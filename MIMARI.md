@@ -131,8 +131,10 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 
 - **Faz 0 — Kurulum (bu commit):** Laravel 12 + Filament v5, koyu tema, MySQL `mehse`,
   admin kullanıcı, nav grupları, kök yönlendirme, `MIMARI.md` + `CLAUDE.md`.
-- **Faz 1 — Çekirdek:** Firma + Çalışan CRUD (Filament resource), Dashboard iskeleti
-  (sayaç kartları), NACE / tehlike sınıfı yardımcıları.
+- **Faz 1 — Çekirdek ✅ (commit 270a685):** `config/isg.php`; `User` İSG alanları +
+  `FilamentUser`; `Firma` modeli + `FirmaResource` (bölümlü form, tehlike sınıfı rozetli
+  tablo, nav rozeti, portföy filtresi); `Calisan` modeli + `CalisanResource` + Firma
+  altında RelationManager; `PortfoyOzetiWidget`. `FirmaCalisanTest` (6 test).
 - **Faz 2 — Risk Değerlendirme:** 6 adımlı sihirbaz (özel Filament page), Risk Kütüphanesi,
   RiskDegerlendirmesi + RiskMaddesi, 5×5 / Fine-Kinney skorlama, PDF çıktı.
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
