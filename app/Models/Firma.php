@@ -41,6 +41,11 @@ class Firma extends Model
         return $this->hasMany(Calisan::class);
     }
 
+    public function riskDegerlendirmeleri(): HasMany
+    {
+        return $this->hasMany(RiskDegerlendirmesi::class);
+    }
+
     public function tehlikeSinifiEtiketi(): string
     {
         return config('isg.tehlike_siniflari.'.$this->tehlike_sinifi, $this->tehlike_sinifi);

@@ -37,7 +37,8 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | planlandı |
 | Yönetim | Profilim | `/admin/profile` (özel) | planlandı |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | planlandı (Chrome eklentisi — sadece bilgi/stub) |
-| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | planlandı |
+| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **çekirdek hazır** (sihirbaz UI sonra) |
+| Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | planlandı |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | planlandı |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | planlandı |
@@ -60,7 +61,9 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | planlandı |
 | Planlama & Arşiv | Ziyaret Programı `[AI]` | `ziyaret-programi` | planlandı |
 | Planlama & Arşiv | Araçlar | `araclar` | planlandı |
-| — | **Panel (Dashboard)** | `/admin` | planlandı |
+| — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
+| Yönetim | Firmalar | `firmalar` | **hazır** (Çalışanlar RelationManager dâhil) |
+| Yönetim | Çalışanlar | `calisanlar` | **hazır** |
 
 ## Ekran notları (görülen referanslar)
 
@@ -135,8 +138,22 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
   `FilamentUser`; `Firma` modeli + `FirmaResource` (bölümlü form, tehlike sınıfı rozetli
   tablo, nav rozeti, portföy filtresi); `Calisan` modeli + `CalisanResource` + Firma
   altında RelationManager; `PortfoyOzetiWidget`. `FirmaCalisanTest` (6 test).
-- **Faz 2 — Risk Değerlendirme:** 6 adımlı sihirbaz (özel Filament page), Risk Kütüphanesi,
-  RiskDegerlendirmesi + RiskMaddesi, 5×5 / Fine-Kinney skorlama, PDF çıktı.
+- **Faz 2 — Risk Değerlendirme çekirdeği ✅ (commit sonrası):**
+  - `config/isg.php` → `risk_yontemleri`, `risk_matris_5x5` / `risk_fine_kinney` (ölçek
+    metinleri + puan → düzey bantları; **Fine-Kinney ondalık anahtarlar string**),
+    `risk_madde_durumlari`.
+  - `App\Support\RiskSkorlama::hesapla($yontem, O, Ş, ?F)` — 5×5 (O×Ş) ve Fine-Kinney
+    (O×F×Ş); `bant()`, `olcek()`.
+  - `TehlikeKategorisi` + `Tehlike` (Risk Kütüphanesi) + `TehlikeKutuphanesiSeeder`
+    (3 kategori / 13 tehlike başlangıç seti). `TehlikeResource` (kategoriye göre gruplu tablo).
+  - `RiskDegerlendirmesi` (firma künye snapshot + `belge_no` `RD-…` + geçerlilik tehlike
+    sınıfına göre otomatik) + `RiskMaddesi` (`saving` → puan/düzey + rezidüel puan/düzey
+    yönteme göre). `RiskDegerlendirmesiResource` (Firma & Yöntem + Ekip formu) +
+    **MaddelerRelationManager** (yönteme göre O/(F)/Ş select'leri, "Kütüphaneden aktar",
+    puan rozetli tablo, sıralanabilir). Create → edit'e yönlendirir.
+  - `RiskDegerlendirmeTest` (9 test toplam).
+  - **Sonra:** 6 adımlı sihirbaz UI (isgpratik 10-18.jpg), AI risk üretimi, şablonlar,
+    Excel içe/dışa aktarma, Risk PDF çıktısı.
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).

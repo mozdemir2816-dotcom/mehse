@@ -18,7 +18,8 @@ görüntüleri referans (`C:\Users\mozde\Desktop\isgpratik\`), yol haritası: `M
 "C:/xampp2/php/php.exe" "C:/xampp2/php/composer.phar" <komut>
 
 php artisan migrate        # yalnızca yeni migration'lar
-php artisan test
+php artisan db:seed --class=TehlikeKutuphanesiSeeder
+php artisan test           # 11 test
 ```
 
 ### Kurallar
