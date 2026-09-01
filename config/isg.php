@@ -232,6 +232,162 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Acil Durum Eylem Planı — isgpratik 19-21, 146-154.jpg
+    |--------------------------------------------------------------------------
+    | 6331 SK kapsamında her işyerinde zorunlu belge. Firma seçilir, konu
+    | sayfaları + destek ekipleri + kapak çerçevesi seçilir → PDF üretilir.
+    | Ayrıca 7 acil durum afişi (A3/A4 talimat).
+    */
+    'acil_durum' => [
+        'hakkinda' => 'Acil Durum Eylem Planı, işyerinizde meydana gelebilecek yangın, deprem, doğal afetler ve diğer acil durumlara karşı alınacak önlemleri içeren yasal bir belgedir. Bu plan, 6331 sayılı İş Sağlığı ve Güvenliği Kanunu kapsamında her işyerinde bulundurulması zorunlu belgelerden biridir.',
+
+        // Plan yenileme periyodu tehlike sınıfına göre (yıl) — Acil Durumlar Yön.
+        'gecerlilik_yili' => [
+            'az_tehlikeli' => 6,
+            'tehlikeli' => 4,
+            'cok_tehlikeli' => 2,
+        ],
+
+        // PDF/Word'e eklenecek acil durum konu sayfaları. varsayilan=true → yeni planda seçili.
+        'konular' => [
+            ['anahtar' => 'yangin', 'ad' => 'Yangın', 'varsayilan' => true],
+            ['anahtar' => 'deprem', 'ad' => 'Deprem', 'varsayilan' => true],
+            ['anahtar' => 'sabotaj', 'ad' => 'Sabotaj', 'varsayilan' => true],
+            ['anahtar' => 'is_kazasi', 'ad' => 'İş Kazası ve Sağlık Olayları', 'varsayilan' => true],
+            ['anahtar' => 'kimyasal', 'ad' => 'Kimyasal Dökülme / Sızıntı', 'varsayilan' => true],
+            ['anahtar' => 'elektrik', 'ad' => 'Elektrik Çarpması', 'varsayilan' => true],
+            ['anahtar' => 'zehirlenme', 'ad' => 'Zehirlenme', 'varsayilan' => true],
+            ['anahtar' => 'patlama', 'ad' => 'Patlama', 'varsayilan' => true],
+            ['anahtar' => 'salgin', 'ad' => 'Salgın Hastalık ve Biyolojik Etki', 'varsayilan' => false],
+            ['anahtar' => 'sel', 'ad' => 'Sel ve Su Baskını', 'varsayilan' => false],
+            ['anahtar' => 'yildirim', 'ad' => 'Yıldırım Düşmesi ve Fırtına', 'varsayilan' => false],
+            ['anahtar' => 'bomba', 'ad' => 'Bomba İhbarı ve Patlayıcı Tehdidi', 'varsayilan' => false],
+            ['anahtar' => 'yuksekten_dusme', 'ad' => 'Yüksekten Düşme', 'varsayilan' => false],
+            ['anahtar' => 'heyelan', 'ad' => 'Heyelan ve Toprak Kayması', 'varsayilan' => false],
+            ['anahtar' => 'radyasyon', 'ad' => 'Radyasyon Sızıntısı', 'varsayilan' => false],
+            ['anahtar' => 'trafik', 'ad' => 'İşyeri İçi Trafik ve Araç Kazası', 'varsayilan' => false],
+            ['anahtar' => 'bogulma', 'ad' => 'Boğulma ve Su Kazası', 'varsayilan' => false],
+            ['anahtar' => 'basincli_kap', 'ad' => 'Basınçlı Kap Patlaması', 'varsayilan' => false],
+            ['anahtar' => 'makine_arizasi', 'ad' => 'Makine Arızası ve Sıkışma', 'varsayilan' => false],
+            ['anahtar' => 'gida_zehirlenmesi', 'ad' => 'Toplu Gıda Zehirlenmesi', 'varsayilan' => false],
+            ['anahtar' => 'asansor', 'ad' => 'Asansörde Mahsur Kalma', 'varsayilan' => false],
+        ],
+
+        'kapak_cerceveleri' => [
+            'klasik' => 'Klasik — siyah çift çizgi çerçeve',
+            'altin' => 'Altın — ince altın kenarlık',
+            'mavi_zarif' => 'Mavi Zarif — köşe süslemeli',
+            'minimalist' => 'Minimalist — ince tek çizgi',
+            'yesil_doga' => 'Yeşil Doğa — organik kenar',
+            'kirmizi_resmi' => 'Kırmızı Resmi — kalın kırmızı bant',
+            'golgeli' => 'Gölgeli — hafif gölge çerçeve',
+        ],
+
+        'ekipler' => [
+            'sondurme' => 'Söndürme Ekibi',
+            'kurtarma' => 'Kurtarma Ekibi',
+            'koruma' => 'Koruma Ekibi',
+            'ilk_yardim' => 'İlk Yardım Ekibi',
+        ],
+
+        // 7 acil durum afişi — A3/A4 talimat (numaralı adımlar).
+        'afisler' => [
+            'yangin' => [
+                'ad' => 'Yangınla Mücadele', 'baslik' => 'YANGINLA MÜCADELE VE TAHLİYE TALİMATI',
+                'adimlar' => [
+                    'İtfaiyeyi arayın (110).',
+                    'Sesli olarak etrafındakileri uyarın.',
+                    'En yakın yangın alarm butonuna basın.',
+                    'Yangın müdahale ekip şefini arayın.',
+                    'Eğitimliyseniz yangın söndürücü ile ilk müdahaleyi yapın.',
+                    'Yangının niteliğine göre gaz akımı ve diğer enerjileri kesin.',
+                    'Söndüremiyorsanız binayı tahliye edin, en yakın çıkışı kullanın.',
+                    'Toplanma bölgesine gidin ve sayım yapın.',
+                    'İtfaiye gelene kadar kimseyi içeri sokmayın.',
+                ],
+            ],
+            'deprem' => [
+                'ad' => 'Deprem Eylem Planı', 'baslik' => 'DEPREM EYLEM PLANI',
+                'adimlar' => [
+                    'Deprem anında etrafındakileri sesli olarak uyarın.',
+                    'Çök – kapan – tutun: sağlam bir masanın altına girin.',
+                    'Elektrik ve gazı kesin (mümkünse).',
+                    'Sarsıntı bitene kadar en yakın korunma bölgesinde kalın.',
+                    'Sarsıntı geçince düşebilecek cisimlerden korunarak binayı terk edin.',
+                    'Asansör kullanmayın, merdivenlerden inin.',
+                    'Toplanma bölgesine gidin ve sayım yapın.',
+                    'Yaralı varsa ilk yardım uygulayın, 112’yi arayın.',
+                    'Olay raporu hazırlayın.',
+                ],
+            ],
+            'is_kazasi' => [
+                'ad' => 'İş Kazası Eylem Planı', 'baslik' => 'İŞ KAZASI EYLEM PLANI',
+                'adimlar' => [
+                    'Kaza ve yaralanmayı belirleyin, ortamı güvene alın.',
+                    'Makine / ekipman hasarını değerlendirin, enerjiyi kesin.',
+                    'Duruma uygun acil eylem planını uygulayın.',
+                    'Kaza yerine müdahale edin, ilk yardım uygulayın.',
+                    'İş Sağlığı ve Güvenliği birimine haber verin.',
+                    'Gerekliyse 112’yi arayın.',
+                    'Yasa gereği kazayı 3 iş günü içinde SGK’ya bildirin.',
+                    'Olay raporu hazırlayın, kök neden analizi yapın.',
+                    'Oluşan aksaklıkların tekrar etmemesi için önlem alın.',
+                ],
+            ],
+            'elektrik' => [
+                'ad' => 'Elektrik Çarpması', 'baslik' => 'ELEKTRİK ÇARPMASI ACİL MÜDAHALE TALİMATI',
+                'adimlar' => [
+                    'Akımı kesin — ana şalteri kapatın.',
+                    'Kazazedeye asla çıplak elle dokunmayın; yalıtkan cisimle ayırın.',
+                    'Bilinç ve nefes kontrolü yapın.',
+                    'Nefes yoksa kalp masajına başlayın (CPR).',
+                    '112 acil servisini arayın.',
+                    'Yanık varsa yanık bakımı yapın ve hastaneye sevk edin.',
+                ],
+            ],
+            'kimyasal' => [
+                'ad' => 'Kimyasal Dökülme', 'baslik' => 'KİMYASAL DÖKÜLME VE SIZINTI EYLEM PLANI',
+                'adimlar' => [
+                    'Uyarı verin ve ortamı havalandırın; camları açın.',
+                    'Kişisel koruyucu ekipman giyin (maske, eldiven, gözlük).',
+                    'Dökülme ve sızıntıyı kontrol altına alın.',
+                    'Döküntüyü uygun malzemeyle absorbe edin.',
+                    'Etkilenen kişiye acil yardım: duş ve göz yıkama.',
+                    '112 veya 114 (UZEM) haber verin.',
+                    'Olayı kaydedin, tedbirleri gözden geçirin.',
+                ],
+            ],
+            'sel' => [
+                'ad' => 'Sel ve Su Baskını', 'baslik' => 'SEL VE SU BASKINI EYLEM PLANI',
+                'adimlar' => [
+                    'Sel / su baskını anında etrafındakileri sesli uyarın.',
+                    'Durumu İş Güvenliği birimine bildirin.',
+                    'Elektrik ve gazı kesin.',
+                    'En yakın yüksek / korunma bölgesine taşının.',
+                    'Saha imkânları yeterliyse su baskınını önlemek için müdahale edin.',
+                    'Toplanma bölgesine gidin.',
+                    'Yaralı varsa ilk yardım uygulayın, 112’yi arayın.',
+                    'Oluşan aksaklıklar için önlem alın.',
+                ],
+            ],
+            'sabotaj' => [
+                'ad' => 'Sabotaj ve Patlama', 'baslik' => 'SABOTAJ VE PATLAMA EYLEM PLANI',
+                'adimlar' => [
+                    'Sabotaj şeklini belirleyin (yangın, patlayıcı, mekanik, kimyasal, biyolojik).',
+                    'Makine / ekipman hasarını değerlendirin.',
+                    'Duruma uygun acil eylem planını uygulayın.',
+                    'İş Sağlığı ve Güvenliği birimine haber verin.',
+                    'Olay yerine müdahale edin.',
+                    'Yaralı varsa ilk müdahaleyi yapın, ambulans çağırın (112).',
+                    'Toplanma bölgesine gidin ve sayım yapın.',
+                    'Olay raporu hazırlayın, güvenlik önlemlerini artırın.',
+                ],
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Risk Sihirbazı — "Yapay Zeka" (kural tabanlı) risk üretimi
     |--------------------------------------------------------------------------
     | isgpratik 103-115.jpg akışı. Gerçek LLM yerine kural tabanlı motor

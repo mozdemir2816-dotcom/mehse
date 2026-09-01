@@ -46,7 +46,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
-| Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | planlandı |
+| Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | planlandı |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | planlandı |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
@@ -155,6 +155,7 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
 | `RiskMaddesi` / `risk_maddeleri` | `risk_degerlendirmesi_id`, `bolum`, `faaliyet`, `tehlike`, `risk`, mevcut O/Ş → skor/düzey, önlemler, sorumlu, termin, rezidüel O/Ş |
 | `TehlikeKategorisi` + `Tehlike` | risk kütüphanesi (kategori → tehlike madde) |
 | `RiskSablonu` / `risk_sablonlari` | `user_id`, `ad`, `sektor` (config risk_ai anahtarı) / `sektor_adi`, `yontem`, `maddeler` (json), `paylasildi`, `kullanim_sayisi` — sektörel toplu şablon; `scopeGorunur`, `maddeleriKopyala`, `olustur` |
+| `AcilDurumPlani` / `acil_durum_planlari` | `firma_id` (unique), `dokuman_no` (AD-YYYY-NN), `rapor_tarihi`, `gecerlilik_tarihi` (tehlike sınıfına göre 2/4/6 yıl), `kapak_cercevesi`, `konular` (json — seçili acil durum konu anahtarları), `ekipler` (json — söndürme/kurtarma/koruma/ilk_yardım isim listeleri), kaşe/logo görselleri; `firmaIcin`, `konuAdlari`, `ekipListesi` |
 | `RiskSablonu` | kayıtlı / paylaşılan şablonlar, puan |
 | (diğer modüller kendi modelleriyle eklenecek) |
 
@@ -266,7 +267,20 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Süre Analizi …) + günlük hak sayacı + "Neden/Güvende miyim" metinleri. "Kurmak için
   tıklayın" / "Eklentiyi İndir" / "Bağlantıyı Kontrol Et" hepsi stub bildirimi döndürür.
   `IsgKatipRobotTest` (3 test).
-  **76 test toplam.**
+- **Faz 3g — Acil Durum Eylem Planı ✅ (isgpratik 19-21, 146-154.jpg):**
+  `App\Filament\Pages\AcilDurumPlani` (stub yerine geçti) + `App\Models\AcilDurumPlani`
+  (firma başına 1) + `App\Support\AcilDurumPlaniUretici` (dompdf) +
+  `config isg.acil_durum` (21 konu, 7 kapak çerçevesi, 4 ekip, 7 afiş talimatı).
+  - Firma seç → plan `firmaIcin` ile oluşur/yüklenir; doküman no + rapor tarihi +
+    geçerlilik (tehlike sınıfına göre 2/4/6 yıl) + **acil durum konu sayfaları** seçimi
+    (ilk 8 varsayılan) + kapak çerçevesi + **destek ekipleri** (söndürme/kurtarma/koruma/
+    ilk yardım — virgülle isim) → "Kaydet".
+  - Header: **Plan PDF** (dompdf, kapak + künye + ekip tablosu + seçili konu sayfaları +
+    onay), **Word** (stub). **Acil Durum Afişleri:** 7 tip (Yangın/Deprem/İş Kazası/
+    Elektrik/Kimyasal/Sel/Sabotaj) × A4/A3 → numaralı talimat afişi PDF.
+  - `barryvdh/laravel-dompdf` ilk kez kullanıldı; PDF blade'leri `resources/views/pdf/`.
+  `AcilDurumPlaniTest` (6 test).
+  **82 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
