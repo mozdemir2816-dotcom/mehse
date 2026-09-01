@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Support\RiskUretici;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -213,6 +214,26 @@ class RiskSihirbaziTest extends TestCase
         );
         // Kütüphane baz riskleri de gelir (genel_isyeri)
         $this->assertTrue(collect($adaylar)->contains('kaynak', 'kutuphane'));
+    }
+
+    public function test_risk_uretici_gemini_aktifse_llm_onerilerini_ekler(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar']);
+
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [['content' => ['parts' => [['text' => json_encode([
+                    ['tehlike' => 'Çağrı merkezinde sesli tehdit ve psikososyal risk', 'risk' => 'Tükenmişlik',
+                        'oneri' => 'Psikososyal risk değerlendirmesi yapılır.', 'mevzuat' => '6331 SK', 'olasilik' => 2, 'siddet' => 2],
+                ])]]]]],
+            ]),
+        ]);
+
+        $adaylar = RiskUretici::uret('ofis', ['Çağrı merkezi'], []);
+
+        $this->assertTrue(collect($adaylar)->contains(
+            fn ($a) => $a['kaynak'] === 'llm' && str_contains($a['tehlike'], 'psikososyal risk'),
+        ));
     }
 
     public function test_ai_soru_atlanabilir(): void

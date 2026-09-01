@@ -6,10 +6,10 @@ use App\Models\Tehlike;
 use Illuminate\Support\Str;
 
 /**
- * Risk Sihirbazı "Yapay Zeka" adımı — **kural tabanlı** aday risk üretimi
- * (isgpratik 103-115.jpg). Gerçek LLM yok: sektör + alt kategori + soru
- * cevaplarındaki eksikliklerden mevzuat referanslı risk maddeleri türetir.
- * İleride Gemini/OpenAI cevabı bu çıktının yerine geçebilir (aynı şema).
+ * Risk Sihirbazı "Yapay Zeka" adımı — sektör + alt kategori + soru
+ * cevaplarındaki eksikliklerden **kural tabanlı** mevzuat referanslı risk
+ * maddeleri türetir (isgpratik 103-115.jpg). `GeminiRiskDanismani` API
+ * anahtarı tanımlıysa aynı şemada işyerine özel ek öneriler ekler.
  */
 class RiskUretici
 {
@@ -77,7 +77,17 @@ class RiskUretici
             ], kaynak: 'kutuphane', tehlikeId: $t->id);
         }
 
-        // 3) Aynı tehlike metnini tekrar etme
+        // 3) Gemini (gerçek LLM) — API anahtarı tanımlıysa işyerine özel ek öneriler ister
+        if (GeminiRiskDanismani::aktifMi()) {
+            $sektorAdi = config('isg.risk_ai.sektorler.'.$sektor.'.ad', $sektor);
+            $mevcutTehlikeler = collect($adaylar)->pluck('tehlike')->filter()->values()->all();
+
+            foreach (GeminiRiskDanismani::oner($sektorAdi, $altKategoriler, $cevaplar, $mevcutTehlikeler) as $risk) {
+                $adaylar[] = static::normalize($risk, kaynak: 'llm');
+            }
+        }
+
+        // 4) Aynı tehlike metnini tekrar etme
         return array_values(collect($adaylar)
             ->unique(fn ($m) => Str::lower(trim($m['tehlike'])))
             ->all());

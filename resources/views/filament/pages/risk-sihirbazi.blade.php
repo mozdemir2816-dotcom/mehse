@@ -371,7 +371,9 @@
                             <div style="font-size:.78rem;color:rgb(107 114 128)">
                                 {{ $aday['risk'] }}
                                 @if ($aday['mevzuat']) · <em>{{ $aday['mevzuat'] }}</em> @endif
-                                @if ($aday['kaynak'] === 'ai') · <span style="color:{{ $mor }}">öneri O/Ş {{ $aday['olasilik'] }}/{{ $aday['siddet'] }}</span> @endif
+                                @if (in_array($aday['kaynak'], ['ai', 'llm'], true))
+                                    · <span style="color:{{ $mor }}">{{ $aday['kaynak'] === 'llm' ? 'Gemini önerisi' : 'öneri' }} O/Ş {{ $aday['olasilik'] }}/{{ $aday['siddet'] }}</span>
+                                @endif
                             </div>
                         </button>
                     @endforeach
