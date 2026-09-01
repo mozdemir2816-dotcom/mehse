@@ -273,14 +273,20 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   `config isg.acil_durum` (21 konu, 7 kapak çerçevesi, 4 ekip, 7 afiş talimatı).
   - Firma seç → plan `firmaIcin` ile oluşur/yüklenir; doküman no + rapor tarihi +
     geçerlilik (tehlike sınıfına göre 2/4/6 yıl) + **acil durum konu sayfaları** seçimi
-    (ilk 8 varsayılan) + kapak çerçevesi + **destek ekipleri** (söndürme/kurtarma/koruma/
+    + kapak çerçevesi + **destek ekipleri** (söndürme/kurtarma/koruma/
     ilk yardım — virgülle isim) → "Kaydet".
+  - **Konu ön-seçimi (`App\Support\AcilDurumKonuSecici`):** sabit varsayılan yerine
+    firmanın NACE kodu + tehlike sınıfına göre hesaplanır (`config isg.acil_durum.konular[].kosul`
+    — `null` = her firmada seçili, `['nace'=>[…], 'tehlike'=>[…]]` = NACE ön eki VEYA
+    tehlike sınıfı eşleşirse seçili). Kullanıcı elle ekleyip çıkarabilir.
   - Header: **Plan PDF** (dompdf, kapak + künye + ekip tablosu + seçili konu sayfaları +
     onay), **Word** (stub). **Acil Durum Afişleri:** 7 tip (Yangın/Deprem/İş Kazası/
-    Elektrik/Kimyasal/Sel/Sabotaj) × A4/A3 → numaralı talimat afişi PDF.
+    Elektrik/Kimyasal/Sel/Sabotaj) × A4/A3 → numaralı talimat afişi PDF. Bir afiş türü için
+    hazır PDF tanımlıysa (`config .dosya`, `resources/belge/acil-durum-afisleri/`) dompdf
+    yerine doğrudan o dosya indirilir (örn. sabotaj).
   - `barryvdh/laravel-dompdf` ilk kez kullanıldı; PDF blade'leri `resources/views/pdf/`.
-  `AcilDurumPlaniTest` (6 test).
-  **82 test toplam.**
+  `AcilDurumPlaniTest` (8 test).
+  **84 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
