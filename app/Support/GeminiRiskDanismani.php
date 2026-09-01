@@ -33,7 +33,7 @@ class GeminiRiskDanismani
         }
 
         try {
-            $yanit = Http::timeout(20)->post(
+            $yanit = Http::timeout(45)->post(
                 static::endpoint(),
                 static::istekGovdesi($sektorAdi, $altKategoriler, $cevaplar, $mevcutTehlikeler),
             );
@@ -64,7 +64,7 @@ class GeminiRiskDanismani
 
     private static function endpoint(): string
     {
-        $model = config('services.gemini.model', 'gemini-2.5-flash');
+        $model = config('services.gemini.model', 'gemini-3.6-flash');
 
         return "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=".config('services.gemini.key');
     }
