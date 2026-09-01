@@ -237,6 +237,25 @@
                             </button>
                         @endforeach
                     </div>
+                    @if ($aiSektor)
+                        @php $sektorSablonlari = $this->aiSektorSablonlari(); @endphp
+                        @if ($sektorSablonlari->isNotEmpty())
+                            <div style="{{ $kutu }};border-color:{{ $mor }};padding:.75rem;margin-top:1rem;background:rgb(139 92 246 / .06)">
+                                <div style="font-size:.85rem;font-weight:600">
+                                    ⚡ Bu sektör için {{ $sektorSablonlari->count() }} kayıtlı şablonunuz var — sohbete girmeden direkt kullanabilirsiniz:
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem">
+                                    @foreach ($sektorSablonlari as $s)
+                                        <x-filament::button size="xs" color="gray" icon="heroicon-o-bolt"
+                                            wire:click="aiSablonKullan({{ $s->id }})">
+                                            {{ $s->ad }} ({{ $s->maddeSayisi() }})
+                                        </x-filament::button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
                     <div style="display:flex;justify-content:flex-end;margin-top:1rem">
                         <x-filament::button icon="heroicon-o-chevron-right" icon-position="after"
                             wire:click="aiSektorOnayla" :disabled="! $aiSektor">İleri</x-filament::button>
@@ -362,6 +381,45 @@
                     <x-filament::button icon="heroicon-o-plus" wire:click="aiAdaylariEkle" :disabled="empty($aiSecilenAdaylar)">
                         Seçili {{ count($aiSecilenAdaylar) }} riski ekle
                     </x-filament::button>
+                </div>
+            @endif
+        </x-filament::section>
+    @endif
+
+    {{-- ==================== ADIM 3 — ŞABLONLAR ========================= --}}
+    @if ($adim === 3 && $yontemSecim === 'sablon')
+        <x-filament::section icon="heroicon-o-rectangle-stack" icon-color="primary">
+            <x-slot name="heading">Şablonlar & Paylaşılanlar</x-slot>
+            <x-slot name="description">Sektöre göre kaydettiğiniz risk setleri — tıklayın, tabloya toplu eklensin</x-slot>
+
+            @php $gruplar = $this->sablonlar(); @endphp
+            @if ($gruplar->isEmpty())
+                <div style="{{ $kutu }};padding:1rem;font-size:.85rem;color:rgb(107 114 128)">
+                    Henüz şablon yok. <strong>Manuel</strong> veya <strong>Yapay Zeka</strong> ile risk seti
+                    oluşturup Adım 6'da <em>"Sektör şablonu olarak kaydet"</em> ile buraya ekleyebilirsiniz.
+                </div>
+            @else
+                <div style="display:flex;flex-direction:column;gap:1rem">
+                    @foreach ($gruplar as $sektorAd => $liste)
+                        <div>
+                            <div style="font-weight:700;font-size:.9rem;margin-bottom:.4rem">🏭 {{ $sektorAd }}</div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem">
+                                @foreach ($liste as $s)
+                                    <div style="{{ $kutu }};padding:.75rem;display:flex;flex-direction:column;gap:.4rem">
+                                        <div style="font-weight:600;font-size:.88rem">{{ $s->ad }}</div>
+                                        <div style="font-size:.75rem;color:rgb(107 114 128)">
+                                            {{ $s->maddeSayisi() }} madde · {{ config('isg.risk_yontemleri.'.$s->yontem) }}
+                                            @if ($s->kullanim_sayisi) · {{ $s->kullanim_sayisi }}× kullanıldı @endif
+                                            @if ($s->paylasildi) · paylaşılan @endif
+                                        </div>
+                                        <x-filament::button size="xs" icon="heroicon-o-plus" wire:click="sablonUygula({{ $s->id }})">
+                                            Bu şablonu uygula
+                                        </x-filament::button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @endif
         </x-filament::section>
@@ -501,6 +559,32 @@
                 <x-filament::button color="primary" icon="heroicon-o-check" wire:click="kaydet" :disabled="! $this->tumMaddelerPuanli()">Kaydet</x-filament::button>
                 <x-filament::button color="gray" disabled icon="heroicon-o-document-arrow-down">PDF indir (yakında)</x-filament::button>
             </div>
+
+            {{-- Sektör şablonu olarak kaydet --}}
+            <div style="{{ $kutu }};padding:.85rem;margin-top:1.25rem">
+                <div style="font-weight:600;font-size:.9rem">📋 Sektör şablonu olarak kaydet</div>
+                <p style="font-size:.8rem;color:rgb(107 114 128);margin:.35rem 0 .6rem">
+                    Bu risk setini bir sektöre etiketleyip saklayın; aynı sektörden yeni firma gelince
+                    "Şablonlar" yönteminden tek tıkla uygularsınız.
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
+                    <input type="text" wire:model="sablonAd" placeholder="Şablon adı (örn. Küçük ofis)"
+                        style="padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
+                    <select wire:model="sablonSektor"
+                        style="padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
+                        <option value="">Sektör seçin…</option>
+                        @foreach (config('isg.risk_ai.sektorler') as $k => $s)
+                            <option value="{{ $k }}" @selected($aiSektor === $k)>{{ $s['ad'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="margin-top:.6rem">
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-bookmark"
+                        wire:click="sablonlaKaydet" :disabled="count($secilenler) === 0">
+                        Şablon olarak kaydet
+                    </x-filament::button>
+                </div>
+            </div>
         </x-filament::section>
     @endif
 
@@ -513,7 +597,7 @@
         </div>
         <div style="font-size:.8rem;color:rgb(107 114 128)">{{ $adim }} / 6</div>
         <div>
-            @if ($adim < 6 && ! ($adim === 3 && $yontemSecim === 'ai'))
+            @if ($adim < 6 && ! ($adim === 3 && in_array($yontemSecim, ['ai', 'sablon'], true)))
                 <x-filament::button icon="heroicon-o-chevron-right" icon-position="after"
                     wire:click="ileri" :disabled="! $this->adimGecerli($adim)">
                     {{ $ileriEtiket[$adim] ?? 'İleri' }}

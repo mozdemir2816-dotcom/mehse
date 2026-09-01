@@ -37,8 +37,9 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | planlandı |
 | Yönetim | Profilim | `/admin/profile` (özel) | planlandı |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | planlandı (Chrome eklentisi — sadece bilgi/stub) |
-| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** (Faz 3a — Manuel yöntem; AI/Şablon/Excel + PDF sonra) |
+| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (kural tabanlı) yöntemleri; Şablon/Kayıtlı/Excel + PDF Faz 3b |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
+| Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | planlandı |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | planlandı |
@@ -105,18 +106,32 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 - **Uygulanabilirlik:** gerçek eklenti + resmî portal gerektiği için yalnız **bilgi
   sayfası** + günlük hak sayacı stub'ı olarak kurulacak.
 
-### Risk Değerlendirme sihirbazı (10-18.jpg)
+### Risk Değerlendirme sihirbazı (10-18.jpg) — **kuruldu, bkz. Faz 3a**
 6 adım: **Firma Bilgileri → Ekleme Yöntemi → Risk Ekleme → Tercihler → Risklerim →
 Önizleme & PDF**.
-- **1. Firma Bilgileri:** firma seç (+ "Risk Değerlendirme Ekibi"), firma künye kartı,
-  Rapor Tarihi + Geçerlilik Tarihi (tehlike sınıfına göre otomatik: az 6 / tehlikeli 4 /
-  çok tehlikeli 2 yıl), firma logosu (opsiyonel).
-- **2. Ekleme Yöntemi:** 5 seçenek — (a) **Yapay Zeka Sohbeti ile Risk Üret** (ÖNERİLEN,
-  sektör-spesifik 5-50 soru → 100-300 madde, mevzuat referanslı önlemler), (b) **Manuel
-  Seçim** (Risk Kütüphanesi — kategoriler: Fabrika/Atölye/Tersane/Maden/Enerji/… her biri
-  N tehlike), (c) **Şablonlar & Paylaşılanlar** (kendi + paylaşılan şablonlar, puanlı),
-  (d) **Kayıtlı Risklerim** (klasörlü), (e) **Excel'den Yükle** (.xlsx ≤5MB, çok sayfa).
-- Günlük AI hak sayacı ("Bugün 5/5 hak kaldı").
+- **1. Firma Bilgileri:** firma seç, künye kartı, Rapor + Geçerlilik Tarihi (tehlike
+  sınıfına göre otomatik: az 6 / tehlikeli 4 / çok tehlikeli 2 yıl). (Ekip + logo Faz 3b.)
+- **2. Ekleme Yöntemi:** 5 seçenek — (a) **Yapay Zeka** (ÖNERİLEN), (b) **Manuel Seçim**,
+  (c) **Şablonlar & Paylaşılanlar** (sektör bazlı), (d) **Kayıtlı Risklerim**,
+  (e) **Excel'den Yükle**. → a + b + c kuruldu; d/e "yakında".
+
+### Yapay Zeka (kural tabanlı) risk üretimi (103-115.jpg) — **kuruldu**
+Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akış:
+- **1. Aşama — Ana Sektör** (105): 13 sektör kartı (Fabrika/Üretim, İnşaat/Yapı,
+  Sağlık/Hastane, Ofis/Hizmet/Finans, Gıda/Yemekhane, Ulaşım/Lojistik, Tarım/Hayvancılık,
+  Maden/Taşocağı, Servis/Bakım, Depo/Lojistik, Eğitim/Okul, Eğlence/Otel, Diğer).
+- **2. Aşama — Alt Kategori** (106): sektöre bağlı chip'ler, çoklu, boş bırakılabilir.
+- **Sohbet — Sorular** (107-115): ~11 soru tek tek; her soruda mevzuat ipucu (italik),
+  radyo veya çoklu; "Cevabı Gönder / Atla / ← Önceki Soru". Başlıkta "Soru X/N" +
+  "N aday risk". Sektöre uymayan sorular atlanır (`insaat_yapi_turu` yalnız inşaat).
+  Sorular: çalışan sayısı, vardiya, yangın/ilkyardım eğitimi, tahliye tatbikatı, yangın
+  altyapısı, elektrik (KAKR + topraklama), mekanik havalandırma, kaza/ramak kala geçmişi,
+  psikososyal risk.
+- **Sonuç:** aday riskler = cevaptaki eksikliğin tetiklediği mevzuat riski (öneri O/Ş ile,
+  seçili gelir) + sektöre göre kütüphane baz riskleri (`genel_isyeri` + eşleşen kategori).
+  Çoklu seçim, "Tümünü Seç/Kaldır" → "Seçili N riski ekle" → Adım 5.
+- Günlük AI hak sayacı isgpratik'te var; kural tabanlıda `config isg.risk_ai.gunluk_hak`
+  yalnız gösterim, engellemez.
 
 ## Veri modeli — ilk taslak
 
@@ -128,6 +143,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | `RiskDegerlendirmesi` / `risk_degerlendirmeleri` | `firma_id`, `yontem`, `rapor_tarihi`, `gecerlilik_tarihi`, `belge_no`, `revizyon_no`, künye snapshot, `ekip` (json), `durum` |
 | `RiskMaddesi` / `risk_maddeleri` | `risk_degerlendirmesi_id`, `bolum`, `faaliyet`, `tehlike`, `risk`, mevcut O/Ş → skor/düzey, önlemler, sorumlu, termin, rezidüel O/Ş |
 | `TehlikeKategorisi` + `Tehlike` | risk kütüphanesi (kategori → tehlike madde) |
+| `RiskSablonu` / `risk_sablonlari` | `user_id`, `ad`, `sektor` (config risk_ai anahtarı) / `sektor_adi`, `yontem`, `maddeler` (json), `paylasildi`, `kullanim_sayisi` — sektörel toplu şablon; `scopeGorunur`, `maddeleriKopyala`, `olustur` |
 | `RiskSablonu` | kayıtlı / paylaşılan şablonlar, puan |
 | (diğer modüller kendi modelleriyle eklenecek) |
 
@@ -153,7 +169,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
     **MaddelerRelationManager** (yönteme göre O/(F)/Ş select'leri, "Kütüphaneden aktar",
     puan rozetli tablo, sıralanabilir). Create → edit'e yönlendirir.
   - `RiskDegerlendirmeTest` (9 test toplam).
-- **Faz 3a — Risk Değerlendirme Sihirbazı ✅ (isgpratik 10-18.jpg):**
+- **Faz 3a — Risk Değerlendirme Sihirbazı ✅ (isgpratik 10-18 + AI: 103-115):**
   - `App\Filament\Pages\RiskSihirbazi` (slug `risk-degerlendirme`, nav "Risk Yönetimi"
     sort 1). 6 adım: Firma Bilgileri → Ekleme Yöntemi → Risk Ekleme → Tercihler →
     Risklerim → Önizleme & Kaydet. Livewire state + elle yazılmış Blade (stepper +
@@ -175,20 +191,28 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
     "Tümünü Seç/Kaldır"). Adaylar = cevap-tetikli riskler (öneri O/Ş ile, seçili gelir)
     + sektöre göre kütüphane baz riskleri (`genel_isyeri` + eşleşen kategori).
     "Seçili N riski ekle" → `secilenler` → Adım 4.
+  - **Adım 3 (Şablonlar):** `RiskSablonu` — sektöre göre gruplu liste; "Bu şablonu
+    uygula" maddeleri `secilenler`'e toplu ekler (mükerrer atlanır), `kullanim_sayisi++`,
+    Adım 4'e geçer. `RiskSablonuResource` (nav "Sektör Şablonları", sihirbazdan oluşur;
+    List sektöre göre gruplu + Edit: ad/sektör/yöntem/**paylaş**; silme yalnız sahibi).
+  - **Adım 3 (AI kısayolu):** sektör seçilince o sektörün kayıtlı şablonu varsa
+    "sohbete girmeden direkt kullan" butonları çıkar.
   - **Adım 4:** Tercihler — puanlama yöntemi (5×5 / Fine-Kinney), etkilenen
     taşeron/ziyaretçi varsayılanı, varsayılan termin.
   - **Adım 5 (Risklerim):** seçilen maddeler kart listesi — bölüm/faaliyet/tehlike
     düzenlenebilir + O/(F)/Ş select → canlı puan/düzey (renk bandı).
   - **Adım 6:** özet (künye rozetleri + düzey dağılımı) + **Kaydet** →
     `RiskDegerlendirmesi` + `RiskMaddesi` kayıtları → kayıtlı değerlendirme edit'ine
-    yönlendirir. **PDF butonu "yakında"** (Faz 3b).
+    yönlendirir. **"Sektör şablonu olarak kaydet"** (ad + sektör → `RiskSablonu::olustur`).
+    **PDF butonu "yakında"** (Faz 3b).
   - `RiskDegerlendirmesiResource` artık **"Kayıtlı Değerlendirmeler"** (slug
     `risk-degerlendirmelerim`, sort 2, klasör ikonu); List header'ında "Yeni (Sihirbaz)"
     + "Boş kayıt". `barryvdh/laravel-dompdf` bağımlılığı eklendi (PDF için, henüz kullanılmıyor).
-  - `RiskSihirbaziTest` (12 test). **23 test toplam.**
-  - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Şablonlar &
-    Paylaşılanlar (`RiskSablonu` modeli gerekli); Kayıtlı Risklerim (klasörlü); Excel
-    içe/dışa aktarma; gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur.
+  - `RiskSihirbaziTest` (17 test). **28 test toplam.**
+  - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
+    (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
+    gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
+    `RiskSablonu` `maddeler` düzenleme (repeater).
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).

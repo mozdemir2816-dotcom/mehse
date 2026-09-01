@@ -6,6 +6,7 @@ use App\Filament\Pages\RiskSihirbazi;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\Tehlike;
+use App\Models\RiskSablonu;
 use App\Models\User;
 use App\Support\RiskUretici;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
@@ -224,6 +225,105 @@ class RiskSihirbaziTest extends TestCase
             ->call('aiBaslat')->call('aiSektorSec', 'ofis')->call('aiSektorOnayla')->call('aiAltKategoriOnayla')
             ->call('aiSoruAtla', 'calisan_sayisi')
             ->assertSet('aiAtlananlar', ['calisan_sayisi']);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sektörel şablonlar (toplu ekleme + tekrar kullanım)
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_adim_6_secili_riskler_sektor_sablonu_olarak_kaydedilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'manuel')->call('ileri')
+            ->call('tehlikeEkle', Tehlike::all()->get(0)->id)
+            ->call('tehlikeEkle', Tehlike::all()->get(1)->id)
+            ->set('adim', 6)
+            ->set('sablonAd', 'Küçük ofis seti')
+            ->set('sablonSektor', 'ofis')
+            ->call('sablonlaKaydet');
+
+        $sablon = RiskSablonu::firstOrFail();
+        $this->assertSame($this->uzman->id, $sablon->user_id);
+        $this->assertSame('ofis', $sablon->sektor);
+        $this->assertSame('Ofis / Hizmet / Finans', $sablon->sektorEtiketi());
+        $this->assertCount(2, $sablon->maddeler);
+    }
+
+    public function test_sablon_yontemi_sektore_gore_gruplu_ve_uygulanabilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $sablon = RiskSablonu::olustur($this->uzman, 'İnşaat temel', 'insaat', null, 'matris_5x5', [
+            ['anahtar' => 'x1', 'tehlike' => 'Yüksekten düşme', 'bolum' => 'Saha', 'faaliyet' => 'Kalıp', 'olasilik' => 3, 'siddet' => 5],
+            ['anahtar' => 'x2', 'tehlike' => 'Malzeme düşmesi', 'bolum' => 'Saha', 'faaliyet' => 'Kaldırma', 'olasilik' => 3, 'siddet' => 4],
+        ]);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'sablon')->call('ileri')
+            ->assertSet('adim', 3);
+
+        $gruplar = $component->instance()->sablonlar();
+        $this->assertArrayHasKey('İnşaat / Yapı', $gruplar->toArray());
+
+        $component->call('sablonUygula', $sablon->id)
+            ->assertSet('adim', 4);
+
+        $this->assertCount(2, $component->get('secilenler'));
+        $this->assertSame(1, $sablon->fresh()->kullanim_sayisi);
+    }
+
+    public function test_ai_akisinda_ayni_sektorun_sablonu_kisayoldan_uygulanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $sablon = RiskSablonu::olustur($this->uzman, 'Ofis hazır', 'ofis', null, 'matris_5x5', [
+            ['anahtar' => 'o1', 'tehlike' => 'Ekranlı çalışma zorlanması', 'olasilik' => 3, 'siddet' => 2],
+        ]);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'ai')->call('ileri')
+            ->call('aiBaslat')
+            ->call('aiSektorSec', 'ofis');
+
+        // sektör seçilince kısayol şablonları görünür
+        $this->assertCount(1, $component->instance()->aiSektorSablonlari());
+
+        $component->call('aiSablonKullan', $sablon->id)
+            ->assertSet('adim', 4);
+
+        $this->assertCount(1, $component->get('secilenler'));
+    }
+
+    public function test_sablon_resource_sayfalari_acilir(): void
+    {
+        $sablon = RiskSablonu::olustur($this->uzman, 'Test', 'ofis', null, 'matris_5x5', [['anahtar' => 'a', 'tehlike' => 'x']]);
+
+        Livewire::test(\App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus::class)
+            ->assertOk()
+            ->assertCanSeeTableRecords([$sablon]);
+
+        Livewire::test(\App\Filament\Resources\RiskSablonus\Pages\EditRiskSablonu::class, ['record' => $sablon->getRouteKey()])
+            ->assertOk();
+    }
+
+    public function test_paylasilan_sablon_baska_uzmanda_gorunur_kendi_olmayan_silinemez(): void
+    {
+        $baskasi = User::factory()->create();
+        $paylasik = RiskSablonu::olustur($baskasi, 'Paylaşık', 'depo', null, 'matris_5x5', [
+            ['anahtar' => 'd1', 'tehlike' => 'Raf devrilmesi', 'olasilik' => 2, 'siddet' => 4],
+        ]);
+        $paylasik->update(['paylasildi' => true]);
+
+        $ozel = RiskSablonu::olustur($baskasi, 'Özel', 'depo', null, 'matris_5x5', [['anahtar' => 'z', 'tehlike' => 'x']]);
+
+        $gorunur = RiskSablonu::gorunur($this->uzman->id)->pluck('id');
+        $this->assertTrue($gorunur->contains($paylasik->id));
+        $this->assertFalse($gorunur->contains($ozel->id));
     }
 
     public function test_baska_uzmanin_firmasi_listede_gorunmez(): void

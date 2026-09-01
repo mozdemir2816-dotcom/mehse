@@ -23,7 +23,7 @@ class TehlikeResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Risk Yönetimi';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $modelLabel = 'Tehlike';
 

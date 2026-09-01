@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
+use App\Models\RiskSablonu;
 use App\Models\Tehlike;
 use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
@@ -60,9 +61,9 @@ class RiskSihirbazi extends Page
         'manuel' => ['ad' => 'Manuel Seçim', 'onerilen' => false, 'hazir' => true,
             'aciklama' => 'Risk kütüphanesinden kendiniz seçin.',
             'maddeler' => ['Kategori bazlı filtreleme', 'Detaylı risk listesi', 'Tam kontrol']],
-        'sablon' => ['ad' => 'Şablonlar & Paylaşılanlar', 'onerilen' => false, 'hazir' => false,
-            'aciklama' => 'Kendi şablonlarınız veya diğer uzmanların paylaştıkları.',
-            'maddeler' => ['Paylaşılan şablon kütüphanesi', 'Kendi hazır risk setleriniz', 'Tek tıkla hızlı yükleme']],
+        'sablon' => ['ad' => 'Şablonlar & Paylaşılanlar', 'onerilen' => false, 'hazir' => true,
+            'aciklama' => 'Sektöre göre kaydettiğiniz risk setleri; aynı sektörden yeni firmada tek tıkla uygulanır.',
+            'maddeler' => ['Sektör bazlı gruplama', 'Kendi hazır risk setleriniz', 'Tek tıkla toplu ekleme']],
         'kayitli' => ['ad' => 'Kayıtlı Risklerim', 'onerilen' => false, 'hazir' => false,
             'aciklama' => 'Daha önce eklediğiniz risk maddelerinizi klasörlenmiş olarak seçin.',
             'maddeler' => ['Klasör bazlı görüntüleme', 'Arama ve filtreleme', 'Toplu veya tekli ekleme']],
@@ -120,6 +121,11 @@ class RiskSihirbazi extends Page
     /** @var array<int, string> seçilen aday anahtarları */
     public array $aiSecilenAdaylar = [];
 
+    // Adım 6 — sektör şablonu olarak kaydetme
+    public ?string $sablonAd = null;
+
+    public ?string $sablonSektor = null;
+
     /** Adıma göre birincil buton etiketi (isgpratik: "Yöntem Seç", "Risk Ekle" …). */
     public const ILERI_ETIKET = [
         1 => 'Yöntem Seç',
@@ -141,7 +147,7 @@ class RiskSihirbazi extends Page
             'adim', 'firmaId', 'gecerlilikTarihi', 'yontem', 'yontemSecim',
             'acikKategoriler', 'secilenler', 'etkilenenDiger', 'varsayilanTermin',
             'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
-            'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar',
+            'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
         ]);
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
@@ -499,6 +505,102 @@ class RiskSihirbazi extends Page
         $cevaplanan = count($this->aiCevaplar) + count($this->aiAtlananlar);
 
         return $cevaplanan.' / '.RiskUretici::soruSayisi((string) $this->aiSektor);
+    }
+
+    /** AI'da seçilen sektör için kayıtlı şablonlar (kısayol). */
+    public function aiSektorSablonlari()
+    {
+        if (! $this->aiSektor) {
+            return collect();
+        }
+
+        return RiskSablonu::query()
+            ->gorunur(Filament::auth()->id())
+            ->where('sektor', $this->aiSektor)
+            ->latest()
+            ->get();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Adım 3 — "Şablonlar & Paylaşılanlar" (sektör bazlı)
+    |--------------------------------------------------------------------------
+    */
+
+    /** @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection> sektör etiketi => şablonlar */
+    public function sablonlar()
+    {
+        return RiskSablonu::query()
+            ->gorunur(Filament::auth()->id())
+            ->orderByDesc('kullanim_sayisi')
+            ->latest()
+            ->get()
+            ->groupBy(fn (RiskSablonu $s) => $s->sektorEtiketi());
+    }
+
+    public function sablonUygula(int $id): void
+    {
+        $sablon = RiskSablonu::gorunur(Filament::auth()->id())->find($id);
+
+        if (! $sablon) {
+            return;
+        }
+
+        foreach ($sablon->maddeleriKopyala() as $madde) {
+            $zaten = collect($this->secilenler)->contains(
+                fn ($m) => Str::lower(trim($m['tehlike'] ?? '')) === Str::lower(trim($madde['tehlike'] ?? '')),
+            );
+
+            if (! $zaten) {
+                $this->secilenler[] = $madde;
+            }
+        }
+
+        $this->yontem = $sablon->yontem;
+        $sablon->kullanildi();
+
+        Notification::make()
+            ->title($sablon->ad.' uygulandı')
+            ->body(count($this->secilenler).' madde')
+            ->success()->send();
+
+        if (count($this->secilenler) > 0) {
+            $this->adim = 4;
+        }
+    }
+
+    /** AI akışında "bu sektörün şablonunu direkt kullan". */
+    public function aiSablonKullan(int $id): void
+    {
+        $this->sablonUygula($id);
+    }
+
+    public function sablonlaKaydet(): void
+    {
+        if (count($this->secilenler) === 0) {
+            Notification::make()->title('Kaydedilecek madde yok')->danger()->send();
+
+            return;
+        }
+
+        $sektor = $this->sablonSektor ?: $this->aiSektor;
+        $sektorGecerli = $sektor && array_key_exists($sektor, config('isg.risk_ai.sektorler', []));
+
+        RiskSablonu::olustur(
+            Filament::auth()->user(),
+            $this->sablonAd ?: (($this->firma?->unvan ?? 'Şablon').' — '.now()->format('d.m.Y')),
+            $sektorGecerli ? $sektor : null,
+            $sektorGecerli ? null : $sektor,
+            $this->yontem,
+            $this->secilenler,
+        );
+
+        $this->reset('sablonAd', 'sablonSektor');
+
+        Notification::make()
+            ->title('Sektör şablonu kaydedildi')
+            ->body('Aynı sektörden yeni firmada "Şablonlar" yönteminden uygulayabilirsiniz.')
+            ->success()->send();
     }
 
     /*
