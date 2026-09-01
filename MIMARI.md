@@ -363,7 +363,6 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     `GeminiRiskDanismaniTest` (5 test, `Http::fake`). **`phpunit.xml`de
     `GEMINI_API_KEY` boş zorlanıyor** — yoksa gerçek anahtar varken bazı testler
     sessizce canlı API'ye istek atıp 20-30s sürüyordu.
-  **111 test toplam.**
   - **Panel çalışan sayısı düzeltmesi:** `PortfoyKarne::ozet()`/`profilOzeti()`
     artık `Calisan` (isim) kaydı sayısı yerine firmaların bildirdiği
     `calisan_sayisi` toplamını gösteriyor — kullanıcı çoğu zaman firmaya
@@ -371,13 +370,33 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     `calisanDagilimi()` ve "çalışansız firma" sayacı kasıtlı değiştirilmedi
     (onlar zaten Çalışan kaydı eksikliğini göstermeyi amaçlıyor).
   - **Faz 3b — Risk PDF çıktısı ✅** (kapak → künye → metodoloji → risk tablosu →
-    ekip → onay, `RiskDegerlendirmesiUretici`). **Kalan:** Kayıtlı Risklerim
-    (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona
-    kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater); sektörel
-    "orijinal şablon" Word çıktısı (Acil Durum'daki gibi — kullanıcının gerçek
-    risk analizi belgelerini yükleyip firmaya özel alanları değiştirmek; risk
-    tablosu değişken satır sayılı olduğundan Acil Durum'dan daha karmaşık,
-    kullanıcı örnek dosyaları hazırlayınca tasarlanacak).
+    ekip → onay, `RiskDegerlendirmesiUretici`).
+  - **"Risk Değerlendirmenizden Yükleyin" (excel) yöntemi ✅:**
+    `App\Support\RiskDegerlendirmesiExcelOkuyucu` — kullanıcının KENDİ Excel
+    risk analizini hiçbir sabit şablona uydurmadan okur. Önce ilk ~60 satırda
+    en çok tanınan başlığı içeren satır "başlık satırı" bulunur (gerçek
+    dosyalarda üstte logo/lejant/ölçek tablosu olduğundan başlık nadiren 1.
+    satırdadır), sonra her sütun eş anlamlı kelime kümeleriyle alana atanır.
+    Olasılık/Frekans/Şiddet yalnızca hem ad hem ALTINDAKİ VERİ SAYISALSA kabul
+    edilir. Kullanıcının `isgpratik\RİSK ANALİZİ\finkeney prosödür..xlsx`
+    dosyasının "kent" sayfasıyla (292 satır, 16. satırda başlık, gerçek O/F/Ş
+    puanları) doğrulandı. Sihirbaz Adım 3'te dosya yükle → tara → aday listesi
+    (AI akışındaki gibi toggle) → seçilenlere ekle. Adaylar varsayılan SEÇİLİ
+    gelir (kullanıcının kendi onayladığı veri olduğundan).
+  - **Risk Kütüphanesi (Tehlike) Excel'den toplu yükleme ✅:**
+    `App\Support\TehlikeExcelIceAktarici` — "Kategori" sütunu yoksa otomatik
+    oluşturulur (Kazı Çalışmaları, Cam Üretimi vb. yeni kategoriler bu yolla
+    eklenebilir). `ListTehlikes` header'ında "Şablon İndir" + "Excel'den
+    Toplu Yükle". **Not:** Bu, `Tehlike` (skorsuz referans kütüphane) için;
+    yukarıdaki "excel" yöntemi ise gerçek O/Ş/Puan içeren tam risk
+    değerlendirmeleri için — farklı hedef, farklı şema.
+  **116 test toplam.**
+  - **Kalan:** Kayıtlı Risklerim (klasörlü); `RiskSablonu` `maddeler` düzenleme
+    (repeater); İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/
+    Zemin İyileştirme) çoklu-seçim arayüzü (kullanıcı Tehlike Kütüphanesi'ne
+    kendi kategorilerini yükledikçe kurulacak); sektörel "orijinal şablon" Word
+    çıktısı (Acil Durum'daki gibi — risk tablosu değişken satır sayılı olduğundan
+    daha karmaşık, ayrı ele alınacak).
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).
