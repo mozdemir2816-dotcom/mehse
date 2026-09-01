@@ -42,7 +42,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | **hazır** (3 sekme; portföy karnesi — 12 kriter) |
 | Yönetim | Profilim | `profilim` | **hazır** (künye + sayaçlar + 6 sekme) |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | **hazır** (bilgi sayfası — gerçek eklenti yok, stub) |
-| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (kural tabanlı) yöntemleri; Şablon/Kayıtlı/Excel + PDF Faz 3b |
+| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (Gemini) yöntemleri + PDF çıktısı; Kayıtlı/Excel kalan |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
@@ -182,6 +182,21 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     (O×F×Ş); `bant()`, `olcek()`.
   - `TehlikeKategorisi` + `Tehlike` (Risk Kütüphanesi) + `TehlikeKutuphanesiSeeder`
     (3 kategori / 13 tehlike başlangıç seti). `TehlikeResource` (kategoriye göre gruplu tablo).
+    **Excel'den toplu yükleme ✅:** `App\Support\TehlikeExcelIceAktarici` —
+    "Kategori" sütunundaki değer yoksa OTOMATİK OLUŞTURULUR (kullanıcı bu yolla
+    kendi sektör/iş kategorilerini — Kazı Çalışmaları, Kalıp İşleri, Cam Üretimi,
+    Toz Boyama, Metal, Havalandırma vb. — ekleyebiliyor); aynı kategoride aynı
+    tehlike metni tekrar yüklenirse güncellenir. `ListTehlikes` header'ında
+    "Şablon İndir" + "Excel'den Toplu Yükle". `TehlikeExcelIceAktariciTest` (6 test).
+    Referans: kullanıcının `Desktop\isgpratik\RİSK ANALİZİ\finkeney prosödür..xlsx`
+    dosyası (Kazı/Kalıp/İskele/Zemin gibi inşaat alt-faaliyetlerine göre gruplu
+    gerçek bir Fine-Kinney risk tablosu — BÖLÜM sütunu kategori karşılığı).
+    **Sonraki adım (kullanıcı verisi bekleniyor):** kullanıcı kendi sektörel
+    risk analizlerini bu araçla yükledikçe, Risk Sihirbazı'nın Manuel/AI
+    yöntemlerinde İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/
+    Zemin İyileştirme) çoklu-seçim arayüzü kurulacak (`RiskUretici::
+    KUTUPHANE_ESLESME` şu an sektör→tek kategori eşliyor, alt-kategoriye göre
+    çoklu kategoriye genişleyecek).
   - `RiskDegerlendirmesi` (firma künye snapshot + `belge_no` `RD-…` + geçerlilik tehlike
     sınıfına göre otomatik) + `RiskMaddesi` (`saving` → puan/düzey + rezidüel puan/düzey
     yönteme göre). `RiskDegerlendirmesiResource` (Firma & Yöntem + Ekip formu) +
@@ -223,7 +238,8 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   - **Adım 6:** özet (künye rozetleri + düzey dağılımı) + **Kaydet** →
     `RiskDegerlendirmesi` + `RiskMaddesi` kayıtları → kayıtlı değerlendirme edit'ine
     yönlendirir. **"Sektör şablonu olarak kaydet"** (ad + sektör → `RiskSablonu::olustur`).
-    **PDF butonu "yakında"** (Faz 3b).
+    PDF butonu artık kayıtlı değerlendirme edit sayfasında gerçek çıktı üretiyor
+    (`RiskDegerlendirmesiUretici`, Faz 3b).
   - `RiskDegerlendirmesiResource` artık **"Kayıtlı Değerlendirmeler"** (slug
     `risk-degerlendirmelerim`, sort 2, klasör ikonu); List header'ında "Yeni (Sihirbaz)"
     + "Boş kayıt". `barryvdh/laravel-dompdf` bağımlılığı eklendi (PDF için, henüz kullanılmıyor).
@@ -347,16 +363,21 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     `GeminiRiskDanismaniTest` (5 test, `Http::fake`). **`phpunit.xml`de
     `GEMINI_API_KEY` boş zorlanıyor** — yoksa gerçek anahtar varken bazı testler
     sessizce canlı API'ye istek atıp 20-30s sürüyordu.
-  **102 test toplam.**
+  **111 test toplam.**
   - **Panel çalışan sayısı düzeltmesi:** `PortfoyKarne::ozet()`/`profilOzeti()`
     artık `Calisan` (isim) kaydı sayısı yerine firmaların bildirdiği
     `calisan_sayisi` toplamını gösteriyor — kullanıcı çoğu zaman firmaya
     çalışan sayısını giriyor ama her çalışanı tek tek kayıt olarak eklemiyor.
     `calisanDagilimi()` ve "çalışansız firma" sayacı kasıtlı değiştirilmedi
     (onlar zaten Çalışan kaydı eksikliğini göstermeyi amaçlıyor).
-  - **Faz 3b (kalan):** Risk PDF çıktısı (kapak → prosedür → tablo → ekip);
-    Kayıtlı Risklerim (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup
-    şablona kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater).
+  - **Faz 3b — Risk PDF çıktısı ✅** (kapak → künye → metodoloji → risk tablosu →
+    ekip → onay, `RiskDegerlendirmesiUretici`). **Kalan:** Kayıtlı Risklerim
+    (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona
+    kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater); sektörel
+    "orijinal şablon" Word çıktısı (Acil Durum'daki gibi — kullanıcının gerçek
+    risk analizi belgelerini yükleyip firmaya özel alanları değiştirmek; risk
+    tablosu değişken satır sayılı olduğundan Acil Durum'dan daha karmaşık,
+    kullanıcı örnek dosyaları hazırlayınca tasarlanacak).
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).
