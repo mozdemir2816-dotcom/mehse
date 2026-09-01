@@ -22,19 +22,21 @@ class RiskDegerlendirmesiResource extends Resource
 {
     protected static ?string $model = RiskDegerlendirmesi::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolderOpen;
 
     protected static string|UnitEnum|null $navigationGroup = 'Risk Yönetimi';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'Risk Değerlendirmesi';
 
     protected static ?string $pluralModelLabel = 'Risk Değerlendirmeleri';
 
+    protected static ?string $navigationLabel = 'Kayıtlı Değerlendirmeler';
+
     protected static ?string $recordTitleAttribute = 'belge_no';
 
-    protected static ?string $slug = 'risk-degerlendirme';
+    protected static ?string $slug = 'risk-degerlendirmelerim';
 
     public static function form(Schema $schema): Schema
     {

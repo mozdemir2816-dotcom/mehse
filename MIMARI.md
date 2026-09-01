@@ -37,7 +37,8 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | planlandı |
 | Yönetim | Profilim | `/admin/profile` (özel) | planlandı |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | planlandı (Chrome eklentisi — sadece bilgi/stub) |
-| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **çekirdek hazır** (sihirbaz UI sonra) |
+| **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** (Faz 3a — Manuel yöntem; AI/Şablon/Excel + PDF sonra) |
+| Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | planlandı |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | planlandı |
@@ -152,8 +153,31 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
     **MaddelerRelationManager** (yönteme göre O/(F)/Ş select'leri, "Kütüphaneden aktar",
     puan rozetli tablo, sıralanabilir). Create → edit'e yönlendirir.
   - `RiskDegerlendirmeTest` (9 test toplam).
-  - **Sonra:** 6 adımlı sihirbaz UI (isgpratik 10-18.jpg), AI risk üretimi, şablonlar,
-    Excel içe/dışa aktarma, Risk PDF çıktısı.
+- **Faz 3a — Risk Değerlendirme Sihirbazı ✅ (isgpratik 10-18.jpg):**
+  - `App\Filament\Pages\RiskSihirbazi` (slug `risk-degerlendirme`, nav "Risk Yönetimi"
+    sort 1). 6 adım: Firma Bilgileri → Ekleme Yöntemi → Risk Ekleme → Tercihler →
+    Risklerim → Önizleme & Kaydet. Livewire state + elle yazılmış Blade (stepper +
+    inline stil; özel Filament teması yok, `x-filament::*` bileşenleri).
+  - **Adım 1:** firma seç (yalnız kullanıcının firmaları) + künye kartı + rapor/geçerlilik
+    tarihi (tehlike sınıfına göre otomatik, `Firma::riskGecerlilikYili()`) + yöntem
+    (5×5 / Fine-Kinney).
+  - **Adım 2:** 5 yöntem kartı (`RiskSihirbazi::YONTEMLER`); Faz 3a'da yalnız **Manuel
+    Seçim** `hazir`, diğerleri "yakında" (tıklanınca uyarı).
+  - **Adım 3 (Manuel):** `App\Support\RiskKutuphanesi` — `TehlikeKategorisi` accordion,
+    tehlike tek tek veya "Tümünü ekle"; mükerrer engellenir. "Elle boş madde ekle".
+  - **Adım 4:** Tercihler (etkilenen taşeron/ziyaretçi varsayılanı, varsayılan termin).
+  - **Adım 5 (Risklerim):** seçilen maddeler kart listesi — bölüm/faaliyet/tehlike
+    düzenlenebilir + O/(F)/Ş select → canlı puan/düzey (renk bandı).
+  - **Adım 6:** özet (künye rozetleri + düzey dağılımı) + **Kaydet** →
+    `RiskDegerlendirmesi` + `RiskMaddesi` kayıtları → kayıtlı değerlendirme edit'ine
+    yönlendirir. **PDF butonu "yakında"** (Faz 3b).
+  - `RiskDegerlendirmesiResource` artık **"Kayıtlı Değerlendirmeler"** (slug
+    `risk-degerlendirmelerim`, sort 2, klasör ikonu); List header'ında "Yeni (Sihirbaz)"
+    + "Boş kayıt". `barryvdh/laravel-dompdf` bağımlılığı eklendi (PDF için, henüz kullanılmıyor).
+  - `RiskSihirbaziTest` (8 test). **19 test toplam.**
+  - **Faz 3b (ekran görüntüleri geldikçe):** Risk PDF çıktısı (kapak → prosedür → tablo →
+    ekip), AI risk üretimi (istem-kopyala iskele), Şablonlar & Paylaşılanlar, Kayıtlı
+    Risklerim (klasörlü), Excel içe/dışa aktarma.
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).
