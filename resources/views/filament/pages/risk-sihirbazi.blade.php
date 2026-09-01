@@ -559,8 +559,10 @@
 
             <div style="margin-top:1.25rem;display:flex;gap:.75rem">
                 <x-filament::button color="primary" icon="heroicon-o-check" wire:click="kaydet" :disabled="! $this->tumMaddelerPuanli()">Kaydet</x-filament::button>
-                <x-filament::button color="gray" disabled icon="heroicon-o-document-arrow-down">PDF indir (yakında)</x-filament::button>
             </div>
+            <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:.4rem">
+                Kaydettikten sonra açılan sayfada "PDF İndir" ile çıktı alabilirsiniz.
+            </p>
 
             {{-- Sektör şablonu olarak kaydet --}}
             <div style="{{ $kutu }};padding:.85rem;margin-top:1.25rem">

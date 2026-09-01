@@ -10,10 +10,12 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\User;
+use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskSkorlama;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
 class RiskDegerlendirmeTest extends TestCase
@@ -84,6 +86,49 @@ class RiskDegerlendirmeTest extends TestCase
         Livewire::test(CreateRiskDegerlendirmesi::class)->assertOk();
         Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])->assertOk();
         Livewire::test(ListTehlikes::class)->assertOk()->assertCountTableRecords(13);
+    }
+
+    public function test_pdf_matris_5x5_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $rd = RiskDegerlendirmesi::create([
+            'firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+            'ekip' => [['ad' => 'Ali Veli', 'unvan' => 'İşveren']],
+        ]);
+        $rd->maddeler()->create(['bolum' => 'Şantiye', 'tehlike' => 'Korkuluksuz kenar', 'olasilik' => 3, 'siddet' => 5]);
+
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_pdf_fine_kinney_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Gürültü', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 15]);
+
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd);
+
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_edit_sayfasinda_pdf_aksiyonu_calisir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Test tehlike', 'olasilik' => 2, 'siddet' => 2]);
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->assertOk()
+            ->callAction('pdf');
     }
 
     public function test_uzman_baskasinin_risk_degerlendirmesini_gormez(): void
