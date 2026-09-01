@@ -120,6 +120,67 @@ class PortfoyKarne
             ->all();
     }
 
+    /**
+     * Genel Bakış — Çalışan Dağılımı (firma başına aktif çalışan). isgpratik 6.jpg.
+     *
+     * @return array<string, int>
+     */
+    public static function calisanDagilimi(int $userId): array
+    {
+        return Firma::query()
+            ->where('user_id', $userId)
+            ->withCount(['calisanlar as aktif_calisan' => fn ($q) => $q->where('aktif', true)])
+            ->orderByDesc('aktif_calisan')
+            ->orderBy('unvan')
+            ->get()
+            ->mapWithKeys(fn (Firma $f) => [$f->unvan => (int) $f->aktif_calisan])
+            ->all();
+    }
+
+    /**
+     * Genel Bakış — günlük aktivite (son N gün). isgpratik 6.jpg: trend + heatmap.
+     * Risk değerlendirmesi / madde / şablon / firma / çalışan eklemeleri sayılır.
+     *
+     * @return array<string, int>  'Y-m-d' => adet   (bugüne kadar, sıralı)
+     */
+    public static function aktiviteGunluk(int $userId, int $gun = 90): array
+    {
+        $baslangic = now()->subDays($gun - 1)->startOfDay();
+
+        $tarihler = [];
+        for ($i = 0; $i < $gun; $i++) {
+            $tarihler[$baslangic->copy()->addDays($i)->toDateString()] = 0;
+        }
+
+        $ekle = function (\Illuminate\Support\Collection $tarihKolonu) use (&$tarihler): void {
+            foreach ($tarihKolonu as $tarih) {
+                $g = \Illuminate\Support\Carbon::parse($tarih)->toDateString();
+                if (array_key_exists($g, $tarihler)) {
+                    $tarihler[$g]++;
+                }
+            }
+        };
+
+        $ekle(\App\Models\RiskDegerlendirmesi::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
+            ->where('created_at', '>=', $baslangic)->pluck('created_at'));
+
+        $ekle(\App\Models\RiskMaddesi::query()
+            ->whereHas('riskDegerlendirmesi.firma', fn ($q) => $q->where('user_id', $userId))
+            ->where('created_at', '>=', $baslangic)->pluck('created_at'));
+
+        $ekle(\App\Models\RiskSablonu::query()->where('user_id', $userId)
+            ->where('created_at', '>=', $baslangic)->pluck('created_at'));
+
+        $ekle(Firma::query()->where('user_id', $userId)
+            ->where('created_at', '>=', $baslangic)->pluck('created_at'));
+
+        $ekle(Calisan::query()->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
+            ->where('created_at', '>=', $baslangic)->pluck('created_at'));
+
+        return $tarihler;
+    }
+
     /** Profilim başlık kartları + Genel Bakış (isgpratik 5.jpg). */
     public static function profilOzeti(int $userId): array
     {
@@ -135,6 +196,13 @@ class PortfoyKarne
             ->where('puan', '>', $onemliEsik)
             ->count();
 
+        $calisansizFirma = Firma::query()
+            ->where('user_id', $userId)
+            ->whereDoesntHave('calisanlar', fn ($q) => $q->where('aktif', true))
+            ->count();
+
+        $ozet = static::ozet($userId);
+
         return [
             'firma' => $firmalar->count(),
             'calisan' => (int) Calisan::query()
@@ -144,8 +212,10 @@ class PortfoyKarne
                 ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))->count(),
             'risk_sablonu' => \App\Models\RiskSablonu::query()->where('user_id', $userId)->count(),
             'onemli_risk' => $onemliRisk,
+            'calisansiz_firma' => $calisansizFirma,
+            'evrak_eksigi' => $ozet['evrak_eksigi'],
             'tehlike_dagilimi' => $tehlikeDagilimi,
-            'uyum_yuzde' => static::ozet($userId)['uyum_yuzde'],
+            'uyum_yuzde' => $ozet['uyum_yuzde'],
         ];
     }
 

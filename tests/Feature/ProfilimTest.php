@@ -83,6 +83,50 @@ class ProfilimTest extends TestCase
             ->call('sekmeSec', 'yok')->assertSet('sekme', 'diger');
     }
 
+    public function test_unvan_ayari_action_kullaniciyi_gunceller(): void
+    {
+        Livewire::test(Profilim::class)
+            ->callAction('unvanAyari', [
+                'unvan' => 'a_sinifi',
+                'telefon' => '0555 111 22 33',
+                'sertifika_no' => 'ABC-123',
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame('a_sinifi', $this->uzman->fresh()->unvan);
+        $this->assertSame('0555 111 22 33', $this->uzman->fresh()->telefon);
+    }
+
+    public function test_kase_bilgisi_action_gorseli_kaydeder(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        Livewire::test(Profilim::class)
+            ->callAction('kaseBilgisi', [
+                'kase_gorseli' => \Illuminate\Http\Testing\File::image('kase.png'),
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertNotNull($this->uzman->fresh()->kase_gorseli);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($this->uzman->fresh()->kase_gorseli);
+    }
+
+    public function test_calisan_dagilimi_ve_aktivite_hesaplanir(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'A Firma']);
+        $b = Firma::factory()->for($this->uzman)->create(['unvan' => 'B Firma']);
+        Calisan::create(['firma_id' => $a->id, 'ad_soyad' => 'x', 'aktif' => true]);
+        Calisan::create(['firma_id' => $a->id, 'ad_soyad' => 'y', 'aktif' => true]);
+
+        $dagilim = PortfoyKarne::calisanDagilimi($this->uzman->id);
+        $this->assertSame(2, $dagilim['A Firma']);
+        $this->assertSame(0, $dagilim['B Firma']);
+
+        $aktivite = PortfoyKarne::aktiviteGunluk($this->uzman->id, 90);
+        $this->assertCount(90, $aktivite);
+        $this->assertGreaterThanOrEqual(2, $aktivite[now()->toDateString()]); // bugün 2 firma + 2 çalışan
+    }
+
     public function test_calisanlar_yalniz_kendi_firmalarindan_gelir(): void
     {
         $benim = Firma::factory()->for($this->uzman)->create();

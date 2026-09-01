@@ -6,7 +6,13 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Support\PortfoyKarne;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
@@ -58,6 +64,64 @@ class Profilim extends Page
         }
     }
 
+    /**
+     * @return array<Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('unvanAyari')
+                ->label('Ünvan & İletişim')
+                ->icon('heroicon-o-identification')
+                ->color('gray')
+                ->fillForm(fn (): array => [
+                    'unvan' => $this->kullanici->unvan,
+                    'telefon' => $this->kullanici->telefon,
+                    'sertifika_no' => $this->kullanici->sertifika_no,
+                    'sertifika_gecerlilik' => $this->kullanici->sertifika_gecerlilik,
+                ])
+                ->schema([
+                    Select::make('unvan')
+                        ->label('Ünvan / Sınıf')
+                        ->options(config('isg.uzman_unvanlari'))
+                        ->native(false)
+                        ->required(),
+                    TextInput::make('telefon')->label('Telefon')->tel(),
+                    TextInput::make('sertifika_no')->label('Sertifika No'),
+                    DatePicker::make('sertifika_gecerlilik')->label('Sertifika Geçerlilik'),
+                ])
+                ->action(function (array $data): void {
+                    Filament::auth()->user()->forceFill($data)->save();
+                    unset($this->kullanici);
+                    Notification::make()->title('Ünvan bilgileri güncellendi')->success()->send();
+                }),
+
+            Action::make('kaseBilgisi')
+                ->label('Kaşe Bilgisi')
+                ->icon('heroicon-o-finger-print')
+                ->color('gray')
+                ->modalDescription('Kaşe ve imza görselleri PDF / Word belge çıktılarında kullanılır.')
+                ->fillForm(fn (): array => [
+                    'kase_gorseli' => $this->kullanici->kase_gorseli,
+                    'imza_gorseli' => $this->kullanici->imza_gorseli,
+                ])
+                ->schema([
+                    FileUpload::make('kase_gorseli')->label('Kaşe görseli')
+                        ->image()->imageEditor()
+                        ->disk('public')->directory('uzman-kase')->maxSize(2048)
+                        ->helperText('PNG / JPG; şeffaf zeminli görsel en iyi sonucu verir.'),
+                    FileUpload::make('imza_gorseli')->label('İmza görseli')
+                        ->image()->imageEditor()
+                        ->disk('public')->directory('uzman-imza')->maxSize(2048),
+                ])
+                ->action(function (array $data): void {
+                    Filament::auth()->user()->forceFill($data)->save();
+                    unset($this->kullanici);
+                    Notification::make()->title('Kaşe bilgisi kaydedildi')->success()->send();
+                }),
+        ];
+    }
+
     #[Computed]
     public function kullanici()
     {
@@ -96,5 +160,19 @@ class Profilim extends Page
     public function firmaMatrisi(): array
     {
         return PortfoyKarne::firmaKriterMatrisi(Filament::auth()->id());
+    }
+
+    /** @return array<string, int> firma → aktif çalışan */
+    #[Computed]
+    public function calisanDagilimi(): array
+    {
+        return PortfoyKarne::calisanDagilimi(Filament::auth()->id());
+    }
+
+    /** @return array<string, int> son 90 gün: 'Y-m-d' => aktivite adedi */
+    #[Computed]
+    public function aktivite(): array
+    {
+        return PortfoyKarne::aktiviteGunluk(Filament::auth()->id(), 90);
     }
 }

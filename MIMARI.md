@@ -241,10 +241,15 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   - **Günlük Akış:** geçerliliği geçmiş / 60 gün içinde dolan risk değerlendirmeleri;
     boşsa "Harika! Tüm Görevler Güncel".
   `KontrolMerkeziTest` (6 test).
-- **Faz 3e — Profilim ✅ (isgpratik 5, 137-147.jpg):** `App\Filament\Pages\Profilim`
+- **Faz 3e — Profilim ✅ (isgpratik 5-6, 137-147.jpg):** `App\Filament\Pages\Profilim`
   (slug `profilim`, Yönetim sort 1). Künye + 6 sayaç (`PortfoyKarne::profilOzeti`) + 6
-  pill sekme:
-  - **Genel Bakış:** uyumluluk skoru gauge + tehlike sınıfı dağılımı + ilk yardım kartı.
+  pill sekme. Header aksiyonları: **"Ünvan & İletişim"** (unvan/telefon/sertifika modalı →
+  `User`) + **"Kaşe Bilgisi"** (kase_gorseli / imza_gorseli FileUpload → belge çıktıları).
+  Künyede kaşe önizleme + "Kaşe yüklü/eksik" rozeti.
+  - **Genel Bakış (5-6.jpg):** 4 mini stat (eğitimsiz çalışan —, önemli risk, çalışansız
+    firma, evrak eksiği) + **Dönemsel Aktivite Trendi** (son 30 gün inline SVG sparkline) +
+    uyumluluk skoru gauge + tehlike sınıfı dağılımı + **Çalışan Dağılımı** (firma → çalışan)
+    + **Son 90 Gün Aktivite heatmap** (`PortfoyKarne::aktiviteGunluk`).
   - **Firmalar / Çalışanlar:** kompakt tablo + ilgili resource'a link. Çalışan boşsa
     "Henüz çalışan eklenmemiş".
   - **Firma Takip:** firma × 12 kriter matrisi (`firmaKriterMatrisi`; "—" = modül yok).
@@ -253,8 +258,8 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   - **Diğer:** isgpratik'te olup henüz kurulmayan 6 sekme (Eğitimler, Evrak Takip,
     Pazarlama, Arşiv, Raporlar, Firma Ziyaretleri) + referans notları.
   Hesap düzenleme hâlâ Filament'ın kendi profil sayfasında (`->profile()`, kullanıcı menüsü).
-  `ProfilimTest` (4 test).
-  **70 test toplam.**
+  `ProfilimTest` (7 test).
+  **73 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
