@@ -8,6 +8,7 @@ use App\Models\RiskDegerlendirmesi;
 use App\Models\Tehlike;
 use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
+use App\Support\RiskUretici;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -15,6 +16,7 @@ use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
@@ -51,18 +53,22 @@ class RiskSihirbazi extends Page
         6 => 'Önizleme & PDF',
     ];
 
-    /** Faz 3a'da yalnız "manuel" uygulanıyor. */
     public const YONTEMLER = [
-        'ai' => ['ad' => 'Yapay Zeka Sohbeti ile Risk Üret', 'onerilen' => true, 'hazir' => false,
-            'aciklama' => 'AI önce işyeriniz hakkında sorular sorar, sonra sektöre özel risk maddeleri önerir.'],
+        'ai' => ['ad' => 'Yapay Zeka Sohbeti ile Risk Üret', 'onerilen' => true, 'hazir' => true,
+            'aciklama' => 'Önce işyeriniz hakkında sektöre özel sorular sorulur, sonra kütüphane + duruma özel öneriler üretilir.',
+            'maddeler' => ['Sektör-spesifik soru akışı', 'Cevaplardaki eksiklik → mevzuat riski', 'Mevzuat referanslı öneriler']],
         'manuel' => ['ad' => 'Manuel Seçim', 'onerilen' => false, 'hazir' => true,
-            'aciklama' => 'Risk Kütüphanesinden kategori bazlı seçim yapın.'],
+            'aciklama' => 'Risk kütüphanesinden kendiniz seçin.',
+            'maddeler' => ['Kategori bazlı filtreleme', 'Detaylı risk listesi', 'Tam kontrol']],
         'sablon' => ['ad' => 'Şablonlar & Paylaşılanlar', 'onerilen' => false, 'hazir' => false,
-            'aciklama' => 'Kendi şablonlarınız veya paylaşılan şablonlar.'],
+            'aciklama' => 'Kendi şablonlarınız veya diğer uzmanların paylaştıkları.',
+            'maddeler' => ['Paylaşılan şablon kütüphanesi', 'Kendi hazır risk setleriniz', 'Tek tıkla hızlı yükleme']],
         'kayitli' => ['ad' => 'Kayıtlı Risklerim', 'onerilen' => false, 'hazir' => false,
-            'aciklama' => 'Daha önce eklediğiniz, klasörlenmiş risk maddeleri.'],
-        'excel' => ['ad' => "Excel'den Yükle", 'onerilen' => false, 'hazir' => false,
-            'aciklama' => 'Kendi Excel risk değerlendirmenizi yükleyin.'],
+            'aciklama' => 'Daha önce eklediğiniz risk maddelerinizi klasörlenmiş olarak seçin.',
+            'maddeler' => ['Klasör bazlı görüntüleme', 'Arama ve filtreleme', 'Toplu veya tekli ekleme']],
+        'excel' => ['ad' => 'Risk Değerlendirmenizden Yükleyin', 'onerilen' => false, 'hazir' => false,
+            'aciklama' => 'Kendi Excel risk değerlendirmenizi yükleyin; sistem risk maddelerini otomatik ekler.',
+            'maddeler' => ['Her formatı akıllı algılama', 'Eksik puan/önlem tamamlama', 'Tüm maddeler otomatik eklenir']],
     ];
 
     public int $adim = 1;
@@ -88,10 +94,58 @@ class RiskSihirbazi extends Page
 
     public ?string $varsayilanTermin = null;
 
+    /*
+    | Adım 3 — "Yapay Zeka" (kural tabanlı) alt akışı (isgpratik 103-115)
+    | aiAsama: baslangic | sektor | altkategori | sohbet | sonuc
+    */
+    public string $aiAsama = 'baslangic';
+
+    public ?string $aiSektor = null;
+
+    /** @var array<int, string> seçilen alt kategori etiketleri */
+    public array $aiAltKategoriler = [];
+
+    /** @var array<string, string|array<int,string>> soru anahtarı => cevap */
+    public array $aiCevaplar = [];
+
+    /** @var array<int, string> "Atla" denen soru anahtarları */
+    public array $aiAtlananlar = [];
+
+    /** Çoklu soruda "Cevabı Gönder" öncesi geçici seçim. */
+    public array $aiGecici = [];
+
+    /** @var array<int, array<string, mixed>> üretilen aday riskler */
+    public array $aiAdaylar = [];
+
+    /** @var array<int, string> seçilen aday anahtarları */
+    public array $aiSecilenAdaylar = [];
+
+    /** Adıma göre birincil buton etiketi (isgpratik: "Yöntem Seç", "Risk Ekle" …). */
+    public const ILERI_ETIKET = [
+        1 => 'Yöntem Seç',
+        2 => 'Risk Ekle',
+        3 => 'Devam Et',
+        4 => 'Devam Et',
+        5 => 'Önizlemeye Geç',
+    ];
+
     public function mount(): void
     {
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
+    }
+
+    public function sifirla(): void
+    {
+        $this->reset([
+            'adim', 'firmaId', 'gecerlilikTarihi', 'yontem', 'yontemSecim',
+            'acikKategoriler', 'secilenler', 'etkilenenDiger', 'varsayilanTermin',
+            'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
+            'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar',
+        ]);
+        $this->raporTarihi = now()->toDateString();
+        $this->gecerlilikTarihiHesapla();
+        unset($this->firma, $this->fineKinney);
     }
 
     /*
@@ -257,6 +311,194 @@ class RiskSihirbazi extends Page
         if ($this->adim < 5) {
             $this->adim = 5;
         }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Adım 3 — "Yapay Zeka" (kural tabanlı) alt akışı
+    |--------------------------------------------------------------------------
+    */
+
+    public function aiBaslat(): void
+    {
+        $this->aiAsama = 'sektor';
+    }
+
+    public function aiSektorSec(string $anahtar): void
+    {
+        $this->aiSektor = $anahtar;
+    }
+
+    public function aiSektorOnayla(): void
+    {
+        if ($this->aiSektor) {
+            $this->aiAsama = 'altkategori';
+        }
+    }
+
+    public function aiAltKategoriToggle(int $index): void
+    {
+        $etiket = config('isg.risk_ai.sektorler.'.$this->aiSektor.'.alt_kategoriler.'.$index);
+
+        if ($etiket === null) {
+            return;
+        }
+
+        $this->aiAltKategoriler = in_array($etiket, $this->aiAltKategoriler, true)
+            ? array_values(array_diff($this->aiAltKategoriler, [$etiket]))
+            : [...$this->aiAltKategoriler, $etiket];
+    }
+
+    public function aiAltKategoriOnayla(): void
+    {
+        $this->aiAsama = 'sohbet';
+        $this->aiGecici = [];
+    }
+
+    /** Blade için: sırada sorulacak soru (yoksa null → aday üretimine geçilir). */
+    public function aiSiradakiSoru(): ?array
+    {
+        return RiskUretici::siradakiSoru(
+            (string) $this->aiSektor,
+            array_keys($this->aiCevaplar),
+            $this->aiAtlananlar,
+        );
+    }
+
+    public function aiCevapla(string $anahtar, string $deger, bool $coklu): void
+    {
+        if (! $coklu) {
+            $this->aiCevaplar[$anahtar] = $deger;
+            $this->aiGecici = [];
+            $this->aiSohbetIlerlet();
+
+            return;
+        }
+
+        $this->aiGecici = in_array($deger, $this->aiGecici, true)
+            ? array_values(array_diff($this->aiGecici, [$deger]))
+            : [...$this->aiGecici, $deger];
+    }
+
+    public function aiCokluGonder(string $anahtar): void
+    {
+        $this->aiCevaplar[$anahtar] = $this->aiGecici;
+        $this->aiGecici = [];
+        $this->aiSohbetIlerlet();
+    }
+
+    public function aiSoruAtla(string $anahtar): void
+    {
+        $this->aiAtlananlar[] = $anahtar;
+        $this->aiGecici = [];
+        $this->aiSohbetIlerlet();
+    }
+
+    public function aiOncekiSoru(): void
+    {
+        // Son cevaplanan / atlanan soruyu geri al
+        if (! empty($this->aiCevaplar)) {
+            array_pop($this->aiCevaplar);
+        } elseif (! empty($this->aiAtlananlar)) {
+            array_pop($this->aiAtlananlar);
+        }
+
+        $this->aiGecici = [];
+
+        if ($this->aiAsama === 'sonuc') {
+            $this->aiAsama = 'sohbet';
+        }
+    }
+
+    private function aiSohbetIlerlet(): void
+    {
+        if ($this->aiSiradakiSoru() === null) {
+            $this->aiAdaylariUret();
+        }
+    }
+
+    public function aiAdaylariUret(): void
+    {
+        $this->aiAdaylar = RiskUretici::uret(
+            (string) $this->aiSektor,
+            $this->aiAltKategoriler,
+            $this->aiCevaplar,
+        );
+
+        // Varsayılan: puanı önerilmiş (cevap kaynaklı) adaylar seçili gelir
+        $this->aiSecilenAdaylar = collect($this->aiAdaylar)
+            ->filter(fn ($a) => $a['kaynak'] === 'ai')
+            ->pluck('anahtar')
+            ->all();
+
+        $this->aiAsama = 'sonuc';
+    }
+
+    public function aiAdayToggle(string $anahtar): void
+    {
+        $this->aiSecilenAdaylar = in_array($anahtar, $this->aiSecilenAdaylar, true)
+            ? array_values(array_diff($this->aiSecilenAdaylar, [$anahtar]))
+            : [...$this->aiSecilenAdaylar, $anahtar];
+    }
+
+    public function aiTumAdaylar(bool $sec): void
+    {
+        $this->aiSecilenAdaylar = $sec
+            ? collect($this->aiAdaylar)->pluck('anahtar')->all()
+            : [];
+    }
+
+    public function aiAdaylariEkle(): void
+    {
+        $eklenecek = collect($this->aiAdaylar)
+            ->whereIn('anahtar', $this->aiSecilenAdaylar);
+
+        foreach ($eklenecek as $aday) {
+            $zaten = collect($this->secilenler)->contains(
+                fn ($m) => Str::lower(trim($m['tehlike'] ?? '')) === Str::lower(trim($aday['tehlike'] ?? '')),
+            );
+
+            if (! $zaten) {
+                $this->secilenler[] = $aday;
+            }
+        }
+
+        if (count($this->secilenler) > 0) {
+            $this->adim = 4;
+        }
+    }
+
+    public function aiSektorEtiketi(): ?string
+    {
+        return $this->aiSektor
+            ? config('isg.risk_ai.sektorler.'.$this->aiSektor.'.ad')
+            : null;
+    }
+
+    /** Sohbet başlığı için: cevaplardan tetiklenen aday risk sayısı (kaba). */
+    public function aiTetiklenenSayisi(): int
+    {
+        $n = 0;
+
+        foreach (config('isg.risk_ai.sorular', []) as $soru) {
+            $secim = (array) ($this->aiCevaplar[$soru['anahtar']] ?? []);
+
+            foreach ($soru['secenekler'] as $s) {
+                if (in_array($s['deger'], $secim, true)) {
+                    $n += count($s['riskler'] ?? []);
+                }
+            }
+        }
+
+        return $n;
+    }
+
+    /** Cevaplanan soru sayısı / sektöre uygun toplam. */
+    public function aiIlerleme(): string
+    {
+        $cevaplanan = count($this->aiCevaplar) + count($this->aiAtlananlar);
+
+        return $cevaplanan.' / '.RiskUretici::soruSayisi((string) $this->aiSektor);
     }
 
     /*

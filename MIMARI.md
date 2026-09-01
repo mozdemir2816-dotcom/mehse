@@ -161,11 +161,22 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
   - **Adım 1:** firma seç (yalnız kullanıcının firmaları) + künye kartı + rapor/geçerlilik
     tarihi (tehlike sınıfına göre otomatik, `Firma::riskGecerlilikYili()`) + yöntem
     (5×5 / Fine-Kinney).
-  - **Adım 2:** 5 yöntem kartı (`RiskSihirbazi::YONTEMLER`); Faz 3a'da yalnız **Manuel
-    Seçim** `hazir`, diğerleri "yakında" (tıklanınca uyarı).
+  - **Adım 2:** 5 yöntem kartı (`RiskSihirbazi::YONTEMLER`, madde listeli, "ÖNERİLEN"
+    rozeti); **Manuel Seçim + Yapay Zeka** `hazir`, Şablon/Kayıtlı/Excel "yakında".
+    Adıma göre buton etiketi (`ILERI_ETIKET`: "Yöntem Seç" / "Risk Ekle" …).
   - **Adım 3 (Manuel):** `App\Support\RiskKutuphanesi` — `TehlikeKategorisi` accordion,
     tehlike tek tek veya "Tümünü ekle"; mükerrer engellenir. "Elle boş madde ekle".
-  - **Adım 4:** Tercihler (etkilenen taşeron/ziyaretçi varsayılanı, varsayılan termin).
+  - **Adım 3 (Yapay Zeka — kural tabanlı, isgpratik 103-115.jpg):** LLM YOK.
+    `config/isg.php → risk_ai` (13 sektör + alt kategoriler + ~11 mevzuat referanslı
+    soru; her seçenek eksiklikse `riskler[]` tetikler) + `App\Support\RiskUretici`.
+    Alt akış (`aiAsama`): başlangıç → **1. Aşama sektör** → **2. Aşama alt kategori**
+    → **sohbet** (sorular tek tek; radyo/çoklu; ipucu = mevzuat; "Cevabı Gönder / Atla
+    / Önceki Soru"; sektöre uymayan soru atlanır) → **sonuç** (aday riskler, çoklu seç,
+    "Tümünü Seç/Kaldır"). Adaylar = cevap-tetikli riskler (öneri O/Ş ile, seçili gelir)
+    + sektöre göre kütüphane baz riskleri (`genel_isyeri` + eşleşen kategori).
+    "Seçili N riski ekle" → `secilenler` → Adım 4.
+  - **Adım 4:** Tercihler — puanlama yöntemi (5×5 / Fine-Kinney), etkilenen
+    taşeron/ziyaretçi varsayılanı, varsayılan termin.
   - **Adım 5 (Risklerim):** seçilen maddeler kart listesi — bölüm/faaliyet/tehlike
     düzenlenebilir + O/(F)/Ş select → canlı puan/düzey (renk bandı).
   - **Adım 6:** özet (künye rozetleri + düzey dağılımı) + **Kaydet** →
@@ -174,10 +185,10 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
   - `RiskDegerlendirmesiResource` artık **"Kayıtlı Değerlendirmeler"** (slug
     `risk-degerlendirmelerim`, sort 2, klasör ikonu); List header'ında "Yeni (Sihirbaz)"
     + "Boş kayıt". `barryvdh/laravel-dompdf` bağımlılığı eklendi (PDF için, henüz kullanılmıyor).
-  - `RiskSihirbaziTest` (8 test). **19 test toplam.**
-  - **Faz 3b (ekran görüntüleri geldikçe):** Risk PDF çıktısı (kapak → prosedür → tablo →
-    ekip), AI risk üretimi (istem-kopyala iskele), Şablonlar & Paylaşılanlar, Kayıtlı
-    Risklerim (klasörlü), Excel içe/dışa aktarma.
+  - `RiskSihirbaziTest` (12 test). **23 test toplam.**
+  - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Şablonlar &
+    Paylaşılanlar (`RiskSablonu` modeli gerekli); Kayıtlı Risklerim (klasörlü); Excel
+    içe/dışa aktarma; gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur.
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).

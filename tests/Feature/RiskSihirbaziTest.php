@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\Tehlike;
 use App\Models\User;
+use App\Support\RiskUretici;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -126,6 +127,103 @@ class RiskSihirbaziTest extends TestCase
         $this->assertSame(15.0, $ilk->puan);
         $this->assertSame('Yüksek Risk', $ilk->duzey);
         $this->assertSame('Sürekli', $ilk->termin);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Yapay Zeka (kural tabanlı) akışı — isgpratik 103-115
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_ai_yontemi_sektor_ve_alt_kategori_akisi(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')
+            ->call('yontemSec', 'ai')
+            ->assertSet('yontemSecim', 'ai')
+            ->call('ileri')
+            ->assertSet('adim', 3)
+            ->call('aiBaslat')
+            ->assertSet('aiAsama', 'sektor')
+            ->call('aiSektorSec', 'insaat')
+            ->call('aiSektorOnayla')
+            ->assertSet('aiAsama', 'altkategori')
+            ->call('aiAltKategoriToggle', 0)
+            ->call('aiAltKategoriOnayla')
+            ->assertSet('aiAsama', 'sohbet');
+    }
+
+    public function test_ai_sohbet_cevaplari_aday_risk_uretir_ve_maddelere_eklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'ai')->call('ileri')
+            ->call('aiBaslat')
+            ->call('aiSektorSec', 'ofis')
+            ->call('aiSektorOnayla')
+            ->call('aiAltKategoriOnayla');
+
+        // Soruları cevapla — bazı cevaplar eksiklik → risk tetikler
+        $cevaplar = [
+            'calisan_sayisi' => 'mikro',
+            'vardiya' => 'uc',              // gece vardiyası riski
+            'tatbikat' => 'hic',            // tatbikat riski
+            'yangin_altyapi' => 'yok',      // yangın altyapı riski
+            'elektrik' => 'tam',
+            'havalandirma' => 'yetersiz',   // havalandırma riski
+            'kaza_gecmisi' => 'yok',
+            'psikososyal' => 'yonetiliyor',
+        ];
+
+        foreach ($cevaplar as $anahtar => $deger) {
+            $component->call('aiCevapla', $anahtar, $deger, false);
+        }
+        // çoklu soru: egitimler → "hicbiri"
+        $component->call('aiCevapla', 'egitimler', 'hicbiri', true)
+            ->call('aiCokluGonder', 'egitimler');
+
+        $component->assertSet('aiAsama', 'sonuc');
+        $this->assertNotEmpty($component->get('aiAdaylar'));
+
+        // "ai" kaynaklı adaylar varsayılan seçili
+        $secili = $component->get('aiSecilenAdaylar');
+        $this->assertNotEmpty($secili);
+
+        $component->call('aiAdaylariEkle')
+            ->assertSet('adim', 4);
+
+        $this->assertNotEmpty($component->get('secilenler'));
+        // gece vardiyası riski eklendi mi?
+        $tehlikeler = collect($component->get('secilenler'))->pluck('tehlike')->implode(' | ');
+        $this->assertStringContainsString('Gece çalışması', $tehlikeler);
+    }
+
+    public function test_risk_uretici_eksik_egitim_riskini_tetikler(): void
+    {
+        $adaylar = RiskUretici::uret('ofis', [], ['egitimler' => ['hicbiri']]);
+
+        $this->assertTrue(
+            collect($adaylar)->contains(fn ($a) => str_contains($a['tehlike'], 'eğitimi verilmemiş')),
+        );
+        // Kütüphane baz riskleri de gelir (genel_isyeri)
+        $this->assertTrue(collect($adaylar)->contains('kaynak', 'kutuphane'));
+    }
+
+    public function test_ai_soru_atlanabilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'ai')->call('ileri')
+            ->call('aiBaslat')->call('aiSektorSec', 'ofis')->call('aiSektorOnayla')->call('aiAltKategoriOnayla')
+            ->call('aiSoruAtla', 'calisan_sayisi')
+            ->assertSet('aiAtlananlar', ['calisan_sayisi']);
     }
 
     public function test_baska_uzmanin_firmasi_listede_gorunmez(): void
