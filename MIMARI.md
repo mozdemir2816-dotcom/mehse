@@ -167,6 +167,13 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   `FilamentUser`; `Firma` modeli + `FirmaResource` (bölümlü form, tehlike sınıfı rozetli
   tablo, nav rozeti, portföy filtresi); `Calisan` modeli + `CalisanResource` + Firma
   altında RelationManager; `PortfoyOzetiWidget`. `FirmaCalisanTest` (6 test).
+  - **Excel'den toplu firma yükleme ✅:** `App\Support\FirmaExcelIceAktarici`
+    (phpoffice/phpspreadsheet) — ilk satır başlık, sütun adları Türkçe karakter/boşluk
+    farkı gözetmeksizin eşleştirilir; yalnız "Unvan" zorunlu, "Tehlike Sınıfı" hem
+    anahtar hem Türkçe etiketle eşleşir (bilinmeyense `az_tehlikeli`), tarihler Excel
+    seri sayısı/metin olarak çözülür, boş satırlar sessizce atlanır. `ListFirmas`
+    header'ında "Şablon İndir" (örnek .xlsx) + "Excel'den Yükle" (FileUpload modal,
+    sonuç/hata özeti bildirimle). `FirmaExcelIceAktariciTest` (7 test).
 - **Faz 2 — Risk Değerlendirme çekirdeği ✅ (commit sonrası):**
   - `config/isg.php` → `risk_yontemleri`, `risk_matris_5x5` / `risk_fine_kinney` (ölçek
     metinleri + puan → düzey bantları; **Fine-Kinney ondalık anahtarlar string**),
