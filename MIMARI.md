@@ -40,7 +40,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Grup | Modül | Slug | Durum |
 |---|---|---|---|
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | **hazır** (3 sekme; portföy karnesi — 12 kriter) |
-| Yönetim | Profilim | `/admin/profile` (özel) | planlandı |
+| Yönetim | Profilim | `profilim` | **hazır** (künye + sayaçlar + 6 sekme) |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | planlandı (Chrome eklentisi — sadece bilgi/stub) |
 | **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (kural tabanlı) yöntemleri; Şablon/Kayıtlı/Excel + PDF Faz 3b |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
@@ -97,14 +97,18 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 - Çalışan Asistanı: firma seç → çalışan eksikleri; seçilmeden boş durum (136.jpg).
 - Günlük Akış boş durum: "Harika! Tüm Görevler Güncel".
 
-### Profilim (5-6.jpg)
-- Künye: ad, e-posta, rol rozeti. Butonlar: Mesajlarım, Kaşe Bilgisi, Tanıtım Turu, Nasıl Kullanılır.
-- Sayaç: Firmalarım, Çalışanlarım, Risklerim, Notlarım, Önemli Risk, Raporlarım.
-- Sekmeler: Genel Bakış / Firmalar / Çalışanlar / Eğitimler / Evrak Takip / Firma Takip /
-  Pazarlama / Arşiv / Risklerim / Raporlar.
-- Genel Bakış: Uyumluluk Skoru gauge, İlkYardım Sertifikası kartı, Performans Profili,
-  Dönemsel Aktivite Trendi (çizgi), Tehlike Sınıfı Dağılımı (donut), Çalışan Dağılımı
-  (firma başına), Son 90 Gün Aktivite (heatmap).
+### Profilim (5, 137-147.jpg) — **kuruldu, bkz. Faz 3e**
+- Künye: ad, e-posta, ünvan rozeti, Aktif rozeti, "Hesap Ayarları" (Filament profil).
+- Sayaç: Firmalarım / Çalışanlarım / Risk Değerlendirmesi / Risk Şablonları / Önemli Risk /
+  Raporlarım.
+- Sekmeler: **Genel Bakış / Firmalar / Çalışanlar / Firma Takip / Risklerim / Diğer**.
+  (isgpratik ayrıca Eğitimler 139-140, Evrak Takip 141, Pazarlama 143, Arşiv 144,
+  Raporlar 146, Firma Ziyaretleri 147 sekmelerini gösterir → "Diğer" sekmesinde
+  bekleyen liste; ilgili model gelince açılır.)
+- Genel Bakış: Uyumluluk Skoru (conic-gradient gauge), Tehlike Sınıfı Dağılımı (bar),
+  İlk Yardım bilgi kartı. Performans/trend/heatmap ileride.
+- Firma Takip: firma × 12 yasal kriter matrisi (isgpratik 141-142 —
+  `PortfoyKarne::firmaKriterMatrisi`).
 
 ### İSG-KATİP Robot (7-9.jpg)
 - Chrome eklentisi ile İSG-KATİP portal otomasyonu. "Teknik Gereksinimler", "Kurulum
@@ -237,7 +241,20 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   - **Günlük Akış:** geçerliliği geçmiş / 60 gün içinde dolan risk değerlendirmeleri;
     boşsa "Harika! Tüm Görevler Güncel".
   `KontrolMerkeziTest` (6 test).
-  **65 test toplam.**
+- **Faz 3e — Profilim ✅ (isgpratik 5, 137-147.jpg):** `App\Filament\Pages\Profilim`
+  (slug `profilim`, Yönetim sort 1). Künye + 6 sayaç (`PortfoyKarne::profilOzeti`) + 6
+  pill sekme:
+  - **Genel Bakış:** uyumluluk skoru gauge + tehlike sınıfı dağılımı + ilk yardım kartı.
+  - **Firmalar / Çalışanlar:** kompakt tablo + ilgili resource'a link. Çalışan boşsa
+    "Henüz çalışan eklenmemiş".
+  - **Firma Takip:** firma × 12 kriter matrisi (`firmaKriterMatrisi`; "—" = modül yok).
+  - **Risklerim:** Sektör Şablonları / Risk Kütüphanesi / Risk Değerlendirmeleri sayaç
+    kartları + linkler.
+  - **Diğer:** isgpratik'te olup henüz kurulmayan 6 sekme (Eğitimler, Evrak Takip,
+    Pazarlama, Arşiv, Raporlar, Firma Ziyaretleri) + referans notları.
+  Hesap düzenleme hâlâ Filament'ın kendi profil sayfasında (`->profile()`, kullanıcı menüsü).
+  `ProfilimTest` (4 test).
+  **70 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;

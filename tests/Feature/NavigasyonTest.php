@@ -26,6 +26,7 @@ class NavigasyonTest extends TestCase
         return [
             // Yönetim
             'kontrol merkezi' => ['/admin/kontrol-merkezi'],
+            'profilim' => ['/admin/profilim'],
             'isg-katip robot' => ['/admin/isg-katip-robot'],
             'firmalar' => ['/admin/firmalar'],
             'calisanlar' => ['/admin/calisanlar'],

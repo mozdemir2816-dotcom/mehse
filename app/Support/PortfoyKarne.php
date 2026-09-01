@@ -75,12 +75,78 @@ class PortfoyKarne
         }, config('isg.kontrol_merkezi.kriterler', []));
     }
 
-    private static function firmaKriterKarsilarMi(Firma $firma, string $anahtar): bool
+    public static function firmaKriterKarsilarMi(Firma $firma, string $anahtar): bool
     {
         return match ($anahtar) {
             'risk_degerlendirmesi' => $firma->riskDegerlendirmeleri()->exists(),
             default => false, // ilgili modül kurulunca burada gerçek kontrol
         };
+    }
+
+    /**
+     * Profilim "Evrak / Firma Takip" — firma × kriter matrisi (isgpratik 141-142).
+     *
+     * @return array<int, array{firma: Firma, hucreler: array<string, bool>, oran: int}>
+     */
+    public static function firmaKriterMatrisi(int $userId): array
+    {
+        $kriterler = config('isg.kontrol_merkezi.kriterler', []);
+
+        return Firma::query()
+            ->where('user_id', $userId)
+            ->orderBy('unvan')
+            ->get()
+            ->map(function (Firma $firma) use ($kriterler): array {
+                $hucreler = [];
+                $karsilanan = 0;
+                $hazirSayi = 0;
+
+                foreach ($kriterler as $k) {
+                    $var = $k['hazir'] && static::firmaKriterKarsilarMi($firma, $k['anahtar']);
+                    $hucreler[$k['anahtar']] = $var;
+
+                    if ($k['hazir']) {
+                        $hazirSayi++;
+                        $karsilanan += $var ? 1 : 0;
+                    }
+                }
+
+                return [
+                    'firma' => $firma,
+                    'hucreler' => $hucreler,
+                    'oran' => $hazirSayi > 0 ? (int) round($karsilanan / $hazirSayi * 100) : 0,
+                ];
+            })
+            ->all();
+    }
+
+    /** Profilim başlık kartları + Genel Bakış (isgpratik 5.jpg). */
+    public static function profilOzeti(int $userId): array
+    {
+        $firmalar = Firma::query()->where('user_id', $userId)->get();
+
+        $tehlikeDagilimi = collect(config('isg.tehlike_siniflari'))
+            ->mapWithKeys(fn ($ad, $anahtar) => [$ad => $firmalar->where('tehlike_sinifi', $anahtar)->count()])
+            ->all();
+
+        $onemliEsik = (int) config('isg.onemli_risk_esigi', 140);
+        $onemliRisk = \App\Models\RiskMaddesi::query()
+            ->whereHas('riskDegerlendirmesi.firma', fn ($q) => $q->where('user_id', $userId))
+            ->where('puan', '>', $onemliEsik)
+            ->count();
+
+        return [
+            'firma' => $firmalar->count(),
+            'calisan' => (int) Calisan::query()
+                ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
+                ->where('aktif', true)->count(),
+            'risk_degerlendirmesi' => \App\Models\RiskDegerlendirmesi::query()
+                ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))->count(),
+            'risk_sablonu' => \App\Models\RiskSablonu::query()->where('user_id', $userId)->count(),
+            'onemli_risk' => $onemliRisk,
+            'tehlike_dagilimi' => $tehlikeDagilimi,
+            'uyum_yuzde' => static::ozet($userId)['uyum_yuzde'],
+        ];
     }
 
     private static function firmaTamUyumluMu(Firma $firma): bool
