@@ -37,16 +37,24 @@
 <body>
 
 {{-- KAPAK --}}
+@php $uzman = $firma?->user; @endphp
 <div class="kapak">
     <div style="font-size:12px;color:#666">{{ $firma?->unvan }}</div>
     <h1>ACİL DURUM EYLEM PLANI</h1>
-    <div style="font-size:12px">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu</div>
+    <div style="font-size:12px">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu — İşyerlerinde Acil Durumlar Hakkında Yönetmelik</div>
     <div class="firma">{{ $firma?->unvan }}</div>
     <div style="font-size:11px;margin-top:6px">{{ $firma?->adres }}</div>
+    <div style="font-size:11px;margin-top:6px">NACE Kodu: {{ $firma?->nace_kodu ?: '—' }} &nbsp;·&nbsp; SGK Sicil No: {{ $firma?->sgk_sicil_no ?: '—' }}</div>
     <div style="font-size:11px;margin-top:30px">
         Doküman No: {{ $plan->dokuman_no }}<br>
-        Rapor Tarihi: {{ $plan->rapor_tarihi?->format('d.m.Y') }}<br>
-        Geçerlilik: {{ $plan->gecerlilik_tarihi?->format('d.m.Y') }}
+        @if ($plan->revizyon_no)
+            Rev. Tarihi / No: {{ $plan->revizyon_no }}<br>
+        @endif
+        Hazırlanma Tarihi: {{ $plan->rapor_tarihi?->format('d.m.Y') }}<br>
+        Geçerlilik Tarihi: {{ $plan->gecerlilik_tarihi?->format('d.m.Y') }}
+    </div>
+    <div style="font-size:11px;margin-top:20px;color:#444">
+        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
     </div>
 </div>
 
@@ -60,9 +68,24 @@
         <tr><td>Tehlike Sınıfı</td><td>{{ $firma?->tehlikeSinifiEtiketi() }}</td></tr>
         <tr><td>Çalışan Sayısı</td><td>{{ $firma?->calisan_sayisi ?: '—' }}</td></tr>
         <tr><td>Adres</td><td>{{ $firma?->adres ?: '—' }}</td></tr>
+        <tr><td>Toplanma Yeri</td><td>{{ $plan->toplanma_yeri ?: '—' }}</td></tr>
     </table>
 
-    <h2 style="margin-top:24px">2. ACİL DURUM DESTEK EKİPLERİ</h2>
+    <h2 style="margin-top:24px">2. İŞYERİ İÇİN BELİRLENEN ACİL DURUMLAR</h2>
+    <ol style="margin:8px 0 0;padding-left:18px;font-size:11px">
+        @forelse ($plan->konuAdlari() as $konuAdi)
+            <li>{{ mb_strtoupper($konuAdi, 'UTF-8') }}</li>
+        @empty
+            <li style="list-style:none;color:#888">Henüz acil durum konusu seçilmedi.</li>
+        @endforelse
+    </ol>
+
+    @if ($plan->disaridan_etkileyebilecek_isyerleri)
+        <h2 style="margin-top:24px">3. İŞYERİNİ DIŞARIDAN ETKİLEYEBİLECEK İŞYERLERİ</h2>
+        <p style="font-size:11px;white-space:pre-line">{{ $plan->disaridan_etkileyebilecek_isyerleri }}</p>
+    @endif
+
+    <h2 style="margin-top:24px">4. ACİL DURUM DESTEK EKİPLERİ</h2>
     <table class="ekip">
         <tr><th>Ekip</th><th>Görevliler</th></tr>
         @foreach (config('isg.acil_durum.ekipler') as $anahtar => $ad)
@@ -76,6 +99,28 @@
         Ekip üyeleri, 6331 SK ve İşyerlerinde Acil Durumlar Yönetmeliği uyarınca tehlike sınıfı ve çalışan
         sayısına göre belirlenir; söndürme ve kurtarma ekiplerinde en az bir kişi eğitimli olmalıdır.
     </p>
+
+    <h2 style="margin-top:24px">5. ACİL DURUMLARDA İRTİBAT KURULACAK KURULUŞLAR VE TELEFONLARI</h2>
+    <table class="ekip">
+        <tr><th>Kuruluş</th><th>Telefon</th></tr>
+        @foreach (config('isg.acil_durum.irtibat_telefonlari') as $kurulus => $telefon)
+            <tr><td>{{ $kurulus }}</td><td>{{ $telefon }}</td></tr>
+        @endforeach
+    </table>
+</div>
+
+{{-- TAHLİYE PLANI --}}
+<div class="sayfa">
+    <h2>6. TAHLİYE PLANI</h2>
+    @if ($plan->tahliye_plani_gorseli)
+        <img src="{{ public_path('storage/'.$plan->tahliye_plani_gorseli) }}" style="max-width:100%;max-height:620px;margin-top:10px">
+    @else
+        <p style="font-size:11px">
+            Bu sayfaya işyerinin her bölümü için hazırlanan tahliye planı (kaçış yolları, toplanma yeri,
+            acil durum ekipmanlarının konumu ve varsa uyarı sistemlerinin yer aldığı kroki) eklenecektir.
+            Sayfa başlığında yer alan "Tahliye Planı Görseli" ile yüklenebilir.
+        </p>
+    @endif
 </div>
 
 {{-- KONU SAYFALARI --}}
@@ -108,8 +153,12 @@
     <h2>ONAY</h2>
     <table class="imza">
         <tr>
-            <td>İş Güvenliği Uzmanı<br>(Ad – Soyad / İmza – Kaşe)</td>
-            <td>İşveren / İşveren Vekili<br>(Ad – Soyad / İmza)</td>
+            <td>
+                {{ $uzman?->name ?: 'İş Güvenliği Uzmanı' }}
+                @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvanEtiketi() }}</span> @endif
+                <br>(İmza – Kaşe)
+            </td>
+            <td>{{ $firma?->isveren_ad ?: 'İşveren / İşveren Vekili' }}<br>(Ad – Soyad / İmza)</td>
         </tr>
     </table>
     <div class="not">

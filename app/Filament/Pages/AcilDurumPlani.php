@@ -8,6 +8,7 @@ use App\Support\AcilDurumPlaniUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
@@ -42,6 +43,12 @@ class AcilDurumPlani extends Page
     public ?string $raporTarihi = null;
 
     public string $kapakCercevesi = 'klasik';
+
+    public ?string $revizyonNo = null;
+
+    public ?string $toplanmaYeri = null;
+
+    public ?string $disaridanEtkileyebilecekIsyerleri = null;
 
     /** @var array<int, string> seçili konu anahtarları */
     public array $konular = [];
@@ -90,6 +97,9 @@ class AcilDurumPlani extends Page
         $this->dokumanNo = $plan->dokuman_no;
         $this->raporTarihi = $plan->rapor_tarihi?->toDateString() ?? now()->toDateString();
         $this->kapakCercevesi = $plan->kapak_cercevesi ?: 'klasik';
+        $this->revizyonNo = $plan->revizyon_no;
+        $this->toplanmaYeri = $plan->toplanma_yeri;
+        $this->disaridanEtkileyebilecekIsyerleri = $plan->disaridan_etkileyebilecek_isyerleri;
         $this->konular = $plan->konular ?? [];
         $this->ekipMetni = collect(config('isg.acil_durum.ekipler'))
             ->mapWithKeys(fn ($ad, $k) => [$k => implode(', ', $plan->ekipListesi()[$k] ?? [])])
@@ -125,6 +135,9 @@ class AcilDurumPlani extends Page
             'rapor_tarihi' => $this->raporTarihi,
             'gecerlilik_tarihi' => null, // saving hook yeniden hesaplar
             'kapak_cercevesi' => $this->kapakCercevesi,
+            'revizyon_no' => $this->revizyonNo,
+            'toplanma_yeri' => $this->toplanmaYeri,
+            'disaridan_etkileyebilecek_isyerleri' => $this->disaridanEtkileyebilecekIsyerleri,
             'konular' => $this->konular ?: null,
             'ekipler' => collect($this->ekipMetni)
                 ->map(fn ($metin) => array_values(array_filter(array_map('trim', explode(',', (string) $metin)))))
@@ -156,6 +169,24 @@ class AcilDurumPlani extends Page
                     ->title('Word çıktısı yakında')
                     ->body('Şimdilik PDF çıktısı kullanılabilir.')
                     ->warning()->send()),
+
+            Action::make('tahliyePlani')
+                ->label('Tahliye Planı Görseli')
+                ->icon('heroicon-o-map')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalDescription('İşyerinin kat/bölüm krokisi üzerine kaçış yolları, toplanma yeri ve acil durum ekipmanlarının işaretlendiği tahliye planı — İşyerlerinde Acil Durumlar Hakkında Yönetmelik gereği zorunludur.')
+                ->fillForm(fn (): array => ['tahliye_plani_gorseli' => $this->plan()?->tahliye_plani_gorseli])
+                ->schema([
+                    FileUpload::make('tahliye_plani_gorseli')
+                        ->label('Tahliye planı / kroki görseli')
+                        ->image()->imageEditor()
+                        ->disk('public')->directory('acil-durum-tahliye')->maxSize(4096),
+                ])
+                ->action(function (array $data): void {
+                    $this->plan()?->forceFill($data)->save();
+                    Notification::make()->title('Tahliye planı görseli kaydedildi')->success()->send();
+                }),
         ];
     }
 

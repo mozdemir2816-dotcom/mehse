@@ -241,6 +241,20 @@ return [
     'acil_durum' => [
         'hakkinda' => 'Acil Durum Eylem Planı, işyerinizde meydana gelebilecek yangın, deprem, doğal afetler ve diğer acil durumlara karşı alınacak önlemleri içeren yasal bir belgedir. Bu plan, 6331 sayılı İş Sağlığı ve Güvenliği Kanunu kapsamında her işyerinde bulundurulması zorunlu belgelerden biridir.',
 
+        // İşyerlerinde Acil Durumlar Hakkında Yönetmelik EK-2 — ulusal acil durum
+        // hatları (işyerinden bağımsız, sabit). Yerel kurum/kuruluş telefonları
+        // (elektrik/su/doğalgaz arıza hattı vb.) plan sahibince elle eklenir.
+        'irtibat_telefonlari' => [
+            'İtfaiye' => '110 / 112',
+            'Ambulans (Acil Sağlık)' => '112',
+            'Polis' => '155',
+            'Jandarma' => '156',
+            'AFAD' => '122',
+            'Sahil Güvenlik' => '158',
+            'Ulusal Zehir Danışma Merkezi (UZEM)' => '114',
+            'Sosyal Yardımlaşma Hattı (SABİM)' => '184',
+        ],
+
         // Plan yenileme periyodu tehlike sınıfına göre (yıl) — Acil Durumlar Yön.
         'gecerlilik_yili' => [
             'az_tehlikeli' => 6,

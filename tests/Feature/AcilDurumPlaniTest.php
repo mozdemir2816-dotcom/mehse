@@ -71,6 +71,9 @@ class AcilDurumPlaniTest extends TestCase
             ->call('konuToggle', 'yangin')          // çıkar (koşulsuz varsayılan)
             ->set('ekipMetni.sondurme', 'Ali Veli, Ayşe Fatma')
             ->set('kapakCercevesi', 'altin')
+            ->set('revizyonNo', 'Rev.01 — 01.01.2027')
+            ->set('toplanmaYeri', 'Ana kapı önü açık saha')
+            ->set('disaridanEtkileyebilecekIsyerleri', 'Komşu Akaryakıt A.Ş. — Akaryakıt istasyonu — Patlama riski')
             ->call('kaydet');
 
         $plan = AcilDurumPlani::where('firma_id', $firma->id)->firstOrFail();
@@ -78,6 +81,27 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertNotContains('yangin', $plan->konular);
         $this->assertSame('altin', $plan->kapak_cercevesi);
         $this->assertSame(['Ali Veli', 'Ayşe Fatma'], $plan->ekipListesi()['sondurme']);
+        $this->assertSame('Rev.01 — 01.01.2027', $plan->revizyon_no);
+        $this->assertSame('Ana kapı önü açık saha', $plan->toplanma_yeri);
+        $this->assertStringContainsString('Akaryakıt', $plan->disaridan_etkileyebilecek_isyerleri);
+    }
+
+    public function test_tahliye_plani_gorseli_yuklenir(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        AcilDurumPlani::firmaIcin($firma);
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('tahliyePlani', data: [
+                'tahliye_plani_gorseli' => \Illuminate\Http\UploadedFile::fake()->image('kroki.jpg'),
+            ]);
+
+        $plan = AcilDurumPlani::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertNotNull($plan->tahliye_plani_gorseli);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($plan->tahliye_plani_gorseli);
     }
 
     public function test_tum_konular_secilir_ve_kaldirilir(): void
@@ -103,6 +127,44 @@ class AcilDurumPlaniTest extends TestCase
         $yanit = AcilDurumPlaniUretici::pdf($plan);
 
         $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_plan_pdf_yonetmelik_gereği_zorunlu_alanlari_icerir(): void
+    {
+        $uzman = $this->uzman;
+        $uzman->forceFill(['name' => 'Mehmet Özdemir', 'unvan' => 'a_sinifi'])->save();
+
+        $firma = Firma::factory()->for($uzman)->create(['nace_kodu' => '41.00']);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->forceFill([
+            'revizyon_no' => 'Rev.01 — 01.01.2027',
+            'toplanma_yeri' => 'Ana kapı önü açık saha',
+            'disaridan_etkileyebilecek_isyerleri' => 'Komşu Akaryakıt A.Ş. — Akaryakıt istasyonu',
+            'konular' => ['yangin', 'deprem'],
+        ])->save();
+
+        // dompdf metin katmanini ayiklamak yerine, uretimin hata vermeden
+        // gectigini ve HTML asamasinda beklenen icerigin goruntuye girdigini
+        // dogrulamak icin blade'i dogrudan render ediyoruz.
+        $html = view('pdf.acil-durum-plani', [
+            'plan' => $plan->fresh('firma'),
+            'firma' => $firma->fresh(),
+            'hakkinda' => config('isg.acil_durum.hakkinda'),
+        ])->render();
+
+        $this->assertStringContainsString('Mehmet Özdemir', $html);
+        $this->assertStringContainsString('Rev.01', $html);
+        $this->assertStringContainsString('Ana kapı önü açık saha', $html);
+        $this->assertStringContainsString('Komşu Akaryakıt A.Ş.', $html);
+        $this->assertStringContainsString('İRTİBAT KURULACAK KURULUŞLAR', $html);
+        $this->assertStringContainsString('112', $html);
+        $this->assertStringContainsString('NACE Kodu: 41.00', $html);
+
+        $yanit = AcilDurumPlaniUretici::pdf($plan);
         ob_start();
         $yanit->sendContent();
         $icerik = ob_get_clean();

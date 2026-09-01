@@ -40,6 +40,11 @@
                 <input type="text" wire:model="dokumanNo" placeholder="Örn: AD-01"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Rev. Tarihi / No</label>
+                <input type="text" wire:model="revizyonNo" placeholder="Örn: Rev.01 — 15.03.2027"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
         </div>
 
         @if ($this->firma)
@@ -51,6 +56,22 @@
                     <x-filament::badge color="gray">{{ $this->firma->calisan_sayisi ?: '—' }} çalışan</x-filament::badge>
                 </div>
                 <div style="font-size:.8rem;color:rgb(107 114 128)">{{ $this->firma->adres ?: 'Adres girilmemiş' }}</div>
+            </div>
+
+            {{-- Toplanma yeri + dışarıdan etkileyebilecek işyerleri (yönetmelik gereği zorunlu) --}}
+            <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem">
+                <div>
+                    <label style="font-weight:600;font-size:.82rem">Toplanma Yeri</label>
+                    <div style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.2rem">İşyeri dışında, güvenli, tarif edilebilir bir nokta</div>
+                    <input type="text" wire:model="toplanmaYeri" placeholder="Örn: İnşaat alanı girişi, ana yol kenarı açık saha"
+                        style="width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                </div>
+                <div>
+                    <label style="font-weight:600;font-size:.82rem">İşyerini Dışarıdan Etkileyebilecek İşyerleri</label>
+                    <div style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.2rem">Her satıra bir işyeri: unvan, faaliyet konusu, olası etki</div>
+                    <textarea wire:model="disaridanEtkileyebilecekIsyerleri" rows="2" placeholder="Örn: Komşu Akaryakıt A.Ş. — Akaryakıt istasyonu — Patlama/yangın sıçraması riski"
+                        style="width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-family:inherit;font-size:.85rem"></textarea>
+                </div>
             </div>
 
             {{-- Destek ekipleri --}}
