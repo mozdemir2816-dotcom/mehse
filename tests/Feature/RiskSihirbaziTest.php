@@ -55,7 +55,7 @@ class RiskSihirbaziTest extends TestCase
             ->set('firmaId', Firma::factory()->for($this->uzman)->create()->id)
             ->call('ileri')
             ->assertSet('adim', 2)
-            ->call('yontemSec', 'excel')            // hazır değil
+            ->call('yontemSec', 'kayitli')           // hazır değil
             ->assertSet('yontemSecim', null)
             ->call('yontemSec', 'manuel')
             ->assertSet('yontemSecim', 'manuel')
@@ -246,6 +246,32 @@ class RiskSihirbaziTest extends TestCase
             ->call('aiBaslat')->call('aiSektorSec', 'ofis')->call('aiSektorOnayla')->call('aiAltKategoriOnayla')
             ->call('aiSoruAtla', 'calisan_sayisi')
             ->assertSet('aiAtlananlar', ['calisan_sayisi']);
+    }
+
+    public function test_excel_yontemi_dosyayi_okur_ve_secilenlere_ekler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
+            ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', 4, 5],
+            ['Şantiye', 'İksasız kazı', 'Göçük', 3, 5],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->assertSet('excelAdaylar', fn ($adaylar) => count($adaylar) === 2)
+            ->call('excelSecilenleriEkle')
+            ->assertSet('secilenler', fn ($secilenler) => count($secilenler) === 2)
+            ->assertSet('adim', 4);
+
+        unlink($yol);
     }
 
     /*

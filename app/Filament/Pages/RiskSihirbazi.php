@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
+use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
 use App\Support\RiskUretici;
@@ -15,10 +16,12 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
 /**
@@ -31,6 +34,8 @@ use UnitEnum;
  */
 class RiskSihirbazi extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.pages.risk-sihirbazi';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
@@ -67,7 +72,7 @@ class RiskSihirbazi extends Page
         'kayitli' => ['ad' => 'Kayıtlı Risklerim', 'onerilen' => false, 'hazir' => false,
             'aciklama' => 'Daha önce eklediğiniz risk maddelerinizi klasörlenmiş olarak seçin.',
             'maddeler' => ['Klasör bazlı görüntüleme', 'Arama ve filtreleme', 'Toplu veya tekli ekleme']],
-        'excel' => ['ad' => 'Risk Değerlendirmenizden Yükleyin', 'onerilen' => false, 'hazir' => false,
+        'excel' => ['ad' => 'Risk Değerlendirmenizden Yükleyin', 'onerilen' => false, 'hazir' => true,
             'aciklama' => 'Kendi Excel risk değerlendirmenizi yükleyin; sistem risk maddelerini otomatik ekler.',
             'maddeler' => ['Her formatı akıllı algılama', 'Eksik puan/önlem tamamlama', 'Tüm maddeler otomatik eklenir']],
     ];
@@ -121,6 +126,21 @@ class RiskSihirbazi extends Page
     /** @var array<int, string> seçilen aday anahtarları */
     public array $aiSecilenAdaylar = [];
 
+    /*
+    | Adım 3 — "Risk Değerlendirmenizden Yükleyin" alt akışı: kullanıcının
+    | kendi Excel dosyası, esnek başlık algılamayla (RiskDegerlendirmesiExcelOkuyucu).
+    */
+    public ?UploadedFile $excelDosya = null;
+
+    /** @var array<int, array<string, mixed>> dosyadan okunan aday riskler */
+    public array $excelAdaylar = [];
+
+    /** @var array<int, string> seçilen aday anahtarları */
+    public array $excelSecilenAdaylar = [];
+
+    /** @var array<int, string> */
+    public array $excelHatalar = [];
+
     // Adım 6 — sektör şablonu olarak kaydetme
     public ?string $sablonAd = null;
 
@@ -148,6 +168,7 @@ class RiskSihirbazi extends Page
             'acikKategoriler', 'secilenler', 'etkilenenDiger', 'varsayilanTermin',
             'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
             'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
+            'excelDosya', 'excelAdaylar', 'excelSecilenAdaylar', 'excelHatalar',
         ]);
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
@@ -563,6 +584,79 @@ class RiskSihirbazi extends Page
             ->title($sablon->ad.' uygulandı')
             ->body(count($this->secilenler).' madde')
             ->success()->send();
+
+        if (count($this->secilenler) > 0) {
+            $this->adim = 4;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Adım 3 — "Risk Değerlendirmenizden Yükleyin" alt akışı
+    |--------------------------------------------------------------------------
+    */
+
+    public function excelIceAktar(): void
+    {
+        $this->validate(['excelDosya' => 'required|file|mimes:xlsx,xls,csv']);
+
+        try {
+            $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($this->excelDosya->getRealPath());
+        } catch (\Throwable $e) {
+            Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+            return;
+        }
+
+        $this->excelAdaylar = $sonuc['adaylar'];
+        $this->excelHatalar = $sonuc['hatalar'];
+        // Kullanıcının kendi belgesindeki maddeler zaten kendi onayından geçmiş
+        // kabul edilir (kütüphane/AI önerilerinin aksine) — hepsi seçili gelir.
+        $this->excelSecilenAdaylar = collect($this->excelAdaylar)->pluck('anahtar')->all();
+        $this->excelDosya = null;
+
+        if (! $this->excelAdaylar) {
+            Notification::make()->title('Madde bulunamadı')
+                ->body($this->excelHatalar[0] ?? 'Dosyada tanınabilir bir risk tablosu bulunamadı.')
+                ->danger()->send();
+        }
+    }
+
+    public function excelAdayToggle(string $anahtar): void
+    {
+        $this->excelSecilenAdaylar = in_array($anahtar, $this->excelSecilenAdaylar, true)
+            ? array_values(array_diff($this->excelSecilenAdaylar, [$anahtar]))
+            : [...$this->excelSecilenAdaylar, $anahtar];
+    }
+
+    public function excelTumAdaylar(bool $sec): void
+    {
+        $this->excelSecilenAdaylar = $sec ? collect($this->excelAdaylar)->pluck('anahtar')->all() : [];
+    }
+
+    public function excelSecilenleriEkle(): void
+    {
+        $eklenen = 0;
+
+        foreach ($this->excelAdaylar as $aday) {
+            if (! in_array($aday['anahtar'], $this->excelSecilenAdaylar, true)) {
+                continue;
+            }
+
+            $zaten = collect($this->secilenler)->contains(
+                fn ($m) => Str::lower(trim($m['tehlike'] ?? '')) === Str::lower(trim($aday['tehlike'] ?? '')),
+            );
+
+            if (! $zaten) {
+                $this->secilenler[] = $aday;
+                $eklenen++;
+            }
+        }
+
+        $this->excelAdaylar = [];
+        $this->excelSecilenAdaylar = [];
+
+        Notification::make()->title($eklenen.' risk maddesi eklendi')->success()->send();
 
         if (count($this->secilenler) > 0) {
             $this->adim = 4;
