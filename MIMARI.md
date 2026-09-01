@@ -32,6 +32,11 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 
 ## Navigasyon grupları (sol menü)
 
+> **isgpratik 1-3.jpg'ye göre tam menü kuruldu.** "planlandı" satırlar
+> `App\Filament\Pages\HazirlanryorPage` türeten **stub** sayfalardır (nav'da görünür,
+> "🚧 hazırlanıyor" + referans notu); ilgili ekran görüntüsü gelince gerçek sayfayla
+> değiştirilir. `[AI]` rozeti `HazirlanryorPage::$aiModulu`. `NavigasyonTest` (31 test).
+
 | Grup | Modül | Slug | Durum |
 |---|---|---|---|
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | planlandı |
@@ -208,7 +213,15 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   - `RiskDegerlendirmesiResource` artık **"Kayıtlı Değerlendirmeler"** (slug
     `risk-degerlendirmelerim`, sort 2, klasör ikonu); List header'ında "Yeni (Sihirbaz)"
     + "Boş kayıt". `barryvdh/laravel-dompdf` bağımlılığı eklendi (PDF için, henüz kullanılmıyor).
-  - `RiskSihirbaziTest` (17 test). **28 test toplam.**
+  - `RiskSihirbaziTest` (17 test).
+- **Faz 3c — Sol menü iskelesi ✅ (isgpratik 1-3.jpg):** `App\Filament\Pages\HazirlanryorPage`
+  (abstract; ortak `filament.pages.hazirlaniyor` view + `[AI]` rozeti + referans notu) →
+  24 stub sayfa (Kontrol Merkezi, İSG-KATİP Robot, Acil Durum Planı, DÖF, AI Saha Analizi,
+  Saha Denetimi, Kurul Toplantısı, Atama Yazıları, Eğitim Katılım, İşbaşı Eğitim, Tatbikat,
+  Tespit Öneri Defteri, Sertifika, Eğitim Soruları, KKD, İş İzni, Ceza/Tebliğ, İş Kazası,
+  Talimat, Muayene EK-2, E-Reçetem, Yıllık Planlar, Ziyaret Programı, Araçlar).
+  4 nav grubu doğru sırada. `NavigasyonTest` (31 test — tüm menü sayfaları açılıyor).
+  **59 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
