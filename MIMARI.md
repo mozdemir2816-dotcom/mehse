@@ -300,12 +300,19 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     adaylarına `kaynak=llm` olarak ekler (aynı şema, mükerrer tehlike metni elenir).
     `config('services.gemini.key')` tanımlı değilse veya istek başarısız
     olursa/istisna atarsa sessizce boş dizi döner — sihirbaz kural tabanlı
-    sonuçlarla çalışmaya devam eder. `.env`: `GEMINI_API_KEY` / `GEMINI_MODEL`
-    (varsayılan `gemini-2.5-flash`). **Bilinçli tercih:** LLM önerileri, kütüphane
-    önerileri gibi varsayılan olarak SEÇİLİ GELMİYOR — mevzuat riski taşıyan bir
-    belgede LLM çıktısını sessizce onaylatmamak için uzman gözden geçirip seçmeli.
-    `GeminiRiskDanismaniTest` (5 test, `Http::fake`).
-  **90 test toplam.**
+    sonuçlarla çalışmaya devam eder. `.env`: `GEMINI_API_KEY` (gerçek anahtar
+    girildi, `.env` git'e girmez) / `GEMINI_MODEL` (varsayılan `gemini-3.6-flash` —
+    `gemini-2.5-flash` canlı testte "no longer available to new users" hatası verdi,
+    Google'ın önerdiği modele geçildi). Timeout 45s (`thinking` gecikmesi nedeniyle
+    canlı testte 14-20s sürdü, eski 20s limiti yetmiyordu). **Canlı API testi
+    yapıldı — çalışıyor** (sektöre özel, mevzuat referanslı 4 öneri üretti).
+    **Bilinçli tercih:** LLM önerileri, kütüphane önerileri gibi varsayılan olarak
+    SEÇİLİ GELMİYOR — mevzuat riski taşıyan bir belgede LLM çıktısını sessizce
+    onaylatmamak için uzman gözden geçirip seçmeli.
+    `GeminiRiskDanismaniTest` (5 test, `Http::fake`). **`phpunit.xml`de
+    `GEMINI_API_KEY` boş zorlanıyor** — yoksa gerçek anahtar varken bazı testler
+    sessizce canlı API'ye istek atıp 20-30s sürüyordu.
+  **97 test toplam.**
   - **Faz 3b (kalan):** Risk PDF çıktısı (kapak → prosedür → tablo → ekip);
     Kayıtlı Risklerim (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup
     şablona kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater).
