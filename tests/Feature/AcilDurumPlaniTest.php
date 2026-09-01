@@ -138,6 +138,25 @@ class AcilDurumPlaniTest extends TestCase
         );
     }
 
+    public function test_konfigurasyondaki_tum_hazir_afis_dosyalari_mevcut(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        foreach (config('isg.acil_durum.afisler') as $tip => $afis) {
+            if (! isset($afis['dosya'])) {
+                continue;
+            }
+
+            $yol = resource_path('belge/acil-durum-afisleri/'.$afis['dosya']);
+            $this->assertFileExists($yol, "Afiş dosyası eksik: {$tip} -> {$afis['dosya']}");
+
+            ob_start();
+            AcilDurumPlaniUretici::afis($firma, $tip, 'a4')->sendContent();
+            $icerik = ob_get_clean();
+            $this->assertStringStartsWith('%PDF', $icerik, "Geçersiz PDF: {$tip}");
+        }
+    }
+
     public function test_gecersiz_afis_tipi_404(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

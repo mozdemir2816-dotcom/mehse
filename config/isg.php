@@ -316,6 +316,7 @@ return [
         'afisler' => [
             'yangin' => [
                 'ad' => 'Yangınla Mücadele', 'baslik' => 'YANGINLA MÜCADELE VE TAHLİYE TALİMATI',
+                'dosya' => 'yangin.pdf',
                 'adimlar' => [
                     'İtfaiyeyi arayın (110).',
                     'Sesli olarak etrafındakileri uyarın.',
@@ -330,6 +331,7 @@ return [
             ],
             'deprem' => [
                 'ad' => 'Deprem Eylem Planı', 'baslik' => 'DEPREM EYLEM PLANI',
+                'dosya' => 'deprem.pdf',
                 'adimlar' => [
                     'Deprem anında etrafındakileri sesli olarak uyarın.',
                     'Çök – kapan – tutun: sağlam bir masanın altına girin.',
@@ -344,6 +346,7 @@ return [
             ],
             'is_kazasi' => [
                 'ad' => 'İş Kazası Eylem Planı', 'baslik' => 'İŞ KAZASI EYLEM PLANI',
+                'dosya' => 'is_kazasi.pdf',
                 'adimlar' => [
                     'Kaza ve yaralanmayı belirleyin, ortamı güvene alın.',
                     'Makine / ekipman hasarını değerlendirin, enerjiyi kesin.',
@@ -358,6 +361,7 @@ return [
             ],
             'elektrik' => [
                 'ad' => 'Elektrik Çarpması', 'baslik' => 'ELEKTRİK ÇARPMASI ACİL MÜDAHALE TALİMATI',
+                'dosya' => 'elektrik.pdf',
                 'adimlar' => [
                     'Akımı kesin — ana şalteri kapatın.',
                     'Kazazedeye asla çıplak elle dokunmayın; yalıtkan cisimle ayırın.',
@@ -369,6 +373,7 @@ return [
             ],
             'kimyasal' => [
                 'ad' => 'Kimyasal Dökülme', 'baslik' => 'KİMYASAL DÖKÜLME VE SIZINTI EYLEM PLANI',
+                'dosya' => 'kimyasal.pdf',
                 'adimlar' => [
                     'Uyarı verin ve ortamı havalandırın; camları açın.',
                     'Kişisel koruyucu ekipman giyin (maske, eldiven, gözlük).',
@@ -381,6 +386,7 @@ return [
             ],
             'sel' => [
                 'ad' => 'Sel ve Su Baskını', 'baslik' => 'SEL VE SU BASKINI EYLEM PLANI',
+                'dosya' => 'sel.pdf',
                 'adimlar' => [
                     'Sel / su baskını anında etrafındakileri sesli uyarın.',
                     'Durumu İş Güvenliği birimine bildirin.',
