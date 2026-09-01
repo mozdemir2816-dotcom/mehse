@@ -30,7 +30,7 @@ class ProfilimTest extends TestCase
     public function test_profil_ozeti_sayaclari_hesaplar(): void
     {
         $a = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 3]);
-        Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli', 'calisan_sayisi' => 7]);
         Firma::factory()->create(); // başka uzman
 
         Calisan::create(['firma_id' => $a->id, 'ad_soyad' => 'A', 'aktif' => true]);
@@ -46,7 +46,7 @@ class ProfilimTest extends TestCase
         $o = PortfoyKarne::profilOzeti($this->uzman->id);
 
         $this->assertSame(2, $o['firma']);
-        $this->assertSame(1, $o['calisan']); // yalnız aktif
+        $this->assertSame(10, $o['calisan']); // firmaların bildirdiği toplam (3+7), Çalışan kaydı sayısı değil
         $this->assertSame(1, $o['risk_degerlendirmesi']);
         $this->assertSame(1, $o['risk_sablonu']);
         $this->assertSame(1, $o['onemli_risk']);

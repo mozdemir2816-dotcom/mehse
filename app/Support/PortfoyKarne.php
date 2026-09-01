@@ -22,10 +22,6 @@ class PortfoyKarne
         $riskOlan = $firmalar->filter(fn (Firma $f) => $f->riskDegerlendirmeleri()->exists())->count();
         $tamUyumlu = $firmalar->filter(fn (Firma $f) => static::firmaTamUyumluMu($f))->count();
 
-        $calisan = (int) Calisan::query()
-            ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
-            ->where('aktif', true)->count();
-
         $kriterler = static::kriterler($userId);
         $hazirKriterler = array_filter($kriterler, fn ($k) => $k['hazir']);
         $uyumYuzde = $hazirKriterler
@@ -34,7 +30,9 @@ class PortfoyKarne
 
         return [
             'firma' => $toplam,
-            'calisan' => $calisan ?: (int) $firmalar->sum('calisan_sayisi'),
+            // Firmaya kayıtlı Çalışan (isim) sayısı değil, firmanın bildirdiği
+            // toplam çalışan sayısı esas alınır (çalışan kaydı eksik olsa da doğru sayı görünsün).
+            'calisan' => (int) $firmalar->sum('calisan_sayisi'),
             'risk_olan' => $riskOlan,
             'evrak_eksigi' => $toplam - $riskOlan,
             'tam_uyumlu' => $tamUyumlu,
@@ -205,9 +203,9 @@ class PortfoyKarne
 
         return [
             'firma' => $firmalar->count(),
-            'calisan' => (int) Calisan::query()
-                ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
-                ->where('aktif', true)->count(),
+            // Firmaya kayıtlı Çalışan (isim) sayısı değil, firmanın bildirdiği
+            // toplam çalışan sayısı esas alınır.
+            'calisan' => (int) $firmalar->sum('calisan_sayisi'),
             'risk_degerlendirmesi' => \App\Models\RiskDegerlendirmesi::query()
                 ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))->count(),
             'risk_sablonu' => \App\Models\RiskSablonu::query()->where('user_id', $userId)->count(),
