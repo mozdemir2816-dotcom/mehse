@@ -286,11 +286,22 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     yerine doğrudan o dosya indirilir (örn. sabotaj).
   - `barryvdh/laravel-dompdf` ilk kez kullanıldı; PDF blade'leri `resources/views/pdf/`.
   `AcilDurumPlaniTest` (8 test).
-  **84 test toplam.**
-  - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
-    (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
-    gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
-    `RiskSablonu` `maddeler` düzenleme (repeater).
+  - **Gemini (gerçek LLM) entegrasyonu ✅:** `App\Support\GeminiRiskDanismani` —
+    Risk Sihirbazı AI adımında sektör + alt kategori + sohbet cevaplarıyla Gemini
+    `generateContent` REST API'sine `responseSchema` (structured JSON output) ile
+    istek atar; `RiskUretici::uret()` çıktısını kural tabanlı + kütüphane
+    adaylarına `kaynak=llm` olarak ekler (aynı şema, mükerrer tehlike metni elenir).
+    `config('services.gemini.key')` tanımlı değilse veya istek başarısız
+    olursa/istisna atarsa sessizce boş dizi döner — sihirbaz kural tabanlı
+    sonuçlarla çalışmaya devam eder. `.env`: `GEMINI_API_KEY` / `GEMINI_MODEL`
+    (varsayılan `gemini-2.5-flash`). **Bilinçli tercih:** LLM önerileri, kütüphane
+    önerileri gibi varsayılan olarak SEÇİLİ GELMİYOR — mevzuat riski taşıyan bir
+    belgede LLM çıktısını sessizce onaylatmamak için uzman gözden geçirip seçmeli.
+    `GeminiRiskDanismaniTest` (5 test, `Http::fake`).
+  **90 test toplam.**
+  - **Faz 3b (kalan):** Risk PDF çıktısı (kapak → prosedür → tablo → ekip);
+    Kayıtlı Risklerim (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup
+    şablona kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater).
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
   Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).
