@@ -41,7 +41,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 |---|---|---|---|
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | **hazır** (3 sekme; portföy karnesi — 12 kriter) |
 | Yönetim | Profilim | `profilim` | **hazır** (künye + sayaçlar + 6 sekme) |
-| Yönetim | İSG-KATİP Robot | `isg-katip-robot` | planlandı (Chrome eklentisi — sadece bilgi/stub) |
+| Yönetim | İSG-KATİP Robot | `isg-katip-robot` | **hazır** (bilgi sayfası — gerçek eklenti yok, stub) |
 | **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (kural tabanlı) yöntemleri; Şablon/Kayıtlı/Excel + PDF Faz 3b |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
@@ -115,7 +115,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
   Rehberi", "Kontrol Paneli" (bot kartları: Çoklu Atama, Toplu Sözleşme İndir/Onayla/
   Sonlandır, Tıbbi Tetkik / Gezici Sağlık Aracı ataması, Süre Analizi …).
 - **Uygulanabilirlik:** gerçek eklenti + resmî portal gerektiği için yalnız **bilgi
-  sayfası** + günlük hak sayacı stub'ı olarak kurulacak.
+  sayfası** + günlük hak sayacı stub'ı olarak kuruldu (bkz. Faz 3f).
 
 ### Risk Değerlendirme sihirbazı (10-18.jpg) — **kuruldu, bkz. Faz 3a**
 6 adım: **Firma Bilgileri → Ekleme Yöntemi → Risk Ekleme → Tercihler → Risklerim →
@@ -259,7 +259,14 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     Pazarlama, Arşiv, Raporlar, Firma Ziyaretleri) + referans notları.
   Hesap düzenleme hâlâ Filament'ın kendi profil sayfasında (`->profile()`, kullanıcı menüsü).
   `ProfilimTest` (7 test).
-  **73 test toplam.**
+- **Faz 3f — İSG-KATİP Robot ✅ (isgpratik 7-9.jpg):** `App\Filament\Pages\IsgKatipRobot`
+  (stub yerine geçti). **Bilgi sayfası** — gerçek Chrome eklentisi / portal erişimi YOK.
+  `config isg.isg_katip`: 3 gereksinim + 4 kurulum adımı + **11 bot kataloğu** (Çoklu
+  Atama, Toplu Sözleşme İndir/Onayla/Sonlandır, Tıbbi Tetkik/Gezici Sağlık Aracı ataması,
+  Süre Analizi …) + günlük hak sayacı + "Neden/Güvende miyim" metinleri. "Kurmak için
+  tıklayın" / "Eklentiyi İndir" / "Bağlantıyı Kontrol Et" hepsi stub bildirimi döndürür.
+  `IsgKatipRobotTest` (3 test).
+  **76 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;

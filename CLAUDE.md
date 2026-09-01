@@ -19,7 +19,7 @@ görüntüleri referans (`C:\Users\mozde\Desktop\isgpratik\`), yol haritası: `M
 
 php artisan migrate        # yalnızca yeni migration'lar
 php artisan db:seed --class=TehlikeKutuphanesiSeeder
-php artisan test           # 73 test
+php artisan test           # 76 test
 ```
 
 ### Kurallar
