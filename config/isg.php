@@ -248,29 +248,51 @@ return [
             'cok_tehlikeli' => 2,
         ],
 
-        // PDF/Word'e eklenecek acil durum konu sayfaları. varsayilan=true → yeni planda seçili.
+        /*
+         | Acil durum konu sayfaları (isgpratik 155.jpg — 19 konu + ek). Yeni planda
+         | firmaya göre otomatik seçilir (`App\Support\AcilDurumKonuSecici`):
+         |   kosul = null  → her firmada seçili (genel afet + ortak riskler)
+         |   kosul = ['nace' => [ön ekler], 'tehlike' => [sınıflar]]  → NACE ön eki
+         |     eşleşirse VEYA tehlike sınıfı eşleşirse seçili.
+         | Kullanıcı elle ekleyip çıkarabilir; firmaya uymayan konu işaretlenmez.
+        */
         'konular' => [
-            ['anahtar' => 'yangin', 'ad' => 'Yangın', 'varsayilan' => true],
-            ['anahtar' => 'deprem', 'ad' => 'Deprem', 'varsayilan' => true],
-            ['anahtar' => 'sabotaj', 'ad' => 'Sabotaj', 'varsayilan' => true],
-            ['anahtar' => 'is_kazasi', 'ad' => 'İş Kazası ve Sağlık Olayları', 'varsayilan' => true],
-            ['anahtar' => 'kimyasal', 'ad' => 'Kimyasal Dökülme / Sızıntı', 'varsayilan' => true],
-            ['anahtar' => 'elektrik', 'ad' => 'Elektrik Çarpması', 'varsayilan' => true],
-            ['anahtar' => 'zehirlenme', 'ad' => 'Zehirlenme', 'varsayilan' => true],
-            ['anahtar' => 'patlama', 'ad' => 'Patlama', 'varsayilan' => true],
-            ['anahtar' => 'salgin', 'ad' => 'Salgın Hastalık ve Biyolojik Etki', 'varsayilan' => false],
-            ['anahtar' => 'sel', 'ad' => 'Sel ve Su Baskını', 'varsayilan' => false],
-            ['anahtar' => 'yildirim', 'ad' => 'Yıldırım Düşmesi ve Fırtına', 'varsayilan' => false],
-            ['anahtar' => 'bomba', 'ad' => 'Bomba İhbarı ve Patlayıcı Tehdidi', 'varsayilan' => false],
-            ['anahtar' => 'yuksekten_dusme', 'ad' => 'Yüksekten Düşme', 'varsayilan' => false],
-            ['anahtar' => 'heyelan', 'ad' => 'Heyelan ve Toprak Kayması', 'varsayilan' => false],
-            ['anahtar' => 'radyasyon', 'ad' => 'Radyasyon Sızıntısı', 'varsayilan' => false],
-            ['anahtar' => 'trafik', 'ad' => 'İşyeri İçi Trafik ve Araç Kazası', 'varsayilan' => false],
-            ['anahtar' => 'bogulma', 'ad' => 'Boğulma ve Su Kazası', 'varsayilan' => false],
-            ['anahtar' => 'basincli_kap', 'ad' => 'Basınçlı Kap Patlaması', 'varsayilan' => false],
-            ['anahtar' => 'makine_arizasi', 'ad' => 'Makine Arızası ve Sıkışma', 'varsayilan' => false],
-            ['anahtar' => 'gida_zehirlenmesi', 'ad' => 'Toplu Gıda Zehirlenmesi', 'varsayilan' => false],
-            ['anahtar' => 'asansor', 'ad' => 'Asansörde Mahsur Kalma', 'varsayilan' => false],
+            ['anahtar' => 'yangin', 'ad' => 'Yangın', 'kosul' => null],
+            ['anahtar' => 'deprem', 'ad' => 'Deprem', 'kosul' => null],
+            ['anahtar' => 'sabotaj', 'ad' => 'Sabotaj', 'kosul' => null],
+            ['anahtar' => 'is_kazasi', 'ad' => 'İş Kazası ve Sağlık Olayları', 'kosul' => null],
+            ['anahtar' => 'elektrik', 'ad' => 'Elektrik Çarpması', 'kosul' => null],
+            ['anahtar' => 'sel', 'ad' => 'Sel ve Su Baskını', 'kosul' => null],
+            ['anahtar' => 'yildirim', 'ad' => 'Yıldırım Düşmesi ve Fırtına', 'kosul' => null],
+
+            ['anahtar' => 'kimyasal', 'ad' => 'Kimyasal Dökülme / Sızıntı',
+                'kosul' => ['nace' => ['05', '06', '07', '08', '09', '10', '11', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '35', '36', '37', '38', '39', '86'], 'tehlike' => ['cok_tehlikeli']]],
+            ['anahtar' => 'zehirlenme', 'ad' => 'Zehirlenme',
+                'kosul' => ['nace' => ['10', '11', '19', '20', '21', '86'], 'tehlike' => ['cok_tehlikeli']]],
+            ['anahtar' => 'patlama', 'ad' => 'Patlama',
+                'kosul' => ['nace' => ['05', '06', '07', '08', '09', '19', '20', '21', '24', '35'], 'tehlike' => ['cok_tehlikeli']]],
+            ['anahtar' => 'salgin', 'ad' => 'Salgın Hastalık ve Biyolojik Etki',
+                'kosul' => ['nace' => ['10', '11', '55', '56', '85', '86', '87', '88']]],
+            ['anahtar' => 'bomba', 'ad' => 'Bomba İhbarı ve Patlayıcı Tehdidi',
+                'kosul' => ['nace' => ['35', '51', '64', '65', '66', '84'], 'tehlike' => ['cok_tehlikeli']]],
+            ['anahtar' => 'yuksekten_dusme', 'ad' => 'Yüksekten Düşme',
+                'kosul' => ['nace' => ['05', '06', '07', '08', '09', '33', '41', '42', '43'], 'tehlike' => ['tehlikeli', 'cok_tehlikeli']]],
+            ['anahtar' => 'heyelan', 'ad' => 'Heyelan ve Toprak Kayması',
+                'kosul' => ['nace' => ['01', '02', '05', '06', '07', '08', '09', '41', '42', '43']]],
+            ['anahtar' => 'radyasyon', 'ad' => 'Radyasyon Sızıntısı',
+                'kosul' => ['nace' => ['21', '24', '25', '35', '72', '86']]],
+            ['anahtar' => 'trafik', 'ad' => 'İşyeri İçi Trafik ve Araç Kazası',
+                'kosul' => ['nace' => ['01', '02', '41', '42', '43', '45', '46', '47', '49', '50', '52', '53']]],
+            ['anahtar' => 'bogulma', 'ad' => 'Boğulma ve Su Kazası',
+                'kosul' => ['nace' => ['03', '50', '52', '93']]],
+            ['anahtar' => 'basincli_kap', 'ad' => 'Basınçlı Kap Patlaması',
+                'kosul' => ['nace' => ['10', '11', '19', '20', '21', '22', '23', '24', '25', '35'], 'tehlike' => ['tehlikeli', 'cok_tehlikeli']]],
+            ['anahtar' => 'makine_arizasi', 'ad' => 'Makine Arızası ve Sıkışma',
+                'kosul' => ['nace' => ['01', '02', '05', '06', '07', '08', '09', '10', '11', '13', '14', '15', '16', '17', '18', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '41', '42', '43'], 'tehlike' => ['tehlikeli', 'cok_tehlikeli']]],
+            ['anahtar' => 'gida_zehirlenmesi', 'ad' => 'Toplu Gıda Zehirlenmesi',
+                'kosul' => ['nace' => ['10', '11', '55', '56']]],
+            ['anahtar' => 'asansor', 'ad' => 'Asansörde Mahsur Kalma',
+                'kosul' => ['nace' => []]], // elle seçilir (kat bilgisi yok)
         ],
 
         'kapak_cerceveleri' => [
@@ -372,6 +394,9 @@ return [
             ],
             'sabotaj' => [
                 'ad' => 'Sabotaj ve Patlama', 'baslik' => 'SABOTAJ VE PATLAMA EYLEM PLANI',
+                // Hazır afiş dosyası varsa `resources/belge/acil-durum-afisleri/<dosya>`
+                // kullanılır (kullanıcı ekler). Yoksa aşağıdaki adımlardan PDF üretilir.
+                'dosya' => 'sabotaj.pdf',
                 'adimlar' => [
                     'Sabotaj şeklini belirleyin (yangın, patlayıcı, mekanik, kimyasal, biyolojik).',
                     'Makine / ekipman hasarını değerlendirin.',

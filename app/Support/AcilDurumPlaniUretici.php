@@ -35,6 +35,17 @@ class AcilDurumPlaniUretici
 
         abort_if(! $afis, 404, 'Afiş bulunamadı');
 
+        if ($dosya = $afis['dosya'] ?? null) {
+            $yol = resource_path('belge/acil-durum-afisleri/'.$dosya);
+
+            if (is_file($yol)) {
+                return response()->streamDownload(
+                    fn () => print(file_get_contents($yol)),
+                    'acil-durum-afis-'.$tip.'-'.strtoupper($ebat).'.pdf',
+                );
+            }
+        }
+
         $pdf = Pdf::loadView('pdf.acil-durum-afis', [
             'firma' => $firma,
             'afis' => $afis,

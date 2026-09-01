@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AcilDurumKonuSecici;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,8 +34,7 @@ class AcilDurumPlani extends Model
             $p->kapak_cercevesi ??= 'klasik';
 
             if (empty($p->konular)) {
-                $p->konular = collect(config('isg.acil_durum.konular'))
-                    ->where('varsayilan', true)->pluck('anahtar')->all();
+                $p->konular = AcilDurumKonuSecici::firmaIcin($p->firma);
             }
 
             if ($p->rapor_tarihi && ! $p->gecerlilik_tarihi) {
