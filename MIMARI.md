@@ -290,9 +290,28 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     onay), **Word** (stub). **Acil Durum Afişleri:** 7 tip (Yangın/Deprem/İş Kazası/
     Elektrik/Kimyasal/Sel/Sabotaj) × A4/A3 → numaralı talimat afişi PDF. Bir afiş türü için
     hazır PDF tanımlıysa (`config .dosya`, `resources/belge/acil-durum-afisleri/`) dompdf
-    yerine doğrudan o dosya indirilir (örn. sabotaj).
+    yerine doğrudan o dosya indirilir. **7'si de gerçek dosya** (kullanıcının referans
+    klasöründen; yangin/deprem/elektrik/kimyasal/sabotaj/sel/is_kazasi) —
+    `setasign/fpdi`+`fpdf` ile her birinin alt %6'lık bandı beyaz dikdörtgenle
+    maskelendi (kaynak dosyalardan birinde örnek müşteri firma adı gömülüydü;
+    yalnız görsel maskeleme, PDF metin katmanında orijinal metin hâlâ var).
+  - **Kapak/künye içeriği yönetmelik gereği zorunlu alanlarla tamamlandı ✅**
+    (kullanıcının gerçek referans planlarıyla — ALTIN YAKUT + NİL UNLU örnekleri —
+    karşılaştırılarak): kapakta NACE kodu + Hazırlayan (uzman adı/unvanı) + Rev.
+    Tarihi/No; künye sayfasında "İşyeri İçin Belirlenen Acil Durumlar" numaralı
+    listesi + Toplanma Yeri + "İşyerini Dışarıdan Etkileyebilecek İşyerleri"
+    (serbest metin) + "Acil Durumlarda İrtibat Kurulacak Kuruluşlar ve
+    Telefonları" (`config isg.acil_durum.irtibat_telefonlari`, sabit ulusal
+    hatlar); yeni **Tahliye Planı** sayfası (`tahliye_plani_gorseli` — önceden
+    var ama bağlanmamış kolon; header'da "Tahliye Planı Görseli" modal
+    aksiyonu); ONAY sayfasında uzmanın adı/unvanı artık basılı. Konu listesi
+    (21 acil durum) NİL UNLU'nun EK-1 listesiyle (19 konu) karşılaştırıldı,
+    19/19 zaten birebir eşleşiyor. **Kapsam dışı bırakılan:** ekip tablosunun
+    ad/soyad/sorumluluk alanı/telefon/imza düzeyinde detaylandırılması
+    (referans belgelerde var, mevcut "isim listesi" yaklaşımından daha büyük
+    bir veri modeli değişikliği gerektiriyor — ayrı iş).
   - `barryvdh/laravel-dompdf` ilk kez kullanıldı; PDF blade'leri `resources/views/pdf/`.
-  `AcilDurumPlaniTest` (8 test).
+  `AcilDurumPlaniTest` (14 test).
   - **Gemini (gerçek LLM) entegrasyonu ✅:** `App\Support\GeminiRiskDanismani` —
     Risk Sihirbazı AI adımında sektör + alt kategori + sohbet cevaplarıyla Gemini
     `generateContent` REST API'sine `responseSchema` (structured JSON output) ile
@@ -312,7 +331,7 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     `GeminiRiskDanismaniTest` (5 test, `Http::fake`). **`phpunit.xml`de
     `GEMINI_API_KEY` boş zorlanıyor** — yoksa gerçek anahtar varken bazı testler
     sessizce canlı API'ye istek atıp 20-30s sürüyordu.
-  **97 test toplam.**
+  **100 test toplam.**
   - **Faz 3b (kalan):** Risk PDF çıktısı (kapak → prosedür → tablo → ekip);
     Kayıtlı Risklerim (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup
     şablona kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater).
