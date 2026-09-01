@@ -311,7 +311,23 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     (referans belgelerde var, mevcut "isim listesi" yaklaşımından daha büyük
     bir veri modeli değişikliği gerektiriyor — ayrı iş).
   - `barryvdh/laravel-dompdf` ilk kez kullanıldı; PDF blade'leri `resources/views/pdf/`.
-  `AcilDurumPlaniTest` (14 test).
+  - **Firmalar → hızlı erişim + orijinal şablonu koruyan ikinci çıktı (Word) ✅:**
+    `FirmasTable` satır aksiyonu "Acil Durum Planı" → `?firma=` ile sayfaya gidip
+    firmayı önceden seçili getirir (`mount()`). `App\Support\AcilDurumWordUretici`
+    — kullanıcının gerçek referans belgesini (`resources/belge/acil-durum-plani-
+    sablonu.docx`) birebir şablon olarak kullanır; yalnız 8 sabit alan (unvan,
+    adres, SGK no, 2 tarih, tehlike sınıfı, hazırlayan ad/unvan) + "ACİL DURUM N:"
+    11 satırlık liste + "ÇALIŞAN SAYISI:" satırı firmaya göre değişir, gerisi
+    (hukuki metin, biçim, SmartArt diyagramları) aynen kalır — Word'ün aynı
+    değeri birden fazla `<w:r>` koşusuna bölmesi ihtimaline karşı paragraf içi
+    `<w:t>` düğümleri birleştirilip aralık bulunur, biçim bozulmadan geri
+    dağıtılır. **Canlı testte 2 hata bulunup düzeltildi:** `mb_strtoupper`
+    Türkçe nokta kuralını bilmiyor ("tekstil"→"TEKSTIL" değil "TEKSTİL" olmalı
+    — `turkceBuyuk()` helper'ı eklendi); `response()->download()
+    ->deleteFileAfterSend(true)` Windows'ta süreç takılmasına yol açıyordu —
+    `AcilDurumPlaniUretici`'nin zaten kullandığı `streamDownload`+manuel
+    `unlink()` desenine çevrildi.
+  `AcilDurumPlaniTest` (13 test).
   - **Gemini (gerçek LLM) entegrasyonu ✅:** `App\Support\GeminiRiskDanismani` —
     Risk Sihirbazı AI adımında sektör + alt kategori + sohbet cevaplarıyla Gemini
     `generateContent` REST API'sine `responseSchema` (structured JSON output) ile
@@ -331,7 +347,13 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     `GeminiRiskDanismaniTest` (5 test, `Http::fake`). **`phpunit.xml`de
     `GEMINI_API_KEY` boş zorlanıyor** — yoksa gerçek anahtar varken bazı testler
     sessizce canlı API'ye istek atıp 20-30s sürüyordu.
-  **100 test toplam.**
+  **102 test toplam.**
+  - **Panel çalışan sayısı düzeltmesi:** `PortfoyKarne::ozet()`/`profilOzeti()`
+    artık `Calisan` (isim) kaydı sayısı yerine firmaların bildirdiği
+    `calisan_sayisi` toplamını gösteriyor — kullanıcı çoğu zaman firmaya
+    çalışan sayısını giriyor ama her çalışanı tek tek kayıt olarak eklemiyor.
+    `calisanDagilimi()` ve "çalışansız firma" sayacı kasıtlı değiştirilmedi
+    (onlar zaten Çalışan kaydı eksikliğini göstermeyi amaçlıyor).
   - **Faz 3b (kalan):** Risk PDF çıktısı (kapak → prosedür → tablo → ekip);
     Kayıtlı Risklerim (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup
     şablona kaydedilecek); `RiskSablonu` `maddeler` düzenleme (repeater).
