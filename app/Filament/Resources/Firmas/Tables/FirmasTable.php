@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Firmas\Tables;
 
+use App\Filament\Pages\AcilDurumPlani;
 use App\Models\Firma;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -41,6 +43,11 @@ class FirmasTable
                 TernaryFilter::make('aktif')->label('Aktif')->default(true),
             ])
             ->recordActions([
+                Action::make('acilDurumPlani')
+                    ->label('Acil Durum Planı')
+                    ->icon('heroicon-o-exclamation-triangle')
+                    ->color('danger')
+                    ->url(fn (Firma $record) => AcilDurumPlani::getUrl(['firma' => $record->id])),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

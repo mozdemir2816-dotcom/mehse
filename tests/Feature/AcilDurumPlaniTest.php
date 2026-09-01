@@ -8,6 +8,7 @@ use App\Models\Firma;
 use App\Models\User;
 use App\Support\AcilDurumKonuSecici;
 use App\Support\AcilDurumPlaniUretici;
+use App\Support\AcilDurumWordUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -84,6 +85,55 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertSame('Rev.01 — 01.01.2027', $plan->revizyon_no);
         $this->assertSame('Ana kapı önü açık saha', $plan->toplanma_yeri);
         $this->assertStringContainsString('Akaryakıt', $plan->disaridan_etkileyebilecek_isyerleri);
+    }
+
+    public function test_firmalar_listesinden_query_ile_firma_onceden_secili_gelir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Query Test Firma A.Ş.']);
+
+        $this->get(AcilDurumSayfasi::getUrl(['firma' => $firma->id]))
+            ->assertOk()
+            ->assertSee('Query Test Firma A.Ş.');
+    }
+
+    public function test_word_ciktisi_sablon_degerlerini_firmaya_gore_degistirir(): void
+    {
+        $uzman = $this->uzman;
+        $uzman->forceFill(['name' => 'Ayşe Yılmaz', 'unvan' => 'b_sinifi'])->save();
+
+        $firma = Firma::factory()->for($uzman)->create([
+            'unvan' => 'Deneme Tekstil Sanayi Ltd.',
+            'adres' => 'Test Mahallesi No:5 İzmir',
+            'sgk_sicil_no' => '11122233344',
+            'tehlike_sinifi' => 'tehlikeli',
+            'calisan_sayisi' => 47,
+        ]);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->forceFill(['konular' => ['yangin', 'deprem', 'elektrik']])->save();
+
+        $yanit = AcilDurumWordUretici::docx($plan);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'adep_test').'.docx';
+        file_put_contents($gecici, $icerik);
+
+        $zip = new \ZipArchive();
+        $zip->open($gecici);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        unlink($gecici);
+
+        $this->assertStringContainsString('DENEME TEKSTİL SANAYİ LTD.', $xml);
+        $this->assertStringContainsString('Test Mahallesi No:5 İzmir', $xml);
+        $this->assertStringContainsString('11122233344', $xml);
+        $this->assertStringContainsString('AYŞE YILMAZ', $xml);
+        $this->assertStringNotContainsString('ALTIN YAKUT', $xml);
+        $this->assertStringNotContainsString('MEHMET ÖZDEMİR', $xml);
+        $this->assertStringNotContainsString('44100010111205450770133000', $xml);
     }
 
     public function test_tahliye_plani_gorseli_yuklenir(): void

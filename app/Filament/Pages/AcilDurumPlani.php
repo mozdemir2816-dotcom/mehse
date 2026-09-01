@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\AcilDurumPlani as PlanModel;
 use App\Models\Firma;
 use App\Support\AcilDurumPlaniUretici;
+use App\Support\AcilDurumWordUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -60,6 +61,15 @@ class AcilDurumPlani extends Page
     public string $afisTipi = 'yangin';
 
     public string $afisEbat = 'a4';
+
+    /** Firmalar listesinden "Acil Durum Planı" satır aksiyonuyla ?firma= ile gelinir. */
+    public function mount(): void
+    {
+        if ($firmaId = request()->integer('firma')) {
+            $this->firmaId = $firmaId;
+            $this->updatedFirmaId();
+        }
+    }
 
     #[Computed]
     public function firmalar(): array
@@ -161,14 +171,16 @@ class AcilDurumPlani extends Page
                 }),
 
             Action::make('word')
-                ->label('Word')
+                ->label('Word (Orijinal Şablon)')
                 ->icon('heroicon-o-document')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
-                ->action(fn () => Notification::make()
-                    ->title('Word çıktısı yakında')
-                    ->body('Şimdilik PDF çıktısı kullanılabilir.')
-                    ->warning()->send()),
+                ->tooltip('Referans belgenin birebir kopyası; yalnızca firmaya özel bilgiler değişir, geri kalan metin/biçim aynen korunur.')
+                ->action(function () {
+                    $this->kaydet();
+
+                    return AcilDurumWordUretici::docx($this->plan());
+                }),
 
             Action::make('tahliyePlani')
                 ->label('Tahliye Planı Görseli')
