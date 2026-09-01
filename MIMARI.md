@@ -39,7 +39,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 
 | Grup | Modül | Slug | Durum |
 |---|---|---|---|
-| **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | planlandı |
+| **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | **hazır** (3 sekme; portföy karnesi — 12 kriter) |
 | Yönetim | Profilim | `/admin/profile` (özel) | planlandı |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | planlandı (Chrome eklentisi — sadece bilgi/stub) |
 | **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (kural tabanlı) yöntemleri; Şablon/Kayıtlı/Excel + PDF Faz 3b |
@@ -89,11 +89,13 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 - Sağ kolon: **Yapılacaklar** listesi + duyuru/changelog akışı.
 - Alt: özellik tanıtım kartları (Firma Arşiv, Firma Yetki, Risk Sihirbazı, İSG Robot AI …).
 
-### Kontrol Merkezi (4.jpg)
-- Başlık "İSG Komuta Merkezi — Canlı İSG Takibi".
+### Kontrol Merkezi (4 + 135-136.jpg) — **kuruldu, bkz. Faz 3d**
+- Başlık "İSG Komuta Merkezi" + "Canlı İSG Takibi" rozeti.
 - Sekmeler: **Günlük Akış** / **Firma Asistanı** / **Çalışan Asistanı**.
-- Boş durum: "Harika! Tüm Görevler Güncel — Yaklaşan görevlendirme, evrak, ziyaret,
-  eğitim veya tahsilat işlemi bulunmuyor."
+- Firma Asistanı: İSG Portföy Özeti + 12 yasal kriterin portföy tamamlanma oranı +
+  yenileme süreleri + uzman tavsiyeleri (135.jpg).
+- Çalışan Asistanı: firma seç → çalışan eksikleri; seçilmeden boş durum (136.jpg).
+- Günlük Akış boş durum: "Harika! Tüm Görevler Güncel".
 
 ### Profilim (5-6.jpg)
 - Künye: ad, e-posta, rol rozeti. Butonlar: Mesajlarım, Kaşe Bilgisi, Tanıtım Turu, Nasıl Kullanılır.
@@ -221,7 +223,21 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Tespit Öneri Defteri, Sertifika, Eğitim Soruları, KKD, İş İzni, Ceza/Tebliğ, İş Kazası,
   Talimat, Muayene EK-2, E-Reçetem, Yıllık Planlar, Ziyaret Programı, Araçlar).
   4 nav grubu doğru sırada. `NavigasyonTest` (31 test — tüm menü sayfaları açılıyor).
-  **59 test toplam.**
+- **Faz 3d — Kontrol Merkezi ✅ (isgpratik 135-136.jpg):** `App\Filament\Pages\KontrolMerkezi`
+  (stub yerine geçti). 3 pill sekme:
+  - **Firma Asistanı:** `App\Support\PortfoyKarne` — İSG Portföy Özeti (firma/çalışan
+    sayısı, evrak eksiği, tam uyumlu, %uyum) + **12 yasal kriterin** portföy tamamlanma
+    oranı (progress bar; `config isg.kontrol_merkezi.kriterler`). Kriterin `hazir=false`
+    olanı 0/N gösterir, ilgili modül kurulunca `firmaKriterKarsilarMi()`'de gerçek
+    kontrole geçer (şu an yalnız `risk_degerlendirmesi` hesaplanıyor). İSG Kurulu kriteri
+    `kosul=elli_calisan` ile yalnız 50+ firmayı kapsar. + Yenileme süreleri
+    (`risk_gecerlilik_yili`) + Uzman tavsiyeleri kartları.
+  - **Çalışan Asistanı:** firma seç → çalışan karnesi (genç çalışan &lt;18, ağır/tehlikeli
+    iş sayısı); muayene/eğitim/MYK ilgili modüller kurulunca eklenecek.
+  - **Günlük Akış:** geçerliliği geçmiş / 60 gün içinde dolan risk değerlendirmeleri;
+    boşsa "Harika! Tüm Görevler Güncel".
+  `KontrolMerkeziTest` (6 test).
+  **65 test toplam.**
   - **Faz 3b:** Risk PDF çıktısı (kapak → prosedür → tablo → ekip); Kayıtlı Risklerim
     (klasörlü); Excel içe/dışa aktarma (yüklerken sektör sorulup şablona kaydedilecek);
     gerçek LLM (Gemini/OpenAI env) — çıktısı `RiskUretici` şemasına oturur;
