@@ -853,8 +853,7 @@ return [
     'egitim' => [
         // Tehlike sınıfına göre yıllık periyodik eğitim süresi (Çalışanların İSG
         // Eğitimlerinin Usul ve Esasları Hak. Yön. Ek-1: 8/12/16 saat). İşe özgü
-        // risk ve dinlenme dakikaları yalnızca az tehlikeli için ekran görüntüsünde
-        // doğrulandı (90/120dk); diğerleri saat artışıyla orantılı tahmindir.
+        // risk ve dinlenme dakikaları kullanıcı tarafından doğrulandı.
         'sureler' => [
             'az_tehlikeli' => ['saat' => 8, 'ise_ozgu_dk' => 90, 'dinlenme_dk' => 120],
             'tehlikeli' => ['saat' => 12, 'ise_ozgu_dk' => 135, 'dinlenme_dk' => 180],
