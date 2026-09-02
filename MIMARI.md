@@ -49,7 +49,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF; AI Saha Analizi'nden bulgu aktarımı kabul eder) |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF; seçili bulgular DÖF Oluştur'a aktarılabilir) |
-| Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | **hazır** (9 kategori/41 madde kontrol listesi, foto kanıtı → PDF isgpratik'in gerçek raporuyla birebir) |
+| Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | **hazır** (9 kategori/41 madde + sektöre özel kendi başlık/madde ekleme, foto kanıtı → PDF isgpratik'in gerçek raporuyla birebir) |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
 | Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF) |
 | Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
@@ -747,11 +747,45 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   madde tablosu (KRİTİK etiketi kırmızı) + Ekip Üyesi/Görev/KKD tablosu +
   9 maddelik Sabit Güvenlik Uyarıları (3 sütun) + Genel Notlar + Denetçi
   Kaşe/İmza (beşinci kaşe-basma kullanımı) + her fotoğraf kanıtı için ayrı
-  sayfa. **Kapsam dışı bırakıldı:** isgpratik'in sürükle-bırak Şablon
-  Editörü (kategori/madde ekleme-çıkarma, bayrak düzenleme — kontrol listesi
-  burada sabit config); "Taslaklar" sekmesi (yarım kalan denetimi
-  kaydedip sonra devam etme — şu an tek oturumda tamamlanmalı).
+  sayfa. **Kapsam dışı bırakıldı:** "Taslaklar" sekmesi (yarım kalan
+  denetimi kaydedip sonra devam etme — şu an tek oturumda tamamlanmalı).
   `SahaDenetimiTest` (10 test). **297 test toplam.**
+- **Faz 3z — Saha Denetimi: sektöre özel kontrol maddesi ekleme ✅
+  (isgpratik'in Şablon Editörü'nün küçük/sektörel bir versiyonu):**
+  Kullanıcı "kontrol listesine ekleme için konu başlığı ve içeriği eklemek
+  istiyorum — İnşaatlar için Kazı Kontrol, Kalıp, Beton Demir, İş Makineleri,
+  İskele; yükseklten düşme için kapatılması gereken merdivenler, asansörler,
+  kat kenarları, galeriler" dedi, sonra "ileride sektörel olarak ayırabiliriz
+  (Metal, Orman gibi), detaylı ekipman kontrol listesi ayarlamayı
+  planlıyorum ona göre dizayn et" ekledi. `App\Models\
+  SahaDenetimiOzelMadde` (yeni tablo, `user_id` scope — Talimat Oluştur'un
+  "Arşivim" / Risk Kütüphanesi Excel-ekleme ile AYNI "kendi arşivinden ekle"
+  deseninin bir başka kullanımı) — alanlar: `sektor_anahtari` (nullable,
+  **isg.risk_ai.sektorler'i reuse eder** — Risk Sihirbazı AI adımı ve Eğitim
+  Katılım'ın işyerine özgü riskler bölümüyle aynı 13 sektörlük ortak taksonomi,
+  yeni bir sektör listesi icat edilmedi), `kategori_ad` (serbest metin —
+  mevcut bir başlıkla birebir eşleşirse o başlığın altına eklenir, yoksa yeni
+  başlık açılır), `ifade`, `kritik`, `uygulanamaz_izni`. Sayfaya "Sektör
+  (opsiyonel)" seçici + firma bağımsız (AI Saha Analizi'nin fotoğraf
+  yükleme dersinden ders alınarak firma seçilmeden de kullanılabilir)
+  "Kendi Kontrol Başlığı/Madde Ekle" bölümü eklendi — `kategoriler()`
+  computed artık sabit 41 maddeyi + seçili sektöre uygun (`sektor_anahtari`
+  null VEYA seçili sektörle eşleşen) özel maddeleri birleştirip döndürüyor;
+  `tumMaddeler()`/`cevaplar`/PDF hiçbir ek değişiklik gerekmeden bu birleşik
+  listeyi otomatik kullanıyor (kod şeması `OZL{id}` — nokta içermediği için
+  Faz 3y'deki Livewire dot-notation tuzağına takılmıyor). İnşaat sektörü için
+  tarif edilen 6 başlık/33 madde (Kazı Kontrolü, Kalıp İşleri, Beton ve Demir
+  İşleri, İş Makineleri, İskele, Yükseklten Düşme Önleme) kullanıcının
+  hesabına `sektor_anahtari='insaat'` ile veritabanına eklendi (tinker ile,
+  UI'nin kendisi de aynı işi yapar). **Aynı oturumda ek istek:** "Uygulanamaz
+  olanları raporda listeleme, istatistiklere ekleme" — istatistik zaten hariç
+  tutuyordu (uygunluk yüzdesi yalnız uygun/uygun değil sayar), PDF ana
+  tablosu da artık `uygulanamaz` sonuçlu satırları FİLTRELEYİP basmıyor (boş
+  kalan kategori de otomatik gizleniyor). `SahaDenetimiTest`'e 5 yeni test +
+  1 PDF-filtre testi (view render edilip HTML'de uygulanamaz maddenin
+  metninin GEÇMEDİĞİ doğrulandı — dompdf binary'sinde metin arama yapmak
+  yerine bilerek ham Blade view'ı render edip assertStringNotContainsString
+  kullanıldı). **302 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (İş Kazası
   Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene formu), Ücretsiz
   E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve

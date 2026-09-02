@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\SahaDenetimi as SahaDenetimiModel;
+use App\Models\SahaDenetimiOzelMadde;
 use App\Support\SahaDenetimiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -13,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
@@ -57,6 +59,9 @@ class SahaDenetimi extends Page
 
     public ?string $denetciAdi = null;
 
+    /** null = tüm sektörler için ortak liste — config isg.risk_ai.sektorler */
+    public ?string $sektorAnahtari = null;
+
     /** @var array<string, array{sonuc: ?string, aciklama: ?string, foto_yolu: ?string}> kod => cevap */
     public array $cevaplar = [];
 
@@ -75,14 +80,22 @@ class SahaDenetimi extends Page
 
     public ?string $genelNotlar = null;
 
+    public ?string $yeniOzelSektorAnahtari = null;
+
+    public ?string $yeniOzelKategoriAdi = null;
+
+    public ?string $yeniOzelIfade = null;
+
+    public bool $yeniOzelKritik = false;
+
+    public bool $yeniOzelUygulanamazIzni = true;
+
     public function mount(): void
     {
         $this->denetimTarihi = now()->toDateString();
         $this->denetimSaati = now()->format('H:i');
 
-        foreach ($this->tumMaddeler() as $kod => $madde) {
-            $this->cevaplar[$this->anahtar($kod)] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
-        }
+        $this->cevaplariSenkronizeEt();
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
@@ -114,16 +127,56 @@ class SahaDenetimi extends Page
             : null;
     }
 
+    /** Sabit 41 madde + kullanıcının o sektör için eklediği özel maddeler. */
     #[Computed]
     public function kategoriler(): array
     {
-        return config('isg.saha_denetimi.kategoriler');
+        $kategoriler = config('isg.saha_denetimi.kategoriler');
+
+        $gecerliOzelMaddeler = $this->ozelMaddeler
+            ->filter(fn (SahaDenetimiOzelMadde $m) => $m->sektor_anahtari === null || $m->sektor_anahtari === $this->sektorAnahtari)
+            ->groupBy('kategori_ad');
+
+        foreach ($gecerliOzelMaddeler as $kategoriAdi => $maddeler) {
+            $ozelMaddeListesi = $maddeler->map(fn (SahaDenetimiOzelMadde $m) => [
+                'kod' => 'OZL'.$m->id,
+                'ifade' => $m->ifade,
+                'kritik' => $m->kritik,
+                'uygulanamaz_izni' => $m->uygulanamaz_izni,
+            ])->values()->all();
+
+            $eslesenAnahtar = collect($kategoriler)->search(fn ($k) => $k['ad'] === $kategoriAdi);
+
+            if ($eslesenAnahtar !== false) {
+                $kategoriler[$eslesenAnahtar]['maddeler'] = [...$kategoriler[$eslesenAnahtar]['maddeler'], ...$ozelMaddeListesi];
+            } else {
+                $kategoriler['ozel_'.Str::slug($kategoriAdi, '_')] = ['ad' => $kategoriAdi, 'maddeler' => $ozelMaddeListesi];
+            }
+        }
+
+        return $kategoriler;
     }
 
     #[Computed]
     public function kkdSecenekleri(): array
     {
         return config('isg.saha_denetimi.kkd_secenekleri');
+    }
+
+    #[Computed]
+    public function sektorler(): array
+    {
+        return collect(config('isg.risk_ai.sektorler'))->map(fn ($s) => $s['ad'])->all();
+    }
+
+    /** @return Collection<int, SahaDenetimiOzelMadde> */
+    #[Computed]
+    public function ozelMaddeler(): Collection
+    {
+        return SahaDenetimiOzelMadde::where('user_id', Filament::auth()->id())
+            ->orderBy('kategori_ad')
+            ->orderBy('sira')
+            ->get();
     }
 
     /** @return Collection<int, Calisan> */
@@ -172,18 +225,30 @@ class SahaDenetimi extends Page
         return $this->firma?->sahaDenetimleri()->latest()->get() ?? collect();
     }
 
-    /** kod => madde config (tüm kategoriler düzleştirilmiş). */
+    /** kod => madde config (tüm kategoriler + özel maddeler düzleştirilmiş). */
     private function tumMaddeler(): array
     {
         $sonuc = [];
 
-        foreach (config('isg.saha_denetimi.kategoriler') as $kategoriAnahtari => $kategori) {
+        foreach ($this->kategoriler as $kategoriAnahtari => $kategori) {
             foreach ($kategori['maddeler'] as $madde) {
                 $sonuc[$madde['kod']] = [...$madde, 'kategori_anahtari' => $kategoriAnahtari, 'kategori_ad' => $kategori['ad']];
             }
         }
 
         return $sonuc;
+    }
+
+    /** Henüz $cevaplar'da olmayan (yeni eklenen özel) maddeler için boş cevap girişi açar. */
+    private function cevaplariSenkronizeEt(): void
+    {
+        foreach ($this->tumMaddeler() as $kod => $madde) {
+            $anahtar = $this->anahtar($kod);
+
+            if (! isset($this->cevaplar[$anahtar])) {
+                $this->cevaplar[$anahtar] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
+            }
+        }
     }
 
     private function ifadeYaz(string $ifade): string
@@ -212,6 +277,50 @@ class SahaDenetimi extends Page
     {
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->denetciAdi = $this->firma?->igu?->ad_soyad;
+    }
+
+    public function updatedSektorAnahtari(): void
+    {
+        unset($this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+    }
+
+    public function ozelMaddeEkle(): void
+    {
+        if (blank($this->yeniOzelKategoriAdi) || blank($this->yeniOzelIfade)) {
+            Notification::make()->title('Kategori adı ve madde ifadesi zorunlu')->danger()->send();
+
+            return;
+        }
+
+        $madde = SahaDenetimiOzelMadde::create([
+            'sektor_anahtari' => $this->yeniOzelSektorAnahtari,
+            'kategori_ad' => $this->yeniOzelKategoriAdi,
+            'ifade' => $this->yeniOzelIfade,
+            'kritik' => $this->yeniOzelKritik,
+            'uygulanamaz_izni' => $this->yeniOzelUygulanamazIzni,
+        ]);
+
+        unset($this->ozelMaddeler, $this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+
+        $this->reset('yeniOzelKategoriAdi', 'yeniOzelIfade', 'yeniOzelKritik');
+        $this->yeniOzelUygulanamazIzni = true;
+
+        Notification::make()->title('Kontrol maddesi eklendi')->body($madde->kategori_ad.' — '.$madde->ifade)->success()->send();
+    }
+
+    public function ozelMaddeSil(int $id): void
+    {
+        $madde = SahaDenetimiOzelMadde::where('user_id', Filament::auth()->id())->find($id);
+
+        if (! $madde) {
+            return;
+        }
+
+        unset($this->cevaplar[$this->anahtar('OZL'.$madde->id)]);
+        $madde->delete();
+        unset($this->ozelMaddeler, $this->kategoriler);
     }
 
     public function cevapVer(string $kod, string $sonuc): void
@@ -319,6 +428,7 @@ class SahaDenetimi extends Page
 
         $d = new SahaDenetimiModel([
             'firma_id' => $this->firma->id,
+            'sektor_anahtari' => $this->sektorAnahtari,
             'revizyon' => $this->firma->sahaDenetimleri()->count() + 1,
             'is_tanimi' => $this->isTanimi,
             'santiye_adi' => $this->santiyeAdi,

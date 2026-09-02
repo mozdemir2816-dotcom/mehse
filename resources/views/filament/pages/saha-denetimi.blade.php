@@ -66,6 +66,17 @@
                 <input type="text" wire:model="denetciAdi"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Sektör (opsiyonel)</label>
+                <select wire:model.live="sektorAnahtari"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    <option value="">— Genel (sektörsüz) —</option>
+                    @foreach ($this->sektorler as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Sektör seçilince aşağıya o sektöre eklediğiniz özel maddeler de dahil olur.</p>
+            </div>
         </div>
 
         @if ($this->firma && ! $this->firma->igu)
@@ -73,6 +84,78 @@
                 Kaşe yok — <a href="{{ \App\Filament\Resources\IsgProfesyonelis\IsgProfesyoneliResource::getUrl() }}" style="color:{{ $turuncu }};text-decoration:underline">İSG Profesyonelleri</a>
                 panelinden İGU ekleyip Firma düzenleme sayfasından atayın.
             </p>
+        @endif
+    </x-filament::section>
+
+    {{-- SEKTÖRE ÖZEL KONTROL MADDELERİ (firma seçmeden de eklenebilir/yönetilebilir) --}}
+    <x-filament::section icon="heroicon-o-squares-plus" icon-color="warning" collapsible collapsed>
+        <x-slot name="heading">Kendi Kontrol Başlığı / Maddesi Ekle</x-slot>
+        <x-slot name="description">
+            İnşaat, metal, orman gibi sektörlere özel başlık (örn. "Kazı Kontrolü", "İskele") ve
+            madde ekleyin. Sektör seçmezseniz madde tüm denetimlerde görünür; sektör seçerseniz
+            yalnızca üstte o sektör seçiliyken kontrol listesine dahil olur. Var olan bir başlık
+            adını yazarsanız madde o başlığın altına eklenir.
+        </x-slot>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;margin-bottom:.6rem">
+            <div>
+                <label style="font-size:.75rem;font-weight:600">Sektör</label>
+                <select wire:model="yeniOzelSektorAnahtari"
+                    style="margin-top:.2rem;width:100%;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.8rem">
+                    <option value="">Tüm Sektörler</option>
+                    @foreach ($this->sektorler as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label style="font-size:.75rem;font-weight:600">Başlık (Kategori) Adı</label>
+                <input list="saha-denetimi-kategori-oneri" wire:model="yeniOzelKategoriAdi" placeholder="Örn: Kazı Kontrolü"
+                    style="margin-top:.2rem;width:100%;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.8rem">
+                <datalist id="saha-denetimi-kategori-oneri">
+                    @foreach ($this->kategoriler as $k)
+                        <option value="{{ $k['ad'] }}"></option>
+                    @endforeach
+                </datalist>
+            </div>
+            <div style="grid-column:span 2">
+                <label style="font-size:.75rem;font-weight:600">Madde İfadesi</label>
+                <input type="text" wire:model="yeniOzelIfade" placeholder="Örn: Kazı şevi/iksa sistemi güvenli ve yönetmeliğe uygun mu?"
+                    style="margin-top:.2rem;width:100%;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.8rem">
+            </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer">
+                <input type="checkbox" wire:model="yeniOzelKritik"> Kritik
+            </label>
+            <label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer">
+                <input type="checkbox" wire:model="yeniOzelUygulanamazIzni"> "Uygulanamaz" seçeneği olsun
+            </label>
+            <x-filament::button size="sm" wire:click="ozelMaddeEkle">Madde Ekle</x-filament::button>
+        </div>
+
+        @if ($this->ozelMaddeler->isNotEmpty())
+            <table style="width:100%;border-collapse:collapse;font-size:.78rem">
+                <tr>
+                    <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sektör</th>
+                    <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Başlık</th>
+                    <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Madde</th>
+                    <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Kritik</th>
+                    <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
+                </tr>
+                @foreach ($this->ozelMaddeler as $m)
+                    <tr>
+                        <td style="padding:.3rem .5rem">{{ $m->sektorEtiketi() }}</td>
+                        <td style="padding:.3rem .5rem">{{ $m->kategori_ad }}</td>
+                        <td style="padding:.3rem .5rem">{{ $m->ifade }}</td>
+                        <td style="padding:.3rem .5rem">{{ $m->kritik ? 'Evet' : '—' }}</td>
+                        <td style="padding:.3rem .5rem;text-align:right">
+                            <button type="button" wire:click="ozelMaddeSil({{ $m->id }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                        </td>
+                    </tr>
+                @endforeach
+            </table>
         @endif
     </x-filament::section>
 

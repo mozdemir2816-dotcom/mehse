@@ -43,4 +43,11 @@ class SahaDenetimi extends Model
     {
         return config('isg.saha_denetimi.dokuman_kodu').' · Revizyon '.$this->revizyon;
     }
+
+    public function sektorEtiketi(): ?string
+    {
+        return $this->sektor_anahtari
+            ? config('isg.risk_ai.sektorler.'.$this->sektor_anahtari.'.ad', $this->sektor_anahtari)
+            : null;
+    }
 }

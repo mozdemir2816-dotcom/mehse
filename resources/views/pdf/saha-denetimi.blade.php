@@ -50,6 +50,11 @@
             <td class="etiket">İşin Tanımı</td><td>{{ $denetim->is_tanimi ?: '—' }}</td>
             <td class="etiket">Referans No</td><td>{{ $denetim->is_referans_no ?: '—' }}</td>
         </tr>
+        @if ($denetim->sektorEtiketi())
+        <tr>
+            <td class="etiket">Sektör</td><td colspan="3">{{ $denetim->sektorEtiketi() }}</td>
+        </tr>
+        @endif
         <tr>
             <td class="etiket">Tarih / Saat</td><td>{{ $denetim->denetim_tarihi?->format('d.m.Y') }} · {{ $denetim->denetim_saati }}</td>
             <td class="etiket">Sorumlu</td><td>{{ $denetim->santiye_sorumlusu ?: '—' }}</td>
@@ -68,8 +73,12 @@
             <th style="width:12%">Sonuç</th>
             <th style="width:35%">Açıklama</th>
         </tr>
-        @php $mevcutKategori = null; @endphp
-        @foreach (($denetim->cevaplar ?? []) as $c)
+        @php
+            $mevcutKategori = null;
+            // Uygulanamaz maddeler rapor tablosunda yer kaplamasın — istatistiklere zaten dahil değil.
+            $gosterilecekCevaplar = collect($denetim->cevaplar ?? [])->reject(fn ($c) => ($c['sonuc'] ?? null) === 'uygulanamaz');
+        @endphp
+        @forelse ($gosterilecekCevaplar as $c)
             @if ($c['kategori_ad'] !== $mevcutKategori)
                 @php $mevcutKategori = $c['kategori_ad']; @endphp
                 <tr class="kategori"><td colspan="5">{{ mb_strtoupper($mevcutKategori, 'UTF-8') }}</td></tr>
@@ -81,7 +90,9 @@
                 <td class="sonuc-{{ $c['sonuc'] ?? '' }}">{{ config('isg.saha_denetimi.sonuc_secenekleri.'.($c['sonuc'] ?? ''), '—') }}</td>
                 <td>{{ $c['aciklama'] ?: '—' }}</td>
             </tr>
-        @endforeach
+        @empty
+            <tr><td colspan="5" style="text-align:center;color:#888">Gösterilecek madde yok.</td></tr>
+        @endforelse
     </table>
 
     <table class="ekip">

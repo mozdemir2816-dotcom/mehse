@@ -7,6 +7,7 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\SahaDenetimi;
+use App\Models\SahaDenetimiOzelMadde;
 use App\Models\User;
 use App\Support\SahaDenetimiUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -136,6 +137,101 @@ class SahaDenetimiTest extends TestCase
         $yanit->sendContent();
         $icerik = ob_get_clean();
         $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_pdf_raporunda_uygulanamaz_maddeler_listelenmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $d = SahaDenetimi::create([
+            'firma_id' => $firma->id,
+            'revizyon' => 1,
+            'cevaplar' => [
+                ['kategori_ad' => 'Yangın', 'kod' => '1.1', 'ifade' => 'Görünmesi gereken madde', 'kritik' => true, 'sonuc' => 'uygun', 'aciklama' => null, 'foto_yolu' => null],
+                ['kategori_ad' => 'Yangın', 'kod' => '1.4', 'ifade' => 'Gizlenmesi gereken uygulanamaz madde', 'kritik' => false, 'sonuc' => 'uygulanamaz', 'aciklama' => null, 'foto_yolu' => null],
+            ],
+        ]);
+
+        $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('Görünmesi gereken madde', $html);
+        $this->assertStringNotContainsString('Gizlenmesi gereken uygulanamaz madde', $html);
+    }
+
+    public function test_ozel_madde_eklenir_ve_secili_sektorde_kontrol_listesine_dahil_olur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniOzelSektorAnahtari', 'insaat')
+            ->set('yeniOzelKategoriAdi', 'Kazı Kontrolü')
+            ->set('yeniOzelIfade', 'Kazı şevi/iksa sistemi güvenli mi?')
+            ->set('yeniOzelKritik', true)
+            ->call('ozelMaddeEkle');
+
+        $this->assertDatabaseHas('saha_denetimi_ozel_maddeleri', [
+            'user_id' => $this->uzman->id,
+            'sektor_anahtari' => 'insaat',
+            'kategori_ad' => 'Kazı Kontrolü',
+        ]);
+
+        // Sektör henüz seçilmediği için kontrol listesinde (kategoriler) görünmemeli
+        // (özel madde yönetim tablosunda hâlâ görünür — o listede sektör filtresi yok).
+        $iceriyorMu = fn ($kategoriler) => collect($kategoriler)->contains(fn ($k) => $k['ad'] === 'Kazı Kontrolü');
+        $this->assertFalse($iceriyorMu($component->get('kategoriler')));
+
+        // Sektör "İnşaat" seçilince kontrol listesine dahil olmalı.
+        $component->set('sektorAnahtari', 'insaat');
+        $this->assertTrue($iceriyorMu($component->get('kategoriler')));
+    }
+
+    public function test_sektorsuz_ozel_madde_her_sektorde_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        SahaDenetimiOzelMadde::create([
+            'user_id' => $this->uzman->id,
+            'sektor_anahtari' => null,
+            'kategori_ad' => 'Genel Ek Kontrol',
+            'ifade' => 'Herkes için görünen madde',
+        ]);
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('sektorAnahtari', 'maden')
+            ->assertSee('Herkes için görünen madde');
+    }
+
+    public function test_ozel_madde_mevcut_kategoriye_eklenince_birlesir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniOzelKategoriAdi', 'Yüksekte Çalışma')
+            ->set('yeniOzelIfade', 'Kat kenarları korkuluklu mu?')
+            ->call('ozelMaddeEkle');
+
+        $kategoriler = $component->get('kategoriler');
+        $bulunduMu = collect($kategoriler)->contains(fn ($k) => $k['ad'] === 'Yüksekte Çalışma'
+            && collect($k['maddeler'])->contains(fn ($m) => $m['ifade'] === 'Kat kenarları korkuluklu mu?'));
+
+        $this->assertTrue($bulunduMu);
+        // Aynı kategori tekrar oluşturulmamalı (tek "Yüksekte Çalışma" girdisi kalmalı).
+        $this->assertCount(1, collect($kategoriler)->where('ad', 'Yüksekte Çalışma'));
+    }
+
+    public function test_ozel_madde_silinir(): void
+    {
+        $madde = SahaDenetimiOzelMadde::create([
+            'user_id' => $this->uzman->id,
+            'kategori_ad' => 'Test Başlık',
+            'ifade' => 'Test madde',
+        ]);
+
+        Livewire::test(SahaSayfasi::class)->call('ozelMaddeSil', $madde->id);
+
+        $this->assertDatabaseMissing('saha_denetimi_ozel_maddeleri', ['id' => $madde->id]);
     }
 
     public function test_gecmis_kayit_silinir(): void
