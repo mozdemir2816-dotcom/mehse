@@ -1,0 +1,164 @@
+@php
+    $mor = 'rgb(139 92 246)';
+    $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
+    $rol = $this->rol;
+@endphp
+
+<x-filament-panels::page>
+    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+        Firma ve görev tipini seçin, üye bilgilerini girin; "PDF" ile 6331 sayılı Kanun ve
+        ilgili yönetmelikler kapsamındaki görevlendirme yazısını oluşturun.
+    </p>
+
+    {{-- 1. FİRMA & GÖREV TİPİ --}}
+    <x-filament::section icon="heroicon-o-document-text" icon-color="primary">
+        <x-slot name="heading">1. Firma & Görev Tipi</x-slot>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <select wire:model.live="firmaId"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    <option value="">— Firma seçin —</option>
+                    @foreach ($this->firmalar as $id => $ad)
+                        <option value="{{ $id }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Tarih</label>
+                <input type="date" wire:model="tarih"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">İşveren / İşveren Vekili</label>
+                <input type="text" wire:model="isverenVekiliAdi" placeholder="İşveren / vekili adı"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+        </div>
+
+        <div style="margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap">
+            @foreach ($this->roller as $anahtar => $r)
+                @php $secili = $rolAnahtari === $anahtar; @endphp
+                <button type="button" wire:click="$set('rolAnahtari','{{ $anahtar }}')"
+                    style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
+                        border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
+                        background:{{ $secili ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
+                    {{ $r['ad'] }}
+                </button>
+            @endforeach
+        </div>
+    </x-filament::section>
+
+    @if ($this->firma)
+        {{-- 2. ÜYE BİLGİLERİ --}}
+        <x-filament::section icon="heroicon-o-user-group" icon-color="primary">
+            <x-slot name="heading">2. {{ $rol['ad'] ?? '' }} — Üye Bilgileri</x-slot>
+            <x-slot name="description">{{ $rol['aciklama'] ?? '' }}</x-slot>
+
+            @if (! $this->ekipMi)
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Hızlı Çalışan Seç</label>
+                        <select wire:model.live="tekHizliSecId"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            <option value="">Firmaya kayıtlı çalışan yok / manuel gir</option>
+                            @foreach ($this->calisanlar as $c)
+                                <option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Ad Soyad <span style="color:#ef4444">*</span></label>
+                        <input type="text" wire:model="tekAdSoyad"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">T.C. Kimlik No</label>
+                        <input type="text" wire:model="tekTc"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Görev / Unvan</label>
+                        <input type="text" wire:model="tekGorev"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Görev Başlangıç Tarihi</label>
+                        <input type="date" wire:model="gorevBaslangic"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Görev Bitiş Tarihi (Opsiyonel)</label>
+                        <input type="date" wire:model="gorevBitis"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                </div>
+                @if ($rolAnahtari === 'calisan_temsilcisi')
+                    <label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem;cursor:pointer;margin-top:.75rem">
+                        <input type="checkbox" wire:model="basTemsilci"> Baş Çalışan Temsilcisi
+                    </label>
+                @endif
+            @else
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+                    <div style="font-weight:600;font-size:.82rem">Ekip Üyeleri</div>
+                    @if ($rolAnahtari === 'isg_kurulu')
+                        <x-filament::button size="xs" color="gray" wire:click="firmaProfilindenDoldur">Firma Profilinden Otomatik Doldur</x-filament::button>
+                    @endif
+                </div>
+
+                @if ($this->calisanlar->isEmpty())
+                    <p style="font-size:.82rem;color:rgb(107 114 128)">Bu firmaya kayıtlı çalışan bulunamadı — önce Çalışanlar sekmesinden ekleyin.</p>
+                @else
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.35rem">
+                        @foreach ($this->calisanlar as $c)
+                            @php $secili = in_array($c->id, $secilenCalisanIdler, true); @endphp
+                            <div style="display:flex;align-items:center;gap:.3rem;padding:.45rem .3rem;border-radius:.4rem;
+                                border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
+                                background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                <button type="button" wire:click="calisanToggle({{ $c->id }})" style="flex:1;text-align:left;background:none;border:none;cursor:pointer;font-size:.8rem;color:inherit">
+                                    {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
+                                    @if ($c->gorev) <span style="color:rgb(107 114 128)">— {{ $c->gorev }}</span> @endif
+                                </button>
+                                @if ($secili)
+                                    <button type="button" wire:click="basUyeSec({{ $c->id }})" title="Baş üye"
+                                        style="background:none;border:none;cursor:pointer;font-size:.9rem;color:{{ $basUyeId === $c->id ? '#f59e0b' : 'rgb(107 114 128 / .4)' }}">★</button>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            @endif
+        </x-filament::section>
+
+        {{-- 3. GEÇMİŞ KAYITLAR --}}
+        @if ($this->gecmisKayitlar->isNotEmpty())
+            <x-filament::section icon="heroicon-o-clock" icon-color="gray">
+                <x-slot name="heading">Geçmiş Atama Yazıları</x-slot>
+                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                    <tr>
+                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Doküman No</th>
+                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Görev Tipi</th>
+                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
+                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Üye</th>
+                        <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
+                    </tr>
+                    @foreach ($this->gecmisKayitlar as $k)
+                        <tr>
+                            <td style="padding:.35rem .5rem">{{ $k->dokuman_no }}</td>
+                            <td style="padding:.35rem .5rem">{{ $k->rolEtiketi() }}</td>
+                            <td style="padding:.35rem .5rem">{{ $k->tarih?->format('d.m.Y') }}</td>
+                            <td style="padding:.35rem .5rem">{{ count($k->uyeler ?? []) }}</td>
+                            <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
+                                <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
+                                <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </x-filament::section>
+        @endif
+    @else
+        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+    @endif
+</x-filament-panels::page>

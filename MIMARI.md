@@ -50,8 +50,8 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | planlandı |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | planlandı |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
-| Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | planlandı |
-| Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | planlandı |
+| Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
+| Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip → PDF) |
 | Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
 | Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | planlandı |
 | Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | planlandı |
@@ -464,9 +464,48 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   - PDF logo için ayrı yükleme eklenmedi — `Firma.logo` (zaten firma kaydında var)
     kullanılıyor.
   `EgitimKatilimTest` (11 test). **141 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
-  Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
-  Ziyaret Programı, Kontrol Merkezi, Profilim …).
+- **Faz 3i — Atama Yazıları ✅ (isgpratik 38-44.jpg):** `App\Filament\Pages\AtamaYazilari`
+  (stub yerine geçti) + `App\Models\AtamaYazisi` + `App\Support\AtamaYazisiUretici` (dompdf)
+  + `config isg.atama.roller` (10 görev tipi). Her rol `tip` alanına göre iki şekilden
+  birini kullanır: **'tekli'** (Çalışan Temsilcisi, İşveren Vekili, Risk Değerlendirme
+  Ekibi, Bilgi Sahibi Çalışan, Acil Durum Koordinatörü) — tek çalışan + Görev Başlangıç/
+  Bitiş tarihi; **'ekip'** (Söndürme/Kurtarma/Koruma/İlk Yardım Ekibi, İSG Kurulu) — çoklu
+  çalışan seçimi + ★ ile "baş üye" işaretleme. İSG Kurulu'na özel "Firma Profilinden
+  Otomatik Doldur" tüm firma çalışanlarını tek tıkla ekler. Her rolün mevzuat dayanağı
+  metni (`aciklama`) PDF gövdesine basılır; anahtarlar örtüştüğü yerde `isg.egitim.
+  ozel_basliklar` ile birebir aynı (calisan_temsilcisi, sondurme_ekibi, vb.). Word çıktısı
+  **kapsam dışı** — isgpratik'in 10 rol için ayrı literal-şablon .docx'u yok, yalnız PDF.
+  Seçim süreci evrakları (seçim duyurusu/aday başvuru/oy pusulası/seçim tutanağı — yalnız
+  seçimli roller çalışan temsilcisi + İSG kurulu için anlamlı) **kapsam dışı** bırakıldı.
+  `AtamaYazilariTest` (8 test).
+- **Faz 3j — İSG Kurul Toplantısı ✅ (isgpratik yardım/kurul-toplantisi rehberi):**
+  `App\Filament\Pages\KurulToplantisi` (stub yerine geçti) + `App\Models\KurulToplantisi`
+  (firma başına çoklu toplantı) + `App\Support\KurulToplantisiUretici` (dompdf) +
+  `App\Support\GeminiKararDanismani` (gerçek LLM) + `config isg.kurul_toplantisi`.
+  Katılımcı/gündem/karar listeleri JSON tutulur (codebase'deki "liste of item" deseni,
+  bkz. `AcilDurumPlani.konular`) — ayrı çocuk tablo açılmadı. Akış: toplantı oluştur
+  (tarih/saat/yer/başkan) → **katılımcı** ekle (firma çalışanından hızlı seç veya manuel,
+  katılım durumu tek tıkla toggle) → **gündem** ekle (manuel veya `config isg.
+  kurul_toplantisi.hazir_gundem_maddeleri` — 5 kategori, kategorilere ayrılmış sabit
+  liste, tek tıkla ekle) → her gündem maddesinden **"Karar Yaz"** ile karar ekle (metin/
+  sorumlu/termin/durum) → **PDF Tutanak** indir. **Gerçek Gemini entegrasyonu:** karar
+  formunda "✨ AI Öner" butonu `GeminiKararDanismani::oner()` ile gündem maddesi metninden
+  tek cümlelik somut karar önerisi ister (`GeminiRiskDanismani` ile aynı desen — API
+  anahtarı yoksa/istek başarısızsa sessizce null döner, kullanıcı elle yazar). Rehberde
+  anlatılan "AI ile Gündem Önerisi" (sektöre özel 10 gündem maddesi) bilinçli olarak
+  **kapsam dışı** bırakıldı — hazır kategorili liste zaten aynı ihtiyacı karşılıyor, AI
+  bütçesi karar-metni önerisine ayrıldı.
+  `KurulToplantisiTest` (11 test, `Http::fake`). **160 test toplam.**
+- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
+  Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı, Tespit
+  Öneri Defteri, Sertifika Oluştur, Eğitim Soruları, KKD Formu, İş İzin Formu, Ceza ve
+  Tebliğ Tutanağı, İş Kazası Raporu, Talimat Oluştur, Muayene Formu, Ücretsiz E-Reçetem,
+  Yıllık Planlar, Ziyaret Programı, Araçlar). isgpratik kök klasöründe 24-101(+133-135,158)
+  numaralı ekran görüntüleri bu modüllere karşılık geliyor — kısmen incelendi (24-44, 60-66
+  görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı
+  Eğt./Tatbikat/Tespit Öneri Defteri/Sertifika Oluştur), 67-101+133-135+158 henüz
+  incelenmedi. Her biri Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende
+  (config-driven içerik + Filament Page + dompdf + test) tek tek kurulacak.
 
 ## Notlar
 

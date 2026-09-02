@@ -2,11 +2,28 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\AtamaYazisi as AtamaYazisiModel;
+use App\Models\Calisan;
+use App\Models\Firma;
+use App\Support\AtamaYazisiUretici;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use UnitEnum;
 
-class AtamaYazilari extends HazirlanryorPage
+/**
+ * Atama Yazıları — isgpratik 38-44.jpg. 10 görev tipinden biri seçilir;
+ * 'tekli' roller tek çalışan (+ görev tarihi aralığı), 'ekip' roller çoklu
+ * çalışan (+ baş üye işareti) ile doldurulur, PDF üretilir.
+ */
+class AtamaYazilari extends Page
 {
+    protected string $view = 'filament.pages.atama-yazilari';
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
     protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
@@ -19,7 +36,249 @@ class AtamaYazilari extends HazirlanryorPage
 
     protected static ?string $navigationLabel = 'Atama Yazıları';
 
-    protected static bool $aiModulu = false;
+    public ?int $firmaId = null;
 
-    protected static ?string $planNotu = 'isgpratik — İGU/İH/DSP görevlendirme yazıları';
+    public string $rolAnahtari = 'calisan_temsilcisi';
+
+    public ?string $tarih = null;
+
+    public ?string $isverenVekiliAdi = null;
+
+    // 'tekli' roller
+    public ?string $tekAdSoyad = null;
+
+    public ?string $tekTc = null;
+
+    public ?string $tekGorev = null;
+
+    public ?string $gorevBaslangic = null;
+
+    public ?string $gorevBitis = null;
+
+    public bool $basTemsilci = false;
+
+    public ?int $tekHizliSecId = null;
+
+    // 'ekip' roller
+    /** @var array<int, int> */
+    public array $secilenCalisanIdler = [];
+
+    public ?int $basUyeId = null;
+
+    public function mount(): void
+    {
+        $this->tarih = now()->toDateString();
+        $this->gorevBaslangic = now()->toDateString();
+
+        if ($firmaId = request()->integer('firma')) {
+            $this->firmaId = $firmaId;
+            $this->updatedFirmaId();
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hesaplanan veriler
+    |--------------------------------------------------------------------------
+    */
+
+    #[Computed]
+    public function firmalar(): array
+    {
+        return Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->orderBy('unvan')
+            ->pluck('unvan', 'id')
+            ->all();
+    }
+
+    #[Computed]
+    public function firma(): ?Firma
+    {
+        return $this->firmaId
+            ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId)
+            : null;
+    }
+
+    /** @return Collection<int, Calisan> */
+    #[Computed]
+    public function calisanlar(): Collection
+    {
+        return $this->firma?->calisanlar()->orderBy('ad_soyad')->get() ?? collect();
+    }
+
+    #[Computed]
+    public function roller(): array
+    {
+        return config('isg.atama.roller');
+    }
+
+    #[Computed]
+    public function rol(): array
+    {
+        return config('isg.atama.roller.'.$this->rolAnahtari, []);
+    }
+
+    #[Computed]
+    public function ekipMi(): bool
+    {
+        return ($this->rol()['tip'] ?? 'tekli') === 'ekip';
+    }
+
+    /** @return Collection<int, AtamaYazisiModel> */
+    #[Computed]
+    public function gecmisKayitlar(): Collection
+    {
+        return $this->firma?->atamaYazilari()->latest('tarih')->latest()->get() ?? collect();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Form alanları
+    |--------------------------------------------------------------------------
+    */
+
+    public function updatedFirmaId(): void
+    {
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
+        $this->isverenVekiliAdi = $this->firma?->isveren_vekili ?: $this->firma?->isveren_ad;
+        $this->secilenCalisanIdler = [];
+        $this->basUyeId = null;
+    }
+
+    public function updatedRolAnahtari(): void
+    {
+        unset($this->rol, $this->ekipMi);
+        $this->secilenCalisanIdler = [];
+        $this->basUyeId = null;
+        $this->tekAdSoyad = null;
+        $this->tekTc = null;
+        $this->tekGorev = null;
+        $this->basTemsilci = false;
+        $this->tekHizliSecId = null;
+    }
+
+    public function updatedTekHizliSecId(): void
+    {
+        $c = $this->tekHizliSecId ? $this->calisanlar->firstWhere('id', $this->tekHizliSecId) : null;
+
+        $this->tekAdSoyad = $c?->ad_soyad;
+        $this->tekTc = $c?->tc;
+        $this->tekGorev = $c?->gorev;
+    }
+
+    public function calisanToggle(int $id): void
+    {
+        $this->secilenCalisanIdler = in_array($id, $this->secilenCalisanIdler, true)
+            ? array_values(array_diff($this->secilenCalisanIdler, [$id]))
+            : [...$this->secilenCalisanIdler, $id];
+
+        if ($this->basUyeId === $id && ! in_array($id, $this->secilenCalisanIdler, true)) {
+            $this->basUyeId = null;
+        }
+    }
+
+    public function basUyeSec(int $id): void
+    {
+        $this->basUyeId = $this->basUyeId === $id ? null : $id;
+    }
+
+    public function firmaProfilindenDoldur(): void
+    {
+        $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
+    }
+
+    /** @return array<int, array{ad_soyad: string, tc: ?string, gorev: ?string, bas_uye: bool}> */
+    private function uyeleriTopla(): array
+    {
+        if (! $this->ekipMi()) {
+            if (blank($this->tekAdSoyad)) {
+                return [];
+            }
+
+            return [[
+                'ad_soyad' => $this->tekAdSoyad,
+                'tc' => $this->tekTc,
+                'gorev' => $this->tekGorev,
+                'bas_uye' => $this->basTemsilci,
+            ]];
+        }
+
+        return $this->calisanlar
+            ->whereIn('id', $this->secilenCalisanIdler)
+            ->map(fn (Calisan $c) => [
+                'ad_soyad' => $c->ad_soyad,
+                'tc' => $c->tc,
+                'gorev' => $c->gorev,
+                'bas_uye' => $c->id === $this->basUyeId,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function kaydet(): ?AtamaYazisiModel
+    {
+        if (! $this->firma || ! $this->tarih) {
+            Notification::make()->title('Firma ve tarih zorunlu')->danger()->send();
+
+            return null;
+        }
+
+        $uyeler = $this->uyeleriTopla();
+
+        if (! $uyeler) {
+            Notification::make()->title('En az bir üye/çalışan girin')->danger()->send();
+
+            return null;
+        }
+
+        $kayit = new AtamaYazisiModel([
+            'firma_id' => $this->firma->id,
+            'rol_anahtari' => $this->rolAnahtari,
+            'tarih' => $this->tarih,
+            'isveren_vekili_adi' => $this->isverenVekiliAdi,
+            'gorev_baslangic' => $this->ekipMi() ? null : $this->gorevBaslangic,
+            'gorev_bitis' => $this->ekipMi() ? null : $this->gorevBitis,
+            'uyeler' => $uyeler,
+        ]);
+        $kayit->save();
+
+        unset($this->gecmisKayitlar);
+
+        return $kayit;
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('pdf')
+                ->label('PDF (Kaydet ve İndir)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    Notification::make()->title('Atama yazısı kaydedildi')->body($kayit->dokuman_no)->success()->send();
+
+                    return AtamaYazisiUretici::pdf($kayit);
+                }),
+        ];
+    }
+
+    public function gecmisPdf(int $id)
+    {
+        $kayit = $this->firma?->atamaYazilari()->find($id);
+
+        return $kayit ? AtamaYazisiUretici::pdf($kayit) : null;
+    }
+
+    public function gecmisSil(int $id): void
+    {
+        $this->firma?->atamaYazilari()->find($id)?->delete();
+        unset($this->gecmisKayitlar);
+    }
 }

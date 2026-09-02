@@ -1084,4 +1084,114 @@ return [
             ]],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Atama Yazıları — isgpratik 38-44.jpg
+    |--------------------------------------------------------------------------
+    | 10 görev tipi; 'tekli' tek bir kişiyle doldurulur (Görev Başlangıç/Bitiş
+    | tarihli), 'ekip' çoklu üye seçimiyle (bir üye "baş üye" işaretlenebilir).
+    | Anahtarlar, örtüştükleri yerde isg.egitim.ozel_basliklar ile birebir aynı.
+    */
+    'atama' => [
+        'roller' => [
+            'calisan_temsilcisi' => [
+                'ad' => 'Çalışan Temsilcisi', 'tip' => 'tekli',
+                'aciklama' => '6331 Sayılı İSG Kanunu md.20 uyarınca görevlendirilir.',
+            ],
+            'isveren_vekili' => [
+                'ad' => 'İşveren Vekili', 'tip' => 'tekli',
+                'aciklama' => '6331 Sayılı İSG Kanunu md.3 (1/e ve 2. fıkra) ve 4857 Sayılı İş Kanunu md.2 uyarınca, '.
+                    'işveren adına hareket eden ve iş/işyerinin yönetiminde görev alan kişi olarak görevlendirilir. '.
+                    'Kanunda işveren için öngörülen sorumluluk ve zorunluluklar, devredilen yetki alanı ile sınırlı '.
+                    'olarak işveren vekili hakkında da uygulanır.',
+            ],
+            'risk_degerlendirme_ekibi' => [
+                'ad' => 'Risk Değerlendirme Ekibi', 'tip' => 'tekli',
+                'aciklama' => 'İSG Risk Değerlendirmesi Yönetmeliği uyarınca oluşturulur.',
+            ],
+            'bilgi_sahibi' => [
+                'ad' => 'Bilgi Sahibi Çalışan', 'tip' => 'tekli',
+                'aciklama' => 'İSG Risk Değerlendirmesi Yönetmeliği md.6/1-d uyarınca, işyerindeki bütün birimleri '.
+                    'temsil edecek şekilde belirlenen ve iş/tehlike/riskler hakkında bilgi sahibi çalışan, risk '.
+                    'değerlendirme ekibine görevlendirilir.',
+            ],
+            'sondurme_ekibi' => [
+                'ad' => 'Söndürme Ekibi', 'tip' => 'ekip',
+                'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 (2021 değişikliği) uyarınca ayrı '.
+                    'ayrı görevlendirilir. Tehlike sınıfına göre her 30 / 40 / 50 çalışan için en az 1 destek '.
+                    'elemanı, 10\'dan az çalışanı olan işyerlerinde tek özel eğitimli çalışan yeterlidir.',
+            ],
+            'kurtarma_ekibi' => [
+                'ad' => 'Kurtarma Ekibi', 'tip' => 'ekip',
+                'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 (2021 değişikliği) uyarınca ayrı '.
+                    'ayrı görevlendirilir. Tehlike sınıfına göre her 30 / 40 / 50 çalışan için en az 1 destek '.
+                    'elemanı, 10\'dan az çalışanı olan işyerlerinde tek özel eğitimli çalışan yeterlidir.',
+            ],
+            'koruma_ekibi' => [
+                'ad' => 'Koruma Ekibi', 'tip' => 'ekip',
+                'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 (2021 değişikliği) uyarınca ayrı '.
+                    'ayrı görevlendirilir. Tehlike sınıfına göre her 30 / 40 / 50 çalışan için en az 1 destek '.
+                    'elemanı, 10\'dan az çalışanı olan işyerlerinde tek özel eğitimli çalışan yeterlidir.',
+            ],
+            'ilkyardim_ekibi' => [
+                'ad' => 'İlk Yardım Ekibi', 'tip' => 'ekip',
+                'aciklama' => 'İlkyardım Yönetmeliği md.19 uyarınca tehlike sınıfına göre 10 / 15 / 20 çalışan için '.
+                    'en az 1 Sağlık Bakanlığı sertifikalı ilkyardımcı bulundurulur.',
+            ],
+            'isg_kurulu' => [
+                'ad' => 'İSG Kurulu', 'tip' => 'ekip',
+                'aciklama' => '6331 sayılı Kanun ve İSG Kurulları Hakkında Yönetmelik kapsamında, sanayiden sayılan '.
+                    've 50 ve üzeri çalışanı olan, 6 aydan fazla sürecek işyerleri için zorunludur. Üyeler: Başkan '.
+                    '(işveren/vekili), İGU, İşyeri Hekimi, İnsan Kaynakları Sorumlusu, Sivil Savunma Uzmanı (varsa), '.
+                    'Usta/Formen (varsa), Çalışan Temsilcisi.',
+            ],
+            'acil_durum_koordinatoru' => [
+                'ad' => 'Acil Durum Koordinatörü', 'tip' => 'tekli',
+                'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 kapsamında, söndürme/kurtarma/'.
+                    'koruma/ilkyardım ekiplerini koordine eden ve dış kurumlarla (itfaiye, 112, AFAD) iletişimi '.
+                    'sağlayan tek kişi olarak işveren tarafından görevlendirilir.',
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | İSG Kurulu Toplantısı — isgpratik yardım/kurul-toplantisi rehberi
+    |--------------------------------------------------------------------------
+    | Gündem ekranında "Hazır Gündem Maddeleri" kategorilere ayrılmış sabit
+    | listeden tek tıkla eklenir (AI önerisi ayrı, ileride Gemini ile).
+    */
+    'kurul_toplantisi' => [
+        'katilimci_gorevleri' => [
+            'İşveren / Vekili', 'İş Güvenliği Uzmanı', 'İşyeri Hekimi', 'İnsan Kaynakları Sorumlusu',
+            'Çalışan Temsilcisi (Asıl)', 'Çalışan Temsilcisi (Yedek)', 'Formen / Ustabaşı', 'Destek Elemanı', 'Diğer',
+        ],
+        'hazir_gundem_maddeleri' => [
+            'Genel' => [
+                'Bir önceki toplantı kararlarının gözden geçirilmesi',
+                'İş kazası ve meslek hastalığı istatistiklerinin değerlendirilmesi',
+                'Risk değerlendirmesi sonuçlarının değerlendirilmesi',
+                'Yıllık çalışma planı ve eğitim planının gözden geçirilmesi',
+                'Ramak kala olayların ve tespit/öneri defteri kayıtlarının değerlendirilmesi',
+            ],
+            'Acil Durum' => [
+                'Acil durum planının ve tatbikat sonuçlarının değerlendirilmesi',
+                'Yangın söndürme ve algılama sistemlerinin kontrol durumu',
+                'İlk yardım, söndürme, kurtarma ve koruma ekiplerinin yeterliliği',
+            ],
+            'Sağlık Gözetimi' => [
+                'Periyodik sağlık muayenelerinin takibi',
+                'İşe giriş/periyodik muayene sonuçlarının değerlendirilmesi',
+            ],
+            'Eğitim' => [
+                'Çalışan eğitimlerinin planlanan sürede tamamlanma durumu',
+                'Yeni işe başlayan çalışanların işbaşı eğitimlerinin kontrolü',
+            ],
+            'Denetim' => [
+                'Saha denetimlerinde tespit edilen uygunsuzlukların (DÖF) takibi',
+                'Kişisel koruyucu donanım kullanım durumunun değerlendirilmesi',
+            ],
+        ],
+    ],
 ];
