@@ -53,8 +53,8 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
 | Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip → PDF) |
 | Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
-| Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | planlandı |
-| Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | planlandı |
+| Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | **hazır** (konu kategorileri + eğitim yöntemi + TC gizleme → PDF) |
+| Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | **hazır** (10 senaryo + ekip + değerlendirme + DÖF önerisi → PDF) |
 | Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | **hazır** (hazır katalog + serbest/AI destekli madde → PDF) |
 | Formlar & Belgeler | Sertifika Oluştur | `sertifika` | planlandı |
 | Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | **hazır** (Gemini ile 10 soruluk sınav + manuel soru → PDF) |
@@ -596,19 +596,36 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     ile güncelleniyor (Livewire nested-array `wire:model` sınırlaması nedeniyle —
     `KurulToplantisi.kararDurumGuncelle` ile aynı çözüm). PDF çıktısı artık 3 ayrı sayfa.
     5 yeni test. **228 test toplam.**
+- **Faz 3r — İşbaşı Eğt. Tutanağı ✅ (isgpratik 60.jpg):** `App\Filament\Pages\IsbasiEgitim`
+  (stub yerine geçti) + `App\Models\IsbasiEgitimTutanagi` + `App\Support\
+  IsbasiEgitimTutanagiUretici` (dompdf) + `config isg.isbasi_egitim` (3 konu kategorisi —
+  İşyeri Tanıtımı [5 madde], Görev ve Ekipman Tanıtımı [3 madde], İşe/İşyerine Özgü İSG
+  [1 madde] — + eğitim yöntemleri: Uygulamalı/Teorik/Uygulamalı+Teorik). Firma çalışanından
+  hızlı seçim; konu toggle + "Tümünü Seç"; TC No görünürlüğü `tc_gizli` bayrağıyla
+  maskelenebilir (`tcGorunur()` — ilk 3 hane + `*`). `IsbasiEgitimTest` (8 test).
+  **236 test toplam.**
+- **Faz 3s — Tatbikat Tutanağı ✅ (isgpratik 61-65.jpg):** `App\Filament\Pages\
+  TatbikatTutanagi` (stub yerine geçti) + `App\Models\TatbikatTutanagi` + `App\Support\
+  TatbikatTutanagiUretici` (dompdf) + `config isg.tatbikat` (10 hazır senaryo — Yangın,
+  Deprem, Genel Tahliye, Kimyasal Dökülme, İlkyardım/İş Kazası, Doğalgaz/LPG Kaçağı, Sel/Su
+  Baskını, Elektrik Kaynaklı Yangın, Sabotaj/Güvenlik, Gıda Zehirlenmesi — her biri hazır
+  metinle; süre dk). Senaryo seçilince metin otomatik dolar; görev alan ekipler (firma
+  çalışanından hızlı ekle), değerlendirme kontrol listesi (5 varsayılan soru + serbest özel
+  soru), tespit edilen eksiklikler, DÖF önerileri, katılımcılar bölümleri var; PDF aksiyonu
+  yalnız firma seçiliyken görünür (`assertActionHidden` ile test edildi).
+  `TatbikatTutanagiTest` (10 test). **246 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
-  Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı,
-  Sertifika Oluştur, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene
-  formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve
-  Tebliğ'in ikinci sekmesi; "Yıllık Eğitim Planı"/"Yıllık Değerlendirme Raporu" — Yıllık
-  Planlar'ın diğer 2 sekmesi). isgpratik kök klasöründe 24-101(+133-135,158) numaralı ekran
-  görüntüleri bu modüllere karşılık geliyor — kısmen incelendi (24-44, 60-87 görüldü:
-  DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı Eğt./
-  Tatbikat/Tespit Öneri Defteri(✅)/Sertifika Oluştur/Eğitim Soruları(✅)/KKD(✅)/İş İzin(✅)/
-  Ceza Tebliğ(✅)/İş Kazası Raporu/Talimat Oluştur(✅)/Muayene Formu (çok büyük, ertelendi)/
-  Yıllık Planlar(✅)), 88-101+133-135+158 henüz incelenmedi. Her biri Eğitim Katılım/Atama
-  Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik + Filament Page +
-  dompdf + test) tek tek kurulacak.
+  Saha Denetimi, Sertifika Oluştur, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük,
+  tıbbi muayene formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC
+  Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi). isgpratik kök klasöründe 24-101(+133-
+  135,158) numaralı ekran görüntüleri bu modüllere karşılık geliyor — kısmen incelendi
+  (24-65, 79-87 görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama
+  Yazıları(✅)/Eğitim Katılım(✅)/İşbaşı Eğt.(✅)/Tatbikat(✅)/Ceza Tebliğ(✅)/Talimat
+  Oluştur(✅)/Yıllık Planlar(✅)), 66-78+88-101+133-135+158 henüz tam incelenmedi (Tespit
+  Öneri Defteri, Sertifika Oluştur, Eğitim Soruları, KKD, İş İzin, İş Kazası Raporu,
+  Muayene Formu (çok büyük, ertelendi) zaten ✅/ertelendi olarak işaretli). Her biri Eğitim
+  Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik + Filament
+  Page + dompdf + test) tek tek kurulacak.
 
 ## Notlar
 

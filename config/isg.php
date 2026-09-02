@@ -1539,4 +1539,63 @@ return [
             ['calisma' => 'Diğer çalışmalar', 'yapan_kisi' => 'İsim ve Unvan', 'yontem' => 'Yöntem', 'sonuc' => 'Sonuç ve yorum'],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | İşbaşı / Oryantasyon Eğitim Tutanağı — isgpratik 60.jpg
+    |--------------------------------------------------------------------------
+    | İşe yeni başlayan her çalışan için ayrı, tek sayfalık tutanak. Kontrol
+    | listesi kategorilere ayrılmıştır; ekranda kesilen kısım nedeniyle
+    | yalnız görülebilen maddeler config'e alındı — kullanıcı "Madde Ekle" ile
+    | genişletebilir.
+    */
+    'isbasi_egitim' => [
+        'konu_kategorileri' => [
+            'İşyeri Tanıtımı' => [
+                'İşyeri ve organizasyonun tanıtımı',
+                'Çalışma saatleri, molalar ve vardiya düzeni',
+                'İşyeri kuralları, disiplin ve davranış kuralları',
+                'Sosyal alanların tanıtımı (yemekhane, soyunma odası, WC, dinlenme)',
+                'Amir ve çalışma arkadaşları ile tanıştırma',
+            ],
+            'Görev ve Ekipman Tanıtımı' => [
+                'Görev tanımının aktarılması ve iş ile ilgili beklentiler',
+                'Kullanılacak iş ekipmanlarının tanıtımı ve güvenli kullanımı',
+                'İlgili çalışma talimatlarının okutulması ve imzalatılması',
+            ],
+            'İşe / İşyerine Özgü İSG' => [
+                'İşyerine özgü tehlikeler, riskler ve alınan önlemler',
+            ],
+        ],
+        'egitim_yontemleri' => ['Uygulamalı', 'Teorik', 'Uygulamalı + Teorik'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tatbikat Tutanağı — isgpratik 61-65.jpg
+    |--------------------------------------------------------------------------
+    */
+    'tatbikat' => [
+        'senaryolar' => [
+            'yangin' => ['ad' => 'Yangın Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında işyerinde yangın alarmı verilerek çalışanların en yakın ve güvenli çıkış yollarını kullanarak belirlenen toplanma noktasına tahliyesi test edilmiştir.'],
+            'deprem' => ['ad' => 'Deprem Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında deprem senaryosu uygulanmış; çalışanların "Çök-Kapan-Tutun" davranışını sergilemesi ve sarsıntı sonrası güvenli tahliyesi test edilmiştir.'],
+            'genel_tahliye' => ['ad' => 'Genel Tahliye Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'İşyerinin genel tahliye planı doğrultusunda tüm çalışanların belirlenen toplanma alanına yönlendirilmesi ve sayımının yapılması test edilmiştir.'],
+            'kimyasal_dokulme' => ['ad' => 'Kimyasal Dökülme/Sızıntı Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında kimyasal madde dökülme/sızıntı senaryosu uygulanmış; etkilenen alanın izolasyonu, müdahale ekibinin devreye girmesi ve tahliye süreci test edilmiştir.'],
+            'ilkyardim_is_kazasi' => ['ad' => 'İlk Yardım / İş Kazası Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında bir iş kazası senaryosu canlandırılmış; ilkyardım ekibinin müdahalesi, 112 ile iletişim ve olay yeri güvenliğinin sağlanması test edilmiştir.'],
+            'dogalgaz_lpg' => ['ad' => 'Doğalgaz/LPG Kaçağı Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında doğalgaz/LPG kaçağı senaryosu uygulanmış; gaz vanalarının kapatılması, elektrik/ateş kaynaklarının izole edilmesi ve tahliye süreci test edilmiştir.'],
+            'sel_su_baskini' => ['ad' => 'Sel/Su Baskını Tatbikatı', 'sure_dk' => '45-60', 'metin' => 'Tatbikat kapsamında sel/su baskını senaryosu uygulanmış; alçak kotlardaki alanların tahliyesi ve elektrik kesintisi prosedürleri test edilmiştir.'],
+            'elektrik_yangini' => ['ad' => 'Elektrik Yangını Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında elektrik kaynaklı yangın senaryosu uygulanmış; ana elektrik kesme prosedürü ve uygun söndürücü (CO2) kullanımı test edilmiştir.'],
+            'sabotaj_guvenlik' => ['ad' => 'Sabotaj/Güvenlik Tehdidi Tatbikatı', 'sure_dk' => '30-45', 'metin' => 'Tatbikat kapsamında güvenlik tehdidi/şüpheli paket senaryosu uygulanmış; alanın güvenli bir şekilde boşaltılması ve yetkili mercilerle iletişim test edilmiştir.'],
+            'gida_zehirlenmesi' => ['ad' => 'Gıda Zehirlenmesi Tatbikatı', 'sure_dk' => '45-60', 'metin' => 'Tatbikat kapsamında toplu gıda zehirlenmesi şüphesi senaryosu uygulanmış; etkilenen çalışanların tespiti, ilkyardım müdahalesi ve sağlık kuruluşuyla iletişim test edilmiştir.'],
+        ],
+        'degerlendirme_sorulari' => [
+            'Alarm/anons tüm çalışma alanlarında duyuldu mu?',
+            'Tahliye planlanan sürede tamamlandı mı?',
+            'Kaçış yolları ve acil çıkışlar açık ve engelsiz miydi?',
+            'Acil durum yönlendirme levhaları yeterli ve görünür müydü?',
+            'Toplanma noktasında sayım doğru ve eksiksiz yapıldı mı?',
+        ],
+        'degerlendirme_secenekleri' => ['evet' => 'Evet', 'hayir' => 'Hayır', 'kismen' => 'Kısmen'],
+        'ekip_secenekleri' => ['Söndürme Ekibi', 'Kurtarma Ekibi', 'Koruma Ekibi', 'İlk Yardım Ekibi'],
+    ],
 ];
