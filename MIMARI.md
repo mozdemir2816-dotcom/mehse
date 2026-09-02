@@ -383,14 +383,30 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     puanları) doğrulandı. Sihirbaz Adım 3'te dosya yükle → tara → aday listesi
     (AI akışındaki gibi toggle) → seçilenlere ekle. Adaylar varsayılan SEÇİLİ
     gelir (kullanıcının kendi onayladığı veri olduğundan).
-  - **Risk Kütüphanesi (Tehlike) Excel'den toplu yükleme ✅:**
+  - **Risk Kütüphanesi (Tehlike) Excel'den toplu yükleme + çakışma tespiti ✅:**
     `App\Support\TehlikeExcelIceAktarici` — "Kategori" sütunu yoksa otomatik
     oluşturulur (Kazı Çalışmaları, Cam Üretimi vb. yeni kategoriler bu yolla
     eklenebilir). `ListTehlikes` header'ında "Şablon İndir" + "Excel'den
     Toplu Yükle". **Not:** Bu, `Tehlike` (skorsuz referans kütüphane) için;
     yukarıdaki "excel" yöntemi ise gerçek O/Ş/Puan içeren tam risk
-    değerlendirmeleri için — farklı hedef, farklı şema.
-  **116 test toplam.**
+    değerlendirmeleri için — farklı hedef, farklı şema. Kullanıcı zaman
+    içinde birden çok sektör/iş dosyasını TEK "master" kütüphaneye biriktirmek
+    istediğinden: kategoriden bağımsız tüm kütüphaneyle metin benzerliği
+    (`similar_text`, Türkçe normalize) karşılaştırılır — aynı kategoride
+    ≥97% "zaten bu" sayılıp günceller, ≥80% (herhangi kategoride) otomatik
+    eklenmeyip `App\Models\TehlikeCakismasi` olarak biriktirilir.
+    `App\Filament\Pages\TehlikeCakismalari` (nav rozetli, boşken gizli):
+    mevcut/yeni yan yana, "Mevcudu Koru / Yenisini Kullan / İkisini de Tut".
+  - **Excel içe aktarmalarda "siyah ekran" (bellek taşması) düzeltmesi ✅:**
+    Gerçek dünya dosyaları (biçimlendirilmiş/çok sayfalı) 512M `memory_limit`i
+    aşıp fatal hataya yol açıyordu. `App\Support\ExcelBellek` (1024M'a çıkarır)
+    + her üç Excel okuyucuda `setReadDataOnly(true)` (stil atlanır, ~%85 bellek
+    tasarrufu). **Yan etki + düzeltme:** `setReadDataOnly` dosyanın "aktif
+    sayfa" bilgisini güvenilmez kılıyor — `RiskDegerlendirmesiExcelOkuyucu`
+    artık aktif sayfaya güvenmeden TÜM sayfaları tarayıp en iyi eşleşen
+    başlık satırını bulan sayfayı kullanıyor (kullanıcı dosyayı hiç
+    değiştirmeden olduğu gibi yükleyebiliyor).
+  **122 test toplam.**
   - **Kalan:** Kayıtlı Risklerim (klasörlü); `RiskSablonu` `maddeler` düzenleme
     (repeater); İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/
     Zemin İyileştirme) çoklu-seçim arayüzü (kullanıcı Tehlike Kütüphanesi'ne
