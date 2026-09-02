@@ -41,7 +41,12 @@ class TehlikeExcelIceAktarici
      */
     public static function iceAktar(string $dosyaYolu): array
     {
-        $satirlar = IOFactory::load($dosyaYolu)
+        ExcelBellek::artir();
+
+        $reader = IOFactory::createReaderForFile($dosyaYolu);
+        $reader->setReadDataOnly(true);
+
+        $satirlar = $reader->load($dosyaYolu)
             ->getActiveSheet()
             ->toArray(null, true, false, false);
 

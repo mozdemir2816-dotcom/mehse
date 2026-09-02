@@ -46,15 +46,42 @@ class RiskDegerlendirmesiExcelOkuyucu
      */
     public static function oku(string $dosyaYolu): array
     {
-        $sheet = IOFactory::load($dosyaYolu)->getActiveSheet();
+        // Gerçek risk analizi dosyaları genelde büyük/çok biçimlendirilmiş olur
+        // (lejant tabloları, renkli hücreler, çoklu sayfa) — stil nesnelerini
+        // yüklemeden yalnız veriyi okumak bellek kullanımını büyük ölçüde azaltır.
+        // NOT: bu modda dosyanın "aktif sayfa" bilgisi güvenilir gelmeyebiliyor
+        // (PhpSpreadsheet bir kısıtı) — bu yüzden aktif sayfaya güvenmek yerine
+        // TÜM sayfalar taranıp en iyi eşleşen başlık satırı bulunur.
+        ExcelBellek::artir();
+
+        $reader = IOFactory::createReaderForFile($dosyaYolu);
+        $reader->setReadDataOnly(true);
+
+        $kitap = $reader->load($dosyaYolu);
+
+        $sheet = null;
+        $baslikSatiri = null;
+        $enIyiPuan = -1;
+
+        foreach ($kitap->getAllSheets() as $adaySheet) {
+            $adayMaxRow = $adaySheet->getHighestRow();
+            $adayMaxCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($adaySheet->getHighestColumn());
+
+            [$adaySatir, $adayPuan] = static::baslikSatiriniBul($adaySheet, $adayMaxRow, $adayMaxCol);
+
+            if ($adaySatir !== null && $adayPuan > $enIyiPuan) {
+                $enIyiPuan = $adayPuan;
+                $baslikSatiri = $adaySatir;
+                $sheet = $adaySheet;
+            }
+        }
+
+        if ($sheet === null || $baslikSatiri === null) {
+            return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ['Tanıdık bir başlık satırı bulunamadı (en az "Tehlike" sütunu gerekli, dosyanın hiçbir sayfasında).']];
+        }
+
         $maxRow = $sheet->getHighestRow();
         $maxCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheet->getHighestColumn());
-
-        $baslikSatiri = static::baslikSatiriniBul($sheet, $maxRow, $maxCol);
-
-        if ($baslikSatiri === null) {
-            return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ['Tanıdık bir başlık satırı bulunamadı (en az "Tehlike" sütunu gerekli).']];
-        }
 
         $sutunlar = static::sutunlariEslestir($sheet, $baslikSatiri, $maxCol);
 
@@ -112,7 +139,8 @@ class RiskDegerlendirmesiExcelOkuyucu
         return ['basarili' => count($adaylar), 'adaylar' => $adaylar, 'hatalar' => $hatalar];
     }
 
-    private static function baslikSatiriniBul($sheet, int $maxRow, int $maxCol): ?int
+    /** @return array{0: int|null, 1: int} [en iyi satır numarası (yoksa null), puanı] */
+    private static function baslikSatiriniBul($sheet, int $maxRow, int $maxCol): array
     {
         $enIyiSatir = null;
         $enIyiPuan = 0;
@@ -152,7 +180,7 @@ class RiskDegerlendirmesiExcelOkuyucu
             }
         }
 
-        return $enIyiSatir;
+        return [$enIyiSatir, $enIyiPuan];
     }
 
     /** @return array<int, string> sütun indeksi => alan adı */
