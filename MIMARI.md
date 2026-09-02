@@ -48,7 +48,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF) |
-| Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | planlandı |
+| Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF) |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
 | Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF) |
@@ -675,21 +675,45 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   zaten aynı). isgpratik'in OSGB logosu / şablon kaydetme özellikleri kapsam
   dışı (tek kullanıcılı panelde anlamsız / ayrı iş). `DofOlusturTest` (10 test).
   **275 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (AI Saha Analizi,
-  Saha Denetimi, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük,
-  tıbbi muayene formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC
-  Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi). isgpratik kök klasöründe 24-101(+133-
-  135,158) numaralı ekran görüntüleri bu modüllere karşılık geliyor — DÖF (158.jpg)
-  hariç **AI Saha Analizi ve Saha Denetimi için hiçbir ekran görüntüsü bulunamadı**
-  (planNotu'larındaki 11.jpg/73-75.jpg referansları hatalı çıktı — 73-75 aslında
-  KKD Formu'na ait; isgpratik'te bu ikisi muhtemelen ayrı bir alt sayfada/klasörde,
-  henüz görülmedi). 88-101 aralığı incelendi ama tamamı kapsam dışı isgpratik
-  özellikleri (İSG Arşiv Dosyaları 2860 dosyalık kütüphane, İSG Deneme Sınavı
-  3499 soruluk sınav havuzu, genel Mevzuat sayfası — hiçbiri sol menümüzde yok).
-  133-135+158 incelendi (Profilim sekmeleri zaten ✅, DÖF ✅). Her biri Eğitim
-  Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik +
-  Filament Page + dompdf + test) tek tek kurulacak; AI Saha Analizi/Saha Denetimi
-  için kullanıcıdan ekran görüntüsü istenmesi gerekebilir.
+- **Faz 3w — AI Saha Analizi ✅ (isgpratik AI SAHA ANALİZİ/1-6.jpg + gerçek
+  örnek PDF):** Kullanıcı ekran görüntülerini `Desktop\isgpratik\AI SAHA
+  ANALİZİ\` alt klasörüne ekledi — 6 ekran + isgpratik'ten indirilmiş gerçek
+  bir "İSG Saha Gözetim Raporu" PDF örneği (Coklu-DOF-NİL-UNLU-...pdf).
+  `App\Filament\Pages\AiSahaAnalizi` (stub yerine geçti) + `App\Models\
+  SahaAnalizi` + `App\Support\SahaAnaliziUretici` (dompdf, A4 yatay) +
+  `App\Support\GeminiSahaAnalizi` (**projede ilk Gemini VISION kullanımı** —
+  önceki tüm Gemini sınıfları yalnız metin girdisi alıyordu; bu sefer fotoğraf
+  `inline_data` (base64) olarak `parts` dizisine ekleniyor, `responseSchema`
+  ile yapılandırılmış JSON dizisi isteniyor). Akış: firma seç → en fazla 10
+  fotoğraf yükle (yalnız yeni eklenenler analiz edilir) + opsiyonel bağlam
+  notu → "Fotoğrafları AI ile Analiz Et" → her fotoğraftaki uygunsuzluk için
+  bulgu (bina/bölge, kategori, tespit, öneriler, yasal gerekçe, risk derecesi
+  1-4) otomatik gelir; kullanıcı bulguları elden geçirip (metin düzenle/sil)
+  seçtiklerini rapora dahil eder. **PDF çıktısı isgpratik'in gerçek "İSG Saha
+  Gözetim Raporu" PDF'iyle BİREBİR aynı kolon düzeninde** (Sıra No/Bina-Bölge/
+  Uygunsuzluk Fotosu/Tehlikeler/Uygun Hale Getirme/Örnek Resim/Yasal Gerekçe/
+  Risk Derecesi + üstte künye + risk derecesi renk lejantı + alt kısımda İGU
+  kaşe/imza) — dördüncü kaşe-basma kullanımı (`gozetim_yapan_kase`).
+  **Kapsam dışı bırakıldı:** "Uygun Hale Getirme (Örnek Resim)" için ayrı
+  manuel görsel yükleme (isgpratik'te opsiyonel, sütun PDF'te boş kalıyor);
+  isgpratik'in analiz kredisi/kota sistemi (ödeme entegrasyonu zaten kapsam
+  dışı); "Seçilenleri Çoklu DÖF'e Aktar" — DÖF Oluştur'un (Faz 3v) madde
+  şeması farklı (durum/termin/sorumlu takibi var, bina-bölge/foto/örnek resim
+  yok) olduğundan iki modül BİLİNÇLİ OLARAK ayrı tutuldu, veri modeli
+  birleştirilmedi; entegrasyon istenirse ayrı bir iş. `AiSahaAnaliziTest`
+  (9 test). **284 test toplam.**
+- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Saha
+  Denetimi, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene
+  formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC
+  Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi) tek tek kurulacak. **Saha
+  Denetimi için isgpratik'te hâlâ hiçbir ekran görüntüsü yok**
+  (planNotu'ndaki 73-75.jpg referansı hatalı çıktı — KKD Formu'na ait);
+  kullanıcıdan ekran görüntüsü istenmesi gerekiyor. isgpratik kök klasöründe
+  24-101(+133-135,158) + AI SAHA ANALİZİ alt klasörü artık tam incelendi;
+  88-101 aralığı kapsam dışı isgpratik özellikleri (İSG Arşiv 2860 dosya,
+  İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası — sol menümüzde yok).
+  Her yeni modül Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı
+  desende (config-driven içerik + Filament Page + dompdf + test) kurulacak.
 
 ## Notlar
 

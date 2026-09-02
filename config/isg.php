@@ -1266,6 +1266,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Saha Analizi — isgpratik AI SAHA ANALİZİ/1-6.jpg
+    |--------------------------------------------------------------------------
+    | Saha fotoğrafı Gemini vision'a gönderilir; her fotoğraftaki uygunsuzluk
+    | için bulgu (tespit + öneriler + yasal gerekçe + risk derecesi) üretilir.
+    | Çıktı PDF'i isgpratik'in "İSG Saha Gözetim Raporu" ile birebir aynı
+    | kolon düzenini kullanır (bkz. örnek PDF: Coklu-DOF-...pdf).
+    */
+    'saha_analiz' => [
+        'risk_dereceleri' => [
+            1 => 'Çok Yüksek',
+            2 => 'Yüksek',
+            3 => 'Orta',
+            4 => 'Düşük',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tespit ve Öneri Defteri — isgpratik 65-66.jpg
     |--------------------------------------------------------------------------
     | Hazır öneri kataloğu, isgpratik'teki "171 madde" kataloğunun bir alt
