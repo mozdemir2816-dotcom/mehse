@@ -637,6 +637,7 @@ class RiskSihirbazi extends Page
     public function excelSecilenleriEkle(): void
     {
         $eklenen = 0;
+        $eklenenler = [];
 
         foreach ($this->excelAdaylar as $aday) {
             if (! in_array($aday['anahtar'], $this->excelSecilenAdaylar, true)) {
@@ -649,6 +650,7 @@ class RiskSihirbazi extends Page
 
             if (! $zaten) {
                 $this->secilenler[] = $aday;
+                $eklenenler[] = $aday;
                 $eklenen++;
             }
         }
@@ -656,11 +658,46 @@ class RiskSihirbazi extends Page
         $this->excelAdaylar = [];
         $this->excelSecilenAdaylar = [];
 
+        // Excel'deki O/Ş(/F) puanları, ekrandaki açılır listede yalnızca SEÇİLİ
+        // puanlama yönteminin ölçek noktalarıyla (örn. 5x5 için 1-5) eşleşirse
+        // görünür. Kullanıcının dosyası Fine-Kinney ölçeğinde (0.2/0.5/…/40 gibi
+        // veya Frekans sütunu dolu) geldiyse yöntemi otomatik ona çevirmezsek
+        // puanlar "kayboldu" gibi görünür — kullanıcı elle girmek zorunda kalır.
+        if ($eklenenler && $this->yontem !== 'fine_kinney' && static::fineKinneyOlcegineUyuyor($eklenenler)) {
+            $this->yontem = 'fine_kinney';
+            Notification::make()
+                ->title('Puanlama yöntemi Fine-Kinney\'e çevrildi')
+                ->body('Excel dosyanızdaki olasılık/şiddet değerleri Fine-Kinney ölçeğine uyuyor, 5x5 Matris\'te görünmüyorlardı.')
+                ->warning()->send();
+        }
+
         Notification::make()->title($eklenen.' risk maddesi eklendi')->success()->send();
 
         if (count($this->secilenler) > 0) {
             $this->adim = 4;
         }
+    }
+
+    /** @param  array<int, array<string, mixed>>  $maddeler */
+    private static function fineKinneyOlcegineUyuyor(array $maddeler): bool
+    {
+        $matris5x5Puanlari = [1.0, 2.0, 3.0, 4.0, 5.0];
+
+        foreach ($maddeler as $m) {
+            if (filled($m['frekans'] ?? null)) {
+                return true; // Frekans yalnız Fine-Kinney'de var
+            }
+
+            foreach (['olasilik', 'siddet'] as $alan) {
+                $deger = $m[$alan] ?? null;
+
+                if ($deger !== null && ! in_array((float) $deger, $matris5x5Puanlari, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** AI akışında "bu sektörün şablonunu direkt kullan". */

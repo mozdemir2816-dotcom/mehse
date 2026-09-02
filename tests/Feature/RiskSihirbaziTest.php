@@ -274,6 +274,38 @@ class RiskSihirbaziTest extends TestCase
         unlink($yol);
     }
 
+    public function test_excel_fine_kinney_puanlari_getirince_yontem_otomatik_degisir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        // Varsayılan yöntem 5x5 Matris'tir (1-5 ölçek); dosyadaki 0.2/6/15 gibi
+        // değerler o ölçekte yok -- kullanıcı "puanlar aktarılmıyor" diye şikayet
+        // etmişti çünkü açılır listede seçili görünmüyorlardı.
+        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Frekans', 'Şiddet'],
+            ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', 6, 10, 15],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->assertSet('yontem', 'matris_5x5')
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->call('excelSecilenleriEkle')
+            ->assertSet('yontem', 'fine_kinney');
+
+        $madde = $component->get('secilenler')[0];
+        $this->assertEquals(6, $madde['olasilik']);
+        $this->assertEquals(10, $madde['frekans']);
+        $this->assertEquals(15, $madde['siddet']);
+
+        unlink($yol);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Sektörel şablonlar (toplu ekleme + tekrar kullanım)
