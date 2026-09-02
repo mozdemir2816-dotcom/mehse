@@ -72,6 +72,11 @@ class Firma extends Model
         return $this->hasOne(TespitOneriDefteri::class);
     }
 
+    public function kkdZimmetFormlari(): HasMany
+    {
+        return $this->hasMany(KkdZimmetFormu::class);
+    }
+
     public function tehlikeSinifiEtiketi(): string
     {
         return config('isg.tehlike_siniflari.'.$this->tehlike_sinifi, $this->tehlike_sinifi);
