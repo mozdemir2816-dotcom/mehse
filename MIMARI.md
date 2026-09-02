@@ -58,9 +58,9 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | **hazır** (hazır katalog + serbest/AI destekli madde → PDF) |
 | Formlar & Belgeler | Sertifika Oluştur | `sertifika` | planlandı |
 | Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | **hazır** (Gemini ile 10 soruluk sınav + manuel soru → PDF) |
-| Formlar & Belgeler | KKD Formu | `kkd-formu` | planlandı |
-| Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | planlandı |
-| Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | planlandı |
+| Formlar & Belgeler | KKD Formu | `kkd-formu` | **hazır** (6 kategori TS EN katalog, çoklu çalışan × çoklu KKD → PDF) |
+| Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | **hazır** (4 izin türü, dinamik güvenlik önlemleri → PDF) |
+| Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | **hazır** (ihlal kataloğu + serbest madde + yaptırım → PDF) |
 | Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | planlandı |
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | planlandı |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
@@ -520,16 +520,41 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Öneri Al" ile Gemini'den tek cümlelik öneri iste → deftere ekle. PDF çıktısı öncelik
   renkli (yüksek/orta/düşük) madde listesi + imza alanları.
   `TespitOneriDefteriTest` (9 test, `Http::fake`). **179 test toplam.**
+- **Faz 3m — KKD Zimmet Formu ✅ (isgpratik 71-75.jpg):** `App\Filament\Pages\KkdFormu`
+  (stub yerine geçti) + `App\Models\KkdZimmetFormu` + `App\Support\KkdZimmetFormuUretici`
+  (dompdf) + `config isg.kkd.kategoriler` (6 kategori — Baş/Yüz, İşitme, Solunum, El/Kol,
+  Ayak/Bacak, Gövde/Yükseklik — isgpratik ekranlarından birebir, her madde TS EN standart
+  numarasıyla, toplam ~85 KKD maddesi). Çoklu çalışan (firma + manuel) × çoklu KKD
+  (kategori bazlı "Kategorinin Tümünü Seç" dahil) seçilir; PDF her çalışan için AYRI
+  teslim tutanağı sayfası üretir (KKD seti hepsinde aynı — isgpratik'te de tekil seçim).
+  `KkdFormuTest` (7 test).
+- **Faz 3n — İş İzin Formu (PTW) ✅ (isgpratik 76-78.jpg):** `App\Filament\Pages\
+  IsIzinFormu` (stub yerine geçti) + `App\Models\IsIzinFormu` + `App\Support\
+  IsIzinFormuUretici` (dompdf) + `config isg.is_izin` (4 izin türü: sıcak iş/yüksekte/
+  kapalı alan/elektrik + 16 güvenlik önlemi maddesi, her biri `tur` alanıyla ilişkili —
+  `null` = her izinde görünür, doluysa yalnız o tür seçiliyken). İzin türü değişince
+  önlem listesi dinamik güncellenir; artık geçersiz olan seçili önlemler otomatik
+  temizlenir. `IsIzinFormuTest` (7 test).
+- **Faz 3o — İSG Ceza ve Tebliğ Tutanağı ✅ (isgpratik 79-80.jpg):**
+  `App\Filament\Pages\CezaTeblig` (stub yerine geçti) + `App\Models\CezaTebligTutanagi`
+  + `App\Support\CezaTebligTutanagiUretici` (dompdf) + `config isg.ceza_teblig`
+  (2 ihlal kategorisi katalog + 4 yaptırım tipi). Çalışan bilgisi + olay bilgisi +
+  tanıklar + katalogdan/serbest ihlal maddesi + tek seçimli yaptırım (Sözlü Uyarı/
+  Yazılı İhtar/Ücret Kesme/Yazılı Savunma) + tebliğ/tebellüğ (imzaladı/imtina etti).
+  **Kapsam dışı:** isgpratik'in ikinci sekmesi "İşverene İPC Tebliği" (idari para cezası
+  bildirimi, ayrı bir belge akışı) — yalnız "Çalışana Ceza Tutanağı" akışı yapıldı.
+  `CezaTebligTest` (9 test). **202 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
   Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı,
-  Sertifika Oluştur, KKD Formu, İş İzin Formu, Ceza ve Tebliğ Tutanağı, İş Kazası Raporu,
-  Talimat Oluştur, Muayene Formu, Ücretsiz E-Reçetem, Yıllık Planlar, Ziyaret Programı,
-  Araçlar). isgpratik kök klasöründe 24-101(+133-135,158) numaralı ekran görüntüleri bu
-  modüllere karşılık geliyor — kısmen incelendi (24-44, 60-70 görüldü: DÖF/AI Saha
-  Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı Eğt./Tatbikat/
-  Tespit Öneri Defteri(✅)/Sertifika Oluştur/Eğitim Soruları(✅)), 71-101+133-135+158
-  henüz incelenmedi. Her biri Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı
-  desende (config-driven içerik + Filament Page + dompdf + test) tek tek kurulacak.
+  Sertifika Oluştur, İş Kazası Raporu, Talimat Oluştur, Muayene Formu, Ücretsiz
+  E-Reçetem, Yıllık Planlar, Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve
+  Tebliğ'in ikinci sekmesi). isgpratik kök klasöründe 24-101(+133-135,158) numaralı ekran
+  görüntüleri bu modüllere karşılık geliyor — kısmen incelendi (24-44, 60-80 görüldü:
+  DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı Eğt./
+  Tatbikat/Tespit Öneri Defteri(✅)/Sertifika Oluştur/Eğitim Soruları(✅)/KKD(✅)/İş İzin(✅)/
+  Ceza Tebliğ(✅)), 81-101+133-135+158 henüz incelenmedi. Her biri Eğitim Katılım/Atama
+  Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik + Filament Page +
+  dompdf + test) tek tek kurulacak.
 
 ## Notlar
 

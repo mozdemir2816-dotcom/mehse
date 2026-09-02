@@ -1357,4 +1357,69 @@ return [
             ]],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | İş İzin Formu (Permit to Work) — isgpratik 76-78.jpg
+    |--------------------------------------------------------------------------
+    | Güvenlik önlemi maddelerinin 'tur' alanı null ise her izinde gösterilir,
+    | doluysa yalnız o izin türü seçiliyken gösterilir.
+    */
+    'is_izin' => [
+        'turler' => [
+            'sicak_is' => 'Sıcak İş Çalışması',
+            'yukseklik' => 'Yüksekte Çalışma',
+            'kapali_alan' => 'Kapalı Alan',
+            'elektrik' => 'Elektrik Çalışması',
+        ],
+        'guvenlik_onlemleri' => [
+            ['madde' => 'Çalışma alanı sınırlandırıldı / Uyarı levhaları asıldı', 'tur' => null],
+            ['madde' => 'Acil durum planı ve iletişim hazır', 'tur' => null],
+            ['madde' => 'İlk yardım malzemeleri kontrol edildi', 'tur' => null],
+            ['madde' => 'Çalışanlar iş güvenliği eğitimi aldı', 'tur' => null],
+            ['madde' => 'Risk değerlendirmesi yapıldı ve paylaşıldı', 'tur' => null],
+            ['madde' => 'Yangın söndürme tüpü hazır', 'tur' => 'sicak_is'],
+            ['madde' => 'Yanıcı malzemeler uzaklaştırıldı', 'tur' => 'sicak_is'],
+            ['madde' => 'Yangın gözetlemecisi görevlendirildi', 'tur' => 'sicak_is'],
+            ['madde' => 'Yaşam hattı / Emniyet kemeri kontrol edildi', 'tur' => 'yukseklik'],
+            ['madde' => 'İskele ve platformlar kontrol edildi', 'tur' => 'yukseklik'],
+            ['madde' => 'Düşme önleme sistemleri kuruldu', 'tur' => 'yukseklik'],
+            ['madde' => 'Gaz ölçümü yapıldı ve uygun', 'tur' => 'kapali_alan'],
+            ['madde' => 'Havalandırma sistemi çalışıyor', 'tur' => 'kapali_alan'],
+            ['madde' => 'Kurtarma ekipmanları hazır', 'tur' => 'kapali_alan'],
+            ['madde' => 'Enerji kesildi ve kilitlendi (LOTO)', 'tur' => 'elektrik'],
+            ['madde' => 'Topraklama kontrolü yapıldı', 'tur' => 'elektrik'],
+        ],
+        'kkd_secenekleri' => [
+            'Baret', 'İş Ayakkabısı', 'Reflektörlü Yelek', 'Koruyucu Gözlük',
+            'Kaynak Maskesi', 'Emniyet Kemeri', 'Gaz Maskesi', 'Kulaklık',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | İSG Ceza ve Tebliğ Tutanağı — isgpratik 79-80.jpg
+    |--------------------------------------------------------------------------
+    */
+    'ceza_teblig' => [
+        'ihlal_kategorileri' => [
+            'Kişisel Koruyucu Donanım' => [
+                ['madde' => 'KKD kullanmama', 'dayanak' => '6331 s.K. m.19/2-b; KKD Yönetmeliği m.10'],
+                ['madde' => 'Emniyet kemeri takmama (yüksekte çalışma)', 'dayanak' => '6331 s.K. m.19/2-b; Yapı İşlerinde İSG Yönetmeliği'],
+                ['madde' => "KKD'yi amacına uygun kullanmama / koruma", 'dayanak' => '6331 s.K. m.19/2-b; 4857 s.K. m.25-II/(ı)'],
+            ],
+            'Makine ve Ekipman' => [
+                ['madde' => 'Güvenlik tertibatını devre dışı bırakma', 'dayanak' => '6331 s.K. m.19/2-a,c; 4857 s.K. m.25-II/(ı)'],
+                ['madde' => 'Yetkisiz makine/ekipman kullanımı', 'dayanak' => '6331 s.K. m.19/2-ç; İş Ekipmanları Yönetmeliği'],
+                ['madde' => 'Arızalı ekipmanla çalışmaya devam etme', 'dayanak' => '6331 s.K. m.19/2-e'],
+                ['madde' => 'Ekipmanı talimata aykırı kullanma', 'dayanak' => '6331 s.K. m.19/2-ç'],
+            ],
+        ],
+        'yaptirimlar' => [
+            'sozlu_uyari' => ['ad' => 'Sözlü Uyarı', 'aciklama' => 'İlk/hafif ihlalde sözlü ikaz; tutanakla kayıt altına alınır.'],
+            'yazili_ihtar' => ['ad' => 'Yazılı İhtar', 'aciklama' => 'Tekrarında fesih sürecine dayanak olacak yazılı uyarı.'],
+            'ucret_kesme' => ['ad' => 'Ücret Kesme Cezası', 'aciklama' => '4857 md.38 — ayda en fazla iki gündelik kesilebilir.'],
+            'yazili_savunma' => ['ad' => 'Yazılı Savunma Talebi', 'aciklama' => 'Çalışandan süre verilerek yazılı savunma istenir.'],
+        ],
+    ],
 ];
