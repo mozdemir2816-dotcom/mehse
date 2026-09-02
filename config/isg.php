@@ -1950,4 +1950,58 @@ return [
         ],
         'gurultu_guvenli_mesaj' => 'Ölçülen günlük maruziyet düzeyi eylem sınırlarının altındadır.',
     ],
+
+    /*
+    |--------------------------------------------------------------------
+    | Muayene Formu (EK-2) — İşyeri Hekimi ve Diğer Sağlık Personelinin
+    | Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik'in
+    | EK-2 "İşe Giriş / Periyodik Muayene Formu"na göre kuruldu.
+    |--------------------------------------------------------------------
+    */
+    'muayene' => [
+        'muayene_turleri' => [
+            'ise_giris' => 'İşe Giriş Muayenesi',
+            'periyodik' => 'Periyodik Muayene',
+            'araya_giren' => 'Aralıklı / Ara Kontrol Muayenesi',
+            'ise_donus' => 'İşe Dönüş Muayenesi',
+        ],
+
+        'sistemik_muayene_basliklari' => [
+            'Genel Durum',
+            'Baş - Boyun / KBB',
+            'Göz',
+            'Solunum Sistemi',
+            'Kardiyovasküler Sistem',
+            'Gastrointestinal Sistem',
+            'Nörolojik Sistem',
+            'Kas - İskelet Sistemi',
+            'Deri',
+            'Psikiyatrik Değerlendirme',
+        ],
+
+        'tetkikler' => [
+            'odyometri' => 'Odyometri (İşitme Testi)',
+            'sft' => 'Solunum Fonksiyon Testi (SFT/Spirometri)',
+            'akciger_grafisi' => 'Akciğer Grafisi',
+            'goz_muayenesi' => 'Göz Muayenesi (Görme Keskinliği / Renk Körlüğü)',
+            'tam_kan' => 'Tam Kan Sayımı',
+            'biyokimya' => 'Biyokimya (Açlık Kan Şekeri, Karaciğer/Böbrek Fonksiyonu)',
+            'idrar_tetkiki' => 'İdrar Tetkiki',
+            'ekg' => 'EKG',
+        ],
+
+        'sonuc_kanaatleri' => [
+            'uygun' => 'İşe Uygundur',
+            'sartli_uygun' => 'Şartlı Uygundur',
+            'uygun_degil' => 'Uygun Değildir',
+            'is_degisikligi' => 'İş Değişikliği Önerilir',
+        ],
+
+        // Periyodik muayene yenileme süresi (yıl) — tehlike sınıfına göre.
+        'periyot_yili' => [
+            'az_tehlikeli' => 5,
+            'tehlikeli' => 3,
+            'cok_tehlikeli' => 1,
+        ],
+    ],
 ];

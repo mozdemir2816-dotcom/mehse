@@ -63,7 +63,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | **hazır** (2 sekme: Çalışana Ceza Tutanağı + İşverene İPC Tebliği → PDF) |
 | Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | **hazır** (5N1K + kök neden analizi, SGK bildirim takibi → PDF) |
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + kendi arşiv Excel yüklemesi + Gemini ile madde üretimi → PDF) |
-| Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
+| Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | **hazır** (meslek öyküsü/özgeçmiş + sistemik muayene + tetkikler + sonuç/kanaat → PDF) |
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | **hazır** (bilgi sayfası — e-Reçete süreci, uygunluk, SSS) |
 | **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (3 sekme: Çalışma Planı + Eğitim Planı + Değerlendirme Raporu → PDF) |
 | Planlama & Arşiv | Ziyaret Programı `[AI]` | `ziyaret-programi` | planlandı |
@@ -829,9 +829,28 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   `CezaTebligTest`'e 7 test eklendi (sekme görünürlük ayrımı dahil —
   `pdf`/`pdfIpc` aksiyonları yalnız kendi sekmesi aktifken görünür).
   **330 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Muayene
-  Formu (EK-2 — çok büyük, tıbbi muayene formu), Ziyaret Programı) tek tek
-  kurulacak. isgpratik kök klasöründe
+- **Faz 3ad — Muayene Formu (EK-2) ✅ (isgpratik'te ekran görüntüsü yok —
+  daha önce "çok büyük" gerekçesiyle ertelenmişti; İşyeri Hekimi ve Diğer
+  Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında
+  Yönetmelik EK-2'sine göre kuruldu):** `App\Filament\Pages\MuayeneFormu`
+  (stub yerine geçti) + `App\Models\MuayeneFormu` + `App\Support\
+  MuayeneFormuUretici` (dompdf) + `config isg.muayene` (4 muayene türü,
+  10 sistemik muayene başlığı, 8 tetkik, 4 sonuç/kanaat, tehlike sınıfına
+  göre periyot yılı). Çalışan firma çalışanından hızlı seçilir/manuel
+  girilir; meslek öyküsü+maruziyet / özgeçmiş+soygeçmiş (serbest metin) /
+  sistemik muayene (10 sistem × Normal-Anormal + not, KKD Formu'ndaki
+  checklist desenine benzer) / tetkikler (8 kalem × Yapıldı toggle +
+  sonuç + not) / sonuç-kanaat (4 seçenek, "Şartlı Uygundur" seçilince
+  şart açıklaması alanı açılır) / "Tehlike Sınıfına Göre Öner" butonu
+  (firma tehlike sınıfına göre bir sonraki kontrol tarihini otomatik
+  hesaplar — Az Tehlikeli 5, Tehlikeli 3, Çok Tehlikeli 1 yıl). Hekim adı
+  firmaya atanmış İşyeri Hekimi'nden otomatik, kaşesi PDF'e basılır
+  (sekizinci kaşe-basma kullanımı). `MuayeneFormuTest` (10 test).
+  **340 test toplam.**
+- **Faz 3+:** Kullanıcı ekran görüntüsü paylaşırsa Ziyaret Programı da
+  (aylık/haftalık takvim, sürükle-bırak, çoklu firma atama — isgsuite/OSGB
+  tarzı karmaşık bir modül) ele alınabilir; şimdilik ertelendi. isgpratik
+  kök klasöründe
   24-101(+133-135,158) + AI SAHA ANALİZİ + SAHA DENETİMİ alt klasörleri
   artık tam incelendi; 88-101 aralığı kapsam dışı isgpratik özellikleri
   (İSG Arşiv 2860 dosya, İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası

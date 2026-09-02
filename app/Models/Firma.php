@@ -152,6 +152,11 @@ class Firma extends Model
         return $this->hasMany(IpcTebligi::class);
     }
 
+    public function muayeneFormlari(): HasMany
+    {
+        return $this->hasMany(MuayeneFormu::class);
+    }
+
     public function tehlikeSinifiEtiketi(): string
     {
         return config('isg.tehlike_siniflari.'.$this->tehlike_sinifi, $this->tehlike_sinifi);
