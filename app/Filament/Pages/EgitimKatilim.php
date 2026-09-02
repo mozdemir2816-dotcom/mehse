@@ -84,6 +84,20 @@ class EgitimKatilim extends Page
     {
         $this->belgeTarihi = now()->toDateString();
 
+        if ($aktarim = session()->pull('egitim_katilim_aktarim')) {
+            $this->firmaId = $aktarim['firma_id'];
+            $this->updatedFirmaId();
+            $this->baslikAnahtari = $aktarim['baslik_anahtari'];
+            $this->manuelKatilimcilar = [...$this->manuelKatilimcilar, ...$aktarim['katilimcilar']];
+
+            Notification::make()
+                ->title(count($aktarim['katilimcilar']).' katılımcı Atama Yazıları\'ndan aktarıldı')
+                ->success()
+                ->send();
+
+            return;
+        }
+
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();

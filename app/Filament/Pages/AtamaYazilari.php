@@ -7,6 +7,7 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Support\AtamaYazisiUretici;
+use App\Support\AtamaYazisiWordUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -325,7 +326,7 @@ class AtamaYazilari extends Page
     {
         return [
             Action::make('pdf')
-                ->label('PDF İndir (Kaydet ve İndir)')
+                ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('danger')
                 ->visible(fn () => $this->firma !== null)
@@ -340,7 +341,62 @@ class AtamaYazilari extends Page
 
                     return AtamaYazisiUretici::pdf($kayit);
                 }),
+
+            Action::make('word')
+                ->label('Word İndir')
+                ->icon('heroicon-o-document-text')
+                ->color('info')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    Notification::make()->title('Atama yazısı kaydedildi')->body($kayit->dokuman_no)->success()->send();
+
+                    return AtamaYazisiWordUretici::docx($kayit);
+                }),
+
+            Action::make('egitimFormu')
+                ->label('Eğitim Katılım Formu Oluştur')
+                ->icon('heroicon-o-academic-cap')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => $this->egitimFormuOlustur()),
         ];
+    }
+
+    public function egitimFormuOlustur()
+    {
+        $kayit = $this->kaydet();
+
+        if (! $kayit) {
+            return null;
+        }
+
+        $katilimcilar = collect($kayit->uyeler)
+            ->reject(fn (array $u) => array_key_exists('kase_gorseli', $u))
+            ->map(fn (array $u) => [
+                'ad_soyad' => $u['ad_soyad'] ?? '',
+                'tc' => $u['tc'] ?? null,
+                'gorev' => $u['gorev'] ?? null,
+            ])
+            ->values()
+            ->all();
+
+        $baslikAnahtari = array_key_exists($this->rolAnahtari, config('isg.egitim.ozel_basliklar'))
+            ? $this->rolAnahtari
+            : 'genel';
+
+        session(['egitim_katilim_aktarim' => [
+            'firma_id' => $this->firma->id,
+            'baslik_anahtari' => $baslikAnahtari,
+            'katilimcilar' => $katilimcilar,
+        ]]);
+
+        return $this->redirect(EgitimKatilim::getUrl());
     }
 
     public function gecmisPdf(int $id)
@@ -348,6 +404,13 @@ class AtamaYazilari extends Page
         $kayit = $this->firma?->atamaYazilari()->find($id);
 
         return $kayit ? AtamaYazisiUretici::pdf($kayit) : null;
+    }
+
+    public function gecmisWord(int $id)
+    {
+        $kayit = $this->firma?->atamaYazilari()->find($id);
+
+        return $kayit ? AtamaYazisiWordUretici::docx($kayit) : null;
     }
 
     public function gecmisSil(int $id): void

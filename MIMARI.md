@@ -876,7 +876,48 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik +
   Filament Page + dompdf + test) kurulacak.
 
-## Notlar
+## Tasarım cilası (Faz 4)
+
+Tüm modüller tamamlandıktan sonra kullanıcı, isgpratik.com'un gerçek ekran
+görüntülerine göre (renk/banner/buton/uyarı alanı) görsel cila turuna
+başlanmasını istedi. Sırasıyla ele alınacak.
+
+- **Atama Yazıları ✅ (isgpratik.com/panel/atama-yazilari canlı ekran
+  görüntüsü):** İkonlu pill-sekme rol seçici + role göre değişen mor
+  gradyan başlık banner'ı + tüm rollerin yasal dayanağını listeleyen
+  kalıcı "Bilgi" kutusu (config'teki mevcut `aciklama` alanlarından,
+  yeni metin yazılmadı). Config'teki her role `ikon` (heroicon) eklendi.
+  **Kullanıcı geri bildirimi (kritik düzeltme):** "Atamalar yapıldıktan
+  sonra her biri için AYRI hazırlanmış atama evrakı yap; dosyanın içindeki
+  benim koyduğum yazıyı istemiyorum." — iki kök sorun tespit edildi ve
+  düzeltildi: (1) `pdf.atama-yazisi.blade.php`'nin gövde metnine
+  `{{ $rol['aciklama'] }}` (uzun yasal/mevzuat açıklama paragrafı)
+  doğrudan basılıyordu — resmi bir görevlendirme yazısında bulunmaması
+  gereken bir metin, kaldırıldı. (2) Ekip rolünde (örn. Söndürme Ekibi, 3
+  üye) TEK PDF içinde ortak bir üye tablosu üretiliyordu; artık
+  Sertifika Oluştur'daki "katılımcı başına ayrı sayfa" deseniyle birebir
+  aynı şekilde HER ÜYE KENDİ SAYFASINDA, kendi adına yazılmış gövde
+  metni ve kendi imza satırıyla ayrı görevlendirme belgesi alıyor
+  (`page-break-before: always`). Bu düzeltme hem 'tekli' hem 'ekip'
+  rollerde aynı döngüyle çalışıyor (tekli roller zaten tek üyelik).
+  **Yeni özellikler (kullanıcı onayıyla):** `phpoffice/phpword` paketi
+  eklendi — `App\Support\AtamaYazisiWordUretici` PDF ile birebir aynı
+  içerikte (aciklama YOK, üye başına ayrı sayfa) gerçek `.docx` üretir
+  (raw ZipArchive/DOMDocument şablon-patching değil, PhpWord'ün
+  programatik API'siyle sıfırdan — çünkü 10 rol için gerçek boş şablon
+  dosyası yoktu, yalnız isgpratik'in 2 örnek ÇIKTI dosyası vardı).
+  "Eğitim Katılım Formu Oluştur" butonu — AI Saha Analizi→DÖF Oluştur'da
+  kurulan session-aktarım deseniyle (`session(['egitim_katilim_aktarim'
+  => [...]]); redirect(EgitimKatilim::getUrl());`) atanan üyeleri
+  Eğitim Katılım'ın `manuelKatilimcilar`'ına aktarır; rol anahtarı
+  `config('isg.egitim.ozel_basliklar')`'da varsa (8 rol: söndürme/
+  kurtarma/koruma/ilkyardım ekibi, isg_kurulu, çalışan temsilcisi, risk
+  değ. ekibi, acil durum koordinatörü) o eğitim başlığı otomatik seçilir,
+  yoksa (işveren vekili/bilgi sahibi) "genel" İSG eğitimine düşer. İSG
+  Kurulu'ndaki İGU/hekim/DSP gibi profesyonel üyeler (çalışan değil)
+  katılımcı aktarımına DAHİL EDİLMEZ (`kase_gorseli` anahtarının varlığı
+  ile ayırt edildi). `AtamaYazilariTest`'e 6 test eklendi. **354 test
+  toplam.**
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
   "istem kopyala / kural tabanlı" iskele, sonra Gemini/OpenAI entegrasyonu (env).
