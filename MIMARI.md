@@ -174,6 +174,13 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     seri sayısı/metin olarak çözülür, boş satırlar sessizce atlanır. `ListFirmas`
     header'ında "Şablon İndir" (örnek .xlsx) + "Excel'den Yükle" (FileUpload modal,
     sonuç/hata özeti bildirimle). `FirmaExcelIceAktariciTest` (7 test).
+  - **Excel'den toplu çalışan yükleme ✅:** `App\Support\CalisanExcelIceAktarici` —
+    firma bağlamdan gelir (`CalisanlarRelationManager` üzerinden), Excel'de firma
+    sütunu yok. Yalnız "Ad Soyad" zorunlu; T.C. Kimlik No verilmişse aynı firmada
+    aynı TC ile tekrar yüklenirse günceller (mükerrer oluşmaz). Firma'nın Düzenle
+    sayfasında "Çalışanlar" sekmesinde "Şablon İndir" + "Excel'den Toplu Yükle".
+    **Not:** Filament v5'te RelationManager tablo aksiyonları testte `callAction()`
+    değil `callTableAction()` ile çağrılır. `CalisanExcelIceAktariciTest` (6 test).
 - **Faz 2 — Risk Değerlendirme çekirdeği ✅ (commit sonrası):**
   - `config/isg.php` → `risk_yontemleri`, `risk_matris_5x5` / `risk_fine_kinney` (ölçek
     metinleri + puan → düzey bantları; **Fine-Kinney ondalık anahtarlar string**),
@@ -406,7 +413,14 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     artık aktif sayfaya güvenmeden TÜM sayfaları tarayıp en iyi eşleşen
     başlık satırını bulan sayfayı kullanıyor (kullanıcı dosyayı hiç
     değiştirmeden olduğu gibi yükleyebiliyor).
-  **122 test toplam.**
+  - **Excel'den gelen puan yöntem uyuşmazlığı düzeltmesi ✅:** Kullanıcı "olasılık/
+    şiddet aktarılmıyor" dedi — kök neden, Adım 5'in O/Ş(/F) açılır listelerinin
+    yalnız SEÇİLİ puanlama yönteminin (varsayılan 5x5 Matris, 1-5) sabit
+    seçeneklerini göstermesiydi; dosya Fine-Kinney ölçeğindeyse (0.2/6/15 gibi)
+    değer `secilenler`de duruyor ama listede seçili görünmüyordu. `excelSecilenleriEkle()`
+    artık eklenen maddelerin 5x5 ölçeğine uyup uymadığını (veya Frekans dolu mu)
+    kontrol edip gerekirse `$yontem`'i otomatik `fine_kinney`'e çeviriyor.
+  **129 test toplam.**
   - **Kalan:** Kayıtlı Risklerim (klasörlü); `RiskSablonu` `maddeler` düzenleme
     (repeater); İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/
     Zemin İyileştirme) çoklu-seçim arayüzü (kullanıcı Tehlike Kütüphanesi'ne
