@@ -31,6 +31,13 @@ class AiSahaAnaliziTest extends TestCase
         $this->actingAs($this->uzman);
     }
 
+    public function test_fotograf_yukleme_alani_firma_secilmeden_de_gorunur(): void
+    {
+        Livewire::test(SahaSayfasi::class)
+            ->assertSee('Fotoğrafları AI ile Analiz Et')
+            ->assertSee('PDF rapor oluşturmak için bir firma seçin');
+    }
+
     public function test_firma_secilince_igu_bilgileri_otomatik_dolar(): void
     {
         $igu = IsgProfesyoneli::factory()->for($this->uzman)->create(['ad_soyad' => 'İGU Ayşe', 'sertifika_no' => 'A-99']);
