@@ -144,6 +144,46 @@ class AiSahaAnalizi extends Page
         $this->bulgular = array_values($this->bulgular);
     }
 
+    /**
+     * Seçili bulguları DÖF Oluştur'un madde listesine aktarır (isgpratik'teki
+     * "Seçilenleri Çoklu DÖF'e Aktar" — Bina/Bölge ve Yasal Gerekçe, DÖF'ün
+     * şeması bunları ayrı tutmadığından tespit/öneri metnine katlanır).
+     */
+    public function secilenleriDofeAktar()
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return null;
+        }
+
+        $secili = collect($this->bulgular)->filter(fn ($b) => $b['secili'] ?? false)->values();
+
+        if ($secili->isEmpty()) {
+            Notification::make()->title('En az bir bulgu seçin')->danger()->send();
+
+            return null;
+        }
+
+        $maddeler = $secili->map(fn ($b) => [
+            'tespit' => filled($b['bina_bolge'] ?? null) ? "[{$b['bina_bolge']}] {$b['tespit']}" : $b['tespit'],
+            'oncelik' => match ((int) ($b['risk_derecesi'] ?? 3)) {
+                1 => 'kritik',
+                2 => 'yuksek',
+                3 => 'orta',
+                default => 'dusuk',
+            },
+            'oneri' => trim(($b['oneriler_metni'] ?? '').(filled($b['yasal_gerekce'] ?? null) ? "\n\nYasal dayanak: {$b['yasal_gerekce']}" : '')) ?: null,
+            'sorumlu' => null,
+            'termin' => null,
+            'durum' => 'acik',
+        ])->values()->all();
+
+        session(['dof_aktarim' => ['firma_id' => $this->firma->id, 'maddeler' => $maddeler]]);
+
+        return $this->redirect(DofOlustur::getUrl());
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Fotoğraf analizi

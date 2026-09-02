@@ -40,6 +40,25 @@ class DofOlusturTest extends TestCase
         $this->assertSame('Ali Patron', $component->get('isverenVekiliAdi'));
     }
 
+    public function test_ai_saha_analizinden_aktarilan_maddeler_mount_ile_yuklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        session(['dof_aktarim' => [
+            'firma_id' => $firma->id,
+            'maddeler' => [
+                ['tespit' => '[Depo] Hortumlar dağınık.', 'oncelik' => 'yuksek', 'oneri' => 'Topla.', 'sorumlu' => null, 'termin' => null, 'durum' => 'acik'],
+            ],
+        ]]);
+
+        $component = Livewire::test(DofSayfasi::class);
+
+        $this->assertSame($firma->id, $component->get('firmaId'));
+        $this->assertCount(1, $component->get('maddeler'));
+        $this->assertSame('[Depo] Hortumlar dağınık.', $component->get('maddeler')[0]['tespit']);
+        $this->assertNull(session('dof_aktarim'));
+    }
+
     public function test_madde_eklenir_ve_silinir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

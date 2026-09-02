@@ -47,8 +47,8 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
-| **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF) |
-| Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF) |
+| **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF; AI Saha Analizi'nden bulgu aktarımı kabul eder) |
+| Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF; seçili bulgular DÖF Oluştur'a aktarılabilir) |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
 | Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF) |
@@ -697,11 +697,29 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   **Kapsam dışı bırakıldı:** "Uygun Hale Getirme (Örnek Resim)" için ayrı
   manuel görsel yükleme (isgpratik'te opsiyonel, sütun PDF'te boş kalıyor);
   isgpratik'in analiz kredisi/kota sistemi (ödeme entegrasyonu zaten kapsam
-  dışı); "Seçilenleri Çoklu DÖF'e Aktar" — DÖF Oluştur'un (Faz 3v) madde
-  şeması farklı (durum/termin/sorumlu takibi var, bina-bölge/foto/örnek resim
-  yok) olduğundan iki modül BİLİNÇLİ OLARAK ayrı tutuldu, veri modeli
-  birleştirilmedi; entegrasyon istenirse ayrı bir iş. `AiSahaAnaliziTest`
-  (9 test). **284 test toplam.**
+  dışı). `AiSahaAnaliziTest` (9 test). **284 test toplam.**
+- **Faz 3x — AI Saha Analizi → DÖF Oluştur entegrasyonu ✅ (isgpratik'teki
+  "Seçilenleri Çoklu DÖF'e Aktar" akışı):** Kullanıcı "entegre edelim" dedi.
+  Bulgular bölümünde en az bir bulgu seçiliyken "Seçilenleri DÖF'e Aktar (N)"
+  butonu belirir (`AiSahaAnalizi::secilenleriDofeAktar()`). DÖF Oluştur'un
+  madde şeması (tespit/öncelik/öneri/sorumlu/termin/durum) AI Saha Analizi'nin
+  bulgu şemasından (bina_bolge/kategori/tespit/oneriler/yasal_gerekce/
+  risk_derecesi) farklı olduğundan **DofRaporu şeması değiştirilmedi** (sıfır
+  regresyon riski) — bunun yerine aktarım anında veri iki DÖF alanına
+  katlanıyor: `bina_bolge` varsa `tespit`'e `[Bina/Bölge] ...` öneki olarak,
+  `yasal_gerekce` varsa `oneri`'nin sonuna "Yasal dayanak: ..." satırı olarak
+  ekleniyor; `risk_derecesi` (1-4) → `oncelik` (kritik/yuksek/orta/dusuk)
+  eşleniyor. İki sayfa arasında veri geçişi Livewire session flash ile:
+  `session(['dof_aktarim' => [...]])` + `$this->redirect(DofOlustur::getUrl())`,
+  `DofOlustur::mount()` içinde `session()->pull('dof_aktarim')` okunup
+  firma+maddeler otomatik yükleniyor ve bildirim gösteriliyor. Foto/bina-bölge/
+  yasal-gerekçe için DÖF PDF'i DEĞİŞMEDİ (o zenginlik yalnız AI Saha
+  Analizi'nin kendi "İSG Saha Gözetim Raporu" PDF'inde kalıyor). Aktarımdan
+  sonra AI Saha Analizi'ndeki bulgular silinmiyor (isgpratik'teki gibi
+  non-destructive — kullanıcı hem DÖF'e aktarabilir hem kendi Saha Gözetim
+  Raporu'nu da üretebilir). `AiSahaAnaliziTest`'e 1 test (session/redirect) +
+  `DofOlusturTest`'e 1 test (mount ile otomatik yükleme) eklendi.
+  **286 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Saha
   Denetimi, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene
   formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC

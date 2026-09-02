@@ -120,6 +120,13 @@
                     3. Bulgular
                     <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ collect($bulgular)->where('secili', true)->count() }} / {{ count($bulgular) }} seçili)</span>
                 </x-slot>
+                <x-slot name="afterHeader">
+                    @if (collect($bulgular)->contains('secili', true))
+                        <x-filament::button size="sm" color="success" icon="heroicon-o-arrow-right-circle" wire:click="secilenleriDofeAktar">
+                            Seçilenleri DÖF'e Aktar ({{ collect($bulgular)->where('secili', true)->count() }})
+                        </x-filament::button>
+                    @endif
+                </x-slot>
 
                 <div style="display:flex;flex-direction:column;gap:.75rem">
                     @foreach ($bulgular as $i => $b)

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\AiSahaAnalizi as SahaSayfasi;
+use App\Filament\Pages\DofOlustur;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\SahaAnalizi;
@@ -110,6 +111,28 @@ class AiSahaAnaliziTest extends TestCase
             ->call('bulguSil', 0);
 
         $this->assertCount(0, $component->get('bulgular'));
+    }
+
+    public function test_secilenleri_dofe_aktar_oturuma_kaydeder_ve_yonlendirir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('bulgular', [
+                ['foto_yolu' => null, 'bina_bolge' => 'Depo', 'kategori' => 'Genel', 'tespit' => 'Hortumlar dağınık.', 'oneriler_metni' => "Topla.\nSabitle.", 'yasal_gerekce' => '6331 m.4', 'risk_derecesi' => 2, 'secili' => true],
+                ['foto_yolu' => null, 'bina_bolge' => null, 'kategori' => null, 'tespit' => 'Seçilmeyen bulgu', 'oneriler_metni' => '', 'yasal_gerekce' => null, 'risk_derecesi' => 4, 'secili' => false],
+            ])
+            ->call('secilenleriDofeAktar')
+            ->assertRedirect(DofOlustur::getUrl());
+
+        $aktarim = session('dof_aktarim');
+        $this->assertSame($firma->id, $aktarim['firma_id']);
+        $this->assertCount(1, $aktarim['maddeler']);
+        $this->assertStringContainsString('[Depo] Hortumlar dağınık.', $aktarim['maddeler'][0]['tespit']);
+        $this->assertSame('yuksek', $aktarim['maddeler'][0]['oncelik']);
+        $this->assertStringContainsString('Topla.', $aktarim['maddeler'][0]['oneri']);
+        $this->assertStringContainsString('Yasal dayanak: 6331 m.4', $aktarim['maddeler'][0]['oneri']);
     }
 
     public function test_pdf_aksiyonu_secili_bulgulari_kaydeder_ve_kase_snapshotlanir(): void

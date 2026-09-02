@@ -69,6 +69,19 @@ class DofOlustur extends Page
     {
         $this->raporTarihi = now()->toDateString();
 
+        if ($aktarim = session()->pull('dof_aktarim')) {
+            $this->firmaId = $aktarim['firma_id'];
+            $this->updatedFirmaId();
+            $this->maddeler = [...$this->maddeler, ...$aktarim['maddeler']];
+
+            Notification::make()
+                ->title(count($aktarim['maddeler']).' bulgu AI Saha Analizi\'nden aktarıldı')
+                ->success()
+                ->send();
+
+            return;
+        }
+
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
