@@ -62,7 +62,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | **hazır** (4 izin türü, dinamik güvenlik önlemleri → PDF) |
 | Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | **hazır** (ihlal kataloğu + serbest madde + yaptırım → PDF) |
 | Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | planlandı |
-| Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + Gemini ile madde üretimi → PDF) |
+| Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + kendi arşiv Excel yüklemesi + Gemini ile madde üretimi → PDF) |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | planlandı |
 | **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (14 varsayılan faaliyet, ay bazlı durum matrisi → PDF) |
@@ -556,6 +556,18 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   görünmüyordu (yalnız "İncele" tıklanınca açılan bir modal içinde olmalı) — bu yüzden
   gövde metni sabit kopyalanmadı, bilinçli olarak AI/manuel üretime bırakıldı.
   `TalimatOlusturTest` (10 test, `Http::fake`). **212 test toplam.**
+  - **Kendi arşivinden toplu yükleme ✅:** Kullanıcı "talimatlara bende ekleme yapacağım
+    kendi arşivimden" dedi — `App\Models\TalimatSablonu` (uzman bazlı, `talimat_sablonlari`
+    tablosu) + `App\Support\TalimatSablonuExcelIceAktarici` (`FirmaExcelIceAktarici` ile
+    aynı Şablon İndir/Excel Yükle deseni). Excel'de **Maddeler** sütunu hücre içi çok
+    satırlı olabilir (Alt+Enter ile alt satıra geçilerek yazılan her satır ayrı madde
+    olur); **KKD'ler** virgülle ayrılır; **Kategori** serbest metinle girilse de
+    `config isg.talimat.kategoriler` adlarıyla normalize edilip eşleşirse otomatik
+    anahtara bağlanır (eşleşmezse kategori boş/serbest kalır — veri kaybı olmaz).
+    Yüklenen şablonlar Şablon Kütüphanesi listesinde 30 hazır şablonun yanına **"Arşivim"**
+    rozetiyle eklenir, silinebilir; yalnız kendi kullanıcısına görünür (`user_id` scope).
+    `sablonSec()` artık `(kaynak, anahtar)` alır ('hazir'=config index, 'ozel'=DB id).
+    5 yeni test eklendi. **224 test toplam.**
 - **Faz 3q — Yıllık Planlar ✅ (isgpratik 86-87.jpg):** `App\Filament\Pages\YillikPlanlar`
   (stub yerine geçti) + `App\Models\YillikPlan` (firma + yıl başına TEK kayıt, `AcilDurumPlani`
   ile aynı `firmaXIcin()` deseni) + `App\Support\YillikPlanUretici` (dompdf, A4 yatay) +
