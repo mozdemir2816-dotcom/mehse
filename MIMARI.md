@@ -49,7 +49,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF; AI Saha Analizi'nden bulgu aktarımı kabul eder) |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF; seçili bulgular DÖF Oluştur'a aktarılabilir) |
-| Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
+| Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | **hazır** (9 kategori/41 madde kontrol listesi, foto kanıtı → PDF isgpratik'in gerçek raporuyla birebir) |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
 | Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF) |
 | Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
@@ -720,18 +720,48 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Raporu'nu da üretebilir). `AiSahaAnaliziTest`'e 1 test (session/redirect) +
   `DofOlusturTest`'e 1 test (mount ile otomatik yükleme) eklendi.
   **286 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Saha
-  Denetimi, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene
-  formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC
-  Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi) tek tek kurulacak. **Saha
-  Denetimi için isgpratik'te hâlâ hiçbir ekran görüntüsü yok**
-  (planNotu'ndaki 73-75.jpg referansı hatalı çıktı — KKD Formu'na ait);
-  kullanıcıdan ekran görüntüsü istenmesi gerekiyor. isgpratik kök klasöründe
-  24-101(+133-135,158) + AI SAHA ANALİZİ alt klasörü artık tam incelendi;
-  88-101 aralığı kapsam dışı isgpratik özellikleri (İSG Arşiv 2860 dosya,
-  İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası — sol menümüzde yok).
-  Her yeni modül Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı
-  desende (config-driven içerik + Filament Page + dompdf + test) kurulacak.
+- **Faz 3y — Saha Denetimi ✅ (isgpratik SAHA DENETİMİ/1-15.jpg + gerçek
+  örnek PDF):** Kullanıcı `Desktop\isgpratik\SAHA DENETİMİ\` alt klasörüne
+  15 ekran + gerçek bir "Şantiye Denetim ve Değerlendirme" PDF örneği ekledi,
+  "raporlama yöntemi aynı şekilde kalsın" dedi. `App\Filament\Pages\
+  SahaDenetimi` (stub yerine geçti — model adıyla çakıştığı için Page'de
+  `use App\Models\SahaDenetimi as SahaDenetimiModel`) + `App\Models\
+  SahaDenetimi` + `App\Support\SahaDenetimiUretici` (dompdf, A4 yatay) +
+  `config isg.saha_denetimi` — **"Şantiye Denetim ve Değerlendirme v1"
+  kontrol listesi, 9 kategori/41 madde isgpratik'ten BİREBİR** (kritik/
+  uygulanamaz-izni bayrakları gerçek PDF'teki "KRİTİK" etiketleriyle
+  doğrulandı — yalnız Şantiye Ekipleri/3.1 uygulanamaz seçeneği yok).
+  isgpratik'teki 9 adımlı sihirbaz yerine tüm kategoriler tek sayfada
+  (kapsam/zaman gerekçesiyle bilinçli sadeleştirme — "raporlama/PDF çıktısı
+  aynı kalsın" isteği zaten PDF'e odaklıydı, giriş UX'i değil). Her madde
+  Uygun/Uygun Değil/Uygulanamaz; "Uygun Değil" açıklama zorunlu + fotoğraf
+  opsiyonel. **ÖNEMLİ HATA VE DÜZELTME:** madde kodları ("1.1", "2.3" gibi)
+  Livewire'ın dot-notation property yoluyla ÇAKIŞTI — `wire:model="cevaplar.
+  1.1.aciklama"` her noktayı ayrı dizi seviyesi sanıp `cevaplar['1']['1']
+  ['aciklama']` şeklinde yanlış yorumluyordu, kayıt sessizce boş kalıyordu.
+  Çözüm: `anahtar()` yardımcı metodu ile nokta alt çizgiye çevrilip
+  ($cevaplar/$fotoYuklemeleri dizilerinde "1_1" gibi) güvenli anahtar
+  kullanıldı; gerçek "kod" yalnız görüntüleme/PDF'te kullanılıyor. **Bu ders
+  ileride benzer "X.Y" kod şemalı herhangi bir modülde tekrar kontrol
+  edilmeli.** PDF çıktısı gerçek örnekle birebir: künye + kategori başlıklı
+  madde tablosu (KRİTİK etiketi kırmızı) + Ekip Üyesi/Görev/KKD tablosu +
+  9 maddelik Sabit Güvenlik Uyarıları (3 sütun) + Genel Notlar + Denetçi
+  Kaşe/İmza (beşinci kaşe-basma kullanımı) + her fotoğraf kanıtı için ayrı
+  sayfa. **Kapsam dışı bırakıldı:** isgpratik'in sürükle-bırak Şablon
+  Editörü (kategori/madde ekleme-çıkarma, bayrak düzenleme — kontrol listesi
+  burada sabit config); "Taslaklar" sekmesi (yarım kalan denetimi
+  kaydedip sonra devam etme — şu an tek oturumda tamamlanmalı).
+  `SahaDenetimiTest` (10 test). **297 test toplam.**
+- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (İş Kazası
+  Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene formu), Ücretsiz
+  E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve
+  Tebliğ'in ikinci sekmesi) tek tek kurulacak. isgpratik kök klasöründe
+  24-101(+133-135,158) + AI SAHA ANALİZİ + SAHA DENETİMİ alt klasörleri
+  artık tam incelendi; 88-101 aralığı kapsam dışı isgpratik özellikleri
+  (İSG Arşiv 2860 dosya, İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası
+  — sol menümüzde yok). Her yeni modül Eğitim Katılım/Atama Yazıları/Kurul
+  Toplantısı ile aynı desende (config-driven içerik + Filament Page +
+  dompdf + test) kurulacak.
 
 ## Notlar
 

@@ -2,11 +2,33 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Calisan;
+use App\Models\Firma;
+use App\Models\SahaDenetimi as SahaDenetimiModel;
+use App\Support\SahaDenetimiUretici;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
-class SahaDenetimi extends HazirlanryorPage
+/**
+ * Saha Denetimi ("Şantiye Denetim ve Değerlendirme") — isgpratik SAHA
+ * DENETİMİ/1-15.jpg + gerçek örnek PDF. 9 kategori / 41 maddelik kontrol
+ * listesi tek sayfada doldurulur (isgpratik'teki 9 adımlı sihirbaz yerine);
+ * PDF çıktısı isgpratik'in gerçek raporuyla birebir aynı düzende.
+ */
+class SahaDenetimi extends Page
 {
+    use WithFileUploads;
+
+    protected string $view = 'filament.pages.saha-denetimi';
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
@@ -19,7 +41,337 @@ class SahaDenetimi extends HazirlanryorPage
 
     protected static ?string $navigationLabel = 'Saha Denetimi';
 
-    protected static bool $aiModulu = false;
+    public ?int $firmaId = null;
 
-    protected static ?string $planNotu = 'isgpratik 73-75.jpg — görsel saha denetimi akışı';
+    public ?string $isTanimi = null;
+
+    public ?string $santiyeAdi = null;
+
+    public ?string $santiyeSorumlusu = null;
+
+    public ?string $isReferansNo = null;
+
+    public ?string $denetimTarihi = null;
+
+    public ?string $denetimSaati = null;
+
+    public ?string $denetciAdi = null;
+
+    /** @var array<string, array{sonuc: ?string, aciklama: ?string, foto_yolu: ?string}> kod => cevap */
+    public array $cevaplar = [];
+
+    /** @var array<string, UploadedFile> kod => yüklenen fotoğraf */
+    public array $fotoYuklemeleri = [];
+
+    /** @var array<int, array{ad_soyad: string, gorev: ?string, kkd: string}> */
+    public array $ekipUyeleri = [];
+
+    public ?string $yeniEkipAdSoyad = null;
+
+    public ?string $yeniEkipGorev = null;
+
+    /** @var array<int, string> */
+    public array $yeniEkipKkd = [];
+
+    public ?string $genelNotlar = null;
+
+    public function mount(): void
+    {
+        $this->denetimTarihi = now()->toDateString();
+        $this->denetimSaati = now()->format('H:i');
+
+        foreach ($this->tumMaddeler() as $kod => $madde) {
+            $this->cevaplar[$this->anahtar($kod)] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
+        }
+
+        if ($firmaId = request()->integer('firma')) {
+            $this->firmaId = $firmaId;
+            $this->updatedFirmaId();
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hesaplanan veriler
+    |--------------------------------------------------------------------------
+    */
+
+    #[Computed]
+    public function firmalar(): array
+    {
+        return Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->orderBy('unvan')
+            ->pluck('unvan', 'id')
+            ->all();
+    }
+
+    #[Computed]
+    public function firma(): ?Firma
+    {
+        return $this->firmaId
+            ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId)
+            : null;
+    }
+
+    #[Computed]
+    public function kategoriler(): array
+    {
+        return config('isg.saha_denetimi.kategoriler');
+    }
+
+    #[Computed]
+    public function kkdSecenekleri(): array
+    {
+        return config('isg.saha_denetimi.kkd_secenekleri');
+    }
+
+    /** @return Collection<int, Calisan> */
+    #[Computed]
+    public function calisanlar(): Collection
+    {
+        return $this->firma?->calisanlar()->orderBy('ad_soyad')->get() ?? collect();
+    }
+
+    /** @return array{uygun: int, uygun_degil: int, yuzde: float, kritik_var: bool} */
+    #[Computed]
+    public function canliSonuc(): array
+    {
+        $maddeler = $this->tumMaddeler();
+        $uygun = 0;
+        $uygunDegil = 0;
+        $kritikVar = false;
+
+        foreach ($maddeler as $kod => $madde) {
+            $cevap = $this->cevaplar[$this->anahtar($kod)] ?? null;
+
+            if (($cevap['sonuc'] ?? null) === 'uygun') {
+                $uygun++;
+            } elseif (($cevap['sonuc'] ?? null) === 'uygun_degil') {
+                $uygunDegil++;
+                if ($madde['kritik']) {
+                    $kritikVar = true;
+                }
+            }
+        }
+
+        $cevaplanan = $uygun + $uygunDegil;
+
+        return [
+            'uygun' => $uygun,
+            'uygun_degil' => $uygunDegil,
+            'yuzde' => $cevaplanan > 0 ? round($uygun / $cevaplanan * 100, 2) : 0.0,
+            'kritik_var' => $kritikVar,
+        ];
+    }
+
+    /** @return Collection<int, SahaDenetimiModel> */
+    #[Computed]
+    public function gecmisKayitlar(): Collection
+    {
+        return $this->firma?->sahaDenetimleri()->latest()->get() ?? collect();
+    }
+
+    /** kod => madde config (tüm kategoriler düzleştirilmiş). */
+    private function tumMaddeler(): array
+    {
+        $sonuc = [];
+
+        foreach (config('isg.saha_denetimi.kategoriler') as $kategoriAnahtari => $kategori) {
+            foreach ($kategori['maddeler'] as $madde) {
+                $sonuc[$madde['kod']] = [...$madde, 'kategori_anahtari' => $kategoriAnahtari, 'kategori_ad' => $kategori['ad']];
+            }
+        }
+
+        return $sonuc;
+    }
+
+    private function ifadeYaz(string $ifade): string
+    {
+        return str_replace('{FIRMA}', $this->firma?->unvan ?? '{FİRMA}', $ifade);
+    }
+
+    /**
+     * "1.1" gibi kodlar Livewire'ın dot-notation property yolunda (wire:model,
+     * ->set()) her noktayı ayrı bir dizi seviyesi sanar; bu yüzden $cevaplar/
+     * $fotoYuklemeleri dizilerinde gerçek anahtar olarak nokta içermeyen bu
+     * güvenli hale kullanılır (görüntüleme/PDF'te hâlâ gerçek "kod" kullanılır).
+     */
+    public function anahtar(string $kod): string
+    {
+        return str_replace('.', '_', $kod);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Form alanları
+    |--------------------------------------------------------------------------
+    */
+
+    public function updatedFirmaId(): void
+    {
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
+        $this->denetciAdi = $this->firma?->igu?->ad_soyad;
+    }
+
+    public function cevapVer(string $kod, string $sonuc): void
+    {
+        $anahtar = $this->anahtar($kod);
+
+        if (isset($this->cevaplar[$anahtar])) {
+            $this->cevaplar[$anahtar]['sonuc'] = $sonuc;
+        }
+    }
+
+    public function ekipHizliEkle(int $calisanId): void
+    {
+        $c = $this->calisanlar->firstWhere('id', $calisanId);
+
+        if ($c) {
+            $this->ekipUyeleri[] = ['ad_soyad' => $c->ad_soyad, 'gorev' => $c->gorev, 'kkd' => ''];
+        }
+    }
+
+    public function ekipEkle(): void
+    {
+        if (blank($this->yeniEkipAdSoyad)) {
+            return;
+        }
+
+        $this->ekipUyeleri[] = [
+            'ad_soyad' => $this->yeniEkipAdSoyad,
+            'gorev' => $this->yeniEkipGorev,
+            'kkd' => implode(', ', $this->yeniEkipKkd),
+        ];
+
+        $this->reset('yeniEkipAdSoyad', 'yeniEkipGorev', 'yeniEkipKkd');
+    }
+
+    public function ekipSil(int $index): void
+    {
+        unset($this->ekipUyeleri[$index]);
+        $this->ekipUyeleri = array_values($this->ekipUyeleri);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kaydet & PDF
+    |--------------------------------------------------------------------------
+    */
+
+    private function kaydet(): ?SahaDenetimiModel
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return null;
+        }
+
+        $maddeler = $this->tumMaddeler();
+
+        foreach ($maddeler as $kod => $madde) {
+            $cevap = $this->cevaplar[$this->anahtar($kod)] ?? [];
+
+            if (($cevap['sonuc'] ?? null) === 'uygun_degil' && blank($cevap['aciklama'] ?? null)) {
+                Notification::make()->title('Uygunsuzluk açıklaması zorunlu')
+                    ->body($kod.' — '.$this->ifadeYaz($madde['ifade']))
+                    ->danger()->send();
+
+                return null;
+            }
+        }
+
+        $cevaplarSnapshot = [];
+        $uygun = 0;
+        $uygunDegil = 0;
+        $kritikUygunsuzlukVar = false;
+
+        foreach ($maddeler as $kod => $madde) {
+            $anahtar = $this->anahtar($kod);
+            $cevap = $this->cevaplar[$anahtar] ?? ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
+
+            $fotoYolu = $cevap['foto_yolu'] ?? null;
+            if ($this->fotoYuklemeleri[$anahtar] ?? null) {
+                $fotoYolu = $this->fotoYuklemeleri[$anahtar]->store('saha-denetimi-foto', 'public');
+            }
+
+            if ($cevap['sonuc'] === 'uygun') {
+                $uygun++;
+            } elseif ($cevap['sonuc'] === 'uygun_degil') {
+                $uygunDegil++;
+                if ($madde['kritik']) {
+                    $kritikUygunsuzlukVar = true;
+                }
+            }
+
+            $cevaplarSnapshot[] = [
+                'kategori_ad' => $madde['kategori_ad'],
+                'kod' => $kod,
+                'ifade' => $this->ifadeYaz($madde['ifade']),
+                'kritik' => $madde['kritik'],
+                'sonuc' => $cevap['sonuc'],
+                'aciklama' => $cevap['aciklama'],
+                'foto_yolu' => $fotoYolu,
+            ];
+        }
+
+        $cevaplanan = $uygun + $uygunDegil;
+
+        $d = new SahaDenetimiModel([
+            'firma_id' => $this->firma->id,
+            'revizyon' => $this->firma->sahaDenetimleri()->count() + 1,
+            'is_tanimi' => $this->isTanimi,
+            'santiye_adi' => $this->santiyeAdi,
+            'santiye_sorumlusu' => $this->santiyeSorumlusu,
+            'is_referans_no' => $this->isReferansNo,
+            'denetim_tarihi' => $this->denetimTarihi,
+            'denetim_saati' => $this->denetimSaati,
+            'denetci_adi' => $this->denetciAdi,
+            'denetci_kase' => $this->firma->igu?->kase_gorseli,
+            'cevaplar' => $cevaplarSnapshot,
+            'ekip_uyeleri' => $this->ekipUyeleri,
+            'genel_notlar' => $this->genelNotlar,
+            'uygunluk_yuzdesi' => $cevaplanan > 0 ? round($uygun / $cevaplanan * 100, 2) : null,
+            'kritik_uygunsuzluk_var' => $kritikUygunsuzlukVar,
+        ]);
+        $d->save();
+
+        unset($this->gecmisKayitlar);
+
+        return $d;
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('pdf')
+                ->label('Denetimi Tamamla (Kaydet ve İndir PDF)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $d = $this->kaydet();
+
+                    if (! $d) {
+                        return null;
+                    }
+
+                    Notification::make()->title('Saha denetimi kaydedildi')->body($d->belgeAdi())->success()->send();
+
+                    return SahaDenetimiUretici::pdf($d);
+                }),
+        ];
+    }
+
+    public function gecmisPdf(int $id)
+    {
+        $d = $this->firma?->sahaDenetimleri()->find($id);
+
+        return $d ? SahaDenetimiUretici::pdf($d) : null;
+    }
+
+    public function gecmisSil(int $id): void
+    {
+        $this->firma?->sahaDenetimleri()->find($id)?->delete();
+        unset($this->gecmisKayitlar);
+    }
 }

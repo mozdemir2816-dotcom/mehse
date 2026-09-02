@@ -1284,6 +1284,131 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Saha Denetimi — isgpratik SAHA DENETİMİ/1-15.jpg + gerçek örnek PDF
+    |--------------------------------------------------------------------------
+    | "Şantiye Denetim ve Değerlendirme v1" kontrol listesi — 9 kategori,
+    | 41 madde, isgpratik'ten birebir (kritik/uygulanamaz-izni bayrakları
+    | gerçek PDF çıktısındaki "KRİTİK" etiketleriyle doğrulandı). {FIRMA}
+    | placeholder'ı ifade metninde firma unvanıyla değiştirilir.
+    | isgpratik'teki sürükle-bırak Şablon Editörü (kategori/madde
+    | ekleme-çıkarma, kritik/uygulanamaz/foto bayrağı düzenleme) kapsam
+    | dışı — kontrol listesi burada sabit config, ileride istenirse ayrı iş.
+    */
+    'saha_denetimi' => [
+        'sablon_adi' => 'Şantiye Denetim ve Değerlendirme',
+        'dokuman_kodu' => 'Şantiye Denetimi',
+        'sonuc_secenekleri' => [
+            'uygun' => 'Uygun',
+            'uygun_degil' => 'Uygun Değil',
+            'uygulanamaz' => 'Uygulanamaz',
+        ],
+        'kategoriler' => [
+            'yangin' => [
+                'ad' => 'Yangın',
+                'maddeler' => [
+                    ['kod' => '1.1', 'ifade' => 'Yangın söndürme tüpünün muayene etiketi mevcut, basıncı yeterli ve ibresi yeşil alanda mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '1.2', 'ifade' => 'Yangın söndürme cihazı {FIRMA} etiketiyle tanımlanmış mı?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '1.3', 'ifade' => 'Ekipte yangınla mücadele eğitimi almış personel bulunuyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '1.4', 'ifade' => 'Çalışan ekipte yangın battaniyesi bulunuyor mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '1.5', 'ifade' => 'Çalışma alanı yanıcı dağınıklık ve kirlilikten arındırılmış mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'genel_konular' => [
+                'ad' => 'Genel Konular',
+                'maddeler' => [
+                    ['kod' => '2.1', 'ifade' => 'Şantiye panosu hazırlanmış ve ekip bilgileri panoya yazılmış mı?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '2.2', 'ifade' => 'Çalışma alanı emniyet şeridiyle ayrılarak güvenli hale getirilmiş mi?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '2.3', 'ifade' => 'Risk değerlendirme formu hazırlanmış mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '2.4', 'ifade' => 'Şantiye alanı temiz ve düzenli mi?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '2.5', 'ifade' => 'Şantiye zemini kuru ve yağdan arındırılmış mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '2.6', 'ifade' => 'Geçiş yolları kablo, kanal ve hortum gibi engellerden arındırılmış mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '2.7', 'ifade' => 'Taşlama işlerinde spiral taş muhafazaları ve taş ölçüleri uygun mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'santiye_ekipleri' => [
+                'ad' => 'Şantiye Ekipleri',
+                'maddeler' => [
+                    ['kod' => '3.1', 'ifade' => 'Çalışma alanındaki tüm personelin bildirimi yapılmış mı?', 'kritik' => true, 'uygulanamaz_izni' => false],
+                ],
+            ],
+            'kkd' => [
+                'ad' => 'Kişisel Koruyucu Donanım',
+                'maddeler' => [
+                    ['kod' => '4.1', 'ifade' => '{FIRMA} logolu iş elbiseleri kullanılıyor mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '4.2', 'ifade' => 'Kişisel koruyucu donanımlar kullanılabilir durumda mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '4.3', 'ifade' => 'Göz solüsyonu mevcut ve ekibin erişiminde mi?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'elektrik' => [
+                'ad' => 'Elektrikli Cihazlar',
+                'maddeler' => [
+                    ['kod' => '5.1', 'ifade' => 'Elektrik kabloları tehlikeli ek, ezilme ve deformasyon içermiyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '5.2', 'ifade' => 'Elektrik kabloları ve cihazlar dış etkilerden korunmuş mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '5.3', 'ifade' => 'Elektrik bağlantı prizleri sağlam mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '5.4', 'ifade' => 'Elektrik bağlantısı uygun akımdaki prizden alınıyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'kaynak' => [
+                'ad' => 'Kaynak İşleri',
+                'maddeler' => [
+                    ['kod' => '6.1', 'ifade' => 'Basınçlı tüpler dik pozisyonda ve sabitlenmiş mi?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '6.2', 'ifade' => 'Basınçlı tüpler için taşıma arabası mevcut mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '6.3', 'ifade' => 'Basınçlı tüplerin manometreleri çalışır durumda mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '6.4', 'ifade' => 'Basınçlı tüplerin koruyucu başlıkları mevcut mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '6.5', 'ifade' => 'Sıcak çalışma izni alınıyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '6.6', 'ifade' => 'Kaynak şase uçları sağlam mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'yukseklik' => [
+                'ad' => 'Yüksekte Çalışma',
+                'maddeler' => [
+                    ['kod' => '7.1', 'ifade' => 'Merdiven güvenli kullanıma uygun mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '7.2', 'ifade' => 'Rampalar ve çalışma platformlarında korkuluk bulunuyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '7.3', 'ifade' => 'Paraşüt tipi emniyet kemeri kullanılıyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '7.4', 'ifade' => 'Emniyet kemeri halatı güvenli ankraja bağlı mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '7.5', 'ifade' => 'Manlift üzerinde {FIRMA} tanımlaması mevcut mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '7.6', 'ifade' => 'Manlift periyodik muayenesi güncel mi?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'santiye_duzeni' => [
+                'ad' => 'Şantiye Düzeni',
+                'maddeler' => [
+                    ['kod' => '8.1', 'ifade' => 'Şantiye çalışma arabası ekibin yanında mı?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '8.2', 'ifade' => 'Uygun aydınlatma sağlanmış mı?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '8.3', 'ifade' => 'Çalışma ortamı hareket engellerinden arındırılmış mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '8.4', 'ifade' => 'İskele ve manlift yolları güvenli mi?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '8.5', 'ifade' => 'Elektrikli el aletleri güvenli depolanıyor mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '8.6', 'ifade' => 'Zararlı hava, partikül, buhar ve gaz riski kontrol altında mı?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                ],
+            ],
+            'calisan_davranislari' => [
+                'ad' => 'Çalışan Davranışları',
+                'maddeler' => [
+                    ['kod' => '9.1', 'ifade' => 'Yalnız belirlenmiş alanlarda sigara içiliyor mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                    ['kod' => '9.2', 'ifade' => 'Onaylanmamış materyal veya tehlikeli alet kullanılmıyor mu?', 'kritik' => true, 'uygulanamaz_izni' => true],
+                    ['kod' => '9.3', 'ifade' => 'Dinlenme yalnız belirlenmiş alanlarda yapılıyor mu?', 'kritik' => false, 'uygulanamaz_izni' => true],
+                ],
+            ],
+        ],
+        'guvenlik_uyarilari' => [
+            'Kişisel koruyucu donanımlar sürekli kullanılmalıdır.',
+            'Sigara yalnız belirlenmiş alanlarda içilmelidir.',
+            'Makine koruyucuları yalnız enerji kesildikten sonra çıkarılmalıdır.',
+            'Yetki ve izin bulunmayan bölümlerde çalışma yapılmamalıdır.',
+            'Sıcak çalışma öncesinde ortam kontrolü ve çalışma izni alınmalıdır.',
+            'Yükseklte çalışma öncesinde uygun KKD ve izin hazır olmalıdır.',
+            'Dinlenme, yeme ve içme yalnız belirlenmiş alanlarda yapılmalıdır.',
+            'Taşıma ekipmanlarını yalnız yetkili kişiler kullanmalıdır.',
+            'Çalışmalar firma İSG kurallarına uygun yürütülmelidir.',
+        ],
+        'kkd_secenekleri' => [
+            'Baret', 'Koruyucu gözlük', 'İş elbisesi', 'İş ayakkabısı',
+            'Kulak koruyucu', 'Koruyucu maske', 'Koruyucu eldiven', 'Reflektif yelek',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tespit ve Öneri Defteri — isgpratik 65-66.jpg
     |--------------------------------------------------------------------------
     | Hazır öneri kataloğu, isgpratik'teki "171 madde" kataloğunun bir alt
