@@ -56,7 +56,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | **hazır** (konu kategorileri + eğitim yöntemi + TC gizleme → PDF) |
 | Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | **hazır** (10 senaryo + ekip + değerlendirme + DÖF önerisi → PDF) |
 | Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | **hazır** (hazır katalog + serbest/AI destekli madde → PDF) |
-| Formlar & Belgeler | Sertifika Oluştur | `sertifika` | planlandı |
+| Formlar & Belgeler | Sertifika Oluştur | `sertifika` | **hazır** (4 tip: İSG/Yüksekte/Kapalı Alan/Yangın; katılımcı başına sayfa + otomatik kaşe → PDF) |
 | Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | **hazır** (Gemini ile 10 soruluk sınav + manuel soru → PDF) |
 | Formlar & Belgeler | KKD Formu | `kkd-formu` | **hazır** (6 kategori TS EN katalog, çoklu çalışan × çoklu KKD → PDF) |
 | Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | **hazır** (4 izin türü, dinamik güvenlik önlemleri → PDF) |
@@ -642,18 +642,35 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Risk Değerlendirmesi vb.) "(İmza – Kaşe)" placeholder'larına da uygulanabilir.
   `IsgProfesyoneliTest` (5 test) + `AtamaYazilariTest`'e 3 yeni test + `NavigasyonTest`'e
   1 sayfa. **255 test toplam.**
+- **Faz 3u — Sertifika Oluştur ✅ (isgpratik 66-68.jpg):** `App\Filament\Pages\
+  SertifikaOlustur` (stub yerine geçti) + `App\Models\Sertifika` + `App\Support\
+  SertifikaUretici` (dompdf, A4 yatay, **katılımcı başına ayrı sayfa**) +
+  `config isg.sertifika` (4 tip: İSG Sertifikası [çoklu eğitici — İGU+İşyeri
+  Hekimi, `isg.egitim` 'genel' içeriğini reuse eder — sektör seçilince işyerine
+  özgü riskler dahil], Yüksekte Çalışma/Kapalı Alanlarda Çalışma/Yangın Eğitimi
+  [tek eğitici, `isg.egitim.ozel_basliklar`'dan sabit içerik reuse — yuksekte_
+  calisma/kapali_alan/sondurme_ekibi]). Geçerlilik tarihi 3 hızlı buton ile
+  hesaplanır (Az Tehlikeli +3 / Tehlikeli +2 / Çok Tehlikeli +1 yıl — Çalışanların
+  İSG Eğitimlerinin Usul ve Esasları Yön.). Katılımcı listesi Eğitim Katılım ile
+  birebir aynı desen (firma çalışanları hepsi seçili + manuel ekle + Excel toplu
+  yükle). **Eğitici kaşesi firmaya atanmış İSG Profesyoneli'nden (Faz 3t)
+  otomatik gelir** ve kayıt anında `egitici_igu_kase`/`egitici_hekim_kase`
+  alanlarına anlık görüntü olarak snapshotlanır — Atama Yazıları'ndan sonra
+  kaşe-basma deseninin **ikinci** kullanımı. Sertifika logosu (yok/sol/sağ/her
+  iki taraf) + çerçeve stili (klasik/sade/mor) seçilebilir; isgpratik'in OSGB
+  logosu sabit-sol kısıtı kapsam dışı (tek kullanıcılı panelde anlamsız).
+  `SertifikaOlusturTest` (10 test). **265 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
-  Saha Denetimi, Sertifika Oluştur, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük,
+  Saha Denetimi, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük,
   tıbbi muayene formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC
   Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi). isgpratik kök klasöründe 24-101(+133-
   135,158) numaralı ekran görüntüleri bu modüllere karşılık geliyor — kısmen incelendi
-  (24-65, 79-87 görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama
-  Yazıları(✅)/Eğitim Katılım(✅)/İşbaşı Eğt.(✅)/Tatbikat(✅)/Ceza Tebliğ(✅)/Talimat
-  Oluştur(✅)/Yıllık Planlar(✅)), 66-78+88-101+133-135+158 henüz tam incelenmedi (Tespit
-  Öneri Defteri, Sertifika Oluştur, Eğitim Soruları, KKD, İş İzin, İş Kazası Raporu,
-  Muayene Formu (çok büyük, ertelendi) zaten ✅/ertelendi olarak işaretli). Her biri Eğitim
-  Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik + Filament
-  Page + dompdf + test) tek tek kurulacak.
+  (24-68, 79-87 görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama
+  Yazıları(✅)/Eğitim Katılım(✅)/İşbaşı Eğt.(✅)/Tatbikat(✅)/Sertifika Oluştur(✅)/
+  Ceza Tebliğ(✅)/Talimat Oluştur(✅)/Yıllık Planlar(✅)), 88-101+133-135+158 henüz tam
+  incelenmedi (69-78 zaten Eğitim Soruları/KKD/İş İzin ✅ olarak işaretli). Her biri
+  Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik +
+  Filament Page + dompdf + test) tek tek kurulacak.
 
 ## Notlar
 

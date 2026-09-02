@@ -1456,6 +1456,49 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sertifika Oluştur — isgpratik 66-68.jpg
+    |--------------------------------------------------------------------------
+    | 4 sertifika tipi. İSG Sertifikası çoklu eğitici (İGU + İşyeri Hekimi,
+    | isg.egitim 'genel' içeriği); diğer 3 tip tek eğitici + sabit özel başlık
+    | içeriği (isg.egitim.ozel_basliklar'dan reuse). Eğitici kaşesi firmaya
+    | atanmış İSG Profesyoneli'nden (isg_profesyonelleri) otomatik gelir.
+    */
+    'sertifika' => [
+        'tipler' => [
+            'isg' => [
+                'ad' => 'İSG Sertifikası', 'baslik' => 'İş Sağlığı ve Güvenliği Temel Eğitim Sertifikası',
+                'coklu_egitici' => true, 'icerik_anahtari' => null,
+            ],
+            'yukseklik' => [
+                'ad' => 'Yüksekte Çalışma Sertifikası', 'baslik' => 'Yüksekte Çalışma Eğitimi Sertifikası',
+                'coklu_egitici' => false, 'icerik_anahtari' => 'yuksekte_calisma',
+            ],
+            'kapali_alan' => [
+                'ad' => 'Kapalı Alanlarda Çalışma Sertifikası', 'baslik' => 'Kapalı Alanda Çalışma Eğitimi Sertifikası',
+                'coklu_egitici' => false, 'icerik_anahtari' => 'kapali_alan',
+            ],
+            'yangin' => [
+                'ad' => 'Yangın Eğitimi Sertifikası', 'baslik' => 'Yangın Eğitimi ve Söndürme Sertifikası',
+                'coklu_egitici' => false, 'icerik_anahtari' => 'sondurme_ekibi',
+            ],
+        ],
+        // Çalışanların İSG Eğitimlerinin Usul ve Esasları Hak. Yön. — periyodik
+        // eğitim tekrar süresi: az tehlikeli 3, tehlikeli 2, çok tehlikeli 1 yıl.
+        'gecerlilik_yili' => [
+            'az_tehlikeli' => 3,
+            'tehlikeli' => 2,
+            'cok_tehlikeli' => 1,
+        ],
+        'sureler' => ['4 saat', '8 saat', '8 Ders saati', '16 saat'],
+        'cerceveler' => [
+            'klasik_siyah' => 'Klasik — siyah çift çizgi çerçeve',
+            'sade' => 'Sade — çerçevesiz',
+            'mor' => 'Mor kenarlık',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Çalışma Talimatları — isgpratik 82-83.jpg
     |--------------------------------------------------------------------------
     | Hazır şablon kütüphanesi (isgpratik'in 36 şablonluk kütüphanesinden 30'u
