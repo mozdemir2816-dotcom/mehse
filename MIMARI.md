@@ -47,7 +47,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
-| **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | planlandı |
+| **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF) |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | planlandı |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
@@ -660,17 +660,36 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   iki taraf) + çerçeve stili (klasik/sade/mor) seçilebilir; isgpratik'in OSGB
   logosu sabit-sol kısıtı kapsam dışı (tek kullanıcılı panelde anlamsız).
   `SertifikaOlusturTest` (10 test). **265 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
+- **Faz 3v — DÖF Oluştur ✅ (isgpratik 158.jpg — "Çoklu DÖF Oluştur"):**
+  `App\Filament\Pages\DofOlustur` (stub yerine geçti) + `App\Models\DofRaporu` +
+  `App\Support\DofRaporuUretici` (dompdf, A4 yatay) + `config isg.dof` (4 öncelik:
+  Düşük/Orta/Yüksek/Kritik; 4 durum: Açık/Devam Ediyor/Tamamlandı/Ertelendi).
+  Rapor künyesi (Alan/Bölge, Gözetim Tarih Aralığı, Rapor Tarihi, Gözetim Yapan +
+  Sertifika No, Sorumlu Kişi, İşveren/Vekili Adı) isgpratik ekranıyla birebir;
+  Gözetim Yapan + Sertifika No firmaya atanmış İGU'dan otomatik dolar (üçüncü
+  kaşe-basma kullanımı — `gozetim_yapan_kase` snapshotlanır). Çoklu madde ekleme
+  (tespit + öncelik + öneri + sorumlu + termin + durum — durum listede tek tıkla
+  güncellenir). **"Yapay Zekadan Öneri Al"** yeni `GeminiOneriDanismani`
+  ÇAĞRISI değil, mevcut Tespit Öneri Defteri'nin AYNI sınıfını reuse eder (ayrı
+  Gemini sınıfı yazmaya gerek kalmadı — tespit metninden öneri üretme ihtiyacı
+  zaten aynı). isgpratik'in OSGB logosu / şablon kaydetme özellikleri kapsam
+  dışı (tek kullanıcılı panelde anlamsız / ayrı iş). `DofOlusturTest` (10 test).
+  **275 test toplam.**
+- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (AI Saha Analizi,
   Saha Denetimi, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük,
   tıbbi muayene formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC
   Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi). isgpratik kök klasöründe 24-101(+133-
-  135,158) numaralı ekran görüntüleri bu modüllere karşılık geliyor — kısmen incelendi
-  (24-68, 79-87 görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama
-  Yazıları(✅)/Eğitim Katılım(✅)/İşbaşı Eğt.(✅)/Tatbikat(✅)/Sertifika Oluştur(✅)/
-  Ceza Tebliğ(✅)/Talimat Oluştur(✅)/Yıllık Planlar(✅)), 88-101+133-135+158 henüz tam
-  incelenmedi (69-78 zaten Eğitim Soruları/KKD/İş İzin ✅ olarak işaretli). Her biri
-  Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik +
-  Filament Page + dompdf + test) tek tek kurulacak.
+  135,158) numaralı ekran görüntüleri bu modüllere karşılık geliyor — DÖF (158.jpg)
+  hariç **AI Saha Analizi ve Saha Denetimi için hiçbir ekran görüntüsü bulunamadı**
+  (planNotu'larındaki 11.jpg/73-75.jpg referansları hatalı çıktı — 73-75 aslında
+  KKD Formu'na ait; isgpratik'te bu ikisi muhtemelen ayrı bir alt sayfada/klasörde,
+  henüz görülmedi). 88-101 aralığı incelendi ama tamamı kapsam dışı isgpratik
+  özellikleri (İSG Arşiv Dosyaları 2860 dosyalık kütüphane, İSG Deneme Sınavı
+  3499 soruluk sınav havuzu, genel Mevzuat sayfası — hiçbiri sol menümüzde yok).
+  133-135+158 incelendi (Profilim sekmeleri zaten ✅, DÖF ✅). Her biri Eğitim
+  Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik +
+  Filament Page + dompdf + test) tek tek kurulacak; AI Saha Analizi/Saha Denetimi
+  için kullanıcıdan ekran görüntüsü istenmesi gerekebilir.
 
 ## Notlar
 

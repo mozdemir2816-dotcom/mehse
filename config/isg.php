@@ -1243,6 +1243,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | DÖF Oluştur (Çoklu DÖF) — isgpratik 158.jpg
+    |--------------------------------------------------------------------------
+    | Saha gözetimi/denetimi sonucu birden çok Düzeltici Önleyici Faaliyet
+    | maddesini tek raporda toplar. "AI ile Öneri Al" GeminiOneriDanismani'yı
+    | (Tespit Öneri Defteri ile aynı) reuse eder.
+    */
+    'dof' => [
+        'oncelikler' => [
+            'dusuk' => 'Düşük',
+            'orta' => 'Orta',
+            'yuksek' => 'Yüksek',
+            'kritik' => 'Kritik',
+        ],
+        'durumlar' => [
+            'acik' => 'Açık',
+            'devam_ediyor' => 'Devam Ediyor',
+            'tamamlandi' => 'Tamamlandı',
+            'ertelendi' => 'Ertelendi',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tespit ve Öneri Defteri — isgpratik 65-66.jpg
     |--------------------------------------------------------------------------
     | Hazır öneri kataloğu, isgpratik'teki "171 madde" kataloğunun bir alt
