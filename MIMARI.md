@@ -55,9 +55,9 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
 | Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | planlandı |
 | Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | planlandı |
-| Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | planlandı |
+| Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | **hazır** (hazır katalog + serbest/AI destekli madde → PDF) |
 | Formlar & Belgeler | Sertifika Oluştur | `sertifika` | planlandı |
-| Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | planlandı |
+| Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | **hazır** (Gemini ile 10 soruluk sınav + manuel soru → PDF) |
 | Formlar & Belgeler | KKD Formu | `kkd-formu` | planlandı |
 | Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | planlandı |
 | Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | planlandı |
@@ -496,16 +496,40 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   **kapsam dışı** bırakıldı — hazır kategorili liste zaten aynı ihtiyacı karşılıyor, AI
   bütçesi karar-metni önerisine ayrıldı.
   `KurulToplantisiTest` (11 test, `Http::fake`). **160 test toplam.**
+- **Faz 3k — Eğitim Soruları ✅ (isgpratik 69-70.jpg):** `App\Filament\Pages\EgitimSorulari`
+  (stub yerine geçti) + `App\Models\EgitimSinavi` + `App\Support\EgitimSinaviUretici`
+  (dompdf) + `App\Support\GeminiSoruUretici` (gerçek LLM). Sektör listesi AYRI bir config
+  bloğu AÇILMADI — `isg.risk_ai.sektorler` (13 sektör) + "Genel" doğrudan reuse edildi
+  (tekrar veri girmemek için). "AI ile 10 Soru Üret" Gemini'den `responseSchema` ile
+  4 şıklı çoktan seçmeli soru listesi ister (`GeminiRiskDanismani`/`GeminiKararDanismani`
+  ile aynı desen — anahtar yoksa/istek başarısızsa boş dizi, kullanıcı elle ekler).
+  Eksik şıklı/geçersiz `dogru_index`'li adaylar sessizce elenir. PDF: her katılımcı için
+  ayrı sınav sayfası + "cevap anahtarı dahil mi" (isgpratik'teki "Sınavdan Önce/Sonra"
+  toggle'ının karşılığı) işaretliyse sonda ayrı cevap anahtarı sayfası. **Kapsam dışı:**
+  soru şablonu kaydetme/yükleme ("Şablonlarım"), sınav öncesi/sonrası ayrı PDF üretimi.
+  `EgitimSorulariTest` (10 test, `Http::fake`).
+- **Faz 3l — Tespit ve Öneri Defteri ✅ (isgpratik 65-66.jpg):**
+  `App\Filament\Pages\TespitOneriDefteri` (stub yerine geçti) + `App\Models\
+  TespitOneriDefteri` (firma başına TEK kayıt — `AcilDurumPlani` ile aynı `firmaIcin()`
+  deseni) + `App\Support\TespitOneriDefteriUretici` (dompdf) + `App\Support\
+  GeminiOneriDanismani` (gerçek LLM) + `config isg.tespit_oneri.katalog` (6 kategori,
+  ~14 hazır madde — isgpratik'in "171 madde" kataloğunun küçük, GENİŞLETİLEBİLİR bir alt
+  kümesi; tam katalog ekran görüntülerinden tek tek çıkarılamayacak kadar büyük, zamanla
+  büyütülecek). Akış: katalogdan konu/arama filtresiyle madde bul → "+ Ekle" ile deftere
+  ekle, VEYA "Diğer (Kendiniz Yazın)" bölümünde serbest tespit yazıp "✨ Yapay Zekadan
+  Öneri Al" ile Gemini'den tek cümlelik öneri iste → deftere ekle. PDF çıktısı öncelik
+  renkli (yüksek/orta/düşük) madde listesi + imza alanları.
+  `TespitOneriDefteriTest` (9 test, `Http::fake`). **179 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
-  Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı, Tespit
-  Öneri Defteri, Sertifika Oluştur, Eğitim Soruları, KKD Formu, İş İzin Formu, Ceza ve
-  Tebliğ Tutanağı, İş Kazası Raporu, Talimat Oluştur, Muayene Formu, Ücretsiz E-Reçetem,
-  Yıllık Planlar, Ziyaret Programı, Araçlar). isgpratik kök klasöründe 24-101(+133-135,158)
-  numaralı ekran görüntüleri bu modüllere karşılık geliyor — kısmen incelendi (24-44, 60-66
-  görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı
-  Eğt./Tatbikat/Tespit Öneri Defteri/Sertifika Oluştur), 67-101+133-135+158 henüz
-  incelenmedi. Her biri Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı desende
-  (config-driven içerik + Filament Page + dompdf + test) tek tek kurulacak.
+  Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı,
+  Sertifika Oluştur, KKD Formu, İş İzin Formu, Ceza ve Tebliğ Tutanağı, İş Kazası Raporu,
+  Talimat Oluştur, Muayene Formu, Ücretsiz E-Reçetem, Yıllık Planlar, Ziyaret Programı,
+  Araçlar). isgpratik kök klasöründe 24-101(+133-135,158) numaralı ekran görüntüleri bu
+  modüllere karşılık geliyor — kısmen incelendi (24-44, 60-70 görüldü: DÖF/AI Saha
+  Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı Eğt./Tatbikat/
+  Tespit Öneri Defteri(✅)/Sertifika Oluştur/Eğitim Soruları(✅)), 71-101+133-135+158
+  henüz incelenmedi. Her biri Eğitim Katılım/Atama Yazıları/Kurul Toplantısı ile aynı
+  desende (config-driven içerik + Filament Page + dompdf + test) tek tek kurulacak.
 
 ## Notlar
 

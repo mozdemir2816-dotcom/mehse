@@ -1194,4 +1194,58 @@ return [
             ],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Eğitim Soruları — isgpratik 69-70.jpg
+    |--------------------------------------------------------------------------
+    | Sektör listesi risk_ai.sektorler ile ortak (aynı 13 sektör + "Genel").
+    */
+    'egitim_sorulari' => [
+        'zorluklar' => [
+            'kolay' => 'Kolay',
+            'orta' => 'Orta',
+            'zor' => 'Zor',
+            'karisik' => 'Karışık',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tespit ve Öneri Defteri — isgpratik 65-66.jpg
+    |--------------------------------------------------------------------------
+    | Hazır öneri kataloğu, isgpratik'teki "171 madde" kataloğunun bir alt
+    | kümesi — kategorilere ayrılmış, öncelik etiketli, mevzuat dayanaklı.
+    | Zamanla genişletilebilir.
+    */
+    'tespit_oneri' => [
+        'katalog' => [
+            'Yönetim Sistemi ve Dokümantasyon' => [
+                ['oncelik' => 'yuksek', 'tespit' => 'İşyerinde güncel ve onaylı İSG Risk Değerlendirmesi raporunun bulunmadığı/süresinin dolduğu tespit edilmiştir.', 'oneri' => 'Tehlike sınıfına uygun süre içinde (çok tehlikeli 2, tehlikeli 4, az tehlikeli 6 yıl) işyerine özgü risk değerlendirmesi yapılmalı/yenilenmeli ve uygulamaya konulmalıdır.', 'dayanak' => '6331 s.K. m.10; İSG Risk Değerlendirmesi Yönetmeliği'],
+                ['oncelik' => 'yuksek', 'tespit' => 'İş kazalarının yasal süresinde SGK\'ya bildirilmediği/kayıt altına alınmadığı tespit edilmiştir.', 'oneri' => 'Tüm iş kazaları kazadan sonraki 3 iş günü içinde SGK\'ya bildirilmeli ve kaza inceleme raporu düzenlenmelidir.', 'dayanak' => '6331 s.K. m.14'],
+                ['oncelik' => 'orta', 'tespit' => 'İşyeri hekimi ve iş güvenliği uzmanınca hazırlanması gereken yıllık çalışma planının bulunmadığı görülmüştür.', 'oneri' => 'İSG profesyonellerince yıllık çalışma planı hazırlanmalı, eğitim/ölçüm/muayene takvimi belirlenmeli ve işverene sunulmalıdır.', 'dayanak' => 'İSG Hizmetleri Yönetmeliği'],
+                ['oncelik' => 'orta', 'tespit' => 'İşyerinde çalışan sayısı ve tehlike sınıfı gereği bulunması gereken İSG Kurulunun kurulmadığı/toplantıların yapılmadığı görülmüştür.', 'oneri' => '50 ve üzeri çalışanı olan ve 6 aydan fazla süren işlerde İSG Kurulu oluşturulmalı, toplantılar düzenli yapılarak karar defterine işlenmelidir.', 'dayanak' => '6331 s.K. m.22; İSG Kurulları Hakkında Yönetmelik'],
+            ],
+            'Kişisel Koruyucu Donanım' => [
+                ['oncelik' => 'yuksek', 'tespit' => 'Çalışanların işin gerektirdiği kişisel koruyucu donanımı (baret, iş ayakkabısı, eldiven vb.) kullanmadığı tespit edilmiştir.', 'oneri' => 'Risk değerlendirmesinde belirlenen KKD\'ler ücretsiz temin edilmeli, kullanımı denetlenmeli ve KKD tutanağı ile teslim edilmelidir.', 'dayanak' => 'Kişisel Koruyucu Donanımların İşyerlerinde Kullanılması Hakkında Yönetmelik'],
+                ['oncelik' => 'orta', 'tespit' => 'KKD teslim tutanaklarının imzalı/eksiksiz olmadığı görülmüştür.', 'oneri' => 'Her çalışana teslim edilen KKD için imzalı teslim tutanağı düzenlenmeli ve özlük dosyasında saklanmalıdır.', 'dayanak' => 'KKD Yönetmeliği m.6'],
+            ],
+            'Elektrik ve Yangın Güvenliği' => [
+                ['oncelik' => 'yuksek', 'tespit' => 'Yangın söndürme cihazlarının periyodik bakım/dolum kontrolünün süresi geçmiş etiketli olduğu tespit edilmiştir.', 'oneri' => 'Yangın söndürme cihazları yıllık periyodik bakıma tabi tutulmalı, muayene etiketleri güncel tutulmalıdır.', 'dayanak' => 'Binaların Yangından Korunması Hakkında Yönetmelik'],
+                ['oncelik' => 'yuksek', 'tespit' => 'Elektrik pano ve tesisatının periyodik topraklama/izolasyon ölçümünün yapılmadığı tespit edilmiştir.', 'oneri' => 'Elektrik tesisatı yılda en az 1 kez yetkili kişi/kuruluşa periyodik kontrol yaptırılmalı, ölçüm raporları saklanmalıdır.', 'dayanak' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3'],
+            ],
+            'Makine ve Ekipman Güvenliği' => [
+                ['oncelik' => 'yuksek', 'tespit' => 'Kaldırma ve iletme ekipmanlarının (vinç, forklift vb.) periyodik kontrolünün yapılmadığı/belgesinin bulunmadığı tespit edilmiştir.', 'oneri' => 'İş ekipmanları yönetmeliği Ek-3 kapsamında periyodik kontroller yaptırılmalı, kontrol raporları işyerinde bulundurulmalıdır.', 'dayanak' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği'],
+                ['oncelik' => 'orta', 'tespit' => 'Makinelerin hareketli aksamlarında koruyucu (siper) bulunmadığı görülmüştür.', 'oneri' => 'Kesme/sıkışma riski taşıyan hareketli aksamlara uygun koruyucu/siper takılmalı, acil durdurma butonu erişilebilir olmalıdır.', 'dayanak' => 'Makina Emniyeti Yönetmeliği'],
+            ],
+            'Sağlık Gözetimi ve Eğitim' => [
+                ['oncelik' => 'orta', 'tespit' => 'Çalışanların periyodik sağlık muayenelerinin tehlike sınıfına göre belirlenen sürelerde yapılmadığı tespit edilmiştir.', 'oneri' => 'İşe giriş ve periyodik muayeneler işyeri hekimince tehlike sınıfına uygun aralıklarla (çok tehlikeli yılda 1, tehlikeli 3 yılda 1, az tehlikeli 5 yılda 1) tekrarlanmalıdır.', 'dayanak' => 'İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik'],
+                ['oncelik' => 'orta', 'tespit' => 'Yeni işe başlayan çalışanlara işbaşı/oryantasyon eğitimi verilmediği/tutanağa bağlanmadığı görülmüştür.', 'oneri' => 'İşe yeni başlayan her çalışan için işbaşı eğitimi verilmeli ve tek sayfalık tutanakla belgelendirilmelidir.', 'dayanak' => 'Çalışanların İSG Eğitimlerinin Usul ve Esasları Hak. Yönetmelik'],
+            ],
+            'Acil Durum' => [
+                ['oncelik' => 'yuksek', 'tespit' => 'İşyerinde yürürlükte bir acil durum planının bulunmadığı/güncel olmadığı tespit edilmiştir.', 'oneri' => 'İşyerine özgü acil durum planı hazırlanmalı, tahliye planı ve toplanma yeri işaretlenmelidir.', 'dayanak' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik'],
+                ['oncelik' => 'orta', 'tespit' => 'Yıllık tatbikat yapılmadığı/tatbikat tutanağının bulunmadığı görülmüştür.', 'oneri' => 'Acil durum planı doğrultusunda yılda en az 1 tatbikat yapılmalı ve tutanakla belgelendirilmelidir.', 'dayanak' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik m.13'],
+            ],
+        ],
+    ],
 ];

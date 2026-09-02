@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Firma extends Model
 {
@@ -59,6 +60,16 @@ class Firma extends Model
     public function kurulToplantilari(): HasMany
     {
         return $this->hasMany(KurulToplantisi::class);
+    }
+
+    public function egitimSinavlari(): HasMany
+    {
+        return $this->hasMany(EgitimSinavi::class);
+    }
+
+    public function tespitOneriDefteri(): HasOne
+    {
+        return $this->hasOne(TespitOneriDefteri::class);
     }
 
     public function tehlikeSinifiEtiketi(): string
