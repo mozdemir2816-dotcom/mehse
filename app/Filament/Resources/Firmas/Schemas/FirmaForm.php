@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Firmas\Schemas;
 
+use App\Models\IsgProfesyoneli;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -41,6 +43,27 @@ class FirmaForm
                     TextInput::make('il')->label('İl')->maxLength(50),
                     TextInput::make('ilce')->label('İlçe')->maxLength(50),
                     Textarea::make('adres')->label('Adres')->rows(2)->columnSpanFull(),
+                ]),
+
+            Section::make('İSG Profesyonelleri')
+                ->columns(3)
+                ->description('Atanan kişilerin kaşesi bu firmanın belgelerinde (Atama Yazıları vb.) otomatik basılır.')
+                ->schema([
+                    Select::make('igu_id')->label('İş Güvenliği Uzmanı')
+                        ->options(fn () => IsgProfesyoneli::query()
+                            ->where('user_id', Filament::auth()->id())->where('tip', 'igu')
+                            ->pluck('ad_soyad', 'id'))
+                        ->native(false)->searchable()->preload(),
+                    Select::make('isyeri_hekimi_id')->label('İşyeri Hekimi')
+                        ->options(fn () => IsgProfesyoneli::query()
+                            ->where('user_id', Filament::auth()->id())->where('tip', 'isyeri_hekimi')
+                            ->pluck('ad_soyad', 'id'))
+                        ->native(false)->searchable()->preload(),
+                    Select::make('dsp_id')->label('Diğer Sağlık Personeli (DSP)')
+                        ->options(fn () => IsgProfesyoneli::query()
+                            ->where('user_id', Filament::auth()->id())->where('tip', 'dsp')
+                            ->pluck('ad_soyad', 'id'))
+                        ->native(false)->searchable()->preload(),
                 ]),
 
             Section::make('Sözleşme & Diğer')

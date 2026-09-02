@@ -52,9 +52,10 @@
 
     <table class="uyeler">
         <tr>
-            <th style="width:5%">#</th><th>Ad Soyad</th><th style="width:18%">T.C. Kimlik No</th>
-            <th style="width:25%">Görev / Unvan</th>
-            @if ($kayit->ekipMi())<th style="width:12%">Baş Üye</th>@endif
+            <th style="width:5%">#</th><th>Ad Soyad</th><th style="width:16%">T.C. Kimlik No</th>
+            <th style="width:20%">Görev / Unvan</th>
+            @if ($kayit->ekipMi())<th style="width:10%">Baş Üye</th>@endif
+            @if ($kayit->ekipMi())<th style="width:14%">Kaşe / İmza</th>@endif
         </tr>
         @forelse (($kayit->uyeler ?? []) as $i => $u)
             <tr>
@@ -63,9 +64,18 @@
                 <td>{{ $u['tc'] ?? '—' }}</td>
                 <td>{{ $u['gorev'] ?? '—' }}</td>
                 @if ($kayit->ekipMi())<td>{{ ($u['bas_uye'] ?? false) ? 'Evet' : '—' }}</td>@endif
+                @if ($kayit->ekipMi())
+                    <td>
+                        @if (! empty($u['kase_gorseli']))
+                            <img src="{{ storage_path('app/public/'.$u['kase_gorseli']) }}" style="max-height:36px;max-width:100%">
+                        @else
+                            —
+                        @endif
+                    </td>
+                @endif
             </tr>
         @empty
-            <tr><td colspan="5" style="color:#888">Üye eklenmedi.</td></tr>
+            <tr><td colspan="{{ $kayit->ekipMi() ? 6 : 4 }}" style="color:#888">Üye eklenmedi.</td></tr>
         @endforelse
     </table>
 

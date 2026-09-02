@@ -1087,6 +1087,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | İSG Profesyonelleri — İGU / İşyeri Hekimi / DSP kayıtları
+    |--------------------------------------------------------------------------
+    | Uzmanın portföyünde çalıştığı sağlık/güvenlik profesyonelleri; her firmaya
+    | bir İGU + bir İşyeri Hekimi + bir DSP atanabilir (Firma.igu_id vb.).
+    | Kaşe/imza görselleri atandığı firmanın belgelerinde (Atama Yazıları vb.)
+    | otomatik basılır.
+    */
+    'isg_profesyonelleri' => [
+        'tipler' => [
+            'igu' => 'İş Güvenliği Uzmanı',
+            'isyeri_hekimi' => 'İşyeri Hekimi',
+            'dsp' => 'Diğer Sağlık Personeli (DSP)',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Atama Yazıları — isgpratik 38-44.jpg
     |--------------------------------------------------------------------------
     | 10 görev tipi; 'tekli' tek bir kişiyle doldurulur (Görev Başlangıç/Bitiş
@@ -1152,6 +1169,20 @@ return [
                     'koruma/ilkyardım ekiplerini koordine eden ve dış kurumlarla (itfaiye, 112, AFAD) iletişimi '.
                     'sağlayan tek kişi olarak işveren tarafından görevlendirilir.',
             ],
+        ],
+        // İSG Kurulu ekip üyesi seçilince, her üye için firmadaki genel "gorev" alanı
+        // yerine kurul içindeki görev tanımı atanabilir (İSG Kurulları Hk. Yönetmelik
+        // md.6 — kurul üyeleri).
+        'kurul_gorevleri' => [
+            'baskan' => 'Başkan (İşveren / İşveren Vekili)',
+            'igu' => 'İş Güvenliği Uzmanı',
+            'isyeri_hekimi' => 'İşyeri Hekimi',
+            'insan_kaynaklari' => 'İnsan Kaynakları Sorumlusu',
+            'sivil_savunma' => 'Sivil Savunma Uzmanı',
+            'usta_formen' => 'Usta / Formen',
+            'calisan_temsilcisi' => 'Çalışan Temsilcisi',
+            'dsp' => 'Diğer Sağlık Personeli (DSP)',
+            'diger' => 'Diğer',
         ],
     ],
 

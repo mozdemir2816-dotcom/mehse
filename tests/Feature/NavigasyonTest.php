@@ -30,6 +30,7 @@ class NavigasyonTest extends TestCase
             'isg-katip robot' => ['/admin/isg-katip-robot'],
             'firmalar' => ['/admin/firmalar'],
             'calisanlar' => ['/admin/calisanlar'],
+            'isg profesyonelleri' => ['/admin/isg-profesyonelleri'],
             // Risk Yönetimi
             'risk sihirbazi' => ['/admin/risk-degerlendirme'],
             'kayitli degerlendirmeler' => ['/admin/risk-degerlendirmelerim'],

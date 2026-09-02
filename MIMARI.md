@@ -51,7 +51,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | planlandı |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
-| Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip → PDF) |
+| Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF) |
 | Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
 | Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | **hazır** (konu kategorileri + eğitim yöntemi + TC gizleme → PDF) |
 | Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | **hazır** (10 senaryo + ekip + değerlendirme + DÖF önerisi → PDF) |
@@ -71,6 +71,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
 | Yönetim | Firmalar | `firmalar` | **hazır** (Çalışanlar RelationManager dâhil) |
 | Yönetim | Çalışanlar | `calisanlar` | **hazır** |
+| Yönetim | İSG Profesyonelleri | `isg-profesyonelleri` | **hazır** (İGU/İşyeri Hekimi/DSP + kaşe/imza, firmalara atanır) |
 
 ## Ekran notları (görülen referanslar)
 
@@ -614,6 +615,33 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   soru), tespit edilen eksiklikler, DÖF önerileri, katılımcılar bölümleri var; PDF aksiyonu
   yalnız firma seçiliyken görünür (`assertActionHidden` ile test edildi).
   `TatbikatTutanagiTest` (10 test). **246 test toplam.**
+- **Faz 3t — İSG Profesyonelleri ✅ (kullanıcı talebi, isgpratik ekranı yok):**
+  Kullanıcı "atama yazılarındaki İSG Kurulu'na görev tanımı ekle (İşveren/Çalışan
+  Temsilcisi/Sivil Savunma Uzmanı/İnsan Kaynakları), İGU ve İşyeri Hekimini
+  sistemden otomatik seç, kaşelerini yükleyip atandığı firmanın evraklarında
+  otomatik bassın" dedi. `App\Models\IsgProfesyoneli` (yeni tablo
+  `isg_profesyonelleri` — tip: igu/isyeri_hekimi/dsp, ad_soyad, unvan,
+  sertifika_no, kase_gorseli, imza_gorseli; `user_id` scope, Firma ile aynı
+  `booted()->saving()` deseni) + `App\Filament\Resources\IsgProfesyonelis\
+  IsgProfesyoneliResource` (List/Create/Edit, nav "Yönetim" grubu, kaşe/imza
+  `FileUpload`). `Firma`'ya `igu_id`/`isyeri_hekimi_id`/`dsp_id` nullable FK
+  eklendi (`FirmaForm`'da 3 ayrı Select ile atanır). **Atama Yazıları — İSG
+  Kurulu ekip seçiminde:** rol `isg_kurulu` seçilince (veya firma değişince)
+  firmaya atanmış İGU + İşyeri Hekimi otomatik seçili gelir (`varsayilanProfesyonelIdler()`);
+  DSP + diğerleri manuel `profesyonelToggle()` ile eklenir/çıkarılır. Ayrıca
+  seçili her firma çalışanı için `config isg.atama.kurul_gorevleri` (Başkan/İGU/
+  İşyeri Hekimi/İnsan Kaynakları Sorumlusu/Sivil Savunma Uzmanı/Usta-Formen/
+  Çalışan Temsilcisi/DSP/Diğer) üzerinden kurul içindeki görev tanımı atanabilir
+  (`kurulGorevleri[calisan_id]` — firma içi genel `gorev` alanının yerine PDF'te
+  bu görev metni basılır). PDF (`atama-yazisi.blade.php`) üye tablosuna "Kaşe /
+  İmza" sütunu eklendi — profesyonel üyenin `kase_gorseli`si varsa dompdf'e
+  `storage_path('app/public/...')` ile gömülü resim olarak basılır (yoksa "—").
+  Bu, projede kaşe görselinin bir PDF'e gerçekten basıldığı **ilk** kullanım
+  (Profilim'in kendi kaşe/imza yüklemesi daha önce depolanıyordu ama hiçbir
+  belgede kullanılmıyordu) — aynı desen ileride diğer modüllerin (Tatbikat,
+  Risk Değerlendirmesi vb.) "(İmza – Kaşe)" placeholder'larına da uygulanabilir.
+  `IsgProfesyoneliTest` (5 test) + `AtamaYazilariTest`'e 3 yeni test + `NavigasyonTest`'e
+  1 sayfa. **255 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
   Saha Denetimi, Sertifika Oluştur, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük,
   tıbbi muayene formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC

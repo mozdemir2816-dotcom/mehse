@@ -37,6 +37,21 @@ class Firma extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function igu(): BelongsTo
+    {
+        return $this->belongsTo(IsgProfesyoneli::class, 'igu_id');
+    }
+
+    public function isyeriHekimi(): BelongsTo
+    {
+        return $this->belongsTo(IsgProfesyoneli::class, 'isyeri_hekimi_id');
+    }
+
+    public function dsp(): BelongsTo
+    {
+        return $this->belongsTo(IsgProfesyoneli::class, 'dsp_id');
+    }
+
     public function calisanlar(): HasMany
     {
         return $this->hasMany(Calisan::class);

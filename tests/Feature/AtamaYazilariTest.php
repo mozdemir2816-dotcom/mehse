@@ -6,6 +6,7 @@ use App\Filament\Pages\AtamaYazilari as AtamaSayfasi;
 use App\Models\AtamaYazisi;
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\User;
 use App\Support\AtamaYazisiUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -88,6 +89,62 @@ class AtamaYazilariTest extends TestCase
             ->call('firmaProfilindenDoldur');
 
         $this->assertCount(3, $component->get('secilenCalisanIdler'));
+    }
+
+    public function test_isg_kurulu_atanmis_igu_ve_hekim_otomatik_secili_gelir_ve_kaydedilir(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'igu', 'ad_soyad' => 'İGU Ayşe', 'kase_gorseli' => 'isg-profesyonel-kase/ayse.png']);
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Mehmet']);
+        $dsp = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'dsp', 'ad_soyad' => 'DSP Fatma']);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'igu_id' => $igu->id,
+            'isyeri_hekimi_id' => $hekim->id,
+            'dsp_id' => $dsp->id,
+        ]);
+
+        $component = Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'isg_kurulu');
+
+        $this->assertEqualsCanonicalizing([$igu->id, $hekim->id], $component->get('secilenProfesyonelIdler'));
+
+        $component->callAction('pdf');
+
+        $kayit = AtamaYazisi::where('firma_id', $firma->id)->firstOrFail();
+        $uyeler = collect($kayit->uyeler);
+        $this->assertTrue($uyeler->contains('ad_soyad', 'İGU Ayşe'));
+        $this->assertTrue($uyeler->contains('ad_soyad', 'Dr. Mehmet'));
+        $this->assertFalse($uyeler->contains('ad_soyad', 'DSP Fatma'));
+        $this->assertSame('isg-profesyonel-kase/ayse.png', $uyeler->firstWhere('ad_soyad', 'İGU Ayşe')['kase_gorseli']);
+    }
+
+    public function test_isg_kurulu_profesyonel_toggle_ile_dsp_manuel_eklenir(): void
+    {
+        $dsp = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'dsp', 'ad_soyad' => 'DSP Fatma']);
+        $firma = Firma::factory()->for($this->uzman)->create(['dsp_id' => $dsp->id]);
+
+        $component = Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'isg_kurulu')
+            ->call('profesyonelToggle', $dsp->id);
+
+        $this->assertSame([$dsp->id], $component->get('secilenProfesyonelIdler'));
+    }
+
+    public function test_isg_kurulu_calisana_kurul_gorevi_atanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $c = Calisan::factory()->for($firma)->create(['ad_soyad' => 'İK Sorumlusu Ayşe', 'gorev' => 'Muhasebe']);
+
+        Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'isg_kurulu')
+            ->call('calisanToggle', $c->id)
+            ->set('kurulGorevleri.'.$c->id, 'insan_kaynaklari')
+            ->callAction('pdf');
+
+        $kayit = AtamaYazisi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('İnsan Kaynakları Sorumlusu', collect($kayit->uyeler)->firstWhere('ad_soyad', 'İK Sorumlusu Ayşe')['gorev']);
     }
 
     public function test_uye_olmadan_kaydedilemez(): void

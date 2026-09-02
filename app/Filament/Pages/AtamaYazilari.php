@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\AtamaYazisi as AtamaYazisiModel;
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Support\AtamaYazisiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -64,6 +65,15 @@ class AtamaYazilari extends Page
     public array $secilenCalisanIdler = [];
 
     public ?int $basUyeId = null;
+
+    /** İSG Kurulu: seçili çalışanın firma içi genel görevi yerine kurul içindeki
+     *  görev tanımı (config isg.atama.kurul_gorevleri anahtarı), calisan_id ile keyed. */
+    /** @var array<int, string> */
+    public array $kurulGorevleri = [];
+
+    /** İSG Kurulu: firmaya atanmış İGU/İşyeri Hekimi/DSP'den kurula dahil edilenler. */
+    /** @var array<int, int> */
+    public array $secilenProfesyonelIdler = [];
 
     public function mount(): void
     {
@@ -125,6 +135,34 @@ class AtamaYazilari extends Page
         return ($this->rol()['tip'] ?? 'tekli') === 'ekip';
     }
 
+    #[Computed]
+    public function kurulGorevSecenekleri(): array
+    {
+        return config('isg.atama.kurul_gorevleri');
+    }
+
+    /** Firmaya atanmış İGU/İşyeri Hekimi/DSP (İSG Kurulu ekip seçiminde kullanılır). */
+    #[Computed]
+    public function firmaProfesyonelleri(): Collection
+    {
+        if (! $this->firma) {
+            return collect();
+        }
+
+        return collect([$this->firma->igu, $this->firma->isyeriHekimi, $this->firma->dsp])
+            ->filter()
+            ->values();
+    }
+
+    /** İGU ve İşyeri Hekimi otomatik seçili gelir (DSP manuel eklenir). */
+    private function varsayilanProfesyonelIdler(): array
+    {
+        return collect([$this->firma?->igu_id, $this->firma?->isyeri_hekimi_id])
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     /** @return Collection<int, AtamaYazisiModel> */
     #[Computed]
     public function gecmisKayitlar(): Collection
@@ -140,10 +178,12 @@ class AtamaYazilari extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->firmaProfesyonelleri);
         $this->isverenVekiliAdi = $this->firma?->isveren_vekili ?: $this->firma?->isveren_ad;
         $this->secilenCalisanIdler = [];
         $this->basUyeId = null;
+        $this->kurulGorevleri = [];
+        $this->secilenProfesyonelIdler = $this->rolAnahtari === 'isg_kurulu' ? $this->varsayilanProfesyonelIdler() : [];
     }
 
     public function updatedRolAnahtari(): void
@@ -156,6 +196,8 @@ class AtamaYazilari extends Page
         $this->tekGorev = null;
         $this->basTemsilci = false;
         $this->tekHizliSecId = null;
+        $this->kurulGorevleri = [];
+        $this->secilenProfesyonelIdler = $this->rolAnahtari === 'isg_kurulu' ? $this->varsayilanProfesyonelIdler() : [];
     }
 
     public function updatedTekHizliSecId(): void
@@ -173,8 +215,11 @@ class AtamaYazilari extends Page
             ? array_values(array_diff($this->secilenCalisanIdler, [$id]))
             : [...$this->secilenCalisanIdler, $id];
 
-        if ($this->basUyeId === $id && ! in_array($id, $this->secilenCalisanIdler, true)) {
-            $this->basUyeId = null;
+        if (! in_array($id, $this->secilenCalisanIdler, true)) {
+            if ($this->basUyeId === $id) {
+                $this->basUyeId = null;
+            }
+            unset($this->kurulGorevleri[$id]);
         }
     }
 
@@ -183,12 +228,19 @@ class AtamaYazilari extends Page
         $this->basUyeId = $this->basUyeId === $id ? null : $id;
     }
 
+    public function profesyonelToggle(int $id): void
+    {
+        $this->secilenProfesyonelIdler = in_array($id, $this->secilenProfesyonelIdler, true)
+            ? array_values(array_diff($this->secilenProfesyonelIdler, [$id]))
+            : [...$this->secilenProfesyonelIdler, $id];
+    }
+
     public function firmaProfilindenDoldur(): void
     {
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
     }
 
-    /** @return array<int, array{ad_soyad: string, tc: ?string, gorev: ?string, bas_uye: bool}> */
+    /** @return array<int, array{ad_soyad: string, tc: ?string, gorev: ?string, bas_uye: bool, kase_gorseli?: ?string, imza_gorseli?: ?string}> */
     private function uyeleriTopla(): array
     {
         if (! $this->ekipMi()) {
@@ -204,16 +256,37 @@ class AtamaYazilari extends Page
             ]];
         }
 
-        return $this->calisanlar
+        $kurulMu = $this->rolAnahtari === 'isg_kurulu';
+
+        $calisanUyeler = $this->calisanlar
             ->whereIn('id', $this->secilenCalisanIdler)
-            ->map(fn (Calisan $c) => [
-                'ad_soyad' => $c->ad_soyad,
-                'tc' => $c->tc,
-                'gorev' => $c->gorev,
-                'bas_uye' => $c->id === $this->basUyeId,
-            ])
-            ->values()
-            ->all();
+            ->map(function (Calisan $c) use ($kurulMu) {
+                $kurulGorevi = $kurulMu ? ($this->kurulGorevleri[$c->id] ?? null) : null;
+
+                return [
+                    'ad_soyad' => $c->ad_soyad,
+                    'tc' => $c->tc,
+                    'gorev' => filled($kurulGorevi)
+                        ? config('isg.atama.kurul_gorevleri.'.$kurulGorevi, $c->gorev)
+                        : $c->gorev,
+                    'bas_uye' => $c->id === $this->basUyeId,
+                ];
+            });
+
+        $profesyonelUyeler = $kurulMu
+            ? $this->firmaProfesyonelleri
+                ->whereIn('id', $this->secilenProfesyonelIdler)
+                ->map(fn (IsgProfesyoneli $p) => [
+                    'ad_soyad' => $p->ad_soyad,
+                    'tc' => null,
+                    'gorev' => $p->unvan ?: $p->tipEtiketi(),
+                    'bas_uye' => false,
+                    'kase_gorseli' => $p->kase_gorseli,
+                    'imza_gorseli' => $p->imza_gorseli,
+                ])
+            : collect();
+
+        return $calisanUyeler->concat($profesyonelUyeler)->values()->all();
     }
 
     private function kaydet(): ?AtamaYazisiModel

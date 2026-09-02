@@ -100,6 +100,33 @@
                     </label>
                 @endif
             @else
+                @if ($rolAnahtari === 'isg_kurulu')
+                    <div style="margin-bottom:1rem">
+                        <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">İSG Profesyonelleri (Otomatik)</div>
+                        @if ($this->firmaProfesyonelleri->isEmpty())
+                            <p style="font-size:.8rem;color:rgb(107 114 128)">
+                                Bu firmaya İGU / İşyeri Hekimi / DSP atanmamış —
+                                <a href="{{ \App\Filament\Resources\IsgProfesyonelis\IsgProfesyoneliResource::getUrl() }}" style="color:{{ $mor }};text-decoration:underline">İSG Profesyonelleri</a>
+                                panelinden ekleyip Firma düzenleme sayfasından atayın.
+                            </p>
+                        @else
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.35rem">
+                                @foreach ($this->firmaProfesyonelleri as $p)
+                                    @php $psecili = in_array($p->id, $secilenProfesyonelIdler, true); @endphp
+                                    <button type="button" wire:click="profesyonelToggle({{ $p->id }})"
+                                        style="text-align:left;padding:.45rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;color:inherit;
+                                            border:1px solid {{ $psecili ? $mor : 'rgb(107 114 128 / .3)' }};
+                                            background:{{ $psecili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                        {{ $psecili ? '☑' : '☐' }} {{ $p->ad_soyad }}
+                                        <span style="color:rgb(107 114 128)">— {{ $p->tipEtiketi() }}</span>
+                                        @if ($p->kase_gorseli) <span title="Kaşe yüklü">🖋️</span> @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
                     <div style="font-weight:600;font-size:.82rem">Ekip Üyeleri</div>
                     @if ($rolAnahtari === 'isg_kurulu')
@@ -120,6 +147,15 @@
                                     {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
                                     @if ($c->gorev) <span style="color:rgb(107 114 128)">— {{ $c->gorev }}</span> @endif
                                 </button>
+                                @if ($secili && $rolAnahtari === 'isg_kurulu')
+                                    <select wire:model="kurulGorevleri.{{ $c->id }}"
+                                        style="font-size:.72rem;padding:.15rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .35);background:transparent;max-width:9rem">
+                                        <option value="">Kurul görevi seç</option>
+                                        @foreach ($this->kurulGorevSecenekleri as $ganahtar => $gad)
+                                            <option value="{{ $ganahtar }}">{{ $gad }}</option>
+                                        @endforeach
+                                    </select>
+                                @endif
                                 @if ($secili)
                                     <button type="button" wire:click="basUyeSec({{ $c->id }})" title="Baş üye"
                                         style="background:none;border:none;cursor:pointer;font-size:.9rem;color:{{ $basUyeId === $c->id ? '#f59e0b' : 'rgb(107 114 128 / .4)' }}">★</button>
