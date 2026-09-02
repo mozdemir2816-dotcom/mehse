@@ -1876,4 +1876,61 @@ return [
         'degerlendirme_secenekleri' => ['evet' => 'Evet', 'hayir' => 'Hayır', 'kismen' => 'Kısmen'],
         'ekip_secenekleri' => ['Söndürme Ekibi', 'Kurtarma Ekibi', 'Koruma Ekibi', 'İlk Yardım Ekibi'],
     ],
+
+    /*
+    |--------------------------------------------------------------------
+    | Ücretsiz E-Reçetem — bilgi sayfası (gerçek MEDULA/e-Reçete
+    | entegrasyonu yok; işyeri hekiminin periyodik muayenelerde
+    | çalışanlara ücretsiz e-reçete düzenleyebildiği hizmetin anlatımı).
+    |--------------------------------------------------------------------
+    */
+    'e_recetem' => [
+        'nedir' => 'Aile hekimliği/işyeri hekimliği mevzuatı gereği, işyeri hekiminiz periyodik muayene sırasında çalışanlarınıza Sağlık Bakanlığı e-Reçete sistemi üzerinden ücretsiz ilaç reçetesi düzenleyebilir. Bu, çalışanın ayrıca aile hekimine gitmesine gerek kalmadan, iş yerinde tespit edilen basit rahatsızlıklar için hızlı çözüm sağlar.',
+
+        'kimler_faydalanabilir' => [
+            ['baslik' => 'Periyodik Muayeneden Geçen Çalışanlar', 'ikon' => 'heroicon-o-user-group',
+                'aciklama' => 'İşyeri hekiminin fiziki muayenesi sırasında tespit edilen basit/akut şikayetler için.'],
+            ['baslik' => 'İşe Giriş Muayenesi Yapılanlar', 'ikon' => 'heroicon-o-clipboard-document-check',
+                'aciklama' => 'İşe giriş muayenesinde ihtiyaç görülmesi halinde.'],
+            ['baslik' => 'İş Kazası/Meslek Hastalığı Sonrası', 'ikon' => 'heroicon-o-heart',
+                'aciklama' => 'Hafif iş kazası sonrası ilk müdahale niteliğindeki ilaç ihtiyaçlarında.'],
+        ],
+
+        'nasil_calisir' => [
+            ['baslik' => 'Muayene Yapılır', 'aciklama' => 'İşyeri hekimi çalışanı iş yerinde veya sözleşmeli sağlık biriminde muayene eder.'],
+            ['baslik' => 'e-Reçete Sisteme Girilir', 'aciklama' => 'Hekim, kendi doktor e-imzası ve SGK hekim şifresiyle Sağlık Bakanlığı e-Reçete portalına reçeteyi işler.'],
+            ['baslik' => 'Barkod/Kod Çalışana İletilir', 'aciklama' => 'Çalışan, SMS ile gelen reçete kodunu veya T.C. kimlik numarasını herhangi bir eczaneye ibraz eder.'],
+            ['baslik' => 'Eczaneden Ücretsiz Temin Edilir', 'aciklama' => 'SGK\'lı çalışan, katılım payı dışında ek ücret ödemeden ilacını alır.'],
+        ],
+
+        'kapsam_disi' => [
+            'mehse üzerinden doğrudan e-Reçete/MEDULA sistemine reçete yazılamaz — bu işlem, işyeri hekiminin kendi mevzuat gereği sahip olduğu doktor e-imzası ve SGK yetkilendirmesiyle, resmi Sağlık Bakanlığı sistemleri üzerinden yapılır.',
+            'mehse, bu süreci yalnızca bilgilendirme ve işyeri hekimi atama takibi (İSG Profesyonelleri modülü) ile destekler.',
+        ],
+
+        'sss' => [
+            ['soru' => 'İşyeri hekimim yoksa bu hizmetten faydalanabilir miyiz?', 'cevap' => 'Hayır, e-reçete yalnızca firmanıza atanmış ve SGK\'ya kayıtlı bir işyeri hekimi tarafından düzenlenebilir. Firma kaydında işyeri hekimi atamasını kontrol edin.'],
+            ['soru' => 'Reçete bedeli tamamen ücretsiz mi?', 'cevap' => 'SGK\'lı çalışanlar için, ilacın SGK katılım payı dışında ek bir ücret alınmaz; muayene ve reçete için ayrıca ücret talep edilemez.'],
+            ['soru' => 'Kronik hastalıklar için de reçete yazılabilir mi?', 'cevap' => 'İşyeri hekimliği kapsamı iş sağlığına yönelik akut/basit durumları kapsar; kronik hastalık takibi için çalışanın kendi aile hekimine yönlendirilmesi önerilir.'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------
+    | Araçlar — İSG uzmanına yönelik bağımsız hesaplayıcılar.
+    | Gürültü eylem sınırları: Çalışanların Gürültü ile İlgili
+    | Risklerden Korunmalarına Dair Yönetmelik'teki eşik değerleri.
+    |--------------------------------------------------------------------
+    */
+    'araclar' => [
+        'gurultu_sinirlari' => [
+            ['esik' => 87, 'etiket' => 'Maruziyet Sınır Değeri Aşıldı', 'renk' => 'danger',
+                'aciklama' => 'KKD etkisi dahil edilse bile bu değer aşılamaz — acil teknik/organizasyonel önlem gerekir.'],
+            ['esik' => 85, 'etiket' => 'Üst Eylem Değeri Aşıldı', 'renk' => 'danger',
+                'aciklama' => 'KKD kullanımı zorunludur; alan işaretlenmeli ve erişim sınırlandırılmalıdır.'],
+            ['esik' => 80, 'etiket' => 'Alt Eylem Değeri Aşıldı', 'renk' => 'warning',
+                'aciklama' => 'KKD bulundurulmalı ve çalışanlara gönüllü kullanım imkânı sağlanmalıdır.'],
+        ],
+        'gurultu_guvenli_mesaj' => 'Ölçülen günlük maruziyet düzeyi eylem sınırlarının altındadır.',
+    ],
 ];

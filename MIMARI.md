@@ -64,10 +64,10 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | **hazır** (5N1K + kök neden analizi, SGK bildirim takibi → PDF) |
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + kendi arşiv Excel yüklemesi + Gemini ile madde üretimi → PDF) |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
-| Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | planlandı |
+| Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | **hazır** (bilgi sayfası — e-Reçete süreci, uygunluk, SSS) |
 | **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (3 sekme: Çalışma Planı + Eğitim Planı + Değerlendirme Raporu → PDF) |
 | Planlama & Arşiv | Ziyaret Programı `[AI]` | `ziyaret-programi` | planlandı |
-| Planlama & Arşiv | Araçlar | `araclar` | planlandı |
+| Planlama & Arşiv | Araçlar | `araclar` | **hazır** (Kaza Sıklık/Ağırlık Hızı + Gürültü Lex,8h hesaplayıcıları) |
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
 | Yönetim | Firmalar | `firmalar` | **hazır** (Çalışanlar RelationManager dâhil) |
 | Yönetim | Çalışanlar | `calisanlar` | **hazır** |
@@ -802,10 +802,22 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   "önlemleri DÖF'e aktar" entegrasyonu (istenirse ayrı iş — bu modülün
   kendi içinde zaten alınacak önlemler alanı var). `IsKazasiRaporuTest`
   (8 test). **310 test toplam.**
+- **Faz 3ab — Ücretsiz E-Reçetem ✅ + Araçlar ✅ (ikisi de isgpratik'te
+  planNotu'nda spesifik ekran görüntüsü referansı yok — genel bilgiyle
+  kuruldu):** `EReetem` (mevcut stub sınıf adı korunarak, İsgKatipRobot ile
+  aynı "gerçek entegrasyon yok, bilgi sayfası" deseninde) — e-Reçete süreci
+  (muayene → hekim e-imzasıyla sisteme giriş → eczaneden ücretsiz temin),
+  uygunluk kriterleri, kapsam dışı notu (mehse'den doğrudan MEDULA/e-Reçete
+  yazılamaz), SSS; `config isg.e_recetem`. `Araclar` — kalıcı veri
+  tutmayan, firma seçimi gerektirmeyen 2 bağımsız hesaplayıcı: Kaza Sıklık
+  Hızı/Ağırlık Hızı (standart formül) ve Gürültü Maruziyet Düzeyi Lex,8h
+  (çoklu ölçüm satırı ekle/sil, Gürültü Yönetmeliği eylem sınırlarına göre
+  uyarı — `config isg.araclar.gurultu_sinirlari`). `EReetemTest` (3 test) +
+  `AraclarTest` (10 test). **323 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Muayene
-  Formu (EK-2 — çok büyük, tıbbi muayene formu), Ücretsiz E-Reçetem,
-  Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve Tebliğ'in
-  ikinci sekmesi) tek tek kurulacak. isgpratik kök klasöründe
+  Formu (EK-2 — çok büyük, tıbbi muayene formu), Ziyaret Programı;
+  "İşverene İPC Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi) tek tek
+  kurulacak. isgpratik kök klasöründe
   24-101(+133-135,158) + AI SAHA ANALİZİ + SAHA DENETİMİ alt klasörleri
   artık tam incelendi; 88-101 aralığı kapsam dışı isgpratik özellikleri
   (İSG Arşiv 2860 dosya, İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası

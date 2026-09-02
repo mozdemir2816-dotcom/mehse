@@ -3,10 +3,20 @@
 namespace App\Filament\Pages;
 
 use BackedEnum;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
 use UnitEnum;
 
-class EReetem extends HazirlanryorPage
+/**
+ * Ücretsiz E-Reçetem — BİLGİ SAYFASI. mehse'de gerçek e-Reçete/MEDULA
+ * entegrasyonu yok (bu işlem işyeri hekiminin kendi doktor e-imzası ve
+ * SGK yetkilendirmesiyle resmi Sağlık Bakanlığı sistemleri üzerinden
+ * yapılır); süreç, uygunluk ve SSS burada anlatılır.
+ */
+class EReetem extends Page
 {
+    protected string $view = 'filament.pages.e-recetem';
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
 
     protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
@@ -19,7 +29,12 @@ class EReetem extends HazirlanryorPage
 
     protected static ?string $navigationLabel = 'Ücretsiz E-Reçetem';
 
-    protected static bool $aiModulu = false;
-
-    protected static ?string $planNotu = 'isgpratik — e-reçete bilgilendirme';
+    public function isyeriHekimiHatirlat(): void
+    {
+        Notification::make()
+            ->title('İşyeri Hekimi Ataması')
+            ->body('Firma kaydınızda işyeri hekimi atanmışsa, e-reçete düzenleme yetkisi doğrudan hekiminize aittir. Atama yoksa "İSG Profesyonelleri" modülünden ekleyebilirsiniz.')
+            ->info()
+            ->send();
+    }
 }
