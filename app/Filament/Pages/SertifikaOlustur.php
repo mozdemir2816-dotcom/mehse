@@ -48,6 +48,10 @@ class SertifikaOlustur extends Page
 
     public string $tip = 'isg';
 
+    public string $tur = 'ilk_defa';
+
+    public string $sekil = 'yuz_yuze';
+
     public ?string $sektorAnahtari = null;
 
     public int $gunSayisi = 1;
@@ -90,8 +94,13 @@ class SertifikaOlustur extends Page
     /** @var array<int, string> */
     public array $excelHatalar = [];
 
+    /** @var array<string, mixed> EgitimIcerikOlusturucu çıktısı — kullanıcı her maddeyi dahil/hariç bırakıp dakikasını değiştirebilir. */
+    public array $icerik = [];
+
     public function mount(): void
     {
+        $this->icerikYenile();
+
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
@@ -153,12 +162,11 @@ class SertifikaOlustur extends Page
         return EgitimIcerikOlusturucu::sektorler();
     }
 
-    #[Computed]
-    public function icerik(): array
+    private function icerikYenile(): void
     {
         $anahtar = $this->cokluEgiticiMi ? 'genel' : ($this->tipTanimi()['icerik_anahtari'] ?? 'genel');
 
-        return EgitimIcerikOlusturucu::olustur(
+        $this->icerik = EgitimIcerikOlusturucu::olustur(
             $anahtar,
             $this->cokluEgiticiMi ? $this->sektorAnahtari : null,
             $this->firma?->tehlike_sinifi ?? 'az_tehlikeli',
@@ -184,21 +192,24 @@ class SertifikaOlustur extends Page
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egiticiIguAdi = $this->firma?->igu?->ad_soyad;
         $this->egiticiHekimAdi = $this->firma?->isyeriHekimi?->ad_soyad;
+        $this->icerikYenile();
     }
 
     public function updatedTip(): void
     {
-        unset($this->tipTanimi, $this->cokluEgiticiMi, $this->icerik);
+        unset($this->tipTanimi, $this->cokluEgiticiMi);
 
         if (! $this->cokluEgiticiMi) {
             $this->sektorAnahtari = null;
             $this->egiticiHekimDahil = false;
         }
+
+        $this->icerikYenile();
     }
 
     public function updatedSektorAnahtari(): void
     {
-        unset($this->icerik);
+        $this->icerikYenile();
     }
 
     public function updatedGunSayisi(): void
@@ -342,6 +353,8 @@ class SertifikaOlustur extends Page
         $s = new Sertifika([
             'firma_id' => $this->firma->id,
             'tip' => $this->tip,
+            'tur' => $this->tur,
+            'sekil' => $this->sekil,
             'sektor_anahtari' => $this->cokluEgiticiMi ? $this->sektorAnahtari : null,
             'gun_sayisi' => $this->gunSayisi,
             'egitim_tarihleri' => $this->egitimTarihleri,

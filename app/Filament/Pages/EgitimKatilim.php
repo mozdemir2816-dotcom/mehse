@@ -80,14 +80,19 @@ class EgitimKatilim extends Page
     /** @var array<int, string> */
     public array $excelHatalar = [];
 
+    /** @var array<string, mixed> EgitimIcerikOlusturucu çıktısı — kullanıcı her maddeyi dahil/hariç bırakıp dakikasını değiştirebilir. */
+    public array $icerik = [];
+
     public function mount(): void
     {
         $this->belgeTarihi = now()->toDateString();
+        $this->icerikYenile();
 
         if ($aktarim = session()->pull('egitim_katilim_aktarim')) {
             $this->firmaId = $aktarim['firma_id'];
             $this->updatedFirmaId();
             $this->baslikAnahtari = $aktarim['baslik_anahtari'];
+            $this->icerikYenile();
             $this->manuelKatilimcilar = [...$this->manuelKatilimcilar, ...$aktarim['katilimcilar']];
 
             Notification::make()
@@ -147,10 +152,9 @@ class EgitimKatilim extends Page
         return EgitimIcerikOlusturucu::sektorler();
     }
 
-    #[Computed]
-    public function icerik(): array
+    private function icerikYenile(): void
     {
-        return EgitimIcerikOlusturucu::olustur(
+        $this->icerik = EgitimIcerikOlusturucu::olustur(
             $this->baslikAnahtari,
             $this->sektorAnahtari,
             $this->firma?->tehlike_sinifi ?? 'az_tehlikeli',
@@ -174,6 +178,7 @@ class EgitimKatilim extends Page
     {
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
+        $this->icerikYenile();
     }
 
     public function updatedBaslikAnahtari(): void
@@ -182,12 +187,12 @@ class EgitimKatilim extends Page
             $this->sektorAnahtari = null;
         }
 
-        unset($this->icerik);
+        $this->icerikYenile();
     }
 
     public function updatedSektorAnahtari(): void
     {
-        unset($this->icerik);
+        $this->icerikYenile();
     }
 
     public function calisanToggle(int $id): void

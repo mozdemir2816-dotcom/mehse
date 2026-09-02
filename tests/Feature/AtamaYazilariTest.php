@@ -266,6 +266,119 @@ class AtamaYazilariTest extends TestCase
         $this->assertStringStartsWith('PK', $icerik);
     }
 
+    private function docxMetni(string $binaryIcerik): string
+    {
+        $gecici = tempnam(sys_get_temp_dir(), 'tst').'.docx';
+        file_put_contents($gecici, $binaryIcerik);
+
+        $zip = new \ZipArchive();
+        $zip->open($gecici);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        unlink($gecici);
+
+        return trim(preg_replace('/<[^>]*>/', ' ', preg_replace('/\s+/', ' ', $xml)));
+    }
+
+    public function test_word_sablonundaki_ornek_veriler_gercek_verilerle_degisir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'ACME SANAYİ A.Ş.']);
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'isveren_vekili',
+            'tarih' => '2026-05-10',
+            'uyeler' => [['ad_soyad' => 'Ali Veli', 'tc' => '11122233344', 'gorev' => 'Genel Müdür', 'bas_uye' => false]],
+        ]);
+
+        $yanit = AtamaYazisiWordUretici::docx($kayit);
+        ob_start();
+        $yanit->sendContent();
+        $metin = $this->docxMetni(ob_get_clean());
+
+        $this->assertStringContainsString('ACME SANAYİ A.Ş.', $metin);
+        $this->assertStringContainsString('ALİ VELİ', $metin);
+        $this->assertStringContainsString('11122233344', $metin);
+        $this->assertStringContainsString('GENEL MÜDÜR', $metin);
+        $this->assertStringContainsString('10.05.2026', $metin);
+        $this->assertStringNotContainsString('NİL UNLU MAMULLER', $metin);
+        $this->assertStringNotContainsString('MEHMET ÖZDEMİR', $metin);
+        $this->assertStringNotContainsString('35479473338', $metin);
+    }
+
+    public function test_ekip_word_sablonunda_uye_satirlari_gercek_sayida_klonlanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        Calisan::factory()->for($firma)->count(3)->create();
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'sondurme_ekibi',
+            'tarih' => now(),
+            'uyeler' => [
+                ['ad_soyad' => 'Kişi Bir', 'tc' => '11111111111', 'gorev' => 'Operatör', 'bas_uye' => true],
+                ['ad_soyad' => 'Kişi İki', 'tc' => '22222222222', 'gorev' => 'Teknisyen', 'bas_uye' => false],
+            ],
+        ]);
+
+        $yanit = AtamaYazisiWordUretici::docx($kayit);
+        ob_start();
+        $yanit->sendContent();
+        $metin = $this->docxMetni(ob_get_clean());
+
+        $this->assertStringContainsString('KİŞİ BİR', $metin);
+        $this->assertStringContainsString('KİŞİ İKİ', $metin);
+        $this->assertStringContainsString('Ekip Başı', $metin);
+        $this->assertStringContainsString('Tehlikeli', $metin);
+        $this->assertStringContainsString('Çalışan Sayısı: 3', $metin);
+        $this->assertStringContainsString('Asgari Görevlendirme: 1 kişi', $metin);
+    }
+
+    public function test_isg_kurulu_word_sablonunda_bes_ornek_satir_gercek_uyelerle_degisir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'isg_kurulu',
+            'tarih' => now(),
+            'uyeler' => [
+                ['ad_soyad' => 'Kurul Üyesi', 'tc' => '33333333333', 'gorev' => 'İnsan Kaynakları Sorumlusu', 'bas_uye' => false],
+            ],
+        ]);
+
+        $yanit = AtamaYazisiWordUretici::docx($kayit);
+        ob_start();
+        $yanit->sendContent();
+        $metin = $this->docxMetni(ob_get_clean());
+
+        $this->assertStringContainsString('KURUL ÜYESİ', $metin);
+        $this->assertStringContainsString('İNSAN KAYNAKLARI SORUMLUSU', $metin);
+        $this->assertStringNotContainsString('DFDFDF', $metin);
+        $this->assertStringNotContainsString('HASAN ASDAD', $metin);
+    }
+
+    public function test_acil_durum_koordinatoru_icin_word_sablonu_yok(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'acil_durum_koordinatoru',
+            'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Test', 'tc' => null, 'gorev' => null, 'bas_uye' => false]],
+        ]);
+
+        $this->assertFalse(AtamaYazisiWordUretici::sablonVarMi('acil_durum_koordinatoru'));
+        $this->assertNull(AtamaYazisiWordUretici::docx($kayit));
+    }
+
+    public function test_word_butonu_sablonu_olmayan_rolde_gizli(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'acil_durum_koordinatoru')
+            ->assertActionHidden('word');
+    }
+
     public function test_word_aksiyonu_kayit_olusturur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

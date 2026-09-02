@@ -76,6 +76,37 @@
                 </div>
             </div>
 
+            <div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
+                <div>
+                    <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
+                    <div style="display:flex;gap:.4rem;margin-top:.3rem">
+                        @foreach (config('isg.sertifika.turler') as $anahtar => $ad)
+                            @php $secili = $tur === $anahtar; @endphp
+                            <button type="button" wire:click="$set('tur','{{ $anahtar }}')"
+                                style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.78rem;
+                                    border:1px solid {{ $secili ? $altin : 'rgb(107 114 128 / .3)' }};
+                                    background:{{ $secili ? 'rgb(217 119 6 / .1)' : 'transparent' }}">
+                                {{ $ad }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:600;font-size:.82rem">Eğitim Şekli</label>
+                    <div style="display:flex;gap:.4rem;margin-top:.3rem">
+                        @foreach (config('isg.sertifika.sekiller') as $anahtar => $ad)
+                            @php $secili = $sekil === $anahtar; @endphp
+                            <button type="button" wire:click="$set('sekil','{{ $anahtar }}')"
+                                style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.78rem;
+                                    border:1px solid {{ $secili ? $altin : 'rgb(107 114 128 / .3)' }};
+                                    background:{{ $secili ? 'rgb(217 119 6 / .1)' : 'transparent' }}">
+                                {{ $ad }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem">
                 @foreach ($egitimTarihleri as $i => $tarih)
                     <div>
@@ -158,63 +189,12 @@
         </x-filament::section>
 
         {{-- 3. KONU İÇERİĞİ --}}
-        <x-filament::section icon="heroicon-o-book-open" icon-color="warning">
+        <x-filament::section icon="heroicon-o-book-open" icon-color="warning" collapsible>
             <x-slot name="heading">3. Eğitim Konuları</x-slot>
+            <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz.</x-slot>
 
-            @if (($icerik['tip'] ?? null) === 'genel')
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">Genel Konular</div>
-                        <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                            @foreach ($icerik['genel_konular'] as $m)
-                                <li>{{ $m['madde'] }} <span style="color:rgb(107 114 128)">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">Sağlık Konuları</div>
-                        <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                            @foreach ($icerik['saglik_konulari'] as $m)
-                                <li>{{ $m['madde'] }} <span style="color:rgb(107 114 128)">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">Teknik Konular</div>
-                        <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                            @foreach ($icerik['teknik_konular'] as $m)
-                                <li>{{ $m['madde'] }} <span style="color:rgb(107 114 128)">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">
-                            İşyerine Özgü Riskler
-                            @if ($icerik['isyerine_ozgu'] ?? null)
-                                <span style="font-weight:400;color:rgb(107 114 128)">— {{ $icerik['isyerine_ozgu']['sektor'] }}</span>
-                            @endif
-                        </div>
-                        @if ($icerik['isyerine_ozgu'] ?? null)
-                            <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                                @foreach ($icerik['isyerine_ozgu']['maddeler'] as $madde)
-                                    <li>{{ $madde }}</li>
-                                @endforeach
-                            </ol>
-                        @else
-                            <p style="font-size:.78rem;color:#f59e0b;margin:0">Sektör seçilmedi.</p>
-                        @endif
-                    </div>
-                </div>
-            @else
-                <div style="{{ $kutu }}">
-                    <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">{{ $icerik['ad'] ?? '' }}</div>
-                    <ol style="margin:0;padding-left:1.1rem;font-size:.82rem;display:flex;flex-direction:column;gap:.3rem">
-                        @foreach (($icerik['maddeler'] ?? []) as $madde)
-                            <li>{{ $madde }}</li>
-                        @endforeach
-                    </ol>
-                </div>
-            @endif
+            @php $wireModelKok = 'icerik'; @endphp
+            @include('filament.pages.partials.egitim-konulari')
         </x-filament::section>
 
         {{-- 4. KATILIMCI LİSTESİ --}}

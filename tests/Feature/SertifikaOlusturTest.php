@@ -8,6 +8,7 @@ use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\Sertifika;
 use App\Models\User;
+use App\Support\EgitimIcerikOlusturucu;
 use App\Support\SertifikaUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -50,7 +51,10 @@ class SertifikaOlusturTest extends TestCase
             ->set('tip', 'yukseklik');
 
         $icerik = $component->get('icerik');
-        $this->assertSame(config('isg.egitim.ozel_basliklar.yuksekte_calisma.maddeler'), $icerik['maddeler']);
+        $this->assertSame(
+            config('isg.egitim.ozel_basliklar.yuksekte_calisma.maddeler'),
+            collect($icerik['maddeler'])->pluck('madde')->all(),
+        );
     }
 
     public function test_isg_tipi_sektor_secilince_icerik_isyerine_ozgu_gelir(): void
@@ -157,5 +161,64 @@ class SertifikaOlusturTest extends TestCase
         $firmalar = Livewire::test(SertifikaSayfasi::class)->instance()->firmalar();
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    public function test_tur_ve_sekil_kaydedilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create();
+
+        Livewire::test(SertifikaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('tur', 'tekrar')
+            ->set('sekil', 'uzaktan')
+            ->callAction('pdf');
+
+        $s = Sertifika::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('tekrar', $s->tur);
+        $this->assertSame('uzaktan', $s->sekil);
+    }
+
+    public function test_madde_hariç_birakilinca_pdfde_gorunmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(SertifikaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('icerik.genel_konular.0.dahil', false)
+            ->call('tumCalisanlar', false)
+            ->set('manuelKatilimcilar', [['ad_soyad' => 'Test Kişi', 'tc' => null, 'gorev' => null]])
+            ->callAction('pdf');
+
+        $s = Sertifika::where('firma_id', $firma->id)->firstOrFail();
+        $ilkMadde = config('isg.egitim.genel_konular.0.madde');
+
+        $html = view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma])->render();
+
+        $this->assertStringNotContainsString($ilkMadde, $html);
+    }
+
+    public function test_pdf_referans_belge_bilgilerini_icerir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Test Firma A.Ş.']);
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'tur' => 'ilk_defa',
+            'sekil' => 'yuz_yuze',
+            'katilimcilar' => [['ad_soyad' => 'Test Kişi', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+
+        $html = view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('Katılımcının Adı Soyadı', $html);
+        $this->assertStringContainsString('Eğitim Türü / Şekli', $html);
+        $this->assertStringContainsString('İlk Defa Eğitim', $html);
+        $this->assertStringContainsString('Yüz Yüze', $html);
+        $this->assertStringContainsString('Eğitimin Konuları', $html);
+        $this->assertStringContainsString('1. Genel Konular', $html);
+        $this->assertStringContainsString('a)', $html);
+        $this->assertStringContainsString('Düzenleme Tarihi', $html);
     }
 }

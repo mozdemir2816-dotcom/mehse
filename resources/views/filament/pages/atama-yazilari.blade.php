@@ -198,7 +198,9 @@
                             <td style="padding:.35rem .5rem">{{ count($k->uyeler ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
-                                <x-filament::button size="xs" color="info" wire:click="gecmisWord({{ $k->id }})">Word</x-filament::button>
+                                @if (\App\Support\AtamaYazisiWordUretici::sablonVarMi($k->rol_anahtari))
+                                    <x-filament::button size="xs" color="info" wire:click="gecmisWord({{ $k->id }})">Word</x-filament::button>
+                                @endif
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

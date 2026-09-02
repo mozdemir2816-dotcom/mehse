@@ -56,4 +56,14 @@ class Sertifika extends Model
     {
         return (bool) ($this->tipTanimi()['coklu_egitici'] ?? false);
     }
+
+    public function turEtiketi(): string
+    {
+        return config('isg.sertifika.turler.'.$this->tur, $this->tur ?? '—');
+    }
+
+    public function sekilEtiketi(): string
+    {
+        return config('isg.sertifika.sekiller.'.$this->sekil, $this->sekil ?? '—');
+    }
 }

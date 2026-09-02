@@ -346,7 +346,7 @@ class AtamaYazilari extends Page
                 ->label('Word İndir')
                 ->icon('heroicon-o-document-text')
                 ->color('info')
-                ->visible(fn () => $this->firma !== null)
+                ->visible(fn () => $this->firma !== null && AtamaYazisiWordUretici::sablonVarMi($this->rolAnahtari))
                 ->action(function () {
                     $kayit = $this->kaydet();
 
@@ -354,9 +354,17 @@ class AtamaYazilari extends Page
                         return null;
                     }
 
+                    $docx = AtamaYazisiWordUretici::docx($kayit);
+
+                    if (! $docx) {
+                        Notification::make()->title('Bu görev tipi için Word şablonu mevcut değil')->warning()->send();
+
+                        return null;
+                    }
+
                     Notification::make()->title('Atama yazısı kaydedildi')->body($kayit->dokuman_no)->success()->send();
 
-                    return AtamaYazisiWordUretici::docx($kayit);
+                    return $docx;
                 }),
 
             Action::make('egitimFormu')
@@ -409,8 +417,13 @@ class AtamaYazilari extends Page
     public function gecmisWord(int $id)
     {
         $kayit = $this->firma?->atamaYazilari()->find($id);
+        $docx = $kayit ? AtamaYazisiWordUretici::docx($kayit) : null;
 
-        return $kayit ? AtamaYazisiWordUretici::docx($kayit) : null;
+        if ($kayit && ! $docx) {
+            Notification::make()->title('Bu görev tipi için Word şablonu mevcut değil')->warning()->send();
+        }
+
+        return $docx;
     }
 
     public function gecmisSil(int $id): void

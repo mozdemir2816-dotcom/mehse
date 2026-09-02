@@ -4,133 +4,168 @@
 <meta charset="utf-8">
 <style>
     * { font-family: DejaVu Sans, sans-serif; }
-    body { margin: 0; color: #111; }
-    .sayfa { padding: 30px 40px; page-break-after: always; position: relative; height: 100%; box-sizing: border-box; }
+    body { margin: 0; color: #111; font-size: 10.5px; }
+    .sayfa { padding: 26px 32px; page-break-after: always; }
     .sayfa:last-child { page-break-after: avoid; }
-    .cerceve-klasik_siyah { border: 3px double #111; padding: 24px; height: calc(100% - 48px); box-sizing: border-box; }
-    .cerceve-mor { border: 4px solid rgb(139 92 246); padding: 24px; height: calc(100% - 48px); box-sizing: border-box; }
-    .cerceve-sade { padding: 10px; }
-    .logo { max-height: 60px; }
-    .ust { width: 100%; margin-bottom: 10px; }
-    .ust td { vertical-align: middle; width: 33%; }
-    .baslik { text-align: center; }
-    .baslik h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: 1px; }
-    .baslik h2 { font-size: 13px; margin: 0; font-weight: normal; color: #444; }
-    .govde { text-align: center; margin-top: 26px; font-size: 12px; }
-    .govde .kisi { font-size: 20px; font-weight: bold; margin: 10px 0; }
-    .govde .tc { font-size: 11px; color: #555; margin-bottom: 14px; }
-    .bilgi { width: 70%; margin: 18px auto 0; border-collapse: collapse; font-size: 10.5px; }
-    .bilgi td { padding: 4px 8px; }
-    .bilgi td:first-child { font-weight: bold; width: 45%; text-align: right; color: #444; }
-    .bilgi td:last-child { text-align: left; }
-    .konular { margin-top: 16px; font-size: 9.5px; color: #444; text-align: left; columns: 2; column-gap: 24px; }
-    .konular div { break-inside: avoid; margin-bottom: 2px; }
-    .imza { margin-top: 34px; width: 100%; }
-    .imza td { width: 50%; text-align: center; vertical-align: bottom; font-size: 10px; }
-    .imza img { max-height: 44px; display: block; margin: 0 auto 4px; }
-    .imza .cizgi { border-top: 1px solid #111; padding-top: 4px; display: inline-block; min-width: 60%; }
-    .belge-no { position: absolute; bottom: 8px; right: 16px; font-size: 8px; color: #999; }
+    .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 14px; }
+    .baslik img { max-height: 46px; float: left; }
+    .baslik h1 { font-size: 16px; margin: 0; }
+    .bilgi { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
+    .bilgi td { padding: 3px 6px; vertical-align: top; width: 25%; }
+    .bilgi td.etiket { font-weight: bold; width: 20%; }
+    .metin { font-size: 10px; text-align: justify; margin-bottom: 10px; }
+    h3 { font-size: 10.5px; margin: 10px 0 4px; }
+    table.konular { width: 100%; border-collapse: collapse; }
+    table.konular > tr > td { width: 50%; vertical-align: top; padding: 0 6px 0 0; }
+    .blok { margin-bottom: 8px; }
+    .blok-baslik { font-weight: bold; font-size: 9.5px; margin-bottom: 2px; }
+    .blok p { margin: 0 0 2px; font-size: 9.5px; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 24px; }
+    table.imza td { width: 33.33%; vertical-align: top; font-size: 9.5px; padding-right: 10px; }
+    table.imza img { max-height: 40px; display: block; margin: 4px 0; }
+    .not { margin-top: 14px; font-size: 8.5px; color: #666; }
+    .tarih-sag { text-align: right; font-size: 8.5px; font-weight: bold; margin-top: 4px; }
 </style>
 </head>
 <body>
 
+@php
+    // Türk alfabesi sırasına göre madde harflendirme (a, b, c, ç, d, ...).
+    $turkceAlfabe = ['a','b','c','ç','d','e','f','g','ğ','h','ı','i','j','k','l','m','n','o','ö','p','r','s','ş','t','u','ü','v','y','z'];
+    $harf = fn (int $i) => $turkceAlfabe[$i] ?? (string) ($i + 1);
+    $sure = fn (array $maddeler) => \App\Support\EgitimIcerikOlusturucu::bolumSuresi($maddeler);
+    $goster = fn (array $maddeler) => collect($maddeler)->where('dahil', true)->values();
+@endphp
+
 @forelse (($sertifika->katilimcilar ?? []) as $k)
     <div class="sayfa">
-        <div class="cerceve-{{ $sertifika->cerceve }}">
-            <table class="ust">
-                <tr>
-                    <td style="text-align:left">
-                        @if (in_array($sertifika->logo_konumu, ['sol', 'iki_taraf']) && $firma?->logo)
-                            <img class="logo" src="{{ storage_path('app/public/'.$firma->logo) }}">
-                        @endif
-                    </td>
-                    <td></td>
-                    <td style="text-align:right">
-                        @if (in_array($sertifika->logo_konumu, ['sag', 'iki_taraf']) && $firma?->logo)
-                            <img class="logo" src="{{ storage_path('app/public/'.$firma->logo) }}">
-                        @endif
-                    </td>
-                </tr>
-            </table>
 
-            <div class="baslik">
-                <h1>SERTİFİKA</h1>
-                <h2>{{ $sertifika->tipBasligi() }}</h2>
-            </div>
-
-            <div class="govde">
-                Bu sertifika,
-                <div class="kisi">{{ $k['ad_soyad'] ?? '—' }}</div>
-                @if (! empty($k['tc']))
-                    <div class="tc">T.C. Kimlik No: {{ $k['tc'] }}</div>
-                @endif
-                adlı katılımcının <strong>{{ $firma?->unvan }}</strong> işyerinde düzenlenen
-                <strong>{{ $sertifika->tipEtiketi() }}</strong> eğitimini başarıyla tamamladığını belgeler.
-            </div>
-
-            <table class="bilgi">
-                @if ($sertifika->egitim_tarihleri)
-                    <tr><td>Eğitim Tarihleri</td><td>{{ collect($sertifika->egitim_tarihleri)->filter()->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d.m.Y'))->implode(' · ') ?: '—' }}</td></tr>
-                @endif
-                @if ($sertifika->sure_metni)
-                    <tr><td>Eğitim Süresi</td><td>{{ $sertifika->sure_metni }}</td></tr>
-                @endif
-                <tr><td>Geçerlilik Tarihi</td><td>{{ $sertifika->gecerlilik_tarihi?->format('d.m.Y') ?: '—' }}</td></tr>
-                <tr><td>Belge No</td><td>{{ $sertifika->belge_no }}</td></tr>
-            </table>
-
-            @if ($sertifika->cokluEgiticiMi() && ($sertifika->konu_icerigi['tip'] ?? null) === 'genel')
-                <div class="konular">
-                    @foreach (($sertifika->konu_icerigi['genel_konular'] ?? []) as $m)
-                        <div>· {{ $m['madde'] }}</div>
-                    @endforeach
-                    @foreach (($sertifika->konu_icerigi['saglik_konulari'] ?? []) as $m)
-                        <div>· {{ $m['madde'] }}</div>
-                    @endforeach
-                    @foreach (($sertifika->konu_icerigi['teknik_konular'] ?? []) as $m)
-                        <div>· {{ $m['madde'] }}</div>
-                    @endforeach
-                    @foreach (($sertifika->konu_icerigi['isyerine_ozgu']['maddeler'] ?? []) as $madde)
-                        <div>· {{ $madde }}</div>
-                    @endforeach
-                </div>
-            @else
-                <div class="konular">
-                    @foreach (($sertifika->konu_icerigi['maddeler'] ?? []) as $madde)
-                        <div>· {{ $madde }}</div>
-                    @endforeach
-                </div>
+        <div class="baslik">
+            @if ($firma?->logo)
+                <img src="{{ storage_path('app/public/'.$firma->logo) }}">
             @endif
+            <h1>{{ \App\Support\TurkceMetin::buyuk($sertifika->tipBasligi()) }}</h1>
+        </div>
 
-            <table class="imza">
+        <table class="bilgi">
+            <tr>
+                <td class="etiket">Katılımcının Adı Soyadı</td><td>: <strong>{{ $k['ad_soyad'] ?? '—' }}</strong></td>
+                <td class="etiket">Katılımcının T.C. No</td><td>: {{ $k['tc'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td class="etiket">Katılımcının Görev Ünvanı</td><td>: {{ $k['gorev'] ?? '—' }}</td>
+                <td class="etiket">Eğitim Tarihi</td><td>: {{ collect($sertifika->egitim_tarihleri)->filter()->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d.m.Y'))->implode('-') ?: '—' }}</td>
+            </tr>
+            <tr>
+                <td class="etiket">Eğitim Türü / Şekli</td><td>: {{ $sertifika->turEtiketi() }} | {{ $sertifika->sekilEtiketi() }}</td>
+                <td class="etiket">Geçerlilik Tarihi</td><td>: {{ $sertifika->gecerlilik_tarihi?->format('d.m.Y') ?: '—' }}</td>
+            </tr>
+            <tr>
+                <td class="etiket">Firma</td><td>: {{ $firma?->unvan }}</td>
+                <td class="etiket">Eğitim Süresi</td><td>: {{ $sertifika->sure_metni ?: '—' }}</td>
+            </tr>
+        </table>
+
+        <p class="metin">
+            Yukarıda adı geçen katılımcı, "Çalışanların İş Sağlığı ve Güvenliği Eğitimleri Usul ve Esasları
+            hakkında" yönetmelik kapsamında verilen "{{ $sertifika->tipEtiketi() }}" eğitimlerini başarıyla
+            tamamlayarak bu eğitim belgesini almaya hak kazanmıştır.
+        </p>
+
+        <h3>Eğitimin Konuları :</h3>
+
+        @if ($sertifika->cokluEgiticiMi() && ($sertifika->konu_icerigi['tip'] ?? null) === 'genel')
+            @php
+                $genel = $goster($sertifika->konu_icerigi['genel_konular'] ?? []);
+                $saglik = $goster($sertifika->konu_icerigi['saglik_konulari'] ?? []);
+                $teknik = $goster($sertifika->konu_icerigi['teknik_konular'] ?? []);
+                $ozgu = $sertifika->konu_icerigi['isyerine_ozgu'] ?? null;
+                $ozguMaddeler = $ozgu ? $goster($ozgu['maddeler']) : collect();
+            @endphp
+            <table class="konular">
                 <tr>
-                    @if ($sertifika->egitici_igu_dahil)
-                        <td>
-                            @if ($sertifika->egitici_igu_kase)
-                                <img src="{{ storage_path('app/public/'.$sertifika->egitici_igu_kase) }}">
-                            @endif
-                            <span class="cizgi">{{ $sertifika->egitici_igu_adi ?: 'İş Güvenliği Uzmanı' }}</span>
-                        </td>
-                    @endif
-                    @if ($sertifika->cokluEgiticiMi() && $sertifika->egitici_hekim_dahil)
-                        <td>
-                            @if ($sertifika->egitici_hekim_kase)
-                                <img src="{{ storage_path('app/public/'.$sertifika->egitici_hekim_kase) }}">
-                            @endif
-                            <span class="cizgi">{{ $sertifika->egitici_hekim_adi ?: 'İşyeri Hekimi' }}</span>
-                        </td>
-                    @endif
+                    <td>
+                        <div class="blok">
+                            @php $s = $sure($sertifika->konu_icerigi['genel_konular'] ?? []); @endphp
+                            <div class="blok-baslik">1. Genel Konular (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                            @foreach ($genel as $i => $m)
+                                <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                            @endforeach
+                        </div>
+                        <div class="blok">
+                            @php $s = $sure($sertifika->konu_icerigi['saglik_konulari'] ?? []); @endphp
+                            <div class="blok-baslik">2. Sağlık Konular (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                            @foreach ($saglik as $i => $m)
+                                <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                            @endforeach
+                        </div>
+                    </td>
+                    <td>
+                        <div class="blok">
+                            @php $s = $sure($sertifika->konu_icerigi['teknik_konular'] ?? []); @endphp
+                            <div class="blok-baslik">3. Teknik Konular (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                            @foreach ($teknik as $i => $m)
+                                <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                            @endforeach
+                        </div>
+                        @if ($ozgu)
+                            <div class="blok">
+                                @php $s = $sure($ozgu['maddeler']); @endphp
+                                <div class="blok-baslik">4. İşyerine Özgü Riskler (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                                @foreach ($ozguMaddeler as $i => $m)
+                                    <p>{{ $harf($i) }}) {{ \App\Support\TurkceMetin::buyuk($m['madde']) }} ({{ $m['dakika'] }} dk)</p>
+                                @endforeach
+                            </div>
+                        @endif
+                    </td>
                 </tr>
             </table>
+        @else
+            @php $ozelMaddeler = $goster($sertifika->konu_icerigi['maddeler'] ?? []); @endphp
+            <div class="blok">
+                @foreach ($ozelMaddeler as $i => $m)
+                    <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                @endforeach
+            </div>
+        @endif
 
-            <div class="belge-no">{{ $sertifika->belge_no }}</div>
-        </div>
+        <table class="imza">
+            <tr>
+                @if ($sertifika->egitici_igu_dahil)
+                    <td>
+                        İş Güvenliği Uzmanı<br>
+                        Eğitici Adı Soyadı : {{ $sertifika->egitici_igu_adi ?: '—' }}<br>
+                        @if ($sertifika->egitici_igu_kase)
+                            <img src="{{ storage_path('app/public/'.$sertifika->egitici_igu_kase) }}">
+                        @endif
+                        İmza :
+                    </td>
+                @endif
+                @if ($sertifika->cokluEgiticiMi() && $sertifika->egitici_hekim_dahil)
+                    <td>
+                        İşyeri Hekimi<br>
+                        Eğitici Adı Soyadı : {{ $sertifika->egitici_hekim_adi ?: '—' }}<br>
+                        @if ($sertifika->egitici_hekim_kase)
+                            <img src="{{ storage_path('app/public/'.$sertifika->egitici_hekim_kase) }}">
+                        @endif
+                        İmza :
+                    </td>
+                @endif
+                <td>
+                    İşveren / İşveren Vekilinin<br>
+                    Adı Soyadı :<br><br>
+                    İmza :
+                </td>
+            </tr>
+        </table>
+
+        <p class="not">(1 ders saati: 45 dk ders + 15 dk Dinlenme)</p>
+        <p class="tarih-sag">Düzenleme Tarihi : {{ now()->format('d.m.Y') }}</p>
+
     </div>
 @empty
     <div class="sayfa">
-        <div class="cerceve-{{ $sertifika->cerceve }}">
-            <p style="text-align:center;color:#888;margin-top:40%">Katılımcı eklenmedi.</p>
-        </div>
+        <p style="text-align:center;color:#888;margin-top:40%">Katılımcı eklenmedi.</p>
     </div>
 @endforelse
 

@@ -58,22 +58,33 @@
         </tr>
     </table>
 
+    @php
+        $goster = fn (array $maddeler) => collect($maddeler)->where('dahil', true)->values();
+        $sure = fn (array $maddeler) => \App\Support\EgitimIcerikOlusturucu::bolumSuresi($maddeler);
+    @endphp
+
     @if (($icerik['tip'] ?? null) === 'genel')
+        @php
+            $genelSure = $sure($icerik['genel_konular']);
+            $saglikSure = $sure($icerik['saglik_konulari']);
+            $teknikSure = $sure($icerik['teknik_konular']);
+            $ozguSure = $icerik['isyerine_ozgu'] ? $sure($icerik['isyerine_ozgu']['maddeler']) : null;
+        @endphp
         <table class="grid">
             <tr>
                 <td style="padding-right:5px">
                     <div class="blok">
-                        <h3>Genel Konular</h3>
+                        <h3>Genel Konular <span class="dk">(Fiili Ders: {{ $genelSure['fiili'] }}dk / Din: {{ $genelSure['dinlenme'] }}dk)</span></h3>
                         <ol>
-                            @foreach ($icerik['genel_konular'] as $m)
+                            @foreach ($goster($icerik['genel_konular']) as $m)
                                 <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
                             @endforeach
                         </ol>
                     </div>
                     <div class="blok">
-                        <h3>Sağlık Konuları</h3>
+                        <h3>Sağlık Konuları <span class="dk">(Fiili Ders: {{ $saglikSure['fiili'] }}dk / Din: {{ $saglikSure['dinlenme'] }}dk)</span></h3>
                         <ol>
-                            @foreach ($icerik['saglik_konulari'] as $m)
+                            @foreach ($goster($icerik['saglik_konulari']) as $m)
                                 <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
                             @endforeach
                         </ol>
@@ -81,19 +92,19 @@
                 </td>
                 <td style="padding-left:5px">
                     <div class="blok">
-                        <h3>Teknik Konular</h3>
+                        <h3>Teknik Konular <span class="dk">(Fiili Ders: {{ $teknikSure['fiili'] }}dk / Din: {{ $teknikSure['dinlenme'] }}dk)</span></h3>
                         <ol>
-                            @foreach ($icerik['teknik_konular'] as $m)
+                            @foreach ($goster($icerik['teknik_konular']) as $m)
                                 <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
                             @endforeach
                         </ol>
                     </div>
                     <div class="blok">
-                        <h3>İşyerine Özgü Riskler @if($icerik['isyerine_ozgu'] ?? null)— {{ $icerik['isyerine_ozgu']['sektor'] }} <span class="dk">({{ $icerik['isyerine_ozgu']['dakika'] }} dk)</span>@endif</h3>
+                        <h3>İşyerine Özgü Riskler @if($icerik['isyerine_ozgu'] ?? null)— {{ $icerik['isyerine_ozgu']['sektor'] }} <span class="dk">(Fiili Ders: {{ $ozguSure['fiili'] }}dk / Din: {{ $ozguSure['dinlenme'] }}dk)</span>@endif</h3>
                         @if ($icerik['isyerine_ozgu'] ?? null)
                             <ol>
-                                @foreach ($icerik['isyerine_ozgu']['maddeler'] as $madde)
-                                    <li>{{ $madde }}</li>
+                                @foreach ($goster($icerik['isyerine_ozgu']['maddeler']) as $m)
+                                    <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
                                 @endforeach
                             </ol>
                         @else
@@ -103,13 +114,13 @@
                 </td>
             </tr>
         </table>
-        <p style="font-size:9px;color:#666">Dinlenme/ara süresi: {{ $icerik['dinlenme_dk'] }} dakika.</p>
     @else
+        @php $ozelSure = $sure($icerik['maddeler'] ?? []); @endphp
         <div class="blok ozel">
-            <h3>{{ $icerik['ad'] ?? $kayit->basliklarEtiketi() }}</h3>
+            <h3>{{ $icerik['ad'] ?? $kayit->basliklarEtiketi() }} <span class="dk">(Fiili Ders: {{ $ozelSure['fiili'] }}dk / Din: {{ $ozelSure['dinlenme'] }}dk)</span></h3>
             <ol>
-                @foreach (($icerik['maddeler'] ?? []) as $madde)
-                    <li>{{ $madde }}</li>
+                @foreach ($goster($icerik['maddeler'] ?? []) as $m)
+                    <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
                 @endforeach
             </ol>
         </div>

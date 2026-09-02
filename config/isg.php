@@ -1716,6 +1716,15 @@ return [
             'sade' => 'Sade — çerçevesiz',
             'mor' => 'Mor kenarlık',
         ],
+        'turler' => [
+            'ilk_defa' => 'İlk Defa Eğitim',
+            'tekrar' => 'Tekrar Eğitim',
+        ],
+        'sekiller' => [
+            'yuz_yuze' => 'Yüz Yüze',
+            'uzaktan' => 'Uzaktan',
+            'karma' => 'Karma',
+        ],
     ],
 
     /*

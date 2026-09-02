@@ -900,12 +900,6 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   metni ve kendi imza satırıyla ayrı görevlendirme belgesi alıyor
   (`page-break-before: always`). Bu düzeltme hem 'tekli' hem 'ekip'
   rollerde aynı döngüyle çalışıyor (tekli roller zaten tek üyelik).
-  **Yeni özellikler (kullanıcı onayıyla):** `phpoffice/phpword` paketi
-  eklendi — `App\Support\AtamaYazisiWordUretici` PDF ile birebir aynı
-  içerikte (aciklama YOK, üye başına ayrı sayfa) gerçek `.docx` üretir
-  (raw ZipArchive/DOMDocument şablon-patching değil, PhpWord'ün
-  programatik API'siyle sıfırdan — çünkü 10 rol için gerçek boş şablon
-  dosyası yoktu, yalnız isgpratik'in 2 örnek ÇIKTI dosyası vardı).
   "Eğitim Katılım Formu Oluştur" butonu — AI Saha Analizi→DÖF Oluştur'da
   kurulan session-aktarım deseniyle (`session(['egitim_katilim_aktarim'
   => [...]]); redirect(EgitimKatilim::getUrl());`) atanan üyeleri
@@ -916,8 +910,74 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   yoksa (işveren vekili/bilgi sahibi) "genel" İSG eğitimine düşer. İSG
   Kurulu'ndaki İGU/hekim/DSP gibi profesyonel üyeler (çalışan değil)
   katılımcı aktarımına DAHİL EDİLMEZ (`kase_gorseli` anahtarının varlığı
-  ile ayırt edildi). `AtamaYazilariTest`'e 6 test eklendi. **354 test
-  toplam.**
+  ile ayırt edildi).
+  **DÜZELTME (kullanıcı ikinci geri bildirimi — Word çıktısı için):**
+  "Atama yazıların için indirilen Word'de isgpratik'teki GERÇEK belgeleri
+  kullanmak istiyorum, buradaki belgeleri bozmadan firma/çalışan
+  değişecek şekilde üreteceğiz, genel yazılara dokunmayacağız — senin
+  hazırladıkların yönetmeliği karşılamıyor." İlk sürümde (yukarıdaki
+  paragrafta bahsedilen, PhpWord ile sıfırdan yazılmış basit gövde metni)
+  gerçekten eksikti — isgpratik'in gerçek çıktıları her rol için özel,
+  numaralı "Görev ve Sorumluluklar" listesi ve tam yasal atıflar
+  içeriyor. **Çözüm — AcilDurumWordUretici ile AYNI YÖNTEM (gerçek
+  referans .docx'i BİREBİR ŞABLON kullan):** kullanıcının isgpratik'ten
+  indirdiği 8 gerçek örnek çıktı (`ATAMA YAZISI/*/`) `resources/belge/
+  atama-yazisi/{rol}.docx` olarak birebir kopyalandı (çalışan temsilcisi,
+  işveren vekili, bilgi sahibi, söndürme/kurtarma/koruma/ilkyardım ekibi,
+  isg kurulu); "Risk Değerlendirme Ekibi" için gerçek çıktı yalnız PDF
+  olarak vardı — metni birebir doğrulanıp aynı düzende yeni bir .docx
+  şablonu PhpWord ile bir kerelik inşa edildi (İÇERİK UYDURULMADI, gerçek
+  PDF'ten kopyalandı). "Acil Durum Koordinatörü" için hiçbir referans
+  (ne docx ne PDF) bulunamadığından bu rol için Word ÜRETİLMİYOR (buton
+  gizli, `AtamaYazisiWordUretici::sablonVarMi()` false döner) — mevzuat
+  uyumu doğrulanamayan içerik uydurulmadı. `AtamaYazisiWordUretici`
+  baştan yazıldı: `AcilDurumWordUretici`'deki paragraf-birleştirip-
+  aralık-bulma tekniğiyle firma/tarih/ad-soyad/TC/görev DEĞİŞTİRİLİYOR,
+  genel/yasal metne DOKUNULMUYOR. "Ekip" şablonlarında (Söndürme/
+  Kurtarma/Koruma/İlkyardım/İSG Kurulu) örnek üye tablo satırı gerçek üye
+  sayısı kadar KLONLANIYOR (yeni teknik: `<w:tr>` DOM node cloneNode);
+  tehlike sınıfı/çalışan sayısı/asgari görevlendirme (İşyerlerinde Acil
+  Durumlar Yön. md.11 — her 30/40/50 çalışana 1 kişi formülü) canlı
+  hesaplanıyor. `AtamaYazisiTest`'e 8 yeni test (şablon değişimi doğrulama
+  + tablo klonlama + acil_durum_koordinatoru'nda buton gizli).
+- **Eğitim Katılım + Sertifika Oluştur — düzenlenebilir "Eğitim Konuları"
+  ✅ (kullanıcının paylaştığı isgpratik.com/egitim-katilim CANLI ekranı +
+  isgpratik.com/sertifika CANLI ekranı):** Kullanıcı: "Eğitim butonunu
+  buradaki sistemle aynı yap, sertifika seçeneklerini bölümlere/eğitim
+  türüne göre değiştirmeye izin ver; sertifika da bu adresteki ile aynı
+  olsun." `EgitimIcerikOlusturucu::olustur()` artık her maddeyi
+  `{madde, dakika, dahil}` olarak döndürüyor (config'teki "özel başlık"
+  serbest metin maddeleri de aynı şekle sarılıyor, varsayılan 15 dk —
+  config içeriği sade kaldı, düzenlenebilirlik kod tarafında eklendi).
+  Her iki sayfada `icerik` artık salt-okunur `#[Computed]` değil,
+  kullanıcının değiştirebildiği stateful property; ortak
+  `resources/views/filament/pages/partials/egitim-konulari.blade.php`
+  partial'ı her maddeyi checkbox (dahil) + sayı kutusu (dakika) ile
+  gösterir, kategori başlıkları dahil edilen maddelerin toplamını canlı
+  hesaplar (`EgitimIcerikOlusturucu::bolumSuresi()` — din dakikası =
+  fiili/3, "1 ders saati: 45 dk ders + 15 dk dinlenme" formülünden).
+  PDF şablonları (`pdf/egitim-katilim.blade.php`, `pdf/sertifika.blade.php`)
+  yalnız `dahil=true` maddeleri basıyor. **Sertifika PDF'i tamamen
+  yeniden tasarlandı** — kullanıcının verdiği gerçek "MEHMET ÖZDEMİR İSG
+  Sertifikası" çıktısıyla BİREBİR: "diploma" tarzı eski tasarım yerine
+  resmi "EĞİTİM BELGESİ" düzeni (künye tablosu: Ad Soyad/TC/Görev/Eğitim
+  Türü-Şekli/Firma/Tarih/Geçerlilik/Süre + yönetmelik cümlesi + "Eğitimin
+  Konuları" 4 bölüm × Türk alfabesi harflendirmesiyle (a,b,c,ç,d...)
+  maddeler + her bölüm başlığında "Fiili Ders: Xdk / Din: Ydk" + 3 sütunlu
+  imza bloğu + "(1 ders saati...)" dipnotu + "Düzenleme Tarihi"). Yeni
+  `tur` (İlk Defa/Tekrar) ve `sekil` (Yüz Yüze/Uzaktan/Karma) alanları
+  `sertifikalar` tablosuna eklendi (`config isg.sertifika.turler/
+  sekiller`) — reference'taki "Eğitim Türü / Şekli" bilgisi için.
+  **Hata bulundu ve düzeltildi:** PHP'nin native `strtoupper()` Türkçe
+  karakterleri bozuyordu ("GÜVENLİĞİ" yerine "GüVENLIğI") — yeni paylaşılan
+  `App\Support\TurkceMetin::buyuk()` (üç sınıfta tekrarlanan aynı
+  mb_strtoupper+i→İ mantığının merkezi hali) ile düzeltildi.
+  `EgitimKatilimTest`/`SertifikaOlusturTest` mevcut testleri (yeni
+  madde şekliyle) güncellendi + `SertifikaOlusturTest`'e 3 yeni test
+  (tür/şekil kaydı, madde hariç bırakma PDF'e yansıması, referans belge
+  alanlarının varlığı). **362 test toplam.**
+
+## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
   "istem kopyala / kural tabanlı" iskele, sonra Gemini/OpenAI entegrasyonu (env).

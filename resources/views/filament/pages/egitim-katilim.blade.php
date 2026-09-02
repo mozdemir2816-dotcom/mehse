@@ -1,7 +1,6 @@
 @php
     $yesil = 'rgb(16 185 129)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
-    $icerik = $this->icerik;
 @endphp
 
 <x-filament-panels::page>
@@ -65,12 +64,9 @@
 
         @if ($baslikAnahtari === 'genel' && ($icerik['saat'] ?? null))
             <div style="{{ $kutu }};margin-top:1rem;background:rgb(16 185 129 / .06);border-color:rgb(16 185 129 / .3);font-size:.82rem">
-                <strong>{{ $this->firma?->tehlikeSinifiEtiketi() ?? 'Az Tehlikeli' }}</strong> sınıfı için toplam eğitim süresi:
-                <strong>{{ $icerik['saat'] }} saat</strong>
-                @if ($icerik['isyerine_ozgu'] ?? null)
-                    (işyerine özgü riskler {{ $icerik['isyerine_ozgu']['dakika'] }} dk dahil)
-                @endif
-                · Dinlenme/ara: {{ $icerik['dinlenme_dk'] }} dk.
+                <strong>{{ $this->firma?->tehlikeSinifiEtiketi() ?? 'Az Tehlikeli' }}</strong> sınıfı için önerilen eğitim süresi:
+                <strong>{{ $icerik['saat'] }} saat</strong> — aşağıdaki "Eğitim Konuları" bölümünden maddeleri
+                işaretleyip/kaldırıp dakikalarını değiştirerek gerçek süreyi kendiniz belirleyebilirsiniz.
             </div>
         @endif
 
@@ -95,61 +91,10 @@
         {{-- 2. KONU İÇERİĞİ --}}
         <x-filament::section icon="heroicon-o-book-open" icon-color="success">
             <x-slot name="heading">2. Eğitim Konuları</x-slot>
+            <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz.</x-slot>
 
-            @if (($icerik['tip'] ?? null) === 'genel')
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">Genel Konular</div>
-                        <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                            @foreach ($icerik['genel_konular'] as $m)
-                                <li>{{ $m['madde'] }} <span style="color:rgb(107 114 128)">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">Sağlık Konuları</div>
-                        <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                            @foreach ($icerik['saglik_konulari'] as $m)
-                                <li>{{ $m['madde'] }} <span style="color:rgb(107 114 128)">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">Teknik Konular</div>
-                        <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                            @foreach ($icerik['teknik_konular'] as $m)
-                                <li>{{ $m['madde'] }} <span style="color:rgb(107 114 128)">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div style="{{ $kutu }}">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">
-                            İşyerine Özgü Riskler
-                            @if ($icerik['isyerine_ozgu'] ?? null)
-                                <span style="font-weight:400;color:rgb(107 114 128)">— {{ $icerik['isyerine_ozgu']['sektor'] }}</span>
-                            @endif
-                        </div>
-                        @if ($icerik['isyerine_ozgu'] ?? null)
-                            <ol style="margin:0;padding-left:1.1rem;font-size:.8rem;display:flex;flex-direction:column;gap:.25rem">
-                                @foreach ($icerik['isyerine_ozgu']['maddeler'] as $madde)
-                                    <li>{{ $madde }}</li>
-                                @endforeach
-                            </ol>
-                        @else
-                            <p style="font-size:.78rem;color:#f59e0b;margin:0">Sektör seçilmedi — üstteki "İşyerine Özgü Risk Sektörü" alanından seçin.</p>
-                        @endif
-                    </div>
-                </div>
-            @else
-                <div style="{{ $kutu }}">
-                    <div style="font-weight:700;font-size:.85rem;margin-bottom:.4rem">{{ $icerik['ad'] ?? '' }}</div>
-                    <ol style="margin:0;padding-left:1.1rem;font-size:.82rem;display:flex;flex-direction:column;gap:.3rem">
-                        @foreach (($icerik['maddeler'] ?? []) as $madde)
-                            <li>{{ $madde }}</li>
-                        @endforeach
-                    </ol>
-                </div>
-            @endif
+            @php $wireModelKok = 'icerik'; @endphp
+            @include('filament.pages.partials.egitim-konulari')
         </x-filament::section>
 
         {{-- 3. KATILIMCI LİSTESİ --}}
