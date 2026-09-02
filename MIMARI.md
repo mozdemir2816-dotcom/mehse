@@ -60,7 +60,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | **hazır** (Gemini ile 10 soruluk sınav + manuel soru → PDF) |
 | Formlar & Belgeler | KKD Formu | `kkd-formu` | **hazır** (6 kategori TS EN katalog, çoklu çalışan × çoklu KKD → PDF) |
 | Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | **hazır** (4 izin türü, dinamik güvenlik önlemleri → PDF) |
-| Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | **hazır** (ihlal kataloğu + serbest madde + yaptırım → PDF) |
+| Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | **hazır** (2 sekme: Çalışana Ceza Tutanağı + İşverene İPC Tebliği → PDF) |
 | Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | **hazır** (5N1K + kök neden analizi, SGK bildirim takibi → PDF) |
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + kendi arşiv Excel yüklemesi + Gemini ile madde üretimi → PDF) |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
@@ -542,8 +542,8 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   (2 ihlal kategorisi katalog + 4 yaptırım tipi). Çalışan bilgisi + olay bilgisi +
   tanıklar + katalogdan/serbest ihlal maddesi + tek seçimli yaptırım (Sözlü Uyarı/
   Yazılı İhtar/Ücret Kesme/Yazılı Savunma) + tebliğ/tebellüğ (imzaladı/imtina etti).
-  **Kapsam dışı:** isgpratik'in ikinci sekmesi "İşverene İPC Tebliği" (idari para cezası
-  bildirimi, ayrı bir belge akışı) — yalnız "Çalışana Ceza Tutanağı" akışı yapıldı.
+  **O zaman kapsam dışı bırakılmıştı:** isgpratik'in ikinci sekmesi "İşverene İPC
+  Tebliği" — sonradan Faz 3ac'de tamamlandı.
   `CezaTebligTest` (9 test). **202 test toplam.**
 - **Faz 3p — Talimat Oluştur ✅ (isgpratik 82-83.jpg):** `App\Filament\Pages\
   TalimatOlustur` (stub yerine geçti) + `App\Models\Talimat` + `App\Support\
@@ -814,9 +814,23 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   (çoklu ölçüm satırı ekle/sil, Gürültü Yönetmeliği eylem sınırlarına göre
   uyarı — `config isg.araclar.gurultu_sinirlari`). `EReetemTest` (3 test) +
   `AraclarTest` (10 test). **323 test toplam.**
+- **Faz 3ac — İşverene İPC Tebliği ✅ (Ceza ve Tebliğ Tutanağı'nın isgpratik
+  79-80.jpg'deki 2. sekmesi, Faz 3o'da ertelenmişti):** `CezaTeblig` sayfasına
+  `aktifSekme` (tutanak/ipc) ile SEKME EKLENDİ — ayrı bir Page/URL açılmadı,
+  isgpratik'in gerçek ekranındaki tek-sayfa-iki-sekme yapısı korundu. Firma
+  seçici artık iki sekmenin ÜSTÜNDE paylaşılan tek alan. Yeni `App\Models\
+  IpcTebligi` + `App\Support\IpcTebligiUretici` (dompdf) + `config
+  isg.ceza_teblig.ipc_maddeleri` (6331 s.K. m.26 kapsamı, 9 ihlal başlığı —
+  yıllık değişen TL tutarları config'e YAZILMADI, tutar tebligattan
+  kullanıcı tarafından girilir). Peşin ödeme tutarı otomatik %25 indirimli
+  hesaplanır (Kabahatler Kanunu m.17/6); PDF'te sabit "15 gün içinde Sulh
+  Ceza Hakimliği'ne itiraz" bilgilendirmesi (m.27). Hazırlayan (İSG Uzmanı)
+  + kaşesi firmaya atanmış İGU'dan otomatik (yedinci kaşe-basma kullanımı).
+  `CezaTebligTest`'e 7 test eklendi (sekme görünürlük ayrımı dahil —
+  `pdf`/`pdfIpc` aksiyonları yalnız kendi sekmesi aktifken görünür).
+  **330 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Muayene
-  Formu (EK-2 — çok büyük, tıbbi muayene formu), Ziyaret Programı;
-  "İşverene İPC Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi) tek tek
+  Formu (EK-2 — çok büyük, tıbbi muayene formu), Ziyaret Programı) tek tek
   kurulacak. isgpratik kök klasöründe
   24-101(+133-135,158) + AI SAHA ANALİZİ + SAHA DENETİMİ alt klasörleri
   artık tam incelendi; 88-101 aralığı kapsam dışı isgpratik özellikleri

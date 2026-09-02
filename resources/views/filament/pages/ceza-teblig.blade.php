@@ -9,26 +9,42 @@
         tebliğini — resmi PDF çıktısı ile — hazırlayın.
     </p>
 
+    {{-- FİRMA (paylaşılan) --}}
+    <div style="{{ $kutu }}">
+        <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+        <select wire:model.live="firmaId"
+            style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            <option value="">— Firma seçin —</option>
+            @foreach ($this->firmalar as $id => $ad)
+                <option value="{{ $id }}">{{ $ad }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    {{-- SEKME SEÇİCİ --}}
+    <div style="display:flex;gap:.5rem;border-bottom:1px solid rgb(107 114 128 / .25);padding-bottom:.5rem">
+        @foreach (['tutanak' => 'Ceza ve Tebliğ Tutanağı', 'ipc' => 'İşverene İPC Tebliği'] as $anahtar => $etiket)
+            @php $secili = $aktifSekme === $anahtar; @endphp
+            <button type="button" wire:click="$set('aktifSekme', '{{ $anahtar }}')"
+                style="padding:.5rem 1rem;border-radius:.5rem .5rem 0 0;cursor:pointer;font-size:.85rem;font-weight:600;
+                    border:1px solid {{ $secili ? $kirmizi : 'transparent' }};border-bottom:none;
+                    background:{{ $secili ? 'rgb(239 68 68 / .08)' : 'transparent' }};
+                    color:{{ $secili ? $kirmizi : 'inherit' }}">
+                {{ $etiket }}
+            </button>
+        @endforeach
+    </div>
+
+    @if ($aktifSekme === 'tutanak')
+
     {{-- 1. FİRMA & ÇALIŞAN --}}
     <x-filament::section icon="heroicon-o-scale" icon-color="danger">
-        <x-slot name="heading">1. Firma ve Çalışan Bilgileri</x-slot>
+        <x-slot name="heading">1. Çalışan Bilgileri</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem">
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
-                <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                    <option value="">— Firma seçin —</option>
-                    @foreach ($this->firmalar as $id => $ad)
-                        <option value="{{ $id }}">{{ $ad }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Tutanak Tarihi</label>
-                <input type="date" wire:model="tutanakTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
+        <div style="margin-bottom:1rem;max-width:260px">
+            <label style="font-weight:600;font-size:.82rem">Tutanak Tarihi</label>
+            <input type="date" wire:model="tutanakTarihi"
+                style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
         </div>
 
         @if ($this->firma)
@@ -245,5 +261,119 @@
         @endif
     @else
         <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+    @endif
+
+    @endif{{-- /aktifSekme tutanak --}}
+
+    @if ($aktifSekme === 'ipc')
+        @if ($this->firma)
+            {{-- 1. DENETİM BİLGİLERİ --}}
+            <x-filament::section icon="heroicon-o-magnifying-glass" icon-color="warning">
+                <x-slot name="heading">1. Denetim Bilgileri</x-slot>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Tebliğ Tarihi</label>
+                        <input type="date" wire:model="tebligTarihiIpc"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Denetim Tarihi</label>
+                        <input type="date" wire:model="denetimTarihiIpc"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Tespit Eden Kurum</label>
+                        <input type="text" wire:model="tespitEdenKurum" placeholder="Örn: Çalışma ve Sosyal Güvenlik Bakanlığı"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">Müfettiş Adı</label>
+                        <input type="text" wire:model="mufettisAdi"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                </div>
+            </x-filament::section>
+
+            {{-- 2. İHLAL EDİLEN HÜKÜMLER --}}
+            <x-filament::section icon="heroicon-o-x-circle" icon-color="warning">
+                <x-slot name="heading">2. İhlal Edilen Hükümler ({{ count($ihlallerIpc) }} seçili)</x-slot>
+                <x-slot name="description">6331 sayılı Kanun m.26 kapsamındaki kategorilerden seçin; tutar TL cinsinden aşağıda ayrıca girilir.</x-slot>
+
+                <div style="display:flex;flex-direction:column;gap:.3rem">
+                    @foreach ($this->ipcMaddeKatalogu as $m)
+                        @php $secili = $this->ihlalIpcSeciliMi($m['baslik']); @endphp
+                        <button type="button" wire:click="ihlalIpcToggle('{{ addslashes($m['baslik']) }}', '{{ addslashes($m['aciklama']) }}')"
+                            style="text-align:left;padding:.4rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
+                                border:1px solid {{ $secili ? '#b45309' : 'rgb(107 114 128 / .3)' }};
+                                background:{{ $secili ? 'rgb(180 83 9 / .08)' : 'transparent' }}">
+                            {{ $secili ? '☑' : '☐' }} {{ $m['baslik'] }}
+                            <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $m['aciklama'] }}</div>
+                        </button>
+                    @endforeach
+                </div>
+
+                <div style="{{ $kutu }};margin-top:.75rem">
+                    <label style="font-weight:600;font-size:.8rem">Ek Açıklama (serbest metin)</label>
+                    <textarea wire:model="serbestIhlalMetniIpc" rows="2" placeholder="Tebligatta yer alan ek açıklama"
+                        style="width:100%;margin-top:.3rem;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-family:inherit;font-size:.82rem"></textarea>
+                </div>
+            </x-filament::section>
+
+            {{-- 3. CEZA TUTARI VE ÖDEME --}}
+            <x-filament::section icon="heroicon-o-banknotes" icon-color="warning">
+                <x-slot name="heading">3. Ceza Tutarı ve Ödeme</x-slot>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">İdari Para Cezası Tutarı (TL)</label>
+                        <input type="number" step="0.01" min="0" wire:model.live="cezaTutari"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    </div>
+                    <div style="{{ $kutu }};text-align:center">
+                        <div style="font-size:.78rem;color:rgb(107 114 128)">Peşin Ödeme Tutarı (%25 indirimli)</div>
+                        <div style="font-size:1.2rem;font-weight:800;color:#b45309">{{ $this->pesinOdemeTutari() !== null ? number_format($this->pesinOdemeTutari(), 2, ',', '.').' TL' : '—' }}</div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1.5rem;margin-top:1rem">
+                    <label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem">
+                        <input type="checkbox" wire:model="odemeYapildi"> Ödeme Yapıldı
+                    </label>
+                    <label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem">
+                        <input type="checkbox" wire:model.live="itirazEdildi"> İtiraz Edildi
+                    </label>
+                </div>
+                @if ($itirazEdildi)
+                    <textarea wire:model="itirazNotu" rows="2" placeholder="İtiraz notu / dilekçe özeti"
+                        style="width:100%;margin-top:.5rem;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-family:inherit;font-size:.82rem"></textarea>
+                @endif
+
+                <div style="{{ $kutu }};margin-top:1rem;background:rgb(107 114 128 / .06);font-size:.75rem;color:rgb(75 85 99)">
+                    Bu karara karşı tebliğ tarihinden itibaren 15 gün içinde yetkili Sulh Ceza Hakimliği'ne itiraz
+                    edilebilir (5326 s. Kabahatler Kanunu m.27). Cezanın 15 gün içinde peşin ödenmesi halinde
+                    %25 indirim uygulanır (Kabahatler Kanunu m.17/6).
+                </div>
+            </x-filament::section>
+
+            {{-- 4. GEÇMİŞ TEBLİĞLER --}}
+            @if ($this->gecmisIpcTebligleri->isNotEmpty())
+                <x-filament::section icon="heroicon-o-clock" icon-color="gray">
+                    <x-slot name="heading">Geçmiş İPC Tebliğleri</x-slot>
+                    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                        @foreach ($this->gecmisIpcTebligleri as $t)
+                            <tr>
+                                <td style="padding:.3rem .5rem">{{ $t->belge_no }} — {{ $t->teblig_tarihi?->format('d.m.Y') }}</td>
+                                <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
+                                    <x-filament::button size="xs" color="gray" wire:click="gecmisIpcPdf({{ $t->id }})">PDF</x-filament::button>
+                                    <x-filament::button size="xs" color="danger" wire:click="gecmisIpcSil({{ $t->id }})">Sil</x-filament::button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </x-filament::section>
+            @endif
+        @else
+            <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        @endif
     @endif
 </x-filament-panels::page>

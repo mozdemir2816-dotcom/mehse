@@ -5,7 +5,9 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\CezaTebligTutanagi as CezaTebligTutanagiModel;
 use App\Models\Firma;
+use App\Models\IpcTebligi;
 use App\Support\CezaTebligTutanagiUretici;
+use App\Support\IpcTebligiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -81,10 +83,40 @@ class CezaTeblig extends Page
 
     public ?string $imzaDurumu = 'imzaladi';
 
+    /*
+    |--------------------------------------------------------------------------
+    | İşverene İPC Tebliği (2. sekme)
+    |--------------------------------------------------------------------------
+    */
+
+    public string $aktifSekme = 'tutanak';
+
+    public ?string $tebligTarihiIpc = null;
+
+    public ?string $denetimTarihiIpc = null;
+
+    public ?string $tespitEdenKurum = null;
+
+    public ?string $mufettisAdi = null;
+
+    /** @var array<int, array{baslik: string, aciklama: ?string}> */
+    public array $ihlallerIpc = [];
+
+    public ?string $serbestIhlalMetniIpc = null;
+
+    public ?float $cezaTutari = null;
+
+    public bool $odemeYapildi = false;
+
+    public bool $itirazEdildi = false;
+
+    public ?string $itirazNotu = null;
+
     public function mount(): void
     {
         $this->tutanakTarihi = now()->toDateString();
         $this->tebligTarihi = now()->toDateString();
+        $this->tebligTarihiIpc = now()->toDateString();
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
@@ -141,9 +173,27 @@ class CezaTeblig extends Page
         return $this->firma?->cezaTebligTutanaklari()->latest()->get() ?? collect();
     }
 
+    #[Computed]
+    public function ipcMaddeKatalogu(): array
+    {
+        return config('isg.ceza_teblig.ipc_maddeleri');
+    }
+
+    /** @return Collection<int, IpcTebligi> */
+    #[Computed]
+    public function gecmisIpcTebligleri(): Collection
+    {
+        return $this->firma?->ipcTebligleri()->latest()->get() ?? collect();
+    }
+
+    public function pesinOdemeTutari(): ?float
+    {
+        return $this->cezaTutari !== null ? round($this->cezaTutari * 0.75, 2) : null;
+    }
+
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar);
+        unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->gecmisIpcTebligleri);
     }
 
     public function updatedCalisanHizliSecId(): void
@@ -218,6 +268,34 @@ class CezaTeblig extends Page
 
     /*
     |--------------------------------------------------------------------------
+    | İPC İhlalleri
+    |--------------------------------------------------------------------------
+    */
+
+    public function ihlalIpcToggle(string $baslik, ?string $aciklama): void
+    {
+        $mevcut = collect($this->ihlallerIpc)->firstWhere('baslik', $baslik);
+
+        if ($mevcut) {
+            $this->ihlallerIpc = array_values(array_filter($this->ihlallerIpc, fn ($i) => $i['baslik'] !== $baslik));
+        } else {
+            $this->ihlallerIpc[] = ['baslik' => $baslik, 'aciklama' => $aciklama];
+        }
+    }
+
+    public function ihlalIpcSeciliMi(string $baslik): bool
+    {
+        return collect($this->ihlallerIpc)->contains('baslik', $baslik);
+    }
+
+    public function ihlalIpcSil(int $index): void
+    {
+        unset($this->ihlallerIpc[$index]);
+        $this->ihlallerIpc = array_values($this->ihlallerIpc);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Kaydet & PDF
     |--------------------------------------------------------------------------
     */
@@ -256,17 +334,57 @@ class CezaTeblig extends Page
         return $t;
     }
 
+    private function kaydetIpc(): ?IpcTebligi
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Firma seçimi zorunlu')->danger()->send();
+
+            return null;
+        }
+
+        $t = new IpcTebligi([
+            'firma_id' => $this->firma->id,
+            'teblig_tarihi' => $this->tebligTarihiIpc,
+            'denetim_tarihi' => $this->denetimTarihiIpc,
+            'tespit_eden_kurum' => $this->tespitEdenKurum,
+            'mufettis_adi' => $this->mufettisAdi,
+            'ihlaller' => $this->ihlallerIpc,
+            'serbest_ihlal_metni' => $this->serbestIhlalMetniIpc,
+            'ceza_tutari' => $this->cezaTutari,
+            'odeme_yapildi' => $this->odemeYapildi,
+            'itiraz_edildi' => $this->itirazEdildi,
+            'itiraz_notu' => $this->itirazNotu,
+            'hazirlayan' => $this->firma->igu?->ad_soyad,
+            'hazirlayan_kase' => $this->firma->igu?->kase_gorseli,
+        ]);
+        $t->save();
+
+        unset($this->gecmisIpcTebligleri);
+
+        return $t;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
-                ->visible(fn () => $this->firma !== null)
+                ->visible(fn () => $this->firma !== null && $this->aktifSekme === 'tutanak')
                 ->action(function () {
                     $t = $this->kaydet();
 
                     return $t ? CezaTebligTutanagiUretici::pdf($t) : null;
+                }),
+
+            Action::make('pdfIpc')
+                ->label('PDF İndir')
+                ->icon('heroicon-o-document-arrow-down')
+                ->visible(fn () => $this->firma !== null && $this->aktifSekme === 'ipc')
+                ->action(function () {
+                    $t = $this->kaydetIpc();
+
+                    return $t ? IpcTebligiUretici::pdf($t) : null;
                 }),
         ];
     }
@@ -282,5 +400,18 @@ class CezaTeblig extends Page
     {
         $this->firma?->cezaTebligTutanaklari()->find($id)?->delete();
         unset($this->gecmisTutanaklar);
+    }
+
+    public function gecmisIpcPdf(int $id)
+    {
+        $t = $this->firma?->ipcTebligleri()->find($id);
+
+        return $t ? IpcTebligiUretici::pdf($t) : null;
+    }
+
+    public function gecmisIpcSil(int $id): void
+    {
+        $this->firma?->ipcTebligleri()->find($id)?->delete();
+        unset($this->gecmisIpcTebligleri);
     }
 }

@@ -1618,6 +1618,23 @@ return [
             'ucret_kesme' => ['ad' => 'Ücret Kesme Cezası', 'aciklama' => '4857 md.38 — ayda en fazla iki gündelik kesilebilir.'],
             'yazili_savunma' => ['ad' => 'Yazılı Savunma Talebi', 'aciklama' => 'Çalışandan süre verilerek yazılı savunma istenir.'],
         ],
+
+        // İşverene İPC (İdari Para Cezası) Tebliği — 6331 s.K. m.26 kapsamındaki
+        // ihlal başlıkları. Ceza tutarları her yıl yeniden değerleme oranıyla
+        // güncellendiğinden burada SABİT TL tutarı YOK — resmi tebligattaki
+        // tutar kullanıcı tarafından girilir.
+        'ipc_maddeleri' => [
+            ['baslik' => 'Risk Değerlendirmesi Yaptırmama', 'aciklama' => '6331 s.K. m.10 uyarınca risk değerlendirmesinin yapılmaması/yaptırılmaması.'],
+            ['baslik' => 'İSG Hizmeti Sağlamama', 'aciklama' => '6331 s.K. m.6, m.8 uyarınca İGU/işyeri hekimi görevlendirilmemesi veya OSGB hizmeti alınmaması.'],
+            ['baslik' => 'Acil Durum Planı Eksikliği', 'aciklama' => '6331 s.K. m.11, m.12 uyarınca acil durum planının hazırlanmaması/tatbikat yapılmaması.'],
+            ['baslik' => 'İş Kazası/Meslek Hastalığı Bildirim İhlali', 'aciklama' => '6331 s.K. m.14 uyarınca iş kazası/meslek hastalığının süresinde bildirilmemesi.'],
+            ['baslik' => 'Sağlık Gözetimi Yaptırmama', 'aciklama' => '6331 s.K. m.15 uyarınca işe giriş/periyodik sağlık muayenelerinin yaptırılmaması.'],
+            ['baslik' => 'Eğitim / Bilgilendirme Eksikliği', 'aciklama' => '6331 s.K. m.16, m.17 uyarınca çalışanlara İSG eğitimi verilmemesi/bilgilendirme yapılmaması.'],
+            ['baslik' => 'Çalışan Temsilcisi / Kurul Eksikliği', 'aciklama' => '6331 s.K. m.18, m.22 uyarınca çalışan temsilcisi görevlendirilmemesi veya İSG kurulu oluşturulmaması.'],
+            ['baslik' => 'Koruyucu / Önleyici Tedbir Eksikliği', 'aciklama' => '6331 s.K. m.4, m.5 uyarınca tespit edilen risklere karşı gerekli önlemlerin alınmaması.'],
+            ['baslik' => 'Durdurma Kararına Uymama', 'aciklama' => '6331 s.K. m.25 uyarınca işin durdurulması kararına rağmen faaliyetin sürdürülmesi.'],
+            ['baslik' => 'Diğer', 'aciklama' => 'Yukarıdaki kategorilere girmeyen, tebligatta belirtilen diğer ihlal.'],
+        ],
     ],
 
     /*

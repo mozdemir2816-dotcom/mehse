@@ -6,8 +6,11 @@ use App\Filament\Pages\CezaTeblig as CezaSayfasi;
 use App\Models\Calisan;
 use App\Models\CezaTebligTutanagi;
 use App\Models\Firma;
+use App\Models\IpcTebligi;
+use App\Models\IsgProfesyoneli;
 use App\Models\User;
 use App\Support\CezaTebligTutanagiUretici;
+use App\Support\IpcTebligiUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -155,5 +158,109 @@ class CezaTebligTest extends TestCase
         $firmalar = Livewire::test(CezaSayfasi::class)->instance()->firmalar();
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | İşverene İPC Tebliği (2. sekme)
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_ipc_katalogundan_ihlal_toggle_edilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $ilkBaslik = config('isg.ceza_teblig.ipc_maddeleri.0.baslik');
+        $ilkAciklama = config('isg.ceza_teblig.ipc_maddeleri.0.aciklama');
+
+        $component = Livewire::test(CezaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('aktifSekme', 'ipc')
+            ->call('ihlalIpcToggle', $ilkBaslik, $ilkAciklama);
+
+        $this->assertCount(1, $component->get('ihlallerIpc'));
+
+        $component->call('ihlalIpcToggle', $ilkBaslik, $ilkAciklama);
+        $this->assertCount(0, $component->get('ihlallerIpc'));
+    }
+
+    public function test_pesin_odeme_tutari_yuzde_25_indirimli_hesaplanir(): void
+    {
+        $component = Livewire::test(CezaSayfasi::class)
+            ->set('aktifSekme', 'ipc')
+            ->set('cezaTutari', 1000);
+
+        $this->assertSame(750.0, $component->instance()->pesinOdemeTutari());
+    }
+
+    public function test_ipc_pdf_aksiyonu_kayit_olusturur_ve_kase_snapshotlanir(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create(['kase_gorseli' => 'isg-profesyonel-kase/x.png']);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id]);
+
+        Livewire::test(CezaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('aktifSekme', 'ipc')
+            ->set('tespitEdenKurum', 'Çalışma ve Sosyal Güvenlik Bakanlığı')
+            ->set('mufettisAdi', 'X Y')
+            ->call('ihlalIpcToggle', config('isg.ceza_teblig.ipc_maddeleri.0.baslik'), config('isg.ceza_teblig.ipc_maddeleri.0.aciklama'))
+            ->set('cezaTutari', 2000)
+            ->callAction('pdfIpc');
+
+        $t = IpcTebligi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('Çalışma ve Sosyal Güvenlik Bakanlığı', $t->tespit_eden_kurum);
+        $this->assertCount(1, $t->ihlaller);
+        $this->assertSame(2000.0, (float) $t->ceza_tutari);
+        $this->assertSame(1500.0, (float) $t->pesin_odeme_tutari);
+        $this->assertSame('isg-profesyonel-kase/x.png', $t->hazirlayan_kase);
+        $this->assertStringStartsWith('IPC-'.now()->year.'-', $t->belge_no);
+    }
+
+    public function test_ipc_firma_secilmeden_pdf_aksiyonu_gizli(): void
+    {
+        Livewire::test(CezaSayfasi::class)
+            ->set('aktifSekme', 'ipc')
+            ->assertActionHidden('pdfIpc');
+
+        $this->assertDatabaseCount('ipc_tebligleri', 0);
+    }
+
+    public function test_ipc_pdf_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $t = IpcTebligi::create(['firma_id' => $firma->id, 'ceza_tutari' => 500]);
+
+        $yanit = IpcTebligiUretici::pdf($t);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_ipc_gecmis_teblig_silinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $t = IpcTebligi::create(['firma_id' => $firma->id]);
+
+        Livewire::test(CezaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('gecmisIpcSil', $t->id);
+
+        $this->assertDatabaseMissing('ipc_tebligleri', ['id' => $t->id]);
+    }
+
+    public function test_pdf_aksiyonu_sadece_kendi_sekmesinde_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(CezaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('aktifSekme', 'tutanak')
+            ->assertActionVisible('pdf')
+            ->assertActionHidden('pdfIpc')
+            ->set('aktifSekme', 'ipc')
+            ->assertActionHidden('pdf')
+            ->assertActionVisible('pdfIpc');
     }
 }
