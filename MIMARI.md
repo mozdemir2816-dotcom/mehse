@@ -445,9 +445,9 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     hepsi ekran görüntülerinden birebir; **İşyerine Özgü Riskler** ise seçilen sektöre
     göre değişir (6 sektör hazır: İnşaat, Maden, Tekstil, Enerji/Elektrik, Çimento/Beton,
     Nakliye/Taşıma — her biri 5 madde). Tehlike sınıfına göre toplam süre bilgi kutusu
-    (`config isg.egitim.sureler` — az tehlikeli 8 saat ekran görüntüsünden doğrulandı;
-    tehlikeli/çok tehlikeli 12/16 saat mevzuattan, dakika kırılımları saat oranıyla
-    ölçeklendi — ekranla doğrudan doğrulanmadı).
+    (`config isg.egitim.sureler` — tüm 3 tehlike sınıfı için saat/işe-özgü-dk/dinlenme-dk
+    kullanıcı tarafından doğrulandı: az tehlikeli 8s/90dk/120dk, tehlikeli 12s/135dk/180dk,
+    çok tehlikeli 16s/180dk/240dk).
   - **Diğer 13 başlık tek bloklu "özel" eğitimlerdir** (Fiziksel Risk Etmenleri,
     Yükseklerde Çalışma, Kapalı Alanlarda Çalışma, İş Kazası Sonrası İşe Dönüş, Çalışan
     Temsilcisi, Risk Değerlendirme Ekibi, İSG Kurulu, Acil Durum Koordinatörü, Söndürme/
