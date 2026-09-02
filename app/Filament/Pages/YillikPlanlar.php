@@ -14,9 +14,9 @@ use Livewire\Attributes\Computed;
 use UnitEnum;
 
 /**
- * Yıllık Planlar — isgpratik 86-87.jpg. Firma + yıl seçilince 14 varsayılan
- * faaliyet otomatik yüklenir; her ay hücresi tıklanarak boş → planlandı →
- * tamamlandı arasında döner.
+ * Yıllık Planlar — isgpratik 86-90.jpg. 3 sekme: Çalışma Planı / Eğitim
+ * Planı (ikisi de ay durum matrisli — Boş→Planlandı→Tamamlandı) /
+ * Değerlendirme Raporu (satır bazlı serbest metin, ay matrisi yok).
  */
 class YillikPlanlar extends Page
 {
@@ -42,11 +42,23 @@ class YillikPlanlar extends Page
 
     public int $yil;
 
+    public string $sekme = 'calisma';
+
     public ?string $yeniFaaliyet = null;
 
     public ?string $yeniSorumlu = null;
 
     public ?string $yeniAciklama = null;
+
+    public ?string $yeniEgitimKonu = null;
+
+    public ?string $yeniEgitimSure = null;
+
+    public ?string $yeniEgitimEgitici = null;
+
+    public ?string $yeniEgitimHedefKitle = null;
+
+    public ?string $yeniDegerlendirmeCalisma = null;
 
     public function mount(): void
     {
@@ -99,26 +111,32 @@ class YillikPlanlar extends Page
 
     /*
     |--------------------------------------------------------------------------
-    | Faaliyet & ay durumu
+    | Ay durum matrisi (Çalışma Planı + Eğitim Planı ortak) — $alan: 'faaliyetler'|'egitimler'
     |--------------------------------------------------------------------------
     */
 
-    public function ayDurumDegistir(int $faaliyetIndex, int $ayIndex): void
+    public function ayDurumDegistir(string $alan, int $index, int $ayIndex): void
     {
         $p = $this->plan();
-        $faaliyetler = $p?->faaliyetler ?? [];
+        $satirlar = $p?->{$alan} ?? [];
 
-        if (! $p || ! isset($faaliyetler[$faaliyetIndex])) {
+        if (! $p || ! isset($satirlar[$index])) {
             return;
         }
 
-        $mevcut = $faaliyetler[$faaliyetIndex]['aylar'][$ayIndex] ?? 'bos';
+        $mevcut = $satirlar[$index]['aylar'][$ayIndex] ?? 'bos';
         $siraIndex = array_search($mevcut, self::DURUM_SIRASI, true);
         $yeni = self::DURUM_SIRASI[($siraIndex + 1) % count(self::DURUM_SIRASI)];
 
-        $faaliyetler[$faaliyetIndex]['aylar'][$ayIndex] = $yeni;
-        $p->update(['faaliyetler' => $faaliyetler]);
+        $satirlar[$index]['aylar'][$ayIndex] = $yeni;
+        $p->update([$alan => $satirlar]);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Yıllık Çalışma Planı
+    |--------------------------------------------------------------------------
+    */
 
     public function faaliyetEkle(): void
     {
@@ -153,6 +171,104 @@ class YillikPlanlar extends Page
         $p->update(['faaliyetler' => array_values($faaliyetler)]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Yıllık Eğitim Planı
+    |--------------------------------------------------------------------------
+    */
+
+    public function egitimEkle(): void
+    {
+        $p = $this->plan();
+
+        if (! $p || blank($this->yeniEgitimKonu)) {
+            return;
+        }
+
+        $egitimler = $p->egitimler ?? [];
+        $egitimler[] = [
+            'konu' => $this->yeniEgitimKonu,
+            'sure_saat' => $this->yeniEgitimSure ?: null,
+            'egitici' => $this->yeniEgitimEgitici,
+            'hedef' => null,
+            'hedef_kitle' => $this->yeniEgitimHedefKitle,
+            'aylar' => array_fill(0, 12, 'bos'),
+        ];
+        $p->update(['egitimler' => $egitimler]);
+
+        $this->reset('yeniEgitimKonu', 'yeniEgitimSure', 'yeniEgitimEgitici', 'yeniEgitimHedefKitle');
+    }
+
+    public function egitimSil(int $index): void
+    {
+        $p = $this->plan();
+        $egitimler = $p?->egitimler ?? [];
+
+        if (! $p || ! isset($egitimler[$index])) {
+            return;
+        }
+
+        unset($egitimler[$index]);
+        $p->update(['egitimler' => array_values($egitimler)]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Yıllık Değerlendirme Raporu (ay matrisi yok, satır bazlı serbest metin)
+    |--------------------------------------------------------------------------
+    */
+
+    public function degerlendirmeGuncelle(int $index, string $alan, string $deger): void
+    {
+        $p = $this->plan();
+        $degerlendirmeler = $p?->degerlendirmeler ?? [];
+
+        if (! $p || ! isset($degerlendirmeler[$index]) || ! in_array($alan, ['tarih', 'yapan_kisi', 'tekrar_sayisi', 'yontem', 'sonuc'], true)) {
+            return;
+        }
+
+        $degerlendirmeler[$index][$alan] = $deger;
+        $p->update(['degerlendirmeler' => $degerlendirmeler]);
+    }
+
+    public function degerlendirmeEkle(): void
+    {
+        $p = $this->plan();
+
+        if (! $p || blank($this->yeniDegerlendirmeCalisma)) {
+            return;
+        }
+
+        $degerlendirmeler = $p->degerlendirmeler ?? [];
+        $degerlendirmeler[] = [
+            'calisma' => $this->yeniDegerlendirmeCalisma,
+            'yapan_kisi' => null, 'yontem' => null, 'sonuc' => null,
+            'tarih' => null, 'tekrar_sayisi' => null,
+        ];
+        $p->update(['degerlendirmeler' => $degerlendirmeler]);
+
+        $this->reset('yeniDegerlendirmeCalisma');
+    }
+
+    public function degerlendirmeSil(int $index): void
+    {
+        $p = $this->plan();
+        $degerlendirmeler = $p?->degerlendirmeler ?? [];
+
+        if (! $p || ! isset($degerlendirmeler[$index])) {
+            return;
+        }
+
+        unset($degerlendirmeler[$index]);
+        $p->update(['degerlendirmeler' => array_values($degerlendirmeler)]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ortak
+    |--------------------------------------------------------------------------
+    */
+
     public function varsayilanaSifirla(): void
     {
         $p = $this->plan();
@@ -161,13 +277,25 @@ class YillikPlanlar extends Page
             return;
         }
 
-        $p->update([
-            'faaliyetler' => collect(config('isg.yillik_plan.varsayilan_faaliyetler'))
-                ->map(fn ($f) => [...$f, 'aylar' => array_fill(0, 12, 'bos')])
-                ->all(),
-        ]);
+        match ($this->sekme) {
+            'egitim' => $p->update([
+                'egitimler' => collect(config('isg.yillik_plan.varsayilan_egitimler'))
+                    ->map(fn ($e) => [...$e, 'aylar' => array_fill(0, 12, 'bos')])
+                    ->all(),
+            ]),
+            'degerlendirme' => $p->update([
+                'degerlendirmeler' => collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
+                    ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
+                    ->all(),
+            ]),
+            default => $p->update([
+                'faaliyetler' => collect(config('isg.yillik_plan.varsayilan_faaliyetler'))
+                    ->map(fn ($f) => [...$f, 'aylar' => array_fill(0, 12, 'bos')])
+                    ->all(),
+            ]),
+        };
 
-        Notification::make()->title('Varsayılan faaliyetlere sıfırlandı')->success()->send();
+        Notification::make()->title('Bu sekme varsayılan içeriğe sıfırlandı')->success()->send();
     }
 
     protected function getHeaderActions(): array

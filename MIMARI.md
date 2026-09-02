@@ -65,7 +65,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + kendi arşiv Excel yüklemesi + Gemini ile madde üretimi → PDF) |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | planlandı |
-| **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (14 varsayılan faaliyet, ay bazlı durum matrisi → PDF) |
+| **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (3 sekme: Çalışma Planı + Eğitim Planı + Değerlendirme Raporu → PDF) |
 | Planlama & Arşiv | Ziyaret Programı `[AI]` | `ziyaret-programi` | planlandı |
 | Planlama & Arşiv | Araçlar | `araclar` | planlandı |
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
@@ -577,10 +577,25 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   Tatbikatı, İSG Kurul Toplantısı, Periyodik Sağlık Muayenesi). Firma+yıl seçilince plan
   otomatik oluşur ve varsayılan faaliyetler yüklenir; her ay hücresi tıklanarak **Boş →
   Planlandı → Tamamlandı** arasında döner (isgpratik'teki 3 renkli durum sistemi birebir).
-  Faaliyet ekle/sil + "Varsayılana Sıfırla". **Kapsam dışı:** isgpratik'in diğer 2 sekmesi
-  "Yıllık Eğitim Planı" ve "Yıllık Değerlendirme Raporu" — yalnız "Yıllık Çalışma Planı"
-  sekmesi yapıldı.
+  Faaliyet ekle/sil + "Varsayılana Sıfırla".
   `YillikPlanlarTest` (7 test). **219 test toplam.**
+  - **Diğer 2 sekme sonradan eklendi ✅ (isgpratik 88-90.jpg):** "Yıllık Eğitim Planı"
+    (`config isg.yillik_plan.varsayilan_egitimler`, 16 mevzuat eğitimi — Çalışma
+    Mevzuatı, Yasal Hak ve Sorumluluklar, KKD Kullanımı, İlkyardım vb., her biri konu/
+    süre(saat)/eğitici/hedef/hedef kitle + AYNI ay durum matrisi) ve "Yıllık
+    Değerlendirme Raporu" (`config isg.yillik_plan.varsayilan_degerlendirmeler`,
+    11 çalışma — Risk değerlendirmesi, Ortam ölçümleri, İşe giriş/periyodik muayeneler,
+    Radyolojik/Biyolojik/Toksikolojik analizler, Fizyolojik/Psikolojik testler, Eğitim
+    çalışmaları, Diğer — ay matrisi YOK, bunun yerine satır bazlı Tarih/Tekrar Sayısı/
+    Yapan Kişi/Yöntem/Sonuç alanları; ilk 3'ü hariç hepsi mevzuat gereği önerilen
+    varsayılan değerle gelir, kullanıcı üzerine yazar). `YillikPlan` modeline `egitimler`
+    + `degerlendirmeler` JSON kolonları eklendi; sayfa artık 3 sekmeli
+    (`$sekme` — 'calisma'/'egitim'/'degerlendirme'), `ayDurumDegistir()` hem faaliyetler
+    hem eğitimler için `$alan` parametresiyle ortak kullanılıyor. Değerlendirme
+    satırlarının serbest metin alanları `x-on:change="$wire.degerlendirmeGuncelle(...)"`
+    ile güncelleniyor (Livewire nested-array `wire:model` sınırlaması nedeniyle —
+    `KurulToplantisi.kararDurumGuncelle` ile aynı çözüm). PDF çıktısı artık 3 ayrı sayfa.
+    5 yeni test. **228 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
   Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı,
   Sertifika Oluştur, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene

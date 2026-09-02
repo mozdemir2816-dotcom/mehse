@@ -5,7 +5,7 @@
 <style>
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 10px; }
-    .sayfa { padding: 20px 26px; }
+    .sayfa { padding: 20px 26px; page-break-after: always; }
     .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 8px; margin-bottom: 12px; }
     .baslik h1 { font-size: 15px; margin: 0 0 4px; }
     table.plan { width: 100%; border-collapse: collapse; font-size: 8px; }
@@ -15,11 +15,14 @@
     table.plan td.sorumlu { text-align: left; width: 8%; }
     table.plan td.aciklama { text-align: left; width: 20%; font-size: 7.5px; }
     .durum { width: 16px; height: 16px; display: inline-block; border-radius: 2px; }
+    table.rapor { width: 100%; border-collapse: collapse; font-size: 9px; }
+    table.rapor th, table.rapor td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
+    table.rapor th { background: #f0f0f0; }
 </style>
 </head>
 <body>
-<div class="sayfa">
 
+<div class="sayfa">
     <div class="baslik">
         <h1>YILLIK ÇALIŞMA PLANI — {{ $plan->yil }}</h1>
         <div style="font-size:11px">{{ $firma?->unvan }}</div>
@@ -38,9 +41,7 @@
                 <td class="sorumlu">{{ $f['sorumlu'] ?? '—' }}</td>
                 <td class="aciklama">{{ $f['aciklama'] ?? '' }}</td>
                 @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $durum)
-                    @php
-                        $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' };
-                    @endphp
+                    @php $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' }; @endphp
                     <td><span class="durum" style="background:{{ $renk }}"></span></td>
                 @endforeach
             </tr>
@@ -54,7 +55,64 @@
         <span class="durum" style="background:#f59e0b"></span> Planlandı &nbsp;
         <span class="durum" style="background:#10b981"></span> Tamamlandı
     </p>
-
 </div>
+
+<div class="sayfa">
+    <div class="baslik">
+        <h1>YILLIK EĞİTİM PLANI — {{ $plan->yil }}</h1>
+        <div style="font-size:11px">{{ $firma?->unvan }}</div>
+    </div>
+
+    <table class="plan">
+        <tr>
+            <th>Eğitim Konusu</th><th>Süre</th><th>Eğitici</th><th>Hedef Kitle</th>
+            @foreach ($aylar as $ay)
+                <th>{{ $ay }}</th>
+            @endforeach
+        </tr>
+        @forelse (($plan->egitimler ?? []) as $e)
+            <tr>
+                <td class="faaliyet">{{ $e['konu'] }}</td>
+                <td class="sorumlu">{{ $e['sure_saat'] ?? '—' }} saat</td>
+                <td class="sorumlu">{{ $e['egitici'] ?? '—' }}</td>
+                <td class="sorumlu">{{ $e['hedef_kitle'] ?? '—' }}</td>
+                @foreach (($e['aylar'] ?? array_fill(0, 12, 'bos')) as $durum)
+                    @php $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' }; @endphp
+                    <td><span class="durum" style="background:{{ $renk }}"></span></td>
+                @endforeach
+            </tr>
+        @empty
+            <tr><td colspan="16" style="color:#888">Eğitim eklenmedi.</td></tr>
+        @endforelse
+    </table>
+</div>
+
+<div class="sayfa" style="page-break-after:auto">
+    <div class="baslik">
+        <h1>YILLIK DEĞERLENDİRME RAPORU — {{ $plan->yil }}</h1>
+        <div style="font-size:11px">{{ $firma?->unvan }}</div>
+    </div>
+
+    <table class="rapor">
+        <tr>
+            <th style="width:4%">No</th><th>Yapılan Çalışmalar</th><th style="width:9%">Tarih</th>
+            <th>Yapan Kişi ve Unvanı</th><th style="width:8%">Tekrar Sayısı</th><th>Kullanılan Yöntem</th><th>Sonuç ve Yorum</th>
+        </tr>
+        @forelse (($plan->degerlendirmeler ?? []) as $i => $d)
+            <tr>
+                <td>{{ $i + 1 }}</td>
+                <td>{{ $d['calisma'] }}</td>
+                <td>{{ $d['tarih'] ?? '—' }}</td>
+                <td>{{ $d['yapan_kisi'] ?? '—' }}</td>
+                <td>{{ $d['tekrar_sayisi'] ?? '—' }}</td>
+                <td>{{ $d['yontem'] ?? '—' }}</td>
+                <td>{{ $d['sonuc'] ?? '—' }}</td>
+            </tr>
+        @empty
+            <tr><td colspan="7" style="color:#888">Çalışma eklenmedi.</td></tr>
+        @endforelse
+    </table>
+</div>
+
 </body>
 </html>

@@ -1500,5 +1500,43 @@ return [
             ['faaliyet' => 'İSG Kurul Toplantısı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => '6331 sayılı kanun gereği İSG kurulunun 2 ayda bir toplanarak kararlar alması'],
             ['faaliyet' => 'Periyodik Sağlık Muayenesi', 'sorumlu' => 'İşyeri Hekimi', 'aciklama' => 'Çalışanların periyodik sağlık muayenelerinin işyeri hekimi tarafından yapılması'],
         ],
+
+        // "Yıllık Eğitim Planı" sekmesi — isgpratik 88-89.jpg. Aynı ay durum
+        // matrisini kullanır; süre saat cinsinden, eğitici İSG Uzmanı/İşyeri Hekimi.
+        'varsayilan_egitimler' => [
+            ['konu' => 'Çalışma Mevzuatı ile İlgili Bilgiler', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar 4857 ve 5510 sayılı kanunlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Çalışanların Yasal Hak ve Sorumlulukları', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, 4857, 6331 sayılı kanunlarda belirtilen çalışan hak ve sorumlulukları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Kimyasal, Fiziksel ve Ergonomik Risk Etmenleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan riskler ve çalışma ortamında uyulması gereken davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Elle Kaldırma ve Taşıma', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan elle kaldırma ve taşıma konularında bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları'],
+            ['konu' => 'Parlama, Patlama, Yangın ve Yangından Korunma', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, parlama, patlama, yangın ve yangından korunma yöntemlerini bilir. Acil durumda uyulması gerekli davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'İş Ekipmanlarının Güvenli Kullanımı', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, işyerinde mevcut olan iş ekipmanları riskleri ve güvenli kullanımı konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Operatörler'],
+            ['konu' => 'Ekranlı Araçlarla Çalışma', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, ekranlı araçlarla çalışma ve dikkat edilmesi gereken davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Ofis Çalışanları'],
+            ['konu' => 'Elektrik Tehlikeleri, Riskleri ve Önlemleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar elektrik tehlike, risk ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'İş Kazalarının Sebepleri ve Korunma Prensipleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'İşyerinde olabilecek iş kazaları sebepleri ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Güvenlik ve Sağlık İşaretleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, güvenlik ve sağlık işaretleri yönetmeliğinde mevcut olan işaret ve renkleri hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Kişisel Koruyucu Donanım Kullanımı', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar kişisel koruyucu donanımlar hakkında ve hangi alanda kullanılacakları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları'],
+            ['konu' => 'İş Sağlığı ve Güvenliği Genel Kuralları ve Güvenlik Kültürü', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar İSG Genel Kuralları ve Güvenlik Kültürü hakkında bilgi sahibi olurlar, güvenlik kültürünün işyerinde geliştirilmesi için örneklemelerde bulunurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Tahliye ve Kurtarma', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar Acil durumlarda yapılması gerekli davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Meslek Hastalıklarının Sebepleri', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı maruz oldukları mesleki riskleri ve sebepleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'Biyolojik ve Psikososyal Risk Etmenleri', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı oluşan biyolojik ve psikososyal riskler konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
+            ['konu' => 'İlkyardım', 'sure_saat' => 4, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, Acil durum halinde uygulanması gerekli temel ilkyardım konuları hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'İlkyardımcılar'],
+        ],
+
+        // "Yıllık Değerlendirme Raporu" sekmesi — isgpratik 90.jpg. Ay matrisi
+        // yok; satır bazlı serbest metin (tarih/tekrar sayısı kullanıcı girer,
+        // yapan kişi/yöntem/sonuç önerilen varsayılan değerle gelir).
+        'varsayilan_degerlendirmeler' => [
+            ['calisma' => 'Risk değerlendirmesi', 'yapan_kisi' => 'Risk Değerlendirme Ekibi', 'yontem' => 'Fine Kinney', 'sonuc' => 'Riskler belirlendi, önlemler alındı'],
+            ['calisma' => 'Ortam ölçümleri', 'yapan_kisi' => 'İSG Laboratuvarı', 'yontem' => 'Ölçüm Cihazları', 'sonuc' => 'Ölçüm sonuçları uygun'],
+            ['calisma' => 'İşe giriş muayeneleri', 'yapan_kisi' => 'İşyeri Hekimi', 'yontem' => 'Tıbbi Muayene', 'sonuc' => 'Çalışanlar işe uygun bulundu'],
+            ['calisma' => 'Periyodik muayeneler', 'yapan_kisi' => 'İşyeri Hekimi', 'yontem' => 'Tıbbi Muayene', 'sonuc' => 'Çalışanlar çalışmaya uygun bulundu'],
+            ['calisma' => 'Radyolojik analizler', 'yapan_kisi' => 'İşyeri Hekimi', 'yontem' => 'Röntgen/Akciğer Grafisi', 'sonuc' => 'Bulgular normal sınırlarda'],
+            ['calisma' => 'Biyolojik analizler', 'yapan_kisi' => 'İşyeri Hekimi', 'yontem' => 'Kan/İdrar Tahlili', 'sonuc' => 'Sonuçlar normal sınırlarda'],
+            ['calisma' => 'Toksikolojik analizler', 'yapan_kisi' => 'İşyeri Hekimi', 'yontem' => 'Laboratuvar Analizi', 'sonuc' => 'Maruziyet sınırları içinde'],
+            ['calisma' => 'Fizyolojik testler', 'yapan_kisi' => 'İşyeri Hekimi', 'yontem' => 'Fonksiyon Testleri', 'sonuc' => 'Test sonuçları normal'],
+            ['calisma' => 'Psikolojik testler', 'yapan_kisi' => 'Psikolog', 'yontem' => 'Psikolojik Değerlendirme', 'sonuc' => 'Değerlendirme sonuçları olumlu'],
+            ['calisma' => 'Eğitim çalışmaları', 'yapan_kisi' => 'İSG Uzmanı', 'yontem' => 'Sunum/Uygulama', 'sonuc' => 'Eğitimler tamamlandı'],
+            ['calisma' => 'Diğer çalışmalar', 'yapan_kisi' => 'İsim ve Unvan', 'yontem' => 'Yöntem', 'sonuc' => 'Sonuç ve yorum'],
+        ],
     ],
 ];

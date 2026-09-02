@@ -44,14 +44,14 @@ class YillikPlanlarTest extends TestCase
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('ayDurumDegistir', 0, 0);
+            ->call('ayDurumDegistir', 'faaliyetler', 0, 0);
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
         $this->assertSame('planlandi', $plan->faaliyetler[0]['aylar'][0]);
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('ayDurumDegistir', 0, 0);
+            ->call('ayDurumDegistir', 'faaliyetler', 0, 0);
 
         $this->assertSame('tamamlandi', $plan->fresh()->faaliyetler[0]['aylar'][0]);
     }
@@ -93,7 +93,7 @@ class YillikPlanlarTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create();
 
         $component = Livewire::test(PlanSayfasi::class)->set('firmaId', $firma->id);
-        $component->call('ayDurumDegistir', 0, 0)->call('varsayilanaSifirla');
+        $component->call('ayDurumDegistir', 'faaliyetler', 0, 0)->call('varsayilanaSifirla');
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
         $this->assertSame('bos', $plan->faaliyetler[0]['aylar'][0]);
@@ -121,5 +121,87 @@ class YillikPlanlarTest extends TestCase
         $firmalar = Livewire::test(PlanSayfasi::class)->instance()->firmalar();
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    public function test_firma_secilince_varsayilan_egitimler_ve_degerlendirmeler_yuklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(PlanSayfasi::class)->set('firmaId', $firma->id);
+
+        $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertCount(count(config('isg.yillik_plan.varsayilan_egitimler')), $plan->egitimler);
+        $this->assertSame(array_fill(0, 12, 'bos'), $plan->egitimler[0]['aylar']);
+        $this->assertCount(count(config('isg.yillik_plan.varsayilan_degerlendirmeler')), $plan->degerlendirmeler);
+        $this->assertNull($plan->degerlendirmeler[0]['tarih']);
+    }
+
+    public function test_egitim_ay_durumu_degisir_ve_egitim_eklenip_silinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ayDurumDegistir', 'egitimler', 0, 0);
+
+        $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('planlandi', $plan->egitimler[0]['aylar'][0]);
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniEgitimKonu', 'Forklift Operatörlüğü')
+            ->set('yeniEgitimEgitici', 'İSG Uzmanı')
+            ->call('egitimEkle');
+
+        $varsayilanSayisi = count(config('isg.yillik_plan.varsayilan_egitimler'));
+        $this->assertCount($varsayilanSayisi + 1, $plan->fresh()->egitimler);
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('egitimSil', $varsayilanSayisi);
+
+        $this->assertCount($varsayilanSayisi, $plan->fresh()->egitimler);
+    }
+
+    public function test_degerlendirme_satiri_guncellenir_eklenir_ve_silinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('degerlendirmeGuncelle', 0, 'tarih', '2026-03-05')
+            ->call('degerlendirmeGuncelle', 0, 'tekrar_sayisi', '2');
+
+        $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('2026-03-05', $plan->degerlendirmeler[0]['tarih']);
+        $this->assertSame('2', $plan->degerlendirmeler[0]['tekrar_sayisi']);
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniDegerlendirmeCalisma', 'Gürültü haritası güncellemesi')
+            ->call('degerlendirmeEkle');
+
+        $varsayilanSayisi = count(config('isg.yillik_plan.varsayilan_degerlendirmeler'));
+        $this->assertCount($varsayilanSayisi + 1, $plan->fresh()->degerlendirmeler);
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('degerlendirmeSil', $varsayilanSayisi);
+
+        $this->assertCount($varsayilanSayisi, $plan->fresh()->degerlendirmeler);
+    }
+
+    public function test_egitim_sekmesi_varsayilana_sifirlanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('sekme', 'egitim')
+            ->call('ayDurumDegistir', 'egitimler', 0, 0)
+            ->call('varsayilanaSifirla');
+
+        $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('bos', $plan->egitimler[0]['aylar'][0]);
     }
 }
