@@ -47,4 +47,33 @@ class RiskSkorlama
 
         return config("isg.$anahtar.$eksen", []);
     }
+
+    /**
+     * Maddelerin O/Ş(/F) değerleri 5x5 Matris ölçeğine (tam sayı 1-5) uymuyorsa
+     * veya Frekans doluysa (yalnız Fine-Kinney'de var) Fine-Kinney önerilir.
+     * Excel'den gelen puanların, seçili yönteme uymadığı için ekranda "kayıp"
+     * gibi görünmesini önlemek amacıyla kullanılır.
+     *
+     * @param  array<int, array<string, mixed>>  $maddeler
+     */
+    public static function fineKinneyeUyuyorMu(array $maddeler): bool
+    {
+        $matris5x5Puanlari = [1.0, 2.0, 3.0, 4.0, 5.0];
+
+        foreach ($maddeler as $m) {
+            if (filled($m['frekans'] ?? null)) {
+                return true;
+            }
+
+            foreach (['olasilik', 'siddet'] as $alan) {
+                $deger = $m[$alan] ?? null;
+
+                if ($deger !== null && ! in_array((float) $deger, $matris5x5Puanlari, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }

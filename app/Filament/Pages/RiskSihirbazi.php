@@ -663,7 +663,7 @@ class RiskSihirbazi extends Page
         // görünür. Kullanıcının dosyası Fine-Kinney ölçeğinde (0.2/0.5/…/40 gibi
         // veya Frekans sütunu dolu) geldiyse yöntemi otomatik ona çevirmezsek
         // puanlar "kayboldu" gibi görünür — kullanıcı elle girmek zorunda kalır.
-        if ($eklenenler && $this->yontem !== 'fine_kinney' && static::fineKinneyOlcegineUyuyor($eklenenler)) {
+        if ($eklenenler && $this->yontem !== 'fine_kinney' && RiskSkorlama::fineKinneyeUyuyorMu($eklenenler)) {
             $this->yontem = 'fine_kinney';
             Notification::make()
                 ->title('Puanlama yöntemi Fine-Kinney\'e çevrildi')
@@ -676,28 +676,6 @@ class RiskSihirbazi extends Page
         if (count($this->secilenler) > 0) {
             $this->adim = 4;
         }
-    }
-
-    /** @param  array<int, array<string, mixed>>  $maddeler */
-    private static function fineKinneyOlcegineUyuyor(array $maddeler): bool
-    {
-        $matris5x5Puanlari = [1.0, 2.0, 3.0, 4.0, 5.0];
-
-        foreach ($maddeler as $m) {
-            if (filled($m['frekans'] ?? null)) {
-                return true; // Frekans yalnız Fine-Kinney'de var
-            }
-
-            foreach (['olasilik', 'siddet'] as $alan) {
-                $deger = $m[$alan] ?? null;
-
-                if ($deger !== null && ! in_array((float) $deger, $matris5x5Puanlari, true)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /** AI akışında "bu sektörün şablonunu direkt kullan". */

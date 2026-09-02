@@ -378,6 +378,40 @@ class RiskSihirbaziTest extends TestCase
         $this->assertCount(1, $component->get('secilenler'));
     }
 
+    public function test_excelden_dogrudan_sektorel_sablon_olusturulur(): void
+    {
+        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Frekans', 'Şiddet'],
+            ['Şantiye', 'İksasız derin kazı', 'Göçük', 6, 10, 15],
+            ['Şantiye', 'Kalıp montaj kontrolsüzlüğü', 'Kalıp çökmesi', 3, 6, 7],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+
+        Livewire::test(\App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus::class)
+            ->callAction('excelSektorSablonu', data: [
+                'ad' => 'İnşaat Kazı-Kalıp',
+                'sektor' => 'insaat',
+                'sektor_adi' => null,
+                'dosya' => \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)),
+            ]);
+
+        $sablon = RiskSablonu::where('ad', 'İnşaat Kazı-Kalıp')->firstOrFail();
+        $this->assertSame('insaat', $sablon->sektor);
+        $this->assertSame('fine_kinney', $sablon->yontem); // 6/10/15 5x5 olceginde yok
+        $this->assertCount(2, $sablon->maddeler);
+        $this->assertEqualsCanonicalizing(
+            ['İksasız derin kazı', 'Kalıp montaj kontrolsüzlüğü'],
+            collect($sablon->maddeler)->pluck('tehlike')->all(),
+        );
+        // hicbir madde elenmedi / secilmedi -- dosyadaki her satir aynen geldi
+        $this->assertEquals(6, $sablon->maddeler[0]['olasilik']);
+        $this->assertEquals(15, $sablon->maddeler[0]['siddet']);
+
+        unlink($yol);
+    }
+
     public function test_sablon_resource_sayfalari_acilir(): void
     {
         $sablon = RiskSablonu::olustur($this->uzman, 'Test', 'ofis', null, 'matris_5x5', [['anahtar' => 'a', 'tehlike' => 'x']]);
