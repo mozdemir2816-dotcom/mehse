@@ -1622,6 +1622,44 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | İş Kazası Raporu — isgpratik'te ilgili ekran görüntüsü yok (planNotu'ndaki
+    | 16.jpg mevcut değil); 6331 s.K. ve standart kaza inceleme raporu formatına
+    | (5N1K + kök neden analizi) göre kuruldu.
+    |--------------------------------------------------------------------------
+    */
+    'is_kazasi' => [
+        'kaza_turleri' => [
+            'dusme' => 'Düşme (aynı seviye / yükseklikten)',
+            'carpma' => 'Çarpma / Bir Cisme Çarpma',
+            'sikisma' => 'Sıkışma / Ezilme',
+            'kesilme' => 'Kesilme / Delinme',
+            'yanik' => 'Yanık (termal/kimyasal)',
+            'elektrik' => 'Elektrik Çarpması',
+            'kimyasal' => 'Kimyasal Maruziyet',
+            'trafik' => 'İş Trafiği Kazası',
+            'diger' => 'Diğer',
+        ],
+        'agirlik_dereceleri' => [
+            'hafif' => 'Hafif (ilkyardım, işe devam)',
+            'yarali' => 'Yaralanmalı (iş göremezlik / kayıp gün var)',
+            'agir' => 'Ağır Yaralanma / Uzuv Kaybı',
+            'olumlu' => 'Ölümlü',
+        ],
+        // Kök neden analizi — birden çok seçilebilir (balık kılçığı/5N1K yöntemine göre).
+        'kok_neden_kategorileri' => [
+            'insan_faktoru' => 'İnsan Faktörü (dikkatsizlik, tedbirsizlik)',
+            'ekipman_arizasi' => 'Ekipman / Makine Arızası',
+            'kkd_kullanilmamasi' => 'KKD Kullanılmaması / Uygunsuzluğu',
+            'egitim_eksikligi' => 'Eğitim Eksikliği',
+            'talimat_eksikligi' => 'Prosedür / Talimat Eksikliği',
+            'calisma_ortami' => 'Çalışma Ortamı Koşulları',
+            'yonetim_sistemi' => 'Yönetim Sistemi / Denetim Eksikliği',
+            'diger' => 'Diğer',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sertifika Oluştur — isgpratik 66-68.jpg
     |--------------------------------------------------------------------------
     | 4 sertifika tipi. İSG Sertifikası çoklu eğitici (İGU + İşyeri Hekimi,

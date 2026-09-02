@@ -61,7 +61,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | KKD Formu | `kkd-formu` | **hazır** (6 kategori TS EN katalog, çoklu çalışan × çoklu KKD → PDF) |
 | Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | **hazır** (4 izin türü, dinamik güvenlik önlemleri → PDF) |
 | Formlar & Belgeler | Ceza ve Tebliğ Tutanağı | `ceza-teblig` | **hazır** (ihlal kataloğu + serbest madde + yaptırım → PDF) |
-| Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | planlandı |
+| Formlar & Belgeler | İş Kazası Raporu | `is-kazasi-raporu` | **hazır** (5N1K + kök neden analizi, SGK bildirim takibi → PDF) |
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + kendi arşiv Excel yüklemesi + Gemini ile madde üretimi → PDF) |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | planlandı |
@@ -786,10 +786,26 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   metninin GEÇMEDİĞİ doğrulandı — dompdf binary'sinde metin arama yapmak
   yerine bilerek ham Blade view'ı render edip assertStringNotContainsString
   kullanıldı). **302 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (İş Kazası
-  Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene formu), Ücretsiz
-  E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve
-  Tebliğ'in ikinci sekmesi) tek tek kurulacak. isgpratik kök klasöründe
+- **Faz 3aa — İş Kazası Raporu ✅ (isgpratik'te ekran görüntüsü yok —
+  planNotu'ndaki 16.jpg mevcut değil; standart kaza inceleme raporu
+  formatına göre kuruldu):** `App\Filament\Pages\IsKazasiRaporu` (stub
+  yerine geçti) + `App\Models\IsKazasiRaporu` + `App\Support\
+  IsKazasiRaporuUretici` (dompdf) + `config isg.is_kazasi` (9 kaza türü,
+  4 ağırlık derecesi, 8 kök neden kategorisi — 6331 s.K. ve genel kabul
+  görmüş 5N1K/kök neden analizi yöntemine göre). Kazazede firma
+  çalışanından hızlı seçilebilir veya manuel girilir; kaza tanımı + "nasıl
+  oldu" + kök neden kategorileri (çoklu seçim) + serbest kök neden açıklaması
+  + alınan/alınacak önlemler + tanıklar (CezaTebliğ ile aynı ekle/sil deseni)
+  + SGK bildirim takibi (6331 m.14 — 3 iş günü uyarı metni sayfa üstünde
+  sabit). Rapor hazırlayan (İSG Uzmanı) ve kaşesi firmaya atanmış İGU'dan
+  otomatik gelir. **Kapsam dışı bırakıldı:** AI Saha Analizi→DÖF benzeri bir
+  "önlemleri DÖF'e aktar" entegrasyonu (istenirse ayrı iş — bu modülün
+  kendi içinde zaten alınacak önlemler alanı var). `IsKazasiRaporuTest`
+  (8 test). **310 test toplam.**
+- **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (Muayene
+  Formu (EK-2 — çok büyük, tıbbi muayene formu), Ücretsiz E-Reçetem,
+  Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve Tebliğ'in
+  ikinci sekmesi) tek tek kurulacak. isgpratik kök klasöründe
   24-101(+133-135,158) + AI SAHA ANALİZİ + SAHA DENETİMİ alt klasörleri
   artık tam incelendi; 88-101 aralığı kapsam dışı isgpratik özellikleri
   (İSG Arşiv 2860 dosya, İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası
