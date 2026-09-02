@@ -325,8 +325,9 @@ class AtamaYazilari extends Page
     {
         return [
             Action::make('pdf')
-                ->label('PDF (Kaydet ve İndir)')
+                ->label('PDF İndir (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
+                ->color('danger')
                 ->visible(fn () => $this->firma !== null)
                 ->action(function () {
                     $kayit = $this->kaydet();

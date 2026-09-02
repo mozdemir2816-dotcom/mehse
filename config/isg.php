@@ -1113,58 +1113,58 @@ return [
     'atama' => [
         'roller' => [
             'calisan_temsilcisi' => [
-                'ad' => 'Çalışan Temsilcisi', 'tip' => 'tekli',
+                'ad' => 'Çalışan Temsilcisi', 'tip' => 'tekli', 'ikon' => 'heroicon-o-user',
                 'aciklama' => '6331 Sayılı İSG Kanunu md.20 uyarınca görevlendirilir.',
             ],
             'isveren_vekili' => [
-                'ad' => 'İşveren Vekili', 'tip' => 'tekli',
+                'ad' => 'İşveren Vekili', 'tip' => 'tekli', 'ikon' => 'heroicon-o-briefcase',
                 'aciklama' => '6331 Sayılı İSG Kanunu md.3 (1/e ve 2. fıkra) ve 4857 Sayılı İş Kanunu md.2 uyarınca, '.
                     'işveren adına hareket eden ve iş/işyerinin yönetiminde görev alan kişi olarak görevlendirilir. '.
                     'Kanunda işveren için öngörülen sorumluluk ve zorunluluklar, devredilen yetki alanı ile sınırlı '.
                     'olarak işveren vekili hakkında da uygulanır.',
             ],
             'risk_degerlendirme_ekibi' => [
-                'ad' => 'Risk Değerlendirme Ekibi', 'tip' => 'tekli',
+                'ad' => 'Risk Değerlendirme Ekibi', 'tip' => 'tekli', 'ikon' => 'heroicon-o-shield-exclamation',
                 'aciklama' => 'İSG Risk Değerlendirmesi Yönetmeliği uyarınca oluşturulur.',
             ],
             'bilgi_sahibi' => [
-                'ad' => 'Bilgi Sahibi Çalışan', 'tip' => 'tekli',
+                'ad' => 'Bilgi Sahibi Çalışan', 'tip' => 'tekli', 'ikon' => 'heroicon-o-information-circle',
                 'aciklama' => 'İSG Risk Değerlendirmesi Yönetmeliği md.6/1-d uyarınca, işyerindeki bütün birimleri '.
                     'temsil edecek şekilde belirlenen ve iş/tehlike/riskler hakkında bilgi sahibi çalışan, risk '.
                     'değerlendirme ekibine görevlendirilir.',
             ],
             'sondurme_ekibi' => [
-                'ad' => 'Söndürme Ekibi', 'tip' => 'ekip',
+                'ad' => 'Söndürme Ekibi', 'tip' => 'ekip', 'ikon' => 'heroicon-o-fire',
                 'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 (2021 değişikliği) uyarınca ayrı '.
                     'ayrı görevlendirilir. Tehlike sınıfına göre her 30 / 40 / 50 çalışan için en az 1 destek '.
                     'elemanı, 10\'dan az çalışanı olan işyerlerinde tek özel eğitimli çalışan yeterlidir.',
             ],
             'kurtarma_ekibi' => [
-                'ad' => 'Kurtarma Ekibi', 'tip' => 'ekip',
+                'ad' => 'Kurtarma Ekibi', 'tip' => 'ekip', 'ikon' => 'heroicon-o-hand-raised',
                 'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 (2021 değişikliği) uyarınca ayrı '.
                     'ayrı görevlendirilir. Tehlike sınıfına göre her 30 / 40 / 50 çalışan için en az 1 destek '.
                     'elemanı, 10\'dan az çalışanı olan işyerlerinde tek özel eğitimli çalışan yeterlidir.',
             ],
             'koruma_ekibi' => [
-                'ad' => 'Koruma Ekibi', 'tip' => 'ekip',
+                'ad' => 'Koruma Ekibi', 'tip' => 'ekip', 'ikon' => 'heroicon-o-shield-check',
                 'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 (2021 değişikliği) uyarınca ayrı '.
                     'ayrı görevlendirilir. Tehlike sınıfına göre her 30 / 40 / 50 çalışan için en az 1 destek '.
                     'elemanı, 10\'dan az çalışanı olan işyerlerinde tek özel eğitimli çalışan yeterlidir.',
             ],
             'ilkyardim_ekibi' => [
-                'ad' => 'İlk Yardım Ekibi', 'tip' => 'ekip',
+                'ad' => 'İlk Yardım Ekibi', 'tip' => 'ekip', 'ikon' => 'heroicon-o-heart',
                 'aciklama' => 'İlkyardım Yönetmeliği md.19 uyarınca tehlike sınıfına göre 10 / 15 / 20 çalışan için '.
                     'en az 1 Sağlık Bakanlığı sertifikalı ilkyardımcı bulundurulur.',
             ],
             'isg_kurulu' => [
-                'ad' => 'İSG Kurulu', 'tip' => 'ekip',
+                'ad' => 'İSG Kurulu', 'tip' => 'ekip', 'ikon' => 'heroicon-o-user-group',
                 'aciklama' => '6331 sayılı Kanun ve İSG Kurulları Hakkında Yönetmelik kapsamında, sanayiden sayılan '.
                     've 50 ve üzeri çalışanı olan, 6 aydan fazla sürecek işyerleri için zorunludur. Üyeler: Başkan '.
                     '(işveren/vekili), İGU, İşyeri Hekimi, İnsan Kaynakları Sorumlusu, Sivil Savunma Uzmanı (varsa), '.
                     'Usta/Formen (varsa), Çalışan Temsilcisi.',
             ],
             'acil_durum_koordinatoru' => [
-                'ad' => 'Acil Durum Koordinatörü', 'tip' => 'tekli',
+                'ad' => 'Acil Durum Koordinatörü', 'tip' => 'tekli', 'ikon' => 'heroicon-o-exclamation-triangle',
                 'aciklama' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 kapsamında, söndürme/kurtarma/'.
                     'koruma/ilkyardım ekiplerini koordine eden ve dış kurumlarla (itfaiye, 112, AFAD) iletişimi '.
                     'sağlayan tek kişi olarak işveren tarafından görevlendirilir.',

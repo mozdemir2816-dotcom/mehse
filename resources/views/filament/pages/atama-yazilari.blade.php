@@ -2,17 +2,40 @@
     $mor = 'rgb(139 92 246)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $rol = $this->rol;
+    $grad = 'linear-gradient(135deg, rgb(139 92 246), rgb(99 102 241))';
 @endphp
 
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
-        Firma ve görev tipini seçin, üye bilgilerini girin; "PDF" ile 6331 sayılı Kanun ve
+        Firma ve görev tipini seçin, üye bilgilerini girin; "PDF İndir" ile 6331 sayılı Kanun ve
         ilgili yönetmelikler kapsamındaki görevlendirme yazısını oluşturun.
     </p>
 
-    {{-- 1. FİRMA & GÖREV TİPİ --}}
-    <x-filament::section icon="heroicon-o-document-text" icon-color="primary">
-        <x-slot name="heading">1. Firma & Görev Tipi</x-slot>
+    {{-- SEKME PİLLERİ --}}
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(107 114 128 / .06);padding:.5rem;border-radius:9999px">
+        @foreach ($this->roller as $anahtar => $r)
+            @php $secili = $rolAnahtari === $anahtar; @endphp
+            <button type="button" wire:click="$set('rolAnahtari','{{ $anahtar }}')"
+                style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .9rem;border-radius:9999px;cursor:pointer;font-size:.78rem;font-weight:600;border:none;white-space:nowrap;
+                    color:{{ $secili ? '#fff' : 'inherit' }};
+                    background:{{ $secili ? $grad : 'transparent' }}">
+                @if ($r['ikon'] ?? null)
+                    <x-filament::icon :icon="$r['ikon']" style="width:1rem;height:1rem"/>
+                @endif
+                {{ $r['ad'] }}
+            </button>
+        @endforeach
+    </div>
+
+    {{-- BAŞLIK BANNER --}}
+    <div style="{{ $kutu }};background:{{ $grad }};color:#fff;border:none;display:flex;align-items:center;gap:.6rem">
+        <x-filament::icon icon="heroicon-o-document-text" style="width:1.4rem;height:1.4rem"/>
+        <span style="font-size:1.05rem;font-weight:800">{{ $rol['ad'] ?? '' }} Atama Yazısı</span>
+    </div>
+
+    {{-- 1. FİRMA BİLGİLERİ --}}
+    <x-filament::section icon="heroicon-o-building-office" icon-color="primary">
+        <x-slot name="heading">1. Firma Bilgileri</x-slot>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
@@ -35,18 +58,6 @@
                 <input type="text" wire:model="isverenVekiliAdi" placeholder="İşveren / vekili adı"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             </div>
-        </div>
-
-        <div style="margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap">
-            @foreach ($this->roller as $anahtar => $r)
-                @php $secili = $rolAnahtari === $anahtar; @endphp
-                <button type="button" wire:click="$set('rolAnahtari','{{ $anahtar }}')"
-                    style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
-                        border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
-                        background:{{ $secili ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
-                    {{ $r['ad'] }}
-                </button>
-            @endforeach
         </div>
     </x-filament::section>
 
@@ -197,4 +208,17 @@
     @else
         <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
     @endif
+
+    {{-- BİLGİ: tüm görev tiplerinin yasal dayanağı --}}
+    <div style="{{ $kutu }};background:rgb(59 130 246 / .06);border-color:rgb(59 130 246 / .25)">
+        <div style="display:flex;align-items:center;gap:.5rem;font-weight:700;color:rgb(37 99 235);margin-bottom:.5rem">
+            <x-filament::icon icon="heroicon-o-information-circle" style="width:1.15rem;height:1.15rem"/>
+            Bilgi
+        </div>
+        <ul style="margin:0;padding-left:1.1rem;font-size:.78rem;color:rgb(75 85 99);display:flex;flex-direction:column;gap:.4rem">
+            @foreach ($this->roller as $r)
+                <li><strong>{{ $r['ad'] }}:</strong> {{ $r['aciklama'] }}</li>
+            @endforeach
+        </ul>
+    </div>
 </x-filament-panels::page>
