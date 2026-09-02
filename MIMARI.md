@@ -66,7 +66,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | **hazır** (meslek öyküsü/özgeçmiş + sistemik muayene + tetkikler + sonuç/kanaat → PDF) |
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | **hazır** (bilgi sayfası — e-Reçete süreci, uygunluk, SSS) |
 | **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (3 sekme: Çalışma Planı + Eğitim Planı + Değerlendirme Raporu → PDF) |
-| Planlama & Arşiv | Ziyaret Programı `[AI]` | `ziyaret-programi` | planlandı |
+| Planlama & Arşiv | Ziyaret Programı | `ziyaret-programi` | **hazır** (basitleştirilmiş: firma+yıl → 12 aylık satır, AI amaç önerisi → PDF) |
 | Planlama & Arşiv | Araçlar | `araclar` | **hazır** (Kaza Sıklık/Ağırlık Hızı + Gürültü Lex,8h hesaplayıcıları) |
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
 | Yönetim | Firmalar | `firmalar` | **hazır** (Çalışanlar RelationManager dâhil) |
@@ -847,16 +847,34 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   firmaya atanmış İşyeri Hekimi'nden otomatik, kaşesi PDF'e basılır
   (sekizinci kaşe-basma kullanımı). `MuayeneFormuTest` (10 test).
   **340 test toplam.**
-- **Faz 3+:** Kullanıcı ekran görüntüsü paylaşırsa Ziyaret Programı da
-  (aylık/haftalık takvim, sürükle-bırak, çoklu firma atama — isgsuite/OSGB
-  tarzı karmaşık bir modül) ele alınabilir; şimdilik ertelendi. isgpratik
-  kök klasöründe
+- **Faz 3ae — Ziyaret Programı ✅ (isgpratik'te ekran görüntüsü yok; daha
+  önce "aylık/haftalık takvim, sürükle-bırak, çoklu firma/OSGB atama —
+  isgsuite/OSGB tarzı karmaşık" gerekçesiyle ertelenmişti; kullanıcı
+  onayıyla BASİTLEŞTİRİLMİŞ liste olarak kuruldu):** `App\Filament\Pages\
+  ZiyaretProgrami` (stub yerine geçti) + `App\Models\ZiyaretProgrami`
+  (firma+yıl başına TEK kayıt, AcilDurumPlani/YillikPlan ile aynı
+  `firmaYilIcin()` deseni) + `App\Support\ZiyaretProgramiUretici` (dompdf)
+  + `config isg.ziyaret_programi.amac_kategorileri` (datalist için 8 hazır
+  kategori). 12 aylık satır (Tarih/Amaç-Kapsam/Süre/Durum/Notlar); durum
+  hücresi YillikPlanlar'daki Boş→Planlandı→Tamamlandı tıklama döngüsüyle
+  birebir aynı (`ZiyaretProgrami::DURUM_SIRASI`). Gerçek takvim/sürükle-
+  bırak arayüzü KAPSAM DIŞI bırakıldı — isgpratik'in görsel takvimi yerine
+  düz liste. **Yeni Gemini entegrasyonu:** `GeminiZiyaretDanismani` —
+  GeminiKararDanismani ile birebir aynı desen (API anahtarı yoksa/istek
+  başarısızsa sessizce null); firma sektörü+tehlike sınıfı+ay adından o ay
+  için kısa bir ziyaret amacı/kapsamı önerir, "✨" ikonlu buton ile ilgili
+  ay satırının Amaç hücresine yazılır — bu, planNotu'ndaki "AI önerili"
+  ifadesini gerçek (ama küçük kapsamlı) bir AI özelliğiyle karşılıyor.
+  `ZiyaretProgramiTest` (8 test). **348 test toplam.**
+- **Tüm sol menü modülleri tamamlandı.** `HazirlanryorPage` stub temel
+  sınıfı ve `hazirlaniyor.blade.php` görünümü artık hiçbir sayfa tarafından
+  kullanılmadığından SİLİNDİ (ölü kod). isgpratik kök klasöründe
   24-101(+133-135,158) + AI SAHA ANALİZİ + SAHA DENETİMİ alt klasörleri
   artık tam incelendi; 88-101 aralığı kapsam dışı isgpratik özellikleri
   (İSG Arşiv 2860 dosya, İSG Deneme Sınavı 3499 soru, genel Mevzuat sayfası
-  — sol menümüzde yok). Her yeni modül Eğitim Katılım/Atama Yazıları/Kurul
-  Toplantısı ile aynı desende (config-driven içerik + Filament Page +
-  dompdf + test) kurulacak.
+  — sol menümüzde yok). Yeni bir modül gerekirse Eğitim Katılım/Atama
+  Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik +
+  Filament Page + dompdf + test) kurulacak.
 
 ## Notlar
 

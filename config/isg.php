@@ -2004,4 +2004,24 @@ return [
             'cok_tehlikeli' => 1,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------
+    | Ziyaret Programı — isgpratik'te ekran görüntüsü yok; kullanıcı
+    | onayıyla BASİTLEŞTİRİLMİŞ liste (12 aylık satır) olarak kuruldu,
+    | tam takvim/sürükle-bırak arayüzü kapsam dışı bırakıldı.
+    |--------------------------------------------------------------------
+    */
+    'ziyaret_programi' => [
+        'amac_kategorileri' => [
+            'Genel Saha Gözetimi',
+            'Risk Değerlendirmesi Güncelleme',
+            'Eğitim',
+            'Tetkik / Ölçüm Takibi',
+            'DÖF Takibi',
+            'Kaza / Olay İncelemesi',
+            'Kurul Toplantısı',
+            'Diğer',
+        ],
+    ],
 ];
