@@ -52,7 +52,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | planlandı |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | planlandı |
 | Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | planlandı |
-| Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | planlandı |
+| Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
 | Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | planlandı |
 | Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | planlandı |
 | Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | planlandı |
@@ -435,8 +435,37 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     kendi kategorilerini yükledikçe kurulacak); sektörel "orijinal şablon" Word
     çıktısı (Acil Durum'daki gibi — risk tablosu değişken satır sayılı olduğundan
     daha karmaşık, ayrı ele alınacak).
+- **Faz 3h — Eğitim Katılım Formu ✅ (isgpratik EĞİTİM klasörü, 33 ekran görüntüsü):**
+  `App\Filament\Pages\EgitimKatilim` (stub yerine geçti) + `App\Models\EgitimKatilim`
+  (firma başına çoklu kayıt — her "Form PDF" tıklaması yeni bir belge) +
+  `App\Support\EgitimIcerikOlusturucu` + `App\Support\EgitimKatilimUretici` (dompdf) +
+  `config isg.egitim`.
+  - **"İş Sağlığı ve Güvenliği" (varsayılan) başlığı 4 sabit blok:** Genel Konular (4
+    madde, 80dk), Sağlık Konuları (5 madde, 80dk), Teknik Konular (12 madde, 120dk) —
+    hepsi ekran görüntülerinden birebir; **İşyerine Özgü Riskler** ise seçilen sektöre
+    göre değişir (6 sektör hazır: İnşaat, Maden, Tekstil, Enerji/Elektrik, Çimento/Beton,
+    Nakliye/Taşıma — her biri 5 madde). Tehlike sınıfına göre toplam süre bilgi kutusu
+    (`config isg.egitim.sureler` — az tehlikeli 8 saat ekran görüntüsünden doğrulandı;
+    tehlikeli/çok tehlikeli 12/16 saat mevzuattan, dakika kırılımları saat oranıyla
+    ölçeklendi — ekranla doğrudan doğrulanmadı).
+  - **Diğer 13 başlık tek bloklu "özel" eğitimlerdir** (Fiziksel Risk Etmenleri,
+    Yükseklerde Çalışma, Kapalı Alanlarda Çalışma, İş Kazası Sonrası İşe Dönüş, Çalışan
+    Temsilcisi, Risk Değerlendirme Ekibi, İSG Kurulu, Acil Durum Koordinatörü, Söndürme/
+    Kurtarma/Koruma/İlk Yardım Ekibi, Destek Elemanları) — her biri kendi sabit numaralı
+    konu listesiyle gelir, dakika/kişi kontrolü yok.
+  - **Katılımcı listesi:** firma çalışanları otomatik listelenir (varsayılan hepsi
+    seçili, toggle edilebilir) + manuel Ad Soyad/T.C./Görev ekleme + Excel toplu
+    yükleme (`App\Support\KatilimciExcelOkuyucu` — `CalisanExcelIceAktarici` deseniyle
+    aynı esnek sütun eşleştirme, ama veritabanına yazmaz, yalnız listeye ekler)."Elle
+    eklenenleri firmaya da kaydet" işaretlenirse kayıt anında `Calisan` oluşturulur.
+  - Konu içeriği kayıt anında `konu_secimleri` JSON'una **anlık görüntü** olarak
+    yazılır (config sonradan değişse de geçmiş belgeler değişmez). Sayfa altında
+    firmanın geçmiş eğitim kayıtları listelenir (PDF yeniden indir / sil).
+  - PDF logo için ayrı yükleme eklenmedi — `Firma.logo` (zaten firma kaydında var)
+    kullanılıyor.
+  `EgitimKatilimTest` (11 test). **141 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, Saha Denetimi,
-  Eğitim Katılım, Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
+  Atama Yazıları, Tatbikat, KKD, İş İzni, İş Kazası, Talimat, Yıllık Plan,
   Ziyaret Programı, Kontrol Merkezi, Profilim …).
 
 ## Notlar

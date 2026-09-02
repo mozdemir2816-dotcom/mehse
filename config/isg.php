@@ -840,4 +840,249 @@ return [
             ],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Eğitim Katılım Formu — isgpratik 45-59, 116-132.jpg
+    |--------------------------------------------------------------------------
+    | "İş Sağlığı ve Güvenliği" (varsayılan) 4 sabit blok gösterir: Genel +
+    | Sağlık + Teknik konular (hepsi sabit) + İşyerine Özgü Riskler (sektöre
+    | göre). Diğer tüm başlıklar (ekip eğitimleri vb.) TEK bloklu, kendi sabit
+    | konu listesini gösteren "özel" eğitimlerdir.
+    */
+    'egitim' => [
+        // Tehlike sınıfına göre yıllık periyodik eğitim süresi (Çalışanların İSG
+        // Eğitimlerinin Usul ve Esasları Hak. Yön. Ek-1: 8/12/16 saat). İşe özgü
+        // risk ve dinlenme dakikaları yalnızca az tehlikeli için ekran görüntüsünde
+        // doğrulandı (90/120dk); diğerleri saat artışıyla orantılı tahmindir.
+        'sureler' => [
+            'az_tehlikeli' => ['saat' => 8, 'ise_ozgu_dk' => 90, 'dinlenme_dk' => 120],
+            'tehlikeli' => ['saat' => 12, 'ise_ozgu_dk' => 135, 'dinlenme_dk' => 180],
+            'cok_tehlikeli' => ['saat' => 16, 'ise_ozgu_dk' => 180, 'dinlenme_dk' => 240],
+        ],
+
+        // "İş Sağlığı ve Güvenliği" başlığının sabit 3 bloğu (dakikalar toplamı
+        // genel=80, sağlık=80, teknik=120 — isgpratik ekranlarıyla birebir).
+        'genel_konular' => [
+            ['madde' => 'Çalışma mevzuatı ile ilgili bilgiler', 'dakika' => 20],
+            ['madde' => 'Çalışanların yasal hak ve sorumlulukları', 'dakika' => 20],
+            ['madde' => 'İşyeri temizliği ve düzeni', 'dakika' => 20],
+            ['madde' => 'İş kazası ve meslek hastalığından doğan hukuki sonuçlar', 'dakika' => 20],
+        ],
+        'saglik_konulari' => [
+            ['madde' => 'Meslek hastalıklarının sebepleri', 'dakika' => 20],
+            ['madde' => 'Hastalıktan korunma prensipleri ve korunma teknikleri', 'dakika' => 20],
+            ['madde' => 'Biyolojik ve psikososyal risk etmenleri', 'dakika' => 20],
+            ['madde' => 'İlkyardım', 'dakika' => 10],
+            ['madde' => 'Bağımlılık yapıcı maddelerin zararları ve teknoloji bağımlılığı', 'dakika' => 10],
+        ],
+        'teknik_konular' => [
+            ['madde' => 'Kimyasal, fiziksel ve ergonomik risk etmenleri', 'dakika' => 10],
+            ['madde' => 'Elle kaldırma ve taşıma', 'dakika' => 10],
+            ['madde' => 'Parlama, patlama', 'dakika' => 10],
+            ['madde' => 'Yangın ve yangından korunma', 'dakika' => 10],
+            ['madde' => 'İş ekipmanlarının güvenli kullanımı', 'dakika' => 10],
+            ['madde' => 'Ekranlı araçlarla çalışma', 'dakika' => 10],
+            ['madde' => 'Elektrik, tehlikeleri, riskleri ve önlemleri', 'dakika' => 10],
+            ['madde' => 'İş kazalarının sebepleri ve korunma prensipleri ile teknikleri', 'dakika' => 10],
+            ['madde' => 'Sağlık ve güvenlik işaretleri', 'dakika' => 10],
+            ['madde' => 'Kişisel koruyucu donanım kullanımı', 'dakika' => 10],
+            ['madde' => 'İş sağlığı ve güvenliği genel kuralları ve güvenlik kültürü', 'dakika' => 10],
+            ['madde' => 'Acil durumlar, tahliye ve kurtarma', 'dakika' => 10],
+        ],
+
+        // "İşyerine Özgü Riskler" bloğu — sektör seçilince 5 madde otomatik gelir;
+        // ekran görüntüsünde doğrulanan sektörler bunlar. Listede olmayan bir
+        // sektör için kullanıcı elle madde ekler (arayüz bunu zaten destekliyor).
+        'isyerine_ozgu_sektorler' => [
+            'insaat' => ['ad' => 'İnşaat', 'maddeler' => [
+                'İskele ve kalıp güvenliği', 'Yüksekte çalışma önlemleri', 'Kazı işlerinde güvenlik',
+                'Ağır iş makinesi kullanımı', 'Düşen nesne tehlikesi',
+            ]],
+            'maden' => ['ad' => 'Maden', 'maddeler' => [
+                'Yeraltı madenciliği güvenliği', 'Gaz ve toz patlaması önlemleri', 'Göçük riski ve destek sistemleri',
+                'Havalandırma sistemleri', 'Kurtarma odası kullanımı',
+            ]],
+            'tekstil' => ['ad' => 'Tekstil', 'maddeler' => [
+                'İplik ve dokuma makine güvenliği', 'Toz ve lif maruziyeti', 'Boya ve kimyasal madde güvenliği',
+                'Gürültüden korunma', 'Ergonomik riskler ve tekrarlayıcı hareketler',
+            ]],
+            'enerji_elektrik' => ['ad' => 'Enerji / Elektrik', 'maddeler' => [
+                'Elektrik çarpması önlemleri', 'Enerji nakil hattı güvenliği', 'LOTO (kilitle-etiketle) sistemi',
+                'Ark flash tehlikeleri', 'Trafo ve pano güvenliği',
+            ]],
+            'cimento_beton' => ['ad' => 'Çimento / Beton', 'maddeler' => [
+                'Çimento tozu maruziyeti', 'Döner fırın güvenliği', 'Bant konveyörlerinde güvenlik',
+                'Kapalı alan çalışma', 'Patlama ve parlama riskleri',
+            ]],
+            'nakliye_tasima' => ['ad' => 'Nakliye / Taşıma', 'maddeler' => [
+                'Ticari araç sürüş güvenliği', 'Yük sabitleme ve bağlama', 'Tehlikeli madde taşımacılığı (ADR)',
+                'Uzun sürüş ve yorgunluk yönetimi', 'Yük indirme-bindirme güvenliği',
+            ]],
+        ],
+
+        // "Özel" (tek bloklu) eğitim başlıkları — her biri kendi sabit konu
+        // listesiyle gelir; genel/sağlık/teknik/işyerine özgü ayrımı yoktur.
+        'ozel_basliklar' => [
+            'fiziksel_risk' => ['ad' => 'Fiziksel Risk Etmenleri', 'maddeler' => [
+                'Tozlu ortamlarda çalışmalarda iş güvenliği',
+                'Gürültülü ortamlarda çalışmalarda iş güvenliği',
+                'Titreşimli ortamlarda çalışmalarda iş güvenliği',
+                'Termal konfor',
+                'Ergonomi',
+                'Toz, gürültü, titreşim risk etmenleri ve maruziyet sınırları',
+            ]],
+            'yuksekte_calisma' => ['ad' => 'Yükseklerde Çalışma', 'maddeler' => [
+                'Yüksekliğin tanımı & yüksekte çalışma ortamları',
+                'Kaza istatistikleri ve yüksekten düşme şeklindeki kazaların oranı',
+                'Yüksekte çalışırken dikkat edilecek hususlar',
+                'Temel güvenlik kuralları',
+                'İşe uygun merdiven iskele seçimi — merdiven ve iskelelerin kurulması ve sabitlenmesi',
+                'Toplu koruma yöntemleri ve önemi (korkuluk, platform, güvenlik ağı, barikatlama, işaretleme vs.)',
+                'Kişisel koruyucu donanımlar (standart personel koruyucu ekipmanlar)',
+                'Temel emniyet ipi ile enerji tutucu sistemlerin kullanımı ve özellikleri',
+                'Yüksekte çalışma sırasında olabilecek kazaların önlenmesi ve iş güvenliği performansının iyileştirilmesi',
+                'Çatılarda çalışma alınacak önlemler',
+                'Yüksek iş makinelerinde alınacak önlemler',
+                'Yükseklikte yapılacak çalışmalarda tehlike ve risklerin önceden belirlenmesi ve önlenmesi',
+                'Düşme faktörü kavramı ve önlemler',
+                'Düşmeden korunmanın teorisi ve uygulaması',
+                'İş planı ve alanın organizasyonu',
+            ]],
+            'kapali_alan' => ['ad' => 'Kapalı Alanlarda Çalışma Eğitimi', 'maddeler' => [
+                'Kapalı/sınırlı alan tanımı, türleri ve sınıflandırması (I, II, III sınıf)',
+                'Yasal çerçeve: 6331 sayılı İSG kanunu, ilgili yönetmelikler ve uluslararası standartlar (OSHA 1910.146)',
+                'Kapalı alan kaza istatistikleri, önemi ve risk değerlendirmesi',
+                'Atmosferik tehlikeler: oksijen yetersizliği, parlayıcı/patlayıcı ortam ve zehirli ortam',
+                'Oksijen dengesi: güvenli aralık, yetersizlik nedenleri ve oksijence zengin ortamda artan yanma riski',
+                'Boğucu ve zehirli gazlar: H2S, karbon monoksit, CO2 ve tehlikenin duyularla algılanamaması',
+                'Parlayıcı/patlayıcı atmosfer: alt ve üst patlama sınırları (LEL/UEL) ve ATEX önlemleri',
+                'Fiziksel ve diğer tehlikeler: gömülme/boğulma, sıkışma, termal stres, gürültü ve biyolojik etkenler',
+                'Atmosfer ölçümü ve gaz dedektörü kullanımı: ölçüm sırası, katmanlı ölçüm ve sürekli izleme',
+                'Gaz ölçüm cihazlarının kalibrasyonu, bump test ve alarm seviyeleri',
+                'Kapalı alana güvenli giriş izni sistemi (permit-to-work), izin formu ve girişin sonlandırılması',
+                'Enerji izolasyonu, kilitleme-etiketleme (LOTO), körleme, purge ve inertleme',
+                'Zorlamalı (cebri) mekanik havalandırma ve ex-proof ekipman kullanımı',
+                'Görev ve sorumluluklar: giren personel, bekçi/gözetmen, giriş sorumlusu ve gaz ölçüm yetkilisi',
+                'İletişim ve haberleşme sistemleri: sesli, telsiz, halat işareti ve sürekli haberleşme kuralı',
+                'Kişisel koruyucu donanım seçimi ve kullanımı: SCBA, hava hattı/kaçış cihazı, tam vücut kemeri ve halat',
+                'Acil durum, kurtarma ve tahliye planı: kurtarma hiyerarşisi, ekipmanlar (tripod/vinç/halat) ve tatbikat',
+                'Yanlış kurtarmanın ölümcül tehlikesi (çok kurbanlı ikinci ölüm), ilk yardım ve temel yaşam desteği',
+            ]],
+            'is_kazasi_sonrasi' => ['ad' => 'İş Kazası Sonrası İşe Dönüş Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: 6331 sayılı İSG kanunu md.17/3 (ilave eğitim) ve çalışanların iş eğitimlerinin usul ve esasları hakkında yönetmelik md.8 (RG 15.05.2013/28648)',
+                'Yaşanan iş kazasının değerlendirilmesi: kazanın oluş şekli, sebepleri ve katkıda bulunan faktörler',
+                'Kaza kök neden analizi: tehlikeli durum ve tehlikeli hareket (davranış) ayrımı',
+                'Benzer kazaların önlenmesi: alınan düzeltici faaliyetler (DÖF) ve kazadan çıkarılan dersler',
+                'Koruma yolları: toplu koruma önlemleri, mühendislik kontrolleri ve kişisel koruyucu donanım kullanımı',
+                'Güvenli çalışma yöntemleri: işe özgü güvenli çalışma talimatları ve prosedürleri',
+                'Risk değerlendirmesi: kaza sonrası güncellenen riskler ve yeni kontrol tedbirleri',
+                'Makine ve iş ekipmanı güvenliği: koruyucular, acil durdurma ve güvenlik tertibatlarının kontrolü',
+                'Ramak kala ve tehlikeli durum bildirimi: raporlama kültürü ve kazalardan öğrenme',
+                'İşe dönüş sağlık gözetimi: işe dönüş muayenesi ve işyeri hekimi uygunluk değerlendirmesi',
+                'Kaza sonrası psikososyal destek: travma sonrası iş uyum ve kaygı yönetimi',
+                'Çalışanın hak ve yükümlülükleri: 6331 md.19 (çalışanların yükümlülükleri) ve md.13 (çalışmaktan kaçınma hakkı)',
+                'Güvenlik kültürü: örnek olay paylaşımı, davranış odaklı güvenlik ve sürekli iyileştirme',
+            ]],
+            'calisan_temsilcisi' => ['ad' => 'Çalışan Temsilcisi Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: 6331 sayılı İSG kanunu ve çalışan temsilcisi yönetmeliği',
+                'Görev ve sorumluluklar: temsilcinin yetkileri ve yükümlülükleri',
+                'İletişim teknikleri: çalışanların görüşlerini alma ve işverene raporlama yöntemleri',
+                'İSG kuruluna katılım: kurul toplantılarında temsil ve oy hakkı',
+                'Tehlike kaynaklarını izleme: işyerindeki riskli durumları gözlemleme ve durdurma yetkisi (ciddi ve yakın tehlike)',
+            ]],
+            'risk_degerlendirme_ekibi' => ['ad' => 'Risk Değerlendirme Ekibi Eğitimi', 'maddeler' => [
+                'Tehlike ve risk kavramları: arasındaki farklar ve tanımlama yöntemleri',
+                'Risk değerlendirmesi metodolojisi: kullanılan yöntem (matris, Fine-Kinney, L-tipi vb.) hakkında teknik bilgi',
+                'Adım adım risk analizi: tehlikelerin belirlenmesi, risklerin puanlanması ve kontrol tedbirlerinin kararlaştırılması',
+                'Kontrol hiyerarşisi: riskle mücadelede öncelik sıralaması (eliminasyon, ikame, mühendislik önlemleri, KKD)',
+                'Dokümantasyon ve takip: risk analizinin güncellenme süreleri ve aksiyon takibi',
+            ]],
+            'isg_kurulu' => ['ad' => 'İSG Kurulu Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: 6331 sayılı İSG kanunu ve İş Sağlığı ve Güvenliği Kurulları Hakkında Yönetmelik',
+                'Kurulun oluşumu: üyeler, roller ve görev tanımları (başkan, İGU, hekim, İK, sivil savunma, usta, çalışan temsilcisi)',
+                'Kurul kurma zorunluluğu: 50+ çalışan, sanayiden sayılan ve 6 aydan fazla süreklilik kriterleri',
+                'Toplantı periyodu: tehlike sınıfına göre ayda 1 / 2 ayda 1 / 3 ayda 1 toplantı zorunluluğu',
+                'Görevleri: iç yönerge hazırlama, risk değerlendirme sonuçlarını değerlendirme, iş kazası inceleme',
+                'Yıllık plan hazırlama: yıllık çalışma planı, eğitim planı ve değerlendirme raporu',
+                'Acil durum planlarının gözden geçirilmesi ve tatbikat değerlendirmesi',
+                'Karar alma ve oy çokluğu: kurul kararlarının kayıt altına alınması ve işveren onayı',
+                'Tutanak ve dokümantasyon: toplantı tutanakları, karar defteri ve denetim hazırlık',
+                'Koordinasyon: alt işveren ilişkisi ve ortak çalışma alanlarında kurul iş birliği',
+            ]],
+            'acil_durum_koordinatoru' => ['ad' => 'Acil Durum Koordinatörü Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: 6331 sayılı İSG kanunu ve İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11',
+                'Acil durum planı: hazırlama, güncelleme ve yasal zorunluluklar',
+                'Ekip yönetimi: söndürme, kurtarma, koruma, ilkyardım ekiplerinin koordinasyonu',
+                'Tatbikat planlaması: yıllık tatbikat zorunluluğu, senaryo hazırlama ve değerlendirme',
+                'Tahliye planı: toplanma yerleri, kaçış yolları, kat planları ve işaretleme',
+                'Kriz iletişimi: dış kurumlarla (112, itfaiye, AFAD, kolluk) koordinasyon',
+                'Yangın güvenliği: yangın söndürme ekipmanları, dedektörler ve periyodik kontrol',
+                'Risk değerlendirme entegrasyonu: sonuçların acil durum planına yansıtılması',
+                'Kriz yönetimi ve liderlik: panik kontrolü, karar alma ve ekip yönetimi',
+                'Olay sonrası: inceleme, raporlama ve düzeltici faaliyet takibi',
+                'Bilgilendirme: çalışan eğitimi, ilan panosu ve tahliye krokisi güncelleme',
+            ]],
+            'sondurme_ekibi' => ['ad' => 'Söndürme Ekibi Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 — söndürme ekibi tanımı ve tehlike sınıfına göre sayısal zorunluluk (1/30, 1/40, 1/50)',
+                'Yangının kimyası: yanma üçgeni, yanma türleri ve yayılma yolları',
+                'Yangın sınıfları ve özellikleri: A (katı), B (sıvı), C (gaz), D (metal), F (bitkisel/hayvansal yağ)',
+                'Yangın söndürücü tipleri: kuru kimyevi toz (ABC), köpük, CO2, hangi sınıfta hangi söndürücü kullanılacağı',
+                'Taşınabilir söndürücü kullanım tekniği (PASS): pimi çek, nozzle\'ı yangına yönelt, sık, süpürür gibi hareket et',
+                'Yangın hortumu ve dolaplı sistemler (fire hose cabinet): kurulum, bağlantı ve basınçlı kullanım',
+                'Yangın algılama ve uyarı sistemleri: duman/ısı dedektörleri, butonlar ve siren',
+                'Güvenli müdahale prensipleri: sırt dönük müdahale etmeme, kaçış yolu bırakma, ekip halinde hareket',
+                'Kişisel koruyucu donanım: yangıncı başlığı, eldiven, bot, nefes koruyucu',
+                'Tatbikat ve periyodik kontrol yükümlülükleri',
+            ]],
+            'kurtarma_ekibi' => ['ad' => 'Kurtarma Ekibi Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 — kurtarma ekibi tanımı ve tehlike sınıfına göre sayısal zorunluluk',
+                'Kurtarma ekibinin görevleri ve ekip organizasyonu (ekip başı, görev dağılımı)',
+                'Bina içi kat planları ve güvenli rota seçimi',
+                'Mahsur kalan personele ulaşma yöntemleri: sistematik arama, oda işaretleme, kat tarama',
+                'Personel sayımı ve toplanma alanı kontrolü',
+                'Kurtarma ekipmanları: halat, sedye, taşıma battaniyesi, kesici aletler',
+                'Riskli alana güvenli giriş prosedürleri: hava kontrolü, ışık, geri çekilme planı',
+                'Yaralı taşıma teknikleri: sırtta taşıma, koltuk taşıma, sürüklemeyle tahliye',
+                'Kapalı alan (confined space) giriş kuralları ve gözetim',
+                'Koordinasyon: söndürme ve koruma ekipleriyle iş birliği, 112 ile iletişim',
+            ]],
+            'koruma_ekibi' => ['ad' => 'Koruma Ekibi Eğitimi', 'maddeler' => [
+                'Yasal mevzuat: İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 — koruma ekibi tanımı (2021 değişikliğiyle eklenen ayrı ekip)',
+                'Koruma ekibinin görevleri ve söndürme/kurtarma ekibinden ayrımı',
+                'Kaçış yollarının açık tutulması ve periyodik denetimi',
+                'Tahliye edilen bina/alanın güvenliğinin sağlanması: yetkisiz girişlerin engellenmesi',
+                'Çalışanların güvenli alana sevki ve toplanma alanı disiplini',
+                'Mülkiyet koruması: değerli evrak, bilgisayar, makine ve cihaz emniyeti',
+                'Trafik ve araç yönetimi: itfaiye/ambulans araçları için yol açma',
+                'Bilgilendirme ve panik kontrolü: çalışan ve ziyaretçileri yönlendirme',
+                'Dış kurumlarla koordinasyon: polis, itfaiye, sağlık ekipleriyle iletişim',
+                'Olay sonrası bölge güvenliğinin korunması ve olay yeri delil muhafazası',
+            ]],
+            'ilkyardim_ekibi' => ['ad' => 'İlk Yardım Ekibi Eğitimi (İlkyardım Yön. md.19)', 'maddeler' => [
+                'Yasal mevzuat: İlkyardım Yönetmeliği md.19 — tehlike sınıfına göre sayısal zorunluluk (1/10, 1/15, 1/20) ve Sağlık Bakanlığı sertifikası şartı',
+                'İlkyardımın temel ilkeleri ve ilkyardımcının sorumluluğu',
+                'Olay yerinin değerlendirilmesi ve güvenlik önceliği',
+                'Temel yaşam desteği (TYD): yetişkin, çocuk ve bebeklerde CPR uygulaması',
+                'Otomatik eksternal defibrilatör (OED/AED) kullanımı',
+                'Bilinç değerlendirme ve hava yolu açıklığı (head-tilt-chin-lift, Heimlich manevrası)',
+                'Kanama kontrolü ve şok yönetimi',
+                'Yara çeşitleri, yanıklar ve elektrik çarpması müdahale',
+                'Kırık, çıkık, burkulma ve stabilizasyon teknikleri',
+                'Zehirlenmeler, boğulma, ısı çarpması ve hipotermi müdahale',
+                'Hasta taşıma teknikleri ve sedye kullanımı',
+                'İlkyardım çantası içeriği, sertifika güncelleme ve yıllık tatbikat',
+            ]],
+            'destek_elemanlari' => ['ad' => 'Destek Elemanları (Toplu Eğitim)', 'maddeler' => [
+                'Yasal mevzuat: 6331 sayılı İSG kanunu md.11/c (2021 değişikliği — söndürme, kurtarma, koruma ayrımı)',
+                'Acil durum planı: işyerindeki tahliye planı, toplanma yerleri ve kaçış yolları',
+                'Söndürme ekibi görevleri: yangın sınıfları, söndürücü tipleri ve müdahale teknikleri',
+                'Kurtarma ekibi görevleri: bina içi kat planları, personel sayımı ve mahsur kalanlara güvenli ulaşım',
+                'Koruma ekibi görevleri: kaçış yollarının açık tutulması, tahliye edilen alanın güvenliği ve mülkiyet korunması',
+                'İlkyardım (Sağlık Bakanlığı sertifikalı personel için): temel yaşam desteği, kanama, yaralanmaya acil müdahale',
+                'Haberleşme ve koordinasyon: acil durumlarda ekipler arası iletişim ve dış kurumlarla irtibat',
+                'Tatbikat ve değerlendirme: yıllık tatbikat zorunluluğu, kayıtlar ve eksikliklerin giderilmesi',
+            ]],
+        ],
+    ],
 ];
