@@ -1473,4 +1473,32 @@ return [
             ['baslik' => 'El Aletleri (Çekiç, Tornavida, Pense) Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Genel el aletlerinin güvenli kullanımı ve bakımı.', 'kkdler' => ['Mekanik dirençli eldiven', 'Koruyucu gözlük', 'Çelik burunlu iş ayakkabısı']],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Yıllık Planlar — isgpratik 86-87.jpg
+    |--------------------------------------------------------------------------
+    | Yeni bir yıllık plan başlatılınca bu 14 faaliyet varsayılan olarak
+    | yüklenir (ekran görüntüsündeki liste birebir); kullanıcı ekleyip
+    | çıkarabilir. Her faaliyetin 12 aylık durumu ayrı tutulur.
+    */
+    'yillik_plan' => [
+        'ay_durumlari' => ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'],
+        'varsayilan_faaliyetler' => [
+            ['faaliyet' => 'Risk Değerlendirmesi Revizyonu', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => '6331 sayılı kanun gereği risk değerlendirmesinin gözden geçirilmesi ve güncellenmesi'],
+            ['faaliyet' => 'Tehlike Kaynak Analizi', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => 'İşyerindeki tehlike kaynaklarının tespit edilerek analiz edilmesi'],
+            ['faaliyet' => 'Asansör Periyodik Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Asansör Bakım ve İşletme Yönetmeliği kapsamında yıllık periyodik kontrol'],
+            ['faaliyet' => 'Basınçlı Kap Periyodik Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Basınçlı ekipmanların yıllık periyodik muayene ve hidrostatik testleri'],
+            ['faaliyet' => 'Elektrik Tesisatı Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Elektrik iç tesisat ve topraklama kontrollerinin periyodik olarak yaptırılması'],
+            ['faaliyet' => 'Topraklama Ölçümü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Elektrik tesisatı topraklama dirençlerinin ölçülmesi ve uygunluğunun kontrolü'],
+            ['faaliyet' => 'Yangın Söndürme Cihazı Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Yangın söndürme tüplerinin dolum, basınç ve genel durumlarının kontrolü'],
+            ['faaliyet' => 'Gürültü Ölçümü', 'sorumlu' => 'İSG Laboratuvarı', 'aciklama' => 'Çalışma ortamındaki gürültü düzeyinin ölçülerek maruziyet sınırlarının değerlendirilmesi'],
+            ['faaliyet' => 'Toz Ölçümü', 'sorumlu' => 'İSG Laboratuvarı', 'aciklama' => 'Çalışma ortamındaki toz konsantrasyonunun ölçülmesi ve sınır değerlerle karşılaştırılması'],
+            ['faaliyet' => 'Aydınlatma Ölçümü', 'sorumlu' => 'İSG Laboratuvarı', 'aciklama' => 'Çalışma alanlarındaki aydınlatma seviyelerinin ölçülerek yeterliliğinin değerlendirilmesi'],
+            ['faaliyet' => 'Yangın Tatbikatı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => 'Acil durum eylem planı kapsamında yılda en az 1 kez yangın tahliye tatbikatı yapılması'],
+            ['faaliyet' => 'Deprem Tatbikatı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => 'Acil durum eylem planı kapsamında deprem tatbikatı ve tahliye uygulaması'],
+            ['faaliyet' => 'İSG Kurul Toplantısı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => '6331 sayılı kanun gereği İSG kurulunun 2 ayda bir toplanarak kararlar alması'],
+            ['faaliyet' => 'Periyodik Sağlık Muayenesi', 'sorumlu' => 'İşyeri Hekimi', 'aciklama' => 'Çalışanların periyodik sağlık muayenelerinin işyeri hekimi tarafından yapılması'],
+        ],
+    ],
 ];

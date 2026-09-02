@@ -65,7 +65,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Talimat Oluştur `[AI]` | `talimat` | **hazır** (30 hazır şablon + Gemini ile madde üretimi → PDF) |
 | Formlar & Belgeler | Muayene Formu (EK-2) | `muayene-formu` | planlandı |
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | planlandı |
-| **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | planlandı |
+| **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (14 varsayılan faaliyet, ay bazlı durum matrisi → PDF) |
 | Planlama & Arşiv | Ziyaret Programı `[AI]` | `ziyaret-programi` | planlandı |
 | Planlama & Arşiv | Araçlar | `araclar` | planlandı |
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
@@ -556,20 +556,32 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
   görünmüyordu (yalnız "İncele" tıklanınca açılan bir modal içinde olmalı) — bu yüzden
   gövde metni sabit kopyalanmadı, bilinçli olarak AI/manuel üretime bırakıldı.
   `TalimatOlusturTest` (10 test, `Http::fake`). **212 test toplam.**
+- **Faz 3q — Yıllık Planlar ✅ (isgpratik 86-87.jpg):** `App\Filament\Pages\YillikPlanlar`
+  (stub yerine geçti) + `App\Models\YillikPlan` (firma + yıl başına TEK kayıt, `AcilDurumPlani`
+  ile aynı `firmaXIcin()` deseni) + `App\Support\YillikPlanUretici` (dompdf, A4 yatay) +
+  `config isg.yillik_plan.varsayilan_faaliyetler` (14 faaliyet, isgpratik ekranından
+  birebir — Risk Değ. Revizyonu, Tehlike Kaynak Analizi, Asansör/Basınçlı Kap/Elektrik
+  periyodik kontrolleri, Topraklama/Gürültü/Toz/Aydınlatma ölçümleri, Yangın/Deprem
+  Tatbikatı, İSG Kurul Toplantısı, Periyodik Sağlık Muayenesi). Firma+yıl seçilince plan
+  otomatik oluşur ve varsayılan faaliyetler yüklenir; her ay hücresi tıklanarak **Boş →
+  Planlandı → Tamamlandı** arasında döner (isgpratik'teki 3 renkli durum sistemi birebir).
+  Faaliyet ekle/sil + "Varsayılana Sıfırla". **Kapsam dışı:** isgpratik'in diğer 2 sekmesi
+  "Yıllık Eğitim Planı" ve "Yıllık Değerlendirme Raporu" — yalnız "Yıllık Çalışma Planı"
+  sekmesi yapıldı.
+  `YillikPlanlarTest` (7 test). **219 test toplam.**
 - **Faz 3+:** Kullanıcı ekran görüntülerini ekledikçe ilgili modül (DÖF, AI Saha Analizi,
   Saha Denetimi, Eğitim Katılım'a bağlı İşbaşı Eğt. Tutanağı, Tatbikat Tutanağı,
   Sertifika Oluştur, İş Kazası Raporu, Muayene Formu (EK-2 — çok büyük, tıbbi muayene
-  formu), Ücretsiz E-Reçetem, Yıllık Planlar, Ziyaret Programı, Araçlar; "İşverene İPC
-  Tebliği" — Ceza ve Tebliğ'in ikinci sekmesi). isgpratik kök klasöründe
-  24-101(+133-135,158) numaralı ekran görüntüleri bu modüllere karşılık geliyor —
-  kısmen incelendi (24-44, 60-87 görüldü: DÖF/AI Saha Analizi/Saha Denetimi/Kurul
-  Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı Eğt./Tatbikat/Tespit Öneri Defteri(✅)/Sertifika
-  Oluştur/Eğitim Soruları(✅)/KKD(✅)/İş İzin(✅)/Ceza Tebliğ(✅)/İş Kazası Raporu/Talimat
-  Oluştur(✅)/Muayene Formu (çok büyük, ertelendi)/Yıllık Planlar — bu sonuncusu için
-  tam faaliyet listesi + ay bazlı durum matrisi görüldü, henüz kurulmadı), 88-101+
-  133-135+158 henüz incelenmedi. Her biri Eğitim Katılım/Atama Yazıları/Kurul Toplantısı
-  ile aynı desende (config-driven içerik + Filament Page + dompdf + test) tek tek
-  kurulacak.
+  formu), Ücretsiz E-Reçetem, Ziyaret Programı, Araçlar; "İşverene İPC Tebliği" — Ceza ve
+  Tebliğ'in ikinci sekmesi; "Yıllık Eğitim Planı"/"Yıllık Değerlendirme Raporu" — Yıllık
+  Planlar'ın diğer 2 sekmesi). isgpratik kök klasöründe 24-101(+133-135,158) numaralı ekran
+  görüntüleri bu modüllere karşılık geliyor — kısmen incelendi (24-44, 60-87 görüldü:
+  DÖF/AI Saha Analizi/Saha Denetimi/Kurul Toplantısı(✅)/Atama Yazıları(✅)/İşbaşı Eğt./
+  Tatbikat/Tespit Öneri Defteri(✅)/Sertifika Oluştur/Eğitim Soruları(✅)/KKD(✅)/İş İzin(✅)/
+  Ceza Tebliğ(✅)/İş Kazası Raporu/Talimat Oluştur(✅)/Muayene Formu (çok büyük, ertelendi)/
+  Yıllık Planlar(✅)), 88-101+133-135+158 henüz incelenmedi. Her biri Eğitim Katılım/Atama
+  Yazıları/Kurul Toplantısı ile aynı desende (config-driven içerik + Filament Page +
+  dompdf + test) tek tek kurulacak.
 
 ## Notlar
 
