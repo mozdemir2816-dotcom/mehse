@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Tehlikes\Pages\ListTehlikes;
 use App\Models\Tehlike;
+use App\Models\TehlikeCakismasi;
 use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\TehlikeExcelIceAktarici;
@@ -118,6 +119,93 @@ class TehlikeExcelIceAktariciTest extends TestCase
         $this->assertNotEmpty($sonuc['hatalar']);
 
         unlink($yol);
+    }
+
+    public function test_farkli_kategoride_cok_benzer_madde_cakisma_olarak_biriktirilir(): void
+    {
+        $kategori = TehlikeKategorisi::create(['ad' => 'İskele İşleri', 'anahtar' => 'iskele_isleri']);
+        $mevcut = Tehlike::create([
+            'tehlike_kategorisi_id' => $kategori->id,
+            'tehlike' => 'Yüksekten düşme riski bulunan iskele platformunda güvenlik önlemi alınmaması',
+            'risk' => 'Yaralanma veya ölüm',
+        ]);
+
+        // Farklı bir kategoriden (Çatı İşleri) neredeyse aynı metinli bir madde geliyor.
+        $yol = $this->xlsxOlustur([
+            ['Kategori', 'Tehlike', 'Risk'],
+            ['Çatı İşleri', 'Yüksekten düşme riski bulunan iskele platformunda güvenlik önlemi alınmaması', 'Ağır yaralanma veya ölüm'],
+        ]);
+
+        $sonuc = TehlikeExcelIceAktarici::iceAktar($yol);
+
+        $this->assertSame(0, $sonuc['basarili']);
+        $this->assertSame(1, $sonuc['cakisma']);
+        $this->assertSame(1, TehlikeCakismasi::count());
+
+        $cakisma = TehlikeCakismasi::first();
+        $this->assertSame($mevcut->id, $cakisma->mevcut_tehlike_id);
+        $this->assertGreaterThanOrEqual(80, $cakisma->benzerlik_yuzdesi);
+        $this->assertSame('Ağır yaralanma veya ölüm', $cakisma->yeni_veri['risk']);
+
+        // Mevcut madde değişmedi, kütüphanede hâlâ tek kayıt var.
+        $this->assertSame(1, Tehlike::count());
+
+        unlink($yol);
+    }
+
+    public function test_cakisma_mevcuduKoru_mevcudu_degistirmeden_siler(): void
+    {
+        $kategori = TehlikeKategorisi::create(['ad' => 'Test', 'anahtar' => 'test']);
+        $mevcut = Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'tehlike' => 'Orijinal metin', 'risk' => 'Orijinal risk']);
+        $cakisma = TehlikeCakismasi::create([
+            'tehlike_kategorisi_id' => $kategori->id,
+            'mevcut_tehlike_id' => $mevcut->id,
+            'benzerlik_yuzdesi' => 85,
+            'yeni_veri' => ['tehlike' => 'Orijinal metin (biraz farklı)', 'risk' => 'Yeni risk'],
+        ]);
+
+        $cakisma->mevcuduKoru();
+
+        $this->assertSame('Orijinal risk', $mevcut->fresh()->risk);
+        $this->assertSame(0, TehlikeCakismasi::count());
+        $this->assertSame(1, Tehlike::count());
+    }
+
+    public function test_cakisma_yenisiniKullan_mevcudu_gunceller(): void
+    {
+        $kategori = TehlikeKategorisi::create(['ad' => 'Test', 'anahtar' => 'test']);
+        $mevcut = Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'tehlike' => 'Orijinal metin', 'risk' => 'Orijinal risk']);
+        $cakisma = TehlikeCakismasi::create([
+            'tehlike_kategorisi_id' => $kategori->id,
+            'mevcut_tehlike_id' => $mevcut->id,
+            'benzerlik_yuzdesi' => 85,
+            'yeni_veri' => ['tehlike' => 'Orijinal metin (güncel)', 'risk' => 'Yeni risk'],
+        ]);
+
+        $cakisma->yenisiniKullan();
+
+        $this->assertSame('Yeni risk', $mevcut->fresh()->risk);
+        $this->assertSame(0, TehlikeCakismasi::count());
+        $this->assertSame(1, Tehlike::count());
+    }
+
+    public function test_cakisma_ikisiniDeTut_ayri_yeni_madde_olusturur(): void
+    {
+        $kategori = TehlikeKategorisi::create(['ad' => 'Test', 'anahtar' => 'test']);
+        $mevcut = Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'tehlike' => 'Orijinal metin', 'risk' => 'Orijinal risk']);
+        $cakisma = TehlikeCakismasi::create([
+            'tehlike_kategorisi_id' => $kategori->id,
+            'mevcut_tehlike_id' => $mevcut->id,
+            'benzerlik_yuzdesi' => 85,
+            'yeni_veri' => ['tehlike' => 'Farklı bir varyant metin', 'risk' => 'Yeni risk'],
+        ]);
+
+        $yeni = $cakisma->ikisiniDeTut();
+
+        $this->assertSame('Orijinal risk', $mevcut->fresh()->risk); // mevcut değişmedi
+        $this->assertSame('Farklı bir varyant metin', $yeni->tehlike);
+        $this->assertSame(0, TehlikeCakismasi::count());
+        $this->assertSame(2, Tehlike::count());
     }
 
     public function test_sablon_indirilebilir(): void

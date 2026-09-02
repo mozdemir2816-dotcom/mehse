@@ -62,6 +62,9 @@ class ListTehlikes extends ListRecords
                     if ($sonuc['yeniKategori'] > 0) {
                         $baslik .= ' ('.$sonuc['yeniKategori'].' yeni kategori oluşturuldu)';
                     }
+                    if ($sonuc['cakisma'] > 0) {
+                        $baslik .= ' — '.$sonuc['cakisma'].' madde mevcuda çok benzediği için "Kütüphane Çakışmaları" sayfasına ayrıldı';
+                    }
 
                     $bildirim = Notification::make()->title($baslik);
 
@@ -69,7 +72,7 @@ class ListTehlikes extends ListRecords
                         $bildirim->body(implode("\n", array_slice($sonuc['hatalar'], 0, 10)));
                     }
 
-                    $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
+                    $sonuc['basarili'] > 0 || $sonuc['cakisma'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
                 }),
 
             CreateAction::make(),

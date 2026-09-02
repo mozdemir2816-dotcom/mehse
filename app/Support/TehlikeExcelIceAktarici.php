@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Tehlike;
+use App\Models\TehlikeCakismasi;
 use App\Models\TehlikeKategorisi;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -16,10 +17,21 @@ use Throwable;
  * yükleme. Kategori sütunundaki değer mevcut değilse otomatik oluşturulur —
  * böylece "Kazı Çalışmaları", "Kalıp İşleri", "Cam Üretimi" gibi yeni sektör/iş
  * kategorileri, yükleme sırasında kendiliğinden kütüphaneye eklenir. Aynı
- * kategoride aynı tehlike metni tekrar yüklenirse güncellenir (mükerrer oluşmaz).
+ * kategoride birebir aynı tehlike metni tekrar yüklenirse doğrudan güncellenir.
+ *
+ * Birden çok sektör/iş dosyası zaman içinde yüklendiğinde aynı tehlikenin
+ * (farklı kategoriden bile olsa) benzer metinle tekrar gelmesi olasıdır —
+ * bu durumda otomatik eklemek yerine `TehlikeCakismasi` olarak biriktirilir;
+ * kullanıcı "Kütüphane Çakışmaları" sayfasında mevcudu koru / yenisini kullan /
+ * ikisini de tut seçer.
  */
 class TehlikeExcelIceAktarici
 {
+    /** Bu yüzdenin üzerindeki benzerlik "muhtemel mükerrer" sayılır (çakışma olarak biriktirilir). */
+    private const CAKISMA_ESIGI = 80.0;
+
+    /** Bu yüzdenin üzerindeki benzerlik (aynı kategoride) "zaten bu" sayılır, doğrudan günceller. */
+    private const AYNI_MADDE_ESIGI = 97.0;
     private const ALAN_ESLESME = [
         'kategori' => 'kategori',
         'kod' => 'kod',
@@ -37,7 +49,7 @@ class TehlikeExcelIceAktarici
     ];
 
     /**
-     * @return array{basarili: int, yeniKategori: int, hatalar: array<int, string>}
+     * @return array{basarili: int, yeniKategori: int, cakisma: int, hatalar: array<int, string>}
      */
     public static function iceAktar(string $dosyaYolu): array
     {
@@ -51,16 +63,21 @@ class TehlikeExcelIceAktarici
             ->toArray(null, true, false, false);
 
         if (count($satirlar) < 2) {
-            return ['basarili' => 0, 'yeniKategori' => 0, 'hatalar' => ['Dosyada veri satırı bulunamadı.']];
+            return ['basarili' => 0, 'yeniKategori' => 0, 'cakisma' => 0, 'hatalar' => ['Dosyada veri satırı bulunamadı.']];
         }
 
         $sutunlar = static::sutunEslestir(array_shift($satirlar));
 
         if (! in_array('kategori', $sutunlar, true) || ! in_array('tehlike', $sutunlar, true)) {
-            return ['basarili' => 0, 'yeniKategori' => 0, 'hatalar' => ['"Kategori" ve "Tehlike" sütunları zorunlu. Şablonu indirip kontrol edin.']];
+            return ['basarili' => 0, 'yeniKategori' => 0, 'cakisma' => 0, 'hatalar' => ['"Kategori" ve "Tehlike" sütunları zorunlu. Şablonu indirip kontrol edin.']];
         }
 
+        // Kütüphanenin tamamıyla (kategori sınırı olmadan) karşılaştırılır --
+        // aynı tehlike farklı bir sektör dosyasında farklı kategoriyle de gelmiş olabilir.
+        $mevcutTehlikeler = Tehlike::query()->get(['id', 'tehlike_kategorisi_id', 'tehlike']);
+
         $basarili = 0;
+        $cakisma = 0;
         $hatalar = [];
         $yeniKategoriAnahtarlari = [];
 
@@ -86,24 +103,83 @@ class TehlikeExcelIceAktarici
                     $yeniKategoriAnahtarlari[$kategori->anahtar] = true;
                 }
 
-                Tehlike::updateOrCreate(
-                    ['tehlike_kategorisi_id' => $kategori->id, 'tehlike' => $veri['tehlike']],
-                    [
-                        'kod' => $veri['kod'] ?? null,
-                        'bolum' => $veri['bolum'] ?? null,
-                        'faaliyet' => $veri['faaliyet'] ?? null,
-                        'risk' => $veri['risk'] ?? null,
-                        'mevcut_onlem' => $veri['mevcut_onlem'] ?? null,
-                        'mevzuat' => $veri['mevzuat'] ?? null,
-                    ],
-                );
+                $alanlar = [
+                    'kod' => $veri['kod'] ?? null,
+                    'bolum' => $veri['bolum'] ?? null,
+                    'faaliyet' => $veri['faaliyet'] ?? null,
+                    'tehlike' => $veri['tehlike'],
+                    'risk' => $veri['risk'] ?? null,
+                    'mevcut_onlem' => $veri['mevcut_onlem'] ?? null,
+                    'mevzuat' => $veri['mevzuat'] ?? null,
+                ];
+
+                $aynisi = null;
+                $enBenzer = null;
+                $enBenzerYuzde = 0.0;
+
+                foreach ($mevcutTehlikeler as $mevcut) {
+                    $yuzde = static::benzerlikYuzdesi($mevcut->tehlike, $veri['tehlike']);
+
+                    if ($mevcut->tehlike_kategorisi_id === $kategori->id && $yuzde >= self::AYNI_MADDE_ESIGI) {
+                        $aynisi = $mevcut;
+                        break;
+                    }
+
+                    if ($yuzde > $enBenzerYuzde) {
+                        $enBenzerYuzde = $yuzde;
+                        $enBenzer = $mevcut;
+                    }
+                }
+
+                if ($aynisi) {
+                    Tehlike::whereKey($aynisi->id)->update($alanlar);
+                    $basarili++;
+
+                    continue;
+                }
+
+                if ($enBenzer && $enBenzerYuzde >= self::CAKISMA_ESIGI) {
+                    TehlikeCakismasi::create([
+                        'tehlike_kategorisi_id' => $kategori->id,
+                        'mevcut_tehlike_id' => $enBenzer->id,
+                        'benzerlik_yuzdesi' => (int) round($enBenzerYuzde),
+                        'yeni_veri' => $alanlar,
+                    ]);
+                    $cakisma++;
+
+                    continue;
+                }
+
+                $yeniTehlike = Tehlike::create(array_merge(['tehlike_kategorisi_id' => $kategori->id], $alanlar));
+                $mevcutTehlikeler->push((object) [
+                    'id' => $yeniTehlike->id,
+                    'tehlike_kategorisi_id' => $kategori->id,
+                    'tehlike' => $veri['tehlike'],
+                ]);
                 $basarili++;
             } catch (Throwable $e) {
                 $hatalar[] = "Satır {$satirNo}: {$e->getMessage()}";
             }
         }
 
-        return ['basarili' => $basarili, 'yeniKategori' => count($yeniKategoriAnahtarlari), 'hatalar' => $hatalar];
+        return ['basarili' => $basarili, 'yeniKategori' => count($yeniKategoriAnahtarlari), 'cakisma' => $cakisma, 'hatalar' => $hatalar];
+    }
+
+    private static function benzerlikYuzdesi(string $a, string $b): float
+    {
+        similar_text(static::benzerlikMetni($a), static::benzerlikMetni($b), $yuzde);
+
+        return $yuzde;
+    }
+
+    private static function benzerlikMetni(string $metin): string
+    {
+        $metin = strtr($metin, [
+            'Ç' => 'c', 'ç' => 'c', 'Ğ' => 'g', 'ğ' => 'g', 'İ' => 'i', 'I' => 'i', 'ı' => 'i',
+            'Ö' => 'o', 'ö' => 'o', 'Ş' => 's', 'ş' => 's', 'Ü' => 'u', 'ü' => 'u',
+        ]);
+
+        return trim(preg_replace('/\s+/', ' ', mb_strtolower($metin)));
     }
 
     public static function sablonIndir(): StreamedResponse
