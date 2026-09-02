@@ -420,7 +420,15 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     değer `secilenler`de duruyor ama listede seçili görünmüyordu. `excelSecilenleriEkle()`
     artık eklenen maddelerin 5x5 ölçeğine uyup uymadığını (veya Frekans dolu mu)
     kontrol edip gerekirse `$yontem`'i otomatik `fine_kinney`'e çeviriyor.
-  **129 test toplam.**
+  - **Excel'den doğrudan sektörel şablon oluşturma ✅:** `ListRiskSablonus`
+    header'ında "Excel'den Sektörel Şablon Oluştur" — sihirbazı hiç açmadan,
+    dosyadaki TÜM adayları (seçim/filtre yok) `RiskDegerlendirmesiExcelOkuyucu`
+    ile okuyup doğrudan `RiskSablonu::olustur()`'a veriyor; hiçbir alan/puan
+    değiştirilmiyor. `RiskSkorlama::fineKinneyeUyuyorMu()` (RiskSihirbazi'dan
+    taşındı, paylaşılır oldu) yöntemi otomatik seçiyor. Oluşan şablon mevcut
+    "Şablonlar" akışıyla (değişiklik gerekmedi) her zamanki gibi yeni
+    firmalara tek tıkla uygulanıyor, puanlar dahil.
+  **130 test toplam.**
   - **Kalan:** Kayıtlı Risklerim (klasörlü); `RiskSablonu` `maddeler` düzenleme
     (repeater); İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/
     Zemin İyileştirme) çoklu-seçim arayüzü (kullanıcı Tehlike Kütüphanesi'ne
