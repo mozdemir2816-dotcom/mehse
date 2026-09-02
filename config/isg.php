@@ -1422,4 +1422,55 @@ return [
             'yazili_savunma' => ['ad' => 'Yazılı Savunma Talebi', 'aciklama' => 'Çalışandan süre verilerek yazılı savunma istenir.'],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Çalışma Talimatları — isgpratik 82-83.jpg
+    |--------------------------------------------------------------------------
+    | Hazır şablon kütüphanesi (isgpratik'in 36 şablonluk kütüphanesinden 30'u
+    | ekran görüntülerinden çıkarıldı — başlık/kategori/açıklama/KKD listesi
+    | birebir; madde metinleri (adım adım talimat) AI (Gemini) ile üretilir.
+    */
+    'talimat' => [
+        'kategoriler' => [
+            'is_makineleri' => 'İş Makineleri', 'el_aletleri' => 'El Aletleri', 'kimyasal_madde' => 'Kimyasal Madde',
+            'elektrik_isleri' => 'Elektrik İşleri', 'yukseklerde_calisma' => 'Yükseklerde Çalışma', 'kapali_alan' => 'Kapalı Alan',
+            'kaynak_kesme' => 'Kaynak ve Kesme', 'tasima_depolama' => 'Taşıma & Depolama', 'mutfak_yemekhane' => 'Mutfak & Yemekhane',
+            'ofis_buro' => 'Ofis & Büro', 'insaat_saha' => 'İnşaat & Saha', 'genel_isg' => 'Genel İSG',
+        ],
+        'sablonlar' => [
+            ['baslik' => 'Forklift Kullanma Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Forklift operatörlerinin uyması gereken güvenli kullanım esasları.', 'kkdler' => ['Baret', 'Çelik burunlu iş ayakkabısı', 'Reflektörlü yelek']],
+            ['baslik' => 'Torna Tezgahı Kullanma Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Torna tezgahında güvenli talaşlı imalat çalışmaları için temel kurallar.', 'kkdler' => ['Koruyucu gözlük', 'Çelik burunlu iş ayakkabısı', 'Vücuda oturan tulum']],
+            ['baslik' => 'Hidrolik Pres Makinesi Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Hidrolik/eksantrik pres makinelerinde kalıp ve baskı işlemleri.', 'kkdler' => ['Koruyucu gözlük', 'Çelik burunlu iş ayakkabısı', 'Anti-vibrasyon eldiveni']],
+            ['baslik' => 'Spiral (Avuç İçi) Taşlama Makinesi Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Spiral taşlama makinesinin güvenli kullanımı için kurallar.', 'kkdler' => ['Yüz siperliği', 'Koruyucu gözlük', 'Anti-vibrasyon eldiveni']],
+            ['baslik' => 'Sütunlu/El Matkap Kullanma Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Sütunlu ve el matkabı ile güvenli delik delme operasyonu.', 'kkdler' => ['Koruyucu gözlük', 'Çelik burunlu iş ayakkabısı', 'Vücuda oturan tulum']],
+            ['baslik' => 'Elektrikli Kırıcı/Delici Kullanma Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Kırıcı tip elektrikli delici makinelerin güvenli kullanımı.', 'kkdler' => ['Anti-vibrasyon eldiveni', 'Koruyucu gözlük', 'FFP3 toz maskesi']],
+            ['baslik' => 'Kimyasal Madde Depolama ve Kullanma Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Tehlikeli kimyasalların depolanması ve kullanılması.', 'kkdler' => ['Kimyasala dayanıklı eldiven', 'Kimyasal gaz maskesi', 'Yarım/tam yüz maske + uygun filtre']],
+            ['baslik' => 'Boya ve Cila Uygulama Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Endüstriyel boya, vernik ve cila uygulamalarında güvenli çalışma.', 'kkdler' => ['Yarım/tam yüz organik gaz maskesi', 'Kimyasal dirençli eldiven', 'Koruyucu gözlük']],
+            ['baslik' => 'Asbest ile Çalışma Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Asbest içeren malzemelerin sökümü ve bertarafında güvenli çalışma.', 'kkdler' => ['Tam yüz maskesi + P3 filtre', 'Tek kullanımlık tulum', 'Çelik burunlu iş ayakkabısı']],
+            ['baslik' => 'Elektrik Panosunda Çalışma Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Elektrik panolarında bakım/onarım yapacak yetkili personel için talimat.', 'kkdler' => ['Elektrik yalıtımlı eldiven', 'Yüz siperliği', 'Yalıtkan bot']],
+            ['baslik' => 'Jeneratör Kullanma Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Dizel/benzinli jeneratörlerin güvenli çalıştırılması ve bakımı.', 'kkdler' => ['Kulak tıkacı/kulaklık', 'Yalıtkan eldiven', 'Çelik burunlu iş ayakkabısı']],
+            ['baslik' => 'Kablo Döşeme ve Bağlantı Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Kablo çekimi, döşeme ve bağlantı işlerinde güvenli çalışma.', 'kkdler' => ['Yalıtkan eldiven', 'Koruyucu gözlük', 'Yalıtkan ayakkabı']],
+            ['baslik' => 'Yükseklerde Çalışma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => '2 metre ve üzeri yükseklikte yapılacak çalışmalar için temel güvenlik kuralları.', 'kkdler' => ['Tam vücut emniyet kemeri', 'Çift kancalı şok emici lanyard', 'Çene bağlantılı baret']],
+            ['baslik' => 'Çatı Üzerinde Çalışma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'Çatı bakım, onarım ve izolasyon işlerinde güvenli çalışma.', 'kkdler' => ['Tam vücut emniyet kemeri', 'Çift kancalı lanyard', 'Çene bağlantılı baret']],
+            ['baslik' => 'Portatif Merdiven Kullanma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'A tipi, uzatma ve tek ayaklı portatif merdivenlerin güvenli kullanımı.', 'kkdler' => ['Kaymaz iş ayakkabısı', 'Baret', 'Mekanik eldiven']],
+            ['baslik' => 'Kapalı Alanda Çalışma Talimatı', 'kategori' => 'kapali_alan', 'aciklama' => 'Tank, depo, kazan gibi kapalı alanlarda güvenli giriş ve çalışma.', 'kkdler' => ['Tam vücut emniyet kemeri + kurtarma halatı', 'Solunum cihazı', 'Çoklu gaz dedektörü']],
+            ['baslik' => 'Silo ve Tank İçi Temizlik Talimatı', 'kategori' => 'kapali_alan', 'aciklama' => 'Silo, tank ve depo içi temizlik çalışmalarında güvenli giriş ve çalışma.', 'kkdler' => ['Tam vücut emniyet kemeri + kurtarma halatı', 'Solunum koruma', 'Çoklu gaz dedektörü']],
+            ['baslik' => 'Oksijen-Asetilen Kaynak/Kesme Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Gazaltı kaynak ve oksi-asetilen kesme işleri için güvenli çalışma kuralları.', 'kkdler' => ['Kaynak maskesi', 'Kaynakçı eldiveni', 'Krom deri önlük ve tozluk']],
+            ['baslik' => 'Elektrik Ark Kaynağı (MIG/MAG/TIG) Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Elektrik ark kaynağı (MIG/MAG/TIG) ile güvenli çalışma kuralları.', 'kkdler' => ['Otomatik kararmalı kaynak maskesi', 'Kaynakçı eldiveni', 'Alev geciktirici tulum']],
+            ['baslik' => 'Manuel Transpalet Kullanma Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Manuel transpalet ile yük taşıma ve istifleme kuralları.', 'kkdler' => ['Çelik burunlu iş ayakkabısı', 'Mekanik dirençli eldiven', 'Reflektörlü yelek']],
+            ['baslik' => 'İstif Makinesi (Reach Truck) Kullanma Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Depo içi dar koridor istif makinesi ile güvenli yük taşıma ve istifleme.', 'kkdler' => ['Baret', 'Çelik burunlu iş ayakkabısı', 'Reflektörlü yelek']],
+            ['baslik' => 'Depo ve Raf Sistemleri Güvenlik Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Depo raf sistemlerinin güvenli kullanımı, istifleme ve bakım kuralları.', 'kkdler' => ['Baret', 'Çelik burunlu iş ayakkabısı', 'Mekanik eldiven']],
+            ['baslik' => 'Mutfak Bıçak ve Kesim Aletleri Talimatı', 'kategori' => 'mutfak_yemekhane', 'aciklama' => 'Mutfak personeli için bıçak, kıyma makinesi ve kesim aletlerinin güvenli kullanımı.', 'kkdler' => ['Kesilmeye dirençli eldiven', 'Kaymaz iş ayakkabısı', 'Mutfak önlüğü']],
+            ['baslik' => 'Endüstriyel Fırın ve Ocak Kullanma Talimatı', 'kategori' => 'mutfak_yemekhane', 'aciklama' => 'Yemekhane ve endüstriyel fırın, ocak ve buharlı cihazların güvenli kullanımı.', 'kkdler' => ['Sıcak iş eldiveni', 'Kaymaz iş ayakkabısı', 'Mutfak önlüğü']],
+            ['baslik' => 'Ofis ve Ekran Önü Çalışma Talimatı', 'kategori' => 'ofis_buro', 'aciklama' => 'Ekran karşısında uzun süre çalışan ofis personeli için ergonomi kuralları.', 'kkdler' => ['Bilgisayar gözlüğü', 'Bilek desteği', 'Bel/sırt desteği']],
+            ['baslik' => 'Yazıcı ve Fotokopi Makinesi Güvenlik Talimatı', 'kategori' => 'ofis_buro', 'aciklama' => 'Lazer yazıcı, fotokopi makinesi ve tarayıcıların güvenli kullanımı.', 'kkdler' => ['Toner değişiminde nitril eldiven', 'FFP2 maske', 'Koruyucu gözlük']],
+            ['baslik' => 'Kazı İşleri Güvenlik Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Hendek, temel ve altyapı kazı işlerinde güvenli çalışma kuralları.', 'kkdler' => ['Baret', 'Su geçirmez çizme', 'Reflektörlü yelek']],
+            ['baslik' => 'Beton Dökümü ve Kalıp İşleri Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Beton dökümü, kalıp kurulum/söküm ve vibratör kullanımında güvenlik.', 'kkdler' => ['Baret', 'Alkali dirençli eldiven', 'Çelik burunlu iş ayakkabısı']],
+            ['baslik' => 'Cephe İskelesinde Çalışma Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Cephe iskelesinin kurulumu, kullanımı ve söküm sırasında güvenli çalışma.', 'kkdler' => ['Tam vücut emniyet kemeri', 'Çift kancalı şok emici lanyard', 'Çene bağlamalı baret']],
+            ['baslik' => 'İşyeri Temizlik ve Hijyen Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'İşyeri genel temizliği, hijyen kuralları ve dezenfeksiyon prosedürleri.', 'kkdler' => ['Kimyasal eldiven', 'Kaymaz iş ayakkabısı', 'Koruyucu gözlük']],
+            ['baslik' => 'Genel İşyeri İSG Kuralları Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Tüm çalışanların uyması gereken işyeri genel iş sağlığı ve güvenliği kuralları.', 'kkdler' => ['Çalışma alanına özel KKD\'leri tak', 'Genel: baret']],
+            ['baslik' => 'El Aletleri (Çekiç, Tornavida, Pense) Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Genel el aletlerinin güvenli kullanımı ve bakımı.', 'kkdler' => ['Mekanik dirençli eldiven', 'Koruyucu gözlük', 'Çelik burunlu iş ayakkabısı']],
+        ],
+    ],
 ];
