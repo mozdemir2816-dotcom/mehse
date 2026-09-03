@@ -10,8 +10,10 @@ use App\Models\Sertifika;
 use App\Models\User;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\SertifikaUretici;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
@@ -220,5 +222,39 @@ class SertifikaOlusturTest extends TestCase
         $this->assertStringContainsString('1. Genel Konular', $html);
         $this->assertStringContainsString('a)', $html);
         $this->assertStringContainsString('Düzenleme Tarihi', $html);
+    }
+
+    public function test_dort_gercek_cerceve_secenegi_mevcut(): void
+    {
+        $this->assertSame(
+            ['sade', 'mavi_kose', 'altin_susleme', 'gri_cizgi'],
+            array_keys(config('isg.sertifika.cerceveler')),
+        );
+    }
+
+    #[DataProvider('cerceveSaglayici')]
+    public function test_her_cerceve_ve_tip_kombinasyonu_tek_sayfaya_sigar(string $cerceve): void
+    {
+        $firma = Firma::factory()->create(['unvan' => 'NİL UNLU MAMULLER GIDA PASTACILIK SANAYİ VE TİCARET ANONİM ŞİRKETİ', 'tehlike_sinifi' => 'cok_tehlikeli']);
+
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'kapali_alan',
+            'cerceve' => $cerceve,
+            'egitici_igu_dahil' => true,
+            'egitici_igu_adi' => 'Mehmet Test Uzman Uzunadı',
+            'katilimcilar' => [['ad_soyad' => 'Test Kişi Uzun Soyadı', 'tc' => '12345678901', 'gorev' => 'Üretim Vardiya Sorumlusu']],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('kapali_alan', null, 'cok_tehlikeli'),
+        ]);
+
+        $pdf = Pdf::loadView('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma])->setPaper('a4');
+        $pdf->output();
+
+        $this->assertSame(1, $pdf->getCanvas()->get_page_count());
+    }
+
+    public static function cerceveSaglayici(): array
+    {
+        return [['sade'], ['mavi_kose'], ['altin_susleme'], ['gri_cizgi']];
     }
 }

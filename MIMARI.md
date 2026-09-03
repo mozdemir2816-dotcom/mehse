@@ -976,6 +976,28 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   madde şekliyle) güncellendi + `SertifikaOlusturTest`'e 3 yeni test
   (tür/şekil kaydı, madde hariç bırakma PDF'e yansıması, referans belge
   alanlarının varlığı). **362 test toplam.**
+- **Sertifika — gerçek çerçeve seçenekleri + tek sayfaya sığdırma ✅
+  (kullanıcı: "sertifikanın diğer yolladığım seçenekleri de koy, bir
+  sayfaya sığdır, gerekirse yazı boyutunu düşür"):** isgpratik EĞİTİM
+  klasöründeki 3 farklı gerçek sertifika PDF çıktısı (`(1).pdf`/`(2)
+  (1).pdf`/`(4) (1).pdf` — üçü de aynı kişi/içerik, yalnız farklı çerçeve)
+  incelendi; her biri gerçek bir çerçeve tasarımı olduğu ortaya çıktı.
+  `config isg.sertifika.cerceveler` daha önce İCAT EDİLMİŞ 3 seçenekten
+  (klasik_siyah/sade/mor) isgpratik'teki GERÇEK 4 seçeneğe değiştirildi:
+  `sade` (çerçevesiz), `mavi_kose` (mavi çift çizgi + 4 köşede dolu kare
+  vurgu — `position:absolute` ile), `altin_susleme` (yuvarlak köşeli altın
+  çift çizgi — `border-radius`), `gri_cizgi` (gri çift çizgi). Bu, [[resmi-
+  belge-gercek-sablon-kullan]] dersinin PDF çerçevesi için de uygulanması.
+  **Tek sayfaya sığdırma:** font boyutları küçültüldü (gövde 9.5px, madde
+  listesi 8.5px, künye 9px) ve "özel" (tek bloklu) sertifika tiplerinin
+  (Yükseklik/Kapalı Alan 18 madde/Yangın) madde listesi de artık "genel"
+  tip gibi 2 sütuna bölünüyor (hem yer tasarrufu hem görsel denge).
+  `Barryvdh\DomPDF`'in `getCanvas()->get_page_count()` API'siyle 4 tip ×
+  4 çerçeve = 16 kombinasyon en kötü senaryo içerikle (çok tehlikeli
+  sınıf, uzun firma/kişi adları, sektörlü işyerine özgü riskler) test
+  edilip HEPSİNİN tek sayfaya sığdığı doğrulandı.
+  `SertifikaOlusturTest`'e 5 yeni test (4 çerçeve config + `#[DataProvider]`
+  ile 4 kombinasyon tek-sayfa testi). **367 test toplam.**
 
 ## Notlar
 

@@ -1711,10 +1711,12 @@ return [
             'cok_tehlikeli' => 1,
         ],
         'sureler' => ['4 saat', '8 saat', '8 Ders saati', '16 saat'],
+        // isgpratik'in gerçek sertifika çıktılarında görülen 4 çerçeve seçeneği.
         'cerceveler' => [
-            'klasik_siyah' => 'Klasik — siyah çift çizgi çerçeve',
             'sade' => 'Sade — çerçevesiz',
-            'mor' => 'Mor kenarlık',
+            'mavi_kose' => 'Mavi Köşeli Çerçeve',
+            'altin_susleme' => 'Altın Süsleme Çerçeve',
+            'gri_cizgi' => 'Gri Çift Çizgi Çerçeve',
         ],
         'turler' => [
             'ilk_defa' => 'İlk Defa Eğitim',

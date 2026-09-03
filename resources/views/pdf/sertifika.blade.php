@@ -4,27 +4,37 @@
 <meta charset="utf-8">
 <style>
     * { font-family: DejaVu Sans, sans-serif; }
-    body { margin: 0; color: #111; font-size: 10.5px; }
-    .sayfa { padding: 26px 32px; page-break-after: always; }
+    body { margin: 0; color: #111; font-size: 9.5px; }
+    .sayfa { position: relative; page-break-after: always; }
     .sayfa:last-child { page-break-after: avoid; }
-    .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 14px; }
-    .baslik img { max-height: 46px; float: left; }
-    .baslik h1 { font-size: 16px; margin: 0; }
-    .bilgi { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
-    .bilgi td { padding: 3px 6px; vertical-align: top; width: 25%; }
+    .ic { padding: 20px 26px; }
+    .cerceve-sade .ic { padding: 22px 28px; }
+    .cerceve-mavi_kose { border: 3px double #1e5f8c; margin: 10px; }
+    .cerceve-mavi_kose .kose { position: absolute; width: 14px; height: 14px; background: #1e5f8c; }
+    .cerceve-mavi_kose .kose-sol-ust { top: 6px; left: 6px; }
+    .cerceve-mavi_kose .kose-sag-ust { top: 6px; right: 6px; }
+    .cerceve-mavi_kose .kose-sol-alt { bottom: 6px; left: 6px; }
+    .cerceve-mavi_kose .kose-sag-alt { bottom: 6px; right: 6px; }
+    .cerceve-altin_susleme { border: 3px double #b8860b; border-radius: 14px; margin: 10px; }
+    .cerceve-gri_cizgi { border: 3px double #444; margin: 10px; }
+    .baslik { text-align: center; border-bottom: 2px solid #111; padding-bottom: 7px; margin-bottom: 10px; }
+    .baslik img { max-height: 38px; float: left; }
+    .baslik h1 { font-size: 14px; margin: 0; }
+    .bilgi { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 8px; }
+    .bilgi td { padding: 2px 5px; vertical-align: top; width: 25%; line-height: 1.3; }
     .bilgi td.etiket { font-weight: bold; width: 20%; }
-    .metin { font-size: 10px; text-align: justify; margin-bottom: 10px; }
-    h3 { font-size: 10.5px; margin: 10px 0 4px; }
+    .metin { font-size: 9px; text-align: justify; margin-bottom: 7px; line-height: 1.35; }
+    h3 { font-size: 9.5px; margin: 7px 0 3px; }
     table.konular { width: 100%; border-collapse: collapse; }
-    table.konular > tr > td { width: 50%; vertical-align: top; padding: 0 6px 0 0; }
-    .blok { margin-bottom: 8px; }
-    .blok-baslik { font-weight: bold; font-size: 9.5px; margin-bottom: 2px; }
-    .blok p { margin: 0 0 2px; font-size: 9.5px; }
-    table.imza { width: 100%; border-collapse: collapse; margin-top: 24px; }
-    table.imza td { width: 33.33%; vertical-align: top; font-size: 9.5px; padding-right: 10px; }
-    table.imza img { max-height: 40px; display: block; margin: 4px 0; }
-    .not { margin-top: 14px; font-size: 8.5px; color: #666; }
-    .tarih-sag { text-align: right; font-size: 8.5px; font-weight: bold; margin-top: 4px; }
+    table.konular > tr > td { width: 50%; vertical-align: top; padding: 0 5px 0 0; }
+    .blok { margin-bottom: 5px; }
+    .blok-baslik { font-weight: bold; font-size: 8.5px; margin-bottom: 1px; }
+    .blok p { margin: 0 0 1px; font-size: 8.5px; line-height: 1.25; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    table.imza td { width: 33.33%; vertical-align: top; font-size: 8.5px; padding-right: 8px; line-height: 1.3; }
+    table.imza img { max-height: 32px; display: block; margin: 3px 0; }
+    .not { margin-top: 8px; font-size: 7.5px; color: #666; }
+    .tarih-sag { text-align: right; font-size: 7.5px; font-weight: bold; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -38,7 +48,14 @@
 @endphp
 
 @forelse (($sertifika->katilimcilar ?? []) as $k)
-    <div class="sayfa">
+    <div class="sayfa cerceve-{{ $sertifika->cerceve }}">
+        @if ($sertifika->cerceve === 'mavi_kose')
+            <div class="kose kose-sol-ust"></div>
+            <div class="kose kose-sag-ust"></div>
+            <div class="kose kose-sol-alt"></div>
+            <div class="kose kose-sag-alt"></div>
+        @endif
+        <div class="ic">
 
         <div class="baslik">
             @if ($firma?->logo)
@@ -122,11 +139,24 @@
             </table>
         @else
             @php $ozelMaddeler = $goster($sertifika->konu_icerigi['maddeler'] ?? []); @endphp
-            <div class="blok">
-                @foreach ($ozelMaddeler as $i => $m)
-                    <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
-                @endforeach
-            </div>
+            <table class="konular">
+                <tr>
+                    <td>
+                        <div class="blok">
+                            @foreach ($ozelMaddeler->slice(0, (int) ceil($ozelMaddeler->count() / 2)) as $i => $m)
+                                <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                            @endforeach
+                        </div>
+                    </td>
+                    <td>
+                        <div class="blok">
+                            @foreach ($ozelMaddeler->slice((int) ceil($ozelMaddeler->count() / 2)) as $i => $m)
+                                <p>{{ $harf($i + (int) ceil($ozelMaddeler->count() / 2)) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                            @endforeach
+                        </div>
+                    </td>
+                </tr>
+            </table>
         @endif
 
         <table class="imza">
@@ -162,10 +192,13 @@
         <p class="not">(1 ders saati: 45 dk ders + 15 dk Dinlenme)</p>
         <p class="tarih-sag">Düzenleme Tarihi : {{ now()->format('d.m.Y') }}</p>
 
+        </div>
     </div>
 @empty
     <div class="sayfa">
-        <p style="text-align:center;color:#888;margin-top:40%">Katılımcı eklenmedi.</p>
+        <div class="ic">
+            <p style="text-align:center;color:#888;margin-top:40%">Katılımcı eklenmedi.</p>
+        </div>
     </div>
 @endforelse
 

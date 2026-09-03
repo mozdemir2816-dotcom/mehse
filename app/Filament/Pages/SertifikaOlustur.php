@@ -73,7 +73,7 @@ class SertifikaOlustur extends Page
 
     public string $logoKonumu = 'sol';
 
-    public string $cerceve = 'klasik_siyah';
+    public string $cerceve = 'sade';
 
     /** @var array<int, int> */
     public array $secilenCalisanIdler = [];
