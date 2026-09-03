@@ -10,9 +10,11 @@ use App\Models\Sertifika;
 use App\Models\User;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\SertifikaUretici;
+use App\Support\SertifikaYildizGrupUretici;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -256,5 +258,111 @@ class SertifikaOlusturTest extends TestCase
     public static function cerceveSaglayici(): array
     {
         return [['sade'], ['mavi_kose'], ['altin_susleme'], ['gri_cizgi']];
+    }
+
+    public function test_yildiz_grup_yalniz_isg_tipinde_uygun(): void
+    {
+        $isg = new Sertifika(['tip' => 'isg']);
+        $yukseklik = new Sertifika(['tip' => 'yukseklik']);
+
+        $this->assertTrue(SertifikaYildizGrupUretici::uygunMu($isg));
+        $this->assertFalse(SertifikaYildizGrupUretici::uygunMu($yukseklik));
+    }
+
+    public function test_yildiz_grup_tek_katilimci_alanlari_dolduruyor(): void
+    {
+        $firma = Firma::factory()->create(['unvan' => 'TEST FİRMA A.Ş.']);
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'tur' => 'ilk_defa',
+            'sekil' => 'yuz_yuze',
+            'egitim_tarihleri' => ['2026-09-01', '2026-09-02'],
+            'sure_metni' => '16 Ders Saati',
+            'egitici_igu_dahil' => true,
+            'egitici_igu_adi' => 'Test İGU',
+            'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => '11111111111', 'gorev' => 'Operatör']],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', 'tekstil', 'az_tehlikeli'),
+        ]);
+
+        $yanit = SertifikaYildizGrupUretici::indir($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'ygt').'.xlsx';
+        file_put_contents($gecici, $icerik);
+        $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        unlink($gecici);
+
+        $this->assertSame('AHMET YILMAZ', $sheet->getCell('D9')->getValue());
+        $this->assertSame('     GÖREVİ:OPERATÖR', $sheet->getCell('D8')->getValue());
+        $this->assertSame('TEST FİRMA A.Ş.', $sheet->getCell('G29')->getValue());
+        $this->assertSame('Test İGU', $sheet->getCell('G24')->getValue());
+        $this->assertStringContainsString('01/09/2026 ve 02/09/2026', (string) $sheet->getCell('D10')->getValue());
+        $this->assertSame('a)Çalışma mevzuatı ile ilgili bilgiler', $sheet->getCell('E47')->getValue()->getPlainText());
+        $this->assertSame('a)İplik ve dokuma makine güvenliği', $sheet->getCell('E71')->getValue()->getPlainText());
+        $this->assertNull($sheet->getCell('E76')->getValue());
+    }
+
+    public function test_yildiz_grup_coklu_katilimci_zip_dondurur(): void
+    {
+        $firma = Firma::factory()->create();
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'katilimcilar' => [
+                ['ad_soyad' => 'Ahmet Yılmaz', 'tc' => '11111111111', 'gorev' => 'Operatör'],
+                ['ad_soyad' => 'Ayşe Kaya', 'tc' => '22222222222', 'gorev' => 'Teknisyen'],
+            ],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+
+        $yanit = SertifikaYildizGrupUretici::indir($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $this->assertStringStartsWith('PK', $icerik);
+        $this->assertSame('application/zip', $yanit->headers->get('Content-Type'));
+    }
+
+    public function test_yildiz_grup_diger_tiplerde_null_doner(): void
+    {
+        $firma = Firma::factory()->create();
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'yukseklik',
+            'katilimcilar' => [['ad_soyad' => 'Test', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('yuksekte_calisma', null, 'az_tehlikeli'),
+        ]);
+
+        $this->assertNull(SertifikaYildizGrupUretici::indir($s));
+    }
+
+    public function test_yildiz_grup_butonu_sadece_isg_tipinde_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create();
+
+        Livewire::test(SertifikaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('tip', 'isg')
+            ->assertActionVisible('yildizGrup')
+            ->set('tip', 'yukseklik')
+            ->assertActionHidden('yildizGrup');
+    }
+
+    public function test_yildiz_grup_aksiyonu_kayit_olusturur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create();
+
+        Livewire::test(SertifikaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('tip', 'isg')
+            ->callAction('yildizGrup');
+
+        $this->assertDatabaseCount('sertifikalar', 1);
     }
 }

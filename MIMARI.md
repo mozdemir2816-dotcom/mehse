@@ -998,6 +998,37 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   edilip HEPSİNİN tek sayfaya sığdığı doğrulandı.
   `SertifikaOlusturTest`'e 5 yeni test (4 çerçeve config + `#[DataProvider]`
   ile 4 kombinasyon tek-sayfa testi). **367 test toplam.**
+- **Sertifika — "Yıldız Grup" gerçek Excel şablonu ✅ (kullanıcı kendi
+  Desktop'ından `Yeni klasör\eğitim Sertifikası.xlsx` paylaştı — GERÇEK bir
+  OSGB'nin ("Yıldız Grup Ortak Sağlık ve Güvenlik Birimleri Ltd. Şti.")
+  kullandığı dolu örnek sertifika, isgpratik'le hiç ilgisi yok):** [[resmi-
+  belge-gercek-sablon-kullan]] dersi burada da uygulandı — dosya
+  `resources/belge/sertifika-yildiz-grup.xlsx` olarak BİREBİR kopyalandı,
+  yeni `App\Support\SertifikaYildizGrupUretici` PhpSpreadsheet ile şablonu
+  açıp yalnız belirli hücreleri dolduruyor (`AcilDurumWordUretici`'nin
+  docx'teki "birebir şablon" felsefesinin xlsx karşılığı).
+  **Doğrulanan çarpıcı bulgu:** şablonun "Çıktı Sayfası"ndaki 1-3 kategori
+  satır sayıları (Genel Konular=4 satır, Sağlık=5 satır, Teknik=12 satır)
+  `config isg.egitim`'deki madde sayılarıyla BİREBİR aynı çıktı — ikisi de
+  aynı resmi Ek-1 standardından geldiği için mükemmel hücre eşleşmesi
+  sağladı (kategori başına madde metinleri de birebir aynı çıktı, örn.
+  "Çalışma mevzuatı ile ilgili bilgiler"). 4. kategori (İşe Özgü Riskler)
+  şablonda 14 satırlık boş alan bırakıyor; sektörün 5 maddesi doldurulup
+  kalan 9 satır TEMİZLENİYOR (silinmiyor — satır silme, birleştirilmiş
+  hücreleri/sonraki imza bloğunu kaydırma riski taşırdı).
+  Madde metinleri şablonda "a)"/"b)"... harfi KALIN, geri kalanı normal
+  RichText run'ları olarak saklı — `PhpOffice\PhpSpreadsheet\RichText\
+  RichText` ile aynı biçim korunarak yeniden oluşturuluyor (düz string
+  yazılsaydı kalın harf biçimi kaybolurdu).
+  Eğitim türü ("İlk Defa"/"Tekrar") ve şekli ("Uzaktan"/"Yüz Yüze") seçimi
+  şablonda TEXT DEĞİL, küçük bir onay işareti GÖRSELİ ile gösteriliyor —
+  bu görseller silinip yeniden çizilmedi, `Drawing::setCoordinates()` ile
+  seçilen satıra TAŞINDI (şablonun mekanizması aynen korunmuş oldu).
+  Yalnız `tip='isg'` (4 kategorili genel içerik) ile uyumlu — diğer 3 tip
+  bu şablona sığmadığından buton onlarda gizli. Çoklu katılımcı için
+  ZIP indirme (isgpratik'in "ZIP İndir" düğmesiyle aynı fikir). Kaşe
+  görselleri G25/K25 hücrelerine yeni `Drawing` olarak ekleniyor.
+  `SertifikaOlusturTest`'e 6 test. **373 test toplam.**
 
 ## Notlar
 

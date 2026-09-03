@@ -301,6 +301,9 @@
                             <td style="padding:.35rem .5rem">{{ count($k->katilimcilar ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
+                                @if ($k->tip === 'isg')
+                                    <x-filament::button size="xs" color="success" wire:click="gecmisYildizGrup({{ $k->id }})">Yıldız Grup</x-filament::button>
+                                @endif
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

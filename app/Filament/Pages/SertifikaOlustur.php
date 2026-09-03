@@ -8,6 +8,7 @@ use App\Models\Sertifika;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
+use App\Support\SertifikaYildizGrupUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -396,6 +397,31 @@ class SertifikaOlustur extends Page
 
                     return SertifikaUretici::pdf($s);
                 }),
+
+            Action::make('yildizGrup')
+                ->label('Yıldız Grup Şablonu (Excel)')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null && $this->tip === 'isg')
+                ->action(function () {
+                    $s = $this->kaydet();
+
+                    if (! $s) {
+                        return null;
+                    }
+
+                    $indirme = SertifikaYildizGrupUretici::indir($s);
+
+                    if (! $indirme) {
+                        Notification::make()->title('Bu sertifika tipi için Yıldız Grup şablonu uygun değil')->warning()->send();
+
+                        return null;
+                    }
+
+                    Notification::make()->title('Sertifika kaydedildi')->body($s->belge_no)->success()->send();
+
+                    return $indirme;
+                }),
         ];
     }
 
@@ -404,6 +430,13 @@ class SertifikaOlustur extends Page
         $s = $this->firma?->sertifikalar()->find($id);
 
         return $s ? SertifikaUretici::pdf($s) : null;
+    }
+
+    public function gecmisYildizGrup(int $id)
+    {
+        $s = $this->firma?->sertifikalar()->find($id);
+
+        return $s ? SertifikaYildizGrupUretici::indir($s) : null;
     }
 
     public function gecmisSil(int $id): void
