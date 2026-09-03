@@ -305,6 +305,36 @@ class SertifikaOlusturTest extends TestCase
         $this->assertNull($sheet->getCell('E76')->getValue());
     }
 
+    public function test_yildiz_grup_secilen_tur_ve_sekil_kalin_isaretlenir(): void
+    {
+        $firma = Firma::factory()->create();
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'tur' => 'tekrar',
+            'sekil' => 'uzaktan',
+            'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+
+        $yanit = SertifikaYildizGrupUretici::indir($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'ygt').'.xlsx';
+        file_put_contents($gecici, $icerik);
+        $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        unlink($gecici);
+
+        // tur='tekrar' -> F19 kalın, F18 kalın değil.
+        $this->assertTrue($sheet->getStyle('F19')->getFont()->getBold());
+        $this->assertFalse($sheet->getStyle('F18')->getFont()->getBold());
+        // sekil='uzaktan' -> F20 kalın, F21 kalın değil.
+        $this->assertTrue($sheet->getStyle('F20')->getFont()->getBold());
+        $this->assertFalse($sheet->getStyle('F21')->getFont()->getBold());
+    }
+
     public function test_yildiz_grup_coklu_katilimci_zip_dondurur(): void
     {
         $firma = Firma::factory()->create();

@@ -170,6 +170,14 @@ class SertifikaYildizGrupUretici
         }
     }
 
+    /**
+     * Eğitim Türü (İlk Defa/Tekrar) ve Eğitim Şekli (Uzaktan/Yüz Yüze) seçimi
+     * şablonda iki şekilde belirginleştirilir: (1) şablonun kendi onay işareti
+     * görseli seçili satıra taşınır, (2) seçili seçeneğin metni KALIN yapılır
+     * — kullanıcı: "seçilen seçenekleri işaretle." İki seçenek de metin
+     * olarak GÖRÜNMEYE devam eder (şablon formatı bozulmaz), yalnız hangisinin
+     * seçili olduğu artık tek bakışta belli olur.
+     */
     private static function turSekilIsaretle(Worksheet $sheet, Sertifika $s): void
     {
         $turSatiri = $s->tur === 'tekrar' ? 19 : 18;
@@ -183,6 +191,14 @@ class SertifikaYildizGrupUretici
             if ($cizim->getCoordinates() === 'I20' || $cizim->getCoordinates() === 'I21') {
                 $cizim->setCoordinates('I'.$sekilSatiri);
             }
+        }
+
+        foreach ([18, 19] as $satir) {
+            $sheet->getStyle('F'.$satir)->getFont()->setBold($satir === $turSatiri);
+        }
+
+        foreach ([20, 21] as $satir) {
+            $sheet->getStyle('F'.$satir)->getFont()->setBold($satir === $sekilSatiri);
         }
     }
 

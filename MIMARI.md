@@ -1029,6 +1029,14 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   ZIP indirme (isgpratik'in "ZIP İndir" düğmesiyle aynı fikir). Kaşe
   görselleri G25/K25 hücrelerine yeni `Drawing` olarak ekleniyor.
   `SertifikaOlusturTest`'e 6 test. **373 test toplam.**
+  **Ek düzeltme (kullanıcı: "seçilen seçenekleri işaretle"):** Eğitim
+  Türü/Şekli için "seçileni gizle mi, ikisini de gösterip kutucuk mu
+  ekle" tercihi kullanıcıya soruldu, "sen seç" dedi — şablon formatını
+  bozmama ilkesiyle tutarlı, DAHA AZ invaziv seçenek seçildi: her iki
+  seçenek de metin olarak görünmeye devam ediyor (satır silinmiyor),
+  yalnız seçili olanın yazısı KALIN yapılıyor (mevcut onay işareti
+  görselinin taşınmasına ek olarak — iki işaret üst üste, tek bakışta
+  belli). `SertifikaOlusturTest`'e 1 test daha. **374 test toplam.**
 
 ## Notlar
 
