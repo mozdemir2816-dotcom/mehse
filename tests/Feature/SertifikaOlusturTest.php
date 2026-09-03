@@ -327,12 +327,19 @@ class SertifikaOlusturTest extends TestCase
         $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
         unlink($gecici);
 
-        // tur='tekrar' -> F19 kalın, F18 kalın değil.
+        // tur='tekrar' -> F19 kalın + I19 çarpı, F18/I18 boş.
         $this->assertTrue($sheet->getStyle('F19')->getFont()->getBold());
         $this->assertFalse($sheet->getStyle('F18')->getFont()->getBold());
-        // sekil='uzaktan' -> F20 kalın, F21 kalın değil.
+        $this->assertSame('X', $sheet->getCell('I19')->getValue());
+        $this->assertEmpty($sheet->getCell('I18')->getValue());
+        // sekil='uzaktan' -> F20 kalın + I20 çarpı, F21/I21 boş.
         $this->assertTrue($sheet->getStyle('F20')->getFont()->getBold());
         $this->assertFalse($sheet->getStyle('F21')->getFont()->getBold());
+        $this->assertSame('X', $sheet->getCell('I20')->getValue());
+        $this->assertEmpty($sheet->getCell('I21')->getValue());
+        // Yanlış hizalanan eski onay işareti görselleri artık şablonda yok.
+        $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
+        $this->assertEmpty(array_intersect(['I18', 'I19', 'I20', 'I21'], $koordinatlar));
     }
 
     public function test_yildiz_grup_coklu_katilimci_zip_dondurur(): void

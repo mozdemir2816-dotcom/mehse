@@ -1037,6 +1037,18 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   yalnız seçili olanın yazısı KALIN yapılıyor (mevcut onay işareti
   görselinin taşınmasına ek olarak — iki işaret üst üste, tek bakışta
   belli). `SertifikaOlusturTest`'e 1 test daha. **374 test toplam.**
+  **Düzeltme (kullanıcı: "onay için koyduğun buton yazının karşında
+  olmuyor... çarpı koyarak daha belirgin yapabilirsin"):** Şablonun kendi
+  onay işareti görselini (Resim 4/5) hedef satıra taşıma yaklaşımı hatalı
+  çıktı — hedef satırda (I18/I21) görsele karşılık gelen bir kutucuk
+  bulunmadığından görsel metinle hizasız duruyordu. Görseller artık
+  taşınmıyor, TAMAMEN KALDIRILIYOR (`Drawing::setWorksheet(null, true)` —
+  koleksiyon üzerinde dönerken silmek yerine önce toplanıp sonra
+  kaldırıldı, aksi halde ArrayObject iterasyonu bozuluyordu) ve yerine
+  güvenilir bir metin işareti kondu: seçili seçeneğin yanındaki (I sütunu)
+  hücreye kalın siyah büyük punto "X" yazılıyor, kalın metinle birlikte
+  çift katmanlı net bir işaret oluşuyor. **374 test toplam** (yeni test
+  eklenmedi, mevcut test genişletildi).
 
 ## Notlar
 

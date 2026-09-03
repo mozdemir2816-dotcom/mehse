@@ -172,34 +172,49 @@ class SertifikaYildizGrupUretici
 
     /**
      * Eğitim Türü (İlk Defa/Tekrar) ve Eğitim Şekli (Uzaktan/Yüz Yüze) seçimi
-     * şablonda iki şekilde belirginleştirilir: (1) şablonun kendi onay işareti
-     * görseli seçili satıra taşınır, (2) seçili seçeneğin metni KALIN yapılır
-     * — kullanıcı: "seçilen seçenekleri işaretle." İki seçenek de metin
-     * olarak GÖRÜNMEYE devam eder (şablon formatı bozulmaz), yalnız hangisinin
-     * seçili olduğu artık tek bakışta belli olur.
+     * şablonda iki şekilde belirginleştirilir: seçili seçeneğin metni KALIN
+     * yapılır VE hemen yanındaki (I sütunu) hücreye kalın siyah bir "X"
+     * çarpı işareti yazılır — kullanıcı: "seçilen seçenekleri işaretle...
+     * çarpı koyarak daha belirgin yapabilirsin." İki seçenek de metin olarak
+     * GÖRÜNMEYE devam eder (şablon satırı silinmiyor).
+     *
+     * Şablonun kendi onay işareti GÖRSELİ (Resim 4/5) taşınmıyor — hedef
+     * satırda karşılık gelen bir kutucuk olmadığından taşındığında metnin
+     * karşısına denk gelmiyordu (kullanıcı geri bildirimi); bunun yerine
+     * kaldırılıp yerine güvenilir bir metin işareti kullanılıyor.
      */
     private static function turSekilIsaretle(Worksheet $sheet, Sertifika $s): void
     {
         $turSatiri = $s->tur === 'tekrar' ? 19 : 18;
         $sekilSatiri = $s->sekil === 'uzaktan' ? 20 : 21;
 
-        foreach ($sheet->getDrawingCollection() as $cizim) {
-            if ($cizim->getCoordinates() === 'I19' || $cizim->getCoordinates() === 'I18') {
-                $cizim->setCoordinates('I'.$turSatiri);
-            }
+        $kaldirilacaklar = [];
 
-            if ($cizim->getCoordinates() === 'I20' || $cizim->getCoordinates() === 'I21') {
-                $cizim->setCoordinates('I'.$sekilSatiri);
+        foreach ($sheet->getDrawingCollection() as $cizim) {
+            if (in_array($cizim->getCoordinates(), ['I18', 'I19', 'I20', 'I21'], true)) {
+                $kaldirilacaklar[] = $cizim;
             }
+        }
+
+        foreach ($kaldirilacaklar as $cizim) {
+            $cizim->setWorksheet(null, true);
         }
 
         foreach ([18, 19] as $satir) {
-            $sheet->getStyle('F'.$satir)->getFont()->setBold($satir === $turSatiri);
+            self::secimIsaretiYaz($sheet, $satir, $satir === $turSatiri);
         }
 
         foreach ([20, 21] as $satir) {
-            $sheet->getStyle('F'.$satir)->getFont()->setBold($satir === $sekilSatiri);
+            self::secimIsaretiYaz($sheet, $satir, $satir === $sekilSatiri);
         }
+    }
+
+    private static function secimIsaretiYaz(Worksheet $sheet, int $satir, bool $secili): void
+    {
+        $sheet->getStyle('F'.$satir)->getFont()->setBold($secili);
+        $sheet->setCellValue('I'.$satir, $secili ? 'X' : '');
+        $sheet->getStyle('I'.$satir)->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('000000');
+        $sheet->getStyle('I'.$satir)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
     }
 
     private static function kaseEkle(Worksheet $sheet, string $hucre, ?string $kaseYolu): void
