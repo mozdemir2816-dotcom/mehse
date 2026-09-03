@@ -3,9 +3,20 @@
 Tek kişilik İş Güvenliği Uzmanı için İSG operasyon paneli. Referans ekran
 görüntüleri: `C:\Users\mozde\Desktop\isgpratik\` (kullanıcı ekledikçe artıyor).
 
-> **Kural:** `isgpratik` ekranları referanstır; kod/marka/metin birebir kopyalanmaz,
-> **modül ve akış** taklit edilir. Önceki projelerden (yeni-proje, katip-isg) **kod
-> alınmaz** — sıfırdan.
+> **Kural:** `isgpratik` ekranları referanstır; UI/renk/buton TASARIMI kod/marka/
+> metin olarak birebir kopyalanmaz, **modül ve akış** taklit edilir. Önceki
+> projelerden (yeni-proje, katip-isg) **kod alınmaz** — sıfırdan.
+>
+> **İSTİSNA — resmi/yasal belge ÇIKTILARI (Word/Excel/PDF):** Kullanıcı gerçek
+> bir referans belge paylaşırsa (isgpratik'ten indirilmiş bir çıktı, ya da
+> tamamen farklı bir kaynak — örn. gerçek bir OSGB'nin kendi şablonu, bkz.
+> Sertifika'daki "Yıldız Grup" Excel şablonu), o belge BİREBİR ŞABLON olarak
+> kullanılır (yalnız firma/kişi/tarih gibi değişken alanlar değişir, genel/
+> yasal metne dokunulmaz) — bkz. `[[resmi-belge-gercek-sablon-kullan]]` hafıza
+> notu ve `AcilDurumWordUretici`/`AtamaYazisiWordUretici`/
+> `SertifikaYildizGrupUretici` örnekleri. Referans yoksa, kendi tasarımımızla
+> (dompdf) üretiriz — ASLA yönetmelik/görev-sorumluluk gibi resmi içeriği
+> tahminle uydurmayız.
 
 ## Yığın
 
@@ -51,12 +62,12 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF; seçili bulgular DÖF Oluştur'a aktarılabilir) |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | **hazır** (9 kategori/41 madde + sektöre özel kendi başlık/madde ekleme, foto kanıtı → PDF isgpratik'in gerçek raporuyla birebir) |
 | Formlar & Belgeler | Kurul Toplantısı `[AI]` | `kurul-toplantisi` | **hazır** (toplantı + katılımcı + gündem + AI karar önerisi + PDF tutanak) |
-| Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF) |
-| Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık + katılımcı listesi → PDF) |
+| Formlar & Belgeler | Atama Yazıları | `atama-yazilari` | **hazır** (10 görev tipi, tekli/ekip; İSG Kurulu'nda İGU/Hekim otomatik + kurul görev tanımı + kaşe → PDF/gerçek isgpratik Word şablonu — üye başına ayrı belge/sayfa; Eğitim Katılım'a aktarım) |
+| Formlar & Belgeler | Eğitim Katılım | `egitim-katilim` | **hazır** (Genel/Sağlık/Teknik/İşyerine Özgü + 13 özel başlık — her madde işaretlenip dakikası değiştirilebilir + katılımcı listesi → PDF; Atama Yazıları'ndan katılımcı aktarımı kabul eder) |
 | Formlar & Belgeler | İşbaşı Eğt. Tutanağı | `isbasi-egitim` | **hazır** (konu kategorileri + eğitim yöntemi + TC gizleme → PDF) |
 | Formlar & Belgeler | Tatbikat Tutanağı | `tatbikat` | **hazır** (10 senaryo + ekip + değerlendirme + DÖF önerisi → PDF) |
 | Formlar & Belgeler | Tespit Öneri Defteri | `tespit-oneri-defteri` | **hazır** (hazır katalog + serbest/AI destekli madde → PDF) |
-| Formlar & Belgeler | Sertifika Oluştur | `sertifika` | **hazır** (4 tip: İSG/Yüksekte/Kapalı Alan/Yangın; katılımcı başına sayfa + otomatik kaşe → PDF) |
+| Formlar & Belgeler | Sertifika Oluştur | `sertifika` | **hazır** (4 tip: İSG/Yüksekte/Kapalı Alan/Yangın; düzenlenebilir Eğitim Konuları; katılımcı başına sayfa + otomatik kaşe → resmi eğitim belgesi PDF'i (4 gerçek çerçeve seçeneği, tek sayfa) veya İSG tipinde "Yıldız Grup" gerçek Excel şablonu) |
 | Formlar & Belgeler | Eğitim Soruları `[AI]` | `egitim-sorulari` | **hazır** (Gemini ile 10 soruluk sınav + manuel soru → PDF) |
 | Formlar & Belgeler | KKD Formu | `kkd-formu` | **hazır** (6 kategori TS EN katalog, çoklu çalışan × çoklu KKD → PDF) |
 | Formlar & Belgeler | İş İzin Formu | `is-izin-formu` | **hazır** (4 izin türü, dinamik güvenlik önlemleri → PDF) |
