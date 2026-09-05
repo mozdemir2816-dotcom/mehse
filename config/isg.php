@@ -2165,4 +2165,133 @@ return [
                 'ikincil_uretici' => \App\Support\AcilDurumWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Acil Durum Kroki Düzenleyici
+    |--------------------------------------------------------------------------
+    |
+    | Çekirdek sembol seti — isgpratik'teki geniş ISO 7010 kütüphanesinin tam
+    | kopyası değil, en sık kullanılan 8 sembolle sınırlı ilk sürüm. Şekiller
+    | basitleştirilmiş şematik piktogramlardır (resmi ISO 7010 sertifikalı
+    | sanat değil) — gerçek, yönetmeliğe uygun İSG işaretleri zaten Acil Durum
+    | Planı → "Acil Durum Afişleri" altında ayrı gerçek PDF dosyaları olarak var;
+    | bu kroki yalnızca konum/yerleşim şeması içindir.
+    |
+    */
+    'kroki' => [
+        'semboller' => [
+            'cikis' => ['ad' => 'Acil Çıkış', 'renk' => '#1a9850'],
+            'toplanma' => ['ad' => 'Toplanma Yeri', 'renk' => '#1a9850'],
+            'merdiven' => ['ad' => 'Kaçış Yönü / Merdiven', 'renk' => '#1a9850'],
+            'sondurucu' => ['ad' => 'Yangın Söndürücü', 'renk' => '#c0272d'],
+            'hidrant' => ['ad' => 'Yangın Dolabı', 'renk' => '#c0272d'],
+            'alarm' => ['ad' => 'Alarm Butonu', 'renk' => '#c0272d'],
+            'ilkyardim' => ['ad' => 'İlk Yardım', 'renk' => '#0e6f72'],
+            'oda' => ['ad' => 'Oda / Alan Etiketi', 'renk' => '#6b7280'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mevzuat Kütüphanesi
+    |--------------------------------------------------------------------------
+    |
+    | İSG pratiğinde en sık başvurulan Kanun/Yönetmelik/Tebliğ/Rehber'lerin
+    | kısa, yönlendirici bir dizini — isgpratik'teki genel mevzuat.gov.tr
+    | tarzı TAM kütüphane değil, mehse'nin kendi modüllerinde zaten dayanak
+    | olarak kullanılan mevzuatla sınırlı, İSG'ye özgü bir seçki. Açıklamalar
+    | genel bilgilendirme amaçlıdır; madde numarası/tarih gibi ayrıntılar için
+    | resmi kaynağa (mevzuat.gov.tr, resmigazete.gov.tr) bakılmalıdır.
+    |
+    */
+    'mevzuat' => [
+        'kategoriler' => [
+            'anayasa' => 'Anayasa',
+            'kanun' => 'Kanunlar',
+            'yonetmelik' => 'Yönetmelikler',
+            'teblig' => 'Tebliğler',
+            'rehber' => 'Rehberler',
+        ],
+        'liste' => [
+            ['baslik' => 'Türkiye Cumhuriyeti Anayasası', 'kategori' => 'anayasa',
+                'aciklama' => 'Çalışma hakkı, dinlenme hakkı ve sosyal güvenlik hakkına ilişkin temel hükümleriyle İSG mevzuatının anayasal dayanağıdır.'],
+
+            ['baslik' => '6331 sayılı İş Sağlığı ve Güvenliği Kanunu', 'kategori' => 'kanun',
+                'aciklama' => 'İSG\'nin temel kanunu — işveren yükümlülükleri, risk değerlendirmesi zorunluluğu, İSG uzmanı/işyeri hekimi görevlendirme, İSG kurulu ve idari para cezalarını düzenler.'],
+            ['baslik' => '4857 sayılı İş Kanunu', 'kategori' => 'kanun',
+                'aciklama' => 'İş sözleşmesi, çalışma süreleri, fazla mesai, yıllık ücretli izin ve iş güvencesine ilişkin temel çalışma hayatı hükümleri.'],
+            ['baslik' => '5510 sayılı Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu', 'kategori' => 'kanun',
+                'aciklama' => 'İş kazası ve meslek hastalığı bildirimi, sigortalılık ve sağlık hizmetlerine ilişkin hükümler.'],
+            ['baslik' => '6098 sayılı Türk Borçlar Kanunu', 'kategori' => 'kanun',
+                'aciklama' => 'İşverenin işçiyi gözetme borcu gibi hizmet sözleşmesine ilişkin genel hükümler içerir.'],
+
+            ['baslik' => 'İş Sağlığı ve Güvenliği Risk Değerlendirmesi Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Risk değerlendirmesi ekibinin oluşumu, yöntemi, süreci ve yenileme sürelerini düzenler.'],
+            ['baslik' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Acil durum planı hazırlama zorunluluğu, tahliye ve söndürme/kurtarma/koruma/ilk yardım destek ekiplerini düzenler.'],
+            ['baslik' => 'İş Sağlığı ve Güvenliği Kurulları Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => '50 ve üzeri çalışanı olan işyerlerinde İSG kurulu kurma şartı, üyeleri ve toplantı düzenini belirler.'],
+            ['baslik' => 'Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Zorunlu İSG eğitimlerinin konu başlıklarını ve tehlike sınıfına göre sürelerini düzenler.'],
+            ['baslik' => 'Kişisel Koruyucu Donanımların İşyerlerinde Kullanılması Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'KKD seçimi, ücretsiz temini, teslim tutanağı ve kullanım zorunluluğuna ilişkin esasları belirler.'],
+            ['baslik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'İş ekipmanlarının (vinç, forklift, basınçlı kap vb.) periyodik kontrol yükümlülüklerini (Ek-3) düzenler.'],
+            ['baslik' => 'İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'İşyeri hekiminin görevlerini ve tehlike sınıfına göre periyodik muayene sürelerini düzenler.'],
+            ['baslik' => 'İş Güvenliği Uzmanlarının Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'İSG uzmanı sınıflarını (A/B/C) ve görevlerini, çalışma sürelerini düzenler.'],
+            ['baslik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'OSGB/İSGB hizmet esasları ile yıllık çalışma planı hazırlama yükümlülüğünü düzenler.'],
+            ['baslik' => 'Elle Taşıma İşleri Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Elle taşıma kaynaklı kas-iskelet sistemi risklerinin değerlendirilmesi ve önlenmesini düzenler.'],
+            ['baslik' => 'Ekranlı Araçlarla Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Bilgisayar/ekran başında çalışmada ergonomi, mola ve göz sağlığı önlemlerini düzenler.'],
+            ['baslik' => 'Çalışanların Gürültü ile İlgili Risklerden Korunmalarına Dair Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Gürültü maruziyet sınır ve eylem değerlerini (alt/üst eylem değeri, sınır değer) düzenler.'],
+            ['baslik' => 'Çalışanların Titreşimle İlgili Risklerden Korunmalarına Dair Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'El-kol ve tüm vücut titreşimi maruziyet sınırlarını ve önlemlerini düzenler.'],
+            ['baslik' => 'Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Tehlikeli kimyasallarla çalışmada risk değerlendirmesi, ölçüm ve KKD önlemlerini düzenler.'],
+            ['baslik' => 'Kanserojen veya Mutajen Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Kanserojen/mutajen maddelere maruziyetin önlenmesi ve sağlık gözetimini düzenler.'],
+            ['baslik' => 'Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Bakteri, virüs gibi biyolojik etkenlere maruziyetin risk gruplarına göre sınıflandırılmasını ve önlenmesini düzenler.'],
+            ['baslik' => 'Yapı İşlerinde İş Sağlığı ve Güvenliği Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'İnşaat/şantiye işlerinde yüksekte çalışma, kazı, iskele gibi risklere özgü önlemleri düzenler.'],
+            ['baslik' => 'Maden İşyerlerinde İş Sağlığı ve Güvenliği Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Yeraltı ve yerüstü maden işletmelerine özgü İSG önlemlerini düzenler.'],
+            ['baslik' => 'Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Patlayıcı ortam oluşabilecek işyerlerinde bölgelendirme (zone) ve önlemleri düzenler.'],
+            ['baslik' => 'İşyeri Bina ve Eklentilerinde Alınacak Sağlık ve Güvenlik Önlemlerine İlişkin Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Zemin, merdiven, aydınlatma, havalandırma gibi işyeri bina şartlarını düzenler.'],
+            ['baslik' => 'Makina Emniyeti Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Makinelerin piyasaya arzında CE işareti ve temel sağlık/güvenlik gereklerini düzenler.'],
+            ['baslik' => 'Sağlık ve Güvenlik İşaretleri Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'İşyerlerinde kullanılacak uyarı, yasak, yangın ve kurtarma işaretlerinin standartlarını düzenler.'],
+            ['baslik' => 'İlkyardım Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'İşyerlerinde bulundurulması gereken ilkyardımcı sayısını (tehlike sınıfına göre) ve sertifika şartını düzenler.'],
+            ['baslik' => 'Tehlikeli ve Çok Tehlikeli İşlerde Çalıştırılacakların Mesleki Eğitimlerine Dair Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Tehlikeli/çok tehlikeli işlerde MYK mesleki yeterlilik belgesi zorunluluğunun dayanağıdır (bkz. Araçlar → MYK Zorunluluk Sorgula).'],
+            ['baslik' => 'Postalar Halinde İşçi Çalıştırılarak Yürütülen İşlerde Çalışmalara İlişkin Özel Usul ve Esaslar Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Vardiyalı (postalı) çalışmada dinlenme süresi ve postalar arası geçiş kurallarını düzenler.'],
+            ['baslik' => 'Binaların Yangından Korunması Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Yangın söndürme sistemleri, kaçış yolları ve periyodik bakım yükümlülüklerini düzenler.'],
+            ['baslik' => 'Asansör İşletme, Bakım ve Periyodik Kontrol Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Asansörlerin yıllık periyodik kontrol ve bakım yükümlülüklerini düzenler.'],
+            ['baslik' => 'İşyerlerinde İşin Durdurulmasına Dair Yönetmelik', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Hayati tehlike halinde işin durdurulması usul ve esaslarını düzenler.'],
+
+            ['baslik' => 'İş Sağlığı ve Güvenliğine İlişkin İşyeri Tehlike Sınıfları Tebliği', 'kategori' => 'teblig',
+                'aciklama' => 'NACE koduna göre işyeri tehlike sınıflarını (az/tehlikeli/çok tehlikeli) belirler (bkz. Araçlar → NACE Kod Sorgula).'],
+            ['baslik' => 'Meslekî Yeterlilik Kurumu Meslekî Yeterlilik Belgesi Zorunluluğu Getirilen Mesleklere İlişkin Tebliğ', 'kategori' => 'teblig',
+                'aciklama' => 'MYK belgesi zorunlu meslekleri ve yeterlilik kodlarını kademeli olarak (Sıra No ile) genişleten tebliğ dizisi (bkz. Araçlar → MYK Zorunluluk Sorgula).'],
+
+            ['baslik' => 'Çalışma ve Sosyal Güvenlik Bakanlığı — Risk Değerlendirmesi Rehberleri', 'kategori' => 'rehber',
+                'aciklama' => 'İSG Genel Müdürlüğü\'nün sektörel risk değerlendirmesi ve KKD seçimine yönelik uygulama rehberleri (ailevi.gov.tr / çalışma bakanlığı yayınları).'],
+            ['baslik' => 'SGK İş Kazası ve Meslek Hastalığı Bildirim Rehberi', 'kategori' => 'rehber',
+                'aciklama' => 'İş kazası/meslek hastalığının SGK\'ya bildirim süresi ve usulüne ilişkin uygulama rehberi.'],
+        ],
+    ],
 ];

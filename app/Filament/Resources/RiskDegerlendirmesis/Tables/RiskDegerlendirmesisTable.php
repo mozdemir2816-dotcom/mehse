@@ -9,6 +9,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
 class RiskDegerlendirmesisTable
@@ -36,6 +37,10 @@ class RiskDegerlendirmesisTable
                 SelectFilter::make('yontem')->label('Yöntem')->options(config('isg.risk_yontemleri')),
                 SelectFilter::make('durum')->label('Durum')->options(['taslak' => 'Taslak', 'yayinlandi' => 'Yayınlandı']),
             ])
+            ->groups([
+                Group::make('firma.unvan')->label('Firma')->collapsible(),
+            ])
+            ->defaultGroup('firma.unvan')
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),

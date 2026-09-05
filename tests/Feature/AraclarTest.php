@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\Araclar;
 use App\Models\User;
+use Database\Seeders\MykMeslekSeeder;
+use Database\Seeders\NaceKoduSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -111,5 +113,116 @@ class AraclarTest extends TestCase
 
         $this->assertCount(1, $component->get('gurultuOlcumleri'));
         $this->assertNull($component->get('gurultuOlcumleri')[0]['db']);
+    }
+
+    public function test_nace_kodu_noktali_girilirse_bulunur(): void
+    {
+        $this->seed(NaceKoduSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('naceKoduGirdi', '01.11.14')
+            ->call('naceSorgula');
+
+        $this->assertNotNull($component->instance()->naceSonuc);
+        $this->assertSame('tehlikeli', $component->instance()->naceSonuc->tehlike_sinifi);
+        $this->assertNull($component->instance()->naceHata);
+    }
+
+    public function test_nace_kodu_noktasiz_girilirse_normalize_edilip_bulunur(): void
+    {
+        $this->seed(NaceKoduSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('naceKoduGirdi', '011114')
+            ->call('naceSorgula');
+
+        $this->assertSame('01.11.14', $component->instance()->naceSonuc->kod);
+    }
+
+    public function test_gecersiz_formatta_nace_kodu_hata_doner(): void
+    {
+        $this->seed(NaceKoduSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('naceKoduGirdi', '123')
+            ->call('naceSorgula');
+
+        $this->assertNull($component->instance()->naceSonuc);
+        $this->assertNotNull($component->instance()->naceHata);
+    }
+
+    public function test_listede_olmayan_nace_kodu_bulunamadi_doner(): void
+    {
+        $this->seed(NaceKoduSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('naceKoduGirdi', '99.99.99')
+            ->call('naceSorgula');
+
+        $this->assertNull($component->instance()->naceSonuc);
+        $this->assertStringContainsString('bulunamadı', $component->instance()->naceHata);
+    }
+
+    public function test_nace_sorgusu_sifirlanir(): void
+    {
+        $this->seed(NaceKoduSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('naceKoduGirdi', '01.11.14')
+            ->call('naceSorgula')
+            ->call('naceSifirla');
+
+        $this->assertNull($component->get('naceKoduGirdi'));
+        $this->assertNull($component->instance()->naceSonuc);
+        $this->assertNull($component->instance()->naceHata);
+    }
+
+    public function test_myk_meslek_adiyla_aranir(): void
+    {
+        $this->seed(MykMeslekSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('mykAramaTerimi', 'Ahşap Kalıpçı')
+            ->call('mykAra');
+
+        $this->assertCount(1, $component->instance()->mykSonuclar);
+        $this->assertSame('11UY0011-3', $component->instance()->mykSonuclar->first()->yeterlilik_kodu);
+    }
+
+    public function test_myk_kod_ile_kismi_aranir_ve_birden_fazla_sonuc_doner(): void
+    {
+        $this->seed(MykMeslekSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('mykAramaTerimi', '17UY0301')
+            ->call('mykAra');
+
+        $this->assertCount(3, $component->instance()->mykSonuclar);
+    }
+
+    public function test_myk_eslesmeyen_arama_bos_sonuc_doner(): void
+    {
+        $this->seed(MykMeslekSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('mykAramaTerimi', 'Uzay Mühendisi Xyzabc')
+            ->call('mykAra');
+
+        $this->assertTrue($component->instance()->mykSonuclar->isEmpty());
+        $this->assertTrue($component->get('mykArandi'));
+    }
+
+    public function test_myk_sorgusu_sifirlanir(): void
+    {
+        $this->seed(MykMeslekSeeder::class);
+
+        $component = Livewire::test(Araclar::class)
+            ->set('mykAramaTerimi', 'Ahşap Kalıpçı')
+            ->call('mykAra')
+            ->call('mykSifirla');
+
+        $this->assertNull($component->get('mykAramaTerimi'));
+        $this->assertFalse($component->get('mykArandi'));
+        $this->assertTrue($component->instance()->mykSonuclar->isEmpty());
     }
 }

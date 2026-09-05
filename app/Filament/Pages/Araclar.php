@@ -2,8 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\MykMeslek;
+use App\Models\NaceKodu;
 use BackedEnum;
 use Filament\Pages\Page;
+use Illuminate\Database\Eloquent\Collection;
 use UnitEnum;
 
 /**
@@ -109,5 +112,70 @@ class Araclar extends Page
     public function gurultuHesaplayiciSifirla(): void
     {
         $this->gurultuOlcumleri = [['db' => null, 'saat' => null]];
+    }
+
+    // --- NACE Kod → Tehlike Sınıfı Sorgula ---
+    public ?string $naceKoduGirdi = null;
+
+    public ?string $naceHata = null;
+
+    public ?NaceKodu $naceSonuc = null;
+
+    public function naceSorgula(): void
+    {
+        $this->naceHata = null;
+        $this->naceSonuc = null;
+
+        $girdi = trim((string) $this->naceKoduGirdi);
+
+        if ($girdi === '') {
+            return;
+        }
+
+        if (NaceKodu::normalizeKod($girdi) === null) {
+            $this->naceHata = '6 haneli bir NACE kodu girin (ör. 01.11.14 veya 011114).';
+
+            return;
+        }
+
+        $sonuc = NaceKodu::bul($girdi);
+
+        if (! $sonuc) {
+            $this->naceHata = 'Bu kod EK-1 listesinde bulunamadı — 6 haneli en alt kırılım (faaliyet) kodu olduğundan emin olun.';
+
+            return;
+        }
+
+        $this->naceSonuc = $sonuc;
+    }
+
+    public function naceSifirla(): void
+    {
+        $this->reset(['naceKoduGirdi', 'naceHata', 'naceSonuc']);
+    }
+
+    // --- MYK Zorunluluk Sorgula ---
+    public ?string $mykAramaTerimi = null;
+
+    public bool $mykArandi = false;
+
+    /** @var Collection<int, MykMeslek> */
+    public Collection $mykSonuclar;
+
+    public function mount(): void
+    {
+        $this->mykSonuclar = new Collection;
+    }
+
+    public function mykAra(): void
+    {
+        $this->mykArandi = true;
+        $this->mykSonuclar = MykMeslek::ara((string) $this->mykAramaTerimi);
+    }
+
+    public function mykSifirla(): void
+    {
+        $this->reset(['mykAramaTerimi', 'mykArandi']);
+        $this->mykSonuclar = new Collection;
     }
 }

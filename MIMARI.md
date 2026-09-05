@@ -53,12 +53,14 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | **hazır** (3 sekme; portföy karnesi — 12 kriter) |
 | Yönetim | Profilim | `profilim` | **TAMAMLANDI** (künye + sayaçlar + isgpratik'in 11 sekmesinin tamamı — Faz 5) |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | **hazır** (bilgi sayfası — gerçek eklenti yok, stub) |
+| Yönetim | Mevzuat | `mevzuat` | **hazır** (İSG'ye özgü ~40 kalemlik kanun/yönetmelik/tebliğ/rehber dizini, arama + kategori filtresi) |
 | **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (Gemini) yöntemleri + PDF çıktısı; Kayıtlı/Excel kalan |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
 | Risk Yönetimi | Risk Prosedürleri | `risk-prosedurleri` | **hazır** (Matris/Fine-Kinney gerçek prosedür metni + kendi .docx'ini yükleme — Faz 6) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
+| Risk Yönetimi | Acil Durum Krokisi | `acil-durum-krokisi` | **hazır** (SVG editör — 8 çekirdek sembol, 90°'ye kenetlenen duvar, plan altlığı, PDF) |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF; AI Saha Analizi'nden bulgu aktarımı kabul eder) |
 | Formlar & Belgeler | AI Saha Analizi `[AI]` | `ai-saha-analizi` | **hazır** (Gemini vision fotoğraf analizi → İSG Saha Gözetim Raporu PDF; seçili bulgular DÖF Oluştur'a aktarılabilir) |
 | Formlar & Belgeler | Saha Denetimi | `saha-denetimi` | **hazır** (9 kategori/41 madde + sektöre özel kendi başlık/madde ekleme, foto kanıtı → PDF isgpratik'in gerçek raporuyla birebir) |
@@ -79,7 +81,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Formlar & Belgeler | Ücretsiz E-Reçetem | `e-recetem` | **hazır** (bilgi sayfası — e-Reçete süreci, uygunluk, SSS) |
 | **Planlama & Arşiv** | Yıllık Planlar | `yillik-planlar` | **hazır** (3 sekme: Çalışma Planı + Eğitim Planı + Değerlendirme Raporu → PDF) |
 | Planlama & Arşiv | Ziyaret Programı | `ziyaret-programi` | **hazır** (basitleştirilmiş: firma+yıl → 12 aylık satır, AI amaç önerisi → PDF) |
-| Planlama & Arşiv | Araçlar | `araclar` | **hazır** (Kaza Sıklık/Ağırlık Hızı + Gürültü Lex,8h hesaplayıcıları) |
+| Planlama & Arşiv | Araçlar | `araclar` | **hazır** (Kaza Sıklık/Ağırlık Hızı + Gürültü Lex,8h hesaplayıcıları + NACE Kod → Tehlike Sınıfı Sorgula + MYK Zorunluluk Sorgula) |
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
 | Yönetim | Firmalar | `firmalar` | **hazır** (Çalışanlar RelationManager dâhil) |
 | Yönetim | Çalışanlar | `calisanlar` | **hazır** |
@@ -457,10 +459,11 @@ Gerçek LLM yok; `App\Support\RiskUretici` + `config/isg.php → risk_ai`. Akı�
     "Şablonlar" akışıyla (değişiklik gerekmedi) her zamanki gibi yeni
     firmalara tek tıkla uygulanıyor, puanlar dahil.
   **130 test toplam.**
-  - **Kalan:** Kayıtlı Risklerim (klasörlü); `RiskSablonu` `maddeler` düzenleme
-    (repeater); İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/
-    Zemin İyileştirme) çoklu-seçim arayüzü (kullanıcı Tehlike Kütüphanesi'ne
-    kendi kategorilerini yükledikçe kurulacak); sektörel "orijinal şablon" Word
+  - **Kalan:** ~~Kayıtlı Risklerim (klasörlü)~~ ve ~~`RiskSablonu` `maddeler`
+    düzenleme~~ **✅ 06.09.2026'da tamamlandı** (bkz. aşağıdaki Durum notları);
+    İnşaat gibi sektörlerde alt-faaliyet (Kazı/Kalıp/İskele/Çatı/Zemin
+    İyileştirme) çoklu-seçim arayüzü (kullanıcı Tehlike Kütüphanesi'ne kendi
+    kategorilerini yükledikçe kurulacak); sektörel "orijinal şablon" Word
     çıktısı (Acil Durum'daki gibi — risk tablosu değişken satır sayılı olduğundan
     daha karmaşık, ayrı ele alınacak).
 - **Faz 3h — Eğitim Katılım Formu ✅ (isgpratik EĞİTİM klasörü, 33 ekran görüntüsü):**
@@ -1423,6 +1426,205 @@ gerçek panele işlendi.
   tüpü dahil). Üçü de Artifact + PhpSpreadsheet ile Excel olarak
   `Downloads/`'a teslim edildi, mehse kod tabanına HİÇ dokunmadı — karışık
   bağlamda tutmamak için MIMARI.md'ye ayrıntı yazılmadı, sadece bu not.
+
+## Durum — 2026-09-05/06 (NACE Kod → Tehlike Sınıfı Sorgula)
+
+**431 test** (426 → +5). `isgpratik`'te referans klasörüne eklenmiş ama henüz hiçbir
+modülde karşılığı olmayan 4 ekran tarandı (95/99-100/101.jpg + "NACE Kod" tarihli
+ekran görüntüsü): **Mevzuat kütüphanesi**, **Acil Durum Kroki Düzenleyici**, **MYK
+Zorunluluk Sorgula**, **NACE Kod Tehlike Sınıfı Sorgula** — kullanıcı en küçük
+kapsamlı olan NACE aracıyla başlanmasını seçti; diğer üçü sırada.
+
+- **Resmi kaynak, tahmin değil:** Kullanıcının elinde NACE→tehlike sınıfı dosyası
+  yoktu ("resmi şablon kullan" dedi) — mevzuatı ezbere yazmak yerine gerçek kaynak
+  arandı ve bulundu: `mevzuat.gov.tr`'deki konsolide tebliğ sayfası HTML'i içinde
+  `<a href="9.5.16909-Ek.xlsx">` linki 404 verdi (SPA route, gerçek dosya farklı
+  yolda), ama Resmî Gazete arşivinden orijinal dosyaya doğrudan ulaşıldı:
+  `resmigazete.gov.tr/eskiler/2012/12/20121226-11-1.xls` — 26/12/2012 tarihli ve
+  28509 sayılı Resmî Gazete, "İş Sağlığı ve Güvenliğine İlişkin İşyeri Tehlike
+  Sınıfları Tebliği" EK-1 (gerçek eski-format .xls, 3194 satır, NACE Rev.2 altılı
+  kod hiyerarşisi + Tehlike Sınıfı sütunu).
+  - PhpSpreadsheet ile parse edilip yalnız 6 haneli "yaprak" (`\d\d\.\d\d\.\d\d`)
+    kodlar + üst tek harfli sektör başlığı (`sektor_adi`) ayıklandı →
+    **2182 temiz kayıt**, `database/data/nace-kodlari.php` (kaynak yorumu dahil).
+  - **Bilinçli sınırlama, MIMARI'ye not düşüldü:** bu tebliğ 2013-2026 arasında
+    16 kez kısmen değiştirildi (son değişiklik 1/4/2026, 33211 sayılı RG);
+    tam güncel konsolide tabloyu tek seferde indirmenin güvenilir bir yolu
+    bulunamadı (mevzuat.gov.tr'nin ek dosyası 404, Resmî Gazete'nin 2025/03 PDF'i
+    12MB'lık ayrı bir değişiklik tebliği — tam liste değil). Taban 2012 verisi
+    kullanıldı, sayfaya görünür bir kaynak notu eklendi ("sık değişen sektörlerde
+    güncel RG metniyle teyit önerilir") — sessizce "güncel" diye sunulmadı.
+- `App\Models\NaceKodu` (`nace_kodlari` tablosu) — `normalizeKod()` kullanıcı
+  girdisini ("01.11.14", "011114", boşluklu) noktalı 6 haneli forma çevirir,
+  `bul()` ile sorgular. `NaceKoduSeeder` (`DatabaseSeeder`'a eklendi,
+  `upsert` + 500'lük chunk).
+- `App\Filament\Pages\Araclar`'a üçüncü bölüm: kod gir → Sorgula → tanım +
+  renkli tehlike sınıfı rozeti (`FirmasTable` ile aynı renk kuralı:
+  çok tehlikeli=danger/tehlikeli=warning/az tehlikeli=success). Geçersiz format
+  ve listede bulunamayan kod için ayrı hata mesajları. `AraclarTest`'e 5 test
+  eklendi (nokta/noktasız girdi, geçersiz format, bulunamayan kod, sıfırlama).
+
+## Durum — 2026-09-06 (MYK Zorunluluk Sorgula)
+
+**435 test** (431 → +4, isgpratik'te bulunan 4 yeni ekrandan ikincisi tamamlandı;
+Mevzuat kütüphanesi ve Acil Durum Kroki Düzenleyici sırada).
+
+- **Yine gerçek kaynak, tahmin yok:** isgpratik'in ekranı "158 meslek" gösteriyordu
+  ama bu statik/eski bir sayı — MYK'nın kendi CANLI portalından (`portal.myk.gov.tr/
+  index.php?belge_zorunlu=1&option=com_yeterlilik&view=arama`, "Belge Zorunluluğu
+  Kapsamındaki Meslekler" sorgusu) doğrudan çekildi: **242 yeterlilik kodu**
+  (05.09.2026 anlık görüntüsü — 23/3/2026 tarihli 33202 sayılı RG tebliğiyle 40
+  meslek daha eklenmiş, haber kaynaklarında "244" deniyor; portalın kendi HTML'i
+  242 benzersiz kod içeriyordu, küçük fark muhtemelen haberin yuvarlaması).
+  - Sayfanın DOM yapısı: her yeterlilik kodu için 1+ REVİZYON alt satırı var
+    (rowspan ile "Yeterlilik Adı"/"Kodu" tek satırda, sonraki revizyon satırları
+    aynı "Belge Zorunluluk Tarihi"ni tekrarlıyor) — DOMDocument/DOMXPath ile
+    grup grup ayrıştırılıp en güncel revizyonun tarihi esas alındı.
+    3 kod (`11UY0036-2`, `11UY0037-2`, `12UY0062-3`) portalda tarih sütunu boş
+    geldi — muhtemelen yeni eklenmiş ve zorunluluk tarihi henüz belirlenmemiş;
+    veri OLDUĞU GİBİ (boş) tutuldu, tahmini tarih uydurulmadı.
+  - `database/data/myk-meslekleri.php` (kaynak yorumu + çekim tarihi dahil).
+- `App\Models\MykMeslek` (`myk_meslekleri` tablosu) — `ara()` meslek adında veya
+  kodda kısmi eşleşme arar. `MykMeslekSeeder` (`DatabaseSeeder`'a eklendi).
+- `Araclar` sayfasına dördüncü bölüm: serbest metin ara → Sorgula → aynı meslek
+  adına ait TÜM yeterlilik kodları tek kartta gruplu (`groupBy('yeterlilik_adi')`,
+  isgpratik'teki "Ahşap Mobilya İmalatçısı: 3 kod" görünümüyle aynı mantık) +
+  Belge Zorunluluk Tarihi. Sonuç yoksa/aranmadıysa ayrı durumlar. Kaynağa canlı
+  link + "MYK periyodik günceller" notu. `AraclarTest`'e 4 test eklendi.
+- **Not (ileride karşılaşılabilir):** arama `LIKE` ile yapılıyor; hem sqlite
+  (test) hem mehse'nin gerçek MySQL bağlantısı (`utf8mb4_unicode_ci`, `turkish_ci`
+  DEĞİL) İ/I büyük-küçük dönüşümünü İngilizce kurallarla yapıyor
+  (bkz. `[[turkce-buyuk-harf-donusumu]]`) — yani "kaynakçı" küçük harfle
+  yazılırsa "Kaynakçı" ile HER ZAMAN eşleşeceği garanti değil. Testler kasıtlı
+  olarak veride var olan büyük/küçük harfle yazıldı; case-insensitive Türkçe
+  arama iddia edilmedi. Kullanıcıdan şikayet gelirse çözüm: sütun koleksiyonunu
+  `utf8mb4_turkish_ci`'ye çevirmek ya da normalize edilmiş bir arama sütunu eklemek.
+
+## Durum — 2026-09-06 (Mevzuat Kütüphanesi)
+
+**441 test** (435 → +6: 5 `MevzuatTest` + 1 `NavigasyonTest`, isgpratik'te bulunan 4 yeni ekrandan üçüncüsü tamamlandı;
+yalnız Acil Durum Kroki Düzenleyici kaldı — büyük kapsamı nedeniyle ayrı bir
+oturuma bırakıldı).
+
+- **Kapsam bilinçli olarak daraltıldı, isgpratik birebir kopyalanmadı:**
+  isgpratik'in Mevzuat sayfası genel mevzuat.gov.tr tarzı bir kütüphaneydi
+  (Anayasa/Kanun/Yönetmelik/Tebliğ/Rehber kategorileriyle, İSG dışı binlerce
+  mevzuatı da kapsayan). NACE/MYK'nın aksine burada tek doğru bir "kaynak
+  dosya" yok — bu yüzden mehse'nin MIMARI kuralı gereği ("modül ve akış taklit
+  edilir, kod/marka/metin birebir kopyalanmaz") kapsam mehse'nin kendi
+  modüllerinde (Risk Değerlendirme, DÖF, Ceza-Tebliğ, KKD Formu, Acil Durum
+  Planı vb.) zaten dayanak olarak kullanılan ~40 kalemlik İSG'ye özgü bir
+  seçkiye daraltıldı — rastgele/alakasız mevzuat (asansör, basınçlı kap vb.
+  isgpratik'te vardı) eklenmedi. Bu, kullanıcıya AŞ sorulmadan alınan bir
+  kapsam kararı — memnun kalınmazsa `config('isg.mevzuat.liste')` genişletilir.
+  Açıklamalar genel/yönlendirici tutuldu (madde numarası iddia edilmedi),
+  sayfada "resmi ve güncel metin için mevzuat.gov.tr/resmigazete.gov.tr"
+  notu var.
+- `config('isg.mevzuat')`: `kategoriler` (anayasa/kanun/yonetmelik/teblig/rehber)
+  + `liste` (baslik/kategori/aciklama, ~40 kayıt). Ayrı veri dosyası değil,
+  `config/isg.php` içinde (statik/küçük veri, NACE/MYK gibi 200+ satır değil).
+- `App\Filament\Pages\Mevzuat` (`Yönetim` grubu, sort 3, slug `mevzuat`) —
+  serbest metin arama (başlık+açıklamada) + kategori pilleri, Livewire
+  `sonuclar()` computed metodu. `NavigasyonTest`'e eklendi, `MevzuatTest`
+  5 test.
+
+## Durum — 2026-09-06 (Acil Durum Krokisi Düzenleyici)
+
+**451 test** (441 → +10: 9 `AcilDurumKrokisiTest` + 1 `NavigasyonTest`, isgpratik'te bulunan 4 yeni ekranın SONUNCUSU da
+tamamlandı — bu turda hiç kod parçası isgpratik'ten alınmadı, akış/kavram
+taklit edildi, ölçek bilinçli küçültüldü).
+
+- **Kapsam kullanıcıyla netleştirildi (AskUserQuestion), tam isgpratik
+  kopyası değil:** isgpratik'in editörü sürükle-bırak CAD motoru, tam ISO 7010
+  sembol kütüphanesi ve vektörel PDF/PNG çıktısı vaat ediyordu. Kullanıcı üç
+  soruda: **(1)** çizim motoru **SVG** (Canvas değil — dompdf'e vektör olarak
+  daha kolay gömülür), **(2)** sembol paleti **çekirdek 8 sembol** (tam ISO
+  7010 seti değil), **(3)** plan altlığı yükleme **v1'de dahil** olsun dedi.
+  **Sürükleme YOK** (mehse'de hiçbir modülde raw canvas-drag JS yok, hepsi
+  Livewire round-trip) — tıkla-yerleştir (sembol) / iki-tıkla-çiz (duvar) /
+  listeden-sil modeli seçildi; bu, MIMARI'nin "modül ve akış taklit edilir,
+  birebir kopyalanmaz" kuralına en uygun, mevcut mimariyle tutarlı yaklaşımdı.
+- **Semboller resmi ISO 7010 sanatı İDDİA EDİLMEDİ:** `config('isg.kroki.
+  semboller')` + `resources/views/filament/pages/partials/kroki-sembol.blade.php`
+  — 8 basit şematik piktogram (çıkış oku, toplanma yeri, merdiven/kaçış yönü,
+  söndürücü, hidrant, alarm butonu, ilk yardım, oda etiketi), yalnızca temel
+  SVG ilkelleriyle (rect/circle/polygon/line — dompdf uyumluluğu için path/arc
+  kullanılmadı). Bu partial hem editörde hem PDF'te AYNEN paylaşılıyor —
+  ikisi asla birbirinden sapmaz. Sayfada açık not: "gerçek, yönetmeliğe uygun
+  işaretler zaten Acil Durum Planı → Acil Durum Afişleri'nde gerçek dosya
+  olarak var, bu yalnız konum şeması."
+- `acil_durum_krokileri` tablosu (firma başına 1, `duvarlar`/`semboller` json)
+  — `App\Models\AcilDurumKrokisi::firmaIcin()` (AcilDurumPlani ile aynı desen),
+  `lejant()` sembol tipine göre gruplar.
+- `App\Filament\Pages\AcilDurumKrokisi` (Risk Yönetimi, sort 6, slug
+  `acil-durum-krokisi`) — SVG tuvaline Alpine `x-on:click` ile tıklanan nokta
+  `getBoundingClientRect()`+`viewBox` oranıyla SVG koordinatına çevrilip
+  `$wire.nokta(x,y)` çağrılır. **90°'ye kenetleme:** iki nokta arası yatay
+  fark dikey farktan büyükse çizgi tam yatay, değilse tam dikey yapılır
+  (`AcilDurumKrokisi::nokta()`). Plan altlığı `FileUpload` ile yüklenir (aynı
+  `AcilDurumPlani`'nin "Tahliye Planı Görseli" deseni), SVG'de `<image opacity=.5>`
+  olarak arkaya basılır. `App\Support\AcilDurumKrokisiUretici` (dompdf, A4 yatay)
+  — editördeki AYNI `elemanlar`/partial'dan PDF üretir + lejant.
+  **Bilinçli olarak yapılmayan:** mevcut "Tahliye Planı Görseli" (AcilDurumPlani)
+  alanına otomatik aktarım — SVG'den rastere (PNG) sunucu tarafı dönüşüm için
+  güvenilir bir araç (Imagick+librsvg vb.) doğrulanmadığından iki özellik
+  bağımsız tutuldu, entegrasyon ayrı bir iş.
+  `AcilDurumKrokisiTest` (9 test), `NavigasyonTest`'e eklendi.
+  **Kalan (ileride):** eleman sürükleyerek taşıma (şu an sil+yeniden ekle),
+  daha geniş ISO 7010 seti, döndürme (rotasyon) desteği.
+
+## Durum — 2026-09-06 (Kayıtlı Risklerim — klasörlü görünüm)
+
+**452 test** (451 → +1). Faz 3a'dan beri açık duran "Kalan" kalemlerden ilki
+kapatıldı: kullanıcı 4 kalemden bunu seçti (Kayıtlı Risklerim, RiskSablonu
+madde düzenleme, İnşaat alt-faaliyet seçimi, sektörel Word çıktısı arasından).
+
+- Filament v5'in kendi `Grouping\Group` özelliği kullanıldı — özel bir
+  klasör/ağaç UI'ı YAZILMADI: `RiskDegerlendirmesisTable`'a
+  `->groups([Group::make('firma.unvan')->label('Firma')->collapsible()])`
+  + `->defaultGroup('firma.unvan')` eklendi. Sonuç: "Kayıtlı Değerlendirmeler"
+  listesi artık varsayılan olarak firma başına daraltılabilir bir bölüme
+  ayrılıyor (klasör hissi), kullanıcı isterse tablo üstündeki grup seçiciden
+  kaldırabilir/değiştirebilir (Filament'ın standart davranışı).
+  `RiskDegerlendirmeTest`'e 1 test eklendi (`getDefaultGroup()->getColumn()`
+  kontrolü + 2 farklı firma kaydının ikisinin de göründüğü doğrulaması).
+  **Ders:** Filament'ın yerleşik özelliği varken (`groups()`/`defaultGroup()`)
+  özel klasör görünümü kodlamaya gerek yoktu — kullanıcı isteğini "kod yaz"
+  değil "doğru API'yi bul" olarak çözmek daha az kod, daha az bakım demek.
+
+## Durum — 2026-09-06 (RiskSablonu Madde Düzenleme + güvenlik düzeltmesi)
+
+**456 test** (452 → +4). Faz 3a'nın "Kalan" listesindeki ikinci kalem kapatıldı.
+
+- `RiskSablonuResource` form'una `Repeater::make('maddeler')` eklendi —
+  bölüm/faaliyet/tehlike/risk/mevcut önlem/olasılık/(fine-kinney'de frekans)/
+  şiddet/öneri/sorumlu/termin alanları, `RiskDegerlendirmesi`nin
+  `MaddelerRelationManager`'ıyla AYNI `RiskSkorlama::olcek()` seçenekleri
+  kullanılıyor (tutarlı O/F/Ş listeleri). O/Ş(/F) Select'leri formdaki
+  `yontem` alanına (`->live()`) göre `Get('../../yontem')` ile reaktif —
+  yöntem değişince ölçek de değişiyor. Repeater daraltılabilir, sıra
+  düğmeleriyle yeniden sıralanabilir, varsayılan 0 öğeyle başlıyor.
+- **Yan etkide bulunan güvenlik düzeltmesi:** Repeater'ı eklerken fark edildi
+  — `RiskSablonuResource::getEloquentQuery()` paylaşılan şablonları HERKESE
+  görünür kılıyordu (`scopeGorunur`) ama edit FORMUNUN kendisinde sahiplik
+  kontrolü YOKTU (yalnız `DeleteAction`'da vardı) — yani paylaşılan bir
+  şablonu açan HERHANGİ bir kullanıcı `ad`/`sektor`/`yontem`'ini de,
+  şimdi eklenen madde listesini de değiştirip kaydedebilirdi. Bu, Repeater
+  eklenmeden ÖNCE de var olan bir açıktı (form zaten ad/sektör/yöntem
+  düzenliyordu), yeni yazma yeteneği ekleyince etkisi büyüdüğü için bu
+  turda düzeltildi: `RiskSablonuResource::canEdit()` eklendi
+  (`$record->user_id === Filament::auth()->id()`), Filament'ın
+  `EditRecord::authorizeAccess()`'i bunu otomatik çağırıp sahip değilse
+  403 döndürüyor; tablo satırındaki "Düzenle" aksiyonu da (Delete'te
+  zaten olduğu gibi) otomatik gizleniyor. **Bilinçli ödün:** artık paylaşılan
+  bir şablonu sahibi olmayan biri "sadece bakmak" için de açamıyor
+  (ayrı bir salt-okunur View sayfası yok) — güvenlik, "önizleme" kolaylığına
+  tercih edildi; önizleme ihtiyacı olursa ayrı iş.
+  `RiskSablonuResourceTest` (4 test: madde ekleme/düzenleme/silme +
+  paylaşılan-ama-sahibi-olmayan 403 alır).
+  **Ders:** bir kaynağa yeni bir yazma yeteneği eklerken, o kaynağın
+  MEVCUT yetkilendirmesini de gözden geçir — yalnız yeni eklenen alanı
+  değil, formun tamamını.
 
 ## Notlar
 

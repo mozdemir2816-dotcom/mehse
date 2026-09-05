@@ -28,6 +28,7 @@ class NavigasyonTest extends TestCase
             'kontrol merkezi' => ['/admin/kontrol-merkezi'],
             'profilim' => ['/admin/profilim'],
             'isg-katip robot' => ['/admin/isg-katip-robot'],
+            'mevzuat' => ['/admin/mevzuat'],
             'firmalar' => ['/admin/firmalar'],
             'calisanlar' => ['/admin/calisanlar'],
             'isg profesyonelleri' => ['/admin/isg-profesyonelleri'],
@@ -37,6 +38,7 @@ class NavigasyonTest extends TestCase
             'sektor sablonlari' => ['/admin/risk-sablonlari'],
             'risk kutuphanesi' => ['/admin/risk-kutuphanesi'],
             'acil durum plani' => ['/admin/acil-durum-plani'],
+            'acil durum krokisi' => ['/admin/acil-durum-krokisi'],
             // Formlar & Belgeler
             'dof olustur' => ['/admin/dof'],
             'ai saha analizi' => ['/admin/ai-saha-analizi'],

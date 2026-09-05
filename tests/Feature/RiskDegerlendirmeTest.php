@@ -247,4 +247,23 @@ class RiskDegerlendirmeTest extends TestCase
             ->assertCanSeeTableRecords([$benim])
             ->assertCountTableRecords(1);
     }
+
+    public function test_kayitli_degerlendirmeler_firmaya_gore_klasorlenir(): void
+    {
+        RiskDegerlendirmesi::create([
+            'firma_id' => Firma::factory()->for($this->uzman)->create(['unvan' => 'A Firması'])->id,
+            'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+        ]);
+        RiskDegerlendirmesi::create([
+            'firma_id' => Firma::factory()->for($this->uzman)->create(['unvan' => 'B Firması'])->id,
+            'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+        ]);
+
+        $component = Livewire::test(ListRiskDegerlendirmesis::class)->assertCountTableRecords(2);
+
+        $grup = $component->instance()->getTable()->getDefaultGroup();
+
+        $this->assertNotNull($grup);
+        $this->assertSame('firma.unvan', $grup->getColumn());
+    }
 }

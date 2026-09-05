@@ -94,4 +94,96 @@
             <x-filament::button size="xs" color="gray" wire:click="gurultuHesaplayiciSifirla">Sıfırla</x-filament::button>
         </div>
     </x-filament::section>
+
+    {{-- NACE KOD → TEHLİKE SINIFI SORGULA --}}
+    <x-filament::section icon="heroicon-o-magnifying-glass" icon-color="warning">
+        <x-slot name="heading">NACE Kod → Tehlike Sınıfı Sorgula</x-slot>
+        <x-slot name="description">6 haneli NACE Rev.2 faaliyet kodunu girin (ör. 01.11.14), İşyeri Tehlike Sınıfları Tebliği EK-1'deki tehlike sınıfını görün.</x-slot>
+
+        <div style="display:flex;gap:.75rem;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+                <label style="font-weight:600;font-size:.82rem">NACE Kodu</label>
+                <input type="text" placeholder="Örn: 01.11.14 veya 011114" wire:model="naceKoduGirdi" wire:keydown.enter="naceSorgula" style="{{ $girdi }}">
+            </div>
+            <x-filament::button color="warning" wire:click="naceSorgula">Sorgula</x-filament::button>
+            @if ($naceKoduGirdi || $naceSonuc)
+                <x-filament::button size="sm" color="gray" wire:click="naceSifirla">Temizle</x-filament::button>
+            @endif
+        </div>
+
+        @if ($naceHata)
+            <div style="margin-top:1rem;color:rgb(220 38 38);font-size:.85rem">{{ $naceHata }}</div>
+        @endif
+
+        @if ($naceSonuc)
+            @php
+                $renk = match ($naceSonuc->tehlike_sinifi) {
+                    'cok_tehlikeli' => 'danger',
+                    'tehlikeli' => 'warning',
+                    default => 'success',
+                };
+            @endphp
+            <div style="{{ $kutu }};margin-top:1rem">
+                <div style="font-size:.78rem;color:rgb(107 114 128)">{{ $naceSonuc->kod }} @if($naceSonuc->sektor_adi) · {{ $naceSonuc->sektor_adi }} @endif</div>
+                <div style="font-weight:600;margin-top:.25rem">{{ $naceSonuc->tanim }}</div>
+                <div style="margin-top:.6rem">
+                    <x-filament::badge color="{{ $renk }}">{{ config('isg.tehlike_siniflari')[$naceSonuc->tehlike_sinifi] }}</x-filament::badge>
+                </div>
+            </div>
+        @endif
+
+        <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:1rem">
+            Kaynak: 26/12/2012 tarihli ve 28509 sayılı Resmî Gazete, İş Sağlığı ve Güvenliğine İlişkin İşyeri
+            Tehlike Sınıfları Tebliği, EK-1 (taban liste). Tebliğ 2013-2026 arasında 16 kez kısmen değiştirildi;
+            burada gösterilen sınıf 2012 taban metnindendir — sık değişen sektörlerde (inşaat, gıda, kimya vb.)
+            güncel Resmî Gazete metniyle teyit edilmesi önerilir.
+        </p>
+    </x-filament::section>
+
+    {{-- MYK ZORUNLULUK SORGULA --}}
+    <x-filament::section icon="heroicon-o-identification" icon-color="warning">
+        <x-slot name="heading">MYK Zorunluluk Sorgula</x-slot>
+        <x-slot name="description">Meslek adı veya yeterlilik kodu ile MYK (Mesleki Yeterlilik Belgesi) zorunluluğu kapsamındaki meslekleri arayın.</x-slot>
+
+        <div style="display:flex;gap:.75rem;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+                <label style="font-weight:600;font-size:.82rem">Meslek Adı veya Kodu</label>
+                <input type="text" placeholder="Örn: Betonarme Demircisi veya 11UY0011" wire:model="mykAramaTerimi" wire:keydown.enter="mykAra" style="{{ $girdi }}">
+            </div>
+            <x-filament::button color="warning" wire:click="mykAra">Sorgula</x-filament::button>
+            @if ($mykAramaTerimi || $mykArandi)
+                <x-filament::button size="sm" color="gray" wire:click="mykSifirla">Temizle</x-filament::button>
+            @endif
+        </div>
+
+        @if ($mykArandi)
+            @if ($mykSonuclar->isEmpty())
+                <div style="margin-top:1rem;color:rgb(220 38 38);font-size:.85rem">Eşleşen meslek bulunamadı.</div>
+            @else
+                <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem">
+                    @foreach ($mykSonuclar->groupBy('yeterlilik_adi') as $ad => $kayitlar)
+                        <div style="{{ $kutu }}">
+                            <div style="font-weight:600">{{ $ad }}</div>
+                            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
+                                @foreach ($kayitlar as $k)
+                                    <span style="font-size:.78rem;font-family:monospace;background:rgb(107 114 128 / .12);border-radius:.4rem;padding:.15rem .5rem">{{ $k->yeterlilik_kodu }}</span>
+                                @endforeach
+                            </div>
+                            <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.4rem">
+                                Belge Zorunluluk Tarihi: {{ $kayitlar->first()->belge_zorunluluk_tarihi ?? 'Henüz belirlenmemiş' }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        @endif
+
+        <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:1rem">
+            Kaynak: MYK (Mesleki Yeterlilik Kurumu) resmi portalı, "Belge Zorunluluğu Kapsamındaki Meslekler"
+            sorgu sayfası — 05.09.2026 anlık görüntüsü, {{ \App\Models\MykMeslek::count() }} yeterlilik kodu.
+            MYK bu listeyi periyodik olarak yeni meslek eklemeleriyle günceller; kesinleştirme için
+            <a href="https://portal.myk.gov.tr/index.php?belge_zorunlu=1&option=com_yeterlilik&view=arama" target="_blank" style="color:rgb(217 119 6)">resmi MYK kaynağını</a>
+            kontrol edin.
+        </p>
+    </x-filament::section>
 </x-filament-panels::page>

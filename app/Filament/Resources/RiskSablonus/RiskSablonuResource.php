@@ -5,13 +5,17 @@ namespace App\Filament\Resources\RiskSablonus;
 use App\Filament\Resources\RiskSablonus\Pages\EditRiskSablonu;
 use App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus;
 use App\Models\RiskSablonu;
+use App\Support\RiskSkorlama;
 use BackedEnum;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -50,6 +54,12 @@ class RiskSablonuResource extends Resource
         return parent::getEloquentQuery()->gorunur(Filament::auth()->id());
     }
 
+    /** Paylaşılan şablonlar herkese GÖRÜNÜR ama yalnız sahibi DÜZENLEYEBİLİR/uygulayabildiği maddeleri değiştirebilir. */
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return $record->user_id === Filament::auth()->id();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -61,10 +71,44 @@ class RiskSablonuResource extends Resource
                 TextInput::make('sektor_adi')->label('Sektör (serbest metin)')
                     ->helperText('Sektör listede yoksa buraya yazın'),
                 Select::make('yontem')->label('Puanlama yöntemi')
-                    ->options(config('isg.risk_yontemleri'))->required(),
+                    ->options(config('isg.risk_yontemleri'))->required()->live(),
                 Toggle::make('paylasildi')->label('Diğer uzmanlarla paylaş')
                     ->helperText('Açıksa tüm kullanıcılar bu şablonu görüp uygulayabilir'),
             ]),
+
+            Section::make('Maddeler')
+                ->description('Şablon Risk Sihirbazı\'nda uygulanınca bu maddeler aynen kopyalanır.')
+                ->schema([
+                    Repeater::make('maddeler')
+                        ->label('')
+                        ->schema([
+                            TextInput::make('bolum')->label('Bölüm / Ünite'),
+                            TextInput::make('faaliyet')->label('Faaliyet'),
+                            Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
+                            Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
+                            Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
+                            Select::make('olasilik')->label('Olasılık')
+                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') === 'fine_kinney' ? 'fine_kinney' : 'matris_5x5', 'olasilik'))
+                                ->native(false),
+                            Select::make('frekans')->label('Frekans (maruz kalma)')
+                                ->options(fn () => RiskSkorlama::olcek('fine_kinney', 'frekans'))
+                                ->native(false)
+                                ->visible(fn (Get $get) => $get('../../yontem') === 'fine_kinney'),
+                            Select::make('siddet')->label('Şiddet')
+                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') === 'fine_kinney' ? 'fine_kinney' : 'matris_5x5', 'siddet'))
+                                ->native(false),
+                            Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpanFull(),
+                            TextInput::make('sorumlu')->label('Sorumlu'),
+                            TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
+                        ])
+                        ->columns(3)
+                        ->itemLabel(fn (array $state): ?string => $state['tehlike'] ?? null)
+                        ->addActionLabel('Madde Ekle')
+                        ->collapsible()
+                        ->collapsed()
+                        ->reorderableWithButtons()
+                        ->defaultItems(0),
+                ]),
         ]);
     }
 

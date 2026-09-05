@@ -10,6 +10,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TehlikeKutuphanesiSeeder::class,
+            NaceKoduSeeder::class,
+            MykMeslekSeeder::class,
         ]);
     }
 }
