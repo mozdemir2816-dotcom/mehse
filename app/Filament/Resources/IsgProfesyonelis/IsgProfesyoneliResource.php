@@ -5,8 +5,10 @@ namespace App\Filament\Resources\IsgProfesyonelis;
 use App\Filament\Resources\IsgProfesyonelis\Pages\CreateIsgProfesyoneli;
 use App\Filament\Resources\IsgProfesyonelis\Pages\EditIsgProfesyoneli;
 use App\Filament\Resources\IsgProfesyonelis\Pages\ListIsgProfesyonelis;
+use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
@@ -14,6 +16,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -89,6 +92,55 @@ class IsgProfesyoneliResource extends Resource
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
             ])
             ->recordActions([
+                Action::make('firmalaraAta')
+                    ->label('Firmalara Ata')
+                    ->icon('heroicon-o-building-office-2')
+                    ->color('gray')
+                    ->modalHeading(fn (IsgProfesyoneli $record) => $record->ad_soyad.' — Firmalara Toplu Ata')
+                    ->modalDescription('Seçilen firmaların ilgili alanına bu kişi atanır; işaretini kaldırdığınız firmalardan atama silinir.')
+                    ->modalSubmitActionLabel('Ata')
+                    ->schema(fn (IsgProfesyoneli $record) => [
+                        Select::make('firma_idler')
+                            ->label('Firmalar')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->native(false)
+                            ->options(fn () => Firma::query()
+                                ->where('user_id', Filament::auth()->id())
+                                ->orderBy('unvan')
+                                ->pluck('unvan', 'id'))
+                            ->helperText($record->firmaAlani()
+                                ? null
+                                : 'Bu tip için atama alanı tanımlı değil.'),
+                    ])
+                    ->fillForm(fn (IsgProfesyoneli $record): array => [
+                        'firma_idler' => $record->firmaAlani()
+                            ? Firma::query()->where('user_id', Filament::auth()->id())
+                                ->where($record->firmaAlani(), $record->id)->pluck('id')->all()
+                            : [],
+                    ])
+                    ->action(function (IsgProfesyoneli $record, array $data): void {
+                        $alan = $record->firmaAlani();
+
+                        if (! $alan) {
+                            Notification::make()->title('Bu tip için atama yapılamıyor')->danger()->send();
+
+                            return;
+                        }
+
+                        $userId = Filament::auth()->id();
+                        $secilenler = $data['firma_idler'] ?? [];
+
+                        Firma::query()->where('user_id', $userId)->where($alan, $record->id)
+                            ->whereNotIn('id', $secilenler)->update([$alan => null]);
+
+                        Firma::query()->where('user_id', $userId)->whereIn('id', $secilenler)
+                            ->update([$alan => $record->id]);
+
+                        Notification::make()->title(count($secilenler).' firmaya atandı')->success()->send();
+                    }),
+
                 EditAction::make(),
                 DeleteAction::make(),
             ])

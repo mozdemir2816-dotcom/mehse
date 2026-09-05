@@ -82,7 +82,7 @@ return [
         ],
         // puan >= min → düzey (üstten alta)
         'bantlar' => [
-            ['min' => 25, 'ad' => 'Tolerans Gösterilemez Risk', 'renk' => '#7f1d1d', 'eylem' => 'Bu risk kontrol altına alınıncaya kadar çalışma yapılmamalıdır.'],
+            ['min' => 25, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Bu risk kontrol altına alınıncaya kadar çalışma yapılmamalıdır.'],
             ['min' => 15, 'ad' => 'Yüksek Risk', 'renk' => '#dc2626', 'eylem' => 'Bu risk azaltılıncaya kadar iş başlatılmamalı; devam eden işte acil önlem alınmalıdır.'],
             ['min' => 8, 'ad' => 'Orta Düzeyde Risk', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde risk azaltıcı önlemler alınmalıdır.'],
             ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'renk' => '#84cc16', 'eylem' => 'Ek kontrol gerekmeyebilir; maliyeti düşük iyileştirmeler düşünülmelidir.'],
@@ -117,7 +117,7 @@ return [
             '40' => 'Felaket (birden çok ölüm)',
         ],
         'bantlar' => [
-            ['min' => 400, 'ad' => 'Tolerans Gösterilemez Risk', 'renk' => '#7f1d1d', 'eylem' => 'Çalışma derhal durdurulmalıdır.'],
+            ['min' => 400, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Çalışma derhal durdurulmalıdır.'],
             ['min' => 200, 'ad' => 'Esaslı Risk', 'renk' => '#dc2626', 'eylem' => 'Kısa dönemde (birkaç ay) iyileştirme yapılmalıdır.'],
             ['min' => 70, 'ad' => 'Önemli Risk', 'renk' => '#f59e0b', 'eylem' => 'Yıl içinde iyileştirme yapılmalıdır.'],
             ['min' => 20, 'ad' => 'Olası Risk', 'renk' => '#84cc16', 'eylem' => 'Gözetim altında tutulmalı, iyileştirme planlanmalıdır.'],
@@ -141,19 +141,35 @@ return [
     | ilgili modül kurulunca `App\Support\PortfoyKarne` gerçek sayıma geçer.)
     */
     'kontrol_merkezi' => [
+        /*
+         | 'hazir' = mehse'de bu kriteri hesaplayacak gerçek modül şu an var mı?
+         | Yoksa 0/N döner; ilgili modül kurulunca `App\Support\PortfoyKarne`
+         | gerçek sayıma geçer. (Not: eskiden 'manuel_anahtar' ile Profilim >
+         | OSGB Takip'ten Excel'le elle işaretleme mümkündü — kullanıcı isteğiyle
+         | 05.09.2026'da tamamen kaldırıldı, MIMARI.md'de not var.)
+        */
         'kriterler' => [
             ['anahtar' => 'risk_degerlendirmesi', 'ad' => 'Risk Değerlendirmesi', 'ikon' => 'heroicon-o-sparkles', 'hazir' => true],
-            ['anahtar' => 'yillik_calisma_plani', 'ad' => 'Yıllık Çalışma Planı', 'ikon' => 'heroicon-o-calendar-days', 'hazir' => false],
+            ['anahtar' => 'yillik_calisma_plani', 'ad' => 'Yıllık Çalışma Planı', 'ikon' => 'heroicon-o-calendar-days', 'hazir' => true],
             ['anahtar' => 'acil_durum_plani', 'ad' => 'Acil Durum Planı Belgesi (ADP)', 'ikon' => 'heroicon-o-exclamation-triangle', 'hazir' => false],
             ['anahtar' => 'acil_durum_destek', 'ad' => 'Acil Durum Destek Elemanları', 'ikon' => 'heroicon-o-user-group', 'hazir' => false],
-            ['anahtar' => 'acil_durum_tatbikat', 'ad' => 'Acil Durum Tatbikat Tutanağı', 'ikon' => 'heroicon-o-fire', 'hazir' => false],
-            ['anahtar' => 'isg_kurulu', 'ad' => 'İSG Kurulu Toplantısı', 'ikon' => 'heroicon-o-users', 'hazir' => false, 'kosul' => 'elli_calisan'],
-            ['anahtar' => 'yillik_egitim_plani', 'ad' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'hazir' => false],
-            ['anahtar' => 'yillik_degerlendirme', 'ad' => 'Yıllık Değerlendirme Raporu', 'ikon' => 'heroicon-o-document-chart-bar', 'hazir' => false],
+            ['anahtar' => 'acil_durum_tatbikat', 'ad' => 'Acil Durum Tatbikat Tutanağı', 'ikon' => 'heroicon-o-fire', 'hazir' => true],
+            ['anahtar' => 'isg_kurulu', 'ad' => 'İSG Kurulu Toplantısı', 'ikon' => 'heroicon-o-users', 'hazir' => true, 'kosul' => 'elli_calisan'],
+            ['anahtar' => 'yillik_egitim_plani', 'ad' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'hazir' => true],
+            ['anahtar' => 'yillik_degerlendirme', 'ad' => 'Yıllık Değerlendirme Raporu', 'ikon' => 'heroicon-o-document-chart-bar', 'hazir' => true],
             ['anahtar' => 'calisan_temsilcisi', 'ad' => 'Çalışan Temsilcisi Görevlendirmesi', 'ikon' => 'heroicon-o-identification', 'hazir' => false],
-            ['anahtar' => 'igu_atamasi', 'ad' => 'İş Güvenliği Uzmanı (İGU) Ataması', 'ikon' => 'heroicon-o-shield-check', 'hazir' => false],
-            ['anahtar' => 'hekim_atamasi', 'ad' => 'İşyeri Hekimi Ataması', 'ikon' => 'heroicon-o-heart', 'hazir' => false],
-            ['anahtar' => 'tespit_oneri', 'ad' => 'Tespit ve Öneri Defteri Kaydı', 'ikon' => 'heroicon-o-book-open', 'hazir' => false],
+            ['anahtar' => 'igu_atamasi', 'ad' => 'İş Güvenliği Uzmanı (İGU) Ataması', 'ikon' => 'heroicon-o-shield-check', 'hazir' => true],
+            ['anahtar' => 'hekim_atamasi', 'ad' => 'İşyeri Hekimi Ataması', 'ikon' => 'heroicon-o-heart', 'hazir' => true],
+            ['anahtar' => 'tespit_oneri', 'ad' => 'Tespit ve Öneri Defteri Kaydı', 'ikon' => 'heroicon-o-book-open', 'hazir' => true],
+            ['anahtar' => 'egitim_katilim_formu', 'ad' => 'Eğitim Katılım Formu', 'ikon' => 'heroicon-o-clipboard-document-check', 'hazir' => true],
+            ['anahtar' => 'periyodik_kontrol_raporu', 'ad' => 'Periyodik Kontrol Raporu', 'ikon' => 'heroicon-o-wrench-screwdriver', 'hazir' => false],
+            ['anahtar' => 'calisma_izin_formu', 'ad' => 'Çalışma İzin Formu', 'ikon' => 'heroicon-o-document-check', 'hazir' => true],
+            ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true],
+            ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true],
+            ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => false],
+            ['anahtar' => 'saglik_raporu', 'ad' => 'Sağlık Raporu', 'ikon' => 'heroicon-o-document-text', 'hazir' => true],
+            ['anahtar' => 'onayli_defter_nushalari', 'ad' => 'Onaylı Defter Nüshaları', 'ikon' => 'heroicon-o-book-open', 'hazir' => false],
+            ['anahtar' => 'diger_evrak', 'ad' => 'Diğer', 'ikon' => 'heroicon-o-document', 'hazir' => false],
         ],
 
         'uzman_tavsiyeleri' => [
@@ -1083,6 +1099,35 @@ return [
                 'Tatbikat ve değerlendirme: yıllık tatbikat zorunluluğu, kayıtlar ve eksikliklerin giderilmesi',
             ]],
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Eğitim Kayıtları — Profilim > Eğitimler (isgpratik 139-140.jpg)
+    |--------------------------------------------------------------------------
+    | Bu liste artık doğrudan matris sütunu DEĞİL — yalnız "Konu Ekle" modalının
+    | hazır katalogu. Kullanıcı Profilim > Eğitimler'i ilk açtığında yalnız ilk
+    | madde (Temel İSG Eğitimi) kendi EgitimTuru satırı olarak oluşturulur
+    | (EgitimTuru::aktifListe); geri kalanlar istenirse tek tek eklenir.
+    | 'gecerlilik_ay' null olan tek madde (temel İSG eğitimi) tehlike sınıfına
+    | göre değişir — geçerliliği 'egitim_yenileme_yili' (yıl) ile hesaplanır,
+    | sonradan eklenen konularda bu alan zorunludur (sabit ay).
+    */
+    'egitim_kayit_turleri' => [
+        ['anahtar' => 'is_sagligi_guvenligi_egitimi', 'ad' => 'Temel İş Sağlığı ve Güvenliği Eğitimi', 'kategori' => 'genel', 'gecerlilik_ay' => null],
+        ['anahtar' => 'ilkyardim_temel', 'ad' => 'İlkyardım (Temel Bilgilendirme)', 'kategori' => 'saglik', 'gecerlilik_ay' => 36],
+        ['anahtar' => 'kkd_kullanimi', 'ad' => 'Kişisel Koruyucu Donanım (KKD) Kullanımı', 'kategori' => 'teknik', 'gecerlilik_ay' => 36],
+        ['anahtar' => 'yuksekte_calisma', 'ad' => 'Yüksekte Çalışma', 'kategori' => 'risk_bazli', 'gecerlilik_ay' => 12],
+        ['anahtar' => 'iskele_kurulum_sokme', 'ad' => 'İskele Kurulum, Sökme ve Kullanım', 'kategori' => 'risk_bazli', 'gecerlilik_ay' => 12],
+        ['anahtar' => 'asbestle_calisma', 'ad' => 'Asbestle Çalışma', 'kategori' => 'risk_bazli', 'gecerlilik_ay' => 12],
+        ['anahtar' => 'isg_kurul_uyesi_egitimi', 'ad' => 'İSG Kurul Üyesi Eğitimi', 'kategori' => 'gorev', 'gecerlilik_ay' => 36],
+        ['anahtar' => 'calisan_temsilcisi_ozel_egitimi', 'ad' => 'Çalışan Temsilcisi Özel Eğitimi', 'kategori' => 'gorev', 'gecerlilik_ay' => 36],
+        ['anahtar' => 'destek_elemani_egitimi', 'ad' => 'Destek Elemanı Eğitimi', 'kategori' => 'gorev', 'gecerlilik_ay' => 12],
+        ['anahtar' => 'ilkyardimci_sertifikasi_16saat', 'ad' => 'İlkyardımcı Sertifikası (16 Saat)', 'kategori' => 'gorev', 'gecerlilik_ay' => 36],
+        ['anahtar' => 'yangin_sondurme_gorevlisi', 'ad' => 'Yangın Söndürme Görevlisi', 'kategori' => 'gorev', 'gecerlilik_ay' => 12],
+        ['anahtar' => 'acil_durum_tatbikati_yillik', 'ad' => 'Acil Durum Tatbikatı (Yıllık)', 'kategori' => 'gorev', 'gecerlilik_ay' => 12],
+        ['anahtar' => 'risk_degerlendirme_ekibi_uyesi', 'ad' => 'Risk Değerlendirme Ekibi Üyesi', 'kategori' => 'gorev', 'gecerlilik_ay' => 36],
+        ['anahtar' => 'isveren_isveren_vekili_egitimi', 'ad' => 'İşveren / İşveren Vekili Eğitimi', 'kategori' => 'gorev', 'gecerlilik_ay' => 36],
     ],
 
     /*
@@ -2033,6 +2078,91 @@ return [
             'Kaza / Olay İncelemesi',
             'Kurul Toplantısı',
             'Diğer',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pazarlama (Saha CRM) — Profilim > Pazarlama (isgpratik 143.jpg)
+    |--------------------------------------------------------------------------
+    */
+    'pazarlama' => [
+        'asamalar' => [
+            'aday' => 'Aday',
+            'teklif' => 'Teklif Aşamasında',
+            'kazanildi' => 'Kazanıldı',
+            'kaybedildi' => 'Kaybedildi',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Arşiv — Profilim > Arşiv (isgpratik 144.jpg)
+    |--------------------------------------------------------------------------
+    */
+    'arsiv' => [
+        'kota_mb' => 1024,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Raporlar — Profilim > Raporlar (isgpratik 146.jpg)
+    |--------------------------------------------------------------------------
+    | mehse'de üretilen HER belge türü tek listede — App\Support\RaporKayitlari
+    | bu listeyi gezip her modelin kendi kayıtlarını "created_at" üzerinden
+    | birleştirir. Her satır: model + (varsa) dinamik tip etiketi metodu +
+    | birincil üretici (Uretici::pdf($kayit)) + (varsa) ikincil format.
+    | Yeni bir belge modülü eklendiğinde Raporlar'a girmesi için TEK satır yeter.
+    */
+    'raporlar' => [
+        'kaynaklar' => [
+            ['model' => \App\Models\Sertifika::class, 'ad' => 'Sertifika', 'tip_metod' => 'tipEtiketi',
+                'uretici' => \App\Support\SertifikaUretici::class, 'pdf_metod' => 'pdf',
+                'ikincil_uretici' => \App\Support\SertifikaYildizGrupUretici::class, 'ikincil_metod' => 'indir', 'ikincil_etiket' => 'Yıldız Grup Şablonu'],
+            ['model' => \App\Models\EgitimKatilim::class, 'ad' => 'Eğitim Katılım Formu', 'tip_metod' => 'basliklarEtiketi',
+                'uretici' => \App\Support\EgitimKatilimUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\RiskDegerlendirmesi::class, 'ad' => 'Risk Değerlendirmesi', 'tip_metod' => null,
+                'uretici' => \App\Support\RiskDegerlendirmesiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\SahaDenetimi::class, 'ad' => 'Saha Denetimi', 'tip_metod' => null,
+                'uretici' => \App\Support\SahaDenetimiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\AtamaYazisi::class, 'ad' => 'Atama Yazısı', 'tip_metod' => 'rolEtiketi',
+                'uretici' => \App\Support\AtamaYazisiUretici::class, 'pdf_metod' => 'pdf',
+                'ikincil_uretici' => \App\Support\AtamaYazisiWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
+            ['model' => \App\Models\DofRaporu::class, 'ad' => 'DÖF Raporu', 'tip_metod' => null,
+                'uretici' => \App\Support\DofRaporuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\IsKazasiRaporu::class, 'ad' => 'İş Kazası Raporu', 'tip_metod' => 'kazaTuruEtiketi',
+                'uretici' => \App\Support\IsKazasiRaporuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\KurulToplantisi::class, 'ad' => 'Kurul Toplantı Tutanağı', 'tip_metod' => null,
+                'uretici' => \App\Support\KurulToplantisiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\SahaAnalizi::class, 'ad' => 'AI Saha Analizi Raporu', 'tip_metod' => null,
+                'uretici' => \App\Support\SahaAnaliziUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\CezaTebligTutanagi::class, 'ad' => 'Ceza ve Tebliğ Tutanağı', 'tip_metod' => 'yaptirimEtiketi',
+                'uretici' => \App\Support\CezaTebligTutanagiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\IpcTebligi::class, 'ad' => 'İşverene İPC Tebliği', 'tip_metod' => null,
+                'uretici' => \App\Support\IpcTebligiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\IsbasiEgitimTutanagi::class, 'ad' => 'İşbaşı Eğitim Tutanağı', 'tip_metod' => null,
+                'uretici' => \App\Support\IsbasiEgitimTutanagiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\TatbikatTutanagi::class, 'ad' => 'Tatbikat Tutanağı', 'tip_metod' => 'senaryoEtiketi',
+                'uretici' => \App\Support\TatbikatTutanagiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\EgitimSinavi::class, 'ad' => 'Eğitim Sınav Kağıdı', 'tip_metod' => null,
+                'uretici' => \App\Support\EgitimSinaviUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\MuayeneFormu::class, 'ad' => 'Muayene Formu (EK-2)', 'tip_metod' => 'muayeneTuruEtiketi',
+                'uretici' => \App\Support\MuayeneFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\TespitOneriDefteri::class, 'ad' => 'Tespit ve Öneri Defteri', 'tip_metod' => null,
+                'uretici' => \App\Support\TespitOneriDefteriUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
+                'uretici' => \App\Support\KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,
+                'uretici' => \App\Support\IsIzinFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\Talimat::class, 'ad' => 'Çalışma Talimatı', 'tip_metod' => 'kategoriEtiketi',
+                'uretici' => \App\Support\TalimatUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\YillikPlan::class, 'ad' => 'Yıllık Plan', 'tip_metod' => null,
+                'uretici' => \App\Support\YillikPlanUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\ZiyaretProgrami::class, 'ad' => 'Ziyaret Programı', 'tip_metod' => null,
+                'uretici' => \App\Support\ZiyaretProgramiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => \App\Models\AcilDurumPlani::class, 'ad' => 'Acil Durum Planı', 'tip_metod' => null,
+                'uretici' => \App\Support\AcilDurumPlaniUretici::class, 'pdf_metod' => 'pdf',
+                'ikincil_uretici' => \App\Support\AcilDurumWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
         ],
     ],
 ];

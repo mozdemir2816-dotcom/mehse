@@ -41,4 +41,15 @@ class IsgProfesyoneli extends Model
     {
         return config('isg.isg_profesyonelleri.tipler.'.$this->tip, $this->tip);
     }
+
+    /** Bu tipin atandığı Firma sütunu — toplu firma atama (IsgProfesyoneliResource). */
+    public function firmaAlani(): ?string
+    {
+        return match ($this->tip) {
+            'igu' => 'igu_id',
+            'isyeri_hekimi' => 'isyeri_hekimi_id',
+            'dsp' => 'dsp_id',
+            default => null,
+        };
+    }
 }

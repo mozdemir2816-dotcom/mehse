@@ -162,6 +162,11 @@ class Firma extends Model
         return $this->hasMany(ZiyaretProgrami::class);
     }
 
+    public function arsivDosyalari(): HasMany
+    {
+        return $this->hasMany(ArsivDosya::class);
+    }
+
     public function tehlikeSinifiEtiketi(): string
     {
         return config('isg.tehlike_siniflari.'.$this->tehlike_sinifi, $this->tehlike_sinifi);

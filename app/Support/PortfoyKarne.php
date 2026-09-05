@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\YillikPlan;
 use Illuminate\Support\Carbon;
 
 /**
@@ -16,7 +17,7 @@ class PortfoyKarne
     /** @return array<string, int|float> portföy özeti */
     public static function ozet(int $userId): array
     {
-        $firmalar = Firma::query()->where('user_id', $userId)->get();
+        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->get();
         $toplam = $firmalar->count();
 
         $riskOlan = $firmalar->filter(fn (Firma $f) => $f->riskDegerlendirmeleri()->exists())->count();
@@ -47,7 +48,7 @@ class PortfoyKarne
      */
     public static function kriterler(int $userId): array
     {
-        $firmalar = Firma::query()->where('user_id', $userId)->get();
+        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->get();
         $toplam = $firmalar->count();
 
         return array_map(function (array $kriter) use ($firmalar, $toplam): array {
@@ -75,23 +76,81 @@ class PortfoyKarne
 
     public static function firmaKriterKarsilarMi(Firma $firma, string $anahtar): bool
     {
+        return static::gercekModulVarMi($firma, $anahtar) === true;
+    }
+
+    /**
+     * Kriter anahtarına karşılık gelen gerçek mehse modülünü kontrol eder — hem
+     * `firmaKriterKarsilarMi()` hem `firmaKriterMatrisi()` bunu kullanır, böylece
+     * "gerçek modül" tanımı tek yerde kalır. Modülü henüz kurulmamış (veya kasıtlı
+     * olarak hep manuel kalan — ör. 'diger_evrak') kriterler için null döner;
+     * çağıran o zaman manuel Evrak Kaydı'na bakar.
+     */
+    private static function gercekModulVarMi(Firma $firma, string $anahtar): ?bool
+    {
         return match ($anahtar) {
             'risk_degerlendirmesi' => $firma->riskDegerlendirmeleri()->exists(),
-            default => false, // ilgili modül kurulunca burada gerçek kontrol
+            'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists(),
+            'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->exists(),
+            'isg_kurulu' => $firma->kurulToplantilari()->exists(),
+            'calisma_izin_formu' => $firma->isIzinFormlari()->exists(),
+            'saha_denetim_formu' => $firma->sahaDenetimleri()->exists(),
+            'is_kazasi_bildirimi' => $firma->isKazasiRaporlari()->exists(),
+            'saglik_raporu' => $firma->muayeneFormlari()->exists(),
+            'igu_atamasi' => $firma->igu_id !== null,
+            'hekim_atamasi' => $firma->isyeri_hekimi_id !== null,
+            'tespit_oneri' => filled($firma->tespitOneriDefteri?->maddeler),
+            'yillik_calisma_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'faaliyetler'),
+            'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
+            'yillik_degerlendirme' => static::yillikPlanDegerlendirmeDoluMu($firma),
+            default => null,
         };
     }
 
     /**
-     * Profilim "Evrak / Firma Takip" — firma × kriter matrisi (isgpratik 141-142).
+     * Yıllık Çalışma/Eğitim Planı'nda ($alan: 'faaliyetler'/'egitimler') en az bir
+     * ay 'bos' dışında işaretlenmiş mi (herhangi bir yıl) — kayıt sayfa ilk
+     * açıldığında boş şablonla otomatik oluştuğu için salt "kayıt var" yeterli
+     * kanıt değil, gerçekten işaretlenmiş olması aranır.
+     */
+    private static function yillikPlanAyMatrisiDoluMu(Firma $firma, string $alan): bool
+    {
+        return $firma->yillikPlanlar->contains(
+            fn (YillikPlan $p) => collect($p->{$alan} ?? [])
+                ->contains(fn (array $madde) => collect($madde['aylar'] ?? [])->contains(fn ($durum) => $durum !== 'bos'))
+        );
+    }
+
+    /** Yıllık Değerlendirme Raporu'nda en az bir maddeye tarih girilmiş mi (herhangi bir yıl). */
+    private static function yillikPlanDegerlendirmeDoluMu(Firma $firma): bool
+    {
+        return $firma->yillikPlanlar->contains(
+            fn (YillikPlan $p) => collect($p->degerlendirmeler ?? [])->contains(fn (array $d) => filled($d['tarih'] ?? null))
+        );
+    }
+
+    /**
+     * Firma Takip'in sütun listesi: config'teki sabit kriterler.
+     *
+     * @return array<int, array{anahtar:string, ad:string, ikon?:string, hazir:bool, kosul?:string}>
+     */
+    public static function firmaTakipKriterleri(int $userId): array
+    {
+        return config('isg.kontrol_merkezi.kriterler', []);
+    }
+
+    /**
+     * Profilim "OSGB / Firma Takip" — firma × kriter matrisi (isgpratik 141-142).
      *
      * @return array<int, array{firma: Firma, hucreler: array<string, bool>, oran: int}>
      */
     public static function firmaKriterMatrisi(int $userId): array
     {
-        $kriterler = config('isg.kontrol_merkezi.kriterler', []);
+        $kriterler = static::firmaTakipKriterleri($userId);
 
         return Firma::query()
             ->where('user_id', $userId)
+            ->where('aktif', true)
             ->orderBy('unvan')
             ->get()
             ->map(function (Firma $firma) use ($kriterler): array {
@@ -100,10 +159,17 @@ class PortfoyKarne
                 $hazirSayi = 0;
 
                 foreach ($kriterler as $k) {
-                    $var = $k['hazir'] && static::firmaKriterKarsilarMi($firma, $k['anahtar']);
+                    // 'kosul' => 'elli_calisan' kriterler (şu an yalnız isg_kurulu) 50 altı
+                    // çalışanlı firmalarda muaf — kriterler()/ozet() bu firmaları zaten
+                    // kapsam dışı bırakıyordu (bkz. 'kapsam' filtresi), burada da aynı
+                    // muafiyet uygulanmazsa küçük firmalar haksız yere düşük "Oran" alır.
+                    $muaf = ($k['kosul'] ?? null) === 'elli_calisan' && (int) $firma->calisan_sayisi < 50;
+
+                    $var = $muaf || static::gercekModulVarMi($firma, $k['anahtar']) === true;
+
                     $hucreler[$k['anahtar']] = $var;
 
-                    if ($k['hazir']) {
+                    if ($k['hazir'] && ! $muaf) {
                         $hazirSayi++;
                         $karsilanan += $var ? 1 : 0;
                     }
@@ -127,6 +193,7 @@ class PortfoyKarne
     {
         return Firma::query()
             ->where('user_id', $userId)
+            ->where('aktif', true)
             ->withCount(['calisanlar as aktif_calisan' => fn ($q) => $q->where('aktif', true)])
             ->orderByDesc('aktif_calisan')
             ->orderBy('unvan')
@@ -182,7 +249,7 @@ class PortfoyKarne
     /** Profilim başlık kartları + Genel Bakış (isgpratik 5.jpg). */
     public static function profilOzeti(int $userId): array
     {
-        $firmalar = Firma::query()->where('user_id', $userId)->get();
+        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->get();
 
         $tehlikeDagilimi = collect(config('isg.tehlike_siniflari'))
             ->mapWithKeys(fn ($ad, $anahtar) => [$ad => $firmalar->where('tehlike_sinifi', $anahtar)->count()])
@@ -196,6 +263,7 @@ class PortfoyKarne
 
         $calisansizFirma = Firma::query()
             ->where('user_id', $userId)
+            ->where('aktif', true)
             ->whereDoesntHave('calisanlar', fn ($q) => $q->where('aktif', true))
             ->count();
 
@@ -221,6 +289,14 @@ class PortfoyKarne
     {
         foreach (config('isg.kontrol_merkezi.kriterler', []) as $kriter) {
             if (! $kriter['hazir']) {
+                continue;
+            }
+
+            // 'kosul' => 'elli_calisan' kriterler (şu an yalnız isg_kurulu) 50 altı
+            // çalışanlı firmalarda muaf — aksi halde küçük firmalar bu şartı hiç
+            // karşılayamayacağı için asla "tam uyumlu" sayılmaz.
+            $muaf = ($kriter['kosul'] ?? null) === 'elli_calisan' && (int) $firma->calisan_sayisi < 50;
+            if ($muaf) {
                 continue;
             }
 

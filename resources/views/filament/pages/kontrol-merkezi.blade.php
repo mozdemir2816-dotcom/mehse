@@ -1,11 +1,22 @@
 @php
     $sekmeler = \App\Filament\Pages\KontrolMerkezi::SEKMELER;
     $mor = 'rgb(139 92 246)';
+    $turkuaz = 'rgb(20 184 166)';
     $yesil = 'rgb(34 197 94)';
     $kirmizi = 'rgb(239 68 68)';
     $sari = 'rgb(245 158 11)';
-    $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
+    $gri = 'rgb(128 116 148)';
+    $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
     $o = $this->ozet;
+
+    // İSG Portföy Özeti kartları — Gemini referans görselindeki dolu-renk fayans stili.
+    $ozetKartlari = [
+        ['ad' => 'Toplam Firma', 'deger' => $o['firma'], 'ikon' => 'heroicon-o-building-office-2', 'renk' => $gri],
+        ['ad' => 'Evrak Eksiği Olan', 'deger' => $o['evrak_eksigi'], 'ikon' => 'heroicon-o-document-text', 'renk' => $kirmizi],
+        ['ad' => 'Çalışan Uyarılı', 'deger' => 0, 'ikon' => 'heroicon-o-exclamation-triangle', 'renk' => $sari],
+        ['ad' => 'Tam Uyumlu', 'deger' => $o['tam_uyumlu'], 'ikon' => 'heroicon-o-check-circle', 'renk' => $yesil],
+    ];
+    $uyumRengi = $o['uyum_yuzde'] < 40 ? $kirmizi : ($o['uyum_yuzde'] < 75 ? $sari : $yesil);
 @endphp
 
 <x-filament-panels::page>
@@ -16,17 +27,17 @@
             <span style="width:.5rem;height:.5rem;border-radius:9999px;background:{{ $yesil }}"></span> Canlı İSG Takibi
         </span>
     </div>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p style="font-size:.85rem;color:rgb(128 116 148);margin-top:-.5rem">
         Tüm firmalarınızın yasal belgeleri, yaklaşan işleri ve çalışan eksiklerini tek kontrol merkezinde.
     </p>
 
     {{-- SEKME PILL'LERİ --}}
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(107 114 128 / .1);padding:.3rem;border-radius:.6rem">
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(128 116 148 / .1);padding:.3rem;border-radius:.6rem">
         @foreach ($sekmeler as $anahtar => $ad)
             @php $aktif = $sekme === $anahtar; @endphp
             <button type="button" wire:click="sekmeSec('{{ $anahtar }}')"
                 style="flex:1;min-width:120px;padding:.5rem .75rem;border:none;border-radius:.45rem;cursor:pointer;font-weight:600;font-size:.85rem;
-                    background:{{ $aktif ? $mor : 'transparent' }};color:{{ $aktif ? '#fff' : 'inherit' }}">
+                    background:{{ $aktif ? $turkuaz : 'transparent' }};color:{{ $aktif ? '#fff' : 'inherit' }}">
                 {{ $ad }}
             </button>
         @endforeach
@@ -37,7 +48,7 @@
         <div>
             <label style="font-weight:600;font-size:.82rem">Firma Seçin</label>
             <select wire:model.live="firmaId"
-                style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(128 116 148 / .35);background:transparent">
                 <option value="">★ Tüm Firmalar (portföy geneli)</option>
                 @foreach ($this->firmalar as $id => $unvan)
                     <option value="{{ $id }}">{{ $unvan }}</option>
@@ -53,7 +64,7 @@
             <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
                 <div style="font-size:2rem">🎉</div>
                 <div style="font-weight:700;margin-top:.4rem">Harika! Tüm Görevler Güncel</div>
-                <p style="font-size:.85rem;color:rgb(107 114 128)">
+                <p style="font-size:.85rem;color:rgb(128 116 148)">
                     Yaklaşan risk değerlendirmesi yenilemesi veya eksik kayıt bulunmuyor.
                 </p>
             </div>
@@ -64,7 +75,7 @@
                         border-left:4px solid {{ $is['durum'] === 'gecikti' ? $kirmizi : $sari }}">
                         <div>
                             <div style="font-weight:600;font-size:.88rem">{{ $is['baslik'] }}</div>
-                            <div style="font-size:.8rem;color:rgb(107 114 128)">{{ $is['firma'] }}</div>
+                            <div style="font-size:.8rem;color:rgb(128 116 148)">{{ $is['firma'] }}</div>
                         </div>
                         <div style="font-size:.8rem;color:{{ $is['durum'] === 'gecikti' ? $kirmizi : $sari }};font-weight:600;white-space:nowrap">
                             {{ $is['durum'] === 'gecikti' ? 'Gecikti' : 'Yaklaşıyor' }}
@@ -83,24 +94,37 @@
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
                 <div>
                     <div style="font-weight:700">İSG Portföy Özeti</div>
-                    <div style="font-size:.8rem;color:rgb(107 114 128)">{{ $o['firma'] }} Firma · {{ $o['calisan'] }} Çalışan — anlık yasal uyum tablosu</div>
+                    <div style="font-size:.8rem;color:{{ $gri }}">{{ $o['firma'] }} Firma · {{ $o['calisan'] }} Çalışan — anlık yasal uyum tablosu</div>
                 </div>
-                <div style="text-align:right">
-                    <div style="font-size:1.4rem;font-weight:800;color:{{ $o['uyum_yuzde'] < 40 ? $kirmizi : ($o['uyum_yuzde'] < 75 ? $sari : $yesil) }}">%{{ $o['uyum_yuzde'] }}</div>
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $o['tam_uyumlu'] }} firma tam uyumlu</div>
+                {{-- Uyum yüzdesi — dolgu halkası (conic-gradient + mask, tema-bağımsız) --}}
+                <div style="display:flex;align-items:center;gap:.7rem">
+                    <div style="position:relative;width:3.4rem;height:3.4rem;flex-shrink:0">
+                        <div style="width:100%;height:100%;border-radius:9999px;
+                                background:conic-gradient({{ $uyumRengi }} {{ $o['uyum_yuzde'] }}%, rgb(128 116 148 / .18) 0);
+                                -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
+                                mask:radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px))"></div>
+                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:{{ $uyumRengi }}">
+                            %{{ $o['uyum_yuzde'] }}
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:1.3rem;font-weight:800;color:{{ $uyumRengi }}">%{{ $o['uyum_yuzde'] }}</div>
+                        <div style="font-size:.72rem;color:{{ $gri }}">{{ $o['tam_uyumlu'] }} firma tam uyumlu</div>
+                    </div>
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-top:1rem">
-                @foreach ([
-                    ['Toplam Firma', $o['firma'], 'rgb(107 114 128)'],
-                    ['Evrak Eksiği Olan', $o['evrak_eksigi'], $kirmizi],
-                    ['Çalışan Uyarılı', 0, $sari],
-                    ['Tam Uyumlu', $o['tam_uyumlu'], $yesil],
-                ] as [$etiket, $deger, $renk])
-                    <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.6rem .75rem">
-                        <div style="font-size:.7rem;color:rgb(107 114 128);text-transform:uppercase">{{ $etiket }}</div>
-                        <div style="font-size:1.3rem;font-weight:800;color:{{ $renk }}">{{ $deger }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-top:1rem">
+                @foreach ($ozetKartlari as $kart)
+                    <div style="border-radius:.65rem;padding:.85rem;background:color-mix(in srgb, {{ $kart['renk'] }} 14%, transparent)">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">
+                            <span style="font-size:.68rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:{{ $gri }}">{{ $kart['ad'] }}</span>
+                            <span style="width:1.8rem;height:1.8rem;border-radius:.5rem;background:rgb(128 116 148 / .12);
+                                    display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <x-filament::icon :icon="$kart['ikon']" style="width:1rem;height:1rem;color:{{ $kart['renk'] }}"/>
+                            </span>
+                        </div>
+                        <div style="font-size:1.55rem;font-weight:800;color:{{ $kart['renk'] }};margin-top:.35rem">{{ $kart['deger'] }}</div>
                     </div>
                 @endforeach
             </div>
@@ -109,22 +133,27 @@
         {{-- Yasal Kriterlerin Portföy Tamamlanma Oranları --}}
         <div style="{{ $kutu }}">
             <div style="font-weight:700">Yasal Kriterlerin Portföy Tamamlanma Oranları</div>
-            <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.75rem">
+            <div style="font-size:.8rem;color:{{ $gri }};margin-bottom:.75rem">
                 Takip edilen {{ count($this->kriterler) }} kriterin firmalarınızdaki karşılanma yüzdeleri · {{ $o['firma'] }} firma tarandı
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.5rem">
                 @foreach ($this->kriterler as $k)
-                    <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.6rem .75rem">
+                    @php $kRenk = $k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil); @endphp
+                    <div style="border:1px solid rgb(128 116 148 / .2);border-radius:.5rem;padding:.6rem .75rem">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
-                            <span style="display:flex;align-items:center;gap:.4rem;font-size:.83rem;font-weight:600">
-                                <x-filament::icon :icon="$k['ikon']" style="width:1rem;height:1rem"/>
+                            <span style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;font-weight:600">
+                                <span style="width:1.5rem;height:1.5rem;border-radius:9999px;flex-shrink:0;
+                                        background:color-mix(in srgb, {{ $kRenk }} 18%, transparent);
+                                        display:flex;align-items:center;justify-content:center">
+                                    <x-filament::icon :icon="$k['ikon']" style="width:.85rem;height:.85rem;color:{{ $kRenk }}"/>
+                                </span>
                                 {{ $k['ad'] }}
-                                @unless ($k['hazir']) <span style="font-size:.65rem;color:rgb(107 114 128)">(modül yakında)</span> @endunless
+                                @unless ($k['hazir']) <span style="font-size:.65rem;color:{{ $gri }}">(modül yakında)</span> @endunless
                             </span>
-                            <span style="font-size:.78rem;color:rgb(107 114 128);white-space:nowrap">{{ $k['tamam'] }}/{{ $k['toplam'] }} · %{{ $k['yuzde'] }}</span>
+                            <span style="font-size:.78rem;color:{{ $gri }};white-space:nowrap">{{ $k['tamam'] }}/{{ $k['toplam'] }} · %{{ $k['yuzde'] }}</span>
                         </div>
-                        <div style="height:6px;border-radius:9999px;background:rgb(107 114 128 / .2);margin-top:.4rem;overflow:hidden">
-                            <div style="height:100%;width:{{ max($k['yuzde'], 1) }}%;background:{{ $k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil) }}"></div>
+                        <div style="height:6px;border-radius:9999px;background:rgb(128 116 148 / .2);margin-top:.4rem;overflow:hidden">
+                            <div style="height:100%;width:{{ max($k['yuzde'], 1) }}%;background:{{ $kRenk }}"></div>
                         </div>
                     </div>
                 @endforeach
@@ -135,9 +164,9 @@
             {{-- Yenileme Süreleri --}}
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Yasal Evrak Yenileme Süreleri</div>
-                <div style="font-size:.78rem;color:rgb(107 114 128);margin-bottom:.6rem">6331 Sayılı İSG Kanunu uyarınca zorunlu periyotlar</div>
+                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.6rem">6331 Sayılı İSG Kanunu uyarınca zorunlu periyotlar</div>
                 @foreach (config('isg.tehlike_siniflari') as $anahtar => $ad)
-                    <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-top:1px solid rgb(107 114 128 / .15);font-size:.85rem">
+                    <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-top:1px solid rgb(128 116 148 / .15);font-size:.85rem">
                         <span>{{ $ad }} Sınıf</span>
                         <strong>{{ config('isg.risk_gecerlilik_yili.'.$anahtar) }} Yılda Bir</strong>
                     </div>
@@ -147,7 +176,7 @@
             {{-- Uzman Tavsiyeleri --}}
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Uzman Tavsiyeleri & Aksiyonlar</div>
-                <div style="font-size:.78rem;color:rgb(107 114 128);margin-bottom:.6rem">Denetim öncesi dikkat edilmesi gereken noktalar</div>
+                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.6rem">Denetim öncesi dikkat edilmesi gereken noktalar</div>
                 <ul style="margin:0;padding-left:1.1rem;font-size:.82rem;display:flex;flex-direction:column;gap:.4rem">
                     @foreach (config('isg.kontrol_merkezi.uzman_tavsiyeleri') as $t)
                         <li><strong>{{ $t['baslik'] }}:</strong> {{ $t['metin'] }}</li>
@@ -163,7 +192,7 @@
             <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
                 <div style="font-size:2rem">👥</div>
                 <div style="font-weight:700;margin-top:.4rem">Çalışan İSG Asistanı</div>
-                <p style="font-size:.85rem;color:rgb(107 114 128)">
+                <p style="font-size:.85rem;color:rgb(128 116 148)">
                     Muayene, İSG eğitimi, MYK ve genç çalışan eksiklerini listelemek için yukarıdan bir firma seçin.
                 </p>
             </div>
@@ -171,14 +200,14 @@
             @php $k = $this->calisanKarne; @endphp
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">{{ $this->secilenFirma->unvan }}</div>
-                <div style="font-size:.82rem;color:rgb(107 114 128)">{{ $k['toplam'] }} aktif çalışan</div>
+                <div style="font-size:.82rem;color:rgb(128 116 148)">{{ $k['toplam'] }} aktif çalışan</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-top:.75rem">
-                    <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.7rem;color:rgb(107 114 128);text-transform:uppercase">Genç Çalışan (&lt;18)</div>
+                    <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
+                        <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">Genç Çalışan (&lt;18)</div>
                         <div style="font-size:1.3rem;font-weight:800;color:{{ $k['genc']->count() ? $sari : 'inherit' }}">{{ $k['genc']->count() }}</div>
                     </div>
-                    <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.7rem;color:rgb(107 114 128);text-transform:uppercase">Ağır & Tehlikeli İş</div>
+                    <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
+                        <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">Ağır & Tehlikeli İş</div>
                         <div style="font-size:1.3rem;font-weight:800">{{ $k['agir_tehlikeli'] }}</div>
                     </div>
                 </div>
@@ -195,7 +224,7 @@
                 </div>
             @endif
 
-            <div style="{{ $kutu }};font-size:.82rem;color:rgb(107 114 128)">
+            <div style="{{ $kutu }};font-size:.82rem;color:rgb(128 116 148)">
                 📋 Şu takipler ilgili modüller kurulunca burada listelenecek:
                 <strong>{{ implode(', ', $k['moduller_bekliyor']) }}</strong>.
             </div>

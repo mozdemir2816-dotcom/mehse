@@ -8,7 +8,8 @@ görüntüleri referans (`C:\Users\mozde\Desktop\isgpratik\`), yol haritası: `M
 - **Yığın:** Laravel 12 + Filament v5 (PHP 8.2, XAMPP)
 - **DB:** MySQL `mehse` (root / şifresiz)
 - **Erişim:** <http://localhost/mehse/> → `public/admin`
-- **Panel:** tek panel `admin`, koyu tema varsayılan, birincil renk mor
+- **Panel:** tek panel `admin`, açık tema varsayılan (05.09.2026'da koyudan çevrildi,
+  bkz. MIMARI.md), birincil renk mor
 - **Giriş:** `mozdemir2816@gmail.com` / `mehse2026`
 
 ### Komutlar
@@ -19,7 +20,7 @@ görüntüleri referans (`C:\Users\mozde\Desktop\isgpratik\`), yol haritası: `M
 
 php artisan migrate        # yalnızca yeni migration'lar
 php artisan db:seed --class=TehlikeKutuphanesiSeeder
-php artisan test           # 82 test
+php artisan test           # 443 test (bkz. MIMARI.md için güncel sayı)
 ```
 
 ### Kurallar

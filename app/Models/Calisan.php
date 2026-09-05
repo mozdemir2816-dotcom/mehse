@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Calisan extends Model
 {
@@ -25,5 +26,10 @@ class Calisan extends Model
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);
+    }
+
+    public function egitimKayitlari(): HasMany
+    {
+        return $this->hasMany(EgitimKaydi::class);
     }
 }

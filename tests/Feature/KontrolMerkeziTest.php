@@ -39,7 +39,9 @@ class KontrolMerkeziTest extends TestCase
         $this->assertSame(3, $ozet['firma']);
         $this->assertSame(1, $ozet['risk_olan']);
         $this->assertSame(2, $ozet['evrak_eksigi']);
-        $this->assertSame(1, $ozet['tam_uyumlu']); // yalnız hazır kriter = risk değ.
+        // 14 hazır kriter var (risk değ. + gerçek modülü bağlanan 13'ü); firma A yalnız
+        // risk değerlendirmesini karşılıyor, "tam uyumlu" sayılmaz.
+        $this->assertSame(0, $ozet['tam_uyumlu']);
     }
 
     public function test_kriterler_hazir_olmayanlar_sifir_doner(): void

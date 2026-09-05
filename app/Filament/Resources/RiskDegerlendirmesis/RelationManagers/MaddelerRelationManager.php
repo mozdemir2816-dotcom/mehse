@@ -75,11 +75,14 @@ class MaddelerRelationManager extends RelationManager
                     TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
                     Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
                     Select::make('son_olasilik')->label('Önlem sonrası Olasılık')
-                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'olasilik'))->native(false),
+                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'olasilik'))->native(false)
+                        ->default(1)
+                        ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
                     $fk ? Select::make('son_frekans')->label('Önlem sonrası Frekans')
                         ->options(RiskSkorlama::olcek('fine_kinney', 'frekans'))->native(false) : null,
                     Select::make('son_siddet')->label('Önlem sonrası Şiddet')
-                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'siddet'))->native(false),
+                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'siddet'))->native(false)
+                        ->helperText('Boş bırakılırsa öneri öncesindeki Şiddet değeriyle aynı kabul edilir.'),
                 ]))),
         ]);
     }

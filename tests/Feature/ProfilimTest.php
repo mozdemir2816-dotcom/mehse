@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\Profilim;
 use App\Models\Calisan;
+use App\Models\EgitimKaydi;
+use App\Models\EgitimTuru;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
@@ -11,7 +13,10 @@ use App\Models\RiskSablonu;
 use App\Models\User;
 use App\Support\PortfoyKarne;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Testing\File;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
 class ProfilimTest extends TestCase
@@ -56,15 +61,18 @@ class ProfilimTest extends TestCase
 
     public function test_firma_kriter_matrisi_risk_degerlendirmesini_isaretler(): void
     {
-        $a = Firma::factory()->for($this->uzman)->create();
-        $b = Firma::factory()->for($this->uzman)->create();
+        // calisan_sayisi < 50 sabitlenir: isg_kurulu kriteri muaf olur (deterministik oran).
+        $a = Firma::factory()->for($this->uzman)->create(['calisan_sayisi' => 10]);
+        $b = Firma::factory()->for($this->uzman)->create(['calisan_sayisi' => 10]);
         RiskDegerlendirmesi::create(['firma_id' => $a->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
 
         $matris = collect(PortfoyKarne::firmaKriterMatrisi($this->uzman->id))->keyBy(fn ($s) => $s['firma']->id);
 
         $this->assertTrue($matris[$a->id]['hucreler']['risk_degerlendirmesi']);
         $this->assertFalse($matris[$b->id]['hucreler']['risk_degerlendirmesi']);
-        $this->assertSame(100, $matris[$a->id]['oran']);
+        // 50 altı çalışan olduğu için isg_kurulu muaf — 14 değil 13 hazır kriter sayılır;
+        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/13*100) = 8.
+        $this->assertSame(8, $matris[$a->id]['oran']);
         $this->assertSame(0, $matris[$b->id]['oran']);
     }
 
@@ -78,9 +86,13 @@ class ProfilimTest extends TestCase
             ->call('sekmeSec', 'firmalar')->assertSet('sekme', 'firmalar')
             ->call('sekmeSec', 'firma_takip')->assertSet('sekme', 'firma_takip')
             ->call('sekmeSec', 'calisanlar')->assertSet('sekme', 'calisanlar')
+            ->call('sekmeSec', 'egitimler')->assertSet('sekme', 'egitimler')
             ->call('sekmeSec', 'risklerim')->assertSet('sekme', 'risklerim')
-            ->call('sekmeSec', 'diger')->assertSet('sekme', 'diger')
-            ->call('sekmeSec', 'yok')->assertSet('sekme', 'diger');
+            ->call('sekmeSec', 'pazarlama')->assertSet('sekme', 'pazarlama')
+            ->call('sekmeSec', 'arsiv')->assertSet('sekme', 'arsiv')
+            ->call('sekmeSec', 'raporlar')->assertSet('sekme', 'raporlar')
+            ->call('sekmeSec', 'firma_ziyaretleri')->assertSet('sekme', 'firma_ziyaretleri')
+            ->call('sekmeSec', 'yok')->assertSet('sekme', 'firma_ziyaretleri');
     }
 
     public function test_unvan_ayari_action_kullaniciyi_gunceller(): void
@@ -138,5 +150,102 @@ class ProfilimTest extends TestCase
 
         $this->assertCount(1, $liste);
         $this->assertSame('Benimki', $liste->first()->ad_soyad);
+    }
+
+    public function test_egitim_turleri_varsayilan_olarak_tek_maddedir(): void
+    {
+        $turler = Livewire::test(Profilim::class)->instance()->egitimTurleri();
+
+        $this->assertCount(1, $turler);
+        $this->assertSame('is_sagligi_guvenligi_egitimi', $turler->first()->anahtar);
+        $this->assertSame('Temel İş Sağlığı ve Güvenliği Eğitimi', $turler->first()->ad);
+    }
+
+    public function test_egitim_matrisi_varsayilan_ve_sonradan_eklenen_konuyu_dondurur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $calisan = Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Test Çalışan', 'aktif' => true]);
+
+        EgitimTuru::aktifListe($this->uzman->id); // varsayılan "Temel İSG" satırını oluşturur
+        EgitimTuru::create([
+            'user_id' => $this->uzman->id, 'anahtar' => 'ilkyardim_temel',
+            'ad' => 'İlkyardım (Temel Bilgilendirme)', 'gecerlilik_ay' => 36, 'sira' => 1,
+        ]);
+        EgitimKaydi::create(['calisan_id' => $calisan->id, 'tur' => 'ilkyardim_temel', 'tarih' => now()->subMonth()]);
+
+        $matris = collect(Livewire::test(Profilim::class)->instance()->egitimMatrisi())->keyBy(fn ($s) => $s['calisan']->id);
+
+        $this->assertNull($matris[$calisan->id]['hucreler']['is_sagligi_guvenligi_egitimi']['tarih']);
+        $this->assertSame('gecerli', $matris[$calisan->id]['hucreler']['ilkyardim_temel']['durum']);
+    }
+
+    public function test_egitim_turu_ekle_action_katalogdan_ekler(): void
+    {
+        Livewire::test(Profilim::class)
+            ->callAction('egitimTuruEkle', [
+                'katalog' => 'ilkyardim_temel',
+                'gecerlilik_ay' => 36,
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertDatabaseHas('egitim_turleri', [
+            'user_id' => $this->uzman->id,
+            'anahtar' => 'ilkyardim_temel',
+            'ad' => 'İlkyardım (Temel Bilgilendirme)',
+        ]);
+    }
+
+    public function test_egitim_turu_ekle_action_ozel_konu_ekler(): void
+    {
+        Livewire::test(Profilim::class)
+            ->callAction('egitimTuruEkle', [
+                'ozel_ad' => 'Forklift Kullanımı',
+                'gecerlilik_ay' => 24,
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertDatabaseHas('egitim_turleri', [
+            'user_id' => $this->uzman->id,
+            'anahtar' => 'forklift_kullanimi',
+            'ad' => 'Forklift Kullanımı',
+            'gecerlilik_ay' => 24,
+        ]);
+    }
+
+    public function test_egitim_turu_kaldir_action_kaldirir(): void
+    {
+        EgitimTuru::aktifListe($this->uzman->id);
+
+        Livewire::test(Profilim::class)
+            ->call('egitimTuruKaldir', 'is_sagligi_guvenligi_egitimi');
+
+        $this->assertDatabaseMissing('egitim_turleri', [
+            'user_id' => $this->uzman->id,
+            'anahtar' => 'is_sagligi_guvenligi_egitimi',
+        ]);
+    }
+
+    public function test_egitim_yukle_action_ice_aktarir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek A.Ş.']);
+        Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Ahmet Yılmaz', 'aktif' => true]);
+
+        $kitap = new Spreadsheet();
+        $kitap->getActiveSheet()->fromArray([
+            ['Çalışan', 'Firma', 'Temel İş Sağlığı ve Güvenliği Eğitimi'],
+            ['Ahmet Yılmaz', 'Örnek A.Ş.', '01.01.2026'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        Livewire::test(Profilim::class)
+            ->callAction('egitimYukle', [
+                'dosya' => File::createWithContent('egitim.xlsx', file_get_contents($yol)),
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame('2026-01-01', EgitimKaydi::where('tur', 'is_sagligi_guvenligi_egitimi')->firstOrFail()->tarih->toDateString());
+
+        unlink($yol);
     }
 }

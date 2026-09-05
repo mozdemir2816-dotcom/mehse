@@ -51,11 +51,12 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | Grup | Modül | Slug | Durum |
 |---|---|---|---|
 | **Yönetim** | Kontrol Merkezi (İSG Komuta Merkezi) | `kontrol-merkezi` | **hazır** (3 sekme; portföy karnesi — 12 kriter) |
-| Yönetim | Profilim | `profilim` | **hazır** (künye + sayaçlar + 6 sekme) |
+| Yönetim | Profilim | `profilim` | **TAMAMLANDI** (künye + sayaçlar + isgpratik'in 11 sekmesinin tamamı — Faz 5) |
 | Yönetim | İSG-KATİP Robot | `isg-katip-robot` | **hazır** (bilgi sayfası — gerçek eklenti yok, stub) |
 | **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (Gemini) yöntemleri + PDF çıktısı; Kayıtlı/Excel kalan |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
+| Risk Yönetimi | Risk Prosedürleri | `risk-prosedurleri` | **hazır** (Matris/Fine-Kinney gerçek prosedür metni + kendi .docx'ini yükleme — Faz 6) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
 | **Formlar & Belgeler** | DÖF Oluştur `[AI]` | `dof` | **hazır** (çoklu madde + Gemini öneri + otomatik kaşe → PDF; AI Saha Analizi'nden bulgu aktarımı kabul eder) |
@@ -82,7 +83,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | — | **Panel (Dashboard)** | `/admin` | iskele (`PortföyÖzetiWidget`) |
 | Yönetim | Firmalar | `firmalar` | **hazır** (Çalışanlar RelationManager dâhil) |
 | Yönetim | Çalışanlar | `calisanlar` | **hazır** |
-| Yönetim | İSG Profesyonelleri | `isg-profesyonelleri` | **hazır** (İGU/İşyeri Hekimi/DSP + kaşe/imza, firmalara atanır) |
+| Yönetim | İSG Profesyonelleri | `isg-profesyonelleri` | **hazır** (İGU/İşyeri Hekimi/DSP + kaşe/imza; "Firmalara Ata" ile toplu atama/kaldırma — Faz 5) |
 
 ## Ekran notları (görülen referanslar)
 
@@ -109,18 +110,33 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 - Çalışan Asistanı: firma seç → çalışan eksikleri; seçilmeden boş durum (136.jpg).
 - Günlük Akış boş durum: "Harika! Tüm Görevler Güncel".
 
-### Profilim (5, 137-147.jpg) — **kuruldu, bkz. Faz 3e**
+### Profilim (5, 137-147.jpg) — **TAMAMLANDI, bkz. Faz 3e + Faz 5**
 - Künye: ad, e-posta, ünvan rozeti, Aktif rozeti, "Hesap Ayarları" (Filament profil).
 - Sayaç: Firmalarım / Çalışanlarım / Risk Değerlendirmesi / Risk Şablonları / Önemli Risk /
   Raporlarım.
-- Sekmeler: **Genel Bakış / Firmalar / Çalışanlar / Firma Takip / Risklerim / Diğer**.
-  (isgpratik ayrıca Eğitimler 139-140, Evrak Takip 141, Pazarlama 143, Arşiv 144,
-  Raporlar 146, Firma Ziyaretleri 147 sekmelerini gösterir → "Diğer" sekmesinde
-  bekleyen liste; ilgili model gelince açılır.)
+- Sekmeler (isgpratik'in 11 sekmesinin TAMAMI kuruldu, "Diğer" kaldırıldı):
+  **Genel Bakış / Firmalar / Çalışanlar / Eğitimler / OSGB Takip / Firma Takip /
+  Risklerim / Pazarlama / Arşiv / Raporlar / Firma Ziyaretleri**.
 - Genel Bakış: Uyumluluk Skoru (conic-gradient gauge), Tehlike Sınıfı Dağılımı (bar),
   İlk Yardım bilgi kartı. Performans/trend/heatmap ileride.
-- Firma Takip: firma × 12 yasal kriter matrisi (isgpratik 141-142 —
-  `PortfoyKarne::firmaKriterMatrisi`).
+- Eğitimler (139-140.jpg, Faz 5): çalışan × kullanıcının kendi `EgitimTuru` listesi
+  (varsayılan tek madde — Temel İSG Eğitimi; "Konu Ekle"/× ile büyür/küçülür) + Excel
+  toplu yükle/şablon indir (`EgitimKayitExcelIceAktarici`).
+- OSGB Takip (141.jpg, Faz 5 — eski "Evrak Takip"): firma × kullanıcının `EvrakTuru`
+  listesi (7 varsayılan madde + ekle/kaldır) + Excel toplu yükle; ortak anahtarlarda
+  (`yillik_calisma_plani` vb.) tarih girilince Firma Takip'teki ilgili kriter de ✓
+  işaretlenir (`PortfoyKarne::firmaKriterKarsilarMi`). Firma Takip'e de aynı "Evrak
+  Türü Ekle" eklendi — iki sekme tek `EvrakTuru` state'ini paylaşır.
+- Firma Takip: firma × 12+9 yasal/manuel kriter matrisi + kullanıcının özel evrak
+  türleri (isgpratik 141-142 — `PortfoyKarne::firmaKriterMatrisi`/`firmaTakipKriterleri`).
+- Pazarlama (143.jpg, Faz 5): `AdayFirma` — aday/teklif/kazanıldı/kaybedildi, "Kazanıldı"
+  için `CreateFirma`'yı ön-dolu açan dönüştürme kısayolu.
+- Arşiv (144.jpg, Faz 5): firma başına düz dosya listesi (`ArsivDosya`, klasör yok).
+- Raporlar (146.jpg, Faz 5): mehse'deki 22 belge üretici modülünün TAMAMI tek listede
+  (`App\Support\RaporKayitlari` + `config isg.raporlar.kaynaklar` — her satır bir
+  model + üretici eşleşmesi, dosya arşivlemeden `Uretici::pdf($kayit)` ile anlık üretim).
+- Firma Ziyaretleri (147.jpg, Faz 5): yeni tablo yok — `ZiyaretProgrami`'nin tarihli ay
+  satırlarından türetilen salt-okunur takvim (`App\Support\ZiyaretTakvimi`).
 
 ### İSG-KATİP Robot (7-9.jpg)
 - Chrome eklentisi ile İSG-KATİP portal otomasyonu. "Teknik Gereksinimler", "Kurulum
@@ -1060,6 +1076,353 @@ başlanmasını istedi. Sırasıyla ele alınacak.
   hücreye kalın siyah büyük punto "X" yazılıyor, kalın metinle birlikte
   çift katmanlı net bir işaret oluşuyor. **374 test toplam** (yeni test
   eklenmedi, mevcut test genişletildi).
+
+## Profilim tamamlandı + İSG Profesyonelleri toplu atama (Faz 5)
+
+Faz 4 (tasarım cilası) sürerken kullanıcı Profilim panelindeki eksik işleri
+tamamlamaya yöneldi — isgpratik'te var olup mehse'de hiç kurulmamış son
+sekmeler + İSG Profesyonelleri'ne toplu atama. Bu fazın sonunda Profilim
+isgpratik'in **11 sekmesinin tamamına** sahip. **429 test toplam** (374 →
+429, bu fazda 55 yeni test).
+
+- **İSG Profesyonelleri — toplu firma atama ✅:** `IsgProfesyoneliResource`
+  tablosuna "Firmalara Ata" satır aksiyonu — çoklu-seçim Select (mevcut
+  atamalar önceden işaretli), kaydedince seçilenlere `IsgProfesyoneli::
+  firmaAlani()` (tip'e göre `igu_id`/`isyeri_hekimi_id`/`dsp_id`) ile atar,
+  işareti kaldırılanlardan siler. Artık her firmayı tek tek açıp atama
+  yapmaya gerek yok.
+- **Eğitim Kayıtları + Evrak Takip toplu Excel yükleme ✅ (isgpratik
+  profilim 1-16.jpg):** Profilim'e `egitimler`/`evrak_takip` sekmeleri
+  eklendi. `EgitimKaydi`/`EvrakKaydi` (tarih kayıtları) + `EgitimKayitExcelIceAktarici`/
+  `EvrakKayitExcelIceAktarici` (mevcut `CalisanExcelIceAktarici` deseniyle
+  birebir — şablon indir/toplu yükle, Türkçe-duyarsız başlık eşleme).
+  **Kritik keşif:** `kontrol_merkezi.kriterler`'deki `hazir` bayrağı
+  "gereksinim karşılandı" değil "mehse'de gerçek modül var" demek
+  (`test_kriterler_hazir_olmayanlar_sifir_doner` + Kontrol Merkezi'nin
+  "(modül yakında)" etiketiyle sabit) — bu yüzden manuel evrak verisi
+  `hazir`'i DEĞİŞTİRMEDİ, yalnız Firma Takip'in hücre görünümünü besledi
+  (`manuel_anahtar` alanı, `PortfoyKarne::firmaKriterKarsilarMi`); oran/yüzde
+  hesabı hâlâ yalnız gerçek modüllere göre.
+- **Eğitimler sadeleştirildi ✅:** kullanıcı 14 maddelik listeyi fazla buldu
+  ("sadece temel iş sağlığı ve güvenliği... ilerde konu eklemek için buton
+  bırak") — `EgitimTuru` (kullanıcı bazlı) yalnız 1 varsayılan madde
+  ("Temel İş Sağlığı ve Güvenliği Eğitimi") ile başlıyor, "Konu Ekle"
+  (hazır katalogdan seç veya özel yaz) + × ile kaldır. Kaldırma yalnız
+  takip listesinden çıkarır, geçmiş `EgitimKaydi` silinmez.
+- **Evrak Takip → OSGB Takip ✅:** isim değişti, 7 varsayılan maddeyle
+  (İSG/İY Sözleşmesi, Yıllık Çalışma Planı, Yıllık Değerlendirme Raporu,
+  Eğitim Katılım Formu, Kurul Toplantıları, Tespit Öneri Defteri)
+  başlayan, `EvrakTuru` ile aynı desende ekle/kaldır'lı bir listeye
+  dönüştü. Firma Takip'e de AYNI "Evrak Türü Ekle" eklendi — iki sekme tek
+  `EvrakTuru` tablosunu paylaşır (`PortfoyKarne::firmaTakipKriterleri` config
+  kriterleri + kullanıcının config'te karşılığı olmayan özel türlerini birleştirir).
+- **Pazarlama / Arşiv / Raporlar / Firma Ziyaretleri ✅ (isgpratik
+  `SİSTEME YÜKLENENLER/143-147.jpg`):** `BEKLEYEN_SEKMELER` const'u ve
+  "Diğer" sekmesi kaldırıldı.
+  - **Pazarlama:** `AdayFirma` (aday/teklif/kazanıldı/kaybedildi), "Kazanıldı"
+    için `CreateFirma::fillForm()`'a `session()->pull()` + `$this->form->
+    fillPartially()` ile ad/telefon/il aktaran dönüştürme kısayolu
+    (`fillPartially` diğer alan varsayılanlarını bozmuyor — düz `fill()`
+    kullansaydı bozardı).
+  - **Arşiv:** `ArsivDosya`, firma başına düz dosya listesi (klasör yok).
+    **Kendi bulduğum güvenlik açığı:** `arsivSeciliFirmaId` public Livewire
+    property'si tek noktada (`arsivFirmaSec`) sahiplik kontrolünden geçse
+    de istemci property'yi doğrudan değiştirebilir — dosya listeleme VE
+    yükleme action'larının ikisine de AYRICA sahiplik kontrolü eklendi.
+  - **Raporlar (en değerli mimari keşif):** mehse'deki 22 belge üretici
+    sınıfı zaten aynı statik imzaya sahipti (`Uretici::pdf(Model $kayit):
+    StreamedResponse`) — bu yüzden isgpratik'teki gibi ayrı bir dosya
+    arşivi KURULMADAN, `App\Support\RaporKayitlari` + `config
+    isg.raporlar.kaynaklar` (model + üretici eşleşmesi) ile TEK listede
+    birleşti; "İndir" ilgili üreticiyi anlık çağırır. Yeni modül eklenince
+    tek satır config yeter. **Ders:** config'e davranış (closure) YAZMA —
+    `config:cache` ile `var_export` çöker; ikincil format uygunluk kontrolü
+    `RaporKayitlari::ikincilUygunMu()`'da sabit `match()` ile yapıldı.
+  - **Firma Ziyaretleri:** yeni tablo yok, `ZiyaretProgrami`'nin tarihli ay
+    satırlarından türetilen salt-okunur takvim (`ZiyaretTakvimi`).
+
+## Risk Analizi PDF: sütun ayrımı + her sayfa başlık/altbilgi/sayfa no (Faz 6 devamı)
+
+Kullanıcı **440 test** aşamasında tabloyla ilgili ince ayar istedi: "Öneri
+Sorumlu Termin"i ayrı sütunlara böl, "Düzey" kutusunu daralt ve yazıyı dikey
+yap; ayrıca her sayfada tablo başlığının ve İşveren/İGU/Hekim/Temsilci/Destek
+imza şeridinin tekrarlanmasını, sayfa numarası ve kapakta toplam sayfa
+sayısını istedi.
+- `pdf/risk-degerlendirmesi.blade.php`: Öneri/Sorumlu/Termin 3 ayrı `<th>`/`<td>`
+  oldu. Düzey/Son Düzey hücreleri `.duzey-dikey` (`transform: rotate(-90deg)`,
+  dar `.col-duzey` sütun) ile dikey yazıya çevrildi — dompdf'in resmen
+  desteklediği `transform` özelliği kullanıldı (`writing-mode` DEĞİL, o
+  dompdf'te güvenilir değil). Risk tablosu `<thead>`/`<tbody>`'ye ayrıldı —
+  dompdf `<thead>`'i her sayfanın başında otomatik tekrarlıyor (native özellik,
+  ekstra kod gerekmedi). Yeni `@page { margin: ... 78px ... }` + `position:
+  fixed; bottom:-68px` alt bilgi şeridi (dompdf'in resmi header/footer
+  tekniği) — 5 kutu: İşveren/Vekili (firma alanı), İGU (gerçek kaşe+imza,
+  mevcut "kaşe deseni"), İşyeri Hekimi (firmaya atanmış `IsgProfesyoneli`nin
+  kaşesi — `Firma::isyeriHekimi` ilk kez risk PDF'inde kullanıldı), Çalışan
+  Temsilcisi/Destek Elemanı (`$rd->ekip`'te unvanında "temsilci"/"destek"
+  geçen üye, Uretici'de heuristik eşleşme).
+- Sayfa numarası + kapakta toplam sayfa: dompdf'in `Canvas::page_script()`
+  API'si (render() SONRASI, output() ÖNCESİ çağrılır — sıra önemli, aksi halde
+  sayfa sayısı henüz bilinmez). `{PAGE_NUM}`/`{PAGE_COUNT}` metnini HTML'e
+  yazmak İŞE YARAMAZ (dompdf'in o path'i `Renderer/Text.php`'de yorum
+  satırına alınmış/pasif) — gerçek yöntem PHP tarafından `$canvas->
+  page_script(fn($pageNumber,$pageCount) => ...)` ile `$canvas->text()`
+  çağırmak. Bu projede İLK sayfa numaralandırma kullanımı; ileride başka
+  çok sayfalı PDF'lerde (Saha Denetimi, İş Kazası vb.) aynı desen kopyalanabilir.
+- **Görsel doğrulama kısıtı:** bu makinede poppler/pdftoppm, imagemagick,
+  Python+PyMuPDF YOK; headless Chrome de PDF'i screenshot'ta boş/siyah
+  veriyor (bilinen bir headless Chrome kısıtı — PDF viewer plugin başlıksız
+  modda güvenilir çalışmıyor). PDF gerçekten üretilip test edildi (440 test
+  yeşil, hatasız render+page_script+output) ama piksel bazında konum/boyut
+  kullanıcı gerçek PDF'i açana kadar doğrulanamadı — ince ayar gerekebilir.
+
+## Risk Analizi: Kapak → Prosedür → Form + Risk Prosedürleri kütüphanesi (Faz 6)
+
+Kullanıcı "risk analizi sayfasını düzenlemeye geldi, bitire bitire gidelim"
+dedi ve `C:\Users\mozde\Desktop\isgpratik\RİSK ANALİZİ` klasöründeki GERÇEK
+belgeleri verdi: bir prosedür `.docx` (Matris Yöntemi), bir Fine-Kinney
+prosedür+rapor `.xlsx` (gerçek bir inşaat firmasının 150+ maddelik risk
+tablosu dahil) ve bir kapak `.pptx`. **440 test toplam.** Kullanıcı işin
+ortasında dışarı çıkıp "sen devam et, dönünce sorduğun seçenekleri
+cevaplarım" dediği için kalan tasarım kararları (prosedür kütüphanesinin
+şekli, yükleme akışı) kendi takdirimle verildi — kullanıcı dönünce gözden
+geçirmesi gerekebilir.
+- **`App\Models\RiskProsedur`** (yeni tablo, kullanıcı+yöntem başına tek
+  kayıt): `varsayilanlariSeedEt()` kullanıcı hiç prosedürü yoksa Matris ve
+  Fine-Kinney için GERÇEK referans metinle (docx/xlsx'ten satır satır
+  alınan AMAÇ/KAPSAM/TANIMLAR/UYGULAMA/DÖKÜMANTASYON) başlatır — uydurma
+  metin YOK, [[resmi-belge-gercek-sablon-kullan]] kuralı burada da geçerli.
+  `App\Filament\Resources\RiskProsedurs\RiskProsedurResource` ("Risk
+  Prosedürleri" — Risk Yönetimi menüsü): liste + "Prosedür Yükle" (kendi
+  .docx'ini yükleyip bir yöntemin prosedürünü DEĞİŞTİRİR) + içerik görüntüle
+  + sil. `App\Support\RiskProsedurDocxOkuyucu` PhpWord ile metni
+  paragraf/başlık olarak ayrıştırır (sezgi: kısa + tamamen büyük harfli
+  satır = başlık — gerçek referans docx'te AMAÇ/KAPSAM/5.1 gibi başlıkları
+  doğru yakaladığı test edildi).
+- **PDF sırası değişti:** kullanıcı netleştirdi — "kapak, seçilen prosedür,
+  form sırasına göre çıkacak". `RiskDegerlendirmesiUretici::pdf()` artık
+  `RiskProsedur::aktifIcin($userId, $rd->yontem)`'i view'a geçiriyor;
+  `pdf.risk-degerlendirmesi.blade.php`'de Kapak'tan hemen sonra, Künye/
+  Metodoloji/Risk Tablosu'ndan (Form) önce yeni bir prosedür sayfası
+  eklendi. Kapağa da eksik olan SGK Sicil No + NACE Kodu eklendi (gerçek
+  pptx kapak şablonunda vardı, mehse'de yoktu — bu, kullanıcının "verdiğim
+  adrese göre kontrol et eksik varsa düzelt" isteğiyle bulunan gerçek bir
+  eksiklikti).
+- **Kontrol edildi, EKSİK ÇIKMADI:** kullanıcı "inşaat için yüklediğim
+  Excel'i aynı sektör geldiğinde kullanalım, yeni yüklenecekse kütüphaneye
+  ekle" dedi — bu tam olarak zaten var olan `RiskSablonu` + Risk
+  Sihirbazı'nın "Şablonlar & Paylaşılanlar" (sektöre göre gruplu, tek
+  tıkla uygulama) ve "Excel'den Sektörel Şablon Oluştur" (kendi Excel'ini
+  sektöre etiketleyip kütüphaneye ekleme, `ListRiskSablonus`) akışlarıydı.
+  Yeniden inşa EDİLMEDİ — mevcut olanın gerçek referans dosyayla (fine-kinney
+  inşaat Excel'i) uyumlu çalıştığı kod okumasıyla doğrulandı.
+- **Ders:** kullanıcı bir özelliği "eksik" sanıp isteyebilir ama bazen
+  zaten var olur — yeniden yazmadan önce mevcut kodu (bu örnekte
+  `RiskSihirbazi::ADIMLAR`/`YONTEMLER` ve `ListRiskSablonus`) MUTLAKA
+  kontrol et; gereksiz yeniden inşa hem riskli hem israf.
+
+## Risk Analizi PDF: bant adı, dikey Düzey hizalama düzeltmesi, No sütunu, toplam sayfa (Faz 6 devamı, 442 test)
+
+Kullanıcı 440 test sonrası üç ince ayar daha istedi: en üst risk bandının adını
+değiştir, dikey "Düzey" yazısının satırla hizasız kaydığı hatayı düzelt, risk
+tablosuna sıra numarası ekle, kapaktaki toplam sayfa sayısını "Hazırlayan"ın
+hemen altına konumlandır.
+- **Bant adı:** `config('isg.risk_matris_5x5.bantlar')` ve
+  `risk_fine_kinney.bantlar`'daki en üst bant `'Tolerans Gösterilemez Risk'` →
+  `'Çok Yüksek Risk'` olarak değiştirildi (her iki yöntemde de, testte de).
+- **Dikey Düzey hizalama hatası kök nedeni ve düzeltmesi:** önceki turda
+  kullanılan `transform: rotate(-90deg)` dompdf'te kutuyu KENDİ döndürülmemiş
+  doğal genişliğine göre ortalıyor; bu genişlik yazının uzunluğuna göre
+  satırdan satıra değiştiği için döndürülmüş metin kendi hücresinin satırına
+  göre kayıyordu (bant adı ne kadar uzunsa kayma o kadar büyüktü). Çözüm:
+  `transform` tamamen terk edilip harf harf alt alta yazma tekniğine
+  geçildi — `RiskMaddesi::duzeyDikey()`/`sonDuzeyDikey()` yeni metodları
+  `mb_str_split()` ile Türkçe karakterleri bozmadan tek tek ayırıp `"\n"`
+  ile birleştiriyor, blade'de `white-space: pre-line` ile satır satır
+  gösteriliyor. Bu teknik normal tablo akışına (hücre otomatik yüksekliği)
+  dayandığı için satırla hizası garanti — transform gibi ek bir konumlandırma
+  katmanı yok. `.col-duzey` ayrıca 18px'ten 11px'e daraltıldı.
+  **Ders:** dompdf'te `transform: rotate()` resmen destekleniyor olması onu
+  tablo hücresi içinde güvenilir kılmıyor — döndürme merkezi öncesi kutunun
+  doğal boyutuna bağlı olduğunda içerik uzunluğu değiştikçe kayma birikir;
+  tablo satırıyla kesin hizalanması gereken dikey metin için karakter
+  yığınlama daha sağlam.
+- **No sütunu:** risk tablosuna en sola `.col-no` (16px) eklendi, değeri
+  `{{ $loop->iteration }}` — 1, 2, 3 diye artan sıra numarası.
+- **Kapakta toplam sayfa, "Hazırlayan"ın altında:** önceki turda mutlak
+  canvas koordinatı (`$canvas->text(360, 30, ...)`) tahminiyle konumlanmıştı;
+  bu, "Hazırlayan" satırının gerçek render pozisyonundan bağımsızdı ve
+  kullanıcının net isteğiyle ("Hazırlayan'ın ALTINDA") yetersiz kaldığı
+  ortaya çıktı. Çözüm: **iki geçişli render** — `RiskDegerlendirmesiUretici::
+  pdf()` önce `toplamSayfa=null` ile bir kez render edip `$dompdf->
+  getCanvas()->get_page_count()` ile sayfa sayısını öğreniyor, sonra bu
+  değeri normal view verisi olarak geçirip İKİNCİ kez render ediyor — böylece
+  "Toplam Sayfa: N" normal HTML akışında (`Hazırlayan` div'inin hemen
+  altında) CSS ile konumlanıyor, koordinat tahmini gerekmiyor.
+  **Ders:** bir değerin HTML akışında belirli bir öğeye göre kesin
+  konumlanması gerektiğinde (mutlak canvas koordinatı değil), ve o değer
+  ancak render sonrası bilinebiliyorsa (sayfa sayısı gibi), iki geçişli
+  render dompdf'te güvenilir ve basit bir çözüm — piksel tahmini riskini
+  tamamen ortadan kaldırıyor.
+- Sayfa numarası mantığı da sadeleşti: `page_script` içinde `$pageNumber===1`
+  ise (kapak) hiç yazmıyor, 2. sayfadan itibaren `"Sayfa N / Toplam"` yazmaya
+  devam ediyor — toplam sayı kapak dahil tüm sayfaları sayıyor.
+- Tam paket: **442 test, 1215 assertion, hatasız.**
+- **Hâlâ görsel doğrulama YOK** (bkz. bir önceki fazın notu — poppler/
+  imagemagick/Python yok, headless Chrome PDF screenshot'ı boş veriyor);
+  kullanıcı gerçek PDF'i açtığında piksel bazlı ince ayar gerekebilir.
+
+## Risk Analizi PDF: sayfa no konumu, Düzey kutusu tam boyama, önlem sonrası O/Ş sütunları (Faz 6 devamı, 443 test)
+
+Kullanıcı gerçek PDF çıktısını inceledikten sonra üç somut hata/istek bildirdi:
+sayfa numarası tablonun üstüne biniyor; dikey "Düzey" kutusu yalnız yazı
+kadar boyanıyor (satırın ortasında değil); "Termin"in yanına önlem sonrası
+Olasılık/Şiddet sütunu açılsın ve bunlar (girilmemişse) olasılık=1,
+şiddet=öneri öncesiyle aynı varsayılıp çarpımdan Son Puan/Son Düzey
+hesaplansın.
+- **Sayfa no üst-marjdan alt-marja taşındı:** eski konum `$canvas->
+  text(500, 15, ...)` üst marja (25px) çok yakındı ve her sayfanın başında
+  tekrarlayan tablo başlığıyla (`<thead>`) çakışıyordu. Yeni konum alt
+  marjda, tablo bittikten SONRA imza şeridinden ÖNCEki boşlukta: `.sayfa-alt`
+  artık `bottom:-78px` (önceki `-68px` yerine, @page alt marjıyla `78px`
+  birebir aynı) — şerit sayfanın gerçek alt kenarına dayanıyor, böylece
+  içerik kutusunun bittiği yer ile şeridin başladığı yer arasında sayfa
+  numarası için güvenli bir bant açılıyor. Koordinat `$canvas->get_width()`/
+  `get_height()`'tan TÜRETİLİYOR (`width-90, height-64`), sabit sayı tahmini
+  yerine. **Ders:** dompdf canvas'ına mutlak koordinatla yazı basarken, o
+  koordinatın hangi CSS kutusuna (marj/içerik) denk geldiğini varsaymak
+  yerine, marj değerleriyle TUTARLI/türetilmiş bir hesap kullan — "üstte 15px
+  boşluk var sanırım" gibi bir tahmin gerçek dompdf sayfalama davranışında
+  yanlış çıkabiliyor (kullanıcının gerçek PDF'i açmasıyla ortaya çıktı).
+- **Düzey kutusu artık TAMAMEN boyanıyor:** renk artık iç `<span>`e değil,
+  `<td class="col-duzey">`nin kendisine `style="background:..."` olarak
+  uygulanıyor; `.col-duzey`e `vertical-align:middle` eklendi (tablo hücresi
+  özgü — 2 class'lı seçici `table.risk td`nin `vertical-align:top`'unu
+  spesifiklikle eziyor) — böylece harf yığını satırın YÜKSEKLİĞİ ne olursa
+  olsun (yanındaki uzun Tehlike/Risk metni satırı ne kadar uzatırsa
+  uzatsın) dikey ortada kalıyor, kutunun tamamı renkli.
+- **Önlem sonrası Olasılık/Şiddet sütunları + otomatik varsayılan:**
+  `RiskMaddesi`'nin `saving` hook'una, `son_olasilik`/`son_siddet`/
+  (Fine-Kinney'de) `son_frekans` NULL ise varsayılan atanması eklendi:
+  olasılık **1** (önlem genelde olasılığı düşürür), şiddet ve frekans
+  **öneri ÖNCESİNDEKİ değerle aynı** (önlem şiddeti değil olasılığı azaltır
+  varsayımı) — kullanıcı elle farklı bir değer girerse dokunulmuz. Risk
+  tablosuna Termin'in hemen sağına iki yeni `<th>O</th><th>Ş</th>` sütunu
+  eklendi (Son Puan/Son Düzey'den önce) — artık her zaman gerçek bir
+  olasılık×şiddet çarpımından Son Puan/Son Düzey hesaplanıyor, "—" boş
+  durumu yalnız hiç mevcut olasılık/şiddet girilmemiş (tamamlanmamış) bir
+  maddede kalıyor. Filament formunda da "Önlem sonrası Olasılık" alanına
+  `->default(1)` + her iki alana açıklayıcı `helperText` eklendi.
+- Tam paket: **443 test, 1224 assertion, hatasız** (bir önceki turdaki
+  `test_risk_maddesi_duzey_dikey_harf_harf_alt_alta_yazar` testinin eski
+  "son_duzey boşsa null" beklentisi artık YENİ varsayılan davranışa göre
+  güncellendi — kasıtlı davranış değişikliği, regresyon değil).
+
+## Durum — 2026-09-04/05 (Kontrol Merkezi / Firma Takip mantık hataları + tasarım güncellemesi Md.1-4)
+
+**443 test (değişmedi — sadece davranış/görsel düzeltmeleri, yeni özellik yok).**
+Kullanıcı "sistemdeki mantık hatalarını test et, eksik gördüğün yerleri düzelt"
+dedi; ardından ayrı bir turda "Gemini'nin ürettiği görsele göre Kontrol Merkezi'ni
+güncelle" + tasarım Md.1-4 (renk paleti, tipografi, buton, gölge) onaylanıp
+gerçek panele işlendi.
+
+- **`PortfoyKarne::gercekModulVarMi()` — 6 gerçek mantık hatası bulundu ve
+  düzeltildi:**
+  1. `kontrol_merkezi.kriterler`'in 13 kriteri `hazir=false` kalmıştı (gerçek
+     modülü olduğu HALDE) — `EgitimKatilim`, `TatbikatTutanagi`,
+     `KurulToplantisi`, `IsIzinFormu`, `SahaDenetimi`, `IsKazasiRaporu`,
+     `MuayeneFormu`, `Firma.igu_id`/`isyeri_hekimi_id`, `YillikPlan` (3
+     kriter), `TespitOneriDefteri` artık gerçek modüle bakıyor.
+  2. `gercekModulVarMi()===false` durumunda eski manuel `EvrakKaydi`
+     kaydını YOK SAYAN bir `??`/null-coalescing hatası vardı (false, null
+     DEĞİLDİR) — `=== true` kontrolüne çevrildi, artık "gerçek modül VEYA
+     manuel kayıt" ikisinden biri yeterli (geçmiş manuel veri kaybolmuyor).
+  3. `YillikPlan` sınıfı `use` edilmeden kullanılmıştı — yanlış namespace
+     (`App\Support\YillikPlan`) çözülüp fatal hataya yol açıyordu.
+  4. **35 firma vs 34 firma çelişkisi:** `Firmalar` nav rozeti `aktif=true`
+     filtreliydi, Profilim'in TÜM hesapları (`ozet`, `kriterler`,
+     `firmaKriterMatrisi`, `profilOzeti`, `calisanDagilimi`) filtrelemiyordu
+     — 6 yerde `->where('aktif', true)` eklendi.
+  5. `isg_kurulu` kriterinin 50-altı-çalışan muafiyeti yalnız `kriterler()`/
+     `ozet()`'te uygulanıyordu, `firmaKriterMatrisi()`/`firmaTamUyumluMu()`
+     bunu atlıyordu — küçük firmalar hem "Oran" hem "tam uyumlu" sayımında
+     haksız yere cezalandırılıyordu. İkisine de aynı `$muaf` kontrolü eklendi.
+  **Ders:** "aynı hesap birden fazla yerde tekrarlanıyorsa, bir yerde
+  düzeltilen bir kural (muafiyet, filtre) diğer kopyalarda da UYGULANMALI" —
+  bu oturumda 2 kez (aktif filtresi, isg_kurulu muafiyeti) aynı sınıftan hata
+  bulundu; tek bir yerde düzeltip diğerini unutmak kolay.
+- **"OSGB Takip" TAMAMEN KALDIRILDI (05.09.2026, aynı gün ikinci tur).**
+  Önceki turda kullanıcı bu sekmeyi kaldırmak istemiş ama net onay
+  vermemişti; bu turda netleşti: sekme + altındaki TÜM manuel evrak
+  mekanizması (Excel toplu yükleme, "Evrak Türü Ekle" özel kriter ekleme,
+  Firma Takip'teki "açık ✓" manuel-işaret gösterimi) tamamen gitti — sadece
+  ayrı sekme görünümü değil, mekanizmanın kendisi.
+  - Silinen: `App\Models\EvrakTuru`/`EvrakKaydi`, `App\Support\
+    EvrakKayitExcelIceAktarici`, ilgili 2 migration (dev DB'de tablo
+    boştu — 0 `evrak_kayitlari`, 8 `evrak_turleri` satırı, veri kaybı yok;
+    tablolar `Schema::dropIfExists` ile elle düşürüldü, migration
+    kayıtları da temizlendi — `migrate:fresh` KULLANILMADI).
+    `Firma::evrakKayitlari()` ilişkisi, `Profilim`'in evrak* metodları/
+    action'ları, blade'deki OSGB Takip bloğu, config'teki `manuel_anahtar`
+    alanları hep birlikte kaldırıldı.
+  - `PortfoyKarne::firmaKriterKarsilarMi()` artık SADECE
+    `gercekModulVarMi()`'ye bakıyor (manuel fallback yok);
+    `firmaTakipKriterleri()` artık salt config listesini döner (özel/ozel
+    sütun kavramı gitti); `firmaKriterMatrisi()`'nin `evrakKayitlari` eager
+    load'u ve manuel fallback dalı kaldırıldı. Firma Takip artık YALNIZ
+    gerçek modüllere göre ✓/✗ gösterir.
+  - 443 → **426 test** (17 test kaldırıldı: `EvrakKayitExcelIceAktariciTest`
+    dosyası tamamen + `ProfilimTest`'teki 7 evrak-özel test), kalan hepsi
+    geçiyor.
+- **Tasarım Md.1-4 (AskUserQuestion'sız, kullanıcı Gemini görseline
+  referansla onayladı) `AdminPanelProvider`'a işlendi:**
+  - Md.1: özel `gray` paleti (`GrayVioletTint` — Gray'in lightness/chroma
+    eğrisi aynı, hue Violet ailesine ~290° kaydırılmış) + `profilim.blade.php`/
+    `kontrol-merkezi.blade.php`'deki 70+ düz gri (`107 114 128`) referansı
+    `128 116 148`'e çevrildi.
+  - Md.2: `->font('Public Sans', GoogleFontProvider)` +
+    `->monoFont('JetBrains Mono', ...)`; başlıklarda Archivo (head render-hook
+    ile CSS override, Filament'ın `->font()` API'sinde ayrı "başlık fontu"
+    slotu yok).
+  - Md.3: Filament'ın varsayılan dolu/solid buton stili zaten uygundu, ekstra
+    değişiklik gerekmedi.
+  - Md.4: seçici gölge (`$golge` — KÜNYE kartı + sayaç kartları, DİĞER
+    kutular bilinçli düz kaldı) + turkuaz "seçili sekme" vurgusu
+    (`$mor`→`$turkuaz`, profilim + kontrol-merkezi aktif tab pili).
+  - **`->defaultThemeMode(ThemeMode::Light)`** — panel varsayılanı koyudan
+    açığa çevrildi. **Kritik keşif:** Filament'ın `dark-mode.js`'i
+    `localStorage.getItem('theme') ?? --default-theme-mode` sırasıyla karar
+    veriyor — tarayıcıda ÖNCEDEN kayıtlı "dark" tercihi sunucu ayarını HER
+    ZAMAN eziyor. `HEAD_START` render-hook'una (Alpine başlamadan ÖNCE
+    çalışır) tek seferlik bir migration script eklendi: localStorage'da
+    "theme" yoksa/daha önce migrate edilmemişse "light" yazıp bir damga
+    bırakıyor, sonra hiç karışmıyor. **Çözüldü (05.09.2026, ikinci tur):**
+    kullanıcı yeni bir gizli/InPrivate pencerede kontrol etti, açık tema
+    doğru görünüyor — kod hiç bug'lı değilmiş. Kök neden: Filament'ın
+    `wire:navigate` SPA-tarzı gezinmesi `<head>`'i yeniden yüklemiyor,
+    kullanıcı deploy sonrası ESKİ açık sekmede gezinmeye devam ettiği için
+    yeni migration script'i o sekmede hiç çalışmamış. **Ders: "tema/JS
+    değişikliği görünmüyor" şikayetinde önce kullanıcının YENİ sekme/
+    tam sayfa yenileme yapıp yapmadığını sor — Filament panelleri SPA gibi
+    gezindiğinden `<head>` içeriği eski kalabilir.**
+  - Kontrol Merkezi "İSG Portföy Özeti" kartları görsel olarak yenilendi:
+    düz sayı yerine dolu-renk fayans + ikon rozeti + `conic-gradient`+`mask`
+    ile tema-bağımsız (panel bg rengini tahmin etmeden) uyum yüzdesi halkası;
+    21 kriter kartına renkli daire ikon rozeti eklendi.
+  **Ders (tekrar karşılaşılabilir):** Filament panel `colors()`/tema
+  ayarları SUNUCU tarafında anında canlıdır (config cache yok, `--default-
+  theme-mode` CSS değişkeni her istekte `filament()->getDefaultThemeMode()
+  ->value`'dan türetiliyor) — "tema değişikliği görünmüyor" şikayetinde önce
+  tarayıcı `localStorage`'ını (client-side persisted override) şüphelen,
+  sunucu/kod tarafını suçlamadan önce.
+- **Bu oturumda AYRICA, mehse'yle İLGİSİZ 3 ayrı Fine-Kinney risk
+  değerlendirmesi hazırlandı** (kullanıcının açık isteğiyle: "bu programla
+  ilgili değil") — Rüzgar Enerjisi Kurulum/Bakım/Lojistik (54 madde, verilen
+  6 PDF'ten), Yer Altı/Havai Hat Kablo Çekimi + Elektrik Bakımı (36 madde),
+  Ameliyathane — Şehir Hastanesi (41 madde, formaldehit/UV/akü şarj/oksijen
+  tüpü dahil). Üçü de Artifact + PhpSpreadsheet ile Excel olarak
+  `Downloads/`'a teslim edildi, mehse kod tabanına HİÇ dokunmadı — karışık
+  bağlamda tutmamak için MIMARI.md'ye ayrıntı yazılmadı, sadece bu not.
 
 ## Notlar
 
