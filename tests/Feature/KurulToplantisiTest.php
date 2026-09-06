@@ -183,6 +183,28 @@ class KurulToplantisiTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_pdf_katilimcilar_tablosunda_katilim_yerine_imza_yeri_acilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = KurulToplantisi::create([
+            'firma_id' => $firma->id,
+            'tarih' => now(),
+            'katilimcilar' => [
+                ['ad_soyad' => 'Katılan Kişi', 'gorev' => 'İGU', 'katildi' => true],
+                ['ad_soyad' => 'Katılmayan Kişi', 'gorev' => 'İşveren Vekili', 'katildi' => false],
+            ],
+            'gundem' => [],
+            'kararlar' => [],
+        ]);
+
+        $html = view('pdf.kurul-toplantisi', ['toplanti' => $toplanti, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('İmza</th>', $html);
+        $this->assertStringNotContainsString('Katıldı<', $html);
+        $this->assertStringContainsString('Katılmayan Kişi', $html);
+        $this->assertStringContainsString('Katılmadı', $html);
+    }
+
     public function test_toplanti_silinir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

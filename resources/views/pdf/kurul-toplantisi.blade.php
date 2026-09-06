@@ -41,13 +41,13 @@
 
     <h2>KATILIMCILAR</h2>
     <table class="liste">
-        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th>Görev</th><th style="width:15%">Katılım</th></tr>
+        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th>Görev</th><th style="width:22%">İmza</th></tr>
         @forelse (($toplanti->katilimcilar ?? []) as $i => $k)
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $k['ad_soyad'] ?? '—' }}</td>
                 <td>{{ $k['gorev'] ?? '—' }}</td>
-                <td>{{ ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı' }}</td>
+                <td>{{ ($k['katildi'] ?? false) ? '' : 'Katılmadı' }}</td>
             </tr>
         @empty
             <tr><td colspan="4" style="color:#888">Katılımcı eklenmedi.</td></tr>
