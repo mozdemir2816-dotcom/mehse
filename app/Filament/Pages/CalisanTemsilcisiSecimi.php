@@ -173,6 +173,13 @@ class CalisanTemsilcisiSecimi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('bosSablon')
+                ->label('Boş Şablon Seti (ZIP)')
+                ->icon('heroicon-o-document-duplicate')
+                ->color('gray')
+                ->tooltip('Firma adı ve aday listesi boş — elle doldurmak için 5 belgenin tamamı')
+                ->action(fn () => CalisanTemsilcisiSecimiUretici::bosSablonZip()),
+
             Action::make('duyuru')
                 ->label('Seçim Duyuru İlanı')
                 ->icon('heroicon-o-megaphone')

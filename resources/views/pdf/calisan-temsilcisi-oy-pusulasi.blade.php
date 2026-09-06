@@ -21,8 +21,10 @@
 </head>
 <body>
 @php
+    $bosMi = $bos ?? false;
     $adaylar = $secim->adaylarListesi();
     $pusulaSayisi = 16;
+    $bosAdaySayisi = 6;
 @endphp
 
 <table class="izgara">
@@ -33,16 +35,25 @@
                     <div class="pusula">
                         <div class="baslik">
                             <div class="sol">OY PUSULASI</div>
-                            <div class="sag">EN FAZLA {{ $secim->zorunlu_temsilci_sayisi }} TERCİH</div>
+                            <div class="sag">EN FAZLA {{ $secim->zorunlu_temsilci_sayisi ?: '__' }} TERCİH</div>
                         </div>
-                        @forelse ($adaylar as $i => $aday)
-                            <div class="aday">
-                                <div class="ad">{{ $i + 1 }}. {{ $aday['ad_soyad'] }}</div>
-                                <div class="daire"><span></span></div>
-                            </div>
-                        @empty
-                            <div class="aday"><div class="ad">Aday eklenmedi.</div></div>
-                        @endforelse
+                        @if ($bosMi)
+                            @for ($n = 1; $n <= $bosAdaySayisi; $n++)
+                                <div class="aday">
+                                    <div class="ad">{{ $n }}. &nbsp;</div>
+                                    <div class="daire"><span></span></div>
+                                </div>
+                            @endfor
+                        @else
+                            @forelse ($adaylar as $i => $aday)
+                                <div class="aday">
+                                    <div class="ad">{{ $i + 1 }}. {{ $aday['ad_soyad'] }}</div>
+                                    <div class="daire"><span></span></div>
+                                </div>
+                            @empty
+                                <div class="aday"><div class="ad">Aday eklenmedi.</div></div>
+                            @endforelse
+                        @endif
                         <div class="bosluk"></div>
                     </div>
                 </td>

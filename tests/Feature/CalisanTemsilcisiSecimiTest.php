@@ -6,10 +6,13 @@ use App\Filament\Pages\CalisanTemsilcisiSecimi as SecimSayfasi;
 use App\Models\CalisanTemsilcisiSecimi as SecimModel;
 use App\Models\Firma;
 use App\Models\User;
+use App\Support\CalisanTemsilcisiSecimiUretici;
 use App\Support\PortfoyKarne;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
+use ZipArchive;
 
 class CalisanTemsilcisiSecimiTest extends TestCase
 {
@@ -116,6 +119,60 @@ class CalisanTemsilcisiSecimiTest extends TestCase
         $this->assertSame('Ahmet Yılmaz', $kayit->secilenAday()['ad_soyad']);
 
         $this->assertTrue(PortfoyKarne::firmaKriterKarsilarMi($firma->fresh(), 'calisan_temsilcisi'));
+    }
+
+    public function test_bos_sablon_seti_firma_secilmeden_de_uretilir(): void
+    {
+        // Firma hiç seçilmeden de erişilebilmeli — elle doldurulacak, sistemden
+        // bağımsız bir şablon seti istendiği için.
+        Livewire::test(SecimSayfasi::class)
+            ->assertActionExists('bosSablon')
+            ->callAction('bosSablon');
+    }
+
+    public function test_bos_sablon_zip_5_belge_icerir(): void
+    {
+        $yanit = CalisanTemsilcisiSecimiUretici::bosSablonZip();
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+
+        ob_start();
+        $yanit->sendContent();
+        $zipIcerik = ob_get_clean();
+
+        $geciciDosya = tempnam(sys_get_temp_dir(), 'test-ct-bos-zip').'.zip';
+        file_put_contents($geciciDosya, $zipIcerik);
+
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($geciciDosya) === true);
+        $this->assertSame(5, $zip->numFiles);
+        $zip->close();
+        unlink($geciciDosya);
+    }
+
+    public function test_bos_sablonda_firma_adi_ve_aday_listesi_gercek_veri_icermez(): void
+    {
+        $firma = Firma::factory()->create(['unvan' => 'Gizli Kalması Gereken Firma A.Ş.']);
+        $secim = SecimModel::firmaIcin($firma);
+        $secim->forceFill(['adaylar' => [['ad_soyad' => 'Gerçek Aday', 'unvan' => 'İşçi']]])->save();
+
+        // Boş şablon, seçili firma/kayıttan tamamen bağımsız üretilir.
+        $html = view('pdf.calisan-temsilcisi-duyuru', [
+            'secim' => new SecimModel,
+            'firma' => null,
+            'bos' => true,
+        ])->render();
+
+        $this->assertStringNotContainsString('Gizli Kalması Gereken Firma', $html);
+
+        $adayHtml = view('pdf.calisan-temsilcisi-aday-listesi', [
+            'secim' => new SecimModel,
+            'firma' => null,
+            'bos' => true,
+        ])->render();
+
+        $this->assertStringNotContainsString('Gerçek Aday', $adayHtml);
+        $this->assertStringNotContainsString('Aday eklenmedi', $adayHtml);
     }
 
     public function test_baska_uzmanin_firmasi_listede_gorunmez(): void

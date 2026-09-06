@@ -19,15 +19,20 @@
     .imza { margin-top: 60px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
+    .cizgi { display: inline-block; border-bottom: 1px solid #111; }
 </style>
 </head>
 <body>
+@php
+    $bosMi = $bos ?? false;
+    $aday = $secim->secilenAday() ?? [];
+    $tire = fn ($deger) => filled($deger) ? $deger : ($bosMi ? '' : '—');
+@endphp
 <div class="sayfa">
-    @php $aday = $secim->secilenAday(); @endphp
 
     <div class="ust">
         <div class="sol">
-            <div class="firma">{{ $firma?->unvan }}</div>
+            <div class="firma">@if ($bosMi)<span class="cizgi" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
             <h1>ÇALIŞAN TEMSİLCİSİ ATAMA TUTANAĞI</h1>
         </div>
         <div class="sag">
@@ -36,20 +41,20 @@
         </div>
     </div>
 
-    <div class="adres">İşyeri Adresi: {{ $firma?->adres }}</div>
+    <div class="adres">İşyeri Adresi: @if ($bosMi)<span class="cizgi" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
 
     <div class="govde">
-        {{ $firma?->unvan }} işyerinde gerçekleştirilen çalışan temsilcisi seçimi sonucunda aşağıda bilgileri yer
+        @if ($bosMi)<span class="cizgi" style="min-width:220px">&nbsp;</span>@else{{ $firma?->unvan }}@endif işyerinde gerçekleştirilen çalışan temsilcisi seçimi sonucunda aşağıda bilgileri yer
         alan çalışan, 6331 sayılı İş Sağlığı ve Güvenliği Kanununun 20 nci maddesi kapsamında çalışan temsilcisi
         olarak görevlendirilmiştir.
     </div>
 
     <table class="kunye">
-        <tr><td>Atanan Çalışanın Adı Soyadı</td><td>{{ $aday['ad_soyad'] ?? '—' }}</td></tr>
-        <tr><td>Unvanı / Görevi</td><td>{{ $aday['unvan'] ?: '—' }}</td></tr>
-        <tr><td>Görevlendirme Tarihi</td><td>{{ ($secim->gorevlendirme_tarihi ?: $secim->secim_tarihi)?->format('d.m.Y') ?: '—' }}</td></tr>
-        <tr><td>İşyeri Çalışan Sayısı</td><td>{{ $secim->isyeri_calisan_sayisi }}</td></tr>
-        <tr><td>Zorunlu Temsilci Sayısı</td><td>{{ $secim->zorunlu_temsilci_sayisi }}</td></tr>
+        <tr><td>Atanan Çalışanın Adı Soyadı</td><td>{{ $tire($aday['ad_soyad'] ?? null) }}</td></tr>
+        <tr><td>Unvanı / Görevi</td><td>{{ $tire($aday['unvan'] ?? null) }}</td></tr>
+        <tr><td>Görevlendirme Tarihi</td><td>{{ $tire(($secim->gorevlendirme_tarihi ?: $secim->secim_tarihi)?->format('d.m.Y')) }}</td></tr>
+        <tr><td>İşyeri Çalışan Sayısı</td><td>{{ $tire($secim->isyeri_calisan_sayisi) }}</td></tr>
+        <tr><td>Zorunlu Temsilci Sayısı</td><td>{{ $tire($secim->zorunlu_temsilci_sayisi) }}</td></tr>
     </table>
 
     <div class="govde">

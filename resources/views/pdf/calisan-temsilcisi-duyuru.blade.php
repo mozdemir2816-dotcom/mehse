@@ -19,14 +19,19 @@
     .imza { margin-top: 60px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
+    .cizgi { display: inline-block; border-bottom: 1px solid #111; }
 </style>
 </head>
 <body>
+@php
+    $bosMi = $bos ?? false;
+    $tire = fn ($deger) => filled($deger) ? $deger : ($bosMi ? '' : '—');
+@endphp
 <div class="sayfa">
 
     <div class="ust">
         <div class="sol">
-            <div class="firma">{{ $firma?->unvan }}</div>
+            <div class="firma">@if ($bosMi)<span class="cizgi" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
             <h1>ÇALIŞAN TEMSİLCİSİ SEÇİM DUYURU İLANI</h1>
         </div>
         <div class="sag">
@@ -35,7 +40,7 @@
         </div>
     </div>
 
-    <div class="adres">İşyeri Adresi: {{ $firma?->adres }}</div>
+    <div class="adres">İşyeri Adresi: @if ($bosMi)<span class="cizgi" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
 
     <div class="govde">
         İşyerimizde iş sağlığı ve güvenliği ile ilgili çalışmalara katılmak, çalışmaları izlemek, gerekli tedbirlerin
@@ -43,12 +48,12 @@
     </div>
 
     <table class="kunye">
-        <tr><td>İşyeri</td><td>{{ $firma?->unvan }}</td></tr>
-        <tr><td>Çalışan Sayısı</td><td>{{ $secim->isyeri_calisan_sayisi }}</td></tr>
-        <tr><td>Seçilecek Temsilci Sayısı</td><td>{{ $secim->zorunlu_temsilci_sayisi }}</td></tr>
-        <tr><td>Aday Başvuru Son Tarihi</td><td>{{ $secim->aday_basvuru_son_tarihi?->format('d.m.Y') ?: '—' }}</td></tr>
-        <tr><td>Seçim Tarihi ve Saati</td><td>{{ $secim->secim_tarihi?->format('d.m.Y') ?: '—' }} {{ $secim->secim_saati }}</td></tr>
-        <tr><td>Seçim Yeri</td><td>{{ $secim->secim_yeri ?: '—' }}</td></tr>
+        <tr><td>İşyeri</td><td>@if ($bosMi)&nbsp;@else{{ $firma?->unvan }}@endif</td></tr>
+        <tr><td>Çalışan Sayısı</td><td>{{ $tire($secim->isyeri_calisan_sayisi) }}</td></tr>
+        <tr><td>Seçilecek Temsilci Sayısı</td><td>{{ $tire($secim->zorunlu_temsilci_sayisi) }}</td></tr>
+        <tr><td>Aday Başvuru Son Tarihi</td><td>{{ $tire($secim->aday_basvuru_son_tarihi?->format('d.m.Y')) }}</td></tr>
+        <tr><td>Seçim Tarihi ve Saati</td><td>{{ $tire($secim->secim_tarihi?->format('d.m.Y')) }} {{ $secim->secim_saati }}</td></tr>
+        <tr><td>Seçim Yeri</td><td>{{ $tire($secim->secim_yeri) }}</td></tr>
     </table>
 
     <div class="govde">
