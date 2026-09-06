@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
 /**
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class CezaTeblig extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.pages.ceza-teblig';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-scale';
@@ -82,6 +85,10 @@ class CezaTeblig extends Page
     public ?string $tebligTarihi = null;
 
     public ?string $imzaDurumu = 'imzaladi';
+
+    // Fotoğraflar (olay/ihlal kanıtı)
+    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    public array $yeniFotograflar = [];
 
     /*
     |--------------------------------------------------------------------------
@@ -268,6 +275,18 @@ class CezaTeblig extends Page
 
     /*
     |--------------------------------------------------------------------------
+    | Fotoğraflar
+    |--------------------------------------------------------------------------
+    */
+
+    public function fotoSil(int $index): void
+    {
+        unset($this->yeniFotograflar[$index]);
+        $this->yeniFotograflar = array_values($this->yeniFotograflar);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | İPC İhlalleri
     |--------------------------------------------------------------------------
     */
@@ -326,6 +345,7 @@ class CezaTeblig extends Page
             'yaptirim' => $this->yaptirim,
             'teblig_tarihi' => $this->tebligTarihi,
             'imza_durumu' => $this->imzaDurumu,
+            'fotograflar' => collect($this->yeniFotograflar)->map(fn ($f) => $f->store('ceza-teblig-foto', 'public'))->all(),
         ]);
         $t->save();
 

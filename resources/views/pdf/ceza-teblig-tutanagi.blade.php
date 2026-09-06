@@ -19,6 +19,9 @@
     .imza { margin-top: 30px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
+    .foto-sayfa { page-break-before: always; }
+    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+    .foto-sayfa img { max-width: 100%; max-height: 560px; }
 </style>
 </head>
 <body>
@@ -98,5 +101,17 @@
     </p>
 
 </div>
+
+@foreach (($tutanak->fotograflar ?? []) as $i => $foto)
+    <div class="sayfa foto-sayfa">
+        <div class="baslik">
+            <h1>İSG CEZA VE TEBLİĞ TUTANAĞI</h1>
+            <div style="font-size:11px">{{ $firma?->unvan }} — Tutanak No: {{ $tutanak->tutanak_no }}</div>
+        </div>
+        <div class="baslik2">FOTOĞRAF {{ $i + 1 }}</div>
+        <img src="{{ storage_path('app/public/'.$foto) }}">
+    </div>
+@endforeach
+
 </body>
 </html>

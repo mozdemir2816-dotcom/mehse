@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
 /**
@@ -22,6 +23,8 @@ use UnitEnum;
  */
 class DofOlustur extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.pages.dof-olustur';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
@@ -64,6 +67,9 @@ class DofOlustur extends Page
     public ?string $yeniSorumlu = null;
 
     public ?string $yeniTermin = null;
+
+    /** Sahada tespit edilen uygunsuzluğun fotoğraf kanıtı (yeni madde eklerken). */
+    public $yeniFoto = null;
 
     public function mount(): void
     {
@@ -253,9 +259,10 @@ class DofOlustur extends Page
             'sorumlu' => $this->yeniSorumlu,
             'termin' => $this->yeniTermin,
             'durum' => 'acik',
+            'foto_yolu' => $this->yeniFoto?->store('dof-foto', 'public'),
         ];
 
-        $this->reset('yeniTespit', 'yeniOneri', 'yeniSorumlu', 'yeniTermin');
+        $this->reset('yeniTespit', 'yeniOneri', 'yeniSorumlu', 'yeniTermin', 'yeniFoto');
         $this->yeniOncelik = 'orta';
     }
 

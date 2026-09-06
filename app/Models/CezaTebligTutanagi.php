@@ -24,6 +24,7 @@ class CezaTebligTutanagi extends Model
         'teblig_tarihi' => 'date',
         'taniklar' => 'array',
         'ihlaller' => 'array',
+        'fotograflar' => 'array',
     ];
 
     protected static function booted(): void
@@ -49,6 +50,6 @@ class CezaTebligTutanagi extends Model
 
     public function yaptirimEtiketi(): string
     {
-        return config('isg.ceza_teblig.yaptirimlar.'.$this->yaptirim.'.ad', $this->yaptirim);
+        return config('isg.ceza_teblig.yaptirimlar.'.$this->yaptirim.'.ad', $this->yaptirim) ?? '—';
     }
 }

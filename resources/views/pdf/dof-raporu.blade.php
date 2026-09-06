@@ -21,6 +21,9 @@
     .imza { margin-top: 26px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 9.5px; }
     .imza img { max-height: 40px; display: block; margin: 0 auto 4px; }
+    .foto-sayfa { page-break-before: always; }
+    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+    .foto-sayfa img { max-width: 100%; max-height: 560px; }
 </style>
 </head>
 <body>
@@ -87,5 +90,19 @@
     </table>
 
 </div>
+
+@foreach (($rapor->maddeler ?? []) as $i => $m)
+    @if (! empty($m['foto_yolu']))
+        <div class="sayfa foto-sayfa">
+            <div class="baslik">
+                <h1>ÇOKLU DÜZELTİCİ ÖNLEYİCİ FAALİYET (DÖF) RAPORU</h1>
+                <div style="font-size:11px">{{ $firma?->unvan }}</div>
+            </div>
+            <div class="baslik2">FOTOĞRAF KANITI · Madde {{ $i + 1 }} — {{ $m['tespit'] ?? '' }}</div>
+            <img src="{{ storage_path('app/public/'.$m['foto_yolu']) }}">
+        </div>
+    @endif
+@endforeach
+
 </body>
 </html>

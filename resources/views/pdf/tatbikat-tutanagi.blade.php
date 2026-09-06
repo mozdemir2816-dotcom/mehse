@@ -18,6 +18,9 @@
     table.liste th { background: #f0f0f0; }
     .imza { margin-top: 30px; width: 100%; }
     .imza td { width: 33.33%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 9.5px; }
+    .foto-sayfa { page-break-before: always; }
+    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+    .foto-sayfa img { max-width: 100%; max-height: 560px; }
 </style>
 </head>
 <body>
@@ -113,5 +116,17 @@
     </table>
 
 </div>
+
+@foreach (($tutanak->fotograflar ?? []) as $i => $foto)
+    <div class="sayfa foto-sayfa">
+        <div class="baslik">
+            <h1>TATBİKAT TUTANAĞI — {{ mb_strtoupper($tutanak->senaryoEtiketi(), 'UTF-8') }}</h1>
+            <div style="font-size:11px">{{ $firma?->unvan }}</div>
+        </div>
+        <div class="baslik2">FOTOĞRAF {{ $i + 1 }}</div>
+        <img src="{{ storage_path('app/public/'.$foto) }}">
+    </div>
+@endforeach
+
 </body>
 </html>

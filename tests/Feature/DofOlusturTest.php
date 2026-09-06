@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Support\DofRaporuUretici;
 use App\Support\GeminiOneriDanismani;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -74,6 +76,40 @@ class DofOlusturTest extends TestCase
 
         $component->call('maddeSil', 0);
         $this->assertCount(0, $component->get('maddeler'));
+    }
+
+    public function test_madde_eklenirken_fotograf_yuklenip_kaydedilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(DofSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniTespit', 'Kaygan zemin')
+            ->set('yeniFoto', UploadedFile::fake()->image('kanit.jpg'))
+            ->call('maddeEkle');
+
+        $madde = $component->get('maddeler')[0];
+        $this->assertNotNull($madde['foto_yolu']);
+        Storage::disk('public')->assertExists($madde['foto_yolu']);
+        $this->assertNull($component->get('yeniFoto'));
+    }
+
+    public function test_fotografli_dof_pdfinde_kanit_sayfasi_olusur(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg')->store('dof-foto', 'public');
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rapor = DofRaporu::create([
+            'firma_id' => $firma->id,
+            'maddeler' => [['tespit' => 'Kaygan zemin', 'oncelik' => 'orta', 'durum' => 'acik', 'foto_yolu' => $yol]],
+        ]);
+
+        $html = view('pdf.dof-raporu', ['rapor' => $rapor, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('FOTOĞRAF KANITI', $html);
+        $this->assertStringContainsString($yol, $html);
     }
 
     public function test_durum_guncellenir(): void

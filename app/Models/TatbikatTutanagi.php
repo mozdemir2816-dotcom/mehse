@@ -28,6 +28,7 @@ class TatbikatTutanagi extends Model
         'eksiklikler' => 'array',
         'dof_onerileri' => 'array',
         'katilimcilar' => 'array',
+        'fotograflar' => 'array',
     ];
 
     public function firma(): BelongsTo

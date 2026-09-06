@@ -12,6 +12,8 @@ use App\Models\User;
 use App\Support\CezaTebligTutanagiUretici;
 use App\Support\IpcTebligiUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -104,6 +106,51 @@ class CezaTebligTest extends TestCase
         $this->assertSame('yazili_ihtar', $t->yaptirim);
         $this->assertSame('imtina_etti', $t->imza_durumu);
         $this->assertStringStartsWith('CT-'.now()->year.'-', $t->tutanak_no);
+    }
+
+    public function test_fotograflar_yuklenir_kaydedilince_saklanir_ve_silinebilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(CezaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('calisanAdSoyad', 'Ahmet Yılmaz')
+            ->set('yaptirim', 'sozlu_uyari')
+            ->set('yeniFotograflar', [
+                UploadedFile::fake()->image('olay-1.jpg'),
+                UploadedFile::fake()->image('olay-2.jpg'),
+            ]);
+
+        $this->assertCount(2, $component->get('yeniFotograflar'));
+
+        $component->call('fotoSil', 0);
+        $this->assertCount(1, $component->get('yeniFotograflar'));
+
+        $component->callAction('pdf');
+
+        $t = CezaTebligTutanagi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertCount(1, $t->fotograflar);
+        Storage::disk('public')->assertExists($t->fotograflar[0]);
+    }
+
+    public function test_fotografli_ceza_teblig_pdfinde_kanit_sayfasi_olusur(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg')->store('ceza-teblig-foto', 'public');
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $t = CezaTebligTutanagi::create([
+            'firma_id' => $firma->id,
+            'calisan_ad_soyad' => 'Test Kişi',
+            'yaptirim' => 'sozlu_uyari',
+            'fotograflar' => [$yol],
+        ]);
+
+        $html = view('pdf.ceza-teblig-tutanagi', ['tutanak' => $t, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('FOTOĞRAF 1', $html);
+        $this->assertStringContainsString($yol, $html);
     }
 
     public function test_calisan_adi_olmadan_kaydedilemez(): void

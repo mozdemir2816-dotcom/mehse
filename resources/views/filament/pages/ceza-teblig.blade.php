@@ -242,7 +242,29 @@
             </div>
         </x-filament::section>
 
-        {{-- 6. GEÇMİŞ TUTANAKLAR --}}
+        {{-- 6. FOTOĞRAFLAR --}}
+        <x-filament::section icon="heroicon-o-camera" icon-color="danger">
+            <x-slot name="heading">6. Fotoğraflar ({{ count($yeniFotograflar) }})</x-slot>
+
+            @if ($yeniFotograflar)
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
+                    @foreach ($yeniFotograflar as $i => $dosya)
+                        <div style="position:relative">
+                            <img src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
+                            <button type="button" wire:click="fotoSil({{ $i }})"
+                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <input type="file" wire:model="yeniFotograflar" multiple accept="image/*" style="font-size:.82rem">
+            <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.3rem">
+                Olay yerinin veya ihlalin fotoğraf kanıtı — PDF'in sonuna kanıt sayfası olarak eklenir.
+            </p>
+        </x-filament::section>
+
+        {{-- 7. GEÇMİŞ TUTANAKLAR --}}
         @if ($this->gecmisTutanaklar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Tutanaklar</x-slot>

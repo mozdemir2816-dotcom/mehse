@@ -2259,6 +2259,51 @@ de istendi.
   oluşturur, `TalimatWordUretici::word()` geçerli bir .docx/ZIP paketi
   ("PK" imzası) üretir, kayıtlı talimat Word olarak indirilebilir).
 
+## Durum — 2026-09-06 (DÖF, Tatbikat, Ceza Tebliğ — fotoğraf ekleme)
+
+Kullanıcı isteği: "tatbikat raporuna, döf, ceza tebliğ tutanağına fotograf
+ekleme yeri bırak." Mevcut kütüphanede iki farklı fotoğraf konvansiyonu
+zaten vardı — hangisinin hangi belgeye uyduğuna göre seçildi:
+
+- **DÖF (`DofOlustur`) — PER-MADDE fotoğraf** (Saha Denetimi'nin `foto_yolu`
+  deseniyle birebir aynı): her DÖF maddesi kendi tespitine ait tek bir
+  kanıt fotoğrafı taşıyabilir (`maddeler` json'undaki her öğeye `foto_yolu`
+  eklendi — migration GEREKMEDİ, zaten esnek json sütun). Madde eklerken
+  `yeniFoto` (Livewire `WithFileUploads`) dosya seçilirse `dof-foto/`
+  diskine kaydedilir.
+- **Tatbikat Tutanağı ve Ceza/Tebliğ Tutanağı — GENEL çoklu fotoğraf**
+  (AI Saha Analizi'nin çoklu-yükleme deseniyle aynı): bu ikisi madde bazlı
+  değil (tatbikatın toplanma yeri/ekip müdahalesi, olay yerinin genel
+  görünümü gibi tüm tutanağa ait kanıtlar), bu yüzden her tabloya yeni bir
+  `fotograflar` (json path dizisi) sütunu eklendi (migration
+  `2026_09_06_230000_...`). `yeniFotograflar` (çoklu `WithFileUploads`) +
+  `fotoSil()` ile kaydetmeden önce kaldırılabilir; `kaydet()` sırasında
+  `tatbikat-foto/` / `ceza-teblig-foto/` diskine yazılır.
+- **PDF çıktıları:** üçünde de Saha Denetimi'ndeki `.foto-sayfa` deseni
+  birebir taşındı — her fotoğraf, ana raporun ARDINDAN ayrı, tam sayfalık
+  bir "FOTOĞRAF KANITI" sayfası olarak eklenir. Saha Denetimi'nin aksine
+  buradakilere açıkça `page-break-before: always` eklendi (orijinalinde
+  yoktu, yalnızca resmin boyutu nedeniyle "genelde" ayrı sayfaya taşıyordu
+  — burada garantili hâle getirildi, ileride Saha Denetimi'ne de
+  uygulanabilir bir iyileştirme).
+- **Yan bulunan gerçek hata (düzeltildi):** `CezaTebligTutanagi::
+  yaptirimEtiketi(): string` dönüş tipi vardı ama `yaptirim` alanı boşken
+  (kullanıcı henüz bir yaptırım seçmemişse) `config(...)`'ten `null` dönüp
+  PDF üretiminde `TypeError` ile PATLIYORDU — canlıda da olurdu, yalnızca
+  bu oturumda foto testleri yazılırken tesadüfen ortaya çıktı. `?? '—'`
+  eklendi.
+- **Test:** `DofOlusturTest`'e 2, `TatbikatTutanagiTest`'e 2,
+  `CezaTebligTest`'e 2 yeni test (yükleme+kayıt+silme, PDF'de kanıt
+  sayfasının gerçekten oluştuğu).
+
+**Kullanıcıya önerilen ek yerler (istenirse ayrı iş olarak eklenebilir,
+şimdilik UYGULANMADI):**
+- **İş Kazası Raporu** — olay yeri/kaza sonrası durumun fotoğrafı, gerçek
+  OSGB pratiğinde neredeyse her zaman istenir; en güçlü aday.
+- **Tespit Öneri Defteri** — DÖF ile aynı "tespit" doğasında, aynı
+  per-madde fotoğraf deseni doğrudan uygulanabilir.
+- Daha düşük öncelikli: İş İzin Formu (çalışma alanı/izin panosu fotoğrafı).
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

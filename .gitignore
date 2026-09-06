@@ -25,3 +25,6 @@ Thumbs.db
 
 /index.php.bak
 .phpunit.result.cache
+
+/gemini-onlem-gunluk.php
+/DENETIM-NOTU-*.md

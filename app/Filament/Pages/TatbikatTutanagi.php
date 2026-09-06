@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
 /**
@@ -22,6 +23,8 @@ use UnitEnum;
  */
 class TatbikatTutanagi extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.pages.tatbikat-tutanagi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-fire';
@@ -107,6 +110,10 @@ class TatbikatTutanagi extends Page
 
     /** @var array<int, array{ad_soyad: string, tc: ?string, gorev: ?string}> */
     public array $katilimcilar = [];
+
+    // Fotoğraflar
+    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    public array $yeniFotograflar = [];
 
     public function mount(): void
     {
@@ -338,6 +345,18 @@ class TatbikatTutanagi extends Page
 
     /*
     |--------------------------------------------------------------------------
+    | Fotoğraflar
+    |--------------------------------------------------------------------------
+    */
+
+    public function fotoSil(int $index): void
+    {
+        unset($this->yeniFotograflar[$index]);
+        $this->yeniFotograflar = array_values($this->yeniFotograflar);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Kaydet & PDF
     |--------------------------------------------------------------------------
     */
@@ -372,6 +391,7 @@ class TatbikatTutanagi extends Page
             'eksiklikler' => $this->eksiklikler,
             'dof_onerileri' => $this->dofOnerileri,
             'katilimcilar' => $this->katilimcilar,
+            'fotograflar' => collect($this->yeniFotograflar)->map(fn ($f) => $f->store('tatbikat-foto', 'public'))->all(),
         ]);
         $t->save();
 

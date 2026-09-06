@@ -9,6 +9,8 @@ use App\Models\TatbikatTutanagi;
 use App\Models\User;
 use App\Support\TatbikatTutanagiUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -109,6 +111,48 @@ class TatbikatTutanagiTest extends TestCase
         $this->assertSame('deprem', $t->senaryo_anahtari);
         $this->assertSame('Üretim sahası', $t->tatbikat_yeri);
         $this->assertSame('evet', $t->degerlendirmeler[0]['cevap']);
+    }
+
+    public function test_fotograflar_yuklenir_kaydedilince_saklanir_ve_silinebilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(TatbikatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniFotograflar', [
+                UploadedFile::fake()->image('toplanma-1.jpg'),
+                UploadedFile::fake()->image('toplanma-2.jpg'),
+            ]);
+
+        $this->assertCount(2, $component->get('yeniFotograflar'));
+
+        $component->call('fotoSil', 0);
+        $this->assertCount(1, $component->get('yeniFotograflar'));
+
+        $component->callAction('pdf');
+
+        $t = TatbikatTutanagi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertCount(1, $t->fotograflar);
+        Storage::disk('public')->assertExists($t->fotograflar[0]);
+    }
+
+    public function test_fotografli_tatbikat_pdfinde_kanit_sayfasi_olusur(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg')->store('tatbikat-foto', 'public');
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $t = TatbikatTutanagi::create([
+            'firma_id' => $firma->id,
+            'senaryo_anahtari' => 'yangin',
+            'fotograflar' => [$yol],
+        ]);
+
+        $html = view('pdf.tatbikat-tutanagi', ['tutanak' => $t, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('FOTOĞRAF 1', $html);
+        $this->assertStringContainsString($yol, $html);
     }
 
     public function test_firma_secilmeden_pdf_aksiyonu_gorunmez(): void

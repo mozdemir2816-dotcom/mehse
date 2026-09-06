@@ -189,6 +189,13 @@
                         </x-filament::button>
                     @endif
                 </div>
+                <div style="grid-column:1/-1">
+                    <label style="font-weight:600;font-size:.8rem">Fotoğraf Kanıtı (opsiyonel)</label><br>
+                    @if ($yeniFoto)
+                        <img src="{{ $yeniFoto->temporaryUrl() }}" style="width:60px;height:60px;object-fit:cover;border-radius:.4rem;border:2px solid #dc2626;margin:.3rem 0;display:block">
+                    @endif
+                    <input type="file" wire:model="yeniFoto" accept="image/*" style="margin-top:.2rem;font-size:.78rem">
+                </div>
             </div>
 
             <x-filament::button size="sm" color="danger" wire:click="maddeEkle" style="margin-top:.75rem">Madde Ekle</x-filament::button>
@@ -206,7 +213,12 @@
                     </tr>
                     @foreach ($maddeler as $i => $m)
                         <tr>
-                            <td style="padding:.3rem .5rem;max-width:16rem">{{ $m['tespit'] }}</td>
+                            <td style="padding:.3rem .5rem;max-width:16rem">
+                                {{ $m['tespit'] }}
+                                @if (! empty($m['foto_yolu']))
+                                    <span style="font-size:.7rem;color:rgb(107 114 128)">(foto eklendi)</span>
+                                @endif
+                            </td>
                             <td style="padding:.3rem .5rem">{{ $this->oncelikler[$m['oncelik']] ?? $m['oncelik'] }}</td>
                             <td style="padding:.3rem .5rem;max-width:16rem">{{ $m['oneri'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $m['sorumlu'] ?: '—' }}</td>
