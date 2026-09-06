@@ -2092,6 +2092,39 @@ kullanıcıdan izin alınmadan devam edildi.
   `AcilDurumPlaniTest`'e kaşe/imza görsellerinin PDF HTML'ine gerçekten
   basıldığını doğrulayan 1 yeni test. Tam suite: bkz. altta.
 
+## Durum — 2026-09-06 (Eğitim Kayıtları Matrisi — düzeltme + filtre eklemeleri)
+
+Kullanıcı, "büyük, henüz yapılmamış" olarak raporladığım iki bulgudan
+"Eğitim Kayıtları Matrisi"ni seçti (`1`). İncelemeye başlayınca **kendi
+raporumu düzeltmem gerekti**: bu özellik "hiç yok" değildi — Profilim'in
+"Eğitimler" sekmesi (`EgitimTuru`, `EgitimKaydi` modelleri, `egitimMatrisi()`,
+Excel şablon indir/yükle, "Konu Ekle/Kaldır" aksiyonları) ÖNCEKİ bir
+oturumda zaten kurulmuştu — 22 testin ~17'si zaten buydu, ben denetim
+sırasında yalnız ekran görüntüsüne bakıp koda bakmadan "yok" diye
+raporlamışım. Gerçek eksik, isgpratik referansındaki filtre/arama/özet
+katmanıydı — o eklendi:
+
+- **`EgitimTuru::kategori()`** (yeni): config `isg.egitim_kayit_turleri`
+  katalogundan kategori döner (Genel/Sağlık/Teknik/Risk Bazlı/Görev-
+  Sertifika); kullanıcının kendi yazdığı "özel" konularda null → "Özel"
+  etiketiyle gösterilir.
+- **Profilim → Eğitimler'e eklenenler:**
+  - **Aktif Personel / İşten Ayrılanlar** sekmesi (`Calisan.aktif` alanına
+    göre, veri modelinde zaten vardı, yalnız UI'da yoktu).
+  - **Arama** (çalışan adı) ve **Firma** açılır filtresi.
+  - **Kategori filtre çipleri** — yalnızca kullanıcının fiilen takip ettiği
+    kategoriler gösterilir (birden fazla kategori varsa).
+  - **Durum filtre çipleri** (Geçerli/Yakında/Dolmuş/Eksik) — görünen
+    sütunlardan EN AZ BİRİ seçili duruma uyan çalışanları listeler.
+  - **Özet satırı**: "N çalışan · M eksik" (önceden yalnız "N aktif çalışan"
+    yazıyordu, eksik sayısı hiç gösterilmiyordu).
+  - Kasıtlı olarak eklenmeyenler: isgpratik'in "Matris/Kart" görünüm
+    değiştirici (mehse zaten tek, sade bir tablo kullanıyor) ve "tüm 14
+    konuyu varsayılan göster" (önceki oturumda kasıtlı tasarım kararıydı —
+    kullanıcı yalnız ilgili konuları ekler; bu davranışa dokunulmadı).
+- **Test:** `ProfilimTest`'e 5 yeni test (aktif/ayrılan, arama+firma,
+  kategori filtresi, durum filtresi, özet sayaçları).
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

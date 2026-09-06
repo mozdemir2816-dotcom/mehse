@@ -234,6 +234,82 @@ class ProfilimTest extends TestCase
         $this->assertSame('gecerli', $matris[$calisan->id]['hucreler']['ilkyardim_temel']['durum']);
     }
 
+    public function test_egitim_matrisi_aktif_isten_ayrilan_sekmesine_gore_filtrelenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Aktif Çalışan', 'aktif' => true]);
+        Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Ayrılan Çalışan', 'aktif' => false]);
+
+        $aktifIsimler = collect(Livewire::test(Profilim::class)->instance()->egitimMatrisi())
+            ->pluck('calisan.ad_soyad');
+        $this->assertSame(['Aktif Çalışan'], $aktifIsimler->all());
+
+        $ayrilanIsimler = collect(Livewire::test(Profilim::class)
+            ->set('egitimDurumTab', 'ayrilan')
+            ->instance()
+            ->egitimMatrisi())
+            ->pluck('calisan.ad_soyad');
+        $this->assertSame(['Ayrılan Çalışan'], $ayrilanIsimler->all());
+    }
+
+    public function test_egitim_matrisi_arama_ve_firma_filtresi(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'A Firma']);
+        $b = Firma::factory()->for($this->uzman)->create(['unvan' => 'B Firma']);
+        Calisan::create(['firma_id' => $a->id, 'ad_soyad' => 'Ahmet Yılmaz', 'aktif' => true]);
+        Calisan::create(['firma_id' => $b->id, 'ad_soyad' => 'Mehmet Kaya', 'aktif' => true]);
+
+        $component = Livewire::test(Profilim::class)->set('egitimArama', 'Ahmet');
+        $this->assertCount(1, $component->instance()->egitimMatrisi());
+
+        $component = Livewire::test(Profilim::class)->set('egitimFirmaId', $b->id);
+        $isimler = collect($component->instance()->egitimMatrisi())->pluck('calisan.ad_soyad');
+        $this->assertSame(['Mehmet Kaya'], $isimler->all());
+    }
+
+    public function test_egitim_kategori_filtresi_yalniz_eslesen_sutunlari_gosterir(): void
+    {
+        EgitimTuru::aktifListe($this->uzman->id); // genel kategoride "Temel İSG"
+        EgitimTuru::create([
+            'user_id' => $this->uzman->id, 'anahtar' => 'yuksekte_calisma',
+            'ad' => 'Yüksekte Çalışma', 'gecerlilik_ay' => 12, 'sira' => 1,
+        ]);
+
+        $component = Livewire::test(Profilim::class)->set('egitimKategoriFiltre', 'risk_bazli');
+
+        $gorunen = collect($component->instance()->egitimTurleriGorunen())->pluck('anahtar');
+        $this->assertSame(['yuksekte_calisma'], $gorunen->all());
+    }
+
+    public function test_egitim_durum_filtresi_yalniz_eslesen_calisanlari_gosterir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $gecerli = Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Geçerli Çalışan', 'aktif' => true]);
+        Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Eksik Çalışan', 'aktif' => true]);
+
+        EgitimTuru::aktifListe($this->uzman->id);
+        EgitimKaydi::create(['calisan_id' => $gecerli->id, 'tur' => 'is_sagligi_guvenligi_egitimi', 'tarih' => now()]);
+
+        $component = Livewire::test(Profilim::class)->set('egitimDurumFiltre', 'eksik');
+        $isimler = collect($component->instance()->egitimMatrisi())->pluck('calisan.ad_soyad');
+        $this->assertSame(['Eksik Çalışan'], $isimler->all());
+    }
+
+    public function test_egitim_ozet_toplam_ve_eksik_sayisini_hesaplar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $dolu = Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Dolu Çalışan', 'aktif' => true]);
+        Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Eksik Çalışan', 'aktif' => true]);
+
+        EgitimTuru::aktifListe($this->uzman->id);
+        EgitimKaydi::create(['calisan_id' => $dolu->id, 'tur' => 'is_sagligi_guvenligi_egitimi', 'tarih' => now()]);
+
+        $ozet = Livewire::test(Profilim::class)->instance()->egitimOzet();
+
+        $this->assertSame(2, $ozet['toplam']);
+        $this->assertSame(1, $ozet['eksik']);
+    }
+
     public function test_egitim_turu_ekle_action_katalogdan_ekler(): void
     {
         Livewire::test(Profilim::class)

@@ -23,6 +23,13 @@ class EgitimTuru extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** Katalogdaki (isg.egitim_kayit_turleri) kategori — özel/kullanıcı tanımlı konularda null döner. */
+    public function kategori(): ?string
+    {
+        return collect(config('isg.egitim_kayit_turleri', []))
+            ->firstWhere('anahtar', $this->anahtar)['kategori'] ?? null;
+    }
+
     /** @return Collection<int, EgitimTuru> */
     public static function aktifListe(int $userId): Collection
     {

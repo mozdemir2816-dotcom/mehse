@@ -316,11 +316,13 @@
     @if ($sekme === 'egitimler')
         @php
             $durumRenk = ['gecerli' => $yesil, 'yakinda' => $sari, 'dolmus' => $kirmizi];
+            $durumEtiket = ['gecerli' => 'Geçerli', 'yakinda' => 'Yakında', 'dolmus' => 'Dolmuş', 'eksik' => 'Eksik'];
+            $ozet = $this->egitimOzet;
         @endphp
         <div style="{{ $kutu }};overflow-x:auto">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
                 <div>
-                    <div style="font-weight:700">Eğitim Kayıtları ({{ count($this->egitimMatrisi) }} aktif çalışan)</div>
+                    <div style="font-weight:700">Eğitim Kayıtları ({{ $ozet['toplam'] }} çalışan · {{ $ozet['eksik'] }} eksik)</div>
                     <div style="font-size:.78rem;color:rgb(128 116 148)">Çalışan × eğitim türü tamamlanma tarihi. Yeşil = geçerli, sarı = 60 gün içinde dolacak, kırmızı = dolmuş/eksik. Varsayılan olarak yalnız Temel İSG Eğitimi takip edilir — "Konu Ekle" ile yeni sütun eklenir.</div>
                 </div>
                 <div style="display:flex;gap:.4rem">
@@ -329,14 +331,72 @@
                     {{ $this->egitimTuruEkleAction }}
                 </div>
             </div>
+
+            {{-- AKTİF / İŞTEN AYRILAN + ARAMA + FİRMA --}}
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem">
+                <div style="display:flex;background:rgb(128 116 148 / .08);border-radius:9999px;padding:.2rem">
+                    <button type="button" wire:click="$set('egitimDurumTab','aktif')"
+                        style="padding:.3rem .8rem;border-radius:9999px;border:none;cursor:pointer;font-size:.78rem;font-weight:600;
+                            background:{{ $egitimDurumTab === 'aktif' ? $mor : 'transparent' }};color:{{ $egitimDurumTab === 'aktif' ? '#fff' : 'inherit' }}">Aktif Personel</button>
+                    <button type="button" wire:click="$set('egitimDurumTab','ayrilan')"
+                        style="padding:.3rem .8rem;border-radius:9999px;border:none;cursor:pointer;font-size:.78rem;font-weight:600;
+                            background:{{ $egitimDurumTab === 'ayrilan' ? $mor : 'transparent' }};color:{{ $egitimDurumTab === 'ayrilan' ? '#fff' : 'inherit' }}">İşten Ayrılanlar</button>
+                </div>
+                <input type="text" wire:model.live.debounce.400ms="egitimArama" placeholder="Çalışan ara..."
+                    style="padding:.35rem .7rem;border-radius:.5rem;border:1px solid rgb(128 116 148 / .35);background:transparent;font-size:.8rem;min-width:12rem">
+                <select wire:model.live="egitimFirmaId"
+                    style="padding:.35rem .6rem;border-radius:.5rem;border:1px solid rgb(128 116 148 / .35);background:transparent;font-size:.8rem">
+                    <option value="0">Tüm Firmalar</option>
+                    @foreach ($this->egitimFirmalari as $id => $ad)
+                        <option value="{{ $id }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- KATEGORİ FİLTRESİ --}}
+            @php $kullanilanKategoriler = $this->egitimTurleri->map(fn ($t) => $t->kategori() ?? 'ozel')->unique(); @endphp
+            @if ($kullanilanKategoriler->count() > 1)
+                <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.4rem">
+                    <span style="font-size:.72rem;color:rgb(128 116 148);align-self:center;font-weight:700">KATEGORİ</span>
+                    <button type="button" wire:click="$set('egitimKategoriFiltre','')"
+                        style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                            border:1px solid {{ $egitimKategoriFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
+                            background:{{ $egitimKategoriFiltre === '' ? 'rgb(139 92 246 / .1)' : 'transparent' }}">Tümü</button>
+                    @foreach ($kullanilanKategoriler as $kat)
+                        <button type="button" wire:click="$set('egitimKategoriFiltre','{{ $kat }}')"
+                            style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                                border:1px solid {{ $egitimKategoriFiltre === $kat ? $mor : 'rgb(128 116 148 / .3)' }};
+                                background:{{ $egitimKategoriFiltre === $kat ? 'rgb(139 92 246 / .1)' : 'transparent' }}">{{ \App\Filament\Pages\Profilim::EGITIM_KATEGORI_ETIKETLERI[$kat] ?? $kat }}</button>
+                    @endforeach
+                </div>
+            @endif
+
+            {{-- DURUM FİLTRESİ --}}
+            <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">
+                <span style="font-size:.72rem;color:rgb(128 116 148);align-self:center;font-weight:700">DURUM</span>
+                <button type="button" wire:click="$set('egitimDurumFiltre','')"
+                    style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                        border:1px solid {{ $egitimDurumFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
+                        background:{{ $egitimDurumFiltre === '' ? 'rgb(139 92 246 / .1)' : 'transparent' }}">Tümü</button>
+                @foreach ($durumEtiket as $anahtar => $etiket)
+                    <button type="button" wire:click="$set('egitimDurumFiltre','{{ $anahtar }}')"
+                        style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                            border:1px solid {{ $egitimDurumFiltre === $anahtar ? ($durumRenk[$anahtar] ?? $mor) : 'rgb(128 116 148 / .3)' }};
+                            color:{{ $egitimDurumFiltre === $anahtar ? ($durumRenk[$anahtar] ?? $mor) : 'inherit' }};
+                            background:{{ $egitimDurumFiltre === $anahtar ? 'rgb(139 92 246 / .08)' : 'transparent' }}">{{ $etiket }}</button>
+                @endforeach
+            </div>
+
             @if (empty($this->egitimMatrisi))
-                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">Henüz aktif çalışan eklenmemiş.</div>
+                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">
+                    {{ $egitimDurumTab === 'ayrilan' ? 'İşten ayrılan çalışan bulunamadı.' : 'Filtrelere uyan aktif çalışan bulunamadı.' }}
+                </div>
             @else
                 <table style="border-collapse:collapse;font-size:.76rem;white-space:nowrap">
                     <thead>
                         <tr style="color:rgb(128 116 148)">
                             <th style="padding:.35rem;text-align:left;position:sticky;left:0;background:inherit">Çalışan</th>
-                            @foreach ($this->egitimTurleri as $t)
+                            @foreach ($this->egitimTurleriGorunen as $t)
                                 <th style="padding:.35rem;text-align:center;max-width:5.5rem;white-space:normal">
                                     {{ $t->ad }}
                                     <button type="button" title="Takipten kaldır" wire:click="egitimTuruKaldir('{{ $t->anahtar }}')"
@@ -353,7 +413,7 @@
                                     {{ $satir['calisan']->ad_soyad }}
                                     <div style="font-weight:400;font-size:.7rem;color:rgb(128 116 148)">{{ $satir['calisan']->firma?->unvan }}</div>
                                 </td>
-                                @foreach ($this->egitimTurleri as $t)
+                                @foreach ($this->egitimTurleriGorunen as $t)
                                     @php $h = $satir['hucreler'][$t->anahtar]; @endphp
                                     <td style="padding:.35rem;text-align:center;color:{{ $h['durum'] ? $durumRenk[$h['durum']] : $kirmizi }}">
                                         {{ $h['tarih'] ? $h['tarih']->format('d.m.Y') : 'Eksik' }}

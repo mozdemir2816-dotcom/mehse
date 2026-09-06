@@ -48,6 +48,15 @@ class Profilim extends Page
 
     protected static ?string $title = 'Profilim';
 
+    public const EGITIM_KATEGORI_ETIKETLERI = [
+        'genel' => 'Genel',
+        'saglik' => 'Sağlık',
+        'teknik' => 'Teknik',
+        'risk_bazli' => 'Risk Bazlı',
+        'gorev' => 'Görev/Sertifika',
+        'ozel' => 'Özel',
+    ];
+
     public const SEKMELER = [
         'genel' => 'Genel Bakış',
         'firmalar' => 'Firmalar',
@@ -76,6 +85,16 @@ class Profilim extends Page
     public string $ziyaretSeciliTarih = '';
 
     public string $ziyaretGosterilenAy = '';
+
+    public string $egitimArama = '';
+
+    public int $egitimFirmaId = 0;
+
+    public string $egitimKategoriFiltre = '';
+
+    public string $egitimDurumFiltre = '';
+
+    public string $egitimDurumTab = 'aktif';
 
     public function mount(): void
     {
@@ -234,9 +253,31 @@ class Profilim extends Page
         return EgitimTuru::aktifListe(Filament::auth()->id());
     }
 
+    /** @return \Illuminate\Support\Collection<int, EgitimTuru> Kategori filtresine göre görünecek sütunlar */
+    #[Computed]
+    public function egitimTurleriGorunen()
+    {
+        return $this->egitimTurleri->when(
+            filled($this->egitimKategoriFiltre),
+            fn ($q) => $q->filter(fn (EgitimTuru $t) => ($t->kategori() ?? 'ozel') === $this->egitimKategoriFiltre)->values(),
+        );
+    }
+
+    /** @return array<int, string> firma id => unvan (Eğitimler sekmesi firma filtresi) */
+    #[Computed]
+    public function egitimFirmalari(): array
+    {
+        return Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->orderBy('unvan')
+            ->pluck('unvan', 'id')
+            ->all();
+    }
+
     /**
      * Profilim > Eğitimler — Çalışan × eğitim türü matrisi (isgpratik 139-140.jpg).
-     * Sütunlar sabit değil — kullanıcı "Konu Ekle" ile büyütebilir.
+     * Sütunlar sabit değil — kullanıcı "Konu Ekle" ile büyütebilir. Arama/firma/
+     * kategori/durum ve Aktif-İşten Ayrılan filtreleri burada uygulanır.
      *
      * @return array<int, array{calisan: Calisan, hucreler: array<string, array{tarih: ?\Illuminate\Support\Carbon, durum: ?string}>}>
      */
@@ -244,10 +285,13 @@ class Profilim extends Page
     public function egitimMatrisi(): array
     {
         $turler = $this->egitimTurleri;
+        $gorunenAnahtarlar = $this->egitimTurleriGorunen->pluck('anahtar')->all();
 
         return Calisan::query()
             ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
-            ->where('aktif', true)
+            ->where('aktif', $this->egitimDurumTab === 'aktif')
+            ->when($this->egitimFirmaId, fn ($q) => $q->where('firma_id', $this->egitimFirmaId))
+            ->when(filled($this->egitimArama), fn ($q) => $q->where('ad_soyad', 'like', '%'.$this->egitimArama.'%'))
             ->with(['firma:id,unvan,tehlike_sinifi', 'egitimKayitlari'])
             ->orderBy('ad_soyad')
             ->get()
@@ -265,7 +309,34 @@ class Profilim extends Page
 
                 return ['calisan' => $calisan, 'hucreler' => $hucreler];
             })
+            ->when(
+                filled($this->egitimDurumFiltre),
+                fn ($rows) => $rows->filter(function (array $satir) use ($gorunenAnahtarlar): bool {
+                    foreach ($gorunenAnahtarlar as $anahtar) {
+                        $durum = $satir['hucreler'][$anahtar]['durum'] ?? 'eksik';
+                        if (($durum ?? 'eksik') === $this->egitimDurumFiltre) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }),
+            )
+            ->values()
             ->all();
+    }
+
+    /** @return array{toplam: int, eksik: int} Eğitimler sekmesi özet sayaçları (görünen sütunlar üzerinden) */
+    #[Computed]
+    public function egitimOzet(): array
+    {
+        $gorunenAnahtarlar = $this->egitimTurleriGorunen->pluck('anahtar')->all();
+
+        $eksik = collect($this->egitimMatrisi)->sum(
+            fn (array $satir) => collect($gorunenAnahtarlar)->filter(fn ($a) => blank($satir['hucreler'][$a]['tarih'] ?? null))->count(),
+        );
+
+        return ['toplam' => count($this->egitimMatrisi), 'eksik' => $eksik];
     }
 
     /**
