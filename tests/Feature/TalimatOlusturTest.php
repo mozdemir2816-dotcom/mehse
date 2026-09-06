@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\GeminiTalimatUretici;
 use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TalimatUretici;
+use App\Support\TalimatWordUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
@@ -120,6 +121,23 @@ class TalimatOlusturTest extends TestCase
         $this->assertCount(1, $talimat->maddeler);
     }
 
+    public function test_word_aksiyonu_kayit_olusturur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(TalimatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('sablonSec', 'hazir', 0)
+            ->set('yeniMadde', 'Test maddesi')
+            ->call('maddeEkle')
+            ->callAction('word');
+
+        $talimat = Talimat::where('firma_id', $firma->id)->firstOrFail();
+        $ilkSablon = config('isg.talimat.sablonlar.0');
+        $this->assertSame($ilkSablon['baslik'], $talimat->baslik);
+        $this->assertCount(1, $talimat->maddeler);
+    }
+
     public function test_baslik_olmadan_kaydedilemez(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
@@ -150,6 +168,39 @@ class TalimatOlusturTest extends TestCase
         $yanit->sendContent();
         $icerik = ob_get_clean();
         $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_word_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $talimat = Talimat::create([
+            'firma_id' => $firma->id,
+            'baslik' => 'Forklift Kullanma Talimatı',
+            'kategori' => 'is_makineleri',
+            'aciklama' => 'Test açıklama',
+            'kkdler' => ['Baret'],
+            'maddeler' => ['Madde 1'],
+        ]);
+
+        $yanit = TalimatWordUretici::word($talimat);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        // .docx bir ZIP paketidir — "PK" imzasıyla başlar.
+        $this->assertStringStartsWith('PK', $icerik);
+    }
+
+    public function test_kayitli_talimat_word_olarak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $talimat = Talimat::create(['firma_id' => $firma->id, 'baslik' => 'Test', 'maddeler' => ['Madde 1']]);
+
+        $component = Livewire::test(TalimatSayfasi::class)->set('firmaId', $firma->id);
+        $yanit = $component->instance()->kayitliWord($talimat->id);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
     }
 
     public function test_kayitli_talimat_silinir(): void

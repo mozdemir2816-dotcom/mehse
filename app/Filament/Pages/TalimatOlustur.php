@@ -8,6 +8,7 @@ use App\Models\TalimatSablonu;
 use App\Support\GeminiTalimatUretici;
 use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TalimatUretici;
+use App\Support\TalimatWordUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -314,6 +315,17 @@ class TalimatOlustur extends Page
 
                     return $talimat ? TalimatUretici::pdf($talimat) : null;
                 }),
+
+            Action::make('word')
+                ->label('Word İndir (Kaydet)')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $talimat = $this->kaydet();
+
+                    return $talimat ? TalimatWordUretici::word($talimat) : null;
+                }),
         ];
     }
 
@@ -322,6 +334,13 @@ class TalimatOlustur extends Page
         $talimat = $this->firma?->talimatlar()->find($id);
 
         return $talimat ? TalimatUretici::pdf($talimat) : null;
+    }
+
+    public function kayitliWord(int $id)
+    {
+        $talimat = $this->firma?->talimatlar()->find($id);
+
+        return $talimat ? TalimatWordUretici::word($talimat) : null;
     }
 
     public function kayitliSil(int $id): void

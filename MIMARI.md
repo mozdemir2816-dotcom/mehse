@@ -2236,6 +2236,29 @@ kişiye verilen oryantasyon) için TEK sayfada toplu imza formu.
 - **Test:** `IsbasiEgitimTest`'e 2 yeni test (çalışan adı olmadan üretilir,
   katılım tablosunda gerçek çalışan + en az 10 satır).
 
+## Durum — 2026-09-06 (Talimat Oluştur — Word çıktısı eklendi)
+
+Kullanıcı isteği: "talimatlara pdf ve word olarakta ekleme seçeneği koy" —
+Talimat Oluştur sayfasında yalnız PDF indirme vardı, Word (.docx) seçeneği
+de istendi.
+
+- **`App\Support\TalimatWordUretici::word(Talimat $talimat)`** (yeni) —
+  Acil Durum Planı/Atama Yazıları'ndaki Word üreticilerin aksine (onlar
+  SABİT alanlı, gerçek referans .docx şablonu üzerinde metin değiştirir),
+  talimatın madde sayısı firmadan firmaya değiştiğinden burada sabit bir
+  şablon uygun değil — içerik doğrudan `phpoffice/phpword` (zaten
+  `composer.json`'da bağımlıydı, ilk kez kullanıldı) ile programatik
+  üretiliyor: başlık, firma, kategori, açıklama, KKD listesi, numaralı
+  madde listesi (`addListItem` + `ListItem::TYPE_NUMBER`), imza tablosu,
+  yasal dayanak metni — `pdf.talimat` (dompdf) ile aynı içerik/sıra.
+- **Filament sayfası:** yeni header aksiyonu "Word İndir (Kaydet)" (PDF
+  aksiyonunun yanına, aynı `kaydet()` akışını kullanır) + "Kayıtlı
+  Talimatlarım" listesindeki her satıra "Word" butonu (`kayitliWord()`,
+  `kayitliPdf()` ile aynı desende).
+- **Test:** `TalimatOlusturTest`'e 3 yeni test (Word aksiyonu kayıt
+  oluşturur, `TalimatWordUretici::word()` geçerli bir .docx/ZIP paketi
+  ("PK" imzası) üretir, kayıtlı talimat Word olarak indirilebilir).
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

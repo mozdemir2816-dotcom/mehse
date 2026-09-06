@@ -138,6 +138,7 @@
                             <td style="padding:.3rem .5rem">{{ $t->baslik }} — {{ $t->kategoriEtiketi() }}</td>
                             <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="kayitliPdf({{ $t->id }})">PDF</x-filament::button>
+                                <x-filament::button size="xs" color="gray" wire:click="kayitliWord({{ $t->id }})">Word</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="kayitliSil({{ $t->id }})">Sil</x-filament::button>
                             </td>
                         </tr>
