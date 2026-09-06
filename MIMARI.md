@@ -1856,6 +1856,146 @@ tamamla. AI ile olanda kalsın, tek kullanıcı olduğum için kredi gerek yok."
   ve "eksik puanları tamamla" (yalnız boş maddeleri doldurma) senaryoları.
   `RiskDegerlendirmeTest` güncellendi (13→25). Tam suite: bkz. altta.
 
+## Durum — 2026-09-06 (Risk Kütüphanesi/Excel: Mevcut Önlem AI tamamlama + genişletme)
+
+Devam isteği: "bundan sonra risk değerlendirmesine yükleyeceğim tablolarda
+eğer puanlama ve önlemler bölümü boşsa yapay zeka doldursun. Ve bundan
+önceki yüklenen risk değerlendirmesinde kontrol et."
+
+- **`GeminiRiskPuanTamamlayici::onlemOner()` (yeni metod) ✅:** Puanlamadan
+  bağımsız ayrı bir istek — yalnızca `mevcut_onlem` metni boşsa çağrılır,
+  tehlikeye özgü kısa (tek cümle) bir önlem önerisi ister. Var olan metnin
+  üzerine hiç yazmaz.
+- **`MaddelerRelationManager` — "Mevcut Önlem" de artık kapsamda ✅:**
+  - "Kütüphaneden aktar": madde oluşturulduktan sonra hem puan hem (kütüphane
+    kaydında `mevcut_onlem` boşsa) önlem önerisi isteniyor; bildirim metni
+    ikisine göre değişiyor.
+  - "Eksik Puanları AI ile Tamamla" → **"Eksik Puan/Önlemleri AI ile
+    Tamamla"** olarak genişletildi: sorgu artık `mevcut_onlem` boş olan
+    maddeleri de kapsıyor (Fine-Kinney'de `frekans` boşluğu da). Tam dolu
+    madde sorguya hiç girmiyor, kısmi dolu maddede yalnız eksik eksen(ler)
+    isteniyor.
+  - **Bulunan/düzeltilen ince hata:** `puanlaAiIle()` önceden AI'nin
+    döndürdüğü TÜM eksenleri (`olasilik`/`siddet`/`frekans`) `forceFill`
+    ediyordu — Fine-Kinney'de yalnız `frekans` boşken bile kullanıcının
+    elle girdiği Olasılık/Şiddet AI önerisiyle ezilebilirdi. Artık yalnız
+    gerçekten boş olan eksen(ler) yazılıyor.
+- **`RiskSihirbazi` — Excel içe aktarımda otomatik tamamlama (yeni) ✅:**
+  `excelSecilenleriEkle()`'ye eklenen `excelEksikleriAiIleTamamla()`, Excel'den
+  gelen ve seçilip "Risklerime Ekle" ile eklenen her satır için Olasılık/
+  Şiddet(/Frekans) veya Mevcut Önlem boşsa AI'dan tamamlıyor. Sıralama önemli:
+  Fine-Kinney ölçek-otomatik-geçiş kontrolü (mevcut özellik) AI tamamlamadan
+  ÖNCE çalışıyor — aksi halde AI henüz yanlış ölçeğe göre puan üretebilirdi.
+  AI kapalıysa (anahtar yok) hiç dokunmuyor, eski davranış (elle giriş) aynen
+  sürüyor. Bildirimde kaç maddenin AI ile tamamlandığı gösteriliyor.
+- **Mevcut (önceden yüklenmiş) risk değerlendirmeleri — DURUM TESPİTİ:**
+  Canlı veride kontrol edildi: **11 risk değerlendirmesi, 3073 madde** — puanlama
+  tarafında hiç eksik YOK (`olasilik`/`siddet` hepsi dolu), ama **2982 maddede
+  (%97) `mevcut_onlem` boş** — bu, TÜM 11 kayıtta neredeyse aynı oranda
+  (275-352 madde/kayıt) tekrarlayan sistemik bir boşluk (muhtemelen o dönemde
+  bu alanın Excel/sihirbaz akışlarında hiç doldurulmamasından). "Eksik Puan/
+  Önlemleri AI ile Tamamla" butonu artık her risk değerlendirmesi sayfasında
+  bu boşluğu tek tıkla dolduruyor — ancak ~3000 canlı Gemini isteği (gerçek
+  API kotası + uzunca sürecek bir işlem) gerektirdiğinden, kullanıcıya
+  hangi kapsamda (tümü / belirli firmalar / kendisi tek tek) çalıştırmak
+  istediği soruldu, otomatik toplu çalıştırma yapılmadı.
+- **Test:** `GeminiRiskPuanTamamlayiciTest`'e 2 yeni test (eksik-eksen-only
+  doldurma + kütüphaneden aktarırken önlem tamamlama), `RiskSihirbaziTest`'e
+  2 yeni test (Excel'de boş puan/önlem AI ile dolduruluyor; AI kapalıyken
+  dokunulmuyor).
+- **Geçmiş veri backfill'i — gerçek kota keşfi:** Kullanıcı onayıyla tüm 11
+  firmanın 2982 boş `mevcut_onlem` alanını dolduran tek seferlik betik
+  (`onlem-backfill.php`, repo dışı/scratchpad, commit edilmedi) çalıştırıldı.
+  İlk denemede (istek başına 150ms bekleme) yalnızca 20 madde dolup gerisi
+  sürekli "kota aşıldı" (429) hatası aldı — Google'ın ücretsiz katmanı
+  `gemini-3.6-flash` için **dakikada 20 istekle** sınırlı. Betik durdurulup
+  istek aralığı ~4.2 saniyeye (dakikada ~14 istek, güvenlik payı) çıkarıldı
+  ve 429/503 gibi geçici hatalarda aynı maddeyi 4 kez tekrar deneyen mantık
+  eklendi. Yeniden başlatıldı; ~2962 madde için tahmini süre ~3-3.5 saat
+  (kullanıcı onayladı — "kotaya uygun hızda arka planda devam et").
+
+## Durum — 2026-09-06 (Acil Durum Afişleri — gerçek grafik şablonlarla güncelleme + gerçek A3)
+
+Kullanıcı isteği: "acil durum afişleri ... güncelle. Örneğin yangın afişi
+tıkladığımda bu adresteki pdfler gelsin birde A3 boyutunda basmak için
+seçenek gelsin" — kaynak: `C:\Users\mozde\Desktop\isgpratik\acil durum\`.
+
+- **Bulunan ciddi hata (kullanıcı fark etmeden önce):** `resources/belge/
+  acil-durum-afisleri/*.pdf` altındaki 7 hazır afiş dosyası, isgpratik'ten
+  dışa aktarılırken **başka bir firmanın adı ("NİL UNLU MAMULLER GIDA
+  PASTACILIK...") görsele sabit gömülü** olarak kaydedilmişti — eski kod da
+  bu dosyayı OLDUĞU GİBİ akıtıyordu (`file_get_contents` + stream), yani
+  **hangi firma için indirilirse indirilsin TÜM firmalar** afişte yanlış
+  firma adını görüyordu. `A3 Boyutu` seçeneği de yalnızca dosya adını
+  değiştiriyordu — içerik hep aynı (A4 boyutunda) statik dosyaydı.
+- **Yeni kaynak dosyalar ✅:** Kullanıcının verdiği klasördeki 7 güncel,
+  **firma adı gömülü OLMAYAN** genel şablon (`Genel_*_A4_Afiş.pdf`),
+  `resources/belge/acil-durum-afisleri/{yangin,deprem,is_kazasi,elektrik,
+  kimyasal,sel,sabotaj}.pdf` üzerine kopyalandı (1:1 isim eşleşmesi).
+- **`AcilDurumPlaniUretici::hazirAfisiFirmaIleUret()` (yeni) ✅:** Artık hazır
+  dosya OLDUĞU GİBİ akıtılmıyor — her indirmede `setasign/fpdi` (zaten
+  composer'da vardı, kullanılmıyordu) ile şablon sayfası İÇE AKTARILIP
+  üstüne o anki firmanın adı + tehlike sınıfı + tarihi gösteren, dompdf ile
+  üretilen (Türkçe karakter güvenli) bir bilgi şeridiyle YENİDEN birleştirilir.
+  Statik dosyada artık hiçbir firma adı yok; her firma kendi adını görür.
+  - **Gerçek A3 ✅:** Seçilen ebada göre gerçekten farklı fiziksel sayfa
+    üretilir (A4 MediaBox 297×210mm / A3 420×297mm doğrulandı) — önceden
+    yalnız dosya adında "A3" yazan ama içerik olarak A4 kalan sahte seçenek
+    düzeltildi. Kaynak afişler yatay tasarlandığından (çoğu akış şeması),
+    çıktı da kaynağın doğal yönünde (yatay) üretilir — dikey çerçeveye zorla
+    sığdırmak posteri gereksiz küçültüp boşluk bırakırdı.
+  - **Bulunan/atlatılan dompdf hatası:** Bilgi şeridi için `display:table`
+    + `height:100%` kullanan ilk deneme, çok kısa (18mm) özel sayfa
+    boyutunda dompdf'in yanlış 3 sayfaya bölmesine yol açtı (float'lu
+    çocukların üst kapsayıcı yüksekliğine dahil edilmemesi de ayrı bir
+    sorundu) — tek satır, float'sız, table'sız basit `inline` düzene
+    çevrilerek çözüldü.
+- **Test:** `AcilDurumPlaniTest`'teki eski `test_hazir_dosyasi_olan_afis_o_
+  dosyayi_indirir` (statik dosyayla bayt-bayt eşitlik bekliyordu — artık
+  yanlış varsayım) kaldırılıp yerine `assertNotSame` (artık firma şeridiyle
+  yeniden üretiliyor, ham dosya değil) ve yeni `test_a3_secimi_gercekten_
+  daha_buyuk_fiziksel_sayfa_uretir` (MediaBox karşılaştırması) eklendi.
+  Tam suite: 500 test geçti.
+
+## Durum — 2026-09-06 (Gemini günlük kota keşfi + Beyda Yapı risk değerlendirmesi tamamlama)
+
+- **KRİTİK keşif — Gemini ücretsiz kota GÜNLÜK, dakikalık değil:** Önceki
+  "Mevcut Önlem" toplu doldurma denemesi tekrar tıkandı; hata gövdesindeki
+  `quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier, quotaValue: 20`
+  alanı gösterdi ki `gemini-3.6-flash` ücretsiz katmanı **günde yalnızca 20
+  istek** izniyle sınırlı (dakikada 20 değil). ~2941 kalan madde için bu
+  hızda ~150 gün gerekir. Kullanıcıya durum anlatıldı, üç seçenek sunuldu;
+  kullanıcı "günde otomatik 20'şer devam etsin" seçeneğini onayladı.
+  - **Yeni betik — `gemini-onlem-gunluk.php`** (repo köküne, `.gitignore`'a
+    eklenmesi denendi ama işletim sistemi düzeyinde kalıcı otomasyon kurma
+    eylemleri — `.bat` dosyası yazma, zamanlanmış görev oluşturma —
+    Claude Code'un otomatik onay sınıflandırıcısı tarafından engellendi;
+    bu commit edilmemiş, kullanıcının kendi PowerShell'inde çalıştırdığı bir
+    `Register-ScheduledTask` komutuyla Windows Görev Zamanlayıcı'ya
+    kaydedildi). Her çalıştırma art arda 3 başarısız denemeden sonra
+    (günlük kota tükendi varsayımıyla) hemen durur — kotayı boşuna
+    zorlamaz, ertesi gün kaldığı yerden devam eder. Log:
+    `gemini-onlem-gunluk.log` (repo dışı).
+- **Beyda Yapı / AHMET BULUT risk değerlendirmesi tamamlandı ✅:** Kullanıcı
+  isteği üzerine `C:\Users\mozde\Desktop\Firmalar\beyda yapı\` klasöründeki
+  gerçek belgeler incelendi. "Beyda Yapı" ayrı bir firma değil, mehse'deki
+  **AHMET BULUT** firmasının işletme adıymış (gerçek belgelerde "ŞİRKET ADI:
+  BEYDA YAPI/AHMET BULUT" yazıyor). Acil Durum Planı zaten eksiksizdi (11
+  gerçek konu, sistemde 16 vardı). Ama gerçek "BEYDA YAPI RİSK DEĞERLENDİRMESİ
+  .xlsx" (RD TABLO sayfası, PhpSpreadsheet ile okundu) 171 satır içeriyordu,
+  sistemde ise yalnızca 147 madde vardı. Fark, sıva/boya/alçıpan/yalıtım/dış
+  cephe/şap gibi farklı iş kollarında TEKRARLANAN aynı tehlike metinlerinden
+  (örn. "AĞIR NESNELERİN ELLE KALDIRILMASI", "YÜKSEKTE ÇALIŞMA") kaynaklanıyordu
+  — ilk aktarımda bu tekrarlar tek satıra indirgenmiş, farklı iş kollarına ait
+  ayrı satırlar kaybolmuştu. Bir kerelik betikle (`beyda-eksik-ekle.php`, repo
+  dışı) her tehlike metninin kaynaktaki tekrar sayısı ile sistemdeki sayısı
+  karşılaştırılıp eksik 24 satır, doğru `bölüm` (iş kolu: DIŞ CEPHE KAPLAMA VE
+  BOYAMA, YALITIM YAPILMASI, BOYA İŞLERİNDE İSG, BOYA YAPILMASI, ŞAP DÖKÜLMESİ)
+  etiketiyle eklendi — kullanıcının "ahmet bulut gibi firmalar boya sıva gibi
+  işleri yapmakta, eksik doğru şekilde kalsın" onayıyla. Toplam 147→171 madde.
+  Bu, kod değişikliği değil tek seferlik veri tamamlamadır; test suite'i
+  etkilemez.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

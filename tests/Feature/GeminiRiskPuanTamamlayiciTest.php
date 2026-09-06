@@ -148,21 +148,28 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_eksik_puanlari_tamamla_sadece_puansiz_maddeleri_doldurur(): void
+    public function test_eksik_puanlari_tamamla_sadece_eksik_eksenleri_doldurur(): void
     {
         config(['services.gemini.key' => 'test-anahtar']);
 
-        Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [['content' => ['parts' => [['text' => json_encode(['olasilik' => 2, 'siddet' => 3])]]]]],
-            ]),
-        ]);
+        Http::fake(function ($request) {
+            $govde = json_decode($request->body(), true);
+            $ozellikler = array_keys(data_get($govde, 'generationConfig.responseSchema.properties', []));
+            $onlemIstegi = in_array('onlem', $ozellikler, true);
+
+            $json = $onlemIstegi
+                ? ['onlem' => 'Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.']
+                : ['olasilik' => 2, 'siddet' => 3];
+
+            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($json)]]]]]]);
+        });
 
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
 
-        $eksik = $rd->maddeler()->create(['sira' => 1, 'tehlike' => 'Puansız madde', 'durum' => 'acik']);
-        $dolu = $rd->maddeler()->create(['sira' => 2, 'tehlike' => 'Dolu madde', 'durum' => 'acik', 'olasilik' => 5, 'siddet' => 5]);
+        $eksik = $rd->maddeler()->create(['sira' => 1, 'tehlike' => 'Puansız ve önlemsiz madde', 'durum' => 'acik']);
+        $sadeceOnlemEksik = $rd->maddeler()->create(['sira' => 2, 'tehlike' => 'Puanlı, önlemsiz madde', 'durum' => 'acik', 'olasilik' => 4, 'siddet' => 4]);
+        $tamOlan = $rd->maddeler()->create(['sira' => 3, 'tehlike' => 'Tam dolu madde', 'durum' => 'acik', 'olasilik' => 5, 'siddet' => 5, 'mevcut_onlem' => 'Zaten yazılmış önlem.']);
 
         Livewire::test(MaddelerRelationManager::class, [
             'ownerRecord' => $rd,
@@ -171,9 +178,52 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
 
         $this->assertSame(2.0, $eksik->fresh()->olasilik);
         $this->assertSame(3.0, $eksik->fresh()->siddet);
-        // dolu olan madde tekrar puanlanmasın diye tek istek atılmış olmalı.
-        $this->assertSame(5.0, $dolu->fresh()->olasilik);
-        $this->assertSame(5.0, $dolu->fresh()->siddet);
-        Http::assertSentCount(1);
+        $this->assertSame('Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.', $eksik->fresh()->mevcut_onlem);
+
+        // Puanı zaten dolu olan madde AI önerisiyle EZİLMEZ, yalnız eksik önlemi tamamlanır.
+        $this->assertSame(4.0, $sadeceOnlemEksik->fresh()->olasilik);
+        $this->assertSame(4.0, $sadeceOnlemEksik->fresh()->siddet);
+        $this->assertSame('Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.', $sadeceOnlemEksik->fresh()->mevcut_onlem);
+
+        // Tamamen dolu madde hiç dokunulmadan kalır — sorgu kapsamına bile girmez.
+        $this->assertSame(5.0, $tamOlan->fresh()->olasilik);
+        $this->assertSame('Zaten yazılmış önlem.', $tamOlan->fresh()->mevcut_onlem);
+
+        // eksik: 1 puan + 1 önlem; sadeceOnlemEksik: 1 önlem; tamOlan: 0 = toplam 3.
+        Http::assertSentCount(3);
+    }
+
+    public function test_kutuphaneden_aktar_mevcut_onlem_boluyorsa_ai_onlem_de_ekler(): void
+    {
+        $this->seed(TehlikeKutuphanesiSeeder::class);
+        config(['services.gemini.key' => 'test-anahtar']);
+
+        // Kütüphanedeki tehlikenin mevcut_onlem'i boş bırakılır ki AI'nin
+        // önlem önerisi de devreye girsin.
+        $tehlike = Tehlike::first();
+        $tehlike->update(['mevcut_onlem' => null]);
+
+        Http::fake(function ($request) {
+            $govde = json_decode($request->body(), true);
+            $ozellikler = array_keys(data_get($govde, 'generationConfig.responseSchema.properties', []));
+            $onlemIstegi = in_array('onlem', $ozellikler, true);
+
+            $json = $onlemIstegi
+                ? ['onlem' => 'AI önlem önerisi.']
+                : ['olasilik' => 3, 'siddet' => 3];
+
+            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($json)]]]]]]);
+        });
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        Livewire::test(MaddelerRelationManager::class, [
+            'ownerRecord' => $rd,
+            'pageClass' => EditRiskDegerlendirmesi::class,
+        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_id' => $tehlike->id]);
+
+        $madde = RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->first();
+        $this->assertSame('AI önlem önerisi.', $madde->mevcut_onlem);
     }
 }

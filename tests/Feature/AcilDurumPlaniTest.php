@@ -233,7 +233,7 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
-    public function test_hazir_dosyasi_olan_afis_o_dosyayi_indirir(): void
+    public function test_hazir_dosyasi_olan_afis_firma_seridiyle_yeniden_uretilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
@@ -244,10 +244,39 @@ class AcilDurumPlaniTest extends TestCase
         $icerik = ob_get_clean();
 
         $this->assertStringStartsWith('%PDF', $icerik);
-        $this->assertSame(
+
+        // Statik kaynak dosya AYNEN akıtılmıyor — her firma için firma bilgi
+        // şeridiyle yeniden birleştiriliyor (aksi halde tüm firmalar hazır
+        // dosyada sabit yazılı olan BAŞKA bir firmanın adını görürdü).
+        $this->assertNotSame(
             file_get_contents(resource_path('belge/acil-durum-afisleri/sabotaj.pdf')),
             $icerik,
         );
+    }
+
+    public function test_a3_secimi_gercekten_daha_buyuk_fiziksel_sayfa_uretir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        ob_start();
+        AcilDurumPlaniUretici::afis($firma, 'yangin', 'a4')->sendContent();
+        $a4 = ob_get_clean();
+
+        ob_start();
+        AcilDurumPlaniUretici::afis($firma, 'yangin', 'a3')->sendContent();
+        $a3 = ob_get_clean();
+
+        preg_match('/\/MediaBox\s*\[([^\]]+)\]/', $a4, $a4Kutu);
+        preg_match('/\/MediaBox\s*\[([^\]]+)\]/', $a3, $a3Kutu);
+
+        $this->assertNotEmpty($a4Kutu);
+        $this->assertNotEmpty($a3Kutu);
+        $this->assertNotSame($a4Kutu[1], $a3Kutu[1]);
+
+        // A3'ün alanı A4'ten büyük olmalı — yalnız dosya adı değişmiyor.
+        $a4Alan = (float) explode(' ', trim($a4Kutu[1]))[2] * (float) explode(' ', trim($a4Kutu[1]))[3];
+        $a3Alan = (float) explode(' ', trim($a3Kutu[1]))[2] * (float) explode(' ', trim($a3Kutu[1]))[3];
+        $this->assertGreaterThan($a4Alan * 1.5, $a3Alan);
     }
 
     public function test_konfigurasyondaki_tum_hazir_afis_dosyalari_mevcut(): void

@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
+use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
@@ -638,6 +639,7 @@ class RiskSihirbazi extends Page
     {
         $eklenen = 0;
         $eklenenler = [];
+        $eklenenIndeksler = [];
 
         foreach ($this->excelAdaylar as $aday) {
             if (! in_array($aday['anahtar'], $this->excelSecilenAdaylar, true)) {
@@ -650,6 +652,7 @@ class RiskSihirbazi extends Page
 
             if (! $zaten) {
                 $this->secilenler[] = $aday;
+                $eklenenIndeksler[] = array_key_last($this->secilenler);
                 $eklenenler[] = $aday;
                 $eklenen++;
             }
@@ -663,6 +666,8 @@ class RiskSihirbazi extends Page
         // görünür. Kullanıcının dosyası Fine-Kinney ölçeğinde (0.2/0.5/…/40 gibi
         // veya Frekans sütunu dolu) geldiyse yöntemi otomatik ona çevirmezsek
         // puanlar "kayboldu" gibi görünür — kullanıcı elle girmek zorunda kalır.
+        // NOT: bu kontrol AI tamamlamadan ÖNCE yapılır — aksi halde AI, henüz
+        // eski (yanlış) yönteme göre puan üretip ölçek dışı kalabilir.
         if ($eklenenler && $this->yontem !== 'fine_kinney' && RiskSkorlama::fineKinneyeUyuyorMu($eklenenler)) {
             $this->yontem = 'fine_kinney';
             Notification::make()
@@ -671,11 +676,80 @@ class RiskSihirbazi extends Page
                 ->warning()->send();
         }
 
-        Notification::make()->title($eklenen.' risk maddesi eklendi')->success()->send();
+        [$aiPuan, $aiOnlem] = $this->excelEksikleriAiIleTamamla($eklenenIndeksler);
+
+        $mesaj = $eklenen.' risk maddesi eklendi';
+
+        if ($aiPuan || $aiOnlem) {
+            $ekler = collect([
+                $aiPuan ? "{$aiPuan} puan" : null,
+                $aiOnlem ? "{$aiOnlem} önlem" : null,
+            ])->filter()->implode(' + ');
+            $mesaj .= " ({$ekler} AI ile tamamlandı)";
+        }
+
+        Notification::make()->title($mesaj)->success()->send();
 
         if (count($this->secilenler) > 0) {
             $this->adim = 4;
         }
+    }
+
+    /**
+     * Excel'den eklenen maddelerden Olasılık/Şiddet(/Frekans) veya Mevcut
+     * Önlem metni boş kalanları AI ile tamamlar — kullanıcı isteği: "risk
+     * değerlendirmesine yükleyeceğim tablolarda puanlama ve önlemler bölümü
+     * boşsa yapay zeka doldursun". AI kapalıysa (API anahtarı yok) dokunmadan
+     * bırakır, eski davranış (elle giriş) aynen sürer.
+     *
+     * @param  array<int, int>  $indeksler  $this->secilenler içindeki ilgili öğelerin indeksleri
+     * @return array{0: int, 1: int} [AI ile puanlanan sayısı, AI ile önlem verilen sayısı]
+     */
+    private function excelEksikleriAiIleTamamla(array $indeksler): array
+    {
+        if (! GeminiRiskPuanTamamlayici::aktifMi()) {
+            return [0, 0];
+        }
+
+        $puanlanan = 0;
+        $onlemli = 0;
+        $fk = $this->fineKinney();
+
+        foreach ($indeksler as $i) {
+            $m = $this->secilenler[$i];
+
+            $puanEksik = blank($m['olasilik'] ?? null) || blank($m['siddet'] ?? null) || ($fk && blank($m['frekans'] ?? null));
+
+            if ($puanEksik) {
+                $oneri = GeminiRiskPuanTamamlayici::oner(
+                    $m['tehlike'] ?? '', $m['risk'] ?? null, $m['bolum'] ?? null, $m['faaliyet'] ?? null, $this->yontem,
+                );
+
+                if ($oneri) {
+                    $this->secilenler[$i]['olasilik'] = $oneri['olasilik'];
+                    $this->secilenler[$i]['siddet'] = $oneri['siddet'];
+
+                    if ($fk) {
+                        $this->secilenler[$i]['frekans'] = $oneri['frekans'];
+                    }
+
+                    $puanlanan++;
+                }
+            }
+
+            if (blank($this->secilenler[$i]['mevcut_onlem'] ?? null)) {
+                $onlem = GeminiRiskPuanTamamlayici::onlemOner(
+                    $m['tehlike'] ?? '', $m['risk'] ?? null, $m['bolum'] ?? null, $m['faaliyet'] ?? null,
+                );
+
+                if ($onlem) {
+                    $this->secilenler[$i]['mevcut_onlem'] = $onlem;
+                    $onlemli++;
+                }
+            }
+        }
+
+        return [$puanlanan, $onlemli];
     }
 
     /** AI akışında "bu sektörün şablonunu direkt kullan". */

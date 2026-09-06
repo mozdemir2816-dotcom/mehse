@@ -306,6 +306,80 @@ class RiskSihirbaziTest extends TestCase
         unlink($yol);
     }
 
+    public function test_excelde_puanlama_ve_onlem_bos_kalan_satirlari_ai_tamamlar(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar']);
+
+        Http::fake(function ($request) {
+            $govde = json_decode($request->body(), true);
+            $ozellikler = array_keys(data_get($govde, 'generationConfig.responseSchema.properties', []));
+            $onlemIstegi = in_array('onlem', $ozellikler, true);
+
+            $json = $onlemIstegi
+                ? ['onlem' => 'AI önerisi: kenar koruması ve uyarı levhası.']
+                : ['olasilik' => 4, 'siddet' => 5];
+
+            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($json)]]]]]]);
+        });
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        // "Mevcut Önlem" sütunu YOK, "Olasılık"/"Şiddet" hücreleri BOŞ —
+        // gerçek hayatta kullanıcının kendi taslak/eksik dosyası gibi.
+        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
+            ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', null, null],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->call('excelSecilenleriEkle');
+
+        $madde = $component->get('secilenler')[0];
+        $this->assertSame(4.0, $madde['olasilik']);
+        $this->assertSame(5.0, $madde['siddet']);
+        $this->assertSame('AI önerisi: kenar koruması ve uyarı levhası.', $madde['mevcut_onlem']);
+
+        unlink($yol);
+    }
+
+    public function test_excel_ai_kapaliyken_bos_satirlar_dokunulmadan_kalir(): void
+    {
+        config(['services.gemini.key' => null]);
+        Http::fake();
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
+            ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', null, null],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->call('excelSecilenleriEkle');
+
+        $madde = $component->get('secilenler')[0];
+        $this->assertNull($madde['olasilik']);
+        $this->assertNull($madde['mevcut_onlem'] ?? null);
+
+        Http::assertNothingSent();
+
+        unlink($yol);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Sektörel şablonlar (toplu ekleme + tekrar kullanım)

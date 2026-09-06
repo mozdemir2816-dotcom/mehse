@@ -7,13 +7,15 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Kütüphaneden aktarılan veya elle eklenip Olasılık/Şiddet(/Frekans) puanı
- * girilmemiş risk maddelerini Gemini ile tamamlar — kullanıcı isteği:
- * "olasılık şiddet ve frekans olmayan kayıtları otomatik yapay zekaya
- * yaptırarak kaydet". `GeminiRiskDanismani`'nin aksine YENİ risk ÜRETMEZ,
- * zaten var olan bir tehlike/risk metnine puan atar. API anahtarı yoksa veya
- * istek başarısız olursa sessizce null döner — madde puansız kalır, kullanıcı
- * elle girebilir.
+ * Kütüphaneden aktarılan, Excel'den yüklenen veya elle eklenip Olasılık/
+ * Şiddet(/Frekans) puanı ya da Mevcut Önlem metni girilmemiş risk
+ * maddelerini Gemini ile tamamlar — kullanıcı isteği: "olasılık şiddet ve
+ * frekans olmayan kayıtları otomatik yapay zekaya yaptırarak kaydet" ve
+ * ardından "yükleyeceğim tablolarda puanlama ve önlemler bölümü boşsa
+ * yapay zeka doldursun". `GeminiRiskDanismani`'nin aksine YENİ risk
+ * ÜRETMEZ, zaten var olan bir tehlike/risk metnine puan/önlem atar.
+ * API anahtarı yoksa veya istek başarısız olursa sessizce null döner —
+ * madde boş kalır, kullanıcı elle girebilir.
  */
 class GeminiRiskPuanTamamlayici
 {
@@ -60,6 +62,78 @@ class GeminiRiskPuanTamamlayici
 
             return null;
         }
+    }
+
+    /**
+     * Mevcut Önlem metni boş olan bir maddeye kısa, tehlikeye özgü bir önlem
+     * önerisi ister. Puanlamadan bağımsız, ayrı ve daha ucuz bir istek —
+     * yalnızca metin boşsa çağrılmalı (var olan metnin üzerine hiç yazılmaz).
+     */
+    public static function onlemOner(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet): ?string
+    {
+        if (! static::aktifMi()) {
+            return null;
+        }
+
+        try {
+            $yanit = Http::timeout(45)->post(
+                static::endpoint(),
+                static::onlemIstekGovdesi($tehlike, $risk, $bolum, $faaliyet),
+            );
+
+            if ($yanit->failed()) {
+                Log::warning('Gemini önlem önerisi başarısız', ['durum' => $yanit->status(), 'govde' => $yanit->body()]);
+
+                return null;
+            }
+
+            $metin = data_get($yanit->json(), 'candidates.0.content.parts.0.text');
+            $sonuc = json_decode((string) $metin, true);
+
+            if (! is_array($sonuc) || blank($sonuc['onlem'] ?? null)) {
+                return null;
+            }
+
+            return trim((string) $sonuc['onlem']);
+        } catch (Throwable $e) {
+            Log::warning('Gemini önlem önerisi istisna', ['hata' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /** @return array<string, mixed> */
+    private static function onlemIstekGovdesi(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet): array
+    {
+        return [
+            'contents' => [[
+                'role' => 'user',
+                'parts' => [['text' => static::onlemIstem($tehlike, $risk, $bolum, $faaliyet)]],
+            ]],
+            'generationConfig' => [
+                'temperature' => 0.3,
+                'responseMimeType' => 'application/json',
+                'responseSchema' => ['type' => 'OBJECT', 'properties' => ['onlem' => ['type' => 'STRING']], 'required' => ['onlem']],
+            ],
+        ];
+    }
+
+    private static function onlemIstem(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet): string
+    {
+        return <<<PROMPT
+        Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu'na göre çalışan
+        deneyimli bir İş Güvenliği Uzmanısın. Aşağıdaki tehlike/risk maddesi için
+        KISA (tek cümle, en fazla 25-30 kelime), somut ve uygulanabilir bir
+        "mevcut/alınması gereken önlem" metni yaz — genel klişe değil, tehlikeye
+        özgü teknik/idari bir önlem belirt.
+
+        Bölüm/Ünite: {$bolum}
+        Faaliyet: {$faaliyet}
+        Tehlike: {$tehlike}
+        Risk (olası sonuç): {$risk}
+
+        Yanıtı SADECE JSON nesnesi olarak ver (ör. {"onlem": "..."}).
+        PROMPT;
     }
 
     /** LLM'in döndürdüğü sayı, ölçekteki İZİN VERİLEN değerlerden en yakınına yuvarlanır (ölçek dışı değer sızmasın diye). */

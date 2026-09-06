@@ -52,7 +52,36 @@ class MaddelerRelationManager extends RelationManager
             return false;
         }
 
-        $madde->forceFill($oneri)->save();
+        // Yalnızca gerçekten boş olan eksen(ler) yazılır — örn. Fine-Kinney'de
+        // yalnız Frekans eksikse, kullanıcının elle girdiği Olasılık/Şiddet
+        // AI önerisiyle EZİLMEZ.
+        $doldurulacak = collect($oneri)
+            ->only(collect(['olasilik', 'siddet', 'frekans'])->filter(fn ($eksen) => blank($madde->{$eksen}))->all())
+            ->all();
+
+        if (! $doldurulacak) {
+            return false;
+        }
+
+        $madde->forceFill($doldurulacak)->save();
+
+        return true;
+    }
+
+    /** Mevcut Önlem metni boşsa AI'dan kısa bir öneri alıp yazar; doluysa dokunmaz. */
+    private function onlemVerAiIle(RiskMaddesi $madde): bool
+    {
+        if (filled($madde->mevcut_onlem)) {
+            return false;
+        }
+
+        $onlem = GeminiRiskPuanTamamlayici::onlemOner($madde->tehlike, $madde->risk, $madde->bolum, $madde->faaliyet);
+
+        if (! $onlem) {
+            return false;
+        }
+
+        $madde->forceFill(['mevcut_onlem' => $onlem])->save();
 
         return true;
     }
@@ -153,28 +182,48 @@ class MaddelerRelationManager extends RelationManager
                         ]);
 
                         $puanlandi = $this->puanlaAiIle($madde);
+                        $onlemVerildi = $this->onlemVerAiIle($madde);
 
-                        Notification::make()
-                            ->title($puanlandi ? 'Risk maddesi eklendi ve AI ile puanlandı' : 'Risk maddesi eklendi (puanı girin)')
-                            ->success()
-                            ->send();
+                        $baslik = match (true) {
+                            $puanlandi && $onlemVerildi => 'Risk maddesi eklendi, AI ile puanlandı ve önlem önerisi eklendi',
+                            $puanlandi => 'Risk maddesi eklendi ve AI ile puanlandı',
+                            $onlemVerildi => 'Risk maddesi eklendi ve AI önlem önerisi eklendi (puanı girin)',
+                            default => 'Risk maddesi eklendi (puanı girin)',
+                        };
+
+                        Notification::make()->title($baslik)->success()->send();
                     }),
                 Action::make('eksikPuanlariTamamla')
-                    ->label('Eksik Puanları AI ile Tamamla')
+                    ->label('Eksik Puan/Önlemleri AI ile Tamamla')
                     ->icon('heroicon-o-sparkles')
                     ->color('gray')
                     ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi())
                     ->requiresConfirmation()
-                    ->modalDescription('Olasılık veya Şiddet puanı girilmemiş tüm maddeler için Gemini\'den puan istenir; öneri yalnız ölçekteki değerlerden seçilir, siz yine de gözden geçirip düzeltebilirsiniz.')
+                    ->modalDescription('Olasılık/Şiddet puanı veya Mevcut Önlem metni boş olan tüm maddeler için Gemini\'den öneri istenir; puan önerisi yalnız ölçekteki değerlerden seçilir, siz yine de gözden geçirip düzeltebilirsiniz.')
                     ->action(function (): void {
+                        $fk = $this->fineKinney();
+
                         $eksikler = $this->getOwnerRecord()->maddeler()
-                            ->where(fn ($q) => $q->whereNull('olasilik')->orWhereNull('siddet'))
+                            ->where(function ($q) use ($fk) {
+                                $q->whereNull('olasilik')->orWhereNull('siddet')
+                                    ->orWhereNull('mevcut_onlem')->orWhere('mevcut_onlem', '');
+
+                                if ($fk) {
+                                    $q->orWhereNull('frekans');
+                                }
+                            })
                             ->get();
 
-                        $tamamlanan = $eksikler->filter(fn (RiskMaddesi $m) => $this->puanlaAiIle($m))->count();
+                        $tamamlanan = $eksikler->filter(function (RiskMaddesi $m) {
+                            $puanEksik = blank($m->olasilik) || blank($m->siddet) || ($this->fineKinney() && blank($m->frekans));
+                            $puanlandi = $puanEksik && $this->puanlaAiIle($m);
+                            $onlemVerildi = $this->onlemVerAiIle($m);
+
+                            return $puanlandi || $onlemVerildi;
+                        })->count();
 
                         Notification::make()
-                            ->title($eksikler->isEmpty() ? 'Eksik puanlı madde yok' : "{$tamamlanan}/{$eksikler->count()} madde AI ile puanlandı")
+                            ->title($eksikler->isEmpty() ? 'Eksik puan/önlem içeren madde yok' : "{$tamamlanan}/{$eksikler->count()} madde AI ile tamamlandı")
                             ->success()
                             ->send();
                     }),
