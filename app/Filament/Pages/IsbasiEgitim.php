@@ -207,6 +207,29 @@ class IsbasiEgitim extends Page
 
                     return $t ? IsbasiEgitimTutanagiUretici::pdf($t) : null;
                 }),
+
+            Action::make('katilimFormu')
+                ->label('Katılım Formu (Toplu)')
+                ->icon('heroicon-o-user-group')
+                ->color('gray')
+                ->tooltip('Birden fazla çalışanın aynı eğitime katılımını tek sayfada imzalatmak için')
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => IsbasiEgitimTutanagiUretici::katilimFormuPdf($this->firma, [
+                    'egitim_tarihi' => $this->egitimTarihi,
+                    'sure_saat' => $this->sureSaat,
+                    'egitim_yeri' => $this->egitimYeri,
+                    'egitimi_veren' => $this->egitimiVeren,
+                    'egitim_yontemi' => $this->egitimYontemi,
+                    'belge_tarihi' => $this->belgeTarihi,
+                    'igu_imzasi' => $this->iguImzasi,
+                    'isyeri_hekimi_imzasi' => $this->isyeriHekimiImzasi,
+                    'konular' => $this->secilenKonular,
+                    'katilimcilar' => $this->calisanlar->map(fn ($c) => [
+                        'ad_soyad' => $c->ad_soyad,
+                        'tc' => $c->tc,
+                        'gorev' => $c->gorev,
+                    ])->all(),
+                ])),
         ];
     }
 

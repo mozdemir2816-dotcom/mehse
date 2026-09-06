@@ -111,6 +111,60 @@ class IsbasiEgitimTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_katilim_formu_calisan_adi_gerektirmeden_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->count(3)->for($firma)->create();
+
+        // Tekil tutanağın aksine, toplu katılım formu tek bir "Çalışan Adı"
+        // alanına bağlı değildir — yalnız firma seçilmesi yeterlidir.
+        Livewire::test(IsbasiSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertActionExists('katilimFormu')
+            ->callAction('katilimFormu');
+
+        $this->assertDatabaseCount('isbasi_egitim_tutanaklari', 0);
+    }
+
+    public function test_katilim_formu_pdf_firma_calisanlarini_en_az_10_satir_listeler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create(['ad_soyad' => 'Zeynep Kaya', 'tc' => '11122233344', 'gorev' => 'Operatör']);
+
+        $yanit = IsbasiEgitimTutanagiUretici::katilimFormuPdf($firma, [
+            'egitim_tarihi' => now()->toDateString(),
+            'sure_saat' => 2,
+            'egitim_yeri' => 'Üretim Sahası',
+            'egitimi_veren' => 'Ali Veli',
+            'egitim_yontemi' => 'Uygulamalı',
+            'belge_tarihi' => now()->toDateString(),
+            'igu_imzasi' => true,
+            'isyeri_hekimi_imzasi' => false,
+            'konular' => [],
+            'katilimcilar' => [['ad_soyad' => 'Zeynep Kaya', 'tc' => '11122233344', 'gorev' => 'Operatör']],
+        ]);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+
+        $html = view('pdf.isbasi-egitim-katilim-formu', [
+            'firma' => $firma,
+            'veri' => [
+                'egitim_tarihi' => '06.09.2026',
+                'katilimcilar' => [['ad_soyad' => 'Zeynep Kaya', 'tc' => '11122233344', 'gorev' => 'Operatör']],
+            ],
+        ])->render();
+
+        $this->assertStringContainsString('Zeynep Kaya', $html);
+        // Katılımcı sayısı 10'dan az olsa da katılım tablosunda en az 10 satır
+        // olur: kunye tablosunun 3 satırı + katılım tablosunun 1 başlık +
+        // 10 veri satırı + alt imza tablosunun 1 satırı = toplam 15 <tr>.
+        $this->assertSame(15, substr_count($html, '<tr>'));
+    }
+
     public function test_gecmis_tutanak_silinir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
