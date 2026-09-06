@@ -2042,10 +2042,6 @@ bunu önceliklendirdi.
   (rol_anahtari=calisan_temsilcisi) HEM DE yeni seçim sürecinin sonucu
   (`secilen_aday_index` dolu) kabul eden bir case eklendi — ikisinden
   hangisi kullanılırsa kullanılsın kriter karşılanmış sayılır.
-  - **Not (henüz yapılmadı):** `acil_durum_destek` kriteri de aynı
-    `hazir => false` deseninde ve muhtemelen aynı sorunu taşıyor (söndürme/
-    kurtarma/koruma/ilkyardım ekipleri zaten Atama Yazıları'ndan atanıyor)
-    — ayrı bir denetim maddesi olarak bırakıldı, bu oturumda dokunulmadı.
   - Bu flip, kriter sayısını 15→16 hazır kritere çıkardığı için
     `KontrolMerkeziTest` ve `ProfilimTest`'teki ilgili oran hesaplama
     yorumları (14→15, 15→16) güncellendi; sayısal beklenti değerleri
@@ -2055,6 +2051,46 @@ bunu önceliklendirdi.
   Tutanak aksiyonunun devre dışı kalması, Kontrol Merkezi kriterinin
   karşılanması. `KontrolMerkeziTest`'e 1 yeni test, mevcut 2 testin örnek
   kriteri (`calisan_temsilcisi` → `periyodik_kontrol_raporu`) güncellendi.
+
+## Durum — 2026-09-06 (acil_durum_destek kriteri + Acil Durum Planı kaşe/imza eksikliği)
+
+Kullanıcı "sırayla yap eksik gördüklerini" dedi — denetimde bulunan iki
+maddeye ("Kaşe sistemi + Acil Durum Word çıktısı" olarak özetlenmişti)
+kullanıcıdan izin alınmadan devam edildi.
+
+- **`acil_durum_destek` kriteri de `calisan_temsilcisi`/`acil_durum_plani`
+  ile AYNI türde unutulmuş bir hataydı ✅:** Kontrol Merkezi'nde
+  "Acil Durum Destek Elemanları" hep `hazir => false` idi, hiçbir firma
+  için asla karşılanmış sayılmıyordu — halbuki söndürme/kurtarma/koruma/
+  ilk yardım ekipleri zaten iki yerden atanabiliyordu (Acil Durum Planı'nın
+  kendi "Ekip Üyeleri" alanı VEYA Atama Yazıları'ndaki ilgili ekip rolleri).
+  `hazir => true` yapıldı, `gercekModulVarMi()`'ye ikisini de kabul eden bir
+  case eklendi. Kriter sayısı 16→17 oldu; bu kez sayısal beklenti de gerçekten
+  değişti (isg_kurulu muaf firmada round(1/16*100)=7 idi, round(1/16*100)
+  şimdi 6 — `firma_kriter_matrisi` testinin beklenen değeri 7'den 6'ya
+  güncellendi, diğer testlerin yorumları da 16/17 olarak düzeltildi).
+- **"Kaşe sistemi" aslında ZATEN VARDI — asıl eksik yalnızca Acil Durum
+  Planı'nın PDF çıktısıydı ✅:** Araştırınca görüldü ki `User::kase_gorseli`/
+  `imza_gorseli` (uzmanın kendi kaşe/imzası) ve `IsgProfesyoneli::kase_gorseli`
+  (İGU/hekim) zaten Risk Değerlendirmesi, Atama Yazıları, DÖF, İş Kazası
+  Raporu, Muayene Formu, Saha Denetimi, Sertifika, Ceza-Tebliğ gibi HEMEN
+  HEMEN HER belge şablonunda kullanılıyordu — sadece **Acil Durum Planı'nın
+  PDF'inde** ONAY bölümünde `$uzman` değişkeni zaten vardı (ad/unvan
+  gösteriliyordu) ama kaşe/imza görseli hiç `<img>` ile basılmıyordu. Ayrıca
+  isgpratik referansında "2. Kaşe — İşyeri Hekimi" diye ayrı bir slot da
+  vardı; ONAY tablosuna üçüncü bir sütun (İşyeri Hekimi, atanmışsa kaşe/imza
+  ile) eklendi. `risk-degerlendirmesi.blade.php`'deki aynı desenle
+  eklendi. Word çıktısına dokunulmadı (o "orijinal şablonun birebir kopyası"
+  olma sözü taşıyor, görsel gömme oraya ayrı bir karar gerektirir).
+  - **Bulunan ölü kod (dokunulmadı, sadece not edildi):** `acil_durum_planlari`
+    tablosundaki `kase_1_gorseli`/`kase_2_gorseli`/`cikti_logosu` sütunları
+    hâlâ hiçbir yerde okunmuyor/yazılmıyor — muhtemelen daha önce denenip
+    yarım bırakılmış, gerçek sistemin (`User`/`IsgProfesyoneli` üzerinden)
+    yerini aldığı bir tasarım. Fonksiyonel bir sorun yaratmıyor, silinmesi
+    ayrı bir karar (veri kaybı riski yok çünkü hiç kullanılmamışlar).
+- **Test:** `KontrolMerkeziTest`'e `acil_durum_destek` için 1 yeni test;
+  `AcilDurumPlaniTest`'e kaşe/imza görsellerinin PDF HTML'ine gerçekten
+  basıldığını doğrulayan 1 yeni test. Tam suite: bkz. altta.
 
 ## Notlar
 

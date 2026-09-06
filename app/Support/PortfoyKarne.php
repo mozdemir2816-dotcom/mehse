@@ -94,6 +94,13 @@ class PortfoyKarne
             // (rapor_tarihi atanır) — bu yüzden salt "kayıt var" yeterli kanıt değil,
             // konular (acil durum sayfaları) gerçekten seçilmiş olmalı.
             'acil_durum_plani' => filled($firma->acilDurumPlani?->konular),
+            // Destek elemanları (söndürme/kurtarma/koruma/ilk yardım) ya doğrudan
+            // Acil Durum Planı'nın kendi "Ekip Üyeleri" alanına ya da Atama
+            // Yazıları'ndaki ilgili "ekip" rollerine girilmiş olabilir.
+            'acil_durum_destek' => collect($firma->acilDurumPlani?->ekipListesi() ?? [])->flatten()->isNotEmpty()
+                || $firma->atamaYazilari()
+                    ->whereIn('rol_anahtari', ['sondurme_ekibi', 'kurtarma_ekibi', 'koruma_ekibi', 'ilkyardim_ekibi'])
+                    ->exists(),
             'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists(),
             'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->exists(),
             'isg_kurulu' => $firma->kurulToplantilari()->exists(),

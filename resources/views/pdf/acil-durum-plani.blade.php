@@ -30,7 +30,8 @@
     table.ekip th, table.ekip td { border: 1px solid #999; padding: 5px 8px; font-size: 10px; text-align: left; }
     table.ekip th { background: #f0f0f0; }
     .imza { margin-top: 50px; width: 100%; }
-    .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
+    .imza td { width: 33.33%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
+    .imza img { max-height: 40px; display: block; margin: 0 auto -32px auto; }
     .not { background: #fff7ed; border: 1px solid #fdba74; padding: 10px; font-size: 10px; margin-top: 20px; }
 </style>
 </head>
@@ -154,8 +155,16 @@
     <table class="imza">
         <tr>
             <td>
+                @if ($uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
+                @if ($uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
                 {{ $uzman?->name ?: 'İş Güvenliği Uzmanı' }}
                 @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvanEtiketi() }}</span> @endif
+                <br>(İmza – Kaşe)
+            </td>
+            <td>
+                @if ($firma?->isyeriHekimi?->kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">@endif
+                @if ($firma?->isyeriHekimi?->imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->imza_gorseli) }}">@endif
+                {{ $firma?->isyeriHekimi?->ad_soyad ?: 'İşyeri Hekimi' }}
                 <br>(İmza – Kaşe)
             </td>
             <td>{{ $firma?->isveren_ad ?: 'İşveren / İşveren Vekili' }}<br>(Ad – Soyad / İmza)</td>

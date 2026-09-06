@@ -101,9 +101,9 @@ class ProfilimTest extends TestCase
 
         $this->assertTrue($matris[$a->id]['hucreler']['risk_degerlendirmesi']);
         $this->assertFalse($matris[$b->id]['hucreler']['risk_degerlendirmesi']);
-        // 50 altı çalışan olduğu için isg_kurulu muaf — 16 değil 15 hazır kriter sayılır;
-        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/15*100) = 7.
-        $this->assertSame(7, $matris[$a->id]['oran']);
+        // 50 altı çalışan olduğu için isg_kurulu muaf — 17 değil 16 hazır kriter sayılır;
+        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/16*100) = 6.
+        $this->assertSame(6, $matris[$a->id]['oran']);
         $this->assertSame(0, $matris[$b->id]['oran']);
     }
 

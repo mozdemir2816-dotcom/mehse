@@ -221,6 +221,33 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_plan_pdf_onay_bolumunde_uzman_ve_hekimin_kase_imzasi_gorunur(): void
+    {
+        $this->uzman->forceFill(['kase_gorseli' => 'uzman-kase/test-kase.png', 'imza_gorseli' => 'uzman-kase/test-imza.png'])->save();
+        $hekim = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim-kase/test-kase.png']);
+
+        $firma = Firma::factory()->for($this->uzman)->create(['isyeri_hekimi_id' => $hekim->id]);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+
+        $html = view('pdf.acil-durum-plani', [
+            'plan' => $plan->fresh('firma'),
+            'firma' => $firma->fresh(),
+            'hakkinda' => config('isg.acil_durum.hakkinda'),
+        ])->render();
+
+        $this->assertStringContainsString('uzman-kase/test-kase.png', $html);
+        $this->assertStringContainsString('uzman-kase/test-imza.png', $html);
+        $this->assertStringContainsString('hekim-kase/test-kase.png', $html);
+        $this->assertStringContainsString($hekim->ad_soyad, $html);
+
+        // Görsel gerçekte diskte olmasa bile dompdf üretimi hata vermemeli.
+        $yanit = AcilDurumPlaniUretici::pdf($plan);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
     public function test_afis_pdf_uretilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
