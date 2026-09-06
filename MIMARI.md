@@ -2125,6 +2125,49 @@ katmanıydı — o eklendi:
 - **Test:** `ProfilimTest`'e 5 yeni test (aktif/ayrılan, arama+firma,
   kategori filtresi, durum filtresi, özet sayaçları).
 
+## Durum — 2026-09-06 (Firma Checklist — Firma Takip drill-down)
+
+Kullanıcı "büyük, henüz yapılmamış" 2. bulgu olan "Firma Takip"i seçti
+(önceki "1" seçiminden sonra "tamam devam edelim"). Eğitim Kayıtları
+Matrisi'nde yaşanan özeleştiriyi tekrarlamamak için ÖNCE kod okundu: Profilim
+sayfasında `firma_takip` sekmesinde zaten bir "Firma × Yasal Kriter Matrisi"
+portföy tablosu vardı (`PortfoyKarne::firmaTakipKriterleri()`/
+`firmaKriterMatrisi()`) — isgpratik'e kıyasla eksik olan yalnızca **firma
+başına drill-down**: her kriter için elle vade tarihi girip
+"tamamlandı / yakın / eksik" durumunu görmek.
+
+- **Kasıtlı olarak eklenmeyen kapsam:** isgpratik'teki "İGU/İşyeri Hekimi
+  için GEREKLİ dakika vs ATANMIŞ dakika" karşılaştırması (sözleşme süresi
+  yeterliliği) **bilinçli olarak yapılmadı** — bu hesap resmi OSGB
+  Yönetmeliği Ek-2'deki dakika/oran tablosuna dayanıyor ve bu tabloyu
+  hatasız/güvenilir şekilde alıntılayabileceğimden emin değilim. Yanlış bir
+  yasal/resmi rakam üretmektense bu kalemi tamamen dışarıda bırakmak tercih
+  edildi (`PortfoyKarne::firmaChecklistDetay()` docblock'unda da not edildi).
+  Kullanıcı isterse resmi tabloyu kendisi sağlarsa bu ayrı bir görev olarak
+  eklenebilir.
+- **Yeni tablo:** `firma_checklist_vadeleri` (migration
+  `2026_09_06_220000_...`) — `firma_id`, `kriter_anahtari`, `vade_tarihi`
+  (nullable date), unique(firma_id, kriter_anahtari). Yalnız kullanıcı elle
+  bir vade girdiğinde satır oluşuyor (mehse'nin genel "seyrek override"
+  deseniyle aynı — bkz. `AcilDurumPlani::firmaIcin()`).
+- **`FirmaChecklistVadesi` modeli** (yeni) + `Firma::checklistVadeleri()`
+  ilişkisi.
+- **`PortfoyKarne::firmaChecklistDetay(Firma $firma): array`** (yeni) —
+  mevcut `firmaTakipKriterleri()` listesini `checklistVadeleri` ile
+  birleştirip her kriter için `durum` hesaplar: `tamamlandi` (gerçek modül
+  kurulu veya muaf), `yakin` (vade ≤30 gün kaldı), `eksik` (diğer her şey).
+- **Profilim sayfası:** `firmaTakipSeciliId` özelliği + `firmaTakipSecili()`/
+  `firmaChecklistDetay()` computed metodları + `firmaChecklistVadeGuncelle()`
+  (vade tarihini `updateOrCreate` ile kaydeder, boş string gelirse siler).
+- **UI:** `firma_takip` sekmesinde mevcut portföy matrisinin ALTINA yeni bir
+  "Firma Checklist" kutusu eklendi — firma açılır listesi, seçilince Uyum
+  Skoru (aynı `firmaMatrisi` oranı) + her kriter için renkli durum rozeti
+  (yeşil/sarı/kırmızı) ve tamamlanmamışsa düzenlenebilir bir tarih girişi.
+- **Test:** `ProfilimTest`'e 2 yeni test (`firma_checklist_detay_vade_
+  tarihine_gore_durum_hesaplar`, `firma_checklist_vade_guncelle_action_
+  kaydeder_ve_kaldirir`). Tam suite: **517 test geçti** (1449 assertion),
+  regresyon yok.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

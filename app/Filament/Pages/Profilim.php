@@ -96,6 +96,8 @@ class Profilim extends Page
 
     public string $egitimDurumTab = 'aktif';
 
+    public int $firmaTakipSeciliId = 0;
+
     public function mount(): void
     {
         $this->arsivSeciliFirmaId = (int) (Firma::query()
@@ -217,6 +219,40 @@ class Profilim extends Page
     public function firmaTakipKriterleri(): array
     {
         return PortfoyKarne::firmaTakipKriterleri(Filament::auth()->id());
+    }
+
+    #[Computed]
+    public function firmaTakipSecili(): ?Firma
+    {
+        return $this->firmaTakipSeciliId
+            ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaTakipSeciliId)
+            : null;
+    }
+
+    /**
+     * Firma Takip'te seçili tek firmanın vade tarihli checklist detayı
+     * (isgpratik "Firma Checklist" referansı).
+     *
+     * @return array<int, array{anahtar: string, ad: string, tamam: bool, vade_tarihi: ?\Illuminate\Support\Carbon, durum: string}>
+     */
+    #[Computed]
+    public function firmaChecklistDetay(): array
+    {
+        return $this->firmaTakipSecili ? PortfoyKarne::firmaChecklistDetay($this->firmaTakipSecili) : [];
+    }
+
+    public function firmaChecklistVadeGuncelle(string $anahtar, ?string $tarih): void
+    {
+        if (! $this->firmaTakipSecili) {
+            return;
+        }
+
+        \App\Models\FirmaChecklistVadesi::updateOrCreate(
+            ['firma_id' => $this->firmaTakipSecili->id, 'kriter_anahtari' => $anahtar],
+            ['vade_tarihi' => filled($tarih) ? $tarih : null],
+        );
+
+        unset($this->firmaChecklistDetay);
     }
 
     /** @return array<string, int> firma → aktif çalışan */

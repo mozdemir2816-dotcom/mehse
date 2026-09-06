@@ -463,6 +463,69 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- FİRMA CHECKLİST (tek firma, vade tarihli detay) --}}
+        <div style="{{ $kutu }};margin-top:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.6rem">
+                <div>
+                    <div style="font-weight:700">Firma Checklist</div>
+                    <div style="font-size:.78rem;color:rgb(128 116 148)">
+                        Tek firma seçip her kriter için vade tarihi girin — vadesi 30 gün içinde olan "Yakın",
+                        geçmiş veya girilmemiş "Eksik" olarak işaretlenir. Modül gerçekten tamamlanmışsa vadeden
+                        bağımsız her zaman "Tamamlandı" gösterilir.
+                    </div>
+                </div>
+                <select wire:model.live="firmaTakipSeciliId"
+                    style="padding:.35rem .6rem;border-radius:.5rem;border:1px solid rgb(128 116 148 / .35);background:transparent;font-size:.8rem">
+                    <option value="0">— Firma seçin —</option>
+                    @foreach ($this->firmalar as $f)
+                        <option value="{{ $f->id }}">{{ $f->unvan }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            @if ($this->firmaTakipSecili)
+                @php
+                    $seciliOran = collect($this->firmaMatrisi)->firstWhere('firma.id', $this->firmaTakipSecili->id)['oran'] ?? 0;
+                    $checklistRenk = ['tamamlandi' => $yesil, 'yakin' => $sari, 'eksik' => $kirmizi];
+                    $checklistEtiket = ['tamamlandi' => 'Tamamlandı', 'yakin' => 'Yakın', 'eksik' => 'Eksik'];
+                @endphp
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.7rem">
+                    <div style="{{ $kutu }};flex:1;min-width:10rem">
+                        <div style="font-size:.75rem;color:rgb(128 116 148)">Uyum Skoru</div>
+                        <div style="font-size:1.4rem;font-weight:800;color:{{ $mor }}">%{{ $seciliOran }}</div>
+                    </div>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                    <thead><tr style="color:rgb(128 116 148)">
+                        <th style="padding:.35rem;text-align:left">Kriter</th>
+                        <th style="padding:.35rem;text-align:center">Durum</th>
+                        <th style="padding:.35rem;text-align:center">Vade Tarihi</th>
+                    </tr></thead>
+                    <tbody>
+                        @foreach ($this->firmaChecklistDetay as $satir)
+                            <tr style="border-top:1px solid rgb(128 116 148 / .15)">
+                                <td style="padding:.4rem">{{ $satir['ad'] }}</td>
+                                <td style="padding:.4rem;text-align:center">
+                                    <span style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;font-weight:600;
+                                        color:{{ $checklistRenk[$satir['durum']] }};background:{{ $checklistRenk[$satir['durum']] }}1a">
+                                        {{ $checklistEtiket[$satir['durum']] }}
+                                    </span>
+                                </td>
+                                <td style="padding:.4rem;text-align:center">
+                                    <input type="date" value="{{ $satir['vade_tarihi']?->toDateString() }}"
+                                        @disabled($satir['tamam'])
+                                        wire:change="firmaChecklistVadeGuncelle('{{ $satir['anahtar'] }}', $event.target.value)"
+                                        style="padding:.25rem .4rem;border-radius:.4rem;border:1px solid rgb(128 116 148 / .35);background:transparent;font-size:.75rem">
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <p style="text-align:center;padding:1.5rem;color:rgb(128 116 148);font-size:.85rem">Detay için yukarıdan bir firma seçin.</p>
+            @endif
+        </div>
     @endif
 
     {{-- ==================== RİSKLERİM ==================== --}}

@@ -200,6 +200,49 @@ class PortfoyKarne
     }
 
     /**
+     * Firma Takip — tek bir firmanın "Firma Checklist" satırları (isgpratik
+     * 141-142.jpg'deki vade tarihli evrak listesi). Kontrol Merkezi'nin
+     * otomatik tamam/eksik durumuna, kullanıcının elle girdiği vade tarihi
+     * ekler: henüz tamamlanmamış bir kriterde vade 30 gün içindeyse "yakin",
+     * geçmişse veya hiç girilmemişse "eksik" — tamamlanan kriterler vade
+     * tarihinden bağımsız her zaman "tamamlandi" sayılır.
+     *
+     * NOT: isgpratik referansındaki İGU/İşyeri Hekimi "gerekli dakika / atanmış
+     * dakika" kapsam karşılaştırması BİLİNÇLİ OLARAK eklenmedi — bu hesaplama
+     * OSGB Yönetmeliği Ek-2'deki resmi süre tablosuna dayanır ve doğru
+     * kaynak/güncel değerler olmadan tahmini bir sayı üretmek "resmi belgede
+     * gerçek şablon kullan" ilkesine aykırı olur (bkz. MIMARI.md).
+     *
+     * @return array<int, array{anahtar: string, ad: string, tamam: bool, vade_tarihi: ?Carbon, durum: string}>
+     */
+    public static function firmaChecklistDetay(Firma $firma): array
+    {
+        $kriterler = static::firmaTakipKriterleri($firma->user_id);
+        $vadeler = $firma->checklistVadeleri()->get()->keyBy('kriter_anahtari');
+
+        return collect($kriterler)->map(function (array $k) use ($firma, $vadeler): array {
+            $muaf = ($k['kosul'] ?? null) === 'elli_calisan' && (int) $firma->calisan_sayisi < 50;
+            $tamam = $muaf || (bool) $k['hazir'] && static::gercekModulVarMi($firma, $k['anahtar']) === true;
+            $vadeTarihi = $vadeler->get($k['anahtar'])?->vade_tarihi;
+
+            $durum = match (true) {
+                $tamam => 'tamamlandi',
+                $vadeTarihi && $vadeTarihi->isFuture() && $vadeTarihi->diffInDays(now()) <= 30 => 'yakin',
+                default => 'eksik',
+            };
+
+            return [
+                'anahtar' => $k['anahtar'],
+                'ad' => $k['ad'],
+                'hazir' => (bool) $k['hazir'],
+                'tamam' => $tamam,
+                'vade_tarihi' => $vadeTarihi,
+                'durum' => $durum,
+            ];
+        })->all();
+    }
+
+    /**
      * Genel Bakış — Çalışan Dağılımı (firma başına aktif çalışan). isgpratik 6.jpg.
      *
      * @return array<string, int>

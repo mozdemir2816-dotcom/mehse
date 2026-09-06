@@ -107,6 +107,49 @@ class ProfilimTest extends TestCase
         $this->assertSame(0, $matris[$b->id]['oran']);
     }
 
+    public function test_firma_checklist_detay_vade_tarihine_gore_durum_hesaplar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        \App\Models\FirmaChecklistVadesi::create([
+            'firma_id' => $firma->id, 'kriter_anahtari' => 'egitim_katilim_formu', 'vade_tarihi' => now()->addDays(10),
+        ]);
+        \App\Models\FirmaChecklistVadesi::create([
+            'firma_id' => $firma->id, 'kriter_anahtari' => 'tespit_oneri', 'vade_tarihi' => now()->subDays(5),
+        ]);
+
+        $detay = collect(PortfoyKarne::firmaChecklistDetay($firma->fresh()))->keyBy('anahtar');
+
+        $this->assertSame('tamamlandi', $detay['risk_degerlendirmesi']['durum']);
+        $this->assertSame('yakin', $detay['egitim_katilim_formu']['durum']);
+        $this->assertSame('eksik', $detay['tespit_oneri']['durum']);
+        $this->assertSame('eksik', $detay['saglik_raporu']['durum']); // hiç vade girilmemiş
+    }
+
+    public function test_firma_checklist_vade_guncelle_action_kaydeder_ve_kaldirir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $tarih = now()->addDays(15)->toDateString();
+
+        Livewire::test(Profilim::class)
+            ->set('firmaTakipSeciliId', $firma->id)
+            ->call('firmaChecklistVadeGuncelle', 'saglik_raporu', $tarih);
+
+        $this->assertSame(
+            $tarih,
+            \App\Models\FirmaChecklistVadesi::where('firma_id', $firma->id)->where('kriter_anahtari', 'saglik_raporu')->first()->vade_tarihi->toDateString(),
+        );
+
+        Livewire::test(Profilim::class)
+            ->set('firmaTakipSeciliId', $firma->id)
+            ->call('firmaChecklistVadeGuncelle', 'saglik_raporu', '');
+
+        $this->assertNull(
+            \App\Models\FirmaChecklistVadesi::where('firma_id', $firma->id)->where('kriter_anahtari', 'saglik_raporu')->first()->vade_tarihi,
+        );
+    }
+
     public function test_acil_durum_plani_konulari_bosken_kriter_karsilanmaz_dolunca_karsilanir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

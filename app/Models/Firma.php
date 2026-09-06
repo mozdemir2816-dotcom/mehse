@@ -77,6 +77,11 @@ class Firma extends Model
         return $this->hasOne(CalisanTemsilcisiSecimi::class);
     }
 
+    public function checklistVadeleri(): HasMany
+    {
+        return $this->hasMany(FirmaChecklistVadesi::class);
+    }
+
     public function kurulToplantilari(): HasMany
     {
         return $this->hasMany(KurulToplantisi::class);
