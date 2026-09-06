@@ -2168,6 +2168,74 @@ başına drill-down**: her kriter için elle vade tarihi girip
   kaydeder_ve_kaldirir`). Tam suite: **517 test geçti** (1449 assertion),
   regresyon yok.
 
+## Durum — 2026-09-06 (Kurul Toplantısı — Katılım yerine İmza yeri)
+
+Kullanıcı isteği: "isg kurul kararına katılımcıların imza için yer aç.
+Katılım yerine imza yeri aç. çalışanlarında imza atacağı yer olması
+gerekli." — tutanak PDF'indeki KATILIMCILAR tablosunda "Katılım" sütunu
+yalnızca "Katıldı/Katılmadı" metni basıyordu; fiziksel olarak imzalanan bir
+tutanakta bu, katılımı ispatlamaz. `resources/views/pdf/kurul-toplantisi.
+blade.php`: sütun başlığı "İmza" oldu, katılan kişiler için hücre boş
+bırakıldı (fiziksel imza için yer), yalnızca katılmayan kişilerde
+"Katılmadı" yazısı kalır (imza gerekmez). Uygulama içi `katildi` alanı/
+toggle (`katilimToggle`) dokunulmadı — yalnızca PDF çıktısı değişti; aynı
+desen zaten `egitim-katilim.blade.php`'nin katılımcı imza tablosunda
+kullanılıyordu. `KurulToplantisiTest`'e 1 yeni test.
+
+## Durum — 2026-09-06 (Çalışan Temsilcisi Seçimi — Boş Şablon Seti)
+
+Kullanıcı isteği: "çalışan temsilci seçim tutanakların firmanın ismini ve
+çalışan listesi boş olupta elle doldurulcak evraklar gibi çıktı almak
+istiyorum." — 5 belgenin (Duyuru/Başvuru/Aday Listesi/Oy Pusulası/Tutanak)
+firma adından ve seçili firmanın gerçek aday/çalışan verisinden tamamen
+BAĞIMSIZ, elle doldurulacak boş bir versiyonu istendi (kağıt üstünde
+imzalatılacak fiziksel form ihtiyacı).
+
+- **5 blade şablonuna `$bos` parametresi eklendi** (`pdf.calisan-temsilcisi-
+  {duyuru,basvuru,aday-listesi,oy-pusulasi,tutanak}.blade.php`) — `true`
+  olunca: firma adı/adresi yerine boş çizgi (`.cizgi`/`.bos` CSS — bazı
+  dosyalarda zaten ölü kod olarak duran `.bos` sınıfı ilk kez kullanıldı),
+  `$secim`'e ait tarih/sayı alanları boşken '—' yerine tamamen boş (fiziksel
+  formda '—' yazan bir alan "doldurulmasın" gibi yanlış anlaşılabilir),
+  aday/çalışan listesi tabloları gerçek veri yerine 10 (aday listesi) / 6
+  (oy pusulası) boş satır/daire üretir ("eklenmedi" mesajı yerine).
+- **`CalisanTemsilcisiSecimiUretici::bosSablonZip()`** (yeni) — `FirmaEvrakZip
+  Uretici` ile aynı `ZipArchive`+`tempnam`+`streamDownload` deseni; hiçbir
+  firma/kayıt gerektirmeden `new CalisanTemsilcisiSecimi()` (kaydedilmeden)
+  ile 5 belgeyi `bos:true` render edip tek ZIP'te toplar.
+- **Filament sayfası:** yeni header aksiyonu "Boş Şablon Seti (ZIP)" —
+  diğer 5 aksiyonun aksine `->visible(fn () => $this->firma !== null)`
+  KOŞULU YOK, firma seçilmeden de her zaman görünür (sistemden bağımsız
+  şablon istendiği için).
+- **Test:** `CalisanTemsilcisiSecimiTest`'e 3 yeni test (firma seçilmeden
+  erişim, ZIP 5 dosya içeriyor, boş şablonda gerçek firma/aday verisi hiç
+  görünmüyor).
+
+## Durum — 2026-09-06 (İşbaşı Eğitim — Toplu Katılım Formu)
+
+Kullanıcı isteği: "işbaşı eğitimi katılım formunu indirmek için buton ver.
+Yaklaşık olarak 10 kişilik eğitim katılım formu." — mevcut İşbaşı/Oryantasyon
+Eğitim Tutanağı YALNIZ tek bir çalışan içindi (`IsbasiEgitimTutanagi.
+calisan_ad_soyad` tekil alan); isteneni bir grup eğitimi (aynı anda ~10
+kişiye verilen oryantasyon) için TEK sayfada toplu imza formu.
+
+- **`resources/views/pdf/isbasi-egitim-katilim-formu.blade.php`** (yeni) —
+  künye (eğitim tarihi/süre/yer/eğitimci/yöntem/belge tarihi, tekil çalışan
+  alanı YOK) + konu kategorileri checklist (tutanakla aynı görsel dil) +
+  katılım tablosu (Ad Soyad/T.C./Görevi/İmza, `egitim-katilim.blade.php`'deki
+  "en az 10 satır" deseniyle — firma çalışan sayısı azsa boş satırlarla
+  tamamlanır) + eğitici/İGU-Hekim imza bloğu.
+- **`IsbasiEgitimTutanagiUretici::katilimFormuPdf(Firma $firma, array $veri)`**
+  (yeni) — tekil tutanağın aksine VERİTABANINA YAZMAZ, yalnız anlık üretilip
+  indirilir (grup formu için ayrı bir model açmaya gerek yok, sayfanın o
+  anki alan değerleri + firma çalışanları yeterli).
+- **Filament sayfası:** yeni header aksiyonu "Katılım Formu (Toplu)" — tekil
+  "PDF İndir" aksiyonunun aksine `calisanAdSoyad` doldurulmasını GEREKTİRMEZ,
+  yalnız firma seçili olması yeterli; firmanın tüm çalışanları (`$this->
+  calisanlar`) otomatik listeye eklenir.
+- **Test:** `IsbasiEgitimTest`'e 2 yeni test (çalışan adı olmadan üretilir,
+  katılım tablosunda gerçek çalışan + en az 10 satır).
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
