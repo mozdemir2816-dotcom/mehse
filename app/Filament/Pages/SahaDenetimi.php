@@ -80,6 +80,8 @@ class SahaDenetimi extends Page
 
     public ?string $genelNotlar = null;
 
+    public bool $taslakYuklendi = false;
+
     public ?string $yeniOzelSektorAnahtari = null;
 
     public ?string $yeniOzelKategoriAdi = null;
@@ -222,7 +224,14 @@ class SahaDenetimi extends Page
     #[Computed]
     public function gecmisKayitlar(): Collection
     {
-        return $this->firma?->sahaDenetimleri()->latest()->get() ?? collect();
+        return $this->firma?->sahaDenetimleri()->where('durum', 'tamamlandi')->latest()->get() ?? collect();
+    }
+
+    /** Firma başına en fazla 1 açık taslak — "kaldığı yerden devam et". */
+    #[Computed]
+    public function aktifTaslak(): ?SahaDenetimiModel
+    {
+        return $this->firma?->sahaDenetimleri()->where('durum', 'taslak')->first();
     }
 
     /** kod => madde config (tüm kategoriler + özel maddeler düzleştirilmiş). */
@@ -275,8 +284,54 @@ class SahaDenetimi extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->aktifTaslak);
         $this->denetciAdi = $this->firma?->igu?->ad_soyad;
+
+        if ($taslak = $this->aktifTaslak) {
+            $this->taslaktanYukle($taslak);
+        }
+    }
+
+    private function taslaktanYukle(SahaDenetimiModel $taslak): void
+    {
+        $this->isTanimi = $taslak->is_tanimi;
+        $this->santiyeAdi = $taslak->santiye_adi;
+        $this->santiyeSorumlusu = $taslak->santiye_sorumlusu;
+        $this->isReferansNo = $taslak->is_referans_no;
+        $this->denetimTarihi = $taslak->denetim_tarihi?->toDateString() ?? $this->denetimTarihi;
+        $this->denetimSaati = $taslak->denetim_saati ?? $this->denetimSaati;
+        $this->denetciAdi = $taslak->denetci_adi ?: $this->denetciAdi;
+        $this->sektorAnahtari = $taslak->sektor_anahtari;
+        $this->ekipUyeleri = $taslak->ekip_uyeleri ?? [];
+        $this->genelNotlar = $taslak->genel_notlar;
+
+        unset($this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+
+        foreach ($taslak->cevaplar ?? [] as $c) {
+            $anahtar = $this->anahtar($c['kod']);
+            if (isset($this->cevaplar[$anahtar])) {
+                $this->cevaplar[$anahtar] = ['sonuc' => $c['sonuc'], 'aciklama' => $c['aciklama'], 'foto_yolu' => $c['foto_yolu']];
+            }
+        }
+
+        $this->taslakYuklendi = true;
+    }
+
+    public function taslakTemizle(): void
+    {
+        $this->aktifTaslak?->delete();
+        unset($this->aktifTaslak);
+
+        $this->reset([
+            'isTanimi', 'santiyeAdi', 'santiyeSorumlusu', 'isReferansNo', 'sektorAnahtari',
+            'ekipUyeleri', 'genelNotlar', 'cevaplar', 'taslakYuklendi',
+        ]);
+        $this->denetciAdi = $this->firma?->igu?->ad_soyad;
+        unset($this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+
+        Notification::make()->title('Taslak temizlendi')->success()->send();
     }
 
     public function updatedSektorAnahtari(): void
@@ -429,7 +484,8 @@ class SahaDenetimi extends Page
         $d = new SahaDenetimiModel([
             'firma_id' => $this->firma->id,
             'sektor_anahtari' => $this->sektorAnahtari,
-            'revizyon' => $this->firma->sahaDenetimleri()->count() + 1,
+            'durum' => 'tamamlandi',
+            'revizyon' => $this->firma->sahaDenetimleri()->where('durum', 'tamamlandi')->count() + 1,
             'is_tanimi' => $this->isTanimi,
             'santiye_adi' => $this->santiyeAdi,
             'santiye_sorumlusu' => $this->santiyeSorumlusu,
@@ -446,14 +502,81 @@ class SahaDenetimi extends Page
         ]);
         $d->save();
 
-        unset($this->gecmisKayitlar);
+        // Denetim tamamlandı — bu firma için bekleyen taslak varsa artık gereksiz.
+        $this->firma->sahaDenetimleri()->where('durum', 'taslak')->delete();
+
+        unset($this->gecmisKayitlar, $this->aktifTaslak);
+        $this->taslakYuklendi = false;
 
         return $d;
+    }
+
+    /**
+     * Yarıda bırakılan denetimi kaydeder — "Denetimi Tamamla"nın aksine
+     * hiçbir alan zorunlu değildir (uygunsuzluk açıklaması dahil). Firma
+     * başına tek taslak tutulur; ikinci "Taslak Kaydet" öncekini günceller.
+     */
+    public function taslakKaydet(): void
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return;
+        }
+
+        $cevaplarSnapshot = [];
+        foreach ($this->tumMaddeler() as $kod => $madde) {
+            $anahtar = $this->anahtar($kod);
+            $cevap = $this->cevaplar[$anahtar] ?? ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
+
+            $fotoYolu = $cevap['foto_yolu'] ?? null;
+            if ($this->fotoYuklemeleri[$anahtar] ?? null) {
+                $fotoYolu = $this->fotoYuklemeleri[$anahtar]->store('saha-denetimi-foto', 'public');
+            }
+
+            $cevaplarSnapshot[] = [
+                'kategori_ad' => $madde['kategori_ad'],
+                'kod' => $kod,
+                'ifade' => $this->ifadeYaz($madde['ifade']),
+                'kritik' => $madde['kritik'],
+                'sonuc' => $cevap['sonuc'],
+                'aciklama' => $cevap['aciklama'],
+                'foto_yolu' => $fotoYolu,
+            ];
+        }
+
+        $taslak = $this->aktifTaslak ?? new SahaDenetimiModel(['firma_id' => $this->firma->id, 'durum' => 'taslak', 'revizyon' => 0]);
+
+        $taslak->forceFill([
+            'sektor_anahtari' => $this->sektorAnahtari,
+            'is_tanimi' => $this->isTanimi,
+            'santiye_adi' => $this->santiyeAdi,
+            'santiye_sorumlusu' => $this->santiyeSorumlusu,
+            'is_referans_no' => $this->isReferansNo,
+            'denetim_tarihi' => $this->denetimTarihi,
+            'denetim_saati' => $this->denetimSaati,
+            'denetci_adi' => $this->denetciAdi,
+            'cevaplar' => $cevaplarSnapshot,
+            'ekip_uyeleri' => $this->ekipUyeleri,
+            'genel_notlar' => $this->genelNotlar,
+        ])->save();
+
+        unset($this->aktifTaslak);
+        $this->taslakYuklendi = true;
+
+        Notification::make()->title('Taslak kaydedildi')->body('Kaldığınız yerden devam edebilirsiniz.')->success()->send();
     }
 
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('taslak')
+                ->label('Taslak Olarak Kaydet')
+                ->icon('heroicon-o-bookmark')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => $this->taslakKaydet()),
+
             Action::make('pdf')
                 ->label('Denetimi Tamamla (Kaydet ve İndir PDF)')
                 ->icon('heroicon-o-document-arrow-down')

@@ -183,6 +183,23 @@ class SertifikaOlusturTest extends TestCase
         $this->assertSame('uzaktan', $s->sekil);
     }
 
+    public function test_tur_tekrar_secilince_icerik_8_saate_gore_yeniden_olceklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli']);
+
+        $component = Livewire::test(SertifikaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('tip', 'isg');
+
+        $ilkDefaToplam = collect($component->get('icerik')['genel_konular'])->sum('dakika');
+
+        $component->set('tur', 'tekrar');
+        $tekrarToplam = collect($component->get('icerik')['genel_konular'])->sum('dakika');
+
+        // çok tehlikeli ilk defa: blok başına 180dk hedef; tekrar: her zaman 90dk hedef.
+        $this->assertGreaterThan($tekrarToplam, $ilkDefaToplam);
+    }
+
     public function test_madde_hariç_birakilinca_pdfde_gorunmez(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

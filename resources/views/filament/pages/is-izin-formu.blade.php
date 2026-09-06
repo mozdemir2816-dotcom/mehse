@@ -11,6 +11,8 @@
         (Permit to Work) düzenleyin; ilgili güvenlik önlemlerini işaretleyip onaylayın.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'calisma_izin_formu'])
+
     {{-- 1. İŞ TANIMI & LOKASYON --}}
     <x-filament::section icon="heroicon-o-key" icon-color="warning">
         <x-slot name="heading">1. İş Tanımı ve Lokasyon</x-slot>

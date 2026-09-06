@@ -42,6 +42,15 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Sınav Zamanı</label>
+                <select wire:model="sinavZamani"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    @foreach ($this->zamanlar as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div style="display:flex;align-items:end">
                 <label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem;cursor:pointer">
                     <input type="checkbox" wire:model="cevapAnahtariDahil"> Cevap anahtarı PDF'e dahil edilsin

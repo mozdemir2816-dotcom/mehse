@@ -25,7 +25,7 @@
 @forelse (($sinav->katilimcilar ?: [null]) as $k)
     <div class="sayfa">
         <div class="baslik">
-            <h1>EĞİTİM SORULARI SINAVI</h1>
+            <h1>EĞİTİM SORULARI SINAVI — {{ $sinav->zamanEtiketi() }}</h1>
             <div style="font-size:11px">{{ $firma?->unvan }}</div>
         </div>
 
@@ -33,6 +33,9 @@
             <tr>
                 <td>Sektör</td><td>{{ $sinav->sektorEtiketi() }}</td>
                 <td>Zorluk</td><td>{{ config('isg.egitim_sorulari.zorluklar.'.$sinav->zorluk, $sinav->zorluk) }}</td>
+            </tr>
+            <tr>
+                <td>Sınav Zamanı</td><td colspan="3">{{ $sinav->zamanEtiketi() }}</td>
             </tr>
             @if ($k)
                 <tr>

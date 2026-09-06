@@ -42,6 +42,8 @@ class EgitimSorulari extends Page
 
     public string $zorluk = 'karisik';
 
+    public string $sinavZamani = 'sonra';
+
     public bool $cevapAnahtariDahil = true;
 
     /** @var array<int, array{soru: string, secenekler: array<int, string>, dogru_index: int}> */
@@ -115,6 +117,12 @@ class EgitimSorulari extends Page
     public function zorluklar(): array
     {
         return config('isg.egitim_sorulari.zorluklar');
+    }
+
+    #[Computed]
+    public function zamanlar(): array
+    {
+        return config('isg.egitim_sorulari.zamanlar');
     }
 
     #[Computed]
@@ -249,6 +257,7 @@ class EgitimSorulari extends Page
             'firma_id' => $this->firma->id,
             'sektor_anahtari' => $this->sektorAnahtari ?: null,
             'zorluk' => $this->zorluk,
+            'sinav_zamani' => $this->sinavZamani,
             'cevap_anahtari_dahil' => $this->cevapAnahtariDahil,
             'sorular' => $this->sorular,
             'katilimcilar' => $this->katilimcilar,

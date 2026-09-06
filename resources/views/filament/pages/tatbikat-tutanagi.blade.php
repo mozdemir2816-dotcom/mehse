@@ -10,6 +10,8 @@
         denetime kanıttır. Senaryo seçin, tatbikat bilgilerini doldurup PDF alın.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'acil_durum_tatbikat'])
+
     {{-- 1. FİRMA & SENARYO --}}
     <x-filament::section icon="heroicon-o-fire" icon-color="danger">
         <x-slot name="heading">1. Firma & Tatbikat Senaryosu</x-slot>

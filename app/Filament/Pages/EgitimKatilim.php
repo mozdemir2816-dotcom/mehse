@@ -47,6 +47,8 @@ class EgitimKatilim extends Page
 
     public string $baslikAnahtari = 'genel';
 
+    public string $egitimTuru = 'ilk';
+
     public ?string $sektorAnahtari = null;
 
     public ?string $egitimYeri = null;
@@ -158,7 +160,13 @@ class EgitimKatilim extends Page
             $this->baslikAnahtari,
             $this->sektorAnahtari,
             $this->firma?->tehlike_sinifi ?? 'az_tehlikeli',
+            $this->egitimTuru,
         );
+    }
+
+    public function updatedEgitimTuru(): void
+    {
+        $this->icerikYenile();
     }
 
     /** @return Collection<int, EgitimKatilimModel> */
@@ -316,6 +324,7 @@ class EgitimKatilim extends Page
         $kayit = new EgitimKatilimModel([
             'firma_id' => $this->firma->id,
             'baslik_anahtari' => $this->baslikAnahtari,
+            'egitim_turu' => $this->egitimTuru,
             'sektor_anahtari' => $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
             'egitim_yeri' => $this->egitimYeri,
             'belge_tarihi' => $this->belgeTarihi,
@@ -365,5 +374,27 @@ class EgitimKatilim extends Page
     {
         $this->firma?->egitimKatilimlari()->find($id)?->delete();
         unset($this->gecmisKayitlar);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Boş İmza Formu — firma/katılımcı seçmeden, her konu için tek tıkla indir
+    |--------------------------------------------------------------------------
+    */
+
+    public string $bosFormTehlikeSinifi = 'az_tehlikeli';
+
+    public string $bosFormTuru = 'ilk';
+
+    public ?string $bosFormSektor = null;
+
+    public function bosFormIndir(string $baslikAnahtari)
+    {
+        return EgitimKatilimUretici::bosFormPdf(
+            $baslikAnahtari,
+            $baslikAnahtari === 'genel' ? $this->bosFormSektor : null,
+            $this->bosFormTehlikeSinifi,
+            $this->bosFormTuru,
+        );
     }
 }

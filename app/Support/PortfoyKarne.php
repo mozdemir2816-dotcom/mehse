@@ -90,6 +90,10 @@ class PortfoyKarne
     {
         return match ($anahtar) {
             'risk_degerlendirmesi' => $firma->riskDegerlendirmeleri()->exists(),
+            // AcilDurumPlani::firmaIcin() ilk ziyarette otomatik bir taslak kaydı açar
+            // (rapor_tarihi atanır) — bu yüzden salt "kayıt var" yeterli kanıt değil,
+            // konular (acil durum sayfaları) gerçekten seçilmiş olmalı.
+            'acil_durum_plani' => filled($firma->acilDurumPlani?->konular),
             'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists(),
             'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->exists(),
             'isg_kurulu' => $firma->kurulToplantilari()->exists(),
@@ -189,6 +193,78 @@ class PortfoyKarne
      *
      * @return array<string, int>
      */
+    /**
+     * Portföy genelinde yasal ilkyardımcı ihtiyacı — İlkyardım Yönetmeliği md.19
+     * (çok tehlikeli: her 10 çalışana 1, tehlikeli: 15'e 1, az tehlikeli: 20'ye 1).
+     * Firma.calisan_sayisi (bildirilen toplam) esas alınır — Calisan (isim) kaydı
+     * eksik olsa da doğru sayı çıksın diye (bkz. ozet()'teki aynı gerekçe).
+     */
+    public static function ilkyardimciIhtiyaci(int $userId): int
+    {
+        $oran = ['cok_tehlikeli' => 10, 'tehlikeli' => 15, 'az_tehlikeli' => 20];
+
+        return Firma::query()
+            ->where('user_id', $userId)
+            ->where('aktif', true)
+            ->get()
+            ->sum(fn (Firma $f) => (int) ceil(max(0, (int) $f->calisan_sayisi) / ($oran[$f->tehlike_sinifi] ?? 20)));
+    }
+
+    /**
+     * "Performans Profili" — 5 eksenli portföy sağlık özeti (isgpratik profil
+     * ekranı). Yalnız GERÇEK modülü olan (hazır=true) kriterlerin ortalaması
+     * alınır — henüz kurulmamış (hazır=false) kriterler eksende 0'a çekip
+     * yanıltıcı olmasın diye dahil edilmez.
+     *
+     * @return array<string, int> eksen adı => yüzde (0-100)
+     */
+    public static function performansEksenleri(int $userId): array
+    {
+        $kriterler = collect(static::kriterler($userId))->keyBy('anahtar');
+
+        $ortalama = fn (array $anahtarlar): int => (int) round(
+            collect($anahtarlar)
+                ->map(fn (string $a) => $kriterler[$a]['yuzde'] ?? null)
+                ->filter(fn (?int $v) => $v !== null)
+                ->avg() ?? 0
+        );
+
+        $toplamFirma = Firma::query()->where('user_id', $userId)->where('aktif', true)->count();
+        $calisansizFirma = Firma::query()
+            ->where('user_id', $userId)->where('aktif', true)
+            ->whereDoesntHave('calisanlar', fn ($q) => $q->where('aktif', true))
+            ->count();
+        $calisanKapsami = $toplamFirma > 0 ? (int) round((($toplamFirma - $calisansizFirma) / $toplamFirma) * 100) : 0;
+
+        return [
+            'Evrak Uyumu' => $ortalama(['yillik_calisma_plani', 'yillik_egitim_plani', 'yillik_degerlendirme', 'tespit_oneri']),
+            'Çalışan Kapsamı' => $calisanKapsami,
+            'Eğitim Durumu' => $ortalama(['egitim_katilim_formu']),
+            'Risk Yönetimi' => $ortalama(['risk_degerlendirmesi', 'saha_denetim_formu']),
+            'Acil Durum' => $ortalama(['acil_durum_tatbikat']),
+        ];
+    }
+
+    /**
+     * Bir kriteri henüz karşılamayan aktif firmalar — form/belge sayfalarında
+     * "Eksik Olan Firmalar" hızlı erişim listesi için (kullanıcı tek tek firma
+     * açıp kontrol etmek zorunda kalmasın).
+     *
+     * @return \Illuminate\Support\Collection<int, Firma>
+     */
+    public static function eksikFirmalar(int $userId, string $kriterAnahtari): \Illuminate\Support\Collection
+    {
+        $kriter = collect(config('isg.kontrol_merkezi.kriterler'))->firstWhere('anahtar', $kriterAnahtari);
+
+        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan')->get();
+
+        if (($kriter['kosul'] ?? null) === 'elli_calisan') {
+            $firmalar = $firmalar->filter(fn (Firma $f) => (int) $f->calisan_sayisi >= 50)->values();
+        }
+
+        return $firmalar->reject(fn (Firma $f) => static::firmaKriterKarsilarMi($f, $kriterAnahtari))->values();
+    }
+
     public static function calisanDagilimi(int $userId): array
     {
         return Firma::query()

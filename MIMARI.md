@@ -1626,6 +1626,236 @@ madde düzenleme, İnşaat alt-faaliyet seçimi, sektörel Word çıktısı aras
   MEVCUT yetkilendirmesini de gözden geçir — yalnız yeni eklenen alanı
   değil, formun tamamını.
 
+## Durum — 2026-09-06 (Eğitim süre modeli düzeltmesi + Boş İmza Formu)
+
+**464 test** (456 → +7 EgitimKatilimTest, +1 SertifikaOlusturTest). Kullanıcı
+isgpratik'in gerçek `/egitim-katilim` ekranını mehse ile karşılaştırmamı istedi;
+tek gerçek eksik (çok günlü panel yapısı) ayrı bırakıldı, ama karşılaştırma
+sırasında kullanıcı mevzuata dayalı **iki gerçek hata** bildirdi ve düzeltilmesini
+istedi — kullanıcının kendi ifadesiyle: "4 blok için az tehlikelilerde 2 saat
+tehlikeli 3 saat çok tehlikelilerde 4 [saat] olmak zorunda... tekrar eğitimelerin
+hep en az sekiz saat olarak yapılması gerekmektedir."
+
+- **Kök neden:** `config('isg.egitim.sureler')` yalnız "İşyerine Özgü Riskler"
+  bloğunu tehlike sınıfına göre ölçekliyordu (`ise_ozgu_dk` 90/135/180); Genel/
+  Sağlık/Teknik Konular SABİT 80/80/120 dk idi (tehlike sınıfından bağımsız).
+  Doğrusu: **4 blok da eşit paylaşımla** toplam süreye ulaşmalı (az tehlikeli
+  4×2=8s, tehlikeli 4×3=12s, çok tehlikeli 4×4=16s — zaten var olan toplamlarla
+  birebir uyuşuyor, sadece dağılım yanlıştı).
+  - `config('isg.egitim.sureler')` → `ilk.{az_tehlikeli,tehlikeli,cok_tehlikeli}`
+    + ayrı `tekrar` anahtarı (`blok_fiili_dk` her zaman 90, `saat` her zaman 8 —
+    tehlike sınıfından bağımsız, kullanıcı doğruladı). `dinlenme_dk` alanı
+    KALDIRILDI — zaten hiçbir view'da kullanılmıyordu (`bolumSuresi()` dinlenmeyi
+    fiili/3 ile zaten dinamik hesaplıyor); sadece `blok_fiili_dk`+3:1 oranıyla
+    (45dk ders+15dk teneffüs) tutarlı: örn. az tehlikeli 90dk fiili+30dk dinlenme
+    =120dk=2 saat × 4 blok = 8 saat ✅.
+  - `EgitimIcerikOlusturucu::olustur()`'a `$egitimTuru='ilk'|'tekrar'` parametresi
+    eklendi; yeni `maddeleriOlcekle()` Genel/Sağlık/Teknik'in config'teki SABİT
+    ağırlıklarını (ör. Sağlık'ta İlkyardım diğerlerinden daha az ağırlıklı)
+    KORUYARAK hedef toplam dakikaya orantılı ölçekler (yuvarlama nedeniyle
+    ±birkaç dk sapma olabilir, testlerde tolerans tanındı).
+  - **Yan bulgu, aynı turda düzeltildi:** `SertifikaOlustur.php`'de zaten bir
+    `$tur` (İlk Defa/Tekrar) seçici VARDI ve `Sertifika` kaydına yazılıyordu
+    ama `EgitimIcerikOlusturucu::olustur()`'a hiç GEÇİRİLMİYORDU — yani "Tekrar"
+    seçmek içeriği/süreyi hiç etkilemiyordu (sessiz kalan bir bağlantı eksikliği).
+    `icerikYenile()`'a `$this->tur==='tekrar'?'tekrar':'ilk'` eklendi + eksik
+    olan `updatedTur()` hook'u eklendi (buton `$set('tur',...)` ile tetikliyordu
+    ama içerik hiç yenilenmiyordu).
+- **Tekrar periyodu bilgi notu (hesaplama YOK, kullanıcı bunu istedi):**
+  `config('isg.egitim.tekrar_periyodu_yil')` (çok tehlikeli 1, tehlikeli 2,
+  az tehlikeli 3 yıl) — yalnız EgitimKatilim sayfasında bilgi metni olarak
+  gösteriliyor, otomatik "sonraki eğitim tarihi" hesaplanmıyor/hatırlatılmıyor.
+- **Boş İmza Formu (yeni özellik):** EgitimKatilim sayfasına firma/katılımcı
+  seçmeden çalışan, 14 konu başlığının HER BİRİ için ayrı "İndir" butonu içeren
+  yeni bir bölüm eklendi ("Genel" başlığı için ayrıca tehlike sınıfı/tür/sektör
+  mini seçiciler). `EgitimKatilimUretici::bosFormPdf()` — kaydedilmeyen
+  (unsaved) bir `EgitimKatilim` örneğiyle aynı PDF şablonunu kullanır.
+  PDF şablonundaki katılımcı tablosu artık HER ZAMAN en az 10 satır basıyor
+  (gerçek katılımcı sayısı 10'dan azsa kalanlar boş bırakılır) — el yazısıyla
+  ad/T.C./imza atmak için. `İşveren/İşveren Vekili` yeni başlık olarak
+  EKLENMEDİ (kullanıcı "hayır, mevcut 13+genel yeter" dedi).
+  `EgitimKatilimTest`'e 9 test eklendi.
+
+## Durum — 2026-09-06 gece (isgpratik ↔ mehse gece denetimi)
+
+Kullanıcı uyurken tüm `Desktop\isgpratik\` referans klasörünün mehse'nin
+mevcut modülleriyle karşılaştırılması istendi ("kesin eksikse izin almadan
+devam et"). Tam rapor: proje kökünde `DENETIM-NOTU-2026-09-06.md` (git'e
+eklenmedi, geçici). Bulunan ve düzeltilen 3 kesin eksik:
+
+- **DÖF Takip paneli:** `DofOlustur` sayfası artık üstte portföy geneli bir
+  takip bölümü gösteriyor — Toplam DÖF / Açık Madde / Kapanmış Madde / Genel
+  Kapatma Başarısı %, öncelik dağılımı rozetleri, tüm firmalarda arama+öncelik
+  filtresi, her açık madde için kapatma notu + "Kapat" butonu (`durum` alanını
+  `tamamlandi` yapıp `kapatma_notu`/`kapatma_tarihi` ekler — maddeler JSON'unda
+  yeni alanlar, migration gerekmedi). Önceden mehse yalnız SEÇİLİ firmanın
+  geçmiş kayıtlarını listeliyordu, portföy geneli özet/kapatma akışı hiç
+  yoktu. `DofOlusturTest`'e 4 test.
+- **Profilim → İlkyardımcı İhtiyacı:** `PortfoyKarne::ilkyardimciIhtiyaci()`
+  — önceden "çalışan modülü tamamlanınca..." diye sabit bir "yakında" metniydi;
+  artık İlkyardım Yönetmeliği md.19'daki (zaten kodda dokümante) oranla
+  (çok tehlikeli 1/10, tehlikeli 1/15, az tehlikeli 1/20) gerçek sayı
+  hesaplanıyor.
+- **Profilim → Performans Profili:** `PortfoyKarne::performansEksenleri()` —
+  5 eksenli (Evrak Uyumu/Çalışan Kapsamı/Eğitim Durumu/Risk Yönetimi/Acil
+  Durum) SVG radar grafiği eklendi; yalnız GERÇEK modülü kurulu (`hazir=true`)
+  kriterlerin ortalaması alınıyor (kurulmamış kriterleri dahil etmek portföyü
+  olduğundan kötü gösterirdi — bilinçli tercih). `ProfilimTest`'e 2 test.
+
+**Uygulanmayan, daha düşük öncelikli/tartışmalı bulgular** (`DENETIM-NOTU`
+dosyasında ayrıntılı): Saha Denetimi "Taslaklar" sekmesi yok; Acil Durum
+Planı "Toplu İndir" (ZIP) yok; Acil Durum Planı'ndan Kroki'ye doğrudan
+kısayol yok; AI Saha Analizi'nin isgpratik'teki kredi/kota sistemi
+**bilinçli olarak atlandı** (mehse tek kullanıcının kendi programı, SaaS
+faturalama modeli anlamsız); Eğitim Soruları'nda "Sınavdan Önce/Sonra"
+ayrımı yok. `sorunlu/osgb takip.jpg` ekran görüntüsü canlı veriyle kontrol
+edildi — sorun tespit edilmedi (05.09.2026'da zaten düzeltilmiş görünüyor).
+
+**Tam test:** DÖF+Profilim değişiklikleri dahil tüm paket **470 test**,
+hepsi geçiyor.
+
+## Durum — 2026-09-06 (Saha Denetimi Taslakları + Eksik Firmalar + acil_durum_plani düzeltmesi)
+
+DENETIM-NOTU'ndaki 5 "tartışmalı" kalem kullanıcıyla tek tek gözden geçiriliyor
+("sen sor, ben seçeyim" akışı). İlk kalem onaylanıp uygulandı, ayrıca kullanıcı
+bu sırada canlı bir istek daha ekledi.
+
+- **Saha Denetimi — Taslaklar ✅:** `saha_denetimleri` tablosuna `durum`
+  (`taslak`/`tamamlandi`, varsayılan `tamamlandi`) eklendi. Firma başına 1
+  açık taslak: "Taslak Olarak Kaydet" (validasyon yok, uygunsuzluk açıklaması
+  dahil hiçbir alan zorunlu değil), firma seçilince otomatik yükleme +
+  turuncu "Taslağı Temizle" banner'ı (isgpratik'in Eğitim Katılım'daki aynı
+  desenine benzer), "Denetimi Tamamla" ile bitirilince taslak otomatik
+  silinir, `gecmisKayitlar()` artık yalnız `tamamlandi` olanları listeler.
+  `SahaDenetimiTest`'e 5 test.
+- **"Eksik Olan Firmalar" hızlı erişimi (yeni, genel kalıp) ✅:** Kullanıcı
+  canlı isteği: "Acil durum planı hazırlanmayan firmaları tek tek firma
+  açmadan görebilmeliyim." `PortfoyKarne::eksikFirmalar(userId, kriterAnahtari)`
+  eklendi (mevcut `firmaKriterKarsilarMi()`'yi kullanır, `elli_calisan` koşullu
+  kriterlerde muafiyeti de uygular) + paylaşılan partial
+  `resources/views/filament/pages/partials/eksik-firmalar.blade.php` —
+  daraltılabilir "⚠ Eksik Olan Firmalar (N)" kutusu, her firma bir buton,
+  tıklanınca `$set('firmaId', ...)` ile sayfanın firmasını değiştirir.
+  **Acil Durum Planı** sayfasına eklendi (kullanıcının verdiği örnek); diğer
+  belge sayfalarına yaygınlaştırma kullanıcıyla konuşulacak.
+  - **Bu sırada bulunup düzeltilen gerçek hata:** `acil_durum_plani` kriteri
+    `PortfoyKarne::gercekModulVarMi()`'de HİÇ implemente edilmemişti (`default
+    => null`), config'te de `hazir=false` işaretliydi — Acil Durum Planı
+    modülü (Faz 3g'den beri) tamamen kurulu olmasına rağmen Kontrol Merkezi
+    ve Firma Takip bunu asla "tamam" göstermiyordu, her firma sürekli "eksik"
+    görünüyordu. Ayrıca `Firma` modelinde `acilDurumPlani()`/`acilDurumKrokisi()`
+    ters ilişkileri hiç yoktu (eklendi). Artık `filled($firma->acilDurumPlani
+    ?->konular)` ile kontrol ediliyor — `AcilDurumPlani::firmaIcin()` ilk
+    ziyarette otomatik boş(değil, varsayılan konularla dolu) bir taslak
+    açtığından bu, "sayfa hiç açılmadı" ile "en azından bir kez düzenlenip
+    kaydedildi" arasındaki farkı ayırt eder (yıllık plan kriterlerinde
+    kullanılan aynı desen). `hazir=true` yapıldı — hazır kriter sayısı
+    14'ten 15'e çıktı, buna bağlı 2 test (`ProfilimTest`, `KontrolMerkeziTest`)
+    güncellendi + 3 yeni test eklendi.
+
+## Durum — 2026-09-06 (Eksik Firmalar → 10 sayfa + Firma Evrak ZIP)
+
+- **"Eksik Olan Firmalar" tüm kontrol listesine yayıldı ✅:** Kullanıcı
+  "kontrol listesindeki her butona koy" dedi — partial artık Acil Durum
+  Planı, Risk Sihirbazı, Tatbikat Tutanağı, Kurul Toplantısı, Tespit Öneri
+  Defteri, Eğitim Katılım, İş İzin Formu, İş Kazası Raporu, Muayene Formu ve
+  Yıllık Planlar'da (3 sekmesi de kendi kriterine göre: `yillik_calisma_plani`
+  / `yillik_egitim_plani` / `yillik_degerlendirme`) gösteriliyor. `igu_atamasi`/
+  `hekim_atamasi` gibi Firma alan bazlı kriterlerin kendi "belge sayfası" yok,
+  bilinçli olarak atlandı. Tüm ilgili sayfa testleri (125 test, 10 dosya)
+  regresyonsuz geçti.
+- **Firma başına "Tüm Evrakları İndir" (yeni özellik) ✅:** Kullanıcı canlı
+  isteği: "Firmaya tıkladığımda indir seçeneği gelsin, istediğim evrakları
+  tikleyip toplu indireyim." `Firmalar` listesine "Evrakları İndir" satır
+  aksiyonu eklendi — mevcut `RaporKayitlari` kaynağını (Profilim → Raporlar
+  ile aynı, 22 belge üretici modülü) kullanarak o firmanın ürettiği TÜM
+  belgeleri onay kutulu listede gösterir (varsayılan hepsi seçili), seçilenleri
+  `ZipArchive` ile tek dosyada indirir. Yeni sınıf: `App\Support\
+  FirmaEvrakZipUretici` (`secenekler()` + `zip()`).
+  - **Bulunup düzeltilen ince hata:** `RaporKayitlari::hepsi()` performans
+    için `firma` ilişkisini yalnız `id,unvan` ile eager-load ediyor (liste
+    görünümü için yeterli) — bu modeli doğrudan PDF üreticiye verince
+    `tehlike_sinifi` gibi alanlar `null` geliyor, `Firma::tehlikeSinifiEtiketi()`
+    tip hatası fırlatıyordu. `FirmaEvrakZipUretici::zip()` her kayıt için
+    `$kayit->load('firma')` ile ilişkiyi tam alanlarla tazeliyor.
+  - Evrağı olmayan firmalarda buton gizli. `FirmaEvrakZipUreticiTest` (6 test).
+- Bu iki özellik, DENETİM-NOTU'ndaki "Acil Durum Planı — Toplu İndir"
+  tartışmalı kaleminin çoğu ihtiyacını zaten karşılıyor (farklı belge
+  türlerini birlikte indirme) — yalnız aynı belgenin PDF+Word ikilisini bir
+  arada vermiyor, o madde düşük öncelikte açık kaldı.
+
+## Durum — 2026-09-06 (Acil Durum Planı → Kroki kısayolu)
+
+DENETIM-NOTU'ndaki tartışmalı kalem 3/5 onaylandı: `AcilDurumPlani` sayfasına
+"Kroki Planı Hazırla" başlık aksiyonu eklendi (`AcilDurumKrokisi::getUrl(['firma'
+=> ...])` — sayfa zaten bu query param'ı destekliyordu). `AcilDurumPlaniTest`'e
+1 test (`assertActionHasUrl`). Kalan 2 tartışmalı kalem: Eğitim Soruları
+Önce/Sonra ayrımı, AI Saha Analizi kredi sistemi (bu sonuncusu için öneri:
+uygulanmasın).
+
+## Durum — 2026-09-06 (Eğitim Soruları — Sınav Zamanı)
+
+DENETIM-NOTU tartışmalı kalem 4/5 onaylandı: `egitim_sinavlari` tablosuna
+`sinav_zamani` (`once`/`sonra`, varsayılan `sonra` — uygulamanın kendi
+tanımı zaten "eğitim sonrası sınav" varsayıyordu) eklendi. Model'e her ikisi
+de eklendi: `zamanEtiketi()` + DB default'uyla eşleşen `$attributes` (aksi
+halde `::create()` ile bu alan atlanan testlerde model null görüyordu —
+klasik Eloquent "DB default kaydetmeden nesneye yansımaz" tuzağı).
+Form + PDF başlığı/künyesi güncellendi. `EgitimSorulariTest`'e 1 test.
+Kalan tek tartışmalı kalem: 5/5 AI Saha Analizi kredi sistemi (öneri:
+uygulanmasın).
+
+## Durum — 2026-09-06 (Risk Kütüphanesi: Asansör/Boya/Dış Cephe + AI Puan Tamamlama)
+
+Kullanıcı isteği: "risk değerlendirmede olasılık şiddet ve frekans olmayan
+kayıtları otomatik olarak yapay zekaya yaptırarak kaydet. Misal Asansör boya
+dış cephe gibi durumlar hazırlamış olduklarıma ekle eksik olanlarıda
+tamamla. AI ile olanda kalsın, tek kullanıcı olduğum için kredi gerek yok."
+
+- **Risk Kütüphanesi'ne 3 yeni kategori ✅:** `TehlikeKutuphanesiSeeder`'a
+  `asansor` (Asansör), `boya` (Boya İşleri), `dis_cephe` (Dış Cephe İşleri)
+  eklendi — her biri 4'er tehlike/risk/önlem/mevzuat satırıyla, mevcut
+  `genel_isyeri`/`insaat`/`atolye` kategorileriyle aynı formatta (bölüm,
+  faaliyet, tehlike, risk, mevcut önlem, ilgili yönetmelik). İçerik gerçek
+  yönetmelik başlıklarına atıfla (Asansör İşletme/Bakım/Periyodik Kontrol
+  Yön., Yapı İşlerinde İSG Yön., Patlayıcı Ortamların Tehlikelerinden Korunma
+  Yön. vb.) hazırlanmış kürate edilmiş referans içeriktir — birebir resmi
+  metin/tablo kopyası değildir (bu tür kütüphane maddeleri zaten mevzuat
+  metni değil, uzmanın kendi risk değerlendirme çıkarımıdır). Toplam: 3→6
+  kategori, 13→25 tehlike. **Doğrudan sonuç:** `RiskDegerlendirmeTest`'teki
+  sabit `assertCountTableRecords(13)` beklentisi kırıldı, `25`'e güncellendi
+  (kendi değişikliğimin beklenen yan etkisi).
+- **`App\Support\GeminiRiskPuanTamamlayici` (yeni) ✅:** Var olan bir
+  tehlike/risk metnine (kütüphaneden aktarılan ya da elle girilen) Gemini'den
+  Olasılık/Şiddet(/Frekans — yalnız Fine-Kinney'de) puanı ister.
+  `GeminiRiskDanismani`'nin aksine YENİ risk ÜRETMEZ, sadece puanlar.
+  Güvenlik mekanizması: LLM'in döndürdüğü sayı, ilgili ölçekteki (matris_5x5
+  veya fine_kinney) İZİN VERİLEN değerlerden en yakınına yuvarlanır
+  (`enYakinDeger()`) — ölçek dışı bir değer asla `RiskMaddesi`'ne yazılamaz.
+  API anahtarı yoksa/istek başarısız olursa/JSON bozuksa sessizce `null`
+  döner, madde puansız kalır (kullanıcı elle girebilir) — mevcut Gemini
+  entegrasyonlarıyla aynı "sessiz başarısızlık" konvansiyonu.
+  - **Kredi/kota sistemi YOK — bilinçli karar:** Kullanıcının açık isteği
+    "tek kullanıcı olduğum için kredi gerek yok" — AI Saha Analizi için daha
+    önce reddedilen kredi sistemi kararıyla (DENETİM-NOTU tartışmalı 5/5)
+    tutarlı, aynı gerekçeyle bu özellikte de hiç uygulanmadı.
+- **`MaddelerRelationManager` entegrasyonu ✅:** İki noktada devreye giriyor:
+  1. **"Kütüphaneden aktar"** aksiyonu artık maddeyi oluşturduktan hemen sonra
+     AI'dan puan istiyor (`puanlaAiIle()`), başarılıysa bildirim metni
+     "...ve AI ile puanlandı" oluyor; AI kapalıysa eskisi gibi "puanı girin".
+  2. **Yeni "Eksik Puanları AI ile Tamamla" başlık aksiyonu** — o risk
+     değerlendirmesindeki Olasılık VEYA Şiddet'i boş olan TÜM maddeleri
+     bulup topluca AI'ya puanlatıyor (önceden var olan/ithal edilmiş kayıtlar
+     dahil — kullanıcının "eksik olanları da tamamla" isteği). Yalnız AI
+     aktifken görünür (`GeminiRiskPuanTamamlayici::aktifMi()`), onay modalı
+     var. Dolu puanlı maddelere dokunmuyor (test: `Http::assertSentCount(1)`
+     ile tek maddeye tek istek atıldığı doğrulandı).
+- **Test:** Yeni `GeminiRiskPuanTamamlayiciTest` (8 test) — API kapalıyken
+  pasiflik, matris_5x5/Fine-Kinney yuvarlama, başarısız istek/bozuk JSON,
+  RelationManager üzerinden uçtan uca "kütüphaneden aktar" (AI açık/kapalı)
+  ve "eksik puanları tamamla" (yalnız boş maddeleri doldurma) senaryoları.
+  `RiskDegerlendirmeTest` güncellendi (13→25). Tam suite: bkz. altta.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

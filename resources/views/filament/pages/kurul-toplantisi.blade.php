@@ -10,6 +10,8 @@
         katılımcı/gündem/karar bilgilerini doldurup "PDF İndir" ile resmi tutanağı alın.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'isg_kurulu'])
+
     {{-- 1. FİRMA & TOPLANTI SEÇİMİ --}}
     <x-filament::section icon="heroicon-o-users" icon-color="primary">
         <x-slot name="heading">1. Firma & Toplantı</x-slot>

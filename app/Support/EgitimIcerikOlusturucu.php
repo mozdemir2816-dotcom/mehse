@@ -19,7 +19,7 @@ class EgitimIcerikOlusturucu
     private const OZEL_VARSAYILAN_DAKIKA = 15;
 
     /** @return array<string, mixed> */
-    public static function olustur(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi): array
+    public static function olustur(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi, string $egitimTuru = 'ilk'): array
     {
         if ($baslikAnahtari !== 'genel') {
             $ozel = config('isg.egitim.ozel_basliklar.'.$baslikAnahtari);
@@ -31,19 +31,23 @@ class EgitimIcerikOlusturucu
             ];
         }
 
-        $sureler = config('isg.egitim.sureler.'.$tehlikeSinifi) ?? config('isg.egitim.sureler.az_tehlikeli');
+        $sure = $egitimTuru === 'tekrar'
+            ? config('isg.egitim.sureler.tekrar')
+            : (config('isg.egitim.sureler.ilk.'.$tehlikeSinifi) ?? config('isg.egitim.sureler.ilk.az_tehlikeli'));
+
+        $hedefDk = $sure['blok_fiili_dk'];
         $sektor = $sektorAnahtari ? config('isg.egitim.isyerine_ozgu_sektorler.'.$sektorAnahtari) : null;
 
         return [
             'tip' => 'genel',
-            'saat' => $sureler['saat'],
-            'dinlenme_dk' => $sureler['dinlenme_dk'],
-            'genel_konular' => static::maddeleriHazirla(config('isg.egitim.genel_konular', [])),
-            'saglik_konulari' => static::maddeleriHazirla(config('isg.egitim.saglik_konulari', [])),
-            'teknik_konular' => static::maddeleriHazirla(config('isg.egitim.teknik_konular', [])),
+            'saat' => $sure['saat'],
+            'egitim_turu' => $egitimTuru,
+            'genel_konular' => static::maddeleriOlcekle(config('isg.egitim.genel_konular', []), $hedefDk),
+            'saglik_konulari' => static::maddeleriOlcekle(config('isg.egitim.saglik_konulari', []), $hedefDk),
+            'teknik_konular' => static::maddeleriOlcekle(config('isg.egitim.teknik_konular', []), $hedefDk),
             'isyerine_ozgu' => $sektor ? [
                 'sektor' => $sektor['ad'],
-                'maddeler' => static::maddeleriHazirla($sektor['maddeler'], $sureler['ise_ozgu_dk'] / max(count($sektor['maddeler']), 1)),
+                'maddeler' => static::maddeleriHazirla($sektor['maddeler'], $hedefDk / max(count($sektor['maddeler']), 1)),
             ] : null,
         ];
     }
@@ -58,6 +62,36 @@ class EgitimIcerikOlusturucu
             ->map(fn ($m) => is_array($m)
                 ? ['madde' => $m['madde'], 'dakika' => $m['dakika'], 'dahil' => true]
                 : ['madde' => $m, 'dakika' => (int) round($varsayilanDakika), 'dahil' => true])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * config'teki sabit madde/dakika ağırlıklarını KORUYARAK (ör. İlkyardım
+     * diğerlerinden daha az ağırlıklı), hedef toplam dakikaya orantılı ölçekler
+     * — Genel/Sağlık/Teknik Konular bloklarının tehlike sınıfına/eğitim türüne
+     * göre değişen toplam süreye (bkz. config isg.egitim.sureler) uyması için.
+     *
+     * @param  array<int, string|array{madde: string, dakika: int}>  $maddeler
+     * @return array<int, array{madde: string, dakika: int, dahil: bool}>
+     */
+    private static function maddeleriOlcekle(array $maddeler, float $hedefToplamDk): array
+    {
+        $agirlikToplami = collect($maddeler)->sum(fn ($m) => is_array($m) ? $m['dakika'] : self::OZEL_VARSAYILAN_DAKIKA);
+
+        if ($agirlikToplami <= 0) {
+            return static::maddeleriHazirla($maddeler);
+        }
+
+        $olcek = $hedefToplamDk / $agirlikToplami;
+
+        return collect($maddeler)
+            ->map(function ($m) use ($olcek) {
+                $agirlik = is_array($m) ? $m['dakika'] : self::OZEL_VARSAYILAN_DAKIKA;
+                $ad = is_array($m) ? $m['madde'] : $m;
+
+                return ['madde' => $ad, 'dakika' => max(1, (int) round($agirlik * $olcek)), 'dahil' => true];
+            })
             ->values()
             ->all();
     }

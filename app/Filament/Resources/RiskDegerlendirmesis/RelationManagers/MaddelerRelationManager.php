@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RiskDegerlendirmesis\RelationManagers;
 
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
+use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\RiskSkorlama;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -34,6 +35,26 @@ class MaddelerRelationManager extends RelationManager
     protected function fineKinney(): bool
     {
         return $this->getOwnerRecord()->yontem === 'fine_kinney';
+    }
+
+    /** AI'dan puan alıp maddeye yazar; öneri gelmezse (AI kapalı/hatalı) dokunmadan false döner. */
+    private function puanlaAiIle(RiskMaddesi $madde): bool
+    {
+        $oneri = GeminiRiskPuanTamamlayici::oner(
+            $madde->tehlike,
+            $madde->risk,
+            $madde->bolum,
+            $madde->faaliyet,
+            $this->getOwnerRecord()->yontem,
+        );
+
+        if (! $oneri) {
+            return false;
+        }
+
+        $madde->forceFill($oneri)->save();
+
+        return true;
     }
 
     public function form(Schema $schema): Schema
@@ -121,7 +142,7 @@ class MaddelerRelationManager extends RelationManager
                     ])
                     ->action(function (array $data): void {
                         $t = Tehlike::findOrFail($data['tehlike_id']);
-                        $this->getOwnerRecord()->maddeler()->create([
+                        $madde = $this->getOwnerRecord()->maddeler()->create([
                             'sira' => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1,
                             'bolum' => $t->bolum,
                             'faaliyet' => $t->faaliyet,
@@ -130,7 +151,32 @@ class MaddelerRelationManager extends RelationManager
                             'mevcut_onlem' => $t->mevcut_onlem,
                             'durum' => 'acik',
                         ]);
-                        Notification::make()->title('Risk maddesi eklendi (puanı girin)')->success()->send();
+
+                        $puanlandi = $this->puanlaAiIle($madde);
+
+                        Notification::make()
+                            ->title($puanlandi ? 'Risk maddesi eklendi ve AI ile puanlandı' : 'Risk maddesi eklendi (puanı girin)')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('eksikPuanlariTamamla')
+                    ->label('Eksik Puanları AI ile Tamamla')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('gray')
+                    ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi())
+                    ->requiresConfirmation()
+                    ->modalDescription('Olasılık veya Şiddet puanı girilmemiş tüm maddeler için Gemini\'den puan istenir; öneri yalnız ölçekteki değerlerden seçilir, siz yine de gözden geçirip düzeltebilirsiniz.')
+                    ->action(function (): void {
+                        $eksikler = $this->getOwnerRecord()->maddeler()
+                            ->where(fn ($q) => $q->whereNull('olasilik')->orWhereNull('siddet'))
+                            ->get();
+
+                        $tamamlanan = $eksikler->filter(fn (RiskMaddesi $m) => $this->puanlaAiIle($m))->count();
+
+                        Notification::make()
+                            ->title($eksikler->isEmpty() ? 'Eksik puanlı madde yok' : "{$tamamlanan}/{$eksikler->count()} madde AI ile puanlandı")
+                            ->success()
+                            ->send();
                     }),
             ])
             ->recordActions([

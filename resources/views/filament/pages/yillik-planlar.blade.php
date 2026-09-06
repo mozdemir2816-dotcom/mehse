@@ -12,6 +12,15 @@
         değiştirin.
     </p>
 
+    @php
+        $yillikKriter = match ($sekme) {
+            'egitim' => 'yillik_egitim_plani',
+            'degerlendirme' => 'yillik_degerlendirme',
+            default => 'yillik_calisma_plani',
+        };
+    @endphp
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => $yillikKriter])
+
     {{-- FİRMA & YIL --}}
     <x-filament::section icon="heroicon-o-calendar-days" icon-color="primary">
         <x-slot name="heading">Firma & Yıl</x-slot>

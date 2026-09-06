@@ -13,6 +13,8 @@
         6331 Sayılı Kanun m.14 uyarınca iş kazası, kazadan sonraki <strong>3 iş günü içinde</strong> SGK'ya bildirilmelidir.
     </div>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'is_kazasi_bildirimi'])
+
     {{-- 1. FİRMA & KAZAZEDE --}}
     <x-filament::section icon="heroicon-o-user" icon-color="danger">
         <x-slot name="heading">1. Firma & Kazazede</x-slot>

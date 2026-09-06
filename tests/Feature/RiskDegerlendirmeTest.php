@@ -85,7 +85,7 @@ class RiskDegerlendirmeTest extends TestCase
         Livewire::test(ListRiskDegerlendirmesis::class)->assertOk();
         Livewire::test(CreateRiskDegerlendirmesi::class)->assertOk();
         Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])->assertOk();
-        Livewire::test(ListTehlikes::class)->assertOk()->assertCountTableRecords(13);
+        Livewire::test(ListTehlikes::class)->assertOk()->assertCountTableRecords(25);
     }
 
     public function test_pdf_matris_5x5_uretilir(): void

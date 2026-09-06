@@ -50,4 +50,9 @@ class SahaDenetimi extends Model
             ? config('isg.risk_ai.sektorler.'.$this->sektor_anahtari.'.ad', $this->sektor_anahtari)
             : null;
     }
+
+    public function taslakMi(): bool
+    {
+        return $this->durum === 'taslak';
+    }
 }

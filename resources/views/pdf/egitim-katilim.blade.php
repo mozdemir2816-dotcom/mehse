@@ -47,7 +47,7 @@
             <td>Tarih</td><td>{{ $kayit->belge_tarihi?->format('d.m.Y') }}</td>
         </tr>
         <tr>
-            <td>Süre</td><td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null)) ({{ $icerik['saat'] }} saat) @endif</td>
+            <td>Süre</td><td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null)) ({{ $icerik['saat'] }} saat @if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar Eğitimi @endif) @endif</td>
             <td>Eğitimciler</td>
             <td>
                 @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı @endif
@@ -126,19 +126,23 @@
         </div>
     @endif
 
+    @php
+        $katilimcilar = $kayit->katilimcilar ?? [];
+        // En az 10 imza satırı olsun diye eksik kalan satırlar boş bırakılır —
+        // katılımcı hiç eklenmediyse (boş imza formu) tamamı elle doldurulur.
+        $minSatir = max(10, count($katilimcilar));
+    @endphp
     <table class="katilim">
         <tr><th style="width:5%">#</th><th>Ad Soyad</th><th style="width:15%">T.C. No</th><th style="width:20%">Görevi</th><th style="width:20%">İmza</th></tr>
-        @forelse (($kayit->katilimcilar ?? []) as $i => $k)
+        @for ($i = 0; $i < $minSatir; $i++)
             <tr>
                 <td>{{ $i + 1 }}</td>
-                <td>{{ $k['ad_soyad'] ?? '—' }}</td>
-                <td>{{ $k['tc'] ?? '—' }}</td>
-                <td>{{ $k['gorev'] ?? '—' }}</td>
+                <td>{{ $katilimcilar[$i]['ad_soyad'] ?? '' }}</td>
+                <td>{{ $katilimcilar[$i]['tc'] ?? '' }}</td>
+                <td>{{ $katilimcilar[$i]['gorev'] ?? '' }}</td>
                 <td></td>
             </tr>
-        @empty
-            <tr><td colspan="5" style="color:#888">Katılımcı eklenmedi.</td></tr>
-        @endforelse
+        @endfor
     </table>
 
     <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>

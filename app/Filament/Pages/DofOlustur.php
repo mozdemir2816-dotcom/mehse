@@ -139,6 +139,94 @@ class DofOlustur extends Page
 
     /*
     |--------------------------------------------------------------------------
+    | Portföy Geneli Takip — isgpratik DÖF ana ekranı (24.jpg)
+    |--------------------------------------------------------------------------
+    */
+
+    public string $takipArama = '';
+
+    public string $takipOncelikFiltre = '';
+
+    /** @var array<string, string> "raporId-maddeIndex" => kapatma notu taslağı */
+    public array $kapatmaNotlari = [];
+
+    /** Kullanıcının tüm firmalarındaki tüm DÖF maddeleri, firma bilgisiyle birlikte düz liste. */
+    #[Computed]
+    public function tumMaddeler(): Collection
+    {
+        return DofRaporu::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->with('firma')
+            ->get()
+            ->flatMap(fn (DofRaporu $rapor) => collect($rapor->maddeler ?? [])->map(fn (array $m, int $i) => [
+                ...$m,
+                'anahtar' => $rapor->id.'-'.$i,
+                'rapor_id' => $rapor->id,
+                'madde_index' => $i,
+                'firma' => $rapor->firma?->unvan ?? '—',
+                'belge_no' => $rapor->belge_no,
+            ]));
+    }
+
+    #[Computed]
+    public function takipOzeti(): array
+    {
+        $tumu = $this->tumMaddeler;
+        $acik = $tumu->where('durum', '!=', 'tamamlandi');
+        $kapanmis = $tumu->where('durum', 'tamamlandi');
+
+        return [
+            'toplam_dof' => DofRaporu::query()->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))->count(),
+            'acik_madde' => $acik->count(),
+            'kapanmis_madde' => $kapanmis->count(),
+            'kapatma_orani' => $tumu->isEmpty() ? 0 : round(($kapanmis->count() / $tumu->count()) * 100),
+            'oncelik_dagilimi' => $acik->countBy('oncelik'),
+        ];
+    }
+
+    /** @return Collection<int, array> arama/filtre uygulanmış açık maddeler */
+    #[Computed]
+    public function acikMaddelerFiltreli(): Collection
+    {
+        $terim = mb_strtolower(trim($this->takipArama));
+
+        return $this->tumMaddeler
+            ->where('durum', '!=', 'tamamlandi')
+            ->when($this->takipOncelikFiltre !== '', fn ($q) => $q->where('oncelik', $this->takipOncelikFiltre))
+            ->when($terim !== '', fn ($q) => $q->filter(
+                fn (array $m) => str_contains(mb_strtolower($m['tespit'] ?? ''), $terim)
+                    || str_contains(mb_strtolower($m['firma'] ?? ''), $terim)
+                    || str_contains(mb_strtolower($m['belge_no'] ?? ''), $terim),
+            ))
+            ->sortByDesc(fn (array $m) => array_search($m['oncelik'] ?? 'dusuk', ['dusuk', 'orta', 'yuksek', 'kritik']))
+            ->values();
+    }
+
+    /** Portföydeki (kaydedilmiş) bir DÖF maddesini "Tamamlandı" yapıp kapatma notu ekler. */
+    public function maddeKapat(int $raporId, int $maddeIndex): void
+    {
+        $rapor = DofRaporu::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->find($raporId);
+
+        if (! $rapor || ! isset($rapor->maddeler[$maddeIndex])) {
+            return;
+        }
+
+        $maddeler = $rapor->maddeler;
+        $maddeler[$maddeIndex]['durum'] = 'tamamlandi';
+        $maddeler[$maddeIndex]['kapatma_notu'] = $this->kapatmaNotlari[$raporId.'-'.$maddeIndex] ?? null;
+        $maddeler[$maddeIndex]['kapatma_tarihi'] = now()->toDateString();
+        $rapor->update(['maddeler' => $maddeler]);
+
+        unset($this->kapatmaNotlari[$raporId.'-'.$maddeIndex], $this->tumMaddeler, $this->takipOzeti, $this->acikMaddelerFiltreli);
+        unset($this->gecmisKayitlar);
+
+        Notification::make()->title('Madde kapatıldı')->success()->send();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Form alanları
     |--------------------------------------------------------------------------
     */

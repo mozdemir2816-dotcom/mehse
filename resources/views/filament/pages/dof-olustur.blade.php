@@ -9,6 +9,80 @@
         "DÖF Raporu" ile Çoklu Düzeltici Önleyici Faaliyet raporu PDF'ini indirin.
     </p>
 
+    {{-- 0. PORTFÖY GENELİ TAKİP --}}
+    @php $ozet = $this->takipOzeti; @endphp
+    <x-filament::section icon="heroicon-o-clock" icon-color="warning" collapsible>
+        <x-slot name="heading">DÖF Takip (Tüm Firmalar)</x-slot>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1rem">
+            <div style="{{ $kutu }};text-align:center">
+                <div style="font-size:1.5rem;font-weight:800">{{ $ozet['toplam_dof'] }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam DÖF</div>
+            </div>
+            <div style="{{ $kutu }};text-align:center;border-color:rgb(217 119 6 / .4)">
+                <div style="font-size:1.5rem;font-weight:800;color:rgb(217 119 6)">{{ $ozet['acik_madde'] }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Açık Madde</div>
+            </div>
+            <div style="{{ $kutu }};text-align:center;border-color:rgb(16 185 129 / .4)">
+                <div style="font-size:1.5rem;font-weight:800;color:rgb(16 185 129)">{{ $ozet['kapanmis_madde'] }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Kapanmış Madde</div>
+            </div>
+            <div style="{{ $kutu }};text-align:center">
+                <div style="font-size:1.5rem;font-weight:800">%{{ $ozet['kapatma_orani'] }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Genel Kapatma Başarısı</div>
+            </div>
+        </div>
+
+        @if ($ozet['oncelik_dagilimi']->isNotEmpty())
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
+                @foreach (['kritik', 'yuksek', 'orta', 'dusuk'] as $p)
+                    @continue(! ($ozet['oncelik_dagilimi'][$p] ?? null))
+                    <x-filament::badge :color="match ($p) { 'kritik' => 'danger', 'yuksek' => 'warning', 'orta' => 'gray', default => 'success' }">
+                        {{ config('isg.dof.oncelikler.'.$p) }}: {{ $ozet['oncelik_dagilimi'][$p] }}
+                    </x-filament::badge>
+                @endforeach
+            </div>
+        @endif
+
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem">
+            <input type="text" wire:model.live.debounce.300ms="takipArama" placeholder="Madde, firma veya belge no ara..."
+                style="flex:1;min-width:200px;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
+            <select wire:model.live="takipOncelikFiltre"
+                style="padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
+                <option value="">Tüm Öncelikler</option>
+                @foreach (config('isg.dof.oncelikler') as $anahtar => $ad)
+                    <option value="{{ $anahtar }}">{{ $ad }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem;max-height:400px;overflow-y:auto">
+            @forelse ($this->acikMaddelerFiltreli as $m)
+                <div style="{{ $kutu }};display:flex;justify-content:space-between;align-items:start;gap:1rem;flex-wrap:wrap">
+                    <div style="flex:1;min-width:220px">
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['firma'] }} · {{ $m['belge_no'] }}</div>
+                        <div style="font-weight:600;font-size:.85rem">{{ $m['tespit'] }}</div>
+                        <div style="margin-top:.3rem">
+                            <x-filament::badge :color="match ($m['oncelik']) { 'kritik' => 'danger', 'yuksek' => 'warning', 'orta' => 'gray', default => 'success' }">
+                                {{ config('isg.dof.oncelikler.'.$m['oncelik']) }}
+                            </x-filament::badge>
+                            @if ($m['termin'] ?? null)
+                                <span style="font-size:.72rem;color:rgb(107 114 128);margin-left:.4rem">Termin: {{ $m['termin'] }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+                        <input type="text" wire:model="kapatmaNotlari.{{ $m['anahtar'] }}" placeholder="Kapatma notu (opsiyonel)"
+                            style="width:180px;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
+                        <x-filament::button size="xs" color="success" wire:click="maddeKapat({{ $m['rapor_id'] }}, {{ $m['madde_index'] }})">Kapat</x-filament::button>
+                    </div>
+                </div>
+            @empty
+                <p style="font-size:.82rem;color:rgb(107 114 128);text-align:center;padding:1rem">🎉 Açık DÖF maddesi bulunmuyor.</p>
+            @endforelse
+        </div>
+    </x-filament::section>
+
     {{-- 1. FİRMA & RAPOR BİLGİLERİ --}}
     <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="danger">
         <x-slot name="heading">1. Firma & Rapor Bilgileri</x-slot>

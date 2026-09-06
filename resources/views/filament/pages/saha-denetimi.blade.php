@@ -16,6 +16,18 @@
         Uygulanamaz olarak işaretleyin; "Denetimi Tamamla" ile PDF raporu indirin.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'saha_denetim_formu'])
+
+    @if ($this->firma && $taslakYuklendi)
+        <div style="border:1px solid {{ $turuncu }};background:rgb(234 88 12 / .08);border-radius:.75rem;padding:.85rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+            <div style="font-size:.83rem">
+                <strong>Kaydedilmiş taslağınız yüklendi</strong> — {{ $this->firma->unvan }}.
+                Yanlış firma veya işse temizleyin.
+            </div>
+            <x-filament::button size="xs" color="gray" wire:click="taslakTemizle">Taslağı Temizle</x-filament::button>
+        </div>
+    @endif
+
     {{-- 1. DENETİM BİLGİLERİ --}}
     <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="warning">
         <x-slot name="heading">1. Denetim Bilgileri</x-slot>

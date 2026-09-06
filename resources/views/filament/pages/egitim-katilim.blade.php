@@ -9,6 +9,49 @@
         Madde 17 kapsamındaki eğitim katılım formunu oluşturun.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'egitim_katilim_formu'])
+
+    {{-- 0. BOŞ İMZA FORMU — firma/katılımcı seçmeden, tek tıkla --}}
+    <x-filament::section icon="heroicon-o-pencil-square" icon-color="gray" collapsible collapsed>
+        <x-slot name="heading">Boş İmza Formu İndir</x-slot>
+        <x-slot name="description">Firma/katılımcı seçmeden, yalnız konu içeriğiyle — eğitime gelenlerin kendi el yazısıyla ad/T.C./imza atması için (en az 10 satır).</x-slot>
+
+        <div style="{{ $kutu }};margin-bottom:.75rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:end">
+            <div>
+                <label style="font-weight:600;font-size:.78rem">Tehlike Sınıfı (Genel başlığı için)</label>
+                <select wire:model="bosFormTehlikeSinifi" style="margin-top:.3rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                    <option value="az_tehlikeli">Az Tehlikeli</option>
+                    <option value="tehlikeli">Tehlikeli</option>
+                    <option value="cok_tehlikeli">Çok Tehlikeli</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.78rem">Eğitim Türü</label>
+                <select wire:model="bosFormTuru" style="margin-top:.3rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                    <option value="ilk">İlk Defa</option>
+                    <option value="tekrar">Tekrar</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.78rem">İşyerine Özgü Sektör (opsiyonel)</label>
+                <select wire:model="bosFormSektor" style="margin-top:.3rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                    <option value="">— Seçilmedi —</option>
+                    @foreach ($this->sektorler as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.5rem">
+            @foreach ($this->basliklar as $anahtar => $ad)
+                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="bosFormIndir('{{ $anahtar }}')">
+                    {{ $ad }}
+                </x-filament::button>
+            @endforeach
+        </div>
+    </x-filament::section>
+
     {{-- 1. FİRMA & EĞİTİM BİLGİLERİ --}}
     <x-filament::section icon="heroicon-o-academic-cap" icon-color="success">
         <x-slot name="heading">1. Firma & Eğitim Bilgileri</x-slot>
@@ -50,6 +93,16 @@
             </div>
             @if ($baslikAnahtari === 'genel')
                 <div>
+                    <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
+                    <select wire:model.live="egitimTuru"
+                        style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        <option value="ilk">İlk Defa</option>
+                        <option value="tekrar">Tekrar (her zaman 8 saat)</option>
+                    </select>
+                </div>
+            @endif
+            @if ($baslikAnahtari === 'genel')
+                <div>
                     <label style="font-weight:600;font-size:.82rem">İşyerine Özgü Risk Sektörü</label>
                     <select wire:model.live="sektorAnahtari"
                         style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
@@ -64,9 +117,20 @@
 
         @if ($baslikAnahtari === 'genel' && ($icerik['saat'] ?? null))
             <div style="{{ $kutu }};margin-top:1rem;background:rgb(16 185 129 / .06);border-color:rgb(16 185 129 / .3);font-size:.82rem">
-                <strong>{{ $this->firma?->tehlikeSinifiEtiketi() ?? 'Az Tehlikeli' }}</strong> sınıfı için önerilen eğitim süresi:
-                <strong>{{ $icerik['saat'] }} saat</strong> — aşağıdaki "Eğitim Konuları" bölümünden maddeleri
-                işaretleyip/kaldırıp dakikalarını değiştirerek gerçek süreyi kendiniz belirleyebilirsiniz.
+                @if ($egitimTuru === 'tekrar')
+                    <strong>Tekrar eğitimi</strong> — tehlike sınıfından bağımsız her zaman <strong>8 saat</strong>
+                    (4 blok × 2 saat).
+                @else
+                    <strong>{{ $this->firma?->tehlikeSinifiEtiketi() ?? 'Az Tehlikeli' }}</strong> sınıfı için ilk defa verilecek
+                    eğitimin toplam süresi: <strong>{{ $icerik['saat'] }} saat</strong> (4 blok × {{ $icerik['saat'] / 4 }} saat).
+                @endif
+                Aşağıdaki "Eğitim Konuları" bölümünden maddeleri işaretleyip/kaldırıp dakikalarını değiştirerek gerçek süreyi kendiniz belirleyebilirsiniz.
+                <div style="margin-top:.4rem;color:rgb(107 114 128)">
+                    Tekrar (periyodik yenileme) eğitiminin yapılması gereken periyot —
+                    Az Tehlikeli: {{ config('isg.egitim.tekrar_periyodu_yil.az_tehlikeli') }} yılda 1,
+                    Tehlikeli: {{ config('isg.egitim.tekrar_periyodu_yil.tehlikeli') }} yılda 1,
+                    Çok Tehlikeli: {{ config('isg.egitim.tekrar_periyodu_yil.cok_tehlikeli') }} yılda 1.
+                </div>
             </div>
         @endif
 

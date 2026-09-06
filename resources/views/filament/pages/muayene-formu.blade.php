@@ -9,6 +9,8 @@
         EK-2 İşe Giriş / Periyodik Muayene Formu'nu doldurun; sonuç ve kanaat ile PDF çıktısı üretilir.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'saglik_raporu'])
+
     {{-- 1. FİRMA & ÇALIŞAN --}}
     <x-filament::section icon="heroicon-o-heart" icon-color="info">
         <x-slot name="heading">1. Firma & Çalışan</x-slot>

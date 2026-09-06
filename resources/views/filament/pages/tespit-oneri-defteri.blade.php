@@ -11,6 +11,8 @@
         serbest yazın; firma için kaydedip PDF çıktısını alın.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'tespit_oneri'])
+
     {{-- 1. FİRMA --}}
     <x-filament::section icon="heroicon-o-book-open" icon-color="warning">
         <x-slot name="heading">1. Firma</x-slot>

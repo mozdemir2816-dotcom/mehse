@@ -173,6 +173,72 @@ class DofOlusturTest extends TestCase
         $this->assertDatabaseMissing('dof_raporlari', ['id' => $rapor->id]);
     }
 
+    public function test_takip_ozeti_tum_firmalarin_maddelerini_sayar(): void
+    {
+        $firma1 = Firma::factory()->for($this->uzman)->create();
+        $firma2 = Firma::factory()->for($this->uzman)->create();
+
+        DofRaporu::create(['firma_id' => $firma1->id, 'maddeler' => [
+            ['tespit' => 'A', 'oncelik' => 'kritik', 'durum' => 'acik'],
+            ['tespit' => 'B', 'oncelik' => 'orta', 'durum' => 'tamamlandi'],
+        ]]);
+        DofRaporu::create(['firma_id' => $firma2->id, 'maddeler' => [
+            ['tespit' => 'C', 'oncelik' => 'yuksek', 'durum' => 'devam_ediyor'],
+        ]]);
+
+        $ozet = Livewire::test(DofSayfasi::class)->instance()->takipOzeti();
+
+        $this->assertSame(2, $ozet['toplam_dof']);
+        $this->assertSame(2, $ozet['acik_madde']);
+        $this->assertSame(1, $ozet['kapanmis_madde']);
+        $this->assertEquals(33, $ozet['kapatma_orani']);
+    }
+
+    public function test_madde_kapat_durumu_tamamlandi_yapar_ve_not_ekler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rapor = DofRaporu::create(['firma_id' => $firma->id, 'maddeler' => [
+            ['tespit' => 'Test tespit', 'oncelik' => 'orta', 'durum' => 'acik'],
+        ]]);
+
+        Livewire::test(DofSayfasi::class)
+            ->set("kapatmaNotlari.{$rapor->id}-0", 'Düzeltildi, kontrol edildi.')
+            ->call('maddeKapat', $rapor->id, 0);
+
+        $rapor->refresh();
+        $this->assertSame('tamamlandi', $rapor->maddeler[0]['durum']);
+        $this->assertSame('Düzeltildi, kontrol edildi.', $rapor->maddeler[0]['kapatma_notu']);
+        $this->assertNotNull($rapor->maddeler[0]['kapatma_tarihi']);
+    }
+
+    public function test_baska_uzmanin_dof_raporunu_kapatamaz(): void
+    {
+        $baskaFirma = Firma::factory()->create();
+        $rapor = DofRaporu::create(['firma_id' => $baskaFirma->id, 'maddeler' => [
+            ['tespit' => 'X', 'oncelik' => 'orta', 'durum' => 'acik'],
+        ]]);
+
+        Livewire::test(DofSayfasi::class)->call('maddeKapat', $rapor->id, 0);
+
+        $rapor->refresh();
+        $this->assertSame('acik', $rapor->maddeler[0]['durum']);
+    }
+
+    public function test_acik_maddeler_oncelik_ve_arama_ile_filtrelenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Filtre Firması']);
+        DofRaporu::create(['firma_id' => $firma->id, 'maddeler' => [
+            ['tespit' => 'Yangın söndürücü eksik', 'oncelik' => 'kritik', 'durum' => 'acik'],
+            ['tespit' => 'Merdiven aydınlatması', 'oncelik' => 'dusuk', 'durum' => 'acik'],
+        ]]);
+
+        $component = Livewire::test(DofSayfasi::class)->set('takipOncelikFiltre', 'kritik');
+        $this->assertCount(1, $component->instance()->acikMaddelerFiltreli());
+
+        $component->set('takipOncelikFiltre', '')->set('takipArama', 'merdiven');
+        $this->assertCount(1, $component->instance()->acikMaddelerFiltreli());
+    }
+
     public function test_baska_uzmanin_firmasi_secilemez(): void
     {
         $baskaUzman = User::factory()->create();

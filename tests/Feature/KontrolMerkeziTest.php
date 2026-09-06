@@ -39,7 +39,7 @@ class KontrolMerkeziTest extends TestCase
         $this->assertSame(3, $ozet['firma']);
         $this->assertSame(1, $ozet['risk_olan']);
         $this->assertSame(2, $ozet['evrak_eksigi']);
-        // 14 hazır kriter var (risk değ. + gerçek modülü bağlanan 13'ü); firma A yalnız
+        // 15 hazır kriter var (risk değ. + gerçek modülü bağlanan 14'ü); firma A yalnız
         // risk değerlendirmesini karşılıyor, "tam uyumlu" sayılmaz.
         $this->assertSame(0, $ozet['tam_uyumlu']);
     }
@@ -53,8 +53,20 @@ class KontrolMerkeziTest extends TestCase
 
         $this->assertSame(1, $kriterler['risk_degerlendirmesi']['tamam']);
         $this->assertSame(100, $kriterler['risk_degerlendirmesi']['yuzde']);
-        $this->assertFalse($kriterler['acil_durum_plani']['hazir']);
-        $this->assertSame(0, $kriterler['acil_durum_plani']['tamam']);
+        // calisan_temsilcisi henüz gerçek modüle bağlanmadı (hazir=false) — hep 0 döner.
+        $this->assertFalse($kriterler['calisan_temsilcisi']['hazir']);
+        $this->assertSame(0, $kriterler['calisan_temsilcisi']['tamam']);
+    }
+
+    public function test_acil_durum_plani_kriteri_artik_gercek_modulu_bagli(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        \App\Models\AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin']]);
+
+        $kriterler = collect(PortfoyKarne::kriterler($this->uzman->id))->keyBy('anahtar');
+
+        $this->assertTrue($kriterler['acil_durum_plani']['hazir']);
+        $this->assertSame(1, $kriterler['acil_durum_plani']['tamam']);
     }
 
     public function test_isg_kurulu_kriteri_yalniz_50_ustu_firmalari_kapsar(): void

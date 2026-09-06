@@ -14,6 +14,8 @@
         Acil Durum Eylem Planı PDF’ini oluşturun. 6331 SK kapsamında her işyerinde zorunludur.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'acil_durum_plani'])
+
     {{-- 1. FİRMA & RAPOR BİLGİLERİ --}}
     <x-filament::section icon="heroicon-o-building-office-2" icon-color="danger">
         <x-slot name="heading">1. Firma & Rapor Bilgileri</x-slot>

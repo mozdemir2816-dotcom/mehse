@@ -171,6 +171,7 @@ class SertifikaOlustur extends Page
             $anahtar,
             $this->cokluEgiticiMi ? $this->sektorAnahtari : null,
             $this->firma?->tehlike_sinifi ?? 'az_tehlikeli',
+            $this->tur === 'tekrar' ? 'tekrar' : 'ilk',
         );
     }
 
@@ -209,6 +210,11 @@ class SertifikaOlustur extends Page
     }
 
     public function updatedSektorAnahtari(): void
+    {
+        $this->icerikYenile();
+    }
+
+    public function updatedTur(): void
     {
         $this->icerikYenile();
     }

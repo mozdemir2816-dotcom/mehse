@@ -34,6 +34,24 @@ class TehlikeKutuphanesiSeeder extends Seeder
                 ['Atölye', 'Elle taşıma', 'Ağır parçanın tek kişi taşınması', 'Bel incinmesi', 'Kaldırma yardımcıları, 2 kişi kuralı, doğru kaldırma eğitimi.', 'Elle Taşıma İşleri Yön.'],
                 ['Atölye', 'Gürültü', '85 dB(A) üstü sürekli gürültü', 'Gürültüye bağlı işitme kaybı', 'Ortam ölçümü, kulak koruyucu, kaynakta izolasyon.', 'Çalışanların Gürültü ile İlgili Risklerden Korunmaları Yön.'],
             ]],
+            'asansor' => ['Asansör', [
+                ['Asansör Kuyusu', 'Bakım / Onarım', 'Kuyu içinde çalışırken düşme', 'Yüksekten düşme, ağır yaralanma', 'Tam vücut kemeri + yaşam hattı, kuyu aydınlatması, güvenlik tertibatları devre dışı bırakılmaz.', 'Asansör İşletme, Bakım ve Periyodik Kontrol Yön.'],
+                ['Asansör Kabini', 'Periyodik Kontrol', 'Fren / paraşüt sisteminin arızalı olması', 'Kabin serbest düşmesi', 'Yılda 1 A tipi muayene kuruluşu kontrolü, düzenli bakım sözleşmesi.', 'Asansör İşletme, Bakım ve Periyodik Kontrol Yön.'],
+                ['Makine Dairesi', 'Elektrik / Mekanik Bakım', 'Hareketli aksamda (halat, kasnak) sıkışma', 'El/parmak ezilmesi, kesilme', 'Bakım öncesi enerji kesme (LOTO), koruyucu muhafazalar.', 'İş Ekipmanları Yön.'],
+                ['Asansör Kuyusu', 'Acil Kurtarma', 'Katlar arası mahsur kalan yolcunun kurtarılması', 'Düşme, ezilme', 'Yetkili personelce üretici talimatına uygun manuel tahliye, acil aydınlatma.', 'Asansör Yönetmeliği'],
+            ]],
+            'boya' => ['Boya İşleri', [
+                ['Boya Atölyesi / Saha', 'Solvent Bazlı Boya Uygulama', 'Uçucu organik bileşen (VOC) buharı solunması', 'Baş dönmesi, bulantı, kronik solunum yolu hastalığı', 'Yerel/genel havalandırma, organik buhar filtreli (A tipi) maske.', 'Kimyasal Maddelerle Çalışmalarda İSG Yön.'],
+                ['Kapalı Alan / Tank İçi', 'Boya Uygulama', 'Dar alanda patlayıcı ortam oluşması', 'Patlama, yangın', 'Ex-proof ekipman, kıvılcımsız alet, sürekli gaz ölçümü, gözetmen bulundurma.', 'Patlayıcı Ortamların Tehlikelerinden Korunma Yön.'],
+                ['Boya Deposu', 'Depolama', 'Yanıcı/parlayıcı malzemenin uygunsuz depolanması', 'Yangın, patlama', 'Ayrı yangına dayanıklı depo, ateş kaynağından uzak tutma, uygun söndürme sistemi.', 'Binaların Yangından Korunması Hak. Yön.'],
+                ['Sprey Boyama', 'Püskürtmeli Uygulama', 'Cilt ve göze boya/tiner sıçraması', 'Cilt tahrişi, göz yaralanması', 'Uygun eldiven, gözlük/yüz siperliği, göz duşu bulundurma.', 'KKD Kullanılması Hak. Yön.'],
+            ]],
+            'dis_cephe' => ['Dış Cephe İşleri', [
+                ['Bina Dış Cephesi', 'Cephe Temizliği / Boyama (Yükseklik)', 'Cephe iskelesi/asma iskeleden düşme', 'Yüksekten düşme (ölüm riski)', 'Tam vücut kemeri + çift yaşam hattı, korkuluklu platform, periyodik iskele kontrolü.', 'Yapı İşlerinde İSG Yön.'],
+                ['Cephe İskelesi', 'Kurulum / Söküm', 'İskelenin usulüne uygun kurulmaması, devrilmesi', 'Çoklu düşme, ezilme', 'Yetkili kişi onayı, ankraj kontrolü, scafftag sistemi.', 'İş Ekipmanları Yön. Ek-4'],
+                ['Cephe Kaplama', 'Malzeme Montajı (Panel / Taş)', 'Yükseklikte malzeme/alet düşürme', 'Alttakilere çarpma, yaralanma', 'Alt bölge bariyerleme/uyarı, alet bağlama ipi, baret zorunluluğu.', 'Yapı İşlerinde İSG Yön.'],
+                ['Bina Dış Cephesi', 'Cam / Perde Duvar Temizliği', 'Cephe askı platformunun (gondol) arızalanması', 'Düşme, platform devrilmesi', 'Periyodik bakım, ikincil güvenlik halatı, rüzgarlı havada çalışmama.', 'İş Ekipmanları Yön.'],
+            ]],
         ];
 
         foreach ($set as $anahtar => [$ad, $tehlikeler]) {

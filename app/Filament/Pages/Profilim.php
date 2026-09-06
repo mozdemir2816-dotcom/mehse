@@ -214,6 +214,19 @@ class Profilim extends Page
         return PortfoyKarne::aktiviteGunluk(Filament::auth()->id(), 90);
     }
 
+    #[Computed]
+    public function ilkyardimciIhtiyaci(): int
+    {
+        return PortfoyKarne::ilkyardimciIhtiyaci(Filament::auth()->id());
+    }
+
+    /** @return array<string, int> 5 eksenli performans profili — eksen adı => yüzde */
+    #[Computed]
+    public function performansEksenleri(): array
+    {
+        return PortfoyKarne::performansEksenleri(Filament::auth()->id());
+    }
+
     /** @return \Illuminate\Support\Collection<int, EgitimTuru> Kullanıcının fiilen takip ettiği eğitim konuları */
     #[Computed]
     public function egitimTurleri()

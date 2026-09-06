@@ -121,6 +121,33 @@ class EgitimSorulariTest extends TestCase
         $this->assertCount(1, $sinav->sorular);
     }
 
+    public function test_sinav_zamani_varsayilan_sonra_ve_secilebilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SorularSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniSoruMetni', 'Soru 1')
+            ->set('yeniSecenekler', ['A', 'B', 'C', 'D'])
+            ->call('soruEkle')
+            ->callAction('pdf');
+
+        $sinav = EgitimSinavi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('sonra', $sinav->sinav_zamani);
+        $this->assertSame('Eğitim Sonrası (Son Test)', $sinav->zamanEtiketi());
+
+        Livewire::test(SorularSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('sinavZamani', 'once')
+            ->set('yeniSoruMetni', 'Soru 2')
+            ->set('yeniSecenekler', ['A', 'B', 'C', 'D'])
+            ->call('soruEkle')
+            ->callAction('pdf');
+
+        $ikinciSinav = EgitimSinavi::where('firma_id', $firma->id)->latest('id')->firstOrFail();
+        $this->assertSame('once', $ikinciSinav->sinav_zamani);
+    }
+
     public function test_soru_olmadan_kaydedilemez(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

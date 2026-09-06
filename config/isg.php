@@ -151,7 +151,7 @@ return [
         'kriterler' => [
             ['anahtar' => 'risk_degerlendirmesi', 'ad' => 'Risk Değerlendirmesi', 'ikon' => 'heroicon-o-sparkles', 'hazir' => true],
             ['anahtar' => 'yillik_calisma_plani', 'ad' => 'Yıllık Çalışma Planı', 'ikon' => 'heroicon-o-calendar-days', 'hazir' => true],
-            ['anahtar' => 'acil_durum_plani', 'ad' => 'Acil Durum Planı Belgesi (ADP)', 'ikon' => 'heroicon-o-exclamation-triangle', 'hazir' => false],
+            ['anahtar' => 'acil_durum_plani', 'ad' => 'Acil Durum Planı Belgesi (ADP)', 'ikon' => 'heroicon-o-exclamation-triangle', 'hazir' => true],
             ['anahtar' => 'acil_durum_destek', 'ad' => 'Acil Durum Destek Elemanları', 'ikon' => 'heroicon-o-user-group', 'hazir' => false],
             ['anahtar' => 'acil_durum_tatbikat', 'ad' => 'Acil Durum Tatbikat Tutanağı', 'ikon' => 'heroicon-o-fire', 'hazir' => true],
             ['anahtar' => 'isg_kurulu', 'ad' => 'İSG Kurulu Toplantısı', 'ikon' => 'heroicon-o-users', 'hazir' => true, 'kosul' => 'elli_calisan'],
@@ -867,13 +867,33 @@ return [
     | konu listesini gösteren "özel" eğitimlerdir.
     */
     'egitim' => [
-        // Tehlike sınıfına göre yıllık periyodik eğitim süresi (Çalışanların İSG
-        // Eğitimlerinin Usul ve Esasları Hak. Yön. Ek-1: 8/12/16 saat). İşe özgü
-        // risk ve dinlenme dakikaları kullanıcı tarafından doğrulandı.
+        // Tehlike sınıfına göre İLK DEFA verilen eğitimin toplam süresi
+        // (Çalışanların İSG Eğitimlerinin Usul ve Esasları Hak. Yön. Ek-1:
+        // 8/12/16 saat) — kullanıcı tarafından doğrulandı: 4 blok (Genel/Sağlık/
+        // Teknik/İşyerine Özgü Riskler) EŞİT PAYLA bu toplama bölünür: az
+        // tehlikelide blok başına 2 saat, tehlikelide 3 saat, çok tehlikelide
+        // 4 saat (4 × 2/3/4 = 8/12/16). `blok_fiili_dk`, "1 ders saati = 45 dk
+        // fiili + 15 dk dinlenme" oranıyla (bkz. EgitimIcerikOlusturucu::
+        // bolumSuresi, dinlenme=fiili/3) bu saat hedefine karşılık gelen FİİLİ
+        // ders dakikasıdır — 4 fiili/3 = saat cinsinden duvar saati verir
+        // (ör. az tehlikeli: 90 dk fiili + 30 dk dinlenme = 120 dk = 2 saat).
         'sureler' => [
-            'az_tehlikeli' => ['saat' => 8, 'ise_ozgu_dk' => 90, 'dinlenme_dk' => 120],
-            'tehlikeli' => ['saat' => 12, 'ise_ozgu_dk' => 135, 'dinlenme_dk' => 180],
-            'cok_tehlikeli' => ['saat' => 16, 'ise_ozgu_dk' => 180, 'dinlenme_dk' => 240],
+            'ilk' => [
+                'az_tehlikeli' => ['saat' => 8, 'blok_fiili_dk' => 90],
+                'tehlikeli' => ['saat' => 12, 'blok_fiili_dk' => 135],
+                'cok_tehlikeli' => ['saat' => 16, 'blok_fiili_dk' => 180],
+            ],
+            // TEKRAR eğitiminde tehlike sınıfından BAĞIMSIZ, her zaman toplam
+            // 8 saat (4 blok × 2 saat) — kullanıcı tarafından doğrulandı.
+            'tekrar' => ['saat' => 8, 'blok_fiili_dk' => 90],
+        ],
+
+        // Tekrar eğitiminin yenilenme periyodu (bilgi amaçlı — otomatik
+        // hesaplama/hatırlatma YAPILMAZ, yalnız arayüzde/PDF'te gösterilir).
+        'tekrar_periyodu_yil' => [
+            'az_tehlikeli' => 3,
+            'tehlikeli' => 2,
+            'cok_tehlikeli' => 1,
         ],
 
         // "İş Sağlığı ve Güvenliği" başlığının sabit 3 bloğu (dakikalar toplamı
@@ -1283,6 +1303,10 @@ return [
             'orta' => 'Orta',
             'zor' => 'Zor',
             'karisik' => 'Karışık',
+        ],
+        'zamanlar' => [
+            'once' => 'Eğitim Öncesi (Ön Test)',
+            'sonra' => 'Eğitim Sonrası (Son Test)',
         ],
     ],
 

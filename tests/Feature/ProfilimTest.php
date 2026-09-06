@@ -59,6 +59,37 @@ class ProfilimTest extends TestCase
         $this->assertSame(1, $o['tehlike_dagilimi']['Az Tehlikeli']);
     }
 
+    public function test_ilkyardimci_ihtiyaci_tehlike_sinifina_gore_hesaplanir(): void
+    {
+        // çok tehlikeli: her 10 çalışana 1 -> ceil(3/10)=1 ; az tehlikeli: her 20'ye 1 -> ceil(7/20)=1
+        Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 3]);
+        Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli', 'calisan_sayisi' => 7]);
+        Firma::factory()->create(['tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 100]); // başka uzman
+
+        $this->assertSame(2, PortfoyKarne::ilkyardimciIhtiyaci($this->uzman->id));
+    }
+
+    public function test_performans_eksenleri_yalniz_hazir_kriterleri_ortalar(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create();
+        Firma::factory()->for($this->uzman)->create(); // risk değerlendirmesi yok
+
+        RiskDegerlendirmesi::create(['firma_id' => $a->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        $eksenler = PortfoyKarne::performansEksenleri($this->uzman->id);
+
+        $this->assertEqualsCanonicalizing(
+            ['Evrak Uyumu', 'Çalışan Kapsamı', 'Eğitim Durumu', 'Risk Yönetimi', 'Acil Durum'],
+            array_keys($eksenler),
+        );
+        // 2 firmadan 1'inde risk değerlendirmesi var (%50), saha denetimi hiçbirinde yok (%0) -> ortalama %25
+        $this->assertSame(25, $eksenler['Risk Yönetimi']);
+        foreach ($eksenler as $yuzde) {
+            $this->assertGreaterThanOrEqual(0, $yuzde);
+            $this->assertLessThanOrEqual(100, $yuzde);
+        }
+    }
+
     public function test_firma_kriter_matrisi_risk_degerlendirmesini_isaretler(): void
     {
         // calisan_sayisi < 50 sabitlenir: isg_kurulu kriteri muaf olur (deterministik oran).
@@ -70,10 +101,34 @@ class ProfilimTest extends TestCase
 
         $this->assertTrue($matris[$a->id]['hucreler']['risk_degerlendirmesi']);
         $this->assertFalse($matris[$b->id]['hucreler']['risk_degerlendirmesi']);
-        // 50 altı çalışan olduğu için isg_kurulu muaf — 14 değil 13 hazır kriter sayılır;
-        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/13*100) = 8.
-        $this->assertSame(8, $matris[$a->id]['oran']);
+        // 50 altı çalışan olduğu için isg_kurulu muaf — 15 değil 14 hazır kriter sayılır;
+        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/14*100) = 7.
+        $this->assertSame(7, $matris[$a->id]['oran']);
         $this->assertSame(0, $matris[$b->id]['oran']);
+    }
+
+    public function test_acil_durum_plani_konulari_bosken_kriter_karsilanmaz_dolunca_karsilanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $this->assertFalse(PortfoyKarne::firmaKriterKarsilarMi($firma, 'acil_durum_plani'));
+
+        \App\Models\AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin', 'deprem']]);
+        $firma->refresh();
+
+        $this->assertTrue(PortfoyKarne::firmaKriterKarsilarMi($firma, 'acil_durum_plani'));
+    }
+
+    public function test_eksik_firmalar_kriteri_karsilamayanlari_doner(): void
+    {
+        $tamam = Firma::factory()->for($this->uzman)->create(['unvan' => 'Tamamlayan Firma']);
+        $eksik = Firma::factory()->for($this->uzman)->create(['unvan' => 'Eksik Firma']);
+        \App\Models\AcilDurumPlani::create(['firma_id' => $tamam->id, 'konular' => ['yangin']]);
+
+        $eksikFirmalar = PortfoyKarne::eksikFirmalar($this->uzman->id, 'acil_durum_plani');
+
+        $this->assertCount(1, $eksikFirmalar);
+        $this->assertSame('Eksik Firma', $eksikFirmalar->first()->unvan);
     }
 
     public function test_sayfa_sekmeli_acilir(): void

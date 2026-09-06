@@ -158,14 +158,53 @@
                 @endforeach
             </div>
 
-            {{-- İlk yardım / bilgi --}}
+            {{-- İlk yardım ihtiyacı --}}
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">İlk Yardım Sertifikası</div>
-                <p style="font-size:.82rem;color:rgb(128 116 148);margin-top:.4rem">
-                    Aktif firmalarınızın yasal ilkyardımcı bulundurma zorunlulukları
-                    (İlk Yardım Yön. m.16 — çok tehlikeli 10, tehlikeli 15, az tehlikeli 20 kişide 1).
-                    Çalışan modülü tamamlanınca firma bazlı eksik listesi burada çıkacak.
+                <div style="font-size:.72rem;color:rgb(128 116 148);text-transform:uppercase;margin-top:.5rem">Toplam İlkyardımcı İhtiyacı</div>
+                <div style="font-size:1.8rem;font-weight:800;color:{{ $yesil }}">{{ $this->ilkyardimciIhtiyaci }} kişi</div>
+                <p style="font-size:.78rem;color:rgb(128 116 148);margin-top:.4rem">
+                    Aktif firmalarınızın bildirdiği çalışan sayısına göre — İlkyardım Yönetmeliği md.19
+                    (çok tehlikeli her 10, tehlikeli her 15, az tehlikeli her 20 çalışana 1 ilkyardımcı).
                 </p>
+            </div>
+
+            {{-- Performans Profili (5 eksen) --}}
+            @php
+                $eksenler = $this->performansEksenleri;
+                $n = count($eksenler);
+                $merkez = 50; $yaricap = 42;
+                $noktaHesapla = fn (float $yuzde, int $i) => [
+                    $merkez + $yaricap * ($yuzde / 100) * cos((-90 + $i * 360 / $n) * M_PI / 180),
+                    $merkez + $yaricap * ($yuzde / 100) * sin((-90 + $i * 360 / $n) * M_PI / 180),
+                ];
+                $poligonNoktalari = collect($eksenler)->values()
+                    ->map(fn ($y, $i) => implode(',', $noktaHesapla($y, $i)))
+                    ->implode(' ');
+                $izgaraNoktalari = fn (float $yuzde) => collect(range(0, $n - 1))
+                    ->map(fn ($i) => implode(',', $noktaHesapla($yuzde, $i)))
+                    ->implode(' ');
+            @endphp
+            <div style="{{ $kutu }}">
+                <div style="font-weight:700">Performans Profili</div>
+                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.4rem">Yalnız kurulu modüllerin portföy ortalaması</div>
+                <svg viewBox="0 0 100 100" style="width:100%;max-width:220px;display:block;margin:0 auto">
+                    @foreach ([25, 50, 75, 100] as $izgaraYuzde)
+                        <polygon points="{{ $izgaraNoktalari($izgaraYuzde) }}" fill="none" stroke="rgb(128 116 148 / .2)" stroke-width="0.5"/>
+                    @endforeach
+                    @foreach (range(0, $n - 1) as $i)
+                        @php [$x, $y] = $noktaHesapla(100, $i); @endphp
+                        <line x1="{{ $merkez }}" y1="{{ $merkez }}" x2="{{ $x }}" y2="{{ $y }}" stroke="rgb(128 116 148 / .2)" stroke-width="0.5"/>
+                    @endforeach
+                    <polygon points="{{ $poligonNoktalari }}" fill="{{ $turkuaz }}" fill-opacity="0.25" stroke="{{ $turkuaz }}" stroke-width="1.5"/>
+                </svg>
+                <div style="display:flex;flex-direction:column;gap:.2rem;margin-top:.5rem">
+                    @foreach ($eksenler as $ad => $yuzde)
+                        <div style="display:flex;justify-content:space-between;font-size:.72rem">
+                            <span style="color:rgb(128 116 148)">{{ $ad }}</span><strong>%{{ $yuzde }}</strong>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 

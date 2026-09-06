@@ -11,6 +11,8 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'risk_degerlendirmesi'])
+
     {{-- BAŞLIK + SIFIRLA -------------------------------------------------- --}}
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div>

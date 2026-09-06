@@ -276,4 +276,34 @@ class AcilDurumPlaniTest extends TestCase
         $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
         AcilDurumPlaniUretici::afis($firma, 'gecersiz', 'a4');
     }
+
+    public function test_kroki_plani_kisayolu_dogru_firmaya_gider(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertActionVisible('krokiPlani')
+            ->assertActionHasUrl('krokiPlani', \App\Filament\Pages\AcilDurumKrokisi::getUrl(['firma' => $firma->id]));
+    }
+
+    public function test_eksik_firmalar_kutusu_plani_olmayan_firmayi_gosterir(): void
+    {
+        $eksik = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planı Olmayan A.Ş.']);
+        $tamam = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planı Tamam A.Ş.']);
+        AcilDurumPlani::create(['firma_id' => $tamam->id, 'konular' => ['yangin']]);
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->assertSee('Eksik Olan Firmalar (1)')
+            ->assertSee('Planı Olmayan A.Ş.');
+    }
+
+    public function test_eksik_firmalar_kutusundan_tiklaninca_o_firma_secilir(): void
+    {
+        $eksik = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planı Olmayan A.Ş.']);
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->call('$set', 'firmaId', $eksik->id) // "Eksik Olan Firmalar" butonunun yaptığıyla aynı
+            ->assertSet('firmaId', $eksik->id);
+    }
 }

@@ -182,6 +182,13 @@ class AcilDurumPlani extends Page
                     return AcilDurumWordUretici::docx($this->plan());
                 }),
 
+            Action::make('krokiPlani')
+                ->label('Kroki Planı Hazırla')
+                ->icon('heroicon-o-map')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->url(fn () => AcilDurumKrokisi::getUrl(['firma' => $this->firma->id])),
+
             Action::make('tahliyePlani')
                 ->label('Tahliye Planı Görseli')
                 ->icon('heroicon-o-map')

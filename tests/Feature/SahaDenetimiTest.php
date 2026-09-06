@@ -246,6 +246,84 @@ class SahaDenetimiTest extends TestCase
         $this->assertDatabaseMissing('saha_denetimleri', ['id' => $d->id]);
     }
 
+    public function test_taslak_kaydedilir_ve_gecmise_karismaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('santiyeAdi', 'Yarım Kalan Şantiye')
+            ->call('cevapVer', '1.1', 'uygun')
+            ->call('taslakKaydet');
+
+        $this->assertDatabaseCount('saha_denetimleri', 1);
+        $taslak = SahaDenetimi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('taslak', $taslak->durum);
+        $this->assertSame('Yarım Kalan Şantiye', $taslak->santiye_adi);
+
+        // Taslak, "geçmiş kayıtlar" (tamamlanmış) listesine dahil edilmemeli.
+        $sayfa = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertCount(0, $sayfa->instance()->gecmisKayitlar());
+    }
+
+    public function test_ikinci_taslak_kaydi_oncekini_gunceller_yeni_satir_acmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('santiyeAdi', 'İlk Hal')
+            ->call('taslakKaydet');
+
+        $component->set('santiyeAdi', 'Güncellenmiş Hal')->call('taslakKaydet');
+
+        $this->assertDatabaseCount('saha_denetimleri', 1);
+        $this->assertSame('Güncellenmiş Hal', SahaDenetimi::where('firma_id', $firma->id)->firstOrFail()->santiye_adi);
+    }
+
+    public function test_firma_secilince_taslak_otomatik_yuklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        SahaDenetimi::create([
+            'firma_id' => $firma->id, 'durum' => 'taslak', 'revizyon' => 0,
+            'santiye_adi' => 'Kaydedilmiş Şantiye', 'ekip_uyeleri' => [], 'cevaplar' => [
+                ['kategori_ad' => 'x', 'kod' => '1.1', 'ifade' => 'y', 'kritik' => false, 'sonuc' => 'uygun', 'aciklama' => null, 'foto_yolu' => null],
+            ],
+        ]);
+
+        $component = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id);
+
+        $this->assertTrue($component->get('taslakYuklendi'));
+        $this->assertSame('Kaydedilmiş Şantiye', $component->get('santiyeAdi'));
+        $this->assertSame('uygun', $component->get('cevaplar')['1_1']['sonuc']);
+    }
+
+    public function test_taslak_temizle_kaydi_siler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $taslak = SahaDenetimi::create(['firma_id' => $firma->id, 'durum' => 'taslak', 'revizyon' => 0]);
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('taslakTemizle');
+
+        $this->assertDatabaseMissing('saha_denetimleri', ['id' => $taslak->id]);
+    }
+
+    public function test_denetimi_tamamlayinca_bekleyen_taslak_silinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        SahaDenetimi::create(['firma_id' => $firma->id, 'durum' => 'taslak', 'revizyon' => 0]);
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('cevapVer', '1.1', 'uygun')
+            ->callAction('pdf');
+
+        $this->assertDatabaseCount('saha_denetimleri', 1);
+        $this->assertSame('tamamlandi', SahaDenetimi::where('firma_id', $firma->id)->firstOrFail()->durum);
+    }
+
     public function test_baska_uzmanin_firmasi_secilemez(): void
     {
         $baskaUzman = User::factory()->create();
