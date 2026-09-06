@@ -101,6 +101,10 @@ class PortfoyKarne
             'saha_denetim_formu' => $firma->sahaDenetimleri()->exists(),
             'is_kazasi_bildirimi' => $firma->isKazasiRaporlari()->exists(),
             'saglik_raporu' => $firma->muayeneFormlari()->exists(),
+            // Doğrudan atama (Atama Yazıları) veya seçim süreci sonucu (Çalışan
+            // Temsilcisi Seçimi) — hangisi kullanılmışsa geçerli sayılır.
+            'calisan_temsilcisi' => $firma->atamaYazilari()->where('rol_anahtari', 'calisan_temsilcisi')->exists()
+                || $firma->calisanTemsilcisiSecimi?->secilen_aday_index !== null,
             'igu_atamasi' => $firma->igu_id !== null,
             'hekim_atamasi' => $firma->isyeri_hekimi_id !== null,
             'tespit_oneri' => filled($firma->tespitOneriDefteri?->maddeler),

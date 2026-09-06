@@ -39,7 +39,7 @@ class KontrolMerkeziTest extends TestCase
         $this->assertSame(3, $ozet['firma']);
         $this->assertSame(1, $ozet['risk_olan']);
         $this->assertSame(2, $ozet['evrak_eksigi']);
-        // 15 hazır kriter var (risk değ. + gerçek modülü bağlanan 14'ü); firma A yalnız
+        // 16 hazır kriter var (risk değ. + gerçek modülü bağlanan 15'i); firma A yalnız
         // risk değerlendirmesini karşılıyor, "tam uyumlu" sayılmaz.
         $this->assertSame(0, $ozet['tam_uyumlu']);
     }
@@ -53,9 +53,9 @@ class KontrolMerkeziTest extends TestCase
 
         $this->assertSame(1, $kriterler['risk_degerlendirmesi']['tamam']);
         $this->assertSame(100, $kriterler['risk_degerlendirmesi']['yuzde']);
-        // calisan_temsilcisi henüz gerçek modüle bağlanmadı (hazir=false) — hep 0 döner.
-        $this->assertFalse($kriterler['calisan_temsilcisi']['hazir']);
-        $this->assertSame(0, $kriterler['calisan_temsilcisi']['tamam']);
+        // periyodik_kontrol_raporu henüz gerçek modüle bağlanmadı (hazir=false) — hep 0 döner.
+        $this->assertFalse($kriterler['periyodik_kontrol_raporu']['hazir']);
+        $this->assertSame(0, $kriterler['periyodik_kontrol_raporu']['tamam']);
     }
 
     public function test_acil_durum_plani_kriteri_artik_gercek_modulu_bagli(): void
@@ -67,6 +67,25 @@ class KontrolMerkeziTest extends TestCase
 
         $this->assertTrue($kriterler['acil_durum_plani']['hazir']);
         $this->assertSame(1, $kriterler['acil_durum_plani']['tamam']);
+    }
+
+    public function test_calisan_temsilcisi_kriteri_atama_veya_secim_sonucuna_bagli(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $kriterler = collect(PortfoyKarne::kriterler($this->uzman->id))->keyBy('anahtar');
+        $this->assertTrue($kriterler['calisan_temsilcisi']['hazir']);
+        $this->assertSame(0, $kriterler['calisan_temsilcisi']['tamam']);
+
+        \App\Models\AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'calisan_temsilcisi',
+            'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Test Çalışan', 'tc' => null, 'gorev' => null, 'bas_uye' => false]],
+        ]);
+
+        $kriterler = collect(PortfoyKarne::kriterler($this->uzman->id))->keyBy('anahtar');
+        $this->assertSame(1, $kriterler['calisan_temsilcisi']['tamam']);
     }
 
     public function test_isg_kurulu_kriteri_yalniz_50_ustu_firmalari_kapsar(): void

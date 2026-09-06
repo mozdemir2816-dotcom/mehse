@@ -1996,6 +1996,66 @@ seçenek gelsin" — kaynak: `C:\Users\mozde\Desktop\isgpratik\acil durum\`.
   Bu, kod değişikliği değil tek seferlik veri tamamlamadır; test suite'i
   etkilemez.
 
+## Durum — 2026-09-06 (Çalışan Temsilcisi Seçimi — yeni modül)
+
+Denetime devam ederken (ATAMA YAZISI/ÇALIŞAN TEMSİLCİSİ klasörü) isgpratik'te
+"Atama Yazıları"ndaki düz atamanın yanında ayrı, tam bir **seçim süreci**
+olduğu görüldü: Seçim Duyuru İlanı → Aday Başvuru Dilekçesi (boş) → Kesin
+Aday Listesi → Oy Pusulası (16'lı kesilebilir pusula) → Atama Tutanağı.
+mehse'de yalnızca direkt atama vardı, seçim süreci hiç yoktu. Kullanıcı iki
+bulunan eksikten (bu + Acil Durum Planı kaşe/çıktı logosu, henüz yapılmadı)
+bunu önceliklendirdi.
+
+- **Yeni tablo/model — `calisan_temsilcisi_secimleri` / `CalisanTemsilcisiSecimi`:**
+  Firma başına bir kayıt (`AcilDurumPlani::firmaIcin()` ile aynı desen).
+  `booted()` hook'u dokuman no (`ÇT-YYYY-NN`), ilan tarihi ve **zorunlu
+  temsilci sayısı** varsayılanlarını otomatik doldurur — sonuncusu 6331
+  sayılı Kanun md.20/2 fıkrasındaki çalışan sayısı kademelerine göre
+  (2-50:1, 51-100:2, 101-500:3, 501-1000:4, 1001-2000:5, 2001+:6) hesaplanan
+  bir ÖNERİDİR, kullanıcı formda değiştirebilir (gerçek yasal metin, ezbere
+  yazılmadı — Kanun'un ilgili fıkrasının doğrudan aktarımı).
+- **`CalisanTemsilcisiSecimiUretici`** — 5 ayrı dompdf şablonu
+  (`pdf.calisan-temsilcisi-{duyuru,basvuru,aday-listesi,oy-pusulasi,tutanak}`),
+  isgpratik'in gerçek belge metinleri (6331 md.20 + Tebliğ referanslı) esas
+  alınarak, `atama-yazisi.blade.php` ile aynı görsel dilde (kunye tablosu +
+  imza satırı + yasal dayanak dipnotu) yazıldı. Oy Pusulası, isgpratik'teki
+  gibi sayfa başına 16 kesilebilir pusula (2×8, kesik çizgili) üretir.
+- **Yeni sayfa — `CalisanTemsilcisiSecimi`** (Formlar & Belgeler grubu):
+  Firma seçilir, seçim bilgileri (tarih/saat/yer/sayılar) ve dinamik aday
+  listesi (ekle/sil) girilir; adaylardan biri "kazanan" işaretlenmeden Atama
+  Tutanağı aksiyonu devre dışı kalır (`->disabled()` + tooltip).
+- **Bulunan/düzeltilen 2. hata — Turkish CSS `text-transform: uppercase`
+  dompdf'te "İ"yi bozuyor:** İlk denemede başlıklar CSS ile büyütülüyordu;
+  "Çalışan Temsilcisi" → "ÇALIŞAN TEMSILCISI" (noktasız I) çıktı — tarayıcı/
+  dompdf'in `text-transform` algoritması Türkçe'ye duyarlı değil (bkz.
+  [[turkce-buyuk-harf-donusumu]] hafıza notu, ama bu kez PHP değil CSS
+  kaynaklı). Çözüm: `text-transform` kaldırıldı, başlıklar blade içinde
+  doğrudan doğru Türkçe büyük harfle (İ noktalı) yazıldı. NOT: mevcut
+  `atama-yazisi.blade.php`'de de aynı `text-transform: uppercase` deseni var
+  — aynı hataya açık olabilir, bu oturumda dokunulmadı (kapsam dışı, ayrı
+  bir denetim maddesi olarak not edildi).
+- **Kontrol Merkezi bağlantısı (aynı zamanda 3. bulunan hata):**
+  `calisan_temsilcisi` kriteri de `acil_durum_plani` ile AYNI şekilde
+  `hazir => false` olarak scaffold edilmiş, hiç gerçek modüle bağlanmamıştı
+  (var olan "Atama Yazıları" akışı bile bunu karşılamıyordu). `hazir =>
+  true` yapıldı, `PortfoyKarne::gercekModulVarMi()`'ye hem AtamaYazisi
+  (rol_anahtari=calisan_temsilcisi) HEM DE yeni seçim sürecinin sonucu
+  (`secilen_aday_index` dolu) kabul eden bir case eklendi — ikisinden
+  hangisi kullanılırsa kullanılsın kriter karşılanmış sayılır.
+  - **Not (henüz yapılmadı):** `acil_durum_destek` kriteri de aynı
+    `hazir => false` deseninde ve muhtemelen aynı sorunu taşıyor (söndürme/
+    kurtarma/koruma/ilkyardım ekipleri zaten Atama Yazıları'ndan atanıyor)
+    — ayrı bir denetim maddesi olarak bırakıldı, bu oturumda dokunulmadı.
+  - Bu flip, kriter sayısını 15→16 hazır kritere çıkardığı için
+    `KontrolMerkeziTest` ve `ProfilimTest`'teki ilgili oran hesaplama
+    yorumları (14→15, 15→16) güncellendi; sayısal beklenti değerleri
+    (round sonucu aynı çıktığından) değişmedi.
+- **Test:** Yeni `CalisanTemsilcisiSecimiTest` (7 test) — zorunlu temsilci
+  kademesi, aday ekle/sil, 5 belgenin PDF üretimi, kazanan seçilmeden
+  Tutanak aksiyonunun devre dışı kalması, Kontrol Merkezi kriterinin
+  karşılanması. `KontrolMerkeziTest`'e 1 yeni test, mevcut 2 testin örnek
+  kriteri (`calisan_temsilcisi` → `periyodik_kontrol_raporu`) güncellendi.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
