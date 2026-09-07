@@ -2405,6 +2405,19 @@ kullan. Firma kayıttan uzman ve hekim bilgilerini çek."
   imza satırı.
 - `EgitimKatilimTest`e `test_firma_secilince_egitmen_bilgileri_firma_kaydindan_gelir`.
 
+### Aynı oturum — katılım tablosu satır sayısı + imza bloğu tek sayfa
+
+Kullanıcı: "katılımcı kadar çıkart; katılımcı olmadan form indirilecekse 10
+kişilik; imzaları tek sayfaya sığdır."
+
+- `pdf.egitim-katilim`: eski `max(10, count)` → `count($katilimcilar) ?: 10`
+  (katılımcı varsa tam katılımcı kadar satır; hiç yoksa 10 satırlık boş form).
+- Eğitmen kaşe/imza tablosu `.imza-blok` sarmalayıcıya alındı +
+  `page-break-inside: avoid` (blok bölünmeden tek sayfada kalır); kaşe kutusu
+  60→46px, boşluklar daraltıldı.
+- `EgitimKatilimTest`: `test_bos_form_pdf_en_az_10_satir_icerir` →
+  `test_katilim_tablosu_satir_sayisi_katilimciya_gore_belirlenir` (0→10, 3→3, 12→12).
+
 - Toplam **544 test.**
 
 ## Notlar

@@ -272,17 +272,19 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
-    public function test_bos_form_pdf_en_az_10_satir_icerir(): void
+    public function test_katilim_tablosu_satir_sayisi_katilimciya_gore_belirlenir(): void
     {
         // dompdf çıktısından sayfa metnini doğrudan doğrulamak zor; bunun yerine
-        // şablonun beslendiği satır sayısı mantığını (min 10) doğrudan test ederiz.
-        $kayit = new EgitimKatilim(['katilimcilar' => []]);
-        $minSatir = max(10, count($kayit->katilimcilar ?? []));
+        // şablonun beslendiği satır sayısı mantığını doğrudan test ederiz:
+        // katılımcı yoksa 10 (boş imza formu), varsa tam olarak katılımcı kadar.
+        $bos = new EgitimKatilim(['katilimcilar' => []]);
+        $this->assertSame(10, count($bos->katilimcilar ?? []) ?: 10);
 
-        $this->assertSame(10, $minSatir);
+        $uc = new EgitimKatilim(['katilimcilar' => array_fill(0, 3, ['ad_soyad' => 'X'])]);
+        $this->assertSame(3, count($uc->katilimcilar) ?: 10);
 
-        $kayit2 = new EgitimKatilim(['katilimcilar' => array_fill(0, 12, ['ad_soyad' => 'X'])]);
-        $this->assertSame(12, max(10, count($kayit2->katilimcilar)));
+        $onIki = new EgitimKatilim(['katilimcilar' => array_fill(0, 12, ['ad_soyad' => 'X'])]);
+        $this->assertSame(12, count($onIki->katilimcilar) ?: 10);
     }
 
     public function test_ozel_baslik_icin_bos_form_indirilir(): void

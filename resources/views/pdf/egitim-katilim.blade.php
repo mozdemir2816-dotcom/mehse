@@ -24,12 +24,13 @@
     table.katilim th, table.katilim td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     table.katilim th { background: #f0f0f0; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
-    table.imza { width: 100%; border-collapse: collapse; margin-top: 18px; page-break-inside: avoid; }
-    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 8px 10px; font-size: 9.5px; }
+    .imza-blok { page-break-inside: avoid; margin-top: 14px; }
+    table.imza { width: 100%; border-collapse: collapse; page-break-inside: avoid; }
+    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 6px 10px; font-size: 9.5px; }
     table.imza .rol { font-weight: bold; margin-bottom: 2px; }
-    table.imza .ad { margin-bottom: 4px; }
-    table.imza .kase { height: 60px; }
-    table.imza .kase img { max-height: 58px; max-width: 90%; }
+    table.imza .ad { margin-bottom: 3px; }
+    table.imza .kase { height: 46px; }
+    table.imza .kase img { max-height: 44px; max-width: 90%; }
     table.imza .imza-satir { color: #666; }
 </style>
 </head>
@@ -135,13 +136,13 @@
 
     @php
         $katilimcilar = $kayit->katilimcilar ?? [];
-        // En az 10 imza satırı olsun diye eksik kalan satırlar boş bırakılır —
-        // katılımcı hiç eklenmediyse (boş imza formu) tamamı elle doldurulur.
-        $minSatir = max(10, count($katilimcilar));
+        // Katılımcı varsa tam olarak katılımcı sayısı kadar satır; hiç katılımcı
+        // yoksa (boş imza formu) elle doldurmak için 10 satır.
+        $satirSayisi = count($katilimcilar) ?: 10;
     @endphp
     <table class="katilim">
         <tr><th style="width:5%">#</th><th>Ad Soyad</th><th style="width:15%">T.C. No</th><th style="width:20%">Görevi</th><th style="width:20%">İmza</th></tr>
-        @for ($i = 0; $i < $minSatir; $i++)
+        @for ($i = 0; $i < $satirSayisi; $i++)
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $katilimcilar[$i]['ad_soyad'] ?? '' }}</td>
@@ -153,6 +154,7 @@
     </table>
 
     @if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
+        <div class="imza-blok">
         <table class="imza">
             <tr>
                 @if ($kayit->isg_uzmani_var)
@@ -181,6 +183,7 @@
                 @endif
             </tr>
         </table>
+        </div>
     @endif
 
     <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>
