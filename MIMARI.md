@@ -2324,7 +2324,22 @@ Tebliğ'de kurulan iki desen):
   göstergesi; PDF'te ilgili maddenin ardından "FOTOĞRAF KANITI · Madde N"
   sayfası (DÖF `dof-raporu.blade.php` deseniyle birebir).
   `TespitOneriDefteriTest`'e 2 yeni test.
-- Toplam **536 test.**
+
+### Aynı oturum — üretim/yayın hazırlığı + QA cilası
+
+- **README.md** stok Laravel README'sinden gerçek proje rehberine çevrildi
+  (kurulum adımları, `storage:link`, `db:seed`, ilk kullanıcı, üretim notları).
+- **.env.example**: `APP_NAME="mehse İSG"`, `tr` locale, MySQL `mehse`
+  varsayılanları, `GEMINI_API_KEY` açıklaması.
+- **Kök route** artık `welcome` görünümü yerine `/admin`'e yönleniyor
+  (`Route::redirect('/', '/admin')`); `ExampleTest` buna göre güncellendi.
+- `php artisan config:cache / route:cache / view:cache` üçü de temiz geçiyor
+  (config'te closure yok, route'ta closure yok) — üretimde önbellek güvenli.
+- `storage:link` bu ortamda oluşturuldu (fotoğraf kanıtı/kaşe görselleri için
+  gerekli — daha önce link yoktu; PDF'ler `storage_path()` kullandığından
+  fark edilmemişti ama panelde `Storage::url()` bağlantıları kırık olurdu).
+
+- Toplam **537 test.**
 
 ## Notlar
 
