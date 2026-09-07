@@ -1,59 +1,86 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# mehse İSG
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Tek kişilik **İş Güvenliği Uzmanı** için İSG operasyon yönetim paneli. Bir uzmanın
+portföyündeki firmaları, çalışanları, risk değerlendirmelerini ve tüm yasal
+form/belge süreçlerini tek yerden yönetir.
 
-## About Laravel
+- **Yığın:** Laravel 12 + Filament v5 (PHP 8.2+)
+- **Veritabanı:** MySQL
+- **Panel:** tek panel `admin`, açık tema, birincil renk mor, marka "mehse İSG"
+- **Yol haritası & mimari kararlar:** [`MIMARI.md`](MIMARI.md)
+- **Geliştirme kuralları:** [`CLAUDE.md`](CLAUDE.md)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Öne çıkan modüller
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Grup | Modüller |
+|---|---|
+| **Yönetim** | Kontrol Merkezi (portföy karnesi), Profilim, Firmalar, Çalışanlar, İSG Profesyonelleri, Mevzuat, İSG-KATİP Robot (bilgi) |
+| **Risk Yönetimi** | 6 adımlı Risk Değerlendirme sihirbazı (Manuel + Gemini AI + Excel), Kayıtlı Değerlendirmeler, Sektör Şablonları, Risk Prosedürleri, Risk Kütüphanesi, Acil Durum Planı + Krokisi |
+| **Formlar & Belgeler** | DÖF, AI Saha Analizi, Saha Denetimi, Kurul Toplantısı, Atama Yazıları, Eğitim Katılım, İşbaşı Eğitim, Tatbikat, Tespit Öneri Defteri, Sertifika, Eğitim Soruları, KKD, İş İzin, Ceza/Tebliğ, İş Kazası Raporu, Talimat, Muayene (EK-2), E-Reçete |
+| **Planlama & Arşiv** | Yıllık Planlar, Ziyaret Programı, Araçlar (hesaplayıcılar) |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Belge üreticileri PDF (dompdf) ve yerine göre Word (PhpWord) / Excel
+(PhpSpreadsheet) çıktısı verir. `[AI]` rozetli modüller Google Gemini API'sini
+kullanır; anahtar tanımlı değilse ilgili özellik sessizce devre dışı kalır,
+uygulama kural tabanlı çalışmaya devam eder.
 
-## Learning Laravel
+## Kurulum
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Gereksinimler: PHP 8.2+, Composer, MySQL, Node.js (varlık derlemesi için).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+# 1. Bağımlılıklar
+composer install
+npm install
 
-## Laravel Sponsors
+# 2. Ortam dosyası
+cp .env.example .env
+php artisan key:generate
+#   .env içinde DB_* ve (isteğe bağlı) GEMINI_API_KEY değerlerini doldurun
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 3. Veritabanı
+php artisan migrate
+php artisan db:seed            # Risk kütüphanesi + NACE + MYK referans verileri
 
-### Premium Partners
+# 4. Yüklenen dosyalar için symlink (fotoğraf kanıtları, kaşe/logo görselleri)
+php artisan storage:link
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 5. Varlıklar
+npm run build
 
-## Contributing
+# 6. İlk kullanıcı (tinker)
+php artisan tinker
+>>> \App\Models\User::create(['name' => 'Ad Soyad', 'email' => 'uzman@ornek.com', 'password' => bcrypt('parola')]);
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Panel adresi: `/admin`
 
-## Code of Conduct
+### XAMPP (yerel geliştirme)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+"C:/xampp2/php/php.exe" artisan <komut>
+"C:/xampp2/php/php.exe" "C:/xampp2/php/composer.phar" <komut>
+```
 
-## Security Vulnerabilities
+Erişim: <http://localhost/mehse/> → `public/admin`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Test
 
-## License
+```bash
+php artisan test
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Test veritabanı `phpunit.xml` içinde sqlite `:memory:` olarak ayarlıdır; Gemini
+API anahtarı testlerde boşa zorlanır (canlı istek atılmaz).
+
+## Üretim notları
+
+- `.env`: `APP_ENV=production`, `APP_DEBUG=false`, güçlü `APP_KEY`.
+- `php artisan storage:link` çalıştırılmalı — yüklenen fotoğraf/kaşe görselleri
+  aksi halde görünmez.
+- Önbellek: `php artisan config:cache route:cache view:cache` (config yalnız
+  veri içerir, closure içermez — cache güvenli).
+- Kuyruk sürücüsü `database`; ağır e-posta/işlem yoksa `php artisan queue:work`
+  şart değil.
+- Abonelik/ödeme entegrasyonu kapsam dışıdır; `users.abonelik_*` alanları yalnız
+  kalan gün göstergesi içindir.
