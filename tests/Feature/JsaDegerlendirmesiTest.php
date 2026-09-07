@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\JsaDegerlendirmesi as JsaSayfasi;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\JsaSablonu;
 use App\Models\User;
 use App\Support\JsaExcelOkuyucu;
@@ -152,6 +153,57 @@ class JsaDegerlendirmesiTest extends TestCase
         $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma])->render();
 
         $this->assertStringContainsString('Örnek İnşaat A.Ş.', $html);
+    }
+
+    public function test_hazirlayan_rolu_tespiti(): void
+    {
+        $this->assertTrue(JsaSablonu::hazirlayanRoluMu('Hazırlayan (İSG / HSE)'));
+        $this->assertTrue(JsaSablonu::hazirlayanRoluMu('HAZIRLAYAN'));
+        $this->assertFalse(JsaSablonu::hazirlayanRoluMu('Onaylayan (Proje Müdürü)'));
+        $this->assertFalse(JsaSablonu::hazirlayanRoluMu(null));
+    }
+
+    public function test_firma_secilince_hazirlayan_satiri_uzman_ve_kasesiyle_dolar(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'igu',
+            'ad_soyad' => 'Uzman Ayşe Yılmaz',
+            'unvan' => 'A Sınıfı İş Güvenliği Uzmanı',
+            'kase_gorseli' => 'isg-profesyonel-kase/ayse.png',
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'Örnek İnşaat A.Ş.',
+            'igu_id' => $igu->id,
+        ]);
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id, 'baslik' => 'JSA - Duvar', 'adimlar' => [
+                ['sira' => '1', 'is_adimi' => 'x', 'tehlikeler' => '', 'sonuclar' => '', 'baslangic_risk' => 'Orta', 'kontrol_tedbirleri' => '', 'kalinti_risk' => 'Düşük', 'sorumlu' => ''],
+            ],
+            'imza_rolleri' => JsaSablonu::VARSAYILAN_IMZA_ROLLERI,
+        ]);
+
+        $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma, 'uzman' => $firma->igu])->render();
+
+        $this->assertStringContainsString('Uzman Ayşe Yılmaz', $html);
+        $this->assertStringContainsString('A Sınıfı İş Güvenliği Uzmanı', $html);
+        $this->assertStringContainsString('isg-profesyonel-kase/ayse.png', $html);
+
+        // Word çıktısı da kaşe olmadan (dosya yok) hatasız üretilmeli.
+        ob_start();
+        JsaWordUretici::word($sablon, $firma)->sendContent();
+        $this->assertStringStartsWith('PK', ob_get_clean());
+    }
+
+    public function test_firmasiz_ciktida_hazirlayan_satiri_bos_kalir(): void
+    {
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id, 'baslik' => 'JSA - Genel', 'adimlar' => [],
+            'imza_rolleri' => JsaSablonu::VARSAYILAN_IMZA_ROLLERI,
+        ]);
+
+        $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => null])->render();
+
+        $this->assertStringContainsString('Hazırlayan (İSG / HSE)', $html);
     }
 
     public function test_baska_uzmanin_jsasi_gorunmez_ve_silinemez(): void

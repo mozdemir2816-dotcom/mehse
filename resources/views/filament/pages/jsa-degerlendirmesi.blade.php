@@ -25,6 +25,18 @@
                 <option value="{{ $id }}">{{ $ad }}</option>
             @endforeach
         </select>
+
+        @if ($this->firma)
+            <p style="margin-top:.7rem;font-size:.78rem;color:rgb(107 114 128)">
+                <strong>Onay ve İmza</strong> bloğundaki <strong>“Hazırlayan”</strong> satırı, firmaya
+                atanmış İş Güvenliği Uzmanı
+                <strong>{{ $this->firma->igu?->ad_soyad ?? '— firmaya uzman atanmamış —' }}</strong>
+                @if ($this->firma->igu && ! $this->firma->igu->kase_gorseli)
+                    <span style="color:rgb(239 68 68)">(kaşe görseli yüklenmemiş)</span>
+                @endif
+                bilgisiyle ve kaşesiyle otomatik doldurulur. Diğer satırlar boş kalır.
+            </p>
+        @endif
     </x-filament::section>
 
     {{-- KÜTÜPHANE --}}

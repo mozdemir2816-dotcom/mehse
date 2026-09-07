@@ -107,9 +107,8 @@
     <div style="font-size:11px;margin-top:20px;color:#444">
         Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
     </div>
-    @if ($toplamSayfa ?? null)
-        <div style="font-size:11px;margin-top:6px;color:#444">Toplam Sayfa: {{ $toplamSayfa }}</div>
-    @endif
+    {{-- "Toplam Sayfa: N" satırı RiskDegerlendirmesiUretici'nde page_script ile
+         kapağın altına damgalanır (tek render — büyük raporlarda süre yarıya iner). --}}
 </div>
 
 {{-- RİSK ANALİZİ PROSEDÜRÜ (seçilen yönteme göre) --}}

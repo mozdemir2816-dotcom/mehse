@@ -85,11 +85,31 @@ class JsaWordUretici
         foreach (['Görevi / Rolü', 'Adı Soyadı', 'İmza', 'Tarih'] as $b) {
             $imza->addCell(3500, ['bgColor' => self::BASLIK_ARKA])->addText($b, ['bold' => true, 'size' => 8]);
         }
+        // Firma seçiliyse "Hazırlayan" satırı firmaya atanmış İSG Uzmanı + kaşesiyle dolar.
+        $uzman = $firma?->igu;
+
         foreach (($sablon->imza_rolleri ?: JsaSablonu::VARSAYILAN_IMZA_ROLLERI) as $rol) {
+            $hazirlayan = $uzman && JsaSablonu::hazirlayanRoluMu($rol['rol'] ?? null);
+
             $imza->addRow(400);
             $imza->addCell(3500)->addText((string) ($rol['rol'] ?? ''), ['size' => 8]);
-            $imza->addCell(3500)->addText((string) ($rol['ad'] ?? ''), ['size' => 8]);
-            $imza->addCell(3500)->addText('');
+
+            $adHucre = $imza->addCell(3500);
+            $adHucre->addText($hazirlayan ? (string) $uzman->ad_soyad : (string) ($rol['ad'] ?? ''), ['size' => 8]);
+            if ($hazirlayan && $uzman->unvan) {
+                $adHucre->addText((string) $uzman->unvan, ['size' => 7, 'color' => '555555']);
+            }
+
+            $imzaHucre = $imza->addCell(3500);
+            $kaseYolu = $hazirlayan && $uzman->kase_gorseli
+                ? storage_path('app/public/'.$uzman->kase_gorseli)
+                : null;
+            if ($kaseYolu && is_file($kaseYolu)) {
+                $imzaHucre->addImage($kaseYolu, ['height' => 38, 'alignment' => Jc::CENTER]);
+            } else {
+                $imzaHucre->addText('');
+            }
+
             $imza->addCell(3500)->addText((string) ($rol['tarih'] ?? ''), ['size' => 8]);
         }
 

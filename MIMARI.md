@@ -2420,6 +2420,52 @@ kişilik; imzaları tek sayfaya sığdır."
 
 - Toplam **544 test.**
 
+## Durum — 2026-09-07 (JSA "Hazırlayan" satırına firma İSG Uzmanı kaşesi)
+
+Kullanıcı isteği: "JSA'da hazırlayan bölümüne atalı firmanın uzmanı bilgileri +
+kaşesi yüklensin."
+
+- **`JsaSablonu::hazirlayanRoluMu(?string)`** — imza rolü metni (normalize:
+  `ı/İ→i`, küçük harf) `hazirlayan` ile başlıyor mu.
+- **`pdf.jsa` blade:** `$uzman = $uzman ?? $firma?->igu`. "Onay ve İmza"
+  tablosunda `hazirlayanRoluMu` eşleşen satırda "Adı Soyadı" hücresi
+  `$uzman->ad_soyad` (+ küçük punto `unvan`), "İmza" hücresi
+  `$uzman->kase_gorseli` görseli (`storage_path('app/public/...')`). Diğer
+  roller/firmasız çıktı değişmez.
+- **`JsaUretici`** view'e `uzman => $firma?->igu` geçer. **`JsaWordUretici`**
+  aynı mantık — `hazirlayan` satırına `addImage` (kaşe dosyası yoksa `is_file`
+  ile atlanır, boş hücre).
+- **JSA sayfası** (blade): firma seçilince atanmış İSG Uzmanı adı + "kaşe yok"
+  uyarısı gösterilir.
+- `JsaDegerlendirmesiTest`: `test_hazirlayan_rolu_tespiti`,
+  `test_firma_secilince_hazirlayan_satiri_uzman_ve_kasesiyle_dolar`,
+  `test_firmasiz_ciktida_hazirlayan_satiri_bos_kalir`.
+
+- Toplam **547 test.**
+
+## Durum — 2026-09-07 (Risk Değerlendirmesi PDF: büyük raporda indirilemiyor)
+
+Kullanıcı: "Firmalardan risk analizini tanımladığımda indiremiyorum."
+
+Kök neden: `RiskDegerlendirmesiUretici::pdf()` raporu **iki kez** render ediyordu
+(kapaktaki "Toplam Sayfa" için ön render + gerçek render). Gerçek veride en
+büyük değerlendirme **352 madde**; tek render ~55 sn, çift render ~113 sn →
+web'in `max_execution_time=120` sınırını aşıp indirmeyi düşürüyordu (öncesinde
+de 512M belleği aşıyordu, bkz. laravel.log 2026-09-04).
+
+- **`RiskDegerlendirmesiUretici`:** çift render kaldırıldı — **tek render**.
+  "Toplam Sayfa: N" artık HTML akışında değil, `page_script` ile kapağın alt
+  ortasına damgalanıyor (`$pageNumber === 1`). Ek olarak `@set_time_limit(600)`
+  (bellek yükseltmesi zaten vardı). Ölçüm: 352 madde → **113 sn → 55 sn**, tepe
+  bellek **782 MB → 460 MB**.
+- **`pdf.risk-degerlendirmesi` blade:** kapaktaki `@if ($toplamSayfa)` bloğu
+  kaldırıldı (artık page_script damgalıyor).
+- `RiskDegerlendirmeTest`: `test_pdf_kapakta_toplam_sayfa_...` →
+  `test_pdf_tek_render_edilir_ve_toplam_sayfa_page_script_ile_damgalanir`
+  (test sayısı değişmedi).
+
+- Toplam **547 test.**
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

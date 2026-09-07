@@ -20,6 +20,8 @@ class JsaUretici
         $pdf = Pdf::loadView('pdf.jsa', [
             'sablon' => $sablon,
             'firma' => $firma,
+            // "Hazırlayan" imza satırı firmaya atanmış İSG Uzmanı'ndan doldurulur.
+            'uzman' => $firma?->igu,
         ])->setPaper('a4', 'landscape');
 
         $ad = 'jsa-'.Str::slug($sablon->baslik ?: 'ise-ozgu-risk')

@@ -61,6 +61,17 @@ class JsaSablonu extends Model
         $query->where('user_id', $userId);
     }
 
+    /**
+     * İmza bloğundaki bir rol "Hazırlayan" mı? Firma seçilince bu satır, firmaya
+     * atanmış İş Güvenliği Uzmanı'nın (Firma.igu) adı + kaşesiyle doldurulur.
+     */
+    public static function hazirlayanRoluMu(?string $rol): bool
+    {
+        $n = strtr(mb_strtolower(trim((string) $rol)), ['ı' => 'i', 'İ' => 'i']);
+
+        return str_starts_with($n, 'hazirlayan');
+    }
+
     /** Bir risk seviyesi metnini renk anahtarına çevirir (yuksek/orta/dusuk/none). */
     public static function riskRengi(?string $seviye): string
     {

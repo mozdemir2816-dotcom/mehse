@@ -170,25 +170,29 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame(2, substr_count($html, '<th>Ş</th>'));
     }
 
-    public function test_pdf_kapakta_toplam_sayfa_sayisi_hazirlayanin_altinda_yazilir(): void
+    public function test_pdf_tek_render_edilir_ve_toplam_sayfa_page_script_ile_damgalanir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
         $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
 
+        // "Toplam Sayfa" artık HTML akışında DEĞİL — büyük raporlarda çift render
+        // web'in 120 sn süre sınırını aşıyordu; sayı tek render sonrası
+        // RiskDegerlendirmesiUretici'de page_script ile kapağa damgalanır.
         $html = view('pdf.risk-degerlendirmesi', [
             'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman,
             'hekim' => null, 'temsilci' => null, 'destekElemani' => null,
             'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
-            'toplamSayfa' => 7,
         ])->render();
 
-        $hazirlayanPos = strpos($html, 'Hazırlayan:');
-        $toplamSayfaPos = strpos($html, 'Toplam Sayfa: 7');
+        $this->assertStringContainsString('Hazırlayan:', $html);
+        $this->assertStringNotContainsString('Toplam Sayfa', $html);
 
-        $this->assertNotFalse($hazirlayanPos);
-        $this->assertNotFalse($toplamSayfaPos);
-        $this->assertTrue($hazirlayanPos < $toplamSayfaPos, 'Toplam Sayfa, Hazırlayan\'ın altında olmalı');
+        // Uretici, toplamSayfa view değişkeni olmadan hatasız PDF üretmeli.
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 
     public function test_risk_maddesi_duzey_dikey_harf_harf_alt_alta_yazar(): void
