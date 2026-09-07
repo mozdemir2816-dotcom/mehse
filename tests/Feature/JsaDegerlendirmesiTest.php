@@ -141,6 +141,67 @@ class JsaDegerlendirmesiTest extends TestCase
         $this->assertStringStartsWith('PK', ob_get_clean());
     }
 
+    public function test_secili_birden_fazla_jsa_tek_belgede_birlesir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek İnşaat A.Ş.']);
+        $kazi = JsaSablonu::create([
+            'user_id' => $this->uzman->id, 'baslik' => 'JSA - Kazı İşleri', 'adimlar' => [
+                ['sira' => '1', 'is_adimi' => 'Kazı', 'tehlikeler' => 'Göçük', 'sonuclar' => '', 'baslangic_risk' => 'Yüksek', 'kontrol_tedbirleri' => '', 'kalinti_risk' => 'Orta', 'sorumlu' => ''],
+            ],
+        ]);
+        $elektrik = JsaSablonu::create([
+            'user_id' => $this->uzman->id, 'baslik' => 'JSA - Elektrik Tesisatı', 'adimlar' => [
+                ['sira' => '1', 'is_adimi' => 'Pano montajı', 'tehlikeler' => 'Elektrik çarpması', 'sonuclar' => '', 'baslangic_risk' => 'Yüksek', 'kontrol_tedbirleri' => '', 'kalinti_risk' => 'Düşük', 'sorumlu' => ''],
+            ],
+        ]);
+
+        $pdf = JsaUretici::topluPdf(collect([$kazi, $elektrik]), $firma);
+        $this->assertInstanceOf(StreamedResponse::class, $pdf);
+        ob_start();
+        $pdf->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        $word = JsaWordUretici::topluWord(collect([$kazi, $elektrik]), $firma);
+        ob_start();
+        $word->sendContent();
+        $this->assertStringStartsWith('PK', ob_get_clean());
+
+        // Birleşik HTML iki analizi de içerir.
+        $html = view('pdf.jsa-toplu', ['sablonlar' => collect([$kazi, $elektrik]), 'firma' => $firma])->render();
+        $this->assertStringContainsString('JSA - Kazı İşleri', $html);
+        $this->assertStringContainsString('JSA - Elektrik Tesisatı', $html);
+        $this->assertStringContainsString('Örnek İnşaat A.Ş.', $html);
+        // Her analiz kendi sayfasında (page-break kuralı toplu stilinde).
+        $this->assertSame(2, substr_count($html, 'class="sayfa"'));
+    }
+
+    public function test_toplu_cikti_sayfadan_secilip_uretilir(): void
+    {
+        $a = JsaSablonu::create(['user_id' => $this->uzman->id, 'baslik' => 'JSA A', 'adimlar' => []]);
+        $b = JsaSablonu::create(['user_id' => $this->uzman->id, 'baslik' => 'JSA B', 'adimlar' => []]);
+
+        $component = Livewire::test(JsaSayfasi::class)->call('tumunuSec');
+        $this->assertEqualsCanonicalizing(
+            [(string) $a->id, (string) $b->id],
+            $component->get('secili'),
+        );
+
+        // Seçim yokken uyarır, çıktı üretmez.
+        Livewire::test(JsaSayfasi::class)->set('secili', [])->call('topluPdf')
+            ->assertNotified('Önce en az bir JSA işaretleyin');
+    }
+
+    public function test_baska_uzmanin_jsasi_toplu_secime_alinmaz(): void
+    {
+        $baskasi = User::factory()->create();
+        $yabanci = JsaSablonu::create(['user_id' => $baskasi->id, 'baslik' => 'Yabancı JSA', 'adimlar' => []]);
+
+        Livewire::test(JsaSayfasi::class)
+            ->set('secili', [(string) $yabanci->id])
+            ->call('topluPdf')
+            ->assertNotified('Önce en az bir JSA işaretleyin');
+    }
+
     public function test_firma_secilince_cikti_kunyesine_firma_gelir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek İnşaat A.Ş.']);

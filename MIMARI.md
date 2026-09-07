@@ -2466,6 +2466,61 @@ de 512M belleği aşıyordu, bkz. laravel.log 2026-09-04).
 
 - Toplam **547 test.**
 
+## Durum — 2026-09-07 (JSA kütüphanesinden toplu seçip tek belgede birleştirme)
+
+Kullanıcı isteği: "JSA kütüphane özetinden firmaya toplu seçme özelliği. Misal
+firmada kazı, elektrik tesisatı işi var, ikisini seçeyim gibi."
+
+- **`pdf.jsa` bölündü:** ortak `pdf/partials/jsa-stiller.blade.php` (`<style>`) +
+  `pdf/partials/jsa-govde.blade.php` (bir analizin `.sayfa` gövdesi — `$sablon`,
+  `$firma`, `$uzman`, `$yeniSayfa`). `pdf.jsa` = kabuk + tek `@include`.
+- **`pdf.jsa-toplu` (yeni):** kabuk + `@foreach ($sablonlar ...)`; ilk hariç her
+  gövde `page-break-before: always` ile yeni sayfada (2 kısa JSA → 2 sayfa
+  doğrulandı; `.sayfa + .sayfa` CSS'i de fallback olarak duruyor).
+- **`JsaUretici::topluPdf(iterable $sablonlar, ?Firma)`** + **`JsaWordUretici::
+  topluWord(...)`** — Word'de her analiz kendi `addSection`'ı (= yeni sayfa);
+  tekli `word()` de artık `bolumEkle()`/`imzaTablosu()`/`indir()` yardımcılarını
+  paylaşıyor. İkisinde de `@set_time_limit(300)`. Dosya adı `jsa-toplu-<firma|
+  genel>.<uzantı>`.
+- **`JsaDegerlendirmesi` sayfası:** `public array $secili` (string id'ler,
+  `wire:model.live` checkbox), `tumunuSec()` / `secimiTemizle()` / `topluPdf()` /
+  `topluWord()` (sahiplik: `sahip()` scope + `whereIn`). `sil()` seçimi de
+  temizler. Seçim > 0 ise kütüphanenin üstünde mor toplu çubuk (PDF/Word/Tümünü
+  Seç/Temizle + firmasızsa uyarı); kartlarda başlık solunda checkbox, seçili
+  kart kenarı mor.
+- `JsaDegerlendirmesiTest`: `test_secili_birden_fazla_jsa_tek_belgede_birlesir`,
+  `test_toplu_cikti_sayfadan_secilip_uretilir`,
+  `test_baska_uzmanin_jsasi_toplu_secime_alinmaz`.
+
+- Toplam **550 test.**
+
+## Durum — 2026-09-07 (İSG Kurul Toplantısı: Excel çıktısı, toplantı no, karar düzenleme, PDF sütun ayarı)
+
+Kullanıcı istekleri (tek turda, parça parça): Excel indirme; PDF/Excel'de Sorumlu
+sütununu daralt + "Durum" sütununu kaldır (karar metni genişlesin); karar metnini
+kayıttan sonra düzeltebilme; takip için toplantı numarası.
+
+- **Migration `2026_09_07_120000`** — `kurul_toplantilari.toplanti_no` (nullable).
+  `KurulToplantisi::sonrakiNo(Firma, ?tarih)` → firma+yıl bazlı `"2026/1"`,
+  `"2026/2"` … `yeniToplanti()`'de otomatik atanır, formda elle düzeltilebilir.
+  Toplantı seçici butonları + geçmiş listesi + PDF künyesi + Excel'de gösterilir.
+- **`KurulToplantisiUretici::excel()`** (yeni) — PhpSpreadsheet tek sayfa tutanak:
+  künye + KATILIMCILAR + GÜNDEM + ALINAN KARARLAR. Kararlar tablosunda **Durum
+  sütunu yok**; sütun genişlikleri Karar Metni=70, Sorumlu=16 (dar). Header
+  action "Excel İndir" (`heroicon-o-table-cells`).
+- **`pdf.kurul-toplantisi` blade:** kararlar tablosundan "Durum" sütunu (+ rozet
+  CSS/`match` blokları) kaldırıldı; genişlikler `#`4% · Gündem 24% · Karar Metni
+  (kalan, ~48%) · Sorumlu 13% · Termin 11%. Künyeye "Toplantı No" satırı.
+- **Karar düzenleme:** `duzenlenenKararIndex` + `kararDuzenle()` / `kararGuncelle()`
+  / `kararDuzenlemeIptal()`. KARARLAR tablosunda satır başına "Düzenle" → o satırın
+  altında inline form (metin/sorumlu/termin); `gundem_maddesi` + `durum` korunur.
+- `KurulToplantisiTest` +5: `test_yeni_toplantiya_firma_yil_bazli_no_atanir`,
+  `test_toplanti_no_elle_duzeltilebilir`, `test_karar_kayittan_sonra_duzenlenir`,
+  `test_excel_uretilir_durum_sutunu_olmadan`,
+  `test_pdf_kararlar_tablosunda_durum_sutunu_yok_toplanti_no_var`.
+
+- Toplam **555 test.**
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

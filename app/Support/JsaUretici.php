@@ -29,4 +29,27 @@ class JsaUretici
 
         return response()->streamDownload(fn () => print($pdf->output()), $ad);
     }
+
+    /**
+     * Kütüphaneden seçilen birden çok JSA'yı TEK PDF'te birleştirir (her analiz
+     * kendi sayfasında). Firmada birden fazla işin — kazı, elektrik tesisatı vb.
+     * — analizini tek belgede toplamak için.
+     *
+     * @param  iterable<int, JsaSablonu>  $sablonlar
+     */
+    public static function topluPdf(iterable $sablonlar, ?Firma $firma = null): StreamedResponse
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+
+        $pdf = Pdf::loadView('pdf.jsa-toplu', [
+            'sablonlar' => $sablonlar,
+            'firma' => $firma,
+        ])->setPaper('a4', 'landscape');
+
+        $ad = 'jsa-toplu-'.($firma ? Str::slug($firma->unvan) : 'genel').'.pdf';
+
+        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+    }
 }

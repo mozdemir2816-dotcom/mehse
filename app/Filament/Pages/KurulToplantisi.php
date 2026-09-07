@@ -40,6 +40,8 @@ class KurulToplantisi extends Page
 
     public ?int $toplantiId = null;
 
+    public ?string $toplantiNo = null;
+
     public ?string $tarih = null;
 
     public ?string $saat = '14:00';
@@ -56,8 +58,11 @@ class KurulToplantisi extends Page
     // Gündem ekleme
     public ?string $yeniGundemMaddesi = null;
 
-    // Karar ekleme
+    // Karar ekleme / düzenleme
     public ?int $kararGundemIndex = null;
+
+    /** Kayıtlı bir kararı düzenlerken o kararın kararlar[] içindeki indeksi. */
+    public ?int $duzenlenenKararIndex = null;
 
     public ?string $yeniKararMetni = null;
 
@@ -158,8 +163,11 @@ class KurulToplantisi extends Page
             return;
         }
 
+        $tarih = $this->tarih ?: now()->toDateString();
+
         $toplanti = $this->firma->kurulToplantilari()->create([
-            'tarih' => $this->tarih ?: now()->toDateString(),
+            'toplanti_no' => KurulToplantisiModel::sonrakiNo($this->firma, $tarih),
+            'tarih' => $tarih,
             'saat' => $this->saat,
             'yer' => $this->yer,
             'baskan' => $this->baskan,
@@ -180,6 +188,7 @@ class KurulToplantisi extends Page
         $t = $this->toplanti();
 
         if ($t) {
+            $this->toplantiNo = $t->toplanti_no;
             $this->tarih = $t->tarih?->toDateString();
             $this->saat = $t->saat;
             $this->yer = $t->yer;
@@ -190,6 +199,7 @@ class KurulToplantisi extends Page
     public function toplantiBilgileriniKaydet(): void
     {
         $this->toplanti()?->update([
+            'toplanti_no' => $this->toplantiNo,
             'tarih' => $this->tarih,
             'saat' => $this->saat,
             'yer' => $this->yer,
@@ -341,9 +351,56 @@ class KurulToplantisi extends Page
     public function kararFormuAc(int $gundemIndex): void
     {
         $this->kararGundemIndex = $gundemIndex;
+        $this->duzenlenenKararIndex = null;
         $this->yeniKararMetni = null;
         $this->yeniKararSorumlu = null;
         $this->yeniKararTermin = null;
+    }
+
+    /** Kayıtlı bir kararı düzenlemeye açar — metin/sorumlu/termin alanları doldurulur. */
+    public function kararDuzenle(int $index): void
+    {
+        $karar = $this->toplanti()?->kararlar[$index] ?? null;
+
+        if (! $karar) {
+            return;
+        }
+
+        $this->kararGundemIndex = null;
+        $this->duzenlenenKararIndex = $index;
+        $this->yeniKararMetni = $karar['karar_metni'] ?? null;
+        $this->yeniKararSorumlu = $karar['sorumlu'] ?? null;
+        $this->yeniKararTermin = $karar['termin'] ?? null;
+    }
+
+    public function kararDuzenlemeIptal(): void
+    {
+        $this->duzenlenenKararIndex = null;
+        $this->reset('yeniKararMetni', 'yeniKararSorumlu', 'yeniKararTermin');
+    }
+
+    /** Düzenlenen kararın metin/sorumlu/termin alanlarını günceller (gündem + durum korunur). */
+    public function kararGuncelle(): void
+    {
+        $t = $this->toplanti();
+        $kararlar = $t?->kararlar ?? [];
+
+        if (! $t || $this->duzenlenenKararIndex === null
+            || ! isset($kararlar[$this->duzenlenenKararIndex])
+            || blank($this->yeniKararMetni)) {
+            return;
+        }
+
+        $kararlar[$this->duzenlenenKararIndex] = [
+            ...$kararlar[$this->duzenlenenKararIndex],
+            'karar_metni' => $this->yeniKararMetni,
+            'sorumlu' => $this->yeniKararSorumlu,
+            'termin' => $this->yeniKararTermin,
+        ];
+        $t->update(['kararlar' => $kararlar]);
+
+        $this->kararDuzenlemeIptal();
+        Notification::make()->title('Karar güncellendi')->success()->send();
     }
 
     public function kararAiOner(): void
@@ -432,6 +489,13 @@ class KurulToplantisi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->toplanti() !== null)
                 ->action(fn () => KurulToplantisiUretici::pdf($this->toplanti())),
+
+            Action::make('excel')
+                ->label('Excel İndir')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn () => $this->toplanti() !== null)
+                ->action(fn () => KurulToplantisiUretici::excel($this->toplanti())),
         ];
     }
 }

@@ -123,6 +123,93 @@ class KurulToplantisiTest extends TestCase
         $this->assertSame('beklemede', $toplanti->kararlar[0]['durum']);
     }
 
+    public function test_yeni_toplantiya_firma_yil_bazli_no_atanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $yil = now()->year;
+
+        Livewire::test(KurulSayfasi::class)->set('firmaId', $firma->id)->call('yeniToplanti');
+        Livewire::test(KurulSayfasi::class)->set('firmaId', $firma->id)->call('yeniToplanti');
+
+        $nolar = $firma->kurulToplantilari()->orderBy('id')->pluck('toplanti_no')->all();
+        $this->assertSame(["{$yil}/1", "{$yil}/2"], $nolar);
+    }
+
+    public function test_toplanti_no_elle_duzeltilebilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = $firma->kurulToplantilari()->create(['toplanti_no' => '2026/1', 'tarih' => now(), 'katilimcilar' => [], 'gundem' => [], 'kararlar' => []]);
+
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('toplantiSec', $toplanti->id)
+            ->set('toplantiNo', '2026/A-1')
+            ->call('toplantiBilgileriniKaydet');
+
+        $this->assertSame('2026/A-1', $toplanti->refresh()->toplanti_no);
+    }
+
+    public function test_karar_kayittan_sonra_duzenlenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = $firma->kurulToplantilari()->create([
+            'tarih' => now(), 'katilimcilar' => [], 'gundem' => ['Gündem X'],
+            'kararlar' => [['gundem_maddesi' => 'Gündem X', 'karar_metni' => 'Eski metin', 'sorumlu' => 'A', 'termin' => null, 'durum' => 'devam_ediyor']],
+        ]);
+
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('toplantiSec', $toplanti->id)
+            ->call('kararDuzenle', 0)
+            ->assertSet('yeniKararMetni', 'Eski metin')
+            ->set('yeniKararMetni', 'Yeni düzeltilmiş metin')
+            ->set('yeniKararSorumlu', 'B')
+            ->call('kararGuncelle');
+
+        $karar = $toplanti->refresh()->kararlar[0];
+        $this->assertSame('Yeni düzeltilmiş metin', $karar['karar_metni']);
+        $this->assertSame('B', $karar['sorumlu']);
+        $this->assertSame('Gündem X', $karar['gundem_maddesi']); // korunur
+        $this->assertSame('devam_ediyor', $karar['durum']);      // korunur
+    }
+
+    public function test_excel_uretilir_durum_sutunu_olmadan(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = KurulToplantisi::create([
+            'firma_id' => $firma->id, 'toplanti_no' => '2026/3', 'tarih' => now(),
+            'katilimcilar' => [['ad_soyad' => 'Test', 'gorev' => 'İGU', 'katildi' => true]],
+            'gundem' => ['Madde 1'],
+            'kararlar' => [['gundem_maddesi' => 'Madde 1', 'karar_metni' => 'Karar', 'sorumlu' => 'X', 'termin' => null, 'durum' => 'beklemede']],
+        ]);
+
+        $yanit = KurulToplantisiUretici::excel($toplanti);
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('PK', ob_get_clean());
+    }
+
+    public function test_pdf_kararlar_tablosunda_durum_sutunu_yok_toplanti_no_var(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = KurulToplantisi::create([
+            'firma_id' => $firma->id, 'toplanti_no' => '2026/7', 'tarih' => now(),
+            'katilimcilar' => [], 'gundem' => ['G1'],
+            'kararlar' => [['gundem_maddesi' => 'G1', 'karar_metni' => 'K1', 'sorumlu' => 'S1', 'termin' => null, 'durum' => 'tamamlandi']],
+        ]);
+
+        $html = view('pdf.kurul-toplantisi', ['toplanti' => $toplanti, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('Toplantı No', $html);
+        $this->assertStringContainsString('2026/7', $html);
+        $this->assertStringContainsString('<th>Karar Metni</th>', $html);
+        // Kararlar tablosunda "Durum" başlığı/rozeti kaldırıldı (karar metni sütunu genişledi).
+        $this->assertStringNotContainsString('<th>Durum</th>', $html);
+        $this->assertStringNotContainsString('Tamamlandı', $html);
+        $this->assertStringNotContainsString('class="durum"', $html);
+    }
+
     public function test_karar_durumu_guncellenir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

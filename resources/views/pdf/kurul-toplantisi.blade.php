@@ -15,7 +15,7 @@
     table.liste { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-bottom: 6px; }
     table.liste th, table.liste td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
     table.liste th { background: #f0f0f0; }
-    .durum { color: #fff; padding: 1px 5px; border-radius: 3px; font-size: 8.5px; white-space: nowrap; }
+    table.kararlar td.sorumlu, table.kararlar td.termin { white-space: nowrap; }
     .imza { margin-top: 40px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
 </style>
@@ -30,12 +30,15 @@
 
     <table class="kunye">
         <tr>
+            <td>Toplantı No</td><td>{{ $toplanti->toplanti_no ?: '—' }}</td>
             <td>Tarih</td><td>{{ $toplanti->tarih?->format('d.m.Y') }}</td>
-            <td>Saat</td><td>{{ $toplanti->saat ?: '—' }}</td>
         </tr>
         <tr>
+            <td>Saat</td><td>{{ $toplanti->saat ?: '—' }}</td>
             <td>Yer</td><td>{{ $toplanti->yer ?: '—' }}</td>
-            <td>Toplantı Başkanı</td><td>{{ $toplanti->baskan ?: '—' }}</td>
+        </tr>
+        <tr>
+            <td>Toplantı Başkanı</td><td colspan="3">{{ $toplanti->baskan ?: '—' }}</td>
         </tr>
     </table>
 
@@ -65,31 +68,24 @@
     </table>
 
     <h2>ALINAN KARARLAR</h2>
-    <table class="liste">
-        <tr><th style="width:5%">#</th><th>İlgili Gündem</th><th>Karar Metni</th><th>Sorumlu</th><th>Termin</th><th>Durum</th></tr>
+    <table class="liste kararlar">
+        <tr>
+            <th style="width:4%">#</th>
+            <th style="width:24%">İlgili Gündem</th>
+            <th>Karar Metni</th>
+            <th style="width:13%">Sorumlu</th>
+            <th style="width:11%">Termin</th>
+        </tr>
         @forelse (($toplanti->kararlar ?? []) as $i => $k)
-            @php
-                $renk = match ($k['durum'] ?? 'beklemede') {
-                    'tamamlandi' => '#10b981',
-                    'devam_ediyor' => '#f59e0b',
-                    default => '#6b7280',
-                };
-                $durumEtiket = match ($k['durum'] ?? 'beklemede') {
-                    'tamamlandi' => 'Tamamlandı',
-                    'devam_ediyor' => 'Devam Ediyor',
-                    default => 'Beklemede',
-                };
-            @endphp
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $k['gundem_maddesi'] ?? '—' }}</td>
                 <td>{{ $k['karar_metni'] ?? '—' }}</td>
-                <td>{{ $k['sorumlu'] ?? '—' }}</td>
-                <td>{{ $k['termin'] ?? '—' }}</td>
-                <td><span class="durum" style="background:{{ $renk }}">{{ $durumEtiket }}</span></td>
+                <td class="sorumlu">{{ $k['sorumlu'] ?: '—' }}</td>
+                <td class="termin">{{ $k['termin'] ?: '—' }}</td>
             </tr>
         @empty
-            <tr><td colspan="6" style="color:#888">Karar alınmadı.</td></tr>
+            <tr><td colspan="5" style="color:#888">Karar alınmadı.</td></tr>
         @endforelse
     </table>
 

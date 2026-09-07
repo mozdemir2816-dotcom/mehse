@@ -46,6 +46,9 @@ class JsaDegerlendirmesi extends Page
 
     public string $arama = '';
 
+    /** @var array<int, string> toplu çıktı için işaretlenen JSA id'leri */
+    public array $secili = [];
+
     /*
     |--------------------------------------------------------------------------
     | Hesaplanan veriler
@@ -104,8 +107,61 @@ class JsaDegerlendirmesi extends Page
     public function sil(int $id): void
     {
         JsaSablonu::sahip((int) Filament::auth()->id())->find($id)?->delete();
+        $this->secili = array_values(array_diff($this->secili, [(string) $id]));
         unset($this->sablonlar);
         Notification::make()->title('JSA kütüphaneden silindi')->success()->send();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toplu seçim (firmada birden çok iş: kazı + elektrik tesisatı gibi)
+    |--------------------------------------------------------------------------
+    */
+
+    public function tumunuSec(): void
+    {
+        $this->secili = $this->sablonlar->pluck('id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    public function secimiTemizle(): void
+    {
+        $this->secili = [];
+    }
+
+    /** @return Collection<int, JsaSablonu> */
+    private function seciliKayitlar(): Collection
+    {
+        return JsaSablonu::query()
+            ->sahip((int) Filament::auth()->id())
+            ->whereIn('id', array_filter($this->secili))
+            ->latest()
+            ->get();
+    }
+
+    public function topluPdf()
+    {
+        $kayitlar = $this->seciliKayitlar();
+
+        if ($kayitlar->isEmpty()) {
+            Notification::make()->title('Önce en az bir JSA işaretleyin')->warning()->send();
+
+            return null;
+        }
+
+        return JsaUretici::topluPdf($kayitlar, $this->firma);
+    }
+
+    public function topluWord()
+    {
+        $kayitlar = $this->seciliKayitlar();
+
+        if ($kayitlar->isEmpty()) {
+            Notification::make()->title('Önce en az bir JSA işaretleyin')->warning()->send();
+
+            return null;
+        }
+
+        return JsaWordUretici::topluWord($kayitlar, $this->firma);
     }
 
     protected function getHeaderActions(): array

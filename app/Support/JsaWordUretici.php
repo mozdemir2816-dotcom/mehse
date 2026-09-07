@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Firma;
 use App\Models\JsaSablonu;
 use Illuminate\Support\Str;
+use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\SimpleType\Jc;
@@ -25,6 +26,42 @@ class JsaWordUretici
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontSize(8);
 
+        self::bolumEkle($phpWord, $sablon, $firma);
+
+        $ad = 'jsa-'.Str::slug($sablon->baslik ?: 'ise-ozgu-risk')
+            .($firma ? '-'.Str::slug($firma->unvan) : '').'.docx';
+
+        return self::indir($phpWord, $ad);
+    }
+
+    /**
+     * Kütüphaneden seçilen birden çok JSA'yı TEK .docx'te birleştirir — her
+     * analiz kendi bölümünde (yeni sayfa). Firmadaki farklı işlerin (kazı,
+     * elektrik tesisatı vb.) analizini tek belgede toplamak için.
+     *
+     * @param  iterable<int, JsaSablonu>  $sablonlar
+     */
+    public static function topluWord(iterable $sablonlar, ?Firma $firma = null): StreamedResponse
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+
+        $phpWord = new PhpWord;
+        $phpWord->setDefaultFontSize(8);
+
+        foreach ($sablonlar as $sablon) {
+            self::bolumEkle($phpWord, $sablon, $firma);
+        }
+
+        $ad = 'jsa-toplu-'.($firma ? Str::slug($firma->unvan) : 'genel').'.docx';
+
+        return self::indir($phpWord, $ad);
+    }
+
+    /** Bir JSA'yı kendi yatay bölümü olarak belgeye ekler (yeni bölüm = yeni sayfa). */
+    private static function bolumEkle(PhpWord $phpWord, JsaSablonu $sablon, ?Firma $firma): void
+    {
         $bolum = $phpWord->addSection([
             'orientation' => 'landscape',
             'marginTop' => 720, 'marginBottom' => 720, 'marginLeft' => 720, 'marginRight' => 720,
@@ -77,6 +114,11 @@ class JsaWordUretici
             }
         }
 
+        self::imzaTablosu($bolum, $sablon, $firma);
+    }
+
+    private static function imzaTablosu(Section $bolum, JsaSablonu $sablon, ?Firma $firma): void
+    {
         $bolum->addTextBreak();
         $bolum->addText('Onay ve İmza', ['bold' => true, 'size' => 10]);
 
@@ -85,6 +127,7 @@ class JsaWordUretici
         foreach (['Görevi / Rolü', 'Adı Soyadı', 'İmza', 'Tarih'] as $b) {
             $imza->addCell(3500, ['bgColor' => self::BASLIK_ARKA])->addText($b, ['bold' => true, 'size' => 8]);
         }
+
         // Firma seçiliyse "Hazırlayan" satırı firmaya atanmış İSG Uzmanı + kaşesiyle dolar.
         $uzman = $firma?->igu;
 
@@ -112,12 +155,12 @@ class JsaWordUretici
 
             $imza->addCell(3500)->addText((string) ($rol['tarih'] ?? ''), ['size' => 8]);
         }
+    }
 
+    private static function indir(PhpWord $phpWord, string $ad): StreamedResponse
+    {
         $geciciYol = tempnam(sys_get_temp_dir(), 'mehse-jsa').'.docx';
         IOFactory::createWriter($phpWord, 'Word2007')->save($geciciYol);
-
-        $ad = 'jsa-'.Str::slug($sablon->baslik ?: 'ise-ozgu-risk')
-            .($firma ? '-'.Str::slug($firma->unvan) : '').'.docx';
 
         return response()->streamDownload(function () use ($geciciYol) {
             print(file_get_contents($geciciYol));

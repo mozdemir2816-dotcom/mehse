@@ -7,7 +7,9 @@
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Firma seçip yeni bir kurul toplantısı oluşturun veya geçmiş bir toplantıyı seçin;
-        katılımcı/gündem/karar bilgilerini doldurup "PDF İndir" ile resmi tutanağı alın.
+        katılımcı/gündem/karar bilgilerini doldurup <strong>"PDF İndir"</strong> veya
+        <strong>"Excel İndir"</strong> ile resmi tutanağı alın. Her toplantıya firma+yıl
+        bazlı bir <strong>toplantı numarası</strong> atanır (elle düzeltilebilir).
     </p>
 
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'isg_kurulu'])
@@ -38,13 +40,18 @@
                             style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
                                 border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
-                            {{ $tp->tarih?->format('d.m.Y') }} {{ $tp->saat }}
+                            @if ($tp->toplanti_no)<strong>No {{ $tp->toplanti_no }}</strong> · @endif{{ $tp->tarih?->format('d.m.Y') }} {{ $tp->saat }}
                         </button>
                     @endforeach
                 </div>
             @endif
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr)) auto;gap:.75rem;align-items:end">
+                <div>
+                    <label style="font-weight:600;font-size:.8rem">Toplantı No</label>
+                    <input type="text" wire:model="toplantiNo" placeholder="Örn: 2026/1"
+                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
+                </div>
                 <div>
                     <label style="font-weight:600;font-size:.8rem">Tarih</label>
                     <input type="date" wire:model="tarih"
@@ -228,10 +235,32 @@
                                     <option value="tamamlandi" @selected(($k['durum'] ?? '') === 'tamamlandi')>Tamamlandı</option>
                                 </select>
                             </td>
-                            <td style="padding:.3rem .5rem;text-align:right">
+                            <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
+                                <button type="button" wire:click="kararDuzenle({{ $i }})" style="color:{{ $mor }};cursor:pointer;background:none;border:none;font-size:.78rem">Düzenle</button>
                                 <button type="button" wire:click="kararSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
+                        @if ($duzenlenenKararIndex === $i)
+                            <tr>
+                                <td colspan="6" style="padding:.5rem">
+                                    <div style="{{ $kutu }};background:rgb(139 92 246 / .05);border-color:{{ $mor }}">
+                                        <div style="font-weight:600;font-size:.8rem;margin-bottom:.4rem">Kararı düzenle — {{ $k['gundem_maddesi'] }}</div>
+                                        <textarea wire:model="yeniKararMetni" rows="2" placeholder="Karar metni"
+                                            style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem;font-family:inherit"></textarea>
+                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem">
+                                            <input type="text" wire:model="yeniKararSorumlu" placeholder="Sorumlu"
+                                                style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                                            <input type="date" wire:model="yeniKararTermin"
+                                                style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                                        </div>
+                                        <div style="margin-top:.5rem;display:flex;gap:.5rem">
+                                            <x-filament::button size="sm" wire:click="kararGuncelle">Güncelle</x-filament::button>
+                                            <x-filament::button size="sm" color="gray" wire:click="kararDuzenlemeIptal">Vazgeç</x-filament::button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @endforeach
                 </table>
             @else
@@ -246,7 +275,10 @@
                 <table style="width:100%;border-collapse:collapse;font-size:.82rem">
                     @foreach ($this->toplantilar as $tp)
                         <tr>
-                            <td style="padding:.3rem .5rem">{{ $tp->tarih?->format('d.m.Y') }} {{ $tp->saat }} — {{ $tp->yer ?: 'Yer belirtilmedi' }}</td>
+                            <td style="padding:.3rem .5rem">
+                                @if ($tp->toplanti_no)<strong>No {{ $tp->toplanti_no }}</strong> — @endif
+                                {{ $tp->tarih?->format('d.m.Y') }} {{ $tp->saat }} — {{ $tp->yer ?: 'Yer belirtilmedi' }}
+                            </td>
                             <td style="padding:.3rem .5rem;text-align:right">
                                 <x-filament::button size="xs" color="danger" wire:click="toplantiSil({{ $tp->id }})">Sil</x-filament::button>
                             </td>
