@@ -6,6 +6,7 @@ use App\Filament\Pages\EgitimKatilim as EgitimSayfasi;
 use App\Models\Calisan;
 use App\Models\EgitimKatilim;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\User;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
@@ -289,6 +290,32 @@ class EgitimKatilimTest extends TestCase
         $yanit = Livewire::test(EgitimSayfasi::class)->instance()->bosFormIndir('isg_kurulu');
 
         $this->assertInstanceOf(StreamedResponse::class, $yanit);
+    }
+
+    public function test_firma_secilince_egitmen_bilgileri_firma_kaydindan_gelir(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'igu', 'ad_soyad' => 'İGU Ayşe', 'kase_gorseli' => 'isg-profesyonel-kase/ayse.png',
+        ]);
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Mehmet', 'kase_gorseli' => 'isg-profesyonel-kase/mehmet.png',
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'igu_id' => $igu->id, 'isyeri_hekimi_id' => $hekim->id,
+        ]);
+
+        $component = Livewire::test(EgitimSayfasi::class)->set('firmaId', $firma->id);
+
+        $component->assertSet('isyeriHekimiVar', true)
+            ->assertSet('isyeriHekimiAdi', 'Dr. Mehmet');
+
+        $component->set('belgeTarihi', now()->toDateString())->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('İGU Ayşe', $kayit->isg_uzmani_adi);
+        $this->assertSame('isg-profesyonel-kase/ayse.png', $kayit->isg_uzmani_kase);
+        $this->assertSame('Dr. Mehmet', $kayit->isyeri_hekimi_adi);
+        $this->assertSame('isg-profesyonel-kase/mehmet.png', $kayit->isyeri_hekimi_kase);
     }
 
     public function test_baska_uzmanin_firmasi_secilemez(): void

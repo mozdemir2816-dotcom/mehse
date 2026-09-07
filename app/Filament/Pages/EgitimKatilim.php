@@ -186,7 +186,20 @@ class EgitimKatilim extends Page
     {
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
+        $this->egitmenBilgileriYenile();
         $this->icerikYenile();
+    }
+
+    /**
+     * Firma seçilince eğitmen bilgilerini firmaya atanmış İSG Profesyoneli'nden
+     * (Firma.igu / isyeriHekimi) çek — kaşesi belge oluşturulunca kopyalanır.
+     */
+    private function egitmenBilgileriYenile(): void
+    {
+        $hekim = $this->firma?->isyeriHekimi;
+
+        $this->isyeriHekimiVar = $hekim !== null;
+        $this->isyeriHekimiAdi = $hekim?->ad_soyad;
     }
 
     public function updatedBaslikAnahtari(): void
@@ -330,8 +343,13 @@ class EgitimKatilim extends Page
             'belge_tarihi' => $this->belgeTarihi,
             'sure_gun' => $this->sureGun,
             'isg_uzmani_var' => $this->isgUzmaniVar,
+            'isg_uzmani_adi' => $this->isgUzmaniVar ? $this->firma->igu?->ad_soyad : null,
+            'isg_uzmani_kase' => $this->isgUzmaniVar ? $this->firma->igu?->kase_gorseli : null,
             'isyeri_hekimi_var' => $this->isyeriHekimiVar,
-            'isyeri_hekimi_adi' => $this->isyeriHekimiVar ? $this->isyeriHekimiAdi : null,
+            'isyeri_hekimi_adi' => $this->isyeriHekimiVar
+                ? ($this->isyeriHekimiAdi ?: $this->firma->isyeriHekimi?->ad_soyad)
+                : null,
+            'isyeri_hekimi_kase' => $this->isyeriHekimiVar ? $this->firma->isyeriHekimi?->kase_gorseli : null,
             'konu_secimleri' => $this->icerik,
             'katilimcilar' => $this->katilimcilarTopla(),
         ]);

@@ -148,6 +148,17 @@
                         style="padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
                 @endif
             </div>
+            @if ($this->firma)
+                <div style="margin-top:.5rem;font-size:.78rem;color:rgb(107 114 128)">
+                    İş Güvenliği Uzmanı:
+                    <strong>{{ $this->firma->igu?->ad_soyad ?? 'firmaya atanmamış' }}</strong>
+                    @if ($this->firma->igu && ! $this->firma->igu->kase_gorseli) (kaşe görseli yok) @endif
+                    &nbsp;•&nbsp; İşyeri Hekimi:
+                    <strong>{{ $this->firma->isyeriHekimi?->ad_soyad ?? 'firmaya atanmamış' }}</strong>
+                    @if ($this->firma->isyeriHekimi && ! $this->firma->isyeriHekimi->kase_gorseli) (kaşe görseli yok) @endif
+                    <br>Ad ve kaşe, belge oluşturulduğunda firma kaydından (İSG Profesyonelleri) alınır.
+                </div>
+            @endif
         </div>
     </x-filament::section>
 

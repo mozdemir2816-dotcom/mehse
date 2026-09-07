@@ -2384,6 +2384,29 @@ benzer dosyalar; **duvar örme kanonik biçim** kabul edildi).
 
 - Toplam **543 test.**
 
+## Durum — 2026-09-07 (Eğitim Katılım Formu'na eğitmen kaşe/imza alanı)
+
+Kullanıcı isteği: "eğitim katılım formunda işyeri hekimi ve uzmanın kaşesini
+kullan. Firma kayıttan uzman ve hekim bilgilerini çek."
+
+- **Migration `2026_09_07_110000`** — `egitim_katilimlari`e `isg_uzmani_adi`,
+  `isg_uzmani_kase`, `isyeri_hekimi_kase` (nullable). `isyeri_hekimi_adi` zaten
+  vardı.
+- **`EgitimKatilim` sayfası:** firma seçilince `egitmenBilgileriYenile()` →
+  `Firma.isyeriHekimi` atanmışsa `isyeriHekimiVar` otomatik işaretlenir ve adı
+  input'a gelir. `kaydet()` belgeyi oluştururken ad + `kase_gorseli`'ni
+  `Firma.igu` / `Firma.isyeriHekimi`'den **anlık kopyalar** (DÖF / İş Kazası
+  Raporu deseni — sonradan atama değişse bile belge sabit). Kaşesi olmayan /
+  atanmamış profesyonel için sayfada uyarı metni.
+- **`pdf.egitim-katilim` blade:** katılımcı tablosunun altına 2 hücreli
+  "Eğitimi Veren" imza tablosu — rol + ad + kaşe görseli (`storage_path(
+  'app/public/...')`, sertifika deseni) + "Kaşe / İmza" satırı. Künye
+  "Eğitimciler" satırına uzman adı da eklendi. Boş formda (firma yok) noktalı
+  imza satırı.
+- `EgitimKatilimTest`e `test_firma_secilince_egitmen_bilgileri_firma_kaydindan_gelir`.
+
+- Toplam **544 test.**
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

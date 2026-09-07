@@ -24,6 +24,13 @@
     table.katilim th, table.katilim td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     table.katilim th { background: #f0f0f0; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 18px; page-break-inside: avoid; }
+    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 8px 10px; font-size: 9.5px; }
+    table.imza .rol { font-weight: bold; margin-bottom: 2px; }
+    table.imza .ad { margin-bottom: 4px; }
+    table.imza .kase { height: 60px; }
+    table.imza .kase img { max-height: 58px; max-width: 90%; }
+    table.imza .imza-satir { color: #666; }
 </style>
 </head>
 <body>
@@ -50,7 +57,7 @@
             <td>Süre</td><td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null)) ({{ $icerik['saat'] }} saat @if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar Eğitimi @endif) @endif</td>
             <td>Eğitimciler</td>
             <td>
-                @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı @endif
+                @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı{{ $kayit->isg_uzmani_adi ? ' ('.$kayit->isg_uzmani_adi.')' : '' }} @endif
                 @if ($kayit->isg_uzmani_var && $kayit->isyeri_hekimi_var) · @endif
                 @if ($kayit->isyeri_hekimi_var) İşyeri Hekimi{{ $kayit->isyeri_hekimi_adi ? ' ('.$kayit->isyeri_hekimi_adi.')' : '' }} @endif
                 @if (! $kayit->isg_uzmani_var && ! $kayit->isyeri_hekimi_var) — @endif
@@ -144,6 +151,37 @@
             </tr>
         @endfor
     </table>
+
+    @if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
+        <table class="imza">
+            <tr>
+                @if ($kayit->isg_uzmani_var)
+                    <td>
+                        <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
+                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: '.....................................' }}</div>
+                        <div class="kase">
+                            @if ($kayit->isg_uzmani_kase)
+                                <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
+                            @endif
+                        </div>
+                        <div class="imza-satir">Kaşe / İmza</div>
+                    </td>
+                @endif
+                @if ($kayit->isyeri_hekimi_var)
+                    <td>
+                        <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
+                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: '.....................................' }}</div>
+                        <div class="kase">
+                            @if ($kayit->isyeri_hekimi_kase)
+                                <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
+                            @endif
+                        </div>
+                        <div class="imza-satir">Kaşe / İmza</div>
+                    </td>
+                @endif
+            </tr>
+        </table>
+    @endif
 
     <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>
 
