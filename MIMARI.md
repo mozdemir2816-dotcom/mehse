@@ -2339,7 +2339,7 @@ Tebliğ'de kurulan iki desen):
   gerekli — daha önce link yoktu; PDF'ler `storage_path()` kullandığından
   fark edilmemişti ama panelde `Storage::url()` bağlantıları kırık olurdu).
 
-- Toplam **537 test.**
+- Toplam **536 test** (1513 assertion, hepsi yeşil).
 
 ## Notlar
 
