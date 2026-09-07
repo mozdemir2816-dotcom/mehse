@@ -2296,13 +2296,35 @@ zaten vardı — hangisinin hangi belgeye uyduğuna göre seçildi:
   `CezaTebligTest`'e 2 yeni test (yükleme+kayıt+silme, PDF'de kanıt
   sayfasının gerçekten oluştuğu).
 
-**Kullanıcıya önerilen ek yerler (istenirse ayrı iş olarak eklenebilir,
-şimdilik UYGULANMADI):**
-- **İş Kazası Raporu** — olay yeri/kaza sonrası durumun fotoğrafı, gerçek
-  OSGB pratiğinde neredeyse her zaman istenir; en güçlü aday.
-- **Tespit Öneri Defteri** — DÖF ile aynı "tespit" doğasında, aynı
-  per-madde fotoğraf deseni doğrudan uygulanabilir.
-- Daha düşük öncelikli: İş İzin Formu (çalışma alanı/izin panosu fotoğrafı).
+**Kullanıcıya önerilen ek yerler:**
+- ~~**İş Kazası Raporu**~~ ✅ 07.09.2026'da eklendi (bkz. aşağıdaki Durum).
+- ~~**Tespit Öneri Defteri**~~ ✅ 07.09.2026'da eklendi (bkz. aşağıdaki Durum).
+- Daha düşük öncelikli, HÂLÂ uygulanmadı: İş İzin Formu (çalışma alanı/izin
+  panosu fotoğrafı).
+
+## Durum — 2026-09-07 (İş Kazası Raporu + Tespit Öneri Defteri — fotoğraf kanıtı)
+
+Kullanıcı isteği: "bugün artık bu programı bitirelim" — önceki oturumda
+"önerilen ama uygulanmayan" olarak bırakılan iki fotoğraf ekleme yeri
+tamamlandı. Hangi konvansiyonun uyduğuna göre seçildi (DÖF/Tatbikat/Ceza
+Tebliğ'de kurulan iki desen):
+
+- **İş Kazası Raporu — GENEL çoklu fotoğraf** (Tatbikat + Ceza/Tebliğ deseni):
+  olay yeri / kaza sonrası durum / ekipman gibi tüm rapora ait kanıtlar madde
+  bazlı değil. Yeni `fotograflar` json sütunu (migration `2026_09_07_090000`),
+  `yeniFotograflar` çoklu `WithFileUploads` + `fotoSil()`, `kaydet()` sırasında
+  `is-kazasi-foto/` diskine yazılır. PDF: ana raporun ardından her foto ayrı
+  tam sayfalık "FOTOĞRAF KANITI N" sayfası (`.foto-sayfa`,
+  `page-break-before: always`). `IsKazasiRaporuTest`'e 2 yeni test.
+- **Tespit Öneri Defteri — PER-MADDE fotoğraf** (DÖF deseni): "tespit"
+  doğasında, her serbest madde kendi kanıt fotoğrafını taşıyabilir
+  (`maddeler` json'una `foto_yolu` — migration GEREKMEDİ). Yalnız serbest
+  (kendiniz yazın) akışında yükleme var; hazır katalog maddeleri `foto_yolu
+  => null`. `tespit-oneri-foto/` diskine yazılır. Defter tablosunda 📷
+  göstergesi; PDF'te ilgili maddenin ardından "FOTOĞRAF KANITI · Madde N"
+  sayfası (DÖF `dof-raporu.blade.php` deseniyle birebir).
+  `TespitOneriDefteriTest`'e 2 yeni test.
+- Toplam **536 test.**
 
 ## Notlar
 

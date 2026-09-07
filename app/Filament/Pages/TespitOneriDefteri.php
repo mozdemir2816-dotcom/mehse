@@ -12,6 +12,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
 /**
@@ -20,6 +21,8 @@ use UnitEnum;
  */
 class TespitOneriDefteri extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.pages.tespit-oneri-defteri';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
@@ -46,6 +49,9 @@ class TespitOneriDefteri extends Page
     public ?string $serbestTespit = null;
 
     public ?string $serbestOneri = null;
+
+    /** Serbest tespitin fotoğraf kanıtı (opsiyonel). */
+    public $yeniFoto = null;
 
     public function mount(): void
     {
@@ -159,6 +165,7 @@ class TespitOneriDefteri extends Page
             'oneri' => $eklenecek['oneri'],
             'dayanak' => $eklenecek['dayanak'] ?? null,
             'oncelik' => $eklenecek['oncelik'] ?? 'orta',
+            'foto_yolu' => null,
         ];
         $d->update(['maddeler' => $maddeler]);
 
@@ -196,10 +203,11 @@ class TespitOneriDefteri extends Page
             'oneri' => $this->serbestOneri,
             'dayanak' => null,
             'oncelik' => 'orta',
+            'foto_yolu' => $this->yeniFoto?->store('tespit-oneri-foto', 'public'),
         ];
         $d->update(['maddeler' => $maddeler]);
 
-        $this->reset('serbestTespit', 'serbestOneri');
+        $this->reset('serbestTespit', 'serbestOneri', 'yeniFoto');
         Notification::make()->title('Madde eklendi')->success()->send();
     }
 

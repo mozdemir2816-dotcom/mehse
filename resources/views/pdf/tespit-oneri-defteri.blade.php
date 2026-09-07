@@ -18,6 +18,9 @@
     .dayanak { font-size: 8.5px; color: #666; }
     .imza { margin-top: 40px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
+    .foto-sayfa { page-break-before: always; }
+    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+    .foto-sayfa img { max-width: 100%; max-height: 560px; }
 </style>
 </head>
 <body>
@@ -60,5 +63,19 @@
     </table>
 
 </div>
+
+@foreach (($defter->maddeler ?? []) as $i => $m)
+    @if (! empty($m['foto_yolu']))
+        <div class="sayfa foto-sayfa">
+            <div class="baslik">
+                <h1>İSG TESPİT VE ÖNERİ DEFTERİ</h1>
+                <div style="font-size:11px">{{ $firma?->unvan }}</div>
+            </div>
+            <div class="baslik2">FOTOĞRAF KANITI · Madde {{ $i + 1 }} — {{ $m['tespit'] ?? '' }}</div>
+            <img src="{{ storage_path('app/public/'.$m['foto_yolu']) }}">
+        </div>
+    @endif
+@endforeach
+
 </body>
 </html>

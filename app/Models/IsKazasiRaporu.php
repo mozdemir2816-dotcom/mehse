@@ -20,6 +20,7 @@ class IsKazasiRaporu extends Model
         'kayip_gun_sayisi' => 'integer',
         'kok_neden_kategorileri' => 'array',
         'taniklar' => 'array',
+        'fotograflar' => 'array',
         'sgk_bildirimi_yapildi' => 'boolean',
     ];
 

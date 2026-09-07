@@ -21,6 +21,9 @@
     .imza img { max-height: 42px; display: block; margin: 0 auto -34px auto; }
     .sgk-durum { font-weight: bold; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
+    .foto-sayfa { page-break-before: always; }
+    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+    .foto-sayfa img { max-width: 100%; max-height: 560px; }
 </style>
 </head>
 <body>
@@ -100,5 +103,17 @@
     <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu m.14 uyarınca düzenlenmiştir.</p>
 
 </div>
+
+@foreach (($rapor->fotograflar ?? []) as $i => $foto)
+    <div class="sayfa foto-sayfa">
+        <div class="baslik">
+            <h1>İŞ KAZASI İNCELEME RAPORU</h1>
+            <div style="font-size:11px">{{ $firma?->unvan }}</div>
+        </div>
+        <div class="baslik2">FOTOĞRAF KANITI {{ $i + 1 }}</div>
+        <img src="{{ storage_path('app/public/'.$foto) }}">
+    </div>
+@endforeach
+
 </body>
 </html>

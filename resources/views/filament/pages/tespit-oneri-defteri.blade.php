@@ -87,6 +87,17 @@
             <textarea wire:model="serbestOneri" rows="2" placeholder="Önerinizi yazın (örn: Acil çıkış kapısı her zaman açılabilir durumda bulundurulmalıdır.)"
                 style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem;font-family:inherit;margin-top:.5rem;margin-bottom:.5rem"></textarea>
 
+            <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
+                <input type="file" wire:model="yeniFoto" accept="image/*" style="font-size:.8rem">
+                @if ($yeniFoto)
+                    <img src="{{ $yeniFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.35rem;border:1px solid rgb(107 114 128 / .3)">
+                    <button type="button" wire:click="$set('yeniFoto', null)" style="color:#ef4444;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
+                @endif
+            </div>
+            <p style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.5rem">
+                İsteğe bağlı fotoğraf kanıtı — PDF'te ilgili maddenin ardından ayrı bir sayfa olarak eklenir.
+            </p>
+
             <x-filament::button size="sm" wire:click="serbestEkle">+ Listeye Ekle</x-filament::button>
         </x-filament::section>
 
@@ -115,7 +126,10 @@
                     </tr>
                     @foreach ($this->defter->maddeler as $i => $m)
                         <tr>
-                            <td style="padding:.3rem .5rem">{{ $m['tespit'] }}</td>
+                            <td style="padding:.3rem .5rem">
+                                @if (! empty($m['foto_yolu'])) <span title="Fotoğraf kanıtı ekli">📷</span> @endif
+                                {{ $m['tespit'] }}
+                            </td>
                             <td style="padding:.3rem .5rem">{{ $m['oneri'] }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
                                 <button type="button" wire:click="maddeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>

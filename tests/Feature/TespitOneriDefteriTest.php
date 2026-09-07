@@ -9,7 +9,9 @@ use App\Models\User;
 use App\Support\GeminiOneriDanismani;
 use App\Support\TespitOneriDefteriUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -96,6 +98,42 @@ class TespitOneriDefteriTest extends TestCase
 
         $this->assertFalse(GeminiOneriDanismani::aktifMi());
         $this->assertNull(GeminiOneriDanismani::oner('Bir tespit'));
+    }
+
+    public function test_serbest_madde_fotografi_yuklenip_saklanir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(DefterSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('serbestTespit', 'Kaygan zemin tespit edildi.')
+            ->set('serbestOneri', 'Kaymaz yüzey uygulanmalı.')
+            ->set('yeniFoto', UploadedFile::fake()->image('kanit.jpg'))
+            ->call('serbestEkle');
+
+        $defter = TespitOneriDefteri::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertCount(1, $defter->maddeler);
+        $this->assertNotNull($defter->maddeler[0]['foto_yolu']);
+        Storage::disk('public')->assertExists($defter->maddeler[0]['foto_yolu']);
+        $this->assertNull($component->get('yeniFoto'));
+    }
+
+    public function test_fotografli_madde_pdfinde_kanit_sayfasi_olusur(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg')->store('tespit-oneri-foto', 'public');
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $defter = TespitOneriDefteri::firmaIcin($firma);
+        $defter->update(['maddeler' => [
+            ['tespit' => 'Kaygan zemin', 'oneri' => 'Kaymaz yüzey', 'dayanak' => null, 'oncelik' => 'orta', 'foto_yolu' => $yol],
+        ]]);
+
+        $html = view('pdf.tespit-oneri-defteri', ['defter' => $defter, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('FOTOĞRAF KANITI', $html);
+        $this->assertStringContainsString($yol, $html);
     }
 
     public function test_madde_silinir(): void

@@ -10,6 +10,8 @@ use App\Models\IsKazasiRaporu;
 use App\Models\User;
 use App\Support\IsKazasiRaporuUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -118,6 +120,51 @@ class IsKazasiRaporuTest extends TestCase
         $yanit->sendContent();
         $icerik = ob_get_clean();
         $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_fotograflar_yuklenir_kaydedilince_saklanir_ve_silinebilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kazazedeAdSoyad', 'Ahmet Yılmaz')
+            ->set('kazaTanimi', 'Merdivenden düşme.')
+            ->set('yeniFotograflar', [
+                UploadedFile::fake()->image('olay-1.jpg'),
+                UploadedFile::fake()->image('olay-2.jpg'),
+            ]);
+
+        $this->assertCount(2, $component->get('yeniFotograflar'));
+
+        $component->call('fotoSil', 0);
+        $this->assertCount(1, $component->get('yeniFotograflar'));
+
+        $component->callAction('pdf');
+
+        $r = IsKazasiRaporu::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertCount(1, $r->fotograflar);
+        Storage::disk('public')->assertExists($r->fotograflar[0]);
+    }
+
+    public function test_fotografli_is_kazasi_pdfinde_kanit_sayfasi_olusur(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg')->store('is-kazasi-foto', 'public');
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $r = IsKazasiRaporu::create([
+            'firma_id' => $firma->id,
+            'kazazede_ad_soyad' => 'Test Kişi',
+            'kaza_tanimi' => 'Test tanım',
+            'fotograflar' => [$yol],
+        ]);
+
+        $html = view('pdf.is-kazasi-raporu', ['rapor' => $r, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('FOTOĞRAF KANITI 1', $html);
+        $this->assertStringContainsString($yol, $html);
     }
 
     public function test_gecmis_kayit_silinir(): void

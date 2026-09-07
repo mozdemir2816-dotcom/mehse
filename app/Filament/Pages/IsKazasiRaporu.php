@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 use UnitEnum;
 
 /**
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class IsKazasiRaporu extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.pages.is-kazasi-raporu';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-exclamation-circle';
@@ -82,6 +85,13 @@ class IsKazasiRaporu extends Page
     public ?string $sgkBildirimTarihi = null;
 
     public ?string $raporHazirlayan = null;
+
+    /**
+     * Olay yeri / kaza sonrası durumun fotoğraf kanıtları.
+     *
+     * @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile>
+     */
+    public array $yeniFotograflar = [];
 
     public function mount(): void
     {
@@ -186,6 +196,12 @@ class IsKazasiRaporu extends Page
         $this->taniklar = array_values($this->taniklar);
     }
 
+    public function fotoSil(int $index): void
+    {
+        unset($this->yeniFotograflar[$index]);
+        $this->yeniFotograflar = array_values($this->yeniFotograflar);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Kaydet & PDF
@@ -224,6 +240,7 @@ class IsKazasiRaporu extends Page
             'kaza_nedeni' => $this->kazaNedeni,
             'alinan_onlemler' => $this->alinanOnlemler,
             'taniklar' => $this->taniklar,
+            'fotograflar' => collect($this->yeniFotograflar)->map(fn ($f) => $f->store('is-kazasi-foto', 'public'))->all(),
             'sgk_bildirimi_yapildi' => $this->sgkBildirimiYapildi,
             'sgk_bildirim_tarihi' => $this->sgkBildirimiYapildi ? $this->sgkBildirimTarihi : null,
             'rapor_hazirlayan' => $this->raporHazirlayan,
