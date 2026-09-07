@@ -2339,6 +2339,12 @@ Tebliğ'de kurulan iki desen):
   gerekli — daha önce link yoktu; PDF'ler `storage_path()` kullandığından
   fark edilmemişti ama panelde `Storage::url()` bağlantıları kırık olurdu).
 
+- **Kullanıcı geri bildirimi (aynı oturum):** (1) çoklu foto artık hem UI
+  küçük resimlerinde (sol-alt numara rozeti) hem PDF'te sıralı numaralanıyor —
+  DÖF/Tespit'te de "FOTOĞRAF KANITI N · Madde M" (madde indeksi değil, çalışan
+  foto sayacı); İş Kazası/Tatbikat/Ceza'da "FOTOĞRAF N". (2) PDF'te foto
+  `max-height` 560→880px (fotoğraflar bire bir aynı boyuta zorlanmasın,
+  doğal en-boy korunur). 5 PDF blade + 3 UI blade güncellendi.
 - Toplam **536 test** (1513 assertion, hepsi yeşil).
 
 ## Notlar

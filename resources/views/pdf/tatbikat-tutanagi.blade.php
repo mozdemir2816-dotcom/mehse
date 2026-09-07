@@ -19,8 +19,8 @@
     .imza { margin-top: 30px; width: 100%; }
     .imza td { width: 33.33%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 9.5px; }
     .foto-sayfa { page-break-before: always; }
-    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 4px; }
-    .foto-sayfa img { max-width: 100%; max-height: 560px; }
+    .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 6px; }
+    .foto-sayfa img { max-width: 100%; max-height: 880px; }
 </style>
 </head>
 <body>

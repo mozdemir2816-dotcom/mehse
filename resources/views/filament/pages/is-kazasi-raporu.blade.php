@@ -210,6 +210,7 @@
                     @foreach ($yeniFotograflar as $i => $dosya)
                         <div style="position:relative">
                             <img src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
+                            <span style="position:absolute;bottom:2px;left:2px;background:rgb(0 0 0 / .65);color:#fff;border-radius:.25rem;padding:0 .3rem;font-size:.68rem;line-height:1.3">{{ $i + 1 }}</span>
                             <button type="button" wire:click="fotoSil({{ $i }})"
                                 style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
                         </div>

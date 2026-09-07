@@ -124,16 +124,23 @@ class TespitOneriDefteriTest extends TestCase
         Storage::fake('public');
         $yol = UploadedFile::fake()->image('kanit.jpg')->store('tespit-oneri-foto', 'public');
 
+        $yol2 = UploadedFile::fake()->image('kanit2.jpg')->store('tespit-oneri-foto', 'public');
+
         $firma = Firma::factory()->for($this->uzman)->create();
         $defter = TespitOneriDefteri::firmaIcin($firma);
         $defter->update(['maddeler' => [
+            ['tespit' => 'Fotosuz madde', 'oneri' => '—', 'dayanak' => null, 'oncelik' => 'orta', 'foto_yolu' => null],
             ['tespit' => 'Kaygan zemin', 'oneri' => 'Kaymaz yüzey', 'dayanak' => null, 'oncelik' => 'orta', 'foto_yolu' => $yol],
+            ['tespit' => 'Açık pano', 'oneri' => 'Kapat', 'dayanak' => null, 'oncelik' => 'yuksek', 'foto_yolu' => $yol2],
         ]]);
 
         $html = view('pdf.tespit-oneri-defteri', ['defter' => $defter, 'firma' => $firma])->render();
 
-        $this->assertStringContainsString('FOTOĞRAF KANITI', $html);
+        // Fotoğraflar madde indeksinden bağımsız 1, 2 diye sıralanır (madde 2 ve 3'ün fotosu).
+        $this->assertStringContainsString('FOTOĞRAF KANITI 1 · Madde 2', $html);
+        $this->assertStringContainsString('FOTOĞRAF KANITI 2 · Madde 3', $html);
         $this->assertStringContainsString($yol, $html);
+        $this->assertStringContainsString($yol2, $html);
     }
 
     public function test_madde_silinir(): void

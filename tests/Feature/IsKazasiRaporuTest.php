@@ -152,19 +152,22 @@ class IsKazasiRaporuTest extends TestCase
     {
         Storage::fake('public');
         $yol = UploadedFile::fake()->image('kanit.jpg')->store('is-kazasi-foto', 'public');
+        $yol2 = UploadedFile::fake()->image('kanit2.jpg')->store('is-kazasi-foto', 'public');
 
         $firma = Firma::factory()->for($this->uzman)->create();
         $r = IsKazasiRaporu::create([
             'firma_id' => $firma->id,
             'kazazede_ad_soyad' => 'Test Kişi',
             'kaza_tanimi' => 'Test tanım',
-            'fotograflar' => [$yol],
+            'fotograflar' => [$yol, $yol2],
         ]);
 
         $html = view('pdf.is-kazasi-raporu', ['rapor' => $r, 'firma' => $firma])->render();
 
-        $this->assertStringContainsString('FOTOĞRAF KANITI 1', $html);
+        $this->assertStringContainsString('FOTOĞRAF 1', $html);
+        $this->assertStringContainsString('FOTOĞRAF 2', $html);
         $this->assertStringContainsString($yol, $html);
+        $this->assertStringContainsString($yol2, $html);
     }
 
     public function test_gecmis_kayit_silinir(): void
