@@ -57,6 +57,7 @@ Bir uzman ~100 firmaya hizmet verir. OSGB kavramı yok; her şey tek uzmanın po
 | **Risk Yönetimi** | Risk Değerlendirme (6 adımlı sihirbaz) | `risk-degerlendirme` | **hazır** — Manuel + Yapay Zeka (Gemini) yöntemleri + PDF çıktısı; Kayıtlı/Excel kalan |
 | Risk Yönetimi | Kayıtlı Değerlendirmeler | `risk-degerlendirmelerim` | **hazır** |
 | Risk Yönetimi | Sektör Şablonları | `risk-sablonlari` | **hazır** (sihirbazdan oluşur, burada yönetilir) |
+| Risk Yönetimi | JSA (İşe Özgü Risk) | `jsa` | **hazır** (kullanıcının "İş Güvenliği Analizi (JSA)" Excel'lerini bölmeden kütüphaneye alır; firmaya uygula → PDF (yatay) + Word) |
 | Risk Yönetimi | Risk Prosedürleri | `risk-prosedurleri` | **hazır** (Matris/Fine-Kinney gerçek prosedür metni + kendi .docx'ini yükleme — Faz 6) |
 | Risk Yönetimi | Risk Kütüphanesi | `risk-kutuphanesi` | **hazır** |
 | Risk Yönetimi | Acil Durum Planı | `acil-durum-plani` | **hazır** (firma + konu seçimi → PDF + 7 afiş) |
@@ -2345,7 +2346,43 @@ Tebliğ'de kurulan iki desen):
   foto sayacı); İş Kazası/Tatbikat/Ceza'da "FOTOĞRAF N". (2) PDF'te foto
   `max-height` 560→880px (fotoğraflar bire bir aynı boyuta zorlanmasın,
   doğal en-boy korunur). 5 PDF blade + 3 UI blade güncellendi.
-- Toplam **536 test** (1513 assertion, hepsi yeşil).
+
+## Durum — 2026-09-07 (JSA — İşe Özgü Risk Değerlendirmesi kütüphanesi)
+
+Kullanıcı isteği: "Risk analize jsa (işe özgü risk) değerlendirmesi modülü …
+yükleyeceğim excel formatından, pdf ve word formatında olabilir. Örnek şablon
+… duvar örme … Şablonu KESİNLİKLE BÖLME, bunu kütüphane gibi kullanacağım
+ilerde bir firma lazım olduğunda oradan çekip veriyi ona kullanmak için."
+
+Referans dosya: `C:\Users\mozde\Desktop\yeni firma\risk değerlendirme\duvar
+örme\IS_GUVENLIGI_ANALIZI_DUVAR_ORME.xlsx` (aynı klasörde ~25 farklı iş için
+benzer dosyalar; **duvar örme kanonik biçim** kabul edildi).
+
+- **`JsaSablonu` / `jsa_sablonlari`** (migration `2026_09_07_100000`) — bir
+  kayıt = bir işin TAM analizi: `baslik`, `dokuman_ref`, `revizyon`,
+  `belge_tarihi` (serbest metin — "31 Temmuz 2026"), `kapsam`, `adimlar` (json,
+  8 sütun: sıra/iş adımı/tehlikeler/sonuçlar/başlangıç risk/kontrol
+  tedbirleri/kalıntı risk/sorumlu), `notlar` (json), `imza_rolleri` (json).
+  Firmadan bağımsız (kütüphane). **Şablon bölünmez** — mevcut `RiskMaddesi`
+  (O×Ş puanlı) modeline sokulmadı; JSA'nın "iş adımı" sütunu + nitel risk
+  seviyesi (Yüksek/Orta/Düşük) ayrı bir yapı.
+- **`JsaExcelOkuyucu`** — kanonik biçmi tam çözer (başlık/künye/8 sütun/
+  notlar/imza). Farklı yerleşimlere toleranslı: başlık satırını "Sıra No" +
+  "İş Adımı" ile bulur, altbilgi/bölüm satırlarını ("Doküman No … | Sayfa
+  1/1", "Onay ve Kabul Tablosu") ayıklar. `sablonIndir()` = boş örnek .xlsx.
+  Gerçek 3 dosyayla doğrulandı (duvar örme 11 adım, iskele 10, kule vinç 14).
+- **`JsaUretici`** (dompdf, **A4 yatay**) + `pdf.jsa` — künye + logo (firma
+  verilirse) + 8 sütunlu tablo + renkli risk rozetleri + notlar + imza tablosu.
+- **`JsaWordUretici`** (PhpWord, yatay section, programatik — adım sayısı
+  değişken olduğu için sabit .docx şablonu yerine; `TalimatWordUretici` gerekçesi).
+- **`App\Filament\Pages\JsaDegerlendirmesi`** (slug `jsa`, Risk Yönetimi sort 7):
+  opsiyonel firma seçici (çıktı künyesi) + kütüphane listesi (başlık, adım
+  sayısı, risk seviyesi dağılımı) + satır başına PDF/Word/Sil + header:
+  "Boş Şablon İndir", "Excel'den Yükle". Firma seçiliyse çıktı künyesine
+  firma adı/logosu eklenir, analiz gövdesine dokunulmaz.
+- `JsaDegerlendirmesiTest` (6 test), `NavigasyonTest`e `/admin/jsa`.
+
+- Toplam **543 test.**
 
 ## Notlar
 

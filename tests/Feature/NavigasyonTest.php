@@ -36,6 +36,7 @@ class NavigasyonTest extends TestCase
             'risk sihirbazi' => ['/admin/risk-degerlendirme'],
             'kayitli degerlendirmeler' => ['/admin/risk-degerlendirmelerim'],
             'sektor sablonlari' => ['/admin/risk-sablonlari'],
+            'jsa ise ozgu risk' => ['/admin/jsa'],
             'risk kutuphanesi' => ['/admin/risk-kutuphanesi'],
             'acil durum plani' => ['/admin/acil-durum-plani'],
             'acil durum krokisi' => ['/admin/acil-durum-krokisi'],
