@@ -3,6 +3,8 @@
     $etiketler = ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'];
     $mor = 'rgb(139 92 246)';
     $p = $this->plan;
+    $kilit = $this->kilitAyIndeksi;
+    $egitimKategorileri = config('isg.yillik_plan.egitim_kategorileri');
 @endphp
 
 <x-filament-panels::page>
@@ -20,6 +22,16 @@
         };
     @endphp
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => $yillikKriter])
+
+    @if ($p && $kilit > 0 && $kilit < 12)
+        <div style="border:1px solid rgb(245 158 11 / .4);background:rgb(245 158 11 / .08);border-radius:.6rem;padding:.6rem .85rem;font-size:.8rem;color:#b45309">
+            ⚠ Bu firmanın sözleşme başlangıcı (atanmış uzman tarihi) <strong>{{ \App\Filament\Pages\YillikPlanlar::AYLAR[$kilit] }}</strong> ayı — önceki aylar planda seçilemez ve otomatik doldurulmaz.
+        </div>
+    @elseif ($p && $kilit >= 12)
+        <div style="border:1px solid rgb(239 68 68 / .4);background:rgb(239 68 68 / .08);border-radius:.6rem;padding:.6rem .85rem;font-size:.8rem;color:#b91c1c">
+            ⚠ Bu firmanın sözleşme başlangıcı {{ $yil }} yılından sonra — bu yıl için plan ayları seçilemez.
+        </div>
+    @endif
 
     {{-- FİRMA & YIL --}}
     <x-filament::section icon="heroicon-o-calendar-days" icon-color="primary">
@@ -74,11 +86,11 @@
                 </x-slot>
 
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:900px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1000px">
                         <tr>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Faaliyet</th>
+                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Yasal Gereklilik / Faaliyet</th>
                             <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sorumlu</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Açıklama</th>
+                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Frekans</th>
                             @foreach (\App\Filament\Pages\YillikPlanlar::AYLAR as $ay)
                                 <th style="padding:.3rem .3rem;border-bottom:1px solid rgb(107 114 128 / .3);width:2.2rem">{{ $ay }}</th>
                             @endforeach
@@ -86,13 +98,21 @@
                         </tr>
                         @foreach (($p->faaliyetler ?? []) as $fi => $f)
                             <tr>
-                                <td style="padding:.3rem .5rem;font-weight:600">{{ $f['faaliyet'] }}</td>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $f['sorumlu'] ?? '—' }}</td>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $f['aciklama'] ?? '' }}</td>
+                                <td style="padding:.3rem .5rem">
+                                    <div style="font-weight:600">{{ $f['faaliyet'] }}</div>
+                                    @if (!empty($f['yasal_gereklilik']))
+                                        <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $f['yasal_gereklilik'] }}</div>
+                                    @endif
+                                </td>
+                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $f['sorumlu'] ?? '—' }}</td>
+                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $f['frekans'] ?? '—' }}</td>
                                 @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $ai => $durum)
+                                    @php $kilitli = $ai < $kilit; @endphp
                                     <td style="padding:.15rem;text-align:center">
-                                        <button type="button" wire:click="ayDurumDegistir('faaliyetler', {{ $fi }}, {{ $ai }})" title="{{ $etiketler[$durum] ?? $durum }}"
-                                            style="width:1.4rem;height:1.4rem;border-radius:.25rem;border:none;cursor:pointer;background:{{ $renkler[$durum] ?? $renkler['bos'] }}"></button>
+                                        <button type="button" @disabled($kilitli)
+                                            @unless ($kilitli) wire:click="ayDurumDegistir('faaliyetler', {{ $fi }}, {{ $ai }})" @endunless
+                                            title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : ($etiketler[$durum] ?? $durum) }}"
+                                            style="width:1.4rem;height:1.4rem;border-radius:.25rem;border:none;background:{{ $kilitli ? '#111827' : ($renkler[$durum] ?? $renkler['bos']) }};{{ $kilitli ? 'opacity:.3;cursor:not-allowed' : 'cursor:pointer' }}"></button>
                                     </td>
                                 @endforeach
                                 <td style="padding:.3rem .3rem">
@@ -127,12 +147,12 @@
                 </x-slot>
 
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:900px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1000px">
                         <tr>
+                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Kategori</th>
                             <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Eğitim Konusu</th>
                             <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Süre</th>
                             <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Eğitici</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Hedef Kitle</th>
                             @foreach (\App\Filament\Pages\YillikPlanlar::AYLAR as $ay)
                                 <th style="padding:.3rem .3rem;border-bottom:1px solid rgb(107 114 128 / .3);width:2.2rem">{{ $ay }}</th>
                             @endforeach
@@ -140,14 +160,17 @@
                         </tr>
                         @foreach (($p->egitimler ?? []) as $ei => $e)
                             <tr>
+                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $egitimKategorileri[$e['kategori'] ?? ''] ?? '—' }}</td>
                                 <td style="padding:.3rem .5rem;font-weight:600">{{ $e['konu'] }}</td>
                                 <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['sure_saat'] ?? '—' }} saat</td>
                                 <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['egitici'] ?? '—' }}</td>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['hedef_kitle'] ?? '—' }}</td>
                                 @foreach (($e['aylar'] ?? array_fill(0, 12, 'bos')) as $ai => $durum)
+                                    @php $kilitli = $ai < $kilit; @endphp
                                     <td style="padding:.15rem;text-align:center">
-                                        <button type="button" wire:click="ayDurumDegistir('egitimler', {{ $ei }}, {{ $ai }})" title="{{ $etiketler[$durum] ?? $durum }}"
-                                            style="width:1.4rem;height:1.4rem;border-radius:.25rem;border:none;cursor:pointer;background:{{ $renkler[$durum] ?? $renkler['bos'] }}"></button>
+                                        <button type="button" @disabled($kilitli)
+                                            @unless ($kilitli) wire:click="ayDurumDegistir('egitimler', {{ $ei }}, {{ $ai }})" @endunless
+                                            title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : ($etiketler[$durum] ?? $durum) }}"
+                                            style="width:1.4rem;height:1.4rem;border-radius:.25rem;border:none;background:{{ $kilitli ? '#111827' : ($renkler[$durum] ?? $renkler['bos']) }};{{ $kilitli ? 'opacity:.3;cursor:not-allowed' : 'cursor:pointer' }}"></button>
                                     </td>
                                 @endforeach
                                 <td style="padding:.3rem .3rem">

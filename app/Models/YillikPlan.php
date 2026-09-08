@@ -37,8 +37,10 @@ class YillikPlan extends Model
         $plan = static::firstOrNew(['firma_id' => $firma->id, 'yil' => $yil]);
 
         if (! $plan->exists) {
-            $plan->faaliyetler = static::maddeAylarIle(config('isg.yillik_plan.varsayilan_faaliyetler'));
-            $plan->egitimler = static::maddeAylarIle(config('isg.yillik_plan.varsayilan_egitimler'));
+            $kilitAy = $firma->planKilitAyIndeksi($yil);
+
+            $plan->faaliyetler = static::maddeAylarIle(config('isg.yillik_plan.varsayilan_faaliyetler'), $kilitAy);
+            $plan->egitimler = static::maddeAylarIle(config('isg.yillik_plan.varsayilan_egitimler'), $kilitAy);
             $plan->degerlendirmeler = collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
                 ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
                 ->all();
@@ -48,11 +50,29 @@ class YillikPlan extends Model
         return $plan;
     }
 
-    /** @return array<int, array<string, mixed>> */
-    private static function maddeAylarIle(array $maddeler): array
+    /**
+     * Varsayılan maddelere 12 aylık durum dizisi ekler. `varsayilan_aylar`
+     * (0-11) verilenler otomatik "Planlandı" işaretlenir — ancak atanmış uzman
+     * öncesindeki ($kilitAy) aylar boş bırakılır: kullanıcı veri girmeden plan
+     * dolu gelsin, sonra gerekirse düzeltsin.
+     *
+     * @param  array<int, array<string, mixed>>  $maddeler
+     * @return array<int, array<string, mixed>>
+     */
+    public static function maddeAylarIle(array $maddeler, int $kilitAy = 0): array
     {
         return collect($maddeler)
-            ->map(fn ($m) => [...$m, 'aylar' => array_fill(0, 12, 'bos')])
+            ->map(function (array $m) use ($kilitAy): array {
+                $aylar = array_fill(0, 12, 'bos');
+
+                foreach ($m['varsayilan_aylar'] ?? [] as $ay) {
+                    if ($ay >= $kilitAy && $ay <= 11) {
+                        $aylar[$ay] = 'planlandi';
+                    }
+                }
+
+                return [...$m, 'aylar' => $aylar];
+            })
             ->all();
     }
 }

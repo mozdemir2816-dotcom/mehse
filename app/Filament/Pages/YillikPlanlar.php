@@ -4,13 +4,18 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\YillikPlan as YillikPlanModel;
+use App\Support\YillikDegerlendirmeVerisi;
+use App\Support\YillikPlanExcelIceAktarici;
 use App\Support\YillikPlanUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Throwable;
 use UnitEnum;
 
 /**
@@ -109,6 +114,13 @@ class YillikPlanlar extends Page
         unset($this->plan);
     }
 
+    /** Atanmış uzman (sözleşme başlangıcı) öncesi ay indeksi — bu aylar kilitli. */
+    #[Computed]
+    public function kilitAyIndeksi(): int
+    {
+        return $this->firma?->planKilitAyIndeksi($this->yil) ?? 0;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Ay durum matrisi (Çalışma Planı + Eğitim Planı ortak) — $alan: 'faaliyetler'|'egitimler'
@@ -121,6 +133,17 @@ class YillikPlanlar extends Page
         $satirlar = $p?->{$alan} ?? [];
 
         if (! $p || ! isset($satirlar[$index])) {
+            return;
+        }
+
+        // Atanmış uzman öncesindeki aylar seçilemez.
+        if ($ayIndex < $this->kilitAyIndeksi()) {
+            Notification::make()
+                ->title('Bu ay seçilemez')
+                ->body('Firma sözleşme başlangıcından (atanmış uzman tarihi) önceki aylar için plan işaretlenemez.')
+                ->warning()
+                ->send();
+
             return;
         }
 
@@ -277,11 +300,11 @@ class YillikPlanlar extends Page
             return;
         }
 
+        $kilitAy = $this->kilitAyIndeksi();
+
         match ($this->sekme) {
             'egitim' => $p->update([
-                'egitimler' => collect(config('isg.yillik_plan.varsayilan_egitimler'))
-                    ->map(fn ($e) => [...$e, 'aylar' => array_fill(0, 12, 'bos')])
-                    ->all(),
+                'egitimler' => YillikPlanModel::maddeAylarIle(config('isg.yillik_plan.varsayilan_egitimler'), $kilitAy),
             ]),
             'degerlendirme' => $p->update([
                 'degerlendirmeler' => collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
@@ -289,13 +312,11 @@ class YillikPlanlar extends Page
                     ->all(),
             ]),
             default => $p->update([
-                'faaliyetler' => collect(config('isg.yillik_plan.varsayilan_faaliyetler'))
-                    ->map(fn ($f) => [...$f, 'aylar' => array_fill(0, 12, 'bos')])
-                    ->all(),
+                'faaliyetler' => YillikPlanModel::maddeAylarIle(config('isg.yillik_plan.varsayilan_faaliyetler'), $kilitAy),
             ]),
         };
 
-        Notification::make()->title('Bu sekme varsayılan içeriğe sıfırlandı')->success()->send();
+        Notification::make()->title('Bu sekme varsayılan içeriğe sıfırlandı (otomatik dolduruldu)')->success()->send();
     }
 
     protected function getHeaderActions(): array
@@ -306,6 +327,102 @@ class YillikPlanlar extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->plan() !== null)
                 ->action(fn () => YillikPlanUretici::pdf($this->plan())),
+
+            Action::make('excelYukleCalisma')
+                ->label('Çalışma Planı Excel’den Yükle')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'calisma')
+                ->modalDescription('Kendi Yıllık Çalışma Planı Excel’inizi yükleyin. Satırlar isimle eşleştirilir: mevcut satır varsa ayları güncellenir, yoksa eklenir. Atanmış uzman öncesindeki aylar işaretlenmez.')
+                ->modalSubmitActionLabel('Yükle')
+                ->schema([static::dosyaAlani()])
+                ->action(fn (array $data) => $this->exceliIsle($data['dosya'], 'faaliyetler')),
+
+            Action::make('excelYukleEgitim')
+                ->label('Eğitim Planı Excel’den Yükle')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'egitim')
+                ->modalDescription('Kendi Yıllık Eğitim Planı Excel’inizi yükleyin (12 ay × 4 hafta düzeni desteklenir, ay bazına indirilir). Satırlar isimle eşleştirilir.')
+                ->modalSubmitActionLabel('Yükle')
+                ->schema([static::dosyaAlani()])
+                ->action(fn (array $data) => $this->exceliIsle($data['dosya'], 'egitimler')),
+
+            Action::make('degerlendirmeSistemdenDoldur')
+                ->label('Sistemden Doldur')
+                ->icon('heroicon-o-sparkles')
+                ->color('primary')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
+                ->requiresConfirmation()
+                ->modalHeading('Değerlendirmeyi sistem verisinden doldur')
+                ->modalDescription('Risk değerlendirmesi, muayeneler, eğitimler, tatbikat, saha denetimi, kurul ve iş kazası satırlarının tarih + tekrar sayısı, '.$this->yil.' yılı için sisteme girilmiş kayıtlardan yazılır. Elle girdiğiniz bu iki alan üzerine yazılır; diğer alanlara dokunulmaz.')
+                ->modalSubmitActionLabel('Doldur')
+                ->action(function (): void {
+                    $p = $this->plan();
+
+                    if (! $p) {
+                        return;
+                    }
+
+                    $sonuc = YillikDegerlendirmeVerisi::planiDoldur($this->firma, $this->yil, $p->degerlendirmeler ?? []);
+                    $p->update(['degerlendirmeler' => $sonuc['satirlar']]);
+
+                    Notification::make()
+                        ->title($sonuc['doldurulan'] > 0
+                            ? $sonuc['doldurulan'].' satır sistem verisinden dolduruldu'
+                            : 'Bu yıl için eşleşen sistem kaydı bulunamadı')
+                        ->{$sonuc['doldurulan'] > 0 ? 'success' : 'warning'}()
+                        ->send();
+                }),
         ];
+    }
+
+    private static function dosyaAlani(): FileUpload
+    {
+        return FileUpload::make('dosya')
+            ->label('Excel dosyası (.xlsx / .xls)')
+            ->disk('local')
+            ->directory('excel-ice-aktarim')
+            ->acceptedFileTypes([
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel',
+            ])
+            ->required();
+    }
+
+    /** @param  'faaliyetler'|'egitimler'  $tip */
+    private function exceliIsle(string $dosya, string $tip): void
+    {
+        $p = $this->plan();
+
+        if (! $p) {
+            return;
+        }
+
+        $yol = Storage::disk('local')->path($dosya);
+
+        try {
+            $sonuc = YillikPlanExcelIceAktarici::iceAktar($yol, $p, $tip);
+        } catch (Throwable $e) {
+            Notification::make()->title('Dosya işlenemedi')->body($e->getMessage())->danger()->send();
+
+            return;
+        } finally {
+            Storage::disk('local')->delete($dosya);
+        }
+
+        unset($this->plan);
+
+        if ($sonuc['hatalar']) {
+            Notification::make()->title('İçe aktarma tamamlanamadı')->body(implode(' ', $sonuc['hatalar']))->danger()->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Excel içe aktarıldı')
+            ->body("{$sonuc['eklenen']} satır eklendi, {$sonuc['guncellenen']} satır güncellendi.")
+            ->success()
+            ->send();
     }
 }

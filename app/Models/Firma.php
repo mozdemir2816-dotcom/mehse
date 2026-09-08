@@ -203,4 +203,25 @@ class Firma extends Model
         return $this->aktif
             && (! $this->sozlesme_bitis || $this->sozlesme_bitis->isFuture());
     }
+
+    /**
+     * Yıllık planda, atanmış uzman (firma sözleşme başlangıcı) öncesindeki
+     * aylar seçilemez. Verilen yıl için seçilebilir İLK ay indeksini (0=Ocak …
+     * 11=Aralık) döndürür: 0 → kısıt yok, 12 → o yılın tamamı kilitli
+     * (sözleşme sonraki yıl başlıyor).
+     */
+    public function planKilitAyIndeksi(int $yil): int
+    {
+        $baslangic = $this->sozlesme_baslangic;
+
+        if (! $baslangic || $baslangic->year < $yil) {
+            return 0;
+        }
+
+        if ($baslangic->year > $yil) {
+            return 12;
+        }
+
+        return $baslangic->month - 1;
+    }
 }

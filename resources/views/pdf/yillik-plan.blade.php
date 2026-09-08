@@ -30,16 +30,19 @@
 
     <table class="plan">
         <tr>
-            <th>Faaliyet</th><th>Sorumlu</th><th>Açıklama</th>
+            <th>Yasal Gereklilik / Faaliyet</th><th>Sorumlu</th><th>Frekans</th>
             @foreach ($aylar as $ay)
                 <th>{{ $ay }}</th>
             @endforeach
         </tr>
         @forelse (($plan->faaliyetler ?? []) as $f)
             <tr>
-                <td class="faaliyet">{{ $f['faaliyet'] }}</td>
+                <td class="aciklama">
+                    <strong>{{ $f['faaliyet'] }}</strong>
+                    @if (!empty($f['yasal_gereklilik']))<br><span style="color:#666;font-size:7px">{{ $f['yasal_gereklilik'] }}</span>@endif
+                </td>
                 <td class="sorumlu">{{ $f['sorumlu'] ?? '—' }}</td>
-                <td class="aciklama">{{ $f['aciklama'] ?? '' }}</td>
+                <td class="sorumlu">{{ $f['frekans'] ?? '—' }}</td>
                 @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $durum)
                     @php $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' }; @endphp
                     <td><span class="durum" style="background:{{ $renk }}"></span></td>
@@ -65,17 +68,18 @@
 
     <table class="plan">
         <tr>
-            <th>Eğitim Konusu</th><th>Süre</th><th>Eğitici</th><th>Hedef Kitle</th>
+            <th>Kategori</th><th>Eğitim Konusu</th><th>Süre</th><th>Eğitici</th>
             @foreach ($aylar as $ay)
                 <th>{{ $ay }}</th>
             @endforeach
         </tr>
+        @php $egitimKat = config('isg.yillik_plan.egitim_kategorileri'); @endphp
         @forelse (($plan->egitimler ?? []) as $e)
             <tr>
+                <td class="sorumlu">{{ $egitimKat[$e['kategori'] ?? ''] ?? '—' }}</td>
                 <td class="faaliyet">{{ $e['konu'] }}</td>
                 <td class="sorumlu">{{ $e['sure_saat'] ?? '—' }} saat</td>
                 <td class="sorumlu">{{ $e['egitici'] ?? '—' }}</td>
-                <td class="sorumlu">{{ $e['hedef_kitle'] ?? '—' }}</td>
                 @foreach (($e['aylar'] ?? array_fill(0, 12, 'bos')) as $durum)
                     @php $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' }; @endphp
                     <td><span class="durum" style="background:{{ $renk }}"></span></td>
