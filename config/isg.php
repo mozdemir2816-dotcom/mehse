@@ -14,6 +14,7 @@ use App\Models\IsKazasiRaporu;
 use App\Models\KkdZimmetFormu;
 use App\Models\KurulToplantisi;
 use App\Models\MuayeneFormu;
+use App\Models\PeriyodikKontrol;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaAnalizi;
 use App\Models\SahaDenetimi;
@@ -39,6 +40,7 @@ use App\Support\IsKazasiRaporuUretici;
 use App\Support\KkdZimmetFormuUretici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\MuayeneFormuUretici;
+use App\Support\PeriyodikKontrolUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\SahaAnaliziUretici;
 use App\Support\SahaDenetimiUretici;
@@ -197,6 +199,71 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | İş Ekipmanları Periyodik Kontrol — İş Ekipmanlarının Kullanımında Sağlık ve
+    | Güvenlik Şartları Yönetmeliği EK-3. `periyot_ay` = ilgili standart/üretici
+    | daha kısa bir süre öngörmüyorsa azami periyot. Kapasite raporundan belirlenen
+    | ekipmanlar bu katalogdan seçilir (ya da serbest eklenir); her ekipman için
+    | son kontrol tarihi + sonuç + sonraki tarih girilir.
+    */
+    'periyodik_kontrol' => [
+        'sonuclar' => [
+            'bekliyor' => 'Kontrol Bekliyor',
+            'uygun' => 'Uygun (kullanılabilir)',
+            'sartli' => 'Şartlı / Kısmi Uygun',
+            'uygun_degil' => 'Uygun Değil (kullanım dışı)',
+        ],
+
+        'katalog' => [
+            'Basınçlı Kaplar ve Tesisatları' => [
+                ['ad' => 'Buhar Kazanı', 'periyot_ay' => 12],
+                ['ad' => 'Kalorifer / Kızgın Su Kazanı', 'periyot_ay' => 12],
+                ['ad' => 'Kompresör ve Basınçlı Hava Tankı', 'periyot_ay' => 12],
+                ['ad' => 'Hidrofor', 'periyot_ay' => 12],
+                ['ad' => 'Genleşme Tankı / Boyler', 'periyot_ay' => 12],
+                ['ad' => 'Otoklav / Sterilizatör', 'periyot_ay' => 12],
+                ['ad' => 'Sıvılaştırılmış Gaz Tankı (LPG / Kriyojenik)', 'periyot_ay' => 12],
+            ],
+            'Kaldırma ve İletme Ekipmanları' => [
+                ['ad' => 'Kule Vinç', 'periyot_ay' => 12],
+                ['ad' => 'Mobil Vinç / Araç Üstü Vinç', 'periyot_ay' => 12],
+                ['ad' => 'Köprülü / Gezer Vinç', 'periyot_ay' => 12],
+                ['ad' => 'Forklift', 'periyot_ay' => 12],
+                ['ad' => 'İstif Makinesi / Reachtruck', 'periyot_ay' => 12],
+                ['ad' => 'Akülü Transpalet', 'periyot_ay' => 12],
+                ['ad' => 'Caraskal / Elektrikli Vinç', 'periyot_ay' => 12],
+                ['ad' => 'İnsan / Yük Asansörü', 'periyot_ay' => 12],
+                ['ad' => 'Yapı Asansörü / Cephe Platformu', 'periyot_ay' => 6],
+                ['ad' => 'Sepetli Platform (Manlift)', 'periyot_ay' => 6],
+                ['ad' => 'Yürüyen Merdiven / Bant', 'periyot_ay' => 12],
+                ['ad' => 'Kaldırma Aksesuarları (sapan, zincir, halat, mapa)', 'periyot_ay' => 6],
+            ],
+            'Tesisatlar' => [
+                ['ad' => 'Elektrik Tesisatı', 'periyot_ay' => 12],
+                ['ad' => 'Topraklama Tesisatı', 'periyot_ay' => 12],
+                ['ad' => 'Paratoner (Yıldırımdan Korunma) Tesisatı', 'periyot_ay' => 12],
+                ['ad' => 'Katodik Koruma Tesisatı', 'periyot_ay' => 12],
+                ['ad' => 'Jeneratör', 'periyot_ay' => 12],
+                ['ad' => 'Havalandırma ve Klima Tesisatı', 'periyot_ay' => 12],
+                ['ad' => 'Akümülatör / Transformatör / OG Hücre', 'periyot_ay' => 12],
+            ],
+            'Yangın Ekipmanları' => [
+                ['ad' => 'Yangın Söndürme Cihazları (YSC)', 'periyot_ay' => 12],
+                ['ad' => 'Yangın Hidrantı / Yangın Dolabı', 'periyot_ay' => 6],
+                ['ad' => 'Yangın Pompası (Motopomp / Hidrofor)', 'periyot_ay' => 12],
+                ['ad' => 'Sabit Söndürme Sistemi (Sprinkler / Gazlı)', 'periyot_ay' => 12],
+                ['ad' => 'Yangın Algılama ve Alarm Sistemi', 'periyot_ay' => 6],
+            ],
+            'Tezgahlar ve Diğer İş Ekipmanları' => [
+                ['ad' => 'CNC / Torna / Freze Tezgahı', 'periyot_ay' => 12],
+                ['ad' => 'Pres / Giyotin / Abkant', 'periyot_ay' => 12],
+                ['ad' => 'Enjeksiyon / Ekstrüzyon Makinesi', 'periyot_ay' => 12],
+                ['ad' => 'El Aletleri ve Sabit Zımpara / Taşlama', 'periyot_ay' => 12],
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Kontrol Merkezi (İSG Komuta Merkezi) — isgpratik 135-136.jpg
     |--------------------------------------------------------------------------
     | Portföy genelinde 12 yasal kriterin firma bazlı tamamlanma oranı.
@@ -225,7 +292,7 @@ return [
             ['anahtar' => 'hekim_atamasi', 'ad' => 'İşyeri Hekimi Ataması', 'ikon' => 'heroicon-o-heart', 'hazir' => true],
             ['anahtar' => 'tespit_oneri', 'ad' => 'Tespit ve Öneri Defteri Kaydı', 'ikon' => 'heroicon-o-book-open', 'hazir' => true],
             ['anahtar' => 'egitim_katilim_formu', 'ad' => 'Eğitim Katılım Formu', 'ikon' => 'heroicon-o-clipboard-document-check', 'hazir' => true],
-            ['anahtar' => 'periyodik_kontrol_raporu', 'ad' => 'Periyodik Kontrol Raporu', 'ikon' => 'heroicon-o-wrench-screwdriver', 'hazir' => false],
+            ['anahtar' => 'periyodik_kontrol_raporu', 'ad' => 'Periyodik Kontrol Raporu', 'ikon' => 'heroicon-o-wrench-screwdriver', 'hazir' => true],
             ['anahtar' => 'calisma_izin_formu', 'ad' => 'Çalışma İzin Formu', 'ikon' => 'heroicon-o-document-check', 'hazir' => true],
             ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true],
             ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true],
@@ -2270,6 +2337,8 @@ return [
                 'uretici' => MuayeneFormuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => TespitOneriDefteri::class, 'ad' => 'Tespit ve Öneri Defteri', 'tip_metod' => null,
                 'uretici' => TespitOneriDefteriUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => PeriyodikKontrol::class, 'ad' => 'Periyodik Kontrol Takip Listesi', 'tip_metod' => null,
+                'uretici' => PeriyodikKontrolUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
                 'uretici' => KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,

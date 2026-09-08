@@ -102,6 +102,11 @@ class Firma extends Model
         return $this->hasMany(OnayliDefterNushasi::class);
     }
 
+    public function periyodikKontrol(): HasOne
+    {
+        return $this->hasOne(PeriyodikKontrol::class);
+    }
+
     public function kkdZimmetFormlari(): HasMany
     {
         return $this->hasMany(KkdZimmetFormu::class);

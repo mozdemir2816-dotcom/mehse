@@ -60,6 +60,7 @@ class NavigasyonTest extends TestCase
             'is kazasi raporu' => ['/admin/is-kazasi-raporu'],
             'talimat olustur' => ['/admin/talimat'],
             'muayene formu' => ['/admin/muayene-formu'],
+            'periyodik kontrol' => ['/admin/periyodik-kontrol'],
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
             'yillik planlar' => ['/admin/yillik-planlar'],

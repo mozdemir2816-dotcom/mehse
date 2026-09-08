@@ -42,8 +42,8 @@ class KontrolMerkeziTest extends TestCase
         $this->assertSame(3, $ozet['firma']);
         $this->assertSame(1, $ozet['risk_olan']);
         $this->assertSame(2, $ozet['evrak_eksigi']);
-        // 17 hazır kriter var (risk değ. + gerçek modülü bağlanan 16'sı); firma A yalnız
-        // risk değerlendirmesini karşılıyor, "tam uyumlu" sayılmaz.
+        // Çok sayıda hazır kriter var; firma A yalnız risk değerlendirmesini
+        // karşılıyor, "tam uyumlu" sayılmaz.
         $this->assertSame(0, $ozet['tam_uyumlu']);
     }
 
@@ -56,9 +56,9 @@ class KontrolMerkeziTest extends TestCase
 
         $this->assertSame(1, $kriterler['risk_degerlendirmesi']['tamam']);
         $this->assertSame(100, $kriterler['risk_degerlendirmesi']['yuzde']);
-        // periyodik_kontrol_raporu henüz gerçek modüle bağlanmadı (hazir=false) — hep 0 döner.
-        $this->assertFalse($kriterler['periyodik_kontrol_raporu']['hazir']);
-        $this->assertSame(0, $kriterler['periyodik_kontrol_raporu']['tamam']);
+        // meslek_hastaligi_bildirimi henüz gerçek modüle bağlanmadı (hazir=false) — hep 0 döner.
+        $this->assertFalse($kriterler['meslek_hastaligi_bildirimi']['hazir']);
+        $this->assertSame(0, $kriterler['meslek_hastaligi_bildirimi']['tamam']);
     }
 
     public function test_acil_durum_plani_kriteri_artik_gercek_modulu_bagli(): void
