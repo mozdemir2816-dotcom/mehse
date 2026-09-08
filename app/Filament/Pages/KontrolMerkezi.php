@@ -40,11 +40,38 @@ class KontrolMerkezi extends Page
 
     public ?int $firmaId = null;
 
+    /** Portföy kriter listesinde "eksik firmaları göster" için açık olan kriter anahtarı. */
+    public ?string $acikKriter = null;
+
     public function sekmeSec(string $sekme): void
     {
         if (array_key_exists($sekme, self::SEKMELER)) {
             $this->sekme = $sekme;
         }
+    }
+
+    /** Bir kriter satırına tıklayınca eksik firma listesini aç/kapat. */
+    public function kriterDetayAc(string $anahtar): void
+    {
+        $this->acikKriter = $this->acikKriter === $anahtar ? null : $anahtar;
+    }
+
+    /**
+     * Açık kriteri henüz karşılamayan firmalar (id => unvan). Kullanıcı "işyeri
+     * hekimi 1 firmada eksik" görünce hangi firma olduğunu tıkla-gör.
+     *
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function acikKriterEksikFirmalar(): array
+    {
+        if ($this->acikKriter === null) {
+            return [];
+        }
+
+        return PortfoyKarne::eksikFirmalar(Filament::auth()->id(), $this->acikKriter)
+            ->pluck('unvan', 'id')
+            ->all();
     }
 
     /** @return array<int, string> */

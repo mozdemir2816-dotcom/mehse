@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\KontrolMerkezi;
+use App\Models\AcilDurumPlani;
+use App\Models\AtamaYazisi;
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\User;
 use App\Support\PortfoyKarne;
@@ -61,7 +64,7 @@ class KontrolMerkeziTest extends TestCase
     public function test_acil_durum_plani_kriteri_artik_gercek_modulu_bagli(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
-        \App\Models\AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin']]);
+        AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin']]);
 
         $kriterler = collect(PortfoyKarne::kriterler($this->uzman->id))->keyBy('anahtar');
 
@@ -77,7 +80,7 @@ class KontrolMerkeziTest extends TestCase
         $this->assertTrue($kriterler['calisan_temsilcisi']['hazir']);
         $this->assertSame(0, $kriterler['calisan_temsilcisi']['tamam']);
 
-        \App\Models\AtamaYazisi::create([
+        AtamaYazisi::create([
             'firma_id' => $firma->id,
             'rol_anahtari' => 'calisan_temsilcisi',
             'tarih' => now(),
@@ -96,7 +99,7 @@ class KontrolMerkeziTest extends TestCase
         $this->assertTrue($kriterler['acil_durum_destek']['hazir']);
         $this->assertSame(0, $kriterler['acil_durum_destek']['tamam']);
 
-        \App\Models\AcilDurumPlani::create([
+        AcilDurumPlani::create([
             'firma_id' => $firma->id,
             'konular' => ['yangin'],
             'ekipler' => ['sondurme' => ['Ahmet Yılmaz'], 'kurtarma' => [], 'koruma' => [], 'ilk_yardim' => []],
@@ -126,6 +129,39 @@ class KontrolMerkeziTest extends TestCase
             ->call('sekmeSec', 'gunluk')->assertSet('sekme', 'gunluk')
             ->call('sekmeSec', 'calisan')->assertSet('sekme', 'calisan')
             ->call('sekmeSec', 'gecersiz')->assertSet('sekme', 'calisan');
+    }
+
+    public function test_kriter_detay_ac_eksik_firmalari_gosterir(): void
+    {
+        Firma::factory()->for($this->uzman)->create(['unvan' => 'Hekimsiz A.Ş.']);
+        Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'Hekimli A.Ş.',
+            'isyeri_hekimi_id' => IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'hekim'])->id,
+        ]);
+
+        $bilesen = Livewire::test(KontrolMerkezi::class)
+            ->assertSet('acikKriter', null)
+            ->call('kriterDetayAc', 'hekim_atamasi')
+            ->assertSet('acikKriter', 'hekim_atamasi');
+
+        $this->assertSame(
+            ['Hekimsiz A.Ş.'],
+            array_values($bilesen->instance()->acikKriterEksikFirmalar()),
+        );
+
+        // aynı kritere tekrar tıklayınca kapanır
+        $bilesen->call('kriterDetayAc', 'hekim_atamasi')->assertSet('acikKriter', null);
+        $this->assertSame([], $bilesen->instance()->acikKriterEksikFirmalar());
+    }
+
+    public function test_acik_kriter_eksik_firmalar_yalniz_karsilamayanlari_doner(): void
+    {
+        Firma::factory()->for($this->uzman)->create(['unvan' => 'A']);
+        Firma::factory()->for($this->uzman)->create(['unvan' => 'B']);
+
+        $bilesen = Livewire::test(KontrolMerkezi::class)->call('kriterDetayAc', 'igu_atamasi');
+
+        $this->assertEqualsCanonicalizing(['A', 'B'], array_values($bilesen->instance()->acikKriterEksikFirmalar()));
     }
 
     public function test_gunluk_akis_geciken_risk_degerlendirmesini_listeler(): void

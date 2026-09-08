@@ -136,10 +136,19 @@
             <div style="font-size:.8rem;color:{{ $gri }};margin-bottom:.75rem">
                 Takip edilen {{ count($this->kriterler) }} kriterin firmalarınızdaki karşılanma yüzdeleri · {{ $o['firma'] }} firma tarandı
             </div>
+            <div style="font-size:.75rem;color:{{ $gri }};margin-bottom:.5rem">
+                Eksiği olan bir kritere tıklayın — hangi firmalarda eksik olduğu listelenir.
+            </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.5rem">
                 @foreach ($this->kriterler as $k)
-                    @php $kRenk = $k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil); @endphp
-                    <div style="border:1px solid rgb(128 116 148 / .2);border-radius:.5rem;padding:.6rem .75rem">
+                    @php
+                        $kRenk = $k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil);
+                        $eksikSayi = max($k['toplam'] - $k['tamam'], 0);
+                        $tiklanir = $k['hazir'] && $eksikSayi > 0;
+                        $acik = $acikKriter === $k['anahtar'];
+                    @endphp
+                    <div style="border:1px solid {{ $acik ? $kRenk : 'rgb(128 116 148 / .2)' }};border-radius:.5rem;padding:.6rem .75rem;{{ $tiklanir ? 'cursor:pointer' : '' }}"
+                        @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif>
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
                             <span style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;font-weight:600">
                                 <span style="width:1.5rem;height:1.5rem;border-radius:9999px;flex-shrink:0;
@@ -150,11 +159,36 @@
                                 {{ $k['ad'] }}
                                 @unless ($k['hazir']) <span style="font-size:.65rem;color:{{ $gri }}">(modül yakında)</span> @endunless
                             </span>
-                            <span style="font-size:.78rem;color:{{ $gri }};white-space:nowrap">{{ $k['tamam'] }}/{{ $k['toplam'] }} · %{{ $k['yuzde'] }}</span>
+                            <span style="display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:{{ $gri }};white-space:nowrap">
+                                {{ $k['tamam'] }}/{{ $k['toplam'] }} · %{{ $k['yuzde'] }}
+                                @if ($tiklanir)
+                                    <x-filament::icon icon="{{ $acik ? 'heroicon-m-chevron-up' : 'heroicon-m-chevron-down' }}" style="width:.85rem;height:.85rem"/>
+                                @endif
+                            </span>
                         </div>
                         <div style="height:6px;border-radius:9999px;background:rgb(128 116 148 / .2);margin-top:.4rem;overflow:hidden">
                             <div style="height:100%;width:{{ max($k['yuzde'], 1) }}%;background:{{ $kRenk }}"></div>
                         </div>
+
+                        @if ($acik)
+                            @php $eksikFirmalar = $this->acikKriterEksikFirmalar; @endphp
+                            <div style="margin-top:.6rem;padding-top:.55rem;border-top:1px dashed rgb(128 116 148 / .3)" onclick="event.stopPropagation()">
+                                <div style="font-size:.72rem;font-weight:700;color:{{ $kirmizi }};margin-bottom:.4rem">
+                                    Bu kriterin eksik olduğu {{ count($eksikFirmalar) }} firma:
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;gap:.35rem">
+                                    @forelse ($eksikFirmalar as $fId => $fUnvan)
+                                        <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $fId]) }}"
+                                            style="display:inline-block;padding:.15rem .55rem;border-radius:9999px;font-size:.72rem;
+                                                border:1px solid {{ $kirmizi }};color:{{ $kirmizi }};text-decoration:none">
+                                            {{ $fUnvan }} ↗
+                                        </a>
+                                    @empty
+                                        <span style="font-size:.75rem;color:{{ $gri }}">Eksik firma yok.</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>
