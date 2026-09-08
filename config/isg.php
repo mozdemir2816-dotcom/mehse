@@ -144,6 +144,7 @@ return [
         'aciklama' => 'Risk = Olasılık × Frekans (maruz kalma) × Şiddet.',
         // Ondalıklı anahtarlar string olmalı (PHP dizisinde float anahtar int'e kırpılır).
         'olasilik' => [
+            '0.1' => 'Hemen hemen imkânsız (yalnız teoride)',
             '0.2' => 'Pratik olarak imkânsız',
             '0.5' => 'Zayıf olasılık (beklenmez)',
             '1' => 'Küçük olasılık (ama mümkün)',
@@ -165,13 +166,16 @@ return [
             '7' => 'Ciddi (kalıcı hasar / uzuv kaybı)',
             '15' => 'Çok ciddi (bir ölüm)',
             '40' => 'Felaket (birden çok ölüm)',
+            '100' => 'Çok büyük felaket (kitlesel kayıp, çevre felaketi)',
         ],
+        // Etiketler kullanıcının inşaat Fine-Kinney master analiziyle hizalı
+        // (200-400 = "Yüksek Risk", <20 = "Kabul Edilebilir Risk").
         'bantlar' => [
-            ['min' => 400, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Çalışma derhal durdurulmalıdır.'],
-            ['min' => 200, 'ad' => 'Esaslı Risk', 'renk' => '#dc2626', 'eylem' => 'Kısa dönemde (birkaç ay) iyileştirme yapılmalıdır.'],
-            ['min' => 70, 'ad' => 'Önemli Risk', 'renk' => '#f59e0b', 'eylem' => 'Yıl içinde iyileştirme yapılmalıdır.'],
+            ['min' => 400, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Tolere edilemez risk! Çalışma derhal durdurulmalıdır.'],
+            ['min' => 200, 'ad' => 'Yüksek Risk', 'renk' => '#dc2626', 'eylem' => 'Acil tedbir gerektirir; kısa dönemde (birkaç ay) iyileştirme yapılmalıdır.'],
+            ['min' => 70, 'ad' => 'Önemli Risk', 'renk' => '#f59e0b', 'eylem' => 'DÖF planlanmalı; yıl içinde iyileştirme yapılmalıdır.'],
             ['min' => 20, 'ad' => 'Olası Risk', 'renk' => '#84cc16', 'eylem' => 'Gözetim altında tutulmalı, iyileştirme planlanmalıdır.'],
-            ['min' => 0, 'ad' => 'Önemsiz Risk', 'renk' => '#22c55e', 'eylem' => 'Ek önleme gerek yoktur.'],
+            ['min' => 0, 'ad' => 'Kabul Edilebilir Risk', 'renk' => '#22c55e', 'eylem' => 'Mevcut kontrol tedbirleri yeterlidir; sürekli izlenir.'],
         ],
     ],
 
