@@ -103,6 +103,30 @@ class KkdFormuTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_pdf_gercek_teslim_tutanagi_sablonunu_kullanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek İnşaat A.Ş.']);
+        $form = KkdZimmetFormu::create([
+            'firma_id' => $firma->id,
+            'teslim_tarihi' => now(),
+            'teslim_eden' => 'Mehmet Özdemir',
+            'calisanlar' => [['ad_soyad' => 'Ali Veli', 'tc' => null, 'departman' => 'Kalıpçı']],
+            'kkdler' => [['ad' => 'Endüstriyel Emniyet Bareti', 'standart' => 'TS EN 397', 'kategori' => 'Baş ve Yüz Koruyucular']],
+        ]);
+
+        $html = view('pdf.kkd-zimmet-formu', ['form' => $form, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('KİŞİSEL KORUYUCU DONANIM TESLİM TUTANAĞI', $html);
+        $this->assertStringContainsString('MALZEMENİN TÜRÜ', $html);
+        $this->assertStringContainsString('KULLANMA DÖNEMİ', $html);
+        $this->assertStringContainsString('4857 sayılı Kanun 25. maddesi', $html);
+        $this->assertStringContainsString('TESLİM ALAN', $html);
+        $this->assertStringContainsString('TESLİM VEREN', $html);
+        $this->assertStringContainsString('Ali Veli', $html);
+        $this->assertStringContainsString('Mehmet Özdemir', $html);
+        $this->assertStringContainsString('TS EN 397', $html);
+    }
+
     public function test_gecmis_form_silinir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
