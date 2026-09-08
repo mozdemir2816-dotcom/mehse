@@ -125,7 +125,7 @@ class FirmaExcelIceAktarici
 
     private static function sablonUret(): Spreadsheet
     {
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(static::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->fromArray([

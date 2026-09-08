@@ -23,6 +23,6 @@ class MuayeneFormuUretici
 
         $ad = 'muayene-formu-'.Str::slug($m->calisan_ad_soyad ?: 'calisan').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

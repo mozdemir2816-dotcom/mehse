@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -61,13 +62,13 @@ class SertifikaYildizGrupUretici
             $icerik = file_get_contents($dosyalar[0]['yol']);
             unlink($dosyalar[0]['yol']);
 
-            return response()->streamDownload(fn () => print($icerik), $dosyalar[0]['ad'], [
+            return response()->streamDownload(fn () => print ($icerik), $dosyalar[0]['ad'], [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);
         }
 
         $zipYolu = tempnam(sys_get_temp_dir(), 'ygz').'.zip';
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zip->open($zipYolu, ZipArchive::CREATE);
 
         foreach ($dosyalar as $d) {
@@ -85,7 +86,7 @@ class SertifikaYildizGrupUretici
 
         $ad = 'sertifika-yildiz-grup-'.Str::slug($s->firma?->unvan ?: 'firma').'.zip';
 
-        return response()->streamDownload(fn () => print($icerik), $ad, ['Content-Type' => 'application/zip']);
+        return response()->streamDownload(fn () => print ($icerik), $ad, ['Content-Type' => 'application/zip']);
     }
 
     /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string} $katilimci */
@@ -153,7 +154,7 @@ class SertifikaYildizGrupUretici
 
             $harf = self::TURKCE_HARFLER[$i] ?? (string) ($i + 1);
 
-            $rt = new RichText();
+            $rt = new RichText;
             $koşu = $rt->createTextRun($harf.')');
             $koşu->getFont()->setBold(true);
             $rt->createText($m['madde']);
@@ -214,7 +215,7 @@ class SertifikaYildizGrupUretici
         $sheet->getStyle('F'.$satir)->getFont()->setBold($secili);
         $sheet->setCellValue('I'.$satir, $secili ? 'X' : '');
         $sheet->getStyle('I'.$satir)->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('000000');
-        $sheet->getStyle('I'.$satir)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('I'.$satir)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }
 
     private static function kaseEkle(Worksheet $sheet, string $hucre, ?string $kaseYolu): void
@@ -229,7 +230,7 @@ class SertifikaYildizGrupUretici
             return;
         }
 
-        $cizim = new Drawing();
+        $cizim = new Drawing;
         $cizim->setPath($tamYol);
         $cizim->setHeight(40);
         $cizim->setCoordinates($hucre);

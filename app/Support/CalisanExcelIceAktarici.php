@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Calisan;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -116,7 +117,7 @@ class CalisanExcelIceAktarici
 
     private static function sablonUret(): Spreadsheet
     {
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(static::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->fromArray([
@@ -174,7 +175,7 @@ class CalisanExcelIceAktarici
     {
         try {
             if (is_numeric($deger)) {
-                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $deger)->format('Y-m-d');
+                return Date::excelToDateTimeObject((float) $deger)->format('Y-m-d');
             }
 
             return Carbon::parse((string) $deger)->toDateString();

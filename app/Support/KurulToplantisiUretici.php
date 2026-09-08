@@ -30,7 +30,7 @@ class KurulToplantisiUretici
             'firma' => $toplanti->firma,
         ])->setPaper('a4');
 
-        return response()->streamDownload(fn () => print($pdf->output()), self::dosyaAdi($toplanti, 'pdf'));
+        return response()->streamDownload(fn () => print ($pdf->output()), self::dosyaAdi($toplanti, 'pdf'));
     }
 
     /** Aynı tutanak Excel olarak — kararlar tablosunda "Durum" sütunu yok, "Karar Metni" geniş. */

@@ -27,7 +27,7 @@ class JsaUretici
         $ad = 'jsa-'.Str::slug($sablon->baslik ?: 'ise-ozgu-risk')
             .($firma ? '-'.Str::slug($firma->unvan) : '').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
     /**
@@ -50,6 +50,6 @@ class JsaUretici
 
         $ad = 'jsa-toplu-'.($firma ? Str::slug($firma->unvan) : 'genel').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

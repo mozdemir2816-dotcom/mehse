@@ -23,6 +23,6 @@ class CezaTebligTutanagiUretici
 
         $ad = 'ceza-teblig-tutanagi-'.Str::slug($t->calisan_ad_soyad ?: 'calisan').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

@@ -139,7 +139,7 @@ class EgitimKayitExcelIceAktarici
         $turler = EgitimTuru::aktifListe($userId);
         $baslik = array_merge(self::KIMLIK_BASLIKLARI, $turler->pluck('ad')->all());
 
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->setTitle('Eğitim Kayıtları');
         $sayfa->fromArray($baslik, null, 'A1');

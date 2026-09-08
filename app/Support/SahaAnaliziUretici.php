@@ -24,6 +24,6 @@ class SahaAnaliziUretici
 
         $ad = 'saha-gozetim-raporu-'.Str::slug($s->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

@@ -162,6 +162,7 @@ class JsaExcelOkuyucu
                     if ($n === $kelime || str_contains($n, $kelime)) {
                         $sutunlar[$c] = $alan;
                         $kullanilan[$alan] = true;
+
                         continue 3;
                     }
                 }

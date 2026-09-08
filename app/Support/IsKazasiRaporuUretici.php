@@ -23,6 +23,6 @@ class IsKazasiRaporuUretici
 
         $ad = 'is-kazasi-raporu-'.Str::slug($r->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

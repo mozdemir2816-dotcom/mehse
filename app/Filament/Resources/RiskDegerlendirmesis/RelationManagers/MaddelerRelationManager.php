@@ -19,12 +19,11 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class MaddelerRelationManager extends RelationManager
 {
@@ -166,7 +165,7 @@ class MaddelerRelationManager extends RelationManager
                     ->schema([
                         Select::make('tehlike_id')->label('Tehlike')
                             ->options(fn () => Tehlike::query()->with('kategori')->get()
-                                ->mapWithKeys(fn (Tehlike $t) => [$t->id => "[{$t->kategori->ad}] ".\Illuminate\Support\Str::limit($t->tehlike, 70)]))
+                                ->mapWithKeys(fn (Tehlike $t) => [$t->id => "[{$t->kategori->ad}] ".Str::limit($t->tehlike, 70)]))
                             ->searchable()->required(),
                     ])
                     ->action(function (array $data): void {

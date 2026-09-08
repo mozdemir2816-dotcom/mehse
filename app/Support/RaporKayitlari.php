@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,7 +16,7 @@ use Illuminate\Support\Collection;
 class RaporKayitlari
 {
     /**
-     * @return array<int, array{kayit: Model, kaynak: array, baslik: string, tip: string, firma: ?string, tarih: \Illuminate\Support\Carbon}>
+     * @return array<int, array{kayit: Model, kaynak: array, baslik: string, tip: string, firma: ?string, tarih: Carbon}>
      */
     public static function hepsi(int $userId, ?string $arama = null, ?string $tipFiltre = null): array
     {

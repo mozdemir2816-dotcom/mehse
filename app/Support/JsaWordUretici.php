@@ -163,7 +163,7 @@ class JsaWordUretici
         IOFactory::createWriter($phpWord, 'Word2007')->save($geciciYol);
 
         return response()->streamDownload(function () use ($geciciYol) {
-            print(file_get_contents($geciciYol));
+            echo file_get_contents($geciciYol);
             @unlink($geciciYol);
         }, $ad);
     }

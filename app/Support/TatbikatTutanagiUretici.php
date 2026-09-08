@@ -23,6 +23,6 @@ class TatbikatTutanagiUretici
 
         $ad = 'tatbikat-tutanagi-'.Str::slug($t->senaryoEtiketi()).'-'.Str::slug($t->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

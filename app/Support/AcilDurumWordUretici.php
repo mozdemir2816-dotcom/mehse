@@ -39,11 +39,11 @@ class AcilDurumWordUretici
         $gecici = tempnam(sys_get_temp_dir(), 'adep').'.docx';
         copy($kaynak, $gecici);
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zip->open($gecici);
         $xml = $zip->getFromName('word/document.xml');
 
-        $doc = new DOMDocument();
+        $doc = new DOMDocument;
         libxml_use_internal_errors(true);
         $doc->loadXML($xml);
         libxml_clear_errors();
@@ -79,7 +79,7 @@ class AcilDurumWordUretici
 
         $ad = 'acil-durum-plani-'.Str::slug($firma?->unvan ?: 'firma').'.docx';
 
-        return response()->streamDownload(fn () => print($icerik), $ad, [
+        return response()->streamDownload(fn () => print ($icerik), $ad, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ]);
     }

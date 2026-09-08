@@ -4,8 +4,12 @@ namespace App\Support;
 
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\RiskDegerlendirmesi;
+use App\Models\RiskMaddesi;
+use App\Models\RiskSablonu;
 use App\Models\YillikPlan;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Kontrol Merkezi "Firma / Çalışan Asistanı" hesapları — isgpratik 135-136.jpg.
@@ -304,9 +308,9 @@ class PortfoyKarne
      * "Eksik Olan Firmalar" hızlı erişim listesi için (kullanıcı tek tek firma
      * açıp kontrol etmek zorunda kalmasın).
      *
-     * @return \Illuminate\Support\Collection<int, Firma>
+     * @return Collection<int, Firma>
      */
-    public static function eksikFirmalar(int $userId, string $kriterAnahtari): \Illuminate\Support\Collection
+    public static function eksikFirmalar(int $userId, string $kriterAnahtari): Collection
     {
         $kriter = collect(config('isg.kontrol_merkezi.kriterler'))->firstWhere('anahtar', $kriterAnahtari);
 
@@ -336,7 +340,7 @@ class PortfoyKarne
      * Genel Bakış — günlük aktivite (son N gün). isgpratik 6.jpg: trend + heatmap.
      * Risk değerlendirmesi / madde / şablon / firma / çalışan eklemeleri sayılır.
      *
-     * @return array<string, int>  'Y-m-d' => adet   (bugüne kadar, sıralı)
+     * @return array<string, int> 'Y-m-d' => adet   (bugüne kadar, sıralı)
      */
     public static function aktiviteGunluk(int $userId, int $gun = 90): array
     {
@@ -347,24 +351,24 @@ class PortfoyKarne
             $tarihler[$baslangic->copy()->addDays($i)->toDateString()] = 0;
         }
 
-        $ekle = function (\Illuminate\Support\Collection $tarihKolonu) use (&$tarihler): void {
+        $ekle = function (Collection $tarihKolonu) use (&$tarihler): void {
             foreach ($tarihKolonu as $tarih) {
-                $g = \Illuminate\Support\Carbon::parse($tarih)->toDateString();
+                $g = Carbon::parse($tarih)->toDateString();
                 if (array_key_exists($g, $tarihler)) {
                     $tarihler[$g]++;
                 }
             }
         };
 
-        $ekle(\App\Models\RiskDegerlendirmesi::query()
+        $ekle(RiskDegerlendirmesi::query()
             ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
             ->where('created_at', '>=', $baslangic)->pluck('created_at'));
 
-        $ekle(\App\Models\RiskMaddesi::query()
+        $ekle(RiskMaddesi::query()
             ->whereHas('riskDegerlendirmesi.firma', fn ($q) => $q->where('user_id', $userId))
             ->where('created_at', '>=', $baslangic)->pluck('created_at'));
 
-        $ekle(\App\Models\RiskSablonu::query()->where('user_id', $userId)
+        $ekle(RiskSablonu::query()->where('user_id', $userId)
             ->where('created_at', '>=', $baslangic)->pluck('created_at'));
 
         $ekle(Firma::query()->where('user_id', $userId)
@@ -386,7 +390,7 @@ class PortfoyKarne
             ->all();
 
         $onemliEsik = (int) config('isg.onemli_risk_esigi', 140);
-        $onemliRisk = \App\Models\RiskMaddesi::query()
+        $onemliRisk = RiskMaddesi::query()
             ->whereHas('riskDegerlendirmesi.firma', fn ($q) => $q->where('user_id', $userId))
             ->where('puan', '>', $onemliEsik)
             ->count();
@@ -404,9 +408,9 @@ class PortfoyKarne
             // Firmaya kayıtlı Çalışan (isim) sayısı değil, firmanın bildirdiği
             // toplam çalışan sayısı esas alınır.
             'calisan' => (int) $firmalar->sum('calisan_sayisi'),
-            'risk_degerlendirmesi' => \App\Models\RiskDegerlendirmesi::query()
+            'risk_degerlendirmesi' => RiskDegerlendirmesi::query()
                 ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))->count(),
-            'risk_sablonu' => \App\Models\RiskSablonu::query()->where('user_id', $userId)->count(),
+            'risk_sablonu' => RiskSablonu::query()->where('user_id', $userId)->count(),
             'onemli_risk' => $onemliRisk,
             'calisansiz_firma' => $calisansizFirma,
             'evrak_eksigi' => $ozet['evrak_eksigi'],

@@ -23,6 +23,6 @@ class TespitOneriDefteriUretici
 
         $ad = 'tespit-oneri-defteri-'.Str::slug($defter->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

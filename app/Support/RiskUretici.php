@@ -26,7 +26,7 @@ class RiskUretici
      * @param  string  $sektor  config isg.risk_ai.sektorler anahtarı
      * @param  array<int, string>  $altKategoriler  seçilen alt kategori etiketleri
      * @param  array<string, string|array<int,string>>  $cevaplar  soru anahtarı => seçilen değer(ler)
-     * @return array<int, array<string, mixed>>  aday risk maddeleri
+     * @return array<int, array<string, mixed>> aday risk maddeleri
      */
     public static function uret(string $sektor, array $altKategoriler, array $cevaplar): array
     {

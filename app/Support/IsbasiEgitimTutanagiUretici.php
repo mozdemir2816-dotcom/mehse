@@ -25,7 +25,7 @@ class IsbasiEgitimTutanagiUretici
 
         $ad = 'isbasi-egitim-tutanagi-'.Str::slug($t->calisan_ad_soyad).'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
     /**
@@ -48,6 +48,6 @@ class IsbasiEgitimTutanagiUretici
 
         $ad = 'isbasi-egitim-katilim-formu-'.Str::slug($firma->unvan).'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -87,7 +88,7 @@ class CezaTeblig extends Page
     public ?string $imzaDurumu = 'imzaladi';
 
     // Fotoğraflar (olay/ihlal kanıtı)
-    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    /** @var array<int, TemporaryUploadedFile> */
     public array $yeniFotograflar = [];
 
     /*

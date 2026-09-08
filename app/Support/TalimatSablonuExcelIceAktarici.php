@@ -99,7 +99,7 @@ class TalimatSablonuExcelIceAktarici
 
     public static function sablonIndir(): StreamedResponse
     {
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(static::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->setCellValue('A2', 'Kompresör Kullanma Talimatı');

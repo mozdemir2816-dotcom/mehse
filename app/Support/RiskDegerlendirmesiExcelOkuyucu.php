@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 /**
@@ -65,7 +66,7 @@ class RiskDegerlendirmesiExcelOkuyucu
 
         foreach ($kitap->getAllSheets() as $adaySheet) {
             $adayMaxRow = $adaySheet->getHighestRow();
-            $adayMaxCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($adaySheet->getHighestColumn());
+            $adayMaxCol = Coordinate::columnIndexFromString($adaySheet->getHighestColumn());
 
             [$adaySatir, $adayPuan] = static::baslikSatiriniBul($adaySheet, $adayMaxRow, $adayMaxCol);
 
@@ -81,7 +82,7 @@ class RiskDegerlendirmesiExcelOkuyucu
         }
 
         $maxRow = $sheet->getHighestRow();
-        $maxCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheet->getHighestColumn());
+        $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
 
         $sutunlar = static::sutunlariEslestir($sheet, $baslikSatiri, $maxCol);
 
@@ -207,6 +208,7 @@ class RiskDegerlendirmesiExcelOkuyucu
                     if (str_contains($normalize, $kelime) && static::sutunSayisalMi($sheet, $c, $baslikSatiri)) {
                         $sutunlar[$c] = $alan;
                         $doluAlanlar[$alan] = true;
+
                         continue 3;
                     }
                 }
@@ -220,6 +222,7 @@ class RiskDegerlendirmesiExcelOkuyucu
                 foreach ($kelimeler as $kelime) {
                     if (str_contains($normalize, $kelime)) {
                         $sutunlar[$c] = $alan;
+
                         continue 3;
                     }
                 }

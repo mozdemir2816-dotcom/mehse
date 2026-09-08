@@ -88,7 +88,7 @@ class KatilimciExcelOkuyucu
 
     public static function sablonIndir(): StreamedResponse
     {
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(static::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->fromArray(['Ahmet Yılmaz', '12345678901', 'Şantiye Şefi'], null, 'A2');

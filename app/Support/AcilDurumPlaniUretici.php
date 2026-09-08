@@ -28,7 +28,7 @@ class AcilDurumPlaniUretici
 
         $ad = 'acil-durum-plani-'.Str::slug($plan->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
     public static function afis(Firma $firma, string $tip, string $ebat = 'a4'): StreamedResponse
@@ -45,7 +45,7 @@ class AcilDurumPlaniUretici
             if (is_file($yol)) {
                 $icerik = static::hazirAfisiFirmaIleUret($yol, $firma, $ebat);
 
-                return response()->streamDownload(fn () => print($icerik), $ad);
+                return response()->streamDownload(fn () => print ($icerik), $ad);
             }
         }
 
@@ -54,7 +54,7 @@ class AcilDurumPlaniUretici
             'afis' => $afis,
         ])->setPaper(strtolower($ebat), 'portrait');
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
     /**
@@ -72,7 +72,7 @@ class AcilDurumPlaniUretici
         $a3 = strtolower($ebat) === 'a3';
         $bosluk = 3.0;
 
-        $fpdi = new Fpdi();
+        $fpdi = new Fpdi;
         $fpdi->SetAutoPageBreak(false);
 
         $fpdi->setSourceFile(StreamReader::createByString(file_get_contents($kaynakYol)));

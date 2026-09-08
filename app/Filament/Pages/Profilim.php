@@ -8,6 +8,7 @@ use App\Models\ArsivDosya;
 use App\Models\Calisan;
 use App\Models\EgitimTuru;
 use App\Models\Firma;
+use App\Models\FirmaChecklistVadesi;
 use App\Support\EgitimKayitExcelIceAktarici;
 use App\Support\PortfoyKarne;
 use App\Support\RaporKayitlari;
@@ -22,7 +23,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -233,7 +236,7 @@ class Profilim extends Page
      * Firma Takip'te seçili tek firmanın vade tarihli checklist detayı
      * (isgpratik "Firma Checklist" referansı).
      *
-     * @return array<int, array{anahtar: string, ad: string, tamam: bool, vade_tarihi: ?\Illuminate\Support\Carbon, durum: string}>
+     * @return array<int, array{anahtar: string, ad: string, tamam: bool, vade_tarihi: ?Carbon, durum: string}>
      */
     #[Computed]
     public function firmaChecklistDetay(): array
@@ -247,7 +250,7 @@ class Profilim extends Page
             return;
         }
 
-        \App\Models\FirmaChecklistVadesi::updateOrCreate(
+        FirmaChecklistVadesi::updateOrCreate(
             ['firma_id' => $this->firmaTakipSecili->id, 'kriter_anahtari' => $anahtar],
             ['vade_tarihi' => filled($tarih) ? $tarih : null],
         );
@@ -282,14 +285,14 @@ class Profilim extends Page
         return PortfoyKarne::performansEksenleri(Filament::auth()->id());
     }
 
-    /** @return \Illuminate\Support\Collection<int, EgitimTuru> Kullanıcının fiilen takip ettiği eğitim konuları */
+    /** @return Collection<int, EgitimTuru> Kullanıcının fiilen takip ettiği eğitim konuları */
     #[Computed]
     public function egitimTurleri()
     {
         return EgitimTuru::aktifListe(Filament::auth()->id());
     }
 
-    /** @return \Illuminate\Support\Collection<int, EgitimTuru> Kategori filtresine göre görünecek sütunlar */
+    /** @return Collection<int, EgitimTuru> Kategori filtresine göre görünecek sütunlar */
     #[Computed]
     public function egitimTurleriGorunen()
     {
@@ -315,7 +318,7 @@ class Profilim extends Page
      * Sütunlar sabit değil — kullanıcı "Konu Ekle" ile büyütebilir. Arama/firma/
      * kategori/durum ve Aktif-İşten Ayrılan filtreleri burada uygulanır.
      *
-     * @return array<int, array{calisan: Calisan, hucreler: array<string, array{tarih: ?\Illuminate\Support\Carbon, durum: ?string}>}>
+     * @return array<int, array{calisan: Calisan, hucreler: array<string, array{tarih: ?Carbon, durum: ?string}>}>
      */
     #[Computed]
     public function egitimMatrisi(): array
@@ -378,7 +381,7 @@ class Profilim extends Page
     /**
      * Profilim > Pazarlama — aday firma listesi (isgpratik 143.jpg).
      *
-     * @return \Illuminate\Support\Collection<int, AdayFirma>
+     * @return Collection<int, AdayFirma>
      */
     #[Computed]
     public function adayFirmalar()
@@ -424,7 +427,7 @@ class Profilim extends Page
         return $this->arsivFirmalar->firstWhere('id', $this->arsivSeciliFirmaId);
     }
 
-    /** @return \Illuminate\Support\Collection<int, ArsivDosya> */
+    /** @return Collection<int, ArsivDosya> */
     #[Computed]
     public function arsivDosyalar()
     {
@@ -453,7 +456,7 @@ class Profilim extends Page
     /**
      * Profilim > Raporlar — mehse'de üretilen tüm belgelerin tek listesi (isgpratik 146.jpg).
      *
-     * @return array<int, array{kayit: \Illuminate\Database\Eloquent\Model, kaynak: array, baslik: string, tip: string, firma: ?string, tarih: ?Carbon}>
+     * @return array<int, array{kayit: Model, kaynak: array, baslik: string, tip: string, firma: ?string, tarih: ?Carbon}>
      */
     #[Computed]
     public function raporlar(): array
@@ -461,7 +464,7 @@ class Profilim extends Page
         return RaporKayitlari::hepsi(Filament::auth()->id(), $this->raporArama ?: null, $this->raporTipFiltre ?: null);
     }
 
-    /** @return \Illuminate\Support\Collection<int, string> */
+    /** @return Collection<int, string> */
     #[Computed]
     public function raporTipSecenekleri()
     {

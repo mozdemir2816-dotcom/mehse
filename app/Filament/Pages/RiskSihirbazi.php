@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
+use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskKutuphanesi;
@@ -204,7 +205,7 @@ class RiskSihirbazi extends Page
             : null;
     }
 
-    /** @return Collection<int, \App\Models\TehlikeKategorisi> */
+    /** @return Collection<int, TehlikeKategorisi> */
     #[Computed]
     public function kategoriler(): Collection
     {
@@ -549,7 +550,7 @@ class RiskSihirbazi extends Page
     |--------------------------------------------------------------------------
     */
 
-    /** @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection> sektör etiketi => şablonlar */
+    /** @return Collection<string, Collection> sektör etiketi => şablonlar */
     public function sablonlar()
     {
         return RiskSablonu::query()

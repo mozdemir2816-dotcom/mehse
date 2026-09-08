@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Firma;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
@@ -67,13 +68,13 @@ class FirmaEvrakZipUretici
         $dosyaAdi = Str::slug($firma->unvan).'-evraklar.zip';
 
         return response()->streamDownload(function () use ($zipYolu) {
-            print(file_get_contents($zipYolu));
+            echo file_get_contents($zipYolu);
             @unlink($zipYolu);
         }, $dosyaAdi);
     }
 
-    /** @return \Illuminate\Support\Collection<int, array> */
-    private static function firmaSatirlari(Firma $firma): \Illuminate\Support\Collection
+    /** @return Collection<int, array> */
+    private static function firmaSatirlari(Firma $firma): Collection
     {
         return collect(RaporKayitlari::hepsi($firma->user_id))
             ->filter(fn (array $s) => $s['kayit']->firma_id === $firma->id);

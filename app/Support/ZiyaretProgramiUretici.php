@@ -23,6 +23,6 @@ class ZiyaretProgramiUretici
 
         $ad = 'ziyaret-programi-'.Str::slug($p->firma?->unvan ?: 'firma').'-'.$p->yil.'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

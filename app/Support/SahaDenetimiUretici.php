@@ -25,6 +25,6 @@ class SahaDenetimiUretici
 
         $ad = 'saha-denetimi-'.Str::slug($d->firma?->unvan ?? 'firma').'-r'.$d->revizyon.'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

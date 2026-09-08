@@ -24,6 +24,6 @@ class YillikPlanUretici
 
         $ad = 'yillik-plan-'.Str::slug($plan->firma?->unvan ?? 'firma').'-'.$plan->yil.'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

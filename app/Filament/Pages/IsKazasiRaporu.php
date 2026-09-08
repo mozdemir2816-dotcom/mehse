@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -89,7 +90,7 @@ class IsKazasiRaporu extends Page
     /**
      * Olay yeri / kaza sonrası durumun fotoğraf kanıtları.
      *
-     * @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile>
+     * @var array<int, TemporaryUploadedFile>
      */
     public array $yeniFotograflar = [];
 

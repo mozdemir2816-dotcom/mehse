@@ -25,6 +25,6 @@ class EgitimSinaviUretici
 
         $ad = 'egitim-sinavi-'.Str::slug($sinav->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

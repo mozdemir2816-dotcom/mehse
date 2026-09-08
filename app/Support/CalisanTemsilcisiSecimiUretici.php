@@ -50,7 +50,7 @@ class CalisanTemsilcisiSecimiUretici
 
         $dosyaAdi = 'calisan-temsilcisi-'.$ad.'-'.Str::slug($secim->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $dosyaAdi);
+        return response()->streamDownload(fn () => print ($pdf->output()), $dosyaAdi);
     }
 
     /**
@@ -84,7 +84,7 @@ class CalisanTemsilcisiSecimiUretici
         $zip->close();
 
         return response()->streamDownload(function () use ($zipYolu) {
-            print(file_get_contents($zipYolu));
+            echo file_get_contents($zipYolu);
             @unlink($zipYolu);
         }, 'calisan-temsilcisi-secimi-bos-sablon-seti.zip');
     }

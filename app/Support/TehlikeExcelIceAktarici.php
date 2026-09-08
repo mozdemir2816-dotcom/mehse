@@ -32,6 +32,7 @@ class TehlikeExcelIceAktarici
 
     /** Bu yüzdenin üzerindeki benzerlik (aynı kategoride) "zaten bu" sayılır, doğrudan günceller. */
     private const AYNI_MADDE_ESIGI = 97.0;
+
     private const ALAN_ESLESME = [
         'kategori' => 'kategori',
         'kod' => 'kod',
@@ -194,7 +195,7 @@ class TehlikeExcelIceAktarici
 
     private static function sablonUret(): Spreadsheet
     {
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(static::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->fromArray([

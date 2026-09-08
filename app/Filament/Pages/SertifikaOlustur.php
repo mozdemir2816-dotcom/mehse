@@ -10,6 +10,7 @@ use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -230,7 +231,7 @@ class SertifikaOlustur extends Page
         $yil = config('isg.sertifika.gecerlilik_yili.'.$tehlikeSinifi, 1);
         $baz = collect($this->egitimTarihleri)->filter()->last() ?? now()->toDateString();
 
-        $this->gecerlilikTarihi = \Carbon\Carbon::parse($baz)->addYears($yil)->toDateString();
+        $this->gecerlilikTarihi = Carbon::parse($baz)->addYears($yil)->toDateString();
     }
 
     public function calisanToggle(int $id): void

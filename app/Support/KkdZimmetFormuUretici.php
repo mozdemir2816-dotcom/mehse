@@ -24,6 +24,6 @@ class KkdZimmetFormuUretici
 
         $ad = 'kkd-zimmet-formu-'.Str::slug($form->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 }

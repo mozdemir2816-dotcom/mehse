@@ -24,7 +24,7 @@ class GeminiRiskDanismani
      * @param  array<int, string>  $altKategoriler
      * @param  array<string, string|array<int, string>>  $cevaplar  soru anahtarı => değer(ler)
      * @param  array<int, string>  $mevcutTehlikeler  zaten üretilmiş aday tehlike metinleri (mükerrer istenmez)
-     * @return array<int, array<string, mixed>>  ham risk maddeleri (RiskUretici::normalize şemasına uyar)
+     * @return array<int, array<string, mixed>> ham risk maddeleri (RiskUretici::normalize şemasına uyar)
      */
     public static function oner(string $sektorAdi, array $altKategoriler, array $cevaplar, array $mevcutTehlikeler): array
     {

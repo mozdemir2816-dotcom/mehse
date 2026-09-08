@@ -7,6 +7,8 @@ use App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus;
 use App\Models\RiskSablonu;
 use App\Support\RiskSkorlama;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -23,6 +25,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 /**
@@ -55,7 +58,7 @@ class RiskSablonuResource extends Resource
     }
 
     /** Paylaşılan şablonlar herkese GÖRÜNÜR ama yalnız sahibi DÜZENLEYEBİLİR/uygulayabildiği maddeleri değiştirebilir. */
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return $record->user_id === Filament::auth()->id();
     }
@@ -135,8 +138,8 @@ class RiskSablonuResource extends Resource
             ])
             ->defaultGroup('sektor')
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\DeleteAction::make()
+                EditAction::make(),
+                DeleteAction::make()
                     ->visible(fn (RiskSablonu $r) => $r->user_id === Filament::auth()->id()),
             ])
             ->defaultSort('kullanim_sayisi', 'desc');

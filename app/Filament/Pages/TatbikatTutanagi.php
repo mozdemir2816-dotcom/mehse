@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\TatbikatTutanagi as TatbikatTutanagiModel;
 use App\Support\TatbikatTutanagiUretici;
@@ -13,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -112,7 +112,7 @@ class TatbikatTutanagi extends Page
     public array $katilimcilar = [];
 
     // Fotoğraflar
-    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    /** @var array<int, TemporaryUploadedFile> */
     public array $yeniFotograflar = [];
 
     public function mount(): void

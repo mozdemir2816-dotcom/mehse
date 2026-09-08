@@ -71,7 +71,7 @@ class TalimatWordUretici
         $ad = 'talimat-'.Str::slug($talimat->baslik).'.docx';
 
         return response()->streamDownload(function () use ($geciciYol) {
-            print(file_get_contents($geciciYol));
+            echo file_get_contents($geciciYol);
             @unlink($geciciYol);
         }, $ad);
     }
