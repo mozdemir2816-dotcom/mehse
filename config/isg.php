@@ -186,6 +186,15 @@ return [
         'kapali' => 'Kapalı (önlem alındı)',
     ],
 
+    // Onaylı Defter Nüshaları — firma + tür başına sıralı numara verilir.
+    'onayli_defter' => [
+        'turleri' => [
+            'tespit_oneri' => 'İş Güvenliği Uzmanı ve İşyeri Hekimi Tespit ve Öneri Defteri',
+            'isyeri_hekimi' => 'İşyeri Hekimi Defteri',
+            'diger' => 'Diğer Onaylı Defter',
+        ],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Kontrol Merkezi (İSG Komuta Merkezi) — isgpratik 135-136.jpg
@@ -222,7 +231,7 @@ return [
             ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true],
             ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => false],
             ['anahtar' => 'saglik_raporu', 'ad' => 'Sağlık Raporu', 'ikon' => 'heroicon-o-document-text', 'hazir' => true],
-            ['anahtar' => 'onayli_defter_nushalari', 'ad' => 'Onaylı Defter Nüshaları', 'ikon' => 'heroicon-o-book-open', 'hazir' => false],
+            ['anahtar' => 'onayli_defter_nushalari', 'ad' => 'Onaylı Defter Nüshaları', 'ikon' => 'heroicon-o-book-open', 'hazir' => true],
             ['anahtar' => 'diger_evrak', 'ad' => 'Diğer', 'ikon' => 'heroicon-o-document', 'hazir' => false],
         ],
 

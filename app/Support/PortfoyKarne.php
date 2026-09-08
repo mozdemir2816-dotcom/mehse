@@ -119,6 +119,7 @@ class PortfoyKarne
             'igu_atamasi' => $firma->igu_id !== null,
             'hekim_atamasi' => $firma->isyeri_hekimi_id !== null,
             'tespit_oneri' => filled($firma->tespitOneriDefteri?->maddeler),
+            'onayli_defter_nushalari' => $firma->onayliDefterNushalari()->exists(),
             'yillik_calisma_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'faaliyetler'),
             'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
             'yillik_degerlendirme' => static::yillikPlanDegerlendirmeDoluMu($firma),

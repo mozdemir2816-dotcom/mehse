@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -50,6 +51,7 @@ class NavigasyonTest extends TestCase
             'isbasi egitim' => ['/admin/isbasi-egitim'],
             'tatbikat tutanagi' => ['/admin/tatbikat'],
             'tespit oneri defteri' => ['/admin/tespit-oneri-defteri'],
+            'onayli defter nushalari' => ['/admin/onayli-defter-nushalari'],
             'sertifika olustur' => ['/admin/sertifika'],
             'egitim sorulari' => ['/admin/egitim-sorulari'],
             'kkd formu' => ['/admin/kkd-formu'],
@@ -74,7 +76,7 @@ class NavigasyonTest extends TestCase
 
     public function test_nav_gruplari_dogru_sirada(): void
     {
-        $panel = \Filament\Facades\Filament::getPanel('admin');
+        $panel = Filament::getPanel('admin');
         $gruplar = collect($panel->getNavigationGroups())
             ->map(fn ($g) => is_string($g) ? $g : $g->getLabel())
             ->values()->all();

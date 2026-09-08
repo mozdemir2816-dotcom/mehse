@@ -97,6 +97,11 @@ class Firma extends Model
         return $this->hasOne(TespitOneriDefteri::class);
     }
 
+    public function onayliDefterNushalari(): HasMany
+    {
+        return $this->hasMany(OnayliDefterNushasi::class);
+    }
+
     public function kkdZimmetFormlari(): HasMany
     {
         return $this->hasMany(KkdZimmetFormu::class);
