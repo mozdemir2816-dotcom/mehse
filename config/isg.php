@@ -1,5 +1,55 @@
 <?php
 
+use App\Models\AcilDurumPlani;
+use App\Models\AtamaYazisi;
+use App\Models\CezaTebligTutanagi;
+use App\Models\DofRaporu;
+use App\Models\EgitimKatilim;
+use App\Models\EgitimSinavi;
+use App\Models\FirmaJsa;
+use App\Models\IpcTebligi;
+use App\Models\IsbasiEgitimTutanagi;
+use App\Models\IsIzinFormu;
+use App\Models\IsKazasiRaporu;
+use App\Models\KkdZimmetFormu;
+use App\Models\KurulToplantisi;
+use App\Models\MuayeneFormu;
+use App\Models\RiskDegerlendirmesi;
+use App\Models\SahaAnalizi;
+use App\Models\SahaDenetimi;
+use App\Models\Sertifika;
+use App\Models\Talimat;
+use App\Models\TatbikatTutanagi;
+use App\Models\TespitOneriDefteri;
+use App\Models\YillikPlan;
+use App\Models\ZiyaretProgrami;
+use App\Support\AcilDurumPlaniUretici;
+use App\Support\AcilDurumWordUretici;
+use App\Support\AtamaYazisiUretici;
+use App\Support\AtamaYazisiWordUretici;
+use App\Support\CezaTebligTutanagiUretici;
+use App\Support\DofRaporuUretici;
+use App\Support\EgitimKatilimUretici;
+use App\Support\EgitimSinaviUretici;
+use App\Support\FirmaJsaUretici;
+use App\Support\IpcTebligiUretici;
+use App\Support\IsbasiEgitimTutanagiUretici;
+use App\Support\IsIzinFormuUretici;
+use App\Support\IsKazasiRaporuUretici;
+use App\Support\KkdZimmetFormuUretici;
+use App\Support\KurulToplantisiUretici;
+use App\Support\MuayeneFormuUretici;
+use App\Support\RiskDegerlendirmesiUretici;
+use App\Support\SahaAnaliziUretici;
+use App\Support\SahaDenetimiUretici;
+use App\Support\SertifikaUretici;
+use App\Support\SertifikaYildizGrupUretici;
+use App\Support\TalimatUretici;
+use App\Support\TatbikatTutanagiUretici;
+use App\Support\TespitOneriDefteriUretici;
+use App\Support\YillikPlanUretici;
+use App\Support\ZiyaretProgramiUretici;
+
 /**
  * İSG mevzuatına bağlı sabitler. Değişince tek yerden güncellenir.
  */
@@ -1859,42 +1909,75 @@ return [
     */
     'yillik_plan' => [
         'ay_durumlari' => ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'],
+
+        // Yıllık Eğitim Planı kategori grupları (referans: ABDULLETİF YALÇINKAYA
+        // YILLIK EĞİTİM PLANI.xlsx — "GENEL / SAĞLIK / TEKNİK / DİĞER" bölümleri).
+        'egitim_kategorileri' => [
+            'genel' => 'Genel Konular',
+            'saglik' => 'Sağlık Konuları',
+            'teknik' => 'Teknik Konular',
+            'diger' => 'Diğer Eğitimler',
+        ],
+
+        /*
+         | Yeni bir yıllık plan açılınca bu faaliyetler otomatik yüklenir ve
+         | "varsayilan_aylar" (0=Ocak … 11=Aralık) uyarınca ilgili aylar
+         | "Planlandı" işaretlenir — kullanıcı sonradan düzeltir. Atanmış uzman
+         | (firma sözleşme başlangıcı) öncesindeki aylar otomatik doldurulmaz.
+         | yasal_gereklilik + frekans, referans "YILLIK ÇALIŞMA PLANI.xlsx"
+         | biçimindeki sütunlardır (çıktıya ve ekrana yansır).
+         */
         'varsayilan_faaliyetler' => [
-            ['faaliyet' => 'Risk Değerlendirmesi Revizyonu', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => '6331 sayılı kanun gereği risk değerlendirmesinin gözden geçirilmesi ve güncellenmesi'],
-            ['faaliyet' => 'Tehlike Kaynak Analizi', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => 'İşyerindeki tehlike kaynaklarının tespit edilerek analiz edilmesi'],
-            ['faaliyet' => 'Asansör Periyodik Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Asansör Bakım ve İşletme Yönetmeliği kapsamında yıllık periyodik kontrol'],
-            ['faaliyet' => 'Basınçlı Kap Periyodik Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Basınçlı ekipmanların yıllık periyodik muayene ve hidrostatik testleri'],
-            ['faaliyet' => 'Elektrik Tesisatı Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Elektrik iç tesisat ve topraklama kontrollerinin periyodik olarak yaptırılması'],
-            ['faaliyet' => 'Topraklama Ölçümü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Elektrik tesisatı topraklama dirençlerinin ölçülmesi ve uygunluğunun kontrolü'],
-            ['faaliyet' => 'Yangın Söndürme Cihazı Kontrolü', 'sorumlu' => 'Yetkili Firma', 'aciklama' => 'Yangın söndürme tüplerinin dolum, basınç ve genel durumlarının kontrolü'],
-            ['faaliyet' => 'Gürültü Ölçümü', 'sorumlu' => 'İSG Laboratuvarı', 'aciklama' => 'Çalışma ortamındaki gürültü düzeyinin ölçülerek maruziyet sınırlarının değerlendirilmesi'],
-            ['faaliyet' => 'Toz Ölçümü', 'sorumlu' => 'İSG Laboratuvarı', 'aciklama' => 'Çalışma ortamındaki toz konsantrasyonunun ölçülmesi ve sınır değerlerle karşılaştırılması'],
-            ['faaliyet' => 'Aydınlatma Ölçümü', 'sorumlu' => 'İSG Laboratuvarı', 'aciklama' => 'Çalışma alanlarındaki aydınlatma seviyelerinin ölçülerek yeterliliğinin değerlendirilmesi'],
-            ['faaliyet' => 'Yangın Tatbikatı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => 'Acil durum eylem planı kapsamında yılda en az 1 kez yangın tahliye tatbikatı yapılması'],
-            ['faaliyet' => 'Deprem Tatbikatı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => 'Acil durum eylem planı kapsamında deprem tatbikatı ve tahliye uygulaması'],
-            ['faaliyet' => 'İSG Kurul Toplantısı', 'sorumlu' => 'İSG Uzmanı', 'aciklama' => '6331 sayılı kanun gereği İSG kurulunun 2 ayda bir toplanarak kararlar alması'],
-            ['faaliyet' => 'Periyodik Sağlık Muayenesi', 'sorumlu' => 'İşyeri Hekimi', 'aciklama' => 'Çalışanların periyodik sağlık muayenelerinin işyeri hekimi tarafından yapılması'],
+            ['faaliyet' => 'Yıllık çalışma planının hazırlanması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi, İşveren', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [0]],
+            ['faaliyet' => 'Yıllık eğitim planının hazırlanması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi, İşveren', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [0]],
+            ['faaliyet' => 'Yılsonu değerlendirme raporunun hazırlanması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi, İşveren', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [11]],
+            ['faaliyet' => 'Risk değerlendirmesinin gözden geçirilmesi ve güncellenmesi', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Risk Değerlendirmesi Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [5]],
+            ['faaliyet' => 'Yeni başlayan çalışanlara Temel İSG Eğitimi verilmesi ve eğitimin yenilenmesi', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => []],
+            ['faaliyet' => 'İşyeri saha gözetiminin yapılması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu', 'frekans' => 'Sürekli', 'varsayilan_aylar' => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+            ['faaliyet' => 'İSG yönünden görülen eksikliklerin tespiti, raporlanması ve işverene bildirilmesi', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => 'İSG Uzmanlarının Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik', 'frekans' => 'Her ay', 'varsayilan_aylar' => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+            ['faaliyet' => 'Kişisel koruyucu donanımların çalışanlara zimmet tutanağı ile teslim edilmesi', 'sorumlu' => 'Bölüm Sorumluları', 'yasal_gereklilik' => 'Kişisel Koruyucu Donanımların İşyerlerinde Kullanılması Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [0]],
+            ['faaliyet' => 'Kimyasal maddelerin güvenlik bilgi formlarının (GBF) kontrolü', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => 'Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [2]],
+            ['faaliyet' => 'İşe giriş muayeneleri', 'sorumlu' => 'İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 15', 'frekans' => 'İşe girişlerde', 'varsayilan_aylar' => []],
+            ['faaliyet' => 'Periyodik sağlık muayeneleri', 'sorumlu' => 'İşyeri Hekimi', 'yasal_gereklilik' => 'İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [6]],
+            ['faaliyet' => 'İSG Kurulu toplantısının yapılması', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Kurulları Hakkında Yönetmelik', 'frekans' => 'Tehlike sınıfına göre 1-3 ayda 1', 'varsayilan_aylar' => [1, 3, 5, 7, 9, 11]],
+            ['faaliyet' => 'Yangın tatbikatı', 'sorumlu' => 'İş Güvenliği Uzmanı, İşveren', 'yasal_gereklilik' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik', 'frekans' => 'Yılda 1 (çok tehlikeli), 2 yılda 1 (tehlikeli), 3 yılda 1 (az tehlikeli)', 'varsayilan_aylar' => [8]],
+            ['faaliyet' => 'İlk yardım eğitimi / yenileme eğitimi', 'sorumlu' => 'İşveren / İşveren Vekili', 'yasal_gereklilik' => 'İlk Yardım Yönetmeliği', 'frekans' => '3 Yılda 1', 'varsayilan_aylar' => [9]],
+            ['faaliyet' => 'Çalışan temsilcisi ve destek elemanları eğitimi', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [8]],
+            ['faaliyet' => 'Mesleki eğitim belgelerinin alınması', 'sorumlu' => 'İşveren / İşveren Vekili', 'yasal_gereklilik' => 'Tehlikeli ve Çok Tehlikeli Sınıfta Yer Alan İşlerde Çalıştırılacakların Mesleki Eğitimlerine Dair Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [10]],
+            ['faaliyet' => 'Kaldırma araçlarının yıllık periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Kişi', 'yasal_gereklilik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
+            ['faaliyet' => 'Basınçlı kapların periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Kişi', 'yasal_gereklilik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
+            ['faaliyet' => 'Elektrik ve topraklama tesisatının yıllık periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Kişi', 'yasal_gereklilik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
+            ['faaliyet' => 'Yangın söndürme tüplerinin yıllık periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Firma', 'yasal_gereklilik' => 'Binaların Yangından Korunması Hakkında Yönetmelik', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
+            ['faaliyet' => 'Ortam ölçümleri (gürültü, toz, aydınlatma, termal konfor vb.)', 'sorumlu' => 'Yetkili İSG Laboratuvarı', 'yasal_gereklilik' => 'İş Hijyeni Ölçüm, Test ve Analizi Yapan Laboratuvarlar Hakkında Yönetmelik', 'frekans' => 'Risk değerlendirmesinde belirtilen periyotta', 'varsayilan_aylar' => [4]],
+            ['faaliyet' => 'İş kazalarının kaydının tutulması, bildirimi ve incelenmesi', 'sorumlu' => 'İşveren / Vekili, İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 14', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => []],
+            ['faaliyet' => 'Ecza dolaplarının kontrolü ve düzenlenmesi', 'sorumlu' => 'İlk Yardım Ekibi / İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu', 'frekans' => '6 Ayda 1', 'varsayilan_aylar' => [2, 8]],
         ],
 
         // "Yıllık Eğitim Planı" sekmesi — isgpratik 88-89.jpg. Aynı ay durum
         // matrisini kullanır; süre saat cinsinden, eğitici İSG Uzmanı/İşyeri Hekimi.
+        // Her eğitim "kategori" ile gruplanır (Genel/Sağlık/Teknik/Diğer) ve
+        // "varsayilan_aylar" ile otomatik doldurulur (referans plan: yılın son
+        // ayında toplu; kullanıcı sonradan taşır).
         'varsayilan_egitimler' => [
-            ['konu' => 'Çalışma Mevzuatı ile İlgili Bilgiler', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar 4857 ve 5510 sayılı kanunlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Çalışanların Yasal Hak ve Sorumlulukları', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, 4857, 6331 sayılı kanunlarda belirtilen çalışan hak ve sorumlulukları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Kimyasal, Fiziksel ve Ergonomik Risk Etmenleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan riskler ve çalışma ortamında uyulması gereken davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Elle Kaldırma ve Taşıma', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan elle kaldırma ve taşıma konularında bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları'],
-            ['konu' => 'Parlama, Patlama, Yangın ve Yangından Korunma', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, parlama, patlama, yangın ve yangından korunma yöntemlerini bilir. Acil durumda uyulması gerekli davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'İş Ekipmanlarının Güvenli Kullanımı', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, işyerinde mevcut olan iş ekipmanları riskleri ve güvenli kullanımı konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Operatörler'],
-            ['konu' => 'Ekranlı Araçlarla Çalışma', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, ekranlı araçlarla çalışma ve dikkat edilmesi gereken davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Ofis Çalışanları'],
-            ['konu' => 'Elektrik Tehlikeleri, Riskleri ve Önlemleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar elektrik tehlike, risk ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'İş Kazalarının Sebepleri ve Korunma Prensipleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'İşyerinde olabilecek iş kazaları sebepleri ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Güvenlik ve Sağlık İşaretleri', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, güvenlik ve sağlık işaretleri yönetmeliğinde mevcut olan işaret ve renkleri hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Kişisel Koruyucu Donanım Kullanımı', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar kişisel koruyucu donanımlar hakkında ve hangi alanda kullanılacakları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları'],
-            ['konu' => 'İş Sağlığı ve Güvenliği Genel Kuralları ve Güvenlik Kültürü', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar İSG Genel Kuralları ve Güvenlik Kültürü hakkında bilgi sahibi olurlar, güvenlik kültürünün işyerinde geliştirilmesi için örneklemelerde bulunurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Tahliye ve Kurtarma', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar Acil durumlarda yapılması gerekli davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Meslek Hastalıklarının Sebepleri', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı maruz oldukları mesleki riskleri ve sebepleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'Biyolojik ve Psikososyal Risk Etmenleri', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı oluşan biyolojik ve psikososyal riskler konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar'],
-            ['konu' => 'İlkyardım', 'sure_saat' => 4, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, Acil durum halinde uygulanması gerekli temel ilkyardım konuları hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'İlkyardımcılar'],
+            ['konu' => 'Çalışma Mevzuatı ile İlgili Bilgiler', 'kategori' => 'genel', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar 4857 ve 5510 sayılı kanunlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Çalışanların Yasal Hak ve Sorumlulukları', 'kategori' => 'genel', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, 4857, 6331 sayılı kanunlarda belirtilen çalışan hak ve sorumlulukları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'İş Kazalarının Sebepleri ve Korunma Prensipleri', 'kategori' => 'genel', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'İşyerinde olabilecek iş kazaları sebepleri ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'İş Sağlığı ve Güvenliği Genel Kuralları ve Güvenlik Kültürü', 'kategori' => 'genel', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar İSG Genel Kuralları ve Güvenlik Kültürü hakkında bilgi sahibi olurlar, güvenlik kültürünün işyerinde geliştirilmesi için örneklemelerde bulunurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Meslek Hastalıklarının Sebepleri', 'kategori' => 'saglik', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı maruz oldukları mesleki riskleri ve sebepleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Biyolojik ve Psikososyal Risk Etmenleri', 'kategori' => 'saglik', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı oluşan biyolojik ve psikososyal riskler konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'İlkyardım', 'kategori' => 'saglik', 'sure_saat' => 4, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, Acil durum halinde uygulanması gerekli temel ilkyardım konuları hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'İlkyardımcılar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Kimyasal, Fiziksel ve Ergonomik Risk Etmenleri', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan riskler ve çalışma ortamında uyulması gereken davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Elle Kaldırma ve Taşıma', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan elle kaldırma ve taşıma konularında bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Parlama, Patlama, Yangın ve Yangından Korunma', 'kategori' => 'teknik', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, parlama, patlama, yangın ve yangından korunma yöntemlerini bilir. Acil durumda uyulması gerekli davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'İş Ekipmanlarının Güvenli Kullanımı', 'kategori' => 'teknik', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, işyerinde mevcut olan iş ekipmanları riskleri ve güvenli kullanımı konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Operatörler', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Ekranlı Araçlarla Çalışma', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, ekranlı araçlarla çalışma ve dikkat edilmesi gereken davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Ofis Çalışanları', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Elektrik Tehlikeleri, Riskleri ve Önlemleri', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar elektrik tehlike, risk ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Güvenlik ve Sağlık İşaretleri', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, güvenlik ve sağlık işaretleri yönetmeliğinde mevcut olan işaret ve renkleri hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Kişisel Koruyucu Donanım Kullanımı', 'kategori' => 'teknik', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar kişisel koruyucu donanımlar hakkında ve hangi alanda kullanılacakları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Tahliye ve Kurtarma', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar Acil durumlarda yapılması gerekli davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Risk Değerlendirmesi Eğitimi', 'kategori' => 'diger', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'İşyerine özgü tehlikeler, riskler ve önlemleri ile risk değerlendirmesi sonuçları hakkında bilgilendirme.', 'hedef_kitle' => 'İlgili Kişiler', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Acil Durum Planı Eğitimi', 'kategori' => 'diger', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Acil durum planı, kaçış yolları ve toplanma bölgesi hakkında bilgilendirme.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
+            ['konu' => 'Yüksekte Güvenli Çalışma Eğitimi', 'kategori' => 'diger', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Yüksekte çalışma tehlikeleri, riskleri ve önlemleri hakkında bilgilendirme.', 'hedef_kitle' => 'İlgili Kişiler', 'varsayilan_aylar' => [11]],
         ],
 
         // "Yıllık Değerlendirme Raporu" sekmesi — isgpratik 90.jpg. Ay matrisi
@@ -2140,53 +2223,55 @@ return [
     */
     'raporlar' => [
         'kaynaklar' => [
-            ['model' => \App\Models\Sertifika::class, 'ad' => 'Sertifika', 'tip_metod' => 'tipEtiketi',
-                'uretici' => \App\Support\SertifikaUretici::class, 'pdf_metod' => 'pdf',
-                'ikincil_uretici' => \App\Support\SertifikaYildizGrupUretici::class, 'ikincil_metod' => 'indir', 'ikincil_etiket' => 'Yıldız Grup Şablonu'],
-            ['model' => \App\Models\EgitimKatilim::class, 'ad' => 'Eğitim Katılım Formu', 'tip_metod' => 'basliklarEtiketi',
-                'uretici' => \App\Support\EgitimKatilimUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\RiskDegerlendirmesi::class, 'ad' => 'Risk Değerlendirmesi', 'tip_metod' => null,
-                'uretici' => \App\Support\RiskDegerlendirmesiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\SahaDenetimi::class, 'ad' => 'Saha Denetimi', 'tip_metod' => null,
-                'uretici' => \App\Support\SahaDenetimiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\AtamaYazisi::class, 'ad' => 'Atama Yazısı', 'tip_metod' => 'rolEtiketi',
-                'uretici' => \App\Support\AtamaYazisiUretici::class, 'pdf_metod' => 'pdf',
-                'ikincil_uretici' => \App\Support\AtamaYazisiWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
-            ['model' => \App\Models\DofRaporu::class, 'ad' => 'DÖF Raporu', 'tip_metod' => null,
-                'uretici' => \App\Support\DofRaporuUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\IsKazasiRaporu::class, 'ad' => 'İş Kazası Raporu', 'tip_metod' => 'kazaTuruEtiketi',
-                'uretici' => \App\Support\IsKazasiRaporuUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\KurulToplantisi::class, 'ad' => 'Kurul Toplantı Tutanağı', 'tip_metod' => null,
-                'uretici' => \App\Support\KurulToplantisiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\SahaAnalizi::class, 'ad' => 'AI Saha Analizi Raporu', 'tip_metod' => null,
-                'uretici' => \App\Support\SahaAnaliziUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\CezaTebligTutanagi::class, 'ad' => 'Ceza ve Tebliğ Tutanağı', 'tip_metod' => 'yaptirimEtiketi',
-                'uretici' => \App\Support\CezaTebligTutanagiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\IpcTebligi::class, 'ad' => 'İşverene İPC Tebliği', 'tip_metod' => null,
-                'uretici' => \App\Support\IpcTebligiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\IsbasiEgitimTutanagi::class, 'ad' => 'İşbaşı Eğitim Tutanağı', 'tip_metod' => null,
-                'uretici' => \App\Support\IsbasiEgitimTutanagiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\TatbikatTutanagi::class, 'ad' => 'Tatbikat Tutanağı', 'tip_metod' => 'senaryoEtiketi',
-                'uretici' => \App\Support\TatbikatTutanagiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\EgitimSinavi::class, 'ad' => 'Eğitim Sınav Kağıdı', 'tip_metod' => null,
-                'uretici' => \App\Support\EgitimSinaviUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\MuayeneFormu::class, 'ad' => 'Muayene Formu (EK-2)', 'tip_metod' => 'muayeneTuruEtiketi',
-                'uretici' => \App\Support\MuayeneFormuUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\TespitOneriDefteri::class, 'ad' => 'Tespit ve Öneri Defteri', 'tip_metod' => null,
-                'uretici' => \App\Support\TespitOneriDefteriUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
-                'uretici' => \App\Support\KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,
-                'uretici' => \App\Support\IsIzinFormuUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\Talimat::class, 'ad' => 'Çalışma Talimatı', 'tip_metod' => 'kategoriEtiketi',
-                'uretici' => \App\Support\TalimatUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\YillikPlan::class, 'ad' => 'Yıllık Plan', 'tip_metod' => null,
-                'uretici' => \App\Support\YillikPlanUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\ZiyaretProgrami::class, 'ad' => 'Ziyaret Programı', 'tip_metod' => null,
-                'uretici' => \App\Support\ZiyaretProgramiUretici::class, 'pdf_metod' => 'pdf'],
-            ['model' => \App\Models\AcilDurumPlani::class, 'ad' => 'Acil Durum Planı', 'tip_metod' => null,
-                'uretici' => \App\Support\AcilDurumPlaniUretici::class, 'pdf_metod' => 'pdf',
-                'ikincil_uretici' => \App\Support\AcilDurumWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
+            ['model' => Sertifika::class, 'ad' => 'Sertifika', 'tip_metod' => 'tipEtiketi',
+                'uretici' => SertifikaUretici::class, 'pdf_metod' => 'pdf',
+                'ikincil_uretici' => SertifikaYildizGrupUretici::class, 'ikincil_metod' => 'indir', 'ikincil_etiket' => 'Yıldız Grup Şablonu'],
+            ['model' => EgitimKatilim::class, 'ad' => 'Eğitim Katılım Formu', 'tip_metod' => 'basliklarEtiketi',
+                'uretici' => EgitimKatilimUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => RiskDegerlendirmesi::class, 'ad' => 'Risk Değerlendirmesi', 'tip_metod' => null,
+                'uretici' => RiskDegerlendirmesiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => SahaDenetimi::class, 'ad' => 'Saha Denetimi', 'tip_metod' => null,
+                'uretici' => SahaDenetimiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => AtamaYazisi::class, 'ad' => 'Atama Yazısı', 'tip_metod' => 'rolEtiketi',
+                'uretici' => AtamaYazisiUretici::class, 'pdf_metod' => 'pdf',
+                'ikincil_uretici' => AtamaYazisiWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
+            ['model' => DofRaporu::class, 'ad' => 'DÖF Raporu', 'tip_metod' => null,
+                'uretici' => DofRaporuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => IsKazasiRaporu::class, 'ad' => 'İş Kazası Raporu', 'tip_metod' => 'kazaTuruEtiketi',
+                'uretici' => IsKazasiRaporuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => KurulToplantisi::class, 'ad' => 'Kurul Toplantı Tutanağı', 'tip_metod' => null,
+                'uretici' => KurulToplantisiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => SahaAnalizi::class, 'ad' => 'AI Saha Analizi Raporu', 'tip_metod' => null,
+                'uretici' => SahaAnaliziUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => CezaTebligTutanagi::class, 'ad' => 'Ceza ve Tebliğ Tutanağı', 'tip_metod' => 'yaptirimEtiketi',
+                'uretici' => CezaTebligTutanagiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => IpcTebligi::class, 'ad' => 'İşverene İPC Tebliği', 'tip_metod' => null,
+                'uretici' => IpcTebligiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => IsbasiEgitimTutanagi::class, 'ad' => 'İşbaşı Eğitim Tutanağı', 'tip_metod' => null,
+                'uretici' => IsbasiEgitimTutanagiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => TatbikatTutanagi::class, 'ad' => 'Tatbikat Tutanağı', 'tip_metod' => 'senaryoEtiketi',
+                'uretici' => TatbikatTutanagiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => EgitimSinavi::class, 'ad' => 'Eğitim Sınav Kağıdı', 'tip_metod' => null,
+                'uretici' => EgitimSinaviUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => MuayeneFormu::class, 'ad' => 'Muayene Formu (EK-2)', 'tip_metod' => 'muayeneTuruEtiketi',
+                'uretici' => MuayeneFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => TespitOneriDefteri::class, 'ad' => 'Tespit ve Öneri Defteri', 'tip_metod' => null,
+                'uretici' => TespitOneriDefteriUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
+                'uretici' => KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,
+                'uretici' => IsIzinFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => Talimat::class, 'ad' => 'Çalışma Talimatı', 'tip_metod' => 'kategoriEtiketi',
+                'uretici' => TalimatUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => YillikPlan::class, 'ad' => 'Yıllık Plan', 'tip_metod' => null,
+                'uretici' => YillikPlanUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => ZiyaretProgrami::class, 'ad' => 'Ziyaret Programı', 'tip_metod' => null,
+                'uretici' => ZiyaretProgramiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => AcilDurumPlani::class, 'ad' => 'Acil Durum Planı', 'tip_metod' => null,
+                'uretici' => AcilDurumPlaniUretici::class, 'pdf_metod' => 'pdf',
+                'ikincil_uretici' => AcilDurumWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
+            ['model' => FirmaJsa::class, 'ad' => 'JSA (İşe Özgü Risk)', 'tip_metod' => 'baslikEtiketi',
+                'uretici' => FirmaJsaUretici::class, 'pdf_metod' => 'pdf'],
         ],
     ],
 

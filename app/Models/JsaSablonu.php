@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * JSA (İşe Özgü Risk Değerlendirmesi / Job Safety Analysis) kütüphane kaydı.
@@ -53,6 +54,15 @@ class JsaSablonu extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Bu JSA'nın atandığı firmalar. Atanan JSA, firmanın "Evrakları İndir"
+     * toplu ZIP'inde ve Profilim > Raporlar'da görünür (bkz. FirmaJsa).
+     */
+    public function firmalar(): BelongsToMany
+    {
+        return $this->belongsToMany(Firma::class, 'firma_jsa')->withTimestamps();
     }
 
     /** @param Builder<JsaSablonu> $query */

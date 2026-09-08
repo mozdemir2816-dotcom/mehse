@@ -7,9 +7,12 @@ use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\JsaSablonu;
 use App\Models\User;
+use App\Support\FirmaEvrakZipUretici;
 use App\Support\JsaExcelOkuyucu;
 use App\Support\JsaUretici;
 use App\Support\JsaWordUretici;
+use App\Support\RaporKayitlari;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -265,6 +268,155 @@ class JsaDegerlendirmesiTest extends TestCase
         $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => null])->render();
 
         $this->assertStringContainsString('Hazırlayan (İSG / HSE)', $html);
+    }
+
+    public function test_kunye_duzenle_baslik_revizyon_tarih_gunceller(): void
+    {
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id,
+            'baslik' => 'JSA - Eski Başlık',
+            'dokuman_ref' => 'JSA-1',
+            'revizyon' => '00',
+            'belge_tarihi' => '1 Ocak 2026',
+            'adimlar' => [],
+        ]);
+
+        Livewire::test(JsaSayfasi::class)
+            ->callAction('kunyeDuzenle', data: [
+                'baslik' => 'JSA - Duvar Örme (Rev.)',
+                'dokuman_ref' => 'JSA-BLOCK-002',
+                'revizyon' => '01',
+                'belge_tarihi' => '15 Eylül 2026',
+                'kapsam' => 'Tüm sahalar',
+            ], arguments: ['id' => $sablon->id])
+            ->assertNotified('JSA künyesi güncellendi');
+
+        $sablon->refresh();
+        $this->assertSame('JSA - Duvar Örme (Rev.)', $sablon->baslik);
+        $this->assertSame('JSA-BLOCK-002', $sablon->dokuman_ref);
+        $this->assertSame('01', $sablon->revizyon);
+        $this->assertSame('15 Eylül 2026', $sablon->belge_tarihi);
+        $this->assertSame('Tüm sahalar', $sablon->kapsam);
+    }
+
+    public function test_kunye_duzenle_bos_alanlari_null_yapar(): void
+    {
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id,
+            'baslik' => 'JSA - Test',
+            'dokuman_ref' => 'JSA-1',
+            'revizyon' => '00',
+            'belge_tarihi' => '1 Ocak 2026',
+            'kapsam' => 'x',
+            'adimlar' => [],
+        ]);
+
+        Livewire::test(JsaSayfasi::class)
+            ->callAction('kunyeDuzenle', data: [
+                'baslik' => 'JSA - Test',
+                'dokuman_ref' => '',
+                'revizyon' => '',
+                'belge_tarihi' => '',
+                'kapsam' => '',
+            ], arguments: ['id' => $sablon->id]);
+
+        $sablon->refresh();
+        $this->assertNull($sablon->dokuman_ref);
+        $this->assertNull($sablon->revizyon);
+        $this->assertNull($sablon->belge_tarihi);
+        $this->assertNull($sablon->kapsam);
+    }
+
+    public function test_baska_uzmanin_jsa_kunyesi_duzenlenemez(): void
+    {
+        $baskasi = User::factory()->create();
+        $yabanci = JsaSablonu::create([
+            'user_id' => $baskasi->id, 'baslik' => 'Yabancı JSA', 'adimlar' => [],
+        ]);
+
+        try {
+            Livewire::test(JsaSayfasi::class)
+                ->callAction('kunyeDuzenle', data: [
+                    'baslik' => 'Ele geçirildi', 'dokuman_ref' => '', 'revizyon' => '', 'belge_tarihi' => '', 'kapsam' => '',
+                ], arguments: ['id' => $yabanci->id]);
+            $this->fail('Yabancı kayda erişim engellenmeliydi.');
+        } catch (ModelNotFoundException $e) {
+            // beklenen
+        }
+
+        $this->assertDatabaseHas('jsa_sablonlari', ['id' => $yabanci->id, 'baslik' => 'Yabancı JSA']);
+    }
+
+    public function test_jsa_birden_cok_firmaya_atanir(): void
+    {
+        $duzyaka = Firma::factory()->for($this->uzman)->create(['unvan' => 'Düzyaka İnş.']);
+        $ikinci = Firma::factory()->for($this->uzman)->create(['unvan' => 'İkinci Şantiye']);
+        $sablon = JsaSablonu::create(['user_id' => $this->uzman->id, 'baslik' => 'JSA - Kazı İşleri', 'adimlar' => []]);
+
+        Livewire::test(JsaSayfasi::class)
+            ->callAction('firmalaraEkle', data: ['firmalar' => [$duzyaka->id, $ikinci->id]], arguments: ['id' => $sablon->id])
+            ->assertNotified();
+
+        $this->assertEqualsCanonicalizing(
+            ['Düzyaka İnş.', 'İkinci Şantiye'],
+            $sablon->firmalar()->pluck('unvan')->all(),
+        );
+        $this->assertDatabaseCount('firma_jsa', 2);
+    }
+
+    public function test_firmalara_ekle_isareti_kaldirilan_firmayi_cikarir(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'A']);
+        $b = Firma::factory()->for($this->uzman)->create(['unvan' => 'B']);
+        $sablon = JsaSablonu::create(['user_id' => $this->uzman->id, 'baslik' => 'JSA - X', 'adimlar' => []]);
+        $sablon->firmalar()->sync([$a->id, $b->id]);
+
+        Livewire::test(JsaSayfasi::class)
+            ->callAction('firmalaraEkle', data: ['firmalar' => [$a->id]], arguments: ['id' => $sablon->id]);
+
+        $this->assertSame(['A'], $sablon->firmalar()->pluck('unvan')->all());
+    }
+
+    public function test_firmalara_ekle_baska_uzmanin_firmasini_baglamaz(): void
+    {
+        $baskasi = User::factory()->create();
+        $yabanciFirma = Firma::factory()->for($baskasi)->create();
+        $sablon = JsaSablonu::create(['user_id' => $this->uzman->id, 'baslik' => 'JSA - X', 'adimlar' => []]);
+
+        Livewire::test(JsaSayfasi::class)
+            ->callAction('firmalaraEkle', data: ['firmalar' => [$yabanciFirma->id]], arguments: ['id' => $sablon->id]);
+
+        $this->assertCount(0, $sablon->firmalar);
+        $this->assertDatabaseCount('firma_jsa', 0);
+    }
+
+    public function test_firmaya_atanan_jsa_evrak_zipine_ve_raporlara_girer(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Düzyaka İnş.']);
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id,
+            'baslik' => 'JSA - Kazı İşleri',
+            'adimlar' => [
+                ['sira' => '1', 'is_adimi' => 'Kazı', 'tehlikeler' => 'Göçük', 'sonuclar' => '', 'baslangic_risk' => 'Yüksek', 'kontrol_tedbirleri' => '', 'kalinti_risk' => 'Orta', 'sorumlu' => ''],
+            ],
+        ]);
+        $sablon->firmalar()->sync([$firma->id]);
+
+        // Raporlar listesinde JSA satırı, firma + başlıkla görünür.
+        $satirlar = RaporKayitlari::hepsi($this->uzman->id);
+        $jsaSatiri = collect($satirlar)->firstWhere('tip', 'JSA (İşe Özgü Risk)');
+        $this->assertNotNull($jsaSatiri);
+        $this->assertSame('Düzyaka İnş. — JSA: JSA - Kazı İşleri', $jsaSatiri['baslik']);
+
+        // "Evrakları İndir" seçeneklerinde ve ZIP'te yer alır.
+        $secenekler = FirmaEvrakZipUretici::secenekler($firma);
+        $this->assertNotEmpty($secenekler);
+
+        $yanit = FirmaEvrakZipUretici::zip($firma, array_keys($secenekler));
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('PK', $icerik);
     }
 
     public function test_baska_uzmanin_jsasi_gorunmez_ve_silinemez(): void

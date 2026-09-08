@@ -90,11 +90,22 @@
                                     @endforeach
                                 </div>
                             @endif
+
+                            <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.45rem;align-items:center">
+                                <span style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">FİRMALAR:</span>
+                                @forelse ($s->firmalar as $f)
+                                    <span style="display:inline-block;padding:1px 7px;border-radius:9999px;font-size:.68rem;border:1px solid {{ $mor }};color:{{ $mor }}">{{ $f->unvan }}</span>
+                                @empty
+                                    <span style="font-size:.7rem;color:rgb(107 114 128)">— hiçbir firmaya eklenmedi —</span>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                     <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:center">
                         <x-filament::button size="xs" color="danger" icon="heroicon-o-document-arrow-down" wire:click="pdf({{ $s->id }})">PDF</x-filament::button>
                         <x-filament::button size="xs" color="info" icon="heroicon-o-document-text" wire:click="word({{ $s->id }})">Word</x-filament::button>
+                        <x-filament::button size="xs" color="primary" icon="heroicon-o-building-office-2" wire:click="mountAction('firmalaraEkle', { id: {{ $s->id }} })">Firmalara Ekle</x-filament::button>
+                        <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil-square" wire:click="mountAction('kunyeDuzenle', { id: {{ $s->id }} })">Künye</x-filament::button>
                         <x-filament::button size="xs" color="gray" wire:click="sil({{ $s->id }})" wire:confirm="Bu JSA kütüphaneden silinsin mi?">Sil</x-filament::button>
                     </div>
                 </div>
@@ -105,5 +116,8 @@
                 (biçimden emin değilseniz önce <strong>“Boş Şablon İndir”</strong>).
             </p>
         @endforelse
+
+        {{ $this->kunyeDuzenleAction }}
+        {{ $this->firmalaraEkleAction }}
     </x-filament::section>
 </x-filament-panels::page>
