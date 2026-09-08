@@ -50,6 +50,55 @@ class FineKinneyKutuphaneIceAktariciTest extends TestCase
         return $yol;
     }
 
+    /** "Beton dökümü" dosyasındaki gibi: 2 satırlık başlık + her iş kalemi ayrı sayfa. */
+    private function ikiSatirBaslikVeCokSayfaExcel(): string
+    {
+        $kitap = new Spreadsheet;
+
+        foreach (['Beton' => 'Betonarme ve Beton Dökümü', 'kazı' => 'Hafriyat ve Kazı İşleri'] as $sayfaAd => $kategori) {
+            $s = $kitap->getSheetCount() === 1 && $kitap->getActiveSheet()->getHighestRow() === 1
+                ? $kitap->getActiveSheet()->setTitle($sayfaAd)
+                : $kitap->createSheet()->setTitle($sayfaAd);
+
+            // Ana başlık (satır 3) + alt başlık (satır 4: O1/F1/S1 …)
+            $s->fromArray([
+                'Sıra No', 'Faaliyet Alanı (Ana Kategori)', 'Alt Faaliyet / Bölüm', 'Tehlike Kaynağı (Hazard)',
+                'Olası Risk & Sonuç', 'MEVCUT DURUM RİSK DEĞERLENDİRMESİ', null, null, null, null,
+                'Alınması Gereken Önleyici ve Düzeltici Tedbirler', 'ÖNLEMLER SONRASI', null, null, null, null, 'Sorumlu Birim / Termin',
+            ], null, 'A3');
+            $s->fromArray([
+                null, null, null, null, null,
+                'Olasılık (O1)', 'Frekans (F1)', 'Şiddet (S1)', 'Risk Skoru (R1)', 'Risk Seviyesi 1',
+                null, 'Olasılık (O2)', 'Frekans (F2)', 'Şiddet (S2)', 'Risk Skoru (R2)', 'Risk Seviyesi 2', null,
+            ], null, 'A4');
+            $s->fromArray([1, $kategori, 'Süreç A', 'Tehlike '.$sayfaAd, 'Yaralanma', 3, 6, 7, 126, 'ÖNEMLİ RİSK', 'Önlem metni.', 0.2, 6, 7, 8.4, 'KABUL EDİLEBİLİR RİSK', 'Kısım Şefi'], null, 'A5');
+            $s->fromArray([2, $kategori, 'Süreç B', 'Tehlike 2 '.$sayfaAd, 'Ölüm', 3, 6, 15, 270, 'YÜKSEK RİSK', 'Diğer önlem.', 0.2, 6, 7, 8.4, 'KABUL EDİLEBİLİR RİSK', 'Kısım Şefi'], null, 'A6');
+        }
+
+        $yol = tempnam(sys_get_temp_dir(), 'fk2').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        return $yol;
+    }
+
+    public function test_iki_satir_baslik_ve_cok_sayfali_dosya_tum_sayfalari_okur(): void
+    {
+        $sonuc = FineKinneyKutuphaneIceAktarici::iceAktar($this->ikiSatirBaslikVeCokSayfaExcel());
+
+        $this->assertSame(4, $sonuc['basarili']);          // 2 sayfa × 2 satır
+        $this->assertSame(2, $sonuc['yeniKategori']);
+
+        $beton = TehlikeKategorisi::where('ad', 'Betonarme ve Beton Dökümü')->sole();
+        $this->assertSame(2, $beton->tehlikeler()->count());
+
+        $t = Tehlike::where('tehlike', 'Tehlike Beton')->sole();
+        // Alt başlık satırındaki O1/F1/S1 doğru sütuna bağlandı; Risk Skoru sütunu (126) alınmadı
+        $this->assertEqualsWithDelta(3.0, (float) $t->olasilik, 0.01);
+        $this->assertEqualsWithDelta(6.0, (float) $t->frekans, 0.01);
+        $this->assertEqualsWithDelta(7.0, (float) $t->siddet, 0.01);
+        $this->assertSame('Süreç A', $t->faaliyet);
+    }
+
     public function test_faaliyet_alani_kategori_olur_ve_ofs_yazilir(): void
     {
         $sonuc = FineKinneyKutuphaneIceAktarici::iceAktar($this->ornekExcel());

@@ -113,7 +113,14 @@ class FineKinneyKutuphaneIceAktarici
         return ['basarili' => $basarili, 'yeniKategori' => $yeniKategori, 'hatalar' => []];
     }
 
-    /** @return array<int, array<string, mixed>> */
+    /**
+     * Çok sayfalı dosyaları da destekler — her sayfada bir risk tablosu aranır ve
+     * hepsinden okunan satırlar birleştirilir (ör. "Beton", "kazı" gibi ayrı ayrı
+     * iş kalemi sayfaları). Başlık 1 veya 2 satırlık olabilir (ana başlık + O1/F1/S1
+     * alt başlığı).
+     *
+     * @return array<int, array<string, mixed>>
+     */
     private static function excelSatirlari(string $dosyaYolu): array
     {
         ExcelBellek::artir();
@@ -122,38 +129,36 @@ class FineKinneyKutuphaneIceAktarici
         $reader->setReadDataOnly(true);
         $kitap = $reader->load($dosyaYolu);
 
-        $sheet = null;
-        $baslikSatiri = null;
-        $enIyi = -1;
+        $satirlar = [];
 
-        foreach ($kitap->getAllSheets() as $aday) {
-            $maxRow = $aday->getHighestRow();
-            $maxCol = Coordinate::columnIndexFromString($aday->getHighestColumn());
-            [$satir, $puan] = static::baslikBul($aday, $maxRow, $maxCol);
-
-            if ($satir !== null && $puan > $enIyi) {
-                $enIyi = $puan;
-                $baslikSatiri = $satir;
-                $sheet = $aday;
+        foreach ($kitap->getAllSheets() as $sheet) {
+            foreach (static::sayfaSatirlari($sheet) as $s) {
+                $satirlar[] = $s;
             }
         }
 
-        if ($sheet === null || $baslikSatiri === null) {
-            return [];
-        }
+        return $satirlar;
+    }
 
+    /** @return array<int, array<string, mixed>> */
+    private static function sayfaSatirlari($sheet): array
+    {
         $maxRow = $sheet->getHighestRow();
         $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
-        $sutunlar = static::sutunlariEsle($sheet, $baslikSatiri, $maxCol);
 
-        if (! in_array('tehlike', $sutunlar, true)) {
+        [$veriBaslangic, $sutunlar] = static::baslikBandiBul($sheet, $maxRow, $maxCol);
+
+        if ($veriBaslangic === null || ! in_array('tehlike', $sutunlar, true)) {
             return [];
         }
+
+        // Kategori sütunu yoksa sayfa adını kategori kabul et.
+        $sayfaKategorisi = in_array('kategori', $sutunlar, true) ? null : trim((string) $sheet->getTitle());
 
         $satirlar = [];
         $bos = 0;
 
-        for ($r = $baslikSatiri + 1; $r <= $maxRow; $r++) {
+        for ($r = $veriBaslangic; $r <= $maxRow; $r++) {
             $veri = [];
             $doluMu = false;
 
@@ -161,7 +166,7 @@ class FineKinneyKutuphaneIceAktarici
                 $deger = $sheet->getCell([$c, $r])->getCalculatedValue();
                 $deger = is_string($deger) ? trim($deger) : $deger;
 
-                if ($deger === '' || $deger === null) {
+                if ($deger === '' || $deger === null || (is_string($deger) && str_starts_with($deger, '#'))) {
                     continue;
                 }
 
@@ -181,75 +186,103 @@ class FineKinneyKutuphaneIceAktarici
 
             $bos = 0;
 
-            if (! blank($veri['tehlike'] ?? null)) {
-                $satirlar[] = $veri;
+            if (blank($veri['tehlike'] ?? null)) {
+                continue;
             }
+
+            if ($sayfaKategorisi && blank($veri['kategori'] ?? null)) {
+                $veri['kategori'] = $sayfaKategorisi;
+            }
+
+            $satirlar[] = $veri;
         }
 
         return $satirlar;
     }
 
-    /** @return array{0:int|null, 1:int} */
-    private static function baslikBul($sheet, int $maxRow, int $maxCol): array
+    /**
+     * Başlık bandını (1-2 satır) bulur ve sütunları eşler.
+     *
+     * @return array{0:int|null, 1:array<int,string>} [veri başlangıç satırı, sütun eşlemesi]
+     */
+    private static function baslikBandiBul($sheet, int $maxRow, int $maxCol): array
     {
-        $enIyiSatir = null;
-        $enIyiPuan = 0;
         $tara = min($maxRow, self::BASLIK_TARAMA_LIMIT);
+        $enIyi = [null, []];
+        $enIyiPuan = 0;
 
-        for ($r = 1; $r <= $tara; $r++) {
-            $puan = 0;
-            $tehlike = false;
-            $olasilik = false;
+        for ($r = 1; $r < $tara; $r++) {
+            $altSatirMi = static::altBaslikMi($sheet, $r + 1, $maxCol);
+            $veriBaslangic = $altSatirMi ? $r + 2 : $r + 1;
 
-            for ($c = 1; $c <= $maxCol; $c++) {
-                $deger = $sheet->getCell([$c, $r])->getValue();
+            $sutunlar = static::sutunlariEsle($sheet, $r, $altSatirMi ? $r + 1 : null, $maxCol, $veriBaslangic);
 
-                if (! is_string($deger) || trim($deger) === '') {
-                    continue;
-                }
-
-                $n = static::normalize($deger);
-
-                foreach ([...self::KATEGORI_KELIMELERI, 'tehlike', 'olasilik', 'siddet', 'faaliyet', 'mevzuat', 'onlem', 'tedbir'] as $kelime) {
-                    if (str_contains($n, $kelime)) {
-                        $puan++;
-
-                        if ($kelime === 'tehlike') {
-                            $tehlike = true;
-                        }
-
-                        if ($kelime === 'olasilik') {
-                            $olasilik = true;
-                        }
-
-                        break;
-                    }
-                }
+            if (! in_array('tehlike', $sutunlar, true)) {
+                continue;
             }
 
-            if ($tehlike && $olasilik && $puan > $enIyiPuan) {
+            $puanAlaniVar = (bool) array_intersect(['olasilik', 'frekans', 'siddet'], $sutunlar);
+
+            if (! $puanAlaniVar) {
+                continue;
+            }
+
+            $puan = count($sutunlar);
+
+            if ($puan > $enIyiPuan) {
                 $enIyiPuan = $puan;
-                $enIyiSatir = $r;
+                $enIyi = [$veriBaslangic, $sutunlar];
             }
         }
 
-        return [$enIyiSatir, $enIyiPuan];
+        return $enIyi;
     }
 
-    /** @return array<int, string> sütun indeksi => alan */
-    private static function sutunlariEsle($sheet, int $baslikSatiri, int $maxCol): array
+    /** Bir satır "alt başlık" (Olasılık O1 / Frekans F1 / Şiddet S1 …) satırı mı? */
+    private static function altBaslikMi($sheet, int $row, int $maxCol): bool
+    {
+        $isaret = 0;
+        $uzunMetin = 0;
+
+        for ($c = 1; $c <= $maxCol; $c++) {
+            $deger = $sheet->getCell([$c, $row])->getValue();
+
+            if (! is_string($deger) || trim($deger) === '') {
+                continue;
+            }
+
+            if (mb_strlen($deger) > 55) {
+                $uzunMetin++;
+            }
+
+            if (preg_match('/(olasilik|olasılık|frekans|siddet|şiddet|puan|skor|seviye|derece|maruziyet|^[ofsr]\s*\d)/iu', $deger)) {
+                $isaret++;
+            }
+        }
+
+        return $isaret >= 2 && $uzunMetin === 0;
+    }
+
+    /**
+     * Sütunları eşler — başlık metni, ana başlık satırı ile (varsa) alt başlık
+     * satırının birleştirilmiş hâlidir.
+     *
+     * @return array<int, string> sütun indeksi => alan
+     */
+    private static function sutunlariEsle($sheet, int $anaSatir, ?int $altSatir, int $maxCol, int $veriBaslangic): array
     {
         $sutunlar = [];
         $dolu = [];
 
         for ($c = 1; $c <= $maxCol; $c++) {
-            $baslik = $sheet->getCell([$c, $baslikSatiri])->getValue();
+            $ana = $sheet->getCell([$c, $anaSatir])->getValue();
+            $alt = $altSatir ? $sheet->getCell([$c, $altSatir])->getValue() : null;
 
-            if (! is_string($baslik) || trim($baslik) === '') {
+            $n = static::normalize(trim((string) $ana).' '.trim((string) $alt));
+
+            if ($n === '') {
                 continue;
             }
-
-            $n = static::normalize($baslik);
 
             if (! isset($dolu['kategori'])) {
                 foreach (self::KATEGORI_KELIMELERI as $kelime) {
@@ -268,7 +301,7 @@ class FineKinneyKutuphaneIceAktarici
                 }
 
                 foreach ($kelimeler as $kelime) {
-                    if (str_contains($n, $kelime) && static::sutunSayisalMi($sheet, $c, $baslikSatiri)) {
+                    if (str_contains($n, $kelime) && static::sutunSayisalMi($sheet, $c, $veriBaslangic)) {
                         $sutunlar[$c] = $alan;
                         $dolu[$alan] = true;
 
@@ -296,11 +329,11 @@ class FineKinneyKutuphaneIceAktarici
         return $sutunlar;
     }
 
-    private static function sutunSayisalMi($sheet, int $col, int $baslikSatiri): bool
+    private static function sutunSayisalMi($sheet, int $col, int $veriBaslangic): bool
     {
         $kontrol = 0;
 
-        for ($r = $baslikSatiri + 1; $r <= $baslikSatiri + 20 && $kontrol < 5; $r++) {
+        for ($r = $veriBaslangic; $r <= $veriBaslangic + 25 && $kontrol < 5; $r++) {
             $deger = $sheet->getCell([$col, $r])->getValue();
 
             if ($deger === null || $deger === '') {
