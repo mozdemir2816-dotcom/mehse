@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Tehlikes\Pages;
 
 use App\Filament\Resources\Tehlikes\TehlikeResource;
+use App\Support\FineKinneyKutuphaneIceAktarici;
 use App\Support\TehlikeExcelIceAktarici;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -73,6 +74,54 @@ class ListTehlikes extends ListRecords
                     }
 
                     $sonuc['basarili'] > 0 || $sonuc['cakisma'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
+                }),
+
+            Action::make('fineKinneyYukle')
+                ->label('Fine-Kinney Analizi Yükle')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->modalDescription('Sektörel bir Fine-Kinney risk analizi Excel\'i (ör. "İnşaat İSG Risk Analizi ve Fine-Kinney Programı"). Başlık satırı ve sütunlar otomatik bulunur; "Faaliyet Alanı / Ana Kategori" değeri kütüphane kategorisi olur, Olasılık / Frekans / Şiddet de yüklenir. Risk Sihirbazı → Manuel Seçim\'de kategoriye göre süzüp ilgili maddeleri seçersiniz. Aynı kategoride aynı tehlike tekrar yüklenirse güncellenir.')
+                ->modalSubmitActionLabel('Yükle')
+                ->schema([
+                    FileUpload::make('dosya')
+                        ->label('Fine-Kinney Excel dosyası')
+                        ->disk('local')
+                        ->directory('excel-ice-aktarim')
+                        ->acceptedFileTypes([
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'application/vnd.ms-excel',
+                        ])
+                        ->required()
+                        ->helperText('Olasılık, Frekans ve Şiddet sütunları bulunan risk tablosu. Büyük dosyalarda yükleme birkaç dakika sürebilir.'),
+                ])
+                ->action(function (array $data): void {
+                    $yol = Storage::disk('local')->path($data['dosya']);
+
+                    try {
+                        $sonuc = FineKinneyKutuphaneIceAktarici::iceAktar($yol);
+                    } catch (Throwable $e) {
+                        Storage::disk('local')->delete($data['dosya']);
+                        Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                        return;
+                    }
+
+                    Storage::disk('local')->delete($data['dosya']);
+
+                    if ($sonuc['basarili'] === 0) {
+                        Notification::make()->title('Madde bulunamadı')
+                            ->body($sonuc['hatalar'][0] ?? 'Dosyada tanınabilir bir Fine-Kinney risk tablosu yok.')
+                            ->danger()->send();
+
+                        return;
+                    }
+
+                    $baslik = $sonuc['basarili'].' tehlike kütüphaneye eklendi/güncellendi';
+                    if ($sonuc['yeniKategori'] > 0) {
+                        $baslik .= ' ('.$sonuc['yeniKategori'].' yeni kategori)';
+                    }
+
+                    Notification::make()->title($baslik)->success()->send();
                 }),
 
             CreateAction::make(),

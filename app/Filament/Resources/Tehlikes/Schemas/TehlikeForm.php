@@ -29,6 +29,15 @@ class TehlikeForm
                 Textarea::make('mevcut_onlem')->label('Önerilen kontrol tedbiri')->rows(2)->columnSpanFull(),
                 TextInput::make('mevzuat')->label('Mevzuat dayanağı')->columnSpanFull(),
             ]),
+            Section::make('Önerilen Puanlar')
+                ->description('Sektörel bir analizden (Fine-Kinney / 5x5) aktarıldıysa dolu gelir; Risk Sihirbazı manuel seçimde forma önceden yazılır. Boş bırakılabilir.')
+                ->columns(3)
+                ->collapsed(fn ($record) => $record === null || ($record->olasilik === null && $record->siddet === null))
+                ->schema([
+                    TextInput::make('olasilik')->label('Olasılık')->numeric()->step('0.1'),
+                    TextInput::make('frekans')->label('Frekans (yalnız Fine-Kinney)')->numeric()->step('0.1'),
+                    TextInput::make('siddet')->label('Şiddet')->numeric()->step('0.1'),
+                ]),
         ]);
     }
 }

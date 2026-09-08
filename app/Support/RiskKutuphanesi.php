@@ -42,9 +42,11 @@ class RiskKutuphanesi
             'oneri' => null,
             'sorumlu' => null,
             'termin' => null,
-            'olasilik' => null,
-            'frekans' => null,
-            'siddet' => null,
+            // Kütüphaneye sektörel bir analizden (ör. İnşaat Fine-Kinney) O/F/Ş ile
+            // aktarıldıysa sihirbaz formuna önceden dolsun.
+            'olasilik' => $t->olasilik !== null ? (float) $t->olasilik : null,
+            'frekans' => $t->frekans !== null ? (float) $t->frekans : null,
+            'siddet' => $t->siddet !== null ? (float) $t->siddet : null,
         ];
     }
 
