@@ -3,16 +3,21 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\RiskSihirbazi;
+use App\Filament\Resources\RiskSablonus\Pages\EditRiskSablonu;
+use App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
-use App\Models\Tehlike;
 use App\Models\RiskSablonu;
+use App\Models\Tehlike;
 use App\Models\User;
 use App\Support\RiskUretici;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
 class RiskSihirbaziTest extends TestCase
@@ -252,19 +257,19 @@ class RiskSihirbaziTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
-        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap = new Spreadsheet;
         $kitap->getActiveSheet()->fromArray([
             ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
             ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', 4, 5],
             ['Şantiye', 'İksasız kazı', 'Göçük', 3, 5],
         ], null, 'A1');
         $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+        (new Xlsx($kitap))->save($yol);
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
-            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
             ->assertSet('excelAdaylar', fn ($adaylar) => count($adaylar) === 2)
             ->call('excelSecilenleriEkle')
@@ -281,19 +286,19 @@ class RiskSihirbaziTest extends TestCase
         // Varsayılan yöntem 5x5 Matris'tir (1-5 ölçek); dosyadaki 0.2/6/15 gibi
         // değerler o ölçekte yok -- kullanıcı "puanlar aktarılmıyor" diye şikayet
         // etmişti çünkü açılır listede seçili görünmüyorlardı.
-        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap = new Spreadsheet;
         $kitap->getActiveSheet()->fromArray([
             ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Frekans', 'Şiddet'],
             ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', 6, 10, 15],
         ], null, 'A1');
         $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+        (new Xlsx($kitap))->save($yol);
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
             ->assertSet('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
-            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
             ->call('excelSecilenleriEkle')
             ->assertSet('yontem', 'fine_kinney');
@@ -326,18 +331,18 @@ class RiskSihirbaziTest extends TestCase
 
         // "Mevcut Önlem" sütunu YOK, "Olasılık"/"Şiddet" hücreleri BOŞ —
         // gerçek hayatta kullanıcının kendi taslak/eksik dosyası gibi.
-        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap = new Spreadsheet;
         $kitap->getActiveSheet()->fromArray([
             ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
             ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', null, null],
         ], null, 'A1');
         $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+        (new Xlsx($kitap))->save($yol);
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
-            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
             ->call('excelSecilenleriEkle');
 
@@ -356,18 +361,18 @@ class RiskSihirbaziTest extends TestCase
 
         $firma = Firma::factory()->for($this->uzman)->create();
 
-        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap = new Spreadsheet;
         $kitap->getActiveSheet()->fromArray([
             ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
             ['Şantiye', 'Korkuluksuz kenar', 'Yüksekten düşme', null, null],
         ], null, 'A1');
         $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+        (new Xlsx($kitap))->save($yol);
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
-            ->set('excelDosya', \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
             ->call('excelSecilenleriEkle');
 
@@ -430,6 +435,54 @@ class RiskSihirbaziTest extends TestCase
         $this->assertSame(1, $sablon->fresh()->kullanim_sayisi);
     }
 
+    public function test_cok_maddeli_sablon_sihirbaza_yuklenmeden_dogrudan_uygulanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $maddeler = [];
+        for ($i = 1; $i <= 300; $i++) {
+            $maddeler[] = [
+                'anahtar' => 'm'.$i, 'kaynak' => 'sablon', 'tehlike' => 'Tehlike '.$i,
+                'bolum' => 'Bölüm', 'faaliyet' => 'Faaliyet', 'oneri' => 'Önlem '.$i,
+                'olasilik' => 6, 'frekans' => 6, 'siddet' => 7, 'son_olasilik' => 0.5, 'son_frekans' => 3, 'son_siddet' => 3,
+            ];
+        }
+        $sablon = RiskSablonu::olustur($this->uzman, 'Büyük master', 'insaat', null, 'fine_kinney', $maddeler);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'sablon')->call('ileri')
+            ->call('sablonUygula', $sablon->id);
+
+        // Sihirbaza yüklenmedi; yeni bir risk değerlendirmesi oluşturulup yönlendirildi
+        $this->assertCount(0, $component->get('secilenler'));
+        $component->assertRedirect();
+
+        $rd = RiskDegerlendirmesi::where('firma_id', $firma->id)->sole();
+        $this->assertSame('fine_kinney', $rd->yontem);
+        $this->assertSame(300, $rd->maddeler()->count());
+
+        $ilk = $rd->maddeler()->orderBy('sira')->first();
+        $this->assertEqualsWithDelta(252.0, (float) $ilk->puan, 0.01); // 6 × 6 × 7
+        $this->assertNotNull($ilk->duzey);
+        $this->assertSame(1, $sablon->fresh()->kullanim_sayisi);
+    }
+
+    public function test_cok_maddeli_sablon_firma_secilmeden_1_adima_yonlendirir(): void
+    {
+        $maddeler = [];
+        for ($i = 1; $i <= 300; $i++) {
+            $maddeler[] = ['anahtar' => 'm'.$i, 'tehlike' => 'Tehlike '.$i, 'olasilik' => 3, 'siddet' => 3];
+        }
+        $sablon = RiskSablonu::olustur($this->uzman, 'Büyük master', 'insaat', null, 'matris_5x5', $maddeler);
+
+        Livewire::test(RiskSihirbazi::class)
+            ->call('sablonUygula', $sablon->id)
+            ->assertSet('adim', 1);
+
+        $this->assertSame(0, RiskDegerlendirmesi::count());
+    }
+
     public function test_ai_akisinda_ayni_sektorun_sablonu_kisayoldan_uygulanir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
@@ -454,21 +507,21 @@ class RiskSihirbaziTest extends TestCase
 
     public function test_excelden_dogrudan_sektorel_sablon_olusturulur(): void
     {
-        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $kitap = new Spreadsheet;
         $kitap->getActiveSheet()->fromArray([
             ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Frekans', 'Şiddet'],
             ['Şantiye', 'İksasız derin kazı', 'Göçük', 6, 10, 15],
             ['Şantiye', 'Kalıp montaj kontrolsüzlüğü', 'Kalıp çökmesi', 3, 6, 7],
         ], null, 'A1');
         $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($yol);
+        (new Xlsx($kitap))->save($yol);
 
-        Livewire::test(\App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus::class)
+        Livewire::test(ListRiskSablonus::class)
             ->callAction('excelSektorSablonu', data: [
                 'ad' => 'İnşaat Kazı-Kalıp',
                 'sektor' => 'insaat',
                 'sektor_adi' => null,
-                'dosya' => \Illuminate\Http\UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)),
+                'dosya' => UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)),
             ]);
 
         $sablon = RiskSablonu::where('ad', 'İnşaat Kazı-Kalıp')->firstOrFail();
@@ -490,11 +543,11 @@ class RiskSihirbaziTest extends TestCase
     {
         $sablon = RiskSablonu::olustur($this->uzman, 'Test', 'ofis', null, 'matris_5x5', [['anahtar' => 'a', 'tehlike' => 'x']]);
 
-        Livewire::test(\App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus::class)
+        Livewire::test(ListRiskSablonus::class)
             ->assertOk()
             ->assertCanSeeTableRecords([$sablon]);
 
-        Livewire::test(\App\Filament\Resources\RiskSablonus\Pages\EditRiskSablonu::class, ['record' => $sablon->getRouteKey()])
+        Livewire::test(EditRiskSablonu::class, ['record' => $sablon->getRouteKey()])
             ->assertOk();
     }
 

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
+use App\Models\RiskMaddesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
@@ -561,15 +562,29 @@ class RiskSihirbazi extends Page
             ->groupBy(fn (RiskSablonu $s) => $s->sektorEtiketi());
     }
 
-    public function sablonUygula(int $id): void
+    /**
+     * Bu sayıdan çok maddeli şablonlar (ör. 1.671 maddelik sektörel "master" analiz)
+     * etkileşimli sihirbaz adımına yüklenmez — binlerce Livewire form input'u tarayıcıyı
+     * kilitler, her istek payload sınırını aşar. Onun yerine doğrudan Risk Değerlendirmesi
+     * oluşturulup sayfalı düzenleme tablosuna yönlendirilir.
+     */
+    private const SABLON_DOGRUDAN_ESIGI = 250;
+
+    public function sablonUygula(int $id)
     {
         $sablon = RiskSablonu::gorunur(Filament::auth()->id())->find($id);
 
         if (! $sablon) {
-            return;
+            return null;
         }
 
-        foreach ($sablon->maddeleriKopyala() as $madde) {
+        $maddeler = $sablon->maddeleriKopyala();
+
+        if (count($maddeler) > self::SABLON_DOGRUDAN_ESIGI) {
+            return $this->buyukSablonuDogrudanUygula($sablon, $maddeler);
+        }
+
+        foreach ($maddeler as $madde) {
             $zaten = collect($this->secilenler)->contains(
                 fn ($m) => Str::lower(trim($m['tehlike'] ?? '')) === Str::lower(trim($madde['tehlike'] ?? '')),
             );
@@ -590,6 +605,103 @@ class RiskSihirbazi extends Page
         if (count($this->secilenler) > 0) {
             $this->adim = 4;
         }
+
+        return null;
+    }
+
+    /**
+     * Çok maddeli şablonu doğrudan yeni bir Risk Değerlendirmesine yazar (sihirbaza
+     * yüklemeden) ve düzenleme sayfasına yönlendirir. Puan/düzey satır bazında
+     * `RiskSkorlama` ile hesaplanıp toplu insert edilir (model `saving` hook'u
+     * tek tek çalışmasın diye).
+     */
+    private function buyukSablonuDogrudanUygula(RiskSablonu $sablon, array $maddeler)
+    {
+        if (! $this->firmaId) {
+            Notification::make()
+                ->title('Önce 1. adımdan bir firma seçin')
+                ->body(count($maddeler).' maddelik şablon, seçilen firmaya doğrudan bir risk değerlendirmesi olarak uygulanacak.')
+                ->warning()->send();
+            $this->adim = 1;
+
+            return null;
+        }
+
+        $firma = Firma::where('user_id', Filament::auth()->id())->find($this->firmaId);
+
+        if (! $firma) {
+            return null;
+        }
+
+        @set_time_limit(300);
+
+        $rd = new RiskDegerlendirmesi([
+            'firma_id' => $firma->id,
+            'yontem' => $sablon->yontem,
+            'rapor_tarihi' => $this->raporTarihi,
+            'gecerlilik_tarihi' => $this->gecerlilikTarihi,
+            'durum' => 'taslak',
+        ]);
+        $rd->save();
+
+        $fk = $sablon->yontem === 'fine_kinney';
+        $sira = 0;
+
+        foreach (array_chunk($maddeler, 250) as $parca) {
+            $satirlar = [];
+
+            foreach ($parca as $m) {
+                $sira++;
+                $o = $this->sayiVeyaNull($m['olasilik'] ?? null);
+                $s = $this->sayiVeyaNull($m['siddet'] ?? null);
+                $f = $fk ? $this->sayiVeyaNull($m['frekans'] ?? null) : null;
+                $mevcut = RiskSkorlama::hesapla($sablon->yontem, $o, $s, $f);
+
+                $so = $this->sayiVeyaNull($m['son_olasilik'] ?? null) ?? ($o !== null ? 1.0 : null);
+                $ss = $this->sayiVeyaNull($m['son_siddet'] ?? null) ?? $s;
+                $sf = $fk ? ($this->sayiVeyaNull($m['son_frekans'] ?? null) ?? $f) : null;
+                $son = RiskSkorlama::hesapla($sablon->yontem, $so, $ss, $sf);
+
+                $satirlar[] = [
+                    'risk_degerlendirmesi_id' => $rd->id,
+                    'sira' => $sira,
+                    'bolum' => $m['bolum'] ?? null,
+                    'faaliyet' => $m['faaliyet'] ?? null,
+                    'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',
+                    'risk' => $m['risk'] ?? null,
+                    'mevcut_onlem' => $m['mevcut_onlem'] ?? null,
+                    'etkilenen_calisan' => true,
+                    'etkilenen_diger' => $this->etkilenenDiger,
+                    'olasilik' => $o,
+                    'frekans' => $f,
+                    'siddet' => $s,
+                    'puan' => $mevcut['puan'] ?: null,
+                    'duzey' => $mevcut['puan'] ? $mevcut['duzey'] : null,
+                    'oneri' => $m['oneri'] ?? null,
+                    'sorumlu' => $m['sorumlu'] ?? null,
+                    'termin' => ($m['termin'] ?? '') ?: $this->varsayilanTermin,
+                    'son_olasilik' => $so,
+                    'son_frekans' => $sf,
+                    'son_siddet' => $ss,
+                    'son_puan' => $son['puan'] ?: null,
+                    'son_duzey' => $son['puan'] ? $son['duzey'] : null,
+                    'durum' => 'acik',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            RiskMaddesi::insert($satirlar);
+        }
+
+        $sablon->kullanildi();
+
+        Notification::make()
+            ->title($sablon->ad.' uygulandı')
+            ->body($sira.' madde ile yeni risk değerlendirmesi oluşturuldu.')
+            ->success()->send();
+
+        return $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $rd]));
     }
 
     /*
@@ -754,9 +866,9 @@ class RiskSihirbazi extends Page
     }
 
     /** AI akışında "bu sektörün şablonunu direkt kullan". */
-    public function aiSablonKullan(int $id): void
+    public function aiSablonKullan(int $id)
     {
-        $this->sablonUygula($id);
+        return $this->sablonUygula($id);
     }
 
     public function sablonlaKaydet(): void
