@@ -25,6 +25,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        GeminiRiskPuanTamamlayici::devreyiSifirla();
         $this->uzman = User::factory()->create();
         $this->actingAs($this->uzman);
     }
@@ -191,6 +192,43 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
 
         // eksik: 1 puan + 1 önlem; sadeceOnlemEksik: 1 önlem; tamOlan: 0 = toplam 3.
         Http::assertSentCount(3);
+    }
+
+    public function test_art_arda_basarisizlikta_devre_kesilir_ve_istek_atilmaz(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar']);
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response(['error' => 'kota'], 429)]);
+
+        // İlk 4 istek gider ve başarısız olur; 5.'de devre kesiktir, HTTP'ye hiç gidilmez.
+        for ($i = 0; $i < 6; $i++) {
+            GeminiRiskPuanTamamlayici::oner('Tehlike '.$i, null, null, null, 'matris_5x5');
+        }
+
+        $this->assertTrue(GeminiRiskPuanTamamlayici::devreKesikMi());
+        Http::assertSentCount(4);
+    }
+
+    public function test_eksik_puanlari_tamamla_tek_calistirmada_40_madde_ile_sinirli(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar']);
+        Http::fake(fn () => Http::response([
+            'candidates' => [['content' => ['parts' => [['text' => json_encode(['olasilik' => 3, 'siddet' => 3])]]]]],
+        ]));
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        for ($i = 1; $i <= 55; $i++) {
+            $rd->maddeler()->create(['sira' => $i, 'tehlike' => 'Puansız madde '.$i, 'mevcut_onlem' => 'var', 'durum' => 'acik']);
+        }
+
+        Livewire::test(MaddelerRelationManager::class, [
+            'ownerRecord' => $rd,
+            'pageClass' => EditRiskDegerlendirmesi::class,
+        ])->callTableAction('eksikPuanlariTamamla');
+
+        // 40 madde puanlandı, 15'i hâlâ eksik
+        $this->assertSame(40, $rd->maddeler()->whereNotNull('olasilik')->count());
+        $this->assertSame(15, $rd->maddeler()->whereNull('olasilik')->count());
     }
 
     public function test_kutuphaneden_aktar_mevcut_onlem_boluyorsa_ai_onlem_de_ekler(): void

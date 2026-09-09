@@ -19,15 +19,43 @@ use Throwable;
  */
 class GeminiRiskPuanTamamlayici
 {
+    /** Bu kadar art arda başarısız istekten sonra (kota/hız sınırı, servis kapalı) aynı
+     *  istek içinde artık Gemini'ye gidilmez — toplu tamamlama döngüsü 120 sn'yi aşmasın. */
+    private const DEVRE_KESME_ESIGI = 4;
+
+    private static int $ardArdaBasarisiz = 0;
+
     public static function aktifMi(): bool
     {
         return filled(config('services.gemini.key'));
     }
 
+    /** Art arda çok sayıda başarısızlık oldu mu — çağıran toplu döngü buna bakıp durmalı. */
+    public static function devreKesikMi(): bool
+    {
+        return static::$ardArdaBasarisiz >= self::DEVRE_KESME_ESIGI;
+    }
+
+    /** Yeni bir toplu tamamlama başlamadan önce sayacı sıfırlar (Gemini toparlanmış olabilir). */
+    public static function devreyiSifirla(): void
+    {
+        static::$ardArdaBasarisiz = 0;
+    }
+
+    private static function basarisizlikKaydet(): void
+    {
+        static::$ardArdaBasarisiz++;
+    }
+
+    private static function basariKaydet(): void
+    {
+        static::$ardArdaBasarisiz = 0;
+    }
+
     /** @return array{olasilik: float, siddet: float, frekans: ?float}|null */
     public static function oner(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, string $yontem): ?array
     {
-        if (! static::aktifMi()) {
+        if (! static::aktifMi() || static::devreKesikMi()) {
             return null;
         }
 
@@ -41,6 +69,7 @@ class GeminiRiskPuanTamamlayici
 
             if ($yanit->failed()) {
                 Log::warning('Gemini risk puanı önerisi başarısız', ['durum' => $yanit->status(), 'govde' => $yanit->body()]);
+                static::basarisizlikKaydet();
 
                 return null;
             }
@@ -52,6 +81,8 @@ class GeminiRiskPuanTamamlayici
                 return null;
             }
 
+            static::basariKaydet();
+
             return [
                 'olasilik' => static::enYakinDeger($sonuc['olasilik'], $yontem, 'olasilik'),
                 'siddet' => static::enYakinDeger($sonuc['siddet'], $yontem, 'siddet'),
@@ -59,6 +90,7 @@ class GeminiRiskPuanTamamlayici
             ];
         } catch (Throwable $e) {
             Log::warning('Gemini risk puanı önerisi istisna', ['hata' => $e->getMessage()]);
+            static::basarisizlikKaydet();
 
             return null;
         }
@@ -71,7 +103,7 @@ class GeminiRiskPuanTamamlayici
      */
     public static function onlemOner(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet): ?string
     {
-        if (! static::aktifMi()) {
+        if (! static::aktifMi() || static::devreKesikMi()) {
             return null;
         }
 
@@ -83,6 +115,7 @@ class GeminiRiskPuanTamamlayici
 
             if ($yanit->failed()) {
                 Log::warning('Gemini önlem önerisi başarısız', ['durum' => $yanit->status(), 'govde' => $yanit->body()]);
+                static::basarisizlikKaydet();
 
                 return null;
             }
@@ -94,9 +127,12 @@ class GeminiRiskPuanTamamlayici
                 return null;
             }
 
+            static::basariKaydet();
+
             return trim((string) $sonuc['onlem']);
         } catch (Throwable $e) {
             Log::warning('Gemini önlem önerisi istisna', ['hata' => $e->getMessage()]);
+            static::basarisizlikKaydet();
 
             return null;
         }

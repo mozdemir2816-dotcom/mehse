@@ -80,6 +80,9 @@ class RiskSihirbazi extends Page
             'maddeler' => ['Her formatı akıllı algılama', 'Eksik puan/önlem tamamlama', 'Tüm maddeler otomatik eklenir']],
     ];
 
+    /** Excel içe aktarımda "eksik puan/önlemi AI ile tamamla" tek seferde en fazla bu kadar madde işler. */
+    private const AI_TOPLU_LIMIT = 40;
+
     public int $adim = 1;
 
     public ?int $firmaId = null;
@@ -824,14 +827,27 @@ class RiskSihirbazi extends Page
             return [0, 0];
         }
 
+        GeminiRiskPuanTamamlayici::devreyiSifirla();
+
         $puanlanan = 0;
         $onlemli = 0;
         $fk = $this->fineKinney();
+        $islenen = 0;
 
         foreach ($indeksler as $i) {
+            // Gemini kota/hız sınırına takıldıysa ya da tek seferde çok fazla madde
+            // varsa döngüyü kes — 120 sn'yi aşıp sayfa çökmemeli.
+            if ($islenen >= self::AI_TOPLU_LIMIT || GeminiRiskPuanTamamlayici::devreKesikMi()) {
+                break;
+            }
+
             $m = $this->secilenler[$i];
 
             $puanEksik = blank($m['olasilik'] ?? null) || blank($m['siddet'] ?? null) || ($fk && blank($m['frekans'] ?? null));
+
+            if ($puanEksik || blank($this->secilenler[$i]['mevcut_onlem'] ?? null)) {
+                $islenen++;
+            }
 
             if ($puanEksik) {
                 $oneri = GeminiRiskPuanTamamlayici::oner(

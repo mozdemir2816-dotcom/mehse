@@ -31,6 +31,9 @@ class MaddelerRelationManager extends RelationManager
 
     protected static ?string $title = 'Risk Maddeleri';
 
+    /** "Eksik Puan/Önlemleri AI ile Tamamla" tek çalıştırmada en fazla bu kadar madde işler. */
+    private const AI_TOPLU_LIMIT = 40;
+
     protected function fineKinney(): bool
     {
         return $this->getOwnerRecord()->yontem === 'fine_kinney';
@@ -198,11 +201,12 @@ class MaddelerRelationManager extends RelationManager
                     ->color('gray')
                     ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi())
                     ->requiresConfirmation()
-                    ->modalDescription('Olasılık/Şiddet puanı veya Mevcut Önlem metni boş olan tüm maddeler için Gemini\'den öneri istenir; puan önerisi yalnız ölçekteki değerlerden seçilir, siz yine de gözden geçirip düzeltebilirsiniz.')
+                    ->modalDescription('Olasılık/Şiddet puanı veya Mevcut Önlem metni boş olan maddeler için Gemini\'den öneri istenir (her çalıştırmada en fazla '.self::AI_TOPLU_LIMIT.' madde; kalanlar için tekrar çalıştırın). Puan önerisi yalnız ölçekteki değerlerden seçilir, yine de gözden geçirin.')
                     ->action(function (): void {
+                        GeminiRiskPuanTamamlayici::devreyiSifirla();
                         $fk = $this->fineKinney();
 
-                        $eksikler = $this->getOwnerRecord()->maddeler()
+                        $eksikSorgu = $this->getOwnerRecord()->maddeler()
                             ->where(function ($q) use ($fk) {
                                 $q->whereNull('olasilik')->orWhereNull('siddet')
                                     ->orWhereNull('mevcut_onlem')->orWhere('mevcut_onlem', '');
@@ -210,19 +214,44 @@ class MaddelerRelationManager extends RelationManager
                                 if ($fk) {
                                     $q->orWhereNull('frekans');
                                 }
-                            })
-                            ->get();
+                            });
 
-                        $tamamlanan = $eksikler->filter(function (RiskMaddesi $m) {
-                            $puanEksik = blank($m->olasilik) || blank($m->siddet) || ($this->fineKinney() && blank($m->frekans));
+                        $toplamEksik = (clone $eksikSorgu)->count();
+                        $eksikler = $eksikSorgu->orderBy('sira')->limit(self::AI_TOPLU_LIMIT)->get();
+
+                        if ($eksikler->isEmpty()) {
+                            Notification::make()->title('Eksik puan/önlem içeren madde yok')->success()->send();
+
+                            return;
+                        }
+
+                        $tamamlanan = 0;
+
+                        foreach ($eksikler as $m) {
+                            if (GeminiRiskPuanTamamlayici::devreKesikMi()) {
+                                break;
+                            }
+
+                            $puanEksik = blank($m->olasilik) || blank($m->siddet) || ($fk && blank($m->frekans));
                             $puanlandi = $puanEksik && $this->puanlaAiIle($m);
                             $onlemVerildi = $this->onlemVerAiIle($m);
 
-                            return $puanlandi || $onlemVerildi;
-                        })->count();
+                            if ($puanlandi || $onlemVerildi) {
+                                $tamamlanan++;
+                            }
+                        }
+
+                        $kalan = max(0, $toplamEksik - $tamamlanan);
+
+                        $body = match (true) {
+                            GeminiRiskPuanTamamlayici::devreKesikMi() => 'Gemini yanıt vermiyor (kota / hız sınırı olabilir); birkaç dakika sonra tekrar deneyin.'.($kalan ? " Kalan: {$kalan} madde." : ''),
+                            $kalan > 0 => "{$kalan} madde hâlâ eksik — aksiyonu tekrar çalıştırın.",
+                            default => null,
+                        };
 
                         Notification::make()
-                            ->title($eksikler->isEmpty() ? 'Eksik puan/önlem içeren madde yok' : "{$tamamlanan}/{$eksikler->count()} madde AI ile tamamlandı")
+                            ->title("{$tamamlanan} madde AI ile tamamlandı")
+                            ->body($body)
                             ->success()
                             ->send();
                     }),
