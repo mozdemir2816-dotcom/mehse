@@ -188,6 +188,45 @@ return [
         'kapali' => 'Kapalı (önlem alındı)',
     ],
 
+    // Kimyasal Ürün Sicili — SDS / GHS-CLP.
+    'kimyasal' => [
+        'fiziksel_hal' => [
+            'sivi' => 'Sıvı',
+            'kati' => 'Katı',
+            'gaz' => 'Gaz',
+            'aerosol' => 'Aerosol',
+            'toz' => 'Toz / Granül',
+        ],
+        // GHS/CLP tehlike sınıfları (piktogramlar).
+        'ghs' => [
+            'ghs01' => 'GHS01 — Patlayıcı',
+            'ghs02' => 'GHS02 — Alevlenir',
+            'ghs03' => 'GHS03 — Oksitleyici',
+            'ghs04' => 'GHS04 — Basınç altında gaz',
+            'ghs05' => 'GHS05 — Aşındırıcı / Korozif',
+            'ghs06' => 'GHS06 — Akut toksik (kurukafa)',
+            'ghs07' => 'GHS07 — Tahriş edici / Zararlı',
+            'ghs08' => 'GHS08 — Sağlığa uzun vadeli tehdit (KMR)',
+            'ghs09' => 'GHS09 — Çevreye zararlı (sucul)',
+        ],
+    ],
+
+    // İSG Afiş / Pano kütüphanesi.
+    'afis' => [
+        'kategoriler' => [
+            'genel' => 'Genel İSG',
+            'kimyasal' => 'Kimyasal Güvenliği / GHS',
+            'acil_durum' => 'Acil Durum',
+            'yangin' => 'Yangın',
+            'kkd' => 'KKD Kullanımı',
+            'elektrik' => 'Elektrik Güvenliği',
+            'yuksekte_calisma' => 'Yüksekte Çalışma',
+            'is_makinesi' => 'İş Makinesi / Trafik',
+            'ilk_yardim' => 'İlk Yardım',
+            'uyari_ikaz' => 'Uyarı / İkaz Levhaları',
+        ],
+    ],
+
     // Uzaktan Eğitim (Video LMS) — İSG uzmanı paket oluşturur, çalışana atar; çalışan
     // portaldan (panel: portal, /egitim) izler, final sınavına girer, belge alır.
     'uzaktan_egitim' => [

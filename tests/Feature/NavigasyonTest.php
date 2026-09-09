@@ -61,6 +61,7 @@ class NavigasyonTest extends TestCase
             'talimat olustur' => ['/admin/talimat'],
             'muayene formu' => ['/admin/muayene-formu'],
             'periyodik kontrol' => ['/admin/periyodik-kontrol'],
+            'kimyasal sicili' => ['/admin/kimyasal-sicili'],
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
             'yillik planlar' => ['/admin/yillik-planlar'],

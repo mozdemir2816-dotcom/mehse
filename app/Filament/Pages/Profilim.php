@@ -10,6 +10,7 @@ use App\Models\EgitimTuru;
 use App\Models\Firma;
 use App\Models\FirmaChecklistVadesi;
 use App\Support\EgitimKayitExcelIceAktarici;
+use App\Support\PortfoyExcelPanosuUretici;
 use App\Support\PortfoyKarne;
 use App\Support\RaporKayitlari;
 use App\Support\ZiyaretTakvimi;
@@ -125,6 +126,12 @@ class Profilim extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('excelPanosu')
+                ->label('Excel Panosu İndir')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->action(fn () => PortfoyExcelPanosuUretici::indir(Filament::auth()->user())),
+
             Action::make('unvanAyari')
                 ->label('Ünvan & İletişim')
                 ->icon('heroicon-o-identification')
