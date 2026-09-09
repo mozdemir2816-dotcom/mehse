@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Calisan;
 use App\Models\User;
 
 return [
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Uzaktan Eğitim portalı — çalışan (personel) girişi.
+        'calisan' => [
+            'driver' => 'session',
+            'provider' => 'calisanlar',
+        ],
     ],
 
     /*
@@ -65,6 +72,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'calisanlar' => [
+            'driver' => 'eloquent',
+            'model' => Calisan::class,
         ],
 
         // 'users' => [

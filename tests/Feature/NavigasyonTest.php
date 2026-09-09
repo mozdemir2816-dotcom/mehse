@@ -64,6 +64,8 @@ class NavigasyonTest extends TestCase
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
             'yillik planlar' => ['/admin/yillik-planlar'],
+            'uzaktan egitim paketleri' => ['/admin/uzaktan-egitim-paketleri'],
+            'uzaktan egitim atama' => ['/admin/uzaktan-egitim-atama'],
             'ziyaret programi' => ['/admin/ziyaret-programi'],
             'araclar' => ['/admin/araclar'],
         ];

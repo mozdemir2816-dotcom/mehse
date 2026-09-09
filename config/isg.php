@@ -188,6 +188,28 @@ return [
         'kapali' => 'Kapalı (önlem alındı)',
     ],
 
+    // Uzaktan Eğitim (Video LMS) — İSG uzmanı paket oluşturur, çalışana atar; çalışan
+    // portaldan (panel: portal, /egitim) izler, final sınavına girer, belge alır.
+    'uzaktan_egitim' => [
+        'durumlar' => [
+            'atandi' => 'Atandı',
+            'devam' => 'Devam Ediyor',
+            'basarisiz' => 'Sınav Başarısız',
+            'tamamlandi' => 'Tamamlandı',
+        ],
+        'egitim_turleri' => [
+            'ilk_defa' => 'İlk Defa',
+            'yenileme' => 'Yenileme',
+            'isbasi' => 'İşbaşı',
+        ],
+        // Temel İSG eğitimi yenileme periyodu (yıl) — Yenileme Takibi bunu kullanır.
+        'yenileme_yili' => [
+            'az_tehlikeli' => 3,
+            'tehlikeli' => 2,
+            'cok_tehlikeli' => 1,
+        ],
+    ],
+
     // Onaylı Defter Nüshaları — firma + tür başına sıralı numara verilir.
     'onayli_defter' => [
         'turleri' => [
