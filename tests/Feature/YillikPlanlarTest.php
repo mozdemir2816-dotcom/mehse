@@ -142,6 +142,18 @@ class YillikPlanlarTest extends TestCase
         $this->assertCount($varsayilanSayisi, $plan->fresh()->faaliyetler);
     }
 
+    public function test_plani_kaydet_butonu_calisir_ve_bildirim_gonderir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(PlanSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('planiKaydet')
+            ->assertNotified();
+
+        $this->assertDatabaseHas('yillik_planlar', ['firma_id' => $firma->id]);
+    }
+
     public function test_varsayilana_sifirlanir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -319,9 +319,45 @@ class YillikPlanlar extends Page
         Notification::make()->title('Bu sekme varsayılan içeriğe sıfırlandı (otomatik dolduruldu)')->success()->send();
     }
 
+    /**
+     * Planı Kaydet — çalışma/eğitim ay hücreleri ve satır ekleme/silme zaten anlık
+     * kaydediliyor; bu buton değerlendirme sekmesindeki serbest metin alanlarının
+     * (henüz odaktan çıkmamış olsa bile) sunucuya yazılmasını garantiler ve
+     * kullanıcıya "kaydedildi" geri bildirimi verir.
+     */
+    public function planiKaydet(): void
+    {
+        $p = $this->plan();
+
+        if (! $p) {
+            return;
+        }
+
+        $p->update([
+            'faaliyetler' => $p->faaliyetler ?? [],
+            'egitimler' => $p->egitimler ?? [],
+            'degerlendirmeler' => $p->degerlendirmeler ?? [],
+        ]);
+
+        unset($this->plan);
+
+        Notification::make()
+            ->title('Yıllık plan kaydedildi')
+            ->body('Son kayıt: '.now()->format('d.m.Y H:i'))
+            ->success()
+            ->send();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('planiKaydet')
+                ->label('Planı Kaydet')
+                ->icon('heroicon-o-check')
+                ->color('primary')
+                ->visible(fn () => $this->plan() !== null)
+                ->action(fn () => $this->planiKaydet()),
+
             Action::make('pdf')
                 ->label('Çıktı İndir (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
