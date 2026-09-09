@@ -163,7 +163,19 @@ class FineKinneyKutuphaneIceAktarici
             $doluMu = false;
 
             foreach ($sutunlar as $c => $alan) {
-                $deger = $sheet->getCell([$c, $r])->getCalculatedValue();
+                $hucre = $sheet->getCell([$c, $r]);
+                $ham = $hucre->getValue();
+
+                if (is_string($ham) && str_starts_with($ham, '=')) {
+                    try {
+                        $deger = $hucre->getCalculatedValue();
+                    } catch (\Throwable $e) {
+                        $deger = null;
+                    }
+                } else {
+                    $deger = $ham;
+                }
+
                 $deger = is_string($deger) ? trim($deger) : $deger;
 
                 if ($deger === '' || $deger === null || (is_string($deger) && str_starts_with($deger, '#'))) {

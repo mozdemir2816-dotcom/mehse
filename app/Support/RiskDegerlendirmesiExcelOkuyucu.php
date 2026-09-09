@@ -9,36 +9,42 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  * Risk Sihirbazı "Risk Değerlendirmenizden Yükleyin" yöntemi — kullanıcının
  * KENDİ Excel dosyasını, hiçbir sabit şablona uydurmadan okur. Gerçek risk
  * değerlendirme dosyaları genelde: (a) başlık satırı ilk satırda değildir
- * (üstte logo/lejant/ölçek tabloları olur), (b) sütun adları kişiden kişiye
- * değişir ("Tehlikeli Durum" / "Tehlike Tanımı" / "Tehlike Kaynağı" gibi).
+ * (üstte logo/lejant/ölçek tabloları olur), (b) başlık 1 VEYA 2 satırlık
+ * olabilir (ana başlık + "Olasılık (O1) / Frekans (F1) / Şiddet (S1)" alt
+ * başlığı), (c) sütun adları kişiden kişiye değişir, (d) her iş kalemi ayrı
+ * bir SAYFADA olabilir.
  *
- * Bu yüzden: önce en çok tanıdık sütun adı içeren satır "başlık satırı" olarak
- * bulunur, sonra her sütun eş anlamlı kelime kümeleriyle eşleştirilir. Puan
- * sütunları (Olasılık/Frekans/Şiddet) yalnızca hem adı uyuyorsa HEM de altındaki
- * veri sayısalsa kabul edilir — metin sütununun yanlışlıkla puan sanılmasını önler.
+ * Bu yüzden: her sayfada başlık bandı (1-2 satır) aranır, sütunlar ana + alt
+ * satırın birleşik metniyle eşlenir, tüm sayfalardan okunan maddeler
+ * birleştirilir. Puan sütunları (O/F/Ş) yalnızca adı uyuyorsa HEM de altındaki
+ * veri sayısalsa kabul edilir; "Risk Skoru / Risk Seviyesi" gibi HESAPLANAN
+ * çıktı sütunları hiç eşlenmez.
  */
 class RiskDegerlendirmesiExcelOkuyucu
 {
     private const ALAN_ANAHTAR_KELIMELERI = [
-        'bolum' => ['bolum', 'departman', 'saha', 'birim'],
-        'faaliyet' => ['altfaaliyet', 'altfaaliyetler', 'faaliyet', 'proses'],
-        'tehlike' => ['tehlikelidurum', 'tehlikelidurumyadadavranis', 'tehliketanimi', 'tehlikekaynagi', 'tehlike'],
-        'risk' => ['risk', 'sonuc', 'etki'],
-        'mevcut_onlem' => ['mevcutonlem', 'mevcuttedbir', 'mevcutdurum', 'kontrol'],
-        'oneri' => ['alinacaktedbir', 'alinanonlem', 'onlem', 'oneri', 'aksiyon'],
-        'sorumlu' => ['sorumluvetermin', 'sorumlu'],
-        'termin' => ['termin', 'tarih'],
-        'mevzuat' => ['mevzuat', 'yasaldayanak', 'yonetmelik', 'kanun'],
+        'bolum' => ['anakategori', 'faaliyetalani', 'bolum', 'departman', 'unite'],
+        'faaliyet' => ['altfaaliyet', 'altfaaliyetler', 'surec', 'imalat', 'faaliyet', 'proses'],
+        'tehlike' => ['tehlikelidurum', 'tehlikelidurumyadadavranis', 'tehliketanimi', 'tehlikekaynagi', 'hazard', 'tehlike'],
+        'risk' => ['olasirisk', 'riskevent', 'riskvesonuc', 'sonucharm', 'olasisonuc'],
+        'mevcut_onlem' => ['mevcutonlem', 'mevcuttedbir', 'mevcutdurum', 'mevcutkontrol'],
+        'oneri' => ['alinmasigereken', 'onleyiciveduzeltici', 'alinacaktedbir', 'alinanonlem', 'duzelticitedbir', 'onlem', 'oneri', 'aksiyon'],
+        'sorumlu' => ['sorumluvetermin', 'sorumlubirim', 'sorumlu'],
+        'termin' => ['termin'],
+        'mevzuat' => ['yasalmevzuat', 'yasaldayanak', 'mevzuat', 'yonetmelik', 'kanun', 'standartdayanak'],
     ];
 
     /** Yalnızca altındaki veri sayısalsa kabul edilir. */
     private const PUAN_ANAHTAR_KELIMELERI = [
-        'olasilik' => ['olasilik'],
+        'olasilik' => ['olasilik', 'ihtimal'],
         'frekans' => ['frekans', 'maruziyet'],
         'siddet' => ['siddet'],
     ];
 
-    private const BASLIK_TARAMA_SATIR_LIMIT = 60;
+    /** Bu kelimeleri içeren başlıklar HESAPLANAN çıktı sütunudur — hiç eşlenmez. */
+    private const YOKSAY_KELIMELERI = ['riskskoru', 'skorr', 'riskseviyesi', 'seviye', 'riskduzeyi', 'duzey', 'renk'];
+
+    private const BASLIK_TARAMA_SATIR_LIMIT = 20;
 
     private const BOS_SATIR_TOLERANSI = 25;
 
@@ -47,71 +53,100 @@ class RiskDegerlendirmesiExcelOkuyucu
      */
     public static function oku(string $dosyaYolu): array
     {
-        // Gerçek risk analizi dosyaları genelde büyük/çok biçimlendirilmiş olur
-        // (lejant tabloları, renkli hücreler, çoklu sayfa) — stil nesnelerini
-        // yüklemeden yalnız veriyi okumak bellek kullanımını büyük ölçüde azaltır.
-        // NOT: bu modda dosyanın "aktif sayfa" bilgisi güvenilir gelmeyebiliyor
-        // (PhpSpreadsheet bir kısıtı) — bu yüzden aktif sayfaya güvenmek yerine
-        // TÜM sayfalar taranıp en iyi eşleşen başlık satırı bulunur.
         ExcelBellek::artir();
 
         $reader = IOFactory::createReaderForFile($dosyaYolu);
         $reader->setReadDataOnly(true);
-
         $kitap = $reader->load($dosyaYolu);
 
-        $sheet = null;
-        $baslikSatiri = null;
-        $enIyiPuan = -1;
+        // 1. Geçiş — her sayfada başlık bandını bul.
+        $sayfalar = [];
 
-        foreach ($kitap->getAllSheets() as $adaySheet) {
-            $adayMaxRow = $adaySheet->getHighestRow();
-            $adayMaxCol = Coordinate::columnIndexFromString($adaySheet->getHighestColumn());
+        foreach ($kitap->getAllSheets() as $sheet) {
+            $maxRow = $sheet->getHighestRow();
+            $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
+            [$veriBaslangic, $sutunlar] = static::baslikBandiBul($sheet, $maxRow, $maxCol);
 
-            [$adaySatir, $adayPuan] = static::baslikSatiriniBul($adaySheet, $adayMaxRow, $adayMaxCol);
-
-            if ($adaySatir !== null && $adayPuan > $enIyiPuan) {
-                $enIyiPuan = $adayPuan;
-                $baslikSatiri = $adaySatir;
-                $sheet = $adaySheet;
+            if ($veriBaslangic !== null && in_array('tehlike', $sutunlar, true)) {
+                $sayfalar[] = compact('sheet', 'veriBaslangic', 'sutunlar', 'maxRow', 'maxCol');
             }
         }
 
-        if ($sheet === null || $baslikSatiri === null) {
+        if (! $sayfalar) {
             return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ['Tanıdık bir başlık satırı bulunamadı (en az "Tehlike" sütunu gerekli, dosyanın hiçbir sayfasında).']];
         }
 
-        $maxRow = $sheet->getHighestRow();
-        $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
+        // Herhangi bir sayfada O/F/Ş puan sütunu varsa, yalnız o sayfaları oku —
+        // böylece "içindekiler / özet / arama" gibi yardımcı sayfalar elenir. Hiçbir
+        // sayfada puan yoksa (kullanıcı puanları AI'ye bıraktıysa) hepsi okunur.
+        $puanliVar = collect($sayfalar)->contains(
+            fn ($s) => (bool) array_intersect(['olasilik', 'frekans', 'siddet'], $s['sutunlar']),
+        );
 
-        $sutunlar = static::sutunlariEslestir($sheet, $baslikSatiri, $maxCol);
-
-        if (! in_array('tehlike', $sutunlar, true)) {
-            return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ["Satır {$baslikSatiri} başlık olarak bulundu ama \"Tehlike\" sütunu eşleşmedi."]];
+        if ($puanliVar) {
+            $sayfalar = array_values(array_filter(
+                $sayfalar,
+                fn ($s) => (bool) array_intersect(['olasilik', 'frekans', 'siddet'], $s['sutunlar']),
+            ));
         }
 
         $adaylar = [];
-        $hatalar = [];
+
+        foreach ($sayfalar as $s) {
+            foreach (static::sayfaAdaylari($s['sheet'], $s['veriBaslangic'], $s['sutunlar'], $s['maxRow'], $s['maxCol']) as $a) {
+                $adaylar[] = $a;
+            }
+        }
+
+        if (! $adaylar) {
+            return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ['Başlık satırı bulundu ama altında okunabilir risk maddesi yok.']];
+        }
+
+        return ['basarili' => count($adaylar), 'adaylar' => $adaylar, 'hatalar' => []];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private static function sayfaAdaylari($sheet, int $veriBaslangic, array $sutunlar, int $maxRow, int $maxCol): array
+    {
+        $adaylar = [];
         $bosSayaci = 0;
 
-        for ($r = $baslikSatiri + 1; $r <= $maxRow; $r++) {
-            $satir = static::satiriOku($sheet, $r, $maxCol);
+        for ($r = $veriBaslangic; $r <= $maxRow; $r++) {
+            // Yalnız eşlenen sütunlar okunur — tüm satırı taramaktan çok daha hızlı.
+            $veri = [];
+            $doluMu = false;
 
-            if (static::satirBosMu($satir)) {
-                $bosSayaci++;
+            foreach ($sutunlar as $c => $alan) {
+                $deger = static::hucreDegeri($sheet, $c, $r);
 
-                if ($bosSayaci >= self::BOS_SATIR_TOLERANSI) {
-                    break; // tablo bitti kabul edilir
+                if ($deger === '' || $deger === null || (is_string($deger) && str_starts_with($deger, '#'))) {
+                    continue;
+                }
+
+                $doluMu = true;
+
+                if (in_array($alan, ['olasilik', 'frekans', 'siddet'], true)) {
+                    $veri[$alan] = is_numeric($deger) ? (float) $deger : ($veri[$alan] ?? null);
+
+                    continue;
+                }
+
+                $yeni = is_string($deger) ? trim($deger) : (string) $deger;
+                $veri[$alan] = isset($veri[$alan]) ? $veri[$alan].' — '.$yeni : $yeni;
+            }
+
+            if (! $doluMu) {
+                if (++$bosSayaci >= self::BOS_SATIR_TOLERANSI) {
+                    break;
                 }
 
                 continue;
             }
 
             $bosSayaci = 0;
-            $veri = static::satiriEslestir($satir, $sutunlar);
 
             if (blank($veri['tehlike'] ?? null)) {
-                continue; // tehlike alanı boşsa muhtemelen alt başlık / boş satır
+                continue;
             }
 
             $adaylar[] = [
@@ -133,95 +168,118 @@ class RiskDegerlendirmesiExcelOkuyucu
             ];
         }
 
-        if (! $adaylar) {
-            $hatalar[] = "Satır {$baslikSatiri} başlık olarak bulundu ama altında okunabilir madde yok.";
-        }
-
-        return ['basarili' => count($adaylar), 'adaylar' => $adaylar, 'hatalar' => $hatalar];
+        return $adaylar;
     }
 
-    /** @return array{0: int|null, 1: int} [en iyi satır numarası (yoksa null), puanı] */
-    private static function baslikSatiriniBul($sheet, int $maxRow, int $maxCol): array
+    /**
+     * @return array{0: int|null, 1: array<int, string>} [veri başlangıç satırı, sütun eşlemesi]
+     */
+    private static function baslikBandiBul($sheet, int $maxRow, int $maxCol): array
     {
-        $enIyiSatir = null;
+        $tara = min($maxRow, self::BASLIK_TARAMA_SATIR_LIMIT);
+        $enIyi = [null, []];
         $enIyiPuan = 0;
-        $tarananSatir = min($maxRow, self::BASLIK_TARAMA_SATIR_LIMIT);
 
-        for ($r = 1; $r <= $tarananSatir; $r++) {
-            $puan = 0;
-            $tehlikeEslesti = false;
+        for ($r = 1; $r < $tara; $r++) {
+            $altSatirMi = static::altBaslikMi($sheet, $r + 1, $maxCol);
+            $veriBaslangic = $altSatirMi ? $r + 2 : $r + 1;
 
-            for ($c = 1; $c <= $maxCol; $c++) {
-                $deger = $sheet->getCell([$c, $r])->getValue();
+            $sutunlar = static::sutunlariEslestir($sheet, $r, $altSatirMi ? $r + 1 : null, $maxCol, $veriBaslangic);
 
-                if (! is_string($deger) || trim($deger) === '') {
-                    continue;
-                }
-
-                $normalize = static::normalize($deger);
-
-                foreach (self::ALAN_ANAHTAR_KELIMELERI as $alan => $kelimeler) {
-                    foreach ($kelimeler as $kelime) {
-                        if (str_contains($normalize, $kelime)) {
-                            $puan++;
-
-                            if ($alan === 'tehlike') {
-                                $tehlikeEslesti = true;
-                            }
-
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if ($tehlikeEslesti && $puan > $enIyiPuan) {
-                $enIyiPuan = $puan;
-                $enIyiSatir = $r;
-            }
-        }
-
-        return [$enIyiSatir, $enIyiPuan];
-    }
-
-    /** @return array<int, string> sütun indeksi => alan adı */
-    private static function sutunlariEslestir($sheet, int $baslikSatiri, int $maxCol): array
-    {
-        $sutunlar = [];
-        $doluAlanlar = [];
-
-        for ($c = 1; $c <= $maxCol; $c++) {
-            $baslik = $sheet->getCell([$c, $baslikSatiri])->getValue();
-
-            if (! is_string($baslik) || trim($baslik) === '') {
+            if (! in_array('tehlike', $sutunlar, true)) {
                 continue;
             }
 
-            $normalize = static::normalize($baslik);
+            $puan = count($sutunlar);
+
+            if ($puan > $enIyiPuan) {
+                $enIyiPuan = $puan;
+                $enIyi = [$veriBaslangic, $sutunlar];
+            }
+
+            // Tehlike + Olasılık + Şiddet birlikte varsa bu kesin başlıktır — devam etme.
+            if (in_array('olasilik', $sutunlar, true) && in_array('siddet', $sutunlar, true)) {
+                break;
+            }
+        }
+
+        return $enIyi;
+    }
+
+    /** Bir satır "alt başlık" (Olasılık O1 / Frekans F1 / Şiddet S1 …) satırı mı? */
+    private static function altBaslikMi($sheet, int $row, int $maxCol): bool
+    {
+        $isaret = 0;
+        $uzunMetin = 0;
+
+        for ($c = 1; $c <= $maxCol; $c++) {
+            $deger = $sheet->getCell([$c, $row])->getValue();
+
+            if (! is_string($deger) || trim($deger) === '') {
+                continue;
+            }
+
+            if (mb_strlen($deger) > 55) {
+                $uzunMetin++;
+            }
+
+            if (preg_match('/(olasilik|olasılık|frekans|siddet|şiddet|puan|skor|seviye|derece|maruziyet|^\s*[ofsr]\s*\d)/iu', $deger)) {
+                $isaret++;
+            }
+        }
+
+        return $isaret >= 2 && $uzunMetin === 0;
+    }
+
+    /**
+     * @return array<int, string> sütun indeksi => alan adı
+     */
+    private static function sutunlariEslestir($sheet, int $anaSatir, ?int $altSatir, int $maxCol, int $veriBaslangic): array
+    {
+        $sutunlar = [];
+        $dolu = [];
+
+        for ($c = 1; $c <= $maxCol; $c++) {
+            $ana = $sheet->getCell([$c, $anaSatir])->getValue();
+            $alt = $altSatir ? $sheet->getCell([$c, $altSatir])->getValue() : null;
+
+            $normalize = static::normalize(trim((string) $ana).' '.trim((string) $alt));
+
+            if ($normalize === '') {
+                continue;
+            }
+
+            // Hesaplanan çıktı sütunları (Risk Skoru / Risk Seviyesi / Düzey) atlanır.
+            foreach (self::YOKSAY_KELIMELERI as $yoksay) {
+                if (str_contains($normalize, $yoksay)) {
+                    continue 2;
+                }
+            }
 
             foreach (self::PUAN_ANAHTAR_KELIMELERI as $alan => $kelimeler) {
-                if (isset($doluAlanlar[$alan])) {
+                if (isset($dolu[$alan])) {
                     continue;
                 }
 
                 foreach ($kelimeler as $kelime) {
-                    if (str_contains($normalize, $kelime) && static::sutunSayisalMi($sheet, $c, $baslikSatiri)) {
+                    if (str_contains($normalize, $kelime) && static::sutunSayisalMi($sheet, $c, $veriBaslangic)) {
                         $sutunlar[$c] = $alan;
-                        $doluAlanlar[$alan] = true;
+                        $dolu[$alan] = true;
 
                         continue 3;
                     }
                 }
             }
 
-            if (isset($sutunlar[$c])) {
-                continue;
-            }
-
             foreach (self::ALAN_ANAHTAR_KELIMELERI as $alan => $kelimeler) {
+                if (isset($dolu[$alan])) {
+                    continue;
+                }
+
                 foreach ($kelimeler as $kelime) {
                     if (str_contains($normalize, $kelime)) {
                         $sutunlar[$c] = $alan;
+                        $dolu[$alan] = true;
 
                         continue 3;
                     }
@@ -232,12 +290,12 @@ class RiskDegerlendirmesiExcelOkuyucu
         return $sutunlar;
     }
 
-    /** Başlığın altındaki ilk birkaç doldurulmuş hücre sayısal mı? */
-    private static function sutunSayisalMi($sheet, int $col, int $baslikSatiri): bool
+    /** Verinin başladığı satırdan itibaren ilk birkaç dolu hücre sayısal mı? */
+    private static function sutunSayisalMi($sheet, int $col, int $veriBaslangic): bool
     {
         $kontrolEdilen = 0;
 
-        for ($r = $baslikSatiri + 1; $r <= $baslikSatiri + 15 && $kontrolEdilen < 5; $r++) {
+        for ($r = $veriBaslangic; $r <= $veriBaslangic + 25 && $kontrolEdilen < 5; $r++) {
             $deger = $sheet->getCell([$col, $r])->getValue();
 
             if ($deger === null || $deger === '') {
@@ -254,47 +312,22 @@ class RiskDegerlendirmesiExcelOkuyucu
         return $kontrolEdilen > 0;
     }
 
-    /** @return array<int, mixed> */
-    private static function satiriOku($sheet, int $row, int $maxCol): array
+    /** Tek hücrenin değeri — formül değilse hesap motorunu hiç çalıştırmaz (hız). */
+    private static function hucreDegeri($sheet, int $col, int $row)
     {
-        $satir = [];
+        $hucre = $sheet->getCell([$col, $row]);
+        $ham = $hucre->getValue();
 
-        for ($c = 1; $c <= $maxCol; $c++) {
-            $satir[$c] = $sheet->getCell([$c, $row])->getCalculatedValue();
+        if (! is_string($ham) || ! str_starts_with($ham, '=')) {
+            return $ham;
         }
 
-        return $satir;
-    }
-
-    /** @return array<string, mixed> */
-    private static function satiriEslestir(array $satir, array $sutunlar): array
-    {
-        $veri = [];
-
-        foreach ($sutunlar as $c => $alan) {
-            $deger = is_string($satir[$c] ?? null) ? trim($satir[$c]) : ($satir[$c] ?? null);
-
-            if ($deger === '' || $deger === null) {
-                continue;
-            }
-
-            if (in_array($alan, ['olasilik', 'frekans', 'siddet'], true)) {
-                $veri[$alan] = is_numeric($deger) ? (float) $deger : null;
-
-                continue;
-            }
-
-            $yeni = is_string($deger) ? $deger : (string) $deger;
-
-            $veri[$alan] = isset($veri[$alan]) ? $veri[$alan].' — '.$yeni : $yeni;
+        try {
+            return $hucre->getCalculatedValue();
+        } catch (\Throwable $e) {
+            // PhpSpreadsheet'in çözemediği formül (ör. _xludf.MAXIFS) — atla.
+            return null;
         }
-
-        return $veri;
-    }
-
-    private static function satirBosMu(array $satir): bool
-    {
-        return collect($satir)->every(fn ($h) => blank(is_string($h) ? trim($h) : $h));
     }
 
     private static function normalize(string $metin): string
