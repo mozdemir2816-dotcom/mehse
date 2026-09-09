@@ -5,11 +5,14 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\EgitimSinavi as EgitimSinaviModel;
 use App\Models\Firma;
+use App\Models\SoruBankasiSorusu;
 use App\Support\EgitimSinaviUretici;
 use App\Support\GeminiSoruUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -162,8 +165,48 @@ class EgitimSorulari extends Page
             return;
         }
 
-        $this->sorular = $sorular;
+        $this->sorular = array_map(fn ($s) => [
+            'soru' => $s['soru'],
+            'secenekler' => $s['secenekler'],
+            'dogru_index' => $s['dogru_index'],
+        ], $sorular);
+
         Notification::make()->title(count($sorular).' soru üretildi')->success()->send();
+    }
+
+    /** Onaylı soru bankasından, seçilen sektöre uygun rastgele soru çeker. */
+    #[Computed]
+    public function bankaSayisi(): int
+    {
+        return SoruBankasiSorusu::query()
+            ->erisilebilir(Filament::auth()->id())
+            ->onayli()
+            ->where(fn ($q) => $q->whereNull('sektor_anahtari')->when($this->sektorAnahtari, fn ($w) => $w->orWhere('sektor_anahtari', $this->sektorAnahtari)))
+            ->count();
+    }
+
+    public function bankadanEkle(?string $konu, int $adet): void
+    {
+        $sorular = SoruBankasiSorusu::query()
+            ->erisilebilir(Filament::auth()->id())
+            ->onayli()
+            ->where(fn ($q) => $q->whereNull('sektor_anahtari')->when($this->sektorAnahtari, fn ($w) => $w->orWhere('sektor_anahtari', $this->sektorAnahtari)))
+            ->when($konu, fn ($q) => $q->where('konu', $konu))
+            ->inRandomOrder()
+            ->limit(max(1, min(50, $adet)))
+            ->get();
+
+        if ($sorular->isEmpty()) {
+            Notification::make()->title('Bankada uygun soru bulunamadı')->body('Soru Bankası sayfasından bu sektör/konu için onaylı soru ekleyin.')->warning()->send();
+
+            return;
+        }
+
+        foreach ($sorular as $s) {
+            $this->sorular[] = ['soru' => $s->soru, 'secenekler' => $s->secenekler, 'dogru_index' => $s->dogru_index];
+        }
+
+        Notification::make()->title($sorular->count().' soru bankadan eklendi')->success()->send();
     }
 
     public function soruEkle(): void
@@ -272,6 +315,22 @@ class EgitimSorulari extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('bankadanCek')
+                ->label('Soru Bankasından Ekle')
+                ->icon('heroicon-o-rectangle-stack')
+                ->color('gray')
+                ->modalDescription(fn () => 'Seçili sektöre uygun, onaylı sorulardan rastgele çekilir. Havuzda uygun soru: '.$this->bankaSayisi())
+                ->schema([
+                    Select::make('konu')
+                        ->label('Konu (opsiyonel)')
+                        ->options(config('isg.soru_bankasi.konular'))
+                        ->placeholder('Tüm konular'),
+                    TextInput::make('adet')
+                        ->label('Soru sayısı')
+                        ->numeric()->default(10)->minValue(1)->maxValue(50),
+                ])
+                ->action(fn (array $data) => $this->bankadanEkle($data['konu'] ?? null, (int) ($data['adet'] ?? 10))),
+
             Action::make('pdf')
                 ->label('PDF İndir (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')

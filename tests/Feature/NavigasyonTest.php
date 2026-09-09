@@ -54,6 +54,7 @@ class NavigasyonTest extends TestCase
             'onayli defter nushalari' => ['/admin/onayli-defter-nushalari'],
             'sertifika olustur' => ['/admin/sertifika'],
             'egitim sorulari' => ['/admin/egitim-sorulari'],
+            'soru bankasi' => ['/admin/soru-bankasi'],
             'kkd formu' => ['/admin/kkd-formu'],
             'is izin formu' => ['/admin/is-izin-formu'],
             'ceza teblig' => ['/admin/ceza-teblig'],

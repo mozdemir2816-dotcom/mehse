@@ -1506,6 +1506,62 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Soru Bankası — kalıcı, kaynaklı, onaylı sektörel İSG sınav sorusu havuzu
+    |--------------------------------------------------------------------------
+    | Sektör listesi risk_ai.sektorler ile ortak. Eğitim Soruları ve Uzaktan
+    | Eğitim sınavları YALNIZ durum=onaylandi soruları havuzdan çeker.
+    */
+    'soru_bankasi' => [
+        'zorluklar' => [
+            'kolay' => 'Kolay',
+            'orta' => 'Orta',
+            'zor' => 'Zor',
+        ],
+        'durumlar' => [
+            'taslak' => 'Taslak (İnceleme Bekliyor)',
+            'onaylandi' => 'Onaylandı',
+            'arsiv' => 'Arşiv',
+        ],
+        // Konu = eğitim başlığı / risk teması. isg.egitim genel içerik başlıklarıyla uyumlu.
+        'konular' => [
+            'genel_isg' => 'Genel İSG / Mevzuat',
+            'calisan_haklari' => 'Çalışan Hak ve Yükümlülükleri',
+            'risk_degerlendirmesi' => 'Risk Değerlendirmesi',
+            'acil_durum' => 'Acil Durumlar ve Tahliye',
+            'yangin' => 'Yangın Güvenliği',
+            'ilk_yardim' => 'İlk Yardım',
+            'kkd' => 'Kişisel Koruyucu Donanım',
+            'ergonomi' => 'Ergonomi ve Duruş',
+            'elle_tasima' => 'Elle Taşıma İşleri',
+            'kimyasal' => 'Kimyasal Etkenler',
+            'biyolojik' => 'Biyolojik Etkenler',
+            'gurultu_titresim' => 'Gürültü ve Titreşim',
+            'elektrik' => 'Elektrik Güvenliği',
+            'is_ekipmanlari' => 'İş Ekipmanları ve Makine Koruyucuları',
+            'yuksekte_calisma' => 'Yüksekte Çalışma',
+            'kapali_alan' => 'Kapalı / Dar Alan',
+            'kazi' => 'Kazı ve Hafriyat',
+            'is_kazasi' => 'İş Kazası ve Ramak Kala',
+            'meslek_hastaligi' => 'Meslek Hastalıkları ve Sağlık Gözetimi',
+            'termal_konfor' => 'Termal Konfor ve Aydınlatma',
+            'ellecleme_istif' => 'İstifleme ve Depolama',
+            'trafik_saha' => 'Saha İçi Trafik ve İş Makineleri',
+        ],
+        // AI üretiminde ve manuel eklemede birer örnek kaynak (serbest metin, zorunlu değil).
+        'ornek_kaynaklar' => [
+            '6331 sayılı İSG Kanunu',
+            'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği',
+            'Yapı İşlerinde İSG Yönetmeliği',
+            'KKD Yönetmeliği',
+            'Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Yönetmeliği',
+            'İşyerlerinde Acil Durumlar Hakkında Yönetmelik',
+            'Elle Taşıma İşleri Yönetmeliği',
+            'Çalışanların Gürültü ile İlgili Risklerden Korunmalarına Dair Yönetmelik',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | DÖF Oluştur (Çoklu DÖF) — isgpratik 158.jpg
     |--------------------------------------------------------------------------
     | Saha gözetimi/denetimi sonucu birden çok Düzeltici Önleyici Faaliyet

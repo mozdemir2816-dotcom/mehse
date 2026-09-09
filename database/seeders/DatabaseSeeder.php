@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             MykMeslekSeeder::class,
             RiskSablonuInsaatFineKinneySeeder::class,
             InsaatFineKinneyKutuphaneSeeder::class,
+            SoruBankasiSeeder::class,
         ]);
     }
 }
