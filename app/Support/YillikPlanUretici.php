@@ -14,7 +14,7 @@ class YillikPlanUretici
 {
     public static function pdf(YillikPlan $plan): StreamedResponse
     {
-        $plan->loadMissing('firma');
+        $plan->loadMissing(['firma.igu', 'firma.isyeriHekimi']);
 
         $pdf = Pdf::loadView('pdf.yillik-plan', [
             'plan' => $plan,

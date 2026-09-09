@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\YillikPlanlar as PlanSayfasi;
 use App\Models\EgitimKatilim;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\User;
 use App\Models\YillikPlan;
@@ -180,6 +181,37 @@ class YillikPlanlarTest extends TestCase
         $yanit->sendContent();
         $icerik = ob_get_clean();
         $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_her_sayfada_imza_blogu_ve_sistemdeki_kaseler_yer_alir(): void
+    {
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Hekim Test', 'kase_gorseli' => 'kase/hekim.png',
+        ]);
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'ad_soyad' => 'İGU Test', 'kase_gorseli' => 'kase/igu.png',
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'igu_id' => $igu->id, 'isyeri_hekimi_id' => $hekim->id, 'isveren_vekili' => 'Patron Bey',
+        ]);
+        $plan = YillikPlan::firmaYilIcin($firma, 2026);
+
+        $html = view('pdf.yillik-plan', [
+            'plan' => $plan->load(['firma.igu', 'firma.isyeriHekimi']),
+            'firma' => $plan->firma,
+            'aylar' => ['Oca'],
+        ])->render();
+
+        // 3 plan sayfasının her birinde imza bloğu (imza tablosu + rol satırları)
+        $this->assertSame(3, substr_count($html, '<table class="imza">'));
+        $this->assertSame(3, substr_count($html, '<div class="rol">İş Güvenliği Uzmanı</div>'));
+        $this->assertSame(3, substr_count($html, '<div class="rol">İşyeri Hekimi</div>'));
+        $this->assertSame(3, substr_count($html, '<div class="rol">İşveren / İşveren Vekili</div>'));
+        $this->assertSame(3, substr_count($html, 'İGU Test'));
+        $this->assertSame(3, substr_count($html, 'Dr. Hekim Test'));
+        $this->assertSame(3, substr_count($html, 'Patron Bey'));
+        // kaşe dosyası diskte yoksa img basılmaz (is_file guard)
+        $this->assertStringNotContainsString('kase/igu.png', $html);
     }
 
     public function test_baska_uzmanin_firmasi_secilemez(): void

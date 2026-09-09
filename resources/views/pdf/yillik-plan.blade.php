@@ -18,6 +18,13 @@
     table.rapor { width: 100%; border-collapse: collapse; font-size: 9px; }
     table.rapor th, table.rapor td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     table.rapor th { background: #f0f0f0; }
+
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 24px; page-break-inside: avoid; }
+    table.imza td { width: 33.33%; text-align: center; font-size: 9px; vertical-align: top; padding: 0 10px; }
+    table.imza .kutu { height: 46px; border-bottom: 1px solid #111; text-align: center; }
+    table.imza .kutu img { max-height: 44px; max-width: 100%; }
+    table.imza .ad { font-weight: bold; margin-top: 5px; }
+    table.imza .rol { color: #555; font-size: 8px; }
 </style>
 </head>
 <body>
@@ -58,6 +65,8 @@
         <span class="durum" style="background:#f59e0b"></span> Planlandı &nbsp;
         <span class="durum" style="background:#10b981"></span> Tamamlandı
     </p>
+
+    @include('pdf.partials.yillik-plan-imza')
 </div>
 
 <div class="sayfa">
@@ -89,6 +98,8 @@
             <tr><td colspan="16" style="color:#888">Eğitim eklenmedi.</td></tr>
         @endforelse
     </table>
+
+    @include('pdf.partials.yillik-plan-imza')
 </div>
 
 <div class="sayfa" style="page-break-after:auto">
@@ -116,6 +127,8 @@
             <tr><td colspan="7" style="color:#888">Çalışma eklenmedi.</td></tr>
         @endforelse
     </table>
+
+    @include('pdf.partials.yillik-plan-imza')
 </div>
 
 </body>
