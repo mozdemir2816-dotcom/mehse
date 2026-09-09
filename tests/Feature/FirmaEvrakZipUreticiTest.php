@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Firmas\Pages\EditFirma;
 use App\Filament\Resources\Firmas\Pages\ListFirmas;
 use App\Models\DofRaporu;
 use App\Models\Firma;
@@ -115,5 +116,24 @@ class FirmaEvrakZipUreticiTest extends TestCase
 
         Livewire::test(ListFirmas::class)
             ->assertTableActionHidden('evrakIndir', $firma);
+    }
+
+    public function test_firma_duzenleme_sayfasinda_tek_tikla_tum_evrak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        DofRaporu::create(['firma_id' => $firma->id, 'maddeler' => [['tespit' => 'X', 'oncelik' => 'orta', 'durum' => 'acik']]]);
+
+        Livewire::test(EditFirma::class, ['record' => $firma->getRouteKey()])
+            ->callAction('tumEvrakIndir')
+            ->assertSuccessful();
+    }
+
+    public function test_firma_duzenleme_sayfasinda_evrak_yoksa_indir_butonu_gizli(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(EditFirma::class, ['record' => $firma->getRouteKey()])
+            ->assertActionHidden('tumEvrakIndir');
     }
 }
