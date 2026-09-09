@@ -24,9 +24,12 @@ görüntüleri: `C:\Users\mozde\Desktop\isgpratik\` (kullanıcı ekledikçe art�
 - MySQL: `mehse` (root / şifresiz)
 - Erişim: <http://localhost/mehse/> (kök `index.php` → `public/admin`) veya
   doğrudan <http://localhost/mehse/public/admin>
-- Panel: tek panel `admin`, **koyu tema varsayılan**, birincil renk mor (`Color::Violet`),
-  marka "mehse İSG"
+- Panel: tek panel `admin`, **açık tema varsayılan** (05.09.2026'da koyudan
+  çevrildi — `ThemeMode::Light`), birincil renk mor (`Color::Violet`), nötr gri
+  paleti mora hafif kaçık özel palet, marka "mehse İSG"
+- Ayrıca `portal` paneli (`/egitim`, `calisan` guard) — Uzaktan Eğitim LMS
 - Giriş: `mozdemir2816@gmail.com` / `mehse2026`
+- Test: `php artisan test` — güncel **654 test** (2026-09-09)
 
 ## Temel kavram
 
@@ -2520,6 +2523,208 @@ kayıttan sonra düzeltebilme; takip için toplantı numarası.
   `test_pdf_kararlar_tablosunda_durum_sutunu_yok_toplanti_no_var`.
 
 - Toplam **555 test.**
+
+## Durum — 2026-09-08 (JSA→çoklu firma · Kontrol Merkezi eksik firma · Yıllık Plan Excel+otomatik+kilit)
+
+- **JSA → çoklu firma ataması:** pivot+ilk-sınıf `firma_jsa` / `FirmaJsa`
+  (`baslikEtiketi()`); köprü `FirmaJsaUretici::pdf()` → `JsaUretici::pdf($sablon,$firma)`.
+  `isg.raporlar.kaynaklar`'a tek satır → atanan JSA firmanın "Evrakları İndir"
+  ZIP'ine + Raporlar'a girer. JSA sayfasına "Firmalara Ekle" (CheckboxList sync)
+  + "Künye Düzenle" action'ları; kartta firma rozetleri.
+- **Kontrol Merkezi → eksik firmayı görme:** kriter satırına tıkla →
+  `PortfoyKarne::eksikFirmalar()` listesi (her firma FirmaResource edit link).
+  `KontrolMerkezi::$acikKriter` + `kriterDetayAc()` + `#[Computed]
+  acikKriterEksikFirmalar()`. Yalnız `hazir && eksik>0` kriterler tıklanır.
+- **Yıllık Plan (büyük):** config `varsayilan_faaliyetler`/`varsayilan_egitimler`
+  gerçek referansa göre yeniden yazıldı (`yasal_gereklilik`+`frekans`+
+  `varsayilan_aylar`). `YillikPlan::maddeAylarIle($maddeler,$kilitAy)` → veri
+  girmeden plan dolu gelir. `Firma::planKilitAyIndeksi($yil)` = sözleşme
+  ayından önceki aylar seçilemez/otomatik dolmaz (blade'de disabled+gri).
+  `YillikPlanExcelIceAktarici::iceAktar($yol,$plan,'faaliyetler'|'egitimler')`
+  — serbest Excel, 12ay×4hafta düzenini ay bazına indirir, satırları İSİMLE
+  eşler. Değerlendirme "Sistemden Doldur" (`YillikDegerlendirmeVerisi`) — satır
+  adını modüle eşleyip tarih(son)+tekrar_sayısı yazar.
+
+## Durum — 2026-09-08 (İnşaat Fine-Kinney "master" risk şablonu — commit f398ddb)
+
+- Kullanıcının `İnşaat İSG Risk Analizi ve Fine-Kinney Programı.xlsx` (1671 satır)
+  → `database/data/insaat-risk-fine-kinney.php` (madde başına tek satır; alan
+  şekli `RiskDegerlendirmesiExcelOkuyucu` çıktısı + `son_*`). **O/F/Ş BİREBİR**
+  korundu; seviye dağılımı Excel formülüyle aynı (667/439/344/221).
+  `RiskSablonuInsaatFineKinneySeeder` sektör=`insaat`, yöntem=`fine_kinney`,
+  `paylasildi=true` şablon üretir (`DatabaseSeeder`, idempotent).
+- **`config/isg.php risk_fine_kinney`:** olasılık ölçeğine `0.1`, şiddet ölçeğine
+  `100`; bant etiketleri `Esaslı Risk→Yüksek Risk`, `Önemsiz→Kabul Edilebilir`.
+- **`max_allowed_packet` sorunu:** 1671-madde JSON ~2 MB, XAMPP MariaDB `1M` idi
+  → `db:seed` "gone away". `C:\xampp2\mysql\bin\my.ini` satır 37 **1M→64M** yazıldı
+  (MySQL restart bekliyor); runtime `SET GLOBAL` geçici çözüm.
+- **1671-satır RD PDF'e dönüşemez** — dompdf Cellmap ~1,5 GB OOM (kesin sınır).
+  Kullanıcı kararı: "PDF şimdilik dokunma", kütüphane yolunu kullan.
+
+## Durum — 2026-09-08 (Sistem denetimi + KKD teslim tutanağı gerçek şablon + büyük şablon payload)
+
+- Tüm sistem denetimi + "bir işyeri için olması gereken ~23 evrak" raporu
+  (artifact). Modülü olmayan yasal evraklar tespit edildi (periyodik kontrol,
+  meslek hastalığı bildirimi, onaylı defter nüshaları).
+- **KKD Teslim Tutanağı (34e4c79):** `İSG_KKD_1.xlsx` gerçek şablonu →
+  `pdf/kkd-zimmet-formu.blade.php` birebir (başlık, Türü/Standardı/Kullanma
+  Dönemi/Miktar sütunları, 4 maddelik taahhüt + 4857 md.25, Teslim Alan/Veren).
+- **PayloadTooLargeException + FatalError düzeltmesi (8dff6c2):** 1671-madde
+  şablon Risk Sihirbazı'na uygulanınca binlerce Livewire input + ~2.5MB payload
+  → 500. `config/livewire.php` payload 1MB→6MB; `RiskSihirbazi::SABLON_DOGRUDAN_
+  ESIGI = 250` — büyük şablonlar sihirbaza yüklenmez, `buyukSablonuDogrudanUygula()`
+  ile seçili firmaya toplu insert (`array_chunk(250)` + `RiskMaddesi::insert`) +
+  edit sayfasına redirect.
+
+## Durum — 2026-09-08 (Risk Kütüphanesine Fine-Kinney içe aktarma — commit 126ab0d)
+
+- `tehlikeler` + `olasilik/frekans/siddet` sütunları; `FineKinneyKutuphaneIce
+  Aktarici` (sektörel FK Excel → `TehlikeKategorisi` + `Tehlike`, O/F/Ş ile,
+  esnek başlık algılama, kategori+faaliyet+tehlike anahtarı; çok sayfalı + 1-2
+  satır başlık desteği — `21f02f0`). ListTehlikes'e "Fine-Kinney Analizi Yükle"
+  butonu; `RiskKutuphanesi::maddeyeCevir` O/F/Ş taşır. `InsaatFineKinneyKutuphane
+  Seeder` → dev DB ~1329 tehlike / 28 kategori. Kullanıcı Manuel Seçim'de iş
+  kalemine göre süzüp ~200-400 madde seçer → PDF çalışır.
+
+## Durum — 2026-09-08 (Onaylı Defter Nüshaları + İş Ekipmanları Periyodik Kontrol — commit 20f1d85, 857862b)
+
+- **Onaylı Defter Nüshaları:** `OnayliDefterNushasi` (firma+`defter_turu` başına
+  `nusha_no` otomatik 1,2,3 — `creating` hook `sonrakiNo`). Page `onayli-defter-
+  nushalari` (Formlar & Belgeler): tür seç → defteri indir → onaylı nüsha yükle
+  (dosya+onay tarihi+dönem) → türüne göre gruplu liste. Kontrol Merkezi kriteri
+  `onayli_defter_nushalari` `hazir=true`.
+- **İş Ekipmanları Periyodik Kontrol:** `PeriyodikKontrol` (firma başına 1,
+  `ekipmanlar` JSON; `saving` hook sonraki kontrol tarihini periyottan türetir;
+  `baslatilmisMi`/`yaklasanlar`/`ozet`). config EK-3 kataloğu 5 kategori +
+  `periyot_ay`, sonuç seçenekleri. Page `periyodik-kontrol`: katalogdan/serbest
+  ekipman ekle → satır bazında düzenle → PDF (A4 yatay, `PeriyodikKontrolUretici`).
+  Kontrol Merkezi kriteri `periyodik_kontrol_raporu` `hazir=true`.
+
+## Durum — 2026-09-09 (AI puan/önlem tamamlama — 120 sn çökmesi düzeltmeleri f102561 + 5644ea6)
+
+- **f102561 — devre kesici:** 1671-satır RD'de "Eksik Puan/Önlemleri AI ile
+  Tamamla" → her satır Gemini → 429 → döngü 120 sn'yi aşıp `Symfony FatalError`
+  (guzzle CurlFactory). `GeminiRiskPuanTamamlayici` art arda başarısızlıkta devre
+  keser; iki toplu döngü tek çalıştırmada **en fazla 40 madde**.
+- **5644ea6 — tekrar:** devre kesici yetersizdi (`Http::timeout(45)` × 3-4 yavaş
+  429 = >120 sn) + "Mevcut Önlem" sütunu olmayıp "Alınacak Önlem" (`oneri`) dolu
+  satırlara da AI atılıyordu. Çözüm: `ISTEK_TIMEOUT=12` + `connectTimeout(5)`;
+  `DEVRE_KESME_ESIGI 4→3`; **`BUTCE_SN=45` süre bütçesi** (`devreyiSifirla()` son
+  tarih kurar, `devreKesikMi()` süre dolunca true); **`oneri` doluysa AI önlem
+  isteği ATILMAZ**; yükleme aksiyonlarına `@set_time_limit(300)`.
+
+## Durum — 2026-09-09 (Uzaktan Eğitim Video LMS modülü — commit 73d30c1)
+
+- **Yeni `portal` Filament paneli** (`/egitim`, `calisan` guard). `Calisan` artık
+  `FilamentUser` + Authenticatable; `sifre` sütunu; `canAccessPanel` yalnız portal
+  + ataması olan aktif çalışan. `config/auth.php` `calisan` guard/`calisanlar`
+  provider; `bootstrap/providers.php` PortalPanelProvider.
+- **Modeller:** `EgitimPaketi` (dersler + soru havuzu; kod `UE-YYYY-NNN`),
+  `EgitimDersi` (YouTube/Vimeo id + `gommeUrl()`), `EgitimPaketiSorusu`,
+  `EgitimAtamasi` (`durumuTazele()`), `EgitimDersIlerlemesi`, `EgitimSinavSonucu`.
+- **Admin:** `EgitimPaketiResource` (`uzaktan-egitim-paketleri`, ders+soru
+  repeater), `UzaktanEgitimAtama` sayfası (firma→çalışanlar→paket + geçici şifre).
+- **Portal:** `Egitimlerim` + `EgitimIzle` (`izle/{atama}`) — sıralı video,
+  **YouTube IFrame API** izleme % → `dersIlerleme()`; tüm dersler izlenince final
+  sınavı; ≥ geçme puanı → Katılım Belgesi PDF. config `isg.uzaktan_egitim`.
+
+## Durum — 2026-09-09 (Kimyasal Sicili / SDS / Afiş + Portföy Excel Panosu — commit 362d9c0)
+
+- **Kimyasal Sicili / Afiş** (`kimyasal-sicili`): `KimyasalUrun` (SDS dosyası,
+  GHS/CLP json, `sds_tarihi`→`sonraki_gozden_gecirme` +1 yıl), `IsgAfis`
+  (firma/genel, kategori). Sayfa: firma→kimyasal ekle (SDS upload + GHS checklist),
+  özet kartları, envanter PDF; Afiş/Pano bölümü. config `isg.kimyasal` + `isg.afis`.
+- **Portföy Excel Panosu:** `PortfoyExcelPanosuUretici` → 8 sayfalı xlsx (Genel
+  Bakış/Firmalar/Çalışanlar/Risk/Kontrol Merkezi matrisi/Uzaktan Eğitim/Kimyasal/
+  Periyodik Kontrol), "Notunuz" sütunları elle düzenlenir. Profilim → "Excel
+  Panosu İndir". **Tek yönlü** (re-import yok).
+
+## Durum — 2026-09-09 (Olay Kayıtları / Ramak Kala modülü — commit c9ed334)
+
+Kullanıcı: "İş Kazası Raporu var ama ayrı 'olay kaydı + 5N kök neden +
+sınıflandırma' akışı yok". `IsKazasiRaporu` DURUYOR; bu AYRI olay defteri.
+
+- **`OlayKaydi`** (`olay_kayitlari`): `olay_tipi` (ramak_kala / tehlikeli_durum /
+  tehlikeli_davranis / ilk_yardim / maddi_hasar / cevre_olayi / is_kazasi /
+  meslek_hastaligi_supheli), sınıflandırma (`sonuc_turu`, `etkilenen_kategorileri`),
+  potansiyel risk `skorHesapla(O,Ş)` = sıra(1-5)×sıra(1-5) → `potansiyel_skor`
+  1-25 (`saving` hook), `potansiyelSeviye()`. **5N:** `bes_neden` json (5 sabit
+  adım) + `nedenZinciri()`. İş kazası ek: SGK/kolluk/kayıp gün. `belge_no` OLK-.
+- **Page `OlayKayitlari`** (Formlar & Belgeler, sort 9): firma+tip → sınıflandırma
+  (canlı `potansiyelOnizleme`) → 5N → düzeltici faaliyet → geçmiş liste `tipFiltre`
+  + **"DÖF'e Aktar"** (`session(['dof_aktarim'=>...])` + redirect).
+- **`OlayKaydiUretici`:** kayıt inceleme PDF'i + firma "Olay Kayıt Defteri" Excel.
+  config `isg.olay`; Raporlar kaynaklarına eklendi. **Kontrol Merkezi'ne kriter
+  `olay_ramak_kala_kaydi`** (`hazir=true`) → hazır kriter sayısı 18→19,
+  `ProfilimTest` oranı 6→5 güncellendi.
+
+## Durum — 2026-09-09 (İş İzin Formu: izin kütüphanesi + onay yaşam döngüsü — commit 8702846)
+
+Kullanıcı: "üreticisi var; izin kütüphanesi + onay durumu yok".
+
+- **Kütüphane:** `config isg.is_izin.kutuphane` 9 hazır PTW şablonu (sıcak iş,
+  yüksekte, kapalı alan, elektrik/LOTO, kazı, kaldırma, radyografi, basınçlı test,
+  genel) — türler + ek_onlemler + kkdler + gecerlilik_saat + uyarilar + onay
+  başlıkları. `turler`'e kazi/kaldirma/loto/radyografi/basincli_test eklendi.
+  `IsIzinSablonu`/`is_izin_sablonlari` = uzmanın kendi kütüphanesi. Sayfada
+  "Kütüphaneden seç" (`hazir:i`/`ozel:id`) ön doldurur; "Kütüphaneye Şablon Ekle".
+- **Onay yaşam döngüsü:** `is_izin_formlari`'na `durum` (taslak→onay_bekliyor→
+  onaylandi→is_tamamlandi→kapatildi / reddedildi / iptal) + `onay1/2_durum`+tarih
+  + `red_gerekcesi` + `is_bitis_tarihi` + `saha_teslim_alindi` + `kapanis_notu` +
+  `kapatan`. Geçmiş listede durum rozeti + adım butonları (`onayaGonder`/`onayla`/
+  `isiTamamla` + inline `islemBaslat`/`islemiUygula` reddet & kapanış).
+  `saving` hook `gecerlilik_saat`'ten bitiş türetir; `suresiGectiMi()` uyarısı.
+  PDF: DURUM damgası + tarihli onay tablosu + iş tamamlama/saha teslim bloğu.
+
+## Durum — 2026-09-09 (Soru Bankası: kaynaklı/onaylı sektörel havuz — commit 216bb3c)
+
+Kullanıcı: "AI sınav üretimi var; kaynaklı/onaylı soru bankası yap sektörel
+ekleyelim".
+
+- **`soru_bankasi_sorulari`** / `SoruBankasiSorusu` (`user_id` NULL = sistem/ortak
+  havuz, dolu = uzmanın; scope `erisilebilir($userId)`/`onayli()`). Alanlar:
+  sektör + `konu` (config ~22) + zorluk + soru + secenekler(4) + dogru_index +
+  **`aciklama`** (cevap gerekçesi) + **`kaynak`** (yasal dayanak) + `durum`
+  (taslak/onaylandi/arsiv) + `uretim_kaynagi` + onaylayan/onay_tarihi.
+- **Page `SoruBankasi`** (Planlama & Arşiv, sort 21): filtre + özet + elle ekle +
+  onayla/taslağaAl/arşivle/sil (sistem soruları silinemez) + `tumTaslaklariOnayla`
+  + header action `aiUret` (havuza **taslak** yazar).
+- **`GeminiSoruUretici::uret()`** imzası `($sektorAdi,$zorluk,$adet,$konuAdi)`;
+  dönüş her soruya `kaynak`+`aciklama` ekler.
+- **Entegrasyon:** `EgitimSorulari` header action "Soru Bankasından Ekle"
+  (`bankadanEkle` — seçili sektör + genel onaylı sorulardan `inRandomOrder`).
+- **`SoruBankasiSeeder`** (DatabaseSeeder, idempotent): **25 sistem sorusu**,
+  hepsi onaylı (genel + inşaat/fabrika/sağlık/depo).
+
+## Durum — 2026-09-09 (Yıllık Plan "Kaydet" butonu + PDF imza bloğu — commit abe811b, 9189356)
+
+- **`YillikPlanlar::planiKaydet()`** + header action (ilk sırada, primary). Ay
+  hücreleri/satır ekleme zaten anlık kaydediyordu; buton değerlendirme sekmesindeki
+  `x-on:change` serbest metinleri garantiye alır + "son kayıt <tarih>" bildirimi.
+- **PDF imza bloğu:** `pdf/partials/yillik-plan-imza.blade.php` — 3 sütunlu
+  `<table class="imza">`, `pdf/yillik-plan.blade.php`'nin 3 sayfasına da
+  `@include`. İşyeri Hekimi & İGU: `$firma->isyeriHekimi`/`$firma->igu` →
+  `ad_soyad` + `kase_gorseli` (`is_file(storage_path(...))` guard'lı). İşveren:
+  `$firma->isveren_vekili ?: $firma->isveren_ad`, kaşesiz. `YillikPlanUretici`
+  `loadMissing(['firma.igu','firma.isyeriHekimi'])`.
+
+## Durum — 2026-09-09 (Firma "Tüm Evrakları İndir" butonu + dev DB içe aktarmaları — commit cd2c767)
+
+- **`EditFirma` header action `tumEvrakIndir`:** firma düzenleme sayfasının üstüne
+  **tek tıkla, seçim modalı olmadan** "Tüm Evrakları İndir (ZIP)" →
+  `FirmaEvrakZipUretici::zip($record, array_keys(secenekler($record)))`. (Firmalar
+  listesindeki checkbox'lı "Evrakları İndir" duruyor.)
+- **Dev DB'ye (kod yok, commit yok):**
+  - @İSGCEO-İGUVURALGÜNDÜZ YouTube kanalının 207 videosu → tek `EgitimPaketi`
+    (id 1, UE-2026-001, user_id 1) + 207 `EgitimDersi`. innertube
+    `youtubei/v1/browse` API + `lockupViewModel` parse. Seeder YOK (kullanıcı
+    silince geri gelmesin). Sınav havuzu boş.
+  - `Desktop\yeni isg dosya evrakları\Risk Analizi\matriks\` 12 xlsx risk analizi
+    → paylaşılan `RiskSablonu` (yontem `matris_5x5`, `paylasildi=true`, ad
+    "<FİRMA> — Risk Analizi (Matris)"). **O/Ş birebir**, 4358 madde. Dosya
+    adlarındaki firmalar sistemde yok → firma OLUŞTURULMADI
+    (`[[firma-ekleme-onay-gerekli]]`). Bekleyen: belirli firmalara
+    `RiskDegerlendirmesi` istenirse firmaların açılması gerekir.
 
 ## Notlar
 
