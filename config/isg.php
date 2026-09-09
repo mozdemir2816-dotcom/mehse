@@ -14,6 +14,7 @@ use App\Models\IsKazasiRaporu;
 use App\Models\KkdZimmetFormu;
 use App\Models\KurulToplantisi;
 use App\Models\MuayeneFormu;
+use App\Models\OlayKaydi;
 use App\Models\PeriyodikKontrol;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaAnalizi;
@@ -40,6 +41,7 @@ use App\Support\IsKazasiRaporuUretici;
 use App\Support\KkdZimmetFormuUretici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\MuayeneFormuUretici;
+use App\Support\OlayKaydiUretici;
 use App\Support\PeriyodikKontrolUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\SahaAnaliziUretici;
@@ -357,6 +359,7 @@ return [
             ['anahtar' => 'calisma_izin_formu', 'ad' => 'Çalışma İzin Formu', 'ikon' => 'heroicon-o-document-check', 'hazir' => true],
             ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true],
             ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true],
+            ['anahtar' => 'olay_ramak_kala_kaydi', 'ad' => 'Olay / Ramak Kala Kaydı', 'ikon' => 'heroicon-o-bell-alert', 'hazir' => true],
             ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => false],
             ['anahtar' => 'saglik_raporu', 'ad' => 'Sağlık Raporu', 'ikon' => 'heroicon-o-document-text', 'hazir' => true],
             ['anahtar' => 'onayli_defter_nushalari', 'ad' => 'Onaylı Defter Nüshaları', 'ikon' => 'heroicon-o-book-open', 'hazir' => true],
@@ -1937,6 +1940,62 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Olay Kayıtları / Ramak Kala
+    |--------------------------------------------------------------------------
+    | İş Kazası Raporu'ndan AYRI bir olay defteri: yaralanma olmasa da her İSG
+    | olayını (ramak kala, tehlikeli durum/davranış, ilk yardım, maddi hasar,
+    | çevre) kaydeder. Her kayıtta sınıflandırma + potansiyel risk (olasılık ×
+    | şiddet, 1-25) + 5 Neden (5N) kök neden zinciri + düzeltici faaliyet var;
+    | düzeltici faaliyet tek tıkla DÖF Oluştur'a aktarılabilir (dof_aktarim).
+    */
+    'olay' => [
+        'tipler' => [
+            'ramak_kala' => 'Ramak Kala (Kazaya Ramak Kalan Olay)',
+            'tehlikeli_durum' => 'Tehlikeli Durum',
+            'tehlikeli_davranis' => 'Tehlikeli Davranış',
+            'ilk_yardim' => 'İlk Yardım Müdahalesi (Kayıtsız)',
+            'maddi_hasar' => 'Maddi Hasarlı Olay',
+            'cevre_olayi' => 'Çevre Olayı (Dökülme / Sızıntı / Emisyon)',
+            'is_kazasi' => 'İş Kazası',
+            'meslek_hastaligi_supheli' => 'Meslek Hastalığı Şüphesi',
+        ],
+        'sonuc_turleri' => [
+            'yaralanmasiz' => 'Yaralanmasız / Hasarsız',
+            'ilk_yardim' => 'İlk Yardım Gerektiren',
+            'tibbi_mudahale' => 'Tıbbi Müdahale / Reçeteli Tedavi',
+            'is_gunu_kaybi' => 'İş Günü Kaybına Yol Açan',
+            'kalici_hasar' => 'Kalıcı Hasar / Uzuv Kaybı',
+            'olum' => 'Ölümle Sonuçlanan',
+        ],
+        'etkilenen_kategorileri' => [
+            'calisan' => 'Şirket Çalışanı',
+            'taseron' => 'Taşeron / Alt İşveren Çalışanı',
+            'ziyaretci' => 'Ziyaretçi / 3. Şahıs',
+            'ekipman' => 'Ekipman / Makine',
+            'malzeme' => 'Malzeme / Ürün',
+            'cevre' => 'Çevre',
+            'uretim' => 'Üretim / İş Sürekliliği',
+        ],
+        // Potansiyel risk — "olabilecek en kötü sonuç" değerlendirilir (ramak
+        // kalada gerçekleşen sonuç yok; önemli olan tekrarında ne olabileceği).
+        'olasiliklar' => [
+            'cok_dusuk' => 'Çok Düşük (pratikte imkânsıza yakın)',
+            'dusuk' => 'Düşük (nadiren olabilir)',
+            'orta' => 'Orta (zaman zaman olabilir)',
+            'yuksek' => 'Yüksek (sıklıkla olabilir)',
+            'cok_yuksek' => 'Çok Yüksek (kaçınılmaz)',
+        ],
+        'siddetler' => [
+            'cok_hafif' => 'Çok Hafif (ilk yardım, iş kaybı yok)',
+            'hafif' => 'Hafif (ayakta tedavi, kısa istirahat)',
+            'orta' => 'Orta (iş günü kaybı, geçici iş göremezlik)',
+            'ciddi' => 'Ciddi (uzun tedavi / kalıcı sınırlı hasar)',
+            'cok_ciddi' => 'Çok Ciddi (ölüm / sürekli iş göremezlik)',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sertifika Oluştur — isgpratik 66-68.jpg
     |--------------------------------------------------------------------------
     | 4 sertifika tipi. İSG Sertifikası çoklu eğitici (İGU + İşyeri Hekimi,
@@ -2380,6 +2439,8 @@ return [
                 'uretici' => DofRaporuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsKazasiRaporu::class, 'ad' => 'İş Kazası Raporu', 'tip_metod' => 'kazaTuruEtiketi',
                 'uretici' => IsKazasiRaporuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => OlayKaydi::class, 'ad' => 'Olay Kaydı / Ramak Kala', 'tip_metod' => 'tipEtiketi',
+                'uretici' => OlayKaydiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KurulToplantisi::class, 'ad' => 'Kurul Toplantı Tutanağı', 'tip_metod' => null,
                 'uretici' => KurulToplantisiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => SahaAnalizi::class, 'ad' => 'AI Saha Analizi Raporu', 'tip_metod' => null,

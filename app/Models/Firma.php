@@ -177,6 +177,11 @@ class Firma extends Model
         return $this->hasMany(IsKazasiRaporu::class);
     }
 
+    public function olayKayitlari(): HasMany
+    {
+        return $this->hasMany(OlayKaydi::class);
+    }
+
     public function ipcTebligleri(): HasMany
     {
         return $this->hasMany(IpcTebligi::class);

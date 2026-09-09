@@ -111,6 +111,7 @@ class PortfoyKarne
             'calisma_izin_formu' => $firma->isIzinFormlari()->exists(),
             'saha_denetim_formu' => $firma->sahaDenetimleri()->exists(),
             'is_kazasi_bildirimi' => $firma->isKazasiRaporlari()->exists(),
+            'olay_ramak_kala_kaydi' => $firma->olayKayitlari()->exists(),
             'saglik_raporu' => $firma->muayeneFormlari()->exists(),
             // Doğrudan atama (Atama Yazıları) veya seçim süreci sonucu (Çalışan
             // Temsilcisi Seçimi) — hangisi kullanılmışsa geçerli sayılır.
