@@ -354,6 +354,40 @@ class RiskSihirbaziTest extends TestCase
         unlink($yol);
     }
 
+    public function test_excelde_onerisi_dolu_satir_icin_ai_onlem_istegi_atilmaz(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar']);
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response(
+            ['candidates' => [['content' => ['parts' => [['text' => json_encode(['onlem' => 'olmamalı'])]]]]]],
+        )]);
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        // O/Ş dolu, "Alınması Gereken Önlem" (oneri) dolu, "Mevcut Önlem" sütunu yok
+        // → kullanıcının tamamlanmış matris tablosu. AI'ya HİÇ gidilmemeli.
+        $kitap = new Spreadsheet;
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet', 'Alınması Gereken Önlem'],
+            ['Depo', 'Raf devrilmesi', 'Ezilme', 3, 4, 'Raflar zemine sabitlenmeli, kapasite etiketi asılmalı.'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->call('excelSecilenleriEkle');
+
+        Http::assertNothingSent();
+        $madde = $component->get('secilenler')[0];
+        $this->assertEquals(3, $madde['olasilik']);
+        $this->assertNull($madde['mevcut_onlem'] ?? null);
+
+        unlink($yol);
+    }
+
     public function test_excel_ai_kapaliyken_bos_satirlar_dokunulmadan_kalir(): void
     {
         config(['services.gemini.key' => null]);

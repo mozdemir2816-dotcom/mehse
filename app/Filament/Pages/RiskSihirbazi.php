@@ -753,6 +753,9 @@ class RiskSihirbazi extends Page
 
     public function excelSecilenleriEkle(): void
     {
+        // Büyük dosya + AI tamamlama toplamı 120 sn'yi aşabilir; sayfa çökmesin.
+        @set_time_limit(300);
+
         $eklenen = 0;
         $eklenenler = [];
         $eklenenIndeksler = [];
@@ -845,7 +848,14 @@ class RiskSihirbazi extends Page
 
             $puanEksik = blank($m['olasilik'] ?? null) || blank($m['siddet'] ?? null) || ($fk && blank($m['frekans'] ?? null));
 
-            if ($puanEksik || blank($this->secilenler[$i]['mevcut_onlem'] ?? null)) {
+            // "Mevcut önlem" AI'ya YALNIZCA hem mevcut önlem hem de öneri/alınacak
+            // tedbir sütunu boşsa sorulur. Kullanıcının kendi tablosunda genelde
+            // "Alınması Gereken Önlem" (oneri) dolu, "Mevcut Önlem" sütunu yoktur —
+            // bu satırlar zaten kontrollü sayılır, AI ile 40 istek atıp sayfayı
+            // kilitlemenin (ve kullanıcının belgesini "düzenlemenin") anlamı yok.
+            $onlemEksik = blank($this->secilenler[$i]['mevcut_onlem'] ?? null) && blank($m['oneri'] ?? null);
+
+            if ($puanEksik || $onlemEksik) {
                 $islenen++;
             }
 
@@ -866,7 +876,7 @@ class RiskSihirbazi extends Page
                 }
             }
 
-            if (blank($this->secilenler[$i]['mevcut_onlem'] ?? null)) {
+            if ($onlemEksik) {
                 $onlem = GeminiRiskPuanTamamlayici::onlemOner(
                     $m['tehlike'] ?? '', $m['risk'] ?? null, $m['bolum'] ?? null, $m['faaliyet'] ?? null,
                 );

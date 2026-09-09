@@ -21,25 +21,39 @@ class GeminiRiskPuanTamamlayici
 {
     /** Bu kadar art arda başarısız istekten sonra (kota/hız sınırı, servis kapalı) aynı
      *  istek içinde artık Gemini'ye gidilmez — toplu tamamlama döngüsü 120 sn'yi aşmasın. */
-    private const DEVRE_KESME_ESIGI = 4;
+    private const DEVRE_KESME_ESIGI = 3;
+
+    /** Tek bir toplu tamamlamada AI çağrılarına ayrılan toplam süre (sn). Bu süre
+     *  aşılınca kalan maddeler AI'sız bırakılır — sayfa çökmesin (Windows'ta PHP
+     *  max_execution_time curl beklemesini de sayar). */
+    private const BUTCE_SN = 45;
+
+    /** Tek istek için curl zaman aşımı — gerçek yanıt 2-5 sn, 429 anında döner;
+     *  yalnızca ağ takılması bu sınıra dayanır. Kısa tutulur ki birkaç başarısız
+     *  istek toplam bütçeyi/max_execution_time'ı patlatmasın. */
+    private const ISTEK_TIMEOUT = 12;
 
     private static int $ardArdaBasarisiz = 0;
+
+    private static ?float $sonlanma = null;
 
     public static function aktifMi(): bool
     {
         return filled(config('services.gemini.key'));
     }
 
-    /** Art arda çok sayıda başarısızlık oldu mu — çağıran toplu döngü buna bakıp durmalı. */
+    /** Art arda çok sayıda başarısızlık oldu mu VEYA süre bütçesi bitti mi. */
     public static function devreKesikMi(): bool
     {
-        return static::$ardArdaBasarisiz >= self::DEVRE_KESME_ESIGI;
+        return static::$ardArdaBasarisiz >= self::DEVRE_KESME_ESIGI
+            || (static::$sonlanma !== null && microtime(true) >= static::$sonlanma);
     }
 
-    /** Yeni bir toplu tamamlama başlamadan önce sayacı sıfırlar (Gemini toparlanmış olabilir). */
+    /** Yeni bir toplu tamamlama başlamadan önce sayacı + süre bütçesini sıfırlar. */
     public static function devreyiSifirla(): void
     {
         static::$ardArdaBasarisiz = 0;
+        static::$sonlanma = microtime(true) + self::BUTCE_SN;
     }
 
     private static function basarisizlikKaydet(): void
@@ -62,7 +76,7 @@ class GeminiRiskPuanTamamlayici
         $fk = $yontem === 'fine_kinney';
 
         try {
-            $yanit = Http::timeout(45)->post(
+            $yanit = Http::timeout(self::ISTEK_TIMEOUT)->connectTimeout(5)->post(
                 static::endpoint(),
                 static::istekGovdesi($tehlike, $risk, $bolum, $faaliyet, $fk),
             );
@@ -108,7 +122,7 @@ class GeminiRiskPuanTamamlayici
         }
 
         try {
-            $yanit = Http::timeout(45)->post(
+            $yanit = Http::timeout(self::ISTEK_TIMEOUT)->connectTimeout(5)->post(
                 static::endpoint(),
                 static::onlemIstekGovdesi($tehlike, $risk, $bolum, $faaliyet),
             );

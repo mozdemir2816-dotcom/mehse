@@ -203,6 +203,7 @@ class MaddelerRelationManager extends RelationManager
                     ->requiresConfirmation()
                     ->modalDescription('Olasılık/Şiddet puanı veya Mevcut Önlem metni boş olan maddeler için Gemini\'den öneri istenir (her çalıştırmada en fazla '.self::AI_TOPLU_LIMIT.' madde; kalanlar için tekrar çalıştırın). Puan önerisi yalnız ölçekteki değerlerden seçilir, yine de gözden geçirin.')
                     ->action(function (): void {
+                        @set_time_limit(300);
                         GeminiRiskPuanTamamlayici::devreyiSifirla();
                         $fk = $this->fineKinney();
 

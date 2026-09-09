@@ -199,13 +199,30 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         config(['services.gemini.key' => 'test-anahtar']);
         Http::fake(['generativelanguage.googleapis.com/*' => Http::response(['error' => 'kota'], 429)]);
 
-        // İlk 4 istek gider ve başarısız olur; 5.'de devre kesiktir, HTTP'ye hiç gidilmez.
+        GeminiRiskPuanTamamlayici::devreyiSifirla();
+
+        // İlk 3 istek gider ve başarısız olur; 4.'de devre kesiktir, HTTP'ye hiç gidilmez.
         for ($i = 0; $i < 6; $i++) {
             GeminiRiskPuanTamamlayici::oner('Tehlike '.$i, null, null, null, 'matris_5x5');
         }
 
         $this->assertTrue(GeminiRiskPuanTamamlayici::devreKesikMi());
-        Http::assertSentCount(4);
+        Http::assertSentCount(3);
+    }
+
+    public function test_sure_butcesi_dolunca_devre_kesilir(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar']);
+
+        GeminiRiskPuanTamamlayici::devreyiSifirla();
+        $this->assertFalse(GeminiRiskPuanTamamlayici::devreKesikMi());
+
+        // Bütçenin geçmişte bittiğini taklit et (reflection ile private static alan).
+        $prop = new \ReflectionProperty(GeminiRiskPuanTamamlayici::class, 'sonlanma');
+        $prop->setAccessible(true);
+        $prop->setValue(null, microtime(true) - 1);
+
+        $this->assertTrue(GeminiRiskPuanTamamlayici::devreKesikMi());
     }
 
     public function test_eksik_puanlari_tamamla_tek_calistirmada_40_madde_ile_sinirli(): void
