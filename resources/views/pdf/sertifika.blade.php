@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <style>
     * { font-family: DejaVu Sans, sans-serif; }
-    body { margin: 0; color: #111; font-size: 9.5px; }
-    .sayfa { position: relative; page-break-after: always; }
+    body { margin: 0; color: #111; font-size: 8px; }
+    .sayfa { position: relative; page-break-after: always; page-break-inside: avoid; }
     .sayfa:last-child { page-break-after: avoid; }
-    .ic { padding: 20px 26px; }
-    .cerceve-sade .ic { padding: 22px 28px; }
+    .ic { padding: 14px 20px; }
+    .cerceve-sade .ic { padding: 16px 22px; }
     .cerceve-mavi_kose { border: 3px double #1e5f8c; margin: 10px; }
     .cerceve-mavi_kose .kose { position: absolute; width: 14px; height: 14px; background: #1e5f8c; }
     .cerceve-mavi_kose .kose-sol-ust { top: 6px; left: 6px; }
@@ -17,24 +17,24 @@
     .cerceve-mavi_kose .kose-sag-alt { bottom: 6px; right: 6px; }
     .cerceve-altin_susleme { border: 3px double #b8860b; border-radius: 14px; margin: 10px; }
     .cerceve-gri_cizgi { border: 3px double #444; margin: 10px; }
-    .baslik { text-align: center; border-bottom: 2px solid #111; padding-bottom: 7px; margin-bottom: 10px; }
-    .baslik img { max-height: 38px; float: left; }
-    .baslik h1 { font-size: 14px; margin: 0; }
-    .bilgi { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 8px; }
-    .bilgi td { padding: 2px 5px; vertical-align: top; width: 25%; line-height: 1.3; }
+    .baslik { text-align: center; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px; }
+    .baslik img { max-height: 32px; float: left; }
+    .baslik h1 { font-size: 12px; margin: 0; }
+    .bilgi { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 5px; }
+    .bilgi td { padding: 1px 5px; vertical-align: top; width: 25%; line-height: 1.25; }
     .bilgi td.etiket { font-weight: bold; width: 20%; }
-    .metin { font-size: 9px; text-align: justify; margin-bottom: 7px; line-height: 1.35; }
-    h3 { font-size: 9.5px; margin: 7px 0 3px; }
+    .metin { font-size: 8px; text-align: justify; margin-bottom: 5px; line-height: 1.3; }
+    h3 { font-size: 8.5px; margin: 4px 0 2px; }
     table.konular { width: 100%; border-collapse: collapse; }
     table.konular > tr > td { width: 50%; vertical-align: top; padding: 0 5px 0 0; }
-    .blok { margin-bottom: 5px; }
-    .blok-baslik { font-weight: bold; font-size: 8.5px; margin-bottom: 1px; }
-    .blok p { margin: 0 0 1px; font-size: 8.5px; line-height: 1.25; }
-    table.imza { width: 100%; border-collapse: collapse; margin-top: 14px; }
-    table.imza td { width: 33.33%; vertical-align: top; font-size: 8.5px; padding-right: 8px; line-height: 1.3; }
-    table.imza img { max-height: 32px; display: block; margin: 3px 0; }
-    .not { margin-top: 8px; font-size: 7.5px; color: #666; }
-    .tarih-sag { text-align: right; font-size: 7.5px; font-weight: bold; margin-top: 2px; }
+    .blok { margin-bottom: 3px; }
+    .blok-baslik { font-weight: bold; font-size: 7.5px; margin-bottom: 1px; }
+    .blok p { margin: 0 0 1px; font-size: 7px; line-height: 1.2; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    table.imza td { width: 33.33%; vertical-align: top; font-size: 7.5px; padding-right: 8px; line-height: 1.25; }
+    table.imza img { max-height: 28px; display: block; margin: 2px 0; }
+    .not { margin-top: 4px; font-size: 6.5px; color: #666; }
+    .tarih-sag { text-align: right; font-size: 6.5px; font-weight: bold; margin-top: 1px; }
 </style>
 </head>
 <body>

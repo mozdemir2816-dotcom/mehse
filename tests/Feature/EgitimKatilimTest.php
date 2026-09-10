@@ -387,6 +387,34 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('KULE V', $html);
     }
 
+    public function test_sertifika_girilen_egitim_tarihleriyle_basilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'belge_tarihi' => now(),
+            'sure_gun' => 2,
+            'isg_uzmani_var' => true,
+            'isg_uzmani_adi' => 'Vural Gündüz',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+        ]);
+        $kayit->setRelation('firma', $firma);
+
+        $ref = new \ReflectionMethod(EgitimSayfasi::class, 'sertifikaKur');
+        $ref->setAccessible(true);
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $firma->id)->instance();
+
+        $s = $ref->invoke($sayfa, $kayit, ['2026-09-15', '2026-09-16']);
+
+        $this->assertSame(['2026-09-15', '2026-09-16'], $s->egitim_tarihleri);
+        $this->assertSame('2028-09-16', $s->gecerlilik_tarihi->toDateString());   // son gün + 2 yıl (tehlikeli)
+
+        $html = view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma])->render();
+        $this->assertStringContainsString('15.09.2026-16.09.2026', $html);
+    }
+
     public function test_egitim_katilimindan_katilimci_sertifikasi_indirilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);

@@ -186,25 +186,9 @@
 
     @php
         $katilimcilar = $kayit->katilimcilar ?? [];
-
-        // Katılımcı listesi tek A4 sayfayı DOLDURACAK kadar satır içersin — konu
-        // bloğu ne kadar yer kaplarsa katılımcı satırı o kadar az. Katılımcı
-        // sayısı bu kapasiteyi aşarsa hepsi listelenir (sonraki sayfaya taşar).
-        if (($icerik['tip'] ?? null) === 'genel') {
-            $solKonu = count($goster($icerik['genel_konular'])) + count($goster($icerik['saglik_konulari']));
-            $sagKonu = count($goster($icerik['teknik_konular']))
-                + (($icerik['isyerine_ozgu'] ?? null) ? count($goster($icerik['isyerine_ozgu']['maddeler'])) : 0);
-            $konuSatir = max($solKonu, $sagKonu);   // 2 sütun — uzun kolon belirler
-        } else {
-            $konuSatir = count($goster($icerik['maddeler'] ?? [])) * 2;   // tek kolon
-        }
-
-        // A4 ≈ 1123px (96dpi); sabit bölümler (başlık+künye+eğitmen imza+yasal) ≈ 330px;
-        // her konu satırı ≈ 13px; her katılımcı satırı ≈ 20px. dompdf ile kalibre edildi.
-        $sigan = (int) floor((1095 - 330 - $konuSatir * 13) / 20);
-        $sigan = max(12, min($sigan, 32));
-
-        $satirSayisi = max(count($katilimcilar), $sigan);
+        // Sabit 24 imza satırı — tutarlı imza yeri. Katılımcı sayısı 24'ü aşarsa
+        // hepsi listelenir (fazlası 2. sayfaya taşar, eğitmen imzası orada da var).
+        $satirSayisi = max(count($katilimcilar), 24);
     @endphp
     <div class="lt">Katılımcı Listesi ve İmzaları</div>
     <table class="katilim">

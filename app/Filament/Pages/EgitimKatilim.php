@@ -493,7 +493,11 @@ class EgitimKatilim extends Page
      * yalnız PDF üretimi için). Eğitim başlığına göre sertifika tipi seçilir
      * (genel → isg, yüksekte_çalışma → yükseklik, kapalı_alan → kapali_alan).
      */
-    private function sertifikaKur(EgitimKatilimModel $kayit): Sertifika
+    /**
+     * @param  array<int, string>|null  $egitimTarihleri  gün gün eğitim tarihleri (kullanıcı sorulunca);
+     *                                                     boş ise belge tarihi gün sayısı kadar tekrarlanır
+     */
+    private function sertifikaKur(EgitimKatilimModel $kayit, ?array $egitimTarihleri = null): Sertifika
     {
         $tip = 'isg';
 
@@ -506,9 +510,20 @@ class EgitimKatilim extends Page
         }
 
         $gun = max(1, (int) ($kayit->sure_gun ?? 1));
-        $tarih = $kayit->belge_tarihi?->toDateString() ?? now()->toDateString();
+        $belgeTarih = $kayit->belge_tarihi?->toDateString() ?? now()->toDateString();
         $tehlike = $kayit->firma?->tehlike_sinifi ?? 'az_tehlikeli';
         $dersSaati = $kayit->konu_secimleri['saat'] ?? null;
+
+        $tarihler = collect($egitimTarihleri ?? [])
+            ->filter()
+            ->map(fn ($t) => Carbon::parse($t)->toDateString())
+            ->values();
+
+        if ($tarihler->isEmpty()) {
+            $tarihler = collect(array_fill(0, $gun, $belgeTarih));
+        }
+
+        $sonTarih = $tarihler->last();
 
         $s = new Sertifika([
             'firma_id' => $kayit->firma_id,
@@ -516,9 +531,9 @@ class EgitimKatilim extends Page
             'tur' => ($kayit->egitim_turu ?? 'ilk') === 'tekrar' ? 'tekrar' : 'ilk_defa',
             'sekil' => $kayit->egitim_sekli ?? 'yuz_yuze',
             'sektor_anahtari' => $tip === 'isg' ? $kayit->sektor_anahtari : null,
-            'gun_sayisi' => $gun,
-            'egitim_tarihleri' => array_fill(0, $gun, $tarih),
-            'gecerlilik_tarihi' => Carbon::parse($tarih)
+            'gun_sayisi' => max($gun, $tarihler->count()),
+            'egitim_tarihleri' => $tarihler->all(),
+            'gecerlilik_tarihi' => Carbon::parse($sonTarih)
                 ->addYears((int) config('isg.sertifika.gecerlilik_yili.'.$tehlike, 1))
                 ->toDateString(),
             'sure_metni' => $dersSaati ? $dersSaati.' Ders Saati' : null,
@@ -635,16 +650,27 @@ class EgitimKatilim extends Page
                 ->icon('heroicon-o-check-badge')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
-                ->action(function () {
+                ->modalHeading('Katılımcı Sertifikaları')
+                ->modalDescription('Sertifikaya basılacak eğitim tarih(ler)ini girin. Her katılımcı için ayrı sertifika sayfası oluşturulur.')
+                ->schema(fn () => array_map(
+                    fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
+                        ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
+                        ->default($this->belgeTarihi)
+                        ->required(),
+                    range(1, max(1, (int) $this->sureGun)),
+                ))
+                ->action(function (array $data) {
                     $kayit = $this->kaydet();
 
                     if (! $kayit) {
                         return null;
                     }
 
+                    $tarihler = array_values(array_filter($data));
+
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — her katılımcı için ayrı sertifika sayfası')->success()->send();
 
-                    return SertifikaUretici::pdf($this->sertifikaKur($kayit));
+                    return SertifikaUretici::pdf($this->sertifikaKur($kayit, $tarihler));
                 }),
         ];
     }

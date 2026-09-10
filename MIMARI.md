@@ -2825,6 +2825,13 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   tablosu `<thead>` ile başlık satırı her sayfada tekrarlar; çok sayfada
   `page_script` "Belge No · Sayfa X/Y" damgası (`EgitimKatilimUretici::pdfCikti`).
   `.sayfa` alt dolgu 82px şeride yer açar.
+- **Katılımcı tablosu sabit 24 imza satırı** (dinamik formül kaldırıldı) — tutarlı
+  imza yeri; >24 katılımcı 2. sayfaya taşar.
+- **Sertifika eğitim tarihi sorulur:** "Katılımcı Sertifikaları" aksiyonu artık
+  `->schema()` ile gün gün DatePicker gösterir; `sertifikaKur($kayit, $tarihler)`
+  bunları `egitim_tarihleri`'ne yazar, geçerlilik SON güne göre. Boşsa belge tarihi.
+- **`pdf/sertifika` küçültüldü** (8px gövde, 7px konu satırları, `page-break-inside:avoid`)
+  → çok tehlikeli 16 saat + işe özgü ekler bile **kişi başı tek sayfa**.
 - **Otomatik çalışan ekleme:** form kaydedilince (PDF/Excel/Sertifika aksiyonlarının
   hepsinde) firmada kayıtlı OLMAYAN katılımcılar (`EgitimKatilim::eksikCalisanlariEkle`,
   TC varsa TC'ye yoksa ad-soyada göre) firma çalışan listesine otomatik eklenir —
@@ -2859,6 +2866,13 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   Sağlık/Teknik blokları eskisi gibi (yalnız dakika/dahil). Dakika düzenleme zaten vardı.
 
 Testler: `EgitimKatilimTest` +4. Suite yeşil (669).
+
+## Durum — 2026-09-10 (İşbaşı Eğitim — Boş Katılım Formu)
+
+`IsbasiEgitim` sayfasına **"Boş Katılım Formu"** header aksiyonu — mevcut "Katılım
+Formu (Toplu)" ile aynı künye/konu, ama `katilimcilar => []` → blade zaten
+`max(10, count)` ile 10 boş imza satırı üretir. Personel tanımlamadan, işyerinde
+elle imzalatmak için. Ortak `katilimFormuVerisi()` yardımcısı.
 
 ## Notlar
 
