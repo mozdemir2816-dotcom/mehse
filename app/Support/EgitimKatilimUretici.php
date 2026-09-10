@@ -21,13 +21,31 @@ class EgitimKatilimUretici
     {
         $kayit->loadMissing('firma');
 
-        $pdf = Pdf::loadView('pdf.egitim-katilim', [
-            'kayit' => $kayit,
-            'firma' => $kayit->firma,
-            'icerik' => $kayit->konu_secimleri,
-        ])->setPaper('a4');
-
         $ad = 'egitim-katilim-'.Str::slug($kayit->firma?->unvan ?? 'firma').'-'.$kayit->belge_no.'.pdf';
+
+        return static::pdfCikti($kayit, $kayit->firma, $kayit->konu_secimleri ?? [], $ad);
+    }
+
+    /**
+     * pdf.egitim-katilim'i render eder; katılımcı listesi 2. sayfaya taşarsa
+     * her sayfaya "Belge No · Sayfa X/Y" damgalar (eğitmen imzası zaten
+     * position:fixed ile her sayfada). Tek sayfada damga yok.
+     */
+    private static function pdfCikti(EgitimKatilim $kayit, $firma, array $icerik, string $ad): StreamedResponse
+    {
+        $pdf = Pdf::loadView('pdf.egitim-katilim', compact('kayit', 'firma', 'icerik'))->setPaper('a4');
+        $pdf->render();
+
+        $dompdf = $pdf->getDomPDF();
+        $canvas = $dompdf->getCanvas();
+        $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $belgeNo = (string) $kayit->belge_no;
+
+        $canvas->page_script(function (int $pageNumber, int $pageCount) use ($canvas, $font, $belgeNo): void {
+            if ($pageCount > 1) {
+                $canvas->text($canvas->get_width() - 132, 15, "{$belgeNo} · Sayfa {$pageNumber} / {$pageCount}", $font, 6.5, [0.45, 0.45, 0.45]);
+            }
+        });
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
@@ -51,15 +69,9 @@ class EgitimKatilimUretici
         ]);
         $kayit->belge_no = 'BOŞ FORM';
 
-        $pdf = Pdf::loadView('pdf.egitim-katilim', [
-            'kayit' => $kayit,
-            'firma' => null,
-            'icerik' => $icerik,
-        ])->setPaper('a4');
-
         $ad = 'bos-egitim-katilim-'.Str::slug($kayit->basliklarEtiketi()).'.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+        return static::pdfCikti($kayit, null, $icerik, $ad);
     }
 
     /**

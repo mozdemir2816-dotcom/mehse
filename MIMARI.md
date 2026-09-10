@@ -2820,6 +2820,11 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   `konu_secimleri['saat']` kaydedilirken güncellenir.
 - **İmza:** katılımcı 2 günde 2 ayrı imza (tablo sütunları), eğitimci tek imza
   (gün ayrımı yok — "Kaşe / İmza").
+- **Eğitmen imzası her sayfada:** `.alt-serit` `position:fixed` → katılımcı listesi
+  2. sayfaya taşarsa eğitmen kaşe/imzası + yasal metin orada da görünür. Katılımcı
+  tablosu `<thead>` ile başlık satırı her sayfada tekrarlar; çok sayfada
+  `page_script` "Belge No · Sayfa X/Y" damgası (`EgitimKatilimUretici::pdfCikti`).
+  `.sayfa` alt dolgu 82px şeride yer açar.
 - **Otomatik çalışan ekleme:** form kaydedilince (PDF/Excel/Sertifika aksiyonlarının
   hepsinde) firmada kayıtlı OLMAYAN katılımcılar (`EgitimKatilim::eksikCalisanlariEkle`,
   TC varsa TC'ye yoksa ad-soyada göre) firma çalışan listesine otomatik eklenir —
