@@ -420,6 +420,23 @@ class EgitimKatilim extends Page
 
                     return EgitimKatilimUretici::pdf($kayit);
                 }),
+
+            Action::make('excel')
+                ->label('Excel (Kaydet ve İndir)')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no)->success()->send();
+
+                    return EgitimKatilimUretici::excel($kayit);
+                }),
         ];
     }
 
@@ -428,6 +445,13 @@ class EgitimKatilim extends Page
         $kayit = $this->firma?->egitimKatilimlari()->find($id);
 
         return $kayit ? EgitimKatilimUretici::pdf($kayit) : null;
+    }
+
+    public function gecmisExcel(int $id)
+    {
+        $kayit = $this->firma?->egitimKatilimlari()->find($id);
+
+        return $kayit ? EgitimKatilimUretici::excel($kayit) : null;
     }
 
     public function gecmisSil(int $id): void

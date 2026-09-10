@@ -2802,9 +2802,15 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
 - **İmza günü 1./2. gün:** `pdf/egitim-katilim` — `sure_gun >= 2` ise katılımcı
   tablosunda "İmza (1. Gün)" + "İmza (2. Gün)" ayrı sütunları, eğitmen bloğunda
   gün bazlı imza satırı, künyede planlama notu. `bosFormPdf` de `planlananGun` kullanır.
-- **Eğitmen imza bloğu yeri:** İş Güvenliği Uzmanı + İşyeri Hekimi kaşe/imzası artık
-  eğitim konularıyla AYNI SAYFADA (katılımcı imza listesinden ÖNCE) — uzun katılımcı
-  listesi imzaları 2. sayfaya itmiyor. Tek eğitmen varsa hücre `width:100%`.
+- **PDF tek sayfa (klasik düzen):** `pdf/egitim-katilim` baştan yazıldı — 8px
+  gövde, 6.8px konu listeleri, sıkı `.blok`/tablo dolgu, 2 sütunlu konu grid'i.
+  Eğitmenler (Uzman + Hekim) formun ALTINDA (katılımcı listesinden sonra) — klasik
+  düzen. Katılımcı tablosu en az 10 satır (`max(count, 10)`). Çok tehlikeli (16 s,
+  ~26 konu) + 10 katılımcı + 2 gün bile tek A4'e sığıyor.
+- **Excel çıktısı:** `EgitimKatilimUretici::excel()` — künye + konu blokları +
+  katılımcı imza tablosu (10+ satır) + eğitmenler tek sayfada `.xlsx`.
+  Sayfa header aksiyonu "Excel (Kaydet ve İndir)" + geçmiş kayıtlarda "Excel" düğmesi
+  (`gecmisExcel`). `konuBloklari()` hem genel (4 blok) hem özel (tek blok) düzler.
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/

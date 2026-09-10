@@ -285,6 +285,7 @@
                             <td style="padding:.35rem .5rem">{{ $k->katilimciSayisi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
+                                <x-filament::button size="xs" color="gray" wire:click="gecmisExcel({{ $k->id }})">Excel</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

@@ -3,35 +3,47 @@
 <head>
 <meta charset="utf-8">
 <style>
+    @page { margin: 0; }
     * { font-family: DejaVu Sans, sans-serif; }
-    body { margin: 0; color: #111; font-size: 11px; }
-    .sayfa { padding: 20px 28px; }
-    .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 12px; }
-    .baslik img { max-height: 50px; float: left; }
-    .baslik h1 { font-size: 17px; margin: 0 0 4px; }
-    .kunye { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
-    .kunye td { border: 1px solid #999; padding: 5px 8px; }
-    .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 22%; }
-    .blok { border: 1px solid #999; margin-bottom: 10px; page-break-inside: avoid; }
-    .blok h3 { background: #ecf0f1; margin: 0; padding: 5px 8px; font-size: 11px; border-bottom: 1px solid #999; }
-    .blok ol { margin: 6px 10px; padding-left: 16px; font-size: 9.5px; }
-    .blok ol li { margin-bottom: 3px; }
-    table.grid { width: 100%; border-collapse: collapse; }
+    body { margin: 0; color: #111; font-size: 8px; }
+    .sayfa { padding: 14px 20px; }
+
+    .baslik { text-align: center; border-bottom: 2px double #111; padding-bottom: 4px; margin-bottom: 6px; }
+    .baslik img { max-height: 34px; float: left; }
+    .baslik h1 { font-size: 13px; margin: 0; }
+    .baslik div { font-size: 8px; }
+
+    .kunye { width: 100%; border-collapse: collapse; font-size: 7.5px; margin-bottom: 6px; }
+    .kunye td { border: 1px solid #999; padding: 2px 5px; }
+    .kunye td.e { background: #f0f0f0; font-weight: bold; width: 12%; }
+
+    table.grid { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
     table.grid > tr > td { width: 50%; vertical-align: top; padding: 0; }
-    table.ozel ol { font-size: 10px; margin: 8px 12px; }
+    .blok { border: 1px solid #999; margin-bottom: 4px; page-break-inside: avoid; }
+    .blok.l { margin-right: 3px; }
+    .blok.r { margin-left: 3px; }
+    .blok h3 { background: #ecf0f1; margin: 0; padding: 2px 5px; font-size: 7.5px; border-bottom: 1px solid #999; }
+    .blok ol { margin: 2px 6px 3px; padding-left: 12px; font-size: 6.8px; line-height: 1.28; }
+    .blok ol li { margin: 0; }
+    .blok.ozel ol { font-size: 8px; margin: 5px 12px; line-height: 1.4; }
     .dk { color: #666; font-weight: normal; }
-    table.katilim { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9.5px; }
-    table.katilim th, table.katilim td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
-    table.katilim th { background: #f0f0f0; }
-    .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
-    .imza-blok { page-break-inside: avoid; margin-top: 14px; }
+
+    .lt { font-weight: bold; font-size: 8px; margin: 6px 0 2px; }
+    table.katilim { width: 100%; border-collapse: collapse; font-size: 8px; }
+    table.katilim th, table.katilim td { border: 1px solid #999; padding: 2px 5px; text-align: left; }
+    table.katilim th { background: #f0f0f0; font-size: 7.5px; }
+    table.katilim td { height: 16px; }
+
+    .imza-blok { page-break-inside: avoid; margin-top: 8px; }
     table.imza { width: 100%; border-collapse: collapse; page-break-inside: avoid; }
-    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 6px 10px; font-size: 9.5px; }
-    table.imza .rol { font-weight: bold; margin-bottom: 2px; }
-    table.imza .ad { margin-bottom: 3px; }
-    table.imza .kase { height: 46px; }
-    table.imza .kase img { max-height: 44px; max-width: 90%; }
+    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 4px 7px; font-size: 8px; }
+    table.imza .rol { font-weight: bold; margin-bottom: 1px; }
+    table.imza .ad { margin-bottom: 2px; }
+    table.imza .kase { height: 30px; }
+    table.imza .kase img { max-height: 30px; max-width: 85%; }
     table.imza .imza-satir { color: #666; }
+
+    .yasal { margin-top: 5px; font-size: 6.5px; color: #666; }
 </style>
 </head>
 <body>
@@ -42,21 +54,24 @@
             <img src="{{ storage_path('app/public/'.$firma->logo) }}">
         @endif
         <h1>EĞİTİM KATILIM FORMU</h1>
-        <div style="font-size:11px">{{ $firma?->unvan }}</div>
+        <div>{{ $firma?->unvan }}</div>
     </div>
+
+    @php $ikiGun = ($kayit->sure_gun ?? 1) >= 2; @endphp
 
     <table class="kunye">
         <tr>
-            <td>Eğitim Konusu</td><td>{{ $kayit->basliklarEtiketi() }}</td>
-            <td>Belge No</td><td>{{ $kayit->belge_no }}</td>
+            <td class="e">Eğitim Konusu</td><td style="width:38%">{{ $kayit->basliklarEtiketi() }}</td>
+            <td class="e">Belge No</td><td>{{ $kayit->belge_no }}</td>
         </tr>
         <tr>
-            <td>Eğitim Yeri</td><td>{{ $kayit->egitim_yeri ?: '—' }}</td>
-            <td>Tarih</td><td>{{ $kayit->belge_tarihi?->format('d.m.Y') }}</td>
+            <td class="e">Eğitim Yeri</td><td>{{ $kayit->egitim_yeri ?: '—' }}</td>
+            <td class="e">Tarih</td><td>{{ $kayit->belge_tarihi?->format('d.m.Y') }}</td>
         </tr>
         <tr>
-            <td>Süre</td><td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null)) ({{ $icerik['saat'] }} saat @if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar Eğitimi @endif) @endif @if (($kayit->sure_gun ?? 1) >= 2) <span style="color:#666">— toplam süre 11 saati aştığından 1. ve 2. gün olarak planlandı</span> @endif</td>
-            <td>Eğitimciler</td>
+            <td class="e">Süre</td>
+            <td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null))({{ $icerik['saat'] }} saat@if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar@endif)@endif @if ($ikiGun)<span class="dk">— 1. ve 2. gün</span>@endif</td>
+            <td class="e">Eğitimciler</td>
             <td>
                 @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı{{ $kayit->isg_uzmani_adi ? ' ('.$kayit->isg_uzmani_adi.')' : '' }} @endif
                 @if ($kayit->isg_uzmani_var && $kayit->isyeri_hekimi_var) · @endif
@@ -69,63 +84,37 @@
     @php
         $goster = fn (array $maddeler) => collect($maddeler)->where('dahil', true)->values();
         $sure = fn (array $maddeler) => \App\Support\EgitimIcerikOlusturucu::bolumSuresi($maddeler);
+        $blok = function (string $baslik, array $maddeler, string $kenar) use ($goster, $sure) {
+            $s = $sure($maddeler);
+            $html = '<div class="blok '.$kenar.'"><h3>'.e($baslik).' <span class="dk">('.$s['fiili'].'+'.$s['dinlenme'].' dk)</span></h3><ol>';
+            foreach ($goster($maddeler) as $m) {
+                $html .= '<li>'.e($m['madde']).' <span class="dk">('.$m['dakika'].')</span></li>';
+            }
+            return $html.'</ol></div>';
+        };
     @endphp
 
     @if (($icerik['tip'] ?? null) === 'genel')
-        @php
-            $genelSure = $sure($icerik['genel_konular']);
-            $saglikSure = $sure($icerik['saglik_konulari']);
-            $teknikSure = $sure($icerik['teknik_konular']);
-            $ozguSure = $icerik['isyerine_ozgu'] ? $sure($icerik['isyerine_ozgu']['maddeler']) : null;
-        @endphp
         <table class="grid">
             <tr>
-                <td style="padding-right:5px">
-                    <div class="blok">
-                        <h3>Genel Konular <span class="dk">(Fiili Ders: {{ $genelSure['fiili'] }}dk / Din: {{ $genelSure['dinlenme'] }}dk)</span></h3>
-                        <ol>
-                            @foreach ($goster($icerik['genel_konular']) as $m)
-                                <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div class="blok">
-                        <h3>Sağlık Konuları <span class="dk">(Fiili Ders: {{ $saglikSure['fiili'] }}dk / Din: {{ $saglikSure['dinlenme'] }}dk)</span></h3>
-                        <ol>
-                            @foreach ($goster($icerik['saglik_konulari']) as $m)
-                                <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
+                <td>
+                    {!! $blok('Genel Konular', $icerik['genel_konular'], 'l') !!}
+                    {!! $blok('Sağlık Konuları', $icerik['saglik_konulari'], 'l') !!}
                 </td>
-                <td style="padding-left:5px">
-                    <div class="blok">
-                        <h3>Teknik Konular <span class="dk">(Fiili Ders: {{ $teknikSure['fiili'] }}dk / Din: {{ $teknikSure['dinlenme'] }}dk)</span></h3>
-                        <ol>
-                            @foreach ($goster($icerik['teknik_konular']) as $m)
-                                <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
-                            @endforeach
-                        </ol>
-                    </div>
-                    <div class="blok">
-                        <h3>İşyerine Özgü Riskler @if($icerik['isyerine_ozgu'] ?? null)— {{ $icerik['isyerine_ozgu']['sektor'] }} <span class="dk">(Fiili Ders: {{ $ozguSure['fiili'] }}dk / Din: {{ $ozguSure['dinlenme'] }}dk)</span>@endif</h3>
-                        @if ($icerik['isyerine_ozgu'] ?? null)
-                            <ol>
-                                @foreach ($goster($icerik['isyerine_ozgu']['maddeler']) as $m)
-                                    <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
-                                @endforeach
-                            </ol>
-                        @else
-                            <p style="font-size:9.5px;color:#888;margin:8px 10px">Sektör seçilmedi.</p>
-                        @endif
-                    </div>
+                <td>
+                    {!! $blok('Teknik Konular', $icerik['teknik_konular'], 'r') !!}
+                    @if ($icerik['isyerine_ozgu'] ?? null)
+                        {!! $blok('İşyerine Özgü Riskler — '.$icerik['isyerine_ozgu']['sektor'], $icerik['isyerine_ozgu']['maddeler'], 'r') !!}
+                    @else
+                        <div class="blok r"><h3>İşyerine Özgü Riskler</h3><p style="font-size:7px;color:#888;margin:4px 8px">Sektör seçilmedi.</p></div>
+                    @endif
                 </td>
             </tr>
         </table>
     @else
         @php $ozelSure = $sure($icerik['maddeler'] ?? []); @endphp
         <div class="blok ozel">
-            <h3>{{ $icerik['ad'] ?? $kayit->basliklarEtiketi() }} <span class="dk">(Fiili Ders: {{ $ozelSure['fiili'] }}dk / Din: {{ $ozelSure['dinlenme'] }}dk)</span></h3>
+            <h3>{{ $icerik['ad'] ?? $kayit->basliklarEtiketi() }} <span class="dk">(Fiili: {{ $ozelSure['fiili'] }}dk / Din: {{ $ozelSure['dinlenme'] }}dk)</span></h3>
             <ol>
                 @foreach ($goster($icerik['maddeler'] ?? []) as $m)
                     <li>{{ $m['madde'] }} <span class="dk">({{ $m['dakika'] }} dk)</span></li>
@@ -134,66 +123,19 @@
         </div>
     @endif
 
-    @php $ikiGun = ($kayit->sure_gun ?? 1) >= 2; @endphp
-
-    {{-- Eğitmen kaşe/imzaları — eğitim konularıyla AYNI SAYFADA kalsın diye
-         katılımcı imza listesinden ÖNCE. İş Güvenliği Uzmanı ve İşyeri Hekimi
-         yan yana tek satırda, birlikte (page-break-inside: avoid). --}}
-    @if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
-        <div class="imza-blok">
-        <table class="imza">
-            <tr>
-                @if ($kayit->isg_uzmani_var)
-                    <td @if (! $kayit->isyeri_hekimi_var) style="width:100%" @endif>
-                        <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
-                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: '.....................................' }}</div>
-                        <div class="kase">
-                            @if ($kayit->isg_uzmani_kase)
-                                <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
-                            @endif
-                        </div>
-                        @if ($ikiGun)
-                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
-                        @else
-                            <div class="imza-satir">Kaşe / İmza</div>
-                        @endif
-                    </td>
-                @endif
-                @if ($kayit->isyeri_hekimi_var)
-                    <td @if (! $kayit->isg_uzmani_var) style="width:100%" @endif>
-                        <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
-                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: '.....................................' }}</div>
-                        <div class="kase">
-                            @if ($kayit->isyeri_hekimi_kase)
-                                <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
-                            @endif
-                        </div>
-                        @if ($ikiGun)
-                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
-                        @else
-                            <div class="imza-satir">Kaşe / İmza</div>
-                        @endif
-                    </td>
-                @endif
-            </tr>
-        </table>
-        </div>
-    @endif
-
     @php
         $katilimcilar = $kayit->katilimcilar ?? [];
-        // Katılımcı varsa tam olarak katılımcı sayısı kadar satır; hiç katılımcı
-        // yoksa (boş imza formu) elle doldurmak için 10 satır.
-        $satirSayisi = count($katilimcilar) ?: 10;
+        // En az 10 satırlık form — katılımcı daha fazlaysa hepsi.
+        $satirSayisi = max(count($katilimcilar), 10);
     @endphp
-    <div style="font-weight:bold;font-size:10px;margin:12px 0 4px">Katılımcı Listesi ve İmzaları</div>
+    <div class="lt">Katılımcı Listesi ve İmzaları</div>
     <table class="katilim">
         <tr>
-            <th style="width:5%">#</th><th>Ad Soyad</th><th style="width:14%">T.C. No</th><th style="width:16%">Görevi</th>
+            <th style="width:4%">#</th><th>Ad Soyad</th><th style="width:15%">T.C. No</th><th style="width:16%">Görevi</th>
             @if ($ikiGun)
-                <th style="width:16%">İmza (1. Gün)</th><th style="width:16%">İmza (2. Gün)</th>
+                <th style="width:17%">İmza (1. Gün)</th><th style="width:17%">İmza (2. Gün)</th>
             @else
-                <th style="width:20%">İmza</th>
+                <th style="width:22%">İmza</th>
             @endif
         </tr>
         @for ($i = 0; $i < $satirSayisi; $i++)
@@ -207,6 +149,40 @@
             </tr>
         @endfor
     </table>
+
+    {{-- Eğitimciler formun altında (klasik düzen). --}}
+    @if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
+        <div class="imza-blok">
+        <table class="imza">
+            <tr>
+                @if ($kayit->isg_uzmani_var)
+                    <td @if (! $kayit->isyeri_hekimi_var) style="width:100%" @endif>
+                        <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
+                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: '.....................................' }}</div>
+                        <div class="kase">
+                            @if ($kayit->isg_uzmani_kase)
+                                <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
+                            @endif
+                        </div>
+                        <div class="imza-satir">@if ($ikiGun) 1. Gün İmza: ..............&nbsp; 2. Gün İmza: .............. @else Kaşe / İmza @endif</div>
+                    </td>
+                @endif
+                @if ($kayit->isyeri_hekimi_var)
+                    <td @if (! $kayit->isg_uzmani_var) style="width:100%" @endif>
+                        <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
+                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: '.....................................' }}</div>
+                        <div class="kase">
+                            @if ($kayit->isyeri_hekimi_kase)
+                                <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
+                            @endif
+                        </div>
+                        <div class="imza-satir">@if ($ikiGun) 1. Gün İmza: ..............&nbsp; 2. Gün İmza: .............. @else Kaşe / İmza @endif</div>
+                    </td>
+                @endif
+            </tr>
+        </table>
+        </div>
+    @endif
 
     <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>
 

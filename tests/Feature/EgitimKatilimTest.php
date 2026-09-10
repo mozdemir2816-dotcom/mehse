@@ -132,7 +132,45 @@ class EgitimKatilimTest extends TestCase
 
         $this->assertStringContainsString('İmza (1. Gün)', $html);
         $this->assertStringContainsString('İmza (2. Gün)', $html);
-        $this->assertStringContainsString('1. ve 2. gün olarak planlandı', $html);
+        $this->assertStringContainsString('1. ve 2. gün', $html);   // künyede planlama notu
+    }
+
+    public function test_egitim_katilim_formu_excel_olarak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'sure_gun' => 1,
+            'isg_uzmani_var' => true,
+            'isg_uzmani_adi' => 'Vural Gündüz',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+        ]);
+
+        $yanit = EgitimKatilimUretici::excel($kayit);
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $this->assertStringStartsWith('PK', $icerik);   // geçerli .xlsx (zip)
+        $this->assertStringContainsString('.xlsx', $yanit->headers->get('content-disposition'));
+    }
+
+    public function test_excel_aksiyonu_kayit_olusturur_ve_xlsx_doner(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create(['ad_soyad' => 'Test Çalışan']);
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'genel')
+            ->set('belgeTarihi', now()->toDateString())
+            ->callAction('excel');
+
+        $this->assertDatabaseHas('egitim_katilimlari', ['firma_id' => $firma->id]);
     }
 
     public function test_tekrar_egitiminde_tehlike_sinifindan_bagimsiz_8_saat_ve_esit_bloklar(): void
