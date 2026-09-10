@@ -112,6 +112,16 @@ class Firma extends Model
         return $this->hasOne(OrtamOlcumu::class);
     }
 
+    public function kkdMatrisi(): HasOne
+    {
+        return $this->hasOne(KkdMatrisi::class);
+    }
+
+    public function saglikGozetimi(): HasOne
+    {
+        return $this->hasOne(SaglikGozetimi::class);
+    }
+
     public function kazaIstatistikleri(): HasMany
     {
         return $this->hasMany(KazaIstatistigi::class);

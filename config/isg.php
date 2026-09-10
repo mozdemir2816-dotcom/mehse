@@ -12,6 +12,7 @@ use App\Models\IsbasiEgitimTutanagi;
 use App\Models\IsIzinFormu;
 use App\Models\IsKazasiRaporu;
 use App\Models\KazaIstatistigi;
+use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu;
 use App\Models\KurulToplantisi;
 use App\Models\MuayeneFormu;
@@ -19,6 +20,7 @@ use App\Models\OlayKaydi;
 use App\Models\OrtamOlcumu;
 use App\Models\PeriyodikKontrol;
 use App\Models\RiskDegerlendirmesi;
+use App\Models\SaglikGozetimi;
 use App\Models\SahaAnalizi;
 use App\Models\SahaDenetimi;
 use App\Models\Sertifika;
@@ -41,6 +43,7 @@ use App\Support\IsbasiEgitimTutanagiUretici;
 use App\Support\IsIzinFormuUretici;
 use App\Support\IsKazasiRaporuUretici;
 use App\Support\KazaIstatistigiUretici;
+use App\Support\KkdMatrisiUretici;
 use App\Support\KkdZimmetFormuUretici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\MuayeneFormuUretici;
@@ -48,6 +51,7 @@ use App\Support\OlayKaydiUretici;
 use App\Support\OrtamOlcumuUretici;
 use App\Support\PeriyodikKontrolUretici;
 use App\Support\RiskDegerlendirmesiUretici;
+use App\Support\SaglikGozetimiUretici;
 use App\Support\SahaAnaliziUretici;
 use App\Support\SahaDenetimiUretici;
 use App\Support\SertifikaUretici;
@@ -92,6 +96,14 @@ return [
     'egitim_yenileme_yili' => [
         'az_tehlikeli' => 3,
         'tehlikeli' => 2,
+        'cok_tehlikeli' => 1,
+    ],
+
+    // Periyodik sağlık muayenesi aralığı (yıl) — İşyeri Hekimi ve Diğer Sağlık
+    // Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik.
+    'saglik_periyodik_yili' => [
+        'az_tehlikeli' => 5,
+        'tehlikeli' => 3,
         'cok_tehlikeli' => 1,
     ],
 
@@ -398,6 +410,92 @@ return [
         // aylık tabloda elle değiştirilebilir).
         'aylik_kisi_saat' => 175,
         'aylar' => ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sağlık Gözetimi Takibi — çalışan × sağlık tetkiki
+    |--------------------------------------------------------------------------
+    | 6331 s.K. Md.15 + İşyeri Hekimi Yönetmeliği. Her tetkik türünün varsayılan
+    | periyodu; `periyot_ay = null` olanlar tehlike sınıfına göre yıl bazlı
+    | (egitim/sağlık yenileme: az_tehlikeli 5 · tehlikeli 3 · çok tehlikeli 1 yıl).
+    */
+    'saglik_tetkik' => [
+        'sonuclar' => [
+            'bekliyor' => 'Bekliyor',
+            'uygun' => 'Çalışabilir (uygun)',
+            'sartli' => 'Şartlı / Kısıtlı Uygun',
+            'uygun_degil' => 'Uygun Değil',
+        ],
+
+        'turleri' => [
+            'ise_giris' => ['ad' => 'İşe Giriş Muayenesi (EK-2)', 'periyot_ay' => null, 'aciklama' => 'İşe başlamadan önce; iş değişikliğinde tekrar'],
+            'periyodik' => ['ad' => 'Periyodik Muayene (EK-2)', 'periyot_ay' => null, 'aciklama' => 'Tehlike sınıfına göre 1 / 3 / 5 yılda bir'],
+            'ise_donus' => ['ad' => 'İşe Dönüş Muayenesi', 'periyot_ay' => null, 'aciklama' => '6 aydan uzun rapor / iş kazası sonrası'],
+            'goz' => ['ad' => 'Göz Muayenesi', 'periyot_ay' => 12, 'aciklama' => 'Ekranlı araç / hassas görsel işler'],
+            'odyometri' => ['ad' => 'İşitme Testi (Odyometri)', 'periyot_ay' => 12, 'aciklama' => 'Gürültülü ortam (>85 dB(A))'],
+            'sft' => ['ad' => 'Solunum Fonksiyon Testi (SFT)', 'periyot_ay' => 12, 'aciklama' => 'Toz / gaz / kimyasal maruziyeti'],
+            'akciger_grafisi' => ['ad' => 'Akciğer Grafisi (PA)', 'periyot_ay' => 12, 'aciklama' => 'Tozlu işler — pnömokonyoz taraması'],
+            'kan_tahlili' => ['ad' => 'Hemogram / Biyokimya', 'periyot_ay' => 12, 'aciklama' => 'Kurşun, benzen, çözücü vb. maruziyette'],
+            'idrar_tahlili' => ['ad' => 'Tam İdrar Tahlili', 'periyot_ay' => 12, 'aciklama' => 'Ağır metal / çözücü maruziyeti'],
+            'portor' => ['ad' => 'Portör Muayenesi', 'periyot_ay' => 3, 'aciklama' => 'Gıda ile temaslı çalışanlar (Hijyen Yön.)'],
+            'psikoteknik' => ['ad' => 'Psikoteknik Değerlendirme', 'periyot_ay' => 60, 'aciklama' => 'Araç sürücüleri / vinç-forklift operatörleri'],
+            'agir_tehlikeli' => ['ad' => 'Ağır ve Tehlikeli İşler Sağlık Raporu', 'periyot_ay' => null, 'aciklama' => 'İşin niteliğine göre'],
+            'tetanoz' => ['ad' => 'Tetanoz Aşısı', 'periyot_ay' => 120, 'aciklama' => 'Yaralanma riski yüksek işler'],
+            'hepatit' => ['ad' => 'Hepatit B Aşısı / Tarama', 'periyot_ay' => null, 'aciklama' => 'Sağlık / atık / kan teması riski'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | KKD Seçim Matrisi — iş kalemi × KKD türü
+    |--------------------------------------------------------------------------
+    | Hangi işte hangi KKD'nin gerektiği (KKD'lerin İşyerlerinde Kullanılması
+    | Hakkında Yönetmelik + risk değerlendirmesi). Sütunlar sabit; hücre metni
+    | "✔", "Gerekirse", standart no ya da serbest metin olabilir.
+    */
+    'kkd_matris' => [
+        'sutunlar' => [
+            'baret' => 'Baret (EN 397)',
+            'gozluk' => 'Koruyucu Gözlük / Siperlik (EN 166)',
+            'kulaklik' => 'Kulak Koruyucu (EN 352)',
+            'maske' => 'Solunum Koruyucu (EN 149 / EN 14387)',
+            'eldiven' => 'Koruyucu Eldiven (EN 388 / EN 374 / EN 60903)',
+            'ayakkabi' => 'İş Ayakkabısı (EN ISO 20345 S3)',
+            'yelek' => 'Reflektif Yelek (EN ISO 20471)',
+            'kemer' => 'Düşme Durdurma Sistemi (EN 361 + EN 355)',
+            'diger' => 'Diğer KKD',
+        ],
+
+        'is_kalemleri' => [
+            'İnşaat / Şantiye' => [
+                ['ad' => 'Kazı ve Hafriyat İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'Kazı kenarında', 'diger' => 'Dizlik']],
+                ['ad' => 'Kalıp İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => '2 m üzeri', 'diger' => 'Bel destek kemeri']],
+                ['ad' => 'Demir / Donatı İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388 kesilmeye dayanıklı', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => '2 m üzeri', 'diger' => 'Kol koruyucu']],
+                ['ad' => 'Duvar / Örgü İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'İskelede', 'diger' => 'Dizlik']],
+                ['ad' => 'Sıva / Şap İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'İskelede']],
+                ['ad' => 'Boya / İzolasyon İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'EN 14387 A1P2', 'eldiven' => 'EN 374 kimyasal', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'İskelede', 'diger' => 'Koruyucu tulum']],
+                ['ad' => 'Yüksekte Çalışma / İskele', 'v' => ['baret' => '✔ çene bağlı', 'gozluk' => '✔', 'maske' => 'İşe göre', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => '✔ EN 361 + EN 355 + EN 362', 'diger' => 'Çift kancalı lanyard']],
+                ['ad' => 'Elektrik Tesisat İşleri', 'v' => ['baret' => '✔ yalıtkan (EN 50365)', 'gozluk' => '✔', 'eldiven' => 'EN 60903 yalıtkan', 'ayakkabi' => '✔ S3 elektrikçi tipi', 'yelek' => '✔', 'kemer' => 'Yüksekte ise', 'diger' => 'Yalıtkan paspas']],
+                ['ad' => 'Beton Dökümü / Pompası', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => 'Gerekirse', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3 lastik çizme', 'yelek' => '✔']],
+                ['ad' => 'Yıkım İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => 'FFP3', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'diger' => 'Toz gözlüğü + yüz siperi']],
+            ],
+            'İmalat / Fabrika' => [
+                ['ad' => 'Kaynak İşleri', 'v' => ['baret' => 'Gerekirse', 'gozluk' => 'Kaynak maskesi + gözlük', 'maske' => 'Kaynak dumanı maskesi', 'eldiven' => 'EN 388 + EN 407', 'ayakkabi' => '✔ S3', 'diger' => 'Kaynakçı önlüğü / tozluk']],
+                ['ad' => 'Talaşlı İmalat (CNC / Torna / Freze)', 'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'eldiven' => 'Dönen parçada TAKILMAZ', 'ayakkabi' => '✔ S3', 'diger' => 'Yüz siperi']],
+                ['ad' => 'Pres / Büküm / Giyotin', 'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'eldiven' => 'EN 388 kesilmeye dayanıklı', 'ayakkabi' => '✔ S3']],
+                ['ad' => 'Boyahane / Yüzey İşlem', 'v' => ['gozluk' => '✔', 'maske' => 'EN 14387 A2P3 / tam yüz', 'eldiven' => 'EN 374 kimyasal', 'ayakkabi' => '✔ S3', 'diger' => 'Solunum koruyuculu tulum']],
+                ['ad' => 'Depo / Forklift Operasyonu', 'v' => ['baret' => 'Gerekirse', 'ayakkabi' => '✔ S3', 'yelek' => '✔']],
+                ['ad' => 'Bakım / Onarım', 'v' => ['baret' => 'Gerekirse', 'gozluk' => '✔', 'kulaklik' => 'Gerekirse', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'kemer' => 'Yüksekte ise', 'diger' => 'LOTO kilit-etiket']],
+                ['ad' => 'Kimyasal Depolama / Transfer', 'v' => ['gozluk' => '✔ / yüz siperi', 'maske' => 'GBF\'ye göre filtre', 'eldiven' => 'EN 374', 'ayakkabi' => '✔ S3', 'diger' => 'Kimyasal önlük / göz duşu erişimi']],
+            ],
+            'Genel / Hizmet' => [
+                ['ad' => 'Ofis Çalışması', 'v' => ['diger' => 'Ekranlı araç için ergonomi — KKD gerekmez']],
+                ['ad' => 'Temizlik İşleri', 'v' => ['gozluk' => 'Kimyasal kullanımında', 'maske' => 'Gerekirse', 'eldiven' => 'EN 374', 'ayakkabi' => 'Kaymaz taban']],
+                ['ad' => 'Şoför / Sevkiyat', 'v' => ['ayakkabi' => 'S1P', 'yelek' => '✔ (araç dışı)', 'eldiven' => 'Yük elleçlemede']],
+                ['ad' => 'Arşiv / Depo Görevlisi', 'v' => ['ayakkabi' => 'S3', 'eldiven' => 'Yük elleçlemede', 'diger' => 'Merdiven kullanımı eğitimi']],
+            ],
+        ],
     ],
 
     /*
@@ -2743,6 +2841,10 @@ return [
                 'uretici' => OrtamOlcumuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KazaIstatistigi::class, 'ad' => 'Kaza İstatistikleri', 'tip_metod' => null,
                 'uretici' => KazaIstatistigiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => KkdMatrisi::class, 'ad' => 'KKD Seçim Matrisi', 'tip_metod' => null,
+                'uretici' => KkdMatrisiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => SaglikGozetimi::class, 'ad' => 'Sağlık Gözetimi Takip Çizelgesi', 'tip_metod' => null,
+                'uretici' => SaglikGozetimiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
                 'uretici' => KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,

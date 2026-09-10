@@ -63,11 +63,13 @@ class NavigasyonTest extends TestCase
             'talimat olustur' => ['/admin/talimat'],
             'muayene formu' => ['/admin/muayene-formu'],
             'periyodik kontrol' => ['/admin/periyodik-kontrol'],
+            'kkd secim matrisi' => ['/admin/kkd-secim-matrisi'],
             'kimyasal sicili' => ['/admin/kimyasal-sicili'],
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
             'ortam olcumleri' => ['/admin/ortam-olcumleri'],
             'kaza istatistikleri' => ['/admin/kaza-istatistikleri'],
+            'saglik gozetimi' => ['/admin/saglik-gozetimi'],
             'yillik planlar' => ['/admin/yillik-planlar'],
             'uzaktan egitim paketleri' => ['/admin/uzaktan-egitim-paketleri'],
             'uzaktan egitim atama' => ['/admin/uzaktan-egitim-atama'],
