@@ -67,6 +67,74 @@ class EgitimKatilimTest extends TestCase
         $this->assertEqualsWithDelta(180, collect($cok['saglik_konulari'])->sum('dakika'), 6);
     }
 
+    public function test_toplam_sure_11_saati_asinca_2_gun_planlanir(): void
+    {
+        // az tehlikeli = 8 saat toplam -> 1 gün
+        $az = EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli');
+        $this->assertLessThanOrEqual(EgitimIcerikOlusturucu::IKI_GUN_ESIGI_DK, EgitimIcerikOlusturucu::toplamDakika($az));
+        $this->assertSame(1, EgitimIcerikOlusturucu::planlananGun($az));
+
+        // tehlikeli = 12 saat, çok tehlikeli = 16 saat -> 2 gün
+        $this->assertSame(2, EgitimIcerikOlusturucu::planlananGun(
+            EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli'),
+        ));
+        $this->assertSame(2, EgitimIcerikOlusturucu::planlananGun(
+            EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli'),
+        ));
+    }
+
+    public function test_cok_tehlikeli_firma_secilince_sure_gun_otomatik_2_olur(): void
+    {
+        $azFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $cokFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli']);
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $azFirma->id)
+            ->assertSet('sureGun', 1)
+            ->set('firmaId', $cokFirma->id)
+            ->assertSet('sureGun', 2);
+    }
+
+    public function test_isyerine_ozgu_konu_eklenip_cikarilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+
+        $component = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('sektorAnahtari', 'insaat')
+            ->call('isyerineOzguMaddeEkle');
+
+        $maddeler = $component->get('icerik')['isyerine_ozgu']['maddeler'];
+        $this->assertCount(6, $maddeler);   // 5 sabit + 1 yeni
+
+        $component->set('icerik.isyerine_ozgu.maddeler.5.madde', 'Vinç altında durmama')
+            ->call('isyerineOzguMaddeCikar', 0);
+
+        $sonrasi = $component->get('icerik')['isyerine_ozgu']['maddeler'];
+        $this->assertCount(5, $sonrasi);
+        $this->assertContains('Vinç altında durmama', collect($sonrasi)->pluck('madde')->all());
+    }
+
+    public function test_iki_gunluk_egitim_pdfinde_gun_bazli_imza_sutunlari_olusur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'sure_gun' => 2,
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => null, 'gorev' => null]],
+        ]);
+
+        $html = view('pdf.egitim-katilim', [
+            'kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri,
+        ])->render();
+
+        $this->assertStringContainsString('İmza (1. Gün)', $html);
+        $this->assertStringContainsString('İmza (2. Gün)', $html);
+        $this->assertStringContainsString('1. ve 2. gün olarak planlandı', $html);
+    }
+
     public function test_tekrar_egitiminde_tehlike_sinifindan_bagimsiz_8_saat_ve_esit_bloklar(): void
     {
         $tekrar = EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli', 'tekrar');

@@ -6,6 +6,10 @@
 --}}
 @php
     $kutu = $kutu ?? 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
+    // Host bileşen isyerineOzguMaddeEkle/Cikar sağlıyorsa işyerine özgü maddeler
+    // metin olarak da düzenlenir + eklenir/çıkarılır (EgitimKatilim). Sağlamıyorsa
+    // (SertifikaOlustur) yalnız dakika/dahil düzenlenir — eski davranış.
+    $konularDuzenlenebilir = ($konularDuzenlenebilir ?? false) && method_exists($this, 'isyerineOzguMaddeEkle');
 
     $satir = function (string $yol, array $m, int $i) use ($wireModelKok) {
         $tamYol = $wireModelKok.'.'.$yol.'.'.$i;
@@ -61,13 +65,29 @@
                         @php $s = $satir('isyerine_ozgu.maddeler', $m, $i); @endphp
                         <div style="display:flex;align-items:center;gap:.4rem;font-size:.8rem">
                             <input type="checkbox" wire:model.live="{{ $s['dahil_model'] }}">
-                            <span style="flex:1;{{ ! $s['dahil'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">{{ $s['madde'] }}</span>
+                            @if ($konularDuzenlenebilir)
+                                <input type="text" wire:model.live.debounce.500ms="{{ $wireModelKok }}.isyerine_ozgu.maddeler.{{ $i }}.madde"
+                                    placeholder="İşe özgü konu"
+                                    style="flex:1;padding:.2rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.78rem">
+                            @else
+                                <span style="flex:1;{{ ! $s['dahil'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">{{ $s['madde'] }}</span>
+                            @endif
                             <input type="number" min="0" wire:model.live="{{ $s['dakika_model'] }}"
                                 style="width:3.5rem;padding:.15rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
                             <span style="font-size:.7rem;color:rgb(107 114 128)">dk</span>
+                            @if ($konularDuzenlenebilir)
+                                <button type="button" wire:click="isyerineOzguMaddeCikar({{ $i }})"
+                                    style="color:#ef4444;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
+                            @endif
                         </div>
                     @endforeach
                 </div>
+                @if ($konularDuzenlenebilir)
+                    <button type="button" wire:click="isyerineOzguMaddeEkle"
+                        style="margin-top:.5rem;font-size:.75rem;color:rgb(16 185 129);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
+                        + Konu Ekle
+                    </button>
+                @endif
             @else
                 <p style="font-size:.78rem;color:#f59e0b;margin:0">Sektör seçilmedi.</p>
             @endif

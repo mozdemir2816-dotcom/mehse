@@ -96,6 +96,9 @@ class EgitimIcerikOlusturucu
             ->all();
     }
 
+    /** Eğitim, bu duvar-saati dakikasını aşarsa 2 güne planlanır (11 saat). */
+    public const IKI_GUN_ESIGI_DK = 11 * 60;
+
     /**
      * Bir kategori/bölümün toplam fiili ders (dk) ve dinlenme (dk) süresi —
      * yalnız dahil edilen maddeler (1 ders saati: 45 dk ders + 15 dk dinlenme).
@@ -108,6 +111,35 @@ class EgitimIcerikOlusturucu
         $fiili = (int) collect($maddeler)->where('dahil', true)->sum('dakika');
 
         return ['fiili' => $fiili, 'dinlenme' => (int) round($fiili / 3)];
+    }
+
+    /**
+     * Tüm bloklardaki dahil maddelerin toplam duvar-saati süresi (fiili + dinlenme).
+     *
+     * @param  array<string, mixed>  $icerik  olustur() çıktısı
+     */
+    public static function toplamDakika(array $icerik): int
+    {
+        $bloklar = ($icerik['tip'] ?? null) === 'genel'
+            ? [
+                $icerik['genel_konular'] ?? [],
+                $icerik['saglik_konulari'] ?? [],
+                $icerik['teknik_konular'] ?? [],
+                $icerik['isyerine_ozgu']['maddeler'] ?? [],
+            ]
+            : [$icerik['maddeler'] ?? []];
+
+        return collect($bloklar)->sum(function (array $maddeler) {
+            $s = static::bolumSuresi($maddeler);
+
+            return $s['fiili'] + $s['dinlenme'];
+        });
+    }
+
+    /** Toplam süre 11 saati aşıyorsa eğitim 2 güne planlanır, aşmıyorsa 1 gün. */
+    public static function planlananGun(array $icerik): int
+    {
+        return static::toplamDakika($icerik) > self::IKI_GUN_ESIGI_DK ? 2 : 1;
     }
 
     /** @return array<string, string> anahtar => etiket (dropdown için) */

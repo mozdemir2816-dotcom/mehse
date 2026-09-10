@@ -162,11 +162,53 @@ class EgitimKatilim extends Page
             $this->firma?->tehlike_sinifi ?? 'az_tehlikeli',
             $this->egitimTuru,
         );
+
+        $this->sureGunYenile();
+    }
+
+    /** Toplam süre 11 saati aşıyorsa eğitim 2 güne planlanır (kullanıcı sonra elle değiştirebilir). */
+    private function sureGunYenile(): void
+    {
+        $this->sureGun = EgitimIcerikOlusturucu::planlananGun($this->icerik);
+    }
+
+    /** Konu dakikası / dahil durumu her değiştiğinde gün sayısını yeniden hesapla. */
+    public function updatedIcerik(): void
+    {
+        $this->sureGunYenile();
     }
 
     public function updatedEgitimTuru(): void
     {
         $this->icerikYenile();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | İşyerine özgü konular — kullanıcı ekler / çıkarır / metnini düzenler
+    |--------------------------------------------------------------------------
+    */
+
+    public function isyerineOzguMaddeEkle(): void
+    {
+        if (! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+            Notification::make()->title('Önce bir işyerine özgü risk sektörü seçin')->warning()->send();
+
+            return;
+        }
+
+        $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => '', 'dakika' => 10, 'dahil' => true];
+    }
+
+    public function isyerineOzguMaddeCikar(int $index): void
+    {
+        if (! isset($this->icerik['isyerine_ozgu']['maddeler'][$index])) {
+            return;
+        }
+
+        unset($this->icerik['isyerine_ozgu']['maddeler'][$index]);
+        $this->icerik['isyerine_ozgu']['maddeler'] = array_values($this->icerik['isyerine_ozgu']['maddeler']);
+        $this->sureGunYenile();
     }
 
     /** @return Collection<int, EgitimKatilimModel> */

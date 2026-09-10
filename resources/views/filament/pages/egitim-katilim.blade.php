@@ -90,6 +90,15 @@
                 <label style="font-weight:600;font-size:.82rem">Eğitim Süresi (Gün)</label>
                 <input type="number" min="1" wire:model="sureGun"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                @php $toplamDk = \App\Support\EgitimIcerikOlusturucu::toplamDakika($icerik); @endphp
+                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                    Toplam süre ≈ {{ intdiv($toplamDk, 60) }}s {{ $toplamDk % 60 }}dk.
+                    @if ($toplamDk > \App\Support\EgitimIcerikOlusturucu::IKI_GUN_ESIGI_DK)
+                        11 saati aştığı için <strong>2 gün</strong> planlandı; imzalar 1. ve 2. gün ayrı alınır. Elle değiştirebilirsiniz.
+                    @else
+                        11 saati aşınca otomatik 2 güne çıkar.
+                    @endif
+                </p>
             </div>
             @if ($baslikAnahtari === 'genel')
                 <div>
@@ -166,9 +175,9 @@
         {{-- 2. KONU İÇERİĞİ --}}
         <x-filament::section icon="heroicon-o-book-open" icon-color="success">
             <x-slot name="heading">2. Eğitim Konuları</x-slot>
-            <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz.</x-slot>
+            <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz. İşyerine özgü konuları ayrıca ekleyip metnini düzenleyebilirsiniz.</x-slot>
 
-            @php $wireModelKok = 'icerik'; @endphp
+            @php $wireModelKok = 'icerik'; $konularDuzenlenebilir = true; @endphp
             @include('filament.pages.partials.egitim-konulari')
         </x-filament::section>
 

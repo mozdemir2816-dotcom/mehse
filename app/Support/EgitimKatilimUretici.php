@@ -39,7 +39,7 @@ class EgitimKatilimUretici
         $kayit = new EgitimKatilim([
             'baslik_anahtari' => $baslikAnahtari,
             'egitim_turu' => $egitimTuru,
-            'sure_gun' => 1,
+            'sure_gun' => EgitimIcerikOlusturucu::planlananGun($icerik),
             'isg_uzmani_var' => true,
             'isyeri_hekimi_var' => false,
             'katilimcilar' => [],

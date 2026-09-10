@@ -2792,6 +2792,23 @@ içeriyor (1671 satır) — yeniden üretime gerek kalmadı.
 Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite yeşil (665).
 **Sonraki tur (H):** içe aktarım öncesi "sütun → alan" eşleme/önizleme ekranı.
 
+## Durum — 2026-09-10 (Eğitim Katılım Formu — 2 gün planlama + işe özgü konu düzenleme)
+
+- **11 saat kuralı:** `EgitimIcerikOlusturucu::toplamDakika()` tüm bloklardaki dahil
+  maddelerin duvar-saati toplamını (fiili + dinlenme=fiili/3) verir; `planlananGun()`
+  > 660 dk ise 2, değilse 1. `EgitimKatilim::sureGun` firma/başlık/sektör/konu her
+  değiştiğinde (`updatedIcerik`, `icerikYenile`) otomatik güncellenir — kullanıcı
+  sonrasında elle değiştirebilir. Tehlikeli (12 s) ve çok tehlikeli (16 s) → 2 gün.
+- **İmza günü 1./2. gün:** `pdf/egitim-katilim` — `sure_gun >= 2` ise katılımcı
+  tablosunda "İmza (1. Gün)" + "İmza (2. Gün)" ayrı sütunları, eğitmen bloğunda
+  gün bazlı imza satırı, künyede planlama notu. `bosFormPdf` de `planlananGun` kullanır.
+- **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
+  `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
+  değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/
+  Sağlık/Teknik blokları eskisi gibi (yalnız dakika/dahil). Dakika düzenleme zaten vardı.
+
+Testler: `EgitimKatilimTest` +4. Suite yeşil (669).
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

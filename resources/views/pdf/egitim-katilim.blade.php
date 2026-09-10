@@ -55,7 +55,7 @@
             <td>Tarih</td><td>{{ $kayit->belge_tarihi?->format('d.m.Y') }}</td>
         </tr>
         <tr>
-            <td>Süre</td><td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null)) ({{ $icerik['saat'] }} saat @if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar Eğitimi @endif) @endif</td>
+            <td>Süre</td><td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null)) ({{ $icerik['saat'] }} saat @if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar Eğitimi @endif) @endif @if (($kayit->sure_gun ?? 1) >= 2) <span style="color:#666">— toplam süre 11 saati aştığından 1. ve 2. gün olarak planlandı</span> @endif</td>
             <td>Eğitimciler</td>
             <td>
                 @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı{{ $kayit->isg_uzmani_adi ? ' ('.$kayit->isg_uzmani_adi.')' : '' }} @endif
@@ -139,9 +139,18 @@
         // Katılımcı varsa tam olarak katılımcı sayısı kadar satır; hiç katılımcı
         // yoksa (boş imza formu) elle doldurmak için 10 satır.
         $satirSayisi = count($katilimcilar) ?: 10;
+        // 11 saati aşan eğitimler 2 güne planlanır — imza her gün ayrı alınır.
+        $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
     @endphp
     <table class="katilim">
-        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th style="width:15%">T.C. No</th><th style="width:20%">Görevi</th><th style="width:20%">İmza</th></tr>
+        <tr>
+            <th style="width:5%">#</th><th>Ad Soyad</th><th style="width:14%">T.C. No</th><th style="width:16%">Görevi</th>
+            @if ($ikiGun)
+                <th style="width:16%">İmza (1. Gün)</th><th style="width:16%">İmza (2. Gün)</th>
+            @else
+                <th style="width:20%">İmza</th>
+            @endif
+        </tr>
         @for ($i = 0; $i < $satirSayisi; $i++)
             <tr>
                 <td>{{ $i + 1 }}</td>
@@ -149,6 +158,7 @@
                 <td>{{ $katilimcilar[$i]['tc'] ?? '' }}</td>
                 <td>{{ $katilimcilar[$i]['gorev'] ?? '' }}</td>
                 <td></td>
+                @if ($ikiGun) <td></td> @endif
             </tr>
         @endfor
     </table>
@@ -166,7 +176,11 @@
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
                             @endif
                         </div>
-                        <div class="imza-satir">Kaşe / İmza</div>
+                        @if ($ikiGun)
+                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
+                        @else
+                            <div class="imza-satir">Kaşe / İmza</div>
+                        @endif
                     </td>
                 @endif
                 @if ($kayit->isyeri_hekimi_var)
@@ -178,7 +192,11 @@
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
                             @endif
                         </div>
-                        <div class="imza-satir">Kaşe / İmza</div>
+                        @if ($ikiGun)
+                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
+                        @else
+                            <div class="imza-satir">Kaşe / İmza</div>
+                        @endif
                     </td>
                 @endif
             </tr>
