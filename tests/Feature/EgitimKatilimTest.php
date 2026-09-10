@@ -319,6 +319,43 @@ class EgitimKatilimTest extends TestCase
         $this->assertSame(2, $firma->calisanlar()->count());   // 1 var olan + 1 yeni
     }
 
+    public function test_firma_secilince_onceki_egitim_katilim_konu_icerigi_yuklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+
+        // Önce bu firma için işe özgü konusu eklenmiş bir kayıt oluştur.
+        $onceki = EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli');
+        $onceki['isyerine_ozgu']['maddeler'][] = ['madde' => 'Kule vinç yük altında durmama', 'dakika' => 20, 'dahil' => true];
+        $onceki['genel_konular'][0]['dahil'] = false;
+        EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'egitim_turu' => 'ilk',
+            'sektor_anahtari' => 'insaat',
+            'belge_tarihi' => now()->subDay(),
+            'sure_gun' => 2,
+            'konu_secimleri' => $onceki,
+            'katilimcilar' => [],
+        ]);
+
+        // Yeni form: aynı firma + başlık + sektör seçilince önceki içerik gelmeli.
+        $c = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'genel')
+            ->set('sektorAnahtari', 'insaat')
+            ->assertSet('oncekidenYuklendi', true);
+
+        $maddeler = collect($c->get('icerik')['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+        $this->assertContains('Kule vinç yük altında durmama', $maddeler);
+        $this->assertFalse($c->get('icerik')['genel_konular'][0]['dahil']);   // önceki "dahil" durumu korundu
+
+        // "Standart İçerikten Başlat" → önceki yoksayılır.
+        $c->call('icerigiSifirla')->assertSet('oncekidenYuklendi', false);
+        $sifirMaddeler = collect($c->get('icerik')['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+        $this->assertNotContains('Kule vinç yük altında durmama', $sifirMaddeler);
+        $this->assertTrue($c->get('icerik')['genel_konular'][0]['dahil']);
+    }
+
     public function test_egitim_katiliminda_eklenen_ise_ozgu_konu_sertifikada_da_gorunur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);

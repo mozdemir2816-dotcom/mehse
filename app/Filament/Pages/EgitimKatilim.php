@@ -161,19 +161,84 @@ class EgitimKatilim extends Page
         return EgitimIcerikOlusturucu::sektorler();
     }
 
+    /** "Sıfırdan başlat" dendiyse önceki kayıttan konu yükleme atlanır (sektör/başlık değişince sıfırlanır). */
+    public bool $oncekiIcerikYoksay = false;
+
+    /** Bu turdaki içerik önceki bir eğitim katılım kaydından mı geldi? (arayüzde not göstermek için) */
+    public bool $oncekidenYuklendi = false;
+
     private function icerikYenile(): void
     {
-        $this->icerik = EgitimIcerikOlusturucu::olustur(
+        $taze = EgitimIcerikOlusturucu::olustur(
             $this->baslikAnahtari,
             $this->sektorAnahtari,
             $this->firma?->tehlike_sinifi ?? 'az_tehlikeli',
             $this->egitimTuru,
         );
 
+        // Bu firma için aynı başlık/sektör/türde daha önce düzenlenmiş içerik varsa
+        // onu baz al — kullanıcı işe özgü konuları her seferinde yeniden eklemesin.
+        $onceki = $this->oncekiIcerikYoksay ? null : $this->oncekiKonuIcerigi();
+
+        if ($onceki && ($onceki['tip'] ?? null) === ($taze['tip'] ?? null)) {
+            $this->icerik = $this->konuIcerigiBirlestir($taze, $onceki);
+            $this->oncekidenYuklendi = true;
+        } else {
+            $this->icerik = $taze;
+            $this->oncekidenYuklendi = false;
+        }
+
         // Tehlike sınıfına göre nominal ders saati (8/12/16) — kullanıcı elle değiştirebilir.
         $this->dersSaati = $this->icerik['saat'] ?? null;
 
         $this->sureGunYenile();
+    }
+
+    /** Aynı firma + başlık (+ genel'de sektör) + tür için en son eğitim katılım kaydının konu içeriği. */
+    private function oncekiKonuIcerigi(): ?array
+    {
+        $kayit = $this->firma?->egitimKatilimlari()
+            ->where('baslik_anahtari', $this->baslikAnahtari)
+            ->when($this->baslikAnahtari === 'genel', fn ($q) => $q->where('sektor_anahtari', $this->sektorAnahtari))
+            ->where('egitim_turu', $this->egitimTuru)
+            ->latest('belge_tarihi')
+            ->latest()
+            ->first();
+
+        return $kayit?->konu_secimleri;
+    }
+
+    /**
+     * Önceki kaydın konu seçimlerini (dahil/dakika + işe özgü ekler) taze yapının
+     * üzerine yazar; `saat` ve `egitim_turu` her zaman güncel bağlamdan gelir.
+     */
+    private function konuIcerigiBirlestir(array $taze, array $onceki): array
+    {
+        if (($taze['tip'] ?? null) !== 'genel') {
+            return array_merge($taze, ['maddeler' => $onceki['maddeler'] ?? $taze['maddeler']]);
+        }
+
+        $ozgu = $taze['isyerine_ozgu'];
+
+        if ($ozgu && ! empty($onceki['isyerine_ozgu']['maddeler'])) {
+            $ozgu = array_merge($ozgu, ['maddeler' => $onceki['isyerine_ozgu']['maddeler']]);
+        }
+
+        return array_merge($taze, [
+            'genel_konular' => $onceki['genel_konular'] ?? $taze['genel_konular'],
+            'saglik_konulari' => $onceki['saglik_konulari'] ?? $taze['saglik_konulari'],
+            'teknik_konular' => $onceki['teknik_konular'] ?? $taze['teknik_konular'],
+            'isyerine_ozgu' => $ozgu,
+        ]);
+    }
+
+    /** "Sıfırdan başlat" — önceki kayıttan yüklemeyi atla, standart içeriğe dön. */
+    public function icerigiSifirla(): void
+    {
+        $this->oncekiIcerikYoksay = true;
+        $this->icerikYenile();
+
+        Notification::make()->title('Konu içeriği sıfırlandı')->success()->send();
     }
 
     public function updatedDersSaati(): void
@@ -202,6 +267,7 @@ class EgitimKatilim extends Page
 
     public function updatedEgitimTuru(): void
     {
+        $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
     }
 
@@ -251,6 +317,7 @@ class EgitimKatilim extends Page
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egitmenBilgileriYenile();
+        $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
     }
 
@@ -272,11 +339,13 @@ class EgitimKatilim extends Page
             $this->sektorAnahtari = null;
         }
 
+        $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
     }
 
     public function updatedSektorAnahtari(): void
     {
+        $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
     }
 

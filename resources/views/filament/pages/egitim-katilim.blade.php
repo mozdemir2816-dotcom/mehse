@@ -193,6 +193,13 @@
             <x-slot name="heading">2. Eğitim Konuları</x-slot>
             <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz. İşyerine özgü konuları ayrıca ekleyip metnini düzenleyebilirsiniz.</x-slot>
 
+            @if ($oncekidenYuklendi)
+                <div style="border:1px solid rgb(16 185 129 / .4);background:rgb(16 185 129 / .08);border-radius:.5rem;padding:.6rem .85rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;font-size:.82rem">
+                    <span>Bu firmanın önceki eğitim katılım kaydından konu içeriği (işe özgü konular dâhil) yüklendi.</span>
+                    <x-filament::button size="xs" color="gray" wire:click="icerigiSifirla">Standart İçerikten Başlat</x-filament::button>
+                </div>
+            @endif
+
             @php $wireModelKok = 'icerik'; $konularDuzenlenebilir = true; @endphp
             @include('filament.pages.partials.egitim-konulari')
         </x-filament::section>

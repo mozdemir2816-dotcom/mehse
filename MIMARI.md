@@ -2842,6 +2842,12 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   Ayrıca `SertifikaOlustur` sayfasına da işe özgü konu ekleme/düzenleme verildi
   (`isyerineOzguMaddeEkle`/`Cikar` + partial `$konularDuzenlenebilir=true`) — iki
   sayfanın içeriği örtüşsün.
+- **Önceki içerik otomatik gelir:** `icerikYenile()` firma + başlık (+ genel'de
+  sektör) + tür için en son eğitim katılım kaydının `konu_secimleri`'ni baz alır
+  (`oncekiKonuIcerigi` / `konuIcerigiBirlestir` — dahil/dakika + işe özgü ekler
+  korunur, `saat`/`egitim_turu` güncel bağlamdan). Kullanıcı işe özgü konuları
+  her seferinde yeniden eklemez. "Standart İçerikten Başlat" (`icerigiSifirla`,
+  `oncekiIcerikYoksay`) ile sıfırdan. Firma/başlık/sektör/tür değişince bayrak sıfırlanır.
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/
