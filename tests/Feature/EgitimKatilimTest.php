@@ -319,6 +319,37 @@ class EgitimKatilimTest extends TestCase
         $this->assertSame(2, $firma->calisanlar()->count());   // 1 var olan + 1 yeni
     }
 
+    public function test_egitim_katiliminda_eklenen_ise_ozgu_konu_sertifikada_da_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+
+        $sayfa = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'genel')
+            ->set('sektorAnahtari', 'insaat')
+            ->set('belgeTarihi', now()->toDateString())
+            ->call('isyerineOzguMaddeEkle')
+            ->set('icerik.isyerine_ozgu.maddeler.5.madde', 'Kule vinç yük altında durmama')
+            ->set('yeniAdSoyad', 'Ali Veli')
+            ->call('manuelEkle')
+            ->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertContains(
+            'Kule vinç yük altında durmama',
+            collect($kayit->konu_secimleri['isyerine_ozgu']['maddeler'])->pluck('madde')->all(),
+        );
+
+        // Aynı içerikten kurulan sertifika PDF'inde de görünmeli (blade metni büyütür).
+        $kayit->setRelation('firma', $firma);
+        $ref = new \ReflectionMethod(EgitimSayfasi::class, 'sertifikaKur');
+        $ref->setAccessible(true);
+        $s = $ref->invoke($sayfa->instance(), $kayit);
+
+        $html = mb_strtoupper(view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma])->render());
+        $this->assertStringContainsString('KULE V', $html);
+    }
+
     public function test_egitim_katilimindan_katilimci_sertifikasi_indirilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);

@@ -2836,6 +2836,12 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   altında `table.secim`: kayıtlı değer X'li kutu, diğerleri boş kutu (`.kutu`
   CSS box) — eğitimde elle de işaretlenebilir. Excel'e de Tür/Şekil satırı.
   `sertifikaKur` sekil'i `egitim_sekli`'den alır.
+- **Sertifika = eğitim içeriği:** `sertifikaKur()` zaten `konu_icerigi = $kayit->konu_secimleri`
+  verdiğinden eğitim katılımda eklenen/düzenlenen işe özgü konular sertifika PDF'inde
+  de birebir görünür (`pdf/sertifika` `isyerine_ozgu.maddeler`'i render eder).
+  Ayrıca `SertifikaOlustur` sayfasına da işe özgü konu ekleme/düzenleme verildi
+  (`isyerineOzguMaddeEkle`/`Cikar` + partial `$konularDuzenlenebilir=true`) — iki
+  sayfanın içeriği örtüşsün.
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/

@@ -191,9 +191,9 @@
         {{-- 3. KONU İÇERİĞİ --}}
         <x-filament::section icon="heroicon-o-book-open" icon-color="warning" collapsible>
             <x-slot name="heading">3. Eğitim Konuları</x-slot>
-            <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz.</x-slot>
+            <x-slot name="description">Her maddeyi işaretleyip dakikasını değiştirebilirsiniz. İşyerine özgü konuları ayrıca ekleyip metnini düzenleyebilirsiniz (eğitim katılım formundaki içerikle aynı).</x-slot>
 
-            @php $wireModelKok = 'icerik'; @endphp
+            @php $wireModelKok = 'icerik'; $konularDuzenlenebilir = true; @endphp
             @include('filament.pages.partials.egitim-konulari')
         </x-filament::section>
 

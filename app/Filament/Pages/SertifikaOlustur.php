@@ -215,6 +215,34 @@ class SertifikaOlustur extends Page
         $this->icerikYenile();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | İşyerine özgü konular — kullanıcı ekler / çıkarır / metnini düzenler
+    | (Eğitim Katılım ile aynı; sertifika içeriği eğitim içeriğiyle örtüşsün).
+    |--------------------------------------------------------------------------
+    */
+
+    public function isyerineOzguMaddeEkle(): void
+    {
+        if (! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+            Notification::make()->title('Önce bir işyerine özgü risk sektörü seçin')->warning()->send();
+
+            return;
+        }
+
+        $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => '', 'dakika' => 10, 'dahil' => true];
+    }
+
+    public function isyerineOzguMaddeCikar(int $index): void
+    {
+        if (! isset($this->icerik['isyerine_ozgu']['maddeler'][$index])) {
+            return;
+        }
+
+        unset($this->icerik['isyerine_ozgu']['maddeler'][$index]);
+        $this->icerik['isyerine_ozgu']['maddeler'] = array_values($this->icerik['isyerine_ozgu']['maddeler']);
+    }
+
     public function updatedTur(): void
     {
         $this->icerikYenile();
