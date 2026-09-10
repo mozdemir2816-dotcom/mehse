@@ -314,9 +314,11 @@ class SertifikaOlusturTest extends TestCase
 
         $this->assertSame('KATILIMCININ ADI : AHMET YILMAZ', $sheet->getCell('D8')->getValue());
         $this->assertSame('GÖREVİ : OPERATÖR', $sheet->getCell('D9')->getValue());
-        $this->assertSame('TEST FİRMA A.Ş.', $sheet->getCell('G29')->getValue());
+        // İşyerinin ünvanı / işveren adı otomatik doldurulmaz (işveren kaşe/imza atar).
+        $this->assertEmpty($sheet->getCell('G29')->getValue());
+        $this->assertEmpty($sheet->getCell('G30')->getValue());
         $this->assertSame('Test İGU', $sheet->getCell('G24')->getValue());
-        $this->assertStringContainsString('01/09/2026 ve 02/09/2026', (string) $sheet->getCell('D10')->getValue());
+        $this->assertStringContainsString('01/09/2026 ve 02/09/2026 tarihlerinde', (string) $sheet->getCell('D10')->getValue());
         $this->assertSame('a)Çalışma mevzuatı ile ilgili bilgiler', $sheet->getCell('E44')->getValue()->getPlainText());
         $this->assertSame('a)İplik ve dokuma makine güvenliği', $sheet->getCell('E68')->getValue()->getPlainText());
         $this->assertNull($sheet->getCell('E73')->getValue());
@@ -354,6 +356,70 @@ class SertifikaOlusturTest extends TestCase
         $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
         $this->assertContains('K4', $koordinatlar);   // firma amblemi sağ üstte
         $this->assertContains('D4', $koordinatlar);   // OSGB amblemi solda korunur
+    }
+
+    public function test_yildiz_grup_isyeri_hekimi_kasesi_firmadan_cekilir(): void
+    {
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+        $kaseRel = 'isg-profesyonel-kase/test-hekim-'.uniqid().'.png';
+        $kaseTam = storage_path('app/public/'.$kaseRel);
+        @mkdir(dirname($kaseTam), 0777, true);
+        file_put_contents($kaseTam, $png);
+
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Cüneyt Kural', 'kase_gorseli' => $kaseRel,
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create(['isyeri_hekimi_id' => $hekim->id]);
+
+        // Katılım formunda hekim işaretlenmemiş olsa bile şablonda kaşe firmadan gelir.
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'egitici_hekim_dahil' => false,
+            'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+        $s->setRelation('firma', $firma);
+
+        $yanit = SertifikaYildizGrupUretici::indir($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        @unlink($kaseTam);
+
+        $gecici = tempnam(sys_get_temp_dir(), 'ygh').'.xlsx';
+        file_put_contents($gecici, $icerik);
+        $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        unlink($gecici);
+
+        $this->assertSame('Dr. Cüneyt Kural', $sheet->getCell('K24')->getValue());
+        $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
+        $this->assertContains('K25', $koordinatlar);   // hekim kaşesi
+    }
+
+    public function test_yildiz_grup_tek_gunluk_egitimde_aciklama_tarihinde_yazar(): void
+    {
+        $firma = Firma::factory()->create();
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'egitim_tarihleri' => ['2026-09-05'],
+            'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+
+        $yanit = SertifikaYildizGrupUretici::indir($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'ygt').'.xlsx';
+        file_put_contents($gecici, $icerik);
+        $d10 = (string) IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası')->getCell('D10')->getValue();
+        unlink($gecici);
+
+        $this->assertStringContainsString('05/09/2026 tarihinde', $d10);
+        $this->assertStringNotContainsString('tarihlerinde', $d10);
     }
 
     public function test_yildiz_grup_secilen_tur_ve_sekil_kalin_isaretlenir(): void

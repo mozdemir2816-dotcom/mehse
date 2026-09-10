@@ -103,33 +103,48 @@ class SertifikaYildizGrupUretici
         $sheet->setCellValue('D8', 'KATILIMCININ ADI : '.TurkceMetin::buyuk($katilimci['ad_soyad'] ?? '—'));
         $sheet->setCellValue('D9', 'GÖREVİ : '.TurkceMetin::buyuk($katilimci['gorev'] ?: '—'));
 
-        $tarihler = collect($s->egitim_tarihleri ?? [])->filter()->map(fn ($t) => Carbon::parse($t)->format('d/m/Y'));
-        $tarih1 = $tarihler->get(0, now()->format('d/m/Y'));
-        $yeniTarihler = [$tarih1, $tarihler->get(1, $tarih1)];
+        // Açıklama paragrafındaki tarih(ler) — eğitim katılımdaki gün sayısına göre
+        // "… tarihinde" (tek gün) / "… ve … tarihlerinde" (çok gün) olarak yazılır.
+        $tarihler = collect($s->egitim_tarihleri ?? [])
+            ->filter()
+            ->map(fn ($t) => Carbon::parse($t)->format('d/m/Y'))
+            ->unique()
+            ->values();
 
-        $paragraf = (string) $sheet->getCell('D10')->getValue();
-        $sira = 0;
-        $paragraf = preg_replace_callback(
-            '/\d{2}\/\d{2}\/\d{4}/',
-            function () use (&$sira, $yeniTarihler) {
-                return $yeniTarihler[$sira++] ?? end($yeniTarihler);
-            },
-            $paragraf,
+        if ($tarihler->isEmpty()) {
+            $tarihler = collect([now()->format('d/m/Y')]);
+        }
+
+        $tarihIfadesi = $tarihler->count() > 1
+            ? $tarihler->slice(0, -1)->implode(', ').' ve '.$tarihler->last().' tarihlerinde'
+            : $tarihler->first().' tarihinde';
+
+        $paragraf = preg_replace(
+            '/\d{2}\/\d{2}\/\d{4}(?:\s*(?:,|ve)\s*\d{2}\/\d{2}\/\d{4})*\s*tarih(?:inde|lerinde)/u',
+            $tarihIfadesi,
+            (string) $sheet->getCell('D10')->getValue(),
         );
         $sheet->setCellValue('D10', $paragraf);
 
         $sheet->setCellValue('F16', now()->format('d/m/Y'));
         $sheet->setCellValue('F17', ($s->sure_metni ?: '16 Ders Saati'));
 
-        $sheet->setCellValue('G24', $s->egitici_igu_dahil ? $s->egitici_igu_adi : null);
-        $sheet->setCellValue('K24', $s->egitici_hekim_dahil ? $s->egitici_hekim_adi : null);
+        // Eğiticiler bu şablonda her zaman İGU + İşyeri Hekimi — ad ve kaşe firmaya
+        // atanmış İSG Profesyonellerinden çekilir (yoksa sertifika snapshot'ına düşer).
+        $iguAdi = $firma?->igu?->ad_soyad ?: ($s->egitici_igu_dahil ? $s->egitici_igu_adi : null);
+        $iguKase = $firma?->igu?->kase_gorseli ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null);
+        $hekimAdi = $firma?->isyeriHekimi?->ad_soyad ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_adi : null);
+        $hekimKase = $firma?->isyeriHekimi?->kase_gorseli ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
 
-        $sheet->setCellValue('G29', $firma?->unvan);
-        $sheet->setCellValue('G30', $firma?->isveren_vekili ?: $firma?->isveren_ad);
+        $sheet->setCellValue('G24', $iguAdi);
+        $sheet->setCellValue('K24', $hekimAdi);
+
+        // Not: "Çalışanın İşyerinin Ünvanı" / "İşverenin Adı Soyadı" (G29/G30) BİLE
+        // BİLE boş bırakılır — bu alan işveren tarafından kaşe/imza ile doldurulur.
 
         self::turSekilIsaretle($sheet, $s);
-        self::kaseEkle($sheet, 'G25', $s->egitici_igu_dahil ? $s->egitici_igu_kase : null);
-        self::kaseEkle($sheet, 'K25', $s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
+        self::kaseEkle($sheet, 'G25', $iguKase);
+        self::kaseEkle($sheet, 'K25', $hekimKase);
 
         // Sağ üstte firma amblemi (K4) — OSGB amblemi (D4) şablonda sabit.
         self::firmaLogosuEkle($sheet, $firma?->logo);

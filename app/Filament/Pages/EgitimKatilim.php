@@ -10,6 +10,7 @@ use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
+use App\Support\SertifikaYildizGrupUretici;
 use BackedEnum;
 use Illuminate\Support\Carbon;
 use Filament\Actions\Action;
@@ -726,6 +727,41 @@ class EgitimKatilim extends Page
 
                     return SertifikaUretici::pdf($this->sertifikaKur($kayit, $tarihler));
                 }),
+
+            Action::make('yildizGrupSertifika')
+                ->label('Yıldız Grup Eğitim Sertifikası (Excel)')
+                ->icon('heroicon-o-check-badge')
+                ->color('gray')
+                // Şablon 4 sabit kategoriye (Genel/Sağlık/Teknik/İşe Özgü) dayanır → yalnız "genel" başlık.
+                ->visible(fn () => $this->firma !== null && $this->baslikAnahtari === 'genel')
+                ->modalHeading('Yıldız Grup Eğitim Sertifikası')
+                ->modalDescription('Eğitim konuları ve süreleri bu katılım formundan alınır. Sertifikaya basılacak eğitim tarih(ler)ini girin; her katılımcı için ayrı Excel sayfası oluşturulur.')
+                ->schema(fn () => array_map(
+                    fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
+                        ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
+                        ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
+                        ->required(),
+                    range(1, max(1, (int) $this->sureGun)),
+                ))
+                ->action(function (array $data) {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    $indirme = SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit, array_values(array_filter($data))));
+
+                    if (! $indirme) {
+                        Notification::make()->title('Yıldız Grup şablonu bu eğitim için uygun değil')->warning()->send();
+
+                        return null;
+                    }
+
+                    Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — Yıldız Grup sertifikası')->success()->send();
+
+                    return $indirme;
+                }),
         ];
     }
 
@@ -754,6 +790,19 @@ class EgitimKatilim extends Page
         $kayit->setRelation('firma', $this->firma);
 
         return SertifikaUretici::pdf($this->sertifikaKur($kayit));
+    }
+
+    public function gecmisYildizGrup(int $id)
+    {
+        $kayit = $this->firma?->egitimKatilimlari()->find($id);
+
+        if (! $kayit) {
+            return null;
+        }
+
+        $kayit->setRelation('firma', $this->firma);
+
+        return SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit));
     }
 
     public function gecmisSil(int $id): void

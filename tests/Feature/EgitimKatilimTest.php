@@ -483,6 +483,54 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('15.09.2026-16.09.2026', $html);
     }
 
+    public function test_egitim_katilimindan_yildiz_grup_sertifikasi_ise_ozgu_konu_ve_sureleriyle_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+
+        $icerik = EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli');
+        $icerik['isyerine_ozgu']['maddeler'][] = ['madde' => 'Kule vinç yük altında durmama', 'dakika' => 17, 'dahil' => true];
+
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'sektor_anahtari' => 'insaat',
+            'belge_tarihi' => now(),
+            'sure_gun' => 2,
+            'konu_secimleri' => $icerik,
+            'katilimcilar' => [['ad_soyad' => 'Furkan Bal', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+        ]);
+
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $firma->id)->instance();
+        $yanit = $sayfa->gecmisYildizGrup($kayit->id);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $xlsx = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'ekyg').'.xlsx';
+        file_put_contents($gecici, $xlsx);
+        $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        unlink($gecici);
+
+        // 4. kategori (İşe Özgü, satır 68+) katılım formundaki maddeleri ve dakikaları taşır.
+        $ozguMetinler = collect(range(68, 83))
+            ->map(fn ($r) => $sheet->getCell('E'.$r)->getValue())
+            ->map(fn ($v) => $v instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText ? $v->getPlainText() : (string) $v)
+            ->all();
+
+        $this->assertNotEmpty(array_filter($ozguMetinler));
+        $this->assertStringContainsString('Kule vinç yük altında durmama', implode(' ', $ozguMetinler));
+
+        $satir = collect(range(68, 83))->first(fn ($r) => str_contains(
+            ($sheet->getCell('E'.$r)->getValue() instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText
+                ? $sheet->getCell('E'.$r)->getValue()->getPlainText()
+                : (string) $sheet->getCell('E'.$r)->getValue()),
+            'Kule vinç',
+        ));
+        $this->assertSame('17 Dk.', $sheet->getCell('L'.$satir)->getValue());
+    }
+
     public function test_egitim_katilimindan_katilimci_sertifikasi_indirilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
