@@ -29,6 +29,7 @@ use App\Models\Sertifika;
 use App\Models\Talimat;
 use App\Models\TatbikatTutanagi;
 use App\Models\TespitOneriDefteri;
+use App\Models\YanginGuvenligiDegerlendirmesi;
 use App\Models\YillikPlan;
 use App\Models\ZiyaretProgrami;
 use App\Support\AcilDurumPlaniUretici;
@@ -63,6 +64,7 @@ use App\Support\SertifikaYildizGrupUretici;
 use App\Support\TalimatUretici;
 use App\Support\TatbikatTutanagiUretici;
 use App\Support\TespitOneriDefteriUretici;
+use App\Support\YanginGuvenligiUretici;
 use App\Support\YillikPlanUretici;
 use App\Support\ZiyaretProgramiUretici;
 
@@ -2413,6 +2415,86 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Yangın Güvenliği Genel Durum Değerlendirmesi
+    |--------------------------------------------------------------------------
+    | Binaların Yangından Korunması Hakkında Yönetmelik. Bina kullanım türü +
+    | bölümler + faaliyet/depolama riskleri → bina yangın tehlike sınıfı
+    | (düşük / orta / yüksek). Riskler kütüphanesindeki 'sinif' değerleri
+    | maksimumu sınıfı belirler; tespit kütüphanesi ile eksikler raporlanır.
+    */
+    'yangin_guvenligi' => [
+        'yapi_durumlari' => ['Betonarme', 'Çelik Konstrüksiyon', 'Yığma', 'Prefabrik', 'Karma'],
+
+        'kullanim_turleri' => [
+            'endustriyel' => 'Endüstriyel Yapı (fabrika / atölye / imalathane)',
+            'depolama' => 'Depolama Yapısı (antrepo / lojistik / soğuk hava)',
+            'ticaret' => 'Ticaret Yapısı (mağaza / AVM / showroom)',
+            'buro' => 'Büro Yapısı (ofis / plaza)',
+            'toplanma' => 'Toplanma Amaçlı Yapı (yeme-içme / eğlence / spor)',
+            'konaklama' => 'Konaklama Amaçlı Yapı (otel / yurt / pansiyon)',
+            'saglik' => 'Sağlık Yapısı',
+            'egitim' => 'Eğitim Yapısı',
+            'karma' => 'Karma Kullanım',
+        ],
+
+        'bolum_kutuphanesi' => [
+            'Satış / hizmet alanı', 'Ürün veya ham madde deposu', 'Kimyasal depolama alanı',
+            'Yüksek raflı depo', 'Üretim / atölye', 'Mutfak / fırın', 'Soğuk hava deposu',
+            'Ofis', 'Kazan dairesi', 'Jeneratör / enerji odası', 'Trafo / elektrik odası',
+            'Kapalı otopark', 'Atrium / galeri boşluğu', 'Arşiv', 'Boyahane', 'Kaynakhane',
+        ],
+
+        // Her riskin bina yangın tehlike sınıfına katkısı (dusuk=1, orta=2, yuksek=3).
+        'risk_kutuphanesi' => [
+            'Yanıcı / parlayıcı sıvı (tiner, solvent, yakıt)' => 'yuksek',
+            'LPG / yanıcı gaz kullanımı veya depolama' => 'yuksek',
+            'Aerosol ürün depolama' => 'yuksek',
+            'Yanıcı kimyasal madde' => 'yuksek',
+            'Oksitleyici / reaktif kimyasal' => 'yuksek',
+            'Yanıcı toz (ahşap, un, metal, plastik)' => 'yuksek',
+            'Basınçlı gaz tüpleri' => 'orta',
+            'Patlayıcı madde / piroteknik' => 'yuksek',
+            'Yoğun karton / kağıt / plastik ambalaj' => 'orta',
+            'Ahşap / tekstil / kauçuk / köpük stoğu' => 'orta',
+            'Yüksek raflı depolama (> 4 m)' => 'yuksek',
+            'Mutfak / kızartma / açık alev' => 'orta',
+            'Kaynak / taşlama / sıcak çalışma' => 'orta',
+            'Boya kabini / solventli yüzey işlem' => 'yuksek',
+            'Akü şarj alanı / lityum batarya' => 'orta',
+            'Elektrikli araç / iş makinesi şarjı' => 'orta',
+            'Kazan dairesi (katı / sıvı / gaz yakıtlı)' => 'orta',
+            'Jeneratör (yakıt tanklı)' => 'orta',
+            'Trafo / yüksek gerilim odası' => 'orta',
+            'Kapalı otopark' => 'orta',
+        ],
+
+        'tespit_kutuphanesi' => [
+            ['madde' => 'Yangın algılama ve alarm sistemi kurulmalı / kapsamı genişletilmeli', 'oncelik' => 'yuksek'],
+            ['madde' => 'Otomatik yağmurlama (sprinkler) sistemi değerlendirilmeli', 'oncelik' => 'yuksek'],
+            ['madde' => 'Yangın dolabı / hidrant sayısı ve yerleşimi yönetmeliğe uygun hale getirilmeli', 'oncelik' => 'orta'],
+            ['madde' => 'Yangın söndürme cihazları (YSC) her 200 m² için 1 adet ve max 25 m aralıkla yerleştirilmeli', 'oncelik' => 'orta'],
+            ['madde' => 'Kaçış yolları ve yönlendirme/acil aydınlatma armatürleri tamamlanmalı', 'oncelik' => 'yuksek'],
+            ['madde' => 'Yangın merdiveni / korunumlu kaçış koridoru sağlanmalı', 'oncelik' => 'yuksek'],
+            ['madde' => 'Yangın kapıları (EI 60/90) yangın bölmelerine takılmalı, kendinden kapanır olmalı', 'oncelik' => 'orta'],
+            ['madde' => 'Kazan dairesi ayrı yangın bölmesi, patlama yükü atma yüzeyi ve gaz dedektörü ile teçhiz edilmeli', 'oncelik' => 'yuksek'],
+            ['madde' => 'Yanıcı sıvı / kimyasal ayrı, havalandırmalı ve topraklamalı depoda tutulmalı', 'oncelik' => 'yuksek'],
+            ['madde' => 'Elektrik panoları termal kamera ile kontrol edilmeli, pano önleri boş tutulmalı', 'oncelik' => 'orta'],
+            ['madde' => 'Paratoner ve topraklama ölçümleri yıllık yaptırılmalı', 'oncelik' => 'orta'],
+            ['madde' => 'Sıcak çalışma (kaynak/taşlama) için iş izni ve yangın nöbeti prosedürü uygulanmalı', 'oncelik' => 'orta'],
+            ['madde' => 'Yıllık yangın tatbikatı yapılmalı ve kaydı tutulmalı', 'oncelik' => 'orta'],
+            ['madde' => 'Acil durum ekipleri (söndürme / kurtarma / ilk yardım / koruma) görevlendirilmeli ve eğitilmeli', 'oncelik' => 'orta'],
+            ['madde' => 'Duman tahliye / basınçlandırma sistemi kapalı otopark ve atrium için değerlendirilmeli', 'oncelik' => 'orta'],
+        ],
+
+        'tehlike_siniflari' => [
+            'dusuk' => 'Düşük Tehlike',
+            'orta' => 'Orta Tehlike',
+            'yuksek' => 'Yüksek Tehlike',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | İşe Dönüş Belgesi — uzun rapor / iş kazası / meslek hastalığı sonrası
     |--------------------------------------------------------------------------
     | İşyeri hekiminin işe dönüşte uygunluk değerlendirmesi ve geçici kısıtlar
@@ -3039,6 +3121,8 @@ return [
                 'uretici' => SaglikGozetimiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KimyasalRiskDegerlendirmesi::class, 'ad' => 'Kimyasal Risk Değerlendirmesi', 'tip_metod' => null,
                 'uretici' => KimyasalRiskUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => YanginGuvenligiDegerlendirmesi::class, 'ad' => 'Yangın Güvenliği Değerlendirme Raporu', 'tip_metod' => null,
+                'uretici' => YanginGuvenligiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
                 'uretici' => KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,

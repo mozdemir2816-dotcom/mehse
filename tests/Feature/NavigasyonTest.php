@@ -66,6 +66,7 @@ class NavigasyonTest extends TestCase
             'periyodik kontrol' => ['/admin/periyodik-kontrol'],
             'kkd secim matrisi' => ['/admin/kkd-secim-matrisi'],
             'kimyasal risk degerlendirmesi' => ['/admin/kimyasal-risk-degerlendirmesi'],
+            'yangin guvenligi' => ['/admin/yangin-guvenligi'],
             'kimyasal sicili' => ['/admin/kimyasal-sicili'],
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
