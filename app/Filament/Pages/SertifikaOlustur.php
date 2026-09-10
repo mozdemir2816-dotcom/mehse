@@ -434,7 +434,7 @@ class SertifikaOlustur extends Page
                 }),
 
             Action::make('yildizGrup')
-                ->label('Yıldız Grup Şablonu (Excel)')
+                ->label('Yıldız Grup Eğitim Sertifikası (Excel)')
                 ->icon('heroicon-o-table-cells')
                 ->color('success')
                 ->visible(fn () => $this->firma !== null && $this->tip === 'isg')

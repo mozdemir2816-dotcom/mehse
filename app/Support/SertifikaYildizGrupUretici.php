@@ -15,26 +15,28 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 
 /**
- * "Yıldız Grup" sertifika şablonu — kullanıcının kendi gerçek Excel şablonunu
- * ("resources/belge/sertifika-yildiz-grup.xlsx") BİREBİR kullanır (aynı yöntem:
- * [[AcilDurumWordUretici]]/[[AtamaYazisiWordUretici]] — şablonun formatı,
- * yazı tipleri, logoları AYNEN korunur; yalnızca katılımcı/firma/eğitim
- * bilgileri ve "Eğitim Konuları" (config'teki genel/sağlık/teknik + seçili
- * sektörün işe özgü riskleri) doldurulur). Yalnız 'isg' (genel, çoklu
- * eğitici) sertifika tipiyle uyumludur — şablonun 4 sabit kategori yapısı
- * (Genel 4 / Sağlık 5 / Teknik 12 / İşe Özgü) yalnız bu tiple eşleşir.
+ * "Yıldız Grup Eğitim Sertifikası" şablonu — kullanıcının kendi gerçek Excel
+ * şablonunu ("resources/belge/sertifika-yildiz-grup.xlsx") BİREBİR kullanır
+ * (aynı yöntem: [[AcilDurumWordUretici]]/[[AtamaYazisiWordUretici]] — şablonun
+ * formatı, yazı tipleri, OSGB amblemi AYNEN korunur; yalnızca katılımcı/firma/
+ * eğitim bilgileri, sağ üstteki FİRMA amblemi (K4, firma logosundan) ve
+ * "Eğitim Konuları" (eğitim katılım formundaki genel/sağlık/teknik + seçili
+ * sektörün işe özgü riskleri ve süreleri) doldurulur). Yalnız 'isg' (genel,
+ * çoklu eğitici) sertifika tipiyle uyumludur — şablonun 4 sabit kategori
+ * yapısı (Genel 4 / Sağlık 5 / Teknik 12 / İşe Özgü) yalnız bu tiple eşleşir.
  */
 class SertifikaYildizGrupUretici
 {
     private const SABLON_YOLU = 'belge/sertifika-yildiz-grup.xlsx';
 
+    /** Şablonda kategori başlıklarını izleyen doldurulabilir madde satır aralıkları. */
     private const KATEGORI_SATIRLARI = [
-        'genel_konular' => [47, 50],
-        'saglik_konulari' => [52, 56],
-        'teknik_konular' => [58, 69],
+        'genel_konular' => [44, 47],
+        'saglik_konulari' => [49, 53],
+        'teknik_konular' => [55, 66],
     ];
 
-    private const ISYERINE_OZGU_SATIRLARI = [71, 84];
+    private const ISYERINE_OZGU_SATIRLARI = [68, 83];
 
     private const TURKCE_HARFLER = ['a', 'b', 'c', 'ç', 'd', 'e', 'f', 'g', 'ğ', 'h', 'ı', 'i', 'k', 'l'];
 
@@ -98,8 +100,8 @@ class SertifikaYildizGrupUretici
         $spreadsheet = IOFactory::load(resource_path(self::SABLON_YOLU));
         $sheet = $spreadsheet->getSheetByName('Çıktı Sayfası');
 
-        $sheet->setCellValue('D8', '     GÖREVİ:'.TurkceMetin::buyuk($katilimci['gorev'] ?: '—'));
-        $sheet->setCellValue('D9', TurkceMetin::buyuk($katilimci['ad_soyad'] ?? '—'));
+        $sheet->setCellValue('D8', 'KATILIMCININ ADI : '.TurkceMetin::buyuk($katilimci['ad_soyad'] ?? '—'));
+        $sheet->setCellValue('D9', 'GÖREVİ : '.TurkceMetin::buyuk($katilimci['gorev'] ?: '—'));
 
         $tarihler = collect($s->egitim_tarihleri ?? [])->filter()->map(fn ($t) => Carbon::parse($t)->format('d/m/Y'));
         $tarih1 = $tarihler->get(0, now()->format('d/m/Y'));
@@ -128,6 +130,9 @@ class SertifikaYildizGrupUretici
         self::turSekilIsaretle($sheet, $s);
         self::kaseEkle($sheet, 'G25', $s->egitici_igu_dahil ? $s->egitici_igu_kase : null);
         self::kaseEkle($sheet, 'K25', $s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
+
+        // Sağ üstte firma amblemi (K4) — OSGB amblemi (D4) şablonda sabit.
+        self::firmaLogosuEkle($sheet, $firma?->logo);
 
         $icerik = $s->konu_icerigi ?? [];
 
@@ -234,6 +239,31 @@ class SertifikaYildizGrupUretici
         $cizim->setPath($tamYol);
         $cizim->setHeight(40);
         $cizim->setCoordinates($hucre);
+        $cizim->setWorksheet($sheet);
+    }
+
+    /**
+     * Sertifikanın sağ üstüne (K4) firmanın yüklü logosunu yerleştirir —
+     * şablondaki OSGB amblemiyle (D4) simetrik. Firma logosuz ise sağ üst boş
+     * kalır (şablonun görünümü bozulmaz).
+     */
+    private static function firmaLogosuEkle(Worksheet $sheet, ?string $logoYolu): void
+    {
+        if (! $logoYolu) {
+            return;
+        }
+
+        $tamYol = storage_path('app/public/'.$logoYolu);
+
+        if (! file_exists($tamYol)) {
+            return;
+        }
+
+        $cizim = new Drawing;
+        $cizim->setName('Firma Amblemi');
+        $cizim->setPath($tamYol);
+        $cizim->setHeight(58);
+        $cizim->setCoordinates('K4');
         $cizim->setWorksheet($sheet);
     }
 }

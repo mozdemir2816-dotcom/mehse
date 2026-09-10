@@ -2874,6 +2874,27 @@ Formu (Toplu)" ile aynı künye/konu, ama `katilimcilar => []` → blade zaten
 `max(10, count)` ile 10 boş imza satırı üretir. Personel tanımlamadan, işyerinde
 elle imzalatmak için. Ortak `katilimFormuVerisi()` yardımcısı.
 
+## Durum — 2026-09-10 (Eğitim tarihleri · Oryantasyon boş formu · Yıldız Grup sertifika şablonu)
+
+- **2 güne planlanan eğitimde gün bazlı tarih:** `egitim_katilimlari.gun_tarihleri`
+  (nullable json). `EgitimKatilim` sayfası `sureGun >= 2` olunca belge tarihinden
+  gün gün türetir (`gunTarihleriYenile`), kullanıcı elle değiştirebilir. Form
+  künyesi ("Tarih" hücresi) ve Excel künyesi "1. Gün: … · 2. Gün: …" yazar;
+  sertifika modalı DatePicker'ları öntanımlı bu tarihleri alır, kullanıcı vermezse
+  `sertifikaKur` `gun_tarihleri`'ne düşer. Tek günlükte null.
+- **Oryantasyon "Boş Katılım Formu" firmasız:** `IsbasiEgitim` `bosKatilimFormu`
+  aksiyonundan firma şartı kaldırıldı; "2. Eğitim Konuları" bölümü `@if($this->firma)`
+  dışına alındı. `IsbasiEgitimTutanagiUretici::katilimFormuPdf` artık `?Firma` alır.
+- **Yıldız Grup Eğitim Sertifikası şablonu:** `resources/belge/sertifika-yildiz-grup.xlsx`
+  kullanıcının gerçek "FURKAN BAL.xlsx" çalışma kopyasından yeniden kuruldu
+  (KEREM ACON/tarih/kaşe/VİZYON logosu temizlendi). Yeni düzen: OSGB amblemi solda
+  (D4, sabit), **FİRMA amblemi sağda (K4, `firma->logo`'dan dinamik**,
+  `firmaLogosuEkle`). Katılımcı adı D8, görev D9 (hücre içi etiketli). Konu satır
+  aralıkları: Genel 44-47 · Sağlık 49-53 · Teknik 55-66 · İşe Özgü 68-83. Aksiyon
+  etiketi "Yıldız Grup Eğitim Sertifikası (Excel)". Yalnız `tip='isg'`.
+
+Testler: `EgitimKatilimTest` +3, `IsbasiEgitimTest` +2, `SertifikaOlusturTest` +1.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

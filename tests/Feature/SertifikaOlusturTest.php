@@ -312,14 +312,48 @@ class SertifikaOlusturTest extends TestCase
         $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
         unlink($gecici);
 
-        $this->assertSame('AHMET YILMAZ', $sheet->getCell('D9')->getValue());
-        $this->assertSame('     GÖREVİ:OPERATÖR', $sheet->getCell('D8')->getValue());
+        $this->assertSame('KATILIMCININ ADI : AHMET YILMAZ', $sheet->getCell('D8')->getValue());
+        $this->assertSame('GÖREVİ : OPERATÖR', $sheet->getCell('D9')->getValue());
         $this->assertSame('TEST FİRMA A.Ş.', $sheet->getCell('G29')->getValue());
         $this->assertSame('Test İGU', $sheet->getCell('G24')->getValue());
         $this->assertStringContainsString('01/09/2026 ve 02/09/2026', (string) $sheet->getCell('D10')->getValue());
-        $this->assertSame('a)Çalışma mevzuatı ile ilgili bilgiler', $sheet->getCell('E47')->getValue()->getPlainText());
-        $this->assertSame('a)İplik ve dokuma makine güvenliği', $sheet->getCell('E71')->getValue()->getPlainText());
-        $this->assertNull($sheet->getCell('E76')->getValue());
+        $this->assertSame('a)Çalışma mevzuatı ile ilgili bilgiler', $sheet->getCell('E44')->getValue()->getPlainText());
+        $this->assertSame('a)İplik ve dokuma makine güvenliği', $sheet->getCell('E68')->getValue()->getPlainText());
+        $this->assertNull($sheet->getCell('E73')->getValue());
+    }
+
+    public function test_yildiz_grup_firma_logosu_sag_uste_eklenir(): void
+    {
+        $logoRel = 'firma-logo/test-yildiz-'.uniqid().'.png';
+        $logoTam = storage_path('app/public/'.$logoRel);
+        @mkdir(dirname($logoTam), 0777, true);
+        // 1x1 saydam PNG
+        file_put_contents($logoTam, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+        ));
+
+        $firma = Firma::factory()->create(['logo' => $logoRel]);
+        $s = Sertifika::create([
+            'firma_id' => $firma->id,
+            'tip' => 'isg',
+            'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+
+        $yanit = SertifikaYildizGrupUretici::indir($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'ygl').'.xlsx';
+        file_put_contents($gecici, $icerik);
+        $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        unlink($gecici);
+        @unlink($logoTam);
+
+        $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
+        $this->assertContains('K4', $koordinatlar);   // firma amblemi sağ üstte
+        $this->assertContains('D4', $koordinatlar);   // OSGB amblemi solda korunur
     }
 
     public function test_yildiz_grup_secilen_tur_ve_sekil_kalin_isaretlenir(): void
