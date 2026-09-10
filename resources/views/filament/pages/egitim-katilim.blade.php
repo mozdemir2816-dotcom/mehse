@@ -110,16 +110,24 @@
                     @endif
                 </p>
             </div>
-            @if ($baslikAnahtari === 'genel')
-                <div>
-                    <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
-                    <select wire:model.live="egitimTuru"
-                        style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                        <option value="ilk">İlk Defa</option>
-                        <option value="tekrar">Tekrar (her zaman 8 saat)</option>
-                    </select>
-                </div>
-            @endif
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
+                <select wire:model.live="egitimTuru"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    <option value="ilk">İlk Defa</option>
+                    <option value="tekrar">Tekrar (Yenileme)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Eğitim Şekli</label>
+                <select wire:model="egitimSekli"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    <option value="yuz_yuze">Yüz Yüze</option>
+                    <option value="uzaktan">Uzaktan</option>
+                    <option value="karma">Karma</option>
+                </select>
+                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Formda tür ve şekil, elde işaretlenebilir kutu olarak da görünür.</p>
+            </div>
             @if ($baslikAnahtari === 'genel')
                 <div>
                     <label style="font-weight:600;font-size:.82rem">İşyerine Özgü Risk Sektörü</label>

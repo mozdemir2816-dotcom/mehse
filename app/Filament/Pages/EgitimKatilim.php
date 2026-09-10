@@ -52,6 +52,9 @@ class EgitimKatilim extends Page
 
     public string $egitimTuru = 'ilk';
 
+    /** yuz_yuze | uzaktan | karma — formda işaretlenebilir kutu olarak da gösterilir. */
+    public string $egitimSekli = 'yuz_yuze';
+
     public ?string $sektorAnahtari = null;
 
     public ?string $egitimYeri = null;
@@ -442,7 +445,7 @@ class EgitimKatilim extends Page
             'firma_id' => $kayit->firma_id,
             'tip' => $tip,
             'tur' => ($kayit->egitim_turu ?? 'ilk') === 'tekrar' ? 'tekrar' : 'ilk_defa',
-            'sekil' => 'yuz_yuze',
+            'sekil' => $kayit->egitim_sekli ?? 'yuz_yuze',
             'sektor_anahtari' => $tip === 'isg' ? $kayit->sektor_anahtari : null,
             'gun_sayisi' => $gun,
             'egitim_tarihleri' => array_fill(0, $gun, $tarih),
@@ -499,6 +502,7 @@ class EgitimKatilim extends Page
             'firma_id' => $this->firma->id,
             'baslik_anahtari' => $this->baslikAnahtari,
             'egitim_turu' => $this->egitimTuru,
+            'egitim_sekli' => $this->egitimSekli,
             'sektor_anahtari' => $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
             'egitim_yeri' => $this->egitimYeri,
             'belge_tarihi' => $this->belgeTarihi,

@@ -406,6 +406,30 @@ class EgitimKatilimTest extends TestCase
         $this->assertDatabaseMissing('egitim_katilimlari', ['id' => $kayit->id]);
     }
 
+    public function test_egitim_sekli_ve_turu_kaydedilir_ve_formda_isaretli_kutu_olur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'genel')
+            ->set('belgeTarihi', now()->toDateString())
+            ->set('egitimTuru', 'tekrar')
+            ->set('egitimSekli', 'uzaktan')
+            ->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('uzaktan', $kayit->egitim_sekli);
+        $this->assertSame('tekrar', $kayit->egitim_turu);
+
+        $html = view('pdf.egitim-katilim', ['kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri])->render();
+        $this->assertStringContainsString('Eğitim Türü', $html);
+        $this->assertStringContainsString('Eğitim Şekli', $html);
+        $this->assertStringContainsString('Uzaktan', $html);
+        // Tekrar seçili → onun kutusunda X, İlk Defa boş
+        $this->assertMatchesRegularExpression('/class="kutu">X<\/span>\s*Tekrar/u', $html);
+    }
+
     public function test_egitim_turu_kaydedilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -13,9 +13,15 @@
     .baslik h1 { font-size: 13px; margin: 0; }
     .baslik div { font-size: 8px; }
 
-    .kunye { width: 100%; border-collapse: collapse; font-size: 7.5px; margin-bottom: 6px; }
+    .kunye { width: 100%; border-collapse: collapse; font-size: 7.5px; margin-bottom: 4px; }
     .kunye td { border: 1px solid #999; padding: 2px 5px; }
     .kunye td.e { background: #f0f0f0; font-weight: bold; width: 12%; }
+
+    table.secim { width: 100%; border-collapse: collapse; font-size: 7.5px; margin-bottom: 6px; }
+    table.secim td { border: 1px solid #999; padding: 3px 5px; }
+    table.secim td.e { background: #f0f0f0; font-weight: bold; width: 12%; }
+    .kutu { display: inline-block; width: 8px; height: 8px; border: 1px solid #333; text-align: center; line-height: 7px; font-size: 8px; margin: 0 2px 0 6px; }
+    .kutu:first-child, td .kutu:first-of-type { margin-left: 0; }
 
     table.grid { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
     table.grid > tr > td { width: 50%; vertical-align: top; padding: 0; }
@@ -61,6 +67,9 @@
         $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
         $sureMetni = (($icerik['saat'] ?? null) ? $icerik['saat'].' Ders Saati · ' : '')
             .($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '');
+        $tekrarMi = ($kayit->egitim_turu ?? 'ilk') === 'tekrar';
+        $sekil = $kayit->egitim_sekli ?? 'yuz_yuze';
+        $tik = fn (bool $v) => '<span class="kutu">'.($v ? 'X' : '').'</span>';
     @endphp
 
     <table class="kunye">
@@ -82,6 +91,15 @@
                 @if ($kayit->isyeri_hekimi_var) İşyeri Hekimi{{ $kayit->isyeri_hekimi_adi ? ' ('.$kayit->isyeri_hekimi_adi.')' : '' }} @endif
                 @if (! $kayit->isg_uzmani_var && ! $kayit->isyeri_hekimi_var) — @endif
             </td>
+        </tr>
+    </table>
+
+    <table class="secim">
+        <tr>
+            <td class="e">Eğitim Türü</td>
+            <td>{!! $tik(! $tekrarMi) !!} İlk Defa &nbsp;&nbsp;&nbsp; {!! $tik($tekrarMi) !!} Tekrar (Yenileme)</td>
+            <td class="e">Eğitim Şekli</td>
+            <td>{!! $tik($sekil === 'yuz_yuze') !!} Yüz Yüze &nbsp;&nbsp; {!! $tik($sekil === 'uzaktan') !!} Uzaktan &nbsp;&nbsp; {!! $tik($sekil === 'karma') !!} Karma</td>
         </tr>
     </table>
 

@@ -99,6 +99,8 @@ class EgitimKatilimUretici
             ['Eğitim Yeri', $kayit->egitim_yeri ?: '—'],
             ['Tarih', $kayit->belge_tarihi?->format('d.m.Y') ?? '—'],
             ['Süre', (($icerik['saat'] ?? null) ? "{$icerik['saat']} Ders Saati · " : '').($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '')],
+            ['Eğitim Türü', ($kayit->egitim_turu ?? 'ilk') === 'tekrar' ? 'Tekrar (Yenileme)' : 'İlk Defa'],
+            ['Eğitim Şekli', config('isg.sertifika.sekiller.'.($kayit->egitim_sekli ?? 'yuz_yuze'), 'Yüz Yüze')],
             ['Eğitimciler', static::egitmenMetni($kayit)],
         ];
 

@@ -2830,6 +2830,12 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   yuksekte_calisma→yukseklik, kapali_alan→kapali_alan), `SertifikaUretici::pdf` ile
   katılımcı başına ayrı sayfa. Eğitmen adı/kaşesi kayıttan (snapshot), geçerlilik
   tehlike sınıfına göre.
+- **Eğitim Türü / Şekli işaretlenebilir kutu:** yeni `egitim_sekli` sütunu
+  (yuz_yuze/uzaktan/karma; migration `2026_09_10_120000`). Formda "Eğitim Türü"
+  (İlk Defa / Tekrar) her başlıkta görünür + "Eğitim Şekli" select. PDF künyenin
+  altında `table.secim`: kayıtlı değer X'li kutu, diğerleri boş kutu (`.kutu`
+  CSS box) — eğitimde elle de işaretlenebilir. Excel'e de Tür/Şekil satırı.
+  `sertifikaKur` sekil'i `egitim_sekli`'den alır.
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/
