@@ -134,14 +134,59 @@
         </div>
     @endif
 
+    @php $ikiGun = ($kayit->sure_gun ?? 1) >= 2; @endphp
+
+    {{-- Eğitmen kaşe/imzaları — eğitim konularıyla AYNI SAYFADA kalsın diye
+         katılımcı imza listesinden ÖNCE. İş Güvenliği Uzmanı ve İşyeri Hekimi
+         yan yana tek satırda, birlikte (page-break-inside: avoid). --}}
+    @if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
+        <div class="imza-blok">
+        <table class="imza">
+            <tr>
+                @if ($kayit->isg_uzmani_var)
+                    <td @if (! $kayit->isyeri_hekimi_var) style="width:100%" @endif>
+                        <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
+                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: '.....................................' }}</div>
+                        <div class="kase">
+                            @if ($kayit->isg_uzmani_kase)
+                                <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
+                            @endif
+                        </div>
+                        @if ($ikiGun)
+                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
+                        @else
+                            <div class="imza-satir">Kaşe / İmza</div>
+                        @endif
+                    </td>
+                @endif
+                @if ($kayit->isyeri_hekimi_var)
+                    <td @if (! $kayit->isg_uzmani_var) style="width:100%" @endif>
+                        <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
+                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: '.....................................' }}</div>
+                        <div class="kase">
+                            @if ($kayit->isyeri_hekimi_kase)
+                                <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
+                            @endif
+                        </div>
+                        @if ($ikiGun)
+                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
+                        @else
+                            <div class="imza-satir">Kaşe / İmza</div>
+                        @endif
+                    </td>
+                @endif
+            </tr>
+        </table>
+        </div>
+    @endif
+
     @php
         $katilimcilar = $kayit->katilimcilar ?? [];
         // Katılımcı varsa tam olarak katılımcı sayısı kadar satır; hiç katılımcı
         // yoksa (boş imza formu) elle doldurmak için 10 satır.
         $satirSayisi = count($katilimcilar) ?: 10;
-        // 11 saati aşan eğitimler 2 güne planlanır — imza her gün ayrı alınır.
-        $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
     @endphp
+    <div style="font-weight:bold;font-size:10px;margin:12px 0 4px">Katılımcı Listesi ve İmzaları</div>
     <table class="katilim">
         <tr>
             <th style="width:5%">#</th><th>Ad Soyad</th><th style="width:14%">T.C. No</th><th style="width:16%">Görevi</th>
@@ -162,47 +207,6 @@
             </tr>
         @endfor
     </table>
-
-    @if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
-        <div class="imza-blok">
-        <table class="imza">
-            <tr>
-                @if ($kayit->isg_uzmani_var)
-                    <td>
-                        <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
-                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: '.....................................' }}</div>
-                        <div class="kase">
-                            @if ($kayit->isg_uzmani_kase)
-                                <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
-                            @endif
-                        </div>
-                        @if ($ikiGun)
-                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
-                        @else
-                            <div class="imza-satir">Kaşe / İmza</div>
-                        @endif
-                    </td>
-                @endif
-                @if ($kayit->isyeri_hekimi_var)
-                    <td>
-                        <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
-                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: '.....................................' }}</div>
-                        <div class="kase">
-                            @if ($kayit->isyeri_hekimi_kase)
-                                <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
-                            @endif
-                        </div>
-                        @if ($ikiGun)
-                            <div class="imza-satir">1. Gün İmza: ....................&nbsp;&nbsp; 2. Gün İmza: ....................</div>
-                        @else
-                            <div class="imza-satir">Kaşe / İmza</div>
-                        @endif
-                    </td>
-                @endif
-            </tr>
-        </table>
-        </div>
-    @endif
 
     <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>
 

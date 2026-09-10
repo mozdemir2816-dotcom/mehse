@@ -2802,6 +2802,9 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
 - **İmza günü 1./2. gün:** `pdf/egitim-katilim` — `sure_gun >= 2` ise katılımcı
   tablosunda "İmza (1. Gün)" + "İmza (2. Gün)" ayrı sütunları, eğitmen bloğunda
   gün bazlı imza satırı, künyede planlama notu. `bosFormPdf` de `planlananGun` kullanır.
+- **Eğitmen imza bloğu yeri:** İş Güvenliği Uzmanı + İşyeri Hekimi kaşe/imzası artık
+  eğitim konularıyla AYNI SAYFADA (katılımcı imza listesinden ÖNCE) — uzun katılımcı
+  listesi imzaları 2. sayfaya itmiyor. Tek eğitmen varsa hücre `width:100%`.
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/
