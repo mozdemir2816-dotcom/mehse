@@ -12,6 +12,7 @@ use App\Models\IsbasiEgitimTutanagi;
 use App\Models\IsIzinFormu;
 use App\Models\IsKazasiRaporu;
 use App\Models\KazaIstatistigi;
+use App\Models\KimyasalRiskDegerlendirmesi;
 use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu;
 use App\Models\KurulToplantisi;
@@ -43,6 +44,7 @@ use App\Support\IsbasiEgitimTutanagiUretici;
 use App\Support\IsIzinFormuUretici;
 use App\Support\IsKazasiRaporuUretici;
 use App\Support\KazaIstatistigiUretici;
+use App\Support\KimyasalRiskUretici;
 use App\Support\KkdMatrisiUretici;
 use App\Support\KkdZimmetFormuUretici;
 use App\Support\KurulToplantisiUretici;
@@ -226,6 +228,48 @@ return [
             'ghs07' => 'GHS07 — Tahriş edici / Zararlı',
             'ghs08' => 'GHS08 — Sağlığa uzun vadeli tehdit (KMR)',
             'ghs09' => 'GHS09 — Çevreye zararlı (sucul)',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kimyasal Risk Değerlendirmesi — kontrol bantlama (COSHH Essentials)
+    |--------------------------------------------------------------------------
+    | Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yön.
+    | Tehlike grubu (A-E, S) × kullanım miktarı × uçuculuk/tozlaşma → kontrol
+    | yaklaşımı (1: genel havalandırma · 2: lokal havalandırma · 3: kapalı sistem
+    | · 4: özel — uzman görüşü). CMR maddelerde en az yaklaşım 3.
+    */
+    'kimyasal_risk' => [
+        'tehlike_gruplari' => [
+            'A' => 'A — Düşük tehlike (tahriş etmeyen)',
+            'B' => 'B — Zararlı (H302/H312/H332, cilt/göz tahrişi)',
+            'C' => 'C — Ciddi zarar (H301/H311/H331, H314 aşındırıcı)',
+            'D' => 'D — Yüksek tehlike (H300/H310/H330, duyarlılaştırıcı)',
+            'E' => 'E — Çok yüksek / CMR (H340/H350/H360, H334)',
+            'S' => 'S — Deri / göz teması yolu (ek önlem)',
+        ],
+        'miktarlar' => [
+            'az' => 'Az (< 100 g veya ml / gün)',
+            'orta' => 'Orta (100 g–kg / ml–L / gün)',
+            'cok' => 'Çok (> kg veya L / gün)',
+        ],
+        'ucuculuk' => [
+            'dusuk' => 'Düşük uçuculuk / az tozlaşan (pelet, pasta)',
+            'orta' => 'Orta (sıvı, kristal toz)',
+            'yuksek' => 'Yüksek uçuculuk / ince toz (kaynama <50°C, uçuşan toz)',
+        ],
+        'maruziyet_yollari' => [
+            'soluma' => 'Soluma',
+            'deri' => 'Deri teması / emilim',
+            'yutma' => 'Yutma',
+            'goz' => 'Göz sıçraması',
+        ],
+        'yaklasimlar' => [
+            1 => '1 — Genel havalandırma / iyi çalışma uygulaması',
+            2 => '2 — Lokal cebri havalandırma (LEV)',
+            3 => '3 — Kapalı sistem / muhafaza',
+            4 => '4 — Özel önlem — uzman görüşü gerekli',
         ],
     ],
 
@@ -2867,6 +2911,8 @@ return [
                 'uretici' => KkdMatrisiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => SaglikGozetimi::class, 'ad' => 'Sağlık Gözetimi Takip Çizelgesi', 'tip_metod' => null,
                 'uretici' => SaglikGozetimiUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => KimyasalRiskDegerlendirmesi::class, 'ad' => 'Kimyasal Risk Değerlendirmesi', 'tip_metod' => null,
+                'uretici' => KimyasalRiskUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
                 'uretici' => KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,

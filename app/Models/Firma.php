@@ -122,6 +122,11 @@ class Firma extends Model
         return $this->hasOne(SaglikGozetimi::class);
     }
 
+    public function kimyasalRiskDegerlendirmesi(): HasOne
+    {
+        return $this->hasOne(KimyasalRiskDegerlendirmesi::class);
+    }
+
     public function kazaIstatistikleri(): HasMany
     {
         return $this->hasMany(KazaIstatistigi::class);

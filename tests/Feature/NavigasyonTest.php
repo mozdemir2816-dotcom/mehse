@@ -64,6 +64,7 @@ class NavigasyonTest extends TestCase
             'muayene formu' => ['/admin/muayene-formu'],
             'periyodik kontrol' => ['/admin/periyodik-kontrol'],
             'kkd secim matrisi' => ['/admin/kkd-secim-matrisi'],
+            'kimyasal risk degerlendirmesi' => ['/admin/kimyasal-risk-degerlendirmesi'],
             'kimyasal sicili' => ['/admin/kimyasal-sicili'],
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
