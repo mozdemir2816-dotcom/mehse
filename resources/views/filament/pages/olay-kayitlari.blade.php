@@ -174,6 +174,31 @@
             <textarea wire:model="kokNeden" rows="2" style="{{ $inp }}"></textarea>
         </x-filament::section>
 
+        {{-- 4b. BALIK KILÇIĞI (ISHIKAWA) --}}
+        <x-filament::section icon="heroicon-o-share" icon-color="warning" collapsible collapsed>
+            <x-slot name="heading">4b. Balık Kılçığı (Ishikawa) — 6M</x-slot>
+            <x-slot name="description">İsteğe bağlı görsel kök neden analizi. "5N ve Kök Nedenlerden Doldur" ile başlayıp düzenleyin; PDF'i "Balık Kılçığı Analizi" butonuyla alınır.</x-slot>
+
+            <x-filament::button size="xs" color="gray" wire:click="balikKilcigiOtomatik" style="margin-bottom:.75rem">
+                5N ve Kök Nedenlerden Doldur
+            </x-filament::button>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem">
+                @foreach (config('isg.olay.balik_kilcigi_kategorileri') as $anahtar => $etiket)
+                    <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.6rem">
+                        <div style="font-weight:700;font-size:.8rem;margin-bottom:.4rem">{{ $etiket }}</div>
+                        @foreach ($balikKilcigi[$anahtar] ?? [] as $i => $neden)
+                            <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
+                                <input type="text" wire:model="balikKilcigi.{{ $anahtar }}.{{ $i }}" style="{{ $inp }};font-size:.78rem" placeholder="Neden…">
+                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer">✕</button>
+                            </div>
+                        @endforeach
+                        <x-filament::button size="xs" color="gray" wire:click="balikNedenEkle('{{ $anahtar }}')" icon="heroicon-o-plus">Neden</x-filament::button>
+                    </div>
+                @endforeach
+            </div>
+        </x-filament::section>
+
         {{-- 5. DÜZELTİCİ FAALİYET --}}
         <x-filament::section icon="heroicon-o-wrench" icon-color="warning">
             <x-slot name="heading">5. Düzeltici / Önleyici Faaliyet</x-slot>
@@ -300,6 +325,9 @@
                                 <td style="padding:.35rem .5rem">{{ $k->dofRaporu?->belge_no ?? '—' }}</td>
                                 <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                     <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
+                                    @if ($k->balikKilcigiDoluMu())
+                                        <x-filament::button size="xs" color="gray" wire:click="gecmisBalikKilcigi({{ $k->id }})">Balık Kılçığı</x-filament::button>
+                                    @endif
                                     <x-filament::button size="xs" color="warning" wire:click="dofeAktar({{ $k->id }})">DÖF'e Aktar</x-filament::button>
                                     <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                                 </td>

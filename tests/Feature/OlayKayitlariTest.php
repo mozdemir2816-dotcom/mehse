@@ -55,6 +55,49 @@ class OlayKayitlariTest extends TestCase
         $this->assertSame(['Zemin ıslaktı', 'Temizlik programı yok'], $o->nedenZinciri());
     }
 
+    public function test_balik_kilcigi_otomatik_kok_nedenlerden_doldurulur_ve_kaydedilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->set('olayTipi', 'ramak_kala')
+            ->set('olayOzeti', 'Yükseklikten malzeme düştü')
+            ->set('besNeden', ['Bariyer yoktu', 'Kontrol yapılmadı', 'Saha denetimi eksik', '', ''])
+            ->set('kokNedenKategorileri', ['ekipman_arizasi', 'yonetim_sistemi'])
+            ->call('balikKilcigiOtomatik')
+            ->callAction('kaydet_pdf');
+
+        $o = OlayKaydi::where('firma_id', $firma->id)->firstOrFail();
+
+        // ekipman_arizasi → makine, yonetim_sistemi → yonetim (config kok_neden_6m)
+        $this->assertNotEmpty($o->balik_kilcigi['makine']);
+        $this->assertContains('Yönetim Sistemi / Denetim Eksikliği', $o->balik_kilcigi['yonetim']);
+        $this->assertTrue($o->balikKilcigiDoluMu());
+    }
+
+    public function test_balik_kilcigi_pdf_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $o = OlayKaydi::create([
+            'firma_id' => $firma->id,
+            'olay_tipi' => 'ramak_kala',
+            'olay_ozeti' => 'Forklift ile yaya çarpışması ramak kala',
+            'olay_tarihi' => now(),
+            'bes_neden' => ['Görüş engeli', 'Ayrılmış yaya yolu yok'],
+            'balik_kilcigi' => [
+                'insan' => ['Operatör hız yaptı'],
+                'yontem' => ['Yaya-araç ayrımı planlanmamış'],
+                'yonetim' => ['Trafik planı güncel değil'],
+            ],
+        ]);
+
+        $yanit = OlayKaydiUretici::balikKilcigiPdf($o);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
     public function test_hizli_calisan_secimi_etkilenen_alanlari_doldurur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

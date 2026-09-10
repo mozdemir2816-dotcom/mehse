@@ -2368,6 +2368,28 @@ return [
             'ciddi' => 'Ciddi (uzun tedavi / kalıcı sınırlı hasar)',
             'cok_ciddi' => 'Çok Ciddi (ölüm / sürekli iş göremezlik)',
         ],
+
+        // Balık Kılçığı (Ishikawa) 6M kategorileri — kök neden analizi görseli için.
+        'balik_kilcigi_kategorileri' => [
+            'insan' => 'İnsan (Man)',
+            'makine' => 'Makine / Ekipman (Machine)',
+            'yontem' => 'Yöntem / Metot (Method)',
+            'malzeme' => 'Malzeme (Material)',
+            'cevre' => 'Çevre / Ortam (Milieu)',
+            'yonetim' => 'Yönetim (Management)',
+        ],
+
+        // kök_neden_kategorileri anahtarı → balık kılçığı 6M kategorisi (otomatik taşıma).
+        'kok_neden_6m' => [
+            'insan_faktoru' => 'insan',
+            'ekipman_arizasi' => 'makine',
+            'kkd_kullanilmamasi' => 'insan',
+            'egitim_eksikligi' => 'insan',
+            'talimat_eksikligi' => 'yontem',
+            'calisma_ortami' => 'cevre',
+            'yonetim_sistemi' => 'yonetim',
+            'diger' => 'yonetim',
+        ],
     ],
 
     /*

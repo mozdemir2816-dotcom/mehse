@@ -84,6 +84,9 @@ class OlayKayitlari extends Page
     /** @var array<int, string> */
     public array $kokNedenKategorileri = [];
 
+    /** @var array<string, array<int, string>> Balık kılçığı 6M — kategori => neden listesi */
+    public array $balikKilcigi = ['insan' => [], 'makine' => [], 'yontem' => [], 'malzeme' => [], 'cevre' => [], 'yonetim' => []];
+
     public ?string $duzelticiFaaliyet = null;
 
     public ?int $kayipGunSayisi = null;
@@ -264,6 +267,52 @@ class OlayKayitlari extends Page
 
     /*
     |--------------------------------------------------------------------------
+    | Balık Kılçığı (Ishikawa) — 6M kök neden
+    |--------------------------------------------------------------------------
+    */
+
+    public function balikNedenEkle(string $kategori): void
+    {
+        if (! array_key_exists($kategori, $this->balikKilcigi)) {
+            return;
+        }
+
+        $this->balikKilcigi[$kategori][] = '';
+    }
+
+    public function balikNedenSil(string $kategori, int $index): void
+    {
+        unset($this->balikKilcigi[$kategori][$index]);
+        $this->balikKilcigi[$kategori] = array_values($this->balikKilcigi[$kategori]);
+    }
+
+    /** 5N zinciri + seçili kök neden kategorilerini balık kılçığına dağıt. */
+    public function balikKilcigiOtomatik(): void
+    {
+        $harita = config('isg.olay.kok_neden_6m', []);
+
+        foreach ($this->kokNedenKategorileri as $kat) {
+            $hedef = $harita[$kat] ?? 'yonetim';
+            $etiket = config('isg.is_kazasi.kok_neden_kategorileri.'.$kat, $kat);
+
+            if (! in_array($etiket, $this->balikKilcigi[$hedef], true)) {
+                $this->balikKilcigi[$hedef][] = $etiket;
+            }
+        }
+
+        // 5N'nin ilk adımı genelde "insan/yöntem"e yakın; son adım kök neden →
+        // yönetim tarafına ipucu olarak ekle (kullanıcı düzenler).
+        $zincir = array_values(array_filter(array_map('trim', $this->besNeden), fn ($n) => $n !== ''));
+
+        if ($zincir && ! in_array(end($zincir), $this->balikKilcigi['yonetim'], true)) {
+            $this->balikKilcigi['yonetim'][] = end($zincir);
+        }
+
+        Notification::make()->title('Balık kılçığı 5N ve kök nedenlerden dolduruldu — düzenleyin')->success()->send();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Kaydet / PDF / DÖF
     |--------------------------------------------------------------------------
     */
@@ -301,6 +350,9 @@ class OlayKayitlari extends Page
             'bes_neden' => $this->besNeden,
             'kok_neden' => $this->kokNeden,
             'kok_neden_kategorileri' => $this->kokNedenKategorileri,
+            'balik_kilcigi' => collect($this->balikKilcigi)
+                ->map(fn (array $n) => array_values(array_filter(array_map('trim', $n), fn ($x) => $x !== '')))
+                ->all(),
             'duzeltici_faaliyet' => $this->duzelticiFaaliyet,
             'kayip_gun_sayisi' => $this->kayipGunSayisi,
             'sgk_bildirimi_yapildi' => $this->sgkBildirimiYapildi,
@@ -337,6 +389,23 @@ class OlayKayitlari extends Page
                     return OlayKaydiUretici::pdf($o);
                 }),
 
+            Action::make('balik_kilcigi_pdf')
+                ->label('Balık Kılçığı Analizi (Kaydet ve PDF)')
+                ->icon('heroicon-o-share')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $o = $this->kaydet();
+
+                    if (! $o) {
+                        return null;
+                    }
+
+                    Notification::make()->title('Olay kaydı oluşturuldu')->body($o->belge_no.' — Balık Kılçığı')->success()->send();
+
+                    return OlayKaydiUretici::balikKilcigiPdf($o);
+                }),
+
             Action::make('defter_excel')
                 ->label('Olay Kayıt Defteri (Excel)')
                 ->icon('heroicon-o-table-cells')
@@ -351,6 +420,13 @@ class OlayKayitlari extends Page
         $o = $this->firma?->olayKayitlari()->find($id);
 
         return $o ? OlayKaydiUretici::pdf($o) : null;
+    }
+
+    public function gecmisBalikKilcigi(int $id)
+    {
+        $o = $this->firma?->olayKayitlari()->find($id);
+
+        return $o ? OlayKaydiUretici::balikKilcigiPdf($o) : null;
     }
 
     public function gecmisSil(int $id): void

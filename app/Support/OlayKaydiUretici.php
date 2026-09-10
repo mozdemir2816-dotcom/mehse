@@ -31,6 +31,21 @@ class OlayKaydiUretici
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
+    /** Balık Kılçığı (Ishikawa) kök neden analizi — tek sayfa A4 yatay. */
+    public static function balikKilcigiPdf(OlayKaydi $o): StreamedResponse
+    {
+        $o->loadMissing('firma');
+
+        $pdf = Pdf::loadView('pdf.balik-kilcigi', [
+            'kayit' => $o,
+            'firma' => $o->firma,
+        ])->setPaper('a4', 'landscape');
+
+        $ad = 'balik-kilcigi-'.Str::slug($o->belge_no ?: ($o->firma?->unvan ?? 'firma')).'.pdf';
+
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+    }
+
     /** Firmanın tüm olay kayıtları — tek sayfalık kayıt defteri Excel'i. */
     public static function defterExcel(Firma $firma): StreamedResponse
     {

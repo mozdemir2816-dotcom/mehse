@@ -24,6 +24,7 @@ class OlayKaydi extends Model
         'kayip_gun_sayisi' => 'integer',
         'potansiyel_skor' => 'integer',
         'bes_neden' => 'array',
+        'balik_kilcigi' => 'array',
         'etkilenen_kategorileri' => 'array',
         'kok_neden_kategorileri' => 'array',
         'taniklar' => 'array',
@@ -133,5 +134,33 @@ class OlayKaydi extends Model
             array_map('trim', $this->bes_neden ?? []),
             fn ($n) => $n !== '',
         ));
+    }
+
+    /**
+     * Balık kılçığı 6M kategorileri — her kategori için (boş olmayan) neden
+     * listesi. Etiketler config'ten; sıra config sırasıyla.
+     *
+     * @return array<int, array{anahtar: string, etiket: string, nedenler: array<int, string>}>
+     */
+    public function balikKilcigiKategorileri(): array
+    {
+        $veri = $this->balik_kilcigi ?? [];
+
+        return collect(config('isg.olay.balik_kilcigi_kategorileri', []))
+            ->map(fn (string $etiket, string $anahtar): array => [
+                'anahtar' => $anahtar,
+                'etiket' => $etiket,
+                'nedenler' => array_values(array_filter(
+                    array_map('trim', (array) ($veri[$anahtar] ?? [])),
+                    fn ($n) => $n !== '',
+                )),
+            ])
+            ->values()
+            ->all();
+    }
+
+    public function balikKilcigiDoluMu(): bool
+    {
+        return collect($this->balikKilcigiKategorileri())->contains(fn (array $k) => filled($k['nedenler']));
     }
 }
