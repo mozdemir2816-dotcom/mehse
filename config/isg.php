@@ -11,10 +11,12 @@ use App\Models\IpcTebligi;
 use App\Models\IsbasiEgitimTutanagi;
 use App\Models\IsIzinFormu;
 use App\Models\IsKazasiRaporu;
+use App\Models\KazaIstatistigi;
 use App\Models\KkdZimmetFormu;
 use App\Models\KurulToplantisi;
 use App\Models\MuayeneFormu;
 use App\Models\OlayKaydi;
+use App\Models\OrtamOlcumu;
 use App\Models\PeriyodikKontrol;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaAnalizi;
@@ -38,10 +40,12 @@ use App\Support\IpcTebligiUretici;
 use App\Support\IsbasiEgitimTutanagiUretici;
 use App\Support\IsIzinFormuUretici;
 use App\Support\IsKazasiRaporuUretici;
+use App\Support\KazaIstatistigiUretici;
 use App\Support\KkdZimmetFormuUretici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\MuayeneFormuUretici;
 use App\Support\OlayKaydiUretici;
+use App\Support\OrtamOlcumuUretici;
 use App\Support\PeriyodikKontrolUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\SahaAnaliziUretici;
@@ -323,6 +327,77 @@ return [
                 ['ad' => 'El Aletleri ve Sabit Zımpara / Taşlama', 'periyot_ay' => 12],
             ],
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | İş Hijyeni / Ortam Ölçümleri Takibi
+    |--------------------------------------------------------------------------
+    | İşyerinde yapılması gereken ortam ölçümleri (gürültü, toz, aydınlatma,
+    | termal konfor, kimyasal maruziyet vb.), ölçüm tarihi, sınır değerle
+    | karşılaştırılmış sonuç ve bir sonraki ölçüm tarihi. Periyot risk
+    | değerlendirmesinde belirtilir; varsayılan 24 ay (elle değiştirilir).
+    */
+    'ortam_olcum' => [
+        'sonuclar' => [
+            'bekliyor' => 'Ölçüm Bekliyor',
+            'uygun' => 'Uygun (sınır değer altında)',
+            'sinir' => 'Sınır Değere Yakın',
+            'asim' => 'Sınır Değer Aşımı',
+        ],
+
+        'katalog' => [
+            'Fiziksel Etkenler' => [
+                ['ad' => 'Gürültü Maruziyeti (LEX,8h)', 'periyot_ay' => 24, 'birim' => 'dB(A)', 'sinir_deger' => '85'],
+                ['ad' => 'Aydınlatma Şiddeti', 'periyot_ay' => 24, 'birim' => 'lüks', 'sinir_deger' => '—'],
+                ['ad' => 'Termal Konfor (sıcaklık / nem / hava akış hızı)', 'periyot_ay' => 24, 'birim' => '°C / % / m/s', 'sinir_deger' => '—'],
+                ['ad' => 'El-Kol Titreşimi (A(8))', 'periyot_ay' => 24, 'birim' => 'm/s²', 'sinir_deger' => '5'],
+                ['ad' => 'Tüm Vücut Titreşimi (A(8))', 'periyot_ay' => 24, 'birim' => 'm/s²', 'sinir_deger' => '1.15'],
+                ['ad' => 'Elektromanyetik Alan', 'periyot_ay' => 24, 'birim' => 'µT / V/m', 'sinir_deger' => '—'],
+                ['ad' => 'İyonlaştırıcı Radyasyon', 'periyot_ay' => 12, 'birim' => 'mSv', 'sinir_deger' => '20'],
+            ],
+            'Toz Maruziyeti' => [
+                ['ad' => 'Toplam Toz', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
+                ['ad' => 'Solunabilir Toz', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
+                ['ad' => 'Kristal Yapıda Silika (Kuvars)', 'periyot_ay' => 12, 'birim' => 'mg/m³', 'sinir_deger' => '0.1'],
+                ['ad' => 'Ahşap Tozu', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '5'],
+                ['ad' => 'Un / Tahıl Tozu', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
+            ],
+            'Kimyasal Maruziyet' => [
+                ['ad' => 'Uçucu Organik Bileşikler (VOC)', 'periyot_ay' => 24, 'birim' => 'ppm / mg/m³', 'sinir_deger' => '—'],
+                ['ad' => 'Kaynak Dumanı ve Metal Buharı', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '5'],
+                ['ad' => 'Ağır Metaller (Pb, Cr, Ni, Mn ...)', 'periyot_ay' => 12, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
+                ['ad' => 'Formaldehit', 'periyot_ay' => 24, 'birim' => 'ppm', 'sinir_deger' => '0.3'],
+                ['ad' => 'Amonyak / Asit Buharları', 'periyot_ay' => 24, 'birim' => 'ppm', 'sinir_deger' => '20'],
+                ['ad' => 'Karbon Monoksit (CO)', 'periyot_ay' => 24, 'birim' => 'ppm', 'sinir_deger' => '20'],
+                ['ad' => 'Egzoz Emisyonu (dizel partikül)', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
+            ],
+            'Biyolojik ve Diğer' => [
+                ['ad' => 'Biyolojik Etkenler (bakteri / mantar / endotoksin)', 'periyot_ay' => 24, 'birim' => 'kob/m³', 'sinir_deger' => '—'],
+                ['ad' => 'İç Ortam Hava Kalitesi (CO₂)', 'periyot_ay' => 24, 'birim' => 'ppm', 'sinir_deger' => '1000'],
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kaza İstatistikleri — Sıklık ve Ağırlık Oranı
+    |--------------------------------------------------------------------------
+    | Firma × yıl bazlı; İş Kazası Raporları + Olay Kayıtları (iş kazası tipi) +
+    | elle eklenen harici kazalardan hesaba dahil kaza sayısı, kayıp gün ve
+    | aylık çalışma saatinden Sıklık / Ağırlık oranı hesaplanır. Standart:
+    |  - turkiye_1m  : oran × 1.000.000 (SGK / ÇSGB yıllık istatistik yöntemi)
+    |  - osha_200k   : oran × 200.000 (100 tam zamanlı çalışan yılı — OSHA)
+    */
+    'kaza_istatistik' => [
+        'standartlar' => [
+            'turkiye_1m' => ['ad' => 'Türkiye (× 1.000.000)', 'carpan' => 1000000],
+            'osha_200k' => ['ad' => 'OSHA (× 200.000)', 'carpan' => 200000],
+        ],
+        // Bir çalışanın bir ayda ortalama fiili çalışma saati (varsayılan öneri;
+        // aylık tabloda elle değiştirilebilir).
+        'aylik_kisi_saat' => 175,
+        'aylar' => ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
     ],
 
     /*
@@ -2664,6 +2739,10 @@ return [
                 'uretici' => TespitOneriDefteriUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => PeriyodikKontrol::class, 'ad' => 'Periyodik Kontrol Takip Listesi', 'tip_metod' => null,
                 'uretici' => PeriyodikKontrolUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => OrtamOlcumu::class, 'ad' => 'Ortam Ölçümleri Takip Listesi', 'tip_metod' => null,
+                'uretici' => OrtamOlcumuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => KazaIstatistigi::class, 'ad' => 'Kaza İstatistikleri', 'tip_metod' => null,
+                'uretici' => KazaIstatistigiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => KkdZimmetFormu::class, 'ad' => 'KKD Zimmet Formu', 'tip_metod' => null,
                 'uretici' => KkdZimmetFormuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsIzinFormu::class, 'ad' => 'İş İzin Formu', 'tip_metod' => null,

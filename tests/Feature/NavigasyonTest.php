@@ -66,6 +66,8 @@ class NavigasyonTest extends TestCase
             'kimyasal sicili' => ['/admin/kimyasal-sicili'],
             'e-recetem' => ['/admin/e-recetem'],
             // Planlama & Arşiv
+            'ortam olcumleri' => ['/admin/ortam-olcumleri'],
+            'kaza istatistikleri' => ['/admin/kaza-istatistikleri'],
             'yillik planlar' => ['/admin/yillik-planlar'],
             'uzaktan egitim paketleri' => ['/admin/uzaktan-egitim-paketleri'],
             'uzaktan egitim atama' => ['/admin/uzaktan-egitim-atama'],

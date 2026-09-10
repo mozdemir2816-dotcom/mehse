@@ -2895,6 +2895,37 @@ elle imzalatmak için. Ortak `katilimFormuVerisi()` yardımcısı.
 
 Testler: `EgitimKatilimTest` +3, `IsbasiEgitimTest` +2, `SertifikaOlusturTest` +1.
 
+## Durum — 2026-09-10 (TEDBİR ON karşılaştırma → 2 yeni modül)
+
+Kullanıcı `Desktop\Yeni klasör\` — TEDBİR ON İSG Yönetim Platformu v4.21 ekran
+görüntülerini verdi, "eksik olanları ekle, rapor bırak" dedi. Tam karşılaştırma
+`TEDBIR-ON-KARSILASTIRMA.md`'de. İki eksik modül eklendi:
+
+- **Ortam Ölçümleri Takibi** (`/admin/ortam-olcumleri`, Planlama & Arşiv, sort 30):
+  `OrtamOlcumu` (firma başına 1 kayıt, `olcumler` JSON — PeriyodikKontrol deseni:
+  `firmaIcin`/`baslatilmisMi`/`yaklasanlar`/`ozet`, `saving` hook periyottan sonraki
+  ölçüm tarihini türetir). `config isg.ortam_olcum` — 4 grup (Fiziksel / Toz /
+  Kimyasal / Biyolojik) ~22 parametre kataloğu + `sonuclar` (bekliyor/uygun/sinir/asim).
+  `OrtamOlcumuUretici::pdf` A4 yatay takip listesi. migration `2026_09_10_150000`.
+  `Firma::ortamOlcumu()` HasOne. `OrtamOlcumleriTest` (7).
+- **Kaza İstatistikleri** (`/admin/kaza-istatistikleri`, Planlama & Arşiv, sort 31):
+  `KazaIstatistigi` (firma × yıl unique). `tumKazalar()` = `IsKazasiRaporu`
+  (`whereYear kaza_tarihi`) + `OlayKaydi` (`olay_tipi=is_kazasi`) + `harici_kazalar`
+  JSON birleşimi. `aylik_veriler` 12 satır {ort_calisan, calisma_saati}. Sıklık Oranı
+  = kaza×çarpan/saat, Ağırlık Oranı = kayıpgün×çarpan/saat; `carpan` standarttan
+  (turkiye_1m=1M / osha_200k=200k). Sayfada anlık özet `replicate()` ile geçici
+  model üzerinden. `KazaIstatistigiUretici` pdf (A4 dikey, KPI + aylık tablo + kaza
+  listesi) + excel. `config isg.kaza_istatistik`. migration `2026_09_10_160000`.
+  `Firma::kazaIstatistikleri()` HasMany. `KazaIstatistikleriTest` (9).
+
+İkisi de `raporlar.kaynaklar`'a eklendi. Kontrol Merkezi'ne kriter EKLENMEDİ
+(uygulanabilirlik firmaya göre değişir, oran testlerini korur). `NavigasyonTest` +2.
+
+**Kalan eksikler (rapordaki öncelik sırası):** Sağlık Gözetimi Takibi (S), Balık
+Kılçığı PDF eki (S/M), KKD Seçim Matrisi (M), Kimyasal Risk Değerlendirmesi (M),
+Firma bazlı Çalışma Merkezi + Dosya Fihristi (M), İşe Dönüş Belgesi (S), Yangın
+Güvenliği Değerlendirme Raporu (M/L).
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

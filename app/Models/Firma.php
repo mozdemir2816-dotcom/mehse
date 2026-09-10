@@ -107,6 +107,16 @@ class Firma extends Model
         return $this->hasOne(PeriyodikKontrol::class);
     }
 
+    public function ortamOlcumu(): HasOne
+    {
+        return $this->hasOne(OrtamOlcumu::class);
+    }
+
+    public function kazaIstatistikleri(): HasMany
+    {
+        return $this->hasMany(KazaIstatistigi::class);
+    }
+
     public function kimyasalUrunler(): HasMany
     {
         return $this->hasMany(KimyasalUrun::class);
