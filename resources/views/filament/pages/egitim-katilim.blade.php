@@ -255,9 +255,9 @@
                     @endforeach
                 </table>
 
-                <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;cursor:pointer;margin-bottom:1rem">
-                    <input type="checkbox" wire:model="elleEklenenleriFirmayaKaydet"> Elle eklenenleri firmaya da kaydet
-                </label>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:1rem">
+                    Firmada kayıtlı olmayan katılımcılar, form kaydedilince firma çalışan listesine otomatik eklenir.
+                </p>
             @endif
 
             <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Excel ile Toplu Yükle</div>
@@ -294,6 +294,7 @@
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisExcel({{ $k->id }})">Excel</x-filament::button>
+                                <x-filament::button size="xs" color="gray" wire:click="gecmisSertifika({{ $k->id }})">Sertifika</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

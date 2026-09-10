@@ -294,9 +294,10 @@ class EgitimKatilimTest extends TestCase
         unlink($yol);
     }
 
-    public function test_elle_eklenenleri_firmaya_kaydet_secilince_calisan_olusturur(): void
+    public function test_firmada_kayitli_olmayan_katilimci_otomatik_firma_listesine_eklenir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create(['ad_soyad' => 'Var Olan', 'tc' => '11111111111']);
 
         Livewire::test(EgitimSayfasi::class)
             ->set('firmaId', $firma->id)
@@ -305,7 +306,9 @@ class EgitimKatilimTest extends TestCase
             ->set('yeniAdSoyad', 'Ali Veli')
             ->set('yeniTc', '99988877766')
             ->call('manuelEkle')
-            ->set('elleEklenenleriFirmayaKaydet', true)
+            ->set('yeniAdSoyad', 'Var Olan')   // zaten kayıtlı — kopya oluşturmaz
+            ->set('yeniTc', '11111111111')
+            ->call('manuelEkle')
             ->callAction('pdf');
 
         $this->assertDatabaseHas('calisanlar', [
@@ -313,6 +316,33 @@ class EgitimKatilimTest extends TestCase
             'ad_soyad' => 'Ali Veli',
             'tc' => '99988877766',
         ]);
+        $this->assertSame(2, $firma->calisanlar()->count());   // 1 var olan + 1 yeni
+    }
+
+    public function test_egitim_katilimindan_katilimci_sertifikasi_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'belge_tarihi' => now(),
+            'sure_gun' => 2,
+            'isg_uzmani_var' => true,
+            'isg_uzmani_adi' => 'Vural Gündüz',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli'),
+            'katilimcilar' => [
+                ['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi'],
+                ['ad_soyad' => 'Ayşe Fatma', 'tc' => '10987654321', 'gorev' => 'Ustabaşı'],
+            ],
+        ]);
+
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $firma->id)->instance();
+        $yanit = $sayfa->gecmisSertifika($kayit->id);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 
     public function test_pdf_aksiyonu_kayit_olusturur_ve_pdf_doner(): void

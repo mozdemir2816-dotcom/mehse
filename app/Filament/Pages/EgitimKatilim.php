@@ -5,10 +5,13 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\EgitimKatilim as EgitimKatilimModel;
 use App\Models\Firma;
+use App\Models\Sertifika;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
 use App\Support\KatilimciExcelOkuyucu;
+use App\Support\SertifikaUretici;
 use BackedEnum;
+use Illuminate\Support\Carbon;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -71,8 +74,6 @@ class EgitimKatilim extends Page
 
     /** @var array<int, array{ad_soyad: string, tc: ?string, gorev: ?string}> */
     public array $manuelKatilimcilar = [];
-
-    public bool $elleEklenenleriFirmayaKaydet = false;
 
     public ?string $yeniAdSoyad = null;
 
@@ -365,6 +366,107 @@ class EgitimKatilim extends Page
         return [...$firmaCalisanlari, ...$this->manuelKatilimcilar];
     }
 
+    /**
+     * Elle / Excel ile eklenen katılımcılardan firmanın çalışan listesinde
+     * OLMAYANLARı (TC varsa TC'ye, yoksa ad-soyada göre) firmaya ekler.
+     */
+    private function eksikCalisanlariEkle(): int
+    {
+        if (! $this->firma) {
+            return 0;
+        }
+
+        $mevcut = $this->firma->calisanlar()->get(['tc', 'ad_soyad']);
+        $eklenen = 0;
+
+        foreach ($this->manuelKatilimcilar as $k) {
+            $ad = trim((string) ($k['ad_soyad'] ?? ''));
+            $tc = filled($k['tc'] ?? null) ? trim((string) $k['tc']) : null;
+
+            if ($ad === '') {
+                continue;
+            }
+
+            $var = $mevcut->contains(function (Calisan $c) use ($ad, $tc) {
+                if ($tc !== null && (string) $c->tc === $tc) {
+                    return true;
+                }
+
+                return mb_strtolower((string) $c->ad_soyad) === mb_strtolower($ad);
+            });
+
+            if ($var) {
+                continue;
+            }
+
+            $this->firma->calisanlar()->create([
+                'ad_soyad' => $ad,
+                'tc' => $tc,
+                'gorev' => $k['gorev'] ?? null,
+            ]);
+
+            $mevcut->push(new Calisan(['ad_soyad' => $ad, 'tc' => $tc]));
+            $eklenen++;
+        }
+
+        if ($eklenen > 0) {
+            unset($this->calisanlar);
+        }
+
+        return $eklenen;
+    }
+
+    /**
+     * Kayıtlı eğitim katılım formundan bir Sertifika modeli kurar (kaydedilmez;
+     * yalnız PDF üretimi için). Eğitim başlığına göre sertifika tipi seçilir
+     * (genel → isg, yüksekte_çalışma → yükseklik, kapalı_alan → kapali_alan).
+     */
+    private function sertifikaKur(EgitimKatilimModel $kayit): Sertifika
+    {
+        $tip = 'isg';
+
+        foreach (config('isg.sertifika.tipler', []) as $anahtar => $tanim) {
+            if (($tanim['icerik_anahtari'] ?? null) === $kayit->baslik_anahtari && $kayit->baslik_anahtari) {
+                $tip = $anahtar;
+
+                break;
+            }
+        }
+
+        $gun = max(1, (int) ($kayit->sure_gun ?? 1));
+        $tarih = $kayit->belge_tarihi?->toDateString() ?? now()->toDateString();
+        $tehlike = $kayit->firma?->tehlike_sinifi ?? 'az_tehlikeli';
+        $dersSaati = $kayit->konu_secimleri['saat'] ?? null;
+
+        $s = new Sertifika([
+            'firma_id' => $kayit->firma_id,
+            'tip' => $tip,
+            'tur' => ($kayit->egitim_turu ?? 'ilk') === 'tekrar' ? 'tekrar' : 'ilk_defa',
+            'sekil' => 'yuz_yuze',
+            'sektor_anahtari' => $tip === 'isg' ? $kayit->sektor_anahtari : null,
+            'gun_sayisi' => $gun,
+            'egitim_tarihleri' => array_fill(0, $gun, $tarih),
+            'gecerlilik_tarihi' => Carbon::parse($tarih)
+                ->addYears((int) config('isg.sertifika.gecerlilik_yili.'.$tehlike, 1))
+                ->toDateString(),
+            'sure_metni' => $dersSaati ? $dersSaati.' Ders Saati' : null,
+            'egitici_igu_dahil' => (bool) $kayit->isg_uzmani_var,
+            'egitici_igu_adi' => $kayit->isg_uzmani_adi,
+            'egitici_igu_kase' => $kayit->isg_uzmani_kase,
+            'egitici_hekim_dahil' => (bool) $kayit->isyeri_hekimi_var,
+            'egitici_hekim_adi' => $kayit->isyeri_hekimi_adi,
+            'egitici_hekim_kase' => $kayit->isyeri_hekimi_kase,
+            'logo_konumu' => 'sol',
+            'cerceve' => 'sade',
+            'konu_icerigi' => $kayit->konu_secimleri,
+            'katilimcilar' => $kayit->katilimcilar,
+        ]);
+        $s->belge_no = 'SRT · '.$kayit->belge_no;
+        $s->setRelation('firma', $kayit->firma);
+
+        return $s;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Kaydet & PDF
@@ -379,19 +481,11 @@ class EgitimKatilim extends Page
             return null;
         }
 
-        if ($this->elleEklenenleriFirmayaKaydet) {
-            foreach ($this->manuelKatilimcilar as $k) {
-                $anahtar = filled($k['tc'] ?? null)
-                    ? ['firma_id' => $this->firma->id, 'tc' => $k['tc']]
-                    : ['firma_id' => $this->firma->id, 'ad_soyad' => $k['ad_soyad']];
+        // Firmada kayıtlı OLMAYAN katılımcılar firma çalışan listesine otomatik eklenir.
+        $yeniCalisan = $this->eksikCalisanlariEkle();
 
-                Calisan::firstOrCreate($anahtar, [
-                    'firma_id' => $this->firma->id,
-                    'ad_soyad' => $k['ad_soyad'],
-                    'tc' => $k['tc'] ?? null,
-                    'gorev' => $k['gorev'] ?? null,
-                ]);
-            }
+        if ($yeniCalisan > 0) {
+            Notification::make()->title($yeniCalisan.' katılımcı firma çalışan listesine eklendi')->success()->send();
         }
 
         // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse onu kaydet.
@@ -462,6 +556,23 @@ class EgitimKatilim extends Page
 
                     return EgitimKatilimUretici::excel($kayit);
                 }),
+
+            Action::make('sertifika')
+                ->label('Katılımcı Sertifikaları (Kaydet ve İndir)')
+                ->icon('heroicon-o-check-badge')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — her katılımcı için ayrı sertifika sayfası')->success()->send();
+
+                    return SertifikaUretici::pdf($this->sertifikaKur($kayit));
+                }),
         ];
     }
 
@@ -477,6 +588,19 @@ class EgitimKatilim extends Page
         $kayit = $this->firma?->egitimKatilimlari()->find($id);
 
         return $kayit ? EgitimKatilimUretici::excel($kayit) : null;
+    }
+
+    public function gecmisSertifika(int $id)
+    {
+        $kayit = $this->firma?->egitimKatilimlari()->find($id);
+
+        if (! $kayit) {
+            return null;
+        }
+
+        $kayit->setRelation('firma', $this->firma);
+
+        return SertifikaUretici::pdf($this->sertifikaKur($kayit));
     }
 
     public function gecmisSil(int $id): void

@@ -2820,6 +2820,16 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   `konu_secimleri['saat']` kaydedilirken güncellenir.
 - **İmza:** katılımcı 2 günde 2 ayrı imza (tablo sütunları), eğitimci tek imza
   (gün ayrımı yok — "Kaşe / İmza").
+- **Otomatik çalışan ekleme:** form kaydedilince (PDF/Excel/Sertifika aksiyonlarının
+  hepsinde) firmada kayıtlı OLMAYAN katılımcılar (`EgitimKatilim::eksikCalisanlariEkle`,
+  TC varsa TC'ye yoksa ad-soyada göre) firma çalışan listesine otomatik eklenir —
+  eski `elleEklenenleriFirmayaKaydet` onay kutusu kaldırıldı.
+- **Katılımcı sertifikası:** "Katılımcı Sertifikaları" header aksiyonu + geçmişte
+  "Sertifika" düğmesi (`gecmisSertifika`) → `EgitimKatilim::sertifikaKur()` kayıttan
+  bir `Sertifika` modeli kurar (kaydedilmez), başlığa göre tip seçer (genel→isg,
+  yuksekte_calisma→yukseklik, kapali_alan→kapali_alan), `SertifikaUretici::pdf` ile
+  katılımcı başına ayrı sayfa. Eğitmen adı/kaşesi kayıttan (snapshot), geçerlilik
+  tehlike sınıfına göre.
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/
