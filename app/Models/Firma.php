@@ -137,6 +137,11 @@ class Firma extends Model
         return $this->hasMany(KazaIstatistigi::class);
     }
 
+    public function iseDonusBelgeleri(): HasMany
+    {
+        return $this->hasMany(IseDonusBelgesi::class);
+    }
+
     public function kimyasalUrunler(): HasMany
     {
         return $this->hasMany(KimyasalUrun::class);

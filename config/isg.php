@@ -9,6 +9,7 @@ use App\Models\EgitimSinavi;
 use App\Models\FirmaJsa;
 use App\Models\IpcTebligi;
 use App\Models\IsbasiEgitimTutanagi;
+use App\Models\IseDonusBelgesi;
 use App\Models\IsIzinFormu;
 use App\Models\IsKazasiRaporu;
 use App\Models\KazaIstatistigi;
@@ -41,6 +42,7 @@ use App\Support\EgitimSinaviUretici;
 use App\Support\FirmaJsaUretici;
 use App\Support\IpcTebligiUretici;
 use App\Support\IsbasiEgitimTutanagiUretici;
+use App\Support\IseDonusBelgesiUretici;
 use App\Support\IsIzinFormuUretici;
 use App\Support\IsKazasiRaporuUretici;
 use App\Support\KazaIstatistigiUretici;
@@ -2411,6 +2413,45 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | İşe Dönüş Belgesi — uzun rapor / iş kazası / meslek hastalığı sonrası
+    |--------------------------------------------------------------------------
+    | İşyeri hekiminin işe dönüşte uygunluk değerlendirmesi ve geçici kısıtlar
+    | (6331 s.K. Md.15). Kaza sonrası "İşe Dönüş Belgesi" olarak da kullanılır.
+    */
+    'ise_donus' => [
+        'nedenler' => [
+            'is_kazasi' => 'İş Kazası Sonrası',
+            'meslek_hastaligi' => 'Meslek Hastalığı Sonrası',
+            'hastalik' => 'Hastalık / Uzun Süreli Rapor',
+            'ameliyat' => 'Ameliyat / Operasyon Sonrası',
+            'dogum' => 'Doğum / Analık İzni Sonrası',
+            'diger' => 'Diğer',
+        ],
+        'uygunluk' => [
+            'tam' => 'Eski Görevine Tam Uygun',
+            'kisitli' => 'Kısıtlı / Şartlı Uygun (aşağıdaki kısıtlarla)',
+            'gecici_gorev' => 'Geçici Başka Göreve Uygun',
+            'uygun_degil' => 'Çalışmaya Uygun Değil (istirahat devam)',
+        ],
+        'kisitlama_kutuphanesi' => [
+            'Ağır kaldırma yasağı (10 kg üzeri)',
+            'Elle taşıma / itme-çekme kısıtlaması',
+            'Yüksekte çalışma yasağı',
+            'Kapalı / dar alanda çalışma yasağı',
+            'Gece vardiyası muafiyeti',
+            'Uzun süre ayakta durma kısıtlaması',
+            'Tekrarlı hareket / titreşimli el aleti kısıtlaması',
+            'Araç / iş makinesi kullanma kısıtlaması',
+            'Gürültülü ortamda çalışma kısıtlaması',
+            'Kimyasal / toz maruziyeti olan bölümde çalışma yasağı',
+            'Sıcak / soğuk ortamda çalışma kısıtlaması',
+            'Fazla mesai muafiyeti',
+            'Oturarak / hafif işte çalışma',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Balık Kılçığı (Ishikawa) — 6M Modeli
     |--------------------------------------------------------------------------
     | İş Kazası İnceleme Raporu ve Olay Kayıtları kök neden analizinde ortak
@@ -2962,6 +3003,8 @@ return [
                 'ikincil_uretici' => AtamaYazisiWordUretici::class, 'ikincil_metod' => 'docx', 'ikincil_etiket' => 'Word'],
             ['model' => DofRaporu::class, 'ad' => 'DÖF Raporu', 'tip_metod' => null,
                 'uretici' => DofRaporuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => IseDonusBelgesi::class, 'ad' => 'İşe Dönüş Belgesi', 'tip_metod' => 'nedenEtiketi',
+                'uretici' => IseDonusBelgesiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => IsKazasiRaporu::class, 'ad' => 'İş Kazası Raporu', 'tip_metod' => 'kazaTuruEtiketi',
                 'uretici' => IsKazasiRaporuUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => OlayKaydi::class, 'ad' => 'Olay Kaydı / Ramak Kala', 'tip_metod' => 'tipEtiketi',

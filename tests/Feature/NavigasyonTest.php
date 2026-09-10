@@ -59,6 +59,7 @@ class NavigasyonTest extends TestCase
             'is izin formu' => ['/admin/is-izin-formu'],
             'ceza teblig' => ['/admin/ceza-teblig'],
             'is kazasi raporu' => ['/admin/is-kazasi-raporu'],
+            'ise donus belgesi' => ['/admin/ise-donus-belgesi'],
             'olay kayitlari' => ['/admin/olay-kayitlari'],
             'talimat olustur' => ['/admin/talimat'],
             'muayene formu' => ['/admin/muayene-formu'],
