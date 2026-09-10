@@ -101,18 +101,27 @@ Her ikisi de `raporlar.kaynaklar`'a eklendi (Profilim > Raporlar + Firma Evrak p
 
 | # | Öneri | Boyut | Not |
 |---|-------|-------|-----|
-| 1 | ✅ **Kaza İstatistikleri** | — | **YAPILDI** |
-| 2 | ✅ **Ortam Ölçümleri** | — | **YAPILDI** |
-| 3 | **Sağlık Gözetimi Takibi** — çalışan × muayene türü matrisi (işe giriş / periyodik / özel), yenileme tarihi + "kalan gün", tıpkı Profilim > Eğitimler gibi | S | `EgitimKaydi` deseninin birebir aynısı; MuayeneFormu zaten var. Yüksek değer. |
-| 4 | **Balık Kılçığı (Ishikawa) PDF eki** — OlayKaydi / İş Kazası kök neden 6M diyagramı (İnsan · Makine · Yöntem · Malzeme · Çevre · Yönetim) | S/M | Mevcut `bes_neden` + `kok_neden_kategorileri`'ni 6M'ye eşle, dompdf ile SVG/kutu çizim |
-| 5 | **Eğitim/Sağlık takibine "kalan gün" + yaklaşan/dolmuş vurgusu**, istenirse firma bazlı sekme | S | Matris zaten var, sadece sütun + renk |
-| 6 | **KKD Seçim Matrisi** — iş kalemi × KKD türü (baş/göz/kulak/el/ayak/solunum/düşme) matrisi → firma bazlı KKD listesi | M | `Desktop\...\İNŞAAT KKD MATRİKSİ.xlsx` referans olarak hazır |
-| 7 | **Kimyasal Risk Değerlendirmesi** — Kimyasal Sicili'ndeki her ürün için maruziyet yolu + kontrol bantlama (COSHH Essentials benzeri) | M | Kimyasal Sicili'ne bağlı |
-| 8 | **Firma bazlı Çalışma Merkezi + Dosya Fihristi** — FirmaResource'a "Çalışma Durumu" sekmesi (Belge/İmza/Teslim 3-durum + yenileme) + fihrist PDF | M | KontrolMerkezi mantığını firma bazına indir |
-| 9 | **İş Kazası Sonrası İşe Dönüş Belgesi** — kaza sonrası hekim onayı + iş kısıtları belgesi | S | IsKazasiRaporu'na bağlı küçük belge |
-| 10 | **Yangın Güvenliği Değerlendirme Raporu** — bina kullanım türü + kat/kullanıcı yükü + EK-1 faaliyet + bölüm/risk checklist → yangın tehlike sınıfı + Word rapor | M/L | Standart "BEÇ" benzeri; en büyük tek eksik |
-| 11 | **Şablon profil sistemi** — en azından "logolu/kurumlu" varyant + birkaç belge için özel Word yükleme | M | Tek kullanıcıda düşük öncelik |
-| 12 | **İç Denetim Kontrol Listesi** (ISO 45001 tarzı yönetim sistemi denetimi, SahaDenetimi'nden ayrı) | M | Düşük öncelik |
+| 1 | ✅ **Kaza İstatistikleri** | — | **YAPILDI** (10.09) |
+| 2 | ✅ **Ortam Ölçümleri** | — | **YAPILDI** (10.09) |
+| 3 | ✅ **Sağlık Gözetimi Takibi** — çalışan × 14 tetkik türü, periyot/tehlike sınıfından sonraki tetkik, "tüm çalışanlara ekle" | — | **YAPILDI** (11.09) |
+| 4 | ✅ **Balık Kılçığı (Ishikawa) PDF eki** — OlayKaydi 6M, "5N/kök nedenlerden doldur" | — | **YAPILDI** (11.09) |
+| 5 | ⏳ **Eğitim/Sağlık matrisine "kalan gün" + yaklaşan/dolmuş vurgusu** | S | Sağlık Gözetimi'nde kırmızı vurgu var; Profilim > Eğitimler matrisine kalan gün sütunu kaldı |
+| 6 | ✅ **KKD Seçim Matrisi** — iş kalemi × 9 KKD sütunu | — | **YAPILDI** (11.09) |
+| 7 | ✅ **Kimyasal Risk Değerlendirmesi** — COSHH Essentials kontrol bantlama (1-4) | — | **YAPILDI** (11.09) |
+| 8 | ⏳ **Firma bazlı Çalışma Merkezi + Dosya Fihristi** — FirmaResource'a "Çalışma Durumu" sekmesi (Belge/İmza/Teslim 3-durum) + fihrist PDF | M | KontrolMerkezi mantığını firma bazına indir |
+| 9 | ⏳ **İş Kazası Sonrası İşe Dönüş Belgesi** — kaza sonrası hekim onayı + iş kısıtları belgesi | S | IsKazasiRaporu'na bağlı küçük belge |
+| 10 | ⏳ **Yangın Güvenliği Değerlendirme Raporu** — bina kullanım türü + kat/kullanıcı yükü + EK-1 faaliyet + bölüm/risk checklist → yangın tehlike sınıfı + rapor | M/L | Standart "BEÇ" benzeri; en büyük tek eksik |
+| 11 | ⏳ **Şablon profil sistemi** — "logolu/kurumlu" varyant + birkaç belge için özel Word yükleme | M | Tek kullanıcıda düşük öncelik |
+| 12 | ⏳ **İç Denetim Kontrol Listesi** (ISO 45001 tarzı, SahaDenetimi'nden ayrı) | M | Düşük öncelik |
+
+## Ayrıca — Periyodik Kontrol tam yeniden yazıldı (11.09)
+
+Kullanıcı `Desktop\isgpratik\iş ekipmanları\` ekranlarını verip "bununla birebir
+aynısı olsun" dedi. `PeriyodikKontrol` "Ekipman & Periyodik Kontrol Motoru"na
+dönüştürüldü: ayrı `IsEkipmani` modeli, 5 yasal kategori × tip kataloğu (her tip için
+TS/EN standart + deney + periyot), "Yeni Ekipman Tanımla" bağımlı-select modal formu,
+4 KPI kartı (Vizesi Geçerli / Yaklaşan / Süresi Dolan), kategori sekmeleri + arama +
+durum filtresi, "Müfettiş Teftiş Paketi" PDF + Excel.
 
 **Not:** Kaza İstatistikleri ve Ortam Ölçümleri için Kontrol Merkezi'ne yeni kriter
 EKLENMEDİ (uygulanabilirlik firmaya göre değişir + oran testlerini etkiler). İstenirse

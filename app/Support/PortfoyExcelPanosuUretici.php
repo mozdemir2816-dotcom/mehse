@@ -233,15 +233,16 @@ class PortfoyExcelPanosuUretici
     {
         $s = static::sayfa($kitap, 'Periyodik Kontrol');
 
-        $satirlar = [['İşyeri', 'Ekipman', 'Kategori', 'Periyot (ay)', 'Son Kontrol', 'Sonraki', 'Kontrol Eden', 'Sonuç']];
+        $satirlar = [['İşyeri', 'Ekipman', 'Kategori', 'Periyot (ay)', 'Son Muayene', 'Sonraki Vize', 'Vize Durumu', 'Muayene Yapan', 'Sonuç']];
 
-        Firma::where('user_id', $uzman->id)->with('periyodikKontrol')->get()->each(function (Firma $f) use (&$satirlar) {
-            foreach ($f->periyodikKontrol?->ekipmanlar ?? [] as $e) {
+        Firma::where('user_id', $uzman->id)->with('isEkipmanlari')->get()->each(function (Firma $f) use (&$satirlar) {
+            foreach ($f->isEkipmanlari as $e) {
                 $satirlar[] = [
-                    $f->unvan, $e['ad'] ?? '', $e['kategori'] ?? '', $e['periyot_ay'] ?? '',
-                    $e['son_kontrol_tarihi'] ?? '', $e['sonraki_kontrol_tarihi'] ?? '',
-                    $e['kontrol_eden'] ?? '',
-                    config('isg.periyodik_kontrol.sonuclar.'.($e['sonuc'] ?? ''), $e['sonuc'] ?? ''),
+                    $f->unvan, $e->ekipman_adi, $e->kategoriAdi(), $e->muayene_periyodu_ay,
+                    $e->son_muayene_tarihi?->format('d.m.Y') ?? '',
+                    $e->sonraki_vize_tarihi?->format('d.m.Y') ?? '',
+                    $e->vizeDurumEtiketi(), $e->muayene_yapan ?? '',
+                    $e->sonucEtiketi(),
                 ];
             }
         });

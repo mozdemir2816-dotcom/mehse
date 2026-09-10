@@ -2895,11 +2895,39 @@ elle imzalatmak için. Ortak `katilimFormuVerisi()` yardımcısı.
 
 Testler: `EgitimKatilimTest` +3, `IsbasiEgitimTest` +2, `SertifikaOlusturTest` +1.
 
-## Durum — 2026-09-10 (TEDBİR ON karşılaştırma → 2 yeni modül)
+## Durum — 2026-09-10/11 (TEDBİR ON karşılaştırma → 6 modül + Periyodik Kontrol rework)
 
 Kullanıcı `Desktop\Yeni klasör\` — TEDBİR ON İSG Yönetim Platformu v4.21 ekran
-görüntülerini verdi, "eksik olanları ekle, rapor bırak" dedi. Tam karşılaştırma
-`TEDBIR-ON-KARSILASTIRMA.md`'de. İki eksik modül eklendi:
+görüntülerini + `Desktop\isgpratik\iş ekipmanları\` verdi, "tüm eksikleri ekle,
+rapor bırak" dedi. Tam karşılaştırma `TEDBIR-ON-KARSILASTIRMA.md`'de.
+
+**11.09 batch:**
+- **KKD Seçim Matrisi** (`KkdSecimMatrisi`, `kkd-secim-matrisi`, Formlar & Belgeler
+  29): iş kalemi × 9 KKD sütunu; `config isg.kkd_matris` sektörel katalog varsayılan
+  KKD önerili. `KkdMatrisi` model (firma başına 1). `KkdMatrisiUretici::pdf` A4 yatay.
+- **Sağlık Gözetimi Takibi** (`SaglikGozetimi`, `saglik-gozetimi`, Planlama & Arşiv
+  32): çalışan × 14 tetkik (işe giriş/periyodik/odyometri/SFT/portör/psikoteknik/
+  aşı). Periyot/tehlike sınıfından sonraki tetkik otomatik; "tüm çalışanlara ekle".
+  `config isg.saglik_tetkik` + `saglik_periyodik_yili` (5/3/1).
+- **Olay Kaydı Balık Kılçığı (Ishikawa)**: `olay_kayitlari.balik_kilcigi` json (6M).
+  "4b. Balık Kılçığı" bölümü + "5N/Kök Nedenlerden Doldur" (`config isg.olay.kok_neden_6m`).
+  `OlayKaydiUretici::balikKilcigiPdf` (tablo tabanlı fishbone).
+- **Kimyasal Risk Değerlendirmesi** (`KimyasalRiskDegerlendirmesi`,
+  `kimyasal-risk-degerlendirmesi`, Risk Yönetimi 6): Kimyasal Sicili envanterinden.
+  Tehlike grubu (A-E/S) × miktar × uçuculuk → kontrol yaklaşımı 1-4 (COSHH Essentials;
+  `::kontrolYaklasimi`). CMR/E ≥3. `config isg.kimyasal_risk`.
+- **Ekipman & Periyodik Kontrol Motoru** — `PeriyodikKontrol` sayfası isgpratik
+  referansına göre YENİDEN yazıldı. Eski `periyodik_kontroller.ekipmanlar` json →
+  yeni **`IsEkipmani`** modeli (`is_ekipmanlari` tablosu, her ekipman ayrı kayıt).
+  5 kategori (Ek-III 2.1-2.4 + İş Hijyeni) × tip kataloğu (`config isg.periyodik_kontrol.tipler`
+  — her tip `standart`+`deney`+`periyot_ay`); "Yeni Ekipman Tanımla" Filament schema
+  aksiyonu (kategori→tip bağımlı select); 4 KPI kartı; kategori sekmeleri + arama +
+  durum filtresi; satır içi muayene girişi; `IsEkipmani::vizeDurumu()`.
+  `PeriyodikKontrolUretici` pdf + **excel** ("Müfettiş Teftiş Paketi"). `PeriyodikKontrol`
+  model thin kapsayıcıya indirgendi (`ekipmanlar()` → firma->isEkipmanlari, `firmaIcin`,
+  RaporKayitlari kaydı). `PortfoyKarne` + `PortfoyExcelPanosuUretici` `isEkipmanlari`'ye.
+
+**10.09 batch (2 modül):** Kullanıcı önce sadece "eksik olanları ekle" demişti —
 
 - **Ortam Ölçümleri Takibi** (`/admin/ortam-olcumleri`, Planlama & Arşiv, sort 30):
   `OrtamOlcumu` (firma başına 1 kayıt, `olcumler` JSON — PeriyodikKontrol deseni:

@@ -85,7 +85,7 @@ class OlayKayitlari extends Page
     public array $kokNedenKategorileri = [];
 
     /** @var array<string, array<int, string>> Balık kılçığı 6M — kategori => neden listesi */
-    public array $balikKilcigi = ['insan' => [], 'makine' => [], 'yontem' => [], 'malzeme' => [], 'cevre' => [], 'yonetim' => []];
+    public array $balikKilcigi = ['insan' => [], 'makine' => [], 'metot' => [], 'malzeme' => [], 'olcum' => [], 'cevre' => []];
 
     public ?string $duzelticiFaaliyet = null;
 
@@ -289,10 +289,10 @@ class OlayKayitlari extends Page
     /** 5N zinciri + seçili kök neden kategorilerini balık kılçığına dağıt. */
     public function balikKilcigiOtomatik(): void
     {
-        $harita = config('isg.olay.kok_neden_6m', []);
+        $harita = config('isg.balik_kilcigi.kok_neden_6m', []);
 
         foreach ($this->kokNedenKategorileri as $kat) {
-            $hedef = $harita[$kat] ?? 'yonetim';
+            $hedef = $harita[$kat] ?? 'metot';
             $etiket = config('isg.is_kazasi.kok_neden_kategorileri.'.$kat, $kat);
 
             if (! in_array($etiket, $this->balikKilcigi[$hedef], true)) {
@@ -300,12 +300,11 @@ class OlayKayitlari extends Page
             }
         }
 
-        // 5N'nin ilk adımı genelde "insan/yöntem"e yakın; son adım kök neden →
-        // yönetim tarafına ipucu olarak ekle (kullanıcı düzenler).
+        // 5N son adımı (kök neden) → Metot tarafına ipucu olarak ekle (kullanıcı düzenler).
         $zincir = array_values(array_filter(array_map('trim', $this->besNeden), fn ($n) => $n !== ''));
 
-        if ($zincir && ! in_array(end($zincir), $this->balikKilcigi['yonetim'], true)) {
-            $this->balikKilcigi['yonetim'][] = end($zincir);
+        if ($zincir && ! in_array(end($zincir), $this->balikKilcigi['metot'], true)) {
+            $this->balikKilcigi['metot'][] = end($zincir);
         }
 
         Notification::make()->title('Balık kılçığı 5N ve kök nedenlerden dolduruldu — düzenleyin')->success()->send();

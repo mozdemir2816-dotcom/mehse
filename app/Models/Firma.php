@@ -107,6 +107,11 @@ class Firma extends Model
         return $this->hasOne(PeriyodikKontrol::class);
     }
 
+    public function isEkipmanlari(): HasMany
+    {
+        return $this->hasMany(IsEkipmani::class);
+    }
+
     public function ortamOlcumu(): HasOne
     {
         return $this->hasOne(OrtamOlcumu::class);

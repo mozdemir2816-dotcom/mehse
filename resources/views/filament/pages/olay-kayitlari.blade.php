@@ -184,9 +184,9 @@
             </x-filament::button>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem">
-                @foreach (config('isg.olay.balik_kilcigi_kategorileri') as $anahtar => $etiket)
+                @foreach (config('isg.balik_kilcigi.kategoriler') as $anahtar => $tanim)
                     <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.6rem">
-                        <div style="font-weight:700;font-size:.8rem;margin-bottom:.4rem">{{ $etiket }}</div>
+                        <div style="font-weight:700;font-size:.8rem;margin-bottom:.4rem">{{ $tanim['ad'] }}</div>
                         @foreach ($balikKilcigi[$anahtar] ?? [] as $i => $neden)
                             <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
                                 <input type="text" wire:model="balikKilcigi.{{ $anahtar }}.{{ $i }}" style="{{ $inp }};font-size:.78rem" placeholder="Neden…">

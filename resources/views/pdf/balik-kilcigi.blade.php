@@ -37,8 +37,8 @@
 
 @php
     $kats = collect($kayit->balikKilcigiKategorileri())->keyBy('anahtar');
-    $ust = ['insan', 'makine', 'yontem'];
-    $alt = ['malzeme', 'cevre', 'yonetim'];
+    $ust = ['insan', 'makine', 'metot'];
+    $alt = ['malzeme', 'olcum', 'cevre'];
     $blok = function ($anahtar) use ($kats) {
         $k = $kats[$anahtar] ?? ['etiket' => $anahtar, 'nedenler' => []];
         $html = '<div class="kat"><h3>'.e($k['etiket']).'</h3>';
@@ -69,7 +69,7 @@
     <tr>
         <td style="width:31%">{!! $blok('insan') !!}</td>
         <td style="width:31%">{!! $blok('makine') !!}</td>
-        <td style="width:31%">{!! $blok('yontem') !!}</td>
+        <td style="width:31%">{!! $blok('metot') !!}</td>
         <td style="width:7%" rowspan="3">
             <div class="problem">OLAY / PROBLEM<br><span style="font-weight:normal;font-size:7px">{{ \Illuminate\Support\Str::limit((string) $kayit->olay_ozeti, 90) }}</span></div>
         </td>
@@ -79,8 +79,8 @@
     </tr>
     <tr>
         <td>{!! $blok('malzeme') !!}</td>
+        <td>{!! $blok('olcum') !!}</td>
         <td>{!! $blok('cevre') !!}</td>
-        <td>{!! $blok('yonetim') !!}</td>
     </tr>
 </table>
 

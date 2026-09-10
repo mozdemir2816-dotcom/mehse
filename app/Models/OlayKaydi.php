@@ -146,10 +146,10 @@ class OlayKaydi extends Model
     {
         $veri = $this->balik_kilcigi ?? [];
 
-        return collect(config('isg.olay.balik_kilcigi_kategorileri', []))
-            ->map(fn (string $etiket, string $anahtar): array => [
+        return collect(config('isg.balik_kilcigi.kategoriler', []))
+            ->map(fn (array $tanim, string $anahtar): array => [
                 'anahtar' => $anahtar,
-                'etiket' => $etiket,
+                'etiket' => $tanim['ad'],
                 'nedenler' => array_values(array_filter(
                     array_map('trim', (array) ($veri[$anahtar] ?? [])),
                     fn ($n) => $n !== '',

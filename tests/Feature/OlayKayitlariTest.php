@@ -70,9 +70,9 @@ class OlayKayitlariTest extends TestCase
 
         $o = OlayKaydi::where('firma_id', $firma->id)->firstOrFail();
 
-        // ekipman_arizasi → makine, yonetim_sistemi → yonetim (config kok_neden_6m)
+        // ekipman_arizasi → makine, yonetim_sistemi → olcum (config balik_kilcigi.kok_neden_6m)
         $this->assertNotEmpty($o->balik_kilcigi['makine']);
-        $this->assertContains('Yönetim Sistemi / Denetim Eksikliği', $o->balik_kilcigi['yonetim']);
+        $this->assertContains('Yönetim Sistemi / Denetim Eksikliği', $o->balik_kilcigi['olcum']);
         $this->assertTrue($o->balikKilcigiDoluMu());
     }
 
@@ -87,8 +87,8 @@ class OlayKayitlariTest extends TestCase
             'bes_neden' => ['Görüş engeli', 'Ayrılmış yaya yolu yok'],
             'balik_kilcigi' => [
                 'insan' => ['Operatör hız yaptı'],
-                'yontem' => ['Yaya-araç ayrımı planlanmamış'],
-                'yonetim' => ['Trafik planı güncel değil'],
+                'metot' => ['Yaya-araç ayrımı planlanmamış'],
+                'olcum' => ['Trafik planı güncel değil'],
             ],
         ]);
 

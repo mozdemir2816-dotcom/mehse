@@ -328,59 +328,84 @@ return [
     | ekipmanlar bu katalogdan seçilir (ya da serbest eklenir); her ekipman için
     | son kontrol tarihi + sonuç + sonraki tarih girilir.
     */
+    /*
+    | Ekipman & Periyodik Kontrol Motoru — İş Ekipmanlarının Kullanımında Sağlık
+    | ve Güvenlik Şartları Yönetmeliği EK-III. Her ekipman kategori + tip ile
+    | tanımlanır; tip seçilince yasal standart, deney/test ve önerilen periyot
+    | otomatik gelir (elle değiştirilir). "Vize" = periyodik muayene geçerliliği.
+    */
     'periyodik_kontrol' => [
         'sonuclar' => [
-            'bekliyor' => 'Kontrol Bekliyor',
+            'bekliyor' => 'Muayene Bekliyor',
             'uygun' => 'Uygun (kullanılabilir)',
             'sartli' => 'Şartlı / Kısmi Uygun',
             'uygun_degil' => 'Uygun Değil (kullanım dışı)',
         ],
 
-        'katalog' => [
-            'Basınçlı Kaplar ve Tesisatları' => [
-                ['ad' => 'Buhar Kazanı', 'periyot_ay' => 12],
-                ['ad' => 'Kalorifer / Kızgın Su Kazanı', 'periyot_ay' => 12],
-                ['ad' => 'Kompresör ve Basınçlı Hava Tankı', 'periyot_ay' => 12],
-                ['ad' => 'Hidrofor', 'periyot_ay' => 12],
-                ['ad' => 'Genleşme Tankı / Boyler', 'periyot_ay' => 12],
-                ['ad' => 'Otoklav / Sterilizatör', 'periyot_ay' => 12],
-                ['ad' => 'Sıvılaştırılmış Gaz Tankı (LPG / Kriyojenik)', 'periyot_ay' => 12],
+        'periyot_secenekleri' => [
+            3 => '3 Ay',
+            6 => '6 Ay',
+            12 => '12 Ay (Standart 1 Yıl)',
+            24 => '24 Ay (2 Yıl)',
+            36 => '36 Ay (3 Yıl)',
+            60 => '60 Ay (5 Yıl)',
+        ],
+
+        // Vize durumu: "yaklaşan" eşiği (gün).
+        'vize_yaklasan_gun' => 30,
+
+        'kategoriler' => [
+            'kaldirma_iletme' => ['ad' => 'Kaldırma & İletme Araçları', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.2'],
+            'basincli_kap' => ['ad' => 'Basınçlı Kap ve Tesisatlar', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.1'],
+            'elektrik_topraklama' => ['ad' => 'Elektrik & Topraklama', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.3'],
+            'tesisat_yangin' => ['ad' => 'Tesisat & Yangın', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.4'],
+            'is_hijyeni' => ['ad' => 'İş Hijyeni & Ortam Ölçümleri', 'mevzuat' => 'İş Hijyeni Ölçüm, Test ve Analizi Yapan Laboratuvarlar Hakkında Yönetmelik'],
+        ],
+
+        'tipler' => [
+            'kaldirma_iletme' => [
+                ['ad' => 'Tavan Vinci / Gezer Köprülü Vinç', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1', 'deney' => 'Statik 1.25 kat, Dinamik 1.1 kat yük testi'],
+                ['ad' => 'Portal Vinç', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1', 'deney' => 'Statik 1.25 kat, Dinamik 1.1 kat yük testi'],
+                ['ad' => 'Mobil Vinç / Hiyap', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1 / FEM', 'deney' => 'Yük testi + yapısal muayene'],
+                ['ad' => 'Kule Vinç', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1 / TS EN 14439', 'deney' => 'Statik/dinamik yük testi, kurulum muayenesi'],
+                ['ad' => 'Forklift / Akülü & Dizel İstifleyici', 'periyot_ay' => 12, 'standart' => 'TS 10689 / TS ISO 3691', 'deney' => 'Nominal yükte kaldırma/eğim testi, fren-direksiyon'],
+                ['ad' => 'Transpalet (Motorlu / Manuel)', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 3691-5', 'deney' => 'Yük testi ve fonksiyon kontrolü'],
+                ['ad' => 'Araç Kaldırma Lifti', 'periyot_ay' => 12, 'standart' => 'TS EN 1493', 'deney' => 'Nominal yük + %10 aşırı yük testi'],
+                ['ad' => 'Caraskal & Halatlı/Zincirli Çektirme', 'periyot_ay' => 12, 'standart' => 'TS EN 13157', 'deney' => 'Statik 1.25 kat yük testi'],
+                ['ad' => 'Yükseltilebilir Seyyar İş Platformu (Manlift)', 'periyot_ay' => 6, 'standart' => 'TS EN 280', 'deney' => 'Stabilite + yük testi, acil indirme'],
+                ['ad' => 'Asansör (İnsan / Yük)', 'periyot_ay' => 12, 'standart' => 'TS EN 81-20 / Asansör Yön.', 'deney' => 'A tipi muayene kuruluşu yıllık kontrolü'],
+                ['ad' => 'Yapı / Cephe İskelesi', 'periyot_ay' => 6, 'standart' => 'TS EN 12811 / Yapı İşleri Yön.', 'deney' => 'Kurulum sonrası ve periyodik statik muayene'],
+                ['ad' => 'Kaldırma Aksesuarları (sapan, zincir, halat, mapa)', 'periyot_ay' => 6, 'standart' => 'TS EN 13414 / TS EN 818', 'deney' => 'Gözle muayene + deformasyon/aşınma kontrolü'],
             ],
-            'Kaldırma ve İletme Ekipmanları' => [
-                ['ad' => 'Kule Vinç', 'periyot_ay' => 12],
-                ['ad' => 'Mobil Vinç / Araç Üstü Vinç', 'periyot_ay' => 12],
-                ['ad' => 'Köprülü / Gezer Vinç', 'periyot_ay' => 12],
-                ['ad' => 'Forklift', 'periyot_ay' => 12],
-                ['ad' => 'İstif Makinesi / Reachtruck', 'periyot_ay' => 12],
-                ['ad' => 'Akülü Transpalet', 'periyot_ay' => 12],
-                ['ad' => 'Caraskal / Elektrikli Vinç', 'periyot_ay' => 12],
-                ['ad' => 'İnsan / Yük Asansörü', 'periyot_ay' => 12],
-                ['ad' => 'Yapı Asansörü / Cephe Platformu', 'periyot_ay' => 6],
-                ['ad' => 'Sepetli Platform (Manlift)', 'periyot_ay' => 6],
-                ['ad' => 'Yürüyen Merdiven / Bant', 'periyot_ay' => 12],
-                ['ad' => 'Kaldırma Aksesuarları (sapan, zincir, halat, mapa)', 'periyot_ay' => 6],
+            'basincli_kap' => [
+                ['ad' => 'Hava Kompresörü ve Hava Tankı', 'periyot_ay' => 12, 'standart' => 'TS 1203 EN 286-1', 'deney' => 'Hidrostatik test (1.5 × işletme basıncı), emniyet valfi'],
+                ['ad' => 'Hidrofor & Genleşme Deposu', 'periyot_ay' => 12, 'standart' => 'TS EN 13831', 'deney' => 'Basınç testi + membran/valf kontrolü'],
+                ['ad' => 'Buhar Kazanı', 'periyot_ay' => 12, 'standart' => 'TS 2025 / TS EN 12953', 'deney' => 'Hidrostatik test + iç/dış muayene, emniyet donanımı'],
+                ['ad' => 'Kalorifer Kazanı / Sıcak Su Kazanı', 'periyot_ay' => 12, 'standart' => 'TS EN 12953 / TS 4041', 'deney' => 'Hidrostatik test + emniyet valfi kontrolü'],
+                ['ad' => 'Kızgın Yağ Kazanı', 'periyot_ay' => 12, 'standart' => 'TS EN 12952', 'deney' => 'İç/dış muayene + basınç testi'],
+                ['ad' => 'Boyler / Sıcak Su Akümülasyon Tankı', 'periyot_ay' => 12, 'standart' => 'TS EN 12897', 'deney' => 'Hidrostatik test + katodik koruma kontrolü'],
+                ['ad' => 'LPG / Kriyojenik Sıvı Gaz Deposu', 'periyot_ay' => 12, 'standart' => 'TS EN 12817 / TS EN 13458', 'deney' => 'İç/dış muayene, hidrostatik test, valf-armatür'],
             ],
-            'Tesisatlar' => [
-                ['ad' => 'Elektrik Tesisatı', 'periyot_ay' => 12],
-                ['ad' => 'Topraklama Tesisatı', 'periyot_ay' => 12],
-                ['ad' => 'Paratoner (Yıldırımdan Korunma) Tesisatı', 'periyot_ay' => 12],
-                ['ad' => 'Katodik Koruma Tesisatı', 'periyot_ay' => 12],
-                ['ad' => 'Jeneratör', 'periyot_ay' => 12],
-                ['ad' => 'Havalandırma ve Klima Tesisatı', 'periyot_ay' => 12],
-                ['ad' => 'Akümülatör / Transformatör / OG Hücre', 'periyot_ay' => 12],
+            'elektrik_topraklama' => [
+                ['ad' => 'Topraklama Tesisatı ve Çevrim Empedansı', 'periyot_ay' => 12, 'standart' => 'TS HD 60364-6', 'deney' => 'Toprak direnci (Ohm) ve süreklilik ölçümü, çevrim empedansı'],
+                ['ad' => 'Paratoner & Yıldırımdan Korunma Tesisatı', 'periyot_ay' => 12, 'standart' => 'TS EN 62305', 'deney' => 'Yakalama ucu, iniş iletkeni ve toprak direnci ölçümü'],
+                ['ad' => 'Elektrik Ana & Tali Dağıtım Panoları', 'periyot_ay' => 12, 'standart' => 'TS HD 60364 / Elektrik İç Tesisleri Yön.', 'deney' => 'Yalıtım direnci, koruma iletkeni sürekliliği, termografi'],
+                ['ad' => 'Kaçak Akım Koruma Rölesi (RCD) Testi', 'periyot_ay' => 12, 'standart' => 'TS HD 60364-6', 'deney' => 'Açma akımı ve açma süresi ölçümü'],
+                ['ad' => 'Pano Termal Kamera İncelemesi', 'periyot_ay' => 12, 'standart' => 'TS EN 60204-1', 'deney' => 'Termografik sıcaklık haritalama'],
+                ['ad' => 'Trafo & Yüksek Gerilim İşletmesi', 'periyot_ay' => 12, 'standart' => 'Elektrik Kuvvetli Akım Tesisleri Yön.', 'deney' => 'Yağ analizi, izolasyon direnci, topraklama'],
             ],
-            'Yangın Ekipmanları' => [
-                ['ad' => 'Yangın Söndürme Cihazları (YSC)', 'periyot_ay' => 12],
-                ['ad' => 'Yangın Hidrantı / Yangın Dolabı', 'periyot_ay' => 6],
-                ['ad' => 'Yangın Pompası (Motopomp / Hidrofor)', 'periyot_ay' => 12],
-                ['ad' => 'Sabit Söndürme Sistemi (Sprinkler / Gazlı)', 'periyot_ay' => 12],
-                ['ad' => 'Yangın Algılama ve Alarm Sistemi', 'periyot_ay' => 6],
+            'tesisat_yangin' => [
+                ['ad' => 'Yangın Tesisatı, Motopomplar & Hidrantlar', 'periyot_ay' => 12, 'standart' => 'TS EN 12845 / BYKHY', 'deney' => 'Debi-basınç testi, pompa performansı, hidrant kontrolü'],
+                ['ad' => 'Yangın Söndürme Cihazları (YSC)', 'periyot_ay' => 12, 'standart' => 'TS ISO 11602-2 / TS 862-7 EN 3-7', 'deney' => 'Yıllık kontrol; her 4 yılda tekrar dolum, 10 yılda hidrostatik'],
+                ['ad' => 'Havalandırma ve İklimlendirme Tesisatı', 'periyot_ay' => 12, 'standart' => 'TS EN 12599', 'deney' => 'Hava debisi, filtre ve duman tahliye fonksiyon testi'],
+                ['ad' => 'Doğalgaz & LPG Boru Hattı Tesisatı', 'periyot_ay' => 12, 'standart' => 'TS EN 1775 / Gaz Yön.', 'deney' => 'Sızdırmazlık (basınç düşme) testi, gaz dedektörü kontrolü'],
             ],
-            'Tezgahlar ve Diğer İş Ekipmanları' => [
-                ['ad' => 'CNC / Torna / Freze Tezgahı', 'periyot_ay' => 12],
-                ['ad' => 'Pres / Giyotin / Abkant', 'periyot_ay' => 12],
-                ['ad' => 'Enjeksiyon / Ekstrüzyon Makinesi', 'periyot_ay' => 12],
-                ['ad' => 'El Aletleri ve Sabit Zımpara / Taşlama', 'periyot_ay' => 12],
+            'is_hijyeni' => [
+                ['ad' => 'İş Hijyeni Kişisel Gürültü Maruziyeti', 'periyot_ay' => 24, 'standart' => 'TS ISO 1999', 'deney' => 'LEX,8h (dBA) ve Ppeak (dBC) dozimetre ölçümü'],
+                ['ad' => 'Solunabilir ve Toplam Toz Ölçümü', 'periyot_ay' => 24, 'standart' => 'TS EN 481 / NIOSH 0500-0600', 'deney' => 'Gravimetrik toz örnekleme, kristal silika analizi'],
+                ['ad' => 'Aydınlatma Düzeyi Ölçümü', 'periyot_ay' => 24, 'standart' => 'TS EN 12464-1', 'deney' => 'Lüksmetre ile bölge bazlı ölçüm'],
+                ['ad' => 'Termal Konfor Ölçümü (PMV/PPD/WBGT)', 'periyot_ay' => 24, 'standart' => 'TS EN ISO 7730 / TS EN ISO 7243', 'deney' => 'Sıcaklık, nem, hava akış hızı, radyant sıcaklık'],
+                ['ad' => 'El-Kol / Tüm Vücut Titreşim Maruziyeti', 'periyot_ay' => 24, 'standart' => 'TS EN ISO 5349 / TS EN ISO 2631', 'deney' => 'A(8) ivme ölçümü'],
             ],
         ],
     ],
@@ -2356,6 +2381,85 @@ return [
             'yonetim_sistemi' => 'Yönetim Sistemi / Denetim Eksikliği',
             'diger' => 'Diğer',
         ],
+
+        // 5 Neden (5N) — sabit sıralı sorular (isgpratik İş Kazası İnceleme Raporu).
+        'bes_neden_sorulari' => [
+            'Neden yaralandı?',
+            'Neden bu durum oluştu?',
+            'Neden önlem alınmadı?',
+            'Neden sistem bunu engellemedi?',
+            'Kök neden nedir?',
+        ],
+
+        // DÖF (Düzeltici / Önleyici Faaliyet) — kaza raporu içi tablo.
+        'dof_onlem_tipleri' => [
+            'teknik' => 'Teknik Önlem',
+            'yonetsel' => 'Yönetsel Önlem',
+            'egitim' => 'Eğitim',
+        ],
+        'dof_durumlari' => [
+            'acik' => 'Açık',
+            'devam' => 'Devam Ediyor',
+            'tamamlandi' => 'Tamamlandı',
+        ],
+
+        'rapor_durumlari' => [
+            'taslak' => 'Taslak',
+            'tamamlandi' => 'Tamamlandı',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Balık Kılçığı (Ishikawa) — 6M Modeli
+    |--------------------------------------------------------------------------
+    | İş Kazası İnceleme Raporu ve Olay Kayıtları kök neden analizinde ortak
+    | kullanılır. Her kategori için tıkla-ekle örnek bulgular.
+    */
+    'balik_kilcigi' => [
+        'kategoriler' => [
+            'insan' => [
+                'ad' => 'İnsan (Man)',
+                'aciklama' => 'Çalışanın bilgi, beceri, davranış ve psikolojik durumuna bağlı faktörler',
+                'ornekler' => ['Eğitim eksikliği', 'Yorgunluk / dikkatsizlik', 'Yetkinlik yetersizliği', 'Talimata uymama', 'Acelecilik / iş baskısı'],
+            ],
+            'makine' => [
+                'ad' => 'Makine (Machine)',
+                'aciklama' => 'Kullanılan ekipman, araç-gereç ve makinelere ilişkin sorunlar',
+                'ornekler' => ['Bakımsız ekipman', 'Koruyucusu olmayan makine', 'Uygunsuz el aleti', 'Arızalı / periyodik kontrolsüz ekipman'],
+            ],
+            'metot' => [
+                'ad' => 'Metot (Method)',
+                'aciklama' => 'Çalışma prosedürleri, talimatlar ve iş yapış şekillerine dair eksiklikler',
+                'ornekler' => ['Talimat olmaması', 'Yanlış çalışma prosedürü', 'Risk analizindeki eksiklikler', 'İş izni sistemi yok'],
+            ],
+            'malzeme' => [
+                'ad' => 'Malzeme (Material)',
+                'aciklama' => 'Kullanılan malzemeler, KKD ve ham maddelere ilişkin sorunlar',
+                'ornekler' => ['Standart dışı KKD', 'Kalitesiz ham madde', 'Uygunsuz kimyasal madde', 'KKD temin edilmemiş'],
+            ],
+            'olcum' => [
+                'ad' => 'Ölçüm (Measurement)',
+                'aciklama' => 'Ölçüm, kalibrasyon, denetim ve kontrol sistemlerindeki aksaklıklar',
+                'ornekler' => ['Hatalı kalibrasyon', 'Yanlış ortam ölçümü (gaz, gürültü)', 'Yetersiz gaz dedektörü', 'Denetim / gözetim eksikliği'],
+            ],
+            'cevre' => [
+                'ad' => 'Çevre / Ortam (Environment)',
+                'aciklama' => 'Fiziksel çalışma ortamı ve çevresel koşullara bağlı faktörler',
+                'ornekler' => ['Kötü aydınlatma', 'Kaygan zemin', 'Aşırı sıcaklık / soğuk', 'Dağınık / düzensiz çalışma alanı'],
+            ],
+        ],
+        // kök_neden_kategorileri anahtarı → 6M kategorisi (otomatik taşıma).
+        'kok_neden_6m' => [
+            'insan_faktoru' => 'insan',
+            'ekipman_arizasi' => 'makine',
+            'kkd_kullanilmamasi' => 'malzeme',
+            'egitim_eksikligi' => 'insan',
+            'talimat_eksikligi' => 'metot',
+            'calisma_ortami' => 'cevre',
+            'yonetim_sistemi' => 'olcum',
+            'diger' => 'metot',
+        ],
     ],
 
     /*
@@ -2413,27 +2517,6 @@ return [
             'cok_ciddi' => 'Çok Ciddi (ölüm / sürekli iş göremezlik)',
         ],
 
-        // Balık Kılçığı (Ishikawa) 6M kategorileri — kök neden analizi görseli için.
-        'balik_kilcigi_kategorileri' => [
-            'insan' => 'İnsan (Man)',
-            'makine' => 'Makine / Ekipman (Machine)',
-            'yontem' => 'Yöntem / Metot (Method)',
-            'malzeme' => 'Malzeme (Material)',
-            'cevre' => 'Çevre / Ortam (Milieu)',
-            'yonetim' => 'Yönetim (Management)',
-        ],
-
-        // kök_neden_kategorileri anahtarı → balık kılçığı 6M kategorisi (otomatik taşıma).
-        'kok_neden_6m' => [
-            'insan_faktoru' => 'insan',
-            'ekipman_arizasi' => 'makine',
-            'kkd_kullanilmamasi' => 'insan',
-            'egitim_eksikligi' => 'insan',
-            'talimat_eksikligi' => 'yontem',
-            'calisma_ortami' => 'cevre',
-            'yonetim_sistemi' => 'yonetim',
-            'diger' => 'yonetim',
-        ],
     ],
 
     /*

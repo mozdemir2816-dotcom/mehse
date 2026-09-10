@@ -121,7 +121,7 @@ class PortfoyKarne
             'hekim_atamasi' => $firma->isyeri_hekimi_id !== null,
             'tespit_oneri' => filled($firma->tespitOneriDefteri?->maddeler),
             'onayli_defter_nushalari' => $firma->onayliDefterNushalari()->exists(),
-            'periyodik_kontrol_raporu' => (bool) $firma->periyodikKontrol?->baslatilmisMi(),
+            'periyodik_kontrol_raporu' => $firma->isEkipmanlari()->whereNotNull('son_muayene_tarihi')->exists(),
             'yillik_calisma_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'faaliyetler'),
             'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
             'yillik_degerlendirme' => static::yillikPlanDegerlendirmeDoluMu($firma),
