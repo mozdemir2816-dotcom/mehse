@@ -83,6 +83,13 @@ class RiskSihirbazi extends Page
     /** Excel içe aktarımda "eksik puan/önlemi AI ile tamamla" tek seferde en fazla bu kadar madde işler. */
     private const AI_TOPLU_LIMIT = 40;
 
+    /**
+     * Bu sayıdan çok maddeli Excel dosyaları sihirbaz adımına yüklenmez —
+     * binlerce Livewire input tarayıcıyı kilitler, payload sınırını aşar.
+     * Doğrudan bir Risk Değerlendirmesi oluşturulup düzenleme tablosuna yönlendirilir.
+     */
+    private const EXCEL_DOGRUDAN_ESIGI = 400;
+
     public int $adim = 1;
 
     public ?int $firmaId = null;
@@ -147,6 +154,12 @@ class RiskSihirbazi extends Page
     /** @var array<int, string> */
     public array $excelHatalar = [];
 
+    /** Dosyadaki (bölüm+faaliyet+tehlike+risk aynı) tekrar eden satır sayısı. */
+    public int $excelTekrarSayisi = 0;
+
+    /** İşaretliyse tekrar eden satırlar tek maddeye indirilir; varsayılan: hepsi eklenir. */
+    public bool $excelTekrarBirlestir = false;
+
     // Adım 6 — sektör şablonu olarak kaydetme
     public ?string $sablonAd = null;
 
@@ -175,6 +188,7 @@ class RiskSihirbazi extends Page
             'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
             'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
             'excelDosya', 'excelAdaylar', 'excelSecilenAdaylar', 'excelHatalar',
+            'excelTekrarSayisi', 'excelTekrarBirlestir',
         ]);
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
@@ -588,9 +602,8 @@ class RiskSihirbazi extends Page
         }
 
         foreach ($maddeler as $madde) {
-            $zaten = collect($this->secilenler)->contains(
-                fn ($m) => Str::lower(trim($m['tehlike'] ?? '')) === Str::lower(trim($madde['tehlike'] ?? '')),
-            );
+            $kimlik = static::maddeKimligi($madde);
+            $zaten = collect($this->secilenler)->contains(fn ($m) => static::maddeKimligi($m) === $kimlik);
 
             if (! $zaten) {
                 $this->secilenler[] = $madde;
@@ -730,6 +743,11 @@ class RiskSihirbazi extends Page
         // Kullanıcının kendi belgesindeki maddeler zaten kendi onayından geçmiş
         // kabul edilir (kütüphane/AI önerilerinin aksine) — hepsi seçili gelir.
         $this->excelSecilenAdaylar = collect($this->excelAdaylar)->pluck('anahtar')->all();
+        $this->excelTekrarBirlestir = false;
+        $this->excelTekrarSayisi = count($this->excelAdaylar) - collect($this->excelAdaylar)
+            ->map(fn ($a) => static::maddeKimligi($a))
+            ->unique()
+            ->count();
         $this->excelDosya = null;
 
         if (! $this->excelAdaylar) {
@@ -751,34 +769,45 @@ class RiskSihirbazi extends Page
         $this->excelSecilenAdaylar = $sec ? collect($this->excelAdaylar)->pluck('anahtar')->all() : [];
     }
 
-    public function excelSecilenleriEkle(): void
+    public function excelSecilenleriEkle()
     {
         // Büyük dosya + AI tamamlama toplamı 120 sn'yi aşabilir; sayfa çökmesin.
         @set_time_limit(300);
 
+        $secilenAdaylar = collect($this->excelAdaylar)
+            ->filter(fn ($a) => in_array($a['anahtar'], $this->excelSecilenAdaylar, true));
+
+        // Kullanıcı "tekrarları birleştir" dediyse aynı bölüm+faaliyet+tehlike+risk
+        // olan satırları tek maddeye indir. Varsayılan: hepsini ekle.
+        if ($this->excelTekrarBirlestir) {
+            $secilenAdaylar = $secilenAdaylar->unique(fn ($a) => static::maddeKimligi($a));
+        }
+
+        $secilenAdaylar = $secilenAdaylar->values()->all();
+
+        // 400+ madde → sihirbaza yükleme, doğrudan risk değerlendirmesi oluştur.
+        if (count($secilenAdaylar) > self::EXCEL_DOGRUDAN_ESIGI) {
+            return $this->excelDosyayiDogrudanUygula($secilenAdaylar);
+        }
+
+        // Kullanıcının kendi belgesindeki her satır eklenir — "aynı tehlike"
+        // farklı bölüm/faaliyet/önlemle tekrar edebilir; birebir tekrarları da
+        // kullanıcı bilinçli tutmuş olabilir (isterse "birleştir" ile indirir).
         $eklenen = 0;
         $eklenenler = [];
         $eklenenIndeksler = [];
 
-        foreach ($this->excelAdaylar as $aday) {
-            if (! in_array($aday['anahtar'], $this->excelSecilenAdaylar, true)) {
-                continue;
-            }
-
-            $zaten = collect($this->secilenler)->contains(
-                fn ($m) => Str::lower(trim($m['tehlike'] ?? '')) === Str::lower(trim($aday['tehlike'] ?? '')),
-            );
-
-            if (! $zaten) {
-                $this->secilenler[] = $aday;
-                $eklenenIndeksler[] = array_key_last($this->secilenler);
-                $eklenenler[] = $aday;
-                $eklenen++;
-            }
+        foreach ($secilenAdaylar as $aday) {
+            $this->secilenler[] = $aday;
+            $eklenenIndeksler[] = array_key_last($this->secilenler);
+            $eklenenler[] = $aday;
+            $eklenen++;
         }
 
         $this->excelAdaylar = [];
         $this->excelSecilenAdaylar = [];
+        $this->excelTekrarSayisi = 0;
+        $this->excelTekrarBirlestir = false;
 
         // Excel'deki O/Ş(/F) puanları, ekrandaki açılır listede yalnızca SEÇİLİ
         // puanlama yönteminin ölçek noktalarıyla (örn. 5x5 için 1-5) eşleşirse
@@ -812,6 +841,117 @@ class RiskSihirbazi extends Page
         if (count($this->secilenler) > 0) {
             $this->adim = 4;
         }
+
+        return null;
+    }
+
+    /** Bir maddenin kimliği — tekrar tespitinde kullanılır (bölüm+faaliyet+tehlike+risk). */
+    private static function maddeKimligi(array $m): string
+    {
+        return Str::lower(trim(
+            ($m['bolum'] ?? '').'|'.($m['faaliyet'] ?? '').'|'.($m['tehlike'] ?? '').'|'.($m['risk'] ?? '')
+        ));
+    }
+
+    /**
+     * 400+ maddeli Excel dosyasını doğrudan yeni bir Risk Değerlendirmesine yazar
+     * (sihirbaza yüklemeden) ve düzenleme sayfasına yönlendirir. İyileştirme
+     * sonrası puanlar Excel'de doluysa alınır, boşsa model varsayımı (son_olasilik=1)
+     * devreye girer.
+     *
+     * @param  array<int, array<string, mixed>>  $maddeler
+     */
+    private function excelDosyayiDogrudanUygula(array $maddeler)
+    {
+        if (! $this->firmaId) {
+            Notification::make()
+                ->title('Önce 1. adımdan bir firma seçin')
+                ->body(count($maddeler).' maddelik dosya, seçilen firmaya doğrudan bir risk değerlendirmesi olarak uygulanacak.')
+                ->warning()->send();
+            $this->adim = 1;
+
+            return null;
+        }
+
+        $firma = Firma::where('user_id', Filament::auth()->id())->find($this->firmaId);
+
+        if (! $firma) {
+            return null;
+        }
+
+        @set_time_limit(300);
+
+        // Excel puanları Fine-Kinney ölçeğindeyse yöntemi ona çevir (5x5'te "kayıp" görünmesin).
+        $yontem = ($this->yontem !== 'fine_kinney' && RiskSkorlama::fineKinneyeUyuyorMu($maddeler))
+            ? 'fine_kinney'
+            : $this->yontem;
+
+        $rd = new RiskDegerlendirmesi([
+            'firma_id' => $firma->id,
+            'yontem' => $yontem,
+            'rapor_tarihi' => $this->raporTarihi,
+            'gecerlilik_tarihi' => $this->gecerlilikTarihi,
+            'durum' => 'taslak',
+        ]);
+        $rd->save();
+
+        $fk = $yontem === 'fine_kinney';
+        $sira = 0;
+
+        foreach (array_chunk($maddeler, 250) as $parca) {
+            $satirlar = [];
+
+            foreach ($parca as $m) {
+                $sira++;
+                $o = $this->sayiVeyaNull($m['olasilik'] ?? null);
+                $s = $this->sayiVeyaNull($m['siddet'] ?? null);
+                $f = $fk ? $this->sayiVeyaNull($m['frekans'] ?? null) : null;
+                $mevcut = RiskSkorlama::hesapla($yontem, $o, $s, $f);
+
+                $so = $this->sayiVeyaNull($m['son_olasilik'] ?? null) ?? ($o !== null ? 1.0 : null);
+                $ss = $this->sayiVeyaNull($m['son_siddet'] ?? null) ?? $s;
+                $sf = $fk ? ($this->sayiVeyaNull($m['son_frekans'] ?? null) ?? $f) : null;
+                $son = RiskSkorlama::hesapla($yontem, $so, $ss, $sf);
+
+                $satirlar[] = [
+                    'risk_degerlendirmesi_id' => $rd->id,
+                    'sira' => $sira,
+                    'bolum' => $m['bolum'] ?? null,
+                    'faaliyet' => $m['faaliyet'] ?? null,
+                    'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',
+                    'risk' => $m['risk'] ?? null,
+                    'mevcut_onlem' => $m['mevcut_onlem'] ?? null,
+                    'etkilenen_calisan' => true,
+                    'etkilenen_diger' => $this->etkilenenDiger,
+                    'olasilik' => $o,
+                    'frekans' => $f,
+                    'siddet' => $s,
+                    'puan' => $mevcut['puan'] ?: null,
+                    'duzey' => $mevcut['puan'] ? $mevcut['duzey'] : null,
+                    'oneri' => $m['oneri'] ?? null,
+                    'sorumlu' => $m['sorumlu'] ?? null,
+                    'termin' => ($m['termin'] ?? '') ?: $this->varsayilanTermin,
+                    'aciklama' => $m['aciklama'] ?? null,
+                    'son_olasilik' => $so,
+                    'son_frekans' => $sf,
+                    'son_siddet' => $ss,
+                    'son_puan' => $son['puan'] ?: null,
+                    'son_duzey' => $son['puan'] ? $son['duzey'] : null,
+                    'durum' => 'acik',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            RiskMaddesi::insert($satirlar);
+        }
+
+        Notification::make()
+            ->title($sira.' madde ile risk değerlendirmesi oluşturuldu')
+            ->body('Dosya '.self::EXCEL_DOGRUDAN_ESIGI.' maddeyi aştığı için sihirbaza yüklenmeden doğrudan uygulandı; düzenleme sayfasına yönlendiriliyorsunuz.')
+            ->success()->send();
+
+        return $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $rd]));
     }
 
     /**
@@ -1050,6 +1190,11 @@ class RiskSihirbazi extends Page
                 'oneri' => $m['oneri'] ?? null,
                 'sorumlu' => $m['sorumlu'] ?? null,
                 'termin' => ($m['termin'] ?? '') ?: $this->varsayilanTermin,
+                'aciklama' => $m['aciklama'] ?? null,
+                // İyileştirme sonrası: Excel'de doluysa al, boşsa model varsayımı (1 / şiddet) devreye girer.
+                'son_olasilik' => $this->sayiVeyaNull($m['son_olasilik'] ?? null),
+                'son_frekans' => $this->fineKinney ? $this->sayiVeyaNull($m['son_frekans'] ?? null) : null,
+                'son_siddet' => $this->sayiVeyaNull($m['son_siddet'] ?? null),
                 'durum' => 'acik',
             ]);
         }

@@ -419,6 +419,105 @@ class RiskSihirbaziTest extends TestCase
         unlink($yol);
     }
 
+    public function test_excel_tekrar_eden_satirlar_varsayilan_hepsi_eklenir_birlestir_secilince_tekillesir(): void
+    {
+        config(['services.gemini.key' => null]);
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $kitap = new Spreadsheet;
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
+            ['İmalat', 'Vinç Kullanımı', 'Halat kopması', 'Yük düşmesi', 4, 5],
+            ['İmalat', 'Vinç Kullanımı', 'Halat kopması', 'Yük düşmesi', 4, 5],  // birebir tekrar
+            ['İmalat', 'Vinç Kullanımı', 'Halat kopması', 'Yük düşmesi', 4, 5],  // birebir tekrar
+            ['İmalat', 'Kaynak', 'Kıvılcım', 'Yangın', 3, 4],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        // Varsayılan: tekrarları da ekler (kullanıcının kendi belgesi).
+        $c = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('r.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->assertSet('excelTekrarSayisi', 2)
+            ->call('excelSecilenleriEkle');
+        $this->assertCount(4, $c->get('secilenler'));
+
+        // "Birleştir" işaretli: tekrar eden satırlar tek maddeye iner.
+        $c2 = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('r.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->set('excelTekrarBirlestir', true)
+            ->call('excelSecilenleriEkle');
+        $this->assertCount(2, $c2->get('secilenler'));
+
+        unlink($yol);
+    }
+
+    public function test_excel_400_madde_ustu_dogrudan_risk_degerlendirmesi_olusturur(): void
+    {
+        config(['services.gemini.key' => null]);
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $satirlar = [['Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet']];
+        for ($i = 1; $i <= 420; $i++) {
+            $satirlar[] = ['Bölüm '.$i, 'Faaliyet '.$i, 'Tehlike '.$i, 'Sonuç '.$i, 3, 4];
+        }
+        $kitap = new Spreadsheet;
+        $kitap->getActiveSheet()->fromArray($satirlar, null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('buyuk.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->call('excelSecilenleriEkle')
+            ->assertRedirect();
+
+        $rd = RiskDegerlendirmesi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame(420, $rd->maddeler()->count());
+        $this->assertSame(12, (int) $rd->maddeler()->first()->puan);  // 3 × 4
+
+        unlink($yol);
+    }
+
+    public function test_excel_iyilestirme_sonrasi_puanlari_kayde_tasinir(): void
+    {
+        config(['services.gemini.key' => null]);
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $kitap = new Spreadsheet;
+        // İki O/Ş bloğu: ikincisi "İyileştirme Sonrası".
+        $kitap->getActiveSheet()->fromArray([
+            ['Bölüm', 'Tehlike', 'Risk', 'RİSK DEĞERLENDİRME', null, 'Öneri', 'İYİLEŞTİRME SONRASI', null],
+            [null, null, null, 'Olasılık', 'Şiddet', null, 'Olasılık', 'Şiddet'],
+            ['Depo', 'Devrilme', 'Ezilme', 4, 5, 'Sabitlenir.', 2, 5],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'xlsx').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
+            ->set('excelDosya', UploadedFile::fake()->createWithContent('r.xlsx', file_get_contents($yol)))
+            ->call('excelIceAktar')
+            ->call('excelSecilenleriEkle')
+            ->call('kaydet');
+
+        $madde = RiskDegerlendirmesi::where('firma_id', $firma->id)->firstOrFail()->maddeler()->firstOrFail();
+        $this->assertEquals(2.0, $madde->son_olasilik);   // Excel'den geldi, varsayılan 1 EZİLMEDİ
+        $this->assertEquals(5.0, $madde->son_siddet);
+        $this->assertEquals(10, (int) $madde->son_puan);
+
+        unlink($yol);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Sektörel şablonlar (toplu ekleme + tekrar kullanım)

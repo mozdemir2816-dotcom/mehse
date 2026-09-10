@@ -142,4 +142,67 @@ class RiskDegerlendirmesiExcelOkuyucuTest extends TestCase
         $this->assertStringNotContainsString('126', (string) $ilk['risk']);
         $this->assertStringNotContainsString('RİSK', mb_strtoupper((string) $ilk['risk']));
     }
+
+    public function test_uc_satir_baslik_kisaltmali_puan_sutunlari_okunur(): void
+    {
+        // Fabrika deseni: ana başlık + "O / Ş" + "OLASILIK (1-5) / ŞİDDET (1-5)".
+        $yol = $this->xlsxOlustur([
+            ['RİSK NO', 'BÖLÜM', 'FAALİYET', 'TEHLİKE KAYNAKLARI', 'TESPİT EDİLEN RİSK', 'RİSKİN DEĞERLENDİRİLMESİ', null, null, null, 'DÜZELTİCİ ve ÖNLEYİCİ KONTROL', 'MEVCUT DURUM', 'TEDBİRLER SONRASI', null, null],
+            [null, null, null, null, null, 'O', 'Ş', 'RİSK SKORU', 'ÖNEM DERECESİ', null, null, 'O', 'Ş', 'RİSK SKORU'],
+            [null, null, null, null, null, 'OLASILIK (1-5)', 'ŞİDDET (1-5)', 'RİSK = O X Ş', null, null, null, 'OLASILIK (1-5)', 'ŞİDDET (1-5)', 'RİSK = O X Ş'],
+            [1, 'Atölye', 'Acil Durumlar', 'Kapıların içe açılması', 'Panik anında tahliye güçlüğü', 3, 4, 12, 'Yüksek', 'Kapılar dışa açacak şekilde düzenlenir.', 'Uygun değil', 1, 4, 4],
+            [2, 'Atölye', 'Elektrik', 'Topraklama ölçümü yok', 'Elektrik çarpması', 4, 5, 20, 'Çok Yüksek', 'Yıllık ölçüm yaptırılır.', 'Yapılmıyor', 1, 5, 5],
+        ]);
+
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($yol);
+        unlink($yol);
+
+        $this->assertSame(2, $sonuc['basarili']);
+        $ilk = $sonuc['adaylar'][0];
+        $this->assertSame('Atölye', $ilk['bolum']);
+        $this->assertSame('Acil Durumlar', $ilk['faaliyet']);
+        $this->assertSame(3.0, $ilk['olasilik']);
+        $this->assertSame(4.0, $ilk['siddet']);
+        $this->assertSame(1.0, $ilk['son_olasilik']);   // 2. blok → son_*
+        $this->assertSame(4.0, $ilk['son_siddet']);
+        $this->assertStringContainsString('Kapıların içe açılması', $ilk['tehlike']);
+        $this->assertStringContainsString('Panik', (string) $ilk['risk']);
+        $this->assertStringContainsString('dışa açacak', $ilk['oneri']);
+        $this->assertStringNotContainsString('12', (string) $ilk['risk']);   // "RİSK = O X Ş" skoru sızmadı
+    }
+
+    public function test_yalin_risk_ve_alan_basliklari_taninir(): void
+    {
+        $yol = $this->xlsxOlustur([
+            ['SIRA NO', 'ALAN', 'FAALİYET', 'TEHLİKE', 'RİSK', 'OLASILIK', 'ŞİDDET'],
+            [1, 'Dış Saha', 'Kazı', 'İksasız kazı', 'Göçük', 4, 5],
+        ]);
+
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($yol);
+        unlink($yol);
+
+        $this->assertSame(1, $sonuc['basarili']);
+        $this->assertSame('Dış Saha', $sonuc['adaylar'][0]['bolum']);
+        $this->assertSame('Göçük', $sonuc['adaylar'][0]['risk']);
+    }
+
+    public function test_bolum_faaliyet_ust_super_satirda_kalinca_alinir(): void
+    {
+        // Altın Yakut deseni: bölüm/faaliyet üst satırda, tehlike/risk/O/Ş ana bantta.
+        $yol = $this->xlsxOlustur([
+            ['SIRA NO', 'BÖLÜM / ÜNİTE', 'FAALİYET / ALAN', 'PLANLAMA ÖNCESİ TEHLİKE', null, null, null, 'PLANLANAN'],
+            [null, null, null, 'TEHLİKE', 'RİSK', 'OLASILIK', 'ŞİDDET', 'ÖNERİLER'],
+            [1, 'İskeleler', 'Dış Cephe İskelesi', 'Korkuluksuz platform', 'Yüksekten düşme', 4, 5, 'Korkuluk takılır.'],
+            [2, 'İskeleler', 'Söküm', 'Malzeme düşmesi', 'Baş yaralanması', 3, 4, 'Baret zorunlu.'],
+        ]);
+
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($yol);
+        unlink($yol);
+
+        $this->assertSame(2, $sonuc['basarili']);
+        $this->assertSame('İskeleler', $sonuc['adaylar'][0]['bolum']);
+        $this->assertSame('Dış Cephe İskelesi', $sonuc['adaylar'][0]['faaliyet']);
+        $this->assertSame(4.0, $sonuc['adaylar'][0]['olasilik']);
+        $this->assertStringContainsString('Korkuluk takılır', $sonuc['adaylar'][0]['oneri']);
+    }
 }

@@ -2726,6 +2726,72 @@ ekleyelim".
     (`[[firma-ekleme-onay-gerekli]]`). Bekleyen: belirli firmalara
     `RiskDegerlendirmesi` istenirse firmaların açılması gerekir.
 
+## Durum — 2026-09-10 (Saha Denetimi / DÖF / AI Saha Analizi — fotoğrafların rapor içine gömülmesi)
+
+Kullanıcı isteği: eklenen fotoğraflar rapor PDF'inde **madde satırının yanında**
+görünsün (sadece rapor sonundaki tam sayfa "FOTOĞRAF KANITI" değil).
+
+- **Saha Denetimi formu (`SahaDenetimi.php` + `saha-denetimi.blade.php`):** fotoğraf
+  yükleme alanı artık **her kontrol maddesinde** var (önceden yalnızca "Uygun Değil"
+  işaretlenince açılıyordu). Her madde satırının altında küçük önizleme + `✕ kaldır`
+  (`fotoKaldir($kod)` — `fotoYuklemeleri`'ni ve taslaktan gelen `foto_yolu`'nu siler).
+  Kaydetme mantığı (`kaydet`/`taslakKaydet`) zaten tüm maddeleri dönüyordu, değişmedi.
+- **`pdf/saha-denetimi.blade.php`:** madde tablosuna **"Foto" sütunu** eklendi
+  (`img.satir-foto`, max-height 78px). Rapor sonundaki tam sayfa foto bölümü **korundu**.
+- **`pdf/dof-raporu.blade.php`:** madde tablosuna **"Foto" sütunu** eklendi
+  (`img.satir-foto`, max-height 75px). Tam sayfa kanıt bölümü korundu. DÖF formunun
+  madde listesinde de küçük thumbnail gösteriliyor.
+- **AI Saha Analizi → "Çoklu DÖF'e Aktar" (`AiSahaAnalizi::secilenleriDofeAktar`):**
+  aktarılan maddeler artık `foto_yolu` taşıyor (önceden aktarımda foto kayboluyordu).
+  `saha-analiz-foto/...` yolu DÖF raporunda da render edilir. AI Saha Gözetim raporu
+  (`pdf/saha-analiz-raporu.blade.php`) zaten satır içi foto gösteriyordu — dokunulmadı.
+- Testler: `SahaDenetimiTest` +3, `DofOlusturTest` +1, `AiSahaAnaliziTest` +1. Tüm
+  suite yeşil (659 test).
+
+## Durum — 2026-09-10 (Risk Analizi Excel içe aktarımı — A–G düzeltmeleri)
+
+Kullanıcının 12 matriks (5×5) + İnşaat Fine-Kinney gerçek dosyası üzerinde ölçüldü;
+her dosyada bir alan sessizce kayboluyordu. Rapor: `claude.ai/code/artifact/431fbccd`.
+`RiskDegerlendirmesiExcelOkuyucu` yeniden yazıldı:
+
+- **Başlık algılama v2:** önce ANA başlık satırı bulunur (tek başına en çok alan
+  üreten + "tehlike" içeren), sonra 0–2 ARDIŞIK alt satır (`altBaslikMi` — puan/derece
+  kelimesi ≥2, uzun hücre ≤1), sonra — bölüm/faaliyet başlığı süper satırda kalmışsa
+  (Altın Yakut) — üstteki 1 satır YALNIZ bölüm/faaliyet boşluğu için. `satirVeriGibi`
+  = 1./2. sütun küçük tam sayı (SIRA NO).
+- **3 satırlık başlık** artık çözülüyor (Fabrika: "O/Ş" 2. satır + "OLASILIK (1-5)"
+  3. satır → birleşik metin). **Yalın "RİSK" ve "ALAN"** başlıkları tanınıyor.
+  "DÜZELTİCİ, KORUYUCU VE ÖNLEYİCİ TEDBİRLER" → öneri.
+- **İki puan bloğu:** ilk O/Ş(/F) → `olasilik/frekans/siddet`, ikinci blok
+  (İYİLEŞTİRME SONRASI / TEDBİRLER SONRASI) → `son_olasilik/son_frekans/son_siddet`.
+  Hesaplanan sütunlar (RİSK SKORU, ÖNCELİK SIRASI, ÖNEM DERECESİ) yoksayılır.
+- **Performans:** `setReadEmptyCells(false)` → Altın Yakut (42.000 satır × 16.000
+  sütun şişmiş) load 44 sn → 2 sn. `MUTLAK_SATIR_TAVANI`, `etkinSutunSayisi` tavanları.
+  (`setReadFilter` denendi — bu dosyalarda hızlı toplu okumayı kapatıp 40 sn EKLİYOR,
+  kullanılmadı.) 13/13 dosya artık <9 sn.
+- **Sonuç:** 13/13 dosyada bölüm·faaliyet·tehlike·risk·O·Ş·öneri tam; son_O/Ş 11/13
+  (MSK'de post-şiddet formül, Altın Yakut'ta veri yok).
+
+Risk Sihirbazı:
+- **Tekilleştirme:** eski "yalnız tehlike metni" eşitliği kalktı. Excel yolu artık
+  HER satırı ekler; `excelIceAktar` tekrar sayısını (`bölüm+faaliyet+tehlike+risk`
+  kimliği) hesaplar, blade'de "N tekrar eden satır — birleştir?" onay kutusu
+  (`excelTekrarBirlestir`, varsayılan kapalı = hepsi eklenir). `sablonUygula` dedup
+  da 4-alan kimliğine geçti.
+- **400 madde eşiği** (`EXCEL_DOGRUDAN_ESIGI`): Excel'de 400'ü aşan seçim sihirbaza
+  yüklenmeden `excelDosyayiDogrudanUygula` ile doğrudan `RiskDegerlendirmesi` +
+  parçalı `RiskMaddesi::insert`, düzenleme sayfasına yönlendirme (şablon yolundaki
+  250 eşiğinin eşi).
+- **İyileştirme sonrası puanlar:** Excel'de doluysa `kaydet()` / doğrudan yol
+  `son_*` alanlarını yazar; boşsa `RiskMaddesi::saving` varsayımı (son_olasilik=1,
+  son_siddet=siddet) devreye girer. `aciklama` alanı da aktarılıyor.
+
+Fine-Kinney master şablonu: `database/data/insaat-risk-fine-kinney.php` zaten `son_*`
+içeriyor (1671 satır) — yeniden üretime gerek kalmadı.
+
+Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite yeşil (665).
+**Sonraki tur (H):** içe aktarım öncesi "sütun → alan" eşleme/önizleme ekranı.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta

@@ -471,8 +471,9 @@
                                 background:{{ $sec ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
                             <div style="font-weight:600;font-size:.85rem">{{ $sec ? '☑ ' : '☐ ' }}{{ $aday['tehlike'] }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128)">
-                                @if ($aday['faaliyet']) {{ $aday['faaliyet'] }} · @endif
-                                {{ Str::limit($aday['risk'], 90) }}
+                                @if ($aday['faaliyet'] ?? null) {{ $aday['faaliyet'] }} · @endif
+                                @if ($aday['bolum'] ?? null) <span style="opacity:.7">[{{ Str::limit($aday['bolum'], 28) }}]</span> @endif
+                                {{ Str::limit($aday['risk'] ?? '', 90) }}
                                 @if ($aday['olasilik'] !== null)
                                     · <span style="color:{{ $mor }}">O:{{ $aday['olasilik'] }}@if($aday['frekans'] !== null) F:{{ $aday['frekans'] }}@endif Ş:{{ $aday['siddet'] }}</span>
                                 @endif
@@ -480,6 +481,24 @@
                         </button>
                     @endforeach
                 </div>
+                @if ($excelTekrarSayisi > 0)
+                    <label style="margin-top:.8rem;display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;cursor:pointer;
+                        border:1px solid rgb(217 119 6 / .4);background:rgb(217 119 6 / .08);border-radius:.5rem;padding:.6rem .75rem">
+                        <input type="checkbox" wire:model="excelTekrarBirlestir" style="margin-top:.15rem">
+                        <span>
+                            <strong>{{ $excelTekrarSayisi }} tekrar eden satır</strong> var (aynı bölüm + faaliyet + tehlike + risk).
+                            İşaretlerseniz tek maddeye indirilir; boş bırakırsanız hepsi ayrı ayrı eklenir.
+                        </span>
+                    </label>
+                @endif
+
+                @if (count($excelSecilenAdaylar) > 400)
+                    <p style="margin-top:.6rem;font-size:.78rem;color:rgb(107 114 128)">
+                        400'den fazla madde seçili — sihirbaza yüklenmeden doğrudan bir risk değerlendirmesi
+                        oluşturulup düzenleme sayfasına yönlendirileceksiniz. (Önce 1. adımdan firma seçili olmalı.)
+                    </p>
+                @endif
+
                 <div style="margin-top:1rem">
                     <x-filament::button color="primary" icon="heroicon-o-plus" wire:click="excelSecilenleriEkle" :disabled="count($excelSecilenAdaylar) === 0">
                         Seçili {{ count($excelSecilenAdaylar) }} riski ekle
