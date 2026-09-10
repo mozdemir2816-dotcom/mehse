@@ -130,9 +130,37 @@ class EgitimKatilimTest extends TestCase
             'kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri,
         ])->render();
 
+        // Katılımcı iki gün ayrı imza atar; eğitimci tek imza (gün ayrımı yok).
         $this->assertStringContainsString('İmza (1. Gün)', $html);
         $this->assertStringContainsString('İmza (2. Gün)', $html);
-        $this->assertStringContainsString('1. ve 2. gün', $html);   // künyede planlama notu
+        $this->assertStringContainsString('1. ve 2. gün', $html);
+        $this->assertStringNotContainsString('1. Gün İmza', $html);   // eğitmen bloğunda gün ayrımı YOK
+    }
+
+    public function test_ders_saati_tehlike_sinifina_gore_gelir_ve_elle_degistirilince_2_gune_ceker(): void
+    {
+        $azFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $cokFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli']);
+
+        $c = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $azFirma->id)
+            ->assertSet('dersSaati', 8)
+            ->assertSet('sureGun', 1)
+            ->set('firmaId', $cokFirma->id)
+            ->assertSet('dersSaati', 16)
+            ->assertSet('sureGun', 2);
+
+        // Az tehlikeli işyeri için elle 16 ders saati → 2 güne çeker, belgeye 16 yazılır.
+        $c->set('firmaId', $azFirma->id)
+            ->assertSet('dersSaati', 8)
+            ->set('dersSaati', 16)
+            ->assertSet('sureGun', 2)
+            ->set('belgeTarihi', now()->toDateString())
+            ->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $azFirma->id)->firstOrFail();
+        $this->assertSame(16, $kayit->konu_secimleri['saat']);
+        $this->assertSame(2, $kayit->sure_gun);
     }
 
     public function test_egitim_katilim_formu_excel_olarak_indirilir(): void

@@ -57,6 +57,9 @@ class EgitimKatilim extends Page
 
     public int $sureGun = 1;
 
+    /** Belgede görünen "X Ders Saati" — tehlike sınıfına göre 8/12/16, gerekirse elle değiştirilir. */
+    public ?int $dersSaati = null;
+
     public bool $isgUzmaniVar = true;
 
     public bool $isyeriHekimiVar = false;
@@ -163,13 +166,28 @@ class EgitimKatilim extends Page
             $this->egitimTuru,
         );
 
+        // Tehlike sınıfına göre nominal ders saati (8/12/16) — kullanıcı elle değiştirebilir.
+        $this->dersSaati = $this->icerik['saat'] ?? null;
+
         $this->sureGunYenile();
     }
 
-    /** Toplam süre 11 saati aşıyorsa eğitim 2 güne planlanır (kullanıcı sonra elle değiştirebilir). */
+    public function updatedDersSaati(): void
+    {
+        $this->sureGunYenile();
+    }
+
+    /**
+     * Toplam süre 11 saati aşıyorsa eğitim 2 güne planlanır (kullanıcı sonra elle
+     * değiştirebilir). "Ders Saati" elle 12+ yapıldıysa (ör. az tehlikeli işyeri
+     * için 16) o da 2 güne çeker — 1 ders saati ≈ 60 dk duvar saati.
+     */
     private function sureGunYenile(): void
     {
-        $this->sureGun = EgitimIcerikOlusturucu::planlananGun($this->icerik);
+        $konuGun = EgitimIcerikOlusturucu::planlananGun($this->icerik);
+        $dersGun = ($this->dersSaati && $this->dersSaati * 60 > EgitimIcerikOlusturucu::IKI_GUN_ESIGI_DK) ? 2 : 1;
+
+        $this->sureGun = max($konuGun, $dersGun);
     }
 
     /** Konu dakikası / dahil durumu her değiştiğinde gün sayısını yeniden hesapla. */
@@ -376,6 +394,13 @@ class EgitimKatilim extends Page
             }
         }
 
+        // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse onu kaydet.
+        $icerik = $this->icerik;
+
+        if (($icerik['tip'] ?? null) === 'genel' && $this->dersSaati) {
+            $icerik['saat'] = $this->dersSaati;
+        }
+
         $kayit = new EgitimKatilimModel([
             'firma_id' => $this->firma->id,
             'baslik_anahtari' => $this->baslikAnahtari,
@@ -392,7 +417,7 @@ class EgitimKatilim extends Page
                 ? ($this->isyeriHekimiAdi ?: $this->firma->isyeriHekimi?->ad_soyad)
                 : null,
             'isyeri_hekimi_kase' => $this->isyeriHekimiVar ? $this->firma->isyeriHekimi?->kase_gorseli : null,
-            'konu_secimleri' => $this->icerik,
+            'konu_secimleri' => $icerik,
             'katilimcilar' => $this->katilimcilarTopla(),
         ]);
         $kayit->save();

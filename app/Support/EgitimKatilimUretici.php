@@ -98,7 +98,7 @@ class EgitimKatilimUretici
             ['Belge No', $kayit->belge_no],
             ['Eğitim Yeri', $kayit->egitim_yeri ?: '—'],
             ['Tarih', $kayit->belge_tarihi?->format('d.m.Y') ?? '—'],
-            ['Süre', ($kayit->sure_gun ?? 1).' gün'.(($icerik['saat'] ?? null) ? " ({$icerik['saat']} saat)" : '').($ikiGun ? ' — 1. ve 2. gün' : '')],
+            ['Süre', (($icerik['saat'] ?? null) ? "{$icerik['saat']} Ders Saati · " : '').($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '')],
             ['Eğitimciler', static::egitmenMetni($kayit)],
         ];
 
@@ -168,14 +168,14 @@ class EgitimKatilimUretici
             if ($kayit->isg_uzmani_var) {
                 $s->setCellValue("A{$r}", 'İş Güvenliği Uzmanı');
                 $s->setCellValue("B{$r}", $kayit->isg_uzmani_adi ?: '');
-                $s->setCellValue("C{$r}", $ikiGun ? 'İmza (1. Gün): ______  (2. Gün): ______' : 'Kaşe / İmza: ______');
+                $s->setCellValue("C{$r}", 'Kaşe / İmza: ______');
                 $r++;
             }
 
             if ($kayit->isyeri_hekimi_var) {
                 $s->setCellValue("A{$r}", 'İşyeri Hekimi');
                 $s->setCellValue("B{$r}", $kayit->isyeri_hekimi_adi ?: '');
-                $s->setCellValue("C{$r}", $ikiGun ? 'İmza (1. Gün): ______  (2. Gün): ______' : 'Kaşe / İmza: ______');
+                $s->setCellValue("C{$r}", 'Kaşe / İmza: ______');
                 $r++;
             }
             $r++;

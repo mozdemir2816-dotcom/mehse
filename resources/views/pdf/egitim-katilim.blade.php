@@ -57,7 +57,11 @@
         <div>{{ $firma?->unvan }}</div>
     </div>
 
-    @php $ikiGun = ($kayit->sure_gun ?? 1) >= 2; @endphp
+    @php
+        $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
+        $sureMetni = (($icerik['saat'] ?? null) ? $icerik['saat'].' Ders Saati · ' : '')
+            .($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '');
+    @endphp
 
     <table class="kunye">
         <tr>
@@ -70,7 +74,7 @@
         </tr>
         <tr>
             <td class="e">Süre</td>
-            <td>{{ $kayit->sure_gun }} gün @if(($icerik['saat'] ?? null))({{ $icerik['saat'] }} saat@if(($kayit->egitim_turu ?? 'ilk') === 'tekrar') — Tekrar@endif)@endif @if ($ikiGun)<span class="dk">— 1. ve 2. gün</span>@endif</td>
+            <td>{{ $sureMetni }}</td>
             <td class="e">Eğitimciler</td>
             <td>
                 @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı{{ $kayit->isg_uzmani_adi ? ' ('.$kayit->isg_uzmani_adi.')' : '' }} @endif
@@ -125,8 +129,25 @@
 
     @php
         $katilimcilar = $kayit->katilimcilar ?? [];
-        // En az 10 satırlık form — katılımcı daha fazlaysa hepsi.
-        $satirSayisi = max(count($katilimcilar), 10);
+
+        // Katılımcı listesi tek A4 sayfayı DOLDURACAK kadar satır içersin — konu
+        // bloğu ne kadar yer kaplarsa katılımcı satırı o kadar az. Katılımcı
+        // sayısı bu kapasiteyi aşarsa hepsi listelenir (sonraki sayfaya taşar).
+        if (($icerik['tip'] ?? null) === 'genel') {
+            $solKonu = count($goster($icerik['genel_konular'])) + count($goster($icerik['saglik_konulari']));
+            $sagKonu = count($goster($icerik['teknik_konular']))
+                + (($icerik['isyerine_ozgu'] ?? null) ? count($goster($icerik['isyerine_ozgu']['maddeler'])) : 0);
+            $konuSatir = max($solKonu, $sagKonu);   // 2 sütun — uzun kolon belirler
+        } else {
+            $konuSatir = count($goster($icerik['maddeler'] ?? [])) * 2;   // tek kolon
+        }
+
+        // A4 ≈ 1123px (96dpi); sabit bölümler (başlık+künye+eğitmen imza+yasal) ≈ 330px;
+        // her konu satırı ≈ 13px; her katılımcı satırı ≈ 20px. dompdf ile kalibre edildi.
+        $sigan = (int) floor((1095 - 330 - $konuSatir * 13) / 20);
+        $sigan = max(12, min($sigan, 32));
+
+        $satirSayisi = max(count($katilimcilar), $sigan);
     @endphp
     <div class="lt">Katılımcı Listesi ve İmzaları</div>
     <table class="katilim">
@@ -164,7 +185,7 @@
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
                             @endif
                         </div>
-                        <div class="imza-satir">@if ($ikiGun) 1. Gün İmza: ..............&nbsp; 2. Gün İmza: .............. @else Kaşe / İmza @endif</div>
+                        <div class="imza-satir">Kaşe / İmza</div>
                     </td>
                 @endif
                 @if ($kayit->isyeri_hekimi_var)
@@ -176,7 +197,7 @@
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
                             @endif
                         </div>
-                        <div class="imza-satir">@if ($ikiGun) 1. Gün İmza: ..............&nbsp; 2. Gün İmza: .............. @else Kaşe / İmza @endif</div>
+                        <div class="imza-satir">Kaşe / İmza</div>
                     </td>
                 @endif
             </tr>

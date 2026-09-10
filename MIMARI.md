@@ -2811,6 +2811,15 @@ Testler: `RiskDegerlendirmesiExcelOkuyucuTest` +3, `RiskSihirbaziTest` +3. Suite
   katılımcı imza tablosu (10+ satır) + eğitmenler tek sayfada `.xlsx`.
   Sayfa header aksiyonu "Excel (Kaydet ve İndir)" + geçmiş kayıtlarda "Excel" düğmesi
   (`gecmisExcel`). `konuBloklari()` hem genel (4 blok) hem özel (tek blok) düzler.
+- **Katılımcı satırı sayfayı doldurur:** PDF'te `$satirSayisi` konu bloğu yüksekliğine
+  göre hesaplanır (dompdf ile kalibre; `$konuSatir * 13`, kalan alan / 20, 12-32
+  arası) — katılımcı listesi tek A4'ü doldurur, sayı aşılırsa taşar.
+- **Ders Saati alanı:** tehlike sınıfına göre 8/12/16 gelir, `EgitimKatilim::dersSaati`
+  ile elle değiştirilebilir (az tehlikeli işyeri için 16 gerekebilir). Belgede
+  "X Ders Saati · N gün" yazar (açıklama yok). `dersSaati` × 60 > 660 ise 2 güne çeker.
+  `konu_secimleri['saat']` kaydedilirken güncellenir.
+- **İmza:** katılımcı 2 günde 2 ayrı imza (tablo sütunları), eğitimci tek imza
+  (gün ayrımı yok — "Kaşe / İmza").
 - **İşe özgü konu düzenleme:** `partials/egitim-konulari` — host bileşen
   `isyerineOzguMaddeEkle`/`Cikar` sağlıyorsa (yalnız EgitimKatilim; SertifikaOlustur
   değil) İşyerine Özgü Riskler maddeleri metin girişi + ✕ + "Konu Ekle". Genel/
