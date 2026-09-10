@@ -63,6 +63,14 @@ class EgitimKatilim extends Page
 
     public int $sureGun = 1;
 
+    /**
+     * 2+ güne planlanan eğitimde her günün ayrı eğitim tarihi (gün sırasıyla).
+     * Tek günlükte boş kalır; künyede/PDF'de "1. Gün / 2. Gün" olarak yazar.
+     *
+     * @var array<int, string>
+     */
+    public array $gunTarihleri = [];
+
     /** Belgede görünen "X Ders Saati" — tehlike sınıfına göre 8/12/16, gerekirse elle değiştirilir. */
     public ?int $dersSaati = null;
 
@@ -257,6 +265,41 @@ class EgitimKatilim extends Page
         $dersGun = ($this->dersSaati && $this->dersSaati * 60 > EgitimIcerikOlusturucu::IKI_GUN_ESIGI_DK) ? 2 : 1;
 
         $this->sureGun = max($konuGun, $dersGun);
+
+        $this->gunTarihleriYenile();
+    }
+
+    /** "Eğitim Süresi (Gün)" elle değiştirilince gün tarihi alanlarını uyarla. */
+    public function updatedSureGun(): void
+    {
+        $this->gunTarihleriYenile();
+    }
+
+    /** Belge tarihi değişince, henüz doldurulmamış gün tarihlerini yeniden türet. */
+    public function updatedBelgeTarihi(): void
+    {
+        $this->gunTarihleriYenile();
+    }
+
+    /**
+     * 2+ günlük eğitimde her gün için bir tarih alanı bulundur; kullanıcının
+     * girdiği değerleri koru, boş kalanları belge tarihinden gün gün türet.
+     * Tek günlükte alanları temizle.
+     */
+    private function gunTarihleriYenile(): void
+    {
+        if ($this->sureGun < 2) {
+            $this->gunTarihleri = [];
+
+            return;
+        }
+
+        $mevcut = array_values($this->gunTarihleri);
+        $baz = $this->belgeTarihi ?: now()->toDateString();
+
+        $this->gunTarihleri = collect(range(0, $this->sureGun - 1))
+            ->map(fn (int $i) => $mevcut[$i] ?? Carbon::parse($baz)->addDays($i)->toDateString())
+            ->all();
     }
 
     /** Konu dakikası / dahil durumu her değiştiğinde gün sayısını yeniden hesapla. */
@@ -519,6 +562,14 @@ class EgitimKatilim extends Page
             ->map(fn ($t) => Carbon::parse($t)->toDateString())
             ->values();
 
+        // Kullanıcı sertifika tarihini vermediyse formda girilen gün tarihlerine düş.
+        if ($tarihler->isEmpty()) {
+            $tarihler = collect($kayit->gun_tarihleri ?: [])
+                ->filter()
+                ->map(fn ($t) => Carbon::parse($t)->toDateString())
+                ->values();
+        }
+
         if ($tarihler->isEmpty()) {
             $tarihler = collect(array_fill(0, $gun, $belgeTarih));
         }
@@ -591,6 +642,9 @@ class EgitimKatilim extends Page
             'egitim_yeri' => $this->egitimYeri,
             'belge_tarihi' => $this->belgeTarihi,
             'sure_gun' => $this->sureGun,
+            'gun_tarihleri' => $this->sureGun >= 2
+                ? (array_values(array_filter($this->gunTarihleri)) ?: null)
+                : null,
             'isg_uzmani_var' => $this->isgUzmaniVar,
             'isg_uzmani_adi' => $this->isgUzmaniVar ? $this->firma->igu?->ad_soyad : null,
             'isg_uzmani_kase' => $this->isgUzmaniVar ? $this->firma->igu?->kase_gorseli : null,
@@ -655,7 +709,7 @@ class EgitimKatilim extends Page
                 ->schema(fn () => array_map(
                     fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
                         ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
-                        ->default($this->belgeTarihi)
+                        ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
                         ->required(),
                     range(1, max(1, (int) $this->sureGun)),
                 ))

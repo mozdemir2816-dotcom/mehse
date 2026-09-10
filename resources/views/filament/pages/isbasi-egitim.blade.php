@@ -5,7 +5,8 @@
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İşe yeni başlayan her çalışan için ayrı, tek sayfalık işbaşı/oryantasyon
-        eğitim tutanağı oluşturun.
+        eğitim tutanağı oluşturun. Firma seçmeden, üstteki <strong>"Boş Katılım Formu"</strong>
+        ile boş imza satırlı formu indirip işyerinde elle doldurabilirsiniz.
     </p>
 
     {{-- 1. FİRMA & EĞİTİM BİLGİSİ --}}
@@ -72,10 +73,37 @@
         </div>
     </x-filament::section>
 
+    {{-- 2. EĞİTİM KONULARI — firma seçilmeden de düzenlenebilir (boş katılım formu için) --}}
+    <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="success">
+        <x-slot name="heading">2. Eğitim Konuları ({{ count($secilenKonular) }}/{{ $this->toplamMaddeSayisi }})</x-slot>
+
+        <div style="margin-bottom:.75rem;display:flex;gap:.5rem">
+            <x-filament::button size="xs" color="gray" wire:click="tumKonular(true)">Tümünü Seç</x-filament::button>
+            <x-filament::button size="xs" color="gray" wire:click="tumKonular(false)">Tümünü Kaldır</x-filament::button>
+        </div>
+
+        @foreach ($this->konuKategorileri as $kategori => $maddeler)
+            <div style="margin-bottom:.75rem">
+                <div style="font-weight:700;font-size:.78rem;color:{{ $yesil }};margin-bottom:.3rem;text-transform:uppercase">{{ $kategori }}</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.35rem">
+                    @foreach ($maddeler as $madde)
+                        @php $secili = in_array($madde, $secilenKonular, true); @endphp
+                        <button type="button" wire:click="konuToggle('{{ addslashes($madde) }}')"
+                            style="text-align:left;padding:.4rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
+                                border:1px solid {{ $secili ? $yesil : 'rgb(107 114 128 / .3)' }};
+                                background:{{ $secili ? 'rgb(16 185 129 / .08)' : 'transparent' }}">
+                            {{ $secili ? '☑' : '☐' }} {{ $madde }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </x-filament::section>
+
     @if ($this->firma)
-        {{-- 2. ÇALIŞAN --}}
+        {{-- 3. ÇALIŞAN --}}
         <x-filament::section icon="heroicon-o-user" icon-color="success">
-            <x-slot name="heading">2. Çalışan Bilgisi</x-slot>
+            <x-slot name="heading">3. Çalışan Bilgisi</x-slot>
 
             @if ($this->calisanlar->isNotEmpty())
                 <div style="margin-bottom:.75rem">
@@ -102,33 +130,6 @@
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
             </div>
-        </x-filament::section>
-
-        {{-- 3. EĞİTİM KONULARI --}}
-        <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="success">
-            <x-slot name="heading">3. Eğitim Konuları ({{ count($secilenKonular) }}/{{ $this->toplamMaddeSayisi }})</x-slot>
-
-            <div style="margin-bottom:.75rem;display:flex;gap:.5rem">
-                <x-filament::button size="xs" color="gray" wire:click="tumKonular(true)">Tümünü Seç</x-filament::button>
-                <x-filament::button size="xs" color="gray" wire:click="tumKonular(false)">Tümünü Kaldır</x-filament::button>
-            </div>
-
-            @foreach ($this->konuKategorileri as $kategori => $maddeler)
-                <div style="margin-bottom:.75rem">
-                    <div style="font-weight:700;font-size:.78rem;color:{{ $yesil }};margin-bottom:.3rem;text-transform:uppercase">{{ $kategori }}</div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.35rem">
-                        @foreach ($maddeler as $madde)
-                            @php $secili = in_array($madde, $secilenKonular, true); @endphp
-                            <button type="button" wire:click="konuToggle('{{ addslashes($madde) }}')"
-                                style="text-align:left;padding:.4rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
-                                    border:1px solid {{ $secili ? $yesil : 'rgb(107 114 128 / .3)' }};
-                                    background:{{ $secili ? 'rgb(16 185 129 / .08)' : 'transparent' }}">
-                                {{ $secili ? '☑' : '☐' }} {{ $madde }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
         </x-filament::section>
 
         {{-- 4. GEÇMİŞ TUTANAKLAR --}}

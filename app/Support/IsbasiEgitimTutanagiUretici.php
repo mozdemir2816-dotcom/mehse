@@ -34,9 +34,11 @@ class IsbasiEgitimTutanagiUretici
      * için; tekil `IsbasiEgitimTutanagi` kaydı gibi veritabanına yazılmaz,
      * yalnızca anlık üretilip indirilir.
      *
+     * Firma verilmezse (boş form) künyede firma başlığı yalın kalır.
+     *
      * @param  array{egitim_tarihi?: ?string, sure_saat?: ?int, egitim_yeri?: ?string, egitimi_veren?: ?string, egitim_yontemi?: ?string, belge_tarihi?: ?string, konular?: array, igu_imzasi?: bool, isyeri_hekimi_imzasi?: bool, katilimcilar?: array}  $veri
      */
-    public static function katilimFormuPdf(Firma $firma, array $veri): StreamedResponse
+    public static function katilimFormuPdf(?Firma $firma, array $veri): StreamedResponse
     {
         $veri['egitim_tarihi'] = filled($veri['egitim_tarihi'] ?? null) ? Carbon::parse($veri['egitim_tarihi'])->format('d.m.Y') : null;
         $veri['belge_tarihi'] = filled($veri['belge_tarihi'] ?? null) ? Carbon::parse($veri['belge_tarihi'])->format('d.m.Y') : null;
@@ -46,7 +48,7 @@ class IsbasiEgitimTutanagiUretici
             'veri' => $veri,
         ])->setPaper('a4');
 
-        $ad = 'isbasi-egitim-katilim-formu-'.Str::slug($firma->unvan).'.pdf';
+        $ad = 'isbasi-egitim-katilim-formu-'.Str::slug($firma?->unvan ?? 'bos').'.pdf';
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }

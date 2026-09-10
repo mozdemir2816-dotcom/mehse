@@ -137,6 +137,74 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringNotContainsString('1. Gün İmza', $html);   // eğitmen bloğunda gün ayrımı YOK
     }
 
+    public function test_iki_gunluk_egitimde_gun_bazli_tarihler_girilir_ve_pdf_kunyesine_yazilir(): void
+    {
+        $cokFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli']);
+
+        $c = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $cokFirma->id)
+            ->assertSet('sureGun', 2);
+
+        // 2 güne planlanınca 2 tarih alanı belge tarihinden gün gün türetilir.
+        $this->assertCount(2, $c->get('gunTarihleri'));
+
+        $c->set('belgeTarihi', '2026-10-05')
+            ->set('gunTarihleri.0', '2026-10-05')
+            ->set('gunTarihleri.1', '2026-10-06')
+            ->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $cokFirma->id)->firstOrFail();
+        $this->assertSame(['2026-10-05', '2026-10-06'], $kayit->gun_tarihleri);
+
+        $html = view('pdf.egitim-katilim', [
+            'kayit' => $kayit, 'firma' => $cokFirma, 'icerik' => $kayit->konu_secimleri,
+        ])->render();
+
+        $this->assertStringContainsString('1. Gün: 05.10.2026', $html);
+        $this->assertStringContainsString('2. Gün: 06.10.2026', $html);
+    }
+
+    public function test_tek_gunluk_egitimde_gun_tarihleri_kaydedilmez(): void
+    {
+        $azFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $azFirma->id)
+            ->assertSet('sureGun', 1)
+            ->assertSet('gunTarihleri', [])
+            ->set('belgeTarihi', now()->toDateString())
+            ->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $azFirma->id)->firstOrFail();
+        $this->assertNull($kayit->gun_tarihleri);
+    }
+
+    public function test_gun_tarihleri_girilmisse_sertifika_o_tarihlerle_basilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'belge_tarihi' => now(),
+            'sure_gun' => 2,
+            'gun_tarihleri' => ['2026-11-02', '2026-11-03'],
+            'isg_uzmani_var' => true,
+            'isg_uzmani_adi' => 'Vural Gündüz',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+        ]);
+        $kayit->setRelation('firma', $firma);
+
+        $ref = new \ReflectionMethod(EgitimSayfasi::class, 'sertifikaKur');
+        $ref->setAccessible(true);
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $firma->id)->instance();
+
+        // Kullanıcı sertifika modalında tarih vermeyince form gün tarihlerine düşer.
+        $s = $ref->invoke($sayfa, $kayit, null);
+
+        $this->assertSame(['2026-11-02', '2026-11-03'], $s->egitim_tarihleri);
+    }
+
     public function test_ders_saati_tehlike_sinifina_gore_gelir_ve_elle_degistirilince_2_gune_ceker(): void
     {
         $azFirma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);

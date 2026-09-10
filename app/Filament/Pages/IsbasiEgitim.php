@@ -227,8 +227,7 @@ class IsbasiEgitim extends Page
                 ->label('Boş Katılım Formu')
                 ->icon('heroicon-o-pencil-square')
                 ->color('gray')
-                ->tooltip('Personel tanımlamadan, boş imza satırlarıyla — işyerinde elle imzalatmak için')
-                ->visible(fn () => $this->firma !== null)
+                ->tooltip('Firma seçmeden, boş imza satırlarıyla — işyerinde elle doldurup imzalatmak için')
                 ->action(fn () => IsbasiEgitimTutanagiUretici::katilimFormuPdf($this->firma, [
                     ...$this->katilimFormuVerisi(),
                     'katilimcilar' => [],

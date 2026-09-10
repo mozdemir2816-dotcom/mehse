@@ -87,6 +87,12 @@ class EgitimKatilimUretici
         $icerik = $kayit->konu_secimleri ?? [];
         $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
 
+        $gunTarihleri = collect($kayit->gun_tarihleri ?? [])->filter()
+            ->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d.m.Y'))->values();
+        $tarihMetni = $gunTarihleri->count() > 1
+            ? $gunTarihleri->map(fn ($t, $i) => ($i + 1).'. Gün: '.$t)->implode(' · ')
+            : ($gunTarihleri->first() ?? $kayit->belge_tarihi?->format('d.m.Y') ?? '—');
+
         $kitap = new Spreadsheet;
         $s = $kitap->getActiveSheet();
         $s->setTitle('Eğitim Katılım');
@@ -109,7 +115,7 @@ class EgitimKatilimUretici
             ['Eğitim Konusu', $kayit->basliklarEtiketi()],
             ['Belge No', $kayit->belge_no],
             ['Eğitim Yeri', $kayit->egitim_yeri ?: '—'],
-            ['Tarih', $kayit->belge_tarihi?->format('d.m.Y') ?? '—'],
+            ['Tarih', $tarihMetni],
             ['Süre', (($icerik['saat'] ?? null) ? "{$icerik['saat']} Ders Saati · " : '').($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '')],
             ['Eğitim Türü', ($kayit->egitim_turu ?? 'ilk') === 'tekrar' ? 'Tekrar (Yenileme)' : 'İlk Defa'],
             ['Eğitim Şekli', config('isg.sertifika.sekiller.'.($kayit->egitim_sekli ?? 'yuz_yuze'), 'Yüz Yüze')],

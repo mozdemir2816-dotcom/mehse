@@ -140,6 +140,34 @@ class IsbasiEgitimTest extends TestCase
         $this->assertSame(0, $firma->calisanlar()->count());
     }
 
+    public function test_bos_katilim_formu_firma_secmeden_indirilir(): void
+    {
+        $ilkMadde = collect(config('isg.isbasi_egitim.konu_kategorileri'))->flatten()->first();
+
+        Livewire::test(IsbasiSayfasi::class)
+            ->assertActionExists('bosKatilimFormu')
+            ->call('konuToggle', $ilkMadde)
+            ->callAction('bosKatilimFormu');
+
+        $this->assertDatabaseCount('isbasi_egitim_tutanaklari', 0);
+    }
+
+    public function test_katilim_formu_uretici_firmasiz_calisir(): void
+    {
+        $yanit = IsbasiEgitimTutanagiUretici::katilimFormuPdf(null, [
+            'egitim_tarihi' => now()->toDateString(),
+            'sure_saat' => 2,
+            'konular' => [],
+            'katilimcilar' => [],
+        ]);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+        $this->assertStringContainsString('bos', $yanit->headers->get('content-disposition'));
+    }
+
     public function test_katilim_formu_pdf_firma_calisanlarini_en_az_10_satir_listeler(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

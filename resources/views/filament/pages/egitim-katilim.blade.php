@@ -104,12 +104,26 @@
                 @php $toplamDk = \App\Support\EgitimIcerikOlusturucu::toplamDakika($icerik); @endphp
                 <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
                     @if ($sureGun >= 2)
-                        <strong>2 gün</strong> — imzalar 1. ve 2. gün ayrı alınır. Elle değiştirebilirsiniz.
+                        <strong>{{ $sureGun }} gün</strong> — imzalar her gün ayrı alınır. Elle değiştirebilirsiniz.
                     @else
                         11 saati / 12 ders saatini aşınca otomatik 2 güne çıkar.
                     @endif
                 </p>
             </div>
+            @if ($sureGun >= 2)
+                @foreach (range(1, $sureGun) as $g)
+                    <div>
+                        <label style="font-weight:600;font-size:.82rem">{{ $g }}. Gün Eğitim Tarihi</label>
+                        <input type="date" wire:model="gunTarihleri.{{ $g - 1 }}"
+                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        @if ($g === 1)
+                            <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                                Formun künyesinde ve sertifikada gün gün yazılır.
+                            </p>
+                        @endif
+                    </div>
+                @endforeach
+            @endif
             <div>
                 <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
                 <select wire:model.live="egitimTuru"

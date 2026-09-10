@@ -22,6 +22,7 @@ class EgitimKatilim extends Model
     protected $casts = [
         'belge_tarihi' => 'date',
         'sure_gun' => 'integer',
+        'gun_tarihleri' => 'array',
         'isg_uzmani_var' => 'boolean',
         'isyeri_hekimi_var' => 'boolean',
         'konu_secimleri' => 'array',
