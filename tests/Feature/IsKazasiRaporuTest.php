@@ -75,7 +75,7 @@ class IsKazasiRaporuTest extends TestCase
 
         Livewire::test(KazaSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->callAction('pdf');
+            ->callAction('raporuTamamla');
 
         $this->assertDatabaseCount('is_kazasi_raporlari', 0);
     }
@@ -94,7 +94,7 @@ class IsKazasiRaporuTest extends TestCase
             ->set('kokNedenKategorileri', ['kkd_kullanilmamasi'])
             ->set('sgkBildirimiYapildi', true)
             ->set('sgkBildirimTarihi', '2026-09-05')
-            ->callAction('pdf');
+            ->callAction('raporuTamamla');
 
         $r = IsKazasiRaporu::where('firma_id', $firma->id)->firstOrFail();
         $this->assertSame('Ahmet Yılmaz', $r->kazazede_ad_soyad);
@@ -141,7 +141,7 @@ class IsKazasiRaporuTest extends TestCase
         $component->call('fotoSil', 0);
         $this->assertCount(1, $component->get('yeniFotograflar'));
 
-        $component->callAction('pdf');
+        $component->callAction('raporuTamamla');
 
         $r = IsKazasiRaporu::where('firma_id', $firma->id)->firstOrFail();
         $this->assertCount(1, $r->fotograflar);
@@ -164,10 +164,75 @@ class IsKazasiRaporuTest extends TestCase
 
         $html = view('pdf.is-kazasi-raporu', ['rapor' => $r, 'firma' => $firma])->render();
 
-        $this->assertStringContainsString('FOTOĞRAF 1', $html);
-        $this->assertStringContainsString('FOTOĞRAF 2', $html);
+        $this->assertStringContainsString('KAZA YERİ FOTOĞRAFI 1', $html);
+        $this->assertStringContainsString('KAZA YERİ FOTOĞRAFI 2', $html);
         $this->assertStringContainsString($yol, $html);
         $this->assertStringContainsString($yol2, $html);
+    }
+
+    public function test_5_neden_ve_balik_kilcigi_ve_dof_kaydedilir_ve_pdfe_yansir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kazazedeAdSoyad', 'Ali Veli')
+            ->set('kazazedeKidem', '4 yıl')
+            ->set('kazaYeri', 'Pres bölümü')
+            ->set('kazaTanimi', 'Operatörün eli preste sıkıştı.')
+            ->set('besNeden', ['Eli sıkıştı', 'Çift el kumanda yoktu', 'Risk analizi güncel değil', 'Periyodik denetim yapılmadı', 'İş güvenliği yönetim sistemi eksik'])
+            ->set('kokNedenKategorileri', ['ekipman_arizasi', 'yonetim_sistemi'])
+            ->call('balikKilcigiOtomatik')
+            ->call('dofEkle')
+            ->set('dofMaddeleri.0.tip', 'teknik')
+            ->set('dofMaddeleri.0.aciklama', 'Prese çift el kumanda ve ışık bariyeri montajı')
+            ->set('dofMaddeleri.0.sorumlu', 'Bakım Md.')
+            ->set('dofMaddeleri.0.hedef_tarih', '2026-11-01')
+            ->callAction('raporuTamamla');
+
+        $r = IsKazasiRaporu::where('firma_id', $firma->id)->firstOrFail();
+
+        $this->assertSame('tamamlandi', $r->durum);
+        $this->assertCount(5, $r->bes_neden);
+        $this->assertSame('İş güvenliği yönetim sistemi eksik', $r->bes_neden[4]);
+        $this->assertNotEmpty($r->balik_kilcigi['makine']);   // ekipman_arizasi → makine
+        $this->assertCount(1, $r->dof_maddeleri);
+        $this->assertSame('Bakım Md.', $r->dof_maddeleri[0]['sorumlu']);
+
+        $html = view('pdf.is-kazasi-raporu', ['rapor' => $r, 'firma' => $firma])->render();
+        $this->assertStringContainsString('Neden sistem bunu engellemedi?', $html);
+        $this->assertStringContainsString('Prese çift el kumanda', $html);
+        $this->assertStringContainsString('BALIK KILÇIĞI', $html);
+    }
+
+    public function test_taslak_kaydet_durumu_taslak_birakir_pdf_uretmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $yanit = Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kazazedeAdSoyad', 'Ali Veli')
+            ->set('kazaTanimi', 'Kısa özet')
+            ->callAction('taslakKaydet');
+
+        $r = IsKazasiRaporu::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('taslak', $r->durum);
+    }
+
+    public function test_gecmis_kayit_duzenlemeye_alinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $r = IsKazasiRaporu::create([
+            'firma_id' => $firma->id, 'kazazede_ad_soyad' => 'Eski Kayıt', 'kaza_tanimi' => 'Eski',
+            'bes_neden' => ['a', 'b', 'c', 'd', 'e'],
+        ]);
+
+        Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('duzenle', $r->id)
+            ->assertSet('duzenlenenId', $r->id)
+            ->assertSet('kazazedeAdSoyad', 'Eski Kayıt')
+            ->assertSet('besNeden.2', 'c');
     }
 
     public function test_gecmis_kayit_silinir(): void
