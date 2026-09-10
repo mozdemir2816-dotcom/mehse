@@ -37,7 +37,7 @@ class EgitimKatilim extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
     protected static ?int $navigationSort = 15;
 

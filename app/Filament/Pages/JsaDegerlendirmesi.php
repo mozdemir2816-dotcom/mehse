@@ -34,7 +34,7 @@ class JsaDegerlendirmesi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Yönetimi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
 
     protected static ?int $navigationSort = 7;
 

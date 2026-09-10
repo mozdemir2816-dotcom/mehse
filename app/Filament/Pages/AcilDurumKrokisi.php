@@ -28,7 +28,7 @@ class AcilDurumKrokisi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-map';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Yönetimi';
+    protected static string|UnitEnum|null $navigationGroup = 'Acil Durum & Yangın';
 
     protected static ?int $navigationSort = 6;
 

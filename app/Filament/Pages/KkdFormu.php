@@ -25,7 +25,7 @@ class KkdFormu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'KKD';
 
     protected static ?int $navigationSort = 21;
 

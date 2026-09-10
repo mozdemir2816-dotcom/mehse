@@ -25,7 +25,7 @@ class SaglikGozetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Sağlık Gözetimi';
 
     protected static ?int $navigationSort = 32;
 

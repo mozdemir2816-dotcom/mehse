@@ -26,7 +26,7 @@ class KurulToplantisi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'Çalışan & Kurul';
 
     protected static ?int $navigationSort = 13;
 

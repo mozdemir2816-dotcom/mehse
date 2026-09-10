@@ -24,7 +24,7 @@ class RiskDegerlendirmesiResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolderOpen;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Yönetimi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
 
     protected static ?int $navigationSort = 2;
 

@@ -28,7 +28,7 @@ class AtamaYazilari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'Çalışan & Kurul';
 
     protected static ?int $navigationSort = 14;
 

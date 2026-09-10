@@ -20,7 +20,7 @@ class TehlikeCakismalari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-square-3-stack-3d';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Yönetim';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
 
     protected static ?int $navigationSort = 6;
 

@@ -25,7 +25,7 @@ class KazaIstatistikleri extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar-square';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'İş Kazaları & Olaylar';
 
     protected static ?int $navigationSort = 31;
 

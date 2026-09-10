@@ -38,7 +38,7 @@ class EgitimPaketiResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPlayCircle;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
     protected static ?int $navigationSort = 31;
 

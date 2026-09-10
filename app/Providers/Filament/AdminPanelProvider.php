@@ -105,10 +105,19 @@ class AdminPanelProvider extends PanelProvider
                     HTML),
             )
             ->navigationGroups([
+                // İSG dosyası klasör yapısına göre (isgpratik "İSG Klasöründe Olması Gerekenler")
                 'Yönetim',
-                'Risk Yönetimi',
-                'Formlar & Belgeler',
+                'Risk Değerlendirmesi',
+                'Acil Durum & Yangın',
+                'Eğitimler',
+                'Çalışan & Kurul',
+                'Sağlık Gözetimi',
+                'Saha Kontrolleri',
+                'Periyodik Kontrol & Ölçüm',
+                'KKD',
+                'İş Kazaları & Olaylar',
                 'Planlama & Arşiv',
+                'Diğer Belge & Yazışma',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

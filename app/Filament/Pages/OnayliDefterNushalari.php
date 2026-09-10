@@ -34,7 +34,7 @@ class OnayliDefterNushalari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
 
     protected static ?int $navigationSort = 19;
 

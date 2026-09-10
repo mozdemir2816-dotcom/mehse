@@ -2938,6 +2938,21 @@ rapor bırak" dedi. Tam karşılaştırma `TEDBIR-ON-KARSILASTIRMA.md`'de.
   `kritik_notlar`, `durum`, `isyeri_hekimi_*`. Yeni PDF `pdf/is-kazasi-raporu` isgpratik
   çıktısına yakın (5N tablosu 5. satır vurgulu, 6M fishbone, DÖF tablosu, 3'lü imza).
   OlayKaydi balık kılçığı da bu ortak config'e taşındı (metot/olcum anahtarları).
+- **İş Kazası Sonrası İşe Dönüş Belgesi** (`IseDonusBelgesi`, `ise-donus-belgesi`,
+  Sağlık Gözetimi): işyeri hekimi işe dönüş uygunluk değerlendirmesi + 13 maddelik
+  geçici kısıtlama kütüphanesi. `config isg.ise_donus`. PDF (hekim + çalışan imza).
+- **Yangın Güvenliği Genel Durum Değerlendirmesi** (`YanginGuvenligi`, `yangin-guvenligi`,
+  Acil Durum & Yangın): bina kullanım türü + kat/kullanıcı yükü + bölümler + faaliyet/
+  depolama riskleri → bina yangın tehlike sınıfı (düşük/orta/yüksek) otomatik
+  (`::hesaplaTehlikeSinifi`). `config isg.yangin_guvenligi` (20 risk sınıf-ağırlıklı,
+  16 bölüm, 15 hazır tespit). PDF (tehlike sınıfı rozeti + tespit tablosu).
+- **NAVİGASYON YENİDEN GRUPLANDI** — isgpratik "İSG Klasöründe Olması Gerekenler" 13
+  klasör yapısına göre. Eski 4 grup → **12 grup**: Yönetim · Risk Değerlendirmesi ·
+  Acil Durum & Yangın · Eğitimler · Çalışan & Kurul · Sağlık Gözetimi · Saha Kontrolleri
+  · Periyodik Kontrol & Ölçüm · KKD · İş Kazaları & Olaylar · Planlama & Arşiv ·
+  **Diğer Belge & Yazışma** (İş İzin / Talimat / Ceza-Tebliğ). `AdminPanelProvider::
+  navigationGroups` + her Page/Resource `$navigationGroup` (regroup.sh) + `NavigasyonTest`.
+  "Formlar & Belgeler"in ~25 maddelik listesi dağıtıldı.
 
 **10.09 batch (2 modül):** Kullanıcı önce sadece "eksik olanları ekle" demişti —
 

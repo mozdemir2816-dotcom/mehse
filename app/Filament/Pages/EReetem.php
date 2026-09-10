@@ -19,7 +19,7 @@ class EReetem extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'Sağlık Gözetimi';
 
     protected static ?int $navigationSort = 27;
 

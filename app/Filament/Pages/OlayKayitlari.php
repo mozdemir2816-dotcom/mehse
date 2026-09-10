@@ -32,7 +32,7 @@ class OlayKayitlari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'İş Kazaları & Olaylar';
 
     protected static ?int $navigationSort = 9;
 

@@ -27,7 +27,7 @@ class UzaktanEgitimAtama extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
     protected static ?int $navigationSort = 32;
 

@@ -36,7 +36,7 @@ class SertifikaOlustur extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formlar & Belgeler';
+    protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
     protected static ?int $navigationSort = 19;
 
