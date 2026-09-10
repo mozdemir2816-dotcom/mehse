@@ -15,6 +15,8 @@
     table.ana { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 8px; }
     table.ana th { background: #57534e; color: #fff; padding: 4px 6px; text-align: left; }
     table.ana td { border: 1px solid #d6d3d1; padding: 4px 6px; text-align: left; vertical-align: top; }
+    table.ana td.foto { text-align: center; }
+    table.ana img.satir-foto { max-width: 100%; max-height: 78px; }
     tr.kategori td { background: #e7e5e4; font-weight: bold; text-align: center; }
     .kritik { color: #dc2626; font-weight: bold; }
     .sonuc-uygun { color: #16a34a; font-weight: bold; }
@@ -67,11 +69,12 @@
 
     <table class="ana">
         <tr>
-            <th style="width:8%">Kategori / Durum</th>
-            <th style="width:5%">Kod</th>
-            <th style="width:40%">Kontrol İfadesi</th>
-            <th style="width:12%">Sonuç</th>
-            <th style="width:35%">Açıklama</th>
+            <th style="width:7%">Kategori / Durum</th>
+            <th style="width:4%">Kod</th>
+            <th style="width:32%">Kontrol İfadesi</th>
+            <th style="width:10%">Sonuç</th>
+            <th style="width:13%">Foto</th>
+            <th style="width:34%">Açıklama</th>
         </tr>
         @php
             $mevcutKategori = null;
@@ -81,17 +84,24 @@
         @forelse ($gosterilecekCevaplar as $c)
             @if ($c['kategori_ad'] !== $mevcutKategori)
                 @php $mevcutKategori = $c['kategori_ad']; @endphp
-                <tr class="kategori"><td colspan="5">{{ mb_strtoupper($mevcutKategori, 'UTF-8') }}</td></tr>
+                <tr class="kategori"><td colspan="6">{{ mb_strtoupper($mevcutKategori, 'UTF-8') }}</td></tr>
             @endif
             <tr>
                 <td style="text-align:center">@if ($c['kritik'])<span class="kritik">KRİTİK</span>@endif</td>
                 <td>{{ $c['kod'] }}</td>
                 <td>{{ $c['ifade'] }}</td>
                 <td class="sonuc-{{ $c['sonuc'] ?? '' }}">{{ config('isg.saha_denetimi.sonuc_secenekleri.'.($c['sonuc'] ?? ''), '—') }}</td>
+                <td class="foto">
+                    @if (! empty($c['foto_yolu']))
+                        <img class="satir-foto" src="{{ storage_path('app/public/'.$c['foto_yolu']) }}">
+                    @else
+                        —
+                    @endif
+                </td>
                 <td>{{ $c['aciklama'] ?: '—' }}</td>
             </tr>
         @empty
-            <tr><td colspan="5" style="text-align:center;color:#888">Gösterilecek madde yok.</td></tr>
+            <tr><td colspan="6" style="text-align:center;color:#888">Gösterilecek madde yok.</td></tr>
         @endforelse
     </table>
 

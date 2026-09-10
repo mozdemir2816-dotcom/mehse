@@ -142,6 +142,21 @@ class AiSahaAnaliziTest extends TestCase
         $this->assertStringContainsString('Yasal dayanak: 6331 m.4', $aktarim['maddeler'][0]['oneri']);
     }
 
+    public function test_secilenleri_dofe_aktar_fotograf_yolunu_tasir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('bulgular', [
+                ['foto_yolu' => 'saha-analiz-foto/depo.jpg', 'bina_bolge' => 'Depo', 'kategori' => 'Genel', 'tespit' => 'Hortumlar dağınık.', 'oneriler_metni' => 'Topla.', 'yasal_gerekce' => null, 'risk_derecesi' => 2, 'secili' => true],
+            ])
+            ->call('secilenleriDofeAktar');
+
+        $aktarim = session('dof_aktarim');
+        $this->assertSame('saha-analiz-foto/depo.jpg', $aktarim['maddeler'][0]['foto_yolu']);
+    }
+
     public function test_pdf_aksiyonu_secili_bulgulari_kaydeder_ve_kase_snapshotlanir(): void
     {
         Storage::fake('public');

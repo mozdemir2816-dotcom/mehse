@@ -216,7 +216,8 @@
                             <td style="padding:.3rem .5rem;max-width:16rem">
                                 {{ $m['tespit'] }}
                                 @if (! empty($m['foto_yolu']))
-                                    <span style="font-size:.7rem;color:rgb(107 114 128)">(foto eklendi)</span>
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}"
+                                        style="width:40px;height:40px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4);margin-top:.25rem;display:block">
                                 @endif
                             </td>
                             <td style="padding:.3rem .5rem">{{ $this->oncelikler[$m['oncelik']] ?? $m['oncelik'] }}</td>

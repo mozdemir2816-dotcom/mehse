@@ -387,6 +387,18 @@ class SahaDenetimi extends Page
         }
     }
 
+    /** Bir maddeye eklenen (yeni yüklenen veya taslaktan gelen) fotoğrafı kaldırır. */
+    public function fotoKaldir(string $kod): void
+    {
+        $anahtar = $this->anahtar($kod);
+
+        unset($this->fotoYuklemeleri[$anahtar]);
+
+        if (isset($this->cevaplar[$anahtar])) {
+            $this->cevaplar[$anahtar]['foto_yolu'] = null;
+        }
+    }
+
     public function ekipHizliEkle(int $calisanId): void
     {
         $c = $this->calisanlar->firstWhere('id', $calisanId);

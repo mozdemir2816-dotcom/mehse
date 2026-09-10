@@ -333,4 +333,54 @@ class SahaDenetimiTest extends TestCase
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    public function test_uygun_maddeye_de_fotograf_eklenebilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('cevapVer', '1.1', 'uygun')
+            ->set('fotoYuklemeleri.1_1', UploadedFile::fake()->image('uygun-kanit.jpg'))
+            ->callAction('pdf');
+
+        $d = SahaDenetimi::where('firma_id', $firma->id)->firstOrFail();
+        $madde11 = collect($d->cevaplar)->firstWhere('kod', '1.1');
+
+        $this->assertSame('uygun', $madde11['sonuc']);
+        $this->assertNotNull($madde11['foto_yolu']);
+        Storage::disk('public')->assertExists($madde11['foto_yolu']);
+    }
+
+    public function test_foto_kaldir_yuklemeyi_ve_taslak_yolunu_temizler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('cevaplar.1_1.foto_yolu', 'saha-denetimi-foto/eski.jpg')
+            ->set('fotoYuklemeleri.1_1', UploadedFile::fake()->image('yeni.jpg'))
+            ->call('fotoKaldir', '1.1');
+
+        $this->assertArrayNotHasKey('1_1', $component->get('fotoYuklemeleri'));
+        $this->assertNull($component->get('cevaplar')['1_1']['foto_yolu']);
+    }
+
+    public function test_pdf_madde_tablosunda_satir_ici_foto_gosterilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $d = SahaDenetimi::create([
+            'firma_id' => $firma->id,
+            'revizyon' => 1,
+            'cevaplar' => [
+                ['kategori_ad' => 'Yangın', 'kod' => '1.1', 'ifade' => 'Test?', 'kritik' => false, 'sonuc' => 'uygun', 'aciklama' => null, 'foto_yolu' => 'saha-denetimi-foto/kanit.jpg'],
+            ],
+        ]);
+
+        $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('class="satir-foto"', $html);
+        $this->assertStringContainsString('saha-denetimi-foto/kanit.jpg', $html);
+    }
 }

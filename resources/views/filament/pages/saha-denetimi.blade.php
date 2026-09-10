@@ -228,9 +228,23 @@
                                     <label style="font-size:.75rem;font-weight:600;color:#dc2626">Uygunsuzluk açıklaması <span style="color:#ef4444">*</span></label>
                                     <textarea wire:model="cevaplar.{{ $anahtar }}.aciklama" rows="2"
                                         style="width:100%;margin-top:.2rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(220 38 38 / .4);background:transparent;font-size:.8rem"></textarea>
-                                    <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" style="margin-top:.4rem;font-size:.78rem">
                                 </div>
                             @endif
+
+                            @php $yuklenenFoto = $fotoYuklemeleri[$anahtar] ?? null; @endphp
+                            <div style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                                <span style="font-size:.72rem;font-weight:600;color:rgb(107 114 128)">📷 Fotoğraf</span>
+                                @if ($yuklenenFoto)
+                                    <img src="{{ $yuklenenFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
+                                @elseif (! empty($cevap['foto_yolu']))
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($cevap['foto_yolu']) }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
+                                @endif
+                                <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" style="font-size:.75rem">
+                                @if ($yuklenenFoto || ! empty($cevap['foto_yolu']))
+                                    <button type="button" wire:click="fotoKaldir('{{ $kod }}')"
+                                        style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:.75rem">✕ kaldır</button>
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>

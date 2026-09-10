@@ -14,6 +14,8 @@
     table.maddeler { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 10px; }
     table.maddeler th, table.maddeler td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
     table.maddeler th { background: #f0f0f0; }
+    table.maddeler td.foto { text-align: center; }
+    table.maddeler img.satir-foto { max-width: 100%; max-height: 75px; }
     .oncelik-kritik { color: #b91c1c; font-weight: bold; }
     .oncelik-yuksek { color: #dc2626; }
     .oncelik-orta { color: #d97706; }
@@ -55,12 +57,13 @@
     <table class="maddeler">
         <tr>
             <th style="width:4%">#</th>
-            <th style="width:26%">Tespit</th>
-            <th style="width:8%">Öncelik</th>
-            <th style="width:26%">Öneri / Düzeltici Faaliyet</th>
-            <th style="width:14%">Sorumlu</th>
-            <th style="width:10%">Termin</th>
-            <th style="width:12%">Durum</th>
+            <th style="width:22%">Tespit</th>
+            <th style="width:7%">Öncelik</th>
+            <th style="width:22%">Öneri / Düzeltici Faaliyet</th>
+            <th style="width:12%">Sorumlu</th>
+            <th style="width:9%">Termin</th>
+            <th style="width:10%">Durum</th>
+            <th style="width:14%">Foto</th>
         </tr>
         @forelse (($rapor->maddeler ?? []) as $i => $m)
             <tr>
@@ -71,9 +74,16 @@
                 <td>{{ $m['sorumlu'] ?? '—' }}</td>
                 <td>{{ ! empty($m['termin']) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
                 <td>{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>
+                <td class="foto">
+                    @if (! empty($m['foto_yolu']))
+                        <img class="satir-foto" src="{{ storage_path('app/public/'.$m['foto_yolu']) }}">
+                    @else
+                        —
+                    @endif
+                </td>
             </tr>
         @empty
-            <tr><td colspan="7" style="color:#888">Madde eklenmedi.</td></tr>
+            <tr><td colspan="8" style="color:#888">Madde eklenmedi.</td></tr>
         @endforelse
     </table>
 

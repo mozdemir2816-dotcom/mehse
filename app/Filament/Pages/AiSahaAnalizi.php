@@ -177,6 +177,7 @@ class AiSahaAnalizi extends Page
             'sorumlu' => null,
             'termin' => null,
             'durum' => 'acik',
+            'foto_yolu' => $b['foto_yolu'] ?? null,
         ])->values()->all();
 
         session(['dof_aktarim' => ['firma_id' => $this->firma->id, 'maddeler' => $maddeler]]);

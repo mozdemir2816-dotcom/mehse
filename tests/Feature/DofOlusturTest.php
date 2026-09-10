@@ -112,6 +112,19 @@ class DofOlusturTest extends TestCase
         $this->assertStringContainsString($yol, $html);
     }
 
+    public function test_dof_pdf_madde_tablosunda_satir_ici_foto_gosterilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rapor = DofRaporu::create([
+            'firma_id' => $firma->id,
+            'maddeler' => [['tespit' => 'Kaygan zemin', 'oncelik' => 'orta', 'durum' => 'acik', 'foto_yolu' => 'dof-foto/kanit.jpg']],
+        ]);
+
+        $html = view('pdf.dof-raporu', ['rapor' => $rapor, 'firma' => $firma])->render();
+
+        $this->assertStringContainsString('class="satir-foto"', $html);
+    }
+
     public function test_durum_guncellenir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
