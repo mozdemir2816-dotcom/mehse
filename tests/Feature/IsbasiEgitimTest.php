@@ -126,6 +126,20 @@ class IsbasiEgitimTest extends TestCase
         $this->assertDatabaseCount('isbasi_egitim_tutanaklari', 0);
     }
 
+    public function test_bos_katilim_formu_personel_tanimlanmadan_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(IsbasiSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertActionExists('bosKatilimFormu')
+            ->callAction('bosKatilimFormu');
+
+        // Boş imza satırlarıyla; hiçbir kayıt oluşturmaz.
+        $this->assertDatabaseCount('isbasi_egitim_tutanaklari', 0);
+        $this->assertSame(0, $firma->calisanlar()->count());
+    }
+
     public function test_katilim_formu_pdf_firma_calisanlarini_en_az_10_satir_listeler(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
