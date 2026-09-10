@@ -2926,6 +2926,18 @@ rapor bırak" dedi. Tam karşılaştırma `TEDBIR-ON-KARSILASTIRMA.md`'de.
   `PeriyodikKontrolUretici` pdf + **excel** ("Müfettiş Teftiş Paketi"). `PeriyodikKontrol`
   model thin kapsayıcıya indirgendi (`ekipmanlar()` → firma->isEkipmanlari, `firmaIcin`,
   RaporKayitlari kaydı). `PortfoyKarne` + `PortfoyExcelPanosuUretici` `isEkipmanlari`'ye.
+- **İş Kazası İnceleme ve Kök Neden Analiz Raporu** — `IsKazasiRaporu` sayfası
+  isgpratik 6 adımlı sihirbaz mantığıyla yeniden yapılandırıldı (bölümler): (1) Genel
+  Bilgiler + Kıdem + Kaza Özeti, (2) 5 Neden — sabit sorular (`config isg.is_kazasi.bes_neden_sorulari`),
+  (3) Balık Kılçığı 6M (ortak `isg.balik_kilcigi` — İnsan/Makine/Metot/Malzeme/Ölçüm/
+  Çevre + örnek bulgular + "5N/kök nedenden doldur"), (4) DÖF tablosu (Önlem Tipi
+  Teknik/Yönetsel/Eğitim · Sorumlu · Açıklama · Hedef Tarih · Durum), (5) Foto & Kritik
+  Notlar + Tanıklar, (6) Önizleme (3 stat + eksik alan uyarısı + İşyeri Hekimi kaşe
+  toggle). Header: "Taslak Kaydet" / "Raporu Tamamla ve İndir"; geçmişte "Düzenle".
+  Kolonlar: `kazazede_kidem`, `bes_neden`, `balik_kilcigi`, `dof_maddeleri`,
+  `kritik_notlar`, `durum`, `isyeri_hekimi_*`. Yeni PDF `pdf/is-kazasi-raporu` isgpratik
+  çıktısına yakın (5N tablosu 5. satır vurgulu, 6M fishbone, DÖF tablosu, 3'lü imza).
+  OlayKaydi balık kılçığı da bu ortak config'e taşındı (metot/olcum anahtarları).
 
 **10.09 batch (2 modül):** Kullanıcı önce sadece "eksik olanları ekle" demişti —
 

@@ -114,14 +114,18 @@ Her ikisi de `raporlar.kaynaklar`'a eklendi (Profilim > Raporlar + Firma Evrak p
 | 11 | ⏳ **Şablon profil sistemi** — "logolu/kurumlu" varyant + birkaç belge için özel Word yükleme | M | Tek kullanıcıda düşük öncelik |
 | 12 | ⏳ **İç Denetim Kontrol Listesi** (ISO 45001 tarzı, SahaDenetimi'nden ayrı) | M | Düşük öncelik |
 
-## Ayrıca — Periyodik Kontrol tam yeniden yazıldı (11.09)
+## Ayrıca — isgpratik'e göre yeniden yazılan ekranlar (11.09)
 
-Kullanıcı `Desktop\isgpratik\iş ekipmanları\` ekranlarını verip "bununla birebir
-aynısı olsun" dedi. `PeriyodikKontrol` "Ekipman & Periyodik Kontrol Motoru"na
-dönüştürüldü: ayrı `IsEkipmani` modeli, 5 yasal kategori × tip kataloğu (her tip için
-TS/EN standart + deney + periyot), "Yeni Ekipman Tanımla" bağımlı-select modal formu,
-4 KPI kartı (Vizesi Geçerli / Yaklaşan / Süresi Dolan), kategori sekmeleri + arama +
-durum filtresi, "Müfettiş Teftiş Paketi" PDF + Excel.
+**Periyodik Kontrol** (`Desktop\isgpratik\iş ekipmanları\`): "Ekipman & Periyodik
+Kontrol Motoru"na dönüştürüldü — ayrı `IsEkipmani` modeli, 5 yasal kategori × tip
+kataloğu (her tip için TS/EN standart + deney + periyot), "Yeni Ekipman Tanımla"
+bağımlı-select modal, 4 KPI kartı (Vizesi Geçerli / Yaklaşan / Süresi Dolan), kategori
+sekmeleri + arama + durum filtresi, "Müfettiş Teftiş Paketi" PDF + Excel.
+
+**İş Kazası Raporu** (`Desktop\isgpratik\iş kazası\`): "İş Kazası İnceleme ve Kök
+Neden Analiz Raporu" — 6 bölümlü akış: Genel Bilgiler → 5 Neden (sabit sorular) →
+Balık Kılçığı 6M (örnek bulgu chip'leri) → DÖF tablosu → Foto & Notlar → Önizleme
+(3 stat + eksik alan). "Taslak Kaydet" / "Raporu Tamamla". Yeni comprehensive PDF.
 
 **Not:** Kaza İstatistikleri ve Ortam Ölçümleri için Kontrol Merkezi'ne yeni kriter
 EKLENMEDİ (uygulanabilirlik firmaya göre değişir + oran testlerini etkiler). İstenirse
