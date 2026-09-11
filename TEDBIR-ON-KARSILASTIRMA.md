@@ -38,10 +38,10 @@ Her ikisi de `raporlar.kaynaklar`'a eklendi (Profilim > Raporlar + Firma Evrak p
 | TEDBİR ON | mehse | Durum |
 |-----------|-------|-------|
 | Temel İSG Takibi (kişi bazlı yenileme, kalan gün, GEÇERLİ/90 GÜN İÇİNDE) | Profilim > Eğitimler matrisi (`EgitimKaydi` + `durum()`) | 🟡 Var ama görünürlüğü zayıf; "kalan gün" sütunu / firma bazlı ekran yok |
-| Yüksekte / Yangın / İş Kazası İşe Dönüş eğitimi | EgitimKatilim (özel başlıklar) + Sertifika | ✅ Var (İşe Dönüş **belgesi** hariç) |
+| Yüksekte / Yangın / İş Kazası İşe Dönüş eğitimi | EgitimKatilim (özel başlıklar) + Sertifika + İşeDönüşBelgesi | ✅ Var |
 | Toplu / Manuel Sertifika | SertifikaOlustur + Yıldız Grup + Uzaktan | ✅ Var |
 | Katılım Formları | EgitimKatilim + boş form + İşbaşı | ✅ Var |
-| **İş Kazası Sonrası İşe Dönüş Belgesi** | — | 🔴 **Eksik** (küçük belge) |
+| **İş Kazası Sonrası İşe Dönüş Belgesi** | ✅ **BU OTURUMDA EKLENDİ** (IseDonusBelgesi) | ✅ Yeni |
 
 ### 3. Risk Analizleri
 | TEDBİR ON | mehse | Durum |
@@ -70,13 +70,13 @@ Her ikisi de `raporlar.kaynaklar`'a eklendi (Profilim > Raporlar + Firma Evrak p
 | Periyodik Kontrol Takibi + Arşivi | PeriyodikKontrol | ✅ Var |
 | Makine ve Ekipman | PeriyodikKontrol kataloğu | ✅ Var |
 | İSG İç Denetim | SahaDenetimi (saha gözetimi) | 🟡 45001 tarzı yönetim sistemi iç denetim listesi yok |
-| **Yangın Güvenliği Genel Durum Değerlendirmesi** (bina yangın sınıfı + EK-1 + Word rapor) | — | 🔴 **Eksik** (orta-büyük modül) |
+| **Yangın Güvenliği Genel Durum Değerlendirmesi** (bina yangın sınıfı + EK-1 + Word rapor) | ✅ **BU OTURUMDA EKLENDİ** (YanginGuvenligiDegerlendirmesi) | ✅ Yeni |
 
 ### 6. Uzman Özeti — Firma Çalışma Merkezi
 | TEDBİR ON | mehse | Durum |
 |-----------|-------|-------|
-| Firma bazlı yasal çalışma/belge durumu, **Belge / İmza / Firmada 3-durum**, yenileme tarihleri | KontrolMerkezi (portföy geneli kriter matrisi) + PortfoyKarne | 🟡 Firma bazlı derin görünüm + 3-durum yok |
-| **İçindekiler Listesi (Dosya Fihristi) Oluştur** | — | 🔴 **Eksik** (küçük) |
+| Firma bazlı yasal çalışma/belge durumu, **Belge / İmza / Firmada 3-durum**, yenileme tarihleri | Profilim "Firma Takip" (PortfoyKarne::firmaChecklistDetay) | 🟡 Firma bazlı derin görünüm var; 3-ayrı-durum (Belge/İmza/Teslim) genel geçer hesaplanamıyor, tek durum (tamamlandı/yakın/eksik) kullanılıyor |
+| **İçindekiler Listesi (Dosya Fihristi) Oluştur** | ✅ **BU OTURUMDA EKLENDİ** (FirmaDosyaFihristiUretici — FirmaResource düzenleme sayfası "Dosya Fihristi (İçindekiler)" butonu, 12 kategoriye göre gruplu PDF) | ✅ Yeni |
 | Dosya Konumu Bağla | — | 🟡 Web tabanlı — gerekmez |
 
 ### 7. İş Kazaları
@@ -108,11 +108,11 @@ Her ikisi de `raporlar.kaynaklar`'a eklendi (Profilim > Raporlar + Firma Evrak p
 | 5 | ⏳ **Eğitim/Sağlık matrisine "kalan gün" + yaklaşan/dolmuş vurgusu** | S | Sağlık Gözetimi'nde kırmızı vurgu var; Profilim > Eğitimler matrisine kalan gün sütunu kaldı |
 | 6 | ✅ **KKD Seçim Matrisi** — iş kalemi × 9 KKD sütunu | — | **YAPILDI** (11.09) |
 | 7 | ✅ **Kimyasal Risk Değerlendirmesi** — COSHH Essentials kontrol bantlama (1-4) | — | **YAPILDI** (11.09) |
-| 8 | ⏳ **Firma bazlı Çalışma Merkezi + Dosya Fihristi** — FirmaResource'a "Çalışma Durumu" sekmesi (Belge/İmza/Teslim 3-durum) + fihrist PDF | M | KontrolMerkezi mantığını firma bazına indir |
-| 9 | ⏳ **İş Kazası Sonrası İşe Dönüş Belgesi** — kaza sonrası hekim onayı + iş kısıtları belgesi | S | IsKazasiRaporu'na bağlı küçük belge |
-| 10 | ⏳ **Yangın Güvenliği Değerlendirme Raporu** — bina kullanım türü + kat/kullanıcı yükü + EK-1 faaliyet + bölüm/risk checklist → yangın tehlike sınıfı + rapor | M/L | Standart "BEÇ" benzeri; en büyük tek eksik |
-| 11 | ⏳ **Şablon profil sistemi** — "logolu/kurumlu" varyant + birkaç belge için özel Word yükleme | M | Tek kullanıcıda düşük öncelik |
-| 12 | ⏳ **İç Denetim Kontrol Listesi** (ISO 45001 tarzı, SahaDenetimi'nden ayrı) | M | Düşük öncelik |
+| 8 | ✅ **Firma bazlı Çalışma Merkezi + Dosya Fihristi** — FirmaResource düzenleme sayfası "Dosya Fihristi (İçindekiler)" butonu, PortfoyKarne::firmaChecklistDetay'ı 12 nav kategorisine göre gruplayan PDF | — | **YAPILDI** (11.09) |
+| 9 | ✅ **İş Kazası Sonrası İşe Dönüş Belgesi** — kaza sonrası hekim onayı + iş kısıtları belgesi | — | **YAPILDI** (11.09) |
+| 10 | ✅ **Yangın Güvenliği Değerlendirme Raporu** — bina kullanım türü + kat/kullanıcı yükü + EK-1 faaliyet + bölüm/risk checklist → yangın tehlike sınıfı + rapor | — | **YAPILDI** (11.09) |
+| 11 | ⏳ **Şablon profil sistemi** — "logolu/kurumlu" varyant + birkaç belge için özel Word yükleme | M | Tek kullanıcıda düşük öncelik — istenmedikçe başlanmayacak |
+| 12 | ⏳ **İç Denetim Kontrol Listesi** (ISO 45001 tarzı, SahaDenetimi'nden ayrı) | M | Düşük öncelik — istenmedikçe başlanmayacak |
 
 ## Ayrıca — isgpratik'e göre yeniden yazılan ekranlar (11.09)
 

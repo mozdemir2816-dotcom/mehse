@@ -241,6 +241,7 @@ class PortfoyKarne
             return [
                 'anahtar' => $k['anahtar'],
                 'ad' => $k['ad'],
+                'kategori' => $k['kategori'] ?? 'Diğer Belge & Yazışma',
                 'hazir' => (bool) $k['hazir'],
                 'tamam' => $tamam,
                 'vade_tarihi' => $vadeTarihi,

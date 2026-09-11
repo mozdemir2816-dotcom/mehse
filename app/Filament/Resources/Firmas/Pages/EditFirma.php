@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Firmas\Pages;
 
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Models\Firma;
+use App\Support\FirmaDosyaFihristiUretici;
 use App\Support\FirmaEvrakZipUretici;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -16,6 +17,12 @@ class EditFirma extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('dosyaFihristi')
+                ->label('Dosya Fihristi (İçindekiler)')
+                ->icon('heroicon-o-list-bullet')
+                ->color('gray')
+                ->action(fn (Firma $record) => FirmaDosyaFihristiUretici::pdf($record)),
+
             Action::make('tumEvrakIndir')
                 ->label('Tüm Evrakları İndir (ZIP)')
                 ->icon('heroicon-o-archive-box-arrow-down')

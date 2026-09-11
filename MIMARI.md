@@ -2981,6 +2981,29 @@ Kılçığı PDF eki (S/M), KKD Seçim Matrisi (M), Kimyasal Risk Değerlendirme
 Firma bazlı Çalışma Merkezi + Dosya Fihristi (M), İşe Dönüş Belgesi (S), Yangın
 Güvenliği Değerlendirme Raporu (M/L).
 
+**Firma bazlı Çalışma Merkezi + Dosya Fihristi** (11.09, kullanıcı onayı "Bunu da
+ekle" — TEDBİR ON gap listesindeki son madde): derin firma-bazlı görünüm zaten
+`PortfoyKarne::firmaChecklistDetay()` ile Profilim > Firma Takip'te vardı; gerçek
+eksik, işyeri İSG dosyasına konacak **basılı içindekiler (fihrist)** sayfasıydı.
+`firmaChecklistDetay()`'ın döndürdüğü 22 kritere `config isg.kontrol_merkezi.
+kriterler`'de yeni bir `'kategori'` anahtarı eklendi — sol menüdeki 12 nav
+grubundan biri (`AdminPanelProvider::navigationGroups` ile birebir aynı liste);
+`firmaChecklistDetay()` dönüşüne de `'kategori'` eklendi. Yeni
+`FirmaDosyaFihristiUretici::pdf(Firma)`: checklistDetay'ı bu kategoriye göre
+gruplar (nav sırasıyla), `pdf/firma-dosya-fihristi` A4 dikey görünümde her
+kategori başlığı altında numaralı satırlar (belge adı, TAMAM/YAKLAŞIYOR/EKSİK,
+vade tarihi) + genel yüzde özeti basar. `EditFirma` header'ına "Dosya Fihristi
+(İçindekiler)" butonu eklendi ("Tüm Evrakları İndir (ZIP)" ile aynı desende,
+her zaman görünür — görünürlük şartı yok). Not: isgpratik'teki üçlü "Belge /
+İmza / Firmada" durumu genel geçer hesaplanamadığı için (çoğu belge türünde
+imza/teslim ayrı bir alan tutulmuyor) checklistDetay'ın var olan tek durumu
+(tamamlandı/yakın/eksik) kullanıldı — kapsam bilinçli olarak buna indirgendi.
+Yeni tablo/migration yok (salt config + support class + view). `FirmaDosyaFihristiTest`
+(4 test). **TEDBİR-ON-KARSILASTIRMA.md'deki tüm öncelikli maddeler artık ✅** —
+kalan yalnızca düşük öncelikli, istenmedikçe başlanmayacak 2 madde (Şablon profil
+sistemi, İç Denetim Kontrol Listesi ISO 45001) + Eğitim/Sağlık matrisine "kalan
+gün" sütunu.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
