@@ -236,4 +236,29 @@ class AcilDurumPlani extends Page
 
         return AcilDurumPlaniUretici::afis($this->firma, $this->afisTipi, $this->afisEbat);
     }
+
+    /** Firmaya otomatik tanımlı (planın seçili konularından türeyen) afiş anahtarları. */
+    #[Computed]
+    public function afisTipleri(): array
+    {
+        return $this->plan() ? AcilDurumPlaniUretici::afisTipleri($this->plan()) : [];
+    }
+
+    public function afislerZipIndir()
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return null;
+        }
+
+        if (empty($this->afisTipleri)) {
+            Notification::make()->title('Bu firma için otomatik tanımlı afiş yok')
+                ->body('Önce Acil Durum Planı konularını kaydedin.')->warning()->send();
+
+            return null;
+        }
+
+        return AcilDurumPlaniUretici::afisZip($this->firma, $this->afisTipleri, $this->afisEbat);
+    }
 }

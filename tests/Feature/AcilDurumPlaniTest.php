@@ -406,6 +406,82 @@ class AcilDurumPlaniTest extends TestCase
         AcilDurumPlaniUretici::afis($firma, 'gecersiz', 'a4');
     }
 
+    public function test_plan_olusturulunca_firmaya_uygun_afisler_otomatik_tanimlanir(): void
+    {
+        // kimyasal koşullu (nace 19-...+çok tehlikeli) — kosulsuz + kimyasal seçili olmalı
+        $kimyasalFirma = Firma::factory()->for($this->uzman)
+            ->create(['tehlike_sinifi' => 'cok_tehlikeli', 'nace_kodu' => '19.20']);
+        $plan1 = AcilDurumPlani::firmaIcin($kimyasalFirma);
+
+        $tipler1 = AcilDurumPlaniUretici::afisTipleri($plan1);
+        $this->assertContains('yangin', $tipler1);
+        $this->assertContains('deprem', $tipler1);
+        $this->assertContains('sabotaj', $tipler1);
+        $this->assertContains('is_kazasi', $tipler1);
+        $this->assertContains('elektrik', $tipler1);
+        $this->assertContains('sel', $tipler1);
+        $this->assertContains('kimyasal', $tipler1);
+        $this->assertCount(7, $tipler1);
+
+        // koşulu tutmayan firma — kimyasal afişi otomatik listede olmamalı
+        $sadeFirma = Firma::factory()->for($this->uzman)
+            ->create(['tehlike_sinifi' => 'az_tehlikeli', 'nace_kodu' => '99.99']);
+        $plan2 = AcilDurumPlani::firmaIcin($sadeFirma);
+
+        $tipler2 = AcilDurumPlaniUretici::afisTipleri($plan2);
+        $this->assertNotContains('kimyasal', $tipler2);
+        $this->assertCount(6, $tipler2);
+    }
+
+    public function test_konu_elle_kaldirilinca_afis_de_otomatik_listeden_duser(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->forceFill(['konular' => array_values(array_diff($plan->konular, ['yangin']))])->save();
+
+        $this->assertNotContains('yangin', AcilDurumPlaniUretici::afisTipleri($plan->fresh()));
+    }
+
+    public function test_tum_afisler_zip_olarak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $plan = AcilDurumPlani::firmaIcin($firma);
+
+        $yanit = AcilDurumPlaniUretici::afisZip($firma, AcilDurumPlaniUretici::afisTipleri($plan), 'a4');
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'test-afis-zip').'.zip';
+        file_put_contents($gecici, $icerik);
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($gecici) === true);
+        $this->assertSame(count(AcilDurumPlaniUretici::afisTipleri($plan)), $zip->numFiles);
+        $zip->close();
+        unlink($gecici);
+    }
+
+    public function test_tanimli_afis_yoksa_zip_404_doner(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $this->expectException(HttpException::class);
+        AcilDurumPlaniUretici::afisZip($firma, [], 'a4');
+    }
+
+    public function test_sayfadan_tum_afisler_zip_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('afislerZipIndir')
+            ->assertSuccessful();
+    }
+
     public function test_kroki_plani_kisayolu_dogru_firmaya_gider(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

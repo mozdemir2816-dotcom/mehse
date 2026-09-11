@@ -3033,6 +3033,23 @@ durum planı olacak" diyerek şablon SEÇİMİ altyapısı istedi.
   (yalnız seçili şablonda `kapak_dosya` varsa görünür). `AcilDurumPlaniTest`
   +3 test (21 toplam).
 
+**Acil Durum Afişleri — otomatik tanımlama + toplu ZIP indirme** (11.09,
+aynı gün): "afişleri toplu indirmek için seçenek + her firmaya tanımlarken
+otomatik tanımlasın" istendi. Afiş kataloğundaki 7 anahtar (yangin, deprem,
+sabotaj, is_kazasi, elektrik, sel, kimyasal), plan zaten firmaya göre otomatik
+seçtiği `konular` listesiyle (`AcilDurumKonuSecici`) birebir örtüşüyor — ayrı
+bir "afiş tanımlama" adımına gerek yok, `AcilDurumPlaniUretici::afisTipleri
+($plan)` yalnızca `array_intersect(afiş anahtarları, $plan->konular)` alır.
+Sonuç: 6 afiş (kosulsuz konular) her firmada otomatik, "kimyasal" yalnız
+ilgili NACE + çok tehlikeli firmalarda; kullanıcı bir konuyu elle çıkarırsa
+o afiş de otomatik listeden düşer. Yeni `AcilDurumPlaniUretici::afisZip
+(Firma, tipler[], ebat)` — `FirmaEvrakZipUretici` ile aynı desen (her PDF'i
+buffer'a render edip ZipArchive'a ekler). Sayfada afiş kartlarında ✓ rozeti
+(otomatik tanımlı olanı işaretler) + "Tüm Afişleri İndir — N adet (ZIP)"
+butonu. `AcilDurumPlaniTest` +6 (26 toplam, 116 assertion).
+
+## Notlar
+
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
   "istem kopyala / kural tabanlı" iskele, sonra Gemini/OpenAI entegrasyonu (env).
 - Abonelik/ödeme: gerçek ödeme entegrasyonu kapsam dışı; `abonelik_*` alanları + kalan

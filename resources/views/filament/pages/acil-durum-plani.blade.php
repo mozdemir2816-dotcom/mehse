@@ -167,15 +167,19 @@
         {{-- 5. ACİL DURUM AFİŞLERİ --}}
         <x-filament::section icon="heroicon-o-printer" icon-color="danger">
             <x-slot name="heading">Acil Durum Afişleri</x-slot>
-            <x-slot name="description">Firmalara asılmak üzere A3 / A4 talimat afişleri</x-slot>
+            <x-slot name="description">Firmalara asılmak üzere A3 / A4 talimat afişleri — plan kaydedilince firmaya uygun olanlar otomatik tanımlanır (✓ işaretli)</x-slot>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem">
                 @foreach ($afisler as $anahtar => $afis)
-                    @php $secili = $afisTipi === $anahtar; @endphp
+                    @php $secili = $afisTipi === $anahtar; $tanimli = in_array($anahtar, $this->afisTipleri, true); @endphp
                     <button type="button" wire:click="$set('afisTipi','{{ $anahtar }}')"
-                        style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:center;
+                        style="position:relative;padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:center;
                             border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};
-                            background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }}">
+                            background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }};
+                            opacity:{{ $tanimli ? 1 : .55 }}">
+                        @if ($tanimli)
+                            <span style="position:absolute;top:2px;right:4px;color:#16a34a;font-size:.75rem" title="Firmaya otomatik tanımlı">✓</span>
+                        @endif
                         ⚠ {{ $afis['ad'] }}
                     </button>
                 @endforeach
@@ -192,6 +196,9 @@
                 </div>
                 <x-filament::button color="danger" icon="heroicon-o-arrow-down-tray" wire:click="afisIndir">
                     Afişi İndir ({{ strtoupper($afisEbat) }})
+                </x-filament::button>
+                <x-filament::button color="gray" icon="heroicon-o-archive-box-arrow-down" wire:click="afislerZipIndir">
+                    Tüm Afişleri İndir — {{ count($this->afisTipleri) }} adet (ZIP, {{ strtoupper($afisEbat) }})
                 </x-filament::button>
             </div>
 

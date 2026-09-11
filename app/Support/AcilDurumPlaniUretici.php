@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use setasign\Fpdi\Fpdi;
 use setasign\Fpdi\PdfParser\StreamReader;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use ZipArchive;
 
 /**
  * Acil Durum Eylem Planı ve acil durum afişleri PDF üretimi (dompdf).
@@ -55,6 +56,59 @@ class AcilDurumPlaniUretici
         ])->setPaper(strtolower($ebat), 'portrait');
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+    }
+
+    /**
+     * Plan için "otomatik tanımlı" afiş tipleri — ayrı bir seçim ekranı
+     * GEREKMEZ: plan zaten firmaya göre otomatik seçilen `konular` listesini
+     * tutuyor (`AcilDurumKonuSecici`), afiş kataloğundaki 7 tipin anahtarları
+     * bu konu anahtarlarıyla birebir örtüşüyor (örn. "kimyasal" yalnız ilgili
+     * NACE + çok tehlikeli firmalarda otomatik seçilir). Kullanıcı bir konuyu
+     * elle çıkarırsa (`konuToggle`) o afiş de otomatik listeden düşer.
+     *
+     * @return array<int, string>
+     */
+    public static function afisTipleri(AcilDurumPlani $plan): array
+    {
+        return array_values(array_intersect(
+            array_keys(config('isg.acil_durum.afisler')),
+            $plan->konular ?? [],
+        ));
+    }
+
+    /** Firmaya otomatik tanımlı tüm afişleri (bkz. `afisTipleri`) tek ZIP'te toplu indirir. */
+    public static function afisZip(Firma $firma, array $tipler, string $ebat = 'a4'): StreamedResponse
+    {
+        abort_if(empty($tipler), 404, 'Bu firma için tanımlı afiş yok');
+
+        $zipYolu = tempnam(sys_get_temp_dir(), 'mehse-afis').'.zip';
+        $zip = new ZipArchive;
+        $zip->open($zipYolu, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        foreach ($tipler as $tip) {
+            $afis = config('isg.acil_durum.afisler.'.$tip);
+
+            if (! $afis) {
+                continue;
+            }
+
+            $yanit = static::afis($firma, $tip, $ebat);
+
+            ob_start();
+            $yanit->sendContent();
+            $icerik = ob_get_clean();
+
+            $zip->addFromString(Str::slug($afis['ad']).'-'.strtoupper($ebat).'.pdf', $icerik);
+        }
+
+        $zip->close();
+
+        $ad = 'acil-durum-afisleri-'.Str::slug($firma->unvan).'-'.strtoupper($ebat).'.zip';
+
+        return response()->streamDownload(function () use ($zipYolu) {
+            echo file_get_contents($zipYolu);
+            @unlink($zipYolu);
+        }, $ad);
     }
 
     /**
