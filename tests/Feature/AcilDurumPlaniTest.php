@@ -2,16 +2,23 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\AcilDurumKrokisi;
 use App\Filament\Pages\AcilDurumPlani as AcilDurumSayfasi;
 use App\Models\AcilDurumPlani;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\User;
+use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumKonuSecici;
 use App\Support\AcilDurumPlaniUretici;
 use App\Support\AcilDurumWordUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 class AcilDurumPlaniTest extends TestCase
@@ -121,7 +128,7 @@ class AcilDurumPlaniTest extends TestCase
         $gecici = tempnam(sys_get_temp_dir(), 'adep_test').'.docx';
         file_put_contents($gecici, $icerik);
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($gecici);
         $xml = $zip->getFromName('word/document.xml');
         $zip->close();
@@ -136,9 +143,75 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringNotContainsString('44100010111205450770133000', $xml);
     }
 
+    public function test_kapak_sayfasi_sablon_degerlerini_firmaya_gore_degistirir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'Deneme Tekstil Sanayi Ltd.',
+            'adres' => 'Test Mahallesi No:5 İzmir',
+            'sgk_sicil_no' => '11122233344',
+            'nace_kodu' => '10.71',
+            'tehlike_sinifi' => 'tehlikeli',
+        ]);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->forceFill(['rapor_tarihi' => '2027-05-10', 'gecerlilik_tarihi' => '2031-05-10'])->save();
+
+        $yanit = AcilDurumKapakUretici::pptx($plan);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'adep_kapak_test').'.pptx';
+        file_put_contents($gecici, $icerik);
+
+        $zip = new \ZipArchive;
+        $zip->open($gecici);
+        $xml = $zip->getFromName('ppt/slides/slide1.xml');
+        $zip->close();
+        unlink($gecici);
+
+        $this->assertStringContainsString('DENEME TEKSTİL SANAYİ LTD.', $xml);
+        $this->assertStringContainsString('Test Mahallesi No:5 İzmir', $xml);
+        $this->assertStringContainsString('11122233344', $xml);
+        $this->assertStringContainsString('10.71', $xml);
+        $this->assertStringContainsString('10.05.2027', $xml);
+        $this->assertStringContainsString('10.05.2031', $xml);
+        $this->assertStringNotContainsString('ALTIN YAKUT', $xml);
+        $this->assertStringNotContainsString('44100010111205450770133000', $xml);
+        $this->assertStringNotContainsString('41.00.01', $xml);
+    }
+
+    public function test_kapagi_olmayan_sablon_icin_kapak_aksiyonu_404_doner(): void
+    {
+        config(['isg.acil_durum.word_sablonlari.bos' => [
+            'ad' => 'Kapaksız Şablon', 'aciklama' => 'test', 'dosya' => 'acil-durum-plani-sablonu.docx',
+        ]]);
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $plan = AcilDurumPlani::firmaIcin($firma);
+
+        $this->expectException(HttpException::class);
+        AcilDurumKapakUretici::pptx($plan, 'bos');
+    }
+
+    public function test_sayfada_sablon_secimi_word_ve_kapak_aksiyonuna_yansir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertSet('sablonId', 'orijinal')
+            ->assertActionVisible('kapakSayfasi')
+            ->callAction('word')
+            ->assertSuccessful()
+            ->callAction('kapakSayfasi')
+            ->assertSuccessful();
+    }
+
     public function test_tahliye_plani_gorseli_yuklenir(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('public');
+        Storage::fake('public');
 
         $firma = Firma::factory()->for($this->uzman)->create();
         AcilDurumPlani::firmaIcin($firma);
@@ -146,12 +219,12 @@ class AcilDurumPlaniTest extends TestCase
         Livewire::test(AcilDurumSayfasi::class)
             ->set('firmaId', $firma->id)
             ->callAction('tahliyePlani', data: [
-                'tahliye_plani_gorseli' => \Illuminate\Http\UploadedFile::fake()->image('kroki.jpg'),
+                'tahliye_plani_gorseli' => UploadedFile::fake()->image('kroki.jpg'),
             ]);
 
         $plan = AcilDurumPlani::where('firma_id', $firma->id)->firstOrFail();
         $this->assertNotNull($plan->tahliye_plani_gorseli);
-        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($plan->tahliye_plani_gorseli);
+        Storage::disk('public')->assertExists($plan->tahliye_plani_gorseli);
     }
 
     public function test_tum_konular_secilir_ve_kaldirilir(): void
@@ -224,7 +297,7 @@ class AcilDurumPlaniTest extends TestCase
     public function test_plan_pdf_onay_bolumunde_uzman_ve_hekimin_kase_imzasi_gorunur(): void
     {
         $this->uzman->forceFill(['kase_gorseli' => 'uzman-kase/test-kase.png', 'imza_gorseli' => 'uzman-kase/test-imza.png'])->save();
-        $hekim = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim-kase/test-kase.png']);
+        $hekim = IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim-kase/test-kase.png']);
 
         $firma = Firma::factory()->for($this->uzman)->create(['isyeri_hekimi_id' => $hekim->id]);
         $plan = AcilDurumPlani::firmaIcin($firma);
@@ -329,7 +402,7 @@ class AcilDurumPlaniTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(NotFoundHttpException::class);
         AcilDurumPlaniUretici::afis($firma, 'gecersiz', 'a4');
     }
 
@@ -340,7 +413,7 @@ class AcilDurumPlaniTest extends TestCase
         Livewire::test(AcilDurumSayfasi::class)
             ->set('firmaId', $firma->id)
             ->assertActionVisible('krokiPlani')
-            ->assertActionHasUrl('krokiPlani', \App\Filament\Pages\AcilDurumKrokisi::getUrl(['firma' => $firma->id]));
+            ->assertActionHasUrl('krokiPlani', AcilDurumKrokisi::getUrl(['firma' => $firma->id]));
     }
 
     public function test_eksik_firmalar_kutusu_plani_olmayan_firmayi_gosterir(): void

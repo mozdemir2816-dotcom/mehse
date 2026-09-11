@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\AcilDurumPlani as PlanModel;
 use App\Models\Firma;
+use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumPlaniUretici;
 use App\Support\AcilDurumWordUretici;
 use BackedEnum;
@@ -61,6 +62,14 @@ class AcilDurumPlani extends Page
     public string $afisTipi = 'yangin';
 
     public string $afisEbat = 'a4';
+
+    /**
+     * Gerçek referans Word/PowerPoint şablonu seçimi — kullanıcı zamanla farklı
+     * biçimli acil durum planı örnekleri ekleyecek (`config isg.acil_durum.
+     * word_sablonlari`); "Word (Orijinal Şablon)" ve "Kapak Sayfası" aksiyonları
+     * seçili şablona göre üretir.
+     */
+    public string $sablonId = 'orijinal';
 
     /** Firmalar listesinden "Acil Durum Planı" satır aksiyonuyla ?firma= ile gelinir. */
     public function mount(): void
@@ -179,8 +188,16 @@ class AcilDurumPlani extends Page
                 ->action(function () {
                     $this->kaydet();
 
-                    return AcilDurumWordUretici::docx($this->plan());
+                    return AcilDurumWordUretici::docx($this->plan(), $this->sablonId);
                 }),
+
+            Action::make('kapakSayfasi')
+                ->label('Kapak Sayfası')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null && filled(config('isg.acil_durum.word_sablonlari.'.$this->sablonId.'.kapak_dosya')))
+                ->tooltip('Word şablonuyla eşleşen kapak sayfası (PowerPoint) — ayrı yazdırılıp plan çıktısının önüne konur.')
+                ->action(fn () => AcilDurumKapakUretici::pptx($this->plan(), $this->sablonId)),
 
             Action::make('krokiPlani')
                 ->label('Kroki Planı Hazırla')

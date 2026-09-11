@@ -719,6 +719,48 @@ return [
         ],
 
         /*
+         | Acil Durum Planı — gerçek referans Word/PowerPoint şablonları kütüphanesi.
+         | `AcilDurumWordUretici`/`AcilDurumKapakUretici` kullanıcının kendi gerçek
+         | belgesini BİREBİR ŞABLON olarak kullanır (kendi tasarımımız değil);
+         | yalnızca firmaya özel değerler değişir. Kullanıcı zamanla farklı
+         | biçimli acil durum planı örnekleri ekleyecek — her yeni şablon için
+         | (1) dosya `resources/belge/`'ye eklenir, (2) burada yeni bir giriş
+         | açılır ('dosya' + varsa 'kapak_dosya' + o dosyadaki orijinal (örnek
+         | firma) değerlerin haritası). `eslemeler`'in anahtarları semantik
+         | (unvan/adres/... ), değerleri şablondaki gerçek eski metindir —
+         | Uretici sınıfları bu semantik anahtarlardan güncel firma değerini
+         | üretip eski metnin yerine yazar. `docx`/`kapak` ayrı tutulur çünkü
+         | aynı bilgi iki dosyada farklı biçimlendirilmiş olabilir (örn. kapak
+         | sayfasında adres sonunda yazım hatası kaynaklı fazladan "/" vardı).
+        */
+        'word_sablonlari' => [
+            'orijinal' => [
+                'ad' => 'Şablon 1 — ADEP Klasik',
+                'aciklama' => 'Gerçek referans belge (11 acil durum listesi + görsel akış şemaları + kapak sayfası).',
+                'dosya' => 'acil-durum-plani-sablonu.docx',
+                'kapak_dosya' => 'acil-durum-kapak-sablonu.pptx',
+                'docx' => [
+                    'unvan' => 'ALTIN YAKUT YAPI ADİ ORTAKLIĞI',
+                    'adres' => 'MEHMET AKİF ERSOY MAHALLESİ 4091 SOK. 1380 ADA 9 PARSEL YALOVA MERKEZ NO:19',
+                    'sgk_sicil_no' => '44100010111205450770133000',
+                    'rapor_tarihi' => '26.03.2026',
+                    'gecerlilik_tarihi' => '26.03.2028',
+                    'tehlike_sinifi' => 'ÇOK TEHLİKELİ',
+                    'uzman_adi' => 'MEHMET ÖZDEMİR',
+                    'uzman_unvani' => 'A Sınıfı İş Güvenliği Uzmanı',
+                ],
+                'kapak' => [
+                    'unvan' => 'ALTIN YAKUT YAPI ADİ ORTAKLIĞI',
+                    'adres' => 'MEHMET AKİF ERSOY MAHALLESİ 4091 SOK. 1380 ADA 9 PARSEL YALOVA MERKEZ NO:19/',
+                    'sgk_sicil_no' => '44100010111205450770133000',
+                    'rapor_tarihi' => '26.03.2026',
+                    'gecerlilik_tarihi' => '26.03.2028',
+                    'nace_kodu' => '41.00.01',
+                ],
+            ],
+        ],
+
+        /*
          | Acil durum konu sayfaları (isgpratik 155.jpg — 19 konu + ek). Yeni planda
          | firmaya göre otomatik seçilir (`App\Support\AcilDurumKonuSecici`):
          |   kosul = null  → her firmada seçili (genel afet + ortak riskler)

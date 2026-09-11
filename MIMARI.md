@@ -3004,7 +3004,34 @@ kalan yalnızca düşük öncelikli, istenmedikçe başlanmayacak 2 madde (Şabl
 sistemi, İç Denetim Kontrol Listesi ISO 45001) + Eğitim/Sağlık matrisine "kalan
 gün" sütunu.
 
-## Notlar
+**Acil Durum Planı — Kapak Sayfası + çoklu gerçek şablon altyapısı** (11.09):
+kullanıcı `26.03.2026 ACİL DURUM EYLEM PLANI.docx`'in (zaten sistemde olan
+`acil-durum-plani-sablonu.docx` ile birebir aynı — doğrulandı) yanına eşlik
+eden `ADEP KAPAK.pptx` kapak sayfasını da istedi, ve "üç adet değişik acil
+durum planı olacak" diyerek şablon SEÇİMİ altyapısı istedi.
+- Yeni `config isg.acil_durum.word_sablonlari` — her giriş `dosya` (docx) +
+  `kapak_dosya` (pptx, opsiyonel) + `docx`/`kapak` eşleme haritaları (semantik
+  anahtar → şablondaki gerçek eski metin). Yeni şablon eklemek artık yalnızca
+  dosya + config girişi; kod değişikliği gerekmez (mapping'ler veri, davranış
+  değil). İlk (ve tek) giriş: `orijinal` = mevcut ALTIN YAKUT örneği.
+- Ortak `App\Support\OoxmlMetinYamasi` — `AcilDurumWordUretici`'nin paragraf-
+  birleştir/aralık-bul/biçim-koru metin yama mantığı pptx (`a:p`/`a:t`) ile de
+  çalışacak şekilde paylaşılan sınıfa çıkarıldı (Word `w:p`/`w:t` ve
+  PowerPoint `a:p`/`a:t` aynı OOXML run-tree yapısını paylaşır).
+- Yeni `App\Support\AcilDurumKapakUretici::pptx($plan, $sablonId)` — kapak
+  slaytındaki unvan/adres/SGK no/NACE kodu/tarihleri firmaya göre değiştirir,
+  OSGB logosu (Yıldız Grup) + illüstrasyon şablonda sabit kalır. `.docx`
+  gövdeden AYRI indirilir (afiş çıktılarıyla aynı yaklaşım — fiziksel dosyada
+  ayrı yazdırılıp birlikte konur).
+- `AcilDurumWordUretici::docx()` artık `$sablonId` parametresi alır, eşleme
+  haritasını config'ten okur (`degerCoz()` semantik anahtar→değer çözümleyici,
+  `AcilDurumKapakUretici` de aynısını kullanır — iki dosyada da aynı firma
+  alanları farklı eski metinlerle eşleşiyor, örn. kapak sayfasındaki adres
+  yazım hatasıyla sonunda fazladan "/" içeriyordu).
+- Sayfaya "Acil Durum Planı Şablonu" seçim bölümü (`$sablonId`, config'teki
+  tüm girişleri buton olarak listeler) + yeni "Kapak Sayfası" header aksiyonu
+  (yalnız seçili şablonda `kapak_dosya` varsa görünür). `AcilDurumPlaniTest`
+  +3 test (21 toplam).
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
   "istem kopyala / kural tabanlı" iskele, sonra Gemini/OpenAI entegrasyonu (env).

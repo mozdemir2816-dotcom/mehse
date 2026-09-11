@@ -3,6 +3,7 @@
     $cerceveler = config('isg.acil_durum.kapak_cerceveleri');
     $ekipler = config('isg.acil_durum.ekipler');
     $afisler = config('isg.acil_durum.afisler');
+    $sablonlar = config('isg.acil_durum.word_sablonlari');
     $mor = 'rgb(139 92 246)';
     $kirmizi = 'rgb(239 68 68)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
@@ -145,7 +146,25 @@
             </div>
         </x-filament::section>
 
-        {{-- 4. ACİL DURUM AFİŞLERİ --}}
+        {{-- 4. GERÇEK ŞABLON (WORD / KAPAK) --}}
+        <x-filament::section icon="heroicon-o-document-duplicate" icon-color="danger">
+            <x-slot name="heading">Acil Durum Planı Şablonu</x-slot>
+            <x-slot name="description">"Word (Orijinal Şablon)" ve "Kapak Sayfası" aksiyonları seçili şablonu üretir — zamanla eklenecek farklı örnekler arasında seçim yapın</x-slot>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem">
+                @foreach ($sablonlar as $anahtar => $s)
+                    @php $secili = $sablonId === $anahtar; @endphp
+                    <button type="button" wire:click="$set('sablonId','{{ $anahtar }}')"
+                        style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:left;
+                            border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};
+                            background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }}">
+                        <div style="font-weight:600">{{ $s['ad'] }}</div>
+                        <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
+                    </button>
+                @endforeach
+            </div>
+        </x-filament::section>
+
+        {{-- 5. ACİL DURUM AFİŞLERİ --}}
         <x-filament::section icon="heroicon-o-printer" icon-color="danger">
             <x-slot name="heading">Acil Durum Afişleri</x-slot>
             <x-slot name="description">Firmalara asılmak üzere A3 / A4 talimat afişleri</x-slot>
