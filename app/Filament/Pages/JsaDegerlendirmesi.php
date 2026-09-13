@@ -22,6 +22,7 @@ use Livewire\Attributes\Computed;
 use Throwable;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * JSA — İşe Özgü Risk Değerlendirmesi kütüphanesi. Kullanıcı "İş Güvenliği
  * Analizi (JSA)" formatındaki Excel'lerini (bkz. örnek DUVAR ÖRME) yükleyip
@@ -30,6 +31,8 @@ use UnitEnum;
  */
 class JsaDegerlendirmesi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.jsa-degerlendirmesi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';

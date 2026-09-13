@@ -28,12 +28,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Uzaktan Eğitim Paketi — video dersleri + final sınav havuzu. Paket "Uzaktan
  * Eğitim Atama" sayfasından çalışanlara atanır.
  */
 class EgitimPaketiResource extends Resource
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected static ?string $model = EgitimPaketi::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPlayCircle;

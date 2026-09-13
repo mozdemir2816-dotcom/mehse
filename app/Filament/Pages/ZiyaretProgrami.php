@@ -14,6 +14,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Ziyaret Programı — isgpratik'te ekran görüntüsü yok; kullanıcı onayıyla
  * BASİTLEŞTİRİLMİŞ liste (firma+yıl başına 12 aylık satır) olarak kuruldu.
@@ -22,6 +23,8 @@ use UnitEnum;
  */
 class ZiyaretProgrami extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.ziyaret-programi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar';

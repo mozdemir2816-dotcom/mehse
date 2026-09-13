@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Ekipman & Periyodik Kontrol Motoru — isgpratik. Her iş ekipmanı kategori +
  * tip ile tanımlanır (tip seçilince yasal standart / deney / periyot otomatik
@@ -30,6 +31,8 @@ use UnitEnum;
  */
 class PeriyodikKontrol extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.periyodik-kontrol';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';

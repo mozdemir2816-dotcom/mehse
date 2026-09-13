@@ -23,6 +23,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Eğitim Katılım Formu — isgpratik EĞİTİM ekranları. "İş Sağlığı ve Güvenliği"
  * seçilince Genel/Sağlık/Teknik/İşyerine Özgü Riskler 4 bloğu birden gösterilir;
@@ -31,6 +32,8 @@ use UnitEnum;
  */
 class EgitimKatilim extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.egitim-katilim';

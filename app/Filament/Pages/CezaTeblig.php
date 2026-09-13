@@ -19,12 +19,15 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İSG Ceza ve Tebliğ Tutanağı — isgpratik 79-80.jpg. Çalışana uygulanan
  * disiplin yaptırımını ve tebliğ/tebellüğ durumunu belgeler.
  */
 class CezaTeblig extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.ceza-teblig';

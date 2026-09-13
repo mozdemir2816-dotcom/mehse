@@ -9,6 +9,7 @@ use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Araçlar — bağımsız, kalıcı veri tutmayan İSG hesaplayıcıları.
  * isgpratik'te tam karşılığı görülmedi; standart İSG mevzuatı
@@ -16,6 +17,8 @@ use UnitEnum;
  */
 class Araclar extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.araclar';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench';

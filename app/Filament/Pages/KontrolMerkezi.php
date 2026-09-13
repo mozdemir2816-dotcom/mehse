@@ -10,12 +10,15 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İSG Komuta Merkezi — isgpratik 135-136.jpg. Portföy genelinde yasal uyum
  * takibi. 3 sekme: Günlük Akış / Firma Asistanı / Çalışan Asistanı.
  */
 class KontrolMerkezi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kontrol-merkezi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';

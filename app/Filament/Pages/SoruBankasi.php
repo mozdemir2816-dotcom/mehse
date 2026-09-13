@@ -15,6 +15,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Soru Bankası — kalıcı, kaynaklı ve onaylı sektörel İSG sınav sorusu havuzu.
  * AI ile üretilen veya elle eklenen sorular "taslak" gelir; incelenip
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class SoruBankasi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.soru-bankasi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';

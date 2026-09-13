@@ -8,6 +8,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Risk Kütüphanesi'ne Excel'den toplu yüklerken bulunan olası mükerrer
  * maddelerin gözden geçirilmesi. `TehlikeExcelIceAktarici` benzerliği yüksek
@@ -16,6 +17,8 @@ use UnitEnum;
  */
 class TehlikeCakismalari extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.tehlike-cakismalari';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-square-3-stack-3d';

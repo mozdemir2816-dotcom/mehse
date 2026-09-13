@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Acil Durum / Tahliye Krokisi Düzenleyici — isgpratik'in "Acil Durum & Tahliye
  * Krokisi Düzenleyici" (kroki-editor) sayfasının küçültülmüş ilk sürümü: SVG
@@ -24,6 +25,8 @@ use UnitEnum;
  */
 class AcilDurumKrokisi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.acil-durum-krokisi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-map';

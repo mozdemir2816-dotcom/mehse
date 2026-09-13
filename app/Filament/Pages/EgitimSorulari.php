@@ -19,12 +19,15 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Eğitim Soruları — isgpratik 69-70.jpg. Sektör + zorluğa göre Gemini ile
  * 10 soruluk çoktan seçmeli sınav üretilir, katılımcı listesine PDF verilir.
  */
 class EgitimSorulari extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.egitim-sorulari';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-question-mark-circle';

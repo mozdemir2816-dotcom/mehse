@@ -15,12 +15,15 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İşe Dönüş Belgesi — uzun süreli rapor / iş kazası / meslek hastalığı sonrası
  * işyeri hekiminin işe dönüş uygunluk değerlendirmesi ve geçici iş kısıtlamaları.
  */
 class IseDonusBelgesi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.ise-donus-belgesi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-uturn-left';

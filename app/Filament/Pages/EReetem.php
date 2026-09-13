@@ -7,6 +7,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Ücretsiz E-Reçetem — BİLGİ SAYFASI. mehse'de gerçek e-Reçete/MEDULA
  * entegrasyonu yok (bu işlem işyeri hekiminin kendi doktor e-imzası ve
@@ -15,6 +16,8 @@ use UnitEnum;
  */
 class EReetem extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.e-recetem';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';

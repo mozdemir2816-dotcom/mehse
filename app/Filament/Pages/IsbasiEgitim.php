@@ -14,12 +14,15 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İşbaşı / Oryantasyon Eğitim Tutanağı — isgpratik 60.jpg. İşe yeni başlayan
  * her çalışan için ayrı, tek sayfalık tutanak.
  */
 class IsbasiEgitim extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.isbasi-egitim';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-identification';

@@ -21,6 +21,7 @@ use Livewire\Attributes\Computed;
 use Throwable;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Talimat Oluştur — isgpratik 82-83.jpg. Hazır şablon kütüphanesinden veya
  * uzmanın kendi arşivinden Excel ile yüklediği şablonlardan bir talimat
@@ -28,6 +29,8 @@ use UnitEnum;
  */
 class TalimatOlustur extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.talimat-olustur';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-duplicate';

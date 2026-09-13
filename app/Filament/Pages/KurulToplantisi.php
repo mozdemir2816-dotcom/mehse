@@ -16,12 +16,15 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İSG Kurulu Toplantısı — isgpratik yardım/kurul-toplantisi rehberi.
  * Toplantı oluşturma → katılımcı yönetimi → gündem → kararlar → PDF tutanak.
  */
 class KurulToplantisi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kurul-toplantisi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';

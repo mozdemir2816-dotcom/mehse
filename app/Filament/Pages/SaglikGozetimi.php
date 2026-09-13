@@ -14,6 +14,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Sağlık Gözetimi Takibi — firma başına. Çalışan × sağlık tetkiki (işe giriş /
  * periyodik muayene, odyometri, SFT, portör vb.). Her satır için tetkik tarihi +
@@ -21,6 +22,8 @@ use UnitEnum;
  */
 class SaglikGozetimi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.saglik-gozetimi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-heart';

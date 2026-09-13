@@ -33,6 +33,7 @@ use Livewire\Attributes\Computed;
 use Throwable;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Profilim — isgpratik 5, 137-147.jpg. Uzmanın komuta ekranı: künye + sayaçlar +
  * sekmeler (Genel Bakış / Firmalar / Çalışanlar / Firma Takip / Risklerim / Diğer).
@@ -40,6 +41,8 @@ use UnitEnum;
  */
 class Profilim extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.profilim';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';

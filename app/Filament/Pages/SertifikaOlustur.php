@@ -21,6 +21,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Sertifika Oluştur — isgpratik 66-68.jpg. 4 tip (İSG / Yüksekte Çalışma /
  * Kapalı Alan / Yangın); İSG tipi çoklu eğitici (İGU + İşyeri Hekimi, isg.egitim
@@ -30,6 +31,8 @@ use UnitEnum;
  */
 class SertifikaOlustur extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.sertifika-olustur';

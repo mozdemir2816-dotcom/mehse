@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Yangın Güvenliği Genel Durum Değerlendirmesi — bina kullanımı, kat/kullanıcı
  * yükü, bölümler ve faaliyet/depolama risklerinden bina yangın tehlike sınıfı
@@ -20,6 +21,8 @@ use UnitEnum;
  */
 class YanginGuvenligi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.yangin-guvenligi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-fire';

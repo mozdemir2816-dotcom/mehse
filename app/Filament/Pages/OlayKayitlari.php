@@ -17,6 +17,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Olay Kayıtları / Ramak Kala — İş Kazası Raporu'ndan AYRI bir olay defteri.
  * Yaralanma olmasa da her İSG olayını (ramak kala, tehlikeli durum/davranış,
@@ -26,6 +27,8 @@ use UnitEnum;
  */
 class OlayKayitlari extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.olay-kayitlari';

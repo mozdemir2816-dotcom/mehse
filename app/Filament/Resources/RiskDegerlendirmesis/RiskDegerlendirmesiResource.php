@@ -18,8 +18,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 class RiskDegerlendirmesiResource extends Resource
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected static ?string $model = RiskDegerlendirmesi::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolderOpen;

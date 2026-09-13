@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Uzaktan Eğitim Atama — İSG uzmanı bir eğitim paketini firmadaki çalışanlara atar;
  * portal giriş bilgisini (e-posta + geçici şifre) üretir. Atanan eğitimlerin
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class UzaktanEgitimAtama extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.uzaktan-egitim-atama';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';

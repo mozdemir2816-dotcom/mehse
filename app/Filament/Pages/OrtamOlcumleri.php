@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İş Hijyeni / Ortam Ölçümleri Takibi — işyerinde yapılması gereken ölçümler
  * (gürültü, toz, aydınlatma, termal konfor, kimyasal maruziyet vb.) listelenir;
@@ -21,6 +22,8 @@ use UnitEnum;
  */
 class OrtamOlcumleri extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.ortam-olcumleri';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';

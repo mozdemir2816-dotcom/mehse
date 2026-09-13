@@ -7,6 +7,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Str;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Mevzuat Kütüphanesi — isgpratik'te genel mevzuat.gov.tr tarzı TAM bir kütüphane
  * olarak görülmüştü (Anayasa/Kanun/Yönetmelik/Tebliğ/Rehber kategorileriyle, İSG
@@ -17,6 +18,8 @@ use UnitEnum;
  */
 class Mevzuat extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.mevzuat';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-scale';

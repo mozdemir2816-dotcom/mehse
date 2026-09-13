@@ -19,8 +19,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->string('sektor_anahtari')->nullable();
-            $table->string('konu')->nullable();
+            $table->string('sektor_anahtari', 60)->nullable();
+            $table->string('konu', 100)->nullable();
             $table->string('zorluk')->default('orta'); // kolay / orta / zor
 
             $table->text('soru');
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->text('aciklama')->nullable();   // doğru cevabın gerekçesi (cevap anahtarı notu)
             $table->string('kaynak')->nullable();   // yasal dayanak / referans (ör. "6331 sK m.4")
 
-            $table->string('durum')->default('taslak'); // taslak / onaylandi / arsiv
+            $table->string('durum', 20)->default('taslak'); // taslak / onaylandi / arsiv
             $table->string('uretim_kaynagi')->nullable(); // seed / manuel / ai
             $table->string('onaylayan')->nullable();
             $table->dateTime('onay_tarihi')->nullable();

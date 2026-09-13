@@ -27,12 +27,15 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İSG Profesyonelleri — İş Güvenliği Uzmanı / İşyeri Hekimi / DSP kayıtları.
  * Firmalara atanınca kaşe/imza görseli belgelerde (Atama Yazıları vb.) otomatik basılır.
  */
 class IsgProfesyoneliResource extends Resource
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected static ?string $model = IsgProfesyoneli::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;

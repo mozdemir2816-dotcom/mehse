@@ -16,6 +16,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * DÖF Oluştur (Çoklu DÖF) — isgpratik 158.jpg. Saha gözetimi sonucu birden
  * çok Düzeltici Önleyici Faaliyet maddesini tek raporda toplar; "AI ile Öneri
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class DofOlustur extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.dof-olustur';

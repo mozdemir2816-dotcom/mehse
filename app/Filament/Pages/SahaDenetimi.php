@@ -19,6 +19,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Saha Denetimi ("Şantiye Denetim ve Değerlendirme") — isgpratik SAHA
  * DENETİMİ/1-15.jpg + gerçek örnek PDF. 9 kategori / 41 maddelik kontrol
@@ -27,6 +28,8 @@ use UnitEnum;
  */
 class SahaDenetimi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.saha-denetimi';

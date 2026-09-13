@@ -28,12 +28,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Sektörel risk şablonları — Risk Sihirbazında oluşturulur, burada yönetilir.
  * Create yok; şablon sihirbazın "Sektör şablonu olarak kaydet" akışından doğar.
  */
 class RiskSablonuResource extends Resource
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected static ?string $model = RiskSablonu::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

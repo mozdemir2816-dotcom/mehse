@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Kaza İstatistikleri — firma × yıl. İş Kazası Raporları + Olay Kayıtları
  * (iş kazası tipi) otomatik hesaba katılır; aylık çalışma verisi girilince
@@ -21,6 +22,8 @@ use UnitEnum;
  */
 class KazaIstatistikleri extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kaza-istatistikleri';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar-square';

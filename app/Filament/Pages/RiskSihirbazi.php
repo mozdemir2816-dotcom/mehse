@@ -27,6 +27,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Risk Değerlendirme Sihirbazı — isgpratik 10-18.jpg.
  * 6 adım: Firma Bilgileri → Ekleme Yöntemi → Risk Ekleme → Tercihler →
@@ -37,6 +38,8 @@ use UnitEnum;
  */
 class RiskSihirbazi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.risk-sihirbazi';

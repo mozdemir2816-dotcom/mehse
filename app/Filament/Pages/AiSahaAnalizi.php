@@ -17,6 +17,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * AI Saha Analizi — isgpratik AI SAHA ANALİZİ/1-6.jpg. Saha fotoğrafları
  * Gemini vision'a gönderilir, her fotoğraftaki uygunsuzluk için bulgu üretilir;
@@ -25,6 +26,8 @@ use UnitEnum;
  */
 class AiSahaAnalizi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.ai-saha-analizi';

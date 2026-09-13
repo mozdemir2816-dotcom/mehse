@@ -8,6 +8,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İSG-KATİP Robot — isgpratik 7-9.jpg. İSG-KATİP portalını otomatikleştiren Chrome
  * eklentisinin BİLGİ SAYFASI. mehse'de gerçek eklenti / portal erişimi yok:
@@ -16,6 +17,8 @@ use UnitEnum;
  */
 class IsgKatipRobot extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.isg-katip-robot';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';

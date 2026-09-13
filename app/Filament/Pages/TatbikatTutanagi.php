@@ -16,6 +16,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Tatbikat Tutanağı — isgpratik 61-65.jpg. Senaryo seçimi otomatik metin
  * doldurur; görev alan ekipler + değerlendirme kontrol listesi + DÖF
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class TatbikatTutanagi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.tatbikat-tutanagi';

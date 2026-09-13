@@ -17,6 +17,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İş İzin Formu (Permit to Work) — isgpratik 76-78.jpg. İzin türüne göre ilgili
  * güvenlik önlemi maddeleri dinamik gösterilir. Ayrıca: izin kütüphanesinden
@@ -25,6 +26,8 @@ use UnitEnum;
  */
 class IsIzinFormu extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.is-izin-formu';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-key';

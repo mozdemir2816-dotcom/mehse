@@ -21,6 +21,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Onaylı Defter Nüshaları — mehse'de yazılan Tespit ve Öneri Defteri'nin
  * imzalanmış / onaylı, İSG-KATİP'e yüklenen nüshalarının taranmış hâli.
@@ -28,6 +29,8 @@ use UnitEnum;
  */
 class OnayliDefterNushalari extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.onayli-defter-nushalari';

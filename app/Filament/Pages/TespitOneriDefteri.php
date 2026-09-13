@@ -15,12 +15,15 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Tespit ve Öneri Defteri — isgpratik 65-66.jpg. Hazır katalogdan tek tıkla
  * madde ekleme + serbest (opsiyonel AI destekli) tespit/öneri yazma.
  */
 class TespitOneriDefteri extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.tespit-oneri-defteri';

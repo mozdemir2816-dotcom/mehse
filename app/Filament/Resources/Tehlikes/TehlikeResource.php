@@ -15,8 +15,11 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 class TehlikeResource extends Resource
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected static ?string $model = Tehlike::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;

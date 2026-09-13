@@ -16,6 +16,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Acil Durum Eylem Planı — isgpratik 19-21, 146-154.jpg. Firma seçilir, konu
  * sayfaları + destek ekipleri + kapak çerçevesi ayarlanır → PDF üretilir.
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class AcilDurumPlani extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.acil-durum-plani';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-exclamation-triangle';

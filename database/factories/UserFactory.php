@@ -30,6 +30,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Mevcut testlerin çoğu tam erişim varsayıyor; kişi bazlı yetkilendirme
+            // testleri bunun yerine ->kisitli() durumunu kullanır.
+            'rol' => 'sahip',
+            'aktif' => true,
         ];
     }
 
@@ -40,6 +44,14 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /** Kişi bazlı yetkilendirme testleri için: sahip olmayan, izinsiz kullanıcı. */
+    public function kisitli(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'rol' => 'uzman',
         ]);
     }
 }

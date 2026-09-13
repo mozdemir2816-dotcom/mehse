@@ -17,6 +17,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * İş Kazası İnceleme ve Kök Neden Analiz Raporu — isgpratik 6 adımlı sihirbaz
  * mantığıyla: Genel Bilgiler → 5 Neden → Balık Kılçığı (6M) → DÖF → Foto & Notlar
@@ -24,6 +25,8 @@ use UnitEnum;
  */
 class IsKazasiRaporu extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     use WithFileUploads;
 
     protected string $view = 'filament.pages.is-kazasi-raporu';

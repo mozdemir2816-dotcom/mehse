@@ -23,6 +23,7 @@ use Illuminate\Support\HtmlString;
 use Throwable;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Risk Analizi Prosedürü kütüphanesi — Risk Değerlendirmesi PDF'inde
  * Kapak'tan sonra, Form'dan önce basılan yöntem prosedürü. Kullanıcının
@@ -32,6 +33,8 @@ use UnitEnum;
  */
 class RiskProsedurResource extends Resource
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected static ?string $model = RiskProsedur::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;

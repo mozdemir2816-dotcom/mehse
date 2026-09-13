@@ -21,6 +21,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Kimyasal Sicili — işyeri kimyasal envanteri (SDS / GHS) + İSG afiş / pano
  * kütüphanesi. Firma seçilir, kimyasallar SDS dosyasıyla eklenir, envanter PDF'i
@@ -28,6 +29,8 @@ use Livewire\Attributes\Computed;
  */
 class KimyasalSicili extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kimyasal-sicili';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';

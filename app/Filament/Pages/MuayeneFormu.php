@@ -16,6 +16,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Muayene Formu (EK-2) — İşyeri Hekimi ve Diğer Sağlık Personelinin Görev,
  * Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik EK-2'ye göre. isgpratik'te
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class MuayeneFormu extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.muayene-formu';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-heart';

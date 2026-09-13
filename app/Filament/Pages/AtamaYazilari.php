@@ -17,6 +17,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Atama Yazıları — isgpratik 38-44.jpg. 10 görev tipinden biri seçilir;
  * 'tekli' roller tek çalışan (+ görev tarihi aralığı), 'ekip' roller çoklu
@@ -24,6 +25,8 @@ use UnitEnum;
  */
 class AtamaYazilari extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.atama-yazilari';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';

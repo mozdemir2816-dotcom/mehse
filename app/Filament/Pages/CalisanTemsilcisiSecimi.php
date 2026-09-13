@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Çalışan Temsilcisi Seçim süreci — isgpratik ATAMA YAZISI/ÇALIŞAN TEMSİLCİSİ
  * referansı. Atama Yazıları'ndaki direkt "atama" akışının aksine, burada
@@ -21,6 +22,8 @@ use UnitEnum;
  */
 class CalisanTemsilcisiSecimi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.calisan-temsilcisi-secimi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-group';

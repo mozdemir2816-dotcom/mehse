@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Kimyasal Risk Değerlendirmesi — firmanın kimyasal envanterindeki her ürün için
  * tehlike grubu × kullanım miktarı × uçuculuk'tan kontrol yaklaşımı (COSHH
@@ -20,6 +21,8 @@ use UnitEnum;
  */
 class KimyasalRiskDegerlendirmesi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kimyasal-risk-degerlendirmesi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';

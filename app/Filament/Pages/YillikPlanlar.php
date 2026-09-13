@@ -18,6 +18,7 @@ use Livewire\Attributes\Computed;
 use Throwable;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * Yıllık Planlar — isgpratik 86-90.jpg. 3 sekme: Çalışma Planı / Eğitim
  * Planı (ikisi de ay durum matrisli — Boş→Planlandı→Tamamlandı) /
@@ -25,6 +26,8 @@ use UnitEnum;
  */
 class YillikPlanlar extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.yillik-planlar';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';

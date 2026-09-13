@@ -30,6 +30,20 @@ class Firma extends Model
                 $f->user_id = auth()->id();
             }
         });
+
+        // Kişi bazlı yetkilendirme: sahip olmayan bir kullanıcı sadece kendi firmalarını
+        // ve kendisine paylaşılan firmaları görür. Konsol/kuyruk/test bağlamında (auth yok)
+        // veya sahip hesabında hiçbir filtre uygulanmaz.
+        static::addGlobalScope('gorunurluk', function (\Illuminate\Database\Eloquent\Builder $query): void {
+            $user = auth()->user();
+
+            // Portal (Calisan guard) veya konsol/kuyruk bağlamında bu kısıtlama uygulanmaz.
+            if (! $user instanceof User || $user->sahipMi()) {
+                return;
+            }
+
+            $query->whereIn('firmalar.id', $user->erisilebilirFirmaIdleri());
+        });
     }
 
     public function user(): BelongsTo

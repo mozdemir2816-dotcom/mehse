@@ -15,12 +15,15 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * KKD Zimmet Formu — isgpratik 71-75.jpg. Çoklu çalışan × çoklu KKD seçimi
  * (6 kategori) → her çalışan için ayrı teslim tutanağı sayfası.
  */
 class KkdFormu extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kkd-formu';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';

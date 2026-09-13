@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
+use App\Filament\Concerns\SinirliErisim;
 /**
  * KKD Seçim Matrisi — iş kalemi × KKD türü. Sektörel katalogdan iş kalemi
  * eklenir (varsayılan KKD gereklilikleriyle) veya serbest satır girilir; her
@@ -20,6 +21,8 @@ use UnitEnum;
  */
 class KkdSecimMatrisi extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.kkd-secim-matrisi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-exclamation';
