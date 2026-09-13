@@ -1,0 +1,114 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament';
+@source '../../../../resources/views/filament';
+
+/* Tasarım Md. 5: buton derinliği — Filament'ın düz/gölgesiz varsayılan dolu butonuna
+   hafif gölge + hover'da kalkma + basılınca geri oturma eklendi (Md.3'teki "varsayılan
+   yeterli" kararı gözden geçirildi — panel çok sade/düz görünüyordu). Outlined butonlarda
+   gölge yok, sadece hafif kalkma; disabled/loading butonlar etkilenmez. */
+.fi-btn:not(.fi-outlined):not(.fi-disabled):not([disabled]) {
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 1px 1px rgb(0 0 0 / 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.fi-btn:not(.fi-outlined):not(.fi-disabled):not([disabled]):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.14), 0 2px 4px rgb(0 0 0 / 0.08);
+    filter: brightness(1.04);
+}
+
+.fi-btn:not(.fi-outlined):not(.fi-disabled):not([disabled]):active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+    filter: brightness(0.97);
+}
+
+.fi-btn.fi-outlined:not(.fi-disabled):not([disabled]) {
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.fi-btn.fi-outlined:not(.fi-disabled):not([disabled]):hover {
+    transform: translateY(-1px);
+}
+
+/* Tasarım Md. 6 (v5): "yalnız aktif sayfa mor" denemesi yeterince iyi gelmedi, grup başına
+   renk (amber+lacivert dönüşümlü) GERİ GETİRİLDİ. AdminPanelProvider::navGruplari() her
+   gruba --fi-nav-grup-tint/--fi-nav-grup-renk CSS değişkenlerini `<li class="fi-sidebar-
+   group">` üzerinden geçiriyor — hem genişletilmiş görünümdeki buton (.fi-sidebar-group-btn)
+   hem daraltılmış ikon-şeridindeki tetikleyici (.fi-sidebar-group-dropdown-trigger-btn)
+   aynı arkaplan tonunu + ikon rengini alıyor. */
+.fi-sidebar-group-btn,
+.fi-sidebar-group-dropdown-trigger-btn {
+    background: var(--fi-nav-grup-tint, transparent);
+    border-radius: 0.5rem;
+}
+
+.fi-sidebar-group-btn > svg,
+.fi-sidebar-group-dropdown-trigger-btn > svg {
+    color: var(--fi-nav-grup-renk, inherit);
+}
+
+/* Tasarım Md. 7: sol menü tek ekrana sığsın — 12 grup + geniş boşluklarla taşıyordu.
+   Nav'ın kendi dikey boşlukları + grup/madde satır yükseklikleri sıkılaştırıldı.
+   İçerik (flyout/genişletilmiş liste) taşarsa kendi içinde kayabilir — sorun değil,
+   önemli olan ana ikon şeridinin bir ekrana sığması. */
+.fi-sidebar-nav {
+    row-gap: 0.5rem;
+    padding-block: 1rem;
+    padding-inline: 0.75rem;
+}
+
+.fi-sidebar-group-btn,
+.fi-sidebar-group-dropdown-trigger-btn,
+.fi-sidebar-item-btn {
+    padding: 0.4rem;
+}
+
+.fi-sidebar-group-label {
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+.fi-sidebar-item-label {
+    font-size: 0.8rem;
+}
+
+/* Tasarım Md. 8: nav grubu flyout'u (tıklayınca sağda açılan liste) Filament'ın genel
+   dropdown genişliğini kullanıyordu (max-width:14rem) — en uzun madde başlıkları
+   ("Çalışan Temsilcisi Seçimi", "Olay Kayıtları / Ramak Kala" gibi) tek satıra sığmayıp
+   "..." ile kesiliyordu. Yalnız sidebar grubu İÇİNDEKİ dropdown paneli hedefleniyor
+   (.fi-sidebar-group öneki) — uygulamanın başka yerindeki (bildirim, tablo aksiyonu vb.)
+   dropdown'lar etkilenmiyor. */
+.fi-sidebar-group .fi-dropdown-panel {
+    max-width: 18rem !important;
+}
+
+.fi-sidebar-group .fi-dropdown-list-item-label {
+    white-space: normal;
+}
+
+/* Tasarım Md. 9: flyout, ana ikonla aynı vurgu rengini taşısın — panelin üst başlık
+   şeridi (.fi-dropdown-header, grup adını tekrar eden kısım) da ikonun arkaplan
+   tonunu/rengini alıyor. */
+.fi-sidebar-group .fi-dropdown-header {
+    background: var(--fi-nav-grup-tint, transparent);
+}
+
+.fi-sidebar-group .fi-dropdown-header,
+.fi-sidebar-group .fi-dropdown-header svg {
+    color: var(--fi-nav-grup-renk, inherit);
+}
+
+/* Tasarım Md. 10 (v2): flyout içindeki madde satırları da grubun rengini taşıyor —
+   yalnız AKTİF/seçili madde (:not(.fi-color-primary) ile hariç tutuldu) hariç, o
+   Filament'ın kendi primary/mor vurgusunda kalıyor ki "şu an neredeyim" göstergesi
+   grup rengiyle boğulmasın (v1'de bu ayrım yoktu — !important aktif maddenin mor
+   ikonunu da eziyordu, düzeltildi). */
+.fi-sidebar-group .fi-dropdown-list-item:not(.fi-color-primary) .fi-icon {
+    color: var(--fi-nav-grup-renk, inherit) !important;
+}
+
+.fi-sidebar-group .fi-dropdown-list-item:not(.fi-color-primary) .fi-dropdown-list-item-label {
+    color: var(--fi-nav-grup-renk, inherit);
+}

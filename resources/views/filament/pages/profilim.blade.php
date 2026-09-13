@@ -63,10 +63,13 @@
             ['Raporlarım', 0, 'heroicon-o-document-text', 'rgb(128 116 148)'],
         ] as [$etiket, $deger, $ikon, $renk])
             <div style="{{ $golge }};padding:.75rem">
-                <div style="display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">
-                    <x-filament::icon :icon="$ikon" style="width:.95rem;height:.95rem"/> {{ $etiket }}
+                <div style="display:flex;align-items:center;gap:.5rem">
+                    <div style="width:1.75rem;height:1.75rem;border-radius:9999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:{{ str_replace(')', ' / .14)', $renk) }}">
+                        <x-filament::icon :icon="$ikon" style="width:1rem;height:1rem;color:{{ $renk }}"/>
+                    </div>
+                    <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">{{ $etiket }}</div>
                 </div>
-                <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $deger }}</div>
+                <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }};margin-top:.35rem">{{ $deger }}</div>
             </div>
         @endforeach
     </div>

@@ -3048,6 +3048,104 @@ buffer'a render edip ZipArchive'a ekler). Sayfada afiş kartlarında ✓ rozeti
 (otomatik tanımlı olanı işaretler) + "Tüm Afişleri İndir — N adet (ZIP)"
 butonu. `AcilDurumPlaniTest` +6 (26 toplam, 116 assertion).
 
+**Gerçek Filament panel teması + buton derinliği (13.09):** panel o zamana kadar
+hiç derlenmiş özel temaya sahip değildi (yalnız `AdminPanelProvider`'daki
+renderHook `<style>` yamaları) — kullanıcı "çok sade görünüyor" dedi.
+`resources/css/filament/admin/theme.css` (`@import vendor/filament/filament/
+resources/css/theme.css` + `@source app/Filament` + `@source resources/views/
+filament`) oluşturulup `vite.config.js` girdisine eklendi, `AdminPanelProvider`
+`->viteTheme(...)` ile bağlandı — artık inline yamayla sınırlı kalmadan gerçek
+Tailwind/custom CSS yazılabiliyor. **Tasarım Md. 5:** Md.3'teki "varsayılan dolu
+buton stili yeterli" kararı gözden geçirildi — `.fi-btn` (outlined/disabled hariç)
+hafif gölge + hover'da kalkma (`translateY(-1px)` + daha derin gölge) + basılınca
+geri oturma aldı; outlined butonlarda yalnız hover kalkması var. 765 test etkilenmedi
+(saf CSS/JS değişikliği).
+
+**Nav grubu aksan rengi + sayaç kartı ikon rozeti (13.09, aynı gün):** Md.5'in devamı.
+`AdminPanelProvider` 12 nav grubunu artık düz string yerine `NavigationGroup::make()
+->extraSidebarAttributes(['style'=>'--fi-nav-grup-renk:...'])` ile üretiyor (`navGruplari()`
++ `NavGrupRenkleri` sabiti — risk/kaza=kırmızı tonları, sağlık=yeşil, eğitim=turkuaz vb.).
+Grup ikonu YOK — Filament, grup ikonuyla madde ikonunun birlikte kullanımını hata fırlatarak
+engelliyor (her sayfa zaten kendi ikonuna sahip); onun yerine `theme.css`'te yalnız
+`.fi-sidebar-group-label` metin rengi + önünde küçük renkli nokta (`::before`). Profilim'in
+6 sayaç kartına da ikon artık kendi renginin %14 opaklıklı dairesel rozetinde duruyor (önceden
+yalnız sayı renkliydi, ikon nötr gri). 50 nav + 24 Profilim testi etkilenmedi.
+**Aynı gün, revizyon:** kullanıcı "yazı rengi yerine arkaplan deneyelim" dedi — `.fi-sidebar-group-label`
+metin rengi/nokta kaldırıldı, `--fi-nav-grup-tint` (aynı renk %12 opaklık) ile `.fi-sidebar-group-btn`
+kutusunun tamamı (zaten kendi padding'i var) hafif renkli arkaplan aldı.
+
+**Aynı gün (2. revizyon) — sol menü ikon-şeridi + flyout + kompaktlaştırma:** kullanıcı "gruba
+tıklayınca içeriği sağda açılsın", "renkler yalnız 2 (Eğitimler'in turkuazı + Sağlık Gözetimi'nin
+yeşili) dönüşümlü olsun" ve "gruplar bir ekrana sığacak şekilde küçültelim" dedi.
+- `->sidebarCollapsibleOnDesktop()` panele eklendi — artık sol menü ikon şeridine daraltılabiliyor.
+  Her 12 gruba bir ikon verildi (`NavGrupIkonlari`) — Filament, grup+madde ikonunu birlikte
+  kullanınca genişletilmiş listede madde ikonlarını METNE çeviriyor (flyout'ta madde ikonları
+  aynen kalıyor, bu Filament'ın kendi tasarım kısıtı). Tek seferlik `localStorage` script'i
+  (`mehse_menu_daralt_varsayilan_20260913`, Md.1'deki açık-tema geçişiyle aynı desen) ilk
+  ziyarette menüyü kapalı/ikon-şeridi başlatıyor — kullanıcı açarsa Alpine `$persist` bunu
+  kalıcı tercihi olarak saklar.
+- Renk: `NavGrupRenkleri` (12 ayrı renk) → `NavGrupRenkDongusu` (yalnız turkuaz+yeşil,
+  `rgb(20 184 166)`/`rgb(34 197 94)`) oldu; `navGruplari()` grup sırasına göre `% 2` ile
+  dönüşümlü atıyor. Aynı `--fi-nav-grup-tint`/`--fi-nav-grup-renk` mekanizması hem
+  `.fi-sidebar-group-btn` (genişletilmiş) hem `.fi-sidebar-group-dropdown-trigger-btn`
+  (daraltılmış ikon-şeridi) üzerinde arkaplan + ikon rengi olarak kullanılıyor.
+- **Tasarım Md. 7 (kompaktlaştırma):** `.fi-sidebar-nav` dikey boşluğu (row-gap 7→0.5rem,
+  padding-block 8→1rem) ve grup/madde buton padding'i (2→0.4rem) sıkılaştırıldı, grup/madde
+  yazı boyutu küçültüldü (0.78rem/0.8rem) — amaç ana ikon şeridinin (12 grup) tek ekrana
+  sığması; açılan flyout/genişletilmiş liste kendi içinde kayabilir, sorun değil.
+- 50 nav testi (icon+dropdown ile birlikte) yeşil kaldı — Filament'ın "grup ikonu + madde
+  ikonu" hata fırlatma riski `sidebarCollapsibleOnDesktop()` sayesinde oluşmuyor (hasDropdown
+  true olduğunda nulling sessiz, exception yalnız hasDropdown false iken oluyor).
+
+**Aynı gün (3. revizyon):** kullanıcı 3 şey daha istedi — daha "profesyonel/İSG" renk,
+flyout başlığının ana ikonla aynı renkte olması, ve gruba TIKLAMADAN üzerine gelince
+(hover) flyout'un açılması.
+- **Renk:** `AskUserQuestion` ile 4 renk ikilisi sunuldu, kullanıcı **"Hi-vis Amber +
+  Endüstriyel Lacivert"**i seçti — `NavGrupRenkDongusu` artık `rgb(217 119 6)` (amber,
+  uyarı/baret) + `rgb(30 64 175)` (lacivert, kurumsal), turkuaz/yeşil yerine.
+- **Flyout başlığı grup rengiyle eşleşiyor (Md.9):** `.fi-dropdown-header` (flyout'un üst
+  şeridi, grup adını tekrarlayan kısım) artık aynı `--fi-nav-grup-tint` arkaplanı +
+  `--fi-nav-grup-renk` yazı/ikon rengini alıyor — kapalı menüdeki ikonla açılan flyout
+  görsel olarak birleşik duruyor.
+- **Hover'da flyout (Md.9, JS):** Filament'ın dropdown'ı (`x-float`) yalnız click/enter/
+  space ile açılıyor, native bir hover modu yok. `AdminPanelProvider`'a `BODY_END`
+  render-hook'u ile küçük bir script eklendi: `document`'e delege `mouseover`/`mouseout`
+  (mouseenter/mouseleave delegasyona uygun değil, `relatedTarget` ile taklit ediliyor),
+  `.fi-sidebar-group` üzerine gelince o grubun `.fi-dropdown` Alpine bileşeninin gerçek
+  `open()`/`close()` metotlarını çağırıyor (sahte mouse event similasyonu değil — filament/
+  support `dropdown.js`'teki API doğrudan kullanılıyor, floating-ui konumlandırması bu
+  yüzden bozulmuyor). Yalnız DOM'a bir kere bağlanıyor, Livewire navigasyonlarında yeniden
+  bağlama gerekmiyor. **Not: bu görsel/etkileşimsel bir JS davranışı — tarayıcıda gerçek
+  hover testi kullanıcı tarafından yapılmalı** (headless ortamda mouse-hover doğrulanamıyor).
+- 50 nav testi yine yeşil (bu tur salt CSS + client-side JS, PHP/blade mantığı değişmedi).
+
+**Aynı gün (4. revizyon) — flyout maddeleri de grup rengini aldı + isgpratik renk incelemesi:**
+kullanıcı flyout'taki madde satırlarının (Kayıtlı Değerlendirmeler, Sektör Şablonları vb.)
+da grup rengini taşımasını istedi (Md.10: `.fi-dropdown-list-item .fi-icon`/`-label`
+renklendirildi) ve isgpratik'in (`Desktop\isgpratik\profilim\1.jpg`, `RİSK ANALİZİ\10.jpg`,
+`100.jpg` — gerçek uygulama ekranları, `gruplar/` klasörü alakasız sosyal medya ekran
+görüntüsü çıktı) renk tasarımını sordu. **Bulgu:** isgpratik menüsü aslında TEK renkli —
+grup başlıkları küçük gri/büyük harf, maddeler düz beyaz/siyah, yalnız AKTİF sayfa dolu
+mor pil ile vurgulanıyor; renk yalnızca anlam taşıyan yerlerde (durum rozetleri, KPI
+ikonları) kullanılıyor. Kullanıcı bunun üzerine **"sadece aktif sayfayı mor yap, olmazsa
+eski haline döneriz" dedi.**
+- **Md.6 (v4):** `navGruplari()`'ndan `extraSidebarAttributes` (renk CSS değişkenleri)
+  kaldırıldı — gruplar yalnız ikon taşıyor, renk yok. `theme.css`'teki Md.6/9/10 renk
+  kuralları silindi (**not:** Md.10'daki `.fi-icon` kuralı `!important` ile `inherit`'e
+  düşseydi aktif maddenin kendi primary/mor ikon rengini de ezerdi — bu yüzden var
+  bırakılmadı, tamamen kaldırıldı). Md.7 (kompakt boyut) ve Md.8 (18rem genişlik) ve
+  hover-flyout JS'i (Md.9'un JS kısmı) AYNEN duruyor — bunlar renkle değil boyut/etkileşimle
+  ilgiliydi. Artık yalnız Filament'ın kendi varsayılan aktif-sayfa (primary/mor) vurgusu
+  görünür durumda. 50 nav testi yeşil.
+
+**Aynı gün (5. revizyon):** kullanıcı denedikten sonra "eski haline dön" dedi — Md.6 (v5):
+amber+lacivert dönüşümlü renk + flyout başlık/madde renklendirmesi GERİ GETİRİLDİ (`navGruplari()`
+`extraSidebarAttributes` + `NavGrupRenkDongusu` const, `theme.css` Md.6/9/10 kuralları). **Küçük
+bir düzeltmeyle:** Md.10 artık `:not(.fi-color-primary)` ile flyout'taki AKTİF/seçili maddeyi
+hariç tutuyor — v1'de `!important` aktif maddenin kendi primary/mor ikon rengini de grup rengine
+eziyordu (fark edilmemiş bir yan etki), şimdi "şu an neredeyim" göstergesi korunuyor. 50 nav
+testi yeşil.
+
 ## Notlar
 
 - AI özellikleri (`[AI]` rozetli modüller): sağlayıcı seçimi ileride; ilk etapta
