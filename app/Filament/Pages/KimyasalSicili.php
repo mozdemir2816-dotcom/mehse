@@ -121,7 +121,13 @@ class KimyasalSicili extends Page
                 ->helperText('Boş bırakılırsa SDS tarihinden +1 yıl.'),
             FileUpload::make('sds')->label('Malzeme Güvenlik Bilgi Formu (SDS / GBF)')
                 ->disk('public')->directory(fn () => 'sds/'.$this->firmaId)->preserveFilenames()
-                ->acceptedFileTypes(['application/pdf'])->maxSize(15360)->columnSpanFull(),
+                ->acceptedFileTypes([
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                ])->maxSize(15360)->columnSpanFull(),
             Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull(),
         ];
     }
