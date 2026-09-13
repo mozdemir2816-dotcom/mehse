@@ -103,11 +103,16 @@ class DofOlustur extends Page
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Firma modelinin kendi görünürlük global scope'u (bkz. Firma::booted) zaten
+     * sahip olunan + paylaşılan firmaları doğru kapsıyor — burada AYRICA
+     * `user_id` ile filtrelemek (eski, tek kullanıcılı dönemden kalma) paylaşılan
+     * firmaları dışlayıp uzmanın DÖF'ünü görememesine/indirememesine yol açıyordu.
+     */
     #[Computed]
     public function firmalar(): array
     {
         return Firma::query()
-            ->where('user_id', Filament::auth()->id())
             ->orderBy('unvan')
             ->pluck('unvan', 'id')
             ->all();
@@ -117,7 +122,7 @@ class DofOlustur extends Page
     public function firma(): ?Firma
     {
         return $this->firmaId
-            ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId)
+            ? Firma::find($this->firmaId)
             : null;
     }
 
@@ -164,7 +169,7 @@ class DofOlustur extends Page
     public function tumMaddeler(): Collection
     {
         return DofRaporu::query()
-            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->whereHas('firma')
             ->with('firma')
             ->get()
             ->flatMap(fn (DofRaporu $rapor) => collect($rapor->maddeler ?? [])->map(fn (array $m, int $i) => [
@@ -185,7 +190,7 @@ class DofOlustur extends Page
         $kapanmis = $tumu->where('durum', 'tamamlandi');
 
         return [
-            'toplam_dof' => DofRaporu::query()->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))->count(),
+            'toplam_dof' => DofRaporu::query()->whereHas('firma')->count(),
             'acik_madde' => $acik->count(),
             'kapanmis_madde' => $kapanmis->count(),
             'kapatma_orani' => $tumu->isEmpty() ? 0 : round(($kapanmis->count() / $tumu->count()) * 100),
@@ -215,7 +220,7 @@ class DofOlustur extends Page
     public function maddeKapat(int $raporId, int $maddeIndex): void
     {
         $rapor = DofRaporu::query()
-            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->whereHas('firma')
             ->find($raporId);
 
         if (! $rapor || ! isset($rapor->maddeler[$maddeIndex])) {

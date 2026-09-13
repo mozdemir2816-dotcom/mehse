@@ -262,6 +262,13 @@ class DofOlusturTest extends TestCase
 
     public function test_baska_uzmanin_dof_raporunu_kapatamaz(): void
     {
+        // Md.6 (Kullanıcı Yönetimi) sonrası "sahip" tüm firmaları görür — izolasyonu
+        // test etmek için burada kasıtlı ->kisitli() (sahip olmayan) kullanıcı gerekiyor;
+        // sayfaya girebilmesi için de 'dof-olustur' yetkisi tanımlanıyor.
+        $kisitli = User::factory()->kisitli()->create();
+        $kisitli->sayfaYetkileri()->create(['sayfa_anahtari' => 'dof-olustur']);
+        $this->actingAs($kisitli);
+
         $baskaFirma = Firma::factory()->create();
         $rapor = DofRaporu::create(['firma_id' => $baskaFirma->id, 'maddeler' => [
             ['tespit' => 'X', 'oncelik' => 'orta', 'durum' => 'acik'],
@@ -290,6 +297,13 @@ class DofOlusturTest extends TestCase
 
     public function test_baska_uzmanin_firmasi_secilemez(): void
     {
+        // Md.6 (Kullanıcı Yönetimi) sonrası "sahip" tüm firmaları görür — izolasyonu
+        // test etmek için burada kasıtlı ->kisitli() (sahip olmayan) kullanıcı gerekiyor;
+        // sayfaya girebilmesi için de 'dof-olustur' yetkisi tanımlanıyor.
+        $kisitli = User::factory()->kisitli()->create();
+        $kisitli->sayfaYetkileri()->create(['sayfa_anahtari' => 'dof-olustur']);
+        $this->actingAs($kisitli);
+
         $baskaUzman = User::factory()->create();
         $baskaFirma = Firma::factory()->for($baskaUzman)->create();
 
