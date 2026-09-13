@@ -87,6 +87,16 @@ class KullaniciYonetimi extends Page
         }
     }
 
+    public function tumSayfalariSec(): void
+    {
+        $this->sayfaSecim = array_fill_keys(array_keys($this->sayfaKatalogu()), true);
+    }
+
+    public function tumFirmalariSec(): void
+    {
+        $this->firmaSecim = array_fill_keys($this->firmalar()->pluck('id')->all(), true);
+    }
+
     public function kaydet(): void
     {
         if (! $this->acikKullaniciId) {

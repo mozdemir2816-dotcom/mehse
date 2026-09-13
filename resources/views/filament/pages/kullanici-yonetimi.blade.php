@@ -29,7 +29,10 @@
                 @if ($acik)
                     <div style="padding:1rem;border-top:1px solid rgb(128 116 148 / .2);display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
                         <div>
-                            <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem">Sayfalar</div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+                                <div style="font-weight:600;font-size:.85rem">Sayfalar</div>
+                                <button type="button" wire:click="tumSayfalariSec" style="font-size:.75rem;color:rgb(139 92 246);background:none;border:none;cursor:pointer;text-decoration:underline">Tümünü Seç</button>
+                            </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;max-height:320px;overflow:auto">
                                 @foreach ($this->sayfaKatalogu as $anahtar => $ad)
                                     <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem">
@@ -40,7 +43,10 @@
                             </div>
                         </div>
                         <div>
-                            <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem">Firmalar</div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+                                <div style="font-weight:600;font-size:.85rem">Firmalar</div>
+                                <button type="button" wire:click="tumFirmalariSec" style="font-size:.75rem;color:rgb(139 92 246);background:none;border:none;cursor:pointer;text-decoration:underline">Tümünü Seç</button>
+                            </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;max-height:320px;overflow:auto">
                                 @foreach ($this->firmalar as $firma)
                                     <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem">
