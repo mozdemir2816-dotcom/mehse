@@ -38,6 +38,10 @@ class FirmaForm
                 ->schema([
                     TextInput::make('isveren_ad')->label('İşveren')->maxLength(255),
                     TextInput::make('isveren_vekili')->label('İşveren vekili')->maxLength(255),
+                    FileUpload::make('isveren_kase_gorseli')->label('İşveren kaşesi (opsiyonel)')
+                        ->image()->disk('public')->directory('isveren-kase')->imageEditor(),
+                    FileUpload::make('isveren_imza_gorseli')->label('İşveren imzası')
+                        ->image()->disk('public')->directory('isveren-imza')->imageEditor(),
                     TextInput::make('telefon')->label('Telefon')->tel()->maxLength(30),
                     TextInput::make('eposta')->label('E-posta')->email()->maxLength(255),
                     TextInput::make('il')->label('İl')->maxLength(50),

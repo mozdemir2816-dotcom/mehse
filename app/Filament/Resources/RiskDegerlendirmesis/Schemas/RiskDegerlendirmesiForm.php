@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RiskDegerlendirmesis\Schemas;
 use App\Models\Firma;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -52,7 +53,10 @@ class RiskDegerlendirmesiForm
                         ->schema([
                             TextInput::make('ad')->label('Adı Soyadı')->required(),
                             TextInput::make('unvan')->label('Unvanı / Görevi')
-                                ->placeholder('İşveren / İGU / Çalışan temsilcisi / Destek elemanı'),
+                                ->placeholder('İşveren / İGU / Çalışan temsilcisi / Destek elemanı / Bilgi sahibi çalışan'),
+                            FileUpload::make('imza_gorseli')->label('İmza (opsiyonel)')
+                                ->image()->disk('public')->directory('risk-ekip-imza')->imageEditor()
+                                ->columnSpanFull(),
                         ]),
                 ]),
         ]);

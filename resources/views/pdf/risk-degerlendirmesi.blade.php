@@ -62,6 +62,8 @@
         <tr>
             <td>
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
+                @if ($firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
+                @if ($firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
                 <span class="ad">{{ $firma?->isveren_ad ?: $firma?->isveren_vekili ?: '—' }}</span>
             </td>
             <td>
@@ -78,10 +80,12 @@
             </td>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
+                @if (! empty($temsilci['imza_gorseli']))<img src="{{ storage_path('app/public/'.$temsilci['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $temsilci['ad'] ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">DESTEK ELEMANI</span>
+                @if (! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $destekElemani['ad'] ?? '—' }}</span>
             </td>
         </tr>

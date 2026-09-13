@@ -48,9 +48,12 @@ class RiskDegerlendirmesiUretici
         $hekim = $rd->firma?->isyeriHekimi;
         $temsilci = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'temsilci'));
         $destekElemani = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'destek'));
+        $bilgiSahibiCalisanlar = $ekip->filter(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'bilgi sahibi'))->values();
 
         // "4. RİSK DEĞERLENDİRME EKİBİ" tablosu — ekip Repeater'ı hiç
-        // doldurulmamış olsa bile 6331 SK m.6'daki 5 sabit rolü daima listeler;
+        // doldurulmamış olsa bile 6331 SK m.6'daki 6 sabit rolü daima listeler
+        // (son rol "bilgi sahibi çalışan" birden fazla kişi olabileceğinden
+        // ekip'te kaç tane varsa o kadar satır açılır, hiç yoksa tek boş satır);
         // ad soyad bilgisi bilinen kaynaktan (firma/uzman/hekim/ekip) gelirse
         // doldurulur, gelmezse satır boş bırakılır (kağıt çıktıda elle yazılabilsin
         // diye "—" DEĞİL boş). Sonda ayrıca tamamen boş bir satır bırakılır —
@@ -61,6 +64,9 @@ class RiskDegerlendirmesiUretici
             ['unvan' => 'İşyeri Hekimi', 'ad' => $hekim?->ad_soyad ?: ''],
             ['unvan' => 'Çalışan Temsilcisi', 'ad' => $temsilci['ad'] ?? ''],
             ['unvan' => 'Destek Elemanı', 'ad' => $destekElemani['ad'] ?? ''],
+            ...($bilgiSahibiCalisanlar->isNotEmpty()
+                ? $bilgiSahibiCalisanlar->map(fn (array $u) => ['unvan' => 'Bilgi Sahibi Çalışan', 'ad' => $u['ad'] ?? ''])->all()
+                : [['unvan' => 'Bilgi Sahibi Çalışan', 'ad' => '']]),
             ['unvan' => '', 'ad' => ''],
         ];
 
