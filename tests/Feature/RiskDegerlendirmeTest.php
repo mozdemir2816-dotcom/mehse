@@ -45,6 +45,52 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame(0, $bos['puan']);
     }
 
+    public function test_hazop_ve_fmea_puan_duzeyi(): void
+    {
+        // HAZOP: matris_5x5 ile aynı yapı (2 eksen, O × Ş).
+        $hazop = RiskSkorlama::hesapla('hazop', 5, 5);
+        $this->assertSame(25, $hazop['puan']);
+        $this->assertSame('Çok Yüksek Risk', $hazop['duzey']);
+        $this->assertFalse(RiskSkorlama::ucEksenliMi('hazop'));
+
+        // FMEA: RPN = S(siddet) × O(olasilik) × D(frekans).
+        $fmea = RiskSkorlama::hesapla('fmea', 8, 9, 7);
+        $this->assertSame(504.0, $fmea['puan']);
+        $this->assertSame('Çok Yüksek Risk (RPN)', $fmea['duzey']);
+        $this->assertTrue(RiskSkorlama::ucEksenliMi('fmea'));
+
+        $etiket = RiskSkorlama::eksenEtiketleri('fmea');
+        $this->assertSame('Saptanabilirlik (D)', $etiket['frekans']);
+    }
+
+    public function test_pdf_hazop_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'hazop', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'DAHA FAZLA Basınç', 'olasilik' => 3, 'siddet' => 4]);
+
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd);
+
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_pdf_fmea_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fmea', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Sensör yanlış okuma', 'olasilik' => 5, 'siddet' => 6, 'frekans' => 4]);
+
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd);
+
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
     public function test_belge_no_ve_gecerlilik_otomatik(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli']);

@@ -9,19 +9,34 @@ namespace App\Support;
 class RiskSkorlama
 {
     /**
+     * Üç eksenli (Olasılık × Frekans/D × Şiddet) çarpılan yöntemler. Diğer tüm
+     * yöntemler (matris_5x5, hazop, ileride eklenecekler) iki eksenlidir
+     * (Olasılık × Şiddet) — bkz. hesapla(). Yeni bir 3 eksenli yöntem eklenirse
+     * buraya eklenmesi yeterlidir.
+     */
+    private const UC_EKSENLI_YONTEMLER = ['fine_kinney', 'fmea'];
+
+    public static function ucEksenliMi(string $yontem): bool
+    {
+        return in_array($yontem, self::UC_EKSENLI_YONTEMLER, true);
+    }
+
+    /**
      * @return array{puan:int|float, duzey:string, renk:string, eylem:string}
      */
     public static function hesapla(string $yontem, ?float $olasilik, ?float $siddet, ?float $frekans = null): array
     {
-        if ($olasilik === null || $siddet === null || ($yontem === 'fine_kinney' && $frekans === null)) {
+        $ucEksenli = static::ucEksenliMi($yontem);
+
+        if ($olasilik === null || $siddet === null || ($ucEksenli && $frekans === null)) {
             return ['puan' => 0, 'duzey' => '—', 'renk' => '#6b7280', 'eylem' => ''];
         }
 
-        $puan = $yontem === 'fine_kinney'
+        $puan = $ucEksenli
             ? $olasilik * $frekans * $siddet
             : $olasilik * $siddet;
 
-        $puan = $yontem === 'fine_kinney' ? round($puan, 1) : (int) round($puan);
+        $puan = $ucEksenli ? round($puan, 1) : (int) round($puan);
 
         return array_merge(['puan' => $puan], static::bant($yontem, $puan));
     }
@@ -29,9 +44,7 @@ class RiskSkorlama
     /** Puana karşılık gelen bant (üstten alta ilk eşleşen). */
     public static function bant(string $yontem, int|float $puan): array
     {
-        $anahtar = $yontem === 'fine_kinney' ? 'risk_fine_kinney' : 'risk_matris_5x5';
-
-        foreach (config("isg.$anahtar.bantlar", []) as $bant) {
+        foreach (config('isg.risk_'.$yontem.'.bantlar', []) as $bant) {
             if ($puan >= $bant['min']) {
                 return ['duzey' => $bant['ad'], 'renk' => $bant['renk'], 'eylem' => $bant['eylem']];
             }
@@ -43,9 +56,22 @@ class RiskSkorlama
     /** @return array<int|float, string> yöntem + eksen için ölçek seçenekleri */
     public static function olcek(string $yontem, string $eksen): array
     {
-        $anahtar = $yontem === 'fine_kinney' ? 'risk_fine_kinney' : 'risk_matris_5x5';
+        return config('isg.risk_'.$yontem.'.'.$eksen, []);
+    }
 
-        return config("isg.$anahtar.$eksen", []);
+    /**
+     * Yöntemin Olasılık/Frekans(-Saptanabilirlik)/Şiddet eksenleri için görünen
+     * etiketler — FMEA'da aynı sütunlar farklı anlam taşır (Oluşma/Saptanabilirlik).
+     *
+     * @return array{olasilik:string, frekans:string, siddet:string}
+     */
+    public static function eksenEtiketleri(string $yontem): array
+    {
+        return match ($yontem) {
+            'fmea' => ['olasilik' => 'Oluşma Olasılığı (O)', 'frekans' => 'Saptanabilirlik (D)', 'siddet' => 'Şiddet (S)'],
+            'fine_kinney' => ['olasilik' => 'Olasılık', 'frekans' => 'Frekans (maruz kalma)', 'siddet' => 'Şiddet'],
+            default => ['olasilik' => 'Olasılık', 'frekans' => 'Frekans', 'siddet' => 'Şiddet'],
+        };
     }
 
     /**

@@ -25,11 +25,11 @@ class RiskProsedurResourceTest extends TestCase
         $this->actingAs($this->uzman);
     }
 
-    public function test_liste_sayfasi_acilir_ve_iki_varsayilanla_gelir(): void
+    public function test_liste_sayfasi_acilir_ve_dort_varsayilanla_gelir(): void
     {
         Livewire::test(ListRiskProsedurs::class)
             ->assertOk()
-            ->assertCountTableRecords(2);
+            ->assertCountTableRecords(4);
     }
 
     public function test_yukle_action_secilen_yontemin_prosedurunu_degistirir(): void
@@ -54,8 +54,8 @@ class RiskProsedurResourceTest extends TestCase
         $prosedur = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'matris_5x5')->firstOrFail();
         $this->assertSame('prosedur.docx', $prosedur->dosya_adi);
         $this->assertSame('YENİ BAŞLIK', $prosedur->icerik[0]['metin']);
-        // fine_kinney'in varsayılanı etkilenmedi.
-        $this->assertSame(2, RiskProsedur::where('user_id', $this->uzman->id)->count());
+        // diğer 3 yöntemin varsayılanı etkilenmedi.
+        $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
     }
 
     public function test_silinen_prosedur_yeniden_seed_edilmez(): void
@@ -67,7 +67,7 @@ class RiskProsedurResourceTest extends TestCase
             ->callTableAction('delete', $matris);
 
         $this->assertDatabaseMissing('risk_prosedurleri', ['id' => $matris->id]);
-        $this->assertSame(1, RiskProsedur::where('user_id', $this->uzman->id)->count());
+        $this->assertSame(3, RiskProsedur::where('user_id', $this->uzman->id)->count());
     }
 
     public function test_baska_kullanicinin_prosedurlerini_gormez(): void
@@ -75,9 +75,9 @@ class RiskProsedurResourceTest extends TestCase
         $baskasi = User::factory()->create();
         RiskProsedur::varsayilanlariSeedEt($baskasi->id);
 
-        Livewire::test(ListRiskProsedurs::class)->assertCountTableRecords(2);
+        Livewire::test(ListRiskProsedurs::class)->assertCountTableRecords(4);
 
-        $this->assertSame(2, RiskProsedur::where('user_id', $baskasi->id)->count());
-        $this->assertSame(2, RiskProsedur::where('user_id', $this->uzman->id)->count());
+        $this->assertSame(4, RiskProsedur::where('user_id', $baskasi->id)->count());
+        $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
     }
 }

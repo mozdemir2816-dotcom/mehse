@@ -20,17 +20,21 @@ class RiskProsedurTest extends TestCase
         $this->actingAs($this->uzman);
     }
 
-    public function test_ilk_kullanimda_iki_gercek_prosedurle_baslar(): void
+    public function test_ilk_kullanimda_dort_gercek_prosedurle_baslar(): void
     {
         RiskProsedur::varsayilanlariSeedEt($this->uzman->id);
 
-        $this->assertSame(2, RiskProsedur::where('user_id', $this->uzman->id)->count());
+        $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
 
         $matris = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'matris_5x5')->firstOrFail();
         $fineKinney = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'fine_kinney')->firstOrFail();
+        $hazop = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'hazop')->firstOrFail();
+        $fmea = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'fmea')->firstOrFail();
 
         $this->assertStringContainsString('Matris', $matris->ad);
         $this->assertStringContainsString('Fine-Kinney', $fineKinney->ad);
+        $this->assertStringContainsString('HAZOP', $hazop->ad);
+        $this->assertStringContainsString('FMEA', $fmea->ad);
         $this->assertSame('baslik', $matris->icerik[0]['tip']);
         $this->assertSame('AMAÇ', $matris->icerik[0]['metin']);
     }
@@ -63,7 +67,7 @@ class RiskProsedurTest extends TestCase
 
         RiskProsedur::varsayilanlariSeedEt($this->uzman->id);
 
-        $this->assertSame(2, RiskProsedur::where('user_id', $this->uzman->id)->count());
-        $this->assertSame(2, RiskProsedur::where('user_id', $baskasi->id)->count());
+        $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
+        $this->assertSame(4, RiskProsedur::where('user_id', $baskasi->id)->count());
     }
 }

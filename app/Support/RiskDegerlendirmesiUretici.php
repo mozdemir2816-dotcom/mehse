@@ -40,7 +40,7 @@ class RiskDegerlendirmesiUretici
 
         $rd->loadMissing('maddeler', 'firma.user', 'firma.isyeriHekimi');
 
-        $yontemAnahtari = $rd->yontem === 'fine_kinney' ? 'risk_fine_kinney' : 'risk_matris_5x5';
+        $yontemAnahtari = 'risk_'.$rd->yontem;
         $userId = $rd->firma?->user_id;
         $ekip = collect($rd->ekip ?? []);
 
@@ -79,6 +79,7 @@ class RiskDegerlendirmesiUretici
             'destekElemani' => $destekElemani,
             'ekipGosterim' => $ekipGosterim,
             'metodoloji' => config('isg.'.$yontemAnahtari),
+            'eksenEtiketleri' => \App\Support\RiskSkorlama::eksenEtiketleri($rd->yontem),
             'prosedur' => $userId ? RiskProsedur::aktifIcin($userId, $rd->yontem) : null,
         ];
 

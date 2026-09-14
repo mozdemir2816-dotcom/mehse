@@ -94,14 +94,14 @@ class RiskSablonuResource extends Resource
                             Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
                             Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
                             Select::make('olasilik')->label('Olasılık')
-                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') === 'fine_kinney' ? 'fine_kinney' : 'matris_5x5', 'olasilik'))
+                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') ?: 'matris_5x5', 'olasilik'))
                                 ->native(false),
-                            Select::make('frekans')->label('Frekans (maruz kalma)')
-                                ->options(fn () => RiskSkorlama::olcek('fine_kinney', 'frekans'))
+                            Select::make('frekans')->label('Frekans / Saptanabilirlik')
+                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') ?: 'matris_5x5', 'frekans'))
                                 ->native(false)
-                                ->visible(fn (Get $get) => $get('../../yontem') === 'fine_kinney'),
+                                ->visible(fn (Get $get) => RiskSkorlama::ucEksenliMi($get('../../yontem') ?: 'matris_5x5')),
                             Select::make('siddet')->label('Şiddet')
-                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') === 'fine_kinney' ? 'fine_kinney' : 'matris_5x5', 'siddet'))
+                                ->options(fn (Get $get) => RiskSkorlama::olcek($get('../../yontem') ?: 'matris_5x5', 'siddet'))
                                 ->native(false),
                             Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpanFull(),
                             TextInput::make('sorumlu')->label('Sorumlu'),

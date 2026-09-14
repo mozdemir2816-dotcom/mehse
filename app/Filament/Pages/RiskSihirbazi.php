@@ -236,7 +236,7 @@ class RiskSihirbazi extends Page
     #[Computed]
     public function fineKinney(): bool
     {
-        return $this->yontem === 'fine_kinney';
+        return RiskSkorlama::ucEksenliMi($this->yontem);
     }
 
     /** @return array<string, int> düzey → madde sayısı */
@@ -663,7 +663,7 @@ class RiskSihirbazi extends Page
         ]);
         $rd->save();
 
-        $fk = $sablon->yontem === 'fine_kinney';
+        $fk = RiskSkorlama::ucEksenliMi($sablon->yontem);
         $sira = 0;
 
         foreach (array_chunk($maddeler, 250) as $parca) {
@@ -819,7 +819,7 @@ class RiskSihirbazi extends Page
         // puanlar "kayboldu" gibi görünür — kullanıcı elle girmek zorunda kalır.
         // NOT: bu kontrol AI tamamlamadan ÖNCE yapılır — aksi halde AI, henüz
         // eski (yanlış) yönteme göre puan üretip ölçek dışı kalabilir.
-        if ($eklenenler && $this->yontem !== 'fine_kinney' && RiskSkorlama::fineKinneyeUyuyorMu($eklenenler)) {
+        if ($eklenenler && $this->yontem === 'matris_5x5' && RiskSkorlama::fineKinneyeUyuyorMu($eklenenler)) {
             $this->yontem = 'fine_kinney';
             Notification::make()
                 ->title('Puanlama yöntemi Fine-Kinney\'e çevrildi')
@@ -885,7 +885,9 @@ class RiskSihirbazi extends Page
         @set_time_limit(300);
 
         // Excel puanları Fine-Kinney ölçeğindeyse yöntemi ona çevir (5x5'te "kayıp" görünmesin).
-        $yontem = ($this->yontem !== 'fine_kinney' && RiskSkorlama::fineKinneyeUyuyorMu($maddeler))
+        // Yalnız varsayılan 5x5 Matris'ten otomatik yükseltilir — kullanıcı zaten
+        // HAZOP/FMEA gibi başka bir yöntem seçtiyse bu tercihi ezmez.
+        $yontem = ($this->yontem === 'matris_5x5' && RiskSkorlama::fineKinneyeUyuyorMu($maddeler))
             ? 'fine_kinney'
             : $this->yontem;
 
@@ -898,7 +900,7 @@ class RiskSihirbazi extends Page
         ]);
         $rd->save();
 
-        $fk = $yontem === 'fine_kinney';
+        $fk = RiskSkorlama::ucEksenliMi($yontem);
         $sira = 0;
 
         foreach (array_chunk($maddeler, 250) as $parca) {

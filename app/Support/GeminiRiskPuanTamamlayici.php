@@ -73,12 +73,12 @@ class GeminiRiskPuanTamamlayici
             return null;
         }
 
-        $fk = $yontem === 'fine_kinney';
+        $fk = RiskSkorlama::ucEksenliMi($yontem);
 
         try {
             $yanit = Http::timeout(self::ISTEK_TIMEOUT)->connectTimeout(5)->post(
                 static::endpoint(),
-                static::istekGovdesi($tehlike, $risk, $bolum, $faaliyet, $fk),
+                static::istekGovdesi($tehlike, $risk, $bolum, $faaliyet, $yontem),
             );
 
             if ($yanit->failed()) {
@@ -205,7 +205,7 @@ class GeminiRiskPuanTamamlayici
     }
 
     /** @return array<string, mixed> */
-    private static function istekGovdesi(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, bool $fk): array
+    private static function istekGovdesi(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, string $yontem): array
     {
         $properties = [
             'olasilik' => ['type' => 'NUMBER'],
@@ -213,7 +213,7 @@ class GeminiRiskPuanTamamlayici
         ];
         $required = ['olasilik', 'siddet'];
 
-        if ($fk) {
+        if (RiskSkorlama::ucEksenliMi($yontem)) {
             $properties['frekans'] = ['type' => 'NUMBER'];
             $required[] = 'frekans';
         }
@@ -221,7 +221,7 @@ class GeminiRiskPuanTamamlayici
         return [
             'contents' => [[
                 'role' => 'user',
-                'parts' => [['text' => static::istem($tehlike, $risk, $bolum, $faaliyet, $fk)]],
+                'parts' => [['text' => static::istem($tehlike, $risk, $bolum, $faaliyet, $yontem)]],
             ]],
             'generationConfig' => [
                 'temperature' => 0.2,
@@ -231,15 +231,16 @@ class GeminiRiskPuanTamamlayici
         ];
     }
 
-    private static function istem(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, bool $fk): string
+    private static function istem(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, string $yontem): string
     {
-        $yontem = $fk ? 'fine_kinney' : 'matris_5x5';
+        $fk = RiskSkorlama::ucEksenliMi($yontem);
+        $etiket = RiskSkorlama::eksenEtiketleri($yontem);
 
         $olcekMetni = fn (string $eksen) => collect(RiskSkorlama::olcek($yontem, $eksen))
             ->map(fn ($ad, $deger) => "{$deger}: {$ad}")
             ->implode("\n");
 
-        $frekansBlok = $fk ? "\nFrekans (maruz kalma) ölçeği — SADECE bu değerlerden seç:\n".$olcekMetni('frekans')."\n" : '';
+        $frekansBlok = $fk ? "\n{$etiket['frekans']} ölçeği — SADECE bu değerlerden seç:\n".$olcekMetni('frekans')."\n" : '';
         $frekansEtiket = $fk ? '/frekans' : '';
         $olasilikBlok = $olcekMetni('olasilik');
         $siddetBlok = $olcekMetni('siddet');

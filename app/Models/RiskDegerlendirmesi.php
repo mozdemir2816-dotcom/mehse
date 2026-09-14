@@ -76,6 +76,12 @@ class RiskDegerlendirmesi extends Model
         return $this->yontem === 'fine_kinney';
     }
 
+    /** Üç eksenli (Olasılık × Frekans/Saptanabilirlik × Şiddet) yöntem mi — bkz. RiskSkorlama::ucEksenliMi(). */
+    public function ucEksenliMi(): bool
+    {
+        return \App\Support\RiskSkorlama::ucEksenliMi($this->yontem);
+    }
+
     public function gecerlilikGecti(): bool
     {
         return $this->gecerlilik_tarihi && $this->gecerlilik_tarihi->isPast();

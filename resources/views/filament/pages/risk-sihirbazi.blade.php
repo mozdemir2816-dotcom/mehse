@@ -573,7 +573,7 @@
 
                         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem;margin-top:.6rem">
                             <div>
-                                <label style="font-size:.72rem;color:rgb(107 114 128)">Olasılık</label>
+                                <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['olasilik'] }}</label>
                                 <select wire:model.live="secilenler.{{ $i }}.olasilik"
                                     style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">—</option>
@@ -584,18 +584,18 @@
                             </div>
                             @if ($this->fineKinney)
                                 <div>
-                                    <label style="font-size:.72rem;color:rgb(107 114 128)">Frekans</label>
+                                    <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['frekans'] }}</label>
                                     <select wire:model.live="secilenler.{{ $i }}.frekans"
                                         style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                         <option value="">—</option>
-                                        @foreach (\App\Support\RiskSkorlama::olcek('fine_kinney', 'frekans') as $deger => $etiket)
+                                        @foreach (\App\Support\RiskSkorlama::olcek($yontem, 'frekans') as $deger => $etiket)
                                             <option value="{{ $deger }}">{{ $deger }} — {{ $etiket }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                             @endif
                             <div>
-                                <label style="font-size:.72rem;color:rgb(107 114 128)">Şiddet</label>
+                                <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['siddet'] }}</label>
                                 <select wire:model.live="secilenler.{{ $i }}.siddet"
                                     style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">—</option>

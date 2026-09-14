@@ -51,7 +51,7 @@ class RiskMaddesi extends Model
             if ($m->siddet !== null && $m->son_siddet === null) {
                 $m->son_siddet = $m->siddet;
             }
-            if ($yontem === 'fine_kinney' && $m->frekans !== null && $m->son_frekans === null) {
+            if (RiskSkorlama::ucEksenliMi($yontem) && $m->frekans !== null && $m->son_frekans === null) {
                 $m->son_frekans = $m->frekans;
             }
 

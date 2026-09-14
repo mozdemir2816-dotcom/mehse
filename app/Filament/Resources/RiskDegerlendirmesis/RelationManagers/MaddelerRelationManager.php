@@ -34,9 +34,14 @@ class MaddelerRelationManager extends RelationManager
     /** "Eksik Puan/Önlemleri AI ile Tamamla" tek çalıştırmada en fazla bu kadar madde işler. */
     private const AI_TOPLU_LIMIT = 40;
 
-    protected function fineKinney(): bool
+    protected function yontem(): string
     {
-        return $this->getOwnerRecord()->yontem === 'fine_kinney';
+        return $this->getOwnerRecord()->yontem;
+    }
+
+    protected function ucEksenli(): bool
+    {
+        return RiskSkorlama::ucEksenliMi($this->yontem());
     }
 
     /** AI'dan puan alıp maddeye yazar; öneri gelmezse (AI kapalı/hatalı) dokunmadan false döner. */
@@ -90,7 +95,10 @@ class MaddelerRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        $fk = $this->fineKinney();
+        $yontem = $this->yontem();
+        $ucEksenli = $this->ucEksenli();
+        $etiket = RiskSkorlama::eksenEtiketleri($yontem);
+        $yontemBasligi = config('isg.risk_yontemleri.'.$yontem, $yontem);
 
         return $schema->components([
             Section::make('Tanım')->columns(2)->schema([
@@ -105,16 +113,16 @@ class MaddelerRelationManager extends RelationManager
                 Toggle::make('etkilenen_diger')->label('Taşeron / ziyaretçi etkilenir'),
             ]),
 
-            Section::make($fk ? 'Mevcut Risk (Fine-Kinney)' : 'Mevcut Risk (5×5)')
+            Section::make("Mevcut Risk ({$yontemBasligi})")
                 ->columns(3)
                 ->schema(array_values(array_filter([
-                    Select::make('olasilik')->label('Olasılık')
-                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'olasilik'))
+                    Select::make('olasilik')->label($etiket['olasilik'])
+                        ->options(RiskSkorlama::olcek($yontem, 'olasilik'))
                         ->native(false)->required(),
-                    $fk ? Select::make('frekans')->label('Frekans (maruz kalma)')
-                        ->options(RiskSkorlama::olcek('fine_kinney', 'frekans'))->native(false)->required() : null,
-                    Select::make('siddet')->label('Şiddet')
-                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'siddet'))
+                    $ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
+                        ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required() : null,
+                    Select::make('siddet')->label($etiket['siddet'])
+                        ->options(RiskSkorlama::olcek($yontem, 'siddet'))
                         ->native(false)->required(),
                 ]))),
 
@@ -126,15 +134,15 @@ class MaddelerRelationManager extends RelationManager
                     TextInput::make('sorumlu')->label('Sorumlu'),
                     TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
                     Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
-                    Select::make('son_olasilik')->label('Önlem sonrası Olasılık')
-                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'olasilik'))->native(false)
+                    Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
+                        ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)
                         ->default(1)
                         ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
-                    $fk ? Select::make('son_frekans')->label('Önlem sonrası Frekans')
-                        ->options(RiskSkorlama::olcek('fine_kinney', 'frekans'))->native(false) : null,
-                    Select::make('son_siddet')->label('Önlem sonrası Şiddet')
-                        ->options(RiskSkorlama::olcek($fk ? 'fine_kinney' : 'matris_5x5', 'siddet'))->native(false)
-                        ->helperText('Boş bırakılırsa öneri öncesindeki Şiddet değeriyle aynı kabul edilir.'),
+                    $ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
+                        ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null,
+                    Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
+                        ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)
+                        ->helperText('Boş bırakılırsa öneri öncesindeki '.$etiket['siddet'].' değeriyle aynı kabul edilir.'),
                 ]))),
         ]);
     }
@@ -205,7 +213,7 @@ class MaddelerRelationManager extends RelationManager
                     ->action(function (): void {
                         @set_time_limit(300);
                         GeminiRiskPuanTamamlayici::devreyiSifirla();
-                        $fk = $this->fineKinney();
+                        $fk = $this->ucEksenli();
 
                         $eksikSorgu = $this->getOwnerRecord()->maddeler()
                             ->where(function ($q) use ($fk) {

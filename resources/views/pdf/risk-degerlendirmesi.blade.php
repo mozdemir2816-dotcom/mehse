@@ -152,7 +152,7 @@
 
     @if (isset($metodoloji['frekans']))
         <table class="olcek">
-            <tr><th>Frekans (maruz kalma)</th><th>Açıklama</th></tr>
+            <tr><th>{{ $eksenEtiketleri['frekans'] }}</th><th>Açıklama</th></tr>
             @foreach ($metodoloji['frekans'] as $puan => $aciklama)
                 <tr><td>{{ $puan }}</td><td>{{ $aciklama }}</td></tr>
             @endforeach
@@ -188,8 +188,8 @@
             <th>Bölüm / Faaliyet</th>
             <th>Tehlike / Risk</th>
             <th>Mevcut Önlem</th>
-            @if ($rd->fineKinneyMi())
-                <th>O</th><th>F</th>
+            @if ($rd->ucEksenliMi())
+                <th>O</th><th>{{ $rd->yontem === 'fmea' ? 'D' : 'F' }}</th>
             @else
                 <th>O</th>
             @endif
@@ -213,7 +213,7 @@
                 <td>{{ $m->tehlike }}@if($m->risk)<br>{{ $m->risk }}@endif</td>
                 <td>{{ $m->mevcut_onlem ?: '—' }}</td>
                 <td>{{ $m->olasilik }}</td>
-                @if ($rd->fineKinneyMi())
+                @if ($rd->ucEksenliMi())
                     <td>{{ $m->frekans }}</td>
                 @endif
                 <td>{{ $m->siddet }}</td>

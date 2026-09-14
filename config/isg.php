@@ -138,6 +138,8 @@ return [
     'risk_yontemleri' => [
         'matris_5x5' => '5x5 Matris (L Tipi)',
         'fine_kinney' => 'Fine-Kinney',
+        'hazop' => 'HAZOP',
+        'fmea' => 'FMEA',
     ],
 
     'risk_matris_5x5' => [
@@ -202,6 +204,85 @@ return [
             ['min' => 70, 'ad' => 'Önemli Risk', 'renk' => '#f59e0b', 'eylem' => 'DÖF planlanmalı; yıl içinde iyileştirme yapılmalıdır.'],
             ['min' => 20, 'ad' => 'Olası Risk', 'renk' => '#84cc16', 'eylem' => 'Gözetim altında tutulmalı, iyileştirme planlanmalıdır.'],
             ['min' => 0, 'ad' => 'Kabul Edilebilir Risk', 'renk' => '#22c55e', 'eylem' => 'Mevcut kontrol tedbirleri yeterlidir; sürekli izlenir.'],
+        ],
+    ],
+
+    // HAZOP: yapısal olarak 5x5 Matris ile aynı (Olasılık × Şiddet, iki eksen) —
+    // yalnız ölçek metinleri kılavuz-kelime/proses sapması bağlamına uyarlanmış.
+    'risk_hazop' => [
+        'aciklama' => 'Risk = Olasılık × Şiddet (HAZOP — kılavuz kelime ile sapma analizi sonrası nitel değerlendirme).',
+        'olasilik' => [
+            '1' => 'Çok Düşük (sapma pratik olarak beklenmez)',
+            '2' => 'Düşük (sapma nadiren olabilir)',
+            '3' => 'Orta (sapma olabilir)',
+            '4' => 'Yüksek (sapma muhtemel)',
+            '5' => 'Çok Yüksek (sapma sık beklenir)',
+        ],
+        'siddet' => [
+            '1' => 'Önemsiz (işletme etkisi yok)',
+            '2' => 'Hafif (küçük duruş / hasar)',
+            '3' => 'Orta (yaralanma, çevresel etki, kısa duruş)',
+            '4' => 'Ciddi (ağır yaralanma, önemli çevresel/maddi hasar)',
+            '5' => 'Felaket (ölüm, büyük patlama/yangın, ağır çevresel etki)',
+        ],
+        'bantlar' => [
+            ['min' => 20, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Kabul edilemez — proses/ekipman devreye alınmadan tasarım değişikliği veya ek koruma zorunlu.'],
+            ['min' => 12, 'ad' => 'Yüksek Risk', 'renk' => '#dc2626', 'eylem' => 'Acil ek koruma/alarm/kilitleme gerekir; kısa sürede kapatılmalıdır.'],
+            ['min' => 6, 'ad' => 'Orta Düzeyde Risk', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde iyileştirme planlanmalıdır.'],
+            ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'renk' => '#84cc16', 'eylem' => 'Mevcut korumalar izlenerek sürdürülebilir; ek iyileştirme düşünülebilir.'],
+            ['min' => 1, 'ad' => 'Önemsiz Risk', 'renk' => '#22c55e', 'eylem' => 'Ek tedbir gerekmez, kayıt yeterlidir.'],
+        ],
+    ],
+
+    // FMEA: üç eksenli (RiskSkorlama::UC_EKSENLI_YONTEMLER) — RPN = Şiddet(S) ×
+    // Oluşma(O) × Saptanabilirlik(D). Veritabanı sütunları yeniden kullanılıyor:
+    // 'olasilik' = Oluşma (O), 'frekans' = Saptanabilirlik (D), 'siddet' = Şiddet (S)
+    // (bkz. RiskSkorlama::eksenEtiketleri — ekranlarda doğru başlıkla gösterilir).
+    'risk_fmea' => [
+        'aciklama' => 'RPN (Risk Öncelik Sayısı) = Şiddet (S) × Oluşma Olasılığı (O) × Saptanabilirlik (D).',
+        'olasilik' => [
+            '1' => 'Neredeyse hiç (yılda 1\'den az)',
+            '2' => 'Çok düşük (yılda birkaç kez)',
+            '3' => 'Düşük (ayda bir)',
+            '4' => 'Düşük-orta (ayda birkaç kez)',
+            '5' => 'Orta (haftada bir)',
+            '6' => 'Orta-yüksek (haftada birkaç kez)',
+            '7' => 'Yüksek (günde bir)',
+            '8' => 'Çok yüksek (günde birkaç kez)',
+            '9' => 'Aşırı yüksek (vardiyada birkaç kez)',
+            '10' => 'Neredeyse kesin (sürekli)',
+        ],
+        'frekans' => [
+            '1' => 'Kesin saptanır (otomatik kilitleme/durdurma)',
+            '2' => 'Çok yüksek saptanabilirlik (otomatik alarm)',
+            '3' => 'Yüksek saptanabilirlik (rutin kontrol her zaman yakalar)',
+            '4' => 'Orta-yüksek saptanabilirlik',
+            '5' => 'Orta saptanabilirlik (rutin kontrol genelde yakalar)',
+            '6' => 'Orta-düşük saptanabilirlik',
+            '7' => 'Düşük saptanabilirlik (rastgele/örnekleme kontrol)',
+            '8' => 'Çok düşük saptanabilirlik',
+            '9' => 'Neredeyse imkânsız (görsel/deneyime dayalı, güvenilmez)',
+            '10' => 'Saptama yok (hiçbir kontrol yok)',
+        ],
+        'siddet' => [
+            '1' => 'Önemsiz (fark edilmez etki)',
+            '2' => 'Çok hafif',
+            '3' => 'Hafif (küçük rahatsızlık/duruş)',
+            '4' => 'Küçük (küçük yaralanma, kısa duruş)',
+            '5' => 'Orta (tedavi gerektiren yaralanma)',
+            '6' => 'Orta-ciddi (kısmi iş göremezlik)',
+            '7' => 'Ciddi (ağır yaralanma, uzun duruş)',
+            '8' => 'Çok ciddi (kalıcı sakatlık, büyük hasar)',
+            '9' => 'Aşırı ciddi (tek ölüm riski)',
+            '10' => 'Felaket (çoklu ölüm/kalıcı çevre felaketi)',
+        ],
+        // RPN teorik aralığı 1-1000; pratikte çoğu değer 1-343 (7'nin küpü) bandında yoğunlaşır.
+        'bantlar' => [
+            ['min' => 200, 'ad' => 'Çok Yüksek Risk (RPN)', 'renk' => '#7f1d1d', 'eylem' => 'Öncelikli, acil önleyici faaliyet zorunlu.'],
+            ['min' => 100, 'ad' => 'Yüksek Risk (RPN)', 'renk' => '#dc2626', 'eylem' => 'Kısa sürede önleyici faaliyet planlanmalıdır.'],
+            ['min' => 50, 'ad' => 'Orta Risk (RPN)', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde iyileştirme değerlendirilmelidir.'],
+            ['min' => 20, 'ad' => 'Düşük Risk (RPN)', 'renk' => '#84cc16', 'eylem' => 'İzlenmeye devam edilmeli, düşük öncelikli iyileştirme düşünülebilir.'],
+            ['min' => 0, 'ad' => 'Önemsiz Risk (RPN)', 'renk' => '#22c55e', 'eylem' => 'Ek faaliyet gerekmez.'],
         ],
     ],
 
