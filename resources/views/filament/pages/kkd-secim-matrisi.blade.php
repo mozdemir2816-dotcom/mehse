@@ -31,7 +31,7 @@
                         <div style="display:flex;flex-wrap:wrap;gap:.4rem">
                             @foreach ($maddeler as $m)
                                 <x-filament::button size="xs" color="gray" icon="heroicon-o-plus"
-                                    wire:click="katalogdanEkle(@js($grup), @js($m['ad']))">{{ $m['ad'] }}</x-filament::button>
+                                    wire:click="katalogdanEkle('{{ addslashes($grup) }}', '{{ addslashes($m['ad']) }}')">{{ $m['ad'] }}</x-filament::button>
                             @endforeach
                         </div>
                     </div>

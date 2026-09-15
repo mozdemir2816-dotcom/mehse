@@ -85,7 +85,7 @@
                     <div style="font-weight:700;font-size:.9rem">{{ $bot['ad'] }}</div>
                     <div style="font-size:.78rem;color:rgb(107 114 128);flex:1">{{ $bot['aciklama'] }}</div>
                     <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-right" icon-position="after"
-                        wire:click="botKur(@js($bot['ad']))">
+                        wire:click="botKur('{{ addslashes($bot['ad']) }}')">
                         Kurmak için tıklayın
                     </x-filament::button>
                 </div>

@@ -718,12 +718,12 @@
                             <td style="padding:.4rem">{{ $satir['tarih']?->format('d.m.Y H:i') }}</td>
                             <td style="padding:.4rem;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray"
-                                    wire:click="mountAction('raporIndir', { model: @js($satir['kaynak']['model']), id: {{ $satir['kayit']->id }}, format: 'birincil' })">
+                                    wire:click="mountAction('raporIndir', { model: '{{ addslashes($satir['kaynak']['model']) }}', id: {{ $satir['kayit']->id }}, format: 'birincil' })">
                                     İndir
                                 </x-filament::button>
                                 @if (\App\Support\RaporKayitlari::ikincilUygunMu($satir['kaynak'], $satir['kayit']))
                                     <x-filament::button size="xs" color="gray"
-                                        wire:click="mountAction('raporIndir', { model: @js($satir['kaynak']['model']), id: {{ $satir['kayit']->id }}, format: 'ikincil' })">
+                                        wire:click="mountAction('raporIndir', { model: '{{ addslashes($satir['kaynak']['model']) }}', id: {{ $satir['kayit']->id }}, format: 'ikincil' })">
                                         {{ $satir['kaynak']['ikincil_etiket'] }}
                                     </x-filament::button>
                                 @endif
