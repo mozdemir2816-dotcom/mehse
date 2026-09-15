@@ -23,7 +23,7 @@
     table.risk thead th { background: #f0f0f0; }
     table.risk .col-no { width: 16px; text-align: center; }
     table.risk .col-duzey { width: 11px; padding: 2px 1px; text-align: center; vertical-align: middle; }
-    table.risk .col-oneri { width: 15%; }
+    table.risk .col-oneri { width: 22%; }
     table.risk .col-sorumlu { width: 5%; }
     table.risk .col-aciklama { width: 10%; }
     table.ekip { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
@@ -132,14 +132,14 @@
     <div style="font-size:11px;margin-top:20px">
         SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; NACE Kodu: {{ $rd->firma_nace ?: '—' }}
     </div>
+    <div style="font-size:11px;margin-top:20px;color:#444">
+        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
+    </div>
     <div style="font-size:11px;margin-top:20px">
         Belge No: {{ $rd->belge_no }} &nbsp;·&nbsp; Rev: {{ $rd->revizyon_no }}<br>
         Yöntem: {{ $rd->yontemEtiketi() }}<br>
         Yapılış Tarihi: {{ $rd->rapor_tarihi?->format('d.m.Y') }}<br>
         Geçerlilik Tarihi: {{ $rd->gecerlilik_tarihi?->format('d.m.Y') }}
-    </div>
-    <div style="font-size:11px;margin-top:20px;color:#444">
-        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
     </div>
     {{-- "Toplam Sayfa: N" satırı RiskDegerlendirmesiUretici'nde page_script ile
          kapağın altına damgalanır (tek render — büyük raporlarda süre yarıya iner). --}}

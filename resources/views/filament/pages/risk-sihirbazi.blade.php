@@ -396,6 +396,19 @@
             <x-slot name="heading">Şablonlar & Paylaşılanlar</x-slot>
             <x-slot name="description">Sektöre göre kaydettiğiniz risk setleri — tıklayın, tabloya toplu eklensin</x-slot>
 
+            <div style="max-width:20rem;margin-bottom:1rem">
+                <label style="font-weight:600;font-size:.85rem">Puanlama Yöntemi</label>
+                <select wire:model.live="yontem"
+                    style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    @foreach (config('isg.risk_yontemleri') as $k => $v)
+                        <option value="{{ $k }}">{{ $v }}</option>
+                    @endforeach
+                </select>
+                <p style="margin-top:.3rem;font-size:.75rem;color:rgb(107 114 128)">
+                    Sadece seçili yönteme ait şablonlar listelenir.
+                </p>
+            </div>
+
             @php $gruplar = $this->sablonlar(); @endphp
             @if ($gruplar->isEmpty())
                 <div style="{{ $kutu }};padding:1rem;font-size:.85rem;color:rgb(107 114 128)">

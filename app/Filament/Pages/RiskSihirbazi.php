@@ -571,11 +571,12 @@ class RiskSihirbazi extends Page
     |--------------------------------------------------------------------------
     */
 
-    /** @return Collection<string, Collection> sektör etiketi => şablonlar */
+    /** @return Collection<string, Collection> sektör etiketi => şablonlar (seçili puanlama yöntemine göre) */
     public function sablonlar()
     {
         return RiskSablonu::query()
             ->gorunur(Filament::auth()->id())
+            ->where('yontem', $this->yontem)
             ->orderByDesc('kullanim_sayisi')
             ->latest()
             ->get()
