@@ -182,6 +182,31 @@ class AtamaYazilariTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_imzasiz_secilince_kase_gorseli_basilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'isg_kurulu',
+            'tarih' => now(),
+            'uyeler' => [
+                ['ad_soyad' => 'Üye Bir', 'tc' => null, 'gorev' => 'İGU', 'bas_uye' => true, 'kase_gorseli' => 'uye-kase/test.png'],
+            ],
+        ]);
+
+        $imzali = view('pdf.atama-yazisi', ['kayit' => $kayit, 'firma' => $firma, 'rol' => $kayit->rol(), 'imzali' => true])->render();
+        $this->assertStringContainsString('uye-kase/test.png', $imzali);
+
+        $imzasiz = view('pdf.atama-yazisi', ['kayit' => $kayit, 'firma' => $firma, 'rol' => $kayit->rol(), 'imzali' => false])->render();
+        $this->assertStringNotContainsString('uye-kase/test.png', $imzasiz);
+        $this->assertStringContainsString('Üye Bir', $imzasiz);
+
+        $yanit = AtamaYazisiUretici::pdf($kayit, false);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
     public function test_gecmis_kayit_silinir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

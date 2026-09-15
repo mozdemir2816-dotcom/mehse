@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class AtamaYazisiUretici
 {
-    public static function pdf(AtamaYazisi $kayit): StreamedResponse
+    public static function pdf(AtamaYazisi $kayit, bool $imzali = true): StreamedResponse
     {
         $kayit->loadMissing('firma');
 
@@ -20,6 +20,7 @@ class AtamaYazisiUretici
             'kayit' => $kayit,
             'firma' => $kayit->firma,
             'rol' => $kayit->rol(),
+            'imzali' => $imzali,
         ])->setPaper('a4');
 
         $ad = 'atama-yazisi-'.Str::slug($kayit->rolEtiketi()).'-'.Str::slug($kayit->firma?->unvan ?? 'firma').'.pdf';

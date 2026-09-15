@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Firmas\Pages;
 
 use App\Filament\Resources\Firmas\FirmaResource;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Support\FirmaDosyaFihristiUretici;
 use App\Support\FirmaEvrakZipUretici;
@@ -21,6 +22,7 @@ class EditFirma extends EditRecord
                 ->label('Dosya Fihristi (İçindekiler)')
                 ->icon('heroicon-o-list-bullet')
                 ->color('gray')
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn (Firma $record) => FirmaDosyaFihristiUretici::pdf($record)),
 
             Action::make('tumEvrakIndir')

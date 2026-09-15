@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Models\IsEkipmani;
 use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\PeriyodikKontrolUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -325,6 +326,7 @@ class PeriyodikKontrol extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 
@@ -336,6 +338,7 @@ class PeriyodikKontrol extends Page
                 ->icon('heroicon-o-table-cells')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

@@ -6,6 +6,7 @@ use App\Models\AtamaYazisi as AtamaYazisiModel;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\AtamaYazisiUretici;
 use App\Support\AtamaYazisiWordUretici;
 use BackedEnum;
@@ -333,7 +334,8 @@ class AtamaYazilari extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('danger')
                 ->visible(fn () => $this->firma !== null)
-                ->action(function () {
+                ->schema([ImzaSecenegi::alan()])
+                ->action(function (array $data) {
                     $kayit = $this->kaydet();
 
                     if (! $kayit) {
@@ -342,7 +344,7 @@ class AtamaYazilari extends Page
 
                     Notification::make()->title('Atama yazısı kaydedildi')->body($kayit->dokuman_no)->success()->send();
 
-                    return AtamaYazisiUretici::pdf($kayit);
+                    return AtamaYazisiUretici::pdf($kayit, ImzaSecenegi::secili($data));
                 }),
 
             Action::make('word')
@@ -350,6 +352,7 @@ class AtamaYazilari extends Page
                 ->icon('heroicon-o-document-text')
                 ->color('info')
                 ->visible(fn () => $this->firma !== null && AtamaYazisiWordUretici::sablonVarMi($this->rolAnahtari))
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $kayit = $this->kaydet();
 

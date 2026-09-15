@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\OrtamOlcumu as OrtamOlcumuModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\OrtamOlcumuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -203,6 +204,7 @@ class OrtamOlcumleri extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => filled($this->olcum()?->olcumler))
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

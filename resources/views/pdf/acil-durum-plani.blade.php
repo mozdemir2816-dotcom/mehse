@@ -155,15 +155,15 @@
     <table class="imza">
         <tr>
             <td>
-                @if ($uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
-                @if ($uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
+                @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
                 {{ $uzman?->name ?: 'İş Güvenliği Uzmanı' }}
                 @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvanEtiketi() }}</span> @endif
                 <br>(İmza – Kaşe)
             </td>
             <td>
-                @if ($firma?->isyeriHekimi?->kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">@endif
-                @if ($firma?->isyeriHekimi?->imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->imza_gorseli) }}">@endif
+                @if (($imzali ?? true) && $firma?->isyeriHekimi?->kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $firma?->isyeriHekimi?->imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->imza_gorseli) }}">@endif
                 {{ $firma?->isyeriHekimi?->ad_soyad ?: 'İşyeri Hekimi' }}
                 <br>(İmza – Kaşe)
             </td>

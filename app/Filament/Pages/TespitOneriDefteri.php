@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Models\TespitOneriDefteri as TespitOneriDefteriModel;
 use App\Support\GeminiOneriDanismani;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\TespitOneriDefteriUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -240,6 +241,7 @@ class TespitOneriDefteri extends Page
                 ->label('PDF Çıktı Al')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->defter() !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => TespitOneriDefteriUretici::pdf($this->defter())),
         ];
     }

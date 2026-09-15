@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Models\SahaAnalizi;
 use App\Support\GeminiSahaAnalizi;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\SahaAnaliziUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -312,6 +313,7 @@ class AiSahaAnalizi extends Page
                 ->label('Rapor Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null && collect($this->bulgular)->contains('secili', true))
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $s = $this->kaydet();
 

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\KkdMatrisi;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\KkdMatrisiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -185,6 +186,7 @@ class KkdSecimMatrisi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => filled($this->satirlar))
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     try {
                         $this->kaydet(sessiz: true);

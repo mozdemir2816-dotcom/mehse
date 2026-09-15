@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Models\ZiyaretProgrami as ZiyaretProgramiModel;
 use App\Support\GeminiZiyaretDanismani;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\ZiyaretProgramiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -165,6 +166,7 @@ class ZiyaretProgrami extends Page
                 ->label('Çıktı İndir (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->program() !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => ZiyaretProgramiUretici::pdf($this->program())),
         ];
     }

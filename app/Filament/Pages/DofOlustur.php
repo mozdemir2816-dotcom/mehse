@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\DofRaporu;
 use App\Models\Firma;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\DofRaporuUretici;
 use App\Support\GeminiOneriDanismani;
 use BackedEnum;
@@ -344,6 +345,7 @@ class DofOlustur extends Page
                 ->label('DÖF Raporu (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $d = $this->kaydet();
 

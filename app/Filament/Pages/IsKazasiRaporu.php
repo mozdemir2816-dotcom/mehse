@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsKazasiRaporu as IsKazasiRaporuModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\IsKazasiRaporuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -404,6 +405,7 @@ class IsKazasiRaporu extends Page
                 ->label('Raporu Tamamla ve İndir')
                 ->icon('heroicon-o-document-check')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $kayit = $this->kaydet('tamamlandi');
 

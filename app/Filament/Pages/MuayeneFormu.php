@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\MuayeneFormu as MuayeneFormuModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\MuayeneFormuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -237,6 +238,7 @@ class MuayeneFormu extends Page
                 ->label('Formu Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $m = $this->kaydet();
 

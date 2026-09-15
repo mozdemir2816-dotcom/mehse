@@ -321,6 +321,32 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_imzasiz_secilince_kase_ve_imza_gorselleri_basilmaz(): void
+    {
+        $this->uzman->forceFill(['kase_gorseli' => 'uzman-kase/test-kase.png', 'imza_gorseli' => 'uzman-kase/test-imza.png'])->save();
+        $hekim = IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim-kase/test-kase.png']);
+
+        $firma = Firma::factory()->for($this->uzman)->create(['isyeri_hekimi_id' => $hekim->id]);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+
+        $veri = [
+            'plan' => $plan->fresh('firma'),
+            'firma' => $firma->fresh(),
+            'hakkinda' => config('isg.acil_durum.hakkinda'),
+        ];
+
+        $imzasiz = view('pdf.acil-durum-plani', [...$veri, 'imzali' => false])->render();
+        $this->assertStringNotContainsString('uzman-kase/test-kase.png', $imzasiz);
+        $this->assertStringNotContainsString('uzman-kase/test-imza.png', $imzasiz);
+        $this->assertStringNotContainsString('hekim-kase/test-kase.png', $imzasiz);
+        $this->assertStringContainsString($hekim->ad_soyad, $imzasiz);
+
+        $yanit = AcilDurumPlaniUretici::pdf($plan, false);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
     public function test_afis_pdf_uretilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

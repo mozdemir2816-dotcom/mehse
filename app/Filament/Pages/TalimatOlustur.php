@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\Talimat as TalimatModel;
 use App\Models\TalimatSablonu;
@@ -317,6 +318,7 @@ class TalimatOlustur extends Page
                 ->label('PDF İndir (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $talimat = $this->kaydet();
 
@@ -328,6 +330,7 @@ class TalimatOlustur extends Page
                 ->icon('heroicon-o-document-text')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $talimat = $this->kaydet();
 

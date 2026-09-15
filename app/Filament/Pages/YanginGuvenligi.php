@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\YanginGuvenligiDegerlendirmesi as YanginModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\YanginGuvenligiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -264,6 +265,7 @@ class YanginGuvenligi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

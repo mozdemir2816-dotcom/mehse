@@ -21,12 +21,12 @@ class JsaWordUretici
 {
     private const BASLIK_ARKA = 'EEEEEE';
 
-    public static function word(JsaSablonu $sablon, ?Firma $firma = null): StreamedResponse
+    public static function word(JsaSablonu $sablon, ?Firma $firma = null, bool $imzali = true): StreamedResponse
     {
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontSize(8);
 
-        self::bolumEkle($phpWord, $sablon, $firma);
+        self::bolumEkle($phpWord, $sablon, $firma, $imzali);
 
         $ad = 'jsa-'.Str::slug($sablon->baslik ?: 'ise-ozgu-risk')
             .($firma ? '-'.Str::slug($firma->unvan) : '').'.docx';
@@ -41,7 +41,7 @@ class JsaWordUretici
      *
      * @param  iterable<int, JsaSablonu>  $sablonlar
      */
-    public static function topluWord(iterable $sablonlar, ?Firma $firma = null): StreamedResponse
+    public static function topluWord(iterable $sablonlar, ?Firma $firma = null, bool $imzali = true): StreamedResponse
     {
         if (function_exists('set_time_limit')) {
             @set_time_limit(300);
@@ -51,7 +51,7 @@ class JsaWordUretici
         $phpWord->setDefaultFontSize(8);
 
         foreach ($sablonlar as $sablon) {
-            self::bolumEkle($phpWord, $sablon, $firma);
+            self::bolumEkle($phpWord, $sablon, $firma, $imzali);
         }
 
         $ad = 'jsa-toplu-'.($firma ? Str::slug($firma->unvan) : 'genel').'.docx';
@@ -60,7 +60,7 @@ class JsaWordUretici
     }
 
     /** Bir JSA'yı kendi yatay bölümü olarak belgeye ekler (yeni bölüm = yeni sayfa). */
-    private static function bolumEkle(PhpWord $phpWord, JsaSablonu $sablon, ?Firma $firma): void
+    private static function bolumEkle(PhpWord $phpWord, JsaSablonu $sablon, ?Firma $firma, bool $imzali = true): void
     {
         $bolum = $phpWord->addSection([
             'orientation' => 'landscape',
@@ -114,10 +114,10 @@ class JsaWordUretici
             }
         }
 
-        self::imzaTablosu($bolum, $sablon, $firma);
+        self::imzaTablosu($bolum, $sablon, $firma, $imzali);
     }
 
-    private static function imzaTablosu(Section $bolum, JsaSablonu $sablon, ?Firma $firma): void
+    private static function imzaTablosu(Section $bolum, JsaSablonu $sablon, ?Firma $firma, bool $imzali = true): void
     {
         $bolum->addTextBreak();
         $bolum->addText('Onay ve İmza', ['bold' => true, 'size' => 10]);
@@ -144,7 +144,7 @@ class JsaWordUretici
             }
 
             $imzaHucre = $imza->addCell(3500);
-            $kaseYolu = $hazirlayan && $uzman->kase_gorseli
+            $kaseYolu = $imzali && $hazirlayan && $uzman->kase_gorseli
                 ? storage_path('app/public/'.$uzman->kase_gorseli)
                 : null;
             if ($kaseYolu && is_file($kaseYolu)) {

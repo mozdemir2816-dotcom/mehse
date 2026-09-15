@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumPlani as PlanModel;
 use App\Models\Firma;
 use App\Support\AcilDurumKapakUretici;
@@ -176,10 +177,11 @@ class AcilDurumPlani extends Page
                 ->label('Plan PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->action(function () {
+                ->schema([ImzaSecenegi::alan()])
+                ->action(function (array $data) {
                     $this->kaydet();
 
-                    return AcilDurumPlaniUretici::pdf($this->plan());
+                    return AcilDurumPlaniUretici::pdf($this->plan(), ImzaSecenegi::secili($data));
                 }),
 
             Action::make('word')
@@ -188,6 +190,7 @@ class AcilDurumPlani extends Page
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
                 ->tooltip('Referans belgenin birebir kopyası; yalnızca firmaya özel bilgiler değişir, geri kalan metin/biçim aynen korunur.')
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet();
 
@@ -200,6 +203,7 @@ class AcilDurumPlani extends Page
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null && filled(config('isg.acil_durum.word_sablonlari.'.$this->sablonId.'.kapak_dosya')))
                 ->tooltip('Word şablonuyla eşleşen kapak sayfası (PowerPoint) — ayrı yazdırılıp plan çıktısının önüne konur.')
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => AcilDurumKapakUretici::pptx($this->plan(), $this->sablonId)),
 
             Action::make('krokiPlani')

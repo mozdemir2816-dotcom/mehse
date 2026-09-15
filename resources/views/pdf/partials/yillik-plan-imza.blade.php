@@ -5,9 +5,9 @@
 @php
     $hekim = $firma?->isyeriHekimi;
     $uzman = $firma?->igu;
-    $hekimKase = $hekim?->kase_gorseli && is_file(storage_path('app/public/'.$hekim->kase_gorseli))
+    $hekimKase = ($imzali ?? true) && $hekim?->kase_gorseli && is_file(storage_path('app/public/'.$hekim->kase_gorseli))
         ? storage_path('app/public/'.$hekim->kase_gorseli) : null;
-    $uzmanKase = $uzman?->kase_gorseli && is_file(storage_path('app/public/'.$uzman->kase_gorseli))
+    $uzmanKase = ($imzali ?? true) && $uzman?->kase_gorseli && is_file(storage_path('app/public/'.$uzman->kase_gorseli))
         ? storage_path('app/public/'.$uzman->kase_gorseli) : null;
     $isveren = $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: null);
 @endphp

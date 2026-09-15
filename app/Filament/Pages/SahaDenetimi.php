@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\SahaDenetimi as SahaDenetimiModel;
@@ -617,6 +618,7 @@ class SahaDenetimi extends Page
                         ->bulkToggleable()
                         ->columns(2)
                         ->required(),
+                    ImzaSecenegi::alan(),
                 ])
                 ->action(function (array $data) {
                     return HaftalikEkipmanKontrolUretici::pdf(
@@ -629,6 +631,7 @@ class SahaDenetimi extends Page
                 ->label('Denetimi Tamamla (Kaydet ve İndir PDF)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $d = $this->kaydet();
 

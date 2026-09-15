@@ -7,6 +7,7 @@ use App\Models\EgitimKatilim as EgitimKatilimModel;
 use App\Models\Firma;
 use App\Models\Sertifika;
 use App\Support\EgitimIcerikOlusturucu;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\EgitimKatilimUretici;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
@@ -674,6 +675,7 @@ class EgitimKatilim extends Page
                 ->label('Form PDF (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $kayit = $this->kaydet();
 
@@ -691,6 +693,7 @@ class EgitimKatilim extends Page
                 ->icon('heroicon-o-table-cells')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $kayit = $this->kaydet();
 
@@ -710,13 +713,16 @@ class EgitimKatilim extends Page
                 ->visible(fn () => $this->firma !== null)
                 ->modalHeading('Katılımcı Sertifikaları')
                 ->modalDescription('Sertifikaya basılacak eğitim tarih(ler)ini girin. Her katılımcı için ayrı sertifika sayfası oluşturulur.')
-                ->schema(fn () => array_map(
-                    fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
-                        ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
-                        ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
-                        ->required(),
-                    range(1, max(1, (int) $this->sureGun)),
-                ))
+                ->schema(fn () => [
+                    ...array_map(
+                        fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
+                            ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
+                            ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
+                            ->required(),
+                        range(1, max(1, (int) $this->sureGun)),
+                    ),
+                    ImzaSecenegi::alan(),
+                ])
                 ->action(function (array $data) {
                     $kayit = $this->kaydet();
 
@@ -724,7 +730,7 @@ class EgitimKatilim extends Page
                         return null;
                     }
 
-                    $tarihler = array_values(array_filter($data));
+                    $tarihler = array_values(array_filter(collect($data)->except('imzali')->all()));
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — her katılımcı için ayrı sertifika sayfası')->success()->send();
 

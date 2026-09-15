@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class YillikPlanUretici
 {
-    public static function pdf(YillikPlan $plan): StreamedResponse
+    public static function pdf(YillikPlan $plan, bool $imzali = true): StreamedResponse
     {
         $plan->loadMissing(['firma.igu', 'firma.isyeriHekimi']);
 
@@ -20,6 +20,7 @@ class YillikPlanUretici
             'plan' => $plan,
             'firma' => $plan->firma,
             'aylar' => ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+            'imzali' => $imzali,
         ])->setPaper('a4', 'landscape');
 
         $ad = 'yillik-plan-'.Str::slug($plan->firma?->unvan ?? 'firma').'-'.$plan->yil.'.pdf';

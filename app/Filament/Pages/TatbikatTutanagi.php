@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\TatbikatTutanagi as TatbikatTutanagiModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\TatbikatTutanagiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -410,6 +411,7 @@ class TatbikatTutanagi extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydet();
 

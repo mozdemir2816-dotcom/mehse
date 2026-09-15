@@ -258,6 +258,32 @@ class JsaDegerlendirmesiTest extends TestCase
         $this->assertStringStartsWith('PK', ob_get_clean());
     }
 
+    public function test_imzasiz_secilince_uzman_kasesi_basilmaz(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'igu', 'ad_soyad' => 'Uzman Ayşe Yılmaz', 'kase_gorseli' => 'isg-profesyonel-kase/ayse.png',
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id]);
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id, 'baslik' => 'JSA - Duvar', 'adimlar' => [
+                ['sira' => '1', 'is_adimi' => 'x', 'tehlikeler' => '', 'sonuclar' => '', 'baslangic_risk' => 'Orta', 'kontrol_tedbirleri' => '', 'kalinti_risk' => 'Düşük', 'sorumlu' => ''],
+            ],
+            'imza_rolleri' => JsaSablonu::VARSAYILAN_IMZA_ROLLERI,
+        ]);
+
+        $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma, 'uzman' => $firma->igu, 'imzali' => false])->render();
+        $this->assertStringNotContainsString('isg-profesyonel-kase/ayse.png', $html);
+        $this->assertStringContainsString('Uzman Ayşe Yılmaz', $html);
+
+        ob_start();
+        JsaUretici::pdf($sablon, $firma, false)->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        ob_start();
+        JsaWordUretici::word($sablon, $firma, false)->sendContent();
+        $this->assertStringStartsWith('PK', ob_get_clean());
+    }
+
     public function test_firmasiz_ciktida_hazirlayan_satiri_bos_kalir(): void
     {
         $sablon = JsaSablonu::create([

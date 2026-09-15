@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\SaglikGozetimi as SaglikGozetimiModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\SaglikGozetimiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -212,6 +213,7 @@ class SaglikGozetimi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => filled($this->gozetim()?->satirlar))
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

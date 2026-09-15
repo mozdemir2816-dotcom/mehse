@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\Sertifika;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\KatilimciExcelOkuyucu;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
 use BackedEnum;
@@ -424,6 +425,7 @@ class SertifikaOlustur extends Page
                 ->label('Sertifikayı Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $s = $this->kaydet();
 
@@ -441,6 +443,7 @@ class SertifikaOlustur extends Page
                 ->icon('heroicon-o-table-cells')
                 ->color('success')
                 ->visible(fn () => $this->firma !== null && $this->tip === 'isg')
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $s = $this->kaydet();
 

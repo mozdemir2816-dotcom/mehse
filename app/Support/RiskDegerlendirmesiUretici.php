@@ -44,15 +44,15 @@ class RiskDegerlendirmesiUretici
         return $yol;
     }
 
-    public static function pdf(RiskDegerlendirmesi $rd): StreamedResponse
+    public static function pdf(RiskDegerlendirmesi $rd, bool $imzali = true): StreamedResponse
     {
-        $pdf = self::olustur($rd);
+        $pdf = self::olustur($rd, $imzali);
         $ad = 'risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'.pdf';
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
-    private static function olustur(RiskDegerlendirmesi $rd): DompdfWrapper
+    private static function olustur(RiskDegerlendirmesi $rd, bool $imzali = true): DompdfWrapper
     {
         // Büyük raporlar (300+ risk maddesi) dompdf'te hem belleği hem süreyi zorlar:
         //  - 2026-09-04: iki kez render (önizleme + gerçek) 512M memory_limit'i
@@ -118,6 +118,7 @@ class RiskDegerlendirmesiUretici
             'metodoloji' => config('isg.'.$yontemAnahtari),
             'eksenEtiketleri' => \App\Support\RiskSkorlama::eksenEtiketleri($rd->yontem),
             'prosedur' => $userId ? RiskProsedur::aktifIcin($userId, $rd->yontem) : null,
+            'imzali' => $imzali,
         ];
 
         $pdf = Pdf::loadView('pdf.risk-degerlendirmesi', $veri)->setPaper('a4');

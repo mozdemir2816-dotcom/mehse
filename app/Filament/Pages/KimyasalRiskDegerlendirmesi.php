@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\KimyasalRiskDegerlendirmesi as KimyasalRiskModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\KimyasalRiskUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -241,6 +242,7 @@ class KimyasalRiskDegerlendirmesi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => filled($this->kayit()?->satirlar))
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

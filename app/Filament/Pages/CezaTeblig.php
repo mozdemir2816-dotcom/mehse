@@ -6,6 +6,7 @@ use App\Models\Calisan;
 use App\Models\CezaTebligTutanagi as CezaTebligTutanagiModel;
 use App\Models\Firma;
 use App\Models\IpcTebligi;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\CezaTebligTutanagiUretici;
 use App\Support\IpcTebligiUretici;
 use BackedEnum;
@@ -395,6 +396,7 @@ class CezaTeblig extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null && $this->aktifSekme === 'tutanak')
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydet();
 
@@ -405,6 +407,7 @@ class CezaTeblig extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null && $this->aktifSekme === 'ipc')
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydetIpc();
 

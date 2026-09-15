@@ -6,6 +6,7 @@ use App\Models\Calisan;
 use App\Models\EgitimSinavi as EgitimSinaviModel;
 use App\Models\Firma;
 use App\Models\SoruBankasiSorusu;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\EgitimSinaviUretici;
 use App\Support\GeminiSoruUretici;
 use BackedEnum;
@@ -338,6 +339,7 @@ class EgitimSorulari extends Page
                 ->label('PDF İndir (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $sinav = $this->kaydet();
 

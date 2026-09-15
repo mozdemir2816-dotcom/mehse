@@ -93,7 +93,7 @@
                     @if ($hazirlayan && $uzman->unvan)<br><span style="color:#555;font-size:7px">{{ $uzman->unvan }}</span>@endif
                 </td>
                 <td class="kase">
-                    @if ($hazirlayan && $uzman->kase_gorseli)
+                    @if (($imzali ?? true) && $hazirlayan && $uzman->kase_gorseli)
                         <img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}" style="max-height:38px;max-width:95%">
                     @endif
                 </td>

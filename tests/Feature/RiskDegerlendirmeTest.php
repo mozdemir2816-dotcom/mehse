@@ -302,6 +302,49 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 
+    public function test_imzasiz_secilince_kase_ve_imza_gorselleri_basilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'isveren_kase_gorseli' => 'isveren/kase.png',
+            'isveren_imza_gorseli' => 'isveren/imza.png',
+        ]);
+        $this->uzman->forceFill(['kase_gorseli' => 'uzman/kase.png', 'imza_gorseli' => 'uzman/imza.png'])->save();
+        $hekim = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim/kase.png']);
+        $temsilci = ['ad' => 'Temsilci Test', 'unvan' => 'Çalışan Temsilcisi', 'imza_gorseli' => 'temsilci/imza.png'];
+        $destekElemani = ['ad' => 'Destek Test', 'unvan' => 'Destek Elemanı', 'imza_gorseli' => 'destek/imza.png'];
+
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
+
+        $veri = [
+            'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman, 'hekim' => $hekim,
+            'temsilci' => $temsilci, 'destekElemani' => $destekElemani,
+            'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
+        ];
+
+        $imzali = view('pdf.risk-degerlendirmesi', [...$veri, 'imzali' => true])->render();
+        $this->assertStringContainsString('isveren/kase.png', $imzali);
+        $this->assertStringContainsString('uzman/kase.png', $imzali);
+        $this->assertStringContainsString('hekim/kase.png', $imzali);
+        $this->assertStringContainsString('temsilci/imza.png', $imzali);
+        $this->assertStringContainsString('destek/imza.png', $imzali);
+
+        $imzasiz = view('pdf.risk-degerlendirmesi', [...$veri, 'imzali' => false])->render();
+        $this->assertStringNotContainsString('isveren/kase.png', $imzasiz);
+        $this->assertStringNotContainsString('isveren/imza.png', $imzasiz);
+        $this->assertStringNotContainsString('uzman/kase.png', $imzasiz);
+        $this->assertStringNotContainsString('hekim/kase.png', $imzasiz);
+        $this->assertStringNotContainsString('temsilci/imza.png', $imzasiz);
+        $this->assertStringNotContainsString('destek/imza.png', $imzasiz);
+        // Ad soyad ve rol etiketleri imzasız modda da görünmeye devam eder.
+        $this->assertStringContainsString($hekim->ad_soyad, $imzasiz);
+
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd, false);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
     public function test_risk_maddesi_duzey_dikey_harf_harf_alt_alta_yazar(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

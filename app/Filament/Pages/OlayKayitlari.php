@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\OlayKaydi;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\OlayKaydiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -379,6 +380,7 @@ class OlayKayitlari extends Page
                 ->label('Kaydı Oluştur (Kaydet ve PDF İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $o = $this->kaydet();
 
@@ -396,6 +398,7 @@ class OlayKayitlari extends Page
                 ->icon('heroicon-o-share')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $o = $this->kaydet();
 

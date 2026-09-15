@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\AcilDurumKrokisi as KrokiModel;
 use App\Models\Firma;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\AcilDurumKrokisiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -223,6 +224,7 @@ class AcilDurumKrokisi extends Page
                 ->label('Kroki PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet();
 

@@ -6,6 +6,7 @@ use App\Models\Firma;
 use App\Models\YillikPlan as YillikPlanModel;
 use App\Support\YillikDegerlendirmeVerisi;
 use App\Support\YillikPlanExcelIceAktarici;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\YillikPlanUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -365,7 +366,8 @@ class YillikPlanlar extends Page
                 ->label('Çıktı İndir (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->plan() !== null)
-                ->action(fn () => YillikPlanUretici::pdf($this->plan())),
+                ->schema([ImzaSecenegi::alan()])
+                ->action(fn (array $data) => YillikPlanUretici::pdf($this->plan(), ImzaSecenegi::secili($data))),
 
             Action::make('excelYukleCalisma')
                 ->label('Çalışma Planı Excel’den Yükle')

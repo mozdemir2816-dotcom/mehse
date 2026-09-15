@@ -6,6 +6,7 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\KurulToplantisi as KurulToplantisiModel;
 use App\Support\GeminiKararDanismani;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\KurulToplantisiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -491,6 +492,7 @@ class KurulToplantisi extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->toplanti() !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KurulToplantisiUretici::pdf($this->toplanti())),
 
             Action::make('excel')
@@ -498,6 +500,7 @@ class KurulToplantisi extends Page
                 ->icon('heroicon-o-table-cells')
                 ->color('gray')
                 ->visible(fn () => $this->toplanti() !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KurulToplantisiUretici::excel($this->toplanti())),
         ];
     }

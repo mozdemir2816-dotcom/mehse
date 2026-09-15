@@ -15,13 +15,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class JsaUretici
 {
-    public static function pdf(JsaSablonu $sablon, ?Firma $firma = null): StreamedResponse
+    public static function pdf(JsaSablonu $sablon, ?Firma $firma = null, bool $imzali = true): StreamedResponse
     {
         $pdf = Pdf::loadView('pdf.jsa', [
             'sablon' => $sablon,
             'firma' => $firma,
             // "Hazırlayan" imza satırı firmaya atanmış İSG Uzmanı'ndan doldurulur.
             'uzman' => $firma?->igu,
+            'imzali' => $imzali,
         ])->setPaper('a4', 'landscape');
 
         $ad = 'jsa-'.Str::slug($sablon->baslik ?: 'ise-ozgu-risk')
@@ -37,7 +38,7 @@ class JsaUretici
      *
      * @param  iterable<int, JsaSablonu>  $sablonlar
      */
-    public static function topluPdf(iterable $sablonlar, ?Firma $firma = null): StreamedResponse
+    public static function topluPdf(iterable $sablonlar, ?Firma $firma = null, bool $imzali = true): StreamedResponse
     {
         if (function_exists('set_time_limit')) {
             @set_time_limit(300);
@@ -46,6 +47,7 @@ class JsaUretici
         $pdf = Pdf::loadView('pdf.jsa-toplu', [
             'sablonlar' => $sablonlar,
             'firma' => $firma,
+            'imzali' => $imzali,
         ])->setPaper('a4', 'landscape');
 
         $ad = 'jsa-toplu-'.($firma ? Str::slug($firma->unvan) : 'genel').'.pdf';

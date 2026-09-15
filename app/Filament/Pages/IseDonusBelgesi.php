@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IseDonusBelgesi as IseDonusBelgesiModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\IseDonusBelgesiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -180,6 +181,7 @@ class IseDonusBelgesi extends Page
                 ->label('Belgeyi Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $b = $this->kaydet();
 

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Models\IsIzinFormu as IsIzinFormuModel;
 use App\Models\IsIzinSablonu;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\IsIzinFormuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -350,6 +351,7 @@ class IsIzinFormu extends Page
                 ->label('Formu Kaydet ve PDF Oluştur')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $form = $this->kaydet();
 

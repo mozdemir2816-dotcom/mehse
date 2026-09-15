@@ -62,7 +62,7 @@
             <tr>
                 <td>İşveren / İşveren Vekili<br>(İmza – Kaşe)</td>
                 <td>
-                    @if (! empty($u['kase_gorseli']))
+                    @if (($imzali ?? true) && ! empty($u['kase_gorseli']))
                         <img src="{{ storage_path('app/public/'.$u['kase_gorseli']) }}">
                     @endif
                     {{ $u['ad_soyad'] ?? '' }}<br>(Görevlendirilen Personel – İmza)

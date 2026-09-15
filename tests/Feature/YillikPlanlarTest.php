@@ -214,6 +214,50 @@ class YillikPlanlarTest extends TestCase
         $this->assertStringNotContainsString('kase/igu.png', $html);
     }
 
+    public function test_imzasiz_secilince_kase_gorseli_basilmaz(): void
+    {
+        $hekimKaseYolu = 'kase-test/hekim-'.uniqid().'.png';
+        $iguKaseYolu = 'kase-test/igu-'.uniqid().'.png';
+        @mkdir(storage_path('app/public/kase-test'), 0777, true);
+        file_put_contents(storage_path('app/public/'.$hekimKaseYolu), 'x');
+        file_put_contents(storage_path('app/public/'.$iguKaseYolu), 'x');
+
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Hekim Test', 'kase_gorseli' => $hekimKaseYolu,
+        ]);
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'ad_soyad' => 'İGU Test', 'kase_gorseli' => $iguKaseYolu,
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'igu_id' => $igu->id, 'isyeri_hekimi_id' => $hekim->id, 'isveren_vekili' => 'Patron Bey',
+        ]);
+        $plan = YillikPlan::firmaYilIcin($firma, 2026);
+        $veri = [
+            'plan' => $plan->load(['firma.igu', 'firma.isyeriHekimi']),
+            'firma' => $plan->firma,
+            'aylar' => ['Oca'],
+        ];
+
+        try {
+            $imzali = view('pdf.yillik-plan', [...$veri, 'imzali' => true])->render();
+            $this->assertStringContainsString($hekimKaseYolu, $imzali);
+            $this->assertStringContainsString($iguKaseYolu, $imzali);
+
+            $imzasiz = view('pdf.yillik-plan', [...$veri, 'imzali' => false])->render();
+            $this->assertStringNotContainsString($hekimKaseYolu, $imzasiz);
+            $this->assertStringNotContainsString($iguKaseYolu, $imzasiz);
+            $this->assertStringContainsString('İGU Test', $imzasiz);
+
+            $yanit = YillikPlanUretici::pdf($plan, false);
+            ob_start();
+            $yanit->sendContent();
+            $this->assertStringStartsWith('%PDF', ob_get_clean());
+        } finally {
+            @unlink(storage_path('app/public/'.$hekimKaseYolu));
+            @unlink(storage_path('app/public/'.$iguKaseYolu));
+        }
+    }
+
     public function test_baska_uzmanin_firmasi_secilemez(): void
     {
         $baskaUzman = User::factory()->create();

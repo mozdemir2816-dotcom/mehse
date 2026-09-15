@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\IsbasiEgitimTutanagi as IsbasiEgitimTutanagiModel;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\IsbasiEgitimTutanagiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -205,6 +206,7 @@ class IsbasiEgitim extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydet();
 

@@ -92,30 +92,30 @@
         <tr>
             <td>
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
-                @if ($firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
-                @if ($firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
+                @if (($imzali ?? true) && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
                 <span class="ad">{{ $firma?->isveren_ad ?: $firma?->isveren_vekili ?: '—' }}</span>
             </td>
             <td>
                 <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
-                @if ($uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
-                @if ($uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
+                @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
                 <span class="ad">{{ $uzman?->name ?: '—' }}</span>
             </td>
             <td>
                 <span class="rol">İŞYERİ HEKİMİ</span>
-                @if ($hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
-                @if ($hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
+                @if (($imzali ?? true) && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
                 <span class="ad">{{ $hekim?->ad_soyad ?: '—' }}</span>
             </td>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
-                @if (! empty($temsilci['imza_gorseli']))<img src="{{ storage_path('app/public/'.$temsilci['imza_gorseli']) }}">@endif
+                @if (($imzali ?? true) && ! empty($temsilci['imza_gorseli']))<img src="{{ storage_path('app/public/'.$temsilci['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $temsilci['ad'] ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">DESTEK ELEMANI</span>
-                @if (! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
+                @if (($imzali ?? true) && ! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $destekElemani['ad'] ?? '—' }}</span>
             </td>
         </tr>

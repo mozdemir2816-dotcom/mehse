@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RiskDegerlendirmesis\Pages;
 
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\RiskDegerlendirmesi;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskYontemDonusturucu;
 use Filament\Actions\Action;
@@ -31,10 +32,11 @@ class EditRiskDegerlendirmesi extends EditRecord
                 ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->action(function () {
+                ->schema([ImzaSecenegi::alan()])
+                ->action(function (array $data) {
                     // Küçük/orta raporlar: tıklama anında üretilip doğrudan indirilir (eskisi gibi).
                     if (! $this->pdfBuyukMu()) {
-                        return RiskDegerlendirmesiUretici::pdf($this->record);
+                        return RiskDegerlendirmesiUretici::pdf($this->record, ImzaSecenegi::secili($data));
                     }
 
                     // Büyük rapor + önbellekte güncel bir PDF hazır: diskten doğrudan indir.

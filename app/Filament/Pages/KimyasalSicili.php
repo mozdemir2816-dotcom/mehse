@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Models\IsgAfis;
 use App\Models\KimyasalUrun;
+use App\Filament\Support\ImzaSecenegi;
 use App\Support\KimyasalEnvanterUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -166,6 +167,7 @@ class KimyasalSicili extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => $this->urunler->isNotEmpty())
+                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KimyasalEnvanterUretici::pdf($this->firma)),
         ];
     }

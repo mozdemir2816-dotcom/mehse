@@ -17,7 +17,7 @@ use ZipArchive;
  */
 class AcilDurumPlaniUretici
 {
-    public static function pdf(AcilDurumPlani $plan): StreamedResponse
+    public static function pdf(AcilDurumPlani $plan, bool $imzali = true): StreamedResponse
     {
         $plan->loadMissing('firma');
 
@@ -25,6 +25,7 @@ class AcilDurumPlaniUretici
             'plan' => $plan,
             'firma' => $plan->firma,
             'hakkinda' => config('isg.acil_durum.hakkinda'),
+            'imzali' => $imzali,
         ])->setPaper('a4');
 
         $ad = 'acil-durum-plani-'.Str::slug($plan->firma?->unvan ?? 'firma').'.pdf';
