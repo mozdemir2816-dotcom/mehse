@@ -9,6 +9,7 @@ use App\Models\RiskMaddesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
+use App\Support\GeminiRiskPdfOkuyucu;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskDegerlendirmesiOlusturucu;
@@ -82,6 +83,9 @@ class RiskSihirbazi extends Page
         'excel' => ['ad' => 'Risk Değerlendirmenizden Yükleyin', 'onerilen' => false, 'hazir' => true,
             'aciklama' => 'Kendi Excel risk değerlendirmenizi yükleyin; sistem risk maddelerini otomatik ekler.',
             'maddeler' => ['Her formatı akıllı algılama', 'Eksik puan/önlem tamamlama', 'Tüm maddeler otomatik eklenir']],
+        'pdf' => ['ad' => 'PDF Yükleyin (AI ile Oku)', 'onerilen' => false, 'hazir' => true,
+            'aciklama' => 'Taranmış/görsel PDF risk analizinizi yükleyin; Gemini tabloyu okuyup maddeleri çıkarır.',
+            'maddeler' => ['Taranmış/görsel tabloları okur', 'Excel ile aynı inceleme ekranı', 'Gemini API anahtarı gerekir']],
     ];
 
     /** Excel içe aktarımda "eksik puan/önlemi AI ile tamamla" tek seferde en fazla bu kadar madde işler. */
@@ -164,6 +168,12 @@ class RiskSihirbazi extends Page
     /** İşaretliyse tekrar eden satırlar tek maddeye indirilir; varsayılan: hepsi eklenir. */
     public bool $excelTekrarBirlestir = false;
 
+    /**
+     * "PDF Yükleyin" — Gemini ile okunur, sonucu excelAdaylar/excelSecilenAdaylar'a
+     * yazılır (bkz. pdfIceAktar). Ayrı bir inceleme ekranı yok, Excel'inkini paylaşır.
+     */
+    public ?UploadedFile $pdfDosya = null;
+
     // Adım 6 — sektör şablonu olarak kaydetme
     public ?string $sablonAd = null;
 
@@ -192,7 +202,7 @@ class RiskSihirbazi extends Page
             'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
             'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
             'excelDosya', 'excelAdaylar', 'excelSecilenAdaylar', 'excelHatalar',
-            'excelTekrarSayisi', 'excelTekrarBirlestir',
+            'excelTekrarSayisi', 'excelTekrarBirlestir', 'pdfDosya',
         ]);
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
@@ -703,6 +713,34 @@ class RiskSihirbazi extends Page
         if (! $this->excelAdaylar) {
             Notification::make()->title('Madde bulunamadı')
                 ->body($this->excelHatalar[0] ?? 'Dosyada tanınabilir bir risk tablosu bulunamadı.')
+                ->danger()->send();
+        }
+    }
+
+    /**
+     * "PDF Yükleyin" — Gemini ile okunan maddeler AYNI excelAdaylar/excelSecilenAdaylar
+     * durumuna yazılır; inceleme, seçim ve toplu ekleme akışının tamamı Excel ile
+     * paylaşılır (bkz. GeminiRiskPdfOkuyucu::oku, "aday" şekli birebir aynı).
+     */
+    public function pdfIceAktar(): void
+    {
+        $this->validate(['pdfDosya' => 'required|file|mimes:pdf|max:15360']);
+
+        $sonuc = GeminiRiskPdfOkuyucu::oku($this->pdfDosya->getRealPath());
+
+        $this->excelAdaylar = $sonuc['adaylar'];
+        $this->excelHatalar = $sonuc['hatalar'];
+        $this->excelSecilenAdaylar = collect($this->excelAdaylar)->pluck('anahtar')->all();
+        $this->excelTekrarBirlestir = false;
+        $this->excelTekrarSayisi = count($this->excelAdaylar) - collect($this->excelAdaylar)
+            ->map(fn ($a) => static::maddeKimligi($a))
+            ->unique()
+            ->count();
+        $this->pdfDosya = null;
+
+        if (! $this->excelAdaylar) {
+            Notification::make()->title('Madde bulunamadı')
+                ->body($this->excelHatalar[0] ?? 'PDF içinde tanınabilir bir risk tablosu bulunamadı.')
                 ->danger()->send();
         }
     }

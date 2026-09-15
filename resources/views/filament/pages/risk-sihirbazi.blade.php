@@ -521,6 +521,92 @@
         </x-filament::section>
     @endif
 
+    {{-- ==================== ADIM 3 — PDF (GEMİNİ) ======================== --}}
+    @if ($adim === 3 && $yontemSecim === 'pdf')
+        <x-filament::section icon="heroicon-o-arrow-up-tray" icon-color="primary">
+            <x-slot name="heading">PDF Yükleyin (AI ile Oku)</x-slot>
+            <x-slot name="description">
+                Taranmış/görsel bir risk analizi PDF'i yükleyin — Gemini tabloyu okuyup maddeleri çıkarır.
+                İnceleme ve seçim ekranı Excel yüklemesiyle aynıdır.
+            </x-slot>
+
+            @if (! \App\Support\GeminiRiskPdfOkuyucu::aktifMi())
+                <div style="{{ $kutu }};padding:1rem;font-size:.85rem;color:rgb(217 119 6)">
+                    Gemini API anahtarı yapılandırılmamış — bu özellik şu an kullanılamıyor.
+                </div>
+            @elseif (empty($excelAdaylar))
+                <div style="display:flex;flex-direction:column;gap:.75rem;max-width:28rem">
+                    <input type="file" wire:model="pdfDosya" accept=".pdf"
+                        style="padding:.5rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
+                    @error('pdfDosya') <span style="color:#ef4444;font-size:.8rem">{{ $message }}</span> @enderror
+                    <div wire:loading wire:target="pdfDosya,pdfIceAktar" style="font-size:.8rem;color:rgb(107 114 128)">
+                        Okunuyor… (büyük belgelerde birkaç dakika sürebilir)
+                    </div>
+                    <x-filament::button icon="heroicon-o-magnifying-glass" wire:click="pdfIceAktar" :disabled="! $pdfDosya">
+                        PDF'i Tara ve Maddeleri Bul
+                    </x-filament::button>
+                </div>
+
+                @if ($excelHatalar)
+                    <div style="{{ $kutu }};margin-top:1rem;background:rgb(239 68 68 / .06);border-color:rgb(239 68 68 / .3);font-size:.82rem">
+                        @foreach ($excelHatalar as $hata) <div>{{ $hata }}</div> @endforeach
+                    </div>
+                @endif
+            @else
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+                    <div style="font-weight:600">{{ count($excelAdaylar) }} madde bulundu — seçili: {{ count($excelSecilenAdaylar) }}</div>
+                    <div style="display:flex;gap:.5rem">
+                        <x-filament::button size="xs" color="gray" wire:click="excelTumAdaylar(true)">Tümünü Seç</x-filament::button>
+                        <x-filament::button size="xs" color="gray" wire:click="excelTumAdaylar(false)">Tümünü Kaldır</x-filament::button>
+                        <x-filament::button size="xs" color="gray" wire:click="$set('excelAdaylar', [])">Farklı Dosya</x-filament::button>
+                    </div>
+                </div>
+                <div style="margin-top:.6rem;display:flex;flex-direction:column;gap:.4rem;max-height:24rem;overflow-y:auto;padding-right:.25rem">
+                    @foreach ($excelAdaylar as $aday)
+                        @php $sec = in_array($aday['anahtar'], $excelSecilenAdaylar, true); @endphp
+                        <button type="button" wire:click="excelAdayToggle('{{ $aday['anahtar'] }}')"
+                            style="text-align:left;padding:.6rem .75rem;border-radius:.5rem;cursor:pointer;
+                                border:1px solid {{ $sec ? $mor : 'rgb(107 114 128 / .3)' }};
+                                background:{{ $sec ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                            <div style="font-weight:600;font-size:.85rem">{{ $sec ? '☑ ' : '☐ ' }}{{ $aday['tehlike'] }}</div>
+                            <div style="font-size:.78rem;color:rgb(107 114 128)">
+                                @if ($aday['faaliyet'] ?? null) {{ $aday['faaliyet'] }} · @endif
+                                @if ($aday['bolum'] ?? null) <span style="opacity:.7">[{{ Str::limit($aday['bolum'], 28) }}]</span> @endif
+                                {{ Str::limit($aday['risk'] ?? '', 90) }}
+                                @if ($aday['olasilik'] !== null)
+                                    · <span style="color:{{ $mor }}">O:{{ $aday['olasilik'] }}@if($aday['frekans'] !== null) F:{{ $aday['frekans'] }}@endif Ş:{{ $aday['siddet'] }}</span>
+                                @endif
+                            </div>
+                        </button>
+                    @endforeach
+                </div>
+                @if ($excelTekrarSayisi > 0)
+                    <label style="margin-top:.8rem;display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;cursor:pointer;
+                        border:1px solid rgb(217 119 6 / .4);background:rgb(217 119 6 / .08);border-radius:.5rem;padding:.6rem .75rem">
+                        <input type="checkbox" wire:model="excelTekrarBirlestir" style="margin-top:.15rem">
+                        <span>
+                            <strong>{{ $excelTekrarSayisi }} tekrar eden satır</strong> var (aynı bölüm + faaliyet + tehlike + risk).
+                            İşaretlerseniz tek maddeye indirilir; boş bırakırsanız hepsi ayrı ayrı eklenir.
+                        </span>
+                    </label>
+                @endif
+
+                @if (count($excelSecilenAdaylar) > 400)
+                    <p style="margin-top:.6rem;font-size:.78rem;color:rgb(107 114 128)">
+                        400'den fazla madde seçili — sihirbaza yüklenmeden doğrudan bir risk değerlendirmesi
+                        oluşturulup düzenleme sayfasına yönlendirileceksiniz. (Önce 1. adımdan firma seçili olmalı.)
+                    </p>
+                @endif
+
+                <div style="margin-top:1rem">
+                    <x-filament::button color="primary" icon="heroicon-o-plus" wire:click="excelSecilenleriEkle" :disabled="count($excelSecilenAdaylar) === 0">
+                        Seçili {{ count($excelSecilenAdaylar) }} riski ekle
+                    </x-filament::button>
+                </div>
+            @endif
+        </x-filament::section>
+    @endif
+
     {{-- ============================ ADIM 4 =============================== --}}
     @if ($adim === 4)
         <x-filament::section icon="heroicon-o-adjustments-horizontal" icon-color="primary">

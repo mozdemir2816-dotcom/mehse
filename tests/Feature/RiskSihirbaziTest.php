@@ -279,6 +279,56 @@ class RiskSihirbaziTest extends TestCase
         unlink($yol);
     }
 
+    public function test_pdf_yontemi_gemini_ile_okur_ve_secilenlere_ekler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        config(['services.gemini.key' => 'test-anahtar']);
+
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [['content' => ['parts' => [['text' => json_encode([
+                    ['bolum' => 'Şantiye', 'tehlike' => 'Korkuluksuz kenar', 'risk' => 'Yüksekten düşme', 'olasilik' => 4, 'siddet' => 5],
+                    ['bolum' => 'Şantiye', 'tehlike' => 'İksasız kazı', 'risk' => 'Göçük', 'olasilik' => 3, 'siddet' => 5],
+                ])]]]]],
+            ]),
+        ]);
+
+        $yol = tempnam(sys_get_temp_dir(), 'pdf');
+        file_put_contents($yol, '%PDF-1.4 sahte içerik');
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'pdf')->call('ileri')
+            ->set('pdfDosya', UploadedFile::fake()->createWithContent('riskler.pdf', file_get_contents($yol)))
+            ->call('pdfIceAktar')
+            ->assertSet('excelAdaylar', fn ($adaylar) => count($adaylar) === 2)
+            ->call('excelSecilenleriEkle')
+            ->assertSet('secilenler', fn ($secilenler) => count($secilenler) === 2)
+            ->assertSet('adim', 4);
+
+        unlink($yol);
+    }
+
+    public function test_pdf_yontemi_api_anahtari_yokken_hata_verir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        config(['services.gemini.key' => null]);
+        Http::fake();
+
+        $yol = tempnam(sys_get_temp_dir(), 'pdf');
+        file_put_contents($yol, '%PDF-1.4 sahte içerik');
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ileri')->call('yontemSec', 'pdf')->call('ileri')
+            ->set('pdfDosya', UploadedFile::fake()->createWithContent('riskler.pdf', file_get_contents($yol)))
+            ->call('pdfIceAktar')
+            ->assertSet('excelAdaylar', []);
+
+        Http::assertNothingSent();
+        unlink($yol);
+    }
+
     public function test_excel_fine_kinney_puanlari_getirince_yontem_otomatik_degisir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
