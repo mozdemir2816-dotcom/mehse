@@ -31,13 +31,13 @@ class KkdSecimMatrisiTest extends TestCase
     {
         Livewire::test(KkdSecimMatrisiSayfasi::class)
             ->set('firmaId', $this->firma->id)
-            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma (Çatı, Dış Cephe)')
             ->call('kaydet');
 
         $matris = KkdMatrisi::where('firma_id', $this->firma->id)->sole();
         $this->assertCount(1, $matris->satirlar);
-        $this->assertSame('Yüksekte Çalışma / İskele', $matris->satirlar[0]['is_kalemi']);
-        $this->assertStringContainsString('EN 361', $matris->satirlar[0]['kemer']);
+        $this->assertSame('Yüksekte Çalışma (Çatı, Dış Cephe)', $matris->satirlar[0]['is_kalemi']);
+        $this->assertStringContainsString('tam vücut', $matris->satirlar[0]['kemer']);
     }
 
     public function test_serbest_satir_eklenir_ve_bos_is_kalemi_saving_ile_temizlenir(): void
@@ -76,17 +76,17 @@ class KkdSecimMatrisiTest extends TestCase
     {
         Livewire::test(KkdSecimMatrisiSayfasi::class)
             ->set('firmaId', $this->firma->id)
-            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
-            ->assertNotified('"Yüksekte Çalışma / İskele" eklendi');
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma (Çatı, Dış Cephe)')
+            ->assertNotified('"Yüksekte Çalışma (Çatı, Dış Cephe)" eklendi');
     }
 
     public function test_ayni_is_kalemi_tekrar_eklenmez_uyari_gosterilir(): void
     {
         $component = Livewire::test(KkdSecimMatrisiSayfasi::class)
             ->set('firmaId', $this->firma->id)
-            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
-            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
-            ->assertNotified('"Yüksekte Çalışma / İskele" zaten listede');
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma (Çatı, Dış Cephe)')
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma (Çatı, Dış Cephe)')
+            ->assertNotified('"Yüksekte Çalışma (Çatı, Dış Cephe)" zaten listede');
 
         $this->assertCount(1, $component->get('satirlar'));
     }
@@ -98,7 +98,7 @@ class KkdSecimMatrisiTest extends TestCase
         Livewire::test(KkdSecimMatrisiSayfasi::class)
             ->set('firmaId', $this->firma->id)
             ->assertActionHidden('pdf')
-            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma (Çatı, Dış Cephe)')
             ->assertActionVisible('pdf');
     }
 

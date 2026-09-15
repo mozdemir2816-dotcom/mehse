@@ -6,7 +6,6 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu as KkdZimmetFormuModel;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\KkdZimmetFormuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -342,7 +341,6 @@ class KkdFormu extends Page
                 ->label('PDF Oluştur (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $form = $this->kaydet();
 

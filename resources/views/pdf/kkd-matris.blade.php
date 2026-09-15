@@ -40,7 +40,7 @@
     @endif
 </table>
 
-@php $sutunKisa = ['baret' => 'Baret', 'gozluk' => 'Gözlük / Siperlik', 'kulaklik' => 'Kulak Kor.', 'maske' => 'Solunum Kor.', 'eldiven' => 'Eldiven', 'ayakkabi' => 'İş Ayakkabısı', 'yelek' => 'Reflektif Yelek', 'kemer' => 'Düşme Durd.', 'diger' => 'Diğer KKD']; @endphp
+@php $sutunKisa = ['baret' => 'Baret', 'gozluk' => 'Gözlük / Siperlik', 'kulaklik' => 'Kulak Kor.', 'maske' => 'Solunum Kor.', 'eldiven' => 'Eldiven', 'ayakkabi' => 'İş Ayakkabısı', 'yuksek_ayakkabi' => 'Yüksek Tip Ayakkabı / Çizme', 'yelek' => 'Reflektif Yelek', 'kemer' => 'Düşme Durd.', 'diger' => 'Diğer KKD']; @endphp
 
 <table class="m">
     <thead>

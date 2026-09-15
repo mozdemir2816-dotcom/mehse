@@ -616,23 +616,25 @@ return [
             'maske' => 'Solunum Koruyucu (EN 149 / EN 14387)',
             'eldiven' => 'Koruyucu Eldiven (EN 388 / EN 374 / EN 60903)',
             'ayakkabi' => 'İş Ayakkabısı (EN ISO 20345 S3)',
+            'yuksek_ayakkabi' => 'Yüksek Tip İş Ayakkabısı / Çizme',
             'yelek' => 'Reflektif Yelek (EN ISO 20471)',
             'kemer' => 'Düşme Durdurma Sistemi (EN 361 + EN 355)',
             'diger' => 'Diğer KKD',
         ],
 
         'is_kalemleri' => [
+            // Kaynak: "İnşaat İş Adımlarına Göre KKD Matrisi" (kullanıcı referansı) — Z/Ö
+            // notasyonu ✔/"Gerekirse" olarak birebir aktarıldı, parantez notları korundu.
             'İnşaat / Şantiye' => [
-                ['ad' => 'Kazı ve Hafriyat İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'Kazı kenarında', 'diger' => 'Dizlik']],
-                ['ad' => 'Kalıp İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => '2 m üzeri', 'diger' => 'Bel destek kemeri']],
-                ['ad' => 'Demir / Donatı İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388 kesilmeye dayanıklı', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => '2 m üzeri', 'diger' => 'Kol koruyucu']],
-                ['ad' => 'Duvar / Örgü İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'İskelede', 'diger' => 'Dizlik']],
-                ['ad' => 'Sıva / Şap İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'İskelede']],
-                ['ad' => 'Boya / İzolasyon İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'EN 14387 A1P2', 'eldiven' => 'EN 374 kimyasal', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => 'İskelede', 'diger' => 'Koruyucu tulum']],
-                ['ad' => 'Yüksekte Çalışma / İskele', 'v' => ['baret' => '✔ çene bağlı', 'gozluk' => '✔', 'maske' => 'İşe göre', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'kemer' => '✔ EN 361 + EN 355 + EN 362', 'diger' => 'Çift kancalı lanyard']],
-                ['ad' => 'Elektrik Tesisat İşleri', 'v' => ['baret' => '✔ yalıtkan (EN 50365)', 'gozluk' => '✔', 'eldiven' => 'EN 60903 yalıtkan', 'ayakkabi' => '✔ S3 elektrikçi tipi', 'yelek' => '✔', 'kemer' => 'Yüksekte ise', 'diger' => 'Yalıtkan paspas']],
-                ['ad' => 'Beton Dökümü / Pompası', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => 'Gerekirse', 'maske' => 'FFP2', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3 lastik çizme', 'yelek' => '✔']],
-                ['ad' => 'Yıkım İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => 'FFP3', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'yelek' => '✔', 'diger' => 'Toz gözlüğü + yüz siperi']],
+                ['ad' => 'Genel Şantiye Saha Gezisi', 'v' => ['baret' => '✔', 'ayakkabi' => '✔']],
+                ['ad' => 'Hafriyat ve Kazı İşleri', 'v' => ['baret' => '✔', 'gozluk' => 'Gerekirse', 'kulaklik' => 'Gerekirse', 'maske' => 'Gerekirse (toz)', 'eldiven' => '✔', 'ayakkabi' => '✔', 'yuksek_ayakkabi' => 'Gerekirse']],
+                ['ad' => 'Kalıp, İskele ve Demir İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'eldiven' => '✔ mekanik', 'ayakkabi' => '✔ çelik taban/burun', 'kemer' => '✔ iskelede']],
+                ['ad' => 'Beton Dökümü ve Şap İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'Gerekirse', 'eldiven' => '✔ kimyasal/kauçuk', 'yuksek_ayakkabi' => '✔ çizme']],
+                ['ad' => 'Kaynak ve Kesim İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔ kaynak maskesi', 'kulaklik' => 'Gerekirse', 'maske' => '✔ gaz/duman filtreli', 'eldiven' => '✔ ısı/deri', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse']],
+                ['ad' => 'Sıva, Boya ve Yüzey Kaplama', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => '✔ kimyasal/toz filtreli', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse']],
+                ['ad' => 'Elektrik ve Tesisat İşleri', 'v' => ['baret' => '✔ yalıtkan', 'gozluk' => '✔', 'eldiven' => '✔ yalıtkan', 'ayakkabi' => '✔ yalıtkan', 'kemer' => 'Gerekirse']],
+                ['ad' => 'Yüksekte Çalışma (Çatı, Dış Cephe)', 'v' => ['baret' => '✔ çene bağlı', 'gozluk' => 'Gerekirse', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => '✔ tam vücut tipi']],
+                ['ad' => 'Kırma, Delme ve Yıkım İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => '✔ toz filtreli', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse']],
             ],
             'İmalat / Fabrika' => [
                 ['ad' => 'Kaynak İşleri', 'v' => ['baret' => 'Gerekirse', 'gozluk' => 'Kaynak maskesi + gözlük', 'maske' => 'Kaynak dumanı maskesi', 'eldiven' => 'EN 388 + EN 407', 'ayakkabi' => '✔ S3', 'diger' => 'Kaynakçı önlüğü / tozluk']],
