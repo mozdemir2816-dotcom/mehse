@@ -194,8 +194,8 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('41.00', $html); // kapakta NACE kodu
 
         // Öneri/Sorumlu/Termin ayrı sütunlar olmalı.
-        $this->assertStringContainsString('<th>Öneri</th>', $html);
-        $this->assertStringContainsString('<th>Sorumlu</th>', $html);
+        $this->assertStringContainsString('<th class="col-oneri">Öneri</th>', $html);
+        $this->assertStringContainsString('<th class="col-sorumlu">Sorumlu</th>', $html);
         $this->assertStringContainsString('<th>Termin</th>', $html);
         $this->assertStringNotContainsString('Öneri / Sorumlu / Termin', $html);
 
@@ -214,6 +214,67 @@ class RiskDegerlendirmeTest extends TestCase
         // (mevcut O/Ş sütunlarıyla birlikte toplam 2'şer tane olmalı).
         $this->assertSame(2, substr_count($html, '<th>O</th>'));
         $this->assertSame(2, substr_count($html, '<th>Ş</th>'));
+    }
+
+    public function test_pdf_mevcut_onlem_sutunu_kaldirildi_aciklama_en_sagda(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create([
+            'tehlike' => 'Test tehlikesi', 'olasilik' => 3, 'siddet' => 4,
+            'mevcut_onlem' => 'Bu metin artık tabloda görünmemeli',
+            'aciklama' => 'Firmaya özel not: X ekipmanı beklemede',
+        ]);
+        $rd->refresh();
+
+        $html = view('pdf.risk-degerlendirmesi', [
+            'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman,
+            'hekim' => null, 'temsilci' => null, 'destekElemani' => null,
+            'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
+        ])->render();
+
+        $this->assertStringNotContainsString('Mevcut Önlem', $html);
+        $this->assertStringNotContainsString('Bu metin artık tabloda görünmemeli', $html);
+
+        $this->assertStringContainsString('<th class="col-aciklama">Açıklama</th>', $html);
+        $this->assertStringContainsString('Firmaya özel not: X ekipmanı beklemede', $html);
+
+        // Açıklama başlığı Son Düzey'den SONRA (en sağda) olmalı.
+        $sonDuzeyPos = strpos($html, '>Son Düzey<');
+        $aciklamaPos = strpos($html, 'col-aciklama">Açıklama');
+        $this->assertNotFalse($sonDuzeyPos);
+        $this->assertNotFalse($aciklamaPos);
+        $this->assertTrue($sonDuzeyPos < $aciklamaPos);
+    }
+
+    public function test_pdf_her_sayfada_ust_bilgi_seridi_firma_kimligini_gosterir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'Üst Bilgi Test A.Ş.', 'sgk_sicil_no' => '9998887', 'adres' => 'Test Mahallesi No:1 İstanbul',
+        ]);
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
+        $rd->refresh();
+
+        $html = view('pdf.risk-degerlendirmesi', [
+            'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman,
+            'hekim' => null, 'temsilci' => null, 'destekElemani' => null,
+            'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
+        ])->render();
+
+        $this->assertStringContainsString('class="sayfa-ust"', $html);
+        $this->assertStringContainsString('Üst Bilgi Test A.Ş.', $html);
+        $this->assertStringContainsString('9998887', $html);
+        $this->assertStringContainsString('Test Mahallesi No:1 İstanbul', $html);
+        $this->assertStringContainsString(now()->format('d.m.Y'), $html);
+
+        // .sayfa-ust, <body>'nin en başında (kapaktan ÖNCE) olmalı ki dompdf'in
+        // sabit-konum tekniğiyle gerçekten HER sayfada tekrarlansın.
+        $ustPos = strpos($html, 'class="sayfa-ust"');
+        $kapakPos = strpos($html, 'class="kapak"');
+        $this->assertNotFalse($ustPos);
+        $this->assertNotFalse($kapakPos);
+        $this->assertTrue($ustPos < $kapakPos);
     }
 
     public function test_pdf_tek_render_edilir_ve_toplam_sayfa_page_script_ile_damgalanir(): void
@@ -315,5 +376,80 @@ class RiskDegerlendirmeTest extends TestCase
 
         $this->assertNotNull($grup);
         $this->assertSame('firma.unvan', $grup->getColumn());
+    }
+
+    private function buyukRdOlustur(): RiskDegerlendirmesi
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        $satirlar = [];
+        for ($i = 0; $i < RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI + 1; $i++) {
+            $satirlar[] = [
+                'risk_degerlendirmesi_id' => $rd->id, 'sira' => $i, 'tehlike' => 'Tehlike '.$i,
+                'olasilik' => 2, 'siddet' => 2, 'created_at' => now(), 'updated_at' => now(),
+            ];
+        }
+        RiskMaddesi::insert($satirlar);
+
+        return $rd->refresh();
+    }
+
+    public function test_esik_ustu_rapor_aninda_indirilmez_arka_plana_talep_birakilir(): void
+    {
+        $rd = $this->buyukRdOlustur();
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->assertOk()
+            ->callAction('pdf')
+            ->assertNotified();
+
+        $rd->refresh();
+        $this->assertNotNull($rd->pdf_talep_edildi_at);
+        $this->assertNull($rd->pdf_hazir_at);
+    }
+
+    public function test_esik_alti_rapor_dogrudan_indirilir_talep_birakilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Küçük rapor', 'olasilik' => 2, 'siddet' => 2]);
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->assertOk()
+            ->callAction('pdf');
+
+        $this->assertNull($rd->refresh()->pdf_talep_edildi_at);
+    }
+
+    public function test_arka_plan_komutu_talep_edilen_pdfi_uretir_ve_diskten_indirilir(): void
+    {
+        $rd = $this->buyukRdOlustur();
+        $rd->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
+
+        $this->artisan('risk:pdf-uret')->assertExitCode(0);
+
+        $rd->refresh();
+        $this->assertTrue($rd->pdfHazirMi());
+        $this->assertNotNull($rd->pdf_yolu);
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->assertOk()
+            ->callAction('pdf');
+    }
+
+    public function test_madde_degisince_onbellek_temizlenir(): void
+    {
+        $rd = $this->buyukRdOlustur();
+        $rd->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
+        $this->artisan('risk:pdf-uret');
+        $rd->refresh();
+        $this->assertTrue($rd->pdfHazirMi());
+
+        $rd->maddeler()->first()->update(['siddet' => 5]);
+
+        $rd->refresh();
+        $this->assertFalse($rd->pdfHazirMi());
+        $this->assertNull($rd->pdf_yolu);
     }
 }

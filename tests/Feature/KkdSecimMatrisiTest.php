@@ -72,6 +72,36 @@ class KkdSecimMatrisiTest extends TestCase
         $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 
+    public function test_katalogdan_eklerken_bildirim_gosterilir(): void
+    {
+        Livewire::test(KkdSecimMatrisiSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
+            ->assertNotified('"Yüksekte Çalışma / İskele" eklendi');
+    }
+
+    public function test_ayni_is_kalemi_tekrar_eklenmez_uyari_gosterilir(): void
+    {
+        $component = Livewire::test(KkdSecimMatrisiSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
+            ->assertNotified('"Yüksekte Çalışma / İskele" zaten listede');
+
+        $this->assertCount(1, $component->get('satirlar'));
+    }
+
+    public function test_pdf_butonu_kaydetmeden_once_de_gorunur(): void
+    {
+        // Regresyon: buton eskiden veritabanındaki (henüz kaydedilmemiş) hâle
+        // bakıyordu — katalogdan ekleyip Kaydet'e basmadan görünmüyordu.
+        Livewire::test(KkdSecimMatrisiSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->assertActionHidden('pdf')
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma / İskele')
+            ->assertActionVisible('pdf');
+    }
+
     public function test_baska_uzmanin_firmasi_secilemez(): void
     {
         $baska = User::factory()->create();

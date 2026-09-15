@@ -167,7 +167,11 @@ class TalimatOlustur extends Page
         $this->kategori = $sablon['kategori'];
         $this->aciklama = $sablon['aciklama'];
         $this->kkdler = $sablon['kkdler'];
-        $this->maddeler = [];
+        // Hazır şablonların çoğu artık statik (elle yazılmış) madde içeriğiyle
+        // gelir — AI (Gemini) API anahtarı olmayan kullanıcı da doğrudan
+        // kullanabilsin diye. Madde yoksa (ör. kullanıcının kendi eski
+        // şablonu) boş kalır, "AI ile Üret" veya elle ekleme devreye girer.
+        $this->maddeler = $sablon['maddeler'] ?? [];
     }
 
     public function yeniTalimat(): void

@@ -5,6 +5,8 @@ namespace App\Support;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskProsedur;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF as DompdfWrapper;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -19,13 +21,48 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class RiskDegerlendirmesiUretici
 {
+    /**
+     * Bu sayıdan çok maddeli raporlarda dosya adı sabit tutulur ve PDF diskten
+     * (önbellekten) sunulur — bkz. RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI.
+     */
+    public static function onbellekYolu(RiskDegerlendirmesi $rd): string
+    {
+        return 'risk-pdf/'.$rd->id.'.pdf';
+    }
+
+    /**
+     * Arka planda (cron/RiskPdfUret) çağrılır: PDF'i render edip diske yazar,
+     * göreli storage yolunu döndürür. Kullanıcıya hiçbir HTTP yanıtı üretmez.
+     */
+    public static function uretVeKaydet(RiskDegerlendirmesi $rd): string
+    {
+        $pdf = self::olustur($rd);
+        $yol = self::onbellekYolu($rd);
+
+        Storage::disk('local')->put($yol, $pdf->output());
+
+        return $yol;
+    }
+
     public static function pdf(RiskDegerlendirmesi $rd): StreamedResponse
+    {
+        $pdf = self::olustur($rd);
+        $ad = 'risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'.pdf';
+
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+    }
+
+    private static function olustur(RiskDegerlendirmesi $rd): DompdfWrapper
     {
         // Büyük raporlar (300+ risk maddesi) dompdf'te hem belleği hem süreyi zorlar:
         //  - 2026-09-04: iki kez render (önizleme + gerçek) 512M memory_limit'i
         //    aşıp "Allowed memory size exhausted" ile indirmeyi düşürüyordu.
         //  - Sonra da tek render ~113 sn sürüp web'in 120 sn max_execution_time
-        //    sınırına takılıyordu (352 maddelik gerçek rapor, XAMPP).
+        //    sınırına takılıyordu (352 maddelik gerçek rapor, XAMPP) — paylaşımlı
+        //    hosting'te bu süre sınırı PHP'nin kendi ayarından bağımsız, web
+        //    sunucusu (LiteSpeed) seviyesinde daha da sıkı olabiliyor; bu yüzden
+        //    RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI üstü raporlar artık HTTP
+        //    isteği içinde değil, cron ile arka planda (RiskPdfUret) üretiliyor.
         // Çözüm: (a) belleği yükselt, (b) süre sınırını kaldır, (c) raporu TEK
         // KEZ render et — kapaktaki "Toplam Sayfa" bilgisi artık ön render yerine
         // page_script ile damgalanıyor (aşağıya bakınız).
@@ -121,8 +158,6 @@ class RiskDegerlendirmesiUretici
             $canvas->text($x, $y, "Sayfa {$pageNumber} / {$pageCount}", $font, 8, [0.4, 0.4, 0.4]);
         });
 
-        $ad = 'risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'.pdf';
-
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+        return $pdf;
     }
 }

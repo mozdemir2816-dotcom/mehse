@@ -383,4 +383,46 @@ class SahaDenetimiTest extends TestCase
         $this->assertStringContainsString('class="satir-foto"', $html);
         $this->assertStringContainsString('saha-denetimi-foto/kanit.jpg', $html);
     }
+
+    public function test_ise_ozgu_kontrol_listesi_jsa_sayfasina_yonlendirir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertActionExists('isEOzguKontrolListesi');
+    }
+
+    public function test_ekipman_kontrol_formu_secilen_tipler_icin_pdf_uretir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'ABC İnşaat']);
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('ekipmanKontrolFormlari', data: ['tipIndeksleri' => [0, 15]])
+            ->assertHasNoActionErrors();
+    }
+
+    public function test_haftalik_ekipman_kontrol_uretici_dogru_tipleri_pdfe_yazar(): void
+    {
+        $yanit = \App\Support\HaftalikEkipmanKontrolUretici::pdf([0, 15], 'ABC İnşaat');
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $icerik);
+    }
+
+    public function test_haftalik_ekipman_kontrol_konfigurasyonu_41_tip_icerir(): void
+    {
+        $tipler = config('isg.haftalik_ekipman_kontrol.tipler');
+
+        $this->assertCount(41, $tipler);
+
+        foreach ($tipler as $t) {
+            $this->assertNotEmpty($t['ad']);
+            $this->assertCount(12, $t['sorular']);
+        }
+    }
 }

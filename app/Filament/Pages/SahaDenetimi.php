@@ -6,10 +6,12 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\SahaDenetimi as SahaDenetimiModel;
 use App\Models\SahaDenetimiOzelMadde;
+use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\SahaDenetimiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
@@ -591,6 +593,37 @@ class SahaDenetimi extends Page
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
                 ->action(fn () => $this->taslakKaydet()),
+
+            Action::make('isEOzguKontrolListesi')
+                ->label('İşe Özgü Kontrol Listesi (JSA)')
+                ->icon('heroicon-o-clipboard-document-check')
+                ->color('gray')
+                ->url(fn () => JsaDegerlendirmesi::getUrl())
+                ->openUrlInNewTab(),
+
+            Action::make('ekipmanKontrolFormlari')
+                ->label('Ekipman Haftalık Kontrol Formu')
+                ->icon('heroicon-o-wrench-screwdriver')
+                ->color('gray')
+                ->modalHeading('Haftalık Ekipman Kontrol Formu Üret')
+                ->modalDescription('Firmada bulunan ekipman tiplerini seçin — her biri için boş, doldurulmaya hazır haftalık kontrol formu tek PDF içinde üretilir. Periyodik kontrolün (resmî muayene) yerine geçmez, sahadaki günlük/haftalık operatör kontrolü içindir.')
+                ->modalSubmitActionLabel('PDF Üret ve İndir')
+                ->schema([
+                    CheckboxList::make('tipIndeksleri')
+                        ->label('Ekipman Tipleri')
+                        ->options(fn () => collect(config('isg.haftalik_ekipman_kontrol.tipler'))
+                            ->mapWithKeys(fn (array $t, int $i) => [$i => $t['ad']]))
+                        ->searchable()
+                        ->bulkToggleable()
+                        ->columns(2)
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    return HaftalikEkipmanKontrolUretici::pdf(
+                        array_map('intval', $data['tipIndeksleri']),
+                        $this->firma?->unvan,
+                    );
+                }),
 
             Action::make('pdf')
                 ->label('Denetimi Tamamla (Kaydet ve İndir PDF)')

@@ -63,4 +63,42 @@ class ToolboxKonusmalariTest extends TestCase
         $this->assertDatabaseMissing('toolbox_konusmalari', ['id' => $konusma->id]);
         Storage::disk('public')->assertMissing($konusma->dosya_yolu);
     }
+
+    public function test_seed_komutu_hazir_kutuphaneyi_tum_kullanicilara_ekler(): void
+    {
+        $digerKullanici = User::factory()->create();
+
+        $this->artisan('toolbox:seed-ornekler')->assertExitCode(0);
+
+        $ornekSayisi = count(config('isg.toolbox_ornekleri'));
+        $this->assertGreaterThan(15, $ornekSayisi);
+
+        $this->assertSame($ornekSayisi, ToolboxKonusmasi::where('user_id', auth()->id())->count());
+        $this->assertSame($ornekSayisi, ToolboxKonusmasi::where('user_id', $digerKullanici->id)->count());
+
+        $ilkOrnek = config('isg.toolbox_ornekleri.0');
+        $this->assertDatabaseHas('toolbox_konusmalari', [
+            'user_id' => auth()->id(),
+            'baslik' => $ilkOrnek['baslik'],
+            'dosya_yolu' => 'toolbox-konusmalari/'.$ilkOrnek['dosya_adi'],
+        ]);
+    }
+
+    public function test_seed_komutu_tekrar_calisinca_kopya_olusturmaz(): void
+    {
+        $this->artisan('toolbox:seed-ornekler');
+        $ilkSayi = ToolboxKonusmasi::count();
+
+        $this->artisan('toolbox:seed-ornekler');
+
+        $this->assertSame($ilkSayi, ToolboxKonusmasi::count());
+    }
+
+    public function test_seed_edilen_konusmalarin_gercek_dosyalari_diskte_mevcut(): void
+    {
+        foreach (config('isg.toolbox_ornekleri') as $o) {
+            $yol = base_path('storage/app/public/toolbox-konusmalari/'.$o['dosya_adi']);
+            $this->assertFileExists($yol, "Dosya bulunamadı: {$o['dosya_adi']}");
+        }
+    }
 }

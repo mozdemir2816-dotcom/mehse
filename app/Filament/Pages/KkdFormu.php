@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu as KkdZimmetFormuModel;
 use App\Support\KkdZimmetFormuUretici;
 use BackedEnum;
@@ -61,6 +62,19 @@ class KkdFormu extends Page
     /** @var array<int, string> "kategori|ad" biçiminde seçilen KKD anahtarları */
     public array $secilenKkdler = [];
 
+    public ?string $secilenIsKalemi = null;
+
+    /**
+     * KKD Seçim Matrisi'nden ("bu iş kalemine bu KKD'ler zorunlu" — firma
+     * bazlı) doldurulan satırlar. secilenKkdler'daki sabit katalogdan ayrı
+     * tutulur çünkü kkdleriTopla() o listeyi config('isg.kkd.kategoriler')
+     * katalogundan arayarak çözer — matris hücreleri serbest metin
+     * olduğundan (ör. "S3", "Sıçrama riski") o aramaya uymaz.
+     *
+     * @var array<int, array{ad: string, standart: string, kategori: string}>
+     */
+    public array $matristenGelenKkdler = [];
+
     public function mount(): void
     {
         $this->teslimTarihi = now()->toDateString();
@@ -107,6 +121,26 @@ class KkdFormu extends Page
         return config('isg.kkd.kategoriler');
     }
 
+    /**
+     * Firmanın KKD Seçim Matrisi'ndeki iş kalemi satırları — "İş Kalemine
+     * Göre Doldur" seçicisi için ad listesi.
+     *
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function isKalemleri(): array
+    {
+        if (! $this->firma) {
+            return [];
+        }
+
+        return collect(KkdMatrisi::firmaIcin($this->firma)->satirlar ?? [])
+            ->pluck('is_kalemi')
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     /** @return Collection<int, KkdZimmetFormuModel> */
     #[Computed]
     public function gecmisFormlar(): Collection
@@ -116,8 +150,10 @@ class KkdFormu extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->calisanlar, $this->gecmisFormlar);
+        unset($this->firma, $this->calisanlar, $this->gecmisFormlar, $this->isKalemleri);
         $this->secilenCalisanIdler = [];
+        $this->matristenGelenKkdler = [];
+        $this->secilenIsKalemi = null;
     }
 
     /*
@@ -182,6 +218,55 @@ class KkdFormu extends Page
         $this->secilenKkdler = [];
     }
 
+    /**
+     * "İş Kalemine Göre Doldur" — KKD Seçim Matrisi'nde o iş kalemi için
+     * dolu olan sütunları (ör. baret ✔, eldiven "EN 388") doğrudan teslim
+     * listesine ekler; firma bu standardı bilmiyordum diyemesin diye matris
+     * ile zimmet formu burada birleşir. Önceki matristen dolum yerini alır
+     * (aynı iş kalemine tekrar tıklanınca çoğalmasın).
+     */
+    public function isKalemindenDoldur(): void
+    {
+        $isKalemi = $this->secilenIsKalemi;
+
+        if (blank($isKalemi) || ! $this->firma) {
+            return;
+        }
+
+        $satir = collect(KkdMatrisi::firmaIcin($this->firma)->satirlar ?? [])
+            ->firstWhere('is_kalemi', $isKalemi);
+
+        if (! $satir) {
+            return;
+        }
+
+        $sutunlar = config('isg.kkd_matris.sutunlar', []);
+
+        $this->matristenGelenKkdler = collect($sutunlar)
+            ->map(fn (string $etiket, string $sutun) => filled($satir[$sutun] ?? null)
+                ? ['ad' => $etiket, 'standart' => $satir[$sutun], 'kategori' => 'İş Kalemi Standardı: '.$isKalemi]
+                : null)
+            ->filter()
+            ->values()
+            ->all();
+
+        Notification::make()
+            ->title(count($this->matristenGelenKkdler).' KKD, "'.$isKalemi.'" standardından eklendi')
+            ->success()->send();
+    }
+
+    public function matristenSil(int $index): void
+    {
+        unset($this->matristenGelenKkdler[$index]);
+        $this->matristenGelenKkdler = array_values($this->matristenGelenKkdler);
+    }
+
+    public function matristenTemizle(): void
+    {
+        $this->matristenGelenKkdler = [];
+        $this->secilenIsKalemi = null;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Kaydet & PDF
@@ -205,16 +290,16 @@ class KkdFormu extends Page
     {
         $kategoriler = $this->kategoriler();
 
-        return collect($this->secilenKkdler)
+        $katalogdan = collect($this->secilenKkdler)
             ->map(function (string $anahtar) use ($kategoriler) {
                 [$kategori, $ad] = explode('|', $anahtar, 2);
                 $madde = collect($kategoriler[$kategori]['maddeler'] ?? [])->firstWhere('ad', $ad);
 
                 return $madde ? ['ad' => $ad, 'standart' => $madde['standart'], 'kategori' => $kategoriler[$kategori]['ad']] : null;
             })
-            ->filter()
-            ->values()
-            ->all();
+            ->filter();
+
+        return $katalogdan->concat($this->matristenGelenKkdler)->values()->all();
     }
 
     private function kaydet(): ?KkdZimmetFormuModel

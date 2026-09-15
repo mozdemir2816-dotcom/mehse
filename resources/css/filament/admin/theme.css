@@ -3,112 +3,425 @@
 @source '../../../../app/Filament';
 @source '../../../../resources/views/filament';
 
-/* Tasarım Md. 5: buton derinliği — Filament'ın düz/gölgesiz varsayılan dolu butonuna
-   hafif gölge + hover'da kalkma + basılınca geri oturma eklendi (Md.3'teki "varsayılan
-   yeterli" kararı gözden geçirildi — panel çok sade/düz görünüyordu). Outlined butonlarda
-   gölge yok, sadece hafif kalkma; disabled/loading butonlar etkilenmez. */
-.fi-btn:not(.fi-outlined):not(.fi-disabled):not([disabled]) {
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 1px 1px rgb(0 0 0 / 0.04);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+/* ==========================================================================
+   Tasarım sistemi (2026-09-14) — kullanıcı tarafından birebir tanımlanan
+   token seti. Önceki mor/amber-lacivert tasarım (Md.1-10) bu dosyada TAMAMEN
+   yerini aldı; AdminPanelProvider.php'deki eşlik eden değişiklikler (primary
+   renk → Blue, font → DM Sans, sabit 200px sidebar) ile birlikte okunmalı.
+   Renk/aralık değerleri icat edilmedi — hepsi kullanıcının verdiği listeyle
+   birebir eşleşiyor.
+   ========================================================================== */
+
+:root {
+    --primary: #2563EB;
+    --bg: #F0F4F8;
+    --panel-bg: #fff;
+    --sidebar-from: #1E3A5F;
+    --sidebar-to: #172f4e;
+    --text-heading: #1E293B;
+    --text-secondary: #64748B;
+    --text-label: #94A3B8;
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+    --success-bg: #F0FDF4;
+    --success-text: #16A34A;
+    --success-border: #BBF7D0;
+    --info-bg: #EFF6FF;
+    --info-text: #2563EB;
+    --info-border: #BFDBFE;
+    --warning-bg: #FFF7ED;
+    --warning-text: #D97706;
+    --warning-border: #FED7AA;
+    --metric-blue: #2563EB;
+    --metric-green: #16A34A;
+    --metric-orange: #D97706;
+    --metric-purple: #7C3AED;
 }
 
-.fi-btn:not(.fi-outlined):not(.fi-disabled):not([disabled]):hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgb(0 0 0 / 0.14), 0 2px 4px rgb(0 0 0 / 0.08);
-    filter: brightness(1.04);
+/* -------------------------------------------------------------------------
+   Font — DM Sans (panel'in ->font() ayarı zaten yüklüyor), gövde 13px.
+   ------------------------------------------------------------------------- */
+.fi-body {
+    font-size: 13px;
+    background-color: var(--bg);
 }
 
-.fi-btn:not(.fi-outlined):not(.fi-disabled):not([disabled]):active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
-    filter: brightness(0.97);
+/* -------------------------------------------------------------------------
+   Sidebar — sabit 200px, lacivert gradient, saydam beyaz metin.
+   ------------------------------------------------------------------------- */
+.fi-sidebar {
+    background: linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-to) 100%) !important;
 }
 
-.fi-btn.fi-outlined:not(.fi-disabled):not([disabled]) {
-    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+.fi-sidebar-header {
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
-.fi-btn.fi-outlined:not(.fi-disabled):not([disabled]):hover {
-    transform: translateY(-1px);
-}
-
-/* Tasarım Md. 6 (v5): "yalnız aktif sayfa mor" denemesi yeterince iyi gelmedi, grup başına
-   renk (amber+lacivert dönüşümlü) GERİ GETİRİLDİ. AdminPanelProvider::navGruplari() her
-   gruba --fi-nav-grup-tint/--fi-nav-grup-renk CSS değişkenlerini `<li class="fi-sidebar-
-   group">` üzerinden geçiriyor — hem genişletilmiş görünümdeki buton (.fi-sidebar-group-btn)
-   hem daraltılmış ikon-şeridindeki tetikleyici (.fi-sidebar-group-dropdown-trigger-btn)
-   aynı arkaplan tonunu + ikon rengini alıyor. */
-.fi-sidebar-group-btn,
-.fi-sidebar-group-dropdown-trigger-btn {
-    background: var(--fi-nav-grup-tint, transparent);
-    border-radius: 0.5rem;
-}
-
-.fi-sidebar-group-btn > svg,
-.fi-sidebar-group-dropdown-trigger-btn > svg {
-    color: var(--fi-nav-grup-renk, inherit);
-}
-
-/* Tasarım Md. 7: sol menü tek ekrana sığsın — 12 grup + geniş boşluklarla taşıyordu.
-   Nav'ın kendi dikey boşlukları + grup/madde satır yükseklikleri sıkılaştırıldı.
-   İçerik (flyout/genişletilmiş liste) taşarsa kendi içinde kayabilir — sorun değil,
-   önemli olan ana ikon şeridinin bir ekrana sığması. */
 .fi-sidebar-nav {
-    row-gap: 0.5rem;
+    row-gap: 0.375rem;
     padding-block: 1rem;
     padding-inline: 0.75rem;
 }
 
 .fi-sidebar-group-btn,
 .fi-sidebar-group-dropdown-trigger-btn,
-.fi-sidebar-item-btn {
-    padding: 0.4rem;
+.fi-sidebar-item-btn,
+.fi-sidebar-database-notifications-btn {
+    padding: 0.45rem 0.6rem;
+}
+
+.fi-sidebar-group-label,
+.fi-sidebar-group-btn .fi-icon,
+.fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+.fi-sidebar-item-label,
+.fi-sidebar-item-btn > .fi-icon,
+.fi-sidebar-database-notifications-btn-label,
+.fi-sidebar-database-notifications-btn > .fi-icon {
+    color: rgb(255 255 255 / .45) !important;
 }
 
 .fi-sidebar-group-label {
     font-size: 0.78rem;
-    line-height: 1.2;
 }
 
 .fi-sidebar-item-label {
     font-size: 0.8rem;
 }
 
-/* Tasarım Md. 8: nav grubu flyout'u (tıklayınca sağda açılan liste) Filament'ın genel
-   dropdown genişliğini kullanıyordu (max-width:14rem) — en uzun madde başlıkları
-   ("Çalışan Temsilcisi Seçimi", "Olay Kayıtları / Ramak Kala" gibi) tek satıra sığmayıp
-   "..." ile kesiliyordu. Yalnız sidebar grubu İÇİNDEKİ dropdown paneli hedefleniyor
-   (.fi-sidebar-group öneki) — uygulamanın başka yerindeki (bildirim, tablo aksiyonu vb.)
-   dropdown'lar etkilenmiyor. */
-.fi-sidebar-group .fi-dropdown-panel {
-    max-width: 18rem !important;
+.fi-sidebar-group-btn:hover,
+.fi-sidebar-item-btn:hover,
+.fi-sidebar-database-notifications-btn:hover {
+    background: rgb(255 255 255 / .08) !important;
 }
 
-.fi-sidebar-group .fi-dropdown-list-item-label {
-    white-space: normal;
+/* Aktif menü: beyaz metin, ince beyaz-saydam arkaplan. */
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background: rgb(255 255 255 / .12) !important;
 }
 
-/* Tasarım Md. 9: flyout, ana ikonla aynı vurgu rengini taşısın — panelin üst başlık
-   şeridi (.fi-dropdown-header, grup adını tekrar eden kısım) da ikonun arkaplan
-   tonunu/rengini alıyor. */
-.fi-sidebar-group .fi-dropdown-header {
-    background: var(--fi-nav-grup-tint, transparent);
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+    color: #fff !important;
 }
 
-.fi-sidebar-group .fi-dropdown-header,
-.fi-sidebar-group .fi-dropdown-header svg {
-    color: var(--fi-nav-grup-renk, inherit);
+.fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
+    color: #fff !important;
 }
 
-/* Tasarım Md. 10 (v2): flyout içindeki madde satırları da grubun rengini taşıyor —
-   yalnız AKTİF/seçili madde (:not(.fi-color-primary) ile hariç tutuldu) hariç, o
-   Filament'ın kendi primary/mor vurgusunda kalıyor ki "şu an neredeyim" göstergesi
-   grup rengiyle boğulmasın (v1'de bu ayrım yoktu — !important aktif maddenin mor
-   ikonunu da eziyordu, düzeltildi). */
-.fi-sidebar-group .fi-dropdown-list-item:not(.fi-color-primary) .fi-icon {
-    color: var(--fi-nav-grup-renk, inherit) !important;
+/* -------------------------------------------------------------------------
+   Topbar — düz lacivert, 50px, başlık beyaz / breadcrumb saydam beyaz.
+   ------------------------------------------------------------------------- */
+.fi-topbar {
+    background: var(--sidebar-from) !important;
+    min-height: 50px !important;
+    box-shadow: none !important;
 }
 
-.fi-sidebar-group .fi-dropdown-list-item:not(.fi-color-primary) .fi-dropdown-list-item-label {
-    color: var(--fi-nav-grup-renk, inherit);
+.fi-topbar .fi-logo,
+.fi-topbar-item-label,
+.fi-header-heading {
+    color: #fff !important;
 }
+
+.fi-topbar .fi-breadcrumbs,
+.fi-breadcrumbs-item-label,
+.fi-breadcrumbs-separator {
+    color: rgb(255 255 255 / .4) !important;
+}
+
+.fi-topbar-open-sidebar-btn .fi-icon,
+.fi-topbar-close-sidebar-btn .fi-icon,
+.fi-topbar-open-collapse-sidebar-btn .fi-icon,
+.fi-topbar-close-collapse-sidebar-btn .fi-icon,
+.fi-topbar-item-btn > .fi-icon {
+    color: rgb(255 255 255 / .6) !important;
+}
+
+.fi-topbar-open-sidebar-btn:hover,
+.fi-topbar-close-sidebar-btn:hover,
+.fi-topbar-item-btn:hover {
+    background: rgb(255 255 255 / .1) !important;
+}
+
+/* Topbar üzerindeki ikincil (outlined) butonlar: yarı-saydam beyaz zemin. */
+.fi-topbar .fi-btn.fi-outlined {
+    background: rgb(255 255 255 / .1) !important;
+    border-color: rgb(255 255 255 / .15) !important;
+    color: #fff !important;
+}
+
+/* -------------------------------------------------------------------------
+   Kart/panel — beyaz zemin, 8px radius, yalnız gölge (border yok).
+   ------------------------------------------------------------------------- */
+.fi-section:not(.fi-aside) {
+    background-color: var(--panel-bg) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 4px rgb(0 0 0 / .06) !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.fi-section-content-ctn {
+    border-color: var(--border-light) !important;
+}
+
+.fi-section-footer {
+    border-color: var(--border-light) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Metin renkleri.
+   ------------------------------------------------------------------------- */
+.fi-section-header-heading,
+.fi-modal-heading,
+.fi-page-header-heading,
+h1, h2, h3 {
+    color: var(--text-heading);
+}
+
+.fi-section-header-description,
+.fi-input-wrp-label,
+.fi-fo-field-wrp-label {
+    color: var(--text-secondary) !important;
+}
+
+::placeholder {
+    color: var(--text-label) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Durum rozetleri (badge) — pill, 20px radius, 2px 8px padding, 10px/600.
+   ------------------------------------------------------------------------- */
+.fi-badge {
+    border-radius: 20px !important;
+    padding: 2px 8px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+.fi-badge.fi-color-success {
+    background-color: var(--success-bg) !important;
+    color: var(--success-text) !important;
+    box-shadow: inset 0 0 0 1px var(--success-border) !important;
+}
+
+.fi-badge.fi-color-info {
+    background-color: var(--info-bg) !important;
+    color: var(--info-text) !important;
+    box-shadow: inset 0 0 0 1px var(--info-border) !important;
+}
+
+.fi-badge.fi-color-warning {
+    background-color: var(--warning-bg) !important;
+    color: var(--warning-text) !important;
+    box-shadow: inset 0 0 0 1px var(--warning-border) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Metrik kartları (Dashboard StatsOverviewWidget) — 4 kolon, 10px gap,
+   sol kenarlıkta mavi/yeşil/turuncu/mor dönüşüm.
+   ------------------------------------------------------------------------- */
+.fi-wi-stats-overview .fi-grid {
+    gap: 16px !important;
+}
+
+.fi-wi-stats-overview-stat {
+    border-radius: 8px !important;
+    box-shadow: 0 1px 4px rgb(0 0 0 / .06) !important;
+    border-left: 3px solid var(--metric-blue);
+}
+
+.fi-wi-stats-overview-stat:nth-of-type(4n+2) {
+    border-left-color: var(--metric-green);
+}
+
+.fi-wi-stats-overview-stat:nth-of-type(4n+3) {
+    border-left-color: var(--metric-orange);
+}
+
+.fi-wi-stats-overview-stat:nth-of-type(4n+4) {
+    border-left-color: var(--metric-purple);
+}
+
+.fi-wi-stats-overview-stat-label {
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text-label) !important;
+    font-weight: 600 !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-weight: 700 !important;
+    color: var(--text-heading) !important;
+}
+
+.fi-wi-stats-overview-stat-description {
+    color: var(--text-label) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Tablo.
+   ------------------------------------------------------------------------- */
+.fi-ta-table > thead > tr {
+    background-color: #F8FAFC !important;
+}
+
+.fi-ta-header-cell {
+    font-size: 10px !important;
+    text-transform: uppercase;
+    color: var(--text-secondary) !important;
+}
+
+.fi-ta-table,
+.fi-ta-table > thead,
+.fi-ta-table > tbody {
+    border-color: var(--border) !important;
+}
+
+.fi-ta-row.fi-clickable:hover {
+    background-color: #F8FAFC !important;
+}
+
+.fi-ta-cell {
+    padding-block: 9px !important;
+}
+
+.fi-ta-cell-content,
+.fi-ta-text-item-label {
+    font-size: 12px !important;
+    color: #334155 !important;
+}
+
+/* -------------------------------------------------------------------------
+   Butonlar.
+   ------------------------------------------------------------------------- */
+.fi-btn {
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
+
+.fi-btn.fi-outlined:not(.fi-color) {
+    background-color: #fff !important;
+    border-color: var(--border) !important;
+    color: var(--text-heading) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Modal.
+   ------------------------------------------------------------------------- */
+.fi-modal-window {
+    border-radius: 10px !important;
+    box-shadow: 0 20px 40px rgb(0 0 0 / .15) !important;
+}
+
+.fi-modal:not(.fi-modal-slide-over) .fi-modal-window {
+    max-width: 520px !important;
+}
+
+.fi-modal-header {
+    background: var(--sidebar-from) !important;
+    color: #fff !important;
+    padding: 16px 20px !important;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.fi-modal-header .fi-modal-heading,
+.fi-modal-header .fi-icon {
+    color: #fff !important;
+}
+
+.fi-modal-content {
+    padding: 20px !important;
+}
+
+.fi-modal-footer {
+    border-top: 1px solid var(--border) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Input.
+   ------------------------------------------------------------------------- */
+.fi-input-wrp {
+    border-radius: 6px !important;
+    box-shadow: inset 0 0 0 1px var(--border) !important;
+}
+
+.fi-input-wrp:not(.fi-disabled):not(:has(.fi-ac-action:focus)):focus-within {
+    box-shadow: inset 0 0 0 1px var(--primary), 0 0 0 3px rgb(37 99 235 / .07) !important;
+}
+
+/* Mobil: açılır sidebar (off-canvas) zaten yukarıdaki .fi-sidebar kuralıyla
+ * aynı lacivert gradienti taşıyor. */
+
+/* -------------------------------------------------------------------------
+   Mobil alt navigasyon çubuğu — kullanıcıyla birlikte seçilen 5 sekme
+   (resources/views/filament/components/mobil-alt-nav.blade.php, render hook:
+   AdminPanelProvider). Yalnız lg altında (Filament'ın sidebar'ı sabitlediği
+   eşik) görünür; masaüstünde sidebar zaten aynı sayfalara erişim veriyor.
+   ------------------------------------------------------------------------- */
+.fi-mobil-alt-nav {
+    display: none;
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -1px 3px rgb(0 0 0 / .05);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+@media (max-width: 1023px) {
+    .fi-mobil-alt-nav {
+        display: flex;
+    }
+
+    .fi-main {
+        padding-bottom: 4.5rem;
+    }
+}
+
+.fi-mobil-alt-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding-block: 6px;
+    text-decoration: none;
+}
+
+.fi-mobil-alt-nav-icon-ctn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 24px;
+    border-radius: 8px;
+}
+
+.fi-mobil-alt-nav-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-label);
+}
+
+.fi-mobil-alt-nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-label);
+}
+
+.fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-icon-ctn {
+    background: var(--info-bg);
+}
+
+.fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-icon,
+.fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-label {
+    color: var(--primary);
+}
+

@@ -59,6 +59,19 @@ class RiskMaddesi extends Model
             $m->son_puan = $son['puan'] ?: null;
             $m->son_duzey = $son['puan'] ? $son['duzey'] : null;
         });
+
+        // Madde eklenip/değişip/silinince üst rapordaki önbelleklenmiş PDF
+        // artık güncel değil — RiskDegerlendirmesi::pdfOnbellegiTemizle().
+        $temizle = function (RiskMaddesi $m): void {
+            $rd = $m->riskDegerlendirmesi;
+
+            if ($rd && $rd->pdf_yolu) {
+                $rd->pdfOnbellegiTemizle();
+                $rd->saveQuietly();
+            }
+        };
+        static::saved($temizle);
+        static::deleted($temizle);
     }
 
     public function riskDegerlendirmesi(): BelongsTo

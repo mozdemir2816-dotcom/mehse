@@ -101,6 +101,12 @@ class KkdSecimMatrisi extends Page
 
     public function katalogdanEkle(string $grup, string $ad): void
     {
+        if (collect($this->satirlar)->contains('is_kalemi', $ad)) {
+            Notification::make()->title('"'.$ad.'" zaten listede')->warning()->send();
+
+            return;
+        }
+
         $madde = collect(config('isg.kkd_matris.is_kalemleri.'.$grup, []))->firstWhere('ad', $ad);
         $degerler = $madde['v'] ?? [];
 
@@ -110,6 +116,11 @@ class KkdSecimMatrisi extends Page
         }
 
         $this->satirlar[] = $satir;
+
+        Notification::make()
+            ->title('"'.$ad.'" eklendi')
+            ->body('Aşağıdaki KKD Matrisi tablosuna eklendi — kalıcı olması için "Kaydet"e basmayı unutmayın.')
+            ->success()->send();
     }
 
     public function serbestEkle(): void
@@ -126,6 +137,12 @@ class KkdSecimMatrisi extends Page
         }
 
         $this->satirlar[] = $satir;
+
+        Notification::make()
+            ->title('"'.$this->yeniIsKalemi.'" eklendi')
+            ->body('Aşağıdaki KKD Matrisi tablosuna eklendi — kalıcı olması için "Kaydet"e basmayı unutmayın.')
+            ->success()->send();
+
         $this->reset('yeniIsKalemi');
     }
 
@@ -167,11 +184,21 @@ class KkdSecimMatrisi extends Page
                 ->label('PDF Matris')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->visible(fn () => filled($this->matris()?->satirlar))
+                ->visible(fn () => filled($this->satirlar))
                 ->action(function () {
-                    $this->kaydet(sessiz: true);
+                    try {
+                        $this->kaydet(sessiz: true);
 
-                    return KkdMatrisiUretici::pdf($this->matris());
+                        return KkdMatrisiUretici::pdf($this->matris());
+                    } catch (\Throwable $e) {
+                        report($e);
+                        Notification::make()
+                            ->title('PDF üretilemedi')
+                            ->body($e->getMessage())
+                            ->danger()->send();
+
+                        return null;
+                    }
                 }),
         ];
     }

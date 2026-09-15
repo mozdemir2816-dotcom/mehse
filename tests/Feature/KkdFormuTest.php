@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\KkdFormu as KkdSayfasi;
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu;
 use App\Models\User;
 use App\Support\KkdZimmetFormuUretici;
@@ -139,6 +140,63 @@ class KkdFormuTest extends TestCase
             ->call('gecmisSil', $form->id);
 
         $this->assertDatabaseMissing('kkd_zimmet_formlari', ['id' => $form->id]);
+    }
+
+    public function test_is_kalemi_matristen_doldurulur_ve_zimmet_formuna_eklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $calisan = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Kalıpçı Veli']);
+
+        KkdMatrisi::firmaIcin($firma)->update(['satirlar' => [
+            ['is_kalemi' => 'Kalıp İşleri', 'grup' => 'İnşaat / Şantiye', 'baret' => '✔', 'eldiven' => 'EN 388', 'ayakkabi' => ''],
+        ]]);
+
+        $component = Livewire::test(KkdSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertSee('Kalıp İşleri')
+            ->set('secilenIsKalemi', 'Kalıp İşleri')
+            ->call('isKalemindenDoldur');
+
+        $matristen = $component->get('matristenGelenKkdler');
+        $this->assertCount(2, $matristen); // sadece dolu sütunlar (baret + eldiven), boş ayakkabı hariç
+        $this->assertSame('İş Kalemi Standardı: Kalıp İşleri', $matristen[0]['kategori']);
+
+        $component->call('calisanToggle', $calisan->id)->callAction('pdf');
+
+        $form = KkdZimmetFormu::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertCount(2, $form->kkdler);
+        $this->assertTrue(collect($form->kkdler)->contains('standart', 'EN 388'));
+    }
+
+    public function test_matristen_satir_tek_tek_silinir_ve_topluca_temizlenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        KkdMatrisi::firmaIcin($firma)->update(['satirlar' => [
+            ['is_kalemi' => 'Kalıp İşleri', 'grup' => 'İnşaat / Şantiye', 'baret' => '✔', 'eldiven' => 'EN 388'],
+        ]]);
+
+        $component = Livewire::test(KkdSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('secilenIsKalemi', 'Kalıp İşleri')
+            ->call('isKalemindenDoldur');
+
+        $this->assertCount(2, $component->get('matristenGelenKkdler'));
+
+        $component->call('matristenSil', 0);
+        $this->assertCount(1, $component->get('matristenGelenKkdler'));
+
+        $component->call('matristenTemizle');
+        $this->assertCount(0, $component->get('matristenGelenKkdler'));
+        $this->assertNull($component->get('secilenIsKalemi'));
+    }
+
+    public function test_matrisi_bos_firmada_is_kalemi_listesi_bostur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(KkdSayfasi::class)->set('firmaId', $firma->id);
+
+        $this->assertSame([], $component->instance()->isKalemleri());
     }
 
     public function test_baska_uzmanin_firmasi_secilemez(): void

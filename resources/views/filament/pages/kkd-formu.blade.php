@@ -92,8 +92,46 @@
         <x-filament::section icon="heroicon-o-shield-exclamation" icon-color="info">
             <x-slot name="heading">
                 3. KKD Seçimi
-                <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ count($secilenKkdler) }} seçili)</span>
+                <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ count($secilenKkdler) + count($matristenGelenKkdler) }} seçili)</span>
             </x-slot>
+
+            @if (count($this->isKalemleri))
+                <div style="{{ $kutu }};margin-bottom:1rem;background:rgb(59 130 246 / .04)">
+                    <div style="font-weight:700;font-size:.82rem;color:{{ $mavi }};margin-bottom:.5rem">
+                        İş Kalemine Göre Doldur — KKD Seçim Matrisi'nden
+                    </div>
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">
+                        Bu firma için KKD Seçim Matrisi'nde tanımlı iş kalemini seçin, o iş kalemi
+                        için zorunlu KKD'ler otomatik eklensin — kişiyi atarken form hazır olsun.
+                    </p>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+                        <select wire:model="secilenIsKalemi" style="border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);padding:.35rem .5rem;font-size:.8rem">
+                            <option value="">— İş kalemi seçin —</option>
+                            @foreach ($this->isKalemleri as $ik)
+                                <option value="{{ $ik }}">{{ $ik }}</option>
+                            @endforeach
+                        </select>
+                        <x-filament::button size="xs" wire:click="isKalemindenDoldur">Doldur</x-filament::button>
+                        @if (count($matristenGelenKkdler))
+                            <x-filament::button size="xs" color="gray" wire:click="matristenTemizle">Matristen Gelenleri Temizle</x-filament::button>
+                        @endif
+                    </div>
+
+                    @if (count($matristenGelenKkdler))
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.35rem;margin-top:.75rem">
+                            @foreach ($matristenGelenKkdler as $i => $m)
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;border-radius:.4rem;border:1px solid {{ $mavi }};background:rgb(59 130 246 / .08);font-size:.78rem">
+                                    <div>
+                                        {{ $m['ad'] }}
+                                        <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
+                                    </div>
+                                    <button type="button" wire:click="matristenSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
 
             <div style="margin-bottom:.75rem">
                 <x-filament::button size="xs" color="gray" wire:click="kkdSecimiTemizle">Temizle</x-filament::button>

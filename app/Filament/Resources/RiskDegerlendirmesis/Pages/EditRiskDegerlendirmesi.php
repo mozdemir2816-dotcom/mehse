@@ -3,25 +3,58 @@
 namespace App\Filament\Resources\RiskDegerlendirmesis\Pages;
 
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Models\RiskDegerlendirmesi;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskYontemDonusturucu;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EditRiskDegerlendirmesi extends EditRecord
 {
     protected static string $resource = RiskDegerlendirmesiResource::class;
 
+    private ?bool $pdfBuyukCache = null;
+
+    private function pdfBuyukMu(): bool
+    {
+        return $this->pdfBuyukCache ??= $this->record->maddeler()->count() > RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('pdf')
-                ->label('PDF İndir')
+                ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->action(fn () => RiskDegerlendirmesiUretici::pdf($this->record)),
+                ->action(function () {
+                    // Küçük/orta raporlar: tıklama anında üretilip doğrudan indirilir (eskisi gibi).
+                    if (! $this->pdfBuyukMu()) {
+                        return RiskDegerlendirmesiUretici::pdf($this->record);
+                    }
+
+                    // Büyük rapor + önbellekte güncel bir PDF hazır: diskten doğrudan indir.
+                    if ($this->record->pdfHazirMi()) {
+                        $ad = 'risk-degerlendirmesi-'.Str::slug($this->record->firma_unvan ?: 'firma').'.pdf';
+
+                        return response()->download(Storage::disk('local')->path($this->record->pdf_yolu), $ad);
+                    }
+
+                    // Büyük rapor + henüz üretilmemiş: arka plana talep bırak, tıklama anında indirme yok.
+                    $this->record->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
+
+                    Notification::make()
+                        ->title('PDF hazırlanıyor')
+                        ->body('Bu rapor '.RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI.' maddeden büyük olduğu için hazırlanması yaklaşık 1 dakika sürüyor. Birazdan tekrar "PDF Hazırla"ya tıklayın.')
+                        ->info()
+                        ->send();
+
+                    return null;
+                }),
             Action::make('fineKinneyeDonustur')
                 ->label('Fine-Kinney\'e Dönüştür')
                 ->icon('heroicon-o-arrow-path')

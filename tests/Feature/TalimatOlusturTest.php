@@ -94,7 +94,7 @@ class TalimatOlusturTest extends TestCase
 
         $component = Livewire::test(TalimatSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('sablonSec', 'hazir', 0)
+            ->call('yeniTalimat')
             ->set('yeniMadde', 'Sahaya sadece yetkili operatör girer.')
             ->call('maddeEkle');
 
@@ -104,20 +104,33 @@ class TalimatOlusturTest extends TestCase
         $this->assertCount(0, $component->get('maddeler'));
     }
 
+    public function test_hazir_sablon_secilince_statik_maddeler_de_gelir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(TalimatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('sablonSec', 'hazir', 0);
+
+        $ilkSablon = config('isg.talimat.sablonlar.0');
+        $this->assertSame($ilkSablon['maddeler'], $component->get('maddeler'));
+        $this->assertNotEmpty($component->get('maddeler'));
+    }
+
     public function test_pdf_aksiyonu_kayit_olusturur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
         Livewire::test(TalimatSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('sablonSec', 'hazir', 0)
+            ->call('yeniTalimat')
+            ->set('baslik', 'Test Talimatı')
             ->set('yeniMadde', 'Test maddesi')
             ->call('maddeEkle')
             ->callAction('pdf');
 
         $talimat = Talimat::where('firma_id', $firma->id)->firstOrFail();
-        $ilkSablon = config('isg.talimat.sablonlar.0');
-        $this->assertSame($ilkSablon['baslik'], $talimat->baslik);
+        $this->assertSame('Test Talimatı', $talimat->baslik);
         $this->assertCount(1, $talimat->maddeler);
     }
 
@@ -127,14 +140,14 @@ class TalimatOlusturTest extends TestCase
 
         Livewire::test(TalimatSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('sablonSec', 'hazir', 0)
+            ->call('yeniTalimat')
+            ->set('baslik', 'Test Talimatı')
             ->set('yeniMadde', 'Test maddesi')
             ->call('maddeEkle')
             ->callAction('word');
 
         $talimat = Talimat::where('firma_id', $firma->id)->firstOrFail();
-        $ilkSablon = config('isg.talimat.sablonlar.0');
-        $this->assertSame($ilkSablon['baslik'], $talimat->baslik);
+        $this->assertSame('Test Talimatı', $talimat->baslik);
         $this->assertCount(1, $talimat->maddeler);
     }
 

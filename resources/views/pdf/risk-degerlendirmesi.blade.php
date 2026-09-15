@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <style>
-    @page { margin: 25px 25px 78px 25px; }
+    @page { margin: 46px 25px 78px 25px; }
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 11px; }
     .kapak { border:3px double #111; margin: 28px; padding: 60px 40px; text-align: center; page-break-after: always; }
@@ -23,6 +23,9 @@
     table.risk thead th { background: #f0f0f0; }
     table.risk .col-no { width: 16px; text-align: center; }
     table.risk .col-duzey { width: 11px; padding: 2px 1px; text-align: center; vertical-align: middle; }
+    table.risk .col-oneri { width: 15%; }
+    table.risk .col-sorumlu { width: 5%; }
+    table.risk .col-aciklama { width: 10%; }
     table.ekip { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
     table.ekip th, table.ekip td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
     table.ekip th { background: #f0f0f0; }
@@ -47,6 +50,22 @@
         position: fixed; bottom: -78px; left: 0; right: 0;
         border-top: 1px solid #999; padding-top: 3px;
     }
+
+    /* HER SAYFANIN ÜST BİLGİSİ — Firma Adı / Sicil No / Tarih / Adres (@page
+       margin-top bunun için 25px'ten 46px'e çıkarıldı). Aynı sabit-konum
+       tekniği (.sayfa-alt ile simetrik): -46px = @page'in üst marjıyla aynı,
+       şerit sayfanın gerçek üst kenarına yaslanır. dompdf flexbox'u güvenilir
+       desteklemediğinden (proje genelindeki diğer şeritler gibi) tek satırlık
+       table ile hizalanır. */
+    .sayfa-ust {
+        position: fixed; top: -46px; left: 0; right: 0;
+        border-bottom: 1px solid #999; padding-bottom: 3px; margin-bottom: 4px;
+    }
+    table.ust-bilgi { width: 100%; border-collapse: collapse; font-size: 8px; color: #333; }
+    table.ust-bilgi td { padding: 0; white-space: nowrap; }
+    table.ust-bilgi td:last-child { text-align: right; }
+    .sayfa-ust b { color: #111; }
+    .sayfa-ust .adres { font-size: 7px; color: #666; margin-top: 1px; white-space: nowrap; }
     table.alt-imza { width: 100%; border-collapse: collapse; font-size: 6.5px; table-layout: fixed; }
     table.alt-imza td { border: 1px solid #ccc; text-align: center; padding: 2px 2px 4px; vertical-align: bottom; }
     table.alt-imza .rol { font-weight: bold; display: block; margin-bottom: 12px; }
@@ -55,6 +74,17 @@
 </style>
 </head>
 <body>
+
+{{-- HER SAYFANIN ÜST BİLGİSİ (firma adı / sicil no / tarih / adres) --}}
+<div class="sayfa-ust">
+    <table class="ust-bilgi">
+        <tr>
+            <td><b>{{ $firma?->unvan }}</b></td>
+            <td>SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; Tarih: {{ $rd->rapor_tarihi?->format('d.m.Y') }}</td>
+        </tr>
+    </table>
+    <div class="adres">{{ Illuminate\Support\Str::limit($rd->firma_adres, 110, '') }}</div>
+</div>
 
 {{-- HER SAYFANIN ALT BİLGİSİ (imza/kaşe şeridi) --}}
 <div class="sayfa-alt">
@@ -187,7 +217,6 @@
             <th class="col-no">No</th>
             <th>Bölüm / Faaliyet</th>
             <th>Tehlike / Risk</th>
-            <th>Mevcut Önlem</th>
             @if ($rd->ucEksenliMi())
                 <th>O</th><th>{{ $rd->yontem === 'fmea' ? 'D' : 'F' }}</th>
             @else
@@ -196,13 +225,14 @@
             <th>Ş</th>
             <th>Puan</th>
             <th class="col-duzey">Düzey</th>
-            <th>Öneri</th>
-            <th>Sorumlu</th>
+            <th class="col-oneri">Öneri</th>
+            <th class="col-sorumlu">Sorumlu</th>
             <th>Termin</th>
             <th>O</th>
             <th>Ş</th>
             <th>Son Puan</th>
             <th class="col-duzey">Son Düzey</th>
+            <th class="col-aciklama">Açıklama</th>
         </tr>
         </thead>
         <tbody>
@@ -211,7 +241,6 @@
                 <td class="col-no">{{ $loop->iteration }}</td>
                 <td>{{ $m->bolum }}@if($m->faaliyet)<br><em>{{ $m->faaliyet }}</em>@endif</td>
                 <td>{{ $m->tehlike }}@if($m->risk)<br>{{ $m->risk }}@endif</td>
-                <td>{{ $m->mevcut_onlem ?: '—' }}</td>
                 <td>{{ $m->olasilik }}</td>
                 @if ($rd->ucEksenliMi())
                     <td>{{ $m->frekans }}</td>
@@ -219,13 +248,14 @@
                 <td>{{ $m->siddet }}</td>
                 <td>{{ $m->puan }}</td>
                 <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-dikey">{{ $m->duzeyDikey() }}</span></td>
-                <td>{{ $m->oneri ?: '—' }}</td>
-                <td>{{ $m->sorumlu ?: '—' }}</td>
+                <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
+                <td class="col-sorumlu">{{ $m->sorumlu ?: '—' }}</td>
                 <td>{{ $m->termin ?: '—' }}</td>
                 <td>{{ $m->son_olasilik ?? '—' }}</td>
                 <td>{{ $m->son_siddet ?? '—' }}</td>
                 <td>{{ $m->son_puan ?: '—' }}</td>
                 <td class="col-duzey" @if($m->son_duzey) style="background:{{ \App\Support\RiskSkorlama::bant($rd->yontem, (float) $m->son_puan)['renk'] }}" @endif>@if($m->son_duzey)<span class="duzey-dikey">{{ $m->sonDuzeyDikey() }}</span>@else — @endif</td>
+                <td class="col-aciklama">{{ $m->aciklama ?: '' }}</td>
             </tr>
         @endforeach
         </tbody>

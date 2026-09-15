@@ -24,7 +24,17 @@ class RiskDegerlendirmesi extends Model
         'rapor_tarihi' => 'date',
         'gecerlilik_tarihi' => 'date',
         'ekip' => 'array',
+        'pdf_talep_edildi_at' => 'datetime',
+        'pdf_hazir_at' => 'datetime',
     ];
+
+    /**
+     * Bu sayıdan çok maddeli raporlarda PDF, tıklama anında (senkron) değil
+     * arka planda (cron ile) üretilir — paylaşımlı hosting'in istek süresi
+     * sınırı büyük raporlarda indirmeyi "boş sayfa" ile kesiyordu.
+     * Bkz. RiskDegerlendirmesiUretici, App\Console\Commands\RiskPdfUret.
+     */
+    public const PDF_ARKA_PLAN_ESIGI = 200;
 
     protected static function booted(): void
     {
@@ -45,6 +55,12 @@ class RiskDegerlendirmesi extends Model
             }
 
             $rd->belge_no ??= static::belgeNoUret();
+
+            // İçerik değiştiyse (pdf_* alanları hariç) önbellekteki PDF artık
+            // güncel değil — RiskPdfUret komutu yeniden üretsin diye temizle.
+            if ($rd->exists && $rd->isDirty() && ! $rd->isDirty(['pdf_talep_edildi_at', 'pdf_hazir_at', 'pdf_yolu'])) {
+                $rd->pdfOnbellegiTemizle();
+            }
         });
     }
 
@@ -85,5 +101,33 @@ class RiskDegerlendirmesi extends Model
     public function gecerlilikGecti(): bool
     {
         return $this->gecerlilik_tarihi && $this->gecerlilik_tarihi->isPast();
+    }
+
+    /**
+     * Arka planda üretilmiş PDF hâlâ güncel mi — talep edildikten sonra
+     * içerik değişmemiş VE dosya diskte gerçekten var mı.
+     */
+    public function pdfHazirMi(): bool
+    {
+        return $this->pdf_yolu
+            && $this->pdf_hazir_at
+            && (! $this->pdf_talep_edildi_at || $this->pdf_hazir_at->gte($this->pdf_talep_edildi_at))
+            && \Illuminate\Support\Facades\Storage::disk('local')->exists($this->pdf_yolu);
+    }
+
+    /**
+     * İçerik değiştiğinde (madde eklendi/silindi/puan değişti vb.) önbellekteki
+     * PDF artık güncel değildir — dosyayı sil, alanları sıfırla. Kaydetmez;
+     * çağıran taraf (kendi saving hook'u ya da açıkça saveQuietly) kaydeder.
+     */
+    public function pdfOnbellegiTemizle(): void
+    {
+        if ($this->pdf_yolu) {
+            \Illuminate\Support\Facades\Storage::disk('local')->delete($this->pdf_yolu);
+        }
+
+        $this->pdf_yolu = null;
+        $this->pdf_hazir_at = null;
+        $this->pdf_talep_edildi_at = null;
     }
 }
