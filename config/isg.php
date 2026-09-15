@@ -625,16 +625,77 @@ return [
         'is_kalemleri' => [
             // Kaynak: "İnşaat İş Adımlarına Göre KKD Matrisi" (kullanıcı referansı) — Z/Ö
             // notasyonu ✔/"Gerekirse" olarak birebir aktarıldı, parantez notları korundu.
+            //
+            // 'anahtar': firma bazlı iş kalemi seçiminde ve risk/talimat/eğitim
+            // eşlemesinde stabil referans (ad metni değişirse anahtar değişmez).
+            // 'talimat_basliklari': isg.talimat.kutuphane içindeki gerçek 'baslik'
+            // değerleriyle birebir eşleşmeli. 'tehlike_kategorileri': dev DB'de
+            // seed edilmiş TehlikeKategorisi.ad değerleriyle birebir eşleşmeli
+            // (bkz. RiskKutuphanesi::kategoriler()).
             'İnşaat / Şantiye' => [
-                ['ad' => 'Genel Şantiye Saha Gezisi', 'v' => ['baret' => '✔', 'ayakkabi' => '✔']],
-                ['ad' => 'Hafriyat ve Kazı İşleri', 'v' => ['baret' => '✔', 'gozluk' => 'Gerekirse', 'kulaklik' => 'Gerekirse', 'maske' => 'Gerekirse (toz)', 'eldiven' => '✔', 'ayakkabi' => '✔', 'yuksek_ayakkabi' => 'Gerekirse']],
-                ['ad' => 'Kalıp, İskele ve Demir İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'eldiven' => '✔ mekanik', 'ayakkabi' => '✔ çelik taban/burun', 'kemer' => '✔ iskelede']],
-                ['ad' => 'Beton Dökümü ve Şap İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'Gerekirse', 'eldiven' => '✔ kimyasal/kauçuk', 'yuksek_ayakkabi' => '✔ çizme']],
-                ['ad' => 'Kaynak ve Kesim İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔ kaynak maskesi', 'kulaklik' => 'Gerekirse', 'maske' => '✔ gaz/duman filtreli', 'eldiven' => '✔ ısı/deri', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse']],
-                ['ad' => 'Sıva, Boya ve Yüzey Kaplama', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => '✔ kimyasal/toz filtreli', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse']],
-                ['ad' => 'Elektrik ve Tesisat İşleri', 'v' => ['baret' => '✔ yalıtkan', 'gozluk' => '✔', 'eldiven' => '✔ yalıtkan', 'ayakkabi' => '✔ yalıtkan', 'kemer' => 'Gerekirse']],
-                ['ad' => 'Yüksekte Çalışma (Çatı, Dış Cephe)', 'v' => ['baret' => '✔ çene bağlı', 'gozluk' => 'Gerekirse', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => '✔ tam vücut tipi']],
-                ['ad' => 'Kırma, Delme ve Yıkım İşleri', 'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => '✔ toz filtreli', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse']],
+                [
+                    'anahtar' => 'genel_saha', 'ad' => 'Genel Şantiye Saha Gezisi',
+                    'v' => ['baret' => '✔', 'ayakkabi' => '✔'],
+                    'talimat_basliklari' => ['Şantiye Trafiği ve Araç-Yaya Ayrımı Talimatı', 'Genel İşyeri İSG Kuralları Talimatı', 'Kişisel Koruyucu Donanım (KKD) Genel Kullanım Talimatı'],
+                    'tehlike_kategorileri' => ['ŞANTİYE GENEL ÇALIŞMALAR', 'Şantiye Genel Çalışmalar & Tesisler', 'Genel İşyeri'],
+                    'egitim_konusu' => 'Şantiye genel giriş-çıkış kuralları, KKD kullanım zorunluluğu, saha trafiği ve yaya güvenliği, acil durum toplanma noktaları.',
+                ],
+                [
+                    'anahtar' => 'hafriyat_kazi', 'ad' => 'Hafriyat ve Kazı İşleri',
+                    'v' => ['baret' => '✔', 'gozluk' => 'Gerekirse', 'kulaklik' => 'Gerekirse', 'maske' => 'Gerekirse (toz)', 'eldiven' => '✔', 'ayakkabi' => '✔', 'yuksek_ayakkabi' => 'Gerekirse'],
+                    'talimat_basliklari' => ['Kazı İşleri Güvenlik Talimatı'],
+                    'tehlike_kategorileri' => ['Hafriyat ve Kazı İşleri'],
+                    'egitim_konusu' => 'Kazı kenarı şevlendirme/iksa, yeraltı tesisatı kontrolü, kazı içi çalışma ve güvenli çıkış, ekskavatör/kepçe yakınında çalışma kuralları.',
+                ],
+                [
+                    'anahtar' => 'kalip_iskele_demir', 'ad' => 'Kalıp, İskele ve Demir İşleri',
+                    'v' => ['baret' => '✔', 'gozluk' => '✔', 'eldiven' => '✔ mekanik', 'ayakkabi' => '✔ çelik taban/burun', 'kemer' => '✔ iskelede'],
+                    'talimat_basliklari' => ['Cephe İskelesinde Çalışma Talimatı', 'İskele Kurulum ve Söküm Talimatı', 'Demir/Donatı Bağlama İşleri Talimatı'],
+                    'tehlike_kategorileri' => ['Kaba Yapı - Kalıp & İskele', 'Kaba Yapı - Demir Donatı', 'KALIP İMALATI', 'DEMİR İŞLERİ'],
+                    'egitim_konusu' => 'İskele kurulum/söküm kontrolü, kalıp montaj-demontaj güvenliği, demir bağlama/kesme sırasında kesilme ve göz yaralanması riskleri.',
+                ],
+                [
+                    'anahtar' => 'beton_sap', 'ad' => 'Beton Dökümü ve Şap İşleri',
+                    'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => 'Gerekirse', 'eldiven' => '✔ kimyasal/kauçuk', 'yuksek_ayakkabi' => '✔ çizme'],
+                    'talimat_basliklari' => ['Beton Dökümü ve Kalıp İşleri Talimatı'],
+                    'tehlike_kategorileri' => ['Betonarme ve Beton Dökümü'],
+                    'egitim_konusu' => 'Beton pompası/mikser yakınında çalışma, vibratör kullanımı, çimento ile cilt teması ve kimyasal yanık riskleri.',
+                ],
+                [
+                    'anahtar' => 'kaynak_kesim', 'ad' => 'Kaynak ve Kesim İşleri',
+                    'v' => ['baret' => '✔', 'gozluk' => '✔ kaynak maskesi', 'kulaklik' => 'Gerekirse', 'maske' => '✔ gaz/duman filtreli', 'eldiven' => '✔ ısı/deri', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse'],
+                    'talimat_basliklari' => ['Oksijen-Asetilen Kaynak/Kesme Talimatı', 'Elektrik Ark Kaynağı (MIG/MAG/TIG) Talimatı', 'Plazma Kesim Talimatı', 'Sıcak İşler (Kaynak, Kesme, Taşlama) İzin Talimatı'],
+                    'tehlike_kategorileri' => ['KAYNAKLA ÇALIŞMA'],
+                    'egitim_konusu' => 'Kaynak dumanına maruziyet, yangın/patlama riski, sıcak iş izni prosedürü, kaynak maskesi ve UV/IR koruması.',
+                ],
+                [
+                    'anahtar' => 'siva_boya', 'ad' => 'Sıva, Boya ve Yüzey Kaplama',
+                    'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => '✔ kimyasal/toz filtreli', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse'],
+                    'talimat_basliklari' => ['Boya ve Cila Uygulama Talimatı'],
+                    'tehlike_kategorileri' => ['Duvar, Sıva & Yalıtım İşleri', 'Boya İşleri', 'İnce Yapı & Kaplama / Montaj', 'SU İZOLASYONU'],
+                    'egitim_konusu' => 'Boya/tiner buharına maruziyet ve havalandırma, sıva makinesi kullanımı, yüksekte sıva/boya yaparken düşme riskleri.',
+                ],
+                [
+                    'anahtar' => 'elektrik_tesisat', 'ad' => 'Elektrik ve Tesisat İşleri',
+                    'v' => ['baret' => '✔ yalıtkan', 'gozluk' => '✔', 'eldiven' => '✔ yalıtkan', 'ayakkabi' => '✔ yalıtkan', 'kemer' => 'Gerekirse'],
+                    'talimat_basliklari' => ['Elektrik Panosunda Çalışma Talimatı', 'Kablo Döşeme ve Bağlantı Talimatı', 'Jeneratör Kullanma Talimatı'],
+                    'tehlike_kategorileri' => ['Elektrik Tesisatı & Altyapı', 'Mekanik Tesisat & Borulama', 'PİS SU TESİSATI', 'TEMİZ SU TESİSATI', 'YANGIN TESİSATI', 'AYDINLATMA ARMATÜRLERİ', 'ÇEVRE AYDINLATMASI', 'İNTERKOM TESİSATI', 'HAVALANDIRMA TESİSAT VE EKİPMANLARIN MONTAJI', 'KAZAN DAİRESİ'],
+                    'egitim_konusu' => 'Elektrik çarpması riski, topraklama kontrolü, gerilim altında çalışma yasağı, yalıtkan KKD kullanımı.',
+                ],
+                [
+                    'anahtar' => 'yukseklik', 'ad' => 'Yüksekte Çalışma (Çatı, Dış Cephe)',
+                    'v' => ['baret' => '✔ çene bağlı', 'gozluk' => 'Gerekirse', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => '✔ tam vücut tipi'],
+                    'talimat_basliklari' => ['Yükseklerde Çalışma Talimatı', 'Çatı Üzerinde Çalışma Talimatı', 'Portatif Merdiven Kullanma Talimatı', 'Makaslı/Eklemli Platform (Manlift) Kullanma Talimatı'],
+                    'tehlike_kategorileri' => ['Çatı & Çelik Konstrüksiyon', 'Dış Cephe İşleri'],
+                    'egitim_konusu' => 'Düşmeye karşı korunma, tam vücut kemeri/yaşam hattı kullanımı, çatı kenarı korkuluk zorunluluğu, manlift/iskele güvenli kullanımı.',
+                ],
+                [
+                    'anahtar' => 'kirma_yikim', 'ad' => 'Kırma, Delme ve Yıkım İşleri',
+                    'v' => ['baret' => '✔', 'gozluk' => '✔', 'kulaklik' => '✔', 'maske' => '✔ toz filtreli', 'eldiven' => '✔', 'ayakkabi' => '✔', 'kemer' => 'Gerekirse'],
+                    'talimat_basliklari' => ['Yıkım İşleri Güvenlik Talimatı', 'Elektrikli Kırıcı/Delici Kullanma Talimatı'],
+                    'tehlike_kategorileri' => ['Kaldırma Araçları & İş Makineleri', 'İnşaat / Yapı'],
+                    'egitim_konusu' => 'Yıkım öncesi statik değerlendirme, toz/gürültü maruziyeti, kırıcı/delici ekipman kullanımı, çevre güvenlik şeridi.',
+                ],
             ],
             'İmalat / Fabrika' => [
                 ['ad' => 'Kaynak İşleri', 'v' => ['baret' => 'Gerekirse', 'gozluk' => 'Kaynak maskesi + gözlük', 'maske' => 'Kaynak dumanı maskesi', 'eldiven' => 'EN 388 + EN 407', 'ayakkabi' => '✔ S3', 'diger' => 'Kaynakçı önlüğü / tozluk']],

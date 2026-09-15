@@ -11,6 +11,7 @@ use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
+use App\Support\RiskDegerlendirmesiOlusturucu;
 use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
 use App\Support\RiskUretici;
@@ -653,72 +654,17 @@ class RiskSihirbazi extends Page
             return null;
         }
 
-        @set_time_limit(300);
-
-        $rd = new RiskDegerlendirmesi([
-            'firma_id' => $firma->id,
-            'yontem' => $sablon->yontem,
-            'rapor_tarihi' => $this->raporTarihi,
-            'gecerlilik_tarihi' => $this->gecerlilikTarihi,
-            'durum' => 'taslak',
-        ]);
-        $rd->save();
-
-        $fk = RiskSkorlama::ucEksenliMi($sablon->yontem);
-        $sira = 0;
-
-        foreach (array_chunk($maddeler, 250) as $parca) {
-            $satirlar = [];
-
-            foreach ($parca as $m) {
-                $sira++;
-                $o = $this->sayiVeyaNull($m['olasilik'] ?? null);
-                $s = $this->sayiVeyaNull($m['siddet'] ?? null);
-                $f = $fk ? $this->sayiVeyaNull($m['frekans'] ?? null) : null;
-                $mevcut = RiskSkorlama::hesapla($sablon->yontem, $o, $s, $f);
-
-                $so = $this->sayiVeyaNull($m['son_olasilik'] ?? null) ?? ($o !== null ? 1.0 : null);
-                $ss = $this->sayiVeyaNull($m['son_siddet'] ?? null) ?? $s;
-                $sf = $fk ? ($this->sayiVeyaNull($m['son_frekans'] ?? null) ?? $f) : null;
-                $son = RiskSkorlama::hesapla($sablon->yontem, $so, $ss, $sf);
-
-                $satirlar[] = [
-                    'risk_degerlendirmesi_id' => $rd->id,
-                    'sira' => $sira,
-                    'bolum' => $m['bolum'] ?? null,
-                    'faaliyet' => $m['faaliyet'] ?? null,
-                    'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',
-                    'risk' => $m['risk'] ?? null,
-                    'mevcut_onlem' => $m['mevcut_onlem'] ?? null,
-                    'etkilenen_calisan' => true,
-                    'etkilenen_diger' => $this->etkilenenDiger,
-                    'olasilik' => $o,
-                    'frekans' => $f,
-                    'siddet' => $s,
-                    'puan' => $mevcut['puan'] ?: null,
-                    'duzey' => $mevcut['puan'] ? $mevcut['duzey'] : null,
-                    'oneri' => $m['oneri'] ?? null,
-                    'sorumlu' => $m['sorumlu'] ?? null,
-                    'termin' => ($m['termin'] ?? '') ?: $this->varsayilanTermin,
-                    'son_olasilik' => $so,
-                    'son_frekans' => $sf,
-                    'son_siddet' => $ss,
-                    'son_puan' => $son['puan'] ?: null,
-                    'son_duzey' => $son['puan'] ? $son['duzey'] : null,
-                    'durum' => 'acik',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            RiskMaddesi::insert($satirlar);
-        }
+        $rd = RiskDegerlendirmesiOlusturucu::maddelerdenOlustur(
+            $firma, $sablon->yontem, $maddeler,
+            $this->raporTarihi, $this->gecerlilikTarihi,
+            $this->etkilenenDiger, $this->varsayilanTermin,
+        );
 
         $sablon->kullanildi();
 
         Notification::make()
             ->title($sablon->ad.' uygulandı')
-            ->body($sira.' madde ile yeni risk değerlendirmesi oluşturuldu.')
+            ->body($rd->maddeler()->count().' madde ile yeni risk değerlendirmesi oluşturuldu.')
             ->success()->send();
 
         return $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $rd]));
@@ -883,8 +829,6 @@ class RiskSihirbazi extends Page
             return null;
         }
 
-        @set_time_limit(300);
-
         // Excel puanları Fine-Kinney ölçeğindeyse yöntemi ona çevir (5x5'te "kayıp" görünmesin).
         // Yalnız varsayılan 5x5 Matris'ten otomatik yükseltilir — kullanıcı zaten
         // HAZOP/FMEA gibi başka bir yöntem seçtiyse bu tercihi ezmez.
@@ -892,68 +836,14 @@ class RiskSihirbazi extends Page
             ? 'fine_kinney'
             : $this->yontem;
 
-        $rd = new RiskDegerlendirmesi([
-            'firma_id' => $firma->id,
-            'yontem' => $yontem,
-            'rapor_tarihi' => $this->raporTarihi,
-            'gecerlilik_tarihi' => $this->gecerlilikTarihi,
-            'durum' => 'taslak',
-        ]);
-        $rd->save();
-
-        $fk = RiskSkorlama::ucEksenliMi($yontem);
-        $sira = 0;
-
-        foreach (array_chunk($maddeler, 250) as $parca) {
-            $satirlar = [];
-
-            foreach ($parca as $m) {
-                $sira++;
-                $o = $this->sayiVeyaNull($m['olasilik'] ?? null);
-                $s = $this->sayiVeyaNull($m['siddet'] ?? null);
-                $f = $fk ? $this->sayiVeyaNull($m['frekans'] ?? null) : null;
-                $mevcut = RiskSkorlama::hesapla($yontem, $o, $s, $f);
-
-                $so = $this->sayiVeyaNull($m['son_olasilik'] ?? null) ?? ($o !== null ? 1.0 : null);
-                $ss = $this->sayiVeyaNull($m['son_siddet'] ?? null) ?? $s;
-                $sf = $fk ? ($this->sayiVeyaNull($m['son_frekans'] ?? null) ?? $f) : null;
-                $son = RiskSkorlama::hesapla($yontem, $so, $ss, $sf);
-
-                $satirlar[] = [
-                    'risk_degerlendirmesi_id' => $rd->id,
-                    'sira' => $sira,
-                    'bolum' => $m['bolum'] ?? null,
-                    'faaliyet' => $m['faaliyet'] ?? null,
-                    'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',
-                    'risk' => $m['risk'] ?? null,
-                    'mevcut_onlem' => $m['mevcut_onlem'] ?? null,
-                    'etkilenen_calisan' => true,
-                    'etkilenen_diger' => $this->etkilenenDiger,
-                    'olasilik' => $o,
-                    'frekans' => $f,
-                    'siddet' => $s,
-                    'puan' => $mevcut['puan'] ?: null,
-                    'duzey' => $mevcut['puan'] ? $mevcut['duzey'] : null,
-                    'oneri' => $m['oneri'] ?? null,
-                    'sorumlu' => $m['sorumlu'] ?? null,
-                    'termin' => ($m['termin'] ?? '') ?: $this->varsayilanTermin,
-                    'aciklama' => $m['aciklama'] ?? null,
-                    'son_olasilik' => $so,
-                    'son_frekans' => $sf,
-                    'son_siddet' => $ss,
-                    'son_puan' => $son['puan'] ?: null,
-                    'son_duzey' => $son['puan'] ? $son['duzey'] : null,
-                    'durum' => 'acik',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            RiskMaddesi::insert($satirlar);
-        }
+        $rd = RiskDegerlendirmesiOlusturucu::maddelerdenOlustur(
+            $firma, $yontem, $maddeler,
+            $this->raporTarihi, $this->gecerlilikTarihi,
+            $this->etkilenenDiger, $this->varsayilanTermin,
+        );
 
         Notification::make()
-            ->title($sira.' madde ile risk değerlendirmesi oluşturuldu')
+            ->title($rd->maddeler()->count().' madde ile risk değerlendirmesi oluşturuldu')
             ->body('Dosya '.self::EXCEL_DOGRUDAN_ESIGI.' maddeyi aştığı için sihirbaza yüklenmeden doğrudan uygulandı; düzenleme sayfasına yönlendiriliyorsunuz.')
             ->success()->send();
 

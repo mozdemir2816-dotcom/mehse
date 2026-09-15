@@ -21,6 +21,7 @@ class Firma extends Model
         'sozlesme_bitis' => 'date',
         'aktif' => 'boolean',
         'calisan_sayisi' => 'integer',
+        'is_kalemleri' => 'array',
     ];
 
     protected static function booted(): void
@@ -269,6 +270,30 @@ class Firma extends Model
     public function tehlikeSinifiEtiketi(): string
     {
         return config('isg.tehlike_siniflari.'.$this->tehlike_sinifi, $this->tehlike_sinifi);
+    }
+
+    /**
+     * Seçili iş kalemlerinin (bkz. isg.kkd_matris.is_kalemleri) önerilen eğitim
+     * konu metinleri. Yeni bir eğitim kaydı OLUŞTURMAZ; EgitimKatilim/İşbaşı
+     * Eğitimi sayfalarının "işyerine özgü konular" listesini önerilerle
+     * doldurmak için kullanılır.
+     *
+     * @return array<int, string>
+     */
+    public function isKalemiEgitimKonulari(): array
+    {
+        if (blank($this->is_kalemleri)) {
+            return [];
+        }
+
+        $tumMaddeler = collect(config('isg.kkd_matris.is_kalemleri', []))->flatten(1);
+
+        return $tumMaddeler
+            ->whereIn('anahtar', $this->is_kalemleri)
+            ->pluck('egitim_konusu')
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /** Risk değerlendirmesi geçerlilik süresi (yıl) — tehlike sınıfına göre. */

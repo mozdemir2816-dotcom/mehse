@@ -12,6 +12,25 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class KkdMatrisiUretici
 {
+    /**
+     * Katalogdan ("grup" altındaki "ad" ile eşleşen madde) KKD matrisi satırı
+     * kurar — varsayılan KKD gereklilikleriyle önceden doldurulmuş.
+     *
+     * @return array<string, mixed>
+     */
+    public static function satirOlustur(string $grup, string $ad): array
+    {
+        $madde = collect(config('isg.kkd_matris.is_kalemleri.'.$grup, []))->firstWhere('ad', $ad);
+        $degerler = $madde['v'] ?? [];
+
+        $satir = ['is_kalemi' => $ad, 'grup' => $grup];
+        foreach (array_keys(config('isg.kkd_matris.sutunlar', [])) as $sutun) {
+            $satir[$sutun] = $degerler[$sutun] ?? '';
+        }
+
+        return $satir;
+    }
+
     public static function pdf(KkdMatrisi $matris): StreamedResponse
     {
         $matris->loadMissing('firma');

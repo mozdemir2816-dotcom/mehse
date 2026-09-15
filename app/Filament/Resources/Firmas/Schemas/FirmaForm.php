@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Firmas\Schemas;
 
 use App\Models\IsgProfesyoneli;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -31,6 +32,19 @@ class FirmaForm
                     TextInput::make('calisan_sayisi')->label('Çalışan sayısı')->numeric()->minValue(0)->default(0),
                     TextInput::make('nace_kodu')->label('NACE kodu')->maxLength(20),
                     TextInput::make('nace_aciklama')->label('NACE açıklaması')->maxLength(255)->columnSpanFull(),
+                ]),
+
+            Section::make('Yaptığı İşler (İnşaat İş Kalemleri)')
+                ->collapsible()
+                ->collapsed()
+                ->description('Firma inşaat sektöründe faaliyet gösteriyorsa yaptığı işleri seçin — risk analizi, çalışma talimatı, KKD matrisi ve eğitim içerikleri buna göre hazırlanabilir (firma düzenleme sayfasındaki "İş Kalemlerine Göre Evrakları Hazırla" butonu).')
+                ->schema([
+                    CheckboxList::make('is_kalemleri')
+                        ->label('İş kalemleri')
+                        ->hiddenLabel()
+                        ->options(fn () => collect(config('isg.kkd_matris.is_kalemleri.İnşaat / Şantiye', []))->pluck('ad', 'anahtar'))
+                        ->columns(3)
+                        ->bulkToggleable(),
                 ]),
 
             Section::make('İletişim & Adres')

@@ -95,6 +95,22 @@ class EgitimKatilimTest extends TestCase
             ->assertSet('sureGun', 2);
     }
 
+    public function test_firmanin_is_kalemi_egitim_konulari_isyerine_ozguye_onerilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'tehlike_sinifi' => 'az_tehlikeli',
+            'is_kalemleri' => ['hafriyat_kazi'],
+        ]);
+
+        $component = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('sektorAnahtari', 'insaat');
+
+        $maddeler = collect($component->get('icerik')['isyerine_ozgu']['maddeler'])->pluck('madde');
+
+        $this->assertTrue($maddeler->contains(fn ($m) => str_contains($m, 'iksa')));
+    }
+
     public function test_isyerine_ozgu_konu_eklenip_cikarilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);

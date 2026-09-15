@@ -107,15 +107,7 @@ class KkdSecimMatrisi extends Page
             return;
         }
 
-        $madde = collect(config('isg.kkd_matris.is_kalemleri.'.$grup, []))->firstWhere('ad', $ad);
-        $degerler = $madde['v'] ?? [];
-
-        $satir = ['is_kalemi' => $ad, 'grup' => $grup];
-        foreach (array_keys($this->sutunlar) as $sutun) {
-            $satir[$sutun] = $degerler[$sutun] ?? '';
-        }
-
-        $this->satirlar[] = $satir;
+        $this->satirlar[] = KkdMatrisiUretici::satirOlustur($grup, $ad);
 
         Notification::make()
             ->title('"'.$ad.'" eklendi')

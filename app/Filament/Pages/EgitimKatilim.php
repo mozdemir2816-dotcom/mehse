@@ -199,12 +199,41 @@ class EgitimKatilim extends Page
         } else {
             $this->icerik = $taze;
             $this->oncekidenYuklendi = false;
+            $this->isKalemiKonulariniOner();
         }
 
         // Tehlike sınıfına göre nominal ders saati (8/12/16) — kullanıcı elle değiştirebilir.
         $this->dersSaati = $this->icerik['saat'] ?? null;
 
         $this->sureGunYenile();
+    }
+
+    /**
+     * Taze (önceki kayıttan gelmeyen) içerikte, firmanın seçili iş kalemlerine
+     * (bkz. Firma::isKalemiEgitimKonulari) göre önerilen konuları "işyerine
+     * özgü" madde listesine ekler — kullanıcı sonradan çıkarabilir/düzenler.
+     */
+    private function isKalemiKonulariniOner(): void
+    {
+        if (! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+            return;
+        }
+
+        $konular = $this->firma?->isKalemiEgitimKonulari() ?? [];
+
+        if (blank($konular)) {
+            return;
+        }
+
+        $mevcut = collect($this->icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+
+        foreach ($konular as $konu) {
+            if (in_array($konu, $mevcut, true)) {
+                continue;
+            }
+
+            $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $konu, 'dakika' => 10, 'dahil' => true];
+        }
     }
 
     /** Aynı firma + başlık (+ genel'de sektör) + tür için en son eğitim katılım kaydının konu içeriği. */
