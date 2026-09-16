@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RiskDegerlendirmesis\Schemas;
 
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -30,6 +31,12 @@ class RiskDegerlendirmesiForm
                     Select::make('yontem')->label('Yöntem')
                         ->options(config('isg.risk_yontemleri'))->default('matris_5x5')->required()
                         ->helperText('5×5 Matris varsayılandır. Yöntem değişince madde puanları yeniden hesaplanmalıdır.'),
+                    Select::make('igu_id')->label('Hazırlayan İş Güvenliği Uzmanı')
+                        ->options(fn () => IsgProfesyoneli::query()
+                            ->where('user_id', Filament::auth()->id())->where('tip', 'igu')
+                            ->pluck('ad_soyad', 'id'))
+                        ->native(false)->searchable()->preload()
+                        ->helperText('Boş bırakılırsa firmanın atanmış İGU\'su kullanılır.'),
                     TextInput::make('belge_no')->label('Belge no')->placeholder('Kaydedince otomatik (RD-…)')
                         ->disabled()->dehydrated(false),
                     TextInput::make('revizyon_no')->label('Revizyon no')->default('00')->maxLength(10),

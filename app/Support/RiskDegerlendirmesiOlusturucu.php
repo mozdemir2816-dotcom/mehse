@@ -27,6 +27,7 @@ class RiskDegerlendirmesiOlusturucu
         bool $etkilenenDiger = false,
         ?string $varsayilanTermin = null,
         string $durum = 'taslak',
+        ?int $iguId = null,
     ): RiskDegerlendirmesi {
         @set_time_limit(300);
 
@@ -35,6 +36,7 @@ class RiskDegerlendirmesiOlusturucu
 
         $rd = new RiskDegerlendirmesi([
             'firma_id' => $firma->id,
+            'igu_id' => $iguId,
             'yontem' => $yontem,
             'rapor_tarihi' => $raporTarihi,
             'gecerlilik_tarihi' => $gecerlilikTarihi,

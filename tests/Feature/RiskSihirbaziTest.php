@@ -136,6 +136,34 @@ class RiskSihirbaziTest extends TestCase
         $this->assertSame('Sürekli', $ilk->termin);
     }
 
+    public function test_firma_secilince_atanmis_igu_onerilir_ve_farkli_igu_secilebilir(): void
+    {
+        $igu1 = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $igu2 = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu1->id]);
+
+        $bilesen = Livewire::test(RiskSihirbazi::class)->set('firmaId', $firma->id);
+        $bilesen->assertSet('iguId', $igu1->id);
+
+        $t = Tehlike::first();
+
+        $bilesen
+            ->set('iguId', $igu2->id)
+            ->call('ileri')
+            ->call('yontemSec', 'manuel')
+            ->call('ileri')
+            ->call('tehlikeEkle', $t->id)
+            ->call('ileri')
+            ->call('ileri')
+            ->set('secilenler.0.olasilik', '3')
+            ->set('secilenler.0.siddet', '3')
+            ->call('ileri')
+            ->call('kaydet');
+
+        $rd = RiskDegerlendirmesi::firstOrFail();
+        $this->assertSame($igu2->id, $rd->igu_id);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Yapay Zeka (kural tabanlı) akışı — isgpratik 103-115

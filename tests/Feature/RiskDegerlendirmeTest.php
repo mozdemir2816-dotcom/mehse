@@ -345,6 +345,65 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 
+    public function test_igu_secilmezse_firmanin_atanmis_igusu_kullanilir(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id]);
+
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        $this->assertSame($igu->id, $rd->fresh()->igu_id);
+    }
+
+    public function test_igu_ayrica_secilirse_firmanin_atanmisindan_farkli_kalir(): void
+    {
+        $firmaIgu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $farkliIgu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $firmaIgu->id]);
+
+        $rd = RiskDegerlendirmesi::create([
+            'firma_id' => $firma->id, 'igu_id' => $farkliIgu->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+        ]);
+
+        $this->assertSame($farkliIgu->id, $rd->fresh()->igu_id);
+    }
+
+    public function test_hazirlayan_secilen_igunun_kase_imza_ve_unvanini_dondurur(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::factory()->create([
+            'tip' => 'igu', 'user_id' => $this->uzman->id, 'ad_soyad' => 'Ayşe Örnek',
+            'unvan' => 'A Sınıfı İş Güvenliği Uzmanı', 'kase_gorseli' => 'ozel-igu/kase.png', 'imza_gorseli' => 'ozel-igu/imza.png',
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create([
+            'firma_id' => $firma->id, 'igu_id' => $igu->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+        ]);
+
+        $hazirlayan = RiskDegerlendirmesiUretici::hazirlayan($rd->fresh());
+
+        $this->assertSame('Ayşe Örnek', $hazirlayan->name);
+        $this->assertSame('A Sınıfı İş Güvenliği Uzmanı', $hazirlayan->unvan);
+        $this->assertSame('ozel-igu/kase.png', $hazirlayan->kase_gorseli);
+        $this->assertSame('ozel-igu/imza.png', $hazirlayan->imza_gorseli);
+    }
+
+    public function test_hazirlayan_igu_secilmezse_hesap_sahibinin_kendi_kase_imzasi_kullanilir(): void
+    {
+        // Ayrı bir İGU kaydı YOK — regresyon: hesap sahibinin kendi kaşe/imzası
+        // eskiden olduğu gibi kullanılmaya devam etmeli.
+        $this->uzman->forceFill(['kase_gorseli' => 'hesap/kase.png', 'imza_gorseli' => 'hesap/imza.png'])->save();
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        $this->assertNull($rd->fresh()->igu_id);
+
+        $hazirlayan = RiskDegerlendirmesiUretici::hazirlayan($rd->fresh());
+
+        $this->assertSame($this->uzman->name, $hazirlayan->name);
+        $this->assertSame('hesap/kase.png', $hazirlayan->kase_gorseli);
+        $this->assertSame('hesap/imza.png', $hazirlayan->imza_gorseli);
+    }
+
     public function test_risk_maddesi_duzey_dikey_harf_harf_alt_alta_yazar(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -93,6 +93,17 @@
                         <input type="date" wire:model="gecerlilikTarihi"
                             style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     </div>
+                    <div>
+                        <label style="font-weight:600;font-size:.85rem">Hazırlayan İş Güvenliği Uzmanı</label>
+                        <select wire:model="iguId"
+                            style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            <option value="">— Firmanın atanmış İGU'su —</option>
+                            @foreach ($this->iguSecenekleri as $id => $ad)
+                                <option value="{{ $id }}">{{ $ad }}</option>
+                            @endforeach
+                        </select>
+                        <p style="margin-top:.3rem;font-size:.78rem;color:rgb(107 114 128)">Bu değerlendirmeyi firmanın atanmış İGU'sundan farklı biri hazırladıysa seçin.</p>
+                    </div>
                 </div>
             </div>
         </x-filament::section>

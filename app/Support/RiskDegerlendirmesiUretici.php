@@ -25,6 +25,27 @@ class RiskDegerlendirmesiUretici
      * Bu sayıdan çok maddeli raporlarda dosya adı sabit tutulur ve PDF diskten
      * (önbellekten) sunulur — bkz. RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI.
      */
+    /**
+     * PDF'te "Hazırlayan" olarak gösterilecek kişi. Bu değerlendirmeye özel
+     * seçilmiş bir İGU varsa (kaşe/imza dahil) o kullanılır; yoksa geriye
+     * dönük uyumluluk için hesap sahibinin kendi adı/unvanı/kaşesi/imzası
+     * gösterilir (RiskDegerlendirmesi::booted() zaten firmanın atanmış
+     * İGU'sunu otomatik dolduruyor — bu yalnız hiç İGU kaydı olmayan
+     * eski/manuel senaryolar için devrededir).
+     */
+    public static function hazirlayan(RiskDegerlendirmesi $rd): object
+    {
+        $igu = $rd->igu;
+        $hesapSahibi = $rd->firma?->user;
+
+        return (object) [
+            'name' => $igu?->ad_soyad ?: $hesapSahibi?->name,
+            'unvan' => $igu ? $igu->unvan : ($hesapSahibi?->unvan ? $hesapSahibi->unvanEtiketi() : null),
+            'kase_gorseli' => $igu?->kase_gorseli ?: $hesapSahibi?->kase_gorseli,
+            'imza_gorseli' => $igu?->imza_gorseli ?: $hesapSahibi?->imza_gorseli,
+        ];
+    }
+
     public static function onbellekYolu(RiskDegerlendirmesi $rd): string
     {
         return 'risk-pdf/'.$rd->id.'.pdf';
@@ -75,13 +96,13 @@ class RiskDegerlendirmesiUretici
             @set_time_limit(600);
         }
 
-        $rd->loadMissing('maddeler', 'firma.user', 'firma.isyeriHekimi');
+        $rd->loadMissing('maddeler', 'firma.user', 'firma.isyeriHekimi', 'igu');
 
         $yontemAnahtari = 'risk_'.$rd->yontem;
         $userId = $rd->firma?->user_id;
         $ekip = collect($rd->ekip ?? []);
 
-        $uzman = $rd->firma?->user;
+        $uzman = self::hazirlayan($rd);
         $hekim = $rd->firma?->isyeriHekimi;
         $temsilci = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'temsilci'));
         $destekElemani = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'destek'));

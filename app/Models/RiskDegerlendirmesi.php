@@ -47,6 +47,8 @@ class RiskDegerlendirmesi extends Model
                 $rd->firma_nace ??= trim($firma->nace_kodu.' '.$firma->nace_aciklama);
                 $rd->tehlike_sinifi ??= $firma->tehlike_sinifi;
                 $rd->firma_adres ??= $firma->adres;
+                // Bu değerlendirmeye özel İGU seçilmediyse firmanın atanmış İGU'su esas alınır.
+                $rd->igu_id ??= $firma->igu_id;
 
                 if ($rd->rapor_tarihi && ! $rd->gecerlilik_tarihi) {
                     $yil = config('isg.risk_gecerlilik_yili.'.$firma->tehlike_sinifi, 4);
@@ -75,6 +77,12 @@ class RiskDegerlendirmesi extends Model
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);
+    }
+
+    /** Bu değerlendirmeyi hazırlayan İGU — firmanın atanmış İGU'sundan farklı olabilir. */
+    public function igu(): BelongsTo
+    {
+        return $this->belongsTo(IsgProfesyoneli::class);
     }
 
     public function maddeler(): HasMany

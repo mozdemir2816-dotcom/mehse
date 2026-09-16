@@ -133,7 +133,7 @@
         SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; NACE Kodu: {{ $rd->firma_nace ?: '—' }}
     </div>
     <div style="font-size:11px;margin-top:20px;color:#444">
-        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
+        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvan }}) @endif
     </div>
     <div style="font-size:11px;margin-top:20px">
         Belge No: {{ $rd->belge_no }} &nbsp;·&nbsp; Rev: {{ $rd->revizyon_no }}<br>
@@ -282,7 +282,7 @@
         <tr>
             <td>
                 {{ $uzman?->name ?: 'İş Güvenliği Uzmanı' }}
-                @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvanEtiketi() }}</span> @endif
+                @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvan }}</span> @endif
                 <br>(İmza – Kaşe)
             </td>
             <td>{{ $firma?->isveren_ad ?: 'İşveren / İşveren Vekili' }}<br>(Ad – Soyad / İmza)</td>

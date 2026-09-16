@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\RiskSablonu;
@@ -101,6 +102,9 @@ class RiskSihirbazi extends Page
     public int $adim = 1;
 
     public ?int $firmaId = null;
+
+    /** Bu değerlendirmeyi hazırlayan İGU — boşsa firmanın atanmış İGU'su kullanılır. */
+    public ?int $iguId = null;
 
     public ?string $raporTarihi = null;
 
@@ -275,6 +279,17 @@ class RiskSihirbazi extends Page
     {
         unset($this->firma);
         $this->gecerlilikTarihiHesapla();
+        // Firma değişince, elle seçilmediyse firmanın atanmış İGU'su öneri olarak gelir.
+        $this->iguId = $this->firma?->igu_id;
+    }
+
+    /** @return array<int, string> */
+    #[Computed]
+    public function iguSecenekleri(): array
+    {
+        return IsgProfesyoneli::query()
+            ->where('user_id', Filament::auth()->id())->where('tip', 'igu')
+            ->pluck('ad_soyad', 'id')->all();
     }
 
     public function updatedRaporTarihi(): void
@@ -668,6 +683,7 @@ class RiskSihirbazi extends Page
             $firma, $sablon->yontem, $maddeler,
             $this->raporTarihi, $this->gecerlilikTarihi,
             $this->etkilenenDiger, $this->varsayilanTermin,
+            iguId: $this->iguId,
         );
 
         $sablon->kullanildi();
@@ -878,6 +894,7 @@ class RiskSihirbazi extends Page
             $firma, $yontem, $maddeler,
             $this->raporTarihi, $this->gecerlilikTarihi,
             $this->etkilenenDiger, $this->varsayilanTermin,
+            iguId: $this->iguId,
         );
 
         Notification::make()
@@ -1101,6 +1118,7 @@ class RiskSihirbazi extends Page
 
         $rd = new RiskDegerlendirmesi([
             'firma_id' => $firma->id,
+            'igu_id' => $this->iguId,
             'yontem' => $this->yontem,
             'rapor_tarihi' => $this->raporTarihi,
             'gecerlilik_tarihi' => $this->gecerlilikTarihi,
