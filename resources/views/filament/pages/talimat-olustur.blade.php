@@ -135,10 +135,20 @@
                 <table style="width:100%;border-collapse:collapse;font-size:.82rem">
                     @foreach ($this->kayitliTalimatlar as $t)
                         <tr>
-                            <td style="padding:.3rem .5rem">{{ $t->baslik }} — {{ $t->kategoriEtiketi() }}</td>
+                            <td style="padding:.3rem .5rem">
+                                {{ $t->baslik }} — {{ $t->kategoriEtiketi() }}
+                                @if ($t->dosyaVarMi())
+                                    <span style="font-size:.65rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px;margin-left:.3rem">Yüklenen dosya</span>
+                                @endif
+                            </td>
                             <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
-                                <x-filament::button size="xs" color="gray" wire:click="kayitliPdf({{ $t->id }})">PDF</x-filament::button>
-                                <x-filament::button size="xs" color="gray" wire:click="kayitliWord({{ $t->id }})">Word</x-filament::button>
+                                @if ($t->dosyaVarMi())
+                                    <x-filament::button size="xs" color="gray" wire:click="kayitliDosyaIndir({{ $t->id }})">Dosyayı İndir</x-filament::button>
+                                @endif
+                                @if ($t->maddeler)
+                                    <x-filament::button size="xs" color="gray" wire:click="kayitliPdf({{ $t->id }})">PDF</x-filament::button>
+                                    <x-filament::button size="xs" color="gray" wire:click="kayitliWord({{ $t->id }})">Word</x-filament::button>
+                                @endif
                                 <x-filament::button size="xs" color="danger" wire:click="kayitliSil({{ $t->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

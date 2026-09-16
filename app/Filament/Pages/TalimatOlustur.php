@@ -314,6 +314,44 @@ class TalimatOlustur extends Page
                     $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
                 }),
 
+            Action::make('dosyaYukle')
+                ->label('Kendi Dosyanı Yükle (Word/PDF)')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('Hazır Talimat Dosyası Yükle')
+                ->modalDescription('Kendi hazırladığınız Word veya PDF dosyasını doğrudan bu firmaya talimat olarak kaydedin — madde/AI akışına gerek kalmadan indirilebilir olarak saklanır.')
+                ->modalSubmitActionLabel('Yükle')
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('baslik')->label('Başlık')->required(),
+                    \Filament\Forms\Components\Select::make('kategori')->label('Kategori')
+                        ->options(fn () => $this->kategoriler())->native(false),
+                    FileUpload::make('dosya')->label('Dosya (Word/PDF)')
+                        ->disk('public')
+                        ->directory(fn () => 'talimatlar/'.$this->firmaId)
+                        ->preserveFilenames()
+                        ->acceptedFileTypes([
+                            'application/pdf',
+                            'application/msword',
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        ])
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $talimat = new TalimatModel([
+                        'firma_id' => $this->firma->id,
+                        'baslik' => $data['baslik'],
+                        'kategori' => $data['kategori'] ?? null,
+                        'dosya_adi' => basename($data['dosya']),
+                        'dosya_yolu' => $data['dosya'],
+                        'boyut' => Storage::disk('public')->exists($data['dosya']) ? Storage::disk('public')->size($data['dosya']) : 0,
+                    ]);
+                    $talimat->save();
+
+                    unset($this->kayitliTalimatlar);
+                    Notification::make()->title('Talimat dosyası yüklendi')->success()->send();
+                }),
+
             Action::make('pdf')
                 ->label('PDF İndir (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -353,9 +391,28 @@ class TalimatOlustur extends Page
         return $talimat ? TalimatWordUretici::word($talimat) : null;
     }
 
+    public function kayitliDosyaIndir(int $id)
+    {
+        $talimat = $this->firma?->talimatlar()->find($id);
+
+        if (! $talimat || ! $talimat->dosya_yolu || ! Storage::disk('public')->exists($talimat->dosya_yolu)) {
+            Notification::make()->title('Dosya bulunamadı')->danger()->send();
+
+            return null;
+        }
+
+        return Storage::disk('public')->download($talimat->dosya_yolu, $talimat->dosya_adi);
+    }
+
     public function kayitliSil(int $id): void
     {
-        $this->firma?->talimatlar()->find($id)?->delete();
+        $talimat = $this->firma?->talimatlar()->find($id);
+
+        if ($talimat?->dosya_yolu && Storage::disk('public')->exists($talimat->dosya_yolu)) {
+            Storage::disk('public')->delete($talimat->dosya_yolu);
+        }
+
+        $talimat?->delete();
         unset($this->kayitliTalimatlar);
     }
 }

@@ -20,6 +20,7 @@ class Talimat extends Model
     protected $casts = [
         'kkdler' => 'array',
         'maddeler' => 'array',
+        'boyut' => 'integer',
     ];
 
     public function firma(): BelongsTo
@@ -30,5 +31,21 @@ class Talimat extends Model
     public function kategoriEtiketi(): string
     {
         return config('isg.talimat.kategoriler.'.$this->kategori, (string) $this->kategori);
+    }
+
+    public function dosyaVarMi(): bool
+    {
+        return (bool) $this->dosya_yolu;
+    }
+
+    public function boyutEtiketi(): string
+    {
+        if (! $this->boyut) {
+            return '—';
+        }
+
+        $kb = $this->boyut / 1024;
+
+        return $kb >= 1024 ? number_format($kb / 1024, 1).' MB' : number_format($kb, 0).' KB';
     }
 }

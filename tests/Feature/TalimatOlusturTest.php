@@ -12,7 +12,9 @@ use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TalimatUretici;
 use App\Support\TalimatWordUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -226,6 +228,72 @@ class TalimatOlusturTest extends TestCase
             ->call('kayitliSil', $talimat->id);
 
         $this->assertDatabaseMissing('talimatlar', ['id' => $talimat->id]);
+    }
+
+    public function test_kendi_dosyasi_yuklenince_talimat_olarak_kaydedilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(TalimatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('dosyaYukle', data: [
+                'baslik' => 'Hazır PDF Talimatı',
+                'kategori' => 'is_makineleri',
+                'dosya' => UploadedFile::fake()->createWithContent('talimat.pdf', str_repeat('a', 1024)),
+            ])
+            ->assertHasNoActionErrors();
+
+        $talimat = Talimat::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('Hazır PDF Talimatı', $talimat->baslik);
+        $this->assertSame('talimat.pdf', $talimat->dosya_adi);
+        $this->assertTrue($talimat->dosyaVarMi());
+        $this->assertTrue(Storage::disk('public')->exists($talimat->dosya_yolu));
+        $this->assertGreaterThan(0, $talimat->boyut);
+        // Dosya yolundan oluşan kayıtta AI/madde akışı zorunlu değil.
+        $this->assertEmpty($talimat->maddeler);
+    }
+
+    public function test_yuklenen_dosya_indirilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Storage::disk('public')->put('talimatlar/'.$firma->id.'/t.pdf', 'icerik');
+
+        $talimat = Talimat::create([
+            'firma_id' => $firma->id,
+            'baslik' => 'Test',
+            'dosya_adi' => 't.pdf',
+            'dosya_yolu' => 'talimatlar/'.$firma->id.'/t.pdf',
+            'boyut' => 7,
+        ]);
+
+        $component = Livewire::test(TalimatSayfasi::class)->set('firmaId', $firma->id);
+        $yanit = $component->instance()->kayitliDosyaIndir($talimat->id);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+    }
+
+    public function test_talimat_silinince_yuklenen_dosya_da_silinir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Storage::disk('public')->put('talimatlar/'.$firma->id.'/t.pdf', 'icerik');
+
+        $talimat = Talimat::create([
+            'firma_id' => $firma->id,
+            'baslik' => 'Test',
+            'dosya_adi' => 't.pdf',
+            'dosya_yolu' => 'talimatlar/'.$firma->id.'/t.pdf',
+            'boyut' => 7,
+        ]);
+
+        Livewire::test(TalimatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('kayitliSil', $talimat->id);
+
+        $this->assertDatabaseMissing('talimatlar', ['id' => $talimat->id]);
+        Storage::disk('public')->assertMissing('talimatlar/'.$firma->id.'/t.pdf');
     }
 
     public function test_baska_uzmanin_firmasi_secilemez(): void
