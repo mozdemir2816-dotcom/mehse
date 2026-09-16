@@ -58,6 +58,37 @@ class RiskProsedurResourceTest extends TestCase
         $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
     }
 
+    public function test_silinen_yontem_icin_yeniden_yukleme_geri_getirip_gunceller(): void
+    {
+        RiskProsedur::varsayilanlariSeedEt($this->uzman->id);
+        $matris = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'matris_5x5')->firstOrFail();
+        $matrisId = $matris->id;
+
+        Livewire::test(ListRiskProsedurs::class)->callTableAction('delete', $matris);
+        $this->assertNotNull($matris->fresh()->deleted_at);
+
+        $phpWord = new PhpWord();
+        $section = $phpWord->addSection();
+        $section->addText('YENİDEN YÜKLENDİ');
+        $yol = tempnam(sys_get_temp_dir(), 'docx').'.docx';
+        IOFactory::createWriter($phpWord, 'Word2007')->save($yol);
+
+        // unique(user_id, yontem) çakışmasına düşmeden — soft-delete'i görüp geri getirmeli.
+        Livewire::test(ListRiskProsedurs::class)
+            ->callTableAction('yukle', data: [
+                'yontem' => 'matris_5x5',
+                'dosya' => UploadedFile::fake()->createWithContent('yeni.docx', file_get_contents($yol)),
+            ])
+            ->assertHasNoTableActionErrors();
+
+        unlink($yol);
+
+        $guncel = RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'matris_5x5')->firstOrFail();
+        $this->assertSame($matrisId, $guncel->id);
+        $this->assertNull($guncel->deleted_at);
+        $this->assertSame('YENİDEN YÜKLENDİ', $guncel->icerik[0]['metin']);
+    }
+
     public function test_silinen_prosedur_yeniden_seed_edilmez(): void
     {
         RiskProsedur::varsayilanlariSeedEt($this->uzman->id);
@@ -66,7 +97,13 @@ class RiskProsedurResourceTest extends TestCase
         Livewire::test(ListRiskProsedurs::class)
             ->callTableAction('delete', $matris);
 
-        $this->assertDatabaseMissing('risk_prosedurleri', ['id' => $matris->id]);
+        // Soft delete: satır fiziksel olarak durur (deleted_at dolar), aktif listede görünmez.
+        $this->assertNotNull($matris->fresh()->deleted_at);
+        $this->assertSame(3, RiskProsedur::where('user_id', $this->uzman->id)->count());
+
+        // Asıl regresyon testi: seed tekrar çalıştırılsa (ör. sayfa yeniden açılsa)
+        // bilerek silinen matris_5x5 "hiç var olmamış" sanılıp diriltilmemeli.
+        RiskProsedur::varsayilanlariSeedEt($this->uzman->id);
         $this->assertSame(3, RiskProsedur::where('user_id', $this->uzman->id)->count());
     }
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Risk Analizi Prosedürü — Risk Değerlendirmesi PDF'inde Kapak'tan sonra,
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class RiskProsedur extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'risk_prosedurleri';
 
     protected $guarded = ['id'];
@@ -36,14 +39,25 @@ class RiskProsedur extends Model
         return static::where('user_id', $userId)->where('yontem', $yontem)->first();
     }
 
-    /** Kullanıcının hiç prosedürü yoksa Matris + Fine-Kinney için gerçek metinle başlatır. */
+    /**
+     * Kullanıcının HENÜZ sahip olmadığı her yöntem için varsayılan (gerçek
+     * referans metinli) prosedürü ekler — yöntem bazında kontrol edilir, "hiç
+     * prosedürü yoksa" değil, çünkü VARSAYILANLAR'a sonradan yeni bir yöntem
+     * (ör. hazop/fmea) eklenince, önceden sadece matris/fine-kinney kaydı
+     * oluşmuş kullanıcılar bu yeni yöntemleri hiç alamıyordu. Var olan
+     * (kullanıcının kendi yüklediği/düzenlediği dahil) kayıtlara dokunmaz.
+     */
     public static function varsayilanlariSeedEt(int $userId): void
     {
-        if (static::where('user_id', $userId)->exists()) {
-            return;
-        }
+        // withTrashed: kullanıcı bir varsayılanı bilerek sildiyse (soft delete)
+        // "hiç var olmamış" sanılıp yeniden eklenmesin.
+        $mevcutYontemler = static::withTrashed()->where('user_id', $userId)->pluck('yontem')->all();
 
         foreach (static::VARSAYILANLAR as $yontem => $veri) {
+            if (in_array($yontem, $mevcutYontemler, true)) {
+                continue;
+            }
+
             static::create([
                 'user_id' => $userId,
                 'yontem' => $yontem,

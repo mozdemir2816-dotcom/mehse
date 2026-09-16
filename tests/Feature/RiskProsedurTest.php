@@ -48,8 +48,35 @@ class RiskProsedurTest extends TestCase
 
         RiskProsedur::varsayilanlariSeedEt($this->uzman->id);
 
-        $this->assertSame(1, RiskProsedur::where('user_id', $this->uzman->id)->count());
-        $this->assertSame('Özel Prosedürüm', RiskProsedur::where('user_id', $this->uzman->id)->first()->ad);
+        // matris_5x5'teki özel kayda dokunulmaz, ama eksik olan diğer 3 yöntem eklenir.
+        $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
+        $this->assertSame('Özel Prosedürüm', RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'matris_5x5')->first()->ad);
+        $this->assertNotNull(RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'hazop')->first());
+        $this->assertNotNull(RiskProsedur::where('user_id', $this->uzman->id)->where('yontem', 'fmea')->first());
+    }
+
+    public function test_yeni_yontem_eklendiginde_eski_kullanicilarda_da_geriye_donuk_tamamlanir(): void
+    {
+        // Kullanıcı HAZOP/FMEA kod'a eklenmeden önceki bir durumu taklit ediyor:
+        // sadece matris_5x5 + fine_kinney var, "hiç kaydı yok" şartı yanlışlıkla
+        // hiç tetiklenmesin diye VARSAYILANLAR'daki TÜM anahtarlar tek tek kontrol edilir.
+        RiskProsedur::create([
+            'user_id' => $this->uzman->id, 'yontem' => 'matris_5x5',
+            'ad' => 'Risk Analizi Prosedürü (Matris Yöntemi)', 'icerik' => [['tip' => 'baslik', 'metin' => 'AMAÇ']],
+        ]);
+        RiskProsedur::create([
+            'user_id' => $this->uzman->id, 'yontem' => 'fine_kinney',
+            'ad' => 'Risk Analizi Prosedürü (Fine-Kinney Yöntemi)', 'icerik' => [['tip' => 'baslik', 'metin' => '1. AMAÇ']],
+        ]);
+
+        $hazop = RiskProsedur::aktifIcin($this->uzman->id, 'hazop');
+        $fmea = RiskProsedur::aktifIcin($this->uzman->id, 'fmea');
+
+        $this->assertNotNull($hazop);
+        $this->assertStringContainsString('HAZOP', $hazop->ad);
+        $this->assertNotNull($fmea);
+        $this->assertStringContainsString('FMEA', $fmea->ad);
+        $this->assertSame(4, RiskProsedur::where('user_id', $this->uzman->id)->count());
     }
 
     public function test_aktif_icin_yonteme_gore_dogru_kaydi_dondurur(): void

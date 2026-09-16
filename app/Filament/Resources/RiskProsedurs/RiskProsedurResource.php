@@ -108,14 +108,21 @@ class RiskProsedurResource extends Resource
                             return;
                         }
 
-                        RiskProsedur::updateOrCreate(
-                            ['user_id' => Filament::auth()->id(), 'yontem' => $data['yontem']],
-                            [
-                                'ad' => 'Risk Analizi Prosedürü ('.config('isg.risk_yontemleri.'.$data['yontem']).')',
-                                'icerik' => $bloklar,
-                                'dosya_adi' => basename($data['dosya']),
-                            ]
-                        );
+                        // updateOrCreate soft-delete'i (deleted_at) görmezden gelip aynı
+                        // (user_id, yontem) için ikinci bir satır açmaya çalışır ve unique
+                        // index'e çarpar — withTrashed ile önce bul, silinmişse geri getir.
+                        $prosedur = RiskProsedur::withTrashed()
+                            ->firstOrNew(['user_id' => Filament::auth()->id(), 'yontem' => $data['yontem']]);
+
+                        if ($prosedur->trashed()) {
+                            $prosedur->restore();
+                        }
+
+                        $prosedur->fill([
+                            'ad' => 'Risk Analizi Prosedürü ('.config('isg.risk_yontemleri.'.$data['yontem']).')',
+                            'icerik' => $bloklar,
+                            'dosya_adi' => basename($data['dosya']),
+                        ])->save();
 
                         Storage::disk('local')->delete($data['dosya']);
                         Notification::make()->title('Prosedür yüklendi')->success()->send();
