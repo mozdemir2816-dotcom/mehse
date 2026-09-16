@@ -24,8 +24,8 @@
     table.risk .col-no { width: 16px; text-align: center; }
     table.risk .col-duzey { width: 11px; padding: 2px 1px; text-align: center; vertical-align: middle; }
     table.risk .col-oneri { width: 22%; }
-    table.risk .col-sorumlu { width: 5%; }
-    table.risk .col-aciklama { width: 10%; }
+    table.risk .col-sorumlu { width: 2.5%; }
+    table.risk .col-aciklama { width: 12.5%; }
     table.ekip { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
     table.ekip th, table.ekip td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
     table.ekip th { background: #f0f0f0; }
@@ -39,6 +39,11 @@
         white-space: pre-line; display: block; text-align: center; }
     .imza { margin-top: 50px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
+    table.onay { width: 100%; border-collapse: collapse; margin-top: 30px; table-layout: fixed; }
+    table.onay td { width: 33.33%; text-align: center; padding: 45px 6px 6px; border-top: 1px solid #111; font-size: 10px; vertical-align: bottom; }
+    table.onay .rol { font-weight: bold; display: block; margin-bottom: 10px; font-size: 9.5px; }
+    table.onay img { max-height: 30px; max-width: 90%; display: block; margin: 0 auto 2px; }
+    table.onay .ad { font-weight: normal; display: block; }
     .prosedur h3 { font-size: 12px; color: #7c3aed; margin: 14px 0 4px; }
     .prosedur p { font-size: 10.5px; margin: 2px 0 8px; white-space: pre-line; }
 
@@ -278,14 +283,43 @@
     </p>
 
     <h2 style="margin-top:24px">ONAY</h2>
-    <table class="imza">
+    <table class="onay">
         <tr>
             <td>
-                {{ $uzman?->name ?: 'İş Güvenliği Uzmanı' }}
-                @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvan }}</span> @endif
-                <br>(İmza – Kaşe)
+                <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
+                @if (($imzali ?? true) && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
+                <span class="ad">{{ $firma?->isveren_ad ?: $firma?->isveren_vekili ?: '' }}</span>
             </td>
-            <td>{{ $firma?->isveren_ad ?: 'İşveren / İşveren Vekili' }}<br>(Ad – Soyad / İmza)</td>
+            <td>
+                <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
+                @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
+                <span class="ad">{{ $uzman?->name ?: '' }}</span>
+            </td>
+            <td>
+                <span class="rol">İŞYERİ HEKİMİ</span>
+                @if (($imzali ?? true) && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
+                @if (($imzali ?? true) && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
+                <span class="ad">{{ $hekim?->ad_soyad ?: '' }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
+                @if (($imzali ?? true) && ! empty($temsilci['imza_gorseli']))<img src="{{ storage_path('app/public/'.$temsilci['imza_gorseli']) }}">@endif
+                <span class="ad">{{ $temsilci['ad'] ?? '' }}</span>
+            </td>
+            <td>
+                <span class="rol">DESTEK ELEMANI</span>
+                @if (($imzali ?? true) && ! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
+                <span class="ad">{{ $destekElemani['ad'] ?? '' }}</span>
+            </td>
+            <td>
+                <span class="rol">BİLGİ SAHİBİ ÇALIŞAN</span>
+                @if (($imzali ?? true) && ! empty($bilgiSahibiCalisan['imza_gorseli']))<img src="{{ storage_path('app/public/'.$bilgiSahibiCalisan['imza_gorseli']) }}">@endif
+                <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '' }}</span>
+            </td>
         </tr>
     </table>
 </div>

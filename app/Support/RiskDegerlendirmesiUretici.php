@@ -107,6 +107,7 @@ class RiskDegerlendirmesiUretici
         $temsilci = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'temsilci'));
         $destekElemani = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'destek'));
         $bilgiSahibiCalisanlar = $ekip->filter(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'bilgi sahibi'))->values();
+        $bilgiSahibiCalisan = $bilgiSahibiCalisanlar->first();
 
         // "4. RİSK DEĞERLENDİRME EKİBİ" tablosu — ekip Repeater'ı hiç
         // doldurulmamış olsa bile 6331 SK m.6'daki 6 sabit rolü daima listeler
@@ -135,6 +136,7 @@ class RiskDegerlendirmesiUretici
             'hekim' => $hekim,
             'temsilci' => $temsilci,
             'destekElemani' => $destekElemani,
+            'bilgiSahibiCalisan' => $bilgiSahibiCalisan,
             'ekipGosterim' => $ekipGosterim,
             'metodoloji' => config('isg.'.$yontemAnahtari),
             'eksenEtiketleri' => \App\Support\RiskSkorlama::eksenEtiketleri($rd->yontem),

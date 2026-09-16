@@ -345,6 +345,44 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 
+    public function test_onay_tablosunda_alti_imza_yeri_bilgi_sahibi_calisan_atamasiz_kalabilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
+
+        $veri = [
+            'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman, 'hekim' => null,
+            'temsilci' => null, 'destekElemani' => null, 'bilgiSahibiCalisan' => null,
+            'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null, 'imzali' => true,
+        ];
+        $sayfa = view('pdf.risk-degerlendirmesi', $veri)->render();
+
+        $this->assertStringContainsString('İŞVEREN / İŞVEREN VEKİLİ', $sayfa);
+        $this->assertStringContainsString('İŞ GÜVENLİĞİ UZMANI', $sayfa);
+        $this->assertStringContainsString('İŞYERİ HEKİMİ', $sayfa);
+        $this->assertStringContainsString('ÇALIŞAN TEMSİLCİSİ', $sayfa);
+        $this->assertStringContainsString('DESTEK ELEMANI', $sayfa);
+        $this->assertStringContainsString('BİLGİ SAHİBİ ÇALIŞAN', $sayfa);
+        // atama yapılmadığında hata vermez, isim boş kalır ("—" değil).
+        $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ ÇALIŞAN<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
+    }
+
+    public function test_onay_tablosunda_bilgi_sahibi_calisan_atanmissa_adi_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create([
+            'firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+            'ekip' => [['ad' => 'Bilgi Sahibi Test', 'unvan' => 'Bilgi Sahibi Çalışan']],
+        ]);
+        $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
+
+        $sayfa = RiskDegerlendirmesiUretici::pdf($rd, false);
+        ob_start();
+        $sayfa->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
     public function test_igu_secilmezse_firmanin_atanmis_igusu_kullanilir(): void
     {
         $igu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
