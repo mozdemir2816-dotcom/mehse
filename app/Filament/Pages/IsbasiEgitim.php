@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\EgitimSunumu;
 use App\Models\Firma;
 use App\Models\IsbasiEgitimTutanagi as IsbasiEgitimTutanagiModel;
 use App\Filament\Support\ImzaSecenegi;
@@ -9,9 +10,12 @@ use App\Support\IsbasiEgitimTutanagiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
@@ -45,6 +49,8 @@ class IsbasiEgitim extends Page
     public ?string $calisanAdSoyad = null;
 
     public ?string $calisanTc = null;
+
+    public ?string $calisanGorev = null;
 
     public bool $tcGizli = false;
 
@@ -143,6 +149,65 @@ class IsbasiEgitim extends Page
 
         $this->calisanAdSoyad = $c?->ad_soyad;
         $this->calisanTc = $c?->tc;
+        $this->calisanGorev = $c?->gorev;
+        unset($this->eslesenSunumlar);
+    }
+
+    public function updatedCalisanGorev(): void
+    {
+        unset($this->eslesenSunumlar);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | İşe özgü eğitim sunumları (kendi arşivim)
+    |--------------------------------------------------------------------------
+    */
+
+    /** @return Collection<int, EgitimSunumu> */
+    #[Computed]
+    public function sunumlar(): Collection
+    {
+        return EgitimSunumu::where('user_id', Filament::auth()->id())->orderBy('gorev')->get();
+    }
+
+    /** Seçili/girilen göreve göre eşleşen sunumlar (büyük-küçük harf duyarsız, kısmi eşleşme). */
+    #[Computed]
+    public function eslesenSunumlar(): Collection
+    {
+        if (blank($this->calisanGorev)) {
+            return collect();
+        }
+
+        $aranan = mb_strtolower(trim($this->calisanGorev));
+
+        return $this->sunumlar->filter(fn (EgitimSunumu $s) => str_contains(mb_strtolower($s->gorev), $aranan)
+            || str_contains($aranan, mb_strtolower($s->gorev)))->values();
+    }
+
+    public function sunumIndir(int $id)
+    {
+        $sunum = EgitimSunumu::where('user_id', Filament::auth()->id())->find($id);
+
+        if (! $sunum || ! $sunum->dosya_yolu || ! Storage::disk('public')->exists($sunum->dosya_yolu)) {
+            Notification::make()->title('Dosya bulunamadı')->danger()->send();
+
+            return null;
+        }
+
+        return Storage::disk('public')->download($sunum->dosya_yolu, $sunum->dosya_adi);
+    }
+
+    public function sunumSil(int $id): void
+    {
+        $sunum = EgitimSunumu::where('user_id', Filament::auth()->id())->find($id);
+
+        if ($sunum?->dosya_yolu && Storage::disk('public')->exists($sunum->dosya_yolu)) {
+            Storage::disk('public')->delete($sunum->dosya_yolu);
+        }
+
+        $sunum?->delete();
+        unset($this->sunumlar, $this->eslesenSunumlar);
     }
 
     /*
@@ -202,6 +267,41 @@ class IsbasiEgitim extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('sunumYukle')
+                ->label('Eğitim Sunumu Yükle')
+                ->icon('heroicon-o-presentation-chart-bar')
+                ->color('gray')
+                ->modalHeading('İşe Özgü Eğitim Sunumu Yükle')
+                ->modalDescription('Görev/iş adına göre kaydedilir — o göreve yeni biri başladığında burada önerilir. Firmadan bağımsız, kendi arşivinizdir.')
+                ->modalSubmitActionLabel('Yükle')
+                ->schema([
+                    TextInput::make('gorev')->label('Görev / İş Adı')->required()->helperText('Örn. "Kaynakçı", "Forklift Operatörü"'),
+                    TextInput::make('baslik')->label('Sunum Başlığı')->required(),
+                    FileUpload::make('dosya')->label('Sunum Dosyası (PowerPoint/PDF)')
+                        ->disk('public')
+                        ->directory(fn () => 'egitim-sunumlari/'.Filament::auth()->id())
+                        ->preserveFilenames()
+                        ->acceptedFileTypes([
+                            'application/pdf',
+                            'application/vnd.ms-powerpoint',
+                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        ])
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    EgitimSunumu::create([
+                        'user_id' => Filament::auth()->id(),
+                        'gorev' => $data['gorev'],
+                        'baslik' => $data['baslik'],
+                        'dosya_adi' => basename($data['dosya']),
+                        'dosya_yolu' => $data['dosya'],
+                        'boyut' => Storage::disk('public')->exists($data['dosya']) ? Storage::disk('public')->size($data['dosya']) : 0,
+                    ]);
+
+                    unset($this->sunumlar, $this->eslesenSunumlar);
+                    Notification::make()->title('Eğitim sunumu yüklendi')->success()->send();
+                }),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')

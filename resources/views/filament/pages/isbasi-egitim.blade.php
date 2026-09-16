@@ -100,6 +100,28 @@
         @endforeach
     </x-filament::section>
 
+    {{-- İŞE ÖZGÜ EĞİTİM SUNUMLARI (Kütüphanem) — firmadan bağımsız, kendi arşivim --}}
+    <x-filament::section icon="heroicon-o-presentation-chart-bar" icon-color="success">
+        <x-slot name="heading">İşe Özgü Eğitim Sunumları (Kütüphanem, {{ $this->sunumlar->count() }})</x-slot>
+        <x-slot name="description">Sağ üstteki "Eğitim Sunumu Yükle" ile görev/iş bazlı PowerPoint/PDF slaytlarınızı buraya kaydedin — o göreve yeni biri başladığında aşağıda otomatik önerilir.</x-slot>
+
+        @if ($this->sunumlar->isNotEmpty())
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                @foreach ($this->sunumlar as $s)
+                    <tr>
+                        <td style="padding:.3rem .5rem"><strong>{{ $s->gorev }}</strong> — {{ $s->baslik }}</td>
+                        <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
+                            <x-filament::button size="xs" color="gray" wire:click="sunumIndir({{ $s->id }})">İndir</x-filament::button>
+                            <x-filament::button size="xs" color="danger" wire:click="sunumSil({{ $s->id }})">Sil</x-filament::button>
+                        </td>
+                    </tr>
+                @endforeach
+            </table>
+        @else
+            <p style="font-size:.82rem;color:rgb(107 114 128)">Henüz sunum yüklenmedi.</p>
+        @endif
+    </x-filament::section>
+
     @if ($this->firma)
         {{-- 3. ÇALIŞAN --}}
         <x-filament::section icon="heroicon-o-user" icon-color="success">
@@ -129,7 +151,24 @@
                     <input type="text" wire:model="calisanTc"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
+                <div>
+                    <label style="font-weight:600;font-size:.8rem">Görev / İş</label>
+                    <input type="text" wire:model.live="calisanGorev" placeholder="Örn: Kaynakçı"
+                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                </div>
             </div>
+
+            @if ($this->eslesenSunumlar->isNotEmpty())
+                <div style="margin-top:.75rem;padding:.6rem .8rem;border-radius:.5rem;background:rgb(16 185 129 / .08);border:1px solid {{ $yesil }}">
+                    <div style="font-weight:700;font-size:.8rem;color:{{ $yesil }};margin-bottom:.3rem">Bu göreve uygun eğitim sunumu bulundu</div>
+                    @foreach ($this->eslesenSunumlar as $s)
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem;padding:.2rem 0">
+                            <span>{{ $s->gorev }} — {{ $s->baslik }}</span>
+                            <x-filament::button size="xs" color="success" wire:click="sunumIndir({{ $s->id }})">İndir</x-filament::button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </x-filament::section>
 
         {{-- 4. GEÇMİŞ TUTANAKLAR --}}

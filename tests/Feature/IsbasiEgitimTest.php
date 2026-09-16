@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\IsbasiEgitim as IsbasiSayfasi;
 use App\Models\Calisan;
+use App\Models\EgitimSunumu;
 use App\Models\Firma;
 use App\Models\IsbasiEgitimTutanagi;
 use App\Models\User;
 use App\Support\IsbasiEgitimTutanagiUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -227,5 +230,104 @@ class IsbasiEgitimTest extends TestCase
         $firmalar = Livewire::test(IsbasiSayfasi::class)->instance()->firmalar();
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    public function test_egitim_sunumu_yuklenir_ve_kutuphanede_gorunur(): void
+    {
+        Storage::fake('public');
+
+        Livewire::test(IsbasiSayfasi::class)
+            ->callAction('sunumYukle', data: [
+                'gorev' => 'Kaynakçı',
+                'baslik' => 'Kaynak İşleri Güvenliği',
+                'dosya' => UploadedFile::fake()->createWithContent('kaynak.pdf', str_repeat('a', 1024)),
+            ])
+            ->assertHasNoActionErrors();
+
+        $sunum = EgitimSunumu::where('user_id', $this->uzman->id)->firstOrFail();
+        $this->assertSame('Kaynakçı', $sunum->gorev);
+        $this->assertSame('kaynak.pdf', $sunum->dosya_adi);
+        $this->assertTrue(Storage::disk('public')->exists($sunum->dosya_yolu));
+        $this->assertGreaterThan(0, $sunum->boyut);
+    }
+
+    public function test_calisan_gorevine_uygun_sunum_onerilir(): void
+    {
+        EgitimSunumu::create([
+            'user_id' => $this->uzman->id, 'gorev' => 'Kaynakçı', 'baslik' => 'Kaynak Güvenliği',
+        ]);
+        EgitimSunumu::create([
+            'user_id' => $this->uzman->id, 'gorev' => 'Forklift Operatörü', 'baslik' => 'Forklift Güvenliği',
+        ]);
+
+        $component = Livewire::test(IsbasiSayfasi::class)->set('calisanGorev', 'kaynakçı');
+
+        $eslesen = $component->get('eslesenSunumlar');
+        $this->assertCount(1, $eslesen);
+        $this->assertSame('Kaynakçı', $eslesen->first()->gorev);
+    }
+
+    public function test_gorev_bos_ise_hicbir_sunum_onerilmez(): void
+    {
+        EgitimSunumu::create(['user_id' => $this->uzman->id, 'gorev' => 'Kaynakçı', 'baslik' => 'Kaynak Güvenliği']);
+
+        $component = Livewire::test(IsbasiSayfasi::class);
+
+        $this->assertCount(0, $component->get('eslesenSunumlar'));
+    }
+
+    public function test_calisan_hizli_secilince_gorevi_de_dolar_ve_eslesen_sunum_bulunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $calisan = Calisan::factory()->for($firma)->create(['gorev' => 'Forklift Operatörü']);
+        EgitimSunumu::create(['user_id' => $this->uzman->id, 'gorev' => 'Forklift Operatörü', 'baslik' => 'Forklift Güvenliği']);
+
+        $component = Livewire::test(IsbasiSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('calisanHizliSecId', $calisan->id);
+
+        $this->assertSame('Forklift Operatörü', $component->get('calisanGorev'));
+        $this->assertCount(1, $component->get('eslesenSunumlar'));
+    }
+
+    public function test_baska_uzmanin_sunumu_gorunmez(): void
+    {
+        $baskaUzman = User::factory()->create();
+        EgitimSunumu::create(['user_id' => $baskaUzman->id, 'gorev' => 'Kaynakçı', 'baslik' => 'Başkasının Sunumu']);
+
+        $sunumlar = Livewire::test(IsbasiSayfasi::class)->get('sunumlar');
+
+        $this->assertCount(0, $sunumlar);
+    }
+
+    public function test_sunum_indirilir(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('egitim-sunumlari/'.$this->uzman->id.'/s.pdf', 'icerik');
+
+        $sunum = EgitimSunumu::create([
+            'user_id' => $this->uzman->id, 'gorev' => 'Kaynakçı', 'baslik' => 'Test',
+            'dosya_adi' => 's.pdf', 'dosya_yolu' => 'egitim-sunumlari/'.$this->uzman->id.'/s.pdf', 'boyut' => 7,
+        ]);
+
+        $yanit = Livewire::test(IsbasiSayfasi::class)->instance()->sunumIndir($sunum->id);
+
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+    }
+
+    public function test_sunum_silinince_dosya_da_kaldirilir(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('egitim-sunumlari/'.$this->uzman->id.'/s.pdf', 'icerik');
+
+        $sunum = EgitimSunumu::create([
+            'user_id' => $this->uzman->id, 'gorev' => 'Kaynakçı', 'baslik' => 'Test',
+            'dosya_adi' => 's.pdf', 'dosya_yolu' => 'egitim-sunumlari/'.$this->uzman->id.'/s.pdf', 'boyut' => 7,
+        ]);
+
+        Livewire::test(IsbasiSayfasi::class)->call('sunumSil', $sunum->id);
+
+        $this->assertDatabaseMissing('egitim_sunumlari', ['id' => $sunum->id]);
+        Storage::disk('public')->assertMissing('egitim-sunumlari/'.$this->uzman->id.'/s.pdf');
     }
 }
