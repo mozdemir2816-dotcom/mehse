@@ -99,37 +99,10 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         $this->assertNull(GeminiRiskPuanTamamlayici::oner('Kaygan zemin', 'Düşme', 'Depo', 'İstifleme', 'matris_5x5'));
     }
 
-    public function test_kutuphaneden_aktar_ai_aktifken_maddeyi_otomatik_puanlar(): void
+    public function test_kutuphaneden_aktar_ai_aktif_olsa_bile_puanlama_yapmaz(): void
     {
         $this->seed(TehlikeKutuphanesiSeeder::class);
         config(['services.gemini.key' => 'test-anahtar']);
-
-        Http::fake([
-            'generativelanguage.googleapis.com/*' => Http::response([
-                'candidates' => [['content' => ['parts' => [['text' => json_encode(['olasilik' => 3, 'siddet' => 4])]]]]],
-            ]),
-        ]);
-
-        $firma = Firma::factory()->for($this->uzman)->create();
-        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
-        $tehlike = Tehlike::first();
-
-        Livewire::test(MaddelerRelationManager::class, [
-            'ownerRecord' => $rd,
-            'pageClass' => EditRiskDegerlendirmesi::class,
-        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_id' => $tehlike->id]);
-
-        $madde = RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->first();
-        $this->assertNotNull($madde);
-        $this->assertSame(3.0, $madde->olasilik);
-        $this->assertSame(4.0, $madde->siddet);
-        $this->assertNotNull($madde->puan);
-    }
-
-    public function test_kutuphaneden_aktar_ai_kapaliyken_madde_puansiz_kalir(): void
-    {
-        $this->seed(TehlikeKutuphanesiSeeder::class);
-        config(['services.gemini.key' => null]);
         Http::fake();
 
         $firma = Firma::factory()->for($this->uzman)->create();
@@ -139,12 +112,36 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         Livewire::test(MaddelerRelationManager::class, [
             'ownerRecord' => $rd,
             'pageClass' => EditRiskDegerlendirmesi::class,
-        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_id' => $tehlike->id]);
+        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_idler' => [$tehlike->id]]);
 
         $madde = RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->first();
         $this->assertNotNull($madde);
         $this->assertNull($madde->olasilik);
         $this->assertNull($madde->siddet);
+        $this->assertSame($tehlike->mevcut_onlem, $madde->mevcut_onlem);
+
+        // Toplu ekleme AI çağırmaz — performans/kota riski, ayrı "Eksik Puan/
+        // Önlemleri AI ile Tamamla" butonuyla sonradan toplu tamamlanır.
+        Http::assertNothingSent();
+    }
+
+    public function test_kutuphaneden_aktar_birden_fazla_tehlikeyi_tek_seferde_ekler(): void
+    {
+        $this->seed(TehlikeKutuphanesiSeeder::class);
+        Http::fake();
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $tehlikeIdler = Tehlike::query()->take(3)->pluck('id')->all();
+        $this->assertGreaterThanOrEqual(3, count($tehlikeIdler), 'Test için en az 3 tehlike gerekli');
+
+        Livewire::test(MaddelerRelationManager::class, [
+            'ownerRecord' => $rd,
+            'pageClass' => EditRiskDegerlendirmesi::class,
+        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_idler' => $tehlikeIdler]);
+
+        $this->assertSame(3, RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->count());
+        $this->assertSame([1, 2, 3], RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->orderBy('sira')->pluck('sira')->all());
 
         Http::assertNothingSent();
     }
@@ -248,27 +245,13 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         $this->assertSame(15, $rd->maddeler()->whereNull('olasilik')->count());
     }
 
-    public function test_kutuphaneden_aktar_mevcut_onlem_boluyorsa_ai_onlem_de_ekler(): void
+    public function test_kutuphaneden_aktar_mevcut_onlem_bosluysa_bos_eklenir(): void
     {
         $this->seed(TehlikeKutuphanesiSeeder::class);
-        config(['services.gemini.key' => 'test-anahtar']);
+        Http::fake();
 
-        // Kütüphanedeki tehlikenin mevcut_onlem'i boş bırakılır ki AI'nin
-        // önlem önerisi de devreye girsin.
         $tehlike = Tehlike::first();
         $tehlike->update(['mevcut_onlem' => null]);
-
-        Http::fake(function ($request) {
-            $govde = json_decode($request->body(), true);
-            $ozellikler = array_keys(data_get($govde, 'generationConfig.responseSchema.properties', []));
-            $onlemIstegi = in_array('onlem', $ozellikler, true);
-
-            $json = $onlemIstegi
-                ? ['onlem' => 'AI önlem önerisi.']
-                : ['olasilik' => 3, 'siddet' => 3];
-
-            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($json)]]]]]]);
-        });
 
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
@@ -276,9 +259,10 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         Livewire::test(MaddelerRelationManager::class, [
             'ownerRecord' => $rd,
             'pageClass' => EditRiskDegerlendirmesi::class,
-        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_id' => $tehlike->id]);
+        ])->callTableAction('kutuphanedenAktar', data: ['tehlike_idler' => [$tehlike->id]]);
 
         $madde = RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->first();
-        $this->assertSame('AI önlem önerisi.', $madde->mevcut_onlem);
+        $this->assertNull($madde->mevcut_onlem);
+        Http::assertNothingSent();
     }
 }

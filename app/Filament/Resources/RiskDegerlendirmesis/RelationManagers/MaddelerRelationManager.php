@@ -172,36 +172,56 @@ class MaddelerRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()->label('Risk Maddesi Ekle'),
                 Action::make('kutuphanedenAktar')
-                    ->label('Kütüphaneden aktar')->icon('heroicon-o-book-open')->color('gray')
+                    ->label('Kütüphaneden Toplu Ekle')->icon('heroicon-o-book-open')->color('gray')
+                    ->modalDescription('Birden fazla tehlike seçip tek seferde ekleyebilirsiniz (ör. yeni makine/ekipman geldiğinde ilgili tüm maddeler). Puan/önlem AI önerisi burada çalışmaz — eklendikten sonra "Eksik Puan/Önlemleri AI ile Tamamla" ile toplu tamamlayabilirsiniz.')
                     ->schema([
-                        Select::make('tehlike_id')->label('Tehlike')
+                        Select::make('tehlike_idler')->label('Tehlikeler')
                             ->options(fn () => Tehlike::query()->with('kategori')->get()
                                 ->mapWithKeys(fn (Tehlike $t) => [$t->id => "[{$t->kategori->ad}] ".Str::limit($t->tehlike, 70)]))
+                            ->multiple()
                             ->searchable()->required(),
                     ])
                     ->action(function (array $data): void {
-                        $t = Tehlike::findOrFail($data['tehlike_id']);
-                        $madde = $this->getOwnerRecord()->maddeler()->create([
-                            'sira' => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1,
-                            'bolum' => $t->bolum,
-                            'faaliyet' => $t->faaliyet,
-                            'tehlike' => $t->tehlike,
-                            'risk' => $t->risk,
-                            'mevcut_onlem' => $t->mevcut_onlem,
-                            'durum' => 'acik',
-                        ]);
+                        $tehlikeler = Tehlike::whereIn('id', $data['tehlike_idler'])->get()->keyBy('id');
+                        $sira = (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0);
+                        $satirlar = [];
 
-                        $puanlandi = $this->puanlaAiIle($madde);
-                        $onlemVerildi = $this->onlemVerAiIle($madde);
+                        foreach ($data['tehlike_idler'] as $id) {
+                            $t = $tehlikeler->get($id);
 
-                        $baslik = match (true) {
-                            $puanlandi && $onlemVerildi => 'Risk maddesi eklendi, AI ile puanlandı ve önlem önerisi eklendi',
-                            $puanlandi => 'Risk maddesi eklendi ve AI ile puanlandı',
-                            $onlemVerildi => 'Risk maddesi eklendi ve AI önlem önerisi eklendi (puanı girin)',
-                            default => 'Risk maddesi eklendi (puanı girin)',
-                        };
+                            if (! $t) {
+                                continue;
+                            }
 
-                        Notification::make()->title($baslik)->success()->send();
+                            $sira++;
+                            $satirlar[] = [
+                                'risk_degerlendirmesi_id' => $this->getOwnerRecord()->id,
+                                'sira' => $sira,
+                                'bolum' => $t->bolum,
+                                'faaliyet' => $t->faaliyet,
+                                'tehlike' => $t->tehlike,
+                                'risk' => $t->risk,
+                                'mevcut_onlem' => $t->mevcut_onlem,
+                                'durum' => 'acik',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+
+                        if ($satirlar === []) {
+                            Notification::make()->title('Eklenecek tehlike bulunamadı')->danger()->send();
+
+                            return;
+                        }
+
+                        RiskMaddesi::insert($satirlar);
+                        $this->getOwnerRecord()->pdfOnbellegiTemizle();
+                        $this->getOwnerRecord()->saveQuietly();
+
+                        Notification::make()
+                            ->title(count($satirlar).' risk maddesi eklendi')
+                            ->body('Puanları girmek veya AI ile tamamlamak için "Eksik Puan/Önlemleri AI ile Tamamla" butonunu kullanabilirsiniz.')
+                            ->success()->send();
                     }),
                 Action::make('eksikPuanlariTamamla')
                     ->label('Eksik Puan/Önlemleri AI ile Tamamla')
