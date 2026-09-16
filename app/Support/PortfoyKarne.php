@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\OnayliDefterNushasi;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\RiskSablonu;
@@ -56,9 +57,7 @@ class PortfoyKarne
         $toplam = $firmalar->count();
 
         return array_map(function (array $kriter) use ($firmalar, $toplam): array {
-            $kapsam = ($kriter['kosul'] ?? null) === 'elli_calisan'
-                ? $firmalar->filter(fn (Firma $f) => (int) $f->calisan_sayisi >= 50)
-                : $firmalar;
+            $kapsam = $firmalar->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null));
 
             $kapsamSayi = $kapsam->count();
 
@@ -81,6 +80,21 @@ class PortfoyKarne
     public static function firmaKriterKarsilarMi(Firma $firma, string $anahtar): bool
     {
         return static::gercekModulVarMi($firma, $anahtar) === true;
+    }
+
+    /**
+     * Bir kriterin 'kosul' alanına göre firma kapsam/muafiyet kontrolü —
+     * `kriterler()`, `firmaKriterMatrisi()`, `firmaChecklistDetay()`,
+     * `firmaTamUyumluMu()` ve `eksikFirmalar()` aynı tanımı kullanır.
+     * Şart yoksa (null) her firma kapsamdadır.
+     */
+    private static function kosulKarsilarMi(Firma $firma, ?string $kosul): bool
+    {
+        return match ($kosul) {
+            'elli_calisan' => (int) $firma->calisan_sayisi >= 50,
+            'ekipman_var' => $firma->isEkipmanlari()->exists(),
+            default => true,
+        };
     }
 
     /**
@@ -120,7 +134,10 @@ class PortfoyKarne
             'igu_atamasi' => $firma->igu_id !== null,
             'hekim_atamasi' => $firma->isyeri_hekimi_id !== null,
             'tespit_oneri' => filled($firma->tespitOneriDefteri?->maddeler),
-            'onayli_defter_nushalari' => $firma->onayliDefterNushalari()->exists(),
+            // Salt "en az bir nüsha var mı" değil, en son yüklemeden itibaren
+            // periyot (varsayılan 3 ay) geçmemiş mi de aranır — süresi dolan
+            // firma "eksik" sayılır ki kullanıcı yeni nüsha yüklemeye teşvik olsun.
+            'onayli_defter_nushalari' => in_array(OnayliDefterNushasi::durum($firma->id), ['gecerli', 'yaklasan'], true),
             'periyodik_kontrol_raporu' => $firma->isEkipmanlari()->whereNotNull('son_muayene_tarihi')->exists(),
             'yillik_calisma_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'faaliyetler'),
             'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
@@ -181,11 +198,11 @@ class PortfoyKarne
                 $hazirSayi = 0;
 
                 foreach ($kriterler as $k) {
-                    // 'kosul' => 'elli_calisan' kriterler (şu an yalnız isg_kurulu) 50 altı
-                    // çalışanlı firmalarda muaf — kriterler()/ozet() bu firmaları zaten
-                    // kapsam dışı bırakıyordu (bkz. 'kapsam' filtresi), burada da aynı
-                    // muafiyet uygulanmazsa küçük firmalar haksız yere düşük "Oran" alır.
-                    $muaf = ($k['kosul'] ?? null) === 'elli_calisan' && (int) $firma->calisan_sayisi < 50;
+                    // 'kosul'lu kriterler (ör. isg_kurulu → 50+ çalışan, periyodik_kontrol_raporu
+                    // → ekipman kaydı olması) kapsam dışı firmalarda muaf — kriterler()/ozet()
+                    // bu firmaları zaten kapsam dışı bırakıyordu (bkz. 'kapsam' filtresi),
+                    // burada da aynı muafiyet uygulanmazsa firmalar haksız yere düşük "Oran" alır.
+                    $muaf = ! static::kosulKarsilarMi($firma, $k['kosul'] ?? null);
 
                     $var = $muaf || static::gercekModulVarMi($firma, $k['anahtar']) === true;
 
@@ -228,9 +245,14 @@ class PortfoyKarne
         $vadeler = $firma->checklistVadeleri()->get()->keyBy('kriter_anahtari');
 
         return collect($kriterler)->map(function (array $k) use ($firma, $vadeler): array {
-            $muaf = ($k['kosul'] ?? null) === 'elli_calisan' && (int) $firma->calisan_sayisi < 50;
+            $muaf = ! static::kosulKarsilarMi($firma, $k['kosul'] ?? null);
             $tamam = $muaf || (bool) $k['hazir'] && static::gercekModulVarMi($firma, $k['anahtar']) === true;
             $vadeTarihi = $vadeler->get($k['anahtar'])?->vade_tarihi;
+
+            // Onaylı Defter için vade elle girilmez — en son yüklemeden otomatik türetilir.
+            if ($k['anahtar'] === 'onayli_defter_nushalari' && ! $vadeTarihi) {
+                $vadeTarihi = OnayliDefterNushasi::vadeTarihi($firma->id);
+            }
 
             $durum = match (true) {
                 $tamam => 'tamamlandi',
@@ -318,11 +340,8 @@ class PortfoyKarne
     {
         $kriter = collect(config('isg.kontrol_merkezi.kriterler'))->firstWhere('anahtar', $kriterAnahtari);
 
-        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan')->get();
-
-        if (($kriter['kosul'] ?? null) === 'elli_calisan') {
-            $firmalar = $firmalar->filter(fn (Firma $f) => (int) $f->calisan_sayisi >= 50)->values();
-        }
+        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan')->get()
+            ->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null))->values();
 
         return $firmalar->reject(fn (Firma $f) => static::firmaKriterKarsilarMi($f, $kriterAnahtari))->values();
     }
@@ -430,10 +449,9 @@ class PortfoyKarne
                 continue;
             }
 
-            // 'kosul' => 'elli_calisan' kriterler (şu an yalnız isg_kurulu) 50 altı
-            // çalışanlı firmalarda muaf — aksi halde küçük firmalar bu şartı hiç
-            // karşılayamayacağı için asla "tam uyumlu" sayılmaz.
-            $muaf = ($kriter['kosul'] ?? null) === 'elli_calisan' && (int) $firma->calisan_sayisi < 50;
+            // 'kosul'lu kriterler kapsam dışı firmalarda muaf — aksi halde bu
+            // firmalar şartı hiç karşılayamayacağı için asla "tam uyumlu" sayılmaz.
+            $muaf = ! static::kosulKarsilarMi($firma, $kriter['kosul'] ?? null);
             if ($muaf) {
                 continue;
             }

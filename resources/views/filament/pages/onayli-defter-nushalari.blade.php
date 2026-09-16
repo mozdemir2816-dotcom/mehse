@@ -41,6 +41,29 @@
         @endif
     </x-filament::section>
 
+    @php
+        $durumStil = [
+            'bekliyor' => ['bg' => 'rgb(107 114 128 / .08)', 'renk' => '#374151'],
+            'yaklasan' => ['bg' => 'rgb(245 158 11 / .12)', 'renk' => '#92400e'],
+            'dolmus' => ['bg' => 'rgb(239 68 68 / .12)', 'renk' => '#991b1b'],
+        ];
+        $durumMetin = [
+            'bekliyor' => 'Bu defter türü için henüz onaylı nüsha yüklenmedi.',
+            'yaklasan' => 'Yeni nüsha yükleme vadesi yaklaşıyor.',
+            'dolmus' => 'Yükleme periyodu (3 ay) doldu — lütfen yeni bir nüsha yükleyin.',
+        ];
+    @endphp
+
+    @if ($this->firma && $this->durum && $this->durum !== 'gecerli')
+        @php $stil = $durumStil[$this->durum] ?? $durumStil['bekliyor']; @endphp
+        <div style="background:{{ $stil['bg'] }};color:{{ $stil['renk'] }};border-radius:.75rem;padding:.85rem 1rem;font-size:.86rem">
+            <strong>⚠ {{ $durumMetin[$this->durum] ?? '' }}</strong>
+            @if ($this->vadeTarihi)
+                · Vade: {{ $this->vadeTarihi->format('d.m.Y') }}
+            @endif
+        </div>
+    @endif
+
     @if ($this->firma)
         @forelse ($this->nushalar as $turEtiketi => $liste)
             <x-filament::section :heading="$turEtiketi" icon="heroicon-o-book-open">

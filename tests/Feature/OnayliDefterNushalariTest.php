@@ -71,9 +71,41 @@ class OnayliDefterNushalariTest extends TestCase
 
         $this->assertFalse($kriterKarsilar());
 
+        // Tarihsiz nüsha periyot takibine giremez, kriteri karşılamaz.
         OnayliDefterNushasi::create(['firma_id' => $this->firma->id, 'defter_turu' => 'tespit_oneri']);
+        $this->assertFalse($kriterKarsilar());
+
+        OnayliDefterNushasi::create([
+            'firma_id' => $this->firma->id, 'defter_turu' => 'isyeri_hekimi', 'onay_tarihi' => now(),
+        ]);
 
         $this->assertTrue($kriterKarsilar());
+    }
+
+    public function test_onayli_defter_periyodu_dolunca_kriter_karsilanmaz(): void
+    {
+        OnayliDefterNushasi::create([
+            'firma_id' => $this->firma->id, 'defter_turu' => 'tespit_oneri', 'onay_tarihi' => now()->subMonths(4),
+        ]);
+
+        $this->assertFalse(PortfoyKarne::firmaKriterKarsilarMi($this->firma->fresh(), 'onayli_defter_nushalari'));
+        $this->assertSame('dolmus', OnayliDefterNushasi::durum($this->firma->id));
+    }
+
+    public function test_onayli_defter_vade_yaklasinca_yaklasan_doner(): void
+    {
+        OnayliDefterNushasi::create([
+            'firma_id' => $this->firma->id, 'defter_turu' => 'tespit_oneri', 'onay_tarihi' => now()->subMonths(3)->addDays(10),
+        ]);
+
+        $this->assertSame('yaklasan', OnayliDefterNushasi::durum($this->firma->id));
+        $this->assertTrue(PortfoyKarne::firmaKriterKarsilarMi($this->firma->fresh(), 'onayli_defter_nushalari'));
+    }
+
+    public function test_onayli_defter_hic_nusha_yoksa_bekliyor_doner(): void
+    {
+        $this->assertSame('bekliyor', OnayliDefterNushasi::durum($this->firma->id));
+        $this->assertNull(OnayliDefterNushasi::vadeTarihi($this->firma->id));
     }
 
     public function test_tespit_oneri_defteri_indir_aksiyonu_defter_varsa_gorunur(): void

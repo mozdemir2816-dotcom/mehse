@@ -7,6 +7,7 @@ use App\Models\AcilDurumPlani;
 use App\Models\AtamaYazisi;
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\IsEkipmani;
 use App\Models\IsgProfesyoneli;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\User;
@@ -56,9 +57,9 @@ class KontrolMerkeziTest extends TestCase
 
         $this->assertSame(1, $kriterler['risk_degerlendirmesi']['tamam']);
         $this->assertSame(100, $kriterler['risk_degerlendirmesi']['yuzde']);
-        // meslek_hastaligi_bildirimi henüz gerçek modüle bağlanmadı (hazir=false) — hep 0 döner.
-        $this->assertFalse($kriterler['meslek_hastaligi_bildirimi']['hazir']);
-        $this->assertSame(0, $kriterler['meslek_hastaligi_bildirimi']['tamam']);
+        // diger_evrak kasıtlı olarak hep manuel kalır (hazir=false) — hep 0 döner.
+        $this->assertFalse($kriterler['diger_evrak']['hazir']);
+        $this->assertSame(0, $kriterler['diger_evrak']['tamam']);
     }
 
     public function test_acil_durum_plani_kriteri_artik_gercek_modulu_bagli(): void
@@ -117,6 +118,25 @@ class KontrolMerkeziTest extends TestCase
         $kurul = collect(PortfoyKarne::kriterler($this->uzman->id))->firstWhere('anahtar', 'isg_kurulu');
 
         $this->assertSame(1, $kurul['toplam']); // yalnız 60 çalışanlı firma
+    }
+
+    public function test_periyodik_kontrol_raporu_kriteri_yalniz_ekipmani_olan_firmalari_kapsar(): void
+    {
+        $ekipmanli = Firma::factory()->for($this->uzman)->create();
+        Firma::factory()->for($this->uzman)->create(); // ekipmansız — muaf
+
+        IsEkipmani::create([
+            'firma_id' => $ekipmanli->id,
+            'kategori' => 'kaldirma',
+            'ekipman_adi' => 'Vinç',
+            'son_muayene_tarihi' => now(),
+        ]);
+
+        $kriter = collect(PortfoyKarne::kriterler($this->uzman->id))->firstWhere('anahtar', 'periyodik_kontrol_raporu');
+
+        $this->assertSame(1, $kriter['toplam']); // yalnız ekipmanlı firma kapsamda
+        $this->assertSame(1, $kriter['tamam']);
+        $this->assertSame(100, $kriter['yuzde']);
     }
 
     public function test_sayfa_uc_sekmeli_acilir_ve_sekme_degisir(): void

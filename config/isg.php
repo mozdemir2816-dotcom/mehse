@@ -403,6 +403,11 @@ return [
             'isyeri_hekimi' => 'İşyeri Hekimi Defteri',
             'diger' => 'Diğer Onaylı Defter',
         ],
+        // En son onaylı nüsha yüklemesinden itibaren bu kadar ay içinde yeni
+        // nüsha yüklenmezse "süresi dolan" sayılır (kullanıcı talimatı: 3 ayda bir).
+        'periyot_ay' => 3,
+        // Vade tarihine bu kadar gün kala "yaklaşan" uyarısı gösterilir.
+        'yaklasan_gun' => 15,
     ],
 
     /*
@@ -1332,7 +1337,7 @@ return [
             ['anahtar' => 'hekim_atamasi', 'ad' => 'İşyeri Hekimi Ataması', 'ikon' => 'heroicon-o-heart', 'hazir' => true, 'kategori' => 'Yönetim'],
             ['anahtar' => 'tespit_oneri', 'ad' => 'Tespit ve Öneri Defteri Kaydı', 'ikon' => 'heroicon-o-book-open', 'hazir' => true, 'kategori' => 'Saha Kontrolleri'],
             ['anahtar' => 'egitim_katilim_formu', 'ad' => 'Eğitim Katılım Formu', 'ikon' => 'heroicon-o-clipboard-document-check', 'hazir' => true, 'kategori' => 'Eğitimler'],
-            ['anahtar' => 'periyodik_kontrol_raporu', 'ad' => 'Periyodik Kontrol Raporu', 'ikon' => 'heroicon-o-wrench-screwdriver', 'hazir' => true, 'kategori' => 'Periyodik Kontrol & Ölçüm'],
+            ['anahtar' => 'periyodik_kontrol_raporu', 'ad' => 'Periyodik Kontrol Raporu', 'ikon' => 'heroicon-o-wrench-screwdriver', 'hazir' => true, 'kosul' => 'ekipman_var', 'kategori' => 'Periyodik Kontrol & Ölçüm'],
             ['anahtar' => 'calisma_izin_formu', 'ad' => 'Çalışma İzin Formu', 'ikon' => 'heroicon-o-document-check', 'hazir' => true, 'kategori' => 'Diğer Belge & Yazışma'],
             ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true, 'kategori' => 'Saha Kontrolleri'],
             ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true, 'kategori' => 'İş Kazaları & Olaylar'],

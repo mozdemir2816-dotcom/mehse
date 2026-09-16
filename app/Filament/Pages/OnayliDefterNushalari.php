@@ -15,6 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
@@ -99,14 +100,31 @@ class OnayliDefterNushalari extends Page
             : 1;
     }
 
+    /** Seçili firma + defter türü için yükleme periyodu durumu (bekliyor/gecerli/yaklasan/dolmus). */
+    #[Computed]
+    public function durum(): ?string
+    {
+        return $this->firma
+            ? OnayliDefterNushasi::durum($this->firma->id, $this->defterTuru)
+            : null;
+    }
+
+    #[Computed]
+    public function vadeTarihi(): ?Carbon
+    {
+        return $this->firma
+            ? OnayliDefterNushasi::vadeTarihi($this->firma->id, $this->defterTuru)
+            : null;
+    }
+
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->nushalar);
+        unset($this->firma, $this->nushalar, $this->durum, $this->vadeTarihi);
     }
 
     public function updatedDefterTuru(): void
     {
-        unset($this->nushalar);
+        unset($this->nushalar, $this->durum, $this->vadeTarihi);
     }
 
     protected function getHeaderActions(): array
@@ -178,7 +196,7 @@ class OnayliDefterNushalari extends Page
                         'aciklama' => $data['aciklama'] ?: null,
                     ]);
 
-                    unset($this->nushalar);
+                    unset($this->nushalar, $this->durum, $this->vadeTarihi);
                     Notification::make()->title($nusha->baslik().' kaydedildi')->success()->send();
                 }),
         ];
@@ -210,7 +228,7 @@ class OnayliDefterNushalari extends Page
         }
 
         $nusha->delete();
-        unset($this->nushalar);
+        unset($this->nushalar, $this->durum, $this->vadeTarihi);
         Notification::make()->title('Nüsha silindi')->success()->send();
     }
 }
