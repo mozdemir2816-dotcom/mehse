@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
@@ -17,7 +18,7 @@ use Illuminate\Foundation\Auth\Access\Authorizable;
  * e-posta + şifre ile girer, yalnız kendisine atanmış eğitimleri görür. Şifre İSG
  * uzmanı tarafından atama sırasında üretilir (`sifre` sütunu, `password` değil).
  */
-class Calisan extends Model implements AuthenticatableContract, FilamentUser
+class Calisan extends Model implements AuthenticatableContract, FilamentUser, HasName
 {
     use Authenticatable;
     use Authorizable;

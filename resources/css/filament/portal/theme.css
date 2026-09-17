@@ -1,0 +1,271 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/Portal';
+@source '../../../../resources/views/filament/portal';
+
+/* ==========================================================================
+   Uzaktan Eğitim Portalı — çalışan tarafı tasarım sistemi (2026-09-17).
+   Admin panelin marka tokenlarını (lacivert/mavi, DM Sans) miras alır ama
+   hedef kitle farklı: tek elle telefondan giren, İSG uzmanı olmayan
+   çalışanlar. Bu yüzden: daha büyük dokunma alanları, daha az yoğun veri,
+   tam-genişlik kartlar, sabit-boy hedefli değil rahat okunur tipografi.
+   ========================================================================== */
+
+:root {
+    --p-primary: #2563EB;
+    --p-primary-dark: #1D4ED8;
+    --p-navy-from: #1E3A5F;
+    --p-navy-to: #172f4e;
+    --p-bg: #F0F4F8;
+    --p-card-bg: #fff;
+    --p-text-heading: #1E293B;
+    --p-text-secondary: #64748B;
+    --p-text-label: #94A3B8;
+    --p-border: #E2E8F0;
+    --p-border-light: #F1F5F9;
+    --p-success-bg: #F0FDF4;
+    --p-success-text: #16A34A;
+    --p-success-border: #BBF7D0;
+    --p-warning-bg: #FFF7ED;
+    --p-warning-text: #D97706;
+    --p-warning-border: #FED7AA;
+    --p-danger-bg: #FEF2F2;
+    --p-danger-text: #B91C1C;
+    --p-danger-border: #FECACA;
+}
+
+.fi-body {
+    background-color: var(--p-bg);
+    font-size: 15px;
+}
+
+/* -------------------------------------------------------------------------
+   Topbar — lacivert gradient marka şeridi. Portalda sidebar yok
+   (->topNavigation()), tek nav öğesi ("Eğitimlerim") burada görünür.
+   ------------------------------------------------------------------------- */
+.fi-topbar {
+    background: linear-gradient(180deg, var(--p-navy-from) 0%, var(--p-navy-to) 100%) !important;
+    box-shadow: none !important;
+    min-height: 60px !important;
+}
+
+.fi-logo {
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -.01em;
+}
+
+.fi-topbar-item-label,
+.fi-topbar-item-btn .fi-icon {
+    color: rgb(255 255 255 / .7) !important;
+}
+
+.fi-topbar-item.fi-active .fi-topbar-item-btn {
+    background: rgb(255 255 255 / .12) !important;
+}
+
+.fi-topbar-item.fi-active .fi-topbar-item-label,
+.fi-topbar-item.fi-active .fi-topbar-item-btn .fi-icon {
+    color: #fff !important;
+}
+
+.fi-topbar-item-btn:hover {
+    background: rgb(255 255 255 / .08) !important;
+}
+
+.fi-topbar-open-sidebar-btn .fi-icon,
+.fi-topbar-close-sidebar-btn .fi-icon,
+.fi-user-menu .fi-icon,
+.fi-user-menu-trigger .fi-avatar {
+    color: rgb(255 255 255 / .8) !important;
+}
+
+/* Marka etiketi (renderHook: TOPBAR_LOGO_AFTER) — "Uzaktan Eğitim" rozeti. */
+.portal-brand-tag {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: .55rem;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / .12);
+    color: rgb(255 255 255 / .85);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+/* -------------------------------------------------------------------------
+   Giriş (login) ekranı — ortalanmış marka bloğu + kart.
+   ------------------------------------------------------------------------- */
+.fi-simple-layout {
+    background: var(--p-bg);
+}
+
+.portal-auth-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .35rem;
+    width: 100%;
+    padding: 2.75rem 1.5rem 4.5rem;
+    background: linear-gradient(180deg, var(--p-navy-from) 0%, var(--p-navy-to) 100%);
+    color: #fff;
+    text-align: center;
+}
+
+.fi-simple-main-ctn {
+    margin-top: -3rem;
+}
+
+.portal-auth-brand strong {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.portal-auth-brand span {
+    font-size: .82rem;
+    color: rgb(255 255 255 / .7);
+}
+
+.fi-simple-main {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px rgb(15 23 42 / .18) !important;
+    border: none !important;
+}
+
+.fi-simple-main .fi-btn {
+    width: 100%;
+}
+
+/* -------------------------------------------------------------------------
+   Kart — eğitim listesi / izleme ekranı ortak kutu stili. Blade'lerde
+   inline style yerine bu sınıflar kullanılıyor.
+   ------------------------------------------------------------------------- */
+.portal-card {
+    background: var(--p-card-bg);
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / .06);
+}
+
+.portal-card-pad {
+    padding: 1.1rem 1.25rem;
+}
+
+.portal-muted {
+    color: var(--p-text-secondary);
+}
+
+.portal-label {
+    color: var(--p-text-label);
+}
+
+.portal-heading {
+    color: var(--p-text-heading);
+}
+
+/* Durum rozeti — pill, admin ile aynı desen. */
+.portal-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: .2rem .65rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+.portal-badge-success { background: var(--p-success-bg); color: var(--p-success-text); box-shadow: inset 0 0 0 1px var(--p-success-border); }
+.portal-badge-warning { background: var(--p-warning-bg); color: var(--p-warning-text); box-shadow: inset 0 0 0 1px var(--p-warning-border); }
+.portal-badge-danger  { background: var(--p-danger-bg);  color: var(--p-danger-text);  box-shadow: inset 0 0 0 1px var(--p-danger-border); }
+.portal-badge-neutral { background: var(--p-border-light); color: var(--p-text-secondary); box-shadow: inset 0 0 0 1px var(--p-border); }
+
+/* İlerleme çubuğu. */
+.portal-progress-track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--p-border-light);
+    overflow: hidden;
+}
+
+.portal-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width .3s ease;
+}
+
+/* Ders listesi satırı (izleme ekranı). */
+.portal-lesson-btn {
+    display: flex;
+    width: 100%;
+    text-align: start;
+    align-items: center;
+    gap: .65rem;
+    padding: .8rem .75rem;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: .9rem;
+    color: var(--p-text-heading);
+    background: transparent;
+}
+
+.portal-lesson-btn:hover { background: var(--p-border-light); }
+
+.portal-lesson-btn.portal-lesson-active {
+    background: rgb(37 99 235 / .1);
+    font-weight: 600;
+}
+
+.portal-lesson-num {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    font-size: .74rem;
+    font-weight: 700;
+    background: var(--p-border-light);
+    color: var(--p-text-secondary);
+}
+
+.portal-lesson-num.portal-lesson-done {
+    background: var(--p-success-bg);
+    color: var(--p-success-text);
+}
+
+.portal-lesson-num.portal-lesson-current {
+    background: var(--p-primary);
+    color: #fff;
+}
+
+/* Mobil: tek sütun, ders listesi videonun altına düşer. */
+.portal-izle-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .portal-izle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.fi-main {
+    padding-block: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .fi-main {
+        padding-inline: .9rem;
+    }
+
+    .portal-card-pad {
+        padding: 1rem;
+    }
+}
