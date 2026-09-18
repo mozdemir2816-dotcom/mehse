@@ -17,6 +17,7 @@ use App\Models\KimyasalRiskDegerlendirmesi;
 use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu;
 use App\Models\KurulToplantisi;
+use App\Models\MeslekHastaligiBildirimi;
 use App\Models\MuayeneFormu;
 use App\Models\OlayKaydi;
 use App\Models\OrtamOlcumu;
@@ -51,6 +52,7 @@ use App\Support\KimyasalRiskUretici;
 use App\Support\KkdMatrisiUretici;
 use App\Support\KkdZimmetFormuUretici;
 use App\Support\KurulToplantisiUretici;
+use App\Support\MeslekHastaligiBildirimiUretici;
 use App\Support\MuayeneFormuUretici;
 use App\Support\OlayKaydiUretici;
 use App\Support\OrtamOlcumuUretici;
@@ -1342,7 +1344,7 @@ return [
             ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true, 'kategori' => 'Saha Kontrolleri'],
             ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true, 'kategori' => 'İş Kazaları & Olaylar'],
             ['anahtar' => 'olay_ramak_kala_kaydi', 'ad' => 'Olay / Ramak Kala Kaydı', 'ikon' => 'heroicon-o-bell-alert', 'hazir' => true, 'kategori' => 'İş Kazaları & Olaylar'],
-            ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => false, 'kategori' => 'Sağlık Gözetimi'],
+            ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => true, 'kategori' => 'Sağlık Gözetimi'],
             ['anahtar' => 'saglik_raporu', 'ad' => 'Sağlık Raporu', 'ikon' => 'heroicon-o-document-text', 'hazir' => true, 'kategori' => 'Sağlık Gözetimi'],
             ['anahtar' => 'onayli_defter_nushalari', 'ad' => 'Onaylı Defter Nüshaları', 'ikon' => 'heroicon-o-book-open', 'hazir' => true, 'kategori' => 'Planlama & Arşiv'],
             ['anahtar' => 'diger_evrak', 'ad' => 'Diğer', 'ikon' => 'heroicon-o-document', 'hazir' => false, 'kategori' => 'Diğer Belge & Yazışma'],
@@ -4241,6 +4243,29 @@ return [
     | EK-2 "İşe Giriş / Periyodik Muayene Formu"na göre kuruldu.
     |--------------------------------------------------------------------
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Meslek Hastalığı Bildirimi — 6331 s.K. m.14, öğrenilme tarihinden
+    | itibaren 3 iş günü içinde SGK'ya (e-SGK/e-Devlet) bildirim zorunluluğu.
+    |--------------------------------------------------------------------------
+    */
+    'meslek_hastaligi' => [
+        'ogrenme_kaynaklari' => [
+            'isyeri_hekimi' => 'İşyeri Hekimi',
+            'saglik_kurulusu' => 'Sağlık Hizmeti Sunucusu / Hastane',
+            'sigortali_kendisi' => 'Sigortalının Kendisi',
+        ],
+        'bildirim_yontemleri' => [
+            'e_sgk' => 'e-SGK İş Kazası ve Meslek Hastalığı E-Bildirim',
+            'e_devlet' => 'e-Devlet Kapısı',
+        ],
+        'kurul_onay_durumlari' => [
+            'bekliyor' => 'SGK Sağlık Kurulu Değerlendirmesi Bekleniyor',
+            'onaylandi' => 'Onaylandı (Meslek Hastalığı)',
+            'reddedildi' => 'Reddedildi',
+        ],
+    ],
+
     'muayene' => [
         'muayene_turleri' => [
             'ise_giris' => 'İşe Giriş Muayenesi',
@@ -4379,6 +4404,8 @@ return [
                 'uretici' => EgitimSinaviUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => MuayeneFormu::class, 'ad' => 'Muayene Formu (EK-2)', 'tip_metod' => 'muayeneTuruEtiketi',
                 'uretici' => MuayeneFormuUretici::class, 'pdf_metod' => 'pdf'],
+            ['model' => MeslekHastaligiBildirimi::class, 'ad' => 'Meslek Hastalığı Bildirimi', 'tip_metod' => null,
+                'uretici' => MeslekHastaligiBildirimiUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => TespitOneriDefteri::class, 'ad' => 'Tespit ve Öneri Defteri', 'tip_metod' => null,
                 'uretici' => TespitOneriDefteriUretici::class, 'pdf_metod' => 'pdf'],
             ['model' => PeriyodikKontrol::class, 'ad' => 'Periyodik Kontrol Takip Listesi', 'tip_metod' => null,

@@ -247,6 +247,11 @@ class Firma extends Model
         return $this->hasMany(MuayeneFormu::class);
     }
 
+    public function meslekHastaligiBildirimleri(): HasMany
+    {
+        return $this->hasMany(MeslekHastaligiBildirimi::class);
+    }
+
     public function ziyaretProgramlari(): HasMany
     {
         return $this->hasMany(ZiyaretProgrami::class);
