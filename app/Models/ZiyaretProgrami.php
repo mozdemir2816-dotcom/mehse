@@ -23,9 +23,17 @@ class ZiyaretProgrami extends Model
 
     public const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
+    /** Carbon dayOfWeekIso sırasıyla (Pazartesi=1). */
+    public const HAFTA_GUNLERI = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);
+    }
+
+    public static function bosGirdi(): array
+    {
+        return ['tarih' => null, 'amac' => null, 'durum' => 'bos', 'sure_saat' => null, 'notlar' => null];
     }
 
     public static function firmaYilIcin(Firma $firma, int $yil): self
@@ -33,10 +41,30 @@ class ZiyaretProgrami extends Model
         $p = static::firstOrNew(['firma_id' => $firma->id, 'yil' => $yil]);
 
         if (! $p->exists) {
-            $p->ziyaretler = array_fill(0, 12, ['tarih' => null, 'amac' => null, 'durum' => 'bos', 'sure_saat' => null, 'notlar' => null]);
+            $p->ziyaretler = array_fill(0, 12, [static::bosGirdi()]);
             $p->save();
         }
 
         return $p;
+    }
+
+    /**
+     * Bir ay hücresini her zaman ziyaret girdisi LİSTESİ olarak döndürür.
+     * Eski (tek girdi düz dizi) ve yeni (girdi listesi) veri şekillerinin
+     * ikisini de destekler, göç gerektirmez.
+     *
+     * @return array<int, array{tarih: ?string, amac: ?string, durum: string, sure_saat: mixed, notlar: ?string}>
+     */
+    public static function ayGirdileri(?array $ay): array
+    {
+        if (empty($ay)) {
+            return [static::bosGirdi()];
+        }
+
+        if (array_key_exists('tarih', $ay)) {
+            return [$ay];
+        }
+
+        return array_values($ay);
     }
 }

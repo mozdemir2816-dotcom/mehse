@@ -34,17 +34,21 @@
             <th>Notlar</th>
         </tr>
         @foreach (\App\Models\ZiyaretProgrami::AYLAR as $i => $ayAdi)
-            @php $z = $program->ziyaretler[$i] ?? []; @endphp
-            <tr>
-                <td>{{ $ayAdi }}</td>
-                <td>{{ ! empty($z['tarih']) ? \Illuminate\Support\Carbon::parse($z['tarih'])->format('d.m.Y') : '—' }}</td>
-                <td>{{ $z['amac'] ?? '—' }}</td>
-                <td>{{ $z['sure_saat'] ?? '—' }}</td>
-                <td class="durum-{{ $z['durum'] ?? 'bos' }}">
-                    {{ match ($z['durum'] ?? 'bos') { 'tamamlandi' => 'Tamamlandı', 'planlandi' => 'Planlandı', default => 'Boş' } }}
-                </td>
-                <td>{{ $z['notlar'] ?? '' }}</td>
-            </tr>
+            @php $girdiler = \App\Models\ZiyaretProgrami::ayGirdileri($program->ziyaretler[$i] ?? null); @endphp
+            @foreach ($girdiler as $s => $z)
+                <tr>
+                    @if ($s === 0)
+                        <td rowspan="{{ count($girdiler) }}">{{ $ayAdi }}</td>
+                    @endif
+                    <td>{{ ! empty($z['tarih']) ? \Illuminate\Support\Carbon::parse($z['tarih'])->format('d.m.Y') : '—' }}</td>
+                    <td>{{ $z['amac'] ?? '—' }}</td>
+                    <td>{{ $z['sure_saat'] ?? '—' }}</td>
+                    <td class="durum-{{ $z['durum'] ?? 'bos' }}">
+                        {{ match ($z['durum'] ?? 'bos') { 'tamamlandi' => 'Tamamlandı', 'planlandi' => 'Planlandı', default => 'Boş' } }}
+                    </td>
+                    <td>{{ $z['notlar'] ?? '' }}</td>
+                </tr>
+            @endforeach
         @endforeach
     </table>
 

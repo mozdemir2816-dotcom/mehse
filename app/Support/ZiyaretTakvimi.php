@@ -23,16 +23,18 @@ class ZiyaretTakvimi
             ->get()
             ->each(function (ZiyaretProgrami $program) use (&$gruplar): void {
                 foreach ($program->ziyaretler ?? [] as $ay) {
-                    if (blank($ay['tarih'] ?? null)) {
-                        continue;
-                    }
+                    foreach (ZiyaretProgrami::ayGirdileri($ay) as $z) {
+                        if (blank($z['tarih'] ?? null)) {
+                            continue;
+                        }
 
-                    $gruplar[$ay['tarih']][] = [
-                        'firma' => $program->firma,
-                        'amac' => $ay['amac'] ?? null,
-                        'sure_saat' => $ay['sure_saat'] ?? null,
-                        'durum' => $ay['durum'] ?? 'bos',
-                    ];
+                        $gruplar[$z['tarih']][] = [
+                            'firma' => $program->firma,
+                            'amac' => $z['amac'] ?? null,
+                            'sure_saat' => $z['sure_saat'] ?? null,
+                            'durum' => $z['durum'] ?? 'bos',
+                        ];
+                    }
                 }
             });
 

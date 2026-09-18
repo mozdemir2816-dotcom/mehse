@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\ZiyaretProgrami as ZiyaretProgramiModel;
 use App\Support\GeminiZiyaretDanismani;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\ZiyaretProgramiUretici;
+use App\Support\ZiyaretTakvimi;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -15,7 +17,6 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Ziyaret Programı — isgpratik'te ekran görüntüsü yok; kullanıcı onayıyla
  * BASİTLEŞTİRİLMİŞ liste (firma+yıl başına 12 aylık satır) olarak kuruldu.
@@ -24,7 +25,7 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class ZiyaretProgrami extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.ziyaret-programi';
 
@@ -44,9 +45,14 @@ class ZiyaretProgrami extends Page
 
     public int $yil;
 
+    public ?string $takvimAy = null;
+
+    public ?string $takvimSeciliTarih = null;
+
     public function mount(): void
     {
         $this->yil = (int) now()->format('Y');
+        $this->takvimSeciliTarih = now()->toDateString();
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
@@ -89,14 +95,62 @@ class ZiyaretProgrami extends Page
         return config('isg.ziyaret_programi.amac_kategorileri');
     }
 
+    /**
+     * Seçili firmanın tarihli ziyaret günleri — Profilim > Firma Ziyaretleri
+     * takvimiyle AYNI kaynaktan (ZiyaretTakvimi) türetilir, ayrı bir
+     * gruplama mantığı tekrarlanmaz; sadece bu firmaya süzülür.
+     *
+     * @return array<string, array<int, array{firma: Firma, amac: ?string, sure_saat: mixed, durum: string}>>
+     */
+    #[Computed]
+    public function takvimGunler(): array
+    {
+        if (! $this->firmaId) {
+            return [];
+        }
+
+        $gunler = [];
+
+        foreach (ZiyaretTakvimi::gunlukGruplar(Filament::auth()->id()) as $tarih => $oGunkuZiyaretler) {
+            $buFirmaninkiler = array_values(array_filter(
+                $oGunkuZiyaretler,
+                fn (array $z) => $z['firma']?->id === $this->firmaId
+            ));
+
+            if ($buFirmaninkiler !== []) {
+                $gunler[$tarih] = $buFirmaninkiler;
+            }
+        }
+
+        return $gunler;
+    }
+
+    #[Computed]
+    public function takvimGosterilenAy(): string
+    {
+        return $this->takvimAy ?: $this->yil.'-01';
+    }
+
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->program);
+        unset($this->firma, $this->program, $this->takvimGunler);
+        $this->takvimAy = null;
     }
 
     public function updatedYil(): void
     {
-        unset($this->program);
+        unset($this->program, $this->takvimGunler);
+        $this->takvimAy = null;
+    }
+
+    public function takvimAyDegistir(int $fark): void
+    {
+        $this->takvimAy = \Illuminate\Support\Carbon::parse($this->takvimGosterilenAy().'-01')->addMonths($fark)->format('Y-m');
+    }
+
+    public function takvimGunSec(string $tarih): void
+    {
+        $this->takvimSeciliTarih = $tarih;
     }
 
     /*
@@ -105,38 +159,91 @@ class ZiyaretProgrami extends Page
     |--------------------------------------------------------------------------
     */
 
-    public function ayGuncelle(int $ayIndex, string $alan, mixed $deger): void
+    public function ayGuncelle(int $ayIndex, int $satirIndex, string $alan, mixed $deger): void
     {
         $p = $this->program();
-        $satirlar = $p?->ziyaretler ?? [];
+        $aylar = $p?->ziyaretler ?? [];
 
-        if (! $p || ! isset($satirlar[$ayIndex])) {
+        if (! $p || ! isset($aylar[$ayIndex])) {
             return;
         }
 
-        $satirlar[$ayIndex][$alan] = $deger;
-        $p->update(['ziyaretler' => $satirlar]);
-        unset($this->program);
+        $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$ayIndex]);
+
+        if (! isset($girdiler[$satirIndex])) {
+            return;
+        }
+
+        $girdiler[$satirIndex][$alan] = $deger;
+        $aylar[$ayIndex] = $girdiler;
+        $p->update(['ziyaretler' => $aylar]);
+        unset($this->program, $this->takvimGunler);
     }
 
-    public function durumDegistir(int $ayIndex): void
+    public function durumDegistir(int $ayIndex, int $satirIndex): void
     {
         $p = $this->program();
-        $satirlar = $p?->ziyaretler ?? [];
+        $aylar = $p?->ziyaretler ?? [];
 
-        if (! $p || ! isset($satirlar[$ayIndex])) {
+        if (! $p || ! isset($aylar[$ayIndex])) {
             return;
         }
 
-        $mevcut = $satirlar[$ayIndex]['durum'] ?? 'bos';
+        $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$ayIndex]);
+
+        if (! isset($girdiler[$satirIndex])) {
+            return;
+        }
+
+        $mevcut = $girdiler[$satirIndex]['durum'] ?? 'bos';
         $siraIndex = array_search($mevcut, ZiyaretProgramiModel::DURUM_SIRASI, true);
-        $satirlar[$ayIndex]['durum'] = ZiyaretProgramiModel::DURUM_SIRASI[($siraIndex + 1) % count(ZiyaretProgramiModel::DURUM_SIRASI)];
+        $girdiler[$satirIndex]['durum'] = ZiyaretProgramiModel::DURUM_SIRASI[($siraIndex + 1) % count(ZiyaretProgramiModel::DURUM_SIRASI)];
 
-        $p->update(['ziyaretler' => $satirlar]);
-        unset($this->program);
+        $aylar[$ayIndex] = $girdiler;
+        $p->update(['ziyaretler' => $aylar]);
+        unset($this->program, $this->takvimGunler);
     }
 
-    public function aiAmacOner(int $ayIndex): void
+    public function ziyaretEkle(int $ayIndex): void
+    {
+        $p = $this->program();
+        $aylar = $p?->ziyaretler ?? [];
+
+        if (! $p || ! isset($aylar[$ayIndex])) {
+            return;
+        }
+
+        $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$ayIndex]);
+        $girdiler[] = ZiyaretProgramiModel::bosGirdi();
+        $aylar[$ayIndex] = $girdiler;
+
+        $p->update(['ziyaretler' => $aylar]);
+        unset($this->program, $this->takvimGunler);
+    }
+
+    public function ziyaretSil(int $ayIndex, int $satirIndex): void
+    {
+        $p = $this->program();
+        $aylar = $p?->ziyaretler ?? [];
+
+        if (! $p || ! isset($aylar[$ayIndex])) {
+            return;
+        }
+
+        $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$ayIndex]);
+
+        if (count($girdiler) <= 1 || ! isset($girdiler[$satirIndex])) {
+            return;
+        }
+
+        unset($girdiler[$satirIndex]);
+        $aylar[$ayIndex] = array_values($girdiler);
+
+        $p->update(['ziyaretler' => $aylar]);
+        unset($this->program, $this->takvimGunler);
+    }
+
+    public function aiAmacOner(int $ayIndex, int $satirIndex): void
     {
         $p = $this->program();
 
@@ -153,7 +260,7 @@ class ZiyaretProgrami extends Page
         $oneri = GeminiZiyaretDanismani::oner($ayAdi, $this->firma->nace_aciklama, $this->firma->tehlikeSinifiEtiketi());
 
         if ($oneri) {
-            $this->ayGuncelle($ayIndex, 'amac', $oneri);
+            $this->ayGuncelle($ayIndex, $satirIndex, 'amac', $oneri);
         } else {
             Notification::make()->title('AI önerisi alınamadı')->warning()->send();
         }
