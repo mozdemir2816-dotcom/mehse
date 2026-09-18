@@ -14,6 +14,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
@@ -145,7 +146,7 @@ class ZiyaretProgrami extends Page
 
     public function takvimAyDegistir(int $fark): void
     {
-        $this->takvimAy = \Illuminate\Support\Carbon::parse($this->takvimGosterilenAy().'-01')->addMonths($fark)->format('Y-m');
+        $this->takvimAy = Carbon::parse($this->takvimGosterilenAy().'-01')->addMonths($fark)->format('Y-m');
     }
 
     public function takvimGunSec(string $tarih): void
@@ -178,29 +179,16 @@ class ZiyaretProgrami extends Page
         $aylar[$ayIndex] = $girdiler;
         $p->update(['ziyaretler' => $aylar]);
         unset($this->program, $this->takvimGunler);
+
+        if ($alan === 'tarih' && filled($deger)) {
+            $this->takvimAy = Carbon::parse($deger)->format('Y-m');
+            $this->takvimSeciliTarih = $deger;
+        }
     }
 
     public function durumDegistir(int $ayIndex, int $satirIndex): void
     {
-        $p = $this->program();
-        $aylar = $p?->ziyaretler ?? [];
-
-        if (! $p || ! isset($aylar[$ayIndex])) {
-            return;
-        }
-
-        $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$ayIndex]);
-
-        if (! isset($girdiler[$satirIndex])) {
-            return;
-        }
-
-        $mevcut = $girdiler[$satirIndex]['durum'] ?? 'bos';
-        $siraIndex = array_search($mevcut, ZiyaretProgramiModel::DURUM_SIRASI, true);
-        $girdiler[$satirIndex]['durum'] = ZiyaretProgramiModel::DURUM_SIRASI[($siraIndex + 1) % count(ZiyaretProgramiModel::DURUM_SIRASI)];
-
-        $aylar[$ayIndex] = $girdiler;
-        $p->update(['ziyaretler' => $aylar]);
+        $this->program()?->durumIlerlet($ayIndex, $satirIndex);
         unset($this->program, $this->takvimGunler);
     }
 

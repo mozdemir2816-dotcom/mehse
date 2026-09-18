@@ -12,7 +12,11 @@ use App\Models\ZiyaretProgrami;
  */
 class ZiyaretTakvimi
 {
-    /** @return array<string, array<int, array{firma: Firma, amac: ?string, sure_saat: ?float, durum: string}>> 'Y-m-d' => o günkü ziyaretler */
+    /**
+     * @return array<string, array<int, array{firma: Firma, amac: ?string, sure_saat: ?float, durum: string, program_id: int, ay_index: int, satir_index: int}>>
+     *         'Y-m-d' => o günkü ziyaretler. program_id/ay_index/satir_index, ZiyaretProgrami::durumIlerlet()
+     *         ile bu girdiyi tekrar bulup güncellemek isteyen çağıranlar (ör. panel takvim widget'ı) içindir.
+     */
     public static function gunlukGruplar(int $userId): array
     {
         $gruplar = [];
@@ -22,8 +26,8 @@ class ZiyaretTakvimi
             ->with('firma:id,unvan')
             ->get()
             ->each(function (ZiyaretProgrami $program) use (&$gruplar): void {
-                foreach ($program->ziyaretler ?? [] as $ay) {
-                    foreach (ZiyaretProgrami::ayGirdileri($ay) as $z) {
+                foreach ($program->ziyaretler ?? [] as $ayIndex => $ay) {
+                    foreach (ZiyaretProgrami::ayGirdileri($ay) as $satirIndex => $z) {
                         if (blank($z['tarih'] ?? null)) {
                             continue;
                         }
@@ -33,6 +37,9 @@ class ZiyaretTakvimi
                             'amac' => $z['amac'] ?? null,
                             'sure_saat' => $z['sure_saat'] ?? null,
                             'durum' => $z['durum'] ?? 'bos',
+                            'program_id' => $program->id,
+                            'ay_index' => $ayIndex,
+                            'satir_index' => $satirIndex,
                         ];
                     }
                 }

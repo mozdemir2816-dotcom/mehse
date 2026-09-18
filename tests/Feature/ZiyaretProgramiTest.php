@@ -191,6 +191,22 @@ class ZiyaretProgramiTest extends TestCase
         $this->assertSame('2026-01', $component->instance()->takvimGosterilenAy());
     }
 
+    public function test_tarih_girilince_takvim_o_aya_otomatik_kayar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(ZiyaretSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yil', 2026);
+
+        $this->assertSame('2026-01', $component->instance()->takvimGosterilenAy());
+
+        $component->call('ayGuncelle', 4, 0, 'tarih', '2026-05-20');
+
+        $this->assertSame('2026-05', $component->instance()->takvimGosterilenAy());
+        $this->assertSame('2026-05-20', $component->get('takvimSeciliTarih'));
+    }
+
     public function test_baska_uzmanin_firmasi_secilemez(): void
     {
         $baskaUzman = User::factory()->create();

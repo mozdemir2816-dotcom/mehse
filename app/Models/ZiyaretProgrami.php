@@ -67,4 +67,27 @@ class ZiyaretProgrami extends Model
 
         return array_values($ay);
     }
+
+    /** Bir ay/satır girdisinin durumunu Boş→Planlandı→Tamamlandı sırasıyla ilerletir ve kaydeder. */
+    public function durumIlerlet(int $ayIndex, int $satirIndex): void
+    {
+        $aylar = $this->ziyaretler ?? [];
+
+        if (! isset($aylar[$ayIndex])) {
+            return;
+        }
+
+        $girdiler = static::ayGirdileri($aylar[$ayIndex]);
+
+        if (! isset($girdiler[$satirIndex])) {
+            return;
+        }
+
+        $mevcut = $girdiler[$satirIndex]['durum'] ?? 'bos';
+        $siraIndex = array_search($mevcut, static::DURUM_SIRASI, true);
+        $girdiler[$satirIndex]['durum'] = static::DURUM_SIRASI[($siraIndex + 1) % count(static::DURUM_SIRASI)];
+
+        $aylar[$ayIndex] = $girdiler;
+        $this->update(['ziyaretler' => $aylar]);
+    }
 }
