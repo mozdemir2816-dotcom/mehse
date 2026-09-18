@@ -132,13 +132,13 @@ class UzaktanEgitimAtama extends Page
 
         $giris = [];
         $atananSayi = 0;
-        $epostasiz = [];
+        $koduUretilenler = [];
 
         foreach ($this->calisanlar->whereIn('id', $this->secilenCalisanlar) as $calisan) {
+            // E-postası olmayan çalışana portala girebilmesi için geçici bir kullanıcı kodu ata.
             if (blank($calisan->eposta)) {
-                $epostasiz[] = $calisan->ad_soyad;
-
-                continue;
+                $calisan->forceFill(['eposta' => $this->geciciKullaniciKodu($calisan)])->save();
+                $koduUretilenler[] = $calisan->ad_soyad;
             }
 
             // Zaten aynı paket atanmışsa atlanır (unique kısıtı).
@@ -174,13 +174,34 @@ class UzaktanEgitimAtama extends Page
         unset($this->atamalar);
 
         $mesaj = $atananSayi.' çalışana eğitim atandı';
-        if ($epostasiz) {
-            $mesaj .= ' · e-postası olmayanlar atlandı: '.implode(', ', $epostasiz);
+        if ($koduUretilenler) {
+            $mesaj .= ' · e-postası olmayanlara geçici kullanıcı kodu üretildi: '.implode(', ', $koduUretilenler);
         }
 
         Notification::make()->title($mesaj)
             ->body('Portal adresi: '.url('/egitim').' — giriş bilgileri aşağıda listelendi.')
             ->success()->send();
+    }
+
+    /**
+     * E-postası olmayan çalışan için, portala e-posta yerine girebileceği
+     * benzersiz, okunabilir bir kullanıcı kodu üretir (ör. "ahmet.yilmaz482").
+     * Aynı `eposta` sütununa yazılır — PortalLogin bu alanda artık e-posta
+     * biçimi zorunlu tutmuyor.
+     */
+    private function geciciKullaniciKodu(Calisan $calisan): string
+    {
+        $taban = (string) Str::of($calisan->ad_soyad)
+            ->ascii()
+            ->lower()
+            ->replace(' ', '.')
+            ->replaceMatches('/[^a-z0-9.]/', '');
+
+        do {
+            $kod = $taban.random_int(100, 999);
+        } while (Calisan::where('eposta', $kod)->exists());
+
+        return $kod;
     }
 
     public function sifreYenile(int $calisanId): void

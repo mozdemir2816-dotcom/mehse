@@ -6,7 +6,8 @@
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Bir eğitim paketini firmadaki çalışanlara atayın; sistem portal giriş bilgisini (e-posta + geçici şifre)
-        üretir. Çalışanlar <strong>{{ url('/egitim') }}</strong> adresinden girer. Paketleri
+        üretir. E-postası olmayan çalışanlara otomatik bir geçici kullanıcı kodu oluşturulur. Çalışanlar
+        <strong>{{ url('/egitim') }}</strong> adresinden girer. Paketleri
         <strong>Uzaktan Eğitim Paketleri</strong> ekranından oluşturursunuz.
     </p>
 
@@ -55,7 +56,7 @@
                                 <input type="checkbox" wire:click="calisanToggle({{ $c->id }})" @checked(in_array($c->id, $secilenCalisanlar))>
                                 <span>
                                     {{ $c->ad_soyad }}
-                                    @if (blank($c->eposta))<span style="color:#ef4444;font-size:.72rem"> (e-posta yok)</span>@endif
+                                    @if (blank($c->eposta))<span style="color:#b45309;font-size:.72rem"> (e-posta yok — kullanıcı kodu üretilecek)</span>@endif
                                     @if (filled($c->sifre))<span style="color:rgb(21 128 61);font-size:.72rem"> ✓ hesap var</span>@endif
                                 </span>
                             </label>
@@ -72,11 +73,14 @@
             <div style="{{ $kutu }};margin-top:1rem;border-color:rgb(21 128 61 / .5);background:rgb(21 128 61 / .05)">
                 <div style="font-weight:600;font-size:.85rem;margin-bottom:.4rem">Giriş Bilgileri — çalışanlara iletin ({{ url('/egitim') }})</div>
                 <table style="width:100%;font-size:.82rem;border-collapse:collapse">
-                    <tr style="text-align:left;color:rgb(107 114 128)"><th style="padding:.3rem">Ad Soyad</th><th style="padding:.3rem">E-posta</th><th style="padding:.3rem">Geçici Şifre</th></tr>
+                    <tr style="text-align:left;color:rgb(107 114 128)"><th style="padding:.3rem">Ad Soyad</th><th style="padding:.3rem">E-posta / Kullanıcı Kodu</th><th style="padding:.3rem">Geçici Şifre</th></tr>
                     @foreach ($sonUretilenGiris as $g)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                             <td style="padding:.3rem">{{ $g['ad_soyad'] }}</td>
-                            <td style="padding:.3rem">{{ $g['eposta'] }}</td>
+                            <td style="padding:.3rem;font-family:monospace">
+                                {{ $g['eposta'] }}
+                                @unless (str_contains($g['eposta'], '@'))<span style="color:#b45309;font-size:.7rem"> (kod)</span>@endunless
+                            </td>
                             <td style="padding:.3rem;font-family:monospace">{{ $g['sifre'] ?? '(mevcut şifre korunuyor)' }}</td>
                         </tr>
                     @endforeach

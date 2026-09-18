@@ -95,7 +95,7 @@ class UzaktanEgitimTest extends TestCase
         $this->assertNotNull($calisan->fresh()->sifre);
     }
 
-    public function test_epostasiz_calisan_atlanir(): void
+    public function test_epostasiz_calisana_gecici_kullanici_kodu_uretilip_atanir(): void
     {
         $paket = $this->paketKur();
         $calisan = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Postasız Kişi', 'aktif' => true]);
@@ -104,9 +104,31 @@ class UzaktanEgitimTest extends TestCase
             ->set('firmaId', $this->firma->id)
             ->set('paketId', $paket->id)
             ->call('calisanToggle', $calisan->id)
+            ->call('ata')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, EgitimAtamasi::count());
+
+        $kod = $calisan->fresh()->eposta;
+        $this->assertNotNull($kod);
+        $this->assertStringNotContainsString('@', $kod);
+        $this->assertStringStartsWith('postasiz.kisi', $kod);
+    }
+
+    public function test_ayni_ad_soyadli_iki_epostasiz_calisana_farkli_kod_uretilir(): void
+    {
+        $paket = $this->paketKur();
+        $a = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Aynı İsim', 'aktif' => true]);
+        $b = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Aynı İsim', 'aktif' => true]);
+
+        Livewire::test(UzaktanEgitimAtama::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('paketId', $paket->id)
+            ->call('calisanToggle', $a->id)
+            ->call('calisanToggle', $b->id)
             ->call('ata');
 
-        $this->assertSame(0, EgitimAtamasi::count());
+        $this->assertNotSame($a->fresh()->eposta, $b->fresh()->eposta);
     }
 
     public function test_eksik_paket_atanmaz(): void
