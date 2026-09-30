@@ -32,18 +32,24 @@ class KurulToplantisiTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
+        // Başkan, "baskan" rolündeki kurul üyesinden gelir; katılımcılar üyelerden kopyalanır.
+        $firma->kurulUyeleri()->create(['rol' => 'baskan', 'ad_soyad' => 'Ali Veli', 'gorev' => 'İşveren']);
+
         $component = Livewire::test(KurulSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->set('yer', 'Toplantı Salonu')
-            ->set('baskan', 'Ali Veli')
-            ->call('yeniToplanti');
+            ->callAction('toplantiPlanla', ['yer' => 'Toplantı Salonu', 'gundem_ek' => "Ek madde 1\nEk madde 2"])
+            ->assertHasNoActionErrors();
 
         $this->assertDatabaseHas('kurul_toplantilari', [
             'firma_id' => $firma->id,
             'yer' => 'Toplantı Salonu',
             'baskan' => 'Ali Veli',
         ]);
-        $this->assertNotNull($component->get('toplantiId'));
+        $toplanti = $firma->kurulToplantilari()->firstOrFail();
+        $this->assertSame('Ali Veli', $toplanti->katilimcilar[0]['ad_soyad']);
+        $this->assertSame('baskan', $toplanti->katilimcilar[0]['rol']);
+        $this->assertContains('Ek madde 2', $toplanti->gundem);
+        $this->assertSame($toplanti->id, $component->get('toplantiId'));
     }
 
     public function test_katilimci_eklenir_ve_katilim_durumu_degistirilir(): void
@@ -128,8 +134,8 @@ class KurulToplantisiTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create();
         $yil = now()->year;
 
-        Livewire::test(KurulSayfasi::class)->set('firmaId', $firma->id)->call('yeniToplanti');
-        Livewire::test(KurulSayfasi::class)->set('firmaId', $firma->id)->call('yeniToplanti');
+        Livewire::test(KurulSayfasi::class)->set('firmaId', $firma->id)->callAction('toplantiPlanla');
+        Livewire::test(KurulSayfasi::class)->set('firmaId', $firma->id)->callAction('toplantiPlanla');
 
         $nolar = $firma->kurulToplantilari()->orderBy('id')->pluck('toplanti_no')->all();
         $this->assertSame(["{$yil}/1", "{$yil}/2"], $nolar);

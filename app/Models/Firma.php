@@ -102,6 +102,11 @@ class Firma extends Model
         return $this->hasMany(KurulToplantisi::class);
     }
 
+    public function kurulUyeleri(): HasMany
+    {
+        return $this->hasMany(KurulUyesi::class);
+    }
+
     public function egitimSinavlari(): HasMany
     {
         return $this->hasMany(EgitimSinavi::class);

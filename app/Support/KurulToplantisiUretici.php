@@ -57,10 +57,14 @@ class KurulToplantisiUretici
 
         foreach ([
             'Toplantı No' => $toplanti->toplanti_no ?: '—',
+            'Belge No' => $toplanti->belge_no ?: '—',
+            'Revizyon' => $toplanti->revizyon_no ?: '00',
             'Tarih' => $toplanti->tarih?->format('d.m.Y') ?: '—',
-            'Saat' => $toplanti->saat ?: '—',
+            'Saat' => $toplanti->saatAraligi() ?: '—',
             'Toplantı Yeri' => $toplanti->yer ?: '—',
+            'Toplantı Türü' => $toplanti->turEtiketi(),
             'Toplantı Başkanı' => $toplanti->baskan ?: '—',
+            'Sonraki Toplantı' => $toplanti->sonraki_toplanti?->format('d.m.Y') ?: '—',
         ] as $etiket => $deger) {
             $s->setCellValue("A{$satir}", $etiket);
             $s->getStyle("A{$satir}")->getFont()->setBold(true);
@@ -71,12 +75,13 @@ class KurulToplantisiUretici
 
         // KATILIMCILAR
         $satir = self::bolumBasligi($s, $satir, 'KATILIMCILAR');
-        $satir = self::tabloBasligi($s, $satir, ['#', 'Ad Soyad', 'Görev', 'Katılım']);
+        $satir = self::tabloBasligi($s, $satir, ['#', 'Ad Soyad', 'Görev', 'Kurul Rolü', 'Katılım']);
         foreach (($toplanti->katilimcilar ?? []) as $i => $k) {
             $s->fromArray([
                 $i + 1,
                 $k['ad_soyad'] ?? '—',
                 $k['gorev'] ?? '—',
+                filled($k['rol'] ?? null) ? config("isg.kurul_toplantisi.roller.{$k['rol']}.ad", $k['rol']) : '—',
                 ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı',
             ], null, "A{$satir}");
             $satir++;

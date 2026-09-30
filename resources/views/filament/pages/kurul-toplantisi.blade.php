@@ -1,169 +1,304 @@
 @php
-    $mor = 'rgb(139 92 246)';
-    $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $t = $this->toplanti;
+    $firma = $this->firma;
+    $m = $this->metrikler;
+    $roller = \App\Support\KurulUyeleri::roller();
+    $girdi = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid var(--border);background:var(--panel-bg, #fff);font-size:.82rem';
+    $etiket = 'display:block;font-weight:600;font-size:.75rem;color:var(--text-secondary);margin-bottom:.2rem';
+    $durumRenk = ['taslak' => 'gray', 'planlandi' => 'info', 'tamamlandi' => 'success'];
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
-        Firma seçip yeni bir kurul toplantısı oluşturun veya geçmiş bir toplantıyı seçin;
-        katılımcı/gündem/karar bilgilerini doldurup <strong>"PDF İndir"</strong> veya
-        <strong>"Excel İndir"</strong> ile resmi tutanağı alın. Her toplantıya firma+yıl
-        bazlı bir <strong>toplantı numarası</strong> atanır (elle düzeltilebilir).
-    </p>
-
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'isg_kurulu'])
 
-    {{-- 1. FİRMA & TOPLANTI SEÇİMİ --}}
-    <x-filament::section icon="heroicon-o-users" icon-color="primary">
-        <x-slot name="heading">1. Firma & Toplantı</x-slot>
+    {{-- AKTİF İŞYERİ BAĞLAMI --}}
+    <x-filament::section icon="heroicon-o-building-office-2">
+        <x-slot name="heading">Aktif işyeri</x-slot>
+        <x-slot name="description">Kurul üyeleri, toplantılar ve tutanaklar yalnız seçilen işyerinden gelir.</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem">
+        <div class="grid gap-4 md:grid-cols-2 md:items-end">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
-                <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                <label style="{{ $etiket }}">İşyeri</label>
+                <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
                     @endforeach
                 </select>
             </div>
-        </div>
 
-        @if ($this->firma)
-            @if ($this->toplantilar->isNotEmpty())
-                <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
-                    @foreach ($this->toplantilar as $tp)
-                        @php $secili = $toplantiId === $tp->id; @endphp
-                        <button type="button" wire:click="toplantiSec({{ $tp->id }})"
-                            style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
-                                border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
-                                background:{{ $secili ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
-                            @if ($tp->toplanti_no)<strong>No {{ $tp->toplanti_no }}</strong> · @endif{{ $tp->tarih?->format('d.m.Y') }} {{ $tp->saat }}
-                        </button>
-                    @endforeach
+            @if ($firma)
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <x-filament::badge color="gray">NACE {{ $firma->nace_kodu ?: '—' }}</x-filament::badge>
+                    <x-filament::badge :color="$firma->tehlike_sinifi === 'cok_tehlikeli' ? 'danger' : ($firma->tehlike_sinifi === 'tehlikeli' ? 'warning' : 'success')">
+                        {{ config('isg.tehlike_siniflari.'.$firma->tehlike_sinifi, '—') }}
+                    </x-filament::badge>
+                    <x-filament::badge color="info">Toplantı: {{ \App\Support\KurulUyeleri::periyotEtiketi($firma) }}</x-filament::badge>
+                    <x-filament::badge :color="($firma->calisan_sayisi ?? 0) >= 50 ? 'warning' : 'gray'">
+                        {{ (int) $firma->calisan_sayisi }} çalışan{{ ($firma->calisan_sayisi ?? 0) >= 50 ? ' · kurul zorunlu' : '' }}
+                    </x-filament::badge>
                 </div>
             @endif
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr)) auto;gap:.75rem;align-items:end">
-                <div>
-                    <label style="font-weight:600;font-size:.8rem">Toplantı No</label>
-                    <input type="text" wire:model="toplantiNo" placeholder="Örn: 2026/1"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
-                </div>
-                <div>
-                    <label style="font-weight:600;font-size:.8rem">Tarih</label>
-                    <input type="date" wire:model="tarih"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
-                </div>
-                <div>
-                    <label style="font-weight:600;font-size:.8rem">Saat</label>
-                    <input type="time" wire:model="saat"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
-                </div>
-                <div>
-                    <label style="font-weight:600;font-size:.8rem">Toplantı Yeri</label>
-                    <input type="text" wire:model="yer" placeholder="Örn: Toplantı Salonu"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
-                </div>
-                <div>
-                    <label style="font-weight:600;font-size:.8rem">Toplantı Başkanı</label>
-                    <input type="text" wire:model="baskan" placeholder="Genellikle işveren/vekili"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
-                </div>
-                @if ($t)
-                    <x-filament::button size="sm" wire:click="toplantiBilgileriniKaydet">Kaydet</x-filament::button>
-                @else
-                    <x-filament::button size="sm" color="success" wire:click="yeniToplanti">+ Yeni Toplantı</x-filament::button>
-                @endif
-            </div>
-        @else
-            <p style="font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
-        @endif
+        </div>
     </x-filament::section>
 
-    @if ($t)
-        {{-- 2. KATILIMCILAR --}}
-        <x-filament::section icon="heroicon-o-user-group" icon-color="primary">
-            <x-slot name="heading">
-                2. Katılımcılar
-                <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ $t->katilanSayisi() }} / {{ count($t->katilimcilar ?? []) }} katıldı)</span>
+    @if ($firma)
+        {{-- METRİKLER --}}
+        <div class="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            @foreach ([
+                ['Aktif üyeler', $m['aktif_uye'], 'Yeni toplantıya katılımcı olarak aktarılır', 'var(--metric-blue)'],
+                ['Planlı toplantılar', $m['planli'], 'Bugün ve sonrası', 'var(--metric-green)'],
+                ['Toplam toplantı', $m['toplam'], 'Tarihsel kayıtlar dahil', 'var(--metric-purple)'],
+                ['Zorunlu üyeler', $m['eksik'] ? $m['eksik'].' eksik' : 'Tam', $m['eksik'] ? 'Yalnız taslak kaydedilebilir' : 'Resmî kayıt yapılabilir', $m['eksik'] ? 'var(--metric-orange)' : 'var(--metric-green)'],
+            ] as [$baslik, $deger, $alt, $renk])
+                <div style="background:var(--panel-bg,#fff);border-radius:12px;padding:.9rem 1rem;border-left:4px solid {{ $renk }};box-shadow:0 0 0 1px rgb(15 23 42 / .05)">
+                    <div style="font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-label)">{{ $baslik }}</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:{{ $renk }};line-height:1.3">{{ $deger }}</div>
+                    <div style="font-size:.72rem;color:var(--text-secondary)">{{ $alt }}</div>
+                </div>
+            @endforeach
+        </div>
+
+        @if ($this->eksikZorunlular)
+            <div style="border:1px solid rgb(217 119 6 / .35);background:rgb(217 119 6 / .07);border-radius:12px;padding:.8rem 1rem" class="flex flex-wrap items-center gap-3">
+                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-5 w-5" style="color:rgb(217 119 6)" />
+                <div class="flex-1 text-sm" style="min-width:14rem">
+                    <strong style="color:rgb(180 83 9)">Resmî durum engeli.</strong>
+                    Eksik zorunlu üyeler: {{ implode(' · ', $this->eksikZorunlular) }}.
+                    Tamamlanmadan toplantılar yalnız <em>Taslak</em> olarak kaydedilebilir.
+                </div>
+                <x-filament::button size="sm" color="warning" icon="heroicon-o-user-plus" wire:click="mountAction('uyeYonet')">Üyeleri tamamla</x-filament::button>
+            </div>
+        @endif
+
+        {{-- KURUL ÜYELERİ --}}
+        <x-filament::section icon="heroicon-o-user-group" collapsible>
+            <x-slot name="heading">Kurul üyeleri ({{ $this->uyeler->count() }})</x-slot>
+            <x-slot name="description">İSG Kurulları Hakkında Yönetmelik Md.6 — kalıcı üye listesi. Toplantı oluşturulurken katılımcı olarak kopyalanır.</x-slot>
+            <x-slot name="afterHeader">
+                <x-filament::button size="sm" color="gray" icon="heroicon-o-user-plus" wire:click="mountAction('uyeYonet')">Üye Yönet</x-filament::button>
             </x-slot>
 
-            @if ($this->calisanlar->isNotEmpty())
-                <div style="font-weight:600;font-size:.8rem;margin-bottom:.3rem">Firma Çalışanlarından Hızlı Ekle</div>
-                <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem">
-                    @foreach ($this->calisanlar as $c)
-                        <x-filament::button size="xs" color="gray" wire:click="katilimHizliEkle({{ $c->id }})">+ {{ $c->ad_soyad }}</x-filament::button>
-                    @endforeach
+            @if ($this->uyeler->isNotEmpty())
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                                <th class="px-3 py-2 text-left">#</th>
+                                <th class="px-3 py-2 text-left">Ad soyad</th>
+                                <th class="px-3 py-2 text-left">Görevi / unvanı</th>
+                                <th class="px-3 py-2 text-left">Kurul rolü</th>
+                                <th class="px-3 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($this->uyeler as $i => $u)
+                                <tr style="border-top:1px solid var(--border-light)">
+                                    <td class="px-3 py-2" style="color:var(--text-label)">{{ $i + 1 }}</td>
+                                    <td class="px-3 py-2 font-semibold">{{ $u->ad_soyad }}</td>
+                                    <td class="px-3 py-2">{{ $u->gorev ?: '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        <x-filament::badge :color="($roller[$u->rol]['zorunlu'] ?? false) ? 'info' : 'gray'">{{ $u->rolEtiketi() }}</x-filament::badge>
+                                    </td>
+                                    <td class="px-3 py-2 text-right">
+                                        <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Kuruldan çıkar"
+                                            wire:click="uyeKaldir({{ $u->id }})" wire:confirm="{{ $u->ad_soyad }} kuruldan çıkarılsın mı? (Geçmiş tutanaklar etkilenmez.)" />
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-            @endif
-
-            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin-bottom:.75rem">
-                <input type="text" wire:model="yeniKatilimciAd" placeholder="Ad Soyad"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                <select wire:model="yeniKatilimciGorev"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                    <option value="">Görev seçin</option>
-                    @foreach ($this->katilimciGorevleri as $g)
-                        <option value="{{ $g }}">{{ $g }}</option>
-                    @endforeach
-                </select>
-                <x-filament::button size="sm" wire:click="katilimciEkle">Ekle</x-filament::button>
-            </div>
-
-            @if ($t->katilimcilar)
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-                    <tr>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Ad Soyad</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Görev</th>
-                        <th style="border-bottom:1px solid rgb(107 114 128 / .3)">Katılım</th>
-                        <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
-                    </tr>
-                    @foreach ($t->katilimcilar as $i => $k)
-                        <tr>
-                            <td style="padding:.3rem .5rem">{{ $k['ad_soyad'] }}</td>
-                            <td style="padding:.3rem .5rem">{{ $k['gorev'] ?: '—' }}</td>
-                            <td style="padding:.3rem .5rem;text-align:center">
-                                <button type="button" wire:click="katilimToggle({{ $i }})"
-                                    style="border:none;cursor:pointer;padding:.15rem .5rem;border-radius:.3rem;font-size:.75rem;color:#fff;
-                                        background:{{ ($k['katildi'] ?? false) ? '#10b981' : '#ef4444' }}">
-                                    {{ ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı' }}
-                                </button>
-                            </td>
-                            <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </table>
+            @else
+                <div class="py-6 text-center text-sm" style="color:var(--text-secondary)">
+                    Henüz kurul üyesi yok. <strong>Üye Yönet</strong> ile işveren, İGU, işyeri hekimi, İK sorumlusu ve çalışan temsilcisini ekleyin.
+                </div>
             @endif
         </x-filament::section>
 
-        {{-- 3. GÜNDEM --}}
-        <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="primary">
-            <x-slot name="heading">3. Gündem</x-slot>
+        {{-- TOPLANTILAR --}}
+        <x-filament::section icon="heroicon-o-calendar-days">
+            <x-slot name="heading">Toplantılar ({{ $this->toplantilar->count() }})</x-slot>
+            <x-slot name="afterHeader">
+                <x-filament::button size="sm" icon="heroicon-o-plus" wire:click="mountAction('toplantiPlanla')">Toplantı Planla</x-filament::button>
+            </x-slot>
 
-            <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;margin-bottom:.75rem">
-                <input type="text" wire:model="yeniGundemMaddesi" placeholder="Gündem maddesi yazın"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+            @if ($this->toplantilar->isNotEmpty())
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                                <th class="px-3 py-2 text-left">Tarih</th>
+                                <th class="px-3 py-2 text-left">No</th>
+                                <th class="px-3 py-2 text-left">Tür / durum</th>
+                                <th class="px-3 py-2 text-left">Gündem</th>
+                                <th class="px-3 py-2 text-center">Karar</th>
+                                <th class="px-3 py-2 text-center">Katılım</th>
+                                <th class="px-3 py-2 text-left">Sonraki</th>
+                                <th class="px-3 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($this->toplantilar as $tp)
+                                @php $secili = $toplantiId === $tp->id; @endphp
+                                <tr style="border-top:1px solid var(--border-light);{{ $secili ? 'background:var(--info-bg)' : '' }}">
+                                    <td class="px-3 py-2 whitespace-nowrap font-semibold">{{ $tp->tarih?->format('d.m.Y') ?: '—' }}
+                                        <div class="text-xs font-normal" style="color:var(--text-label)">{{ $tp->saatAraligi() }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $tp->toplanti_no ?: '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex flex-wrap gap-1">
+                                            <x-filament::badge color="gray">{{ $tp->turEtiketi() }}</x-filament::badge>
+                                            <x-filament::badge :color="$durumRenk[$tp->durum] ?? 'gray'">{{ $tp->durumEtiketi() }}</x-filament::badge>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2" style="max-width:18rem">
+                                        <span class="line-clamp-2">{{ ($tp->gundem ?? [])[0] ?? '—' }}</span>
+                                        @if (count($tp->gundem ?? []) > 1)
+                                            <span class="text-xs" style="color:var(--text-label)">+{{ count($tp->gundem) - 1 }} madde</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-center">{{ count($tp->kararlar ?? []) }}</td>
+                                    <td class="px-3 py-2 text-center whitespace-nowrap">{{ $tp->katilanSayisi() }}/{{ count($tp->katilimcilar ?? []) }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $tp->sonraki_toplanti?->format('d.m.Y') ?: '—' }}</td>
+                                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                                        <x-filament::button size="xs" :color="$secili ? 'primary' : 'gray'" icon="heroicon-o-pencil-square" wire:click="toplantiSec({{ $tp->id }})">
+                                            {{ $secili ? 'Açık' : 'Aç' }}
+                                        </x-filament::button>
+                                        <x-filament::icon-button icon="heroicon-o-trash" color="danger" size="sm" label="Sil"
+                                            wire:click="toplantiSil({{ $tp->id }})" wire:confirm="Bu toplantı ve tutanağı silinsin mi?" />
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="py-6 text-center text-sm" style="color:var(--text-secondary)">
+                    Toplantı kaydı yok. <strong>Toplantı Planla</strong> ile ilk toplantıyı oluşturun.
+                </div>
+            @endif
+        </x-filament::section>
+    @else
+        <p class="text-sm" style="color:rgb(217 119 6)">Devam etmek için bir işyeri seçin.</p>
+    @endif
+
+    @if ($t)
+        {{-- SEÇİLİ TOPLANTI: KÜNYE --}}
+        <x-filament::section icon="heroicon-o-document-text">
+            <x-slot name="heading">Toplantı {{ $t->toplanti_no ?: '' }} — {{ $t->tarih?->format('d.m.Y') }}</x-slot>
+            <x-slot name="description">Tutanak künyesi. PDF / Excel sayfanın üstündeki düğmelerden indirilir.</x-slot>
+            <x-slot name="afterHeader">
+                <x-filament::icon-button icon="heroicon-o-x-mark" color="gray" label="Kapat" wire:click="toplantiKapat" />
+            </x-slot>
+
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div><label style="{{ $etiket }}">Toplantı no</label><input type="text" wire:model="toplantiNo" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Belge no</label><input type="text" wire:model="belgeNo" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Revizyon</label><input type="text" wire:model="revizyonNo" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Tarih</label><input type="date" wire:model="tarih" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Başlangıç</label><input type="time" wire:model="saat" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Bitiş</label><input type="time" wire:model="bitisSaati" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Toplantı yeri</label><input type="text" wire:model="yer" style="{{ $girdi }}"></div>
+                <div><label style="{{ $etiket }}">Toplantı başkanı</label><input type="text" wire:model="baskan" placeholder="İşveren / vekili" style="{{ $girdi }}"></div>
+                <div>
+                    <label style="{{ $etiket }}">Tür</label>
+                    <select wire:model="tur" style="{{ $girdi }}">
+                        @foreach (config('isg.kurul_toplantisi.turler') as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="{{ $etiket }}">Durum</label>
+                    <select wire:model="durum" style="{{ $girdi }}">
+                        @foreach (config('isg.kurul_toplantisi.durumlar') as $k => $v)
+                            <option value="{{ $k }}" @disabled($this->eksikZorunlular && $k !== 'taslak')>{{ $v }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div><label style="{{ $etiket }}">Sonraki toplantı</label><input type="date" wire:model="sonrakiToplanti" style="{{ $girdi }}"></div>
+                <div class="sm:col-span-2 lg:col-span-4">
+                    <label style="{{ $etiket }}">Notlar</label>
+                    <textarea wire:model="notlar" rows="2" style="{{ $girdi }};font-family:inherit"></textarea>
+                </div>
+            </div>
+            <div class="mt-3">
+                <x-filament::button size="sm" icon="heroicon-o-check" wire:click="toplantiBilgileriniKaydet">Kaydet</x-filament::button>
+            </div>
+        </x-filament::section>
+
+        {{-- KATILIMCILAR --}}
+        <x-filament::section icon="heroicon-o-user-group">
+            <x-slot name="heading">Katılım ({{ $t->katilanSayisi() }} / {{ count($t->katilimcilar ?? []) }})</x-slot>
+            <x-slot name="description">Toplantı anındaki kurul üyeleri — tarihsel kopya. Üyeler değiştiyse "Üyeleri yeniden aktar".</x-slot>
+            <x-slot name="afterHeader">
+                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-path" wire:click="uyeleriAktar">Üyeleri yeniden aktar</x-filament::button>
+            </x-slot>
+
+            @if ($t->katilimcilar)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        @foreach ($t->katilimcilar as $i => $k)
+                            <tr style="border-top:{{ $i ? '1px solid var(--border-light)' : 'none' }}">
+                                <td class="px-3 py-2 font-semibold">{{ $k['ad_soyad'] }}</td>
+                                <td class="px-3 py-2">{{ $k['gorev'] ?: '—' }}</td>
+                                <td class="px-3 py-2">
+                                    @if (filled($k['rol'] ?? null))
+                                        <x-filament::badge color="gray">{{ config('isg.kurul_toplantisi.roller.'.$k['rol'].'.ad', $k['rol']) }}</x-filament::badge>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-center">
+                                    <x-filament::button size="xs" :color="($k['katildi'] ?? false) ? 'success' : 'danger'" wire:click="katilimToggle({{ $i }})">
+                                        {{ ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı' }}
+                                    </x-filament::button>
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Çıkar" wire:click="katilimciSil({{ $i }})" />
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            @endif
+
+            @if ($this->calisanlar->isNotEmpty())
+                <div class="mt-3">
+                    <select x-on:change="if ($event.target.value) { $wire.katilimHizliEkle(+$event.target.value); $event.target.value = '' }" style="{{ $girdi }}">
+                        <option value="">+ Firma personelinden katılımcı ekle…</option>
+                        @foreach ($this->calisanlar as $c)
+                            <option value="{{ $c->id }}">{{ $c->ad_soyad }}{{ $c->gorev ? ' — '.$c->gorev : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+
+            <div class="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                <input type="text" wire:model="yeniKatilimciAd" placeholder="Kurul dışı katılımcı — ad soyad" style="{{ $girdi }}">
+                <select wire:model="yeniKatilimciGorev" style="{{ $girdi }}">
+                    <option value="">Görev seçin</option>
+                    @foreach ($this->katilimciGorevleri as $g)<option value="{{ $g }}">{{ $g }}</option>@endforeach
+                </select>
+                <x-filament::button size="sm" color="gray" wire:click="katilimciEkle">Ekle</x-filament::button>
+            </div>
+        </x-filament::section>
+
+        {{-- GÜNDEM --}}
+        <x-filament::section icon="heroicon-o-clipboard-document-list">
+            <x-slot name="heading">Gündem</x-slot>
+
+            <div class="mb-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input type="text" wire:model="yeniGundemMaddesi" wire:keydown.enter="gundemEkle" placeholder="Gündem maddesi yazın" style="{{ $girdi }}">
                 <x-filament::button size="sm" wire:click="gundemEkle">+ Ekle</x-filament::button>
             </div>
 
-            <details style="margin-bottom:.75rem">
-                <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:rgb(107 114 128)">Hazır Gündem Maddeleri</summary>
-                <div style="margin-top:.5rem;display:flex;flex-direction:column;gap:.6rem">
+            <details class="mb-3">
+                <summary class="cursor-pointer text-sm font-semibold" style="color:var(--text-secondary)">Hazır gündem maddeleri</summary>
+                <div class="mt-2 flex flex-col gap-2">
                     @foreach ($this->hazirGundemMaddeleri as $kategori => $maddeler)
                         <div>
-                            <div style="font-size:.75rem;font-weight:700;color:{{ $mor }};margin-bottom:.25rem">{{ $kategori }}</div>
-                            <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+                            <div class="mb-1 text-xs font-bold" style="color:var(--primary)">{{ $kategori }}</div>
+                            <div class="flex flex-wrap gap-1">
                                 @foreach ($maddeler as $madde)
-                                    <button type="button" wire:click="hazirGundemEkle('{{ addslashes($madde) }}')"
-                                        style="text-align:left;padding:.3rem .5rem;border-radius:.35rem;cursor:pointer;font-size:.75rem;
-                                            border:1px solid rgb(107 114 128 / .3);background:transparent">
-                                        + {{ $madde }}
-                                    </button>
+                                    <x-filament::button size="xs" color="gray" wire:click="hazirGundemEkle('{{ addslashes($madde) }}')">+ {{ $madde }}</x-filament::button>
                                 @endforeach
                             </div>
                         </div>
@@ -172,120 +307,99 @@
             </details>
 
             @if ($t->gundem)
-                <div style="display:flex;flex-direction:column;gap:.4rem">
+                <div class="flex flex-col gap-2">
                     @foreach ($t->gundem as $i => $madde)
-                        <div style="display:flex;align-items:center;gap:.5rem;{{ $kutu }};padding:.5rem .7rem">
-                            <span style="flex:1;font-size:.82rem">{{ $i + 1 }}. {{ $madde }}</span>
-                            <x-filament::button size="xs" color="gray" wire:click="kararFormuAc({{ $i }})">Karar Yaz</x-filament::button>
-                            <button type="button" wire:click="gundemSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                        <div class="flex items-center gap-2" style="border:1px solid var(--border);border-radius:10px;padding:.5rem .75rem">
+                            <span class="flex-1 text-sm"><strong>{{ $i + 1 }}.</strong> {{ $madde }}</span>
+                            <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="kararFormuAc({{ $i }})">Karar yaz</x-filament::button>
+                            <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Sil" wire:click="gundemSil({{ $i }})" />
                         </div>
                     @endforeach
                 </div>
             @else
-                <p style="font-size:.82rem;color:rgb(107 114 128)">Henüz gündem maddesi eklenmedi.</p>
+                <p class="text-sm" style="color:var(--text-secondary)">Henüz gündem maddesi eklenmedi.</p>
             @endif
 
             @if ($kararGundemIndex !== null && isset($t->gundem[$kararGundemIndex]))
-                <div style="{{ $kutu }};margin-top:.75rem;background:rgb(139 92 246 / .05);border-color:{{ $mor }}">
-                    <div style="font-weight:600;font-size:.82rem;margin-bottom:.5rem">Karar: {{ $t->gundem[$kararGundemIndex] }}</div>
-                    <textarea wire:model="yeniKararMetni" rows="2" placeholder="Karar metni"
-                        style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem;font-family:inherit"></textarea>
-                    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin-top:.5rem">
-                        <input type="text" wire:model="yeniKararSorumlu" placeholder="Sorumlu"
-                            style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                        <input type="date" wire:model="yeniKararTermin"
-                            style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                <div class="mt-3" style="border:1px solid var(--primary);background:var(--info-bg);border-radius:12px;padding:.9rem">
+                    <div class="mb-2 text-sm font-semibold">Karar: {{ $t->gundem[$kararGundemIndex] }}</div>
+                    <textarea wire:model="yeniKararMetni" rows="2" placeholder="Karar metni" style="{{ $girdi }};font-family:inherit"></textarea>
+                    <div class="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                        <input type="text" wire:model="yeniKararSorumlu" placeholder="Sorumlu" style="{{ $girdi }}">
+                        <input type="date" wire:model="yeniKararTermin" style="{{ $girdi }}">
                         @if ($this->aiAktif)
-                            <x-filament::button size="sm" color="gray" wire:click="kararAiOner">✨ AI Öner</x-filament::button>
+                            <x-filament::button size="sm" color="gray" wire:click="kararAiOner">✨ AI öner</x-filament::button>
                         @endif
                     </div>
-                    <div style="margin-top:.5rem;display:flex;gap:.5rem">
-                        <x-filament::button size="sm" wire:click="kararEkle">Karar Ekle</x-filament::button>
+                    <div class="mt-2 flex gap-2">
+                        <x-filament::button size="sm" wire:click="kararEkle">Karar ekle</x-filament::button>
                         <x-filament::button size="sm" color="gray" wire:click="$set('kararGundemIndex', null)">Vazgeç</x-filament::button>
                     </div>
                 </div>
             @endif
         </x-filament::section>
 
-        {{-- 4. KARARLAR --}}
-        <x-filament::section icon="heroicon-o-check-circle" icon-color="primary">
-            <x-slot name="heading">4. Alınan Kararlar</x-slot>
+        {{-- KARARLAR --}}
+        <x-filament::section icon="heroicon-o-check-circle">
+            <x-slot name="heading">Kararlar ve takip ({{ count($t->kararlar ?? []) }})</x-slot>
 
             @if ($t->kararlar)
-                <table style="width:100%;border-collapse:collapse;font-size:.8rem">
-                    <tr>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Gündem</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Karar</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sorumlu</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Termin</th>
-                        <th style="border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
-                        <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
-                    </tr>
-                    @foreach ($t->kararlar as $i => $k)
-                        <tr>
-                            <td style="padding:.3rem .5rem">{{ $k['gundem_maddesi'] }}</td>
-                            <td style="padding:.3rem .5rem">{{ $k['karar_metni'] }}</td>
-                            <td style="padding:.3rem .5rem">{{ $k['sorumlu'] ?: '—' }}</td>
-                            <td style="padding:.3rem .5rem">{{ $k['termin'] ?: '—' }}</td>
-                            <td style="padding:.3rem .5rem">
-                                <select x-on:change="$wire.kararDurumGuncelle({{ $i }}, $event.target.value)"
-                                    style="padding:.2rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                                    <option value="beklemede" @selected(($k['durum'] ?? '') === 'beklemede')>Beklemede</option>
-                                    <option value="devam_ediyor" @selected(($k['durum'] ?? '') === 'devam_ediyor')>Devam Ediyor</option>
-                                    <option value="tamamlandi" @selected(($k['durum'] ?? '') === 'tamamlandi')>Tamamlandı</option>
-                                </select>
-                            </td>
-                            <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
-                                <button type="button" wire:click="kararDuzenle({{ $i }})" style="color:{{ $mor }};cursor:pointer;background:none;border:none;font-size:.78rem">Düzenle</button>
-                                <button type="button" wire:click="kararSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
-                            </td>
-                        </tr>
-                        @if ($duzenlenenKararIndex === $i)
-                            <tr>
-                                <td colspan="6" style="padding:.5rem">
-                                    <div style="{{ $kutu }};background:rgb(139 92 246 / .05);border-color:{{ $mor }}">
-                                        <div style="font-weight:600;font-size:.8rem;margin-bottom:.4rem">Kararı düzenle — {{ $k['gundem_maddesi'] }}</div>
-                                        <textarea wire:model="yeniKararMetni" rows="2" placeholder="Karar metni"
-                                            style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem;font-family:inherit"></textarea>
-                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem">
-                                            <input type="text" wire:model="yeniKararSorumlu" placeholder="Sorumlu"
-                                                style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                                            <input type="date" wire:model="yeniKararTermin"
-                                                style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                                        </div>
-                                        <div style="margin-top:.5rem;display:flex;gap:.5rem">
-                                            <x-filament::button size="sm" wire:click="kararGuncelle">Güncelle</x-filament::button>
-                                            <x-filament::button size="sm" color="gray" wire:click="kararDuzenlemeIptal">Vazgeç</x-filament::button>
-                                        </div>
-                                    </div>
-                                </td>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                                <th class="px-3 py-2 text-left">Gündem</th>
+                                <th class="px-3 py-2 text-left">Karar</th>
+                                <th class="px-3 py-2 text-left">Sorumlu</th>
+                                <th class="px-3 py-2 text-left">Termin</th>
+                                <th class="px-3 py-2 text-left">Durum</th>
+                                <th class="px-3 py-2"></th>
                             </tr>
-                        @endif
-                    @endforeach
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach ($t->kararlar as $i => $k)
+                                <tr style="border-top:1px solid var(--border-light)">
+                                    <td class="px-3 py-2">{{ $k['gundem_maddesi'] }}</td>
+                                    <td class="px-3 py-2">{{ $k['karar_metni'] }}</td>
+                                    <td class="px-3 py-2">{{ $k['sorumlu'] ?: '—' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $k['termin'] ?: '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        <select x-on:change="$wire.kararDurumGuncelle({{ $i }}, $event.target.value)" style="{{ $girdi }};width:auto;padding:.25rem .45rem">
+                                            <option value="beklemede" @selected(($k['durum'] ?? '') === 'beklemede')>Beklemede</option>
+                                            <option value="devam_ediyor" @selected(($k['durum'] ?? '') === 'devam_ediyor')>Devam ediyor</option>
+                                            <option value="tamamlandi" @selected(($k['durum'] ?? '') === 'tamamlandi')>Tamamlandı</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                                        <x-filament::icon-button icon="heroicon-o-pencil" color="gray" size="sm" label="Düzenle" wire:click="kararDuzenle({{ $i }})" />
+                                        <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Sil" wire:click="kararSil({{ $i }})" />
+                                    </td>
+                                </tr>
+                                @if ($duzenlenenKararIndex === $i)
+                                    <tr>
+                                        <td colspan="6" class="p-2">
+                                            <div style="border:1px solid var(--primary);background:var(--info-bg);border-radius:12px;padding:.9rem">
+                                                <div class="mb-2 text-sm font-semibold">Kararı düzenle — {{ $k['gundem_maddesi'] }}</div>
+                                                <textarea wire:model="yeniKararMetni" rows="2" placeholder="Karar metni" style="{{ $girdi }};font-family:inherit"></textarea>
+                                                <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                                                    <input type="text" wire:model="yeniKararSorumlu" placeholder="Sorumlu" style="{{ $girdi }}">
+                                                    <input type="date" wire:model="yeniKararTermin" style="{{ $girdi }}">
+                                                </div>
+                                                <div class="mt-2 flex gap-2">
+                                                    <x-filament::button size="sm" wire:click="kararGuncelle">Güncelle</x-filament::button>
+                                                    <x-filament::button size="sm" color="gray" wire:click="kararDuzenlemeIptal">Vazgeç</x-filament::button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @else
-                <p style="font-size:.82rem;color:rgb(107 114 128)">Henüz karar alınmadı — bir gündem maddesinden "Karar Yaz" ile ekleyin.</p>
+                <p class="text-sm" style="color:var(--text-secondary)">Henüz karar alınmadı — bir gündem maddesinden "Karar yaz" ile ekleyin.</p>
             @endif
         </x-filament::section>
-
-        {{-- 5. GEÇMİŞ TOPLANTILAR --}}
-        @if ($this->toplantilar->count() > 1)
-            <x-filament::section icon="heroicon-o-clock" icon-color="gray">
-                <x-slot name="heading">Geçmiş Toplantılar</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-                    @foreach ($this->toplantilar as $tp)
-                        <tr>
-                            <td style="padding:.3rem .5rem">
-                                @if ($tp->toplanti_no)<strong>No {{ $tp->toplanti_no }}</strong> — @endif
-                                {{ $tp->tarih?->format('d.m.Y') }} {{ $tp->saat }} — {{ $tp->yer ?: 'Yer belirtilmedi' }}
-                            </td>
-                            <td style="padding:.3rem .5rem;text-align:right">
-                                <x-filament::button size="xs" color="danger" wire:click="toplantiSil({{ $tp->id }})">Sil</x-filament::button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </table>
-            </x-filament::section>
-        @endif
     @endif
 </x-filament-panels::page>

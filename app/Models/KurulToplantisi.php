@@ -20,6 +20,7 @@ class KurulToplantisi extends Model
 
     protected $casts = [
         'tarih' => 'date',
+        'sonraki_toplanti' => 'date',
         'katilimcilar' => 'array',
         'gundem' => 'array',
         'kararlar' => 'array',
@@ -28,6 +29,22 @@ class KurulToplantisi extends Model
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);
+    }
+
+    public function durumEtiketi(): string
+    {
+        return config("isg.kurul_toplantisi.durumlar.{$this->durum}", (string) $this->durum);
+    }
+
+    public function turEtiketi(): string
+    {
+        return config("isg.kurul_toplantisi.turler.{$this->tur}", (string) $this->tur);
+    }
+
+    /** "23:49 - 02:49" / "14:00" / null */
+    public function saatAraligi(): ?string
+    {
+        return collect([$this->saat, $this->bitis_saati])->filter()->implode(' - ') ?: null;
     }
 
     public function katilanSayisi(): int

@@ -324,7 +324,9 @@ h1, h2, h3 {
     box-shadow: 0 20px 40px rgb(0 0 0 / .15) !important;
 }
 
-.fi-modal:not(.fi-modal-slide-over) .fi-modal-window {
+/* 520px sınırı yalnız küçük/varsayılan modallarda; ->modalWidth(2xl+) verilen
+   formlar (Firma ekleme, Kurul toplantısı vb.) Filament'in kendi genişliğini alır. */
+.fi-modal:not(.fi-modal-slide-over) .fi-modal-window:not(.fi-width-2xl, .fi-width-3xl, .fi-width-4xl, .fi-width-5xl, .fi-width-6xl, .fi-width-7xl, .fi-width-full, .fi-width-screen) {
     max-width: 520px !important;
 }
 

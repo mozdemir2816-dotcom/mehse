@@ -72,9 +72,10 @@ class AdminPanelProvider extends PanelProvider
             ->registration(KayitOl::class)
             ->profile(isSimple: false)
             ->brandName('mehse İSG')
-            // Kalkan rozetli marka bloğu (sidebar başlığı, mobil topbar, giriş ekranı).
+            // MEHSE logosu (sidebar/topbar başlığı, giriş ekranı) — koyu/açık zemin sürümü CSS'le seçilir.
             ->brandLogo(fn () => view('filament.components.marka'))
-            ->brandLogoHeight('2.5rem')
+            ->brandLogoHeight('2.4rem')
+            ->favicon(asset('images/marka/favicon-32.png'))
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Light)
             // 200px → 240px (2026-09-30): Türkçe menü adları ("Periyodik Kontrol &
@@ -105,6 +106,16 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.mobil-alt-nav'),
+            )
+            // Giriş / kayıt / şifre ekranları: sol tanıtım paneli (yalnız misafir) +
+            // giriş kartının altında kayıt seçeneği. Stiller: tasarim.css "Giriş ekranı".
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_LAYOUT_START,
+                fn () => view('filament.components.giris-tanitim'),
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => view('filament.components.giris-kayit-secenekleri'),
             )
             // Sidebar altı: oturumdaki uzman + Ayarlar kısayolu.
             ->renderHook(

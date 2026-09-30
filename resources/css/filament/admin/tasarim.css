@@ -4,7 +4,7 @@
    theme.css'teki klasik kuralları sıradan bağımsız ezer.
 
    1) Ortak bileşenler — her temada, renkleri tema değişkenlerinden:
-      marka (kalkan rozet), sidebar alt kartı, karşılama bandı (HosGeldinWidget)
+      marka (MEHSE logosu), sidebar alt kartı, karşılama bandı (HosGeldinWidget)
    2) Ayarlar > Görünüm: yoğunluk (kompakt) ve yazı boyutu
    3) Klasik temanın zenginleştirilmesi — yalnız html[data-mehse-tema="klasik"]
       altında; Material / Windows 11 / Saha kendi kimliğini temalar.css'te korur.
@@ -14,9 +14,6 @@
    Bileşen renk değişkenleri — varsayılan (klasik), temalar aşağıda ezer.
    ------------------------------------------------------------------------- */
 :root {
-    --mehse-rozet-bg: linear-gradient(135deg, #60A5FA 0%, #2563EB 55%, #1D4ED8 100%);
-    --mehse-rozet-metin: #fff;
-    --mehse-rozet-golge: 0 6px 16px rgb(37 99 235 / .35);
 
     --mehse-sb-kart-bg: rgb(255 255 255 / .06);
     --mehse-sb-kart-kenar: rgb(255 255 255 / .09);
@@ -43,8 +40,6 @@
 }
 
 html[data-mehse-tema="material"] {
-    --mehse-rozet-bg: #0B57D0;
-    --mehse-rozet-golge: none;
     --mehse-sb-kart-bg: #FFFFFF;
     --mehse-sb-kart-kenar: transparent;
     --mehse-sb-metin: #1F1F1F;
@@ -65,8 +60,6 @@ html[data-mehse-tema="material"] {
 }
 
 html[data-mehse-tema="windows11"] {
-    --mehse-rozet-bg: linear-gradient(135deg, #4CC2FF, #0067C0);
-    --mehse-rozet-golge: 0 2px 6px rgb(0 95 184 / .3);
     --mehse-sb-kart-bg: rgb(255 255 255 / .7);
     --mehse-sb-kart-kenar: rgb(0 0 0 / .0578);
     --mehse-sb-metin: #1A1A1A;
@@ -89,9 +82,6 @@ html[data-mehse-tema="windows11"] {
 }
 
 html[data-mehse-tema="saha"] {
-    --mehse-rozet-bg: #F5B400;
-    --mehse-rozet-metin: #1C1917;
-    --mehse-rozet-golge: inset 0 -3px 0 rgb(0 0 0 / .25);
     --mehse-sb-kart-bg: rgb(255 255 255 / .05);
     --mehse-sb-kart-kenar: rgb(245 180 0 / .25);
     --mehse-sb-avatar-bg: #F5B400;
@@ -107,74 +97,40 @@ html[data-mehse-tema="saha"] {
 }
 
 /* -------------------------------------------------------------------------
-   Marka (resources/views/filament/components/marka.blade.php)
+   Marka (resources/views/filament/components/marka.blade.php) — MEHSE logosu.
+   Açık zeminde renkli, koyu zeminde (klasik/saha üst çubuk + sidebar) beyaz +
+   açık turkuaz sürüm. Yükseklik: AdminPanelProvider ->brandLogoHeight.
    ------------------------------------------------------------------------- */
 .mehse-marka {
     display: inline-flex;
     align-items: center;
-    gap: .65rem;
     height: 100%;
-    color: inherit;
 }
 
-.mehse-marka-rozet {
-    display: grid;
-    flex-shrink: 0;
-    place-items: center;
-    width: 2.35rem;
-    height: 2.35rem;
-    border-radius: 11px;
-    background: var(--mehse-rozet-bg);
-    color: var(--mehse-rozet-metin);
-    box-shadow: var(--mehse-rozet-golge);
+.mehse-marka img {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
 }
 
-html[data-mehse-tema="material"] .mehse-marka-rozet { border-radius: 9999px; color: #fff; }
-html[data-mehse-tema="windows11"] .mehse-marka-rozet { border-radius: 6px; color: #fff; }
-html[data-mehse-tema="saha"] .mehse-marka-rozet { border-radius: 3px; }
-
-.mehse-marka-rozet svg {
-    width: 1.35rem;
-    height: 1.35rem;
+.mehse-marka-acik {
+    display: none !important;
 }
 
-.mehse-marka-metin {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
+:is(html[data-mehse-tema="klasik"], html[data-mehse-tema="saha"]) :is(.fi-sidebar, .fi-topbar) .mehse-marka-renkli {
+    display: none !important;
 }
 
-.mehse-marka-metin strong {
-    font-size: 1.15rem;
-    font-weight: 800;
-    letter-spacing: -.02em;
+:is(html[data-mehse-tema="klasik"], html[data-mehse-tema="saha"]) :is(.fi-sidebar, .fi-topbar) .mehse-marka-acik {
+    display: block !important;
 }
 
-.mehse-marka-metin small {
-    margin-top: .15rem;
-    font-size: .62rem;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    opacity: .6;
-}
-
-html[data-mehse-tema="saha"] .mehse-marka-metin strong {
-    font-family: 'Barlow Condensed', 'Barlow', sans-serif;
-    font-size: 1.35rem;
-    text-transform: uppercase;
-    letter-spacing: .03em;
-}
-
-/* Giriş ekranı: marka ortada, biraz daha büyük. */
-.fi-simple-layout .mehse-marka-rozet {
-    width: 2.75rem;
-    height: 2.75rem;
-}
-
-.fi-simple-layout .mehse-marka-metin strong {
-    font-size: 1.4rem;
-    color: var(--text-heading);
+/* Giriş/kayıt ekranında logo kartın üstünde daha büyük. */
+.fi-simple-layout .fi-logo {
+    height: 3.4rem !important;
+    margin-inline: auto;
 }
 
 /* -------------------------------------------------------------------------
@@ -485,15 +441,6 @@ html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1
 
 .fi-main .fi-breadcrumbs-item-label:hover {
     color: var(--primary) !important;
-}
-
-/* -------------------------------------------------------------------------
-   Modal genişliği: theme.css'teki klasik 520px sınırı yalnız küçük/varsayılan
-   modallara uygulanır; ->modalWidth(2xl+) verilen formlar (Firma/Çalışan
-   ekleme vb.) kendi genişliğini alır. Tüm temalarda geçerli.
-   ------------------------------------------------------------------------- */
-.fi-modal:not(.fi-modal-slide-over) .fi-modal-window:is(.fi-width-2xl, .fi-width-3xl, .fi-width-4xl, .fi-width-5xl, .fi-width-6xl, .fi-width-7xl, .fi-width-full) {
-    max-width: none !important;
 }
 
 /* -------------------------------------------------------------------------
@@ -883,4 +830,364 @@ html[data-mehse-tema="klasik"] {
         border-radius: 18px !important;
         box-shadow: 0 0 0 1px rgb(15 23 42 / .05), 0 24px 48px -20px rgb(15 23 42 / .25) !important;
     }
+}
+
+/* ==========================================================================
+   GİRİŞ EKRANI (2026-09-30) — giriş / kayıt / şifre sayfaları (simple layout).
+   isgsuite.tr giriş ekranı referansı + MEHSE logosu. Tema ne olursa olsun
+   kurumsal renkler: lacivert #0A345A, turkuaz #099291 (logodan örneklendi).
+   Görünümler: filament.components.giris-tanitim / giris-kayit-secenekleri.
+   :has(.mehse-giris-tanitim) → yalnız oturum açılmamış simple sayfalar.
+   ========================================================================== */
+html .fi-simple-layout:has(.mehse-giris-tanitim) {
+    --mehse-lacivert: #0A345A;
+    --mehse-turkuaz: #099291;
+    min-height: 100vh;
+    background:
+        radial-gradient(700px 420px at 100% 0%, rgb(9 146 145 / .12), transparent 70%),
+        radial-gradient(600px 400px at 60% 100%, rgb(10 52 90 / .08), transparent 70%),
+        #F4F8FA !important;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main {
+    border: none !important;
+    border-radius: 20px !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 1px rgb(10 52 90 / .06), 0 30px 60px -28px rgb(10 52 90 / .35) !important;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-header-heading {
+    color: var(--mehse-lacivert);
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-btn.fi-color-primary:not(.fi-outlined):not(label) {
+    background: linear-gradient(135deg, var(--mehse-lacivert) 0%, #0C4F74 55%, var(--mehse-turkuaz) 130%) !important;
+    color: #fff !important;
+    min-height: 2.75rem;
+    border-radius: 12px !important;
+    font-size: .9rem !important;
+    box-shadow: 0 10px 20px -10px rgb(10 52 90 / .6) !important;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-btn.fi-color-primary:not(.fi-outlined):not(label) > .fi-icon {
+    color: #fff !important;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-input-wrp {
+    border-radius: 10px !important;
+    background: #F8FAFC !important;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-input-wrp:not(.fi-disabled):focus-within {
+    background: #fff !important;
+    box-shadow: inset 0 0 0 1.5px var(--mehse-turkuaz), 0 0 0 4px rgb(9 146 145 / .12) !important;
+}
+
+html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
+    color: var(--mehse-turkuaz) !important;
+}
+
+/* İki sütun: solda tanıtım paneli, sağda kart. */
+.mehse-giris-tanitim {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    html .fi-simple-layout:has(.mehse-giris-tanitim) {
+        display: grid !important;
+        grid-template-columns: minmax(440px, 46%) 1fr;
+        align-items: stretch;
+        padding: 0 !important;
+    }
+
+    html .fi-simple-layout:has(.mehse-giris-tanitim) > :not(.mehse-giris-tanitim) {
+        grid-column: 2;
+    }
+
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main-ctn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0 !important;
+        padding: 2.5rem;
+    }
+
+    .mehse-giris-tanitim {
+        position: sticky;
+        top: 0;
+        grid-column: 1;
+        grid-row: 1 / span 20;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        overflow: hidden;
+        padding: 2.75rem 3.25rem;
+        color: #fff;
+        background:
+            radial-gradient(520px 380px at 110% 105%, rgb(9 146 145 / .55), transparent 70%),
+            radial-gradient(420px 300px at -10% -10%, rgb(56 189 248 / .18), transparent 70%),
+            linear-gradient(160deg, #0A345A 0%, #0B2F50 55%, #082640 100%);
+    }
+
+    /* Logodaki çift eğik bantlardan esinlenen dekor. */
+    .mehse-giris-tanitim::before,
+    .mehse-giris-tanitim::after {
+        content: "";
+        position: absolute;
+        width: 46rem;
+        height: 7rem;
+        right: -14rem;
+        transform: rotate(-32deg);
+        pointer-events: none;
+    }
+
+    .mehse-giris-tanitim::before {
+        top: 9rem;
+        background: linear-gradient(90deg, transparent, rgb(9 146 145 / .22));
+    }
+
+    .mehse-giris-tanitim::after {
+        top: 17rem;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / .05));
+    }
+}
+
+.mehse-giris-tanitim > * {
+    position: relative;
+    z-index: 1;
+}
+
+.mehse-giris-tanitim-logo {
+    display: block;
+    height: 3.25rem;
+    width: auto;
+}
+
+.mehse-giris-tanitim-orta {
+    max-width: 30rem;
+}
+
+.mehse-giris-tanitim-baslik {
+    margin: 0;
+    color: #fff !important;
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: -.025em;
+    line-height: 1.15;
+}
+
+.mehse-giris-tanitim-alt {
+    margin: .9rem 0 1.75rem;
+    color: rgb(255 255 255 / .72);
+    font-size: .95rem;
+    line-height: 1.55;
+}
+
+/* Dönen tanıtım kartı (isgsuite "İSG SUITE 06/10" kartı karşılığı). */
+.mehse-giris-kart {
+    padding: 1.25rem 1.35rem 1rem;
+    border: 1px solid rgb(255 255 255 / .12);
+    border-radius: 20px;
+    background: rgb(255 255 255 / .07);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 48px -24px rgb(0 0 0 / .5);
+}
+
+.mehse-giris-kart-sayac {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    color: rgb(255 255 255 / .6);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+}
+
+.mehse-giris-kart-sayac i {
+    display: inline-block;
+    width: .45rem;
+    height: .45rem;
+    margin-right: .35rem;
+    border-radius: 9999px;
+    background: #2DD4BF;
+    box-shadow: 0 0 8px #2DD4BF;
+}
+
+.mehse-giris-kart-icerik {
+    min-height: 10.5rem;
+}
+
+.mehse-giris-kart-ikon {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-bottom: .9rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0FB5B3, #099291);
+    box-shadow: 0 10px 22px -8px rgb(9 146 145 / .8);
+    color: #fff;
+}
+
+.mehse-giris-kart-etiket {
+    color: #5EEAD4;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.mehse-giris-kart-baslik {
+    margin-top: .25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.mehse-giris-kart-metin {
+    margin: .4rem 0 0;
+    color: rgb(255 255 255 / .7);
+    font-size: .85rem;
+    line-height: 1.5;
+}
+
+.mehse-giris-kart-alt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.mehse-giris-noktalar {
+    display: flex;
+    gap: .35rem;
+}
+
+.mehse-giris-noktalar button {
+    width: .45rem;
+    height: .45rem;
+    padding: 0;
+    border: none;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / .3);
+    cursor: pointer;
+    transition: width .25s, background-color .25s;
+}
+
+.mehse-giris-noktalar button.fi-active {
+    width: 1.5rem;
+    background: #2DD4BF;
+}
+
+.mehse-giris-oklar {
+    display: flex;
+    gap: .4rem;
+}
+
+.mehse-giris-oklar button {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid rgb(255 255 255 / .2);
+    border-radius: 9999px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color .15s;
+}
+
+.mehse-giris-oklar button:hover {
+    background: rgb(255 255 255 / .12);
+}
+
+.mehse-giris-gecis {
+    transition: opacity .45s ease, transform .45s ease;
+}
+
+.mehse-giris-gecis-bas {
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.mehse-giris-gecis-son {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.mehse-giris-tanitim-dip {
+    color: rgb(255 255 255 / .45);
+    font-size: .75rem;
+}
+
+/* Giriş kartının altı: kayıt seçeneği (isgsuite "Başvuru seçenekleri"). */
+.mehse-giris-secenekler {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #E2E8F0;
+}
+
+.mehse-giris-secenekler-baslik {
+    margin-bottom: .6rem;
+    color: #64748B;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.mehse-giris-secenek {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .7rem .85rem;
+    border: 1px solid rgb(9 146 145 / .3);
+    border-radius: 12px;
+    background: rgb(9 146 145 / .04);
+    color: #0A345A;
+    text-decoration: none;
+    transition: border-color .15s, background-color .15s, transform .15s;
+}
+
+.mehse-giris-secenek:hover {
+    border-color: #099291;
+    background: rgb(9 146 145 / .09);
+    transform: translateY(-1px);
+}
+
+.mehse-giris-secenek-ikon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 0 0 1px rgb(9 146 145 / .25);
+    color: #099291;
+}
+
+.mehse-giris-secenek-metin {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.mehse-giris-secenek-metin strong {
+    font-size: .85rem;
+}
+
+.mehse-giris-secenek-metin small {
+    color: #64748B;
+    font-size: .72rem;
+}
+
+.mehse-giris-secenek-ok {
+    color: #099291;
 }

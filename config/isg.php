@@ -2479,6 +2479,27 @@ return [
     | listeden tek tıkla eklenir (AI önerisi ayrı, ileride Gemini ile).
     */
     'kurul_toplantisi' => [
+        /*
+         | Kurul üyelik rolleri — İSG Kurulları Hakkında Yönetmelik Md.6(1).
+         | zorunlu=true olanlar eksikse toplantı yalnız "Taslak" kaydedilebilir
+         | (isgsuite.tr "Resmî durum engeli"). kaynak: firma kaydından otomatik
+         | aday önerisi (App\Support\KurulUyeleri::oneriler()).
+         */
+        'roller' => [
+            'baskan' => ['ad' => 'İşveren / İşveren Vekili (Başkan)', 'zorunlu' => true, 'kaynak' => 'isveren'],
+            'sekreter' => ['ad' => 'İş Güvenliği Uzmanı (Sekreter)', 'zorunlu' => true, 'kaynak' => 'igu'],
+            'hekim' => ['ad' => 'İşyeri Hekimi', 'zorunlu' => true, 'kaynak' => 'hekim'],
+            'ik' => ['ad' => 'İK / Personel / İdari-Mali İşler Sorumlusu', 'zorunlu' => true, 'kaynak' => null],
+            'calisan_temsilcisi' => ['ad' => 'Çalışan Temsilcisi (Baş Temsilci)', 'zorunlu' => true, 'kaynak' => 'temsilci'],
+            'sivil_savunma' => ['ad' => 'Sivil Savunma Uzmanı (varsa)', 'zorunlu' => false, 'kaynak' => null],
+            'formen' => ['ad' => 'Formen / Ustabaşı / Usta (varsa)', 'zorunlu' => false, 'kaynak' => null],
+            'diger' => ['ad' => 'Diğer Üye', 'zorunlu' => false, 'kaynak' => null],
+        ],
+        // Toplantı sıklığı (ay) — Yönetmelik Md.9: çok tehlikeli ayda bir, tehlikeli
+        // iki ayda bir, az tehlikeli üç ayda bir. Sonraki toplantı önerisi buradan.
+        'periyot_ay' => ['cok_tehlikeli' => 1, 'tehlikeli' => 2, 'az_tehlikeli' => 3],
+        'turler' => ['olagan' => 'Olağan', 'olaganustu' => 'Olağanüstü'],
+        'durumlar' => ['taslak' => 'Taslak', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'],
         'katilimci_gorevleri' => [
             'İşveren / Vekili', 'İş Güvenliği Uzmanı', 'İşyeri Hekimi', 'İnsan Kaynakları Sorumlusu',
             'Çalışan Temsilcisi (Asıl)', 'Çalışan Temsilcisi (Yedek)', 'Formen / Ustabaşı', 'Destek Elemanı', 'Diğer',
