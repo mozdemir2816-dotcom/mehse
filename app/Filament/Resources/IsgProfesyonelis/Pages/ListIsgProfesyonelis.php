@@ -5,6 +5,7 @@ namespace App\Filament\Resources\IsgProfesyonelis\Pages;
 use App\Filament\Resources\IsgProfesyonelis\IsgProfesyoneliResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 
 class ListIsgProfesyonelis extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListIsgProfesyonelis extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Profesyonel Ekle')->icon('heroicon-o-plus'),
+            CreateAction::make()->label('Profesyonel Ekle')->icon('heroicon-o-plus')
+                ->modal()->modalWidth(Width::FourExtraLarge)->modalHeading('Yeni İSG Profesyoneli'),
         ];
     }
 }

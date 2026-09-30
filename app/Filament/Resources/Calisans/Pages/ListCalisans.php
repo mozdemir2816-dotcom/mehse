@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Calisans\Pages;
 use App\Filament\Resources\Calisans\CalisanResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 
 class ListCalisans extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListCalisans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Çalışan Ekle')->icon('heroicon-o-plus'),
+            CreateAction::make()->label('Çalışan Ekle')->icon('heroicon-o-plus')
+                ->modal()->modalWidth(Width::ThreeExtraLarge)->modalHeading('Yeni Çalışan'),
         ];
     }
 }

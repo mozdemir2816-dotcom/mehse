@@ -1,9 +1,9 @@
 {{--
-    Görsel tema seçici (topbar, kullanıcı menüsünün solunda). Seçim tarayıcıda
-    localStorage('mehse_tema') olarak saklanır; <html data-mehse-tema="..."> ile
-    uygulanır (ilk boyamada titreme olmasın diye AdminPanelProvider HEAD_START
-    script'i sayfa yüklenmeden aynı attribute'u basıyor). Stiller:
-    resources/css/filament/admin/theme.css — "Görsel temalar" bölümü.
+    Görsel tema seçici (topbar, kullanıcı menüsünün solunda). Seçim anında
+    <html data-mehse-tema="..."> ile uygulanır ve hesaba kaydedilir (POST
+    mehse.ayar.tema → users.ayarlar.tema; Ayarlar sayfası da aynı alanı yazar).
+    İlk boyamada uygulama: filament.components.head-ayarlar. Stiller:
+    resources/css/filament/admin/temalar.css.
 --}}
 @php
     $temalar = [
@@ -40,7 +40,7 @@
                 x-bind:class="{ 'fi-active': tema === '{{ $anahtar }}' }"
                 x-on:click="
                     tema = '{{ $anahtar }}';
-                    window.mehseTemaUygula(tema);
+                    window.mehseTemaUygula(tema, true);
                 "
             >
                 <span class="fi-mehse-tema-ornek" aria-hidden="true">

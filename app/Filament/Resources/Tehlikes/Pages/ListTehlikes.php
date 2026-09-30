@@ -10,6 +10,7 @@ use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -124,7 +125,8 @@ class ListTehlikes extends ListRecords
                     Notification::make()->title($baslik)->success()->send();
                 }),
 
-            CreateAction::make(),
+            CreateAction::make()->icon('heroicon-o-plus')
+                ->modal()->modalWidth(Width::ThreeExtraLarge),
         ];
     }
 }

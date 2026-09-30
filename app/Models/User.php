@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
             'abonelik_baslangic' => 'date',
             'abonelik_bitis' => 'date',
             'aktif' => 'boolean',
+            'ayarlar' => 'array',
         ];
     }
 

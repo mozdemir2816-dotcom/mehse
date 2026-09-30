@@ -74,7 +74,7 @@ class PortfoyKarne
                 'yuzde' => $kapsamSayi > 0 ? (int) round($tamam / $kapsamSayi * 100) : 0,
                 'hazir' => (bool) $kriter['hazir'],
             ];
-        }, config('isg.kontrol_merkezi.kriterler', []));
+        }, static::firmaTakipKriterleri($userId));
     }
 
     public static function firmaKriterKarsilarMi(Firma $firma, string $anahtar): bool
@@ -169,13 +169,19 @@ class PortfoyKarne
     }
 
     /**
-     * Firma Takip'in sütun listesi: config'teki sabit kriterler.
+     * Firma Takip'in sütun listesi: config'teki sabit kriterler, kullanıcının
+     * Ayarlar > Kontrol Merkezi'nde takip dışı bıraktıkları hariç.
      *
      * @return array<int, array{anahtar:string, ad:string, ikon?:string, hazir:bool, kosul?:string}>
      */
     public static function firmaTakipKriterleri(int $userId): array
     {
-        return config('isg.kontrol_merkezi.kriterler', []);
+        $haric = KullaniciAyarlari::kontrolHaric($userId);
+
+        return array_values(array_filter(
+            config('isg.kontrol_merkezi.kriterler', []),
+            fn (array $k): bool => ! in_array($k['anahtar'], $haric, true),
+        ));
     }
 
     /**
@@ -256,7 +262,7 @@ class PortfoyKarne
 
             $durum = match (true) {
                 $tamam => 'tamamlandi',
-                $vadeTarihi && $vadeTarihi->isFuture() && $vadeTarihi->diffInDays(now()) <= 30 => 'yakin',
+                $vadeTarihi && $vadeTarihi->isFuture() && $vadeTarihi->diffInDays(now()) <= KullaniciAyarlari::esik('kontrol_vade') => 'yakin',
                 default => 'eksik',
             };
 
@@ -444,7 +450,7 @@ class PortfoyKarne
 
     private static function firmaTamUyumluMu(Firma $firma): bool
     {
-        foreach (config('isg.kontrol_merkezi.kriterler', []) as $kriter) {
+        foreach (static::firmaTakipKriterleri($firma->user_id) as $kriter) {
             if (! $kriter['hazir']) {
                 continue;
             }

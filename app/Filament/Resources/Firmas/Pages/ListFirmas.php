@@ -10,6 +10,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -68,7 +69,8 @@ class ListFirmas extends ListRecords
                     $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
                 }),
 
-            CreateAction::make()->label('Firma Ekle')->icon('heroicon-o-plus'),
+            CreateAction::make()->label('Firma Ekle')->icon('heroicon-o-plus')
+                ->modal()->modalWidth(Width::FiveExtraLarge)->modalHeading('Yeni Firma'),
         ];
     }
 }

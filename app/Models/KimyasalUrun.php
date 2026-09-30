@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\KullaniciAyarlari;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,7 +65,7 @@ class KimyasalUrun extends Model
 
         return match (true) {
             $gun < 0 => 'gecikmis',
-            $gun <= 60 => 'yaklasan',
+            $gun <= KullaniciAyarlari::esik('kimyasal') => 'yaklasan',
             default => 'guncel',
         };
     }

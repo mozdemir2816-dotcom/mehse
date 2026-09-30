@@ -1,0 +1,886 @@
+/* ==========================================================================
+   TASARIM ZENGİNLEŞTİRME (2026-09-30)
+   theme.css'in başında import edilir; seçiciler html[...] önekli olduğu için
+   theme.css'teki klasik kuralları sıradan bağımsız ezer.
+
+   1) Ortak bileşenler — her temada, renkleri tema değişkenlerinden:
+      marka (kalkan rozet), sidebar alt kartı, karşılama bandı (HosGeldinWidget)
+   2) Ayarlar > Görünüm: yoğunluk (kompakt) ve yazı boyutu
+   3) Klasik temanın zenginleştirilmesi — yalnız html[data-mehse-tema="klasik"]
+      altında; Material / Windows 11 / Saha kendi kimliğini temalar.css'te korur.
+   ========================================================================== */
+
+/* -------------------------------------------------------------------------
+   Bileşen renk değişkenleri — varsayılan (klasik), temalar aşağıda ezer.
+   ------------------------------------------------------------------------- */
+:root {
+    --mehse-rozet-bg: linear-gradient(135deg, #60A5FA 0%, #2563EB 55%, #1D4ED8 100%);
+    --mehse-rozet-metin: #fff;
+    --mehse-rozet-golge: 0 6px 16px rgb(37 99 235 / .35);
+
+    --mehse-sb-kart-bg: rgb(255 255 255 / .06);
+    --mehse-sb-kart-kenar: rgb(255 255 255 / .09);
+    --mehse-sb-metin: #fff;
+    --mehse-sb-soluk: rgb(255 255 255 / .5);
+    --mehse-sb-avatar-bg: linear-gradient(135deg, #34D399, #059669);
+    --mehse-sb-avatar-metin: #fff;
+    --mehse-sb-ayar-hover: rgb(255 255 255 / .1);
+
+    --mehse-hero-bg:
+        radial-gradient(420px 220px at 92% -10%, rgb(96 165 250 / .45), transparent 70%),
+        radial-gradient(360px 200px at 70% 130%, rgb(52 211 153 / .22), transparent 70%),
+        linear-gradient(120deg, #1E3A5F 0%, #1E40AF 100%);
+    --mehse-hero-metin: #fff;
+    --mehse-hero-soluk: rgb(255 255 255 / .72);
+    --mehse-hero-eylem-bg: rgb(255 255 255 / .1);
+    --mehse-hero-eylem-kenar: rgb(255 255 255 / .16);
+    --mehse-hero-eylem-metin: #fff;
+    --mehse-hero-birincil-bg: #fff;
+    --mehse-hero-birincil-metin: #1E3A5F;
+    --mehse-hero-halka: #34D399;
+    --mehse-hero-halka-zemin: rgb(255 255 255 / .14);
+    --mehse-hero-radius: 16px;
+}
+
+html[data-mehse-tema="material"] {
+    --mehse-rozet-bg: #0B57D0;
+    --mehse-rozet-golge: none;
+    --mehse-sb-kart-bg: #FFFFFF;
+    --mehse-sb-kart-kenar: transparent;
+    --mehse-sb-metin: #1F1F1F;
+    --mehse-sb-soluk: #444746;
+    --mehse-sb-avatar-bg: #0B57D0;
+    --mehse-sb-ayar-hover: rgb(31 31 31 / .08);
+    --mehse-hero-bg: linear-gradient(120deg, #D3E3FD 0%, #E8F0FE 60%, #F3E8FD 100%);
+    --mehse-hero-metin: #041E49;
+    --mehse-hero-soluk: #444746;
+    --mehse-hero-eylem-bg: rgb(255 255 255 / .7);
+    --mehse-hero-eylem-kenar: transparent;
+    --mehse-hero-eylem-metin: #041E49;
+    --mehse-hero-birincil-bg: #0B57D0;
+    --mehse-hero-birincil-metin: #fff;
+    --mehse-hero-halka: #0B57D0;
+    --mehse-hero-halka-zemin: rgb(11 87 208 / .14);
+    --mehse-hero-radius: 28px;
+}
+
+html[data-mehse-tema="windows11"] {
+    --mehse-rozet-bg: linear-gradient(135deg, #4CC2FF, #0067C0);
+    --mehse-rozet-golge: 0 2px 6px rgb(0 95 184 / .3);
+    --mehse-sb-kart-bg: rgb(255 255 255 / .7);
+    --mehse-sb-kart-kenar: rgb(0 0 0 / .0578);
+    --mehse-sb-metin: #1A1A1A;
+    --mehse-sb-soluk: #5D5D5D;
+    --mehse-sb-avatar-bg: linear-gradient(135deg, #4CC2FF, #005FB8);
+    --mehse-sb-ayar-hover: rgb(0 0 0 / .0373);
+    --mehse-hero-bg:
+        radial-gradient(500px 260px at 100% 0%, rgb(76 194 255 / .28), transparent 70%),
+        rgb(255 255 255 / .72);
+    --mehse-hero-metin: #1A1A1A;
+    --mehse-hero-soluk: #5D5D5D;
+    --mehse-hero-eylem-bg: rgb(255 255 255 / .8);
+    --mehse-hero-eylem-kenar: rgb(0 0 0 / .0578);
+    --mehse-hero-eylem-metin: #1A1A1A;
+    --mehse-hero-birincil-bg: #005FB8;
+    --mehse-hero-birincil-metin: #fff;
+    --mehse-hero-halka: #005FB8;
+    --mehse-hero-halka-zemin: rgb(0 0 0 / .06);
+    --mehse-hero-radius: 8px;
+}
+
+html[data-mehse-tema="saha"] {
+    --mehse-rozet-bg: #F5B400;
+    --mehse-rozet-metin: #1C1917;
+    --mehse-rozet-golge: inset 0 -3px 0 rgb(0 0 0 / .25);
+    --mehse-sb-kart-bg: rgb(255 255 255 / .05);
+    --mehse-sb-kart-kenar: rgb(245 180 0 / .25);
+    --mehse-sb-avatar-bg: #F5B400;
+    --mehse-sb-avatar-metin: #1C1917;
+    --mehse-hero-bg:
+        linear-gradient(90deg, #1C1917 0%, #292524 100%);
+    --mehse-hero-eylem-bg: rgb(255 255 255 / .06);
+    --mehse-hero-eylem-kenar: rgb(255 255 255 / .14);
+    --mehse-hero-birincil-bg: #F5B400;
+    --mehse-hero-birincil-metin: #1C1917;
+    --mehse-hero-halka: #F5B400;
+    --mehse-hero-radius: 4px;
+}
+
+/* -------------------------------------------------------------------------
+   Marka (resources/views/filament/components/marka.blade.php)
+   ------------------------------------------------------------------------- */
+.mehse-marka {
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    height: 100%;
+    color: inherit;
+}
+
+.mehse-marka-rozet {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 11px;
+    background: var(--mehse-rozet-bg);
+    color: var(--mehse-rozet-metin);
+    box-shadow: var(--mehse-rozet-golge);
+}
+
+html[data-mehse-tema="material"] .mehse-marka-rozet { border-radius: 9999px; color: #fff; }
+html[data-mehse-tema="windows11"] .mehse-marka-rozet { border-radius: 6px; color: #fff; }
+html[data-mehse-tema="saha"] .mehse-marka-rozet { border-radius: 3px; }
+
+.mehse-marka-rozet svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.mehse-marka-metin {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.mehse-marka-metin strong {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.mehse-marka-metin small {
+    margin-top: .15rem;
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .6;
+}
+
+html[data-mehse-tema="saha"] .mehse-marka-metin strong {
+    font-family: 'Barlow Condensed', 'Barlow', sans-serif;
+    font-size: 1.35rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+/* Giriş ekranı: marka ortada, biraz daha büyük. */
+.fi-simple-layout .mehse-marka-rozet {
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.fi-simple-layout .mehse-marka-metin strong {
+    font-size: 1.4rem;
+    color: var(--text-heading);
+}
+
+/* -------------------------------------------------------------------------
+   Sidebar alt kartı (resources/views/filament/components/sidebar-alt.blade.php)
+   ------------------------------------------------------------------------- */
+.mehse-sidebar-alt {
+    padding: .5rem .75rem .9rem;
+}
+
+.mehse-sidebar-alt-kart {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .55rem .55rem .55rem .6rem;
+    border: 1px solid var(--mehse-sb-kart-kenar);
+    border-radius: 12px;
+    background: var(--mehse-sb-kart-bg);
+}
+
+html[data-mehse-tema="material"] .mehse-sidebar-alt-kart { border-radius: 16px; }
+html[data-mehse-tema="windows11"] .mehse-sidebar-alt-kart { border-radius: 8px; }
+html[data-mehse-tema="saha"] .mehse-sidebar-alt-kart { border-radius: 3px; }
+
+.mehse-sidebar-alt-avatar {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 9999px;
+    background: var(--mehse-sb-avatar-bg);
+    color: var(--mehse-sb-avatar-metin);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+html[data-mehse-tema="saha"] .mehse-sidebar-alt-avatar { border-radius: 3px; }
+
+.mehse-sidebar-alt-kisi {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.mehse-sidebar-alt-kisi strong {
+    overflow: hidden;
+    color: var(--mehse-sb-metin);
+    font-size: .8rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mehse-sidebar-alt-kisi small {
+    overflow: hidden;
+    color: var(--mehse-sb-soluk);
+    font-size: .68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mehse-sidebar-alt-ayar {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    color: var(--mehse-sb-soluk);
+    transition: background-color .15s, color .15s, transform .3s;
+}
+
+.mehse-sidebar-alt-ayar:hover,
+.mehse-sidebar-alt-ayar.fi-active {
+    background: var(--mehse-sb-ayar-hover);
+    color: var(--mehse-sb-metin);
+}
+
+.mehse-sidebar-alt-ayar:hover .mehse-sidebar-alt-ayar-ikon {
+    transform: rotate(60deg);
+}
+
+.mehse-sidebar-alt-ayar-ikon {
+    width: 1.15rem;
+    height: 1.15rem;
+    transition: transform .35s ease;
+}
+
+/* -------------------------------------------------------------------------
+   Karşılama bandı (HosGeldinWidget)
+   ------------------------------------------------------------------------- */
+.mehse-hosgeldin {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    overflow: hidden;
+    padding: 1.6rem 1.75rem;
+    border-radius: var(--mehse-hero-radius);
+    background: var(--mehse-hero-bg);
+    color: var(--mehse-hero-metin);
+    box-shadow: 0 10px 30px -12px rgb(15 23 42 / .35);
+}
+
+html[data-mehse-tema="material"] .mehse-hosgeldin { box-shadow: none; }
+
+html[data-mehse-tema="windows11"] .mehse-hosgeldin {
+    box-shadow: 0 0 0 1px rgb(0 0 0 / .0578), 0 2px 4px rgb(0 0 0 / .04);
+    backdrop-filter: blur(20px);
+}
+
+html[data-mehse-tema="saha"] .mehse-hosgeldin {
+    border-bottom: 6px solid transparent;
+    border-image: repeating-linear-gradient(-45deg, #F5B400 0 10px, #1C1917 10px 20px) 6;
+    box-shadow: none;
+}
+
+/* Klasik: dekoratif kalkan filigranı. */
+html[data-mehse-tema="klasik"] .mehse-hosgeldin::after {
+    content: '';
+    position: absolute;
+    right: 9rem;
+    bottom: -2.5rem;
+    width: 11rem;
+    height: 11rem;
+    background: currentColor;
+    opacity: .05;
+    pointer-events: none;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5 4.5 5.4v6.1c0 4.6 3.1 8.8 7.5 10 4.4-1.2 7.5-5.4 7.5-10V5.4L12 2.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5 4.5 5.4v6.1c0 4.6 3.1 8.8 7.5 10 4.4-1.2 7.5-5.4 7.5-10V5.4L12 2.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.mehse-hosgeldin-sol {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 22rem;
+    min-width: 0;
+}
+
+.mehse-hosgeldin-tarih {
+    margin: 0 0 .25rem;
+    color: var(--mehse-hero-soluk);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.mehse-hosgeldin-baslik {
+    margin: 0;
+    color: inherit !important;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+}
+
+html[data-mehse-tema="material"] .mehse-hosgeldin-baslik { font-weight: 400; font-size: 1.85rem; }
+
+html[data-mehse-tema="saha"] .mehse-hosgeldin-baslik {
+    color: #F5B400 !important;
+    font-family: 'Barlow Condensed', 'Barlow', sans-serif;
+    font-size: 2rem;
+    text-transform: uppercase;
+}
+
+.mehse-hosgeldin-alt {
+    margin: .4rem 0 0;
+    color: var(--mehse-hero-soluk);
+    font-size: .9rem;
+}
+
+.mehse-hosgeldin-alt strong {
+    color: var(--mehse-hero-metin);
+}
+
+.mehse-hosgeldin-eylemler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 1.1rem;
+}
+
+.mehse-hosgeldin-eylem {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .9rem;
+    border: 1px solid var(--mehse-hero-eylem-kenar);
+    border-radius: 10px;
+    background: var(--mehse-hero-eylem-bg);
+    color: var(--mehse-hero-eylem-metin);
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform .15s, background-color .15s, box-shadow .15s;
+}
+
+.mehse-hosgeldin-eylem:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -6px rgb(0 0 0 / .35);
+}
+
+.mehse-hosgeldin-eylem-birincil {
+    border-color: transparent;
+    background: var(--mehse-hero-birincil-bg);
+    color: var(--mehse-hero-birincil-metin);
+}
+
+html[data-mehse-tema="material"] .mehse-hosgeldin-eylem { border-radius: 9999px; padding-inline: 1.1rem; }
+html[data-mehse-tema="windows11"] .mehse-hosgeldin-eylem { border-radius: 4px; }
+
+html[data-mehse-tema="saha"] .mehse-hosgeldin-eylem {
+    border-radius: 3px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.mehse-hosgeldin-eylem-ikon {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Uyum halkası: conic-gradient ilerleme. */
+.mehse-hosgeldin-halka {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    flex-shrink: 0;
+    place-content: center;
+    width: 7.5rem;
+    height: 7.5rem;
+    border-radius: 9999px;
+    background: conic-gradient(var(--mehse-hero-halka) calc(var(--yuzde) * 1%), var(--mehse-hero-halka-zemin) 0);
+    color: inherit;
+    text-align: center;
+    text-decoration: none;
+    transition: transform .2s;
+}
+
+.mehse-hosgeldin-halka:hover {
+    transform: scale(1.04);
+}
+
+/* İç daire — halkayı "delik" gösterir; rengi temaya göre aşağıda. */
+.mehse-hosgeldin-halka::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border-radius: inherit;
+}
+
+html[data-mehse-tema="klasik"] .mehse-hosgeldin-halka::before { background: #1E3A5F; }
+html[data-mehse-tema="material"] .mehse-hosgeldin-halka::before { background: #E8F0FE; }
+html[data-mehse-tema="windows11"] .mehse-hosgeldin-halka::before { background: #FBFBFB; }
+html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1D; }
+
+.mehse-hosgeldin-halka-deger,
+.mehse-hosgeldin-halka-etiket {
+    position: relative;
+}
+
+.mehse-hosgeldin-halka-deger {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1;
+}
+
+.mehse-hosgeldin-halka-etiket {
+    margin-top: .25rem;
+    color: var(--mehse-hero-soluk);
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+    .mehse-hosgeldin {
+        padding: 1.25rem;
+    }
+
+    .mehse-hosgeldin-halka {
+        display: none;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Sayfa başlığı + breadcrumb: theme.css'teki topbar kuralı (.fi-header-heading
+   ve .fi-breadcrumbs-item-label → beyaz) sayfa içindekileri de boyuyordu,
+   açık zeminde başlık görünmüyordu (2026-09-14'ten beri). İçerik alanında
+   tema metin rengine döndür.
+   ------------------------------------------------------------------------- */
+.fi-main .fi-header-heading {
+    color: var(--text-heading) !important;
+}
+
+.fi-main :is(.fi-breadcrumbs-item-label, .fi-breadcrumbs-separator) {
+    color: var(--text-secondary) !important;
+}
+
+.fi-main .fi-breadcrumbs-item-label:hover {
+    color: var(--primary) !important;
+}
+
+/* -------------------------------------------------------------------------
+   Modal genişliği: theme.css'teki klasik 520px sınırı yalnız küçük/varsayılan
+   modallara uygulanır; ->modalWidth(2xl+) verilen formlar (Firma/Çalışan
+   ekleme vb.) kendi genişliğini alır. Tüm temalarda geçerli.
+   ------------------------------------------------------------------------- */
+.fi-modal:not(.fi-modal-slide-over) .fi-modal-window:is(.fi-width-2xl, .fi-width-3xl, .fi-width-4xl, .fi-width-5xl, .fi-width-6xl, .fi-width-7xl, .fi-width-full) {
+    max-width: none !important;
+}
+
+/* -------------------------------------------------------------------------
+   Ayarlar > Görünüm: yoğunluk + yazı boyutu (head-ayarlar.blade.php basar).
+   ------------------------------------------------------------------------- */
+html[data-mehse-yogunluk="kompakt"] {
+    .fi-sidebar-nav {
+        row-gap: .15rem !important;
+    }
+
+    .fi-sidebar-item-btn,
+    .fi-sidebar-group-btn {
+        min-height: 0 !important;
+        padding-block: .28rem !important;
+    }
+
+    .fi-ta-cell {
+        padding-block: 4px !important;
+    }
+
+    .fi-ta-header-cell {
+        padding-block: 6px !important;
+    }
+
+    .fi-section-content {
+        padding: .9rem 1rem !important;
+    }
+
+    .fi-section-header {
+        padding-block: .7rem !important;
+    }
+
+    .fi-main {
+        padding-top: .75rem;
+    }
+
+    .fi-page-header-main-ctn {
+        row-gap: 1rem;
+    }
+}
+
+/* zoom yalnız ana yerleşimde: teleport edilen modal/dropdown ayrıca. */
+html[data-mehse-yazi="kucuk"] :is(.fi-layout, .fi-modal-window, .fi-dropdown-panel) {
+    zoom: .92;
+}
+
+html[data-mehse-yazi="buyuk"] :is(.fi-layout, .fi-modal-window, .fi-dropdown-panel) {
+    zoom: 1.1;
+}
+
+/* ==========================================================================
+   KLASİK TEMA ZENGİNLEŞTİRMESİ
+   ========================================================================== */
+html[data-mehse-tema="klasik"] {
+    /* Zemin: düz gri yerine çok hafif mavi ışıma. */
+    .fi-body {
+        background:
+            radial-gradient(900px 420px at 100% -5%, rgb(37 99 235 / .07), transparent 70%),
+            radial-gradient(700px 380px at 0% 105%, rgb(16 185 129 / .05), transparent 70%),
+            var(--bg) !important;
+        background-attachment: fixed !important;
+    }
+
+    /* ---- Sidebar ------------------------------------------------------- */
+    .fi-sidebar {
+        background:
+            radial-gradient(320px 220px at 0% 0%, rgb(59 130 246 / .28), transparent 70%),
+            linear-gradient(180deg, #1E3A5F 0%, #152C4A 55%, #10233C 100%) !important;
+        border-inline-end: 1px solid rgb(255 255 255 / .06);
+    }
+
+    .fi-sidebar .fi-logo {
+        color: #fff !important;
+    }
+
+    .fi-sidebar-header {
+        padding-inline: 1.1rem;
+        border-bottom: 1px solid rgb(255 255 255 / .07);
+    }
+
+    .fi-sidebar-nav {
+        row-gap: .9rem;
+        padding: .9rem .7rem;
+        scrollbar-width: thin;
+        scrollbar-color: rgb(255 255 255 / .15) transparent;
+    }
+
+    /* Grup başlığı: küçük, harf aralıklı, altında ince çizgi. */
+    .fi-sidebar-group-btn {
+        padding: .15rem .55rem .35rem !important;
+    }
+
+    .fi-sidebar-group-label {
+        color: rgb(255 255 255 / .38) !important;
+        font-size: .64rem !important;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+
+    .fi-sidebar-group-btn:hover {
+        background: transparent !important;
+    }
+
+    .fi-sidebar-group-btn:hover .fi-sidebar-group-label {
+        color: rgb(255 255 255 / .6) !important;
+    }
+
+    .fi-sidebar-group-collapse-btn .fi-icon,
+    .fi-sidebar-group-btn > .fi-icon {
+        width: .9rem;
+        height: .9rem;
+        color: rgb(255 255 255 / .3) !important;
+    }
+
+    .fi-sidebar-group-items {
+        row-gap: 2px;
+    }
+
+    /* Menü maddesi. */
+    .fi-sidebar-item-btn {
+        position: relative;
+        gap: .7rem;
+        min-height: 2.3rem;
+        padding: .45rem .65rem !important;
+        border-radius: 10px !important;
+        transition: background-color .15s, transform .15s;
+    }
+
+    .fi-sidebar-item-label {
+        color: rgb(255 255 255 / .74) !important;
+        font-size: .82rem !important;
+        font-weight: 500;
+    }
+
+    .fi-sidebar-item-btn > .fi-icon {
+        width: 1.15rem;
+        height: 1.15rem;
+        color: rgb(255 255 255 / .5) !important;
+        transition: color .15s;
+    }
+
+    .fi-sidebar-item-btn:hover {
+        background: rgb(255 255 255 / .07) !important;
+    }
+
+    .fi-sidebar-item-btn:hover .fi-sidebar-item-label,
+    .fi-sidebar-item-btn:hover > .fi-icon {
+        color: #fff !important;
+    }
+
+    /* Aktif: mavi degrade hap + solda parlak çubuk + ikon açık mavi. */
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: linear-gradient(90deg, rgb(59 130 246 / .42) 0%, rgb(59 130 246 / .12) 100%) !important;
+        box-shadow: inset 0 0 0 1px rgb(147 197 253 / .15), 0 4px 14px -6px rgb(37 99 235 / .6);
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn::before {
+        content: '';
+        position: absolute;
+        inset-inline-start: -.7rem;
+        top: 22%;
+        bottom: 22%;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: #60A5FA;
+        box-shadow: 0 0 10px #60A5FA;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+        color: #93C5FD !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    .fi-sidebar-item-grouped-border-part,
+    .fi-sidebar-item-grouped-border-part-not-first,
+    .fi-sidebar-item-grouped-border-part-not-last {
+        background: rgb(255 255 255 / .15) !important;
+    }
+
+    /* Rozet (menü sayacı). */
+    .fi-sidebar-item-btn .fi-badge {
+        background: rgb(255 255 255 / .12) !important;
+        color: #fff !important;
+        box-shadow: none !important;
+    }
+
+    /* ---- Topbar -------------------------------------------------------- */
+    .fi-topbar {
+        background: linear-gradient(90deg, #1E3A5F 0%, #1B3558 100%) !important;
+        border-bottom: 1px solid rgb(255 255 255 / .06);
+    }
+
+    /* ---- Sayfa başlığı -------------------------------------------------- */
+    .fi-page-header-heading {
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -.02em;
+    }
+
+    .fi-page-header-subheading {
+        color: var(--text-secondary);
+    }
+
+    /* ---- Kartlar -------------------------------------------------------- */
+    .fi-section:not(.fi-aside) {
+        border-radius: 14px !important;
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .05), 0 1px 2px rgb(15 23 42 / .04), 0 8px 24px -12px rgb(15 23 42 / .12) !important;
+    }
+
+    .fi-section-header {
+        padding-block: .95rem;
+    }
+
+    .fi-section-header-heading {
+        font-size: .95rem;
+        font-weight: 700;
+        letter-spacing: -.01em;
+    }
+
+    /* Bölüm başlığı ikonu: renkli yuvarlak kutucuk. */
+    .fi-section-header > .fi-icon {
+        box-sizing: content-box;
+        padding: .4rem;
+        border-radius: 9px;
+        background: var(--info-bg);
+        color: var(--primary) !important;
+    }
+
+    /* ---- Metrik kartları ----------------------------------------------- */
+    .fi-wi-stats-overview-stat {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px !important;
+        border-left: none !important;
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .05), 0 8px 24px -14px rgb(15 23 42 / .18) !important;
+        transition: transform .18s, box-shadow .18s;
+    }
+
+    .fi-wi-stats-overview-stat::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: 4px;
+        background: var(--mehse-metrik, var(--metric-blue));
+    }
+
+    .fi-wi-stats-overview-stat::after {
+        content: '';
+        position: absolute;
+        top: -2.5rem;
+        right: -2.5rem;
+        width: 7rem;
+        height: 7rem;
+        border-radius: 9999px;
+        background: var(--mehse-metrik, var(--metric-blue));
+        opacity: .07;
+        pointer-events: none;
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+2) { --mehse-metrik: var(--metric-green); }
+    .fi-wi-stats-overview-stat:nth-of-type(4n+3) { --mehse-metrik: var(--metric-orange); }
+    .fi-wi-stats-overview-stat:nth-of-type(4n+4) { --mehse-metrik: var(--metric-purple); }
+
+    .fi-wi-stats-overview-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .06), 0 14px 30px -14px rgb(15 23 42 / .28) !important;
+    }
+
+    .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
+        box-sizing: content-box;
+        padding: .35rem;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--mehse-metrik, var(--metric-blue)) 12%, white);
+        color: var(--mehse-metrik, var(--metric-blue)) !important;
+    }
+
+    .fi-wi-stats-overview-stat-value {
+        font-size: 1.85rem !important;
+        letter-spacing: -.02em;
+    }
+
+    /* ---- Tablolar ------------------------------------------------------ */
+    .fi-ta-ctn {
+        overflow: hidden;
+        border-radius: 14px !important;
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .05), 0 8px 24px -14px rgb(15 23 42 / .14) !important;
+    }
+
+    .fi-ta-header-ctn,
+    .fi-ta-header-toolbar {
+        background: #fff;
+    }
+
+    .fi-ta-table > thead > tr {
+        background: linear-gradient(180deg, #F8FAFC, #F1F5F9) !important;
+    }
+
+    .fi-ta-header-cell {
+        font-weight: 700 !important;
+        letter-spacing: .05em;
+    }
+
+    .fi-ta-row {
+        transition: background-color .12s;
+    }
+
+    .fi-ta-row.fi-clickable:hover {
+        background: #F5F9FF !important;
+        box-shadow: inset 3px 0 0 var(--primary);
+    }
+
+    /* ---- Butonlar ------------------------------------------------------ */
+    .fi-btn {
+        border-radius: 8px !important;
+        transition: transform .12s, box-shadow .15s, filter .15s;
+    }
+
+    /* label: ToggleButtons seçenekleri — seçili olmayanlar degrade almasın. */
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label) {
+        background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%) !important;
+        box-shadow: 0 1px 2px rgb(37 99 235 / .3), inset 0 1px 0 rgb(255 255 255 / .18) !important;
+    }
+
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):hover {
+        filter: brightness(1.06);
+        box-shadow: 0 6px 16px -6px rgb(37 99 235 / .6), inset 0 1px 0 rgb(255 255 255 / .18) !important;
+    }
+
+    .fi-btn:not(.fi-disabled):active {
+        transform: translateY(1px);
+    }
+
+    /* ---- Sekmeler ------------------------------------------------------ */
+    .fi-tabs {
+        padding: .3rem;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .06);
+    }
+
+    .fi-tabs-item {
+        border-radius: 9px;
+    }
+
+    .fi-tabs-item.fi-active {
+        background: var(--info-bg);
+    }
+
+    /* ---- Modal --------------------------------------------------------- */
+    .fi-modal-window {
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+
+    .fi-modal-header {
+        background:
+            radial-gradient(300px 120px at 100% 0%, rgb(96 165 250 / .35), transparent 70%),
+            linear-gradient(120deg, #1E3A5F, #1E40AF) !important;
+        border-radius: 0 !important;
+    }
+
+    .fi-modal-footer {
+        background: #F8FAFC;
+    }
+
+    /* ---- Dropdown ------------------------------------------------------ */
+    .fi-dropdown-panel {
+        border-radius: 12px !important;
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .06), 0 16px 40px -12px rgb(15 23 42 / .25) !important;
+    }
+
+    /* ---- Giriş ekranı -------------------------------------------------- */
+    .fi-simple-layout {
+        background:
+            radial-gradient(600px 400px at 85% 0%, rgb(37 99 235 / .14), transparent 70%),
+            radial-gradient(500px 360px at 0% 100%, rgb(16 185 129 / .1), transparent 70%),
+            var(--bg);
+    }
+
+    .fi-simple-main {
+        border-radius: 18px !important;
+        box-shadow: 0 0 0 1px rgb(15 23 42 / .05), 0 24px 48px -20px rgb(15 23 42 / .25) !important;
+    }
+}

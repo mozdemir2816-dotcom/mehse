@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\KullaniciAyarlari;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -116,7 +117,7 @@ class OnayliDefterNushasi extends Model
             return 'dolmus';
         }
 
-        $esik = (int) config('isg.onayli_defter.yaklasan_gun', 15);
+        $esik = KullaniciAyarlari::esik('onayli_defter');
 
         return $vadeTarihi->lte($bugun->copy()->addDays($esik)) ? 'yaklasan' : 'gecerli';
     }

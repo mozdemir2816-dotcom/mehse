@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\KullaniciAyarlari;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -76,6 +77,6 @@ class EgitimKaydi extends Model
             return 'dolmus';
         }
 
-        return $gecerlilik->diffInDays(now(), absolute: true) <= 60 ? 'yakinda' : 'gecerli';
+        return $gecerlilik->diffInDays(now(), absolute: true) <= KullaniciAyarlari::esik('egitim') ? 'yakinda' : 'gecerli';
     }
 }

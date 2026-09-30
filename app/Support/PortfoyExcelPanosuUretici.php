@@ -168,7 +168,7 @@ class PortfoyExcelPanosuUretici
     private static function kontrolMatrisi(Spreadsheet $kitap, User $uzman): void
     {
         $s = static::sayfa($kitap, 'Kontrol Merkezi');
-        $kriterler = config('isg.kontrol_merkezi.kriterler', []);
+        $kriterler = PortfoyKarne::firmaTakipKriterleri($uzman->id);
 
         $baslik = array_merge(['İşyeri'], array_map(fn ($k) => $k['ad'], $kriterler), ['Oran (%)']);
         $satirlar = [$baslik];

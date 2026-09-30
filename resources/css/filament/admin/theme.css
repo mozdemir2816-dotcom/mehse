@@ -2,6 +2,10 @@
 /* Görsel temalar (material / windows11 / saha) — html[data-mehse-tema] önekli,
    aşağıdaki klasik kurallardan daha özgül olduğu için sıralama önemli değil. */
 @import './temalar.css';
+/* Ortak bileşenler (marka, sidebar kartı, karşılama bandı), Ayarlar > Görünüm
+   (yoğunluk/yazı boyutu) ve klasik tema zenginleştirmesi — hepsi html[...] önekli
+   ya da kendine özgü sınıflı, dolayısıyla aşağıdaki kuralları sıradan bağımsız ezer. */
+@import './tasarim.css';
 
 @source '../../../../app/Filament';
 @source '../../../../resources/views/filament';
@@ -10,7 +14,7 @@
    Tasarım sistemi (2026-09-14) — kullanıcı tarafından birebir tanımlanan
    token seti. Önceki mor/amber-lacivert tasarım (Md.1-10) bu dosyada TAMAMEN
    yerini aldı; AdminPanelProvider.php'deki eşlik eden değişiklikler (primary
-   renk → Blue, font → DM Sans, sabit 200px sidebar) ile birlikte okunmalı.
+   renk → Blue, font → DM Sans, sabit sidebar — 30.09.2026 itibarıyla 240px) ile birlikte okunmalı.
    Renk/aralık değerleri icat edilmedi — hepsi kullanıcının verdiği listeyle
    birebir eşleşiyor.
    ========================================================================== */
@@ -50,7 +54,7 @@
 }
 
 /* -------------------------------------------------------------------------
-   Sidebar — sabit 200px, lacivert gradient, saydam beyaz metin.
+   Sidebar — sabit 240px, lacivert gradient, saydam beyaz metin.
    ------------------------------------------------------------------------- */
 .fi-sidebar {
     background: linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-to) 100%) !important;

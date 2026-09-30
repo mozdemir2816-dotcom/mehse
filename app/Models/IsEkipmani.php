@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\KullaniciAyarlari;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -86,7 +87,7 @@ class IsEkipmani extends Model
             return 'dolmus';
         }
 
-        $esik = (int) config('isg.periyodik_kontrol.vize_yaklasan_gun', 30);
+        $esik = KullaniciAyarlari::esik('ekipman');
 
         return $this->sonraki_vize_tarihi->lte($bugun->copy()->addDays($esik)) ? 'yaklasan' : 'gecerli';
     }
