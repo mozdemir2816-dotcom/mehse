@@ -102,8 +102,31 @@ class AdminPanelProvider extends PanelProvider
                                 }
                             } catch (e) {}
                         })();
+
+                        // Görsel tema (klasik / material / windows11 / saha) — ilk boyamadan
+                        // önce <html data-mehse-tema> basılır ki sayfa önce lacivert açılıp
+                        // sonra renk değiştirmesin. Seçici: filament.components.tema-secici.
+                        window.mehseTemaUygula = function (tema) {
+                            var gecerli = ['klasik', 'material', 'windows11', 'saha'];
+                            if (gecerli.indexOf(tema) === -1) tema = 'klasik';
+                            document.documentElement.dataset.mehseTema = tema;
+                            try { localStorage.setItem('mehse_tema', tema); } catch (e) {}
+                        };
+                        (function () {
+                            var tema = 'klasik';
+                            try { tema = localStorage.getItem('mehse_tema') || 'klasik'; } catch (e) {}
+                            window.mehseTemaUygula(tema);
+                        })();
                     </script>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
                     HTML),
+            )
+            // Görsel tema seçici — topbar'da kullanıcı avatarının solunda.
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => view('filament.components.tema-secici'),
             )
             // Mobil alt navigasyon çubuğu (tasarım sistemi 2026-09-14) — yalnız
             // küçük ekranda görünür (bkz. theme.css .fi-mobil-alt-nav); 5 sekme

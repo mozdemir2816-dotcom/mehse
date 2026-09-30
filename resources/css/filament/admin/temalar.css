@@ -1,0 +1,1149 @@
+/* ==========================================================================
+   GÖRSEL TEMALAR (2026-09-30) — <html data-mehse-tema="...">
+   klasik (theme.css'teki varsayılan) · material · windows11 · saha
+   Seçici: resources/views/filament/components/tema-secici.blade.php
+   Erken uygulama + font yükleme: AdminPanelProvider HEAD_START script'i.
+   Her tema önce theme.css token'larını (--bg, --primary, ...) yeniden tanımlar
+   (böylece klasik kuralların çoğu kendiliğinden uyum sağlar), sonra yapısal
+   farkları (radius, sidebar/topbar, buton, modal) ezer. Seçiciler html[...]
+   önekli olduğu için klasik !important kurallardan daha özgüldür.
+   ========================================================================== */
+
+/* -------------------------------------------------------------------------
+   Tema seçici (topbar) — her temada ortak.
+   ------------------------------------------------------------------------- */
+.fi-mehse-tema-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 8px;
+}
+
+.fi-mehse-tema-btn .fi-icon {
+    color: rgb(255 255 255 / .6);
+}
+
+.fi-mehse-tema-btn:hover {
+    background: rgb(255 255 255 / .1);
+}
+
+.fi-mehse-tema-secenek {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    padding: .5rem .6rem;
+    border-radius: 8px;
+    text-align: start;
+    transition: background-color .12s;
+}
+
+.fi-mehse-tema-secenek:hover {
+    background: rgb(0 0 0 / .04);
+}
+
+.fi-mehse-tema-secenek.fi-active {
+    background: rgb(0 0 0 / .06);
+}
+
+.fi-mehse-tema-ornek {
+    display: flex;
+    flex-shrink: 0;
+    overflow: hidden;
+    width: 42px;
+    height: 26px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / .1);
+}
+
+.fi-mehse-tema-ornek > span {
+    flex: 1;
+}
+
+.fi-mehse-tema-metin {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.fi-mehse-tema-metin strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1F2937;
+}
+
+.fi-mehse-tema-metin small {
+    font-size: 11px;
+    color: #6B7280;
+}
+
+.fi-mehse-tema-tik {
+    width: 18px;
+    height: 18px;
+    color: var(--primary);
+}
+
+/* ==========================================================================
+   1) GOOGLE MATERIAL (Material 3 / Material You — Google Workspace görünümü)
+   Yüzey tonları, hap (pill) şeklinde gezinme göstergesi, tam yuvarlak
+   butonlar, 16–28px radius, Roboto, gölge yerine ton farkı.
+   ========================================================================== */
+html[data-mehse-tema="material"] {
+    --primary: #0B57D0;
+    --bg: #F8FAFD;
+    --panel-bg: #FFFFFF;
+    --sidebar-from: #F8FAFD;
+    --sidebar-to: #F8FAFD;
+    --text-heading: #1F1F1F;
+    --text-secondary: #444746;
+    --text-label: #747775;
+    --border: #C4C7C5;
+    --border-light: #E1E3E1;
+    --info-bg: #D3E3FD;
+    --info-text: #041E49;
+    --info-border: #D3E3FD;
+    --success-bg: #C4EED0;
+    --success-text: #0F5223;
+    --success-border: #C4EED0;
+    --warning-bg: #FFDFA6;
+    --warning-text: #5B3E00;
+    --warning-border: #FFDFA6;
+    --metric-blue: #0B57D0;
+    --metric-green: #146C2E;
+    --metric-orange: #B06000;
+    --metric-purple: #6750A4;
+
+    --primary-50: #ECF3FE;
+    --primary-100: #D3E3FD;
+    --primary-200: #A8C7FA;
+    --primary-300: #7CACF8;
+    --primary-400: #4C8DF6;
+    --primary-500: #1B6EF3;
+    --primary-600: #0B57D0;
+    --primary-700: #0842A0;
+    --primary-800: #062E6F;
+    --primary-900: #041E49;
+    --primary-950: #02112B;
+
+    --font-family: 'Roboto';
+
+    .fi-body {
+        font-size: 14px;
+        letter-spacing: .01em;
+    }
+
+    /* Gezinme çekmecesi: yüzeyle aynı ton, hap şeklinde aktif gösterge. */
+    .fi-sidebar {
+        background: var(--bg) !important;
+        border-inline-end: none !important;
+    }
+
+    .fi-sidebar-nav {
+        padding-inline: .75rem;
+    }
+
+    .fi-sidebar-group-label {
+        color: #1F1F1F !important;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .fi-sidebar-item-label {
+        color: #444746 !important;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .fi-sidebar-group-btn .fi-icon,
+    .fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+    .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-database-notifications-btn-label,
+    .fi-sidebar-database-notifications-btn > .fi-icon {
+        color: #444746 !important;
+    }
+
+    .fi-sidebar-item-btn,
+    .fi-sidebar-group-btn,
+    .fi-sidebar-database-notifications-btn {
+        min-height: 36px;
+        border-radius: 9999px !important;
+        padding: .45rem .9rem;
+    }
+
+    .fi-sidebar-group-btn:hover,
+    .fi-sidebar-item-btn:hover,
+    .fi-sidebar-database-notifications-btn:hover {
+        background: rgb(31 31 31 / .08) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: #D3E3FD !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: #041E49 !important;
+        font-weight: 700;
+    }
+
+    .fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
+        color: #041E49 !important;
+    }
+
+    .fi-sidebar-item-grouped-border-part,
+    .fi-sidebar-item-grouped-border-part-not-first,
+    .fi-sidebar-item-grouped-border-part-not-last {
+        background: #C4C7C5 !important;
+    }
+
+    /* Üst çubuk: yüzeyle birleşik, gölgesiz. */
+    .fi-topbar {
+        background: var(--bg) !important;
+        min-height: 64px !important;
+        box-shadow: none !important;
+        border-bottom: none !important;
+    }
+
+    .fi-logo,
+    .fi-topbar .fi-logo,
+    .fi-topbar-item-label,
+    .fi-header-heading {
+        color: #1F1F1F !important;
+    }
+
+    .fi-topbar .fi-breadcrumbs,
+    .fi-breadcrumbs-item-label,
+    .fi-breadcrumbs-separator {
+        color: #444746 !important;
+    }
+
+    .fi-topbar-open-sidebar-btn .fi-icon,
+    .fi-topbar-close-sidebar-btn .fi-icon,
+    .fi-topbar-open-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-close-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-item-btn > .fi-icon,
+    .fi-mehse-tema-btn .fi-icon {
+        color: #444746 !important;
+    }
+
+    .fi-topbar-open-sidebar-btn:hover,
+    .fi-topbar-close-sidebar-btn:hover,
+    .fi-topbar-item-btn:hover,
+    .fi-mehse-tema-btn:hover {
+        background: rgb(31 31 31 / .08) !important;
+        border-radius: 9999px;
+    }
+
+    .fi-topbar .fi-btn.fi-outlined {
+        background: transparent !important;
+        border-color: #747775 !important;
+        color: #0B57D0 !important;
+    }
+
+    /* Global arama: M3 "search bar" — tam yuvarlak, ton dolgulu. */
+    .fi-global-search-field .fi-input-wrp {
+        border-radius: 9999px !important;
+        background: #E9EEF6 !important;
+        box-shadow: none !important;
+    }
+
+    /* Kartlar: 16px radius, gölgesiz, beyaz yüzey — ton farkıyla ayrışır. */
+    .fi-section:not(.fi-aside) {
+        border-radius: 16px !important;
+        box-shadow: none !important;
+    }
+
+    .fi-page-header-heading {
+        font-size: 28px;
+        font-weight: 400;
+        letter-spacing: 0;
+    }
+
+    .fi-section-header-heading {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    /* Butonlar: tam yuvarlak, 40px yükseklik, 14px/500. */
+    .fi-btn {
+        min-height: 40px;
+        padding: 8px 22px !important;
+        border-radius: 9999px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        letter-spacing: .01em;
+        box-shadow: none !important;
+    }
+
+    .fi-btn.fi-size-xs,
+    .fi-btn.fi-size-sm {
+        min-height: 32px;
+        padding: 5px 16px !important;
+        font-size: 13px !important;
+    }
+
+    .fi-btn.fi-outlined:not(.fi-color) {
+        background: transparent !important;
+        --tw-ring-color: #747775 !important;
+        color: #0B57D0 !important;
+    }
+
+    .fi-btn:not(.fi-outlined):not(.fi-color) {
+        background: #E9EEF6 !important;
+        --tw-ring-color: transparent !important;
+        color: #041E49 !important;
+    }
+
+    .fi-icon-btn {
+        border-radius: 9999px !important;
+    }
+
+    /* Durum rozetleri: M3 "chip" — 8px radius. */
+    .fi-badge {
+        border-radius: 8px !important;
+        padding: 3px 10px !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        box-shadow: none !important;
+    }
+
+    /* Metrik kartları: ton dolgulu yüzey, renkli kenar yerine renkli değer. */
+    .fi-wi-stats-overview-stat {
+        border-left: none !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
+        background: #F0F4F9 !important;
+    }
+
+    .fi-wi-stats-overview-stat-label {
+        text-transform: none;
+        letter-spacing: .01em;
+        font-weight: 500 !important;
+        color: #444746 !important;
+    }
+
+    .fi-wi-stats-overview-stat-value {
+        font-weight: 400 !important;
+        color: var(--metric-blue) !important;
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+2) .fi-wi-stats-overview-stat-value {
+        color: var(--metric-green) !important;
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+3) .fi-wi-stats-overview-stat-value {
+        color: var(--metric-orange) !important;
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+4) .fi-wi-stats-overview-stat-value {
+        color: var(--metric-purple) !important;
+    }
+
+    /* Tablo: büyük harf yok, sakin başlık, ince ayraç. */
+    .fi-ta-ctn {
+        border-radius: 16px !important;
+        box-shadow: none !important;
+    }
+
+    .fi-ta-table > thead > tr {
+        background: transparent !important;
+    }
+
+    .fi-ta-header-cell {
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        text-transform: none;
+        color: #444746 !important;
+    }
+
+    .fi-ta-row.fi-clickable:hover {
+        background: #F0F4F9 !important;
+    }
+
+    .fi-ta-cell-content,
+    .fi-ta-text-item-label {
+        font-size: 14px !important;
+        color: #1F1F1F !important;
+    }
+
+    /* Metin alanı: M3 "outlined text field" — 4px radius, odakta 2px birincil. */
+    .fi-input-wrp {
+        border-radius: 4px !important;
+        box-shadow: inset 0 0 0 1px #747775 !important;
+    }
+
+    .fi-input-wrp:not(.fi-disabled):not(:has(.fi-ac-action:focus)):focus-within {
+        box-shadow: inset 0 0 0 2px #0B57D0 !important;
+    }
+
+    .fi-fo-field-wrp-label,
+    .fi-input-wrp-label {
+        font-weight: 500;
+    }
+
+    /* Diyalog: 28px radius, ton dolgulu yüzey, lacivert başlık bandı yok. */
+    .fi-modal-window {
+        border-radius: 28px !important;
+        background: #F0F4F9 !important;
+        box-shadow: 0 8px 12px 6px rgb(0 0 0 / .15), 0 4px 4px rgb(0 0 0 / .3) !important;
+    }
+
+    .fi-modal-header {
+        background: transparent !important;
+        padding: 24px 24px 8px !important;
+        border-radius: 28px 28px 0 0 !important;
+    }
+
+    .fi-modal-header .fi-modal-heading {
+        color: #1F1F1F !important;
+        font-size: 22px;
+        font-weight: 400;
+    }
+
+    .fi-modal-header .fi-icon {
+        color: #444746 !important;
+    }
+
+    .fi-modal-content {
+        padding: 8px 24px 16px !important;
+    }
+
+    .fi-modal-footer {
+        border-top: none !important;
+        padding: 8px 24px 24px !important;
+    }
+
+    .fi-dropdown-panel {
+        border-radius: 12px !important;
+        background: #F0F4F9 !important;
+    }
+
+    /* Mobil alt gezinme: M3 navigation bar — hap şeklinde aktif gösterge. */
+    .fi-mobil-alt-nav {
+        background: #F0F4F9;
+        border-top: none;
+        box-shadow: none;
+    }
+
+    .fi-mobil-alt-nav-icon-ctn {
+        width: 56px;
+        height: 30px;
+        border-radius: 9999px;
+    }
+
+    .fi-mobil-alt-nav-icon,
+    .fi-mobil-alt-nav-label {
+        color: #444746;
+    }
+
+    .fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-icon,
+    .fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-label {
+        color: #041E49;
+    }
+}
+
+/* ==========================================================================
+   2) WINDOWS 11 (Fluent Design — Mica + katman yüzeyleri)
+   Mica zemin, yarı saydam beyaz "katman" kartlar, 4/8px radius, aktif menüde
+   soldaki vurgu çubuğu (NavigationView), Segoe UI Variable, alt kenarı
+   koyulaşan butonlar/alanlar, gri alt bantlı ContentDialog.
+   ========================================================================== */
+html[data-mehse-tema="windows11"] {
+    --primary: #005FB8;
+    --bg: #F3F3F3;
+    --panel-bg: rgb(255 255 255 / .7);
+    --sidebar-from: transparent;
+    --sidebar-to: transparent;
+    --text-heading: #1A1A1A;
+    --text-secondary: #5D5D5D;
+    --text-label: #8A8A8A;
+    --border: rgb(0 0 0 / .0578);
+    --border-light: rgb(0 0 0 / .0578);
+    --info-bg: #E6F0FA;
+    --info-text: #005FB8;
+    --info-border: #CCE0F5;
+    --success-bg: #DFF6DD;
+    --success-text: #0F7B0F;
+    --success-border: #C3EBC0;
+    --warning-bg: #FFF4CE;
+    --warning-text: #9D5D00;
+    --warning-border: #F9E2A6;
+    --metric-blue: #005FB8;
+    --metric-green: #0F7B0F;
+    --metric-orange: #9D5D00;
+    --metric-purple: #8764B8;
+
+    --primary-50: #EBF3FB;
+    --primary-100: #CCE0F5;
+    --primary-200: #99C2EB;
+    --primary-300: #4CC2FF;
+    --primary-400: #0078D4;
+    --primary-500: #0067C0;
+    --primary-600: #005FB8;
+    --primary-700: #004C94;
+    --primary-800: #003A70;
+    --primary-900: #002A52;
+    --primary-950: #001A33;
+
+    --font-family: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+
+    /* Mica: masaüstü duvar kağıdından sızan çok hafif soğuk ton. */
+    .fi-body {
+        font-size: 14px;
+        background:
+            radial-gradient(1200px 600px at 0% 0%, #E8EEF7 0%, transparent 60%),
+            radial-gradient(900px 500px at 100% 0%, #F1ECF4 0%, transparent 55%),
+            #F3F3F3 !important;
+        background-attachment: fixed !important;
+    }
+
+    /* NavigationView: saydam, aktif öğede solda 3px vurgu çubuğu. */
+    .fi-sidebar {
+        background: transparent !important;
+        border-inline-end: none !important;
+    }
+
+    .fi-sidebar-nav {
+        row-gap: .25rem;
+        padding-inline: .35rem;
+    }
+
+    .fi-sidebar-group-label {
+        color: #1A1A1A !important;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .fi-sidebar-item-label {
+        color: #1A1A1A !important;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .fi-sidebar-group-btn .fi-icon,
+    .fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+    .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-database-notifications-btn-label,
+    .fi-sidebar-database-notifications-btn > .fi-icon {
+        color: #1A1A1A !important;
+    }
+
+    .fi-sidebar-item-btn,
+    .fi-sidebar-group-btn,
+    .fi-sidebar-database-notifications-btn {
+        position: relative;
+        min-height: 36px;
+        border-radius: 4px !important;
+        padding: .4rem .75rem;
+    }
+
+    .fi-sidebar-group-btn:hover,
+    .fi-sidebar-item-btn:hover,
+    .fi-sidebar-database-notifications-btn:hover {
+        background: rgb(0 0 0 / .0373) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: rgb(0 0 0 / .0578) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn::before {
+        content: '';
+        position: absolute;
+        inset-inline-start: 0;
+        top: 50%;
+        width: 3px;
+        height: 16px;
+        border-radius: 3px;
+        background: #005FB8;
+        transform: translateY(-50%);
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: #1A1A1A !important;
+        font-weight: 600;
+    }
+
+    .fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
+        color: #005FB8 !important;
+    }
+
+    .fi-sidebar-item-grouped-border-part,
+    .fi-sidebar-item-grouped-border-part-not-first,
+    .fi-sidebar-item-grouped-border-part-not-last {
+        background: rgb(0 0 0 / .1) !important;
+    }
+
+    /* Başlık çubuğu: Mica üzerinde akrilik. */
+    .fi-topbar {
+        background: rgb(243 243 243 / .75) !important;
+        backdrop-filter: blur(30px) saturate(125%);
+        -webkit-backdrop-filter: blur(30px) saturate(125%);
+        min-height: 48px !important;
+        box-shadow: none !important;
+        border-bottom: 1px solid rgb(0 0 0 / .0578) !important;
+    }
+
+    .fi-logo,
+    .fi-topbar .fi-logo,
+    .fi-topbar-item-label,
+    .fi-header-heading {
+        color: #1A1A1A !important;
+    }
+
+    .fi-topbar .fi-breadcrumbs,
+    .fi-breadcrumbs-item-label,
+    .fi-breadcrumbs-separator {
+        color: #5D5D5D !important;
+    }
+
+    .fi-topbar-open-sidebar-btn .fi-icon,
+    .fi-topbar-close-sidebar-btn .fi-icon,
+    .fi-topbar-open-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-close-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-item-btn > .fi-icon,
+    .fi-mehse-tema-btn .fi-icon {
+        color: #1A1A1A !important;
+    }
+
+    .fi-topbar-open-sidebar-btn:hover,
+    .fi-topbar-close-sidebar-btn:hover,
+    .fi-topbar-item-btn:hover,
+    .fi-mehse-tema-btn:hover {
+        background: rgb(0 0 0 / .0373) !important;
+        border-radius: 4px;
+    }
+
+    .fi-topbar .fi-btn.fi-outlined {
+        background: rgb(255 255 255 / .7) !important;
+        border-color: rgb(0 0 0 / .0578) !important;
+        color: #1A1A1A !important;
+    }
+
+    /* Kartlar: katman yüzeyi — yarı saydam beyaz + ince kenar + 8px radius. */
+    .fi-section:not(.fi-aside),
+    .fi-ta-ctn,
+    .fi-wi-stats-overview-stat {
+        background: rgb(255 255 255 / .7) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 0 0 1px rgb(0 0 0 / .0578), 0 2px 4px rgb(0 0 0 / .04) !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+    }
+
+    .fi-page-header-heading {
+        font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .fi-section-header-heading {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* Butonlar: 4px radius, 32px, alt kenar hafif koyu (Fluent "elevation"). */
+    .fi-btn {
+        min-height: 32px;
+        padding: 5px 12px !important;
+        border-radius: 4px !important;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+    }
+
+    .fi-btn.fi-color:not(.fi-outlined) {
+        box-shadow: inset 0 -1px 0 rgb(0 0 0 / .4), inset 0 0 0 1px rgb(255 255 255 / .08) !important;
+        font-weight: 600 !important;
+    }
+
+    .fi-btn:not(.fi-color),
+    .fi-btn.fi-outlined:not(.fi-color) {
+        background: rgb(255 255 255 / .7) !important;
+        color: #1A1A1A !important;
+        --tw-ring-color: transparent !important;
+        box-shadow: inset 0 0 0 1px rgb(0 0 0 / .0578), inset 0 -1px 0 rgb(0 0 0 / .1622) !important;
+    }
+
+    .fi-btn:not(.fi-color):hover {
+        background: rgb(249 249 249 / .5) !important;
+    }
+
+    .fi-icon-btn {
+        border-radius: 4px !important;
+    }
+
+    /* Rozetler: Fluent InfoBadge tonları, 4px radius. */
+    .fi-badge {
+        border-radius: 4px !important;
+        padding: 2px 6px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Metrik kartları: renkli sol kenar yerine üstte ince vurgu çizgisi. */
+    .fi-wi-stats-overview-stat {
+        border-left: none !important;
+        border-top: 2px solid var(--metric-blue);
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+2) {
+        border-top-color: var(--metric-green);
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+3) {
+        border-top-color: var(--metric-orange);
+    }
+
+    .fi-wi-stats-overview-stat:nth-of-type(4n+4) {
+        border-top-color: var(--metric-purple);
+    }
+
+    .fi-wi-stats-overview-stat-label {
+        text-transform: none;
+        letter-spacing: 0;
+        color: #5D5D5D !important;
+    }
+
+    .fi-wi-stats-overview-stat-value {
+        font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600 !important;
+        color: #1A1A1A !important;
+    }
+
+    /* Tablo (DataGrid). */
+    .fi-ta-table > thead > tr {
+        background: rgb(249 249 249 / .6) !important;
+    }
+
+    .fi-ta-header-cell {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-transform: none;
+        color: #5D5D5D !important;
+    }
+
+    .fi-ta-row.fi-clickable:hover {
+        background: rgb(0 0 0 / .0241) !important;
+    }
+
+    .fi-ta-cell-content,
+    .fi-ta-text-item-label {
+        font-size: 14px !important;
+        color: #1A1A1A !important;
+    }
+
+    /* TextBox: 4px, alt kenar koyu; odakta alt kenar 2px vurgu rengi. */
+    .fi-input-wrp {
+        border-radius: 4px !important;
+        background: rgb(255 255 255 / .7) !important;
+        box-shadow: inset 0 0 0 1px rgb(0 0 0 / .0578), inset 0 -1px 0 rgb(0 0 0 / .4458) !important;
+    }
+
+    .fi-input-wrp:not(.fi-disabled):not(:has(.fi-ac-action:focus)):focus-within {
+        background: #FFFFFF !important;
+        box-shadow: inset 0 0 0 1px rgb(0 0 0 / .0578), inset 0 -2px 0 #005FB8 !important;
+    }
+
+    /* ContentDialog: 8px, beyaz gövde + gri alt buton bandı, derin gölge. */
+    .fi-modal-window {
+        border-radius: 8px !important;
+        background: #FFFFFF !important;
+        box-shadow: 0 32px 64px rgb(0 0 0 / .1876), 0 2px 21px rgb(0 0 0 / .1474), 0 0 0 1px rgb(0 0 0 / .05) !important;
+        overflow: hidden;
+    }
+
+    .fi-modal-header {
+        background: transparent !important;
+        padding: 24px 24px 8px !important;
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    .fi-modal-header .fi-modal-heading {
+        color: #1A1A1A !important;
+        font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .fi-modal-header .fi-icon {
+        color: #5D5D5D !important;
+    }
+
+    .fi-modal-content {
+        padding: 8px 24px 24px !important;
+    }
+
+    .fi-modal-footer {
+        background: #F3F3F3 !important;
+        border-top: 1px solid rgb(0 0 0 / .0578) !important;
+        padding: 20px 24px !important;
+    }
+
+    .fi-dropdown-panel {
+        border-radius: 8px !important;
+        background: rgb(252 252 252 / .92) !important;
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        box-shadow: 0 8px 16px rgb(0 0 0 / .14), 0 0 0 1px rgb(0 0 0 / .0578) !important;
+    }
+
+    .fi-mehse-tema-secenek {
+        border-radius: 4px;
+    }
+
+    /* Mobil alt gezinme: akrilik şerit. */
+    .fi-mobil-alt-nav {
+        background: rgb(243 243 243 / .85);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border-top: 1px solid rgb(0 0 0 / .0578);
+        box-shadow: none;
+    }
+
+    .fi-mobil-alt-nav-icon-ctn {
+        border-radius: 4px;
+    }
+}
+
+/* ==========================================================================
+   3) SAHA (serbest tasarım) — şantiye/fabrika ruhu: kömür grisi gövde,
+   baret sarısı vurgu, sidebar ve üst çubukta tehlike şeridi, Barlow /
+   Barlow Condensed (endüstriyel etiket yazısı), keskin 2–4px köşeler,
+   "levha" gibi kalın alt kenarlı butonlar. Sahada tablette, güneş altında
+   yüksek kontrastla okunur.
+   ========================================================================== */
+html[data-mehse-tema="saha"] {
+    --primary: #B45309;
+    --bg: #F4F3EF;
+    --panel-bg: #FFFFFF;
+    --sidebar-from: #1C1917;
+    --sidebar-to: #14110F;
+    --text-heading: #1C1917;
+    --text-secondary: #57534E;
+    --text-label: #78716C;
+    --border: #D6D3CE;
+    --border-light: #E7E5E0;
+    --info-bg: #E0F2FE;
+    --info-text: #075985;
+    --info-border: #7DD3FC;
+    --success-bg: #DCFCE7;
+    --success-text: #166534;
+    --success-border: #4ADE80;
+    --warning-bg: #FEF3C7;
+    --warning-text: #92400E;
+    --warning-border: #F5B400;
+    --metric-blue: #0369A1;
+    --metric-green: #15803D;
+    --metric-orange: #F5B400;
+    --metric-purple: #B91C1C;
+    --saha-sari: #F5B400;
+    --saha-komur: #1C1917;
+    --saha-serit: repeating-linear-gradient(-45deg, #F5B400 0 10px, #1C1917 10px 20px);
+
+    --primary-50: #FFFBEB;
+    --primary-100: #FEF3C7;
+    --primary-200: #FDE68A;
+    --primary-300: #FCD34D;
+    --primary-400: #F5B400;
+    --primary-500: #D97706;
+    --primary-600: #B45309;
+    --primary-700: #92400E;
+    --primary-800: #78350F;
+    --primary-900: #451A03;
+    --primary-950: #2A1002;
+
+    --font-family: 'Barlow';
+
+    .fi-body {
+        font-size: 14px;
+        background-color: var(--bg);
+    }
+
+    .fi-page-header-heading,
+    .fi-section-header-heading,
+    .fi-modal-heading,
+    .fi-wi-stats-overview-stat-value,
+    .fi-sidebar-group-label,
+    .fi-logo {
+        font-family: 'Barlow Condensed', 'Barlow', sans-serif;
+        letter-spacing: .02em;
+    }
+
+    .fi-page-header-heading {
+        font-size: 30px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .fi-section-header-heading {
+        font-size: 17px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    /* Sidebar: kömür grisi, en üstte tehlike şeridi, aktifte sarı sol blok. */
+    .fi-sidebar {
+        background: linear-gradient(180deg, var(--sidebar-from), var(--sidebar-to)) !important;
+    }
+
+    .fi-sidebar-header {
+        border-top: 6px solid transparent;
+        border-image: var(--saha-serit) 6;
+    }
+
+    .fi-sidebar-group-label {
+        color: var(--saha-sari) !important;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .fi-sidebar-item-label {
+        color: rgb(255 255 255 / .72) !important;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .fi-sidebar-group-btn .fi-icon,
+    .fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+    .fi-sidebar-item-btn > .fi-icon {
+        color: rgb(255 255 255 / .5) !important;
+    }
+
+    .fi-sidebar-item-btn,
+    .fi-sidebar-group-btn {
+        border-radius: 2px !important;
+        border-inline-start: 4px solid transparent;
+    }
+
+    .fi-sidebar-group-btn:hover,
+    .fi-sidebar-item-btn:hover {
+        background: rgb(255 255 255 / .06) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: rgb(245 180 0 / .14) !important;
+        border-inline-start-color: var(--saha-sari);
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: var(--saha-sari) !important;
+        font-weight: 700;
+    }
+
+    .fi-sidebar-item-grouped-border-part,
+    .fi-sidebar-item-grouped-border-part-not-first,
+    .fi-sidebar-item-grouped-border-part-not-last {
+        background: rgb(255 255 255 / .18) !important;
+    }
+
+    /* Üst çubuk: kömür grisi + altta tehlike şeridi. */
+    .fi-topbar {
+        background: var(--saha-komur) !important;
+        min-height: 54px !important;
+        box-shadow: none !important;
+        border-bottom: 5px solid transparent;
+        border-image: var(--saha-serit) 5;
+    }
+
+    .fi-logo {
+        color: var(--saha-sari) !important;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .fi-mehse-tema-btn .fi-icon {
+        color: rgb(255 255 255 / .7) !important;
+    }
+
+    .fi-topbar .fi-btn.fi-outlined {
+        background: transparent !important;
+        border-color: var(--saha-sari) !important;
+        color: var(--saha-sari) !important;
+    }
+
+    /* Kartlar: keskin köşe, üstte kalın kömür çizgi — "levha" hissi. */
+    .fi-section:not(.fi-aside) {
+        border-radius: 4px !important;
+        box-shadow: 0 0 0 1px var(--border), 0 2px 0 rgb(0 0 0 / .04) !important;
+        border-top: 3px solid var(--saha-komur);
+    }
+
+    .fi-ta-ctn {
+        border-radius: 4px !important;
+    }
+
+    /* Butonlar: sarı dolgu + kömür yazı, kalın alt kenar (bas-kalk levha). */
+    .fi-btn {
+        border-radius: 3px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: 7px 16px !important;
+    }
+
+    .fi-btn.fi-color-primary:not(.fi-outlined) {
+        --bg: var(--saha-sari) !important;
+        --hover-bg: #FFC61A !important;
+        --text: var(--saha-komur) !important;
+        --hover-text: var(--saha-komur) !important;
+        box-shadow: inset 0 -3px 0 rgb(0 0 0 / .25) !important;
+    }
+
+    .fi-btn.fi-color-primary:not(.fi-outlined) > .fi-icon {
+        color: var(--saha-komur) !important;
+    }
+
+    .fi-btn.fi-color:not(.fi-outlined):not(.fi-color-primary) {
+        box-shadow: inset 0 -3px 0 rgb(0 0 0 / .25) !important;
+    }
+
+    .fi-btn.fi-outlined:not(.fi-color) {
+        background: #fff !important;
+        --tw-ring-color: var(--saha-komur) !important;
+        color: var(--saha-komur) !important;
+    }
+
+    .fi-icon-btn {
+        border-radius: 3px !important;
+    }
+
+    /* Rozetler: dikdörtgen "etiket" — güvenlik işaretleri gibi kalın sol kenar. */
+    .fi-badge {
+        border-radius: 2px !important;
+        padding: 2px 7px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .fi-badge.fi-color-success,
+    .fi-badge.fi-color-info,
+    .fi-badge.fi-color-warning {
+        box-shadow: inset 3px 0 0 currentColor !important;
+    }
+
+    /* Metrik kartları: sol kalın şerit + büyük condensed rakam. */
+    .fi-wi-stats-overview-stat {
+        border-radius: 4px !important;
+        border-left-width: 6px !important;
+        box-shadow: 0 0 0 1px var(--border) !important;
+    }
+
+    .fi-wi-stats-overview-stat-value {
+        font-size: 2.1rem !important;
+        font-weight: 700 !important;
+    }
+
+    .fi-wi-stats-overview-stat-label {
+        color: var(--text-secondary) !important;
+        font-weight: 700 !important;
+    }
+
+    /* Tablo: kömür başlık satırı, sarı hover çizgisi, zebra satırlar. */
+    .fi-ta-table > thead > tr {
+        background: var(--saha-komur) !important;
+    }
+
+    .fi-ta-header-cell,
+    .fi-ta-header-cell button {
+        color: rgb(255 255 255 / .85) !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: .06em;
+    }
+
+    .fi-ta-header-cell .fi-icon {
+        color: var(--saha-sari) !important;
+    }
+
+    .fi-ta-row:nth-child(even) {
+        background: #FAFAF7;
+    }
+
+    .fi-ta-row.fi-clickable:hover {
+        background: #FFFBEB !important;
+        box-shadow: inset 4px 0 0 var(--saha-sari);
+    }
+
+    .fi-ta-cell-content,
+    .fi-ta-text-item-label {
+        font-size: 13px !important;
+        color: #292524 !important;
+    }
+
+    /* Alanlar: kalın alt kenar, odakta sarı halka. */
+    .fi-input-wrp {
+        border-radius: 3px !important;
+        box-shadow: inset 0 0 0 1px var(--border), inset 0 -2px 0 #A8A29E !important;
+    }
+
+    .fi-input-wrp:not(.fi-disabled):not(:has(.fi-ac-action:focus)):focus-within {
+        box-shadow: inset 0 0 0 1px var(--saha-komur), inset 0 -2px 0 var(--saha-komur), 0 0 0 3px rgb(245 180 0 / .45) !important;
+    }
+
+    .fi-fo-field-wrp-label,
+    .fi-input-wrp-label {
+        font-weight: 600;
+    }
+
+    /* Modal: kömür başlık + sarı tehlike şeridi. */
+    .fi-modal-window {
+        border-radius: 4px !important;
+        overflow: hidden;
+    }
+
+    .fi-modal-header {
+        background: var(--saha-komur) !important;
+        border-radius: 0 !important;
+        border-bottom: 5px solid transparent;
+        border-image: var(--saha-serit) 5;
+    }
+
+    .fi-modal-header .fi-modal-heading {
+        color: var(--saha-sari) !important;
+        font-size: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .fi-dropdown-panel {
+        border-radius: 3px !important;
+        border-top: 3px solid var(--saha-sari);
+    }
+
+    .fi-mehse-tema-secenek {
+        border-radius: 3px;
+    }
+
+    /* Mobil alt gezinme: kömür şerit, sarı aktif. */
+    .fi-mobil-alt-nav {
+        background: var(--saha-komur);
+        border-top: 4px solid transparent;
+        border-image: var(--saha-serit) 4;
+    }
+
+    .fi-mobil-alt-nav-icon,
+    .fi-mobil-alt-nav-label {
+        color: rgb(255 255 255 / .55);
+    }
+
+    .fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-icon-ctn {
+        background: var(--saha-sari);
+        border-radius: 3px;
+    }
+
+    .fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-icon {
+        color: var(--saha-komur);
+    }
+
+    .fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-label {
+        color: var(--saha-sari);
+    }
+}

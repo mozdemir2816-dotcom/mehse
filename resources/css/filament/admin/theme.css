@@ -1,4 +1,7 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+/* Görsel temalar (material / windows11 / saha) — html[data-mehse-tema] önekli,
+   aşağıdaki klasik kurallardan daha özgül olduğu için sıralama önemli değil. */
+@import './temalar.css';
 
 @source '../../../../app/Filament';
 @source '../../../../resources/views/filament';
