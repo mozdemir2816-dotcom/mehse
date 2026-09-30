@@ -20,7 +20,7 @@ class GirisEkraniTest extends TestCase
         $yanit->assertSee('mehse-giris-tanitim', escape: false);
         $yanit->assertSee('images/marka/mehse-logo.png', escape: false);
         $yanit->assertSee('İş sağlığı ve güvenliği süreçlerinizi tek panelden yönetin.');
-        $yanit->assertSee('Bireysel hesap oluşturun');
+        $yanit->assertSee('Bireysel kayıt');
         $yanit->assertSee('images/marka/favicon-32.png', escape: false);
     }
 

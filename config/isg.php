@@ -4619,4 +4619,44 @@ return [
         ['grup' => 'lojistik', 'baslik' => 'Akülü Forklift Şarj ve Batarya Güvenliği Toolbox Konuşması', 'dosya_adi' => 'Akülü Forklift Şarj ve Batarya Güvenliği Toolbox Konuşması.docx', 'aciklama' => 'Forklift/istif makinesi batarya şarj işlemlerinde yangın ve kimyasal riskleri azaltmak.', 'boyut' => 8525],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Kayıt / başvuru (isgsuite.tr "Başvuru seçenekleri" referansı)
+    |--------------------------------------------------------------------------
+    | Bireysel İGU kaydı anında hesap açar (App\Filament\Auth\KayitOl); OSGB
+    | başvurusu sahip onayı bekler (App\Filament\Pages\Basvurular).
+    |
+    | yasal_metinler: onay kutusu + "görüntüle" modalı. Metin, `gorunum` Blade
+    | dosyası VARSA devreye girer (yoksa kutu gösterilmez). Metinler kullanıcı
+    | tarafından sağlanır — kendimiz yasal metin YAZMIYORUZ. Metin değişince
+    | `revizyon`u güncelle; her onay revizyonuyla birlikte kaydedilir.
+    */
+    'kayit' => [
+        'osgb_deneme_gun' => 90,
+        'sertifika_siniflari' => [
+            'a_sinifi' => 'A Sınıfı',
+            'b_sinifi' => 'B Sınıfı',
+            'c_sinifi' => 'C Sınıfı',
+        ],
+        'yasal_metinler' => [
+            // Metinler: kullanıcının verdiği Mehse_com_Hizmet_Sozlesmesi_ve_KVKK.docx (birebir).
+            // Onay kutusu ifadeleri belgenin kendisinden: sözleşme md.11, KVKK md.7.
+            // Kutu = `baglanti` (metni açan bağlantı) + `onay_sonrasi`.
+            'sozlesme' => [
+                'baslik' => 'Mehse Hizmet ve Kullanım Sözleşmesi',
+                'baglanti' => 'Mehse Hizmet ve Kullanım Sözleşmesini',
+                'onay_sonrasi' => 'okudum ve kabul ediyorum',
+                'gorunum' => 'yasal.sozlesme',
+                'revizyon' => 'Sürüm 1.1 · 30.09.2026',
+            ],
+            'kvkk' => [
+                'baslik' => 'Mehse KVKK Aydınlatma Metni',
+                'baglanti' => 'Mehse KVKK Aydınlatma Metnini',
+                'onay_sonrasi' => 'okudum ve kişisel verilerimin işlenmesi hakkında bilgilendirildim.',
+                'gorunum' => 'yasal.kvkk',
+                'revizyon' => 'Sürüm 1.2 · 30.09.2026',
+            ],
+        ],
+    ],
+
 ];

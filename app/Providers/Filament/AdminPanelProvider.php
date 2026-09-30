@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\KayitOl;
+use App\Filament\Auth\OsgbBasvuru;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -20,6 +21,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -117,6 +119,14 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.components.giris-kayit-secenekleri'),
             )
+            // Kayıt/başvuru formlarındaki "Sözleşmeyi görüntüle" / "KVKK" modalları
+            // (yalnız metin dosyası varsa — App\Support\YasalMetinler).
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_PAGE_END,
+                fn () => view('filament.components.yasal-modallar'),
+            )
+            // Herkese açık OSGB başvuru formu (hesap açmaz, sahip onayı bekler).
+            ->routes(fn () => Route::get('osgb-basvuru', OsgbBasvuru::class)->name('osgb-basvuru'))
             // Sidebar altı: oturumdaki uzman + Ayarlar kısayolu.
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,

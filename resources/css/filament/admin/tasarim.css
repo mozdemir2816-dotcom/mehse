@@ -1191,3 +1191,55 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 .mehse-giris-secenek-ok {
     color: #099291;
 }
+
+/* Yasal onay bağlantısı + modal metni (App\Support\YasalMetinler). */
+.mehse-yasal-baglanti {
+    color: #099291;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.mehse-yasal-metin {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: .5rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.mehse-yasal-metin h3,
+.mehse-yasal-metin h4 {
+    margin: 1rem 0 .35rem;
+    color: #0A6F6E;
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+.mehse-yasal-metin p {
+    margin: 0 0 .6rem;
+}
+
+/* Yasal metinde doldurulmamış [..] alanları ve bölüm ayraçları (resources/views/yasal/*). */
+.mehse-yasal-metin mark.mehse-yasal-bos {
+    padding: 0 .2rem;
+    border-radius: 3px;
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.mehse-yasal-metin h4.mehse-yasal-bolum {
+    margin: 1.4rem 0 .4rem;
+    padding-top: .9rem;
+    border-top: 1px solid #E2E8F0;
+    color: #0A345A;
+    font-size: .78rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.mehse-yasal-metin ul {
+    margin: 0 0 .6rem 1.1rem;
+    list-style: disc;
+}
