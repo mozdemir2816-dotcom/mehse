@@ -96,7 +96,7 @@
 }
 
 /* -------------------------------------------------------------------------
-   Giriş (login) ekranı — ortalanmış marka bloğu + kart.
+   Giriş (login) ekranı — flat, sade: gradient/gölge yok, ince kenarlık.
    ------------------------------------------------------------------------- */
 .fi-simple-layout {
     background: var(--p-bg);
@@ -106,33 +106,29 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .35rem;
+    gap: .2rem;
     width: 100%;
-    padding: 2.75rem 1.5rem 4.5rem;
-    background: linear-gradient(180deg, var(--p-navy-from) 0%, var(--p-navy-to) 100%);
-    color: #fff;
+    padding: 0 1.5rem 1.75rem;
     text-align: center;
 }
 
-.fi-simple-main-ctn {
-    margin-top: -3rem;
-}
-
 .portal-auth-brand strong {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: -.01em;
+    color: var(--p-text-heading);
 }
 
 .portal-auth-brand span {
     font-size: .82rem;
-    color: rgb(255 255 255 / .7);
+    color: var(--p-text-secondary);
 }
 
 .fi-simple-main {
-    border-radius: 16px !important;
-    box-shadow: 0 20px 40px rgb(15 23 42 / .18) !important;
-    border: none !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    border: 1px solid var(--p-border) !important;
+    background: var(--p-card-bg) !important;
 }
 
 .fi-simple-main .fi-btn {
