@@ -7,6 +7,8 @@ use App\Models\YillikPlan as YillikPlanModel;
 use App\Support\YillikDegerlendirmeVerisi;
 use App\Support\YillikPlanExcelIceAktarici;
 use App\Filament\Support\ImzaSecenegi;
+use App\Support\YillikPlanExcelUretici;
+use App\Support\YillikPlanSablonu;
 use App\Support\YillikPlanUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -62,6 +64,9 @@ class YillikPlanlar extends Page
     public ?string $yeniEgitimKonu = null;
 
     public ?string $yeniEgitimSure = null;
+
+    /** Eğitim planı bölümü (config isg.yillik_plan.egitim_kategorileri) — Excel çıktısında satırın gideceği bölüm. */
+    public string $yeniEgitimKategori = 'ise_ozgu';
 
     public ?string $yeniEgitimEgitici = null;
 
@@ -215,6 +220,9 @@ class YillikPlanlar extends Page
         $egitimler = $p->egitimler ?? [];
         $egitimler[] = [
             'konu' => $this->yeniEgitimKonu,
+            'kategori' => array_key_exists($this->yeniEgitimKategori, config('isg.yillik_plan.egitim_kategorileri'))
+                ? $this->yeniEgitimKategori : 'genel',
+            'hafta' => 2,
             'sure_saat' => $this->yeniEgitimSure ?: null,
             'egitici' => $this->yeniEgitimEgitici,
             'hedef' => null,
@@ -304,20 +312,17 @@ class YillikPlanlar extends Page
             return;
         }
 
-        $kilitAy = $this->kilitAyIndeksi();
+        // İnşaat firmasında şantiye şablonu, diğerlerinde genel varsayılanlar.
+        $icerik = YillikPlanSablonu::icerik($this->firma, $this->yil);
 
         match ($this->sekme) {
-            'egitim' => $p->update([
-                'egitimler' => YillikPlanModel::maddeAylarIle(config('isg.yillik_plan.varsayilan_egitimler'), $kilitAy),
-            ]),
+            'egitim' => $p->update(['egitimler' => $icerik['egitimler']]),
             'degerlendirme' => $p->update([
                 'degerlendirmeler' => collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
                     ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
                     ->all(),
             ]),
-            default => $p->update([
-                'faaliyetler' => YillikPlanModel::maddeAylarIle(config('isg.yillik_plan.varsayilan_faaliyetler'), $kilitAy),
-            ]),
+            default => $p->update(['faaliyetler' => $icerik['faaliyetler']]),
         };
 
         Notification::make()->title('Bu sekme varsayılan içeriğe sıfırlandı (otomatik dolduruldu)')->success()->send();
@@ -368,6 +373,45 @@ class YillikPlanlar extends Page
                 ->visible(fn () => $this->plan() !== null)
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanUretici::pdf($this->plan(), ImzaSecenegi::secili($data))),
+
+            // Kullanıcının gerçek Excel şablonlarıyla birebir çıktı (YillikPlanExcelUretici).
+            Action::make('calismaExcel')
+                ->label('Çalışma Planı (Excel)')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'calisma')
+                ->action(fn () => YillikPlanExcelUretici::calisma($this->plan())),
+
+            Action::make('egitimExcel')
+                ->label('Eğitim Planı (Excel)')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'egitim')
+                ->schema([ImzaSecenegi::alan()])
+                ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data))),
+
+            Action::make('santiyeSablonu')
+                ->label('Şantiye Şablonunu Uygula')
+                ->icon('heroicon-o-building-office')
+                ->color('gray')
+                ->visible(fn () => $this->plan() !== null && in_array($this->sekme, ['calisma', 'egitim'], true))
+                ->requiresConfirmation()
+                ->modalHeading('Şantiye şablonu uygulansın mı?')
+                ->modalDescription(fn () => 'Bu sekmedeki ('.($this->sekme === 'egitim' ? 'eğitim planı' : 'çalışma planı').') tüm satırlar inşaat/şantiye şablonuyla değiştirilecek: '
+                    .($this->sekme === 'egitim'
+                        ? '5 bölümlü eğitim planı, 4. bölümde işe ve işyerine özgü riskler (yüksekte çalışma, kazı, kaldırma, elektrik, acil durum, kalıp-demir-beton).'
+                        : '36 faaliyet, ana konu grupları ve mevzuat/kayıt notlarıyla.')
+                    .' Sözleşme başlangıcından önceki aylar boş bırakılır.')
+                ->modalSubmitActionLabel('Uygula')
+                ->action(function (): void {
+                    $p = $this->plan();
+                    $icerik = YillikPlanSablonu::santiye($this->kilitAyIndeksi());
+                    $alan = $this->sekme === 'egitim' ? 'egitimler' : 'faaliyetler';
+                    $p?->update([$alan => $icerik[$alan]]);
+                    unset($this->plan);
+
+                    Notification::make()->title('Şantiye şablonu uygulandı')->success()->send();
+                }),
 
             Action::make('excelYukleCalisma')
                 ->label('Çalışma Planı Excel’den Yükle')

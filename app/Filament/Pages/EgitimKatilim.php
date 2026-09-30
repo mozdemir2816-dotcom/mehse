@@ -6,6 +6,7 @@ use App\Models\Calisan;
 use App\Models\EgitimKatilim as EgitimKatilimModel;
 use App\Models\Firma;
 use App\Models\Sertifika;
+use App\Models\YillikPlan;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\EgitimKatilimUretici;
@@ -215,6 +216,14 @@ class EgitimKatilim extends Page
      */
     private function isKalemiKonulariniOner(): void
     {
+        // Firmaya özgü içerik önceliklidir: yıllık eğitim planının 4. bölümü
+        // ("İşe ve İşyerine Özgü Riskler") doluysa formun işyerine özgü bölümü
+        // doğrudan o konularla kurulur (sektör seçilmemiş olsa bile) — Yıldız Grup
+        // sertifikası da 4. kategoriyi buradan alır.
+        if ($this->planOzguBolumunuKur()) {
+            return;
+        }
+
         if (! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
             return;
         }
@@ -234,6 +243,38 @@ class EgitimKatilim extends Page
 
             $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $konu, 'dakika' => 10, 'dahil' => true];
         }
+    }
+
+    /**
+     * Genel (temel İSG) eğitimde, firmanın belge yılına ait yıllık eğitim
+     * planındaki "işe özgü" konularla işyerine özgü bölümü kurar. Blok süresi
+     * (tehlike sınıfı / eğitim türü) konulara eşit dağıtılır. Kurulduysa true.
+     */
+    private function planOzguBolumunuKur(): bool
+    {
+        if (($this->icerik['tip'] ?? null) !== 'genel' || ! $this->firma) {
+            return false;
+        }
+
+        $yil = (int) Carbon::parse($this->belgeTarihi ?: now())->year;
+        $konular = collect(YillikPlan::query()->where('firma_id', $this->firma->id)->where('yil', $yil)->value('egitimler') ?? [])
+            ->where('kategori', 'ise_ozgu')->pluck('konu')->filter()->unique()->values();
+
+        if ($konular->isEmpty()) {
+            return false;
+        }
+
+        $sure = $this->egitimTuru === 'tekrar'
+            ? config('isg.egitim.sureler.tekrar')
+            : (config('isg.egitim.sureler.ilk.'.$this->firma->tehlike_sinifi) ?? config('isg.egitim.sureler.ilk.az_tehlikeli'));
+        $dakika = (int) round(($sure['blok_fiili_dk'] ?? 40) / $konular->count());
+
+        $this->icerik['isyerine_ozgu'] = [
+            'sektor' => 'Firmaya özgü ('.$yil.' Yıllık Eğitim Planı)',
+            'maddeler' => $konular->map(fn (string $k) => ['madde' => $k, 'dakika' => $dakika, 'dahil' => true])->all(),
+        ];
+
+        return true;
     }
 
     /** Aynı firma + başlık (+ genel'de sektör) + tür için en son eğitim katılım kaydının konu içeriği. */

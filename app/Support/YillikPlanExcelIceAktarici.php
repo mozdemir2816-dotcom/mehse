@@ -24,7 +24,9 @@ class YillikPlanExcelIceAktarici
         'genelkonular' => 'genel', 'genel' => 'genel',
         'saglikkonulari' => 'saglik', 'saglik' => 'saglik',
         'teknikkonular' => 'teknik', 'teknik' => 'teknik',
-        'digeregitimler' => 'diger', 'diger' => 'diger', 'digerkonular' => 'diger',
+        'digeregitimler' => 'diger', 'diger' => 'diger', 'digerkonular' => 'diger', '5digeregitimler' => 'diger',
+        // Yıldız Grup / VİZYON şablonu 4. bölüm
+        'iseveisyerineozguriskler' => 'ise_ozgu', 'iseozguriskler' => 'ise_ozgu', 'isyerineozguriskler' => 'ise_ozgu',
     ];
 
     /**

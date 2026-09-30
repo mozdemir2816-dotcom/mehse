@@ -4059,6 +4059,9 @@ return [
             'genel' => 'Genel Konular',
             'saglik' => 'Sağlık Konuları',
             'teknik' => 'Teknik Konular',
+            // 4. bölüm — firmaya/şantiyeye özgü riskler; Eğitim Katılım formunun
+            // "işyerine özgü" bölümüne ve sertifikaya da buradan önerilir.
+            'ise_ozgu' => 'İşe ve İşyerine Özgü Riskler',
             'diger' => 'Diğer Eğitimler',
         ],
 

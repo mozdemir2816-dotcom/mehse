@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\YillikPlanSablonu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,10 +38,11 @@ class YillikPlan extends Model
         $plan = static::firstOrNew(['firma_id' => $firma->id, 'yil' => $yil]);
 
         if (! $plan->exists) {
-            $kilitAy = $firma->planKilitAyIndeksi($yil);
+            // İnşaat firmalarında şantiye şablonu, diğerlerinde genel varsayılanlar.
+            $icerik = YillikPlanSablonu::icerik($firma, $yil);
 
-            $plan->faaliyetler = static::maddeAylarIle(config('isg.yillik_plan.varsayilan_faaliyetler'), $kilitAy);
-            $plan->egitimler = static::maddeAylarIle(config('isg.yillik_plan.varsayilan_egitimler'), $kilitAy);
+            $plan->faaliyetler = $icerik['faaliyetler'];
+            $plan->egitimler = $icerik['egitimler'];
             $plan->degerlendirmeler = collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
                 ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
                 ->all();

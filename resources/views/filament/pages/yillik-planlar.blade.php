@@ -99,6 +99,9 @@
                         @foreach (($p->faaliyetler ?? []) as $fi => $f)
                             <tr>
                                 <td style="padding:.3rem .5rem">
+                                    @if (!empty($f['ana_konu']))
+                                        <div style="font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--primary)">{{ $f['ana_konu'] }}</div>
+                                    @endif
                                     <div style="font-weight:600">{{ $f['faaliyet'] }}</div>
                                     @if (!empty($f['yasal_gereklilik']))
                                         <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $f['yasal_gereklilik'] }}</div>
@@ -181,7 +184,13 @@
                     </table>
                 </div>
 
-                <div style="margin-top:1rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:.5rem">
+                <div style="margin-top:1rem;display:grid;grid-template-columns:1.2fr 2fr 1fr 1fr 1fr auto;gap:.5rem">
+                    <select wire:model="yeniEgitimKategori" title="Eğitim planındaki bölüm"
+                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        @foreach ($egitimKategorileri as $anahtar => $ad)
+                            <option value="{{ $anahtar }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
                     <input type="text" wire:model="yeniEgitimKonu" placeholder="Eğitim konusu"
                         style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                     <input type="number" wire:model="yeniEgitimSure" placeholder="Süre (saat)"
