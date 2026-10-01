@@ -100,11 +100,57 @@ class BuAyZiyaretlerWidget extends Widget
             ->all();
     }
 
+    /**
+     * Gösterilen ayda gidilmesi gereken firmaların yüzde kaçına gidildi —
+     * Ziyaret Programı'nda o ay tarihi girilmiş firmalar "gidilecek", en az bir
+     * ziyareti "Tamamlandı" olanlar "gidildi" sayılır (firma başına bir kez).
+     * Takvim yüzdesi: ayın geçen kısmı (geçmiş ay 100, gelecek ay 0) — geride mi
+     * ileride mi kıyası için.
+     *
+     * @return array{toplam: int, gidilen: int, yuzde: ?int, takvim_yuzde: int, firmalar: array<int, array{firma: string, firma_id: int, gidildi: bool}>}
+     */
+    #[Computed]
+    public function ziyaretOzeti(): array
+    {
+        $ayBasi = Carbon::parse($this->gosterilenAy.'-01');
+
+        $firmalar = collect($this->gunlukGruplar)
+            ->filter(fn ($_, string $tarih) => str_starts_with($tarih, $this->gosterilenAy))
+            ->flatten(1)
+            ->filter(fn (array $z) => $z['firma'])
+            ->groupBy(fn (array $z) => $z['firma']->id)
+            ->map(fn ($ziyaretler) => [
+                'firma' => (string) $ziyaretler->first()['firma']->unvan,
+                'firma_id' => $ziyaretler->first()['firma']->id,
+                'gidildi' => $ziyaretler->contains('durum', 'tamamlandi'),
+            ])
+            ->sortBy([['gidildi', 'asc'], ['firma', 'asc']])
+            ->values();
+
+        $toplam = $firmalar->count();
+        $gidilen = $firmalar->where('gidildi', true)->count();
+
+        $bugun = now();
+        $takvim = match (true) {
+            $ayBasi->copy()->endOfMonth()->lt($bugun) => 100,
+            $ayBasi->gt($bugun) => 0,
+            default => (int) round($bugun->day * 100 / $ayBasi->daysInMonth),
+        };
+
+        return [
+            'toplam' => $toplam,
+            'gidilen' => $gidilen,
+            'yuzde' => $toplam ? (int) round($gidilen * 100 / $toplam) : null,
+            'takvim_yuzde' => $takvim,
+            'firmalar' => $firmalar->all(),
+        ];
+    }
+
     public function ayDegistir(int $fark): void
     {
         $this->gosterilenAy = Carbon::parse($this->gosterilenAy.'-01')->addMonths($fark)->format('Y-m');
         $this->seciliTarih = null;
-        unset($this->ayinZiyaretleri);
+        unset($this->ayinZiyaretleri, $this->ziyaretOzeti);
     }
 
     public function gunSec(string $tarih): void
@@ -120,6 +166,6 @@ class BuAyZiyaretlerWidget extends Widget
             ->find($programId)
             ?->durumIlerlet($ayIndex, $satirIndex);
 
-        unset($this->gunlukGruplar, $this->ayinZiyaretleri);
+        unset($this->gunlukGruplar, $this->ayinZiyaretleri, $this->ziyaretOzeti);
     }
 }

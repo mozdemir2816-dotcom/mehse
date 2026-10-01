@@ -18,6 +18,54 @@
             Boş→Planlandı→Tamamlandı arasında geçiş yapın.
         </x-slot>
 
+        {{-- AYLIK ZİYARET GERÇEKLEŞMESİ — gidilmesi gereken firmaların yüzde kaçına gidildi
+             (çubuktaki dikey çizgi = ayın geçen kısmı, takvime göre kıyas) --}}
+        @php
+            $oz = $this->ziyaretOzeti;
+            $yuzdeRenk = match (true) {
+                $oz['yuzde'] === null => 'rgb(156 163 175)',
+                $oz['yuzde'] >= $oz['takvim_yuzde'] => 'rgb(21 128 61)',
+                $oz['takvim_yuzde'] - $oz['yuzde'] <= 15 => 'rgb(180 83 9)',
+                default => 'rgb(220 38 38)',
+            };
+        @endphp
+        <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1rem">
+            @if ($oz['toplam'] === 0)
+                <div style="font-size:.82rem;color:rgb(107 114 128)">
+                    {{ $ayBaslangic->translatedFormat('F Y') }} için Ziyaret Programı'nda tarihi girilmiş firma ziyareti yok.
+                </div>
+            @else
+                <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem">
+                    <div style="font-size:.88rem">
+                        <strong>{{ $ayBaslangic->translatedFormat('F') }}</strong> ayında gitmeniz gereken
+                        <strong>{{ $oz['toplam'] }}</strong> firmanın <strong>{{ $oz['gidilen'] }}</strong>'ine gittiniz
+                    </div>
+                    <div style="font-size:1.5rem;font-weight:800;color:{{ $yuzdeRenk }}">%{{ $oz['yuzde'] }}</div>
+                </div>
+                <div style="position:relative;height:.65rem;border-radius:999px;background:rgb(107 114 128 / .15)">
+                    <div style="height:100%;border-radius:999px;width:{{ $oz['yuzde'] }}%;background:{{ $yuzdeRenk }}"></div>
+                    @if ($oz['takvim_yuzde'] > 0 && $oz['takvim_yuzde'] < 100)
+                        <div title="Bugün: ayın %{{ $oz['takvim_yuzde'] }}'i geçti" style="position:absolute;top:-.2rem;bottom:-.2rem;left:{{ $oz['takvim_yuzde'] }}%;width:2px;background:rgb(55 65 81)"></div>
+                    @endif
+                </div>
+                <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.3rem">
+                    @if ($oz['takvim_yuzde'] > 0 && $oz['takvim_yuzde'] < 100)
+                        Çizgi: bugün (ayın %{{ $oz['takvim_yuzde'] }}'i geçti)
+                    @endif
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
+                    @foreach ($oz['firmalar'] as $f)
+                        <span style="font-size:.72rem;border-radius:.4rem;padding:.12rem .5rem;
+                            border:1px solid {{ $f['gidildi'] ? 'rgb(21 128 61)' : 'rgb(156 163 175)' }};
+                            color:{{ $f['gidildi'] ? 'rgb(21 128 61)' : 'inherit' }}">
+                            {{ $f['gidildi'] ? '✓' : '○' }} {{ \Illuminate\Support\Str::limit($f['firma'], 30) }}
+                        </span>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
         <div style="display:grid;grid-template-columns:16rem 1fr;gap:1.25rem">
             <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
