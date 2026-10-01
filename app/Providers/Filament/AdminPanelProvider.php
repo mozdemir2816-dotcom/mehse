@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\KayitOl;
 use App\Filament\Auth\OsgbBasvuru;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -73,6 +74,11 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->registration(KayitOl::class)
             ->profile(isSimple: false)
+            // İki adımlı doğrulama (Google/Microsoft Authenticator) — isteğe bağlı;
+            // kurulum Profil sayfasında, durum Güvenlik sayfasında.
+            ->multiFactorAuthentication([
+                AppAuthentication::make()->brandName('mehse İSG')->recoverable(),
+            ])
             ->brandName('mehse İSG')
             // MEHSE logosu (sidebar/topbar başlığı, giriş ekranı) — koyu/açık zemin sürümü CSS'le seçilir.
             ->brandLogo(fn () => view('filament.components.marka'))

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\User;
 use Filament\Forms\Components\Checkbox;
 use Illuminate\Support\HtmlString;
 
@@ -42,18 +43,58 @@ class YasalMetinler
      * metinlerin tamamı onaylanmış sayılır (accepted() doğrulaması geçmeden
      * kayıt yapılamaz).
      *
-     * @return array<int, array{anahtar: string, baslik: string, revizyon: ?string, onay_at: string}>
+     * @return array<int, array{anahtar: string, baslik: string, revizyon: ?string, onay_at: string, ip: ?string}>
      */
     public static function onayKaydi(): array
     {
         return collect(self::aktifler())
-            ->map(fn (array $m, string $anahtar): array => [
-                'anahtar' => $anahtar,
-                'baslik' => $m['baslik'],
-                'revizyon' => $m['revizyon'] ?? null,
-                'onay_at' => now()->toIso8601String(),
-            ])
+            ->map(fn (array $m, string $anahtar): array => self::onaySatiri($anahtar, $m))
             ->values()
             ->all();
+    }
+
+    /*
+    | Kullanıcı bazlı onay (Güvenlik sayfası) — users.yasal_onaylar. Metnin
+    | revizyonu değişince eski onay "güncel değil" sayılır, yeniden onay istenir.
+    | Eski onaylar silinmez (iz), yeni satır eklenir.
+    */
+
+    /** @return array{anahtar: string, baslik: string, revizyon: ?string, onay_at: string, ip: ?string}|null kullanıcının bu metin için son onayı */
+    public static function sonOnay(User $user, string $anahtar): ?array
+    {
+        return collect($user->yasal_onaylar ?? [])->where('anahtar', $anahtar)->last();
+    }
+
+    public static function guncelOnayliMi(User $user, string $anahtar): bool
+    {
+        $son = self::sonOnay($user, $anahtar);
+
+        return $son !== null && ($son['revizyon'] ?? null) === (self::aktifler()[$anahtar]['revizyon'] ?? null);
+    }
+
+    public static function onayla(User $user, string $anahtar): bool
+    {
+        $metin = self::aktifler()[$anahtar] ?? null;
+
+        if (! $metin || self::guncelOnayliMi($user, $anahtar)) {
+            return false;
+        }
+
+        $user->yasal_onaylar = [...($user->yasal_onaylar ?? []), self::onaySatiri($anahtar, $metin)];
+        $user->save();
+
+        return true;
+    }
+
+    /** @param  array<string, mixed>  $metin */
+    private static function onaySatiri(string $anahtar, array $metin): array
+    {
+        return [
+            'anahtar' => $anahtar,
+            'baslik' => $metin['baslik'],
+            'revizyon' => $metin['revizyon'] ?? null,
+            'onay_at' => now()->toIso8601String(),
+            'ip' => request()?->ip(),
+        ];
     }
 }

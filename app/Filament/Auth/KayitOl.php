@@ -79,6 +79,8 @@ class KayitOl extends Register
             'password' => $data['password'],
             'rol' => 'uzman',
             'aktif' => true,
+            // Kayıtta onaylanan metinler Güvenlik sayfasında "onaylandı" görünsün.
+            'yasal_onaylar' => YasalMetinler::onayKaydi(),
         ]);
 
         Basvuru::create([

@@ -43,6 +43,8 @@ class BasvuruIslemleri
                 'abonelik_plani' => 'deneme',
                 'abonelik_baslangic' => today(),
                 'abonelik_bitis' => today()->addDays((int) config('isg.kayit.osgb_deneme_gun', 90)),
+                // Başvuruda onaylanan yasal metinler hesaba taşınır (Güvenlik sayfası).
+                'yasal_onaylar' => $basvuru->onaylar ?: null,
             ]);
 
             $basvuru->update([
