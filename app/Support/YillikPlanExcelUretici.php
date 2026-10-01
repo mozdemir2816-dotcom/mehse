@@ -355,13 +355,16 @@ class YillikPlanExcelUretici
             $s->setCellValue("A{$r}", $r - self::CALISMA_ILK_SATIR + 1);
         }
 
-        $imzaSatiri = $sonSatir + 1;
-        self::calismaImzaSatiri($s, $firma, $imzaSatiri);
-        self::calismaSayfaDuzeni($s, $sonSatir, $imzaSatiri);
-
-        self::calismaOzetiGuncelle($ozet, $plan->yil, $faaliyetler, $sonSatir);
         self::cizimleriTemizle($s, ['AD1'], $sonSatir + 1);
         self::logoEkle($s, $firma->logo, 'AD1', 41, 64, 0);
+
+        // İmza + sayfa düzeni en sonda: 1. sayfanın altına bir imza satırı EKLENİR,
+        // tablo bir satır aşağı uzar. PhpSpreadsheet başka sayfadaki formülleri
+        // kaydırmadığından Aylık Özet aralıkları ekleme SONRASI son satırla kurulur
+        // (aradaki imza satırında ana konu/P olmadığından sayıma girmez).
+        self::calismaImzaSatiri($s, $firma, $sonSatir + 1);
+        self::calismaSayfaDuzeni($s, $firma, $sonSatir);
+        self::calismaOzetiGuncelle($ozet, $plan->yil, $faaliyetler, $sonSatir + 1);
 
         return $kitap;
     }
@@ -393,16 +396,32 @@ class YillikPlanExcelUretici
 
     /**
      * A4 yatay: 1–38 (ya da daha fazla) satır tam ortadan iki sayfaya bölünür,
-     * başlık satırları (1–7) her sayfada tekrarlanır, imza son sayfada tablonun
-     * altında. Excel "sığdır" seçeneği elle sayfa sonunu yok saydığından ölçek
-     * sabit verilir: genişlik için şablonun ölçeği, yükseklik için en uzun sayfa.
+     * başlık satırları (1–7) her sayfada tekrarlanır, İKİ sayfanın da altında
+     * imza bloğu var (1. sayfa için ortaya imza satırı eklenir — kullanıcı
+     * isteği 01.10.2026). Excel "sığdır" seçeneği elle sayfa sonunu yok
+     * saydığından ölçek sabit verilir: genişlik sınırı ya da en uzun sayfa.
      */
-    private static function calismaSayfaDuzeni(Worksheet $s, int $sonSatir, int $imzaSatiri): void
+    private static function calismaSayfaDuzeni(Worksheet $s, Firma $firma, int $sonSatir): void
     {
         $ilk = self::CALISMA_ILK_SATIR;
         $orta = $ilk + intdiv($sonSatir - $ilk + 1, 2) + (($sonSatir - $ilk + 1) % 2) - 1;
 
-        $s->setBreak("A{$orta}", Worksheet::BREAK_ROW);
+        // 1. sayfanın imza satırı: alttaki imza satırının biçimi + birleştirmeleri.
+        $araImza = $orta + 1;
+        $s->insertNewRowBefore($araImza, 1);
+        $imzaSatiri = $sonSatir + 2;
+        foreach ($s->rangeToArray("A{$imzaSatiri}:AE{$imzaSatiri}", null, false, false, true)[$imzaSatiri] as $sutun => $_) {
+            $s->duplicateStyle($s->getStyle("{$sutun}{$imzaSatiri}"), "{$sutun}{$araImza}");
+            $s->setCellValue("{$sutun}{$araImza}", null);
+        }
+        foreach ($s->getMergeCells() as $birlesim) {
+            if (preg_match('/^([A-Z]+)'.$imzaSatiri.':([A-Z]+)'.$imzaSatiri.'$/', $birlesim, $m)) {
+                $s->mergeCells("{$m[1]}{$araImza}:{$m[2]}{$araImza}");
+            }
+        }
+        self::calismaImzaSatiri($s, $firma, $araImza);
+
+        $s->setBreak("A{$araImza}", Worksheet::BREAK_ROW);
 
         $yukseklik = function (int $bas, int $son) use ($s): float {
             $toplam = 0.0;
@@ -415,7 +434,7 @@ class YillikPlanExcelUretici
         };
 
         $baslik = $yukseklik(1, $ilk - 1);
-        $enUzunSayfa = max($baslik + $yukseklik($ilk, $orta), $baslik + $yukseklik($orta + 1, $imzaSatiri));
+        $enUzunSayfa = max($baslik + $yukseklik($ilk, $araImza), $baslik + $yukseklik($araImza + 1, $imzaSatiri));
 
         $kenar = $s->getPageMargins();
         $kenar->setTop(0.3)->setBottom(0.35)->setFooter(0.15);
@@ -451,14 +470,13 @@ class YillikPlanExcelUretici
             $o->setCellValue("A{$r}", $konular[$r - 4] ?? null);
         }
 
-        if ($sonSatir === self::CALISMA_SON_SATIR) {
-            return;
-        }
-
+        // Tüm "$X$8:$X$nn" aralıkları tablonun son satırına eşitlenir. Şablonda
+        // Ağustos–Aralık sütunları $43'te bitiyordu (diğerleri $45) — COUNTIFS
+        // eşit olmayan aralıklarla #DEĞER! verir; bu da burada düzelir.
         foreach ($o->getCoordinates() as $hucre) {
             $v = $o->getCell($hucre)->getValue();
-            if (is_string($v) && str_starts_with($v, '=') && str_contains($v, '$45')) {
-                $o->setCellValue($hucre, str_replace('$45', '$'.$sonSatir, $v));
+            if (is_string($v) && str_starts_with($v, '=') && str_contains($v, '$8:$')) {
+                $o->setCellValue($hucre, preg_replace('/(\$[A-Z]+\$8:\$[A-Z]+\$)\d+/', '${1}'.$sonSatir, $v));
             }
         }
     }

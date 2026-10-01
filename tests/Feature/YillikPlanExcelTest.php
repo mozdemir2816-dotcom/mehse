@@ -138,12 +138,14 @@ class YillikPlanExcelTest extends TestCase
         $kitap = YillikPlanExcelUretici::calismaDoldur($plan->fresh());
         $s = $kitap->getSheetByName('Yıllık Çalışma Planı');
 
-        $this->assertSame('Ek faaliyet 4', $s->getCell('C47')->getValue());
-        $this->assertSame(40, $s->getCell('A47')->getValue());
-        $this->assertStringContainsString('$B$8:$B$47', $kitap->getSheetByName('Aylık Özet')->getCell('B4')->getValue());
-        // 40 satır ortadan bölünür: 1–20 / 21–40 (satır 27'den sonra sayfa sonu), imza 48'de.
-        $this->assertSame(['A27'], array_keys($s->getBreaks()));
-        $this->assertSame('A1:AE48', $s->getPageSetup()->getPrintArea());
+        // 40 satır ortadan bölünür: 1–20, 1. sayfa imzası (satır 28), 21–40, son imza (49).
+        $this->assertSame('Ek faaliyet 4', $s->getCell('C48')->getValue());
+        $this->assertSame(40, $s->getCell('A48')->getValue());
+        $this->assertSame(20, $s->getCell('A27')->getValue());
+        $this->assertStringContainsString('İŞ GÜVENLİĞİ UZMANI', $s->getCell('G28')->getValue());
+        $this->assertStringContainsString('$B$8:$B$48', $kitap->getSheetByName('Aylık Özet')->getCell('B4')->getValue());
+        $this->assertSame(['A28'], array_keys($s->getBreaks()));
+        $this->assertSame('A1:AE49', $s->getPageSetup()->getPrintArea());
     }
 
     public function test_hazirlanma_tarihi_varsayilan_bugun_elle_degistirilebilir(): void
@@ -179,21 +181,34 @@ class YillikPlanExcelTest extends TestCase
             ->getSheetByName('Yıllık Çalışma Planı');
         $ayar = $s->getPageSetup();
 
-        // 38 satır (36 faaliyet + 2 numaralı boş satır) → 1–19 / 20–38: satır 26'dan sonra sayfa sonu.
-        $this->assertSame(['A26'], array_keys($s->getBreaks()));
-        $this->assertSame(37, $s->getCell('A44')->getValue());
-        $this->assertSame(38, $s->getCell('A45')->getValue());
+        // 38 satır (36 faaliyet + 2 numaralı boş satır) → 1–19 (8–26), 1. sayfa imzası (27),
+        // sayfa sonu, 20–38 (28–46), son imza (47).
+        $this->assertSame(['A27'], array_keys($s->getBreaks()));
+        $this->assertSame(19, $s->getCell('A26')->getValue());
+        $this->assertSame(20, $s->getCell('A28')->getValue());
+        $this->assertSame(37, $s->getCell('A45')->getValue());
+        $this->assertSame(38, $s->getCell('A46')->getValue());
         $this->assertSame(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4, $ayar->getPaperSize());
         $this->assertSame(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE, $ayar->getOrientation());
         $this->assertFalse($ayar->getFitToPage()); // "sığdır" elle sayfa sonunu yok sayar
         $this->assertGreaterThan(62, $ayar->getScale());
         $this->assertSame([1, 7], $ayar->getRowsToRepeatAtTop());
-        $this->assertSame('A1:AE46', $ayar->getPrintArea());
+        $this->assertSame('A1:AE47', $ayar->getPrintArea());
 
-        // İmza tablonun hemen altında (satır 46), alt bilgide artık imza yok.
-        $this->assertStringContainsString('VELİ PATRON', $s->getCell('B46')->getValue());
-        $this->assertStringContainsString('ALİ UZMAN', $s->getCell('G46')->getValue());
-        $this->assertStringContainsString('İŞYERİ HEKİMİ', $s->getCell('U46')->getValue());
+        // Aylık Özet: tüm ay aralıkları aynı son satırda (şablonda Ağu–Ara $43'tü → #DEĞER!).
+        $ozet = $s->getParent()->getSheetByName('Aylık Özet');
+        foreach (['B4', 'I4', 'M4'] as $hucre) {
+            preg_match_all('/\$8:\$[A-Z]+\$(\d+)/', $ozet->getCell($hucre)->getValue(), $m);
+            $this->assertSame(['46', '46'], $m[1], $hucre);
+        }
+
+        // İmza her iki sayfada tablonun hemen altında (27 ve 47), alt bilgide imza yok.
+        foreach ([27, 47] as $r) {
+            $this->assertStringContainsString('VELİ PATRON', $s->getCell("B{$r}")->getValue());
+            $this->assertStringContainsString('ALİ UZMAN', $s->getCell("G{$r}")->getValue());
+            $this->assertStringContainsString('İŞYERİ HEKİMİ', $s->getCell("U{$r}")->getValue());
+            $this->assertContains("B{$r}:F{$r}", array_keys($s->getMergeCells()));
+        }
         $this->assertStringNotContainsString('İŞ GÜVENLİĞİ UZMANI', $s->getHeaderFooter()->getOddFooter());
     }
 
