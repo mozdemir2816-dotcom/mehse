@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Calisans\Schemas;
 
+use App\Models\Calisan;
 use App\Models\Firma;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
@@ -10,15 +11,17 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class CalisanForm
 {
     /**
      * @param  bool  $firmaSecimi  Standalone kaynakta true; relation manager'da false
-     *                             (firma ilişkiden gelir).
+     *                             (firma ilişkiden gelir, $firmaId ile verilir).
      */
-    public static function configure(Schema $schema, bool $firmaSecimi = true): Schema
+    public static function configure(Schema $schema, bool $firmaSecimi = true, ?int $firmaId = null): Schema
     {
         return $schema->components([
             Section::make()
@@ -29,14 +32,23 @@ class CalisanForm
                             ->options(fn () => Firma::query()
                                 ->where('user_id', Filament::auth()->id())
                                 ->orderBy('unvan')->pluck('unvan', 'id'))
-                            ->searchable()->preload()->required(),
+                            ->searchable()->preload()->required()->live(),
                     ] : []),
                     TextInput::make('ad_soyad')->label('Ad soyad')->required()->maxLength(255),
                     TextInput::make('tc')->label('T.C. Kimlik No')->maxLength(11)->rule('digits:11')->nullable(),
                     TextInput::make('gorev')->label('Görevi')->maxLength(255),
                     TextInput::make('departman')->label('Departman')->maxLength(255),
+                    TextInput::make('sube')->label('Şube')->maxLength(255)
+                        ->helperText('İsteğe bağlı — şube / şantiye / lokasyon')
+                        ->datalist(fn (Get $get) => static::firmaSubeleri($firmaId ?? $get('firma_id'))),
+                    Select::make('cinsiyet')->label('Cinsiyet')->options(Calisan::CINSIYETLER)->placeholder('Belirtilmedi'),
                     DatePicker::make('ise_giris')->label('İşe giriş')->native(false)->displayFormat('d.m.Y'),
-                    DatePicker::make('isten_cikis')->label('İşten çıkış')->native(false)->displayFormat('d.m.Y'),
+                    DatePicker::make('isten_cikis')->label('İşten çıkış')->native(false)->displayFormat('d.m.Y')
+                        ->live()
+                        ->afterStateUpdated(fn ($state, Set $set) => filled($state) ? $set('aktif', false) : null)
+                        ->helperText('Çıkış tarihi girilince personel pasife alınır'),
+                    TextInput::make('ozel_durum')->label('Özel durum (engelli / hükümlü vb.)')->maxLength(255)
+                        ->datalist(Calisan::OZEL_DURUM_ONERILERI),
                     DatePicker::make('dogum_tarihi')->label('Doğum tarihi')->native(false)->displayFormat('d.m.Y'),
                     Select::make('kan_grubu')->label('Kan grubu')
                         ->options(collect(['0 Rh+', '0 Rh-', 'A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-'])
@@ -48,5 +60,16 @@ class CalisanForm
                     Textarea::make('notlar')->label('Notlar')->rows(2)->columnSpanFull(),
                 ]),
         ]);
+    }
+
+    /** Firmada daha önce girilmiş şube adları — yazım birliği için öneri. */
+    public static function firmaSubeleri(mixed $firmaId): array
+    {
+        if (blank($firmaId)) {
+            return [];
+        }
+
+        return Calisan::query()->where('firma_id', $firmaId)->whereNotNull('sube')
+            ->distinct()->orderBy('sube')->pluck('sube')->all();
     }
 }

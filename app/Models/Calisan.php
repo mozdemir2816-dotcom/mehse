@@ -40,6 +40,33 @@ class Calisan extends Model implements AuthenticatableContract, FilamentUser, Ha
         'sifre' => 'hashed',
     ];
 
+    public const CINSIYETLER = ['erkek' => 'Erkek', 'kadin' => 'Kadın'];
+
+    /** Özel durum alanı serbest metin; bunlar yalnız öneri listesi. */
+    public const OZEL_DURUM_ONERILERI = ['Engelli', 'Hükümlü', 'Eski hükümlü', 'Gebe / emziren', 'Genç çalışan (18 yaş altı)', 'Kronik hastalık'];
+
+    public function cinsiyetEtiketi(): ?string
+    {
+        return self::CINSIYETLER[$this->cinsiyet] ?? null;
+    }
+
+    /** KVKK: listelerde TC'nin yalnız ilk 3 ve son 2 hanesi görünür. */
+    public function maskeliTc(): ?string
+    {
+        if (blank($this->tc)) {
+            return null;
+        }
+
+        return strlen($this->tc) === 11
+            ? substr($this->tc, 0, 3).'******'.substr($this->tc, -2)
+            : $this->tc;
+    }
+
+    public function engelliMi(): bool
+    {
+        return str_contains(mb_strtolower((string) $this->ozel_durum), 'engel');
+    }
+
     // --- Portal auth --------------------------------------------------------
 
     public function getAuthPasswordName(): string

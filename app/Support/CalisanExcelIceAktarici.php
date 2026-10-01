@@ -6,7 +6,9 @@ use App\Models\Calisan;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -16,16 +18,24 @@ use Throwable;
  * gelir (RelationManager'dan çağrılır) — Excel'de firma sütunu yoktur. Yalnız
  * "Ad Soyad" zorunlu. T.C. Kimlik No verilmişse aynı firmada aynı TC ile
  * tekrar yüklenen satır günceller (mükerrer oluşmaz); yoksa ad soyad eşleşmesi
- * kullanılır.
+ * kullanılır. Boş hücre mevcut bilgiyi silmez; çıkış tarihi girilen (ve Aktif/Durum
+ * sütunu verilmeyen) kayıt otomatik pasife alınır. isgsuite'in "PERSONEL LİSTESİ"
+ * başlıkları (Adı Soyadı, Durum…) ve kendi Excel Rapor çıktımız da aynen okunur.
  */
 class CalisanExcelIceAktarici
 {
     private const ALAN_ESLESME = [
         'adsoyad' => 'ad_soyad',
+        'adisoyadi' => 'ad_soyad',
         'tckimlikno' => 'tc',
         'tc' => 'tc',
         'gorevi' => 'gorev',
         'gorev' => 'gorev',
+        'bransgorev' => 'gorev',
+        'cinsiyet' => 'cinsiyet',
+        'sube' => 'sube',
+        'ozeldurum' => 'ozel_durum',
+        'engellihukumludurumu' => 'ozel_durum',
         'departman' => 'departman',
         'isegiris' => 'ise_giris',
         'istencikis' => 'isten_cikis',
@@ -38,12 +48,13 @@ class CalisanExcelIceAktarici
         'agirtehlikeliis' => 'agir_tehlikeli_iste',
         'agirvetehlikelisi' => 'agir_tehlikeli_iste',
         'aktif' => 'aktif',
+        'durum' => 'aktif',
         'notlar' => 'notlar',
     ];
 
     public const SABLON_BASLIKLARI = [
-        'Ad Soyad', 'T.C. Kimlik No', 'Görevi', 'Departman', 'İşe Giriş', 'İşten Çıkış',
-        'Doğum Tarihi', 'Kan Grubu', 'Telefon', 'E-posta', 'Ağır ve Tehlikeli İş', 'Aktif', 'Notlar',
+        'Ad Soyad', 'T.C. Kimlik No', 'Görevi', 'Departman', 'Şube', 'Cinsiyet', 'İşe Giriş', 'İşten Çıkış',
+        'Özel Durum', 'Doğum Tarihi', 'Kan Grubu', 'Telefon', 'E-posta', 'Ağır ve Tehlikeli İş', 'Aktif', 'Notlar',
     ];
 
     /**
@@ -90,6 +101,10 @@ class CalisanExcelIceAktarici
 
             $veri['firma_id'] = $firmaId;
 
+            if (filled($veri['isten_cikis'] ?? null) && ! array_key_exists('aktif', $veri)) {
+                $veri['aktif'] = false;
+            }
+
             try {
                 $anahtar = filled($veri['tc'] ?? null)
                     ? ['firma_id' => $firmaId, 'tc' => $veri['tc']]
@@ -119,13 +134,25 @@ class CalisanExcelIceAktarici
     {
         $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
+        $sayfa->setTitle('PERSONEL LİSTESİ');
         $sayfa->fromArray(static::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->fromArray([
-            'Ahmet Yılmaz', '12345678901', 'Şantiye Şefi', 'Üretim', '01.03.2024', '',
-            '15.05.1985', 'A Rh+', '5551234567', 'ahmet@ornek.com', 'Evet', 'Evet', '',
+            'Ahmet Yılmaz', '12345678901', 'Şantiye Şefi', 'Üretim', 'Merkez', 'Erkek', '01.03.2024', '',
+            '', '15.05.1985', 'A Rh+', '5551234567', 'ahmet@ornek.com', 'Evet', 'Evet', '',
         ], null, 'A2');
+        $sayfa->getStyle('A1:P1')->getFont()->setBold(true);
+        $sayfa->getStyle('B:B')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_TEXT);
+        $sayfa->freezePane('A2');
 
-        foreach (range('A', 'M') as $harf) {
+        // Açılır listeler: Cinsiyet, Ağır-tehlikeli, Aktif (500 satıra kadar)
+        foreach (['F' => '"Erkek,Kadın"', 'N' => '"Evet,Hayır"', 'O' => '"Evet,Hayır"'] as $sutun => $liste) {
+            $dogrulama = new DataValidation;
+            $dogrulama->setType(DataValidation::TYPE_LIST)->setAllowBlank(true)
+                ->setShowDropDown(true)->setFormula1($liste);
+            $sayfa->setDataValidation("{$sutun}2:{$sutun}500", $dogrulama);
+        }
+
+        foreach (range('A', 'P') as $harf) {
             $sayfa->getColumnDimension($harf)->setAutoSize(true);
         }
 
@@ -163,6 +190,7 @@ class CalisanExcelIceAktarici
             $veri[$alan] = match ($alan) {
                 'ise_giris', 'isten_cikis', 'dogum_tarihi' => static::tarihCoz($deger),
                 'agir_tehlikeli_iste', 'aktif' => static::boolCoz($deger),
+                'cinsiyet' => static::cinsiyetCoz($deger),
                 'tc' => preg_replace('/\D/', '', (string) $deger) ?: null,
                 default => is_string($deger) ? $deger : (string) $deger,
             };
@@ -192,7 +220,16 @@ class CalisanExcelIceAktarici
 
         $normalize = static::normalize((string) $deger);
 
-        return in_array($normalize, ['evet', 'e', 'var', 'true', '1', 'yes'], true);
+        return in_array($normalize, ['evet', 'e', 'var', 'true', '1', 'yes', 'aktif'], true);
+    }
+
+    private static function cinsiyetCoz(mixed $deger): ?string
+    {
+        return match (static::normalize((string) $deger)) {
+            'erkek', 'e', 'bay', 'm' => 'erkek',
+            'kadin', 'k', 'bayan', 'f' => 'kadin',
+            default => null,
+        };
     }
 
     private static function satirBosMu(array $satir): bool
