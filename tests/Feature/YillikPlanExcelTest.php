@@ -142,7 +142,7 @@ class YillikPlanExcelTest extends TestCase
         $this->assertStringContainsString('$B$8:$B$47', $kitap->getSheetByName('Aylık Özet')->getCell('B4')->getValue());
     }
 
-    public function test_sayfadan_excel_indirilir_ve_santiye_sablonu_uygulanir(): void
+    public function test_sayfadan_excel_indirilir_ve_standart_sablon_uygulanir(): void
     {
         $firma = $this->insaatFirmasi();
         $plan = YillikPlan::firmaYilIcin($firma, 2026);
@@ -152,7 +152,7 @@ class YillikPlanExcelTest extends TestCase
             ->set('firmaId', $firma->id)
             ->set('yil', 2026)
             ->set('sekme', 'calisma')
-            ->callAction('santiyeSablonu')
+            ->callAction('sablonuUygula')
             ->callAction('calismaExcel')
             ->assertFileDownloaded('yillik-calisma-plani-ornek-insaat-ltd-sti-2026.xlsx');
 

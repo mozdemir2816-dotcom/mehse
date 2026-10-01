@@ -61,6 +61,10 @@ class YillikPlanlar extends Page
 
     public ?string $yeniAciklama = null;
 
+    public ?string $yeniAnaKonu = null;
+
+    public ?string $yeniPeriyot = null;
+
     public ?string $yeniEgitimKonu = null;
 
     public ?string $yeniEgitimSure = null;
@@ -164,6 +168,30 @@ class YillikPlanlar extends Page
         $p->update([$alan => $satirlar]);
     }
 
+    /** Çalışma planı tablosundaki P (Planlandı) / G (Gerçekleşti) hücresine tıklama. */
+    public function ayHucresiDegistir(string $alan, int $index, int $ayIndex, string $hucre): void
+    {
+        $p = $this->plan();
+        $satirlar = $p?->{$alan} ?? [];
+
+        if (! $p || ! isset($satirlar[$index]) || ! in_array($hucre, ['P', 'G'], true)) {
+            return;
+        }
+
+        if ($ayIndex < $this->kilitAyIndeksi()) {
+            Notification::make()
+                ->title('Bu ay seçilemez')
+                ->body('Firma sözleşme başlangıcından (atanmış uzman tarihi) önceki aylar için plan işaretlenemez.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $satirlar[$index]['aylar'][$ayIndex] = YillikPlanModel::hucreDurumu($satirlar[$index]['aylar'][$ayIndex] ?? 'bos', $hucre);
+        $p->update([$alan => $satirlar]);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Yıllık Çalışma Planı
@@ -180,14 +208,16 @@ class YillikPlanlar extends Page
 
         $faaliyetler = $p->faaliyetler ?? [];
         $faaliyetler[] = [
+            'ana_konu' => filled($this->yeniAnaKonu) ? $this->yeniAnaKonu : 'DİĞER',
             'faaliyet' => $this->yeniFaaliyet,
+            'frekans' => $this->yeniPeriyot,
             'sorumlu' => $this->yeniSorumlu,
-            'aciklama' => $this->yeniAciklama,
+            'yasal_gereklilik' => $this->yeniAciklama,
             'aylar' => array_fill(0, 12, 'bos'),
         ];
         $p->update(['faaliyetler' => $faaliyetler]);
 
-        $this->reset('yeniFaaliyet', 'yeniSorumlu', 'yeniAciklama');
+        $this->reset('yeniFaaliyet', 'yeniSorumlu', 'yeniAciklama', 'yeniAnaKonu', 'yeniPeriyot');
     }
 
     public function faaliyetSil(int $index): void
@@ -312,7 +342,7 @@ class YillikPlanlar extends Page
             return;
         }
 
-        // İnşaat firmasında şantiye şablonu, diğerlerinde genel varsayılanlar.
+        // Standart şablon; 4. eğitim bölümü yalnız inşaat firmalarında.
         $icerik = YillikPlanSablonu::icerik($this->firma, $this->yil);
 
         match ($this->sekme) {
@@ -367,10 +397,12 @@ class YillikPlanlar extends Page
                 ->visible(fn () => $this->plan() !== null)
                 ->action(fn () => $this->planiKaydet()),
 
+            // Çalışma/eğitim planı çıktısı Excel şablonlarıyla (aşağıda); PDF yalnız
+            // Değerlendirme Raporu için kaldı.
             Action::make('pdf')
-                ->label('Çıktı İndir (PDF)')
+                ->label('Değerlendirme Raporu (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
-                ->visible(fn () => $this->plan() !== null)
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanUretici::pdf($this->plan(), ImzaSecenegi::secili($data))),
 
@@ -390,27 +422,30 @@ class YillikPlanlar extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data))),
 
-            Action::make('santiyeSablonu')
-                ->label('Şantiye Şablonunu Uygula')
-                ->icon('heroicon-o-building-office')
+            Action::make('sablonuUygula')
+                ->label('Standart Şablonu Uygula')
+                ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->visible(fn () => $this->plan() !== null && in_array($this->sekme, ['calisma', 'egitim'], true))
                 ->requiresConfirmation()
-                ->modalHeading('Şantiye şablonu uygulansın mı?')
-                ->modalDescription(fn () => 'Bu sekmedeki ('.($this->sekme === 'egitim' ? 'eğitim planı' : 'çalışma planı').') tüm satırlar inşaat/şantiye şablonuyla değiştirilecek: '
+                ->modalHeading('Standart şablon uygulansın mı?')
+                ->modalDescription(fn () => 'Bu sekmedeki ('.($this->sekme === 'egitim' ? 'eğitim planı' : 'çalışma planı').') tüm satırlar standart şablonla değiştirilecek: '
                     .($this->sekme === 'egitim'
-                        ? '5 bölümlü eğitim planı, 4. bölümde işe ve işyerine özgü riskler (yüksekte çalışma, kazı, kaldırma, elektrik, acil durum, kalıp-demir-beton).'
-                        : '36 faaliyet, ana konu grupları ve mevzuat/kayıt notlarıyla.')
+                        ? '5 bölümlü eğitim planı (4. bölüm "İşe ve İşyerine Özgü Riskler" yalnız inşaat firmalarında dolu gelir).'
+                        : '36 faaliyet; ana konu, periyot, sorumlu ve mevzuat/kayıt notlarıyla.')
                     .' Sözleşme başlangıcından önceki aylar boş bırakılır.')
                 ->modalSubmitActionLabel('Uygula')
                 ->action(function (): void {
                     $p = $this->plan();
-                    $icerik = YillikPlanSablonu::santiye($this->kilitAyIndeksi());
+                    if (! $p || ! $this->firma) {
+                        return;
+                    }
+                    $icerik = YillikPlanSablonu::icerik($this->firma, $this->yil);
                     $alan = $this->sekme === 'egitim' ? 'egitimler' : 'faaliyetler';
-                    $p?->update([$alan => $icerik[$alan]]);
+                    $p->update([$alan => $icerik[$alan]]);
                     unset($this->plan);
 
-                    Notification::make()->title('Şantiye şablonu uygulandı')->success()->send();
+                    Notification::make()->title('Standart şablon uygulandı')->success()->send();
                 }),
 
             Action::make('excelYukleCalisma')

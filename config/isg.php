@@ -4065,66 +4065,9 @@ return [
             'diger' => 'Diğer Eğitimler',
         ],
 
-        /*
-         | Yeni bir yıllık plan açılınca bu faaliyetler otomatik yüklenir ve
-         | "varsayilan_aylar" (0=Ocak … 11=Aralık) uyarınca ilgili aylar
-         | "Planlandı" işaretlenir — kullanıcı sonradan düzeltir. Atanmış uzman
-         | (firma sözleşme başlangıcı) öncesindeki aylar otomatik doldurulmaz.
-         | yasal_gereklilik + frekans, referans "YILLIK ÇALIŞMA PLANI.xlsx"
-         | biçimindeki sütunlardır (çıktıya ve ekrana yansır).
-         */
-        'varsayilan_faaliyetler' => [
-            ['faaliyet' => 'Yıllık çalışma planının hazırlanması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi, İşveren', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [0]],
-            ['faaliyet' => 'Yıllık eğitim planının hazırlanması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi, İşveren', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [0]],
-            ['faaliyet' => 'Yılsonu değerlendirme raporunun hazırlanması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi, İşveren', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [11]],
-            ['faaliyet' => 'Risk değerlendirmesinin gözden geçirilmesi ve güncellenmesi', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Risk Değerlendirmesi Yönetmeliği', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [5]],
-            ['faaliyet' => 'Yeni başlayan çalışanlara Temel İSG Eğitimi verilmesi ve eğitimin yenilenmesi', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => []],
-            ['faaliyet' => 'İşyeri saha gözetiminin yapılması', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu', 'frekans' => 'Sürekli', 'varsayilan_aylar' => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
-            ['faaliyet' => 'İSG yönünden görülen eksikliklerin tespiti, raporlanması ve işverene bildirilmesi', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => 'İSG Uzmanlarının Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik', 'frekans' => 'Her ay', 'varsayilan_aylar' => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
-            ['faaliyet' => 'Kişisel koruyucu donanımların çalışanlara zimmet tutanağı ile teslim edilmesi', 'sorumlu' => 'Bölüm Sorumluları', 'yasal_gereklilik' => 'Kişisel Koruyucu Donanımların İşyerlerinde Kullanılması Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [0]],
-            ['faaliyet' => 'Kimyasal maddelerin güvenlik bilgi formlarının (GBF) kontrolü', 'sorumlu' => 'İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => 'Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [2]],
-            ['faaliyet' => 'İşe giriş muayeneleri', 'sorumlu' => 'İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 15', 'frekans' => 'İşe girişlerde', 'varsayilan_aylar' => []],
-            ['faaliyet' => 'Periyodik sağlık muayeneleri', 'sorumlu' => 'İşyeri Hekimi', 'yasal_gereklilik' => 'İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [6]],
-            ['faaliyet' => 'İSG Kurulu toplantısının yapılması', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'İş Sağlığı ve Güvenliği Kurulları Hakkında Yönetmelik', 'frekans' => 'Tehlike sınıfına göre 1-3 ayda 1', 'varsayilan_aylar' => [1, 3, 5, 7, 9, 11]],
-            ['faaliyet' => 'Yangın tatbikatı', 'sorumlu' => 'İş Güvenliği Uzmanı, İşveren', 'yasal_gereklilik' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik', 'frekans' => 'Yılda 1 (çok tehlikeli), 2 yılda 1 (tehlikeli), 3 yılda 1 (az tehlikeli)', 'varsayilan_aylar' => [8]],
-            ['faaliyet' => 'İlk yardım eğitimi / yenileme eğitimi', 'sorumlu' => 'İşveren / İşveren Vekili', 'yasal_gereklilik' => 'İlk Yardım Yönetmeliği', 'frekans' => '3 Yılda 1', 'varsayilan_aylar' => [9]],
-            ['faaliyet' => 'Çalışan temsilcisi ve destek elemanları eğitimi', 'sorumlu' => 'İş Güvenliği Uzmanı', 'yasal_gereklilik' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [8]],
-            ['faaliyet' => 'Mesleki eğitim belgelerinin alınması', 'sorumlu' => 'İşveren / İşveren Vekili', 'yasal_gereklilik' => 'Tehlikeli ve Çok Tehlikeli Sınıfta Yer Alan İşlerde Çalıştırılacakların Mesleki Eğitimlerine Dair Yönetmelik', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => [10]],
-            ['faaliyet' => 'Kaldırma araçlarının yıllık periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Kişi', 'yasal_gereklilik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
-            ['faaliyet' => 'Basınçlı kapların periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Kişi', 'yasal_gereklilik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
-            ['faaliyet' => 'Elektrik ve topraklama tesisatının yıllık periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Kişi', 'yasal_gereklilik' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-3', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
-            ['faaliyet' => 'Yangın söndürme tüplerinin yıllık periyodik kontrolü', 'sorumlu' => 'İşveren / Yetkili Firma', 'yasal_gereklilik' => 'Binaların Yangından Korunması Hakkında Yönetmelik', 'frekans' => 'Yılda 1', 'varsayilan_aylar' => [9]],
-            ['faaliyet' => 'Ortam ölçümleri (gürültü, toz, aydınlatma, termal konfor vb.)', 'sorumlu' => 'Yetkili İSG Laboratuvarı', 'yasal_gereklilik' => 'İş Hijyeni Ölçüm, Test ve Analizi Yapan Laboratuvarlar Hakkında Yönetmelik', 'frekans' => 'Risk değerlendirmesinde belirtilen periyotta', 'varsayilan_aylar' => [4]],
-            ['faaliyet' => 'İş kazalarının kaydının tutulması, bildirimi ve incelenmesi', 'sorumlu' => 'İşveren / Vekili, İş Güvenliği Uzmanı, İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 14', 'frekans' => 'Gerektiğinde', 'varsayilan_aylar' => []],
-            ['faaliyet' => 'Ecza dolaplarının kontrolü ve düzenlenmesi', 'sorumlu' => 'İlk Yardım Ekibi / İşyeri Hekimi', 'yasal_gereklilik' => '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu', 'frekans' => '6 Ayda 1', 'varsayilan_aylar' => [2, 8]],
-        ],
-
-        // "Yıllık Eğitim Planı" sekmesi — isgpratik 88-89.jpg. Aynı ay durum
-        // matrisini kullanır; süre saat cinsinden, eğitici İSG Uzmanı/İşyeri Hekimi.
-        // Her eğitim "kategori" ile gruplanır (Genel/Sağlık/Teknik/Diğer) ve
-        // "varsayilan_aylar" ile otomatik doldurulur (referans plan: yılın son
-        // ayında toplu; kullanıcı sonradan taşır).
-        'varsayilan_egitimler' => [
-            ['konu' => 'Çalışma Mevzuatı ile İlgili Bilgiler', 'kategori' => 'genel', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar 4857 ve 5510 sayılı kanunlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Çalışanların Yasal Hak ve Sorumlulukları', 'kategori' => 'genel', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, 4857, 6331 sayılı kanunlarda belirtilen çalışan hak ve sorumlulukları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'İş Kazalarının Sebepleri ve Korunma Prensipleri', 'kategori' => 'genel', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'İşyerinde olabilecek iş kazaları sebepleri ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'İş Sağlığı ve Güvenliği Genel Kuralları ve Güvenlik Kültürü', 'kategori' => 'genel', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar İSG Genel Kuralları ve Güvenlik Kültürü hakkında bilgi sahibi olurlar, güvenlik kültürünün işyerinde geliştirilmesi için örneklemelerde bulunurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Meslek Hastalıklarının Sebepleri', 'kategori' => 'saglik', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı maruz oldukları mesleki riskleri ve sebepleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Biyolojik ve Psikososyal Risk Etmenleri', 'kategori' => 'saglik', 'sure_saat' => 1, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, işin niteliğinden dolayı oluşan biyolojik ve psikososyal riskler konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'İlkyardım', 'kategori' => 'saglik', 'sure_saat' => 4, 'egitici' => 'İşyeri Hekimi', 'hedef' => 'Çalışanlar, Acil durum halinde uygulanması gerekli temel ilkyardım konuları hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'İlkyardımcılar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Kimyasal, Fiziksel ve Ergonomik Risk Etmenleri', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan riskler ve çalışma ortamında uyulması gereken davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Elle Kaldırma ve Taşıma', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar işyerinde mevcut olan elle kaldırma ve taşıma konularında bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Parlama, Patlama, Yangın ve Yangından Korunma', 'kategori' => 'teknik', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, parlama, patlama, yangın ve yangından korunma yöntemlerini bilir. Acil durumda uyulması gerekli davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'İş Ekipmanlarının Güvenli Kullanımı', 'kategori' => 'teknik', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, işyerinde mevcut olan iş ekipmanları riskleri ve güvenli kullanımı konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Operatörler', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Ekranlı Araçlarla Çalışma', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, ekranlı araçlarla çalışma ve dikkat edilmesi gereken davranışlar konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Ofis Çalışanları', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Elektrik Tehlikeleri, Riskleri ve Önlemleri', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar elektrik tehlike, risk ve önlemleri konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Güvenlik ve Sağlık İşaretleri', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar, güvenlik ve sağlık işaretleri yönetmeliğinde mevcut olan işaret ve renkleri hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Kişisel Koruyucu Donanım Kullanımı', 'kategori' => 'teknik', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar kişisel koruyucu donanımlar hakkında ve hangi alanda kullanılacakları konusunda bilgi sahibi olurlar.', 'hedef_kitle' => 'Üretim Çalışanları', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Tahliye ve Kurtarma', 'kategori' => 'teknik', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Çalışanlar Acil durumlarda yapılması gerekli davranışlar hakkında bilgi sahibi olurlar.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Risk Değerlendirmesi Eğitimi', 'kategori' => 'diger', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'İşyerine özgü tehlikeler, riskler ve önlemleri ile risk değerlendirmesi sonuçları hakkında bilgilendirme.', 'hedef_kitle' => 'İlgili Kişiler', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Acil Durum Planı Eğitimi', 'kategori' => 'diger', 'sure_saat' => 1, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Acil durum planı, kaçış yolları ve toplanma bölgesi hakkında bilgilendirme.', 'hedef_kitle' => 'Tüm Çalışanlar', 'varsayilan_aylar' => [11]],
-            ['konu' => 'Yüksekte Güvenli Çalışma Eğitimi', 'kategori' => 'diger', 'sure_saat' => 2, 'egitici' => 'İSG Uzmanı', 'hedef' => 'Yüksekte çalışma tehlikeleri, riskleri ve önlemleri hakkında bilgilendirme.', 'hedef_kitle' => 'İlgili Kişiler', 'varsayilan_aylar' => [11]],
-        ],
+        // Çalışma ve eğitim planı içeriği artık tek şablondan gelir:
+        // config/yillik_plan_sablonu.php (kullanıcının VİZYON Excel'lerinden birebir) —
+        // bkz. App\Support\YillikPlanSablonu. Eski genel varsayılan listeler kaldırıldı (01.10.2026).
 
         // "Yıllık Değerlendirme Raporu" sekmesi — isgpratik 90.jpg. Ay matrisi
         // yok; satır bazlı serbest metin (tarih/tekrar sayısı kullanıcı girer,

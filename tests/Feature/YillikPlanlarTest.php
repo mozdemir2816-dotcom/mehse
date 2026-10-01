@@ -10,6 +10,7 @@ use App\Models\RiskDegerlendirmesi;
 use App\Models\User;
 use App\Models\YillikPlan;
 use App\Support\YillikPlanExcelIceAktarici;
+use App\Support\YillikPlanSablonu;
 use App\Support\YillikPlanUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -31,11 +32,11 @@ class YillikPlanlarTest extends TestCase
         $this->actingAs($this->uzman);
     }
 
-    /** varsayilan_aylar => [] olan bir faaliyetin indeksi (ayları hep boş başlar). */
+    /** Ocak'ta (ay 0) otomatik işaretlenmeyen bir faaliyetin indeksi. */
     private function bosBaslayanFaaliyetIndeksi(): int
     {
-        foreach (config('isg.yillik_plan.varsayilan_faaliyetler') as $i => $f) {
-            if (empty($f['varsayilan_aylar'])) {
+        foreach (config('yillik_plan_sablonu.faaliyetler') as $i => $f) {
+            if (! in_array(0, $f['varsayilan_aylar'] ?? [], true)) {
                 return $i;
             }
         }
@@ -52,9 +53,11 @@ class YillikPlanlarTest extends TestCase
             ->set('yil', 2027);
 
         $plan = YillikPlan::where('firma_id', $firma->id)->where('yil', 2027)->firstOrFail();
-        $this->assertCount(count(config('isg.yillik_plan.varsayilan_faaliyetler')), $plan->faaliyetler);
-        // "Yıllık çalışma planının hazırlanması" varsayilan_aylar => [0] → otomatik Planlandı.
-        $this->assertSame('planlandi', $plan->faaliyetler[0]['aylar'][0]);
+        $this->assertCount(count(config('yillik_plan_sablonu.faaliyetler')), $plan->faaliyetler);
+        // "Yıllık çalışma planının hazırlanması" varsayilan_aylar => [11] → Aralık otomatik Planlandı.
+        $this->assertSame('PLANLAMA VE DOKÜMANTASYON', $plan->faaliyetler[0]['ana_konu']);
+        $this->assertSame('planlandi', $plan->faaliyetler[0]['aylar'][11]);
+        $this->assertSame('bos', $plan->faaliyetler[0]['aylar'][0]);
     }
 
     public function test_kullanici_veri_girmeden_plan_otomatik_dolar(): void
@@ -65,7 +68,7 @@ class YillikPlanlarTest extends TestCase
 
         $plan = YillikPlan::where('firma_id', $firma->id)->where('yil', 2027)->firstOrFail();
 
-        // "İşyeri saha gözetimi" (Sürekli) → 12 ayın tamamı Planlandı.
+        // "DÖF açılması ve kapanış takibi" (Sürekli) → 12 ayın tamamı Planlandı.
         $surekliSatir = collect($plan->faaliyetler)->firstWhere('frekans', 'Sürekli');
         $this->assertSame(array_fill(0, 12, 'planlandi'), $surekliSatir['aylar']);
         // Eğitimler de referans plana göre Aralık'ta dolu gelir.
@@ -99,7 +102,7 @@ class YillikPlanlarTest extends TestCase
         $component->assertSet('kilitAyIndeksi', 4);
 
         $plan = YillikPlan::where('firma_id', $firma->id)->where('yil', 2027)->firstOrFail();
-        // "İşyeri saha gözetimi" (Sürekli): Ocak–Nisan boş, Mayıs'tan itibaren dolu.
+        // "DÖF açılması ve kapanış takibi" (Sürekli): Ocak–Nisan boş, Mayıs'tan itibaren dolu.
         $surekliSatir = collect($plan->faaliyetler)->firstWhere('frekans', 'Sürekli');
         $this->assertSame(['bos', 'bos', 'bos', 'bos'], array_slice($surekliSatir['aylar'], 0, 4));
         $this->assertSame('planlandi', $surekliSatir['aylar'][4]);
@@ -132,7 +135,7 @@ class YillikPlanlarTest extends TestCase
             ->call('faaliyetEkle');
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
-        $varsayilanSayisi = count(config('isg.yillik_plan.varsayilan_faaliyetler'));
+        $varsayilanSayisi = count(config('yillik_plan_sablonu.faaliyetler'));
         $this->assertCount($varsayilanSayisi + 1, $plan->faaliyetler);
         $this->assertSame('Özel Denetim', $plan->faaliyetler[$varsayilanSayisi]['faaliyet']);
 
@@ -164,8 +167,8 @@ class YillikPlanlarTest extends TestCase
         $component->call('ayDurumDegistir', 'faaliyetler', $idx, 0)->call('varsayilanaSifirla');
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
-        // Sıfırlama otomatik doldurmayı da yeniden uygular: [0] auto-fill'li satır Planlandı olur.
-        $this->assertSame('planlandi', $plan->faaliyetler[0]['aylar'][0]);
+        // Sıfırlama otomatik doldurmayı da yeniden uygular: [0] Aralık'ta Planlandı olur.
+        $this->assertSame('planlandi', $plan->faaliyetler[0]['aylar'][11]);
         $this->assertSame('bos', $plan->faaliyetler[$idx]['aylar'][0]);
     }
 
@@ -202,14 +205,14 @@ class YillikPlanlarTest extends TestCase
             'aylar' => ['Oca'],
         ])->render();
 
-        // 3 plan sayfasının her birinde imza bloğu (imza tablosu + rol satırları)
-        $this->assertSame(3, substr_count($html, '<table class="imza">'));
-        $this->assertSame(3, substr_count($html, '<div class="rol">İş Güvenliği Uzmanı</div>'));
-        $this->assertSame(3, substr_count($html, '<div class="rol">İşyeri Hekimi</div>'));
-        $this->assertSame(3, substr_count($html, '<div class="rol">İşveren / İşveren Vekili</div>'));
-        $this->assertSame(3, substr_count($html, 'İGU Test'));
-        $this->assertSame(3, substr_count($html, 'Dr. Hekim Test'));
-        $this->assertSame(3, substr_count($html, 'Patron Bey'));
+        // PDF artık yalnız Değerlendirme Raporu sayfası — tek imza bloğu
+        $this->assertSame(1, substr_count($html, '<table class="imza">'));
+        $this->assertSame(1, substr_count($html, '<div class="rol">İş Güvenliği Uzmanı</div>'));
+        $this->assertSame(1, substr_count($html, '<div class="rol">İşyeri Hekimi</div>'));
+        $this->assertSame(1, substr_count($html, '<div class="rol">İşveren / İşveren Vekili</div>'));
+        $this->assertSame(1, substr_count($html, 'İGU Test'));
+        $this->assertSame(1, substr_count($html, 'Dr. Hekim Test'));
+        $this->assertSame(1, substr_count($html, 'Patron Bey'));
         // kaşe dosyası diskte yoksa img basılmaz (is_file guard)
         $this->assertStringNotContainsString('kase/igu.png', $html);
     }
@@ -275,10 +278,10 @@ class YillikPlanlarTest extends TestCase
         Livewire::test(PlanSayfasi::class)->set('firmaId', $firma->id);
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
-        $this->assertCount(count(config('isg.yillik_plan.varsayilan_egitimler')), $plan->egitimler);
-        // Referans plana göre eğitimler Aralık'ta otomatik Planlandı, diğer aylar boş.
+        $this->assertCount(count(YillikPlanSablonu::icerik($firma, (int) now()->year)['egitimler']), $plan->egitimler);
+        // İnşaat dışı firmada 4. bölüm (işe/işyerine özgü) boş gelir.
+        $this->assertFalse(collect($plan->egitimler)->contains('kategori', 'ise_ozgu'));
         $this->assertSame('planlandi', $plan->egitimler[0]['aylar'][11]);
-        $this->assertSame('bos', $plan->egitimler[0]['aylar'][0]);
         $this->assertCount(count(config('isg.yillik_plan.varsayilan_degerlendirmeler')), $plan->degerlendirmeler);
         $this->assertNull($plan->degerlendirmeler[0]['tarih']);
     }
@@ -291,8 +294,9 @@ class YillikPlanlarTest extends TestCase
             ->set('firmaId', $firma->id)
             ->call('ayDurumDegistir', 'egitimler', 0, 0);
 
+        // Şablonda her ay Planlandı gelen satır → bir tıkla Tamamlandı.
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
-        $this->assertSame('planlandi', $plan->egitimler[0]['aylar'][0]);
+        $this->assertSame('tamamlandi', $plan->egitimler[0]['aylar'][0]);
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
@@ -300,7 +304,7 @@ class YillikPlanlarTest extends TestCase
             ->set('yeniEgitimEgitici', 'İSG Uzmanı')
             ->call('egitimEkle');
 
-        $varsayilanSayisi = count(config('isg.yillik_plan.varsayilan_egitimler'));
+        $varsayilanSayisi = count($plan->egitimler);
         $this->assertCount($varsayilanSayisi + 1, $plan->fresh()->egitimler);
 
         Livewire::test(PlanSayfasi::class)
@@ -348,8 +352,9 @@ class YillikPlanlarTest extends TestCase
             ->call('ayDurumDegistir', 'egitimler', 0, 0)
             ->call('varsayilanaSifirla');
 
+        // Tıklamayla Tamamlandı olan ay, sıfırlamayla şablondaki Planlandı'ya döner.
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
-        $this->assertSame('bos', $plan->egitimler[0]['aylar'][0]);
+        $this->assertSame('planlandi', $plan->egitimler[0]['aylar'][0]);
     }
 
     /** Referans "YILLIK ÇALIŞMA PLANI.xlsx" düzeninde küçük bir dosya üretir. */
@@ -361,7 +366,7 @@ class YillikPlanlarTest extends TestCase
         //         A                B               C          D=OCA E=ŞUB F=MAR G=NIS H=MAY I=HAZ J=TEM K=AĞU L=EYL M=EKİ N=KAS O=ARA   P
         $s->fromArray(['YASAL GEREKLİLİK', 'ÖLÇÜM / RAPOR', 'SORUMLU', 'OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK', 'SON ÖLÇÜM'], null, 'A3');
         // Mevcut varsayılan satırla eşleşen bir isim (EKİM işaretli) + tamamen yeni bir satır (ŞUBAT + HAZİRAN).
-        $s->fromArray(['Binaların Yangından Korunması Hakkında Yönetmelik', 'Yangın söndürme tüplerinin yıllık periyodik kontrolü', 'İşveren', '', '', '', '', '', '', '', '', '', 'X', '', '', 'Yılda 1'], null, 'A4');
+        $s->fromArray(['Binaların Yangından Korunması Hakkında Yönetmelik', 'Yangın söndürücüler, hortumlar, hidrant/sprinkler ve yangın ekipmanlarının kontrol takibi', 'İşveren', '', '', '', '', '', '', '', '', '', 'X', '', '', 'Yılda 1'], null, 'A4');
         $s->fromArray(['Özel Yönetmelik', 'Vinç kabin içi kamera kontrolü', 'Teknik Ekip', '', 'X', '', '', '', 'X', '', '', '', '', '', '', '6 Ayda 1'], null, 'A5');
 
         $yol = tempnam(sys_get_temp_dir(), 'ycp').'.xlsx';
@@ -385,7 +390,7 @@ class YillikPlanlarTest extends TestCase
         $plan->refresh();
         $this->assertCount($oncekiSayi + 1, $plan->faaliyetler);
 
-        $yangin = collect($plan->faaliyetler)->firstWhere('faaliyet', 'Yangın söndürme tüplerinin yıllık periyodik kontrolü');
+        $yangin = collect($plan->faaliyetler)->firstWhere('faaliyet', 'Yangın söndürücüler, hortumlar, hidrant/sprinkler ve yangın ekipmanlarının kontrol takibi');
         $this->assertSame('planlandi', $yangin['aylar'][9]);  // EKİM
         $this->assertSame('bos', $yangin['aylar'][0]);
 

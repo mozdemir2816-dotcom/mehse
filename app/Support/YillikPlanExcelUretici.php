@@ -338,7 +338,7 @@ class YillikPlanExcelUretici
                 $not .= ($not !== '' ? "\n" : '').'Kayıt/Not: '.$f['kayit_notu'];
             }
             $s->setCellValue("AD{$r}", $not);
-            $s->setCellValue("AE{$r}", self::faaliyetDurumu($f['aylar'] ?? []));
+            $s->setCellValue("AE{$r}", YillikPlan::faaliyetDurumu($f['aylar'] ?? []));
         }
 
         $s->getPageSetup()->setPrintArea('A1:AE'.($sonSatir + 1));
@@ -356,19 +356,6 @@ class YillikPlanExcelUretici
         self::logoEkle($s, $firma->logo, 'AD1', 41, 64, 0);
 
         return $kitap;
-    }
-
-    /** @param array<int, string> $aylar */
-    private static function faaliyetDurumu(array $aylar): string
-    {
-        $degerler = collect($aylar);
-
-        return match (true) {
-            $degerler->contains('tamamlandi') && ! $degerler->contains('planlandi') => 'Tamamlandı',
-            $degerler->contains('tamamlandi') => 'Devam Ediyor',
-            $degerler->contains('planlandi') => 'Planlandı',
-            default => '—',
-        };
     }
 
     /**

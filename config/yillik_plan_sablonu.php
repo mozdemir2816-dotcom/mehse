@@ -1,13 +1,14 @@
 <?php
 
 /*
-| Yıllık plan ŞANTİYE şablonu — kullanıcının VİZYON (inşaat) firması için hazırladığı
+| Yıllık plan STANDART şablonu (tüm firmalar) — kullanıcının VİZYON firması için hazırladığı
 | "VIZYON_Egitim_Plani_Yazdirma.xlsx" ve "vizyon 2026 yıllık çalışma planı.xlsx"
 | dosyalarından OTOMATİK çıkarıldı; metinler BİREBİR (düzeltmeyin, kaynak Excel'i
 | güncelleyip yeniden çıkarın). Vizyon'da P'ler Eylül–Aralık'taydı (sözleşme Eylül'de
 | başladı); dört ayın hepsinde P olan madde "her ay" (0–11) sayıldı — firma sözleşme
 | başlangıcından önceki aylar YillikPlan::maddeAylarIle ile zaten boş kalır.
-| Kullanım: App\Support\YillikPlanSablonu (inşaat firmalarında varsayılan).
+| Kullanım: App\Support\YillikPlanSablonu — tüm firmalarda varsayılan; eğitimlerin
+| 4. bölümü (ise_ozgu) yalnız inşaat firmalarında yüklenir.
 */
 
 return array (

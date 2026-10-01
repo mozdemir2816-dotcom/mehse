@@ -29,79 +29,8 @@
 </head>
 <body>
 
-<div class="sayfa">
-    <div class="baslik">
-        <h1>YILLIK ÇALIŞMA PLANI — {{ $plan->yil }}</h1>
-        <div style="font-size:11px">{{ $firma?->unvan }}</div>
-    </div>
-
-    <table class="plan">
-        <tr>
-            <th>Yasal Gereklilik / Faaliyet</th><th>Sorumlu</th><th>Frekans</th>
-            @foreach ($aylar as $ay)
-                <th>{{ $ay }}</th>
-            @endforeach
-        </tr>
-        @forelse (($plan->faaliyetler ?? []) as $f)
-            <tr>
-                <td class="aciklama">
-                    <strong>{{ $f['faaliyet'] }}</strong>
-                    @if (!empty($f['yasal_gereklilik']))<br><span style="color:#666;font-size:7px">{{ $f['yasal_gereklilik'] }}</span>@endif
-                </td>
-                <td class="sorumlu">{{ $f['sorumlu'] ?? '—' }}</td>
-                <td class="sorumlu">{{ $f['frekans'] ?? '—' }}</td>
-                @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $durum)
-                    @php $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' }; @endphp
-                    <td><span class="durum" style="background:{{ $renk }}"></span></td>
-                @endforeach
-            </tr>
-        @empty
-            <tr><td colspan="15" style="color:#888">Faaliyet eklenmedi.</td></tr>
-        @endforelse
-    </table>
-
-    <p style="font-size:8px;color:#666;margin-top:10px">
-        <span class="durum" style="background:#374151"></span> Boş &nbsp;
-        <span class="durum" style="background:#f59e0b"></span> Planlandı &nbsp;
-        <span class="durum" style="background:#10b981"></span> Tamamlandı
-    </p>
-
-    @include('pdf.partials.yillik-plan-imza')
-</div>
-
-<div class="sayfa">
-    <div class="baslik">
-        <h1>YILLIK EĞİTİM PLANI — {{ $plan->yil }}</h1>
-        <div style="font-size:11px">{{ $firma?->unvan }}</div>
-    </div>
-
-    <table class="plan">
-        <tr>
-            <th>Kategori</th><th>Eğitim Konusu</th><th>Süre</th><th>Eğitici</th>
-            @foreach ($aylar as $ay)
-                <th>{{ $ay }}</th>
-            @endforeach
-        </tr>
-        @php $egitimKat = config('isg.yillik_plan.egitim_kategorileri'); @endphp
-        @forelse (($plan->egitimler ?? []) as $e)
-            <tr>
-                <td class="sorumlu">{{ $egitimKat[$e['kategori'] ?? ''] ?? '—' }}</td>
-                <td class="faaliyet">{{ $e['konu'] }}</td>
-                <td class="sorumlu">{{ $e['sure_saat'] ?? '—' }} saat</td>
-                <td class="sorumlu">{{ $e['egitici'] ?? '—' }}</td>
-                @foreach (($e['aylar'] ?? array_fill(0, 12, 'bos')) as $durum)
-                    @php $renk = match ($durum) { 'tamamlandi' => '#10b981', 'planlandi' => '#f59e0b', default => '#374151' }; @endphp
-                    <td><span class="durum" style="background:{{ $renk }}"></span></td>
-                @endforeach
-            </tr>
-        @empty
-            <tr><td colspan="16" style="color:#888">Eğitim eklenmedi.</td></tr>
-        @endforelse
-    </table>
-
-    @include('pdf.partials.yillik-plan-imza')
-</div>
-
+{{-- Çalışma ve eğitim planı artık kullanıcının Excel şablonlarıyla üretilir
+     (App\Support\YillikPlanExcelUretici); bu PDF yalnız Değerlendirme Raporu. --}}
 <div class="sayfa" style="page-break-after:auto">
     <div class="baslik">
         <h1>YILLIK DEĞERLENDİRME RAPORU — {{ $plan->yil }}</h1>

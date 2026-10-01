@@ -67,6 +67,7 @@
                             <th style="text-align:left;padding:.4rem;width:90px">Tarih</th>
                             <th style="text-align:left;padding:.4rem">Firma</th>
                             <th style="text-align:left;padding:.4rem">Amaç / Kapsam</th>
+                            <th style="text-align:left;padding:.4rem;width:110px">Yapılacaklar</th>
                             <th style="text-align:left;padding:.4rem;width:110px">Durum</th>
                         </tr>
                         @foreach ($ziyaretler as $z)
@@ -76,6 +77,21 @@
                                 <td style="padding:.4rem;color:rgb(107 114 128)">
                                     {{ $z['amac'] ?: '—' }}
                                     @if ($z['sure_saat']) · {{ $z['sure_saat'] }} saat @endif
+                                </td>
+                                <td style="padding:.4rem">
+                                    @php
+                                        $yil = (int) substr($z['tarih'], 0, 4);
+                                        $say = $z['firma'] ? ($this->yapilacakSayilari[$z['firma']->id.'-'.$yil.'-'.$z['ay_index']] ?? null) : null;
+                                    @endphp
+                                    @if ($say && $say['toplam'] > 0)
+                                        <a href="{{ \App\Filament\Pages\ZiyaretProgrami::getUrl(['firma' => $z['firma']->id, 'yil' => $yil, 'ay' => $z['ay_index'] + 1]) }}"
+                                            title="Yıllık plandan bu ay yapılacaklar"
+                                            style="font-size:.74rem;font-weight:700;color:{{ $say['yapilan'] === $say['toplam'] ? 'rgb(21 128 61)' : 'var(--primary)' }};text-decoration:none">
+                                            📋 {{ $say['yapilan'] }}/{{ $say['toplam'] }} iş
+                                        </a>
+                                    @else
+                                        <span style="color:rgb(107 114 128)">—</span>
+                                    @endif
                                 </td>
                                 <td style="padding:.4rem">
                                     <button type="button"

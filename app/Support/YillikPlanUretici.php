@@ -8,7 +8,8 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Yıllık Çalışma Planı PDF üretimi (dompdf). isgpratik 86-87.jpg.
+ * Yıllık Değerlendirme Raporu PDF üretimi (dompdf). Çalışma ve eğitim planı
+ * artık kullanıcının Excel şablonlarıyla üretilir (YillikPlanExcelUretici).
  */
 class YillikPlanUretici
 {

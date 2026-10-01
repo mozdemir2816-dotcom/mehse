@@ -38,7 +38,7 @@ class YillikPlan extends Model
         $plan = static::firstOrNew(['firma_id' => $firma->id, 'yil' => $yil]);
 
         if (! $plan->exists) {
-            // İnşaat firmalarında şantiye şablonu, diğerlerinde genel varsayılanlar.
+            // Tek şablon (config/yillik_plan_sablonu.php); 4. bölüm inşaat firmalarında dolu.
             $icerik = YillikPlanSablonu::icerik($firma, $yil);
 
             $plan->faaliyetler = $icerik['faaliyetler'];
@@ -47,6 +47,12 @@ class YillikPlan extends Model
                 ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
                 ->all();
             $plan->save();
+        } elseif (YillikPlanSablonu::eskiYapidaMi($plan)) {
+            // Eski genel varsayılanlarla açılmış plan — kullanıcı kararıyla (01.10.2026)
+            // çalışma + eğitim satırları bir kez yeni şablona çevrilir. Değerlendirme
+            // sekmesine dokunulmaz.
+            $icerik = YillikPlanSablonu::icerik($firma, $yil);
+            $plan->update(['faaliyetler' => $icerik['faaliyetler'], 'egitimler' => $icerik['egitimler']]);
         }
 
         return $plan;
@@ -76,5 +82,82 @@ class YillikPlan extends Model
                 return [...$m, 'aylar' => $aylar];
             })
             ->all();
+    }
+
+    /**
+     * Excel'deki P/G sütunlarının ekran karşılığı: ay durumu tek değerde tutulur
+     * (bos / planlandi / tamamlandi = P+G). P hücresi planı açar/kapatır, G hücresi
+     * "Gerçekleşti"yi açar/kapatır (plansız yapılan iş de G ile işaretlenebilir).
+     */
+    public static function hucreDurumu(string $mevcut, string $hucre): string
+    {
+        if ($hucre === 'G') {
+            return $mevcut === 'tamamlandi' ? 'planlandi' : 'tamamlandi';
+        }
+
+        return $mevcut === 'bos' ? 'planlandi' : 'bos';
+    }
+
+    /** Satırın genel durumu — Excel "Durum" sütunu ve ekran aynı metni kullanır. */
+    public static function faaliyetDurumu(array $aylar): string
+    {
+        $degerler = collect($aylar);
+
+        return match (true) {
+            $degerler->contains('tamamlandi') && ! $degerler->contains('planlandi') => 'Gerçekleşti',
+            $degerler->contains('tamamlandi') => 'Devam Ediyor',
+            $degerler->contains('planlandi') => 'Planlandı',
+            default => '—',
+        };
+    }
+
+    /**
+     * Bir ayın (0–11) ziyaret yapılacaklar listesi: çalışma + eğitim planında o
+     * ay P (veya G) olan satırlar. Ziyaret Programı ve ana sayfa widget'ı kullanır.
+     *
+     * @return array<int, array{alan: string, index: int, baslik: string, grup: string, sorumlu: ?string, gerceklesti: bool}>
+     */
+    public function ayinYapilacaklari(int $ay): array
+    {
+        $kategoriler = config('isg.yillik_plan.egitim_kategorileri', []);
+        $liste = [];
+
+        foreach (['faaliyetler', 'egitimler'] as $alan) {
+            foreach (($this->{$alan} ?? []) as $i => $m) {
+                $durum = $m['aylar'][$ay] ?? 'bos';
+                if ($durum === 'bos') {
+                    continue;
+                }
+
+                $liste[] = [
+                    'alan' => $alan,
+                    'index' => $i,
+                    'baslik' => (string) ($alan === 'faaliyetler' ? ($m['faaliyet'] ?? '') : ($m['konu'] ?? '')),
+                    'grup' => $alan === 'faaliyetler'
+                        ? (string) ($m['ana_konu'] ?? 'ÇALIŞMA PLANI')
+                        : 'EĞİTİM — '.($kategoriler[$m['kategori'] ?? ''] ?? 'Diğer'),
+                    'sorumlu' => $m['sorumlu'] ?? $m['egitici'] ?? null,
+                    'gerceklesti' => $durum === 'tamamlandi',
+                ];
+            }
+        }
+
+        return $liste;
+    }
+
+    /** Yapılacaklar listesinden "Gerçekleşti" işaretini açar/kapatır (planlı satır P olarak kalır). */
+    public function gerceklestiDegistir(string $alan, int $index, int $ay): void
+    {
+        if (! in_array($alan, ['faaliyetler', 'egitimler'], true) || $ay < 0 || $ay > 11) {
+            return;
+        }
+
+        $satirlar = $this->{$alan} ?? [];
+        if (! isset($satirlar[$index])) {
+            return;
+        }
+
+        $satirlar[$index]['aylar'][$ay] = static::hucreDurumu($satirlar[$index]['aylar'][$ay] ?? 'bos', 'G');
+        $this->update([$alan => $satirlar]);
     }
 }

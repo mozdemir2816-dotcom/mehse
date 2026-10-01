@@ -10,7 +10,8 @@
         Firma başına yıllık, 12 aylık saha ziyaret programı. Durum hücresine tıklayarak
         Boş→Planlandı→Tamamlandı arasında geçiş yapın; isterseniz AI'dan o ay için kısa
         bir amaç/kapsam önerisi alın. Bir ayda birden fazla ziyaret varsa "+" ile ek
-        satır ekleyebilirsiniz.
+        satır ekleyebilirsiniz. Her ayın "Yapılacaklar" listesi Yıllık Çalışma/Eğitim
+        Planı'nda o ay planlanan maddelerden otomatik gelir.
     </p>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
@@ -42,6 +43,7 @@
                         <th style="text-align:left;padding:.4rem;width:90px">Süre (sa.)</th>
                         <th style="text-align:left;padding:.4rem;width:110px">Durum</th>
                         <th style="text-align:left;padding:.4rem;width:160px">Notlar</th>
+                        <th style="text-align:left;padding:.4rem;width:100px" title="Yıllık plandan o ay yapılacaklar (gerçekleşen/toplam)">Yapılacaklar</th>
                         <th style="text-align:left;padding:.4rem;width:60px"></th>
                     </tr>
                     @foreach (\App\Models\ZiyaretProgrami::AYLAR as $i => $ayAdi)
@@ -78,6 +80,16 @@
                                     <input type="text" value="{{ $z['notlar'] }}"
                                         wire:change="ayGuncelle({{ $i }}, {{ $s }}, 'notlar', $event.target.value)" style="{{ $girdi }}">
                                 </td>
+                                <td style="padding:.4rem">
+                                    @if ($s === 0)
+                                        @php $say = $this->aylikYapilacakSayilari[$i] ?? ['toplam' => 0, 'yapilan' => 0]; @endphp
+                                        <button type="button" wire:click="yapilacakAySec({{ $i }})" title="{{ $ayAdi }} ziyaretinde yapılacakları göster"
+                                            style="padding:.3rem .5rem;border-radius:.4rem;cursor:pointer;font-size:.72rem;font-weight:700;background:transparent;
+                                                border:1px solid {{ $i === $yapilacakAy ? $mor : 'rgb(107 114 128 / .3)' }};color:{{ $say['toplam'] && $say['yapilan'] === $say['toplam'] ? 'rgb(21 128 61)' : 'inherit' }}">
+                                            📋 {{ $say['yapilan'] }}/{{ $say['toplam'] }}
+                                        </button>
+                                    @endif
+                                </td>
                                 <td style="padding:.4rem;white-space:nowrap">
                                     @if ($s === count($girdiler) - 1)
                                         <x-filament::icon-button icon="heroicon-o-plus" color="gray" size="sm"
@@ -98,6 +110,74 @@
                     @endforeach
                 </datalist>
             </div>
+        </x-filament::section>
+
+        @php
+            $yapilacakAyAdi = \App\Models\ZiyaretProgrami::AYLAR[$yapilacakAy];
+            $yapilacakGruplari = collect($this->yapilacaklar)->groupBy('grup');
+            $ayinSayisi = $this->aylikYapilacakSayilari[$yapilacakAy] ?? ['toplam' => 0, 'yapilan' => 0];
+        @endphp
+        <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="primary">
+            <x-slot name="heading">
+                {{ $yapilacakAyAdi }} Ziyaretinde Yapılacaklar
+                <span style="font-weight:400;font-size:.78rem;color:rgb(107 114 128)">
+                    ({{ $ayinSayisi['yapilan'] }}/{{ $ayinSayisi['toplam'] }} gerçekleşti)
+                </span>
+            </x-slot>
+            <x-slot name="afterHeader">
+                <x-filament::link :href="\App\Filament\Pages\YillikPlanlar::getUrl(['firma' => $this->firmaId])" size="sm" icon="heroicon-o-arrow-top-right-on-square">
+                    Yıllık Plan'da aç
+                </x-filament::link>
+            </x-slot>
+
+            <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:-.5rem;margin-bottom:.8rem">
+                Liste {{ $yil }} Yıllık Çalışma ve Eğitim Planı'nda bu ay <strong>P</strong> (Planlandı) işaretli
+                maddelerden otomatik gelir. Kutucuğu işaretlediğinizde plandaki o ayın <strong>G</strong>
+                (Gerçekleşti) hücresi de işaretlenir.
+            </p>
+
+            <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:1rem">
+                @foreach (\App\Models\ZiyaretProgrami::AYLAR as $ai => $ayAdi)
+                    @php
+                        $say = $this->aylikYapilacakSayilari[$ai] ?? ['toplam' => 0, 'yapilan' => 0];
+                        $aktif = $ai === $yapilacakAy;
+                    @endphp
+                    <button type="button" wire:click="yapilacakAySec({{ $ai }})"
+                        style="padding:.3rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.74rem;font-weight:600;
+                            border:1px solid {{ $aktif ? $mor : 'rgb(107 114 128 / .3)' }};
+                            background:{{ $aktif ? 'rgb(139 92 246 / .1)' : 'transparent' }};
+                            color:{{ $aktif ? $mor : 'inherit' }}">
+                        {{ mb_substr($ayAdi, 0, 3) }}
+                        <span style="font-weight:400;color:rgb(107 114 128)">{{ $say['yapilan'] }}/{{ $say['toplam'] }}</span>
+                    </button>
+                @endforeach
+            </div>
+
+            @forelse ($yapilacakGruplari as $grup => $maddeler)
+                <div style="margin-bottom:.8rem">
+                    <div style="font-size:.66rem;font-weight:700;letter-spacing:.04em;color:var(--primary);margin-bottom:.25rem">{{ $grup }}</div>
+                    @foreach ($maddeler as $m)
+                        <label style="display:flex;gap:.6rem;align-items:flex-start;padding:.35rem .2rem;border-top:1px solid rgb(107 114 128 / .12);cursor:pointer">
+                            <input type="checkbox" @checked($m['gerceklesti'])
+                                wire:click="yapilacakGerceklesti('{{ $m['alan'] }}', {{ $m['index'] }})"
+                                style="margin-top:.2rem;width:1rem;height:1rem;accent-color:#15803d">
+                            <span style="flex:1;font-size:.82rem;{{ $m['gerceklesti'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">
+                                {{ $m['baslik'] }}
+                                @if (filled($m['sorumlu']))
+                                    <span style="display:block;font-size:.7rem;color:rgb(107 114 128);text-decoration:none">{{ $m['sorumlu'] }}</span>
+                                @endif
+                            </span>
+                            <span style="font-size:.7rem;font-weight:700;color:{{ $m['gerceklesti'] ? '#15803d' : '#b45309' }}">
+                                {{ $m['gerceklesti'] ? 'G · Gerçekleşti' : 'P · Planlandı' }}
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+            @empty
+                <div style="text-align:center;padding:1.5rem;color:rgb(107 114 128);font-size:.85rem">
+                    {{ $yapilacakAyAdi }} ayı için yıllık planda planlanmış madde yok.
+                </div>
+            @endforelse
         </x-filament::section>
 
         @php

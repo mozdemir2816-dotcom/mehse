@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\YillikPlan;
 use App\Models\ZiyaretProgrami;
 use App\Support\ZiyaretTakvimi;
 use Filament\Facades\Filament;
@@ -64,6 +65,39 @@ class BuAyZiyaretlerWidget extends Widget
         usort($sonuc, fn (array $a, array $b) => $a['tarih'] <=> $b['tarih']);
 
         return $sonuc;
+    }
+
+    /**
+     * Listelenen her ziyaret için yıllık plandan o ayın yapılacak sayısı —
+     * yalnız mevcut planlar okunur (widget plan oluşturmaz).
+     *
+     * @return array<string, array{toplam: int, yapilan: int}> "firmaId-yil-ay" => sayılar
+     */
+    #[Computed]
+    public function yapilacakSayilari(): array
+    {
+        $anahtarlar = collect($this->ayinZiyaretleri)
+            ->filter(fn (array $z) => $z['firma'])
+            ->map(fn (array $z) => [$z['firma']->id, (int) substr($z['tarih'], 0, 4), $z['ay_index']])
+            ->unique(fn (array $k) => implode('-', $k));
+
+        if ($anahtarlar->isEmpty()) {
+            return [];
+        }
+
+        $planlar = YillikPlan::query()
+            ->whereIn('firma_id', $anahtarlar->pluck(0)->unique())
+            ->whereIn('yil', $anahtarlar->pluck(1)->unique())
+            ->get()
+            ->keyBy(fn (YillikPlan $p) => $p->firma_id.'-'.$p->yil);
+
+        return $anahtarlar
+            ->mapWithKeys(function (array $k) use ($planlar): array {
+                $liste = collect($planlar->get($k[0].'-'.$k[1])?->ayinYapilacaklari($k[2]) ?? []);
+
+                return [implode('-', $k) => ['toplam' => $liste->count(), 'yapilan' => $liste->where('gerceklesti', true)->count()]];
+            })
+            ->all();
     }
 
     public function ayDegistir(int $fark): void

@@ -10,8 +10,9 @@
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İSG mevzuatına uygun yıllık çalışma planı, eğitim planı ve değerlendirme raporu
-        oluşturun; ay hücrelerine tıklayarak durumu Boş → Planlandı → Tamamlandı arasında
-        değiştirin.
+        oluşturun. Çalışma planında her ayın P (Planlandı) ve G (Gerçekleşti) hücresine
+        tıklayarak işaretleyin; o ay P olan maddeler Ziyaret Programı'nda o ayın ziyaret
+        yapılacaklar listesine otomatik gelir.
     </p>
 
     @php
@@ -75,69 +76,112 @@
         </div>
 
         @if ($sekme === 'calisma')
+            @php
+                $cizgi = 'border:1px solid rgb(107 114 128 / .25)';
+                $th = $cizgi.';padding:.3rem .4rem;font-size:.66rem;font-weight:700;text-align:center;background:rgb(107 114 128 / .08)';
+                $td = $cizgi.';padding:.3rem .4rem;vertical-align:top';
+                $pRenk = '#b45309';
+                $gRenk = '#15803d';
+            @endphp
             <x-filament::section icon="heroicon-o-table-cells" icon-color="primary">
                 <x-slot name="heading">
-                    Yıllık Çalışma Planı — {{ $yil }}
+                    İş Sağlığı ve Güvenliği Yıllık Çalışma Planı – {{ $yil }}
                     <span style="font-weight:400;font-size:.78rem;color:rgb(107 114 128)">
-                        (<span style="color:{{ $renkler['bos'] }}">●</span> Boş
-                        <span style="color:{{ $renkler['planlandi'] }}">●</span> Planlandı
-                        <span style="color:{{ $renkler['tamamlandi'] }}">●</span> Tamamlandı — tıklayarak değiştirin)
+                        (<strong style="color:{{ $pRenk }}">P</strong> Planlandı ·
+                        <strong style="color:{{ $gRenk }}">G</strong> Gerçekleşti — hücreye tıklayarak işaretleyin)
                     </span>
                 </x-slot>
 
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1000px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:1500px">
                         <tr>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Yasal Gereklilik / Faaliyet</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sorumlu</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Frekans</th>
-                            @foreach (\App\Filament\Pages\YillikPlanlar::AYLAR as $ay)
-                                <th style="padding:.3rem .3rem;border-bottom:1px solid rgb(107 114 128 / .3);width:2.2rem">{{ $ay }}</th>
+                            <th rowspan="2" style="{{ $th }};width:2rem">No</th>
+                            <th rowspan="2" style="{{ $th }};width:8rem">Ana Konu</th>
+                            <th rowspan="2" style="{{ $th }};min-width:14rem">Planlanan Faaliyet</th>
+                            <th rowspan="2" style="{{ $th }};width:7rem">Periyot</th>
+                            <th rowspan="2" style="{{ $th }};width:8rem">Sorumlu</th>
+                            @foreach (['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'] as $ay)
+                                <th colspan="2" style="{{ $th }}">{{ $ay }}</th>
                             @endforeach
-                            <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
+                            <th rowspan="2" style="{{ $th }};min-width:14rem">Mevzuat Dayanağı / Kayıt-Kanıt / Açıklama</th>
+                            <th rowspan="2" style="{{ $th }};width:5.5rem">Durum</th>
+                            <th rowspan="2" style="{{ $th }};width:1.5rem"></th>
+                        </tr>
+                        <tr>
+                            @foreach (range(0, 11) as $_)
+                                <th style="{{ $th }};width:1.4rem;color:{{ $pRenk }}">P</th>
+                                <th style="{{ $th }};width:1.4rem;color:{{ $gRenk }}">G</th>
+                            @endforeach
                         </tr>
                         @foreach (($p->faaliyetler ?? []) as $fi => $f)
                             <tr>
-                                <td style="padding:.3rem .5rem">
-                                    @if (!empty($f['ana_konu']))
-                                        <div style="font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--primary)">{{ $f['ana_konu'] }}</div>
-                                    @endif
-                                    <div style="font-weight:600">{{ $f['faaliyet'] }}</div>
-                                    @if (!empty($f['yasal_gereklilik']))
-                                        <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $f['yasal_gereklilik'] }}</div>
+                                <td style="{{ $td }};text-align:center">{{ $fi + 1 }}</td>
+                                <td style="{{ $td }};font-size:.64rem;font-weight:700;letter-spacing:.03em">{{ $f['ana_konu'] ?? '' }}</td>
+                                <td style="{{ $td }};font-weight:600">{{ $f['faaliyet'] }}</td>
+                                <td style="{{ $td }};font-size:.68rem">{{ $f['frekans'] ?? '' }}</td>
+                                <td style="{{ $td }};font-size:.68rem">{{ $f['sorumlu'] ?? '' }}</td>
+                                @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $ai => $durum)
+                                    @php
+                                        $kilitli = $ai < $kilit;
+                                        $hucreler = [
+                                            'P' => [$durum !== 'bos', $pRenk, 'Planlandı'],
+                                            'G' => [$durum === 'tamamlandi', $gRenk, 'Gerçekleşti'],
+                                        ];
+                                    @endphp
+                                    @foreach ($hucreler as $hucre => [$dolu, $renk, $ad])
+                                        <td style="{{ $cizgi }};padding:0;text-align:center;{{ $kilitli ? 'background:rgb(107 114 128 / .15)' : '' }}">
+                                            <button type="button" @disabled($kilitli)
+                                                @unless ($kilitli) wire:click="ayHucresiDegistir('faaliyetler', {{ $fi }}, {{ $ai }}, '{{ $hucre }}')" @endunless
+                                                title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : \App\Models\ZiyaretProgrami::AYLAR[$ai].' — '.$ad.($dolu ? ' (kaldırmak için tıklayın)' : '') }}"
+                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.72rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}</button>
+                                        </td>
+                                    @endforeach
+                                @endforeach
+                                <td style="{{ $td }};font-size:.66rem;color:rgb(107 114 128)">
+                                    {{ $f['yasal_gereklilik'] ?? '' }}
+                                    @if (filled($f['kayit_notu'] ?? null))
+                                        <div style="margin-top:.2rem"><strong>Kayıt/Not:</strong> {{ $f['kayit_notu'] }}</div>
                                     @endif
                                 </td>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $f['sorumlu'] ?? '—' }}</td>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $f['frekans'] ?? '—' }}</td>
-                                @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $ai => $durum)
-                                    @php $kilitli = $ai < $kilit; @endphp
-                                    <td style="padding:.15rem;text-align:center">
-                                        <button type="button" @disabled($kilitli)
-                                            @unless ($kilitli) wire:click="ayDurumDegistir('faaliyetler', {{ $fi }}, {{ $ai }})" @endunless
-                                            title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : ($etiketler[$durum] ?? $durum) }}"
-                                            style="width:1.4rem;height:1.4rem;border-radius:.25rem;border:none;background:{{ $kilitli ? '#111827' : ($renkler[$durum] ?? $renkler['bos']) }};{{ $kilitli ? 'opacity:.3;cursor:not-allowed' : 'cursor:pointer' }}"></button>
-                                    </td>
-                                @endforeach
-                                <td style="padding:.3rem .3rem">
-                                    <button type="button" wire:click="faaliyetSil({{ $fi }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                @php
+                                    $genelDurum = \App\Models\YillikPlan::faaliyetDurumu($f['aylar'] ?? []);
+                                    $durumRenk = match ($genelDurum) {
+                                        'Gerçekleşti' => $gRenk,
+                                        'Devam Ediyor' => '#2563eb',
+                                        'Planlandı' => $pRenk,
+                                        default => 'rgb(107 114 128)',
+                                    };
+                                @endphp
+                                <td style="{{ $td }};text-align:center;font-size:.66rem;font-weight:700;color:{{ $durumRenk }}">{{ $genelDurum }}</td>
+                                <td style="{{ $td }};text-align:center">
+                                    <button type="button" wire:click="faaliyetSil({{ $fi }})" wire:confirm="Bu faaliyet plandan silinsin mi?" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
                             </tr>
                         @endforeach
                     </table>
                 </div>
 
-                <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem">
-                    <input type="text" wire:model="yeniFaaliyet" placeholder="Faaliyet"
+                <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 2fr 1fr 1fr 1.5fr auto;gap:.5rem">
+                    <input type="text" wire:model="yeniAnaKonu" placeholder="Ana konu" list="ana-konu-listesi"
+                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    <datalist id="ana-konu-listesi">
+                        @foreach (collect($p->faaliyetler ?? [])->pluck('ana_konu')->filter()->unique() as $konu)
+                            <option value="{{ $konu }}"></option>
+                        @endforeach
+                    </datalist>
+                    <input type="text" wire:model="yeniFaaliyet" placeholder="Planlanan faaliyet"
+                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    <input type="text" wire:model="yeniPeriyot" placeholder="Periyot"
                         style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                     <input type="text" wire:model="yeniSorumlu" placeholder="Sorumlu"
                         style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                    <input type="text" wire:model="yeniAciklama" placeholder="Açıklama"
+                    <input type="text" wire:model="yeniAciklama" placeholder="Mevzuat dayanağı / açıklama"
                         style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                    <x-filament::button size="sm" wire:click="faaliyetEkle">+ Aktivite Ekle</x-filament::button>
+                    <x-filament::button size="sm" wire:click="faaliyetEkle">+ Faaliyet Ekle</x-filament::button>
                 </div>
 
                 <div style="margin-top:.75rem">
-                    <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
+                    <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla" wire:confirm="Çalışma planı standart şablona sıfırlansın mı? İşaretlenen P/G'ler silinir.">Varsayılana Sıfırla</x-filament::button>
                 </div>
             </x-filament::section>
         @endif

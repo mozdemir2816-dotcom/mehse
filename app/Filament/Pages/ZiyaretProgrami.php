@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
+use App\Models\YillikPlan;
 use App\Models\ZiyaretProgrami as ZiyaretProgramiModel;
 use App\Support\GeminiZiyaretDanismani;
 use App\Support\ZiyaretProgramiUretici;
@@ -50,13 +51,25 @@ class ZiyaretProgrami extends Page
 
     public ?string $takvimSeciliTarih = null;
 
+    /** "Ziyarette Yapılacaklar" listesinin gösterdiği ay (0–11). */
+    public int $yapilacakAy = 0;
+
     public function mount(): void
     {
         $this->yil = (int) now()->format('Y');
         $this->takvimSeciliTarih = now()->toDateString();
+        $this->yapilacakAy = now()->month - 1;
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
+        }
+
+        // Ana sayfa widget'ından gelen bağlantı: ?yil=2026&ay=10 (1–12).
+        if ($yil = request()->integer('yil')) {
+            $this->yil = $yil;
+        }
+        if ($ay = request()->integer('ay')) {
+            $this->yapilacakAy = max(0, min(11, $ay - 1));
         }
     }
 
@@ -126,6 +139,49 @@ class ZiyaretProgrami extends Page
         return $gunler;
     }
 
+    /**
+     * Firmanın aynı yıla ait Yıllık Çalışma/Eğitim Planı — yoksa standart
+     * şablonla açılır, böylece ziyaret yapılacaklar listesi hep dolu gelir.
+     */
+    #[Computed]
+    public function yillikPlan(): ?YillikPlan
+    {
+        return $this->firma ? YillikPlan::firmaYilIcin($this->firma, $this->yil) : null;
+    }
+
+    /** Seçili ayın ziyaret yapılacakları (yıllık planda o ay P/G olan maddeler). */
+    #[Computed]
+    public function yapilacaklar(): array
+    {
+        return $this->yillikPlan?->ayinYapilacaklari($this->yapilacakAy) ?? [];
+    }
+
+    /** @return array<int, array{toplam: int, yapilan: int}> ay indeksi => sayılar */
+    #[Computed]
+    public function aylikYapilacakSayilari(): array
+    {
+        return collect(range(0, 11))
+            ->mapWithKeys(function (int $ay): array {
+                $liste = collect($this->yillikPlan?->ayinYapilacaklari($ay) ?? []);
+
+                return [$ay => ['toplam' => $liste->count(), 'yapilan' => $liste->where('gerceklesti', true)->count()]];
+            })
+            ->all();
+    }
+
+    public function yapilacakAySec(int $ay): void
+    {
+        $this->yapilacakAy = max(0, min(11, $ay));
+        unset($this->yapilacaklar);
+    }
+
+    /** Listeden "Gerçekleşti" işareti — Yıllık Plan'daki ilgili ayın G hücresine yazılır. */
+    public function yapilacakGerceklesti(string $alan, int $index): void
+    {
+        $this->yillikPlan?->gerceklestiDegistir($alan, $index, $this->yapilacakAy);
+        unset($this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
+    }
+
     #[Computed]
     public function takvimGosterilenAy(): string
     {
@@ -134,13 +190,13 @@ class ZiyaretProgrami extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->program, $this->takvimGunler);
+        unset($this->firma, $this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
         $this->takvimAy = null;
     }
 
     public function updatedYil(): void
     {
-        unset($this->program, $this->takvimGunler);
+        unset($this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
         $this->takvimAy = null;
     }
 
