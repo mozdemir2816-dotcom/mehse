@@ -30,6 +30,16 @@ class KurulToplantisiUretici
             'firma' => $toplanti->firma,
         ])->setPaper('a4');
 
+        // Alt bilgi şeridinin sağına "Sayfa X / Y" (isgsuite tutanağındaki gibi) —
+        // tek render, page_script ile (bkz. EgitimKatilimUretici).
+        $pdf->render();
+        $dompdf = $pdf->getDomPDF();
+        $canvas = $dompdf->getCanvas();
+        $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $canvas->page_script(function (int $sayfa, int $toplam) use ($canvas, $font): void {
+            $canvas->text($canvas->get_width() - 88, $canvas->get_height() - 22, "Sayfa {$sayfa} / {$toplam}", $font, 7, [0.39, 0.45, 0.55]);
+        });
+
         return response()->streamDownload(fn () => print ($pdf->output()), self::dosyaAdi($toplanti, 'pdf'));
     }
 

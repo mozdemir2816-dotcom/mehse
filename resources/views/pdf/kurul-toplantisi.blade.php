@@ -75,6 +75,13 @@
         <td class="e">Toplantı başkanı</td><td>{{ $toplanti->baskan ?: '—' }}</td>
         <td class="e">Sonraki toplantı</td><td>{{ $toplanti->sonraki_toplanti?->format('d.m.Y') ?: '—' }}</td>
     </tr>
+    <tr>
+        <td class="e">Katılım</td>
+        <td colspan="3">
+            @php $katilan = collect($katilimcilar)->where('katildi', true)->count(); @endphp
+            Katılan: {{ $katilan }} / {{ count($katilimcilar) }} kişi{{ count($katilimcilar) > $katilan ? ' · Katılmayan: '.(count($katilimcilar) - $katilan) : '' }}
+        </td>
+    </tr>
 </table>
 
 {{-- Katılım yerine İmza sütunu (kullanıcı kararı, KurulToplantisiTest): katılanın
