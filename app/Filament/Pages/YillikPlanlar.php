@@ -13,9 +13,11 @@ use App\Support\YillikPlanUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -398,6 +400,23 @@ abstract class YillikPlanlar extends Page
             ->send();
     }
 
+    /** Çıktıdaki "Hazırlanma Tarihi" — bugün dolu gelir, istenirse değiştirilir. */
+    protected static function hazirlanmaTarihiAlani(): DatePicker
+    {
+        return DatePicker::make('hazirlanma_tarihi')
+            ->label('Hazırlanma Tarihi')
+            ->default(now()->toDateString())
+            ->native(false)
+            ->displayFormat('d.m.Y')
+            ->required()
+            ->helperText('Bugünün tarihi otomatik gelir; farklı bir tarih istiyorsanız değiştirin.');
+    }
+
+    protected static function secilenTarih(array $data): ?Carbon
+    {
+        return filled($data['hazirlanma_tarihi'] ?? null) ? Carbon::parse($data['hazirlanma_tarihi']) : null;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -426,7 +445,10 @@ abstract class YillikPlanlar extends Page
                 ->color('success')
                 ->tooltip('A4 yatay, yazdırmaya hazır Excel dosyası iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'calisma')
-                ->action(fn () => YillikPlanExcelUretici::calisma($this->plan())),
+                ->modalHeading('Yıllık Çalışma Planı — Çıktı Al')
+                ->modalSubmitActionLabel('İndir')
+                ->schema([static::hazirlanmaTarihiAlani()])
+                ->action(fn (array $data) => YillikPlanExcelUretici::calisma($this->plan(), static::secilenTarih($data))),
 
             Action::make('egitimExcel')
                 ->label('Çıktı Al (Excel)')
@@ -434,8 +456,10 @@ abstract class YillikPlanlar extends Page
                 ->color('success')
                 ->tooltip('Yazdırmaya hazır Excel dosyası iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'egitim')
-                ->schema([ImzaSecenegi::alan()])
-                ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data))),
+                ->modalHeading('Yıllık Eğitim Planı — Çıktı Al')
+                ->modalSubmitActionLabel('İndir')
+                ->schema([static::hazirlanmaTarihiAlani(), ImzaSecenegi::alan()])
+                ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data), static::secilenTarih($data))),
 
             Action::make('sablonuUygula')
                 ->label('Standart Şablonu Uygula')

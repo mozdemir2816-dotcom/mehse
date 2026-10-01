@@ -146,6 +146,31 @@ class YillikPlanExcelTest extends TestCase
         $this->assertSame('A1:AE48', $s->getPageSetup()->getPrintArea());
     }
 
+    public function test_hazirlanma_tarihi_varsayilan_bugun_elle_degistirilebilir(): void
+    {
+        $plan = YillikPlan::firmaYilIcin($this->insaatFirmasi(['sozlesme_baslangic' => '2026-03-15']), 2026);
+        $bugun = now()->format('d.m.Y');
+
+        $s = YillikPlanExcelUretici::calismaDoldur($plan)->getSheetByName('Yıllık Çalışma Planı');
+        $this->assertSame('Hazırlanma Tarihi:'.$bugun, $s->getCell('AD6')->getValue());
+
+        $s = YillikPlanExcelUretici::calismaDoldur($plan, \Illuminate\Support\Carbon::parse('2026-02-10'))->getSheetByName('Yıllık Çalışma Planı');
+        $this->assertSame('Hazırlanma Tarihi:10.02.2026', $s->getCell('AD6')->getValue());
+
+        $e = YillikPlanExcelUretici::egitimDoldur($plan, true, \Illuminate\Support\Carbon::parse('2026-02-10'))->getActiveSheet();
+        $this->assertSame('Hazırlanma Tarihi:10.02.2026', $e->getCell('AQ1')->getValue());
+
+        // Sayfadaki çıktı penceresi bugünle dolu açılır, değiştirilen tarih kabul edilir.
+        Livewire::test(YillikCalismaPlani::class)
+            ->set('firmaId', $plan->firma_id)
+            ->set('yil', 2026)
+            ->mountAction('calismaExcel')
+            ->assertSchemaStateSet(['hazirlanma_tarihi' => now()->toDateString()])
+            ->callMountedAction(['hazirlanma_tarihi' => '2026-02-10'])
+            ->assertHasNoErrors()
+            ->assertFileDownloaded();
+    }
+
     public function test_calisma_plani_a4_yatay_ortadan_bolunur_imza_tablonun_altinda(): void
     {
         $igu = \App\Models\IsgProfesyoneli::factory()->for($this->uzman)->create(['ad_soyad' => 'Ali Uzman']);

@@ -72,12 +72,12 @@ class YillikPlanExcelUretici
     |--------------------------------------------------------------------------
     */
 
-    public static function egitim(YillikPlan $plan, bool $imzali = true): StreamedResponse
+    public static function egitim(YillikPlan $plan, bool $imzali = true, ?Carbon $hazirlanma = null): StreamedResponse
     {
-        return self::indir(self::egitimDoldur($plan, $imzali), self::dosyaAdi($plan, 'yillik-egitim-plani'));
+        return self::indir(self::egitimDoldur($plan, $imzali, $hazirlanma), self::dosyaAdi($plan, 'yillik-egitim-plani'));
     }
 
-    public static function egitimDoldur(YillikPlan $plan, bool $imzali = true): Spreadsheet
+    public static function egitimDoldur(YillikPlan $plan, bool $imzali = true, ?Carbon $hazirlanma = null): Spreadsheet
     {
         $plan->loadMissing(['firma.igu', 'firma.isyeriHekimi']);
         $firma = $plan->firma;
@@ -90,7 +90,7 @@ class YillikPlanExcelUretici
             ."\nFİRMA ADRESİ: ".self::buyuk(self::adres($firma))
             ."\nFİRMA SGK SİCİL NO: ".($firma->sgk_sicil_no ?: '—'));
         $s->getStyle('H1')->getAlignment()->setWrapText(true);
-        $s->setCellValue('AQ1', 'Hazırlanma Tarihi:'.self::hazirlanmaTarihi($plan)->format('d.m.Y'));
+        $s->setCellValue('AQ1', 'Hazırlanma Tarihi:'.self::hazirlanmaTarihi($hazirlanma)->format('d.m.Y'));
 
         $gruplar = collect($plan->egitimler ?? [])->groupBy(fn (array $e) => self::egitimBolumu($e['kategori'] ?? null));
         $bilgi = YillikPlanSablonu::egitimBilgileri();
@@ -270,12 +270,12 @@ class YillikPlanExcelUretici
     |--------------------------------------------------------------------------
     */
 
-    public static function calisma(YillikPlan $plan): StreamedResponse
+    public static function calisma(YillikPlan $plan, ?Carbon $hazirlanma = null): StreamedResponse
     {
-        return self::indir(self::calismaDoldur($plan), self::dosyaAdi($plan, 'yillik-calisma-plani'));
+        return self::indir(self::calismaDoldur($plan, $hazirlanma), self::dosyaAdi($plan, 'yillik-calisma-plani'));
     }
 
-    public static function calismaDoldur(YillikPlan $plan): Spreadsheet
+    public static function calismaDoldur(YillikPlan $plan, ?Carbon $hazirlanma = null): Spreadsheet
     {
         $plan->loadMissing('firma');
         $firma = $plan->firma;
@@ -292,7 +292,7 @@ class YillikPlanExcelUretici
             $s->removeTableByName($tablo);
         }
 
-        $tarih = self::hazirlanmaTarihi($plan);
+        $tarih = self::hazirlanmaTarihi($hazirlanma);
         $s->setCellValue('C1', 'İŞ SAĞLIĞI VE GÜVENLİĞİ YILLIK ÇALIŞMA PLANI – '.$plan->yil);
         $s->setCellValue('C2', self::buyuk($firma->unvan));
         $s->setCellValue('C3', self::buyuk(self::adres($firma)));
@@ -473,13 +473,14 @@ class YillikPlanExcelUretici
      * Hazırlanma tarihi: firmanın sözleşme başlangıcı plan yılı içindeyse o
      * (bkz. evrak tarih bazı = sözleşme), değilse yılın ilk günü.
      */
-    private static function hazirlanmaTarihi(YillikPlan $plan): Carbon
+    /**
+     * Hazırlanma (ve çalışma planında Yayın) tarihi: kullanıcı çıktı alırken
+     * seçer, varsayılanı bugün (01.10.2026 kullanıcı isteği; eskiden sözleşme
+     * başlangıcıydı).
+     */
+    private static function hazirlanmaTarihi(?Carbon $secilen): Carbon
     {
-        $baslangic = $plan->firma?->sozlesme_baslangic;
-
-        return $baslangic && (int) $baslangic->year === (int) $plan->yil
-            ? Carbon::parse($baslangic)
-            : Carbon::create($plan->yil, 1, 1);
+        return ($secilen ?? Carbon::today())->copy();
     }
 
     private static function adres(Firma $firma): string
