@@ -10,10 +10,12 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelTarih;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\HeaderFooter;
 use PhpOffice\PhpSpreadsheet\Worksheet\HeaderFooterDrawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -56,6 +58,13 @@ class YillikPlanExcelUretici
 
     /** Çalışma planında P/G hücre yazı boyutu (şablonun çoğunluk satırları). */
     private const CALISMA_PG_PUNTO = 6.2;
+
+    /**
+     * A4 yatay genişliğe sığan en büyük ölçek (%) — Excel PDF çıktısından ölçüldü
+     * (A1:AE %100'de ≈950 pt, yazdırılabilir genişlik ≈825 pt). Şablonun kayıtlı
+     * %62'si gereğinden küçüktü; asıl sınırı çoğunlukla sayfa yüksekliği belirler.
+     */
+    private const CALISMA_GENISLIK_OLCEGI = 86;
 
     /*
     |--------------------------------------------------------------------------
@@ -341,21 +350,87 @@ class YillikPlanExcelUretici
             $s->setCellValue("AE{$r}", YillikPlan::faaliyetDurumu($f['aylar'] ?? []));
         }
 
-        $s->getPageSetup()->setPrintArea('A1:AE'.($sonSatir + 1));
+        // Boş kalan yedek satırlar da numaralı (elle doldurulabilsin — şablondaki 37, 38 gibi).
+        for ($r = self::CALISMA_ILK_SATIR + count($faaliyetler); $r <= $sonSatir; $r++) {
+            $s->setCellValue("A{$r}", $r - self::CALISMA_ILK_SATIR + 1);
+        }
 
-        // Şablonun alt bilgisinde satır sonu "_x000a_" olarak kaçırılmış, Excel
-        // bunu düz metin basıyordu — gerçek satır sonuyla aynı metin.
-        $s->getHeaderFooter()->setOddFooter(
-            '&L&"Calibri,Regular"&8 İŞVEREN / İŞVEREN VEKİLİ'."\n".'Ad Soyad / İmza'
-            .'&C&"Calibri,Regular"&8 İŞ GÜVENLİĞİ UZMANI'."\n".'Ad Soyad / İmza'
-            .'&R&"Calibri,Regular"&8 İŞYERİ HEKİMİ'."\n".'Ad Soyad / İmza'
-        );
+        $imzaSatiri = $sonSatir + 1;
+        self::calismaImzaSatiri($s, $firma, $imzaSatiri);
+        self::calismaSayfaDuzeni($s, $sonSatir, $imzaSatiri);
 
         self::calismaOzetiGuncelle($ozet, $plan->yil, $faaliyetler, $sonSatir);
         self::cizimleriTemizle($s, ['AD1'], $sonSatir + 1);
         self::logoEkle($s, $firma->logo, 'AD1', 41, 64, 0);
 
         return $kitap;
+    }
+
+    /**
+     * İmza bloğu tablonun hemen altındaki satırda (şablonun B/G/U birleşik
+     * hücreleri). Eskiden aynı metin sayfa alt bilgisinde de basılıyordu ve her
+     * sayfanın dibinde "alt başlık" gibi duruyordu — kullanıcı isteğiyle
+     * (01.10.2026) alt bilgiden kaldırıldı, imza alanı büyütüldü.
+     */
+    private static function calismaImzaSatiri(Worksheet $s, Firma $firma, int $r): void
+    {
+        $bloklar = [
+            'B' => ['İŞVEREN / İŞVEREN VEKİLİ', $firma->isveren_vekili],
+            'G' => ['İŞ GÜVENLİĞİ UZMANI', $firma->igu?->ad_soyad],
+            'U' => ['İŞYERİ HEKİMİ', $firma->isyeriHekimi?->ad_soyad],
+        ];
+
+        foreach ($bloklar as $sutun => [$baslik, $ad]) {
+            $s->setCellValue("{$sutun}{$r}", $baslik."\n".(filled($ad) ? self::buyuk($ad) : 'Ad Soyad').' – Kaşe / İmza');
+            $stil = $s->getStyle("{$sutun}{$r}");
+            $stil->getFont()->setSize(8)->setBold(true);
+            $stil->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP)->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+
+        // Kaşe + imza için boşluk.
+        $s->getRowDimension($r)->setRowHeight(70);
+    }
+
+    /**
+     * A4 yatay: 1–38 (ya da daha fazla) satır tam ortadan iki sayfaya bölünür,
+     * başlık satırları (1–7) her sayfada tekrarlanır, imza son sayfada tablonun
+     * altında. Excel "sığdır" seçeneği elle sayfa sonunu yok saydığından ölçek
+     * sabit verilir: genişlik için şablonun ölçeği, yükseklik için en uzun sayfa.
+     */
+    private static function calismaSayfaDuzeni(Worksheet $s, int $sonSatir, int $imzaSatiri): void
+    {
+        $ilk = self::CALISMA_ILK_SATIR;
+        $orta = $ilk + intdiv($sonSatir - $ilk + 1, 2) + (($sonSatir - $ilk + 1) % 2) - 1;
+
+        $s->setBreak("A{$orta}", Worksheet::BREAK_ROW);
+
+        $yukseklik = function (int $bas, int $son) use ($s): float {
+            $toplam = 0.0;
+            for ($r = $bas; $r <= $son; $r++) {
+                $h = $s->getRowDimension($r)->getRowHeight();
+                $toplam += $h > 0 ? $h : 12.75;
+            }
+
+            return $toplam;
+        };
+
+        $baslik = $yukseklik(1, $ilk - 1);
+        $enUzunSayfa = max($baslik + $yukseklik($ilk, $orta), $baslik + $yukseklik($orta + 1, $imzaSatiri));
+
+        $kenar = $s->getPageMargins();
+        $kenar->setTop(0.3)->setBottom(0.35)->setFooter(0.15);
+        $kullanilabilir = (595.3 - ($kenar->getTop() + $kenar->getBottom()) * 72) * 0.97; // A4 yatay yükseklik (pt), küçük pay
+
+        $ayar = $s->getPageSetup();
+        $ayar->setPaperSize(PageSetup::PAPERSIZE_A4)
+            ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+            ->setPrintArea("A1:AE{$imzaSatiri}")
+            ->setRowsToRepeatAtTopByStartAndEnd(1, $ilk - 1)
+            ->setFitToPage(false)
+            ->setScale((int) floor(min(self::CALISMA_GENISLIK_OLCEGI, $kullanilabilir / $enUzunSayfa * 100)));
+        $ayar->setHorizontalCentered(true);
+
+        $s->getHeaderFooter()->setOddFooter('&R&"Calibri,Regular"&7Sayfa &P / &N');
     }
 
     /**

@@ -189,8 +189,11 @@
                     <x-filament::button size="sm" wire:click="faaliyetEkle">+ Faaliyet Ekle</x-filament::button>
                 </div>
 
-                <div style="margin-top:.75rem">
+                <div style="margin-top:.75rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
                     <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla" wire:confirm="Çalışma planı standart şablona sıfırlansın mı? İşaretlenen P/G'ler silinir.">Varsayılana Sıfırla</x-filament::button>
+                    <x-filament::button color="success" icon="heroicon-o-arrow-down-tray" wire:click="mountAction('calismaExcel')">
+                        Çıktı Al (Excel — A4 yatay)
+                    </x-filament::button>
                 </div>
             </x-filament::section>
         @endif

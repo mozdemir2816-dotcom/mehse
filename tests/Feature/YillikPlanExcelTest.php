@@ -141,6 +141,35 @@ class YillikPlanExcelTest extends TestCase
         $this->assertSame('Ek faaliyet 4', $s->getCell('C47')->getValue());
         $this->assertSame(40, $s->getCell('A47')->getValue());
         $this->assertStringContainsString('$B$8:$B$47', $kitap->getSheetByName('Aylık Özet')->getCell('B4')->getValue());
+        // 40 satır ortadan bölünür: 1–20 / 21–40 (satır 27'den sonra sayfa sonu), imza 48'de.
+        $this->assertSame(['A27'], array_keys($s->getBreaks()));
+        $this->assertSame('A1:AE48', $s->getPageSetup()->getPrintArea());
+    }
+
+    public function test_calisma_plani_a4_yatay_ortadan_bolunur_imza_tablonun_altinda(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::factory()->for($this->uzman)->create(['ad_soyad' => 'Ali Uzman']);
+        $firma = $this->insaatFirmasi(['igu_id' => $igu->id, 'isveren_vekili' => 'Veli Patron']);
+        $s = YillikPlanExcelUretici::calismaDoldur(YillikPlan::firmaYilIcin($firma, 2026))
+            ->getSheetByName('Yıllık Çalışma Planı');
+        $ayar = $s->getPageSetup();
+
+        // 38 satır (36 faaliyet + 2 numaralı boş satır) → 1–19 / 20–38: satır 26'dan sonra sayfa sonu.
+        $this->assertSame(['A26'], array_keys($s->getBreaks()));
+        $this->assertSame(37, $s->getCell('A44')->getValue());
+        $this->assertSame(38, $s->getCell('A45')->getValue());
+        $this->assertSame(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4, $ayar->getPaperSize());
+        $this->assertSame(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE, $ayar->getOrientation());
+        $this->assertFalse($ayar->getFitToPage()); // "sığdır" elle sayfa sonunu yok sayar
+        $this->assertGreaterThan(62, $ayar->getScale());
+        $this->assertSame([1, 7], $ayar->getRowsToRepeatAtTop());
+        $this->assertSame('A1:AE46', $ayar->getPrintArea());
+
+        // İmza tablonun hemen altında (satır 46), alt bilgide artık imza yok.
+        $this->assertStringContainsString('VELİ PATRON', $s->getCell('B46')->getValue());
+        $this->assertStringContainsString('ALİ UZMAN', $s->getCell('G46')->getValue());
+        $this->assertStringContainsString('İŞYERİ HEKİMİ', $s->getCell('U46')->getValue());
+        $this->assertStringNotContainsString('İŞ GÜVENLİĞİ UZMANI', $s->getHeaderFooter()->getOddFooter());
     }
 
     public function test_sayfadan_excel_indirilir_ve_standart_sablon_uygulanir(): void

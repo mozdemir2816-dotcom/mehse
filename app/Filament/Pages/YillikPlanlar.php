@@ -404,31 +404,35 @@ abstract class YillikPlanlar extends Page
             Action::make('planiKaydet')
                 ->label('Planı Kaydet')
                 ->icon('heroicon-o-check')
-                ->color('primary')
+                ->color('gray')
                 ->visible(fn () => $this->plan() !== null)
                 ->action(fn () => $this->planiKaydet()),
 
             // Çalışma/eğitim planı çıktısı Excel şablonlarıyla (aşağıda); PDF yalnız
             // Değerlendirme Raporu için kaldı.
             Action::make('pdf')
-                ->label('Değerlendirme Raporu (PDF)')
-                ->icon('heroicon-o-document-arrow-down')
+                ->label('Çıktı Al (PDF)')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->tooltip('Yıllık Değerlendirme Raporu PDF olarak iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanUretici::pdf($this->plan(), ImzaSecenegi::secili($data))),
 
             // Kullanıcının gerçek Excel şablonlarıyla birebir çıktı (YillikPlanExcelUretici).
             Action::make('calismaExcel')
-                ->label('Çalışma Planı (Excel)')
-                ->icon('heroicon-o-table-cells')
+                ->label('Çıktı Al (Excel)')
+                ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
+                ->tooltip('A4 yatay, yazdırmaya hazır Excel dosyası iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'calisma')
                 ->action(fn () => YillikPlanExcelUretici::calisma($this->plan())),
 
             Action::make('egitimExcel')
-                ->label('Eğitim Planı (Excel)')
-                ->icon('heroicon-o-table-cells')
+                ->label('Çıktı Al (Excel)')
+                ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
+                ->tooltip('Yazdırmaya hazır Excel dosyası iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'egitim')
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data))),
