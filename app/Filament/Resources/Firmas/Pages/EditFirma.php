@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Firmas\Pages;
 
 use App\Filament\Resources\Firmas\FirmaResource;
+use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Support\FirmaDosyaFihristiUretici;
@@ -20,6 +21,8 @@ class EditFirma extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            IsyeriGirisAksiyonu::make(),
+
             Action::make('dosyaFihristi')
                 ->label('Dosya Fihristi (İçindekiler)')
                 ->icon('heroicon-o-list-bullet')

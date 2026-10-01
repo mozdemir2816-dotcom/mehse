@@ -26,6 +26,9 @@ class Firma extends Model
 
     protected static function booted(): void
     {
+        // isyeri_hesaplari.firma_id FK'siz — firma silinince işyeri girişi de silinsin.
+        static::deleting(fn (Firma $f) => $f->isyeriHesabi()->delete());
+
         static::saving(function (Firma $f): void {
             if (blank($f->user_id) && auth()->check()) {
                 $f->user_id = auth()->id();
@@ -65,6 +68,11 @@ class Firma extends Model
     public function dsp(): BelongsTo
     {
         return $this->belongsTo(IsgProfesyoneli::class, 'dsp_id');
+    }
+
+    public function isyeriHesabi(): HasOne
+    {
+        return $this->hasOne(IsyeriHesabi::class);
     }
 
     public function calisanlar(): HasMany

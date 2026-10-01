@@ -24,6 +24,29 @@ class FirmaEvrakZipUretici
             ->all();
     }
 
+    /** @return array<int, array{anahtar: string, tip: string, tarih: \Carbon\CarbonInterface}> en yeni üstte (İşyeri paneli listesi) */
+    public static function liste(Firma $firma): array
+    {
+        return static::firmaSatirlari($firma)
+            ->sortByDesc(fn (array $s) => $s['tarih'])
+            ->map(fn (array $s) => ['anahtar' => static::anahtar($s), 'tip' => $s['tip'], 'tarih' => $s['tarih']])
+            ->values()->all();
+    }
+
+    /** Tek evrakın PDF'i — anahtar bu firmaya ait değilse null (başka firmanın evrakı indirilemez). */
+    public static function pdf(Firma $firma, string $anahtar): ?StreamedResponse
+    {
+        $s = static::firmaSatirlari($firma)->first(fn (array $s) => static::anahtar($s) === $anahtar);
+
+        if (! $s) {
+            return null;
+        }
+
+        $s['kayit']->load('firma');
+
+        return $s['kaynak']['uretici']::{$s['kaynak']['pdf_metod']}($s['kayit']);
+    }
+
     public static function zip(Firma $firma, array $secilenAnahtarlar): StreamedResponse
     {
         $secilenler = static::firmaSatirlari($firma)

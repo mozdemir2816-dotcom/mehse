@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Calisan;
+use App\Models\IsyeriHesabi;
 use App\Models\User;
 
 return [
@@ -49,6 +50,12 @@ return [
             'driver' => 'session',
             'provider' => 'calisanlar',
         ],
+
+        // İşyeri (işveren) girişi — /isyeri paneli, salt-okunur evrak görüntüleme.
+        'isyeri' => [
+            'driver' => 'session',
+            'provider' => 'isyeri_hesaplari',
+        ],
     ],
 
     /*
@@ -77,6 +84,11 @@ return [
         'calisanlar' => [
             'driver' => 'eloquent',
             'model' => Calisan::class,
+        ],
+
+        'isyeri_hesaplari' => [
+            'driver' => 'eloquent',
+            'model' => IsyeriHesabi::class,
         ],
 
         // 'users' => [

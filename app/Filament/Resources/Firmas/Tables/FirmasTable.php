@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\Firmas\Tables;
 
 use App\Filament\Pages\AcilDurumPlani;
+use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
 use App\Models\Firma;
 use App\Support\FirmaEvrakZipUretici;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -34,6 +36,11 @@ class FirmasTable
                         default => 'success',
                     }),
                 TextColumn::make('calisan_sayisi')->label('Çalışan')->numeric()->sortable()->alignCenter(),
+                TextColumn::make('isveren_ad')->label('İşveren / vekili')->searchable(['isveren_ad', 'isveren_vekili'])
+                    ->state(fn (Firma $r) => $r->isveren_ad ?: $r->isveren_vekili)->placeholder('—')->toggleable(),
+                TextColumn::make('telefon')->label('Telefon')->searchable()->placeholder('—')->toggleable(),
+                TextColumn::make('adres')->label('Adres')->limit(40)->tooltip(fn (Firma $r) => $r->adres)->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('il')->label('İl')->searchable()->toggleable(),
                 TextColumn::make('sozlesme_bitis')->label('Sözleşme bitişi')->date('d.m.Y')->sortable()
                     ->placeholder('—')
@@ -42,7 +49,9 @@ class FirmasTable
             ])
             ->filters([
                 SelectFilter::make('tehlike_sinifi')->label('Tehlike sınıfı')->options(config('isg.tehlike_siniflari')),
-                TernaryFilter::make('aktif')->label('Aktif')->default(true),
+                TernaryFilter::make('aktif')->label('Firma görünümü')
+                    ->placeholder('Tüm firmalar')->trueLabel('Aktif firmalar')->falseLabel('Pasif firmalar')
+                    ->default(true),
             ])
             ->recordActions([
                 Action::make('acilDurumPlani')
@@ -67,7 +76,18 @@ class FirmasTable
                     ->modalSubmitActionLabel('ZIP Olarak İndir')
                     ->action(fn (Firma $record, array $data) => FirmaEvrakZipUretici::zip($record, $data['secilenler'] ?? [])),
                 EditAction::make(),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    IsyeriGirisAksiyonu::make(),
+                    Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')
+                        ->visible(fn (Firma $record) => $record->aktif)
+                        ->requiresConfirmation()
+                        ->modalDescription('Firma listeden düşer ve işyeri girişi çalışmaz; tüm kayıt ve evrakları korunur. İstediğiniz zaman tekrar aktifleştirebilirsiniz.')
+                        ->action(fn (Firma $record) => $record->update(['aktif' => false])),
+                    Action::make('aktifEt')->label('Aktifleştir')->icon('heroicon-o-play-circle')->color('success')
+                        ->visible(fn (Firma $record) => ! $record->aktif)
+                        ->action(fn (Firma $record) => $record->update(['aktif' => true])),
+                    DeleteAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
