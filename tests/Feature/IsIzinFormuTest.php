@@ -274,4 +274,124 @@ class IsIzinFormuTest extends TestCase
         $this->assertSame('taslak', $form->fresh()->durum);
         $this->assertNull($form->fresh()->onay1_durum);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | isgsuite karşılaştırması: personel, taşeron, saha denetimi, operasyon kontrolleri
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_secilen_calisanlar_taseron_ve_kontroller_kaydedilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $ali = \App\Models\Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Ali Kaynakçı', 'gorev' => 'Kaynakçı']);
+        $veli = \App\Models\Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Veli Usta']);
+        \App\Models\Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Pasif Kişi', 'aktif' => false]);
+        $yabanci = \App\Models\Calisan::create(['firma_id' => Firma::factory()->for(User::factory())->create()->id, 'ad_soyad' => 'Yabancı']);
+
+        $sayfa = Livewire::test(IzinSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertSame(['Ali Kaynakçı', 'Veli Usta'], $sayfa->get('firmaCalisanlari')->pluck('ad_soyad')->all(), 'pasif çalışan listelenmez');
+
+        $sayfa->call('izinTuruToggle', 'yukseklik')
+            ->call('calisanToggle', $ali->id)
+            ->call('calisanToggle', $veli->id)
+            ->call('calisanToggle', $veli->id) // geri bırakıldı
+            ->call('calisanToggle', $yabanci->id) // başka firmanın çalışanı — kaydedilmemeli
+            ->set('taseron', 'ABC Çatı Ltd.')
+            ->set('kontroller.kkd', 'uygun')
+            ->callAction('pdf');
+
+        $form = IsIzinFormu::where('firma_id', $firma->id)->sole();
+        $this->assertSame([['id' => $ali->id, 'ad_soyad' => 'Ali Kaynakçı', 'gorev' => 'Kaynakçı']], $form->calisanlar);
+        $this->assertSame(['Ali Kaynakçı (Kaynakçı)'], $form->calisanEtiketleri());
+        $this->assertSame('ABC Çatı Ltd.', $form->taseron);
+        // yüksekte çalışma: LOTO ve gaz ölçümü ilgisiz → gerekli değil; KKD elle uygun
+        $this->assertSame('gerekli_degil', $form->kontroller['loto']);
+        $this->assertSame('gerekli_degil', $form->kontroller['gaz']);
+        $this->assertSame('uygun', $form->kontroller['kkd']);
+        $this->assertSame('bekliyor', $form->kontroller['ekipman']);
+    }
+
+    public function test_tur_degisince_kontrol_varsayilanlari_yenilenir_elle_girilen_korunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $sayfa = Livewire::test(IzinSayfasi::class)->set('firmaId', $firma->id)
+            ->set('kontroller.ekipman', 'uygun')
+            ->call('izinTuruToggle', 'kapali_alan');
+
+        $this->assertSame('bekliyor', $sayfa->get('kontroller')['gaz']);
+        $this->assertSame('gerekli_degil', $sayfa->get('kontroller')['loto']);
+        $this->assertSame('uygun', $sayfa->get('kontroller')['ekipman']);
+    }
+
+    public function test_bekleyen_kontrol_varken_tam_onay_verilmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $form = IsIzinFormu::create(['firma_id' => $firma->id, 'izin_turleri' => ['sicak_is'],
+            'kontroller' => IsIzinFormu::varsayilanKontroller(['sicak_is'])]);
+
+        $sayfa = Livewire::test(IzinSayfasi::class)->set('firmaId', $firma->id)
+            ->call('onayaGonder', $form->id)
+            ->call('onayla', $form->id, 1)
+            ->call('onayla', $form->id, 2);
+
+        $form->refresh();
+        $this->assertSame('onay_bekliyor', $form->durum, 'kontroller bekliyorken çalışma yetkisi verilmemeli');
+        $this->assertNotSame('onayladi', $form->onay2_durum);
+
+        // Kontroller satırdan güncellenir → tam onay verilir
+        $sayfa->call('islemBaslat', $form->id, 'kontroller')
+            ->set('islemKontroller', ['loto' => 'gerekli_degil', 'gaz' => 'uygun', 'kkd' => 'uygun', 'ekipman' => 'uygun', 'acil_durum' => 'uygun', 'yetkinlik' => 'gerekli_degil'])
+            ->call('islemiUygula')
+            ->call('onayla', $form->id, 2);
+
+        $this->assertSame('onaylandi', $form->fresh()->durum);
+    }
+
+    public function test_uygun_olmayan_kontrolle_onaya_gonderilemez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $form = IsIzinFormu::create(['firma_id' => $firma->id, 'kontroller' => ['gaz' => 'uygun_degil']]);
+
+        Livewire::test(IzinSayfasi::class)->set('firmaId', $firma->id)->call('onayaGonder', $form->id);
+
+        $this->assertSame('taslak', $form->fresh()->durum);
+    }
+
+    public function test_saha_denetimi_baglanir_ve_pdfde_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $denetim = \App\Models\SahaDenetimi::create(['firma_id' => $firma->id, 'user_id' => $this->uzman->id,
+            'denetim_tarihi' => '2026-09-20', 'santiye_adi' => 'Blok A']);
+        \App\Models\Calisan::create(['firma_id' => $firma->id, 'ad_soyad' => 'Pdf Çalışan']);
+
+        $sayfa = Livewire::test(IzinSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertSame([$denetim->id => '20.09.2026 — Blok A'], $sayfa->get('sahaDenetimleri'));
+
+        $sayfa->call('calisanToggle', $firma->calisanlar()->value('id'))
+            ->set('sahaDenetimiId', $denetim->id)
+            ->callAction('pdf');
+
+        $form = IsIzinFormu::where('firma_id', $firma->id)->sole();
+        $this->assertSame($denetim->id, $form->saha_denetimi_id);
+
+        $html = view('pdf.is-izin-formu', ['form' => $form->load('sahaDenetimi'), 'firma' => $firma])->render();
+        $this->assertStringContainsString('Blok A', $html);
+        $this->assertStringContainsString('Pdf Çalışan', $html);
+        $this->assertStringContainsString('PTW OPERASYON KONTROLLERİ', $html);
+    }
+
+    public function test_ozet_kartlari_sayar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        IsIzinFormu::create(['firma_id' => $firma->id]);
+        IsIzinFormu::create(['firma_id' => $firma->id, 'durum' => 'onay_bekliyor']);
+        IsIzinFormu::create(['firma_id' => $firma->id, 'durum' => 'onaylandi', 'baslangic' => now()->subHour(), 'bitis' => now()->addHours(4)]);
+        IsIzinFormu::create(['firma_id' => $firma->id, 'durum' => 'onaylandi', 'baslangic' => now()->subDays(2), 'bitis' => now()->subDay()]);
+        IsIzinFormu::create(['firma_id' => Firma::factory()->for(User::factory())->create()->id]); // başkasının
+
+        $ozet = Livewire::test(IzinSayfasi::class)->get('ozet');
+        $this->assertSame(['toplam' => 4, 'aktif' => 1, 'onay_bekleyen' => 1, 'suresi_gecen' => 1], $ozet);
+    }
 }

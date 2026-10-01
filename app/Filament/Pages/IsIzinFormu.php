@@ -2,9 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsIzinFormu as IsIzinFormuModel;
 use App\Models\IsIzinSablonu;
+use App\Models\SahaDenetimi;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\IsIzinFormuUretici;
 use BackedEnum;
@@ -79,6 +81,19 @@ class IsIzinFormu extends Page
 
     public ?string $onay2Ad = null;
 
+    /** @var array<int, int> izinde çalışacak personel (firma çalışanı id'leri) */
+    public array $secilenCalisanlar = [];
+
+    public ?string $taseron = null;
+
+    public ?int $sahaDenetimiId = null;
+
+    /** @var array<string, string> PTW operasyon kontrolleri: anahtar => durum */
+    public array $kontroller = [];
+
+    /** @var array<string, string> geçmiş kayıtta düzenlenen kontroller */
+    public array $islemKontroller = [];
+
     // Kütüphane seçimi
     public string $sablonSecim = '';
 
@@ -96,6 +111,8 @@ class IsIzinFormu extends Page
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
         }
+
+        $this->kontroller = IsIzinFormuModel::varsayilanKontroller([]);
     }
 
     /*
@@ -178,6 +195,44 @@ class IsIzinFormu extends Page
         return $hazir->concat($ozel)->values()->all();
     }
 
+    /** @return Collection<int, Calisan> */
+    #[Computed]
+    public function firmaCalisanlari(): Collection
+    {
+        return $this->firma?->calisanlar()->where('aktif', true)->orderBy('ad_soyad')->get(['id', 'ad_soyad', 'gorev']) ?? collect();
+    }
+
+    /** @return array<int, string> id => "dd.mm.yyyy — şantiye / iş tanımı" */
+    #[Computed]
+    public function sahaDenetimleri(): array
+    {
+        if (! $this->firma) {
+            return [];
+        }
+
+        return SahaDenetimi::where('firma_id', $this->firma->id)
+            ->latest('denetim_tarihi')->limit(50)->get()
+            ->mapWithKeys(fn (SahaDenetimi $d) => [
+                $d->id => trim(($d->denetim_tarihi?->format('d.m.Y') ?? '—').' — '.($d->santiye_adi ?: $d->is_tanimi ?: 'Saha denetimi'), ' —'),
+            ])->all();
+    }
+
+    /** Özet kartları — seçili firma, yoksa tüm firmalar. @return array<string, int> */
+    #[Computed]
+    public function ozet(): array
+    {
+        $izinler = IsIzinFormuModel::query()
+            ->whereIn('firma_id', $this->firma ? [$this->firma->id] : array_keys($this->firmalar()))
+            ->get(['id', 'durum', 'baslangic', 'bitis']);
+
+        return [
+            'toplam' => $izinler->count(),
+            'aktif' => $izinler->filter(fn ($f) => $f->aktifMi())->count(),
+            'onay_bekleyen' => $izinler->where('durum', 'onay_bekliyor')->count(),
+            'suresi_gecen' => $izinler->filter(fn ($f) => $f->suresiGectiMi())->count(),
+        ];
+    }
+
     /** @return Collection<int, IsIzinFormuModel> */
     #[Computed]
     public function gecmisFormlar(): Collection
@@ -187,7 +242,9 @@ class IsIzinFormu extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->gecmisFormlar);
+        unset($this->firma, $this->gecmisFormlar, $this->firmaCalisanlari, $this->sahaDenetimleri, $this->ozet);
+        $this->secilenCalisanlar = [];
+        $this->sahaDenetimiId = null;
     }
 
     public function updatedIzinTurleri(): void
@@ -195,6 +252,28 @@ class IsIzinFormu extends Page
         unset($this->onlemler);
         $gecerliMaddeler = $this->onlemler();
         $this->secilenOnlemler = array_values(array_intersect($this->secilenOnlemler, $gecerliMaddeler));
+        $this->kontrolVarsayilanlariniUygula();
+    }
+
+    /** Tür değişince kontrol varsayılanlarını yenile; elle "uygun / uygun değil" yapılanlar korunur. */
+    private function kontrolVarsayilanlariniUygula(): void
+    {
+        $yeni = IsIzinFormuModel::varsayilanKontroller($this->izinTurleri);
+
+        foreach ($this->kontroller as $anahtar => $durum) {
+            if (in_array($durum, ['uygun', 'uygun_degil'], true) && isset($yeni[$anahtar])) {
+                $yeni[$anahtar] = $durum;
+            }
+        }
+
+        $this->kontroller = $yeni;
+    }
+
+    public function calisanToggle(int $id): void
+    {
+        $this->secilenCalisanlar = in_array($id, $this->secilenCalisanlar, true)
+            ? array_values(array_diff($this->secilenCalisanlar, [$id]))
+            : [...$this->secilenCalisanlar, $id];
     }
 
     /*
@@ -220,6 +299,7 @@ class IsIzinFormu extends Page
 
         $this->izinTurleri = $sablon['turler'];
         unset($this->onlemler);
+        $this->kontrolVarsayilanlariniUygula();
 
         // Önlem seti = türlerin filtreli maddeleri + şablonun ek maddeleri (hepsi işaretli).
         $this->secilenOnlemler = array_values(array_unique([
@@ -303,10 +383,17 @@ class IsIzinFormu extends Page
             'onay1_ad' => $this->onay1Ad,
             'onay2_baslik' => $this->onay2Baslik,
             'onay2_ad' => $this->onay2Ad,
+            'calisanlar' => $this->firmaCalisanlari()
+                ->whereIn('id', $this->secilenCalisanlar)
+                ->map(fn (Calisan $c) => ['id' => $c->id, 'ad_soyad' => $c->ad_soyad, 'gorev' => $c->gorev])
+                ->values()->all(),
+            'taseron' => $this->taseron,
+            'saha_denetimi_id' => array_key_exists((int) $this->sahaDenetimiId, $this->sahaDenetimleri()) ? $this->sahaDenetimiId : null,
+            'kontroller' => $this->gecerliKontroller($this->kontroller),
         ]);
         $form->save();
 
-        unset($this->gecmisFormlar);
+        unset($this->gecmisFormlar, $this->ozet);
 
         return $form;
     }
@@ -389,6 +476,14 @@ class IsIzinFormu extends Page
             return;
         }
 
+        if ($uygunDegil = $f->kontrolAdlari('uygun_degil')) {
+            Notification::make()->title('Onaya gönderilemez')
+                ->body('Uygun olmayan kontrol var: '.implode(', ', $uygunDegil).'. Önce düzeltin.')
+                ->danger()->send();
+
+            return;
+        }
+
         $f->update([
             'durum' => 'onay_bekliyor',
             'onay1_durum' => 'bekliyor',
@@ -407,6 +502,16 @@ class IsIzinFormu extends Page
         }
 
         $alan = $hangi === 1 ? 'onay1' : 'onay2';
+        $digerOnayli = ($hangi === 1 ? $f->onay2_durum : $f->onay1_durum) === 'onayladi';
+
+        // Son onay = çalışma yetkisi; bekleyen / uygun olmayan operasyon kontrolü varken verilmez.
+        if ($digerOnayli && ($eksik = $f->kontrolAdlari('bekliyor', 'uygun_degil'))) {
+            Notification::make()->title('Tam onay verilemez')
+                ->body('Tamamlanmamış operasyon kontrolleri: '.implode(', ', $eksik).'. "Kontroller" butonundan güncelleyin.')
+                ->danger()->send();
+
+            return;
+        }
         $f->{$alan.'_durum'} = 'onayladi';
         $f->{$alan.'_tarih'} = now();
 
@@ -455,11 +560,25 @@ class IsIzinFormu extends Page
         $this->islemTuru = $turu;
         $this->islemNotu = null;
         $this->islemSahaTeslim = false;
+
+        if ($turu === 'kontroller' && ($f = $this->kayit($id))) {
+            $this->islemKontroller = $f->kontroller ?? IsIzinFormuModel::varsayilanKontroller($f->izin_turleri ?? []);
+        }
     }
 
     public function islemIptal(): void
     {
-        $this->reset('islemId', 'islemTuru', 'islemNotu', 'islemSahaTeslim');
+        $this->reset('islemId', 'islemTuru', 'islemNotu', 'islemSahaTeslim', 'islemKontroller');
+    }
+
+    /** @return array<string, string> yalnız tanımlı anahtar + geçerli durum */
+    private function gecerliKontroller(array $kontroller): array
+    {
+        $durumlar = config('isg.is_izin.kontrol_durumlari');
+
+        return collect(config('isg.is_izin.operasyon_kontrolleri'))
+            ->mapWithKeys(fn ($k, $anahtar) => [$anahtar => isset($durumlar[$kontroller[$anahtar] ?? '']) ? $kontroller[$anahtar] : 'bekliyor'])
+            ->all();
     }
 
     public function islemiUygula(): void
@@ -488,6 +607,17 @@ class IsIzinFormu extends Page
             Notification::make()->title($f->izin_no.' reddedildi')->danger()->send();
         }
 
+        if ($this->islemTuru === 'kontroller') {
+            if (in_array($f->durum, ['kapatildi', 'iptal'], true)) {
+                $this->islemIptal();
+
+                return;
+            }
+
+            $f->update(['kontroller' => $this->gecerliKontroller($this->islemKontroller)]);
+            Notification::make()->title($f->izin_no.' kontrolleri kaydedildi')->success()->send();
+        }
+
         if ($this->islemTuru === 'kapat') {
             $f->update([
                 'durum' => 'kapatildi',
@@ -500,7 +630,7 @@ class IsIzinFormu extends Page
         }
 
         $this->islemIptal();
-        unset($this->gecmisFormlar);
+        unset($this->gecmisFormlar, $this->ozet);
     }
 
     public function gecmisPdf(int $id)

@@ -2997,6 +2997,24 @@ return [
             'reddetti' => 'Reddetti',
         ],
 
+        // PTW operasyon kontrolleri (isgsuite referansı). 'turler' doluysa yalnız o
+        // izin türlerinde varsayılan "bekliyor", diğerlerinde "gerekli değil" gelir;
+        // boşsa her izinde "bekliyor". Tam onay, bekleyen/uygun olmayan kontrol varken verilmez.
+        'operasyon_kontrolleri' => [
+            'loto' => ['ad' => 'LOTO / enerji izolasyonu', 'turler' => ['loto', 'elektrik']],
+            'gaz' => ['ad' => 'Gaz ölçümü', 'turler' => ['kapali_alan', 'sicak_is']],
+            'kkd' => ['ad' => 'KKD kontrolü', 'turler' => []],
+            'ekipman' => ['ad' => 'Ekipman kontrolü', 'turler' => []],
+            'acil_durum' => ['ad' => 'Acil durum hazırlığı', 'turler' => []],
+            'yetkinlik' => ['ad' => 'Yetkinlik belgesi', 'turler' => []],
+        ],
+        'kontrol_durumlari' => [
+            'bekliyor' => 'Kontrol bekliyor',
+            'uygun' => 'Uygun',
+            'uygun_degil' => 'Uygun değil',
+            'gerekli_degil' => 'Gerekli değil',
+        ],
+
         /*
         | İzin Kütüphanesi — hazır PTW kataloğu. Her şablon: türler + o türlerin
         | filtreli önlemlerine EK önlemler + KKD + geçerlilik (saat) + uyarılar +

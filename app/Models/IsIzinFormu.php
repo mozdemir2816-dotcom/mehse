@@ -32,6 +32,8 @@ class IsIzinFormu extends Model
         'guvenlik_onlemleri' => 'array',
         'gerekli_kkdler' => 'array',
         'uyarilar' => 'array',
+        'calisanlar' => 'array',
+        'kontroller' => 'array',
     ];
 
     protected static function booted(): void
@@ -50,6 +52,58 @@ class IsIzinFormu extends Model
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);
+    }
+
+    public function sahaDenetimi(): BelongsTo
+    {
+        return $this->belongsTo(SahaDenetimi::class);
+    }
+
+    /*
+    | PTW operasyon kontrolleri — ['loto' => 'bekliyor', 'gaz' => 'uygun', ...].
+    | null = kontroller kullanılmamış (eski kayıtlar) → onay akışını engellemez.
+    */
+
+    /** @param  array<int, string>  $turler  @return array<string, string> */
+    public static function varsayilanKontroller(array $turler): array
+    {
+        return collect(config('isg.is_izin.operasyon_kontrolleri'))
+            ->map(fn (array $k) => $k['turler'] === [] || array_intersect($k['turler'], $turler) ? 'bekliyor' : 'gerekli_degil')
+            ->all();
+    }
+
+    /** @return array<int, array{anahtar: string, ad: string, durum: string, etiket: string}> */
+    public function kontrolSatirlari(): array
+    {
+        $durumlar = config('isg.is_izin.kontrol_durumlari');
+
+        return collect(config('isg.is_izin.operasyon_kontrolleri'))
+            ->map(function (array $k, string $anahtar) use ($durumlar) {
+                $durum = $this->kontroller[$anahtar] ?? 'bekliyor';
+
+                return ['anahtar' => $anahtar, 'ad' => $k['ad'], 'durum' => $durum, 'etiket' => $durumlar[$durum] ?? $durum];
+            })
+            ->values()->all();
+    }
+
+    /** @return array<int, string> verilen durumdaki kontrollerin adları */
+    public function kontrolAdlari(string ...$durumlar): array
+    {
+        if ($this->kontroller === null) {
+            return [];
+        }
+
+        return collect($this->kontrolSatirlari())
+            ->filter(fn ($k) => in_array($k['durum'], $durumlar, true))
+            ->pluck('ad')->all();
+    }
+
+    /** @return array<int, string> izinde çalışacakların "Ad Soyad (Görev)" listesi */
+    public function calisanEtiketleri(): array
+    {
+        return collect($this->calisanlar ?? [])
+            ->map(fn (array $c) => $c['ad_soyad'].(filled($c['gorev'] ?? null) ? ' ('.$c['gorev'].')' : ''))
+            ->all();
     }
 
     /** @return array<int, string> seçili izin türlerinin etiketleri */

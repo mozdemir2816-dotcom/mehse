@@ -5,13 +5,13 @@
 <style>
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 11px; }
-    .sayfa { padding: 28px 34px; }
+    .sayfa { padding: 20px 34px; }
     .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 14px; }
     .baslik h1 { font-size: 16px; margin: 0 0 4px; }
     .kunye { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
     .kunye td { border: 1px solid #999; padding: 5px 8px; }
     .kunye td.k { background: #f0f0f0; font-weight: bold; width: 22%; }
-    h2 { font-size: 12px; margin: 14px 0 6px; padding: 4px 8px; color: #fff; border-radius: 3px; }
+    h2 { font-size: 12px; margin: 10px 0 5px; padding: 4px 8px; color: #fff; border-radius: 3px; }
     .turler span { display: inline-block; background: #f59e0b; color: #fff; padding: 2px 8px; border-radius: 3px; font-size: 9.5px; margin: 0 4px 4px 0; }
     table.liste { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-bottom: 10px; }
     table.liste td { border: 1px solid #999; padding: 4px 8px; }
@@ -20,7 +20,7 @@
     .onay td, .onay th { border: 1px solid #999; padding: 5px 8px; text-align: left; }
     .onay th { background: #f0f0f0; }
     .imza { margin-top: 26px; width: 100%; }
-    .imza td { width: 50%; text-align: center; padding-top: 38px; border-top: 1px solid #111; font-size: 10px; }
+    .imza td { width: 50%; text-align: center; padding-top: 30px; border-top: 1px solid #111; font-size: 10px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
     .damga { display: inline-block; padding: 3px 10px; border: 2px solid #111; border-radius: 4px; font-weight: bold; font-size: 11px; }
 </style>
@@ -47,7 +47,24 @@
             <td class="k">Başlangıç</td><td>{{ $form->baslangic?->format('d.m.Y H:i') ?: '—' }}</td>
             <td class="k">Bitiş</td><td>{{ $form->bitis?->format('d.m.Y H:i') ?: '—' }}</td>
         </tr>
+        @if ($form->taseron || $form->sahaDenetimi)
+            <tr>
+                <td class="k">Taşeron</td><td>{{ $form->taseron ?: '—' }}</td>
+                <td class="k">Bağlı Saha Denetimi</td>
+                <td>{{ $form->sahaDenetimi ? ($form->sahaDenetimi->denetim_tarihi?->format('d.m.Y') ?? '').' '.($form->sahaDenetimi->santiye_adi ?: $form->sahaDenetimi->is_tanimi) : '—' }}</td>
+            </tr>
+        @endif
     </table>
+
+    @if ($form->calisanlar)
+        <h2 style="background:#0ea5e9">İZİNDE ÇALIŞACAK PERSONEL ({{ count($form->calisanlar) }})</h2>
+        <table class="liste">
+            <tr style="background:#f0f0f0;font-weight:bold"><td style="width:6%">#</td><td>Ad Soyad</td><td>Görevi</td><td style="width:22%">İmza</td></tr>
+            @foreach ($form->calisanlar as $i => $c)
+                <tr><td>{{ $i + 1 }}</td><td>{{ $c['ad_soyad'] }}</td><td>{{ $c['gorev'] ?? '—' }}</td><td></td></tr>
+            @endforeach
+        </table>
+    @endif
 
     <h2 style="background:#f59e0b">İZİN TÜRÜ</h2>
     <div class="turler">
@@ -75,6 +92,21 @@
             <span style="background:#6b7280">Belirtilmedi</span>
         @endforelse
     </div>
+
+    @if ($form->kontroller !== null)
+        <h2 style="background:#0f766e">PTW OPERASYON KONTROLLERİ</h2>
+        <table class="liste">
+            @foreach (array_chunk($form->kontrolSatirlari(), 2) as $cift)
+                <tr>
+                    @foreach ($cift as $k)
+                        @php $renk = ['uygun' => '#047857', 'uygun_degil' => '#b91c1c', 'bekliyor' => '#b45309'][$k['durum']] ?? '#555'; @endphp
+                        <td style="width:30%;background:#f7f7f7;font-weight:bold">{{ $k['ad'] }}</td>
+                        <td style="width:20%;color:{{ $renk }}">{{ $k['etiket'] }}</td>
+                    @endforeach
+                </tr>
+            @endforeach
+        </table>
+    @endif
 
     @if ($form->uyarilar || $form->ozel_kosullar)
         <h2 style="background:#dc2626">UYARILAR VE ÖZEL KOŞULLAR</h2>

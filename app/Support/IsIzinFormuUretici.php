@@ -14,7 +14,7 @@ class IsIzinFormuUretici
 {
     public static function pdf(IsIzinFormu $form): StreamedResponse
     {
-        $form->loadMissing('firma');
+        $form->loadMissing('firma', 'sahaDenetimi');
 
         $pdf = Pdf::loadView('pdf.is-izin-formu', [
             'form' => $form,

@@ -20,6 +20,25 @@
 
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'calisma_izin_formu'])
 
+    {{-- ÖZET KARTLARI — seçili firma, yoksa tüm firmalar --}}
+    @php $oz = $this->ozet; @endphp
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
+        @foreach ([
+            ['Toplam izin', $oz['toplam'], '#0f766e'],
+            ['Aktif izin', $oz['aktif'], '#10b981'],
+            ['Onay bekleyen', $oz['onay_bekleyen'], '#f59e0b'],
+            ['Süresi geçen', $oz['suresi_gecen'], '#ef4444'],
+        ] as [$etiket, $sayi, $renk])
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.75rem;padding:.8rem 1rem;border-left:4px solid {{ $renk }}">
+                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $etiket }}</div>
+                <div style="font-size:1.6rem;font-weight:700;color:{{ $renk }}">{{ $sayi }}</div>
+            </div>
+        @endforeach
+    </div>
+    <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:-.6rem">
+        {{ $this->firma ? $this->firma->unvan.' için' : 'Tüm firmalarınız için' }} — aktif izin: onaylanmış ve geçerlilik süresi içinde.
+    </p>
+
     {{-- 0. KÜTÜPHANE --}}
     <x-filament::section icon="heroicon-o-book-open" icon-color="primary">
         <x-slot name="heading">İzin Kütüphanesi</x-slot>
@@ -114,6 +133,56 @@
             </div>
         </x-filament::section>
 
+        {{-- 2b. ÇALIŞANLAR, TAŞERON, SAHA DENETİMİ --}}
+        <x-filament::section icon="heroicon-o-users" icon-color="info">
+            <x-slot name="heading">İzinde Çalışacak Personel</x-slot>
+            <x-slot name="description">Firmanın aktif çalışanlarından seçin — ad ve görev izne kaydedilir.</x-slot>
+
+            @if ($this->firmaCalisanlari->isEmpty())
+                <p style="font-size:.82rem;color:rgb(107 114 128)">
+                    Bu firmada kayıtlı aktif çalışan yok. Firma → Çalışanlar sekmesinden ekleyebilirsiniz.
+                </p>
+            @else
+                <div x-data="{ ara: '' }">
+                    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                        <input type="search" x-model="ara" placeholder="Çalışan ara..." style="{{ $inp }};max-width:18rem;margin-top:0">
+                        <span style="font-size:.8rem;color:rgb(107 114 128)">{{ count($secilenCalisanlar) }} kişi seçildi</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.4rem;margin-top:.6rem;max-height:16rem;overflow-y:auto">
+                        @foreach ($this->firmaCalisanlari as $c)
+                            @php $secili = in_array($c->id, $secilenCalisanlar, true); @endphp
+                            <button type="button" wire:click="calisanToggle({{ $c->id }})"
+                                x-show="ara === '' || '{{ addslashes(mb_strtolower(strtr($c->ad_soyad.' '.$c->gorev, ['İ' => 'i', 'I' => 'ı']))) }}'.includes(ara.toLocaleLowerCase('tr'))"
+                                style="text-align:left;padding:.45rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
+                                    border:1px solid {{ $secili ? '#0ea5e9' : 'rgb(107 114 128 / .3)' }};
+                                    background:{{ $secili ? 'rgb(14 165 233 / .08)' : 'transparent' }}">
+                                {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
+                                @if ($c->gorev)
+                                    <span style="color:rgb(107 114 128)">· {{ $c->gorev }}</span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem">
+                <div>
+                    <label style="{{ $lbl }}">Taşeron (varsa)</label>
+                    <input type="text" wire:model="taseron" placeholder="Taşeron firma adı — yoksa boş bırakın" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Bağlı Saha Denetimi</label>
+                    <select wire:model="sahaDenetimiId" style="{{ $inp }}">
+                        <option value="">Bağlantı yok</option>
+                        @foreach ($this->sahaDenetimleri as $id => $ad)
+                            <option value="{{ $id }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </x-filament::section>
+
         {{-- 3. GÜVENLİK ÖNLEMLERİ --}}
         <x-filament::section icon="heroicon-o-shield-check" icon-color="success">
             <x-slot name="heading">3. Güvenlik Önlemleri Kontrol Listesi</x-slot>
@@ -144,6 +213,25 @@
                             background:{{ $secili ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
                         {{ $kkd }}
                     </button>
+                @endforeach
+            </div>
+        </x-filament::section>
+
+        {{-- 4a. PTW OPERASYON KONTROLLERİ --}}
+        <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="success">
+            <x-slot name="heading">PTW Operasyon Kontrolleri</x-slot>
+            <x-slot name="description">İzin türüne göre ilgisiz kontroller "Gerekli değil" gelir. Bekleyen veya uygun olmayan kontrol varken izin tam onaylanamaz.</x-slot>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem">
+                @foreach (config('isg.is_izin.operasyon_kontrolleri') as $anahtar => $k)
+                    <div>
+                        <label style="{{ $lbl }}">{{ $k['ad'] }}</label>
+                        <select wire:model="kontroller.{{ $anahtar }}" style="{{ $inp }}">
+                            @foreach (config('isg.is_izin.kontrol_durumlari') as $d => $etiket)
+                                <option value="{{ $d }}">{{ $etiket }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 @endforeach
             </div>
         </x-filament::section>
@@ -210,6 +298,11 @@
                                 <td style="padding:.4rem .5rem">
                                     <strong>{{ $f->izin_no }}</strong><br>
                                     <span style="color:rgb(107 114 128)">{{ $f->calisma_alani ?: 'Alan belirtilmedi' }}</span>
+                                    @if ($f->calisanlar || $f->taseron)
+                                        <br><span style="font-size:.72rem;color:rgb(107 114 128)">
+                                            {{ $f->calisanlar ? count($f->calisanlar).' çalışan' : '' }}{{ $f->calisanlar && $f->taseron ? ' · ' : '' }}{{ $f->taseron ? 'Taşeron: '.$f->taseron : '' }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td style="padding:.4rem .5rem;white-space:nowrap">
                                     <span style="display:inline-block;padding:.1rem .5rem;border-radius:.4rem;font-size:.72rem;color:#fff;background:{{ $durumRenk[$f->durum] ?? '#6b7280' }}">
@@ -227,6 +320,20 @@
                                         2: {{ $f->onay2Etiketi() }}{{ $f->onay2_tarih ? ' ('.$f->onay2_tarih->format('d.m H:i').')' : '' }}
                                         @if ($f->red_gerekcesi)
                                             <br><span style="color:#ef4444">Ret: {{ $f->red_gerekcesi }}</span>
+                                        @endif
+                                    @endif
+                                    @if ($f->kontroller !== null)
+                                        @php
+                                            $uygunDegil = $f->kontrolAdlari('uygun_degil');
+                                            $bekleyen = $f->kontrolAdlari('bekliyor');
+                                        @endphp
+                                        <br>
+                                        @if ($uygunDegil)
+                                            <span style="color:#ef4444">✕ Uygun değil: {{ implode(', ', $uygunDegil) }}</span>
+                                        @elseif ($bekleyen)
+                                            <span style="color:#f59e0b">⏳ {{ count($bekleyen) }} kontrol bekliyor</span>
+                                        @else
+                                            <span style="color:#10b981">✓ Kontroller tamam</span>
                                         @endif
                                     @endif
                                 </td>
@@ -251,6 +358,9 @@
                                         <x-filament::button size="xs" color="gray" wire:click="islemBaslat({{ $f->id }}, 'kapat')">Kapat (Saha Teslim)</x-filament::button>
                                     @endif
 
+                                    @if (! in_array($f->durum, ['kapatildi', 'iptal']))
+                                        <x-filament::button size="xs" color="success" outlined wire:click="islemBaslat({{ $f->id }}, 'kontroller')">Kontroller</x-filament::button>
+                                    @endif
                                     <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $f->id }})">PDF</x-filament::button>
                                     @if (! in_array($f->durum, ['kapatildi', 'iptal']))
                                         <x-filament::button size="xs" color="danger" wire:click="iptalEt({{ $f->id }})">İptal</x-filament::button>
@@ -262,7 +372,21 @@
                             @if ($islemId === $f->id)
                                 <tr>
                                     <td colspan="5" style="padding:.6rem .5rem;background:rgb(107 114 128 / .06)">
-                                        @if ($islemTuru === 'reddet')
+                                        @if ($islemTuru === 'kontroller')
+                                            <strong style="font-size:.82rem">PTW operasyon kontrolleri: {{ $f->izin_no }}</strong>
+                                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem;margin-top:.5rem">
+                                                @foreach (config('isg.is_izin.operasyon_kontrolleri') as $anahtar => $k)
+                                                    <div>
+                                                        <label style="{{ $lbl }}">{{ $k['ad'] }}</label>
+                                                        <select wire:model="islemKontroller.{{ $anahtar }}" style="{{ $inp }}">
+                                                            @foreach (config('isg.is_izin.kontrol_durumlari') as $d => $etiket)
+                                                                <option value="{{ $d }}">{{ $etiket }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @elseif ($islemTuru === 'reddet')
                                             <label style="{{ $lbl }}">Ret Gerekçesi <span style="color:#ef4444">*</span></label>
                                             <textarea wire:model="islemNotu" rows="2" style="{{ $inp }};font-family:inherit;font-size:.82rem"></textarea>
                                         @else
@@ -273,7 +397,7 @@
                                             </label>
                                         @endif
                                         <div style="margin-top:.6rem;display:flex;gap:.4rem">
-                                            <x-filament::button size="xs" wire:click="islemiUygula">Uygula</x-filament::button>
+                                            <x-filament::button size="xs" wire:click="islemiUygula">{{ $islemTuru === 'kontroller' ? 'Kontrolleri Kaydet' : 'Uygula' }}</x-filament::button>
                                             <x-filament::button size="xs" color="gray" wire:click="islemIptal">Vazgeç</x-filament::button>
                                         </div>
                                     </td>
