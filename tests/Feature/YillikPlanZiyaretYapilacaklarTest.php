@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\YillikPlanlar as PlanSayfasi;
+use App\Filament\Pages\YillikPlan\YillikCalismaPlani as PlanSayfasi;
 use App\Filament\Pages\ZiyaretProgrami as ZiyaretSayfasi;
 use App\Filament\Widgets\BuAyZiyaretlerWidget;
 use App\Models\Firma;

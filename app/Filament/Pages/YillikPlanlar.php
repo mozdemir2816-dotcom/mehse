@@ -18,32 +18,36 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Throwable;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
- * Yıllık Planlar — isgpratik 86-90.jpg. 3 sekme: Çalışma Planı / Eğitim
- * Planı (ikisi de ay durum matrisli — Boş→Planlandı→Tamamlandı) /
- * Değerlendirme Raporu (satır bazlı serbest metin, ay matrisi yok).
+ * Yıllık Planlar ortak tabanı — isgpratik 86-90.jpg. Kullanıcı isteğiyle
+ * (01.10.2026) üç AYRI menü sayfası: Pages/YillikPlan/YillikCalismaPlani,
+ * YillikEgitimPlani, YillikDegerlendirmeRaporu. Üçü aynı YillikPlan kaydını
+ * (firma + yıl) düzenler; her sayfa yalnız kendi bölümünü gösterir ($planTuru).
+ * Bu sınıf abstract — Filament keşfi atlar, rota üretmez.
  */
-class YillikPlanlar extends Page
+abstract class YillikPlanlar extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-
     protected string $view = 'filament.pages.yillik-planlar';
-
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
     protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
 
-    protected static ?int $navigationSort = 30;
+    /** 'calisma' | 'egitim' | 'degerlendirme' — alt sınıf belirler. */
+    protected static string $planTuru = 'calisma';
 
-    protected static ?string $slug = 'yillik-planlar';
+    /**
+     * Üç sayfa da eski tek sayfanın yetki anahtarını ('yillik-planlar') kullanır;
+     * verilmiş yetkiler bölünmeden geçerli kalır.
+     */
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
 
-    protected static ?string $title = 'Yıllık Planlar';
-
-    protected static ?string $navigationLabel = 'Yıllık Planlar';
+        return $user && $user->aktif && $user->sayfaErisimiVarMi('yillik-planlar');
+    }
 
     public const AYLAR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
@@ -53,6 +57,7 @@ class YillikPlanlar extends Page
 
     public int $yil;
 
+    #[Locked]
     public string $sekme = 'calisma';
 
     public ?string $yeniFaaliyet = null;
@@ -80,10 +85,16 @@ class YillikPlanlar extends Page
 
     public function mount(): void
     {
+        $this->sekme = static::$planTuru;
         $this->yil = (int) now()->format('Y');
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
+        }
+
+        // Diğer yıllık plan sayfasından geçişte aynı yıl açılsın.
+        if ($yil = request()->integer('yil')) {
+            $this->yil = $yil;
         }
     }
 
@@ -355,7 +366,7 @@ class YillikPlanlar extends Page
             default => $p->update(['faaliyetler' => $icerik['faaliyetler']]),
         };
 
-        Notification::make()->title('Bu sekme varsayılan içeriğe sıfırlandı (otomatik dolduruldu)')->success()->send();
+        Notification::make()->title('Plan varsayılan içeriğe sıfırlandı (otomatik dolduruldu)')->success()->send();
     }
 
     /**
@@ -429,7 +440,7 @@ class YillikPlanlar extends Page
                 ->visible(fn () => $this->plan() !== null && in_array($this->sekme, ['calisma', 'egitim'], true))
                 ->requiresConfirmation()
                 ->modalHeading('Standart şablon uygulansın mı?')
-                ->modalDescription(fn () => 'Bu sekmedeki ('.($this->sekme === 'egitim' ? 'eğitim planı' : 'çalışma planı').') tüm satırlar standart şablonla değiştirilecek: '
+                ->modalDescription(fn () => 'Bu plandaki ('.($this->sekme === 'egitim' ? 'eğitim planı' : 'çalışma planı').') tüm satırlar standart şablonla değiştirilecek: '
                     .($this->sekme === 'egitim'
                         ? '5 bölümlü eğitim planı (4. bölüm "İşe ve İşyerine Özgü Riskler" yalnız inşaat firmalarında dolu gelir).'
                         : '36 faaliyet; ana konu, periyot, sorumlu ve mevzuat/kayıt notlarıyla.')

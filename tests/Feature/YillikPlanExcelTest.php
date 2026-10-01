@@ -3,7 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\EgitimKatilim;
-use App\Filament\Pages\YillikPlanlar;
+use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
+use App\Filament\Pages\YillikPlan\YillikEgitimPlani;
 use App\Models\Firma;
 use App\Models\User;
 use App\Models\YillikPlan;
@@ -148,20 +149,18 @@ class YillikPlanExcelTest extends TestCase
         $plan = YillikPlan::firmaYilIcin($firma, 2026);
         $plan->update(['faaliyetler' => []]);
 
-        Livewire::test(YillikPlanlar::class)
+        Livewire::test(YillikCalismaPlani::class)
             ->set('firmaId', $firma->id)
             ->set('yil', 2026)
-            ->set('sekme', 'calisma')
             ->callAction('sablonuUygula')
             ->callAction('calismaExcel')
             ->assertFileDownloaded('yillik-calisma-plani-ornek-insaat-ltd-sti-2026.xlsx');
 
         $this->assertCount(36, $plan->fresh()->faaliyetler);
 
-        Livewire::test(YillikPlanlar::class)
+        Livewire::test(YillikEgitimPlani::class)
             ->set('firmaId', $firma->id)
             ->set('yil', 2026)
-            ->set('sekme', 'egitim')
             ->callAction('egitimExcel', ['imzali' => '1'])
             ->assertFileDownloaded('yillik-egitim-plani-ornek-insaat-ltd-sti-2026.xlsx');
     }

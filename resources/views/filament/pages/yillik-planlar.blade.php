@@ -9,10 +9,18 @@
 
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
-        İSG mevzuatına uygun yıllık çalışma planı, eğitim planı ve değerlendirme raporu
-        oluşturun. Çalışma planında her ayın P (Planlandı) ve G (Gerçekleşti) hücresine
-        tıklayarak işaretleyin; o ay P olan maddeler Ziyaret Programı'nda o ayın ziyaret
-        yapılacaklar listesine otomatik gelir.
+        @switch ($sekme)
+            @case('egitim')
+                Firmanın yıllık eğitim planı. Ay hücrelerine tıklayarak durumu Boş → Planlandı → Tamamlandı
+                arasında değiştirin; o ay planlanan eğitimler Ziyaret Programı'ndaki yapılacaklar listesine gelir.
+                @break
+            @case('degerlendirme')
+                Yıl sonu değerlendirme raporu — yapılan çalışmaların tarih, tekrar sayısı ve sonuçlarını girin.
+                @break
+            @default
+                Her ayın P (Planlandı) ve G (Gerçekleşti) hücresine tıklayarak işaretleyin; o ay P olan
+                maddeler Ziyaret Programı'nda o ayın ziyaret yapılacaklar listesine otomatik gelir.
+        @endswitch
     </p>
 
     @php
@@ -61,17 +69,18 @@
     </x-filament::section>
 
     @if ($p)
-        {{-- SEKMELER --}}
-        <div style="display:flex;gap:.4rem;margin-bottom:1rem">
-            @foreach (['calisma' => 'Yıllık Çalışma Planı', 'egitim' => 'Yıllık Eğitim Planı', 'degerlendirme' => 'Yıllık Değerlendirme Raporu'] as $anahtar => $etiket)
-                @php $aktif = $sekme === $anahtar; @endphp
-                <button type="button" wire:click="$set('sekme', '{{ $anahtar }}')"
-                    style="padding:.5rem .9rem;border-radius:.5rem;cursor:pointer;font-size:.82rem;font-weight:600;
-                        border:1px solid {{ $aktif ? $mor : 'rgb(107 114 128 / .3)' }};
-                        background:{{ $aktif ? 'rgb(139 92 246 / .1)' : 'transparent' }};
-                        color:{{ $aktif ? $mor : 'inherit' }}">
+        {{-- Diğer yıllık plan sayfaları (aynı firma + yıl ile) --}}
+        <div style="display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap;font-size:.78rem;color:rgb(107 114 128);align-items:center">
+            Aynı firmanın diğer planları:
+            @foreach ([
+                'calisma' => [\App\Filament\Pages\YillikPlan\YillikCalismaPlani::class, 'Yıllık Çalışma Planı'],
+                'egitim' => [\App\Filament\Pages\YillikPlan\YillikEgitimPlani::class, 'Yıllık Eğitim Planı'],
+                'degerlendirme' => [\App\Filament\Pages\YillikPlan\YillikDegerlendirmeRaporu::class, 'Yıllık Değerlendirme Raporu'],
+            ] as $anahtar => [$sinif, $etiket])
+                @continue($anahtar === $sekme)
+                <x-filament::link :href="$sinif::getUrl(['firma' => $firmaId, 'yil' => $yil])" size="sm" icon="heroicon-o-arrow-top-right-on-square">
                     {{ $etiket }}
-                </button>
+                </x-filament::link>
             @endforeach
         </div>
 

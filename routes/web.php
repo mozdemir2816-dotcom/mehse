@@ -9,6 +9,9 @@ use Illuminate\Validation\Rule;
 // Kök adres doğrudan panele yönlensin (stok Laravel karşılama sayfası yerine).
 Route::redirect('/', '/admin');
 
+// Yıllık Planlar tek sayfadan üç ayrı sayfaya bölündü (01.10.2026) — eski yer imleri.
+Route::redirect('/admin/yillik-planlar', '/admin/yillik-calisma-plani');
+
 // Topbar tema seçicisi (filament.components.tema-secici) seçimi hesaba kaydeder;
 // böylece tema her cihazda aynı gelir. Ayarlar sayfası aynı alanı yazar.
 Route::post('/mehse/ayar/tema', function (Request $request) {

@@ -125,7 +125,7 @@
                 </span>
             </x-slot>
             <x-slot name="afterHeader">
-                <x-filament::link :href="\App\Filament\Pages\YillikPlanlar::getUrl(['firma' => $this->firmaId])" size="sm" icon="heroicon-o-arrow-top-right-on-square">
+                <x-filament::link :href="\App\Filament\Pages\YillikPlan\YillikCalismaPlani::getUrl(['firma' => $this->firmaId, 'yil' => $yil])" size="sm" icon="heroicon-o-arrow-top-right-on-square">
                     Yıllık Plan'da aç
                 </x-filament::link>
             </x-slot>

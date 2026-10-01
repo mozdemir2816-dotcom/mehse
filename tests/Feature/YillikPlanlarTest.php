@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\YillikPlanlar as PlanSayfasi;
+use App\Filament\Pages\YillikPlan\YillikCalismaPlani as PlanSayfasi;
+use App\Filament\Pages\YillikPlan\YillikDegerlendirmeRaporu;
+use App\Filament\Pages\YillikPlan\YillikEgitimPlani;
 use App\Models\EgitimKatilim;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
@@ -346,9 +348,8 @@ class YillikPlanlarTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
-        $component = Livewire::test(PlanSayfasi::class)
+        $component = Livewire::test(YillikEgitimPlani::class)
             ->set('firmaId', $firma->id)
-            ->set('sekme', 'egitim')
             ->call('ayDurumDegistir', 'egitimler', 0, 0)
             ->call('varsayilanaSifirla');
 
@@ -421,10 +422,9 @@ class YillikPlanlarTest extends TestCase
         RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => '2027-08-01']);
         EgitimKatilim::create(['firma_id' => $firma->id, 'belge_tarihi' => '2027-06-10']);
 
-        Livewire::test(PlanSayfasi::class)
+        Livewire::test(YillikDegerlendirmeRaporu::class)
             ->set('firmaId', $firma->id)
             ->set('yil', 2027)
-            ->set('sekme', 'degerlendirme')
             ->callAction('degerlendirmeSistemdenDoldur')
             ->assertNotified();
 
