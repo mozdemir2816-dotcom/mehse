@@ -152,6 +152,26 @@ return [
         ],
     ],
 
+    // Doküman Yönetimi (isgsuite) — arsiv_dosyalari.kategori anahtarları.
+    'dokuman' => [
+        'yaklasan_gun' => 30,
+        'kategoriler' => [
+            'risk_degerlendirmesi' => 'Risk Değerlendirmesi',
+            'acil_durum' => 'Acil Durum Planı / Kroki',
+            'yillik_plan' => 'Yıllık Plan',
+            'egitim' => 'Eğitim',
+            'periyodik_kontrol' => 'Periyodik Kontrol',
+            'ortam_olcumu' => 'Ortam Ölçümü',
+            'talimat' => 'Talimat / Prosedür',
+            'sozlesme' => 'Sözleşme / Görevlendirme',
+            'kimyasal' => 'Kimyasal / SDS / PKD',
+            'olay' => 'İş Kazası / Olay',
+            'resmi_yazi' => 'Resmî Yazışma',
+            'mevzuat' => 'Mevzuat',
+            'diger' => 'Diğer',
+        ],
+    ],
+
     // Ana Sayfa — görev durumu (isgsuite "Ana sayfa — görev durumum").
     'ana_sayfa' => [
         // "Yaklaşan" sütunu: termini bu kadar gün içinde olan görevler.

@@ -9,7 +9,9 @@ use App\Filament\Pages\SaglikGozetimi as SaglikGozetimiSayfasi;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Filament\Pages\DokumanYonetimi;
 use App\Models\AcilDurumPlani;
+use App\Models\ArsivDosya;
 use App\Models\Bildirim;
 use App\Models\Firma;
 use App\Models\KimyasalUrun;
@@ -176,6 +178,19 @@ class BildirimTarayici
             ->whereDate('sonraki_gozden_gecirme', '<=', $bugun->copy()->addDays($esik))->min('sonraki_gozden_gecirme');
         if ($pkd) {
             $ekle('pkd', Carbon::parse($pkd)->lt($bugun) ? 'kritik' : 'uyari', 'Patlamadan korunma dokümanı gözden geçirme termini', 'PKD '.Carbon::parse($pkd)->format('d.m.Y').' tarihinde gözden geçirilmeli.', Carbon::parse($pkd), static::url(fn () => PkdSicili::getUrl(['firma' => $firma->id])));
+        }
+
+        // Doküman Yönetimi: geçerlilik sonu dolan / yaklaşan aktif dokümanlar
+        $dokumanlar = ArsivDosya::query()->where('firma_id', $firma->id)->where('aktif', true)->whereNotNull('gecerlilik_sonu')
+            ->whereDate('gecerlilik_sonu', '<=', $bugun->copy()->addDays($esik))->orderBy('gecerlilik_sonu')->get();
+        $dokUrl = static::url(fn () => DokumanYonetimi::getUrl(['firma' => $firma->id]));
+        $dolan = $dokumanlar->filter(fn (ArsivDosya $d) => $d->gecerlilik_sonu->lt($bugun));
+        $yakin = $dokumanlar->filter(fn (ArsivDosya $d) => $d->gecerlilik_sonu->gte($bugun));
+        if ($dolan->isNotEmpty()) {
+            $ekle('dokuman:gecti', 'kritik', 'Doküman geçerliliği doldu', $dolan->count().' doküman: '.Str::limit($dolan->map(fn ($d) => $d->etiket())->implode(', '), 120).'.', $dolan->first()->gecerlilik_sonu, $dokUrl);
+        }
+        if ($yakin->isNotEmpty()) {
+            $ekle('dokuman:yakin', 'uyari', 'Doküman geçerliliği yaklaşıyor', $yakin->count().' doküman: '.Str::limit($yakin->map(fn ($d) => $d->etiket())->implode(', '), 120).'.', $yakin->first()->gecerlilik_sonu, $dokUrl);
         }
 
         // Ana Sayfa'daki tarihli takipler (periyodik kontrol, KKD, ortam, DÖF, eğitim)
