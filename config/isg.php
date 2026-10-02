@@ -2182,6 +2182,10 @@ return [
     | konu listesini gösteren "özel" eğitimlerdir.
     */
     'egitim' => [
+        // Sonuçlandır adımında puan girilirse bunun altındakiler belge almaz
+        // ve yenileme takibinde eğitimli sayılmaz (puan boşsa yalnız katılım).
+        'gecme_puani' => 60,
+
         // Tehlike sınıfına göre İLK DEFA verilen eğitimin toplam süresi
         // (Çalışanların İSG Eğitimlerinin Usul ve Esasları Hak. Yön. Ek-1:
         // 8/12/16 saat) — kullanıcı tarafından doğrulandı: 4 blok (Genel/Sağlık/
@@ -2432,6 +2436,23 @@ return [
                 'İlkyardım (Sağlık Bakanlığı sertifikalı personel için): temel yaşam desteği, kanama, yaralanmaya acil müdahale',
                 'Haberleşme ve koordinasyon: acil durumlarda ekipler arası iletişim ve dış kurumlarla irtibat',
                 'Tatbikat ve değerlendirme: yıllık tatbikat zorunluluğu, kayıtlar ve eksikliklerin giderilmesi',
+            ]],
+            // isgsuite "Özel Eğitimler" — hijyen uzmanlık eğitimleri (4 saat, yüz yüze).
+            'isyeri_hijyen' => ['ad' => 'İşyeri İçi Hijyen ve Sanitasyon Bilgilendirme Eğitimi', 'maddeler' => [
+                'Kişisel hijyenin temel ilkeleri',
+                'El hijyeni ve doğru el yıkama tekniği',
+                'İş kıyafetleri ve kişisel koruyucu donanım temizliği',
+                'Temizlik, dezenfeksiyon ve sanitasyon kavramları',
+                'Biyolojik riskler ve bulaşma yolları',
+                'Çapraz bulaşmanın önlenmesi',
+            ]],
+            'gida_su_hijyen' => ['ad' => 'Gıda ve Su Sektöründe Hijyen Eğitimi', 'maddeler' => [
+                'Gıda ve su hijyeninin amacı ve çalışan sorumlulukları',
+                'Kişisel hijyen, el yıkama ve el antiseptiği',
+                'Bulaşma yolları ve çapraz bulaşmanın önlenmesi',
+                'Gıda kaynaklı biyolojik, kimyasal ve fiziksel tehlikeler',
+                'İçme ve kullanma suyunun güvenliği; su deposu ve dağıtım',
+                'Soğuk zincir, sıcaklık kontrolü ve güvenli depolama',
             ]],
         ],
     ],

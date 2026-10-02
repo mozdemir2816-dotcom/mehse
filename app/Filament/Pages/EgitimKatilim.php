@@ -672,7 +672,7 @@ class EgitimKatilim extends Page
             'logo_konumu' => 'sol',
             'cerceve' => 'sade',
             'konu_icerigi' => $kayit->konu_secimleri,
-            'katilimcilar' => $kayit->katilimcilar,
+            'katilimcilar' => $kayit->belgeAlacakKatilimcilar(),
         ]);
         $s->belge_no = 'SRT · '.$kayit->belge_no;
         $s->setRelation('firma', $kayit->firma);

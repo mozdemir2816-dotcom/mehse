@@ -52,4 +52,38 @@ class EgitimKatilim extends Model
     {
         return count($this->katilimcilar ?? []);
     }
+
+    public static function gecmePuani(): int
+    {
+        return (int) config('isg.egitim.gecme_puani', 60);
+    }
+
+    /**
+     * "Sonuçlandır" adımı yapıldı mı — her katılımcıda katıldı bilgisi var.
+     * Sonuç girilmemiş (eski) kayıtlarda herkes katılmış ve başarılı sayılır.
+     */
+    public function sonuclandiMi(): bool
+    {
+        $k = $this->katilimcilar ?? [];
+
+        return $k !== [] && collect($k)->every(fn (array $x) => array_key_exists('katildi', $x));
+    }
+
+    /** Katıldı (bilgi yoksa evet) ve puanı varsa geçme puanının üstünde. */
+    public static function katilimciBasariliMi(array $kisi): bool
+    {
+        if (array_key_exists('katildi', $kisi) && ! $kisi['katildi']) {
+            return false;
+        }
+
+        $puan = $kisi['puan'] ?? null;
+
+        return $puan === null || $puan === '' || (int) $puan >= static::gecmePuani();
+    }
+
+    /** @return array<int, array<string, mixed>> belge almaya hak kazananlar */
+    public function belgeAlacakKatilimcilar(): array
+    {
+        return array_values(array_filter($this->katilimcilar ?? [], fn (array $k) => static::katilimciBasariliMi($k)));
+    }
 }
