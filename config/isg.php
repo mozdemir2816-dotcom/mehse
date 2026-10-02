@@ -2847,6 +2847,35 @@ return [
     | 'zorunlu' = uygunluk kontrolünde bu türdeki firma için aranan belgeler.
     | Taşeron çalışanları ana personel listesine (calisanlar) eklenmez.
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Ziyaretçi Yönetimi — isgsuite "Ziyaretçi Yönetimi"
+    |--------------------------------------------------------------------------
+    | Süreli QR'lı geçiş kartı. 'kurallar' kartın arkasında / altında basılan
+    | kısa ziyaretçi güvenlik kurallarıdır (işyerine göre değiştirilebilir).
+    */
+    'ziyaretci' => [
+        'durumlar' => [
+            'planli' => 'Planlandı',
+            'gecerli' => 'Geçerli',
+            'icerde' => 'İçeride',
+            'cikti' => 'Çıkış yaptı',
+            'suresi_doldu' => 'Süresi doldu',
+            'iptal' => 'İptal',
+        ],
+        'varsayilan_sure_saat' => 8,
+        'kurallar' => [
+            'Bu kartı işyerinde bulunduğunuz süre boyunca görünür şekilde taşıyın.',
+            'Refakatçiniz olmadan üretim / saha alanlarına girmeyin.',
+            'Size verilen kişisel koruyucu donanımı (baret, yelek, gözlük vb.) kullanın.',
+            'Yaya yollarını kullanın; forklift ve iş makinelerinden uzak durun.',
+            'Uyarı ve yasak levhalarına uyun; izinsiz fotoğraf / video çekmeyin.',
+            'Sigara yalnızca belirlenmiş alanlarda içilebilir.',
+            'Alarm duyduğunuzda refakatçinizi izleyerek en yakın acil toplanma alanına gidin.',
+            'Çıkışta kartı ve verilen donanımı güvenliğe teslim edin.',
+        ],
+    ],
+
     'taseron' => [
         'turler' => [
             'alt_isveren' => 'Alt İşveren',

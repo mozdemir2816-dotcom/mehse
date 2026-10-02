@@ -6,6 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
 
+// Ziyaretçi kartı QR doğrulaması — güvenlik görevlisi giriş yapmadan okutur.
+Route::get('/ziyaretci/{token}', function (string $token) {
+    $z = \App\Models\Ziyaretci::query()->with('firma')->where('token', $token)->first();
+
+    return response()->view('ziyaretci-dogrula', ['z' => $z], $z ? 200 : 404);
+})->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('ziyaretci.dogrula');
+
 // Kök adres doğrudan panele yönlensin (stok Laravel karşılama sayfası yerine).
 Route::redirect('/', '/admin');
 
