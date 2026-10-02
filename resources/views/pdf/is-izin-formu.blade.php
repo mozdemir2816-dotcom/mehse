@@ -153,6 +153,9 @@
             @if ($form->kapatan)
                 <tr><td colspan="4">Kapatan: {{ $form->kapatan }}</td></tr>
             @endif
+            @if ($form->kapanis_fotografi && is_file(storage_path('app/public/'.$form->kapanis_fotografi)))
+                <tr><td colspan="4">Saha kapanış kanıtı:<br><img src="{{ storage_path('app/public/'.$form->kapanis_fotografi) }}" style="max-width:60%;max-height:260px;margin-top:4px"></td></tr>
+            @endif
         </table>
     @endif
 
