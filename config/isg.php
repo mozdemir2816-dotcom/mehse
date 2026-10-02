@@ -304,6 +304,34 @@ return [
         'kapali' => 'Kapalı (önlem alındı)',
     ],
 
+    // Saha tehlike kategorileri (75) — isgsuite "İncelenecek tehlikeler".
+    // Hızlı Saha Bulgusu kategori listesi + AI Saha Analizi odak seçimi.
+    'saha_tehlike_kategorileri' => [
+        'Genel işyeri düzeni ve temizlik', 'Kayma, takılma ve düşme', 'Yüksekte çalışma', 'Merdivenler', 'İskeleler',
+        'Korkuluklar ve kenar koruma', 'Açıklıklar ve döşeme boşlukları', 'Çatı çalışmaları', 'İnşaat ve şantiye güvenliği', 'Kazı ve kanal çalışmaları',
+        'Yıkım çalışmaları', 'Kalıp ve beton işleri', 'Donatı ve demir işleri', 'Kaldırma ve taşıma işleri', 'Vinçler ve kaldırma ekipmanları',
+        'Sapan, halat ve kaldırma aksesuarları', 'Forklift ve iş makineleri', 'Araç-yaya trafiği', 'Makine ve ekipman güvenliği', 'Makine koruyucuları',
+        'Kilitleme/etiketleme ve enerji izolasyonu', 'Elektrik güvenliği', 'Elektrik panoları ve kablolar', 'Topraklama ve kaçak akım', 'Yangın güvenliği',
+        'Acil çıkışlar ve kaçış yolları', 'Yangın tüpleri ve yangın ekipmanları', 'Patlama ve parlama riski', 'Patlayıcı ortamlar', 'Sıcak işler',
+        'Kaynak, kesme ve taşlama', 'Kimyasal maddeler', 'Kimyasal etiketleme ve SDS', 'Kimyasal depolama', 'Sızıntı ve dökülmeler',
+        'Basınçlı kaplar', 'Tüpler ve basınçlı gazlar', 'Kapalı alanlar', 'Havalandırma', 'Toz ve silis maruziyeti',
+        'Asbest ihtimali', 'Gürültü', 'Titreşim', 'Aydınlatma', 'Isı, soğuk ve termal ortam',
+        'Radyasyon', 'Ergonomi', 'Manuel taşıma', 'Tekrarlı işler', 'Kişisel koruyucu donanımlar',
+        'İş kıyafeti ve görünürlük', 'Acil durum ve tahliye', 'İlk yardım', 'Sağlık hizmetleri ve hastane riskleri', 'Biyolojik riskler',
+        'Kesici-delici tıbbi atıklar', 'Gıda ve hijyen', 'Tarım ve hayvancılık', 'Orman ve peyzaj işleri', 'Maden ve agrega',
+        'Akü, pil ve enerji depolama', 'Şarj alanları', 'Isıl kaçak ve batarya yangını', 'Depo ve raf sistemleri', 'Yükleme-boşaltma rampaları',
+        'Atık yönetimi', 'Kanalizasyon ve atık su', 'Enerji ve elektrik üretim tesisleri', 'Su baskını ve doğal afetler', 'Psikososyal riskler',
+        'Çalışma izinleri ve talimatlar', 'Eğitim ve yetkinlik eksiklikleri', 'İşaretleme ve uyarı levhaları', 'İşyerinin bina ve eklentileri', 'Diğer görülebilir tehlikeler',
+    ],
+
+    // Hızlı Saha Bulgusu — 5×5 risk ölçeği etiketleri.
+    'saha_bulgu' => [
+        'olasilik' => [1 => 'Çok düşük', 2 => 'Düşük', 3 => 'Orta', 4 => 'Yüksek', 5 => 'Çok yüksek'],
+        'siddet' => [1 => 'Çok hafif', 2 => 'Hafif', 3 => 'Orta', 4 => 'Ciddi', 5 => 'Çok ciddi'],
+        'durumlar' => ['acik' => 'Açık', 'kapandi' => 'Kapandı'],
+        'max_foto' => 5,
+    ],
+
     // Patlamadan Korunma Dokümanı (PKD) Sicili — isgsuite "PKD Sicili".
     // Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hk. Yön.
     'pkd' => [

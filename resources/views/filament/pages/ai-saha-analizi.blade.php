@@ -106,6 +106,28 @@
                 style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
         </div>
 
+        <details style="margin-top:.75rem;border:1px solid rgb(107 114 128 / .3);border-radius:.6rem;padding:.6rem .8rem" x-data="{ ara: '' }">
+            <summary style="cursor:pointer;font-weight:600;font-size:.82rem">
+                İncelenecek tehlikeler ({{ count($odakKategoriler) }} / {{ count(config('isg.saha_tehlike_kategorileri')) }} kategori)
+            </summary>
+            <label style="display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;margin:.6rem 0">
+                <input type="checkbox" wire:model.live="tumunuTara" style="margin-top:.15rem">
+                <span><strong>Tüm görünür tehlikeleri tara</strong><br><span style="color:rgb(107 114 128)">Kategori seçimi AI'yı diğer açıkça görülen tehlikeleri değerlendirmekten alıkoymaz.</span></span>
+            </label>
+            <div style="display:flex;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap">
+                <input type="search" x-model="ara" placeholder="Kategori ara…" style="flex:1;min-width:180px;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                <x-filament::button size="xs" color="gray" wire:click="$set('odakKategoriler', {{ \Illuminate\Support\Js::from(config('isg.saha_tehlike_kategorileri')) }})">Tümünü seç</x-filament::button>
+                <x-filament::button size="xs" color="gray" wire:click="$set('odakKategoriler', [])">Temizle</x-filament::button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.2rem .8rem;max-height:18rem;overflow-y:auto">
+                @foreach (config('isg.saha_tehlike_kategorileri') as $k)
+                    <label x-show="! ara || {{ \Illuminate\Support\Js::from(mb_strtolower($k)) }}.includes(ara.toLocaleLowerCase('tr'))" style="display:flex;gap:.35rem;align-items:center;font-size:.78rem;cursor:pointer">
+                        <input type="checkbox" wire:model="odakKategoriler" value="{{ $k }}"> {{ $k }}
+                    </label>
+                @endforeach
+            </div>
+        </details>
+
         <x-filament::button color="primary" wire:click="fotograflariAnalizEt" wire:loading.attr="disabled" style="margin-top:1rem">
             <span wire:loading.remove wire:target="fotograflariAnalizEt">Fotoğrafları AI ile Analiz Et</span>
             <span wire:loading wire:target="fotograflariAnalizEt">Analiz ediliyor…</span>

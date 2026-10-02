@@ -65,6 +65,30 @@ class AiSahaAnalizi extends Page
 
     public ?string $baglamNotu = null;
 
+    /** @var array<int, string> İncelenecek tehlikeler (config isg.saha_tehlike_kategorileri) */
+    public array $odakKategoriler = [];
+
+    /** Açık: seçilen kategoriler öncelikli ama diğer görünen tehlikeler de raporlanır. */
+    public bool $tumunuTara = true;
+
+    /** Kategori seçimini AI bağlam notuna çevirir (Gemini istemine eklenir). */
+    public function aiBaglami(): ?string
+    {
+        $odak = collect($this->odakKategoriler)
+            ->intersect(config('isg.saha_tehlike_kategorileri'))
+            ->values();
+
+        if ($odak->isEmpty()) {
+            return $this->baglamNotu;
+        }
+
+        $talimat = 'İncelenecek tehlike kategorileri: '.$odak->implode(', ').'. '
+            .($this->tumunuTara
+                ? 'Bu kategorilere öncelik ver; fotoğrafta açıkça görülen diğer tehlikeleri de raporla.'
+                : 'Yalnız bu kategorilerdeki tehlikeleri raporla.');
+
+        return trim(($this->baglamNotu ? $this->baglamNotu.'. ' : '').$talimat);
+    }
     /** @var array<int, UploadedFile> */
     public array $yeniFotograflar = [];
 
@@ -221,7 +245,7 @@ class AiSahaAnalizi extends Page
             $yeniYollar[] = $dosya->store('saha-analiz-foto', 'public');
         }
 
-        $bulunanlar = GeminiSahaAnalizi::analizEt($yeniYollar, $this->baglamNotu);
+        $bulunanlar = GeminiSahaAnalizi::analizEt($yeniYollar, $this->aiBaglami());
 
         foreach ($bulunanlar as $b) {
             $this->bulgular[] = [

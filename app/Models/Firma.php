@@ -245,6 +245,11 @@ class Firma extends Model
         return $this->hasMany(IsKazasiRaporu::class);
     }
 
+    public function sahaBulgulari(): HasMany
+    {
+        return $this->hasMany(SahaBulgusu::class);
+    }
+
     public function pkdKayitlari(): HasMany
     {
         return $this->hasMany(PkdKaydi::class);
