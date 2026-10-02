@@ -124,6 +124,11 @@ return [
         'cok_tehlikeli' => 40,
     ],
 
+    // İşyeri hekimi / diğer sağlık personeli aylık asgari süresi (dk / çalışan) —
+    // İSG Hizmetleri Yönetmeliği; DSP yalnız çok tehlikeli sınıfta.
+    'hekim_aylik_dk' => ['az_tehlikeli' => 5, 'tehlikeli' => 10, 'cok_tehlikeli' => 15],
+    'dsp_aylik_dk' => ['az_tehlikeli' => 0, 'tehlikeli' => 0, 'cok_tehlikeli' => 10],
+
     // Ana Sayfa — görev durumu (isgsuite "Ana sayfa — görev durumum").
     'ana_sayfa' => [
         // "Yaklaşan" sütunu: termini bu kadar gün içinde olan görevler.

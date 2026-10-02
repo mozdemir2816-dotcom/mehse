@@ -21,6 +21,12 @@ class EditFirma extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('durumMerkezi')
+                ->label('Durum Merkezi')
+                ->icon('heroicon-o-building-office-2')
+                ->color('gray')
+                ->url(fn (Firma $record) => \App\Filament\Pages\IsyeriDurumMerkezi::getUrl(['firma' => $record->id])),
+
             IsyeriGirisAksiyonu::make(),
 
             Action::make('dosyaFihristi')
