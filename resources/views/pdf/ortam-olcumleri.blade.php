@@ -54,6 +54,7 @@
             <th style="width:80px">Ölçülen / Sınır Değer</th>
             <th style="width:64px">Sonuç</th>
             <th style="width:52px">Sonraki Ölçüm</th>
+            <th style="width:50px">Durum</th>
         </tr>
     </thead>
     <tbody>
@@ -75,9 +76,10 @@
                 </td>
                 <td class="s-{{ $m['sonuc'] ?? 'bekliyor' }}">{{ $sonuclar[$m['sonuc'] ?? 'bekliyor'] ?? ($m['sonuc'] ?? '') }}</td>
                 <td>{{ !empty($m['sonraki_olcum_tarihi']) ? \Illuminate\Support\Carbon::parse($m['sonraki_olcum_tarihi'])->format('d.m.Y') : '—' }}</td>
+                <td>{{ config('isg.ortam_olcum.termin_durumlari.'.\App\Models\OrtamOlcumu::terminDurumu($m)) }}@if (!empty($m['gecmis']))<br><span style="color:#555">{{ count($m['gecmis']) }} önceki ölçüm</span>@endif</td>
             </tr>
         @empty
-            <tr><td colspan="10" style="text-align:center;color:#888">Ölçüm girilmemiş.</td></tr>
+            <tr><td colspan="11" style="text-align:center;color:#888">Ölçüm girilmemiş.</td></tr>
         @endforelse
     </tbody>
 </table>

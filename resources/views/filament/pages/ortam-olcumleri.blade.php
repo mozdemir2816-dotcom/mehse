@@ -22,6 +22,31 @@
     </x-filament::section>
 
     @if ($this->firma)
+        @php
+            $terminEtiket = config('isg.ortam_olcum.termin_durumlari');
+            $terminRenk = ['guncel' => 'rgb(22 163 74 / .55)', 'yaklasan' => 'rgb(245 158 11 / .6)', 'gecikmis' => 'rgb(220 38 38 / .6)', 'olculmedi' => 'rgb(107 114 128 / .45)'];
+            $terminler = collect($satirlar)->map(fn ($s) => \App\Models\OrtamOlcumu::terminDurumu($s));
+            $sonucSay = collect($satirlar)->countBy(fn ($s) => $s['sonuc'] ?? 'bekliyor');
+        @endphp
+
+        @if (count($satirlar))
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem">
+                @foreach ([
+                    ['Toplam ölçüm', count($satirlar), 'inherit'],
+                    ['Güncel', $terminler->filter(fn ($t) => $t === 'guncel')->count(), '#16a34a'],
+                    ['Yaklaşan', $terminler->filter(fn ($t) => $t === 'yaklasan')->count(), '#d97706'],
+                    ['Gecikmiş', $terminler->filter(fn ($t) => $t === 'gecikmis')->count(), '#dc2626'],
+                    ['Ölçülmedi', $terminler->filter(fn ($t) => $t === 'olculmedi')->count(), 'rgb(107 114 128)'],
+                    ['Sınır değer aşımı', $sonucSay['asim'] ?? 0, '#dc2626'],
+                ] as [$ad, $sayi, $renk])
+                    <div style="{{ $kutu }};padding:.7rem 1rem">
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                        <div style="font-size:1.4rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         {{-- KATALOG + SERBEST EKLEME --}}
         <x-filament::section icon="heroicon-o-plus-circle" icon-color="gray" collapsible collapsed>
             <x-slot name="heading">Ölçüm Ekle</x-slot>
@@ -79,6 +104,7 @@
                                 <th style="padding:.5rem;width:150px">Ölçülen / Sınır / Birim</th>
                                 <th style="padding:.5rem;width:140px">Sonuç</th>
                                 <th style="padding:.5rem;width:130px">Sonraki Ölçüm</th>
+                                <th style="padding:.5rem;width:90px">Durum</th>
                                 <th style="padding:.5rem"></th>
                             </tr>
                         </thead>
@@ -114,11 +140,36 @@
                                         <input type="date" wire:model.blur="satirlar.{{ $i }}.sonraki_olcum_tarihi" style="{{ $girdi }}">
                                         <div style="font-size:.68rem;color:rgb(107 114 128)">boş = otomatik</div>
                                     </td>
-                                    <td style="padding:.4rem;text-align:center">
-                                        <button type="button" wire:click="olcumSil({{ $i }})"
+                                    <td style="padding:.4rem">
+                                        <span style="font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $terminRenk[$terminler[$i]] }}">{{ $terminEtiket[$terminler[$i]] }}</span>
+                                    </td>
+                                    <td style="padding:.4rem;text-align:center;white-space:nowrap">
+                                        @if (filled($s['olcum_tarihi'] ?? null))
+                                            <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-path" wire:click="yeniOlcum({{ $i }})" title="Mevcut sonucu geçmişe al, yeni ölçüm gir">Yeni ölçüm</x-filament::button>
+                                        @endif
+                                        <button type="button" wire:click="olcumSil({{ $i }})" wire:confirm="Bu ölçüm satırı (geçmişiyle birlikte) silinsin mi?"
                                             style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>
+                                @if (! empty($s['gecmis']))
+                                    <tr>
+                                        <td colspan="10" style="padding:0 .4rem .5rem">
+                                            <details style="font-size:.75rem;color:rgb(107 114 128)">
+                                                <summary style="cursor:pointer">Önceki ölçümler ({{ count($s['gecmis']) }})</summary>
+                                                <table style="width:100%;border-collapse:collapse;margin-top:.3rem">
+                                                    @foreach (array_reverse($s['gecmis']) as $g)
+                                                        <tr>
+                                                            <td style="padding:.2rem .4rem">{{ filled($g['olcum_tarihi'] ?? null) ? \Illuminate\Support\Carbon::parse($g['olcum_tarihi'])->format('d.m.Y') : '—' }}</td>
+                                                            <td style="padding:.2rem .4rem">{{ $g['olculen_deger'] ?? '—' }} {{ $g['birim'] ?? '' }} (sınır {{ $g['sinir_deger'] ?? '—' }})</td>
+                                                            <td style="padding:.2rem .4rem">{{ $this->sonuclar[$g['sonuc'] ?? 'bekliyor'] ?? '' }}</td>
+                                                            <td style="padding:.2rem .4rem">{{ $g['laboratuvar'] ?? '' }} {{ filled($g['rapor_no'] ?? null) ? '· '.$g['rapor_no'] : '' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </table>
+                                            </details>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

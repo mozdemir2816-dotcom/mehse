@@ -519,6 +519,17 @@ return [
             'asim' => 'Sınır Değer Aşımı',
         ],
 
+        // Termin durumu (sonraki ölçüm tarihine göre) — isgsuite "Durum" sütunu.
+        'termin_durumlari' => [
+            'guncel' => 'Güncel',
+            'yaklasan' => 'Yaklaşıyor',
+            'gecikmis' => 'Gecikmiş',
+            'olculmedi' => 'Ölçülmedi',
+        ],
+        'yaklasan_gun' => 60,
+        // Ölçülen değer sınırın bu oranına ulaşınca otomatik "Sınır Değere Yakın".
+        'sinir_yakin_orani' => 0.8,
+
         'katalog' => [
             'Fiziksel Etkenler' => [
                 ['ad' => 'Gürültü Maruziyeti (LEX,8h)', 'periyot_ay' => 24, 'birim' => 'dB(A)', 'sinir_deger' => '85'],

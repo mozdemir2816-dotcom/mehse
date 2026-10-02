@@ -116,4 +116,82 @@ class OrtamOlcumleriTest extends TestCase
         $firmalar = Livewire::test(OrtamOlcumleriSayfasi::class)->instance()->firmalar();
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    public function test_otomatik_sonuc_sayisal_karsilastirma(): void
+    {
+        $this->assertSame('asim', OrtamOlcumu::otomatikSonuc('88', '85'));
+        $this->assertSame('sinir', OrtamOlcumu::otomatikSonuc('70', '85'));
+        $this->assertSame('uygun', OrtamOlcumu::otomatikSonuc('3,2', '5'));
+        $this->assertNull(OrtamOlcumu::otomatikSonuc('300', '—'));
+        $this->assertNull(OrtamOlcumu::otomatikSonuc(null, '85'));
+    }
+
+    public function test_deger_girilince_sonuc_otomatik_guncellenir_ama_elle_secim_kaydedilir(): void
+    {
+        $sayfa = Livewire::test(OrtamOlcumleriSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'Fiziksel Etkenler', 'Gürültü Maruziyeti (LEX,8h)')
+            ->set('satirlar.0.olculen_deger', '91');
+
+        $this->assertSame('asim', $sayfa->get('satirlar.0.sonuc'));
+
+        // Sınırı "—" olan ölçümde elle seçilen sonuç korunur.
+        $sayfa->call('katalogdanEkle', 'Fiziksel Etkenler', 'Aydınlatma Şiddeti')
+            ->set('satirlar.1.olculen_deger', '250')
+            ->set('satirlar.1.sonuc', 'uygun')
+            ->call('kaydet');
+
+        $olcumler = OrtamOlcumu::where('firma_id', $this->firma->id)->sole()->olcumler;
+        $this->assertSame('asim', $olcumler[0]['sonuc']);
+        $this->assertSame('uygun', $olcumler[1]['sonuc']);
+    }
+
+    public function test_termin_durumu(): void
+    {
+        $this->assertSame('olculmedi', OrtamOlcumu::terminDurumu(['olcum_tarihi' => null]));
+        $this->assertSame('gecikmis', OrtamOlcumu::terminDurumu(['olcum_tarihi' => '2024-01-01', 'sonraki_olcum_tarihi' => now()->subDay()->toDateString()]));
+        $this->assertSame('yaklasan', OrtamOlcumu::terminDurumu(['olcum_tarihi' => '2025-01-01', 'sonraki_olcum_tarihi' => now()->addDays(30)->toDateString()]));
+        $this->assertSame('guncel', OrtamOlcumu::terminDurumu(['olcum_tarihi' => '2026-01-01', 'sonraki_olcum_tarihi' => now()->addYear()->toDateString()]));
+    }
+
+    public function test_yeni_olcum_eskisini_gecmise_alir_ve_excel_iki_sayfa_uretir(): void
+    {
+        $sayfa = Livewire::test(OrtamOlcumleriSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'Fiziksel Etkenler', 'Gürültü Maruziyeti (LEX,8h)')
+            ->set('satirlar.0.bolge', 'Pres hattı')
+            ->set('satirlar.0.olcum_tarihi', '2024-03-01')
+            ->set('satirlar.0.laboratuvar', 'ABC Lab')
+            ->set('satirlar.0.olculen_deger', '82')
+            ->call('kaydet')
+            ->call('yeniOlcum', 0)
+            ->set('satirlar.0.olcum_tarihi', '2026-03-01')
+            ->set('satirlar.0.olculen_deger', '86')
+            ->call('kaydet');
+
+        $m = OrtamOlcumu::where('firma_id', $this->firma->id)->sole()->olcumler[0];
+        $this->assertSame('Pres hattı', $m['bolge']);
+        $this->assertSame('ABC Lab', $m['laboratuvar']);
+        $this->assertSame('86', $m['olculen_deger']);
+        $this->assertSame('asim', $m['sonuc']);
+        $this->assertSame('2028-03-01', $m['sonraki_olcum_tarihi']);
+        $this->assertCount(1, $m['gecmis']);
+        $this->assertSame('82', $m['gecmis'][0]['olculen_deger']);
+        $this->assertSame('sinir', $m['gecmis'][0]['sonuc']);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'oot').'.xlsx';
+        ob_start();
+        OrtamOlcumuUretici::excel(OrtamOlcumu::sole())->sendContent();
+        file_put_contents($tmp, ob_get_clean());
+        $kitap = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmp);
+        @unlink($tmp);
+
+        $this->assertSame(['Ölçüm Defteri', 'Geçmiş Ölçümler'], $kitap->getSheetNames());
+        $this->assertSame('Güncel', $kitap->getSheet(0)->getCell('M2')->getValue());
+        $this->assertSame('01.03.2024', $kitap->getSheet(1)->getCell('C2')->getValue());
+
+        ob_start();
+        OrtamOlcumuUretici::pdf(OrtamOlcumu::sole())->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
 }

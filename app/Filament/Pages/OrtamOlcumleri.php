@@ -155,6 +155,55 @@ class OrtamOlcumleri extends Page
         $this->yeniPeriyot = 24;
     }
 
+    /** Ölçülen / sınır değer değişince sonuç sayısal karşılaştırmadan otomatik güncellenir. */
+    public function updatedSatirlar(mixed $deger, string $anahtar): void
+    {
+        [$i, $alan] = array_pad(explode('.', $anahtar, 2), 2, null);
+
+        if (! in_array($alan, ['olculen_deger', 'sinir_deger'], true) || ! isset($this->satirlar[$i])) {
+            return;
+        }
+
+        $oto = OrtamOlcumuModel::otomatikSonuc($this->satirlar[$i]['olculen_deger'] ?? null, $this->satirlar[$i]['sinir_deger'] ?? null);
+
+        if ($oto) {
+            $this->satirlar[$i]['sonuc'] = $oto;
+        }
+    }
+
+    /**
+     * Periyodik yeni ölçüm: mevcut sonuç satırın geçmişine taşınır, ölçüm
+     * alanları boşaltılır (parametre, nokta, sınır, birim, laboratuvar kalır).
+     */
+    public function yeniOlcum(int $index): void
+    {
+        $s = $this->satirlar[$index] ?? null;
+
+        if (! $s || blank($s['olcum_tarihi'] ?? null)) {
+            Notification::make()->title('Bu satırda henüz ölçüm yok — tarih ve değeri doğrudan girin')->warning()->send();
+
+            return;
+        }
+
+        $s['gecmis'] = [
+            ...($s['gecmis'] ?? []),
+            collect($s)->only(['olcum_tarihi', 'laboratuvar', 'rapor_no', 'olculen_deger', 'sinir_deger', 'birim', 'sonuc'])->all(),
+        ];
+        $s['olcum_tarihi'] = null;
+        $s['sonraki_olcum_tarihi'] = null;
+        $s['rapor_no'] = null;
+        $s['olculen_deger'] = null;
+        $s['sonuc'] = 'bekliyor';
+
+        $this->satirlar[$index] = $s;
+
+        Notification::make()
+            ->title('Önceki ölçüm geçmişe alındı')
+            ->body('Yeni ölçüm tarihini ve değerini girip Kaydet\'e basın.')
+            ->success()
+            ->send();
+    }
+
     public function olcumSil(int $index): void
     {
         unset($this->satirlar[$index]);
@@ -209,6 +258,17 @@ class OrtamOlcumleri extends Page
                     $this->kaydet(sessiz: true);
 
                     return OrtamOlcumuUretici::pdf($this->olcum());
+                }),
+
+            Action::make('excel')
+                ->label('Excel')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn () => filled($this->olcum()?->olcumler))
+                ->action(function () {
+                    $this->kaydet(sessiz: true);
+
+                    return OrtamOlcumuUretici::excel($this->olcum());
                 }),
         ];
     }
