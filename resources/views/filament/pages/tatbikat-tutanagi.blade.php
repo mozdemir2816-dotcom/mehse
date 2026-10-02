@@ -45,15 +45,42 @@
         {{-- 2. FİRMA & TATBİKAT BİLGİLERİ --}}
         <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="danger">
             <x-slot name="heading">2. Tatbikat Bilgileri</x-slot>
+
+            @if ($duzenlenenId)
+                <div style="{{ $kutu }};padding:.55rem .9rem;margin-bottom:.9rem;background:rgb(245 158 11 / .08);border-color:rgb(245 158 11 / .4);font-size:.82rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                    <span>✏️ Kayıtlı bir tatbikat düzenleniyor — kaydettiğinizde bu kayıt güncellenir.</span>
+                    <x-filament::button size="xs" color="gray" wire:click="yeniKayit">Vazgeç / Yeni Tatbikat</x-filament::button>
+                </div>
+            @endif
+
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tatbikat Tarihi</label>
+                    <label style="font-weight:600;font-size:.8rem">Durum</label>
+                    <select wire:model.live="durum"
+                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        @foreach ($this->durumlar as $anahtar => $ad)
+                            <option value="{{ $anahtar }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight:600;font-size:.8rem">Tatbikat Tarihi{{ $durum === 'planlandi' ? ' (planlanan)' : '' }}</label>
                     <input type="date" wire:model="tatbikatTarihi"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
                 <div>
                     <label style="font-weight:600;font-size:.8rem">Tatbikat Yeri</label>
                     <input type="text" wire:model="tatbikatYeri" placeholder="Örn: Üretim sahası ve idari bina"
+                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                </div>
+                <div>
+                    <label style="font-weight:600;font-size:.8rem">Toplanma Alanı</label>
+                    <input type="text" wire:model="toplanmaAlani" placeholder="Örn: Ana kapı önü otopark"
+                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                </div>
+                <div>
+                    <label style="font-weight:600;font-size:.8rem">Katılımcı Sayısı</label>
+                    <input type="number" min="0" wire:model="katilimciSayisi" placeholder="Boş = listedeki katılımcılar ({{ count($katilimcilar) }})"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
                 <div>
@@ -286,24 +313,85 @@
             </p>
         </x-filament::section>
 
-        {{-- 11. GEÇMİŞ TUTANAKLAR --}}
-        @if ($this->gecmisTutanaklar->isNotEmpty())
-            <x-filament::section icon="heroicon-o-clock" icon-color="gray">
-                <x-slot name="heading">Geçmiş Tatbikat Tutanakları</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-                    @foreach ($this->gecmisTutanaklar as $t)
-                        <tr>
-                            <td style="padding:.3rem .5rem">{{ $t->senaryoEtiketi() }} — {{ $t->tatbikat_tarihi?->format('d.m.Y') }}</td>
-                            <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
-                                <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $t->id }})">PDF</x-filament::button>
-                                <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $t->id }})">Sil</x-filament::button>
+    @else
+        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Yeni tatbikat için bir firma seçin. Aşağıda tüm firmaların tatbikat kayıtları listelenir.</p>
+    @endif
+
+    {{-- TATBİKAT KAYITLARI (isgsuite "Tatbikat Yönetimi") --}}
+    @php
+        $o = $this->ozet;
+        $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+        $td = 'padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
+        $girdi = 'width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem';
+        $durumRenk = ['planlandi' => 'rgb(245 158 11 / .6)', 'yapildi' => 'rgb(22 163 74 / .55)', 'takip' => 'rgb(220 38 38 / .6)', 'iptal' => 'rgb(107 114 128 / .45)'];
+    @endphp
+    <x-filament::section icon="heroicon-o-clock" icon-color="gray">
+        <x-slot name="heading">Tatbikat Kayıtları {{ $this->firma ? '— '.$this->firma->unvan : '— Tüm firmalar' }}</x-slot>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;margin-bottom:.9rem">
+            @foreach ([
+                ['Toplam kayıt', $o['toplam'], 'inherit', null],
+                ['Planlandı', $o['planlandi'], '#d97706', 'planlandi'],
+                ['Yapıldı', $o['yapildi'], '#16a34a', 'yapildi'],
+                ['Takip gereken', $o['takip'], '#dc2626', 'takip'],
+                ['Tarihi geçen plan', $o['gecikmis'], '#dc2626', 'gecikmis'],
+            ] as [$ad, $sayi, $renk, $filtre])
+                <button type="button" wire:click="$set('listeDurum', {{ $filtre ? "'".$filtre."'" : 'null' }})"
+                    style="text-align:left;{{ $kutu }};padding:.6rem .85rem;background:transparent;cursor:pointer;{{ $listeDurum === $filtre ? 'border-color:rgb(124 58 237)' : '' }}">
+                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
+                </button>
+            @endforeach
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:.75rem;margin-bottom:.75rem">
+            <input type="search" wire:model.live.debounce.400ms="listeArama" placeholder="Tatbikat türü, sorumlu, senaryo veya firma ara…" style="{{ $girdi }}">
+            <select wire:model.live="listeDurum" style="{{ $girdi }}">
+                <option value="">Tüm durumlar</option>
+                @foreach ($this->durumlar as $anahtar => $ad)
+                    <option value="{{ $anahtar }}">{{ $ad }}</option>
+                @endforeach
+                <option value="gecikmis">Tarihi geçen plan</option>
+            </select>
+        </div>
+
+        @if ($this->kayitlar->isNotEmpty())
+            <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:860px">
+                    <tr>
+                        @foreach (['Tür', 'İşyeri', 'Tarih', 'Saat', 'Sorumlu', 'Katılımcı', 'Foto', 'Durum', ''] as $b)
+                            <th style="{{ $th }}">{{ $b }}</th>
+                        @endforeach
+                    </tr>
+                    @foreach ($this->kayitlar as $t)
+                        <tr @if ($duzenlenenId === $t->id) style="background:rgb(245 158 11 / .08)" @endif>
+                            <td style="{{ $td }}">{{ $t->senaryoEtiketi() }}</td>
+                            <td style="{{ $td }}">{{ $t->firma?->unvan }}</td>
+                            <td style="{{ $td }};white-space:nowrap">{{ $t->tatbikat_tarihi?->format('d.m.Y') ?? '—' }}</td>
+                            <td style="{{ $td }};white-space:nowrap">{{ collect([$t->baslama_saati, $t->bitis_saati])->filter()->implode(' – ') ?: '—' }}</td>
+                            <td style="{{ $td }}">{{ $t->tatbikat_koordinatoru ?: '—' }}</td>
+                            <td style="{{ $td }}">{{ $t->katilimciSayisi() }}</td>
+                            <td style="{{ $td }}">{{ count($t->fotograflar ?? []) }}</td>
+                            <td style="{{ $td }}">
+                                <span style="font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $durumRenk[$t->durum] ?? 'rgb(107 114 128 / .45)' }}">{{ $t->durumEtiketi() }}</span>
+                                @if ($t->gecikmisMi())<div style="font-size:.68rem;color:#dc2626">Planlanan tarih geçti</div>@endif
+                            </td>
+                            <td style="{{ $td }};text-align:right;white-space:nowrap">
+                                @if ($t->durum === 'planlandi')
+                                    <x-filament::button size="xs" color="success" wire:click="duzenle({{ $t->id }}, 'yapildi')">Yapıldı olarak doldur</x-filament::button>
+                                @endif
+                                <x-filament::button size="xs" color="primary" wire:click="duzenle({{ $t->id }})">Düzenle</x-filament::button>
+                                @if ($t->yapildiMi())
+                                    <x-filament::button size="xs" color="gray" wire:click="kayitPdf({{ $t->id }})">PDF</x-filament::button>
+                                @endif
+                                <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $t->id }})" wire:confirm="Tatbikat kaydı silinsin mi?">Sil</x-filament::button>
                             </td>
                         </tr>
                     @endforeach
                 </table>
-            </x-filament::section>
+            </div>
+        @else
+            <p style="font-size:.83rem;color:rgb(107 114 128)">Henüz tatbikat kaydı yok.</p>
         @endif
-    @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
-    @endif
+    </x-filament::section>
 </x-filament-panels::page>

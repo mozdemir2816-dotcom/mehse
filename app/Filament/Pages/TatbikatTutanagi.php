@@ -53,6 +53,20 @@ class TatbikatTutanagi extends Page
 
     public ?string $tatbikatYeri = null;
 
+    /** Düzenlenen kayıt (null = yeni). */
+    public ?int $duzenlenenId = null;
+
+    public string $durum = 'yapildi';
+
+    public ?string $toplanmaAlani = null;
+
+    public ?int $katilimciSayisi = null;
+
+    // --- Kayıt listesi (tüm işyerleri) ---
+    public ?string $listeArama = null;
+
+    public ?string $listeDurum = null;
+
     public ?string $baslamaSaati = null;
 
     public ?string $bitisSaati = null;
@@ -187,9 +201,122 @@ class TatbikatTutanagi extends Page
         return $this->firma?->tatbikatTutanaklari()->latest()->get() ?? collect();
     }
 
+    /**
+     * Tatbikat kayıtları — firma seçiliyse o firma, değilse tüm firmalar.
+     *
+     * @return Collection<int, TatbikatTutanagiModel>
+     */
+    #[Computed]
+    public function kayitlar(): Collection
+    {
+        $aranan = mb_strtolower(trim((string) $this->listeArama));
+
+        return TatbikatTutanagiModel::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->when($this->firmaId, fn ($q) => $q->where('firma_id', $this->firmaId))
+            ->with('firma')
+            ->orderByDesc('tatbikat_tarihi')
+            ->latest('id')
+            ->get()
+            ->filter(fn (TatbikatTutanagiModel $t) => ! $this->listeDurum
+                || ($this->listeDurum === 'gecikmis' ? $t->gecikmisMi() : $t->durum === $this->listeDurum))
+            ->filter(fn (TatbikatTutanagiModel $t) => $aranan === '' || str_contains(
+                mb_strtolower(implode(' ', [$t->senaryoEtiketi(), $t->tatbikat_koordinatoru, $t->senaryo_metni, $t->tatbikat_yeri, $t->firma?->unvan])),
+                $aranan,
+            ))
+            ->values();
+    }
+
+    /** @return array{toplam: int, planlandi: int, yapildi: int, takip: int, gecikmis: int} */
+    #[Computed]
+    public function ozet(): array
+    {
+        $hepsi = TatbikatTutanagiModel::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->when($this->firmaId, fn ($q) => $q->where('firma_id', $this->firmaId))
+            ->get();
+
+        return [
+            'toplam' => $hepsi->count(),
+            'planlandi' => $hepsi->where('durum', 'planlandi')->count(),
+            'yapildi' => $hepsi->where('durum', 'yapildi')->count(),
+            'takip' => $hepsi->where('durum', 'takip')->count(),
+            'gecikmis' => $hepsi->filter->gecikmisMi()->count(),
+        ];
+    }
+
+    #[Computed]
+    public function durumlar(): array
+    {
+        return config('isg.tatbikat.durumlar');
+    }
+
     public function updatedFirmaId(): void
     {
+        unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
+        $this->duzenlenenId = null;
+    }
+
+    public function updatedListeArama(): void
+    {
+        unset($this->kayitlar);
+    }
+
+    public function updatedListeDurum(): void
+    {
+        unset($this->kayitlar);
+    }
+
+    private function kayit(int $id): TatbikatTutanagiModel
+    {
+        return TatbikatTutanagiModel::query()->whereIn('firma_id', array_keys($this->firmalar))->findOrFail($id);
+    }
+
+    /** Kaydı forma yükler; "Kaydet" / "PDF İndir" artık bu kaydı günceller. */
+    public function duzenle(int $id, ?string $yeniDurum = null): void
+    {
+        $t = $this->kayit($id);
+
+        $this->firmaId = $t->firma_id;
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar);
+
+        $this->duzenlenenId = $t->id;
+        $this->durum = $yeniDurum ?? ($t->durum ?: 'yapildi');
+        $this->senaryoAnahtari = $t->senaryo_anahtari;
+        $this->senaryoMetni = $t->senaryo_metni;
+        $this->tatbikatTarihi = $t->tatbikat_tarihi?->toDateString();
+        $this->tatbikatYeri = $t->tatbikat_yeri;
+        $this->toplanmaAlani = $t->toplanma_alani;
+        $this->baslamaSaati = $t->baslama_saati;
+        $this->bitisSaati = $t->bitis_saati;
+        $this->tahliyeDk = $t->tahliye_dk;
+        $this->katilimciSayisi = $t->katilimci_sayisi;
+        $this->haberliTatbikat = (bool) $t->haberli_tatbikat;
+        $this->yillikPlanDahilinde = (bool) $t->yillik_plan_dahilinde;
+        $this->isverenVekili = $t->isveren_vekili;
+        $this->isGuvenligiUzmani = $t->is_guvenligi_uzmani;
+        $this->tatbikatKoordinatoru = $t->tatbikat_koordinatoru;
+        $this->isyeriHekimiImzasi = (bool) $t->isyeri_hekimi_imzasi;
+        $this->belgeTarihi = $t->belge_tarihi?->toDateString();
+        $this->ekipler = $t->ekipler ?? [];
+        $this->degerlendirmeler = $t->degerlendirmeler ?: collect(config('isg.tatbikat.degerlendirme_sorulari'))
+            ->map(fn ($s) => ['soru' => $s, 'cevap' => null])->all();
+        $this->gozlem = $t->gozlem;
+        $this->eksiklikler = $t->eksiklikler ?? [];
+        $this->dofOnerileri = $t->dof_onerileri ?? [];
+        $this->katilimcilar = $t->katilimcilar ?? [];
+        $this->yeniFotograflar = [];
+
+        Notification::make()->title($t->senaryoEtiketi().' düzenleniyor')->body('Değişiklikleri yapıp Kaydet / PDF İndir ile güncelleyin.')->info()->send();
+    }
+
+    public function yeniKayit(): void
+    {
+        $firmaId = $this->firmaId;
+        $this->reset();
+        $this->mount();
+        $this->firmaId = $firmaId;
+        unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
     }
 
     /*
@@ -373,8 +500,20 @@ class TatbikatTutanagi extends Page
             return null;
         }
 
-        $t = new TatbikatTutanagiModel([
+        // Eksiklik / DÖF önerisi olan yapılmış tatbikat "takip gerekiyor" olur.
+        if ($this->durum === 'yapildi' && (filled($this->eksiklikler) || filled($this->dofOnerileri))) {
+            $this->durum = 'takip';
+            Notification::make()->title('Durum "Yapıldı — takip gerekiyor" olarak ayarlandı')->body('Tespit edilen eksiklik / DÖF önerisi var.')->warning()->send();
+        }
+
+        $mevcut = $this->duzenlenenId ? $this->firma->tatbikatTutanaklari()->find($this->duzenlenenId) : null;
+
+        $t = $mevcut ?? new TatbikatTutanagiModel;
+        $t->fill([
             'firma_id' => $this->firma->id,
+            'durum' => $this->durum,
+            'toplanma_alani' => $this->toplanmaAlani,
+            'katilimci_sayisi' => $this->katilimciSayisi ?: null,
             'senaryo_anahtari' => $this->senaryoAnahtari,
             'senaryo_metni' => $this->senaryoMetni,
             'tatbikat_tarihi' => $this->tatbikatTarihi,
@@ -395,11 +534,16 @@ class TatbikatTutanagi extends Page
             'eksiklikler' => $this->eksiklikler,
             'dof_onerileri' => $this->dofOnerileri,
             'katilimcilar' => $this->katilimcilar,
-            'fotograflar' => collect($this->yeniFotograflar)->map(fn ($f) => $f->store('tatbikat-foto', 'public'))->all(),
+            'fotograflar' => [
+                ...($mevcut?->fotograflar ?? []),
+                ...collect($this->yeniFotograflar)->map(fn ($f) => $f->store('tatbikat-foto', 'public'))->all(),
+            ],
         ]);
         $t->save();
 
-        unset($this->gecmisTutanaklar);
+        $this->duzenlenenId = $t->id;
+        $this->yeniFotograflar = [];
+        unset($this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
 
         return $t;
     }
@@ -407,6 +551,24 @@ class TatbikatTutanagi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('kaydet')
+                ->label(fn () => $this->duzenlenenId ? 'Değişiklikleri Kaydet' : 'Kaydet')
+                ->icon('heroicon-o-check')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function (): void {
+                    if ($t = $this->kaydet()) {
+                        Notification::make()->title('Tatbikat kaydedildi')->body($t->senaryoEtiketi().' — '.$t->durumEtiketi())->success()->send();
+                    }
+                }),
+
+            Action::make('yeni_kayit')
+                ->label('Yeni Tatbikat')
+                ->icon('heroicon-o-plus')
+                ->color('gray')
+                ->visible(fn () => $this->duzenlenenId !== null)
+                ->action(fn () => $this->yeniKayit()),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
@@ -429,7 +591,17 @@ class TatbikatTutanagi extends Page
 
     public function gecmisSil(int $id): void
     {
-        $this->firma?->tatbikatTutanaklari()->find($id)?->delete();
-        unset($this->gecmisTutanaklar);
+        $this->kayit($id)->delete();
+
+        if ($this->duzenlenenId === $id) {
+            $this->duzenlenenId = null;
+        }
+
+        unset($this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
+    }
+
+    public function kayitPdf(int $id)
+    {
+        return TatbikatTutanagiUretici::pdf($this->kayit($id));
     }
 }

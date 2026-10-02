@@ -120,7 +120,7 @@ class PortfoyKarne
                     ->whereIn('rol_anahtari', ['sondurme_ekibi', 'kurtarma_ekibi', 'koruma_ekibi', 'ilkyardim_ekibi'])
                     ->exists(),
             'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists(),
-            'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->exists(),
+            'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->whereIn('durum', \App\Models\TatbikatTutanagi::YAPILMIS)->exists(),
             'isg_kurulu' => $firma->kurulToplantilari()->exists(),
             'calisma_izin_formu' => $firma->isIzinFormlari()->exists(),
             'saha_denetim_formu' => $firma->sahaDenetimleri()->exists(),

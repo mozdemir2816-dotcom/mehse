@@ -4330,6 +4330,14 @@ return [
         ],
         'degerlendirme_secenekleri' => ['evet' => 'Evet', 'hayir' => 'Hayır', 'kismen' => 'Kısmen'],
         'ekip_secenekleri' => ['Söndürme Ekibi', 'Kurtarma Ekibi', 'Koruma Ekibi', 'İlk Yardım Ekibi'],
+        // isgsuite "Tatbikat Yönetimi" durumları. Kontrol Merkezi'nde yalnız
+        // yapildi + takip "yapılmış tatbikat" sayılır (TatbikatTutanagi::YAPILMIS).
+        'durumlar' => [
+            'planlandi' => 'Planlandı',
+            'yapildi' => 'Yapıldı',
+            'takip' => 'Yapıldı — takip gerekiyor',
+            'iptal' => 'İptal',
+        ],
     ],
 
     /*

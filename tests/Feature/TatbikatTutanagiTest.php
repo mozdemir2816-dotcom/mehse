@@ -202,4 +202,89 @@ class TatbikatTutanagiTest extends TestCase
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    public function test_planlanan_tatbikat_kaydedilir_ve_kontrol_merkezinde_sayilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(TatbikatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('senaryoSec', 'deprem')
+            ->set('durum', 'planlandi')
+            ->set('tatbikatTarihi', now()->addMonth()->toDateString())
+            ->set('toplanmaAlani', 'Otopark')
+            ->set('tatbikatKoordinatoru', 'Ali Usta')
+            ->callAction('kaydet');
+
+        $t = TatbikatTutanagi::sole();
+        $this->assertSame('planlandi', $t->durum);
+        $this->assertSame('Otopark', $t->toplanma_alani);
+        $this->assertFalse(\App\Support\PortfoyKarne::firmaKriterKarsilarMi($firma, 'acil_durum_tatbikat'));
+
+        $t->update(['durum' => 'yapildi']);
+        $this->assertTrue(\App\Support\PortfoyKarne::firmaKriterKarsilarMi($firma->fresh(), 'acil_durum_tatbikat'));
+    }
+
+    public function test_planlanani_yapildi_olarak_doldurmak_ayni_kaydi_gunceller(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $t = TatbikatTutanagi::create([
+            'firma_id' => $firma->id, 'senaryo_anahtari' => 'yangin', 'durum' => 'planlandi',
+            'tatbikat_tarihi' => now()->subDay(), 'fotograflar' => ['tatbikat-foto/eski.jpg'],
+        ]);
+        $this->assertTrue($t->gecikmisMi());
+
+        $sayfa = Livewire::test(TatbikatSayfasi::class)
+            ->call('duzenle', $t->id, 'yapildi')
+            ->assertSet('firmaId', $firma->id)
+            ->assertSet('durum', 'yapildi')
+            ->set('katilimciSayisi', 42)
+            ->set('tahliyeDk', 4)
+            ->callAction('kaydet');
+
+        $this->assertSame(1, TatbikatTutanagi::count());
+        $t->refresh();
+        $this->assertSame('yapildi', $t->durum);
+        $this->assertSame(42, $t->katilimciSayisi());
+        $this->assertSame(['tatbikat-foto/eski.jpg'], $t->fotograflar);
+        $this->assertFalse($t->gecikmisMi());
+
+        $sayfa->call('yeniKayit')->assertSet('duzenlenenId', null)->assertSet('firmaId', $firma->id);
+    }
+
+    public function test_eksiklik_varsa_yapildi_takip_gerekiyor_olur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(TatbikatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('durum', 'yapildi')
+            ->set('yeniEksiklik', 'Alarm B blokta duyulmadı')
+            ->call('eksiklikEkle')
+            ->callAction('kaydet');
+
+        $this->assertSame('takip', TatbikatTutanagi::sole()->durum);
+    }
+
+    public function test_kayit_listesi_ozet_filtre_ve_arama(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'Alfa']);
+        $b = Firma::factory()->for($this->uzman)->create(['unvan' => 'Beta']);
+        TatbikatTutanagi::create(['firma_id' => $a->id, 'senaryo_anahtari' => 'yangin', 'durum' => 'yapildi', 'tatbikat_koordinatoru' => 'Veli']);
+        TatbikatTutanagi::create(['firma_id' => $b->id, 'senaryo_anahtari' => 'deprem', 'durum' => 'planlandi', 'tatbikat_tarihi' => now()->addWeek()]);
+        TatbikatTutanagi::create(['firma_id' => $b->id, 'senaryo_anahtari' => 'deprem', 'durum' => 'takip']);
+        TatbikatTutanagi::create(['firma_id' => Firma::factory()->for(User::factory())->create()->id, 'senaryo_anahtari' => 'yangin']);
+
+        $sayfa = Livewire::test(TatbikatSayfasi::class);
+        $this->assertSame(['toplam' => 3, 'planlandi' => 1, 'yapildi' => 1, 'takip' => 1, 'gecikmis' => 0], $sayfa->instance()->ozet);
+
+        $sayfa->set('listeDurum', 'planlandi');
+        $this->assertSame([$b->id], $sayfa->instance()->kayitlar->pluck('firma_id')->all());
+
+        $sayfa->set('listeDurum', null)->set('listeArama', 'veli');
+        $this->assertCount(1, $sayfa->instance()->kayitlar);
+
+        $sayfa->set('listeArama', null)->set('firmaId', $b->id);
+        $this->assertSame(2, $sayfa->instance()->ozet['toplam']);
+    }
 }
