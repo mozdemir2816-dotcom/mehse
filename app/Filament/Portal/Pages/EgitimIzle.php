@@ -4,6 +4,7 @@ namespace App\Filament\Portal\Pages;
 
 use App\Models\EgitimAtamasi;
 use App\Models\EgitimDersIlerlemesi;
+use App\Models\EgitimGirisi;
 use App\Models\EgitimSinavSonucu;
 use App\Support\UzaktanEgitimBelgesiUretici;
 use Filament\Facades\Filament;
@@ -46,6 +47,8 @@ class EgitimIzle extends Page
         $a = $this->atamaKaydi();
 
         abort_unless($a !== null, 404);
+
+        EgitimGirisi::kaydet($a->calisan_id, $a->id);
 
         $this->aktifDersId = $a->paket->dersler->first()?->id;
 

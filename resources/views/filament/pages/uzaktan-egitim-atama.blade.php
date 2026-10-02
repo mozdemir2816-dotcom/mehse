@@ -92,24 +92,54 @@
     @if ($this->firma && $this->atamalar->isNotEmpty())
         <x-filament::section icon="heroicon-o-chart-bar" icon-color="gray">
             <x-slot name="heading">Atanan Eğitimler — {{ $this->firma->unvan }}</x-slot>
+            <x-slot name="description">Çalışanın eğitime girdiği her tarih otomatik kaydedilir. Temel İSG eğitimi (ilk defa / yenileme) bitince çalışanın Eğitim Kayıtları'na tamamlanma tarihiyle işlenir.</x-slot>
+            <x-slot name="afterHeader"><x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="takipExcel">Takip Listesi (Excel)</x-filament::button></x-slot>
             <div style="overflow-x:auto">
-                <table style="width:100%;font-size:.83rem;border-collapse:collapse;min-width:640px">
+                <table style="width:100%;font-size:.83rem;border-collapse:collapse;min-width:860px">
                     <thead><tr style="text-align:left;background:rgb(107 114 128 / .08)">
-                        <th style="padding:.5rem">Çalışan</th><th style="padding:.5rem">Eğitim</th>
-                        <th style="padding:.5rem">İlerleme</th><th style="padding:.5rem">Sınav</th>
-                        <th style="padding:.5rem">Durum</th><th style="padding:.5rem"></th>
+                        <th style="padding:.5rem">Çalışan</th><th style="padding:.5rem">Görev</th><th style="padding:.5rem">Eğitim</th>
+                        <th style="padding:.5rem">Eğitime Girişler</th><th style="padding:.5rem">İlerleme</th><th style="padding:.5rem">Sınav</th>
+                        <th style="padding:.5rem">Tamamlandı</th><th style="padding:.5rem"></th>
                     </tr></thead>
                     <tbody>
                     @foreach ($this->atamalar as $a)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                             <td style="padding:.5rem">{{ $a->calisan->ad_soyad }}</td>
-                            <td style="padding:.5rem">{{ \Illuminate\Support\Str::limit($a->paket->ad, 40) }}</td>
+                            <td style="padding:.5rem">{{ $a->calisan->gorev ?: '—' }}</td>
+                            <td style="padding:.5rem">{{ \Illuminate\Support\Str::limit($a->paket->ad, 40) }}<div style="font-size:.72rem;color:rgb(107 114 128)">{{ config('isg.uzaktan_egitim.egitim_turleri.'.$a->egitim_turu, $a->egitim_turu) }} · atandı {{ $a->atandi_at?->format('d.m.Y') }}</div></td>
+                            <td style="padding:.5rem;vertical-align:top">
+                                @php($portal = $this->portalGirisleri->get($a->calisan_id, collect()))
+                                @if ($a->girisler->isEmpty() && $portal->isEmpty())
+                                    <span style="color:rgb(107 114 128)">Henüz girmedi</span>
+                                @else
+                                    <details>
+                                        <summary style="cursor:pointer">
+                                            {{ $a->girisler->count() }} giriş
+                                            @if ($a->girisler->isNotEmpty())<span style="color:rgb(107 114 128);font-size:.75rem">· son {{ $a->girisler->last()->giris_at->format('d.m.Y') }}</span>@endif
+                                        </summary>
+                                        <div style="font-size:.75rem;margin-top:.3rem;line-height:1.5">
+                                            @foreach ($a->girisler as $g)<div>{{ $g->giris_at->format('d.m.Y H:i') }}</div>@endforeach
+                                            @foreach ($a->ilerlemeler->where('izlendi', true)->sortBy('izlendi_at') as $il)
+                                                <div style="color:rgb(21 128 61)">✓ {{ \Illuminate\Support\Str::limit($il->ders?->baslik, 30) }} — {{ $il->izlendi_at?->format('d.m.Y H:i') }}</div>
+                                            @endforeach
+                                            @if ($portal->isNotEmpty())
+                                                <div style="color:rgb(107 114 128);margin-top:.2rem">Portala giriş: {{ $portal->map(fn ($g) => $g->giris_at->format('d.m.Y H:i'))->implode(', ') }}</div>
+                                            @endif
+                                        </div>
+                                    </details>
+                                @endif
+                            </td>
                             <td style="padding:.5rem">{{ $a->izlenenDersSayisi() }}/{{ $a->toplamDersSayisi() }} ders</td>
                             <td style="padding:.5rem">{{ $a->sonSinav() ? '%'.$a->sonSinav()->puan : '—' }}</td>
                             <td style="padding:.5rem">
-                                <span style="font-size:.75rem;color:{{ $a->durum === 'tamamlandi' ? 'rgb(21 128 61)' : ($a->durum === 'basarisiz' ? 'rgb(185 28 28)' : 'rgb(107 114 128)') }}">
-                                    {{ $a->durumEtiketi() }}@if ($a->gecikti()) · gecikti @endif
-                                </span>
+                                @if ($a->durum === 'tamamlandi')
+                                    <span style="color:rgb(21 128 61);font-weight:700">☑ Tamamlandı</span>
+                                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $a->tamamlandi_at?->format('d.m.Y') }}@if (in_array($a->egitim_turu, ['ilk_defa', 'yenileme'], true)) · kayda işlendi @endif</div>
+                                @else
+                                    <span style="font-size:.75rem;color:{{ $a->durum === 'basarisiz' ? 'rgb(185 28 28)' : 'rgb(107 114 128)' }}">
+                                        ☐ {{ $a->durumEtiketi() }}@if ($a->gecikti()) · gecikti @endif
+                                    </span>
+                                @endif
                             </td>
                             <td style="padding:.5rem;white-space:nowrap">
                                 @if ($a->basariliMi())

@@ -6,9 +6,11 @@ use App\Filament\Pages\UzaktanEgitimAtama;
 use App\Filament\Portal\Pages\EgitimIzle;
 use App\Models\Calisan;
 use App\Models\EgitimAtamasi;
+use App\Models\EgitimGirisi;
 use App\Models\EgitimPaketi;
 use App\Models\Firma;
 use App\Models\User;
+use App\Support\EgitimTakibi;
 use App\Support\UzaktanEgitimBelgesiUretici;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -250,5 +252,88 @@ class UzaktanEgitimTest extends TestCase
         // Başkasının atamasına EgitimIzle 404 döner (mount'ta abort_unless).
         Livewire::test(EgitimIzle::class, ['atama' => $atama->id])
             ->assertStatus(404);
+    }
+
+    private function tamamla(EgitimAtamasi $atama): void
+    {
+        foreach ($atama->paket->dersler as $d) {
+            $atama->ilerlemeler()->create(['egitim_dersi_id' => $d->id, 'izleme_yuzdesi' => 100, 'izlendi' => true, 'izlendi_at' => now()]);
+        }
+        $atama->sinavSonuclari()->create(['deneme_no' => 1, 'puan' => 90, 'gecti' => true, 'cevaplar' => [], 'tamamlandi_at' => now()]);
+        $atama->durumuTazele();
+    }
+
+    public function test_egitime_giris_tarihleri_kaydedilir_ve_yenilemede_tekrar_yazilmaz(): void
+    {
+        $paket = $this->paketKur();
+        $calisan = $this->calisanKur();
+        $atama = EgitimAtamasi::create([
+            'egitim_paketi_id' => $paket->id, 'calisan_id' => $calisan->id,
+            'atayan_user_id' => $this->uzman->id, 'atandi_at' => now(), 'durum' => 'atandi',
+        ]);
+
+        // Portal girişi (kullanıcı kodu / e-posta) Login olayıyla günlüğe düşer
+        event(new \Illuminate\Auth\Events\Login('calisan', $calisan, false));
+        event(new \Illuminate\Auth\Events\Login('web', $this->uzman, false));   // uzman girişi sayılmaz
+
+        $this->portalGirisi($calisan);
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id]);
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id]);   // sayfa yenileme → yeni satır yok
+
+        $this->travel(2)->days();
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id]);
+
+        $this->assertSame(2, $atama->girisler()->count());
+        $this->assertSame(1, EgitimGirisi::whereNull('egitim_atamasi_id')->count());
+
+        $atama->delete();
+        $this->assertSame(0, EgitimGirisi::whereNotNull('egitim_atamasi_id')->count());
+    }
+
+    public function test_temel_egitim_bitince_calisanin_egitim_kaydina_islenir(): void
+    {
+        $paket = $this->paketKur();
+        $mehmet = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Mehmet Yılmaz', 'gorev' => 'İşçi', 'eposta' => 'myilmaz123', 'aktif' => true]);
+        $mehmet->egitimKayitlari()->create(['tur' => EgitimTakibi::TEMEL_TUR, 'tarih' => now()->subYears(2)]);
+        $atama = EgitimAtamasi::create([
+            'egitim_paketi_id' => $paket->id, 'calisan_id' => $mehmet->id, 'egitim_turu' => 'yenileme',
+            'atayan_user_id' => $this->uzman->id, 'atandi_at' => now(), 'durum' => 'atandi',
+        ]);
+
+        $this->tamamla($atama);
+
+        $kayit = $mehmet->egitimKayitlari()->where('tur', EgitimTakibi::TEMEL_TUR)->sole();
+        $this->assertSame(now()->toDateString(), $kayit->tarih->toDateString());
+        $this->assertStringContainsString('Uzaktan eğitim', $kayit->notlar);
+        $this->assertSame('gecerli', EgitimTakibi::satirlar($this->firma)->first()['durum']);
+
+        // İşbaşı eğitimi temel eğitim kaydına yazılmaz
+        $ayse = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Ayşe', 'eposta' => 'ayse1', 'aktif' => true]);
+        $this->tamamla(EgitimAtamasi::create([
+            'egitim_paketi_id' => $paket->id, 'calisan_id' => $ayse->id, 'egitim_turu' => 'isbasi',
+            'atayan_user_id' => $this->uzman->id, 'atandi_at' => now(), 'durum' => 'atandi',
+        ]));
+        $this->assertSame(0, $ayse->egitimKayitlari()->count());
+    }
+
+    public function test_atama_ekrani_gorev_giris_tarihi_tamamlandi_ve_excel(): void
+    {
+        $paket = $this->paketKur();
+        $mehmet = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Mehmet Yılmaz', 'gorev' => 'İşçi', 'eposta' => 'myilmaz123', 'aktif' => true]);
+        $atama = EgitimAtamasi::create([
+            'egitim_paketi_id' => $paket->id, 'calisan_id' => $mehmet->id, 'egitim_turu' => 'ilk_defa',
+            'atayan_user_id' => $this->uzman->id, 'atandi_at' => now(), 'durum' => 'atandi',
+        ]);
+        EgitimGirisi::create(['calisan_id' => $mehmet->id, 'egitim_atamasi_id' => $atama->id, 'giris_at' => now()->setDate(2026, 9, 28)->setTime(10, 15)]);
+        $this->tamamla($atama);
+
+        Livewire::test(UzaktanEgitimAtama::class)
+            ->set('firmaId', $this->firma->id)
+            ->assertSee('İşçi')
+            ->assertSee('28.09.2026 10:15')
+            ->assertSee('☑ Tamamlandı')
+            ->assertSee('kayda işlendi')
+            ->call('takipExcel')
+            ->assertFileDownloaded('uzaktan-egitim-takibi-ornek-insaat-as.xlsx');
     }
 }

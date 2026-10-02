@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Models\Calisan;
 use App\Models\EgitimAtamasi;
+use App\Models\EgitimGirisi;
 use App\Models\EgitimPaketi;
 use App\Models\Firma;
+use App\Support\ExcelBellek;
 use App\Support\UzaktanEgitimBelgesiUretici;
 use BackedEnum;
 use Filament\Facades\Filament;
@@ -14,6 +16,9 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -90,14 +95,77 @@ class UzaktanEgitimAtama extends Page
 
         return EgitimAtamasi::query()
             ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma->id))
-            ->with(['calisan', 'paket'])
+            ->with(['calisan', 'paket', 'girisler', 'ilerlemeler.ders'])
             ->latest()
             ->get();
     }
 
+    /** Firmadaki eğitimli çalışanların yalnız portala girdiği (eğitim açmadığı) tarihler. */
+    #[Computed]
+    public function portalGirisleri(): Collection
+    {
+        return EgitimGirisi::query()
+            ->whereIn('calisan_id', $this->atamalar->pluck('calisan_id')->unique())
+            ->whereNull('egitim_atamasi_id')
+            ->orderBy('giris_at')
+            ->get()
+            ->groupBy('calisan_id');
+    }
+
+    /** Uzaktan eğitim takip listesi: kim, hangi tarihlerde girdi, bitirdi mi. */
+    public function takipExcel()
+    {
+        if ($this->atamalar->isEmpty()) {
+            return null;
+        }
+
+        ExcelBellek::artir();
+
+        $basliklar = ['Ad Soyad', 'Görev', 'Eğitim', 'Eğitim Türü', 'Atanma', 'Eğitime Giriş Tarihleri', 'Giriş Sayısı',
+            'İzlenen Ders', 'Sınav Puanı', 'Tamamlandı', 'Tamamlanma Tarihi', 'Eğitim Kaydına İşlendi'];
+
+        $kitap = new Spreadsheet;
+        $sayfa = $kitap->getActiveSheet();
+        $sayfa->setTitle('Uzaktan Eğitim Takibi');
+        $sayfa->fromArray($basliklar, null, 'A1');
+        $sayfa->getStyle('A1:L1')->getFont()->setBold(true);
+        $sayfa->getStyle('A1:L1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E8E5F2');
+
+        foreach ($this->atamalar->values() as $i => $a) {
+            $tamam = $a->durum === 'tamamlandi';
+            $sayfa->fromArray([
+                $a->calisan->ad_soyad,
+                $a->calisan->gorev,
+                $a->paket->ad,
+                config('isg.uzaktan_egitim.egitim_turleri.'.$a->egitim_turu, $a->egitim_turu),
+                $a->atandi_at?->format('d.m.Y'),
+                $a->girisler->map(fn (EgitimGirisi $g) => $g->giris_at->format('d.m.Y H:i'))->implode(', '),
+                $a->girisler->count(),
+                $a->izlenenDersSayisi().'/'.$a->toplamDersSayisi(),
+                $a->sonSinav()?->puan,
+                $tamam ? '✓' : '—',
+                $a->tamamlandi_at?->format('d.m.Y'),
+                $tamam && in_array($a->egitim_turu, ['ilk_defa', 'yenileme'], true) ? 'Evet' : '—',
+            ], null, 'A'.($i + 2));
+        }
+
+        foreach (range('A', 'L') as $sutun) {
+            $sayfa->getColumnDimension($sutun)->setAutoSize(true);
+        }
+        $sayfa->freezePane('A2');
+
+        $tmp = tempnam(sys_get_temp_dir(), 'uze').'.xlsx';
+        (new Xlsx($kitap))->save($tmp);
+
+        return response()->streamDownload(function () use ($tmp) {
+            echo file_get_contents($tmp);
+            @unlink($tmp);
+        }, 'uzaktan-egitim-takibi-'.Str::slug($this->firma->unvan).'.xlsx');
+    }
+
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->calisanlar, $this->atamalar);
+        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri);
         $this->secilenCalisanlar = [];
         $this->sonUretilenGiris = [];
     }
@@ -223,7 +291,7 @@ class UzaktanEgitimAtama extends Page
     public function atamaSil(int $id): void
     {
         EgitimAtamasi::query()
-            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firmaId))
+            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma?->id))
             ->find($id)?->delete();
 
         unset($this->atamalar);
@@ -232,7 +300,7 @@ class UzaktanEgitimAtama extends Page
     public function belgeIndir(int $atamaId)
     {
         $atama = EgitimAtamasi::query()
-            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firmaId))
+            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma?->id))
             ->with(['calisan.firma', 'paket'])
             ->find($atamaId);
 

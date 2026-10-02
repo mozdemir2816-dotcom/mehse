@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EgitimTakibi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,6 +39,17 @@ class EgitimAtamasi extends Model
     public function atayan(): BelongsTo
     {
         return $this->belongsTo(User::class, 'atayan_user_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(fn (EgitimAtamasi $a) => $a->girisler()->delete());
+    }
+
+    /** Bu eğitimin açıldığı tarihler (giriş günlüğü). */
+    public function girisler(): HasMany
+    {
+        return $this->hasMany(EgitimGirisi::class)->orderBy('giris_at');
     }
 
     public function ilerlemeler(): HasMany
@@ -104,10 +116,42 @@ class EgitimAtamasi extends Model
             $this->tamamlandi_at = now();
         }
 
+        $yeniTamamlandi = $yeni === 'tamamlandi' && $this->durum !== 'tamamlandi';
+
         if ($this->durum !== $yeni || $this->isDirty('tamamlandi_at')) {
             $this->durum = $yeni;
             $this->save();
         }
+
+        if ($yeniTamamlandi) {
+            $this->egitimKaydinaIsle();
+        }
+    }
+
+    /**
+     * Temel İSG eğitimi (ilk defa / yenileme) tamamlanınca çalışanın Eğitim
+     * Kayıtları'na tamamlanma tarihiyle işlenir — personel dosyası, eğitim
+     * matrisi ve Yenileme Takibi bunu görür. Daha yeni bir kayıt varsa
+     * dokunulmaz. İşbaşı eğitimi bu listede ayrı tür olmadığından işlenmez.
+     */
+    public function egitimKaydinaIsle(): ?EgitimKaydi
+    {
+        if (! $this->tamamlandi_at || ! in_array($this->egitim_turu, ['ilk_defa', 'yenileme'], true)) {
+            return null;
+        }
+
+        $kayit = EgitimKaydi::firstOrNew(['calisan_id' => $this->calisan_id, 'tur' => EgitimTakibi::TEMEL_TUR]);
+
+        if ($kayit->exists && $kayit->tarih && $kayit->tarih->gte($this->tamamlandi_at->copy()->startOfDay())) {
+            return $kayit;
+        }
+
+        $kayit->fill([
+            'tarih' => $this->tamamlandi_at->toDateString(),
+            'notlar' => 'Uzaktan eğitim: '.($this->paket?->ad ?? '').' (otomatik)',
+        ])->save();
+
+        return $kayit;
     }
 
     public function durumEtiketi(): string
