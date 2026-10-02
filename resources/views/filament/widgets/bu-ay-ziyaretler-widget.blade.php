@@ -18,6 +18,38 @@
             Boş→Planlandı→Tamamlandı arasında geçiş yapın.
         </x-slot>
 
+        {{-- SAYAÇLAR (isgsuite "Saha Takvimi") --}}
+        @php
+            $ao = $this->ayOzeti;
+            $eksikler = $this->sureEksikleri;
+            $plansizEksik = collect($eksikler)->where('plan_var', false)->count();
+        @endphp
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.6rem;margin-bottom:1rem">
+            @foreach ([
+                ['Toplam ziyaret', $ao['toplam'], 'inherit'],
+                ['Planlı', $ao['planli'], 'rgb(180 83 9)'],
+                ['Tamamlanan', $ao['tamamlanan'], 'rgb(21 128 61)'],
+                ['Gecikmiş', $ao['gecikmis'], 'rgb(220 38 38)'],
+                ['Eksik süre (firma)', count($eksikler), 'rgb(220 38 38)'],
+            ] as [$ad, $sayi, $renk])
+                <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.55rem .8rem">
+                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:1.35rem;font-weight:800;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
+                </div>
+            @endforeach
+        </div>
+
+        @if ($plansizEksik > 0 || $ao['gecikmis'] > 0)
+            <div style="border-left:3px solid rgb(217 119 6);background:rgb(245 158 11 / .07);border-radius:.4rem;padding:.55rem .8rem;margin-bottom:1rem;font-size:.8rem">
+                @if ($plansizEksik > 0)
+                    <div>• {{ $plansizEksik }} firmada saha süresi eksik ve bu ay için kalan planlı ziyaret yok.</div>
+                @endif
+                @if ($ao['gecikmis'] > 0)
+                    <div>• {{ $ao['gecikmis'] }} ziyaretin tarihi geçti ama "Tamamlandı" işaretlenmedi.</div>
+                @endif
+            </div>
+        @endif
+
         {{-- AYLIK ZİYARET GERÇEKLEŞMESİ — gidilmesi gereken firmaların yüzde kaçına gidildi
              (çubuktaki dikey çizgi = ayın geçen kısmı, takvime göre kıyas) --}}
         @php
@@ -72,6 +104,10 @@
                     <button type="button" wire:click="ayDegistir(-1)" style="border:none;background:none;cursor:pointer;font-size:1rem">‹</button>
                     <div style="font-weight:700;font-size:.85rem">{{ $ayBaslangic->translatedFormat('F Y') }}</div>
                     <button type="button" wire:click="ayDegistir(1)" style="border:none;background:none;cursor:pointer;font-size:1rem">›</button>
+                </div>
+                <div style="display:flex;gap:.4rem;justify-content:center;margin-bottom:.5rem">
+                    <button type="button" wire:click="bugun" style="font-size:.72rem;padding:.15rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">Bugün</button>
+                    <button type="button" wire:click="tumunuGoster" style="font-size:.72rem;padding:.15rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">Tümünü göster</button>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.68rem;text-align:center;color:rgb(107 114 128);margin-bottom:.3rem">
                     @foreach (['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as $g)
@@ -148,6 +184,9 @@
                                             border:1px solid {{ $durumRenk[$z['durum']] }};color:{{ $durumRenk[$z['durum']] }};background:transparent">
                                         {{ $durumEtiket[$z['durum']] ?? $z['durum'] }}
                                     </button>
+                                    @if (\App\Filament\Widgets\BuAyZiyaretlerWidget::gecikmisMi($z))
+                                        <div style="font-size:.66rem;color:rgb(220 38 38);text-align:center;margin-top:.15rem">Gecikmiş</div>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -155,5 +194,40 @@
                 @endif
             </div>
         </div>
+
+        {{-- EKSİK SAHA SÜRESİ — PLAN ÖNERİSİ --}}
+        @if ($eksikler)
+            <div style="margin-top:1.25rem">
+                <div style="font-weight:700;font-size:.88rem;margin-bottom:.2rem">Eksik saha süresi — plan önerisi</div>
+                <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.5rem">
+                    Gereken süre = çalışan sayısı × aylık asgari İGU süresi (az tehlikeli 10, tehlikeli 20, çok tehlikeli 40 dk).
+                    Ziyaret süreleri Ziyaret Programı'ndaki "saat" alanından alınır.
+                </div>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:560px">
+                        <tr>
+                            @foreach (['Firma', 'Çalışan', 'Gereken (dk)', 'Tamamlanan (dk)', 'Planlı (dk)', 'Eksik (dk)', 'Plan'] as $b)
+                                <th style="text-align:left;padding:.4rem;border-bottom:1px solid rgb(107 114 128 / .2)">{{ $b }}</th>
+                            @endforeach
+                        </tr>
+                        @foreach ($eksikler as $s)
+                            <tr style="border-top:1px solid rgb(107 114 128 / .15)">
+                                <td style="padding:.4rem;font-weight:600">
+                                    <a href="{{ \App\Filament\Pages\ZiyaretProgrami::getUrl(['firma' => $s['firma_id'], 'yil' => (int) substr($gosterilenAy, 0, 4)]) }}" style="color:inherit;text-decoration:underline">{{ $s['firma'] }}</a>
+                                </td>
+                                <td style="padding:.4rem">{{ $s['calisan'] }}</td>
+                                <td style="padding:.4rem">{{ $s['gerekli'] }}</td>
+                                <td style="padding:.4rem">{{ $s['yapilan'] }}</td>
+                                <td style="padding:.4rem">{{ $s['planli'] }}</td>
+                                <td style="padding:.4rem;font-weight:700;color:rgb(220 38 38)">{{ $s['eksik'] }}</td>
+                                <td style="padding:.4rem">
+                                    <span style="font-size:.72rem;font-weight:700;color:{{ $s['plan_var'] ? 'rgb(180 83 9)' : 'rgb(220 38 38)' }}">{{ $s['plan_var'] ? 'Var' : 'Yok' }}</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            </div>
+        @endif
     </x-filament::section>
 </x-filament-widgets::widget>

@@ -115,6 +115,15 @@ return [
         'cok_tehlikeli' => 1,
     ],
 
+    // İş güvenliği uzmanının çalışan başına aylık asgari çalışma süresi (dk) —
+    // İş Güvenliği Uzmanlarının Görev, Yetki, Sorumluluk ve Eğitimleri Hk. Yön.
+    // Panel "Saha Takvimi" eksik süre hesabında kullanılır.
+    'igu_aylik_dk' => [
+        'az_tehlikeli' => 10,
+        'tehlikeli' => 20,
+        'cok_tehlikeli' => 40,
+    ],
+
     // İSG profesyoneli unvanları (hesap sahibi uzmanın sınıfı).
     'uzman_unvanlari' => [
         'a_sinifi' => 'A Sınıfı İş Güvenliği Uzmanı',

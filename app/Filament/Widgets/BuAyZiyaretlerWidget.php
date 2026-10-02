@@ -150,12 +150,26 @@ class BuAyZiyaretlerWidget extends Widget
     {
         $this->gosterilenAy = Carbon::parse($this->gosterilenAy.'-01')->addMonths($fark)->format('Y-m');
         $this->seciliTarih = null;
-        unset($this->ayinZiyaretleri, $this->ziyaretOzeti);
+        $this->yenile();
     }
 
     public function gunSec(string $tarih): void
     {
         $this->seciliTarih = $this->seciliTarih === $tarih ? null : $tarih;
+        unset($this->ayinZiyaretleri);
+    }
+
+    /** Takvimi bu aya alır ve bugünü seçer. */
+    public function bugun(): void
+    {
+        $this->gosterilenAy = now()->format('Y-m');
+        $this->seciliTarih = now()->toDateString();
+        $this->yenile();
+    }
+
+    public function tumunuGoster(): void
+    {
+        $this->seciliTarih = null;
         unset($this->ayinZiyaretleri);
     }
 
@@ -166,6 +180,92 @@ class BuAyZiyaretlerWidget extends Widget
             ->find($programId)
             ?->durumIlerlet($ayIndex, $satirIndex);
 
-        unset($this->gunlukGruplar, $this->ayinZiyaretleri, $this->ziyaretOzeti);
+        unset($this->gunlukGruplar);
+        $this->yenile();
+    }
+
+    private function yenile(): void
+    {
+        unset($this->ayinZiyaretleri, $this->ziyaretOzeti, $this->ayOzeti, $this->sureEksikleri);
+    }
+
+    /** Planlanmış ama tarihi geçmiş ve tamamlanmamış ziyaret. */
+    public static function gecikmisMi(array $z): bool
+    {
+        return ($z['durum'] ?? 'bos') !== 'tamamlandi' && ($z['tarih'] ?? '9999') < now()->toDateString();
+    }
+
+    /**
+     * Gösterilen ayın ziyaret sayaçları (isgsuite "Saha Takvimi"): tarihli tüm
+     * ziyaretler; tamamlanan; tarihi gelmemiş planlı; tarihi geçip
+     * tamamlanmamış (gecikmiş).
+     *
+     * @return array{toplam: int, planli: int, tamamlanan: int, gecikmis: int}
+     */
+    #[Computed]
+    public function ayOzeti(): array
+    {
+        $liste = collect($this->gunlukGruplar)
+            ->filter(fn ($_, string $tarih) => str_starts_with($tarih, $this->gosterilenAy))
+            ->flatMap(fn (array $gun, string $tarih) => collect($gun)->map(fn (array $z) => $z + ['tarih' => $tarih]));
+
+        $tamamlanan = $liste->where('durum', 'tamamlandi')->count();
+        $gecikmis = $liste->filter(fn (array $z) => static::gecikmisMi($z))->count();
+
+        return [
+            'toplam' => $liste->count(),
+            'planli' => $liste->count() - $tamamlanan - $gecikmis,
+            'tamamlanan' => $tamamlanan,
+            'gecikmis' => $gecikmis,
+        ];
+    }
+
+    /**
+     * Eksik saha süresi — aktif firmalarda gereken aylık İGU süresi (çalışan ×
+     * tehlike sınıfı dakikası) ile o ay tamamlanan + planlanan ziyaret
+     * sürelerinin farkı. Yalnız eksiği olan firmalar döner; "plan_var" = ayın
+     * kalan günlerinde tamamlanmamış ziyaret var mı.
+     *
+     * @return array<int, array{firma_id: int, firma: string, calisan: int, gerekli: int, yapilan: int, planli: int, eksik: int, plan_var: bool}>
+     */
+    #[Computed]
+    public function sureEksikleri(): array
+    {
+        $bugun = now()->toDateString();
+        $ziyaretler = collect($this->gunlukGruplar)
+            ->filter(fn ($_, string $tarih) => str_starts_with($tarih, $this->gosterilenAy))
+            ->flatMap(fn (array $gun, string $tarih) => collect($gun)->map(fn (array $z) => $z + ['tarih' => $tarih]))
+            ->filter(fn (array $z) => $z['firma'])
+            ->groupBy(fn (array $z) => $z['firma']->id);
+
+        $dk = fn ($liste) => (int) round(collect($liste)->sum(fn (array $z) => (float) str_replace(',', '.', (string) ($z['sure_saat'] ?? 0))) * 60);
+
+        return \App\Models\Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->where('aktif', true)
+            ->where('calisan_sayisi', '>', 0)
+            ->orderBy('unvan')
+            ->get(['id', 'unvan', 'calisan_sayisi', 'tehlike_sinifi'])
+            ->map(function (\App\Models\Firma $f) use ($ziyaretler, $dk, $bugun): array {
+                $z = $ziyaretler->get($f->id, collect());
+                $gerekli = (int) $f->calisan_sayisi * (int) config('isg.igu_aylik_dk.'.$f->tehlike_sinifi, 10);
+                $yapilan = $dk($z->where('durum', 'tamamlandi'));
+                $planli = $dk($z->where('durum', '!=', 'tamamlandi')->filter(fn (array $x) => $x['tarih'] >= $bugun));
+
+                return [
+                    'firma_id' => $f->id,
+                    'firma' => $f->unvan,
+                    'calisan' => (int) $f->calisan_sayisi,
+                    'gerekli' => $gerekli,
+                    'yapilan' => $yapilan,
+                    'planli' => $planli,
+                    'eksik' => max(0, $gerekli - $yapilan - $planli),
+                    'plan_var' => $z->contains(fn (array $x) => $x['durum'] !== 'tamamlandi' && $x['tarih'] >= $bugun),
+                ];
+            })
+            ->filter(fn (array $s) => $s['eksik'] > 0)
+            ->sortByDesc('eksik')
+            ->values()
+            ->all();
     }
 }
