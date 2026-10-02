@@ -560,7 +560,12 @@ class KkdTakip extends Page
 
     public function stokSil(int $id): void
     {
-        $this->stokKarti($id)->delete();
+        $kart = $this->stokKarti($id);
+
+        // Canlı DB'de yabancı anahtar yok — cascade / null'lamayı burada yap.
+        $kart->hareketler()->delete();
+        KkdZimmet::where('kkd_stok_karti_id', $kart->id)->update(['kkd_stok_karti_id' => null]);
+        $kart->delete();
         $this->yenile();
     }
 
