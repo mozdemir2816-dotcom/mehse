@@ -2825,6 +2825,33 @@ return [
     | Kategori / tür listesi 'kkd.kategoriler' katalogundan gelir. "Yaklaşan"
     | eşiği kullanıcı ayarı (KullaniciAyarlari esik 'kkd', varsayılan 30 gün).
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Taşeron / Alt İşveren Yönetimi — isgsuite "Taşeron Yönetimi"
+    |--------------------------------------------------------------------------
+    | 'zorunlu' = uygunluk kontrolünde bu türdeki firma için aranan belgeler.
+    | Taşeron çalışanları ana personel listesine (calisanlar) eklenmez.
+    */
+    'taseron' => [
+        'turler' => [
+            'alt_isveren' => 'Alt İşveren',
+            'taseron' => 'Taşeron / Yüklenici (hizmet alımı)',
+        ],
+        'belge_turleri' => [
+            'sozlesme' => ['ad' => 'Sözleşme (alt işverenlik / hizmet)', 'zorunlu' => ['alt_isveren', 'taseron']],
+            'sgk_tescil' => ['ad' => 'SGK işyeri tescil / alt işveren bildirgesi', 'zorunlu' => ['alt_isveren']],
+            'isg_hizmet' => ['ad' => 'İSG hizmet sözleşmesi / İGU–hekim görevlendirmesi', 'zorunlu' => ['alt_isveren', 'taseron']],
+            'risk_degerlendirmesi' => ['ad' => 'Risk değerlendirmesi', 'zorunlu' => ['alt_isveren']],
+            'egitim_kaydi' => ['ad' => 'İSG eğitim kayıtları', 'zorunlu' => ['alt_isveren', 'taseron']],
+            'acil_durum_plani' => ['ad' => 'Acil durum planı', 'zorunlu' => []],
+            'ekipman_kontrol' => ['ad' => 'Ekipman periyodik kontrol raporları', 'zorunlu' => []],
+            'sigorta' => ['ad' => 'Sigorta poliçesi', 'zorunlu' => []],
+            'diger' => ['ad' => 'Diğer', 'zorunlu' => []],
+        ],
+        // Sözleşme / belge bitişine bu kadar gün kala "yaklaşıyor" uyarısı.
+        'yaklasan_gun' => 30,
+    ],
+
     'kkd_takip' => [
         'durumlar' => [
             'teslim_edildi' => 'Teslim Edildi',
