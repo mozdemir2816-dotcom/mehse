@@ -234,6 +234,7 @@ class UzaktanEgitimTest extends TestCase
 
     public function test_ileri_sarma_ve_sahte_sure_sayilmaz(): void
     {
+        $this->freezeTime();   // iki rapor arası gerçek süre testte sıfır kalsın
         $paket = $this->paketKur(ders: 1);
         $calisan = $this->calisanKur();
         $atama = $this->atamaKur($paket, $calisan);

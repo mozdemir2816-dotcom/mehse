@@ -129,6 +129,29 @@ return [
     'hekim_aylik_dk' => ['az_tehlikeli' => 5, 'tehlikeli' => 10, 'cok_tehlikeli' => 15],
     'dsp_aylik_dk' => ['az_tehlikeli' => 0, 'tehlikeli' => 0, 'cok_tehlikeli' => 10],
 
+    // Uzman Rapor Merkezi — süreç kategorisi → yasal dayanak. `url` yalnız
+    // doğrulanmış resmî bağlantılar (mevzuat.gov.tr / resmigazete.gov.tr);
+    // olmayanlar mehse Mevzuat sayfasına yönlenir.
+    'uzman_raporu' => [
+        'acik_risk_duzeyleri' => ['Yüksek Risk', 'Çok Yüksek Risk', 'Önemli Risk', 'Esaslı Risk', 'Tolerans Gösterilemez Risk'],
+        'dayanaklar' => [
+            'Eğitim' => ['ad' => 'Çalışanların İSG Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik (RG 02.04.2026)', 'url' => 'https://www.resmigazete.gov.tr/eskiler/2026/04/20260402-2.htm'],
+            'KKD' => ['ad' => 'Kişisel Koruyucu Donanımların İşyerlerinde Kullanılması Hakkında Yönetmelik', 'url' => 'https://www.resmigazete.gov.tr/eskiler/2013/07/20130702-2.htm'],
+            'Periyodik kontrol' => ['ad' => 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=18318&MevzuatTur=7&MevzuatTertip=5'],
+            'Risk' => ['ad' => '6331 sayılı Kanun Md.10 — risk değerlendirmesi', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5'],
+            'Acil durum' => ['ad' => '6331 sayılı Kanun Md.11 — acil durum planları', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5'],
+            'Tatbikat' => ['ad' => 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik — tatbikat', 'url' => null],
+            'İSG Kurulu' => ['ad' => '6331 sayılı Kanun Md.22 — iş sağlığı ve güvenliği kurulu', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5'],
+            'Olay / SGK bildirimi' => ['ad' => '6331 sayılı Kanun Md.14 — iş kazası kayıt ve bildirimi', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5'],
+            'DÖF' => ['ad' => '6331 sayılı Kanun Md.4 — işverenin genel yükümlülüğü', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5'],
+            'Ortam ölçümü' => ['ad' => 'İSG Risk Değerlendirmesi Yönetmeliği — ölçüm ve analiz', 'url' => null],
+            'SDS' => ['ad' => 'Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik', 'url' => null],
+            'PKD' => ['ad' => 'Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yönetmelik', 'url' => null],
+            'Sözleşme' => ['ad' => 'İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği — görevlendirme', 'url' => null],
+            'Süreç' => ['ad' => '6331 sayılı İş Sağlığı ve Güvenliği Kanunu', 'url' => 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5'],
+        ],
+    ],
+
     // Ana Sayfa — görev durumu (isgsuite "Ana sayfa — görev durumum").
     'ana_sayfa' => [
         // "Yaklaşan" sütunu: termini bu kadar gün içinde olan görevler.
