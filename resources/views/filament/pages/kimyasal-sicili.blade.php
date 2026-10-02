@@ -20,7 +20,7 @@
     @if ($this->firma)
         @php $o = $this->ozet; @endphp
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:rgb(107 114 128 / .2);border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;overflow:hidden">
-            @foreach (['toplam' => 'Ürün', 'sds_var' => 'SDS Var', 'sds_yok' => 'SDS Eksik', 'yaklasan' => 'Gözden Geçirme Yakın', 'gecikmis' => 'Gecikmiş'] as $k => $ad)
+            @foreach (['toplam' => 'Ürün', 'sds_var' => 'SDS Var', 'sds_yok' => 'SDS Eksik', 'etiketli' => 'GHS Etiketi İşaretli', 'yaklasan' => 'Gözden Geçirme Yakın', 'gecikmis' => 'Gecikmiş'] as $k => $ad)
                 <div style="background:var(--fi-color-white,#fff);padding:.8rem 1rem">
                     <div style="font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums;color:{{ $k === 'sds_yok' || $k === 'gecikmis' ? '#b91c1c' : ($k === 'yaklasan' ? '#b45309' : 'inherit') }}">{{ $o[$k] }}</div>
                     <div style="font-size:.78rem;color:rgb(107 114 128)">{{ $ad }}</div>
@@ -31,6 +31,9 @@
         {{-- KİMYASAL LİSTESİ --}}
         <x-filament::section icon="heroicon-o-list-bullet" icon-color="primary">
             <x-slot name="heading">Kimyasal Envanteri ({{ $this->urunler->count() }})</x-slot>
+            @if ($this->urunler->isNotEmpty())
+                <input type="search" wire:model.live.debounce.400ms="arama" placeholder="Ürün, CAS veya tedarikçi ara…" style="width:100%;max-width:420px;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;margin-bottom:.75rem">
+            @endif
             @if ($this->urunler->isEmpty())
                 <p style="font-size:.85rem;color:rgb(107 114 128)">Sağ üstteki "Kimyasal Ekle" ile başlayın.</p>
             @else
@@ -42,7 +45,7 @@
                             <th style="padding:.5rem">Gözden Geçirme</th><th style="padding:.5rem"></th>
                         </tr></thead>
                         <tbody>
-                        @foreach ($this->urunler as $u)
+                        @foreach ($this->gosterilenUrunler as $u)
                             @php $d = $u->gozdenGecirmeDurumu(); @endphp
                             <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                                 <td style="padding:.5rem">
@@ -62,6 +65,7 @@
                                     {{ $u->sonraki_gozden_gecirme?->format('d.m.Y') ?: '—' }}
                                 </td>
                                 <td style="padding:.5rem">
+                                    <button wire:click="mountAction('kimyasalDuzenle', { id: {{ $u->id }} })" style="background:none;border:0;color:rgb(124 58 237);cursor:pointer;margin-right:.5rem">Düzenle</button>
                                     <button wire:click="kimyasalSil({{ $u->id }})" wire:confirm="'{{ $u->urun_adi }}' silinsin mi?" style="background:none;border:0;color:#ef4444;cursor:pointer">Sil</button>
                                 </td>
                             </tr>
@@ -74,7 +78,7 @@
     @endif
 
     {{-- AFİŞLER --}}
-    <x-filament::section icon="heroicon-o-photo" icon-color="gray" collapsible :collapsed="$this->firma !== null">
+    <x-filament::section id="afisler" icon="heroicon-o-photo" icon-color="gray" collapsible>
         <x-slot name="heading">Afiş / Pano Kütüphanesi</x-slot>
         @if ($this->afisler->isEmpty())
             <p style="font-size:.85rem;color:rgb(107 114 128)">"Afiş / Pano Ekle" ile GHS levhaları, uyarı posterleri vb. yükleyin.</p>

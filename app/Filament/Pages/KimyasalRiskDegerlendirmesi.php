@@ -38,6 +38,9 @@ class KimyasalRiskDegerlendirmesi extends Page
 
     protected static ?string $navigationLabel = 'Kimyasal Risk Değ.';
 
+    // Kimyasal Yönetimi sayfasından açılır.
+    protected static bool $shouldRegisterNavigation = false;
+
     public ?int $firmaId = null;
 
     /** @var array<int, array<string, mixed>> */
@@ -231,6 +234,12 @@ class KimyasalRiskDegerlendirmesi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('merkez')
+                ->label('Kimyasal Yönetimi')
+                ->icon('heroicon-o-arrow-left')
+                ->color('gray')
+                ->url(fn () => KimyasalYonetimi::getUrl(array_filter(['firma' => $this->firmaId]))),
+
             Action::make('kaydet')
                 ->label('Kaydet')
                 ->icon('heroicon-o-check')

@@ -304,6 +304,49 @@ return [
         'kapali' => 'Kapalı (önlem alındı)',
     ],
 
+    // Patlamadan Korunma Dokümanı (PKD) Sicili — isgsuite "PKD Sicili".
+    // Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hk. Yön.
+    'pkd' => [
+        'ortam_turleri' => [
+            'gaz_buhar_sis' => 'Gaz / buhar / sis',
+            'toz' => 'Yanıcı toz',
+            'hibrit' => 'Hibrit (gaz + toz)',
+        ],
+        'zonelar' => [
+            'zone_0' => 'Zone 0',
+            'zone_1' => 'Zone 1',
+            'zone_2' => 'Zone 2',
+            'zone_20' => 'Zone 20',
+            'zone_21' => 'Zone 21',
+            'zone_22' => 'Zone 22',
+        ],
+        'tutusturucular' => [
+            'sicak_calisma' => 'Sıcak çalışma / açık alev',
+            'elektriksel' => 'Elektriksel ekipman',
+            'statik' => 'Statik elektrik',
+            'mekanik' => 'Mekanik kıvılcım / sıcak yüzey',
+            'arac' => 'Araç ve hareketli ekipman',
+            'yildirim' => 'Yıldırım / atmosferik etki',
+        ],
+        'onlemler' => [
+            'havalandirma' => 'Yeterli havalandırma',
+            'ex_ekipman' => 'Uygun Ex ekipman seçimi',
+            'topraklama' => 'Topraklama ve eşpotansiyel bağlantı',
+            'sicak_calisma_izni' => 'Sıcak çalışma izin sistemi',
+            'algilama' => 'Gaz / toz algılama ve alarm',
+            'toz_temizlik' => 'Toz birikimi ve temizlik kontrolü',
+            'bakim' => 'Periyodik bakım ve muayene',
+            'egitim' => 'Çalışan eğitimi ve bilgilendirme',
+        ],
+        'durumlar' => [
+            'taslak' => 'Taslak',
+            'aktif' => 'Aktif',
+            'revizyon' => 'Revizyon gerekiyor',
+            'arsiv' => 'Arşiv',
+        ],
+        'yaklasan_gun' => 30,
+    ],
+
     // Kimyasal Ürün Sicili — SDS / GHS-CLP.
     'kimyasal' => [
         'fiziksel_hal' => [

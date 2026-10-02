@@ -46,7 +46,12 @@ class KimyasalSicili extends Page
 
     protected static ?string $navigationLabel = 'Kimyasal Sicili / Afiş';
 
+    // Kimyasal Yönetimi sayfasından açılır.
+    protected static bool $shouldRegisterNavigation = false;
+
     public ?int $firmaId = null;
+
+    public ?string $arama = null;
 
     public function mount(): void
     {
@@ -74,6 +79,23 @@ class KimyasalSicili extends Page
         return $this->firma?->kimyasalUrunler()->orderBy('urun_adi')->get() ?? collect();
     }
 
+    /** @return Collection<int, KimyasalUrun> ürün adı / CAS / tedarikçi araması */
+    #[Computed]
+    public function gosterilenUrunler(): Collection
+    {
+        $aranan = mb_strtolower(trim((string) $this->arama));
+
+        return $aranan === '' ? $this->urunler : $this->urunler->filter(fn (KimyasalUrun $u) => str_contains(
+            mb_strtolower(implode(' ', [$u->urun_adi, $u->cas_no, $u->tedarikci, $u->kullanim_alani])),
+            $aranan,
+        ))->values();
+    }
+
+    public function updatedArama(): void
+    {
+        unset($this->gosterilenUrunler);
+    }
+
     /** @return Collection<string, Collection<int, IsgAfis>> */
     #[Computed]
     public function afisler(): Collection
@@ -95,6 +117,7 @@ class KimyasalSicili extends Page
             'toplam' => $u->count(),
             'sds_var' => $u->filter->sdsVarMi()->count(),
             'sds_yok' => $u->reject->sdsVarMi()->count(),
+            'etiketli' => $u->filter(fn ($x) => filled($x->ghs))->count(),
             'gecikmis' => $u->filter(fn ($x) => $x->gozdenGecirmeDurumu() === 'gecikmis')->count(),
             'yaklasan' => $u->filter(fn ($x) => $x->gozdenGecirmeDurumu() === 'yaklasan')->count(),
         ];
@@ -102,7 +125,7 @@ class KimyasalSicili extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->urunler, $this->afisler, $this->ozet);
+        unset($this->firma, $this->urunler, $this->gosterilenUrunler, $this->afisler, $this->ozet);
     }
 
     private function kimyasalForm(): array
@@ -136,6 +159,12 @@ class KimyasalSicili extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('merkez')
+                ->label('Kimyasal Yönetimi')
+                ->icon('heroicon-o-arrow-left')
+                ->color('gray')
+                ->url(fn () => KimyasalYonetimi::getUrl(array_filter(['firma' => $this->firmaId]))),
+
             Action::make('kimyasalEkle')
                 ->label('Kimyasal Ekle')
                 ->icon('heroicon-o-plus')
@@ -169,7 +198,56 @@ class KimyasalSicili extends Page
                 ->visible(fn () => $this->urunler->isNotEmpty())
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KimyasalEnvanterUretici::pdf($this->firma)),
+
+            Action::make('envanterExcel')
+                ->label('Excel Rapor')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn () => $this->urunler->isNotEmpty())
+                ->action(fn () => KimyasalEnvanterUretici::excel($this->firma)),
         ];
+    }
+
+    /** Kayıtlı ürünü düzenler; yeni SDS yüklenirse eskisinin yerine geçer. */
+    public function kimyasalDuzenleAction(): Action
+    {
+        return Action::make('kimyasalDuzenle')
+            ->label('Düzenle')
+            ->modalHeading(fn (array $arguments) => 'Kimyasal — '.$this->urun($arguments['id'])->urun_adi)
+            ->fillForm(function (array $arguments): array {
+                $u = $this->urun($arguments['id']);
+
+                return [
+                    ...$u->only(['urun_adi', 'cas_no', 'tedarikci', 'fiziksel_hal', 'kullanim_alani', 'miktar', 'depolama', 'aciklama']),
+                    'ghs' => $u->ghs ?? [],
+                    'sds_tarihi' => $u->sds_tarihi?->toDateString(),
+                    'sonraki_gozden_gecirme' => $u->sonraki_gozden_gecirme?->toDateString(),
+                ];
+            })
+            ->schema(fn () => $this->kimyasalForm())
+            ->action(function (array $data, array $arguments): void {
+                $u = $this->urun($arguments['id']);
+                $yol = $data['sds'] ?? null;
+                unset($data['sds']);
+
+                if ($yol) {
+                    if ($u->sds_dosya_yolu && $u->sds_dosya_yolu !== $yol && Storage::disk('public')->exists($u->sds_dosya_yolu)) {
+                        Storage::disk('public')->delete($u->sds_dosya_yolu);
+                    }
+                    $data['sds_dosya_yolu'] = $yol;
+                    $data['sds_dosya_adi'] = basename($yol);
+                }
+
+                $u->update($data);
+                unset($this->urunler, $this->gosterilenUrunler, $this->ozet);
+
+                Notification::make()->title('Kimyasal güncellendi')->success()->send();
+            });
+    }
+
+    private function urun(int $id): KimyasalUrun
+    {
+        return $this->firma?->kimyasalUrunler()->findOrFail($id) ?? abort(404);
     }
 
     public function kimyasalKaydet(array $data): void
@@ -188,7 +266,7 @@ class KimyasalSicili extends Page
 
         $this->firma->kimyasalUrunler()->create($data + ['aktif' => true]);
 
-        unset($this->urunler, $this->ozet);
+        unset($this->urunler, $this->gosterilenUrunler, $this->ozet);
         Notification::make()->title('Kimyasal eklendi')->success()->send();
     }
 
@@ -220,7 +298,7 @@ class KimyasalSicili extends Page
                 Storage::disk('public')->delete($urun->sds_dosya_yolu);
             }
             $urun->delete();
-            unset($this->urunler, $this->ozet);
+            unset($this->urunler, $this->gosterilenUrunler, $this->ozet);
         }
     }
 
