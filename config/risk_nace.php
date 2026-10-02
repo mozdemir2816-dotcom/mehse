@@ -145,6 +145,16 @@ return [
         'İşyerlerinde Acil Durumlar Hakkında Yönetmelik',
     ],
 
+    // Tehlike ve Risk Analitiği — tehlike türleri. `anahtar`: tür seçilmemiş
+    // maddelerde tehlike / risk / faaliyet metninde aranan kelime kökleri
+    // (küçük harf). Sıra önemlidir: ilk eşleşen tür; hiçbiri değilse fiziksel.
+    'tehlike_turleri' => [
+        'psikososyal' => ['ad' => 'Psikososyal', 'renk' => '#db2777', 'anahtar' => ['psikososyal', 'stres', 'mobbing', 'taciz', 'saldırı', 'iş yükü', 'vardiya', 'gece çalış', 'monoton', 'yalnız çalış', 'tükenmiş']],
+        'biyolojik' => ['ad' => 'Biyolojik', 'renk' => '#7c3aed', 'anahtar' => ['biyolojik', 'bakteri', 'virüs', 'mikrop', 'enfeksiyon', 'salgın', 'bulaş', ' kan ', 'küf', 'lejyonella', 'hijyen', 'tıbbi atık', 'hayvan', 'böcek', 'kemirgen']],
+        'kimyasal' => ['ad' => 'Kimyasal', 'renk' => '#ea580c', 'anahtar' => ['kimyasal', 'solvent', 'tiner', 'boya', 'vernik', 'asit', ' baz ', 'kostik', 'gaz', 'buhar', 'duman', 'zehir', 'toksik', 'akaryakıt', 'benzin', 'mazot', 'lpg', 'amonyak', 'klor', 'sds', 'sızıntı', 'dökülme', 'yanıcı sıvı', 'yapıştırıcı', 'pestisit']],
+        'ergonomik' => ['ad' => 'Ergonomik', 'renk' => '#2563eb', 'anahtar' => ['ergonom', 'elle taşı', 'elle kaldır', 'duruş', 'tekrarlı', 'ekranlı', 'ekran başı', 'kas-iskelet', 'kas iskelet', ' bel ', 'zorlayıcı', 'uzun süre ayakta', 'uzun süre otur', 'eğilme', 'uzanma']],
+        'fiziksel' => ['ad' => 'Fiziksel', 'renk' => '#0d9488', 'anahtar' => []],
+    ],
     // Risk değerlendirmesi maddelerinde önerilecek bölüm adları (isgsuite "Bölümler").
     'bolum_onerileri' => ['İdari Ofis', 'Üretim', 'Bakım', 'Depo', 'Sevkiyat', 'Laboratuvar', 'Kimyasal Depo', 'Elektrik Odası', 'Kazan Dairesi', 'Atölye', 'Çatı', 'Vinç Sahası', 'Yemekhane / Mutfak', 'Otopark', 'Şantiye Sahası'],
 ];

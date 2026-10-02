@@ -114,6 +114,10 @@ class MaddelerRelationManager extends RelationManager
                 Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
                 Toggle::make('etkilenen_calisan')->label('Çalışanlar etkilenir')->default(true),
                 Toggle::make('etkilenen_diger')->label('Taşeron / ziyaretçi etkilenir'),
+                // Tehlike ve Risk Analitiği: tür boşsa metinden tahmin edilir; dominans = puan × maruz kişi
+                Select::make('tehlike_turu')->label('Tehlike türü')->placeholder('Otomatik (metinden tahmin)')
+                    ->options(collect(config('risk_nace.tehlike_turleri'))->map(fn ($t) => $t['ad'])->all()),
+                TextInput::make('maruz_kisi')->label('Maruz kalan kişi sayısı')->numeric()->minValue(0)->maxValue(100000),
             ]),
 
             Section::make("Mevcut Risk ({$yontemBasligi})")
