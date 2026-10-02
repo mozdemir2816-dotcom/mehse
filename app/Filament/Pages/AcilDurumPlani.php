@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumPlani as PlanModel;
 use App\Models\Firma;
+use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumPlaniUretici;
 use App\Support\AcilDurumWordUretici;
@@ -61,6 +62,9 @@ class AcilDurumPlani extends Page
 
     /** @var array<string, string> ekip anahtarı => virgülle ayrık isimler */
     public array $ekipMetni = [];
+
+    /** isgsuite plan sihirbazı 2-3. adım: tedbirler, müdahale, iletişim, onay / tatbikat (bkz. AcilDurumHazirlik). */
+    public array $uygulama = [];
 
     // Afiş seçimi
     public string $afisTipi = 'yangin';
@@ -124,6 +128,8 @@ class AcilDurumPlani extends Page
         $this->toplanmaYeri = $plan->toplanma_yeri;
         $this->disaridanEtkileyebilecekIsyerleri = $plan->disaridan_etkileyebilecek_isyerleri;
         $this->konular = $plan->konular ?? [];
+        $this->uygulama = array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []);
+        unset($this->hazirlik);
         $this->ekipMetni = collect(config('isg.acil_durum.ekipler'))
             ->mapWithKeys(fn ($ad, $k) => [$k => implode(', ', $plan->ekipListesi()[$k] ?? [])])
             ->all();
@@ -162,12 +168,71 @@ class AcilDurumPlani extends Page
             'toplanma_yeri' => $this->toplanmaYeri,
             'disaridan_etkileyebilecek_isyerleri' => $this->disaridanEtkileyebilecekIsyerleri,
             'konular' => $this->konular ?: null,
+            'uygulama' => AcilDurumHazirlik::temizle($this->uygulama),
             'ekipler' => collect($this->ekipMetni)
                 ->map(fn ($metin) => array_values(array_filter(array_map('trim', explode(',', (string) $metin)))))
                 ->all(),
         ])->save();
 
+        unset($this->hazirlik, $this->portfoy);
+
         Notification::make()->title('Acil durum planı kaydedildi')->success()->send();
+    }
+
+    public function iletisimEkle(): void
+    {
+        $this->uygulama['iletisim'][] = ['ad' => '', 'telefon' => '', 'aciklama' => ''];
+    }
+
+    public function iletisimSil(int $i): void
+    {
+        unset($this->uygulama['iletisim'][$i]);
+        $this->uygulama['iletisim'] = array_values($this->uygulama['iletisim']);
+    }
+
+    /** Seçili planın hazırlık kontrolü (kayıtlı veriden). */
+    #[Computed]
+    public function hazirlik(): ?array
+    {
+        $plan = $this->plan();
+
+        return $plan ? AcilDurumHazirlik::kontrol($plan->fresh('firma')) : null;
+    }
+
+    /** Tüm işyerlerinin acil durum hazırlığı (isgsuite plan portföyü). */
+    #[Computed]
+    public function portfoy(): \Illuminate\Support\Collection
+    {
+        return AcilDurumHazirlik::portfoy((int) Filament::auth()->id());
+    }
+
+    public function portfoyExcel()
+    {
+        \App\Support\ExcelBellek::artir();
+        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $s = $kitap->getActiveSheet();
+        $s->setTitle('Acil Durum Hazırlığı');
+        $s->fromArray(['İşyeri', 'Tehlike sınıfı', 'Plan tarihi', 'Gözden geçirme', 'Hazırlık %', 'Durum', 'Eksik başlıklar'], null, 'A1');
+        $s->getStyle('A1:G1')->getFont()->setBold(true);
+        foreach ($this->portfoy->values() as $n => $r) {
+            $k = $r['kontrol'];
+            $s->fromArray([
+                $r['firma']->unvan, $r['firma']->tehlikeSinifiEtiketi(),
+                $r['plan']?->rapor_tarihi?->format('d.m.Y'), $r['plan']?->gecerlilik_tarihi?->format('d.m.Y'),
+                $k ? $k['yuzde'] : null, $k ? AcilDurumHazirlik::DURUM_ETIKET[$k['durum']] : 'Plan yok',
+                $k ? collect($k['kontroller'])->where('tamam', false)->pluck('baslik')->implode('; ') : null,
+            ], null, 'A'.($n + 2));
+        }
+        foreach (range('A', 'G') as $c) {
+            $s->getColumnDimension($c)->setAutoSize(true);
+        }
+        $tmp = tempnam(sys_get_temp_dir(), 'adp').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($tmp);
+
+        return response()->streamDownload(function () use ($tmp) {
+            echo file_get_contents($tmp);
+            @unlink($tmp);
+        }, 'acil-durum-hazirligi.xlsx');
     }
 
     protected function getHeaderActions(): array

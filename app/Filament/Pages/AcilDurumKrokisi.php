@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumKrokisi as KrokiModel;
 use App\Models\Firma;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\AcilDurumKrokisiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -16,13 +16,15 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
- * Acil Durum / Tahliye Krokisi Düzenleyici — isgpratik'in "Acil Durum & Tahliye
- * Krokisi Düzenleyici" (kroki-editor) sayfasının küçültülmüş ilk sürümü: SVG
- * tuvali üzerinde 90°'ye kenetlenen duvar çizgileri + 8 sembollük çekirdek
- * palet (tam ISO 7010 kütüphanesi değil) + isteğe bağlı mimari plan altlığı.
- * Sürükleme YOK — tıkla-yerleştir / tıkla-seç-sil (bkz. MIMARI "Kalan").
+ * Acil Durum / Tahliye Krokisi Editörü (ISGCEO kroki editörü + isgsuite
+ * referansı). Çizim tamamen tarayıcıda (Alpine + SVG): seç / taşı,
+ * duvar (90° kenetli, zincirleme), oda / bölüm, kaçış yolu (oklu), metin,
+ * ISO 7010 renk-biçim kurallarına uygun 57 işaret, döndür / boyut / çoğalt /
+ * öne-arkaya, geri al / ileri al, yakınlaştırma, ızgara, altlık görseli,
+ * otomatik lejant + resmî antet; PNG / proje (JSON) indir-yükle, yazdır.
+ * Sunucu yalnız `kaydet()` ile temizlenmiş veriyi ve PNG görüntüsünü saklar;
+ * PDF bu PNG'yi basar.
  */
 class AcilDurumKrokisi extends Page
 {
@@ -44,45 +46,22 @@ class AcilDurumKrokisi extends Page
 
     public ?int $firmaId = null;
 
-    /** @var array<int, array{x1:float,y1:float,x2:float,y2:float}> */
-    public array $duvarlar = [];
-
-    /** @var array<int, array{tip:string,x:float,y:float,etiket:?string}> */
-    public array $semboller = [];
-
-    public ?string $hazirlanmaTarihi = null;
-
-    public string $aktifArac = 'sembol';
-
-    public string $aktifSembol = 'cikis';
-
-    /** Duvar çizerken ilk tıklanan nokta; ikinci tıklamada çizgi tamamlanır. */
-    public ?array $bekleyenNokta = null;
-
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
-            $this->firmaId = $firmaId;
-            $this->updatedFirmaId();
-        }
+        $id = request()->integer('firma');
+        $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
     }
 
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()
-            ->where('user_id', Filament::auth()->id())
-            ->orderBy('unvan')
-            ->pluck('unvan', 'id')
-            ->all();
+        return Firma::query()->where('user_id', Filament::auth()->id())->orderBy('unvan')->pluck('unvan', 'id')->all();
     }
 
     #[Computed]
     public function firma(): ?Firma
     {
-        return $this->firmaId
-            ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId)
-            : null;
+        return $this->firmaId ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId) : null;
     }
 
     public function kroki(): ?KrokiModel
@@ -90,98 +69,38 @@ class AcilDurumKrokisi extends Page
         return $this->firma ? KrokiModel::firmaIcin($this->firma) : null;
     }
 
+    /** Editör tarayıcıda yaşadığı için firma değişince sayfa yeniden yüklenir. */
     public function updatedFirmaId(): void
     {
-        unset($this->firma);
-        $this->bekleyenNokta = null;
+        $this->redirect(static::getUrl($this->firmaId ? ['firma' => $this->firmaId] : []));
+    }
 
+    /** Editörün ilk durumu (eski 1000x700 krokiler ölçeklenir). */
+    public function editorVerisi(): array
+    {
         $kroki = $this->kroki();
+        $veri = $kroki?->editorVerisi() ?? ['duvarlar' => [], 'semboller' => [], 'ogeler' => ['odalar' => [], 'yollar' => [], 'metinler' => []], 'antet' => []];
+        $firma = $this->firma;
 
-        if (! $kroki) {
-            $this->duvarlar = [];
-            $this->semboller = [];
-            $this->hazirlanmaTarihi = null;
+        $veri['antet'] += [
+            'baslik' => 'ACİL DURUM TAHLİYE KROKİSİ',
+            'hazirlayan' => Filament::auth()->user()?->name,
+        ];
+        $veri['bilgi'] = [
+            'firma' => $firma?->unvan,
+            'adres' => trim(($firma?->adres ?? '').' '.($firma?->ilce ?? '').' '.($firma?->il ?? '')),
+            'tarih' => ($kroki?->hazirlanma_tarihi ?? now())->format('d.m.Y'),
+            'altlik' => $this->arkaPlanUrl(),
+        ];
 
-            return;
-        }
-
-        $this->duvarlar = $kroki->duvarlar ?? [];
-        $this->semboller = $kroki->semboller ?? [];
-        $this->hazirlanmaTarihi = $kroki->hazirlanma_tarihi?->toDateString();
+        return $veri;
     }
 
-    public function aracSec(string $arac): void
-    {
-        $this->aktifArac = $arac;
-        $this->bekleyenNokta = null;
-    }
-
-    public function semboSec(string $tip): void
-    {
-        $this->aktifSembol = $tip;
-        $this->aktifArac = 'sembol';
-    }
-
-    /** Tuval üzerine tıklanınca JS'ten SVG koordinatı gelir. */
-    public function nokta(float $x, float $y): void
-    {
-        if (! $this->firma) {
-            return;
-        }
-
-        if ($this->aktifArac === 'sembol') {
-            $this->semboller[] = ['tip' => $this->aktifSembol, 'x' => round($x), 'y' => round($y), 'etiket' => null];
-
-            return;
-        }
-
-        if ($this->aktifArac === 'duvar') {
-            if (! $this->bekleyenNokta) {
-                $this->bekleyenNokta = ['x' => round($x), 'y' => round($y)];
-
-                return;
-            }
-
-            $x1 = $this->bekleyenNokta['x'];
-            $y1 = $this->bekleyenNokta['y'];
-            $x2 = round($x);
-            $y2 = round($y);
-
-            // 90°'ye kenetleme: yatay hareket daha büyükse tamamen yatay, değilse tamamen dikey.
-            if (abs($x2 - $x1) >= abs($y2 - $y1)) {
-                $y2 = $y1;
-            } else {
-                $x2 = $x1;
-            }
-
-            if ($x1 !== $x2 || $y1 !== $y2) {
-                $this->duvarlar[] = ['x1' => $x1, 'y1' => $y1, 'x2' => $x2, 'y2' => $y2];
-            }
-
-            $this->bekleyenNokta = null;
-        }
-    }
-
-    public function duvarSil(int $index): void
-    {
-        unset($this->duvarlar[$index]);
-        $this->duvarlar = array_values($this->duvarlar);
-    }
-
-    public function semboSil(int $index): void
-    {
-        unset($this->semboller[$index]);
-        $this->semboller = array_values($this->semboller);
-    }
-
-    public function temizle(): void
-    {
-        $this->duvarlar = [];
-        $this->semboller = [];
-        $this->bekleyenNokta = null;
-    }
-
-    public function kaydet(): void
+    /**
+     * Tarayıcıdan: kroki verisi + o anki görünümün PNG'si (data URL).
+     * PNG en fazla ~8 MB kabul edilir.
+     */
+    public function kaydet(array $veri, ?string $png = null): void
     {
         $kroki = $this->kroki();
 
@@ -191,11 +110,25 @@ class AcilDurumKrokisi extends Page
             return;
         }
 
-        $kroki->forceFill([
-            'duvarlar' => $this->duvarlar,
-            'semboller' => $this->semboller,
-            'hazirlanma_tarihi' => $this->hazirlanmaTarihi ?: now(),
-        ])->save();
+        $temiz = KrokiModel::temizle($veri);
+        $kroki->forceFill([...$temiz, 'hazirlanma_tarihi' => now()]);
+
+        if ($png && str_starts_with($png, 'data:image/png;base64,') && strlen($png) < 11_000_000) {
+            $ikili = base64_decode(substr($png, 22), true);
+
+            if ($ikili !== false && str_starts_with($ikili, "\x89PNG")) {
+                $eski = $kroki->gorsel_yolu;
+                $yol = 'acil-durum-kroki/'.$kroki->firma_id.'-'.now()->format('YmdHis').'.png';
+                Storage::disk('public')->put($yol, $ikili);
+                $kroki->gorsel_yolu = $yol;
+
+                if ($eski && $eski !== $yol) {
+                    Storage::disk('public')->delete($eski);
+                }
+            }
+        }
+
+        $kroki->save();
 
         Notification::make()->title('Kroki kaydedildi')->success()->send();
     }
@@ -204,32 +137,31 @@ class AcilDurumKrokisi extends Page
     {
         return [
             Action::make('arkaPlan')
-                ->label('Plan Altlığı Yükle')
+                ->label('Plan Altlığı')
                 ->icon('heroicon-o-photo')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
+                ->modalDescription('Mimari plan / kat planı görselini krokinin altına yerleştirin; çizimi üzerine yapın. Kaydettikten sonra sayfa yenilenir — önce krokiyi kaydedin.')
                 ->fillForm(fn (): array => ['arka_plan_gorseli' => $this->kroki()?->arka_plan_gorseli])
                 ->schema([
                     FileUpload::make('arka_plan_gorseli')
-                        ->label('Mimari plan / kat planı görseli')
+                        ->label('Mimari plan / kat planı görseli (boş bırakırsanız kaldırılır)')
                         ->image()
                         ->disk('public')->directory('acil-durum-kroki-arkaplan')->maxSize(4096),
                 ])
                 ->action(function (array $data): void {
-                    $this->kroki()?->forceFill($data)->save();
+                    $this->kroki()?->forceFill(['arka_plan_gorseli' => $data['arka_plan_gorseli'] ?? null])->save();
                     Notification::make()->title('Plan altlığı kaydedildi')->success()->send();
+                    $this->redirect(static::getUrl(['firma' => $this->firmaId]));
                 }),
 
             Action::make('pdf')
                 ->label('Kroki PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
+                ->modalDescription('PDF, en son "Kaydet" ile kaydedilen kroki görüntüsünden üretilir.')
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
-                    $this->kaydet();
-
-                    return AcilDurumKrokisiUretici::pdf($this->kroki());
-                }),
+                ->action(fn () => AcilDurumKrokisiUretici::pdf($this->kroki())),
         ];
     }
 

@@ -25,6 +25,7 @@ class AcilDurumPlani extends Model
         'gecerlilik_tarihi' => 'date',
         'konular' => 'array',
         'ekipler' => 'array',
+        'uygulama' => 'array',
     ];
 
     protected static function booted(): void

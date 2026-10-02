@@ -17,6 +17,40 @@
 
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'acil_durum_plani'])
 
+    {{-- PLAN PORTFÖYÜ (isgsuite "İşyerlerinizin acil durum hazırlığı") --}}
+    @php
+        $pf = $this->portfoy;
+        $pfSay = ['toplam' => $pf->filter(fn ($r) => $r['kontrol'])->count(), 'hazir' => $pf->filter(fn ($r) => ($r['kontrol']['durum'] ?? null) === 'hazir')->count(),
+            'aksiyon' => $pf->filter(fn ($r) => ($r['kontrol']['durum'] ?? null) === 'aksiyon')->count(), 'gozden' => $pf->filter(fn ($r) => ($r['kontrol']['durum'] ?? null) === 'gozden_gecirme')->count()];
+    @endphp
+    <x-filament::section icon="heroicon-o-shield-check" icon-color="danger" collapsible :collapsed="(bool) $this->firma">
+        <x-slot name="heading">İşyerlerinizin acil durum hazırlığı</x-slot>
+        <x-slot name="description">Hazırlık düzeyi hukuki uygunluk beyanı değildir; saha doğrulaması, işveren onayı, ekip eğitimleri ve tatbikat kayıtları ayrıca tamamlanmalıdır.</x-slot>
+        <x-slot name="afterHeader"><x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="portfoyExcel">Excel dışa aktar</x-filament::button></x-slot>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-bottom:.8rem">
+            @foreach ([['Toplam plan', $pfSay['toplam'], 'inherit', 'Kayıtlı planlar'], ['Hazır', $pfSay['hazir'], 'rgb(21 128 61)', 'Tüm kontroller tamam'], ['Aksiyon gerekli', $pfSay['aksiyon'], 'rgb(217 119 6)', 'Eksik başlık veya kroki'], ['Gözden geçirme', $pfSay['gozden'], 'rgb(220 38 38)', 'Termin geçmiş plan']] as [$ad, $sayi, $renk, $alt])
+                <div style="{{ $kutu }};padding:.6rem .8rem">
+                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $sayi }}</div>
+                    <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $alt }}</div>
+                </div>
+            @endforeach
+        </div>
+        <div style="max-height:260px;overflow:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                @foreach ($pf as $r)
+                    @php $k = $r['kontrol']; $renk = ['hazir' => 'rgb(21 128 61)', 'aksiyon' => 'rgb(217 119 6)', 'gozden_gecirme' => 'rgb(220 38 38)'][$k['durum'] ?? ''] ?? 'rgb(107 114 128)'; @endphp
+                    <tr style="border-top:1px solid rgb(107 114 128 / .12)">
+                        <td style="padding:.35rem .4rem">{{ $r['firma']->unvan }}</td>
+                        <td style="padding:.35rem .4rem;white-space:nowrap;color:{{ $renk }};font-weight:700">{{ $k ? \App\Support\AcilDurumHazirlik::DURUM_ETIKET[$k['durum']].' · %'.$k['yuzde'] : 'Plan yok' }}</td>
+                        <td style="padding:.35rem .4rem;white-space:nowrap;color:rgb(107 114 128)">{{ $r['plan']?->gecerlilik_tarihi ? 'Gözden geçirme '.$r['plan']->gecerlilik_tarihi->format('d.m.Y') : '' }}</td>
+                        <td style="padding:.35rem .4rem;text-align:right"><a href="{{ \App\Filament\Pages\AcilDurumPlani::getUrl(['firma' => $r['firma']->id]) }}" style="color:rgb(124 58 237);font-size:.75rem">{{ $k ? 'Aç →' : 'Plan oluştur →' }}</a></td>
+                    </tr>
+                @endforeach
+            </table>
+        </div>
+    </x-filament::section>
+
     {{-- 1. FİRMA & RAPOR BİLGİLERİ --}}
     <x-filament::section icon="heroicon-o-building-office-2" icon-color="danger">
         <x-slot name="heading">1. Firma & Rapor Bilgileri</x-slot>
@@ -127,6 +161,94 @@
                 <x-filament::button size="xs" color="gray" wire:click="tumKonular(false)">Tümünü Kaldır</x-filament::button>
             </div>
         </x-filament::section>
+
+        {{-- RİSK, TEDBİR VE UYGULAMA (isgsuite plan sihirbazı 2-3. adım) --}}
+        @php $alan = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem'; $lb = 'display:block;font-size:.78rem;font-weight:600;margin-bottom:.2rem'; @endphp
+        <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="danger" collapsible>
+            <x-slot name="heading">Risk, tedbir ve uygulama</x-slot>
+            <x-slot name="description">Tahliye anında herkes ne yapacak? Bu bilgiler kroki, ekip ve tatbikat süreçleriyle birlikte kullanılır. Kaydet ile saklanır.</x-slot>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem">
+                <div style="grid-column:1/-1"><label style="{{ $lb }}">Önleyici ve sınırlandırıcı tedbirler</label>
+                    <textarea wire:model="uygulama.onleyici_tedbirler" rows="3" style="{{ $alan }}" placeholder="Örn. yanıcı malzemelerin depolama koşulları, periyodik kontroller, alarm ve enerji izolasyonu…"></textarea></div>
+                <div><label style="{{ $lb }}">Ölçüm ve değerlendirme notu</label>
+                    <textarea wire:model="uygulama.olcum_notu" rows="3" style="{{ $alan }}" placeholder="Gerekli ölçümler, mevcut raporlar veya neden uygulanamaz olduğu"></textarea></div>
+                <div><label style="{{ $lb }}">Acil durum ekipmanı ve KKD listesi</label>
+                    <textarea wire:model="uygulama.ekipman_kkd" rows="3" style="{{ $alan }}" placeholder="Yangın, ilk yardım, kurtarma ve gerekiyorsa KKD ekipmanları"></textarea></div>
+                @foreach (['ozel_risk_alanlari' => 'Özel risk alanları', 'enerji_kesme' => 'Enerji kesme / vana noktaları'] as $anahtar => $ad)
+                    <div style="{{ $kutu }};padding:.6rem .8rem"><span style="{{ $lb }}">{{ $ad }}</span>
+                        <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.8rem">
+                            @foreach (\App\Support\AcilDurumHazirlik::UC_DURUM as $k => $v)
+                                <label style="display:flex;gap:.3rem;align-items:center"><input type="radio" wire:model="uygulama.{{ $anahtar }}" value="{{ $k }}"> {{ $v }}</label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+                <div style="grid-column:1/-1"><label style="{{ $lb }}">Müdahale, haberleşme ve tahliye yöntemi</label>
+                    <textarea wire:model="uygulama.mudahale_yontemi" rows="3" style="{{ $alan }}" placeholder="İhbar yöntemi, ilk müdahale, ekiplerin görev sırası, tahliye, toplanma ve yoklama adımları"></textarea></div>
+                <div style="grid-column:1/-1"><label style="{{ $lb }}">Özel desteğe ihtiyaç duyan kişiler için yöntem</label>
+                    <textarea wire:model="uygulama.ozel_destek" rows="2" style="{{ $alan }}" placeholder="Engelli, yaşlı, gebe, çocuk veya refakat ihtiyacı olan kişiler için destek yöntemi"></textarea></div>
+                <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem">
+                    @foreach (['ziyaretci_dahil' => ['Ziyaretçiler dahil', 'Girişte bilgilendirme / refakat akışı'], 'gecici_calisan_dahil' => ['Geçici çalışanlar dahil', 'İşe başlama ve saha bilgilendirmesi'], 'coklu_isveren' => ['Birden fazla işveren / ortak saha', 'Koordinasyon kontrolü gerektirir']] as $anahtar => [$ad, $alt])
+                        <label style="{{ $kutu }};padding:.55rem .7rem;display:flex;gap:.5rem;align-items:flex-start;cursor:pointer">
+                            <input type="checkbox" wire:model="uygulama.{{ $anahtar }}" style="margin-top:.2rem">
+                            <span><span style="font-size:.8rem;font-weight:600">{{ $ad }}</span><br><span style="font-size:.7rem;color:rgb(107 114 128)">{{ $alt }}</span></span>
+                        </label>
+                    @endforeach
+                </div>
+
+                <div style="grid-column:1/-1;{{ $kutu }};padding:.7rem .8rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+                        <span><span style="font-size:.8rem;font-weight:700">Acil iletişim listesi</span><br><span style="font-size:.7rem;color:rgb(107 114 128)">112 yanında işyerine uygun yerel ve tesis irtibatlarını ekleyin.</span></span>
+                        <x-filament::button size="xs" color="gray" icon="heroicon-o-plus" wire:click="iletisimEkle">İrtibat ekle</x-filament::button>
+                    </div>
+                    @foreach ($this->uygulama['iletisim'] ?? [] as $i => $irtibat)
+                        <div style="display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:.4rem;margin-bottom:.35rem" wire:key="irtibat-{{ $i }}">
+                            <input type="text" wire:model="uygulama.iletisim.{{ $i }}.ad" placeholder="Kurum / kişi" style="{{ $alan }}">
+                            <input type="text" wire:model="uygulama.iletisim.{{ $i }}.telefon" placeholder="Telefon" style="{{ $alan }}">
+                            <input type="text" wire:model="uygulama.iletisim.{{ $i }}.aciklama" placeholder="Açıklama" style="{{ $alan }}">
+                            <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" wire:click="iletisimSil({{ $i }})" />
+                        </div>
+                    @endforeach
+                </div>
+
+                <div style="grid-column:1/-1;{{ $kutu }};padding:.7rem .8rem">
+                    <div style="font-size:.8rem;font-weight:700">Yayın, onay ve tatbikat doğrulaması</div>
+                    <div style="font-size:.7rem;color:rgb(107 114 128);margin-bottom:.5rem">Tatbikat modülünde "tamamlandı" kaydı varsa sistem onu öncelikli kaynak kabul eder. Onay seçimi belgeyle ayrıca doğrulanmalıdır.</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
+                        <div><label style="{{ $lb }}">Onay / imza durumu</label>
+                            <select wire:model="uygulama.onay_durumu" style="{{ $alan }}">@foreach (\App\Support\AcilDurumHazirlik::ONAY as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach</select></div>
+                        <div><label style="{{ $lb }}">Son tatbikat (manuel kayıt)</label><input type="date" wire:model="uygulama.son_tatbikat" style="{{ $alan }}"></div>
+                        <div><label style="{{ $lb }}">Planlanan sonraki tatbikat</label><input type="date" wire:model="uygulama.sonraki_tatbikat" style="{{ $alan }}"></div>
+                        <div><label style="{{ $lb }}">Tutanak / kayıt referansı</label><input type="text" wire:model="uygulama.tutanak_ref" placeholder="Örn. TAT-2026-004" style="{{ $alan }}"></div>
+                    </div>
+                    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:.6rem;font-size:.8rem">
+                        <label style="display:flex;gap:.35rem;align-items:center"><input type="checkbox" wire:model="uygulama.kroki_asildi"> Krokiler görünür yerlere asıldı <span style="font-size:.7rem;color:rgb(107 114 128)">(giriş, çıkış ve kat seviyeleri)</span></label>
+                        <label style="display:flex;gap:.35rem;align-items:center"><input type="checkbox" wire:model="uygulama.calisan_bilgilendirildi"> Çalışan bilgilendirmesi tamamlandı <span style="font-size:.7rem;color:rgb(107 114 128)">(yeni ve geçici çalışanlar dahil)</span></label>
+                    </div>
+                </div>
+
+                <div style="grid-column:1/-1"><label style="{{ $lb }}">Ek not</label>
+                    <textarea wire:model="uygulama.ek_not" rows="2" style="{{ $alan }}" placeholder="Planın saha uygulamasına ilişkin ek notlar"></textarea></div>
+            </div>
+            <div style="margin-top:.7rem"><x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button></div>
+        </x-filament::section>
+
+        {{-- HAZIRLIK KONTROLÜ --}}
+        @if ($h = $this->hazirlik)
+            <x-filament::section icon="heroicon-o-check-badge" icon-color="danger">
+                <x-slot name="heading">Hazırlık kontrolü — %{{ $h['yuzde'] }} · {{ \App\Support\AcilDurumHazirlik::DURUM_ETIKET[$h['durum']] }}</x-slot>
+                <x-slot name="description">Kaydedilmiş verilere göre; değişikliklerden sonra Kaydet'e basın.</x-slot>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.4rem">
+                    @foreach ($h['kontroller'] as $k)
+                        <div style="display:flex;gap:.5rem;align-items:flex-start;padding:.45rem .6rem;border-radius:.45rem;border:1px solid {{ $k['tamam'] ? 'rgb(21 128 61 / .35)' : 'rgb(217 119 6 / .45)' }};background:{{ $k['tamam'] ? 'rgb(21 128 61 / .05)' : 'rgb(217 119 6 / .06)' }}">
+                            <span style="font-weight:800;color:{{ $k['tamam'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $k['tamam'] ? '✓' : '!' }}</span>
+                            <span><span style="font-size:.8rem;font-weight:600">{{ $k['baslik'] }}</span><br><span style="font-size:.72rem;color:rgb(107 114 128)">{{ $k['aciklama'] }}</span></span>
+                        </div>
+                    @endforeach
+                </div>
+            </x-filament::section>
+        @endif
 
         {{-- 3. KAPAK ÇERÇEVESİ --}}
         <x-filament::section icon="heroicon-o-swatch" icon-color="danger">
