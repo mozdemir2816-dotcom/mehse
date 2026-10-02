@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\DofRaporu;
+use App\Models\OlayKaydi;
 use App\Models\Firma;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\DofRaporuUretici;
@@ -62,6 +63,9 @@ class DofOlustur extends Page
     /** @var array<int, array{tespit: string, oncelik: string, oneri: ?string, sorumlu: ?string, termin: ?string, durum: string}> */
     public array $maddeler = [];
 
+    /** DÖF bir Olay Kaydı'ndan aktarıldıysa — kaydedilince olaya bağlanır. */
+    public ?int $kaynakOlayKaydiId = null;
+
     public ?string $yeniTespit = null;
 
     public string $yeniOncelik = 'orta';
@@ -83,9 +87,10 @@ class DofOlustur extends Page
             $this->firmaId = $aktarim['firma_id'];
             $this->updatedFirmaId();
             $this->maddeler = [...$this->maddeler, ...$aktarim['maddeler']];
+            $this->kaynakOlayKaydiId = $aktarim['olay_kaydi_id'] ?? null;
 
             Notification::make()
-                ->title(count($aktarim['maddeler']).' bulgu AI Saha Analizi\'nden aktarıldı')
+                ->title(count($aktarim['maddeler']).' bulgu '.($aktarim['kaynak'] ?? 'AI Saha Analizi').'\'nden aktarıldı')
                 ->success()
                 ->send();
 
@@ -332,6 +337,14 @@ class DofOlustur extends Page
             'maddeler' => $this->maddeler,
         ]);
         $d->save();
+
+        // Olay Kaydı'ndan gelen DÖF → olayın "DÖF" sütununa bağla (ilk DÖF korunur).
+        if ($this->kaynakOlayKaydiId) {
+            OlayKaydi::where('firma_id', $this->firma->id)
+                ->whereKey($this->kaynakOlayKaydiId)
+                ->whereNull('dof_raporu_id')
+                ->update(['dof_raporu_id' => $d->id]);
+        }
 
         unset($this->gecmisKayitlar);
 

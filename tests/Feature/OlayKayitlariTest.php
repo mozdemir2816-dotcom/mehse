@@ -215,6 +215,211 @@ class OlayKayitlariTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
+    public function test_isgsuite_alanlari_kaydedilir_ve_imza_sahipleri_firmadan_gelir(): void
+    {
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create(['ad_soyad' => 'Dr. Ayşe Demir']);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'isyeri_hekimi_id' => $hekim->id,
+            'isveren_vekili' => 'Mehmet Yılmaz',
+        ]);
+
+        $component = Livewire::test(OlayKayitlari::class)->set('firmaId', $firma->id);
+
+        $this->assertSame('Dr. Ayşe Demir', $component->get('isyeriHekimi'));
+        $this->assertSame('Mehmet Yılmaz', $component->get('isverenVekili'));
+
+        $component
+            ->set('olayTipi', 'is_kazasi')
+            ->set('durum', 'incelemede')
+            ->set('bolum', 'Üretim')
+            ->set('alan', 'Kaynakhane')
+            ->set('yapilanIs', 'Profil kesimi')
+            ->set('ekipman', 'Avuç taşlama')
+            ->set('kimyasal', 'Kesme yağı')
+            ->set('siniflandirma', 'el_aleti')
+            ->set('olayOzeti', 'Taşlama sırasında disk kırıldı, operatörün eli kesildi.')
+            ->set('olayDetayi', 'Koruyucu kapak sökülmüş taşlama ile kesim yapılırken disk parçalandı.')
+            ->set('etkiler', ['yaralanma', 'tibbi_mudahale'])
+            ->set('riskAnalizinde', 'kismen')
+            ->set('acilDurumIliskisi', 'ilk_yardim')
+            ->set('kazaTuru', 'kesilme')
+            ->set('yaralanmaTuru', 'Sol el kesik')
+            ->set('mudahaleDetayi', 'İlk yardım + hastaneye sevk')
+            ->set('sistemselEksiklik', 'Ekipman ön kontrol formu yok')
+            ->callAction('kaydet');
+
+        $o = OlayKaydi::where('firma_id', $firma->id)->sole();
+        $this->assertSame('incelemede', $o->durum);
+        $this->assertSame('Kaynakhane', $o->alan);
+        $this->assertSame('El aleti / elektrikli el aleti', $o->siniflandirmaEtiketi());
+        $this->assertTrue($o->etkiVar('tibbi_mudahale'));
+        $this->assertFalse($o->etkiVar('ekipman_hasari'));
+        $this->assertSame('kesilme', $o->kaza_turu);
+        $this->assertSame('Dr. Ayşe Demir', $o->isyeri_hekimi);
+        $this->assertSame('Ekipman ön kontrol formu yok', $o->sistemsel_eksiklik);
+    }
+
+    public function test_kisa_ozet_ve_kisa_detay_reddedilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->set('olayOzeti', 'Kısa özet')
+            ->callAction('kaydet');
+        $this->assertDatabaseCount('olay_kayitlari', 0);
+
+        Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->set('olayOzeti', 'Yeterince uzun bir olay özeti yazıldı.')
+            ->set('olayDetayi', 'Çok kısa')
+            ->callAction('kaydet');
+        $this->assertDatabaseCount('olay_kayitlari', 0);
+    }
+
+    public function test_duzenle_ayni_kaydi_gunceller_ve_fotograflari_korur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $o = OlayKaydi::create([
+            'firma_id' => $firma->id,
+            'olay_tipi' => 'ramak_kala',
+            'olay_ozeti' => 'Raftan koli düştü, kimse yaralanmadı.',
+            'olay_tarihi' => '2026-09-20',
+            'bes_neden' => ['Raf aşırı yüklü'],
+            'balik_kilcigi' => ['insan' => ['Dikkatsiz istifleme']],
+            'fotograflar' => ['olay-kaydi-foto/eski.jpg'],
+        ]);
+        $belgeNo = $o->belge_no;
+
+        $component = Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->call('duzenle', $o->id);
+
+        $this->assertSame($o->id, $component->get('duzenlenenId'));
+        $this->assertSame('Raftan koli düştü, kimse yaralanmadı.', $component->get('olayOzeti'));
+        $this->assertSame('2026-09-20', $component->get('olayTarihi'));
+        $this->assertSame(['Raf aşırı yüklü', '', '', '', ''], $component->get('besNeden'));
+        $this->assertSame(['Dikkatsiz istifleme'], $component->get('balikKilcigi')['insan']);
+
+        $component->set('durum', 'kapandi')->callAction('kaydet');
+
+        $this->assertDatabaseCount('olay_kayitlari', 1);
+        $o->refresh();
+        $this->assertSame('kapandi', $o->durum);
+        $this->assertSame($belgeNo, $o->belge_no);
+        $this->assertSame(['olay-kaydi-foto/eski.jpg'], $o->fotograflar);
+
+        // "Yeni Kayıt" düzenlemeyi bırakır; sonraki kayıt ayrı satır olur.
+        $component->call('yeniKayit')
+            ->set('olayOzeti', 'İkinci olay — merdivende kayma yaşandı.')
+            ->callAction('kaydet');
+        $this->assertDatabaseCount('olay_kayitlari', 2);
+    }
+
+    public function test_eksik_ve_otomatik_uyarilar_sgk_son_gunu_hafta_sonunu_atlar(): void
+    {
+        // 2026-10-01 Perşembe → +3 iş günü = 2026-10-06 Salı
+        $o = new OlayKaydi([
+            'olay_tipi' => 'is_kazasi',
+            'olay_tarihi' => '2026-10-01',
+            'risk_analizinde' => 'hayir',
+        ]);
+
+        $this->assertSame('06.10.2026', $o->sgkSonTarih()->format('d.m.Y'));
+        $this->assertCount(4, $o->eksikUyarilari());
+        $this->assertCount(2, $o->otomatikUyarilar());
+        $this->assertStringContainsString('06.10.2026', $o->otomatikUyarilar()[0]);
+
+        $o->fill(['sgk_bildirimi_yapildi' => true, 'kolluk_bildirimi_yapildi' => true, 'duzeltici_faaliyet' => 'x', 'kok_neden' => 'y', 'risk_analizinde' => 'evet']);
+        $this->assertSame([], $o->eksikUyarilari());
+        $this->assertSame([], $o->otomatikUyarilar());
+
+        // Ramak kalada SGK/kolluk uyarısı yok.
+        $this->assertSame([], (new OlayKaydi(['olay_tipi' => 'ramak_kala']))->otomatikUyarilar());
+    }
+
+    public function test_genel_degerlendirme_formdan_olusturulur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->set('olayTipi', 'is_kazasi')
+            ->set('olayTarihi', '2026-09-22')
+            ->set('olayYeri', 'Depo')
+            ->set('siniflandirma', 'malzeme_dusmesi')
+            ->set('etkiler', ['yaralanma'])
+            ->set('besNeden', ['Raf sabitlenmemiş', 'Montaj kontrolü yok', '', '', ''])
+            ->call('genelDegerlendirmeOlustur');
+
+        $metin = $component->get('genelDegerlendirme');
+        $this->assertStringContainsString('22.09.2026', $metin);
+        $this->assertStringContainsString('Malzeme / cisim düşmesi', $metin);
+        $this->assertStringContainsString('Montaj kontrolü yok', $metin);
+        $this->assertStringContainsString('SGK', $metin);
+    }
+
+    public function test_olaydan_aktarilan_dof_kaydedilince_olaya_baglanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $o = OlayKaydi::create([
+            'firma_id' => $firma->id,
+            'olay_tipi' => 'tehlikeli_durum',
+            'olay_ozeti' => 'Korkuluk eksik, düşme tehlikesi var.',
+            'duzeltici_faaliyet' => 'Korkuluk tamamlanacak.',
+        ]);
+
+        Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->call('dofeAktar', $o->id);
+
+        Livewire::test(DofOlustur::class)
+            ->assertSet('kaynakOlayKaydiId', $o->id)
+            ->callAction('pdf', ['imzali' => '1']);
+
+        $this->assertNotNull($o->fresh()->dof_raporu_id);
+    }
+
+    public function test_dolu_is_kazasi_pdf_ve_genis_defter_excel_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $o = OlayKaydi::create([
+            'firma_id' => $firma->id,
+            'olay_tipi' => 'is_kazasi',
+            'durum' => 'acik',
+            'olay_tarihi' => now(),
+            'olay_ozeti' => 'Taşlama diski kırıldı, operatör yaralandı.',
+            'olay_detayi' => 'Koruyucu kapak sökülmüş taşlama ile kesim yapılırken disk parçalandı.',
+            'bolum' => 'Üretim',
+            'siniflandirma' => 'el_aleti',
+            'etkiler' => ['yaralanma', 'is_goremezlik'],
+            'kaza_turu' => 'kesilme',
+            'risk_analizinde' => 'hayir',
+            'acil_durum_iliskisi' => 'ilk_yardim',
+            'genel_degerlendirme' => 'Değerlendirme metni.',
+            'isyeri_hekimi' => 'Dr. X',
+            'isveren_vekili' => 'Y',
+        ]);
+
+        ob_start();
+        OlayKaydiUretici::pdf($o, imzali: false)->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        $yanit = OlayKaydiUretici::defterExcel($firma);
+        $tmp = tempnam(sys_get_temp_dir(), 'olt').'.xlsx';
+        ob_start();
+        $yanit->sendContent();
+        file_put_contents($tmp, ob_get_clean());
+
+        $sayfa = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmp)->getActiveSheet();
+        @unlink($tmp);
+        $baslik = $sayfa->rangeToArray('A1:AG1')[0];
+        $this->assertSame('Durum', $baslik[2]);
+        $this->assertSame('İşveren Vekili', $baslik[32]);
+        $this->assertSame('Açık', $sayfa->getCell('C2')->getValue());
+        $this->assertSame('Üretim', $sayfa->getCell('G2')->getValue());
+    }
+
     public function test_kontrol_merkezi_kriteri_olay_kaydi_varken_karsilanir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

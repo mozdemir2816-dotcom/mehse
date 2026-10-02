@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Olay Kaydı — İSG olay defterinin tek bir satırı. İş Kazası Raporu'ndan farkı:
@@ -29,6 +30,7 @@ class OlayKaydi extends Model
         'kok_neden_kategorileri' => 'array',
         'taniklar' => 'array',
         'fotograflar' => 'array',
+        'etkiler' => 'array',
         'sgk_bildirimi_yapildi' => 'boolean',
         'kolluk_bildirimi_yapildi' => 'boolean',
     ];
@@ -104,6 +106,151 @@ class OlayKaydi extends Model
     public function isKazasiMi(): bool
     {
         return in_array($this->olay_tipi, ['is_kazasi', 'meslek_hastaligi_supheli'], true);
+    }
+
+    public function durumEtiketi(): string
+    {
+        return config('isg.olay.durumlar.'.($this->durum ?: 'acik'), $this->durum ?? 'Açık');
+    }
+
+    public function siniflandirmaEtiketi(): string
+    {
+        return config('isg.olay.siniflandirmalar.'.$this->siniflandirma, $this->siniflandirma ?? '—');
+    }
+
+    public function kazaTuruEtiketi(): string
+    {
+        return config('isg.is_kazasi.kaza_turleri.'.$this->kaza_turu, $this->kaza_turu ?? '—');
+    }
+
+    public function riskAnalizindeEtiketi(): string
+    {
+        return config('isg.olay.risk_analizi_durumlari.'.$this->risk_analizinde, $this->risk_analizinde ?? '—');
+    }
+
+    public function acilDurumEtiketi(): string
+    {
+        return config('isg.olay.acil_durum_iliskileri.'.$this->acil_durum_iliskisi, $this->acil_durum_iliskisi ?? '—');
+    }
+
+    /** Olay etkileri kutucuğu işaretli mi (yaralanma, tıbbi müdahale, …). */
+    public function etkiVar(string $anahtar): bool
+    {
+        return in_array($anahtar, $this->etkiler ?? [], true);
+    }
+
+    /**
+     * SGK bildirimi için son gün — olaydan sonraki 3 iş günü (5510 s.K. m.13).
+     * Hafta sonu atlanır; resmi tatiller hesaba katılmaz.
+     */
+    public function sgkSonTarih(): ?Carbon
+    {
+        return $this->olay_tarihi?->copy()->addWeekdays(3);
+    }
+
+    /**
+     * Raporda eksik kalan alanlar — PDF'in başında sarı uyarı kutusu olarak basılır.
+     *
+     * @return array<int, string>
+     */
+    public function eksikUyarilari(): array
+    {
+        $eksik = [];
+
+        if (! $this->dof_raporu_id && blank($this->duzeltici_faaliyet)) {
+            $eksik[] = 'Olay için düzeltici / önleyici faaliyet (DÖF) tanımlanmamış.';
+        }
+        if (! $this->nedenZinciri() && blank($this->kok_neden)) {
+            $eksik[] = 'Kök neden analizi yapılmamış.';
+        }
+        if ($this->isKazasiMi() && ! $this->sgk_bildirimi_yapildi) {
+            $eksik[] = 'İş kazasında SGK bildirimi işaretlenmemiş.';
+        }
+        if ($this->risk_analizinde === 'hayir') {
+            $eksik[] = 'Olaya yol açan tehlike risk analizinde yok — risk değerlendirmesi güncellenmeli.';
+        }
+
+        return $eksik;
+    }
+
+    /**
+     * Yasal süre uyarıları (SGK'ya 3 iş günü, kolluğa derhal bildirim).
+     *
+     * @return array<int, string>
+     */
+    public function otomatikUyarilar(): array
+    {
+        if (! $this->isKazasiMi()) {
+            return [];
+        }
+
+        $uyarilar = [];
+
+        if (! $this->sgk_bildirimi_yapildi) {
+            $son = $this->sgkSonTarih();
+            $uyarilar[] = 'SGK\'ya bildirim yapılmadı! Olay tarihinden sonraki 3 iş günü içinde bildirim yapılmalıdır'
+                .($son ? ' (son gün: '.$son->format('d.m.Y').').' : '.');
+        }
+        if ($this->olay_tipi === 'is_kazasi' && ! $this->kolluk_bildirimi_yapildi) {
+            $uyarilar[] = 'Kolluk kuvvetlerine bildirim yapılmadı! İş kazası derhal kolluğa bildirilmelidir.';
+        }
+
+        return $uyarilar;
+    }
+
+    /**
+     * Genel değerlendirme taslağı — kayıttaki verilerden kalıp metin üretir
+     * (kullanıcı formda düzenler). Boş alanlar cümleye girmez.
+     */
+    public function otomatikDegerlendirme(): string
+    {
+        $c = [];
+
+        $c[] = trim(sprintf(
+            '%s tarihinde%s %s%s meydana gelen olay "%s" olarak kayda alınmıştır.',
+            $this->olay_tarihi?->format('d.m.Y') ?? '—',
+            $this->olay_saati ? ' saat '.$this->olay_saati.' sularında' : '',
+            collect([$this->olay_yeri, $this->bolum, $this->alan])->filter()->implode(' / ') ?: 'işyerinde',
+            filled($this->yapilan_is) ? ', '.$this->yapilan_is.' işi sırasında' : '',
+            $this->tipEtiketi(),
+        ));
+
+        if (filled($this->siniflandirma)) {
+            $c[] = 'Olaya yol açan tehlike kaynağı: '.$this->siniflandirmaEtiketi().'.';
+        }
+        if ($etki = $this->etkiEtiketleri()) {
+            $c[] = 'Olay sonuçları: '.implode(', ', $etki).'.';
+        }
+        if ($this->potansiyel_skor !== null) {
+            $c[] = "Potansiyel risk skoru {$this->potansiyel_skor} ({$this->potansiyelSeviye()} risk) olarak değerlendirilmiştir.";
+        }
+        if ($zincir = $this->nedenZinciri()) {
+            $c[] = 'Yapılan 5 Neden analizinde kök nedenin "'.($this->kok_neden ?: end($zincir)).'" olduğu belirlenmiştir.';
+        }
+        if (filled($this->sistemsel_eksiklik)) {
+            $c[] = 'Tespit edilen sistemsel eksiklik: '.$this->sistemsel_eksiklik.'.';
+        }
+        if ($this->risk_analizinde === 'hayir' || $this->risk_analizinde === 'kismen') {
+            $c[] = 'Olaya ilişkin tehlike risk değerlendirmesinde yeterince yer almadığından risk değerlendirmesi güncellenmelidir.';
+        }
+        if (filled($this->duzeltici_faaliyet)) {
+            $c[] = 'Benzer olayların tekrarını önlemek için şu faaliyetler planlanmıştır: '.$this->duzeltici_faaliyet;
+        }
+        if ($this->isKazasiMi()) {
+            $c[] = $this->sgk_bildirimi_yapildi
+                ? 'Olay SGK\'ya'.($this->sgk_bildirim_tarihi ? ' '.$this->sgk_bildirim_tarihi->format('d.m.Y').' tarihinde' : '').' bildirilmiştir.'
+                : 'Olayın yasal süre içinde SGK\'ya bildirilmesi gerekmektedir.';
+        }
+
+        return implode(' ', $c);
+    }
+
+    /** @return array<int, string> */
+    public function etkiEtiketleri(): array
+    {
+        return collect($this->etkiler ?? [])
+            ->map(fn ($k) => config('isg.olay.etkiler.'.$k.'.ad', $k))
+            ->all();
     }
 
     /** @return array<int, string> */

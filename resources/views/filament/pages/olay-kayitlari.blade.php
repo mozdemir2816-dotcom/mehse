@@ -41,7 +41,22 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <label style="{{ $lbl }}">Durum</label>
+                <select wire:model="durum" style="{{ $inp }}">
+                    @foreach ($this->durumlar as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
+
+        @if ($duzenlenenId)
+            <div style="margin-top:.9rem;{{ $kutu }};padding:.55rem .9rem;background:rgb(245 158 11 / .08);border-color:rgb(245 158 11 / .4);font-size:.82rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                <span>✏️ <strong>{{ $this->gecmisKayitlar->firstWhere('id', $duzenlenenId)?->belge_no }}</strong> düzenleniyor — kaydettiğinizde bu kayıt güncellenir.</span>
+                <x-filament::button size="xs" color="gray" wire:click="yeniKayit">Vazgeç / Yeni Kayıt</x-filament::button>
+            </div>
+        @endif
     </x-filament::section>
 
     @if ($this->firma)
@@ -61,6 +76,35 @@
                 <div>
                     <label style="{{ $lbl }}">Olay Yeri</label>
                     <input type="text" wire:model="olayYeri" placeholder="Örn: Montaj hattı, 2. kat merdiven" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Departman / Bölüm</label>
+                    <input type="text" wire:model="bolum" placeholder="Örn: Üretim" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Alan</label>
+                    <input type="text" wire:model="alan" placeholder="Örn: Kaynakhane" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Yapılan İş</label>
+                    <input type="text" wire:model="yapilanIs" placeholder="Örn: Profil kesimi" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Sınıflandırma (Tehlike Kaynağı)</label>
+                    <select wire:model="siniflandirma" style="{{ $inp }}">
+                        <option value="">— Seçin —</option>
+                        @foreach ($this->siniflandirmalar as $anahtar => $ad)
+                            <option value="{{ $anahtar }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Kullanılan Ekipman</label>
+                    <input type="text" wire:model="ekipman" placeholder="Örn: Avuç taşlama" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Kimyasal Madde</label>
+                    <input type="text" wire:model="kimyasal" placeholder="Varsa" style="{{ $inp }}">
                 </div>
                 <div>
                     <label style="{{ $lbl }}">Olayı Bildiren</label>
@@ -89,9 +133,33 @@
                 </div>
             </div>
 
-            <div style="margin-top:1rem">
-                <label style="{{ $lbl }}">Olay Özeti (Ne oldu? Nasıl fark edildi?) <span style="color:#ef4444">*</span></label>
-                <textarea wire:model="olayOzeti" rows="3" style="{{ $inp }}"></textarea>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1rem">
+                <div>
+                    <label style="{{ $lbl }}">Kısa Özet (en az 20 karakter) <span style="color:#ef4444">*</span></label>
+                    <textarea wire:model="olayOzeti" rows="3" placeholder="Ne oldu? Nasıl fark edildi?" style="{{ $inp }}"></textarea>
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Detay (en az 30 karakter — olayın nasıl geliştiği)</label>
+                    <textarea wire:model="olayDetayi" rows="3" style="{{ $inp }}"></textarea>
+                </div>
+            </div>
+        </x-filament::section>
+
+        {{-- 2b. OLAY ETKİLERİ --}}
+        <x-filament::section icon="heroicon-o-heart" icon-color="warning">
+            <x-slot name="heading">Olay Etkileri ve Sonuç Göstergeleri</x-slot>
+            <x-slot name="description">Olayın kişi, sağlık ve ekipman üzerindeki etkilerini işaretleyin (hızlı değerlendirme).</x-slot>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem">
+                @foreach ($this->etkiSecenekleri as $anahtar => $etki)
+                    <label style="display:flex;gap:.55rem;align-items:flex-start;cursor:pointer;{{ $kutu }};padding:.6rem .75rem;{{ in_array($anahtar, $etkiler, true) ? 'background:rgb(124 58 237 / .08);border-color:rgb(124 58 237 / .45)' : '' }}">
+                        <input type="checkbox" wire:model.live="etkiler" value="{{ $anahtar }}" style="margin-top:.2rem">
+                        <span>
+                            <span style="font-weight:600;font-size:.82rem;display:block">{{ $etki['ad'] }}</span>
+                            <span style="font-size:.72rem;color:rgb(107 114 128)">{{ $etki['aciklama'] }}</span>
+                        </span>
+                    </label>
+                @endforeach
             </div>
         </x-filament::section>
 
@@ -135,6 +203,35 @@
                 </div>
             @endif
 
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem">
+                <div>
+                    <label style="{{ $lbl }}">Risk Analizinde Var mı?</label>
+                    <select wire:model="riskAnalizinde" style="{{ $inp }}">
+                        <option value="">— Seçin —</option>
+                        @foreach ($this->riskAnaliziDurumlari as $anahtar => $ad)
+                            <option value="{{ $anahtar }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Risk Analizi Notu</label>
+                    <input type="text" wire:model="riskAnaliziNotu" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Acil Durum İlişkisi</label>
+                    <select wire:model="acilDurumIliskisi" style="{{ $inp }}">
+                        <option value="">— Seçin —</option>
+                        @foreach ($this->acilDurumIliskileri as $anahtar => $ad)
+                            <option value="{{ $anahtar }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Acil Durum Notu</label>
+                    <input type="text" wire:model="acilDurumNotu" style="{{ $inp }}">
+                </div>
+            </div>
+
             <div style="{{ $lbl }};margin:1rem 0 .4rem">Etkilenen Unsurlar (birden çok seçilebilir)</div>
             <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                 @foreach ($this->etkilenenSecenekleri as $anahtar => $ad)
@@ -172,6 +269,9 @@
 
             <label style="{{ $lbl }}">Belirlenen Kök Neden (Özet)</label>
             <textarea wire:model="kokNeden" rows="2" style="{{ $inp }}"></textarea>
+
+            <label style="{{ $lbl }};display:block;margin-top:.8rem">Sistemsel Eksiklik</label>
+            <textarea wire:model="sistemselEksiklik" rows="2" placeholder="Örn: Sıcak çalışma izin prosedürü yok, periyodik kontrol takibi yapılmıyor" style="{{ $inp }}"></textarea>
         </x-filament::section>
 
         {{-- 4b. BALIK KILÇIĞI (ISHIKAWA) --}}
@@ -206,8 +306,16 @@
             <textarea wire:model="duzelticiFaaliyet" rows="3" placeholder="Tekrarını önlemek için yapılacaklar…" style="{{ $inp }}"></textarea>
             <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:.4rem">
                 Kaydı oluşturduktan sonra geçmiş listeden <strong>"DÖF'e Aktar"</strong> ile bu faaliyeti
-                DÖF Oluştur ekranına taşıyabilirsiniz.
+                DÖF Oluştur ekranına taşıyabilirsiniz. Oluşturulan DÖF bu kayda otomatik bağlanır.
             </p>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:1rem;flex-wrap:wrap">
+                <label style="{{ $lbl }}">Genel Değerlendirme</label>
+                <x-filament::button size="xs" color="gray" icon="heroicon-o-sparkles" wire:click="genelDegerlendirmeOlustur">
+                    Girilen Bilgilerden Oluştur
+                </x-filament::button>
+            </div>
+            <textarea wire:model="genelDegerlendirme" rows="4" placeholder="Olayın genel değerlendirmesi — butonla taslak oluşturup düzenleyebilirsiniz" style="{{ $inp }}"></textarea>
         </x-filament::section>
 
         {{-- 6. İŞ KAZASI EK ALANLARI --}}
@@ -221,9 +329,27 @@
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
                     <div>
-                        <label style="{{ $lbl }}">Kayıp Gün Sayısı</label>
+                        <label style="{{ $lbl }}">Kaza Türü</label>
+                        <select wire:model="kazaTuru" style="{{ $inp }}">
+                            <option value="">— Seçin —</option>
+                            @foreach ($this->kazaTurleri as $anahtar => $ad)
+                                <option value="{{ $anahtar }}">{{ $ad }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Yaralanma Türü</label>
+                        <input type="text" wire:model="yaralanmaTuru" placeholder="Örn: Sol el işaret parmağında kesik" style="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Rapor Süresi / Kayıp Gün</label>
                         <input type="number" min="0" wire:model="kayipGunSayisi" style="{{ $inp }}">
                     </div>
+                </div>
+
+                <div style="margin-top:.8rem">
+                    <label style="{{ $lbl }}">Müdahale Detayı</label>
+                    <textarea wire:model="mudahaleDetayi" rows="2" placeholder="İlk yardım, sağlık kuruluşuna sevk, verilen tedavi…" style="{{ $inp }}"></textarea>
                 </div>
 
                 <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer;margin:.9rem 0 .5rem">
@@ -271,7 +397,7 @@
 
         {{-- 8. FOTOĞRAFLAR & HAZIRLAYAN --}}
         <x-filament::section icon="heroicon-o-camera" icon-color="gray">
-            <x-slot name="heading">8. Fotoğraflar ({{ count($yeniFotograflar) }}) & Hazırlayan</x-slot>
+            <x-slot name="heading">8. Fotoğraflar ({{ count($yeniFotograflar) }}) & İmza Sahipleri</x-slot>
 
             @if ($yeniFotograflar)
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
@@ -287,8 +413,20 @@
 
             <input type="file" wire:model="yeniFotograflar" multiple accept="image/*" style="font-size:.82rem">
 
-            <label style="{{ $lbl }};margin-top:1rem;display:block">Kaydı Hazırlayan (İSG Uzmanı)</label>
-            <input type="text" wire:model="raporHazirlayan" style="{{ $inp }};max-width:24rem">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem">
+                <div>
+                    <label style="{{ $lbl }}">İSG Uzmanı (Hazırlayan)</label>
+                    <input type="text" wire:model="raporHazirlayan" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">İşyeri Hekimi</label>
+                    <input type="text" wire:model="isyeriHekimi" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">İşveren / Vekili</label>
+                    <input type="text" wire:model="isverenVekili" style="{{ $inp }}">
+                </div>
+            </div>
         </x-filament::section>
 
         {{-- GEÇMİŞ KAYITLAR --}}
@@ -311,25 +449,33 @@
                         <tr>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Belge No</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tip</th>
+                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Potansiyel</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">DÖF</th>
                             <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                         </tr>
                         @foreach ($this->gecmisKayitlar as $k)
-                            <tr>
+                            <tr @if ($duzenlenenId === $k->id) style="background:rgb(245 158 11 / .08)" @endif>
                                 <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
                                 <td style="padding:.35rem .5rem">{{ $k->tipEtiketi() }}</td>
+                                <td style="padding:.35rem .5rem">
+                                    <span style="font-size:.72rem;padding:.1rem .45rem;border-radius:999px;border:1px solid {{ match ($k->durum) { 'kapandi' => 'rgb(22 163 74 / .5)', 'incelemede' => 'rgb(245 158 11 / .5)', default => 'rgb(220 38 38 / .5)' } }}">{{ $k->durumEtiketi() }}</span>
+                                    @if ($k->eksikUyarilari())
+                                        <span title="{{ implode("\n", $k->eksikUyarilari()) }}" style="cursor:help">⚠️</span>
+                                    @endif
+                                </td>
                                 <td style="padding:.35rem .5rem">{{ $k->olay_tarihi?->format('d.m.Y') }}</td>
                                 <td style="padding:.35rem .5rem">{{ $k->potansiyel_skor ?? '—' }} / {{ $k->potansiyelSeviye() }}</td>
                                 <td style="padding:.35rem .5rem">{{ $k->dofRaporu?->belge_no ?? '—' }}</td>
                                 <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
+                                    <x-filament::button size="xs" color="primary" wire:click="duzenle({{ $k->id }})">Düzenle</x-filament::button>
                                     <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                     @if ($k->balikKilcigiDoluMu())
                                         <x-filament::button size="xs" color="gray" wire:click="gecmisBalikKilcigi({{ $k->id }})">Balık Kılçığı</x-filament::button>
                                     @endif
                                     <x-filament::button size="xs" color="warning" wire:click="dofeAktar({{ $k->id }})">DÖF'e Aktar</x-filament::button>
-                                    <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
+                                    <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})" wire:confirm="Bu olay kaydı silinsin mi?">Sil</x-filament::button>
                                 </td>
                             </tr>
                         @endforeach

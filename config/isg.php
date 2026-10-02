@@ -3459,6 +3459,68 @@ return [
             'cok_ciddi' => 'Çok Ciddi (ölüm / sürekli iş göremezlik)',
         ],
 
+        // Kaydın inceleme durumu (defter + Excel "Durum" sütunu).
+        'durumlar' => [
+            'acik' => 'Açık',
+            'incelemede' => 'İncelemede',
+            'kapandi' => 'Kapandı',
+        ],
+
+        // Sınıflandırma — olaya yol açan tehlike kaynağı (isgsuite "Sınıflandırma").
+        'siniflandirmalar' => [
+            'yuksekte_calisma' => 'Yüksekte çalışma / düşme',
+            'kayma_takilma' => 'Kayma / takılma / aynı seviyede düşme',
+            'malzeme_dusmesi' => 'Malzeme / cisim düşmesi',
+            'makine' => 'Makine / hareketli parça',
+            'el_aleti' => 'El aleti / elektrikli el aleti',
+            'is_makinesi' => 'Forklift / iş makinesi / araç',
+            'kaldirma' => 'Kaldırma ekipmanı (vinç / caraskal)',
+            'elektrik' => 'Elektrik',
+            'kaynak_dumani' => 'Kaynak dumanı',
+            'sicak_calisma' => 'Sıcak çalışma / kaynak / kesme',
+            'kimyasal' => 'Kimyasal madde',
+            'toz' => 'Toz',
+            'gurultu_titresim' => 'Gürültü / titreşim',
+            'basincli_kap' => 'Basınçlı kap / tesisat',
+            'yangin_patlama' => 'Yangın / patlama',
+            'kapali_alan' => 'Kapalı alan',
+            'ergonomi' => 'Ergonomi / elle taşıma',
+            'termal' => 'Termal konfor (sıcak / soğuk)',
+            'biyolojik' => 'Biyolojik etken',
+            'psikososyal' => 'Psikososyal / şiddet',
+            'trafik' => 'Trafik / yol',
+            'diger' => 'Diğer',
+        ],
+
+        // Olay etkileri ve sonuç göstergeleri — hızlı değerlendirme kutucukları.
+        'etkiler' => [
+            'yaralanma' => ['ad' => 'Yaralanma oldu', 'aciklama' => 'Fiziksel yaralanma oluştuysa işaretleyin'],
+            'saglik_sikayeti' => ['ad' => 'Sağlık şikayeti', 'aciklama' => 'Ağrı, rahatsızlık veya semptom varsa'],
+            'tibbi_mudahale' => ['ad' => 'Tıbbi müdahale', 'aciklama' => 'İlk yardım veya medikal destek verildiyse'],
+            'is_goremezlik' => ['ad' => 'İş göremezlik raporu', 'aciklama' => 'Rapor veya istirahat düzenlendiyse'],
+            'ekipman_hasari' => ['ad' => 'Ekipman hasarı', 'aciklama' => 'Makine, araç veya ekipmanda zarar varsa'],
+            'ramak_kala' => ['ad' => 'Farklı gelişse yaralanma olurdu', 'aciklama' => 'Ramak kala niteliği taşıyorsa işaretleyin'],
+        ],
+
+        'risk_analizi_durumlari' => [
+            'evet' => 'Evet — risk analizinde var',
+            'kismen' => 'Kısmen — güncellenmeli',
+            'hayir' => 'Hayır — risk analizine eklenmeli',
+        ],
+
+        'acil_durum_iliskileri' => [
+            'yok' => 'Acil durumla ilişkisi yok',
+            'yangin' => 'Yangın',
+            'patlama' => 'Patlama',
+            'elektrik' => 'Elektrik kaynaklı acil durum',
+            'kimyasal' => 'Kimyasal sızıntı / dökülme',
+            'gaz' => 'Gaz kaçağı / zehirlenme',
+            'deprem' => 'Deprem / doğal afet',
+            'sel' => 'Sel / su baskını',
+            'kapali_alan' => 'Kapalı alanda mahsur kalma',
+            'ilk_yardim' => 'İlk yardım gerektiren acil durum',
+            'diger' => 'Diğer',
+        ],
     ],
 
     /*
