@@ -80,7 +80,7 @@ class EgitimPaketiResource extends Resource
                     ->options(collect(config('isg.risk_ai.sektorler'))->map(fn ($s) => $s['ad']))
                     ->native(false)->searchable(),
                 Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull(),
-                TextInput::make('gecme_puani')->label('Geçme puanı (%)')->numeric()->default(70)->minValue(0)->maxValue(100),
+                TextInput::make('gecme_puani')->label('Geçme puanı (100 üzerinden)')->numeric()->default(60)->minValue(60)->maxValue(100)->helperText('Yönetmelik (02.04.2026) Md.16/3: en az 60.'),
                 TextInput::make('video_zorunlu_yuzde')->label('Videonun izlenmesi gereken oran (%)')
                     ->numeric()->default(90)->minValue(0)->maxValue(100)
                     ->helperText('Ders bu orana ulaşınca "izlendi" sayılır.'),
@@ -90,7 +90,7 @@ class EgitimPaketiResource extends Resource
             ]),
 
             Section::make('Video Dersleri')
-                ->description('Çalışan bu videoları portalda SIRAYLA izler. YouTube veya Vimeo (gizli) linki yapıştırın.')
+                ->description('Çalışan bu videoları portalda izler. YouTube önerilir (görünürlük: "Liste dışı") — izleme süresi ölçülür, ileri sarma engellenir. Vimeo ve diğer linklerde süre ölçülemez, çalışan "izledim" ile onaylar.')
                 ->schema([
                     Repeater::make('dersler')
                         ->relationship()
@@ -98,7 +98,7 @@ class EgitimPaketiResource extends Resource
                         ->schema([
                             TextInput::make('baslik')->label('Ders başlığı')->required()->columnSpan(2),
                             TextInput::make('video_url')->label('Video linki (YouTube / Vimeo)')->required()->url()->columnSpan(2),
-                            TextInput::make('sure_sn')->label('Süre (saniye)')->numeric()->helperText('Opsiyonel'),
+                            TextInput::make('sure_sn')->label('Süre (saniye)')->numeric()->helperText('Boşsa YouTube videosu ilk izlendiğinde otomatik dolar.'),
                             Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull(),
                         ])
                         ->columns(2)

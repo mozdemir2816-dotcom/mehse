@@ -465,11 +465,65 @@ return [
             'basarisiz' => 'Sınav Başarısız',
             'tamamlandi' => 'Tamamlandı',
         ],
+        // İşe başlama eğitimi (Yön. 02.04.2026 Md.7) uygulamalı ve yüz yüze
+        // verildiğinden uzaktan atanamaz; eski "isbasi" kayıtları yalnız etiketle gösterilir.
         'egitim_turleri' => [
             'ilk_defa' => 'İlk Defa',
             'yenileme' => 'Yenileme',
+        ],
+        'eski_egitim_turleri' => [
             'isbasi' => 'İşbaşı',
         ],
+
+        // ---- Çalışanların İSG Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik (RG 02.04.2026) ----
+        // Md.16/3: 100 üzerinden en az 60 başarılı; ilk sınav + en fazla 2 tekrar,
+        // üçünde de başarısız olan temel eğitime yeniden katılır.
+        'gecme_puani_alt_sinir' => 60,
+        'sinav_hakki' => 3,
+        // Md.12/5-c: aktif katılım — videonun her N dakikasında açılır pencere + kısa soru.
+        'yoklama_dk' => 5,
+        // Md.12/3: dördüncü konu başlığı bu sınıflarda yüz yüze verilir; uzaktan
+        // eğitim tek başına temel eğitimi tamamlamış saymaz.
+        'yuz_yuze_dorduncu_konu' => ['tehlikeli', 'cok_tehlikeli'],
+        // Md.13: dördüncü konu başlığına ayrılan süre (ders saati).
+        'dorduncu_konu_saat' => ['az_tehlikeli' => 2, 'tehlikeli' => 3, 'cok_tehlikeli' => 4],
+        // Paket süresi kontrolünde 1 ders saatinin video karşılığı (dk).
+        'ders_saati_dk' => 45,
+        // Md.8: temel eğitim işe başlamadan itibaren en geç 3 ay içinde tamamlanır.
+        'temel_egitim_son_ay' => 3,
+        // Ek-1 Eğitim Konuları Tablosu (RG 02.04.2026, birebir) — Ek-2 belgenin arka yüzü.
+        'ek1_konulari' => [
+            '1. Genel konular' => [
+                'a) Çalışma mevzuatı ile ilgili bilgiler',
+                'b) Çalışanların yasal hak ve sorumlulukları',
+                'c) İşyeri temizliği ve düzeni',
+                'ç) İş kazası ve meslek hastalığından doğan hukuki sonuçlar',
+            ],
+            '2. Sağlık konuları' => [
+                'a) Meslek hastalıklarının sebepleri',
+                'b) Hastalıktan korunma prensipleri ve korunma tekniklerinin uygulanması',
+                'c) Biyolojik ve psikososyal risk etmenleri',
+                'ç) İlk yardım',
+                'd) Bağımlılık yapıcı maddelerin zararları ve teknoloji bağımlılığı',
+            ],
+            '3. Teknik konular' => [
+                'a) Kimyasal, fiziksel ve ergonomik risk etmenleri',
+                'b) Elle kaldırma ve taşıma',
+                'c) Parlama, patlama',
+                'ç) Yangın ve yangından korunma',
+                'd) İş ekipmanlarının güvenli kullanımı',
+                'e) Ekranlı araçlarla çalışma',
+                'f) Elektrik, tehlikeleri, riskleri ve önlemleri',
+                'g) İş kazalarının sebepleri ve korunma prensipleri ile tekniklerinin uygulanması',
+                'ğ) Sağlık ve güvenlik işaretleri',
+                'h) Kişisel koruyucu donanım kullanımı',
+                'ı) İş sağlığı ve güvenliği genel kuralları ve güvenlik kültürü',
+                'i) Acil durumlar, tahliye ve kurtarma',
+            ],
+        ],
+        'ek1_dorduncu_baslik' => '4. İşe ve işyerine özgü riskler ve risk değerlendirmesine dayalı konular (Tehlikeli veya Çok Tehlikeli Sınıf) * / Faaliyetin Genel Tehlike ve Riskleri (Az Tehlikeli Sınıf) *',
+        'ek1_dorduncu_a' => 'a) (Tehlikeli veya Çok Tehlikeli Sınıf) İşyerinin acil durum planı, risk değerlendirmesi dokümanı, bulunması halinde patlamadan korunma dokümanı ve iş sağlığı ve güvenliği mevzuatı kapsamında hazırlanan diğer dokümanlarda belirlenmiş olan hususlar ile işyerine ve işe özgü hususları içeren yüksekte çalışma, kapalı ortamda çalışma, yangın, radyasyon riskinin bulunduğu ortamlarda çalışma, kaynakla çalışma, özel risk taşıyan ekipman ile çalışma, kanserojen veya mutajen maddelerle, kimyasal veya biyolojik etkenlerle çalışma ve benzeri konular',
+        'ek1_dorduncu_b' => 'b) (Az Tehlikeli Sınıf) Faaliyetin genel tehlike ve riskleri (yüksekte çalışma, yüksekten düşme, kapalı ortamda çalışma, yangın, özel risk taşıyan ekipmanla çalışma gibi.)',
         // Temel İSG eğitimi yenileme periyodu (yıl) — Yenileme Takibi bunu kullanır.
         'yenileme_yili' => [
             'az_tehlikeli' => 3,

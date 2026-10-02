@@ -36,11 +36,17 @@ class EgitimTakibi
     }
 
     /**
-     * @return Collection<int, array{calisan: Calisan, son_egitim: ?Carbon, kaynak: ?string, yenileme: ?Carbon, kalan_gun: ?int, durum: string, isbasi: bool}>
+     * `ilk_son_tarih`: hiç temel eğitimi olmayanın yasal son günü (işe giriş + 3 ay, Yön. 02.04.2026 Md.8).
+     * `dorduncu_bekleniyor`: uzaktan eğitimi (1–3. konular) bitmiş ama tehlikeli / çok tehlikeli
+     * işyerinde yüz yüze 4. konu henüz verilmemiş.
+     *
+     * @return Collection<int, array{calisan: Calisan, son_egitim: ?Carbon, kaynak: ?string, yenileme: ?Carbon, kalan_gun: ?int, durum: string, isbasi: bool, ilk_son_tarih: ?Carbon, ilk_kalan_gun: ?int, dorduncu_bekleniyor: bool}>
      */
     public static function satirlar(Firma $firma): Collection
     {
-        $calisanlar = $firma->calisanlar()->where('aktif', true)->with('egitimKayitlari')->orderBy('ad_soyad')->get();
+        $calisanlar = $firma->calisanlar()->where('aktif', true)->with(['egitimKayitlari', 'egitimAtamalari' => fn ($q) => $q->where('durum', 'tamamlandi')])->orderBy('ad_soyad')->get();
+        $sonAy = (int) config('isg.uzaktan_egitim.temel_egitim_son_ay', 3);
+        $dorduncuYuzYuze = in_array($firma->tehlike_sinifi, config('isg.uzaktan_egitim.yuz_yuze_dorduncu_konu', []), true);
         $yil = config('isg.egitim_yenileme_yili.'.$firma->tehlike_sinifi);
         $esik = KullaniciAyarlari::esik('egitim');
 
@@ -74,7 +80,7 @@ class EgitimTakibi
             $isbasiAd[static::adAnahtari($t->calisan_ad_soyad)] = true;
         }
 
-        return $calisanlar->map(function (Calisan $c) use ($katilimTc, $katilimAd, $isbasiTc, $isbasiAd, $yil, $esik): array {
+        return $calisanlar->map(function (Calisan $c) use ($katilimTc, $katilimAd, $isbasiTc, $isbasiAd, $yil, $esik, $sonAy, $dorduncuYuzYuze): array {
             $tc = static::tcAnahtari($c->tc);
             $ad = static::adAnahtari($c->ad_soyad);
 
@@ -86,6 +92,8 @@ class EgitimTakibi
             $son = $adaylar->first();
             $yenileme = $son && $yil ? $son['tarih']->copy()->addYears($yil) : null;
             $kalan = $yenileme ? (int) now()->startOfDay()->diffInDays($yenileme, false) : null;
+            $ilkSon = ! $son && $c->ise_giris ? Carbon::parse($c->ise_giris)->addMonths($sonAy) : null;
+            $sonUzaktan = $c->egitimAtamalari->max('tamamlandi_at');
 
             return [
                 'calisan' => $c,
@@ -100,6 +108,9 @@ class EgitimTakibi
                     default => 'gecerli',
                 },
                 'isbasi' => ($tc !== '' && isset($isbasiTc[$tc])) || isset($isbasiAd[$ad]),
+                'ilk_son_tarih' => $ilkSon,
+                'ilk_kalan_gun' => $ilkSon ? (int) now()->startOfDay()->diffInDays($ilkSon, false) : null,
+                'dorduncu_bekleniyor' => $dorduncuYuzYuze && $sonUzaktan && (! $son || $son['tarih']->lt($sonUzaktan->copy()->startOfDay())),
             ];
         });
     }

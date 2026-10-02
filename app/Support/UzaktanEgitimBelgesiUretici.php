@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Uzaktan Eğitim Katılım / Başarı Belgesi (dompdf). Çalışan tüm dersleri izleyip
+ * Temel Eğitim Belgesi — Yönetmelik (RG 02.04.2026) Ek-2 örneği (dompdf). Çalışan tüm dersleri izleyip
  * final sınavını (>= geçme puanı) geçtiğinde üretilir.
  */
 class UzaktanEgitimBelgesiUretici
@@ -26,7 +26,7 @@ class UzaktanEgitimBelgesiUretici
             'sinav' => $sinav,
         ])->setPaper('a4', 'landscape');
 
-        $ad = 'uzaktan-egitim-belgesi-'.Str::slug($atama->calisan?->ad_soyad ?? 'calisan').'.pdf';
+        $ad = 'temel-egitim-belgesi-'.Str::slug($atama->calisan?->ad_soyad ?? 'calisan').'.pdf';
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }

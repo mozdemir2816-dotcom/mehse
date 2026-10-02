@@ -16,6 +16,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -95,9 +96,45 @@ class UzaktanEgitimAtama extends Page
 
         return EgitimAtamasi::query()
             ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma->id))
-            ->with(['calisan', 'paket', 'girisler', 'ilerlemeler.ders'])
+            ->with(['calisan.firma', 'paket', 'girisler', 'ilerlemeler.ders'])
             ->latest()
             ->get();
+    }
+
+    /**
+     * Md.13 süre kontrolü: seçili paketin video süresi, firmanın tehlike
+     * sınıfı + eğitim türüne göre uzaktan verilmesi gereken asgari süreyi
+     * karşılıyor mu. Tehlikeli / çok tehlikeli işyerinde 4. konu yüz yüze
+     * verildiğinden onun süresi düşülür.
+     *
+     * @return array{gereken_dk: int, paket_dk: int, suresiz_ders: int, yeterli: bool, dorduncu_yuz_yuze: bool, saat: int}|null
+     */
+    #[Computed]
+    public function sureKontrolu(): ?array
+    {
+        $paket = $this->paketId ? EgitimPaketi::query()->gorunur(Filament::auth()->id())->with('dersler')->find($this->paketId) : null;
+        $sinif = $this->firma?->tehlike_sinifi;
+
+        if (! $paket || ! $sinif) {
+            return null;
+        }
+
+        $saat = (int) ($this->egitimTuru === 'ilk_defa'
+            ? config("isg.egitim.sureler.ilk.{$sinif}.saat", 8)
+            : config('isg.egitim.sureler.tekrar.saat', 8));
+        $dorduncuYuzYuze = in_array($sinif, config('isg.uzaktan_egitim.yuz_yuze_dorduncu_konu', []), true);
+        $dorduncu = $this->egitimTuru === 'ilk_defa' ? (int) config("isg.uzaktan_egitim.dorduncu_konu_saat.{$sinif}", 0) : intdiv($saat, 4);
+        $gereken = ($saat - ($dorduncuYuzYuze ? $dorduncu : 0)) * (int) config('isg.uzaktan_egitim.ders_saati_dk', 45);
+        $paketDk = $paket->toplamSureDk();
+
+        return [
+            'gereken_dk' => $gereken,
+            'paket_dk' => $paketDk,
+            'suresiz_ders' => $paket->dersler->whereNull('sure_sn')->count(),
+            'yeterli' => $paketDk >= $gereken,
+            'dorduncu_yuz_yuze' => $dorduncuYuzYuze,
+            'saat' => $saat,
+        ];
     }
 
     /** Firmadaki eğitimli çalışanların yalnız portala girdiği (eğitim açmadığı) tarihler. */
@@ -121,15 +158,17 @@ class UzaktanEgitimAtama extends Page
 
         ExcelBellek::artir();
 
-        $basliklar = ['Ad Soyad', 'Görev', 'Eğitim', 'Eğitim Türü', 'Atanma', 'Eğitime Giriş Tarihleri', 'Giriş Sayısı',
-            'İzlenen Ders', 'Sınav Puanı', 'Tamamlandı', 'Tamamlanma Tarihi', 'Eğitim Kaydına İşlendi'];
+        $basliklar = ['Ad Soyad', 'Görev', 'Eğitim', 'Eğitim Türü', 'Atanma', 'Oturumlar (giriş – çıkış)', 'Oturum Sayısı',
+            'Fiili İzleme (dk)', 'Aktif Katılım Cevabı', 'İzlenen Ders', 'Ön Test', 'Sınav Puanı', 'Sınav Denemesi', 'Yeniden Başlatma',
+            'Tamamlandı', 'Tamamlanma Tarihi', 'Eğitim Kaydı'];
+        $son = Coordinate::stringFromColumnIndex(count($basliklar));
 
         $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->setTitle('Uzaktan Eğitim Takibi');
         $sayfa->fromArray($basliklar, null, 'A1');
-        $sayfa->getStyle('A1:L1')->getFont()->setBold(true);
-        $sayfa->getStyle('A1:L1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E8E5F2');
+        $sayfa->getStyle("A1:{$son}1")->getFont()->setBold(true);
+        $sayfa->getStyle("A1:{$son}1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E8E5F2');
 
         foreach ($this->atamalar->values() as $i => $a) {
             $tamam = $a->durum === 'tamamlandi';
@@ -137,20 +176,25 @@ class UzaktanEgitimAtama extends Page
                 $a->calisan->ad_soyad,
                 $a->calisan->gorev,
                 $a->paket->ad,
-                config('isg.uzaktan_egitim.egitim_turleri.'.$a->egitim_turu, $a->egitim_turu),
+                $a->turEtiketi(),
                 $a->atandi_at?->format('d.m.Y'),
-                $a->girisler->map(fn (EgitimGirisi $g) => $g->giris_at->format('d.m.Y H:i'))->implode(', '),
+                $a->girisler->map(fn (EgitimGirisi $g) => $g->giris_at->format('d.m.Y H:i').' – '.($g->cikis_at?->format('H:i') ?? '?'))->implode(', '),
                 $a->girisler->count(),
+                (int) round($a->ilerlemeler->sum('izlenen_sn') / 60),
+                $a->girisler->sum('yoklama_sayisi'),
                 $a->izlenenDersSayisi().'/'.$a->toplamDersSayisi(),
+                $a->on_test_puani,
                 $a->sonSinav()?->puan,
+                $a->sinavSonuclari()->count(),
+                $a->yeniden_baslatma ?: null,
                 $tamam ? '✓' : '—',
                 $a->tamamlandi_at?->format('d.m.Y'),
-                $tamam && in_array($a->egitim_turu, ['ilk_defa', 'yenileme'], true) ? 'Evet' : '—',
+                ! $tamam ? '—' : ($a->egitimKaydinaIslenirMi() ? 'İşlendi' : ($a->dorduncuKonuYuzYuzeMi() ? '4. konu yüz yüze bekleniyor' : '—')),
             ], null, 'A'.($i + 2));
         }
 
-        foreach (range('A', 'L') as $sutun) {
-            $sayfa->getColumnDimension($sutun)->setAutoSize(true);
+        foreach (range(1, count($basliklar)) as $i) {
+            $sayfa->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
         }
         $sayfa->freezePane('A2');
 
@@ -163,9 +207,16 @@ class UzaktanEgitimAtama extends Page
         }, 'uzaktan-egitim-takibi-'.Str::slug($this->firma->unvan).'.xlsx');
     }
 
+    public function updated(string $alan): void
+    {
+        if (in_array($alan, ['paketId', 'egitimTuru'], true)) {
+            unset($this->sureKontrolu);
+        }
+    }
+
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri);
+        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu);
         $this->secilenCalisanlar = [];
         $this->sonUretilenGiris = [];
     }
@@ -188,6 +239,12 @@ class UzaktanEgitimAtama extends Page
 
         if (! $paket || ! $this->firma || ! $this->secilenCalisanlar) {
             Notification::make()->title('Firma, paket ve en az bir çalışan seçin')->danger()->send();
+
+            return;
+        }
+
+        if (! array_key_exists($this->egitimTuru, config('isg.uzaktan_egitim.egitim_turleri'))) {
+            Notification::make()->title('Geçersiz eğitim türü')->body('İşe başlama eğitimi uygulamalı ve yüz yüze verilir (Yönetmelik Md.7).')->danger()->send();
 
             return;
         }

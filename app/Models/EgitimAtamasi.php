@@ -24,6 +24,10 @@ class EgitimAtamasi extends Model
         'atandi_at' => 'datetime',
         'son_tarih' => 'date',
         'tamamlandi_at' => 'datetime',
+        'on_test_at' => 'datetime',
+        'on_test_puani' => 'integer',
+        'yeniden_baslatma' => 'integer',
+        'yeniden_baslatildi_at' => 'datetime',
     ];
 
     public function paket(): BelongsTo
@@ -102,12 +106,69 @@ class EgitimAtamasi extends Model
         return (int) $this->sinavSonuclari()->max('deneme_no') + 1;
     }
 
+    /** Yönetmelik alt sınırı (60) altına inilemeyen geçme puanı. */
+    public function gecmePuani(): int
+    {
+        return max((int) $this->paket?->gecme_puani, (int) config('isg.uzaktan_egitim.gecme_puani_alt_sinir', 60));
+    }
+
+    /** Eğitim son kez (yeniden) başlatıldıktan sonra girilen sınavlar. */
+    public function donemSinavlari(): HasMany
+    {
+        return $this->sinavSonuclari()
+            ->when($this->yeniden_baslatildi_at, fn ($q) => $q->where('tamamlandi_at', '>', $this->yeniden_baslatildi_at));
+    }
+
+    /** Md.16/3: ilk sınav + en fazla iki tekrar. */
+    public function kalanSinavHakki(): int
+    {
+        return max(0, (int) config('isg.uzaktan_egitim.sinav_hakki', 3) - $this->donemSinavlari()->count());
+    }
+
+    /**
+     * Üç sınavda da başarısız olan temel eğitime yeniden katılır: ders
+     * ilerlemesi silinir, sınav hakkı yenilenir. Eski sınavlar kayıtta kalır.
+     */
+    public function yenidenBaslat(): void
+    {
+        $this->ilerlemeler()->delete();
+        $this->forceFill([
+            'yeniden_baslatma' => $this->yeniden_baslatma + 1,
+            'yeniden_baslatildi_at' => now(),
+            'durum' => 'atandi',
+        ])->save();
+    }
+
+    /** Ön test (seviye tespiti) gerekiyor mu — Md.16/1. */
+    public function onTestBekliyorMu(): bool
+    {
+        return $this->on_test_at === null && ! $this->basariliMi() && $this->paket?->sorular()->exists();
+    }
+
+    /** Fiilen izlenen toplam süre (saniye). */
+    public function izlenenSure(): int
+    {
+        return (int) $this->ilerlemeler()->sum('izlenen_sn');
+    }
+
+    /** Md.12/3: tehlikeli / çok tehlikeli işyerinde 4. konu başlığı yüz yüze verilir. */
+    public function dorduncuKonuYuzYuzeMi(): bool
+    {
+        return in_array($this->calisan?->firma?->tehlike_sinifi, config('isg.uzaktan_egitim.yuz_yuze_dorduncu_konu', []), true);
+    }
+
+    public function turEtiketi(): string
+    {
+        return config('isg.uzaktan_egitim.egitim_turleri.'.$this->egitim_turu)
+            ?? config('isg.uzaktan_egitim.eski_egitim_turleri.'.$this->egitim_turu, (string) $this->egitim_turu);
+    }
+
     /** İlerleme/sınav durumuna göre `durum` alanını günceller. */
     public function durumuTazele(): void
     {
         $yeni = match (true) {
             $this->basariliMi() => 'tamamlandi',
-            $this->sinavSonuclari()->exists() => 'basarisiz',
+            $this->donemSinavlari()->exists() => 'basarisiz',
             $this->izlenenDersSayisi() > 0 => 'devam',
             default => 'atandi',
         };
@@ -133,10 +194,13 @@ class EgitimAtamasi extends Model
      * Kayıtları'na tamamlanma tarihiyle işlenir — personel dosyası, eğitim
      * matrisi ve Yenileme Takibi bunu görür. Daha yeni bir kayıt varsa
      * dokunulmaz. İşbaşı eğitimi bu listede ayrı tür olmadığından işlenmez.
+     * Tehlikeli / çok tehlikeli işyerinde 4. konu yüz yüze verilmeden temel
+     * eğitim tamamlanmış sayılmaz (Md.12/3) — yüz yüze katılım formu girilince
+     * Yenileme Takibi onu esas alır.
      */
     public function egitimKaydinaIsle(): ?EgitimKaydi
     {
-        if (! $this->tamamlandi_at || ! in_array($this->egitim_turu, ['ilk_defa', 'yenileme'], true)) {
+        if (! $this->tamamlandi_at || ! $this->egitimKaydinaIslenirMi()) {
             return null;
         }
 
@@ -152,6 +216,11 @@ class EgitimAtamasi extends Model
         ])->save();
 
         return $kayit;
+    }
+
+    public function egitimKaydinaIslenirMi(): bool
+    {
+        return in_array($this->egitim_turu, ['ilk_defa', 'yenileme'], true) && ! $this->dorduncuKonuYuzYuzeMi();
     }
 
     public function durumEtiketi(): string
