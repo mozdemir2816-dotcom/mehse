@@ -245,6 +245,16 @@ class Firma extends Model
         return $this->hasMany(IsKazasiRaporu::class);
     }
 
+    public function kkdZimmetleri(): HasMany
+    {
+        return $this->hasMany(KkdZimmet::class);
+    }
+
+    public function kkdStokKartlari(): HasMany
+    {
+        return $this->hasMany(KkdStokKarti::class);
+    }
+
     public function olayKayitlari(): HasMany
     {
         return $this->hasMany(OlayKaydi::class);

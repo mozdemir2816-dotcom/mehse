@@ -2818,6 +2818,41 @@ return [
     |--------------------------------------------------------------------------
     | 6 kategori, isgpratik ekranlarından birebir (madde adı + TS EN standardı).
     */
+    /*
+    |--------------------------------------------------------------------------
+    | KKD Takip — isgsuite "KKD Takip" (zimmet sicili + stok kartları)
+    |--------------------------------------------------------------------------
+    | Kategori / tür listesi 'kkd.kategoriler' katalogundan gelir. "Yaklaşan"
+    | eşiği kullanıcı ayarı (KullaniciAyarlari esik 'kkd', varsayılan 30 gün).
+    */
+    'kkd_takip' => [
+        'durumlar' => [
+            'teslim_edildi' => 'Teslim Edildi',
+            'iade_edildi' => 'İade Edildi',
+            'yenilendi' => 'Yenilendi',
+            'kayip' => 'Kayıp',
+            'hasarli' => 'Hasarlı / Hurda',
+        ],
+        'takip_durumlari' => [
+            'aktif' => 'Aktif',
+            'yaklasan' => 'Yenileme Yaklaşıyor',
+            'gecikmis' => 'Yenileme Gecikti',
+        ],
+        'stok_durumlari' => [
+            'yeterli' => 'Yeterli',
+            'yaklasan' => 'Süre Yaklaşıyor',
+            'dusuk' => 'Düşük Stok',
+            'tukendi' => 'Tükendi',
+            'suresi_gecmis' => 'Süresi Geçmiş',
+        ],
+        'hareket_tipleri' => [
+            'giris' => 'Stok Girişi',
+            'zimmet' => 'Zimmet Çıkışı',
+            'iade' => 'İade',
+            'fire' => 'Fire / Hurda',
+        ],
+    ],
+
     'kkd' => [
         'kategoriler' => [
             'bas_yuz' => ['ad' => 'Baş ve Yüz Koruyucular', 'maddeler' => [

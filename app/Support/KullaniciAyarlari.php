@@ -45,6 +45,7 @@ class KullaniciAyarlari
         'egitim' => ['Eğitim geçerliliği', 'Çalışan eğitiminin geçerliliği bitmeden kaç gün önce "yakında" sayılsın', 60],
         'ekipman' => ['Periyodik kontrol (ekipman)', 'İş ekipmanının sonraki kontrol tarihine kaç gün kala "yaklaşan" sayılsın', null],
         'onayli_defter' => ['Onaylı defter nüshası', 'Onaylı defter nüshasının yenileme tarihine kaç gün kala uyarı çıksın', null],
+        'kkd' => ['KKD yenileme / SKT', 'Zimmetli KKD\'nin veya stok kartının yenileme / son kullanma tarihine kaç gün kala "yaklaşan" sayılsın', 30],
         'kimyasal' => ['Kimyasal / GBF gözden geçirme', 'Kimyasal ürünün gözden geçirme tarihine kaç gün kala "yaklaşan" sayılsın', 60],
         'kontrol_vade' => ['Kontrol Merkezi vadeleri', 'Firma checklist maddesinin vade tarihine kaç gün kala "yakın" gösterilsin', 30],
     ];

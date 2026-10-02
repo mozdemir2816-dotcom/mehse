@@ -86,8 +86,8 @@
                     <td class="no">{{ $i + 1 }}</td>
                     <td>{{ $satirlar[$i]['ad'] ?? '' }}</td>
                     <td>{{ $satirlar[$i]['standart'] ?? '' }}</td>
-                    <td></td>
-                    <td class="mik"></td>
+                    <td>{{ $satirlar[$i]['donem'] ?? '' }}</td>
+                    <td class="mik">{{ $satirlar[$i]['miktar'] ?? '' }}</td>
                 </tr>
             @endfor
         </table>
