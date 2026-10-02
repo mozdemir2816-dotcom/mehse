@@ -104,7 +104,10 @@ class MaddelerRelationManager extends RelationManager
             Section::make('Tanım')->columns(2)->schema([
                 TextInput::make('sira')->label('Sıra')->numeric()
                     ->default(fn () => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1),
-                TextInput::make('bolum')->label('Bölüm / Ünite'),
+                // isgsuite "Bölümler": bu değerlendirmede kullanılan + önerilen bölüm adları
+                TextInput::make('bolum')->label('Bölüm / Ünite')
+                    ->datalist(fn () => $this->getOwnerRecord()->maddeler()->whereNotNull('bolum')->distinct()->pluck('bolum')
+                        ->merge(config('risk_nace.bolum_onerileri', []))->unique()->values()->all()),
                 TextInput::make('faaliyet')->label('Faaliyet')->columnSpanFull(),
                 Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
                 Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
