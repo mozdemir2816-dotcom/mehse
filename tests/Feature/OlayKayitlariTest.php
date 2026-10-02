@@ -326,11 +326,11 @@ class OlayKayitlariTest extends TestCase
         ]);
 
         $this->assertSame('06.10.2026', $o->sgkSonTarih()->format('d.m.Y'));
-        $this->assertCount(4, $o->eksikUyarilari());
+        $this->assertCount(5, $o->eksikUyarilari());
         $this->assertCount(2, $o->otomatikUyarilar());
         $this->assertStringContainsString('06.10.2026', $o->otomatikUyarilar()[0]);
 
-        $o->fill(['sgk_bildirimi_yapildi' => true, 'kolluk_bildirimi_yapildi' => true, 'duzeltici_faaliyet' => 'x', 'kok_neden' => 'y', 'risk_analizinde' => 'evet']);
+        $o->fill(['sgk_bildirimi_yapildi' => true, 'kolluk_bildirimi_yapildi' => true, 'duzeltici_faaliyet' => 'x', 'kok_neden' => 'y', 'kok_neden_kategorileri' => ['egitim_eksikligi'], 'risk_analizinde' => 'evet']);
         $this->assertSame([], $o->eksikUyarilari());
         $this->assertSame([], $o->otomatikUyarilar());
 
@@ -429,5 +429,86 @@ class OlayKayitlariTest extends TestCase
         OlayKaydi::create(['firma_id' => $firma->id, 'olay_tipi' => 'ramak_kala', 'olay_ozeti' => 'a']);
 
         $this->assertTrue(PortfoyKarne::firmaKriterKarsilarMi($firma->fresh(), 'olay_ramak_kala_kaydi'));
+    }
+
+    public function test_olay_dof_maddesi_eklenir_ve_ayni_dof_raporunda_birikir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $o = OlayKaydi::create([
+            'firma_id' => $firma->id,
+            'olay_tipi' => 'ramak_kala',
+            'olay_ozeti' => 'Forklift yayaya çok yakın geçti, çarpma olmadı.',
+            'olay_yeri' => 'Depo',
+        ]);
+
+        $component = Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->call('duzenle', $o->id)
+            // Kısa tespit reddedilir
+            ->set('dofTespit', 'Kısa')
+            ->call('olayDofEkle');
+        $this->assertNull($o->fresh()->dof_raporu_id);
+
+        $component
+            ->set('dofTespit', 'Yaya ve forklift yolları ayrılmamış')
+            ->set('dofDuzeltici', 'Zemin çizgisi ve bariyer')
+            ->set('dofOnleyici', 'Trafik planı hazırlanacak')
+            ->set('dofSorumlu', 'Depo şefi')
+            ->set('dofTermin', '2026-10-15')
+            ->set('dofOncelik', 'yuksek')
+            ->call('olayDofEkle')
+            ->set('dofTespit', 'Forklift operatörü hız sınırına uymuyor')
+            ->call('olayDofEkle');
+
+        $dof = $o->fresh()->dofRaporu;
+        $this->assertNotNull($dof);
+        $this->assertCount(2, $dof->maddeler);
+        $this->assertStringStartsWith('['.$o->belge_no.']', $dof->maddeler[0]['tespit']);
+        $this->assertStringContainsString('Önleyici: Trafik planı hazırlanacak', $dof->maddeler[0]['oneri']);
+        $this->assertSame('yuksek', $dof->maddeler[0]['oncelik']);
+        $this->assertSame('acik', $dof->maddeler[1]['durum']);
+        $this->assertCount(2, $component->instance()->olayDofMaddeleri);
+        $this->assertSame(1, \App\Models\DofRaporu::count());
+
+        ob_start();
+        OlayKaydiUretici::pdf($o->fresh())->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
+    public function test_kaydedilmemis_olaya_dof_eklenemez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->set('dofTespit', 'Yaya ve forklift yolları ayrılmamış')
+            ->call('olayDofEkle');
+
+        $this->assertSame(0, \App\Models\DofRaporu::count());
+    }
+
+    public function test_kayit_kapatilir_ve_arama_filtreler(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $a = OlayKaydi::create(['firma_id' => $firma->id, 'olay_tipi' => 'ramak_kala', 'olay_ozeti' => 'Merdivende kayma', 'bolum' => 'Üretim']);
+        OlayKaydi::create(['firma_id' => $firma->id, 'olay_tipi' => 'ramak_kala', 'olay_ozeti' => 'Raftan koli düştü', 'bolum' => 'Depo']);
+
+        $component = Livewire::test(OlayKayitlari::class)
+            ->set('firmaId', $firma->id)
+            ->call('kaydiKapat', $a->id);
+
+        $this->assertSame('kapandi', $a->fresh()->durum);
+
+        $component->set('arama', 'depo');
+        $this->assertCount(1, $component->instance()->gecmisKayitlar);
+        $component->set('arama', $a->belge_no);
+        $this->assertSame($a->id, $component->instance()->gecmisKayitlar->first()->id);
+    }
+
+    public function test_rapor_basligi_olay_tipine_gore(): void
+    {
+        $this->assertSame('RAMAK KALA OLAYI RAPORU', (new OlayKaydi(['olay_tipi' => 'ramak_kala']))->raporBasligi());
+        $this->assertSame('İŞ KAZASI RAPORU', (new OlayKaydi(['olay_tipi' => 'is_kazasi']))->raporBasligi());
+        $this->assertSame('OLAY KAYIT VE İNCELEME FORMU', (new OlayKaydi(['olay_tipi' => 'maddi_hasar']))->raporBasligi());
     }
 }

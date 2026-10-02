@@ -318,6 +318,79 @@
             <textarea wire:model="genelDegerlendirme" rows="4" placeholder="Olayın genel değerlendirmesi — butonla taslak oluşturup düzenleyebilirsiniz" style="{{ $inp }}"></textarea>
         </x-filament::section>
 
+        {{-- 5b. OLAY DÖF --}}
+        <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="warning">
+            <x-slot name="heading">Olay DÖF</x-slot>
+            <x-slot name="description">Bu olaya bağlı düzeltici / önleyici faaliyet maddeleri. Eklenen maddeler DÖF Takibi'nde de görünür.</x-slot>
+
+            @if (! $duzenlenenId)
+                <p style="font-size:.83rem;color:rgb(107 114 128)">
+                    DÖF maddesi eklemek için önce kaydı <strong>Kaydet</strong> ile oluşturun (ya da listeden bir kaydı <strong>Düzenle</strong>'yin).
+                </p>
+            @else
+                <div style="overflow-x:auto;margin-bottom:1rem">
+                    <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:640px">
+                        <tr>
+                            @foreach (['DÖF No', 'Tespit', 'Düzeltici', 'Sorumlu', 'Termin', 'Öncelik', 'Durum'] as $b)
+                                <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">{{ $b }}</th>
+                            @endforeach
+                        </tr>
+                        @forelse ($this->olayDofMaddeleri as $m)
+                            <tr>
+                                <td style="padding:.35rem .5rem;white-space:nowrap">{{ $m['no'] }}</td>
+                                <td style="padding:.35rem .5rem">{{ $m['tespit'] ?? '—' }}</td>
+                                <td style="padding:.35rem .5rem">{{ $m['duzeltici'] ?? $m['oneri'] ?? '—' }}</td>
+                                <td style="padding:.35rem .5rem">{{ $m['sorumlu'] ?: '—' }}</td>
+                                <td style="padding:.35rem .5rem;white-space:nowrap">{{ filled($m['termin'] ?? null) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
+                                <td style="padding:.35rem .5rem">{{ \App\Models\DofRaporu::oncelikEtiketi($m['oncelik'] ?? null) }}</td>
+                                <td style="padding:.35rem .5rem">{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7" style="padding:.6rem .5rem;text-align:center;color:rgb(107 114 128)">Olay DÖF yok</td></tr>
+                        @endforelse
+                    </table>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
+                    <div>
+                        <label style="{{ $lbl }}">Tespit Edilen Uygunsuzluk (en az 10 karakter) <span style="color:#ef4444">*</span></label>
+                        <textarea wire:model="dofTespit" rows="2" style="{{ $inp }}"></textarea>
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Kök Neden</label>
+                        <textarea wire:model="dofKokNeden" rows="2" style="{{ $inp }}"></textarea>
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Düzeltici Faaliyet</label>
+                        <textarea wire:model="dofDuzeltici" rows="2" style="{{ $inp }}"></textarea>
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Önleyici Faaliyet</label>
+                        <textarea wire:model="dofOnleyici" rows="2" style="{{ $inp }}"></textarea>
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Sorumlu</label>
+                        <input type="text" wire:model="dofSorumlu" style="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Termin</label>
+                        <input type="date" wire:model="dofTermin" style="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label style="{{ $lbl }}">Öncelik</label>
+                        <select wire:model="dofOncelik" style="{{ $inp }}">
+                            @foreach ($this->dofOncelikleri as $anahtar => $ad)
+                                <option value="{{ $anahtar }}">{{ $ad }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div style="text-align:right;margin-top:.75rem">
+                    <x-filament::button size="sm" icon="heroicon-o-plus" wire:click="olayDofEkle">DÖF Ekle</x-filament::button>
+                </div>
+            @endif
+        </x-filament::section>
+
         {{-- 6. İŞ KAZASI EK ALANLARI --}}
         @if (in_array($olayTipi, ['is_kazasi', 'meslek_hastaligi_supheli']))
             <x-filament::section icon="heroicon-o-exclamation-circle" icon-color="danger">
@@ -433,14 +506,20 @@
         <x-filament::section icon="heroicon-o-clock" icon-color="gray">
             <x-slot name="heading">Olay Kayıt Defteri</x-slot>
 
-            <div style="margin-bottom:.75rem;max-width:18rem">
-                <label style="{{ $lbl }}">Tipe Göre Filtrele</label>
-                <select wire:model.live="tipFiltre" style="{{ $inp }}">
-                    <option value="">Tümü</option>
-                    @foreach ($this->tipler as $anahtar => $ad)
-                        <option value="{{ $anahtar }}">{{ $ad }}</option>
-                    @endforeach
-                </select>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:.75rem">
+                <div>
+                    <label style="{{ $lbl }}">Ara</label>
+                    <input type="search" wire:model.live.debounce.400ms="arama" placeholder="Form no, özet, yer, bölüm…" style="{{ $inp }}">
+                </div>
+                <div>
+                    <label style="{{ $lbl }}">Tipe Göre Filtrele</label>
+                    <select wire:model.live="tipFiltre" style="{{ $inp }}">
+                        <option value="">Tümü</option>
+                        @foreach ($this->tipler as $anahtar => $ad)
+                            <option value="{{ $anahtar }}">{{ $ad }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             @if ($this->gecmisKayitlar->isNotEmpty())
@@ -449,9 +528,11 @@
                         <tr>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Belge No</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tip</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Potansiyel</th>
+                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Özet</th>
+                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sınıf</th>
+                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Risk</th>
+                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
                             <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">DÖF</th>
                             <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                         </tr>
@@ -459,14 +540,16 @@
                             <tr @if ($duzenlenenId === $k->id) style="background:rgb(245 158 11 / .08)" @endif>
                                 <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
                                 <td style="padding:.35rem .5rem">{{ $k->tipEtiketi() }}</td>
+                                <td style="padding:.35rem .5rem">{{ $k->olay_tarihi?->format('d.m.Y') }}</td>
+                                <td style="padding:.35rem .5rem;max-width:16rem" title="{{ $k->olay_ozeti }}">{{ \Illuminate\Support\Str::limit($k->olay_ozeti, 50) }}</td>
+                                <td style="padding:.35rem .5rem">{{ $k->siniflandirma ? $k->siniflandirmaEtiketi() : '—' }}</td>
+                                <td style="padding:.35rem .5rem">{{ $k->potansiyel_skor ?? '—' }} / {{ $k->potansiyelSeviye() }}</td>
                                 <td style="padding:.35rem .5rem">
                                     <span style="font-size:.72rem;padding:.1rem .45rem;border-radius:999px;border:1px solid {{ match ($k->durum) { 'kapandi' => 'rgb(22 163 74 / .5)', 'incelemede' => 'rgb(245 158 11 / .5)', default => 'rgb(220 38 38 / .5)' } }}">{{ $k->durumEtiketi() }}</span>
                                     @if ($k->eksikUyarilari())
                                         <span title="{{ implode("\n", $k->eksikUyarilari()) }}" style="cursor:help">⚠️</span>
                                     @endif
                                 </td>
-                                <td style="padding:.35rem .5rem">{{ $k->olay_tarihi?->format('d.m.Y') }}</td>
-                                <td style="padding:.35rem .5rem">{{ $k->potansiyel_skor ?? '—' }} / {{ $k->potansiyelSeviye() }}</td>
                                 <td style="padding:.35rem .5rem">{{ $k->dofRaporu?->belge_no ?? '—' }}</td>
                                 <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                     <x-filament::button size="xs" color="primary" wire:click="duzenle({{ $k->id }})">Düzenle</x-filament::button>
@@ -475,6 +558,9 @@
                                         <x-filament::button size="xs" color="gray" wire:click="gecmisBalikKilcigi({{ $k->id }})">Balık Kılçığı</x-filament::button>
                                     @endif
                                     <x-filament::button size="xs" color="warning" wire:click="dofeAktar({{ $k->id }})">DÖF'e Aktar</x-filament::button>
+                                    @if ($k->durum !== 'kapandi')
+                                        <x-filament::button size="xs" color="success" wire:click="kaydiKapat({{ $k->id }})" wire:confirm="Kayıt kapatılsın mı?">Kapat</x-filament::button>
+                                    @endif
                                     <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})" wire:confirm="Bu olay kaydı silinsin mi?">Sil</x-filament::button>
                                 </td>
                             </tr>

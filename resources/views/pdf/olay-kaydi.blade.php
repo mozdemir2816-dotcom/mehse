@@ -43,7 +43,7 @@
 <div class="sayfa">
 
     <div class="baslik">
-        <h1>{{ $kayit->olay_tipi === 'is_kazasi' ? 'İŞ KAZASI RAPORU' : 'OLAY KAYIT VE İNCELEME FORMU' }}</h1>
+        <h1>{{ $kayit->raporBasligi() }}</h1>
         <div style="font-size:11px">{{ $firma?->unvan }}</div>
         <div style="font-size:9.5px;color:#555;margin-top:2px">
             Form No: {{ $kayit->belge_no }} · Durum: {{ $kayit->durumEtiketi() }} · Düzenleme: {{ now()->format('d.m.Y H:i') }}
@@ -182,9 +182,28 @@
     <p class="metin"><strong>Acil Durum İlgisi:</strong> {{ $kayit->acilDurumEtiketi() }}@if (filled($kayit->acil_durum_notu)) — {{ $kayit->acil_durum_notu }}@endif</p>
 
     <h2>{{ ++$n }}. DÜZELTİCİ / ÖNLEYİCİ FAALİYETLER</h2>
-    <p class="metin">{{ $kayit->duzeltici_faaliyet ?: 'Düzeltici / önleyici faaliyet tanımlanmamış.' }}</p>
+    @if (filled($kayit->duzeltici_faaliyet) || ! $kayit->dofRaporu)
+        <p class="metin">{{ $kayit->duzeltici_faaliyet ?: 'Düzeltici / önleyici faaliyet tanımlanmamış.' }}</p>
+    @endif
     @if ($kayit->dofRaporu)
-        <p class="metin"><strong>İlgili DÖF Raporu:</strong> {{ $kayit->dofRaporu->belge_no }}</p>
+        <table class="liste">
+            <tr>
+                <th style="width:11%">DÖF No</th><th style="width:25%">Tespit</th><th style="width:30%">Düzeltici / Önleyici</th>
+                <th style="width:13%">Sorumlu</th><th style="width:10%">Termin</th><th style="width:11%">Durum</th>
+            </tr>
+            @forelse (($kayit->dofRaporu->maddeler ?? []) as $i => $m)
+                <tr>
+                    <td>{{ $kayit->dofRaporu->belge_no }}/{{ $i + 1 }}</td>
+                    <td>{{ $m['tespit'] ?? '' }}</td>
+                    <td>{!! nl2br(e($m['oneri'] ?? '—')) !!}</td>
+                    <td>{{ ($m['sorumlu'] ?? null) ?: '—' }}</td>
+                    <td>{{ filled($m['termin'] ?? null) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
+                    <td>{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="6" style="color:#888">{{ $kayit->dofRaporu->belge_no }} raporunda madde yok.</td></tr>
+            @endforelse
+        </table>
     @endif
 
     <h2>{{ ++$n }}. GENEL DEĞERLENDİRME</h2>

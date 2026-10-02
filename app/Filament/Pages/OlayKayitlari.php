@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Calisan;
+use App\Models\DofRaporu;
 use App\Models\Firma;
 use App\Models\OlayKaydi;
 use App\Filament\Support\ImzaSecenegi;
@@ -154,6 +155,24 @@ class OlayKayitlari extends Page
 
     public ?string $raporHazirlayan = null;
 
+    /** Defter araması — belge no, özet, yer, bölüm, alan. */
+    public ?string $arama = null;
+
+    // --- Olay DÖF (kayda bağlı DÖF maddesi) ---
+    public ?string $dofTespit = null;
+
+    public ?string $dofKokNeden = null;
+
+    public ?string $dofDuzeltici = null;
+
+    public ?string $dofOnleyici = null;
+
+    public ?string $dofSorumlu = null;
+
+    public ?string $dofTermin = null;
+
+    public string $dofOncelik = 'orta';
+
     /** @var array<int, TemporaryUploadedFile> */
     public array $yeniFotograflar = [];
 
@@ -297,6 +316,14 @@ class OlayKayitlari extends Page
         return $this->firma
             ? $this->firma->olayKayitlari()
                 ->when($this->tipFiltre, fn ($q) => $q->where('olay_tipi', $this->tipFiltre))
+                ->when(filled($this->arama), function ($q) {
+                    $aranan = '%'.trim($this->arama).'%';
+                    $q->where(fn ($w) => $w->where('belge_no', 'like', $aranan)
+                        ->orWhere('olay_ozeti', 'like', $aranan)
+                        ->orWhere('olay_yeri', 'like', $aranan)
+                        ->orWhere('bolum', 'like', $aranan)
+                        ->orWhere('alan', 'like', $aranan));
+                })
                 ->with('dofRaporu')
                 ->latest('olay_tarihi')->latest()->get()
             : collect();
@@ -327,6 +354,7 @@ class OlayKayitlari extends Page
         }
 
         $this->duzenlenenId = $o->id;
+        unset($this->olayDofMaddeleri);
         $this->olayTipi = $o->olay_tipi;
         $this->durum = $o->durum ?: 'acik';
         $this->etkilenenHizliSecId = $o->calisan_id;
@@ -385,12 +413,15 @@ class OlayKayitlari extends Page
     {
         $firmaId = $this->firmaId;
         $tipFiltre = $this->tipFiltre;
+        $arama = $this->arama;
 
         $this->reset();
         $this->resetErrorBag();
+        unset($this->olayDofMaddeleri);
 
         $this->firmaId = $firmaId;
         $this->tipFiltre = $tipFiltre;
+        $this->arama = $arama;
         $this->olayTarihi = now()->toDateString();
         $this->bildirimTarihi = now()->toDateString();
         $this->updatedFirmaId();
@@ -405,6 +436,110 @@ class OlayKayitlari extends Page
     public function updatedTipFiltre(): void
     {
         unset($this->gecmisKayitlar);
+    }
+
+    public function updatedArama(): void
+    {
+        unset($this->gecmisKayitlar);
+    }
+
+    /** Düzenlenen kaydın bağlı DÖF raporundaki maddeler (Olay DÖF tablosu). */
+    #[Computed]
+    public function olayDofMaddeleri(): array
+    {
+        $o = $this->duzenlenenId ? $this->firma?->olayKayitlari()->with('dofRaporu')->find($this->duzenlenenId) : null;
+
+        return collect($o?->dofRaporu?->maddeler ?? [])
+            ->map(fn (array $m, int $i) => [...$m, 'no' => $o->dofRaporu->belge_no.'/'.($i + 1)])
+            ->all();
+    }
+
+    #[Computed]
+    public function dofOncelikleri(): array
+    {
+        return config('isg.dof.oncelikler');
+    }
+
+    /**
+     * Kayda DÖF maddesi ekler — olayın bağlı DÖF raporu yoksa oluşturulur, varsa
+     * maddeye eklenir. Böylece madde DÖF Takibi'nde de görünür.
+     */
+    public function olayDofEkle(): void
+    {
+        $o = $this->duzenlenenId ? $this->firma?->olayKayitlari()->with('dofRaporu')->find($this->duzenlenenId) : null;
+
+        if (! $o) {
+            Notification::make()->title('Önce kaydı oluşturun')->body('DÖF maddesi kaydedilmiş bir olaya eklenir.')->danger()->send();
+
+            return;
+        }
+
+        if (mb_strlen(trim((string) $this->dofTespit)) < 10) {
+            Notification::make()->title('Tespit edilen uygunsuzluk en az 10 karakter olmalı')->danger()->send();
+
+            return;
+        }
+
+        $madde = [
+            'tespit' => "[{$o->belge_no}] ".trim($this->dofTespit),
+            'oncelik' => $this->dofOncelik,
+            'oneri' => collect([
+                'Düzeltici: ' => $this->dofDuzeltici,
+                'Önleyici: ' => $this->dofOnleyici,
+                'Kök neden: ' => $this->dofKokNeden,
+            ])->filter(fn ($v) => filled($v))->map(fn ($v, $k) => $k.trim($v))->implode("\n") ?: null,
+            'sorumlu' => $this->dofSorumlu,
+            'termin' => $this->dofTermin,
+            'durum' => 'acik',
+            'kok_neden' => $this->dofKokNeden,
+            'duzeltici' => $this->dofDuzeltici,
+            'onleyici' => $this->dofOnleyici,
+        ];
+
+        $dof = $o->dofRaporu ?? new DofRaporu([
+            'firma_id' => $o->firma_id,
+            'alan_bolge' => collect([$o->olay_yeri, $o->bolum, $o->alan])->filter()->implode(' / ') ?: null,
+            'rapor_tarihi' => now()->toDateString(),
+            'gozetim_yapan' => $o->rapor_hazirlayan,
+            'gozetim_yapan_kase' => $o->rapor_hazirlayan_kase,
+            'isveren_vekili_adi' => $o->isveren_vekili,
+            'maddeler' => [],
+        ]);
+        $dof->maddeler = [...($dof->maddeler ?? []), $madde];
+        $dof->save();
+
+        if (! $o->dof_raporu_id) {
+            $o->update(['dof_raporu_id' => $dof->id]);
+        }
+
+        $this->reset('dofTespit', 'dofKokNeden', 'dofDuzeltici', 'dofOnleyici', 'dofSorumlu', 'dofTermin', 'dofOncelik');
+        unset($this->olayDofMaddeleri, $this->gecmisKayitlar);
+
+        Notification::make()->title('DÖF maddesi eklendi')->body($dof->belge_no.' — DÖF Takibi\'nde de görünür.')->success()->send();
+    }
+
+    /** Kaydı kapatır; eksikler varsa yine kapatır ama uyarır. */
+    public function kaydiKapat(int $id): void
+    {
+        $o = $this->firma?->olayKayitlari()->find($id);
+
+        if (! $o) {
+            return;
+        }
+
+        $o->update(['durum' => 'kapandi']);
+
+        if ($this->duzenlenenId === $id) {
+            $this->durum = 'kapandi';
+        }
+        unset($this->gecmisKayitlar);
+
+        $eksik = $o->eksikUyarilari();
+        Notification::make()
+            ->title($o->belge_no.' kapatıldı')
+            ->body($eksik ? 'Dikkat — eksikler: '.implode(' ', $eksik) : null)
+            ->{$eksik ? 'warning' : 'success'}()
+            ->send();
     }
 
     public function updatedEtkilenenHizliSecId(): void

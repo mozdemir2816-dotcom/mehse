@@ -71,6 +71,17 @@ class OlayKaydi extends Model
         return ($o !== false && $s !== false) ? ($o + 1) * ($s + 1) : null;
     }
 
+    /** PDF başlığı — olay tipine göre. */
+    public function raporBasligi(): string
+    {
+        return match ($this->olay_tipi) {
+            'is_kazasi' => 'İŞ KAZASI RAPORU',
+            'ramak_kala' => 'RAMAK KALA OLAYI RAPORU',
+            'meslek_hastaligi_supheli' => 'MESLEK HASTALIĞI ŞÜPHESİ RAPORU',
+            default => 'OLAY KAYIT VE İNCELEME FORMU',
+        };
+    }
+
     public function tipEtiketi(): string
     {
         return config('isg.olay.tipler.'.$this->olay_tipi, $this->olay_tipi ?? '—');
@@ -162,6 +173,11 @@ class OlayKaydi extends Model
         }
         if (! $this->nedenZinciri() && blank($this->kok_neden)) {
             $eksik[] = 'Kök neden analizi yapılmamış.';
+        } elseif (blank($this->kok_neden)) {
+            $eksik[] = 'Kök neden metni eksik.';
+        }
+        if (blank($this->kok_neden_kategorileri)) {
+            $eksik[] = 'Kök neden kategorisi eksik.';
         }
         if ($this->isKazasiMi() && ! $this->sgk_bildirimi_yapildi) {
             $eksik[] = 'İş kazasında SGK bildirimi işaretlenmemiş.';
