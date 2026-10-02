@@ -2,9 +2,12 @@
 
 namespace App\Support;
 
+use App\Models\IsEkipmani;
 use App\Models\PeriyodikKontrol;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -32,6 +35,61 @@ class PeriyodikKontrolUretici
         $ad = 'periyodik-kontrol-teftis-paketi-'.Str::slug($kontrol->firma?->unvan ?? 'firma').'.pdf';
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+    }
+
+    /**
+     * Tüm firmalar periyodik kontrol sicili (isgsuite "periyodik-kontrol.xlsx"
+     * sütunları + vize durumu ve kalan gün).
+     *
+     * @param  Collection<int, IsEkipmani>  $ekipmanlar
+     */
+    public static function portfoyExcel(Collection $ekipmanlar): StreamedResponse
+    {
+        ExcelBellek::artir();
+
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet();
+        $s->setTitle('Periyodik Kontrol');
+
+        $basliklar = [
+            'Firma', 'Kategori', 'Ekipman', 'Yer', 'Seri No', 'Son Kontrol', 'Sonraki Termin',
+            'Kontrol Firması', 'Rapor No', 'Sonuç', 'Durum', 'Kalan Gün', 'Not',
+        ];
+        $son = Coordinate::stringFromColumnIndex(count($basliklar));
+        $s->fromArray($basliklar, null, 'A1');
+        $s->getStyle("A1:{$son}1")->getFont()->setBold(true);
+        $s->getStyle("A1:{$son}1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E8E5F2');
+
+        foreach ($ekipmanlar->values() as $i => $e) {
+            $s->fromArray([
+                $e->firma?->unvan,
+                $e->kategoriAdi(),
+                $e->ekipman_adi,
+                $e->konum,
+                $e->seri_no,
+                $e->son_muayene_tarihi?->format('d.m.Y'),
+                $e->sonraki_vize_tarihi?->format('d.m.Y'),
+                $e->muayene_yapan,
+                $e->rapor_no,
+                $e->sonucEtiketi(),
+                $e->vizeDurumEtiketi(),
+                $e->kalanGun(),
+                $e->ozel_notlar,
+            ], null, 'A'.($i + 2));
+        }
+
+        foreach (range(1, count($basliklar)) as $i) {
+            $s->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
+        }
+        $s->freezePane('A2');
+
+        $tmp = tempnam(sys_get_temp_dir(), 'pkp').'.xlsx';
+        (new Xlsx($kitap))->save($tmp);
+
+        return response()->streamDownload(function () use ($tmp) {
+            echo file_get_contents($tmp);
+            @unlink($tmp);
+        }, 'periyodik-kontrol-tum-firmalar-'.now()->format('Y-m-d').'.xlsx');
     }
 
     public static function excel(PeriyodikKontrol $kontrol): StreamedResponse

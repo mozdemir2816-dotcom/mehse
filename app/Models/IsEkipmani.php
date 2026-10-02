@@ -6,6 +6,7 @@ use App\Support\KullaniciAyarlari;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -47,11 +48,46 @@ class IsEkipmani extends Model
                 $e->sonraki_vize_tarihi = null;
             }
         });
+
+        // Son kontrol bilgisi geçmişe yazılır; aynı tarihli kayıt varsa güncellenir
+        // (satır içi düzenleme / "Kontrol Gir" / yeni ekipman — hepsi aynı yol).
+        static::saved(function (IsEkipmani $e): void {
+            $izlenen = ['son_muayene_tarihi', 'sonraki_vize_tarihi', 'muayene_yapan', 'rapor_no', 'sonuc'];
+
+            if (! $e->son_muayene_tarihi || (! $e->wasRecentlyCreated && ! $e->wasChanged($izlenen))) {
+                return;
+            }
+
+            $tarih = $e->son_muayene_tarihi->toDateString();
+            $degerler = [
+                'sonraki_tarih' => $e->sonraki_vize_tarihi?->toDateString(),
+                'kontrol_eden' => $e->muayene_yapan,
+                'rapor_no' => $e->rapor_no,
+                'sonuc' => $e->sonuc,
+            ];
+
+            // whereDate: sürücüden bağımsız eşleşme (sqlite tarihi saatle saklar).
+            $mevcut = $e->kontroller()->whereDate('kontrol_tarihi', $tarih)->first();
+            $mevcut
+                ? $mevcut->update($degerler)
+                : $e->kontroller()->create(['kontrol_tarihi' => $tarih, ...$degerler]);
+        });
+
+        // Canlı DB'de FK yok — geçmişi (ve rapor dosyalarını) burada temizle.
+        static::deleting(function (IsEkipmani $e): void {
+            $e->kontroller()->get()->each->delete();
+        });
     }
 
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);
+    }
+
+    /** Kontrol geçmişi — en yeni önce. */
+    public function kontroller(): HasMany
+    {
+        return $this->hasMany(IsEkipmaniKontrolu::class)->orderByDesc('kontrol_tarihi');
     }
 
     public function kategoriAdi(): string

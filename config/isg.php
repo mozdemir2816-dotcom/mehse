@@ -489,6 +489,10 @@ return [
             'tesisat_yangin' => [
                 ['ad' => 'Yangın Tesisatı, Motopomplar & Hidrantlar', 'periyot_ay' => 12, 'standart' => 'TS EN 12845 / BYKHY', 'deney' => 'Debi-basınç testi, pompa performansı, hidrant kontrolü'],
                 ['ad' => 'Yangın Söndürme Cihazları (YSC)', 'periyot_ay' => 12, 'standart' => 'TS ISO 11602-2 / TS 862-7 EN 3-7', 'deney' => 'Yıllık kontrol; her 4 yılda tekrar dolum, 10 yılda hidrostatik'],
+                ['ad' => 'Yangın Dolapları', 'periyot_ay' => 12, 'standart' => 'TS EN 671-3', 'deney' => 'Hortum basınç testi, lüle ve vana kontrolü'],
+                ['ad' => 'Yangın Algılama ve Alarm Sistemi', 'periyot_ay' => 12, 'standart' => 'TS EN 54 / BYKHY', 'deney' => 'Dedektör, buton, siren ve panel fonksiyon testi'],
+                ['ad' => 'Otomatik Sprinkler Sistemi', 'periyot_ay' => 12, 'standart' => 'TS EN 12845', 'deney' => 'Alarm vanası, test-drenaj, pompa otomatik devreye girme testi'],
+                ['ad' => 'Acil Aydınlatma ve Yönlendirme', 'periyot_ay' => 12, 'standart' => 'TS EN 50172 / TS EN 1838', 'deney' => 'Şebeke kesintisinde süre ve aydınlık düzeyi testi'],
                 ['ad' => 'Havalandırma ve İklimlendirme Tesisatı', 'periyot_ay' => 12, 'standart' => 'TS EN 12599', 'deney' => 'Hava debisi, filtre ve duman tahliye fonksiyon testi'],
                 ['ad' => 'Doğalgaz & LPG Boru Hattı Tesisatı', 'periyot_ay' => 12, 'standart' => 'TS EN 1775 / Gaz Yön.', 'deney' => 'Sızdırmazlık (basınç düşme) testi, gaz dedektörü kontrolü'],
             ],

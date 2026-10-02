@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\IsEkipmani;
+use App\Models\IsEkipmaniKontrolu;
 use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\PeriyodikKontrolUretici;
@@ -11,6 +12,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -20,6 +22,8 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
@@ -153,11 +157,13 @@ class PeriyodikKontrol extends Page
 
     public function updatedDurumFiltre(): void
     {
+        unset($this->portfoyEkipmanlari);
         $this->satirlariYukle();
     }
 
     public function updatedArama(): void
     {
+        unset($this->portfoyEkipmanlari);
         $this->satirlariYukle();
     }
 
@@ -333,6 +339,13 @@ class PeriyodikKontrol extends Page
                     return PeriyodikKontrolUretici::pdf($this->kapsayici());
                 }),
 
+            Action::make('portfoy_excel')
+                ->label('Tüm Firmalar Excel')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn () => $this->firma === null && $this->portfoyEkipmanlari->isNotEmpty())
+                ->action(fn () => PeriyodikKontrolUretici::portfoyExcel($this->portfoyEkipmanlari)),
+
             Action::make('excel')
                 ->label('Müfettiş Teftiş Paketi (Excel)')
                 ->icon('heroicon-o-table-cells')
@@ -345,6 +358,137 @@ class PeriyodikKontrol extends Page
                     return PeriyodikKontrolUretici::excel($this->kapsayici());
                 }),
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tüm firmalar termin listesi (isgsuite "Periyodik Kontrol Sicili")
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Firma seçilmeden: tüm firmalardaki aktif ekipmanlar, en yakın termin
+     * önce. Durum filtresi ve arama burada da geçerli.
+     *
+     * @return Collection<int, IsEkipmani>
+     */
+    #[Computed]
+    public function portfoyEkipmanlari(): Collection
+    {
+        $aranan = mb_strtolower(trim($this->arama));
+
+        return IsEkipmani::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->where('aktif', true)
+            ->with('firma')
+            ->orderByRaw('sonraki_vize_tarihi is null')
+            ->orderBy('sonraki_vize_tarihi')
+            ->get()
+            ->filter(fn (IsEkipmani $e) => ! $this->durumFiltre || $e->vizeDurumu() === $this->durumFiltre)
+            ->filter(fn (IsEkipmani $e) => $aranan === '' || str_contains(
+                mb_strtolower(implode(' ', [$e->ekipman_adi, $e->seri_no, $e->konum, $e->marka_model, $e->firma?->unvan])),
+                $aranan,
+            ))
+            ->values();
+    }
+
+    public function firmaSec(int $id): void
+    {
+        $this->firmaId = $id;
+        $this->updatedFirmaId();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kontrol girişi ve geçmişi
+    |--------------------------------------------------------------------------
+    */
+
+    private function ekipman(int $id): IsEkipmani
+    {
+        return IsEkipmani::query()->whereIn('firma_id', array_keys($this->firmalar))->findOrFail($id);
+    }
+
+    /** Yeni periyodik kontrol: ekipmanın son kontrolü güncellenir, eskisi geçmişte kalır, rapor dosyası eklenir. */
+    public function kontrolGirAction(): Action
+    {
+        return Action::make('kontrolGir')
+            ->label('Kontrol Gir')
+            ->modalHeading(fn (array $arguments) => 'Periyodik Kontrol — '.$this->ekipman($arguments['id'])->ekipman_adi)
+            ->modalDescription('Önceki kontrol geçmişte saklanır. Sonraki termin boş bırakılırsa periyottan hesaplanır.')
+            ->modalSubmitActionLabel('Kontrolü Kaydet')
+            ->fillForm(fn (array $arguments): array => [
+                'kontrol_tarihi' => now()->toDateString(),
+                'kontrol_eden' => $this->ekipman($arguments['id'])->muayene_yapan,
+                'sonuc' => 'uygun',
+            ])
+            ->schema([
+                DatePicker::make('kontrol_tarihi')->label('Kontrol tarihi')->required()->maxDate(now()),
+                TextInput::make('kontrol_eden')->label('Kontrol firması / yetkili kişi'),
+                TextInput::make('rapor_no')->label('Rapor no'),
+                Select::make('sonuc')->label('Sonuç')->options(fn () => $this->sonuclar)->required(),
+                DatePicker::make('sonraki_tarih')->label('Sonraki termin (isteğe bağlı)')->afterOrEqual('kontrol_tarihi'),
+                FileUpload::make('dosya')
+                    ->label('Kontrol raporu (PDF / görsel)')
+                    ->disk('public')
+                    ->directory(fn () => 'periyodik-kontrol/'.now()->format('Y'))
+                    ->preserveFilenames()
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                    ->maxSize(20480),
+                Textarea::make('notu')->label('Not')->rows(2),
+            ])
+            ->action(function (array $data, array $arguments): void {
+                $e = $this->ekipman($arguments['id']);
+
+                $e->fill([
+                    'son_muayene_tarihi' => $data['kontrol_tarihi'],
+                    'sonraki_vize_tarihi' => filled($data['sonraki_tarih'] ?? null)
+                        ? $data['sonraki_tarih']
+                        : Carbon::parse($data['kontrol_tarihi'])->addMonths($e->muayene_periyodu_ay)->toDateString(),
+                    'muayene_yapan' => $data['kontrol_eden'] ?: null,
+                    'rapor_no' => $data['rapor_no'] ?: null,
+                    'sonuc' => $data['sonuc'],
+                ]);
+                $e->save();
+
+                $kayit = $e->kontroller()->whereDate('kontrol_tarihi', $data['kontrol_tarihi'])->first();
+                $kayit?->update([
+                    'notu' => $data['notu'] ?: null,
+                    ...(filled($data['dosya'] ?? null) ? ['dosya_yolu' => $data['dosya'], 'dosya_adi' => basename($data['dosya'])] : []),
+                ]);
+
+                unset($this->tumEkipmanlar, $this->kpi, $this->kategoriSayaclari, $this->portfoyEkipmanlari);
+                $this->satirlariYukle();
+
+                Notification::make()->title('Kontrol kaydedildi')->body($e->ekipman_adi.' — sonraki: '.$e->sonraki_vize_tarihi?->format('d.m.Y'))->success()->send();
+            });
+    }
+
+    public function kontrolGecmisiAction(): Action
+    {
+        return Action::make('kontrolGecmisi')
+            ->label('Geçmiş')
+            ->modalHeading(fn (array $arguments) => 'Kontrol Geçmişi — '.$this->ekipman($arguments['id'])->ekipman_adi)
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Kapat')
+            ->modalContent(fn (array $arguments) => view('filament.pages.partials.ekipman-kontrol-gecmisi', [
+                'kontroller' => $this->ekipman($arguments['id'])->kontroller()->get(),
+            ]));
+    }
+
+    public function kontrolRaporuIndir(int $kontrolId)
+    {
+        $k = IsEkipmaniKontrolu::query()
+            ->whereIn('is_ekipmani_id', IsEkipmani::query()->whereIn('firma_id', array_keys($this->firmalar))->select('id'))
+            ->findOrFail($kontrolId);
+
+        if (! $k->dosya_yolu || ! Storage::disk('public')->exists($k->dosya_yolu)) {
+            Notification::make()->title('Dosya bulunamadı')->danger()->send();
+
+            return null;
+        }
+
+        return Storage::disk('public')->download($k->dosya_yolu, $k->dosya_adi);
     }
 
     public function ekipmanKaydet(array $data): void

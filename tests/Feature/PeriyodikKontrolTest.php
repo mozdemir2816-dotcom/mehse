@@ -141,4 +141,102 @@ class PeriyodikKontrolTest extends TestCase
         $firmalar = Livewire::test(PeriyodikKontrolSayfasi::class)->instance()->firmalar();
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    private function ekipman(array $ek = []): IsEkipmani
+    {
+        return IsEkipmani::create([
+            'firma_id' => $this->firma->id, 'kategori' => 'tesisat_yangin', 'ekipman_adi' => 'Yangın Tüpü 6 kg',
+            'muayene_periyodu_ay' => 12, ...$ek,
+        ]);
+    }
+
+    public function test_kontrol_gir_gecmisi_korur_ve_rapor_dosyasi_ekler(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $e = $this->ekipman(['son_muayene_tarihi' => '2025-03-01', 'muayene_yapan' => 'Eski Firma', 'sonuc' => 'uygun']);
+        $this->assertSame(1, $e->kontroller()->count());
+
+        Livewire::test(PeriyodikKontrolSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->callAction('kontrolGir', [
+                'kontrol_tarihi' => '2026-03-01',
+                'kontrol_eden' => 'ABC Muayene',
+                'rapor_no' => 'R-77',
+                'sonuc' => 'sartli',
+                'notu' => 'Manometre değişecek',
+                'dosya' => \Illuminate\Http\UploadedFile::fake()->create('rapor.pdf', 40, 'application/pdf'),
+            ], ['id' => $e->id])
+            ->assertHasNoActionErrors();
+
+        $e->refresh();
+        $this->assertSame('2026-03-01', $e->son_muayene_tarihi->toDateString());
+        $this->assertSame('2027-03-01', $e->sonraki_vize_tarihi->toDateString());
+        $this->assertSame('ABC Muayene', $e->muayene_yapan);
+
+        $gecmis = $e->kontroller()->get();
+        $this->assertCount(2, $gecmis);
+        $this->assertSame('2026-03-01', $gecmis[0]->kontrol_tarihi->toDateString());
+        $this->assertSame('R-77', $gecmis[0]->rapor_no);
+        $this->assertSame('Manometre değişecek', $gecmis[0]->notu);
+        $this->assertNotNull($gecmis[0]->dosya_yolu);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($gecmis[0]->dosya_yolu);
+        $this->assertSame('Eski Firma', $gecmis[1]->kontrol_eden);
+    }
+
+    public function test_satir_ici_ayni_tarih_duzeltmesi_gecmisi_cogaltmaz_ve_silme_temizler(): void
+    {
+        $e = $this->ekipman(['son_muayene_tarihi' => '2026-01-10']);
+
+        $e->update(['rapor_no' => 'R-1', 'sonuc' => 'uygun']);
+        $this->assertSame(1, $e->kontroller()->count());
+        $this->assertSame('R-1', $e->kontroller()->first()->rapor_no);
+
+        // Değişiklik olmadan kaydetmek yeni geçmiş satırı açmaz
+        $e->save();
+        $this->assertSame(1, $e->kontroller()->count());
+
+        $e->delete();
+        $this->assertDatabaseCount('is_ekipmani_kontrolleri', 0);
+    }
+
+    public function test_tum_firmalar_listesi_termine_gore_siralanir_ve_excel_uretir(): void
+    {
+        $diger = Firma::factory()->for($this->uzman)->create(['unvan' => 'Beta A.Ş.']);
+        $this->ekipman(['ekipman_adi' => 'Uzak', 'son_muayene_tarihi' => now()->subMonth()->toDateString()]);
+        IsEkipmani::create([
+            'firma_id' => $diger->id, 'kategori' => 'kaldirma_iletme', 'ekipman_adi' => 'Forklift',
+            'muayene_periyodu_ay' => 12, 'son_muayene_tarihi' => now()->subMonths(13)->toDateString(),
+        ]);
+        IsEkipmani::create([
+            'firma_id' => Firma::factory()->for(User::factory()->kisitli())->create()->id,
+            'kategori' => 'kaldirma_iletme', 'ekipman_adi' => 'Başkasının', 'muayene_periyodu_ay' => 12,
+        ]);
+
+        $sayfa = Livewire::test(PeriyodikKontrolSayfasi::class);
+        $liste = $sayfa->instance()->portfoyEkipmanlari;
+        $this->assertSame(['Forklift', 'Uzak'], $liste->pluck('ekipman_adi')->all());
+
+        $sayfa->set('durumFiltre', 'dolmus');
+        $this->assertSame(['Forklift'], $sayfa->instance()->portfoyEkipmanlari->pluck('ekipman_adi')->all());
+
+        $sayfa->call('firmaSec', $diger->id)->assertSet('firmaId', $diger->id);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'pkx').'.xlsx';
+        ob_start();
+        PeriyodikKontrolUretici::portfoyExcel($liste)->sendContent();
+        file_put_contents($tmp, ob_get_clean());
+        $s = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmp)->getActiveSheet();
+        @unlink($tmp);
+        $this->assertSame('Beta A.Ş.', $s->getCell('A2')->getValue());
+        $this->assertSame('Süresi Dolan / Yasak', $s->getCell('K2')->getValue());
+    }
+
+    public function test_yangin_alt_kategorileri_katalogda(): void
+    {
+        $adlar = collect(config('isg.periyodik_kontrol.tipler.tesisat_yangin'))->pluck('ad');
+
+        foreach (['Yangın Dolapları', 'Yangın Algılama ve Alarm Sistemi', 'Otomatik Sprinkler Sistemi'] as $ad) {
+            $this->assertContains($ad, $adlar);
+        }
+    }
 }

@@ -15,7 +15,7 @@
     <x-filament::section icon="heroicon-o-wrench-screwdriver" icon-color="primary">
         <x-slot name="heading">Firma</x-slot>
         <select wire:model.live="firmaId" style="{{ $girdi }};max-width:460px">
-            <option value="">— Firma seçin —</option>
+            <option value="">— Tüm firmalar (termin listesi) —</option>
             @foreach ($this->firmalar as $id => $ad)
                 <option value="{{ $id }}">{{ $ad }}</option>
             @endforeach
@@ -96,7 +96,7 @@
                                 <th style="padding:.4rem;width:150px">Muayene Yapan / Rapor No</th>
                                 <th style="padding:.4rem;width:150px">Sonuç</th>
                                 <th style="padding:.4rem;width:110px">Vize Durumu</th>
-                                <th style="padding:.4rem;width:36px"></th>
+                                <th style="padding:.4rem;width:190px"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,7 +137,9 @@
                                             <div style="font-size:.66rem;color:rgb(107 114 128);margin-top:.15rem">{{ $s['kalan_gun'] }} gün</div>
                                         @endif
                                     </td>
-                                    <td style="padding:.35rem;text-align:center">
+                                    <td style="padding:.35rem;text-align:center;white-space:nowrap">
+                                        <x-filament::button size="xs" color="primary" wire:click="mountAction('kontrolGir', { id: {{ $s['id'] }} })">Kontrol Gir</x-filament::button>
+                                        <x-filament::button size="xs" color="gray" wire:click="mountAction('kontrolGecmisi', { id: {{ $s['id'] }} })">Geçmiş</x-filament::button>
                                         <button type="button" wire:click="ekipmanSil({{ $s['id'] }})"
                                             wire:confirm="Bu ekipman silinsin mi?"
                                             style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
@@ -153,6 +155,61 @@
                 <label style="font-size:.8rem;font-weight:600">Genel Not</label>
                 <input type="text" wire:model.blur="genelNot" style="{{ $girdi }}" placeholder="örn. Kapasite raporu tarih/no; muayeneleri yapan A tipi muayene kuruluşu">
             </div>
+        </x-filament::section>
+    @else
+        {{-- TÜM FİRMALAR — PERİYODİK KONTROL SİCİLİ --}}
+        <x-filament::section icon="heroicon-o-queue-list" icon-color="primary">
+            <x-slot name="heading">Tüm Firmalar — Periyodik Kontrol Sicili ({{ $this->portfoyEkipmanlari->count() }})</x-slot>
+            <x-slot name="description">Bütün firmalarınızdaki ekipmanlar, en yakın termin önce. Ekipman eklemek / kontrol girmek için firma adına tıklayın.</x-slot>
+
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.75rem">
+                <input type="text" wire:model.live.debounce.400ms="arama" placeholder="Ekipman, yer, seri no, firma ara…" style="{{ $girdi }};max-width:340px">
+                <select wire:model.live="durumFiltre" style="{{ $girdi }};max-width:200px">
+                    <option value="">Tüm Durumlar</option>
+                    @foreach ($durumEtiket as $anahtar => $etiket)
+                        <option value="{{ $anahtar }}">{{ $etiket }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            @if ($this->portfoyEkipmanlari->isEmpty())
+                <p style="font-size:.85rem;color:rgb(107 114 128)">Kayıt yok. Bir firma seçip “Yeni Ekipman Tanımla” ile başlayın.</p>
+            @else
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:900px">
+                        <thead>
+                            <tr style="text-align:left;background:rgb(107 114 128 / .08)">
+                                @foreach (['Firma', 'Kategori', 'Ekipman', 'Yer', 'Son Kontrol', 'Sonraki', 'Durum', ''] as $b)
+                                    <th style="padding:.4rem">{{ $b }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($this->portfoyEkipmanlari as $e)
+                                @php $d = $e->vizeDurumu(); $kalan = $e->kalanGun(); @endphp
+                                <tr style="border-top:1px solid rgb(107 114 128 / .18)">
+                                    <td style="padding:.35rem">
+                                        <button type="button" wire:click="firmaSec({{ $e->firma_id }})" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(124 58 237);text-align:left;text-decoration:underline">{{ $e->firma?->unvan }}</button>
+                                    </td>
+                                    <td style="padding:.35rem">{{ $e->kategoriAdi() }}</td>
+                                    <td style="padding:.35rem;font-weight:600">{{ $e->ekipman_adi }}@if ($e->seri_no)<div style="font-weight:400;font-size:.68rem;color:rgb(107 114 128)">{{ $e->seri_no }}</div>@endif</td>
+                                    <td style="padding:.35rem">{{ $e->konum ?: '—' }}</td>
+                                    <td style="padding:.35rem;white-space:nowrap">{{ $e->son_muayene_tarihi?->format('d.m.Y') ?? '—' }}</td>
+                                    <td style="padding:.35rem;white-space:nowrap">{{ $e->sonraki_vize_tarihi?->format('d.m.Y') ?? '—' }}</td>
+                                    <td style="padding:.35rem">
+                                        <span style="display:inline-block;background:{{ $durumRenk[$d] }};color:#fff;font-size:.68rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">{{ $durumEtiket[$d] }}</span>
+                                        @if ($kalan !== null && $d !== 'bekliyor')<div style="font-size:.66rem;color:rgb(107 114 128)">{{ $kalan }} gün</div>@endif
+                                    </td>
+                                    <td style="padding:.35rem;white-space:nowrap;text-align:right">
+                                        <x-filament::button size="xs" color="primary" wire:click="mountAction('kontrolGir', { id: {{ $e->id }} })">Kontrol Gir</x-filament::button>
+                                        <x-filament::button size="xs" color="gray" wire:click="mountAction('kontrolGecmisi', { id: {{ $e->id }} })">Geçmiş</x-filament::button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </x-filament::section>
     @endif
 </x-filament-panels::page>
