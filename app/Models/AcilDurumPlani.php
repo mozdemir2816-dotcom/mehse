@@ -60,10 +60,16 @@ class AcilDurumPlani extends Model
             ->all();
     }
 
-    /** @return array<string, array<int, string>> ekip anahtarı => isimler */
+    /**
+     * Ekip anahtarı => isimler. Acil Durum Ekipleri sayfasında üyesi olan
+     * ekip, plandaki elle yazılmış isimlerin yerine geçer.
+     *
+     * @return array<string, array<int, string>>
+     */
     public function ekipListesi(): array
     {
-        $ekipler = $this->ekipler ?? [];
+        $kayitli = $this->firma ? \App\Support\AcilEkipDurumu::planListesi($this->firma) : [];
+        $ekipler = array_replace($this->ekipler ?? [], $kayitli);
 
         return collect(config('isg.acil_durum.ekipler'))
             ->mapWithKeys(fn ($ad, $anahtar) => [$anahtar => array_values(array_filter($ekipler[$anahtar] ?? []))])

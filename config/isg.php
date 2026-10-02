@@ -1774,6 +1774,25 @@ return [
             'ilk_yardim' => 'İlk Yardım Ekibi',
         ],
 
+        // Acil Durum Ekipleri / Destek Elemanları (isgsuite acil_ekipler).
+        // `oran`: tehlike sınıfına göre kaç çalışana kadar 1 destek elemanı
+        // (Acil Durumlar Yön. Md.11; ilk yardım: İlkyardım Yön. — 20/15/10).
+        // `oran` null ise yasal oran yok, öneri olarak 1 kişi. Çalışan 10'dan
+        // azsa tek eğitimli kişi yeterlidir (min 1). `belge_ay`: eğitim /
+        // sertifika geçerliliği (belge bitişi boşsa tarihten hesaplanır).
+        // `plan`: Acil Durum Planı'ndaki ekip anahtarı.
+        'ekip_turleri' => [
+            'sondurme' => ['ad' => 'Söndürme Ekibi', 'oran' => ['az_tehlikeli' => 50, 'tehlikeli' => 40, 'cok_tehlikeli' => 30], 'belge_ay' => 12, 'plan' => 'sondurme'],
+            'kurtarma' => ['ad' => 'Kurtarma Ekibi', 'oran' => ['az_tehlikeli' => 50, 'tehlikeli' => 40, 'cok_tehlikeli' => 30], 'belge_ay' => 12, 'plan' => 'kurtarma'],
+            'koruma' => ['ad' => 'Koruma Ekibi', 'oran' => ['az_tehlikeli' => 50, 'tehlikeli' => 40, 'cok_tehlikeli' => 30], 'belge_ay' => 12, 'plan' => 'koruma'],
+            'ilk_yardim' => ['ad' => 'İlk Yardım Ekibi', 'oran' => ['az_tehlikeli' => 20, 'tehlikeli' => 15, 'cok_tehlikeli' => 10], 'belge_ay' => 36, 'plan' => 'ilk_yardim'],
+            'tahliye' => ['ad' => 'Tahliye Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
+            'haberlesme' => ['ad' => 'Haberleşme Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
+            'diger' => ['ad' => 'Diğer Ekip', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
+        ],
+        'ekip_belge_yaklasan_gun' => 30,
+        'vardiyalar' => ['Gündüz', 'Akşam', 'Gece', 'Tüm vardiyalar'],
+
         // 7 acil durum afişi — A3/A4 talimat (numaralı adımlar).
         'afisler' => [
             'yangin' => [
