@@ -124,6 +124,21 @@ return [
         'cok_tehlikeli' => 40,
     ],
 
+    // Ana Sayfa — görev durumu (isgsuite "Ana sayfa — görev durumum").
+    'ana_sayfa' => [
+        // "Yaklaşan" sütunu: termini bu kadar gün içinde olan görevler.
+        'yaklasan_gun' => 14,
+        // Aylık görevlendirme kapasitesi (saat) — haftalık 45 saat normal çalışma.
+        'aylik_kapasite_saat' => 195,
+        // İGU belge sınıfının görev yapabileceği tehlike sınıfları
+        // (İSG Hizmetleri Yönetmeliği: C → az tehlikeli, B → tehlikeli dahil, A → tümü).
+        'sinif_tehlike' => [
+            'a_sinifi' => ['az_tehlikeli', 'tehlikeli', 'cok_tehlikeli'],
+            'b_sinifi' => ['az_tehlikeli', 'tehlikeli'],
+            'c_sinifi' => ['az_tehlikeli'],
+        ],
+    ],
+
     // İSG profesyoneli unvanları (hesap sahibi uzmanın sınıfı).
     'uzman_unvanlari' => [
         'a_sinifi' => 'A Sınıfı İş Güvenliği Uzmanı',
