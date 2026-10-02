@@ -211,7 +211,7 @@ class GorevDurumu
     }
 
     /** Tarihli takipler: tek tek kayıt yerine işyeri başına toplu görev. */
-    private static function tarihliGorevler(Firma $firma): array
+    public static function tarihliGorevler(Firma $firma): array
     {
         $gorevler = [];
         $bugun = Carbon::today();

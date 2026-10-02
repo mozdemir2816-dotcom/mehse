@@ -102,6 +102,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_START,
                 fn () => view('filament.components.head-ayarlar'),
             )
+            // Bildirim zili (Bildirim Merkezi okunmamış sayısı) — tema seçicinin solunda.
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => view('filament.components.bildirim-zili'),
+            )
             // Görsel tema seçici — topbar'da kullanıcı avatarının solunda.
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
