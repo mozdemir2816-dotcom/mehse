@@ -412,20 +412,21 @@ class SertifikaOlusturTest extends TestCase
         $this->assertNotContains('K25', collect($imzasiz->getDrawingCollection())->map->getCoordinates()->all());
     }
 
-    public function test_yildiz_grup_imzalida_imza_gorseli_basilir_igu_yoksa_hesap_sahibinden(): void
+    public function test_yildiz_grup_kase_imza_yerine_gecer_kase_yoksa_imza_basilir(): void
     {
         $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
         $yollar = [];
-        $yaz = function (string $ad) use ($png, &$yollar): string {
-            $rel = 'isg-profesyonel-imza/test-'.$ad.'-'.uniqid().'.png';
+        $yaz = function (string $ad, string $uzanti = 'png') use ($png, &$yollar): string {
+            $rel = 'isg-profesyonel-imza/test-'.$ad.'-'.uniqid().'.'.$uzanti;
             @mkdir(dirname(storage_path('app/public/'.$rel)), 0777, true);
             file_put_contents($yollar[] = storage_path('app/public/'.$rel), $png);
 
             return $rel;
         };
 
+        // Canlıdaki gibi: kaşe dosyasının adı .jpeg, içeriği PNG (imza kaşenin içinde).
         $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
-            'kase_gorseli' => $yaz('igu-kase'), 'imza_gorseli' => $yaz('igu-imza'),
+            'kase_gorseli' => $yaz('igu-kase', 'jpeg'), 'imza_gorseli' => $yaz('igu-imza'),
         ]);
         $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create([
             'tip' => 'isyeri_hekimi', 'kase_gorseli' => null, 'imza_gorseli' => $yaz('hekim-imza'),
@@ -444,24 +445,36 @@ class SertifikaOlusturTest extends TestCase
             SertifikaYildizGrupUretici::indir($s, $imzali)->sendContent();
             $gecici = tempnam(sys_get_temp_dir(), 'ygm').'.xlsx';
             file_put_contents($gecici, ob_get_clean());
+
+            // xlsx içinde jpeg uzantılı medya PNG türüyle kayıtlı olmamalı
+            $zip = new \ZipArchive;
+            $zip->open($gecici);
+            $this->assertStringNotContainsString('Extension="jpeg" ContentType="image/png"', $zip->getFromName('[Content_Types].xml'));
+            $zip->close();
+
             $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
             unlink($gecici);
 
             return collect($sheet->getDrawingCollection())
                 ->filter(fn ($d) => in_array($d->getCoordinates(), ['G25', 'K25'], true))
-                ->map(fn ($d) => $d->getCoordinates().':'.$d->getName().':'.$d->getOffsetX())
+                ->map(fn ($d) => $d->getCoordinates().':'.$d->getName())
                 ->values()->all();
         };
 
         $imzali = $cizimler($firma, true);
-        $this->assertContains('G25:İmza:86', $imzali);   // 80 px kaşenin sağında
-        $this->assertContains('K25:İmza:0', $imzali);    // hekim kaşesiz → hücre başında
-        $this->assertEmpty(array_filter($cizimler($firma, false), fn ($c) => str_contains($c, 'İmza')));   // matbu
+        $this->assertContains('G25:Kaşe', $imzali);        // kaşe (içinde imza) basılır…
+        $this->assertNotContains('G25:İmza', $imzali);     // …ayrı imza çift basılmaz
+        $this->assertContains('K25:İmza', $imzali);        // hekim kaşesiz → imzası
+        $this->assertSame([], $cizimler($firma, false));   // matbu: hiçbiri
 
-        // İGU kaydında imza yoksa hesap sahibinin Profilim imzası kullanılır.
-        $igu->update(['imza_gorseli' => null]);
+        // İGU kaşesiz ve imzasız → hesap sahibinin Profilim imzası.
+        $igu->update(['kase_gorseli' => null, 'imza_gorseli' => null]);
         $this->uzman->update(['imza_gorseli' => $yaz('kullanici-imza')]);
-        $this->assertContains('G25:İmza:86', $cizimler($firma->fresh(), true));
+        $this->assertContains('G25:İmza', $cizimler($firma->fresh(), true));
+
+        // Profilim'de kaşe varsa o basılır (İGU kaydında kaşe yok).
+        $this->uzman->update(['kase_gorseli' => $yaz('kullanici-kase', 'jpeg')]);
+        $this->assertContains('G25:Kaşe', $cizimler($firma->fresh(), true));
 
         foreach ($yollar as $y) {
             @unlink($y);
@@ -590,6 +603,7 @@ class SertifikaOlusturTest extends TestCase
 
         $this->assertDatabaseCount('sertifikalar', 1);
     }
+
     public function test_gecmis_yildiz_grup_imzali_imzasiz_sorulur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Geçmiş Firma']);

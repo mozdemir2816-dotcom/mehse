@@ -27,6 +27,6 @@ final class ImzaSecenegi
 
     public static function secili(array $data): bool
     {
-        return ($data['imzali'] ?? '1') === '1';
+        return (string) ($data['imzali'] ?? '1') === '1';   // Radio int 1 de döndürebilir
     }
 }

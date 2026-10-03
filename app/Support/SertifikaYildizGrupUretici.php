@@ -132,10 +132,12 @@ class SertifikaYildizGrupUretici
 
         // Eğiticiler bu şablonda her zaman İGU + İşyeri Hekimi — ad ve kaşe firmaya
         // atanmış İSG Profesyonellerinden çekilir (yoksa sertifika snapshot'ına düşer).
-        $iguKase = $firma?->igu?->kase_gorseli ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null);
+        $iguKase = $firma?->igu?->kase_gorseli
+            ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null)
+            ?: ($s->egitici_igu_dahil || $firma?->igu ? $firma?->user?->kase_gorseli : null);
         $hekimKase = $firma?->isyeriHekimi?->kase_gorseli ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
 
-        // İmza (e-imza görseli) — İGU kaydında yoksa hesap sahibinin Profilim'deki
+        // Ayrı imza görseli yalnız kaşe yoksa (imzaEkle) — İGU kaydında yoksa hesap sahibinin Profilim'deki
         // imzası (RiskDegerlendirmesiUretici::hazirlayan ile aynı geri dönüş).
         $iguImza = $s->egitici_igu_dahil || $firma?->igu
             ? ($firma?->igu?->imza_gorseli ?: $firma?->user?->imza_gorseli)
@@ -251,13 +253,7 @@ class SertifikaYildizGrupUretici
     /** @return int eklenen kaşenin piksel genişliği (yoksa 0) — imza yanına yerleşir. */
     private static function kaseEkle(Worksheet $sheet, string $hucre, ?string $kaseYolu): int
     {
-        if (! $kaseYolu) {
-            return 0;
-        }
-
-        $tamYol = storage_path('app/public/'.$kaseYolu);
-
-        if (! file_exists($tamYol)) {
+        if (! $kaseYolu || ! ($tamYol = ExcelGorsel::yol(storage_path('app/public/'.$kaseYolu)))) {
             return 0;
         }
 
@@ -271,10 +267,14 @@ class SertifikaYildizGrupUretici
         return (int) $cizim->getWidth();
     }
 
-    /** İmza görseli kaşenin sağına (kaşe yoksa hücre başına) yerleşir. */
+    /**
+     * Ayrı imza görseli YALNIZ kaşe yoksa basılır — kullanıcıların kaşe
+     * görselinde imza zaten birlikte (kullanıcı 04.10.2026: "kaşe bölümünde
+     * hem imza hem kaşe beraber yüklü"); ikisi birden imzayı çift basardı.
+     */
     private static function imzaEkle(Worksheet $sheet, string $hucre, ?string $imzaYolu, int $kaseGenisligi): void
     {
-        if (! $imzaYolu || ! file_exists($tamYol = storage_path('app/public/'.$imzaYolu))) {
+        if ($kaseGenisligi || ! $imzaYolu || ! ($tamYol = ExcelGorsel::yol(storage_path('app/public/'.$imzaYolu)))) {
             return;
         }
 
@@ -283,7 +283,6 @@ class SertifikaYildizGrupUretici
         $cizim->setPath($tamYol);
         $cizim->setHeight(60);
         $cizim->setCoordinates($hucre);
-        $cizim->setOffsetX($kaseGenisligi ? $kaseGenisligi + 6 : 0);
         $cizim->setOffsetY(8);
         $cizim->setWorksheet($sheet);
     }
@@ -295,7 +294,7 @@ class SertifikaYildizGrupUretici
      */
     private static function firmaLogosuEkle(Worksheet $sheet, ?string $logoYolu): void
     {
-        if (! $logoYolu || ! file_exists($tamYol = storage_path('app/public/'.$logoYolu))) {
+        if (! $logoYolu || ! ($tamYol = ExcelGorsel::yol(storage_path('app/public/'.$logoYolu)))) {
             return;
         }
 

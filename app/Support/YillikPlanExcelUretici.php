@@ -536,7 +536,7 @@ class YillikPlanExcelUretici
 
     private static function logoEkle(Worksheet $s, ?string $logoYolu, string $hucre, int $yukseklik, int $ofsetX, int $ofsetY): void
     {
-        $tamYol = $logoYolu ? storage_path('app/public/'.$logoYolu) : null;
+        $tamYol = $logoYolu ? ExcelGorsel::yol(storage_path('app/public/'.$logoYolu)) : null;
 
         if (! $tamYol || ! file_exists($tamYol)) {
             return;
