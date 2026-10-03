@@ -135,6 +135,13 @@ class SertifikaYildizGrupUretici
         $iguKase = $firma?->igu?->kase_gorseli ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null);
         $hekimKase = $firma?->isyeriHekimi?->kase_gorseli ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
 
+        // İmza (e-imza görseli) — İGU kaydında yoksa hesap sahibinin Profilim'deki
+        // imzası (RiskDegerlendirmesiUretici::hazirlayan ile aynı geri dönüş).
+        $iguImza = $s->egitici_igu_dahil || $firma?->igu
+            ? ($firma?->igu?->imza_gorseli ?: $firma?->user?->imza_gorseli)
+            : null;
+        $hekimImza = $firma?->isyeriHekimi?->imza_gorseli;
+
         // Eğitici adı basılmaz — kaşe ad / unvan taşır (kullanıcı kararı 03.10.2026).
 
         // Not: "Çalışanın İşyerinin Ünvanı" / "İşverenin Adı Soyadı" (G29/G30) BİLE
@@ -142,8 +149,10 @@ class SertifikaYildizGrupUretici
 
         self::turSekilIsaretle($sheet, $s);
         if ($imzali) {
-            self::kaseEkle($sheet, 'G25', $iguKase);
-            self::kaseEkle($sheet, 'K25', $hekimKase);
+            $genislik = self::kaseEkle($sheet, 'G25', $iguKase);
+            self::imzaEkle($sheet, 'G25', $iguImza, $genislik);
+            $genislik = self::kaseEkle($sheet, 'K25', $hekimKase);
+            self::imzaEkle($sheet, 'K25', $hekimImza, $genislik);
         }
 
         // Sağ üstte firma amblemi — çerçevenin iç çizgisinin ALTINA (çizginin üstüne binmez),
@@ -239,22 +248,43 @@ class SertifikaYildizGrupUretici
         $sheet->getStyle('I'.$satir)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }
 
-    private static function kaseEkle(Worksheet $sheet, string $hucre, ?string $kaseYolu): void
+    /** @return int eklenen kaşenin piksel genişliği (yoksa 0) — imza yanına yerleşir. */
+    private static function kaseEkle(Worksheet $sheet, string $hucre, ?string $kaseYolu): int
     {
         if (! $kaseYolu) {
-            return;
+            return 0;
         }
 
         $tamYol = storage_path('app/public/'.$kaseYolu);
 
         if (! file_exists($tamYol)) {
+            return 0;
+        }
+
+        $cizim = new Drawing;
+        $cizim->setName('Kaşe');
+        $cizim->setPath($tamYol);
+        $cizim->setHeight(80);   // kaşe 2 kat büyük (kullanıcı isteği 03.10.2026)
+        $cizim->setCoordinates($hucre);
+        $cizim->setWorksheet($sheet);
+
+        return (int) $cizim->getWidth();
+    }
+
+    /** İmza görseli kaşenin sağına (kaşe yoksa hücre başına) yerleşir. */
+    private static function imzaEkle(Worksheet $sheet, string $hucre, ?string $imzaYolu, int $kaseGenisligi): void
+    {
+        if (! $imzaYolu || ! file_exists($tamYol = storage_path('app/public/'.$imzaYolu))) {
             return;
         }
 
         $cizim = new Drawing;
+        $cizim->setName('İmza');
         $cizim->setPath($tamYol);
-        $cizim->setHeight(80);   // kaşe 2 kat büyük (kullanıcı isteği 03.10.2026)
+        $cizim->setHeight(60);
         $cizim->setCoordinates($hucre);
+        $cizim->setOffsetX($kaseGenisligi ? $kaseGenisligi + 6 : 0);
+        $cizim->setOffsetY(8);
         $cizim->setWorksheet($sheet);
     }
 

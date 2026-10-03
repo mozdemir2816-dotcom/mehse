@@ -412,6 +412,62 @@ class SertifikaOlusturTest extends TestCase
         $this->assertNotContains('K25', collect($imzasiz->getDrawingCollection())->map->getCoordinates()->all());
     }
 
+    public function test_yildiz_grup_imzalida_imza_gorseli_basilir_igu_yoksa_hesap_sahibinden(): void
+    {
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+        $yollar = [];
+        $yaz = function (string $ad) use ($png, &$yollar): string {
+            $rel = 'isg-profesyonel-imza/test-'.$ad.'-'.uniqid().'.png';
+            @mkdir(dirname(storage_path('app/public/'.$rel)), 0777, true);
+            file_put_contents($yollar[] = storage_path('app/public/'.$rel), $png);
+
+            return $rel;
+        };
+
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'kase_gorseli' => $yaz('igu-kase'), 'imza_gorseli' => $yaz('igu-imza'),
+        ]);
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create([
+            'tip' => 'isyeri_hekimi', 'kase_gorseli' => null, 'imza_gorseli' => $yaz('hekim-imza'),
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id, 'isyeri_hekimi_id' => $hekim->id]);
+
+        // [hücre:ad:offsetX] listesi
+        $cizimler = function (Firma $firma, bool $imzali): array {
+            $s = Sertifika::create([
+                'firma_id' => $firma->id,
+                'tip' => 'isg',
+                'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]],
+                'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+            ]);
+            ob_start();
+            SertifikaYildizGrupUretici::indir($s, $imzali)->sendContent();
+            $gecici = tempnam(sys_get_temp_dir(), 'ygm').'.xlsx';
+            file_put_contents($gecici, ob_get_clean());
+            $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+            unlink($gecici);
+
+            return collect($sheet->getDrawingCollection())
+                ->filter(fn ($d) => in_array($d->getCoordinates(), ['G25', 'K25'], true))
+                ->map(fn ($d) => $d->getCoordinates().':'.$d->getName().':'.$d->getOffsetX())
+                ->values()->all();
+        };
+
+        $imzali = $cizimler($firma, true);
+        $this->assertContains('G25:İmza:86', $imzali);   // 80 px kaşenin sağında
+        $this->assertContains('K25:İmza:0', $imzali);    // hekim kaşesiz → hücre başında
+        $this->assertEmpty(array_filter($cizimler($firma, false), fn ($c) => str_contains($c, 'İmza')));   // matbu
+
+        // İGU kaydında imza yoksa hesap sahibinin Profilim imzası kullanılır.
+        $igu->update(['imza_gorseli' => null]);
+        $this->uzman->update(['imza_gorseli' => $yaz('kullanici-imza')]);
+        $this->assertContains('G25:İmza:86', $cizimler($firma->fresh(), true));
+
+        foreach ($yollar as $y) {
+            @unlink($y);
+        }
+    }
+
     public function test_yildiz_grup_tek_gunluk_egitimde_aciklama_tarihinde_yazar(): void
     {
         $firma = Firma::factory()->create();
