@@ -1,6 +1,7 @@
 {{--
     Yıllık plan/rapor imza bloğu — İşyeri Hekimi + İş Güvenliği Uzmanı (sistemde
     kayıtlı kaşeleriyle) + İşveren/İşveren Vekili. $firma değişkeni beklenir.
+    Görevli ad soyadı basılmaz (kullanıcı kararı 03.10.2026): kaşe adı zaten taşır.
 --}}
 @php
     $hekim = $firma?->isyeriHekimi;
@@ -16,17 +17,14 @@
     <tr>
         <td>
             <div class="kutu">@if ($hekimKase)<img src="{{ $hekimKase }}">@endif</div>
-            <div class="ad">{{ $hekim?->ad_soyad ?: '……………………………' }}</div>
             <div class="rol">İşyeri Hekimi</div>
         </td>
         <td>
             <div class="kutu">@if ($uzmanKase)<img src="{{ $uzmanKase }}">@endif</div>
-            <div class="ad">{{ $uzman?->ad_soyad ?: '……………………………' }}</div>
             <div class="rol">İş Güvenliği Uzmanı</div>
         </td>
         <td>
             <div class="kutu"></div>
-            <div class="ad">{{ $isveren ?: '……………………………' }}</div>
             <div class="rol">İşveren / İşveren Vekili</div>
         </td>
     </tr>

@@ -15,7 +15,7 @@
                 arasında değiştirin; o ay planlanan eğitimler Ziyaret Programı'ndaki yapılacaklar listesine gelir.
                 @break
             @case('degerlendirme')
-                Yıl sonu değerlendirme raporu — yapılan çalışmaların tarih, tekrar sayısı ve sonuçlarını girin.
+                İSG yıllık değerlendirme raporu — 36 çalışma satırı sistemdeki kayıtlardan otomatik dolar; eksikleri tamamlayıp çıktı alın.
                 @break
             @default
                 Her ayın P (Planlandı) ve G (Gerçekleşti) hücresine tıklayarak işaretleyin; o ay P olan
@@ -269,52 +269,50 @@
         @endif
 
         @if ($sekme === 'degerlendirme')
+            @php
+                $ydKunye = \App\Support\YillikDegerlendirmeVerisi::kunye($this->firma, $yil);
+                $ydSatirlar = collect($p->degerlendirmeler ?? []);
+                $ydGirdi = 'width:100%;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.74rem;font-family:inherit';
+                $ydTh = 'text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.7rem';
+            @endphp
             <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="primary">
-                <x-slot name="heading">Yıllık Değerlendirme Raporu — {{ $yil }}</x-slot>
+                <x-slot name="heading">İSG Yıllık Değerlendirme Raporu — {{ $yil }}</x-slot>
+                <x-slot name="description">Dönem: {{ $ydKunye['donem'] }} (atandığınız tarih → yıl sonu). Satırlar sayfa açılınca sistem kayıtlarından yenilenir; elle düzelttiğiniz satır korunur. Çıktıda görevli adı yazılmaz, imza alanına kaşe basılır.</x-slot>
+
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.6rem">
+                    NACE / Faaliyet: {{ $ydKunye['nace'] ?: '—' }} · Çalışan: Erkek {{ $ydKunye['erkek'] }} / Kadın {{ $ydKunye['kadin'] }} / Toplam {{ $ydKunye['toplam'] }} | Genç {{ $ydKunye['genc'] }} / Çocuk {{ $ydKunye['cocuk'] }}
+                    · Sistemden dolan: <strong>{{ $ydSatirlar->where('otomatik', true)->count() }}</strong> / {{ $ydSatirlar->count() }} satır
+                </div>
 
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:900px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.76rem;min-width:1000px">
                         <tr>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">No</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Yapılan Çalışmalar</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Yapan Kişi ve Unvanı</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tekrar Sayısı</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Kullanılan Yöntem</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sonuç ve Yorum</th>
-                            <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
+                            <th style="{{ $ydTh }};width:2.5rem">No</th>
+                            <th style="{{ $ydTh }};width:9rem">Tarih / Dönem</th>
+                            <th style="{{ $ydTh }};width:12rem">Yapılan çalışma</th>
+                            <th style="{{ $ydTh }};width:10rem">Yapan / Ünvan</th>
+                            <th style="{{ $ydTh }};width:11rem">Yöntem / Kanıt</th>
+                            <th style="{{ $ydTh }}">Sonuç ve yorum</th>
+                            <th style="{{ $ydTh }};width:3.5rem"></th>
                         </tr>
+                        @php $no = 0; @endphp
                         @foreach (($p->degerlendirmeler ?? []) as $di => $d)
-                            <tr>
-                                <td style="padding:.3rem .5rem">{{ $di + 1 }}</td>
-                                <td style="padding:.3rem .5rem;font-weight:600">{{ $d['calisma'] }}</td>
-                                <td style="padding:.15rem">
-                                    <input type="date" value="{{ $d['tarih'] ?? '' }}"
-                                        x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'tarih', $event.target.value)"
-                                        style="width:8.5rem;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
+                            @continue(($d['tur'] ?? 'calisma') === 'genel')
+                            @php $no++; @endphp
+                            <tr wire:key="yd-{{ $di }}-{{ md5(json_encode($d)) }}" style="border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top">
+                                <td style="padding:.3rem .5rem">{{ $no }}</td>
+                                <td style="padding:.15rem"><input type="text" value="{{ $d['tarih'] ?? '' }}" placeholder="… / … / …" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'tarih', $event.target.value)" style="{{ $ydGirdi }}"></td>
+                                <td style="padding:.3rem .5rem;font-weight:600">{{ $d['calisma'] }}
+                                    @if ($d['otomatik'] ?? false)<div style="font-size:.66rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@elseif ($d['elle'] ?? false)<div style="font-size:.66rem;color:rgb(217 119 6);font-weight:500">✎ elle</div>@else<div style="font-size:.66rem;color:rgb(107 114 128);font-weight:500">kayıt yok — şablon</div>@endif
                                 </td>
-                                <td style="padding:.15rem">
-                                    <input type="text" value="{{ $d['yapan_kisi'] ?? '' }}"
-                                        x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yapan_kisi', $event.target.value)"
-                                        style="width:9rem;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                                </td>
-                                <td style="padding:.15rem">
-                                    <input type="number" value="{{ $d['tekrar_sayisi'] ?? '' }}"
-                                        x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'tekrar_sayisi', $event.target.value)"
-                                        style="width:4rem;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                                </td>
-                                <td style="padding:.15rem">
-                                    <input type="text" value="{{ $d['yontem'] ?? '' }}"
-                                        x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yontem', $event.target.value)"
-                                        style="width:9rem;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                                </td>
-                                <td style="padding:.15rem">
-                                    <input type="text" value="{{ $d['sonuc'] ?? '' }}"
-                                        x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'sonuc', $event.target.value)"
-                                        style="width:11rem;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                                </td>
-                                <td style="padding:.3rem .3rem">
-                                    <button type="button" wire:click="degerlendirmeSil({{ $di }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yapan_kisi', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['yapan_kisi'] ?? '' }}</textarea></td>
+                                <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yontem', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['yontem'] ?? '' }}</textarea></td>
+                                <td style="padding:.15rem"><textarea rows="3" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'sonuc', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['sonuc'] ?? '' }}</textarea></td>
+                                <td style="padding:.3rem .2rem;white-space:nowrap">
+                                    @if (($d['elle'] ?? false) && ! str_starts_with((string) ($d['anahtar'] ?? ''), 'ek_'))
+                                        <button type="button" wire:click="degerlendirmeOtomatigeDondur({{ $di }})" title="Sistem kaydına dön" style="color:rgb(13 148 136);cursor:pointer;background:none;border:none">↺</button>
+                                    @endif
+                                    <button type="button" wire:click="degerlendirmeSil({{ $di }})" wire:confirm="Satır silinsin mi?" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -322,13 +320,26 @@
                 </div>
 
                 <div style="margin-top:1rem;display:grid;grid-template-columns:1fr auto;gap:.5rem">
-                    <input type="text" wire:model="yeniDegerlendirmeCalisma" placeholder="Yapılan çalışma"
+                    <input type="text" wire:model="yeniDegerlendirmeCalisma" placeholder="Ek çalışma (şablon dışı)"
                         style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                     <x-filament::button size="sm" wire:click="degerlendirmeEkle">+ Çalışma Ekle</x-filament::button>
                 </div>
 
+                @if ($ydSatirlar->where('tur', 'genel')->isNotEmpty())
+                    <div style="margin-top:1.2rem;font-weight:700;font-size:.85rem">Genel sonuç, iyileştirme kararları ve gelecek yıl önerileri</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:.76rem;margin-top:.4rem">
+                        @foreach (($p->degerlendirmeler ?? []) as $di => $d)
+                            @continue(($d['tur'] ?? 'calisma') !== 'genel')
+                            <tr wire:key="ydg-{{ $di }}-{{ md5(json_encode($d)) }}" style="border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top">
+                                <td style="padding:.35rem .5rem;font-weight:600;width:14rem">{{ $d['calisma'] }}@if ($d['otomatik'] ?? false)<div style="font-size:.66rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@endif</td>
+                                <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'sonuc', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['sonuc'] ?? '' }}</textarea></td>
+                            </tr>
+                        @endforeach
+                    </table>
+                @endif
+
                 <div style="margin-top:.75rem">
-                    <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
+                    <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla" wire:confirm="Değerlendirme şablona sıfırlanıp sistem kayıtlarından yeniden doldurulsun mu? Elle yazdıklarınız silinir.">Şablona Sıfırla</x-filament::button>
                 </div>
             </x-filament::section>
         @endif

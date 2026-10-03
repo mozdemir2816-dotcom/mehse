@@ -43,9 +43,8 @@ class YillikPlan extends Model
 
             $plan->faaliyetler = $icerik['faaliyetler'];
             $plan->egitimler = $icerik['egitimler'];
-            $plan->degerlendirmeler = collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
-                ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
-                ->all();
+            // Kullanıcının İSG Yıllık Değerlendirme Raporu şablonu (36 satır) — kayıtlardan dolu gelir.
+            $plan->degerlendirmeler = \App\Support\YillikDegerlendirmeVerisi::planiDoldur($firma, $yil, [])['satirlar'];
             $plan->save();
         } elseif (YillikPlanSablonu::eskiYapidaMi($plan)) {
             // Eski genel varsayılanlarla açılmış plan — kullanıcı kararıyla (01.10.2026)

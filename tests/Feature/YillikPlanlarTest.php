@@ -212,9 +212,10 @@ class YillikPlanlarTest extends TestCase
         $this->assertSame(1, substr_count($html, '<div class="rol">İş Güvenliği Uzmanı</div>'));
         $this->assertSame(1, substr_count($html, '<div class="rol">İşyeri Hekimi</div>'));
         $this->assertSame(1, substr_count($html, '<div class="rol">İşveren / İşveren Vekili</div>'));
-        $this->assertSame(1, substr_count($html, 'İGU Test'));
-        $this->assertSame(1, substr_count($html, 'Dr. Hekim Test'));
-        $this->assertSame(1, substr_count($html, 'Patron Bey'));
+        // Görevli ad soyadı basılmaz (kaşe yeterli — kullanıcı kararı 03.10.2026)
+        $this->assertSame(0, substr_count($html, 'İGU Test'));
+        $this->assertSame(0, substr_count($html, 'Dr. Hekim Test'));
+        $this->assertSame(0, substr_count($html, 'Patron Bey'));
         // kaşe dosyası diskte yoksa img basılmaz (is_file guard)
         $this->assertStringNotContainsString('kase/igu.png', $html);
     }
@@ -251,7 +252,7 @@ class YillikPlanlarTest extends TestCase
             $imzasiz = view('pdf.yillik-plan', [...$veri, 'imzali' => false])->render();
             $this->assertStringNotContainsString($hekimKaseYolu, $imzasiz);
             $this->assertStringNotContainsString($iguKaseYolu, $imzasiz);
-            $this->assertStringContainsString('İGU Test', $imzasiz);
+            $this->assertStringNotContainsString('İGU Test', $imzasiz);
 
             $yanit = YillikPlanUretici::pdf($plan, false);
             ob_start();
@@ -284,7 +285,9 @@ class YillikPlanlarTest extends TestCase
         // NACE / iş kalemi yoksa 4. bölüm (işe/işyerine özgü) boş gelir; eşleşme kuralları IseOzguEgitimKonulariTest'te.
         $this->assertFalse(collect($plan->egitimler)->contains('kategori', 'ise_ozgu'));
         $this->assertSame('planlandi', $plan->egitimler[0]['aylar'][11]);
-        $this->assertCount(count(config('isg.yillik_plan.varsayilan_degerlendirmeler')), $plan->degerlendirmeler);
+        // Kullanıcının şablonu: 36 çalışma + 6 genel sonuç satırı; kayıt yoksa tarih boş
+        $this->assertCount(42, $plan->degerlendirmeler);
+        $this->assertSame('risk', $plan->degerlendirmeler[0]['anahtar']);
         $this->assertNull($plan->degerlendirmeler[0]['tarih']);
     }
 
@@ -322,26 +325,28 @@ class YillikPlanlarTest extends TestCase
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('degerlendirmeGuncelle', 0, 'tarih', '2026-03-05')
-            ->call('degerlendirmeGuncelle', 0, 'tekrar_sayisi', '2');
+            ->call('degerlendirmeGuncelle', 0, 'tarih', '05.03.2026')
+            ->call('degerlendirmeGuncelle', 0, 'sonuc', 'Elle yazıldı');
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
-        $this->assertSame('2026-03-05', $plan->degerlendirmeler[0]['tarih']);
-        $this->assertSame('2', $plan->degerlendirmeler[0]['tekrar_sayisi']);
+        $this->assertSame('05.03.2026', $plan->degerlendirmeler[0]['tarih']);
+        $this->assertSame('Elle yazıldı', $plan->degerlendirmeler[0]['sonuc']);
+        $this->assertTrue($plan->degerlendirmeler[0]['elle']);
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
             ->set('yeniDegerlendirmeCalisma', 'Gürültü haritası güncellemesi')
             ->call('degerlendirmeEkle');
 
-        $varsayilanSayisi = count(config('isg.yillik_plan.varsayilan_degerlendirmeler'));
-        $this->assertCount($varsayilanSayisi + 1, $plan->fresh()->degerlendirmeler);
+        // Ek satır genel sonuç bölümünden önce (36. çalışmanın ardından) girer
+        $this->assertCount(43, $plan->fresh()->degerlendirmeler);
+        $this->assertSame('Gürültü haritası güncellemesi', $plan->fresh()->degerlendirmeler[36]['calisma']);
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->call('degerlendirmeSil', $varsayilanSayisi);
+            ->call('degerlendirmeSil', 36);
 
-        $this->assertCount($varsayilanSayisi, $plan->fresh()->degerlendirmeler);
+        $this->assertCount(42, $plan->fresh()->degerlendirmeler);
     }
 
     public function test_egitim_sekmesi_varsayilana_sifirlanir(): void
@@ -429,12 +434,9 @@ class YillikPlanlarTest extends TestCase
             ->assertNotified();
 
         $plan = YillikPlan::where('firma_id', $firma->id)->where('yil', 2027)->firstOrFail();
-        $risk = collect($plan->degerlendirmeler)->firstWhere('calisma', 'Risk değerlendirmesi');
-        $this->assertSame('2027-08-01', $risk['tarih']);
-        $this->assertSame(2, $risk['tekrar_sayisi']);
-
-        $egitim = collect($plan->degerlendirmeler)->firstWhere('calisma', 'Eğitim çalışmaları');
-        $this->assertSame('2027-06-10', $egitim['tarih']);
-        $this->assertSame(1, $egitim['tekrar_sayisi']);
+        $risk = collect($plan->degerlendirmeler)->firstWhere('anahtar', 'risk');
+        $this->assertSame('01.08.2027', $risk['tarih']);   // dönemdeki en son rapor
+        $this->assertStringContainsString('Rapor tarihi: 01.08.2027', $risk['sonuc']);
+        $this->assertTrue($risk['otomatik']);
     }
 }

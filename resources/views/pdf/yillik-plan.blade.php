@@ -33,29 +33,42 @@
      (App\Support\YillikPlanExcelUretici); bu PDF yalnız Değerlendirme Raporu. --}}
 <div class="sayfa" style="page-break-after:auto">
     <div class="baslik">
-        <h1>YILLIK DEĞERLENDİRME RAPORU — {{ $plan->yil }}</h1>
+        <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ YILLIK DEĞERLENDİRME RAPORU — {{ $plan->yil }}</h1>
         <div style="font-size:11px">{{ $firma?->unvan }}</div>
     </div>
 
+    @php $k = \App\Support\YillikDegerlendirmeVerisi::kunye($firma, $plan->yil); $tum = collect($plan->degerlendirmeler ?? []); @endphp
+    <div style="font-size:9px;margin-bottom:8px">
+        SGK sicil no: {{ $firma?->sgk_sicil_no ?: '…' }} · NACE / Faaliyet: {{ $k['nace'] ?: '…' }} · Tehlike sınıfı: {{ $firma?->tehlikeSinifiEtiketi() }}<br>
+        Adres: {{ $firma?->adres ?: '…' }} · Dönem: {{ $k['donem'] }} · Çalışan: Erkek {{ $k['erkek'] }} / Kadın {{ $k['kadin'] }} / Toplam {{ $k['toplam'] }} | Genç {{ $k['genc'] }} / Çocuk {{ $k['cocuk'] }}
+    </div>
     <table class="rapor">
         <tr>
-            <th style="width:4%">No</th><th>Yapılan Çalışmalar</th><th style="width:9%">Tarih</th>
-            <th>Yapan Kişi ve Unvanı</th><th style="width:8%">Tekrar Sayısı</th><th>Kullanılan Yöntem</th><th>Sonuç ve Yorum</th>
+            <th style="width:4%">No</th><th style="width:11%">Tarih / Dönem</th><th style="width:16%">Yapılan çalışma</th>
+            <th style="width:14%">Yapan kişi / Ünvan</th><th style="width:15%">Kullanılan yöntem / Kanıt</th><th>Sonuç ve yorum</th>
         </tr>
-        @forelse (($plan->degerlendirmeler ?? []) as $i => $d)
+        @forelse ($tum->where('tur', '!=', 'genel')->values() as $i => $d)
             <tr>
                 <td>{{ $i + 1 }}</td>
+                <td>{{ filled($d['tarih'] ?? null) ? (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d['tarih']) ? \Illuminate\Support\Carbon::parse($d['tarih'])->format('d.m.Y') : $d['tarih']) : '… / … / …' }}</td>
                 <td>{{ $d['calisma'] }}</td>
-                <td>{{ $d['tarih'] ?? '—' }}</td>
-                <td>{{ $d['yapan_kisi'] ?? '—' }}</td>
-                <td>{{ $d['tekrar_sayisi'] ?? '—' }}</td>
-                <td>{{ $d['yontem'] ?? '—' }}</td>
-                <td>{{ $d['sonuc'] ?? '—' }}</td>
+                <td>{{ $d['yapan_kisi'] ?? '' }}</td>
+                <td>{{ $d['yontem'] ?? '' }}</td>
+                <td>{{ $d['sonuc'] ?? '' }}</td>
             </tr>
         @empty
-            <tr><td colspan="7" style="color:#888">Çalışma eklenmedi.</td></tr>
+            <tr><td colspan="6" style="color:#888">Çalışma eklenmedi.</td></tr>
         @endforelse
     </table>
+
+    @if ($tum->where('tur', 'genel')->isNotEmpty())
+        <table class="rapor" style="margin-top:10px">
+            <tr><th colspan="2">GENEL SONUÇ, İYİLEŞTİRME KARARLARI VE GELECEK YIL ÖNERİLERİ</th></tr>
+            @foreach ($tum->where('tur', 'genel') as $g)
+                <tr><td style="width:22%;font-weight:bold">{{ $g['calisma'] }}</td><td>{{ $g['sonuc'] ?? '' }}</td></tr>
+            @endforeach
+        </table>
+    @endif
 
     @include('pdf.partials.yillik-plan-imza')
 </div>

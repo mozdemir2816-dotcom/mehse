@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\YillikPlan as YillikPlanModel;
+use App\Support\YillikDegerlendirmeExcelUretici;
 use App\Support\YillikDegerlendirmeVerisi;
 use App\Support\YillikPlanExcelIceAktarici;
 use App\Filament\Support\ImzaSecenegi;
@@ -99,6 +100,25 @@ abstract class YillikPlanlar extends Page
         if ($yil = request()->integer('yil')) {
             $this->yil = $yil;
         }
+
+        $this->degerlendirmeyiOtomatikGuncelle();
+    }
+
+    /**
+     * Değerlendirme sayfası açılınca / firma-yıl değişince satırlar sistem
+     * kayıtlarından yenilenir (elle düzenlenen satırlar korunur).
+     */
+    protected function degerlendirmeyiOtomatikGuncelle(): void
+    {
+        if ($this->sekme !== 'degerlendirme' || ! ($p = $this->plan())) {
+            return;
+        }
+
+        $yeni = YillikDegerlendirmeVerisi::planiDoldur($this->firma, $this->yil, $p->degerlendirmeler ?? [])['satirlar'];
+
+        if ($yeni !== $p->degerlendirmeler) {
+            $p->update(['degerlendirmeler' => $yeni]);
+        }
     }
 
     /*
@@ -134,11 +154,13 @@ abstract class YillikPlanlar extends Page
     public function updatedFirmaId(): void
     {
         unset($this->firma, $this->plan);
+        $this->degerlendirmeyiOtomatikGuncelle();
     }
 
     public function updatedYil(): void
     {
         unset($this->plan);
+        $this->degerlendirmeyiOtomatikGuncelle();
     }
 
     /** Atanmış uzman (sözleşme başlangıcı) öncesi ay indeksi — bu aylar kilitli. */
@@ -307,7 +329,25 @@ abstract class YillikPlanlar extends Page
         }
 
         $degerlendirmeler[$index][$alan] = $deger;
+        // Elle değiştirilen satır artık otomatik yenilemede ezilmez.
+        $degerlendirmeler[$index]['elle'] = true;
         $p->update(['degerlendirmeler' => $degerlendirmeler]);
+    }
+
+    /** Elle düzenlenen satırı tekrar sistem kayıtlarından doldurur. */
+    public function degerlendirmeOtomatigeDondur(int $index): void
+    {
+        $p = $this->plan();
+        $satirlar = $p?->degerlendirmeler ?? [];
+
+        if (! $p || ! isset($satirlar[$index])) {
+            return;
+        }
+
+        $anahtar = $satirlar[$index]['anahtar'] ?? null;
+        $sablon = collect(YillikDegerlendirmeVerisi::sablonSatirlari())->firstWhere('anahtar', $anahtar);
+        $satirlar[$index] = $sablon ?? [...$satirlar[$index], 'elle' => false];
+        $p->update(['degerlendirmeler' => YillikDegerlendirmeVerisi::planiDoldur($this->firma, $this->yil, $satirlar)['satirlar']]);
     }
 
     public function degerlendirmeEkle(): void
@@ -319,11 +359,12 @@ abstract class YillikPlanlar extends Page
         }
 
         $degerlendirmeler = $p->degerlendirmeler ?? [];
-        $degerlendirmeler[] = [
-            'calisma' => $this->yeniDegerlendirmeCalisma,
-            'yapan_kisi' => null, 'yontem' => null, 'sonuc' => null,
-            'tarih' => null, 'tekrar_sayisi' => null,
-        ];
+        // Ek çalışma satırı "Genel sonuç" bölümünden önce girer.
+        $konum = collect($degerlendirmeler)->search(fn ($d) => ($d['tur'] ?? 'calisma') === 'genel');
+        array_splice($degerlendirmeler, $konum === false ? count($degerlendirmeler) : $konum, 0, [[
+            'tur' => 'calisma', 'anahtar' => 'ek_'.uniqid(), 'calisma' => $this->yeniDegerlendirmeCalisma,
+            'yapan_kisi' => null, 'yontem' => null, 'sonuc' => null, 'tarih' => null, 'otomatik' => false, 'elle' => true,
+        ]]);
         $p->update(['degerlendirmeler' => $degerlendirmeler]);
 
         $this->reset('yeniDegerlendirmeCalisma');
@@ -362,9 +403,7 @@ abstract class YillikPlanlar extends Page
         match ($this->sekme) {
             'egitim' => $p->update(['egitimler' => $icerik['egitimler']]),
             'degerlendirme' => $p->update([
-                'degerlendirmeler' => collect(config('isg.yillik_plan.varsayilan_degerlendirmeler'))
-                    ->map(fn ($d) => [...$d, 'tarih' => null, 'tekrar_sayisi' => null])
-                    ->all(),
+                'degerlendirmeler' => YillikDegerlendirmeVerisi::planiDoldur($this->firma, $this->yil, [])['satirlar'],
             ]),
             default => $p->update(['faaliyetler' => $icerik['faaliyetler']]),
         };
@@ -651,31 +690,43 @@ abstract class YillikPlanlar extends Page
                 ->schema([static::dosyaAlani()])
                 ->action(fn (array $data) => $this->exceliIsle($data['dosya'], 'egitimler')),
 
+            Action::make('degerlendirmeExcel')
+                ->label('Çıktı Al (Excel)')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->tooltip('Kendi şablonunuzla (İSG-YDR-01, 7 sayfa) Excel olarak iner')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
+                ->modalHeading('Yıllık Değerlendirme Raporu — Çıktı Al')
+                ->modalSubmitActionLabel('İndir')
+                ->schema([static::hazirlanmaTarihiAlani()->label('Rapor Tarihi')])
+                ->action(fn (array $data) => YillikDegerlendirmeExcelUretici::excel($this->plan(), static::secilenTarih($data))),
+
             Action::make('degerlendirmeSistemdenDoldur')
-                ->label('Sistemden Doldur')
+                ->label('Sistemden Yenile')
                 ->icon('heroicon-o-sparkles')
                 ->color('primary')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
-                ->requiresConfirmation()
-                ->modalHeading('Değerlendirmeyi sistem verisinden doldur')
-                ->modalDescription('Risk değerlendirmesi, muayeneler, eğitimler, tatbikat, saha denetimi, kurul ve iş kazası satırlarının tarih + tekrar sayısı, '.$this->yil.' yılı için sisteme girilmiş kayıtlardan yazılır. Elle girdiğiniz bu iki alan üzerine yazılır; diğer alanlara dokunulmaz.')
-                ->modalSubmitActionLabel('Doldur')
-                ->action(function (): void {
+                ->modalHeading('Değerlendirmeyi sistem kayıtlarından yenile')
+                ->modalDescription(fn () => 'Dönem: '.($this->firma ? YillikDegerlendirmeVerisi::donemMetni($this->firma, $this->yil) : '—')
+                    .' (atandığınız tarih → yıl sonu). Risk değerlendirmesi, muayeneler, sağlık gözetimi, eğitimler, acil durum, tatbikat, ekipman kontrolleri, saha denetimi, DÖF, olaylar, KKD, kimyasallar, kurul ve görevlendirme kayıtlarından Tarih / Dönem ve Sonuç alanları yazılır. Kaydı olmayan satırlar şablon metniyle kalır.')
+                ->schema([
+                    \Filament\Forms\Components\Toggle::make('ustune_yaz')->label('Elle düzenlediğim satırların da üzerine yaz')->default(false),
+                ])
+                ->modalSubmitActionLabel('Yenile')
+                ->action(function (array $data): void {
                     $p = $this->plan();
 
                     if (! $p) {
                         return;
                     }
 
-                    $sonuc = YillikDegerlendirmeVerisi::planiDoldur($this->firma, $this->yil, $p->degerlendirmeler ?? []);
+                    $sonuc = YillikDegerlendirmeVerisi::planiDoldur($this->firma, $this->yil, $p->degerlendirmeler ?? [], (bool) ($data['ustune_yaz'] ?? false));
                     $p->update(['degerlendirmeler' => $sonuc['satirlar']]);
 
-                    Notification::make()
-                        ->title($sonuc['doldurulan'] > 0
-                            ? $sonuc['doldurulan'].' satır sistem verisinden dolduruldu'
-                            : 'Bu yıl için eşleşen sistem kaydı bulunamadı')
-                        ->{$sonuc['doldurulan'] > 0 ? 'success' : 'warning'}()
-                        ->send();
+                    $bildirim = Notification::make()->title($sonuc['doldurulan'] > 0
+                        ? $sonuc['doldurulan'].' satır sistem kayıtlarından dolduruldu'
+                        : 'Bu dönem için eşleşen sistem kaydı bulunamadı');
+                    ($sonuc['doldurulan'] > 0 ? $bildirim->success() : $bildirim->warning())->send();
                 }),
         ];
     }
