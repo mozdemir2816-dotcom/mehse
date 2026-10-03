@@ -8,6 +8,7 @@ use App\Support\YillikDegerlendirmeVerisi;
 use App\Support\YillikPlanExcelIceAktarici;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\YillikPlanExcelUretici;
+use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\YillikPlanSablonu;
 use App\Support\YillikPlanUretici;
 use BackedEnum;
@@ -369,6 +370,149 @@ abstract class YillikPlanlar extends Page
         };
 
         Notification::make()->title('Plan varsayılan içeriğe sıfırlandı (otomatik dolduruldu)')->success()->send();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | İşe özgü konular (4. bölüm) — kütüphaneden seçim / kütüphaneye kayıt
+    |--------------------------------------------------------------------------
+    */
+
+    /** Plandaki 4. bölüm satırlarının kütüphane anahtarları (eski satırlar ada göre eşlenir). */
+    private function plandakiIseOzguAnahtarlari(): array
+    {
+        $tumu = IseOzguEgitimKutuphanesi::tumu(Filament::auth()->id());
+        $adaGore = $tumu->mapWithKeys(fn ($k, $a) => [mb_strtolower(trim($k['ad'])) => $a]);
+
+        return collect($this->plan()?->egitimler ?? [])->where('kategori', 'ise_ozgu')
+            ->map(fn ($e) => ($e['kutuphane_anahtari'] ?? null) && $tumu->has($e['kutuphane_anahtari'])
+                ? $e['kutuphane_anahtari']
+                : ($adaGore[mb_strtolower(trim((string) ($e['konu'] ?? '')))] ?? null))
+            ->filter()->unique()->values()->all();
+    }
+
+    public function iseOzguSecAction(): Action
+    {
+        return Action::make('iseOzguSec')
+            ->label('İşe Özgü Konuları Seç')
+            ->icon('heroicon-o-queue-list')
+            ->modalHeading('İşe ve İşyerine Özgü Riskler — konu seçimi')
+            ->modalDescription(fn () => $this->firma
+                ? 'Firmanın '.(filled($this->firma->is_kalemleri) ? 'iş kalemlerine' : 'NACE koduna ('.($this->firma->nace_kodu ?: 'girilmemiş').')').' göre önerilenler ★ ile işaretli. Seçilen konular planın 4. bölümüne ve oradan Eğitim Katılım formunun işyerine özgü bölümüne girer.'
+                : null)
+            ->modalWidth(\Filament\Support\Enums\Width::FourExtraLarge)
+            ->modalSubmitActionLabel('Plana uygula')
+            ->fillForm(function (): array {
+                $mevcut = $this->plandakiIseOzguAnahtarlari();
+
+                return ['secilenler' => $mevcut ?: IseOzguEgitimKutuphanesi::firmaIcin($this->firma)->keys()->all()];
+            })
+            ->schema(function (): array {
+                $onerilen = $this->firma ? IseOzguEgitimKutuphanesi::firmaIcin($this->firma)->keys()->all() : [];
+                $tumu = IseOzguEgitimKutuphanesi::tumu(Filament::auth()->id())
+                    ->sortBy(fn ($k, $a) => [in_array($a, $onerilen, true) ? 0 : 1, $k['kaynak'], $k['ad']]);
+
+                return [
+                    \Filament\Forms\Components\CheckboxList::make('secilenler')
+                        ->label('Konular')
+                        ->options($tumu->map(fn ($k, $a) => (in_array($a, $onerilen, true) ? '★ ' : '').$k['ad'])->all())
+                        ->descriptions($tumu->map(fn ($k) => $k['kaynak']
+                            .($k['nace'] ? ' · NACE '.IseOzguEgitimKutuphanesi::naceGoster($k['nace']) : '')
+                            .' — '.\Illuminate\Support\Str::limit((string) $k['hedef'], 90))->all())
+                        ->searchable()
+                        ->bulkToggleable()
+                        ->columns(2),
+                ];
+            })
+            ->action(function (array $data): void {
+                $this->iseOzguUygula($data['secilenler'] ?? []);
+            });
+    }
+
+    /**
+     * 4. bölümü seçilen kütüphane konularıyla günceller: seçili kalanların
+     * işaretli ayları korunur, seçimden çıkarılan kütüphane konuları silinir,
+     * kütüphanede olmayan (elle yazılmış) satırlar olduğu gibi kalır.
+     */
+    public function iseOzguUygula(array $secilenler): void
+    {
+        $p = $this->plan();
+
+        if (! $p || ! $this->firma) {
+            return;
+        }
+
+        $tumu = IseOzguEgitimKutuphanesi::tumu(Filament::auth()->id());
+        $adaGore = $tumu->mapWithKeys(fn ($k, $a) => [mb_strtolower(trim($k['ad'])) => $a]);
+        $kilit = $this->kilitAyIndeksi();
+
+        $mevcutlar = collect($p->egitimler ?? [])->where('kategori', 'ise_ozgu')->values()->map(function ($e) use ($tumu, $adaGore) {
+            $a = $e['kutuphane_anahtari'] ?? null;
+            $e['_anahtar'] = $a && $tumu->has($a) ? $a : ($adaGore[mb_strtolower(trim((string) ($e['konu'] ?? '')))] ?? null);
+
+            return $e;
+        });
+
+        $yeni = $mevcutlar->filter(fn ($e) => $e['_anahtar'] === null || in_array($e['_anahtar'], $secilenler, true));
+        $varOlan = $yeni->pluck('_anahtar')->filter()->all();
+
+        foreach ($secilenler as $a) {
+            if ($tumu->has($a) && ! in_array($a, $varOlan, true)) {
+                $yeni->push(IseOzguEgitimKutuphanesi::planSatiri($tumu[$a], $kilit));
+            }
+        }
+
+        $satirlar = $yeni->map(function ($e) {
+            if (array_key_exists('_anahtar', $e)) {
+                $e['kutuphane_anahtari'] = $e['_anahtar'] ?? ($e['kutuphane_anahtari'] ?? null);
+                unset($e['_anahtar']);
+            }
+
+            return $e;
+        })->values()->all();
+
+        $p->update(['egitimler' => YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $satirlar)]);
+
+        Notification::make()->title('İşe özgü konular güncellendi')->body(count($satirlar).' konu planın 4. bölümünde.')->success()->send();
+    }
+
+    /** Plandaki bir 4. bölüm satırını kendi kütüphaneme kaydeder (başka firmalarda da seçilebilsin). */
+    public function kutuphaneyeKaydetAction(): Action
+    {
+        return Action::make('kutuphaneyeKaydet')
+            ->modalHeading('Konuyu kütüphaneye kaydet')
+            ->modalDescription('Kaydedilen konu, NACE kodu veya iş kalemi eşleşen diğer firmaların planına otomatik önerilir.')
+            ->modalSubmitActionLabel('Kaydet')
+            ->fillForm(function (array $arguments): array {
+                $e = ($this->plan()?->egitimler ?? [])[$arguments['index'] ?? -1] ?? [];
+                $nace = preg_replace('/\D/', '', (string) $this->firma?->nace_kodu);
+
+                return [
+                    'ad' => $e['konu'] ?? null,
+                    'hedef' => $e['hedef'] ?? null,
+                    'egitici' => $e['egitici'] ?? IseOzguEgitimKutuphanesi::VARSAYILAN_EGITICI,
+                    'nace' => strlen($nace) >= 4 ? substr($nace, 0, 2).'.'.substr($nace, 2, 2) : null,
+                    'is_kalemleri' => array_values($this->firma?->is_kalemleri ?? []),
+                ];
+            })
+            ->schema(fn () => \App\Filament\Pages\IseOzguEgitimKonulari::konuSemasi())
+            ->action(function (array $data, array $arguments): void {
+                $k = \App\Models\IseOzguEgitimKonusu::create([
+                    'user_id' => Filament::auth()->id(),
+                    'ad' => $data['ad'], 'hedef' => $data['hedef'] ?? null, 'egitici' => $data['egitici'] ?? null,
+                    'nace_onekleri' => IseOzguEgitimKutuphanesi::naceHazirla($data['nace'] ?? null),
+                    'is_kalemleri' => array_values($data['is_kalemleri'] ?? []) ?: null,
+                ]);
+
+                $p = $this->plan();
+                $egitimler = $p?->egitimler ?? [];
+                if (isset($egitimler[$arguments['index'] ?? -1])) {
+                    $egitimler[$arguments['index']]['kutuphane_anahtari'] = 'ozel_'.$k->id;
+                    $p->update(['egitimler' => $egitimler]);
+                }
+
+                Notification::make()->title('Konu kütüphaneye kaydedildi')->success()->send();
+            });
     }
 
     /**

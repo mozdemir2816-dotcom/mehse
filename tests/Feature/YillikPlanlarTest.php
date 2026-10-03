@@ -275,13 +275,13 @@ class YillikPlanlarTest extends TestCase
 
     public function test_firma_secilince_varsayilan_egitimler_ve_degerlendirmeler_yuklenir(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create();
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => null, 'is_kalemleri' => null]);
 
         Livewire::test(PlanSayfasi::class)->set('firmaId', $firma->id);
 
         $plan = YillikPlan::where('firma_id', $firma->id)->firstOrFail();
         $this->assertCount(count(YillikPlanSablonu::icerik($firma, (int) now()->year)['egitimler']), $plan->egitimler);
-        // İnşaat dışı firmada 4. bölüm (işe/işyerine özgü) boş gelir.
+        // NACE / iş kalemi yoksa 4. bölüm (işe/işyerine özgü) boş gelir; eşleşme kuralları IseOzguEgitimKonulariTest'te.
         $this->assertFalse(collect($plan->egitimler)->contains('kategori', 'ise_ozgu'));
         $this->assertSame('planlandi', $plan->egitimler[0]['aylar'][11]);
         $this->assertCount(count(config('isg.yillik_plan.varsayilan_degerlendirmeler')), $plan->degerlendirmeler);

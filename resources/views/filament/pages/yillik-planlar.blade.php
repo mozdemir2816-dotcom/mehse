@@ -232,7 +232,8 @@
                                             style="width:1.4rem;height:1.4rem;border-radius:.25rem;border:none;background:{{ $kilitli ? '#111827' : ($renkler[$durum] ?? $renkler['bos']) }};{{ $kilitli ? 'opacity:.3;cursor:not-allowed' : 'cursor:pointer' }}"></button>
                                     </td>
                                 @endforeach
-                                <td style="padding:.3rem .3rem">
+                                <td style="padding:.3rem .3rem;white-space:nowrap">
+                                    @if (($e['kategori'] ?? null) === 'ise_ozgu' && blank($e['kutuphane_anahtari'] ?? null))<button type="button" wire:click="mountAction('kutuphaneyeKaydet', { index: {{ $ei }} })" title="Kütüphaneye kaydet" style="color:#f59e0b;cursor:pointer;background:none;border:none">★</button>@endif
                                     <button type="button" wire:click="egitimSil({{ $ei }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
                             </tr>
@@ -258,8 +259,11 @@
                     <x-filament::button size="sm" wire:click="egitimEkle">+ Ekle</x-filament::button>
                 </div>
 
-                <div style="margin-top:.75rem">
+                <div style="margin-top:.75rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+                    <x-filament::button size="xs" color="primary" icon="heroicon-o-queue-list" wire:click="mountAction('iseOzguSec')">İşe Özgü Konuları Seç</x-filament::button>
+                    <x-filament::button size="xs" color="gray" tag="a" :href="\App\Filament\Pages\IseOzguEgitimKonulari::getUrl(['firmaId' => $this->firmaId])">Konu kütüphanesi</x-filament::button>
                     <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
+                    <span style="font-size:.72rem;color:rgb(107 114 128)">4. bölüm firmanın iş kalemine / NACE koduna göre otomatik gelir; ★ ile plandaki konuyu kütüphaneye kaydedebilirsiniz.</span>
                 </div>
             </x-filament::section>
         @endif
