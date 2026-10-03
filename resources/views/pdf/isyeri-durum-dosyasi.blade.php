@@ -49,10 +49,10 @@
 <table class="kv">
     <tr><th>Firma</th><td>{{ $firma->unvan }}</td><th>Vergi no</th><td>{{ $firma->vergi_no ?: '—' }}</td></tr>
     <tr><th>SGK sicil no</th><td>{{ $firma->sgk_sicil_no ?: '—' }}</td><th>NACE kodu</th><td>{{ trim($firma->nace_kodu.' '.$firma->nace_aciklama) ?: '—' }}</td></tr>
-    <tr><th>Tehlike sınıfı</th><td>{{ $firma->tehlikeSinifiEtiketi() }}</td><th>Yetkili</th><td>{{ $firma->isveren_vekili ?: $firma->isveren_ad ?: '—' }}</td></tr>
+    <tr><th>Tehlike sınıfı</th><td>{{ $firma->tehlikeSinifiEtiketi() }}</td><th>Yetkili</th><td>İşveren / İşveren Vekili</td></tr>
     <tr><th>Telefon</th><td>{{ $firma->telefon ?: '—' }}</td><th>Durum</th><td>{{ $firma->aktif ? 'Aktif' : 'Pasif' }}</td></tr>
     <tr><th>Adres</th><td>{{ trim($firma->adres.' '.$firma->ilce.' '.$firma->il) ?: '—' }}</td><th>İSG-KATİP no</th><td>{{ $firma->katip_no ?: '—' }}</td></tr>
-    <tr><th>Hizmet sözleşmesi</th><td>{{ $firma->sozlesme_baslangic ? \Illuminate\Support\Carbon::parse($firma->sozlesme_baslangic)->format('d.m.Y') : '—' }} – {{ $firma->sozlesme_bitis ? \Illuminate\Support\Carbon::parse($firma->sozlesme_bitis)->format('d.m.Y') : '—' }}</td><th>Hazırlayan</th><td>{{ $osgb ?: '—' }}</td></tr>
+    <tr><th>Hizmet sözleşmesi</th><td>{{ $firma->sozlesme_baslangic ? \Illuminate\Support\Carbon::parse($firma->sozlesme_baslangic)->format('d.m.Y') : '—' }} – {{ $firma->sozlesme_bitis ? \Illuminate\Support\Carbon::parse($firma->sozlesme_bitis)->format('d.m.Y') : '—' }}</td><th>Hazırlayan</th><td>İş Güvenliği Uzmanı</td></tr>
 </table>
 
 <h2>İşgücü ve Görevlendirmeler</h2>

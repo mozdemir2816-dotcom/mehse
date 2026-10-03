@@ -204,8 +204,8 @@ class YillikPlanExcelTest extends TestCase
 
         // İmza her iki sayfada tablonun hemen altında (27 ve 47), alt bilgide imza yok.
         foreach ([27, 47] as $r) {
-            $this->assertStringContainsString('VELİ PATRON', $s->getCell("B{$r}")->getValue());
-            $this->assertStringContainsString('ALİ UZMAN', $s->getCell("G{$r}")->getValue());
+            $this->assertStringNotContainsString('VELİ PATRON', $s->getCell("B{$r}")->getValue());
+            $this->assertStringNotContainsString('ALİ UZMAN', $s->getCell("G{$r}")->getValue());
             $this->assertStringContainsString('İŞYERİ HEKİMİ', $s->getCell("U{$r}")->getValue());
             $this->assertContains("B{$r}:F{$r}", array_keys($s->getMergeCells()));
         }

@@ -62,7 +62,7 @@
             <td class="etiket">Sorumlu</td><td>{{ $denetim->santiye_sorumlusu ?: '—' }}</td>
         </tr>
         <tr>
-            <td class="etiket">Denetçi</td><td>{{ $denetim->denetci_adi ?: '—' }}</td>
+            <td class="etiket">Denetçi</td><td>İş Güvenliği Uzmanı</td>
             <td class="etiket">Sonuç</td><td><strong>{{ $denetim->sonucEtiketi() }}</strong> — %{{ $denetim->uygunluk_yuzdesi ?? '—' }} uygunluk</td>
         </tr>
     </table>

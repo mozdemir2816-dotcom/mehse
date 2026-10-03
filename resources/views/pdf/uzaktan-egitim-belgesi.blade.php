@@ -73,7 +73,7 @@
 
             <div style="margin-top:22px">
                 <div class="alan">Çalışanın işyerinin ünvanı: <strong>{{ $firma?->unvan }}</strong></div>
-                <div class="alan">İşverenin/işveren vekilinin adı soyadı: <strong>{{ $firma?->isveren_vekili ?: $firma?->isveren_ad }}</strong></div>
+                <div class="alan">İşverenin/işveren vekilinin adı soyadı: <strong></strong></div>
                 <div class="alan">İşveren/işveren vekilinin imzası:</div>
             </div>
 

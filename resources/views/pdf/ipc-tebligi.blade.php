@@ -78,7 +78,7 @@
                 @if ($tebligi->hazirlayan_kase)
                     <img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">
                 @endif
-                {{ $tebligi->hazirlayan ?: 'İSG Uzmanı' }}<br>(Hazırlayan – Kaşe)
+                İSG Uzmanı<br>(Hazırlayan – Kaşe)
             </td>
             <td>İşveren / İşveren Vekili<br>(Tebellüğ – İmza)</td>
         </tr>

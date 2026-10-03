@@ -46,7 +46,7 @@
             <td>Gözetim Tarih Aralığı</td><td>{{ $rapor->gozetim_tarih_araligi ?: '—' }}</td>
         </tr>
         <tr>
-            <td>Gözetim Yapan</td><td>{{ $rapor->gozetim_yapan ?: '—' }}</td>
+            <td>Gözetim Yapan</td><td>İş Güvenliği Uzmanı</td>
             <td>Sertifika No</td><td>{{ $rapor->gozetim_yapan_sertifika_no ?: '—' }}</td>
         </tr>
         <tr>
@@ -93,9 +93,9 @@
                 @if ($rapor->gozetim_yapan_kase)
                     <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
                 @endif
-                {{ $rapor->gozetim_yapan ?: 'Gözetim Yapan (İSG Uzmanı)' }}
+                Gözetim Yapan (İSG Uzmanı)<br>(İmza – Kaşe)
             </td>
-            <td>{{ $rapor->isveren_vekili_adi ?: 'İşveren / İşveren Vekili' }}<br>(İmza – Kaşe)</td>
+            <td>İşveren / İşveren Vekili<br>(İmza – Kaşe)</td>
         </tr>
     </table>
 

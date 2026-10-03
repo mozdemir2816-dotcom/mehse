@@ -55,7 +55,7 @@
         Geçerlilik Tarihi: {{ $plan->gecerlilik_tarihi?->format('d.m.Y') }}
     </div>
     <div style="font-size:11px;margin-top:20px;color:#444">
-        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
+        Hazırlayan: İş Güvenliği Uzmanı @if ($uzman?->unvan) ({{ $uzman->unvanEtiketi() }}) @endif
     </div>
 </div>
 
@@ -157,17 +157,17 @@
             <td>
                 @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
-                {{ $uzman?->name ?: 'İş Güvenliği Uzmanı' }}
+                İş Güvenliği Uzmanı
                 @if ($uzman?->unvan) <br><span style="font-weight:normal">{{ $uzman->unvanEtiketi() }}</span> @endif
                 <br>(İmza – Kaşe)
             </td>
             <td>
                 @if (($imzali ?? true) && $firma?->isyeriHekimi?->kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $firma?->isyeriHekimi?->imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->imza_gorseli) }}">@endif
-                {{ $firma?->isyeriHekimi?->ad_soyad ?: 'İşyeri Hekimi' }}
+                İşyeri Hekimi
                 <br>(İmza – Kaşe)
             </td>
-            <td>{{ $firma?->isveren_ad ?: 'İşveren / İşveren Vekili' }}<br>(Ad – Soyad / İmza)</td>
+            <td>İşveren / İşveren Vekili<br>(İmza – Kaşe)</td>
         </tr>
     </table>
     <div class="not">

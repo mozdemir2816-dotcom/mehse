@@ -101,7 +101,7 @@
                 @if ($form->hekim_kase)
                     <img src="{{ storage_path('app/public/'.$form->hekim_kase) }}">
                 @endif
-                {{ $form->hekim_adi ?: 'İşyeri Hekimi' }}<br>(Muayeneyi Yapan Hekim – Kaşe/İmza)
+                İşyeri Hekimi<br>(Muayeneyi Yapan Hekim – Kaşe/İmza)
             </td>
             <td>{{ $form->calisan_ad_soyad ?: '' }}<br>(Muayene Olan – İmza)</td>
         </tr>

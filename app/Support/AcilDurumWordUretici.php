@@ -83,7 +83,7 @@ class AcilDurumWordUretici
             'rapor_tarihi' => $plan->rapor_tarihi?->format('d.m.Y') ?: '—',
             'gecerlilik_tarihi' => $plan->gecerlilik_tarihi?->format('d.m.Y') ?: '—',
             'tehlike_sinifi' => OoxmlMetinYamasi::turkceBuyuk($firma?->tehlikeSinifiEtiketi() ?: ''),
-            'uzman_adi' => OoxmlMetinYamasi::turkceBuyuk($uzman?->name ?: '—'),
+            'uzman_adi' => 'İŞ GÜVENLİĞİ UZMANI', // görevli adı basılmaz (kaşe)
             'uzman_unvani' => $uzman?->unvanEtiketi() ?: '—',
             'nace_kodu' => $firma?->nace_kodu ?: '—',
             default => '—',

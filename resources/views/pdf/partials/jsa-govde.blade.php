@@ -89,7 +89,7 @@
             <tr>
                 <td>{{ $rol['rol'] ?? '' }}</td>
                 <td>
-                    {{ $hazirlayan ? $uzman->ad_soyad : ($rol['ad'] ?? '') }}
+                    {{ $hazirlayan ? '' : ($rol['ad'] ?? '') }}
                     @if ($hazirlayan && $uzman->unvan)<br><span style="color:#555;font-size:7px">{{ $uzman->unvan }}</span>@endif
                 </td>
                 <td class="kase">

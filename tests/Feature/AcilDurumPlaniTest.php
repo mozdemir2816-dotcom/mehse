@@ -137,7 +137,7 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('DENEME TEKSTİL SANAYİ LTD.', $xml);
         $this->assertStringContainsString('Test Mahallesi No:5 İzmir', $xml);
         $this->assertStringContainsString('11122233344', $xml);
-        $this->assertStringContainsString('AYŞE YILMAZ', $xml);
+        $this->assertStringNotContainsString('AYŞE YILMAZ', $xml);
         $this->assertStringNotContainsString('ALTIN YAKUT', $xml);
         $this->assertStringNotContainsString('MEHMET ÖZDEMİR', $xml);
         $this->assertStringNotContainsString('44100010111205450770133000', $xml);
@@ -279,7 +279,7 @@ class AcilDurumPlaniTest extends TestCase
             'hakkinda' => config('isg.acil_durum.hakkinda'),
         ])->render();
 
-        $this->assertStringContainsString('Mehmet Özdemir', $html);
+        $this->assertStringNotContainsString('Mehmet Özdemir', $html);
         $this->assertStringContainsString('Rev.01', $html);
         $this->assertStringContainsString('Ana kapı önü açık saha', $html);
         $this->assertStringContainsString('Komşu Akaryakıt A.Ş.', $html);
@@ -311,7 +311,7 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('uzman-kase/test-kase.png', $html);
         $this->assertStringContainsString('uzman-kase/test-imza.png', $html);
         $this->assertStringContainsString('hekim-kase/test-kase.png', $html);
-        $this->assertStringContainsString($hekim->ad_soyad, $html);
+        $this->assertStringNotContainsString($hekim->ad_soyad, $html);
 
         // Görsel gerçekte diskte olmasa bile dompdf üretimi hata vermemeli.
         $yanit = AcilDurumPlaniUretici::pdf($plan);
@@ -339,7 +339,7 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringNotContainsString('uzman-kase/test-kase.png', $imzasiz);
         $this->assertStringNotContainsString('uzman-kase/test-imza.png', $imzasiz);
         $this->assertStringNotContainsString('hekim-kase/test-kase.png', $imzasiz);
-        $this->assertStringContainsString($hekim->ad_soyad, $imzasiz);
+        $this->assertStringNotContainsString($hekim->ad_soyad, $imzasiz);
 
         $yanit = AcilDurumPlaniUretici::pdf($plan, false);
         ob_start();

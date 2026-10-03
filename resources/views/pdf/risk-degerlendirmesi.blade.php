@@ -99,19 +99,19 @@
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
                 @if (($imzali ?? true) && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
-                <span class="ad">{{ $firma?->isveren_ad ?: $firma?->isveren_vekili ?: '—' }}</span>
+                
             </td>
             <td>
                 <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
                 @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
-                <span class="ad">{{ $uzman?->name ?: '—' }}</span>
+                
             </td>
             <td>
                 <span class="rol">İŞYERİ HEKİMİ</span>
                 @if (($imzali ?? true) && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
-                <span class="ad">{{ $hekim?->ad_soyad ?: '—' }}</span>
+                
             </td>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
@@ -138,7 +138,7 @@
         SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; NACE Kodu: {{ $rd->firma_nace ?: '—' }}
     </div>
     <div style="font-size:11px;margin-top:20px;color:#444">
-        Hazırlayan: {{ $uzman?->name ?: '—' }} @if ($uzman?->unvan) ({{ $uzman->unvan }}) @endif
+        Hazırlayan: İş Güvenliği Uzmanı @if ($uzman?->unvan) ({{ $uzman->unvan }}) @endif
     </div>
     <div style="font-size:11px;margin-top:20px">
         Belge No: {{ $rd->belge_no }} &nbsp;·&nbsp; Rev: {{ $rd->revizyon_no }}<br>
@@ -289,19 +289,19 @@
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
                 @if (($imzali ?? true) && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
-                <span class="ad">{{ $firma?->isveren_ad ?: $firma?->isveren_vekili ?: '' }}</span>
+                
             </td>
             <td>
                 <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
                 @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
-                <span class="ad">{{ $uzman?->name ?: '' }}</span>
+                
             </td>
             <td>
                 <span class="rol">İŞYERİ HEKİMİ</span>
                 @if (($imzali ?? true) && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
                 @if (($imzali ?? true) && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
-                <span class="ad">{{ $hekim?->ad_soyad ?: '' }}</span>
+                
             </td>
         </tr>
         <tr>

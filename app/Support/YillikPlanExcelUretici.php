@@ -378,13 +378,14 @@ class YillikPlanExcelUretici
     private static function calismaImzaSatiri(Worksheet $s, Firma $firma, int $r): void
     {
         $bloklar = [
-            'B' => ['İŞVEREN / İŞVEREN VEKİLİ', $firma->isveren_vekili],
-            'G' => ['İŞ GÜVENLİĞİ UZMANI', $firma->igu?->ad_soyad],
-            'U' => ['İŞYERİ HEKİMİ', $firma->isyeriHekimi?->ad_soyad],
+            // Görevli adı basılmaz — kaşe / imza (kullanıcı kararı 03.10.2026)
+            'B' => ['İŞVEREN / İŞVEREN VEKİLİ', null],
+            'G' => ['İŞ GÜVENLİĞİ UZMANI', null],
+            'U' => ['İŞYERİ HEKİMİ', null],
         ];
 
         foreach ($bloklar as $sutun => [$baslik, $ad]) {
-            $s->setCellValue("{$sutun}{$r}", $baslik."\n".(filled($ad) ? self::buyuk($ad) : 'Ad Soyad').' – Kaşe / İmza');
+            $s->setCellValue("{$sutun}{$r}", $baslik."\n".(filled($ad) ? self::buyuk($ad).' – ' : '').'Kaşe / İmza');
             $stil = $s->getStyle("{$sutun}{$r}");
             $stil->getFont()->setSize(8)->setBold(true);
             $stil->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP)->setHorizontal(Alignment::HORIZONTAL_CENTER);

@@ -161,7 +161,7 @@
                         <img src="{{ storage_path('app/public/'.$rapor->rapor_hazirlayan_kase) }}">
                     @endif
                 </div>
-                <div style="font-size:8px;margin-top:2px">{{ $rapor->rapor_hazirlayan ?: '' }}</div>
+                
             </td>
             <td>
                 <div class="rol">ONAYLAYAN</div><div class="unvan">İşyeri Hekimi</div>
@@ -170,7 +170,7 @@
                         <img src="{{ storage_path('app/public/'.$rapor->isyeri_hekimi_kase) }}">
                     @endif
                 </div>
-                <div style="font-size:8px;margin-top:2px">{{ $rapor->isyeri_hekimi_dahil ? ($rapor->isyeri_hekimi_adi ?: '') : '' }}</div>
+                
             </td>
             <td>
                 <div class="rol">İŞVEREN / VEKİLİ</div><div class="unvan">&nbsp;</div>

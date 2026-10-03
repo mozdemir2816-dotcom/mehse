@@ -65,7 +65,7 @@
                 @if ($kayit->isg_uzmani_var)
                     <td @if (! $kayit->isyeri_hekimi_var) style="width:100%" @endif>
                         <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
-                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: '.....................................' }}</div>
+                        <div class="ad">&nbsp;</div>
                         <div class="kase">
                             @if ($kayit->isg_uzmani_kase)
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
@@ -77,7 +77,7 @@
                 @if ($kayit->isyeri_hekimi_var)
                     <td @if (! $kayit->isg_uzmani_var) style="width:100%" @endif>
                         <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
-                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: '.....................................' }}</div>
+                        <div class="ad">&nbsp;</div>
                         <div class="kase">
                             @if ($kayit->isyeri_hekimi_kase)
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
@@ -130,9 +130,9 @@
             <td>{{ $sureMetni }}</td>
             <td class="e">Eğitimciler</td>
             <td>
-                @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı{{ $kayit->isg_uzmani_adi ? ' ('.$kayit->isg_uzmani_adi.')' : '' }} @endif
+                @if ($kayit->isg_uzmani_var) İş Güvenliği Uzmanı @endif
                 @if ($kayit->isg_uzmani_var && $kayit->isyeri_hekimi_var) · @endif
-                @if ($kayit->isyeri_hekimi_var) İşyeri Hekimi{{ $kayit->isyeri_hekimi_adi ? ' ('.$kayit->isyeri_hekimi_adi.')' : '' }} @endif
+                @if ($kayit->isyeri_hekimi_var) İşyeri Hekimi @endif
                 @if (! $kayit->isg_uzmani_var && ! $kayit->isyeri_hekimi_var) — @endif
             </td>
         </tr>

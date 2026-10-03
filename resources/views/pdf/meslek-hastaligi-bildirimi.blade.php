@@ -92,7 +92,7 @@
                 @if ($firma?->isyeriHekimi?->kase_gorseli)
                     <img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">
                 @endif
-                {{ $firma?->isyeriHekimi?->ad_soyad ?: 'İşyeri Hekimi' }}<br>(İşyeri Hekimi – Kaşe/İmza)
+                İşyeri Hekimi<br>(Kaşe / İmza)
             </td>
             <td>İşveren / İşveren Vekili<br>(Kaşe/İmza)</td>
         </tr>

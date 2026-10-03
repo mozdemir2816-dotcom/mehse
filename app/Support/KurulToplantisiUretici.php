@@ -89,7 +89,7 @@ class KurulToplantisiUretici
         foreach (($toplanti->katilimcilar ?? []) as $i => $k) {
             $s->fromArray([
                 $i + 1,
-                $k['ad_soyad'] ?? '—',
+                in_array($k['rol'] ?? null, ['baskan', 'sekreter', 'hekim'], true) ? '' : ($k['ad_soyad'] ?? '—'), // kaşeli görevli adı basılmaz
                 $k['gorev'] ?? '—',
                 filled($k['rol'] ?? null) ? config("isg.kurul_toplantisi.roller.{$k['rol']}.ad", $k['rol']) : '—',
                 ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı',

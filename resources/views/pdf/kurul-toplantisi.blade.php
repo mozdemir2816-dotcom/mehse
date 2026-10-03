@@ -72,7 +72,7 @@
         <td class="e">Toplantı türü</td><td>{{ $toplanti->turEtiketi() }}</td>
     </tr>
     <tr>
-        <td class="e">Toplantı başkanı</td><td>{{ $toplanti->baskan ?: '—' }}</td>
+        <td class="e">Toplantı başkanı</td><td>İşveren / İşveren Vekili</td>
         <td class="e">Sonraki toplantı</td><td>{{ $toplanti->sonraki_toplanti?->format('d.m.Y') ?: '—' }}</td>
     </tr>
     <tr>
@@ -98,7 +98,8 @@
     @forelse ($katilimcilar as $i => $k)
         <tr>
             <td class="ortala">{{ $i + 1 }}</td>
-            <td>{{ $k['ad_soyad'] ?? '—' }}</td>
+            {{-- Kaşeli görevlilerin (başkan / İGU / hekim) adı basılmaz --}}
+            <td>{{ in_array($k['rol'] ?? null, ['baskan', 'sekreter', 'hekim'], true) ? '' : ($k['ad_soyad'] ?? '—') }}</td>
             <td>{{ $k['gorev'] ?? '—' }}</td>
             <td>{{ $rolAdi($k['rol'] ?? null) }}</td>
             <td style="height:26px" class="ortala">{{ ($k['katildi'] ?? false) ? '' : 'Katılmadı' }}</td>

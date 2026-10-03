@@ -248,7 +248,7 @@ class JsaDegerlendirmesiTest extends TestCase
 
         $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma, 'uzman' => $firma->igu])->render();
 
-        $this->assertStringContainsString('Uzman Ayşe Yılmaz', $html);
+        $this->assertStringNotContainsString('Uzman Ayşe Yılmaz', $html);
         $this->assertStringContainsString('A Sınıfı İş Güvenliği Uzmanı', $html);
         $this->assertStringContainsString('isg-profesyonel-kase/ayse.png', $html);
 
@@ -273,7 +273,7 @@ class JsaDegerlendirmesiTest extends TestCase
 
         $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma, 'uzman' => $firma->igu, 'imzali' => false])->render();
         $this->assertStringNotContainsString('isg-profesyonel-kase/ayse.png', $html);
-        $this->assertStringContainsString('Uzman Ayşe Yılmaz', $html);
+        $this->assertStringNotContainsString('Uzman Ayşe Yılmaz', $html);
 
         ob_start();
         JsaUretici::pdf($sablon, $firma, false)->sendContent();

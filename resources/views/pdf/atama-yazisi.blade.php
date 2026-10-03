@@ -39,7 +39,7 @@
             </tr>
             <tr>
                 <td>Görev / Unvan</td><td>{{ $u['gorev'] ?? '—' }}</td>
-                <td>İşveren / İşveren Vekili</td><td>{{ $kayit->isveren_vekili_adi ?: ($firma?->isveren_vekili ?: $firma?->isveren_ad) ?: '—' }}</td>
+                <td>İşveren / İşveren Vekili</td><td>Kaşe / İmza</td>
             </tr>
             @if ($kayit->gorev_baslangic)
                 <tr>

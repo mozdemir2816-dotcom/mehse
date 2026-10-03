@@ -138,7 +138,7 @@ class JsaWordUretici
             $imza->addCell(3500)->addText((string) ($rol['rol'] ?? ''), ['size' => 8]);
 
             $adHucre = $imza->addCell(3500);
-            $adHucre->addText($hazirlayan ? (string) $uzman->ad_soyad : (string) ($rol['ad'] ?? ''), ['size' => 8]);
+            $adHucre->addText($hazirlayan ? '' : (string) ($rol['ad'] ?? ''), ['size' => 8]);
             if ($hazirlayan && $uzman->unvan) {
                 $adHucre->addText((string) $uzman->unvan, ['size' => 7, 'color' => '555555']);
             }

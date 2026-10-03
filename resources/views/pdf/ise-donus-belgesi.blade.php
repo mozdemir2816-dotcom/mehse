@@ -102,7 +102,7 @@
                     <img src="{{ storage_path('app/public/'.$belge->hekim_kase) }}">
                 @endif
             </div>
-            <div style="font-size:8.5px;margin-top:2px">{{ $belge->hekim_adi ?: '' }}</div>
+            
         </td>
         <td>
             <div class="rol">Çalışan (Bilgilendirildi)</div>

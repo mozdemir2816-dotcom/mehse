@@ -109,7 +109,7 @@
 
     <table class="imza">
         <tr>
-            <td><span>{{ $firma?->igu?->ad_soyad ?: 'İş Güvenliği Uzmanı' }}<br>İş Güvenliği Uzmanı</span></td>
+            <td><span>&nbsp;<br>İş Güvenliği Uzmanı</span></td>
             <td><span>{{ $t->yetkili ?: 'Taşeron Yetkilisi' }}<br>{{ $t->turEtiketi() }} Yetkilisi</span></td>
         </tr>
     </table>

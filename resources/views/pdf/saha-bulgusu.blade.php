@@ -76,7 +76,7 @@
 
     <table class="imza">
         <tr>
-            <td><span>{{ $b->kaydeden ?: ($firma?->igu?->ad_soyad ?: 'Tespit Eden') }}<br>Tespit Eden</span></td>
+            <td><span>&nbsp;<br>Tespit Eden</span></td>
             <td><span>{{ $b->sorumlu ?: 'Sorumlu' }}<br>Bölüm Sorumlusu</span></td>
         </tr>
     </table>

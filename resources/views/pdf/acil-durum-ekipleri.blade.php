@@ -58,9 +58,9 @@
 
     <table class="imza">
         <tr>
-            <td><b>Hazırlayan (İSG Uzmanı)</b><br>{{ $firma->igu?->ad_soyad ?? '' }}</td>
-            <td><b>İşyeri Hekimi</b><br>{{ $firma->isyeriHekimi?->ad_soyad ?? '' }}</td>
-            <td><b>İşveren / İşveren Vekili</b><br>{{ $firma->isveren_vekili ?: $firma->isveren_ad }}</td>
+            <td><b>Hazırlayan (İSG Uzmanı)</b><br>Kaşe / İmza</td>
+            <td><b>İşyeri Hekimi</b><br>Kaşe / İmza</td>
+            <td><b>İşveren / İşveren Vekili</b><br>Kaşe / İmza</td>
         </tr>
     </table>
 </body>

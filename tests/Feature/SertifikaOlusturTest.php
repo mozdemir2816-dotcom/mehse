@@ -317,7 +317,7 @@ class SertifikaOlusturTest extends TestCase
         // İşyerinin ünvanı / işveren adı otomatik doldurulmaz (işveren kaşe/imza atar).
         $this->assertEmpty($sheet->getCell('G29')->getValue());
         $this->assertEmpty($sheet->getCell('G30')->getValue());
-        $this->assertSame('Test İGU', $sheet->getCell('G24')->getValue());
+        $this->assertNull($sheet->getCell('G24')->getValue());   // eğitici adı basılmaz (kaşe)
         $this->assertStringContainsString('01/09/2026 ve 02/09/2026 tarihlerinde', (string) $sheet->getCell('D10')->getValue());
         $this->assertSame('a)Çalışma mevzuatı ile ilgili bilgiler', $sheet->getCell('E44')->getValue()->getPlainText());
         $this->assertSame('a)İplik ve dokuma makine güvenliği', $sheet->getCell('E68')->getValue()->getPlainText());
@@ -392,7 +392,7 @@ class SertifikaOlusturTest extends TestCase
         $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
         unlink($gecici);
 
-        $this->assertSame('Dr. Cüneyt Kural', $sheet->getCell('K24')->getValue());
+        $this->assertNull($sheet->getCell('K24')->getValue());   // eğitici adı basılmaz (kaşe)
         $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
         $this->assertContains('K25', $koordinatlar);   // hekim kaşesi
     }

@@ -118,9 +118,9 @@ class RiskDegerlendirmesiUretici
         // diye "—" DEĞİL boş). Sonda ayrıca tamamen boş bir satır bırakılır —
         // sonradan elle bir isim eklenmesi gerekirse şablonu bozmadan yazılabilsin.
         $ekipGosterim = [
-            ['unvan' => 'İşveren', 'ad' => $rd->firma?->isveren_ad ?: $rd->firma?->isveren_vekili ?: ''],
-            ['unvan' => 'İş Güvenliği Uzmanı', 'ad' => $uzman?->name ?: ''],
-            ['unvan' => 'İşyeri Hekimi', 'ad' => $hekim?->ad_soyad ?: ''],
+            ['unvan' => 'İşveren', 'ad' => ''], // kaşeli görevlilerin adı basılmaz
+            ['unvan' => 'İş Güvenliği Uzmanı', 'ad' => ''],
+            ['unvan' => 'İşyeri Hekimi', 'ad' => ''],
             ['unvan' => 'Çalışan Temsilcisi', 'ad' => $temsilci['ad'] ?? ''],
             ['unvan' => 'Destek Elemanı', 'ad' => $destekElemani['ad'] ?? ''],
             ...($bilgiSahibiCalisanlar->isNotEmpty()

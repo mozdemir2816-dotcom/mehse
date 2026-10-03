@@ -164,7 +164,7 @@
                 @if ($sertifika->egitici_igu_dahil)
                     <td>
                         İş Güvenliği Uzmanı<br>
-                        Eğitici Adı Soyadı : {{ $sertifika->egitici_igu_adi ?: '—' }}<br>
+                        Eğitici Adı Soyadı : <br>
                         @if ($sertifika->egitici_igu_kase)
                             <img src="{{ storage_path('app/public/'.$sertifika->egitici_igu_kase) }}">
                         @endif
@@ -174,7 +174,7 @@
                 @if ($sertifika->cokluEgiticiMi() && $sertifika->egitici_hekim_dahil)
                     <td>
                         İşyeri Hekimi<br>
-                        Eğitici Adı Soyadı : {{ $sertifika->egitici_hekim_adi ?: '—' }}<br>
+                        Eğitici Adı Soyadı : <br>
                         @if ($sertifika->egitici_hekim_kase)
                             <img src="{{ storage_path('app/public/'.$sertifika->egitici_hekim_kase) }}">
                         @endif

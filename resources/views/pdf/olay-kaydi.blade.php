@@ -224,14 +224,14 @@
         <tr><th style="width:30%">Unvan</th><th style="width:35%">Ad Soyad</th><th style="width:35%">Kaşe / İmza</th></tr>
         <tr><td>Olayı Bildiren</td><td>{{ $kayit->bildiren_ad_soyad }}</td><td></td></tr>
         <tr>
-            <td>İş Güvenliği Uzmanı</td><td>{{ $kayit->rapor_hazirlayan }}</td>
+            <td>İş Güvenliği Uzmanı</td><td></td>
             <td>
                 @if ($imzali && $kayit->rapor_hazirlayan_kase)<img src="{{ storage_path('app/public/'.$kayit->rapor_hazirlayan_kase) }}">@endif
                 @if ($imzali && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
             </td>
         </tr>
         <tr>
-            <td>İşyeri Hekimi</td><td>{{ $kayit->isyeri_hekimi }}</td>
+            <td>İşyeri Hekimi</td><td></td>
             <td>
                 @if ($imzali && $hekim && $hekim->ad_soyad === $kayit->isyeri_hekimi)
                     @if ($hekim->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
@@ -240,7 +240,7 @@
             </td>
         </tr>
         <tr>
-            <td>İşveren / İşveren Vekili</td><td>{{ $kayit->isveren_vekili }}</td>
+            <td>İşveren / İşveren Vekili</td><td></td>
             <td>
                 @if ($imzali && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
                 @if ($imzali && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif

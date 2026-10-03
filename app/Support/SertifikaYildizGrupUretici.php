@@ -131,13 +131,10 @@ class SertifikaYildizGrupUretici
 
         // Eğiticiler bu şablonda her zaman İGU + İşyeri Hekimi — ad ve kaşe firmaya
         // atanmış İSG Profesyonellerinden çekilir (yoksa sertifika snapshot'ına düşer).
-        $iguAdi = $firma?->igu?->ad_soyad ?: ($s->egitici_igu_dahil ? $s->egitici_igu_adi : null);
         $iguKase = $firma?->igu?->kase_gorseli ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null);
-        $hekimAdi = $firma?->isyeriHekimi?->ad_soyad ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_adi : null);
         $hekimKase = $firma?->isyeriHekimi?->kase_gorseli ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
 
-        $sheet->setCellValue('G24', $iguAdi);
-        $sheet->setCellValue('K24', $hekimAdi);
+        // Eğitici adı basılmaz — kaşe ad / unvan taşır (kullanıcı kararı 03.10.2026).
 
         // Not: "Çalışanın İşyerinin Ünvanı" / "İşverenin Adı Soyadı" (G29/G30) BİLE
         // BİLE boş bırakılır — bu alan işveren tarafından kaşe/imza ile doldurulur.

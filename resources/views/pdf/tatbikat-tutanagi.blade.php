@@ -41,10 +41,6 @@
             <td>Tahliye Süresi</td><td>{{ $tutanak->tahliye_dk ?: '—' }} dk</td>
         </tr>
         <tr>
-            <td>İşveren / Vekili</td><td>{{ $tutanak->isveren_vekili ?: '—' }}</td>
-            <td>İş Güvenliği Uzmanı</td><td>{{ $tutanak->is_guvenligi_uzmani ?: '—' }}</td>
-        </tr>
-        <tr>
             <td>Tatbikat Koordinatörü</td><td>{{ $tutanak->tatbikat_koordinatoru ?: '—' }}</td>
             <td>Niteliği</td>
             <td>{{ $tutanak->haberli_tatbikat ? 'Haberli' : 'Habersiz' }}, {{ $tutanak->yillik_plan_dahilinde ? 'Yıllık plan dahilinde' : 'Plan dışı' }}</td>
@@ -109,8 +105,8 @@
 
     <table class="imza">
         <tr>
-            <td>{{ $tutanak->isveren_vekili ?: 'İşveren / Vekili' }}<br>(İmza – Kaşe)</td>
-            <td>{{ $tutanak->is_guvenligi_uzmani ?: 'İş Güvenliği Uzmanı' }}<br>(İmza)</td>
+            <td>İşveren / Vekili<br>(İmza – Kaşe)</td>
+            <td>İş Güvenliği Uzmanı<br>(İmza – Kaşe)</td>
             <td>{{ $tutanak->tatbikat_koordinatoru ?: 'Tatbikat Koordinatörü' }}<br>(İmza)</td>
         </tr>
     </table>

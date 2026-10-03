@@ -71,7 +71,7 @@
     <table class="imza">
         <tr><th>Görev</th><th>Ad Soyad</th><th>İmza</th></tr>
         <tr><td>Sorumlu</td><td>{{ $p->sorumlu }}</td><td></td></tr>
-        <tr><td>Hazırlayan</td><td>{{ $p->hazirlayan }}</td><td></td></tr>
+        <tr><td>Hazırlayan</td><td>İş Güvenliği Uzmanı</td><td></td></tr>
         <tr><td>Onaylayan (İşveren)</td><td>{{ $p->onaylayan }}</td><td></td></tr>
     </table>
 

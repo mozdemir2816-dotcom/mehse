@@ -187,14 +187,14 @@ class EgitimKatilimUretici
 
             if ($kayit->isg_uzmani_var) {
                 $s->setCellValue("A{$r}", 'İş Güvenliği Uzmanı');
-                $s->setCellValue("B{$r}", $kayit->isg_uzmani_adi ?: '');
+                $s->setCellValue("B{$r}", ''); // görevli adı basılmaz (kaşe)
                 $s->setCellValue("C{$r}", 'Kaşe / İmza: ______');
                 $r++;
             }
 
             if ($kayit->isyeri_hekimi_var) {
                 $s->setCellValue("A{$r}", 'İşyeri Hekimi');
-                $s->setCellValue("B{$r}", $kayit->isyeri_hekimi_adi ?: '');
+                $s->setCellValue("B{$r}", '');
                 $s->setCellValue("C{$r}", 'Kaşe / İmza: ______');
                 $r++;
             }
@@ -220,7 +220,7 @@ class EgitimKatilimUretici
         $parcalar = [];
 
         if ($kayit->isg_uzmani_var) {
-            $parcalar[] = 'İş Güvenliği Uzmanı'.($kayit->isg_uzmani_adi ? " ({$kayit->isg_uzmani_adi})" : '');
+            $parcalar[] = 'İş Güvenliği Uzmanı';
         }
 
         if ($kayit->isyeri_hekimi_var) {

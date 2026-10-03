@@ -33,7 +33,7 @@
     <table class="ust">
         <tr>
             <td style="width:22%">
-                <span class="etiket">Gözetim Yapan :</span> {{ $rapor->gozetim_yapan ?: '—' }}<br>
+                <span class="etiket">Gözetim Yapan :</span> İş Güvenliği Uzmanı<br>
                 <span class="etiket">Sorumlu Kişi :</span> {{ $rapor->sorumlu_kisi ?: '—' }}
             </td>
             <td class="baslik-hucre" style="width:34%">İSG SAHA GÖZETİM RAPORU</td>
@@ -42,7 +42,7 @@
                 <span class="etiket">Alan / Bölge :</span> {{ $rapor->alan_bolge ?: '—' }}
             </td>
             <td style="width:22%">
-                <span class="etiket">İşveren/Vekili :</span> {{ $rapor->isveren_vekili_adi ?: '—' }}<br>
+                
                 <span class="etiket">Rapor Tarihi / No :</span> {{ $rapor->rapor_tarihi?->format('d.m.Y') }} / {{ $rapor->belge_no }}
             </td>
             <td style="width:20%">
@@ -101,7 +101,7 @@
         @if ($rapor->gozetim_yapan_kase)
             <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
         @endif
-        {{ $rapor->gozetim_yapan ?: '—' }}<br>İmza
+        İş Güvenliği Uzmanı<br>Kaşe / İmza
     </div>
 
 </div>

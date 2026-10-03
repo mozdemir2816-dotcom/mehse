@@ -337,7 +337,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringNotContainsString('temsilci/imza.png', $imzasiz);
         $this->assertStringNotContainsString('destek/imza.png', $imzasiz);
         // Ad soyad ve rol etiketleri imzasız modda da görünmeye devam eder.
-        $this->assertStringContainsString($hekim->ad_soyad, $imzasiz);
+        $this->assertStringNotContainsString($hekim->ad_soyad, $imzasiz);
 
         $yanit = RiskDegerlendirmesiUretici::pdf($rd, false);
         ob_start();
