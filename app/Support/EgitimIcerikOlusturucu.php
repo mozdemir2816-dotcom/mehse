@@ -18,6 +18,12 @@ class EgitimIcerikOlusturucu
 {
     private const OZEL_VARSAYILAN_DAKIKA = 15;
 
+    /** NACE grubu → config'te hazır olan sektör (diğer gruplar 'nace_<grup>'). */
+    public const NACE_SEKTOR = [
+        'insaat' => 'insaat', 'madencilik' => 'maden', 'tekstil' => 'tekstil',
+        'enerji' => 'enerji_elektrik', 'mineral' => 'cimento_beton', 'tasima' => 'nakliye_tasima',
+    ];
+
     /** @return array<string, mixed> */
     public static function olustur(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi, string $egitimTuru = 'ilk'): array
     {
@@ -36,7 +42,7 @@ class EgitimIcerikOlusturucu
             : (config('isg.egitim.sureler.ilk.'.$tehlikeSinifi) ?? config('isg.egitim.sureler.ilk.az_tehlikeli'));
 
         $hedefDk = $sure['blok_fiili_dk'];
-        $sektor = $sektorAnahtari ? config('isg.egitim.isyerine_ozgu_sektorler.'.$sektorAnahtari) : null;
+        $sektor = $sektorAnahtari ? (static::tumSektorler()[$sektorAnahtari] ?? null) : null;
 
         return [
             'tip' => 'genel',
@@ -48,6 +54,7 @@ class EgitimIcerikOlusturucu
             'isyerine_ozgu' => $sektor ? [
                 'sektor' => $sektor['ad'],
                 'maddeler' => static::maddeleriHazirla($sektor['maddeler'], $hedefDk / max(count($sektor['maddeler']), 1)),
+                'elle' => $sektorAnahtari === 'ozel',
             ] : null,
         ];
     }
@@ -149,9 +156,48 @@ class EgitimIcerikOlusturucu
             + collect(config('isg.egitim.ozel_basliklar', []))->map(fn ($v) => $v['ad'])->all();
     }
 
+    /**
+     * İşyerine özgü bölüm sektör listesi: config'teki 6 hazır sektör + diğer
+     * NACE grupları (config/risk_nace.php — teknik risk başlıkları madde olur)
+     * + "Diğer" (konular elle yazılır).
+     *
+     * @return array<string, array{ad: string, maddeler: array<int, string>}>
+     */
+    public static function tumSektorler(): array
+    {
+        $liste = config('isg.egitim.isyerine_ozgu_sektorler', []);
+
+        foreach (config('risk_nace.gruplar', []) as $anahtar => $g) {
+            if (! isset(self::NACE_SEKTOR[$anahtar])) {
+                $liste['nace_'.$anahtar] = ['ad' => $g['ad'], 'maddeler' => $g['basliklar']];
+            }
+        }
+
+        $liste['ozel'] = ['ad' => 'Firmaya özgü', 'maddeler' => []];
+
+        return $liste;
+    }
+
     /** @return array<string, string> anahtar => etiket */
     public static function sektorler(): array
     {
-        return collect(config('isg.egitim.isyerine_ozgu_sektorler', []))->map(fn ($v) => $v['ad'])->all();
+        return collect(static::tumSektorler())
+            ->map(fn ($v, $k) => $k === 'ozel' ? 'Diğer — konuları elle yazacağım' : $v['ad'])
+            ->sortBy(fn ($ad, $k) => $k === 'ozel' ? 'zzz' : $ad)
+            ->all();
+    }
+
+    /** Firma NACE kodunun grubuna karşılık gelen sektör anahtarı. */
+    public static function naceSektoru(?string $nace): ?string
+    {
+        $bolum = substr(preg_replace('/\D/', '', (string) $nace), 0, 2);
+
+        foreach (config('risk_nace.gruplar', []) as $anahtar => $g) {
+            if (strlen($bolum) === 2 && in_array($bolum, $g['bolumler'], true)) {
+                return self::NACE_SEKTOR[$anahtar] ?? 'nace_'.$anahtar;
+            }
+        }
+
+        return null;
     }
 }

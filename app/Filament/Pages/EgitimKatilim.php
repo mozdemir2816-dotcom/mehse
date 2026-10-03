@@ -181,8 +181,19 @@ class EgitimKatilim extends Page
     /** Bu turdaki içerik önceki bir eğitim katılım kaydından mı geldi? (arayüzde not göstermek için) */
     public bool $oncekidenYuklendi = false;
 
+    /** Önceki içerik nereden geldi (bu firma / NACE'si aynı başka firma) — arayüz notu. */
+    public ?string $oncekiKaynak = null;
+
     private function icerikYenile(): void
     {
+        // Sektör seçilmemişse, NACE'si aynı firmada daha önce seçilen sektör gelir
+        // (ör. metal firması için bir kez "enerji" seçildiyse sonraki metal firmalarında da).
+        if ($this->baslikAnahtari === 'genel' && blank($this->sektorAnahtari) && ! $this->oncekiIcerikYoksay) {
+            $this->sektorAnahtari = $this->firma?->egitimKatilimlari()->where('baslik_anahtari', 'genel')->whereNotNull('sektor_anahtari')->latest('belge_tarihi')->value('sektor_anahtari')
+                ?? $this->ayniNaceKaydi(sektorsuz: true)?->sektor_anahtari
+                ?? EgitimIcerikOlusturucu::naceSektoru($this->firma?->nace_kodu);
+        }
+
         $taze = EgitimIcerikOlusturucu::olustur(
             $this->baslikAnahtari,
             $this->sektorAnahtari,
@@ -277,9 +288,16 @@ class EgitimKatilim extends Page
         return true;
     }
 
-    /** Aynı firma + başlık (+ genel'de sektör) + tür için en son eğitim katılım kaydının konu içeriği. */
+    /**
+     * Aynı firma + başlık (+ genel'de sektör) + tür için en son eğitim katılım
+     * kaydının konu içeriği; bu firmada yoksa NACE kodu aynı (önce tam kod, sonra
+     * sınıf xx.yy, sonra bölüm xx) başka bir firmanızdaki son kayıttan — işe özgü
+     * konular her yeni firmada yeniden yazılmasın, evraklar tutarlı kalsın.
+     */
     private function oncekiKonuIcerigi(): ?array
     {
+        $this->oncekiKaynak = null;
+
         $kayit = $this->firma?->egitimKatilimlari()
             ->where('baslik_anahtari', $this->baslikAnahtari)
             ->when($this->baslikAnahtari === 'genel', fn ($q) => $q->where('sektor_anahtari', $this->sektorAnahtari))
@@ -288,7 +306,61 @@ class EgitimKatilim extends Page
             ->latest()
             ->first();
 
-        return $kayit?->konu_secimleri;
+        if ($kayit) {
+            $this->oncekiKaynak = 'Bu firmanın önceki eğitim katılım kaydından';
+
+            return $kayit->konu_secimleri;
+        }
+
+        $benzer = $this->ayniNaceKaydi();
+
+        if ($benzer) {
+            $this->oncekiKaynak = 'NACE kodu aynı olan '.$benzer->firma?->unvan.' firmasındaki son eğitimden ('.$benzer->belge_tarihi?->format('d.m.Y').')';
+        }
+
+        return $benzer?->konu_secimleri;
+    }
+
+    /**
+     * Kullanıcının NACE kodu bu firmayla aynı olan diğer firmalarındaki en son
+     * eğitim katılım kaydı (tam kod → xx.yy → xx). $sektorsuz: sektör seçimini
+     * türetmek için sektör filtresi uygulanmaz.
+     */
+    private function ayniNaceKaydi(bool $sektorsuz = false): ?EgitimKatilimModel
+    {
+        $nace = (string) $this->firma?->nace_kodu;
+        $rakam = preg_replace('/\D/', '', $nace);
+
+        if (strlen($rakam) < 2) {
+            return null;
+        }
+
+        $onekler = array_unique(array_filter([
+            strlen($rakam) >= 6 ? substr($rakam, 0, 2).'.'.substr($rakam, 2, 2).'.'.substr($rakam, 4, 2) : null,
+            strlen($rakam) >= 4 ? substr($rakam, 0, 2).'.'.substr($rakam, 2, 2) : null,
+            substr($rakam, 0, 2),
+        ]));
+
+        foreach ($onekler as $onek) {
+            $kayit = EgitimKatilimModel::query()
+                ->with('firma:id,unvan')
+                ->where('firma_id', '!=', $this->firma->id)
+                ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id())->where('nace_kodu', 'like', $onek.'%'))
+                ->where('baslik_anahtari', $this->baslikAnahtari)
+                ->when($this->baslikAnahtari === 'genel', fn ($q) => $sektorsuz
+                    ? $q->whereNotNull('sektor_anahtari')
+                    : $q->where('sektor_anahtari', $this->sektorAnahtari))
+                ->orderByRaw('egitim_turu = ? desc', [$this->egitimTuru])
+                ->latest('belge_tarihi')
+                ->latest('id')
+                ->first();
+
+            if ($kayit) {
+                return $kayit;
+            }
+        }
+
+        return null;
     }
 
     /**
