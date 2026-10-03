@@ -45,7 +45,8 @@ class SertifikaYildizGrupUretici
         return $s->tip === 'isg';
     }
 
-    public static function indir(Sertifika $s): ?StreamedResponse
+    /** $imzali: false → matbu (kaşe görseli basılmaz, elle imzalanır). */
+    public static function indir(Sertifika $s, bool $imzali = true): ?StreamedResponse
     {
         if (! self::uygunMu($s) || ! ($s->katilimcilar ?? [])) {
             return null;
@@ -54,7 +55,7 @@ class SertifikaYildizGrupUretici
         $dosyalar = [];
 
         foreach ($s->katilimcilar as $k) {
-            $spreadsheet = self::doldur($s, $k);
+            $spreadsheet = self::doldur($s, $k, $imzali);
             $gecici = tempnam(sys_get_temp_dir(), 'ygs').'.xlsx';
             IOFactory::createWriter($spreadsheet, 'Xlsx')->save($gecici);
             $dosyalar[] = ['yol' => $gecici, 'ad' => Str::slug($k['ad_soyad'] ?? 'katilimci').'.xlsx'];
@@ -92,7 +93,7 @@ class SertifikaYildizGrupUretici
     }
 
     /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string} $katilimci */
-    private static function doldur(Sertifika $s, array $katilimci): Spreadsheet
+    private static function doldur(Sertifika $s, array $katilimci, bool $imzali = true): Spreadsheet
     {
         $s->loadMissing('firma');
         $firma = $s->firma;
@@ -140,10 +141,13 @@ class SertifikaYildizGrupUretici
         // BİLE boş bırakılır — bu alan işveren tarafından kaşe/imza ile doldurulur.
 
         self::turSekilIsaretle($sheet, $s);
-        self::kaseEkle($sheet, 'G25', $iguKase);
-        self::kaseEkle($sheet, 'K25', $hekimKase);
+        if ($imzali) {
+            self::kaseEkle($sheet, 'G25', $iguKase);
+            self::kaseEkle($sheet, 'K25', $hekimKase);
+        }
 
-        // Sağ üstte firma amblemi (K4) — OSGB amblemi (D4) şablonda sabit.
+        // Sağ üstte firma amblemi — çerçevenin iç çizgisinin ALTINA (çizginin üstüne binmez),
+        // soldaki OSGB amblemiyle (D4, 15 px aşağı, 48 px) simetrik.
         self::firmaLogosuEkle($sheet, $firma?->logo);
 
         $icerik = $s->konu_icerigi ?? [];
@@ -249,33 +253,29 @@ class SertifikaYildizGrupUretici
 
         $cizim = new Drawing;
         $cizim->setPath($tamYol);
-        $cizim->setHeight(40);
+        $cizim->setHeight(80);   // kaşe 2 kat büyük (kullanıcı isteği 03.10.2026)
         $cizim->setCoordinates($hucre);
         $cizim->setWorksheet($sheet);
     }
 
     /**
-     * Sertifikanın sağ üstüne (K4) firmanın yüklü logosunu yerleştirir —
-     * şablondaki OSGB amblemiyle (D4) simetrik. Firma logosuz ise sağ üst boş
-     * kalır (şablonun görünümü bozulmaz).
+     * Firma logosu: sağ üstte (L4), çerçevenin 4. satır üstündeki iç çizgisinin
+     * altında kalacak şekilde 15 px aşağı kaydırılır (OSGB amblemi D4 ile aynı
+     * düzen). Firma logosuz ise sağ üst boş kalır.
      */
     private static function firmaLogosuEkle(Worksheet $sheet, ?string $logoYolu): void
     {
-        if (! $logoYolu) {
-            return;
-        }
-
-        $tamYol = storage_path('app/public/'.$logoYolu);
-
-        if (! file_exists($tamYol)) {
+        if (! $logoYolu || ! file_exists($tamYol = storage_path('app/public/'.$logoYolu))) {
             return;
         }
 
         $cizim = new Drawing;
         $cizim->setName('Firma Amblemi');
         $cizim->setPath($tamYol);
-        $cizim->setHeight(58);
-        $cizim->setCoordinates('K4');
+        $cizim->setHeight(48);
+        $cizim->setCoordinates('L4');   // sağ köşe — OSGB amblemine simetrik
+        $cizim->setOffsetX(10);
+        $cizim->setOffsetY(15);
         $cizim->setWorksheet($sheet);
     }
 }

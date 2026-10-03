@@ -325,7 +325,7 @@
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisExcel({{ $k->id }})">Excel</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisSertifika({{ $k->id }})">Sertifika</x-filament::button>
                                 @if ($k->baslik_anahtari === 'genel')
-                                    <x-filament::button size="xs" color="gray" wire:click="gecmisYildizGrup({{ $k->id }})">Yıldız Grup</x-filament::button>
+                                    <x-filament::button size="xs" color="gray" wire:click="mountAction('gecmisYildizGrup', { id: {{ $k->id }} })">Yıldız Grup</x-filament::button>
                                 @endif
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>

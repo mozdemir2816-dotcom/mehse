@@ -353,8 +353,11 @@ class SertifikaOlusturTest extends TestCase
         unlink($gecici);
         @unlink($logoTam);
 
+        $logo = collect($sheet->getDrawingCollection())->first(fn ($d) => $d->getName() === 'Firma Amblemi');
         $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
-        $this->assertContains('K4', $koordinatlar);   // firma amblemi sağ üstte
+        // Firma amblemi sağ üstte, çerçevenin iç çizgisinin altında (çizgiye binmez)
+        $this->assertSame('L4', $logo->getCoordinates());
+        $this->assertSame(15, $logo->getOffsetY());
         $this->assertContains('D4', $koordinatlar);   // OSGB amblemi solda korunur
     }
 
@@ -393,8 +396,20 @@ class SertifikaOlusturTest extends TestCase
         unlink($gecici);
 
         $this->assertNull($sheet->getCell('K24')->getValue());   // eğitici adı basılmaz (kaşe)
-        $koordinatlar = collect($sheet->getDrawingCollection())->map->getCoordinates()->all();
-        $this->assertContains('K25', $koordinatlar);   // hekim kaşesi
+        $kase = collect($sheet->getDrawingCollection())->first(fn ($d) => $d->getCoordinates() === 'K25');
+        $this->assertNotNull($kase);   // hekim kaşesi
+        $this->assertSame(80, $kase->getHeight());   // imzalıda kaşe 2 kat büyük
+
+        // İmzasız (matbu): kaşe görseli basılmaz
+        file_put_contents($kaseTam, $png);
+        ob_start();
+        SertifikaYildizGrupUretici::indir($s, false)->sendContent();
+        $gecici = tempnam(sys_get_temp_dir(), 'ygi').'.xlsx';
+        file_put_contents($gecici, ob_get_clean());
+        @unlink($kaseTam);
+        $imzasiz = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        unlink($gecici);
+        $this->assertNotContains('K25', collect($imzasiz->getDrawingCollection())->map->getCoordinates()->all());
     }
 
     public function test_yildiz_grup_tek_gunluk_egitimde_aciklama_tarihinde_yazar(): void
@@ -518,5 +533,22 @@ class SertifikaOlusturTest extends TestCase
             ->callAction('yildizGrup');
 
         $this->assertDatabaseCount('sertifikalar', 1);
+    }
+    public function test_gecmis_yildiz_grup_imzali_imzasiz_sorulur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Geçmiş Firma']);
+        $s = Sertifika::create([
+            'firma_id' => $firma->id, 'tip' => 'isg',
+            'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli'),
+        ]);
+
+        Livewire::test(SertifikaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->mountAction('gecmisYildizGrup', ['id' => $s->id])
+            ->assertActionMounted('gecmisYildizGrup')
+            ->callMountedAction(['imzali' => '0'])
+            ->assertHasNoActionErrors()
+            ->assertFileDownloaded('ahmet-yilmaz.xlsx');
     }
 }

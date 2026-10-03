@@ -444,14 +444,14 @@ class SertifikaOlustur extends Page
                 ->color('success')
                 ->visible(fn () => $this->firma !== null && $this->tip === 'isg')
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $s = $this->kaydet();
 
                     if (! $s) {
                         return null;
                     }
 
-                    $indirme = SertifikaYildizGrupUretici::indir($s);
+                    $indirme = SertifikaYildizGrupUretici::indir($s, ImzaSecenegi::secili($data));
 
                     if (! $indirme) {
                         Notification::make()->title('Bu sertifika tipi için Yıldız Grup şablonu uygun değil')->warning()->send();
@@ -473,11 +473,21 @@ class SertifikaOlustur extends Page
         return $s ? SertifikaUretici::pdf($s) : null;
     }
 
-    public function gecmisYildizGrup(int $id)
+    public function gecmisYildizGrup(int $id, bool $imzali = true)
     {
         $s = $this->firma?->sertifikalar()->find($id);
 
-        return $s ? SertifikaYildizGrupUretici::indir($s) : null;
+        return $s ? SertifikaYildizGrupUretici::indir($s, $imzali) : null;
+    }
+
+    /** Geçmiş sertifikadan Yıldız Grup Excel'i — imzalı / imzasız sorulur. */
+    public function gecmisYildizGrupAction(): Action
+    {
+        return Action::make('gecmisYildizGrup')
+            ->modalHeading('Yıldız Grup Eğitim Sertifikası')
+            ->modalSubmitActionLabel('İndir')
+            ->schema([ImzaSecenegi::alan()])
+            ->action(fn (array $data, array $arguments) => $this->gecmisYildizGrup((int) $arguments['id'], ImzaSecenegi::secili($data)));
     }
 
     public function gecmisSil(int $id): void

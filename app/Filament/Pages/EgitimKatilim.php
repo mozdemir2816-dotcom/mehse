@@ -887,13 +887,13 @@ class EgitimKatilim extends Page
                 ->visible(fn () => $this->firma !== null && $this->baslikAnahtari === 'genel')
                 ->modalHeading('Yıldız Grup Eğitim Sertifikası')
                 ->modalDescription('Eğitim konuları ve süreleri bu katılım formundan alınır. Sertifikaya basılacak eğitim tarih(ler)ini girin; her katılımcı için ayrı Excel sayfası oluşturulur.')
-                ->schema(fn () => array_map(
+                ->schema(fn () => [ImzaSecenegi::alan(), ...array_map(
                     fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
                         ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
                         ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
                         ->required(),
                     range(1, max(1, (int) $this->sureGun)),
-                ))
+                )])
                 ->action(function (array $data) {
                     $kayit = $this->kaydet();
 
@@ -901,7 +901,8 @@ class EgitimKatilim extends Page
                         return null;
                     }
 
-                    $indirme = SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit, array_values(array_filter($data))));
+                    $tarihler = array_values(array_filter($data, fn ($v, $k) => str_starts_with((string) $k, 'egitim_gun_') && filled($v), ARRAY_FILTER_USE_BOTH));
+                    $indirme = SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit, $tarihler), ImzaSecenegi::secili($data));
 
                     if (! $indirme) {
                         Notification::make()->title('Yıldız Grup şablonu bu eğitim için uygun değil')->warning()->send();
@@ -943,7 +944,7 @@ class EgitimKatilim extends Page
         return SertifikaUretici::pdf($this->sertifikaKur($kayit));
     }
 
-    public function gecmisYildizGrup(int $id)
+    public function gecmisYildizGrup(int $id, bool $imzali = true)
     {
         $kayit = $this->firma?->egitimKatilimlari()->find($id);
 
@@ -953,7 +954,17 @@ class EgitimKatilim extends Page
 
         $kayit->setRelation('firma', $this->firma);
 
-        return SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit));
+        return SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit), $imzali);
+    }
+
+    /** Geçmiş kayıttan Yıldız Grup sertifikası — imzalı / imzasız sorulur. */
+    public function gecmisYildizGrupAction(): Action
+    {
+        return Action::make('gecmisYildizGrup')
+            ->modalHeading('Yıldız Grup Eğitim Sertifikası')
+            ->modalSubmitActionLabel('İndir')
+            ->schema([ImzaSecenegi::alan()])
+            ->action(fn (array $data, array $arguments) => $this->gecmisYildizGrup((int) $arguments['id'], ImzaSecenegi::secili($data)));
     }
 
     public function gecmisSil(int $id): void
