@@ -2816,11 +2816,17 @@ return [
             'orta' => 'Orta',
             'zor' => 'Zor',
         ],
+        // Editoryal akış: taslak → incelemede → yayımlandı (onaylandi) →
+        // kullanımdan kaldırıldı (arsiv). Sınavlar yalnız 'onaylandi' kullanır.
         'durumlar' => [
-            'taslak' => 'Taslak (İnceleme Bekliyor)',
-            'onaylandi' => 'Onaylandı',
-            'arsiv' => 'Arşiv',
+            'taslak' => 'Taslak',
+            'incelemede' => 'İncelemede',
+            'onaylandi' => 'Yayımlandı',
+            'arsiv' => 'Kaldırıldı',
         ],
+        // NACE kapsama hedefi (isgsuite akıllı sınav motoru: 5 sabit temel
+        // + 15 işe özgü soru). Temel = ortak havuz, işe özgü = NACE kapsamlı.
+        'kapsama' => ['temel' => 5, 'ise_ozgu' => 15],
         // Konu = eğitim başlığı / risk teması. isg.egitim genel içerik başlıklarıyla uyumlu.
         'konular' => [
             'genel_isg' => 'Genel İSG / Mevzuat',

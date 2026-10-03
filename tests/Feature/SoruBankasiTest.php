@@ -58,6 +58,7 @@ class SoruBankasiTest extends TestCase
         $s = SoruBankasiSorusu::create([
             'user_id' => $this->uzman->id, 'konu' => 'genel_isg', 'zorluk' => 'orta',
             'soru' => 'X?', 'secenekler' => ['A', 'B', 'C', 'D'], 'dogru_index' => 1, 'durum' => 'taslak',
+            'aciklama' => 'Gerekçe', 'kaynak' => '6331 sK',
         ]);
 
         $c = Livewire::test(SoruBankasi::class)->call('onayla', $s->id);
@@ -77,6 +78,7 @@ class SoruBankasiTest extends TestCase
             SoruBankasiSorusu::create([
                 'user_id' => $this->uzman->id, 'sektor_anahtari' => 'insaat', 'konu' => 'kazi', 'zorluk' => 'orta',
                 'soru' => "Kazı sorusu {$i}?", 'secenekler' => ['A', 'B', 'C', 'D'], 'dogru_index' => 0, 'durum' => 'taslak',
+                'aciklama' => 'Gerekçe', 'kaynak' => 'Yapı İşleri Yön.',
             ]);
         }
 

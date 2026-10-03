@@ -185,7 +185,7 @@ class EgitimSorulari extends Page
         return SoruBankasiSorusu::query()
             ->erisilebilir(Filament::auth()->id())
             ->onayli()
-            ->where(fn ($q) => $q->whereNull('sektor_anahtari')->when($this->sektorAnahtari, fn ($w) => $w->orWhere('sektor_anahtari', $this->sektorAnahtari)))
+            ->kapsamaUygun($this->sektorAnahtari, $this->firma?->nace_kodu)
             ->count();
     }
 
@@ -194,7 +194,7 @@ class EgitimSorulari extends Page
         $sorular = SoruBankasiSorusu::query()
             ->erisilebilir(Filament::auth()->id())
             ->onayli()
-            ->where(fn ($q) => $q->whereNull('sektor_anahtari')->when($this->sektorAnahtari, fn ($w) => $w->orWhere('sektor_anahtari', $this->sektorAnahtari)))
+            ->kapsamaUygun($this->sektorAnahtari, $this->firma?->nace_kodu)
             ->when($konu, fn ($q) => $q->where('konu', $konu))
             ->inRandomOrder()
             ->limit(max(1, min(50, $adet)))

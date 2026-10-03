@@ -127,7 +127,7 @@ class EditEgitimPaketi extends EditRecord
         return SoruBankasiSorusu::query()
             ->erisilebilir(Filament::auth()->id())
             ->onayli()
-            ->where(fn ($q) => $q->whereNull('sektor_anahtari')->when($paket->sektor, fn ($w) => $w->orWhere('sektor_anahtari', $paket->sektor)));
+            ->kapsamaUygun($paket->sektor);
     }
 
     private static function bankaSayisi(EgitimPaketi $paket): int
