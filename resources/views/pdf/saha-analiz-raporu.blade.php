@@ -98,7 +98,7 @@
 
     <div class="imza">
         <div class="baslik">İŞ GÜVENLİĞİ UZMANI</div>
-        @if ($rapor->gozetim_yapan_kase)
+        @if (($imzali ?? true) && $rapor->gozetim_yapan_kase)
             <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
         @endif
         İş Güvenliği Uzmanı<br>Kaşe / İmza
