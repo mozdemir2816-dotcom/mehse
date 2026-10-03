@@ -3,13 +3,13 @@
 namespace App\Support;
 
 use App\Filament\Pages\AcilDurumPlani as AcilDurumPlaniSayfasi;
+use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\KimyasalSicili;
 use App\Filament\Pages\PkdSicili;
 use App\Filament\Pages\SaglikGozetimi as SaglikGozetimiSayfasi;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
-use App\Filament\Pages\DokumanYonetimi;
 use App\Models\AcilDurumPlani;
 use App\Models\ArsivDosya;
 use App\Models\Bildirim;
@@ -180,9 +180,22 @@ class BildirimTarayici
             $ekle('pkd', Carbon::parse($pkd)->lt($bugun) ? 'kritik' : 'uyari', 'Patlamadan korunma dokümanı gözden geçirme termini', 'PKD '.Carbon::parse($pkd)->format('d.m.Y').' tarihinde gözden geçirilmeli.', Carbon::parse($pkd), static::url(fn () => PkdSicili::getUrl(['firma' => $firma->id])));
         }
 
-        // Doküman Yönetimi: geçerlilik sonu dolan / yaklaşan aktif dokümanlar
-        $dokumanlar = ArsivDosya::query()->where('firma_id', $firma->id)->where('aktif', true)->whereNotNull('gecerlilik_sonu')
+        // Arşiv: geçerlilik sonu dolan / yaklaşan "kayıt" türü belgeler…
+        $dokumanlar = ArsivDosya::query()->where('firma_id', $firma->id)->tarihTakipli()->whereNotNull('gecerlilik_sonu')
             ->whereDate('gecerlilik_sonu', '<=', $bugun->copy()->addDays($esik))->orderBy('gecerlilik_sonu')->get();
+        // …ve kural kategorilerinde (periyodik / yıllık) yenilemesi geciken / yaklaşan belge.
+        // Yalnız arşivde o kategoride kaydı olan firmalar — arşivi hiç kullanmayan
+        // firmaya her kategori için "eksik" bildirimi yağdırılmaz (Arşiv sayfası gösterir).
+        $arsivKayitlari = ArsivDosya::query()->where('firma_id', $firma->id)->get()->groupBy(fn (ArsivDosya $d) => ArsivKurali::kategori($d->kategori)['anahtar']);
+        foreach ($arsivKayitlari as $kategori => $kayitlar) {
+            if (! ArsivKurali::takipliMi($kategori)) {
+                continue;
+            }
+            $durum = ArsivKurali::durum($firma, $kategori, $kayitlar, $bugun, KullaniciAyarlari::arsivHaric($firma->user));
+            if (in_array($durum['durum'], ['gecikmis', 'yaklasan'], true)) {
+                $ekle('arsiv:'.$kategori.':'.$durum['durum'], $durum['durum'] === 'gecikmis' ? 'kritik' : 'uyari', $durum['baslik'].($durum['durum'] === 'gecikmis' ? ' gecikti' : ' yaklaşıyor'), $durum['mesaj'], $durum['son_tarih'] ?? $bugun, static::url(fn () => DokumanYonetimi::getUrl(['firma' => $firma->id, 'kategori' => $kategori])));
+            }
+        }
         $dokUrl = static::url(fn () => DokumanYonetimi::getUrl(['firma' => $firma->id]));
         $dolan = $dokumanlar->filter(fn (ArsivDosya $d) => $d->gecerlilik_sonu->lt($bugun));
         $yakin = $dokumanlar->filter(fn (ArsivDosya $d) => $d->gecerlilik_sonu->gte($bugun));

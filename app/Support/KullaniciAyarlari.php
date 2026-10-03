@@ -72,6 +72,8 @@ class KullaniciAyarlari
             'yazi_boyutu' => 'normal',
             'esikler' => $esikler,
             'kontrol_haric' => [],
+            // Arşiv hatırlatma ayarları (Arşiv > Hatırlatma Ayarları).
+            'arsiv' => ['yaklasan_gun' => (int) config('arsiv.yaklasan_gun', 30), 'haric' => []],
         ];
     }
 
@@ -117,6 +119,18 @@ class KullaniciAyarlari
         $user = $aktif?->id === $userId ? $aktif : User::query()->find($userId);
 
         return $user ? array_values((array) self::hepsi($user)['kontrol_haric']) : [];
+    }
+
+    /** Arşivde belgenin "yaklaşıyor" sayılacağı gün (Arşiv > Hatırlatma Ayarları). */
+    public static function arsivYaklasanGun(?User $user = null): int
+    {
+        return max(1, min(365, (int) (self::hepsi($user)['arsiv']['yaklasan_gun'] ?? 30)));
+    }
+
+    /** @return array<int, string> Arşivde takip dışı bırakılan kategori anahtarları */
+    public static function arsivHaric(?User $user = null): array
+    {
+        return array_values((array) (self::hepsi($user)['arsiv']['haric'] ?? []));
     }
 
     /** @param  array<string, mixed>  $degerler */

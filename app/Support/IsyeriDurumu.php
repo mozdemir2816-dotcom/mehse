@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Filament\Pages\AcilDurumPlani as AcilDurumPlaniSayfasi;
 use App\Filament\Pages\BildirimMerkezi;
 use App\Filament\Pages\DofOlustur;
+use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\EgitimYenilemeTakibi;
 use App\Filament\Pages\KimyasalSicili;
 use App\Filament\Pages\KkdTakip;
@@ -208,10 +209,10 @@ class IsyeriDurumu
         $evrak = collect(PortfoyKarne::firmaChecklistDetay($firma))->where('hazir', true);
         $tamam = $evrak->where('tamam', true)->count();
         $gecVade = $evrak->where('tamam', false)->filter(fn ($k) => $k['vade_tarihi']?->lt($bugun))->count();
-        $yuklu = ArsivDosya::query()->where('firma_id', $firma->id)->where('aktif', true)->get(['gecerlilik_sonu']);
+        $yuklu = ArsivDosya::query()->where('firma_id', $firma->id)->tarihTakipli()->get(['gecerlilik_sonu']);
         $suresiGecen = $yuklu->filter(fn ($d) => $d->gecerlilik_sonu?->lt($bugun))->count();
         $ekle('Dokümanlar (İSG dosyası)', $gecVade + $suresiGecen > 0 ? 'gecikmis' : ($tamam === $evrak->count() ? 'tamamlandi' : 'eksik'),
-            $tamam.' / '.$evrak->count().' evrak mevcut; '.$gecVade.' evrakın vadesi geçti. Doküman Yönetimi: '.$yuklu->count().' aktif doküman, '.$suresiGecen.' süresi geçmiş.',
+            $tamam.' / '.$evrak->count().' evrak mevcut; '.$gecVade.' evrakın vadesi geçti. Arşiv: '.$yuklu->count().' aktif doküman, '.$suresiGecen.' süresi geçmiş.',
             'Kayıt sorumlusu', fn () => KontrolMerkezi::getUrl());
 
         // 16. Yıllık çalışma planı
@@ -343,8 +344,8 @@ class IsyeriDurumu
             }
         }
 
-        foreach (ArsivDosya::query()->where('firma_id', $firma->id)->where('aktif', true)->whereNotNull('gecerlilik_sonu')->get() as $d) {
-            $ekle('Doküman', $d->etiket(), $d->kategoriEtiketi().($d->versiyon ? ' · v'.$d->versiyon : ''), $d->gecerlilik_sonu, 'Kayıt sorumlusu', fn () => \App\Filament\Pages\DokumanYonetimi::getUrl(['firma' => $firma->id]));
+        foreach (ArsivDosya::query()->where('firma_id', $firma->id)->tarihTakipli()->whereNotNull('gecerlilik_sonu')->get() as $d) {
+            $ekle('Doküman', $d->etiket(), $d->kategoriEtiketi().($d->versiyon ? ' · v'.$d->versiyon : ''), $d->gecerlilik_sonu, 'Kayıt sorumlusu', fn () => DokumanYonetimi::getUrl(['firma' => $firma->id]));
         }
 
         $sira = array_flip(array_keys(static::TAKVIM_DURUMLARI));
