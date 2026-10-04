@@ -108,7 +108,11 @@ class EgitimKatilimUretici
         foreach ($ikiGun ? ['G', 'H'] : ['F', 'G'] as $harf) {
             $s->getColumnDimension($harf)->setWidth(9);
         }
-        if (! $ikiGun) {
+        if ($ikiGun) {
+            // "İmza (1. Gün)" / "İmza (2. Gün)" başlığı sığacak kadar.
+            $s->getColumnDimension('E')->setWidth(14);
+            $s->getColumnDimension('F')->setWidth(14);
+        } else {
             $s->getColumnDimension('E')->setWidth(22);
         }
 
