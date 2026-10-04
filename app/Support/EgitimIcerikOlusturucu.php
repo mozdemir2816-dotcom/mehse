@@ -115,7 +115,8 @@ class EgitimIcerikOlusturucu
      */
     public static function bolumSuresi(array $maddeler): array
     {
-        $fiili = (int) collect($maddeler)->where('dahil', true)->sum('dakika');
+        // Formda dakika kutusu boşaltılınca '' gelir; int + '' TypeError verir (canlıda 01.10.2026).
+        $fiili = (int) collect($maddeler)->where('dahil', true)->sum(fn ($m) => (int) ($m['dakika'] ?? 0));
 
         return ['fiili' => $fiili, 'dinlenme' => (int) round($fiili / 3)];
     }

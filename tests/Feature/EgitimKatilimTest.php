@@ -67,6 +67,17 @@ class EgitimKatilimTest extends TestCase
         $this->assertEqualsWithDelta(180, collect($cok['saglik_konulari'])->sum('dakika'), 6);
     }
 
+    public function test_bos_birakilan_dakika_kutusu_sayfayi_dusurmez(): void
+    {
+        $sure = EgitimIcerikOlusturucu::bolumSuresi([
+            ['madde' => 'A', 'dakika' => 45, 'dahil' => true],
+            ['madde' => 'B', 'dakika' => '', 'dahil' => true],
+            ['madde' => 'C', 'dakika' => '30', 'dahil' => true],
+        ]);
+
+        $this->assertSame(['fiili' => 75, 'dinlenme' => 25], $sure);
+    }
+
     public function test_toplam_sure_11_saati_asinca_2_gun_planlanir(): void
     {
         // az tehlikeli = 8 saat toplam -> 1 gün
