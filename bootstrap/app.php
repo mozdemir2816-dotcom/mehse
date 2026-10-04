@@ -11,7 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // 'auth' korumalı özel rotalar (tema kaydı, Saha Gözlem PDF'i) oturumsuz
+        // istekte Laravel'in olmayan "login" rotasını arayıp 500 veriyordu.
+        $middleware->redirectGuestsTo('/admin/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

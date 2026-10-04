@@ -1,14 +1,17 @@
 <?php
 
+use App\Models\SahaAnalizi;
 use App\Models\User;
+use App\Models\Ziyaretci;
 use App\Support\KullaniciAyarlari;
+use App\Support\SahaAnaliziUretici;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
 
 // Ziyaretçi kartı QR doğrulaması — güvenlik görevlisi giriş yapmadan okutur.
 Route::get('/ziyaretci/{token}', function (string $token) {
-    $z = \App\Models\Ziyaretci::query()->with('firma')->where('token', $token)->first();
+    $z = Ziyaretci::query()->with('firma')->where('token', $token)->first();
 
     return response()->view('ziyaretci-dogrula', ['z' => $z], $z ? 200 : 404);
 })->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('ziyaretci.dogrula');
@@ -32,3 +35,13 @@ Route::post('/mehse/ayar/tema', function (Request $request) {
 
     return response()->noContent();
 })->middleware('auth')->name('mehse.ayar.tema');
+
+// Saha Gözlem Raporu PDF'i — telefonda "PDF'i Paylaş" (Web Share API ile dosya olarak
+// WhatsApp'a gönderilir). Yalnız raporun sahibi uzman indirebilir.
+Route::get('/mehse/saha-gozlem/{rapor}/pdf', function (int $rapor, Request $request) {
+    $s = SahaAnalizi::query()
+        ->whereHas('firma', fn ($q) => $q->where('user_id', $request->user()->id))
+        ->findOrFail($rapor);
+
+    return SahaAnaliziUretici::pdf($s);
+})->middleware('auth')->name('mehse.saha-gozlem.pdf');

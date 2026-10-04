@@ -117,13 +117,15 @@
                                     </span>
                                     @if ($imza)<span style="display:block;font-size:.76rem;color:#b45309">{{ $imza }} belge imza bekliyor</span>@endif
                                 </button>
-                                <div style="display:flex;gap:.35rem">
+                                <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:center">
                                     @if ($g)
                                         <x-filament::button size="sm" color="gray" icon="heroicon-o-eye" wire:click="goruntule({{ $g->id }})">Aç</x-filament::button>
                                     @endif
                                     @if ($d['durum'] !== 'muaf')
-                                        <x-filament::button size="sm" icon="heroicon-o-arrow-up-tray"
-                                            wire:click="mountAction('yeniKayit', { kategori: '{{ $anahtar }}', firma: {{ $firmaId }}, yontem: 'yukle' })">Yükle</x-filament::button>
+                                        {{-- Tek dokunuş: 📷 çek → Kaydet (yıl / tarih otomatik) --}}
+                                        @include('filament.components.hizli-arsiv', ['kategori' => $anahtar])
+                                        <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-up-tray" title="Tarih, yıl, kişi gibi bilgileri girerek yükle"
+                                            wire:click="mountAction('yeniKayit', { kategori: '{{ $anahtar }}', firma: {{ $firmaId }}, yontem: 'yukle' })">Formla yükle</x-filament::button>
                                     @endif
                                 </div>
                                 @if (in_array($anahtar, ['yillik_calisma_plani', 'yillik_egitim_plani', 'yillik_degerlendirme'], true))
@@ -314,7 +316,7 @@
 
         <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-                <span style="{{ $baslikStil }}">Üretilmiş Belgeler @if ($detay['uretilmis']->isNotEmpty())({{ $detay['uretilmis']->count() }})@endif</span>
+                <span style="{{ $baslikStil }}">Üretilmiş Belgeler{{ $detay['uretilmis']->isNotEmpty() ? ' ('.$detay['uretilmis']->count().')' : '' }}</span>
                 <button type="button" wire:click="mountAction('yeniKayit', { kategori: '{{ $kategoriAnahtari }}', yontem: 'sablon' })" style="background:none;border:none;cursor:pointer;font-size:.88rem;color:inherit">+ Belge ekle</button>
             </div>
             <div style="display:flex;gap:.9rem;flex-wrap:wrap;font-size:.8rem;margin-bottom:.45rem">

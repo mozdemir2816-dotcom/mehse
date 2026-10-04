@@ -442,12 +442,39 @@
     </div>
 
     {{-- 6. ALT AKSİYONLAR --}}
-    @if ($this->firma && ! $kilitli)
-        <div style="display:flex;flex-direction:column;gap:.5rem">
-            <x-filament::button color="primary" icon="heroicon-o-check" wire:click="tamamlaPaneliAc" :disabled="! $bulgular">Raporu Tamamla</x-filament::button>
-            <x-filament::button color="gray" icon="heroicon-o-bookmark" wire:click="taslagiKaydet">Taslağı Kaydet</x-filament::button>
+    @if ($this->firma)
+        {{-- Telefonda alt menünün hemen üstünde sabit işlem çubuğu --}}
+        @php
+            $pdfUrl = $kayitId ? route('mehse.saha-gozlem.pdf', $kayitId) : null;
+            $pdfAd = 'saha-gozlem-'.\Illuminate\Support\Str::slug($this->firma->kisa_ad ?: $this->firma->unvan).'.pdf';
+        @endphp
+        <div class="mehse-sabit-alt sgr-panel" style="padding:.6rem;border-radius:.9rem;box-shadow:0 -2px 12px rgb(0 0 0 / .12);display:grid;grid-template-columns:repeat({{ $kilitli ? 1 : 2 }},1fr);gap:.5rem"
+            x-data="{ paylasiliyor: false, async paylas(url, ad) {
+                this.paylasiliyor = true;
+                try {
+                    const yanit = await fetch(url, { credentials: 'same-origin' });
+                    const veri = await yanit.blob();
+                    const dosya = new File([veri], ad, { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [dosya] })) {
+                        await navigator.share({ files: [dosya], title: ad });
+                    } else {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(veri); a.download = ad; a.click();
+                    }
+                } catch (e) {} finally { this.paylasiliyor = false; }
+            } }">
+            @unless ($kilitli)
+                <x-filament::button color="gray" icon="heroicon-o-bookmark" wire:click="taslagiKaydet">Taslağı Kaydet</x-filament::button>
+                <x-filament::button color="primary" icon="heroicon-o-check" wire:click="tamamlaPaneliAc" :disabled="! $bulgular">Raporu Tamamla</x-filament::button>
+            @endunless
+            @if ($pdfUrl)
+                <x-filament::button :color="$kilitli ? 'success' : 'gray'" icon="heroicon-o-share" style="grid-column:1 / -1"
+                    x-on:click="paylas('{{ addslashes($pdfUrl) }}', '{{ addslashes($pdfAd) }}')" x-bind:disabled="paylasiliyor">
+                    <span x-text="paylasiliyor ? 'Hazırlanıyor…' : '{{ $kilitli ? 'PDF’i Paylaş (WhatsApp)' : 'Taslak PDF’i Paylaş' }}'"></span>
+                </x-filament::button>
+            @endif
         </div>
-    @elseif (! $this->firma)
+    @else
         <p style="font-size:.85rem;color:#f59e0b">Raporu kaydetmek ve PDF almak için Genel Bilgiler'den bir firma seçin (fotoğraf analizi firma seçmeden de yapılabilir).</p>
     @endif
 

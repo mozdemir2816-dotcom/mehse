@@ -2,12 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\HizliArsivYukleme;
 use App\Filament\Concerns\SinirliErisim;
 use App\Models\ArsivDosya;
 use App\Models\BelgeSablonu;
 use App\Models\Firma;
 use App\Support\ArsivKurali;
 use App\Support\ArsivUretici;
+use App\Support\ArsivYukleyici;
 use App\Support\BelgeSablonMotoru;
 use App\Support\EtiketliSablon;
 use App\Support\ExcelBellek;
@@ -39,7 +41,6 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use UnitEnum;
-use ZipArchive;
 
 /**
  * Arşiv (eski adı Doküman Yönetimi; 04.10.2026'da kullanıcının FirstİSG
@@ -55,6 +56,7 @@ use ZipArchive;
  */
 class DokumanYonetimi extends Page
 {
+    use HizliArsivYukleme;
     use SinirliErisim;
 
     protected string $view = 'filament.pages.dokuman-yonetimi';
@@ -291,6 +293,16 @@ class DokumanYonetimi extends Page
         $this->kategoriAc($anahtar);
     }
 
+    protected function hizliArsivFirmasi(): ?Firma
+    {
+        return $this->firmaId ? Firma::query()->where('user_id', Filament::auth()->id())->find($this->firmaId) : null;
+    }
+
+    protected function hizliArsivKaydedildi(ArsivDosya $d): void
+    {
+        $this->yenile();
+    }
+
     private function bul(?int $id): ?ArsivDosya
     {
         return $id ? ArsivDosya::query()->whereIn('firma_id', array_keys($this->firmalar))->find($id) : null;
@@ -515,7 +527,7 @@ class DokumanYonetimi extends Page
             return;
         }
 
-        $dosya = $this->yuklenenleriBirlestir((array) ($data['dosyalar'] ?? []), $firma, $varsayilanBaslik, (array) ($data['dosya_adlari'] ?? []));
+        $dosya = ArsivYukleyici::birlestir((array) ($data['dosyalar'] ?? []), $firma, $varsayilanBaslik, (array) ($data['dosya_adlari'] ?? []));
 
         if (! $dosya) {
             Notification::make()->title('Belge yüklenmedi')->danger()->send();
@@ -583,59 +595,6 @@ class DokumanYonetimi extends Page
         Notification::make()->title('Belge üretildi; imza bekliyor.')->body('İmzalandıktan sonra "Dosyaya ekle" ile arşive alın.')->success()->send();
     }
 
-    /**
-     * Yüklenen dosyaları arşiv klasörüne taşır: birden çok görsel (çok sayfalı
-     * belge fotoğrafları) sırasıyla tek PDF'te birleşir; görsel dışı karışık
-     * çoklu seçim tek ZIP olur; tek dosya olduğu gibi kalır.
-     *
-     * @param  array<int, string>  $yollar  public diskteki geçici yollar
-     * @return array{dosya_adi: string, dosya_yolu: string, boyut: int}|null
-     */
-    private function yuklenenleriBirlestir(array $yollar, Firma $firma, string $baslik, array $adlar = []): ?array
-    {
-        $disk = Storage::disk('public');
-        $yollar = array_values(array_filter($yollar, fn ($y) => is_string($y) && $disk->exists($y)));
-
-        if (! $yollar) {
-            return null;
-        }
-
-        $klasor = 'arsiv/'.$firma->id.'/'.now()->format('Y');
-        $ad = Str::slug($baslik ?: 'belge') ?: 'belge';
-        $gorselMi = fn (string $y) => in_array(strtolower(pathinfo($y, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp'], true);
-
-        if (count($yollar) > 1 && collect($yollar)->every($gorselMi)) {
-            $icerik = Pdf::loadView('pdf.arsiv-gorseller', [
-                'baslik' => $baslik,
-                'gorseller' => array_map(fn ($y) => $disk->path($y), $yollar),
-            ])->setPaper('a4')->output();
-            $ad .= '.pdf';
-        } elseif (count($yollar) > 1) {
-            $zipYolu = tempnam(sys_get_temp_dir(), 'arz').'.zip';
-            $zip = new ZipArchive;
-            $zip->open($zipYolu, ZipArchive::CREATE);
-            foreach ($yollar as $i => $y) {
-                $zip->addFile($disk->path($y), ($i + 1).'-'.($adlar[$y] ?? basename($y)));
-            }
-            $zip->close();
-            $icerik = (string) file_get_contents($zipYolu);
-            @unlink($zipYolu);
-            $ad .= '.zip';
-        } else {
-            $ozgun = (string) (($adlar[$yollar[0]] ?? null) ?: basename($yollar[0]));
-            $yol = $klasor.'/'.Str::random(8).'-'.(Str::slug(pathinfo($ozgun, PATHINFO_FILENAME)) ?: 'belge').'.'.strtolower(pathinfo($yollar[0], PATHINFO_EXTENSION));
-            $disk->move($yollar[0], $yol);
-
-            return ['dosya_adi' => $ozgun, 'dosya_yolu' => $yol, 'boyut' => $disk->size($yol)];
-        }
-
-        $yol = $klasor.'/'.Str::random(8).'-'.$ad;
-        $disk->put($yol, $icerik);
-        $disk->delete($yollar);
-
-        return ['dosya_adi' => $ad, 'dosya_yolu' => $yol, 'boyut' => strlen($icerik)];
-    }
-
     /*
     |--------------------------------------------------------------------------
     | Kayıt işlemleri
@@ -675,7 +634,7 @@ class DokumanYonetimi extends Page
 
                 $guncelle = ['asama' => ArsivDosya::DOSYADA, 'baslangic_tarihi' => $data['baslangic_tarihi']];
 
-                if ($yeni = $this->yuklenenleriBirlestir((array) ($data['dosyalar'] ?? []), $d->firma, $d->etiket(), (array) ($data['dosya_adlari'] ?? []))) {
+                if ($yeni = ArsivYukleyici::birlestir((array) ($data['dosyalar'] ?? []), $d->firma, $d->etiket(), (array) ($data['dosya_adlari'] ?? []))) {
                     Storage::disk('public')->delete($d->dosya_yolu);
                     $guncelle += $yeni;
                 }
@@ -725,7 +684,7 @@ class DokumanYonetimi extends Page
 
                 $firma = Firma::find((int) $data['firma_id']);
 
-                if (filled($data['dosya'] ?? null) && ($yeni = $this->yuklenenleriBirlestir([$data['dosya']], $firma, $data['baslik'], [$data['dosya'] => $data['dosya_adi_ozgun'] ?? null]))) {
+                if (filled($data['dosya'] ?? null) && ($yeni = ArsivYukleyici::birlestir([$data['dosya']], $firma, $data['baslik'], [$data['dosya'] => $data['dosya_adi_ozgun'] ?? null]))) {
                     Storage::disk('public')->delete($d->dosya_yolu);
                     $alanlar += $yeni;
                 }
