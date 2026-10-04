@@ -223,6 +223,25 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $this->assertNull(KatipSozlesmeIceAktarici::numarayaGoreBul($this->uzman->id, '999'));
     }
 
+    public function test_formda_tehlike_sinifi_katipten_ezilir_unvan_korunur(): void
+    {
+        $yol = $this->dosya($this->satir('5746639', 'BTM BURSA TOZ BOYA LTD', '22540010111537360161270000', 11, 'Çok Tehlikeli', '25.40.05', '10.02.2026'));
+        KatipSozlesmeIceAktarici::listeKaydet($this->uzman->id, KatipSozlesmeIceAktarici::dosyaOku($yol));
+
+        Livewire::test(ListFirmas::class)
+            ->mountAction('create')
+            ->set('mountedActions.0.data.unvan', 'BTM Toz Boya')
+            ->set('mountedActions.0.data.tehlike_sinifi', 'tehlikeli')
+            ->set('mountedActions.0.data.calisan_sayisi', 5)
+            ->set('mountedActions.0.data.katip_no', '5746639')
+            ->assertActionDataSet([
+                'unvan' => 'BTM Toz Boya',
+                'tehlike_sinifi' => 'cok_tehlikeli',
+                'calisan_sayisi' => 11,
+                'nace_kodu' => '25.40.05',
+            ]);
+    }
+
     public function test_firma_eklerken_sgk_no_yazinca_bilgiler_dolar(): void
     {
         $yol = $this->dosya($this->satir('2283739', 'BERT PLASTİK LTD', '22212010112247420160872000', 2, 'Tehlikeli', '22.12.01', '23.09.2026', onaylayan: 'SERDAR ÖZGÜREL'));

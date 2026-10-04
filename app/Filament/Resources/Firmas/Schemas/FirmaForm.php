@@ -110,7 +110,8 @@ class FirmaForm
 
     /**
      * SGK / KATİP no girilince yüklü İSG-KATİP listesinden firma bilgilerini doldurur.
-     * Elle doldurulmuş alanlar korunur; yalnız boş (veya varsayılan değerdeki) alanlar yazılır.
+     * Tehlike sınıfı, NACE ve çalışan sayısı resmi KATİP bilgisidir, her zaman yazılır;
+     * unvan, il, işveren gibi elle doldurulmuş alanlar korunur (yalnız boşsa yazılır).
      */
     public static function katiptenDoldur(?string $no, Get $get, Set $set): void
     {
@@ -120,13 +121,11 @@ class FirmaForm
             return;
         }
 
-        $varsayilan = ['calisan_sayisi' => [0, '0'], 'tehlike_sinifi' => ['az_tehlikeli']];
+        $resmi = ['tehlike_sinifi', 'nace_kodu', 'calisan_sayisi'];
         $dolan = 0;
 
         foreach (KatipSozlesmeIceAktarici::formVerisi($kayit) as $alan => $deger) {
-            $mevcut = $get($alan);
-
-            if (blank($mevcut) || in_array($mevcut, $varsayilan[$alan] ?? [])) {
+            if (in_array($alan, $resmi, true) || blank($get($alan))) {
                 $set($alan, $deger);
                 $dolan++;
             }
