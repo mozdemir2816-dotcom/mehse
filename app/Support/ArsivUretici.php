@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Firma;
+use App\Models\SahaAnalizi;
 use App\Models\YillikPlan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -26,12 +27,14 @@ final class ArsivUretici
         return [
             'yillik_calisma_plani' => 'Sistem: Yıllık Çalışma Planı (Excel)',
             'yillik_egitim_plani' => 'Sistem: Yıllık Eğitim Planı (Excel)',
-            'yillik_degerlendirme' => 'Sistem: Yıllık Değerlendirme Raporu (Excel)',
+            'yillik_degerlendirme' => 'Sistem: Yıllık Değerlendirme Raporu — İSG Plan ve Değerlendirme Formu (Excel)',
             'risk_degerlendirmesi' => 'Sistem: Son Risk Değerlendirmesi (PDF)',
             'acil_durum_plani' => 'Sistem: Acil Durum Planı (PDF)',
             'acil_durum_ekipleri' => 'Sistem: Acil Durum Ekipleri Listesi (PDF)',
             'tatbikat' => 'Sistem: Son Tatbikat Tutanağı (PDF)',
             'kurul_tutanagi' => 'Sistem: Son Kurul Toplantı Tutanağı (PDF)',
+            'egitim_katilim' => 'Sistem: Son Eğitim Katılım Formu (PDF)',
+            'saha_gozlem' => 'Sistem: Son Tamamlanan Saha Gözlem Raporu (PDF)',
         ];
     }
 
@@ -53,7 +56,7 @@ final class ArsivUretici
             return match ($kategori) {
                 'yillik_calisma_plani' => self::excel(YillikPlanExcelUretici::calismaDoldur(YillikPlan::firmaYilIcin($firma, $yil), $tarihC), "{$yil}-calisma-plani-{$slug}.xlsx"),
                 'yillik_egitim_plani' => self::excel(YillikPlanExcelUretici::egitimDoldur(YillikPlan::firmaYilIcin($firma, $yil), true, $tarihC), "{$yil}-egitim-plani-{$slug}.xlsx"),
-                'yillik_degerlendirme' => self::yanit(YillikDegerlendirmeExcelUretici::excel(YillikPlan::firmaYilIcin($firma, $yil), $tarihC), "{$yil}-yillik-degerlendirme-raporu-{$slug}.xlsx"),
+                'yillik_degerlendirme' => self::excel(YillikDegerlendirmeFormUretici::doldur($firma, $yil, $tarihC), YillikDegerlendirmeFormUretici::dosyaAdi($firma, $yil)),
                 'risk_degerlendirmesi' => ($rd = $firma->riskDegerlendirmeleri()->latest('id')->first())
                     ? self::yanit(RiskDegerlendirmesiUretici::pdf($rd), "risk-degerlendirmesi-{$slug}.pdf")
                     : 'Bu firmanın risk değerlendirmesi yok. Önce Risk Değerlendirmesi modülünde oluşturun.',
@@ -69,6 +72,12 @@ final class ArsivUretici
                 'kurul_tutanagi' => ($k = $firma->kurulToplantilari()->orderByDesc('tarih')->latest('id')->first())
                     ? self::yanit(KurulToplantisiUretici::pdf($k), "kurul-tutanagi-{$slug}.pdf")
                     : 'Bu firmanın kurul toplantısı kaydı yok. Önce İSG Kurulu sayfasında oluşturun.',
+                'egitim_katilim' => ($e = $firma->egitimKatilimlari()->latest('id')->first())
+                    ? self::yanit(EgitimKatilimUretici::pdf($e), "egitim-katilim-formu-{$slug}.pdf")
+                    : 'Bu firmanın eğitim katılım kaydı yok. Önce Eğitim Katılım sayfasında oluşturun.',
+                'saha_gozlem' => ($g = $firma->sahaAnalizleri()->where('durum', SahaAnalizi::TAMAMLANDI)->latest('id')->first())
+                    ? self::yanit(SahaAnaliziUretici::pdf($g), "saha-gozlem-raporu-{$slug}.pdf")
+                    : 'Bu firmanın tamamlanmış saha gözlem raporu yok. Önce Saha Gözlem Raporu sayfasında tamamlayın.',
                 default => 'Bu kategori için sistem şablonu yok.',
             };
         } catch (Throwable $e) {

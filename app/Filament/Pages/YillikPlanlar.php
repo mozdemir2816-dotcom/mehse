@@ -2,25 +2,31 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
+use App\Models\IseOzguEgitimKonusu;
 use App\Models\YillikPlan as YillikPlanModel;
+use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\YillikDegerlendirmeExcelUretici;
+use App\Support\YillikDegerlendirmeFormUretici;
 use App\Support\YillikDegerlendirmeVerisi;
 use App\Support\YillikPlanExcelIceAktarici;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\YillikPlanExcelUretici;
-use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\YillikPlanSablonu;
 use App\Support\YillikPlanUretici;
-use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Throwable;
@@ -439,7 +445,7 @@ abstract class YillikPlanlar extends Page
             ->modalDescription(fn () => $this->firma
                 ? 'Firmanın '.(filled($this->firma->is_kalemleri) ? 'iş kalemlerine' : 'NACE koduna ('.($this->firma->nace_kodu ?: 'girilmemiş').')').' göre önerilenler ★ ile işaretli. Seçilen konular planın 4. bölümüne ve oradan Eğitim Katılım formunun işyerine özgü bölümüne girer.'
                 : null)
-            ->modalWidth(\Filament\Support\Enums\Width::FourExtraLarge)
+            ->modalWidth(Width::FourExtraLarge)
             ->modalSubmitActionLabel('Plana uygula')
             ->fillForm(function (): array {
                 $mevcut = $this->plandakiIseOzguAnahtarlari();
@@ -452,12 +458,12 @@ abstract class YillikPlanlar extends Page
                     ->sortBy(fn ($k, $a) => [in_array($a, $onerilen, true) ? 0 : 1, $k['kaynak'], $k['ad']]);
 
                 return [
-                    \Filament\Forms\Components\CheckboxList::make('secilenler')
+                    CheckboxList::make('secilenler')
                         ->label('Konular')
                         ->options($tumu->map(fn ($k, $a) => (in_array($a, $onerilen, true) ? '★ ' : '').$k['ad'])->all())
                         ->descriptions($tumu->map(fn ($k) => $k['kaynak']
                             .($k['nace'] ? ' · NACE '.IseOzguEgitimKutuphanesi::naceGoster($k['nace']) : '')
-                            .' — '.\Illuminate\Support\Str::limit((string) $k['hedef'], 90))->all())
+                            .' — '.Str::limit((string) $k['hedef'], 90))->all())
                         ->searchable()
                         ->bulkToggleable()
                         ->columns(2),
@@ -534,9 +540,9 @@ abstract class YillikPlanlar extends Page
                     'is_kalemleri' => array_values($this->firma?->is_kalemleri ?? []),
                 ];
             })
-            ->schema(fn () => \App\Filament\Pages\IseOzguEgitimKonulari::konuSemasi())
+            ->schema(fn () => IseOzguEgitimKonulari::konuSemasi())
             ->action(function (array $data, array $arguments): void {
-                $k = \App\Models\IseOzguEgitimKonusu::create([
+                $k = IseOzguEgitimKonusu::create([
                     'user_id' => Filament::auth()->id(),
                     'ad' => $data['ad'], 'hedef' => $data['hedef'] ?? null, 'egitici' => $data['egitici'] ?? null,
                     'nace_onekleri' => IseOzguEgitimKutuphanesi::naceHazirla($data['nace'] ?? null),
@@ -694,12 +700,25 @@ abstract class YillikPlanlar extends Page
                 ->label('Çıktı Al (Excel)')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->tooltip('Kendi şablonunuzla (İSG-YDR-01, 7 sayfa) Excel olarak iner')
+                ->tooltip('İSG Plan ve Değerlendirme Formu (tek sayfa) ya da İSG-YDR-01 (7 sayfa) Excel olarak iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
                 ->modalHeading('Yıllık Değerlendirme Raporu — Çıktı Al')
                 ->modalSubmitActionLabel('İndir')
-                ->schema([static::hazirlanmaTarihiAlani()->label('Rapor Tarihi')])
-                ->action(fn (array $data) => YillikDegerlendirmeExcelUretici::excel($this->plan(), static::secilenTarih($data))),
+                ->schema([
+                    Radio::make('bicim')
+                        ->label('Biçim')
+                        ->options([
+                            'form' => 'İSG Plan ve Değerlendirme Formu (tek sayfa, 19 çalışma satırı)',
+                            'ydr' => 'İSG-YDR-01 (7 sayfa, 36 satır — bu sayfadaki satırlarla)',
+                        ])
+                        ->default('form')
+                        ->required(),
+                    static::hazirlanmaTarihiAlani()->label('Rapor Tarihi'),
+                    ImzaSecenegi::alan(),
+                ])
+                ->action(fn (array $data) => ($data['bicim'] ?? 'form') === 'ydr'
+                    ? YillikDegerlendirmeExcelUretici::excel($this->plan(), static::secilenTarih($data))
+                    : YillikDegerlendirmeFormUretici::excel($this->firma, $this->yil, static::secilenTarih($data), ImzaSecenegi::secili($data))),
 
             Action::make('degerlendirmeSistemdenDoldur')
                 ->label('Sistemden Yenile')
@@ -710,7 +729,7 @@ abstract class YillikPlanlar extends Page
                 ->modalDescription(fn () => 'Dönem: '.($this->firma ? YillikDegerlendirmeVerisi::donemMetni($this->firma, $this->yil) : '—')
                     .' (atandığınız tarih → yıl sonu). Risk değerlendirmesi, muayeneler, sağlık gözetimi, eğitimler, acil durum, tatbikat, ekipman kontrolleri, saha denetimi, DÖF, olaylar, KKD, kimyasallar, kurul ve görevlendirme kayıtlarından Tarih / Dönem ve Sonuç alanları yazılır. Kaydı olmayan satırlar şablon metniyle kalır.')
                 ->schema([
-                    \Filament\Forms\Components\Toggle::make('ustune_yaz')->label('Elle düzenlediğim satırların da üzerine yaz')->default(false),
+                    Toggle::make('ustune_yaz')->label('Elle düzenlediğim satırların da üzerine yaz')->default(false),
                 ])
                 ->modalSubmitActionLabel('Yenile')
                 ->action(function (array $data): void {

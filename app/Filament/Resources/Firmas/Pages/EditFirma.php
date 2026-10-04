@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Firmas\Pages;
 
+use App\Filament\Pages\DokumanYonetimi;
+use App\Filament\Pages\IsyeriDurumMerkezi;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
 use App\Filament\Support\ImzaSecenegi;
@@ -25,7 +27,13 @@ class EditFirma extends EditRecord
                 ->label('Durum Merkezi')
                 ->icon('heroicon-o-building-office-2')
                 ->color('gray')
-                ->url(fn (Firma $record) => \App\Filament\Pages\IsyeriDurumMerkezi::getUrl(['firma' => $record->id])),
+                ->url(fn (Firma $record) => IsyeriDurumMerkezi::getUrl(['firma' => $record->id])),
+
+            Action::make('arsivDosyasi')
+                ->label('Arşiv Dosyası')
+                ->icon('heroicon-o-folder-open')
+                ->color('gray')
+                ->url(fn (Firma $record) => DokumanYonetimi::getUrl(['firma' => $record->id])),
 
             IsyeriGirisAksiyonu::make(),
 

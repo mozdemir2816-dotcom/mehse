@@ -8,12 +8,15 @@ use App\Models\BelgeSablonu;
 use App\Models\Bildirim;
 use App\Models\Calisan;
 use App\Models\Firma;
+use App\Models\Talimat;
 use App\Models\User;
 use App\Support\ArsivKurali;
+use App\Support\ArsivUretici;
 use App\Support\BelgeSablonMotoru;
 use App\Support\BildirimTarayici;
 use App\Support\IsyeriDurumu;
 use App\Support\KullaniciAyarlari;
+use App\Support\YillikDegerlendirmeFormUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -67,12 +70,13 @@ class ArsivSayfasiTest extends TestCase
         ]);
     }
 
-    private function durum(string $kategori): array
+    /** Saf kural testi: varsayılan takip dışı listesi uygulanmaz ($haric = null → []). */
+    private function durum(string $kategori, ?array $haric = []): array
     {
         $kayitlar = ArsivDosya::where('firma_id', $this->firma->id)->get()
             ->filter(fn ($d) => ArsivKurali::kategori($d->kategori)['anahtar'] === $kategori);
 
-        return ArsivKurali::durum($this->firma, $kategori, $kayitlar, null, KullaniciAyarlari::arsivHaric());
+        return ArsivKurali::durum($this->firma, $kategori, $kayitlar, null, $haric ?? KullaniciAyarlari::arsivHaric());
     }
 
     /*
@@ -143,7 +147,7 @@ class ArsivSayfasiTest extends TestCase
         $this->assertSame('eksik', $this->durum('igu_sozlesmesi')['durum']);
 
         KullaniciAyarlari::kaydet($this->uzman, ['arsiv' => ['yaklasan_gun' => 30, 'haric' => ['igu_sozlesmesi']]]);
-        $this->assertSame('takipsiz', $this->durum('igu_sozlesmesi')['durum']);
+        $this->assertSame('takipsiz', $this->durum('igu_sozlesmesi', null)['durum']);
     }
 
     public function test_kayit_kategorisinde_elle_girilen_bitis_takip_edilir(): void
@@ -163,15 +167,16 @@ class ArsivSayfasiTest extends TestCase
         $this->kayit('yillik_calisma_plani', ['yil' => 2026, 'baslik' => '2026 Çalışma Planı']);
 
         $sayfa = Livewire::test(DokumanYonetimi::class)
-            ->assertSee('Sözleşmeler')
-            ->assertSee('İSG Uzmanı Sözleşmesi')
-            ->assertSee('Risk ve Acil Durum')
+            ->assertSee('OSGB Arşiv Evrakları')
+            ->assertSee('İş Güvenliği Sözleşmesi')
+            ->assertSee('Diğer Belgeler')
             ->assertSee('süresi geçmiş')
             ->assertSee('1 firmada çalışan listesi eksik');
 
         $kartlar = $sayfa->instance()->kartlar;
         $this->assertSame(1, $kartlar['yillik_calisma_plani']['kayit']);
-        $this->assertSame(1, $kartlar['tatbikat']['gecikmis']);
+        $this->assertSame(1, $kartlar['yillik_degerlendirme']['gecikmis']);
+        $this->assertSame(0, $kartlar['tatbikat']['gecikmis']);   // OSGB grubu dışı → varsayılan takip dışı
         $this->assertSame(1, $kartlar['igu_sozlesmesi']['eksik']);
 
         Calisan::factory()->for($this->firma)->create(['aktif' => true]);
@@ -184,9 +189,9 @@ class ArsivSayfasiTest extends TestCase
         $sayfa->set('sekme', 'uyum')->assertSee('Ahmet Yapı')
             ->set('sekme', 'liste')->assertSee('2026 Çalışma Planı');
 
-        $sayfa->call('firmaKategoriAc', $this->firma->id, 'tatbikat')
-            ->assertSet('kategoriAnahtari', 'tatbikat')
-            ->assertSee('Tatbikat en az yılda bir yapılır');
+        $sayfa->call('firmaKategoriAc', $this->firma->id, 'egitim_katilim')
+            ->assertSet('kategoriAnahtari', 'egitim_katilim')
+            ->assertSee('Temel İSG eğitimi çok tehlikelide yılda bir');
     }
 
     /*
@@ -212,7 +217,7 @@ class ArsivSayfasiTest extends TestCase
         ])->assertHasNoActionErrors();
 
         $d = ArsivDosya::sole();
-        $this->assertSame('İSG Uzmanı Sözleşmesi — Ayşe Uzman', $d->baslik);
+        $this->assertSame('İş Güvenliği Sözleşmesi — Ayşe Uzman', $d->baslik);
         $this->assertSame('sozlesme.pdf', $d->dosya_adi);   // özgün ad korunur
         $this->assertSame(ArsivDosya::DOSYADA, $d->asama);
         $this->assertSame('yukleme', $d->kaynak);
@@ -452,7 +457,8 @@ class ArsivSayfasiTest extends TestCase
         $this->kayit('diger', ['gecerlilik_sonu' => '2026-10-14']);                             // kayıt: yaklaşıyor
         $this->kayit('diger', ['gecerlilik_sonu' => '2025-01-01', 'aktif' => false]);          // pasif sayılmaz
         $this->kayit('yillik_calisma_plani', ['yil' => 2025]);                                  // geçen yılın planı "doldu" alarmı vermez
-        $this->kayit('tatbikat', ['baslangic_tarihi' => '2025-08-01']);                         // periyodik: gecikti
+        $this->kayit('tespit_oneri', ['baslangic_tarihi' => '2026-08-01']);                    // periyodik (aylık): gecikti
+        $this->kayit('tatbikat', ['baslangic_tarihi' => '2025-08-01']);                         // OSGB grubu dışı: varsayılan takip dışı
         $this->kayit('talimat', ['gecerlilik_sonu' => '2026-01-01', 'asama' => ArsivDosya::IMZA_BEKLIYOR]);   // imza bekleyen sayılmaz
 
         BildirimTarayici::tara($this->uzman);
@@ -462,12 +468,128 @@ class ArsivSayfasiTest extends TestCase
         $this->assertSame('kritik', $a[$f.'dokuman:gecti']);
         $this->assertSame('uyari', $a[$f.'dokuman:yakin']);
         $this->assertStringContainsString('1 doküman', Bildirim::where('anahtar', $f.'dokuman:gecti')->value('aciklama'));
-        $this->assertSame('kritik', $a[$f.'arsiv:tatbikat:gecikmis']);
+        $this->assertSame('kritik', $a[$f.'arsiv:tespit_oneri:gecikmis']);
+        $this->assertArrayNotHasKey($f.'arsiv:tatbikat:gecikmis', $a->all());
         $this->assertArrayNotHasKey($f.'arsiv:yillik_calisma_plani:eksik', $a->all());
         $this->assertArrayNotHasKey($f.'arsiv:igu_sozlesmesi:eksik', $a->all());
 
         $surec = collect(IsyeriDurumu::surecler($this->firma))->firstWhere('surec', 'Dokümanlar (İSG dosyası)');
         $this->assertStringContainsString('Arşiv: 2 aktif doküman, 1 süresi geçmiş', $surec['sonuc']);
         $this->assertCount(2, IsyeriDurumu::takvim($this->firma)->where('kategori', 'Doküman'));
+    }
+
+    /*
+    | İki grup: OSGB arşiv evrakları (varsayılan takip) + diğer belgeler
+    */
+
+    public function test_varsayilan_takip_yalniz_osgb_arsiv_evraklari(): void
+    {
+        $osgb = collect(config('arsiv.kategoriler'))->where('grup', 'osgb')->keys()->all();
+        $this->assertSame([
+            'igu_sozlesmesi', 'yillik_calisma_plani', 'yillik_egitim_plani', 'yillik_degerlendirme', 'egitim_katilim',
+            'risk_degerlendirmesi', 'tespit_oneri', 'kurul_tutanagi', 'saha_gozlem',
+        ], $osgb);
+
+        $haric = KullaniciAyarlari::arsivHaric();
+        $this->assertContains('tatbikat', $haric);
+        $this->assertContains('hekim_sozlesmesi', $haric);
+        $this->assertSame([], array_intersect($osgb, $haric));
+        $this->assertSame('takipsiz', $this->durum('tatbikat', null)['durum']);
+
+        // Kullanıcı takip listesini kaydedince (boş dahi olsa) varsayılan değil kayıtlı liste geçerli.
+        KullaniciAyarlari::kaydet($this->uzman, ['arsiv' => ['yaklasan_gun' => 30, 'haric' => []]]);
+        $this->assertSame([], KullaniciAyarlari::arsivHaric($this->uzman));
+        $this->assertSame('gecikmis', $this->durum('tatbikat', null)['durum']);
+    }
+
+    public function test_firma_secilince_osgb_evraklari_kontrol_listesi_ve_yukle(): void
+    {
+        $this->kayit('igu_sozlesmesi', ['baslangic_tarihi' => '2026-01-05', 'baslik' => 'Sözleşme']);
+
+        $sayfa = Livewire::test(DokumanYonetimi::class)->set('firmaId', $this->firma->id)
+            ->assertSee('OSGB Arşiv Evrakları')
+            ->assertSee('Firmaya imzalatılmış evrakların')
+            ->assertSee('Eğitim Katılım Formları')
+            ->assertSee('Saha Gözlem Raporları')
+            ->assertSee('1 / 8 güncel')            // 9 evrak; kurul 50'den az çalışanda gerekmez
+            ->assertSee('Yükle');
+
+        $secenekler = $sayfa->instance()->kategoriSecenekleri();
+        $this->assertSame(['OSGB Arşiv Evrakları', 'Diğer Belgeler'], array_keys($secenekler));
+        $this->assertSame('İş Güvenliği Sözleşmesi', $secenekler['OSGB Arşiv Evrakları']['igu_sozlesmesi']);
+
+        $sayfa->callAction('yeniKayit', [
+            'yontem' => 'yukle', 'firma_id' => $this->firma->id, 'kategori' => 'saha_gozlem',
+            'dosyalar' => [UploadedFile::fake()->create('saha-imzali.pdf', 30, 'application/pdf')],
+            'baslangic_tarihi' => '2026-10-02',
+        ], ['kategori' => 'saha_gozlem', 'firma' => $this->firma->id, 'yontem' => 'yukle'])->assertHasNoActionErrors();
+
+        $this->assertSame('tamam', $sayfa->instance()->matris[$this->firma->id]['saha_gozlem']['durum']);
+        $sayfa->assertSee('2 / 8 güncel');
+    }
+
+    public function test_aylik_periyotta_yaklasan_esigi_kisalir(): void
+    {
+        $d = $this->kayit('tespit_oneri', ['baslangic_tarihi' => '2026-09-20']);   // son 20.10 → 16 gün
+        $this->assertSame('tamam', $this->durum('tespit_oneri')['durum']);          // 30 günlük eşik uygulanmaz (aylık → 10 gün)
+
+        $d->update(['baslangic_tarihi' => '2026-09-10']);                            // son 10.10 → 6 gün
+        $this->assertSame('yaklasan', $this->durum('tespit_oneri')['durum']);
+
+        $this->assertSame('muaf', $this->durum('kurul_tutanagi')['durum']);
+        $this->firma->update(['calisan_sayisi' => 60]);
+        $this->assertSame('eksik', $this->durum('kurul_tutanagi')['durum']);
+    }
+
+    public function test_yillik_degerlendirme_formu_sablondan_doldurulur_gorevli_adi_yok(): void
+    {
+        $this->firma->update(['sgk_sicil_no' => '1234567', 'telefon' => '0224 000 00 00', 'nace_aciklama' => 'Bina inşaatı', 'nace_kodu' => null]);
+        Calisan::factory()->for($this->firma)->count(3)->create(['aktif' => true, 'cinsiyet' => 'erkek', 'dogum_tarihi' => '1990-01-01']);
+        Talimat::create(['firma_id' => $this->firma->id, 'baslik' => 'Forklift', 'created_at' => '2025-05-01 10:00:00']);
+
+        $kitap = YillikDegerlendirmeFormUretici::doldur($this->firma->fresh(), 2025, Carbon::parse('2026-01-15'));
+        $s = $kitap->getActiveSheet();
+
+        $this->assertSame('2025 YILI İSG DEĞERLENDİRME RAPORU', $s->getCell('C1')->getValue());
+        $this->assertSame('15.01.2026', $s->getCell('N1')->getValue());
+        $this->assertSame('AHMET YAPI', $s->getCell('C6')->getValue());
+        $this->assertSame('1234567', $s->getCell('I7')->getValue());
+        $this->assertSame('ÇOK TEHLİKELİ', $s->getCell('I8')->getValue());
+        $this->assertSame('BİNA İNŞAATI', $s->getCell('C8')->getValue());
+        $this->assertSame(3, $s->getCell('E11')->getValue());
+        $this->assertSame(3, $s->getCell('O11')->getValue());
+        $this->assertSame('İSG KATİP SÖZLEŞME GİRİŞİ (UZMAN+HEKİM+DİĞER SAĞLIK PERSONELİ)', $s->getCell('B16')->getValue());
+        $this->assertSame('01.05.2025', $s->getCell('D24')->getValue());
+        $this->assertSame('1 TALİMAT OLUŞTURULARAK PERSONELE EĞİTİM OLARAK VERİLDİ.', $s->getCell('K24')->getValue());
+        $this->assertSame('ÇALIŞAN TEMSİLCİSİ SEÇİMİ YAPILDI.', $s->getCell('K19')->getValue());   // örnek kişi adı yok
+        // Görevli (İGU / hekim / işveren) adı basılmaz.
+        foreach (['C7', 'E12', 'H12', 'B36', 'D36', 'J36'] as $h) {
+            $this->assertEmpty($s->getCell($h)->getValue(), $h.' boş olmalı');
+        }
+        $this->assertStringNotContainsString('Mehmet Uzman', json_encode($s->toArray(), JSON_UNESCAPED_UNICODE));
+
+        // Arşivde "Şablondan Üret → Sistem" de bu formu kullanır.
+        Livewire::test(DokumanYonetimi::class)->callAction('yeniKayit', [
+            'yontem' => 'sablon', 'firma_id' => $this->firma->id, 'kategori' => 'yillik_degerlendirme', 'yil' => 2025,
+            'baslangic_tarihi' => '2026-01-15', 'sablon' => 'sistem',
+        ])->assertHasNoActionErrors();
+        $d = ArsivDosya::sole();
+        $this->assertSame('2025-yillik-degerlendirme-raporu-ahmet-yapi.xlsx', $d->dosya_adi);
+        $gecici = tempnam(sys_get_temp_dir(), 'tst').'.xlsx';
+        file_put_contents($gecici, Storage::disk('public')->get($d->dosya_yolu));
+        $this->assertSame('2025 YILI İSG DEĞERLENDİRME RAPORU', IOFactory::load($gecici)->getActiveSheet()->getCell('C1')->getValue());
+        @unlink($gecici);
+    }
+
+    public function test_egitim_katilim_ve_saha_gozlem_sistem_sablonu_kayit_yoksa_uyarir(): void
+    {
+        $sayfa = Livewire::test(DokumanYonetimi::class);
+        $this->assertArrayHasKey('sistem', $sayfa->instance()->sablonSecenekleri('egitim_katilim'));
+        $this->assertArrayHasKey('sistem', $sayfa->instance()->sablonSecenekleri('saha_gozlem'));
+
+        foreach (['egitim_katilim', 'saha_gozlem'] as $k) {
+            $sonuc = ArsivUretici::uret($k, $this->firma, null, '2026-10-03');
+            $this->assertIsString($sonuc);
+        }
     }
 }

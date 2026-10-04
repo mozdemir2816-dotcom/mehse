@@ -254,6 +254,14 @@ class DokumanYonetimi extends Page
             ->values();
     }
 
+    /** @return array<string, array<string, string>> kategori seçimi, gruplu (OSGB arşiv evrakları önce) */
+    public function kategoriSecenekleri(): array
+    {
+        return collect(config('arsiv.gruplar'))
+            ->mapWithKeys(fn ($ad, $grup) => [$ad => collect(config('arsiv.kategoriler'))->where('grup', $grup)->map(fn ($k) => $k['ad'])->all()])
+            ->all();
+    }
+
     public function updated(string $alan): void
     {
         if (in_array($alan, ['firmaId', 'kategori', 'durum', 'arama'], true)) {
@@ -398,7 +406,7 @@ class DokumanYonetimi extends Page
                     Select::make('firma_id')->label('Firma')->options($this->firmalar)->required()->searchable()->live()
                         ->helperText('Kayıt bu işyerinin arşivine eklenecek.'),
                     Select::make('kategori')->label('Kategori')->required()->live()
-                        ->options(collect(config('arsiv.kategoriler'))->map(fn ($k) => $k['ad'])->all()),
+                        ->options($this->kategoriSecenekleri()),
                 ]),
                 FileUpload::make('dosyalar')->storeFileNamesIn('dosya_adlari')
                     ->label('Belge')
@@ -686,7 +694,7 @@ class DokumanYonetimi extends Page
                 Grid::make(2)->schema([
                     Select::make('firma_id')->label('Firma')->options($this->firmalar)->required()->searchable()->live(),
                     Select::make('kategori')->label('Kategori')->required()->live()
-                        ->options(collect(config('arsiv.kategoriler'))->map(fn ($k) => $k['ad'])->all()),
+                        ->options($this->kategoriSecenekleri()),
                     TextInput::make('baslik')->label('Başlık')->required()->maxLength(160),
                     TextInput::make('versiyon')->label('Versiyon')->maxLength(20),
                 ]),
@@ -775,7 +783,7 @@ class DokumanYonetimi extends Page
                 Grid::make(2)->schema([
                     TextInput::make('ad')->label('Şablon adı')->required()->maxLength(120),
                     Select::make('kategori')->label('Kategori')->placeholder('Tüm kategoriler')
-                        ->options(collect(config('arsiv.kategoriler'))->map(fn ($k) => $k['ad'])->all()),
+                        ->options($this->kategoriSecenekleri()),
                 ]),
                 FileUpload::make('dosya')->label('Şablon dosyası (.docx / .xlsx)')->required()
                     ->disk('public')->directory('belge-sablonlari')->preserveFilenames()

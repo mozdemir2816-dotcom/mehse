@@ -5,9 +5,14 @@
 | Arşiv — kategori kuralları (Doküman Yönetimi → Arşiv, 04.10.2026)
 |--------------------------------------------------------------------------
 | Referans: kullanıcının "FirstİSG" Arşiv ekran görüntüleri (Downloads/Yeni
-| klasör). Her kategori bir "kural" taşır; ArsivKurali bu kurala göre
-| firma başına beklenen belgeyi, geçerlilik sonunu ve durumu (tamam /
-| eksik / yaklaşan / gecikmiş) hesaplar.
+| klasör). İki grup (kullanıcı kararı 04.10.2026):
+|   osgb  — OSGB'de her firma için arşivlenmesi gereken, firmaya imzalatılmış
+|           evrakların soft kopyaları (fiziksel arşivin sistemdeki karşılığı);
+|           varsayılan olarak yalnız bunlar takip edilir.
+|   diger — diğer belgeler (Hatırlatma Ayarları'ndan takibe alınabilir).
+| Her kategori bir "kural" taşır; ArsivKurali bu kurala göre firma başına
+| beklenen belgeyi, geçerlilik sonunu ve durumu (tamam / eksik / yaklaşan /
+| gecikmiş) hesaplar.
 |
 | kural:
 |   suresiz      — bitiş tarihi yok; yenisi yüklenene kadar yürürlükte.
@@ -19,134 +24,143 @@
 | yoksa: belge hiç yokken durum ('eksik' | 'gecikmis').
 | kosul: 'elli_calisan' — yalnız 50+ çalışanlı firmalarda beklenir.
 | alanlar: kisi (etiket), tarih (etiket), yil (etiket), bitis (manuel bitiş tarihi).
-| uretici: ArsivUretici'deki sistem üreticisi anahtarı.
+| Sistem şablonları: ArsivUretici::sablonlar() (kategori anahtarıyla).
 */
 
 return [
 
     'gruplar' => [
-        'sozlesmeler' => 'Sözleşmeler',
-        'planlar' => 'Planlar ve Raporlar',
-        'kurul' => 'Kurul ve Temsil',
-        'risk' => 'Risk ve Acil Durum',
-        'olcum' => 'Ölçüm ve Kontrol',
-        'egitim' => 'Eğitim ve Sağlık',
-        'olay' => 'Olay ve Denetim',
+        'osgb' => 'OSGB Arşiv Evrakları',
         'diger' => 'Diğer Belgeler',
     ],
 
-    'kategoriler' => [
-        'igu_sozlesmesi' => [
-            'ad' => 'İSG Uzmanı Sözleşmesi', 'grup' => 'sozlesmeler', 'ikon' => 'heroicon-o-pencil-square',
-            'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Sözleşmeler',
-            'alanlar' => ['kisi' => 'Uzman Adı', 'tarih' => 'Sözleşme Tarihi'],
-            'kural_metni' => 'Sözleşmelerin bitiş tarihi yoktur; yenisi yüklenene kadar yürürlükte kalırlar. Bu yüzden bu kategoride yenileme uyarısı çıkmaz.',
-        ],
-        'hekim_sozlesmesi' => [
-            'ad' => 'İşyeri Hekimi Sözleşmesi', 'grup' => 'sozlesmeler', 'ikon' => 'heroicon-o-briefcase',
-            'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Sözleşmeler',
-            'alanlar' => ['kisi' => 'Hekim Adı', 'tarih' => 'Sözleşme Tarihi'],
-            'kural_metni' => 'Sözleşmelerin bitiş tarihi yoktur; yenisi yüklenene kadar yürürlükte kalırlar. Bu yüzden bu kategoride yenileme uyarısı çıkmaz.',
-        ],
-        'sozlesme' => [
-            'ad' => 'Diğer Sözleşme / Görevlendirme', 'grup' => 'sozlesmeler', 'ikon' => 'heroicon-o-document-text',
-            'kural' => 'kayit', 'alanlar' => ['tarih' => 'Belge Tarihi', 'bitis' => 'Bitiş Tarihi'],
-            'kural_metni' => 'Görevlendirme yazıları ve diğer sözleşmeler arşivlenir; bitiş tarihi girilirse süresi takip edilir.',
-        ],
+    // Varsayılan olarak takip edilen grup (Hatırlatma Ayarları'nda değiştirilebilir).
+    'takip_grubu' => 'osgb',
 
+    'kategoriler' => [
+
+        /*
+        | OSGB arşiv evrakları — kullanıcının sırasıyla
+        */
+        'igu_sozlesmesi' => [
+            'ad' => 'İş Güvenliği Sözleşmesi', 'grup' => 'osgb', 'ikon' => 'heroicon-o-pencil-square',
+            'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Sözleşme',
+            'alanlar' => ['kisi' => 'Uzman Adı', 'tarih' => 'Sözleşme Tarihi'],
+            'kural_metni' => 'Sözleşmelerin bitiş tarihi yoktur; yenisi yüklenene kadar yürürlükte kalırlar. Firmaya imzalatılmış sözleşmenin taranmış / fotoğraflanmış halini yükleyin.',
+        ],
         'yillik_calisma_plani' => [
-            'ad' => 'Yıllık Çalışma Planı', 'grup' => 'planlar', 'ikon' => 'heroicon-o-calendar-days',
-            'kural' => 'yillik_plan', 'yoksa' => 'eksik', 'uretici' => 'yillik_calisma_plani',
+            'ad' => 'Yıllık Çalışma Planı', 'grup' => 'osgb', 'ikon' => 'heroicon-o-calendar-days',
+            'kural' => 'yillik_plan', 'yoksa' => 'eksik',
             'alanlar' => ['yil' => 'Plan Yılı', 'tarih' => 'Hazırlama Tarihi'],
-            'kural_metni' => "Planlar hangi tarihte hazırlanırsa hazırlansın ait oldukları yılın 31 Aralık'ında sona erer. Gelecek yılın planı şimdiden yüklenebilir; yükleme ekranındaki yıl seçimi belgenin hangi yıla ait olduğunu belirler. Bu yılın planı yoksa eksik görünür.",
+            'kural_metni' => "Planlar hangi tarihte hazırlanırsa hazırlansın ait oldukları yılın 31 Aralık'ında sona erer. Gelecek yılın planı şimdiden yüklenebilir; yükleme ekranındaki yıl seçimi belgenin hangi yıla ait olduğunu belirler. Bu yılın imzalı planı yoksa eksik görünür.",
         ],
         'yillik_egitim_plani' => [
-            'ad' => 'Yıllık Eğitim Planı', 'grup' => 'planlar', 'ikon' => 'heroicon-o-calendar',
-            'kural' => 'yillik_plan', 'yoksa' => 'eksik', 'uretici' => 'yillik_egitim_plani',
+            'ad' => 'Yıllık Eğitim Planı', 'grup' => 'osgb', 'ikon' => 'heroicon-o-calendar',
+            'kural' => 'yillik_plan', 'yoksa' => 'eksik',
             'alanlar' => ['yil' => 'Plan Yılı', 'tarih' => 'Hazırlama Tarihi'],
-            'kural_metni' => "Planlar hangi tarihte hazırlanırsa hazırlansın ait oldukları yılın 31 Aralık'ında sona erer. Gelecek yılın planı şimdiden yüklenebilir; yükleme ekranındaki yıl seçimi belgenin hangi yıla ait olduğunu belirler. Bu yılın planı yoksa eksik görünür.",
+            'kural_metni' => "Planlar hangi tarihte hazırlanırsa hazırlansın ait oldukları yılın 31 Aralık'ında sona erer. Gelecek yılın planı şimdiden yüklenebilir; yükleme ekranındaki yıl seçimi belgenin hangi yıla ait olduğunu belirler. Bu yılın imzalı planı yoksa eksik görünür.",
         ],
         'yillik_degerlendirme' => [
-            'ad' => 'Yıllık Değerlendirme Raporu', 'grup' => 'planlar', 'ikon' => 'heroicon-o-document-chart-bar',
-            'kural' => 'yillik_rapor', 'yoksa' => 'gecikmis', 'uretici' => 'yillik_degerlendirme',
+            'ad' => 'Yıllık Değerlendirme Raporu', 'grup' => 'osgb', 'ikon' => 'heroicon-o-document-chart-bar',
+            'kural' => 'yillik_rapor', 'yoksa' => 'gecikmis',
             'alanlar' => ['yil' => 'Rapor Yılı', 'tarih' => 'Hazırlama Tarihi'],
             'kural_metni' => "Rapor geçen yılın faaliyetlerini anlatır ve 31 Ocak'a kadar hazırlanır. Hazırlandıktan sonra süresi dolmaz; her yıl için ayrı bir rapor beklenir.",
         ],
+        'egitim_katilim' => [
+            'ad' => 'Eğitim Katılım Formları', 'grup' => 'osgb', 'ikon' => 'heroicon-o-clipboard-document-check',
+            'kural' => 'periyodik', 'ay' => ['cok_tehlikeli' => 12, 'tehlikeli' => 24, 'az_tehlikeli' => 36], 'yoksa' => 'eksik',
+            'alanlar' => ['tarih' => 'Eğitim Tarihi'],
+            'kural_metni' => 'Temel İSG eğitimi çok tehlikelide yılda bir, tehlikelide iki yılda bir, az tehlikelide üç yılda bir tekrarlanır. Son imzalı katılım formunun tarihinden itibaren bir sonraki eğitim beklenir; her eğitimin formunu ayrı yükleyin.',
+        ],
+        'risk_degerlendirmesi' => [
+            'ad' => 'Risk Analizi', 'grup' => 'osgb', 'ikon' => 'heroicon-o-shield-exclamation',
+            'kural' => 'periyodik', 'ay' => ['cok_tehlikeli' => 24, 'tehlikeli' => 48, 'az_tehlikeli' => 72], 'yoksa' => 'eksik',
+            'alanlar' => ['tarih' => 'Hazırlama / Revizyon Tarihi'],
+            'kural_metni' => 'Risk değerlendirmesi çok tehlikelide 2, tehlikelide 4, az tehlikelide 6 yılda bir yenilenir; işyerinde değişiklik olduğunda daha önce de yenilenmelidir.',
+        ],
+        'tespit_oneri' => [
+            'ad' => 'Tespit ve Öneri Defteri', 'grup' => 'osgb', 'ikon' => 'heroicon-o-book-open',
+            'kural' => 'periyodik', 'ay' => 1, 'yoksa' => 'eksik',
+            'alanlar' => ['tarih' => 'Defter Kayıt Tarihi'],
+            'kural_metni' => 'Onaylı defterin imzalı sayfaları her ziyaretten sonra yüklenir; son yüklemenin üzerinden bir ay geçince yenisi beklenir.',
+        ],
+        'kurul_tutanagi' => [
+            'ad' => 'İSG Kurulu Kayıtları', 'grup' => 'osgb', 'ikon' => 'heroicon-o-users',
+            'kural' => 'periyodik', 'ay' => ['cok_tehlikeli' => 1, 'tehlikeli' => 2, 'az_tehlikeli' => 3], 'yoksa' => 'eksik',
+            'kosul' => 'elli_calisan',
+            'alanlar' => ['tarih' => 'Toplantı Tarihi'],
+            'kural_metni' => 'Elli ve daha fazla çalışanı olan işyerlerinde kurul; çok tehlikelide ayda bir, tehlikelide iki ayda bir, az tehlikelide üç ayda bir toplanır. Son tutanağın tarihinden itibaren bir sonraki toplantı beklenir. 50\'den az çalışanı olan firmada takip edilmez.',
+        ],
+        'saha_gozlem' => [
+            'ad' => 'Saha Gözlem Raporları', 'grup' => 'osgb', 'ikon' => 'heroicon-o-camera',
+            'kural' => 'periyodik', 'ay' => 1, 'yoksa' => 'eksik',
+            'alanlar' => ['tarih' => 'Rapor Tarihi'],
+            'kural_metni' => 'İmzalı saha gözlem raporları her ziyaretten sonra yüklenir; son raporun üzerinden bir ay geçince yenisi beklenir.',
+        ],
 
+        /*
+        | Diğer belgeler
+        */
+        'hekim_sozlesmesi' => [
+            'ad' => 'İşyeri Hekimi Sözleşmesi', 'grup' => 'diger', 'ikon' => 'heroicon-o-briefcase',
+            'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Sözleşme',
+            'alanlar' => ['kisi' => 'Hekim Adı', 'tarih' => 'Sözleşme Tarihi'],
+            'kural_metni' => 'Sözleşmelerin bitiş tarihi yoktur; yenisi yüklenene kadar yürürlükte kalırlar.',
+        ],
+        'sozlesme' => [
+            'ad' => 'Diğer Sözleşme / Görevlendirme', 'grup' => 'diger', 'ikon' => 'heroicon-o-document-text',
+            'kural' => 'kayit', 'alanlar' => ['tarih' => 'Belge Tarihi', 'bitis' => 'Bitiş Tarihi'],
+            'kural_metni' => 'Görevlendirme yazıları ve diğer sözleşmeler arşivlenir; bitiş tarihi girilirse süresi takip edilir.',
+        ],
         'calisan_temsilcisi' => [
-            'ad' => 'Çalışan Temsilcisi Kayıtları', 'grup' => 'kurul', 'ikon' => 'heroicon-o-identification',
+            'ad' => 'Çalışan Temsilcisi Kayıtları', 'grup' => 'diger', 'ikon' => 'heroicon-o-identification',
             'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Kayıtlar',
             'alanlar' => ['kisi' => 'Temsilci Adı', 'tarih' => 'Seçim / Atama Tarihi'],
             'kural_metni' => 'Temsilci seçim tutanağı ve atama yazısı, yeni seçim yapılana kadar yürürlükte kalır.',
         ],
-        'kurul_tutanagi' => [
-            'ad' => 'İSG Kurul Toplantı Tutanakları', 'grup' => 'kurul', 'ikon' => 'heroicon-o-clipboard-document-list',
-            'kural' => 'periyodik', 'ay' => ['cok_tehlikeli' => 1, 'tehlikeli' => 2, 'az_tehlikeli' => 3], 'yoksa' => 'eksik',
-            'kosul' => 'elli_calisan', 'uretici' => 'kurul_tutanagi',
-            'alanlar' => ['tarih' => 'Toplantı Tarihi'],
-            'kural_metni' => 'Elli ve daha fazla çalışanı olan işyerlerinde kurul; çok tehlikelide ayda bir, tehlikelide iki ayda bir, az tehlikelide üç ayda bir toplanır. Son tutanağın tarihinden itibaren bir sonraki toplantı beklenir.',
-        ],
-
-        'risk_degerlendirmesi' => [
-            'ad' => 'Risk Değerlendirmesi', 'grup' => 'risk', 'ikon' => 'heroicon-o-shield-exclamation',
-            'kural' => 'periyodik', 'ay' => ['cok_tehlikeli' => 24, 'tehlikeli' => 48, 'az_tehlikeli' => 72], 'yoksa' => 'eksik',
-            'uretici' => 'risk_degerlendirmesi',
-            'alanlar' => ['tarih' => 'Hazırlama / Revizyon Tarihi'],
-            'kural_metni' => 'Risk değerlendirmesi çok tehlikelide 2, tehlikelide 4, az tehlikelide 6 yılda bir yenilenir; işyerinde değişiklik olduğunda daha önce de yenilenmelidir.',
-        ],
         'acil_durum_plani' => [
-            'ad' => 'Acil Durum Planı', 'grup' => 'risk', 'ikon' => 'heroicon-o-bell-alert',
+            'ad' => 'Acil Durum Planı', 'grup' => 'diger', 'ikon' => 'heroicon-o-bell-alert',
             'kural' => 'periyodik', 'ay' => ['cok_tehlikeli' => 24, 'tehlikeli' => 48, 'az_tehlikeli' => 72], 'yoksa' => 'eksik',
-            'uretici' => 'acil_durum_plani',
             'alanlar' => ['tarih' => 'Hazırlama / Revizyon Tarihi'],
             'kural_metni' => 'Acil durum planı risk değerlendirmesiyle aynı periyotta (2 / 4 / 6 yıl) yenilenir.',
         ],
         'acil_durum_ekipleri' => [
-            'ad' => 'Acil Durum Ekipleri', 'grup' => 'risk', 'ikon' => 'heroicon-o-fire',
-            'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Kayıtlar', 'uretici' => 'acil_durum_ekipleri',
+            'ad' => 'Acil Durum Ekipleri', 'grup' => 'diger', 'ikon' => 'heroicon-o-fire',
+            'kural' => 'suresiz', 'yoksa' => 'eksik', 'bolum' => 'Yürürlükteki Kayıtlar',
             'alanlar' => ['tarih' => 'Görevlendirme Tarihi'],
             'kural_metni' => 'Ekip görevlendirmeleri, ekipte değişiklik olana kadar yürürlükte kalır.',
         ],
         'tatbikat' => [
-            'ad' => 'Acil Durum Tatbikatları', 'grup' => 'risk', 'ikon' => 'heroicon-o-arrow-right-on-rectangle',
-            'kural' => 'periyodik', 'ay' => 12, 'yoksa' => 'gecikmis', 'uretici' => 'tatbikat',
+            'ad' => 'Acil Durum Tatbikatları', 'grup' => 'diger', 'ikon' => 'heroicon-o-arrow-right-on-rectangle',
+            'kural' => 'periyodik', 'ay' => 12, 'yoksa' => 'gecikmis',
             'alanlar' => ['tarih' => 'Tatbikat Tarihi'],
             'kural_metni' => 'Tatbikat en az yılda bir yapılır; son tatbikatın tarihinden bir yıl sonra yenisi beklenir.',
         ],
-
         'is_hijyeni' => [
-            'ad' => 'İş Hijyeni Ölçümleri', 'grup' => 'olcum', 'ikon' => 'heroicon-o-beaker',
+            'ad' => 'İş Hijyeni Ölçümleri', 'grup' => 'diger', 'ikon' => 'heroicon-o-beaker',
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Ölçüm Tarihi', 'bitis' => 'Sonraki Ölçüm Tarihi'],
             'kural_metni' => 'Ölçüm raporları arşivlenir; sonraki ölçüm tarihi girilirse yaklaşınca ve geçince uyarı çıkar.',
         ],
         'periyodik_kontrol' => [
-            'ad' => 'Periyodik Kontroller', 'grup' => 'olcum', 'ikon' => 'heroicon-o-wrench-screwdriver',
+            'ad' => 'Periyodik Kontroller', 'grup' => 'diger', 'ikon' => 'heroicon-o-wrench-screwdriver',
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Kontrol Tarihi', 'bitis' => 'Sonraki Kontrol Tarihi'],
             'kural_metni' => 'Kontrol raporları arşivlenir; sonraki kontrol tarihi girilirse yaklaşınca ve geçince uyarı çıkar.',
         ],
-
         'isg_egitimleri' => [
-            'ad' => 'İSG Eğitimleri', 'grup' => 'egitim', 'ikon' => 'heroicon-o-academic-cap',
+            'ad' => 'Eğitim Sertifikaları / Diğer Eğitim Belgeleri', 'grup' => 'diger', 'ikon' => 'heroicon-o-academic-cap',
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Eğitim Tarihi', 'bitis' => 'Geçerlilik Sonu'],
-            'kural_metni' => 'Katılım formları ve sertifikalar arşivlenir; geçerlilik sonu girilirse yenileme takip edilir.',
+            'kural_metni' => 'Sertifikalar ve diğer eğitim belgeleri arşivlenir; geçerlilik sonu girilirse yenileme takip edilir.',
         ],
         'saglik_raporlari' => [
-            'ad' => 'Sağlık Raporları', 'grup' => 'egitim', 'ikon' => 'heroicon-o-heart',
+            'ad' => 'Sağlık Raporları', 'grup' => 'diger', 'ikon' => 'heroicon-o-heart',
             'kural' => 'kayit', 'alanlar' => ['kisi' => 'Çalışan Adı', 'tarih' => 'Muayene Tarihi', 'bitis' => 'Sonraki Muayene Tarihi'],
             'kural_metni' => 'İşe giriş ve periyodik muayene raporları arşivlenir; sonraki muayene tarihi girilirse takip edilir.',
         ],
-
         'is_kazasi' => [
-            'ad' => 'İş Kazası Kayıtları', 'grup' => 'olay', 'ikon' => 'heroicon-o-exclamation-triangle',
+            'ad' => 'İş Kazası Kayıtları', 'grup' => 'diger', 'ikon' => 'heroicon-o-exclamation-triangle',
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Olay Tarihi'],
             'kural_metni' => 'İş kazası bildirimleri, tutanaklar ve inceleme raporları süresiz arşivlenir.',
         ],
-        'tespit_oneri' => [
-            'ad' => 'Tespit ve Öneri Defteri Kayıtları', 'grup' => 'olay', 'ikon' => 'heroicon-o-book-open',
-            'kural' => 'kayit', 'alanlar' => ['tarih' => 'Kayıt Tarihi'],
-            'kural_metni' => 'Onaylı defter sayfalarının fotoğrafları süresiz arşivlenir.',
-        ],
-
         'talimat' => [
             'ad' => 'Talimat / Prosedür', 'grup' => 'diger', 'ikon' => 'heroicon-o-list-bullet',
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Belge Tarihi', 'bitis' => 'Geçerlilik Sonu'],

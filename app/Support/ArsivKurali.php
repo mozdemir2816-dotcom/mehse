@@ -162,10 +162,13 @@ final class ArsivKurali
                 }
 
                 $kalan = (int) $bugun->diffInDays($son, false);
+                // Kısa periyotlarda (aylık defter / saha raporu) eşik periyodun üçte birini geçmez;
+                // yoksa 30 günlük eşikle aylık belge yüklendiği gün "yaklaşıyor" görünürdü.
+                $esik = min($yaklasan, max(3, intdiv((int) self::ay($k['anahtar'], $firma) * 30, 3)));
 
                 return match (true) {
                     $kalan < 0 => $sonuc('gecikmis', 'Yenileme tarihi '.$son->format('d.m.Y').' geçti.', $son, $gecerli),
-                    $kalan <= $yaklasan => $sonuc('yaklasan', 'Yenileme tarihi '.$son->format('d.m.Y').'.', $son, $gecerli),
+                    $kalan <= $esik => $sonuc('yaklasan', 'Yenileme tarihi '.$son->format('d.m.Y').'.', $son, $gecerli),
                     default => $sonuc('tamam', 'Sonraki: '.$son->format('d.m.Y').'.', $son, $gecerli),
                 };
 

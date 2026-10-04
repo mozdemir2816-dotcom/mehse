@@ -79,37 +79,74 @@
                 <p style="{{ $soluk }};font-size:.92rem">Bu kapsamda henüz arşiv kaydı yok. Bir kategoriye dokunarak ilk belgeyi ekleyin.</p>
             @endif
 
-            @foreach (config('arsiv.gruplar') as $grup => $grupAdi)
-                <div>
-                    <div style="{{ $baslikStil }};margin:.4rem 0 .55rem">{{ $grupAdi }}</div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.7rem">
-                        @foreach (collect($kategoriler)->where('grup', $grup) as $anahtar => $k)
+            @php
+                $takipGrubu = config('arsiv.takip_grubu');
+                $osgb = collect($kategoriler)->where('grup', $takipGrubu);
+            @endphp
+
+            {{-- 1. OSGB ARŞİV EVRAKLARI --}}
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin:.4rem 0 .2rem">
+                    <span style="{{ $baslikStil }}">{{ config('arsiv.gruplar')[$takipGrubu] }}</span>
+                    @if ($firmaId)
+                        @php
+                            $satir = $this->matris[$firmaId] ?? [];
+                            $gerekli = $osgb->keys()->filter(fn ($a) => ! in_array($satir[$a]['durum'] ?? '', ['muaf', 'takipsiz'], true));
+                            $tamamSay = $gerekli->filter(fn ($a) => ($satir[$a]['durum'] ?? '') === 'tamam')->count();
+                        @endphp
+                        <span style="font-size:.85rem;font-weight:600;color:{{ $tamamSay === $gerekli->count() ? '#15803d' : '#b45309' }}">{{ $tamamSay }} / {{ $gerekli->count() }} güncel</span>
+                    @endif
+                </div>
+                <p style="font-size:.8rem;{{ $soluk }};margin-bottom:.6rem">Firmaya imzalatılmış evrakların taranmış / fotoğraflanmış hallerini yükleyin — fiziksel arşivin sistemdeki karşılığı.</p>
+
+                @if ($firmaId)
+                    {{-- Firma seçiliyken: kontrol listesi --}}
+                    <div style="display:flex;flex-direction:column;gap:.45rem">
+                        @foreach ($osgb as $anahtar => $k)
                             @php
-                                $o = $this->kartlar[$anahtar];
-                                $serit = $o['gecikmis'] ? '#dc2626' : ($o['yaklasan'] ? '#d97706' : null);
+                                $d = $this->matris[$firmaId][$anahtar];
+                                $g = $d['gecerli'];
+                                $imza = $this->kartlar[$anahtar]['imza'];
                             @endphp
-                            <button type="button" wire:key="kart-{{ $anahtar }}" wire:click="kategoriAc('{{ $anahtar }}')" class="arsiv-kart"
-                                style="{{ $kart }};text-align:left;padding:.9rem 1rem;cursor:pointer;display:flex;flex-direction:column;gap:.45rem;min-height:7.5rem;color:inherit;{{ $serit ? 'border-left:4px solid '.$serit : '' }}">
-                                <x-filament::icon :icon="$k['ikon']" style="width:1.3rem;height:1.3rem;color:rgb(37 99 235)" />
-                                <span style="font-weight:600;font-size:.95rem;line-height:1.25">{{ $k['ad'] }}</span>
-                                <span style="margin-top:auto;font-size:.82rem;color:{{ $serit ?? 'rgb(107 114 128)' }}">
-                                    @if ($o['gecikmis'])
-                                        {{ $o['gecikmis'] }} gecikmiş
-                                    @elseif ($o['yaklasan'])
-                                        {{ $o['yaklasan'] }} yaklaşıyor
-                                    @elseif ($o['kayit'])
-                                        {{ $o['kayit'] }} kayıt
-                                    @else
-                                        Kayıt yok
+                            <div wire:key="ck-{{ $anahtar }}" style="{{ $kart }};padding:.7rem .85rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;border-left:4px solid {{ $renk[$d['durum']] }}">
+                                <span style="font-size:1.1rem;width:1.4rem;text-align:center;color:{{ $renk[$d['durum']] }}">{{ ['tamam' => '✓', 'gecikmis' => '⚠', 'yaklasan' => '◷', 'eksik' => '○', 'muaf' => '–', 'takipsiz' => '·'][$d['durum']] }}</span>
+                                <button type="button" wire:click="kategoriAc('{{ $anahtar }}')" style="flex:1;min-width:180px;text-align:left;background:none;border:none;padding:0;cursor:pointer;color:inherit">
+                                    <span style="display:block;font-weight:600">{{ $k['ad'] }}</span>
+                                    <span style="display:block;font-size:.8rem;color:{{ in_array($d['durum'], ['gecikmis', 'yaklasan'], true) ? $renk[$d['durum']] : 'rgb(107 114 128)' }}">
+                                        @if ($g){{ $g->baslangic_tarihi?->format('d.m.Y') ?? $g->created_at?->format('d.m.Y') }} · @endif{{ $d['mesaj'] }}
+                                    </span>
+                                    @if ($imza)<span style="display:block;font-size:.76rem;color:#b45309">{{ $imza }} belge imza bekliyor</span>@endif
+                                </button>
+                                <div style="display:flex;gap:.35rem">
+                                    @if ($g)
+                                        <x-filament::button size="sm" color="gray" icon="heroicon-o-eye" wire:click="goruntule({{ $g->id }})">Aç</x-filament::button>
                                     @endif
-                                    @if ($o['imza'])<span style="display:block;color:#b45309">{{ $o['imza'] }} imza bekliyor</span>@endif
-                                    @if ($o['eksik'] && $firmaId)<span style="display:block">Eksik</span>@elseif ($o['eksik'] && ! $o['gecikmis'])<span style="display:block">{{ $o['eksik'] }} firmada eksik</span>@endif
-                                </span>
-                            </button>
+                                    @if ($d['durum'] !== 'muaf')
+                                        <x-filament::button size="sm" icon="heroicon-o-arrow-up-tray"
+                                            wire:click="mountAction('yeniKayit', { kategori: '{{ $anahtar }}', firma: {{ $firmaId }}, yontem: 'yukle' })">Yükle</x-filament::button>
+                                    @endif
+                                </div>
+                            </div>
                         @endforeach
                     </div>
+                @else
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.7rem">
+                        @foreach ($osgb as $anahtar => $k)
+                            @include('filament.pages.partials.arsiv-kart', ['anahtar' => $anahtar, 'k' => $k, 'o' => $this->kartlar[$anahtar], 'kart' => $kart, 'firmaSayisi' => $this->kapsamFirmalari->count()])
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- 2. DİĞER BELGELER --}}
+            <details @if ($this->tumu->contains(fn ($d) => \App\Support\ArsivKurali::kategori($d->kategori)['grup'] !== $takipGrubu)) open @endif>
+                <summary style="cursor:pointer;{{ $baslikStil }};margin:.6rem 0 .55rem">{{ config('arsiv.gruplar')['diger'] }}</summary>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.7rem">
+                    @foreach (collect($kategoriler)->where('grup', '!=', $takipGrubu) as $anahtar => $k)
+                        @include('filament.pages.partials.arsiv-kart', ['anahtar' => $anahtar, 'k' => $k, 'o' => $this->kartlar[$anahtar], 'kart' => $kart, 'firmaSayisi' => $this->kapsamFirmalari->count()])
+                    @endforeach
                 </div>
-            @endforeach
+            </details>
         @elseif ($sekme === 'takip')
             @forelse ($this->sorunlar as $s)
                 <div wire:key="sorun-{{ $s['firma']->id }}-{{ $s['kategori'] }}" style="{{ $kart }};padding:.75rem .9rem;display:flex;gap:.7rem;align-items:center;border-left:4px solid {{ $renk[$s['durum']] }}">
@@ -125,7 +162,7 @@
                 <div style="{{ $kart }};padding:1.2rem;text-align:center;{{ $soluk }}">Takip edilecek eksik ya da gecikmiş belge yok. 🎉</div>
             @endforelse
         @elseif ($sekme === 'uyum')
-            @php $takipliler = collect($kategoriler)->filter(fn ($k) => $k['kural'] !== 'kayit'); @endphp
+            @php $takipliler = collect($kategoriler)->filter(fn ($k, $a) => $k['kural'] !== 'kayit' && ! in_array($a, $this->haric, true)); @endphp
             <div style="{{ $kart }};overflow-x:auto">
                 <table style="border-collapse:collapse;font-size:.8rem;min-width:100%">
                     <tr>
@@ -150,7 +187,7 @@
                     @endforeach
                 </table>
             </div>
-            <p style="font-size:.75rem;{{ $soluk }}">✓ tamam · ◷ yaklaşıyor · ! eksik · ✕ gecikmiş · – gerekmiyor (ör. 50'den az çalışan) · · takip dışı. Hücreye dokunarak kategoriyi açın.</p>
+            <p style="font-size:.75rem;{{ $soluk }}">✓ tamam · ◷ yaklaşıyor · ! eksik · ✕ gecikmiş · – gerekmiyor (ör. 50'den az çalışan) (takip dışı kategoriler Hatırlatma Ayarları'ndan eklenebilir). Hücreye dokunarak kategoriyi açın.</p>
         @else
             {{-- Tüm Belgeler (eski Doküman Yönetimi listesi) --}}
             <x-filament::section>

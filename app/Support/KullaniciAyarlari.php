@@ -73,7 +73,7 @@ class KullaniciAyarlari
             'esikler' => $esikler,
             'kontrol_haric' => [],
             // Arşiv hatırlatma ayarları (Arşiv > Hatırlatma Ayarları).
-            'arsiv' => ['yaklasan_gun' => (int) config('arsiv.yaklasan_gun', 30), 'haric' => []],
+            'arsiv' => ['yaklasan_gun' => (int) config('arsiv.yaklasan_gun', 30)],
         ];
     }
 
@@ -127,10 +127,30 @@ class KullaniciAyarlari
         return max(1, min(365, (int) (self::hepsi($user)['arsiv']['yaklasan_gun'] ?? 30)));
     }
 
-    /** @return array<int, string> Arşivde takip dışı bırakılan kategori anahtarları */
+    /**
+     * Arşivde takip dışı bırakılan kategori anahtarları. Kayıtlı değer yoksa
+     * varsayılan: "takip grubu" (OSGB arşiv evrakları) dışındaki kural
+     * kategorileri. Liste olduğu için hepsi()'nin özyinelemeli birleştirmesinden
+     * değil doğrudan kayıttan okunur (array_replace_recursive listeleri indeksle karıştırır).
+     *
+     * @return array<int, string>
+     */
     public static function arsivHaric(?User $user = null): array
     {
-        return array_values((array) (self::hepsi($user)['arsiv']['haric'] ?? []));
+        $user ??= self::aktifKullanici();
+        $kayitli = $user ? (((array) ($user->ayarlar ?? []))['arsiv']['haric'] ?? null) : null;
+
+        if (is_array($kayitli)) {
+            return array_values($kayitli);
+        }
+
+        $grup = config('arsiv.takip_grubu');
+
+        return collect(config('arsiv.kategoriler'))
+            ->filter(fn ($k) => $k['kural'] !== 'kayit' && $grup && $k['grup'] !== $grup)
+            ->keys()
+            ->values()
+            ->all();
     }
 
     /** @param  array<string, mixed>  $degerler */
