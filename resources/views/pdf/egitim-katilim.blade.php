@@ -199,12 +199,14 @@
     <table class="katilim">
         <thead>
             <tr>
-                <th style="width:4%">#</th><th>Ad Soyad</th><th style="width:15%">T.C. No</th><th style="width:16%">Görevi</th>
+                <th style="width:4%">#</th><th>Ad Soyad</th><th style="width:13%">T.C. No</th><th style="width:14%">Görevi</th>
                 @if ($ikiGun)
-                    <th style="width:17%">İmza (1. Gün)</th><th style="width:17%">İmza (2. Gün)</th>
+                    <th style="width:13%">İmza (1. Gün)</th><th style="width:13%">İmza (2. Gün)</th>
                 @else
-                    <th style="width:22%">İmza</th>
+                    <th style="width:18%">İmza</th>
                 @endif
+                {{-- Sınav puanları elle yazılır; imza yerleriyle karışmasın diye imzalardan sonra yan yana. --}}
+                <th style="width:7%">Ön Test</th><th style="width:7%">Son Test</th>
             </tr>
         </thead>
         <tbody>
@@ -216,6 +218,7 @@
                     <td>{{ $katilimcilar[$i]['gorev'] ?? '' }}</td>
                     <td></td>
                     @if ($ikiGun) <td></td> @endif
+                    <td></td><td></td>
                 </tr>
             @endfor
         </tbody>

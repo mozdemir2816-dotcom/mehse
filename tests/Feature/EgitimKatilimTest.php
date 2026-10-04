@@ -179,6 +179,8 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('İmza (2. Gün)', $html);
         $this->assertStringContainsString('1. ve 2. gün', $html);
         $this->assertStringNotContainsString('1. Gün İmza', $html);   // eğitmen bloğunda gün ayrımı YOK
+        // Sınav puanları imzalardan sonra: İmza (2. Gün) … Ön Test … Son Test
+        $this->assertMatchesRegularExpression('/İmza \(2\. Gün\).*Ön Test.*Son Test/s', $html);
     }
 
     public function test_iki_gunluk_egitimde_gun_bazli_tarihler_girilir_ve_pdf_kunyesine_yazilir(): void
@@ -439,6 +441,38 @@ class EgitimKatilimTest extends TestCase
 
         $component->call('manuelCikar', 0);
         $this->assertCount(0, $component->get('manuelKatilimcilar'));
+    }
+
+    public function test_manuel_katilimcida_11_haneli_olmayan_tc_kabul_edilmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yeniAdSoyad', 'Deneme Kişi')
+            ->set('yeniTc', '324353423232323')   // canlıda 04.10.2026 indirmeyi düşüren 15 hane
+            ->call('manuelEkle')
+            ->assertHasErrors(['yeniTc' => 'digits'])
+            ->assertSet('manuelKatilimcilar', [])
+            ->set('yeniTc', '123 456 789 01')     // boşluklu yazım kabul edilir
+            ->call('manuelEkle')
+            ->assertHasNoErrors()
+            ->assertSet('manuelKatilimcilar.0.tc', '12345678901');
+    }
+
+    public function test_gecersiz_tc_li_katilimci_indirmeyi_dusurmez_calisana_tcsiz_eklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'genel')
+            ->set('belgeTarihi', now()->toDateString())
+            ->set('manuelKatilimcilar', [['ad_soyad' => 'Excelden Gelen', 'tc' => '324353423232323', 'gorev' => 'İşçi']])
+            ->callAction('pdf')
+            ->assertNotified('T.C. 11 haneli olmadığı için çalışan kaydına T.C.\'siz eklendi');
+
+        $this->assertDatabaseHas('calisanlar', ['firma_id' => $firma->id, 'ad_soyad' => 'Excelden Gelen', 'tc' => null]);
     }
 
     public function test_excel_ile_katilimci_toplu_yuklenir(): void

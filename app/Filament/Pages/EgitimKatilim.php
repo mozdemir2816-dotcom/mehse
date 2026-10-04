@@ -559,11 +559,16 @@ class EgitimKatilim extends Page
 
     public function manuelEkle(): void
     {
-        $this->validate(['yeniAdSoyad' => 'required|string|max:190']);
+        $this->yeniTc = preg_replace('/\s+/', '', (string) $this->yeniTc) ?: null;
+
+        $this->validate(
+            ['yeniAdSoyad' => 'required|string|max:190', 'yeniTc' => 'nullable|digits:11'],
+            ['yeniTc.digits' => 'T.C. Kimlik No 11 haneli olmalı (yazılan: :input).'],
+        );
 
         $this->manuelKatilimcilar[] = [
             'ad_soyad' => $this->yeniAdSoyad,
-            'tc' => $this->yeniTc ?: null,
+            'tc' => $this->yeniTc,
             'gorev' => $this->yeniGorev ?: null,
         ];
 
@@ -632,6 +637,9 @@ class EgitimKatilim extends Page
      * Elle / Excel ile eklenen katılımcılardan firmanın çalışan listesinde
      * OLMAYANLARı (TC varsa TC'ye, yoksa ad-soyada göre) firmaya ekler.
      */
+    /** eksikCalisanlariEkle() sırasında 11 hane olmadığı için çalışan kaydına yazılmayan T.C.'ler (yalnız bu istek). */
+    private array $gecersizTcler = [];
+
     private function eksikCalisanlariEkle(): int
     {
         if (! $this->firma) {
@@ -644,6 +652,12 @@ class EgitimKatilim extends Page
         foreach ($this->manuelKatilimcilar as $k) {
             $ad = trim((string) ($k['ad_soyad'] ?? ''));
             $tc = filled($k['tc'] ?? null) ? trim((string) $k['tc']) : null;
+
+            // Çalışan kaydı 11 haneli T.C. kabul eder; hatalı T.C. indirmeyi düşürmesin (canlı 04.10.2026).
+            if ($tc !== null && ! preg_match('/^\d{11}$/', $tc)) {
+                $this->gecersizTcler[] = "{$ad}: {$tc}";
+                $tc = null;
+            }
 
             if ($ad === '') {
                 continue;
@@ -771,6 +785,14 @@ class EgitimKatilim extends Page
 
         if ($yeniCalisan > 0) {
             Notification::make()->title($yeniCalisan.' katılımcı firma çalışan listesine eklendi')->success()->send();
+        }
+
+        if ($this->gecersizTcler) {
+            Notification::make()->title('T.C. 11 haneli olmadığı için çalışan kaydına T.C.\'siz eklendi')
+                ->body(implode("
+", $this->gecersizTcler)."
+Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirsiniz.")
+                ->warning()->persistent()->send();
         }
 
         // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse onu kaydet.
