@@ -500,10 +500,11 @@ html[data-mehse-tema="windows11"] {
         background-attachment: fixed !important;
     }
 
-    /* NavigationView: saydam, aktif öğede solda 3px vurgu çubuğu. */
+    /* NavigationView: Mica tonunda OPAK zemin (04.10.2026: saydamken telefonda
+       içeriğin üstüne açılan menüde arkadaki yazılar okunuyordu), aktif öğede solda 3px vurgu. */
     .fi-sidebar {
-        background: transparent !important;
-        border-inline-end: none !important;
+        background: #F3F3F3 !important;
+        border-inline-end: 1px solid rgb(0 0 0 / .0578) !important;
     }
 
     .fi-sidebar-nav {
@@ -578,11 +579,9 @@ html[data-mehse-tema="windows11"] {
         background: rgb(0 0 0 / .1) !important;
     }
 
-    /* Başlık çubuğu: Mica üzerinde akrilik. */
+    /* Başlık çubuğu: Mica tonunda opak (akrilik saydamlık telefonda kaydırılan içeriği gösteriyordu). */
     .fi-topbar {
-        background: rgb(243 243 243 / .75) !important;
-        backdrop-filter: blur(30px) saturate(125%);
-        -webkit-backdrop-filter: blur(30px) saturate(125%);
+        background: #F3F3F3 !important;
         min-height: 48px !important;
         box-shadow: none !important;
         border-bottom: 1px solid rgb(0 0 0 / .0578) !important;
@@ -794,11 +793,9 @@ html[data-mehse-tema="windows11"] {
         border-radius: 4px;
     }
 
-    /* Mobil alt gezinme: akrilik şerit. */
+    /* Mobil alt gezinme: Mica tonunda opak şerit. */
     .fi-mobil-alt-nav {
-        background: rgb(243 243 243 / .85);
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
+        background: #F3F3F3;
         border-top: 1px solid rgb(0 0 0 / .0578);
         box-shadow: none;
     }

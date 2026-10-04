@@ -16,7 +16,7 @@
     @endphp
 
     <x-filament::section icon="heroicon-o-shield-check" icon-color="primary">
-        <x-slot name="heading">Ana sayfa — görev durumu</x-slot>
+        <x-slot name="heading">Görev durumu</x-slot>
         <x-slot name="description">
             {{ $kullanici->name }} · {{ config('isg.uzman_unvanlari.'.$kullanici->unvan, '') }} · {{ $sure['isyeri'] }} işyeri —
             yapılan, yapılmayan, yaklaşan ve süresi geçen faaliyetler tek bakışta. Karttaki “İşleme git” ile ilgili modülde kayıt açın.
