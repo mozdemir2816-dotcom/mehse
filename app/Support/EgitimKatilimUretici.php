@@ -97,23 +97,19 @@ class EgitimKatilimUretici
         $s = $kitap->getActiveSheet();
         $s->setTitle('Eğitim Katılım');
         $s->getColumnDimension('A')->setWidth(6);
-        $s->getColumnDimension('B')->setWidth(34);
+        $s->getColumnDimension('B')->setWidth(26);
         $s->getColumnDimension('C')->setWidth(16);
         $s->getColumnDimension('D')->setWidth(22);
-        $s->getColumnDimension('E')->setWidth(20);
-        $s->getColumnDimension('F')->setWidth(20);
 
-        // Katılımcı tablosu: imza sütun(lar)ından sonra ilk ve son sınav puanı (elle doldurulur).
+        // Katılımcı tablosu, sınav puanları elle doldurulur:
+        // 1 gün:  İmza | Ön Test | Son Test
+        // 2 gün:  İmza (1. Gün) | Ön Test | İmza (2. Gün) | Son Test  (her sınav kendi gününün imzasının yanında)
         $son = $ikiGun ? 'H' : 'G';
-        foreach ($ikiGun ? ['G', 'H'] : ['F', 'G'] as $harf) {
-            $s->getColumnDimension($harf)->setWidth(9);
-        }
-        if ($ikiGun) {
-            // "İmza (1. Gün)" / "İmza (2. Gün)" başlığı sığacak kadar.
-            $s->getColumnDimension('E')->setWidth(14);
-            $s->getColumnDimension('F')->setWidth(14);
-        } else {
-            $s->getColumnDimension('E')->setWidth(22);
+        $genislik = $ikiGun
+            ? ['E' => 14, 'F' => 9, 'G' => 14, 'H' => 9]   // "İmza (1. Gün)" başlığı sığacak kadar
+            : ['E' => 22, 'F' => 9, 'G' => 9];
+        foreach ($genislik as $harf => $g) {
+            $s->getColumnDimension($harf)->setWidth($g);
         }
 
         $r = 1;
@@ -156,6 +152,7 @@ class EgitimKatilimUretici
 
             foreach ($blok['maddeler'] as $m) {
                 $s->setCellValue("B{$r}", $m['madde']);
+                $s->getStyle("B{$r}")->getAlignment()->setWrapText(true);
                 $s->setCellValue("C{$r}", $m['dakika'].' dk');
                 $r++;
             }
@@ -169,7 +166,7 @@ class EgitimKatilimUretici
 
         $baslikSatir = $r;
         $sutunlar = $ikiGun
-            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)', 'Ön Test', 'Son Test']
+            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'Ön Test', 'İmza (2. Gün)', 'Son Test']
             : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza', 'Ön Test', 'Son Test'];
 
         $s->fromArray($sutunlar, null, "A{$r}");

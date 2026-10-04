@@ -304,7 +304,7 @@ class EgitimKatilimTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create();
 
         foreach ([1 => ['E' => 'İmza', 'F' => 'Ön Test', 'G' => 'Son Test'],
-            2 => ['F' => 'İmza (2. Gün)', 'G' => 'Ön Test', 'H' => 'Son Test']] as $gun => $beklenen) {
+            2 => ['E' => 'İmza (1. Gün)', 'F' => 'Ön Test', 'G' => 'İmza (2. Gün)', 'H' => 'Son Test']] as $gun => $beklenen) {
             $kayit = EgitimKatilim::create([
                 'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => $gun,
                 'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
