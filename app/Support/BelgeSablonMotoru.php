@@ -53,7 +53,8 @@ final class BelgeSablonMotoru
      */
     public static function sistemDegerleri(?Firma $firma, array $kayit = []): array
     {
-        $calisanlar = $firma?->calisanlar()->where('aktif', true)->get(['cinsiyet']) ?? collect();
+        $calisanlar = $firma?->calisanlar()->where('aktif', true)->get(['cinsiyet', 'dogum_tarihi']) ?? collect();
+        $yas = fn ($c) => $c->dogum_tarihi ? (int) $c->dogum_tarihi->diffInYears(now()) : null;
         $tarih = filled($kayit['tarih'] ?? null) ? Carbon::parse($kayit['tarih'])->format('d.m.Y') : null;
         $yil = filled($kayit['yil'] ?? null) ? (string) $kayit['yil'] : null;
         $bos = fn ($v) => filled($v) ? (string) $v : null;
@@ -71,6 +72,8 @@ final class BelgeSablonMotoru
             'isyeri.katip_no' => $bos($firma?->katip_no),
             'erkek_sayisi' => $calisanlar->isNotEmpty() ? (string) $calisanlar->where('cinsiyet', 'erkek')->count() : null,
             'kadin_sayisi' => $calisanlar->isNotEmpty() ? (string) $calisanlar->where('cinsiyet', 'kadin')->count() : null,
+            'genc_sayisi' => $calisanlar->isNotEmpty() ? (string) $calisanlar->filter(fn ($c) => ($y = $yas($c)) !== null && $y >= 15 && $y < 18)->count() : null,
+            'cocuk_sayisi' => $calisanlar->isNotEmpty() ? (string) $calisanlar->filter(fn ($c) => ($y = $yas($c)) !== null && $y < 15)->count() : null,
             'yetkili' => $bos($firma?->isveren_vekili ?: ($firma?->isveren_ad ?: $firma?->yetkili_ad)),
             'uzman.ad' => $bos($firma?->igu?->ad_soyad ?: $firma?->user?->name),
             'uzman.sertifika_no' => $bos($firma?->igu?->sertifika_no ?: $firma?->user?->sertifika_no),
@@ -155,6 +158,9 @@ final class BelgeSablonMotoru
                 }
             }
         }
+
+        // Yer tutucusu olmayan örnek formlar: künye alanları etiketinden tanınıp doldurulur.
+        EtiketliSablon::uygula($kitap, $degerler, filled($degerler['kayit.yil'] ?? null) ? (int) $degerler['kayit.yil'] : null);
 
         $gecici = tempnam(sys_get_temp_dir(), 'bsm').'.xlsx';
         IOFactory::createWriter($kitap, 'Xlsx')->save($gecici);

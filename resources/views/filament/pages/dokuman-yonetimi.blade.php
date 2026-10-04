@@ -126,6 +126,17 @@
                                             wire:click="mountAction('yeniKayit', { kategori: '{{ $anahtar }}', firma: {{ $firmaId }}, yontem: 'yukle' })">Yükle</x-filament::button>
                                     @endif
                                 </div>
+                                @if (in_array($anahtar, ['yillik_calisma_plani', 'yillik_egitim_plani', 'yillik_degerlendirme'], true))
+                                    @php $kendiFormu = $this->sablonlar->firstWhere('kategori', $anahtar); @endphp
+                                    <div style="flex-basis:100%;display:flex;gap:.9rem;flex-wrap:wrap;padding-left:2.1rem;font-size:.8rem">
+                                        <button type="button" wire:click="hazirIndir('{{ $anahtar }}')" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(37 99 235)">⤓ Hazır Excel'i indir (düzeltip yükleyin)</button>
+                                        @if ($kendiFormu)
+                                            <button type="button" wire:click="mountAction('yeniKayit', { kategori: '{{ $anahtar }}', firma: {{ $firmaId }}, yontem: 'sablon' })" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(37 99 235)">✦ Formumdan üret ({{ $kendiFormu->ad }})</button>
+                                        @else
+                                            <button type="button" wire:click="mountAction('sablonlar', { kategori: '{{ $anahtar }}' })" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(37 99 235)">＋ Örnek formumu yükle (birebir aynısı üretilsin)</button>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -305,6 +316,12 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
                 <span style="{{ $baslikStil }}">Üretilmiş Belgeler @if ($detay['uretilmis']->isNotEmpty())({{ $detay['uretilmis']->count() }})@endif</span>
                 <button type="button" wire:click="mountAction('yeniKayit', { kategori: '{{ $kategoriAnahtari }}', yontem: 'sablon' })" style="background:none;border:none;cursor:pointer;font-size:.88rem;color:inherit">+ Belge ekle</button>
+            </div>
+            <div style="display:flex;gap:.9rem;flex-wrap:wrap;font-size:.8rem;margin-bottom:.45rem">
+                @if ($firmaId && \App\Support\ArsivUretici::varMi($kategoriAnahtari))
+                    <button type="button" wire:click="hazirIndir('{{ $kategoriAnahtari }}')" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(37 99 235)">⤓ Hazır belgeyi indir (düzeltip "Yeni Kayıt → Belge Yükle" ile ekleyin)</button>
+                @endif
+                <button type="button" wire:click="mountAction('sablonlar', { kategori: '{{ $kategoriAnahtari }}' })" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(37 99 235)">＋ Örnek formumu yükle</button>
             </div>
             @if ($detay['uretilmis']->isNotEmpty())
                 <p style="font-size:.82rem;{{ $soluk }};margin-bottom:.45rem">Şablondan üretilenler; imzalandıktan sonra "Dosyaya ekle" ile arşive alın.</p>

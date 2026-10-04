@@ -214,6 +214,8 @@ return [
         'isyeri.katip_no' => 'İSG-KATİP No',
         'erkek_sayisi' => 'Erkek Çalışan Sayısı',
         'kadin_sayisi' => 'Kadın Çalışan Sayısı',
+        'genc_sayisi' => 'Genç Çalışan Sayısı (15-18)',
+        'cocuk_sayisi' => 'Çocuk Çalışan Sayısı (15 altı)',
         'yetkili' => 'İşveren / İşveren Vekili',
         'uzman.ad' => 'İSG Uzmanı',
         'uzman.sertifika_no' => 'Uzman Sertifika No',

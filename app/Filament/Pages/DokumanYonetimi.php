@@ -9,6 +9,7 @@ use App\Models\Firma;
 use App\Support\ArsivKurali;
 use App\Support\ArsivUretici;
 use App\Support\BelgeSablonMotoru;
+use App\Support\EtiketliSablon;
 use App\Support\ExcelBellek;
 use App\Support\KullaniciAyarlari;
 use BackedEnum;
@@ -306,12 +307,17 @@ class DokumanYonetimi extends Page
     {
         $secenekler = [];
 
-        if ($kategori && ArsivUretici::varMi($kategori)) {
-            $secenekler['sistem'] = ArsivUretici::sablonlar()[$kategori];
+        // Kullanıcının bu kategoriye yüklediği formlar önce (varsayılan seçim), sonra genel şablonlar, en son sistem.
+        $kendi = $this->sablonlar
+            ->filter(fn (BelgeSablonu $s) => ! $s->kategori || $s->kategori === $kategori)
+            ->sortBy(fn (BelgeSablonu $s) => $s->kategori === $kategori ? 0 : 1);
+
+        foreach ($kendi as $s) {
+            $secenekler['kullanici:'.$s->id] = $s->ad.' ('.strtoupper($s->tur).')';
         }
 
-        foreach ($this->sablonlar->filter(fn (BelgeSablonu $s) => ! $s->kategori || $s->kategori === $kategori) as $s) {
-            $secenekler['kullanici:'.$s->id] = $s->ad.' ('.strtoupper($s->tur).')';
+        if ($kategori && ArsivUretici::varMi($kategori)) {
+            $secenekler['sistem'] = ArsivUretici::sablonlar()[$kategori];
         }
 
         return $secenekler;
@@ -648,12 +654,16 @@ class DokumanYonetimi extends Page
         return Action::make('dosyayaEkle')
             ->label('Dosyaya ekle')
             ->modalHeading('Dosyaya ekle')
-            ->modalDescription('Belge imzalandıysa imzalı nüshasının fotoğrafını / PDF\'ini yükleyin; yüklemezseniz üretilen dosya arşive alınır.')
+            ->modalDescription('Belge imzalandıysa imzalı nüshasının fotoğrafını / PDF\'ini yükleyin; üretilen dosyayı indirip düzelttiyseniz düzelttiğiniz Excel / Word dosyasını da yükleyebilirsiniz. Yüklemezseniz üretilen dosya arşive alınır.')
             ->modalSubmitActionLabel('Dosyaya ekle')
             ->fillForm(fn (array $arguments) => ['baslangic_tarihi' => $this->bul($arguments['id'] ?? null)?->baslangic_tarihi?->toDateString() ?? now()->toDateString()])
             ->schema([
-                FileUpload::make('dosyalar')->storeFileNamesIn('dosya_adlari')->label('İmzalı nüsha (isteğe bağlı)')->multiple()->disk('public')->directory('arsiv/gecici')
-                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])->maxSize(20480)->maxFiles(30)->reorderable(),
+                FileUpload::make('dosyalar')->storeFileNamesIn('dosya_adlari')->label('İmzalı / düzeltilmiş nüsha (isteğe bağlı)')->multiple()->disk('public')->directory('arsiv/gecici')
+                    ->acceptedFileTypes([
+                        'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword',
+                    ])->maxSize(20480)->maxFiles(30)->reorderable(),
                 DatePicker::make('baslangic_tarihi')->label('Belge Tarihi')->native(false)->displayFormat('d.m.Y')->required(),
             ])
             ->action(function (array $data, array $arguments): void {
@@ -763,6 +773,31 @@ class DokumanYonetimi extends Page
         return Storage::disk('public')->download($d->dosya_yolu, $d->dosya_adi);
     }
 
+    /**
+     * Sistemin hazır Excel'ini (yıllık çalışma / eğitim planı, değerlendirme…)
+     * arşive kaydetmeden indirir — kullanıcı düzeltip "Yükle" ile geri ekler.
+     */
+    public function hazirIndir(string $kategori)
+    {
+        $firma = $this->firmaId ? Firma::query()->where('user_id', Filament::auth()->id())->find($this->firmaId) : null;
+
+        if (! $firma || ! ArsivUretici::varMi($kategori)) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return null;
+        }
+
+        $sonuc = ArsivUretici::uret($kategori, $firma, ArsivKurali::beklenenYil($kategori), now()->toDateString());
+
+        if (is_string($sonuc)) {
+            Notification::make()->title('Belge üretilemedi')->body($sonuc)->danger()->persistent()->send();
+
+            return null;
+        }
+
+        return response()->streamDownload(fn () => print ($sonuc['icerik']), $sonuc['dosya_adi']);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Belge Şablonları / Hatırlatma Ayarları
@@ -776,9 +811,13 @@ class DokumanYonetimi extends Page
             ->icon('heroicon-o-document-duplicate')
             ->color('gray')
             ->modalHeading('Belge Şablonları')
-            ->modalDescription('Kendi Word (.docx) veya Excel (.xlsx) şablonunuzu yükleyin. Belgede {{isyeri.unvan}} gibi yer tutucular kullanın; sistemde karşılığı olanlar otomatik dolar, diğerleri üretirken sorulur.')
+            ->modalDescription('Kullandığınız formun bir örneğini (.xlsx / .docx) yükleyin; arşivde "Şablondan Üret" ile her firma için birebir aynısı üretilir. Excel örneklerinde "İşyeri Ünvanı", "Adresi", "SGK Sicil No", "Çalışma Yılı", "Tarih" gibi künye alanları etiketinden tanınıp seçilen firmanın bilgisiyle değiştirilir; formun geri kalanı aynen kalır. Word\'de ya da istediğiniz başka bir yerde {{isyeri.unvan}} gibi yer tutucular da kullanabilirsiniz.')
             ->modalContent(fn () => view('filament.pages.partials.arsiv-sablonlar', ['sablonlar' => $this->sablonlar]))
             ->modalSubmitActionLabel('Şablonu Yükle')
+            ->fillForm(fn (array $arguments) => [
+                'kategori' => $arguments['kategori'] ?? null,
+                'ad' => isset($arguments['kategori']) ? 'Kendi '.ArsivKurali::kategori($arguments['kategori'])['ad'].' formum' : null,
+            ])
             ->schema([
                 Grid::make(2)->schema([
                     TextInput::make('ad')->label('Şablon adı')->required()->maxLength(120),
@@ -816,10 +855,17 @@ class DokumanYonetimi extends Page
                     'yer_tutucular' => $yerTutucular,
                 ]);
 
+                $etiketler = $tur === 'xlsx' ? EtiketliSablon::bul($disk->path($data['dosya'])) : [];
+                $taninan = collect($etiketler)->map(fn ($a) => $a === 'gorevli_adi' ? 'görevli adları (boşaltılır)' : BelgeSablonMotoru::etiket($a))->unique()->values();
+
                 $this->yenile();
                 Notification::make()
                     ->title('Şablon yüklendi')
-                    ->body($yerTutucular ? count($yerTutucular).' alan bulundu: '.implode(', ', $yerTutucular) : 'Şablonda {{alan}} biçiminde yer tutucu bulunamadı; belge olduğu gibi kopyalanır.')
+                    ->body(collect([
+                        $taninan->isNotEmpty() ? 'Firmaya göre değişecek künye alanları: '.$taninan->implode(', ').'.' : null,
+                        $yerTutucular ? 'Yer tutucular: '.implode(', ', $yerTutucular).'.' : null,
+                    ])->filter()->implode(' ') ?: 'Formda tanınan künye alanı ya da {{alan}} yer tutucusu bulunamadı; belge olduğu gibi kopyalanır.')
+                    ->persistent()
                     ->success()->send();
             });
     }

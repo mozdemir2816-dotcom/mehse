@@ -14,6 +14,7 @@ use App\Support\ArsivKurali;
 use App\Support\ArsivUretici;
 use App\Support\BelgeSablonMotoru;
 use App\Support\BildirimTarayici;
+use App\Support\EtiketliSablon;
 use App\Support\IsyeriDurumu;
 use App\Support\KullaniciAyarlari;
 use App\Support\YillikDegerlendirmeFormUretici;
@@ -607,5 +608,120 @@ class ArsivSayfasiTest extends TestCase
             $sonuc = ArsivUretici::uret($k, $this->firma, null, '2026-10-03');
             $this->assertIsString($sonuc);
         }
+    }
+
+    /*
+    | Örnek form yükle → birebir aynısı üretilir / hazır Excel'i indir → düzelt → yükle
+    */
+
+    /** Yer tutucusuz, başka firmanın verisiyle dolu örnek form (FirstİSG düzeni). */
+    private function ornekForm(): string
+    {
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet();
+        $s->setCellValue('C1', 'ESKİ FİRMA LTD.');
+        $s->setCellValue('C2', '2026 - YILLIK EĞİTİM PLANI');
+        $s->setCellValue('A3', 'İŞ YERİ ÜNVANI');
+        $s->mergeCells('A3:B3');
+        $s->setCellValue('C3', 'ESKİ FİRMA LTD.');
+        $s->setCellValue('E3', 'ÇALIŞMA YILI');
+        $s->setCellValue('F3', 2026);
+        $s->setCellValue('A4', 'ADRESİ');
+        $s->setCellValue('B4', 'Eski adres');
+        $s->setCellValue('E4', 'İŞ GÜVENLİĞİ UZMANI');
+        $s->setCellValue('F4', 'Eski Uzman Adı');
+        $s->setCellValue('A5', 'SGK Sicil No:');
+        $s->setCellValue('B5', '1111111111111');
+        $s->setCellValue('A7', 'Planlanan Tarih:');
+        $s->setCellValue('B7', 1);
+        $s->setCellValue('C7', 8);
+        $s->setCellValue('D7', 2026);
+        $s->setCellValue('A8', 'Eğitim konusu');
+        $s->setCellValue('B8', '01.08.2026 tarihinde KKD eğitimi');
+        $s->setCellValue('A20', '=F4');            // imza altı: uzman adı (formül)
+        $s->setCellValue('A21', '=A20');           // zincir
+        $s->setCellValue('B20', '=E4');            // rol etiketi — kalır
+        $yol = tempnam(sys_get_temp_dir(), 'orn').'.xlsx';
+        IOFactory::createWriter($kitap, 'Xlsx')->save($yol);
+
+        return $yol;
+    }
+
+    public function test_ornek_form_yuklenir_kunye_taninir_ve_birebir_uretilir(): void
+    {
+        $this->firma->update(['sgk_sicil_no' => '2410101099999']);
+        $ornek = $this->ornekForm();
+        $this->assertEqualsCanonicalizing(['isyeri.unvan', 'kayit.yil', 'isyeri.adres', 'gorevli_adi', 'isyeri.sgk_sicil'], EtiketliSablon::bul($ornek));
+
+        $sayfa = Livewire::test(DokumanYonetimi::class)->set('firmaId', $this->firma->id)
+            ->assertSee('Örnek formumu yükle')
+            ->assertSee("Hazır Excel'i indir", false);
+
+        $sayfa->mountAction('sablonlar', ['kategori' => 'yillik_egitim_plani'])
+            ->assertActionDataSet(['kategori' => 'yillik_egitim_plani', 'ad' => 'Kendi Yıllık Eğitim Planı formum']);
+        $sayfa->setActionData(['dosya' => UploadedFile::fake()->createWithContent('egitim-plani.xlsx', (string) file_get_contents($ornek))])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        $sablon = BelgeSablonu::sole();
+        $this->assertSame([], $sablon->yer_tutucular);
+        $this->assertSame('kullanici:'.$sablon->id, array_key_first($sayfa->instance()->sablonSecenekleri('yillik_egitim_plani')));   // kendi formu varsayılan
+        $sayfa->assertSee('Formumdan üret');
+
+        $sayfa->callAction('yeniKayit', [
+            'yontem' => 'sablon', 'firma_id' => $this->firma->id, 'kategori' => 'yillik_egitim_plani', 'yil' => 2027,
+            'baslangic_tarihi' => '2026-12-20', 'sablon' => 'kullanici:'.$sablon->id,
+        ])->assertHasNoActionErrors();
+
+        $d = ArsivDosya::sole();
+        $gecici = tempnam(sys_get_temp_dir(), 'tst').'.xlsx';
+        file_put_contents($gecici, Storage::disk('public')->get($d->dosya_yolu));
+        $s = IOFactory::load($gecici)->getActiveSheet();
+
+        $this->assertSame('Ahmet Yapı', $s->getCell('C1')->getValue());                     // başlıktaki eski unvan
+        $this->assertSame('2027 - YILLIK EĞİTİM PLANI', $s->getCell('C2')->getValue());
+        $this->assertSame('Ahmet Yapı', $s->getCell('C3')->getValue());                     // birleştirilmiş etiketin sağı
+        $this->assertSame(2027, $s->getCell('F3')->getValue());
+        $this->assertSame('Atatürk Cad. 1 Bursa', $s->getCell('B4')->getValue());
+        $this->assertSame('2410101099999', $s->getCell('B5')->getValue());                  // uzun numara metin kalır
+        $this->assertNull($s->getCell('F4')->getValue());                                  // görevli adı basılmaz
+        $this->assertNull($s->getCell('A20')->getValue());                                 // ada bağlı formül
+        $this->assertNull($s->getCell('A21')->getValue());                                 // zincir
+        $this->assertSame('=E4', $s->getCell('B20')->getValue());                          // rol etiketi formülü kalır
+        $this->assertSame(2027, $s->getCell('D7')->getValue());                            // gövdedeki yıl
+        $this->assertSame('01.08.2027 tarihinde KKD eğitimi', $s->getCell('B8')->getValue());
+        $this->assertSame(8, $s->getCell('C7')->getValue());                               // diğer sayılar aynen
+        $this->assertSame('Eğitim konusu', $s->getCell('A8')->getValue());
+        @unlink($gecici);
+        @unlink($ornek);
+    }
+
+    public function test_hazir_excel_indirilir_duzeltilip_dosyaya_eklenir(): void
+    {
+        $sayfa = Livewire::test(DokumanYonetimi::class);
+        $sayfa->call('hazirIndir', 'yillik_calisma_plani');                                  // firma seçilmeden indirilmez
+        $this->assertDatabaseCount('arsiv_dosyalari', 0);
+
+        $sayfa->set('firmaId', $this->firma->id)
+            ->call('hazirIndir', 'yillik_calisma_plani')
+            ->assertFileDownloaded();
+        $this->assertDatabaseCount('arsiv_dosyalari', 0);                                   // indirmek kayıt açmaz
+
+        // Düzeltilmiş Excel "Yükle" ile arşive girer…
+        $sayfa->callAction('yeniKayit', [
+            'yontem' => 'yukle', 'firma_id' => $this->firma->id, 'kategori' => 'yillik_calisma_plani', 'yil' => 2026,
+            'dosyalar' => [UploadedFile::fake()->create('calisma-plani-duzeltilmis.xlsx', 30, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')],
+            'baslangic_tarihi' => '2026-10-04',
+        ])->assertHasNoActionErrors();
+        $this->assertSame('calisma-plani-duzeltilmis.xlsx', ArsivDosya::sole()->dosya_adi);
+
+        // …ya da üretilen belge "Dosyaya ekle"de düzeltilmiş Excel ile değiştirilir.
+        $d = $this->kayit('yillik_egitim_plani', ['yil' => 2026, 'asama' => ArsivDosya::IMZA_BEKLIYOR]);
+        $sayfa->callAction('dosyayaEkle', [
+            'baslangic_tarihi' => '2026-10-04',
+            'dosyalar' => [UploadedFile::fake()->create('egitim-duzeltilmis.xlsx', 30, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')],
+        ], ['id' => $d->id])->assertHasNoActionErrors();
+        $this->assertSame('egitim-duzeltilmis.xlsx', $d->fresh()->dosya_adi);
+        $this->assertSame(ArsivDosya::DOSYADA, $d->fresh()->asama);
     }
 }
