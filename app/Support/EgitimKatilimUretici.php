@@ -97,17 +97,17 @@ class EgitimKatilimUretici
         $s = $kitap->getActiveSheet();
         $s->setTitle('Eğitim Katılım');
         $s->getColumnDimension('A')->setWidth(6);
-        $s->getColumnDimension('B')->setWidth(26);
-        $s->getColumnDimension('C')->setWidth(16);
-        $s->getColumnDimension('D')->setWidth(22);
+        $s->getColumnDimension('B')->setWidth(32);
+        $s->getColumnDimension('C')->setWidth(18);
+        $s->getColumnDimension('D')->setWidth(26);
 
-        // Katılımcı tablosu, sınav puanları elle doldurulur:
+        // Katılımcı tablosu: imzalar yan yana, ardından sınav puanları yan yana (elle doldurulur).
         // 1 gün:  İmza | Ön Test | Son Test
-        // 2 gün:  İmza (1. Gün) | Ön Test | İmza (2. Gün) | Son Test  (her sınav kendi gününün imzasının yanında)
+        // 2 gün:  İmza (1. Gün) | İmza (2. Gün) | Ön Test | Son Test
         $son = $ikiGun ? 'H' : 'G';
         $genislik = $ikiGun
-            ? ['E' => 14, 'F' => 9, 'G' => 14, 'H' => 9]   // "İmza (1. Gün)" başlığı sığacak kadar
-            : ['E' => 22, 'F' => 9, 'G' => 9];
+            ? ['E' => 12, 'F' => 12, 'G' => 9, 'H' => 9]   // imza başlığı iki satıra kayar
+            : ['E' => 14, 'F' => 9, 'G' => 9];
         foreach ($genislik as $harf => $g) {
             $s->getColumnDimension($harf)->setWidth($g);
         }
@@ -166,7 +166,7 @@ class EgitimKatilimUretici
 
         $baslikSatir = $r;
         $sutunlar = $ikiGun
-            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'Ön Test', 'İmza (2. Gün)', 'Son Test']
+            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)', 'Ön Test', 'Son Test']
             : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza', 'Ön Test', 'Son Test'];
 
         $s->fromArray($sutunlar, null, "A{$r}");
