@@ -103,9 +103,18 @@ class EgitimKatilimUretici
         $s->getColumnDimension('E')->setWidth(20);
         $s->getColumnDimension('F')->setWidth(20);
 
+        // Katılımcı tablosu: imza sütun(lar)ından sonra ilk ve son sınav puanı (elle doldurulur).
+        $son = $ikiGun ? 'H' : 'G';
+        foreach ($ikiGun ? ['G', 'H'] : ['F', 'G'] as $harf) {
+            $s->getColumnDimension($harf)->setWidth(14);
+        }
+        if (! $ikiGun) {
+            $s->getColumnDimension('E')->setWidth(22);
+        }
+
         $r = 1;
         $s->setCellValue("A{$r}", 'EĞİTİM KATILIM FORMU');
-        $s->mergeCells("A{$r}:F{$r}");
+        $s->mergeCells("A{$r}:{$son}{$r}");
         $s->getStyle("A{$r}")->getFont()->setBold(true)->setSize(14);
         $s->getStyle("A{$r}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $r += 2;
@@ -126,7 +135,7 @@ class EgitimKatilimUretici
             $s->setCellValue("A{$r}", $etiket);
             $s->setCellValue("B{$r}", $deger);
             $s->getStyle("A{$r}")->getFont()->setBold(true);
-            $s->mergeCells("B{$r}:F{$r}");
+            $s->mergeCells("B{$r}:{$son}{$r}");
             $r++;
         }
         $r++;
@@ -156,11 +165,12 @@ class EgitimKatilimUretici
 
         $baslikSatir = $r;
         $sutunlar = $ikiGun
-            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)']
-            : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza'];
+            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)', 'İlk Sınav (Ön Test)', 'Son Sınav (Son Test)']
+            : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza', 'İlk Sınav (Ön Test)', 'Son Sınav (Son Test)'];
 
         $s->fromArray($sutunlar, null, "A{$r}");
-        $s->getStyle("A{$r}:F{$r}")->getFont()->setBold(true);
+        $s->getStyle("A{$r}:{$son}{$r}")->getFont()->setBold(true);
+        $s->getStyle("A{$r}:{$son}{$r}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_CENTER);
         $r++;
 
         $katilimcilar = $kayit->katilimcilar ?? [];
@@ -175,7 +185,7 @@ class EgitimKatilimUretici
         }
 
         $sonSatir = $r - 1;
-        $s->getStyle("A{$baslikSatir}:".($ikiGun ? 'F' : 'E')."{$sonSatir}")
+        $s->getStyle("A{$baslikSatir}:{$son}{$sonSatir}")
             ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
         $r += 2;
 

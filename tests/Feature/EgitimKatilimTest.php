@@ -282,6 +282,34 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('.xlsx', $yanit->headers->get('content-disposition'));
     }
 
+    public function test_excel_katilimci_listesinde_ilk_ve_son_sinav_sutunlari_var(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        foreach ([1 => ['E' => 'İmza', 'F' => 'İlk Sınav (Ön Test)', 'G' => 'Son Sınav (Son Test)'],
+            2 => ['F' => 'İmza (2. Gün)', 'G' => 'İlk Sınav (Ön Test)', 'H' => 'Son Sınav (Son Test)']] as $gun => $beklenen) {
+            $kayit = EgitimKatilim::create([
+                'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => $gun,
+                'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+                'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+            ]);
+
+            ob_start();
+            EgitimKatilimUretici::excel($kayit)->sendContent();
+            $yol = tempnam(sys_get_temp_dir(), 'egt').'.xlsx';
+            file_put_contents($yol, ob_get_clean());
+
+            $sayfa = \PhpOffice\PhpSpreadsheet\IOFactory::load($yol)->getActiveSheet();
+            $satir = collect($sayfa->toArray(null, false, false, true))->search(fn ($s) => ($s['B'] ?? null) === 'Ad Soyad');
+            $this->assertNotFalse($satir, "{$gun} günlük formda katılımcı başlığı yok");
+
+            foreach ($beklenen as $sutun => $baslik) {
+                $this->assertSame($baslik, $sayfa->getCell($sutun.$satir)->getValue(), "{$gun} gün, {$sutun} sütunu");
+            }
+            @unlink($yol);
+        }
+    }
+
     public function test_excel_aksiyonu_kayit_olusturur_ve_xlsx_doner(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
