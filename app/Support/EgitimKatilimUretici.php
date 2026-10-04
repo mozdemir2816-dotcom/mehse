@@ -18,13 +18,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class EgitimKatilimUretici
 {
-    public static function pdf(EgitimKatilim $kayit): StreamedResponse
+    /** @param  bool  $imzali  false = imzasız (matbu): eğitmen kaşe/imza görselleri basılmaz */
+    public static function pdf(EgitimKatilim $kayit, bool $imzali = true): StreamedResponse
     {
         $kayit->loadMissing('firma');
 
         $ad = 'egitim-katilim-'.Str::slug($kayit->firma?->unvan ?? 'firma').'-'.$kayit->belge_no.'.pdf';
 
-        return static::pdfCikti($kayit, $kayit->firma, $kayit->konu_secimleri ?? [], $ad);
+        return static::pdfCikti($kayit, $kayit->firma, $kayit->konu_secimleri ?? [], $ad, $imzali);
     }
 
     /**
@@ -32,9 +33,9 @@ class EgitimKatilimUretici
      * her sayfaya "Belge No · Sayfa X/Y" damgalar (eğitmen imzası zaten
      * position:fixed ile her sayfada). Tek sayfada damga yok.
      */
-    private static function pdfCikti(EgitimKatilim $kayit, $firma, array $icerik, string $ad): StreamedResponse
+    private static function pdfCikti(EgitimKatilim $kayit, $firma, array $icerik, string $ad, bool $imzali = true): StreamedResponse
     {
-        $pdf = Pdf::loadView('pdf.egitim-katilim', compact('kayit', 'firma', 'icerik'))->setPaper('a4');
+        $pdf = Pdf::loadView('pdf.egitim-katilim', compact('kayit', 'firma', 'icerik', 'imzali'))->setPaper('a4');
         $pdf->render();
 
         $dompdf = $pdf->getDomPDF();

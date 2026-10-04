@@ -408,10 +408,10 @@ class CezaTeblig extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null && $this->aktifSekme === 'ipc')
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $t = $this->kaydetIpc();
 
-                    return $t ? IpcTebligiUretici::pdf($t) : null;
+                    return $t ? IpcTebligiUretici::pdf($t, ImzaSecenegi::secili($data)) : null;
                 }),
         ];
     }

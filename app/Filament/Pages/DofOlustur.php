@@ -359,7 +359,7 @@ class DofOlustur extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $d = $this->kaydet();
 
                     if (! $d) {
@@ -368,7 +368,7 @@ class DofOlustur extends Page
 
                     Notification::make()->title('DÖF raporu kaydedildi')->body($d->belge_no)->success()->send();
 
-                    return DofRaporuUretici::pdf($d);
+                    return DofRaporuUretici::pdf($d, ImzaSecenegi::secili($data));
                 }),
         ];
     }

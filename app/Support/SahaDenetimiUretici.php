@@ -14,11 +14,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class SahaDenetimiUretici
 {
-    public static function pdf(SahaDenetimi $d): StreamedResponse
+    /** @param  bool  $imzali  false = imzasız (matbu): kaşe/imza görselleri basılmaz */
+    public static function pdf(SahaDenetimi $d, bool $imzali = true): StreamedResponse
     {
         $d->loadMissing('firma');
 
         $pdf = Pdf::loadView('pdf.saha-denetimi', [
+            'imzali' => $imzali,
             'denetim' => $d,
             'firma' => $d->firma,
         ])->setPaper('a4', 'landscape');

@@ -426,7 +426,7 @@ class SertifikaOlustur extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $s = $this->kaydet();
 
                     if (! $s) {
@@ -435,7 +435,7 @@ class SertifikaOlustur extends Page
 
                     Notification::make()->title('Sertifika kaydedildi')->body($s->belge_no)->success()->send();
 
-                    return SertifikaUretici::pdf($s);
+                    return SertifikaUretici::pdf($s, ImzaSecenegi::secili($data));
                 }),
 
             Action::make('yildizGrup')

@@ -840,7 +840,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $kayit = $this->kaydet();
 
                     if (! $kayit) {
@@ -849,7 +849,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no)->success()->send();
 
-                    return EgitimKatilimUretici::pdf($kayit);
+                    return EgitimKatilimUretici::pdf($kayit, ImzaSecenegi::secili($data));
                 }),
 
             Action::make('excel')
@@ -898,7 +898,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — her katılımcı için ayrı sertifika sayfası')->success()->send();
 
-                    return SertifikaUretici::pdf($this->sertifikaKur($kayit, $tarihler));
+                    return SertifikaUretici::pdf($this->sertifikaKur($kayit, $tarihler), ImzaSecenegi::secili($data));
                 }),
 
             Action::make('yildizGrupSertifika')

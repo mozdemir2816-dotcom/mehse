@@ -91,7 +91,7 @@
         <tr>
             <td>
                 @if ($rapor->gozetim_yapan_kase)
-                    <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
+                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">@endif
                 @endif
                 Gözetim Yapan (İSG Uzmanı)<br>(İmza – Kaşe)
             </td>

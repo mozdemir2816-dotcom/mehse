@@ -67,7 +67,7 @@
                         <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
                         <div class="ad">&nbsp;</div>
                         <div class="kase">
-                            @if ($kayit->isg_uzmani_kase)
+                            @if (($imzali ?? true) && $kayit->isg_uzmani_kase)
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
                             @endif
                         </div>
@@ -79,7 +79,7 @@
                         <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
                         <div class="ad">&nbsp;</div>
                         <div class="kase">
-                            @if ($kayit->isyeri_hekimi_kase)
+                            @if (($imzali ?? true) && $kayit->isyeri_hekimi_kase)
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
                             @endif
                         </div>

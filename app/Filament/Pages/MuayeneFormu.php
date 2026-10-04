@@ -239,7 +239,7 @@ class MuayeneFormu extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $m = $this->kaydet();
 
                     if (! $m) {
@@ -248,7 +248,7 @@ class MuayeneFormu extends Page
 
                     Notification::make()->title('Muayene formu kaydedildi')->body($m->belge_no)->success()->send();
 
-                    return MuayeneFormuUretici::pdf($m);
+                    return MuayeneFormuUretici::pdf($m, ImzaSecenegi::secili($data));
                 }),
         ];
     }

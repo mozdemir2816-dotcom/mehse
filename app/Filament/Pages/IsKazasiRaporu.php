@@ -406,7 +406,7 @@ class IsKazasiRaporu extends Page
                 ->icon('heroicon-o-document-check')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $kayit = $this->kaydet('tamamlandi');
 
                     if (! $kayit) {
@@ -415,7 +415,7 @@ class IsKazasiRaporu extends Page
 
                     Notification::make()->title('İş kazası raporu tamamlandı')->body($kayit->belge_no)->success()->send();
 
-                    return IsKazasiRaporuUretici::pdf($kayit);
+                    return IsKazasiRaporuUretici::pdf($kayit, ImzaSecenegi::secili($data));
                 }),
         ];
     }

@@ -159,6 +159,25 @@ class EgitimKatilimTest extends TestCase
         $this->assertContains('Vinç altında durmama', collect($sonrasi)->pluck('madde')->all());
     }
 
+    public function test_imzasiz_secilince_katilim_formunda_egitmen_kasesi_basilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 1,
+            'isg_uzmani_var' => true, 'isg_uzmani_kase' => 'isg-profesyonel-kase/x.png',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+            'katilimcilar' => [],
+        ]);
+
+        $html = fn (bool $imzali) => view('pdf.egitim-katilim', [
+            'kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri, 'imzali' => $imzali,
+        ])->render();
+
+        $this->assertStringContainsString('isg-profesyonel-kase/x.png', $html(true));
+        $this->assertStringNotContainsString('isg-profesyonel-kase/x.png', $html(false));
+        $this->assertStringContainsString('Kaşe / İmza', $html(false));   // elle imza yeri kalır
+    }
+
     public function test_iki_gunluk_egitim_pdfinde_gun_bazli_imza_sutunlari_olusur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -99,7 +99,7 @@
             <div class="rol">İşyeri Hekimi</div>
             <div class="kutu2">
                 @if ($belge->hekim_kase && is_file(storage_path('app/public/'.$belge->hekim_kase)))
-                    <img src="{{ storage_path('app/public/'.$belge->hekim_kase) }}">
+                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$belge->hekim_kase) }}">@endif
                 @endif
             </div>
             

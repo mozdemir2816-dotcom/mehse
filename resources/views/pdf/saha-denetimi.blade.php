@@ -132,7 +132,7 @@
             <td style="width:60%">Genel Notlar: {{ $denetim->genel_notlar ?: '—' }}</td>
             <td class="kase" style="text-align:right">
                 @if ($denetim->denetci_kase)
-                    <img src="{{ storage_path('app/public/'.$denetim->denetci_kase) }}"><br>
+                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$denetim->denetci_kase) }}">@endif<br>
                 @endif
                 Denetçi Kaşe / İmza
             </td>

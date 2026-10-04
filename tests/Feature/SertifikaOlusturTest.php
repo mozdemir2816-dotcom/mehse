@@ -126,6 +126,21 @@ class SertifikaOlusturTest extends TestCase
         $this->assertDatabaseCount('sertifikalar', 0);
     }
 
+    public function test_imzasiz_secilince_sertifikada_egitici_kasesi_basilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $s = Sertifika::create([
+            'firma_id' => $firma->id, 'tip' => 'isg', 'egitici_igu_dahil' => true, 'egitici_igu_kase' => 'isg-profesyonel-kase/x.png',
+            'katilimcilar' => [['ad_soyad' => 'Test Kişi', 'tc' => null, 'gorev' => null]],
+            'konu_icerigi' => ['tip' => 'genel', 'genel_konular' => [], 'saglik_konulari' => [], 'teknik_konular' => []],
+        ]);
+
+        $html = fn (bool $imzali) => view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma, 'imzali' => $imzali])->render();
+
+        $this->assertStringContainsString('isg-profesyonel-kase/x.png', $html(true));
+        $this->assertStringNotContainsString('isg-profesyonel-kase/x.png', $html(false));
+    }
+
     public function test_pdf_uretilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

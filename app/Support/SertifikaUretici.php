@@ -13,13 +13,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class SertifikaUretici
 {
-    public static function pdf(Sertifika $s): StreamedResponse
+    /** @param  bool  $imzali  false = imzasız (matbu): eğitici kaşe/imza görselleri basılmaz */
+    public static function pdf(Sertifika $s, bool $imzali = true): StreamedResponse
     {
         $s->loadMissing('firma');
 
         $pdf = Pdf::loadView('pdf.sertifika', [
             'sertifika' => $s,
             'firma' => $s->firma,
+            'imzali' => $imzali,
         ])->setPaper('a4', 'landscape');
 
         $ad = 'sertifika-'.Str::slug($s->tipEtiketi()).'-'.Str::slug($s->firma?->unvan ?? 'firma').'.pdf';

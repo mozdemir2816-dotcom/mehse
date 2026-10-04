@@ -12,11 +12,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class IsKazasiRaporuUretici
 {
-    public static function pdf(IsKazasiRaporu $r): StreamedResponse
+    /** @param  bool  $imzali  false = imzasız (matbu): kaşe/imza görselleri basılmaz */
+    public static function pdf(IsKazasiRaporu $r, bool $imzali = true): StreamedResponse
     {
         $r->loadMissing('firma');
 
         $pdf = Pdf::loadView('pdf.is-kazasi-raporu', [
+            'imzali' => $imzali,
             'rapor' => $r,
             'firma' => $r->firma,
         ])->setPaper('a4');

@@ -632,7 +632,7 @@ class SahaDenetimi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $d = $this->kaydet();
 
                     if (! $d) {
@@ -641,7 +641,7 @@ class SahaDenetimi extends Page
 
                     Notification::make()->title('Saha denetimi kaydedildi')->body($d->belgeAdi())->success()->send();
 
-                    return SahaDenetimiUretici::pdf($d);
+                    return SahaDenetimiUretici::pdf($d, ImzaSecenegi::secili($data));
                 }),
         ];
     }

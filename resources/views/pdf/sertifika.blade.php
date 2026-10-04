@@ -165,7 +165,7 @@
                     <td>
                         İş Güvenliği Uzmanı<br>
                         Eğitici Adı Soyadı : <br>
-                        @if ($sertifika->egitici_igu_kase)
+                        @if (($imzali ?? true) && $sertifika->egitici_igu_kase)
                             <img src="{{ storage_path('app/public/'.$sertifika->egitici_igu_kase) }}">
                         @endif
                         İmza :
@@ -175,7 +175,7 @@
                     <td>
                         İşyeri Hekimi<br>
                         Eğitici Adı Soyadı : <br>
-                        @if ($sertifika->egitici_hekim_kase)
+                        @if (($imzali ?? true) && $sertifika->egitici_hekim_kase)
                             <img src="{{ storage_path('app/public/'.$sertifika->egitici_hekim_kase) }}">
                         @endif
                         İmza :

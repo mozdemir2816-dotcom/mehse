@@ -182,7 +182,7 @@ class IseDonusBelgesi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $b = $this->kaydet();
 
                     if (! $b) {
@@ -191,7 +191,7 @@ class IseDonusBelgesi extends Page
 
                     Notification::make()->title('İşe dönüş belgesi kaydedildi')->body($b->belge_no)->success()->send();
 
-                    return IseDonusBelgesiUretici::pdf($b);
+                    return IseDonusBelgesiUretici::pdf($b, ImzaSecenegi::secili($data));
                 }),
         ];
     }

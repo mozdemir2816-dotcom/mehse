@@ -99,7 +99,7 @@
         <tr>
             <td>
                 @if ($form->hekim_kase)
-                    <img src="{{ storage_path('app/public/'.$form->hekim_kase) }}">
+                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$form->hekim_kase) }}">@endif
                 @endif
                 İşyeri Hekimi<br>(Muayeneyi Yapan Hekim – Kaşe/İmza)
             </td>

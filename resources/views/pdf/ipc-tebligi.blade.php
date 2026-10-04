@@ -76,7 +76,7 @@
         <tr>
             <td>
                 @if ($tebligi->hazirlayan_kase)
-                    <img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">
+                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">@endif
                 @endif
                 İSG Uzmanı<br>(Hazırlayan – Kaşe)
             </td>

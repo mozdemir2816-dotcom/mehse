@@ -158,7 +158,7 @@
                 <div class="rol">HAZIRLAYAN</div><div class="unvan">İş Güvenliği Uzmanı</div>
                 <div class="kutu">
                     @if ($rapor->rapor_hazirlayan_kase && is_file(storage_path('app/public/'.$rapor->rapor_hazirlayan_kase)))
-                        <img src="{{ storage_path('app/public/'.$rapor->rapor_hazirlayan_kase) }}">
+                        @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$rapor->rapor_hazirlayan_kase) }}">@endif
                     @endif
                 </div>
                 
@@ -167,7 +167,7 @@
                 <div class="rol">ONAYLAYAN</div><div class="unvan">İşyeri Hekimi</div>
                 <div class="kutu">
                     @if ($rapor->isyeri_hekimi_dahil && $rapor->isyeri_hekimi_kase && is_file(storage_path('app/public/'.$rapor->isyeri_hekimi_kase)))
-                        <img src="{{ storage_path('app/public/'.$rapor->isyeri_hekimi_kase) }}">
+                        @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$rapor->isyeri_hekimi_kase) }}">@endif
                     @endif
                 </div>
                 
