@@ -106,7 +106,7 @@ class EgitimKatilimUretici
         // Katılımcı tablosu: imza sütun(lar)ından sonra ilk ve son sınav puanı (elle doldurulur).
         $son = $ikiGun ? 'H' : 'G';
         foreach ($ikiGun ? ['G', 'H'] : ['F', 'G'] as $harf) {
-            $s->getColumnDimension($harf)->setWidth(14);
+            $s->getColumnDimension($harf)->setWidth(9);
         }
         if (! $ikiGun) {
             $s->getColumnDimension('E')->setWidth(22);
@@ -165,8 +165,8 @@ class EgitimKatilimUretici
 
         $baslikSatir = $r;
         $sutunlar = $ikiGun
-            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)', 'İlk Sınav (Ön Test)', 'Son Sınav (Son Test)']
-            : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza', 'İlk Sınav (Ön Test)', 'Son Sınav (Son Test)'];
+            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)', 'Ön Test', 'Son Test']
+            : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza', 'Ön Test', 'Son Test'];
 
         $s->fromArray($sutunlar, null, "A{$r}");
         $s->getStyle("A{$r}:{$son}{$r}")->getFont()->setBold(true);

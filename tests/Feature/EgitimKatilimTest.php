@@ -67,6 +67,23 @@ class EgitimKatilimTest extends TestCase
         $this->assertEqualsWithDelta(180, collect($cok['saglik_konulari'])->sum('dakika'), 6);
     }
 
+    public function test_sayfada_sure_11_saati_asinca_otomatik_2_gun_secilir(): void
+    {
+        $az = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $tehlikeli = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+
+        // Tehlike sınıfından gelen 12 saat -> 2 gün
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', $tehlikeli->id)->assertSet('sureGun', 2);
+
+        // Az tehlikeli 8 saat -> 1 gün; ders saati 12 yapılınca -> 2 gün, 8'e dönünce -> 1 gün
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $az->id)->assertSet('sureGun', 1)
+            ->set('dersSaati', 12)->assertSet('sureGun', 2)
+            ->set('dersSaati', 8)->assertSet('sureGun', 1);
+
+        // Konu dakikaları artırılıp toplam 11 saati aşınca -> 2 gün
+        $sayfa->set('icerik.genel_konular.0.dakika', 300)->assertSet('sureGun', 2);
+    }
+
     public function test_bos_birakilan_dakika_kutusu_sayfayi_dusurmez(): void
     {
         $sure = EgitimIcerikOlusturucu::bolumSuresi([
@@ -286,8 +303,8 @@ class EgitimKatilimTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
-        foreach ([1 => ['E' => 'İmza', 'F' => 'İlk Sınav (Ön Test)', 'G' => 'Son Sınav (Son Test)'],
-            2 => ['F' => 'İmza (2. Gün)', 'G' => 'İlk Sınav (Ön Test)', 'H' => 'Son Sınav (Son Test)']] as $gun => $beklenen) {
+        foreach ([1 => ['E' => 'İmza', 'F' => 'Ön Test', 'G' => 'Son Test'],
+            2 => ['F' => 'İmza (2. Gün)', 'G' => 'Ön Test', 'H' => 'Son Test']] as $gun => $beklenen) {
             $kayit = EgitimKatilim::create([
                 'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => $gun,
                 'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),

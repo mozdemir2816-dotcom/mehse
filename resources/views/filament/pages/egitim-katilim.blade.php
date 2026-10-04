@@ -106,7 +106,7 @@
                     @if ($sureGun >= 2)
                         <strong>{{ $sureGun }} gün</strong> — imzalar her gün ayrı alınır. Elle değiştirebilirsiniz.
                     @else
-                        11 saati / 12 ders saatini aşınca otomatik 2 güne çıkar.
+                        Toplam süre 11 saati geçince (12 ders saati ve üstü) otomatik 2 gün seçilir.
                     @endif
                 </p>
             </div>
