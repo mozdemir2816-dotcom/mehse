@@ -181,7 +181,7 @@ class FirmaExcelIceAktarici
         return $veri;
     }
 
-    private static function tehlikeSinifiCoz(string $deger): string
+    public static function tehlikeSinifiCoz(string $deger): string
     {
         $normalize = static::normalize($deger);
 
@@ -212,7 +212,7 @@ class FirmaExcelIceAktarici
         return collect($satir)->every(fn ($h) => blank(is_string($h) ? trim($h) : $h));
     }
 
-    private static function normalize(string $metin): string
+    public static function normalize(string $metin): string
     {
         $metin = strtr($metin, [
             'Ç' => 'c', 'ç' => 'c', 'Ğ' => 'g', 'ğ' => 'g', 'İ' => 'i', 'I' => 'i', 'ı' => 'i',
