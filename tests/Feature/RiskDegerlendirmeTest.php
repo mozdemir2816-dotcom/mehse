@@ -268,13 +268,16 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('Test Mahallesi No:1 İstanbul', $html);
         $this->assertStringContainsString(now()->format('d.m.Y'), $html);
 
-        // .sayfa-ust, <body>'nin en başında (kapaktan ÖNCE) olmalı ki dompdf'in
-        // sabit-konum tekniğiyle gerçekten HER sayfada tekrarlansın.
+        // Şeritler kapaktan SONRA tanımlanır: dompdf sabit-konumlu öğeyi tanımlandığı
+        // sayfadan itibaren basar → kapak (kullanıcı şablonu) şeritsiz, 2. sayfadan itibaren her sayfada.
         $ustPos = strpos($html, 'class="sayfa-ust"');
+        $altPos = strpos($html, 'class="sayfa-alt"');
         $kapakPos = strpos($html, 'class="kapak"');
+        $prosedurVeyaForm = strpos($html, '1. İŞYERİ KÜNYESİ');
         $this->assertNotFalse($ustPos);
         $this->assertNotFalse($kapakPos);
-        $this->assertTrue($ustPos < $kapakPos);
+        $this->assertTrue($kapakPos < $ustPos && $ustPos < $prosedurVeyaForm);
+        $this->assertTrue($kapakPos < $altPos && $altPos < $prosedurVeyaForm);
     }
 
     public function test_pdf_tek_render_edilir_ve_toplam_sayfa_page_script_ile_damgalanir(): void
@@ -292,8 +295,23 @@ class RiskDegerlendirmeTest extends TestCase
             'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
         ])->render();
 
-        $this->assertStringContainsString('Hazırlayan:', $html);
-        $this->assertStringNotContainsString('Toplam Sayfa', $html);
+        // Kapak = kullanıcının Word şablonu; toplam sayfa hücresi boş, sayı page_script ile yazılır.
+        foreach (['İŞ SAĞLIĞI VE GÜVENLİĞİ', 'İŞYERİ BİLGİLERİ', 'DOKÜMAN BİLGİLERİ', 'RİSK DEĞERLENDİRMESİ EKİBİ', 'Toplam sayfa sayısı', 'Bilgi Sahibi Personel'] as $metin) {
+            $this->assertStringContainsString($metin, $html);
+        }
+        $this->assertStringContainsString('id="kapak-toplam-sayfa"', $html);
+        $this->assertStringNotContainsString('Toplam Sayfa:', $html);
+
+        // Render sonrası hücrenin konumu bulunabilmeli (yoksa sayı kapağa yazılamaz).
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.risk-degerlendirmesi', [
+            'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman, 'hekim' => null, 'temsilci' => null,
+            'destekElemani' => null, 'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
+        ])->setPaper('a4');
+        $kutu = null;
+        RiskDegerlendirmesiUretici::konumYakala($pdf->getDomPDF(), 'kapak-toplam-sayfa', $kutu);
+        $pdf->render();
+        $this->assertNotNull($kutu);
+        $this->assertGreaterThan(0, $kutu[2]);
 
         // Uretici, toplamSayfa view değişkeni olmadan hatasız PDF üretmeli.
         $yanit = RiskDegerlendirmesiUretici::pdf($rd);

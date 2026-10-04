@@ -145,6 +145,12 @@ class RiskDegerlendirmesiUretici
         ];
 
         $pdf = Pdf::loadView('pdf.risk-degerlendirmesi', $veri)->setPaper('a4');
+
+        // Kapaktaki "Toplam sayfa sayısı" hücresinin konumu çizim sırasında yakalanır
+        // (dompdf render bitince kutu ağacını boşaltır); sayı aşağıda page_script ile
+        // o hücreye yazılır — çift render yok (300+ maddede süreyi ikiye katlıyordu).
+        $toplamHucre = null;
+        self::konumYakala($pdf->getDomPDF(), 'kapak-toplam-sayfa', $toplamHucre);
         $pdf->render();
 
         $dompdf = $pdf->getDomPDF();
@@ -158,21 +164,17 @@ class RiskDegerlendirmesiUretici
         // @page alt marjı 78px, imza şeridi (.sayfa-alt) tam o marjın altına
         // yaslanmış durumda (bottom:-78px) — içerik kutusunun bitişiyle şerit
         // arasında sayfa numarası için boşluk kalıyor.
-        $canvas->page_script(function (int $pageNumber, int $pageCount) use ($canvas, $font, $fontMetrics): void {
+        $canvas->page_script(function (int $pageNumber, int $pageCount) use ($canvas, $font, $fontMetrics, $toplamHucre): void {
             if ($pageNumber === 1) {
-                // Kapaktaki "Toplam Sayfa" — çift render'dan kaçınmak için
-                // (300+ maddede süreyi ikiye katlıyordu) sayfa alt-ortasına,
-                // kapağın çift çerçevesi içine damgalanır.
-                $metin = "Toplam Sayfa: {$pageCount}";
-                $genislik = $fontMetrics->getTextWidth($metin, $font, 10);
-                $canvas->text(
-                    ($canvas->get_width() - $genislik) / 2,
-                    $canvas->get_height() - 92,
-                    $metin,
-                    $font,
-                    10,
-                    [0.27, 0.27, 0.27],
-                );
+                if ($toplamHucre) {
+                    [$x, $y, , $h] = $toplamHucre;
+                    $canvas->text($x + 6, $y + ($h - 7.5) / 2 - 1.5, "{$pageCount} sayfa", $font, 7.5, [0, 0, 0]);
+                }
+
+                // Şablondaki kapak alt bilgisi (sağ alt).
+                $metin = 'Risk Değerlendirmesi  |  Kapak';
+                $genislik = $fontMetrics->getTextWidth($metin, $font, 7);
+                $canvas->text($canvas->get_width() - 45 - $genislik, $canvas->get_height() - 40, $metin, $font, 7, [0, 0, 0]);
 
                 return;
             }
@@ -183,5 +185,31 @@ class RiskDegerlendirmesiUretici
         });
 
         return $pdf;
+    }
+
+    /**
+     * Render sırasında id'si verilen öğenin kutusunu [x, y, genişlik, yükseklik] (pt, sayfa
+     * koordinatı) $konum'a yazar. Render'dan ÖNCE çağrılmalı: dompdf iş bitince kutu ağacını
+     * boşalttığı için konum sonradan okunamaz.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}|null  $konum
+     */
+    public static function konumYakala(\Dompdf\Dompdf $dompdf, string $id, ?array &$konum): void
+    {
+        $dompdf->setCallbacks([[
+            'event' => 'end_frame',
+            'f' => function ($kutu) use ($id, &$konum): void {
+                if ($konum !== null) {
+                    return;
+                }
+
+                $dugum = $kutu->get_node();
+
+                if ($dugum instanceof \DOMElement && $dugum->getAttribute('id') === $id) {
+                    $b = $kutu->get_padding_box();
+                    $konum = [(float) $b['x'], (float) $b['y'], (float) $b['w'], (float) $b['h']];
+                }
+            },
+        ]]);
     }
 }

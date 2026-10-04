@@ -6,9 +6,25 @@
     @page { margin: 46px 25px 78px 25px; }
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 11px; }
-    .kapak { border:3px double #111; margin: 28px; padding: 60px 40px; text-align: center; page-break-after: always; }
-    .kapak h1 { font-size: 24px; margin: 40px 0 8px; letter-spacing: 1px; }
-    .kapak .firma { font-size: 15px; font-weight: bold; margin-top: 40px; }
+    /* KAPAK — Risk_Degerlendirmesi_Kapak.docx: ortalı başlık, açık gri etiket hücreli tablolar */
+    .kapak { margin: 0 35px; page-break-after: always; position: relative; }
+    /* Sabit şeritleri kapakta örter: @page marjları üst 46px / alt 78px, yatay 25px; içerik yüksekliği 1123-46-78 = 999px. */
+    .kapak .k-ort { position: absolute; left: -60px; right: -60px; background: #fff; z-index: 50; }
+    .kapak .k-ort-ust { top: -46px; height: 46px; }
+    .kapak .k-ort-alt { top: 999px; height: 78px; }
+    .kapak .k-logo { text-align: center; font-size: 12px; margin-top: 4px; }
+    .kapak .k-logo img { max-height: 54px; max-width: 220px; }
+    .kapak .k-ust { text-align: center; font-size: 13px; margin-top: 22px; }
+    .kapak h1 { text-align: center; font-size: 30px; font-weight: bold; margin: 10px 0 0; letter-spacing: .5px; }
+    .kapak .k-firma { text-align: center; font-size: 15px; font-weight: bold; margin-top: 22px; }
+    .kapak .k-baslik { font-size: 12px; font-weight: bold; margin: 22px 0 9px; }
+    table.k-tablo { width: 100%; border-collapse: collapse; font-size: 10px; }
+    table.k-tablo td { border-top: 1px solid #c9ced3; border-bottom: 1px solid #c9ced3; padding: 0 6px; height: 23px; vertical-align: middle; text-align: left; }
+    table.k-tablo td.e { background: #edf0f3; font-weight: bold; border-left: 1px solid #c9ced3; border-right: 1px solid #c9ced3; }
+    table.k-tablo td.e2 { font-weight: bold; border-left: 1px solid #c9ced3; border-right: 1px solid #c9ced3; }
+    table.k-ekip tr.bas td { background: #edf0f3; font-weight: bold; }
+    table.k-ekip td { border-left: 1px solid #c9ced3; border-right: 1px solid #c9ced3; }
+    table.k-ekip td.imza img { max-height: 18px; max-width: 45%; margin-right: 3px; }
     .kunye { margin: 20px 0; width: 100%; border-collapse: collapse; font-size: 11px; }
     .kunye td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
     .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 35%; }
@@ -80,6 +96,85 @@
 </head>
 <body>
 
+{{-- KAPAK — kullanıcının "Risk_Degerlendirmesi_Kapak.docx" şablonu birebir.
+     Üst bilgi / imza şeritleri (position:fixed) dompdf'te her sayfaya basılır;
+     kapakta şablon gereği görünmemeleri için üstlerine beyaz örtü (.k-ort) konur. "Toplam sayfa sayısı" hücresi (#kapak-toplam-sayfa)
+     RiskDegerlendirmesiUretici'nde page_script ile doldurulur (tek render). --}}
+@php
+    $bosTarih = '…… / …… / …………';
+    $kapakEkip = [
+        ['İşveren / işveren vekili', '', ($imzali ?? true) ? [$firma?->isveren_kase_gorseli, $firma?->isveren_imza_gorseli] : []],
+        ['İş Güvenliği Uzmanı', '', ($imzali ?? true) ? [$uzman?->kase_gorseli, $uzman?->imza_gorseli] : []],
+        ['İşyeri Hekimi', '', ($imzali ?? true) ? [$hekim?->kase_gorseli, $hekim?->imza_gorseli] : []],
+        ['Çalışan Temsilcisi', $temsilci['ad'] ?? '', ($imzali ?? true) ? [$temsilci['imza_gorseli'] ?? null] : []],
+        ['Destek Elemanı', $destekElemani['ad'] ?? '', ($imzali ?? true) ? [$destekElemani['imza_gorseli'] ?? null] : []],
+        ['Bilgi Sahibi Personel', $bilgiSahibiCalisan['ad'] ?? '', []],
+    ];
+    // firma_nace bazen açıklamayı da içerir ("22.12.01 Plastik ...") → kodu firmadan al.
+    $naceKod = $firma?->nace_kodu ?: $rd->firma_nace;
+    $faaliyet = collect([$firma?->nace_aciklama, $naceKod])->filter()->unique()->implode(' / ');
+    $tehlike = collect([$firma?->tehlikeSinifiEtiketi(), $firma?->calisan_sayisi ? $firma->calisan_sayisi.' çalışan' : null])->filter()->implode(' / ');
+@endphp
+<div class="kapak">
+    <div class="k-ort k-ort-ust"></div>
+    <div class="k-ort k-ort-alt"></div>
+    {{-- Şablondaki "FİRMA LOGOSU / FİRMA UNVANI": logo varsa logo; yoksa unvan zaten aşağıda büyük yazıldığı için boş. --}}
+    <div class="k-logo">
+        @if ($firma?->logo && is_file(storage_path('app/public/'.$firma->logo)))
+            <img src="{{ storage_path('app/public/'.$firma->logo) }}">
+        @else
+            &nbsp;
+        @endif
+    </div>
+    <div class="k-ust">İŞ SAĞLIĞI VE GÜVENLİĞİ</div>
+    <h1>RİSK DEĞERLENDİRMESİ</h1>
+    <div class="k-firma">{{ $rd->firma_unvan ?: $firma?->unvan }}</div>
+
+    <div class="k-baslik">İŞYERİ BİLGİLERİ</div>
+    <table class="k-tablo">
+        <tr><td class="e" style="width:28.8%">İşyeri / proje adı</td><td></td></tr>
+        <tr><td class="e">İşyeri adresi</td><td style="height:34px">{{ $rd->firma_adres }}</td></tr>
+        <tr><td class="e">SGK işyeri sicil numarası</td><td>{{ $rd->firma_sgk_sicil_no }}</td></tr>
+        <tr><td class="e">Faaliyet konusu / NACE kodu</td><td>{{ $faaliyet }}</td></tr>
+        <tr><td class="e">Tehlike sınıfı / çalışan sayısı</td><td>{{ $tehlike }}</td></tr>
+        <tr><td class="e">Kapsam / değerlendirilen bölümler</td><td>{{ $rd->kapsam_notu }}</td></tr>
+        <tr><td class="e">Toplam sayfa sayısı</td><td id="kapak-toplam-sayfa">&nbsp;</td></tr>
+    </table>
+
+    <div class="k-baslik">DOKÜMAN BİLGİLERİ</div>
+    <table class="k-tablo">
+        <tr>
+            <td class="e" style="width:23.4%">Doküman numarası</td><td style="width:24%">{{ $rd->belge_no ?: 'RD-……' }}</td>
+            <td class="e2" style="width:20.3%">Revizyon numarası</td><td>{{ $rd->revizyon_no ?: '……' }}</td>
+        </tr>
+        <tr>
+            <td class="e">Değerlendirme tarihi</td><td>{{ $rd->rapor_tarihi?->format('d.m.Y') ?? $bosTarih }}</td>
+            <td class="e2">Revizyon tarihi</td><td>{{ $bosTarih }}</td>
+        </tr>
+        <tr>
+            <td class="e">Planlanan yenileme tarihi</td><td>{{ $rd->gecerlilik_tarihi?->format('d.m.Y') ?? $bosTarih }}</td>
+            <td class="e2">Yöntem</td><td>{{ $rd->yontemEtiketi() }}</td>
+        </tr>
+    </table>
+
+    <div class="k-baslik">RİSK DEĞERLENDİRMESİ EKİBİ</div>
+    <table class="k-tablo k-ekip">
+        <tr class="bas"><td style="width:33.8%">Görevi</td><td style="width:43.7%">Adı soyadı</td><td>İmza</td></tr>
+        @foreach ($kapakEkip as [$gorev, $ad, $gorseller])
+            <tr>
+                <td>{{ $gorev }}</td>
+                {{-- Kaşeli görevlilerin (işveren, İGU, hekim) adı basılmaz — kaşe ad/unvanı taşır. --}}
+                <td>{{ $ad }}</td>
+                <td class="imza">
+                    @foreach (array_filter($gorseller) as $g)
+                        @if (is_file(storage_path('app/public/'.$g)))<img src="{{ storage_path('app/public/'.$g) }}">@endif
+                    @endforeach
+                </td>
+            </tr>
+        @endforeach
+    </table>
+</div>
+
 {{-- HER SAYFANIN ÜST BİLGİSİ (firma adı / sicil no / tarih / adres) --}}
 <div class="sayfa-ust">
     <table class="ust-bilgi">
@@ -125,29 +220,6 @@
             </td>
         </tr>
     </table>
-</div>
-
-{{-- KAPAK --}}
-<div class="kapak">
-    <div style="font-size:12px;color:#666">{{ $firma?->unvan }}</div>
-    <h1>RİSK DEĞERLENDİRMESİ</h1>
-    <div style="font-size:12px">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu — Risk Değerlendirmesi Yönetmeliği</div>
-    <div class="firma">{{ $firma?->unvan }}</div>
-    <div style="font-size:11px;margin-top:6px">{{ $rd->firma_adres }}</div>
-    <div style="font-size:11px;margin-top:20px">
-        SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; NACE Kodu: {{ $rd->firma_nace ?: '—' }}
-    </div>
-    <div style="font-size:11px;margin-top:20px;color:#444">
-        Hazırlayan: İş Güvenliği Uzmanı @if ($uzman?->unvan) ({{ $uzman->unvan }}) @endif
-    </div>
-    <div style="font-size:11px;margin-top:20px">
-        Belge No: {{ $rd->belge_no }} &nbsp;·&nbsp; Rev: {{ $rd->revizyon_no }}<br>
-        Yöntem: {{ $rd->yontemEtiketi() }}<br>
-        Yapılış Tarihi: {{ $rd->rapor_tarihi?->format('d.m.Y') }}<br>
-        Geçerlilik Tarihi: {{ $rd->gecerlilik_tarihi?->format('d.m.Y') }}
-    </div>
-    {{-- "Toplam Sayfa: N" satırı RiskDegerlendirmesiUretici'nde page_script ile
-         kapağın altına damgalanır (tek render — büyük raporlarda süre yarıya iner). --}}
 </div>
 
 {{-- RİSK ANALİZİ PROSEDÜRÜ (seçilen yönteme göre) --}}
