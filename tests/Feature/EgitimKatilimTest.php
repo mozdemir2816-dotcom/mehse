@@ -299,32 +299,64 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('.xlsx', $yanit->headers->get('content-disposition'));
     }
 
-    public function test_excel_katilimci_listesinde_ilk_ve_son_sinav_sutunlari_var(): void
+    /** @return \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet */
+    private function excelSayfasi(EgitimKatilim $kayit)
+    {
+        ob_start();
+        EgitimKatilimUretici::excel($kayit)->sendContent();
+        $yol = tempnam(sys_get_temp_dir(), 'egt').'.xlsx';
+        file_put_contents($yol, ob_get_clean());
+
+        return \PhpOffice\PhpSpreadsheet\IOFactory::load($yol)->getSheet(0);
+    }
+
+    public function test_excel_kullanici_sablonuna_yalniz_firma_tarih_ve_katilimcilar_yazilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'BERT PLASTİK LTD']);
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 1,
+            'belge_tarihi' => '2026-10-04', 'gun_tarihleri' => ['2026-10-04'],
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '01234567890', 'gorev' => 'Kalıpçı']],
+        ]);
+
+        $s = $this->excelSayfasi($kayit);
+
+        $this->assertSame('BERT PLASTİK LTD', $s->getCell('F26')->getValue());
+        $this->assertSame('04.10.2026', $s->getCell('L4')->getValue());
+        $this->assertSame('Eğitim Süresi: / 8 Ders Saati', $s->getCell('L26')->getValue());
+        $this->assertSame('Ali Veli', $s->getCell('E29')->getValue());
+        $this->assertSame('01234567890', $s->getCell('H29')->getValue());   // baştaki 0 korunur
+        $this->assertSame('Kalıpçı', $s->getCell('I29')->getValue());
+        // Şablonun elle düzenlenen kısmı ve sütun başlıkları aynen kalır
+        $this->assertStringContainsString('Temel Eğitim Katılım Formu', (string) $s->getCell('C3')->getValue());
+        $this->assertSame('1. GÜN İMZA', $s->getCell('L27')->getValue());
+        $this->assertSame('Sınav Puanı', $s->getCell('N27')->getValue());
+        $this->assertFalse($s->getColumnDimension('M')->getVisible());          // 1 gün: 2. gün imza gizli
+        $this->assertNotEmpty($s->getDrawingCollection());                       // logo korunur
+    }
+
+    public function test_excel_iki_gunde_ikinci_gun_imzasi_acilir_fazla_katilimcida_satir_eklenir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
+        $katilimcilar = collect(range(1, 13))->map(fn ($i) => ['ad_soyad' => "Kişi {$i}", 'tc' => '1000000000'.($i % 10), 'gorev' => 'İşçi'])->all();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 2,
+            'gun_tarihleri' => ['2026-10-04', '2026-10-05'],
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli'),
+            'katilimcilar' => $katilimcilar,
+        ]);
 
-        foreach ([1 => ['E' => 'İmza', 'F' => 'Ön Test', 'G' => 'Son Test'],
-            2 => ['E' => 'İmza (1. Gün)', 'F' => 'İmza (2. Gün)', 'G' => 'Ön Test', 'H' => 'Son Test']] as $gun => $beklenen) {
-            $kayit = EgitimKatilim::create([
-                'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => $gun,
-                'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
-                'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi']],
-            ]);
+        $s = $this->excelSayfasi($kayit);
 
-            ob_start();
-            EgitimKatilimUretici::excel($kayit)->sendContent();
-            $yol = tempnam(sys_get_temp_dir(), 'egt').'.xlsx';
-            file_put_contents($yol, ob_get_clean());
-
-            $sayfa = \PhpOffice\PhpSpreadsheet\IOFactory::load($yol)->getActiveSheet();
-            $satir = collect($sayfa->toArray(null, false, false, true))->search(fn ($s) => ($s['B'] ?? null) === 'Ad Soyad');
-            $this->assertNotFalse($satir, "{$gun} günlük formda katılımcı başlığı yok");
-
-            foreach ($beklenen as $sutun => $baslik) {
-                $this->assertSame($baslik, $sayfa->getCell($sutun.$satir)->getValue(), "{$gun} gün, {$sutun} sütunu");
-            }
-            @unlink($yol);
-        }
+        $this->assertTrue($s->getColumnDimension('M')->getVisible());
+        $this->assertArrayHasKey('L26:M26', $s->getMergeCells());                // süre tek hücre
+        $this->assertSame('04.10.2026 - 05.10.2026', $s->getCell('L4')->getValue());
+        $this->assertSame('Kişi 13', $s->getCell('E41')->getValue());
+        $this->assertSame(13, $s->getCell('C41')->getValue());
+        $this->assertArrayHasKey('E41:G41', $s->getMergeCells());                // eklenen satır şablon gibi birleşik
+        $this->assertSame('Eğiticiler', $s->getCell('E42')->getValue());         // alt kısım 3 satır aşağı kaydı
+        $this->assertSame('A1:O46', $s->getPageSetup()->getPrintArea());
     }
 
     public function test_excel_aksiyonu_kayit_olusturur_ve_xlsx_doner(): void

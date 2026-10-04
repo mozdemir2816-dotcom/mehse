@@ -5,7 +5,8 @@ namespace App\Support;
 use App\Models\EgitimKatilim;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -74,10 +75,21 @@ class EgitimKatilimUretici
         return static::pdfCikti($kayit, null, $icerik, $ad);
     }
 
+    /** Kullanıcının kendi formu (resources/belge) — konular/başlık/logo elle düzenlenir, kod dokunmaz. */
+    public const EXCEL_SABLONU = 'belge/egitim-katilim-formu.xlsx';
+
+    /** Şablonda katılımcı satırlarının başladığı satır ve hazır satır sayısı (29–38). */
+    private const KATILIMCI_ILK_SATIR = 29;
+
+    private const KATILIMCI_SABLON_SATIR = 10;
+
     /**
-     * Kayıtlı bir eğitim katılım formunu Excel (.xlsx) olarak dışa aktarır —
-     * künye + konular + katılımcı imza listesi + eğitmenler. Kullanıcı elle
-     * düzenleyip/yazdırıp kullanabilir (tek yönlü çıktı).
+     * Kayıtlı bir eğitim katılım formunu kullanıcının Excel şablonuna doldurur.
+     * Yalnız firma ismi (F26), tarih (L4), eğitim yeri (F4, girildiyse), ders saati (L26)
+     * ve katılımcılar (sıra C/D, ad soyad E:G, T.C. H, görev I:K) yazılır; konular, başlık,
+     * logo, imza/sınav sütunları ve sayfa düzeni şablonda nasılsa öyle kalır.
+     * 10'dan fazla katılımcıda satır eklenir (biçim ve birleştirmeler kopyalanır).
+     * 2 günlük eğitimde şablonda gizli olan "2. GÜN İMZA" (M) sütunu açılır.
      */
     public static function excel(EgitimKatilim $kayit): StreamedResponse
     {
@@ -87,133 +99,65 @@ class EgitimKatilimUretici
         $icerik = $kayit->konu_secimleri ?? [];
         $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
 
-        $gunTarihleri = collect($kayit->gun_tarihleri ?? [])->filter()
+        $tarihler = collect($kayit->gun_tarihleri ?? [])->filter()
             ->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d.m.Y'))->values();
-        $tarihMetni = $gunTarihleri->count() > 1
-            ? $gunTarihleri->map(fn ($t, $i) => ($i + 1).'. Gün: '.$t)->implode(' · ')
-            : ($gunTarihleri->first() ?? $kayit->belge_tarihi?->format('d.m.Y') ?? '—');
-
-        $kitap = new Spreadsheet;
-        $s = $kitap->getActiveSheet();
-        $s->setTitle('Eğitim Katılım');
-        $s->getColumnDimension('A')->setWidth(6);
-        $s->getColumnDimension('B')->setWidth(32);
-        $s->getColumnDimension('C')->setWidth(18);
-        $s->getColumnDimension('D')->setWidth(26);
-
-        // Katılımcı tablosu: imzalar yan yana, ardından sınav puanları yan yana (elle doldurulur).
-        // 1 gün:  İmza | Ön Test | Son Test
-        // 2 gün:  İmza (1. Gün) | İmza (2. Gün) | Ön Test | Son Test
-        $son = $ikiGun ? 'H' : 'G';
-        $genislik = $ikiGun
-            ? ['E' => 12, 'F' => 12, 'G' => 9, 'H' => 9]   // imza başlığı iki satıra kayar
-            : ['E' => 14, 'F' => 9, 'G' => 9];
-        foreach ($genislik as $harf => $g) {
-            $s->getColumnDimension($harf)->setWidth($g);
+        if ($tarihler->isEmpty() && $kayit->belge_tarihi) {
+            $tarihler = collect([$kayit->belge_tarihi->format('d.m.Y')]);
         }
 
-        $r = 1;
-        $s->setCellValue("A{$r}", 'EĞİTİM KATILIM FORMU');
-        $s->mergeCells("A{$r}:{$son}{$r}");
-        $s->getStyle("A{$r}")->getFont()->setBold(true)->setSize(14);
-        $s->getStyle("A{$r}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $r += 2;
+        $kitap = IOFactory::load(resource_path(self::EXCEL_SABLONU));
+        $s = $kitap->getSheet(0);
 
-        $kunye = [
-            ['Firma', $kayit->firma?->unvan ?? '—'],
-            ['Eğitim Konusu', $kayit->basliklarEtiketi()],
-            ['Belge No', $kayit->belge_no],
-            ['Eğitim Yeri', $kayit->egitim_yeri ?: '—'],
-            ['Tarih', $tarihMetni],
-            ['Süre', (($icerik['saat'] ?? null) ? "{$icerik['saat']} Ders Saati · " : '').($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '')],
-            ['Eğitim Türü', ($kayit->egitim_turu ?? 'ilk') === 'tekrar' ? 'Tekrar (Yenileme)' : 'İlk Defa'],
-            ['Eğitim Şekli', config('isg.sertifika.sekiller.'.($kayit->egitim_sekli ?? 'yuz_yuze'), 'Yüz Yüze')],
-            ['Eğitimciler', static::egitmenMetni($kayit)],
-        ];
-
-        foreach ($kunye as [$etiket, $deger]) {
-            $s->setCellValue("A{$r}", $etiket);
-            $s->setCellValue("B{$r}", $deger);
-            $s->getStyle("A{$r}")->getFont()->setBold(true);
-            $s->mergeCells("B{$r}:{$son}{$r}");
-            $r++;
+        $s->setCellValue('F26', $kayit->firma?->unvan ?? '');
+        if ($tarihler->isNotEmpty()) {
+            $s->setCellValue('L4', $tarihler->implode(' - '));
         }
-        $r++;
+        if (filled($kayit->egitim_yeri)) {
+            $s->setCellValue('F4', $kayit->egitim_yeri);
+        }
+        if ($saat = $icerik['saat'] ?? null) {
+            $s->setCellValue('L26', "Eğitim Süresi: / {$saat} Ders Saati");
+            $s->setCellValue('M26', "Eğitim Süresi: / {$saat} Ders Saati");
+        }
+        $s->getColumnDimension('M')->setVisible($ikiGun);
+        if ($ikiGun) {
+            // Şablonda L26 ve M26 aynı metni taşır (M gizliyken tek görünür); 2 günde tek hücre olsun.
+            $s->setCellValue('M26', null);
+            $s->mergeCells('L26:M26');
+        }
 
-        // --- Eğitim Konuları ---
-        $s->setCellValue("A{$r}", 'EĞİTİM KONULARI');
-        $s->getStyle("A{$r}")->getFont()->setBold(true);
-        $r++;
+        $katilimcilar = array_values($kayit->katilimcilar ?? []);
+        $ilk = self::KATILIMCI_ILK_SATIR;
+        $fazla = max(0, count($katilimcilar) - self::KATILIMCI_SABLON_SATIR);
 
-        foreach (static::konuBloklari($icerik) as $blok) {
-            $s->setCellValue("A{$r}", $blok['baslik']);
-            $s->getStyle("A{$r}")->getFont()->setBold(true)->setItalic(true);
-            $r++;
+        if ($fazla > 0) {
+            $sonSablon = $ilk + self::KATILIMCI_SABLON_SATIR - 1;
+            $s->insertNewRowBefore($sonSablon + 1, $fazla);   // biçim üstteki satırdan kopyalanır
 
-            foreach ($blok['maddeler'] as $m) {
-                $s->setCellValue("B{$r}", $m['madde']);
-                $s->getStyle("B{$r}")->getAlignment()->setWrapText(true);
-                $s->setCellValue("C{$r}", $m['dakika'].' dk');
-                $r++;
+            for ($r = $sonSablon + 1; $r <= $sonSablon + $fazla; $r++) {
+                $s->mergeCells("E{$r}:G{$r}");
+                $s->mergeCells("I{$r}:K{$r}");
+                $s->getRowDimension($r)->setRowHeight($s->getRowDimension($sonSablon)->getRowHeight());
             }
-        }
-        $r++;
-
-        // --- Katılımcı listesi ---
-        $s->setCellValue("A{$r}", 'KATILIMCI LİSTESİ VE İMZALARI');
-        $s->getStyle("A{$r}")->getFont()->setBold(true);
-        $r++;
-
-        $baslikSatir = $r;
-        $sutunlar = $ikiGun
-            ? ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza (1. Gün)', 'İmza (2. Gün)', 'Ön Test', 'Son Test']
-            : ['#', 'Ad Soyad', 'T.C. No', 'Görevi', 'İmza', 'Ön Test', 'Son Test'];
-
-        $s->fromArray($sutunlar, null, "A{$r}");
-        $s->getStyle("A{$r}:{$son}{$r}")->getFont()->setBold(true);
-        $s->getStyle("A{$r}:{$son}{$r}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_CENTER);
-        $r++;
-
-        $katilimcilar = $kayit->katilimcilar ?? [];
-        $satirSayisi = max(count($katilimcilar), 10);
-
-        for ($i = 0; $i < $satirSayisi; $i++) {
-            $s->setCellValue("A{$r}", $i + 1);
-            $s->setCellValue("B{$r}", $katilimcilar[$i]['ad_soyad'] ?? '');
-            $s->setCellValueExplicit("C{$r}", $katilimcilar[$i]['tc'] ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $s->setCellValue("D{$r}", $katilimcilar[$i]['gorev'] ?? '');
-            $r++;
+            // Yazdırma alanı (A1:O43) satır eklenince kütüphane tarafından kendiliğinden uzatılır.
         }
 
-        $sonSatir = $r - 1;
-        $s->getStyle("A{$baslikSatir}:{$son}{$sonSatir}")
-            ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-        $r += 2;
-
-        // --- Eğitimciler ---
-        if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var) {
-            $s->setCellValue("A{$r}", 'EĞİTİMİ VERENLER');
-            $s->getStyle("A{$r}")->getFont()->setBold(true);
-            $r++;
-
-            if ($kayit->isg_uzmani_var) {
-                $s->setCellValue("A{$r}", 'İş Güvenliği Uzmanı');
-                $s->setCellValue("B{$r}", ''); // görevli adı basılmaz (kaşe)
-                $s->setCellValue("C{$r}", 'Kaşe / İmza: ______');
-                $r++;
-            }
-
-            if ($kayit->isyeri_hekimi_var) {
-                $s->setCellValue("A{$r}", 'İşyeri Hekimi');
-                $s->setCellValue("B{$r}", '');
-                $s->setCellValue("C{$r}", 'Kaşe / İmza: ______');
-                $r++;
-            }
-            $r++;
+        // Şablon satırlarının hizası birbirinden farklı (bazısı sola, bazısı ortaya dayalı):
+        // tüm katılımcı satırlarını ilk satırın biçimine eşitle, yazılar dikeyde ortalı olsun.
+        $sonSatir = $ilk + max(count($katilimcilar), self::KATILIMCI_SABLON_SATIR) - 1;
+        foreach (range('C', 'O') as $sutun) {
+            $s->duplicateStyle($s->getStyle("{$sutun}{$ilk}"), "{$sutun}{$ilk}:{$sutun}{$sonSatir}");
         }
+        $s->getStyle("C{$ilk}:O{$sonSatir}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
-        $s->setCellValue("A{$r}", '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.');
-        $s->getStyle("A{$r}")->getFont()->setSize(8)->setItalic(true);
+        foreach ($katilimcilar as $i => $k) {
+            $r = $ilk + $i;
+            $s->setCellValue("C{$r}", $i + 1);
+            $s->setCellValue("D{$r}", $i + 1);
+            $s->setCellValue("E{$r}", $k['ad_soyad'] ?? '');
+            $s->setCellValueExplicit("H{$r}", (string) ($k['tc'] ?? ''), DataType::TYPE_STRING);
+            $s->setCellValue("I{$r}", $k['gorev'] ?? '');
+        }
 
         $tmp = tempnam(sys_get_temp_dir(), 'egt').'.xlsx';
         (new Xlsx($kitap))->save($tmp);
@@ -224,57 +168,5 @@ class EgitimKatilimUretici
             echo file_get_contents($tmp);
             @unlink($tmp);
         }, $ad);
-    }
-
-    private static function egitmenMetni(EgitimKatilim $kayit): string
-    {
-        $parcalar = [];
-
-        if ($kayit->isg_uzmani_var) {
-            $parcalar[] = 'İş Güvenliği Uzmanı';
-        }
-
-        if ($kayit->isyeri_hekimi_var) {
-            $parcalar[] = 'İşyeri Hekimi'.($kayit->isyeri_hekimi_adi ? " ({$kayit->isyeri_hekimi_adi})" : '');
-        }
-
-        return $parcalar ? implode(' · ', $parcalar) : '—';
-    }
-
-    /**
-     * konu_secimleri'ni {baslik, maddeler:[{madde,dakika}]} bloklarına düzler —
-     * yalnız dahil edilen maddeler. Hem "genel" (4 blok) hem "özel" (tek blok).
-     *
-     * @return array<int, array{baslik: string, maddeler: array<int, array{madde: string, dakika: int}>}>
-     */
-    private static function konuBloklari(array $icerik): array
-    {
-        $dahil = fn (array $maddeler) => collect($maddeler)
-            ->where('dahil', true)
-            ->map(fn ($m) => ['madde' => $m['madde'], 'dakika' => $m['dakika']])
-            ->values()
-            ->all();
-
-        if (($icerik['tip'] ?? null) !== 'genel') {
-            return [[
-                'baslik' => $icerik['ad'] ?? 'Eğitim Konuları',
-                'maddeler' => $dahil($icerik['maddeler'] ?? []),
-            ]];
-        }
-
-        $bloklar = [
-            ['baslik' => 'Genel Konular', 'maddeler' => $dahil($icerik['genel_konular'] ?? [])],
-            ['baslik' => 'Sağlık Konuları', 'maddeler' => $dahil($icerik['saglik_konulari'] ?? [])],
-            ['baslik' => 'Teknik Konular', 'maddeler' => $dahil($icerik['teknik_konular'] ?? [])],
-        ];
-
-        if ($icerik['isyerine_ozgu'] ?? null) {
-            $bloklar[] = [
-                'baslik' => 'İşyerine Özgü Riskler — '.$icerik['isyerine_ozgu']['sektor'],
-                'maddeler' => $dahil($icerik['isyerine_ozgu']['maddeler']),
-            ];
-        }
-
-        return $bloklar;
     }
 }
