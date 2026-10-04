@@ -457,7 +457,7 @@ class ArsivSayfasiTest extends TestCase
         $this->kayit('diger', ['gecerlilik_sonu' => '2026-10-14']);                             // kayıt: yaklaşıyor
         $this->kayit('diger', ['gecerlilik_sonu' => '2025-01-01', 'aktif' => false]);          // pasif sayılmaz
         $this->kayit('yillik_calisma_plani', ['yil' => 2025]);                                  // geçen yılın planı "doldu" alarmı vermez
-        $this->kayit('tespit_oneri', ['baslangic_tarihi' => '2026-08-01']);                    // periyodik (aylık): gecikti
+        $this->kayit('tespit_oneri', ['baslangic_tarihi' => '2026-06-01']);                    // periyodik (3 ay): 01.09'da gecikti
         $this->kayit('tatbikat', ['baslangic_tarihi' => '2025-08-01']);                         // OSGB grubu dışı: varsayılan takip dışı
         $this->kayit('talimat', ['gecerlilik_sonu' => '2026-01-01', 'asama' => ArsivDosya::IMZA_BEKLIYOR]);   // imza bekleyen sayılmaz
 
@@ -528,17 +528,33 @@ class ArsivSayfasiTest extends TestCase
         $sayfa->assertSee('2 / 8 güncel');
     }
 
-    public function test_aylik_periyotta_yaklasan_esigi_kisalir(): void
+    public function test_defter_ve_saha_raporu_uc_ayda_bir_beklenir(): void
     {
-        $d = $this->kayit('tespit_oneri', ['baslangic_tarihi' => '2026-09-20']);   // son 20.10 → 16 gün
-        $this->assertSame('tamam', $this->durum('tespit_oneri')['durum']);          // 30 günlük eşik uygulanmaz (aylık → 10 gün)
+        $d = $this->kayit('saha_gozlem', ['baslangic_tarihi' => '2026-08-01']);   // son 01.11 → 28 gün
+        $this->assertSame('2026-11-01', $d->gecerlilik_sonu->toDateString());
+        $this->assertSame('yaklasan', $this->durum('saha_gozlem')['durum']);
 
-        $d->update(['baslangic_tarihi' => '2026-09-10']);                            // son 10.10 → 6 gün
-        $this->assertSame('yaklasan', $this->durum('tespit_oneri')['durum']);
+        $d->update(['baslangic_tarihi' => '2026-09-01']);                           // son 01.12 → 58 gün
+        $this->assertSame('tamam', $this->durum('saha_gozlem')['durum']);
+
+        $d->update(['baslangic_tarihi' => '2026-07-01']);                           // son 01.10 → geçti
+        $this->assertSame('gecikmis', $this->durum('saha_gozlem')['durum']);
+        $this->assertSame(3, ArsivKurali::ay('tespit_oneri', $this->firma));
 
         $this->assertSame('muaf', $this->durum('kurul_tutanagi')['durum']);
         $this->firma->update(['calisan_sayisi' => 60]);
         $this->assertSame('eksik', $this->durum('kurul_tutanagi')['durum']);
+    }
+
+    public function test_kisa_periyotta_yaklasan_esigi_kisalir(): void
+    {
+        config(['arsiv.kategoriler.tespit_oneri.ay' => 1]);   // aylık periyot: eşik 30 değil 10 gün
+
+        $d = $this->kayit('tespit_oneri', ['baslangic_tarihi' => '2026-09-20']);   // son 20.10 → 16 gün
+        $this->assertSame('tamam', $this->durum('tespit_oneri')['durum']);
+
+        $d->update(['baslangic_tarihi' => '2026-09-10']);                            // son 10.10 → 6 gün
+        $this->assertSame('yaklasan', $this->durum('tespit_oneri')['durum']);
     }
 
     public function test_yillik_degerlendirme_formu_sablondan_doldurulur_gorevli_adi_yok(): void

@@ -80,9 +80,9 @@ return [
         ],
         'tespit_oneri' => [
             'ad' => 'Tespit ve Öneri Defteri', 'grup' => 'osgb', 'ikon' => 'heroicon-o-book-open',
-            'kural' => 'periyodik', 'ay' => 1, 'yoksa' => 'eksik',
+            'kural' => 'periyodik', 'ay' => 3, 'yoksa' => 'eksik',
             'alanlar' => ['tarih' => 'Defter Kayıt Tarihi'],
-            'kural_metni' => 'Onaylı defterin imzalı sayfaları her ziyaretten sonra yüklenir; son yüklemenin üzerinden bir ay geçince yenisi beklenir.',
+            'kural_metni' => 'Onaylı defterin imzalı sayfaları her ziyaretten sonra yüklenir; en az üç ayda bir yeni yükleme beklenir; son yüklemenin üzerinden üç ay geçince gecikmiş görünür.',
         ],
         'kurul_tutanagi' => [
             'ad' => 'İSG Kurulu Kayıtları', 'grup' => 'osgb', 'ikon' => 'heroicon-o-users',
@@ -93,9 +93,9 @@ return [
         ],
         'saha_gozlem' => [
             'ad' => 'Saha Gözlem Raporları', 'grup' => 'osgb', 'ikon' => 'heroicon-o-camera',
-            'kural' => 'periyodik', 'ay' => 1, 'yoksa' => 'eksik',
+            'kural' => 'periyodik', 'ay' => 3, 'yoksa' => 'eksik',
             'alanlar' => ['tarih' => 'Rapor Tarihi'],
-            'kural_metni' => 'İmzalı saha gözlem raporları her ziyaretten sonra yüklenir; son raporun üzerinden bir ay geçince yenisi beklenir.',
+            'kural_metni' => 'İmzalı saha gözlem raporları her ziyaretten sonra yüklenir; en az üç ayda bir yeni rapor beklenir; son raporun üzerinden üç ay geçince gecikmiş görünür.',
         ],
 
         /*
