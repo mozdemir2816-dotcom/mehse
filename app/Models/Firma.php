@@ -21,6 +21,7 @@ class Firma extends Model
         'sozlesme_bitis' => 'date',
         'aktif' => 'boolean',
         'calisan_sayisi' => 'integer',
+        'katip_aylik_dk' => 'integer',
         'is_kalemleri' => 'array',
     ];
 
@@ -313,6 +314,20 @@ class Firma extends Model
     public function acilDurumKrokisi(): HasOne
     {
         return $this->hasOne(AcilDurumKrokisi::class);
+    }
+
+    /**
+     * İGU'nun bu firmada ayda çalışması gereken süre (dk). İSG-KATİP sözleşmesindeki süre
+     * (en son yüklenen KATİP Excel'i — güncel çalışan sayısı ve tehlike sınıfına göre KATİP
+     * hesaplar) varsa o; yoksa çalışan sayısı × tehlike sınıfına göre yönetmelik dakikası.
+     */
+    public function iguAylikDk(?int $calisan = null): int
+    {
+        if ((int) $this->katip_aylik_dk > 0) {
+            return (int) $this->katip_aylik_dk;
+        }
+
+        return ($calisan ?? (int) $this->calisan_sayisi) * (int) config('isg.igu_aylik_dk.'.$this->tehlike_sinifi, 10);
     }
 
     public function tehlikeSinifiEtiketi(): string

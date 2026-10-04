@@ -217,6 +217,7 @@ class ListFirmas extends ListRecords
             $kayit['il'],
             $kayit['calisan_sayisi'] !== null ? $kayit['calisan_sayisi'].' çalışan' : null,
             $kayit['nace_kodu'] ? 'NACE '.$kayit['nace_kodu'] : null,
+            ($kayit['katip_aylik_dk'] ?? null) ? $kayit['katip_aylik_dk'].' dk/ay' : null,
             ($kayit['onaylayan'] ?? null) ? 'Onaylayan: '.$kayit['onaylayan'] : null,
         ]));
     }

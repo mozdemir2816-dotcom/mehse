@@ -393,7 +393,8 @@ class IsyeriDurumu
         return collect($roller)
             ->map(fn (array $r) => ['p' => $firma->{$r['iliski']}, ...$r])
             ->filter(fn (array $r) => $r['p'] !== null)
-            ->map(fn (array $r) => ['ad' => $r['p']->ad_soyad, 'rol' => $r['rol'], 'aylik_dk' => $calisan * $r['dk'], 'sertifika' => $r['p']->sertifika_no])
+            ->map(fn (array $r) => ['ad' => $r['p']->ad_soyad, 'rol' => $r['rol'],
+                'aylik_dk' => $r['iliski'] === 'igu' ? $firma->iguAylikDk($calisan) : $calisan * $r['dk'], 'sertifika' => $r['p']->sertifika_no])
             ->values()->all();
     }
 

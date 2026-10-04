@@ -243,12 +243,12 @@ class BuAyZiyaretlerWidget extends Widget
         return \App\Models\Firma::query()
             ->where('user_id', Filament::auth()->id())
             ->where('aktif', true)
-            ->where('calisan_sayisi', '>', 0)
+            ->where(fn ($q) => $q->where('calisan_sayisi', '>', 0)->orWhere('katip_aylik_dk', '>', 0))
             ->orderBy('unvan')
-            ->get(['id', 'unvan', 'calisan_sayisi', 'tehlike_sinifi'])
+            ->get(['id', 'unvan', 'calisan_sayisi', 'tehlike_sinifi', 'katip_aylik_dk'])
             ->map(function (\App\Models\Firma $f) use ($ziyaretler, $dk, $bugun): array {
                 $z = $ziyaretler->get($f->id, collect());
-                $gerekli = (int) $f->calisan_sayisi * (int) config('isg.igu_aylik_dk.'.$f->tehlike_sinifi, 10);
+                $gerekli = $f->iguAylikDk();
                 $yapilan = $dk($z->where('durum', 'tamamlandi'));
                 $planli = $dk($z->where('durum', '!=', 'tamamlandi')->filter(fn (array $x) => $x['tarih'] >= $bugun));
 

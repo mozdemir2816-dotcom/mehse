@@ -189,7 +189,7 @@ class TesisUygunlugu
         $ay = now()->format('Y-m');
         $bugun = now()->toDateString();
         $calisan = max((int) $firma->calisan_sayisi, $firma->calisanlar()->where('aktif', true)->count());
-        $gerekli = $calisan * (int) config('isg.igu_aylik_dk.'.$firma->tehlike_sinifi, 10);
+        $gerekli = $firma->iguAylikDk($calisan);
 
         $girdiler = ZiyaretProgrami::query()->where('firma_id', $firma->id)->get()
             ->flatMap(fn (ZiyaretProgrami $p) => collect($p->ziyaretler ?? [])->flatMap(fn ($a) => ZiyaretProgrami::ayGirdileri($a)))

@@ -47,7 +47,7 @@ class KatipSozlesmeIceAktariciTest extends TestCase
     }
 
     private function satir(string $isyeriId, string $unvan, string $sgk, int $calisan, string $tehlike, string $nace,
-        string $baslangic, string $bitis = '', string $statu = 'Sözleşme Devam Ediyor', string $onaylayan = ''): array
+        string $baslangic, string $bitis = '', string $statu = 'Sözleşme Devam Ediyor', string $onaylayan = '', string $sure = ''): array
     {
         $s = array_fill_keys(self::BASLIK, '');
         $s['Sözleşme Adı'] = 'OSGB İLE ÖZEL İŞYERİ ARASINDA İŞ GÜVENLİĞİ UZMANI HİZMET ALIMI SÖZLEŞMESİ';
@@ -64,6 +64,8 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $s['Sözleşme Bitiş Tarihi'] = $bitis;
         $s['Sözleşme Statü'] = $statu;
         $s['Onaylayan Kişi Ad Soyad'] = $onaylayan;
+        $s['Çalışma Süresi'] = $sure;
+        $s['Çalışma Periyodu'] = $sure === '' ? '' : 'Aylık';
 
         return array_values($s);
     }
@@ -285,6 +287,34 @@ class KatipSozlesmeIceAktariciTest extends TestCase
             ->assertNotified('1 firma eklendi, 0 firma güncellendi');
 
         $this->assertSame(['ENGİN MEN', 'FOM MAKİNA LTD'], Firma::orderBy('unvan')->pluck('unvan')->all());
+    }
+
+    public function test_aylik_sure_her_yuklemede_en_son_dosyadan_guncellenir_ve_hesaplarda_kullanilir(): void
+    {
+        $firma = Firma::create(['user_id' => $this->uzman->id, 'unvan' => 'FOM', 'sgk_sicil_no' => '22932010101204260161204000',
+            'calisan_sayisi' => 41, 'tehlike_sinifi' => 'tehlikeli', 'katip_aylik_dk' => 820]);
+
+        // Eski formül: 41 × 20 = 820; KATİP'te süre 980'e çıkmış (çalışan artmış).
+        $yol = $this->dosya($this->satir('8761689', 'FOM MAKİNA LTD', '22932010101204260161204000', 49, 'Tehlikeli', '29.32.21', '08.07.2026', sure: '980'));
+        KatipSozlesmeIceAktarici::iceAktar($yol, $this->uzman->id);
+
+        $firma->refresh();
+        $this->assertSame(980, $firma->katip_aylik_dk);   // dolu olsa da en son dosyadaki değer
+        $this->assertSame(41, $firma->calisan_sayisi);     // diğer dolu alanlar korunur
+        $this->assertSame(980, $firma->iguAylikDk());
+
+        // Süre yoksa çalışan × tehlike sınıfı dakikası
+        $firma->katip_aylik_dk = null;
+        $this->assertSame(41 * 20, $firma->iguAylikDk());
+    }
+
+    public function test_yeni_firmaya_katip_suresi_yazilir(): void
+    {
+        $yol = $this->dosya($this->satir('13253676', 'VİZYON TESİSAT LTD', '44100010115242890160883000', 39, 'Çok Tehlikeli', '41.00.01', '04.09.2026', sure: '840'));
+
+        KatipSozlesmeIceAktarici::iceAktar($yol, $this->uzman->id);
+
+        $this->assertSame(840, Firma::sole()->katip_aylik_dk);
     }
 
     public function test_ayni_unvanli_farkli_sgk_ayri_firma_olur(): void

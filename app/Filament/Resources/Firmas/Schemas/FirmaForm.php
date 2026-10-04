@@ -42,6 +42,8 @@ class FirmaForm
                         ->live(onBlur: true)
                         ->afterStateUpdated(fn (?string $state, Get $get, Set $set, ?Model $record) => static::katiptenDoldur($state, $get, $set, $record)),
                     TextInput::make('calisan_sayisi')->label('Çalışan sayısı')->numeric()->minValue(0)->default(0),
+                    TextInput::make('katip_aylik_dk')->label('İSG-KATİP aylık süre (dk)')->numeric()->minValue(0)
+                        ->helperText('İGU sözleşme süresi; KATİP Excel\'i yüklenince en son dosyadaki değerle güncellenir. Boşsa çalışan sayısı × tehlike sınıfından hesaplanır.'),
                     TextInput::make('nace_kodu')->label('NACE kodu')->maxLength(20),
                     TextInput::make('nace_aciklama')->label('NACE açıklaması')->maxLength(255)->columnSpanFull(),
                 ]),
@@ -128,7 +130,8 @@ class FirmaForm
         foreach (KatipSozlesmeIceAktarici::formVerisi($kayit) as $alan => $deger) {
             $mevcut = $get($alan);
 
-            if (blank($mevcut) || in_array($mevcut, $varsayilan[$alan] ?? [])) {
+            // Aylık süre KATİP'in güncel hesabıdır: her zaman en son listedeki değer yazılır.
+            if ($alan === 'katip_aylik_dk' || blank($mevcut) || in_array($mevcut, $varsayilan[$alan] ?? [])) {
                 $set($alan, $deger);
                 $dolan++;
             }

@@ -128,9 +128,9 @@ class GorevDurumu
      */
     public static function sureOzeti(User $kullanici): array
     {
-        $firmalar = Firma::query()->where('user_id', $kullanici->id)->where('aktif', true)->get(['id', 'unvan', 'calisan_sayisi', 'tehlike_sinifi']);
+        $firmalar = Firma::query()->where('user_id', $kullanici->id)->where('aktif', true)->get(['id', 'unvan', 'calisan_sayisi', 'tehlike_sinifi', 'katip_aylik_dk']);
 
-        $kullanilan = (int) $firmalar->sum(fn (Firma $f) => (int) $f->calisan_sayisi * (int) config('isg.igu_aylik_dk.'.$f->tehlike_sinifi, 10));
+        $kullanilan = (int) $firmalar->sum(fn (Firma $f) => $f->iguAylikDk());
         $kapasite = (int) config('isg.ana_sayfa.aylik_kapasite_saat', 195) * 60;
 
         $izinli = config('isg.ana_sayfa.sinif_tehlike.'.$kullanici->unvan);

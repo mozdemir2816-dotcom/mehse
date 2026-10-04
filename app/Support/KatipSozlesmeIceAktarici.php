@@ -21,6 +21,8 @@ use Throwable;
  * - Mevcut firma SGK no → KATİP işyeri ID → unvan sırasıyla eşleştirilir; mükerrer firma açılmaz.
  * - Sonlandırılmış / iptal sözleşmeler: yeni firma AÇILMAZ; mevcut firmada bitiş tarihi boşsa işlenir.
  * - Kayıtlı firmada yalnız BOŞ alanlar doldurulur; dolu alanlara (elle girilenlere) hiç dokunulmaz.
+ *   İstisna: İGU aylık çalışma süresi (katip_aylik_dk) — KATİP güncel çalışan sayısı ve tehlike
+ *   sınıfına göre hesapladığı için her yüklemede en son dosyadaki değerle güncellenir.
  */
 class KatipSozlesmeIceAktarici
 {
@@ -37,6 +39,8 @@ class KatipSozlesmeIceAktarici
         'sozlesmebitistarihi' => 'sozlesme_bitis',
         'sozlesmestatu' => 'statu',
         'onaylayankisiadsoyad' => 'onaylayan',
+        'calismasuresi' => 'sure',
+        'calismaperiyodu' => 'periyot',
     ];
 
     /** Dosyanın ilk satırı KATİP sözleşme dışa aktarımına mı ait? */
@@ -185,6 +189,7 @@ class KatipSozlesmeIceAktarici
             'tehlike_sinifi' => $kayit['tehlike_sinifi'],
             'nace_kodu' => $kayit['nace_kodu'],
             'isveren_ad' => $kayit['onaylayan'] ?? null,
+            'katip_aylik_dk' => $kayit['katip_aylik_dk'] ?? null,
             'sozlesme_baslangic' => $kayit['sozlesme_baslangic'],
             'sozlesme_bitis' => $kayit['bitti'] ? $kayit['sozlesme_bitis'] : null,
         ], fn ($v) => $v !== null && $v !== '');
@@ -220,6 +225,9 @@ class KatipSozlesmeIceAktarici
                 'tehlike_sinifi' => $al('tehlike_sinifi') !== '' ? FirmaExcelIceAktarici::tehlikeSinifiCoz($al('tehlike_sinifi')) : null,
                 'nace_kodu' => $al('nace_kodu') ?: null,
                 'onaylayan' => static::unvanTemizle($al('onaylayan')) ?: null,
+                // "Çalışma Süresi" dk; yalnız aylık periyotta (KATİP İGU sözleşmeleri aylık dakika verir).
+                'katip_aylik_dk' => is_numeric($al('sure')) && in_array(FirmaExcelIceAktarici::normalize($al('periyot')), ['', 'aylik'], true)
+                    ? (int) $al('sure') : null,
                 'sozlesme_baslangic' => static::tarih($al('sozlesme_baslangic')),
                 'sozlesme_bitis' => static::tarih($al('sozlesme_bitis')),
                 'bitti' => str_contains($statu, 'sonlandir') || str_contains($statu, 'iptal'),
@@ -275,6 +283,11 @@ class KatipSozlesmeIceAktarici
                 && FirmaExcelIceAktarici::normalize($firma->isveren_ad) !== FirmaExcelIceAktarici::normalize($onaylayan)) {
                 $firma->isveren_vekili = $onaylayan;
             }
+        }
+
+        // Aylık süre: devam eden sözleşmede her zaman en son dosyadaki değer.
+        if (! $kayit['bitti'] && ($kayit['katip_aylik_dk'] ?? null) !== null) {
+            $firma->katip_aylik_dk = $kayit['katip_aylik_dk'];
         }
 
         if ($kayit['bitti'] && blank($firma->sozlesme_bitis)) {
