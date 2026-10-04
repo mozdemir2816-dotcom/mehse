@@ -19,8 +19,8 @@ use Throwable;
  * - Aynı işyeri (SGK no) birden çok satırda geçerse en son başlayan sözleşme esas alınır;
  *   aynı unvanlı farklı SGK no'lu işyerleri (şubeler) ayrı firmadır.
  * - Mevcut firma SGK no → KATİP işyeri ID → unvan sırasıyla eşleştirilir; mükerrer firma açılmaz.
- * - Sonlandırılmış / iptal sözleşmeler: yeni firma AÇILMAZ, yalnız mevcut firmanın bitiş tarihi işlenir.
- * - Unvan, kısa ad, iletişim gibi elle girilmiş alanlar ezilmez; SGK no, il, işveren yalnız boşsa doldurulur.
+ * - Sonlandırılmış / iptal sözleşmeler: yeni firma AÇILMAZ; mevcut firmada bitiş tarihi boşsa işlenir.
+ * - Kayıtlı firmada yalnız BOŞ alanlar doldurulur; dolu alanlara (elle girilenlere) hiç dokunulmaz.
  */
 class KatipSozlesmeIceAktarici
 {
@@ -259,21 +259,8 @@ class KatipSozlesmeIceAktarici
             return;
         }
 
-        // Eski tarihli bir dışa aktarım (veya tarihsiz teklif satırı) firmadaki daha güncel bilgiyi geri almasın.
-        if ($firma->sozlesme_baslangic
-            && ($kayit['sozlesme_baslangic'] ?? '') < $firma->sozlesme_baslangic->toDateString()) {
-            $sonuc['atlanan'][] = $firma->unvan.' (dosyadaki sözleşme kayıtlıdan eski)';
-
-            return;
-        }
-
-        foreach (['katip_no', 'calisan_sayisi', 'tehlike_sinifi', 'nace_kodu', 'sozlesme_baslangic'] as $alan) {
-            if ($kayit[$alan] !== null) {
-                $firma->{$alan} = $kayit[$alan];
-            }
-        }
-
-        foreach (['sgk_sicil_no', 'il'] as $alan) {
+        // Kayıtlı firmada yalnız boş bilgiler KATİP'ten doldurulur; dolu alanlar kullanıcınındır.
+        foreach (['katip_no', 'sgk_sicil_no', 'il', 'calisan_sayisi', 'tehlike_sinifi', 'nace_kodu', 'sozlesme_baslangic'] as $alan) {
             if (blank($firma->{$alan}) && $kayit[$alan] !== null) {
                 $firma->{$alan} = $kayit[$alan];
             }
@@ -290,7 +277,9 @@ class KatipSozlesmeIceAktarici
             }
         }
 
-        $firma->sozlesme_bitis = $kayit['bitti'] ? $kayit['sozlesme_bitis'] : null;
+        if ($kayit['bitti'] && blank($firma->sozlesme_bitis)) {
+            $firma->sozlesme_bitis = $kayit['sozlesme_bitis'];
+        }
 
         if ($firma->isDirty()) {
             $firma->save();

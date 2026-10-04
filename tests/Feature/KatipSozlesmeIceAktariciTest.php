@@ -116,7 +116,7 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $this->assertSame(0, Firma::where('unvan', 'like', '%OSGB%')->count());
     }
 
-    public function test_kayitli_firma_mukerrer_acilmaz_guncellenir_elle_girilenler_korunur(): void
+    public function test_kayitli_firmada_yalniz_bos_bilgiler_doldurulur(): void
     {
         $firma = Firma::create([
             'user_id' => $this->uzman->id, 'unvan' => 'Bert Plastik', 'kisa_ad' => 'Bert',
@@ -134,9 +134,11 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $this->assertSame('Bert Plastik', $firma->unvan);
         $this->assertSame('Bert', $firma->kisa_ad);
         $this->assertSame('Gemlik', $firma->il);
-        $this->assertSame(5, $firma->calisan_sayisi);
-        $this->assertSame('tehlikeli', $firma->tehlike_sinifi);
+        $this->assertSame(1, $firma->calisan_sayisi);
+        $this->assertSame('az_tehlikeli', $firma->tehlike_sinifi);
         $this->assertSame('2283739', $firma->katip_no);
+        $this->assertSame('22.12.01', $firma->nace_kodu);
+        $this->assertSame('2026-09-23', $firma->sozlesme_baslangic->toDateString());
 
         // Aynı dosya tekrar yüklenince değişiklik yok.
         $tekrar = KatipSozlesmeIceAktarici::iceAktar($yol, $this->uzman->id);
@@ -184,10 +186,10 @@ class KatipSozlesmeIceAktariciTest extends TestCase
             $this->satir('8357458', 'ENGİN MEN', '24334010113000520161413000', 5, 'Çok Tehlikeli', '43.34.01', '02.03.2026'),
         );
 
-        $sonuc = KatipSozlesmeIceAktarici::iceAktar($yol, $this->uzman->id);
+        KatipSozlesmeIceAktarici::iceAktar($yol, $this->uzman->id);
 
-        $this->assertSame([], $sonuc['guncellenen']);
         $this->assertSame(8, $firma->refresh()->calisan_sayisi);
+        $this->assertSame('43.34.01', $firma->nace_kodu); // boş alan yine dolar
         $this->assertSame('2026-03-25', $firma->sozlesme_baslangic->toDateString());
     }
 
@@ -223,7 +225,7 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $this->assertNull(KatipSozlesmeIceAktarici::numarayaGoreBul($this->uzman->id, '999'));
     }
 
-    public function test_formda_tehlike_sinifi_katipten_ezilir_unvan_korunur(): void
+    public function test_formda_elle_girilenler_korunur_bos_alanlar_dolar(): void
     {
         $yol = $this->dosya($this->satir('5746639', 'BTM BURSA TOZ BOYA LTD', '22540010111537360161270000', 11, 'Çok Tehlikeli', '25.40.05', '10.02.2026'));
         KatipSozlesmeIceAktarici::listeKaydet($this->uzman->id, KatipSozlesmeIceAktarici::dosyaOku($yol));
@@ -236,8 +238,8 @@ class KatipSozlesmeIceAktariciTest extends TestCase
             ->set('mountedActions.0.data.katip_no', '5746639')
             ->assertActionDataSet([
                 'unvan' => 'BTM Toz Boya',
-                'tehlike_sinifi' => 'cok_tehlikeli',
-                'calisan_sayisi' => 11,
+                'tehlike_sinifi' => 'tehlikeli',
+                'calisan_sayisi' => 5,
                 'nace_kodu' => '25.40.05',
             ]);
     }

@@ -53,7 +53,7 @@ class ListFirmas extends ListRecords
                             ->label('Ne yapılsın?')
                             ->options([
                                 'sec' => 'Listeyi yükle, aktarılacak firmaları ben seçeyim',
-                                'tumu' => 'Tümünü aktar (yeniler eklenir, kayıtlılar güncellenir)',
+                                'tumu' => 'Tümünü aktar (yeniler eklenir, kayıtlı firmaların yalnız boş bilgileri doldurulur)',
                                 'kaydet' => 'Yalnız listeyi sakla (firma eklerken numarayla dolduracağım)',
                             ])
                             ->default('sec')
@@ -90,7 +90,7 @@ class ListFirmas extends ListRecords
                     ->modalHeading('İSG-KATİP listesinden firma aktar')
                     ->modalDescription(fn () => 'Liste yüklenme: '
                         .Carbon::parse(KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id())['yuklenme'] ?? now())->format('d.m.Y H:i')
-                        .'. Yeni firmalar işaretli gelir; kayıtlı firmaları işaretlerseniz çalışan sayısı, tehlike sınıfı, NACE ve sözleşme tarihleri güncellenir.')
+                        .'. Yeni firmalar işaretli gelir; kayıtlı firmaları işaretlerseniz yalnız boş bilgileri doldurulur, dolu bilgilere dokunulmaz.')
                     ->modalWidth(Width::FourExtraLarge)
                     ->modalSubmitActionLabel('Seçilenleri Aktar')
                     ->schema([
@@ -207,7 +207,7 @@ class ListFirmas extends ListRecords
     {
         $durum = match (true) {
             $kayit['bitti'] => 'Sözleşme sona ermiş',
-            KatipSozlesmeIceAktarici::mevcutFirma($kayit) !== null => 'Kayıtlı firma (güncellenir)',
+            KatipSozlesmeIceAktarici::mevcutFirma($kayit) !== null => 'Kayıtlı firma (boş bilgileri doldurulur)',
             default => 'YENİ',
         };
 

@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 
 class FirmaForm
 {
@@ -32,14 +33,14 @@ class FirmaForm
                         ->options(config('isg.tehlike_siniflari'))->default('az_tehlikeli')->required(),
                     TextInput::make('sgk_sicil_no')->label('SGK sicil no')->maxLength(50)
                         ->live(onBlur: true)
-                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set) => static::katiptenDoldur($state, $get, $set))
+                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set, ?Model $record) => static::katiptenDoldur($state, $get, $set, $record))
                         ->helperText(fn () => KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id())
                             ? 'SGK veya İSG-KATİP no yazın: yüklü KATİP listesinde varsa diğer bilgiler otomatik dolar.'
                             : null),
                     TextInput::make('vergi_no')->label('Vergi no')->maxLength(20),
                     TextInput::make('katip_no')->label('İSG-KATİP işyeri no')->maxLength(50)
                         ->live(onBlur: true)
-                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set) => static::katiptenDoldur($state, $get, $set)),
+                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set, ?Model $record) => static::katiptenDoldur($state, $get, $set, $record)),
                     TextInput::make('calisan_sayisi')->label('Çalışan sayısı')->numeric()->minValue(0)->default(0),
                     TextInput::make('nace_kodu')->label('NACE kodu')->maxLength(20),
                     TextInput::make('nace_aciklama')->label('NACE açıklaması')->maxLength(255)->columnSpanFull(),
@@ -110,10 +111,10 @@ class FirmaForm
 
     /**
      * SGK / KATİP no girilince yüklü İSG-KATİP listesinden firma bilgilerini doldurur.
-     * Tehlike sınıfı, NACE ve çalışan sayısı resmi KATİP bilgisidir, her zaman yazılır;
-     * unvan, il, işveren gibi elle doldurulmuş alanlar korunur (yalnız boşsa yazılır).
+     * Yalnız boş alanlar yazılır, dolu alanlar kullanıcıya aittir. Yeni firmada formun varsayılanları
+     * (tehlike sınıfı "az tehlikeli", çalışan 0) henüz girilmemiş sayılır.
      */
-    public static function katiptenDoldur(?string $no, Get $get, Set $set): void
+    public static function katiptenDoldur(?string $no, Get $get, Set $set, ?Model $record = null): void
     {
         $kayit = KatipSozlesmeIceAktarici::numarayaGoreBul((int) Filament::auth()->id(), $no);
 
@@ -121,11 +122,13 @@ class FirmaForm
             return;
         }
 
-        $resmi = ['tehlike_sinifi', 'nace_kodu', 'calisan_sayisi'];
+        $varsayilan = $record ? [] : ['calisan_sayisi' => [0, '0'], 'tehlike_sinifi' => ['az_tehlikeli']];
         $dolan = 0;
 
         foreach (KatipSozlesmeIceAktarici::formVerisi($kayit) as $alan => $deger) {
-            if (in_array($alan, $resmi, true) || blank($get($alan))) {
+            $mevcut = $get($alan);
+
+            if (blank($mevcut) || in_array($mevcut, $varsayilan[$alan] ?? [])) {
                 $set($alan, $deger);
                 $dolan++;
             }
