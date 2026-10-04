@@ -18,13 +18,16 @@
     <x-filament::section icon="heroicon-o-shield-check" icon-color="primary">
         <x-slot name="heading">Görev durumu</x-slot>
         <x-slot name="description">
-            {{ $kullanici->name }} · {{ config('isg.uzman_unvanlari.'.$kullanici->unvan, '') }} · {{ $sure['isyeri'] }} işyeri —
-            yapılan, yapılmayan, yaklaşan ve süresi geçen faaliyetler tek bakışta. Karttaki “İşleme git” ile ilgili modülde kayıt açın.
+            <span style="display:block;font-weight:600;font-size:.92em;line-height:1.35">
+                {{ collect([$kullanici->name, config('isg.uzman_unvanlari.'.$kullanici->unvan), $sure['isyeri'].' işyeri'])->filter()->implode(' · ') }}
+            </span>
+            <span style="display:block;font-size:.8em;margin-top:.15rem">Faaliyetlerin durumu tek bakışta; kartta “İşleme git” ile kayıt açın.</span>
         </x-slot>
-        <x-slot name="afterHeader">
-            <div style="display:flex;gap:.4rem">
-                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-path" wire:click="yenile">Yenile</x-filament::button>
-                <x-filament::button size="sm" icon="heroicon-o-arrow-down-tray" wire:click="durumRaporu">Durum raporu (TXT)</x-filament::button>
+        {{-- Yenile / Durum raporu: kartın altında tam genişlik çubuk (telefonda başlığı sıkıştırmasın) --}}
+        <x-slot name="footer">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                <x-filament::button color="gray" icon="heroicon-o-arrow-path" wire:click="yenile" style="width:100%">Yenile</x-filament::button>
+                <x-filament::button icon="heroicon-o-arrow-down-tray" wire:click="durumRaporu" style="width:100%">Durum raporu</x-filament::button>
             </div>
         </x-slot>
 
