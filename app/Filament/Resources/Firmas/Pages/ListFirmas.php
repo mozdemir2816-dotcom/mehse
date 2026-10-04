@@ -6,12 +6,16 @@ use App\Filament\Resources\Firmas\FirmaResource;
 use App\Support\FirmaExcelIceAktarici;
 use App\Support\KatipSozlesmeIceAktarici;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Enums\Width;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -28,39 +32,89 @@ class ListFirmas extends ListRecords
                 ->color('gray')
                 ->action(fn () => FirmaExcelIceAktarici::sablonIndir()),
 
-            Action::make('katipAktar')
-                ->label('İSG-KATİP\'ten Aktar')
+            ActionGroup::make([
+                Action::make('katipAktar')
+                    ->label('Listeyi Yükle')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->modalHeading('İSG-KATİP sözleşme listesini yükle')
+                    ->modalDescription('İSG-KATİP → Sözleşme İşlemleri → "Dışa Aktar" ile indirilen ISG_HIZMET_SOZLESME_SURECI_DISA_AKTAR_….xlsx dosyasını yükleyin. Liste saklanır: firma eklerken SGK veya KATİP no yazmanız yeterli olur. Aynı unvanlı işyerleri SGK no ile ayrı firma olarak tutulur.')
+                    ->modalSubmitActionLabel('Yükle')
+                    ->schema([
+                        FileUpload::make('dosya')
+                            ->label('İSG-KATİP Excel dosyası')
+                            ->disk('local')
+                            ->directory('excel-ice-aktarim')
+                            ->acceptedFileTypes([
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-excel',
+                            ])
+                            ->required(),
+                        Radio::make('kapsam')
+                            ->label('Ne yapılsın?')
+                            ->options([
+                                'sec' => 'Listeyi yükle, aktarılacak firmaları ben seçeyim',
+                                'tumu' => 'Tümünü aktar (yeniler eklenir, kayıtlılar güncellenir)',
+                                'kaydet' => 'Yalnız listeyi sakla (firma eklerken numarayla dolduracağım)',
+                            ])
+                            ->default('sec')
+                            ->required(),
+                    ])
+                    ->action(function (array $data): void {
+                        $userId = (int) Filament::auth()->id();
+
+                        try {
+                            $kayitlar = KatipSozlesmeIceAktarici::dosyaOku(Storage::disk('local')->path($data['dosya']));
+                        } catch (Throwable $e) {
+                            Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                            return;
+                        } finally {
+                            Storage::disk('local')->delete($data['dosya']);
+                        }
+
+                        KatipSozlesmeIceAktarici::listeKaydet($userId, $kayitlar);
+
+                        match ($data['kapsam'] ?? 'sec') {
+                            'tumu' => static::katipSonucBildir(KatipSozlesmeIceAktarici::aktar($kayitlar, $userId)),
+                            'kaydet' => Notification::make()->title('İSG-KATİP listesi yüklendi')
+                                ->body(count($kayitlar).' işyeri. Firma eklerken SGK veya KATİP no yazınca bilgiler otomatik dolar.')
+                                ->success()->send(),
+                            default => $this->replaceMountedAction('katipSec'),
+                        };
+                    }),
+
+                Action::make('katipSec')
+                    ->label('Listeden Firma Seç')
+                    ->icon('heroicon-o-queue-list')
+                    ->visible(fn () => KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id()) !== null)
+                    ->modalHeading('İSG-KATİP listesinden firma aktar')
+                    ->modalDescription(fn () => 'Liste yüklenme: '
+                        .Carbon::parse(KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id())['yuklenme'] ?? now())->format('d.m.Y H:i')
+                        .'. Yeni firmalar işaretli gelir; kayıtlı firmaları işaretlerseniz çalışan sayısı, tehlike sınıfı, NACE ve sözleşme tarihleri güncellenir.')
+                    ->modalWidth(Width::FourExtraLarge)
+                    ->modalSubmitActionLabel('Seçilenleri Aktar')
+                    ->schema([
+                        CheckboxList::make('secilenler')
+                            ->label('İşyerleri')
+                            ->options(fn () => collect(static::katipListesi())->map(fn ($k) => $k['unvan'])->all())
+                            ->descriptions(fn () => collect(static::katipListesi())->map(fn ($k) => static::katipAciklama($k))->all())
+                            ->default(fn () => collect(static::katipListesi())
+                                ->filter(fn ($k) => ! $k['bitti'] && ! KatipSozlesmeIceAktarici::mevcutFirma($k))
+                                ->keys()->map(fn ($a) => (string) $a)->values()->all())
+                            ->searchable()
+                            ->bulkToggleable()
+                            ->required(),
+                    ])
+                    ->action(function (array $data): void {
+                        $secilen = array_intersect_key(static::katipListesi(), array_flip(array_map('strval', $data['secilenler'] ?? [])));
+
+                        static::katipSonucBildir(KatipSozlesmeIceAktarici::aktar($secilen, (int) Filament::auth()->id()));
+                    }),
+            ])
+                ->label('İSG-KATİP')
                 ->icon('heroicon-o-cloud-arrow-down')
                 ->color('primary')
-                ->modalHeading('İSG-KATİP sözleşme listesinden firma aktar')
-                ->modalDescription('İSG-KATİP → Sözleşme İşlemleri → "Dışa Aktar" ile indirilen ISG_HIZMET_SOZLESME_SURECI_DISA_AKTAR_….xlsx dosyasını yükleyin. Yeni işyerleri eklenir, kayıtlı olanların çalışan sayısı, tehlike sınıfı, NACE kodu ve sözleşme tarihleri güncellenir. Sona ermiş sözleşmeler için yeni firma açılmaz.')
-                ->modalSubmitActionLabel('Aktar')
-                ->schema([
-                    FileUpload::make('dosya')
-                        ->label('İSG-KATİP Excel dosyası')
-                        ->disk('local')
-                        ->directory('excel-ice-aktarim')
-                        ->acceptedFileTypes([
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'application/vnd.ms-excel',
-                        ])
-                        ->required(),
-                ])
-                ->action(function (array $data): void {
-                    $yol = Storage::disk('local')->path($data['dosya']);
-
-                    try {
-                        $sonuc = KatipSozlesmeIceAktarici::iceAktar($yol, (int) Filament::auth()->id());
-                    } catch (Throwable $e) {
-                        Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
-
-                        return;
-                    } finally {
-                        Storage::disk('local')->delete($data['dosya']);
-                    }
-
-                    static::katipSonucBildir($sonuc);
-                }),
+                ->button(),
 
             Action::make('excelYukle')
                 ->label('Excel\'den Yükle')
@@ -140,5 +194,30 @@ class ListFirmas extends ListRecords
             ->persistent();
 
         $sonuc['hatalar'] && ! $sonuc['eklenen'] && ! $sonuc['guncellenen'] ? $bildirim->danger()->send() : $bildirim->success()->send();
+    }
+    /** @return array<string, array<string, mixed>> anahtar string (CheckboxList değerleriyle eşleşsin) */
+    private static function katipListesi(): array
+    {
+        $kayitlar = KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id())['kayitlar'] ?? [];
+
+        return collect($kayitlar)->mapWithKeys(fn ($k, $a) => [(string) $a => $k])->sortBy('unvan')->all();
+    }
+
+    private static function katipAciklama(array $kayit): string
+    {
+        $durum = match (true) {
+            $kayit['bitti'] => 'Sözleşme sona ermiş',
+            KatipSozlesmeIceAktarici::mevcutFirma($kayit) !== null => 'Kayıtlı firma (güncellenir)',
+            default => 'YENİ',
+        };
+
+        return implode(' · ', array_filter([
+            $durum,
+            $kayit['sgk_sicil_no'] ? 'SGK '.$kayit['sgk_sicil_no'] : null,
+            $kayit['il'],
+            $kayit['calisan_sayisi'] !== null ? $kayit['calisan_sayisi'].' çalışan' : null,
+            $kayit['nace_kodu'] ? 'NACE '.$kayit['nace_kodu'] : null,
+            ($kayit['onaylayan'] ?? null) ? 'Onaylayan: '.$kayit['onaylayan'] : null,
+        ]));
     }
 }

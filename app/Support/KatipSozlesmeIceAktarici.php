@@ -4,19 +4,23 @@ namespace App\Support;
 
 use App\Models\Firma;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelTarih;
 use Throwable;
 
 /**
  * İSG-KATİP "Hizmet Sözleşme Süreci → Dışa Aktar" Excel'inden (ISG_HIZMET_SOZLESME_SURECI_DISA_AKTAR_*.xlsx)
- * firma ekleme / güncelleme. Her satır bir sözleşmedir; firma "Hizmet Alan İşyeri" sütunlarından alınır.
+ * firma ekleme / güncelleme. Her satır bir sözleşmedir; firma "Hizmet Alan İşyeri" sütunlarından,
+ * işveren / işveren vekili "Onaylayan Kişi Ad Soyad"dan alınır.
  *
- * - Aynı işyeri (SGK no) birden çok satırda geçerse en son başlayan sözleşme esas alınır.
+ * - Yüklenen liste kullanıcı başına saklanır (listeKaydet): firma formunda SGK / KATİP no yazınca
+ *   bilgiler buradan doldurulur, "KATİP Listesinden Seç" ile istenen firmalar toplu aktarılır.
+ * - Aynı işyeri (SGK no) birden çok satırda geçerse en son başlayan sözleşme esas alınır;
+ *   aynı unvanlı farklı SGK no'lu işyerleri (şubeler) ayrı firmadır.
  * - Mevcut firma SGK no → KATİP işyeri ID → unvan sırasıyla eşleştirilir; mükerrer firma açılmaz.
- * - Devam eden / teklif aşamasındaki sözleşmeler: firma yoksa eklenir, varsa güncellenir.
  * - Sonlandırılmış / iptal sözleşmeler: yeni firma AÇILMAZ, yalnız mevcut firmanın bitiş tarihi işlenir.
- * - Unvan, kısa ad, iletişim gibi elle girilmiş alanlar ezilmez; SGK no ve il yalnız boşsa doldurulur.
+ * - Unvan, kısa ad, iletişim gibi elle girilmiş alanlar ezilmez; SGK no, il, işveren yalnız boşsa doldurulur.
  */
 class KatipSozlesmeIceAktarici
 {
@@ -32,6 +36,7 @@ class KatipSozlesmeIceAktarici
         'sozlesmebaslangictarihi' => 'sozlesme_baslangic',
         'sozlesmebitistarihi' => 'sozlesme_bitis',
         'sozlesmestatu' => 'statu',
+        'onaylayankisiadsoyad' => 'onaylayan',
     ];
 
     /** Dosyanın ilk satırı KATİP sözleşme dışa aktarımına mı ait? */
@@ -55,19 +60,37 @@ class KatipSozlesmeIceAktarici
     }
 
     /**
+     * Dosyadaki tüm firmaları ekler/günceller (toplu aktarım).
+     *
      * @return array{eklenen: array<int, string>, guncellenen: array<int, string>, atlanan: array<int, string>, hatalar: array<int, string>}
      */
     public static function iceAktar(string $dosyaYolu, int $userId): array
     {
-        $sonuc = ['eklenen' => [], 'guncellenen' => [], 'atlanan' => [], 'hatalar' => []];
+        try {
+            $kayitlar = static::dosyaOku($dosyaYolu);
+        } catch (\InvalidArgumentException $e) {
+            return ['eklenen' => [], 'guncellenen' => [], 'atlanan' => [], 'hatalar' => [$e->getMessage()]];
+        }
 
+        static::listeKaydet($userId, $kayitlar);
+
+        return static::aktar($kayitlar, $userId);
+    }
+
+    /**
+     * Dosyayı okuyup işyeri bazında tekilleştirilmiş kayıt listesi döner (anahtar: SGK no).
+     *
+     * @return array<string, array<string, mixed>>
+     *
+     * @throws \InvalidArgumentException KATİP dosyası değilse
+     */
+    public static function dosyaOku(string $dosyaYolu): array
+    {
         $satirlar = static::satirlariOku($dosyaYolu);
         $baslik = array_shift($satirlar) ?? [];
 
         if (! static::baslikKatipMi($baslik)) {
-            $sonuc['hatalar'][] = 'Bu dosya İSG-KATİP sözleşme dışa aktarımı değil ("Hizmet Alan İşyeri Unvanı" sütunu yok).';
-
-            return $sonuc;
+            throw new \InvalidArgumentException('Bu dosya İSG-KATİP sözleşme dışa aktarımı değil ("Hizmet Alan İşyeri Unvanı" sütunu yok).');
         }
 
         $sutunlar = [];
@@ -77,7 +100,20 @@ class KatipSozlesmeIceAktarici
             }
         }
 
-        foreach (static::isyerleriniTopla($satirlar, $sutunlar) as $kayit) {
+        return static::isyerleriniTopla($satirlar, $sutunlar);
+    }
+
+    /**
+     * Verilen kayıtları firmalara işler.
+     *
+     * @param  array<array-key, array<string, mixed>>  $kayitlar
+     * @return array{eklenen: array<int, string>, guncellenen: array<int, string>, atlanan: array<int, string>, hatalar: array<int, string>}
+     */
+    public static function aktar(array $kayitlar, int $userId): array
+    {
+        $sonuc = ['eklenen' => [], 'guncellenen' => [], 'atlanan' => [], 'hatalar' => []];
+
+        foreach ($kayitlar as $kayit) {
             try {
                 static::isle($kayit, $userId, $sonuc);
             } catch (Throwable $e) {
@@ -87,6 +123,74 @@ class KatipSozlesmeIceAktarici
 
         return $sonuc;
     }
+
+    // ── Kullanıcı başına saklanan son KATİP listesi ──────────────────────────────
+
+    private static function listeYolu(int $userId): string
+    {
+        return "katip-listesi/{$userId}.json";
+    }
+
+    /** @param  array<string, array<string, mixed>>  $kayitlar */
+    public static function listeKaydet(int $userId, array $kayitlar): void
+    {
+        Storage::disk('local')->put(static::listeYolu($userId), json_encode([
+            'yuklenme' => now()->toDateTimeString(),
+            'kayitlar' => $kayitlar,
+        ], JSON_UNESCAPED_UNICODE));
+    }
+
+    /** @return array{yuklenme: string, kayitlar: array<string, array<string, mixed>>}|null */
+    public static function liste(int $userId): ?array
+    {
+        $yol = static::listeYolu($userId);
+
+        if (! Storage::disk('local')->exists($yol)) {
+            return null;
+        }
+
+        $veri = json_decode((string) Storage::disk('local')->get($yol), true);
+
+        return is_array($veri['kayitlar'] ?? null) ? $veri : null;
+    }
+
+    /** SGK sicil no veya KATİP işyeri no ile saklanan listeden işyeri bulur (boşluk/nokta farkı önemsiz). */
+    public static function numarayaGoreBul(int $userId, ?string $no): ?array
+    {
+        $aranan = preg_replace('/\D/', '', (string) $no);
+
+        if ($aranan === '') {
+            return null;
+        }
+
+        foreach (static::liste($userId)['kayitlar'] ?? [] as $kayit) {
+            if (preg_replace('/\D/', '', (string) $kayit['sgk_sicil_no']) === $aranan
+                || (string) $kayit['katip_no'] === $aranan) {
+                return $kayit;
+            }
+        }
+
+        return null;
+    }
+
+    /** Firma formuna doldurulacak alanlar (yalnız dolu olanlar). */
+    public static function formVerisi(array $kayit): array
+    {
+        return array_filter([
+            'unvan' => $kayit['unvan'],
+            'sgk_sicil_no' => $kayit['sgk_sicil_no'],
+            'katip_no' => $kayit['katip_no'],
+            'il' => $kayit['il'],
+            'calisan_sayisi' => $kayit['calisan_sayisi'],
+            'tehlike_sinifi' => $kayit['tehlike_sinifi'],
+            'nace_kodu' => $kayit['nace_kodu'],
+            'isveren_ad' => $kayit['onaylayan'] ?? null,
+            'sozlesme_baslangic' => $kayit['sozlesme_baslangic'],
+            'sozlesme_bitis' => $kayit['bitti'] ? $kayit['sozlesme_bitis'] : null,
+        ], fn ($v) => $v !== null && $v !== '');
+    }
+
+    // ── İç işlemler ──────────────────────────────────────────────────────────────
 
     /**
      * Satırları işyeri bazında tekilleştirir: aynı işyerinin en son başlayan sözleşmesi kalır
@@ -115,6 +219,7 @@ class KatipSozlesmeIceAktarici
                 'calisan_sayisi' => is_numeric($al('calisan_sayisi')) ? (int) $al('calisan_sayisi') : null,
                 'tehlike_sinifi' => $al('tehlike_sinifi') !== '' ? FirmaExcelIceAktarici::tehlikeSinifiCoz($al('tehlike_sinifi')) : null,
                 'nace_kodu' => $al('nace_kodu') ?: null,
+                'onaylayan' => static::unvanTemizle($al('onaylayan')) ?: null,
                 'sozlesme_baslangic' => static::tarih($al('sozlesme_baslangic')),
                 'sozlesme_bitis' => static::tarih($al('sozlesme_bitis')),
                 'bitti' => str_contains($statu, 'sonlandir') || str_contains($statu, 'iptal'),
@@ -147,17 +252,7 @@ class KatipSozlesmeIceAktarici
                 return;
             }
 
-            Firma::create(array_filter([
-                'user_id' => $userId,
-                'unvan' => $kayit['unvan'],
-                'sgk_sicil_no' => $kayit['sgk_sicil_no'],
-                'katip_no' => $kayit['katip_no'],
-                'il' => $kayit['il'],
-                'calisan_sayisi' => $kayit['calisan_sayisi'],
-                'tehlike_sinifi' => $kayit['tehlike_sinifi'],
-                'nace_kodu' => $kayit['nace_kodu'],
-                'sozlesme_baslangic' => $kayit['sozlesme_baslangic'],
-            ], fn ($v) => $v !== null));
+            Firma::create(['user_id' => $userId] + static::formVerisi($kayit));
 
             $sonuc['eklenen'][] = $kayit['unvan'];
 
@@ -184,6 +279,17 @@ class KatipSozlesmeIceAktarici
             }
         }
 
+        // Sözleşmeyi onaylayan kişi: işveren boşsa işveren; işveren başka biriyse ve vekil boşsa vekil.
+        $onaylayan = $kayit['onaylayan'] ?? null;
+        if ($onaylayan) {
+            if (blank($firma->isveren_ad)) {
+                $firma->isveren_ad = $onaylayan;
+            } elseif (blank($firma->isveren_vekili)
+                && FirmaExcelIceAktarici::normalize($firma->isveren_ad) !== FirmaExcelIceAktarici::normalize($onaylayan)) {
+                $firma->isveren_vekili = $onaylayan;
+            }
+        }
+
         $firma->sozlesme_bitis = $kayit['bitti'] ? $kayit['sozlesme_bitis'] : null;
 
         if ($firma->isDirty()) {
@@ -192,7 +298,8 @@ class KatipSozlesmeIceAktarici
         }
     }
 
-    private static function mevcutFirma(array $kayit): ?Firma
+    /** Kayıt sistemde hangi firmaya karşılık geliyor (yoksa null). */
+    public static function mevcutFirma(array $kayit): ?Firma
     {
         $firmalar = Firma::query()->get();
         $rakam = fn (?string $s) => preg_replace('/\D/', '', (string) $s);

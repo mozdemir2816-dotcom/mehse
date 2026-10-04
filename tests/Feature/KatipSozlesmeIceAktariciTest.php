@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\KatipSozlesmeIceAktarici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -40,12 +41,13 @@ class KatipSozlesmeIceAktariciTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Storage::fake('local');
         $this->uzman = User::factory()->create();
         $this->actingAs($this->uzman);
     }
 
     private function satir(string $isyeriId, string $unvan, string $sgk, int $calisan, string $tehlike, string $nace,
-        string $baslangic, string $bitis = '', string $statu = 'Sözleşme Devam Ediyor'): array
+        string $baslangic, string $bitis = '', string $statu = 'Sözleşme Devam Ediyor', string $onaylayan = ''): array
     {
         $s = array_fill_keys(self::BASLIK, '');
         $s['Sözleşme Adı'] = 'OSGB İLE ÖZEL İŞYERİ ARASINDA İŞ GÜVENLİĞİ UZMANI HİZMET ALIMI SÖZLEŞMESİ';
@@ -61,6 +63,7 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $s['Sözleşme Başlangıç Tarihi'] = $baslangic;
         $s['Sözleşme Bitiş Tarihi'] = $bitis;
         $s['Sözleşme Statü'] = $statu;
+        $s['Onaylayan Kişi Ad Soyad'] = $onaylayan;
 
         return array_values($s);
     }
@@ -188,6 +191,81 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $this->assertSame('2026-03-25', $firma->sozlesme_baslangic->toDateString());
     }
 
+    public function test_onaylayan_kisi_isveren_ya_da_vekil_olarak_alinir(): void
+    {
+        $mevcut = Firma::create(['user_id' => $this->uzman->id, 'unvan' => 'FOM', 'sgk_sicil_no' => '22932010101204260161204000', 'isveren_ad' => 'ALİ FOM']);
+
+        $yol = $this->dosya(
+            $this->satir('2283739', 'BERT PLASTİK LTD', '22212010112247420160872000', 2, 'Tehlikeli', '22.12.01', '23.09.2026', onaylayan: 'SERDAR ÖZGÜREL'),
+            $this->satir('8761689', 'FOM MAKİNA LTD', '22932010101204260161204000', 41, 'Tehlikeli', '29.32.21', '08.07.2026', onaylayan: 'YASİN ŞENER'),
+        );
+
+        KatipSozlesmeIceAktarici::iceAktar($yol, $this->uzman->id);
+
+        $this->assertSame('SERDAR ÖZGÜREL', Firma::where('katip_no', '2283739')->value('isveren_ad'));
+        $mevcut->refresh();
+        $this->assertSame('ALİ FOM', $mevcut->isveren_ad);
+        $this->assertSame('YASİN ŞENER', $mevcut->isveren_vekili);
+    }
+
+    public function test_liste_saklanir_ve_sgk_ya_da_katip_no_ile_bulunur(): void
+    {
+        $yol = $this->dosya($this->satir('2283739', 'BERT PLASTİK LTD', '22212010112247420160872000', 2, 'Tehlikeli', '22.12.01', '23.09.2026', onaylayan: 'SERDAR ÖZGÜREL'));
+
+        Livewire::test(ListFirmas::class)
+            ->assertActionHidden('katipSec')
+            ->callAction('katipAktar', ['dosya' => UploadedFile::fake()->createWithContent('k.xlsx', file_get_contents($yol)), 'kapsam' => 'kaydet'])
+            ->assertNotified('İSG-KATİP listesi yüklendi');
+
+        $this->assertSame(0, Firma::count());
+        $this->assertSame('BERT PLASTİK LTD', KatipSozlesmeIceAktarici::numarayaGoreBul($this->uzman->id, '2221 2010 1122 4742 0160 872000')['unvan']);
+        $this->assertSame('BERT PLASTİK LTD', KatipSozlesmeIceAktarici::numarayaGoreBul($this->uzman->id, '2283739')['unvan']);
+        $this->assertNull(KatipSozlesmeIceAktarici::numarayaGoreBul($this->uzman->id, '999'));
+    }
+
+    public function test_firma_eklerken_sgk_no_yazinca_bilgiler_dolar(): void
+    {
+        $yol = $this->dosya($this->satir('2283739', 'BERT PLASTİK LTD', '22212010112247420160872000', 2, 'Tehlikeli', '22.12.01', '23.09.2026', onaylayan: 'SERDAR ÖZGÜREL'));
+        KatipSozlesmeIceAktarici::listeKaydet($this->uzman->id, KatipSozlesmeIceAktarici::dosyaOku($yol));
+
+        Livewire::test(ListFirmas::class)
+            ->mountAction('create')
+            ->set('mountedActions.0.data.sgk_sicil_no', '22212010112247420160872000')
+            ->assertActionDataSet([
+                'unvan' => 'BERT PLASTİK LTD',
+                'katip_no' => '2283739',
+                'calisan_sayisi' => 2,
+                'tehlike_sinifi' => 'tehlikeli',
+                'nace_kodu' => '22.12.01',
+                'isveren_ad' => 'SERDAR ÖZGÜREL',
+                'il' => 'BURSA',
+            ]);
+    }
+
+    public function test_listeden_secilen_firmalar_aktarilir_yeniler_varsayilan_isaretli(): void
+    {
+        Firma::create(['user_id' => $this->uzman->id, 'unvan' => 'ENGİN MEN', 'sgk_sicil_no' => '24334010113000520161413000']);
+
+        $yol = $this->dosya(
+            $this->satir('2283739', 'BERT PLASTİK LTD', '22212010112247420160872000', 2, 'Tehlikeli', '22.12.01', '23.09.2026'),
+            $this->satir('13600032', 'FOM MAKİNA LTD', '22841010115350010161228000', 10, 'Tehlikeli', '28.41.03', '22.09.2026'),
+            $this->satir('8357458', 'ENGİN MEN', '24334010113000520161413000', 8, 'Çok Tehlikeli', '43.34.01', '25.03.2026'),
+        );
+
+        $sayfa = Livewire::test(ListFirmas::class)
+            ->callAction('katipAktar', ['dosya' => UploadedFile::fake()->createWithContent('k.xlsx', file_get_contents($yol)), 'kapsam' => 'sec'])
+            ->assertActionMounted('katipSec')
+            ->assertActionDataSet(['secilenler' => ['22212010112247420160872000', '22841010115350010161228000']]);
+
+        $this->assertSame(1, Firma::count()); // seçim penceresi açıldı, henüz aktarım yok
+
+        $sayfa->set('mountedActions.0.data.secilenler', ['22841010115350010161228000'])
+            ->callMountedAction()
+            ->assertNotified('1 firma eklendi, 0 firma güncellendi');
+
+        $this->assertSame(['ENGİN MEN', 'FOM MAKİNA LTD'], Firma::orderBy('unvan')->pluck('unvan')->all());
+    }
+
     public function test_ayni_unvanli_farkli_sgk_ayri_firma_olur(): void
     {
         $yol = $this->dosya(
@@ -207,7 +285,7 @@ class KatipSozlesmeIceAktariciTest extends TestCase
         $yukleme = UploadedFile::fake()->createWithContent('ISG_HIZMET_SOZLESME_SURECI_DISA_AKTAR_1.xlsx', file_get_contents($yol));
 
         Livewire::test(ListFirmas::class)
-            ->callAction('katipAktar', ['dosya' => $yukleme])
+            ->callAction('katipAktar', ['dosya' => $yukleme, 'kapsam' => 'tumu'])
             ->assertHasNoActionErrors()
             ->assertNotified('1 firma eklendi, 0 firma güncellendi');
 

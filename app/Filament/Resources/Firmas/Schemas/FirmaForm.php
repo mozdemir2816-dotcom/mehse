@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Firmas\Schemas;
 
 use App\Models\IsgProfesyoneli;
+use App\Support\KatipSozlesmeIceAktarici;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -11,7 +12,10 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class FirmaForm
@@ -26,9 +30,16 @@ class FirmaForm
                     TextInput::make('kisa_ad')->label('Kısa ad')->maxLength(255),
                     Select::make('tehlike_sinifi')->label('Tehlike sınıfı')
                         ->options(config('isg.tehlike_siniflari'))->default('az_tehlikeli')->required(),
-                    TextInput::make('sgk_sicil_no')->label('SGK sicil no')->maxLength(50),
+                    TextInput::make('sgk_sicil_no')->label('SGK sicil no')->maxLength(50)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set) => static::katiptenDoldur($state, $get, $set))
+                        ->helperText(fn () => KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id())
+                            ? 'SGK veya İSG-KATİP no yazın: yüklü KATİP listesinde varsa diğer bilgiler otomatik dolar.'
+                            : null),
                     TextInput::make('vergi_no')->label('Vergi no')->maxLength(20),
-                    TextInput::make('katip_no')->label('İSG-KATİP işyeri no')->maxLength(50),
+                    TextInput::make('katip_no')->label('İSG-KATİP işyeri no')->maxLength(50)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set) => static::katiptenDoldur($state, $get, $set)),
                     TextInput::make('calisan_sayisi')->label('Çalışan sayısı')->numeric()->minValue(0)->default(0),
                     TextInput::make('nace_kodu')->label('NACE kodu')->maxLength(20),
                     TextInput::make('nace_aciklama')->label('NACE açıklaması')->maxLength(255)->columnSpanFull(),
@@ -95,5 +106,34 @@ class FirmaForm
                     Textarea::make('notlar')->label('Notlar')->rows(2)->columnSpanFull(),
                 ]),
         ]);
+    }
+
+    /**
+     * SGK / KATİP no girilince yüklü İSG-KATİP listesinden firma bilgilerini doldurur.
+     * Elle doldurulmuş alanlar korunur; yalnız boş (veya varsayılan değerdeki) alanlar yazılır.
+     */
+    public static function katiptenDoldur(?string $no, Get $get, Set $set): void
+    {
+        $kayit = KatipSozlesmeIceAktarici::numarayaGoreBul((int) Filament::auth()->id(), $no);
+
+        if (! $kayit) {
+            return;
+        }
+
+        $varsayilan = ['calisan_sayisi' => [0, '0'], 'tehlike_sinifi' => ['az_tehlikeli']];
+        $dolan = 0;
+
+        foreach (KatipSozlesmeIceAktarici::formVerisi($kayit) as $alan => $deger) {
+            $mevcut = $get($alan);
+
+            if (blank($mevcut) || in_array($mevcut, $varsayilan[$alan] ?? [])) {
+                $set($alan, $deger);
+                $dolan++;
+            }
+        }
+
+        if ($dolan > 0) {
+            Notification::make()->title('İSG-KATİP listesinden dolduruldu')->body($kayit['unvan'])->success()->send();
+        }
     }
 }
