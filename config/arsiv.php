@@ -161,6 +161,11 @@ return [
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Olay Tarihi'],
             'kural_metni' => 'İş kazası bildirimleri, tutanaklar ve inceleme raporları süresiz arşivlenir.',
         ],
+        'dof' => [
+            'ad' => 'DÖF Raporları', 'grup' => 'diger', 'ikon' => 'heroicon-o-clipboard-document-check',
+            'kural' => 'kayit', 'alanlar' => ['tarih' => 'Rapor Tarihi'],
+            'kural_metni' => 'Düzeltici ve önleyici faaliyet raporları (imzalı nüsha veya dışarıda hazırlanmış Excel / Word) arşivlenir.',
+        ],
         'talimat' => [
             'ad' => 'Talimat / Prosedür', 'grup' => 'diger', 'ikon' => 'heroicon-o-list-bullet',
             'kural' => 'kayit', 'alanlar' => ['tarih' => 'Belge Tarihi', 'bitis' => 'Geçerlilik Sonu'],

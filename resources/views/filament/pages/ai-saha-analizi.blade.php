@@ -606,6 +606,8 @@
         </x-filament::section>
     @endif
 
+    @include('filament.components.hazir-raporlar')
+
     <div style="{{ $kutu }};background:rgb(107 114 128 / .05);font-size:.78rem;color:rgb(107 114 128)">
         Yapay zekâ çıktıları ön değerlendirmedir; saha koşullarının İSG profesyoneli tarafından doğrulanması
         olmadan resmî tespit, ölçüm veya uygunluk beyanı yerine geçmez. Bu nedenle her madde rapora girmeden önce onaylanmalıdır.

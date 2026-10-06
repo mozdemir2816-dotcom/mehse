@@ -33,6 +33,7 @@ use UnitEnum;
 class AiSahaAnalizi extends Page
 {
     use SinirliErisim;
+    use \App\Filament\Concerns\HazirRaporYukleme;
     use WithFileUploads;
 
     protected string $view = 'filament.pages.ai-saha-analizi';
@@ -891,9 +892,15 @@ class AiSahaAnalizi extends Page
     |--------------------------------------------------------------------------
     */
 
+    protected function hazirRaporKategorisi(): string
+    {
+        return 'saha_gozlem';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            $this->hazirRaporYukleAction(),
             Action::make('pdf')
                 ->label(fn () => $this->kilitliMi() ? 'PDF İndir' : 'Önizle / PDF (Taslak)')
                 ->icon('heroicon-o-document-arrow-down')

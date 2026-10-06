@@ -268,6 +268,8 @@
                 </table>
             </x-filament::section>
         @endif
+
+        @include('filament.components.hazir-raporlar')
     @else
         <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
     @endif

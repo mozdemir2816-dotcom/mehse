@@ -28,6 +28,7 @@ class DofOlustur extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
 
+    use \App\Filament\Concerns\HazirRaporYukleme;
     use WithFileUploads;
 
     protected string $view = 'filament.pages.dof-olustur';
@@ -351,9 +352,15 @@ class DofOlustur extends Page
         return $d;
     }
 
+    protected function hazirRaporKategorisi(): string
+    {
+        return 'dof';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            $this->hazirRaporYukleAction(),
             Action::make('pdf')
                 ->label('DÖF Raporu (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
