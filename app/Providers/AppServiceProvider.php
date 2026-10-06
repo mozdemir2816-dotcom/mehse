@@ -50,6 +50,15 @@ class AppServiceProvider extends ServiceProvider
         Action::configureUsing(fn (Action $aksiyon) => $aksiyon->stickyModalHeader()->stickyModalFooter());
         BasePage::stickyFormActions();
 
+        // Personel / firma / İGU-hekim bilgisi düzeltilince, bilginin kopyalandığı
+        // evraklar (tutanak, atama yazısı, iş izni...) da güncellenir (06.10.2026).
+        \App\Models\Calisan::updated(fn ($c) => \App\Support\BagliKayitGuncelleyici::calisanGuncellendi($c));
+        \App\Models\Firma::updated(fn ($f) => \App\Support\BagliKayitGuncelleyici::firmaGuncellendi($f));
+        \App\Models\IsgProfesyoneli::updated(fn ($p) => \App\Support\BagliKayitGuncelleyici::profesyonelGuncellendi($p));
+        // Tablo içi "Düzenle" pencerelerinde kaydetme sonrası "X evrak güncellendi"
+        // (düzenleme sayfaları için bkz. KaydetUstte::afterSave).
+        \Filament\Actions\EditAction::configureUsing(fn ($a) => $a->after(fn () => \App\Support\BagliKayitGuncelleyici::bildir()));
+
         // Uzaktan eğitim portalına (kullanıcı kodu / e-posta) her giriş günlüğe düşer.
         Event::listen(Login::class, function (Login $e): void {
             if ($e->guard === 'calisan') {

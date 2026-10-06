@@ -239,8 +239,8 @@
                     <table class="w-full text-sm">
                         @foreach ($t->katilimcilar as $i => $k)
                             <tr style="border-top:{{ $i ? '1px solid var(--border-light)' : 'none' }}">
-                                <td class="px-3 py-2 font-semibold">{{ $k['ad_soyad'] }}</td>
-                                <td class="px-3 py-2">{{ $k['gorev'] ?: '—' }}</td>
+                                <td class="px-3 py-2 font-semibold">{{ ($k['ad_soyad'] ?? '') ?: '—' }}</td>
+                                <td class="px-3 py-2">{{ ($k['gorev'] ?? null) ?: '—' }}</td>
                                 <td class="px-3 py-2">
                                     @if (filled($k['rol'] ?? null))
                                         <x-filament::badge color="gray">{{ config('isg.kurul_toplantisi.roller.'.$k['rol'].'.ad', $k['rol']) }}</x-filament::badge>
@@ -251,10 +251,35 @@
                                         {{ ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı' }}
                                     </x-filament::button>
                                 </td>
-                                <td class="px-3 py-2 text-right">
+                                <td class="px-3 py-2 text-right whitespace-nowrap">
+                                    <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="katilimciDuzenle({{ $i }})">Düzenle</x-filament::button>
                                     <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Çıkar" wire:click="katilimciSil({{ $i }})" />
                                 </td>
                             </tr>
+                            @if ($duzenlenenKatilimciIndex === $i)
+                                <tr>
+                                    <td colspan="5" class="p-2">
+                                        <div style="border:1px solid var(--primary);background:var(--info-bg);border-radius:12px;padding:.9rem">
+                                            <div class="mb-2 text-sm font-semibold">Katılımcıyı düzenle (yalnız bu toplantı)</div>
+                                            <div class="grid gap-2 sm:grid-cols-3">
+                                                <div><label style="{{ $etiket }}">Ad soyad</label><input type="text" wire:model="katilimciForm.ad_soyad" style="{{ $girdi }}"></div>
+                                                <div><label style="{{ $etiket }}">Görevi</label><input type="text" wire:model="katilimciForm.gorev" style="{{ $girdi }}"></div>
+                                                <div>
+                                                    <label style="{{ $etiket }}">Kuruldaki görevi</label>
+                                                    <select wire:model="katilimciForm.rol" style="{{ $girdi }}">
+                                                        <option value="">Kurul Üyesi</option>
+                                                        @foreach (config('isg.kurul_toplantisi.roller') as $rk => $rt)<option value="{{ $rk }}">{{ $rt['ad'] }}</option>@endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 flex gap-2">
+                                                <x-filament::button size="sm" wire:click="katilimciGuncelle">Güncelle</x-filament::button>
+                                                <x-filament::button size="sm" color="gray" wire:click="katilimciDuzenlemeIptal">Vazgeç</x-filament::button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         @endforeach
                     </table>
                 </div>

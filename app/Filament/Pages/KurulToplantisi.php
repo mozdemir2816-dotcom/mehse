@@ -97,6 +97,18 @@ class KurulToplantisi extends Page
 
     public ?string $yeniKatilimciGorev = null;
 
+    // Katılımcı düzenleme (toplantı tutanağındaki kişi)
+    public ?int $duzenlenenKatilimciIndex = null;
+
+    /** @var array{ad_soyad?: ?string, gorev?: ?string, rol?: ?string} */
+    public array $katilimciForm = [];
+
+    // Kurul üyesi düzenleme (Üye Yönet)
+    public ?int $duzenlenenUyeId = null;
+
+    /** @var array{ad_soyad?: ?string, gorev?: ?string, rol?: ?string} */
+    public array $uyeForm = [];
+
     // Gündem ekleme
     public ?string $yeniGundemMaddesi = null;
 
@@ -314,6 +326,69 @@ class KurulToplantisi extends Page
         $this->onbellekTemizle();
     }
 
+    public function uyeDuzenle(int $id): void
+    {
+        $u = $this->firma?->kurulUyeleri()->find($id);
+
+        if (! $u) {
+            return;
+        }
+
+        $this->duzenlenenUyeId = $u->id;
+        $this->uyeForm = ['ad_soyad' => $u->ad_soyad, 'gorev' => $u->gorev, 'rol' => $u->rol];
+    }
+
+    public function uyeDuzenlemeIptal(): void
+    {
+        $this->reset('duzenlenenUyeId', 'uyeForm');
+    }
+
+    /**
+     * Kurul üyesini günceller (örn. işveren vekili değişti). Kişinin geçtiği
+     * toplantı tutanaklarındaki katılımcı kopyası da (eski adla eşleşen) yeni
+     * bilgiye çevrilir — tutanakları yeniden yazmak gerekmez.
+     */
+    public function uyeGuncelle(): void
+    {
+        $u = $this->firma?->kurulUyeleri()->find($this->duzenlenenUyeId);
+        $ad = trim((string) ($this->uyeForm['ad_soyad'] ?? ''));
+
+        if (! $u || $ad === '') {
+            return;
+        }
+
+        $eskiAd = $u->ad_soyad;
+        $rol = array_key_exists($this->uyeForm['rol'] ?? '', KurulUyeleri::roller()) ? $this->uyeForm['rol'] : $u->rol;
+        $u->update(['ad_soyad' => $ad, 'gorev' => $this->uyeForm['gorev'] ?: null, 'rol' => $rol]);
+
+        $tutanak = 0;
+
+        foreach ($this->firma->kurulToplantilari()->get() as $t) {
+            $degisti = false;
+            $katilimcilar = collect($t->katilimcilar ?? [])->map(function (array $k) use ($eskiAd, $ad, $rol, &$degisti) {
+                if (! \App\Support\BagliKayitGuncelleyici::ayni($k['ad_soyad'] ?? '', $eskiAd)) {
+                    return $k;
+                }
+                $degisti = true;
+
+                return [...$k, 'ad_soyad' => $ad, 'gorev' => $this->uyeForm['gorev'] ?: ($k['gorev'] ?? null), 'rol' => $rol];
+            })->all();
+
+            if ($degisti) {
+                $t->update(['katilimcilar' => $katilimcilar]);
+                $tutanak++;
+            }
+        }
+
+        $this->uyeDuzenlemeIptal();
+        $this->onbellekTemizle();
+        unset($this->toplanti);
+
+        Notification::make()->title('Kurul üyesi güncellendi')
+            ->body($tutanak ? "{$tutanak} toplantı tutanağındaki bilgisi de güncellendi." : null)
+            ->success()->send();
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Toplantılar
@@ -488,6 +563,49 @@ class KurulToplantisi extends Page
         $katilimcilar = $t->katilimcilar ?? [];
         unset($katilimcilar[$index]);
         $t->update(['katilimcilar' => array_values($katilimcilar)]);
+    }
+
+    public function katilimciDuzenle(int $index): void
+    {
+        $k = $this->toplanti()?->katilimcilar[$index] ?? null;
+
+        if ($k === null) {
+            return;
+        }
+
+        $this->duzenlenenKatilimciIndex = $index;
+        $this->katilimciForm = ['ad_soyad' => $k['ad_soyad'] ?? '', 'gorev' => $k['gorev'] ?? '', 'rol' => $k['rol'] ?? ''];
+    }
+
+    public function katilimciDuzenlemeIptal(): void
+    {
+        $this->reset('duzenlenenKatilimciIndex', 'katilimciForm');
+    }
+
+    /** Bu toplantının tutanağındaki kişiyi düzeltir (ad / görev / kuruldaki rolü). */
+    public function katilimciGuncelle(): void
+    {
+        $t = $this->toplanti();
+        $katilimcilar = $t?->katilimcilar ?? [];
+        $i = $this->duzenlenenKatilimciIndex;
+        $ad = trim((string) ($this->katilimciForm['ad_soyad'] ?? ''));
+
+        if (! $t || $i === null || ! isset($katilimcilar[$i]) || $ad === '') {
+            return;
+        }
+
+        $rol = $this->katilimciForm['rol'] ?? null;
+        $katilimcilar[$i] = [
+            ...$katilimcilar[$i],
+            'ad_soyad' => $ad,
+            'gorev' => ($this->katilimciForm['gorev'] ?? '') ?: null,
+            'rol' => array_key_exists((string) $rol, KurulUyeleri::roller()) ? $rol : null,
+        ];
+        $t->update(['katilimcilar' => $katilimcilar]);
+
+        $this->katilimciDuzenlemeIptal();
+        unset($this->toplanti);
+        Notification::make()->title('Katılımcı güncellendi')->success()->send();
     }
 
     /*

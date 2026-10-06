@@ -392,6 +392,50 @@ class KurulToplantisiTest extends TestCase
         $this->assertStringContainsString('Uzman Kişi', $html); // kaşeli görevlinin adı da basılır (06.10.2026)
     }
 
+    public function test_kurul_uyesi_isveren_vekili_degistirilince_tutanaklar_da_guncellenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $uye = $firma->kurulUyeleri()->create(['rol' => 'baskan', 'ad_soyad' => 'Eski Vekil', 'gorev' => 'Katip', 'aktif' => true]);
+        $eski = KurulToplantisi::create(['firma_id' => $firma->id, 'tarih' => '2026-08-20', 'gundem' => [], 'kararlar' => [], 'katilimcilar' => [
+            ['ad_soyad' => 'Eski Vekil', 'gorev' => 'Katip', 'rol' => 'baskan', 'katildi' => true],
+            ['ad_soyad' => 'Diğer Üye', 'gorev' => 'Usta', 'rol' => null, 'katildi' => true],
+        ]]);
+
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('uyeDuzenle', $uye->id)
+            ->assertSet('uyeForm.ad_soyad', 'Eski Vekil')
+            ->set('uyeForm.ad_soyad', 'Yeni Vekil')
+            ->set('uyeForm.gorev', 'İşletme Müdürü')
+            ->call('uyeGuncelle')
+            ->assertNotified('Kurul üyesi güncellendi');
+
+        $this->assertSame('Yeni Vekil', $uye->fresh()->ad_soyad);
+        $k = $eski->fresh()->katilimcilar;
+        $this->assertSame(['Yeni Vekil', 'İşletme Müdürü', 'baskan'], [$k[0]['ad_soyad'], $k[0]['gorev'], $k[0]['rol']]);
+        $this->assertSame('Diğer Üye', $k[1]['ad_soyad']);
+    }
+
+    public function test_toplantidaki_katilimci_duzenlenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $t = KurulToplantisi::create(['firma_id' => $firma->id, 'tarih' => now(), 'gundem' => [], 'kararlar' => [], 'katilimcilar' => [
+            ['ad_soyad' => 'Yanlış Ad', 'gorev' => 'Katip', 'rol' => null, 'katildi' => true],
+        ]]);
+
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('toplantiSec', $t->id)
+            ->call('katilimciDuzenle', 0)
+            ->set('katilimciForm.ad_soyad', 'Doğru Ad')
+            ->set('katilimciForm.rol', 'baskan')
+            ->call('katilimciGuncelle')
+            ->assertSet('duzenlenenKatilimciIndex', null);
+
+        $k = $t->fresh()->katilimcilar[0];
+        $this->assertSame(['Doğru Ad', 'Katip', 'baskan', true], [$k['ad_soyad'], $k['gorev'], $k['rol'], $k['katildi']]);
+    }
+
     public function test_baskan_igu_hekim_adlari_bossa_firma_kaydindan_doldurulur(): void
     {
         $igu = \App\Models\IsgProfesyoneli::create(['user_id' => $this->uzman->id, 'tip' => 'igu', 'ad_soyad' => 'Mehmet Uzman', 'unvan' => 'A Sınıfı İş Güvenliği Uzmanı', 'sertifika_no' => '405044']);

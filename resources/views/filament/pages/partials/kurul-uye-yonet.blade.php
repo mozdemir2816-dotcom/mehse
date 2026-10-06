@@ -100,13 +100,30 @@
         <div class="mb-2 text-sm font-bold">Kurul üyeleri ({{ $uyeler->count() }})</div>
 
         @forelse ($uyeler as $u)
-            <div class="flex items-center gap-2 py-2" style="border-top:{{ $loop->first ? 'none' : '1px solid var(--border-light)' }}">
-                <div class="flex-1 leading-tight">
-                    <div class="text-sm font-semibold">{{ $u->ad_soyad }}</div>
-                    <div class="text-xs" style="color:var(--text-label)">{{ $u->rolEtiketi() }}{{ $u->gorev ? ' · '.$u->gorev : '' }}</div>
+            @if ($this->duzenlenenUyeId === $u->id)
+                {{-- Üyeyi düzenle: örn. işveren vekili değişti → tutanaklardaki kopyası da güncellenir --}}
+                <div class="flex flex-col gap-2 py-2" style="border-top:{{ $loop->first ? 'none' : '1px solid var(--border-light)' }}">
+                    <input type="text" wire:model="uyeForm.ad_soyad" placeholder="Ad soyad" style="{{ $girdi }}">
+                    <input type="text" wire:model="uyeForm.gorev" placeholder="Görevi / unvanı" style="{{ $girdi }}">
+                    <select wire:model="uyeForm.rol" style="{{ $girdi }}">
+                        @foreach ($roller as $rol => $tanim)<option value="{{ $rol }}">{{ $tanim['ad'] }}</option>@endforeach
+                    </select>
+                    <div class="text-xs" style="color:var(--text-label)">Kişinin geçtiği toplantı tutanakları da güncellenir.</div>
+                    <div class="flex gap-2">
+                        <x-filament::button size="xs" wire:click="uyeGuncelle">Güncelle</x-filament::button>
+                        <x-filament::button size="xs" color="gray" wire:click="uyeDuzenlemeIptal">Vazgeç</x-filament::button>
+                    </div>
                 </div>
-                <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Çıkar" wire:click="uyeKaldir({{ $u->id }})" />
-            </div>
+            @else
+                <div class="flex items-center gap-2 py-2" style="border-top:{{ $loop->first ? 'none' : '1px solid var(--border-light)' }}">
+                    <div class="flex-1 leading-tight">
+                        <div class="text-sm font-semibold">{{ $u->ad_soyad }}</div>
+                        <div class="text-xs" style="color:var(--text-label)">{{ $u->rolEtiketi() }}{{ $u->gorev ? ' · '.$u->gorev : '' }}</div>
+                    </div>
+                    <x-filament::icon-button icon="heroicon-o-pencil" color="gray" size="sm" label="Düzenle" wire:click="uyeDuzenle({{ $u->id }})" />
+                    <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Çıkar" wire:click="uyeKaldir({{ $u->id }})" />
+                </div>
+            @endif
         @empty
             <div class="py-6 text-center text-xs" style="color:var(--text-label)">
                 Henüz üye seçilmedi.<br>Soldan zorunlu üyeleri ve personeli ekleyin.

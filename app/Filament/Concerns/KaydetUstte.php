@@ -20,4 +20,10 @@ trait KaydetUstte
 
         return $aksiyon->formId('form')->icon('heroicon-o-check');
     }
+
+    /** Düzenleme sayfasında kaydetme sonrası: bağlı evraklar güncellendiyse bildir. */
+    protected function afterSave(): void
+    {
+        \App\Support\BagliKayitGuncelleyici::bildir();
+    }
 }
