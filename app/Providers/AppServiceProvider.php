@@ -38,6 +38,11 @@ class AppServiceProvider extends ServiceProvider
         // "Cannot resolve public path" atıyordu. Gerçek public_path()'i besliyoruz.
         config(['dompdf.public_path' => public_path()]);
 
+        // PhpWord varsayılanda metni XML-kaçışsız yazar: firma adında / metinde
+        // "&" ya da "<" olunca .docx bozuk çıkar, Word açamaz. Hiçbir üretici ham
+        // XML basmadığı için kaçış genel olarak açık (Kurul/JSA/Talimat Word).
+        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+
         // Tüm açılır pencerelerde (modal) başlık ve Kaydet/İptal şeridi sabit:
         // uzun formda kaydırınca da Kaydet ekranda kalır (kullanıcı isteği
         // 06.10.2026 — Çalışan Ekle, Kurul vb. "Kaydet aşağıda kalıyor").

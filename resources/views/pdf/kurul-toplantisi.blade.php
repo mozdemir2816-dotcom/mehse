@@ -42,9 +42,7 @@
     $adres = collect([$firma?->adres, $firma?->ilce, $firma?->il])->filter()->implode(', ');
 
     // Başlığın sol kutusu: firma logosu, yoksa OSGB logosu (kullanıcı kararı 06.10.2026 — unvan yazılmaz).
-    $logo = $firma?->logo && is_file($f = \Illuminate\Support\Facades\Storage::disk('public')->path($firma->logo))
-        ? $f
-        :(is_file($v = resource_path(config('isg.kurul_toplantisi.varsayilan_logo', ''))) ? $v : null);
+    $logo = \App\Support\KurulToplantisiUretici::logoYolu($firma);
 @endphp
 
 <div class="altbilgi">

@@ -392,6 +392,52 @@ class KurulToplantisiTest extends TestCase
         $this->assertStringNotContainsString('Uzman Kişi', $html);
     }
 
+    public function test_word_ciktisi_pdf_ile_ayni_icerikte_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek & Ortak A.Ş.']);
+        $toplanti = KurulToplantisi::create([
+            'firma_id' => $firma->id, 'tarih' => '2026-10-06', 'toplanti_no' => '2026/4',
+            'katilimcilar' => [
+                ['ad_soyad' => 'Katılan Kişi', 'gorev' => 'Usta', 'rol' => null, 'katildi' => true],
+                ['ad_soyad' => 'Uzman Kişi', 'gorev' => 'A Sınıfı İGU', 'rol' => 'sekreter', 'katildi' => true],
+                ['ad_soyad' => 'Gelmeyen Kişi', 'gorev' => 'Formen', 'rol' => null, 'katildi' => false],
+            ],
+            'gundem' => ['Eğitim planı'],
+            'kararlar' => [['gundem_maddesi' => 'Eğitim planı', 'karar_metni' => 'Yıllık eğitim planı onaylandı', 'sorumlu' => 'İGU', 'termin' => '2026-11-01']],
+        ]);
+
+        // Sayfadaki "Word İndir" düğmesi
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('toplantiSec', $toplanti->id)
+            ->assertActionVisible('word')
+            ->callAction('word')
+            ->assertFileDownloaded('kurul-toplantisi-ornek-ortak-as-2026-4.docx');
+
+        ob_start();
+        KurulToplantisiUretici::word($toplanti)->sendContent();
+        $docx = ob_get_clean();
+        $this->assertStringStartsWith('PK', $docx);
+
+        $yol = tempnam(sys_get_temp_dir(), 'kurul').'.docx';
+        file_put_contents($yol, $docx);
+        $zip = new \ZipArchive;
+        $zip->open($yol);
+        $xml = $zip->getFromName('word/document.xml');
+        $medya = collect(range(0, $zip->numFiles - 1))->map(fn ($i) => $zip->getNameIndex($i))->filter(fn ($n) => str_starts_with($n, 'word/media/'));
+        $zip->close();
+        $metin = strip_tags($xml);
+
+        $this->assertNotEmpty($medya, 'OSGB logosu gömülü olmalı');
+        $this->assertStringContainsString('Örnek &amp; Ortak A.Ş.', $xml); // & doğru kaçışlı, belge bozulmaz
+        $this->assertStringContainsString('Yıllık eğitim planı onaylandı', $metin);
+        $this->assertStringContainsString('01.11.2026', $metin);
+        $this->assertStringContainsString('<w:pageBreakBefore w:val="1"/>', $xml);              // kararlar yeni sayfada
+        $this->assertGreaterThan(strpos($metin, 'Kararlar ve Takip'), strpos($metin, 'Katılımcı İmzaları'));
+        $this->assertStringContainsString('Katılmayan: Gelmeyen Kişi', $metin);
+        $this->assertStringNotContainsString('Uzman Kişi', $metin);                  // kaşeli görevli adı yok
+    }
+
     public function test_pdf_basliginda_firma_logosu_yoksa_osgb_logosu_kullanilir(): void
     {
         \Illuminate\Support\Facades\Storage::fake('public');

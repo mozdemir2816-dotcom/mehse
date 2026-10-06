@@ -745,6 +745,14 @@ class KurulToplantisi extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KurulToplantisiUretici::pdf($this->toplanti())),
 
+            // Kararları Word'de düzeltip çıktı almak için (PDF ile aynı düzen).
+            Action::make('word')
+                ->label('Word İndir')
+                ->icon('heroicon-o-document-text')
+                ->color('info')
+                ->visible(fn () => $this->toplanti() !== null)
+                ->action(fn () => KurulToplantisiUretici::word($this->toplanti())),
+
             Action::make('excel')
                 ->label('Excel İndir')
                 ->icon('heroicon-o-table-cells')
