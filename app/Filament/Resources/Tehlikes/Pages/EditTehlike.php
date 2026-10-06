@@ -8,11 +8,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditTehlike extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = TehlikeResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             DeleteAction::make(),
         ];
     }

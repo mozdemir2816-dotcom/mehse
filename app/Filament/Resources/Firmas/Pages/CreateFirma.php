@@ -7,6 +7,13 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateFirma extends CreateRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->ustKaydet()];
+    }
+
     protected static string $resource = FirmaResource::class;
 
     /**

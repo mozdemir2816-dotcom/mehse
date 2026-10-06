@@ -7,6 +7,13 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateRiskDegerlendirmesi extends CreateRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->ustKaydet()];
+    }
+
     protected static string $resource = RiskDegerlendirmesiResource::class;
 
     protected function getRedirectUrl(): string

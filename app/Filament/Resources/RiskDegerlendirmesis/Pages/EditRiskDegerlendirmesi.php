@@ -16,6 +16,8 @@ use Illuminate\Support\Str;
 
 class EditRiskDegerlendirmesi extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = RiskDegerlendirmesiResource::class;
 
     private ?bool $pdfBuyukCache = null;
@@ -28,6 +30,7 @@ class EditRiskDegerlendirmesi extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             Action::make('pdf')
                 ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')

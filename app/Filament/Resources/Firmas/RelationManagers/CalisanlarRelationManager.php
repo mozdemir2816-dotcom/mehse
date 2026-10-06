@@ -26,7 +26,7 @@ class CalisanlarRelationManager extends RelationManager
         return CalisansTable::configure($table)
             ->headerActions([
                 ...CalisanAksiyonlari::hepsi(sabitFirma: fn () => $this->getOwnerRecord()),
-                CreateAction::make()->label('Çalışan Ekle'),
+                CreateAction::make()->label('Çalışan Ekle')->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge),
             ]);
     }
 }

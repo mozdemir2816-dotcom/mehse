@@ -391,6 +391,22 @@ h1, h2, h3 {
     .fi-main {
         padding-bottom: 4.5rem;
     }
+
+    /* Yapışkan form düğmeleri (Kaydet) alt menünün ÜSTÜNDE dursun — yoksa
+       telefonda menü Kaydet'i örtüyordu (06.10.2026). */
+    .fi-sticky .fi-ac {
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .fi-main:has(.fi-sticky) {
+        padding-bottom: 10rem;
+    }
+}
+
+/* Bir pencere (modal) açıkken alt menü gizlenir: pencerenin sabit Kaydet
+   şeridini örtmesin. */
+body:has(.fi-modal.fi-modal-open) .fi-mobil-alt-nav {
+    display: none !important;
 }
 
 .fi-mobil-alt-nav-item {

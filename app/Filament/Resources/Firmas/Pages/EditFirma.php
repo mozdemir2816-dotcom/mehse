@@ -18,11 +18,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditFirma extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = FirmaResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             Action::make('durumMerkezi')
                 ->label('Durum Merkezi')
                 ->icon('heroicon-o-building-office-2')

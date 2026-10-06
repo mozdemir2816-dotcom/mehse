@@ -18,11 +18,14 @@ use Illuminate\Support\Str;
 
 class EditEgitimPaketi extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = EgitimPaketiResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             Action::make('bankadanEkle')
                 ->label('Soru Bankasından Ekle')
                 ->icon('heroicon-o-rectangle-stack')

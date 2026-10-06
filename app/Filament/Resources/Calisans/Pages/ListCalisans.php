@@ -18,7 +18,7 @@ class ListCalisans extends ListRecords
         return [
             ...CalisanAksiyonlari::hepsi(varsayilanFirmaId: fn () => $this->tableFilters['firma_id']['value'] ?? null),
             CreateAction::make()->label('Çalışan Ekle')->icon('heroicon-o-plus')
-                ->modal()->modalWidth(Width::ThreeExtraLarge)->modalHeading('Yeni Çalışan'),
+                ->modal()->modalWidth(Width::FiveExtraLarge)->modalHeading('Yeni Çalışan'),
         ];
     }
 }

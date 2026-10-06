@@ -8,11 +8,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditIsgProfesyoneli extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = IsgProfesyoneliResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             DeleteAction::make(),
         ];
     }

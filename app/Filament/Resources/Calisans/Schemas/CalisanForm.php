@@ -24,8 +24,10 @@ class CalisanForm
     public static function configure(Schema $schema, bool $firmaSecimi = true, ?int $firmaId = null): Schema
     {
         return $schema->components([
+            // 3 sütun + yardım metinleri kısa: form tek ekrana sığsın (06.10.2026)
             Section::make()
-                ->columns(2)
+                ->columns(['default' => 1, 'sm' => 2, 'lg' => 3])
+                ->columnSpanFull()
                 ->schema([
                     ...($firmaSecimi ? [
                         Select::make('firma_id')->label('Firma')
@@ -39,14 +41,14 @@ class CalisanForm
                     TextInput::make('gorev')->label('Görevi')->maxLength(255),
                     TextInput::make('departman')->label('Departman')->maxLength(255),
                     TextInput::make('sube')->label('Şube')->maxLength(255)
-                        ->helperText('İsteğe bağlı — şube / şantiye / lokasyon')
+                        ->placeholder('Şube / şantiye / lokasyon')
                         ->datalist(fn (Get $get) => static::firmaSubeleri($firmaId ?? $get('firma_id'))),
                     Select::make('cinsiyet')->label('Cinsiyet')->options(Calisan::CINSIYETLER)->placeholder('Belirtilmedi'),
                     DatePicker::make('ise_giris')->label('İşe giriş')->native(false)->displayFormat('d.m.Y'),
                     DatePicker::make('isten_cikis')->label('İşten çıkış')->native(false)->displayFormat('d.m.Y')
                         ->live()
                         ->afterStateUpdated(fn ($state, Set $set) => filled($state) ? $set('aktif', false) : null)
-                        ->helperText('Çıkış tarihi girilince personel pasife alınır'),
+                        ->hintIcon('heroicon-o-information-circle', 'Çıkış tarihi girilince personel pasife alınır'),
                     TextInput::make('ozel_durum')->label('Özel durum (engelli / hükümlü vb.)')->maxLength(255)
                         ->datalist(Calisan::OZEL_DURUM_ONERILERI),
                     DatePicker::make('dogum_tarihi')->label('Doğum tarihi')->native(false)->displayFormat('d.m.Y'),
@@ -57,7 +59,7 @@ class CalisanForm
                     TextInput::make('eposta')->label('E-posta')->email()->maxLength(255),
                     Toggle::make('agir_tehlikeli_iste')->label('Ağır ve tehlikeli işte çalışıyor'),
                     Toggle::make('aktif')->label('Aktif')->default(true),
-                    Textarea::make('notlar')->label('Notlar')->rows(2)->columnSpanFull(),
+                    Textarea::make('notlar')->label('Notlar')->rows(1)->columnSpanFull(),
                 ]),
         ]);
     }

@@ -8,11 +8,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditCalisan extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = CalisanResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             DeleteAction::make(),
         ];
     }

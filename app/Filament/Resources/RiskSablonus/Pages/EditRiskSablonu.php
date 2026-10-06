@@ -9,11 +9,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditRiskSablonu extends EditRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
     protected static string $resource = RiskSablonuResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->ustKaydet(),
             DeleteAction::make()
                 ->visible(fn () => $this->record->user_id === Filament::auth()->id()),
         ];

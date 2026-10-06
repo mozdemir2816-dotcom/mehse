@@ -8,6 +8,13 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateEgitimPaketi extends CreateRecord
 {
+    use \App\Filament\Concerns\KaydetUstte;
+
+    protected function getHeaderActions(): array
+    {
+        return [$this->ustKaydet()];
+    }
+
     protected static string $resource = EgitimPaketiResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array

@@ -53,7 +53,7 @@ class CalisansTable
                 SelectFilter::make('cinsiyet')->label('Cinsiyet')->options(Calisan::CINSIYETLER),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge),
                 Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')->color('gray')
                     ->visible(fn (Calisan $record) => $record->aktif)
                     ->requiresConfirmation()

@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\EgitimGirisi;
+use Filament\Actions\Action;
+use Filament\Pages\BasePage;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
@@ -35,6 +37,13 @@ class AppServiceProvider extends ServiceProvider
         // config'inde ayrıca base_path('public') deniyor — orada public/ olmadığı için
         // "Cannot resolve public path" atıyordu. Gerçek public_path()'i besliyoruz.
         config(['dompdf.public_path' => public_path()]);
+
+        // Tüm açılır pencerelerde (modal) başlık ve Kaydet/İptal şeridi sabit:
+        // uzun formda kaydırınca da Kaydet ekranda kalır (kullanıcı isteği
+        // 06.10.2026 — Çalışan Ekle, Kurul vb. "Kaydet aşağıda kalıyor").
+        // Formlu sayfalarda da (Firma/Çalışan düzenle...) alt düğmeler yapışkan.
+        Action::configureUsing(fn (Action $aksiyon) => $aksiyon->stickyModalHeader()->stickyModalFooter());
+        BasePage::stickyFormActions();
 
         // Uzaktan eğitim portalına (kullanıcı kodu / e-posta) her giriş günlüğe düşer.
         Event::listen(Login::class, function (Login $e): void {
