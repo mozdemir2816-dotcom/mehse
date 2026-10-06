@@ -29,7 +29,8 @@ class PortfoyKarne
         $tamUyumlu = $firmalar->filter(fn (Firma $f) => static::firmaTamUyumluMu($f))->count();
 
         $kriterler = static::kriterler($userId);
-        $hazirKriterler = array_filter($kriterler, fn ($k) => $k['hazir']);
+        // Yalnız takip edilen kriterler (iş kazası vb.) uyum yüzdesine girmez.
+        $hazirKriterler = array_filter($kriterler, fn ($k) => $k['hazir'] && ! $k['takip']);
         $uyumYuzde = $hazirKriterler
             ? round(array_sum(array_column($hazirKriterler, 'yuzde')) / count($hazirKriterler))
             : 0;
@@ -73,6 +74,7 @@ class PortfoyKarne
                 'toplam' => $kapsamSayi ?: $toplam,
                 'yuzde' => $kapsamSayi > 0 ? (int) round($tamam / $kapsamSayi * 100) : 0,
                 'hazir' => (bool) $kriter['hazir'],
+                'takip' => $kriter['takip'],
             ];
         }, static::firmaTakipKriterleri($userId));
     }
@@ -93,6 +95,10 @@ class PortfoyKarne
         return match ($kosul) {
             'elli_calisan' => (int) $firma->calisan_sayisi >= 50,
             'ekipman_var' => $firma->isEkipmanlari()->exists(),
+            // Yıllık değerlendirme yalnız firma geçen yıldan beri atalıysa beklenir;
+            // sözleşme başlangıcı girilmemişse bilinmediği için kapsamda sayılır.
+            'gecen_yil_atali' => ! $firma->sozlesme_baslangic || $firma->sozlesme_baslangic->year < now()->year,
+            'kaza_var' => static::sonKazaTarihi($firma) !== null,
             default => true,
         };
     }
@@ -119,7 +125,6 @@ class PortfoyKarne
                 || $firma->atamaYazilari()
                     ->whereIn('rol_anahtari', ['sondurme_ekibi', 'kurtarma_ekibi', 'koruma_ekibi', 'ilkyardim_ekibi'])
                     ->exists(),
-            'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists(),
             'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->whereIn('durum', \App\Models\TatbikatTutanagi::YAPILMIS)->exists(),
             'isg_kurulu' => $firma->kurulToplantilari()->exists(),
             'calisma_izin_formu' => $firma->isIzinFormlari()->exists(),
@@ -142,6 +147,13 @@ class PortfoyKarne
             'yillik_calisma_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'faaliyetler'),
             'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
             'yillik_degerlendirme' => static::yillikPlanDegerlendirmeDoluMu($firma),
+            // Temel İSG eğitimi: eğitim katılım formu veya çalışan eğitim kaydı.
+            'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists()
+                || \App\Models\EgitimKaydi::query()
+                    ->whereIn('calisan_id', $firma->calisanlar()->select('id'))
+                    ->where('tur', 'is_sagligi_guvenligi_egitimi')->exists(),
+            'ise_donus_muayenesi' => static::kazaSonrasiKayitVarMi($firma, $firma->iseDonusBelgeleri(), ['ise_donus_tarihi', 'kontrol_muayene_tarihi', 'belge_tarihi']),
+            'kaza_sonrasi_isbasi_egitimi' => static::kazaSonrasiKayitVarMi($firma, $firma->isbasiEgitimTutanaklari(), ['egitim_tarihi', 'belge_tarihi']),
             default => null,
         };
     }
@@ -168,6 +180,50 @@ class PortfoyKarne
         );
     }
 
+    /** Firmadaki en son iş kazası tarihi (iş kazası raporu veya olay kaydı); kaza yoksa null. */
+    public static function sonKazaTarihi(Firma $firma): ?Carbon
+    {
+        $tarihler = collect([
+            $firma->isKazasiRaporlari()->max('kaza_tarihi'),
+            $firma->olayKayitlari()->where('olay_tipi', 'is_kazasi')->max('olay_tarihi'),
+        ])->filter();
+
+        $varMi = $firma->isKazasiRaporlari()->exists()
+            || $firma->olayKayitlari()->where('olay_tipi', 'is_kazasi')->exists();
+
+        if (! $varMi) {
+            return null;
+        }
+
+        // Tarihsiz kaza kaydı da "kaza var" sayılır; o zaman herhangi bir kayıt yeter.
+        return $tarihler->isEmpty() ? Carbon::create(1900) : Carbon::parse($tarihler->max());
+    }
+
+    /**
+     * Kaza sonrası beklenen kayıt (işe dönüş, işbaşı eğitimi) son kazadan
+     * sonra yapılmış mı — tarih sütunlarından ilki dolu olan esas alınır.
+     *
+     * @param  array<int, string>  $tarihSutunlari
+     */
+    private static function kazaSonrasiKayitVarMi(Firma $firma, $iliski, array $tarihSutunlari): bool
+    {
+        $kaza = static::sonKazaTarihi($firma);
+
+        if ($kaza === null) {
+            return $iliski->exists();
+        }
+
+        return $iliski->get()->contains(function ($kayit) use ($kaza, $tarihSutunlari): bool {
+            foreach ($tarihSutunlari as $sutun) {
+                if ($kayit->{$sutun}) {
+                    return Carbon::parse($kayit->{$sutun})->startOfDay()->gte($kaza->copy()->startOfDay());
+                }
+            }
+
+            return Carbon::parse($kayit->created_at)->gte($kaza);
+        });
+    }
+
     /**
      * Firma Takip'in sütun listesi: config'teki sabit kriterler, kullanıcının
      * Ayarlar > Kontrol Merkezi'nde takip dışı bıraktıkları hariç.
@@ -177,10 +233,14 @@ class PortfoyKarne
     public static function firmaTakipKriterleri(int $userId): array
     {
         $haric = KullaniciAyarlari::kontrolHaric($userId);
+        $takip = KullaniciAyarlari::kontrolYalnizTakip($userId);
 
-        return array_values(array_filter(
-            config('isg.kontrol_merkezi.kriterler', []),
-            fn (array $k): bool => ! in_array($k['anahtar'], $haric, true),
+        return array_values(array_map(
+            fn (array $k): array => [...$k, 'takip' => in_array($k['anahtar'], $takip, true)],
+            array_filter(
+                config('isg.kontrol_merkezi.kriterler', []),
+                fn (array $k): bool => ! in_array($k['anahtar'], $haric, true),
+            ),
         ));
     }
 
@@ -214,7 +274,7 @@ class PortfoyKarne
 
                     $hucreler[$k['anahtar']] = $var;
 
-                    if ($k['hazir'] && ! $muaf) {
+                    if ($k['hazir'] && ! $muaf && ! $k['takip']) {
                         $hazirSayi++;
                         $karsilanan += $var ? 1 : 0;
                     }
@@ -262,6 +322,8 @@ class PortfoyKarne
 
             $durum = match (true) {
                 $tamam => 'tamamlandi',
+                // Olay bazlı kayıt (iş kazası vb.) yoksa eksik değil, yalnız takip.
+                $k['takip'] => 'takip',
                 $vadeTarihi && $vadeTarihi->isFuture() && $vadeTarihi->diffInDays(now()) <= KullaniciAyarlari::esik('kontrol_vade') => 'yakin',
                 default => 'eksik',
             };
@@ -271,6 +333,7 @@ class PortfoyKarne
                 'ad' => $k['ad'],
                 'kategori' => $k['kategori'] ?? 'Diğer Belge & Yazışma',
                 'hazir' => (bool) $k['hazir'],
+                'takip' => $k['takip'],
                 'tamam' => $tamam,
                 'vade_tarihi' => $vadeTarihi,
                 'durum' => $durum,
@@ -345,6 +408,11 @@ class PortfoyKarne
     public static function eksikFirmalar(int $userId, string $kriterAnahtari): Collection
     {
         $kriter = collect(config('isg.kontrol_merkezi.kriterler'))->firstWhere('anahtar', $kriterAnahtari);
+
+        // Yalnız takip edilen kriterde "eksik firma" yoktur.
+        if (in_array($kriterAnahtari, KullaniciAyarlari::kontrolYalnizTakip($userId), true)) {
+            return collect();
+        }
 
         $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan')->get()
             ->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null))->values();
@@ -451,7 +519,7 @@ class PortfoyKarne
     private static function firmaTamUyumluMu(Firma $firma): bool
     {
         foreach (static::firmaTakipKriterleri($firma->user_id) as $kriter) {
-            if (! $kriter['hazir']) {
+            if (! $kriter['hazir'] || $kriter['takip']) {
                 continue;
             }
 

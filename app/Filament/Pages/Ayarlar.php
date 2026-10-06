@@ -51,6 +51,7 @@ class Ayarlar extends Page
             'yazi_boyutu' => $ayar['yazi_boyutu'],
             'esikler' => $ayar['esikler'],
             'kontrol_takip' => array_values(array_diff($tumKriterler, (array) $ayar['kontrol_haric'])),
+            'kontrol_yalniz_takip' => KullaniciAyarlari::kontrolYalnizTakip($this->kullanici()->id),
         ]);
     }
 
@@ -128,6 +129,15 @@ class Ayarlar extends Page
                             ->bulkToggleable()
                             ->minItems(1)
                             ->validationMessages(['min' => 'En az bir kriter takip edilmeli.']),
+                        CheckboxList::make('kontrol_yalniz_takip')
+                            ->label('Yalnız takip — eksik sayılmasın')
+                            ->helperText('Her işyerinde olması gerekmeyen kayıtlar (ör. iş kazası, meslek hastalığı, iş izni). İşaretli kriter kayıt yoksa "eksik" değil "takip" görünür ve uyum yüzdesine girmez.')
+                            ->options(fn (): array => collect(config('isg.kontrol_merkezi.kriterler', []))
+                                ->mapWithKeys(fn (array $k): array => [$k['anahtar'] => $k['ad']])
+                                ->all())
+                            ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
+                            ->searchable()
+                            ->bulkToggleable(),
                     ]),
             ]);
     }
@@ -161,6 +171,7 @@ class Ayarlar extends Page
             'yazi_boyutu' => $veri['yazi_boyutu'],
             'esikler' => array_map('intval', $veri['esikler']),
             'kontrol_haric' => array_values(array_diff($tumKriterler, $veri['kontrol_takip'] ?? [])),
+            'kontrol_yalniz_takip' => array_values($veri['kontrol_yalniz_takip'] ?? []),
         ]);
 
         Notification::make()->title('Ayarlar kaydedildi')->success()->send();

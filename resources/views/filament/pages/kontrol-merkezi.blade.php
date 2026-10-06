@@ -142,9 +142,9 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.5rem">
                 @foreach ($this->kriterler as $k)
                     @php
-                        $kRenk = $k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil);
+                        $kRenk = $k['takip'] ? $gri : ($k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil));
                         $eksikSayi = max($k['toplam'] - $k['tamam'], 0);
-                        $tiklanir = $k['hazir'] && $eksikSayi > 0;
+                        $tiklanir = $k['hazir'] && ! $k['takip'] && $eksikSayi > 0;
                         $acik = $acikKriter === $k['anahtar'];
                     @endphp
                     <div style="border:1px solid {{ $acik ? $kRenk : 'rgb(128 116 148 / .2)' }};border-radius:.5rem;padding:.6rem .75rem;{{ $tiklanir ? 'cursor:pointer' : '' }}"
@@ -158,6 +158,7 @@
                                 </span>
                                 {{ $k['ad'] }}
                                 @unless ($k['hazir']) <span style="font-size:.65rem;color:{{ $gri }}">(modül yakında)</span> @endunless
+                                @if ($k['takip']) <span style="font-size:.65rem;color:{{ $gri }}" title="Olay bazlı kayıt — eksik sayılmaz, uyum yüzdesine girmez">(yalnız takip)</span> @endif
                             </span>
                             <span style="display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:{{ $gri }};white-space:nowrap">
                                 {{ $k['tamam'] }}/{{ $k['toplam'] }} · %{{ $k['yuzde'] }}

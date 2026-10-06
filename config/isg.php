@@ -1537,6 +1537,16 @@ return [
          | OSGB Takip'ten Excel'le elle işaretleme mümkündü — kullanıcı isteğiyle
          | 05.09.2026'da tamamen kaldırıldı, MIMARI.md'de not var.)
         */
+        /*
+         | 'takip' => true → olay/ihtiyaç bazlı kayıt (iş kazası, meslek hastalığı,
+         |   ramak kala, iş izni...): her işyerinde olmak zorunda değil — sayılır,
+         |   gösterilir ama "eksik" sayılmaz, uyum yüzdesine girmez. Varsayılandır;
+         |   kullanıcı Ayarlar > Kontrol Merkezi'nde kriter başına değiştirebilir.
+         | 'kosul' => 'gecen_yil_atali' → firma önceki yıldan beri atalıysa
+         |   (sözleşme başlangıcı bu yıldan önce; tarih boşsa kapsamda sayılır).
+         | 'kosul' => 'kaza_var' → firmada iş kazası kaydı varsa; kaza sonrası
+         |   (son kaza tarihinden sonra) kayıt aranır.
+        */
         'kriterler' => [
             ['anahtar' => 'risk_degerlendirmesi', 'ad' => 'Risk Değerlendirmesi', 'ikon' => 'heroicon-o-sparkles', 'hazir' => true, 'kategori' => 'Risk Değerlendirmesi'],
             ['anahtar' => 'yillik_calisma_plani', 'ad' => 'Yıllık Çalışma Planı', 'ikon' => 'heroicon-o-calendar-days', 'hazir' => true, 'kategori' => 'Planlama & Arşiv'],
@@ -1545,19 +1555,21 @@ return [
             ['anahtar' => 'acil_durum_tatbikat', 'ad' => 'Acil Durum Tatbikat Tutanağı', 'ikon' => 'heroicon-o-fire', 'hazir' => true, 'kategori' => 'Acil Durum & Yangın'],
             ['anahtar' => 'isg_kurulu', 'ad' => 'İSG Kurulu Toplantısı', 'ikon' => 'heroicon-o-users', 'hazir' => true, 'kosul' => 'elli_calisan', 'kategori' => 'Çalışan & Kurul'],
             ['anahtar' => 'yillik_egitim_plani', 'ad' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'hazir' => true, 'kategori' => 'Planlama & Arşiv'],
-            ['anahtar' => 'yillik_degerlendirme', 'ad' => 'Yıllık Değerlendirme Raporu', 'ikon' => 'heroicon-o-document-chart-bar', 'hazir' => true, 'kategori' => 'Planlama & Arşiv'],
+            ['anahtar' => 'yillik_degerlendirme', 'ad' => 'Yıllık Değerlendirme Raporu', 'ikon' => 'heroicon-o-document-chart-bar', 'hazir' => true, 'kosul' => 'gecen_yil_atali', 'kategori' => 'Planlama & Arşiv'],
             ['anahtar' => 'calisan_temsilcisi', 'ad' => 'Çalışan Temsilcisi Görevlendirmesi', 'ikon' => 'heroicon-o-identification', 'hazir' => true, 'kategori' => 'Çalışan & Kurul'],
             ['anahtar' => 'igu_atamasi', 'ad' => 'İş Güvenliği Uzmanı (İGU) Ataması', 'ikon' => 'heroicon-o-shield-check', 'hazir' => true, 'kategori' => 'Yönetim'],
             ['anahtar' => 'hekim_atamasi', 'ad' => 'İşyeri Hekimi Ataması', 'ikon' => 'heroicon-o-heart', 'hazir' => true, 'kategori' => 'Yönetim'],
             ['anahtar' => 'tespit_oneri', 'ad' => 'Tespit ve Öneri Defteri Kaydı', 'ikon' => 'heroicon-o-book-open', 'hazir' => true, 'kategori' => 'Saha Kontrolleri'],
-            ['anahtar' => 'egitim_katilim_formu', 'ad' => 'Eğitim Katılım Formu', 'ikon' => 'heroicon-o-clipboard-document-check', 'hazir' => true, 'kategori' => 'Eğitimler'],
+            ['anahtar' => 'egitim_katilim_formu', 'ad' => 'Temel İSG Eğitimi (Katılım Formu)', 'ikon' => 'heroicon-o-clipboard-document-check', 'hazir' => true, 'kategori' => 'Eğitimler'],
+            ['anahtar' => 'ise_donus_muayenesi', 'ad' => 'İşe Dönüş Muayenesi (kaza sonrası)', 'ikon' => 'heroicon-o-arrow-uturn-left', 'hazir' => true, 'kosul' => 'kaza_var', 'kategori' => 'İş Kazaları & Olaylar'],
+            ['anahtar' => 'kaza_sonrasi_isbasi_egitimi', 'ad' => 'İşbaşı Eğitimi (kaza sonrası)', 'ikon' => 'heroicon-o-academic-cap', 'hazir' => true, 'kosul' => 'kaza_var', 'kategori' => 'İş Kazaları & Olaylar'],
             ['anahtar' => 'periyodik_kontrol_raporu', 'ad' => 'Periyodik Kontrol Raporu', 'ikon' => 'heroicon-o-wrench-screwdriver', 'hazir' => true, 'kosul' => 'ekipman_var', 'kategori' => 'Periyodik Kontrol & Ölçüm'],
-            ['anahtar' => 'calisma_izin_formu', 'ad' => 'Çalışma İzin Formu', 'ikon' => 'heroicon-o-document-check', 'hazir' => true, 'kategori' => 'Diğer Belge & Yazışma'],
-            ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true, 'kategori' => 'Saha Kontrolleri'],
-            ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true, 'kategori' => 'İş Kazaları & Olaylar'],
-            ['anahtar' => 'olay_ramak_kala_kaydi', 'ad' => 'Olay / Ramak Kala Kaydı', 'ikon' => 'heroicon-o-bell-alert', 'hazir' => true, 'kategori' => 'İş Kazaları & Olaylar'],
-            ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => true, 'kategori' => 'Sağlık Gözetimi'],
-            ['anahtar' => 'saglik_raporu', 'ad' => 'Sağlık Raporu', 'ikon' => 'heroicon-o-document-text', 'hazir' => true, 'kategori' => 'Sağlık Gözetimi'],
+            ['anahtar' => 'calisma_izin_formu', 'ad' => 'Çalışma İzin Formu', 'ikon' => 'heroicon-o-document-check', 'hazir' => true, 'takip' => true, 'kategori' => 'Diğer Belge & Yazışma'],
+            ['anahtar' => 'saha_denetim_formu', 'ad' => 'Saha Denetim Formu', 'ikon' => 'heroicon-o-clipboard-document-list', 'hazir' => true, 'takip' => true, 'kategori' => 'Saha Kontrolleri'],
+            ['anahtar' => 'is_kazasi_bildirimi', 'ad' => 'İş Kazası Bildirimi', 'ikon' => 'heroicon-o-exclamation-circle', 'hazir' => true, 'takip' => true, 'kategori' => 'İş Kazaları & Olaylar'],
+            ['anahtar' => 'olay_ramak_kala_kaydi', 'ad' => 'Olay / Ramak Kala Kaydı', 'ikon' => 'heroicon-o-bell-alert', 'hazir' => true, 'takip' => true, 'kategori' => 'İş Kazaları & Olaylar'],
+            ['anahtar' => 'meslek_hastaligi_bildirimi', 'ad' => 'Meslek Hastalığı Bildirimi', 'ikon' => 'heroicon-o-heart', 'hazir' => true, 'takip' => true, 'kategori' => 'Sağlık Gözetimi'],
+            ['anahtar' => 'saglik_raporu', 'ad' => 'Sağlık Raporu', 'ikon' => 'heroicon-o-document-text', 'hazir' => true, 'takip' => true, 'kategori' => 'Sağlık Gözetimi'],
             ['anahtar' => 'onayli_defter_nushalari', 'ad' => 'Onaylı Defter Nüshaları', 'ikon' => 'heroicon-o-book-open', 'hazir' => true, 'kategori' => 'Planlama & Arşiv'],
             ['anahtar' => 'diger_evrak', 'ad' => 'Diğer', 'ikon' => 'heroicon-o-document', 'hazir' => false, 'kategori' => 'Diğer Belge & Yazışma'],
         ],

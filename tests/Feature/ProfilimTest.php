@@ -101,9 +101,10 @@ class ProfilimTest extends TestCase
 
         $this->assertTrue($matris[$a->id]['hucreler']['risk_degerlendirmesi']);
         $this->assertFalse($matris[$b->id]['hucreler']['risk_degerlendirmesi']);
-        // 50 altı çalışan olduğu için isg_kurulu muaf — kalan hazır kriter sayısı 19;
-        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/19*100) = 5.
-        $this->assertSame(5, $matris[$a->id]['oran']);
+        // isg_kurulu (50 altı), kaza sonrası 2 madde ve periyodik kontrol muaf; olay bazlı
+        // 6 madde 'takip' (eksik sayılmaz) — kalan zorunlu kriter 13;
+        // firma A yalnız risk değerlendirmesini karşılıyor: round(1/13*100) = 8.
+        $this->assertSame(8, $matris[$a->id]['oran']);
         $this->assertSame(0, $matris[$b->id]['oran']);
     }
 
@@ -124,7 +125,7 @@ class ProfilimTest extends TestCase
         $this->assertSame('tamamlandi', $detay['risk_degerlendirmesi']['durum']);
         $this->assertSame('yakin', $detay['egitim_katilim_formu']['durum']);
         $this->assertSame('eksik', $detay['tespit_oneri']['durum']);
-        $this->assertSame('eksik', $detay['saglik_raporu']['durum']); // hiç vade girilmemiş
+        $this->assertSame('takip', $detay['saglik_raporu']['durum']); // olay bazlı: kayıt yoksa eksik değil
     }
 
     public function test_firma_checklist_vade_guncelle_action_kaydeder_ve_kaldirir(): void

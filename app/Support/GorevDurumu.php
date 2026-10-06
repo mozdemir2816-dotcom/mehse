@@ -7,6 +7,8 @@ use App\Filament\Pages\CalisanTemsilcisiSecimi;
 use App\Filament\Pages\DofOlustur;
 use App\Filament\Pages\EgitimKatilim;
 use App\Filament\Pages\EgitimYenilemeTakibi;
+use App\Filament\Pages\IsbasiEgitim;
+use App\Filament\Pages\IseDonusBelgesi;
 use App\Filament\Pages\IsIzinFormu;
 use App\Filament\Pages\KkdTakip;
 use App\Filament\Pages\KurulToplantisi;
@@ -67,6 +69,8 @@ class GorevDurumu
         'hekim_atamasi' => [null, '6331 sayılı Kanun Md.6 — işyeri hekimi görevlendirmesi'],
         'tespit_oneri' => [TespitOneriDefteri::class, 'Onaylı defter — tespit ve öneriler'],
         'egitim_katilim_formu' => [EgitimKatilim::class, '6331 sayılı Kanun Md.17 — çalışanların eğitimi'],
+        'ise_donus_muayenesi' => [IseDonusBelgesi::class, 'İş kazası sonrası işe dönüş muayenesi'],
+        'kaza_sonrasi_isbasi_egitimi' => [IsbasiEgitim::class, 'İSG Eğitimleri Yönetmeliği Md.11 — iş kazası sonrası bilgilendirme eğitimi'],
         'periyodik_kontrol_raporu' => [PeriyodikKontrol::class, 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği'],
         'calisma_izin_formu' => [IsIzinFormu::class, 'Tehlikeli işlerde çalışma izni'],
         'saha_denetim_formu' => [SahaDenetimi::class, 'İşyeri gözetimi ve saha denetimi'],
@@ -187,7 +191,7 @@ class GorevDurumu
         $yaklasan = static::yaklasanGun();
 
         return collect(PortfoyKarne::firmaChecklistDetay($firma))
-            ->filter(fn (array $k) => $k['hazir'])
+            ->filter(fn (array $k) => $k['hazir'] && ! $k['takip'])
             ->map(function (array $k) use ($firma, $yaklasan): array {
                 [$sayfa, $dayanak] = static::KRITER_SAYFALARI[$k['anahtar']] ?? [null, null];
                 $vade = $k['vade_tarihi'];

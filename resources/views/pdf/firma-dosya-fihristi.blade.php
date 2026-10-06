@@ -49,7 +49,7 @@
                 <td class="no">{{ $sira++ }}</td>
                 <td>{{ $s['ad'] }}@if (! $s['hazir']) <span style="color:#999;font-size:8px"> (modül henüz yok)</span>@endif</td>
                 <td class="durum d-{{ $s['durum'] === 'tamamlandi' ? 'tamam' : $s['durum'] }}">
-                    {{ match ($s['durum']) { 'tamamlandi' => 'TAMAM', 'yakin' => 'YAKLAŞIYOR', default => 'EKSİK' } }}
+                    {{ match ($s['durum']) { 'tamamlandi' => 'TAMAM', 'yakin' => 'YAKLAŞIYOR', 'takip' => 'TAKİP', default => 'EKSİK' } }}
                 </td>
                 <td class="vade">{{ $s['vade_tarihi']?->format('d.m.Y') ?? '—' }}</td>
             </tr>
@@ -58,7 +58,8 @@
 @endforeach
 
 @php
-    $tumSatirlar = $gruplu->flatten(1);
+    // Yalnız takip edilen (olay bazlı) kalemler genel duruma girmez.
+    $tumSatirlar = $gruplu->flatten(1)->where('takip', false);
     $toplam = $tumSatirlar->count();
     $tamam = $tumSatirlar->where('durum', 'tamamlandi')->count();
 @endphp

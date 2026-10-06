@@ -453,9 +453,9 @@
                     <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                         <td style="padding:.35rem;font-weight:600;position:sticky;left:0;background:inherit">{{ $satir['firma']->unvan }}</td>
                         @foreach ($this->firmaTakipKriterleri as $k)
-                            @php $var = $satir['hucreler'][$k['anahtar']]; $renk = $var ? $yesil : ($k['hazir'] ? $kirmizi : 'rgb(239 68 68 / .55)'); @endphp
+                            @php $var = $satir['hucreler'][$k['anahtar']]; $renk = $var ? $yesil : ($k['takip'] ? 'rgb(128 116 148)' : ($k['hazir'] ? $kirmizi : 'rgb(239 68 68 / .55)')); @endphp
                             <td style="padding:.35rem;text-align:center;color:{{ $renk }}" title="{{ $k['hazir'] ? 'Gerçek modül' : 'Henüz modül yok' }}">
-                                {{ $var ? '✓' : '✗' }}
+                                {{ $var ? '✓' : ($k['takip'] ? '–' : '✗') }}
                             </td>
                         @endforeach
                         <td style="padding:.35rem;text-align:center;font-weight:700">%{{ $satir['oran'] }}</td>
@@ -490,8 +490,8 @@
             @if ($this->firmaTakipSecili)
                 @php
                     $seciliOran = collect($this->firmaMatrisi)->firstWhere('firma.id', $this->firmaTakipSecili->id)['oran'] ?? 0;
-                    $checklistRenk = ['tamamlandi' => $yesil, 'yakin' => $sari, 'eksik' => $kirmizi];
-                    $checklistEtiket = ['tamamlandi' => 'Tamamlandı', 'yakin' => 'Yakın', 'eksik' => 'Eksik'];
+                    $checklistRenk = ['tamamlandi' => $yesil, 'yakin' => $sari, 'eksik' => $kirmizi, 'takip' => '#808080'];
+                    $checklistEtiket = ['tamamlandi' => 'Tamamlandı', 'yakin' => 'Yakın', 'eksik' => 'Eksik', 'takip' => 'Takip (kayıt yok)'];
                 @endphp
                 <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.7rem">
                     <div style="{{ $kutu }};flex:1;min-width:10rem">

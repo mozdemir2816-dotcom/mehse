@@ -72,6 +72,9 @@ class KullaniciAyarlari
             'yazi_boyutu' => 'normal',
             'esikler' => $esikler,
             'kontrol_haric' => [],
+            // Yalnız takip edilen (eksik sayılmayan) kriterler — null: config'teki
+            // 'takip' => true varsayılanı. Ayarlar > Kontrol Merkezi'nden değişir.
+            'kontrol_yalniz_takip' => null,
             // Arşiv hatırlatma ayarları (Arşiv > Hatırlatma Ayarları).
             'arsiv' => ['yaklasan_gun' => (int) config('arsiv.yaklasan_gun', 30)],
         ];
@@ -119,6 +122,33 @@ class KullaniciAyarlari
         $user = $aktif?->id === $userId ? $aktif : User::query()->find($userId);
 
         return $user ? array_values((array) self::hepsi($user)['kontrol_haric']) : [];
+    }
+
+    /**
+     * Eksik sayılmayan, yalnız takip edilen kriter anahtarları (iş kazası,
+     * meslek hastalığı gibi her işyerinde olması gerekmeyen kayıtlar).
+     * Kullanıcı Ayarlar'da hiç seçim yapmadıysa config varsayılanı döner.
+     *
+     * @return array<int, string>
+     */
+    public static function kontrolYalnizTakip(?int $userId): array
+    {
+        $kayitli = null;
+
+        if ($userId) {
+            $aktif = self::aktifKullanici();
+            $user = $aktif?->id === $userId ? $aktif : User::query()->find($userId);
+            $kayitli = $user ? self::hepsi($user)['kontrol_yalniz_takip'] : null;
+        }
+
+        if (is_array($kayitli)) {
+            return array_values($kayitli);
+        }
+
+        return array_values(array_column(array_filter(
+            config('isg.kontrol_merkezi.kriterler', []),
+            fn (array $k): bool => (bool) ($k['takip'] ?? false),
+        ), 'anahtar'));
     }
 
     /** Arşivde belgenin "yaklaşıyor" sayılacağı gün (Arşiv > Hatırlatma Ayarları). */

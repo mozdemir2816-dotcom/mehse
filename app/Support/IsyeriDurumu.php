@@ -206,7 +206,7 @@ class IsyeriDurumu
             'İşveren / Kurul sekreteryası', fn () => KurulToplantisiSayfasi::getUrl(['firma' => $firma->id]));
 
         // 15. Dokümanlar (Kontrol Merkezi kriterleri)
-        $evrak = collect(PortfoyKarne::firmaChecklistDetay($firma))->where('hazir', true);
+        $evrak = collect(PortfoyKarne::firmaChecklistDetay($firma))->where('hazir', true)->where('takip', false);
         $tamam = $evrak->where('tamam', true)->count();
         $gecVade = $evrak->where('tamam', false)->filter(fn ($k) => $k['vade_tarihi']?->lt($bugun))->count();
         $yuklu = ArsivDosya::query()->where('firma_id', $firma->id)->tarihTakipli()->get(['gecerlilik_sonu']);
@@ -374,7 +374,7 @@ class IsyeriDurumu
     /** Kontrol Merkezi evrak kriterlerinden karşılananların oranı (%). */
     public static function evrakUyum(Firma $firma): int
     {
-        $evrak = collect(PortfoyKarne::firmaChecklistDetay($firma))->where('hazir', true);
+        $evrak = collect(PortfoyKarne::firmaChecklistDetay($firma))->where('hazir', true)->where('takip', false);
 
         return $evrak->isEmpty() ? 0 : (int) round($evrak->where('tamam', true)->count() * 100 / $evrak->count());
     }
