@@ -309,11 +309,21 @@
             @if ($t->gundem)
                 <div class="flex flex-col gap-2">
                     @foreach ($t->gundem as $i => $madde)
-                        <div class="flex items-center gap-2" style="border:1px solid var(--border);border-radius:10px;padding:.5rem .75rem">
-                            <span class="flex-1 text-sm"><strong>{{ $i + 1 }}.</strong> {{ $madde }}</span>
-                            <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="kararFormuAc({{ $i }})">Karar yaz</x-filament::button>
-                            <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Sil" wire:click="gundemSil({{ $i }})" />
-                        </div>
+                        @if ($duzenlenenGundemIndex === $i)
+                            <div class="flex flex-wrap items-center gap-2" style="border:1px solid var(--primary);background:var(--info-bg);border-radius:10px;padding:.5rem .75rem">
+                                <strong class="text-sm">{{ $i + 1 }}.</strong>
+                                <input type="text" wire:model="gundemDuzenMetni" wire:keydown.enter="gundemGuncelle" style="{{ $girdi }};flex:1;min-width:12rem">
+                                <x-filament::button size="xs" wire:click="gundemGuncelle">Güncelle</x-filament::button>
+                                <x-filament::button size="xs" color="gray" wire:click="gundemDuzenlemeIptal">Vazgeç</x-filament::button>
+                            </div>
+                        @else
+                            <div class="flex flex-wrap items-center gap-2" style="border:1px solid var(--border);border-radius:10px;padding:.5rem .75rem">
+                                <span class="flex-1 text-sm" style="min-width:12rem"><strong>{{ $i + 1 }}.</strong> {{ $madde }}</span>
+                                <x-filament::button size="xs" color="gray" icon="heroicon-o-chat-bubble-left-ellipsis" wire:click="kararFormuAc({{ $i }})">Karar yaz</x-filament::button>
+                                <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="gundemDuzenle({{ $i }})">Düzenle</x-filament::button>
+                                <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Sil" wire:click="gundemSil({{ $i }})" />
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             @else
@@ -359,10 +369,10 @@
                         <tbody>
                             @foreach ($t->kararlar as $i => $k)
                                 <tr style="border-top:1px solid var(--border-light)">
-                                    <td class="px-3 py-2">{{ $k['gundem_maddesi'] }}</td>
-                                    <td class="px-3 py-2">{{ $k['karar_metni'] }}</td>
-                                    <td class="px-3 py-2">{{ $k['sorumlu'] ?: '—' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $k['termin'] ?: '—' }}</td>
+                                    <td class="px-3 py-2">{{ $k['gundem_maddesi'] ?? '' }}</td>
+                                    <td class="px-3 py-2">{{ $k['karar_metni'] ?? '' }}</td>
+                                    <td class="px-3 py-2">{{ ($k['sorumlu'] ?? null) ?: '—' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ ($k['termin'] ?? null) ?: '—' }}</td>
                                     <td class="px-3 py-2">
                                         <select x-on:change="$wire.kararDurumGuncelle({{ $i }}, $event.target.value)" style="{{ $girdi }};width:auto;padding:.25rem .45rem">
                                             <option value="beklemede" @selected(($k['durum'] ?? '') === 'beklemede')>Beklemede</option>
@@ -371,7 +381,7 @@
                                         </select>
                                     </td>
                                     <td class="px-3 py-2 text-right whitespace-nowrap">
-                                        <x-filament::icon-button icon="heroicon-o-pencil" color="gray" size="sm" label="Düzenle" wire:click="kararDuzenle({{ $i }})" />
+                                        <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="kararDuzenle({{ $i }})">Düzenle</x-filament::button>
                                         <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Sil" wire:click="kararSil({{ $i }})" />
                                     </td>
                                 </tr>
@@ -379,8 +389,14 @@
                                     <tr>
                                         <td colspan="6" class="p-2">
                                             <div style="border:1px solid var(--primary);background:var(--info-bg);border-radius:12px;padding:.9rem">
-                                                <div class="mb-2 text-sm font-semibold">Kararı düzenle — {{ $k['gundem_maddesi'] }}</div>
-                                                <textarea wire:model="yeniKararMetni" rows="2" placeholder="Karar metni" style="{{ $girdi }};font-family:inherit"></textarea>
+                                                <div class="mb-2 text-sm font-semibold">Kararı düzenle</div>
+                                                <label style="{{ $etiket }}">Gündem maddesi</label>
+                                                <input type="text" wire:model="yeniKararGundem" list="kurul-gundem-listesi" style="{{ $girdi }}">
+                                                <datalist id="kurul-gundem-listesi">
+                                                    @foreach ($t->gundem ?? [] as $g)<option value="{{ $g }}"></option>@endforeach
+                                                </datalist>
+                                                <label style="{{ $etiket }};margin-top:.5rem;display:block">Karar metni</label>
+                                                <textarea wire:model="yeniKararMetni" rows="3" placeholder="Karar metni" style="{{ $girdi }};font-family:inherit"></textarea>
                                                 <div class="mt-2 grid gap-2 sm:grid-cols-2">
                                                     <input type="text" wire:model="yeniKararSorumlu" placeholder="Sorumlu" style="{{ $girdi }}">
                                                     <input type="date" wire:model="yeniKararTermin" style="{{ $girdi }}">

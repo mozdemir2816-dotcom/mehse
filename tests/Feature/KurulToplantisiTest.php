@@ -179,6 +179,53 @@ class KurulToplantisiTest extends TestCase
         $this->assertSame('devam_ediyor', $karar['durum']);      // korunur
     }
 
+    public function test_tamamlanmis_toplantida_kararin_gundemi_degistirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = $firma->kurulToplantilari()->create([
+            'tarih' => now(), 'durum' => 'tamamlandi', 'katilimcilar' => [], 'gundem' => ['Gündem X', 'Gündem Y'],
+            'kararlar' => [['gundem_maddesi' => 'Gündem X', 'karar_metni' => 'Metin', 'sorumlu' => null, 'termin' => null, 'durum' => 'beklemede']],
+        ]);
+
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('toplantiSec', $toplanti->id)
+            ->call('kararDuzenle', 0)
+            ->assertSet('yeniKararGundem', 'Gündem X')
+            ->set('yeniKararGundem', 'Gündem Y')
+            ->call('kararGuncelle')
+            ->assertSet('yeniKararGundem', null);
+
+        $this->assertSame('Gündem Y', $toplanti->refresh()->kararlar[0]['gundem_maddesi']);
+    }
+
+    public function test_gundem_maddesi_duzenlenir_ve_bagli_kararlar_tasinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $toplanti = $firma->kurulToplantilari()->create([
+            'tarih' => now(), 'katilimcilar' => [], 'gundem' => ['Eski gündem', 'Diğer'],
+            'kararlar' => [
+                ['gundem_maddesi' => 'Eski gündem', 'karar_metni' => 'K1', 'durum' => 'beklemede'],
+                ['gundem_maddesi' => 'Diğer', 'karar_metni' => 'K2', 'durum' => 'beklemede'],
+            ],
+        ]);
+
+        Livewire::test(KurulSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('toplantiSec', $toplanti->id)
+            ->call('gundemDuzenle', 0)
+            ->assertSet('gundemDuzenMetni', 'Eski gündem')
+            ->set('gundemDuzenMetni', 'Yeni gündem')
+            ->call('gundemGuncelle')
+            ->assertSet('duzenlenenGundemIndex', null)
+            ->assertSee('Yeni gündem');
+
+        $toplanti->refresh();
+        $this->assertSame(['Yeni gündem', 'Diğer'], $toplanti->gundem);
+        $this->assertSame('Yeni gündem', $toplanti->kararlar[0]['gundem_maddesi']);
+        $this->assertSame('Diğer', $toplanti->kararlar[1]['gundem_maddesi']);
+    }
+
     public function test_excel_uretilir_durum_sutunu_olmadan(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -112,6 +112,14 @@ class KurulToplantisi extends Page
 
     public ?string $yeniKararTermin = null;
 
+    /** Karar düzenlenirken bağlı olduğu gündem maddesi (değiştirilebilir). */
+    public ?string $yeniKararGundem = null;
+
+    // Gündem maddesi düzenleme
+    public ?int $duzenlenenGundemIndex = null;
+
+    public ?string $gundemDuzenMetni = null;
+
     public function mount(): void
     {
         $this->firmaId = request()->integer('firma') ?: (int) array_key_first($this->firmalar()) ?: null;
@@ -519,6 +527,47 @@ class KurulToplantisi extends Page
         }
     }
 
+    public function gundemDuzenle(int $index): void
+    {
+        $madde = $this->toplanti()?->gundem[$index] ?? null;
+
+        if ($madde === null) {
+            return;
+        }
+
+        $this->duzenlenenGundemIndex = $index;
+        $this->gundemDuzenMetni = $madde;
+    }
+
+    public function gundemDuzenlemeIptal(): void
+    {
+        $this->reset('duzenlenenGundemIndex', 'gundemDuzenMetni');
+    }
+
+    /** Gündem maddesinin metnini günceller; o maddeye bağlı kararlar da yeni metne taşınır. */
+    public function gundemGuncelle(): void
+    {
+        $t = $this->toplanti();
+        $gundem = $t?->gundem ?? [];
+        $i = $this->duzenlenenGundemIndex;
+        $yeni = trim((string) $this->gundemDuzenMetni);
+
+        if (! $t || $i === null || ! isset($gundem[$i]) || $yeni === '') {
+            return;
+        }
+
+        $eski = $gundem[$i];
+        $gundem[$i] = $yeni;
+        $kararlar = collect($t->kararlar ?? [])
+            ->map(fn (array $k) => ($k['gundem_maddesi'] ?? null) === $eski ? [...$k, 'gundem_maddesi' => $yeni] : $k)
+            ->all();
+
+        $t->update(['gundem' => $gundem, 'kararlar' => $kararlar]);
+
+        $this->gundemDuzenlemeIptal();
+        Notification::make()->title('Gündem maddesi güncellendi')->success()->send();
+    }
+
     public function gundemSil(int $index): void
     {
         $t = $this->toplanti();
@@ -561,12 +610,13 @@ class KurulToplantisi extends Page
         $this->yeniKararMetni = $karar['karar_metni'] ?? null;
         $this->yeniKararSorumlu = $karar['sorumlu'] ?? null;
         $this->yeniKararTermin = $karar['termin'] ?? null;
+        $this->yeniKararGundem = $karar['gundem_maddesi'] ?? null;
     }
 
     public function kararDuzenlemeIptal(): void
     {
         $this->duzenlenenKararIndex = null;
-        $this->reset('yeniKararMetni', 'yeniKararSorumlu', 'yeniKararTermin');
+        $this->reset('yeniKararMetni', 'yeniKararSorumlu', 'yeniKararTermin', 'yeniKararGundem');
     }
 
     /** Düzenlenen kararın metin/sorumlu/termin alanlarını günceller (gündem + durum korunur). */
@@ -583,6 +633,9 @@ class KurulToplantisi extends Page
 
         $kararlar[$this->duzenlenenKararIndex] = [
             ...$kararlar[$this->duzenlenenKararIndex],
+            'gundem_maddesi' => filled($this->yeniKararGundem)
+                ? trim($this->yeniKararGundem)
+                : $kararlar[$this->duzenlenenKararIndex]['gundem_maddesi'],
             'karar_metni' => $this->yeniKararMetni,
             'sorumlu' => $this->yeniKararSorumlu,
             'termin' => $this->yeniKararTermin,
@@ -675,11 +728,13 @@ class KurulToplantisi extends Page
                 ->color('gray')
                 ->disabled(fn () => ! $this->firma)
                 ->modalHeading(fn () => 'Kurul Üyesi Seçimi — '.($this->firma?->unvan ?? ''))
-                ->modalDescription('Zorunlu üyeler işyeri görevlendirmelerinden önerilir; diğer üyeleri aktif personel arasından ya da elle ekleyin.')
+                ->modalDescription('Zorunlu üyeler işyeri görevlendirmelerinden önerilir; diğer üyeleri aktif personel arasından ya da elle ekleyin. Her ekleme anında kaydedilir — ayrıca Kaydet gerekmez.')
                 ->modalWidth(Width::FiveExtraLarge)
+                ->stickyModalHeader()
+                ->stickyModalFooter()
                 ->modalContent(fn () => view('filament.pages.partials.kurul-uye-yonet'))
                 ->modalSubmitAction(false)
-                ->modalCancelActionLabel('Kapat'),
+                ->modalCancelActionLabel('Tamam'),
 
             $this->toplantiPlanlaAction(),
 
@@ -708,6 +763,8 @@ class KurulToplantisi extends Page
             ->disabled(fn () => ! $this->firma)
             ->modalHeading(fn () => 'Yeni İSG Kurulu Toplantısı — '.($this->firma?->unvan ?? ''))
             ->modalWidth(Width::FourExtraLarge)
+            ->stickyModalHeader()
+            ->stickyModalFooter()
             ->modalSubmitActionLabel('Toplantıyı Kaydet')
             ->fillForm(function (): array {
                 $tarih = now()->toDateString();
@@ -730,7 +787,7 @@ class KurulToplantisi extends Page
                     ->status('warning')
                     ->visible(fn () => (bool) $this->eksikZorunlular),
 
-                Grid::make(['default' => 1, 'md' => 2])->schema([
+                Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema([
                     DatePicker::make('tarih')->label('Toplantı tarihi')->required()->native(false)->displayFormat('d.m.Y')
                         ->live()
                         ->afterStateUpdated(fn (?string $state, Set $set) => $state
@@ -752,16 +809,21 @@ class KurulToplantisi extends Page
                             : config('isg.kurul_toplantisi.durumlar')),
                 ]),
 
-                Section::make('Gündem')->compact()->schema([
-                    CheckboxList::make('gundem_hazir')->hiddenLabel()
-                        ->options(fn () => collect(config('isg.kurul_toplantisi.hazir_gundem_maddeleri', []))
-                            ->flatten()->mapWithKeys(fn (string $m) => [$m => $m])->all())
-                        ->columns(2)->searchable()->bulkToggleable(),
-                    Textarea::make('gundem_ek')->label('Ek gündem maddeleri')->rows(3)
-                        ->helperText('Her satır ayrı bir gündem maddesi olur.'),
-                ]),
+                // Uzun hazır gündem listesi kapalı gelir — modal tek ekrana sığsın,
+                // "Toplantıyı Kaydet" kaydırmadan görünsün (alt bilgi ayrıca yapışkan).
+                Textarea::make('gundem_ek')->label('Gündem maddeleri')->rows(2)
+                    ->helperText('Her satır ayrı bir gündem maddesi olur. Kayıttan sonra da eklenip düzenlenebilir.'),
 
-                Textarea::make('notlar')->label('Notlar')->rows(2),
+                Section::make('Hazır gündem maddelerinden seç')->compact()
+                    ->collapsible()->collapsed()
+                    ->schema([
+                        CheckboxList::make('gundem_hazir')->hiddenLabel()
+                            ->options(fn () => collect(config('isg.kurul_toplantisi.hazir_gundem_maddeleri', []))
+                                ->flatten()->mapWithKeys(fn (string $m) => [$m => $m])->all())
+                            ->columns(2)->searchable()->bulkToggleable(),
+                    ]),
+
+                Textarea::make('notlar')->label('Notlar')->rows(1),
             ])
             ->action(function (array $data): void {
                 $firma = $this->firma;

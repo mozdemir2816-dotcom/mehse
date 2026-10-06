@@ -70,7 +70,7 @@
                 </select>
             </div>
 
-            <div class="flex flex-col gap-1" style="max-height:15rem;overflow-y:auto">
+            <div class="flex flex-col gap-1" style="max-height:11rem;overflow-y:auto">
                 @forelse ($this->adayCalisanlar as $c)
                     <div class="flex items-center gap-2" style="border:1px solid var(--border-light);border-radius:10px;padding:.4rem .6rem">
                         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold" style="background:var(--info-bg);color:var(--primary)">

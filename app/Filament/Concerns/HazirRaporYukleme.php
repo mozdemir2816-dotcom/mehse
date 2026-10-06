@@ -27,6 +27,12 @@ use Livewire\Attributes\Computed;
  */
 trait HazirRaporYukleme
 {
+    /** @return array<int, string> */
+    protected static function hazirRaporUzantilari(): array
+    {
+        return ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'webp'];
+    }
+
     /** Arşiv kategori anahtarı (config/arsiv.php). */
     abstract protected function hazirRaporKategorisi(): string;
 
@@ -48,11 +54,11 @@ trait HazirRaporYukleme
                     ->label('Dosya')
                     ->multiple()
                     ->disk('public')->directory('arsiv/gecici')
-                    ->acceptedFileTypes([
-                        'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
-                        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    ])
+                    // MIME (acceptedFileTypes) yerine uzantı: paylaşımlı sunucunun
+                    // libmagic'i .docx/.xlsx'i application/zip ya da octet-stream
+                    // sanıp reddedebiliyor; telefonlar da tür bildirmeyebiliyor.
+                    ->rules(['extensions:'.implode(',', static::hazirRaporUzantilari())])
+                    ->extraInputAttributes(['accept' => '.'.implode(',.', static::hazirRaporUzantilari())])
                     ->maxSize(20480)
                     ->maxFiles(10)
                     ->helperText('Birden fazla dosya seçerseniz tek ZIP olarak (yalnız fotoğraflarsa tek PDF) saklanır.')

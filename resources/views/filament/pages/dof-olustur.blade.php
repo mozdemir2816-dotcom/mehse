@@ -215,13 +215,22 @@
                         <tr>
                             <td style="padding:.3rem .5rem;max-width:16rem">
                                 {{ $m['tespit'] }}
-                                @if (! empty($m['foto_yolu']))
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}"
-                                        style="width:40px;height:40px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4);margin-top:.25rem;display:block">
-                                @endif
+                                <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem" wire:key="dof-foto-{{ $i }}-{{ md5($m['foto_yolu'] ?? '') }}">
+                                    @if (! empty($m['foto_yolu']))
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}"
+                                            style="width:40px;height:40px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
+                                        <button type="button" wire:click="maddeFotoKaldir({{ $i }})" style="font-size:.7rem;color:#ef4444;background:none;border:none;cursor:pointer">Fotoğrafı kaldır</button>
+                                    @endif
+                                    <label style="font-size:.7rem;color:rgb(14 165 233);cursor:pointer">
+                                        <input type="file" accept="image/*" wire:model="maddeFotolari.{{ $i }}" style="display:none">
+                                        📷 {{ empty($m['foto_yolu']) ? 'Fotoğraf ekle' : 'Değiştir' }}
+                                    </label>
+                                    <span wire:loading wire:target="maddeFotolari.{{ $i }}" style="font-size:.7rem">yükleniyor…</span>
+                                </div>
+                                @error('maddeFotolari.'.$i) <div style="font-size:.7rem;color:#ef4444">{{ $message }}</div> @enderror
                             </td>
                             <td style="padding:.3rem .5rem">{{ $this->oncelikler[$m['oncelik']] ?? $m['oncelik'] }}</td>
-                            <td style="padding:.3rem .5rem;max-width:16rem">{{ $m['oneri'] ?: '—' }}</td>
+                            <td style="padding:.3rem .5rem;max-width:16rem;white-space:pre-line">{{ $m['oneri'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $m['sorumlu'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $m['termin'] ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
                             <td style="padding:.3rem .5rem">

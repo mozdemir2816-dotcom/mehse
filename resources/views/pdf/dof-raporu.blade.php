@@ -70,7 +70,7 @@
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $m['tespit'] ?? '' }}</td>
                 <td class="oncelik-{{ $m['oncelik'] ?? 'orta' }}">{{ \App\Models\DofRaporu::oncelikEtiketi($m['oncelik'] ?? null) }}</td>
-                <td>{{ $m['oneri'] ?? '—' }}</td>
+                <td>{!! nl2br(e($m['oneri'] ?? '—')) !!}</td>
                 <td>{{ $m['sorumlu'] ?? '—' }}</td>
                 <td>{{ ! empty($m['termin']) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
                 <td>{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>

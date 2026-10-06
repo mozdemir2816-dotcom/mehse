@@ -7,10 +7,13 @@ use App\Models\OlayKaydi;
 use App\Models\Firma;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\DofRaporuUretici;
+use App\Support\DofTabloOkuyucu;
 use App\Support\GeminiOneriDanismani;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
+use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -79,6 +82,9 @@ class DofOlustur extends Page
 
     /** Sahada tespit edilen uygunsuzluğun fotoğraf kanıtı (yeni madde eklerken). */
     public $yeniFoto = null;
+
+    /** Listedeki maddeye sonradan fotoğraf eklemek için (madde indeksi => dosya). */
+    public array $maddeFotolari = [];
 
     public function mount(): void
     {
@@ -281,10 +287,71 @@ class DofOlustur extends Page
         $this->yeniOncelik = 'orta';
     }
 
+    public function tablodanAktar(array $data): void
+    {
+        $yol = (string) ($data['dosya'] ?? '');
+        $adi = (string) ($data['dosya_adi'] ?? $yol);
+
+        try {
+            $sonuc = DofTabloOkuyucu::oku(Storage::disk('local')->path($yol), pathinfo($adi, PATHINFO_EXTENSION));
+        } catch (\Throwable $e) {
+            report($e);
+            $sonuc = ['bilgi' => [], 'maddeler' => []];
+        } finally {
+            Storage::disk('local')->delete($yol);
+        }
+
+        if (! $sonuc['maddeler']) {
+            Notification::make()
+                ->title('Dosyada DÖF tablosu bulunamadı')
+                ->body('Tabloda "Tespit / Uygunsuzluk" ve "Öneri / Düzeltici Faaliyet" başlıklı sütunlar olmalı.')
+                ->danger()->send();
+
+            return;
+        }
+
+        // Dosyadaki üst bilgiler sayfadaki alanlara yazılır (rapor tarihi ve
+        // sorumlu kişi varsayılan dolu geldiği için onlar da dosyadan alınır).
+        foreach ($sonuc['bilgi'] as $alan => $deger) {
+            if (blank($this->{$alan}) || in_array($alan, ['sorumluKisi', 'raporTarihi'], true)) {
+                $this->{$alan} = $deger;
+            }
+        }
+
+        $this->maddeler = [...$this->maddeler, ...$sonuc['maddeler']];
+
+        Notification::make()
+            ->title(count($sonuc['maddeler']).' madde aktarıldı')
+            ->body($this->firma ? 'Fotoğrafları ekleyip "DÖF Raporu (Kaydet ve İndir)" ile çıktı alın.' : 'Kaydetmek için firmayı seçin.')
+            ->success()->send();
+    }
+
+    public function updatedMaddeFotolari($dosya, $index): void
+    {
+        $index = (int) $index;
+
+        if (! isset($this->maddeler[$index]) || ! $dosya) {
+            return;
+        }
+
+        $this->validate(['maddeFotolari.'.$index => 'image|max:10240']);
+
+        $this->maddeler[$index]['foto_yolu'] = $dosya->store('dof-foto', 'public');
+        unset($this->maddeFotolari[$index]);
+    }
+
+    public function maddeFotoKaldir(int $index): void
+    {
+        if (isset($this->maddeler[$index])) {
+            $this->maddeler[$index]['foto_yolu'] = null;
+        }
+    }
+
     public function maddeSil(int $index): void
     {
         unset($this->maddeler[$index]);
         $this->maddeler = array_values($this->maddeler);
+        $this->maddeFotolari = [];
     }
 
     public function durumGuncelle(int $index, string $durum): void
@@ -360,6 +427,25 @@ class DofOlustur extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('tablodanAktar')
+                ->label("Word/Excel'den Aktar")
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->modalHeading("Word/Excel'deki DÖF tablosunu aktar")
+                ->modalDescription('Bilgisayarda hazırladığınız DÖF tablosu (Tespit, Öncelik, Öneri, Sorumlu, Termin, Durum sütunları) madde madde listeye eklenir; üst bilgiler (Alan/Bölge, Gözetim Yapan...) doldurulur. Ardından fotoğrafları ekleyip sistemin DÖF raporu olarak çıktı alırsınız.')
+                ->modalSubmitActionLabel('Aktar')
+                ->stickyModalFooter()
+                ->schema([
+                    FileUpload::make('dosya')->storeFileNamesIn('dosya_adi')
+                        ->label('Word (.docx) veya Excel (.xlsx/.xls) dosyası')
+                        ->disk('local')->directory('dof-aktarim')
+                        // MIME yerine uzantı — bkz. HazirRaporYukleme
+                        ->rules(['extensions:docx,xlsx,xls'])
+                        ->extraInputAttributes(['accept' => '.docx,.xlsx,.xls'])
+                        ->maxSize(20480)
+                        ->required(),
+                ])
+                ->action(fn (array $data) => $this->tablodanAktar($data)),
             $this->hazirRaporYukleAction(),
             Action::make('pdf')
                 ->label('DÖF Raporu (Kaydet ve İndir)')
