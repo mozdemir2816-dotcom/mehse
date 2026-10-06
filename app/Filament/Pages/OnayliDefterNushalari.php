@@ -15,6 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -142,26 +143,13 @@ class OnayliDefterNushalari extends Page
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('primary')
                 ->visible(fn () => $this->firma !== null)
-                ->modalDescription('İmzalanmış / onaylanmış defter nüshasının taranmış hâlini (PDF veya görsel) yükleyin. Nüsha numarası firma ve defter türüne göre otomatik verilir.')
-                ->modalSubmitActionLabel('Yükle')
+                ->modalDescription('İmzalı defter nüshasının taranmış hâlini (PDF/görsel) yükleyin.')
+                ->modalSubmitActionLabel('Kaydet')
+                // Telefonda uzun formu sonuna kadar kaydırmadan kaydedebilmek için
+                // başlık ve Kaydet/İptal şeridi hep görünür kalır.
+                ->stickyModalHeader()
+                ->stickyModalFooter()
                 ->schema([
-                    Select::make('defter_turu')
-                        ->label('Defter türü')
-                        ->options(config('isg.onayli_defter.turleri'))
-                        ->default(fn () => $this->defterTuru)
-                        ->native(false)
-                        ->required()
-                        ->live(),
-                    TextInput::make('nusha_no_onizleme')
-                        ->label('Nüsha numarası')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->formatStateUsing(fn ($state, $get) => OnayliDefterNushasi::sonrakiNo(
-                            $this->firma->id,
-                            $get('defter_turu') ?: 'tespit_oneri',
-                        ).'. Nüsha'),
-                    DatePicker::make('onay_tarihi')->label('Onay / imza tarihi')->default(now()),
-                    TextInput::make('donem')->label('Dönem (opsiyonel)')->placeholder('örn. 2026 / 1. çeyrek'),
                     FileUpload::make('dosya')
                         ->label('Taranmış nüsha')
                         ->disk('public')
@@ -170,7 +158,26 @@ class OnayliDefterNushalari extends Page
                         ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                         ->maxSize(20480)
                         ->required(),
-                    Textarea::make('aciklama')->label('Açıklama (opsiyonel)')->rows(2),
+                    Grid::make(['default' => 2])->schema([
+                        Select::make('defter_turu')
+                            ->label('Defter türü')
+                            ->options(config('isg.onayli_defter.turleri'))
+                            ->default(fn () => $this->defterTuru)
+                            ->native(false)
+                            ->required()
+                            ->live(),
+                        TextInput::make('nusha_no_onizleme')
+                            ->label('Nüsha no')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->formatStateUsing(fn ($state, $get) => OnayliDefterNushasi::sonrakiNo(
+                                $this->firma->id,
+                                $get('defter_turu') ?: 'tespit_oneri',
+                            ).'. Nüsha'),
+                        DatePicker::make('onay_tarihi')->label('Onay tarihi')->default(now()),
+                        TextInput::make('donem')->label('Dönem')->placeholder('örn. 2026/1. çeyrek'),
+                    ]),
+                    Textarea::make('aciklama')->label('Açıklama (opsiyonel)')->rows(1),
                 ])
                 ->action(function (array $data): void {
                     $firma = Firma::where('user_id', Filament::auth()->id())->find($this->firmaId);

@@ -47,7 +47,7 @@
                     style="padding:.5rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:1rem;max-height:420px;overflow-y:auto;padding-right:.3rem">
+            <div style="display:flex;flex-direction:column;gap:1rem;max-height:min(420px,45vh);overflow-y:auto;overscroll-behavior:auto;padding-right:.3rem">
                 @forelse ($this->katalog as $kategori => $maddeler)
                     <div>
                         <div style="font-weight:700;font-size:.82rem;color:{{ $sari }};margin-bottom:.4rem">{{ $kategori }} ({{ count($maddeler) }})</div>
