@@ -85,14 +85,14 @@ class KurulToplantisiUretici
 
         // KATILIMCILAR
         $satir = self::bolumBasligi($s, $satir, 'KATILIMCILAR');
-        $satir = self::tabloBasligi($s, $satir, ['#', 'Ad Soyad', 'Görev', 'Kurul Rolü', 'Katılım']);
-        foreach (($toplanti->katilimcilar ?? []) as $i => $k) {
+        $satir = self::tabloBasligi($s, $satir, ['#', 'Ad Soyad', 'Görevi (İşe Giriş Bildirgesi)', 'Kuruldaki Görevi', 'Katılım']);
+        foreach (KurulUyeleri::tutanakKatilimcilari($toplanti) as $i => $k) {
             $s->fromArray([
                 $i + 1,
-                in_array($k['rol'] ?? null, ['baskan', 'sekreter', 'hekim'], true) ? '' : ($k['ad_soyad'] ?? '—'), // kaşeli görevli adı basılmaz
-                $k['gorev'] ?? '—',
-                filled($k['rol'] ?? null) ? config("isg.kurul_toplantisi.roller.{$k['rol']}.ad", $k['rol']) : '—',
-                ($k['katildi'] ?? false) ? 'Katıldı' : 'Katılmadı',
+                $k['ad_basilir'] ? $k['ad_soyad'] : '', // kaşeli görevli adı basılmaz
+                $k['is_gorevi'],
+                $k['kurul_gorevi'],
+                $k['katildi'] ? 'Katıldı' : 'Katılmadı',
             ], null, "A{$satir}");
             $satir++;
         }

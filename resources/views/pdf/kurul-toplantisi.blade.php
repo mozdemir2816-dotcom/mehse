@@ -34,8 +34,10 @@
 </head>
 <body>
 @php
-    $rolAdi = fn (?string $rol) => $rol ? config("isg.kurul_toplantisi.roller.{$rol}.ad", $rol) : '—';
     $katilimcilar = $toplanti->katilimcilar ?? [];
+    $kisiler = \App\Support\KurulUyeleri::tutanakKatilimcilari($toplanti);
+    $katilanlar = array_values(array_filter($kisiler, fn ($k) => $k['katildi']));
+    $katilmayanlar = array_values(array_filter($kisiler, fn ($k) => ! $k['katildi']));
     $adres = collect([$firma?->adres, $firma?->ilce, $firma?->il])->filter()->implode(', ');
 @endphp
 
@@ -84,32 +86,35 @@
     </tr>
 </table>
 
-{{-- Katılım yerine İmza sütunu (kullanıcı kararı, KurulToplantisiTest): katılanın
-     hücresi ıslak imza için boş, katılmayanda "Katılmadı". --}}
-<h2>Kurul Üyeleri ve Katılımcılar</h2>
+{{-- 1. SAYFA: katılanlar + gündem (konu başlıkları). Görevi = çalışan kaydı
+     (işe giriş bildirgesi), Kuruldaki Görevi = kurul rolü / Atama Yazıları
+     (KurulUyeleri::tutanakKatilimcilari). Kaşeli görevlilerin adı basılmaz. --}}
+<h2>Toplantıya Katılanlar</h2>
 <table class="liste">
     <tr>
         <th style="width:4%">#</th>
-        <th style="width:23%">Ad Soyad</th>
-        <th style="width:21%">Görevi / Unvanı</th>
-        <th style="width:26%">Kurul Rolü</th>
-        <th>İmza</th>
+        <th style="width:26%">Ad Soyad</th>
+        <th style="width:30%">Görevi (İşe Giriş Bildirgesi)</th>
+        <th>Kuruldaki Görevi</th>
     </tr>
-    @forelse ($katilimcilar as $i => $k)
+    @forelse ($katilanlar as $i => $k)
         <tr>
             <td class="ortala">{{ $i + 1 }}</td>
-            {{-- Kaşeli görevlilerin (başkan / İGU / hekim) adı basılmaz --}}
-            <td>{{ in_array($k['rol'] ?? null, ['baskan', 'sekreter', 'hekim'], true) ? '' : ($k['ad_soyad'] ?? '—') }}</td>
-            <td>{{ $k['gorev'] ?? '—' }}</td>
-            <td>{{ $rolAdi($k['rol'] ?? null) }}</td>
-            <td style="height:26px" class="ortala">{{ ($k['katildi'] ?? false) ? '' : 'Katılmadı' }}</td>
+            <td>{{ $k['ad_basilir'] ? $k['ad_soyad'] : '' }}</td>
+            <td>{{ $k['is_gorevi'] }}</td>
+            <td>{{ $k['kurul_gorevi'] }}</td>
         </tr>
     @empty
-        <tr><td colspan="5" class="soluk">Katılımcı eklenmedi.</td></tr>
+        <tr><td colspan="4" class="soluk">Katılımcı eklenmedi.</td></tr>
     @endforelse
 </table>
+@if ($katilmayanlar)
+    <div style="font-size:8.5px;color:#64748b;margin-top:4px">
+        Katılmayan: {{ collect($katilmayanlar)->map(fn ($k) => ($k['ad_basilir'] ? $k['ad_soyad'].' — ' : '').$k['kurul_gorevi'])->implode('; ') }}
+    </div>
+@endif
 
-<h2>Gündem</h2>
+<h2>Gündem (Toplantı Konuları)</h2>
 <table class="liste">
     @forelse (($toplanti->gundem ?? []) as $i => $madde)
         <tr><td style="width:4%" class="ortala">{{ $i + 1 }}</td><td>{{ $madde }}</td></tr>
@@ -118,7 +123,8 @@
     @endforelse
 </table>
 
-<h2>Kararlar ve Takip</h2>
+{{-- 2. SAYFADAN İTİBAREN: kararlar --}}
+<h2 style="page-break-before:always;margin-top:0">Kararlar ve Takip</h2>
 <table class="liste">
     <tr>
         <th style="width:4%">#</th>
@@ -144,6 +150,31 @@
     <h2>Notlar</h2>
     <div style="font-size:9.5px;white-space:pre-line">{{ $toplanti->notlar }}</div>
 @endif
+
+{{-- SON: katılanların ıslak imza yeri (kullanıcı kararı 06.10.2026). Tablo
+     bölünmesin diye satırlar page-break-inside:avoid. --}}
+<h2>Katılımcı İmzaları</h2>
+<div style="font-size:8.5px;color:#475569;margin-bottom:4px">
+    Yukarıdaki kararlar toplantıya katılan kurul üyelerince alınmış ve imza altına alınmıştır.
+</div>
+<table class="liste imza-tablo">
+    <tr>
+        <th style="width:4%">#</th>
+        <th style="width:28%">Ad Soyad</th>
+        <th style="width:34%">Kuruldaki Görevi</th>
+        <th>İmza</th>
+    </tr>
+    @forelse ($katilanlar as $i => $k)
+        <tr style="page-break-inside:avoid">
+            <td class="ortala" style="height:34px;vertical-align:middle">{{ $i + 1 }}</td>
+            <td style="vertical-align:middle">{{ $k['ad_basilir'] ? $k['ad_soyad'] : '' }}</td>
+            <td style="vertical-align:middle">{{ $k['kurul_gorevi'] }}</td>
+            <td></td>
+        </tr>
+    @empty
+        <tr><td colspan="4" class="soluk">Katılımcı eklenmedi.</td></tr>
+    @endforelse
+</table>
 
 </body>
 </html>

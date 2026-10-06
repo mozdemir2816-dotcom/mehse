@@ -100,4 +100,72 @@ class KurulUyeleri
             ])
             ->all();
     }
+
+    /** Ad/görevi kaşeyle belirlenen görevliler — tutanakta adları basılmaz. */
+    public const KASELI_ROLLER = ['baskan', 'sekreter', 'hekim'];
+
+    /** Atama Yazıları rolü => kurul rolü (kurul rolü boş katılımcıda otomatik). */
+    private const ATAMA_KURUL_ROLU = [
+        'isveren_vekili' => 'baskan',
+        'calisan_temsilcisi' => 'calisan_temsilcisi',
+    ];
+
+    /**
+     * Tutanak çıktısı için katılımcılar, görevleri otomatik zenginleştirilmiş:
+     * - is_gorevi: firmanın çalışan kaydındaki görev (işe giriş bildirgesi /
+     *   İSG-KATİP aktarımı); çalışan değilse (İGU, hekim) toplantıdaki görev.
+     * - kurul_gorevi: kurul rolü; rol yoksa kişinin Atama Yazıları'ndaki
+     *   görevlendirmesi (işveren vekili → başkan, çalışan temsilcisi; diğer
+     *   atamalar "Kurul Üyesi (Destek Elemanı...)" olarak).
+     *
+     * @return array<int, array{ad_soyad: string, ad_basilir: bool, is_gorevi: string, kurul_gorevi: string, katildi: bool}>
+     */
+    public static function tutanakKatilimcilari(\App\Models\KurulToplantisi $toplanti): array
+    {
+        $firma = $toplanti->firma;
+        $anahtar = fn (?string $ad): string => preg_replace('/\s+/u', ' ', trim(mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], (string) $ad))));
+
+        $calisanGorevi = $firma
+            ? $firma->calisanlar()->whereNotNull('gorev')->get(['ad_soyad', 'gorev'])
+                ->mapWithKeys(fn ($c) => [$anahtar($c->ad_soyad) => $c->gorev])
+            : collect();
+
+        // Kişi adı => Atama Yazıları rol anahtarları
+        $atamalar = [];
+
+        foreach ($firma?->atamaYazilari()->get(['rol_anahtari', 'uyeler']) ?? [] as $a) {
+            foreach ((array) $a->uyeler as $u) {
+                if (filled($u['ad_soyad'] ?? null)) {
+                    $atamalar[$anahtar($u['ad_soyad'])][] = $a->rol_anahtari;
+                }
+            }
+        }
+
+        return collect($toplanti->katilimcilar ?? [])
+            ->map(function (array $k) use ($anahtar, $calisanGorevi, $atamalar): array {
+                $ad = $anahtar($k['ad_soyad'] ?? '');
+                $kisiAtamalari = array_values(array_unique($atamalar[$ad] ?? []));
+                $rol = filled($k['rol'] ?? null) && $k['rol'] !== 'diger' ? $k['rol'] : null;
+
+                foreach ($kisiAtamalari as $atama) {
+                    $rol ??= self::ATAMA_KURUL_ROLU[$atama] ?? null;
+                }
+
+                $kurulGorevi = $rol
+                    ? config("isg.kurul_toplantisi.roller.{$rol}.ad", $rol)
+                    : ($kisiAtamalari
+                        ? 'Kurul Üyesi ('.collect($kisiAtamalari)->map(fn ($r) => config("isg.atama.roller.{$r}.ad", $r))->implode(', ').')'
+                        : 'Kurul Üyesi');
+
+                return [
+                    'ad_soyad' => (string) ($k['ad_soyad'] ?? ''),
+                    'ad_basilir' => ! in_array($rol, self::KASELI_ROLLER, true),
+                    'is_gorevi' => (string) ($calisanGorevi[$ad] ?? $k['gorev'] ?? '') ?: '—',
+                    'kurul_gorevi' => $kurulGorevi,
+                    'katildi' => (bool) ($k['katildi'] ?? false),
+                ];
+            })
+            ->values()
+            ->all();
+    }
 }

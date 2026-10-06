@@ -339,10 +339,57 @@ class KurulToplantisiTest extends TestCase
 
         $html = view('pdf.kurul-toplantisi', ['toplanti' => $toplanti, 'firma' => $firma])->render();
 
+        // İmza yeri en sonda, kararlardan sonra; kararlar yeni sayfadan başlar.
+        $kararlar = strpos($html, 'Kararlar ve Takip</h2>');
+        $imza = strpos($html, 'Katılımcı İmzaları');
+        $this->assertNotFalse($imza);
+        $this->assertGreaterThan($kararlar, $imza);
+        $this->assertStringContainsString('page-break-before:always;margin-top:0">Kararlar ve Takip', $html);
+        $this->assertGreaterThan(strpos($html, 'Gündem (Toplantı Konuları)'), $kararlar);
         $this->assertStringContainsString('İmza</th>', $html);
         $this->assertStringNotContainsString('Katıldı<', $html);
-        $this->assertStringContainsString('Katılmayan Kişi', $html);
-        $this->assertStringContainsString('Katılmadı', $html);
+
+        // İmza tablosunda yalnız katılan; katılmayan ilk sayfada not olarak.
+        $imzaBolumu = substr($html, $imza);
+        $this->assertStringContainsString('Katılan Kişi', $imzaBolumu);
+        $this->assertStringNotContainsString('Katılmayan Kişi', $imzaBolumu);
+        $this->assertStringContainsString('Katılmayan: Katılmayan Kişi', $html);
+    }
+
+    public function test_pdf_gorevi_calisan_kaydindan_kurul_gorevi_atamadan_gelir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $firma->calisanlar()->create(['ad_soyad' => 'Ayşe Yılmaz', 'gorev' => 'Kalite Kontrol Teknisyeni', 'aktif' => true]);
+        $firma->atamaYazilari()->create([
+            'rol_anahtari' => 'calisan_temsilcisi',
+            'uyeler' => [['ad_soyad' => 'AYŞE YILMAZ', 'gorev' => 'Teknisyen']],
+        ]);
+        $firma->atamaYazilari()->create([
+            'rol_anahtari' => 'sondurme_ekibi',
+            'uyeler' => [['ad_soyad' => 'Mehmet Kaya']],
+        ]);
+
+        $toplanti = KurulToplantisi::create([
+            'firma_id' => $firma->id, 'tarih' => now(), 'gundem' => [], 'kararlar' => [],
+            'katilimcilar' => [
+                ['ad_soyad' => 'Ayşe Yılmaz', 'gorev' => 'eski görev', 'rol' => null, 'katildi' => true],
+                ['ad_soyad' => 'Mehmet Kaya', 'gorev' => 'Usta', 'rol' => null, 'katildi' => true],
+                ['ad_soyad' => 'Uzman Kişi', 'gorev' => 'A Sınıfı İGU', 'rol' => 'sekreter', 'katildi' => true],
+            ],
+        ]);
+
+        [$ayse, $mehmet, $uzman] = \App\Support\KurulUyeleri::tutanakKatilimcilari($toplanti);
+
+        $this->assertSame('Kalite Kontrol Teknisyeni', $ayse['is_gorevi']);       // çalışan kaydından
+        $this->assertSame('Çalışan Temsilcisi (Baş Temsilci)', $ayse['kurul_gorevi']); // atamadan
+        $this->assertSame('Usta', $mehmet['is_gorevi']);                           // kayıt yok → toplantıdaki
+        $this->assertSame('Kurul Üyesi (Söndürme Ekibi)', $mehmet['kurul_gorevi']);
+        $this->assertSame('İş Güvenliği Uzmanı (Sekreter)', $uzman['kurul_gorevi']);
+        $this->assertFalse($uzman['ad_basilir']);
+
+        $html = view('pdf.kurul-toplantisi', ['toplanti' => $toplanti, 'firma' => $firma])->render();
+        $this->assertStringContainsString('Kalite Kontrol Teknisyeni', $html);
+        $this->assertStringNotContainsString('Uzman Kişi', $html);
     }
 
     public function test_toplanti_silinir(): void
