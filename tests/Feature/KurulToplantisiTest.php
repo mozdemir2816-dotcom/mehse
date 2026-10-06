@@ -392,6 +392,27 @@ class KurulToplantisiTest extends TestCase
         $this->assertStringNotContainsString('Uzman Kişi', $html);
     }
 
+    public function test_pdf_basliginda_firma_logosu_yoksa_osgb_logosu_kullanilir(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create(['logo' => null]);
+        $toplanti = KurulToplantisi::create(['firma_id' => $firma->id, 'tarih' => now(), 'katilimcilar' => [], 'gundem' => [], 'kararlar' => []]);
+
+        $baslik = fn () => \Illuminate\Support\Str::betweenFirst(
+            view('pdf.kurul-toplantisi', ['toplanti' => $toplanti->fresh(), 'firma' => $firma->fresh()])->render(),
+            '<td class="firma">', '</td>'
+        );
+
+        $this->assertStringContainsString('yildiz-grup-osgb.png', $baslik());
+        $this->assertStringNotContainsString($firma->unvan, $baslik());
+
+        \Illuminate\Support\Facades\Storage::disk('public')->put('logolar/firma.png', 'x');
+        $firma->update(['logo' => 'logolar/firma.png']);
+
+        $this->assertStringContainsString('logolar', $baslik());
+        $this->assertStringNotContainsString('yildiz-grup-osgb.png', $baslik());
+    }
+
     public function test_toplanti_silinir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

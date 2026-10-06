@@ -2731,6 +2731,8 @@ return [
     | listeden tek tıkla eklenir (AI önerisi ayrı, ileride Gemini ile).
     */
     'kurul_toplantisi' => [
+        // Tutanak başlığının sol kutusu: firma logosu yoksa bu OSGB logosu (public/ altında).
+        'varsayilan_logo' => 'images/marka/yildiz-grup-osgb.png',
         /*
          | Kurul üyelik rolleri — İSG Kurulları Hakkında Yönetmelik Md.6(1).
          | zorunlu=true olanlar eksikse toplantı yalnız "Taslak" kaydedilebilir

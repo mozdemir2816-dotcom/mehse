@@ -14,7 +14,8 @@
     body { margin: 0; color: #1e293b; font-size: 10px; }
     .ust { width: 100%; border-collapse: collapse; border: 1px solid #94a3b8; margin-bottom: 10px; }
     .ust td { vertical-align: middle; padding: 8px 10px; }
-    .ust .firma { width: 26%; font-size: 12px; font-weight: bold; color: #1e3a5f; border-right: 1px solid #cbd5e1; }
+    .ust .firma { width: 26%; text-align: center; border-right: 1px solid #cbd5e1; }
+    .ust .firma img { max-width: 170px; max-height: 62px; }
     .ust .baslik { text-align: center; background: #eff6ff; font-size: 15px; font-weight: bold; color: #1e3a5f; line-height: 1.3; border-right: 1px solid #cbd5e1; }
     .ust .bilgi { width: 27%; font-size: 9px; padding: 4px 8px; }
     .ust .bilgi table { width: 100%; border-collapse: collapse; }
@@ -39,6 +40,11 @@
     $katilanlar = array_values(array_filter($kisiler, fn ($k) => $k['katildi']));
     $katilmayanlar = array_values(array_filter($kisiler, fn ($k) => ! $k['katildi']));
     $adres = collect([$firma?->adres, $firma?->ilce, $firma?->il])->filter()->implode(', ');
+
+    // Başlığın sol kutusu: firma logosu, yoksa OSGB logosu (kullanıcı kararı 06.10.2026 — unvan yazılmaz).
+    $logo = $firma?->logo && is_file($f = \Illuminate\Support\Facades\Storage::disk('public')->path($firma->logo))
+        ? $f
+        :(is_file($v = public_path(config('isg.kurul_toplantisi.varsayilan_logo', ''))) ? $v : null);
 @endphp
 
 <div class="altbilgi">
@@ -47,7 +53,7 @@
 
 <table class="ust">
     <tr>
-        <td class="firma">{{ $firma?->unvan }}</td>
+        <td class="firma">@if ($logo)<img src="{{ $logo }}">@endif</td>
         <td class="baslik">İŞ SAĞLIĞI VE GÜVENLİĞİ KURULU<br>TOPLANTI TUTANAĞI</td>
         <td class="bilgi">
             <table>
