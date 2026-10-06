@@ -95,7 +95,7 @@ class KurulToplantisiUretici
         foreach (KurulUyeleri::tutanakKatilimcilari($toplanti) as $i => $k) {
             $s->fromArray([
                 $i + 1,
-                $k['ad_basilir'] ? $k['ad_soyad'] : '', // kaşeli görevli adı basılmaz
+                $k['ad_soyad'],
                 $k['is_gorevi'],
                 $k['kurul_gorevi'],
                 $k['katildi'] ? 'Katıldı' : 'Katılmadı',
@@ -194,7 +194,7 @@ class KurulToplantisiUretici
         $kisiler = KurulUyeleri::tutanakKatilimcilari($toplanti);
         $katilanlar = array_values(array_filter($kisiler, fn ($k) => $k['katildi']));
         $katilmayanlar = array_values(array_filter($kisiler, fn ($k) => ! $k['katildi']));
-        $ad = fn (array $k) => $k['ad_basilir'] ? $k['ad_soyad'] : ''; // kaşeli görevli adı basılmaz
+        $ad = fn (array $k) => $k['ad_soyad'];
 
         $word = new PhpWord;
         $word->setDefaultFontName('Arial');
@@ -323,17 +323,21 @@ class KurulToplantisiUretici
         $bolum->addText('Katılımcı İmzaları', $h2, $h2p + ['keepNext' => true]);
         $bolum->addText('Yukarıdaki kararlar toplantıya katılan kurul üyelerince alınmış ve imza altına alınmıştır.',
             ['size' => 8, 'color' => '475569'], ['spaceAfter' => 60, 'keepNext' => true]);
+        // Föy bölünmez: son satır hariç her paragraf "sonrakiyle birlikte tut" —
+        // sığmazsa başlığıyla bütün olarak sonraki sayfaya geçer.
+        $birlikte = ['keepNext' => true, 'keepLines' => true];
         $t = $bolum->addTable($kenar + ['width' => 100 * 50, 'unit' => 'pct']);
         $t->addRow(null, ['cantSplit' => true]);
         foreach ([['#', 500], ['Ad Soyad', 2900], ['Kuruldaki Görevi', 3500], ['İmza', 3300]] as [$b, $g]) {
-            $t->addCell($g, $baslikHucre)->addText($b, $kalin);
+            $t->addCell($g, $baslikHucre)->addText($b, $kalin, $birlikte);
         }
         foreach ($katilanlar as $i => $k) {
+            $p = $i < count($katilanlar) - 1 ? $birlikte : [];
             $t->addRow(650, ['cantSplit' => true]);
-            $t->addCell(500, ['valign' => 'center'])->addText((string) ($i + 1), [], ['alignment' => Jc::CENTER]);
-            $t->addCell(2900, ['valign' => 'center'])->addText($ad($k));
-            $t->addCell(3500, ['valign' => 'center'])->addText($k['kurul_gorevi']);
-            $t->addCell(3300);
+            $t->addCell(500, ['valign' => 'center'])->addText((string) ($i + 1), [], $p + ['alignment' => Jc::CENTER]);
+            $t->addCell(2900, ['valign' => 'center'])->addText($ad($k), [], $p);
+            $t->addCell(3500, ['valign' => 'center'])->addText($k['kurul_gorevi'], [], $p);
+            $t->addCell(3300)->addText('', [], $p);
         }
 
         $gecici = tempnam(sys_get_temp_dir(), 'mehse-kurul').'.docx';

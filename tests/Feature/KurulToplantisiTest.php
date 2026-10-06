@@ -385,11 +385,41 @@ class KurulToplantisiTest extends TestCase
         $this->assertSame('Usta', $mehmet['is_gorevi']);                           // kayıt yok → toplantıdaki
         $this->assertSame('Kurul Üyesi (Söndürme Ekibi)', $mehmet['kurul_gorevi']);
         $this->assertSame('İş Güvenliği Uzmanı (Sekreter)', $uzman['kurul_gorevi']);
-        $this->assertFalse($uzman['ad_basilir']);
+        $this->assertSame('Uzman Kişi', $uzman['ad_soyad']);
 
         $html = view('pdf.kurul-toplantisi', ['toplanti' => $toplanti, 'firma' => $firma])->render();
         $this->assertStringContainsString('Kalite Kontrol Teknisyeni', $html);
-        $this->assertStringNotContainsString('Uzman Kişi', $html);
+        $this->assertStringContainsString('Uzman Kişi', $html); // kaşeli görevlinin adı da basılır (06.10.2026)
+    }
+
+    public function test_baskan_igu_hekim_adlari_bossa_firma_kaydindan_doldurulur(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::create(['user_id' => $this->uzman->id, 'tip' => 'igu', 'ad_soyad' => 'Mehmet Uzman', 'unvan' => 'A Sınıfı İş Güvenliği Uzmanı', 'sertifika_no' => '405044']);
+        $hekim = \App\Models\IsgProfesyoneli::create(['user_id' => $this->uzman->id, 'tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Ayşe Hekim', 'sertifika_no' => 'H-77']);
+        $firma = Firma::factory()->for($this->uzman)->create(['isveren_vekili' => 'Ali Müdür', 'igu_id' => $igu->id, 'isyeri_hekimi_id' => $hekim->id]);
+
+        $toplanti = KurulToplantisi::create([
+            'firma_id' => $firma->id, 'tarih' => now(), 'gundem' => [], 'kararlar' => [],
+            'katilimcilar' => [
+                ['ad_soyad' => '', 'gorev' => null, 'rol' => 'baskan', 'katildi' => true],
+                ['ad_soyad' => '', 'gorev' => null, 'rol' => 'sekreter', 'katildi' => true],
+                ['ad_soyad' => 'Dr. Ayşe Hekim', 'gorev' => 'İşyeri Hekimi', 'rol' => 'hekim', 'katildi' => true],
+            ],
+        ]);
+
+        [$baskan, $sekreter, $hekimSatiri] = \App\Support\KurulUyeleri::tutanakKatilimcilari($toplanti);
+
+        $this->assertSame('Ali Müdür', $baskan['ad_soyad']);
+        $this->assertSame('Mehmet Uzman', $sekreter['ad_soyad']);
+        $this->assertSame('A Sınıfı İş Güvenliği Uzmanı — Belge No: 405044', $sekreter['is_gorevi']);
+        $this->assertStringContainsString('Belge No: H-77', $hekimSatiri['is_gorevi']);
+
+        $html = view('pdf.kurul-toplantisi', ['toplanti' => $toplanti, 'firma' => $firma])->render();
+        $this->assertStringContainsString('Ali Müdür', $html);
+        $this->assertStringContainsString('Mehmet Uzman', $html);
+        $this->assertStringContainsString('Dr. Ayşe Hekim', $html);
+        // İmza föyü bölünmez kapta
+        $this->assertStringContainsString('<div style="page-break-inside:avoid">'."\n".'<h2>Katılımcı İmzaları</h2>', $html);
     }
 
     public function test_word_ciktisi_pdf_ile_ayni_icerikte_uretilir(): void
@@ -435,7 +465,7 @@ class KurulToplantisiTest extends TestCase
         $this->assertStringContainsString('<w:pageBreakBefore w:val="1"/>', $xml);              // kararlar yeni sayfada
         $this->assertGreaterThan(strpos($metin, 'Kararlar ve Takip'), strpos($metin, 'Katılımcı İmzaları'));
         $this->assertStringContainsString('Katılmayan: Gelmeyen Kişi', $metin);
-        $this->assertStringNotContainsString('Uzman Kişi', $metin);                  // kaşeli görevli adı yok
+        $this->assertStringContainsString('Uzman Kişi', $metin);                     // kaşeli görevlinin adı da basılır
     }
 
     public function test_pdf_basliginda_firma_logosu_yoksa_osgb_logosu_kullanilir(): void

@@ -101,7 +101,11 @@ class KurulUyeleri
             ->all();
     }
 
-    /** Ad/görevi kaşeyle belirlenen görevliler — tutanakta adları basılmaz. */
+    /**
+     * Kaşeli görevliler (başkan / İGU / hekim). Kurul tutanağında adları ARTIK
+     * basılır (kullanıcı isteği 06.10.2026); toplantı kaydında ad boşsa firma
+     * kaydından doldurulur, İGU/hekimde belge numarası görev sütununa eklenir.
+     */
     public const KASELI_ROLLER = ['baskan', 'sekreter', 'hekim'];
 
     /** Atama Yazıları rolü => kurul rolü (kurul rolü boş katılımcıda otomatik). */
@@ -141,8 +145,25 @@ class KurulUyeleri
             }
         }
 
+        $oneriler = $firma ? self::oneriler($firma) : [];
+        $profesyoneller = ['sekreter' => $firma?->igu, 'hekim' => $firma?->isyeriHekimi];
+
         return collect($toplanti->katilimcilar ?? [])
-            ->map(function (array $k) use ($anahtar, $calisanGorevi, $atamalar): array {
+            ->map(function (array $k) use ($anahtar, $calisanGorevi, $atamalar, $oneriler, $profesyoneller): array {
+                $kayitRolu = $k['rol'] ?? null;
+
+                // Ad boşsa firma kaydından: işveren vekili / atanmış İGU / işyeri hekimi
+                if (blank($k['ad_soyad'] ?? null) && in_array($kayitRolu, self::KASELI_ROLLER, true)) {
+                    $k['ad_soyad'] = $oneriler[$kayitRolu]['ad_soyad'] ?? '';
+                    $k['gorev'] = filled($k['gorev'] ?? null) ? $k['gorev'] : ($oneriler[$kayitRolu]['gorev'] ?? null);
+                }
+
+                // İGU / hekim: firmaya atanmış profesyonelse unvan + belge numarası
+                $profesyonel = $profesyoneller[$kayitRolu] ?? null;
+                $profesyonelGorevi = $profesyonel && $anahtar($profesyonel->ad_soyad) === $anahtar($k['ad_soyad'] ?? '')
+                    ? ($profesyonel->unvan ?: $profesyonel->tipEtiketi()).(filled($profesyonel->sertifika_no) ? ' — Belge No: '.$profesyonel->sertifika_no : '')
+                    : null;
+
                 $ad = $anahtar($k['ad_soyad'] ?? '');
                 $kisiAtamalari = array_values(array_unique($atamalar[$ad] ?? []));
                 $rol = filled($k['rol'] ?? null) && $k['rol'] !== 'diger' ? $k['rol'] : null;
@@ -159,8 +180,8 @@ class KurulUyeleri
 
                 return [
                     'ad_soyad' => (string) ($k['ad_soyad'] ?? ''),
-                    'ad_basilir' => ! in_array($rol, self::KASELI_ROLLER, true),
-                    'is_gorevi' => (string) ($calisanGorevi[$ad] ?? $k['gorev'] ?? '') ?: '—',
+                    'ad_basilir' => true,
+                    'is_gorevi' => (string) ($profesyonelGorevi ?? $calisanGorevi[$ad] ?? $k['gorev'] ?? '') ?: '—',
                     'kurul_gorevi' => $kurulGorevi,
                     'katildi' => (bool) ($k['katildi'] ?? false),
                 ];

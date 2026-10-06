@@ -92,7 +92,7 @@
 
 {{-- 1. SAYFA: katılanlar + gündem (konu başlıkları). Görevi = çalışan kaydı
      (işe giriş bildirgesi), Kuruldaki Görevi = kurul rolü / Atama Yazıları
-     (KurulUyeleri::tutanakKatilimcilari). Kaşeli görevlilerin adı basılmaz. --}}
+     (KurulUyeleri::tutanakKatilimcilari). Başkan/İGU/hekim adları da basılır (06.10.2026). --}}
 <h2>Toplantıya Katılanlar</h2>
 <table class="liste">
     <tr>
@@ -104,7 +104,7 @@
     @forelse ($katilanlar as $i => $k)
         <tr>
             <td class="ortala">{{ $i + 1 }}</td>
-            <td>{{ $k['ad_basilir'] ? $k['ad_soyad'] : '' }}</td>
+            <td>{{ $k['ad_soyad'] }}</td>
             <td>{{ $k['is_gorevi'] }}</td>
             <td>{{ $k['kurul_gorevi'] }}</td>
         </tr>
@@ -114,7 +114,7 @@
 </table>
 @if ($katilmayanlar)
     <div style="font-size:8.5px;color:#64748b;margin-top:4px">
-        Katılmayan: {{ collect($katilmayanlar)->map(fn ($k) => ($k['ad_basilir'] ? $k['ad_soyad'].' — ' : '').$k['kurul_gorevi'])->implode('; ') }}
+        Katılmayan: {{ collect($katilmayanlar)->map(fn ($k) => (filled($k['ad_soyad']) ? $k['ad_soyad'].' — ' : '').$k['kurul_gorevi'])->implode('; ') }}
     </div>
 @endif
 
@@ -155,8 +155,11 @@
     <div style="font-size:9.5px;white-space:pre-line">{{ $toplanti->notlar }}</div>
 @endif
 
-{{-- SON: katılanların ıslak imza yeri (kullanıcı kararı 06.10.2026). Tablo
-     bölünmesin diye satırlar page-break-inside:avoid. --}}
+{{-- SON: katılanların ıslak imza föyü, kararların hemen ardından (kullanıcı
+     kararı 06.10.2026). Föy BÖLÜNMEZ: sayfaya sığmıyorsa başlığıyla birlikte
+     bütün olarak sonraki sayfaya geçer (önceden başlık + 1 satır sayfa dibinde
+     kalıp gerisi ertesi sayfaya taşıyordu). --}}
+<div style="page-break-inside:avoid">
 <h2>Katılımcı İmzaları</h2>
 <div style="font-size:8.5px;color:#475569;margin-bottom:4px">
     Yukarıdaki kararlar toplantıya katılan kurul üyelerince alınmış ve imza altına alınmıştır.
@@ -171,7 +174,7 @@
     @forelse ($katilanlar as $i => $k)
         <tr style="page-break-inside:avoid">
             <td class="ortala" style="height:34px;vertical-align:middle">{{ $i + 1 }}</td>
-            <td style="vertical-align:middle">{{ $k['ad_basilir'] ? $k['ad_soyad'] : '' }}</td>
+            <td style="vertical-align:middle">{{ $k['ad_soyad'] }}</td>
             <td style="vertical-align:middle">{{ $k['kurul_gorevi'] }}</td>
             <td></td>
         </tr>
@@ -179,6 +182,7 @@
         <tr><td colspan="4" class="soluk">Katılımcı eklenmedi.</td></tr>
     @endforelse
 </table>
+</div>
 
 </body>
 </html>
