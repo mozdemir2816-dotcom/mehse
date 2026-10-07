@@ -5,6 +5,7 @@ namespace App\Filament\Concerns;
 use App\Models\ArsivDosya;
 use App\Models\Firma;
 use App\Support\ArsivKurali;
+use App\Filament\Support\DosyaKabul;
 use App\Support\ArsivYukleyici;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -50,15 +51,11 @@ trait HazirRaporYukleme
             ->modalSubmitActionLabel('Kaydet')
             ->stickyModalFooter()
             ->schema([
-                FileUpload::make('dosyalar')->storeFileNamesIn('dosya_adlari')
+                // MIME yerine uzantıyla sınırlanır — gerekçe DosyaKabul'de.
+                DosyaKabul::uygula(FileUpload::make('dosyalar')->storeFileNamesIn('dosya_adlari')
                     ->label('Dosya')
                     ->multiple()
-                    ->disk('public')->directory('arsiv/gecici')
-                    // MIME (acceptedFileTypes) yerine uzantı: paylaşımlı sunucunun
-                    // libmagic'i .docx/.xlsx'i application/zip ya da octet-stream
-                    // sanıp reddedebiliyor; telefonlar da tür bildirmeyebiliyor.
-                    ->rules(['extensions:'.implode(',', static::hazirRaporUzantilari())])
-                    ->extraInputAttributes(['accept' => '.'.implode(',.', static::hazirRaporUzantilari())])
+                    ->disk('public')->directory('arsiv/gecici'), static::hazirRaporUzantilari())
                     ->maxSize(20480)
                     ->maxFiles(10)
                     ->helperText('Birden fazla dosya seçerseniz tek ZIP olarak (yalnız fotoğraflarsa tek PDF) saklanır.')

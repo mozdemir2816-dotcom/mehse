@@ -47,6 +47,23 @@ class OfficeMimeTahmincisiTest extends TestCase
         array_map('unlink', [$docx, $xlsx, $pptx, $zip]);
     }
 
+    /**
+     * FilePond, input accept listesini acceptedFileTypes olarak okuyup dosya
+     * türünü (mimeTypeMap[uzantı]) bu listede birebir arar; yalnız uzantı
+     * içeren liste her dosyayı tarayıcıda reddediyordu (07.10.2026).
+     */
+    public function test_tarayici_tur_kontrolu_her_uzanti_icin_eslesir(): void
+    {
+        $uzantilar = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'webp'];
+        $kabul = explode(',', \App\Filament\Support\DosyaKabul::accept($uzantilar));
+
+        foreach (\App\Filament\Support\DosyaKabul::harita($uzantilar) as $uzanti => $mime) {
+            $this->assertContains($mime, $kabul, $uzanti.' türü kabul listesinde yok');
+            $this->assertContains('.'.$uzanti, $kabul);
+        }
+        $this->assertSame('application/vnd.openxmlformats-officedocument.wordprocessingml.document', \App\Filament\Support\DosyaKabul::harita(['docx'])['docx']);
+    }
+
     public function test_dosya_turu_dogrulamasi_word_dosyasini_kabul_eder(): void
     {
         $yol = $this->zip(['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml', 'docProps/app.xml', 'word/document.xml']);

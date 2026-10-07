@@ -436,12 +436,10 @@ class DofOlustur extends Page
                 ->modalSubmitActionLabel('Aktar')
                 ->stickyModalFooter()
                 ->schema([
-                    FileUpload::make('dosya')->storeFileNamesIn('dosya_adi')
+                    // MIME yerine uzantı — gerekçe DosyaKabul'de.
+                    \App\Filament\Support\DosyaKabul::uygula(FileUpload::make('dosya')->storeFileNamesIn('dosya_adi')
                         ->label('Word (.docx) veya Excel (.xlsx/.xls) dosyası')
-                        ->disk('local')->directory('dof-aktarim')
-                        // MIME yerine uzantı — bkz. HazirRaporYukleme
-                        ->rules(['extensions:docx,xlsx,xls'])
-                        ->extraInputAttributes(['accept' => '.docx,.xlsx,.xls'])
+                        ->disk('local')->directory('dof-aktarim'), ['docx', 'xlsx', 'xls'])
                         ->maxSize(20480)
                         ->required(),
                 ])
