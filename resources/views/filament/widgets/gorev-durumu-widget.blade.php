@@ -1,4 +1,4 @@
-<x-filament-widgets::widget>
+<x-filament-widgets::widget class="mehse-mobilde-gizle">
     @php
         $o = $this->ozet;
         $sure = $this->sure;

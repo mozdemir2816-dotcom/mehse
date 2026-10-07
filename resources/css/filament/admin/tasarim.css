@@ -418,9 +418,20 @@ html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1
 @media (max-width: 640px) {
     .mehse-hosgeldin {
         padding: 1.25rem;
+        gap: 1rem;
     }
 
+    /* Telefonda evrak uyumu halkası en üstte, küçültülmüş (kullanıcı:
+       telefonda yalnız ziyaret takvimi + evrak oranları görünsün). */
     .mehse-hosgeldin-halka {
+        order: -1;
+        width: 5.5rem;
+        height: 5.5rem;
+    }
+
+    /* Ana sayfa telefonda sade: görev panosu ve portföy özeti gizlenir,
+       karşılama bandı (evrak uyumu) + bu ayın ziyaret takvimi kalır. */
+    .mehse-ana-sayfa :is(.mehse-mobilde-gizle, .fi-wi-stats-overview) {
         display: none;
     }
 }

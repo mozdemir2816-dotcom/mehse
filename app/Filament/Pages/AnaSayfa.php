@@ -14,4 +14,10 @@ class AnaSayfa extends Dashboard
     protected static ?string $title = 'Ana Sayfa';
 
     protected static ?string $navigationLabel = 'Ana Sayfa';
+
+    /** Telefon görünümü kuralları bu sınıfa bağlı (tasarim.css — yalnız evrak uyumu + ziyaret takvimi). */
+    public function getPageClasses(): array
+    {
+        return [...parent::getPageClasses(), 'mehse-ana-sayfa'];
+    }
 }
