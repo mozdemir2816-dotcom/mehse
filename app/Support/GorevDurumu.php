@@ -191,7 +191,9 @@ class GorevDurumu
         $yaklasan = static::yaklasanGun();
 
         return collect(PortfoyKarne::firmaChecklistDetay($firma))
-            ->filter(fn (array $k) => $k['hazir'] && ! $k['takip'])
+            // Firmayı kapsamayan (muaf) kriter görev değildir; "yapılan" sayılırsa
+            // tamamlanma oranı Evrak uyumundan yüksek görünür.
+            ->filter(fn (array $k) => $k['hazir'] && ! $k['takip'] && ! $k['muaf'])
             ->map(function (array $k) use ($firma, $yaklasan): array {
                 [$sayfa, $dayanak] = static::KRITER_SAYFALARI[$k['anahtar']] ?? [null, null];
                 $vade = $k['vade_tarihi'];

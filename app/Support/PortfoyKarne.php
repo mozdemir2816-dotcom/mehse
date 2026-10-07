@@ -29,8 +29,9 @@ class PortfoyKarne
         $tamUyumlu = $firmalar->filter(fn (Firma $f) => static::firmaTamUyumluMu($f))->count();
 
         $kriterler = static::kriterler($userId);
-        // Yalnız takip edilen kriterler (iş kazası vb.) uyum yüzdesine girmez.
-        $hazirKriterler = array_filter($kriterler, fn ($k) => $k['hazir'] && ! $k['takip']);
+        // Yalnız takip edilen kriterler (iş kazası vb.) ve hiçbir firmayı kapsamayan
+        // kriterler (ör. 50+ çalışanı olmayan portföyde İSG Kurulu) uyum yüzdesine girmez.
+        $hazirKriterler = array_filter($kriterler, fn ($k) => $k['hazir'] && ! $k['takip'] && $k['kapsam'] > 0);
         $uyumYuzde = $hazirKriterler
             ? round(array_sum(array_column($hazirKriterler, 'yuzde')) / count($hazirKriterler))
             : 0;
@@ -72,6 +73,7 @@ class PortfoyKarne
                 'ikon' => $kriter['ikon'],
                 'tamam' => $tamam,
                 'toplam' => $kapsamSayi ?: $toplam,
+                'kapsam' => $kapsamSayi,
                 'yuzde' => $kapsamSayi > 0 ? (int) round($tamam / $kapsamSayi * 100) : 0,
                 'hazir' => (bool) $kriter['hazir'],
                 'takip' => $kriter['takip'],
@@ -335,6 +337,7 @@ class PortfoyKarne
                 'hazir' => (bool) $k['hazir'],
                 'takip' => $k['takip'],
                 'tamam' => $tamam,
+                'muaf' => $muaf,
                 'vade_tarihi' => $vadeTarihi,
                 'durum' => $durum,
             ];

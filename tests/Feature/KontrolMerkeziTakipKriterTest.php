@@ -113,4 +113,23 @@ class KontrolMerkeziTakipKriterTest extends TestCase
         $this->assertSame('tamamlandi', $this->satir($firma, 'ise_donus_muayenesi')['durum']);
         $this->assertSame('tamamlandi', $this->satir($firma, 'kaza_sonrasi_isbasi_egitimi')['durum']);
     }
+
+    public function test_hicbir_firmayi_kapsamayan_kriter_uyuma_girmez_muaf_kriter_gorev_sayilmaz(): void
+    {
+        // 10 çalışanlı firma: İSG Kurulu (50+) kapsam dışı.
+        $firma = Firma::factory()->for($this->uzman)->create(['calisan_sayisi' => 10]);
+        RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $tum = array_column(config('isg.kontrol_merkezi.kriterler'), 'anahtar');
+        KullaniciAyarlari::kaydet($this->uzman, [
+            'kontrol_haric' => array_values(array_diff($tum, ['risk_degerlendirmesi', 'isg_kurulu'])),
+        ]);
+
+        // Kapsamsız İSG Kurulu %0 olarak ortalamaya girseydi %50 olurdu.
+        $this->assertSame(100, (int) PortfoyKarne::ozet($this->uzman->id)['uyum_yuzde']);
+
+        // Ana Sayfa görevlerinde muaf İSG Kurulu "yapılan" diye listelenmez.
+        $kriterGorevleri = \App\Support\GorevDurumu::gorevler($this->uzman)->pluck('baslik')->all();
+        $this->assertNotContains('İSG Kurulu Toplantısı', $kriterGorevleri);
+        $this->assertContains('Risk Değerlendirmesi', $kriterGorevleri, 'Risk kriterinin adı değişmiş olabilir');
+    }
 }
