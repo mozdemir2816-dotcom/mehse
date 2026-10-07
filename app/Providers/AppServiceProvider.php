@@ -43,6 +43,12 @@ class AppServiceProvider extends ServiceProvider
         // XML basmadığı için kaçış genel olarak açık (Kurul/JSA/Talimat Word).
         \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
 
+        // Bazı .docx/.xlsx dosyalarını fileinfo "application/octet-stream" sanıyor;
+        // acceptedFileTypes (mimetypes:) gerçek Word dosyasını reddediyordu
+        // (07.10.2026 — Saha Gözlem Raporu yüklenemedi). ZIP içeriğinden tanıyan
+        // tahminci ilk sıraya kaydedilir; Office değilse fileinfo'ya düşer.
+        \Symfony\Component\Mime\MimeTypes::getDefault()->registerGuesser(new \App\Support\OfficeMimeTahmincisi);
+
         // Tüm açılır pencerelerde (modal) başlık ve Kaydet/İptal şeridi sabit:
         // uzun formda kaydırınca da Kaydet ekranda kalır (kullanıcı isteği
         // 06.10.2026 — Çalışan Ekle, Kurul vb. "Kaydet aşağıda kalıyor").
