@@ -99,6 +99,31 @@ class DofTabloAktarimTest extends TestCase
         $this->assertSame('devam_ediyor', $m2['durum']);
     }
 
+    /** Hücreye gömülü fotoğraf VML (v:imagedata — PhpWord / eski uyumluluk modu) olarak da okunur. */
+    public function test_word_hucresindeki_vml_fotografi_maddeye_eklenir(): void
+    {
+        $resim = UploadedFile::fake()->image('saha.jpg', 120, 90);
+
+        $word = new PhpWord;
+        $t = $word->addSection()->addTable();
+        $t->addRow();
+        foreach (['#', 'Tespit', 'Öncelik', 'Öneri / Düzeltici Faaliyet', 'Sorumlu', 'Termin', 'Durum', 'Foto'] as $b) {
+            $t->addCell()->addText($b);
+        }
+        $t->addRow();
+        foreach (['1', 'Korkuluk yok', 'Yüksek', 'Korkuluk kurulmalı', 'İşveren', '15.10.2026', 'Açık'] as $d) {
+            $t->addCell()->addText($d);
+        }
+        $t->addCell()->addImage($resim->getPathname(), ['width' => 60]);
+        $yol = tempnam(sys_get_temp_dir(), 'dof').'.docx';
+        WordIO::createWriter($word, 'Word2007')->save($yol);
+
+        $madde = DofTabloOkuyucu::oku($yol)['maddeler'][0];
+
+        $this->assertNotNull($madde['foto_yolu']);
+        Storage::disk('public')->assertExists($madde['foto_yolu']);
+    }
+
     public function test_excel_tablosu_sutun_sirasi_farkli_olsa_da_okunur(): void
     {
         $kitap = new Spreadsheet;

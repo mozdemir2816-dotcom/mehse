@@ -268,6 +268,7 @@ class DofTabloOkuyucu
         $xp->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
         $xp->registerNamespace('a', 'http://schemas.openxmlformats.org/drawingml/2006/main');
         $xp->registerNamespace('r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
+        $xp->registerNamespace('v', 'urn:schemas-microsoft-com:vml');
 
         $tablolar = [];
 
@@ -296,7 +297,8 @@ class DofTabloOkuyucu
                     }
 
                     $resim = null;
-                    $blip = $xp->query('.//a:blip/@r:embed', $tc)->item(0);
+                    // DrawingML (Word, python-docx) ya da VML (eski uyumluluk modu, PhpWord)
+                    $blip = $xp->query('.//a:blip/@r:embed|.//v:imagedata/@r:id', $tc)->item(0);
 
                     if ($blip && isset($iliskiler[$blip->nodeValue])) {
                         $resim = static::resimKaydet($zip->getFromName('word/'.$iliskiler[$blip->nodeValue]), $iliskiler[$blip->nodeValue]);
