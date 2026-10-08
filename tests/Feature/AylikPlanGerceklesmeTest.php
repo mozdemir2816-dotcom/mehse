@@ -65,18 +65,51 @@ class AylikPlanGerceklesmeTest extends TestCase
         $this->ziyaretler($b, [['2026-10-08', 'tamamlandi']]);
         $this->ziyaretler($c, [['2026-10-20', 'planlandi']]);
         $this->ziyaretler($d, [['2026-10-28', 'bos']]); // tarih girilmiş = gidilecek
-        // Kapsam dışı: başka ay ve başka uzman
-        $this->ziyaretler(Firma::factory()->for($this->uzman)->create(), [['2026-09-10', 'tamamlandi']]);
+        // E: yalnız Eylül'de ziyaret → Ekim'de planlanmamış (her aktif firmaya ayda bir ziyaret gerekir)
+        $this->ziyaretler(Firma::factory()->for($this->uzman)->create(['unvan' => 'E Firma']), [['2026-09-10', 'tamamlandi']]);
+        // Kapsam dışı: pasif firma ve başka uzman
+        Firma::factory()->for($this->uzman)->create(['unvan' => 'Pasif Firma', 'aktif' => false]);
         $this->ziyaretler(Firma::factory()->for(User::factory())->create(), [['2026-10-10', 'planlandi']]);
 
         $oz = Livewire::test(BuAyZiyaretlerWidget::class)->instance()->ziyaretOzeti();
 
-        $this->assertSame(4, $oz['toplam']);
+        $this->assertSame(5, $oz['toplam'], 'tüm aktif firmalar');
         $this->assertSame(2, $oz['gidilen']);
-        $this->assertSame(50, $oz['yuzde']);
+        $this->assertSame(40, $oz['yuzde']);
         $this->assertSame(48, $oz['takvim_yuzde'], '15 Ekim = 31 günün %48i');
-        // Gidilmeyenler önce
+        // Planlılar: gidilmeyenler önce
         $this->assertSame(['C Firma', 'D Firma', 'A Firma', 'B Firma'], array_column($oz['firmalar'], 'firma'));
+        $this->assertSame(['E Firma'], array_column($oz['plansiz'], 'firma'));
+    }
+
+    public function test_planlanmamis_firmalar_uyarida_adlariyla_gorunur(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planlı Firma']);
+        Firma::factory()->for($this->uzman)->create(['unvan' => 'Unutulan Firma']);
+        $this->ziyaretler($a, [['2026-10-20', 'planlandi']]);
+
+        Livewire::test(BuAyZiyaretlerWidget::class)
+            ->assertSee('ziyaret planlanmamış 1 firma')
+            ->assertSee('Unutulan Firma')
+            ->assertSee('/ziyaret-programi?firma=', false);
+    }
+
+    public function test_tamamlanan_ziyaretler_gizlenir_istenince_gosterilir(): void
+    {
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'Gidilen Firma']);
+        $b = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bekleyen Firma']);
+        $this->ziyaretler($a, [['2026-10-03', 'tamamlandi']]);
+        $this->ziyaretler($b, [['2026-10-20', 'planlandi']]);
+
+        $w = Livewire::test(BuAyZiyaretlerWidget::class);
+        $this->assertSame(['Bekleyen Firma'], array_map(fn ($z) => $z['firma']->unvan, $w->instance()->ayinZiyaretleri()));
+        $this->assertSame(['2026-10-20'], array_keys($w->instance()->takvimGunleri()));
+        $w->assertSee('Tamamlananları göster (1)');
+
+        $w->call('tamamlananlariDegistir');
+        $this->assertCount(2, $w->instance()->ayinZiyaretleri());
+        $this->assertCount(2, $w->instance()->takvimGunleri());
+        $w->assertSee('Tamamlananları gizle');
     }
 
     public function test_ekranda_cumle_ve_yuzde_gorunur_ay_degisince_yenilenir(): void

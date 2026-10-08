@@ -86,17 +86,38 @@
                     @endif
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
-                    @foreach ($oz['firmalar'] as $f)
-                        <span style="font-size:.72rem;border-radius:.4rem;padding:.12rem .5rem;
-                            border:1px solid {{ $f['gidildi'] ? 'rgb(21 128 61)' : 'rgb(156 163 175)' }};
-                            color:{{ $f['gidildi'] ? 'rgb(21 128 61)' : 'inherit' }}">
-                            {{ $f['gidildi'] ? '✓' : '○' }} {{ \Illuminate\Support\Str::limit($f['firma'], 30) }}
-                        </span>
-                    @endforeach
-                </div>
+                {{-- Tamamlananlar gösterilmez (kullanıcı 08.10.2026) — yalnız planlı ama henüz gidilmeyenler --}}
+                @php $bekleyen = collect($oz['firmalar'])->where('gidildi', false); @endphp
+                @if ($bekleyen->isNotEmpty())
+                    <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.5rem">Planlı, henüz gidilmeyen ({{ $bekleyen->count() }}):</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.25rem">
+                        @foreach ($bekleyen as $f)
+                            <span style="font-size:.72rem;border-radius:.4rem;padding:.12rem .5rem;border:1px solid rgb(156 163 175)">
+                                ○ {{ \Illuminate\Support\Str::limit($f['firma'], 30) }}
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
             @endif
         </div>
+
+        {{-- Her aktif firmaya ayda en az bir ziyaret — o ay hiç planı olmayanlar --}}
+        @if ($oz['plansiz'])
+            <div style="border:1px solid rgb(220 38 38 / .35);background:rgb(220 38 38 / .05);border-radius:.6rem;padding:.7rem 1rem;margin-bottom:1rem">
+                <div style="font-size:.85rem;font-weight:700;color:rgb(185 28 28)">
+                    ⚠ {{ $ayBaslangic->translatedFormat('F') }} ayında ziyaret planlanmamış {{ count($oz['plansiz']) }} firma
+                </div>
+                <div style="font-size:.72rem;color:rgb(107 114 128);margin:.15rem 0 .45rem">Her firmaya ayda en az bir ziyaret gerekir. Firmaya tıklayarak Ziyaret Programı'nda tarih girin.</div>
+                <div style="display:flex;flex-wrap:wrap;gap:.35rem">
+                    @foreach ($oz['plansiz'] as $f)
+                        <a href="{{ \App\Filament\Pages\ZiyaretProgrami::getUrl(['firma' => $f['firma_id']]) }}"
+                           style="font-size:.72rem;border-radius:.4rem;padding:.15rem .55rem;border:1px solid rgb(220 38 38 / .5);color:rgb(185 28 28);text-decoration:none">
+                            + {{ \Illuminate\Support\Str::limit($f['firma'], 34) }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <div style="display:grid;grid-template-columns:16rem 1fr;gap:1.25rem">
             <div>
@@ -121,7 +142,7 @@
                     @for ($gun = 1; $gun <= $gunSayisi; $gun++)
                         @php
                             $tarih = $ayBaslangic->copy()->day($gun)->toDateString();
-                            $doluMu = ! empty($gunler[$tarih]);
+                            $doluMu = isset($this->takvimGunleri[$tarih]);
                             $seciliMi = $tarih === $seciliTarih;
                         @endphp
                         <button type="button" wire:click="gunSec('{{ $tarih }}')"
@@ -141,6 +162,13 @@
             </div>
 
             <div style="overflow-x:auto">
+                @if ($this->tamamlananSayisi > 0)
+                    <div style="text-align:right;margin-bottom:.4rem">
+                        <button type="button" wire:click="tamamlananlariDegistir" style="font-size:.72rem;padding:.15rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">
+                            {{ $tamamlananlariGoster ? 'Tamamlananları gizle' : 'Tamamlananları göster ('.$this->tamamlananSayisi.')' }}
+                        </button>
+                    </div>
+                @endif
                 @if (empty($ziyaretler))
                     <div style="text-align:center;padding:2rem;color:rgb(107 114 128);font-size:.85rem">
                         {{ $seciliTarih ? 'Bu tarihte planlanan ziyaret yok.' : 'Bu ay için planlanan ziyaret bulunmuyor.' }}

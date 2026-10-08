@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Firma;
 use App\Models\YillikPlan;
 use App\Models\ZiyaretProgrami;
 use App\Support\ZiyaretTakvimi;
@@ -25,6 +26,9 @@ class BuAyZiyaretlerWidget extends Widget
     public string $gosterilenAy = '';
 
     public ?string $seciliTarih = null;
+
+    /** Tamamlanan ziyaretler varsayılan gizli (kullanıcı 08.10.2026); yanlışlıkla işaretleneni geri almak için açılır. */
+    public bool $tamamlananlariGoster = false;
 
     public function mount(): void
     {
@@ -58,6 +62,10 @@ class BuAyZiyaretlerWidget extends Widget
             }
 
             foreach ($oGunkuZiyaretler as $z) {
+                if (! $this->tamamlananlariGoster && ($z['durum'] ?? 'bos') === 'tamamlandi') {
+                    continue;
+                }
+
                 $sonuc[] = $z + ['tarih' => $tarih];
             }
         }
@@ -65,6 +73,39 @@ class BuAyZiyaretlerWidget extends Widget
         usort($sonuc, fn (array $a, array $b) => $a['tarih'] <=> $b['tarih']);
 
         return $sonuc;
+    }
+
+    /** Takvimde işaretlenecek günler — tamamlananlar gizliyken yalnız bekleyen ziyareti olan günler. @return array<string, bool> */
+    #[Computed]
+    public function takvimGunleri(): array
+    {
+        $gunler = [];
+
+        foreach ($this->gunlukGruplar as $tarih => $ziyaretler) {
+            if (str_starts_with($tarih, $this->gosterilenAy)
+                && collect($ziyaretler)->contains(fn ($z) => $this->tamamlananlariGoster || ($z['durum'] ?? 'bos') !== 'tamamlandi')) {
+                $gunler[$tarih] = true;
+            }
+        }
+
+        return $gunler;
+    }
+
+    /** Gösterilen aydaki tamamlanan ziyaret sayısı (gizleme anahtarı için). */
+    #[Computed]
+    public function tamamlananSayisi(): int
+    {
+        return collect($this->gunlukGruplar)
+            ->filter(fn ($_, string $tarih) => str_starts_with($tarih, $this->gosterilenAy))
+            ->flatten(1)
+            ->where('durum', 'tamamlandi')
+            ->count();
+    }
+
+    public function tamamlananlariDegistir(): void
+    {
+        $this->tamamlananlariGoster = ! $this->tamamlananlariGoster;
+        unset($this->ayinZiyaretleri, $this->takvimGunleri);
     }
 
     /**
@@ -101,19 +142,21 @@ class BuAyZiyaretlerWidget extends Widget
     }
 
     /**
-     * Gösterilen ayda gidilmesi gereken firmaların yüzde kaçına gidildi —
-     * Ziyaret Programı'nda o ay tarihi girilmiş firmalar "gidilecek", en az bir
-     * ziyareti "Tamamlandı" olanlar "gidildi" sayılır (firma başına bir kez).
-     * Takvim yüzdesi: ayın geçen kısmı (geçmiş ay 100, gelecek ay 0) — geride mi
-     * ileride mi kıyası için.
+     * Gösterilen ayda gidilmesi gereken firmaların yüzde kaçına gidildi. Her
+     * aktif firmaya ayda en az bir ziyaret gerekir (kullanıcı 08.10.2026; önce
+     * yalnız tarihi girilmiş firmalar sayılıyordu) → toplam = aktif firmalar,
+     * gidildi = o ay en az bir ziyareti "Tamamlandı". Ziyaret Programı'nda o ay
+     * hiç tarihi olmayan aktif firmalar "plansiz" olarak ayrıca döner.
+     * Takvim yüzdesi: ayın geçen kısmı (geçmiş ay 100, gelecek ay 0).
      *
-     * @return array{toplam: int, gidilen: int, yuzde: ?int, takvim_yuzde: int, firmalar: array<int, array{firma: string, firma_id: int, gidildi: bool}>}
+     * @return array{toplam: int, gidilen: int, yuzde: ?int, takvim_yuzde: int, firmalar: array<int, array{firma: string, firma_id: int, gidildi: bool}>, plansiz: array<int, array{firma: string, firma_id: int}>}
      */
     #[Computed]
     public function ziyaretOzeti(): array
     {
         $ayBasi = Carbon::parse($this->gosterilenAy.'-01');
 
+        // Planlı firmalar (o ay tarihli en az bir ziyaret)
         $firmalar = collect($this->gunlukGruplar)
             ->filter(fn ($_, string $tarih) => str_starts_with($tarih, $this->gosterilenAy))
             ->flatten(1)
@@ -127,7 +170,13 @@ class BuAyZiyaretlerWidget extends Widget
             ->sortBy([['gidildi', 'asc'], ['firma', 'asc']])
             ->values();
 
-        $toplam = $firmalar->count();
+        $aktifFirmalar = Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->get(['id', 'unvan']);
+        $plansiz = $aktifFirmalar->whereNotIn('id', $firmalar->pluck('firma_id'))
+            ->map(fn (Firma $f) => ['firma' => (string) $f->unvan, 'firma_id' => $f->id])
+            ->values();
+
+        // Pasif ama o ay ziyaret planlanmış firma da gidilecekler arasında kalır
+        $toplam = $aktifFirmalar->pluck('id')->merge($firmalar->pluck('firma_id'))->unique()->count();
         $gidilen = $firmalar->where('gidildi', true)->count();
 
         $bugun = now();
@@ -143,6 +192,7 @@ class BuAyZiyaretlerWidget extends Widget
             'yuzde' => $toplam ? (int) round($gidilen * 100 / $toplam) : null,
             'takvim_yuzde' => $takvim,
             'firmalar' => $firmalar->all(),
+            'plansiz' => $plansiz->all(),
         ];
     }
 
@@ -186,7 +236,7 @@ class BuAyZiyaretlerWidget extends Widget
 
     private function yenile(): void
     {
-        unset($this->ayinZiyaretleri, $this->ziyaretOzeti, $this->ayOzeti, $this->sureEksikleri);
+        unset($this->ayinZiyaretleri, $this->ziyaretOzeti, $this->ayOzeti, $this->sureEksikleri, $this->takvimGunleri, $this->tamamlananSayisi);
     }
 
     /** Planlanmış ama tarihi geçmiş ve tamamlanmamış ziyaret. */
