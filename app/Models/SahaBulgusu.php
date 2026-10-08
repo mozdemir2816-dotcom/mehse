@@ -62,6 +62,13 @@ class SahaBulgusu extends Model
             $b->bulgu_no ??= 'SB-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 4, '0', STR_PAD_LEFT);
         });
 
+        // Kapatma / yeniden açma bağlı DÖF maddelerine yansır.
+        static::updated(function (SahaBulgusu $b): void {
+            if ($b->wasChanged('durum')) {
+                \App\Support\BulguHavuzu::dofaYansit($b);
+            }
+        });
+
         static::deleting(function (SahaBulgusu $b): void {
             foreach ($b->fotograflar ?? [] as $yol) {
                 if (Storage::disk('public')->exists($yol)) {

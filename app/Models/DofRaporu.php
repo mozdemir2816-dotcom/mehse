@@ -24,6 +24,9 @@ class DofRaporu extends Model
         static::saving(function (DofRaporu $d): void {
             $d->belge_no ??= 'DOF-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
         });
+
+        // Maddeler ortak saha bulgularına bağlanır, madde durumu bulguya geçer.
+        static::saved(fn (DofRaporu $d) => \App\Support\BulguHavuzu::esle($d));
     }
 
     public function firma(): BelongsTo

@@ -470,6 +470,10 @@ class DofOlustur extends Page
         ]);
         $d->save();
 
+        // Kayıt maddeleri ortak bulgulara bağladı (bulgu_id); sayfa da bunu taşısın,
+        // tekrar kaydedilirse aynı bulgular kullanılsın.
+        $this->maddeler = $d->fresh()->maddeler ?? $this->maddeler;
+
         // Olay Kaydı'ndan gelen DÖF → olayın "DÖF" sütununa bağla (ilk DÖF korunur).
         if ($this->kaynakOlayKaydiId) {
             OlayKaydi::where('firma_id', $this->firma->id)
@@ -491,6 +495,25 @@ class DofOlustur extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('bulgulardanEkle')
+                ->label('Saha Bulgularından Ekle')
+                ->icon('heroicon-o-queue-list')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalDescription('Saha Bulguları\'nda kayıtlı açık bulgular DÖF maddesi olarak eklenir; madde tamamlanınca bulgu da kapanır.')
+                ->schema([
+                    \Filament\Forms\Components\CheckboxList::make('idler')
+                        ->label('Açık bulgular')
+                        ->options(fn () => \App\Support\BulguHavuzu::secenekler($this->firma->id, $this->maddeler))
+                        ->required()
+                        ->bulkToggleable(),
+                ])
+                ->action(function (array $data): void {
+                    $eklenen = \App\Models\SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereIn('id', $data['idler'])->orderBy('id')->get();
+                    $this->maddeler = [...$this->maddeler, ...$eklenen->map(fn (\App\Models\SahaBulgusu $b) => \App\Support\BulguDonusturucu::dofMaddesi($b, bolumOnEki: true))->all()];
+                    Notification::make()->title($eklenen->count().' bulgu eklendi')->success()->send();
+                }),
+
             Action::make('tablodanAktar')
                 ->label("Word/Excel'den Aktar")
                 ->icon('heroicon-o-table-cells')

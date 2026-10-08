@@ -7,6 +7,9 @@ use App\Filament\Support\ImzaSecenegi;
 use App\Models\DofRaporu;
 use App\Models\Firma;
 use App\Models\SahaAnalizi;
+use App\Models\SahaBulgusu;
+use App\Support\BulguDonusturucu;
+use App\Support\BulguHavuzu;
 use App\Support\GeminiSahaAnalizi;
 use App\Support\SahaAnaliziUretici;
 use App\Support\TurkceMetin;
@@ -322,6 +325,7 @@ class AiSahaAnalizi extends Page
     private static function bosBulgu(array $deger = []): array
     {
         return array_merge([
+            'bulgu_id' => null,   // ortak saha bulgusu bağı (BulguHavuzu)
             'foto_yolu' => null,
             'bina_bolge' => null,
             'kategori' => null,
@@ -625,6 +629,7 @@ class AiSahaAnalizi extends Page
                 $skor = SahaAnalizi::fineKinneySkoru($b);
 
                 return [
+                    'bulgu_id' => $b['bulgu_id'] ?? null,   // ortak saha bulgusu bağı (BulguHavuzu)
                     'foto_yolu' => $b['foto_yolu'] ?? null,
                     'bina_bolge' => $b['bina_bolge'] ?? null,
                     'kategori' => $b['kategori'] ?? null,
@@ -828,6 +833,11 @@ class AiSahaAnalizi extends Page
         }
 
         $s = $this->taslagiKaydet(sessiz: true);
+
+        // Maddeler DÖF açılmadan önce ortak bulgulara bağlanır; DÖF maddeleri aynı
+        // bulguyu gösterir (kopya bulgu açılmaz).
+        BulguHavuzu::esle($s);
+        $s->refresh();
         $dof = $this->dofAc($s);
 
         $s->update([
@@ -852,6 +862,7 @@ class AiSahaAnalizi extends Page
         $kendim = Filament::auth()->user()?->name ?: $this->gozetimYapan;
 
         $maddeler = collect($s->bulgular)->filter(fn ($b) => $b['dof_acilacak'] ?? false)->map(fn ($b) => [
+            'bulgu_id' => $b['bulgu_id'] ?? null,
             'tespit' => "[{$s->belge_no}] ".(filled($b['bina_bolge']) ? "[{$b['bina_bolge']}] " : '').$b['tespit'],
             'oncelik' => match ((int) $b['risk_derecesi']) {
                 1 => 'kritik',
@@ -900,6 +911,24 @@ class AiSahaAnalizi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('bulgulardanEkle')
+                ->label('Saha Bulgularından Ekle')
+                ->icon('heroicon-o-queue-list')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null && ! $this->kilitliMi())
+                ->modalDescription('Saha Bulguları\'nda kayıtlı açık bulgular bu rapora uygunsuzluk olarak eklenir; aynı kayıt üzerinden takip edilir.')
+                ->schema([
+                    \Filament\Forms\Components\CheckboxList::make('idler')
+                        ->label('Açık bulgular')
+                        ->options(fn () => BulguHavuzu::secenekler($this->firma->id, $this->bulgular))
+                        ->required()
+                        ->bulkToggleable(),
+                ])
+                ->action(function (array $data): void {
+                    $eklenen = SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereIn('id', $data['idler'])->get();
+                    $this->bulgular = [...$this->bulgular, ...$eklenen->map(fn (SahaBulgusu $b) => static::bosBulgu(BulguDonusturucu::gozlemMaddesi($b)))->all()];
+                    Notification::make()->title($eklenen->count().' bulgu eklendi')->success()->send();
+                }),
             $this->hazirRaporYukleAction(),
             Action::make('pdf')
                 ->label(fn () => $this->kilitliMi() ? 'PDF İndir' : 'Önizle / PDF (Taslak)')

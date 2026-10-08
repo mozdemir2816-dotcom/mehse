@@ -22,6 +22,12 @@ class TespitOneriDefteri extends Model
         'maddeler' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        // Maddeler ortak saha bulgularına bağlanır (BulguHavuzu).
+        static::saved(fn (TespitOneriDefteri $d) => \App\Support\BulguHavuzu::esle($d));
+    }
+
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);

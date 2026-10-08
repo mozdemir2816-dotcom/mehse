@@ -45,9 +45,22 @@ class BulguDonusturucu
             'kok_neden' => static::metin($m['kok_neden'] ?? null),
             'duzeltici' => static::metin($m['duzeltici'] ?? null),
             'onleyici' => static::metin($m['onleyici'] ?? null),
-            'kapanis_tarihi' => $durum === 'kapandi' ? static::tarih($m['kapanis_tarihi'] ?? null) : null,
-            'kapanis_notu' => static::metin($m['kapanis_notu'] ?? null),
+            // Ziyaret Modu "kapatma_*", diğerleri "kapanis_*" yazar
+            'kapanis_tarihi' => $durum === 'kapandi' ? static::tarih($m['kapanis_tarihi'] ?? ($m['kapatma_tarihi'] ?? null)) : null,
+            'kapanis_notu' => static::metin($m['kapanis_notu'] ?? ($m['kapatma_notu'] ?? null)),
         ];
+    }
+
+    /** DÖF madde durumu → bulgu durumu. */
+    public static function dofDurumundan(?string $durum): string
+    {
+        return self::DOF_DURUM[$durum ?? 'acik'] ?? 'acik';
+    }
+
+    /** Bulgu durumu → DÖF madde durumu. */
+    public static function dofDurumu(string $bulguDurumu): string
+    {
+        return array_search($bulguDurumu, self::DOF_DURUM, true) ?: 'acik';
     }
 
     /** @return array<string, mixed> SahaBulgusu alanları */
@@ -56,9 +69,12 @@ class BulguDonusturucu
         $oncelik = self::DERECE_ONCELIK[(int) ($m['risk_derecesi'] ?? 3)] ?? 'orta';
         [$olasilik, $siddet] = SahaBulgusu::onceliktenRisk($oncelik);
 
+        // Sayfa durumunda "oneriler_metni", kayıtlı raporda "oneriler" dizisi
+        $oneriler = $m['oneriler_metni'] ?? (is_array($m['oneriler'] ?? null) ? implode("\n", $m['oneriler']) : ($m['oneri'] ?? null));
+
         return [
             'uygunsuzluk' => trim((string) ($m['tespit'] ?? '')),
-            'aksiyon' => static::metin($m['oneriler_metni'] ?? ($m['oneri'] ?? null)),
+            'aksiyon' => static::metin($oneriler),
             'yasal_gerekce' => static::metin($m['yasal_gerekce'] ?? null),
             'bolum' => static::metin($m['bina_bolge'] ?? null),
             'kategori' => static::metin($m['kategori'] ?? null),
@@ -97,23 +113,70 @@ class BulguDonusturucu
      *
      * @return array<string, mixed>
      */
-    public static function dofMaddesi(SahaBulgusu $b): array
+    public static function dofMaddesi(SahaBulgusu $b, bool $bolumOnEki = false): array
     {
-        return array_filter([
+        // DÖF ekranı ve PDF'i çekirdek anahtarların hep var olmasını bekler (boşsa null);
+        // isteğe bağlı olanlar yalnız doluysa eklenir.
+        return [
             'bulgu_id' => $b->id,
-            'tespit' => $b->uygunsuzluk,
+            'tespit' => trim(($bolumOnEki && $b->bolum ? "[{$b->bolum}] " : '').$b->uygunsuzluk),
             'oncelik' => $b->oncelikAnahtari(),
             'oneri' => $b->aksiyon,
             'sorumlu' => $b->sorumlu,
             'termin' => $b->termin?->toDateString(),
             'durum' => array_search($b->durum, self::DOF_DURUM, true) ?: 'acik',
             'foto_yolu' => ($b->fotograflar ?? [])[0] ?? null,
+        ] + array_filter([
             'kok_neden' => $b->kok_neden,
             'duzeltici' => $b->duzeltici,
             'onleyici' => $b->onleyici,
             'kapanis_tarihi' => $b->kapanis_tarihi?->toDateString(),
             'kapanis_notu' => $b->kapanis_notu,
         ], fn ($v) => $v !== null && $v !== '');
+    }
+
+    /**
+     * Bulgu → Saha Gözlem Raporu madde dizisi (AiSahaAnalizi bosBulgu alanları).
+     * Bulgu zaten değerlendirilmiş sayıldığı için "onaylandi" gelir; Fine-Kinney
+     * alanları boş, risk derecesi öncelikten.
+     *
+     * @return array<string, mixed>
+     */
+    public static function gozlemMaddesi(SahaBulgusu $b): array
+    {
+        return [
+            'bulgu_id' => $b->id,
+            'foto_yolu' => ($b->fotograflar ?? [])[0] ?? null,
+            'bina_bolge' => $b->bolum ?: $b->gozlem_konumu,
+            'kategori' => $b->kategori,
+            'tespit' => $b->uygunsuzluk,
+            'oneriler_metni' => (string) $b->aksiyon,
+            'yasal_gerekce' => $b->yasal_gerekce,
+            'olasilik' => null,
+            'frekans' => null,
+            'siddet' => null,
+            'risk_derecesi' => array_flip(self::DERECE_ONCELIK)[$b->oncelikAnahtari()] ?? 3,
+            'durum' => 'onaylandi',
+            'kaynak' => 'bulgu',
+            'dof_acilacak' => false,
+            'dof_sorumlu_tipi' => 'kendim',
+            'dof_sorumlu' => null,
+            'dof_termin' => $b->termin?->toDateString(),
+            'dof_hedef_skor' => null,
+        ];
+    }
+
+    /** Bulgu → Tespit ve Öneri Defteri madde dizisi. @return array<string, mixed> */
+    public static function tespitOneriMaddesi(SahaBulgusu $b): array
+    {
+        return [
+            'bulgu_id' => $b->id,
+            'tespit' => $b->uygunsuzluk,
+            'oneri' => (string) $b->aksiyon,
+            'dayanak' => $b->yasal_gerekce,
+            'oncelik' => $b->oncelikAnahtari(),
+            'foto_yolu' => ($b->fotograflar ?? [])[0] ?? null,
+        ];
     }
 
     private static function oncelik(mixed $deger): string

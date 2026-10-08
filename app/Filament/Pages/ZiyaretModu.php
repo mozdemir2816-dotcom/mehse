@@ -176,11 +176,16 @@ class ZiyaretModu extends Page
     public function acikBulgular(): Collection
     {
         return $this->firma
-            ? SahaBulgusu::query()->where('firma_id', $this->firma->id)->where('durum', 'acik')->orderByRaw('termin is null')->orderBy('termin')->get()
+            ? SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereIn('durum', ['acik', 'devam_ediyor'])->orderByRaw('termin is null')->orderBy('termin')->get()
             : collect();
     }
 
-    /** @return Collection<int, array{rapor_id: int, index: int, belge_no: ?string, madde: array<string, mixed>}> açık DÖF maddeleri */
+    /**
+     * Saha bulgusuna bağlanmamış (eski) açık DÖF maddeleri — bağlı olanlar
+     * bulgu olarak listelenir, çift görünmez (BulguHavuzu, 08.10.2026).
+     *
+     * @return Collection<int, array{rapor_id: int, index: int, belge_no: ?string, madde: array<string, mixed>}>
+     */
     #[Computed]
     public function acikDofler(): Collection
     {
@@ -191,7 +196,7 @@ class ZiyaretModu extends Page
         return DofRaporu::query()->where('firma_id', $this->firma->id)->get()
             ->flatMap(fn (DofRaporu $r) => collect($r->maddeler ?? [])
                 ->map(fn ($m, $i) => ['rapor_id' => $r->id, 'index' => $i, 'belge_no' => $r->belge_no, 'madde' => $m])
-                ->filter(fn ($s) => ($s['madde']['durum'] ?? 'acik') !== 'tamamlandi'))
+                ->filter(fn ($s) => ($s['madde']['durum'] ?? 'acik') !== 'tamamlandi' && empty($s['madde']['bulgu_id'])))
             ->sortBy(fn ($s) => $s['madde']['termin'] ?? '9999-12-31')
             ->values();
     }
@@ -220,7 +225,8 @@ class ZiyaretModu extends Page
             'bulgu_kapanan' => SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereDate('kapanis_tarihi', $bugun)->count(),
             'bulgu_yeni' => SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereDate('created_at', $bugun)->count(),
             'dof_kapanan' => DofRaporu::query()->where('firma_id', $this->firma->id)->get()
-                ->sum(fn (DofRaporu $r) => collect($r->maddeler ?? [])->where('kapatma_tarihi', $bugun)->count()),
+                // Bulguya bağlı maddenin kapanışı bulgu_kapanan'da sayılır
+                ->sum(fn (DofRaporu $r) => collect($r->maddeler ?? [])->where('kapatma_tarihi', $bugun)->filter(fn ($m) => empty($m['bulgu_id']))->count()),
             'gozlem' => SahaAnalizi::query()->where('firma_id', $this->firma->id)->whereDate('created_at', $bugun)->count(),
         ];
     }

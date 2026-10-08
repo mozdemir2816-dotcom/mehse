@@ -438,12 +438,7 @@ class HizliSahaBulgusu extends Page
         session(['dof_aktarim' => [
             'firma_id' => $bulgular->first()->firma_id,
             'kaynak' => $bulgular->count() === 1 ? 'Saha Bulgusu '.$bulgular->first()->bulgu_no : 'Saha Bulguları',
-            'maddeler' => $bulgular->map(function (SahaBulgusu $b): array {
-                $m = BulguDonusturucu::dofMaddesi($b);
-                $m['tespit'] = trim(($b->bolum ? "[{$b->bolum}] " : '').$b->uygunsuzluk);
-
-                return $m;
-            })->all(),
+            'maddeler' => $bulgular->map(fn (SahaBulgusu $b) => BulguDonusturucu::dofMaddesi($b, bolumOnEki: true))->all(),
         ]]);
 
         return $this->redirect(DofOlustur::getUrl());

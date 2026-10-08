@@ -33,6 +33,13 @@ class SahaAnalizi extends Model
         static::saving(function (SahaAnalizi $s): void {
             $s->belge_no ??= 'SAHA-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
         });
+
+        // Taslak maddeler sık değişir; rapor tamamlanınca ortak bulgulara bağlanır.
+        static::saved(function (SahaAnalizi $s): void {
+            if ($s->tamamlandiMi()) {
+                \App\Support\BulguHavuzu::esle($s);
+            }
+        });
     }
 
     public function firma(): BelongsTo

@@ -237,6 +237,26 @@ class TespitOneriDefteri extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('bulgulardanEkle')
+                ->label('Saha Bulgularından Ekle')
+                ->icon('heroicon-o-queue-list')
+                ->color('gray')
+                ->visible(fn () => $this->defter() !== null)
+                ->modalDescription('Saha Bulguları\'nda kayıtlı açık bulgular deftere tespit / öneri olarak eklenir.')
+                ->schema([
+                    \Filament\Forms\Components\CheckboxList::make('idler')
+                        ->label('Açık bulgular')
+                        ->options(fn () => \App\Support\BulguHavuzu::secenekler($this->firma->id, $this->defter()->maddeler ?? []))
+                        ->required()
+                        ->bulkToggleable(),
+                ])
+                ->action(function (array $data): void {
+                    $d = $this->defter();
+                    $eklenen = \App\Models\SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereIn('id', $data['idler'])->orderBy('id')->get();
+                    $d->update(['maddeler' => [...($d->maddeler ?? []), ...$eklenen->map(fn ($b) => \App\Support\BulguDonusturucu::tespitOneriMaddesi($b))->all()]]);
+                    Notification::make()->title($eklenen->count().' bulgu eklendi')->success()->send();
+                }),
+
             Action::make('pdf')
                 ->label('PDF Çıktı Al')
                 ->icon('heroicon-o-document-arrow-down')
