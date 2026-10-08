@@ -29,6 +29,13 @@ class SahaBulgusu extends Model
         'dusuk' => 'Düşük',
     ];
 
+    public const ONCELIK_RENK = [
+        'kritik' => '#b91c1c',
+        'yuksek' => '#d97706',
+        'orta' => '#ca8a04',
+        'dusuk' => '#16a34a',
+    ];
+
     protected $table = 'saha_bulgulari';
 
     protected $guarded = ['id'];
@@ -122,6 +129,16 @@ class SahaBulgusu extends Model
         return array_key_exists((string) $this->oncelik, static::ONCELIKLER)
             ? $this->oncelik
             : static::skordanOncelik($this->skor());
+    }
+
+    public function oncelikEtiketi(): string
+    {
+        return static::ONCELIKLER[$this->oncelikAnahtari()];
+    }
+
+    public function oncelikRengi(): string
+    {
+        return static::ONCELIK_RENK[$this->oncelikAnahtari()];
     }
 
     public function acikMi(): bool

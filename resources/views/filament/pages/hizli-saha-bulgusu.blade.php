@@ -6,20 +6,21 @@
     $td = 'padding:.45rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $hata = fn (string $alan) => $errors->first($alan);
     $skor = $olasilik * $siddet;
-    $skorRenk = fn (int $s) => match (true) { $s >= 16 => '#b91c1c', $s >= 10 => '#d97706', $s >= 5 => '#ca8a04', default => '#16a34a' };
+    $otoOncelik = \App\Models\SahaBulgusu::skordanOncelik($skor);
+    $gecerliOncelik = $oncelik ?: $otoOncelik;
 @endphp
 
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
-        Sahada gördüğünüz tek bir uygunsuzluğu hızla kaydedin: yer, tehlike, risk skoru, aksiyon ve fotoğraf kanıtı.
-        Fotoğraf eklediyseniz "AI ile doldur" bir taslak üretir; kontrol edip kaydedin. Kapsamlı kontrol listesi için
-        <a href="{{ \App\Filament\Pages\SahaDenetimi::getUrl() }}" style="color:rgb(124 58 237);text-decoration:underline">Saha Denetimi</a>,
-        çok fotoğraflı rapor için <a href="{{ \App\Filament\Pages\AiSahaAnalizi::getUrl() }}" style="color:rgb(124 58 237);text-decoration:underline">AI Saha Analizi</a>.
+        Sahada gördüğünüz her uygunsuzluk burada <strong>bir kez</strong> kaydedilir: elle, fotoğraftan ya da kısa açıklamadan AI ile,
+        veya başka bir yapay zekaya hazırlattığınız Word/Excel dosyasından ("Word/Excel'den Aktar"). DÖF raporu için listeden bulguları
+        seçip "Seçilenleri DÖF'e Aktar"ı kullanın. Kapsamlı kontrol listesi için
+        <a href="{{ \App\Filament\Pages\SahaDenetimi::getUrl() }}" style="color:rgb(124 58 237);text-decoration:underline">Saha Denetimi</a>.
     </p>
 
     @php $o = $this->ozet; @endphp
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem">
-        @foreach ([['Açık bulgu', $o['acik'], '#d97706'], ['Kritik (≥15)', $o['kritik'], '#b91c1c'], ['Termini geçen', $o['gecikmis'], '#b91c1c'], ['Kapanan', $o['kapandi'], '#16a34a']] as [$ad, $sayi, $renk])
+        @foreach ([['Açık bulgu', $o['acik'], '#d97706'], ['Kritik', $o['kritik'], '#b91c1c'], ['Termini geçen', $o['gecikmis'], '#b91c1c'], ['Kapanan', $o['kapandi'], '#16a34a']] as [$ad, $sayi, $renk])
             <div style="{{ $kutu }}">
                 <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                 <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
@@ -93,8 +94,12 @@
             <label style="{{ $lbl }}">Mevcut önlemler</label>
             <textarea wire:model="mevcutOnlemler" rows="2" placeholder="Varsa mevcut kontrol / bariyer" style="{{ $inp }}"></textarea>
         </div>
+        <div style="margin-top:1rem">
+            <label style="{{ $lbl }}">Yasal gerekçe / dayanak</label>
+            <input type="text" wire:model="yasalGerekce" placeholder="Örn. Yapı İşlerinde İSG Yönetmeliği Ek-4 / TS EN 13374" style="{{ $inp }}">
+        </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:end;margin-top:1rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:end;margin-top:1rem">
             <div>
                 <label style="{{ $lbl }}">Olasılık</label>
                 <select wire:model.live="olasilik" style="{{ $inp }}">
@@ -107,9 +112,16 @@
                     @foreach (config('isg.saha_bulgu.siddet') as $d => $ad)<option value="{{ $d }}">{{ $d }} · {{ $ad }}</option>@endforeach
                 </select>
             </div>
-            <div style="text-align:center;padding:.35rem .8rem;border-radius:.6rem;color:#fff;background:{{ $skorRenk($skor) }}">
+            <div>
+                <label style="{{ $lbl }}">Öncelik</label>
+                <select wire:model.live="oncelik" style="{{ $inp }}">
+                    <option value="">Otomatik ({{ \App\Models\SahaBulgusu::ONCELIKLER[$otoOncelik] }})</option>
+                    @foreach (\App\Models\SahaBulgusu::ONCELIKLER as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                </select>
+            </div>
+            <div style="text-align:center;padding:.35rem .8rem;border-radius:.6rem;color:#fff;background:{{ \App\Models\SahaBulgusu::ONCELIK_RENK[$gecerliOncelik] }}">
                 <div style="font-size:1.4rem;font-weight:800;line-height:1">{{ $skor }}</div>
-                <div style="font-size:.7rem">{{ \App\Models\SahaBulgusu::seviye($skor) }}</div>
+                <div style="font-size:.7rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</div>
             </div>
         </div>
     </x-filament::section>
@@ -142,12 +154,26 @@
             @endforeach
         </div>
 
+        <div style="margin-top:1rem">
+            <label style="{{ $lbl }}">Fotoğraf yoksa: gördüğünüzü kısaca yazın, AI taslak çıkarsın</label>
+            <div style="display:flex;gap:.5rem;align-items:flex-start;flex-wrap:wrap">
+                <textarea wire:model="aciklamaMetni" rows="2" placeholder="Örn. 3. kat döşeme kenarında korkuluk yok, işçiler kenarda çalışıyor" style="{{ $inp }};flex:1;min-width:14rem"></textarea>
+                <x-filament::button color="gray" icon="heroicon-o-pencil-square" wire:click="aciklamadanDoldur" wire:loading.attr="disabled" wire:target="aciklamadanDoldur" style="margin-top:.3rem">
+                    <span wire:loading.remove wire:target="aciklamadanDoldur">Açıklamadan AI</span>
+                    <span wire:loading wire:target="aciklamadanDoldur">Hazırlanıyor…</span>
+                </x-filament::button>
+            </div>
+        </div>
+
         <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem">
             <x-filament::button color="gray" icon="heroicon-o-sparkles" wire:click="aiIleDoldur" wire:loading.attr="disabled" wire:target="aiIleDoldur">
-                <span wire:loading.remove wire:target="aiIleDoldur">AI ile doldur</span>
+                <span wire:loading.remove wire:target="aiIleDoldur">Fotoğraftan AI</span>
                 <span wire:loading wire:target="aiIleDoldur">Analiz ediliyor…</span>
             </x-filament::button>
             <x-filament::button icon="heroicon-o-check" wire:click="kaydet">Bulguyu Kaydet</x-filament::button>
+            @if ($aiEkTespitler)
+                <x-filament::button color="warning" icon="heroicon-o-plus" wire:click="kalanTespitleriEkle">Kalan {{ count($aiEkTespitler) }} tespiti de ekle</x-filament::button>
+            @endif
             @if ($kaynak === 'ai')<span style="font-size:.78rem;color:rgb(124 58 237);align-self:center">AI taslağı — kaydetmeden önce kontrol edin.</span>@endif
         </div>
     </x-filament::section>
@@ -156,29 +182,42 @@
     <x-filament::section icon="heroicon-o-queue-list" icon-color="gray">
         <x-slot name="heading">Saha Bulguları {{ $firmaId ? '' : '— tüm işyerleri' }} ({{ $this->bulgular->count() }})</x-slot>
         <x-slot name="afterHeader">
-            <select wire:model.live="listeDurum" style="padding:.35rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
-                <option value="acik">Açık</option>
-                <option value="kapandi">Kapanan</option>
-                <option value="">Tümü</option>
-            </select>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+                @if (count($secili))
+                    <x-filament::button size="sm" color="warning" icon="heroicon-o-arrow-right" wire:click="dofeAktar">Seçilenleri DÖF'e Aktar ({{ count($secili) }})</x-filament::button>
+                @endif
+                <select wire:model.live="listeDurum" style="padding:.35rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                    <option value="acik">Açık + devam eden</option>
+                    <option value="ertelendi">Ertelenen</option>
+                    <option value="kapandi">Kapanan</option>
+                    <option value="">Tümü</option>
+                </select>
+            </div>
         </x-slot>
 
         @if ($this->bulgular->isNotEmpty())
             <div style="overflow-x:auto">
-                <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:860px">
-                    <tr>@foreach (['Bulgu', 'İşyeri / Bölüm', 'Uygunsuzluk', 'Risk', 'Sorumlu / Termin', 'Foto', ''] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
+                <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:900px">
+                    <tr>@foreach (['', 'Bulgu', 'İşyeri / Bölüm', 'Uygunsuzluk', 'Risk', 'Sorumlu / Termin', 'Foto', ''] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                     @foreach ($this->bulgular as $b)
-                        <tr>
-                            <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->created_at?->format('d.m.Y') }}{{ $b->kaynak === 'ai' ? ' · AI' : '' }}</div></td>
+                        <tr wire:key="bulgu-{{ $b->id }}">
+                            <td style="{{ $td }}"><input type="checkbox" wire:model.live="secili" value="{{ $b->id }}" title="DÖF'e aktarmak için seç"></td>
+                            <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->created_at?->format('d.m.Y') }}{{ match ($b->kaynak) { 'ai' => ' · AI', 'dosya' => ' · dosya', default => '' } }}</div>@if ($b->durum !== 'acik')<div style="font-size:.7rem;font-weight:600;color:{{ $b->durum === 'kapandi' ? '#16a34a' : '#d97706' }}">{{ \App\Models\SahaBulgusu::DURUMLAR[$b->durum] ?? $b->durum }}</div>@endif</td>
                             <td style="{{ $td }}">{{ $b->firma?->unvan }}<div style="font-size:.72rem;color:rgb(107 114 128)">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(124 58 237)">harita</a>@endif</div></td>
                             <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->kategori }}</div>@endif</td>
-                            <td style="{{ $td }}"><span style="color:#fff;background:{{ $skorRenk($b->skor()) }};border-radius:.35rem;padding:.1rem .45rem;font-weight:700;font-size:.75rem">{{ $b->skor() }}</span><div style="font-size:.7rem;color:rgb(107 114 128)">{{ $b->seviyeEtiketi() }}</div></td>
+                            <td style="{{ $td }}"><span style="color:#fff;background:{{ $b->oncelikRengi() }};border-radius:.35rem;padding:.1rem .45rem;font-weight:700;font-size:.75rem">{{ $b->skor() }}</span><div style="font-size:.7rem;color:rgb(107 114 128)">{{ $b->oncelikEtiketi() }}</div></td>
                             <td style="{{ $td }};white-space:nowrap">{{ $b->sorumlu ?: '—' }}<div style="font-size:.72rem;color:{{ $b->terminGectiMi() ? '#dc2626' : 'rgb(107 114 128)' }}">{{ $b->termin?->format('d.m.Y') }}{{ $b->terminGectiMi() ? ' · geçti' : '' }}</div></td>
                             <td style="{{ $td }}">{{ count($b->fotograflar ?? []) }}</td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="pdf({{ $b->id }})">Tutanak</x-filament::button>
-                                @if ($b->durum === 'acik')
+                                @if ($b->durum !== 'kapandi')
                                     <x-filament::button size="xs" color="warning" wire:click="dofeAktar({{ $b->id }})">DÖF'e Aktar</x-filament::button>
+                                    @if ($b->durum === 'acik')
+                                        <x-filament::button size="xs" color="gray" wire:click="durumDegistir({{ $b->id }}, 'devam_ediyor')">Devam ediyor</x-filament::button>
+                                        <x-filament::button size="xs" color="gray" wire:click="durumDegistir({{ $b->id }}, 'ertelendi')">Ertele</x-filament::button>
+                                    @else
+                                        <x-filament::button size="xs" color="gray" wire:click="yenidenAc({{ $b->id }})">Açığa al</x-filament::button>
+                                    @endif
                                     <x-filament::button size="xs" color="success" wire:click="mountAction('kapat', { id: {{ $b->id }} })">Kapat</x-filament::button>
                                 @else
                                     <x-filament::button size="xs" color="gray" wire:click="yenidenAc({{ $b->id }})">Yeniden aç</x-filament::button>

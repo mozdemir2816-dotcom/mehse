@@ -22,7 +22,7 @@
 <body>
 @php
     $skor = $b->skor();
-    $renk = match (true) { $skor >= 16 => '#b91c1c', $skor >= 10 => '#d97706', $skor >= 5 => '#ca8a04', default => '#16a34a' };
+    $renk = $b->oncelikRengi();
 @endphp
 <div class="sayfa">
     <div class="baslik">
@@ -52,7 +52,7 @@
             <td class="k">Olasılık</td><td>{{ $b->olasilik }} — {{ config('isg.saha_bulgu.olasilik.'.$b->olasilik) }}</td>
             <td class="k">Şiddet</td><td>{{ $b->siddet }} — {{ config('isg.saha_bulgu.siddet.'.$b->siddet) }}</td>
         </tr>
-        <tr><td class="k">Risk Skoru</td><td colspan="3"><span class="rozet" style="background:{{ $renk }}">{{ $skor }} — {{ $b->seviyeEtiketi() }}</span></td></tr>
+        <tr><td class="k">Risk Skoru</td><td colspan="3"><span class="rozet" style="background:{{ $renk }}">{{ $skor }} — {{ $b->oncelikEtiketi() }}</span></td></tr>
     </table>
 
     <h2>4. DÜZELTİCİ FAALİYET</h2>

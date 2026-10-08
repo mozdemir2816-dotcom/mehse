@@ -38,7 +38,7 @@ class SahaBulgusuUretici
 
         $basliklar = [
             'Bulgu No', 'Tarih', 'İşyeri', 'Bölüm', 'Gözlem Konumu', 'Kategori', 'Tehlike', 'Uygunsuzluk', 'Mevcut Önlemler',
-            'Olasılık', 'Şiddet', 'Skor', 'Seviye', 'Aksiyon', 'Sorumlu', 'Termin', 'Durum', 'Kapanış', 'Kapanış Notu', 'Konum (GPS)', 'Kaynak',
+            'Olasılık', 'Şiddet', 'Skor', 'Öncelik', 'Aksiyon', 'Sorumlu', 'Termin', 'Durum', 'Kapanış', 'Kapanış Notu', 'Konum (GPS)', 'Kaynak',
         ];
         $son = Coordinate::stringFromColumnIndex(count($basliklar));
         $s->fromArray($basliklar, null, 'A1');
@@ -59,7 +59,7 @@ class SahaBulgusuUretici
                 $b->olasilik,
                 $b->siddet,
                 $b->skor(),
-                $b->seviyeEtiketi(),
+                $b->oncelikEtiketi(),
                 $b->aksiyon,
                 $b->sorumlu,
                 $b->termin?->format('d.m.Y'),

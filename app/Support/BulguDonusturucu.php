@@ -69,7 +69,7 @@ class BulguDonusturucu
             'termin' => static::tarih($m['dof_termin'] ?? null),
             'durum' => 'acik',
             'fotograflar' => array_values(array_filter([$m['foto_yolu'] ?? null])),
-            'kaynak' => in_array($m['kaynak'] ?? null, ['foto', 'metin', 'ai'], true) ? 'ai' : 'manuel',
+            'kaynak' => in_array($m['kaynak'] ?? null, ['foto', 'aciklama', 'ai'], true) ? 'ai' : 'manuel',
         ];
     }
 

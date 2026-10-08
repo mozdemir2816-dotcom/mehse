@@ -391,7 +391,7 @@ return [
     'saha_bulgu' => [
         'olasilik' => [1 => 'Çok düşük', 2 => 'Düşük', 3 => 'Orta', 4 => 'Yüksek', 5 => 'Çok yüksek'],
         'siddet' => [1 => 'Çok hafif', 2 => 'Hafif', 3 => 'Orta', 4 => 'Ciddi', 5 => 'Çok ciddi'],
-        'durumlar' => ['acik' => 'Açık', 'kapandi' => 'Kapandı'],
+        'durumlar' => ['acik' => 'Açık', 'devam_ediyor' => 'Devam ediyor', 'ertelendi' => 'Ertelendi', 'kapandi' => 'Kapandı'],
         'max_foto' => 5,
     ],
 
