@@ -262,9 +262,35 @@ class DofOlustur extends Page
     {
         unset($this->firma, $this->gecmisKayitlar);
 
-        $this->gozetimYapan = $this->firma?->igu?->ad_soyad;
-        $this->gozetimYapanSertifikaNo = $this->firma?->igu?->sertifika_no;
-        $this->isverenVekiliAdi = $this->firma?->isveren_vekili ?: $this->firma?->isveren_ad;
+        foreach ($this->firmaKunyesi() as $alan => $deger) {
+            $this->{$alan} = $deger;
+        }
+    }
+
+    /**
+     * Künyenin kişi bilgileri firma kaydından: gözetim yapan = firmanın İGU'su,
+     * İGU atanmamışsa hesap sahibi (uzmanın kendisi); işveren vekili firmadan.
+     * Word/Excel'den aktarımda bu alanlar dosyadakiyle değiştirilmez (kullanıcı
+     * isteği 08.10.2026 — dışarıda hazırlanan raporlar aynı standartta çıksın).
+     *
+     * @return array<string, ?string>
+     */
+    private function firmaKunyesi(): array
+    {
+        $firma = $this->firma;
+
+        if (! $firma) {
+            return [];
+        }
+
+        $igu = $firma->igu;
+        $sahip = $firma->user;
+
+        return [
+            'gozetimYapan' => $igu?->ad_soyad ?: $sahip?->name,
+            'gozetimYapanSertifikaNo' => $igu ? $igu->sertifika_no : $sahip?->sertifika_no,
+            'isverenVekiliAdi' => $firma->isveren_vekili ?: $firma->isveren_ad,
+        ];
     }
 
     public function maddeEkle(): void
@@ -310,12 +336,23 @@ class DofOlustur extends Page
             return;
         }
 
-        // Dosyadaki üst bilgiler sayfadaki alanlara yazılır (rapor tarihi ve
-        // sorumlu kişi varsayılan dolu geldiği için onlar da dosyadan alınır).
+        // Dosyadan yalnız alan/bölge ve tarihler alınır; kişi bilgileri (gözetim
+        // yapan, sertifika, işveren vekili, sorumlu kişi) firma kaydından gelir —
+        // dosyadaki yalnız firmada karşılığı boşsa kullanılır.
+        $firmadan = array_filter($this->firmaKunyesi());
+
         foreach ($sonuc['bilgi'] as $alan => $deger) {
-            if (blank($this->{$alan}) || in_array($alan, ['sorumluKisi', 'raporTarihi'], true)) {
+            if (isset($firmadan[$alan]) || $alan === 'sorumluKisi') {
+                continue;
+            }
+
+            if (blank($this->{$alan}) || $alan === 'raporTarihi') {
                 $this->{$alan} = $deger;
             }
+        }
+
+        foreach ($firmadan as $alan => $deger) {
+            $this->{$alan} = $deger;
         }
 
         $this->maddeler = [...$this->maddeler, ...$sonuc['maddeler']];

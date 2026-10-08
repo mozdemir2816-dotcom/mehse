@@ -165,7 +165,8 @@ class DofTabloAktarimTest extends TestCase
             ])
             ->assertHasNoActionErrors()
             ->assertSet('alanBolge', 'Mekanik Bakım')
-            ->assertSet('gozetimYapan', 'Uzman Adı')
+            // Firmada İGU atanmamış → dosyadaki "Uzman Adı" değil hesap sahibi
+            ->assertSet('gozetimYapan', $this->uzman->name)
             ->assertCount('maddeler', 2)
             ->assertSee('Torna aynası muhafazasız')
             ->set('maddeFotolari.1', UploadedFile::fake()->image('saha.jpg'));
@@ -180,6 +181,26 @@ class DofTabloAktarimTest extends TestCase
         $this->assertSame('Mekanik Bakım', $rapor->alan_bolge);
         $this->assertCount(2, $rapor->maddeler);
         $this->assertSame($foto, $rapor->maddeler[1]['foto_yolu']);
+    }
+
+    /** Künyenin kişi bilgileri firma kaydından gelir, dosyadaki değerlerle ezilmez (08.10.2026). */
+    public function test_aktarimda_kunye_kisileri_firma_kaydindan_gelir(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::factory()->create(['ad_soyad' => 'Kayıtlı İGU', 'sertifika_no' => 'A-111']);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id, 'isveren_vekili' => 'Kayıtlı Vekil']);
+
+        Livewire::test(DofOlustur::class)
+            ->set('firmaId', $firma->id)
+            ->assertSet('gozetimYapan', 'Kayıtlı İGU')
+            ->callAction('tablodanAktar', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('dof.docx', file_get_contents($this->wordDosyasi())),
+            ])
+            ->assertHasNoActionErrors()
+            ->assertSet('gozetimYapan', 'Kayıtlı İGU')          // dosyada "Uzman Adı"
+            ->assertSet('gozetimYapanSertifikaNo', 'A-111')     // dosyada "405044"
+            ->assertSet('isverenVekiliAdi', 'Kayıtlı Vekil')
+            ->assertSet('alanBolge', 'Mekanik Bakım')           // alan/bölge dosyadan
+            ->assertSet('gozetimTarihAraligi', '06.10.2026');
     }
 
     public function test_tablo_olmayan_dosya_madde_eklemez(): void
