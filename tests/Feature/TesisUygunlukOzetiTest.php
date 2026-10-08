@@ -63,13 +63,14 @@ class TesisUygunlukOzetiTest extends TestCase
         $this->assertSame(1, $n['taseron_belge']);
         $this->assertSame(1, $n['ptw']);
         $this->assertSame(1, $n['periyodik']);
-        $this->assertSame(1, $n['denetim']);
-        $this->assertSame(2, $n['acik_aksiyon']);        // DÖF açık + saha bulgusu
+        // DÖF maddesi de ortak saha bulgusudur (BulguHavuzu, 08.10.2026): açık bulgu 2
+        $this->assertSame(2, $n['denetim']);
+        $this->assertSame(2, $n['acik_aksiyon']);        // DÖF açık + saha bulgusu (bağlı DÖF maddesi bir kez)
         $this->assertSame(1, $n['gecikmis_aksiyon']);    // saha bulgusu termini geçti
         $this->assertSame(1, $n['kapasite_kritik']);
 
-        // 100 − (4 belge + 6 sözleşme + 5 PTW + 5 periyodik + 2 denetim + 3 gecikmiş + 12 kapasite) = 63
-        $this->assertSame(63, $s['skor']);
+        // 100 − (4 belge + 6 sözleşme + 5 PTW + 5 periyodik + 4 denetim + 3 gecikmiş + 12 kapasite) = 61
+        $this->assertSame(61, $s['skor']);
         $this->assertSame('Müdahale gerekli', $s['seviye']);
         $this->assertSame(100 - $s['skor'], array_sum(array_column($s['dokum'], 'puan')));
         $this->assertSame('kritik', $s['oneriler'][0]['seviye']);

@@ -83,14 +83,15 @@ class TesisUygunlugu
         // Saha denetimi: son tamamlanan denetimin uygunsuz maddeleri + açık saha bulguları
         $sonDenetim = SahaDenetimi::query()->where('firma_id', $firma->id)->where('durum', 'tamamlandi')->latest('denetim_tarihi')->latest('id')->first();
         $uygunsuz = collect($sonDenetim?->cevaplar ?? [])->where('sonuc', 'uygun_degil')->count();
-        $acikBulgular = SahaBulgusu::query()->where('firma_id', $firma->id)->where('durum', 'acik')->get(['termin', 'durum']);
+        $acikBulgular = SahaBulgusu::query()->where('firma_id', $firma->id)->whereIn('durum', ['acik', 'devam_ediyor'])->get(['termin', 'durum']);
         $denetim = $uygunsuz + $acikBulgular->count();
 
-        // Birleşik aksiyon: DÖF maddeleri + saha bulguları + kurul kararları
+        // Birleşik aksiyon: DÖF maddeleri + saha bulguları + kurul kararları.
+        // Bulguya bağlı DÖF maddesi bulgu olarak sayılır (çift sayılmaz).
         $termler = collect();
         foreach (DofRaporu::query()->where('firma_id', $firma->id)->get() as $r) {
             foreach ($r->maddeler ?? [] as $m) {
-                if (! in_array($m['durum'] ?? 'acik', static::KAPALI, true)) {
+                if (empty($m['bulgu_id']) && ! in_array($m['durum'] ?? 'acik', static::KAPALI, true)) {
                     $termler->push(static::tarih($m['termin'] ?? null));
                 }
             }
