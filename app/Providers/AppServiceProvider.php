@@ -47,7 +47,13 @@ class AppServiceProvider extends ServiceProvider
         // acceptedFileTypes (mimetypes:) gerçek Word dosyasını reddediyordu
         // (07.10.2026 — Saha Gözlem Raporu yüklenemedi). ZIP içeriğinden tanıyan
         // tahminci ilk sıraya kaydedilir; Office değilse fileinfo'ya düşer.
-        \Symfony\Component\Mime\MimeTypes::getDefault()->registerGuesser(new \App\Support\OfficeMimeTahmincisi);
+        // MimeTypes::getDefault() süreç boyunca tekildir — her boot'ta yeniden
+        // eklenirse (testler, kuyruk işçisi) tahminci listesi sürekli büyür.
+        static $officeTahmincisiKayitli = false;
+        if (! $officeTahmincisiKayitli) {
+            \Symfony\Component\Mime\MimeTypes::getDefault()->registerGuesser(new \App\Support\OfficeMimeTahmincisi);
+            $officeTahmincisiKayitli = true;
+        }
 
         // Tüm açılır pencerelerde (modal) başlık ve Kaydet/İptal şeridi sabit:
         // uzun formda kaydırınca da Kaydet ekranda kalır (kullanıcı isteği
