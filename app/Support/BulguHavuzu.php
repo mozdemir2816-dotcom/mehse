@@ -30,6 +30,7 @@ class BulguHavuzu
         DofRaporu::class => ['maddeler', 'dof'],
         TespitOneriDefteri::class => ['maddeler', 'tespit_oneri'],
         SahaAnalizi::class => ['bulgular', 'gozlem'],
+        \App\Models\SahaDenetimi::class => ['cevaplar', 'denetim'],   // yalnız "uygun değil" maddeler
     ];
 
     /** esle() bulguyu güncellerken dofaYansit() geri tetiklenmesin. */
@@ -54,7 +55,9 @@ class BulguHavuzu
 
         try {
             foreach ($maddeler as $i => $m) {
-                if (! is_array($m) || blank($m['tespit'] ?? null)) {
+                $denetimDisi = $bicim === 'denetim' && (! is_array($m) || ($m['sonuc'] ?? null) !== 'uygun_degil');
+
+                if (! is_array($m) || blank($m['tespit'] ?? $m['ifade'] ?? null) || $denetimDisi) {
                     continue;
                 }
 
@@ -64,6 +67,7 @@ class BulguHavuzu
                     $alanlar = match ($bicim) {
                         'dof' => BulguDonusturucu::dofMaddesinden($m),
                         'gozlem' => BulguDonusturucu::gozlemMaddesinden($m),
+                        'denetim' => BulguDonusturucu::denetimMaddesinden($m),
                         default => BulguDonusturucu::tespitOneriMaddesinden($m),
                     };
 

@@ -108,6 +108,29 @@ class BulguDonusturucu
     }
 
     /**
+     * Saha Denetimi "uygun değil" maddesi (SahaDenetimi.cevaplar) → bulgu.
+     * Kritik madde "kritik", diğerleri "orta"; aksiyonu uzman bulguda yazar.
+     *
+     * @return array<string, mixed> SahaBulgusu alanları
+     */
+    public static function denetimMaddesinden(array $m): array
+    {
+        $oncelik = ($m['kritik'] ?? false) ? 'kritik' : 'orta';
+        [$olasilik, $siddet] = SahaBulgusu::onceliktenRisk($oncelik);
+        $aciklama = trim((string) ($m['aciklama'] ?? ''));
+
+        return [
+            'uygunsuzluk' => trim((string) ($m['ifade'] ?? '')).($aciklama !== '' ? ' — '.$aciklama : ''),
+            'kategori' => static::metin($m['kategori_ad'] ?? null),
+            'oncelik' => $oncelik,
+            'olasilik' => $olasilik,
+            'siddet' => $siddet,
+            'durum' => 'acik',
+            'fotograflar' => array_values(array_filter([$m['foto_yolu'] ?? null])),
+        ];
+    }
+
+    /**
      * Bulgu → DÖF madde dizisi (pdf.dof-raporu ve DÖF Oluştur listesi bu
      * anahtarları bekler). bulgu_id ile kaynağa geri bağlanır.
      *

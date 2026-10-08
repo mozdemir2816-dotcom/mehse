@@ -23,6 +23,17 @@ class SahaDenetimi extends Model
         'kritik_uygunsuzluk_var' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // Tamamlanan denetimin "uygun değil" maddeleri Saha Bulguları'na düşer
+        // (saha kontrolleri 5. aşama, 08.10.2026); taslak bulgu açmaz.
+        static::saved(function (SahaDenetimi $d): void {
+            if ($d->durum === 'tamamlandi') {
+                \App\Support\BulguHavuzu::esle($d);
+            }
+        });
+    }
+
     public function firma(): BelongsTo
     {
         return $this->belongsTo(Firma::class);

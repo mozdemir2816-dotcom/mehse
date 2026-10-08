@@ -245,4 +245,31 @@ class BulguHavuzuTest extends TestCase
         $this->assertSame(['Saha bulgusu', 'Bağlı DÖF', 'Bağsız eski DÖF'], $aksiyonlar->pluck('baslik')->all());
         $this->assertSame(3, \App\Support\IsyeriDurumu::gostergeler($this->firma)['acik_dof']);
     }
+
+    public function test_tamamlanan_saha_denetiminin_uygun_degil_maddeleri_bulgu_olur(): void
+    {
+        $cevaplar = [
+            ['kategori_ad' => 'Yangın', 'kod' => '1.1', 'ifade' => 'Söndürücüler dolu mu?', 'kritik' => true, 'sonuc' => 'uygun_degil', 'aciklama' => 'İki tüp boş', 'foto_yolu' => null],
+            ['kategori_ad' => 'Elektrik', 'kod' => '2.1', 'ifade' => 'Panolar kapalı mı?', 'kritik' => false, 'sonuc' => 'uygun_degil', 'aciklama' => null, 'foto_yolu' => null],
+            ['kategori_ad' => 'Elektrik', 'kod' => '2.2', 'ifade' => 'Topraklama var mı?', 'kritik' => false, 'sonuc' => 'uygun', 'aciklama' => null, 'foto_yolu' => null],
+        ];
+
+        \App\Models\SahaDenetimi::create(['firma_id' => $this->firma->id, 'revizyon' => 0, 'durum' => 'taslak', 'cevaplar' => $cevaplar]);
+        $this->assertSame(0, SahaBulgusu::count());   // taslak bulgu açmaz
+
+        $d = \App\Models\SahaDenetimi::create(['firma_id' => $this->firma->id, 'revizyon' => 1, 'durum' => 'tamamlandi', 'cevaplar' => $cevaplar]);
+
+        $this->assertSame(2, SahaBulgusu::count());
+        $c = $d->fresh()->cevaplar;
+        $kritik = SahaBulgusu::find($c[0]['bulgu_id']);
+        $this->assertSame('Söndürücüler dolu mu? — İki tüp boş', $kritik->uygunsuzluk);
+        $this->assertSame('kritik', $kritik->oncelikAnahtari());
+        $this->assertSame('Yangın', $kritik->kategori);
+        $this->assertSame('saha_denetimleri', $kritik->kaynak_tablo);
+        $this->assertSame('orta', SahaBulgusu::find($c[1]['bulgu_id'])->oncelikAnahtari());
+        $this->assertArrayNotHasKey('bulgu_id', $c[2]);
+
+        $d->fresh()->update(['revizyon' => 2]);   // tekrar kayıt kopya açmaz
+        $this->assertSame(2, SahaBulgusu::count());
+    }
 }

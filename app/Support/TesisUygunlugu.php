@@ -82,7 +82,8 @@ class TesisUygunlugu
 
         // Saha denetimi: son tamamlanan denetimin uygunsuz maddeleri + açık saha bulguları
         $sonDenetim = SahaDenetimi::query()->where('firma_id', $firma->id)->where('durum', 'tamamlandi')->latest('denetim_tarihi')->latest('id')->first();
-        $uygunsuz = collect($sonDenetim?->cevaplar ?? [])->where('sonuc', 'uygun_degil')->count();
+        // Bulguya bağlanan "uygun değil" madde açık bulgu olarak sayılır (çift sayılmaz)
+        $uygunsuz = collect($sonDenetim?->cevaplar ?? [])->where('sonuc', 'uygun_degil')->filter(fn ($c) => empty($c['bulgu_id']))->count();
         $acikBulgular = SahaBulgusu::query()->where('firma_id', $firma->id)->whereIn('durum', ['acik', 'devam_ediyor'])->get(['termin', 'durum']);
         $denetim = $uygunsuz + $acikBulgular->count();
 

@@ -639,7 +639,10 @@ class SahaDenetimi extends Page
                         return null;
                     }
 
-                    Notification::make()->title('Saha denetimi kaydedildi')->body($d->belgeAdi())->success()->send();
+                    $bulgu = collect($d->fresh()->cevaplar ?? [])->whereNotNull('bulgu_id')->count();
+                    Notification::make()->title('Saha denetimi kaydedildi')
+                        ->body($d->belgeAdi().($bulgu ? " — {$bulgu} uygunsuzluk Saha Bulguları'na eklendi (aksiyon / sorumlu / termin orada)." : ''))
+                        ->success()->send();
 
                     return SahaDenetimiUretici::pdf($d, ImzaSecenegi::secili($data));
                 }),
