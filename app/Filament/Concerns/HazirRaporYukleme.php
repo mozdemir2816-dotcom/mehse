@@ -5,8 +5,10 @@ namespace App\Filament\Concerns;
 use App\Models\ArsivDosya;
 use App\Models\Firma;
 use App\Support\ArsivKurali;
+use App\Filament\Pages\DofOlustur;
 use App\Filament\Support\DosyaKabul;
 use App\Support\ArsivYukleyici;
+use App\Support\DofTabloOkuyucu;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -76,6 +78,15 @@ trait HazirRaporYukleme
             return;
         }
 
+        // DÖF tablosu formatındaki Word/Excel (ör. yapay zekaya hazırlatılan rapor)
+        // olduğu gibi arşivlenmez; maddeler sisteme aktarılır ve çıktı sistemin
+        // standart DÖF raporu olur (kullanıcı 08.10.2026: "yüklediğim gibi iniyor").
+        if ($tablo = $this->hazirRaporDofTablosu($data)) {
+            $this->dofTablosunuAktar($tablo);
+
+            return;
+        }
+
         $kategori = ArsivKurali::kategori($this->hazirRaporKategorisi());
         $baslik = $kategori['ad'].' — '.Carbon::parse($data['tarih'])->format('d.m.Y');
         $dosya = ArsivYukleyici::birlestir((array) ($data['dosyalar'] ?? []), $firma, $baslik, (array) ($data['dosya_adlari'] ?? []));
@@ -100,6 +111,58 @@ trait HazirRaporYukleme
 
         unset($this->hazirRaporlar);
         Notification::make()->title('Rapor arşive kaydedildi')->body($dosya['dosya_adi'])->success()->send();
+    }
+
+    /**
+     * Tek dosya yüklenmişse ve DÖF tablosu (Tespit / Öneri sütunlu Word-Excel)
+     * içeriyorsa okunmuş sonucu döner; aksi halde null (normal arşivleme).
+     *
+     * @return array{bilgi: array<string, string>, maddeler: array<int, array<string, mixed>>}|null
+     */
+    protected function hazirRaporDofTablosu(array $data): ?array
+    {
+        $yollar = array_values((array) ($data['dosyalar'] ?? []));
+
+        if (count($yollar) !== 1 || ! is_string($yollar[0])) {
+            return null;
+        }
+
+        $yol = $yollar[0];
+        $adi = (string) (((array) ($data['dosya_adlari'] ?? []))[$yol] ?? $yol);
+        $uzanti = strtolower(pathinfo($adi, PATHINFO_EXTENSION));
+
+        if (! in_array($uzanti, ['docx', 'xlsx', 'xls'], true) || ! Storage::disk('public')->exists($yol)) {
+            return null;
+        }
+
+        try {
+            $sonuc = DofTabloOkuyucu::oku(Storage::disk('public')->path($yol), $uzanti);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+
+        if (! $sonuc['maddeler']) {
+            return null;
+        }
+
+        Storage::disk('public')->delete($yol);
+
+        return $sonuc;
+    }
+
+    /**
+     * Varsayılan: DÖF Oluştur'a yönlendirip maddeleri orada açar. DÖF Oluştur
+     * sayfası bunu ezer ve doğrudan kendi listesine ekler.
+     *
+     * @param  array{bilgi: array<string, string>, maddeler: array<int, array<string, mixed>>}  $tablo
+     */
+    protected function dofTablosunuAktar(array $tablo)
+    {
+        session()->put('dof_aktarim', ['firma_id' => $this->firma->id, 'tablo' => $tablo]);
+
+        return $this->redirect(DofOlustur::getUrl());
     }
 
     /** Bu firmanın, sayfanın kategorisindeki arşiv dosyaları (yeniden eskiye). */

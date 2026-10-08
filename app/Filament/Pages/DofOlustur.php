@@ -93,6 +93,14 @@ class DofOlustur extends Page
         if ($aktarim = session()->pull('dof_aktarim')) {
             $this->firmaId = $aktarim['firma_id'];
             $this->updatedFirmaId();
+
+            // Başka sayfanın "Hazır Rapor Yükle"sine verilen DÖF tablosu (Word/Excel)
+            if (isset($aktarim['tablo'])) {
+                $this->aktarimUygula($aktarim['tablo']);
+
+                return;
+            }
+
             $this->maddeler = [...$this->maddeler, ...$aktarim['maddeler']];
             $this->kaynakOlayKaydiId = $aktarim['olay_kaydi_id'] ?? null;
 
@@ -336,12 +344,31 @@ class DofOlustur extends Page
             return;
         }
 
+        $this->aktarimUygula($sonuc);
+    }
+
+    /** "Hazır Rapor Yükle"ye DÖF tablosu verildiyse bu sayfada yönlendirmeden aktarılır. */
+    protected function dofTablosunuAktar(array $tablo)
+    {
+        $this->aktarimUygula($tablo);
+
+        return null;
+    }
+
+    /**
+     * DofTabloOkuyucu sonucunu sayfaya işler — "Word/Excel'den Aktar", "Hazır
+     * Rapor Yükle"ye verilen DÖF tablosu ve başka sayfadan yönlendirme ortak.
+     *
+     * @param  array{bilgi: array<string, string>, maddeler: array<int, array<string, mixed>>}  $sonuc
+     */
+    public function aktarimUygula(array $sonuc): void
+    {
         // Dosyadan yalnız alan/bölge ve tarihler alınır; kişi bilgileri (gözetim
         // yapan, sertifika, işveren vekili, sorumlu kişi) firma kaydından gelir —
         // dosyadaki yalnız firmada karşılığı boşsa kullanılır.
         $firmadan = array_filter($this->firmaKunyesi());
 
-        foreach ($sonuc['bilgi'] as $alan => $deger) {
+        foreach ($sonuc['bilgi'] ?? [] as $alan => $deger) {
             if (isset($firmadan[$alan]) || $alan === 'sorumluKisi') {
                 continue;
             }

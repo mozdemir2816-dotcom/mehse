@@ -27,6 +27,71 @@ class HazirRaporYuklemeTest extends TestCase
         $this->actingAs($this->uzman);
     }
 
+    /** DÖF tablosu formatında (Tespit / Öneri sütunlu) Word içeriği. */
+    private function dofTablosuWord(): string
+    {
+        $word = new \PhpOffice\PhpWord\PhpWord;
+        $s = $word->addSection();
+        $bilgi = $s->addTable();
+        $bilgi->addRow();
+        $bilgi->addCell()->addText('Alan / Bölge');
+        $bilgi->addCell()->addText('Bina cephesi');
+        $t = $s->addTable();
+        $t->addRow();
+        foreach (['#', 'Tespit', 'Öncelik', 'Öneri / Düzeltici Faaliyet', 'Sorumlu', 'Termin', 'Durum', 'Foto'] as $b) {
+            $t->addCell()->addText($b);
+        }
+        $t->addRow();
+        foreach (['1', 'Korkuluk yok', 'Kritik', 'Korkuluk kurulmalı', 'İşveren', '15.10.2026', 'Açık', ''] as $d) {
+            $t->addCell()->addText($d);
+        }
+        $yol = tempnam(sys_get_temp_dir(), 'dof').'.docx';
+        \PhpOffice\PhpWord\IOFactory::createWriter($word, 'Word2007')->save($yol);
+
+        return (string) file_get_contents($yol);
+    }
+
+    /** Kullanıcı 08.10.2026: yapay zekaya hazırlatılan DÖF "yüklediğim gibi iniyor". */
+    public function test_dof_sayfasinda_hazir_rapor_dof_tablosuysa_maddeler_aktarilir_arsivlenmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(DofOlustur::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('hazirRaporYukle', data: [
+                'dosyalar' => [UploadedFile::fake()->createWithContent('DOF_ornek.docx', $this->dofTablosuWord())],
+                'tarih' => '2026-10-08',
+            ])
+            ->assertHasNoActionErrors()
+            ->assertCount('maddeler', 1)
+            ->assertSet('alanBolge', 'Bina cephesi')
+            ->assertSee('Korkuluk yok');
+
+        $this->assertSame(0, ArsivDosya::count());
+    }
+
+    public function test_saha_gozlem_sayfasinda_dof_tablosu_dof_olustura_aktarilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(AiSahaAnalizi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('hazirRaporYukle', data: [
+                'dosyalar' => [UploadedFile::fake()->createWithContent('DOF_ornek.docx', $this->dofTablosuWord())],
+                'tarih' => '2026-10-08',
+            ])
+            ->assertHasNoActionErrors()
+            ->assertRedirect(DofOlustur::getUrl());
+
+        $this->assertSame(0, ArsivDosya::count());
+
+        Livewire::test(DofOlustur::class)
+            ->assertSet('firmaId', $firma->id)
+            ->assertCount('maddeler', 1)
+            ->assertSet('alanBolge', 'Bina cephesi')
+            ->assertSet('gozetimYapan', $this->uzman->name);
+    }
+
     public function test_dof_sayfasindan_excel_yuklenir_ve_arsive_dof_kategorisiyle_girer(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
