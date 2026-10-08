@@ -64,7 +64,8 @@ class AnaSayfaGorevDurumuTest extends TestCase
         $this->assertNotNull($bul('Periyodik kontrol', 'gecikmis'));
         $dof = $bul('DÖF', 'yaklasan');
         $this->assertNotNull($dof);
-        $this->assertStringContainsString('1 açık DÖF', $dof['aciklama']);
+        // DÖF maddesi saha bulgusuna bağlı, bir kez sayılır (BulguHavuzu::aksiyonlar)
+        $this->assertStringContainsString('1 açık bulgu / DÖF', $dof['aciklama']);
         $egitim = $bul('Eğitim kaydı eksik', 'gecikmis');
         $this->assertNotNull($egitim);
         $this->assertStringContainsString('3 ay geçti', $egitim['aciklama']);

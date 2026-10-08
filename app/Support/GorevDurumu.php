@@ -4,9 +4,9 @@ namespace App\Support;
 
 use App\Filament\Pages\AcilDurumPlani;
 use App\Filament\Pages\CalisanTemsilcisiSecimi;
-use App\Filament\Pages\DofOlustur;
 use App\Filament\Pages\EgitimKatilim;
 use App\Filament\Pages\EgitimYenilemeTakibi;
+use App\Filament\Pages\HizliSahaBulgusu;
 use App\Filament\Pages\IsbasiEgitim;
 use App\Filament\Pages\IseDonusBelgesi;
 use App\Filament\Pages\IsIzinFormu;
@@ -26,7 +26,6 @@ use App\Filament\Pages\YillikPlan\YillikDegerlendirmeRaporu;
 use App\Filament\Pages\YillikPlan\YillikEgitimPlani;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
-use App\Models\DofRaporu;
 use App\Models\Firma;
 use App\Models\IsEkipmani;
 use App\Models\KkdZimmet;
@@ -251,11 +250,11 @@ class GorevDurumu
             ->pluck('sonraki_tarih')->filter()->map(fn ($t) => Carbon::parse($t)),
             'tetkikin', '6331 sayılı Kanun Md.15 — sağlık gözetimi', 'Sağlık Gözetimi', static::sayfaUrl(SaglikGozetimi::class, $firma));
 
-        $ekle('DÖF', DofRaporu::query()->where('firma_id', $firma->id)->get()
-            ->flatMap(fn (DofRaporu $r) => collect($r->maddeler ?? []))
-            ->filter(fn (array $m) => ($m['durum'] ?? null) !== 'tamamlandi' && filled($m['termin'] ?? null))
-            ->map(fn (array $m) => static::tarih($m['termin']))->filter()->values(),
-            'açık DÖF maddesinin terminin', 'Düzeltici / önleyici faaliyet takibi', 'Risk ve DÖF', static::sayfaUrl(DofOlustur::class, $firma));
+        // Saha bulguları + bulguya bağlanmamış eski DÖF maddeleri (tek kaynak, çift sayılmaz)
+        $ekle('DÖF', BulguHavuzu::aksiyonlar($firma->id)
+            ->filter(fn (array $a) => $a['acik'] && $a['termin'])
+            ->map(fn (array $a) => $a['termin']->copy()->startOfDay())->values(),
+            'açık bulgu / DÖF maddesinin terminin', 'Düzeltici / önleyici faaliyet takibi', 'Risk ve DÖF', static::sayfaUrl(HizliSahaBulgusu::class, $firma));
 
         // Temel eğitim — Yenileme Takibi ile aynı hesap
         $egitim = collect(EgitimTakibi::satirlar($firma));

@@ -4,7 +4,7 @@ namespace App\Support;
 
 use App\Filament\Pages\AcilDurumPlani as AcilDurumPlaniSayfasi;
 use App\Filament\Pages\BildirimMerkezi;
-use App\Filament\Pages\DofOlustur;
+use App\Filament\Pages\HizliSahaBulgusu;
 use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\EgitimYenilemeTakibi;
 use App\Filament\Pages\KimyasalSicili;
@@ -24,7 +24,6 @@ use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\AcilDurumPlani;
 use App\Models\ArsivDosya;
 use App\Models\Bildirim;
-use App\Models\DofRaporu;
 use App\Models\EgitimAtamasi;
 use App\Models\EgitimKatilim;
 use App\Models\Firma;
@@ -149,13 +148,13 @@ class IsyeriDurumu
             $sg->count().' muayene kaydı; '.$g.' gecikmiş, '.$y.' yaklaşan. Kişisel sağlık detayı gösterilmez.',
             'İşyeri hekimi', fn () => SaglikGozetimiSayfasi::getUrl(['firma' => $firma->id]));
 
-        // 8. DÖF
-        $dofMaddeler = DofRaporu::query()->where('firma_id', $firma->id)->get()->flatMap(fn (DofRaporu $r) => $r->maddeler ?? []);
-        $acikDof = $dofMaddeler->where('durum', '!=', 'tamamlandi');
-        [$g, $y] = $sayac($acikDof->pluck('termin')->filter()->map(fn ($t) => static::tarih($t))->filter());
-        $ekle('Düzeltici ve önleyici faaliyetler', $dofMaddeler->isEmpty() ? 'bilgi' : $durumBul(true, $g, $y),
-            $dofMaddeler->isEmpty() ? 'Henüz DÖF kaydı bulunmuyor.' : $acikDof->count().' açık / '.$dofMaddeler->count().' toplam madde; '.$g.' gecikmiş, '.$y.' yaklaşan termin.',
-            'Kayıt sorumlusu / İşveren', fn () => DofOlustur::getUrl(['firma' => $firma->id]));
+        // 8. DÖF — saha bulguları + bulguya bağlanmamış eski DÖF maddeleri (tek kaynak)
+        $aksiyonlar = BulguHavuzu::aksiyonlar($firma->id);
+        $acikDof = $aksiyonlar->where('acik', true);
+        [$g, $y] = $sayac($acikDof->pluck('termin')->filter()->map(fn ($t) => $t->copy()->startOfDay()));
+        $ekle('Düzeltici ve önleyici faaliyetler', $aksiyonlar->isEmpty() ? 'bilgi' : $durumBul(true, $g, $y),
+            $aksiyonlar->isEmpty() ? 'Henüz bulgu / DÖF kaydı bulunmuyor.' : $acikDof->count().' açık / '.$aksiyonlar->count().' toplam bulgu-DÖF maddesi; '.$g.' gecikmiş, '.$y.' yaklaşan termin.',
+            'Kayıt sorumlusu / İşveren', fn () => HizliSahaBulgusu::getUrl(['firma' => $firma->id]));
 
         // 9. KKD
         $zimmet = KkdZimmet::query()->where('firma_id', $firma->id)->where('durum', 'teslim_edildi')->get();
@@ -315,12 +314,8 @@ class IsyeriDurumu
             ->pluck('sonraki_tarih')->filter()->countBy()
             ->each(fn (int $adet, string $t) => $ekle('Sağlık', 'Periyodik muayene', $adet.' kişi', static::tarih($t), 'İşyeri hekimi', fn () => SaglikGozetimiSayfasi::getUrl(['firma' => $firma->id])));
 
-        foreach (DofRaporu::query()->where('firma_id', $firma->id)->get() as $r) {
-            foreach ($r->maddeler ?? [] as $m) {
-                if (filled($m['termin'] ?? null)) {
-                    $ekle('DÖF', mb_strimwidth((string) ($m['tespit'] ?? 'DÖF maddesi'), 0, 80, '…'), $r->belge_no, static::tarih($m['termin']), (string) ($m['sorumlu'] ?? 'Kayıt sorumlusu'), fn () => DofOlustur::getUrl(['firma' => $firma->id]), ($m['durum'] ?? null) === 'tamamlandi');
-                }
-            }
+        foreach (BulguHavuzu::aksiyonlar($firma->id)->filter(fn (array $a) => $a['termin']) as $a) {
+            $ekle('DÖF', mb_strimwidth($a['baslik'], 0, 80, '…'), $a['belge'], $a['termin']->copy()->startOfDay(), (string) ($a['sorumlu'] ?? 'Kayıt sorumlusu'), fn () => HizliSahaBulgusu::getUrl(['firma' => $firma->id]), ! $a['acik']);
         }
 
         foreach (KimyasalUrun::query()->where('firma_id', $firma->id)->where('aktif', true)->whereNotNull('sonraki_gozden_gecirme')->get() as $k) {
@@ -365,7 +360,7 @@ class IsyeriDurumu
             'gorevlendirme' => collect([$firma->igu_id, $firma->isyeri_hekimi_id, $firma->dsp_id])->filter()->count(),
             'evrak_uyum' => static::evrakUyum($firma),
             'risk_maddesi' => $rd ? $rd->maddeler()->count() : 0,
-            'acik_dof' => DofRaporu::query()->where('firma_id', $firma->id)->get()->flatMap(fn ($r) => $r->maddeler ?? [])->where('durum', '!=', 'tamamlandi')->count(),
+            'acik_dof' => BulguHavuzu::aksiyonlar($firma->id)->where('acik', true)->count(),
             'gecikmis_muayene' => $sg->pluck('sonraki_tarih')->filter()->filter(fn ($t) => static::tarih($t)?->lt(Carbon::today()))->count(),
             'egitim_kaydi' => $firma->calisanlar()->withCount('egitimKayitlari')->get()->sum('egitim_kayitlari_count') + EgitimKatilim::query()->where('firma_id', $firma->id)->count(),
         ];

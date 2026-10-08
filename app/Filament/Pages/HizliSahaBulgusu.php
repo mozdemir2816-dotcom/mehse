@@ -6,6 +6,7 @@ use App\Filament\Support\DosyaKabul;
 use App\Models\Firma;
 use App\Models\SahaBulgusu;
 use App\Support\BulguDonusturucu;
+use App\Support\BulguHavuzu;
 use App\Support\DofTabloOkuyucu;
 use App\Support\GeminiSahaAnalizi;
 use App\Support\SahaBulgusuUretici;
@@ -117,6 +118,13 @@ class HizliSahaBulgusu extends Page
     public function firmalar(): array
     {
         return Firma::query()->where('user_id', Filament::auth()->id())->orderBy('unvan')->pluck('unvan', 'id')->all();
+    }
+
+    /** Bulguya bağlanmamış eski DÖF / Tespit-Öneri maddesi sayısı. */
+    #[Computed]
+    public function baglanmamisSayisi(): int
+    {
+        return BulguHavuzu::baglanmamisMaddeSayisi((int) Filament::auth()->id());
     }
 
     /** Seçili firmadaki önceki bulguların bölümleri — hızlı seçim önerisi. @return array<int, string> */
@@ -494,6 +502,23 @@ class HizliSahaBulgusu extends Page
     protected function getHeaderActions(): array
     {
         return [
+            // 4. aşama — 3. aşamadan önceki DÖF / Tespit-Öneri maddeleri (canlıda shell yok)
+            Action::make('eskileriBagla')
+                ->label(fn () => 'Eski kayıtları bulgulara bağla ('.$this->baglanmamisSayisi.')')
+                ->icon('heroicon-o-link')
+                ->color('warning')
+                ->visible(fn () => $this->baglanmamisSayisi > 0)
+                ->requiresConfirmation()
+                ->modalHeading('Eski DÖF ve Tespit-Öneri maddelerini bağla')
+                ->modalDescription(fn () => $this->baglanmamisSayisi.' eski DÖF / Tespit-Öneri maddesi Saha Bulguları\'na eklenecek; DÖF maddesinin durumu (açık / tamamlandı) korunur, sonra iki taraf birlikte güncellenir. Eski Saha Gözlem Raporları belge olarak kalır. İşlem tekrar çalıştırılabilir, kopya oluşturmaz.')
+                ->modalSubmitActionLabel('Bağla')
+                ->action(function (): void {
+                    $acilan = BulguHavuzu::eskileriBagla((int) Filament::auth()->id());
+                    unset($this->baglanmamisSayisi);
+                    $this->yenile();
+                    Notification::make()->title($acilan.' bulgu eklendi')->success()->send();
+                }),
+
             Action::make('dosyadanAktar')
                 ->label("Word/Excel'den Aktar")
                 ->icon('heroicon-o-document-arrow-up')

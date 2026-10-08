@@ -142,6 +142,80 @@ class BulguHavuzu
     }
 
     /**
+     * Firmanın tüm aksiyon kalemleri tek listede: saha bulguları + bulguya
+     * bağlanmamış (eski) DÖF maddeleri. Ana Sayfa görevleri ve İşyeri Durumu
+     * bunu kullanır — aynı uygunsuzluk iki kez sayılmaz.
+     *
+     * @return Collection<int, array{baslik: string, termin: ?\Illuminate\Support\Carbon, sorumlu: ?string, acik: bool, belge: ?string}>
+     */
+    public static function aksiyonlar(int $firmaId): Collection
+    {
+        $bulgular = SahaBulgusu::query()->where('firma_id', $firmaId)->get()
+            ->map(fn (SahaBulgusu $b) => [
+                'baslik' => (string) $b->uygunsuzluk,
+                'termin' => $b->termin,
+                'sorumlu' => $b->sorumlu,
+                'acik' => $b->acikMi(),
+                'belge' => $b->bulgu_no,
+            ]);
+
+        $dof = DofRaporu::query()->where('firma_id', $firmaId)->get()
+            ->flatMap(fn (DofRaporu $r) => collect($r->maddeler ?? [])
+                ->filter(fn ($m) => is_array($m) && empty($m['bulgu_id']))
+                ->map(fn (array $m) => [
+                    'baslik' => (string) ($m['tespit'] ?? 'DÖF maddesi'),
+                    'termin' => filled($m['termin'] ?? null) ? \Illuminate\Support\Carbon::parse($m['termin']) : null,
+                    'sorumlu' => $m['sorumlu'] ?? null,
+                    'acik' => in_array($m['durum'] ?? 'acik', ['acik', 'devam_ediyor'], true),
+                    'belge' => $r->belge_no,
+                ]));
+
+        return $bulgular->concat($dof)->values();
+    }
+
+    /**
+     * Henüz bulguya bağlanmamış eski kayıtlar — aksiyon takibi yapılan DÖF ve
+     * Tespit-Öneri Defteri maddeleri (3. aşamadan önce girilenler). Eski Saha
+     * Gözlem Raporları bilerek dışarıda: takip edilecek maddeleri zaten DÖF'e
+     * dönüştürülmüştü; gözlem maddelerinin hepsi açık bulgu olsaydı listeler ve
+     * Tesis Uygunluğu puanı gerçek dışı şişerdi. Belge olarak oldukları gibi kalır.
+     *
+     * @return Collection<int, Model> bağlanmamış maddesi olan raporlar
+     */
+    public static function baglanmamislar(int $userId): Collection
+    {
+        $firmaIdler = \App\Models\Firma::query()->where('user_id', $userId)->pluck('id');
+        $eksik = fn (array $maddeler) => collect($maddeler)->contains(fn ($m) => is_array($m) && filled($m['tespit'] ?? null) && empty($m['bulgu_id']));
+
+        return collect()
+            ->concat(DofRaporu::query()->whereIn('firma_id', $firmaIdler)->get()->filter(fn ($r) => $eksik($r->maddeler ?? [])))
+            ->concat(TespitOneriDefteri::query()->whereIn('firma_id', $firmaIdler)->get()->filter(fn ($r) => $eksik($r->maddeler ?? [])))
+            ->values();
+    }
+
+    /** @return int bağlanmamış madde sayısı */
+    public static function baglanmamisMaddeSayisi(int $userId): int
+    {
+        return static::baglanmamislar($userId)
+            ->sum(fn (Model $r) => collect($r->maddeler ?? [])->filter(fn ($m) => is_array($m) && filled($m['tespit'] ?? null) && empty($m['bulgu_id']))->count());
+    }
+
+    /**
+     * Eski kayıtları havuza bağlar (tekrar çalıştırılması güvenli).
+     *
+     * @return int yeni açılan bulgu sayısı
+     */
+    public static function eskileriBagla(int $userId): int
+    {
+        $firmaIdler = \App\Models\Firma::query()->where('user_id', $userId)->pluck('id');
+        $once = SahaBulgusu::query()->whereIn('firma_id', $firmaIdler)->count();
+
+        static::baglanmamislar($userId)->each(fn (Model $rapor) => static::esle($rapor));
+
+        return SahaBulgusu::query()->whereIn('firma_id', $firmaIdler)->count() - $once;
+    }
+
+    /**
      * Rapora eklenebilecek açık / devam eden bulgular (rapordakiler hariç).
      *
      * @param  array<int, array<string, mixed>>  $mevcutMaddeler
