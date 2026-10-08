@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Concerns\HizliArsivYukleme;
+use App\Filament\Concerns\SahaHizliIslemleri;
 use App\Filament\Concerns\SinirliErisim;
 use App\Models\ArsivDosya;
 use App\Models\DofRaporu;
@@ -37,6 +38,7 @@ use UnitEnum;
 class ZiyaretModu extends Page
 {
     use HizliArsivYukleme;
+    use SahaHizliIslemleri;
     use SinirliErisim;
 
     protected string $view = 'filament.pages.ziyaret-modu';
@@ -95,7 +97,7 @@ class ZiyaretModu extends Page
 
     private function yenile(): void
     {
-        unset($this->firma, $this->planMaddeleri, $this->arsivDurumu, $this->acikBulgular, $this->acikDofler, $this->gorevler, $this->bugunYapilanlar, $this->bugunkuZiyaret);
+        unset($this->firma, $this->planMaddeleri, $this->arsivDurumu, $this->acikBulgular, $this->acikDofler, $this->gorevler, $this->bugunYapilanlar, $this->bugunkuZiyaret, $this->aktifIzinler, $this->sonRamakKalalar);
     }
 
     protected function hizliArsivFirmasi(): ?Firma

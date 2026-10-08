@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\SahaHizliIslem;
+use App\Filament\Pages\ZiyaretModu;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\IsIzinFormu;
@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Saha hızlı işlemleri (iş izni kapatma, ramak kala) — 5. aşamadan beri
+ * Ziyaret Modu içinde (Concerns\SahaHizliIslemleri).
+ */
 class SahaHizliIslemTest extends TestCase
 {
     use RefreshDatabase;
@@ -45,7 +49,7 @@ class SahaHizliIslemTest extends TestCase
         $tamam = $this->izin('is_tamamlandi');
         $this->izin('kapatildi');
 
-        $sayfa = Livewire::test(SahaHizliIslem::class)->set('firmaId', $this->firma->id);
+        $sayfa = Livewire::test(ZiyaretModu::class)->set('firmaId', $this->firma->id);
 
         $this->assertEqualsCanonicalizing([$onay->id, $tamam->id], $sayfa->instance()->aktifIzinler->pluck('id')->all());
     }
@@ -55,14 +59,14 @@ class SahaHizliIslemTest extends TestCase
         Storage::fake('public');
         $izin = $this->izin('onaylandi');
 
-        Livewire::test(SahaHizliIslem::class)
+        Livewire::test(ZiyaretModu::class)
             ->set('firmaId', $this->firma->id)
-            ->set('izinId', $izin->id)
-            ->set('kapanisNotu', 'Saha temiz, yangın nöbeti tamamlandı.')
-            ->set('kapanisFoto', UploadedFile::fake()->image('kapanis.jpg'))
+            ->set('ptwIzinId', $izin->id)
+            ->set('ptwKapanisNotu', 'Saha temiz, yangın nöbeti tamamlandı.')
+            ->set('ptwKapanisFoto', UploadedFile::fake()->image('kapanis.jpg'))
             ->call('izniKapat')
             ->assertHasNoErrors()
-            ->assertSet('izinId', null);
+            ->assertSet('ptwIzinId', null);
 
         $izin->refresh();
         $this->assertSame('kapatildi', $izin->durum);
@@ -80,9 +84,9 @@ class SahaHizliIslemTest extends TestCase
     {
         $taslak = $this->izin('taslak');
 
-        Livewire::test(SahaHizliIslem::class)
+        Livewire::test(ZiyaretModu::class)
             ->set('firmaId', $this->firma->id)
-            ->set('izinId', $taslak->id)
+            ->set('ptwIzinId', $taslak->id)
             ->call('izniKapat');
 
         $this->assertSame('taslak', $taslak->fresh()->durum);
@@ -92,16 +96,15 @@ class SahaHizliIslemTest extends TestCase
     {
         Storage::fake('public');
 
-        Livewire::test(SahaHizliIslem::class)
-            ->set('sekme', 'ramak')
+        Livewire::test(ZiyaretModu::class)
             ->set('firmaId', $this->firma->id)
-            ->set('yer', 'Depo rampası')
-            ->set('siniflandirma', 'is_makinesi')
-            ->set('ozet', 'Forklift geri manevrada yayaya çok yaklaştı.')
+            ->set('ramakYer', 'Depo rampası')
+            ->set('ramakSiniflandirma', 'is_makinesi')
+            ->set('ramakOzet', 'Forklift geri manevrada yayaya çok yaklaştı.')
             ->set('ramakFotolar', [UploadedFile::fake()->image('r.jpg')])
             ->call('ramakKalaKaydet')
             ->assertHasNoErrors()
-            ->assertSet('ozet', null);
+            ->assertSet('ramakOzet', null);
 
         $o = OlayKaydi::sole();
         $this->assertSame('ramak_kala', $o->olay_tipi);
@@ -114,21 +117,26 @@ class SahaHizliIslemTest extends TestCase
 
     public function test_ramak_kala_kisa_ozet_ve_detay_reddedilir(): void
     {
-        Livewire::test(SahaHizliIslem::class)
+        Livewire::test(ZiyaretModu::class)
             ->set('firmaId', $this->firma->id)
-            ->set('ozet', 'Kısa')
-            ->set('detay', 'Az')
+            ->set('ramakOzet', 'Kısa')
+            ->set('ramakDetay', 'Az')
             ->call('ramakKalaKaydet')
-            ->assertHasErrors(['ozet', 'detay']);
+            ->assertHasErrors(['ramakOzet', 'ramakDetay']);
 
         $this->assertSame(0, OlayKaydi::count());
     }
 
-    public function test_sekme_adresten_acilir_ve_denetim_kisayollari_gorunur(): void
+    public function test_ziyaret_modunda_gorunur_eski_adres_yonlenir(): void
     {
-        $this->get(SahaHizliIslem::getUrl(['sekme' => 'denetim', 'firma' => $this->firma->id]))
-            ->assertOk()
-            ->assertSee('Hızlı Saha Bulgusu')
-            ->assertSee('AI Saha Analizi');
+        $this->izin('onaylandi');
+
+        Livewire::test(ZiyaretModu::class, ['firmaId' => $this->firma->id])
+            ->assertSee('Hızlı işlemler')
+            ->assertSee('İş iznini kapat (1)')
+            ->call('hizliIslemAc', 'ramak')
+            ->assertSee('Ramak kala kaydını oluştur');
+
+        $this->get('/admin/saha-hizli-islem?firma='.$this->firma->id)->assertRedirect('/admin/ziyaret?firma='.$this->firma->id);
     }
 }

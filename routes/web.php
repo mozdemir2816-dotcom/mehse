@@ -22,6 +22,10 @@ Route::redirect('/', '/admin');
 // Yıllık Planlar tek sayfadan üç ayrı sayfaya bölündü (01.10.2026) — eski yer imleri.
 Route::redirect('/admin/yillik-planlar', '/admin/yillik-calisma-plani');
 
+// "Saha Hızlı İşlem" (iş izni kapatma, ramak kala) Ziyaret Modu'nun içine alındı
+// — saha kontrolleri 5. aşama, 08.10.2026. Eski bağlantı firma seçimiyle yönlenir.
+Route::get('/admin/saha-hizli-islem', fn (Request $request) => redirect('/admin/ziyaret'.($request->integer('firma') ? '?firma='.$request->integer('firma') : '')));
+
 // Topbar tema seçicisi (filament.components.tema-secici) seçimi hesaba kaydeder;
 // böylece tema her cihazda aynı gelir. Ayarlar sayfası aynı alanı yazar.
 Route::post('/mehse/ayar/tema', function (Request $request) {

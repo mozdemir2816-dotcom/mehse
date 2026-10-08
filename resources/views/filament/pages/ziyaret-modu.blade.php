@@ -166,6 +166,9 @@
             @endif
         </div>
 
+        {{-- HIZLI İŞLEMLER — iş izni kapatma, ramak kala (eski "Saha Hızlı İşlem") --}}
+        @include('filament.pages.partials.saha-hizli-islemler')
+
         {{-- 4. DİĞER EKSİKLER --}}
         @if ($this->gorevler)
             <div style="{{ $kart }}">
