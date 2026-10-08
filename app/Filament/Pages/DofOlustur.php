@@ -30,6 +30,7 @@ use App\Filament\Concerns\SinirliErisim;
 class DofOlustur extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     use \App\Filament\Concerns\HazirRaporYukleme;
     use WithFileUploads;
@@ -268,6 +269,8 @@ class DofOlustur extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->gecmisKayitlar);
 
         foreach ($this->firmaKunyesi() as $alan => $deger) {
@@ -456,7 +459,7 @@ class DofOlustur extends Page
             return null;
         }
 
-        $d = new DofRaporu([
+        $d = $this->kayitIcin(DofRaporu::class, [
             'firma_id' => $this->firma->id,
             'alan_bolge' => $this->alanBolge,
             'gozetim_tarih_araligi' => $this->gozetimTarihAraligi,
@@ -495,6 +498,8 @@ class DofOlustur extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('bulgulardanEkle')
                 ->label('Saha Bulgularından Ekle')
                 ->icon('heroicon-o-queue-list')
@@ -543,6 +548,8 @@ class DofOlustur extends Page
                     if (! $d) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('DÖF raporu kaydedildi')->body($d->belge_no)->success()->send();
 

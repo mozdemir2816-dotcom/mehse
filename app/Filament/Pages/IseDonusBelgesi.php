@@ -24,6 +24,7 @@ use App\Filament\Concerns\SinirliErisim;
 class IseDonusBelgesi extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.ise-donus-belgesi';
 
@@ -130,6 +131,8 @@ class IseDonusBelgesi extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->hekimAdi = $this->firma?->isyeriHekimi?->ad_soyad;
     }
@@ -151,7 +154,7 @@ class IseDonusBelgesi extends Page
             return null;
         }
 
-        $b = IseDonusBelgesiModel::create([
+        $b = $this->kayitIcin(IseDonusBelgesiModel::class, [
             'firma_id' => $this->firma->id,
             'calisan_id' => $this->calisanHizliSecId,
             'calisan_ad_soyad' => $this->calisanAdSoyad,
@@ -168,6 +171,7 @@ class IseDonusBelgesi extends Page
             'hekim_adi' => $this->hekimAdi ?: $this->firma->isyeriHekimi?->ad_soyad,
             'hekim_kase' => $this->firma->isyeriHekimi?->kase_gorseli,
         ]);
+        $b->save();
 
         unset($this->gecmisKayitlar);
 
@@ -177,6 +181,8 @@ class IseDonusBelgesi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('Belgeyi Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -188,6 +194,8 @@ class IseDonusBelgesi extends Page
                     if (! $b) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('İşe dönüş belgesi kaydedildi')->body($b->belge_no)->success()->send();
 

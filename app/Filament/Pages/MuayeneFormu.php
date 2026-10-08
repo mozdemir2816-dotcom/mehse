@@ -26,6 +26,7 @@ use App\Filament\Concerns\SinirliErisim;
 class MuayeneFormu extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.muayene-formu';
 
@@ -158,6 +159,8 @@ class MuayeneFormu extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->hekimAdi = $this->firma?->isyeriHekimi?->ad_soyad;
     }
@@ -202,7 +205,7 @@ class MuayeneFormu extends Page
             return null;
         }
 
-        $m = new MuayeneFormuModel([
+        $m = $this->kayitIcin(MuayeneFormuModel::class, [
             'firma_id' => $this->firma->id,
             'calisan_id' => $this->calisanHizliSecId,
             'calisan_ad_soyad' => $this->calisanAdSoyad,
@@ -234,6 +237,8 @@ class MuayeneFormu extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('Formu Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -245,6 +250,8 @@ class MuayeneFormu extends Page
                     if (! $m) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('Muayene formu kaydedildi')->body($m->belge_no)->success()->send();
 

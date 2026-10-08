@@ -35,6 +35,7 @@ use App\Filament\Concerns\SinirliErisim;
 class EgitimKatilim extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     use WithFileUploads;
 
@@ -504,6 +505,8 @@ class EgitimKatilim extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egitmenBilgileriYenile();
@@ -802,7 +805,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
             $icerik['saat'] = $this->dersSaati;
         }
 
-        $kayit = new EgitimKatilimModel([
+        $kayit = $this->kayitIcin(EgitimKatilimModel::class, [
             'firma_id' => $this->firma->id,
             'baslik_anahtari' => $this->baslikAnahtari,
             'egitim_turu' => $this->egitimTuru,
@@ -835,6 +838,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('Form PDF (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -846,6 +851,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                     if (! $kayit) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no)->success()->send();
 
@@ -864,6 +871,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                     if (! $kayit) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no)->success()->send();
 
@@ -894,6 +903,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                         return null;
                     }
 
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+
                     $tarihler = array_values(array_filter(collect($data)->except('imzali')->all()));
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — her katılımcı için ayrı sertifika sayfası')->success()->send();
@@ -922,6 +933,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                     if (! $kayit) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     $tarihler = array_values(array_filter($data, fn ($v, $k) => str_starts_with((string) $k, 'egitim_gun_') && filled($v), ARRAY_FILTER_USE_BOTH));
                     $indirme = SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit, $tarihler), ImzaSecenegi::secili($data));

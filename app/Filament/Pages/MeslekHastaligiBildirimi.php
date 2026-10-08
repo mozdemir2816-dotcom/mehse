@@ -24,6 +24,7 @@ use App\Filament\Concerns\SinirliErisim;
 class MeslekHastaligiBildirimi extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.meslek-hastaligi-bildirimi';
 
@@ -144,6 +145,8 @@ class MeslekHastaligiBildirimi extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
     }
 
@@ -170,7 +173,7 @@ class MeslekHastaligiBildirimi extends Page
             return null;
         }
 
-        $m = new MeslekHastaligiBildirimiModel([
+        $m = $this->kayitIcin(MeslekHastaligiBildirimiModel::class, [
             'firma_id' => $this->firma->id,
             'calisan_id' => $this->calisanHizliSecId,
             'calisan_ad_soyad' => $this->calisanAdSoyad,
@@ -199,6 +202,8 @@ class MeslekHastaligiBildirimi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('Bildirimi Kaydet ve PDF Oluştur')
                 ->icon('heroicon-o-document-arrow-down')
@@ -209,6 +214,8 @@ class MeslekHastaligiBildirimi extends Page
                     if (! $m) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('Meslek hastalığı bildirimi kaydedildi')->body($m->belge_no)->success()->send();
 

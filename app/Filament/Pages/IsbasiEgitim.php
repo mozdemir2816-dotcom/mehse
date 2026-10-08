@@ -27,6 +27,7 @@ use App\Filament\Concerns\SinirliErisim;
 class IsbasiEgitim extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.isbasi-egitim';
 
@@ -140,6 +141,8 @@ class IsbasiEgitim extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar);
     }
 
@@ -242,7 +245,7 @@ class IsbasiEgitim extends Page
             return null;
         }
 
-        $t = new IsbasiEgitimTutanagiModel([
+        $t = $this->kayitIcin(IsbasiEgitimTutanagiModel::class, [
             'firma_id' => $this->firma->id,
             'calisan_ad_soyad' => $this->calisanAdSoyad,
             'calisan_tc' => $this->calisanTc,
@@ -267,6 +270,8 @@ class IsbasiEgitim extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('sunumYukle')
                 ->label('Eğitim Sunumu Yükle')
                 ->icon('heroicon-o-presentation-chart-bar')
@@ -309,6 +314,9 @@ class IsbasiEgitim extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydet();
+                    if ($t) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     return $t ? IsbasiEgitimTutanagiUretici::pdf($t) : null;
                 }),

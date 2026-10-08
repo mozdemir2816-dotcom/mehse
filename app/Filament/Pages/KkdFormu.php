@@ -24,6 +24,7 @@ use App\Filament\Concerns\SinirliErisim;
 class KkdFormu extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.kkd-formu';
 
@@ -150,6 +151,8 @@ class KkdFormu extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisFormlar, $this->isKalemleri);
         $this->secilenCalisanIdler = [];
         $this->matristenGelenKkdler = [];
@@ -319,7 +322,7 @@ class KkdFormu extends Page
             return null;
         }
 
-        $form = new KkdZimmetFormuModel([
+        $form = $this->kayitIcin(KkdZimmetFormuModel::class, [
             'firma_id' => $this->firma->id,
             'teslim_tarihi' => $this->teslimTarihi,
             'periyodik_kontrol_tarihi' => $this->periyodikKontrolTarihi,
@@ -337,12 +340,17 @@ class KkdFormu extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('PDF Oluştur (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->action(function () {
                     $form = $this->kaydet();
+                    if ($form) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     return $form ? KkdZimmetFormuUretici::pdf($form) : null;
                 }),

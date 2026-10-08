@@ -28,6 +28,7 @@ use App\Filament\Concerns\SinirliErisim;
 class EgitimSorulari extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.egitim-sorulari';
 
@@ -147,6 +148,8 @@ class EgitimSorulari extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisSinavlar);
     }
 
@@ -300,7 +303,7 @@ class EgitimSorulari extends Page
             return null;
         }
 
-        $sinav = new EgitimSinaviModel([
+        $sinav = $this->kayitIcin(EgitimSinaviModel::class, [
             'firma_id' => $this->firma->id,
             'sektor_anahtari' => $this->sektorAnahtari ?: null,
             'zorluk' => $this->zorluk,
@@ -319,6 +322,8 @@ class EgitimSorulari extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('bankadanCek')
                 ->label('Soru Bankasından Ekle')
                 ->icon('heroicon-o-rectangle-stack')
@@ -342,6 +347,9 @@ class EgitimSorulari extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $sinav = $this->kaydet();
+                    if ($sinav) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     return $sinav ? EgitimSinaviUretici::pdf($sinav) : null;
                 }),

@@ -30,6 +30,7 @@ use App\Filament\Concerns\SinirliErisim;
 class IsIzinFormu extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.is-izin-formu';
 
@@ -242,6 +243,8 @@ class IsIzinFormu extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->gecmisFormlar, $this->firmaCalisanlari, $this->sahaDenetimleri, $this->ozet);
         $this->secilenCalisanlar = [];
         $this->sahaDenetimiId = null;
@@ -366,7 +369,7 @@ class IsIzinFormu extends Page
             return null;
         }
 
-        $form = new IsIzinFormuModel([
+        $form = $this->kayitIcin(IsIzinFormuModel::class, [
             'firma_id' => $this->firma->id,
             'sablon_kaynak' => $this->sablonKaynak,
             'calisma_alani' => $this->calismaAlani,
@@ -401,6 +404,8 @@ class IsIzinFormu extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('kutuphayeEkle')
                 ->label('Formu Kütüphaneye Şablon Olarak Ekle')
                 ->icon('heroicon-o-bookmark')
@@ -441,6 +446,9 @@ class IsIzinFormu extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $form = $this->kaydet();
+                    if ($form) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     if ($form) {
                         Notification::make()->title('İş izni kaydedildi')->body($form->izin_no.' — durum: Taslak')->success()->send();

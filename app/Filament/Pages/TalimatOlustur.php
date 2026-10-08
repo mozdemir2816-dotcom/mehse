@@ -31,6 +31,7 @@ use App\Filament\Concerns\SinirliErisim;
 class TalimatOlustur extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     protected string $view = 'filament.pages.talimat-olustur';
 
@@ -145,6 +146,8 @@ class TalimatOlustur extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->kayitliTalimatlar);
     }
 
@@ -248,7 +251,7 @@ class TalimatOlustur extends Page
             return null;
         }
 
-        $talimat = new TalimatModel([
+        $talimat = $this->kayitIcin(TalimatModel::class, [
             'firma_id' => $this->firma->id,
             'baslik' => $this->baslik,
             'kategori' => $this->kategori,
@@ -266,6 +269,8 @@ class TalimatOlustur extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('sablonIndir')
                 ->label('Şablon İndir')
                 ->icon('heroicon-o-document-arrow-down')
@@ -359,6 +364,9 @@ class TalimatOlustur extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $talimat = $this->kaydet();
+                    if ($talimat) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     return $talimat ? TalimatUretici::pdf($talimat) : null;
                 }),
@@ -371,6 +379,9 @@ class TalimatOlustur extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $talimat = $this->kaydet();
+                    if ($talimat) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     return $talimat ? TalimatWordUretici::word($talimat) : null;
                 }),

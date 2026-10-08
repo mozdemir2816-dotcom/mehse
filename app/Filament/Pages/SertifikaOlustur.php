@@ -33,6 +33,7 @@ use App\Filament\Concerns\SinirliErisim;
 class SertifikaOlustur extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     use WithFileUploads;
 
@@ -195,6 +196,8 @@ class SertifikaOlustur extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egiticiIguAdi = $this->firma?->igu?->ad_soyad;
@@ -390,7 +393,7 @@ class SertifikaOlustur extends Page
             }
         }
 
-        $s = new Sertifika([
+        $s = $this->kayitIcin(Sertifika::class, [
             'firma_id' => $this->firma->id,
             'tip' => $this->tip,
             'tur' => $this->tur,
@@ -421,6 +424,8 @@ class SertifikaOlustur extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('Sertifikayı Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -432,6 +437,8 @@ class SertifikaOlustur extends Page
                     if (! $s) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     Notification::make()->title('Sertifika kaydedildi')->body($s->belge_no)->success()->send();
 
@@ -450,6 +457,8 @@ class SertifikaOlustur extends Page
                     if (! $s) {
                         return null;
                     }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     $indirme = SertifikaYildizGrupUretici::indir($s, ImzaSecenegi::secili($data));
 

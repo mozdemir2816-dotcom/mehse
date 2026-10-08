@@ -28,6 +28,7 @@ use App\Filament\Concerns\SinirliErisim;
 class CezaTeblig extends Page
 {
     use \App\Filament\Concerns\SinirliErisim;
+    use \App\Filament\Concerns\KaydetSecenegi;
 
     use WithFileUploads;
 
@@ -205,6 +206,8 @@ class CezaTeblig extends Page
 
     public function updatedFirmaId(): void
     {
+        $this->kayitUnut();
+
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->gecmisIpcTebligleri);
     }
 
@@ -332,7 +335,7 @@ class CezaTeblig extends Page
             return null;
         }
 
-        $t = new CezaTebligTutanagiModel([
+        $t = $this->kayitIcin(CezaTebligTutanagiModel::class, [
             'firma_id' => $this->firma->id,
             'tutanak_tarihi' => $this->tutanakTarihi,
             'calisan_ad_soyad' => $this->calisanAdSoyad,
@@ -392,6 +395,8 @@ class CezaTeblig extends Page
     protected function getHeaderActions(): array
     {
         return [
+            $this->kaydetAction(),
+            $this->yeniKayitAction(),
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
@@ -399,6 +404,9 @@ class CezaTeblig extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydet();
+                    if ($t) {
+                        $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+                    }
 
                     return $t ? CezaTebligTutanagiUretici::pdf($t) : null;
                 }),
