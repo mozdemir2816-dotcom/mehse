@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\Talimat as TalimatModel;
 use App\Models\TalimatSablonu;
 use App\Support\GeminiTalimatUretici;
+use App\Support\TalimatDosyaOkuyucu;
 use App\Support\TalimatKutuphanesi;
 use App\Support\TalimatListesiUretici;
 use App\Support\TalimatSablonuExcelIceAktarici;
@@ -144,7 +145,9 @@ class TalimatOlustur extends Page
             ->get()
             ->map(fn (TalimatSablonu $s) => [
                 'baslik' => $s->baslik, 'kategori' => $s->kategori, 'aciklama' => $s->aciklama,
-                'kkdler' => $s->kkdler ?? [], 'kaynak' => 'ozel', 'anahtar' => $s->id,
+                'kkdler' => $s->kkdler ?? [], 'maddeler' => $s->maddeler ?? [],
+                'bolumler' => $s->bolumler, 'taahhut' => $s->taahhut, 'dokuman_no' => $s->dokuman_no,
+                'kaynak' => 'ozel', 'anahtar' => $s->id,
             ]);
 
         return $hazir->concat($ozel)
@@ -366,6 +369,60 @@ class TalimatOlustur extends Page
     |--------------------------------------------------------------------------
     */
 
+    /** "Hazır Talimatlarımı Yükle": her dosya okunur, arşive (ve istenirse firmaya) eklenir. */
+    private function talimatDosyalariniIceAktar(array $data): void
+    {
+        $eklenen = [];
+        $hatalar = [];
+        $firmaya = 0;
+
+        foreach ((array) ($data['dosyalar'] ?? []) as $yol) {
+            $ad = basename($yol);
+
+            try {
+                $sablon = TalimatDosyaOkuyucu::oku(Storage::disk('local')->path($yol), $ad);
+            } catch (Throwable $e) {
+                $hatalar[] = $ad.': '.$e->getMessage();
+
+                continue;
+            } finally {
+                Storage::disk('local')->delete($yol);
+            }
+
+            $sablon['kategori'] = $data['kategori'] ?? null;
+            $alanlar = collect(TalimatKutuphanesi::talimatAlanlari($sablon))->except('baslik')->all();
+
+            TalimatSablonu::updateOrCreate(
+                ['user_id' => Filament::auth()->id(), 'baslik' => $sablon['baslik']],
+                $alanlar,
+            );
+            $eklenen[] = $sablon['baslik'];
+
+            if (($data['firmayaEkle'] ?? false) && $this->firma
+                && ! $this->firma->talimatlar()->where('baslik', $sablon['baslik'])->exists()) {
+                TalimatModel::create(['firma_id' => $this->firma->id, ...TalimatKutuphanesi::talimatAlanlari($sablon)]);
+                $firmaya++;
+            }
+        }
+
+        unset($this->sablonlar, $this->kayitliTalimatlar);
+
+        $govde = implode("\n", array_map(fn ($b) => '✓ '.$b, $eklenen));
+        if ($firmaya) {
+            $govde .= "\n".$firmaya.' talimat firmaya da eklendi.';
+        }
+        if ($hatalar) {
+            $govde .= "\n".implode("\n", array_map(fn ($h) => '✗ '.$h, $hatalar));
+        }
+
+        Notification::make()
+            ->title(count($eklenen).' talimat arşivinize eklendi'.($hatalar ? ', '.count($hatalar).' dosya okunamadı' : ''))
+            ->body(trim($govde))
+            ->{$eklenen ? ($hatalar ? 'warning' : 'success') : 'danger'}()
+            ->persistent()
+            ->send();
+    }
+
     public function kendiSablonSil(int $id): void
     {
         TalimatSablonu::where('user_id', Filament::auth()->id())->where('id', $id)->delete();
@@ -432,6 +489,40 @@ class TalimatOlustur extends Page
                 ->action(fn (array $data) => $data['bicim'] === 'excel'
                     ? TalimatListesiUretici::excel($this->firma, $data['tarih'] ?? null)
                     : TalimatListesiUretici::pdf($this->firma, $data['tarih'] ?? null)),
+
+            // Kullanıcının kendi hazırladığı talimatlar (Word/PDF/Excel) yapısı çıkarılarak arşive.
+            Action::make('talimatDosyasiYukle')
+                ->label('Hazır Talimatlarımı Yükle (Word/PDF/Excel)')
+                ->icon('heroicon-o-document-arrow-up')
+                ->color('info')
+                ->modalHeading('Kendi Talimatlarımı Yükle')
+                ->modalDescription('Hazırladığınız talimat dosyalarını (birden fazla seçebilirsiniz) yükleyin. Başlık, doküman no, bölümler (Amaç, Kapsam, KKD…) veya numaralı maddeler ve taahhüt metni dosyadan okunur; metin değiştirilmez. Talimatlar "Arşivim" olarak kütüphanenize eklenir, aynı başlıklı arşiv talimatı varsa güncellenir.')
+                ->modalSubmitActionLabel('Yükle')
+                ->fillForm(fn () => ['firmayaEkle' => $this->firma !== null])
+                ->schema([
+                    FileUpload::make('dosyalar')
+                        ->label('Talimat dosyaları')
+                        ->multiple()
+                        ->maxFiles(50)
+                        ->disk('local')
+                        ->directory('talimat-ice-aktarim')
+                        ->preserveFilenames()
+                        ->acceptedFileTypes([
+                            'application/pdf',
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'application/vnd.ms-excel',
+                        ])
+                        ->helperText('Word (.docx), PDF veya Excel (.xlsx). Eski .doc dosyalarını Word\'de .docx olarak kaydedin; taranmış (resim) PDF okunamaz.')
+                        ->required(),
+                    \Filament\Forms\Components\Select::make('kategori')->label('Kategori')
+                        ->options(fn () => $this->kategoriler())->native(false)
+                        ->placeholder('Seçmeyin — kategorisiz'),
+                    \Filament\Forms\Components\Toggle::make('firmayaEkle')
+                        ->label(fn () => 'Seçili firmaya da talimat olarak ekle'.($this->firma ? ' ('.$this->firma->unvan.')' : ''))
+                        ->visible(fn () => $this->firma !== null),
+                ])
+                ->action(fn (array $data) => $this->talimatDosyalariniIceAktar($data)),
 
             Action::make('sablonIndir')
                 ->label('Şablon İndir')

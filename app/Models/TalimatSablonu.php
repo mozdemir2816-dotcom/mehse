@@ -22,6 +22,7 @@ class TalimatSablonu extends Model
     protected $casts = [
         'kkdler' => 'array',
         'maddeler' => 'array',
+        'bolumler' => 'array',
     ];
 
     public function user(): BelongsTo
