@@ -193,7 +193,8 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
 
     public function test_art_arda_basarisizlikta_devre_kesilir_ve_istek_atilmaz(): void
     {
-        config(['services.gemini.key' => 'test-anahtar']);
+        // Yedek model kapalı: devre kesici sayımı tek modelle (yedekli hâli GeminiIstemciTest).
+        config(['services.gemini.key' => 'test-anahtar', 'services.gemini.yedek_modeller' => []]);
         Http::fake(['generativelanguage.googleapis.com/*' => Http::response(['error' => 'kota'], 429)]);
 
         GeminiRiskPuanTamamlayici::devreyiSifirla();

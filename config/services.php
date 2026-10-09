@@ -38,6 +38,8 @@ return [
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-3.6-flash'),
+        // Ana model yoğunken (503/429/500) sırayla denenir — App\Support\GeminiIstemci.
+        'yedek_modeller' => array_values(array_filter(explode(',', (string) env('GEMINI_YEDEK_MODELLER', 'gemini-3.5-flash,gemini-2.5-flash')))),
     ],
 
 ];

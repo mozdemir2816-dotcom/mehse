@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -25,7 +24,7 @@ class GeminiOneriDanismani
         }
 
         try {
-            $yanit = Http::timeout(45)->post(static::endpoint(), static::istekGovdesi($tespit));
+            $yanit = GeminiIstemci::post(static::istekGovdesi($tespit), 45);
 
             if ($yanit->failed()) {
                 Log::warning('Gemini tespit önerisi başarısız', ['durum' => $yanit->status(), 'govde' => $yanit->body()]);
@@ -41,13 +40,6 @@ class GeminiOneriDanismani
 
             return null;
         }
-    }
-
-    private static function endpoint(): string
-    {
-        $model = config('services.gemini.model', 'gemini-3.6-flash');
-
-        return "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=".config('services.gemini.key');
     }
 
     /** @return array<string, mixed> */

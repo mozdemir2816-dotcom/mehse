@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\SahaAnalizi;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -151,7 +150,7 @@ class GeminiSahaAnalizi
     private static function istek(array $parts, array $sema): mixed
     {
         try {
-            $yanit = Http::timeout(90)->post(static::endpoint(), [
+            $yanit = GeminiIstemci::post(timeout: 90, govde: [
                 'contents' => [['role' => 'user', 'parts' => $parts]],
                 'generationConfig' => [
                     'temperature' => 0.3,
@@ -172,13 +171,6 @@ class GeminiSahaAnalizi
 
             return null;
         }
-    }
-
-    private static function endpoint(): string
-    {
-        $model = config('services.gemini.model', 'gemini-3.6-flash');
-
-        return "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=".config('services.gemini.key');
     }
 
     /** @return array<string, mixed> */

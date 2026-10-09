@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -28,7 +27,7 @@ class GeminiRiskPdfOkuyucu
         }
 
         try {
-            $yanit = Http::timeout(180)->post(static::endpoint(), static::istekGovdesi($dosyaYolu));
+            $yanit = GeminiIstemci::post(static::istekGovdesi($dosyaYolu), 180);
 
             if ($yanit->failed()) {
                 Log::warning('Gemini risk PDF okuma başarısız', ['durum' => $yanit->status(), 'govde' => $yanit->body()]);
@@ -84,13 +83,6 @@ class GeminiRiskPdfOkuyucu
             'son_frekans' => is_numeric($m['son_frekans'] ?? null) ? (float) $m['son_frekans'] : null,
             'son_siddet' => is_numeric($m['son_siddet'] ?? null) ? (float) $m['son_siddet'] : null,
         ];
-    }
-
-    private static function endpoint(): string
-    {
-        $model = config('services.gemini.model', 'gemini-3.6-flash');
-
-        return "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=".config('services.gemini.key');
     }
 
     /** @return array<string, mixed> */

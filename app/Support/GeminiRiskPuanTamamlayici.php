@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -76,9 +75,9 @@ class GeminiRiskPuanTamamlayici
         $fk = RiskSkorlama::ucEksenliMi($yontem);
 
         try {
-            $yanit = Http::timeout(self::ISTEK_TIMEOUT)->connectTimeout(5)->post(
-                static::endpoint(),
+            $yanit = GeminiIstemci::post(
                 static::istekGovdesi($tehlike, $risk, $bolum, $faaliyet, $yontem),
+                self::ISTEK_TIMEOUT, 5,
             );
 
             if ($yanit->failed()) {
@@ -122,9 +121,9 @@ class GeminiRiskPuanTamamlayici
         }
 
         try {
-            $yanit = Http::timeout(self::ISTEK_TIMEOUT)->connectTimeout(5)->post(
-                static::endpoint(),
+            $yanit = GeminiIstemci::post(
                 static::onlemIstekGovdesi($tehlike, $risk, $bolum, $faaliyet),
+                self::ISTEK_TIMEOUT, 5,
             );
 
             if ($yanit->failed()) {
@@ -195,13 +194,6 @@ class GeminiRiskPuanTamamlayici
         usort($izinli, fn (float $a, float $b) => abs($a - $sayi) <=> abs($b - $sayi));
 
         return $izinli[0] ?? $sayi;
-    }
-
-    private static function endpoint(): string
-    {
-        $model = config('services.gemini.model', 'gemini-3.6-flash');
-
-        return "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=".config('services.gemini.key');
     }
 
     /** @return array<string, mixed> */
