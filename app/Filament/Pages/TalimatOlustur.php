@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\Talimat as TalimatModel;
 use App\Models\TalimatSablonu;
 use App\Support\GeminiTalimatUretici;
+use App\Support\TalimatListesiUretici;
 use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TalimatUretici;
 use App\Support\TalimatWordUretici;
@@ -271,6 +272,29 @@ class TalimatOlustur extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+
+            // Firmaya tanımlı talimatların listesi — "bu firmaya hangi talimatları verdim".
+            Action::make('talimatListesi')
+                ->label('Talimat Listesi')
+                ->icon('heroicon-o-list-bullet')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->disabled(fn () => $this->kayitliTalimatlar->isEmpty())
+                ->modalHeading(fn () => 'Talimat Listesi — '.$this->firma?->unvan)
+                ->modalDescription(fn () => $this->kayitliTalimatlar->count().' kayıtlı talimat listelenecek.')
+                ->modalSubmitActionLabel('İndir')
+                ->fillForm(['bicim' => 'pdf', 'maddeler' => false])
+                ->schema([
+                    \Filament\Forms\Components\Radio::make('bicim')->label('Biçim')
+                        ->options(['pdf' => 'PDF', 'excel' => 'Excel'])->inline()->required()->live(),
+                    \Filament\Forms\Components\Toggle::make('maddeler')
+                        ->label('Her talimatın maddelerini de ekle (ek sayfalarda)')
+                        ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('bicim') === 'pdf'),
+                ])
+                ->action(fn (array $data) => $data['bicim'] === 'excel'
+                    ? TalimatListesiUretici::excel($this->firma)
+                    : TalimatListesiUretici::pdf($this->firma, (bool) ($data['maddeler'] ?? false))),
+
             Action::make('sablonIndir')
                 ->label('Şablon İndir')
                 ->icon('heroicon-o-document-arrow-down')
