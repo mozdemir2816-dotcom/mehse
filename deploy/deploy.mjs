@@ -114,6 +114,10 @@ function walk(localDir, remoteBase, out = []) {
         // Yerel önbellek (services/packages.php) dev paketlerine referans verebilir;
         // sunucu kendi önbelleğini provider listesi değişince kendisi yeniden üretir.
         if (remoteRelPath === 'mehse-app/bootstrap/cache') continue;
+        // Sunucu vendor'ı --no-dev kurulu; yereldeki autoload dev paketlerini
+        // (phpunit, collision…) ister ve başka bir sınıf soneki taşır. Yüklenirse
+        // site 500 verir (10.10.2026). Bunları deploy/autoload-yukle.mjs yükler.
+        if (remoteRelPath === 'mehse-app/vendor/composer' || remoteRelPath === 'mehse-app/vendor/autoload.php') continue;
         if (entry.isDirectory()) {
             walk(localPath, remoteRelPath, out);
         } else if (entry.isFile()) {
@@ -186,6 +190,11 @@ async function main() {
 
     const allFiles = collectFiles();
     const generatedIndexPhp = buildRootIndexPhp();
+
+    if (fs.statSync(path.join(ROOT, 'composer.lock')).mtimeMs > state.lastDeployAt) {
+        console.warn('[deploy] UYARI: composer.lock son deploy\'dan sonra değişti. Yeni paket dosyaları yüklenir ama');
+        console.warn('[deploy] vendor/composer yüklenmez: deploy/autoload-yukle.mjs başındaki adımlarla --no-dev autoload\'u ayrıca yükleyin.');
+    }
 
     const alwaysUpload = new Set(['.htaccess', 'composer.lock']);
 
