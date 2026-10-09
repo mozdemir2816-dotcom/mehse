@@ -61,7 +61,12 @@
                             </span>
                         @endif
                     </div>
-                    <div style="font-weight:700;font-size:.85rem;margin:.15rem 0">{{ $s['baslik'] }}</div>
+                    <div style="font-weight:700;font-size:.85rem;margin:.15rem 0">
+                        {{ $s['baslik'] }}
+                        @if (! empty($s['bolumler']))
+                            <span style="font-size:.62rem;background:rgb(16 185 129);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
+                        @endif
+                    </div>
                     <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
                 </div>
             @empty
@@ -102,27 +107,76 @@
                 </div>
             </div>
 
-            <div style="margin-bottom:.75rem">
+            @php $girdi = 'margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem'; @endphp
+
+            {{-- Künye: çıktının her sayfasındaki üst tablo --}}
+            <div style="{{ $kutu }};margin-bottom:.75rem">
+                <div style="font-weight:600;font-size:.8rem;margin-bottom:.4rem">Doküman Bilgileri <span style="font-weight:400;color:rgb(107 114 128)">(her sayfanın üstündeki tabloya basılır; boş doküman no / yayın tarihi otomatik doldurulur)</span></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
+                    <div><label style="font-size:.75rem">Doküman No</label><input type="text" wire:model="dokumanNo" placeholder="Otomatik" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem">Yayınlanma Tarihi</label><input type="date" wire:model="yayinTarihi" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem">Revizyon No</label><input type="text" wire:model="revizyonNo" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem">Revizyon Tarihi</label><input type="date" wire:model="revizyonTarihi" style="{{ $girdi }}"></div>
+                </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.75rem">
                 <x-filament::button color="info" icon="heroicon-o-sparkles" wire:click="aiIleUret">
                     @if ($this->aiAktif) AI ile Üret @else AI ile Üret (devre dışı) @endif
                 </x-filament::button>
+                @if ($bolumlu)
+                    <x-filament::button color="gray" icon="heroicon-o-list-bullet" wire:click="duzYap"
+                        wire:confirm="Tüm bölümlerin maddeleri tek numaralı listede toplanacak; Amaç/Kapsam gibi açıklamalar düşecek. Devam edilsin mi?">Düz listeye çevir</x-filament::button>
+                @else
+                    <x-filament::button color="gray" icon="heroicon-o-queue-list" wire:click="bolumluYap">Bölümlü yapıya çevir (Amaç, Kapsam, KKD…)</x-filament::button>
+                @endif
+                <span style="font-size:.75rem;color:rgb(107 114 128)">
+                    {{ $bolumlu ? 'Bölümlü yapı: başlıklar otomatik numaralanır, maddeler madde işaretiyle basılır. Boş bölümler çıktıya girmez.' : 'Düz yapı: maddeler 1, 2, 3… diye numaralanır.' }}
+                </span>
             </div>
 
-            @if ($maddeler)
-                <ol style="margin:0 0 .75rem 1.2rem;padding:0;font-size:.82rem;display:flex;flex-direction:column;gap:.3rem">
-                    @foreach ($maddeler as $i => $m)
-                        <li style="display:flex;justify-content:space-between;gap:.5rem">
-                            <span>{{ $m }}</span>
-                            <button type="button" wire:click="maddeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none;flex-shrink:0">✕</button>
-                        </li>
+            @if ($bolumlu)
+                <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:.75rem">
+                    @foreach ($bolumler as $i => $b)
+                        <div wire:key="bolum-{{ $i }}" style="{{ $kutu }};padding:.7rem">
+                            <div style="display:grid;grid-template-columns:auto 1fr auto;gap:.5rem;align-items:center">
+                                <span style="font-weight:700;font-size:.85rem">{{ $i + 1 }}.</span>
+                                <input type="text" wire:model="bolumler.{{ $i }}.baslik" placeholder="Bölüm başlığı (ör. KALIP SÖKÜM KURALLARI)" style="{{ $girdi }};margin-top:0;font-weight:600">
+                                <span style="white-space:nowrap">
+                                    <button type="button" wire:click="bolumTasi({{ $i }}, -1)" title="Yukarı" style="cursor:pointer;background:none;border:none">▲</button>
+                                    <button type="button" wire:click="bolumTasi({{ $i }}, 1)" title="Aşağı" style="cursor:pointer;background:none;border:none">▼</button>
+                                    <button type="button" wire:click="bolumSil({{ $i }})" wire:confirm="Bu bölüm silinsin mi?" title="Bölümü sil" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                </span>
+                            </div>
+                            <textarea wire:model="bolumler.{{ $i }}.aciklama" rows="2" placeholder="Açıklama paragrafı (isteğe bağlı — Amaç/Kapsam metni veya maddelerden önceki giriş cümlesi)" style="{{ $girdi }};margin-top:.4rem"></textarea>
+                            <textarea wire:model="bolumler.{{ $i }}.maddeler" rows="{{ max(3, min(10, substr_count($b['maddeler'], "\n") + 2)) }}" placeholder="Her satıra bir madde" style="{{ $girdi }};margin-top:.4rem"></textarea>
+                        </div>
                     @endforeach
-                </ol>
+                    <div><x-filament::button size="sm" color="gray" icon="heroicon-o-plus" wire:click="bolumEkle">Bölüm Ekle</x-filament::button></div>
+                </div>
+            @else
+                @if ($maddeler)
+                    <ol style="margin:0 0 .75rem 1.2rem;padding:0;font-size:.82rem;display:flex;flex-direction:column;gap:.3rem">
+                        @foreach ($maddeler as $i => $m)
+                            <li style="display:flex;justify-content:space-between;gap:.5rem">
+                                <span style="white-space:pre-line">{{ $m }}</span>
+                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none;flex-shrink:0">✕</button>
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+
+                <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;margin-bottom:.75rem">
+                    <input type="text" wire:model="yeniMadde" placeholder="Madde ekle..."
+                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    <x-filament::button size="sm" wire:click="maddeEkle">+ Ekle</x-filament::button>
+                </div>
             @endif
 
-            <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem">
-                <input type="text" wire:model="yeniMadde" placeholder="Madde ekle..."
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
-                <x-filament::button size="sm" wire:click="maddeEkle">+ Ekle</x-filament::button>
+            <div>
+                <label style="font-weight:600;font-size:.8rem">{{ $bolumlu ? 'Taahhüt (son bölüm)' : 'Talimat sonu tebliğ metni' }}</label>
+                <textarea wire:model="taahhut" rows="{{ $bolumlu ? 2 : 5 }}" style="{{ $girdi }}"></textarea>
+                <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Altına TEBLİĞ EDEN / TEBELLÜĞ EDEN imza alanı basılır.</div>
             </div>
         </x-filament::section>
     @endif
@@ -137,6 +191,9 @@
                         <tr>
                             <td style="padding:.3rem .5rem">
                                 {{ $t->baslik }} — {{ $t->kategoriEtiketi() }}
+                                @unless ($t->dosyaVarMi())
+                                    <span style="font-size:.72rem;color:rgb(107 114 128)">· {{ $t->dokumanNoGoster() }}@if ($t->revizyon_no) · Rev. {{ $t->revizyon_no }}@endif</span>
+                                @endunless
                                 @if ($t->dosyaVarMi())
                                     <span style="font-size:.65rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px;margin-left:.3rem">Yüklenen dosya</span>
                                 @endif
@@ -145,7 +202,8 @@
                                 @if ($t->dosyaVarMi())
                                     <x-filament::button size="xs" color="gray" wire:click="kayitliDosyaIndir({{ $t->id }})">Dosyayı İndir</x-filament::button>
                                 @endif
-                                @if ($t->maddeler)
+                                @if ($t->maddeler || $t->bolumler)
+                                    <x-filament::button size="xs" color="info" wire:click="kayitliDuzenle({{ $t->id }})">Düzenle</x-filament::button>
                                     <x-filament::button size="xs" color="gray" wire:click="kayitliPdf({{ $t->id }})">PDF</x-filament::button>
                                     <x-filament::button size="xs" color="gray" wire:click="kayitliWord({{ $t->id }})">Word</x-filament::button>
                                 @endif

@@ -65,7 +65,7 @@ class IsKalemiEvrakHazirlayici
     private static function talimatEkle(Firma $firma, $maddeler): int
     {
         $mevcutBasliklar = Talimat::where('firma_id', $firma->id)->pluck('baslik')->all();
-        $kutuphane = collect(config('isg.talimat.sablonlar', []));
+        $kutuphane = collect(TalimatKutuphanesi::hazirSablonlar());
 
         $eklenen = 0;
 
@@ -81,14 +81,7 @@ class IsKalemiEvrakHazirlayici
                     continue;
                 }
 
-                Talimat::create([
-                    'firma_id' => $firma->id,
-                    'baslik' => $sablon['baslik'],
-                    'kategori' => $sablon['kategori'] ?? null,
-                    'aciklama' => $sablon['aciklama'] ?? null,
-                    'kkdler' => $sablon['kkdler'] ?? [],
-                    'maddeler' => $sablon['maddeler'] ?? [],
-                ]);
+                Talimat::create(['firma_id' => $firma->id, ...TalimatKutuphanesi::talimatAlanlari($sablon)]);
 
                 $mevcutBasliklar[] = $baslik;
                 $eklenen++;

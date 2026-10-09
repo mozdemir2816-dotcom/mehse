@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\Talimat as TalimatModel;
 use App\Models\TalimatSablonu;
 use App\Support\GeminiTalimatUretici;
+use App\Support\TalimatKutuphanesi;
 use App\Support\TalimatListesiUretici;
 use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TalimatUretici;
@@ -73,6 +74,27 @@ class TalimatOlustur extends Page
 
     public ?string $yeniMadde = null;
 
+    /** Kullanıcının talimat künyesi (her sayfanın üst tablosu). */
+    public ?string $dokumanNo = null;
+
+    public ?string $yayinTarihi = null;
+
+    public ?string $revizyonNo = null;
+
+    public ?string $revizyonTarihi = null;
+
+    /** Bölümlü yapı (Amaç, Kapsam, KKD… — Kalıp/Demir talimatları) mı, düz numaralı liste mi. */
+    public bool $bolumlu = false;
+
+    /**
+     * Formdaki bölümler; maddeler textarea'da satır satır (kayıtta diziye çevrilir).
+     *
+     * @var array<int, array{baslik: string, aciklama: string, maddeler: string}>
+     */
+    public array $bolumler = [];
+
+    public string $taahhut = '';
+
     public function mount(): void
     {
         if ($firmaId = request()->integer('firma')) {
@@ -114,7 +136,7 @@ class TalimatOlustur extends Page
     #[Computed]
     public function sablonlar(): array
     {
-        $hazir = collect(config('isg.talimat.sablonlar'))
+        $hazir = collect(TalimatKutuphanesi::hazirSablonlar())
             ->map(fn ($s, $i) => [...$s, 'kaynak' => 'hazir', 'anahtar' => $i]);
 
         $ozel = TalimatSablonu::query()
@@ -177,6 +199,11 @@ class TalimatOlustur extends Page
         // kullanabilsin diye. Madde yoksa (ör. kullanıcının kendi eski
         // şablonu) boş kalır, "AI ile Üret" veya elle ekleme devreye girer.
         $this->maddeler = $sablon['maddeler'] ?? [];
+
+        // Kullanıcının inşaat talimatlarından gelenlerde künye/bölüm/taahhüt de var.
+        $this->kunyeSifirla();
+        $this->dokumanNo = $sablon['dokuman_no'] ?? null;
+        $this->bolumleriYukle($sablon['bolumler'] ?? null, $sablon['taahhut'] ?? null);
     }
 
     public function yeniTalimat(): void
@@ -188,6 +215,96 @@ class TalimatOlustur extends Page
         $this->aciklama = null;
         $this->kkdler = [];
         $this->maddeler = [];
+        $this->kunyeSifirla();
+        $this->bolumleriYukle(null, null);
+    }
+
+    private function kunyeSifirla(): void
+    {
+        $this->dokumanNo = null;
+        $this->yayinTarihi = null;
+        $this->revizyonNo = null;
+        $this->revizyonTarihi = null;
+    }
+
+    /** @param  array<int, array<string, mixed>>|null  $bolumler */
+    private function bolumleriYukle(?array $bolumler, ?string $taahhut): void
+    {
+        $this->bolumlu = ! empty($bolumler);
+        $this->bolumler = collect($bolumler ?? [])->map(fn ($b) => [
+            'baslik' => (string) ($b['baslik'] ?? ''),
+            'aciklama' => (string) ($b['aciklama'] ?? ''),
+            'maddeler' => implode("\n", $b['maddeler'] ?? []),
+        ])->all();
+        $this->taahhut = filled($taahhut) ? $taahhut : TalimatModel::varsayilanTaahhut($this->bolumlu);
+    }
+
+    /** @return array<int, array{baslik: string, aciklama: string, maddeler: array<int, string>}> */
+    private function bolumleriDiziyeCevir(): array
+    {
+        return collect($this->bolumler)->map(fn ($b) => [
+            'baslik' => trim((string) ($b['baslik'] ?? '')),
+            'aciklama' => trim((string) ($b['aciklama'] ?? '')),
+            'maddeler' => collect(preg_split('/\R/u', (string) ($b['maddeler'] ?? '')))
+                ->map(fn ($m) => trim(preg_replace('/^\s*([•\-–*]|\d+[.)])\s*/u', '', $m)))
+                ->filter()->values()->all(),
+        ])->filter(fn ($b) => $b['baslik'] !== '' || $b['aciklama'] !== '' || $b['maddeler'])->values()->all();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bölümlü yapı (Amaç, Kapsam, KKD, … Yasaklar, Acil Durum)
+    |--------------------------------------------------------------------------
+    */
+
+    /** Düz listeyi kullanıcının bölümlü düzenine çevirir; maddeler "Genel Kurallar"a gider. */
+    public function bolumluYap(): void
+    {
+        $ozelTaahhut = $this->taahhut !== TalimatModel::TAAHHUT_DUZ && filled($this->taahhut) ? $this->taahhut : null;
+        $this->bolumleriYukle(TalimatKutuphanesi::bolumIskeleti((string) $this->baslik, $this->maddeler, $this->kkdler), $ozelTaahhut);
+    }
+
+    /** Bölümlerdeki tüm maddeleri tek numaralı listede toplar (açıklamalar düşer). */
+    public function duzYap(): void
+    {
+        $this->maddeler = collect($this->bolumleriDiziyeCevir())->pluck('maddeler')->flatten()->values()->all();
+
+        if ($this->taahhut === TalimatModel::TAAHHUT_BOLUMLU) {
+            $this->taahhut = TalimatModel::TAAHHUT_DUZ;
+        }
+
+        $this->bolumlu = false;
+        $this->bolumler = [];
+    }
+
+    public function bolumEkle(): void
+    {
+        // Yeni bölüm, sondaki Yasaklar/Acil Durum/Yükümlülükler bloğunun önüne girer.
+        $sabitSon = collect($this->bolumler)->search(fn ($b) => in_array(mb_strtoupper(trim($b['baslik'])), ['YASAKLAR', 'ACİL DURUM VE BİLDİRİM', 'ÇALIŞAN YÜKÜMLÜLÜKLERİ'], true));
+        $yeni = ['baslik' => '', 'aciklama' => '', 'maddeler' => ''];
+
+        if ($sabitSon === false) {
+            $this->bolumler[] = $yeni;
+        } else {
+            array_splice($this->bolumler, $sabitSon, 0, [$yeni]);
+        }
+    }
+
+    public function bolumSil(int $index): void
+    {
+        unset($this->bolumler[$index]);
+        $this->bolumler = array_values($this->bolumler);
+    }
+
+    public function bolumTasi(int $index, int $yon): void
+    {
+        $hedef = $index + $yon;
+
+        if (! isset($this->bolumler[$index], $this->bolumler[$hedef])) {
+            return;
+        }
+
+        [$this->bolumler[$index], $this->bolumler[$hedef]] = [$this->bolumler[$hedef], $this->bolumler[$index]];
     }
 
     public function aiIleUret(): void
@@ -199,6 +316,22 @@ class TalimatOlustur extends Page
         }
 
         $kategoriAdi = $this->kategori ? ($this->kategoriler()[$this->kategori] ?? $this->kategori) : 'Genel';
+
+        if ($this->bolumlu) {
+            $bolumler = GeminiTalimatUretici::uretBolumlu($this->baslik, $kategoriAdi, $this->kkdler);
+
+            if (! $bolumler) {
+                Notification::make()->title('Talimat üretilemedi')->body('AI servisi yanıt vermedi veya devre dışı; bölümleri elle doldurabilirsiniz.')->warning()->send();
+
+                return;
+            }
+
+            $this->bolumleriYukle($bolumler, $this->taahhut);
+            Notification::make()->title(count($bolumler).' bölüm üretildi')->success()->send();
+
+            return;
+        }
+
         $maddeler = GeminiTalimatUretici::uret($this->baslik, $kategoriAdi, $this->kkdler);
 
         if (! $maddeler) {
@@ -258,7 +391,14 @@ class TalimatOlustur extends Page
             'kategori' => $this->kategori,
             'aciklama' => $this->aciklama,
             'kkdler' => $this->kkdler,
-            'maddeler' => $this->maddeler,
+            'maddeler' => $this->bolumlu ? [] : $this->maddeler,
+            'bolumler' => $this->bolumlu ? $this->bolumleriDiziyeCevir() : null,
+            // Varsayılan metin saklanmaz — ileride varsayılan güncellenirse eski kayıtlara da yansır.
+            'taahhut' => trim($this->taahhut) === '' || trim($this->taahhut) === TalimatModel::varsayilanTaahhut($this->bolumlu) ? null : trim($this->taahhut),
+            'dokuman_no' => filled($this->dokumanNo) ? trim($this->dokumanNo) : null,
+            'yayin_tarihi' => $this->yayinTarihi ?: null,
+            'revizyon_no' => filled($this->revizyonNo) ? trim($this->revizyonNo) : null,
+            'revizyon_tarihi' => $this->revizyonTarihi ?: null,
         ]);
         $talimat->save();
 
@@ -273,27 +413,25 @@ class TalimatOlustur extends Page
             $this->kaydetAction(),
             $this->yeniKayitAction(),
 
-            // Firmaya tanımlı talimatların listesi — "bu firmaya hangi talimatları verdim".
+            // Firmaya verilen talimatların listesi = kullanıcının "Talimat Teslim Tutanağı" (Talimat İçerikleri.xlsx).
             Action::make('talimatListesi')
-                ->label('Talimat Listesi')
+                ->label('Talimat Listesi / Teslim Tutanağı')
                 ->icon('heroicon-o-list-bullet')
                 ->color('success')
                 ->visible(fn () => $this->firma !== null)
                 ->disabled(fn () => $this->kayitliTalimatlar->isEmpty())
-                ->modalHeading(fn () => 'Talimat Listesi — '.$this->firma?->unvan)
-                ->modalDescription(fn () => $this->kayitliTalimatlar->count().' kayıtlı talimat listelenecek.')
+                ->modalHeading(fn () => 'Talimat Teslim Tutanağı — '.$this->firma?->unvan)
+                ->modalDescription(fn () => $this->kayitliTalimatlar->count().' kayıtlı talimat listelenir; işveren yükümlülükleri ve Teslim Eden / Teslim Alan imzalarıyla.')
                 ->modalSubmitActionLabel('İndir')
-                ->fillForm(['bicim' => 'pdf', 'maddeler' => false])
+                ->fillForm(['bicim' => 'pdf', 'tarih' => now()->toDateString()])
                 ->schema([
                     \Filament\Forms\Components\Radio::make('bicim')->label('Biçim')
-                        ->options(['pdf' => 'PDF', 'excel' => 'Excel'])->inline()->required()->live(),
-                    \Filament\Forms\Components\Toggle::make('maddeler')
-                        ->label('Her talimatın maddelerini de ekle (ek sayfalarda)')
-                        ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('bicim') === 'pdf'),
+                        ->options(['pdf' => 'PDF', 'excel' => 'Excel'])->inline()->required(),
+                    \Filament\Forms\Components\DatePicker::make('tarih')->label('Teslim tarihi')->native(false)->displayFormat('d.m.Y')->required(),
                 ])
                 ->action(fn (array $data) => $data['bicim'] === 'excel'
-                    ? TalimatListesiUretici::excel($this->firma)
-                    : TalimatListesiUretici::pdf($this->firma, (bool) ($data['maddeler'] ?? false))),
+                    ? TalimatListesiUretici::excel($this->firma, $data['tarih'] ?? null)
+                    : TalimatListesiUretici::pdf($this->firma, $data['tarih'] ?? null)),
 
             Action::make('sablonIndir')
                 ->label('Şablon İndir')
@@ -386,13 +524,13 @@ class TalimatOlustur extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $talimat = $this->kaydet();
                     if ($talimat) {
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $talimat ? TalimatUretici::pdf($talimat) : null;
+                    return $talimat ? TalimatUretici::pdf($talimat, ImzaSecenegi::secili($data)) : null;
                 }),
 
             Action::make('word')
@@ -401,13 +539,13 @@ class TalimatOlustur extends Page
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $talimat = $this->kaydet();
                     if ($talimat) {
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $talimat ? TalimatWordUretici::word($talimat) : null;
+                    return $talimat ? TalimatWordUretici::word($talimat, ImzaSecenegi::secili($data)) : null;
                 }),
         ];
     }
@@ -424,6 +562,34 @@ class TalimatOlustur extends Page
         $talimat = $this->firma?->talimatlar()->find($id);
 
         return $talimat ? TalimatWordUretici::word($talimat) : null;
+    }
+
+    /** Kayıtlı talimatı forma yükler; "Kaydet" aynı kaydı günceller (künye/revizyon düzeltmek için). */
+    public function kayitliDuzenle(int $id): void
+    {
+        $talimat = $this->firma?->talimatlar()->find($id);
+
+        if (! $talimat || $talimat->dosyaVarMi()) {
+            return;
+        }
+
+        $this->secilenKaynak = null;
+        $this->secilenAnahtar = null;
+        $this->baslik = $talimat->baslik;
+        $this->kategori = $talimat->kategori;
+        $this->aciklama = $talimat->aciklama;
+        $this->kkdler = $talimat->kkdler ?? [];
+        $this->maddeler = $talimat->maddeler ?? [];
+        $this->dokumanNo = $talimat->dokuman_no;
+        $this->yayinTarihi = $talimat->yayin_tarihi?->format('Y-m-d');
+        $this->revizyonNo = $talimat->revizyon_no;
+        $this->revizyonTarihi = $talimat->revizyon_tarihi?->format('Y-m-d');
+        $this->bolumleriYukle($talimat->bolumler, $talimat->taahhut);
+
+        $this->kayitHatirla($talimat);
+        $this->ciktiImzasi = null;
+
+        Notification::make()->title('Talimat düzenlemeye açıldı')->body('Değişiklikten sonra "Kaydet" aynı kaydı günceller.')->send();
     }
 
     public function kayitliDosyaIndir(int $id)
