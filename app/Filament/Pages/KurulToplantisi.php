@@ -8,6 +8,7 @@ use App\Models\Firma;
 use App\Models\KurulToplantisi as KurulToplantisiModel;
 use App\Models\KurulUyesi;
 use App\Support\GeminiKararDanismani;
+use App\Support\KurulCagriUretici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\KurulUyeleri;
 use BackedEnum;
@@ -15,15 +16,18 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Callout;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
@@ -856,6 +860,8 @@ class KurulToplantisi extends Page
 
             $this->toplantiPlanlaAction(),
 
+            $this->cagriFormuAction(),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
@@ -879,6 +885,47 @@ class KurulToplantisi extends Page
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KurulToplantisiUretici::excel($this->toplanti())),
         ];
+    }
+
+    /**
+     * Toplantıya Çağrı Formu — Yönetmelik Md.9: gündem, yer, gün ve saat
+     * toplantıdan en az 48 saat önce üyelere bildirilir. Davetliler ve gündem
+     * seçili toplantıdan; çağrı tarihi / olağanüstü nedeni yalnız çıktıya basılır.
+     */
+    private function cagriFormuAction(): Action
+    {
+        return Action::make('cagri')
+            ->label('Çağrı Formu')
+            ->icon('heroicon-o-megaphone')
+            ->color('warning')
+            ->visible(fn () => $this->toplanti() !== null)
+            ->modalHeading('Toplantıya Çağrı Formu')
+            ->modalDescription('Kurul üyelerine toplantıdan önce dağıtılır ve tebellüğ imzası alınır (İSG Kurulları Hakkında Yönetmelik Md.9).')
+            ->modalSubmitActionLabel('İndir')
+            ->fillForm(fn (): array => ['cagri_tarihi' => now()->toDateString(), 'onceki_kararlar' => true, 'bicim' => 'pdf'])
+            ->schema([
+                Callout::make('Gündem boş')
+                    ->description('Toplantıya henüz gündem maddesi eklenmedi — çağrıda yalnız "Dilek ve temenniler" görünür.')
+                    ->status('warning')
+                    ->visible(fn () => ! ($this->toplanti()?->gundem ?? [])),
+                Grid::make(['default' => 1, 'sm' => 2])->schema([
+                    DatePicker::make('cagri_tarihi')->label('Çağrı (bildirim) tarihi')->required()
+                        ->native(false)->displayFormat('d.m.Y')->live(),
+                    Radio::make('bicim')->label('Biçim')->options(['pdf' => 'PDF', 'word' => 'Word (düzenlenebilir)'])->inline()->required(),
+                ]),
+                Callout::make('48 saat kuralı')
+                    ->description(fn () => 'Olağan toplantıda gündem, yer, gün ve saat toplantıdan en az 48 saat önce bildirilmelidir. '
+                        .'Toplantı tarihi: '.($this->toplanti()?->tarih?->format('d.m.Y') ?? '—').' — çağrı tarihini öne alın ya da toplantıyı erteleyin.')
+                    ->status('danger')
+                    ->visible(fn (Get $get) => ! KurulCagriUretici::sureYeterli($this->toplanti(), $get('cagri_tarihi'))),
+                Textarea::make('olaganustu_nedeni')->label('Olağanüstü toplantı nedeni')->rows(2)
+                    ->placeholder('Örn: 05.10.2026 tarihinde meydana gelen ağır iş kazası')
+                    ->visible(fn () => $this->toplanti()?->tur === 'olaganustu'),
+                Toggle::make('onceki_kararlar')->label('Önceki toplantının takipteki (tamamlanmamış) kararları eklensin'),
+            ])
+            ->action(fn (array $data) => $data['bicim'] === 'word'
+                ? KurulCagriUretici::word($this->toplanti(), $data)
+                : KurulCagriUretici::pdf($this->toplanti(), $data));
     }
 
     private function toplantiPlanlaAction(): Action
