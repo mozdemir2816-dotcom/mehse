@@ -68,6 +68,33 @@
             <x-slot name="description">{{ $rol['aciklama'] ?? '' }}</x-slot>
 
             @if (! $this->ekipMi)
+                @if ($this->topluMu)
+                    @php
+                        $kaynaklar = [
+                            'İş Güvenliği Uzmanı' => 'Firma düzenleme sayfasından İGU atayın.',
+                            'İşyeri Hekimi' => 'Firma düzenleme sayfasından işyeri hekimi atayın.',
+                            'Çalışan Temsilcisi' => 'Önce "Çalışan Temsilcisi" atama yazısı çıkarın (veya Çalışan Temsilcisi Seçimi yapın).',
+                            'Bilgi Sahibi Çalışan' => 'Önce "Bilgi Sahibi Çalışan" atama yazısı çıkarın.',
+                        ];
+                    @endphp
+                    <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Sistemden Otomatik Gelen Üyeler</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:1rem">
+                        @foreach ($kaynaklar as $gorev => $ipucu)
+                            @php $kisiler = $this->otomatikEkip[$gorev] ?? []; @endphp
+                            <tr>
+                                <td style="padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .2);font-weight:600;width:34%">{{ $gorev }}</td>
+                                <td style="padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .2)">
+                                    @forelse ($kisiler as $k)
+                                        <div>✓ {{ $k['ad_soyad'] }} @if ($k['gorev']) <span style="color:rgb(107 114 128)">— {{ $k['gorev'] }}</span> @endif</div>
+                                    @empty
+                                        <span style="color:#f59e0b">Kayıt yok — {{ $ipucu }}</span>
+                                    @endforelse
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Destek Elemanı</div>
+                @endif
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
                     <div>
                         <label style="font-weight:600;font-size:.82rem">Hızlı Çalışan Seç</label>
@@ -80,7 +107,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Ad Soyad <span style="color:#ef4444">*</span></label>
+                        <label style="font-weight:600;font-size:.82rem">Ad Soyad @unless ($this->topluMu)<span style="color:#ef4444">*</span>@endunless</label>
                         <input type="text" wire:model="tekAdSoyad"
                             style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     </div>
@@ -141,9 +168,16 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
                     <div style="font-weight:600;font-size:.82rem">Ekip Üyeleri</div>
                     @if ($rolAnahtari === 'isg_kurulu')
-                        <x-filament::button size="xs" color="gray" wire:click="firmaProfilindenDoldur">Firma Profilinden Otomatik Doldur</x-filament::button>
+                        <div style="display:flex;gap:.4rem">
+                            <x-filament::button size="xs" color="primary" wire:click="kurulOtomatikSec">Sistemden Otomatik Seç</x-filament::button>
+                            <x-filament::button size="xs" color="gray" wire:click="firmaProfilindenDoldur">Tüm Çalışanları Seç</x-filament::button>
+                        </div>
                     @endif
                 </div>
+
+                @if ($rolAnahtari === 'isg_kurulu')
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin:-.2rem 0 .5rem">Kurul Üyeleri, işveren vekili ve çalışan temsilcisi atamalarındaki kişiler otomatik seçili ve kurul görevi atanmış gelir; listeden tıklayarak ekleyip çıkarabilirsiniz.</p>
+                @endif
 
                 @if ($this->calisanlar->isEmpty())
                     <p style="font-size:.82rem;color:rgb(107 114 128)">Bu firmaya kayıtlı çalışan bulunamadı — önce Çalışanlar sekmesinden ekleyin.</p>

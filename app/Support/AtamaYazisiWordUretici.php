@@ -82,7 +82,9 @@ class AtamaYazisiWordUretici
 
         $uyeler = $kayit->uyeler ?: [];
 
-        if ($kayit->ekipMi()) {
+        if (($kayit->rol()['tip'] ?? null) === 'toplu') {
+            static::topluDoldur($xpath, $doc, $uyeler);
+        } elseif ($kayit->ekipMi()) {
             static::ekipDoldur($xpath, $doc, $firma, $uyeler);
         } else {
             static::tekliDoldur($xpath, $uyeler[0] ?? []);
@@ -101,12 +103,55 @@ class AtamaYazisiWordUretici
         ]);
     }
 
-    /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string} $uye */
-    private static function tekliDoldur(DOMXPath $xpath, array $uye): void
+    /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string, ekip_gorevi?: string} $uye */
+    private static function tekliDoldur(DOMXPath $xpath, array $uye, ?\DOMNode $kapsam = null): void
     {
-        static::globalDegistir($xpath, 'MEHMET ÖZDEMİR', static::turkceBuyuk($uye['ad_soyad'] ?? '—'));
-        static::globalDegistir($xpath, '35479473338', $uye['tc'] ?: '—');
-        static::globalDegistir($xpath, 'İŞCİ', static::turkceBuyuk($uye['gorev'] ?: '—'));
+        $gorev = (string) ($uye['gorev'] ?? '');
+        $ekipGorevi = (string) ($uye['ekip_gorevi'] ?? '');
+
+        if ($ekipGorevi !== '') {
+            $gorev = $gorev === '' || mb_stripos($gorev, $ekipGorevi) !== false ? $ekipGorevi : $ekipGorevi.' ('.$gorev.')';
+        }
+
+        static::globalDegistir($xpath, 'MEHMET ÖZDEMİR', static::turkceBuyuk($uye['ad_soyad'] ?? '—'), $kapsam);
+        static::globalDegistir($xpath, '35479473338', ($uye['tc'] ?? null) ?: '—', $kapsam);
+        static::globalDegistir($xpath, 'İŞCİ', static::turkceBuyuk($gorev ?: '—'), $kapsam);
+    }
+
+    /**
+     * 'toplu' rol (Risk Değerlendirme Ekibi): tek kişilik şablonun gövdesi her
+     * üye için klonlanıp sayfa sonuyla art arda eklenir — tek .docx içinde
+     * herkese ayrı tebliğ sayfası.
+     *
+     * @param  array<int, array{ad_soyad?: string, tc?: ?string, gorev?: ?string, ekip_gorevi?: string}>  $uyeler
+     */
+    private static function topluDoldur(DOMXPath $xpath, DOMDocument $doc, array $uyeler): void
+    {
+        $govde = $xpath->query('//w:body')->item(0);
+        $sectPr = $xpath->query('w:sectPr', $govde)->item(0);
+        $orijinal = array_values(array_filter(iterator_to_array($govde->childNodes), fn ($n) => $n !== $sectPr));
+        $ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+        foreach (array_values($uyeler ?: [[]]) as $i => $u) {
+            if ($i > 0) {
+                $br = $doc->createElementNS($ns, 'w:br');
+                $br->setAttributeNS($ns, 'w:type', 'page');
+                $run = $doc->createElementNS($ns, 'w:r');
+                $run->appendChild($br);
+                $p = $doc->createElementNS($ns, 'w:p');
+                $p->appendChild($run);
+                $govde->insertBefore($p, $sectPr);
+            }
+
+            foreach ($orijinal as $dugum) {
+                $kopya = $govde->insertBefore($dugum->cloneNode(true), $sectPr);
+                static::tekliDoldur($xpath, $u, $kopya);
+            }
+        }
+
+        foreach ($orijinal as $dugum) {
+            $govde->removeChild($dugum);
+        }
     }
 
     /** @param array<int, array{ad_soyad?: string, tc?: ?string, gorev?: ?string, bas_uye?: bool}> $uyeler */
@@ -225,11 +270,12 @@ class AtamaYazisiWordUretici
     }
 
     /** @return int Kaç paragrafta değiştirildi. */
-    private static function globalDegistir(DOMXPath $xpath, string $arama, string $yeni): int
+    private static function globalDegistir(DOMXPath $xpath, string $arama, string $yeni, ?\DOMNode $kapsam = null): int
     {
         $sayac = 0;
+        $paragraflar = $kapsam ? $xpath->query('descendant-or-self::w:p', $kapsam) : $xpath->query('//w:p');
 
-        foreach ($xpath->query('//w:p') as $p) {
+        foreach ($paragraflar as $p) {
             $birlesik = static::paragrafMetni($xpath, $p);
             $konum = mb_strpos($birlesik, $arama);
 

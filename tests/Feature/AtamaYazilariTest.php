@@ -458,4 +458,86 @@ class AtamaYazilariTest extends TestCase
         $this->assertTrue($adlar->contains('Çalışan Bir'));
         $this->assertFalse($adlar->contains('İGU Ayşe'));
     }
+
+    public function test_risk_ekibi_uyeleri_sistemden_otomatik_gelir_yalniz_destek_elemani_girilir(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'igu', 'ad_soyad' => 'İGU Ayşe']);
+        $hekim = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Mehmet']);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id, 'isyeri_hekimi_id' => $hekim->id]);
+        Calisan::factory()->for($firma)->create(['ad_soyad' => 'Temsilci Ali', 'tc' => '11111111110', 'gorev' => 'Operatör']);
+        $firma->atamaYazilari()->create(['rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now()->subMonth(),
+            'uyeler' => [['ad_soyad' => 'TEMSİLCİ ALİ', 'tc' => null, 'gorev' => null, 'bas_uye' => true]]]);
+        $firma->atamaYazilari()->create(['rol_anahtari' => 'bilgi_sahibi', 'tarih' => now()->subMonth(),
+            'uyeler' => [['ad_soyad' => 'Bilgili Veli', 'tc' => '22222222220', 'gorev' => 'Usta', 'bas_uye' => false]]]);
+
+        Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'risk_degerlendirme_ekibi')
+            ->set('tekAdSoyad', 'Destek Can')
+            ->callAction('pdf');
+
+        $kayit = AtamaYazisi::where('firma_id', $firma->id)->where('rol_anahtari', 'risk_degerlendirme_ekibi')->firstOrFail();
+        $uyeler = collect($kayit->uyeler);
+        $this->assertSame(
+            ['İş Güvenliği Uzmanı', 'İşyeri Hekimi', 'Çalışan Temsilcisi', 'Destek Elemanı', 'Bilgi Sahibi Çalışan'],
+            $uyeler->pluck('ekip_gorevi')->all()
+        );
+        $temsilci = $uyeler->firstWhere('ekip_gorevi', 'Çalışan Temsilcisi');
+        $this->assertSame('11111111110', $temsilci['tc']); // çalışan kaydından tamamlandı
+        $this->assertSame('Operatör', $temsilci['gorev']);
+        $this->assertSame('Destek Can', $uyeler->firstWhere('ekip_gorevi', 'Destek Elemanı')['ad_soyad']);
+
+        $yanit = AtamaYazisiWordUretici::docx($kayit);
+        ob_start();
+        $yanit->sendContent();
+        $metin = $this->docxMetni(ob_get_clean());
+
+        foreach (['İGU AYŞE', 'DR. MEHMET', 'TEMSİLCİ ALİ', 'DESTEK CAN', 'BİLGİLİ VELİ', 'ÇALIŞAN TEMSİLCİSİ (OPERATÖR)'] as $beklenen) {
+            $this->assertStringContainsString($beklenen, $metin);
+        }
+        $this->assertStringNotContainsString('MEHMET ÖZDEMİR', $metin);
+        $this->assertSame(5, substr_count($metin, 'Bilgilerinizi ve gereğini rica ederim'));
+    }
+
+    public function test_risk_ekibi_destek_elemani_bos_birakilabilir(): void
+    {
+        $igu = IsgProfesyoneli::factory()->for($this->uzman)->create(['tip' => 'igu', 'ad_soyad' => 'İGU Ayşe']);
+        $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id]);
+
+        Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'risk_degerlendirme_ekibi')
+            ->callAction('pdf');
+
+        $kayit = AtamaYazisi::where('rol_anahtari', 'risk_degerlendirme_ekibi')->firstOrFail();
+        $this->assertSame(['İGU Ayşe'], collect($kayit->uyeler)->pluck('ad_soyad')->all());
+    }
+
+    public function test_isg_kurulu_uyeleri_sistemden_otomatik_secili_gelir_ve_cikarilabilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $temsilci = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Temsilci Ali']);
+        $vekil = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Vekil Bey']);
+        $ik = Calisan::factory()->for($firma)->create(['ad_soyad' => 'İK Ayşe']);
+        Calisan::factory()->for($firma)->create(['ad_soyad' => 'Diğer İşçi']);
+        $firma->atamaYazilari()->create(['rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(), 'uyeler' => [['ad_soyad' => 'Temsilci Ali']]]);
+        $firma->atamaYazilari()->create(['rol_anahtari' => 'isveren_vekili', 'tarih' => now(), 'uyeler' => [['ad_soyad' => 'VEKİL BEY']]]);
+        $firma->kurulUyeleri()->create(['rol' => 'ik', 'ad_soyad' => 'İK Ayşe', 'calisan_id' => $ik->id, 'aktif' => true]);
+
+        $component = Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'isg_kurulu');
+
+        $this->assertEqualsCanonicalizing([$temsilci->id, $vekil->id, $ik->id], $component->get('secilenCalisanIdler'));
+        $this->assertSame('calisan_temsilcisi', $component->get('kurulGorevleri')[$temsilci->id]);
+        $this->assertSame('baskan', $component->get('kurulGorevleri')[$vekil->id]);
+        $this->assertSame('insan_kaynaklari', $component->get('kurulGorevleri')[$ik->id]);
+
+        $component->call('calisanToggle', $ik->id)->callAction('pdf');
+
+        $adlar = collect(AtamaYazisi::where('rol_anahtari', 'isg_kurulu')->firstOrFail()->uyeler)->pluck('ad_soyad');
+        $this->assertTrue($adlar->contains('Temsilci Ali'));
+        $this->assertFalse($adlar->contains('İK Ayşe'));
+        $this->assertFalse($adlar->contains('Diğer İşçi'));
+    }
 }

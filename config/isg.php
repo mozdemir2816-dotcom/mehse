@@ -2673,8 +2673,10 @@ return [
                     'olarak işveren vekili hakkında da uygulanır.',
             ],
             'risk_degerlendirme_ekibi' => [
-                'ad' => 'Risk Değerlendirme Ekibi', 'tip' => 'tekli', 'ikon' => 'heroicon-o-shield-exclamation',
-                'aciklama' => 'İSG Risk Değerlendirmesi Yönetmeliği uyarınca oluşturulur.',
+                'ad' => 'Risk Değerlendirme Ekibi', 'tip' => 'toplu', 'ikon' => 'heroicon-o-shield-exclamation',
+                'aciklama' => 'İSG Risk Değerlendirmesi Yönetmeliği md.6 uyarınca oluşturulur. İGU, işyeri hekimi, çalışan '.
+                    'temsilcisi ve bilgi sahibi çalışan(lar) sistemden otomatik gelir; yalnız destek elemanı girilir, '.
+                    'her üye için ayrı sayfalı toplu yazı üretilir.',
             ],
             'bilgi_sahibi' => [
                 'ad' => 'Bilgi Sahibi Çalışan', 'tip' => 'tekli', 'ikon' => 'heroicon-o-information-circle',

@@ -41,6 +41,11 @@
                 <td>Görev / Unvan</td><td>{{ $u['gorev'] ?? '—' }}</td>
                 <td>İşveren / İşveren Vekili</td><td>Kaşe / İmza</td>
             </tr>
+            @if (! empty($u['ekip_gorevi']))
+                <tr>
+                    <td>Ekipteki Görevi</td><td colspan="3"><strong>{{ $u['ekip_gorevi'] }}</strong></td>
+                </tr>
+            @endif
             @if ($kayit->gorev_baslangic)
                 <tr>
                     <td>Görev Başlangıç</td><td>{{ $kayit->gorev_baslangic->format('d.m.Y') }}</td>
@@ -52,7 +57,7 @@
         <div class="govde">
             {{ $firma?->unvan }} işyerinde görevli <strong>{{ $u['ad_soyad'] ?? '' }}</strong>,
             {{ $kayit->tarih?->format('d.m.Y') }} tarihinden itibaren
-            <strong>{{ $rol['ad'] ?? $kayit->rolEtiketi() }}</strong> olarak görevlendirilmiştir.
+            <strong>{{ $rol['ad'] ?? $kayit->rolEtiketi() }}</strong>@if (! empty($u['ekip_gorevi'])) içinde <strong>{{ $u['ekip_gorevi'] }}</strong>@endif olarak görevlendirilmiştir.
             @if ($u['bas_uye'] ?? false)
                 Adı geçen personel ekibin baş üyesi olarak görevlendirilmiştir.
             @endif
