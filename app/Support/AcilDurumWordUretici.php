@@ -26,16 +26,21 @@ use ZipArchive;
  */
 class AcilDurumWordUretici
 {
-    public static function docx(AcilDurumPlani $plan, string $sablonId = 'orijinal'): StreamedResponse
+    public static function docx(AcilDurumPlani $plan, string $sablonId = 'fom', bool $imzali = true): StreamedResponse
     {
         $plan->loadMissing('firma.user');
         $firma = $plan->firma;
         $uzman = $firma?->user;
 
         $sablon = config('isg.acil_durum.word_sablonlari.'.$sablonId)
-            ?? config('isg.acil_durum.word_sablonlari.orijinal');
+            ?? config('isg.acil_durum.word_sablonlari.fom');
 
         $kaynak = resource_path('belge/'.$sablon['dosya']);
+
+        // Kapsamlı plan: gövde PDF ile aynı görünümden üretilir (metin yaması değil).
+        if (($sablon['tur'] ?? null) === 'belge') {
+            return AcilDurumBelgeWord::docx($plan, $kaynak, $imzali);
+        }
         $gecici = tempnam(sys_get_temp_dir(), 'adep').'.docx';
         copy($kaynak, $gecici);
 

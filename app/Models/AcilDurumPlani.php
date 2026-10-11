@@ -85,8 +85,9 @@ class AcilDurumPlani extends Model
      *
      * @return array<string, array<int, array{ad: string, gorev: ?string, bolum: ?string, telefon: ?string, yedek: bool, lider: bool, vardiya: ?string}>>
      */
-    public function ekipDetaylari(): array
+    public function ekipDetaylari(?array $anahtarlar = null): array
     {
+        $anahtarlar ??= array_keys(config('isg.acil_durum.ekipler'));
         $kayitli = [];
 
         if ($this->firma) {
@@ -97,14 +98,16 @@ class AcilDurumPlani extends Model
                     $kayitli[$anahtar][] = [
                         'ad' => $u->ad_soyad, 'gorev' => $u->gorev, 'bolum' => $u->bolum, 'telefon' => $u->telefon,
                         'yedek' => $u->uyelik === 'yedek', 'lider' => (bool) $u->lider, 'vardiya' => $u->vardiya,
+                        'belge_no' => $u->belge_no, 'belge_bitis' => $u->belge_bitis,
                     ];
                 }
             }
         }
 
-        return collect(config('isg.acil_durum.ekipler'))->mapWithKeys(fn ($ad, $anahtar) => [
+        return collect($anahtarlar)->mapWithKeys(fn ($anahtar) => [
             $anahtar => $kayitli[$anahtar] ?? collect($this->ekipler[$anahtar] ?? [])->filter()->map(fn ($isim) => [
                 'ad' => $isim, 'gorev' => null, 'bolum' => null, 'telefon' => null, 'yedek' => false, 'lider' => false, 'vardiya' => null,
+                'belge_no' => null, 'belge_bitis' => null,
             ])->values()->all(),
         ])->all();
     }

@@ -240,6 +240,76 @@
             <div style="margin-top:.7rem"><x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button></div>
         </x-filament::section>
 
+        {{-- PLAN BELGESİ BİLGİLERİ (FOM düzenindeki işyerine özgü alanlar) --}}
+        @php
+            $ornekBtn = fn (string $k) => '<button type="button" wire:click="ornekMetin(\''.$k.'\')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="font-size:.7rem;font-weight:500;color:rgb(217 119 6);text-decoration:underline">Örnek metni getir</button>';
+            $kucukAlan = $alan.';padding:.3rem .4rem;font-size:.75rem';
+        @endphp
+        <x-filament::section icon="heroicon-o-document-text" icon-color="primary" collapsible collapsed>
+            <x-slot name="heading">Plan belgesi bilgileri</x-slot>
+            <x-slot name="description">Plan PDF / Word çıktısındaki boş (noktalı) yerleri doldurur: koordinatör, hastane, alarm, risk puanları, çevresel riskler. Boş bırakılan alan belgede elle doldurulacak noktalı satır olarak çıkar.</x-slot>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem">
+                @foreach ([
+                    'koordinator_ad' => ['Acil durum koordinatörü', 'Boşsa işveren vekili / işveren yazılır'],
+                    'koordinator_tel' => ['Koordinatör telefonu', '05xx xxx xx xx'],
+                    'koordinator_vekil' => ['Koordinatör vekili', 'Adı soyadı'],
+                    'koordinator_vekil_tel' => ['Vekil telefonu', '05xx xxx xx xx'],
+                    'isveren_tel' => ['İşveren telefonu', 'Boşsa firma telefonu'],
+                    'isveren_vekili_tel' => ['İşveren vekili telefonu', ''],
+                    'hastane_ad' => ['En yakın hastane', 'Adı / adresi'],
+                    'hastane_tel' => ['Hastane telefonu', ''],
+                    'yedek_toplanma' => ['Yedek toplanma alanı', 'Örn. otopark girişi'],
+                    'refakatci' => ['Refakat görevlisi', 'Yaşlı / engelli / gebe için: ad / görev / alternatif kişi'],
+                    'tatbikat_sorumlusu' => ['Tatbikat sorumlusu', 'Adı soyadı / görevi'],
+                    'vardiyalar' => ['Vardiyalar', 'Örn. Gündüz 08:00-18:00'],
+                    'bina_bilgisi' => ['Çıkış sayısı / kat / kullanım alanı', 'Örn. 2 çıkış, tek kat, 800 m²'],
+                    'kroki_kat' => ['Kroki kat / bölüm', 'Örn. Zemin kat — üretim alanı'],
+                ] as $k => [$ad, $ipucu])
+                    <div><label style="{{ $lb }}">{{ $ad }}</label>
+                        <input type="text" wire:model="uygulama.{{ $k }}" placeholder="{{ $ipucu }}" style="{{ $alan }}"></div>
+                @endforeach
+                <div style="grid-column:1/-1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Alarm yöntemi</label>{!! $ornekBtn('alarm_yontemi') !!}</div>
+                    <textarea wire:model="uygulama.alarm_yontemi" rows="2" style="{{ $alan }}" placeholder="Sesli uyarı, ihbar butonu, siren…"></textarea></div>
+                <div style="grid-column:1/-1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Kayıtların yedeklenmesi (yer / sorumlu)</label>{!! $ornekBtn('kayit_yedekleme') !!}</div>
+                    <textarea wire:model="uygulama.kayit_yedekleme" rows="2" style="{{ $alan }}" placeholder="Kritik kayıtların yedeklendiği yer ve sorumlusu"></textarea></div>
+            </div>
+
+            <div style="margin-top:1rem;font-size:.8rem;font-weight:700">Olası acil durumlar ve risk değerlendirmesi <span style="font-weight:400;color:rgb(107 114 128)">(1 düşük – 5 yüksek; saha risk değerlendirmesine göre)</span></div>
+            <div style="overflow-x:auto;margin-top:.4rem">
+                <table style="width:100%;border-collapse:collapse;font-size:.75rem">
+                    <thead><tr>
+                        <th style="text-align:left;padding:.25rem">Risk</th>
+                        @foreach (config('isg.acil_durum.risk_kolonlari') as $kolon)
+                            <th style="padding:.25rem;font-weight:600">{{ $kolon }}</th>
+                        @endforeach
+                    </tr></thead>
+                    <tbody>
+                        @foreach (config('isg.acil_durum.risk_listesi') as $r => $riskAd)
+                            <tr style="border-top:1px solid rgb(107 114 128 / .2)">
+                                <td style="padding:.2rem .25rem;white-space:nowrap">{{ $riskAd }}</td>
+                                @foreach (array_keys(config('isg.acil_durum.risk_kolonlari')) as $k)
+                                    <td style="padding:.15rem"><select wire:model="uygulama.risk_puanlari.{{ $r }}.{{ $k }}" style="{{ $kucukAlan }}"><option value="">—</option>@for ($p = 1; $p <= 5; $p++)<option value="{{ $p }}">{{ $p }}</option>@endfor</select></td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top:1rem;font-size:.8rem;font-weight:700">Çevresel riskler ve komşu tesisler <span style="font-weight:400;color:rgb(107 114 128)">(Md.8, Md.10/7 — sahada doğrulanır)</span></div>
+            <div style="display:grid;gap:.35rem;margin-top:.4rem">
+                @foreach (config('isg.acil_durum.cevresel_riskler') as $i => $cr)
+                    <div style="display:grid;grid-template-columns:minmax(180px,2fr) 90px 3fr;gap:.4rem;align-items:center;font-size:.75rem" wire:key="cevre-{{ $i }}">
+                        <span>{{ $cr['ad'] }}</span>
+                        <select wire:model="uygulama.cevresel_riskler.{{ $i }}.durum" style="{{ $kucukAlan }}"><option value="">—</option><option value="var">VAR</option><option value="yok">YOK</option></select>
+                        <input type="text" wire:model="uygulama.cevresel_riskler.{{ $i }}.not" placeholder="Konum / tedbir / sorumlu" style="{{ $kucukAlan }}">
+                    </div>
+                @endforeach
+            </div>
+            <div style="margin-top:.7rem"><x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button></div>
+        </x-filament::section>
+
         {{-- HAZIRLIK KONTROLÜ --}}
         @if ($h = $this->hazirlik)
             <x-filament::section icon="heroicon-o-check-badge" icon-color="danger">

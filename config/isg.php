@@ -1690,6 +1690,8 @@ return [
                 ."6. İlkyardım ekibi yaralılara müdahale eder, ambulansı yönlendirir.\n"
                 .'7. Yetkili kişi izin vermeden binaya geri dönülmez.',
             'ozel_destek' => 'Engelli, hamile, yaşlı, geçici olarak hareket kısıtlılığı olan çalışan ve ziyaretçiler için birer refakatçi belirlenir; bu kişiler tahliyede önceliklidir ve refakatçileri tarafından toplanma alanına götürülür.',
+            'alarm_yontemi' => 'Acil durumu fark eden kişi yüksek sesle "YANGIN / ACİL DURUM" diye uyarır; varsa en yakın yangın ihbar butonuna basar, siren / zil çalınır. Uyarı tüm bölümlere ulaştırılır; gürültülü alanlarda görevli tarafından birebir haber verilir.',
+            'kayit_yedekleme' => 'Personel, muhasebe ve İSG kayıtları dijital ortamda tutulur ve düzenli olarak işyeri dışındaki bir ortama (bulut / harici disk) yedeklenir.',
         ],
 
         // Acil Durumlar Yön. Md.12(1)(f)(5) — ulusal acil durum hatları (işyerinden
@@ -1702,6 +1704,99 @@ return [
             'Ulusal Zehir Danışma Merkezi (UZEM)' => '114',
             'Elektrik Arıza' => '186',
             'Doğalgaz Acil' => '187',
+        ],
+
+        /*
+         | Plan belgesi (FOM MAKİNA ADEP düzeni — kullanıcının referans belgesi).
+         | PDF (`pdf/acil-durum-plani`) ve Word (`AcilDurumBelgeWord`) aynı veriyi
+         | `AcilDurumBelgeVerisi` üzerinden kullanır. Senaryo metinleri ayrı
+         | dosyada: config/acil_durum_senaryolari.php; akış şemaları
+         | resources/belge/acil-durum-akis/<konu>.png.
+        */
+        // EK-4 / Bölüm 3.2: altı ekip. İlk dördü Md.11 zorunlu ekipler (plan
+        // `ekipler` anahtarları), haberleşme ve teknik müdahale işletme ihtiyacı.
+        'belge_ekipleri' => [
+            'sondurme' => ['ad' => 'SÖNDÜRME', 'baslik' => 'Söndürme Ekibi'],
+            'kurtarma' => ['ad' => 'KURTARMA', 'baslik' => 'Kurtarma Ekibi'],
+            'koruma' => ['ad' => 'KORUMA / KOORDİNASYON', 'baslik' => 'Koruma Ekibi'],
+            'ilk_yardim' => ['ad' => 'İLKYARDIM', 'baslik' => 'İlk Yardım Ekibi'],
+            'haberlesme' => ['ad' => 'HABERLEŞME EKİBİ', 'baslik' => 'Haberleşme Ekibi'],
+            'teknik' => ['ad' => 'TEKNİK MÜDAHALE EKİBİ', 'baslik' => 'Teknik Müdahale Ekibi'],
+        ],
+
+        // EK-2 dış iletişim listesi (birim => telefon). En yakın hastane plan
+        // ekranından (uygulama.hastane_ad/hastane_tel) ayrıca eklenir.
+        'dis_iletisim' => [
+            'İTFAİYE' => '112',
+            'AMBULANS İLKYARDIM' => '112',
+            'POLİS' => '112',
+            'JANDARMA' => '112',
+            'SAHİL GÜVENLİK' => '112',
+            'ORMAN YANGIN' => '112',
+            'AFAD' => '112',
+            'DOĞALGAZ' => '187',
+            'ELEKTRİK' => '186',
+            'ZEHİR DANIŞMA MERKEZİ' => '114',
+            'ÇEVRE ŞİKAYET HATTI' => '181',
+        ],
+
+        // "Olası acil durumlar ve risk değerlendirmesi" tablosu (1 düşük – 5 yüksek).
+        // Puanlar saha risk değerlendirmesine göre plan ekranında girilir.
+        'risk_listesi' => [
+            'deprem' => 'Deprem', 'yangin' => 'Yangın', 'bomba' => 'Bomba İhbarı, Patlaması',
+            'sel' => 'Sel ve Ani Su Basması', 'firtina' => 'Şiddetli Rüzgar ve Fırtına', 'supheli_paket' => 'Şüpheli Paket',
+            'teror_disi_patlama' => 'Terör Dışı Patlama', 'kar_don' => 'Kar ve Don', 'zehirlenme' => 'Zehirlenme',
+            'is_kazasi' => 'İş Kazası', 'bulasici' => 'Bulaşıcı Hastalıklar', 'kimyasal' => 'Kimyasal Kirlilik',
+            'kavga' => 'Toplu Kavga', 'trafik' => 'Trafik Kazası', 'intihar' => 'İntihar',
+            'ziyaretci' => 'Ziyaretçi Hastalanması, Ölmesi', 'kemirgen' => 'Kemirgen', 'hasarat' => 'Haşarat',
+            'hirsizlik' => 'Hırsızlık', 'gaz_patlamasi' => 'Gaz Patlaması',
+        ],
+        'risk_kolonlari' => [
+            'olasilik' => 'Meydana Gelme Olasılığı', 'insan' => 'İnsan', 'isyeri' => 'İşyeri', 'is' => 'İş',
+            'cevre' => 'Çevre', 'ic_kaynak' => 'İç Kaynak', 'dis_kaynak' => 'Dış Kaynak',
+        ],
+
+        // EK-6 çevresel riskler ve komşu tesisler (Md.8, Md.10/7).
+        'cevresel_riskler' => [
+            ['ad' => 'Yüksek Gerilim / Trafo Enerji Nakil Hattı', 'etki' => 'Elektrik / ark / yangın; yaklaşma ve kaçış etkisi.'],
+            ['ad' => 'Komşu Akaryakıt / LPG İstasyonu', 'etki' => 'Yangın / patlama; yayılım ve tahliye etkisi.'],
+            ['ad' => 'Yoğun Trafikli Ana Arter / Otoyol', 'etki' => 'Araç çarpması; giriş ve toplanma güvenliği.'],
+            ['ad' => 'Heyelan / Şev Kayması Riski Taşıyan Zemin', 'etki' => 'Zemin kayması; bina / kaçış güvenliği.'],
+            ['ad' => 'Havaalanı / Uçuş Koridoru ve İniş Güzergahı', 'etki' => 'Hava aracı olayı; konum ve dış etki.'],
+            ['ad' => 'Deprem Fayı / Zemin Sıvılaşması Kuşağı', 'etki' => 'Sarsıntı / zemin hasarı; güvenli alan seçimi.'],
+            ['ad' => 'Orman / Kuru Çalı Yangını Riski Olan Alan', 'etki' => 'Duman / yangın; rüzgâr ve tahliye etkisi.'],
+            ['ad' => 'Dere Yatağı / Sel ve Su Baskını Riski Taşıyan Bölge', 'etki' => 'Su basması; kot ve yedek alan seçimi.'],
+            ['ad' => 'Doğalgaz Ana Dağıtım Boru Hattı Yakınlığı', 'etki' => 'Gaz kaçağı / patlama; güvenli mesafe.'],
+            ['ad' => 'Bitişik Sanayi / Kimyasal Üretim Tesisi', 'etki' => 'Komşu yangını / duman / kimyasal yayılım.'],
+        ],
+
+        // EK-3 faaliyetlere göre KKD listesi (D = dikkate alınır).
+        'kkd_matrisi' => [
+            'faaliyetler' => ['ELEKTRİK TAMİR', 'KAYNAK', 'KİMYASALLA ÇALIŞMA', 'MEKANİK TAMİR', 'ARITMA BÖLGESİ', 'YÜKLEME BOŞALTMA', 'TEMİZLİK', 'GÜVENLİK', 'TANK/SİLO GİRİŞ', 'YÜKSEKTE ÇALIŞMA'],
+            'kkd' => [
+                'İŞ AYAKKABISI' => '1001011111',
+                'ELEKTRİKÇİ AYAKKABISI' => '1000000000',
+                'PVC ÇİZME' => '0000101000',
+                'ÇİZME - KİMYASAL' => '0010001000',
+                'TOZ MASKESİ' => '0010010000',
+                'KAYNAK MASKESİ' => '0100000000',
+                'GAZ MASKESİ' => '0010000000',
+                'KULAKLIK' => '0101010000',
+                'BARET' => '0000010011',
+                'GÖZLÜK' => '1111001000',
+                'İŞ ELBİSESİ' => '1111111111',
+                'KİMYASAL ELBİSESİ' => '0010001000',
+                'KAYNAKÇI ÖNLÜĞÜ' => '0100000000',
+                'EMNİYET KEMERİ' => '0000000001',
+                'ELDİVEN - KİMYASAL' => '0010001000',
+                'CAN YELEĞİ/SİMİDİ' => '0000100000',
+                'ELDİVEN - MONTAJ' => '0001010000',
+                'ELDİVEN - Y GERİLİM' => '1000000000',
+                'ELDİVEN - TEMİZLİK' => '0000001000',
+                'ELEKTRİKÇİ MASKESİ' => '1000000000',
+                'BEL KEMERİ (KKD DEĞİL)' => '0000000000',
+                'TOPRAKLAMA/ISTAKASI' => '1000000000',
+            ],
         ],
 
         // Plan yenileme periyodu tehlike sınıfına göre (yıl) — Acil Durumlar Yön.
@@ -1727,8 +1822,17 @@ return [
          | sayfasında adres sonunda yazım hatası kaynaklı fazladan "/" vardı).
         */
         'word_sablonlari' => [
+            // Kapsamlı plan (FOM MAKİNA ADEP düzeni) — 'tur' => 'belge': metin
+            // yaması değil, gövde PDF ile aynı Blade'den üretilir; kapak, üst bilgi,
+            // alt imza şeridi ve stiller bu dosyadan gelir (AcilDurumBelgeWord).
+            'fom' => [
+                'ad' => 'Şablon 1 — Kapsamlı ADEP',
+                'aciklama' => 'FOM MAKİNA referans belgesinin düzeni: 7 bölüm, risk tablosu, EK-1…EK-7; tüm bilgiler sistemden dolar (PDF ile aynı içerik).',
+                'dosya' => 'acil-durum-plani-fom.docx',
+                'tur' => 'belge',
+            ],
             'orijinal' => [
-                'ad' => 'Şablon 1 — ADEP Klasik',
+                'ad' => 'Şablon 2 — ADEP Klasik',
                 'aciklama' => 'Gerçek referans belge (11 acil durum listesi + görsel akış şemaları + kapak sayfası).',
                 'dosya' => 'acil-durum-plani-sablonu.docx',
                 'kapak_dosya' => 'acil-durum-kapak-sablonu.pptx',
@@ -1830,7 +1934,8 @@ return [
             'koruma' => ['ad' => 'Koruma Ekibi', 'oran' => ['az_tehlikeli' => 50, 'tehlikeli' => 40, 'cok_tehlikeli' => 30], 'belge_ay' => 12, 'plan' => 'koruma'],
             'ilk_yardim' => ['ad' => 'İlk Yardım Ekibi', 'oran' => ['az_tehlikeli' => 20, 'tehlikeli' => 15, 'cok_tehlikeli' => 10], 'belge_ay' => 36, 'plan' => 'ilk_yardim'],
             'tahliye' => ['ad' => 'Tahliye Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
-            'haberlesme' => ['ad' => 'Haberleşme Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
+            'haberlesme' => ['ad' => 'Haberleşme Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => 'haberlesme'],
+            'teknik' => ['ad' => 'Teknik Müdahale Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => 'teknik'],
             'diger' => ['ad' => 'Diğer Ekip', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
         ],
         'ekip_belge_yaklasan_gun' => 30,

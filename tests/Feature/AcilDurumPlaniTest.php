@@ -9,6 +9,7 @@ use App\Models\AcilEkip;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\User;
+use App\Support\AcilDurumBelgeWord;
 use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumKonuSecici;
 use App\Support\AcilDurumPlaniUretici;
@@ -118,6 +119,50 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertIsArray($u['iletisim']);
     }
 
+    public function test_plan_belgesi_bilgileri_kaydedilir_ve_pdfe_basilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['isveren_ad' => 'Hasan Kaya', 'calisan_sayisi' => 8]);
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('uygulama.koordinator_ad', 'Selin Ak')
+            ->set('uygulama.koordinator_tel', '0532 999 88 77')
+            ->set('uygulama.hastane_ad', 'Şehir Hastanesi')
+            ->set('uygulama.hastane_tel', '0224 444 00 00')
+            ->set('uygulama.risk_puanlari.deprem.olasilik', '4')
+            ->set('uygulama.risk_puanlari.deprem.insan', '5')
+            ->set('uygulama.risk_puanlari.deprem.isyeri', '9')        // geçersiz puan atılır
+            ->set('uygulama.cevresel_riskler.1.durum', 'var')
+            ->set('uygulama.cevresel_riskler.1.not', 'Karşıda LPG istasyonu')
+            ->call('kaydet');
+
+        $plan = AcilDurumPlani::where('firma_id', $firma->id)->firstOrFail();
+        $u = $plan->uygulama;
+        $this->assertSame(['olasilik' => 4, 'insan' => 5], $u['risk_puanlari']['deprem']);
+        $this->assertArrayNotHasKey('yangin', $u['risk_puanlari']);
+        $this->assertSame(['durum' => 'var', 'not' => 'Karşıda LPG istasyonu'], $u['cevresel_riskler'][1]);
+        $this->assertNotEmpty($u['alarm_yontemi']);                  // örnek metinle geldi ve kaydedildi
+
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh('firma'), 'firma' => $firma->fresh()])->render();
+        $this->assertStringContainsString('Selin Ak', $html);
+        $this->assertStringContainsString('0532 999 88 77', $html);
+        $this->assertStringContainsString('Şehir Hastanesi', $html);
+        $this->assertStringContainsString('<b>9</b>', $html);           // deprem toplamı 4+5
+        $this->assertStringContainsString('Karşıda LPG istasyonu', $html);
+        $this->assertStringContainsString('10’dan az çalışanı olan bu işyerinde', $html);
+        $this->assertStringContainsString('TEKNİK MÜDAHALE EKİBİ', $html);
+    }
+
+    public function test_tum_konularin_senaryo_metni_var(): void
+    {
+        foreach (config('isg.acil_durum.konular') as $k) {
+            $s = config('acil_durum_senaryolari.'.$k['anahtar']);
+            $this->assertNotEmpty($s['aciklama'] ?? null, $k['anahtar']);
+            $this->assertNotEmpty($s['mudahale'] ?? null, $k['anahtar']);
+            $this->assertNotEmpty($s['olay_sonrasi'] ?? null, $k['anahtar']);
+        }
+    }
+
     public function test_firmalar_listesinden_query_ile_firma_onceden_secili_gelir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Query Test Firma A.Ş.']);
@@ -142,7 +187,7 @@ class AcilDurumPlaniTest extends TestCase
         $plan = AcilDurumPlani::firmaIcin($firma);
         $plan->forceFill(['konular' => ['yangin', 'deprem', 'elektrik']])->save();
 
-        $yanit = AcilDurumWordUretici::docx($plan);
+        $yanit = AcilDurumWordUretici::docx($plan, 'orijinal');
 
         $this->assertInstanceOf(StreamedResponse::class, $yanit);
         ob_start();
@@ -226,12 +271,65 @@ class AcilDurumPlaniTest extends TestCase
 
         Livewire::test(AcilDurumSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->assertSet('sablonId', 'orijinal')
+            ->assertSet('sablonId', 'fom')
+            ->assertActionHidden('kapakSayfasi')          // kapsamlı planın kapağı belgenin içinde
+            ->callAction('word')
+            ->assertSuccessful()
+            ->set('sablonId', 'orijinal')
             ->assertActionVisible('kapakSayfasi')
             ->callAction('word')
             ->assertSuccessful()
             ->callAction('kapakSayfasi')
             ->assertSuccessful();
+    }
+
+    public function test_kapsamli_word_ciktisi_fom_sablonunu_firma_verisiyle_doldurur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'BERT PLASTİK KAUÇUK LTD. ŞTİ.', 'sgk_sicil_no' => '22212010112247420160872000', 'isveren_ad' => 'Serdar Özgürel',
+        ]);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->forceFill([
+            'konular' => ['yangin', 'sel'], 'revizyon_no' => 'Rev.02 — 05.05.2027',
+            'uygulama' => ['koordinator_ad' => 'Selin Ak', 'onleyici_tedbirler' => "Birinci tedbir\nİkinci tedbir"],
+        ])->save();
+        $ekip = AcilEkip::create(['firma_id' => $firma->id, 'tur' => 'teknik', 'ad' => 'Teknik Müdahale Ekibi']);
+        $ekip->uyeler()->create(['ad_soyad' => 'Kemal Usta', 'telefon' => '0533 222 33 44']);
+
+        $icerik = (new AcilDurumBelgeWord)->uret($plan->fresh(), resource_path('belge/acil-durum-plani-fom.docx'));
+        $yol = tempnam(sys_get_temp_dir(), 'adep');
+        file_put_contents($yol, $icerik);
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($yol) === true);
+        $belge = $zip->getFromName('word/document.xml');
+        $ust = $zip->getFromName('word/header1.xml');
+        $iliski = $zip->getFromName('word/_rels/document.xml.rels');
+        $zip->close();
+        unlink($yol);
+
+        // Geçerli XML (Word açabilir)
+        $this->assertTrue((new \DOMDocument)->loadXML($belge));
+        // Kapak + üst bilgi yeni firmaya göre
+        $this->assertStringContainsString('BERT PLASTİK KAUÇUK LTD. ŞTİ.', $belge);
+        $this->assertStringContainsString('22212010112247420160872000', $belge);
+        $this->assertStringContainsString('Adı Soyadı: Serdar Özgürel', $belge);
+        $this->assertStringNotContainsString('FOM MAKİNA', $belge);
+        $this->assertStringNotContainsString('22841010115350010161228000', $belge);
+        $this->assertStringContainsString('BERT PLASTİK KAUÇUK LTD. ŞTİ.', $ust);
+        $this->assertStringContainsString('Rev.02', $ust);
+        $this->assertStringContainsString('05.05.2027', $ust);
+        // Gövde: FOM stilleri + sistem verisi
+        $this->assertStringContainsString('<w:pStyle w:val="Balk1"/>', $belge);
+        $this->assertStringContainsString('<w:pStyle w:val="ListeParagraf"/>', $belge);
+        $this->assertStringContainsString('Selin Ak', $belge);
+        $this->assertStringContainsString('İkinci tedbir', $belge);
+        $this->assertStringContainsString('Kemal Usta', $belge);
+        $this->assertStringContainsString('1. ACİL DURUM: YANGIN', $belge);
+        $this->assertStringContainsString('2. ACİL DURUM: SEL VE SU BASKINI', $belge);
+        $this->assertStringContainsString('EK-7 TAHLİYE VE ÇIKIŞ PLANI', $belge);
+        // Yangın akış şeması resim olarak eklendi
+        $this->assertStringContainsString('rIdAdep', $belge);
+        $this->assertMatchesRegularExpression('/Id="rIdAdep\d+"[^>]*media\/adep\d+\.png/', $iliski);
     }
 
     public function test_tahliye_plani_gorseli_yuklenir(): void
@@ -332,16 +430,30 @@ class AcilDurumPlaniTest extends TestCase
         // (f)(4): görevli adı, unvanı, sorumluluk alanı, iletişim, yedek
         $this->assertStringContainsString('Torna Operatörü', $html);
         $this->assertStringContainsString('0532 111 22 33', $html);
-        $this->assertStringContainsString('Ekip başı', $html);
-        $this->assertStringContainsString('Yedek · Gece', $html);
-        // (f)(5): ulusal + yerel irtibat
-        $this->assertStringContainsString('İRTİBAT KURULACAK KURULUŞLAR', $html);
-        $this->assertStringContainsString('112 Acil Çağrı Merkezi', $html);
+        $this->assertStringContainsString('(Ekip başı)', $html);
+        $this->assertStringContainsString('Can Er', $html);
+        $this->assertStringContainsString('Yedek görevli', $html);
+        $this->assertStringContainsString('Gece', $html);
+        // (f)(5): ulusal + yerel irtibat (EK-2) — hastane listeden "EN YAKIN HASTANE" satırına
+        $this->assertStringContainsString('EK-2 ACİL İLETİŞİM LİSTESİ', $html);
+        $this->assertStringContainsString('AMBULANS İLKYARDIM', $html);
         $this->assertStringContainsString('Devlet Hastanesi', $html);
+        $this->assertSame(1, substr_count($html, 'Devlet Hastanesi'));
         $this->assertStringNotContainsString('155', $html);
+        // FOM düzeni: bölümler ve ekler
+        foreach (['1. GİRİŞ', '3.2.7 Teknik Müdahale Ekibi', 'OLASI ACİL DURUMLAR ve RİSK DEĞERLENDİRMESİ', 'EK-1 ACİL DURUMLAR VE MÜDAHALE YÖNTEMLERİ',
+            'EK-3 FAALİYETLERE GÖRE', 'EK-4 DESTEK ELEMANI ATAMA YAZISI', 'EK-5 FİRMA BİLGİLERİ', 'EK-6 ÇEVRESEL RİSKLER', 'EK-7 TAHLİYE VE ÇIKIŞ PLANI', 'DEĞİŞME VE DÜZELTMELER'] as $baslik) {
+            $this->assertStringContainsString($baslik, $html);
+        }
+        // EK-1: seçili konuların senaryo metni + akış şeması
+        $this->assertStringContainsString('1. ACİL DURUM: YANGIN', $html);
+        $this->assertStringContainsString('2. ACİL DURUM: DEPREM', $html);
+        $this->assertStringContainsString('acil-durum-akis', $html);
+        $this->assertStringContainsString('Çök – Kapan – Tutun', $html);
+        $this->assertStringNotContainsString('ACİL DURUM: SEL', $html);
         // Md.13-15: tatbikat ve yenileme
         $this->assertStringContainsString('04.05.2026', $html);
-        $this->assertStringContainsString('NACE Kodu: 41.00', $html);
+        $this->assertStringContainsString('NACE: 41.00', $html);
 
         $yanit = AcilDurumPlaniUretici::pdf($plan);
         ob_start();

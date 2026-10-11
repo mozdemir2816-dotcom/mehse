@@ -83,7 +83,7 @@ class AcilDurumPlani extends Page
      * word_sablonlari`); "Word (Orijinal Şablon)" ve "Kapak Sayfası" aksiyonları
      * seçili şablona göre üretir.
      */
-    public string $sablonId = 'orijinal';
+    public string $sablonId = 'fom';
 
     /** Firmalar listesinden "Acil Durum Planı" satır aksiyonuyla ?firma= ile gelinir. */
     public function mount(): void
@@ -272,16 +272,16 @@ class AcilDurumPlani extends Page
                 }),
 
             Action::make('word')
-                ->label('Word (Orijinal Şablon)')
+                ->label('Word')
                 ->icon('heroicon-o-document')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
-                ->tooltip('Referans belgenin birebir kopyası; yalnızca firmaya özel bilgiler değişir, geri kalan metin/biçim aynen korunur.')
+                ->tooltip('Seçili Word şablonuyla düzenlenebilir plan (.docx). Kapsamlı ADEP, PDF ile aynı içeriği FOM belgesinin biçimiyle verir.')
                 ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
+                ->action(function (array $data) {
                     $this->kaydet();
 
-                    return AcilDurumWordUretici::docx($this->plan(), $this->sablonId);
+                    return AcilDurumWordUretici::docx($this->plan(), $this->sablonId, ImzaSecenegi::secili($data));
                 }),
 
             Action::make('kapakSayfasi')

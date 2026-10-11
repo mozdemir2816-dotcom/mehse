@@ -34,8 +34,22 @@ class AcilDurumHazirlik
             'iletisim' => [['ad' => '112 Acil Çağrı Merkezi', 'telefon' => '112', 'aciklama' => 'Ulusal acil çağrı']],
             'onay_durumu' => 'yok', 'son_tatbikat' => null, 'sonraki_tatbikat' => null, 'tutanak_ref' => '',
             'kroki_asildi' => false, 'calisan_bilgilendirildi' => false, 'ek_not' => '',
+            ...array_fill_keys(array_keys(static::BELGE_ALANLARI), ''),
+            'risk_puanlari' => [], 'cevresel_riskler' => [],
         ];
     }
+
+    /**
+     * Plan belgesindeki (FOM düzeni) işyerine özgü kısa bilgiler — alan => azami uzunluk.
+     * Boş kalanlar belgede elle doldurulacak noktalı satır olarak basılır.
+     */
+    public const BELGE_ALANLARI = [
+        'koordinator_ad' => 120, 'koordinator_tel' => 40, 'koordinator_vekil' => 120, 'koordinator_vekil_tel' => 40,
+        'isveren_tel' => 40, 'isveren_vekili_tel' => 40,
+        'alarm_yontemi' => 600, 'yedek_toplanma' => 300, 'refakatci' => 300, 'tatbikat_sorumlusu' => 120,
+        'bina_bilgisi' => 600, 'vardiyalar' => 200, 'kayit_yedekleme' => 600,
+        'hastane_ad' => 200, 'hastane_tel' => 40, 'kroki_kat' => 200,
+    ];
 
     /** Tarayıcıdan / formdan gelen uygulama bilgisini sınırlar. */
     public static function temizle(array $u): array
@@ -67,6 +81,18 @@ class AcilDurumHazirlik
             'kroki_asildi' => (bool) ($u['kroki_asildi'] ?? false),
             'calisan_bilgilendirildi' => (bool) ($u['calisan_bilgilendirildi'] ?? false),
             'ek_not' => $metin($u['ek_not'] ?? ''),
+            ...collect(static::BELGE_ALANLARI)->map(fn ($uz, $k) => $metin($u[$k] ?? '', $uz))->all(),
+            'risk_puanlari' => collect(config('isg.acil_durum.risk_listesi'))->keys()
+                ->mapWithKeys(fn ($r) => [$r => collect(config('isg.acil_durum.risk_kolonlari'))->keys()
+                    ->mapWithKeys(fn ($k) => [$k => in_array((int) ($u['risk_puanlari'][$r][$k] ?? 0), [1, 2, 3, 4, 5], true) ? (int) $u['risk_puanlari'][$r][$k] : null])
+                    ->filter()->all()])
+                ->filter()->all(),
+            'cevresel_riskler' => collect(config('isg.acil_durum.cevresel_riskler'))->keys()
+                ->mapWithKeys(fn ($i) => [$i => [
+                    'durum' => in_array($u['cevresel_riskler'][$i]['durum'] ?? '', ['var', 'yok'], true) ? $u['cevresel_riskler'][$i]['durum'] : '',
+                    'not' => $metin($u['cevresel_riskler'][$i]['not'] ?? '', 300),
+                ]])
+                ->filter(fn ($r) => $r['durum'] !== '' || $r['not'] !== '')->all(),
         ];
     }
 
