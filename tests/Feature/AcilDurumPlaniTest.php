@@ -95,6 +95,29 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('Akaryakıt', $plan->disaridan_etkileyebilecek_isyerleri);
     }
 
+    public function test_bos_kutular_ornek_metinle_gelir_yazilmis_metin_korunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $ornek = config('isg.acil_durum.ornek_metinler');
+        AcilDurumPlani::firmaIcin($firma)->forceFill(['uygulama' => ['olcum_notu' => 'Kendi notum']])->save();
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertSet('uygulama.onleyici_tedbirler', $ornek['onleyici_tedbirler'])
+            ->assertSet('uygulama.mudahale_yontemi', $ornek['mudahale_yontemi'])
+            ->assertSet('uygulama.olcum_notu', 'Kendi notum')
+            ->set('uygulama.onleyici_tedbirler', 'Düzeltilmiş tedbir')
+            ->call('ornekMetin', 'olcum_notu')
+            ->assertSet('uygulama.olcum_notu', $ornek['olcum_notu'])
+            ->call('ornekMetin', 'iletisim')         // örneği olmayan alan dokunulmaz
+            ->call('kaydet');
+
+        $u = AcilDurumPlani::where('firma_id', $firma->id)->firstOrFail()->uygulama;
+        $this->assertSame('Düzeltilmiş tedbir', $u['onleyici_tedbirler']);
+        $this->assertSame($ornek['ekipman_kkd'], $u['ekipman_kkd']);
+        $this->assertIsArray($u['iletisim']);
+    }
+
     public function test_firmalar_listesinden_query_ile_firma_onceden_secili_gelir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Query Test Firma A.Ş.']);

@@ -166,15 +166,15 @@
         @php $alan = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem'; $lb = 'display:block;font-size:.78rem;font-weight:600;margin-bottom:.2rem'; @endphp
         <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="danger" collapsible>
             <x-slot name="heading">Risk, tedbir ve uygulama</x-slot>
-            <x-slot name="description">Tahliye anında herkes ne yapacak? Bu bilgiler kroki, ekip ve tatbikat süreçleriyle birlikte kullanılır. Kaydet ile saklanır.</x-slot>
+            <x-slot name="description">Tahliye anında herkes ne yapacak? Boş kutular hazır örnek metinle gelir; firmaya göre düzeltip Kaydet ile saklayın.</x-slot>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem">
-                <div style="grid-column:1/-1"><label style="{{ $lb }}">Önleyici ve sınırlandırıcı tedbirler</label>
-                    <textarea wire:model="uygulama.onleyici_tedbirler" rows="3" style="{{ $alan }}" placeholder="Örn. yanıcı malzemelerin depolama koşulları, periyodik kontroller, alarm ve enerji izolasyonu…"></textarea></div>
-                <div><label style="{{ $lb }}">Ölçüm ve değerlendirme notu</label>
-                    <textarea wire:model="uygulama.olcum_notu" rows="3" style="{{ $alan }}" placeholder="Gerekli ölçümler, mevcut raporlar veya neden uygulanamaz olduğu"></textarea></div>
-                <div><label style="{{ $lb }}">Acil durum ekipmanı ve KKD listesi</label>
-                    <textarea wire:model="uygulama.ekipman_kkd" rows="3" style="{{ $alan }}" placeholder="Yangın, ilk yardım, kurtarma ve gerekiyorsa KKD ekipmanları"></textarea></div>
+                <div style="grid-column:1/-1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Önleyici ve sınırlandırıcı tedbirler</label><button type="button" wire:click="ornekMetin('onleyici_tedbirler')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="font-size:.7rem;font-weight:500;color:rgb(217 119 6);text-decoration:underline">Örnek metni getir</button></div>
+                    <textarea wire:model="uygulama.onleyici_tedbirler" rows="8" style="{{ $alan }}" placeholder="Örn. yanıcı malzemelerin depolama koşulları, periyodik kontroller, alarm ve enerji izolasyonu…"></textarea></div>
+                <div><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Ölçüm ve değerlendirme notu</label><button type="button" wire:click="ornekMetin('olcum_notu')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="font-size:.7rem;font-weight:500;color:rgb(217 119 6);text-decoration:underline">Örnek metni getir</button></div>
+                    <textarea wire:model="uygulama.olcum_notu" rows="5" style="{{ $alan }}" placeholder="Gerekli ölçümler, mevcut raporlar veya neden uygulanamaz olduğu"></textarea></div>
+                <div><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Acil durum ekipmanı ve KKD listesi</label><button type="button" wire:click="ornekMetin('ekipman_kkd')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="font-size:.7rem;font-weight:500;color:rgb(217 119 6);text-decoration:underline">Örnek metni getir</button></div>
+                    <textarea wire:model="uygulama.ekipman_kkd" rows="5" style="{{ $alan }}" placeholder="Yangın, ilk yardım, kurtarma ve gerekiyorsa KKD ekipmanları"></textarea></div>
                 @foreach ([
                     'ozel_risk_alanlari' => ['Özel risk alanları', 'ozel_risk_notu', 'Kimyasal yayılım, parlama / patlama riski olan bölümler — örn. boya deposu, LPG tüp alanı (Md.12/1-f-6)'],
                     'enerji_kesme' => ['Enerji kesme / vana noktaları', 'enerji_kesme_notu', 'Ana elektrik şalteri ve doğalgaz / LPG vanalarının yeri — örn. giriş sağı ana pano (Md.12/1-f-7)'],
@@ -190,10 +190,10 @@
                         @endif
                     </div>
                 @endforeach
-                <div style="grid-column:1/-1"><label style="{{ $lb }}">Müdahale, haberleşme ve tahliye yöntemi</label>
-                    <textarea wire:model="uygulama.mudahale_yontemi" rows="3" style="{{ $alan }}" placeholder="İhbar yöntemi, ilk müdahale, ekiplerin görev sırası, tahliye, toplanma ve yoklama adımları"></textarea></div>
-                <div style="grid-column:1/-1"><label style="{{ $lb }}">Özel desteğe ihtiyaç duyan kişiler için yöntem</label>
-                    <textarea wire:model="uygulama.ozel_destek" rows="2" style="{{ $alan }}" placeholder="Engelli, yaşlı, gebe, çocuk veya refakat ihtiyacı olan kişiler için destek yöntemi"></textarea></div>
+                <div style="grid-column:1/-1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Müdahale, haberleşme ve tahliye yöntemi</label><button type="button" wire:click="ornekMetin('mudahale_yontemi')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="font-size:.7rem;font-weight:500;color:rgb(217 119 6);text-decoration:underline">Örnek metni getir</button></div>
+                    <textarea wire:model="uygulama.mudahale_yontemi" rows="7" style="{{ $alan }}" placeholder="İhbar yöntemi, ilk müdahale, ekiplerin görev sırası, tahliye, toplanma ve yoklama adımları"></textarea></div>
+                <div style="grid-column:1/-1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem"><label style="{{ $lb }}">Özel desteğe ihtiyaç duyan kişiler için yöntem</label><button type="button" wire:click="ornekMetin('ozel_destek')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="font-size:.7rem;font-weight:500;color:rgb(217 119 6);text-decoration:underline">Örnek metni getir</button></div>
+                    <textarea wire:model="uygulama.ozel_destek" rows="3" style="{{ $alan }}" placeholder="Engelli, yaşlı, gebe, çocuk veya refakat ihtiyacı olan kişiler için destek yöntemi"></textarea></div>
                 <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem">
                     @foreach (['ziyaretci_dahil' => ['Ziyaretçiler dahil', 'Girişte bilgilendirme / refakat akışı'], 'gecici_calisan_dahil' => ['Geçici çalışanlar dahil', 'İşe başlama ve saha bilgilendirmesi'], 'coklu_isveren' => ['Birden fazla işveren / ortak saha', 'Koordinasyon kontrolü gerektirir']] as $anahtar => [$ad, $alt])
                         <label style="{{ $kutu }};padding:.55rem .7rem;display:flex;gap:.5rem;align-items:flex-start;cursor:pointer">

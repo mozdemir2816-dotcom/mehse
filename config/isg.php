@@ -1659,6 +1659,39 @@ return [
     'acil_durum' => [
         'hakkinda' => 'Acil Durum Eylem Planı, işyerinizde meydana gelebilecek yangın, deprem, doğal afetler ve diğer acil durumlara karşı alınacak önlemleri içeren yasal bir belgedir. Bu plan, 6331 sayılı İş Sağlığı ve Güvenliği Kanunu kapsamında her işyerinde bulundurulması zorunlu belgelerden biridir.',
 
+        // "Risk, tedbir ve uygulama" kutularının hazır örnek metinleri (Md.9 / Md.12).
+        // Boş kutu ekranda bununla dolu gelir; uzman firmaya göre düzeltip Kaydet'e basar.
+        'ornek_metinler' => [
+            'onleyici_tedbirler' => "- Yanıcı ve parlayıcı maddeler (boya, tiner, yağ, gaz tüpleri) kapalı ve havalandırmalı alanda, ısı kaynaklarından uzakta, etiketli kaplarda depolanır.\n"
+                ."- Kaynak, taşlama, kesme gibi sıcak işler iş izni ile yapılır; çevredeki yanıcı malzeme kaldırılır, yanında yangın söndürücü bulundurulur.\n"
+                ."- Elektrik panoları kapalı/kilitli tutulur, önleri boş bırakılır; elektrik tesisatı ve topraklama yılda bir yetkili kişiye kontrol ettirilir.\n"
+                ."- Yangın söndürücüler 6 ayda bir, yangın tesisatı ve alarm sistemi yılda bir periyodik kontrolden geçirilir.\n"
+                ."- Kaldırma ekipmanları, basınçlı kaplar ve diğer iş ekipmanları periyodik kontrolden geçirilir; makine koruyucuları ve acil stop butonları çalışır durumda tutulur.\n"
+                ."- Kaçış yolları, acil çıkış kapıları ve toplanma alanı sürekli açık ve işaretli tutulur; acil çıkış kapıları dışa açılır ve kilitlenmez.\n"
+                ."- Belirlenen alanlar dışında sigara içilmez, açık ateş kullanılmaz.\n"
+                ."- Yanıcı atıklar (yağlı bez, talaş, ambalaj) her gün kapaklı metal kaplarda toplanıp uzaklaştırılır.\n"
+                ."- Raf, dolap ve ağır eşyalar devrilmeye karşı sabitlenir (deprem tedbiri).\n"
+                ."- Elektrik ana şalteri ve doğalgaz/LPG vanası işaretlidir; yeri ve kapatılması ekip üyelerine gösterilmiştir.\n"
+                .'- Acil durum ekiplerine eğitim verilir, yılda en az bir tatbikat yapılır.',
+            'olcum_notu' => "- Elektrik tesisatı ve topraklama ölçümü yılda bir yaptırılır, rapor dosyada saklanır.\n"
+                ."- Yangın söndürücü ve yangın tesisatı periyodik kontrol raporları dosyada saklanır.\n"
+                .'- Gürültü, toz, aydınlatma ve kimyasal maruziyet ölçümleri risk değerlendirmesinde gerekli görüldüğü durumlarda yaptırılır.',
+            'ekipman_kkd' => "- Yangın söndürücüler (KKT / CO2), işaretli ve kolay ulaşılabilir yerlerde\n"
+                ."- İlkyardım dolabı / çantası (malzemeleri düzenli kontrol edilir)\n"
+                ."- Acil durum aydınlatması ve fosforlu yönlendirme levhaları\n"
+                ."- Yangın alarm butonu / sireni\n"
+                ."- Acil durum ekipleri için yelek, baret, eldiven, el feneri, düdük\n"
+                .'- Gerekli bölümlerde göz duşu / acil duş, yangın battaniyesi',
+            'mudahale_yontemi' => "1. Acil durumu gören kişi yüksek sesle ve alarm butonuyla çevresini uyarır, amirine ve acil durum ekip liderine haber verir.\n"
+                ."2. Ekip lideri veya görevli 112'yi arar; olayın türü, adres ve yaralı bilgisi verilir.\n"
+                ."3. Söndürme ekibi, kendi güvenliğini tehlikeye atmadan ilk müdahaleyi yapar; elektrik ve gaz kesilir.\n"
+                ."4. Tahliye kararı verilince çalışanlar makineleri güvenli şekilde durdurup en yakın acil çıkıştan, asansör kullanmadan, koşmadan çıkar.\n"
+                ."5. Herkes toplanma alanında toplanır, ekip lideri sayım yapar; eksik kişi varsa kurtarma ekibine ve itfaiyeye bildirilir.\n"
+                ."6. İlkyardım ekibi yaralılara müdahale eder, ambulansı yönlendirir.\n"
+                .'7. Yetkili kişi izin vermeden binaya geri dönülmez.',
+            'ozel_destek' => 'Engelli, hamile, yaşlı, geçici olarak hareket kısıtlılığı olan çalışan ve ziyaretçiler için birer refakatçi belirlenir; bu kişiler tahliyede önceliklidir ve refakatçileri tarafından toplanma alanına götürülür.',
+        ],
+
         // Acil Durumlar Yön. Md.12(1)(f)(5) — ulusal acil durum hatları (işyerinden
         // bağımsız, sabit). İtfaiye/polis/jandarma/AFAD/sahil güvenlik hatları
         // 112 Acil Çağrı Merkezinde birleşti (eski 110/155/156/122/158 112'ye
@@ -3956,11 +3989,11 @@ return [
             'ofis_buro' => 'Ofis & Büro', 'insaat_saha' => 'İnşaat & Saha', 'genel_isg' => 'Genel İSG',
         ],
         'sablonlar' => [
-            ['baslik' => 'Forklift Kullanma Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Forklift operatörlerinin uyması gereken güvenli kullanım esasları.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Çelik burunlu iş ayakkabısı',
-  2 => 'Reflektörlü yelek',
-), 'maddeler' => [
+            ['baslik' => 'Forklift Kullanma Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Forklift operatörlerinin uyması gereken güvenli kullanım esasları.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Çelik burunlu iş ayakkabısı',
+                2 => 'Reflektörlü yelek',
+            ], 'maddeler' => [
                 'Forkliftı yalnızca geçerli forklift operatörlük belgesi olan personel kullanabilir.',
                 'Kullanım öncesi fren, korna, ikaz lambası, direksiyon ve çatal bağlantıları günlük kontrol formuna göre kontrol edilir.',
                 'Yük, kapasite levhasında belirtilen sınırı ve yük merkezini aşmayacak şekilde taşınır.',
@@ -3969,11 +4002,11 @@ return [
                 'Emniyet kemeri her zaman takılı olarak sürüş yapılır; sürücü koltukta olmadan forklift hareket ettirilmez.',
                 'Forklift, park edildiğinde çatallar yere indirilir, kontak kapatılır ve el freni çekilir.',
             ]],
-            ['baslik' => 'Torna Tezgahı Kullanma Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Torna tezgahında güvenli talaşlı imalat çalışmaları için temel kurallar.', 'kkdler' => array (
-  0 => 'Koruyucu gözlük',
-  1 => 'Çelik burunlu iş ayakkabısı',
-  2 => 'Vücuda oturan tulum',
-), 'maddeler' => [
+            ['baslik' => 'Torna Tezgahı Kullanma Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Torna tezgahında güvenli talaşlı imalat çalışmaları için temel kurallar.', 'kkdler' => [
+                0 => 'Koruyucu gözlük',
+                1 => 'Çelik burunlu iş ayakkabısı',
+                2 => 'Vücuda oturan tulum',
+            ], 'maddeler' => [
                 'Torna tezgahını yalnızca eğitim almış ve yetkilendirilmiş personel kullanabilir.',
                 'Çalışma öncesi ayna anahtarı tezgahtan çıkarılır, koruyucular yerinde ve sağlam olduğu kontrol edilir.',
                 'Kravat, bilezik, eldiven gibi dönen parçaya takılabilecek aksesuarlar çalışma sırasında kullanılmaz; saç toplanır.',
@@ -3982,11 +4015,11 @@ return [
                 'Tezgah çalışırken koruyucu siperlik açık bırakılmaz, göz koruma gözlüğü sürekli takılı tutulur.',
                 'Acil durum düğmesinin yeri bilinir, anormal ses/titreşimde derhal durdurulur ve bakım ekibine bildirilir.',
             ]],
-            ['baslik' => 'Hidrolik Pres Makinesi Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Hidrolik/eksantrik pres makinelerinde kalıp ve baskı işlemleri.', 'kkdler' => array (
-  0 => 'Koruyucu gözlük',
-  1 => 'Çelik burunlu iş ayakkabısı',
-  2 => 'Anti-vibrasyon eldiveni',
-), 'maddeler' => [
+            ['baslik' => 'Hidrolik Pres Makinesi Talimatı', 'kategori' => 'is_makineleri', 'aciklama' => 'Hidrolik/eksantrik pres makinelerinde kalıp ve baskı işlemleri.', 'kkdler' => [
+                0 => 'Koruyucu gözlük',
+                1 => 'Çelik burunlu iş ayakkabısı',
+                2 => 'Anti-vibrasyon eldiveni',
+            ], 'maddeler' => [
                 'Pres, çift el kumandası veya ışık perdesi gibi koruyucu tertibatlar devre dışıyken çalıştırılmaz.',
                 'Kalıp değişimi ve ayarı yalnızca enerji kesilip LOTO (kilitle-etiketle) uygulandıktan sonra yapılır.',
                 'El veya herhangi bir uzuv, kalıp bölgesine kesinlikle sokulmaz; parça yerleştirme/alma özel aparatlarla yapılır.',
@@ -3994,11 +4027,11 @@ return [
                 'Makinede anormal ses, sızıntı veya gecikmeli tepki fark edilirse derhal durdurulur ve yetkiliye bildirilir.',
                 'Vardiya başı ve sonu kontrol formu doldurulur, acil stop düğmesinin çalıştığı test edilir.',
             ]],
-            ['baslik' => 'Spiral (Avuç İçi) Taşlama Makinesi Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Spiral taşlama makinesinin güvenli kullanımı için kurallar.', 'kkdler' => array (
-  0 => 'Yüz siperliği',
-  1 => 'Koruyucu gözlük',
-  2 => 'Anti-vibrasyon eldiveni',
-), 'maddeler' => [
+            ['baslik' => 'Spiral (Avuç İçi) Taşlama Makinesi Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Spiral taşlama makinesinin güvenli kullanımı için kurallar.', 'kkdler' => [
+                0 => 'Yüz siperliği',
+                1 => 'Koruyucu gözlük',
+                2 => 'Anti-vibrasyon eldiveni',
+            ], 'maddeler' => [
                 'Taşlama diski, yapılacak işe ve malzemeye uygun tip ve azami devirde seçilir; disk üzerindeki devir sınırı aşılmaz.',
                 'Disk koruyucu siperi kesinlikle sökülmez veya devre dışı bırakılmaz.',
                 'Yeni takılan disk, çalıştırmadan önce en az 30 saniye boşta test edilir; kenarında durup çalıştırılır.',
@@ -4006,44 +4039,44 @@ return [
                 'Makine iki elle sıkıca tutulur, disk sıkışmasına karşı geri tepmeye (kickback) hazırlıklı olunur.',
                 'Kullanım sonrası makine kapatılıp disk tamamen durmadan yere bırakılmaz.',
             ]],
-            ['baslik' => 'Sütunlu/El Matkap Kullanma Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Sütunlu ve el matkabı ile güvenli delik delme operasyonu.', 'kkdler' => array (
-  0 => 'Koruyucu gözlük',
-  1 => 'Çelik burunlu iş ayakkabısı',
-  2 => 'Vücuda oturan tulum',
-), 'maddeler' => [
+            ['baslik' => 'Sütunlu/El Matkap Kullanma Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Sütunlu ve el matkabı ile güvenli delik delme operasyonu.', 'kkdler' => [
+                0 => 'Koruyucu gözlük',
+                1 => 'Çelik burunlu iş ayakkabısı',
+                2 => 'Vücuda oturan tulum',
+            ], 'maddeler' => [
                 'İş parçası, işkence veya uygun bağlama aparatı ile sabitlenmeden delinmez; elde tutularak delme yapılmaz.',
                 'Matkap ucu, delinecek malzemeye ve çapa uygun seçilir, körelmiş uçlar kullanılmaz.',
                 'Eldiven, sütunlu matkapta dönen mile dolanma riski nedeniyle takılmaz (el matkabında iş güvenliği eldiveni kullanılabilir).',
                 'Talaş temizliği fırça ile yapılır, elle veya üfleyerek temizlenmez.',
                 'Devir hızı, malzeme ve çapa uygun seçilir; aşırı baskı uygulanmaz.',
             ]],
-            ['baslik' => 'Elektrikli Kırıcı/Delici Kullanma Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Kırıcı tip elektrikli delici makinelerin güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Anti-vibrasyon eldiveni',
-  1 => 'Koruyucu gözlük',
-  2 => 'FFP3 toz maskesi',
-), 'maddeler' => [
+            ['baslik' => 'Elektrikli Kırıcı/Delici Kullanma Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Kırıcı tip elektrikli delici makinelerin güvenli kullanımı.', 'kkdler' => [
+                0 => 'Anti-vibrasyon eldiveni',
+                1 => 'Koruyucu gözlük',
+                2 => 'FFP3 toz maskesi',
+            ], 'maddeler' => [
                 'Kırıcı kullanılmadan önce kırılacak yüzeyin altında/içinde elektrik, su, doğalgaz tesisatı olmadığı proje üzerinden teyit edilir.',
                 'Uzun süreli kullanımda titreşime maruziyeti azaltmak için düzenli mola verilir (el-kol titreşim yönetmeliği sınırları gözetilir).',
                 'Toz oluşan ortamlarda su püskürtme veya lokal aspirasyon ile toz bastırma uygulanır.',
                 'Kırıcı, iş bitiminde veya bırakılırken enerjisi/hava beslemesi kesilir, uç dik pozisyonda ve destekli bırakılır.',
                 'Kulak koruyucu kullanılır, gürültü seviyesi yüksek alanlarda çalışma süresi sınırlandırılır.',
             ]],
-            ['baslik' => 'El Aletleri (Çekiç, Tornavida, Pense) Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Genel el aletlerinin güvenli kullanımı ve bakımı.', 'kkdler' => array (
-  0 => 'Mekanik dirençli eldiven',
-  1 => 'Koruyucu gözlük',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'El Aletleri (Çekiç, Tornavida, Pense) Talimatı', 'kategori' => 'el_aletleri', 'aciklama' => 'Genel el aletlerinin güvenli kullanımı ve bakımı.', 'kkdler' => [
+                0 => 'Mekanik dirençli eldiven',
+                1 => 'Koruyucu gözlük',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'El aletleri yalnızca üretildiği amaç için kullanılır; örneğin tornavida keski/kaldıraç olarak kullanılmaz.',
                 'Sapı çatlamış, gevşemiş veya kafası deforme olmuş aletler kullanılmadan önce değiştirilir/tamir edilir.',
                 'Alet, kullanılmadığı zamanlarda uygun bir kılıf/kutuda, düşme veya yaralanmaya sebep olmayacak şekilde muhafaza edilir.',
                 'Keskin uçlu aletler taşınırken uç kısmı korumaya alınır, cepte açık taşınmaz.',
                 'Elektrikli el aletlerinin kablo ve fişleri periyodik olarak kontrol edilir, hasarlı olanlar kullanılmaz.',
             ]],
-            ['baslik' => 'Kimyasal Madde Depolama ve Kullanma Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Tehlikeli kimyasalların depolanması ve kullanılması.', 'kkdler' => array (
-  0 => 'Kimyasala dayanıklı eldiven',
-  1 => 'Kimyasal gaz maskesi',
-  2 => 'Yarım/tam yüz maske + uygun filtre',
-), 'maddeler' => [
+            ['baslik' => 'Kimyasal Madde Depolama ve Kullanma Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Tehlikeli kimyasalların depolanması ve kullanılması.', 'kkdler' => [
+                0 => 'Kimyasala dayanıklı eldiven',
+                1 => 'Kimyasal gaz maskesi',
+                2 => 'Yarım/tam yüz maske + uygun filtre',
+            ], 'maddeler' => [
                 'Her kimyasal için Güvenlik Bilgi Formu (GBF) işyerinde bulundurulur ve çalışanlar bilgilendirilir.',
                 'Birbiriyle reaksiyona girebilecek kimyasallar (asit-baz, oksitleyici-yanıcı vb.) ayrı bölmelerde depolanır.',
                 'Kimyasal kaplar orijinal etiketiyle saklanır; başka kaplara aktarılıyorsa içerik ve tehlike bilgisi etiketlenir.',
@@ -4051,66 +4084,66 @@ return [
                 'Dökülme durumunda GBF\'de belirtilen müdahale prosedürü uygulanır, uygun absorban malzeme hazır bulundurulur.',
                 'Kimyasal depolarında yeterli havalandırma sağlanır, ateşleme kaynağı bulundurulmaz.',
             ]],
-            ['baslik' => 'Boya ve Cila Uygulama Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Endüstriyel boya, vernik ve cila uygulamalarında güvenli çalışma.', 'kkdler' => array (
-  0 => 'Yarım/tam yüz organik gaz maskesi',
-  1 => 'Kimyasal dirençli eldiven',
-  2 => 'Koruyucu gözlük',
-), 'maddeler' => [
+            ['baslik' => 'Boya ve Cila Uygulama Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Endüstriyel boya, vernik ve cila uygulamalarında güvenli çalışma.', 'kkdler' => [
+                0 => 'Yarım/tam yüz organik gaz maskesi',
+                1 => 'Kimyasal dirençli eldiven',
+                2 => 'Koruyucu gözlük',
+            ], 'maddeler' => [
                 'Boya uygulaması, yeterli havalandırmalı boya kabini veya açık alanda yapılır; kapalı, havasız ortamda boya yapılmaz.',
                 'Solvent bazlı boya kullanılan alanda ateş, kaynak, sigara gibi ateşleme kaynaklarına kesinlikle izin verilmez.',
                 'Boya artıkları ve solvent bezleri kendiliğinden tutuşma riskine karşı kapalı metal kaplarda biriktirilir.',
                 'Uygulama öncesi ve sonrası eller yıkanır, KKD\'ler iş dışı ortama taşınmaz.',
                 'Statik elektrik birikimine karşı boya kabini ve ekipmanları topraklanır.',
             ]],
-            ['baslik' => 'Asbest ile Çalışma Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Asbest içeren malzemelerin sökümü ve bertarafında güvenli çalışma.', 'kkdler' => array (
-  0 => 'Tam yüz maskesi + P3 filtre',
-  1 => 'Tek kullanımlık tulum',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Asbest ile Çalışma Talimatı', 'kategori' => 'kimyasal_madde', 'aciklama' => 'Asbest içeren malzemelerin sökümü ve bertarafında güvenli çalışma.', 'kkdler' => [
+                0 => 'Tam yüz maskesi + P3 filtre',
+                1 => 'Tek kullanımlık tulum',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Asbest söküm işleri yalnızca yetki belgeli firma/personel tarafından, Asbest Yönetmeliği\'ne uygun olarak yapılır.',
                 'Çalışma alanı izole edilir, negatif basınçlı hava filtrasyon sistemi kullanılır, alan dışına toz yayılımı önlenir.',
                 'Asbest malzemeler kırılmadan, ıslatılarak ve bütün halinde sökülmeye çalışılır; taşlama/kesme ile toz oluşturulmaz.',
                 'Atıklar sızdırmaz, etiketli özel torbalarda toplanır ve lisanslı bertaraf tesisine gönderilir.',
                 'Çalışanlar periyodik akciğer/solunum fonksiyon testine tabi tutulur ve maruziyet kaydı tutulur.',
             ]],
-            ['baslik' => 'Elektrik Panosunda Çalışma Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Elektrik panolarında bakım/onarım yapacak yetkili personel için talimat.', 'kkdler' => array (
-  0 => 'Elektrik yalıtımlı eldiven',
-  1 => 'Yüz siperliği',
-  2 => 'Yalıtkan bot',
-), 'maddeler' => [
+            ['baslik' => 'Elektrik Panosunda Çalışma Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Elektrik panolarında bakım/onarım yapacak yetkili personel için talimat.', 'kkdler' => [
+                0 => 'Elektrik yalıtımlı eldiven',
+                1 => 'Yüz siperliği',
+                2 => 'Yalıtkan bot',
+            ], 'maddeler' => [
                 'Pano üzerinde çalışma öncesi enerji kesilir, kilitleme-etiketleme (LOTO) uygulanır ve gerilim ölçülerek kesildiği teyit edilir.',
                 'Çalışma yalnızca elektrik iç tesisat yönetmeliğine göre yetkilendirilmiş elektrikçi tarafından yapılır.',
                 'Gerilim altında (canlı) çalışma zorunlu ise ayrı özel talimat ve izin prosedürü uygulanır, uygun yalıtkan ekipman kullanılır.',
                 'Pano önünde yalıtkan paspas bulundurulur, ıslak zeminde çalışılmaz.',
                 'İş bitiminde tüm koruyucu kapaklar takılır, enerji ancak kontrol tamamlandıktan sonra verilir.',
             ]],
-            ['baslik' => 'Jeneratör Kullanma Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Dizel/benzinli jeneratörlerin güvenli çalıştırılması ve bakımı.', 'kkdler' => array (
-  0 => 'Kulak tıkacı/kulaklık',
-  1 => 'Yalıtkan eldiven',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Jeneratör Kullanma Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Dizel/benzinli jeneratörlerin güvenli çalıştırılması ve bakımı.', 'kkdler' => [
+                0 => 'Kulak tıkacı/kulaklık',
+                1 => 'Yalıtkan eldiven',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Jeneratör iyi havalandırılan, kapalı olmayan bir alanda çalıştırılır; egzoz gazı yaşam alanlarından uzak tutulur.',
                 'Yakıt ikmali yalnızca motor durdurulmuş ve soğumuş haldeyken yapılır.',
                 'Jeneratör, şebeke ile paralel çalışacaksa mutlaka uygun transfer switch kullanılır; geri besleme riskine karşı önlem alınır.',
                 'Topraklama bağlantısı kontrol edilmeden jeneratör devreye alınmaz.',
                 'Periyodik bakım (yağ, filtre, akü) üretici talimatına göre takip edilir ve kayıt altına alınır.',
             ]],
-            ['baslik' => 'Kablo Döşeme ve Bağlantı Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Kablo çekimi, döşeme ve bağlantı işlerinde güvenli çalışma.', 'kkdler' => array (
-  0 => 'Yalıtkan eldiven',
-  1 => 'Koruyucu gözlük',
-  2 => 'Yalıtkan ayakkabı',
-), 'maddeler' => [
+            ['baslik' => 'Kablo Döşeme ve Bağlantı Talimatı', 'kategori' => 'elektrik_isleri', 'aciklama' => 'Kablo çekimi, döşeme ve bağlantı işlerinde güvenli çalışma.', 'kkdler' => [
+                0 => 'Yalıtkan eldiven',
+                1 => 'Koruyucu gözlük',
+                2 => 'Yalıtkan ayakkabı',
+            ], 'maddeler' => [
                 'Kablo döşenecek güzergahta önceden mevcut enerji hattı/tesisat olup olmadığı kontrol edilir.',
                 'Yer altı/yer üstü geçici kablo döşemelerinde mekanik hasara karşı koruma (kablo kanalı, tabela) sağlanır.',
                 'Bağlantılar yalnızca uygun boyut ve tipte klemens/konnektör ile yapılır; bantla izole edilmiş geçici bağlantı bırakılmaz.',
                 'Islak/nemli ortamda çalışırken IP korumalı ekipman ve kaçak akım rölesi (RCD) kullanılır.',
                 'Kablo makarası taşınırken/açılırken ezilme ve çekme risklerine dikkat edilir.',
             ]],
-            ['baslik' => 'Yükseklerde Çalışma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => '2 metre ve üzeri yükseklikte yapılacak çalışmalar için temel güvenlik kuralları.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri',
-  1 => 'Çift kancalı şok emici lanyard',
-  2 => 'Çene bağlantılı baret',
-), 'maddeler' => [
+            ['baslik' => 'Yükseklerde Çalışma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => '2 metre ve üzeri yükseklikte yapılacak çalışmalar için temel güvenlik kuralları.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri',
+                1 => 'Çift kancalı şok emici lanyard',
+                2 => 'Çene bağlantılı baret',
+            ], 'maddeler' => [
                 'Mümkün olduğunca toplu koruma (korkuluk, ağ) tercih edilir; kişisel düşme koruma sistemi son çare olarak kullanılır.',
                 'Emniyet kemeri, sağlam bir ankraj noktasına, omuz hizasının üzerinde bir noktaya bağlanır.',
                 'Çalışma öncesi kemer, lanyard ve karabina gözle muayene edilir; hasarlı ekipman kullanılmaz.',
@@ -4118,44 +4151,44 @@ return [
                 'Rüzgar, yağış gibi olumsuz hava koşullarında yükseklik çalışması durdurulur.',
                 'Yükseklikte çalışma izni (İş İzin Formu) alınmadan çalışmaya başlanmaz.',
             ]],
-            ['baslik' => 'Çatı Üzerinde Çalışma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'Çatı bakım, onarım ve izolasyon işlerinde güvenli çalışma.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri',
-  1 => 'Çift kancalı lanyard',
-  2 => 'Çene bağlantılı baret',
-), 'maddeler' => [
+            ['baslik' => 'Çatı Üzerinde Çalışma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'Çatı bakım, onarım ve izolasyon işlerinde güvenli çalışma.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri',
+                1 => 'Çift kancalı lanyard',
+                2 => 'Çene bağlantılı baret',
+            ], 'maddeler' => [
                 'Çatıya çıkmadan önce taşıyıcı yapının yükü kaldırabileceği ve yürünebilir olduğu kontrol edilir.',
                 'Işıklık (aydınlatma) ve kırılgan yüzeyler işaretlenir, üzerine basılmaz; gerekiyorsa geçiş platformu kurulur.',
                 'Çatı kenarına güvenlik ağı veya korkuluk kurulamıyorsa yaşam hattı/ankraj noktası kullanılır.',
                 'Çatı işleri sırasında alt bölgeye erişim engellenir, düşen cisimlere karşı bariyer/uyarı bandı çekilir.',
                 'Islak, buzlu veya rüzgarlı havada çatı çalışması yapılmaz.',
             ]],
-            ['baslik' => 'Portatif Merdiven Kullanma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'A tipi, uzatma ve tek ayaklı portatif merdivenlerin güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Kaymaz iş ayakkabısı',
-  1 => 'Baret',
-  2 => 'Mekanik eldiven',
-), 'maddeler' => [
+            ['baslik' => 'Portatif Merdiven Kullanma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'A tipi, uzatma ve tek ayaklı portatif merdivenlerin güvenli kullanımı.', 'kkdler' => [
+                0 => 'Kaymaz iş ayakkabısı',
+                1 => 'Baret',
+                2 => 'Mekanik eldiven',
+            ], 'maddeler' => [
                 'Merdiven, yapılacak iş ve erişilecek yükseklik için uygun tip ve uzunlukta seçilir.',
                 'Merdiven sağlam, düz ve kaymaz bir zemine, 4\'e 1 açı kuralına uygun (dikey 4 birime karşı 1 birim taban açıklığı) kurulur.',
                 'Merdivenin en üst iki basamağına çıkılmaz, üç nokta teması (iki el bir ayak veya iki ayak bir el) korunur.',
                 'Merdiven üzerinde ağır malzeme taşınmaz, çalışma öncesi ellerin serbest olması için malzeme kemer/torbayla taşınır.',
                 'Kullanım öncesi basamak, ayak tamponu ve kilit mekanizması hasar yönünden kontrol edilir.',
             ]],
-            ['baslik' => 'Makaslı/Eklemli Platform (Manlift) Kullanma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'Yükseltilebilir çalışma platformlarının güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri',
-  1 => 'Çene bağlantılı baret',
-  2 => 'Kısa lanyard (platform içi)',
-), 'maddeler' => [
+            ['baslik' => 'Makaslı/Eklemli Platform (Manlift) Kullanma Talimatı', 'kategori' => 'yukseklerde_calisma', 'aciklama' => 'Yükseltilebilir çalışma platformlarının güvenli kullanımı.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri',
+                1 => 'Çene bağlantılı baret',
+                2 => 'Kısa lanyard (platform içi)',
+            ], 'maddeler' => [
                 'Platform yalnızca eğitim almış ve operatör belgesi olan personel tarafından kullanılır.',
                 'Kullanım öncesi günlük kontrol formu doldurulur; acil indirme, alarm ve emniyet kilitleri test edilir.',
                 'Platform üzerinde emniyet kemeri sabit noktaya bağlanır; platforma tırmanarak boy uzatılmaz.',
                 'Zemin eğimi, denge ayakları ve azami yük sınırı üretici talimatına göre kontrol edilir.',
                 'Havai hat, bina çıkıntısı gibi çarpışma riski olan noktalara karşı güvenli mesafe korunur.',
             ]],
-            ['baslik' => 'Kapalı Alanda Çalışma Talimatı', 'kategori' => 'kapali_alan', 'aciklama' => 'Tank, depo, kazan gibi kapalı alanlarda güvenli giriş ve çalışma.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri + kurtarma halatı',
-  1 => 'Solunum cihazı',
-  2 => 'Çoklu gaz dedektörü',
-), 'maddeler' => [
+            ['baslik' => 'Kapalı Alanda Çalışma Talimatı', 'kategori' => 'kapali_alan', 'aciklama' => 'Tank, depo, kazan gibi kapalı alanlarda güvenli giriş ve çalışma.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri + kurtarma halatı',
+                1 => 'Solunum cihazı',
+                2 => 'Çoklu gaz dedektörü',
+            ], 'maddeler' => [
                 'Kapalı alana girmeden önce Çalışma İzin Formu alınır ve gözcü (nöbetçi) görevlendirilir.',
                 'Giriş öncesi ve çalışma boyunca sürekli gaz ölçümü yapılır (oksijen, patlayıcı gaz, zehirli gaz).',
                 'Kapalı alan girişinden önce izole edilebilen enerji kaynakları (elektrik, buhar, akışkan hattı) kilitlenir/etiketlenir.',
@@ -4163,141 +4196,141 @@ return [
                 'Acil tahliye ve kurtarma planı, giriş öncesi tüm ekiple paylaşılır; kurtarma ekipmanı hazır bulundurulur.',
                 'Oksijen seviyesi %19,5 altına düşerse veya zehirli/patlayıcı gaz tespit edilirse alan derhal terk edilir.',
             ]],
-            ['baslik' => 'Silo ve Tank İçi Temizlik Talimatı', 'kategori' => 'kapali_alan', 'aciklama' => 'Silo, tank ve depo içi temizlik çalışmalarında güvenli giriş ve çalışma.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri + kurtarma halatı',
-  1 => 'Solunum koruma',
-  2 => 'Çoklu gaz dedektörü',
-), 'maddeler' => [
+            ['baslik' => 'Silo ve Tank İçi Temizlik Talimatı', 'kategori' => 'kapali_alan', 'aciklama' => 'Silo, tank ve depo içi temizlik çalışmalarında güvenli giriş ve çalışma.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri + kurtarma halatı',
+                1 => 'Solunum koruma',
+                2 => 'Çoklu gaz dedektörü',
+            ], 'maddeler' => [
                 'Silo/tank temizliği öncesi malzeme akışı tamamen durdurulur, besleme hatları kilitlenir.',
                 'Köprüleşme (asma) riski olan siloda üstten girilmez; alt boşaltım ile malzemenin serbest akması sağlanmadan içeri girilmez.',
                 'Toz patlaması riskine karşı statik elektrik boşaltımı yapılır, ateşleme kaynağı bulundurulmaz.',
                 'Havalandırma (mekanik) sağlanmadan ve gaz ölçümü tamamlanmadan tanka girilmez.',
                 'Kurtarma tripodu/vinç sistemi giriş noktasına kurulur ve giriş boyunca hazır bekletilir.',
             ]],
-            ['baslik' => 'Oksijen-Asetilen Kaynak/Kesme Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Gazaltı kaynak ve oksi-asetilen kesme işleri için güvenli çalışma kuralları.', 'kkdler' => array (
-  0 => 'Kaynak maskesi',
-  1 => 'Kaynakçı eldiveni',
-  2 => 'Krom deri önlük ve tozluk',
-), 'maddeler' => [
+            ['baslik' => 'Oksijen-Asetilen Kaynak/Kesme Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Gazaltı kaynak ve oksi-asetilen kesme işleri için güvenli çalışma kuralları.', 'kkdler' => [
+                0 => 'Kaynak maskesi',
+                1 => 'Kaynakçı eldiveni',
+                2 => 'Krom deri önlük ve tozluk',
+            ], 'maddeler' => [
                 'Tüpler dik konumda, sağlam sabitlenmiş, oksijen ve asetilen ayrı ayrı zincirlenmiş olarak bulundurulur.',
                 'Çalışma öncesi hortum, regülatör ve geri tepme valfleri sızıntı ve hasar yönünden kontrol edilir.',
                 'Kaynak/kesme alanında yanıcı madde bulunmaz; en az 10 metre çevre yangına karşı temizlenir.',
                 'Kaynak yapılan alanda yangın söndürme tüpü ve yangın gözcüsü hazır bulundurulur, iş bitiminden sonra da bir süre alan kontrol edilir.',
                 'Tüp değişiminde valfler yavaşça açılır, yağlı/gres\'li ellerle oksijen valfine dokunulmaz.',
             ]],
-            ['baslik' => 'Elektrik Ark Kaynağı (MIG/MAG/TIG) Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Elektrik ark kaynağı (MIG/MAG/TIG) ile güvenli çalışma kuralları.', 'kkdler' => array (
-  0 => 'Otomatik kararmalı kaynak maskesi',
-  1 => 'Kaynakçı eldiveni',
-  2 => 'Alev geciktirici tulum',
-), 'maddeler' => [
+            ['baslik' => 'Elektrik Ark Kaynağı (MIG/MAG/TIG) Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Elektrik ark kaynağı (MIG/MAG/TIG) ile güvenli çalışma kuralları.', 'kkdler' => [
+                0 => 'Otomatik kararmalı kaynak maskesi',
+                1 => 'Kaynakçı eldiveni',
+                2 => 'Alev geciktirici tulum',
+            ], 'maddeler' => [
                 'Kaynak makinesi ve kablolar topraklanmış, yalıtımı sağlam olmalıdır; hasarlı kablo kullanılmaz.',
                 'Kaynak dumanı maruziyetine karşı lokal aspirasyon veya iyi havalandırma sağlanır.',
                 'Kaynak ışığına karşı çevredeki diğer çalışanlar paravan/perde ile korunur.',
                 'Kaynak alanı yanıcı maddelerden arındırılır, gerekiyorsa ateş gözcüsü görevlendirilir.',
                 'Kaynak sonrası sıcak parçalar işaretlenir, soğumadan taşınmaz veya dokunulmaz.',
             ]],
-            ['baslik' => 'Plazma Kesim Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Plazma ark kesim makinelerinin güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Kaynak/kesim gözlüğü',
-  1 => 'Kaynakçı eldiveni',
-  2 => 'Yanmaz önlük',
-), 'maddeler' => [
+            ['baslik' => 'Plazma Kesim Talimatı', 'kategori' => 'kaynak_kesme', 'aciklama' => 'Plazma ark kesim makinelerinin güvenli kullanımı.', 'kkdler' => [
+                0 => 'Kaynak/kesim gözlüğü',
+                1 => 'Kaynakçı eldiveni',
+                2 => 'Yanmaz önlük',
+            ], 'maddeler' => [
                 'Kesim öncesi malzemenin altında yanıcı madde veya kablo/boru bulunmadığı kontrol edilir.',
                 'Cihaz topraklaması ve hava/gaz besleme basıncı üretici talimatına göre ayarlanır.',
                 'Kesim sırasında oluşan metal sıçrantısına (spatter) karşı çevre korumaya alınır.',
                 'Kesilen kenarlar sıcak olduğundan soğumadan tutulmaz, uygun maşa/pense kullanılır.',
             ]],
-            ['baslik' => 'Manuel Transpalet Kullanma Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Manuel transpalet ile yük taşıma ve istifleme kuralları.', 'kkdler' => array (
-  0 => 'Çelik burunlu iş ayakkabısı',
-  1 => 'Mekanik dirençli eldiven',
-  2 => 'Reflektörlü yelek',
-), 'maddeler' => [
+            ['baslik' => 'Manuel Transpalet Kullanma Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Manuel transpalet ile yük taşıma ve istifleme kuralları.', 'kkdler' => [
+                0 => 'Çelik burunlu iş ayakkabısı',
+                1 => 'Mekanik dirençli eldiven',
+                2 => 'Reflektörlü yelek',
+            ], 'maddeler' => [
                 'Yük, palet üzerinde dengeli yerleştirilir; transpalet kapasitesi aşılmaz.',
                 'Transpalet iterek kullanılır, çekerek veya koşarak hareket ettirilmez.',
                 'Rampa ve eğimli zeminlerde transpalet, yük aşağı yönde iken kontrollü indirilir.',
                 'Ayak ve el sıkışması riskine karşı çatal altına ve tekerlek yakınına el/ayak sokulmaz.',
                 'Görüşü kapatan yüksek yükler geriye doğru çekilerek taşınır.',
             ]],
-            ['baslik' => 'İstif Makinesi (Reach Truck) Kullanma Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Depo içi dar koridor istif makinesi ile güvenli yük taşıma ve istifleme.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Çelik burunlu iş ayakkabısı',
-  2 => 'Reflektörlü yelek',
-), 'maddeler' => [
+            ['baslik' => 'İstif Makinesi (Reach Truck) Kullanma Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Depo içi dar koridor istif makinesi ile güvenli yük taşıma ve istifleme.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Çelik burunlu iş ayakkabısı',
+                2 => 'Reflektörlü yelek',
+            ], 'maddeler' => [
                 'Reach truck yalnızca operatörlük belgesi olan personel tarafından kullanılır.',
                 'Yüksek raftan indirme/yükleme yapılırken çatal, raf hizasına dik ve tam ortalanmış olmalıdır.',
                 'Görüş açısı kısıtlıysa yardımcı personel yönlendirmesiyle veya kamera sistemiyle manevra yapılır.',
                 'Koridor içinde azami hız sınırına uyulur, dar koridorlarda yaya bulunmadığı teyit edilmeden ilerlenmez.',
                 'Yük kaldırılmış vaziyette koridor değiştirilmez; taşıma alçak pozisyonda yapılır.',
             ]],
-            ['baslik' => 'Depo ve Raf Sistemleri Güvenlik Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Depo raf sistemlerinin güvenli kullanımı, istifleme ve bakım kuralları.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Çelik burunlu iş ayakkabısı',
-  2 => 'Mekanik eldiven',
-), 'maddeler' => [
+            ['baslik' => 'Depo ve Raf Sistemleri Güvenlik Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Depo raf sistemlerinin güvenli kullanımı, istifleme ve bakım kuralları.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Çelik burunlu iş ayakkabısı',
+                2 => 'Mekanik eldiven',
+            ], 'maddeler' => [
                 'Raflar üzerindeki azami yük kapasitesi levhaları okunur ve aşılmaz.',
                 'Ağır ürünler alt raflara, hafif ürünler üst raflara yerleştirilir.',
                 'Hasarlı (eğik, çatlak, paslı) raf ayağı/kirişi tespit edilirse derhal kullanım dışı bırakılıp bildirilir.',
                 'Raflar arası koridor genişliği kullanılan ekipmana (transpalet/forklift) uygun bırakılır, daraltılmaz.',
                 'Periyodik raf denetimi (görsel muayene) yapılır ve kayıt altına alınır.',
             ]],
-            ['baslik' => 'Elle Malzeme Taşıma (Manuel Elleçleme) Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Elle kaldırma ve taşıma işlerinde bel/sırt yaralanmalarını önlemeye yönelik kurallar.', 'kkdler' => array (
-  0 => 'Bel koruma kemeri (gerekirse)',
-  1 => 'Mekanik dirençli eldiven',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Elle Malzeme Taşıma (Manuel Elleçleme) Talimatı', 'kategori' => 'tasima_depolama', 'aciklama' => 'Elle kaldırma ve taşıma işlerinde bel/sırt yaralanmalarını önlemeye yönelik kurallar.', 'kkdler' => [
+                0 => 'Bel koruma kemeri (gerekirse)',
+                1 => 'Mekanik dirençli eldiven',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Kaldırma sırasında sırt düz tutulur, diz bükülerek kaldırma yapılır; bel bükülerek kaldırma yapılmaz.',
                 'Yük, vücuda mümkün olduğunca yakın tutularak taşınır.',
                 'Tek başına kaldırılamayacak ağırlıktaki yükler iki kişiyle veya mekanik yardımla taşınır.',
                 'Ani dönüş hareketinden kaçınılır, yön değiştirmek için ayaklarla dönülür.',
                 'Tekrarlı kaldırma işlerinde düzenli mola verilir, mümkün olduğunda mekanik kaldırma ekipmanı tercih edilir.',
             ]],
-            ['baslik' => 'Mutfak Bıçak ve Kesim Aletleri Talimatı', 'kategori' => 'mutfak_yemekhane', 'aciklama' => 'Mutfak personeli için bıçak, kıyma makinesi ve kesim aletlerinin güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Kesilmeye dirençli eldiven',
-  1 => 'Kaymaz iş ayakkabısı',
-  2 => 'Mutfak önlüğü',
-), 'maddeler' => [
+            ['baslik' => 'Mutfak Bıçak ve Kesim Aletleri Talimatı', 'kategori' => 'mutfak_yemekhane', 'aciklama' => 'Mutfak personeli için bıçak, kıyma makinesi ve kesim aletlerinin güvenli kullanımı.', 'kkdler' => [
+                0 => 'Kesilmeye dirençli eldiven',
+                1 => 'Kaymaz iş ayakkabısı',
+                2 => 'Mutfak önlüğü',
+            ], 'maddeler' => [
                 'Bıçaklar keskin tutulur; körelmiş bıçak daha fazla kuvvet gerektirdiğinden kayma riskini artırır.',
                 'Bıçak taşınırken ucu aşağı ve vücuttan uzak tutulur, koşarak taşınmaz.',
                 'Kıyma makinesi gibi ekipmanlara elle malzeme itilmez, iticiler kullanılır; koruyucular çıkarılmaz.',
                 'Bıçaklar yıkanmak üzere bulaşık suyuna bırakılmaz, elle yıkanır ve görünür şekilde tutulur.',
                 'Kullanılmayan bıçaklar bıçaklıkta veya belirlenmiş güvenli yerde muhafaza edilir.',
             ]],
-            ['baslik' => 'Endüstriyel Fırın ve Ocak Kullanma Talimatı', 'kategori' => 'mutfak_yemekhane', 'aciklama' => 'Yemekhane ve endüstriyel fırın, ocak ve buharlı cihazların güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Sıcak iş eldiveni',
-  1 => 'Kaymaz iş ayakkabısı',
-  2 => 'Mutfak önlüğü',
-), 'maddeler' => [
+            ['baslik' => 'Endüstriyel Fırın ve Ocak Kullanma Talimatı', 'kategori' => 'mutfak_yemekhane', 'aciklama' => 'Yemekhane ve endüstriyel fırın, ocak ve buharlı cihazların güvenli kullanımı.', 'kkdler' => [
+                0 => 'Sıcak iş eldiveni',
+                1 => 'Kaymaz iş ayakkabısı',
+                2 => 'Mutfak önlüğü',
+            ], 'maddeler' => [
                 'Ocak/fırın açılmadan önce gaz kaçağı olmadığı kontrol edilir, ortam havalandırılır.',
                 'Sıcak yüzeylere ve kaplara çıplak elle dokunulmaz, ısıya dayanıklı eldiven kullanılır.',
                 'Yağ yangınına su ile müdahale edilmez; ocak üstü yangın söndürme battaniyesi/CO2 tüpü hazır bulundurulur.',
                 'Fritöz gibi cihazlarda yağ seviyesi belirlenen sınırın üzerine çıkarılmaz.',
                 'Vardiya sonunda tüm ısıtıcı cihazlar kapatılır ve gaz vanası kontrol edilir.',
             ]],
-            ['baslik' => 'Ofis ve Ekran Önü Çalışma Talimatı', 'kategori' => 'ofis_buro', 'aciklama' => 'Ekran karşısında uzun süre çalışan ofis personeli için ergonomi kuralları.', 'kkdler' => array (
-  0 => 'Bilgisayar gözlüğü',
-  1 => 'Bilek desteği',
-  2 => 'Bel/sırt desteği',
-), 'maddeler' => [
+            ['baslik' => 'Ofis ve Ekran Önü Çalışma Talimatı', 'kategori' => 'ofis_buro', 'aciklama' => 'Ekran karşısında uzun süre çalışan ofis personeli için ergonomi kuralları.', 'kkdler' => [
+                0 => 'Bilgisayar gözlüğü',
+                1 => 'Bilek desteği',
+                2 => 'Bel/sırt desteği',
+            ], 'maddeler' => [
                 'Ekran, göz hizasının hafif altında ve gözden yaklaşık 50-70 cm mesafede konumlandırılır.',
                 'Her 50-60 dakikada bir kısa mola verilerek gözler ekrandan uzağa (en az 20 saniye, 6 metre öteye) odaklanır.',
                 'Sandalye yüksekliği ayarlanarak ayaklar tam yere basacak, dizler 90 derece açıda olacak şekilde oturulur.',
                 'Klavye ve fare kullanımında bilekler nötr (düz) pozisyonda tutulur, aşırı bükülmeden kaçınılır.',
                 'Uzun süreli oturmanın önüne geçmek için gün içinde ayağa kalkıp kısa yürüyüşler yapılır.',
             ]],
-            ['baslik' => 'Yazıcı ve Fotokopi Makinesi Güvenlik Talimatı', 'kategori' => 'ofis_buro', 'aciklama' => 'Lazer yazıcı, fotokopi makinesi ve tarayıcıların güvenli kullanımı.', 'kkdler' => array (
-  0 => 'Toner değişiminde nitril eldiven',
-  1 => 'FFP2 maske',
-  2 => 'Koruyucu gözlük',
-), 'maddeler' => [
+            ['baslik' => 'Yazıcı ve Fotokopi Makinesi Güvenlik Talimatı', 'kategori' => 'ofis_buro', 'aciklama' => 'Lazer yazıcı, fotokopi makinesi ve tarayıcıların güvenli kullanımı.', 'kkdler' => [
+                0 => 'Toner değişiminde nitril eldiven',
+                1 => 'FFP2 maske',
+                2 => 'Koruyucu gözlük',
+            ], 'maddeler' => [
                 'Toner değişimi sırasında toz solunmaması için eldiven ve gerekiyorsa maske kullanılır.',
                 'Kağıt sıkışması giderilirken cihaz kapatılıp sıcak yüzeylere (fuser ünitesi) dokunulmaz.',
                 'Cihazlar iyi havalandırılan alanlarda konumlandırılır, ozon/toz birikimine karşı düzenli temizlik yapılır.',
                 'Elektrik kablosu hasarlıysa cihaz kullanılmaz, yetkili servise bildirilir.',
             ]],
-            ['baslik' => 'Kazı İşleri Güvenlik Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Hendek, temel ve altyapı kazı işlerinde güvenli çalışma kuralları.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Su geçirmez çizme',
-  2 => 'Reflektörlü yelek',
-), 'maddeler' => [
+            ['baslik' => 'Kazı İşleri Güvenlik Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Hendek, temel ve altyapı kazı işlerinde güvenli çalışma kuralları.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Su geçirmez çizme',
+                2 => 'Reflektörlü yelek',
+            ], 'maddeler' => [
                 'Kazı öncesi bölgede yer altı tesisatı (elektrik, su, doğalgaz) haritaları kontrol edilir, gerekirse ilgili kurumdan teyit alınır.',
                 '1,5 metreden derin kazılarda şev açısı zemin cinsine göre ayarlanır veya iksa (istinat) sistemi kurulur.',
                 'Kazı kenarına en az 1 metre mesafede güvenlik şeridi/bariyer çekilir, malzeme kazı kenarına yığılmaz.',
@@ -4305,22 +4338,22 @@ return [
                 'Günlük kazı kontrolü (özellikle yağış sonrası) yapılır, göçük belirtisi (çatlak, su sızıntısı) izlenir.',
                 'Kazı çevresinde iş makinesi çalışırken kazı içinde personel bulunmaz.',
             ]],
-            ['baslik' => 'Beton Dökümü ve Kalıp İşleri Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Beton dökümü, kalıp kurulum/söküm ve vibratör kullanımında güvenlik.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Alkali dirençli eldiven',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Beton Dökümü ve Kalıp İşleri Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Beton dökümü, kalıp kurulum/söküm ve vibratör kullanımında güvenlik.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Alkali dirençli eldiven',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Kalıp iskeletinin taşıyıcı hesaplara uygun kurulduğu, payandaların sağlam ve yeterli sayıda olduğu kontrol edilir.',
                 'Islak beton cilde temas ettirilmez (alkalik yanık riski); eldiven ve uzun kollu giysi kullanılır.',
                 'Beton pompası hortumu ve bomu çalışırken hattın altında/önünde durulmaz.',
                 'Vibratör kullanımında elektrik çarpması ve titreşim maruziyetine karşı yalıtımlı ekipman ve düzenli mola uygulanır.',
                 'Kalıp söküm işlemi, betonun yeterli mukavemete ulaştığı (proje/laboratuvar onayı) teyit edilmeden yapılmaz.',
             ]],
-            ['baslik' => 'Cephe İskelesinde Çalışma Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Cephe iskelesinin kurulumu, kullanımı ve söküm sırasında güvenli çalışma.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri',
-  1 => 'Çift kancalı şok emici lanyard',
-  2 => 'Çene bağlamalı baret',
-), 'maddeler' => [
+            ['baslik' => 'Cephe İskelesinde Çalışma Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Cephe iskelesinin kurulumu, kullanımı ve söküm sırasında güvenli çalışma.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri',
+                1 => 'Çift kancalı şok emici lanyard',
+                2 => 'Çene bağlamalı baret',
+            ], 'maddeler' => [
                 'İskele, yalnızca iskele kurulum/söküm eğitimi almış yetkili ekip tarafından kurulur ve sökülür.',
                 'Kurulum sonrası iskele, yetkili kişi tarafından muayene edilip "kullanıma uygundur" etiketi asılmadan kullanılmaz.',
                 'İskele üzerinde çalışma platformunda korkuluk, ara korkuluk ve topuk levhası eksiksiz bulunur.',
@@ -4328,22 +4361,22 @@ return [
                 'İskele ayakları sağlam, düz zemine ve gerekiyorsa taban plakası ile oturtulur; tekerlekli iskelede fren kilitlenmeden çıkılmaz.',
                 'Kuvvetli rüzgar (yaklaşık 40 km/s üzeri) ve fırtınalı havada iskelede çalışılmaz.',
             ]],
-            ['baslik' => 'İskele Kurulum ve Söküm Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Cephe/sehpa iskelelerinin kurulum ve söküm işlerinde özel güvenlik kuralları.', 'kkdler' => array (
-  0 => 'Tam vücut emniyet kemeri',
-  1 => 'Çift kancalı lanyard',
-  2 => 'Baret',
-), 'maddeler' => [
+            ['baslik' => 'İskele Kurulum ve Söküm Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Cephe/sehpa iskelelerinin kurulum ve söküm işlerinde özel güvenlik kuralları.', 'kkdler' => [
+                0 => 'Tam vücut emniyet kemeri',
+                1 => 'Çift kancalı lanyard',
+                2 => 'Baret',
+            ], 'maddeler' => [
                 'Kurulum/söküm sırasında henüz korkuluğu tamamlanmamış seviyelerde çalışan mutlaka emniyet kemerini bağımsız ankraja bağlar.',
                 'Parçalar aşağıdan yukarıya sırayla monte edilir; atlanmış kat/seviye bırakılmaz.',
                 'Kurulum ekibi malzemeyi elden ele iletir, yukarıdan aşağı atarak malzeme indirilmez.',
                 'Söküm, kurulumun tersi sırayla yapılır; alt seviyeler sökülmeden üst seviyeler ayakta bırakılmaz.',
                 'Kurulum/söküm alanı çevresi bariyerle kapatılır, altından geçişe izin verilmez.',
             ]],
-            ['baslik' => 'Kule Vinç ile Çalışma ve Sinyalizasyon Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Kule vinç operasyonlarında yer ekibi ve sinyalman için güvenli çalışma kuralları.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Reflektörlü yelek',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Kule Vinç ile Çalışma ve Sinyalizasyon Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Kule vinç operasyonlarında yer ekibi ve sinyalman için güvenli çalışma kuralları.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Reflektörlü yelek',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Vinç operasyonu, yalnızca yetkili operatör ve işaretçi (sinyalman) koordinasyonunda yürütülür.',
                 'Standart el işaretleri veya telsiz kullanılır; anlaşılamayan işarette yük hareket ettirilmez.',
                 'Yük altında ve tahmini sallanma/salınım alanında personel bulundurulmaz.',
@@ -4351,54 +4384,54 @@ return [
                 'Rüzgar hızı üretici sınırını aştığında (genelde ~45-72 km/s bölgesine göre değişir) vinç operasyonu durdurulur.',
                 'Vinç, günlük ve periyodik muayeneden geçmeden ve geçerli muayene raporu olmadan çalıştırılmaz.',
             ]],
-            ['baslik' => 'Şantiye Trafiği ve Araç-Yaya Ayrımı Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Şantiye içi araç ve iş makinesi trafiğinde yaya güvenliğini sağlamaya yönelik kurallar.', 'kkdler' => array (
-  0 => 'Reflektörlü yelek',
-  1 => 'Baret',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Şantiye Trafiği ve Araç-Yaya Ayrımı Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Şantiye içi araç ve iş makinesi trafiğinde yaya güvenliğini sağlamaya yönelik kurallar.', 'kkdler' => [
+                0 => 'Reflektörlü yelek',
+                1 => 'Baret',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Şantiye içinde araç ve yaya güzergahları ayrı işaretlenir, mümkün olan yerlerde fiziksel bariyerle ayrılır.',
                 'Şantiye içi azami hız sınırı belirlenir ve tabelalarla duyurulur; hız sınırına uyulur.',
                 'Geri manevra yapan araç/iş makinesinde sesli ikaz cihazı çalışır olmalı, gerekiyorsa yönlendirici personel kullanılır.',
                 'Tüm şantiye çalışanları ve ziyaretçiler reflektörlü yelek giymeden saha içine giremez.',
                 'Kör noktalar, kavşaklar ve giriş-çıkış noktalarında uygun görüş açısı ve trafik aynası sağlanır.',
             ]],
-            ['baslik' => 'Demir/Donatı Bağlama İşleri Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'İnşaat demiri kesim, bükme ve bağlama işlerinde güvenli çalışma.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Kesilmeye dayanıklı eldiven',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Demir/Donatı Bağlama İşleri Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'İnşaat demiri kesim, bükme ve bağlama işlerinde güvenli çalışma.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Kesilmeye dayanıklı eldiven',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Dikey duran demir çubukların uçlarına, göz/vücut yaralanmasını önlemek için koruyucu kapak (mantar) takılır.',
                 'Demir kesme/bükme makineleri yalnızca eğitimli personel tarafından, koruyucuları yerindeyken kullanılır.',
                 'Donatı taşınırken uçlarının çevredeki kişilere veya elektrik hatlarına temas etmediğinden emin olunur.',
                 'Bağlama teli kesilirken uçların sıçrama yönü kontrol altında tutulur, göz koruması kullanılır.',
                 'Kalıp üzerinde donatı döşenirken düşme riskine karşı iskele/platform korkulukları tam olmalıdır.',
             ]],
-            ['baslik' => 'Yıkım İşleri Güvenlik Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Bina/yapı yıkım çalışmalarında güvenli planlama ve uygulama kuralları.', 'kkdler' => array (
-  0 => 'Baret',
-  1 => 'Tam yüz koruyucu maske',
-  2 => 'Çelik burunlu iş ayakkabısı',
-), 'maddeler' => [
+            ['baslik' => 'Yıkım İşleri Güvenlik Talimatı', 'kategori' => 'insaat_saha', 'aciklama' => 'Bina/yapı yıkım çalışmalarında güvenli planlama ve uygulama kuralları.', 'kkdler' => [
+                0 => 'Baret',
+                1 => 'Tam yüz koruyucu maske',
+                2 => 'Çelik burunlu iş ayakkabısı',
+            ], 'maddeler' => [
                 'Yıkım öncesi yapıda asbest, elektrik, gaz, su tesisatı gibi tehlikeler tespit edilip devre dışı bırakılır.',
                 'Yıkım, mühendislik hesabına dayalı bir yıkım planına göre, yukarıdan aşağıya doğru sistematik yapılır.',
                 'Yıkım alanı çevresi güvenlik bariyeriyle kapatılır, yetkisiz giriş engellenir.',
                 'Toz kontrolü için su püskürtme uygulanır, çalışanlar toz maskesi kullanır.',
                 'Yıkım makinesi operatör kabini, düşen enkaza karşı koruyucu (FOPS) donanımlı olmalıdır.',
             ]],
-            ['baslik' => 'İşyeri Temizlik ve Hijyen Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'İşyeri genel temizliği, hijyen kuralları ve dezenfeksiyon prosedürleri.', 'kkdler' => array (
-  0 => 'Kimyasal eldiven',
-  1 => 'Kaymaz iş ayakkabısı',
-  2 => 'Koruyucu gözlük',
-), 'maddeler' => [
+            ['baslik' => 'İşyeri Temizlik ve Hijyen Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'İşyeri genel temizliği, hijyen kuralları ve dezenfeksiyon prosedürleri.', 'kkdler' => [
+                0 => 'Kimyasal eldiven',
+                1 => 'Kaymaz iş ayakkabısı',
+                2 => 'Koruyucu gözlük',
+            ], 'maddeler' => [
                 'Çalışma alanları vardiya sonunda düzenli olarak temizlenir, geçiş yolları malzeme ile kapatılmaz.',
                 'Temizlik kimyasalları birbiriyle karıştırılmaz (özellikle çamaşır suyu ve asit içerikli ürünler).',
                 'Dökülen sıvı/yağ derhal temizlenir, gerekiyorsa "kaygan zemin" uyarı levhası konur.',
                 'Atıklar türüne göre (geri dönüştürülebilir, tehlikeli, evsel) ayrı toplanır.',
                 'Tuvalet, soyunma odası ve yemekhane gibi ortak alanların hijyeni düzenli denetlenir.',
             ]],
-            ['baslik' => 'Genel İşyeri İSG Kuralları Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Tüm çalışanların uyması gereken işyeri genel iş sağlığı ve güvenliği kuralları.', 'kkdler' => array (
-  0 => 'Çalışma alanına özel KKD\'leri tak',
-  1 => 'Genel: baret',
-), 'maddeler' => [
+            ['baslik' => 'Genel İşyeri İSG Kuralları Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Tüm çalışanların uyması gereken işyeri genel iş sağlığı ve güvenliği kuralları.', 'kkdler' => [
+                0 => 'Çalışma alanına özel KKD\'leri tak',
+                1 => 'Genel: baret',
+            ], 'maddeler' => [
                 'İşyerine giren her çalışan/ziyaretçi, alanın gerektirdiği KKD\'leri eksiksiz kullanır.',
                 'Görülen her tehlikeli durum veya ramak kala olay, gecikmeden amire veya İSG uzmanına bildirilir.',
                 'Acil durum çıkışları, yangın söndürme ekipmanları ve toplanma alanı yeri her çalışan tarafından bilinir.',
@@ -4406,76 +4439,76 @@ return [
                 'Talimat ve prosedürlere aykırı "kısayol" davranışlardan kaçınılır, iş güvenliği kuralına aykırı talimat verilse dahi uygulanmadan önce sorgulanır.',
                 'Yeni işe başlayan veya görev değişikliği olan her çalışan, ilgili oryantasyon/işbaşı eğitimini tamamlamadan çalışmaya başlamaz.',
             ]],
-            ['baslik' => 'Kişisel Koruyucu Donanım (KKD) Genel Kullanım Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Tüm KKD\'lerin doğru seçimi, kullanımı, bakımı ve saklanmasına ilişkin genel kurallar.', 'kkdler' => array (
-  0 => 'İşe özgü tüm KKD\'ler',
-), 'maddeler' => [
+            ['baslik' => 'Kişisel Koruyucu Donanım (KKD) Genel Kullanım Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Tüm KKD\'lerin doğru seçimi, kullanımı, bakımı ve saklanmasına ilişkin genel kurallar.', 'kkdler' => [
+                0 => 'İşe özgü tüm KKD\'ler',
+            ], 'maddeler' => [
                 'KKD, çalışana ücretsiz temin edilir ve teslim tutanağı ile zimmetlenir.',
                 'KKD, yalnızca CE işaretli ve ilgili işe uygun standartta seçilir.',
                 'Hasarlı, yıpranmış veya son kullanma tarihi geçmiş KKD kullanılmaz, derhal değiştirilir.',
                 'KKD kullanım öncesi gözle kontrol edilir (çatlak, yırtık, aşınma vb.).',
                 'KKD, üretici talimatına uygun şekilde temizlenir ve saklanır; kişisel olmayan KKD ortak kullanılmaz (özellikle solunum maskesi/kulaklık gibi hijyen gerektirenler).',
             ]],
-            ['baslik' => 'İlkyardım ve Acil Müdahale Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'İş kazası/rahatsızlık anında yapılması gereken ilkyardım ve bildirim adımları.', 'kkdler' => array (
-  0 => 'Tek kullanımlık eldiven (ilkyardımda)',
-), 'maddeler' => [
+            ['baslik' => 'İlkyardım ve Acil Müdahale Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'İş kazası/rahatsızlık anında yapılması gereken ilkyardım ve bildirim adımları.', 'kkdler' => [
+                0 => 'Tek kullanımlık eldiven (ilkyardımda)',
+            ], 'maddeler' => [
                 'Kaza/rahatsızlık anında önce alan güvenliği sağlanır, ikincil kazaya meydan verilmez.',
                 'Bilinci kapalı veya ciddi yaralanma olan kişi, tıbbi eğitim almamış kişilerce hareket ettirilmez (omurga riski).',
                 'İlkyardım eğitimli personel/ekip derhal çağrılır, gerekiyorsa 112 aranır.',
                 'Olay yeri, soruşturma için mümkün olduğunca müdahale sonrası korunur, fotoğraflanır.',
                 'Her olay, ne kadar küçük olursa olsun İSG uzmanına/işverene bildirilir ve kayıt altına alınır.',
             ]],
-            ['baslik' => 'Yangın Güvenliği ve Söndürme Cihazı Kullanma Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Yangın önleme, ihbar ve ilk müdahale kuralları.', 'kkdler' => array (
-), 'maddeler' => [
+            ['baslik' => 'Yangın Güvenliği ve Söndürme Cihazı Kullanma Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Yangın önleme, ihbar ve ilk müdahale kuralları.', 'kkdler' => [
+            ], 'maddeler' => [
                 'Yangın söndürme cihazları önü açık, erişilebilir ve son kontrol tarihi güncel tutulur.',
                 'Yangın algılandığında önce alarm verilir/haber verilir, sonra güvenli ise ilk müdahale yapılır.',
                 'Söndürme cihazı kullanırken PASS yöntemi izlenir: Pimi çek, hortumu ateşin dibine tut, tetiği sık, yelpaze hareketiyle söndür.',
                 'Elektrik kaynaklı yangında su bazlı söndürücü kullanılmaz; CO2 veya kuru kimyevi tozlu söndürücü tercih edilir.',
                 'Müdahale edilemeyecek büyüklükteki yangında derhal tahliye edilir, toplanma alanına gidilir.',
             ]],
-            ['baslik' => 'Kilitleme-Etiketleme (LOTO) Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Bakım/onarım öncesi enerji kaynaklarının izolasyonu (Lockout-Tagout) prosedürü.', 'kkdler' => array (
-  0 => 'İşe özgü KKD',
-), 'maddeler' => [
+            ['baslik' => 'Kilitleme-Etiketleme (LOTO) Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Bakım/onarım öncesi enerji kaynaklarının izolasyonu (Lockout-Tagout) prosedürü.', 'kkdler' => [
+                0 => 'İşe özgü KKD',
+            ], 'maddeler' => [
                 'Bakım/onarım öncesi ekipmanın tüm enerji kaynakları (elektrik, hidrolik, pnömatik, potansiyel enerji) belirlenir.',
                 'Her enerji kaynağı, ilgili çalışanın kendi kilidiyle kilitlenir ve üzerine isim/tarih bilgili etiket asılır.',
                 'Kilitleme sonrası ekipmanın gerçekten enerjisiz olduğu, çalıştırma denemesi ile test edilir.',
                 'Birden fazla kişi çalışıyorsa grup kilitleme prosedürü (kilit kutusu) uygulanır; herkes kendi kilidini takar.',
                 'İş bitiminde kilit/etiket yalnızca onu takan kişi tarafından kaldırılır; alan güvenli hale getirilmeden enerji verilmez.',
             ]],
-            ['baslik' => 'Sıcak İşler (Kaynak, Kesme, Taşlama) İzin Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Belirlenmiş sıcak iş alanı dışında yapılacak kaynak/kesme/taşlama işlerinde izin prosedürü.', 'kkdler' => array (
-  0 => 'İşe özgü KKD (kaynak maskesi, eldiven vb.)',
-), 'maddeler' => [
+            ['baslik' => 'Sıcak İşler (Kaynak, Kesme, Taşlama) İzin Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Belirlenmiş sıcak iş alanı dışında yapılacak kaynak/kesme/taşlama işlerinde izin prosedürü.', 'kkdler' => [
+                0 => 'İşe özgü KKD (kaynak maskesi, eldiven vb.)',
+            ], 'maddeler' => [
                 'Sabit sıcak iş alanı (kaynakhane) dışında yapılacak her kaynak/kesme işi için Sıcak İş İzni alınır.',
                 'İzin öncesi çevredeki yanıcı maddeler kaldırılır veya yanmaz örtü ile kapatılır.',
                 'Çalışma boyunca ve bitiminden sonra en az 30-60 dakika yangın gözcüsü bölgede beklemeye devam eder.',
                 'Uygun söndürme cihazı iş alanında hazır bulundurulur.',
                 'Kapalı/dar alanda sıcak iş yapılacaksa ayrıca kapalı alan giriş izni de alınır.',
             ]],
-            ['baslik' => 'Gürültülü Ortamda Çalışma Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Yüksek gürültü seviyesine maruz kalınan alanlarda işitme koruma kuralları.', 'kkdler' => array (
-  0 => 'Kulak tıkacı veya kulaklık',
-), 'maddeler' => [
+            ['baslik' => 'Gürültülü Ortamda Çalışma Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Yüksek gürültü seviyesine maruz kalınan alanlarda işitme koruma kuralları.', 'kkdler' => [
+                0 => 'Kulak tıkacı veya kulaklık',
+            ], 'maddeler' => [
                 'Gürültü seviyesi 80 dB(A) üzerinde olan alanlarda işitme koruyucu KKD bulundurulur, 85 dB(A) üzerinde kullanımı zorunludur.',
                 'Gürültülü alan sınırları işaretlenir ve KKD zorunluluğu tabela ile belirtilir.',
                 'İşitme koruyucu, kulak kanalına/kulağa tam oturacak şekilde takılır; sürekli kullanım sırasında çıkarılmaz.',
                 'Yüksek gürültüye maruz kalan çalışanlar periyodik odyometri (işitme) testine tabi tutulur.',
             ]],
-            ['baslik' => 'Titreşimli El Aletleriyle Çalışma Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'El-kol titreşimine maruziyeti azaltmaya yönelik kurallar.', 'kkdler' => array (
-  0 => 'Anti-vibrasyon eldiven',
-), 'maddeler' => [
+            ['baslik' => 'Titreşimli El Aletleriyle Çalışma Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'El-kol titreşimine maruziyeti azaltmaya yönelik kurallar.', 'kkdler' => [
+                0 => 'Anti-vibrasyon eldiven',
+            ], 'maddeler' => [
                 'Titreşimli alet (kırıcı, taşlama vb.) kullanım süresi günlük maruziyet sınır değerini aşmayacak şekilde planlanır.',
                 'Alet mümkün olduğunca hafif tutuşla kullanılır, aşırı sıkı kavrama titreşim etkisini artırır.',
                 'Düzenli aralıklarla mola verilerek eller ısıtılır, kan dolaşımı desteklenir.',
                 'Aletlerin titreşim seviyesi düşük modellerle değiştirilmesi ve düzenli bakımı sağlanır.',
             ]],
-            ['baslik' => 'Acil Durum Tahliye Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Yangın, deprem veya diğer acil durumlarda güvenli tahliye kuralları.', 'kkdler' => array (
-), 'maddeler' => [
+            ['baslik' => 'Acil Durum Tahliye Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Yangın, deprem veya diğer acil durumlarda güvenli tahliye kuralları.', 'kkdler' => [
+            ], 'maddeler' => [
                 'Acil durum anında en yakın çıkış ve kaçış yolu kullanılarak sakin ve hızlı şekilde tahliye edilir; asansör kullanılmaz.',
                 'Tahliye sırasında yanınızdakine yardım edin, engelli/yardıma muhtaç kişilere öncelik verilir.',
                 'Belirlenen toplanma alanına gidilir, bölüm sorumlusu tarafından yoklama alınır.',
                 'Yoklamada eksik kişi tespit edilirse derhal arama-kurtarma ekiplerine bildirilir; tekrar içeri girilmez.',
                 'Tahliye tatbikatlarına eksiksiz katılım sağlanır, kaçış yolları ve toplanma alanı önceden öğrenilir.',
             ]],
-            ['baslik' => 'Deprem Anında Davranış Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Deprem sırasında ve sonrasında uygulanacak güvenli davranış kuralları.', 'kkdler' => array (
-), 'maddeler' => [
+            ['baslik' => 'Deprem Anında Davranış Talimatı', 'kategori' => 'genel_isg', 'aciklama' => 'Deprem sırasında ve sonrasında uygulanacak güvenli davranış kuralları.', 'kkdler' => [
+            ], 'maddeler' => [
                 'Deprem sırasında "Çök-Kapan-Tutun" kuralı uygulanır: sağlam bir mobilya yanında çökülür, baş ve boyun korunur, sağlam bir yere tutunulur.',
                 'Pencere, cam, raf ve ağır eşyalardan uzak durulur.',
                 'Sarsıntı bitmeden asansör veya merdivenlere koşulmaz.',

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\AileAnaSayfasi;
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumPlani as PlanModel;
 use App\Models\Firma;
@@ -9,16 +11,19 @@ use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumPlaniUretici;
 use App\Support\AcilDurumWordUretici;
+use App\Support\ExcelBellek;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Acil Durum Eylem Planı — isgpratik 19-21, 146-154.jpg. Firma seçilir, konu
  * sayfaları + destek ekipleri + kapak çerçevesi ayarlanır → PDF üretilir.
@@ -26,9 +31,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class AcilDurumPlani extends Page
 {
-    use \App\Filament\Concerns\AileAnaSayfasi;
-
-    use \App\Filament\Concerns\SinirliErisim;
+    use AileAnaSayfasi;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.acil-durum-plani';
 
@@ -131,6 +135,13 @@ class AcilDurumPlani extends Page
         $this->disaridanEtkileyebilecekIsyerleri = $plan->disaridan_etkileyebilecek_isyerleri;
         $this->konular = $plan->konular ?? [];
         $this->uygulama = array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []);
+
+        // Boş kutular hazır örnek metinle gelir; uzman düzeltip Kaydet'e basar.
+        foreach (config('isg.acil_durum.ornek_metinler', []) as $alan => $metin) {
+            if (blank($this->uygulama[$alan] ?? null)) {
+                $this->uygulama[$alan] = $metin;
+            }
+        }
         unset($this->hazirlik);
         $this->ekipMetni = collect(config('isg.acil_durum.ekipler'))
             ->mapWithKeys(fn ($ad, $k) => [$k => implode(', ', $plan->ekipListesi()[$k] ?? [])])
@@ -181,6 +192,15 @@ class AcilDurumPlani extends Page
         Notification::make()->title('Acil durum planı kaydedildi')->success()->send();
     }
 
+    public function ornekMetin(string $alan): void
+    {
+        $metin = config('isg.acil_durum.ornek_metinler.'.$alan);
+
+        if (is_string($metin)) {
+            $this->uygulama[$alan] = $metin;
+        }
+    }
+
     public function iletisimEkle(): void
     {
         $this->uygulama['iletisim'][] = ['ad' => '', 'telefon' => '', 'aciklama' => ''];
@@ -203,15 +223,15 @@ class AcilDurumPlani extends Page
 
     /** Tüm işyerlerinin acil durum hazırlığı (isgsuite plan portföyü). */
     #[Computed]
-    public function portfoy(): \Illuminate\Support\Collection
+    public function portfoy(): Collection
     {
         return AcilDurumHazirlik::portfoy((int) Filament::auth()->id());
     }
 
     public function portfoyExcel()
     {
-        \App\Support\ExcelBellek::artir();
-        $kitap = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        ExcelBellek::artir();
+        $kitap = new Spreadsheet;
         $s = $kitap->getActiveSheet();
         $s->setTitle('Acil Durum Hazırlığı');
         $s->fromArray(['İşyeri', 'Tehlike sınıfı', 'Plan tarihi', 'Gözden geçirme', 'Hazırlık %', 'Durum', 'Eksik başlıklar'], null, 'A1');
@@ -229,7 +249,7 @@ class AcilDurumPlani extends Page
             $s->getColumnDimension($c)->setAutoSize(true);
         }
         $tmp = tempnam(sys_get_temp_dir(), 'adp').'.xlsx';
-        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($kitap))->save($tmp);
+        (new Xlsx($kitap))->save($tmp);
 
         return response()->streamDownload(function () use ($tmp) {
             echo file_get_contents($tmp);
