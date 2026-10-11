@@ -162,6 +162,22 @@ class AcilDurumKrokisiTest extends TestCase
         $this->assertSame(1, $lejant['sondurucu']['adet']);
     }
 
+    public function test_makine_sembolleri_kaydedilir_ve_pdfde_taban_izi_olarak_cizilir(): void
+    {
+        $kroki = AcilDurumKrokisi::firmaIcin(Firma::factory()->for($this->uzman)->create());
+        $temiz = AcilDurumKrokisi::temizle(['semboller' => [
+            ['tip' => 'cnc', 'x' => 100, 'y' => 100, 'etiket' => 'CNC-1'],
+            ['tip' => 'vinc', 'x' => 300, 'y' => 100],
+        ]]);
+        $this->assertSame(['cnc', 'vinc'], collect($temiz['semboller'])->pluck('tip')->all());
+
+        $kroki->forceFill($temiz)->save();
+        $html = view('pdf.acil-durum-krokisi', ['kroki' => $kroki->fresh(), 'firma' => $kroki->firma])->render();
+        $this->assertStringContainsString('VİNÇ', $html);
+        $this->assertStringContainsString('CNC-1', $html);
+        $this->assertSame('Makine & Ekipman', config('isg.kroki.kategoriler.makine'));
+    }
+
     public function test_kroki_yonetmelik_unsur_kontrolu(): void
     {
         $kroki = AcilDurumKrokisi::firmaIcin(Firma::factory()->for($this->uzman)->create());

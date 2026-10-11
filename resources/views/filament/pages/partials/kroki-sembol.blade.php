@@ -3,7 +3,15 @@
      PAYLAŞIR, ikisi de birbirinden asla sapmaz. --}}
 @php
     $renk = config('isg.kroki.semboller.'.$tip.'.renk', '#666');
+    $makine = config('isg.kroki.semboller.'.$tip.'.sekil') === 'makine';
 @endphp
+@if ($makine)
+{{-- Makine taban izi (editördeki 'makine' şekliyle aynı) --}}
+<g transform="translate({{ $x }},{{ $y }})">
+    <rect x="-33" y="-22" width="66" height="44" rx="4" fill="#e2e8f0" stroke="{{ $renk }}" stroke-width="2.5" />
+    <text x="0" y="5" text-anchor="middle" font-size="11" font-weight="bold" fill="{{ $renk }}">{{ config('isg.kroki.semboller.'.$tip.'.ikon') }}</text>
+</g>
+@else
 <g transform="translate({{ $x }},{{ $y }})">
     <rect x="-18" y="-18" width="36" height="36" rx="6" fill="{{ $renk }}" />
 
@@ -42,6 +50,7 @@
             <rect x="-14" y="-6" width="28" height="12" fill="#fff" />
     @endswitch
 </g>
+@endif
 @if (($etiket ?? null))
     <text x="{{ $x }}" y="{{ $y + 28 }}" font-size="10" text-anchor="middle" fill="#333">{{ $etiket }}</text>
 @endif

@@ -4885,6 +4885,7 @@ return [
             'yasak' => 'Yasaklayıcı',
             'emredici' => 'Emredici / KKD',
             'yapi' => 'Kapı / Merdiven / Yapı',
+            'makine' => 'Makine & Ekipman',
         ],
         'semboller' => [
             // Kaçış & ilk yardım
@@ -4950,6 +4951,26 @@ return [
             'elektrik_pano' => ['ad' => 'Elektrik Panosu', 'renk' => '#475569', 'kategori' => 'yapi', 'sekil' => 'kare', 'ikon' => '⚡'],
             'gaz_vana' => ['ad' => 'Gaz Kesme Vanası', 'renk' => '#475569', 'kategori' => 'yapi', 'sekil' => 'kare', 'ikon' => '⛽'],
             'oda' => ['ad' => 'Oda / Alan Etiketi', 'renk' => '#6b7280', 'kategori' => 'yapi', 'sekil' => 'kare', 'ikon' => 'A'],
+            // Makine & ekipman — kat planında taban izi (gri dikdörtgen + ad).
+            // Kroki işareti değil yerleşim öğesidir; kaçış yolunu daralttığı yerleri
+            // göstermek için. Etiket alanına makine no / adı yazılabilir.
+            'cnc' => ['ad' => 'CNC Tezgâhı', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'CNC'],
+            'torna' => ['ad' => 'Torna', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'TORNA'],
+            'freze' => ['ad' => 'Freze', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'FREZE'],
+            'matkap' => ['ad' => 'Sütunlu Matkap', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'MATKAP'],
+            'taslama' => ['ad' => 'Taşlama', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'TAŞLAMA'],
+            'testere' => ['ad' => 'Şerit Testere', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'TESTERE'],
+            'pres' => ['ad' => 'Pres', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'PRES'],
+            'abkant' => ['ad' => 'Abkant / Giyotin', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'ABKANT'],
+            'kaynak_makinesi' => ['ad' => 'Kaynak Makinesi', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'KAYNAK'],
+            'kompresor' => ['ad' => 'Kompresör', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'KOMPRESÖR'],
+            'vinc' => ['ad' => 'Köprülü / Gezer Vinç', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'VİNÇ'],
+            'forklift_park' => ['ad' => 'Forklift Park / Şarj', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'FORKLİFT'],
+            'jenerator' => ['ad' => 'Jeneratör', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'JENERATÖR'],
+            'kazan' => ['ad' => 'Kazan / Basınçlı Kap', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'KAZAN'],
+            'tezgah' => ['ad' => 'Çalışma Tezgâhı', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'TEZGAH'],
+            'raf' => ['ad' => 'Raf / İstif Alanı', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'RAF'],
+            'makine' => ['ad' => 'Diğer Makine', 'renk' => '#334155', 'kategori' => 'makine', 'sekil' => 'makine', 'ikon' => 'MAKİNE'],
         ],
     ],
 
