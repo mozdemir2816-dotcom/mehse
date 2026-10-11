@@ -3036,7 +3036,7 @@ return [
             'Makine koruyucuları yalnız enerji kesildikten sonra çıkarılmalıdır.',
             'Yetki ve izin bulunmayan bölümlerde çalışma yapılmamalıdır.',
             'Sıcak çalışma öncesinde ortam kontrolü ve çalışma izni alınmalıdır.',
-            'Yükseklte çalışma öncesinde uygun KKD ve izin hazır olmalıdır.',
+            'Yüksekte çalışma öncesinde uygun KKD ve izin hazır olmalıdır.',
             'Dinlenme, yeme ve içme yalnız belirlenmiş alanlarda yapılmalıdır.',
             'Taşıma ekipmanlarını yalnız yetkili kişiler kullanmalıdır.',
             'Çalışmalar firma İSG kurallarına uygun yürütülmelidir.',

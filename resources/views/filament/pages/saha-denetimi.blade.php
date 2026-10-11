@@ -231,16 +231,24 @@
                                 </div>
                             @endif
 
-                            @php $yuklenenFoto = $fotoYuklemeleri[$anahtar] ?? null; @endphp
+                            @php
+                                $yuklenenFotolar = array_filter(\Illuminate\Support\Arr::wrap($fotoYuklemeleri[$anahtar] ?? []), fn ($f) => is_object($f));
+                                $kayitliFotolar = \App\Models\SahaDenetimi::maddeFotolari($cevap);
+                            @endphp
                             <div style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                                 <span style="font-size:.72rem;font-weight:600;color:rgb(107 114 128)">📷 Fotoğraf</span>
-                                @if ($yuklenenFoto)
-                                    <img src="{{ $yuklenenFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
-                                @elseif (! empty($cevap['foto_yolu']))
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($cevap['foto_yolu']) }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
-                                @endif
-                                <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" style="font-size:.75rem">
-                                @if ($yuklenenFoto || ! empty($cevap['foto_yolu']))
+                                @foreach ($kayitliFotolar as $fi => $yol)
+                                    <span style="position:relative;display:inline-block">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($yol) }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
+                                        <button type="button" wire:click="kayitliFotoSil('{{ $kod }}', {{ $fi }})" title="Bu fotoğrafı kaldır"
+                                            style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:999px;border:none;background:#ef4444;color:#fff;font-size:.6rem;line-height:16px;cursor:pointer;padding:0">✕</button>
+                                    </span>
+                                @endforeach
+                                @foreach ($yuklenenFotolar as $yf)
+                                    <img src="{{ $yf->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px dashed rgb(107 114 128 / .6)">
+                                @endforeach
+                                <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" multiple style="font-size:.75rem">
+                                @if ($yuklenenFotolar || $kayitliFotolar)
                                     <button type="button" wire:click="fotoKaldir('{{ $kod }}')"
                                         style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:.75rem">✕ kaldır</button>
                                 @endif

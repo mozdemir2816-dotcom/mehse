@@ -62,6 +62,47 @@ class SahaDenetimi extends Model
             : null;
     }
 
+    /**
+     * Bir cevap maddesinin fotoğraf yolları. Eski kayıtlarda yalnız tekil
+     * 'foto_yolu' vardır; yenilerde 'fotolar' (madde başına birden fazla kanıt).
+     *
+     * @return array<int, string>
+     */
+    public static function maddeFotolari(array $cevap): array
+    {
+        $fotolar = $cevap['fotolar'] ?? [];
+
+        if (empty($fotolar) && ! empty($cevap['foto_yolu'])) {
+            $fotolar = [$cevap['foto_yolu']];
+        }
+
+        return array_values(array_filter($fotolar));
+    }
+
+    /**
+     * Rapor sonundaki "Fotoğraf Kanıtları" sayfaları — sıra numarası, madde
+     * kodu ve kanıt kimliği (depodaki benzersiz dosya adı) ile.
+     *
+     * @return array<int, array{sira: int, kod: string, yol: string, kimlik: string}>
+     */
+    public function kanitlar(): array
+    {
+        $kanitlar = [];
+
+        foreach ($this->cevaplar ?? [] as $c) {
+            foreach (static::maddeFotolari($c) as $yol) {
+                $kanitlar[] = [
+                    'sira' => count($kanitlar) + 1,
+                    'kod' => $c['kod'] ?? '',
+                    'yol' => $yol,
+                    'kimlik' => pathinfo($yol, PATHINFO_FILENAME),
+                ];
+            }
+        }
+
+        return $kanitlar;
+    }
+
     public function taslakMi(): bool
     {
         return $this->durum === 'taslak';

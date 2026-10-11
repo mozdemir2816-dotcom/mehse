@@ -16,6 +16,7 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -68,10 +69,10 @@ class SahaDenetimi extends Page
     /** null = tüm sektörler için ortak liste — config isg.risk_ai.sektorler */
     public ?string $sektorAnahtari = null;
 
-    /** @var array<string, array{sonuc: ?string, aciklama: ?string, foto_yolu: ?string}> kod => cevap */
+    /** @var array<string, array{sonuc: ?string, aciklama: ?string, foto_yolu: ?string, fotolar?: array<int, string>}> kod => cevap */
     public array $cevaplar = [];
 
-    /** @var array<string, UploadedFile> kod => yüklenen fotoğraf */
+    /** @var array<string, UploadedFile|array<int, UploadedFile>> kod => yüklenen fotoğraf(lar) — madde başına birden fazla kanıt */
     public array $fotoYuklemeleri = [];
 
     /** @var array<int, array{ad_soyad: string, gorev: ?string, kkd: string}> */
@@ -261,9 +262,28 @@ class SahaDenetimi extends Page
             $anahtar = $this->anahtar($kod);
 
             if (! isset($this->cevaplar[$anahtar])) {
-                $this->cevaplar[$anahtar] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
+                $this->cevaplar[$anahtar] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null, 'fotolar' => []];
             }
         }
+    }
+
+    /**
+     * Maddenin kayıtlı fotoğrafları + bu oturumda yüklenenler (diske yazılır).
+     * Örnek rapordaki gibi bir maddeye birden fazla kanıt eklenebilir.
+     *
+     * @return array<int, string>
+     */
+    private function fotolariTopla(string $anahtar, array $cevap): array
+    {
+        $yollar = SahaDenetimiModel::maddeFotolari($cevap);
+
+        foreach (Arr::wrap($this->fotoYuklemeleri[$anahtar] ?? []) as $dosya) {
+            if ($dosya instanceof UploadedFile) {
+                $yollar[] = $dosya->store('saha-denetimi-foto', 'public');
+            }
+        }
+
+        return array_values(array_unique($yollar));
     }
 
     private function ifadeYaz(string $ifade): string
@@ -317,7 +337,8 @@ class SahaDenetimi extends Page
         foreach ($taslak->cevaplar ?? [] as $c) {
             $anahtar = $this->anahtar($c['kod']);
             if (isset($this->cevaplar[$anahtar])) {
-                $this->cevaplar[$anahtar] = ['sonuc' => $c['sonuc'], 'aciklama' => $c['aciklama'], 'foto_yolu' => $c['foto_yolu']];
+                $fotolar = SahaDenetimiModel::maddeFotolari($c);
+                $this->cevaplar[$anahtar] = ['sonuc' => $c['sonuc'], 'aciklama' => $c['aciklama'], 'foto_yolu' => $fotolar[0] ?? null, 'fotolar' => $fotolar];
             }
         }
 
@@ -393,7 +414,7 @@ class SahaDenetimi extends Page
         }
     }
 
-    /** Bir maddeye eklenen (yeni yüklenen veya taslaktan gelen) fotoğrafı kaldırır. */
+    /** Bir maddeye eklenen (yeni yüklenen ve taslaktan gelen) tüm fotoğrafları kaldırır. */
     public function fotoKaldir(string $kod): void
     {
         $anahtar = $this->anahtar($kod);
@@ -402,7 +423,25 @@ class SahaDenetimi extends Page
 
         if (isset($this->cevaplar[$anahtar])) {
             $this->cevaplar[$anahtar]['foto_yolu'] = null;
+            $this->cevaplar[$anahtar]['fotolar'] = [];
         }
+    }
+
+    /** Kayıtlı (taslaktan gelen) fotoğraflardan yalnız birini kaldırır. */
+    public function kayitliFotoSil(string $kod, int $sira): void
+    {
+        $anahtar = $this->anahtar($kod);
+
+        if (! isset($this->cevaplar[$anahtar])) {
+            return;
+        }
+
+        $fotolar = SahaDenetimiModel::maddeFotolari($this->cevaplar[$anahtar]);
+        unset($fotolar[$sira]);
+        $fotolar = array_values($fotolar);
+
+        $this->cevaplar[$anahtar]['fotolar'] = $fotolar;
+        $this->cevaplar[$anahtar]['foto_yolu'] = $fotolar[0] ?? null;
     }
 
     public function ekipHizliEkle(int $calisanId): void
@@ -471,11 +510,7 @@ class SahaDenetimi extends Page
         foreach ($maddeler as $kod => $madde) {
             $anahtar = $this->anahtar($kod);
             $cevap = $this->cevaplar[$anahtar] ?? ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
-
-            $fotoYolu = $cevap['foto_yolu'] ?? null;
-            if ($this->fotoYuklemeleri[$anahtar] ?? null) {
-                $fotoYolu = $this->fotoYuklemeleri[$anahtar]->store('saha-denetimi-foto', 'public');
-            }
+            $fotolar = $this->fotolariTopla($anahtar, $cevap);
 
             if ($cevap['sonuc'] === 'uygun') {
                 $uygun++;
@@ -493,7 +528,8 @@ class SahaDenetimi extends Page
                 'kritik' => $madde['kritik'],
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
-                'foto_yolu' => $fotoYolu,
+                'foto_yolu' => $fotolar[0] ?? null,
+                'fotolar' => $fotolar,
             ];
         }
 
@@ -546,11 +582,7 @@ class SahaDenetimi extends Page
         foreach ($this->tumMaddeler() as $kod => $madde) {
             $anahtar = $this->anahtar($kod);
             $cevap = $this->cevaplar[$anahtar] ?? ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null];
-
-            $fotoYolu = $cevap['foto_yolu'] ?? null;
-            if ($this->fotoYuklemeleri[$anahtar] ?? null) {
-                $fotoYolu = $this->fotoYuklemeleri[$anahtar]->store('saha-denetimi-foto', 'public');
-            }
+            $fotolar = $this->fotolariTopla($anahtar, $cevap);
 
             $cevaplarSnapshot[] = [
                 'kategori_ad' => $madde['kategori_ad'],
@@ -559,7 +591,8 @@ class SahaDenetimi extends Page
                 'kritik' => $madde['kritik'],
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
-                'foto_yolu' => $fotoYolu,
+                'foto_yolu' => $fotolar[0] ?? null,
+                'fotolar' => $fotolar,
             ];
         }
 

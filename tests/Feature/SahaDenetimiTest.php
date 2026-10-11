@@ -353,6 +353,56 @@ class SahaDenetimiTest extends TestCase
         Storage::disk('public')->assertExists($madde11['foto_yolu']);
     }
 
+    public function test_bir_maddeye_birden_fazla_fotograf_eklenir_ve_kanit_sayfalari_basilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('cevapVer', '5.3', 'uygun_degil')
+            ->set('cevaplar.5_3.aciklama', 'Priz kırık')
+            ->set('fotoYuklemeleri.5_3', [UploadedFile::fake()->image('a.jpg'), UploadedFile::fake()->image('b.jpg')])
+            ->callAction('pdf');
+
+        $d = SahaDenetimi::where('firma_id', $firma->id)->firstOrFail();
+        $madde = collect($d->cevaplar)->firstWhere('kod', '5.3');
+
+        $this->assertCount(2, $madde['fotolar']);
+        $this->assertSame($madde['fotolar'][0], $madde['foto_yolu']);
+
+        $kanitlar = $d->kanitlar();
+        $this->assertCount(2, $kanitlar);
+        $this->assertSame(2, $kanitlar[1]['sira']);
+
+        $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
+        $this->assertStringContainsString('Kanıt 2 · Madde 5.3', $html);
+        $this->assertStringContainsString('Kanıt kimliği: '.$kanitlar[0]['kimlik'], $html);
+    }
+
+    public function test_eski_tekil_foto_yolu_kanit_olarak_okunur(): void
+    {
+        $d = new SahaDenetimi(['cevaplar' => [
+            ['kod' => '1.1', 'foto_yolu' => 'saha-denetimi-foto/eski.jpg'],
+            ['kod' => '1.2', 'foto_yolu' => null],
+        ]]);
+
+        $this->assertSame([['sira' => 1, 'kod' => '1.1', 'yol' => 'saha-denetimi-foto/eski.jpg', 'kimlik' => 'eski']], $d->kanitlar());
+    }
+
+    public function test_kayitli_fotograflardan_yalniz_biri_silinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('cevaplar.1_1.fotolar', ['saha-denetimi-foto/a.jpg', 'saha-denetimi-foto/b.jpg'])
+            ->call('kayitliFotoSil', '1.1', 0);
+
+        $this->assertSame(['saha-denetimi-foto/b.jpg'], $component->get('cevaplar')['1_1']['fotolar']);
+        $this->assertSame('saha-denetimi-foto/b.jpg', $component->get('cevaplar')['1_1']['foto_yolu']);
+    }
+
     public function test_foto_kaldir_yuklemeyi_ve_taslak_yolunu_temizler(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

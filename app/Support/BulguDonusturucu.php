@@ -126,7 +126,7 @@ class BulguDonusturucu
             'olasilik' => $olasilik,
             'siddet' => $siddet,
             'durum' => 'acik',
-            'fotograflar' => array_values(array_filter([$m['foto_yolu'] ?? null])),
+            'fotograflar' => \App\Models\SahaDenetimi::maddeFotolari($m),
         ];
     }
 
