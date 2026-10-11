@@ -162,11 +162,69 @@ class AcilDurumKrokisiTest extends TestCase
         $this->assertSame(1, $lejant['sondurucu']['adet']);
     }
 
+    public function test_kroki_yonetmelik_unsur_kontrolu(): void
+    {
+        $kroki = AcilDurumKrokisi::firmaIcin(Firma::factory()->for($this->uzman)->create());
+        $kroki->semboller = [['tip' => 'sondurucu', 'x' => 1, 'y' => 1], ['tip' => 'cikis', 'x' => 2, 'y' => 2]];
+        $kroki->ogeler = ['odalar' => [], 'yollar' => [[[0, 0], [10, 0]]], 'metinler' => []];
+
+        $k = $kroki->yonetmelikKontrolu();
+        $this->assertTrue($k['sondurme']['var']);
+        $this->assertTrue($k['kacis']['var']);          // çizilmiş kaçış yolu kaçış yönü sayılır
+        $this->assertFalse($k['uyari']['zorunlu']);      // uyarı sistemi "bulunması halinde"
+
+        $this->assertSame([
+            'İlk yardım malzemesi (Md.12/1-f-2)', 'Toplanma yeri (Md.12/1-f-3)', 'Elektrik / gaz kesme noktası (Md.12/1-f-7)',
+        ], $kroki->eksikZorunluUnsurlar());
+
+        $kroki->save();
+        $this->get(KrokiSayfasi::getUrl(['firma' => $kroki->firma_id]))->assertOk()
+            ->assertSee('3 zorunlu unsur eksik');
+    }
+
+    public function test_plan_tahliye_sayfasi_gorsel_yoksa_kayitli_kroki_goruntusunu_kullanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $this->assertNull($plan->tahliyeGorselYolu());
+
+        $goreli = 'acil-durum-kroki/test-'.$firma->id.'-'.uniqid().'.png';
+        $tam = storage_path('app/public/'.$goreli);
+        @mkdir(dirname($tam), 0777, true);
+        file_put_contents($tam, base64_decode(substr($this->png(), 22)));
+
+        try {
+            AcilDurumKrokisi::firmaIcin($firma)->update(['gorsel_yolu' => $goreli]);
+            $this->assertSame($tam, $plan->fresh()->tahliyeGorselYolu());
+        } finally {
+            @unlink($tam);
+        }
+    }
+
+    public function test_hazirlik_kunye_ve_ozel_risk_yeri_yonetmelige_gore_kontrol_edilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['adres' => null, 'isveren_ad' => null]);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->forceFill(['uygulama' => ['ozel_risk_alanlari' => 'var', 'enerji_kesme' => 'uygulanamaz']])->save();
+
+        $k = collect(AcilDurumHazirlik::kontrol($plan->fresh())['kontroller'])->keyBy('baslik');
+        $this->assertFalse($k['Künye: unvan, adres ve işveren adı']['tamam']);
+        $this->assertStringContainsString('işveren / vekili adı', $k['Künye: unvan, adres ve işveren adı']['aciklama']);
+        $this->assertFalse($k['Özel risk alanları / enerji kesme noktaları']['tamam']);
+        $this->assertStringContainsString('yeri yazılmamış', $k['Özel risk alanları / enerji kesme noktaları']['aciklama']);
+
+        $firma->update(['adres' => 'Merkez', 'isveren_vekili' => 'Ayşe Demir']);
+        $plan->forceFill(['uygulama' => [...$plan->uygulama, 'ozel_risk_notu' => 'LPG tüp alanı']])->save();
+        $k = collect(AcilDurumHazirlik::kontrol($plan->fresh())['kontroller'])->keyBy('baslik');
+        $this->assertTrue($k['Künye: unvan, adres ve işveren adı']['tamam']);
+        $this->assertTrue($k['Özel risk alanları / enerji kesme noktaları']['tamam']);
+    }
+
     // ---------- Acil durum planı: uygulama + hazırlık kontrolü ----------
 
     public function test_plan_uygulama_bilgisi_kaydedilir_ve_hazirlik_hesaplanir(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Hazırlık AŞ']);
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Hazırlık AŞ', 'adres' => 'Merkez Mh.', 'isveren_ad' => 'Hasan Kaya']);
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
@@ -175,7 +233,9 @@ class AcilDurumKrokisiTest extends TestCase
             ->set('uygulama.onleyici_tedbirler', 'Yanıcılar ayrı depoda')
             ->set('uygulama.ekipman_kkd', '6 KKT söndürücü')
             ->set('uygulama.ozel_risk_alanlari', 'var')
+            ->set('uygulama.ozel_risk_notu', 'Boya deposu')
             ->set('uygulama.enerji_kesme', 'var')
+            ->set('uygulama.enerji_kesme_notu', 'Ana pano girişte')
             ->set('uygulama.mudahale_yontemi', 'Alarm → ekip → tahliye → yoklama')
             ->call('iletisimEkle')
             ->set('uygulama.iletisim.1.ad', 'İtfaiye')
@@ -195,8 +255,15 @@ class AcilDurumKrokisiTest extends TestCase
         $this->assertSame(['Tahliye krokisi', 'Tatbikat (yılda en az bir)'], $eksik);
         $this->assertSame('aksiyon', $h['durum']);
 
-        // Kroki çizilir + Tatbikat modülünde tamamlanmış kayıt → hazır
+        // Yalnız çıkış işaretli kroki Md.12(1)(f) için yetmez
         AcilDurumKrokisi::firmaIcin($firma)->update(['semboller' => [['tip' => 'cikis', 'x' => 1, 'y' => 1]]]);
+        $kroki = collect(AcilDurumHazirlik::kontrol($plan->fresh())['kontroller'])->firstWhere('baslik', 'Tahliye krokisi');
+        $this->assertFalse($kroki['tamam']);
+        $this->assertStringContainsString('Toplanma yeri', $kroki['aciklama']);
+
+        // Zorunlu unsurlar işaretli kroki + Tatbikat modülünde tamamlanmış kayıt → hazır
+        AcilDurumKrokisi::firmaIcin($firma)->update(['semboller' => collect(['cikis', 'cikis_sag', 'toplanma', 'sondurucu', 'ilkyardim', 'elektrik_pano'])
+            ->map(fn ($t, $i) => ['tip' => $t, 'x' => $i * 10, 'y' => 1])->all()]);
         TatbikatTutanagi::create(['firma_id' => $firma->id, 'tatbikat_tarihi' => now()->subMonths(2), 'durum' => 'tamamlandi']);
         $h = AcilDurumHazirlik::kontrol($plan->fresh());
         $this->assertSame(100, $h['yuzde']);

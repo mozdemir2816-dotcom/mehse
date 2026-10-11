@@ -16,6 +16,23 @@
     </div>
 
     @if ($this->firma)
+        @php $unsurlar = $this->kroki()->yonetmelikKontrolu(); $eksikSayi = collect($unsurlar)->filter(fn ($u) => $u['zorunlu'] && ! $u['var'])->count(); @endphp
+        <div style="{{ $kutu }};font-size:.78rem">
+            <div style="font-weight:600;margin-bottom:.35rem">
+                Yönetmelik kontrolü (Acil Durumlar Yön. Md.12/1-f) —
+                @if ($eksikSayi) <span style="color:#dc2626">{{ $eksikSayi }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
+                <span style="font-weight:400;color:rgb(107 114 128)">· kayıtlı krokiye göre, "Kaydet" sonrası güncellenir</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">
+                @foreach ($unsurlar as $u)
+                    <span style="color:{{ $u['var'] ? '#16a34a' : ($u['zorunlu'] ? '#dc2626' : 'rgb(107 114 128)') }}">{{ $u['var'] ? '✓' : ($u['zorunlu'] ? '✗' : '○') }} {{ $u['baslik'] }}</span>
+                @endforeach
+            </div>
+            <div style="margin-top:.35rem;color:rgb(107 114 128)">
+                Tahliye planı bina girişleri, çıkışları ve katlarda göz hizasında asılır (Md.12/3). Görevli listesi ve acil telefonlar plan PDF'inde yer alır.
+            </div>
+        </div>
+
         <script>
             window.krokiEditoru = function (veri, ayar) {
                 const W = ayar.genislik, H = ayar.yukseklik, IZ = 10;

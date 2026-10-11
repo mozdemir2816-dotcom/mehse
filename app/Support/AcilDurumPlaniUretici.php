@@ -26,7 +26,20 @@ class AcilDurumPlaniUretici
             'firma' => $plan->firma,
             'hakkinda' => config('isg.acil_durum.hakkinda'),
             'imzali' => $imzali,
+            'u' => array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []),
         ])->setPaper('a4');
+
+        // Md.12(2): sayfalar numaralandırılır, her sayfa paraflanır — alt bilgide
+        // "Sayfa X / Y" + paraf yeri. Tek render, page_script ile (çift render yok).
+        $pdf->render();
+        $dompdf = $pdf->getDomPDF();
+        $canvas = $dompdf->getCanvas();
+        $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $canvas->page_script(function (int $sayfa, int $toplam) use ($canvas, $font): void {
+            $y = $canvas->get_height() - 22;
+            $canvas->text(36, $y, 'Paraf: ...............', $font, 7, [0.4, 0.4, 0.4]);
+            $canvas->text($canvas->get_width() - 92, $y, "Sayfa {$sayfa} / {$toplam}", $font, 7.5, [0.3, 0.3, 0.3]);
+        });
 
         $ad = 'acil-durum-plani-'.Str::slug($plan->firma?->unvan ?? 'firma').'.pdf';
 

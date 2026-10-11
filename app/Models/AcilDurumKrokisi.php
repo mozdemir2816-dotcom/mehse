@@ -136,6 +136,51 @@ class AcilDurumKrokisi extends Model
         return compact('duvarlar', 'semboller', 'ogeler', 'antet');
     }
 
+    /**
+     * Krokide bulunması gereken unsurlar (Acil Durumlar Yön. Md.12(1)(f),
+     * 01.10.2021 değişikliğiyle). `zorunlu` = false olanlar "bulunması halinde"
+     * gösterilir (uyarı sistemi) veya iyi uygulamadır (Buradasınız) — eksikliği
+     * kontrolü düşürmez, yalnız hatırlatılır.
+     *
+     * @var array<string, array{0: string, 1: array<int, string>, 2: bool}>
+     */
+    public const YONETMELIK_UNSURLARI = [
+        'sondurme' => ['Yangın söndürme ekipmanı (Md.12/1-f-1)', ['sondurucu', 'co2', 'kkt', 'kopuk', 'hidrant', 'dis_hidrant', 'kum', 'sprinkler'], true],
+        'ilkyardim' => ['İlk yardım malzemesi (Md.12/1-f-2)', ['ilkyardim', 'sedye', 'aed'], true],
+        'cikis' => ['Acil çıkış (Md.12/1-f-3)', ['cikis', 'merdiven'], true],
+        'kacis' => ['Kaçış yolu / yönü (Md.12/1-f-3)', ['cikis_sol', 'cikis_sag'], true],
+        'toplanma' => ['Toplanma yeri (Md.12/1-f-3)', ['toplanma'], true],
+        'enerji' => ['Elektrik / gaz kesme noktası (Md.12/1-f-7)', ['elektrik_pano', 'gaz_vana'], true],
+        'uyari' => ['Uyarı sistemi — varsa (Md.12/1-f-3)', ['alarm', 'siren'], false],
+        'buradasiniz' => ['"Buradasınız" işareti (asılacak her kopyada)', ['buradasiniz'], false],
+    ];
+
+    /**
+     * Yönetmelik unsur kontrolü: kaçış yönü çizilmiş kaçış yolu (`ogeler.yollar`)
+     * ile de sağlanır.
+     *
+     * @return array<string, array{baslik: string, var: bool, zorunlu: bool}>
+     */
+    public function yonetmelikKontrolu(): array
+    {
+        $tipler = collect($this->semboller ?? [])->pluck('tip')->unique()->all();
+        $yolVar = ! empty($this->ogeler['yollar'] ?? []);
+
+        return collect(static::YONETMELIK_UNSURLARI)->map(fn (array $u, string $k) => [
+            'baslik' => $u[0],
+            'var' => array_intersect($u[1], $tipler) !== [] || ($k === 'kacis' && $yolVar),
+            'zorunlu' => $u[2],
+        ])->all();
+    }
+
+    /** @return array<int, string> eksik zorunlu unsurların başlıkları */
+    public function eksikZorunluUnsurlar(): array
+    {
+        return collect($this->yonetmelikKontrolu())
+            ->filter(fn (array $u) => $u['zorunlu'] && ! $u['var'])
+            ->pluck('baslik')->values()->all();
+    }
+
     /** Sembol tiplerinin adet dağılımı — lejant için. */
     public function lejant(): array
     {

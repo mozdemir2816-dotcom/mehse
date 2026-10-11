@@ -175,13 +175,19 @@
                     <textarea wire:model="uygulama.olcum_notu" rows="3" style="{{ $alan }}" placeholder="Gerekli ölçümler, mevcut raporlar veya neden uygulanamaz olduğu"></textarea></div>
                 <div><label style="{{ $lb }}">Acil durum ekipmanı ve KKD listesi</label>
                     <textarea wire:model="uygulama.ekipman_kkd" rows="3" style="{{ $alan }}" placeholder="Yangın, ilk yardım, kurtarma ve gerekiyorsa KKD ekipmanları"></textarea></div>
-                @foreach (['ozel_risk_alanlari' => 'Özel risk alanları', 'enerji_kesme' => 'Enerji kesme / vana noktaları'] as $anahtar => $ad)
+                @foreach ([
+                    'ozel_risk_alanlari' => ['Özel risk alanları', 'ozel_risk_notu', 'Kimyasal yayılım, parlama / patlama riski olan bölümler — örn. boya deposu, LPG tüp alanı (Md.12/1-f-6)'],
+                    'enerji_kesme' => ['Enerji kesme / vana noktaları', 'enerji_kesme_notu', 'Ana elektrik şalteri ve doğalgaz / LPG vanalarının yeri — örn. giriş sağı ana pano (Md.12/1-f-7)'],
+                ] as $anahtar => [$ad, $notAnahtar, $ipucu])
                     <div style="{{ $kutu }};padding:.6rem .8rem"><span style="{{ $lb }}">{{ $ad }}</span>
                         <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.8rem">
                             @foreach (\App\Support\AcilDurumHazirlik::UC_DURUM as $k => $v)
-                                <label style="display:flex;gap:.3rem;align-items:center"><input type="radio" wire:model="uygulama.{{ $anahtar }}" value="{{ $k }}"> {{ $v }}</label>
+                                <label style="display:flex;gap:.3rem;align-items:center"><input type="radio" wire:model.live="uygulama.{{ $anahtar }}" value="{{ $k }}"> {{ $v }}</label>
                             @endforeach
                         </div>
+                        @if (($uygulama[$anahtar] ?? null) === 'var')
+                            <textarea wire:model="uygulama.{{ $notAnahtar }}" rows="2" style="{{ $alan }};margin-top:.4rem" placeholder="{{ $ipucu }}"></textarea>
+                        @endif
                     </div>
                 @endforeach
                 <div style="grid-column:1/-1"><label style="{{ $lb }}">Müdahale, haberleşme ve tahliye yöntemi</label>

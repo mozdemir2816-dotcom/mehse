@@ -27,7 +27,8 @@ class AcilDurumHazirlik
     {
         return [
             'onleyici_tedbirler' => '', 'olcum_notu' => '', 'ekipman_kkd' => '',
-            'ozel_risk_alanlari' => 'degerlendirilmedi', 'enerji_kesme' => 'degerlendirilmedi',
+            'ozel_risk_alanlari' => 'degerlendirilmedi', 'ozel_risk_notu' => '',
+            'enerji_kesme' => 'degerlendirilmedi', 'enerji_kesme_notu' => '',
             'mudahale_yontemi' => '', 'ozel_destek' => '',
             'ziyaretci_dahil' => false, 'gecici_calisan_dahil' => false, 'coklu_isveren' => false,
             'iletisim' => [['ad' => '112 Acil Çağrı Merkezi', 'telefon' => '112', 'aciklama' => 'Ulusal acil çağrı']],
@@ -49,6 +50,8 @@ class AcilDurumHazirlik
             'ekipman_kkd' => $metin($u['ekipman_kkd'] ?? ''),
             'ozel_risk_alanlari' => array_key_exists($u['ozel_risk_alanlari'] ?? '', static::UC_DURUM) ? $u['ozel_risk_alanlari'] : $v['ozel_risk_alanlari'],
             'enerji_kesme' => array_key_exists($u['enerji_kesme'] ?? '', static::UC_DURUM) ? $u['enerji_kesme'] : $v['enerji_kesme'],
+            'ozel_risk_notu' => $metin($u['ozel_risk_notu'] ?? ''),
+            'enerji_kesme_notu' => $metin($u['enerji_kesme_notu'] ?? ''),
             'mudahale_yontemi' => $metin($u['mudahale_yontemi'] ?? ''),
             'ozel_destek' => $metin($u['ozel_destek'] ?? ''),
             'ziyaretci_dahil' => (bool) ($u['ziyaretci_dahil'] ?? false),
@@ -88,24 +91,42 @@ class AcilDurumHazirlik
         $sonTatbikat = $sonTatbikat ? Carbon::parse($sonTatbikat) : (filled($u['son_tatbikat']) ? Carbon::parse($u['son_tatbikat']) : null);
         $tatbikatKaynak = $sonTatbikat && TatbikatTutanagi::query()->where('firma_id', $plan->firma_id)->exists() ? 'Tatbikat modülü' : 'elle girilen tarih';
 
+        // Tahliye planı: yüklenen görsel (içeriği denetlenemez) ya da editör
+        // krokisi — editör krokisinde Md.12(1)(f) zorunlu unsurları aranır.
         $kroki = AcilDurumKrokisi::query()->where('firma_id', $plan->firma_id)->first();
-        $krokiVar = ($kroki && (count($kroki->semboller ?? []) > 0 || count($kroki->duvarlar ?? []) > 0)) || filled($plan->tahliye_plani_gorseli);
+        $krokiCizili = $kroki && (count($kroki->semboller ?? []) > 0 || count($kroki->duvarlar ?? []) > 0);
+        $krokiEksik = $krokiCizili ? $kroki->eksikZorunluUnsurlar() : [];
+        $krokiVar = filled($plan->tahliye_plani_gorseli) || ($krokiCizili && $krokiEksik === []);
+        $krokiAciklama = match (true) {
+            filled($plan->tahliye_plani_gorseli) => 'Tahliye planı görseli yüklendi',
+            ! $krokiCizili => 'Kroki çizilmemiş',
+            $krokiEksik !== [] => 'Krokide eksik: '.implode(', ', $krokiEksik),
+            default => 'Kroki mevcut, zorunlu unsurlar işaretli',
+        };
 
         $iletisim = collect($u['iletisim']);
 
+        // Özel risk / enerji kesme: "Var" ise yerleri yazılmalı (Md.12/1-f-6,7)
+        $yerYazili = fn (string $durum, string $not) => $durum !== 'degerlendirilmedi' && ($durum !== 'var' || filled($not));
+        $isveren = $firma?->isveren_ad ?: $firma?->isveren_vekili;
+        $kunyeEksik = array_keys(array_filter(['adres' => blank($firma?->adres), 'işveren / vekili adı' => blank($isveren)]));
+
         $k = [
+            ['Künye: unvan, adres ve işveren adı', $kunyeEksik === [],
+                $kunyeEksik ? 'Firma kaydında eksik: '.implode(', ', $kunyeEksik) : 'Tamam'],
             ['Künye: plan ve gözden geçirme tarihi', $plan->rapor_tarihi && $plan->gecerlilik_tarihi?->gte($bugun),
                 $plan->gecerlilik_tarihi ? 'Gözden geçirme '.$plan->gecerlilik_tarihi->format('d.m.Y').($plan->gecerlilik_tarihi->lt($bugun) ? ' — süresi geçti' : '') : 'Plan tarihi girilmemiş'],
             ['Senaryolar (acil durum konuları)', count($plan->konular ?? []) > 0, count($plan->konular ?? []).' senaryo seçili'],
             ['Önleyici ve sınırlandırıcı tedbirler', filled($u['onleyici_tedbirler']), filled($u['onleyici_tedbirler']) ? 'Yazıldı' : 'Tedbirler yazılmamış'],
             ['Acil durum ekipmanı ve KKD listesi', filled($u['ekipman_kkd']), filled($u['ekipman_kkd']) ? 'Yazıldı' : 'Liste yok'],
-            ['Özel risk alanları / enerji kesme noktaları', $u['ozel_risk_alanlari'] !== 'degerlendirilmedi' && $u['enerji_kesme'] !== 'degerlendirilmedi',
-                'Özel risk: '.static::UC_DURUM[$u['ozel_risk_alanlari']].' · Enerji / vana: '.static::UC_DURUM[$u['enerji_kesme']]],
+            ['Özel risk alanları / enerji kesme noktaları', $yerYazili($u['ozel_risk_alanlari'], $u['ozel_risk_notu']) && $yerYazili($u['enerji_kesme'], $u['enerji_kesme_notu']),
+                'Özel risk: '.static::UC_DURUM[$u['ozel_risk_alanlari']].($u['ozel_risk_alanlari'] === 'var' && blank($u['ozel_risk_notu']) ? ' (yeri yazılmamış)' : '')
+                .' · Enerji / vana: '.static::UC_DURUM[$u['enerji_kesme']].($u['enerji_kesme'] === 'var' && blank($u['enerji_kesme_notu']) ? ' (yeri yazılmamış)' : '')],
             ['Destek ekipleri (söndürme, kurtarma, koruma, ilk yardım)', $bosEkip === [], $bosEkip === [] ? 'Tüm ekiplerde kişi var' : 'Boş ekip: '.implode(', ', $bosEkip)],
             ['Müdahale, haberleşme ve tahliye yöntemi', filled($u['mudahale_yontemi']), filled($u['mudahale_yontemi']) ? 'Yazıldı' : 'Yöntem yazılmamış'],
             ['Toplanma alanı', filled($plan->toplanma_yeri), $plan->toplanma_yeri ?: 'Toplanma yeri girilmemiş'],
             ['Acil iletişim listesi', $iletisim->count() >= 2, $iletisim->count().' irtibat (112 dışında işyerine uygun yerel irtibat ekleyin)'],
-            ['Tahliye krokisi', $krokiVar, $krokiVar ? 'Kroki / tahliye planı mevcut' : 'Kroki çizilmemiş'],
+            ['Tahliye krokisi', $krokiVar, $krokiAciklama],
             ['Krokiler görünür yerlere asıldı', (bool) $u['kroki_asildi'], $u['kroki_asildi'] ? 'Saha doğrulandı' : 'Doğrulanmadı'],
             ['Tatbikat (yılda en az bir)', $sonTatbikat !== null && $sonTatbikat->gte($bugun->copy()->subYear()),
                 $sonTatbikat ? 'Son tatbikat '.$sonTatbikat->format('d.m.Y').' ('.$tatbikatKaynak.')' : 'Tatbikat kaydı yok'],

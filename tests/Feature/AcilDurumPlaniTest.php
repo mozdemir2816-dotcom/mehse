@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\AcilDurumKrokisi;
 use App\Filament\Pages\AcilDurumPlani as AcilDurumSayfasi;
 use App\Models\AcilDurumPlani;
+use App\Models\AcilEkip;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\User;
@@ -137,7 +138,8 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('DENEME TEKSTİL SANAYİ LTD.', $xml);
         $this->assertStringContainsString('Test Mahallesi No:5 İzmir', $xml);
         $this->assertStringContainsString('11122233344', $xml);
-        $this->assertStringNotContainsString('AYŞE YILMAZ', $xml);
+        $this->assertStringContainsString('AYŞE YILMAZ', $xml);   // Md.12(1)(b): hazırlayanın adı
+
         $this->assertStringNotContainsString('ALTIN YAKUT', $xml);
         $this->assertStringNotContainsString('MEHMET ÖZDEMİR', $xml);
         $this->assertStringNotContainsString('44100010111205450770133000', $xml);
@@ -261,14 +263,26 @@ class AcilDurumPlaniTest extends TestCase
         $uzman = $this->uzman;
         $uzman->forceFill(['name' => 'Mehmet Özdemir', 'unvan' => 'a_sinifi'])->save();
 
-        $firma = Firma::factory()->for($uzman)->create(['nace_kodu' => '41.00']);
+        $firma = Firma::factory()->for($uzman)->create(['nace_kodu' => '41.00', 'isveren_ad' => 'Hasan Kaya', 'adres' => 'OSB 3. Cad. No:7']);
         $plan = AcilDurumPlani::firmaIcin($firma);
         $plan->forceFill([
             'revizyon_no' => 'Rev.01 — 01.01.2027',
             'toplanma_yeri' => 'Ana kapı önü açık saha',
             'disaridan_etkileyebilecek_isyerleri' => 'Komşu Akaryakıt A.Ş. — Akaryakıt istasyonu',
             'konular' => ['yangin', 'deprem'],
+            'uygulama' => [
+                'onleyici_tedbirler' => 'Talaşlar her vardiya sonu uzaklaştırılır',
+                'mudahale_yontemi' => 'Alarm → 112 → tahliye → sayım',
+                'ozel_risk_alanlari' => 'var', 'ozel_risk_notu' => 'Kaynak tüpü deposu (arka avlu)',
+                'enerji_kesme' => 'var', 'enerji_kesme_notu' => 'Ana pano giriş sağında',
+                'ozel_destek' => 'Gebe çalışana vardiya amiri refakat eder',
+                'iletisim' => [['ad' => 'Devlet Hastanesi', 'telefon' => '0224 000 00 00', 'aciklama' => 'En yakın hastane']],
+                'son_tatbikat' => '2026-05-04',
+            ],
         ])->save();
+        $ekip = AcilEkip::create(['firma_id' => $firma->id, 'tur' => 'sondurme', 'ad' => 'Söndürme Ekibi']);
+        $ekip->uyeler()->create(['ad_soyad' => 'Ali Veli', 'gorev' => 'Torna Operatörü', 'bolum' => 'Atölye', 'telefon' => '0532 111 22 33', 'lider' => true]);
+        $ekip->uyeler()->create(['ad_soyad' => 'Can Er', 'uyelik' => 'yedek', 'vardiya' => 'Gece']);
 
         // dompdf metin katmanini ayiklamak yerine, uretimin hata vermeden
         // gectigini ve HTML asamasinda beklenen icerigin goruntuye girdigini
@@ -279,12 +293,31 @@ class AcilDurumPlaniTest extends TestCase
             'hakkinda' => config('isg.acil_durum.hakkinda'),
         ])->render();
 
-        $this->assertStringNotContainsString('Mehmet Özdemir', $html);
+        // Md.12(1)(a)-(c): unvan, adres, işveren, hazırlayan adı-unvanı, tarihler
+        $this->assertStringContainsString('Mehmet Özdemir', $html);
+        $this->assertStringContainsString('Hasan Kaya', $html);
+        $this->assertStringContainsString('OSB 3. Cad. No:7', $html);
         $this->assertStringContainsString('Rev.01', $html);
         $this->assertStringContainsString('Ana kapı önü açık saha', $html);
         $this->assertStringContainsString('Komşu Akaryakıt A.Ş.', $html);
+        // (d)-(e): tedbirler, müdahale/tahliye, refakat, özel risk bölümleri, kesim noktaları
+        $this->assertStringContainsString('Talaşlar her vardiya sonu', $html);
+        $this->assertStringContainsString('Alarm → 112 → tahliye → sayım', $html);
+        $this->assertStringContainsString('Gebe çalışana vardiya amiri', $html);
+        $this->assertStringContainsString('Kaynak tüpü deposu (arka avlu)', $html);
+        $this->assertStringContainsString('Ana pano giriş sağında', $html);
+        // (f)(4): görevli adı, unvanı, sorumluluk alanı, iletişim, yedek
+        $this->assertStringContainsString('Torna Operatörü', $html);
+        $this->assertStringContainsString('0532 111 22 33', $html);
+        $this->assertStringContainsString('Ekip başı', $html);
+        $this->assertStringContainsString('Yedek · Gece', $html);
+        // (f)(5): ulusal + yerel irtibat
         $this->assertStringContainsString('İRTİBAT KURULACAK KURULUŞLAR', $html);
-        $this->assertStringContainsString('112', $html);
+        $this->assertStringContainsString('112 Acil Çağrı Merkezi', $html);
+        $this->assertStringContainsString('Devlet Hastanesi', $html);
+        $this->assertStringNotContainsString('155', $html);
+        // Md.13-15: tatbikat ve yenileme
+        $this->assertStringContainsString('04.05.2026', $html);
         $this->assertStringContainsString('NACE Kodu: 41.00', $html);
 
         $yanit = AcilDurumPlaniUretici::pdf($plan);

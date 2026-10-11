@@ -83,8 +83,10 @@ class AcilDurumWordUretici
             'rapor_tarihi' => $plan->rapor_tarihi?->format('d.m.Y') ?: '—',
             'gecerlilik_tarihi' => $plan->gecerlilik_tarihi?->format('d.m.Y') ?: '—',
             'tehlike_sinifi' => OoxmlMetinYamasi::turkceBuyuk($firma?->tehlikeSinifiEtiketi() ?: ''),
-            'uzman_adi' => 'İŞ GÜVENLİĞİ UZMANI', // görevli adı basılmaz (kaşe)
-            'uzman_unvani' => $uzman?->unvanEtiketi() ?: '—',
+            // Md.12(1)(b): hazırlayanın adı soyadı ve unvanı plana yazılır —
+            // firmaya atanmış İGU, yoksa hesap sahibi (plan PDF'i ile aynı).
+            'uzman_adi' => OoxmlMetinYamasi::turkceBuyuk($firma?->igu?->ad_soyad ?: ($uzman?->name ?: 'İş Güvenliği Uzmanı')),
+            'uzman_unvani' => ($firma?->igu ? $firma->igu->unvan : $uzman?->unvanEtiketi()) ?: '—',
             'nace_kodu' => $firma?->nace_kodu ?: '—',
             default => '—',
         };

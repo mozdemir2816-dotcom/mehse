@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\AcilDurumKonuSecici;
+use App\Support\AcilEkipDurumu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,12 +69,57 @@ class AcilDurumPlani extends Model
      */
     public function ekipListesi(): array
     {
-        $kayitli = $this->firma ? \App\Support\AcilEkipDurumu::planListesi($this->firma) : [];
+        $kayitli = $this->firma ? AcilEkipDurumu::planListesi($this->firma) : [];
         $ekipler = array_replace($this->ekipler ?? [], $kayitli);
 
         return collect(config('isg.acil_durum.ekipler'))
             ->mapWithKeys(fn ($ad, $anahtar) => [$anahtar => array_values(array_filter($ekipler[$anahtar] ?? []))])
             ->all();
+    }
+
+    /**
+     * Plan PDF'indeki görevli listesi (Acil Durumlar Yön. Md.12/1-f-4 ve
+     * Md.11/9: adı soyadı, unvanı, sorumluluk alanı, iletişim; varsa yedek).
+     * Acil Durum Ekipleri sayfasında üyesi olan ekip ayrıntılı gelir; yoksa
+     * plandaki elle yazılmış isimler yalnız adla listelenir.
+     *
+     * @return array<string, array<int, array{ad: string, gorev: ?string, bolum: ?string, telefon: ?string, yedek: bool, lider: bool, vardiya: ?string}>>
+     */
+    public function ekipDetaylari(): array
+    {
+        $kayitli = [];
+
+        if ($this->firma) {
+            foreach (AcilEkipDurumu::ekipler($this->firma) as $ekip) {
+                $anahtar = $ekip->turBilgisi()['plan'] ?? null;
+
+                foreach ($anahtar ? $ekip->uyeler : [] as $u) {
+                    $kayitli[$anahtar][] = [
+                        'ad' => $u->ad_soyad, 'gorev' => $u->gorev, 'bolum' => $u->bolum, 'telefon' => $u->telefon,
+                        'yedek' => $u->uyelik === 'yedek', 'lider' => (bool) $u->lider, 'vardiya' => $u->vardiya,
+                    ];
+                }
+            }
+        }
+
+        return collect(config('isg.acil_durum.ekipler'))->mapWithKeys(fn ($ad, $anahtar) => [
+            $anahtar => $kayitli[$anahtar] ?? collect($this->ekipler[$anahtar] ?? [])->filter()->map(fn ($isim) => [
+                'ad' => $isim, 'gorev' => null, 'bolum' => null, 'telefon' => null, 'yedek' => false, 'lider' => false, 'vardiya' => null,
+            ])->values()->all(),
+        ])->all();
+    }
+
+    /** Planın tahliye planı görseli: yüklenen görsel, yoksa kaydedilmiş kroki görüntüsü (tam yol). */
+    public function tahliyeGorselYolu(): ?string
+    {
+        if ($this->tahliye_plani_gorseli && is_file($yol = public_path('storage/'.$this->tahliye_plani_gorseli))) {
+            return $yol;
+        }
+
+        $kroki = AcilDurumKrokisi::query()->where('firma_id', $this->firma_id)->first();
+        $yol = $kroki?->gorsel_yolu ? storage_path('app/public/'.$kroki->gorsel_yolu) : null;
+
+        return $yol && is_file($yol) ? $yol : null;
     }
 
     public static function firmaIcin(Firma $firma): self
