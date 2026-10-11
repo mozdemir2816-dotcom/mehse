@@ -34,21 +34,23 @@ use UnitEnum;
  */
 class KkdTakip extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.kkd-takip';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-archive-box';
 
-    protected static string|UnitEnum|null $navigationGroup = 'KKD';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'kkd-takip';
 
     protected static ?string $title = 'KKD Takip';
 
-    protected static ?string $navigationLabel = 'KKD Takip (Zimmet & Stok)';
+    protected static ?string $navigationLabel = 'KKD';
 
     public ?int $firmaId = null;
 

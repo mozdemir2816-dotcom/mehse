@@ -39,9 +39,9 @@ class TaseronYonetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Diğer Belge & Yazışma';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'taseron-yonetimi';
 

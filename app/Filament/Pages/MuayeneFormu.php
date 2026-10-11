@@ -32,9 +32,12 @@ class MuayeneFormu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sağlık Gözetimi';
+    protected static string|UnitEnum|null $navigationGroup = 'Sağlık & Olaylar';
 
-    protected static ?int $navigationSort = 26;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $slug = 'muayene-formu';
 

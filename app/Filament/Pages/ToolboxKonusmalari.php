@@ -35,7 +35,7 @@ class ToolboxKonusmalari extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'toolbox-konusmalari';
 

@@ -29,9 +29,9 @@ class Ayarlar extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Yönetim';
+    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'ayarlar';
 

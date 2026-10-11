@@ -26,6 +26,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class AcilDurumPlani extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.acil-durum-plani';
@@ -34,7 +36,7 @@ class AcilDurumPlani extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Acil Durum & Yangın';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'acil-durum-plani';
 

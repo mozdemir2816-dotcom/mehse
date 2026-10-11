@@ -40,9 +40,9 @@ class IsgProfesyoneliResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Yönetim';
+    protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'İSG Profesyoneli';
 

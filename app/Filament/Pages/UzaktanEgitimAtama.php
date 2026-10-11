@@ -38,7 +38,10 @@ class UzaktanEgitimAtama extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 32;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 91;
 
     protected static ?string $slug = 'uzaktan-egitim-atama';
 

@@ -30,7 +30,7 @@ class YanginGuvenligi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Acil Durum & Yangın';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'yangin-guvenligi';
 

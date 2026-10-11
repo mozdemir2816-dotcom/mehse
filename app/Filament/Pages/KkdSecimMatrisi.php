@@ -27,9 +27,12 @@ class KkdSecimMatrisi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-exclamation';
 
-    protected static string|UnitEnum|null $navigationGroup = 'KKD';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 29;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 91;
 
     protected static ?string $slug = 'kkd-secim-matrisi';
 

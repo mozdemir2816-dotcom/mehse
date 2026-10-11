@@ -35,7 +35,7 @@ class IsbasiEgitim extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 16;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'isbasi-egitim';
 

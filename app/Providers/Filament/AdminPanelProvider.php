@@ -39,20 +39,26 @@ class AdminPanelProvider extends PanelProvider
      * bazlı ikonlar (her Resource/Page kendi navigationIcon'unu tanımlıyor)
      * daha faydalı olduğundan grup ikonları kaldırıldı, yalnız sıralama kaldı.
      */
+    /**
+     * Menü sadeleştirmesi (11.10.2026): 13 grup / 75 madde → 10 grup / ~45 madde.
+     * Aynı işi yapan sayfalar App\Support\SayfaAileleri'nde gruplanır; menüde
+     * yalnız ailenin ana sayfası durur, diğerleri sekme şeridinden açılır.
+     */
     private const NavGrupSirasi = [
-        'Yönetim',
+        'Genel',
+        'Firmalar & Çalışanlar',
         'Risk Değerlendirmesi',
         'Acil Durum & Yangın',
         'Eğitimler',
-        'Çalışan & Kurul',
-        'Sağlık Gözetimi',
-        'Saha Kontrolleri',
-        'Periyodik Kontrol & Ölçüm',
-        'KKD',
-        'İş Kazaları & Olaylar',
+        'Sağlık & Olaylar',
+        'Belgeler & Yazışmalar',
+        'Saha Dışı Kayıtlar',
         'Planlama & Arşiv',
-        'Diğer Belge & Yazışma',
+        'Ayarlar ve Kütüphaneler',
     ];
+
+    /** Kapalı başlayan gruplar — günlük işte kullanılmayan ayar/kütüphane sayfaları. */
+    private const KapaliGruplar = ['Ayarlar ve Kütüphaneler'];
 
     /**
      * @return array<NavigationGroup>
@@ -60,7 +66,8 @@ class AdminPanelProvider extends PanelProvider
     private function navGruplari(): array
     {
         return array_map(
-            fn (string $etiket): NavigationGroup => NavigationGroup::make($etiket),
+            fn (string $etiket): NavigationGroup => NavigationGroup::make($etiket)
+                ->collapsed(in_array($etiket, self::KapaliGruplar, true)),
             self::NavGrupSirasi,
         );
     }
@@ -142,6 +149,16 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,
                 fn () => view('filament.components.sidebar-alt'),
+            )
+            // Sol menü üstü: "Menüde ara…" (gizlenen sekme sayfalarını da bulur).
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_NAV_START,
+                fn () => view('filament.components.menu-arama'),
+            )
+            // Aile sayfalarının üstünde ortak sekme şeridi — App\Support\SayfaAileleri.
+            ->renderHook(
+                PanelsRenderHook::PAGE_START,
+                fn (array $scopes) => view('filament.components.sayfa-sekmeleri', ['scopes' => $scopes]),
             )
             // İSG dosyası klasör yapısına göre (isgpratik "İSG Klasöründe Olması Gerekenler")
             ->navigationGroups($this->navGruplari())

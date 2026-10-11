@@ -48,9 +48,9 @@ class KurulToplantisi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Çalışan & Kurul';
+    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
 
-    protected static ?int $navigationSort = 13;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'kurul-toplantisi';
 

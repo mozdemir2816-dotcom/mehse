@@ -17,6 +17,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class Araclar extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.araclar';
@@ -25,7 +27,7 @@ class Araclar extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
 
-    protected static ?int $navigationSort = 32;
+    protected static ?int $navigationSort = 41;
 
     protected static ?string $slug = 'araclar';
 

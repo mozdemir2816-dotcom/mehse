@@ -23,15 +23,17 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class SaglikGozetimi extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.saglik-gozetimi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sağlık Gözetimi';
+    protected static string|UnitEnum|null $navigationGroup = 'Sağlık & Olaylar';
 
-    protected static ?int $navigationSort = 32;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'saglik-gozetimi';
 

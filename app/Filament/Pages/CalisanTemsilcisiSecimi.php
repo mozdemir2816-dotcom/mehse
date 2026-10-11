@@ -28,9 +28,9 @@ class CalisanTemsilcisiSecimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Çalışan & Kurul';
+    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
 
-    protected static ?int $navigationSort = 15;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'calisan-temsilcisi-secimi';
 

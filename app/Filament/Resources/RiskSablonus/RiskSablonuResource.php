@@ -41,9 +41,9 @@ class RiskSablonuResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 7;
 
     protected static ?string $modelLabel = 'Risk Şablonu';
 

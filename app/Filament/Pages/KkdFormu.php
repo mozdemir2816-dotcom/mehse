@@ -30,9 +30,12 @@ class KkdFormu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string|UnitEnum|null $navigationGroup = 'KKD';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 21;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $slug = 'kkd-formu';
 

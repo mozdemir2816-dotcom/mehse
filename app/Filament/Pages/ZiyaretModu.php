@@ -45,9 +45,12 @@ class ZiyaretModu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-map-pin';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Kontrolleri';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = -1;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 95;
 
     protected static ?string $slug = 'ziyaret';
 

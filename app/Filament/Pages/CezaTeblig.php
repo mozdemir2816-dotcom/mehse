@@ -36,9 +36,9 @@ class CezaTeblig extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-scale';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Diğer Belge & Yazışma';
+    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
 
-    protected static ?int $navigationSort = 23;
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $slug = 'ceza-teblig';
 

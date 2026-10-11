@@ -185,7 +185,9 @@ class HizliSahaBulgusuTest extends TestCase
 
     public function test_sayfa_adi_saha_bulgulari_ve_adres_ayni(): void
     {
-        $this->assertSame('Saha Bulguları', HizliSahaBulgusu::getNavigationLabel());
+        // Menü sadeleştirmesi (11.10.2026): menüde tek "Saha" maddesi, sayfa başlığı aynı.
+        $this->assertSame('Saha', HizliSahaBulgusu::getNavigationLabel());
+        $this->assertSame('Saha Bulguları', (new HizliSahaBulgusu)->getTitle());
         $this->assertStringEndsWith('/hizli-saha-bulgusu', HizliSahaBulgusu::getUrl());
     }
 

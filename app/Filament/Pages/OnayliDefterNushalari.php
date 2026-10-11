@@ -41,7 +41,10 @@ class OnayliDefterNushalari extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
 
-    protected static ?int $navigationSort = 19;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $slug = 'onayli-defter-nushalari';
 

@@ -47,9 +47,9 @@ class Profilim extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Yönetim';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'profilim';
 

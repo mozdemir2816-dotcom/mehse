@@ -40,9 +40,9 @@ class TalimatOlustur extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-duplicate';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Diğer Belge & Yazışma';
+    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
 
-    protected static ?int $navigationSort = 25;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'talimat';
 

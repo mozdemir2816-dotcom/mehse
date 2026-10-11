@@ -39,9 +39,12 @@ class DofOlustur extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Kontrolleri';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = 10;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 98;
 
     protected static ?string $slug = 'dof';
 

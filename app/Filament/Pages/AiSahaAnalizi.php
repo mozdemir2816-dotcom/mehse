@@ -43,9 +43,12 @@ class AiSahaAnalizi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-camera';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Kontrolleri';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = 11;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 96;
 
     protected static ?string $slug = 'ai-saha-analizi';
 

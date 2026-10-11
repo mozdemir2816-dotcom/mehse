@@ -42,9 +42,9 @@ class PeriyodikKontrol extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Periyodik Kontrol & Ölçüm';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 28;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'periyodik-kontrol';
 

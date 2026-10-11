@@ -56,6 +56,8 @@ use UnitEnum;
  */
 class DokumanYonetimi extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use HizliArsivYukleme;
     use SinirliErisim;
 
@@ -65,7 +67,7 @@ class DokumanYonetimi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
 
-    protected static ?int $navigationSort = 18;
+    protected static ?int $navigationSort = 40;
 
     protected static ?string $slug = 'dokuman-yonetimi';
 

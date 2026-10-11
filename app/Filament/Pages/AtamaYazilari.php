@@ -35,9 +35,9 @@ class AtamaYazilari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Çalışan & Kurul';
+    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
 
-    protected static ?int $navigationSort = 14;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'atama-yazilari';
 

@@ -27,9 +27,9 @@ class ZiyaretciYonetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-identification';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Diğer Belge & Yazışma';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 31;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'ziyaretci-yonetimi';
 

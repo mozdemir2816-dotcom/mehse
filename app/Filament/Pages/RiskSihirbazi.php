@@ -41,6 +41,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class RiskSihirbazi extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     use WithFileUploads;

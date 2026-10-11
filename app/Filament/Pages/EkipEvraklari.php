@@ -30,9 +30,9 @@ class EkipEvraklari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-magnifying-glass';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Yönetim';
+    protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'ekip-evraklari';
 

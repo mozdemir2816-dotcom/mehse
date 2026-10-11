@@ -36,7 +36,10 @@ class EgitimSorulari extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 20;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 92;
 
     protected static ?string $slug = 'egitim-sorulari';
 

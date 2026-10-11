@@ -39,9 +39,9 @@ class RiskProsedurResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 8;
 
     protected static ?string $modelLabel = 'Risk Analizi Prosedürü';
 

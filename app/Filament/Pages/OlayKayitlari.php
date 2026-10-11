@@ -29,6 +29,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class OlayKayitlari extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     use WithFileUploads;
@@ -37,15 +39,15 @@ class OlayKayitlari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';
 
-    protected static string|UnitEnum|null $navigationGroup = 'İş Kazaları & Olaylar';
+    protected static string|UnitEnum|null $navigationGroup = 'Sağlık & Olaylar';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'olay-kayitlari';
 
     protected static ?string $title = 'Olay Kayıtları / Ramak Kala';
 
-    protected static ?string $navigationLabel = 'Olay Kayıtları / Ramak Kala';
+    protected static ?string $navigationLabel = 'Olaylar (Kaza / Ramak Kala)';
 
     public ?int $firmaId = null;
 

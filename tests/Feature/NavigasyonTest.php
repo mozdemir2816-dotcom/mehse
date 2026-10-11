@@ -99,10 +99,9 @@ class NavigasyonTest extends TestCase
 
         $this->assertSame(
             [
-                'Yönetim', 'Risk Değerlendirmesi', 'Acil Durum & Yangın', 'Eğitimler',
-                'Çalışan & Kurul', 'Sağlık Gözetimi', 'Saha Kontrolleri',
-                'Periyodik Kontrol & Ölçüm', 'KKD', 'İş Kazaları & Olaylar',
-                'Planlama & Arşiv', 'Diğer Belge & Yazışma',
+                'Genel', 'Firmalar & Çalışanlar', 'Risk Değerlendirmesi', 'Acil Durum & Yangın',
+                'Eğitimler', 'Sağlık & Olaylar', 'Belgeler & Yazışmalar', 'Saha Dışı Kayıtlar',
+                'Planlama & Arşiv', 'Ayarlar ve Kütüphaneler',
             ],
             $gruplar,
         );

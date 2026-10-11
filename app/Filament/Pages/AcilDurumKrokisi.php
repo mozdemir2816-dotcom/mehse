@@ -36,7 +36,10 @@ class AcilDurumKrokisi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Acil Durum & Yangın';
 
-    protected static ?int $navigationSort = 6;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $slug = 'acil-durum-krokisi';
 

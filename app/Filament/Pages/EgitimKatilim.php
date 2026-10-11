@@ -34,6 +34,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class EgitimKatilim extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
     use \App\Filament\Concerns\KaydetSecenegi;
 
@@ -45,7 +47,7 @@ class EgitimKatilim extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 15;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'egitim-katilim';
 

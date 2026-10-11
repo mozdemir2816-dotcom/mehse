@@ -35,6 +35,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class EgitimPaketiResource extends Resource
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     protected static ?string $model = EgitimPaketi::class;
@@ -43,13 +45,13 @@ class EgitimPaketiResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 31;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $modelLabel = 'Eğitim Paketi';
 
     protected static ?string $pluralModelLabel = 'Eğitim Paketleri';
 
-    protected static ?string $navigationLabel = 'Uzaktan Eğitim Paketleri';
+    protected static ?string $navigationLabel = 'Uzaktan Eğitim';
 
     protected static ?string $recordTitleAttribute = 'ad';
 

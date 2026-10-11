@@ -29,13 +29,13 @@ class KimyasalYonetimi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'kimyasal-yonetimi';
 
     protected static ?string $title = 'Kimyasal Yönetimi — SDS / Risk / Afiş / PKD';
 
-    protected static ?string $navigationLabel = 'Kimyasal Yönetimi (SDS / PKD)';
+    protected static ?string $navigationLabel = 'Kimyasal Yönetimi';
 
     public ?int $firmaId = null;
 

@@ -34,9 +34,12 @@ class RiskMerkezi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-presentation-chart-bar';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = 0;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 93;
 
     protected static ?string $slug = 'risk-merkezi';
 

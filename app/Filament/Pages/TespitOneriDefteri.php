@@ -31,9 +31,12 @@ class TespitOneriDefteri extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Kontrolleri';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = 18;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 99;
 
     protected static ?string $slug = 'tespit-oneri-defteri';
 

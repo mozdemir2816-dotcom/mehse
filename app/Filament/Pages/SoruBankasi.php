@@ -35,6 +35,8 @@ use UnitEnum;
  */
 class SoruBankasi extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.soru-bankasi';
@@ -43,7 +45,7 @@ class SoruBankasi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
-    protected static ?int $navigationSort = 21;
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $slug = 'soru-bankasi';
 

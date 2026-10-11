@@ -39,7 +39,7 @@ class JsaDegerlendirmesi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'jsa';
 

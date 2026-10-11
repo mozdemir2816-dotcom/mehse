@@ -33,9 +33,9 @@ class IseOzguEgitimKonulari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-queue-list';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
+    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $slug = 'ise-ozgu-egitim-konulari';
 

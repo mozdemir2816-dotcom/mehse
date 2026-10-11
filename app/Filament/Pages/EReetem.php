@@ -22,9 +22,12 @@ class EReetem extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sağlık Gözetimi';
+    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
 
-    protected static ?int $navigationSort = 27;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 91;
 
     protected static ?string $slug = 'e-recetem';
 

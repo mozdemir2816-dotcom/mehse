@@ -36,6 +36,8 @@ use UnitEnum;
  */
 class HizliSahaBulgusu extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
     use WithFileUploads;
 
@@ -43,15 +45,15 @@ class HizliSahaBulgusu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-camera';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Kontrolleri';
+    protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'hizli-saha-bulgusu';
 
     protected static ?string $title = 'Saha Bulguları';
 
-    protected static ?string $navigationLabel = 'Saha Bulguları';
+    protected static ?string $navigationLabel = 'Saha';
 
     // --- Form ---
     public ?int $firmaId = null;

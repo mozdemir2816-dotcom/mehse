@@ -29,9 +29,9 @@ class OrtamOlcumleri extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Periyodik Kontrol & Ölçüm';
+    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'ortam-olcumleri';
 

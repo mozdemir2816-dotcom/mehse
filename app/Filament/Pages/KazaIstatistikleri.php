@@ -29,9 +29,12 @@ class KazaIstatistikleri extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar-square';
 
-    protected static string|UnitEnum|null $navigationGroup = 'İş Kazaları & Olaylar';
+    protected static string|UnitEnum|null $navigationGroup = 'Sağlık & Olaylar';
 
-    protected static ?int $navigationSort = 31;
+    /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?int $navigationSort = 94;
 
     protected static ?string $slug = 'kaza-istatistikleri';
 
