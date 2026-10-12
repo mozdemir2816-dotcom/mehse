@@ -45,7 +45,7 @@ class AcilDurumSektor
         return is_string($anahtar) && array_key_exists($anahtar, config('acil_durum_sektorler', []));
     }
 
-    /** @return array{anahtar: string, ad: string, onlemler: ?string, senaryo_aciklama: array<string, string>} */
+    /** @return array{anahtar: string, ad: string, onlemler: ?string, senaryo_aciklama: array<string, string>, senaryo_ek: array<string, array<int, array{baslik: string, maddeler: array<int, string>}>>} */
     public static function profil(array $u, ?Firma $firma): array
     {
         $anahtar = static::secili($u, $firma);
@@ -56,6 +56,7 @@ class AcilDurumSektor
             'ad' => $s['ad'],
             'onlemler' => $s['onlemler'] ?? null,
             'senaryo_aciklama' => $s['senaryo_aciklama'] ?? [],
+            'senaryo_ek' => $s['senaryo_ek'] ?? [],
         ];
     }
 }

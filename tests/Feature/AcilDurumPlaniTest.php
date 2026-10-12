@@ -193,10 +193,10 @@ class AcilDurumPlaniTest extends TestCase
     public function test_sektor_naceden_onerilir_elle_degisir_ve_belgeye_basilir(): void
     {
         $metal = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '25.62']);
-        $insaat = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '41.00']);
+        $market = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '47.11']);
 
         $this->assertSame('metal', AcilDurumSektor::oner($metal));
-        $this->assertSame('genel', AcilDurumSektor::oner($insaat));
+        $this->assertSame('genel', AcilDurumSektor::oner($market));
 
         Livewire::test(AcilDurumSayfasi::class)
             ->set('firmaId', $metal->id)
@@ -221,6 +221,29 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringNotContainsString('makine imalatı önlemleri', $html);
         $this->assertStringNotContainsString('CNC, torna, matkap, freze', $html);
         $this->assertStringContainsString('pres, torna, CNC, freze', $html);       // genel senaryo metni
+    }
+
+    public function test_insaat_sektorunde_yuksekten_dusme_ayrintilari_eklenir(): void
+    {
+        $santiye = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '41.00', 'tehlike_sinifi' => 'cok_tehlikeli']);
+        $this->assertSame('insaat', AcilDurumSektor::oner($santiye));
+
+        $plan = AcilDurumPlani::firmaIcin($santiye);
+        $plan->update(['konular' => ['yuksekten_dusme', 'deprem']]);
+
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $santiye])->render();
+        $this->assertStringContainsString('İnşaat / şantiye önlemleri:', $html);
+        $this->assertStringContainsString('ASKIDA KALAN ÇALIŞANA ERİŞİM, TAHLİYE VE İLKYARDIM', $html);
+        $this->assertStringContainsString('İSKELELERİN KURULMASI, KULLANIMI VE KONTROLÜ', $html);
+        $this->assertStringContainsString('Askıda kalan personele 10 dakika içinde müdahale edilir.', $html);
+        $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);              // genel senaryo korunur
+        $this->assertSame(1, substr_count($html, 'SINIRLAYICI TEDBİRLER'));                     // yalnız yüksekten düşmede
+
+        // Genel seçilince şantiye blokları çıkmaz.
+        $plan->update(['uygulama' => ['sektor' => 'genel']]);
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $santiye])->render();
+        $this->assertStringNotContainsString('ASKIDA KALAN ÇALIŞANA', $html);
+        $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);
     }
 
     public function test_tum_konularin_senaryo_metni_var(): void

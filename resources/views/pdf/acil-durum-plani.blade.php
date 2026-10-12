@@ -354,6 +354,10 @@
         <h4>OLAY SONRASI</h4>
         <ul>@foreach ($s['olay_sonrasi'] as $m)<li>{{ $m }}</li>@endforeach</ul>
     @endif
+    @foreach ($s['ek'] as $blok)
+        <h4>{{ $blok['baslik'] }}</h4>
+        <ul>@foreach ($blok['maddeler'] as $m)<li>{{ $m }}</li>@endforeach</ul>
+    @endforeach
 @endforeach
 
 {{-- EK-2 İLETİŞİM --}}
