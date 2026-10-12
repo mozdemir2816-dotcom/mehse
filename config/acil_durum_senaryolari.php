@@ -147,6 +147,33 @@ return [
             'Kök neden analizi yapılır, DÖF açılır; risk değerlendirmesi güncellenir.',
             'Kazazede işe dönmeden önce işyeri hekimi değerlendirmesi yapılır; ilgili çalışanlara bilgilendirme / eğitim verilir.',
         ],
+        // Kaynak: Beyda Yapı ADEP (Acil durum 9 + kaza akış şeması); İlkyardım Yönetmeliği oranları eklendi.
+        'ek' => [
+            ['baslik' => 'ÖLÜMLÜ VEYA AĞIR YARALANMALI KAZADA', 'maddeler' => [
+                'Önce ölüm ve yaralı olup olmadığı belirlenir; yaralıya ilkyardım ve 112 bildirimi her şeyden önce gelir.',
+                'Olay yeri güvenlik şeridiyle çevrilerek korunur; görevliler dışında kimse alana alınmaz.',
+                'Hayat kurtarma ve tehlikeyi önleme dışında kaza yerindeki hiçbir şeye dokunulmaz, makine, malzeme ve ekipmanın yeri değiştirilmez.',
+                '112 aranarak sağlık ekibi ve kolluk çağrılır; kolluk ve Cumhuriyet savcılığının talimatı olmadan olay yeri temizlenmez, çalışmaya başlanmaz.',
+                'İşveren / işveren vekili, iş güvenliği uzmanı ve işyeri hekimi derhal bilgilendirilir; ilkyardım ekibi kazazedenin kimlik ve durum bilgisini sağlık ekibine iletir.',
+            ]],
+            ['baslik' => 'İLKYARDIM ORGANİZASYONU', 'maddeler' => [
+                'İlkyardım Yönetmeliğine göre her 20 çalışana (az tehlikeli), 15 çalışana (tehlikeli) veya 10 çalışana (çok tehlikeli) en az bir ilkyardımcı bulundurulur; vardiyalı çalışmada her vardiyada ilkyardımcı bulunur.',
+                'İlkyardımcılar Sağlık Bakanlığınca onaylı ilkyardım eğitim merkezinden belge alır; belgeler 3 yılda bir güncelleme eğitimiyle yenilenir.',
+                'İçeriği düzenli kontrol edilen ilkyardım dolabı / çantası kolay ulaşılır yerde bulundurulur.',
+                'Acil durum irtibat numaraları ve ilkyardımcıların adları görünür yerlere asılır.',
+                'Uygun kişisel koruyucu donanım sağlanır ve doğru kullanımı denetlenir.',
+                'Araçlar otoparka, acil durumda hızla çıkabilecek şekilde (ön tarafı çıkışa dönük) park edilir; ambulans giriş yolu açık tutulur.',
+            ]],
+            ['baslik' => 'İŞ KAZALARINA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Risk değerlendirmesi yapılır ve değişikliklerde güncellenir.',
+                'Çalışanlara işe özgü ve iş sağlığı ve güvenliği eğitimleri verilir.',
+                'Çalışanların sağlık gözetimi belirlenen aralıklarla yapılır.',
+                'Ramak kala olaylar bildirilir, kayıt altına alınır ve değerlendirilir.',
+                'Çalışanların iş sağlığı ve güvenliği konusundaki görüş ve önerileri alınır.',
+                'Zemin, yol ve merdivenler mevzuat ve standartlara uygun tutulur.',
+                'İşyeri içi güncel trafik planı bulundurulur; araç ve yaya yolları ayrılır.',
+            ]],
+        ],
     ],
     'elektrik' => [
         'aciklama' => 'Elektrik akımına kapılma, ark ve elektrik kaynaklı yaralanmalarda kazazedeyi akımdan güvenli şekilde ayırma ve ilk müdahale prosedürüdür.',
