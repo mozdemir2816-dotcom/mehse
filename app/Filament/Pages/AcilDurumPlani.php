@@ -17,6 +17,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -294,14 +295,25 @@ class AcilDurumPlani extends Page
     {
         return [
             Action::make('pdf')
-                ->label('Plan PDF')
+                ->label('Plan Çıktısı')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([
+                    Radio::make('bicim')
+                        ->label('Dosya biçimi')
+                        ->options(['pdf' => 'PDF', 'word' => 'Word (.docx — düzenlenebilir)'])
+                        ->default('pdf')
+                        ->inline()
+                        ->required(),
+                    ImzaSecenegi::alan(),
+                ])
                 ->action(function (array $data) {
                     $this->kaydet();
 
-                    return AcilDurumPlaniUretici::pdf($this->plan(), ImzaSecenegi::secili($data));
+                    // Word: PDF ile aynı içerik ve düzen (Kapsamlı ADEP), seçili şablondan bağımsız.
+                    return ($data['bicim'] ?? 'pdf') === 'word'
+                        ? AcilDurumWordUretici::docx($this->plan(), 'fom', ImzaSecenegi::secili($data))
+                        : AcilDurumPlaniUretici::pdf($this->plan(), ImzaSecenegi::secili($data));
                 }),
 
             Action::make('word')

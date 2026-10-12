@@ -452,6 +452,21 @@ class AcilDurumPlaniTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_plan_ciktisi_pdf_veya_word_olarak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('sablonId', 'orijinal')                 // Word seçeneği yine PDF ile aynı kapsamlı planı verir
+            ->callAction('pdf', ['bicim' => 'pdf', 'imzali' => '1'])
+            ->assertSuccessful()
+            ->assertFileDownloaded('acil-durum-plani-'.\Illuminate\Support\Str::slug($firma->unvan).'.pdf')
+            ->callAction('pdf', ['bicim' => 'word', 'imzali' => '0'])
+            ->assertSuccessful()
+            ->assertFileDownloaded('acil-durum-plani-'.\Illuminate\Support\Str::slug($firma->unvan).'.docx');
+    }
+
     public function test_kapsamli_word_ciktisi_fom_sablonunu_firma_verisiyle_doldurur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create([
