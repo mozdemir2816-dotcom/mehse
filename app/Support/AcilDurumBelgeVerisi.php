@@ -63,7 +63,7 @@ class AcilDurumBelgeVerisi
                     'aciklama' => $s['aciklama'] ?? null,
                     'mudahale' => $s['mudahale'] ?? [],
                     'olay_sonrasi' => $s['olay_sonrasi'] ?? [],
-                    'ek' => $sektor['senaryo_ek'][$k['anahtar']] ?? [],
+                    'ek' => [...($sektor['senaryo_ek'][$k['anahtar']] ?? []), ...($s['ek'] ?? [])],
                     'akis' => is_file($akis) ? $akis : null,
                 ];
             })->values()->all();

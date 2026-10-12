@@ -234,15 +234,19 @@ class AcilDurumPlaniTest extends TestCase
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $santiye])->render();
         $this->assertStringContainsString('İnşaat / şantiye önlemleri:', $html);
         $this->assertStringContainsString('ASKIDA KALAN ÇALIŞANA ERİŞİM, TAHLİYE VE İLKYARDIM', $html);
+        $this->assertSame(1, substr_count($html, 'ASKIDA KALAN ÇALIŞANA ERİŞİM'));                 // genel + şantiye birleşince tekrar yok
         $this->assertStringContainsString('İSKELELERİN KURULMASI, KULLANIMI VE KONTROLÜ', $html);
         $this->assertStringContainsString('Askıda kalan personele 10 dakika içinde müdahale edilir.', $html);
         $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);              // genel senaryo korunur
         $this->assertSame(1, substr_count($html, 'SINIRLAYICI TEDBİRLER'));                     // yalnız yüksekten düşmede
 
-        // Genel seçilince şantiye blokları çıkmaz.
+        // Genel seçilince şantiye blokları çıkmaz; her işyerine uyan yüksekte çalışma ekleri kalır.
         $plan->update(['uygulama' => ['sektor' => 'genel']]);
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $santiye])->render();
-        $this->assertStringNotContainsString('ASKIDA KALAN ÇALIŞANA', $html);
+        $this->assertStringNotContainsString('İSKELELERİN KURULMASI', $html);
+        $this->assertStringNotContainsString('YÜKSEKTE ÇALIŞMA İÇİN ÖNLEYİCİ TEDBİRLER', $html);
+        $this->assertSame(1, substr_count($html, 'ASKIDA KALAN ÇALIŞANA ERİŞİM'));
+        $this->assertStringContainsString('MERDİVEN KURULUMU VE KULLANIMI', $html);
         $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);
     }
 

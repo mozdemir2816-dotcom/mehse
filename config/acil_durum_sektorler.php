@@ -58,33 +58,6 @@ return [
                     'Öncelikle korkuluk, güvenlik ağı gibi toplu koruma yöntemleri, son olarak paraşüt tipi emniyet kemeri kullanılır.',
                     'Personelin emniyet kemerine bağlı olarak askıda kalmasının önüne geçilir.',
                 ]],
-                ['baslik' => 'ASKIDA KALAN ÇALIŞANA ERİŞİM, TAHLİYE VE İLKYARDIM', 'maddeler' => [
-                    'Yüksekten düşme sonucu askıda kalan çalışana hızla müdahale edilir. Koşumda hareketsiz asılı kalmak kısa süre için bile ciddi fizyolojik zarar (askı travması) verebilir; hemen ele alınmazsa ölüme neden olabilir.',
-                    'Askıda kalan personele 10 dakika içinde müdahale edilir.',
-                    '30 dakikayı aşan çalışmalarda iş oturağı (footloop) kullanılır; personel ayağını basabileceği bir platforma geçerek kan dolaşımını düzenler.',
-                    'Askıda kalan personelin çevredeki engellere çarpmış olabileceği düşünülerek boyun ateli takılır.',
-                    'Personel, eğitimli kişilerce uygun kurtarma teknikleri ve ekipmanlarıyla indirilir. İndirilen kişiye ilkyardımcı güncel ilkyardım eğitimine ve 112 yönlendirmesine göre müdahale eder; omurga yaralanması şüphesinde gereksiz hareket ettirilmez.',
-                    'Kendine gelmeyen kazazede beklenmeden 112 ile hastaneye ulaştırılır.',
-                ]],
-                ['baslik' => 'YÜKSEKTE KURTARMA', 'maddeler' => [
-                    'Kurtarma çeşitleri planlanır: kişinin kendini kurtarması, ekip arkadaşlarının kurtarması, ekip çağrılarak yapılan kurtarma.',
-                    'Kurtarma için gerekli ekipmanlar şantiyede hazır bulunur; kurtarmadan kimin sorumlu olacağı, ne yapacağı ve haberleşme yöntemi önceden belirlenir.',
-                    'Kurtarma personeli teknik yeterliliğe sahip, soğukkanlı, ekipmanı kullanabilen ve operasyonu yönetebilen kişilerden seçilir; eğitimleri eksiksiz olur.',
-                    'Kurtarma kaldırma cihazıyla kurtarmada: kurtarıcı, askıdaki personelin baş hizasına ankraj noktası oluşturur, cihazı bu noktaya bağlar, personeli yukarı çekerek lanyarddan kurtarır ve cihazı indirme konumuna alarak üreticinin belirlediği kontrollü hızla aşağı tahliye eder.',
-                ]],
-                ['baslik' => 'PARAŞÜT TİPİ EMNİYET KEMERİ KULLANIMI', 'maddeler' => [
-                    'Düşmeyi engelleyici donanımlar her kullanımdan önce kontrol edilir; mümkün olduğunca vücudun üst bölümüne ve yalnız taşıma gücü uygun sabitleme noktalarına bağlanır.',
-                    'Kazara açılmayı önlemek için yalnız kilitli kancalar kullanılır; tırmanmada donanım kemerin ön kancasına takılır.',
-                    'Kayma ve düşme tehlikesinde enerji emici sistemler kullanılır.',
-                    'Halat ve bağlantı elemanları keskin kenarlardan geçirilmez, düğümlenmez, ek yapılarak uzatılmaz.',
-                    'Baret mutlaka kullanılır. Hasar görmüş veya düşme sonucu direnci azalmış donanım tekrar kullanılmaz.',
-                ]],
-                ['baslik' => 'MERDİVEN KURULUMU VE KULLANIMI', 'maddeler' => [
-                    'Merdiven her gün kullanım öncesi kontrol edilir ve sabitlenir; zemin sağlam ve düz, üst ucu sağlam bir yere dayalı, basamaklar temiz, çevresi düzenli olur.',
-                    'Merdivende çalışma süresi kısa (en fazla 30 dakika), taşınan malzeme hafif (en fazla 10 kg) olur.',
-                    'Merdiven açısı 75° olur (4 m yüksekliğe 1 m ayak mesafesi). Tırmanırken her zaman tutunulur, aşırı uzanılmaz.',
-                    'En üstteki 2 basamakta çalışılmaz; bu kısım tutunmak içindir.',
-                ]],
                 ['baslik' => 'İSKELELERİN KURULMASI, KULLANIMI VE KONTROLÜ', 'maddeler' => [
                     'İskelelerin tasarımı, kurulması, değiştirilmesi ve sökülmesi yetkili kişilerin gözetiminde yapılır; bütün iskeleler güvenli şekilde bağlanır veya desteklenir, hazır iskeleler üreticinin önerdiği şekilde kurulur.',
                     'Platform zeminini oluşturan malzemeler yerinden kaldırılmaz, korkuluklar ve bağlantılar yerinden oynatılmaz; değişiklikler yalnız yetkili kişilerce yapılır.',
