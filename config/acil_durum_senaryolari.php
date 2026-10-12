@@ -287,6 +287,19 @@ return [
             'Patlamanın nedeni araştırılır; gaz, toz ve yanıcı madde kontrolleri gözden geçirilir.',
             'DÖF açılır, risk değerlendirmesi ve patlamadan korunma tedbirleri güncellenir.',
         ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 8 + Patlayıcı Ortamlar Yönetmeliği; tekrar eden maddeler çıkarıldı.
+        'ek' => [
+            ['baslik' => 'PATLAMAYA KARŞI ÖNLEYİCİ VE SINIRLANDIRICI TEDBİRLER', 'maddeler' => [
+                'Patlayıcı ortam oluşabilecek işyerlerinde patlamadan korunma dokümanı hazırlanır; bu alanlar patlayıcı ortamın oluşma sıklığı ve süresine göre bölgelere ayrılır, buralarda uygun kategoride (Ex işaretli) elektrikli ve elektriksiz ekipman kullanılır.',
+                'Kazan, kompresör ve basınçlı kaplar yılda bir periyodik kontrolden geçirilir; kazan dairesine yetkisiz kişilerin girmesi önlenir.',
+                'Gaz tüpleri ve gaz hatları periyodik olarak kontrol edilir; kullanılmayan vanalar kapalı tutulur.',
+                'Gaz dedektörleri doğru yere takılır: doğalgaz (havadan hafif) için tavana yakın, LPG (havadan ağır) için zemine yakın. Yakıtla çalışan cihazların bulunduğu yerlerde karbonmonoksit dedektörü bulunur.',
+                'Dedektörler, gaz akışını kesen acil durum vanası ve ışıklı / sesli alarm sistemiyle bağlantılı çalışır.',
+                'Yanıcı toz (metal, ahşap, un vb.) birikimi düzenli olarak temizlenir; tozlar basınçlı havayla üflenmez, uygun vakumlu sistemle alınır.',
+                'Uygun havalandırma sağlanır; kimyasal atıklar düzenli ve ısı kaynaklarından uzak depolanır.',
+                'Acil çıkışların ve söndürme ekipmanlarının gösterildiği tahliye planları işyerinde görünür yerlere asılır.',
+            ]],
+        ],
     ],
     'gida_zehirlenmesi' => [
         'aciklama' => 'İşyeri yemekhanesinde veya dışarıdan temin edilen yemeklerden kaynaklanan toplu gıda zehirlenmelerinde ilk müdahale ve kaynağın kontrolü prosedürüdür.',
