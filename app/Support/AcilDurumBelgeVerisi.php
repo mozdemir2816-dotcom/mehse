@@ -17,7 +17,7 @@ class AcilDurumBelgeVerisi
     {
         $plan->loadMissing('firma.igu', 'firma.user');
         $firma = $plan->firma;
-        $u = array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []);
+        $u = AcilDurumHazirlik::sablonlaTamamla(array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []), $firma?->user);
         $dolu = fn ($x) => filled($x) ? trim((string) $x) : null;
         $tarih = fn ($t) => $t ? Carbon::parse($t)->format('d.m.Y') : null;
 

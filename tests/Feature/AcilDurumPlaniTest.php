@@ -9,7 +9,9 @@ use App\Models\AcilEkip;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\User;
+use App\Support\AcilDurumBelgeVerisi;
 use App\Support\AcilDurumBelgeWord;
+use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumKonuSecici;
 use App\Support\AcilDurumPlaniUretici;
@@ -151,6 +153,40 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('Karşıda LPG istasyonu', $html);
         $this->assertStringContainsString('10’dan az çalışanı olan bu işyerinde', $html);
         $this->assertStringContainsString('TEKNİK MÜDAHALE EKİBİ', $html);
+    }
+
+    public function test_ilk_doldurulan_risk_puanlari_diger_firmalara_varsayilan_gelir(): void
+    {
+        [$a, $b, $c] = Firma::factory()->for($this->uzman)->count(3)->create()->all();
+
+        // İlk firma: puanlar girilir, kaydedilince kullanıcının varsayılanı olur.
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $a->id)
+            ->set('uygulama.risk_puanlari.deprem.olasilik', '5')
+            ->set('uygulama.risk_puanlari.sel.olasilik', '2')
+            ->set('uygulama.cevresel_riskler.0.durum', 'yok')
+            ->call('kaydet');
+
+        // İkinci firma: boş plan varsayılanla gelir; farklı konum düzeltilip kaydedilir.
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $b->id)
+            ->assertSet('puanlarSablondan', true)
+            ->assertSet('uygulama.risk_puanlari.deprem.olasilik', 5)
+            ->set('uygulama.risk_puanlari.sel.olasilik', '4')
+            ->call('kaydet')
+            ->assertSet('puanlarSablondan', false);
+
+        $this->assertSame(4, AcilDurumPlani::where('firma_id', $b->id)->first()->uygulama['risk_puanlari']['sel']['olasilik']);
+        // Düzeltme varsayılanı değiştirmez; hiç açılmamış firmanın belgesine de varsayılan basılır.
+        $this->assertSame(2, AcilDurumHazirlik::kullaniciSablonu($this->uzman->fresh())['risk_puanlari']['sel']['olasilik']);
+        $this->assertSame(5, AcilDurumBelgeVerisi::hazirla(AcilDurumPlani::firmaIcin($c))['riskler'][0]['puan']['olasilik']);
+
+        // Açık butonla varsayılan güncellenir; kayıtlı plan (A) değişmez.
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $b->id)
+            ->call('puanlariVarsayilanYap');
+        $this->assertSame(4, AcilDurumHazirlik::kullaniciSablonu($this->uzman->fresh())['risk_puanlari']['sel']['olasilik']);
+        $this->assertSame(2, AcilDurumPlani::where('firma_id', $a->id)->first()->uygulama['risk_puanlari']['sel']['olasilik']);
     }
 
     public function test_tum_konularin_senaryo_metni_var(): void

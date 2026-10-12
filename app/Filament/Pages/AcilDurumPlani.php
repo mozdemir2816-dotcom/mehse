@@ -85,6 +85,9 @@ class AcilDurumPlani extends Page
      */
     public string $sablonId = 'fom';
 
+    /** Risk puanları / çevresel riskler bu planda boştu, kullanıcının şablonundan getirildi. */
+    public bool $puanlarSablondan = false;
+
     /** Firmalar listesinden "Acil Durum Planı" satır aksiyonuyla ?firma= ile gelinir. */
     public function mount(): void
     {
@@ -142,6 +145,12 @@ class AcilDurumPlani extends Page
                 $this->uygulama[$alan] = $metin;
             }
         }
+
+        // Aynı bölgedeki işyerleri: bir kez doldurulan puanlar boş planlara gelir.
+        $onceki = $this->uygulama;
+        $this->uygulama = AcilDurumHazirlik::sablonlaTamamla($this->uygulama, Filament::auth()->user());
+        $this->puanlarSablondan = $onceki !== $this->uygulama;
+
         unset($this->hazirlik);
         $this->ekipMetni = collect(config('isg.acil_durum.ekipler'))
             ->mapWithKeys(fn ($ad, $k) => [$k => implode(', ', $plan->ekipListesi()[$k] ?? [])])
@@ -188,8 +197,26 @@ class AcilDurumPlani extends Page
         ])->save();
 
         unset($this->hazirlik, $this->portfoy);
+        $this->puanlarSablondan = false;
 
         Notification::make()->title('Acil durum planı kaydedildi')->success()->send();
+
+        // İlk doldurulan plan, diğer firmalar için şablon olur.
+        $user = Filament::auth()->user();
+        $u = $plan->uygulama ?? [];
+        if ($user && AcilDurumHazirlik::bosMu(AcilDurumHazirlik::kullaniciSablonu($user))
+            && ! AcilDurumHazirlik::bosMu(array_intersect_key($u, array_flip(AcilDurumHazirlik::SABLON_ALANLARI)))) {
+            AcilDurumHazirlik::sablonaKaydet($user, $u);
+            Notification::make()->title('Risk puanları varsayılan yapıldı')->body('Puanı girilmemiş diğer firmalarınızda bu puanlar otomatik gelecek.')->info()->send();
+        }
+    }
+
+    /** Ekrandaki risk puanları ve çevresel riskleri tüm firmalar için varsayılan yapar. */
+    public function puanlariVarsayilanYap(): void
+    {
+        AcilDurumHazirlik::sablonaKaydet(Filament::auth()->user(), $this->uygulama);
+
+        Notification::make()->title('Varsayılan risk puanları güncellendi')->body('Puanı girilmemiş firmalarda bu değerler gelecek; puanı kayıtlı planlar değişmez.')->success()->send();
     }
 
     public function ornekMetin(string $alan): void

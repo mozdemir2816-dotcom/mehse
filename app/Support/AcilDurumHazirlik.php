@@ -6,6 +6,7 @@ use App\Models\AcilDurumKrokisi;
 use App\Models\AcilDurumPlani;
 use App\Models\Firma;
 use App\Models\TatbikatTutanagi;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -50,6 +51,41 @@ class AcilDurumHazirlik
         'bina_bilgisi' => 600, 'vardiyalar' => 200, 'kayit_yedekleme' => 600,
         'hastane_ad' => 200, 'hastane_tel' => 40, 'kroki_kat' => 200,
     ];
+
+    /** Kullanıcının bir kez doldurup tüm firmalarına önerilen alanlar (aynı bölgedeki işyerleri). */
+    public const SABLON_ALANLARI = ['risk_puanlari', 'cevresel_riskler'];
+
+    /** @return array{risk_puanlari: array, cevresel_riskler: array} users.ayarlar.acil_durum_sablonu */
+    public static function kullaniciSablonu(?User $user): array
+    {
+        $kayitli = (array) (((array) ($user?->ayarlar ?? []))['acil_durum_sablonu'] ?? []);
+
+        return collect(static::SABLON_ALANLARI)->mapWithKeys(fn ($a) => [$a => (array) ($kayitli[$a] ?? [])])->all();
+    }
+
+    /** Planda hiç girilmemiş risk puanı / çevresel risk varsa kullanıcının şablonundan doldurur. */
+    public static function sablonlaTamamla(array $u, ?User $user): array
+    {
+        foreach (static::kullaniciSablonu($user) as $alan => $deger) {
+            if (static::bosMu($u[$alan] ?? []) && ! static::bosMu($deger)) {
+                $u[$alan] = $deger;
+            }
+        }
+
+        return $u;
+    }
+
+    public static function sablonaKaydet(User $user, array $u): void
+    {
+        KullaniciAyarlari::kaydet($user, [
+            'acil_durum_sablonu' => array_intersect_key(static::temizle($u), array_flip(static::SABLON_ALANLARI)),
+        ]);
+    }
+
+    public static function bosMu(mixed $deger): bool
+    {
+        return collect((array) $deger)->flatten()->filter(fn ($v) => filled($v))->isEmpty();
+    }
 
     /** Tarayıcıdan / formdan gelen uygulama bilgisini sınırlar. */
     public static function temizle(array $u): array

@@ -276,6 +276,9 @@
             </div>
 
             <div style="margin-top:1rem;font-size:.8rem;font-weight:700">Olası acil durumlar ve risk değerlendirmesi <span style="font-weight:400;color:rgb(107 114 128)">(1 düşük – 5 yüksek; saha risk değerlendirmesine göre)</span></div>
+            @if ($puanlarSablondan)
+                <div style="margin-top:.35rem;padding:.4rem .6rem;border-radius:.4rem;background:rgb(37 99 235 / .08);font-size:.75rem">Bu firmaya puan girilmemişti; puanlar ve çevresel riskler <b>varsayılanınızdan</b> getirildi. Firmanın konumu farklıysa düzeltip Kaydet'e basın.</div>
+            @endif
             <div style="overflow-x:auto;margin-top:.4rem">
                 <table style="width:100%;border-collapse:collapse;font-size:.75rem">
                     <thead><tr>
@@ -307,7 +310,8 @@
                     </div>
                 @endforeach
             </div>
-            <div style="margin-top:.7rem"><x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button></div>
+            <div style="margin-top:.7rem;display:flex;gap:.5rem;flex-wrap:wrap"><x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button>
+                <x-filament::button color="gray" icon="heroicon-o-document-duplicate" wire:click="puanlariVarsayilanYap" wire:confirm="Bu risk puanları ve çevresel riskler, puanı girilmemiş tüm firmalarınızda otomatik gelsin mi? Puanı kayıtlı planlar değişmez.">Bu puanları tüm firmalarım için varsayılan yap</x-filament::button></div>
         </x-filament::section>
 
         {{-- HAZIRLIK KONTROLÜ --}}
