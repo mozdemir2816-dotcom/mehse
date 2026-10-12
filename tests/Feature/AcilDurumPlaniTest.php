@@ -357,6 +357,13 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringNotContainsString('ALTIN YAKUT', $xml);
         $this->assertStringNotContainsString('MEHMET ÖZDEMİR', $xml);
         $this->assertStringNotContainsString('44100010111205450770133000', $xml);
+
+        // Klasik şablondaki teknik hatalar düzeltildi (12.10.2026).
+        $metin = strip_tags($xml);
+        foreach (['halon', '125 kN', '9 m/sn', '155', 'TEDAŞ', 'Sivil Savunma', 'giysilerinden çekerek', 'ehliyetli hükümet', 'karbon tetra', 'Mevcut inşaat'] as $hata) {
+            $this->assertStringNotContainsString($hata, $metin);
+        }
+        $this->assertStringContainsString('personelin korkuluklara çıkması engellenmelidir', $metin);
     }
 
     public function test_kapak_sayfasi_sablon_degerlerini_firmaya_gore_degistirir(): void
