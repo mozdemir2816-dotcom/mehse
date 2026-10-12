@@ -377,7 +377,7 @@ return [
             'Gerekli temas bilgileri gizlilik korunarak işyeri hekimi / sağlık otoritesinin değerlendirmesine sunulur.',
             'İlgili bölge boşaltılır, havalandırılır ve uygun dezenfektan ile temizlenir.',
             'Bildirim yükümlülüğü ve kanalı hastalığa göre işyeri hekimi / sağlık kuruluşunca değerlendirilir.',
-            'Etken ve maruziyete uygun hijyen malzemesi ve gerekli KKD sağlanır; tüm durumlarda gelişigüzel eldiven / maske zorunluluğu uygulanmaz.',
+            'Etken ve maruziyete uygun hijyen malzemesi ve gerekli KKD sağlanır; maske ve eldiven kullanımı etkene ve sağlık otoritesinin önerisine göre belirlenir, gerekmedikçe genel zorunluluk getirilmez.',
             'Yemekhane, soyunma odası ve tuvalet gibi ortak alanlar sık aralıkla temizlenir.',
         ],
         'olay_sonrasi' => [
@@ -386,6 +386,17 @@ return [
             'Bina havalandırma sistemleri ve filtre değişimi gözden geçirilir.',
             'Risk değerlendirmesi biyolojik etken başlığı altında güncellenir.',
             'Yeni vakalar için aktif gözetim süresi belirlenir.',
+        ],
+        // Kullanıcı onaylı metin (Beyda planında salgın bölümü yok).
+        'ek' => [
+            ['baslik' => 'SALGINA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'El yıkama noktaları, sabun ve kâğıt havlu bulundurulur; ortak bardak ve havlu kullanılmaz.',
+                'Belirtisi olan çalışan işe gelmeden amirine ve işyeri hekimine haber verir; hasta çalışan işe gelmeye zorlanmaz.',
+                'Yemekhane, soyunma odası, servis araçları ve varsa yatakhane / konteyner gibi kalabalık ortak alanlar havalandırılır ve düzenli temizlenir.',
+                'Aşılama ihtiyacı, yapılan iş ve maruziyete göre işyeri hekimince değerlendirilir.',
+                'Kritik görevler için yedek personel belirlenir; salgın döneminde işin sürekliliği planlanır.',
+                'Sağlık otoritesinin duyuruları takip edilir, çalışanlara güncel bilgi verilir.',
+            ]],
         ],
     ],
     'sel' => [
