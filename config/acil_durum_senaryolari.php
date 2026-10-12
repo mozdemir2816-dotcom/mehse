@@ -479,6 +479,15 @@ return [
             'Çalışanlara psiko-sosyal destek hizmeti duyurulur.',
             'Güvenlik prosedürleri ve giriş kontrolleri gözden geçirilir.',
         ],
+        // Kullanıcı onaylı metin (Beyda planında bomba ihbarı bölümü yok).
+        'ek' => [
+            ['baslik' => 'BOMBA İHBARI VE ŞÜPHELİ PAKET', 'maddeler' => [
+                'Santral / ana telefonun yanında ihbar formu bulunur. İhbarı alan kişi şunları sorar: Bomba ne zaman patlayacak? Nerede? Neye benziyor? Neden konuldu? Siz kimsiniz? Cevaplar kelimesi kelimesine yazılır; arayan numara ve saat not edilir.',
+                'Şüpheli paket belirtileri: gönderen belirsiz veya adres eksik, aşırı pul veya bant, yağ lekesi, dışarı çıkmış tel ya da folyo, koku, tik tak sesi, dengesiz ağırlık. Böyle bir pakete dokunulmaz, alan boşaltılır, 112 aranır.',
+                'Tahliye kararını acil durum koordinatörü verir; gerekirse emniyetin yönlendirmesine uyulur. Toplanma alanı binadan, cam cephelerden, park halindeki araçlardan ve çöp kutularından uzak seçilir.',
+                'Emniyet talep ederse çalışanlar kendi bölümlerinde yabancı bir nesne olup olmadığını gözle kontrol eder; bulunan nesneye dokunulmaz, yeri bildirilir.',
+            ]],
+        ],
     ],
     'yuksekten_dusme' => [
         'aciklama' => 'Yüksek mekânda, iskelede, çatıda veya merdivende çalışan kişinin düşmesi durumunda hızlı ve doğru ilk müdahale ile ileri yaralanmaları önleme prosedürüdür.',
