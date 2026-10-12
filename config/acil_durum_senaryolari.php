@@ -650,19 +650,29 @@ return [
     'basincli_kap' => [
         'aciklama' => 'İşyerinde kazan, kompresör, hidrofor veya basınçlı tüp varsa uygulanır. Ekipmanların bakımı, periyodik kontrolü ve emniyet donanımları takip edilir; kontrolsüz basınç yükselmesine izin verilmez.',
         'mudahale' => [
+            'Emniyet ventilinin sürekli açması, manometrenin kırmızı çizgiyi geçmesi, tıslama, şişme veya olağandışı ses fark edilirse ekipmana yaklaşılmaz, alan boşaltılır ve yetkili kişiye haber verilir.',
             'Patlama duyulduğunda alan derhal boşaltılır, ekipmana yaklaşılmaz.',
             'Enerji yalnızca güvenli noktadan yetkili kişi tarafından kesilir; patlama bölgesindeki pano ve vanalara yaklaşılmaz.',
             '112 Acil Çağrı Merkezi aranır; olayın tipi ve konumu bildirilir.',
             'Yaralılara yalnız güvenli alanda, ilkyardım eğitimi ve 112 yönlendirmesi kapsamında müdahale edilir.',
-            'İkinci patlama ve yangın riski 112’ye bildirilir; profesyonel ekiplere ekipman ve içerik bilgisi verilir.',
+            'İkinci patlama ve yangın riskine karşı personel emniyet mesafesinde tutulur; 112’ye ekipman ve içerik bilgisi verilir.',
             'Komşu basınçlı kapların vanaları açılmaz, manuel boşaltma yapılmaz. Basınç düşürme ve izolasyon, güvenli yöntemle yetkili teknik ekipçe değerlendirilir.',
-            'Personel ikinci patlama riskine karşı emniyet mesafesine alınır.',
         ],
         'olay_sonrasi' => [
             'Kurtarma ve tehlikeyi önleme dışında olay yeri korunur; kolluk / SGK ve gerekiyorsa ilgili kurum bildirimleri yapılır.',
             'Periyodik muayene belgeleri ve sertifikalar gözden geçirilir.',
             'DÖF açılır; arıza nedenine göre yetkili teknik kişi onarım, parça değişimi ve testleri belirler.',
             'Aynı tip ekipmanlar için erken muayene planlanır.',
+        ],
+        // Kaynak: Beyda Yapı ADEP 3.2–3.4 (mülga İSİG Tüzüğü dili) İş Ekipmanları Yönetmeliği Ek-3'e göre yeniden yazıldı; kullanıcı onaylı (12.10.2026).
+        'ek' => [
+            ['baslik' => 'BASINÇLI KAPLAR VE GAZ TÜPLERİ İÇİN ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Kazan, kompresör, hidrofor, hava tankı ve basınçlı kaplar ilk kullanımdan önce, büyük onarım veya değişiklikten sonra ve yılda en az bir kez yetkili kişiye kontrol ettirilir; raporlar işyerinde saklanır.',
+                'Emniyet ventili, manometre ve presostat çalışır durumda tutulur; ventil iptal edilmez, ayarı değiştirilmez. Manometrede en yüksek çalışma basıncı kırmızı çizgiyle işaretlenir.',
+                'Kompresör hava tankının yoğuşma suyu düzenli boşaltılır.',
+                'Kazan dairesine yetkisiz kişiler giremez; kazanı yalnız eğitimli ve yetkili kişi kullanır.',
+                'Gaz tüpleri dik ve zincirle sabitlenmiş, koruyucu başlıkları takılı tutulur; güneşten ve ısı kaynağından uzak tutulur. Oksijen ile yanıcı gaz tüpleri ayrı depolanır, dolu ve boş tüpler ayrı işaretlenir; kullanılmayan tüplerin vanası kapatılır.',
+            ]],
         ],
     ],
     'makine_arizasi' => [
