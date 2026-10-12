@@ -260,6 +260,8 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('YANGIN SINIFLARI VE UYGUN SÖNDÜRÜCÜ', $html);
         $this->assertStringContainsString('YANGINDA KİŞİSEL DAVRANIŞ', $html);
         $this->assertStringNotContainsStringIgnoringCase('halon', $html);
+        $this->assertStringContainsString('DEPREM SIRASINDA BULUNULAN YERE GÖRE DAVRANIŞ', $html);
+        $this->assertStringNotContainsString('Sivil Savunma', $html);
         $this->assertStringNotContainsString('ASKIDA KALAN', $html);          // seçili olmayan senaryonun eki basılmaz
     }
 

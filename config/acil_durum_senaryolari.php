@@ -72,7 +72,7 @@ return [
         'mudahale' => [
             'Sarsıntı sırasında koşulmaz, merdiven ve asansöre yönelinmez; "Çök – Kapan – Tutun" hareketi yapılır.',
             'Cam, raf, dolap, asılı cisim ve makinelerden uzak durulur; sağlam bir masa altına veya iç duvar dibine geçilir.',
-            'Çalışan makineler güvenle erişilebiliyorsa acil stop ile durdurulur; ocak, kaynak ve ısıl işlem kaynakları kapatılır.',
+            'Sarsıntı sırasında yalnız elinizin altındaki makine acil stop ile durdurulur; ocak, kaynak ve ısıl işlem kaynakları sarsıntı bitince kapatılır.',
             'Sarsıntı bittikten sonra elektrik ve gaz, güvenli noktadan yetkili kişi tarafından kesilir.',
             'Tahliye, hasarlı bölümlerden ve düşme tehlikesi olan cephelerden uzak güvenli çıkışlar kullanılarak sakin biçimde yapılır.',
             'Toplanma alanında sayım yapılır; eksik ve enkaz altında kalan kişilerin son görüldüğü yer 112 / AFAD’a bildirilir.',
@@ -84,6 +84,34 @@ return [
             'Raf, dolap ve makine sabitlemeleri gözden geçirilir; eksikler giderilir.',
             'Yaralanmalar için iş kazası bildirimi yapılır; çalışanlara psiko-sosyal destek planlanır.',
             'Toplanma alanı ve tahliye yolları değerlendirilir, plan güncellenir.',
+        ],
+        // Kaynak: Beyda Yapı ADEP; iç çelişkiler AFAD "Çök – Kapan – Tutun" esasına göre giderildi.
+        'ek' => [
+            ['baslik' => 'DEPREMDEN ÖNCE HAZIRLIK', 'maddeler' => [
+                'Depremi önleyemeyiz; ancak yaralanmayı önlemeye, hasarı en aza indirmeye ve deprem sonrası en az 72 saat dışarıdan yardım almadan idare etmeye hazırlıklı olunur.',
+                'Raf, dolap, makine ve devrilebilecek ekipmanlar sabitlenir; ağır eşyalar alt raflara konur; kaçış yollarına devrilebilecek malzeme konmaz.',
+                'Her bölümde sarsıntıda sığınılacak güvenli noktalar (sağlam masa altı, iç duvar dibi, kolon yanı) önceden belirlenir; cam, raf ve asılı cisimlerin yakını güvenli nokta sayılmaz.',
+                'İşyerinde su, ilkyardım malzemesi, el feneri, düdük ve pil içeren afet ve acil durum çantası bulundurulur.',
+                'Çalışanlara “Çök – Kapan – Tutun” eğitimi verilir; deprem tatbikatı yapılır.',
+            ]],
+            ['baslik' => 'DEPREM SIRASINDA BULUNULAN YERE GÖRE DAVRANIŞ', 'maddeler' => [
+                'Sarsıntı başladığında nerede olunursa olunsun hemen korunma pozisyonu alınır ve sarsıntı durana kadar orada kalınır; sarsıntı sırasında dışarı çıkılmaya çalışılmaz, koşulmaz, merdiven ve asansör kullanılmaz.',
+                'ÇÖK: Hedefi küçültmek için yere çökülür. KAPAN: Kollarla baş ve boyun korunur, varsa sağlam bir masanın altına girilir. TUTUN: Sarsıntı bitene kadar tutunarak beklenir.',
+                'Kapalı alanda: Pencere, cam, raf, dolap ve makinelerden uzaklaşılır; yemekhanede masa altına girilir. Üst katların pencere veya balkonlarından atlanmaz.',
+                'Açık alanda: Bina, duvar, direk, elektrik telleri ve iskelelerden uzak açık bir yerde Çök – Kapan – Tutun yapılır; sarsıntı bitince toplanma alanına gidilir.',
+                'Forklift, kamyon, iş makinesi veya araçta: Araç, yolu kapatmadan ve köprü, alt / üst geçit, bina ve direklerden uzak güvenli bir yere çekilip durdurulur, el freni çekilir; sarsıntı bitene kadar araçta kalınır.',
+                'Yüksekte çalışırken: Emniyet kemeriyle bağlı kalınır ve sağlam bir yere tutunulur; sarsıntı bitince güvenli şekilde aşağı inilir.',
+                'Kalabalık ortamda: Ezilmeyecek bir noktaya sığınılır, kapılara ve merdivenlere hücum edilmez.',
+                'Sarsıntı sırasında yalnız elinizin altındaki acil stop butonuna basılabilir; gaz, elektrik ve diğer tesisata müdahale sarsıntı bittikten sonra yapılır.',
+            ]],
+            ['baslik' => 'DEPREMDEN SONRA', 'maddeler' => [
+                'Sarsıntı bitince kaçış yolları kullanılarak, panik yapmadan ve artçı sarsıntılara hazırlıklı olarak toplanma alanına gidilir.',
+                'Gaz kaçağı ve yanıcı madde sızıntısı kontrol edilir; karanlıkta yalnız el feneri kullanılır, kibrit, çakmak ve açık alev kullanılmaz, elektrik anahtarlarına dokunulmaz.',
+                'Yangın varsa yangın senaryosuna göre hareket edilir; elektrik tesisatı yetkili elektrikçi tarafından kontrol edilir.',
+                'Yaralılar 112’ye bildirilir; ağır yaralının taşınması 112 yönlendirmesiyle yapılır. Mahsur kalanlar için 112 / AFAD’dan yardım istenir.',
+                'Dökülmüş ve saçılmış maddeler (özellikle kimyasallar) güvenli şekilde temizlenir.',
+                'Hasar tespiti yapılmadan ve acil durum koordinatörünün talimatı olmadan çalışmaya başlanmaz.',
+            ]],
         ],
     ],
     'sabotaj' => [
