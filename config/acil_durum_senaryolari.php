@@ -569,14 +569,23 @@ return [
             'Alanın giriş ve çıkışları kapatılır, radyasyon uyarı işaretleri yerleştirilir.',
             '112’ye bilgi verilir; işyerinde kaynak varsa yetkili radyasyondan korunma sorumlusu ve NDK ilgili usule göre bilgilendirilir.',
             'Maruz kalma ile radyoaktif bulaşma birbirinden ayrılır; kişilerin kontrolü yetkili ekiplerce yapılır.',
-            'Bulaşma şüphesinde yayılım önlenir; arındırma, sağlık ve uzman ekip yönlendirmesine göre yapılır. Her maruziyette gelişigüzel yıkama uygulanmaz.',
+            'Bulaşma şüphesinde yayılım önlenir; arındırma (yıkama vb.) yalnız sağlık ve uzman ekibin yönlendirmesiyle yapılır.',
             'Acil yaralanma tedavisi geciktirilmez; 112’ye olası radyoaktif bulaşma bilgisi verilir.',
         ],
         'olay_sonrasi' => [
             'Radyasyon ölçümü yapılana kadar bölge kontrollü alan olarak ilan edilir.',
-            'Kaynak kaybı / radyolojik olay, lisans ve ilgili NDK düzenlemelerinde öngörülen usul ve süreyle yetkili sorumlu tarafından bildirilir; bildirim için beklenmez.',
+            'Kaynak kaybı / radyolojik olay, lisans ve ilgili NDK düzenlemelerinde öngörülen usul ve süreyle yetkili sorumlu tarafından gecikmeksizin bildirilir.',
             'Olay, ölçüm ve sağlık kayıtları ilgili mevzuatın öngördüğü süre ve gizlilik şartlarıyla saklanır.',
             'Personel sağlık taraması ve psiko-sosyal destek planlanır.',
+        ],
+        // Kaynak: Beyda'da radyasyon bölümü yok; kullanıcı onaylı (12.10.2026).
+        'ek' => [
+            ['baslik' => 'RADYASYON KAYNAĞI BULUNAN İŞYERLERİNDE', 'maddeler' => [
+                'Kaynak, NDK lisansı veya izni kapsamında kullanılır; radyasyondan korunma sorumlusu belirlenir.',
+                'Kaynak kilitli ve işaretli bir yerde saklanır; envanteri ve giriş-çıkış kaydı tutulur, kaybolursa hemen bildirilir.',
+                'Kaynakla çalışanlar kişisel dozimetre taşır, eğitim alır ve sağlık gözetiminden geçer.',
+                'Yetkisiz kişilerin kontrollü alana girmesi engellenir.',
+            ]],
         ],
     ],
     'trafik' => [

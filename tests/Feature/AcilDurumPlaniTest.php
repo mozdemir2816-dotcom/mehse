@@ -256,7 +256,7 @@ class AcilDurumPlaniTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '47.11']);
         $plan = AcilDurumPlani::firmaIcin($firma);
-        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik', 'kimyasal', 'zehirlenme', 'patlama', 'sabotaj', 'gida_zehirlenmesi', 'trafik', 'sel', 'asansor', 'salgin', 'yildirim', 'bomba', 'heyelan']]);
+        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik', 'kimyasal', 'zehirlenme', 'patlama', 'sabotaj', 'gida_zehirlenmesi', 'trafik', 'sel', 'asansor', 'salgin', 'yildirim', 'bomba', 'heyelan', 'radyasyon']]);
 
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $firma])->render();
         $this->assertStringContainsString('YANGIN SINIFLARI VE UYGUN SÖNDÜRÜCÜ', $html);
@@ -285,6 +285,8 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('30/30 kuralı', $html);
         $this->assertStringContainsString('BOMBA İHBARI VE ŞÜPHELİ PAKET', $html);
         $this->assertStringContainsString('ŞEV VE ZEMİN İÇİN ÖNLEYİCİ TEDBİRLER', $html);
+        $this->assertStringContainsString('RADYASYON KAYNAĞI BULUNAN İŞYERLERİNDE', $html);
+        $this->assertStringNotContainsString('gelişigüzel yıkama', $html);
         $this->assertStringNotContainsString('KAZI VE GÖÇÜK', $html);                // yalnız şantiye sektöründe
         $this->assertStringNotContainsString('ASKIDA KALAN', $html);          // seçili olmayan senaryonun eki basılmaz
     }
