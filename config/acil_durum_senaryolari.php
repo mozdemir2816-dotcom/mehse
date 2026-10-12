@@ -37,6 +37,7 @@ return [
                 'Elektrik panoları, UPS, trafo: Önleri boş tutulur; yağlı bez ve üstüpü ağzı kapaklı metal kaplarda toplanır; paratoner ve topraklama periyodik kontrol edilir; uygun tipte söndürücü (CO2 / ABC tozlu) ve otomatik yangın algılama bulunur.',
                 'Depolar: Depo içinde sigara içilmez; çabuk parlayıcı malzemeler sık kontrol edilir; malzemeye uygun söndürücüler dolu ve hazır tutulur; elektrik tesisatı, kablo, fiş ve prizler kontrol listesiyle düzenli kontrol edilir, hasarlılar değiştirilir.',
                 'Açık alanlar: Yabani ot, kâğıt, bez gibi yanıcı atıklar temizlenir; kesilen otlar yakılmaz, saha dışına çıkarılır.',
+                'Ana elektrik panosunda yangından korunma amaçlı 300 mA kaçak akım koruma rölesi bulunur (insan koruması için priz devrelerindeki 30 mA röleye ek olarak).',
                 'Elektrik tesisatı: Projesi dışında aşırı yük bağlanmaz; panolardaki sigortalar muhafazalı ve otomatik olur; gerekli cihazlar topraklanır; çıplak veya hasarlı kablo, priz, fiş derhal yenilenir; tesisat yetkili kişilerce periyodik kontrol edilir.',
                 'Uygun yerlere “Sigara içmek yasaktır” ve “Ateşle yaklaşmayınız” levhaları asılır.',
             ]],
@@ -220,7 +221,7 @@ return [
             'Kimyasalın adı ve miktarı belirlenir; ilgili SDS’den tehlikeleri ve müdahale yöntemi kontrol edilir.',
             'Yanıcı kimyasalda tüm ateşleme kaynakları uzaklaştırılır; alanda elektrik anahtarı, telefon ve kıvılcım çıkarabilecek araç kullanılmaz.',
             'Küçük dökülmelere yalnızca eğitimli kişiler uygun KKD ile, emici malzeme / dökülme kiti kullanarak müdahale eder; kanalizasyona akması önlenir.',
-            'Büyük sızıntı, zehirli gaz veya bilinmeyen madde durumunda alan tahliye edilir, rüzgârın tersine uzaklaşılır ve 112 aranır.',
+            'Büyük sızıntı, zehirli gaz veya bilinmeyen madde durumunda alan tahliye edilir, rüzgârın geldiği yöne doğru (rüzgâr üstüne) uzaklaşılır ve 112 aranır; toplanma alanı rüzgâr altında kalıyorsa yedek alan kullanılır.',
             'Maruz kalan kişi temiz havaya çıkarılır; göz veya cilt teması varsa bol su ile en az 15 dakika yıkanır; 112 ve 114 UZEM’e bilgi verilir.',
         ],
         'olay_sonrasi' => [
@@ -228,6 +229,20 @@ return [
             'Çevreye yayılım varsa Çevre, Şehircilik ve İklim Değişikliği İl Müdürlüğü bilgilendirilir.',
             'Depolama koşulları, kaplar ve dökülme kitleri kontrol edilir, eksikler tamamlanır.',
             'Maruziyet yaşayan çalışanlar işyeri hekimince değerlendirilir; olay kaydı ve DÖF açılır.',
+        ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 4 + Kimyasal Maddelerle Çalışmalarda SG Önlemleri Yönetmeliği temel istekleri.
+        'ek' => [
+            ['baslik' => 'KİMYASAL YAYILIMA KARŞI ÖNLEYİCİ VE SINIRLANDIRICI TEDBİRLER', 'maddeler' => [
+                'Güncel kimyasal envanteri tutulur; Türkçe Güvenlik Bilgi Formları (SDS) kullanım yerinde erişilebilir bulundurulur.',
+                'Kimyasallar orijinal ve etiketli kaplarda saklanır; başka kaba aktarılan kimyasal da etiketlenir.',
+                'Kimyasallar özellik ve tehlikelerine göre, uygun kimyasal depolama dolaplarında saklanır; birbiriyle tepkimeye girebilecek (uyumsuz) kimyasallar ayrı tutulur.',
+                'Depolama alanlarında sızıntıya yol açacak durumlar engellenir; döküntü tepsisi / havuzu ve uygun havalandırma bulunur.',
+                'Yetkisiz kişilerin kimyasal depolama alanlarına girmesi engellenir.',
+                'Vana, bağlantı ve hatlar sızıntıya karşı rutin olarak kontrol edilir.',
+                'Kullanım ve depolama alanlarında dökülme kiti, gerekli yerlerde göz duşu / acil duş bulundurulur.',
+                'Çalışanlara uygun kişisel koruyucu donanım sağlanır, doğru kullanımı sağlanır; acil durum ekiplerine kimyasal yayılıma müdahale eğitimi verilir / aldırılır.',
+                'Kimyasal yayılımda işyerini hızla boşaltmak için tahliye planları hazırlanır ve görünür yerlere asılır.',
+            ]],
         ],
     ],
     'zehirlenme' => [
