@@ -396,6 +396,21 @@ return [
             'Hasar ve tedbirler kaydedilir; iş kazası varsa SGK / kolluk bildirimi, çevresel etki varsa ilgili kurum bildirimi yapılır.',
             'Acil durum planı sel senaryosu için güncellenir ve tatbikat planlanır.',
         ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 3 (önleyici tedbir içermiyordu; kullanıcı onaylı metin). Sel sırasında set çekme / malzeme kurtarma talimatları sınırlandırıldı.
+        'ek' => [
+            ['baslik' => 'SELE KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Yağmur suyu kanalları, ızgaralar ve oluklar düzenli olarak temizlenir.',
+                'Bodrum gibi düşük kotlarda kimyasal, elektrik panosu, önemli kayıt ve değerli ekipman bulundurulmaz.',
+                'Su baskını riski olan yerlerde kum torbası, su bariyeri ve dalgıç pompa hazır tutulur.',
+                'Kazı ve temel çukurlarında su birikmesine karşı drenaj yapılır.',
+                'Meteoroloji uyarıları (MeteoUyarı) ve AFAD duyuruları takip edilir.',
+            ]],
+            ['baslik' => 'SU BASKININDA GÜVENLİ DAVRANIŞ', 'maddeler' => [
+                'UNUTMAYIN: Hızla akan 15–20 cm derinlikteki su bir insanı düşürüp sürükleyebilir; yaklaşık 60 cm akan su bir aracı sürükler. Akan suya yürüyerek veya araçla girilmez.',
+                'Akıntısız, küçük su baskınında (ör. bodruma yağmur suyu dolması) elektrik kuru ve güvenli noktadan kesildikten sonra eğitimli personel kum torbası veya pompa ile önlem alabilir.',
+                'Sel ve akıntılı suda set çekmeye, kanal açmaya veya malzeme kurtarmaya çalışılmaz; can güvenliği önce gelir, gerekirse 112 ile itfaiyeden yardım istenir.',
+            ]],
+        ],
     ],
     'yildirim' => [
         'aciklama' => 'Şiddetli rüzgâr, fırtına, hortum veya yıldırım düşmesi gibi atmosferik olaylar sırasında açık ve kapalı alanda bulunan çalışanların güvenliğini sağlamaya yönelik prosedürdür.',
