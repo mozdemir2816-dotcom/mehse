@@ -64,6 +64,24 @@ class ZiyaretProgramiTest extends TestCase
         $this->assertSame('2.5', $program->ziyaretler[0][0]['sure_saat']);
     }
 
+    public function test_kaydet_butonu_kaydi_teyit_eder(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(ZiyaretSayfasi::class)
+            ->call('kaydet')
+            ->assertNotified('Önce firma seçin');
+
+        Livewire::test(ZiyaretSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('ayGuncelle', 2, 0, 'amac', 'Risk Değerlendirmesi')
+            ->call('kaydet')
+            ->assertNotified('Ziyaret programı kaydedildi')
+            ->assertSee('Kaydet');
+
+        $this->assertSame('Risk Değerlendirmesi', ZiyaretProgrami::where('firma_id', $firma->id)->first()->ziyaretler[2][0]['amac']);
+    }
+
     public function test_durum_bos_planlandi_tamamlandi_sirasiyla_degisir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

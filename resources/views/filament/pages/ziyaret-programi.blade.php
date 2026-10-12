@@ -110,6 +110,7 @@
                     @endforeach
                 </datalist>
             </div>
+            <div style="margin-top:.7rem"><x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button></div>
         </x-filament::section>
 
         @php

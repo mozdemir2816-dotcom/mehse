@@ -287,6 +287,23 @@ class ZiyaretProgrami extends Page
         unset($this->program, $this->takvimGunler);
     }
 
+    /**
+     * Kutular değişince zaten tek tek kaydedilir (ayGuncelle); buton, son
+     * düzenlenen kutunun değişikliği işlendikten sonra kaydı teyit eder.
+     */
+    public function kaydet(): void
+    {
+        if (! $this->program()) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return;
+        }
+
+        unset($this->program, $this->takvimGunler);
+
+        Notification::make()->title('Ziyaret programı kaydedildi')->success()->send();
+    }
+
     public function aiAmacOner(int $ayIndex, int $satirIndex): void
     {
         $p = $this->program();
@@ -313,9 +330,15 @@ class ZiyaretProgrami extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('kaydet')
+                ->label('Kaydet')
+                ->icon('heroicon-o-check')
+                ->visible(fn () => $this->program() !== null)
+                ->action(fn () => $this->kaydet()),
             Action::make('pdf')
                 ->label('Çıktı İndir (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
                 ->visible(fn () => $this->program() !== null)
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => ZiyaretProgramiUretici::pdf($this->program())),
