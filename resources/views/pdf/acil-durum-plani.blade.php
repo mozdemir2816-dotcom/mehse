@@ -386,18 +386,19 @@
 {{-- EK-3 KKD --}}
 <div class="yeni-sayfa"></div>
 <h2>EK-3 FAALİYETLERE GÖRE KİŞİSEL KORUYUCU EKİPMAN LİSTESİ</h2>
-<table class="tablo">
+{{-- Sabit sütun genişliği: uzun başlıklar (YÜKSEKTE ÇALIŞMA vb.) tabloyu çerçeve dışına taşırmasın. --}}
+<table class="tablo" style="table-layout:fixed">
     <tr>
-        <th style="width:20%"></th>
+        <th style="width:19%"></th>
         @foreach ($kkd['faaliyetler'] as $f)
-            <th class="orta" style="font-size:6.5pt">{{ $f }}</th>
+            <th class="orta" style="width:8.1%;font-size:5.6pt;padding:3pt 1pt">{{ str_replace('/', '/ ', $f) }}</th>
         @endforeach
     </tr>
     @foreach ($kkd['kkd'] as $ad => $isaret)
         <tr>
-            <td style="font-size:7.5pt"><b>{{ $ad }}</b></td>
+            <td style="font-size:7pt;padding:3pt 2pt"><b>{{ str_replace('/', '/ ', $ad) }}</b></td>
             @foreach (str_split($isaret) as $x)
-                <td class="orta">{{ $x === '1' ? 'D' : '–' }}</td>
+                <td class="orta" style="padding:3pt 1pt">{{ $x === '1' ? 'D' : '–' }}</td>
             @endforeach
         </tr>
     @endforeach
