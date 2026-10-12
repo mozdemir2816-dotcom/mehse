@@ -436,7 +436,7 @@ return [
     'yildirim' => [
         'aciklama' => 'Şiddetli rüzgâr, fırtına, hortum veya yıldırım düşmesi gibi atmosferik olaylar sırasında açık ve kapalı alanda bulunan çalışanların güvenliğini sağlamaya yönelik prosedürdür.',
         'mudahale' => [
-            'Meteoroloji uyarısı alındığında tüm dış mekan çalışmaları durdurulur.',
+            'Turuncu veya kırmızı meteoroloji uyarısında ya da fırtına yaklaştığında dış mekân çalışmaları durdurulur; uyarı döneminde gevşek malzemeler fırtına başlamadan güvenceye alınır.',
             'Çalışanlar sağlam kapalı yapıya alınır; camlardan ve elektrik ileten yüzeylerden uzak tutulur. Güvensiz hafif yapılarda beklenmez.',
             'Varsa çatı, merdiven, dış bakım ve yüksekte çalışmalar önceden durdurulur; ekipman güvenli duruma alınır.',
             'Açık alanda ağaç, direk ve su kenarından uzaklaşılıp güvenli kapalı yapıya veya kapalı metal tavanlı araca geçilir. Yıldırım sırasında açık alan güvenli kabul edilmez.',
@@ -450,6 +450,16 @@ return [
             'Yangın ve sızıntı riski açısından bina taraması yapılır.',
             'Hasar tutanağa bağlanır; gerekirse sigorta bildirimi yapılır.',
             'Bir sonraki uyarı senaryosu için tatbikat tarihi belirlenir.',
+        ],
+        // Kullanıcı onaylı metin (Beyda planında yıldırım / fırtına bölümü yok).
+        'ek' => [
+            ['baslik' => 'FIRTINA VE YILDIRIMA KARŞI TEDBİRLER', 'maddeler' => [
+                'Meteoroloji uyarıları (MeteoUyarı: sarı, turuncu, kırmızı) takip edilir; uyarıyı alıp çalışanlara duyurmaktan sorumlu kişi belirlenir.',
+                '30/30 kuralı: Şimşek ile gök gürültüsü arasındaki süre 30 saniyeden kısaysa hemen sağlam kapalı yapıya geçilir; son gök gürültüsünden sonra 30 dakika dolmadan dışarı çıkılmaz.',
+                'Varsa vinç ve kaldırma ekipmanları üreticinin belirttiği rüzgâr hızı sınırında durdurulur ve güvenli konuma alınır; rüzgâr hızı 45 km/saate ulaştığında yüksekte çalışma yapılmaz.',
+                'Paratoner (yıldırımdan korunma tesisatı) yılda bir yetkili kişilerce kontrol ettirilir.',
+                'Çatı kaplaması, levha, tabela, iskele, konteyner ve geçici yapılar rüzgâra karşı sabitlenir; devrilme tehlikesi olan ağaçlar budanır.',
+            ]],
         ],
     ],
     'bomba' => [
