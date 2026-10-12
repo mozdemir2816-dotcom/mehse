@@ -250,6 +250,19 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);
     }
 
+    public function test_genel_senaryo_ekleri_her_sektorde_basilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '47.11']);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+        $plan->update(['konular' => ['yangin', 'deprem']]);
+
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $firma])->render();
+        $this->assertStringContainsString('YANGIN SINIFLARI VE UYGUN SÖNDÜRÜCÜ', $html);
+        $this->assertStringContainsString('YANGINDA KİŞİSEL DAVRANIŞ', $html);
+        $this->assertStringNotContainsStringIgnoringCase('halon', $html);
+        $this->assertStringNotContainsString('ASKIDA KALAN', $html);          // seçili olmayan senaryonun eki basılmaz
+    }
+
     public function test_tum_konularin_senaryo_metni_var(): void
     {
         foreach (config('isg.acil_durum.konular') as $k) {
