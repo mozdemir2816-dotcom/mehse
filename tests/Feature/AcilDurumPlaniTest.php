@@ -256,7 +256,7 @@ class AcilDurumPlaniTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '47.11']);
         $plan = AcilDurumPlani::firmaIcin($firma);
-        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik', 'kimyasal', 'zehirlenme', 'patlama', 'sabotaj', 'gida_zehirlenmesi', 'trafik', 'sel', 'asansor', 'salgin', 'yildirim', 'bomba', 'heyelan', 'radyasyon', 'bogulma', 'basincli_kap']]);
+        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik', 'kimyasal', 'zehirlenme', 'patlama', 'sabotaj', 'gida_zehirlenmesi', 'trafik', 'sel', 'asansor', 'salgin', 'yildirim', 'bomba', 'heyelan', 'radyasyon', 'bogulma', 'basincli_kap', 'makine_arizasi']]);
 
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $firma])->render();
         $this->assertStringContainsString('YANGIN SINIFLARI VE UYGUN SÖNDÜRÜCÜ', $html);
@@ -292,6 +292,9 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('BASINÇLI KAPLAR VE GAZ TÜPLERİ İÇİN ÖNLEYİCİ TEDBİRLER', $html);
         $this->assertStringContainsString('kırmızı çizgiyi geçmesi', $html);
         $this->assertStringNotContainsString('ehliyetli hükümet', $html);
+        $this->assertStringContainsString('MAKİNE KAYNAKLI KAZALARA KARŞI ÖNLEYİCİ TEDBİRLER', $html);
+        $this->assertStringContainsString('kanamaya müdahale geciktirilmez', $html);
+        $this->assertStringNotContainsString('Lockout', $html);
         $this->assertStringNotContainsString('KAZI VE GÖÇÜK', $html);                // yalnız şantiye sektöründe
         $this->assertStringNotContainsString('ASKIDA KALAN', $html);          // seçili olmayan senaryonun eki basılmaz
     }

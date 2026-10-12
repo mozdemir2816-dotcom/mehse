@@ -678,18 +678,31 @@ return [
     'makine_arizasi' => [
         'aciklama' => 'İşyerinde fiilen bulunan pres, torna, CNC, freze, kesme, taşlama, konveyör ve benzeri makinelerde sıkışma / ezilmede uygulanır. Makine listesi Ek-5’e kaydedilir. Koruyucular ve kilitlemeler iptal edilmez; temizlik ve bakımda enerji izolasyonu yapılır.',
         'mudahale' => [
-            'Makine acil stop butonuna basılır, enerji kesilir ve LOTO (Lockout-Tagout) uygulanır.',
+            'Makine acil stop butonuna basılır, enerji kesilir ve LOTO (kilitleme ve etiketleme) uygulanır.',
             'Hareketli parça zorlanmaz; depolanmış enerji ve ilave hareket ihtimali değerlendirilir.',
             '112 aranır; sıkışan uzuv ve makine tipi bildirilir.',
             'Makine gelişigüzel ters döndürülmez. Sıkışan kişinin kurtarılması, üretici yöntemi ve enerji izolasyonu doğrulanarak yetkili teknik ve profesyonel kurtarma ekiplerince yürütülür.',
             'Kopan uzuv temiz, sızdırmaz poşete alınır; bu poşet buzlu su bulunan ikinci poşete konur. Uzuv buz / suyla doğrudan temas ettirilmeden kişiyle birlikte sağlık ekibine teslim edilir.',
-            'Kanama, eğitimli ilkyardımcı tarafından güncel eğitimi ve 112 yönlendirmesine göre kontrol edilir; yaşamı tehdit eden kanama geciktirilmez.',
+            'Kanama, eğitimli ilkyardımcı tarafından güncel eğitimi ve 112 yönlendirmesine göre kontrol edilir; yaşamı tehdit eden kanamaya müdahale geciktirilmez.',
         ],
         'olay_sonrasi' => [
             'LOTO prosedürü gözden geçirilir ve kayıt altına alınır.',
             'Koruyucu çitler, fotosel, iki el kontrol sistemleri kontrol edilir.',
-            'İş kazası bildirimi yapılır ve DÖF açılır.',
+            'Ağır yaralanmalı kazada olay yeri korunur; makine inceleme tamamlanıp koruyucuları doğrulanmadan yeniden çalıştırılmaz.',
+            'İşveren kazayı SGK’ye üç iş günü içinde bildirir; DÖF açılır.',
             'Operatöre psiko-sosyal destek sağlanır; ekibe LOTO eğitimi tekrarlanır.',
+        ],
+        // Kaynak: İş Ekipmanları Yönetmeliği + Beyda Yapı ADEP bakım kartı maddesi; kullanıcı onaylı (12.10.2026).
+        'ek' => [
+            ['baslik' => 'MAKİNE KAYNAKLI KAZALARA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Makinelerin CE işareti ve uygunluk beyanı bulunur; kullanım talimatı makine başında asılı olur.',
+                'Hareketli parçaların koruyucuları ve kilitlemeleri takılı tutulur; iptal edilmez, köprülenmez.',
+                'Her makinede acil stop kolay erişilebilir yerdedir ve düzenli denenir.',
+                'Bakım ve temizlik yazılı LOTO prosedürüyle yapılır; her çalışanın kendi kilidi ve etiketi olur.',
+                'Makineyi yalnız eğitim almış ve yetkilendirilmiş operatör kullanır.',
+                'Döner parçalı makinelerde (torna, matkap, freze) eldiven, bol giysi ve takı kullanılmaz, uzun saç toplanır.',
+                'Her makine için periyodik bakım kartı tutulur; mevzuatta periyodik kontrolü zorunlu olan ekipmanlar süresinde yetkili kişiye kontrol ettirilir.',
+            ]],
         ],
     ],
 ];
