@@ -229,13 +229,15 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertSame('insaat', AcilDurumSektor::oner($santiye));
 
         $plan = AcilDurumPlani::firmaIcin($santiye);
-        $plan->update(['konular' => ['yuksekten_dusme', 'deprem']]);
+        $plan->update(['konular' => ['yuksekten_dusme', 'deprem', 'heyelan']]);
 
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $santiye])->render();
         $this->assertStringContainsString('İnşaat / şantiye önlemleri:', $html);
         $this->assertStringContainsString('ASKIDA KALAN ÇALIŞANA ERİŞİM, TAHLİYE VE İLKYARDIM', $html);
         $this->assertSame(1, substr_count($html, 'ASKIDA KALAN ÇALIŞANA ERİŞİM'));                 // genel + şantiye birleşince tekrar yok
         $this->assertStringContainsString('İSKELELERİN KURULMASI, KULLANIMI VE KONTROLÜ', $html);
+        $this->assertStringContainsString('KAZI VE GÖÇÜK', $html);
+        $this->assertStringContainsString('ŞEV VE ZEMİN İÇİN ÖNLEYİCİ TEDBİRLER', $html);
         $this->assertStringContainsString('Askıda kalan personele 10 dakika içinde müdahale edilir.', $html);
         $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);              // genel senaryo korunur
         $this->assertSame(1, substr_count($html, 'SINIRLAYICI TEDBİRLER'));                     // yalnız yüksekten düşmede
@@ -254,7 +256,7 @@ class AcilDurumPlaniTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '47.11']);
         $plan = AcilDurumPlani::firmaIcin($firma);
-        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik', 'kimyasal', 'zehirlenme', 'patlama', 'sabotaj', 'gida_zehirlenmesi', 'trafik', 'sel', 'asansor', 'salgin', 'yildirim', 'bomba']]);
+        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik', 'kimyasal', 'zehirlenme', 'patlama', 'sabotaj', 'gida_zehirlenmesi', 'trafik', 'sel', 'asansor', 'salgin', 'yildirim', 'bomba', 'heyelan']]);
 
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $firma])->render();
         $this->assertStringContainsString('YANGIN SINIFLARI VE UYGUN SÖNDÜRÜCÜ', $html);
@@ -282,6 +284,8 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('SALGINA KARŞI ÖNLEYİCİ TEDBİRLER', $html);
         $this->assertStringContainsString('30/30 kuralı', $html);
         $this->assertStringContainsString('BOMBA İHBARI VE ŞÜPHELİ PAKET', $html);
+        $this->assertStringContainsString('ŞEV VE ZEMİN İÇİN ÖNLEYİCİ TEDBİRLER', $html);
+        $this->assertStringNotContainsString('KAZI VE GÖÇÜK', $html);                // yalnız şantiye sektöründe
         $this->assertStringNotContainsString('ASKIDA KALAN', $html);          // seçili olmayan senaryonun eki basılmaz
     }
 

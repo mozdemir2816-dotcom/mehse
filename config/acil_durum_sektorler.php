@@ -32,6 +32,17 @@ return [
         'nace' => ['41', '42', '43'],
         'onlemler' => 'Şantiyede acil durum halinde çalışmayı durdurma, tahliye ve toplanma noktasına yönlendirme amaçlı sesli / ışıklı alarm ve ikaz sistemi kurulur; zaman zaman haberli veya habersiz denenir. Şantiye çevresinde anız ve ot yangınlarına karşı ot mücadelesi düzenli sürdürülür. Makine ve donanım sarsıntıda devrilmemesi için sabitlenir. İnşaat alanına giren araçların yapı, direk ve iskelelere çarpmasını önlemek için tampon / bariyer yapılır ve sağlamlıkları düzenli kontrol edilir. Enerji nakil hatlarına güvenli yaklaşma mesafesi korunur; gerekli durumlarda dağıtım şirketine bilgi verilerek hattın yalıtılması veya uzaklaştırılması sağlanır. Yedek besleme sistemleri (jeneratör) bakım ve kontrollerle çalışır durumda tutulur. Yüksekte çalışma, iskele ve kaldırma işleri iş izni ile yapılır; ayrıntılı tedbirler EK-1 “Yüksekten Düşme” bölümündedir.',
         'senaryo_ek' => [
+            // Kullanıcı onaylı metin; Yapı İşlerinde İSG Yönetmeliği kazı hükümleri esas.
+            'heyelan' => [
+                ['baslik' => 'KAZI VE GÖÇÜK', 'maddeler' => [
+                    'Kazılar zemin özelliklerine uygun şev veya iksa (destek sistemi) ile yapılır.',
+                    'Kazı kenarına malzeme, hafriyat ve iş makinesi yaklaştırılmaz.',
+                    'Kazıya iniş ve çıkış için merdiven bulunur; kazının çevresi korkuluk veya işaretle çevrilir.',
+                    'Yağış, don veya titreşimden sonra yetkili kişi kontrol etmeden kazıya girilmez.',
+                    'Kazıya başlamadan önce yer altındaki elektrik kablosu, doğalgaz ve su hatları belirlenir.',
+                    'Göçükte iksasız kazıya kurtarma için girilmez; ikinci göçük kurtaranı da gömer. 112 aranır, kurtarmayı eğitimli ekip yapar.',
+                ]],
+            ],
             'yuksekten_dusme' => [
                 ['baslik' => 'YÜKSEKTE ÇALIŞMA İÇİN ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
                     'Yüksekte çalışmanın 1. kuralı, zeminde yapılabilecek bütün işlerin yüksekte yapılmaması, zemine indirilerek zeminde yapılmasıdır.',

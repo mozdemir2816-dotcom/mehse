@@ -554,6 +554,13 @@ return [
             'Erken uyarı sistemi (eğim ölçer, çatlak sensörü) gözden geçirilir.',
             'Çalışanlara heyelan senaryolu tatbikat planlanır.',
         ],
+        // Kullanıcı onaylı metin; şantiyeye özgü kazı / göçük bloğu config/acil_durum_sektorler.php > insaat.
+        'ek' => [
+            ['baslik' => 'ŞEV VE ZEMİN İÇİN ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Eğimli arazi varsa şevler ve istinat duvarları özellikle yağıştan sonra kontrol edilir; çatlak ve oturmalar izlenir.',
+                'Drenaj kanalları açık tutulur; şev üstüne yük, malzeme veya hafriyat konmaz.',
+            ]],
+        ],
     ],
     'radyasyon' => [
         'aciklama' => 'Bu senaryo, işyerinde kaynak bulunması veya çevresel radyolojik olayın işyerini etkilemesi halinde uygulanır. Çevresel olaylarda AFAD, NDK ve 112 yönlendirmesi esas alınır.',
