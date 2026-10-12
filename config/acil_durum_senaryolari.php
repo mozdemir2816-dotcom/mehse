@@ -533,6 +533,21 @@ return [
             'Sürüş güzergâhı, hız limiti ve yaya yolları yeniden işaretlenir.',
             'DÖF açılır, sürücülere yeniden eğitim verilir.',
         ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 11 + 3.8; maddi hasarlı kaza KTK Md.81’e göre düzeltildi, 155 -> 112, 5510 Md.13 eklendi.
+        'ek' => [
+            ['baslik' => 'İŞYERİ ARAÇLARIYLA KARAYOLUNDA TRAFİK KAZASI', 'maddeler' => [
+                'Trafik için ek tehlike oluşturmadan hemen durulur; reflektör ve ışıklı işaret konur, yansıtıcı yelek giyilir.',
+                'Kaza yalnız maddi hasarlıysa araçlar trafiği engellemeyecek şekilde yol kenarına çekilir; taraflar anlaşırsa kaza tespit tutanağı doldurulur. Anlaşma sağlanamazsa veya kamu malına zarar varsa 112 aranarak kolluk çağrılır. Her durumda yönetime haber verilir.',
+                'Ölümlü veya yaralanmalı kazada ve vurup kaçmada 112 aranır; araç yerinden oynatılmaz, olay yerinden ayrılınmaz. Yaralı, yangın gibi ek bir tehlike yoksa hareket ettirilmez.',
+                'Görev sırasında veya işverenin sağladığı servis aracıyla toplu taşıma sırasında olan kaza iş kazası sayılır; işveren SGK’ye kazadan sonraki üç iş günü içinde bildirir.',
+            ]],
+            ['baslik' => 'TRAFİK KAZALARINA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Sürücülerin sürücü belgesi geçerli ve araca uygundur; personel servisi sürücülerinde mesleki yeterlilik (SRC) ve psikoteknik belgesi bulunur.',
+                'Araçların muayenesi, sigortası ve bakımı zamanında yapılır; sürücüler ve araçlar kurallara uygunluk bakımından düzenli denetlenir.',
+                'Araçlarda ilkyardım çantası, yangın söndürücü ve reflektör bulunur.',
+                'Emniyet kemeri takılır; sürüş sırasında elde telefon kullanılmaz; yorgun araç kullanılmaz, dinlenme sürelerine uyulur.',
+            ]],
+        ],
     ],
     'bogulma' => [
         'aciklama' => 'İşyerinde su deposu, havuz veya benzeri suya düşme tehlikesi varsa uygulanır. Böyle bir alan yoksa uygulanmadığı kaydedilir. Kapalı hacimde kurtarma ayrı teknik kurtarma gerektirir.',
