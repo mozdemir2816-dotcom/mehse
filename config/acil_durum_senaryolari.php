@@ -621,20 +621,30 @@ return [
         ],
     ],
     'bogulma' => [
-        'aciklama' => 'İşyerinde su deposu, havuz veya benzeri suya düşme tehlikesi varsa uygulanır. Böyle bir alan yoksa uygulanmadığı kaydedilir. Kapalı hacimde kurtarma ayrı teknik kurtarma gerektirir.',
+        'aciklama' => 'İşyerinde su deposu, havuz veya benzeri suya düşme tehlikesi varsa uygulanır. Böyle bir alan yoksa uygulanmadığı kaydedilir. Kapalı hacimlerde (tank, kuyu, foseptik) kurtarma yalnız teknik ekiple yapılır.',
         'mudahale' => [
-            'Kurtarıcı suya veya kapalı tanka girmez. Güvenli kıyıdan erişilebiliyorsa can simidi / halat uzatılır; 112’den teknik kurtarma istenir.',
-            '112 aranır; lokasyon ve su tipi (tatlı/tuzlu/kimyasal) bildirilir.',
+            '112 aranır; konum, su tipi (tatlı / tuzlu / kimyasal) ve teknik kurtarma ihtiyacı bildirilir.',
+            'Kurtarıcı suya veya kapalı tanka girmez; güvenli kıyıdan erişilebiliyorsa can simidi veya halat uzatılır.',
             'Sudan çıkarılan kişi güvenli alanda değerlendirilir; olası travmaya dikkat edilir.',
             'İlkyardımcı, boğulmaya özgü güncel temel yaşam desteği eğitimi ve 112 yönlendirmesine göre müdahale eder.',
             'Ağız içinde yalnızca görülen ve kolayca alınabilen yabancı cisim çıkarılır; körlemesine parmak sokulmaz.',
-            'Kişi soğuksa ısıtılır, ıslak kıyafeti çıkarılır.',
+            'Islak giysileri çıkarılır, kişi kuru battaniyeyle sarılarak üşümesi önlenir.',
         ],
         'olay_sonrasi' => [
-            'Solunum geri gelse de kişi mutlaka hastaneye sevk edilir (geç boğulma riski).',
+            'Solunum geri gelse de kişi mutlaka hastaneye sevk edilir (saatler sonra ortaya çıkabilecek solunum sorunları riski).',
             'Kapalı tankta uygun izin, atmosfer ölçümü, izolasyon ve teknik kurtarma düzeni sağlanmadan yeniden giriş yapılmaz.',
             'Korkuluk, can simidi ve halat ekipmanları kontrol edilir.',
             'Olay tutanağı ve iş kazası bildirimi yapılır.',
+        ],
+        // Kaynak: Beyda'da boğulma bölümü yok; kullanıcı onaylı (12.10.2026).
+        'ek' => [
+            ['baslik' => 'SUYA DÜŞME VE BOĞULMAYA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Su deposu, havuz, foseptik ve kuyu kapakları kilitli veya sabitlenmiş tutulur; açık kenarlara korkuluk yapılır.',
+                'Su kenarında can simidi ve halat hazır bulunur; yeri işaretlenir.',
+                'Su üzerinde veya kenarında çalışanlar can yeleği giyer ve tek başına çalışmaz.',
+                'Kazı, çukur ve hendeklerde biriken su boşaltılır, çevresi kapatılır; yağmur sonrası oluşan su birikintileri de kontrol edilir.',
+                'Tank, kuyu gibi kapalı alanlara iş izni ve atmosfer ölçümü olmadan girilmez.',
+            ]],
         ],
     ],
     'basincli_kap' => [
