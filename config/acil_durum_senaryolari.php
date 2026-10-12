@@ -261,6 +261,15 @@ return [
             'İş kazası / meslek hastalığı şüphesinde gerekli bildirimler yapılır.',
             'Çalışanlar kimyasal güvenliği ve hijyen konusunda yeniden bilgilendirilir, DÖF açılır.',
         ],
+        'ek' => [
+            ['baslik' => 'KARBONMONOKSİT VE KAPALI ALANLARDA ZEHİRLENME', 'maddeler' => [
+                'Kapalı ortamda jeneratör, kompresör, motorlu araç, mangal veya soba çalıştırılmaz; ısıtıcılar bacalı ve kontrollü olur. Gerekli yerlerde karbonmonoksit dedektörü bulunur.',
+                'Baş ağrısı, baş dönmesi, bulantı veya uyku hali birden fazla kişide aynı anda görülürse gaz zehirlenmesinden şüphelenilir ve ortam derhal boşaltılır.',
+                'Tank, silo, kuyu, rögar gibi kapalı alanlara iş izniyle girilir; girişten önce ve çalışma boyunca gaz ölçümü yapılır, havalandırma sağlanır, dışarıda gözcü ve kurtarma ekipmanı bulunur.',
+                'Kapalı alanda bayılan kişiyi kurtarmak için solunum cihazı olmadan içeri girilmez; bu tür kazalarda ölümlerin önemli bir kısmı kurtarmaya giren kişilerde olur. 112 aranır, kurtarma eğitimli ve donanımlı kişilerce yapılır.',
+                'Göz veya cilt yoluyla kimyasal temasında kimyasal yayılım senaryosundaki yıkama adımı uygulanır.',
+            ]],
+        ],
     ],
     'patlama' => [
         'aciklama' => 'Gaz kaçağı, toz birikimi, yanıcı buhar veya basınçlı ekipman kaynaklı patlama ve patlama tehlikesi durumlarında tahliye ve ikincil tehlikelerin önlenmesi prosedürüdür.',
