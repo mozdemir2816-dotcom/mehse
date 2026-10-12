@@ -131,6 +131,21 @@ return [
             'Hasar ve kayıplar kaydedilir; sigorta bildirimi yapılır.',
             'Çalışanlar şüpheli durumları bildirme konusunda yeniden bilgilendirilir.',
         ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 5 (önleyici tedbir içermiyordu; kullanıcı onaylı metin). Oyalama / takip / yakalama talimatları alınmadı.
+        'ek' => [
+            ['baslik' => 'SABOTAJA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Giriş kontrolü yapılır; ziyaretçiler kaydedilir ve işyerinde refakatle dolaşır.',
+                'Kritik alanlar (elektrik panosu, kazan dairesi, kimyasal deposu, mutfak ve yemekhane) kilitli tutulur; yalnız yetkili kişiler girer.',
+                'Kamera sistemi ve çevre aydınlatması bulunur; şantiyelerde saha çevresi çevrilir.',
+                'Anahtar ve giriş kartları kayıt altında tutulur; işten ayrılan kişinin erişim yetkileri derhal kapatılır.',
+                'Çalışanlara şüpheli kişi, paket ve davranışları bildirme konusunda eğitim verilir.',
+            ]],
+            ['baslik' => 'SALDIRGANA KARŞI TUTUM', 'maddeler' => [
+                'Çalışanlar saldırganı yakalamaya, oyalamaya veya takip etmeye çalışmaz; güvenli bir yerden eşkâl, gidiş yönü ve araç plakası not edilerek 112’ye bildirilir.',
+                'Varsa güvenlik görevlisi, can güvenliğini tehlikeye atmadan yetkisi kapsamında hareket eder.',
+                'Olayda kasıt tespit edilirse acil durum koordinatörü başkanlığında olayın sebepleri araştırılır ve yasal işlem için yetkili kurumlara başvurulur.',
+            ]],
+        ],
     ],
     'is_kazasi' => [
         'aciklama' => 'İşyerinde meydana gelen iş kazası, ani rahatsızlanma ve sağlık olaylarında ilk müdahale, sağlık ekiplerine ulaşma ve yasal bildirim prosedürüdür.',
