@@ -254,7 +254,7 @@ class AcilDurumPlaniTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '47.11']);
         $plan = AcilDurumPlani::firmaIcin($firma);
-        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi']]);
+        $plan->update(['konular' => ['yangin', 'deprem', 'is_kazasi', 'elektrik']]);
 
         $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $firma])->render();
         $this->assertStringContainsString('YANGIN SINIFLARI VE UYGUN SÖNDÜRÜCÜ', $html);
@@ -264,6 +264,9 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringNotContainsString('Sivil Savunma', $html);
         $this->assertStringContainsString('ÖLÜMLÜ VEYA AĞIR YARALANMALI KAZADA', $html);
         $this->assertStringNotContainsString('155', $html);
+        $this->assertStringContainsString('ORTAMIN GÜVENLİ HALE GETİRİLMESİ', $html);
+        $this->assertStringNotContainsString('TEDAŞ', $html);
+        $this->assertStringNotContainsString('giysilerinden çekerek', $html);
         $this->assertStringNotContainsString('ASKIDA KALAN', $html);          // seçili olmayan senaryonun eki basılmaz
     }
 

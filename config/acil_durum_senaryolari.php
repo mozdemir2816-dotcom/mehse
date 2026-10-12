@@ -183,13 +183,34 @@ return [
             'Yüksek gerilim hatlarına yaklaşılmaz; elektrik arıza hattına (186) ve 112’ye haber verilir.',
             '112 aranır; olayın elektrik çarpması olduğu, gerilim düzeyi ve kazazedenin durumu bildirilir.',
             'İlkyardımcı bilinç ve solunumu değerlendirir; gerekiyorsa eğitimine ve 112 yönlendirmesine uygun temel yaşam desteği uygular.',
-            'Yanıklar temiz ve kuru bir örtü ile kapatılır; yanığa herhangi bir madde sürülmez.',
+            'Akım kesildikten sonra yanıklar serin, akan suyla soğutulur ve temiz bir örtü ile kapatılır; yanığa herhangi bir madde sürülmez.',
         ],
         'olay_sonrasi' => [
             'Görünür yarası olmasa da kazazede mutlaka sağlık kuruluşunda değerlendirilir.',
             'Arızalı tesisat / ekipman kilitlenip etiketlenir; yetkili elektrikçi kontrolü olmadan kullanılmaz.',
             'İş kazası bildirimi yapılır, DÖF açılır.',
             'Kaçak akım rölesi, topraklama ve tesisat periyodik kontrolleri gözden geçirilir.',
+        ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 7; kazazedeye temas eden çelişkili maddeler ve yanlış güvence çıkarıldı.
+        'ek' => [
+            ['baslik' => 'ELEKTRİK ÇARPMASINA KARŞI ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Elektrikle ilgili her türlü iş yalnız yetkili elektrikçiler tarafından yapılır.',
+                'Elektrikli ekipmanlar kullanılmadan önce gözle kontrol edilir; hasarlı ekipman hiçbir şekilde kullanılmaz.',
+                'Çalışma alanlarındaki dağınık kablo ve tertibatlar yalıtkan kutu veya kapaklar içine alınır; kablolar ezilmeye ve ıslanmaya karşı korunur.',
+                'Priz devrelerinde 30 mA kaçak akım koruma rölesi bulunur ve test butonuyla düzenli denenir.',
+                'Elektrik tesisatı, topraklama ve yıldırımdan korunma (paratoner) tesisatı yılda bir yetkili kişilerce kontrol edilir, raporları saklanır.',
+                'Pano kapakları kapalı tutulur, önleri boş bırakılır; bakım ve onarımda enerji kilitlenip etiketlenir (LOTO).',
+                'İkaz ve uyarı levhalarındaki talimatlara aykırı hareket edilmez.',
+                'Varsa yüksek gerilim / enerji nakil hatlarına güvenli yaklaşma mesafesi korunur; gerekli durumlarda elektrik dağıtım şirketine (186) bilgi verilerek hattın yalıtılması, toprak altına alınması veya uzaklaştırılması sağlanır.',
+            ]],
+            ['baslik' => 'ORTAMIN GÜVENLİ HALE GETİRİLMESİ', 'maddeler' => [
+                'Olay yerine ilk gelen kişinin önceliği, başka kişilerin akıma kapılmasını önlemektir; diğer kişiler olay yerinden uzak tutulur.',
+                'Elektrik şalterden veya sigortadan kesilir. Akım kesildiğinden emin olunmadan kazazedeye dokunulmaz, iletken zemine veya malzemeye basılmaz.',
+                'Akım kesilemiyorsa tahta kutu, plastik veya kuru paspas gibi kuru ve yalıtkan bir zeminde durularak süpürge sapı, tahta sandalye gibi kuru yalıtkan bir cisimle kazazede ile elektrik kaynağı ayrılır.',
+                'Islak, nemli veya metal cisimlerle elektrik kaynağı uzaklaştırılmaya çalışılmaz.',
+                'Yüksek gerilimde akımın kesildiği yetkililerce bildirilmeden en az 18 m’den fazla yaklaşılmaz; elektrik dağıtım şirketi (186), itfaiye ve 112’den yardım istenir.',
+                'Kazazede kendi aracınızla taşınmaz; 112 çağrılır.',
+            ]],
         ],
     ],
     'kimyasal' => [
