@@ -36,7 +36,7 @@ class AcilDurumHazirlik
             'onay_durumu' => 'yok', 'son_tatbikat' => null, 'sonraki_tatbikat' => null, 'tutanak_ref' => '',
             'kroki_asildi' => false, 'calisan_bilgilendirildi' => false, 'ek_not' => '',
             ...array_fill_keys(array_keys(static::BELGE_ALANLARI), ''),
-            'risk_puanlari' => [], 'cevresel_riskler' => [],
+            'risk_puanlari' => [], 'cevresel_riskler' => [], 'sektor' => '',
         ];
     }
 
@@ -123,6 +123,7 @@ class AcilDurumHazirlik
                     ->mapWithKeys(fn ($k) => [$k => in_array((int) ($u['risk_puanlari'][$r][$k] ?? 0), [1, 2, 3, 4, 5], true) ? (int) $u['risk_puanlari'][$r][$k] : null])
                     ->filter()->all()])
                 ->filter()->all(),
+            'sektor' => AcilDurumSektor::gecerliMi($u['sektor'] ?? null) ? $u['sektor'] : '',
             'cevresel_riskler' => collect(config('isg.acil_durum.cevresel_riskler'))->keys()
                 ->mapWithKeys(fn ($i) => [$i => [
                     'durum' => in_array($u['cevresel_riskler'][$i]['durum'] ?? '', ['var', 'yok'], true) ? $u['cevresel_riskler'][$i]['durum'] : '',

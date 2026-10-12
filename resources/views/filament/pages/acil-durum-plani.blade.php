@@ -249,6 +249,17 @@
             <x-slot name="heading">Plan belgesi bilgileri</x-slot>
             <x-slot name="description">Plan PDF / Word çıktısındaki boş (noktalı) yerleri doldurur: koordinatör, hastane, alarm, risk puanları, çevresel riskler. Boş bırakılan alan belgede elle doldurulacak noktalı satır olarak çıkar.</x-slot>
 
+            @php $sektorOneri = \App\Support\AcilDurumSektor::oner($this->firma); @endphp
+            <div style="margin-bottom:.9rem;max-width:520px">
+                <label style="{{ $lb }}">Sektör (plana sektöre özgü önlem ve senaryo metni ekler)</label>
+                <select wire:model="uygulama.sektor" style="{{ $alan }}">
+                    @foreach (\App\Support\AcilDurumSektor::liste() as $sk => $skAd)
+                        <option value="{{ $sk }}">{{ $skAd }}{{ $sk === $sektorOneri ? ' — NACE önerisi' : '' }}</option>
+                    @endforeach
+                </select>
+                <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">NACE {{ $this->firma?->nace_kodu ?: 'girilmemiş' }}. Firmanın fiili işi farklıysa elle değiştirip Kaydet'e basın.</div>
+            </div>
+
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem">
                 @foreach ([
                     'koordinator_ad' => ['Acil durum koordinatörü', 'Boşsa işveren vekili / işveren yazılır'],

@@ -15,6 +15,7 @@ use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumKonuSecici;
 use App\Support\AcilDurumPlaniUretici;
+use App\Support\AcilDurumSektor;
 use App\Support\AcilDurumWordUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -187,6 +188,39 @@ class AcilDurumPlaniTest extends TestCase
             ->call('puanlariVarsayilanYap');
         $this->assertSame(4, AcilDurumHazirlik::kullaniciSablonu($this->uzman->fresh())['risk_puanlari']['sel']['olasilik']);
         $this->assertSame(2, AcilDurumPlani::where('firma_id', $a->id)->first()->uygulama['risk_puanlari']['sel']['olasilik']);
+    }
+
+    public function test_sektor_naceden_onerilir_elle_degisir_ve_belgeye_basilir(): void
+    {
+        $metal = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '25.62']);
+        $insaat = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '41.00']);
+
+        $this->assertSame('metal', AcilDurumSektor::oner($metal));
+        $this->assertSame('genel', AcilDurumSektor::oner($insaat));
+
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $metal->id)
+            ->assertSet('uygulama.sektor', 'metal')
+            ->set('konular', ['makine_arizasi'])
+            ->call('kaydet');
+
+        $plan = AcilDurumPlani::where('firma_id', $metal->id)->firstOrFail();
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan, 'firma' => $metal])->render();
+        $this->assertStringContainsString('Metal işleme / makine imalatı önlemleri:', $html);
+        $this->assertStringContainsString('Talaş ve yanıcı atıklar düzenli uzaklaştırılır', $html);
+        $this->assertStringContainsString('CNC, torna, matkap, freze', $html);
+
+        // NACE tutmuyorsa uzman genel'e çevirir; seçim kalıcıdır.
+        Livewire::test(AcilDurumSayfasi::class)
+            ->set('firmaId', $metal->id)
+            ->set('uygulama.sektor', 'genel')
+            ->call('kaydet');
+        Livewire::test(AcilDurumSayfasi::class)->set('firmaId', $metal->id)->assertSet('uygulama.sektor', 'genel');
+
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $metal])->render();
+        $this->assertStringNotContainsString('makine imalatı önlemleri', $html);
+        $this->assertStringNotContainsString('CNC, torna, matkap, freze', $html);
+        $this->assertStringContainsString('pres, torna, CNC, freze', $html);       // genel senaryo metni
     }
 
     public function test_tum_konularin_senaryo_metni_var(): void

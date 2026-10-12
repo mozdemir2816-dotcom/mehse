@@ -48,10 +48,13 @@ class AcilDurumBelgeVerisi
             'vekil_tel' => $dolu($u['koordinator_vekil_tel']),
         ];
 
+        $sektor = AcilDurumSektor::profil($u, $firma);
+
         $senaryolar = collect(config('isg.acil_durum.konular'))
             ->whereIn('anahtar', $plan->konular ?? [])
-            ->map(function (array $k) {
+            ->map(function (array $k) use ($sektor) {
                 $s = config('acil_durum_senaryolari.'.$k['anahtar'], []);
+                $s['aciklama'] = $sektor['senaryo_aciklama'][$k['anahtar']] ?? $s['aciklama'] ?? null;
                 $akis = resource_path('belge/acil-durum-akis/'.$k['anahtar'].'.png');
 
                 return [
@@ -130,6 +133,7 @@ class AcilDurumBelgeVerisi
             'plan' => $plan,
             'firma' => $firma,
             'u' => $u,
+            'sektor' => $sektor,
             'unvan' => $firma?->unvan,
             'sgk' => $dolu($firma?->sgk_sicil_no),
             'adres' => $dolu($firma?->adres),

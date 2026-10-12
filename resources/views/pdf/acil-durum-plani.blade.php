@@ -252,6 +252,9 @@
 @else
     <p class="bos">{{ $nokta }}</p>
 @endif
+@if ($d['sektor']['onlemler'])
+    <p><b>{{ $d['sektor']['ad'] }} önlemleri:</b> {{ $d['sektor']['onlemler'] }} Kontrol sorumlusu / sıklığı / kayıt yeri: <b>{{ $nokta }}</b></p>
+@endif
 <p>Kimyasal yayılım, parlama / patlama gibi özel riskli bölümler: <b>{{ $n($d['ozel_risk']) }}</b></p>
 @if (filled($u['olcum_notu']))
     <p><b>Ölçüm, kontrol ve kayıtlar:</b></p>

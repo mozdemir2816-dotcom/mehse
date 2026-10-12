@@ -10,6 +10,7 @@ use App\Models\Firma;
 use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
 use App\Support\AcilDurumPlaniUretici;
+use App\Support\AcilDurumSektor;
 use App\Support\AcilDurumWordUretici;
 use App\Support\ExcelBellek;
 use BackedEnum;
@@ -138,6 +139,11 @@ class AcilDurumPlani extends Page
         $this->disaridanEtkileyebilecekIsyerleri = $plan->disaridan_etkileyebilecek_isyerleri;
         $this->konular = $plan->konular ?? [];
         $this->uygulama = array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []);
+
+        // Sektör: kayıtlı seçim yoksa NACE önerisi (uzman değiştirebilir).
+        if (! AcilDurumSektor::gecerliMi($this->uygulama['sektor'] ?? null)) {
+            $this->uygulama['sektor'] = AcilDurumSektor::oner($this->firma);
+        }
 
         // Boş kutular hazır örnek metinle gelir; uzman düzeltip Kaydet'e basar.
         foreach (config('isg.acil_durum.ornek_metinler', []) as $alan => $metin) {
