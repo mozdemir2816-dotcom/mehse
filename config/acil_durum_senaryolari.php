@@ -358,6 +358,16 @@ return [
             'Arızanın nedeni ve kurtarma süresi kayıt altına alınır.',
             'Periyodik kontrol ve bakım kayıtları gözden geçirilir.',
         ],
+        // Kullanıcı onaylı metin (Beyda planında asansör bölümü yok); Asansör İşletme, Bakım ve Periyodik Kontrol Yönetmeliği esas.
+        'ek' => [
+            ['baslik' => 'ASANSÖR GÜVENLİĞİ İÇİN ÖNLEYİCİ TEDBİRLER', 'maddeler' => [
+                'Asansörün bakımı yetkili servis tarafından ayda bir yapılır; yılda bir yetkili muayene kuruluşunca periyodik kontrolü yaptırılır. Kontrol etiketi kabinde görünür durur; kırmızı etiketli (güvensiz) asansör kullanılmaz.',
+                'Kabindeki alarm butonu, iletişim cihazı ve acil aydınlatma çalışır durumda tutulur; bakım firmasının telefonu kabinde ve asansör girişinde asılır.',
+                'Her katta “Yangın ve depremde asansör kullanılmaz” levhası bulunur.',
+                'Makine dairesi ve kumanda panosu kilitli tutulur; yalnız yetkili kişiler girer.',
+                'Yük asansörlerine insan binmez; asansörlerde taşıma kapasitesi aşılmaz.',
+            ]],
+        ],
     ],
     'salgin' => [
         'aciklama' => 'Salgın şüphesinde işyeri hekimi ve sağlık otoritesinin güncel yönlendirmeleri uygulanır. Hijyen, uygun havalandırma, ortak alan temizliği ve belirti gösteren çalışanın değerlendirilmesiyle yayılım önlenir.',
