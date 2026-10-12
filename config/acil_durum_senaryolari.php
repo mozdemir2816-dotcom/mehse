@@ -326,10 +326,22 @@ return [
             'İlaç verilmez, kusturulmaz; sağlık ekibinin yönlendirmesine göre hareket edilir.',
         ],
         'olay_sonrasi' => [
-            'İl / ilçe sağlık müdürlüğü ve gerekli durumlarda gıda denetim birimi bilgilendirilir.',
+            'İl Sağlık Müdürlüğü ve Tarım ve Orman İl / İlçe Müdürlüğü (Alo 174 Gıda Hattı) bilgilendirilir.',
             'Yemek hizmeti veren firma ile birlikte kaynak araştırılır; saklanan numuneler incelemeye verilir.',
             'Mutfak hijyeni, soğuk zincir ve personel sağlık kontrolleri gözden geçirilir.',
             'Olay kaydı ve DÖF açılır.',
+        ],
+        // Kaynak: Beyda Yapı ADEP Acil durum 10; numune saklama süresi, yemek firması belgesi ve içme suyu eklendi.
+        'ek' => [
+            ['baslik' => 'GIDA ZEHİRLENMESİNE KARŞI ÖNLEYİCİ VE SINIRLANDIRICI TEDBİRLER', 'maddeler' => [
+                'Gıda ürünlerinin son tüketim tarihleri kontrol edilir.',
+                'Yemek dışarıdan temin ediliyorsa yemek firmasının işletme kayıt / onay belgesi bulunur; yemekler hijyenik koşullarda ve uygun sıcaklıkta (sıcak yemek sıcak, soğuk yemek soğuk) taşınır.',
+                'Her öğünden numune alınır ve 72 saat buzdolabında saklanır.',
+                'Yemek servisi yapılan tabak, çatal, tepsi vb. temiz tutulur.',
+                'Yemek servisi yapan personel eldiven, bone ve iş kıyafeti kullanır; hijyen eğitimi alır ve sağlık kontrollerinden geçer. Tüm personele genel hijyen eğitimi verilir.',
+                'İçme suyu güvenli kaynaktan sağlanır: kapalı ambalajlı su veya düzenli temizlenen ve kontrol edilen su deposu.',
+                'Acil durum irtibat numaraları görünür yerlere asılır.',
+            ]],
         ],
     ],
     'asansor' => [
