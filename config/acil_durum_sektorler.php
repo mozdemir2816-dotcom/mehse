@@ -30,7 +30,10 @@ return [
     'insaat' => [
         'ad' => 'İnşaat / şantiye',
         'nace' => ['41', '42', '43'],
-        'onlemler' => 'Şantiyede acil durum halinde çalışmayı durdurma, tahliye ve toplanma noktasına yönlendirme amaçlı sesli / ışıklı alarm ve ikaz sistemi kurulur; zaman zaman haberli veya habersiz denenir. Şantiye çevresinde anız ve ot yangınlarına karşı ot mücadelesi düzenli sürdürülür. Makine ve donanım sarsıntıda devrilmemesi için sabitlenir. İnşaat alanına giren araçların yapı, direk ve iskelelere çarpmasını önlemek için tampon / bariyer yapılır ve sağlamlıkları düzenli kontrol edilir. Enerji nakil hatlarına güvenli yaklaşma mesafesi korunur; gerekli durumlarda dağıtım şirketine bilgi verilerek hattın yalıtılması veya uzaklaştırılması sağlanır. Yedek besleme sistemleri (jeneratör) bakım ve kontrollerle çalışır durumda tutulur. Yüksekte çalışma, iskele ve kaldırma işleri iş izni ile yapılır; ayrıntılı tedbirler EK-1 “Yüksekten Düşme” bölümündedir.',
+        'onlemler' => 'Şantiyede acil durum halinde çalışmayı durdurma, tahliye ve toplanma noktasına yönlendirme amaçlı sesli / ışıklı alarm ve ikaz sistemi kurulur; zaman zaman haberli veya habersiz denenir. Şantiye çevresinde anız ve ot yangınlarına karşı ot mücadelesi düzenli sürdürülür. Makine ve donanım sarsıntıda devrilmemesi için sabitlenir. İnşaat alanına giren araçların yapı, direk ve iskelelere çarpmasını önlemek için tampon / bariyer yapılır ve sağlamlıkları düzenli kontrol edilir. Enerji nakil hatlarına güvenli yaklaşma mesafesi korunur; gerekli durumlarda dağıtım şirketine bilgi verilerek hattın yalıtılması veya uzaklaştırılması sağlanır. Yedek besleme sistemleri (jeneratör) bakım ve kontrollerle çalışır durumda tutulur. Yüksekte çalışma, iskele ve kaldırma işleri iş izni ile yapılır.',
+        'onlemler_atif' => [
+            'yuksekten_dusme' => 'Yüksekte çalışmaya ilişkin ayrıntılı tedbirler EK-1 “Yüksekten Düşme” bölümündedir.',
+        ],
         'senaryo_ek' => [
             // Kullanıcı onaylı metin; Yapı İşlerinde İSG Yönetmeliği kazı hükümleri esas.
             'heyelan' => [
@@ -48,18 +51,18 @@ return [
                     'Yüksekte çalışmanın 1. kuralı, zeminde yapılabilecek bütün işlerin yüksekte yapılmaması, zemine indirilerek zeminde yapılmasıdır.',
                     'Yüksekte çalışma yapılması gereken noktalarda toplu koruma önlemleri alınır (ara korkuluğu ve topuk levhası bulunan, yeterli dayanımda en az 1,2 m yüksekliğinde korkuluk, EN 1263 standardında güvenlik ağları vb.).',
                     'Toplu önlemlerin alınamadığı noktalarda kişisel koruyucu önlemler alınır: EN 361 paraşüt tipi emniyet kemeri, EN 354 emniyet halatı ve çift lanyard, EN 355 şok emici, EN 362 çift emniyet kancası ve karabinalar, EN 363 düşmeyi durdurucu sistemler.',
-                    'TS EN 795 standardında yatay yaşam halatları, EN 353-1:2014 standardında dikey yaşam halatları kurulur. Yaşam hatlarına birden fazla personel bağlanmaz.',
+                    'TS EN 795 standardında yatay yaşam halatları, EN 353-1:2014 standardında dikey yaşam halatları kurulur. Yaşam hatlarına üreticinin izin verdiğinden fazla personel bağlanmaz.',
                     'Yüksekte çalışacak personelin yüksekte çalışmaya uygun olduğunu gösterir sağlık raporu ve yüksekte çalışma eğitimi bulunur.',
                     'Yüksekte çalışmalar iş izin sistemi ile yapılır; onaylar alınmadan ve kişisel koruyucu donanım kullanılmadan çalışmaya başlanmaz.',
                     'Yüksekte yapılacak çalışmalar mümkün olan en az kişi ile yapılır.',
                     'Yüksekte asılı kalma durumu için özel eğitimli kurtarma ekipleri hazır bulunur; yüksekte çalışma ve kurtarma ekiplerinin eğitimleri yetkili ehil kişi tarafından verilir (işyeri dışından hizmet alınabilir).',
                     'Yüksekte çalışma platformları, iskeleler vb. ekipmanların ayakları zemine iyi basar; tekerlek frenleri kapalı tutulur, destek ayakları ayarlanabilir olur ve ekipman çalışma yüzeyine belirli aralıklarla çelik dübelle sabitlenir.',
-                    'Platform ve iskelelerde çalışan personel kendisini çalışma yapılan zemine bağlar.',
+                    'Platform ve iskelelerde çalışan personel kendisini taşıma gücü uygun bir ankraj noktasına, mümkünse omuz hizasının üstüne bağlar; manlift ve hareketli platformda üreticinin belirlediği bağlantı noktası kullanılır.',
                     'Balkon, asansör boşluğu, çatı kenarı gibi alanlarda kemer halatı kısa tutulur; kemerler duvarda oluşturulan bağlantı noktalarına bağlanır.',
                     'Çatılardaki ışıklık / perdelikler kırılgandır; bu alanlarda yatay yaşam hattı oluşturulur ve personel kendini bu hatta bağlar.',
-                    'Halat boyu; çatı yüksekliği, personel boyu ve emniyet mesafesi dikkate alınarak düşme anında zemine 1 m kalacak şekilde ayarlanır.',
+                    'Halat boyu; çatı yüksekliği, personel boyu, emniyet mesafesi ve şok emicinin açılma mesafesi dikkate alınarak düşme anında zemine 1 m kalacak şekilde ayarlanır.',
                     'Standarda uymayan, eski, deforme olmuş veya yırtılmış halatlar kullanılmaz ve kullanımdan kaldırılır.',
-                    'Manlift tarzı insan kaldırma ekipmanlarında paraşüt tipi emniyet kemeri kullanılır; halat kısa tutulup sepet tabanına bağlanır. Sepet kapısı içeri açılır, korkuluk yüksekliği 120 cm olur; personelin çalışma sırasında sepetten çıkması önlenir ve sepet kaldırma ekipmanına sabitlenir.',
+                    'Manlift tarzı insan kaldırma ekipmanlarında paraşüt tipi emniyet kemeri kullanılır; halat kısa tutulup sepet tabanına bağlanır. Sepet kapısı içeri açılır, korkuluk yüksekliği en az 1,2 m olur; personelin çalışma sırasında sepetten çıkması önlenir ve sepet kaldırma ekipmanına sabitlenir.',
                 ]],
                 ['baslik' => 'SINIRLAYICI TEDBİRLER', 'maddeler' => [
                     'Yangın söndürme, ilk yardım, kurtarma ve koruma ekipleri oluşturulur ve gerekli eğitimleri verilir / aldırılır; ekip üyeleri ve iletişim bilgileri şantiyede görünür şekilde asılır.',
@@ -77,16 +80,16 @@ return [
                     'Taşeron gibi işveren sorumluluğu taşıyanlar, başka alandan temin edilen iskelenin güvenli olduğundan emin olur.',
                 ]],
                 ['baslik' => 'KORKULUK, TEHLİKELİ BOŞLUKLAR VE PLATFORMLAR', 'maddeler' => [
-                    'Düşmeler yeterli yükseklikte sağlam korkuluklarla önlenir; korkulukta trabzan, ara korkuluk ve etek tahtası bulunur.',
+                    'Düşmeler en az 1,2 m yüksekliğinde sağlam korkuluklarla önlenir; korkulukta trabzan, ara korkuluk ve etek tahtası bulunur.',
                     'Basamakları yapılmamış betonarme merdivenlere geçici ahşap basamaklar, merdiven boşluğu ve döşeme kenarlarına korkuluk yapılır; mümkün değilse döşeme kenarına korkuluklu iskele kurulur.',
                     'Tavan ve döşemelerdeki boşluk ve deliklere, asansör boşluklarına korkuluk yapılır veya üstleri geçici olarak uygun şekilde kapatılır / güvenlik ağı ile örtülür.',
-                    'Hareketli platformlarda paraşüt tipi emniyet kemeri kullanılır ve platform zeminine bağlanır; tekerlekler kilitlenir, destek ayakları açılır; korkuluk yüksekliği en az 125 cm olur; platformlar yılda bir yetkili kişilerce kontrol edilir.',
+                    'Hareketli platformlarda paraşüt tipi emniyet kemeri kullanılır ve platform zeminine bağlanır; tekerlekler kilitlenir, destek ayakları açılır; korkuluk yüksekliği en az 1,2 m olur; platformlar yılda bir yetkili kişilerce kontrol edilir.',
                     'Rüzgâr hızı 45 km/saate ulaştığında yüksekte çalışma yapılmaz.',
                 ]],
                 ['baslik' => 'ÇATI ÇALIŞMALARI VE YAŞAM HATLARI', 'maddeler' => [
                     'Düz çatılarda çatı kenarından, çalışma alanı kenarından, boşluk ve kırılgan ışıklıklardan; eğimli çatılarda saçaktan, kayarak ve kenar korkuluklarından düşme riski değerlendirilir.',
-                    'Kırılgan çatılar güvenli çalışma alanı değildir; toplu koruma (korkuluk, güvenlik ağı) veya kişisel koruyucu önlem alınmadan çalışılmaz.',
-                    'Kemer yatay yaşam hattına bağlanır; halat uzunluğu, şok emicinin açılma mesafesi de hesaba katılarak düşmede zemine 1 m kalacak şekilde ayarlanır.',
+                    'Kırılgan çatılar güvenli çalışma alanı değildir; toplu koruma (en az 1,2 m korkuluk, güvenlik ağı) veya kişisel koruyucu önlem alınmadan çalışılmaz.',
+                    'Kemer yatay yaşam hattına bağlanır.',
                     'Yatay yaşam hatları düşme riskinin başladığı kenarlar boyunca, dikey yaşam hatları (EN 353-1:2014) merdiven gibi dikey güzergâhlarda uzman montaj ekibi tarafından kurulur.',
                 ]],
             ],

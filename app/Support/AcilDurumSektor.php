@@ -45,7 +45,7 @@ class AcilDurumSektor
         return is_string($anahtar) && array_key_exists($anahtar, config('acil_durum_sektorler', []));
     }
 
-    /** @return array{anahtar: string, ad: string, onlemler: ?string, senaryo_aciklama: array<string, string>, senaryo_ek: array<string, array<int, array{baslik: string, maddeler: array<int, string>}>>} */
+    /** @return array{anahtar: string, ad: string, onlemler: ?string, onlemler_atif: array<string, string>, senaryo_aciklama: array<string, string>, senaryo_ek: array<string, array<int, array{baslik: string, maddeler: array<int, string>}>>} */
     public static function profil(array $u, ?Firma $firma): array
     {
         $anahtar = static::secili($u, $firma);
@@ -55,6 +55,8 @@ class AcilDurumSektor
             'anahtar' => $anahtar,
             'ad' => $s['ad'],
             'onlemler' => $s['onlemler'] ?? null,
+            // konu => cümle: yalnız o senaryo planda seçiliyse önlemler paragrafına eklenir.
+            'onlemler_atif' => $s['onlemler_atif'] ?? [],
             'senaryo_aciklama' => $s['senaryo_aciklama'] ?? [],
             'senaryo_ek' => $s['senaryo_ek'] ?? [],
         ];

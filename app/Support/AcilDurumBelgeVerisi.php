@@ -49,6 +49,11 @@ class AcilDurumBelgeVerisi
         ];
 
         $sektor = AcilDurumSektor::profil($u, $firma);
+        foreach ($sektor['onlemler_atif'] as $konu => $cumle) {
+            if (in_array($konu, $plan->konular ?? [], true)) {
+                $sektor['onlemler'] = trim($sektor['onlemler'].' '.$cumle);
+            }
+        }
 
         $senaryolar = collect(config('isg.acil_durum.konular'))
             ->whereIn('anahtar', $plan->konular ?? [])

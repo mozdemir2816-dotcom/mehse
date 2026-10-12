@@ -241,6 +241,19 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('Askıda kalan personele 10 dakika içinde müdahale edilir.', $html);
         $this->assertStringContainsString('Düşen kişiye gereksiz dokunulmaz', $html);              // genel senaryo korunur
         $this->assertSame(1, substr_count($html, 'SINIRLAYICI TEDBİRLER'));                     // yalnız yüksekten düşmede
+        $this->assertStringContainsString('ayrıntılı tedbirler EK-1 “Yüksekten Düşme” bölümündedir', $html);
+        $this->assertStringContainsString('omuz hizasının üstüne', $html);
+        $this->assertStringNotContainsString('zemine bağlar', $html);
+        $this->assertStringNotContainsString('125 cm', $html);
+        $this->assertStringNotContainsString('120 cm', $html);
+        $this->assertSame(1, substr_count($html, 'zemine 1 m kalacak'));                       // tekrar yok
+
+        // Yüksekten düşme seçili değilse önlemler paragrafı olmayan bölüme gönderme yapmaz.
+        $plan->update(['konular' => ['deprem', 'heyelan']]);
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan->fresh(), 'firma' => $santiye])->render();
+        $this->assertStringContainsString('İnşaat / şantiye önlemleri:', $html);
+        $this->assertStringNotContainsString('“Yüksekten Düşme” bölümündedir', $html);
+        $plan->update(['konular' => ['yuksekten_dusme', 'deprem', 'heyelan']]);
 
         // Genel seçilince şantiye blokları çıkmaz; her işyerine uyan yüksekte çalışma ekleri kalır.
         $plan->update(['uygulama' => ['sektor' => 'genel']]);
@@ -364,6 +377,9 @@ class AcilDurumPlaniTest extends TestCase
             $this->assertStringNotContainsString($hata, $metin);
         }
         $this->assertStringContainsString('personelin korkuluklara çıkması engellenmelidir', $metin);
+        foreach (['zemine bağlamalıdır', '125 cm', '120 cm'] as $hata) {
+            $this->assertStringNotContainsString($hata, $metin);
+        }
     }
 
     public function test_kapak_sayfasi_sablon_degerlerini_firmaya_gore_degistirir(): void
