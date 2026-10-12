@@ -294,13 +294,17 @@
                         const tipler = [...new Set(this.d.semboller.map((o) => o.tip))].filter((t) => this.ayar.semboller[t]);
                         const ekstra = (this.d.ogeler.yollar.length ? 1 : 0);
                         const n = tipler.length + ekstra; if (!n) return '';
-                        const kol = n > 12 ? 2 : 1, satir = Math.ceil(n / kol), gen = 230 * kol + 20, yuk = 44 + satir * 30;
+                        // Çizim alanını yukarıdan daraltmasın: en fazla 4 satır (antet yüksekliği),
+                        // sembol arttıkça sağa sütun eklenir; antede kadar yer bitince satır artar.
+                        const KG = 200, alan = W - 24 - (this.d.antet.antet_goster ? 452 : 0) - 20;
+                        const satir = Math.max(4, Math.ceil(n / Math.max(1, Math.floor(alan / KG))));
+                        const kol = Math.ceil(n / Math.min(satir, n)), gen = KG * kol + 20, yuk = 44 + Math.min(satir, n) * 30;
                         const x0 = 12, y0 = H - 12 - yuk;
                         let s = `<g><rect x="${x0}" y="${y0}" width="${gen}" height="${yuk}" fill="#fff" stroke="#111" stroke-width="1.5"/><text x="${x0 + 10}" y="${y0 + 24}" font-size="15" font-weight="800" fill="#111" font-family="Arial, sans-serif">LEJANT</text>`;
                         const kalemler = tipler.map((t) => [this.sembolSvg(t, 0.5), this.ayar.semboller[t].ad]);
                         if (ekstra) kalemler.push([`<line x1="-14" y1="0" x2="10" y2="0" stroke="#16a34a" stroke-width="5" stroke-dasharray="8 4" marker-end="url(#kok)"/>`, 'Kaçış Güzergâhı']);
                         kalemler.forEach(([ikon, ad], i) => {
-                            const cx = x0 + 22 + Math.floor(i / satir) * 230, cy = y0 + 46 + (i % satir) * 30;
+                            const cx = x0 + 22 + Math.floor(i / satir) * KG, cy = y0 + 46 + (i % satir) * 30;
                             s += `<g transform="translate(${cx},${cy})">${ikon}</g><text x="${cx + 22}" y="${cy + 5}" font-size="12.5" fill="#111" font-family="Arial, sans-serif">${esc(ad)}</text>`;
                         });
                         return s + '</g>';
