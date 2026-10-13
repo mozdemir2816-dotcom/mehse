@@ -111,6 +111,15 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_START,
                 fn () => view('filament.components.head-ayarlar'),
             )
+            // PWA: manifest + ikonlar + service worker (public/sw.js); telefonda "Yükle" bandı.
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.components.pwa-head'),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.components.pwa-yukle'),
+            )
             // Bildirim zili (Bildirim Merkezi okunmamış sayısı) — tema seçicinin solunda.
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,

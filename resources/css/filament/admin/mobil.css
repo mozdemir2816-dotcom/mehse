@@ -251,3 +251,97 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         height: 2.8rem !important;
     }
 }
+
+/* ---- PWA kurulum bandı (filament.components.pwa-yukle) ------------------ */
+html .mehse-pwa-bant {
+    position: fixed;
+    inset-inline: .75rem;
+    bottom: calc(.75rem + env(safe-area-inset-bottom, 0px));
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .7rem .6rem .7rem .7rem;
+    border-radius: 16px;
+    background: #fff;
+    color: #0A2E4D;
+    border: 1px solid rgb(10 52 90 / .1);
+    box-shadow: 0 18px 40px -16px rgb(10 52 90 / .45);
+    animation: mehse-pwa-gir .35s ease-out;
+}
+
+html .mehse-pwa-bant[hidden] {
+    display: none;
+}
+
+/* Alt menü varsa onun üstünde dursun. */
+html body:has(.fi-mobil-alt-nav) .mehse-pwa-bant {
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html .mehse-pwa-bant-ikon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgb(10 52 90 / .08);
+}
+
+html .mehse-pwa-bant-metin {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: #51657A;
+}
+
+html .mehse-pwa-bant-metin strong {
+    font-size: 14px;
+    color: #0A2E4D;
+}
+
+html .mehse-pwa-bant-metin svg {
+    display: inline;
+    vertical-align: -2px;
+}
+
+html .mehse-pwa-bant-yukle {
+    flex-shrink: 0;
+    min-height: 2.4rem;
+    padding: 0 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+    background: linear-gradient(135deg, #099291, #077A79);
+}
+
+html .mehse-pwa-bant-yukle[hidden] {
+    display: none;
+}
+
+html .mehse-pwa-bant-kapat {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: #8494A5;
+}
+
+@keyframes mehse-pwa-gir {
+    from { transform: translateY(1rem); opacity: 0; }
+}
+
+/* Uygulama olarak açıldığında (ana ekrandan): tarayıcı çubuğu yok — tıklama
+   vurgusu ve kaydırma sonu esnemesi uygulama hissini bozmasın. */
+@media (display-mode: standalone) {
+    html {
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior-y: none;
+    }
+}
