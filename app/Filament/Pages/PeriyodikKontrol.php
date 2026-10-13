@@ -9,6 +9,7 @@ use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
 use App\Filament\Support\ImzaSecenegi;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Support\EkipmanKatalogu;
+use App\Support\GunlukEkipmanKontrolUretici;
 use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\PeriyodikKontrolUretici;
 use BackedEnum;
@@ -342,8 +343,15 @@ class PeriyodikKontrol extends Page
 
             // Firma çıktıları tek menüde — başlık dar sütuna sıkışmasın.
             ActionGroup::make([
+                Action::make('gunlukKontrolFormu')
+                    ->label('Günlük Kontrol Formu')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->visible(fn () => $this->firma !== null && GunlukEkipmanKontrolUretici::sayfalar($this->firma) !== [])
+                    ->tooltip('Her ekipman için ayrı sayfa: kullanım öncesi Uygun / Uygun Değil / Uygulanamaz, kullanıma uygunluk kararı ve imzalar')
+                    ->action(fn () => GunlukEkipmanKontrolUretici::pdf($this->firma)),
+
                 Action::make('kontrolFormu')
-                    ->label('Ekipman Kontrol Formu')
+                    ->label('Haftalık Kontrol Formu')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->visible(fn () => $this->firma !== null && EkipmanKatalogu::kontrolFormuIndeksleri($this->firma) !== [])
                     ->tooltip('Firmanın ekipmanlarına ait boş kullanım öncesi / haftalık kontrol formları (her tip ayrı sayfa)')

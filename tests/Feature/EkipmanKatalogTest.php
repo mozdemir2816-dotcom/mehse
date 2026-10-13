@@ -12,6 +12,7 @@ use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\BildirimTarayici;
 use App\Support\EkipmanKatalogu;
+use App\Support\GunlukEkipmanKontrolUretici;
 use Database\Seeders\MakineRiskKutuphanesiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -40,7 +41,7 @@ class EkipmanKatalogTest extends TestCase
 
     private function ekipman(string $kategori, string $tip, array $ek = []): IsEkipmani
     {
-        return IsEkipmani::create(['firma_id' => $this->firma->id, 'kategori' => $kategori, 'tip' => $tip, 'ekipman_adi' => $tip, 'aktif' => true] + $ek);
+        return IsEkipmani::create($ek + ['firma_id' => $this->firma->id, 'kategori' => $kategori, 'tip' => $tip, 'ekipman_adi' => $tip, 'aktif' => true]);
     }
 
     private function torna(): IsEkipmani
@@ -219,6 +220,26 @@ class EkipmanKatalogTest extends TestCase
             ->set('firmaId', $this->firma->id)
             ->assertActionVisible('kontrolFormu')
             ->callAction('kontrolFormu')
+            ->assertFileDownloaded();
+    }
+
+    public function test_gunluk_kontrol_formu_her_ekipmana_ayri_sayfa(): void
+    {
+        $this->ekipman('uretim_atolye', 'CNC Tezgâhı', ['ekipman_adi' => 'CNC-1', 'seri_no' => 'SN-111']);
+        $this->ekipman('uretim_atolye', 'CNC Tezgâhı', ['ekipman_adi' => 'CNC-2', 'seri_no' => 'SN-222']);
+        $this->ekipman('elektrik_topraklama', 'Trafo & Yüksek Gerilim İşletmesi');
+        $this->ekipman('elektrik_topraklama', 'Topraklama Tesisatı ve Çevrim Empedansı'); // formu yok
+
+        $sayfalar = GunlukEkipmanKontrolUretici::sayfalar($this->firma);
+
+        $this->assertSame(['CNC-1', 'CNC-2', 'Trafo & Yüksek Gerilim İşletmesi'], collect($sayfalar)->map(fn ($s) => $s['ekipman']->ekipman_adi)->all());
+        $this->assertSame('Trafo (OG/AG)', $sayfalar[2]['form']['ad']);
+        $this->assertCount(12, $sayfalar[0]['form']['sorular']);
+
+        Livewire::test(PeriyodikKontrolSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->assertActionVisible('gunlukKontrolFormu')
+            ->callAction('gunlukKontrolFormu')
             ->assertFileDownloaded();
     }
 
