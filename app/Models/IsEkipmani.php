@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EkipmanKatalogu;
 use App\Support\KullaniciAyarlari;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,7 +45,8 @@ class IsEkipmani extends Model
                 $e->sonraki_vize_tarihi = Carbon::parse($e->son_muayene_tarihi)->addMonths($e->muayene_periyodu_ay);
             }
 
-            if (! $e->son_muayene_tarihi) {
+            // Periyodik muayenesi olmayan ekipmanda vize tarihi tutulmaz (takvim/uyarılara girmez).
+            if (! $e->son_muayene_tarihi || ! EkipmanKatalogu::periyodikMi($e->kategori)) {
                 $e->sonraki_vize_tarihi = null;
             }
         });
@@ -109,10 +111,15 @@ class IsEkipmani extends Model
     /**
      * Vize (periyodik muayene geçerlilik) durumu.
      *
-     * @return 'bekliyor'|'gecerli'|'yaklasan'|'dolmus'
+     * @return 'muaf'|'bekliyor'|'gecerli'|'yaklasan'|'dolmus'
      */
     public function vizeDurumu(): string
     {
+        // Periyodik muayeneye tabi olmayan kategori (ör. Üretim & Atölye Makineleri).
+        if (! EkipmanKatalogu::periyodikMi($this->kategori)) {
+            return 'muaf';
+        }
+
         if (! $this->sonraki_vize_tarihi) {
             return 'bekliyor';
         }
@@ -131,6 +138,7 @@ class IsEkipmani extends Model
     public function vizeDurumEtiketi(): string
     {
         return [
+            'muaf' => 'Periyodik Muayene Yok',
             'bekliyor' => 'Muayene Bekliyor',
             'gecerli' => 'Vizesi Geçerli',
             'yaklasan' => 'Vize Yaklaşan',

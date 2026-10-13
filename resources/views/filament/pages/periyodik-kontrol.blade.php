@@ -1,8 +1,8 @@
 @php
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'width:100%;padding:.4rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem';
-    $durumRenk = ['gecerli' => '#16a34a', 'yaklasan' => '#d97706', 'dolmus' => '#dc2626', 'bekliyor' => '#6b7280'];
-    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan / Yasak', 'bekliyor' => 'Muayene Bekliyor'];
+    $durumRenk = ['gecerli' => '#16a34a', 'yaklasan' => '#d97706', 'dolmus' => '#dc2626', 'bekliyor' => '#6b7280', 'muaf' => '#0369a1'];
+    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan / Yasak', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
 @endphp
 
 <x-filament-panels::page>
@@ -69,6 +69,7 @@
                     <option value="yaklasan">Vize Yaklaşan</option>
                     <option value="dolmus">Süresi Dolan</option>
                     <option value="bekliyor">Muayene Bekliyor</option>
+                    <option value="muaf">Periyodik Muayene Yok</option>
                 </select>
             </div>
         </x-filament::section>
@@ -133,7 +134,7 @@
                                         <span style="display:inline-block;background:{{ $durumRenk[$s['vize_durumu']] }};color:#fff;font-size:.68rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">
                                             {{ $durumEtiket[$s['vize_durumu']] }}
                                         </span>
-                                        @if ($s['kalan_gun'] !== null && $s['vize_durumu'] !== 'bekliyor')
+                                        @if ($s['kalan_gun'] !== null && ! in_array($s['vize_durumu'], ['bekliyor', 'muaf'], true))
                                             <div style="font-size:.66rem;color:rgb(107 114 128);margin-top:.15rem">{{ $s['kalan_gun'] }} gün</div>
                                         @endif
                                     </td>
@@ -198,7 +199,7 @@
                                     <td style="padding:.35rem;white-space:nowrap">{{ $e->sonraki_vize_tarihi?->format('d.m.Y') ?? '—' }}</td>
                                     <td style="padding:.35rem">
                                         <span style="display:inline-block;background:{{ $durumRenk[$d] }};color:#fff;font-size:.68rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">{{ $durumEtiket[$d] }}</span>
-                                        @if ($kalan !== null && $d !== 'bekliyor')<div style="font-size:.66rem;color:rgb(107 114 128)">{{ $kalan }} gün</div>@endif
+                                        @if ($kalan !== null && ! in_array($d, ['bekliyor', 'muaf'], true))<div style="font-size:.66rem;color:rgb(107 114 128)">{{ $kalan }} gün</div>@endif
                                     </td>
                                     <td style="padding:.35rem;white-space:nowrap;text-align:right">
                                         <x-filament::button size="xs" color="primary" wire:click="mountAction('kontrolGir', { id: {{ $e->id }} })">Kontrol Gir</x-filament::button>

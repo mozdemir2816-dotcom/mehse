@@ -62,6 +62,20 @@ class RiskYontemDonusturucu
         }, 'Fine-Kinney');
     }
 
+    /**
+     * Tek bir Fine-Kinney O/Ş çiftini Matris'e çevirir (kütüphane maddesi Matris
+     * değerlendirmesine eklenirken — EkipmanKatalogu::revizeEt).
+     *
+     * @return array{0: ?int, 1: ?int} [olasılık, şiddet]
+     */
+    public static function fineKinneyDegeriniMatrise(?float $olasilik, ?float $siddet): array
+    {
+        return [
+            static::esleTersten($olasilik, self::OLASILIK_FK_TO_MATRIS),
+            static::esleTersten($siddet, self::SIDDET_FK_TO_MATRIS),
+        ];
+    }
+
     /** @param  \Closure(RiskMaddesi): array<string, mixed>  $esleyici */
     private static function donustur(RiskDegerlendirmesi $kaynak, string $hedefYontem, \Closure $esleyici, string $kaynakAdi): RiskDegerlendirmesi
     {

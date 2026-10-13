@@ -1131,6 +1131,7 @@ class RiskSihirbazi extends Page
         foreach (array_values($this->secilenler) as $i => $m) {
             $rd->maddeler()->create([
                 'sira' => $i + 1,
+                'tehlike_id' => is_numeric($m['tehlike_id'] ?? null) ? (int) $m['tehlike_id'] : null,
                 'bolum' => $m['bolum'] ?? null,
                 'faaliyet' => $m['faaliyet'] ?? null,
                 'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',

@@ -24,6 +24,7 @@ class RiskDegerlendirmesi extends Model
         'rapor_tarihi' => 'date',
         'gecerlilik_tarihi' => 'date',
         'ekip' => 'array',
+        'haric_tehlikeler' => 'array',
         'pdf_talep_edildi_at' => 'datetime',
         'pdf_hazir_at' => 'datetime',
     ];

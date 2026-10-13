@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Filament\Pages\AcilDurumPlani as AcilDurumPlaniSayfasi;
 use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\KimyasalSicili;
+use App\Filament\Pages\PeriyodikKontrol as PeriyodikKontrolSayfasi;
 use App\Filament\Pages\PkdSicili;
 use App\Filament\Pages\SaglikGozetimi as SaglikGozetimiSayfasi;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
@@ -133,6 +134,17 @@ class BildirimTarayici
             $ekle('risk:gecti', 'kritik', 'Risk değerlendirmesinin geçerliliği doldu', 'Son risk değerlendirmesi '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihinde geçerliliğini yitirdi; yenileyin (6331 Md.10).', $rd->gecerlilik_tarihi, $rdUrl);
         } elseif ($rd && $rd->gecerlilik_tarihi->lte($bugun->copy()->addDays($esik))) {
             $ekle('risk:yakin', 'uyari', 'Risk değerlendirmesi yenileme tarihi yaklaşıyor', 'Geçerlilik '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihinde bitiyor.', $rd->gecerlilik_tarihi, $rdUrl);
+        }
+
+        // Ekipman → risk değerlendirmesi ve periyodik muayene (EkipmanKatalogu)
+        $ekipmanRisk = EkipmanKatalogu::riskEksikleri($firma);
+        if ($ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0) {
+            $ozet = collect($ekipmanRisk['gruplar'])->map(fn ($liste, $ad) => $ad.' ('.$liste->count().')')->implode(', ');
+            $ekle('ekipman_risk', 'uyari', 'Risk değerlendirmesinde ekipman maddeleri eksik', $ekipmanRisk['toplam'].' madde eklenmemiş: '.Str::limit($ozet, 140).'. Değerlendirmeyi açıp "Ekipman Eksikleri" ile ekleyin.', null, static::url(fn () => RiskDegerlendirmesiResource::getUrl('edit', ['record' => $ekipmanRisk['rd']])));
+        }
+        $tarihsiz = EkipmanKatalogu::muayeneTarihiEksik($firma);
+        if ($tarihsiz->isNotEmpty()) {
+            $ekle('ekipman_muayene', 'uyari', 'Periyodik kontrol tarihi girilmemiş ekipman', $tarihsiz->count().' ekipman: '.Str::limit($tarihsiz->pluck('ekipman_adi')->implode(', '), 120).'. Son muayene tarihini girin; muayene yapılmadıysa yetkili kişiye yaptırın.', null, static::url(fn () => PeriyodikKontrolSayfasi::getUrl(['firma' => $firma->id])));
         }
 
         $adp = AcilDurumPlani::query()->where('firma_id', $firma->id)->first();

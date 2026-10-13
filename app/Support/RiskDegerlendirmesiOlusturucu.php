@@ -65,6 +65,7 @@ class RiskDegerlendirmesiOlusturucu
                 $satirlar[] = [
                     'risk_degerlendirmesi_id' => $rd->id,
                     'sira' => $sira,
+                    'tehlike_id' => is_numeric($m['tehlike_id'] ?? null) ? (int) $m['tehlike_id'] : null,
                     'bolum' => $m['bolum'] ?? null,
                     'faaliyet' => $m['faaliyet'] ?? null,
                     'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',

@@ -7,9 +7,13 @@ use App\Models\IsEkipmani;
 use App\Models\IsEkipmaniKontrolu;
 use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
 use App\Filament\Support\ImzaSecenegi;
+use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Support\EkipmanKatalogu;
+use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\PeriyodikKontrolUretici;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -275,7 +279,7 @@ class PeriyodikKontrol extends Page
                 ->icon('heroicon-o-plus')
                 ->visible(fn () => $this->firma !== null)
                 ->modalHeading('Yeni İş Ekipmanı Tanımla')
-                ->modalDescription('Periyodik kontrol ve muayene takip künyesi')
+                ->modalDescription('Periyodik kontrol ve muayene takip künyesi. Katalogdaki ekipmanlar risk değerlendirmesine ve ekipman kontrol formuna da bağlanır.')
                 ->schema([
                     Select::make('kategori')
                         ->label('Ekipman Kategorisi')
@@ -312,6 +316,7 @@ class PeriyodikKontrol extends Page
                         ->label('Muayene Periyodu (Ay)')
                         ->options(config('isg.periyodik_kontrol.periyot_secenekleri'))
                         ->default('12')
+                        ->visible(fn (Get $get) => EkipmanKatalogu::periyodikMi($get('kategori')))
                         ->required(),
 
                     TextInput::make('ekipman_adi')->label('Ekipman Tanımı / İsmi')->required(),
@@ -321,23 +326,12 @@ class PeriyodikKontrol extends Page
                     TextInput::make('kapasite')->label('Kapasite / İşletme Değeri')->placeholder('Örn: 5 Ton / 500 Litre 11 Bar'),
                     DatePicker::make('son_muayene_tarihi')
                         ->label('Son Yapılan Muayene Tarihi (Varsa)')
+                        ->visible(fn (Get $get) => EkipmanKatalogu::periyodikMi($get('kategori')))
                         ->helperText('Girilirse sonraki vize tarihi otomatik hesaplanır.'),
                     Textarea::make('ozel_notlar')->label('Özel Notlar / Emniyet Talimatları')->rows(2)
                         ->placeholder('Operatör ehliyeti zorunludur, çift halatlı tambur vb.'),
                 ])
                 ->action(fn (array $data) => $this->ekipmanKaydet($data)),
-
-            Action::make('pdf')
-                ->label('Müfettiş Teftiş Paketi (PDF)')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
-                ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
-                    $this->kaydet(sessiz: true);
-
-                    return PeriyodikKontrolUretici::pdf($this->kapsayici());
-                }),
 
             Action::make('portfoy_excel')
                 ->label('Tüm Firmalar Excel')
@@ -346,17 +340,41 @@ class PeriyodikKontrol extends Page
                 ->visible(fn () => $this->firma === null && $this->portfoyEkipmanlari->isNotEmpty())
                 ->action(fn () => PeriyodikKontrolUretici::portfoyExcel($this->portfoyEkipmanlari)),
 
-            Action::make('excel')
-                ->label('Müfettiş Teftiş Paketi (Excel)')
-                ->icon('heroicon-o-table-cells')
-                ->color('gray')
-                ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
-                ->schema([ImzaSecenegi::alan()])
-                ->action(function () {
-                    $this->kaydet(sessiz: true);
+            // Firma çıktıları tek menüde — başlık dar sütuna sıkışmasın.
+            ActionGroup::make([
+                Action::make('kontrolFormu')
+                    ->label('Ekipman Kontrol Formu')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->visible(fn () => $this->firma !== null && EkipmanKatalogu::kontrolFormuIndeksleri($this->firma) !== [])
+                    ->tooltip('Firmanın ekipmanlarına ait boş kullanım öncesi / haftalık kontrol formları (her tip ayrı sayfa)')
+                    ->action(fn () => HaftalikEkipmanKontrolUretici::pdf(EkipmanKatalogu::kontrolFormuIndeksleri($this->firma), $this->firma->unvan)),
 
-                    return PeriyodikKontrolUretici::excel($this->kapsayici());
-                }),
+                Action::make('pdf')
+                    ->label('Müfettiş Teftiş Paketi (PDF)')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
+                    ->schema([ImzaSecenegi::alan()])
+                    ->action(function () {
+                        $this->kaydet(sessiz: true);
+
+                        return PeriyodikKontrolUretici::pdf($this->kapsayici());
+                    }),
+
+                Action::make('excel')
+                    ->label('Müfettiş Teftiş Paketi (Excel)')
+                    ->icon('heroicon-o-table-cells')
+                    ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
+                    ->schema([ImzaSecenegi::alan()])
+                    ->action(function () {
+                        $this->kaydet(sessiz: true);
+
+                        return PeriyodikKontrolUretici::excel($this->kapsayici());
+                    }),
+            ])
+                ->label('Çıktı Al')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->button(),
         ];
     }
 
@@ -498,7 +516,7 @@ class PeriyodikKontrol extends Page
         }
 
         $data['firma_id'] = $this->firma->id;
-        $data['muayene_periyodu_ay'] = (int) ($data['muayene_periyodu_ay'] ?: 12);
+        $data['muayene_periyodu_ay'] = (int) (($data['muayene_periyodu_ay'] ?? null) ?: 12);
         $data['aktif'] = true;
         $data['kategori_adi'] = config('isg.periyodik_kontrol.kategoriler.'.$data['kategori'].'.ad');
 
@@ -511,11 +529,54 @@ class PeriyodikKontrol extends Page
             $data['deney_test'] = $tanim['deney'];
         }
 
-        IsEkipmani::create($data);
+        $ekipman = IsEkipmani::create($data);
 
         unset($this->tumEkipmanlar, $this->kpi, $this->kategoriSayaclari);
         $this->satirlariYukle();
 
         Notification::make()->title('Ekipman tanımlandı')->body($data['ekipman_adi'])->success()->send();
+        $this->ekipmanBaglantiUyarisi($ekipman);
+    }
+
+    /**
+     * Katalogdaki ekipman eklenince: risk değerlendirmesinde eksik madde, kontrol formu
+     * ve periyodik muayene durumu hakkında kalıcı uyarı (EkipmanKatalogu).
+     */
+    private function ekipmanBaglantiUyarisi(IsEkipmani $ekipman): void
+    {
+        $tanim = EkipmanKatalogu::tanim($ekipman->tip);
+        if (! $tanim || ! $this->firma) {
+            return;
+        }
+
+        $satirlar = [];
+        $aksiyonlar = [];
+        $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
+
+        if ($eksik['toplam'] > 0 && $eksik['rd']) {
+            $satirlar[] = 'Risk değerlendirmesinde '.$eksik['toplam'].' ekipman maddesi eksik.';
+            $aksiyonlar[] = Action::make('riskAc')->label('Risk değerlendirmesini aç')->button()
+                ->url(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $eksik['rd']]));
+        } elseif ($eksik['toplam'] > 0) {
+            $satirlar[] = 'Firmanın risk değerlendirmesi yok; Risk Sihirbazı ile oluşturun ('.$eksik['toplam'].' ekipman maddesi kütüphanede hazır).';
+        } elseif ($tanim['risk_kategorileri'] === []) {
+            $satirlar[] = 'Bu ekipman için kütüphanede henüz risk maddesi yok.';
+        }
+
+        if ($tanim['kontrol_formu']) {
+            $satirlar[] = 'Kontrol formu: "Ekipman Kontrol Formu" butonundan alınabilir.';
+        }
+
+        $satirlar[] = EkipmanKatalogu::periyodikMi($ekipman->kategori)
+            ? ($ekipman->son_muayene_tarihi ? 'Periyodik muayene takibi başladı.' : 'Periyodik muayene tarihi girilmedi — tarih girilene kadar uyarı verilir.')
+            : 'Periyodik muayene yükümlülüğü yok (kullanım öncesi kontrol formuyla takip).';
+
+        Notification::make()
+            ->title($ekipman->tip.' — bağlantılı işler')
+            ->body(new \Illuminate\Support\HtmlString(collect($satirlar)->map(fn ($s) => e($s))->implode('<br>')))
+            ->warning()
+            ->persistent()
+            ->actions($aksiyonlar)
+            ->send();
     }
 }

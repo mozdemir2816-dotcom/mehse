@@ -25,6 +25,7 @@
     .d-yaklasan { color: #b45309; font-weight: bold; }
     .d-dolmus { color: #b91c1c; font-weight: bold; }
     .d-bekliyor { color: #6b7280; }
+    .d-muaf { color: #0369a1; }
     .yasal { margin-top: 8px; font-size: 7px; color: #555; }
     .imza { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 8px; }
     .imza td { border-top: 1px solid #111; padding-top: 4px; text-align: center; width: 33%; }
@@ -33,9 +34,9 @@
 <body>
 
 @php
-    $sayac = ['gecerli' => 0, 'yaklasan' => 0, 'dolmus' => 0, 'bekliyor' => 0];
+    $sayac = ['gecerli' => 0, 'yaklasan' => 0, 'dolmus' => 0, 'bekliyor' => 0, 'muaf' => 0];
     foreach ($ekipmanlar as $e) { $sayac[$e->vizeDurumu()]++; }
-    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan', 'bekliyor' => 'Muayene Bekliyor'];
+    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
 @endphp
 
 <h1>EKİPMAN & PERİYODİK KONTROL — MÜFETTİŞ TEFTİŞ PAKETİ</h1>
@@ -98,7 +99,7 @@
                 <td style="text-align:center">{{ $e->muayene_periyodu_ay }}</td>
                 <td>{{ $e->son_muayene_tarihi?->format('d.m.Y') ?? '—' }}</td>
                 <td>{{ $e->sonraki_vize_tarihi?->format('d.m.Y') ?? '—' }}</td>
-                <td class="d-{{ $d }}">{{ $durumEtiket[$d] }}@if ($e->kalanGun() !== null && $d !== 'bekliyor')<br><span style="font-weight:normal;color:#666">{{ $e->kalanGun() }} gün</span>@endif</td>
+                <td class="d-{{ $d }}">{{ $durumEtiket[$d] }}@if ($e->kalanGun() !== null && ! in_array($d, ['bekliyor', 'muaf'], true))<br><span style="font-weight:normal;color:#666">{{ $e->kalanGun() }} gün</span>@endif</td>
                 <td>{{ $e->muayene_yapan ?: '—' }}@if ($e->rapor_no)<br><span style="color:#666">{{ $e->rapor_no }}</span>@endif</td>
                 <td>{{ $sonuclar[$e->sonuc] ?? $e->sonuc }}</td>
             </tr>

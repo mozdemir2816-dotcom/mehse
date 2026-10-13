@@ -96,7 +96,8 @@ class PortfoyKarne
     {
         return match ($kosul) {
             'elli_calisan' => (int) $firma->calisan_sayisi >= 50,
-            'ekipman_var' => $firma->isEkipmanlari()->exists(),
+            // Yalnız periyodik muayeneye tabi ekipman (atölye makineleri rapor gerektirmez).
+            'ekipman_var' => $firma->isEkipmanlari()->whereNotIn('kategori', EkipmanKatalogu::periyodikOlmayanKategoriler())->exists(),
             // Yıllık değerlendirme yalnız firma geçen yıldan beri atalıysa beklenir;
             // sözleşme başlangıcı girilmemişse bilinmediği için kapsamda sayılır.
             'gecen_yil_atali' => ! $firma->sozlesme_baslangic || $firma->sozlesme_baslangic->year < now()->year,

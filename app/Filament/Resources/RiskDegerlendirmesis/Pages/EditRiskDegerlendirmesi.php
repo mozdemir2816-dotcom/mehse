@@ -4,11 +4,14 @@ namespace App\Filament\Resources\RiskDegerlendirmesis\Pages;
 
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\RiskDegerlendirmesi;
+use App\Models\Tehlike;
 use App\Filament\Support\ImzaSecenegi;
+use App\Support\EkipmanKatalogu;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskYontemDonusturucu;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
@@ -27,10 +30,64 @@ class EditRiskDegerlendirmesi extends EditRecord
         return $this->pdfBuyukCache ??= $this->record->maddeler()->count() > RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI;
     }
 
+    /** @var array{rd: ?RiskDegerlendirmesi, gruplar: array<string, \Illuminate\Support\Collection<int, Tehlike>>, toplam: int}|null */
+    private ?array $ekipmanEksikCache = null;
+
+    private function ekipmanEksikleri(): array
+    {
+        return $this->ekipmanEksikCache ??= $this->record->firma
+            ? EkipmanKatalogu::riskEksikleri($this->record->firma, $this->record)
+            : ['rd' => $this->record, 'gruplar' => [], 'toplam' => 0];
+    }
+
+    /**
+     * Firmaya eklenen ekipmanların (Periyodik Kontrol) kütüphane maddelerinden bu
+     * değerlendirmede olmayanlar. İşareti kaldırılan "gerekmiyor" sayılır, bir daha gelmez.
+     */
+    private function ekipmanEksikleriAksiyonu(): Action
+    {
+        return Action::make('ekipmanEksikleri')
+            ->label(fn () => 'Ekipman Eksikleri ('.$this->ekipmanEksikleri()['toplam'].')')
+            ->icon('heroicon-o-wrench-screwdriver')
+            ->color('danger')
+            ->visible(fn () => $this->ekipmanEksikleri()['toplam'] > 0)
+            ->modalHeading('Ekipman Eksikleri — Revize Et')
+            ->modalDescription('Firmaya tanımlı ekipmanlar için kütüphanede olup bu değerlendirmede bulunmayan maddeler. İşaretli olanlar eklenir; işaretini kaldırdıklarınız bu değerlendirme için "gerekmiyor" sayılır ve bir daha önerilmez. Değerlendirmede zaten olan maddeler (elle yazdıklarınız dahil) listelenmez.')
+            ->modalSubmitActionLabel('Seçilenleri Ekle')
+            ->modalWidth('5xl')
+            ->schema(fn () => collect(array_values($this->ekipmanEksikleri()['gruplar']))
+                ->map(fn ($tehlikeler, int $i) => CheckboxList::make('grup_'.$i)
+                    ->label(array_keys($this->ekipmanEksikleri()['gruplar'])[$i].' — '.$tehlikeler->count().' madde')
+                    ->options($tehlikeler->mapWithKeys(fn (Tehlike $t) => [$t->id => trim(($t->faaliyet ? $t->faaliyet.' — ' : '').$t->tehlike)])->all())
+                    ->descriptions($tehlikeler->mapWithKeys(fn (Tehlike $t) => [$t->id => (string) $t->risk])->all())
+                    ->default($tehlikeler->pluck('id')->all())
+                    ->bulkToggleable()
+                    ->columns(2))
+                ->all())
+            ->action(function (array $data) {
+                $gruplar = $this->ekipmanEksikleri()['gruplar'];
+                $listelenen = collect($gruplar)->flatten()->map(fn (Tehlike $t) => $t->id)->all();
+                $secilen = collect($data)->flatten()->map(fn ($id) => (int) $id)->intersect($listelenen)->values()->all();
+                $ekipmanlar = collect($gruplar)->keys()->reject(fn ($ad) => $ad === EkipmanKatalogu::ORTAK_ETIKET)->values()->all();
+
+                $eklenen = EkipmanKatalogu::revizeEt($this->record, $secilen, array_values(array_diff($listelenen, $secilen)), $ekipmanlar ?: [EkipmanKatalogu::ORTAK_ETIKET]);
+                $gerekmeyen = count($listelenen) - count($secilen);
+
+                Notification::make()
+                    ->title($eklenen.' madde eklendi')
+                    ->body(($eklenen ? 'Revizyon no ve nedeni güncellendi. Puanları firmaya göre gözden geçirin.' : '').($gerekmeyen ? ' '.$gerekmeyen.' madde "gerekmiyor" olarak işaretlendi.' : ''))
+                    ->success()
+                    ->send();
+
+                $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $this->record]));
+            });
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             $this->ustKaydet(),
+            $this->ekipmanEksikleriAksiyonu(),
             Action::make('pdf')
                 ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
