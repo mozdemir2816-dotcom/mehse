@@ -28,7 +28,7 @@ class EkipmanKatalogu
 
     public const ORTAK_ETIKET = 'Ortak makine güvenliği';
 
-    /** @return array{risk_kategorileri: array<int, string>, kontrol_formu: ?string}|null */
+    /** @return array{risk_kategorileri: array<int, string>, kontrol_formu: ?string, ortak_riskler?: bool}|null */
     public static function tanim(?string $tip): ?array
     {
         $t = config('ekipman_katalogu.tipler.'.$tip);
@@ -74,7 +74,9 @@ class EkipmanKatalogu
             }
         }
 
-        $ortak = $ekipmanlar->pluck('kategori')->unique()
+        $ortak = $ekipmanlar
+            ->filter(fn (IsEkipmani $e) => (static::tanim($e->tip)['ortak_riskler'] ?? true) !== false)
+            ->pluck('kategori')->unique()
             ->flatMap(fn ($k) => config('ekipman_katalogu.kategori_ortak_riskleri.'.$k, []))
             ->unique()->values()->all();
         if ($ortak) {

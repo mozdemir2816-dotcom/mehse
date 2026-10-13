@@ -92,6 +92,22 @@ class EkipmanKatalogTest extends TestCase
         $this->assertSame(42, $eksik['toplam']);
     }
 
+    public function test_cnc_kendi_80_maddesiyle_gelir_ortak_maddeleri_tek_basina_tetiklemez(): void
+    {
+        $this->ekipman('uretim_atolye', 'CNC Tezgâhı');
+        $this->degerlendirme();
+
+        $yalnizCnc = EkipmanKatalogu::riskEksikleri($this->firma);
+        $this->assertSame(['CNC Tezgâhı'], array_keys($yalnizCnc['gruplar']));
+        $this->assertSame(80, $yalnizCnc['toplam']);
+
+        // Torna da eklenince ortak atölye maddeleri torna için gelir.
+        $this->torna();
+        $ikisi = EkipmanKatalogu::riskEksikleri($this->firma);
+        $this->assertSame(['CNC Tezgâhı', 'Torna Tezgâhı', EkipmanKatalogu::ORTAK_ETIKET], array_keys($ikisi['gruplar']));
+        $this->assertSame(80 + 20 + 22, $ikisi['toplam']);
+    }
+
     public function test_degerlendirmede_olan_madde_id_veya_benzer_metinle_tekrar_onerilmez(): void
     {
         $this->torna();

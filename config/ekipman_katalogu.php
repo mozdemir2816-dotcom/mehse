@@ -21,7 +21,8 @@
 return [
     'tipler' => [
         // Üretim & atölye makineleri — risk: RA-MAK-2026-01 (MakineRiskKutuphanesiSeeder)
-        'CNC Tezgâhı' => ['risk_kategorileri' => [], 'kontrol_formu' => 'CNC Tezgâhı'],
+        // CNC-RA-01 kendi elektrik/eğitim/acil durum maddelerini içerir → ortak atölye maddeleri bu tipten tetiklenmez.
+        'CNC Tezgâhı' => ['risk_kategorileri' => ['atolye_cnc_isleme_merkezi'], 'kontrol_formu' => 'CNC Tezgâhı', 'ortak_riskler' => false],
         'Torna Tezgâhı' => ['risk_kategorileri' => ['atolye_torna_tezgahi'], 'kontrol_formu' => 'Torna Tezgâhı'],
         'Sütunlu Matkap' => ['risk_kategorileri' => ['atolye_sutunlu_matkap'], 'kontrol_formu' => 'Sütunlu Matkap'],
         'Kesme Tezgâhı (Disk / Testere)' => ['risk_kategorileri' => ['atolye_kesme_tezgahi'], 'kontrol_formu' => 'Kesme Tezgâhı (Disk / Testere)'],
@@ -42,7 +43,8 @@ return [
         'Yükseltilebilir Seyyar İş Platformu (Manlift)' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Makaslı Platform (Manlift)'],
     ],
 
-    // Kategoride en az bir ekipman varsa ayrıca beklenen ortak risk kategorileri.
+    // Kategoride en az bir ekipman varsa ayrıca beklenen ortak risk kategorileri. Kendi risk
+    // dosyası bu konuları zaten kapsayan tip 'ortak_riskler' => false ile tetiklemez.
     'kategori_ortak_riskleri' => [
         'uretim_atolye' => ['atolye_elektrik_ve_ortak_makine_guvenligi', 'atolye_egitim_ve_yetkilendirme'],
     ],
