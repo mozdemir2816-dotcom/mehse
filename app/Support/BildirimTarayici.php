@@ -6,6 +6,8 @@ use App\Filament\Pages\AcilDurumPlani as AcilDurumPlaniSayfasi;
 use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\KimyasalSicili;
 use App\Filament\Pages\PeriyodikKontrol as PeriyodikKontrolSayfasi;
+use App\Filament\Pages\RiskSihirbazi;
+use App\Filament\Pages\TalimatOlustur;
 use App\Filament\Pages\PkdSicili;
 use App\Filament\Pages\SaglikGozetimi as SaglikGozetimiSayfasi;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
@@ -141,6 +143,12 @@ class BildirimTarayici
         if ($ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0) {
             $ozet = collect($ekipmanRisk['gruplar'])->map(fn ($liste, $ad) => $ad.' ('.$liste->count().')')->implode(', ');
             $ekle('ekipman_risk', 'uyari', 'Risk değerlendirmesinde ekipman maddeleri eksik', $ekipmanRisk['toplam'].' madde eklenmemiş: '.Str::limit($ozet, 140).'. Değerlendirmeyi açıp "Ekipman Eksikleri" ile ekleyin.', null, static::url(fn () => RiskDegerlendirmesiResource::getUrl('edit', ['record' => $ekipmanRisk['rd']])));
+        } elseif (! $ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0) {
+            $ekle('ekipman_risk_yok', 'kritik', 'Ekipmanı olan firmada risk değerlendirmesi yok', 'Firmaya tanımlı ekipmanlar için kütüphanede '.$ekipmanRisk['toplam'].' risk maddesi hazır; Risk Değerlendirme sihirbazıyla değerlendirmeyi oluşturun.', null, static::url(fn () => RiskSihirbazi::getUrl()));
+        }
+        $eksikTalimat = EkipmanKatalogu::eksikTalimatlar($firma);
+        if ($eksikTalimat) {
+            $ekle('ekipman_talimat', 'uyari', 'Ekipman talimatı firmada yok', count($eksikTalimat).' talimat: '.Str::limit(implode(', ', array_keys($eksikTalimat)), 140).'. Talimat Oluştur sayfasından ekleyip teslim tutanağıyla tebliğ edin.', null, static::url(fn () => TalimatOlustur::getUrl(['firma' => $firma->id])));
         }
         $tarihsiz = EkipmanKatalogu::muayeneTarihiEksik($firma);
         if ($tarihsiz->isNotEmpty()) {

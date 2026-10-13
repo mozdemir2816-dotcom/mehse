@@ -7,6 +7,7 @@ use App\Filament\Resources\RiskDegerlendirmesis\Pages\EditRiskDegerlendirmesi;
 use App\Models\Firma;
 use App\Models\IsEkipmani;
 use App\Models\RiskDegerlendirmesi;
+use App\Models\Talimat;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
 use App\Models\User;
@@ -234,13 +235,48 @@ class EkipmanKatalogTest extends TestCase
 
         $this->assertSame(['CNC-1', 'CNC-2', 'Trafo & Yüksek Gerilim İşletmesi'], collect($sayfalar)->map(fn ($s) => $s['ekipman']->ekipman_adi)->all());
         $this->assertSame('Trafo (OG/AG)', $sayfalar[2]['form']['ad']);
-        $this->assertCount(12, $sayfalar[0]['form']['sorular']);
+        // CNC: kullanıcının gruplu formu (İSG-FR-CNC-01) — 5 grup, 16 madde, U/UD/Y/X.
+        $this->assertSame('İSG-FR-CNC-01', $sayfalar[0]['form']['form_no']);
+        $this->assertCount(16, $sayfalar[0]['form']['sorular']);
+        $this->assertSame(['U', 'UD', 'Y', 'X'], array_keys($sayfalar[0]['form']['kriterler']));
+        $this->assertSame(['grup' => '1. GÜVENLİK & ACİL DURUM EKİPMANLARI'], $sayfalar[0]['form']['satirlar'][0]);
+        $this->assertSame('1.1', $sayfalar[0]['form']['satirlar'][1]['no']);
+        $this->assertCount(12, $sayfalar[2]['form']['sorular']);
 
         Livewire::test(PeriyodikKontrolSayfasi::class)
             ->set('firmaId', $this->firma->id)
             ->assertActionVisible('gunlukKontrolFormu')
             ->callAction('gunlukKontrolFormu')
             ->assertFileDownloaded();
+    }
+
+    public function test_cnc_eklenince_talimati_firmaya_otomatik_eklenir_ve_cogalmaz(): void
+    {
+        $this->ekipman('uretim_atolye', 'CNC Tezgâhı', ['ekipman_adi' => 'CNC-1']);
+        $this->ekipman('uretim_atolye', 'CNC Tezgâhı', ['ekipman_adi' => 'CNC-2']);
+
+        $talimat = Talimat::where('firma_id', $this->firma->id)->sole();
+        $this->assertSame('CNC MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI', $talimat->baslik);
+        $this->assertSame('İSG-TLM-CNC-01', $talimat->dokuman_no);
+        $this->assertTrue($talimat->bolumluMu());
+        $this->assertSame(['AMAÇ VE KAPSAM', 'KİŞİSEL KORUYUCU DONANIMLAR (KKD)', 'ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ', 'ÇALIŞMA SIRASINDA UYULACAK KURALLAR', 'ÇALIŞMA SONRASI VE BAKIM'], array_column($talimat->bolumler, 'baslik'));
+        $this->assertSame([], EkipmanKatalogu::eksikTalimatlar($this->firma));
+
+        // Talimatı olmayan ekipman (dikey freze) talimat oluşturmaz; torna kendi talimatını ekler.
+        $this->ekipman('uretim_atolye', 'Dikey Freze Tezgâhı');
+        $this->torna();
+        $this->assertEqualsCanonicalizing(['CNC MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI', 'ÜNİVERSAL TORNA TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI'], Talimat::where('firma_id', $this->firma->id)->pluck('baslik')->all());
+    }
+
+    public function test_talimat_silinirse_ve_risk_degerlendirmesi_yoksa_bildirim_verir(): void
+    {
+        $this->ekipman('uretim_atolye', 'CNC Tezgâhı');
+        Talimat::where('firma_id', $this->firma->id)->delete();
+
+        $anahtarlar = BildirimTarayici::firmaBildirimleri($this->firma)->pluck('anahtar');
+
+        $this->assertContains('f'.$this->firma->id.':ekipman_talimat', $anahtarlar);
+        $this->assertContains('f'.$this->firma->id.':ekipman_risk_yok', $anahtarlar);
     }
 
     public function test_bildirimler_eksik_risk_ve_muayene_tarihi_icin_uyarir(): void

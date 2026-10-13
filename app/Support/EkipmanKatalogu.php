@@ -6,6 +6,7 @@ use App\Models\Firma;
 use App\Models\IsEkipmani;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
+use App\Models\Talimat;
 use App\Models\Tehlike;
 use Illuminate\Support\Collection;
 
@@ -28,12 +29,12 @@ class EkipmanKatalogu
 
     public const ORTAK_ETIKET = 'Ortak makine güvenliği';
 
-    /** @return array{risk_kategorileri: array<int, string>, kontrol_formu: ?string, ortak_riskler?: bool}|null */
+    /** @return array{risk_kategorileri: array<int, string>, kontrol_formu: ?string, talimat: ?string, ortak_riskler?: bool}|null */
     public static function tanim(?string $tip): ?array
     {
         $t = config('ekipman_katalogu.tipler.'.$tip);
 
-        return is_array($t) ? $t + ['risk_kategorileri' => [], 'kontrol_formu' => null] : null;
+        return is_array($t) ? $t + ['risk_kategorileri' => [], 'kontrol_formu' => null, 'talimat' => null] : null;
     }
 
     /** Kategori periyodik muayene (vize) takibine tabi mi? Bilinmeyen kategori: evet. */
@@ -198,6 +199,99 @@ class EkipmanKatalogu
             $rd->revizyon_nedeni = 'Yeni ekipman: '.implode(', ', $ekipmanlar).' ('.now()->format('d.m.Y').')';
         }
         $rd->save();
+
+        return $eklenen;
+    }
+
+    /** Kriter verilmemiş formların sütunları (kod => açıklama). */
+    public const VARSAYILAN_KRITERLER = ['Uygun' => 'Uygun', 'Uygun Değil' => 'Uygun Değil', 'Uygulanamaz' => 'Uygulanamaz'];
+
+    /**
+     * Kontrol formu tanımları (isg.haftalik_ekipman_kontrol.tipler), indeksleri korunarak
+     * normalleştirilmiş: gruplu formlar (kullanıcının kendi formu, ör. İSG-FR-CNC-01) için de
+     * düz 'sorular' + numaralı 'satirlar' (grup başlığı / 1.1 madde) ve 'kriterler' gelir.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function kontrolFormlari(): array
+    {
+        return array_map([static::class, 'kontrolFormuNormal'], config('isg.haftalik_ekipman_kontrol.tipler', []));
+    }
+
+    /** @return array<string, mixed> */
+    public static function kontrolFormuNormal(array $form): array
+    {
+        $satirlar = [];
+        $sorular = [];
+
+        if (! empty($form['gruplar'])) {
+            foreach (array_values($form['gruplar']) as $g => $grup) {
+                $grupNo = preg_match('/^(\d+)\./u', $grup['baslik'], $m) ? $m[1] : (string) ($g + 1);
+                $satirlar[] = ['grup' => $grup['baslik']];
+                foreach (array_values($grup['sorular']) as $k => $soru) {
+                    $satirlar[] = ['no' => $grupNo.'.'.($k + 1), 'soru' => $soru];
+                    $sorular[] = $soru;
+                }
+            }
+        } else {
+            $sorular = array_values($form['sorular'] ?? []);
+            foreach ($sorular as $k => $soru) {
+                $satirlar[] = ['no' => (string) ($k + 1), 'soru' => $soru];
+            }
+        }
+
+        return [
+            ...$form,
+            'sorular' => $sorular,
+            'satirlar' => $satirlar,
+            'kriterler' => $form['kriterler'] ?? self::VARSAYILAN_KRITERLER,
+        ];
+    }
+
+    /**
+     * Ekipmanın katalogdaki talimat şablonu (TalimatKutuphanesi::hazirSablonlar içinden başlıkla).
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function talimatSablonu(?string $tip): ?array
+    {
+        $baslik = static::tanim($tip)['talimat'] ?? null;
+
+        return $baslik
+            ? collect(TalimatKutuphanesi::hazirSablonlar())->first(fn (array $s) => static::norm($s['baslik']) === static::norm($baslik))
+            : null;
+    }
+
+    /**
+     * Firmanın ekipmanları için katalogda talimatı olup firmada bulunmayanlar
+     * (başlık eşleşmesi, büyük/küçük harf duyarsız).
+     *
+     * @return array<string, array<string, mixed>> talimat başlığı => şablon
+     */
+    public static function eksikTalimatlar(Firma $firma): array
+    {
+        $mevcut = Talimat::query()->where('firma_id', $firma->id)->pluck('baslik')->map(fn ($b) => static::norm($b))->all();
+
+        return static::ekipmanlar($firma)->pluck('tip')->filter()->unique()
+            ->map(fn ($tip) => static::talimatSablonu($tip))
+            ->filter()
+            ->reject(fn (array $s) => in_array(static::norm($s['baslik']), $mevcut, true))
+            ->keyBy('baslik')
+            ->all();
+    }
+
+    /**
+     * Eksik ekipman talimatlarını firmaya ekler (şablondan birebir).
+     *
+     * @return array<int, string> eklenen talimat başlıkları
+     */
+    public static function talimatlariEkle(Firma $firma): array
+    {
+        $eklenen = [];
+        foreach (static::eksikTalimatlar($firma) as $baslik => $sablon) {
+            Talimat::create(['firma_id' => $firma->id, ...TalimatKutuphanesi::talimatAlanlari($sablon)]);
+            $eklenen[] = $baslik;
+        }
 
         return $eklenen;
     }

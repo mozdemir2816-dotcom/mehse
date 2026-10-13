@@ -13,7 +13,8 @@ class TalimatKutuphanesi
     /** @return array<int, array<string, mixed>> */
     public static function hazirSablonlar(): array
     {
-        return array_values([...config('isg.talimat.sablonlar', []), ...config('talimat_insaat', [])]);
+        // Ekipman talimatları sona eklenir — mevcut 'hazir' indeksleri değişmez.
+        return array_values([...config('isg.talimat.sablonlar', []), ...config('talimat_insaat', []), ...config('talimat_ekipman', [])]);
     }
 
     /** Şablondan firmaya kaydedilecek talimat alanları. */

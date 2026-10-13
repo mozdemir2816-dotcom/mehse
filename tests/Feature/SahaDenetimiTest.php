@@ -464,18 +464,34 @@ class SahaDenetimiTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
-    public function test_haftalik_ekipman_kontrol_konfigurasyonu_41_tip_ve_12_taslak_icerir(): void
+    public function test_haftalik_ekipman_kontrol_konfigurasyonu_kullanici_formlari_ve_taslaklari_icerir(): void
     {
-        $tipler = config('isg.haftalik_ekipman_kontrol.tipler');
+        $tipler = collect(\App\Support\EkipmanKatalogu::kontrolFormlari());
 
-        // 41 kullanıcı referansı + 12 atölye/ekipman AI taslağı (13.10.2026, 'taslak' => true).
-        $this->assertCount(41, collect($tipler)->where('taslak', '!==', true));
-        $this->assertCount(12, collect($tipler)->where('taslak', true));
-        $this->assertCount(53, collect($tipler)->pluck('ad')->unique());
+        // 41 kullanıcı referansı + kullanıcının gruplu formları (CNC İSG-FR-CNC-01, Torna
+        // İSG-FR-TRN-01) + 10 atölye/ekipman AI taslağı ('taslak' => true).
+        $this->assertCount(43, $tipler->where('taslak', '!==', true));
+        $this->assertCount(10, $tipler->where('taslak', true));
+        $this->assertSame(['CNC Tezgâhı' => 16, 'Torna Tezgâhı' => 18], $tipler->filter(fn ($t) => ! empty($t['gruplar']))->mapWithKeys(fn ($t) => [$t['ad'] => count($t['sorular'])])->all());
+        $this->assertCount(53, $tipler->pluck('ad')->unique());
 
         foreach ($tipler as $t) {
             $this->assertNotEmpty($t['ad']);
-            $this->assertCount(12, $t['sorular']);
+            // Düz formlar 12 soruluk; gruplu kullanıcı formları yukarıda.
+            if (empty($t['gruplar'])) {
+                $this->assertCount(12, $t['sorular'], $t['ad']);
+            }
         }
+    }
+
+    public function test_gruplu_kullanici_formu_haftalik_pdfe_de_yazilir(): void
+    {
+        $cnc = collect(\App\Support\EkipmanKatalogu::kontrolFormlari())->search(fn ($f) => $f['ad'] === 'CNC Tezgâhı');
+
+        $yanit = \App\Support\HaftalikEkipmanKontrolUretici::pdf([$cnc], 'ABC Makina');
+
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
 }

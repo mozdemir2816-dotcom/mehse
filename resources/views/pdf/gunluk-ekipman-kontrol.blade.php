@@ -22,10 +22,17 @@
     table.sorular th { background: #0A345A; color: #fff; padding: 4px 3px; text-align: center; font-size: 7.6px; }
     table.sorular td { border: 1px solid #cbd5e1; padding: 5px 4px; vertical-align: middle; }
     table.sorular td.no { width: 4%; text-align: center; }
-    table.sorular td.soru { width: 52%; }
-    table.sorular td.kutu { width: 7.5%; text-align: center; font-size: 11px; }
-    table.sorular td.aciklama-hucre { width: 21.5%; }
+    table.sorular td.soru { }
+    table.sorular td.kutu { width: 6.8%; text-align: center; font-size: 11px; }
+    table.sorular td.aciklama-hucre { width: 19%; }
     table.sorular tr:nth-child(even) td { background: #f8fafc; }
+    /* Çok satırlı formlar (gruplu kullanıcı formu) tek sayfaya sığsın. */
+    table.sorular.sik td { padding-top: 3px; padding-bottom: 3px; }
+    table.sorular.sik td.grup { padding-top: 2.5px; padding-bottom: 2.5px; }
+    table.sorular.cok-sik { font-size: 7.8px; }
+    table.sorular.cok-sik td { padding-top: 2.2px; padding-bottom: 2.2px; }
+    table.sorular.cok-sik td.kutu { font-size: 10px; }
+    table.sorular td.grup { background: #dbe4ee !important; font-weight: bold; font-size: 8px; padding: 4px 6px; color: #0A345A; }
     .karar { border: 1.5px solid #0A345A; padding: 6px 8px; margin: 6px 0 8px; font-size: 9px; }
     .karar strong { font-size: 9.5px; }
     .not-alani { font-size: 8px; margin-bottom: 6px; }
@@ -47,8 +54,8 @@
                     <td class="logo"><img src="{{ $logo }}"></td>
                 @endif
                 <td class="baslik">
-                    <h1>GÜNLÜK EKİPMAN KONTROL FORMU</h1>
-                    <div>{{ $s['form']['ad'] }} — kullanım öncesi kontrol</div>
+                    <h1>{{ $s['form']['baslik'] ?? 'GÜNLÜK EKİPMAN KONTROL FORMU' }}</h1>
+                    <div>{{ $s['form']['ad'] }} — kullanım öncesi kontrol{{ filled($s['form']['form_no'] ?? null) ? ' · Form No: '.$s['form']['form_no'] : '' }}</div>
                 </td>
             </tr>
         </table>
@@ -74,30 +81,43 @@
             </tr>
         </table>
 
+        @php
+            $kriterler = $s['form']['kriterler'];
+            $kodlu = array_keys($kriterler) !== array_values($kriterler); // U/UD/Y/X gibi kısaltmalı kriter
+        @endphp
         <div class="aciklama">
             Ekipmanı çalıştırmadan / işe başlamadan önce kontrol edin; enerji gerektirmeyen kontrolleri ekipman durmuşken yapın. Her madde için bir kutuyu işaretleyin (✓).
+            @if ($kodlu)
+                <br><strong>Değerlendirme Kriteri:</strong>
+                @foreach ($kriterler as $kod => $ad) &nbsp;[ <strong>{{ $kod }}</strong> ] = {{ $ad }} @endforeach
+                <br>
+            @endif
             <strong>Uygun Değil</strong> işaretlenen ve güvenliği etkileyen bir maddede ekipmanı <strong>kullanmayın</strong>, amirinize bildirin ve açıklama yazın.
             <strong>Uygulanamaz</strong> seçilirse gerekçesini açıklamaya yazın.
         </div>
 
-        <table class="sorular">
+        <table class="sorular{{ count($s['form']['satirlar']) > 20 ? ' sik cok-sik' : (count($s['form']['satirlar']) > 14 ? ' sik' : '') }}">
             <tr>
                 <th>No</th>
                 <th style="text-align:left;padding-left:6px">Kontrol Maddesi</th>
-                <th>Uygun</th>
-                <th>Uygun<br>Değil</th>
-                <th>Uygula-<br>namaz</th>
+                @foreach ($kriterler as $kod => $ad)
+                    <th>{!! $kodlu ? e($kod) : str_replace(' ', '<br>', e($ad)) !!}</th>
+                @endforeach
                 <th>Açıklama</th>
             </tr>
-            @foreach ($s['form']['sorular'] as $j => $soru)
-                <tr>
-                    <td class="no">{{ $j + 1 }}</td>
-                    <td class="soru">{{ $soru }}</td>
-                    <td class="kutu">☐</td>
-                    <td class="kutu">☐</td>
-                    <td class="kutu">☐</td>
-                    <td class="aciklama-hucre"></td>
-                </tr>
+            @foreach ($s['form']['satirlar'] as $satir)
+                @if (isset($satir['grup']))
+                    <tr><td class="grup" colspan="{{ 3 + count($kriterler) }}">{{ $satir['grup'] }}</td></tr>
+                @else
+                    <tr>
+                        <td class="no">{{ $satir['no'] }}</td>
+                        <td class="soru">{{ $satir['soru'] }}</td>
+                        @foreach ($kriterler as $kod => $ad)
+                            <td class="kutu">☐</td>
+                        @endforeach
+                        <td class="aciklama-hucre"></td>
+                    </tr>
+                @endif
             @endforeach
         </table>
 
@@ -116,7 +136,7 @@
         </div>
 
         <table class="imza">
-            <tr><th style="width:50%">Kontrol Eden Operatör</th><th>Onaylayan Amir / Sorumlu</th></tr>
+            <tr><th style="width:50%">Kontrol Eden Operatör</th><th>{{ $s['form']['onaylayan'] ?? 'Onaylayan Amir / Sorumlu' }}</th></tr>
             <tr><td>Ad Soyad:<br><br>İmza:</td><td>Ad Soyad:<br><br>İmza:</td></tr>
         </table>
 

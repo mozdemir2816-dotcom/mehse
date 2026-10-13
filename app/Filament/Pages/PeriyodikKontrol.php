@@ -571,8 +571,14 @@ class PeriyodikKontrol extends Page
             $satirlar[] = 'Bu ekipman için kütüphanede henüz risk maddesi yok.';
         }
 
+        if ($talimat = EkipmanKatalogu::talimatSablonu($ekipman->tip)) {
+            $satirlar[] = 'Talimat firmanın talimatlarında: '.$talimat['baslik'].' (teslim tutanağına dahil).';
+        } else {
+            $satirlar[] = 'Bu ekipman için kütüphanede henüz talimat yok.';
+        }
+
         if ($tanim['kontrol_formu']) {
-            $satirlar[] = 'Kontrol formu: "Ekipman Kontrol Formu" butonundan alınabilir.';
+            $satirlar[] = 'Kontrol formu: "Çıktı Al → Günlük / Haftalık Kontrol Formu".';
         }
 
         $satirlar[] = EkipmanKatalogu::periyodikMi($ekipman->kategori)

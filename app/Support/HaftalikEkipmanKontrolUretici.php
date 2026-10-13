@@ -21,7 +21,8 @@ class HaftalikEkipmanKontrolUretici
      */
     public static function pdf(array $secilenIndeksler, ?string $firmaUnvan = null): StreamedResponse
     {
-        $tumTipler = config('isg.haftalik_ekipman_kontrol.tipler');
+        // Gruplu (kullanıcı) formlar da düz 'sorular' ile gelsin.
+        $tumTipler = EkipmanKatalogu::kontrolFormlari();
 
         $secilenler = collect($secilenIndeksler)
             ->map(fn ($i) => $tumTipler[$i] ?? null)

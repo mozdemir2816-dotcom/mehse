@@ -1535,37 +1535,122 @@ return [
                 'Zemin, hatlar, delgi çevresi ve ekip iletişimi güvenli mi?',
             ]],
 
-            // ---- Atölye makineleri (13.10.2026) — AI TASLAĞI, uzman onayı bekliyor
-            // ('taslak' => true). Sorular kütüphanedeki "Atölye –" risk maddeleriyle
-            // (RA-MAK-2026-01) aynı tehlikeleri kapsayacak şekilde hazırlandı.
-            ['ad' => 'CNC Tezgâhı', 'taslak' => true, 'sorular' => [
-                'Kabin kapıları, gövde muhafazaları ve gözetleme camları sağlam, çatlaksız mı?',
-                'Kapı emniyet kilidi (interlock) kapı açıkken işleme ve iş mili hareketini engelliyor mu?',
-                'Acil durdurma butonları erişilebilir ve denendiğinde makineyi durduruyor mu?',
-                'Ayna/mengene, iş parçası ve takım tutucular doğru ve sağlam bağlanmış mı?',
-                'Ayna/bağlama anahtarları ve aparatlar çalıştırmadan önce makineden alındı mı?',
-                'Kesici takımlar ve uçlar sağlam; kırık, çatlak veya aşırı aşınmış takım yok mu?',
-                'Hidrolik, pnömatik ve yağlama seviyeleri uygun, sistemler kaçaksız mı?',
-                'Soğutma sıvısı seviyesi ve durumu (koku, köpük, kirlenme) uygun mu?',
-                'Talaş konveyörü çalışıyor, talaş birikimi güvenli yöntemle temizlenmiş mi?',
-                'Elektrik kabloları, pano kapağı ve topraklama bağlantısı sağlam mı?',
-                'Kontrol paneli ve ikaz lambaları çalışıyor, ekranda aktif alarm/arıza yok mu?',
-                'Çevre düzenli, zemin kaymaz; operatör göz koruyucu kullanıyor, bol giysi/takı yok mu?',
-            ]],
-            ['ad' => 'Torna Tezgâhı', 'taslak' => true, 'sorular' => [
-                'Ayna, çeneler ve ayna koruyucusu sağlam, koruyucu emniyet anahtarı çalışıyor mu?',
-                'Ayna anahtarı çalıştırmadan önce aynadan alındı mı, anahtar yuvası kullanılıyor mu?',
-                'Acil durdurma butonu ve fren/durdurma pedalı makineyi hemen durduruyor mu?',
-                'Talaş ve soğutma sıvısı siperi yerinde ve sağlam mı?',
-                'Kayış-kasnak ve dişli kutusu koruyucuları kapalı ve sabitlenmiş mi?',
-                'Kesici kalem ve takım tutucu sağlam, doğru bağlanmış mı?',
-                'Support, punta ve kızak kilitleri çalışıyor, hareketlerde boşluk yok mu?',
-                'Uzun malzemede arka mil çıkıntısı koruyucu veya destekle güvenceye alınmış mı?',
-                'Yağ seviyeleri uygun, yağlama sistemi kaçaksız mı?',
-                'Elektrik kablosu, şalter, pano ve topraklama sağlam mı?',
-                'Talaş fırça/kancayla temizleniyor; elle veya basınçlı havayla temizlenmiyor mu?',
-                'Operatör göz koruyucu kullanıyor; dönen kısımlarda eldiven, bol giysi ve takı yok mu?',
-            ]],
+            // Kullanıcının kendi formu (CNC_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-CNC-01) — BİREBİR;
+            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'CNC Tezgâhı',
+                'baslik' => 'CNC MAKİNESİ GÜNLÜK KONTROL VE BAKIM FORMU',
+                'form_no' => 'İSG-FR-CNC-01',
+                'onaylayan' => 'Bölüm Sorumlusu / İSG Uzmanı',
+                'kriterler' => [
+                    'U' => 'Uygun',
+                    'UD' => 'Uygun Değil',
+                    'Y' => 'Yapıldı / Dolduruldu',
+                    'X' => 'Uygulanamaz',
+                ],
+                'gruplar' => [
+                    [
+                        'baslik' => '1. GÜVENLİK & ACİL DURUM EKİPMANLARI',
+                        'sorular' => [
+                            'Acil durdurma (E-Stop) butonları çalışır ve serbest mi?',
+                            'Kabin kapı emniyet kilidi (interlock switch) işlevsel mi?',
+                            'Tezgah içi aydınlatma armatürü çalışıyor ve yeterli mi?',
+                            'Gövde ve zemin çevresinde kayma/düşme tehlikesi (sıvı, talaş) var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '2. PNÖMATİK & HİDROLİK SİSTEMLER',
+                        'sorular' => [
+                            'Hava giriş basıncı nominal aralıkta mı (min. 5.5 - 6 bar)?',
+                            'Hidrolik ünite basıncı ve yağ seviyesi göstergesi uygun mu?',
+                            'Hortum, rekor ve valf bağlantılarında hava/yağ sızıntısı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '3. YAĞLAMA & SOĞUTMA SIVISI (BOR YAĞI)',
+                        'sorular' => [
+                            'Merkezi otomatik kızak yağlama deposu seviyesi yeterli mi?',
+                            'Soğutma sıvısı (bor yağı) seviyesi ve refraktometre oranı uygun mu?',
+                            'Soğutma nozulları temiz, yönlendirilmiş ve debisi yeterli mi?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '4. MEKANİK & TAKIM BAĞLAMA DONANIMLARI',
+                        'sorular' => [
+                            'Ayna / mengene sıkma pabuçlarında çatlak veya aşınma var mı?',
+                            'Kesici takımlar ve tutucularda hasar, gevşeklik, salgı var mı?',
+                            'Magazin ve otomatik takım değiştirici (ATC) sorunsuz dönüyor mu?',
+                            'X, Y, Z eksen körük muhafazaları yırtıksız ve sağlam mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '5. TEMİZLİK & ÇEVRE DÜZENİ',
+                        'sorular' => [
+                            'Talaş konveyörü çalışır durumda ve talaş teknesi boşaltıldı mı?',
+                            'Elektrik pano filtreleri ve soğutma fanları temiz mi?',
+                        ],
+                    ],
+                ],
+            ],
+            // Kullanıcının kendi formu (Universal_Torna_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-TRN-01) — BİREBİR;
+            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Torna Tezgâhı',
+                'baslik' => 'ÜNİVERSAL TORNA GÜNLÜK KONTROL VE BAKIM FORMU',
+                'form_no' => 'İSG-FR-TRN-01',
+                'onaylayan' => 'Atölye Sorumlusu / İSG Uzmanı',
+                'kriterler' => [
+                    'U' => 'Uygun',
+                    'UD' => 'Uygun Değil',
+                    'Y' => 'Yapıldı / Dolduruldu',
+                    'X' => 'Uygulanamaz',
+                ],
+                'gruplar' => [
+                    [
+                        'baslik' => '1. GÜVENLİK, KORUYUCULAR & ACİL DURUM SİSTEMLERİ',
+                        'sorular' => [
+                            'Acil Durdurma (E-Stop) butonu ve Acil Ayak Fren Pedalı çalışıyor mu?',
+                            'Ayna koruyucu muhafazası (siperlik) sağlam ve switchi aktif mi?',
+                            'Araba üzerindeki şeffaf talaş koruma siperliği temiz ve sağlam mı?',
+                            'Ayna anahtarı yaylı mekanizmaya sahip mi ve anahtar ayna dışında mı?',
+                            'Fener mili arkasından taşan çubuklar için koruma borusu takılı mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '2. MEKANİK DONANIMLAR, AYNA & PUNTA KONTROLÜ',
+                        'sorular' => [
+                            'Ayna çeneleri ve cıvataları aşınmasız, sıkı ve temiz mi?',
+                            'Gezer punta gövdesi, koniği ve kilitleme kolu sağlam kilitliyor mu?',
+                            'Kalemlik (kater tutucu) cıvataları sağlam ve sıkma torku yeterli mi?',
+                            'Ana mil (vidalı mil) ve talaş mili koruma kılıfları/yayları sağlam mı?',
+                            'Devir ve ilerleme kumanda kolları boşluksuz ve kilitli geçiyor mu?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '3. YAĞLAMA & SOĞUTMA SİSTEMLERİ',
+                        'sorular' => [
+                            'Fener mili dişli kutusu yağ seviye göstergesi normal aralıkta mı?',
+                            'Kızak ve araba el pompası / merkezi yağlama deposu dolu mu?',
+                            'Soğutma sıvısı (bor yağı) tank seviyesi, hortumu ve debisi yeterli mi?',
+                            'Gövdede, kızaklarda veya zemin üzerinde yağ/sıvı kaçağı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '4. ELEKTRİK, AYDINLATMA & ÇEVRE DÜZENİ',
+                        'sorular' => [
+                            'Tezgah aydınlatma lambası (alçak gerilim 24V) çalışır durumda mı?',
+                            'Elektrik kablolarında, spirallerde yıpranma veya ezilme var mı?',
+                            'Talaş tavası boşaltılmış ve çalışma tabanı kaymaz ızgara/paspaslı mı?',
+                            'Talaş kancası ve temizleme fırçası tezgah başında hazır mı?',
+                        ],
+                    ],
+                ],
+            ],
+
+            // ---- Atölye / ekipman formları (13.10.2026) — AI TASLAĞI, uzman onayı bekliyor
+            // ('taslak' => true). Sorular kütüphanedeki ekipman risk maddeleriyle aynı
+            // tehlikeleri kapsayacak şekilde hazırlandı. Kullanıcının kendi formu gelince
+            // aynı 'ad'lı kayıt onunla değiştirilir (CNC, Torna gibi).
             ['ad' => 'Dikey Freze Tezgâhı', 'taslak' => true, 'sorular' => [
                 'Freze çakısı/kesici koruyucusu yerinde ve ayarlı mı?',
                 'Çakı ve takım tutucu sağlam, doğru sıkılmış; kırık veya aşınmış kesici yok mu?',

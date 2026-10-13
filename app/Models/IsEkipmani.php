@@ -75,6 +75,14 @@ class IsEkipmani extends Model
                 : $e->kontroller()->create(['kontrol_tarihi' => $tarih, ...$degerler]);
         });
 
+        // Katalogda talimatı olan ekipman eklenince talimat firmaya otomatik eklenir
+        // (yasal evrak kaçmasın — EkipmanKatalogu::talimatlariEkle; firmada varsa eklemez).
+        static::created(function (IsEkipmani $e): void {
+            if ($e->firma && EkipmanKatalogu::talimatSablonu($e->tip)) {
+                EkipmanKatalogu::talimatlariEkle($e->firma);
+            }
+        });
+
         // Canlı DB'de FK yok — geçmişi (ve rapor dosyalarını) burada temizle.
         static::deleting(function (IsEkipmani $e): void {
             $e->kontroller()->get()->each->delete();

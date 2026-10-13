@@ -25,7 +25,7 @@ class GunlukEkipmanKontrolUretici
      */
     public static function sayfalar(Firma $firma): array
     {
-        $formlar = collect(config('isg.haftalik_ekipman_kontrol.tipler', []))->keyBy('ad');
+        $formlar = collect(EkipmanKatalogu::kontrolFormlari())->keyBy('ad');
 
         return EkipmanKatalogu::ekipmanlar($firma)
             ->sortBy(fn (IsEkipmani $e) => [$e->tip, $e->ekipman_adi])
