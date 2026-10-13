@@ -35,6 +35,18 @@
                 // Görsel temaya göre değişen menü yazı rengini kopyala (4 tema, ayrı CSS).
                 const etiket = document.querySelector('.fi-sidebar-item-label');
                 if (etiket) this.$root.style.color = getComputedStyle(etiket).color;
+
+                // Menü sadeleştirmesinden (11.10.2026) önce kapatılan gruplar tarayıcıda
+                // (collapsedGroups) kalırsa, artık kapatma düğmesi olmayan grubun maddeleri
+                // görünmez olur ve açılamaz — yalnız daraltılabilir grupları hafızada tut.
+                const sidebar = window.Alpine?.store('sidebar');
+                if (sidebar && Array.isArray(sidebar.collapsedGroups)) {
+                    const daraltilabilir = [...document.querySelectorAll('.fi-sidebar-group')]
+                        .filter((g) => g.querySelector('.fi-sidebar-group-collapse-btn'))
+                        .map((g) => g.dataset.groupLabel);
+                    const temiz = sidebar.collapsedGroups.filter((g) => daraltilabilir.includes(g));
+                    if (temiz.length !== sidebar.collapsedGroups.length) sidebar.collapsedGroups = temiz;
+                }
             },
             filtrele() {
                 const q = sade(this.q);
