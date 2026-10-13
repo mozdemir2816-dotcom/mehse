@@ -14,15 +14,21 @@ class MakineRiskKutuphanesiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_ekipman_maddeleri_15_kategoriye_yuklenir_ve_tekrar_calistirinca_cogalmaz(): void
+    public function test_ekipman_maddeleri_31_kategoriye_yuklenir_ve_tekrar_calistirinca_cogalmaz(): void
     {
         $this->seed(MakineRiskKutuphanesiSeeder::class);
         $this->seed(MakineRiskKutuphanesiSeeder::class);
 
-        $this->assertSame(15, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
-        $this->assertSame(176 - 20, Tehlike::where('kod', 'like', 'MAK-%')->count()); // MAK torna → TFD
+        $this->assertSame(31, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
+        // MAK: torna → TFD, ekstrüzyon/kırıcı/merdane/bant zımpara/kesme → EKP ile güncellendi.
+        $this->assertSame(176 - 20 - 84, Tehlike::where('kod', 'like', 'MAK-%')->count());
         $this->assertSame(80, Tehlike::where('kod', 'like', 'CNC-%')->count());
         $this->assertSame(156, Tehlike::where('kod', 'like', 'TFD-%')->count());
+        // EKP-RA-01: 448 maddeden torna/freze/trafo (TFD ile birebir aynı, 156) atlandı.
+        $this->assertSame(292, Tehlike::where('kod', 'like', 'EKP-%')->count());
+        $this->assertSame(0, Tehlike::where('kod', 'like', 'MAK-%')->whereHas('kategori', fn ($q) => $q->where('anahtar', 'atolye_ekstruzyon_hatti'))->count());
+        $this->assertSame(16, TehlikeKategorisi::where('anahtar', 'atolye_ekstruzyon_hatti')->sole()->tehlikeler()->count());
+        $this->assertSame(1, Tehlike::where('kod', 'EKP-E-019')->where('bolum', 'Açık vals (iki silindir)')->count()); // sayfa harfi: numaralar sayfalar arası tekrar ediyor
         foreach (['atolye_cnc_isleme_merkezi' => 80, 'atolye_torna_tezgahi' => 52, 'atolye_dikey_freze' => 52, 'ekipman_trafo' => 52] as $anahtar => $adet) {
             $this->assertSame($adet, TehlikeKategorisi::where('anahtar', $anahtar)->sole()->tehlikeler()->count(), $anahtar);
         }
@@ -57,11 +63,11 @@ class MakineRiskKutuphanesiTest extends TestCase
     {
         $this->seed(MakineRiskKutuphanesiSeeder::class);
 
-        $madde = RiskKutuphanesi::maddeyeCevir(Tehlike::where('kod', 'MAK-001')->sole());
+        $madde = RiskKutuphanesi::maddeyeCevir(Tehlike::where('kod', 'MAK-083')->sole());
 
-        $this->assertSame('Ekstrüzyon hattı', $madde['bolum']);
-        $this->assertSame('Hazneden dönen vidaya erişim', $madde['tehlike']);
-        $this->assertStringStartsWith('Hazne açıklığı ve vida erişimini ölçün.', $madde['mevcut_onlem']);
+        $this->assertSame('Sütunlu matkap', $madde['bolum']);
+        $this->assertSame('Dönen mandrene doğrudan erişim', $madde['tehlike']);
+        $this->assertStringStartsWith('İşleme uygun mandren ve işlem bölgesi', $madde['mevcut_onlem']);
         $this->assertSame([6.0, 6.0, 15.0], [$madde['olasilik'], $madde['frekans'], $madde['siddet']]);
         $this->assertStringContainsString('ISO 12100', $madde['mevzuat']);
     }

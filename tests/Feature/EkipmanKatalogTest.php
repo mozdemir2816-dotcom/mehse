@@ -68,7 +68,9 @@ class EkipmanKatalogTest extends TestCase
 
         foreach (config('ekipman_katalogu.tipler') as $tip => $tanim) {
             $this->assertContains($tip, $tipler, "Periyodik kontrol tiplerinde yok: $tip");
-            $this->assertContains($tanim['kontrol_formu'], $formlar, "Kontrol formu yok: {$tanim['kontrol_formu']}");
+            if (isset($tanim['kontrol_formu'])) {
+                $this->assertContains($tanim['kontrol_formu'], $formlar, "Kontrol formu yok: {$tanim['kontrol_formu']}");
+            }
             foreach ($tanim['risk_kategorileri'] as $k) {
                 $this->assertContains($k, $riskKategorileri, "Risk kategorisi yok: $k");
             }

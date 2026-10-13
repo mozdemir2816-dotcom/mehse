@@ -653,6 +653,7 @@ return [
             // risk değerlendirmesi ve kontrol formu bağlantısı çalışır (config/ekipman_katalogu.php);
             // vize durumu "Muayene gerekmiyor" görünür, Kontrol Merkezi periyodik rapor beklemez.
             'uretim_atolye' => ['ad' => 'Üretim & Atölye Makineleri', 'mevzuat' => 'İş Ekipmanları Yön. — kullanım öncesi / düzenli kullanıcı kontrolü', 'periyodik' => false],
+            'diger_ekipman' => ['ad' => 'Diğer İş Ekipmanları & Araçlar', 'mevzuat' => 'İş Ekipmanları Yön. — kullanım öncesi kontrol (Ek-III periyodik muayene kapsamı dışı)', 'periyodik' => false],
         ],
 
         'tipler' => [
@@ -665,6 +666,7 @@ return [
                 ['ad' => 'Transpalet (Motorlu / Manuel)', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 3691-5', 'deney' => 'Yük testi ve fonksiyon kontrolü'],
                 ['ad' => 'Araç Kaldırma Lifti', 'periyot_ay' => 12, 'standart' => 'TS EN 1493', 'deney' => 'Nominal yük + %10 aşırı yük testi'],
                 ['ad' => 'Caraskal & Halatlı/Zincirli Çektirme', 'periyot_ay' => 12, 'standart' => 'TS EN 13157', 'deney' => 'Statik 1.25 kat yük testi'],
+                ['ad' => 'Sütunlu Pergel Vinç', 'periyot_ay' => 12, 'standart' => 'TS EN 14985', 'deney' => 'Statik 1.25 kat, Dinamik 1.1 kat yük testi'],
                 ['ad' => 'Yükseltilebilir Seyyar İş Platformu (Manlift)', 'periyot_ay' => 6, 'standart' => 'TS EN 280', 'deney' => 'Stabilite + yük testi, acil indirme'],
                 ['ad' => 'Asansör (İnsan / Yük)', 'periyot_ay' => 12, 'standart' => 'TS EN 81-20 / Asansör Yön.', 'deney' => 'A tipi muayene kuruluşu yıllık kontrolü'],
                 ['ad' => 'Yapı / Cephe İskelesi', 'periyot_ay' => 6, 'standart' => 'TS EN 12811 / Yapı İşleri Yön.', 'deney' => 'Kurulum sonrası ve periyodik statik muayene'],
@@ -715,6 +717,19 @@ return [
                 ['ad' => 'Plastik Kırıcı / Granülatör', 'periyot_ay' => 12, 'standart' => 'TS EN 12012-1', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
                 ['ad' => 'Merdaneli Makine', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
                 ['ad' => 'Gaz Tüpü ve Şaloma Seti', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 5172 / TS EN ISO 5175-1', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                // EKP-RA-01 (13.10.2026) ile eklenenler
+                ['ad' => 'Açık Vals (İki Silindirli)', 'periyot_ay' => 12, 'standart' => 'TS EN 1417', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Gazaltı Kaynak Makinesi', 'periyot_ay' => 12, 'standart' => 'TS EN IEC 60974-1', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Satıh Taşlama Tezgâhı', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 16089', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Dalma Erozyon (EDM) Tezgâhı', 'periyot_ay' => 12, 'standart' => 'TS EN 12957', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Ayaklı Taş Motoru', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 16089', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Pürmüz ve LPG Tüpü', 'periyot_ay' => 12, 'standart' => 'Üretici talimatı', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol'],
+            ],
+            'diger_ekipman' => [
+                ['ad' => 'Endüstriyel Zemin Temizleme Otomatı', 'periyot_ay' => 12, 'standart' => 'TS EN 60335-2-72', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol'],
+                ['ad' => 'Seyyar / Çok Amaçlı Merdiven', 'periyot_ay' => 12, 'standart' => 'TS EN 131', 'deney' => 'Periyodik muayene yok — kullanım öncesi gözle kontrol'],
+                ['ad' => 'Şirket Aracı', 'periyot_ay' => 12, 'standart' => 'Karayolları Trafik Yön. (araç muayenesi ayrıca)', 'deney' => 'İSG periyodik muayenesi yok — araç muayene ve bakım takibi'],
+                ['ad' => 'Endüstriyel Raf', 'periyot_ay' => 12, 'standart' => 'TS EN 15635', 'deney' => 'Ek-III kapsamı dışı — raf sorumlusu kontrolü ve uzman muayenesi önerilir'],
             ],
         ],
     ],
