@@ -24,9 +24,9 @@ class TehlikeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 7;
 
     protected static ?string $modelLabel = 'Tehlike';
 
