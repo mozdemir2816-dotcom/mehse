@@ -27,7 +27,7 @@ class TehlikeForm
                 Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
                 Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
                 Textarea::make('mevcut_onlem')->label('Önerilen kontrol tedbiri')->rows(2)->columnSpanFull(),
-                TextInput::make('mevzuat')->label('Mevzuat dayanağı')->columnSpanFull(),
+                Textarea::make('mevzuat')->label('Mevzuat dayanağı')->rows(2)->columnSpanFull(),
             ]),
             Section::make('Önerilen Puanlar')
                 ->description('Sektörel bir analizden (Fine-Kinney / 5x5) aktarıldıysa dolu gelir; Risk Sihirbazı manuel seçimde forma önceden yazılır. Boş bırakılabilir.')

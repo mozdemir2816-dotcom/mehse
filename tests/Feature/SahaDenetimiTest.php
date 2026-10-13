@@ -464,14 +464,14 @@ class SahaDenetimiTest extends TestCase
         $this->assertStringStartsWith('%PDF', $icerik);
     }
 
-    public function test_haftalik_ekipman_kontrol_konfigurasyonu_41_tip_ve_10_atolye_taslagi_icerir(): void
+    public function test_haftalik_ekipman_kontrol_konfigurasyonu_41_tip_ve_12_taslak_icerir(): void
     {
         $tipler = config('isg.haftalik_ekipman_kontrol.tipler');
 
-        // 41 kullanıcı referansı + 10 atölye makinesi AI taslağı (13.10.2026, 'taslak' => true).
+        // 41 kullanıcı referansı + 12 atölye/ekipman AI taslağı (13.10.2026, 'taslak' => true).
         $this->assertCount(41, collect($tipler)->where('taslak', '!==', true));
-        $this->assertCount(10, collect($tipler)->where('taslak', true));
-        $this->assertCount(51, collect($tipler)->pluck('ad')->unique());
+        $this->assertCount(12, collect($tipler)->where('taslak', true));
+        $this->assertCount(53, collect($tipler)->pluck('ad')->unique());
 
         foreach ($tipler as $t) {
             $this->assertNotEmpty($t['ad']);

@@ -9,21 +9,48 @@ use Database\Seeders\MakineRiskKutuphanesiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/** Makine atölyesi risk kütüphanesi (RA-MAK-2026-01 176 madde + CNC-RA-01 80 madde). */
+/** Ekipman risk kütüphanesi (RA-MAK-2026-01 + CNC-RA-01 + TFD-RA-01). */
 class MakineRiskKutuphanesiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_makine_ve_cnc_maddeleri_13_kategoriye_yuklenir_ve_tekrar_calistirinca_cogalmaz(): void
+    public function test_ekipman_maddeleri_15_kategoriye_yuklenir_ve_tekrar_calistirinca_cogalmaz(): void
     {
         $this->seed(MakineRiskKutuphanesiSeeder::class);
         $this->seed(MakineRiskKutuphanesiSeeder::class);
 
-        $this->assertSame(13, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
-        $this->assertSame(176, Tehlike::where('kod', 'like', 'MAK-%')->count());
+        $this->assertSame(15, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
+        $this->assertSame(176 - 20, Tehlike::where('kod', 'like', 'MAK-%')->count()); // MAK torna → TFD
         $this->assertSame(80, Tehlike::where('kod', 'like', 'CNC-%')->count());
-        $this->assertSame(80, TehlikeKategorisi::where('anahtar', 'atolye_cnc_isleme_merkezi')->sole()->tehlikeler()->count());
-        $this->assertSame(20, TehlikeKategorisi::where('anahtar', 'atolye_torna_tezgahi')->sole()->tehlikeler()->count());
+        $this->assertSame(156, Tehlike::where('kod', 'like', 'TFD-%')->count());
+        foreach (['atolye_cnc_isleme_merkezi' => 80, 'atolye_torna_tezgahi' => 52, 'atolye_dikey_freze' => 52, 'ekipman_trafo' => 52] as $anahtar => $adet) {
+            $this->assertSame($adet, TehlikeKategorisi::where('anahtar', $anahtar)->sole()->tehlikeler()->count(), $anahtar);
+        }
+    }
+
+    public function test_guncellenen_ekipmanda_eski_seed_maddesi_silinir_elle_eklenen_kalir(): void
+    {
+        $torna = TehlikeKategorisi::create(['anahtar' => 'atolye_torna_tezgahi', 'ad' => 'Atölye – Torna tezgâhı', 'sira' => 1]);
+        $torna->tehlikeler()->create(['kod' => 'MAK-063', 'tehlike' => 'Eski dosyadan torna maddesi']);
+        $elle = $torna->tehlikeler()->create(['kod' => 'T-1', 'tehlike' => 'Uzmanın elle eklediği madde']);
+
+        $this->seed(MakineRiskKutuphanesiSeeder::class);
+
+        $this->assertNull(Tehlike::where('kod', 'MAK-063')->first());
+        $this->assertModelExists($elle);
+        $this->assertSame(52 + 1, $torna->tehlikeler()->count());
+    }
+
+    public function test_tfd_dayanaklari_kisaltilmadan_aktarilir(): void
+    {
+        $this->seed(MakineRiskKutuphanesiSeeder::class);
+
+        $trafo = Tehlike::where('kod', 'TFD-081')->sole();
+
+        $this->assertSame('Trafo', $trafo->bolum);
+        $this->assertStringContainsString('Ek III elektrik tesisatları ve transformatörler', $trafo->mevzuat);
+        $this->assertStringContainsString('Makina Emniyeti kapsamı dışında', $trafo->mevzuat);
+        $this->assertGreaterThan(191, mb_strlen($trafo->mevzuat));
     }
 
     public function test_madde_sihirbaza_tedbir_ve_fine_kinney_puaniyla_gelir(): void

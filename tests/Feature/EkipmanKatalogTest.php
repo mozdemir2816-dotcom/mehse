@@ -79,20 +79,34 @@ class EkipmanKatalogTest extends TestCase
         }
     }
 
-    public function test_torna_eklenince_tum_torna_ve_ortak_maddeler_eksik_gorunur(): void
+    public function test_torna_eklenince_kendi_52_maddesi_eksik_gorunur(): void
     {
         $this->torna();
         $this->degerlendirme();
 
         $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
 
-        $this->assertSame(['Torna Tezgâhı', EkipmanKatalogu::ORTAK_ETIKET], array_keys($eksik['gruplar']));
-        $this->assertCount(20, $eksik['gruplar']['Torna Tezgâhı']);
-        $this->assertCount(14 + 8, $eksik['gruplar'][EkipmanKatalogu::ORTAK_ETIKET]);
-        $this->assertSame(42, $eksik['toplam']);
+        // TFD-RA-01 torna: 40 risk + 6 eğitim + 6 acil durum; ortak atölye maddelerini tetiklemez.
+        $this->assertSame(['Torna Tezgâhı'], array_keys($eksik['gruplar']));
+        $this->assertSame(52, $eksik['toplam']);
+        $this->assertTrue($eksik['gruplar']['Torna Tezgâhı']->every(fn (Tehlike $t) => str_starts_with($t->kod, 'TFD-')));
     }
 
-    public function test_cnc_kendi_80_maddesiyle_gelir_ortak_maddeleri_tek_basina_tetiklemez(): void
+    public function test_dikey_freze_ve_trafo_kendi_maddeleriyle_gelir(): void
+    {
+        $this->ekipman('uretim_atolye', 'Dikey Freze Tezgâhı');
+        $this->ekipman('elektrik_topraklama', 'Trafo & Yüksek Gerilim İşletmesi');
+        $this->degerlendirme();
+
+        $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
+
+        $this->assertEqualsCanonicalizing(['Dikey Freze Tezgâhı', 'Trafo & Yüksek Gerilim İşletmesi'], array_keys($eksik['gruplar']));
+        $this->assertSame(52 + 52, $eksik['toplam']);
+        // Trafo periyodik muayeneye tabi: tarih girilmeyince uyarı listesinde.
+        $this->assertSame(['Trafo & Yüksek Gerilim İşletmesi'], EkipmanKatalogu::muayeneTarihiEksik($this->firma)->pluck('tip')->all());
+    }
+
+    public function test_ortak_atolye_maddeleri_yalniz_kendi_dosyasi_olmayan_makinede_gelir(): void
     {
         $this->ekipman('uretim_atolye', 'CNC Tezgâhı');
         $this->degerlendirme();
@@ -101,11 +115,11 @@ class EkipmanKatalogTest extends TestCase
         $this->assertSame(['CNC Tezgâhı'], array_keys($yalnizCnc['gruplar']));
         $this->assertSame(80, $yalnizCnc['toplam']);
 
-        // Torna da eklenince ortak atölye maddeleri torna için gelir.
-        $this->torna();
+        // Sütunlu matkap (RA-MAK, eğitim/elektrik maddesi yok) eklenince ortak maddeler gelir.
+        $this->ekipman('uretim_atolye', 'Sütunlu Matkap');
         $ikisi = EkipmanKatalogu::riskEksikleri($this->firma);
-        $this->assertSame(['CNC Tezgâhı', 'Torna Tezgâhı', EkipmanKatalogu::ORTAK_ETIKET], array_keys($ikisi['gruplar']));
-        $this->assertSame(80 + 20 + 22, $ikisi['toplam']);
+        $this->assertSame(['CNC Tezgâhı', 'Sütunlu Matkap', EkipmanKatalogu::ORTAK_ETIKET], array_keys($ikisi['gruplar']));
+        $this->assertSame(80 + 14 + 22, $ikisi['toplam']);
     }
 
     public function test_degerlendirmede_olan_madde_id_veya_benzer_metinle_tekrar_onerilmez(): void
@@ -123,7 +137,7 @@ class EkipmanKatalogTest extends TestCase
 
         $torna = EkipmanKatalogu::riskEksikleri($this->firma)['gruplar']['Torna Tezgâhı'];
 
-        $this->assertCount(18, $torna);
+        $this->assertCount(50, $torna);
         $this->assertNotContains($ilk->id, $torna->pluck('id'));
         $this->assertNotContains($ikinci->id, $torna->pluck('id'));
     }
@@ -155,12 +169,12 @@ class EkipmanKatalogTest extends TestCase
     {
         $this->torna();
         $rd = $this->degerlendirme('matris_5x5');
-        $t = Tehlike::where('kod', 'MAK-063')->sole(); // P=6, S=15
+        $t = Tehlike::where('kod', 'TFD-001')->sole(); // P=6, S=40
 
         EkipmanKatalogu::revizeEt($rd, [$t->id], [], ['Torna Tezgâhı']);
 
         $m = $rd->maddeler()->sole();
-        $this->assertSame([4.0, null, 4.0], [$m->olasilik, $m->frekans, $m->siddet]);
+        $this->assertSame([4.0, null, 5.0], [$m->olasilik, $m->frekans, $m->siddet]);
     }
 
     public function test_revize_et_aksiyonu_sayfadan_calisir(): void
@@ -171,12 +185,12 @@ class EkipmanKatalogTest extends TestCase
 
         Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
             ->assertActionVisible('ekipmanEksikleri')
-            ->callAction('ekipmanEksikleri', ['grup_0' => $torna->take(3)->pluck('id')->map(fn ($id) => (string) $id)->all(), 'grup_1' => []])
+            ->callAction('ekipmanEksikleri', ['grup_0' => $torna->take(3)->pluck('id')->map(fn ($id) => (string) $id)->all()])
             ->assertHasNoActionErrors();
 
         $rd->refresh();
         $this->assertSame(3, $rd->maddeler()->count());
-        $this->assertCount(17 + 22, $rd->haric_tehlikeler);
+        $this->assertCount(52 - 3, $rd->haric_tehlikeler);
         $this->assertSame(0, EkipmanKatalogu::riskEksikleri($this->firma)['toplam']);
     }
 

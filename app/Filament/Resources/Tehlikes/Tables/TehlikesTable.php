@@ -22,7 +22,7 @@ class TehlikesTable
                 TextColumn::make('bolum')->label('Bölüm')->placeholder('—')->toggleable(),
                 TextColumn::make('tehlike')->label('Tehlike')->searchable()->wrap()->limit(90),
                 TextColumn::make('risk')->label('Risk')->limit(60)->placeholder('—')->toggleable(),
-                TextColumn::make('mevzuat')->label('Mevzuat')->placeholder('—')->toggleable(),
+                TextColumn::make('mevzuat')->label('Mevzuat')->placeholder('—')->limit(80)->toggleable(),
             ])
             ->groups([
                 Group::make('kategori.ad')->label('Kategori')->collapsible(),
