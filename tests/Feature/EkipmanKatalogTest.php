@@ -241,7 +241,7 @@ class EkipmanKatalogTest extends TestCase
         $this->assertSame(['U', 'UD', 'Y', 'X'], array_keys($sayfalar[0]['form']['kriterler']));
         $this->assertSame(['grup' => '1. GÜVENLİK & ACİL DURUM EKİPMANLARI'], $sayfalar[0]['form']['satirlar'][0]);
         $this->assertSame('1.1', $sayfalar[0]['form']['satirlar'][1]['no']);
-        $this->assertCount(12, $sayfalar[2]['form']['sorular']);
+        $this->assertCount(18, $sayfalar[2]['form']['sorular']); // Trafo İSG-FR-TRF-01
 
         Livewire::test(PeriyodikKontrolSayfasi::class)
             ->set('firmaId', $this->firma->id)
@@ -262,8 +262,8 @@ class EkipmanKatalogTest extends TestCase
         $this->assertSame(['AMAÇ VE KAPSAM', 'KİŞİSEL KORUYUCU DONANIMLAR (KKD)', 'ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ', 'ÇALIŞMA SIRASINDA UYULACAK KURALLAR', 'ÇALIŞMA SONRASI VE BAKIM'], array_column($talimat->bolumler, 'baslik'));
         $this->assertSame([], EkipmanKatalogu::eksikTalimatlar($this->firma));
 
-        // Talimatı olmayan ekipman (dikey freze) talimat oluşturmaz; torna kendi talimatını ekler.
-        $this->ekipman('uretim_atolye', 'Dikey Freze Tezgâhı');
+        // Talimatı olmayan ekipman (sütunlu matkap dışı RA-MAK makinesi: kırıcı) talimat oluşturmaz.
+        $this->ekipman('uretim_atolye', 'Plastik Kırıcı / Granülatör');
         $this->torna();
         $this->assertEqualsCanonicalizing(['CNC MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI', 'ÜNİVERSAL TORNA TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI'], Talimat::where('firma_id', $this->firma->id)->pluck('baslik')->all());
     }

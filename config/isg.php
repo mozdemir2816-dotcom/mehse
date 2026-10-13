@@ -1647,38 +1647,117 @@ return [
                 ],
             ],
 
+            // Kullanıcının kendi formu (Dikey_Freze_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-FRZ-01) — BİREBİR;
+            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Dikey Freze Tezgâhı',
+                'baslik' => 'DİKEY FREZE GÜNLÜK KONTROL VE BAKIM FORMU',
+                'form_no' => 'İSG-FR-FRZ-01',
+                'onaylayan' => 'Atölye Sorumlusu / İSG Uzmanı',
+                'kriterler' => [
+                    'U' => 'Uygun',
+                    'UD' => 'Uygun Değil',
+                    'Y' => 'Yapıldı / Kontrol Edildi',
+                    'X' => 'Uygulanamaz',
+                ],
+                'gruplar' => [
+                    [
+                        'baslik' => '1. GÜVENLİK DONANIMLARI & ACİL DURUM SİSTEMLERİ',
+                        'sorular' => [
+                            'Acil Durdurma (E-Stop) butonu basıldığında mili anında durduruyor mu?',
+                            'Fener mili şeffaf çapak siperliği sağlam ve emniyet switchi aktif mi?',
+                            'Tezgah aydınlatma lambası (24V alçak gerilim) sağlam ve temiz mi?',
+                            'Zeminde kaymaya sebep olacak bor yağı, yağ veya talaş birikintisi var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '2. MEKANİK MEKANİZMALAR, TABLA & TAKIM BAĞLAMA',
+                        'sorular' => [
+                            'Mengene, T-cıvataları ve bağlama pabuçları çatlaksız ve sağlam mı?',
+                            'Freze çakısı, malafa mili ve pens sıkma somunu rijit ve hasarsız mı?',
+                            'X, Y, Z eksen hareket milleri ve boşluk ayar kamaları normal mi?',
+                            'Eksen limit sviçleri (dayamalar) çalışıyor ve doğru ayarlanmış mı?',
+                            'Eksen körük muhafazaları yırtıksız ve kılavuz kızakları koruyor mu?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '3. YAĞLAMA & SOĞUTMA SİSTEMLERİ',
+                        'sorular' => [
+                            'Merkezi kızak yağlama el pompası deposunda yağ seviyesi yeterli mi?',
+                            'Fener mili dişli kutusu yağ seviye gösterge camı kontrol edildi mi?',
+                            'Bor yağı soğutma sıvısı tank seviyesi, sirkülasyonu ve debisi uygun mu?',
+                            'Hortumlarda, kızaklarda veya pompa bağlantılarında sıvı sızıntısı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '4. TEMİZLİK, EL ALETLERİ & ÇEVRE DÜZENİ',
+                        'sorular' => [
+                            'Talaş temizleme fırçası ve kancası tezgah başında hazır mı?',
+                            'Mengene ve sıkma anahtarları kendi askılık/yuvasında mı?',
+                            'Tezgah talaş tavası boşaltılmış ve atık talaş kovasına aktarılmış mı?',
+                            'Operatörün üzerinde eldiven, takı veya sarkan kıyafet OLMADIĞI teyit edildi mi?',
+                        ],
+                    ],
+                ],
+            ],
+            // Kullanıcının kendi formu (Trafo_Merkezi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-TRF-01) — BİREBİR;
+            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Trafo (OG/AG)',
+                'baslik' => 'TRAFO MERKEZİ GÜNLÜK / HAFTALIK KONTROL FORMU',
+                'form_no' => 'İSG-FR-TRF-01',
+                'onaylayan' => 'YG İşletme Sorumlusu / İSG Uzmanı',
+                'kriterler' => [
+                    'U' => 'Uygun',
+                    'UD' => 'Uygun Değil',
+                    'Y' => 'Yapıldı / Kontrol Edildi',
+                    'X' => 'Uygulanamaz',
+                ],
+                'gruplar' => [
+                    [
+                        'baslik' => '1. GİRİŞ GÜVENLİĞİ, FİZİKİ ŞARTLAR & YANGIN EMNİYETİ',
+                        'sorular' => [
+                            'Trafo merkezi giriş kapısı kilitli ve \'ÖLÜM TEHLİKESİ\' levhaları tam mı?',
+                            'Dış havalandırma panjurları temiz ve tel kafesleri haşere/kuş girişine kapalı mı?',
+                            'Kablo galerilerinde, tavanda veya zeminde su sızıntısı / nem var mı?',
+                            'Trafo kapısında 6 kg CO2 veya KKT yangın söndürme tüpü dolu ve güncel mi?',
+                            'Acil durum aydınlatması ve oda normal aydınlatması çalışıyor mu?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '2. İSG & YALITKAN GÜVENLİK DONANIMLARI',
+                        'sorular' => [
+                            'Pano ve hücre önlerindeki yalıtkan paspaslar (dielektrik halı) tam ve serili mi?',
+                            'Yüksek gerilim yalıtkan manevra ıstankası (stank) askısında ve hasarsız mı?',
+                            'Yüksek gerilim kontrol dedektörü (stank ucu) pilli ve test edilmiş durumda mı?',
+                            'Dielektrik yalıtkan eldiven ve yalıtkan çizme dolabında hazır ve deliksiz mi?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '3. TRANSFORMATÖR & ELEKTROMEKANİK DURUM GÖZLEMİ',
+                        'sorular' => [
+                            'Trafo yağ sıcaklığı termometresi izin verilen işletme sınırında mı (<85°C)?',
+                            'Trafo yağ seviye göstergesi normal seviye aralığında mı?',
+                            'Silikajel (nem alıcı) kristalleri pembeleşmemiş (mavi/kuru) durumda mı?',
+                            'Trafodan olağan dışı aşırı vızıltı, ark/cızırtı sesi veya titreşim geliyor mu?',
+                            'Trafo gövdesinde, vana veya buşing diplerinde yağ kaçağı/sızıntısı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '4. KORUMA RÖLELERİ, PANO & TOPRAKLAMA SİSTEMİ',
+                        'sorular' => [
+                            'Buchholz rölesi, termik röle veya aşırı akım rölesinde arıza/ihbar var mı?',
+                            'Gövde ve nötr işletme topraklama irtibat baraları sağlam ve oksitsiz mi?',
+                            'Hücre kapakları, kilit mekanizmaları ve mekanik göstergeler tam mı?',
+                            'Trafo merkezi içinde ilgisiz malzeme, çöp veya hurda OLMADIĞI teyit edildi mi?',
+                        ],
+                    ],
+                ],
+            ],
             // ---- Atölye / ekipman formları (13.10.2026) — AI TASLAĞI, uzman onayı bekliyor
             // ('taslak' => true). Sorular kütüphanedeki ekipman risk maddeleriyle aynı
             // tehlikeleri kapsayacak şekilde hazırlandı. Kullanıcının kendi formu gelince
             // aynı 'ad'lı kayıt onunla değiştirilir (CNC, Torna gibi).
-            ['ad' => 'Dikey Freze Tezgâhı', 'taslak' => true, 'sorular' => [
-                'Freze çakısı/kesici koruyucusu yerinde ve ayarlı mı?',
-                'Çakı ve takım tutucu sağlam, doğru sıkılmış; kırık veya aşınmış kesici yok mu?',
-                'İş parçası mengene veya bağlama aparatıyla tablaya sağlam bağlanmış mı?',
-                'Bağlama anahtarları ve aletler çalıştırmadan önce tabladan ve milden alındı mı?',
-                'Acil durdurma butonu erişilebilir ve denendiğinde makineyi durduruyor mu?',
-                'Tabla, konsol ve kızak kilitleri çalışıyor, otomatik ilerleme limitleri ayarlı mı?',
-                'Kayış-kasnak ve dişli kutusu koruyucuları kapalı ve sabit mi?',
-                'Yağ ve soğutma sıvısı seviyeleri uygun, kaçak yok mu?',
-                'Talaş siperi yerinde; talaş fırça/kancayla temizleniyor, basınçlı hava kullanılmıyor mu?',
-                'Elektrik kablosu, şalter, pano ve topraklama sağlam mı?',
-                'Takım değişimi ve ölçüm iş mili tamamen durduktan sonra mı yapılıyor?',
-                'Operatör göz koruyucu kullanıyor; dönen kısımlarda eldiven, bol giysi ve takı yok mu?',
-            ]],
-            ['ad' => 'Trafo (OG/AG)', 'taslak' => true, 'sorular' => [
-                'Trafo merkezi/odası kapısı kilitli, yalnız yetkili kişiler erişebiliyor mu?',
-                'Yüksek gerilim ve ölüm tehlikesi uyarı levhaları yerinde ve okunaklı mı?',
-                'Trafo çevresi temiz; yanıcı malzeme, depolama ve su birikintisi yok mu?',
-                'Yağlı trafoda yağ seviyesi uygun, sızıntı yok, yağ toplama çukuru boş mu?',
-                'Sıcaklık göstergesi normal değerde, aşırı ısınma belirtisi yok mu?',
-                'Anormal ses, koku, duman veya kıvılcım belirtisi yok mu?',
-                'Havalandırma menfezleri açık, fan/havalandırma çalışıyor mu?',
-                'Hücre ve pano kapakları kapalı, kilitler ve mekanik kilitlemeler sağlam mı?',
-                'Topraklama bağlantıları görünür şekilde sağlam, kopuk veya gevşek iletken yok mu?',
-                'Yalıtkan paspas, eldiven, ıstanka ve gerilim dedektörü yerinde, kontrol tarihi geçerli mi?',
-                'Tek hat şeması ve işletme/manevra talimatı merkezde asılı mı?',
-                'Uygun tip yangın söndürücü erişilebilir ve kontrol tarihi geçerli mi?',
-            ]],
             ['ad' => 'Sütunlu Matkap', 'taslak' => true, 'sorular' => [
                 'Mandren koruyucusu yerinde ve sağlam mı?',
                 'Mandren anahtarı çalıştırmadan önce mandrenden alındı mı?',

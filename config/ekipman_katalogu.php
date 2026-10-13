@@ -27,7 +27,7 @@ return [
         // gelen tipler (CNC, torna, dikey freze) ortak atölye maddelerini tetiklemez.
         'CNC Tezgâhı' => ['risk_kategorileri' => ['atolye_cnc_isleme_merkezi'], 'kontrol_formu' => 'CNC Tezgâhı', 'talimat' => 'CNC MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
         'Torna Tezgâhı' => ['risk_kategorileri' => ['atolye_torna_tezgahi'], 'kontrol_formu' => 'Torna Tezgâhı', 'talimat' => 'ÜNİVERSAL TORNA TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
-        'Dikey Freze Tezgâhı' => ['risk_kategorileri' => ['atolye_dikey_freze'], 'kontrol_formu' => 'Dikey Freze Tezgâhı', 'ortak_riskler' => false],
+        'Dikey Freze Tezgâhı' => ['risk_kategorileri' => ['atolye_dikey_freze'], 'kontrol_formu' => 'Dikey Freze Tezgâhı', 'talimat' => 'DİKEY FREZE TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
         'Sütunlu Matkap' => ['risk_kategorileri' => ['atolye_sutunlu_matkap'], 'kontrol_formu' => 'Sütunlu Matkap', 'talimat' => 'Sütunlu/El Matkap Kullanma Talimatı'],
         'Kesme Tezgâhı (Disk / Testere)' => ['risk_kategorileri' => ['atolye_kesme_tezgahi'], 'kontrol_formu' => 'Kesme Tezgâhı (Disk / Testere)'],
         'Taşlama / Bant Zımpara Makinesi' => ['risk_kategorileri' => ['atolye_bant_zimpara_taslama'], 'kontrol_formu' => 'Taşlama / Bant Zımpara Makinesi'],
@@ -37,7 +37,7 @@ return [
         'Gaz Tüpü ve Şaloma Seti' => ['risk_kategorileri' => ['atolye_gaz_tupleri_ve_saloma'], 'kontrol_formu' => 'Gaz Tüpü ve Şaloma Seti', 'talimat' => 'Oksijen-Asetilen Kaynak/Kesme Talimatı'],
 
         // Periyodik muayeneli ekipmanlar — risk analizleri kullanıcıdan geldikçe doldurulacak.
-        'Trafo & Yüksek Gerilim İşletmesi' => ['risk_kategorileri' => ['ekipman_trafo'], 'kontrol_formu' => 'Trafo (OG/AG)'],
+        'Trafo & Yüksek Gerilim İşletmesi' => ['risk_kategorileri' => ['ekipman_trafo'], 'kontrol_formu' => 'Trafo (OG/AG)', 'talimat' => 'TRAFO MERKEZİ VE YG TESİSLERİ GÜVENLİ ÇALIŞMA TALİMATI'],
         'Hava Kompresörü ve Hava Tankı' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Kompresör', 'talimat' => 'KOMPRESÖR VE HAVA TANKI GÜVENLİ ÇALIŞMA TALİMATI'],
         'Forklift / Akülü & Dizel İstifleyici' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Forklift', 'talimat' => 'Forklift Kullanma Talimatı'],
         'Tavan Vinci / Gezer Köprülü Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Köprü Vinç'],

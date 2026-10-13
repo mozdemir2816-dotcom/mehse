@@ -9,8 +9,10 @@
  *
  * İSG-TLM-CNC-01: CNC_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-TRN-01: Universal_Torna_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
+ * İSG-TLM-FRZ-01: Dikey_Freze_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-KMP-01: Kompresor_ve_Hava_Tanki_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-EKS-01: Ekstruzyon_Makinesi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
+ * İSG-TLM-TRF-01: Trafo_Merkezi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  */
 
 return [
@@ -131,6 +133,63 @@ return [
         ],
     ],
     [
+        'baslik' => 'DİKEY FREZE TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'İSG-TLM-FRZ-01',
+        'aciklama' => 'Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Bu talimat, üniversal dikey freze tezgahlarında yüzey işleme, kanal açma, cep boşaltma, delik delme ve açılı işleme operasyonlarında personelin güvenliğini sağlamak, dönen kesici takımlara ve fırlayan çapaklara bağlı iş kazalarını önlemek amacıyla 6331 sayılı İSG Kanunu ve Makine Emniyeti Yönetmeliği\'ne uygun olarak hazırlanmıştır.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'KİŞİSEL KORUYUCU DONANIMLAR (KKD)',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Göz ve Yüz Koruma: Fırlayan sıcak ve keskin çapaklara, soğutma sıvısına karşı EN 166 standartlarında yan korumalı iş gözlüğü veya şeffaf vizör mutlaka kullanılmalıdır.',
+                    'Ayak Koruma: EN ISO 20345 standartlarına uygun çelik burunlu, tabanı delinmeye ve ağır parça düşmelerine dayanıklı iş ayakkabısı giyilmelidir.',
+                    'İşitme Koruma: Talaş kaldırma esnasında gürültü sınır değerleri aşıldığında EN 352 uyumlu kulak tıkacı veya manşonlu kulaklık takılmalıdır.',
+                    'HAYATİ UYARI - ELDİVEN KULLANIMI KESİNLİKLE YASAKTIR: Freze tezgahı başında çalışırken kesinlikle ELDİVEN KULLANILMAZ. Dönen freze çakısı, tarama kafası veya fener miline eldivenin takılması parmak/kol kopmasına neden olur.',
+                    'Kılık-Kıyafet Güvenliği: Kolları bol giysiler, önlük bağcıkları, saat, yüzük, kolye yasaktır. Kollar dirsek üzerine kıvrılmalı, saçlar arkada toplanıp bone/file içine alınmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Ön Kontrol: Çalışmaya başlamadan önce \'Dikey Freze Günlük Kontrol Formu\' eksiksiz doldurulmalı; tezgahta arıza varsa çalıştırılmamalıdır.',
+                    'Acil Durdurma ve Siperlik: Acil durdurma (E-Stop) butonu ve fener mili çevresindeki mikroswitchli şeffaf çapak koruma siperliği kontrol edilmelidir.',
+                    'İş Parçası Rijitliği: İş parçası mengene, pabuç ve T-kanallara uygun torkta bağlanmalı; gevşek veya rijit olmayan bağlamalarda asla talaş kaldırılmamalıdır.',
+                    'Takım ve Pens Kontrolü: Freze çakısı, pens başlığı ve malafa cıvatası sıkılığı kontrol edilmeli; aşınmış veya kırık uçlu takımlar kullanılmamalıdır.',
+                    'Sıkma Anahtarları: Mengene anahtarı, malafa anahtarı veya alyanlar sıkma işleminden hemen sonra tezgah üzerinden kaldırılmalı, tabla üzerinde bırakılmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SIRASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Elle Müdahale Yasağı: Mil ve kesici takım dönerken parçaya, talaşa veya tablaya kesinlikle elle temas edilmemelidir.',
+                    'Talaş Temizliği Disiplini: Talaşlar ASLA elle veya basınçlı hava üflenerek temizlenmez. Tezgâh tamamen durdurulduktan sonra fırça veya talaş kancası kullanılmalıdır.',
+                    'Dönerken Ölçüm Yapmama: İş mili dönerken kumpas, mikrometre veya komparatör ile ölçüm yapılmamalı; tezgah durdurulduktan sonra kontrol edilmelidir.',
+                    'Devir ve İlerleme Uyumu: Kesici takım çapına, malzeme sertliğine ve talaş derinliğine uygun devir ve otomatik ilerleme seçilmelidir.',
+                    'Soğutma Sıvısı Yönü: Bor yağı borusu kesme bölgesine yönlendirilmeli; sıçramalara karşı talaş tavası ve tabla siperlikleri devrede tutulmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Eksenleri Park Etme: Çalışma bittiğinde otomatik ilerleme kolları boşa alınmalı, tabla emniyetli konuma çekilmelidir.',
+                    'Temizlik ve Yağlama: Tabla ve T-kanallardaki talaşlar süpürülmeli, kızaklar temizlenip kızak yağı ile yağlanmalıdır.',
+                    'Enerji Kesme: Mesai bitiminde ana elektrik şalteri kapatılmalı, zemin kaygan sıvılardan arındırılmalıdır.',
+                ],
+            ],
+        ],
+    ],
+    [
         'baslik' => 'KOMPRESÖR VE HAVA TANKI GÜVENLİ ÇALIŞMA TALİMATI',
         'kategori' => 'is_makineleri',
         'dokuman_no' => 'İSG-TLM-KMP-01',
@@ -239,6 +298,62 @@ return [
                     'Hammadde Boşaltma / Temizleme (Purge): Üretim bitiminde kovan içindeki yanıcı/bozunan hammadde temizleme granülü ile tahliye edilmeli, vida devri sıfırlanmalıdır.',
                     'Rezistans ve Isıtıcıların Kapatılması: Isıtıcı kademeleri kontrollü şekilde kapatılmalı, kovan soğuma periyoduna alınmalıdır.',
                     'LOTO Kuralı: Kalıp sökümü, vida çekme veya kovan içi bakımda ana şalter kilitlenmeli (LOTO), rezistans enerjisi ve hidrolik basınç tamamen kesilmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'TRAFO MERKEZİ VE YG TESİSLERİ GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'İSG-TLM-TRF-01',
+        'aciklama' => 'Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Bu talimat, tesis bünyesindeki Yüksek Gerilim / Alçak Gerilim (YG/AG) Transformatör Merkezleri, hücreler ve ana dağıtım panolarında yürütülen kontrol, manevra ve periyodik gözetim faaliyetlerinde elektrik çarpması, ark patlaması (arc flash), yangın ve zehirlenme risklerini önlemek amacıyla Elektrik Kuvvetli Akım Tesisleri Yönetmeliği, Elektrik Tesislerinde Topraklamalar Yönetmeliği ve 6331 sayılı İSG Kanunu\'na uygun olarak hazırlanmıştır.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'KİŞİSEL KORUYUCU DONANIMLAR (KKD)',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Ark ve Termal Koruma: Manevra ve kontrollerde IEC 61482 standardına uygun ark koruyucu elbise, ark korumalı vizörlü kask veya başlık kullanılmalıdır.',
+                    'Yalıtkan Ayak ve El Koruma: Hücre gerilim sınıfına uygun (sertifikalı ve periyodik testli) EN 60903 sınıfına uygun dielektrik yalıtkan eldiven ve EN 50321 yalıtkan çizme/bot kullanılmalıdır.',
+                    'Yalıtkan Manevra Donanımı: Hücre açma/kapama ve topraklama işlemlerinde gerilim seviyesine uygun yalıtkan ıstanka (stank), neon lambalı gerilim kontrol dedektörü ve topraklama pensleri kullanılmalıdır.',
+                    'Genel Koruma: Metal aksesuarlar (saat, yüzük, künye, metal tokalı kemer) kesinlikle çıkarılmalı; %100 pamuklu veya alev iletmez kıyafet giyilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Yetkisiz Giriş Yasağı: Trafo merkezine yalnızca \'Yüksek Gerilim İşletme Sorumlusu\' veya yetkilendirilmiş Elektrik Bakım Personeli girebilir. Kapı sürekli kilitli ve uyarı levhalı olmalıdır.',
+                    'EKAT Belgesi ve İzin: Manevra ve çalışmalarda personelin geçerli EKAT (Elektrik Kuvvetli Akım Tesislerinde Çalışma) belgesine sahip olması ve Çalışma İzin Formu düzenlenmesi zorunludur.',
+                    'Merkez Ortamı & Havalandırma: Trafo odasında yabancı malzeme, hurda veya kimyasal depolanamaz. Havalandırma panjurları açık ve tel kafesleri sağlam olmalıdır.',
+                    'Emniyet Donanımları Kontrolü: Hücre önlerindeki yalıtkan paspasların (dielektrik halı), acil durum aydınlatmasının ve yangın söndürücülerin sağlamlığı doğrulanmalıdır.',
+                    'Nem ve Su Tehdidi: Kablo kanallarında su birikintisi, rutubet veya tavandan damlama olup olmadığı kontrol edilmeli; ıslak zeminde kesinlikle manevra yapılmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SIRASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    '5 Altın Emniyet Kuralı: 1- Gerilimi kes, 2- Yeniden verilmesini kilitle (LOTO), 3- Gerilim yokluğunu dedektörle doğrula, 4- Topraklama ve kısa devre yap, 5- Çalışma alanını barikatla ve işaretle.',
+                    'Manevra Sırasında Pozisyon: Hücre kesici manevralarında operatör kapak ekseninde değil, yan tarafta durmalı; ark parlaması riskine karşı vizör mutlaka kapalı olmalıdır.',
+                    'Gösterge ve Yağ Takibi: Trafo yağ sıcaklığı, Buchholz rölesi sinyalleri, yağ seviye göstergesi ve silikajel (nem alıcı) renk değişimi takip edilmelidir.',
+                    'Anormal Ses ve Koku: Aşırı vızıltı (harmonik ses), ark cızırtısı, yanık yağ veya ozon kokusu hissedildiğinde derhal amire bilgi verilmeli ve güvenli mesafeye çekilmelidir.',
+                    'Tek Başına Çalışma Yasağı: Trafo merkezinde YG hücrelerinde bakım ve müdahaleler KESİNLİKLE tek başına yapılamaz; en az 2 yetkili personel bulunmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Manevra Tamamlama ve Kilit: İşlem bittiğinde topraklama pensleri ve kilitler sırayla sökülmeli, hücre kapakları tam kilitlenmelidir.',
+                    'Topraklama Ekipmanlarının Düzeni: Yalıtkan stanka, gerilim kontrol dedektörü ve topraklama kabloları kuru ve korumalı askılarına yerleştirilmelidir.',
+                    'Kapı Kilitleme ve Defter: Trafo binası anahtarla kilitlenmeli, yapılan gözlem veya manevralar \'Trafo Merkezi İşletme Defteri\'ne işlenmelidir.',
                 ],
             ],
         ],
