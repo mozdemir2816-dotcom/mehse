@@ -6,6 +6,7 @@ use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\IsyeriDurumMerkezi;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
+use App\Filament\Resources\Firmas\Tables\FirmasTable;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Support\FirmaDosyaFihristiUretici;
@@ -85,7 +86,7 @@ class EditFirma extends EditRecord
                         ->success()->send();
                 }),
 
-            DeleteAction::make(),
+            FirmasTable::silAksiyonu(DeleteAction::make()),
         ];
     }
 }

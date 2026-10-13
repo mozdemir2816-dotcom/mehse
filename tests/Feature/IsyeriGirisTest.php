@@ -146,12 +146,16 @@ class IsyeriGirisTest extends TestCase
         $this->assertTrue($this->firma->fresh()->aktif);
     }
 
-    public function test_firma_silinince_isyeri_hesabi_da_silinir(): void
+    public function test_firma_kalici_silinince_isyeri_hesabi_da_silinir(): void
     {
-        IsyeriHesabi::firmaIcin($this->firma);
+        $hesap = IsyeriHesabi::firmaIcin($this->firma);
 
+        // Çöp Kutusu'ndayken hesap durur ama panele giremez (geri alınınca tekrar çalışsın).
         $this->firma->delete();
+        $this->assertSame(1, IsyeriHesabi::count());
+        $this->assertFalse($hesap->fresh()->canAccessPanel(filament()->getPanel('isyeri')));
 
+        $this->firma->forceDelete();
         $this->assertSame(0, IsyeriHesabi::count());
     }
 }

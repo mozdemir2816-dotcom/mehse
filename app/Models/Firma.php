@@ -3,14 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Firma extends Model
 {
     use HasFactory;
+    use Prunable;
+    // Çöp Kutusu (13.10.2026): silinen firma ve bağlı tüm kayıtları COP_SURESI_AY
+    // boyunca saklanır; süre dolunca kalıcı silinir (DB cascade alt kayıtları da siler).
+    use SoftDeletes;
+
+    public const COP_SURESI_AY = 3;
 
     protected $table = 'firmalar';
 
@@ -27,8 +36,9 @@ class Firma extends Model
 
     protected static function booted(): void
     {
-        // isyeri_hesaplari.firma_id FK'siz — firma silinince işyeri girişi de silinsin.
-        static::deleting(fn (Firma $f) => $f->isyeriHesabi()->delete());
+        // isyeri_hesaplari.firma_id FK'siz — firma kalıcı silinince işyeri girişi de silinsin.
+        // Çöp Kutusu'ndayken hesap durur ama giriş yapamaz (IsyeriHesabi::canAccessPanel).
+        static::forceDeleting(fn (Firma $f) => $f->isyeriHesabi()->delete());
 
         static::saving(function (Firma $f): void {
             if (blank($f->user_id) && auth()->check()) {
@@ -49,6 +59,31 @@ class Firma extends Model
 
             $query->whereIn('firmalar.id', $user->erisilebilirFirmaIdleri());
         });
+    }
+
+    /** Çöp Kutusu'nda COP_SURESI_AY'ı dolduran firmalar — model:prune ve copuTemizle() kalıcı siler. */
+    public function prunable(): Builder
+    {
+        return static::onlyTrashed()->where('deleted_at', '<=', now()->subMonths(self::COP_SURESI_AY));
+    }
+
+    /**
+     * Süresi dolanları kalıcı siler. Sunucuda zamanlayıcı (cron) olmayabileceği için
+     * Firmalar listesi açılırken de çağrılır.
+     */
+    public static function copuTemizle(): int
+    {
+        return (new static)->pruneAll();
+    }
+
+    /** Çöp Kutusu'ndaki firma kalıcı silinmeden önce kalan gün. */
+    public function copteKalanGun(): ?int
+    {
+        if ($this->deleted_at === null) {
+            return null;
+        }
+
+        return max(0, (int) ceil(now()->diffInDays($this->deleted_at->copy()->addMonths(self::COP_SURESI_AY), false)));
     }
 
     public function user(): BelongsTo

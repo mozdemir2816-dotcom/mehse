@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Firmas\Pages;
 
 use App\Filament\Resources\Firmas\FirmaResource;
+use App\Models\Firma;
 use App\Support\FirmaExcelIceAktarici;
 use App\Support\KatipSozlesmeIceAktarici;
 use Filament\Actions\Action;
@@ -14,6 +15,8 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -22,6 +25,29 @@ use Throwable;
 class ListFirmas extends ListRecords
 {
     protected static string $resource = FirmaResource::class;
+
+    public function mount(): void
+    {
+        // Sunucuda zamanlayıcı olmayabilir: süresi dolan Çöp Kutusu kayıtlarını burada da temizle.
+        Firma::copuTemizle();
+
+        parent::mount();
+    }
+
+    /** @return array<string, Tab> */
+    public function getTabs(): array
+    {
+        $copteki = Firma::onlyTrashed()->where('user_id', Filament::auth()->id())->count();
+
+        // Tablo sorgusunda SoftDeletingScope yok (FirmasTable) — sekmeler deleted_at'e göre süzer.
+        return [
+            'firmalar' => Tab::make('Firmalar')->icon('heroicon-o-building-office-2')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereNull('firmalar.deleted_at')),
+            'cop' => Tab::make('Çöp Kutusu')->icon('heroicon-o-trash')
+                ->badge($copteki ?: null)->badgeColor('gray')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('firmalar.deleted_at')->reorder('firmalar.deleted_at', 'desc')),
+        ];
+    }
 
     protected function getHeaderActions(): array
     {
