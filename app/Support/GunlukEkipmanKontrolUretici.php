@@ -44,6 +44,7 @@ class GunlukEkipmanKontrolUretici
         $pdf = Pdf::loadView('pdf.gunluk-ekipman-kontrol', [
             'sayfalar' => static::sayfalar($firma),
             'firmaUnvan' => $firma->unvan,
+            'logo' => TalimatUretici::firmaLogosu($firma),
         ])->setPaper('a4');
 
         $ad = 'gunluk-ekipman-kontrol-'.Str::slug($firma->unvan ?: 'firma').'.pdf';

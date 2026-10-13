@@ -7,7 +7,10 @@
     body { margin: 0; color: #111; font-size: 9px; }
     .sayfa { padding: 22px 26px; }
     .yeni-sayfa { page-break-before: always; }
-    .baslik { background: #0A345A; color: #fff; text-align: center; padding: 8px; margin-bottom: 8px; }
+    table.ust { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    table.ust td.logo { width: 22%; border: 1px solid #0A345A; text-align: center; vertical-align: middle; padding: 4px; background: #fff; }
+    table.ust td.logo img { max-height: 46px; max-width: 140px; }
+    .baslik { background: #0A345A; color: #fff; text-align: center; padding: 8px; }
     .baslik h1 { font-size: 13.5px; margin: 0 0 2px; letter-spacing: .3px; }
     .baslik div { font-size: 9.5px; opacity: .92; }
     table.kunye { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 6px; }
@@ -37,10 +40,18 @@
 @forelse ($sayfalar as $i => $s)
     @php $e = $s['ekipman']; @endphp
     <div class="sayfa{{ $i > 0 ? ' yeni-sayfa' : '' }}">
-        <div class="baslik">
-            <h1>GÜNLÜK EKİPMAN KONTROL FORMU</h1>
-            <div>{{ $s['form']['ad'] }} — kullanım öncesi kontrol</div>
-        </div>
+        {{-- Sol üstte firma logosu (yüklüyse); yoksa başlık tam genişlik. --}}
+        <table class="ust">
+            <tr>
+                @if ($logo)
+                    <td class="logo"><img src="{{ $logo }}"></td>
+                @endif
+                <td class="baslik">
+                    <h1>GÜNLÜK EKİPMAN KONTROL FORMU</h1>
+                    <div>{{ $s['form']['ad'] }} — kullanım öncesi kontrol</div>
+                </td>
+            </tr>
+        </table>
 
         <table class="kunye">
             <tr>
