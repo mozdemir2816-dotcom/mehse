@@ -1777,20 +1777,58 @@ return [
                 'Boş ve dolu tüpler ayrı, oksijen ve yanıcı gaz tüpleri ayrı depolanıyor mu?',
                 'Kapalı alanda kullanılıyorsa havalandırma yeterli mi?',
             ]],
-            ['ad' => 'Kompresör', 'taslak' => true, 'sorular' => [
-                'Hava tankı korozyonsuz, ezik/çatlak yok, etiketi okunaklı mı?',
-                'Emniyet ventili mevcut, plombeli ve test edildiğinde çalışıyor mu?',
-                'Manometre çalışıyor, işletme basıncı sınır değerin altında mı?',
-                'Basınç şalteri kompresörü ayarlı basınçta durduruyor mu?',
-                'Tank altındaki kondens (su) tahliyesi yapılmış mı?',
-                'Kayış-kasnak ve fan koruyucuları yerinde ve sabit mi?',
-                'Yağ seviyesi uygun, yağ/hava kaçağı yok mu?',
-                'Hortum ve rakorlar sağlam, hortumlar kelepçeli ve kopma emniyetli mi?',
-                'Kablo, pano ve topraklama sağlam mı?',
-                'Kompresör alanı havalandırmalı, çevresinde yanıcı malzeme yok mu?',
-                'Kompresör odası kapısı kapalı/kilitli ve uyarı levhası var mı?',
-                'Basınçlı hava ile vücut/giysi temizliği yapılmıyor mu?',
-            ]],
+            // Kullanıcının kendi formu (Kompresor_ve_Hava_Tanki_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-KMP-01) — BİREBİR;
+            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Kompresör',
+                'baslik' => 'KOMPRESÖR VE HAVA TANKI GÜNLÜK KONTROL FORMU',
+                'form_no' => 'İSG-FR-KMP-01',
+                'onaylayan' => 'Bakım Sorumlusu / İSG Uzmanı',
+                'kriterler' => [
+                    'U' => 'Uygun',
+                    'UD' => 'Uygun Değil',
+                    'Y' => 'Yapıldı / Tahliye Edildi',
+                    'X' => 'Uygulanamaz',
+                ],
+                'gruplar' => [
+                    [
+                        'baslik' => '1. BASINÇ EMNİYETİ & GÖSTERGELER',
+                        'sorular' => [
+                            'Hava tankı ve kompresör emniyet ventilleri mühürlü, sağlam ve serbest mi?',
+                            'Manometreler okunaklı, hasarsız ve azami işletme basıncı işaretli mi?',
+                            'Presostat (basınç şalteri) yük-boş aralığı nominal değerlerde mi?',
+                            'Acil Durdurma (Emergency Stop) butonu sağlam ve işlevsel mi?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '2. YAĞLAMA, SOĞUTMA & ÇALIŞMA ŞARTLARI',
+                        'sorular' => [
+                            'Kompresör karter/vida yağ seviyesi gösterge camında normal mi?',
+                            'Kompresör kafa/çıkış sıcaklığı normal limitler içinde mi?',
+                            'Hava kurutucusu (dryer) devrede ve çiğlenme noktası uygun mu?',
+                            'Gövdede veya tabanda anormal yağ kaçağı / sızıntısı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '3. KONDENS (SU) TAHLİYESİ & FİLTRELER',
+                        'sorular' => [
+                            'Hava tankı alt tahliye vanasından biriken kondens (su/yağ) boşaltıldı mı?',
+                            'Otomatik kondens tahliye cihazı (zaman ayarlı/şamandıralı) çalışıyor mu?',
+                            'Hava emiş filtreleri temiz ve tıkanıklıktan uzak mı?',
+                            'Hava hatları ve şartlandırıcılardaki su tutucular tahliye edildi mi?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '4. MEKANİK KORUYUCULAR, HAVA HATLARI & ALAN GÜVENLİĞİ',
+                        'sorular' => [
+                            'Kayış-kasnak ve kaplin koruyucu kafesleri tam ve sabitlenmiş mi?',
+                            'Hava boruları, esnek hortumlar ve rekorlarda çatlak/kaçak var mı?',
+                            'Hava hatlarında kırbaçlanmayı önleyici emniyet teli/pimi (whipcheck) takılı mı?',
+                            'Kompresör dairesi havalandırması, aydınlatması ve yangın tüpü uygun mu?',
+                        ],
+                    ],
+                ],
+            ],
         ],
     ],
 

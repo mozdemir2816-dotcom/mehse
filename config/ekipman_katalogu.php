@@ -38,7 +38,7 @@ return [
 
         // Periyodik muayeneli ekipmanlar — risk analizleri kullanıcıdan geldikçe doldurulacak.
         'Trafo & Yüksek Gerilim İşletmesi' => ['risk_kategorileri' => ['ekipman_trafo'], 'kontrol_formu' => 'Trafo (OG/AG)'],
-        'Hava Kompresörü ve Hava Tankı' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Kompresör'],
+        'Hava Kompresörü ve Hava Tankı' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Kompresör', 'talimat' => 'KOMPRESÖR VE HAVA TANKI GÜVENLİ ÇALIŞMA TALİMATI'],
         'Forklift / Akülü & Dizel İstifleyici' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Forklift', 'talimat' => 'Forklift Kullanma Talimatı'],
         'Tavan Vinci / Gezer Köprülü Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Köprü Vinç'],
         'Portal Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Portal Vinç'],

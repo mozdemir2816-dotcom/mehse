@@ -9,6 +9,7 @@
  *
  * İSG-TLM-CNC-01: CNC_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-TRN-01: Universal_Torna_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
+ * İSG-TLM-KMP-01: Kompresor_ve_Hava_Tanki_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  */
 
 return [
@@ -124,6 +125,62 @@ return [
                     'Kapatma ve Frenleme: İş bitiminde kumanda kolu boşa alınmalı, ayna elle tutularak değil ayak freniyle durdurulmalıdır.',
                     'Temizlik ve Düzen: Kızaklar üzerindeki talaşlar fırça ile süpürülmeli, kızak yağlama kanalları temizlenmeli ve hafifçe yağlanmalıdır. Asla basınçlı hava kullanılmamalıdır.',
                     'Enerji Kesme: Mesai bitiminde ana pano şalteri kapatılmalı, zemin üzerindeki yağ ve talaşlar temizlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'KOMPRESÖR VE HAVA TANKI GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'İSG-TLM-KMP-01',
+        'aciklama' => 'Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Bu talimat; işletmede bulunan vidalı / pistonlu hava kompresörleri ile basınçlı hava tanklarının güvenli bir şekilde işletilmesi, bakımının yapılması, patlama, yüksek basınç yaralanmaları ve gürültü risklerinin önlenmesi amacıyla İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği ve Basınçlı Ekipmanlar Yönetmeliği\'ne uygun olarak hazırlanmıştır.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'KİŞİSEL KORUYUCU DONANIMLAR (KKD)',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İşitme Koruma: Kompresör dairesinde ve test işlemlerinde yüksek gürültü seviyesine karşı EN 352 uyumlu kulak tıkacı veya manşonlu kulak koruyucu takılmalıdır.',
+                    'Göz ve Yüz Koruma: Hava kaçağı denetimi, kondens tahliyesi veya filtre temizliğinde basınçlı partiküllere karşı EN 166 uyumlu iş gözlüğü takılmalıdır.',
+                    'Ayak ve El Koruma: EN ISO 20345 çelik burunlu iş ayakkabısı ve mekanik/termal risklere (sıcak yüzeylere) uygun EN 388 / EN 407 koruyucu eldiven kullanılmalıdır.',
+                    'HAYATİ UYARI - BASINÇLI HAVA İLE ŞAKA / ÜST-BAŞ TEMİZLİĞİ YASAĞI: Basınçlı hava KESİNLİKLE insan vücuduna tutulamaz, kıyafet veya saç temizliğinde kullanılamaz. Deri altına hava girmesi (hava embolisi), göz körlüğü ve kulak zarı patlaması ölümcül neticelere yol açabilir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Periyodik Kontrol: Kompresör ve hava tankının akredite kuruluşça yapılmış yıllık periyodik kontrol / hidrostatik test etiketinin güncel olduğu teyit edilmelidir.',
+                    'Kompresör Dairesi: Kompresör ünitesi çalışanların sürekli bulunduğu alanlardan tecrit edilmiş, havalandırması yeterli ve yangına dayanıklı özel bölmede bulunmalıdır.',
+                    'Emniyet Ventili Kontrolü: Hava tankı ve kompresör üzerindeki emniyet ventilinin mühürlü, temiz ve mekanik çekme halkasının rahat hareket eder durumda olduğu kontrol edilmelidir.',
+                    'Manometre Doğrulaması: Manometrelerin ibresi sıfır noktasında olmalı, maksimum işletme basıncını gösteren kırmızı emniyet çizgisi açıkça görünür olmalıdır.',
+                    'Yağ Seviyesi: Vidalı/pistonlu kompresörün yağ seviye göstergesi kontrol edilmeli; seviye iki çizgi arasında olmalıdır.',
+                    'Kayış-Kasnak Muhafazası: Açıkta dönen mekanik aksamlar (kayış-kasnak, kaplin, fan) tam korumalı kafes/muhafaza içinde olmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SIRASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Otomatik Durma/Kalkma (Yük-Boş): Kompresör ayarlanan set basıncına (örneğin 7.5-8 bar) ulaştığında boşa geçmeli, alt basınca düştüğünde yüke girmelidir. Basınç şalteri (presostat) fonksiyonu takip edilmelidir.',
+                    'Sıcaklık ve Anormal Ses: Çalışma sırasında vida/kafa çıkış sıcaklığı kontrol edilmeli (kritik sınır aşılmamalı), anormal titreşim, sürtünme veya vuruntu durumunda derhal durdurulmalıdır.',
+                    'Kaçak Kontrolü: Hava hatlarında, rakorlarda ve şartlandırıcı bağlantılarında hava kaçağı tespit edilirse basınç altındayken sıkma/onarma yapılmamalıdır.',
+                    'Hortum Güvenliği: Yüksek basınçlı hava hortumlarının kırılma, çatlama ve ezilmelere karşı korunduğu, bağlantılarda kamlok/emniyet pimi (çırpınma teli) bulunduğu teyit edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI, SU TAHLİYESİ VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Kondens (Su) Tahliyesi (GÜNLÜK): Hava tankının altında ve filtrelerde biriken su ve yağ karışımı (kondens), otomatik veya manuel tahliye vanası açılarak her gün düzenli boşaltılmalıdır.',
+                    'Basınç Düşürme (LOTO): Kompresör veya hava tankında bakım-onarım yapılmadan önce ana şalter kilitlenmeli (LOTO), tanktaki basınç tamamen tahliye edilmeli ve manometrenin sıfırlandığı görülmelidir.',
+                    'Hava Emiş Filtresi: Emiş filtreleri periyodik olarak temizlenmeli; tozlu ortamların filtreyi tıkaması önlenmelidir.',
                 ],
             ],
         ],

@@ -268,6 +268,19 @@ class EkipmanKatalogTest extends TestCase
         $this->assertEqualsCanonicalizing(['CNC MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI', 'ÜNİVERSAL TORNA TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI'], Talimat::where('firma_id', $this->firma->id)->pluck('baslik')->all());
     }
 
+    public function test_kompresor_eklenince_talimat_gelir_ve_muayene_takibi_surer(): void
+    {
+        $this->ekipman('basincli_kap', 'Hava Kompresörü ve Hava Tankı');
+
+        $this->assertSame(['İSG-TLM-KMP-01'], Talimat::where('firma_id', $this->firma->id)->pluck('dokuman_no')->all());
+        $this->assertSame(['Hava Kompresörü ve Hava Tankı'], EkipmanKatalogu::muayeneTarihiEksik($this->firma)->pluck('tip')->all());
+
+        $form = GunlukEkipmanKontrolUretici::sayfalar($this->firma)[0]['form'];
+        $this->assertSame('İSG-FR-KMP-01', $form['form_no']);
+        $this->assertSame('Yapıldı / Tahliye Edildi', $form['kriterler']['Y']);
+        $this->assertCount(16, $form['sorular']);
+    }
+
     public function test_talimat_silinirse_ve_risk_degerlendirmesi_yoksa_bildirim_verir(): void
     {
         $this->ekipman('uretim_atolye', 'CNC Tezgâhı');
