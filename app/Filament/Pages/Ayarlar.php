@@ -69,6 +69,7 @@ class Ayarlar extends Page
                             ->label('Tema')
                             ->options(KullaniciAyarlari::TEMALAR)
                             ->icons([
+                                'mehse' => 'heroicon-o-shield-check',
                                 'klasik' => 'heroicon-o-building-office-2',
                                 'material' => 'heroicon-o-squares-2x2',
                                 'windows11' => 'heroicon-o-window',

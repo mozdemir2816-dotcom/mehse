@@ -28,7 +28,7 @@ class AyarlarTest extends TestCase
 
     public function test_ayar_kaydetmemis_kullanici_icin_varsayilanlar_eski_sabit_degerlerle_ayni(): void
     {
-        $this->assertSame('klasik', KullaniciAyarlari::tema());
+        $this->assertSame('mehse', KullaniciAyarlari::tema());
         $this->assertSame(60, KullaniciAyarlari::esik('egitim'));
         $this->assertSame((int) config('isg.periyodik_kontrol.vize_yaklasan_gun'), KullaniciAyarlari::esik('ekipman'));
         $this->assertSame((int) config('isg.onayli_defter.yaklasan_gun'), KullaniciAyarlari::esik('onayli_defter'));

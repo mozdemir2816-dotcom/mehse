@@ -20,9 +20,8 @@
 @endphp
 
 <x-filament-panels::page>
-    {{-- BAŞLIK --}}
+    {{-- BAŞLIK: sayfa başlığı zaten "İSG Komuta Merkezi" — burada yalnız canlı rozeti (13.10.2026). --}}
     <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
-        <span style="font-size:1.15rem;font-weight:700">İSG Komuta Merkezi</span>
         <span style="display:inline-flex;align-items:center;gap:.35rem;background:rgb(34 197 94 / .15);color:{{ $yesil }};font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:9999px">
             <span style="width:.5rem;height:.5rem;border-radius:9999px;background:{{ $yesil }}"></span> Canlı İSG Takibi
         </span>

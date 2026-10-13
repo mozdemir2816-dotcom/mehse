@@ -19,7 +19,11 @@ use WeakMap;
  */
 class KullaniciAyarlari
 {
+    /** Ayar kaydetmemiş kullanıcının teması (13.10.2026: klasik → mehse marka teması). */
+    public const VARSAYILAN_TEMA = 'mehse';
+
     public const TEMALAR = [
+        'mehse' => 'MEHSE',
         'klasik' => 'Klasik',
         'material' => 'Google Material',
         'windows11' => 'Windows 11',
@@ -67,7 +71,7 @@ class KullaniciAyarlari
         }
 
         return [
-            'tema' => 'klasik',
+            'tema' => self::VARSAYILAN_TEMA,
             'yogunluk' => 'rahat',
             'yazi_boyutu' => 'normal',
             'esikler' => $esikler,
@@ -101,7 +105,7 @@ class KullaniciAyarlari
     {
         $tema = (string) self::hepsi($user)['tema'];
 
-        return array_key_exists($tema, self::TEMALAR) ? $tema : 'klasik';
+        return array_key_exists($tema, self::TEMALAR) ? $tema : self::VARSAYILAN_TEMA;
     }
 
     public static function esik(string $anahtar, ?User $user = null): int

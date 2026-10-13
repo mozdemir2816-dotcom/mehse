@@ -62,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
         Action::configureUsing(fn (Action $aksiyon) => $aksiyon->stickyModalHeader()->stickyModalFooter());
         BasePage::stickyFormActions();
 
+        // Excel şablon / Excel–KATİP yükleme düğmeleri telefonda gizli (mobil.css).
+        \App\Support\MobilGorunum::kaydet();
+
         // Personel / firma / İGU-hekim bilgisi düzeltilince, bilginin kopyalandığı
         // evraklar (tutanak, atama yazısı, iş izni...) da güncellenir (06.10.2026).
         \App\Models\Calisan::updated(fn ($c) => \App\Support\BagliKayitGuncelleyici::calisanGuncellendi($c));

@@ -24,21 +24,22 @@ class CalisansTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Telefonda yalnız ana sütunlar görünür; diğerleri ->visibleFrom('md') (13.10.2026).
             ->columns([
                 TextColumn::make('ad_soyad')->label('Ad soyad')->searchable()->sortable()->weight('bold'),
-                TextColumn::make('tc')->label('T.C. Kimlik')->searchable()->placeholder('—')
+                TextColumn::make('tc')->visibleFrom('md')->label('T.C. Kimlik')->searchable()->placeholder('—')
                     ->formatStateUsing(fn (Calisan $record) => $record->maskeliTc())->toggleable(),
                 TextColumn::make('firma.unvan')->label('Firma')->searchable()->sortable()->limit(40)->toggleable(),
-                TextColumn::make('gorev')->label('Görevi')->searchable()->placeholder('—'),
-                TextColumn::make('departman')->label('Departman')->searchable()->placeholder('—')->toggleable(),
-                TextColumn::make('sube')->label('Şube')->searchable()->placeholder('—')->toggleable(),
-                TextColumn::make('ise_giris')->label('İşe giriş')->date('d.m.Y')->sortable()->placeholder('—'),
-                TextColumn::make('isten_cikis')->label('İşten çıkış')->date('d.m.Y')->sortable()->placeholder('—')
+                TextColumn::make('gorev')->visibleFrom('md')->label('Görevi')->searchable()->placeholder('—'),
+                TextColumn::make('departman')->visibleFrom('md')->label('Departman')->searchable()->placeholder('—')->toggleable(),
+                TextColumn::make('sube')->visibleFrom('md')->label('Şube')->searchable()->placeholder('—')->toggleable(),
+                TextColumn::make('ise_giris')->visibleFrom('md')->label('İşe giriş')->date('d.m.Y')->sortable()->placeholder('—'),
+                TextColumn::make('isten_cikis')->visibleFrom('md')->label('İşten çıkış')->date('d.m.Y')->sortable()->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('cinsiyet')->label('Cinsiyet')->placeholder('—')
+                TextColumn::make('cinsiyet')->visibleFrom('md')->label('Cinsiyet')->placeholder('—')
                     ->formatStateUsing(fn ($state) => Calisan::CINSIYETLER[$state] ?? $state)->toggleable(),
-                TextColumn::make('ozel_durum')->label('Özel durum')->placeholder('—')->badge()->color('warning')->toggleable(),
-                IconColumn::make('agir_tehlikeli_iste')->label('Ağır-tehlikeli')->boolean()->toggleable(),
+                TextColumn::make('ozel_durum')->visibleFrom('md')->label('Özel durum')->placeholder('—')->badge()->color('warning')->toggleable(),
+                IconColumn::make('agir_tehlikeli_iste')->visibleFrom('md')->label('Ağır-tehlikeli')->boolean()->toggleable(),
                 TextColumn::make('aktif')->label('Durum')->badge()
                     ->formatStateUsing(fn ($state) => $state ? 'Aktif' : 'Pasif')
                     ->color(fn ($state) => $state ? 'success' : 'gray'),

@@ -7,6 +7,7 @@
 --}}
 @php
     $temalar = [
+        'mehse' => ['ad' => 'MEHSE', 'aciklama' => 'Logo renkleri · lacivert + turkuaz', 'renkler' => ['#0A2E4D', '#099291', '#F3F6F8']],
         'klasik' => ['ad' => 'Klasik', 'aciklama' => 'Lacivert mehse', 'renkler' => ['#1E3A5F', '#2563EB', '#F0F4F8']],
         'material' => ['ad' => 'Google Material', 'aciklama' => 'Material 3 · Material You', 'renkler' => ['#F8FAFD', '#0B57D0', '#D3E3FD']],
         'windows11' => ['ad' => 'Windows 11', 'aciklama' => 'Fluent · Mica', 'renkler' => ['#F3F3F3', '#005FB8', '#FFFFFF']],
@@ -31,7 +32,7 @@
     </x-filament::dropdown.header>
 
     <x-filament::dropdown.list
-        x-data="{ tema: document.documentElement.dataset.mehseTema || 'klasik' }"
+        x-data="{ tema: document.documentElement.dataset.mehseTema || '{{ \App\Support\KullaniciAyarlari::VARSAYILAN_TEMA }}' }"
     >
         @foreach ($temalar as $anahtar => $t)
             <button

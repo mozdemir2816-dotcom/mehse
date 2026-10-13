@@ -1,7 +1,7 @@
 {{-- Topbar bildirim zili: açık + okunmamış bildirim sayısı → Bildirim Merkezi. --}}
 @if (\App\Filament\Pages\BildirimMerkezi::canAccess())
     @php $sayi = \App\Models\Bildirim::okunmamisSayisi((int) auth()->id()); @endphp
-    <a href="{{ \App\Filament\Pages\BildirimMerkezi::getUrl() }}" title="Bildirimler{{ $sayi ? ' — '.$sayi.' okunmamış' : '' }}"
+    <a href="{{ \App\Filament\Pages\BildirimMerkezi::getUrl() }}" class="mehse-zil" title="Bildirimler{{ $sayi ? ' — '.$sayi.' okunmamış' : '' }}"
        style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:2.25rem;height:2.25rem;border-radius:9999px;color:inherit">
         <x-filament::icon icon="heroicon-o-bell" style="width:1.35rem;height:1.35rem" />
         @if ($sayi > 0)

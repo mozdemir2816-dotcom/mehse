@@ -3,15 +3,17 @@
     ÖNCE çalışır ki sayfa önce varsayılan görünümde açılıp sonra değişmesin.
 
     Tema önceliği: hesaba kayıtlı tema (Ayarlar / topbar seçicisi) > tarayıcıdaki
-    eski localStorage seçimi > klasik. Yoğunluk ve yazı boyutu yalnız hesaptan gelir.
+    eski localStorage seçimi (yalnız misafir sayfaları) > varsayılan (mehse). Yoğunluk ve yazı boyutu yalnız hesaptan gelir.
 --}}
 @php
     $kullanici = auth()->user();
-    $kayitli = $kullanici instanceof \App\Models\User ? (array) ($kullanici->ayarlar ?? []) : [];
     $ayar = $kullanici instanceof \App\Models\User ? \App\Support\KullaniciAyarlari::hepsi($kullanici) : null;
 
     $sunucu = [
-        'tema' => isset($kayitli['tema']) ? \App\Support\KullaniciAyarlari::tema($kullanici) : null,
+        // Giriş yapmışsa tema her zaman hesaptan (kayıt yoksa VARSAYILAN_TEMA): tarayıcıda
+        // kalmış eski 'klasik' seçimi yeni varsayılanı ezmesin (13.10.2026).
+        'tema' => $kullanici instanceof \App\Models\User ? \App\Support\KullaniciAyarlari::tema($kullanici) : null,
+        'varsayilan' => \App\Support\KullaniciAyarlari::VARSAYILAN_TEMA,
         'yogunluk' => $ayar['yogunluk'] ?? 'rahat',
         'yazi' => $ayar['yazi_boyutu'] ?? 'normal',
         'kaydetUrl' => $kullanici ? route('mehse.ayar.tema') : null,
@@ -38,7 +40,7 @@
 
         // tema-secici.blade.php çağırır; kaydet=true ise hesaba da yazar.
         window.mehseTemaUygula = function (tema, kaydet) {
-            if (sunucu.temalar.indexOf(tema) === -1) tema = 'klasik';
+            if (sunucu.temalar.indexOf(tema) === -1) tema = sunucu.varsayilan;
             kok.dataset.mehseTema = tema;
             try { localStorage.setItem('mehse_tema', tema); } catch (e) {}
 
@@ -60,7 +62,7 @@
         if (!tema) {
             try { tema = localStorage.getItem('mehse_tema'); } catch (e) {}
         }
-        window.mehseTemaUygula(tema || 'klasik', false);
+        window.mehseTemaUygula(tema || sunucu.varsayilan, false);
 
         kok.dataset.mehseYogunluk = sunucu.yogunluk;
         kok.dataset.mehseYazi = sunucu.yazi;

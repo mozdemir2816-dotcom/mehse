@@ -24,10 +24,11 @@ class FirmasTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Telefonda yalnız ana sütunlar görünür; diğerleri ->visibleFrom('md') (13.10.2026).
             ->columns([
                 TextColumn::make('unvan')->label('Firma')->searchable()->sortable()->weight('bold')
                     ->description(fn (Firma $r) => $r->kisa_ad ?: null)->limit(50),
-                TextColumn::make('nace_kodu')->label('NACE')->searchable()->toggleable(),
+                TextColumn::make('nace_kodu')->visibleFrom('md')->label('NACE')->searchable()->toggleable(),
                 TextColumn::make('tehlike_sinifi')->label('Tehlike sınıfı')->badge()
                     ->formatStateUsing(fn (Firma $r) => $r->tehlikeSinifiEtiketi())
                     ->color(fn (string $state) => match ($state) {
@@ -36,16 +37,16 @@ class FirmasTable
                         default => 'success',
                     }),
                 TextColumn::make('calisan_sayisi')->label('Çalışan')->numeric()->sortable()->alignCenter(),
-                TextColumn::make('isveren_ad')->label('İşveren / vekili')->searchable(['isveren_ad', 'isveren_vekili'])
+                TextColumn::make('isveren_ad')->visibleFrom('md')->label('İşveren / vekili')->searchable(['isveren_ad', 'isveren_vekili'])
                     ->state(fn (Firma $r) => $r->isveren_ad ?: $r->isveren_vekili)->placeholder('—')->toggleable(),
-                TextColumn::make('telefon')->label('Telefon')->searchable()->placeholder('—')->toggleable(),
-                TextColumn::make('adres')->label('Adres')->limit(40)->tooltip(fn (Firma $r) => $r->adres)->placeholder('—')
+                TextColumn::make('telefon')->visibleFrom('md')->label('Telefon')->searchable()->placeholder('—')->toggleable(),
+                TextColumn::make('adres')->visibleFrom('md')->label('Adres')->limit(40)->tooltip(fn (Firma $r) => $r->adres)->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('il')->label('İl')->searchable()->toggleable(),
-                TextColumn::make('sozlesme_bitis')->label('Sözleşme bitişi')->date('d.m.Y')->sortable()
+                TextColumn::make('il')->visibleFrom('md')->label('İl')->searchable()->toggleable(),
+                TextColumn::make('sozlesme_bitis')->visibleFrom('md')->label('Sözleşme bitişi')->date('d.m.Y')->sortable()
                     ->placeholder('—')
                     ->color(fn (?Firma $r) => $r?->sozlesme_bitis?->isPast() ? 'danger' : null),
-                IconColumn::make('aktif')->label('Aktif')->boolean(),
+                IconColumn::make('aktif')->visibleFrom('md')->label('Aktif')->boolean(),
             ])
             ->filters([
                 SelectFilter::make('tehlike_sinifi')->label('Tehlike sınıfı')->options(config('isg.tehlike_siniflari')),

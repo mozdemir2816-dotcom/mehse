@@ -87,6 +87,8 @@ class AdminPanelProvider extends PanelProvider
                 AppAuthentication::make()->brandName('mehse İSG')->recoverable(),
             ])
             ->brandName('mehse İSG')
+            // Baş harfli avatar marka renginde, yerelde üretilir (ui-avatars.com yerine).
+            ->defaultAvatarProvider(\App\Support\MarkaAvatarSaglayici::class)
             // MEHSE logosu (sidebar/topbar başlığı, giriş ekranı) — koyu/açık zemin sürümü CSS'le seçilir.
             ->brandLogo(fn () => view('filament.components.marka'))
             ->brandLogoHeight('2.4rem')

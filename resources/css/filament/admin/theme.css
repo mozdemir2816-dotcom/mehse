@@ -6,6 +6,11 @@
    (yoğunluk/yazı boyutu) ve klasik tema zenginleştirmesi — hepsi html[...] önekli
    ya da kendine özgü sınıflı, dolayısıyla aşağıdaki kuralları sıradan bağımsız ezer. */
 @import './tasarim.css';
+/* MEHSE teması (varsayılan, logo renkleri) — tasarim.css'teki ortak bileşen
+   değişkenlerini ezdiği için ondan sonra gelir. */
+@import './tema-mehse.css';
+/* Telefon düzeni — her temada; en sonda ki tema kurallarını dar ekranda ezsin. */
+@import './mobil.css';
 
 @source '../../../../app/Filament';
 @source '../../../../resources/views/filament';
