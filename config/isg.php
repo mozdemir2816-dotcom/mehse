@@ -1721,20 +1721,59 @@ return [
                 'Makine sabit, titreşim ve anormal ses yok mu?',
                 'Operatör göz/yüz, kulak ve gerektiğinde solunum koruyucu kullanıyor mu?',
             ]],
-            ['ad' => 'Ekstrüzyon Hattı', 'taslak' => true, 'sorular' => [
-                'Besleme haznesi açıklığı dönen vidaya elin ulaşmasını engelliyor mu?',
-                'Silindir ve ısıtıcı bölgelerinde ısı siperi/yalıtım yerinde mi?',
-                'Kalıp çıkışında sıçrama siperi yerinde, çıkış doğrultusu çalışanlardan ayrık mı?',
-                'Basınç ve sıcaklık göstergeleri çalışıyor, değerler sınırlar içinde mi?',
-                'Acil durdurma butonları hat boyunca erişilebilir ve çalışıyor mu?',
-                'Çekici, kesici ve sarıcı ünitelerin koruyucuları ve emniyet anahtarları çalışıyor mu?',
-                'Kayış, kaplin ve dönen mil koruyucuları kapalı mı?',
-                'Isıtıcı kabloları, klemens kutuları ve pano kapakları sağlam mı?',
-                'Hidrolik/yağ ve soğutma suyu sistemleri kaçaksız mı?',
-                'Duman/buhar emişi çalışıyor mu?',
-                'Kalıp sökme ve tıkanıklık giderme işi enerji kesilip kilitlenerek mi yapılıyor?',
-                'Operatör ısıya dayanıklı eldiven ve yüz/göz koruyucu kullanıyor mu?',
-            ]],
+            // Kullanıcının kendi formu (Ekstruzyon_Makinesi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-EKS-01) — BİREBİR;
+            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Ekstrüzyon Hattı',
+                'baslik' => 'EKSTRÜZYON MAKİNESİ GÜNLÜK KONTROL VE BAKIM FORMU',
+                'form_no' => 'İSG-FR-EKS-01',
+                'onaylayan' => 'Hat Sorumlusu / İSG Uzmanı',
+                'kriterler' => [
+                    'U' => 'Uygun',
+                    'UD' => 'Uygun Değil',
+                    'Y' => 'Yapıldı / Kontrol Edildi',
+                    'X' => 'Uygulanamaz',
+                ],
+                'gruplar' => [
+                    [
+                        'baslik' => '1. GÜVENLİK DONANIMLARI & ACİL DURUM SİSTEMLERİ',
+                        'sorular' => [
+                            'Hat boyunca E-Stop butonları ve çekme acil ipleri çalışır durumda mı?',
+                            'Kovan ısıtıcı koruma sacları ve yalıtım muhafazaları tam mı?',
+                            'Bunker giriş ızgarası takılı ve helezona elle erişim engelli mi?',
+                            'Çekici merdane acil durdurma çubuğu / ışık perdesi aktif mi?',
+                            'Giyotin / testere kesim ünitesi emniyet kilidi (interlock) işlevsel mi?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '2. ISITMA, BASINÇ & ERİYİK KONTROLÜ',
+                        'sorular' => [
+                            'Tüm kovan/kalıp ısıtıcı rezistans bölgeleri set değerine ulaştı mı?',
+                            'Eriyik basıncı (melt pressure) ve eriyik sıcaklık sensörleri çalışıyor mu?',
+                            'Soğuk vida kalkış kilidi devrede mi (sıcaklık altındayken motor kilitli mi)?',
+                            'Kalıp kafa bağlantılarında ve flanşlarda polimer sızıntısı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '3. HAVALANDIRMA, SOĞUTMA & HİDROLİK SİSTEMLER',
+                        'sorular' => [
+                            'Kalıp üstü ve gaz alma (degazör) lokal emiş davlumbazları çekiyor mu?',
+                            'Kalibrasyon / soğutma havuzu su debisi, sıcaklığı ve sirkülasyonu normal mi?',
+                            'Hidrolik elek değiştirici ünitesi basıncı ve yağ seviyesi uygun mu?',
+                            'Kalıp ve hidrolik hortumlarda su/yağ sızıntısı var mı?',
+                        ],
+                    ],
+                    [
+                        'baslik' => '4. MEKANİK MEKANİZMALAR, TEMİZLİK & ÇEVRE DÜZENİ',
+                        'sorular' => [
+                            'Redüktör ve ana motor şanzıman yağ seviyesi normal aralıkta mı?',
+                            'Çekici palet/merdane yüzeylerinde aşınma, yabancı cisim veya hasar var mı?',
+                            'Isıya dayanıklı KKD\'ler (EN 407 eldiven, yüz siperi, maske) hatta hazır mı?',
+                            'Zeminde plastik çapak, su veya yağ kaynaklı kayma riski var mı?',
+                        ],
+                    ],
+                ],
+            ],
             ['ad' => 'Plastik Kırıcı / Granülatör', 'taslak' => true, 'sorular' => [
                 'Besleme ağzı ve perdesi, elin kesici rotora ulaşmasını engelliyor mu?',
                 'Hazne kapağı emniyet kilidi rotor tamamen durmadan açılmayı engelliyor mu?',

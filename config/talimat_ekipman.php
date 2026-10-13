@@ -10,6 +10,7 @@
  * İSG-TLM-CNC-01: CNC_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-TRN-01: Universal_Torna_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-KMP-01: Kompresor_ve_Hava_Tanki_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
+ * İSG-TLM-EKS-01: Ekstruzyon_Makinesi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  */
 
 return [
@@ -181,6 +182,63 @@ return [
                     'Kondens (Su) Tahliyesi (GÜNLÜK): Hava tankının altında ve filtrelerde biriken su ve yağ karışımı (kondens), otomatik veya manuel tahliye vanası açılarak her gün düzenli boşaltılmalıdır.',
                     'Basınç Düşürme (LOTO): Kompresör veya hava tankında bakım-onarım yapılmadan önce ana şalter kilitlenmeli (LOTO), tanktaki basınç tamamen tahliye edilmeli ve manometrenin sıfırlandığı görülmelidir.',
                     'Hava Emiş Filtresi: Emiş filtreleri periyodik olarak temizlenmeli; tozlu ortamların filtreyi tıkaması önlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'EKSTRÜZYON MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'İSG-TLM-EKS-01',
+        'aciklama' => 'Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Bu talimat; ekstrüzyon hatlarında (profil, boru, levha, film vb.) hammadde besleme, kovan/vida eritme, kalıptan çıkarma, soğutma ve çekici (çekme-kesme) operasyonları esnasında yüksek sıcaklık, ezilme/kapılma, gaz maruziyeti ve elektriksel tehlikeleri önlemek amacıyla 6331 sayılı İSG Kanunu ve Makine Emniyeti Yönetmeliği\'ne uygun olarak hazırlanmıştır.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'KİŞİSEL KORUYUCU DONANIMLAR (KKD)',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Termal Koruma (Kalıp & Kovan Bölgesi): Kalıp değişimi, kafa temizliği veya nozul müdahalelerinde sıcak ergimiş polimere ve sıcak yüzeylere karşı EN 407 standardına uygun ısıya dayanıklı eldiven ve kolluk kullanılmalıdır.',
+                    'Göz ve Yüz Koruma: Kalıp önü temizliği, gaz çıkışı ve basınçlı eriyik püskürme riskine karşı EN 166 standartlarında polikarbonat yüz siperi veya tam korumalı iş gözlüğü takılmalıdır.',
+                    'Solunum Koruma: Eriyik polimer gazları, bozunma dumanları ve katkı maddelerine karşı EN 14387 standardına uygun ABEK filtreli yarım yüz gaz maskesi hazır bulundurulmalı ve kullanılmalıdır.',
+                    'Ayak ve Vücut Koruma: EN ISO 20345 çelik/kompozit burunlu iş ayakkabısı giyilmeli; sentetik olmayan, aleve/ısıya dayanıklı pamuklu iş elbisesi tercih edilmelidir.',
+                    'DÖNEN AKSAMDA DİKKAT: Çekici merdaneler, sarıcılar veya açıkta dönen helezon besleyiciler yakınında çalışırken bol giysiler, sarkan aksesuarlar yasaktır; saçlar toplanmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Ön Kontrol ve Sıcaklık Doğrulama: Günlük kontrol formu doldurulmalı; kovan ısıtıcı bölgelerinin (rezistanslar) set sıcaklıklarına ulaştığı ve polimerin tam ergidiği doğrulanmalıdır (Soğuk vida kesinlikle döndürülmemelidir; mil kırma ve aşırı basınç riski).',
+                    'Emniyet Donanımları: Acil durdurma (E-Stop) butonları, kovan koruma kapakları ve çekici merdane acil emniyet telleri/çubukları fiziksel olarak test edilmelidir.',
+                    'Hammadde Haznesi (Bunker): Bunker besleme boğazındaki koruyucu ızgara kesinlikle sökülmemeli; hammadde akışını kontrol etmek için hazneye el veya yabancı cisim sokulmamalıdır.',
+                    'Yerel Emiş Havalandırması: Kalıp kafası ve gaz alma (degazör) bölgelerindeki lokal egzoz/davlumbaz havalandırma sisteminin çalıştığı doğrulanmalıdır.',
+                    'Soğutma Suyu Hatları: Kalıp ve soğutma teknesi su sirkülasyonunun açık olduğu, sızıntı veya tıkanıklık olmadığı kontrol edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SIRASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Kalıp Önünde Durmama (Püskürme Riski): İlk yol verme veya arıza sonrası başlatma esnasında kalıp çıkış ekseninin tam karşısında kesinlikle DURULMAMALIDIR (Basınç sıkışması sonucu sıcak eriyik patlaması tehlikesi).',
+                    'Çekici ve Merdane Güvenliği: Profilin/ürünün çekici merdanelere verilmesi sırasında el merdane kıstırma noktasına sokulmamalı; yönlendirme emniyetli aparatlarla yapılmalıdır.',
+                    'Kalıp Temizliği (Purge): Kafa temizliği sadece özel pirinç/bakır spatulalar ve ısıya dayanıklı KKD ile yapılmalıdır. Kesici, sert çelik aletlerle kalıba vurulmamalıdır.',
+                    'Basınç ve Akım Takibi: Kovan içi eriyik basıncı (Melt Pressure) ve ana motor akımı takip edilmeli; basınç pik yaptığında besleme derhal durdurulmalıdır.',
+                    'Kesici Ünite Güvenliği: Otomatik giyotin, testere veya döner bıçak koruma kapakları kapalı tutulmalı; kapak açıldığında makineyi durduran switchler köprülenmemelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Hammadde Boşaltma / Temizleme (Purge): Üretim bitiminde kovan içindeki yanıcı/bozunan hammadde temizleme granülü ile tahliye edilmeli, vida devri sıfırlanmalıdır.',
+                    'Rezistans ve Isıtıcıların Kapatılması: Isıtıcı kademeleri kontrollü şekilde kapatılmalı, kovan soğuma periyoduna alınmalıdır.',
+                    'LOTO Kuralı: Kalıp sökümü, vida çekme veya kovan içi bakımda ana şalter kilitlenmeli (LOTO), rezistans enerjisi ve hidrolik basınç tamamen kesilmelidir.',
                 ],
             ],
         ],

@@ -469,10 +469,10 @@ class SahaDenetimiTest extends TestCase
         $tipler = collect(\App\Support\EkipmanKatalogu::kontrolFormlari());
 
         // 41 kullanıcı referansı + kullanıcının gruplu formları (CNC İSG-FR-CNC-01, Torna
-        // İSG-FR-TRN-01, Kompresör İSG-FR-KMP-01) + 9 atölye/ekipman AI taslağı ('taslak' => true).
-        $this->assertCount(44, $tipler->where('taslak', '!==', true));
-        $this->assertCount(9, $tipler->where('taslak', true));
-        $this->assertSame(['CNC Tezgâhı' => 16, 'Torna Tezgâhı' => 18, 'Kompresör' => 16], $tipler->filter(fn ($t) => ! empty($t['gruplar']))->mapWithKeys(fn ($t) => [$t['ad'] => count($t['sorular'])])->all());
+        // İSG-FR-TRN-01, Kompresör İSG-FR-KMP-01, Ekstrüzyon İSG-FR-EKS-01) + 8 atölye/ekipman AI taslağı ('taslak' => true).
+        $this->assertCount(45, $tipler->where('taslak', '!==', true));
+        $this->assertCount(8, $tipler->where('taslak', true));
+        $this->assertEquals(['CNC Tezgâhı' => 16, 'Ekstrüzyon Hattı' => 17, 'Kompresör' => 16, 'Torna Tezgâhı' => 18], $tipler->filter(fn ($t) => ! empty($t['gruplar']))->mapWithKeys(fn ($t) => [$t['ad'] => count($t['sorular'])])->sortKeys()->all());
         $this->assertCount(53, $tipler->pluck('ad')->unique());
 
         foreach ($tipler as $t) {
