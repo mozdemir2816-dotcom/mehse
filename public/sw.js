@@ -46,12 +46,50 @@ self.addEventListener('fetch', (e) => {
     const statik = url.origin === self.location.origin && STATIK.test(url.pathname) && !url.pathname.includes('/storage/');
     if (!font && !statik) return;
 
-    e.respondWith(
-        caches.open(SURUM).then((c) =>
-            c.match(istek).then((kayitli) => kayitli || fetch(istek).then((yanit) => {
-                if (yanit.ok || yanit.type === 'opaque') c.put(istek, yanit.clone());
-                return yanit;
-            })),
-        ),
-    );
+    // Adı değişmeyen dosyalar (resim, ?v='siz css/js): önbellekten hızlı göster, arka planda
+    // tazele — sunucuda değişen logo/ikon bir sonraki açılışta gelir. Hash'li build
+    // dosyaları ve ?v= sürümlü Filament dosyaları hiç değişmez: yalnız önbellek.
+    const degismez = font || url.pathname.includes('/build/assets/') || url.searchParams.has('v');
+
+    e.respondWith(caches.open(SURUM).then(async (c) => {
+        const kayitli = await c.match(istek);
+        if (kayitli && degismez) return kayitli;
+
+        const ag = fetch(istek).then((yanit) => {
+            if (yanit.ok || yanit.type === 'opaque') c.put(istek, yanit.clone());
+            return yanit;
+        });
+        if (!kayitli) return ag;
+
+        e.waitUntil(ag.catch(() => {}));
+        return kayitli;
+    }));
+});
+
+// ---- Telefon bildirimi (App\Support\WebPush / TelefonBildirimi) -------------
+self.addEventListener('push', (e) => {
+    let veri = {};
+    try { veri = e.data ? e.data.json() : {}; } catch { veri = { body: e.data && e.data.text() }; }
+
+    e.waitUntil(self.registration.showNotification(veri.title || 'MEHSE', {
+        body: veri.body || '',
+        tag: veri.tag || 'mehse',
+        renotify: true,
+        icon: KOK + 'images/pwa/ikon-192.png',
+        badge: KOK + 'images/pwa/ikon-192.png',
+        lang: 'tr',
+        data: { url: veri.url || KOK + 'admin' },
+    }));
+});
+
+// Dokununca: açık MEHSE penceresi varsa ona geç ve adrese git, yoksa yeni aç.
+self.addEventListener('notificationclick', (e) => {
+    e.notification.close();
+    const hedef = new URL(e.notification.data?.url || KOK + 'admin', self.location).href;
+
+    e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((pencereler) => {
+        const acik = pencereler.find((p) => p.url.startsWith(KOK));
+        if (acik) return acik.focus().then((p) => (p || acik).navigate(hedef));
+        return self.clients.openWindow(hedef);
+    }));
 });

@@ -2,8 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\PushAbonelik;
 use App\Models\User;
 use App\Support\KullaniciAyarlari;
+use App\Support\TelefonBildirimi;
+use App\Support\WebPush;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -17,7 +20,10 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Illuminate\Database\QueryException;
+use Throwable;
 use UnitEnum;
 
 /**
@@ -90,6 +96,17 @@ class Ayarlar extends Page
                             ->options(KullaniciAyarlari::YAZI_BOYUTLARI)
                             ->inline()
                             ->required(),
+                    ]),
+
+                Section::make('Telefon bildirimleri')
+                    ->description('Vadesi yaklaşan ve geçen işler (kritik + uyarı) her sabah 08:30\'da bu telefona tek özet olarak gelir. Her cihazda ayrı açılır.')
+                    ->icon('heroicon-o-device-phone-mobile')
+                    ->schema([
+                        View::make('filament.components.telefon-bildirimi-ayar')
+                            ->viewData(fn (): array => [
+                                'anahtar' => static::pushAnahtari(),
+                                'cihazlar' => static::pushCihazlari(),
+                            ]),
                     ]),
 
                 Section::make('Uyarı eşikleri')
@@ -180,6 +197,75 @@ class Ayarlar extends Page
         // Görünüm ayarları <html> attribute'larıyla ilk boyamada uygulanıyor
         // (AdminPanelProvider HEAD_START) — yeni değerlerin gelmesi için yenile.
         $this->redirect(static::getUrl(), navigate: false);
+    }
+
+    /** Tarayıcının PushSubscription.toJSON() çıktısı (telefon-bildirimi-ayar.blade.php). */
+    public function pushAboneOl(array $abonelik, ?string $cihaz = null): void
+    {
+        if (! filter_var($abonelik['endpoint'] ?? null, FILTER_VALIDATE_URL)
+            || ! str_starts_with($abonelik['endpoint'], 'https://')
+            || blank($abonelik['keys']['p256dh'] ?? null) || blank($abonelik['keys']['auth'] ?? null)) {
+            Notification::make()->title('Bildirim aboneliği okunamadı')->danger()->send();
+
+            return;
+        }
+
+        PushAbonelik::kaydet($this->kullanici()->id, $abonelik, $cihaz);
+
+        Notification::make()->title('Bu cihazda bildirimler açıldı')->success()->send();
+    }
+
+    public function pushAbonelikKaldir(string $endpoint): void
+    {
+        PushAbonelik::where('user_id', $this->kullanici()->id)
+            ->where('endpoint_hash', hash('sha256', $endpoint))
+            ->delete();
+
+        Notification::make()->title('Bu cihazda bildirimler kapatıldı')->send();
+    }
+
+    public function pushCihazSil(int $id): void
+    {
+        PushAbonelik::where('user_id', $this->kullanici()->id)->whereKey($id)->delete();
+    }
+
+    public function pushDene(): void
+    {
+        $sayi = TelefonBildirimi::deneme($this->kullanici());
+
+        $sayi > 0
+            ? Notification::make()->title("Deneme bildirimi {$sayi} cihaza gönderildi")->success()->send()
+            : Notification::make()->title('Deneme bildirimi gönderilemedi')
+                ->body('Kayıtlı cihaz yok ya da bildirim servisine ulaşılamadı. Bildirimleri kapatıp yeniden açmayı deneyin.')
+                ->danger()->send();
+    }
+
+    /** VAPID açık anahtarı; üretilemezse (sunucuda openssl sorunu) bölüm "kullanılamıyor" der, sayfa düşmez. */
+    private static function pushAnahtari(): ?string
+    {
+        try {
+            return WebPush::acikAnahtar();
+        } catch (Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
+
+    /** @return array<int, array{id: int, cihaz: string, eklenme: string, son: ?string}> */
+    private static function pushCihazlari(): array
+    {
+        try {
+            return PushAbonelik::where('user_id', Filament::auth()->id())->latest()->get()
+                ->map(fn (PushAbonelik $a): array => [
+                    'id' => $a->id,
+                    'cihaz' => $a->cihaz ?: 'Cihaz',
+                    'eklenme' => $a->created_at?->format('d.m.Y') ?? '',
+                    'son' => $a->son_basari_at?->format('d.m.Y H:i'),
+                ])->all();
+        } catch (QueryException) {
+            return []; // canlıya tablo SQL'i henüz çalıştırılmadıysa Ayarlar açılmaya devam etsin
+        }
     }
 
     private function kullanici(): User

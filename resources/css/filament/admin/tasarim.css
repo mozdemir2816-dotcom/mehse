@@ -1254,3 +1254,87 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
     margin: 0 0 .6rem 1.1rem;
     list-style: disc;
 }
+
+/* ---- Ayarlar > Telefon bildirimleri (telefon-bildirimi-ayar.blade.php) ---- */
+.mehse-tb {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    font-size: .875rem;
+}
+
+.mehse-tb-durum p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--gray-700, #374151);
+}
+
+.mehse-tb-nokta {
+    display: inline-block;
+    width: .55rem;
+    height: .55rem;
+    margin-right: .25rem;
+    border-radius: 999px;
+    background: var(--gray-400, #9ca3af);
+    vertical-align: .05rem;
+}
+
+.mehse-tb-nokta-acik {
+    background: #16a34a;
+    box-shadow: 0 0 0 3px rgb(22 163 74 / .18);
+}
+
+.mehse-tb-dugmeler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.mehse-tb-cihazlar {
+    border-top: 1px solid var(--gray-200, #e5e7eb);
+    padding-top: .8rem;
+}
+
+.mehse-tb-baslik {
+    margin: 0 0 .4rem;
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--gray-500, #6b7280);
+}
+
+.mehse-tb-cihazlar ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mehse-tb-cihazlar li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .45rem 0;
+}
+
+.mehse-tb-cihazlar li + li {
+    border-top: 1px dashed var(--gray-200, #e5e7eb);
+}
+
+.mehse-tb-cihazlar li span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mehse-tb-cihazlar small {
+    color: var(--gray-500, #6b7280);
+}
+
+@media (max-width: 640px) {
+    .mehse-tb-dugmeler > * {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+}
