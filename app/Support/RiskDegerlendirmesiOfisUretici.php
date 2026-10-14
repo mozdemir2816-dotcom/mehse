@@ -30,6 +30,9 @@ class RiskDegerlendirmesiOfisUretici
 {
     private const BASLIK_ARKA = 'E5E7EB';
 
+    /** Risk tablosu başlık satırı (PDF ile aynı mor). */
+    private const TABLO_BASLIK = '7C3AED';
+
     /*
     |--------------------------------------------------------------------------
     | Ortak
@@ -176,8 +179,8 @@ class RiskDegerlendirmesiOfisUretici
             $sayfa->getColumnDimension($harf)->setWidth($genislik);
         }
         $sayfa->getStyle("A{$satir}:{$son}{$satir}")->applyFromArray([
-            'font' => ['bold' => true],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => self::BASLIK_ARKA]],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => self::TABLO_BASLIK]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
         ]);
 
@@ -392,8 +395,8 @@ class RiskDegerlendirmesiOfisUretici
         $tablo = self::wordTablo($bolum);
         $tablo->addRow(null, ['tblHeader' => true, 'cantSplit' => true]);
         foreach ($sutunlar as $i => [$baslik]) {
-            $tablo->addCell($twip($i), ['bgColor' => self::BASLIK_ARKA, 'valign' => 'center'])
-                ->addText($baslik, ['bold' => true, 'size' => 7], ['alignment' => Jc::CENTER]);
+            $tablo->addCell($twip($i), ['bgColor' => self::TABLO_BASLIK, 'valign' => 'center'])
+                ->addText($baslik, ['bold' => true, 'size' => 7, 'color' => 'FFFFFF'], ['alignment' => Jc::CENTER]);
         }
 
         foreach ($rd->maddeler as $n => $m) {

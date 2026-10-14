@@ -545,6 +545,19 @@ class RiskDegerlendirmeTest extends TestCase
             ->callAction('pdf');
     }
 
+    public function test_ciktida_maddeler_puana_gore_yuksekten_dusuge_siralanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['sira' => 1, 'bolum' => 'A', 'tehlike' => 'Dusuk', 'olasilik' => 1, 'siddet' => 2]);
+        $rd->maddeler()->create(['sira' => 2, 'bolum' => 'B', 'tehlike' => 'Yuksek', 'olasilik' => 5, 'siddet' => 5]);
+        $rd->maddeler()->create(['sira' => 3, 'bolum' => 'A', 'tehlike' => 'Orta', 'olasilik' => 3, 'siddet' => 3]);
+
+        $veri = RiskDegerlendirmesiUretici::veri($rd->fresh());
+
+        $this->assertSame(['Yuksek', 'Orta', 'Dusuk'], $veri['rd']->maddeler->pluck('tehlike')->all());
+    }
+
     public function test_excel_ve_word_olarak_indirilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Ofis Test A.Ş.']);

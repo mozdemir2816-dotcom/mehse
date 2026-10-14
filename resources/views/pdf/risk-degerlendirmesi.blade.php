@@ -41,7 +41,7 @@
        tabloyu sayfanın sağ kenarından taşırıyordu. */
     table.risk { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; table-layout: fixed; }
     table.risk th, table.risk td { border: 1px solid #999; padding: 3px 3px; text-align: left; vertical-align: top; word-wrap: break-word; }
-    table.risk thead th { background: #f0f0f0; }
+    table.risk thead th { background: #7c3aed; color: #fff; }
     table.risk .col-no { text-align: center; }
     table.risk .col-duzey { padding: 2px 1px; text-align: center; vertical-align: middle; }
     table.risk th.col-duzey { font-size: 6px; }

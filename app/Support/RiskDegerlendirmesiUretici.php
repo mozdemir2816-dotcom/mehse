@@ -81,6 +81,8 @@ class RiskDegerlendirmesiUretici
     public static function veri(RiskDegerlendirmesi $rd, bool $imzali = true): array
     {
         $rd->loadMissing('maddeler', 'firma.user', 'firma.isyeriHekimi', 'igu');
+        // Çıktıda maddeler puana göre yüksekten düşüğe (eşitte kayıt sırası) — kullanıcı 14.10.2026.
+        $rd->setRelation('maddeler', $rd->maddeler->sort(fn ($a, $b) => ((float) $b->puan <=> (float) $a->puan) ?: ($a->sira <=> $b->sira) ?: ($a->id <=> $b->id))->values());
 
         $yontemAnahtari = 'risk_'.$rd->yontem;
         $userId = $rd->firma?->user_id;
