@@ -357,11 +357,10 @@ class RiskDegerlendirmesiOfisUretici
         $phpWord->setDefaultFontSize(8);
         $phpWord->setDefaultParagraphStyle(['spaceAfter' => 0, 'spaceBefore' => 0, 'spacing' => 0]);
 
-        $bolum = $phpWord->addSection([
-            'orientation' => 'landscape',
-            'marginTop' => 600, 'marginBottom' => 600, 'marginLeft' => 500, 'marginRight' => 500,
-        ]);
-        $bolum->addFooter()->addPreserveText($rd->belge_no.'     Sayfa {PAGE} / {NUMPAGES}', ['size' => 7, 'color' => '666666'], ['alignment' => Jc::END]);
+        // PDF ile aynı düzen: künye + yöntem dikey, risk tablosu + ekip / onay yatay (yeni bölüm).
+        $altBilgi = fn (Section $b) => $b->addFooter()->addPreserveText($rd->belge_no.'     Sayfa {PAGE} / {NUMPAGES}', ['size' => 7, 'color' => '666666'], ['alignment' => Jc::END]);
+        $bolum = $phpWord->addSection(['marginTop' => 700, 'marginBottom' => 700, 'marginLeft' => 500, 'marginRight' => 500]);
+        $altBilgi($bolum);
 
         $bolum->addText('RİSK DEĞERLENDİRMESİ', ['bold' => true, 'size' => 15], ['alignment' => Jc::CENTER, 'spaceAfter' => 160]);
 
@@ -370,8 +369,8 @@ class RiskDegerlendirmesiOfisUretici
         $tablo = self::wordTablo($bolum);
         foreach (self::kunye($rd) as [$etiket, $deger]) {
             $tablo->addRow();
-            $tablo->addCell(3500, ['bgColor' => self::BASLIK_ARKA])->addText($etiket, ['bold' => true]);
-            $tablo->addCell(12000)->addText(self::metin($deger));
+            $tablo->addCell(3000, ['bgColor' => self::BASLIK_ARKA])->addText($etiket, ['bold' => true]);
+            $tablo->addCell(7900)->addText(self::metin($deger));
         }
 
         // 2. Yöntem
@@ -379,7 +378,11 @@ class RiskDegerlendirmesiOfisUretici
         self::wordYontem($bolum, $v);
 
         // 3. Risk tablosu
-        $bolum->addPageBreak();
+        $bolum = $phpWord->addSection([
+            'orientation' => 'landscape',
+            'marginTop' => 600, 'marginBottom' => 600, 'marginLeft' => 500, 'marginRight' => 500,
+        ]);
+        $altBilgi($bolum);
         $bolum->addText('3. TEHLİKELERİN TANIMLANMASI VE RİSK DEĞERLENDİRME TABLOSU', ['bold' => true, 'size' => 11], ['spaceAfter' => 60]);
         $sutunlar = self::sutunlar($rd, false);
         $genislik = collect($sutunlar)->map(fn ($s) => $s[2])->all();
@@ -462,12 +465,12 @@ class RiskDegerlendirmesiOfisUretici
         $olcek = function (string $baslik, array $degerler) use ($bolum): void {
             $tablo = self::wordTablo($bolum);
             $tablo->addRow(null, ['tblHeader' => true]);
-            $tablo->addCell(2500, ['bgColor' => self::BASLIK_ARKA])->addText($baslik, ['bold' => true]);
-            $tablo->addCell(13300, ['bgColor' => self::BASLIK_ARKA])->addText('Açıklama', ['bold' => true]);
+            $tablo->addCell(2000, ['bgColor' => self::BASLIK_ARKA])->addText($baslik, ['bold' => true]);
+            $tablo->addCell(8900, ['bgColor' => self::BASLIK_ARKA])->addText('Açıklama', ['bold' => true]);
             foreach ($degerler as $puan => $aciklama) {
                 $tablo->addRow();
-                $tablo->addCell(2500)->addText(str_replace('.', ',', (string) $puan), [], ['alignment' => Jc::CENTER]);
-                $tablo->addCell(13300)->addText(self::metin($aciklama));
+                $tablo->addCell(2000)->addText(str_replace('.', ',', (string) $puan), [], ['alignment' => Jc::CENTER]);
+                $tablo->addCell(8900)->addText(self::metin($aciklama));
             }
             $bolum->addTextBreak();
         };
@@ -480,15 +483,15 @@ class RiskDegerlendirmesiOfisUretici
 
         $tablo = self::wordTablo($bolum);
         $tablo->addRow(null, ['tblHeader' => true]);
-        foreach (['Düzey' => 3500, 'Kısaltma' => 1300, 'Puan aralığı' => 1700, 'Yapılacak eylem' => 9300] as $b => $g) {
+        foreach (['Düzey' => 2600, 'Kısaltma' => 1100, 'Puan aralığı' => 1500, 'Yapılacak eylem' => 5700] as $b => $g) {
             $tablo->addCell($g, ['bgColor' => self::BASLIK_ARKA])->addText($b, ['bold' => true]);
         }
         foreach ($met['bantlar'] ?? [] as $bant) {
             $tablo->addRow();
-            $tablo->addCell(3500, ['bgColor' => self::hex($bant['renk'])])->addText($bant['ad'], ['bold' => true, 'color' => 'FFFFFF']);
-            $tablo->addCell(1300)->addText((string) ($bant['kisa'] ?? ''), ['bold' => true], ['alignment' => Jc::CENTER]);
-            $tablo->addCell(1700)->addText('≥ '.str_replace('.', ',', (string) $bant['min']));
-            $tablo->addCell(9300)->addText(self::metin($bant['eylem']));
+            $tablo->addCell(2600, ['bgColor' => self::hex($bant['renk'])])->addText($bant['ad'], ['bold' => true, 'color' => 'FFFFFF']);
+            $tablo->addCell(1100)->addText((string) ($bant['kisa'] ?? ''), ['bold' => true], ['alignment' => Jc::CENTER]);
+            $tablo->addCell(1500)->addText('≥ '.str_replace('.', ',', (string) $bant['min']));
+            $tablo->addCell(5700)->addText(self::metin($bant['eylem']));
         }
     }
 

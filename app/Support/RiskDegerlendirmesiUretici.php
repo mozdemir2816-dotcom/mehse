@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskProsedur;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Barryvdh\DomPDF\PDF as DompdfWrapper;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -60,7 +59,7 @@ class RiskDegerlendirmesiUretici
         $pdf = self::olustur($rd);
         $yol = self::onbellekYolu($rd);
 
-        Storage::disk('local')->put($yol, $pdf->output());
+        Storage::disk('local')->put($yol, $pdf);
 
         return $yol;
     }
@@ -70,7 +69,7 @@ class RiskDegerlendirmesiUretici
         $pdf = self::olustur($rd, $imzali);
         $ad = 'risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($pdf), $ad);
     }
 
     /**
@@ -144,7 +143,7 @@ class RiskDegerlendirmesiUretici
         ];
     }
 
-    private static function olustur(RiskDegerlendirmesi $rd, bool $imzali = true): DompdfWrapper
+    private static function olustur(RiskDegerlendirmesi $rd, bool $imzali = true): string
     {
         // Büyük raporlar (300+ risk maddesi) dompdf'te hem belleği hem süreyi zorlar:
         //  - 2026-09-04: iki kez render (önizleme + gerçek) 512M memory_limit'i
@@ -169,31 +168,52 @@ class RiskDegerlendirmesiUretici
 
         $veri = self::veri($rd, $imzali);
 
-        $pdf = Pdf::loadView('pdf.risk-degerlendirmesi', $veri)->setPaper('a4');
+        // İki parça (kullanıcı 14.10.2026): kapak + prosedür + künye/yöntem DİKEY A4,
+        // risk tablosu (yeni sayfadan) + ekip/onay YATAY A4. dompdf tek belgede
+        // sayfa yönünü değiştiremediği için ayrı render edilip FPDI ile birleştirilir.
+        $dikey = Pdf::loadView('pdf.risk-degerlendirmesi', $veri + ['bolum' => 'dikey'])->setPaper('a4');
+        $yatay = Pdf::loadView('pdf.risk-degerlendirmesi', $veri + ['bolum' => 'yatay'])->setPaper('a4', 'landscape');
 
         // Kapaktaki "Toplam sayfa sayısı" hücresinin konumu çizim sırasında yakalanır
         // (dompdf render bitince kutu ağacını boşaltır); sayı aşağıda page_script ile
         // o hücreye yazılır — çift render yok (300+ maddede süreyi ikiye katlıyordu).
         $toplamHucre = null;
-        self::konumYakala($pdf->getDomPDF(), 'kapak-toplam-sayfa', $toplamHucre);
-        $pdf->render();
+        self::konumYakala($dikey->getDomPDF(), 'kapak-toplam-sayfa', $toplamHucre);
+        $dikey->render();
+        $yatay->render();
 
-        $dompdf = $pdf->getDomPDF();
+        $dikeySayfa = $dikey->getDomPDF()->getCanvas()->get_page_count();
+        $toplam = $dikeySayfa + $yatay->getDomPDF()->getCanvas()->get_page_count();
+
+        self::sayfaNumaralari($dikey->getDomPDF(), 0, $toplam, $toplamHucre);
+        self::sayfaNumaralari($yatay->getDomPDF(), $dikeySayfa, $toplam, null);
+
+        return self::birlestir([$dikey->output(), $yatay->output()]);
+    }
+
+    /**
+     * Sayfa numarası kapakta (1. sayfa) gösterilmez, diğer sayfalarda devam eder.
+     * Üstte DEĞİL, alt marjda (tablo bittikten SONRA, imza şeridinden ÖNCE)
+     * konumlanır — üstte tabloya çok yakın olduğu için üstüne biniyordu.
+     * @page alt marjı 78px, imza şeridi (.sayfa-alt) tam o marjın altına
+     * yaslanmış durumda (bottom:-78px). $oncekiSayfa: birleştirilen belgede bu
+     * parçadan önceki sayfa sayısı; $toplam: tüm belgenin sayfa sayısı.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}|null  $toplamHucre
+     */
+    private static function sayfaNumaralari(\Dompdf\Dompdf $dompdf, int $oncekiSayfa, int $toplam, ?array $toplamHucre): void
+    {
         $canvas = $dompdf->getCanvas();
         $fontMetrics = $dompdf->getFontMetrics();
         $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
 
-        // Sayfa numarası kapakta (1. sayfa) gösterilmez, diğer sayfalarda devam eder.
-        // Üstte DEĞİL, alt marjda (tablo bittikten SONRA, imza şeridinden ÖNCE)
-        // konumlanır — üstte tabloya çok yakın olduğu için üstüne biniyordu.
-        // @page alt marjı 78px, imza şeridi (.sayfa-alt) tam o marjın altına
-        // yaslanmış durumda (bottom:-78px) — içerik kutusunun bitişiyle şerit
-        // arasında sayfa numarası için boşluk kalıyor.
-        $canvas->page_script(function (int $pageNumber, int $pageCount) use ($canvas, $font, $fontMetrics, $toplamHucre): void {
-            if ($pageNumber === 1) {
+        $canvas->page_script(function (int $pageNumber) use ($canvas, $font, $fontMetrics, $toplamHucre, $oncekiSayfa, $toplam): void {
+            $no = $oncekiSayfa + $pageNumber;
+
+            if ($no === 1) {
                 if ($toplamHucre) {
                     [$x, $y, , $h] = $toplamHucre;
-                    $canvas->text($x + 6, $y + ($h - 7.5) / 2 - 1.5, "{$pageCount} sayfa", $font, 7.5, [0, 0, 0]);
+                    $canvas->text($x + 6, $y + ($h - 7.5) / 2 - 1.5, "{$toplam} sayfa", $font, 7.5, [0, 0, 0]);
                 }
 
                 // Şablondaki kapak alt bilgisi (sağ alt).
@@ -204,12 +224,31 @@ class RiskDegerlendirmesiUretici
                 return;
             }
 
-            $x = $canvas->get_width() - 90;
-            $y = $canvas->get_height() - 64;
-            $canvas->text($x, $y, "Sayfa {$pageNumber} / {$pageCount}", $font, 8, [0.4, 0.4, 0.4]);
+            $canvas->text($canvas->get_width() - 90, $canvas->get_height() - 64, "Sayfa {$no} / {$toplam}", $font, 8, [0.4, 0.4, 0.4]);
         });
+    }
 
-        return $pdf;
+    /**
+     * PDF parçalarını sırayla tek belgede birleştirir; her sayfa kendi boyut/yönüyle.
+     *
+     * @param  array<int, string>  $parcalar  PDF içerikleri
+     */
+    private static function birlestir(array $parcalar): string
+    {
+        $fpdi = new \setasign\Fpdi\Fpdi;
+        $fpdi->SetAutoPageBreak(false);
+
+        foreach ($parcalar as $icerik) {
+            $sayfaSayisi = $fpdi->setSourceFile(\setasign\Fpdi\PdfParser\StreamReader::createByString($icerik));
+            for ($i = 1; $i <= $sayfaSayisi; $i++) {
+                $sablon = $fpdi->importPage($i);
+                $boyut = $fpdi->getTemplateSize($sablon);
+                $fpdi->AddPage($boyut['orientation'], [$boyut['width'], $boyut['height']]);
+                $fpdi->useTemplate($sablon);
+            }
+        }
+
+        return $fpdi->Output('S');
     }
 
     /**

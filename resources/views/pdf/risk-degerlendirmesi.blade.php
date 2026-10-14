@@ -125,16 +125,18 @@
     // Puanlar Türkçe ondalıkla: 0.2 → "0,2", 120.0 → "120".
     $sayi = fn ($v) => $v === null || $v === '' ? '—' : str_replace('.', ',', rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.'));
     $ucEksen = $rd->ucEksenliMi();
-    // Sütun genişlikleri (%): üç eksenli yöntemde iki F sütunu (2×3) eklenir, Tehlike ve Öneri'den düşülür.
+    // Sütun genişlikleri (%), yatay A4: üç eksenli yöntemde iki F sütunu (2×2,5) eklenir,
+    // Tehlike ve Risk'ten düşülür. Tehlike ile Risk ayrı sütun (kullanıcı 14.10.2026).
     $kolonlar = array_filter([
-        3, 8.5, $ucEksen ? 12 : 15,                       // No, Bölüm/Faaliyet, Tehlike/Risk
-        3, $ucEksen ? 3 : null, 3, 4, 2.5,                // O, F, Ş, Puan, Düzey
-        $ucEksen ? 17 : 20, 8, 8,                         // Öneri, Sorumlu, Termin
-        3, $ucEksen ? 3 : null, 3, 4, 2.5,                // Son O, F, Ş, Puan, Düzey
-        12.5,                                             // Açıklama
+        2.5, 8, $ucEksen ? 11 : 13.5, $ucEksen ? 10 : 12.5, // No, Bölüm/Faaliyet, Tehlike, Risk
+        2.5, $ucEksen ? 2.5 : null, 2.5, 3.5, 2,           // O, F, Ş, Puan, Düzey
+        20, 7, 6,                                         // Öneri, Sorumlu, Termin
+        2.5, $ucEksen ? 2.5 : null, 2.5, 3.5, 2,           // Son O, F, Ş, Puan, Düzey
+        9.5,                                              // Açıklama
     ]);
     $bantlar = collect($metodoloji['bantlar'] ?? [])->map(fn ($b) => $b + ['kisa' => \App\Support\RiskSkorlama::kisaltma($rd->yontem, $b['ad'])]);
 @endphp
+@if (($bolum ?? null) !== 'yatay')
 <div class="kapak">
     <div class="k-ort k-ort-ust"></div>
     <div class="k-ort k-ort-alt"></div>
@@ -194,6 +196,7 @@
         @endforeach
     </table>
 </div>
+@endif
 
 {{-- HER SAYFANIN ÜST BİLGİSİ (firma adı / sicil no / tarih / adres) --}}
 <div class="sayfa-ust">
@@ -247,6 +250,8 @@
     </table>
 </div>
 
+{{-- Dikey parça: prosedür + künye / yöntem --}}
+@if (($bolum ?? null) !== 'yatay')
 {{-- RİSK ANALİZİ PROSEDÜRÜ (seçilen yönteme göre) --}}
 @if ($prosedur)
     <div class="sayfa akis prosedur">
@@ -311,6 +316,9 @@
     </table>
 </div>
 
+@endif
+{{-- Yatay parça: risk tablosu (yeni sayfadan) + ekip / onay — RiskDegerlendirmesiUretici iki parçayı birleştirir. --}}
+@if (($bolum ?? null) !== 'dikey')
 {{-- RİSK TABLOSU --}}
 <div class="sayfa">
     <h2>3. TEHLİKELERİN TANIMLANMASI VE RİSK DEĞERLENDİRME TABLOSU</h2>
@@ -324,7 +332,7 @@
         {{-- dompdf <col> genişliğini yok sayar; fixed düzende ilk satır (başlık) hücrelerinin genişliği geçerlidir. --}}
         @php
             $basliklar = array_values(array_filter([
-                ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike / Risk'],
+                ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike'], ['', 'Risk'],
                 ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Dü<br>zey'],
                 ['col-oneri', 'Öneri'], ['col-sorumlu', 'Sorumlu'], ['', 'Termin'],
                 ['sayi', 'Son O'], $ucEksen ? ['sayi', 'Son '.$fBaslik] : null, ['sayi', 'Son Ş'], ['sayi', 'Son Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
@@ -344,7 +352,8 @@
             <tr>
                 <td class="col-no">{{ $loop->iteration }}</td>
                 <td>{{ $m->bolum }}@if($m->faaliyet)<br><em>{{ $m->faaliyet }}</em>@endif</td>
-                <td>{{ $m->tehlike }}@if($m->risk)<br>{{ $m->risk }}@endif</td>
+                <td>{{ $m->tehlike }}</td>
+                <td>{{ $m->risk }}</td>
                 <td class="sayi">{{ $sayi($m->olasilik) }}</td>
                 @if ($ucEksen)
                     <td class="sayi">{{ $sayi($m->frekans) }}</td>
@@ -425,6 +434,7 @@
         </tr>
     </table>
 </div>
+@endif
 
 </body>
 </html>

@@ -237,7 +237,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringNotContainsString('Mevcut Önlem', $html);
         $this->assertStringNotContainsString('Bu metin artık tabloda görünmemeli', $html);
 
-        $this->assertStringContainsString('col-aciklama" style="width:12.5%">Açıklama</th>', $html);
+        $this->assertStringContainsString('col-aciklama" style="width:9.5%">Açıklama</th>', $html);
         $this->assertStringContainsString('Firmaya özel not: X ekipmanı beklemede', $html);
 
         // Açıklama başlığı Son Düzey'den SONRA (en sağda) olmalı.
