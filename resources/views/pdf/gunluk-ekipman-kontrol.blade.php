@@ -25,6 +25,7 @@
     table.sorular td.soru { }
     table.sorular td.kutu { width: 6.8%; text-align: center; font-size: 11px; }
     table.sorular td.aciklama-hucre { width: 19%; }
+    table.sorular td.kabul { color: #334155; font-size: .95em; }
     table.sorular tr:nth-child(even) td { background: #f8fafc; }
     /* Çok satırlı formlar (gruplu kullanıcı formu) tek sayfaya sığsın. */
     table.sorular.sik td { padding-top: 3px; padding-bottom: 3px; }
@@ -83,7 +84,8 @@
 
         @php
             $kriterler = $s['form']['kriterler'];
-            $kodlu = array_keys($kriterler) !== array_values($kriterler); // U/UD/Y/X gibi kısaltmalı kriter
+            $kodlu = array_keys($kriterler) !== array_values($kriterler); // U/UD/Y/X, ✓/X/- gibi kısaltmalı kriter
+            $kabullu = collect($s['form']['satirlar'])->contains(fn ($r) => filled($r['kabul'] ?? null)); // "Kabul Kriteri" sütunlu form
         @endphp
         <div class="aciklama">
             Ekipmanı çalıştırmadan / işe başlamadan önce kontrol edin; enerji gerektirmeyen kontrolleri ekipman durmuşken yapın. Her madde için bir kutuyu işaretleyin (✓).
@@ -99,7 +101,10 @@
         <table class="sorular{{ count($s['form']['satirlar']) > 20 ? ' sik cok-sik' : (count($s['form']['satirlar']) > 14 ? ' sik' : '') }}">
             <tr>
                 <th>No</th>
-                <th style="text-align:left;padding-left:6px">Kontrol Maddesi</th>
+                <th style="text-align:left;padding-left:6px">{{ $kabullu ? 'Kontrol Parametresi' : 'Kontrol Maddesi' }}</th>
+                @if ($kabullu)
+                    <th style="text-align:left;padding-left:6px">Kabul Kriteri / Standart</th>
+                @endif
                 @foreach ($kriterler as $kod => $ad)
                     <th>{!! $kodlu ? e($kod) : str_replace(' ', '<br>', e($ad)) !!}</th>
                 @endforeach
@@ -107,11 +112,14 @@
             </tr>
             @foreach ($s['form']['satirlar'] as $satir)
                 @if (isset($satir['grup']))
-                    <tr><td class="grup" colspan="{{ 3 + count($kriterler) }}">{{ $satir['grup'] }}</td></tr>
+                    <tr><td class="grup" colspan="{{ 3 + count($kriterler) + ($kabullu ? 1 : 0) }}">{{ $satir['grup'] }}</td></tr>
                 @else
                     <tr>
                         <td class="no">{{ $satir['no'] }}</td>
                         <td class="soru">{{ $satir['soru'] }}</td>
+                        @if ($kabullu)
+                            <td class="kabul">{{ $satir['kabul'] ?? '' }}</td>
+                        @endif
                         @foreach ($kriterler as $kod => $ad)
                             <td class="kutu">☐</td>
                         @endforeach
@@ -122,9 +130,14 @@
         </table>
 
         <div class="karar">
-            <strong>Ekipman kullanıma uygun mu?</strong>
-            &nbsp;&nbsp;&nbsp; ☐ Evet, kullanılabilir
-            &nbsp;&nbsp;&nbsp; ☐ Hayır — kullanım durduruldu, amire bildirildi (saat: ............)
+            @if (! empty($s['form']['karar']))
+                <strong>KONTROL SONUCU:</strong>
+                @foreach ($s['form']['karar'] as $secenek) &nbsp;&nbsp; ☐ {{ $secenek }} @endforeach
+            @else
+                <strong>Ekipman kullanıma uygun mu?</strong>
+                &nbsp;&nbsp;&nbsp; ☐ Evet, kullanılabilir
+                &nbsp;&nbsp;&nbsp; ☐ Hayır — kullanım durduruldu, amire bildirildi (saat: ............)
+            @endif
         </div>
 
         <div class="not-alani">
@@ -135,9 +148,10 @@
             <span class="satir"></span>
         </div>
 
+        @php $imzalar = $s['form']['imzalar'] ?? ['Kontrol Eden Operatör', $s['form']['onaylayan'] ?? 'Onaylayan Amir / Sorumlu']; @endphp
         <table class="imza">
-            <tr><th style="width:50%">Kontrol Eden Operatör</th><th>{{ $s['form']['onaylayan'] ?? 'Onaylayan Amir / Sorumlu' }}</th></tr>
-            <tr><td>Ad Soyad:<br><br>İmza:</td><td>Ad Soyad:<br><br>İmza:</td></tr>
+            <tr>@foreach ($imzalar as $imza)<th style="width:{{ round(100 / count($imzalar), 2) }}%">{{ $imza }}</th>@endforeach</tr>
+            <tr>@foreach ($imzalar as $imza)<td>Ad Soyad:<br><br>İmza:</td>@endforeach</tr>
         </table>
 
         <div class="footnote">

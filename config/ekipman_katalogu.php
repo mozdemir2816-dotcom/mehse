@@ -30,21 +30,21 @@ return [
         'Dikey Freze Tezgâhı' => ['risk_kategorileri' => ['atolye_dikey_freze'], 'kontrol_formu' => 'Dikey Freze Tezgâhı', 'talimat' => 'DİKEY FREZE TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
         'Sütunlu Matkap' => ['risk_kategorileri' => ['atolye_sutunlu_matkap'], 'kontrol_formu' => 'Sütunlu Matkap', 'talimat' => 'Sütunlu/El Matkap Kullanma Talimatı'],
         'Kesme Tezgâhı (Disk / Testere)' => ['risk_kategorileri' => ['atolye_kesme_tezgahi'], 'kontrol_formu' => 'Kesme Tezgâhı (Disk / Testere)', 'ortak_riskler' => false],
-        'Taşlama / Bant Zımpara Makinesi' => ['risk_kategorileri' => ['atolye_bant_zimpara_taslama'], 'kontrol_formu' => 'Taşlama / Bant Zımpara Makinesi', 'ortak_riskler' => false],
-        'Ekstrüzyon Hattı' => ['risk_kategorileri' => ['atolye_ekstruzyon_hatti'], 'kontrol_formu' => 'Ekstrüzyon Hattı', 'talimat' => 'EKSTRÜZYON MAKİNESİ GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
-        'Plastik Kırıcı / Granülatör' => ['risk_kategorileri' => ['atolye_plastik_kirici_granulator'], 'kontrol_formu' => 'Plastik Kırıcı / Granülatör', 'ortak_riskler' => false],
-        'Merdaneli Makine' => ['risk_kategorileri' => ['atolye_merdaneli_makineler'], 'kontrol_formu' => 'Merdaneli Makine', 'ortak_riskler' => false],
+        'Taşlama / Bant Zımpara Makinesi' => ['risk_kategorileri' => ['atolye_bant_zimpara_taslama'], 'kontrol_formu' => 'Taşlama / Bant Zımpara Makinesi', 'talimat' => 'SÜTUNLU ZIMPARA MAKİNESİ (BANT ZIMPARA) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
+        'Ekstrüzyon Hattı' => ['risk_kategorileri' => ['atolye_ekstruzyon_hatti'], 'kontrol_formu' => 'Ekstrüzyon Hattı', 'talimat' => 'PLASTİK EKSTRÜZYON HATTI (EKSTRUDER) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
+        'Plastik Kırıcı / Granülatör' => ['risk_kategorileri' => ['atolye_plastik_kirici_granulator'], 'kontrol_formu' => 'Plastik Kırıcı / Granülatör', 'talimat' => 'PLASTİK KIRMA MAKİNESİ (GRANÜL KRICI) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
+        'Merdaneli Makine' => ['risk_kategorileri' => ['atolye_merdaneli_makineler'], 'kontrol_formu' => 'Merdaneli Makine', 'talimat' => 'PLASTİK ÇEKME / EZME MERDANESİ GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
         'Gaz Tüpü ve Şaloma Seti' => ['risk_kategorileri' => ['atolye_gaz_tupleri_ve_saloma'], 'kontrol_formu' => 'Gaz Tüpü ve Şaloma Seti', 'talimat' => 'Oksijen-Asetilen Kaynak/Kesme Talimatı'],
-        'Açık Vals (İki Silindirli)' => ['risk_kategorileri' => ['atolye_acik_vals'], 'ortak_riskler' => false],
+        'Açık Vals (İki Silindirli)' => ['risk_kategorileri' => ['atolye_acik_vals'], 'kontrol_formu' => 'Açık Vals (İki Silindirli)', 'talimat' => 'AÇIK VALS TEZGÂHI İSG GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
         'Gazaltı Kaynak Makinesi' => ['risk_kategorileri' => ['atolye_gazalti_kaynak'], 'ortak_riskler' => false],
         'Satıh Taşlama Tezgâhı' => ['risk_kategorileri' => ['atolye_satih_taslama'], 'ortak_riskler' => false],
         'Dalma Erozyon (EDM) Tezgâhı' => ['risk_kategorileri' => ['atolye_dalma_erozyon'], 'ortak_riskler' => false],
-        'Ayaklı Taş Motoru' => ['risk_kategorileri' => ['atolye_ayakli_tas_motoru'], 'ortak_riskler' => false],
-        'Pürmüz ve LPG Tüpü' => ['risk_kategorileri' => ['ekipman_purmuz_lpg'], 'ortak_riskler' => false],
+        'Ayaklı Taş Motoru' => ['risk_kategorileri' => ['atolye_ayakli_tas_motoru'], 'kontrol_formu' => 'Ayaklı Taş Motoru', 'talimat' => 'ÇİFT TAŞLAMA MOTORU (ZIMPARA TAŞ MOTORU) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
+        'Pürmüz ve LPG Tüpü' => ['risk_kategorileri' => ['ekipman_purmuz_lpg'], 'kontrol_formu' => 'Pürmüz ve LPG Tüpü', 'talimat' => 'PÜRMÜZ VE PİKNİK TÜPÜ (LPG TAVLAMA SETİ) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
 
         // Diğer iş ekipmanları & araçlar (periyodik muayene yok) — EKP-RA-01
         'Endüstriyel Zemin Temizleme Otomatı' => ['risk_kategorileri' => ['ekipman_zemin_temizleme']],
-        'Seyyar / Çok Amaçlı Merdiven' => ['risk_kategorileri' => ['ekipman_seyyar_merdiven']],
+        'Seyyar / Çok Amaçlı Merdiven' => ['risk_kategorileri' => ['ekipman_seyyar_merdiven'], 'kontrol_formu' => 'Seyyar El Merdiveni', 'talimat' => 'SEYYAR EL MERDİVENİ GÜVENLİ ÇALIŞMA TALİMATI'],
         'Şirket Aracı' => ['risk_kategorileri' => ['ekipman_sirket_araci']],
         'Endüstriyel Raf' => ['risk_kategorileri' => ['ekipman_endustriyel_raf']],
 
@@ -66,6 +66,11 @@ return [
     // Kategoride en az bir ekipman varsa ayrıca beklenen ortak risk kategorileri. Kendi risk
     // dosyası bu konuları zaten kapsayan tip 'ortak_riskler' => false ile tetiklemez.
     'kategori_ortak_riskleri' => [
-        'uretim_atolye' => ['atolye_elektrik_ve_ortak_makine_guvenligi', 'atolye_egitim_ve_yetkilendirme'],
+        'uretim_atolye' => ['atolye_elektrik_ve_ortak_makine_guvenligi'],
     ],
+
+    // Ekipmandan bağımsız, HER firmanın risk değerlendirmesinde beklenen ortak set (kullanıcı
+    // kararı 14.10.2026: "eğitim, acil durum gibi maddeler her firmanın ortağı"). Yoksa uyarı +
+    // "Ekipman Eksikleri" ile tek tıkla eklenir; değerlendirmede olan / "gerekmiyor" denen gelmez.
+    'her_firma_riskleri' => ['atolye_egitim_ve_yetkilendirme', 'atolye_acil_durumlar'],
 ];

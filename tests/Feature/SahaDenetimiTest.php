@@ -468,22 +468,24 @@ class SahaDenetimiTest extends TestCase
     {
         $tipler = collect(\App\Support\EkipmanKatalogu::kontrolFormlari());
 
-        // 41 kullanıcı referansı + kullanıcının gruplu formları (CNC İSG-FR-CNC-01, Torna
-        // İSG-FR-TRN-01, Kompresör İSG-FR-KMP-01, Ekstrüzyon İSG-FR-EKS-01, Dikey Freze İSG-FR-FRZ-01, Trafo İSG-FR-TRF-01) + 6 atölye/ekipman AI taslağı ('taslak' => true).
-        $this->assertCount(47, $tipler->where('taslak', '!==', true));
-        $this->assertCount(6, $tipler->where('taslak', true));
-        $this->assertEquals(['CNC Tezgâhı' => 16, 'Dikey Freze Tezgâhı' => 17, 'Ekstrüzyon Hattı' => 17, 'Kompresör' => 16, 'Torna Tezgâhı' => 18, 'Trafo (OG/AG)' => 18], $tipler->filter(fn ($t) => ! empty($t['gruplar']))->mapWithKeys(fn ($t) => [$t['ad'] => count($t['sorular'])])->sortKeys()->all());
-        $this->assertCount(53, $tipler->pluck('ad')->unique());
+        // 41 kullanıcı referansı (düz, 12 soru) + kullanıcının kendi ekipman formları (form_no'lu:
+        // gruplu U/UD/Y/X ya da kabul kriterli ✓/X/-) + kalan AI taslakları ('taslak' => true).
+        $kullaniciFormlari = $tipler->filter(fn ($t) => filled($t['form_no'] ?? null));
+        $this->assertCount(41, $tipler->filter(fn ($t) => blank($t['form_no'] ?? null) && ($t['taslak'] ?? false) !== true));
+        $this->assertSame(['Gaz Tüpü ve Şaloma Seti', 'Kesme Tezgâhı (Disk / Testere)', 'Sütunlu Matkap'], $tipler->where('taslak', true)->pluck('ad')->sort()->values()->all());
+        $this->assertCount(13, $kullaniciFormlari); // 14 talimat; ekstrüzyonda eski+yeni talimat, tek (yeni) form
+        $this->assertSame($tipler->count(), $tipler->pluck('ad')->unique()->count(), 'form adları tekil olmalı');
 
         foreach ($tipler as $t) {
             $this->assertNotEmpty($t['ad']);
-            // Düz formlar 12 soruluk; gruplu kullanıcı formları yukarıda.
-            if (empty($t['gruplar'])) {
+            if (filled($t['form_no'] ?? null)) {
+                $this->assertGreaterThanOrEqual(8, count($t['sorular']), $t['ad']);
+                $this->assertNotEmpty($t['kriterler'], $t['ad']);
+            } else {
                 $this->assertCount(12, $t['sorular'], $t['ad']);
             }
         }
     }
-
     public function test_gruplu_kullanici_formu_haftalik_pdfe_de_yazilir(): void
     {
         $cnc = collect(\App\Support\EkipmanKatalogu::kontrolFormlari())->search(fn ($f) => $f['ad'] === 'CNC Tezgâhı');

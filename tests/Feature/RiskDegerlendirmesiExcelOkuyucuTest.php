@@ -205,4 +205,38 @@ class RiskDegerlendirmesiExcelOkuyucuTest extends TestCase
         $this->assertSame(4.0, $sonuc['adaylar'][0]['olasilik']);
         $this->assertStringContainsString('Korkuluk takılır', $sonuc['adaylar'][0]['oneri']);
     }
+
+    /** Kullanıcının Fine-Kinney ekipman dosyaları (EKP-RA-01, BERT): Açıklayıcı DÖF, Hedef P/F/S, Önerilen termin. */
+    public function test_fine_kinney_ekipman_dosyasinda_dof_hedef_puan_ve_termin_dogru_eslenir(): void
+    {
+        $baslik = ['No', 'Ekipman / bölüm', 'Faaliyet', 'Tehlike', 'Risk / sonuç', 'Etkilenen kişiler', 'Mevcut durum / saha tespiti',
+            'Olasılık P', 'Frekans F', 'Şiddet S', 'Risk R', 'Risk derecesi', 'Açıklayıcı DÖF', 'Hedef P', 'Hedef F', 'Hedef S',
+            'Hedef R', 'Hedef risk derecesi', 'Sorumlu', 'Önerilen termin', 'DÖF durumu', 'Doğrulama / kapanış kanıtı',
+            'Tamamlanma / kontrol tarihi', 'Standart / teknik dayanak', 'Makina Emniyeti dayanağı', 'İş Ekipmanları dayanağı'];
+        $yol = $this->xlsxOlustur([
+            ['FINE KINNEY', '', '', 'EKİPMAN RİSK ANALİZİ', '', '', '', '', '', '', '', '', '', 'DÖF SONRASI HEDEF VE TAKİP'],
+            ['EKP-RA-01 / Rev.00', '', '', 'Kapsam: atölye ekipmanları'],
+            ['Ön değerlendirme', '', '', 'Saha gözlemi yoktur.'],
+            ['R = P × F × S', '', '', 'Düşük <20; Olası 20–<70'],
+            ['Hazırlık: 13.10.2026', '', '', '2 kayıt.'],
+            $baslik,
+            [1, 'Torna', 'Ayna çevresinde çalışma', 'Korumasız dönen ayna', 'Kaptırma, ölüm', 'Operatör', 'Saha kontrolü bekliyor.',
+                6, 6, 40, 1440, 'Çok yüksek', 'Aynaya erişimi önleyen koruyucu yerleştirin.', 0.2, 6, 40, 48, 'Olası',
+                'Bakım sorumlusu', 'İşe başlamadan önce', 'Açık', '', '', 'ISO 23125', 'Ek I: 1.3', 'Madde 5–8'],
+            [2, 'Forklift', 'Yük taşıma', 'Devrilme', 'Ezilme', 'Operatör', 'Saha kontrolü bekliyor.',
+                3, 6, 15, 270, 'Yüksek', 'Yük tablosuna uyun.', 1, 6, 15, 90, 'Önemli',
+                'Depo şefi', '1 hafta', 'Açık', '', '', 'TS ISO 3691', '', 'Ek II'],
+        ]);
+
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($yol);
+        $m = $sonuc['adaylar'][0];
+
+        $this->assertSame(2, $sonuc['basarili']);
+        $this->assertSame(['Torna', 'Ayna çevresinde çalışma', 'Korumasız dönen ayna'], [$m['bolum'], $m['faaliyet'], $m['tehlike']]);
+        $this->assertSame('Aynaya erişimi önleyen koruyucu yerleştirin.', $m['oneri']);
+        $this->assertSame('Saha kontrolü bekliyor.', $m['mevcut_onlem']);
+        $this->assertSame('İşe başlamadan önce', $m['termin']);
+        $this->assertSame('Bakım sorumlusu', $m['sorumlu']);
+        $this->assertEquals([6, 6, 40, 0.2, 6, 40], [$m['olasilik'], $m['frekans'], $m['siddet'], $m['son_olasilik'], $m['son_frekans'], $m['son_siddet']]);
+    }
 }

@@ -29,6 +29,12 @@ class EkipmanKatalogu
 
     public const ORTAK_ETIKET = 'Ortak makine güvenliği';
 
+    /** Ekipmandan bağımsız, her firmanın değerlendirmesinde beklenen set (config her_firma_riskleri). */
+    public const HER_FIRMA_ETIKET = 'Ortak eğitim ve acil durum';
+
+    /** Ekipman olmayan (revizyon nedeninde "Yeni ekipman" sayılmayan) grup etiketleri. */
+    public const ORTAK_GRUPLAR = [self::ORTAK_ETIKET, self::HER_FIRMA_ETIKET];
+
     /** @return array{risk_kategorileri: array<int, string>, kontrol_formu: ?string, talimat: ?string, ortak_riskler?: bool}|null */
     public static function tanim(?string $tip): ?array
     {
@@ -82,6 +88,11 @@ class EkipmanKatalogu
             ->unique()->values()->all();
         if ($ortak) {
             $gruplar[self::ORTAK_ETIKET] = $ortak;
+        }
+
+        // Ekipmandan bağımsız, her firmada beklenen ortak set (eğitim + acil durum) — kullanıcı kararı 14.10.2026.
+        if ($herFirma = config('ekipman_katalogu.her_firma_riskleri', [])) {
+            $gruplar[self::HER_FIRMA_ETIKET] = $herFirma;
         }
 
         if (! $gruplar) {
@@ -196,7 +207,7 @@ class EkipmanKatalogu
         $rd->haric_tehlikeler = $haric ?: null;
         if ($eklenen > 0) {
             $rd->revizyon_no = static::sonrakiRevizyon($rd->revizyon_no);
-            $rd->revizyon_nedeni = 'Yeni ekipman: '.implode(', ', $ekipmanlar).' ('.now()->format('d.m.Y').')';
+            $rd->revizyon_nedeni = ($ekipmanlar ? 'Yeni ekipman: '.implode(', ', $ekipmanlar) : 'Ortak eğitim / acil durum maddeleri eklendi').' ('.now()->format('d.m.Y').')';
         }
         $rd->save();
 
@@ -224,7 +235,15 @@ class EkipmanKatalogu
         $satirlar = [];
         $sorular = [];
 
-        if (! empty($form['gruplar'])) {
+        if (! empty($form['satirlar'])) {
+            // Hazır satırlı form (✓/X/- düzeni): numara ve sıra belgedeki gibi; 'kabul' = kabul kriteri.
+            $satirlar = array_values($form['satirlar']);
+            foreach ($satirlar as $s) {
+                if (isset($s['soru'])) {
+                    $sorular[] = $s['soru'].(filled($s['kabul'] ?? null) ? ' — '.$s['kabul'] : '');
+                }
+            }
+        } elseif (! empty($form['gruplar'])) {
             foreach (array_values($form['gruplar']) as $g => $grup) {
                 $grupNo = preg_match('/^(\d+)\./u', $grup['baslik'], $m) ? $m[1] : (string) ($g + 1);
                 $satirlar[] = ['grup' => $grup['baslik']];

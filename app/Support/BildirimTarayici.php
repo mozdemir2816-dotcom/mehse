@@ -142,8 +142,8 @@ class BildirimTarayici
         $ekipmanRisk = EkipmanKatalogu::riskEksikleri($firma);
         if ($ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0) {
             $ozet = collect($ekipmanRisk['gruplar'])->map(fn ($liste, $ad) => $ad.' ('.$liste->count().')')->implode(', ');
-            $ekle('ekipman_risk', 'uyari', 'Risk değerlendirmesinde ekipman maddeleri eksik', $ekipmanRisk['toplam'].' madde eklenmemiş: '.Str::limit($ozet, 140).'. Değerlendirmeyi açıp "Ekipman Eksikleri" ile ekleyin.', null, static::url(fn () => RiskDegerlendirmesiResource::getUrl('edit', ['record' => $ekipmanRisk['rd']])));
-        } elseif (! $ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0) {
+            $ekle('ekipman_risk', 'uyari', 'Risk değerlendirmesinde ekipman / ortak maddeler eksik', $ekipmanRisk['toplam'].' madde eklenmemiş: '.Str::limit($ozet, 140).'. Değerlendirmeyi açıp "Eksik Maddeler" ile ekleyin.', null, static::url(fn () => RiskDegerlendirmesiResource::getUrl('edit', ['record' => $ekipmanRisk['rd']])));
+        } elseif (! $ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0 && EkipmanKatalogu::ekipmanlar($firma)->isNotEmpty()) {
             $ekle('ekipman_risk_yok', 'kritik', 'Ekipmanı olan firmada risk değerlendirmesi yok', 'Firmaya tanımlı ekipmanlar için kütüphanede '.$ekipmanRisk['toplam'].' risk maddesi hazır; Risk Değerlendirme sihirbazıyla değerlendirmeyi oluşturun.', null, static::url(fn () => RiskSihirbazi::getUrl()));
         }
         $eksikTalimat = EkipmanKatalogu::eksikTalimatlar($firma);

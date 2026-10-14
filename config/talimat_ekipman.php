@@ -13,6 +13,14 @@
  * İSG-TLM-KMP-01: Kompresor_ve_Hava_Tanki_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-EKS-01: Ekstruzyon_Makinesi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
  * İSG-TLM-TRF-01: Trafo_Merkezi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx
+ * TLT-VALS-01: Acik_Vals_Tezgahi_Guvenli_Calisma_Talimati_ve_Kontrol_Formu.docx
+ * TLT-MER-01: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-BZM-02: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-SEZ-03: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-EKS-04: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-PUR-05: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-KIR-06: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-TAS-07: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
  */
 
 return [
@@ -354,6 +362,418 @@ return [
                     'Manevra Tamamlama ve Kilit: İşlem bittiğinde topraklama pensleri ve kilitler sırayla sökülmeli, hücre kapakları tam kilitlenmelidir.',
                     'Topraklama Ekipmanlarının Düzeni: Yalıtkan stanka, gerilim kontrol dedektörü ve topraklama kabloları kuru ve korumalı askılarına yerleştirilmelidir.',
                     'Kapı Kilitleme ve Defter: Trafo binası anahtarla kilitlenmeli, yapılan gözlem veya manevralar \'Trafo Merkezi İşletme Defteri\'ne işlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'AÇIK VALS TEZGÂHI İSG GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-VALS-01',
+        'aciklama' => 'Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Bu talimat; açık vals tezgâhında kauçuk/plastik hamuru yoğurma, karıştırma ve ezme işlemleri esnasında meydana gelebilecek silindirlere uzuv kapılması, sıkışma, ezilme, fırlama ve yanık risklerini ortadan kaldırmak üzere uyulması zorunlu kuralları belirler.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI – KESİNLİKLE ELDİVEN KULLANILMAZ!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Döner merdaneli açık vals tezgâhında çalışırken ELDİVEN KULLANILMASI KESİNLİKLE YASAKTIR. (Eldiven kumaşının merdaneler arasına kapılması halinde eli ve kolu hızla içeri çekerek ölümcül kazalara yol açar.)',
+                    'Bol kıyafet, sarkıntılı atkı/önlük ipi, saat, yüzük ve kolye kesinlikle yasaktır. Uzun saçlar bone/baret içine hapsedilmelidir.',
+                    'Zorunlu KKD: S3 Çelik Burunlu Kaymaz Tabanlı İş Ayakkabısı, Dar Manşetli İş Elbisesi, EN 166 Koruyucu Gözlük ve Kulak Koruyucu.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ GÜVENLİK KONTROLLERİ',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Acil durdurma göğüs/diz emniyet barı, çekme halatı ve acil stop butonları tezgâh boşta iken BİZZAT TEST EDİLMELİDİR.',
+                    'Merdanelerin acil frenleme mesafesi (en fazla çeyrek tur içinde anında durma) kontrol edilmelidir.',
+                    'Kayış-kasnak, zincir ve dişli muhafaza kapaklarının tam kapalı, sabit ve kilitli olduğu doğrulanmalıdır.',
+                    'Tezgâh tabanındaki kaymaz ızgara/ped kontrol edilmeli; zeminde kaymaya neden olacak yağ/sıvı olmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK GÜVENLİK KURALLARI',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Tezgâha malzeme beslenirken eller asla silindirlerin tepe noktasından (ısırıcı \'nip\' bölgesi) aşağıya sokulmamalıdır.',
+                    'Hamur kesme, sıyırma veya çevirme işlemlerinde eller asla merdaneye temas ettirilmemeli; uygun ahşap/pirinç spatula kullanılmalıdır.',
+                    'Silindire sarılan hamur veya yapışan malzeme tezgâh dönerken elle çekilerek kurtarılmaya çalışılmamalıdır.',
+                    'Tezgâh çalışırken operatör kesinlikle yerinden ayrılmamalı; dikkat dağıtıcı unsurlarla (cep telefonu vb.) ilgilenilmemelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ACİL DURUM MÜDAHALE ADIMLARI',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Uzuv kapılma/sıkışma durumunda operatör derhal göğsüyle emniyet barına abanmalı veya acil stop ipini çekmelidir.',
+                    'Diğer personel derhal acil durdurma butonuna basmalı ve varsa \'Ters Dönüş (Reverse) / Merdane Hızlı Açma\' mekanizmasını tetiklemelidir.',
+                    'Sıkışan uzuv asla çekilmemeli, merdaneler mekanik olarak açılarak kazazede kurtarılmalı ve derhal 112 Acil Yardım aranmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İş bitiminde makine kapatılmalı ve ana panodan şalter indirilerek EKED (Etiketle-Kilitle-Emniyete Al-Dene) kuralı uygulanmalıdır.',
+                    'Merdaneler tamamen durmadan ve enerji kesilmeden hiçbir surette temizlik veya bakım yapılmamalıdır.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'SEYYAR EL MERDİVENİ GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-MER-01',
+        'aciklama' => 'Portatif Dayamalı / A-Tipi Alüminyum ve Ahşap Merdivenler — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'İşletme genelinde bakım, temizlik ve malzeme erişiminde seyyar el merdivenlerinin kullanımında yüksekten düşme ve kayma risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG KURALI: \'3 NOKTA TEMAS\' & 4\'E 1 YASLAMA KURALI!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdivene tırmanırken ve inerken yüz daima basamaklara dönük olmalı ve her zaman en az 3 nokta (2 el 1 ayak veya 2 ayak 1 el) temas etmelidir.',
+                    'Dayamalı merdivenler 4:1 (75 derece) eğim açısıyla kurulmalı, tepe noktasından veya tabanından sabitlenmelidir.',
+                    'Merdiven basamaklarında taşınamayacak ağır yüklerle çalışılamaz; son 3 basamağa kesinlikle çıkılmaz!',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdivenin basamaklarında, takozlarında (pabuçlarında) çatlak, ezilme, yağ veya eğilme olmadığı kontrol edilmelidir.',
+                    'A-tipi mafsallı merdivenlerde gergi makası/emniyet zinciri kilitlenmeden merdivene çıkılmamalıdır.',
+                    'Kaygan zeminlerde, çamurda, ıslak veya eğimli yüzeylerde merdiven pabuçları sabitlenmeden kullanılmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdiven üzerinde gövde ağırlık merkezi yan kirişlerin dışına taşırılmamalıdır (uzanma hareketi yasaktır).',
+                    'Aynı merdiven üzerinde asla birden fazla kişi aynı anda çalışmamalıdır.',
+                    'Kapı arkalarına veya araç trafiği olan yollara kurulurken bariyer çekilmeli veya ikinci bir gözlemci refakat etmelidir.',
+                    'Elektrikli panoların veya açık hatların yakınında metal/alüminyum iletken merdivenler kesinlikle kullanılamaz (fiberglas tercih edilir).',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdivenler zemin üzerinde gelişi güzel bırakılmamalı, asılarak veya özel rafında kilitli muhafaza edilmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'SÜTUNLU ZIMPARA MAKİNESİ (BANT ZIMPARA) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-BZM-02',
+        'aciklama' => 'Ayaklı / Sütunlu Bant Zımpara ve Çapak Alma Tezgâhı — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Parça çapak alma ve yüzey zımparalama işlemlerinde toz soluma, kıvılcım fırlaması, bant kopması ve uzuv kapılma risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: DÖNER BANTTA ELDİVEN YASAKTIR!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Hızlı dönen zımpara bandı ve tahrik kasnağında kumaş/örme eldiven kapılma riski yaratır; parça boyutuna göre mengene/tutucu aparat kullanılmalıdır.',
+                    'Zorunlu KKD: EN 166 Gözlük veya Yüz Siperi, FFP2 Toz Maskesi, Dar paçalı iş elbisesi, Çelik burunlu ayakkabı.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Zımpara bandında yırtık, ek yerinde açılma veya aşırı aşınma olmadığı kontrol edilmelidir.',
+                    'Bant gergi mekanizması ve ayar kolu kontrol edilmeli, bant boşta elle çevrilerek merkezleme kontrol edilmelidir.',
+                    'Acil durdurma (E-Stop) pedalı veya butonu test edilmeli, toz emiş ünitesi çalışır durumda olmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İşlenecek küçük parçalar doğrudan elle değil, özel tutucu kıskaç veya mengene ile zımparaya verilmelidir.',
+                    'Parça zımpara bandına aşırı baskı ile bastırılmamalıdır (bant kopmasına yol açar).',
+                    'Kıvılcım ve tozların yönlendirilmesi için siperlik daima kapalı konumda tutulmalıdır.',
+                    'Makine çalışırken bant gerginlik ayarı veya temizlik yapılmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İş bitiminde makine durdurulmalı, talaş tepsisindeki ve filtredeki metal/toz artıkları vakumla temizlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'PLASTİK ÇEKME / EZME MERDANESİ GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-SEZ-03',
+        'aciklama' => 'Silindir Çekici / Ezici Kalibrasyon Ünitesi — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Ekstrüzyon hattından çıkan plastik profil/levhaların çift silindir arasından çekilmesi ve ezilmesinde ezilme, sıkışma ve kapılma risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: MERDANE GİRİŞİNE ELLE MÜDAHALE YASAKTIR!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdanelerin çekme (ısırıcı) bölgesine profil yönlendirilirken kesinlikle elle itilmez; kılavuz çubuk/pense kullanılır.',
+                    'Döner merdane başında çalışırken bol kıyafet, takı, eldiven kesinlikle yasaktır!',
+                    'Zorunlu KKD: S3 İş Ayakkabısı, Dar kollu cepsiz iş kıyafeti, Koruyucu Gözlük.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdane önündeki tel/bar tipi acil emniyet switchinin çalışıp çalışmadığı denenmelidir.',
+                    'Elektrik panosu kapağının kapalı olduğu ve motor redüktör yağ seviyesi kontrol edilmelidir.',
+                    'Merdane baskı ayar yayları/pnömatik pistonların dengeli bastığı kontrol edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Plastik şerit veya fitil merdanelere beslenirken güvenli mesafede durulmalı, merdane açıklığı elle kontrol edilmemelidir.',
+                    'Merdane yüzeyine sarılan malzeme makine dönerken elle veya maket bıçağıyla kazınmamalıdır.',
+                    'Hız kontrolü (hız potansiyometresi) ekstrüder çıkış hızına senkronize ayarlanmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Merdaneler durdurulduktan ve ana şalter kilitlendikten (EKED) sonra pirinç kazıyıcı ile temizlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'PLASTİK EKSTRÜZYON HATTI (EKSTRUDER) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-EKS-04',
+        'aciklama' => 'Kovan-Vida Isıtıcılı Plastik Profil / Granül Ekstrüzyon Makinesi — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Termoplastik hammadde ergitme ve şekillendirme hattında yüksek sıcaklık (yanık), elektrik, mekanik kapılma ve toksik gaz soluma risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: 200°C+ YÜKSEK SICAKLIK VE YANIK RİSKİ!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Rezistans kovanına ve kafaya (die) çıplak elle dokunulmaz; müdahalede EN 407 Isıya Dayanıklı Eldiven zorunludur.',
+                    'Bunker (huni) besleme boğazına yabancı metal parçası düşürülmemelidir; boğaza asla el sokulmaz!',
+                    'Kafa sökümünde kovan içi basıncın tahliye edildiğinden emin olunmalıdır (patlama/fışkırma riski).',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Isıtıcı rezistansların sıcaklık kontrol cihazları (PID) set edilen değerlere ulaştığı teyit edilmelidir (soğuk çalıştırma vida kırma riski yaratır).',
+                    'Soğutma teknesindeki su seviyesi ve devridaim pompası kontrol edilmelidir.',
+                    'Bunker emniyet ızgarasının yerinde ve sabit olduğu kontrol edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Hammadde çuvalları kaldırılırken ergonomi kurallarına uyulmalı, bunker dolumunda toz maskesi takılmalıdır.',
+                    'Kalıp kafasından çıkan ilk ergimiş plastik parçalar maşa veya pirinç spatula ile alınmalıdır.',
+                    'Hammadde tıkandığında boğaza metal boru veya el sokulmaz, standart tahta tokmak kullanılır.',
+                    'Havalandırma davlumbazı plastik dumanını tahliye etmek üzere sürekli açık tutulmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Isıtıcılar kapatılmalı, hat temizliği için kafa temizlenmeli ve ana şalter indirilmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'PÜRMÜZ VE PİKNİK TÜPÜ (LPG TAVLAMA SETİ) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-PUR-05',
+        'aciklama' => 'Kalıp Isıtma / Tavlama ve Yüzey Yakma LPG Şaloma Ekipmanı — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Kalıp ısıtma ve çapak yakma amacıyla kullanılan portatif LPG tüpü ve şaloma setinde gaz kaçağı, yangın, patlama ve yanık risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: GAZ KAÇAĞI KONTROLÜ ASLA ATEŞLE YAPILMAZ!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Kaçak kontrolü sadece KÖPÜK / SABUNLU SU veya gaz detektörü ile yapılır.',
+                    'Tüp kesinlikle devrilmeyecek şekilde sabitlenmeli veya dik durmalıdır; yatık kullanılmaz!',
+                    'Çalışma alanında 1 metre mesafede yangın söndürme tüpü (KKT) hazır bulundurulmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'LPG tüpü vanası, contası ve şaloma hortumunun çatlak, yıpranma veya gevşeklik taşımadığı kontrol edilmelidir.',
+                    'Hortum kelepçelerinin sıkı olduğu teyit edilmeli, tel sarılarak yapılan bağlantılar KESİNLİKLE YASAKTIR.',
+                    'Tüpün yakınında yanıcı kimyasal (tiner, solvent, plastik tozu) bulunmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Ateşleme sadece çakmaktaşlı şaloma çakmağı veya pürmüz butonuyla yapılmalı; alev asla insanlara veya tüpe yöneltilmemelidir.',
+                    'Pürmüz alevli vaziyette yere veya tezgâha asla bırakılmamalıdır.',
+                    'İş sırasında ortam havalandırması sağlanmalı; kapalı dar hacimlerde LPG birikmesi engellenmelidir.',
+                    'Tüp aşırı sıcak kaynakların veya güneşin altına konulmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Önce tüpün ana vanası kapatılarak hortumdaki gazın yanıp bitmesi beklenmeli, alev söndükten sonra pürmüz vanası kapatılmalıdır.',
+                    'Soğuma sağlanana kadar pürmüz ucu yanıcı zeminle temas ettirilmemelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'PLASTİK KIRMA MAKİNESİ (GRANÜL KRICI) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-KIR-06',
+        'aciklama' => 'Bunkerli Plastik Takoz / Çapak ve Fire Kırma Değirmeni — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Plastik geri dönüşümünde döner bıçaklara uzuv kaptırma, fırlayan plastik parça çarpması, yüksek gürültü ve toz maruziyetini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: BUNKER İÇİNE ASLA EL VE KOL SOKULMAZ!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Bunker kapağı emniyet switchi asla köprülenemez (by-pass edilemez). Kapak açıldığında rotor anında durmalıdır!',
+                    'Malzeme sıkışmasında makine tamamen durup ana şalter kilitlenmeden (EKED) müdahale edilemez!',
+                    'Zorunlu KKD: EN 166 Gözlük/Siperlik, EN 352 Kulak Koruyucu, Dar manşetli elbise, S3 Ayakkabı.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Bunker emniyet limit switchi (interlock) kapağın açılmasıyla motoru kesiyor mu kontrol edilmelidir.',
+                    'Acil durdurma mantar butonu test edilmeli, volan ve kayış-kasnak muhafazalarının kilitli olduğu doğrulanmalıdır.',
+                    'Kırma haznesinde unutulmuş metal el aleti (anahtar, çekiç vb.) olmadığından emin olunmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Plastik takozlar atılırken bunker içine eğilinmemeli; geri fırlayan parçalara karşı yüz siperi takılmalıdır.',
+                    'Malzeme bunkere itilirken eller içeri sokulmaz, sadece standart tahta tokmak kullanılır.',
+                    'Metal, taş veya sert cisimlerin kırıcıya girmesi kesinlikle engellenmelidir (bıçak patlaması riski).',
+                    'Makine çalışırken alt toplama çekmecesi açılmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Bıçak bileme veya temizlik işlemlerinde rotor mekanik pimle kilitlenmeli ve EKED kilidi asılmalıdır.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'ÇİFT TAŞLAMA MOTORU (ZIMPARA TAŞ MOTORU) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-TAS-07',
+        'aciklama' => 'Sehpalı / Masaüstü Çift Taraflı Çapak Alma ve Bileme Taş Motoru — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Takım bileme ve çapak alma işlemlerinde taş patlaması, parça sıkışması, kıvılcım fırlaması ve görme kaybı risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: DAYAMA BOŞLUĞU MAKSİMUM 3 MM OLMALIDIR!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Parça dayama sehpası ile taş arasındaki açıklık 3 mm\'den fazla olamaz (parça sıkışıp taşı patlatır).',
+                    'Taşın yan yüzeyiyle kesinlikle taşlama yapılmaz (taş kırılma riski).',
+                    'Çatlak taş kesinlikle takılmaz (\'Çınlama Testi\' yapılmalıdır)!',
+                    'Çapak alma sırasında kumaş eldiven kullanılamaz; parça maşayla tutulmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Taş muhafazalarının 180 dereceden fazla açılmadığı ve sağlam çelik saçtan olduğu kontrol edilmelidir.',
+                    'Şeffaf çapak koruma siperliklerinin ayarlı ve temiz olduğu kontrol edilmelidir.',
+                    'Dayama mesafesi kontrol edilmeli (Dayama tablası max 3 mm, üst siperlik max 6 mm).',
+                    'Taş boşta çalıştırılarak salgı veya yalpalama yapıp yapmadığı 1 dakika gözlenmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İş parçası taşa yavaşça ve kademeli yaklaştırılmalı, taşa sert darbe vurulmamalıdır.',
+                    'Çok küçük parçalar elle tutularak taşlanmaz; özel mengene veya kıskaç kullanılmalıdır.',
+                    'Taş çalışırken taşın tam ekseninde (karşısında) değil, hafif yanında durulmalıdır.',
+                    'Taş dönmeye devam ederken tezgâh başından ayrılınmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Taş motoru kapatıldıktan sonra taşın kendi kendine durması beklenmeli, parça bastırılarak durdurulmamalıdır.',
                 ],
             ],
         ],

@@ -1769,6 +1769,323 @@ return [
                     ],
                 ],
             ],
+            // Kullanıcının kendi formu (Acik_Vals_Tezgahi_Guvenli_Calisma_Talimati_ve_Kontrol_Formu.docx, TLT-VALS-01) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Açık Vals (İki Silindirli)',
+                'baslik' => 'AÇIK VALS TEZGÂHI GÜNLÜK KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-VALS-01',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. ACİL DURDURMA VE EMNİYET DONANIMLARI',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Göğüs / Diz Emniyet Barı',
+                        'kabul' => 'Operatör yaslandığında tezgâhı ve merdane hareketini anında kilitliyor mu?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Acil Stop Butonları',
+                        'kabul' => 'Mekanik olarak sağlam, basıldığında anında duruş sağlıyor mu?',
+                    ],
+                    [
+                        'no' => '1.3',
+                        'soru' => 'Emniyet Teli / Çekme Halatı',
+                        'kabul' => 'Halat gergin, deformasyonsuz ve çekildiğinde sistemi durduruyor mu?',
+                    ],
+                    [
+                        'no' => '1.4',
+                        'soru' => 'Hızlı Ters Dönüş (Reverse) / Açma',
+                        'kabul' => 'Acil duruş tetiklendiğinde merdaneleri geriye açma sistemi devrede mi?',
+                    ],
+                    [
+                        'no' => '1.5',
+                        'soru' => 'Ani Frenleme Mesafesi',
+                        'kabul' => 'Merdaneler azami çeyrek tur içinde tam duruşa geçiyor mu?',
+                    ],
+                    [
+                        'grup' => '2. MEKANİK & TAHRİK AKSAMI',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Kayış - Kasnak & Dişli Muhafazası',
+                        'kabul' => 'Tahrik koruma sacları ve kapakları tam kapalı, sabitlenmiş ve kilitli mi?',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Silindir Aralık (Nip) Ayarı',
+                        'kabul' => 'Merdane aralık ayar mekanizması boşluksuz ve düzgün çalışıyor mu?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Yatak Yağlaması & Gres Durumu',
+                        'kabul' => 'Rulman ve yataklarda yeterli yağlama mevcut mu, aşırı ısınma/ses var mı?',
+                    ],
+                    [
+                        'no' => '2.4',
+                        'soru' => 'Silindir Yüzey Durumu',
+                        'kabul' => 'Merdanelerde çatlak, derin çizik, korozyon veya yabancı cisim var mı?',
+                    ],
+                    [
+                        'grup' => '3. ELEKTRİK & ÇEVRESEL İSG ŞARTLARI',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Kumanda Panosu & İzolasyon',
+                        'kabul' => 'Pano kapağı kilitli, açıkta veya zedelenmiş kablo bağlantısı yok mu?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Gövde Topraklaması',
+                        'kabul' => 'Tezgâh gövdesinde koruma topraklama hattı sağlam ve bağlı mı?',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Kaymaz Zemin & Çalışma Alanı',
+                        'kabul' => 'Zemin kaygan yağdan arındırılmış, kaymaz ızgara/ped sağlam ve temiz mi?',
+                    ],
+                    [
+                        'no' => '3.4',
+                        'soru' => 'Operatör Kıyafet & Eldiven Kontrolü',
+                        'kabul' => 'Operatörün eldivensiz olduğu, manşetlerinin dar ve takısız olduğu teyit edildi mi?',
+                    ],
+                ],
+                'karar' => [
+                    'Tezgâh Güvenli (Çalışabilir)',
+                    'EMNİYET EKSİKLİĞİ VAR (ÇALIŞTIRILAMAZ - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Operatör (Kontrolü Yapan)',
+                    'Vardiya Amiri / Bakım Sorumlusu',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-MER-01) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Seyyar El Merdiveni',
+                'baslik' => 'SEYYAR EL MERDİVENİ — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-MER-01',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. MEKANİK YAPI VE KAUÇUK PABUÇLAR',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Kaymaz Taban Pabuçları',
+                        'kabul' => 'Kauçuk pabuçlar aşınmamış, yerinde ve yırtıksız mı?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Basamaklar ve Kaynaklar',
+                        'kabul' => 'Basamaklarda çatlak, gevşek perçin veya eğrilme yok mu?',
+                    ],
+                    [
+                        'no' => '1.3',
+                        'soru' => 'Yan Kiriş Profilleri',
+                        'kabul' => 'Ana taşıyıcı kollarda burkulma veya kalıcı deformasyon yok mu?',
+                    ],
+                    [
+                        'grup' => '2. GÜVENLİK AKSAMI VE MONTAJ KİLİTLERİ',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'A-Tipi Gergi Makası / Emniyet İpi',
+                        'kabul' => 'Mafsallar kilitleniyor, emniyet gergi teli/makası sağlam mı?',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Dayama Güvenliği / Üst Nokta',
+                        'kabul' => 'Dayanılan yüzeyden en az 1 metre yukarıya taşıyor mu?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Elektrik Yalıtım Uyumu',
+                        'kabul' => 'Elektrik panosu yanında iletken olmayan merdiven mi seçilmiş?',
+                    ],
+                    [
+                        'grup' => '3. KULLANIM ORTAMI VE OPERATÖR UYUMU',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Zemin Dengesi & Temizlik',
+                        'kabul' => 'Zemin düz, yağsız, kuru ve kaymaz özellikte mi?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => '3 Nokta Temas & Son 3 Basamak',
+                        'kabul' => 'Operatör kurallara uygun ve son basamaklara çıkmadan mı çalışıyor?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-PUR-05) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Pürmüz ve LPG Tüpü',
+                'baslik' => 'PÜRMÜZ VE PİKNİK TÜPÜ (LPG TAVLAMA SETİ) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-PUR-05',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. TÜP, VANA VE BAĞLANTI SIZDIRMAZLIĞI',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Tüp Gövdesi & Vana Durumu',
+                        'kabul' => 'Tüpte darbe, korozyon yok, vana rahat açılıp kapanıyor mu?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Sızdırmazlık & Kaçak Kontrolü',
+                        'kabul' => 'Vana ve bağlantılarda köpükle test yapılmış, gaz kaçağı yok mu?',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Hortum Sağlamlığı',
+                        'kabul' => 'Hortumda ezilme, çatlak, yanık yok ve LPG standardına uygun mu?',
+                    ],
+                    [
+                        'grup' => '2. HORTUM VE KELEPÇE GÜVENLİĞİ',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Kelepçe Bağlantıları',
+                        'kabul' => 'Hortum her iki uçta standart vidalı kelepçe ile sabitlenmiş mi?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Tüpün Sabitliği & Duruşu',
+                        'kabul' => 'Tüp dik konumda, devrilmeye karşı emniyette mi?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Pürmüz Bek ve Tetik Emniyeti',
+                        'kabul' => 'Bek ucu tıkalı değil, alev ayar vanası tam sızdırmaz mı?',
+                    ],
+                    [
+                        'grup' => '3. ŞALOMA, ATEŞLEME VE YANGIN EMNİYETİ',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Yangın Tüpü (YSC) Erişimi',
+                        'kabul' => 'Çalışma alanında 6 kg KKT yangın tüpü hazır ve dolu mu?',
+                    ],
+                    [
+                        'no' => '3.4',
+                        'soru' => 'Operatör KKD ve Çevre Yanıcıları',
+                        'kabul' => 'Çevrede tiner/yağ yok, operatör deri eldiven ve gözlük takıyor mu?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-TAS-07) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Ayaklı Taş Motoru',
+                'baslik' => 'ÇİFT TAŞLAMA MOTORU (ZIMPARA TAŞ MOTORU) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-TAS-07',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. TAŞ MUHAFAZALARI VE PARÇA DAYAMA MESAFESİ',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Parça Dayama Mesafesi (Max 3 mm)',
+                        'kabul' => 'Dayama sehpası ile taş arası 3 mm\'den az ve cıvatası sıkı mı?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Üst Kıvılcım Siper Mesafesi (Max 6 mm)',
+                        'kabul' => 'Üst ayar sacı ile taş arası 6 mm\'den az mı?',
+                    ],
+                    [
+                        'no' => '1.3',
+                        'soru' => 'Çelik Taş Muhafazası',
+                        'kabul' => 'Taşın çevresindeki koruyucu sac sağlam ve hasarsız mı?',
+                    ],
+                    [
+                        'grup' => '2. ŞEFFAF ÇAPAK SİPERLERİ VE TAŞ SAĞLAMLIĞI',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Şeffaf Pleksi Çapak Siperi',
+                        'kabul' => 'Göz hizasındaki pleksiglas siperlik çatlak değil ve temiz mi?',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Taş Yüzey Durumu & Çatlak Kontrolü',
+                        'kabul' => 'Taşta kırık, çatlak, oluklaşma veya yan yüzey aşınması yok mu?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Salgı ve Titreşim',
+                        'kabul' => 'Taş dönerken salgı (yalpalama) veya aşırı sarsıntı yapıyor mu?',
+                    ],
+                    [
+                        'grup' => '3. ELEKTRİK, TİTREŞİM VE OPERATÖR GÜVENLİĞİ',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Açma/Kapama & Acil Stop',
+                        'kabul' => 'Açma-kapama anahtarı sağlam, gövde topraklaması bağlı mı?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Operatör Koruyucu Gözlük Kullanımı',
+                        'kabul' => 'Operatörün gözlük/siperlik taktığı, eldivensiz olduğu teyit edildi mi?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
             // ---- Atölye / ekipman formları (13.10.2026) — AI TASLAĞI, uzman onayı bekliyor
             // ('taslak' => true). Sorular kütüphanedeki ekipman risk maddeleriyle aynı
             // tehlikeleri kapsayacak şekilde hazırlandı. Kullanıcının kendi formu gelince
@@ -1801,101 +2118,294 @@ return [
                 'Sıcak kesim artıkları ve talaş güvenli şekilde toplanıyor mu?',
                 'Operatör yüz/göz koruyucu ve kulak koruyucu kullanıyor mu?',
             ]],
-            ['ad' => 'Taşlama / Bant Zımpara Makinesi', 'taslak' => true, 'sorular' => [
-                'Bant/taş sağlam; yırtık, çatlak veya aşırı aşınma yok mu?',
-                'Bant gerginliği ve yönlendirmesi uygun, bant kaçmıyor mu?',
-                'Kasnak ve dönüş bölgesi koruyucuları yerinde mi?',
-                'Dayama (iş desteği) ile bant/taş arasındaki boşluk küçük ve ayarlı mı?',
-                'Acil durdurma/stop butonu erişilebilir ve çalışıyor mu?',
-                'Küçük parçalar için tutucu aparat kullanılıyor mu?',
-                'Toz emiş sistemi çalışıyor, toz birikimi yok mu?',
-                'Kıvılcım alanında yanıcı malzeme bulunmuyor mu?',
-                'Kablo, gövde ve topraklama sağlam, kaçak belirtisi yok mu?',
-                'Bant/taş değişimi enerji kesilerek yapılıyor mu?',
-                'Makine sabit, titreşim ve anormal ses yok mu?',
-                'Operatör göz/yüz, kulak ve gerektiğinde solunum koruyucu kullanıyor mu?',
-            ]],
-            // Kullanıcının kendi formu (Ekstruzyon_Makinesi_Guvenli_Calisma_Talimati_ve_Gunluk_Kontrol_Formu.docx, İSG-FR-EKS-01) — BİREBİR;
-            // gruplu, U/UD/Y/X kriterli. AI taslağının yerini aldı.
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-BZM-02) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
             [
-                'ad' => 'Ekstrüzyon Hattı',
-                'baslik' => 'EKSTRÜZYON MAKİNESİ GÜNLÜK KONTROL VE BAKIM FORMU',
-                'form_no' => 'İSG-FR-EKS-01',
-                'onaylayan' => 'Hat Sorumlusu / İSG Uzmanı',
+                'ad' => 'Taşlama / Bant Zımpara Makinesi',
+                'baslik' => 'SÜTUNLU ZIMPARA MAKİNESİ (BANT ZIMPARA) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-BZM-02',
                 'kriterler' => [
-                    'U' => 'Uygun',
-                    'UD' => 'Uygun Değil',
-                    'Y' => 'Yapıldı / Kontrol Edildi',
-                    'X' => 'Uygulanamaz',
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
                 ],
-                'gruplar' => [
+                'satirlar' => [
                     [
-                        'baslik' => '1. GÜVENLİK DONANIMLARI & ACİL DURUM SİSTEMLERİ',
-                        'sorular' => [
-                            'Hat boyunca E-Stop butonları ve çekme acil ipleri çalışır durumda mı?',
-                            'Kovan ısıtıcı koruma sacları ve yalıtım muhafazaları tam mı?',
-                            'Bunker giriş ızgarası takılı ve helezona elle erişim engelli mi?',
-                            'Çekici merdane acil durdurma çubuğu / ışık perdesi aktif mi?',
-                            'Giyotin / testere kesim ünitesi emniyet kilidi (interlock) işlevsel mi?',
-                        ],
+                        'grup' => '1. BANT DURUMU VE GERGİ SİSTEMİ',
                     ],
                     [
-                        'baslik' => '2. ISITMA, BASINÇ & ERİYİK KONTROLÜ',
-                        'sorular' => [
-                            'Tüm kovan/kalıp ısıtıcı rezistans bölgeleri set değerine ulaştı mı?',
-                            'Eriyik basıncı (melt pressure) ve eriyik sıcaklık sensörleri çalışıyor mu?',
-                            'Soğuk vida kalkış kilidi devrede mi (sıcaklık altındayken motor kilitli mi)?',
-                            'Kalıp kafa bağlantılarında ve flanşlarda polimer sızıntısı var mı?',
-                        ],
+                        'no' => '1.1',
+                        'soru' => 'Bant Yüzeyi ve Ek Yeri',
+                        'kabul' => 'Zımpara bandında çatlak, yıpranma veya ek açılması yok mu?',
                     ],
                     [
-                        'baslik' => '3. HAVALANDIRMA, SOĞUTMA & HİDROLİK SİSTEMLER',
-                        'sorular' => [
-                            'Kalıp üstü ve gaz alma (degazör) lokal emiş davlumbazları çekiyor mu?',
-                            'Kalibrasyon / soğutma havuzu su debisi, sıcaklığı ve sirkülasyonu normal mi?',
-                            'Hidrolik elek değiştirici ünitesi basıncı ve yağ seviyesi uygun mu?',
-                            'Kalıp ve hidrolik hortumlarda su/yağ sızıntısı var mı?',
-                        ],
+                        'no' => '1.2',
+                        'soru' => 'Bant Gerginliği & Merkezleme',
+                        'kabul' => 'Bant kasnak üzerinde düzgün hizalı ve yeterince gergin mi?',
                     ],
                     [
-                        'baslik' => '4. MEKANİK MEKANİZMALAR, TEMİZLİK & ÇEVRE DÜZENİ',
-                        'sorular' => [
-                            'Redüktör ve ana motor şanzıman yağ seviyesi normal aralıkta mı?',
-                            'Çekici palet/merdane yüzeylerinde aşınma, yabancı cisim veya hasar var mı?',
-                            'Isıya dayanıklı KKD\'ler (EN 407 eldiven, yüz siperi, maske) hatta hazır mı?',
-                            'Zeminde plastik çapak, su veya yağ kaynaklı kayma riski var mı?',
-                        ],
+                        'no' => '2.1',
+                        'soru' => 'Acil Stop Butonu / Pedalı',
+                        'kabul' => 'Butona basıldığında motor derhal ve duraksamadan duruyor mu?',
                     ],
+                    [
+                        'grup' => '2. EMNİYET SİPERLİKLERİ VE ACİL STOP',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Kıvılcım & Koruma Siperliği',
+                        'kabul' => 'Şeffaf koruyucu siperlik sağlam, ayarlanmış ve temiz mi?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Dayama Sehpası Açıklığı',
+                        'kabul' => 'Dayama tablası ile bant arası azami 2-3 mm boşlukta mı?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Toz Emiş & Siklon Çekişi',
+                        'kabul' => 'Toz emiş motoru ve boruları tıkanmasız çekiyor mu?',
+                    ],
+                    [
+                        'grup' => '3. ELEKTRİK, TOZ EMİŞ VE ÇEVRESEL İSG',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Gövde Topraklaması',
+                        'kabul' => 'Makine gövde koruma topraklaması sağlam mı?',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Operatör KKD & Eldiven Uyumu',
+                        'kabul' => 'Operatör eldivensiz, yüz siperliği ve maskesi takılı mı?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
                 ],
             ],
-            ['ad' => 'Plastik Kırıcı / Granülatör', 'taslak' => true, 'sorular' => [
-                'Besleme ağzı ve perdesi, elin kesici rotora ulaşmasını engelliyor mu?',
-                'Hazne kapağı emniyet kilidi rotor tamamen durmadan açılmayı engelliyor mu?',
-                'Alt boşaltma açıklığı tehlikeli bölgeye erişimi engelliyor mu?',
-                'Acil durdurma butonu erişilebilir ve çalışıyor mu?',
-                'Bıçaklar ve bağlantı cıvataları sağlam, yerinde mi?',
-                'Beslenecek malzemede metal, taş vb. yabancı cisim kontrolü yapılıyor mu?',
-                'Açılan hazne kapağı düşmeye karşı destekleniyor mu?',
-                'Makine üstünde alet veya parça bırakılmamış mı?',
-                'Toz emişi çalışıyor, çevrede toz birikimi yok mu?',
-                'Motor, kablolar ve topraklama sağlam mı?',
-                'Sıkışma giderme ve bıçak değişimi enerji kesilip kilitlenerek mi yapılıyor?',
-                'Operatör kulak ve göz koruyucu kullanıyor mu?',
-            ]],
-            ['ad' => 'Merdaneli Makine', 'taslak' => true, 'sorular' => [
-                'Merdane giriş aralığında içeri çekilmeyi önleyen koruyucu/besleme düzeni yerinde mi?',
-                'Çıkış tarafı ve yan mil uçlarının koruyucuları yerinde mi?',
-                'Kayış-kasnak ve tahrik koruyucuları kapalı mı?',
-                'Acil durdurma (buton/çekme teli/gövde barı) erişilebilir ve denendiğinde çalışıyor mu?',
-                'Durdurmadan sonra merdaneler kısa sürede tam duruyor mu (fren uygun mu)?',
-                'Merdane aralık ayarı yalnız makine dururken yapılıyor mu?',
-                'Sıkışan malzeme enerji kesilip kilitlendikten sonra mı çıkarılıyor?',
-                'Yatak ve bağlantı elemanları sağlam, gevşeklik ve anormal ses yok mu?',
-                'Isıtmalı merdane varsa sıcak yüzey uyarısı ve koruması var mı?',
-                'Yağ kaçağı ve zeminde yağlı birikim yok mu?',
-                'Kumanda panosu, kablo girişleri ve topraklama sağlam mı?',
-                'Operatörde bol giysi, takı ve sarkan bez/eldiven yok mu?',
-            ]],
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-EKS-04) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Ekstrüzyon Hattı',
+                'baslik' => 'PLASTİK EKSTRÜZYON HATTI (EKSTRUDER) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-EKS-04',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. KOVAN, REZİSTANS VE SICAKLIK KONTROLÜ',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Rezistans Koruma Sacları',
+                        'kabul' => 'Isıtıcı rezistansların dış sac muhafazaları tam ve yalıtımlı mı?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Termokupl & Sıcaklık Göstergeleri',
+                        'kabul' => 'Bölgelerin sıcaklık kontrol cihazları düzgün ölçüyor mu?',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Bunker Güvenlik Izgarası',
+                        'kabul' => 'Hammadde hunisinin iç ızgarası takılı ve sabit mi?',
+                    ],
+                    [
+                        'grup' => '2. BUNKER VE MEKANİK TAHRİK AKSAMI',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Acil Stop Butonları',
+                        'kabul' => 'Bunker yanında ve kontrol panosunda acil stop butonu çalışıyor mu?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Soğutma Suyu Banyosu & Kaçak',
+                        'kabul' => 'Su sirkülasyonu açık, zemin ve kablolar üzerine su sızıntısı yok mu?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Lokal Egzoz & Havalandırma',
+                        'kabul' => 'Kafa bölgesindeki duman tahliye davlumbazı aktif mi?',
+                    ],
+                    [
+                        'grup' => '3. ELEKTRİK, SU SOĞUTMA VE HAVALANDIRMA',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Elektrik Panosu & Topraklama',
+                        'kabul' => 'Pano kapağı kilitli, kablo bağlantıları yanmaz ve sağlam mı?',
+                    ],
+                    [
+                        'no' => '3.4',
+                        'soru' => 'Isıya Dayanıklı KKD Kullanımı',
+                        'kabul' => 'Operatör kafa ayarlarında EN 407 ısı eldiveni ve siperlik takıyor mu?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-KIR-06) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Plastik Kırıcı / Granülatör',
+                'baslik' => 'PLASTİK KIRMA MAKİNESİ (GRANÜL KRICI) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-KIR-06',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. KAPAK EMNİYET SWITCHLERİ VE ACİL DURUŞ',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Bunker Emniyet Switchi (Limit Switch)',
+                        'kabul' => 'Bunker kapağı açıldığında motor anında duruyor mu (köprüleme yok)?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Acil Stop Butonu',
+                        'kabul' => 'Buton mekanik olarak sağlam ve basıldığında anında duruş veriyor mu?',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Kayış - Kasnak Muhafaza Sacı',
+                        'kabul' => 'Yan tahrik volan muhafazası tam kapalı ve cıvatalı mı?',
+                    ],
+                    [
+                        'grup' => '2. BIÇAK HAZNESİ VE MEKANİK MUHAFAZALAR',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Geri Fırlama Önleyici Perdeler',
+                        'kabul' => 'Bunker girişindeki kauçuk yönlendirme perdeleri sağlam mı?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Bıçak ve Rotor Sıkılığı',
+                        'kabul' => 'Bıçak cıvataları sıkı, haznede gevşeklik veya sürtme sesi var mı?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Alt Malzeme Çekmecesi Switchi',
+                        'kabul' => 'Çekmece açıldığında makinenin çalışmasını engelleyen switch devrede mi?',
+                    ],
+                    [
+                        'grup' => '3. ELEKTRİK, ÇEKMECE VE İŞ GÜVENLİĞİ',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Gövde Topraklaması & Titreşim',
+                        'kabul' => 'Gövde topraklaması sağlam, aşırı sarsıntı/vibrasyon yok mu?',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Kulaklık ve Yüz Siperi Kullanımı',
+                        'kabul' => 'Operatör yüksek sese karşı kulaklık ve yüz siperi takıyor mu?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+            // Kullanıcının kendi formu (Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx, TLT-SEZ-03) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Merdaneli Makine',
+                'baslik' => 'PLASTİK ÇEKME / EZME MERDANESİ — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-SEZ-03',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. MERDANE MEKANİK VE BASKI SİSTEMİ',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Silindir Yüzeyleri & Temizlik',
+                        'kabul' => 'Merdanelerde çizik, deformasyon veya yapışmış malzeme yok mu?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Baskı ve Boşluk Ayarı',
+                        'kabul' => 'İki silindir arası paralel ve baskı mekanizması düzgün mü?',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Acil Stop Butonu & Emniyet Teli',
+                        'kabul' => 'Merdane girişindeki acil tel/bar çekildiğinde hareket anında duruyor mu?',
+                    ],
+                    [
+                        'grup' => '2. ACİL DURDURMA VE EMNİYET BARLARI',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Giriş Koruma Parmaklığı/Siper',
+                        'kabul' => 'Çekme ağzında dar açıklıklı parmak muhafazası yerinde mi?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Motor & Redüktör Ses/Isı',
+                        'kabul' => 'Redüktörde yağ kaçağı, aşırı ısınma ve anormal titreşim yok mu?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Kumanda Panosu & Hız Ayarı',
+                        'kabul' => 'Hız kontrol potansiyometresi ve acil butonlar sorunsuz mu?',
+                    ],
+                    [
+                        'grup' => '3. MOTOR, REDÜKTÖR VE ELEKTRİK PANOSU',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Topraklama & Kablo Kanalı',
+                        'kabul' => 'Motor ve gövde topraklaması tam, kablolar korumalı mı?',
+                    ],
+                    [
+                        'no' => '3.4',
+                        'soru' => 'Operatör Güvenliği',
+                        'kabul' => 'Operatör dar kıyafetli, takısız ve kılavuz aparat kullanıyor mu?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
             ['ad' => 'Gaz Tüpü ve Şaloma Seti', 'taslak' => true, 'sorular' => [
                 'Tüp içeriği etiketten doğrulanmış, renk ve etiket okunaklı mı?',
                 'Tüpler dik ve zincir/kelepçeyle devrilmeye karşı sabitlenmiş mi?',

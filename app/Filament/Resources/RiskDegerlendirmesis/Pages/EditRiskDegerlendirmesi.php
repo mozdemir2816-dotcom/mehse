@@ -47,12 +47,12 @@ class EditRiskDegerlendirmesi extends EditRecord
     private function ekipmanEksikleriAksiyonu(): Action
     {
         return Action::make('ekipmanEksikleri')
-            ->label(fn () => 'Ekipman Eksikleri ('.$this->ekipmanEksikleri()['toplam'].')')
+            ->label(fn () => 'Eksik Maddeler ('.$this->ekipmanEksikleri()['toplam'].')')
             ->icon('heroicon-o-wrench-screwdriver')
             ->color('danger')
             ->visible(fn () => $this->ekipmanEksikleri()['toplam'] > 0)
-            ->modalHeading('Ekipman Eksikleri — Revize Et')
-            ->modalDescription('Firmaya tanımlı ekipmanlar için kütüphanede olup bu değerlendirmede bulunmayan maddeler. İşaretli olanlar eklenir; işaretini kaldırdıklarınız bu değerlendirme için "gerekmiyor" sayılır ve bir daha önerilmez. Değerlendirmede zaten olan maddeler (elle yazdıklarınız dahil) listelenmez.')
+            ->modalHeading('Eksik Maddeler — Revize Et')
+            ->modalDescription('Firmaya tanımlı ekipmanların ve her firmada beklenen ortak eğitim / acil durum setinin kütüphanede olup bu değerlendirmede bulunmayan maddeleri. İşaretli olanlar eklenir; işaretini kaldırdıklarınız bu değerlendirme için "gerekmiyor" sayılır ve bir daha önerilmez. Değerlendirmede zaten olan maddeler (elle yazdıklarınız dahil) listelenmez.')
             ->modalSubmitActionLabel('Seçilenleri Ekle')
             ->modalWidth('5xl')
             ->schema(fn () => collect(array_values($this->ekipmanEksikleri()['gruplar']))
@@ -68,9 +68,9 @@ class EditRiskDegerlendirmesi extends EditRecord
                 $gruplar = $this->ekipmanEksikleri()['gruplar'];
                 $listelenen = collect($gruplar)->flatten()->map(fn (Tehlike $t) => $t->id)->all();
                 $secilen = collect($data)->flatten()->map(fn ($id) => (int) $id)->intersect($listelenen)->values()->all();
-                $ekipmanlar = collect($gruplar)->keys()->reject(fn ($ad) => $ad === EkipmanKatalogu::ORTAK_ETIKET)->values()->all();
+                $ekipmanlar = collect($gruplar)->keys()->reject(fn ($ad) => in_array($ad, EkipmanKatalogu::ORTAK_GRUPLAR, true))->values()->all();
 
-                $eklenen = EkipmanKatalogu::revizeEt($this->record, $secilen, array_values(array_diff($listelenen, $secilen)), $ekipmanlar ?: [EkipmanKatalogu::ORTAK_ETIKET]);
+                $eklenen = EkipmanKatalogu::revizeEt($this->record, $secilen, array_values(array_diff($listelenen, $secilen)), $ekipmanlar);
                 $gerekmeyen = count($listelenen) - count($secilen);
 
                 Notification::make()

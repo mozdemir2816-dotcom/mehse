@@ -430,6 +430,12 @@ class RiskDegerlendirmesiExcelOkuyucu
     /** Başlık metni bir puan eksenine mi işaret ediyor? (O1 / Frekans / ŞİDDET (1-5) …) */
     private static function puanEkseni(string $n): ?string
     {
+        // "Hedef P / Hedef F / Hedef S" (DÖF sonrası hedef — Fine-Kinney ekipman dosyaları):
+        // ilk eksen zaten doluysa sutunlariEslestir bunu son_* olarak yazar.
+        if (preg_match('/^hedef([pfs])$/', $n, $m)) {
+            return ['p' => 'olasilik', 'f' => 'frekans', 's' => 'siddet'][$m[1]];
+        }
+
         if (str_contains($n, 'olasilik') || str_contains($n, 'ihtimal')) {
             return 'olasilik';
         }
@@ -475,6 +481,17 @@ class RiskDegerlendirmesiExcelOkuyucu
         if (str_contains($n, 'mevcutonlem') || str_contains($n, 'mevcuttedbir') || str_contains($n, 'mevcutdurum')
             || str_contains($n, 'mevcutkontrol') || str_contains($n, 'gunceldurum') || str_contains($n, 'mevcutuygulama')) {
             return 'mevcut_onlem';
+        }
+
+        // "Önerilen termin" öneri değil termindir — öneri kuralından önce bakılır.
+        if (str_contains($n, 'termin')) {
+            return 'termin';
+        }
+
+        // "Açıklayıcı DÖF" (düzeltici-önleyici faaliyet metni) = önerilen tedbir;
+        // "DÖF durumu" ise takip alanıdır, alınmaz.
+        if (str_contains($n, 'dof') && ! str_contains($n, 'durum')) {
+            return 'oneri';
         }
 
         // Planlanan / önerilen tedbir.
