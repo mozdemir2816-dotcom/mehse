@@ -40,7 +40,7 @@
     /* table-layout:fixed + <colgroup> genişlikleri: otomatik düzende uzun kelimeler
        tabloyu sayfanın sağ kenarından taşırıyordu. */
     table.risk { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; table-layout: fixed; }
-    table.risk th, table.risk td { border: 1px solid #999; padding: 3px 3px; text-align: left; vertical-align: top; word-wrap: break-word; }
+    table.risk th, table.risk td { border: 1px solid #999; padding: 3px 3px; text-align: center; vertical-align: middle; word-wrap: break-word; }
     table.risk thead th { background: #7c3aed; color: #fff; }
     table.risk .col-no { text-align: center; }
     table.risk .col-duzey { padding: 2px 1px; text-align: center; vertical-align: middle; }
@@ -366,7 +366,7 @@
                 <td class="sayi">{{ $sayi($m->puan) }}</td>
                 <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-dikey">{{ $m->duzeyDikey() }}</span></td>
                 <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
-                <td class="col-sorumlu">{{ $m->sorumlu ?: '—' }}</td>
+                <td class="col-sorumlu">{{ $m->sorumluMetni() }}</td>
                 <td>{{ $m->termin ?: '—' }}</td>
                 <td class="sayi">{{ $sayi($m->son_olasilik) }}</td>
                 @if ($ucEksen)
@@ -375,7 +375,7 @@
                 <td class="sayi">{{ $sayi($m->son_siddet) }}</td>
                 <td class="sayi">{{ $m->son_puan ? $sayi($m->son_puan) : '—' }}</td>
                 <td class="col-duzey" @if($m->son_duzey) style="background:{{ \App\Support\RiskSkorlama::bant($rd->yontem, (float) $m->son_puan)['renk'] }}" @endif>@if($m->son_duzey)<span class="duzey-dikey">{{ $m->sonDuzeyDikey() }}</span>@else — @endif</td>
-                <td class="col-aciklama">{{ $m->aciklama ?: '' }}</td>
+                <td class="col-aciklama">{{ $m->aciklamaMetni() }}</td>
             </tr>
         @endforeach
         </tbody>

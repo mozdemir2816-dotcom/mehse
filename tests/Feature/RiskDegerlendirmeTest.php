@@ -678,6 +678,21 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame('* * * * *', $olay->expression);
     }
 
+    public function test_ciktida_sorumlu_tek_bicim_aciklama_bos_ise_duzey_karari(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $m = $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 4, 'siddet' => 4, 'sorumlu' => 'İŞVEREN/']);
+
+        $this->assertSame('İşveren / İşveren Vekili', $m->sorumluMetni());
+        $this->assertSame('İşveren / İşveren Vekili, Çalışan', $m->fill(['sorumlu' => 'İşveren/Vekili Çalışan'])->sorumluMetni());
+        $this->assertSame('İşveren / İşveren Vekili', $m->fill(['sorumlu' => null])->sorumluMetni());
+        $this->assertSame('ANA İŞVEREN', $m->fill(['sorumlu' => 'ANA İŞVEREN'])->sorumluMetni());
+
+        $this->assertSame(\App\Support\RiskSkorlama::bant('matris_5x5', 16)['eylem'], $m->aciklamaMetni());
+        $this->assertSame('Elle yazılan', $m->fill(['aciklama' => 'Elle yazılan'])->aciklamaMetni());
+    }
+
     public function test_esik_alti_rapor_dogrudan_indirilir_talep_birakilmaz(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

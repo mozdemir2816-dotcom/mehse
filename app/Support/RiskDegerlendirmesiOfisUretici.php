@@ -59,14 +59,14 @@ class RiskDegerlendirmesiOfisUretici
             ['Puan', fn ($m) => $s($m->puan), 8],
             ['Düzey', fn ($m) => $m->duzey, 14],
             ['Öneri', fn ($m) => $m->oneri, 40],
-            ['Sorumlu', fn ($m) => $m->sorumlu, 14],
+            ['Sorumlu', fn ($m) => $m->sorumluMetni(), 14],
             ['Termin', fn ($m) => $m->termin, 12],
             ['Son O', fn ($m) => $s($m->son_olasilik), 7],
             $uc ? ['Son '.$f, fn ($m) => $s($m->son_frekans), 7] : null,
             ['Son Ş', fn ($m) => $s($m->son_siddet), 7],
             ['Son Puan', fn ($m) => $s($m->son_puan), 8],
             ['Son Düzey', fn ($m) => $m->son_duzey, 14],
-            ['Açıklama', fn ($m) => $m->aciklama, 20],
+            ['Açıklama', fn ($m) => $m->aciklamaMetni(), 20],
         ]));
     }
 
@@ -206,7 +206,7 @@ class RiskDegerlendirmesiOfisUretici
 
         $sayfa->getStyle("A{$baslikSatiri}:{$son}{$satir}")->applyFromArray([
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '9CA3AF']]],
-            'alignment' => ['vertical' => Alignment::VERTICAL_TOP, 'wrapText' => true],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
         ]);
         $sayfa->setAutoFilter("A{$baslikSatiri}:{$son}{$satir}");
         $sayfa->freezePane('E'.($baslikSatiri + 1));
@@ -402,7 +402,7 @@ class RiskDegerlendirmesiOfisUretici
         foreach ($rd->maddeler as $n => $m) {
             $tablo->addRow(null, ['cantSplit' => true]);
             foreach ($sutunlar as $i => [$baslik, $deger]) {
-                $stil = [];
+                $stil = ['valign' => 'center'];
                 $yazi = ['size' => 7];
                 if (in_array($baslik, ['Düzey', 'Son Düzey'], true)) {
                     $puan = $baslik === 'Düzey' ? $m->puan : $m->son_puan;
@@ -411,7 +411,7 @@ class RiskDegerlendirmesiOfisUretici
                         $yazi += ['bold' => true, 'color' => 'FFFFFF'];
                     }
                 }
-                $tablo->addCell($twip($i), $stil)->addText(self::metin($deger($m, $n + 1)), $yazi);
+                $tablo->addCell($twip($i), $stil)->addText(self::metin($deger($m, $n + 1)), $yazi, ['alignment' => Jc::CENTER]);
             }
         }
 

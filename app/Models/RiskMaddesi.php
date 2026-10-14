@@ -79,6 +79,44 @@ class RiskMaddesi extends Model
         return $this->belongsTo(RiskDegerlendirmesi::class);
     }
 
+    public const VARSAYILAN_SORUMLU = 'İşveren / İşveren Vekili';
+
+    /**
+     * Çıktılarda (PDF/Excel/Word) gösterilen sorumlu: boşsa varsayılan; "İşveren/Vekili",
+     * "İŞVEREN/", "İşveren İşveren Vekili" gibi yazımlar tek biçime çevrilir, ardındaki
+     * ek kişi korunur ("İşveren/Vekili Çalışan" → "İşveren / İşveren Vekili, Çalışan").
+     * Kayıt değişmez (kullanıcı 14.10.2026).
+     */
+    public function sorumluMetni(): string
+    {
+        $sorumlu = trim((string) $this->sorumlu);
+        if ($sorumlu === '') {
+            return self::VARSAYILAN_SORUMLU;
+        }
+
+        // Türkçe küçük harf: İ/I tek karakter kalır, mb_ konumları asıl metinle aynı.
+        $kucuk = mb_strtolower(str_replace(['İ', 'I'], ['i', 'ı'], $sorumlu));
+        if (! preg_match('#^işveren(?:\s*/\s*(?:işveren\s+)?(?:vekili)?|\s+işveren\s+vekili|\s+vekili)?(?=[\s,/]|$)#u', $kucuk, $e)) {
+            return $sorumlu;
+        }
+
+        $kalan = trim(mb_substr($sorumlu, mb_strlen($e[0])), " \t,/");
+
+        return self::VARSAYILAN_SORUMLU.($kalan !== '' ? ', '.$kalan : '');
+    }
+
+    /** Çıktılardaki açıklama: boşsa ilk risk düzeyinin karar metni (config bantlar.eylem). */
+    public function aciklamaMetni(): string
+    {
+        if (filled($this->aciklama)) {
+            return (string) $this->aciklama;
+        }
+
+        return $this->puan
+            ? RiskSkorlama::bant($this->riskDegerlendirmesi?->yontem ?? 'matris_5x5', (float) $this->puan)['eylem']
+            : '';
+    }
+
     public function rengi(): string
     {
         $yontem = $this->riskDegerlendirmesi?->yontem ?? 'matris_5x5';
