@@ -545,6 +545,38 @@ class RiskDegerlendirmeTest extends TestCase
             ->callAction('pdf');
     }
 
+    public function test_excel_ve_word_olarak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Ofis Test A.Ş.']);
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(),
+            'ekip' => [['ad' => 'Destek Kişi', 'unvan' => 'Destek Elemanı']]]);
+        $rd->maddeler()->create(['tehlike' => 'Düşme & kayma', 'risk' => 'Yaralanma', 'olasilik' => 3, 'frekans' => 6, 'siddet' => 15,
+            'oneri' => 'Korkuluk takılmalı', 'son_olasilik' => 0.2]);
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->callAction('excel')->assertHasNoActionErrors()
+            ->callAction('word')->assertHasNoActionErrors();
+
+        $kitap = \App\Support\RiskDegerlendirmesiOfisUretici::excelKitabi($rd->fresh());
+        $hucreler = collect($kitap->getSheet(0)->toArray())->flatten()->filter()->map(fn ($v) => (string) $v);
+        $this->assertTrue($hucreler->contains('Düşme & kayma'));
+        $this->assertTrue($hucreler->contains('Korkuluk takılmalı'));
+        $this->assertTrue($hucreler->contains('270')); // 3 × 6 × 15
+        $this->assertTrue($hucreler->contains('Destek Kişi'));
+        $this->assertSame('Yöntem', $kitap->getSheet(1)->getTitle());
+
+        // Word: geçerli docx, "&" kaçışlı.
+        $yol = tempnam(sys_get_temp_dir(), 'rdt').'.docx';
+        \PhpOffice\PhpWord\IOFactory::createWriter(\App\Support\RiskDegerlendirmesiOfisUretici::wordBelgesi($rd->fresh()), 'Word2007')->save($yol);
+        $zip = new \ZipArchive;
+        $zip->open($yol);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($yol);
+        $this->assertStringContainsString('Düşme &amp; kayma', $xml);
+        $this->assertNotFalse(simplexml_load_string($xml));
+    }
+
     public function test_uzman_baskasinin_risk_degerlendirmesini_gormez(): void
     {
         $benim = RiskDegerlendirmesi::create([

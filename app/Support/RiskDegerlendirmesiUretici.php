@@ -73,29 +73,14 @@ class RiskDegerlendirmesiUretici
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
-    private static function olustur(RiskDegerlendirmesi $rd, bool $imzali = true): DompdfWrapper
+    /**
+     * Rapor verisi (PDF görünümü + Excel / Word çıktısı ortak): firma, hazırlayan,
+     * hekim, imza sahipleri (ekip + Atama Yazıları), ekip tablosu, metodoloji, prosedür.
+     *
+     * @return array<string, mixed>
+     */
+    public static function veri(RiskDegerlendirmesi $rd, bool $imzali = true): array
     {
-        // Büyük raporlar (300+ risk maddesi) dompdf'te hem belleği hem süreyi zorlar:
-        //  - 2026-09-04: iki kez render (önizleme + gerçek) 512M memory_limit'i
-        //    aşıp "Allowed memory size exhausted" ile indirmeyi düşürüyordu.
-        //  - Sonra da tek render ~113 sn sürüp web'in 120 sn max_execution_time
-        //    sınırına takılıyordu (352 maddelik gerçek rapor, XAMPP) — paylaşımlı
-        //    hosting'te bu süre sınırı PHP'nin kendi ayarından bağımsız, web
-        //    sunucusu (LiteSpeed) seviyesinde daha da sıkı olabiliyor; bu yüzden
-        //    RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI üstü raporlar artık HTTP
-        //    isteği içinde değil, cron ile arka planda (RiskPdfUret) üretiliyor.
-        // Çözüm: (a) belleği yükselt, (b) süre sınırını kaldır, (c) raporu TEK
-        // KEZ render et — kapaktaki "Toplam Sayfa" bilgisi artık ön render yerine
-        // page_script ile damgalanıyor (aşağıya bakınız).
-        $mevcutLimit = ini_get('memory_limit');
-        if ($mevcutLimit !== '-1' && (int) $mevcutLimit < 1536) {
-            ini_set('memory_limit', '1536M');
-        }
-
-        if (function_exists('set_time_limit')) {
-            @set_time_limit(600);
-        }
-
         $rd->loadMissing('maddeler', 'firma.user', 'firma.isyeriHekimi', 'igu');
 
         $yontemAnahtari = 'risk_'.$rd->yontem;
@@ -143,7 +128,7 @@ class RiskDegerlendirmesiUretici
             ['unvan' => '', 'ad' => ''],
         ];
 
-        $veri = [
+        return [
             'rd' => $rd,
             'firma' => $rd->firma,
             'uzman' => $uzman,
@@ -157,6 +142,32 @@ class RiskDegerlendirmesiUretici
             'prosedur' => $userId ? RiskProsedur::aktifIcin($userId, $rd->yontem) : null,
             'imzali' => $imzali,
         ];
+    }
+
+    private static function olustur(RiskDegerlendirmesi $rd, bool $imzali = true): DompdfWrapper
+    {
+        // Büyük raporlar (300+ risk maddesi) dompdf'te hem belleği hem süreyi zorlar:
+        //  - 2026-09-04: iki kez render (önizleme + gerçek) 512M memory_limit'i
+        //    aşıp "Allowed memory size exhausted" ile indirmeyi düşürüyordu.
+        //  - Sonra da tek render ~113 sn sürüp web'in 120 sn max_execution_time
+        //    sınırına takılıyordu (352 maddelik gerçek rapor, XAMPP) — paylaşımlı
+        //    hosting'te bu süre sınırı PHP'nin kendi ayarından bağımsız, web
+        //    sunucusu (LiteSpeed) seviyesinde daha da sıkı olabiliyor; bu yüzden
+        //    RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI üstü raporlar artık HTTP
+        //    isteği içinde değil, cron ile arka planda (RiskPdfUret) üretiliyor.
+        // Çözüm: (a) belleği yükselt, (b) süre sınırını kaldır, (c) raporu TEK
+        // KEZ render et — kapaktaki "Toplam Sayfa" bilgisi artık ön render yerine
+        // page_script ile damgalanıyor (aşağıya bakınız).
+        $mevcutLimit = ini_get('memory_limit');
+        if ($mevcutLimit !== '-1' && (int) $mevcutLimit < 1536) {
+            ini_set('memory_limit', '1536M');
+        }
+
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(600);
+        }
+
+        $veri = self::veri($rd, $imzali);
 
         $pdf = Pdf::loadView('pdf.risk-degerlendirmesi', $veri)->setPaper('a4');
 

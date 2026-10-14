@@ -7,6 +7,7 @@ use App\Models\RiskDegerlendirmesi;
 use App\Models\Tehlike;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\EkipmanKatalogu;
+use App\Support\RiskDegerlendirmesiOfisUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskYontemDonusturucu;
 use Filament\Actions\Action;
@@ -117,6 +118,18 @@ class EditRiskDegerlendirmesi extends EditRecord
 
                     return null;
                 }),
+            Action::make('excel')
+                ->label('Excel İndir')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->schema([ImzaSecenegi::alan()])
+                ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::excel($this->record, ImzaSecenegi::secili($data))),
+            Action::make('word')
+                ->label('Word İndir')
+                ->icon('heroicon-o-document-text')
+                ->color('info')
+                ->schema([ImzaSecenegi::alan()])
+                ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::word($this->record, ImzaSecenegi::secili($data))),
             Action::make('fineKinneyeDonustur')
                 ->label('Fine-Kinney\'e Dönüştür')
                 ->icon('heroicon-o-arrow-path')
