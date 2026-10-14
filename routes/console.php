@@ -24,3 +24,7 @@ Schedule::call(fn () => Artisan::call('mehse:telefon-bildirimi'))
 // Büyük risk değerlendirmesi PDF'leri (RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI üstü) arka planda.
 Schedule::call(fn () => Artisan::call('risk:pdf-uret'))
     ->name('risk:pdf-uret')->everyMinute()->withoutOverlapping(30);
+
+// Öneri (düzeltici faaliyet) metni boş risk maddeleri Gemini ile doldurulur; boş kalmayınca anında biter.
+Schedule::call(fn () => Artisan::call('risk:oneri-tamamla'))
+    ->name('risk:oneri-tamamla')->everyMinute()->withoutOverlapping(10);

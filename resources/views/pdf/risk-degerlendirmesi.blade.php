@@ -340,9 +340,10 @@
         $sira = 0;
     @endphp
     {{-- dompdf'te tek uzun tablo yavaş: 100'er maddelik ardışık tablolar süreyi yaklaşık yarıya
-         indirir (14.10.2026 yerel ölçüm: 400 madde 58 → 34 sn, 352 madde 37 → 27 sn). Başlık her parçada bir kez daha görünür. --}}
+         indirir (14.10.2026 yerel ölçüm: 400 madde 58 → 34 sn, 352 madde 37 → 27 sn). Her parça yeni sayfadan
+         başlar; yoksa parçanın başlık satırı sayfa ortasında görünüyordu (kullanıcı 14.10.2026). --}}
     @foreach ($rd->maddeler->chunk($parcaBoyutu ?? 100) as $parca)
-    <table class="risk" @unless($loop->first) style="margin-top:0" @endunless>
+    <table class="risk" @unless($loop->first) style="margin-top:0;page-break-before:always" @endunless>
         {{-- dompdf <col> genişliğini yok sayar; fixed düzende ilk satır (başlık) hücrelerinin genişliği geçerlidir. --}}
         <thead>
         <tr>

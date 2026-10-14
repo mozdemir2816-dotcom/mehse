@@ -693,6 +693,29 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame('Elle yazılan', $m->fill(['aciklama' => 'Elle yazılan'])->aciklamaMetni());
     }
 
+    public function test_onerisi_bos_maddeler_yapay_zeka_ile_doldurulur_dolu_olana_dokunulmaz(): void
+    {
+        config(['services.gemini.key' => 'test-key']);
+        \Illuminate\Support\Facades\Http::fake([
+            '*generativelanguage.googleapis.com*' => \Illuminate\Support\Facades\Http::response([
+                'candidates' => [['content' => ['parts' => [['text' => json_encode(['onlem' => 'Panoya kaçak akım rölesi takılmalı.'])]]]]],
+            ]),
+        ]);
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $bos = $rd->maddeler()->create(['tehlike' => 'Topraklama yok', 'olasilik' => 3, 'siddet' => 4]);
+        $dolu = $rd->maddeler()->create(['tehlike' => 'Kablo', 'oneri' => 'Elle yazılan', 'olasilik' => 3, 'siddet' => 4]);
+        $yeni = $rd->maddeler()->create(['tehlike' => 'Yeni madde', 'olasilik' => 3, 'siddet' => 4]);
+        RiskMaddesi::whereKey([$bos->id, $dolu->id])->update(['created_at' => now()->subHour()]);
+
+        $this->artisan('risk:oneri-tamamla')->assertSuccessful();
+
+        $this->assertSame('Panoya kaçak akım rölesi takılmalı.', $bos->fresh()->oneri);
+        $this->assertSame('Elle yazılan', $dolu->fresh()->oneri);
+        $this->assertNull($yeni->fresh()->oneri); // 10 dk'dan yeni: kullanıcı yazıyor olabilir
+    }
+
     public function test_esik_alti_rapor_dogrudan_indirilir_talep_birakilmaz(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -114,7 +114,7 @@ class GeminiRiskPuanTamamlayici
      * önerisi ister. Puanlamadan bağımsız, ayrı ve daha ucuz bir istek —
      * yalnızca metin boşsa çağrılmalı (var olan metnin üzerine hiç yazılmaz).
      */
-    public static function onlemOner(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet): ?string
+    public static function onlemOner(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, ?string $istem = null): ?string
     {
         if (! static::aktifMi() || static::devreKesikMi()) {
             return null;
@@ -122,7 +122,7 @@ class GeminiRiskPuanTamamlayici
 
         try {
             $yanit = GeminiIstemci::post(
-                static::onlemIstekGovdesi($tehlike, $risk, $bolum, $faaliyet),
+                static::onlemIstekGovdesi($istem ?? static::onlemIstem($tehlike, $risk, $bolum, $faaliyet)),
                 self::ISTEK_TIMEOUT, 5,
             );
 
@@ -151,13 +151,39 @@ class GeminiRiskPuanTamamlayici
         }
     }
 
+    /**
+     * "Öneri" (düzeltici / önleyici faaliyet) metni boş maddeye öneri ister — risk:oneri-tamamla
+     * komutu kullanır. Mevcut önlem verilirse onu tekrarlamayan ek faaliyet istenir.
+     */
+    public static function oneriOner(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet, ?string $mevcutOnlem): ?string
+    {
+        $istem = <<<PROMPT
+        Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu'na göre çalışan
+        deneyimli bir İş Güvenliği Uzmanısın. Aşağıdaki risk değerlendirmesi maddesi
+        için "Düzeltici / önleyici faaliyet" metni yaz: 1-2 cümle (en fazla 40 kelime),
+        somut ve uygulanabilir, tehlikeye özgü teknik ve idari önlemler; önce tehlikeyi
+        kaynağında yok etme / mühendislik önlemi, sonra idari önlem ve gerekiyorsa KKD.
+        Genel klişe yazma. Mevcut önlemleri tekrarlama, eksik kalanı belirt.
+
+        Bölüm/Ünite: {$bolum}
+        Faaliyet: {$faaliyet}
+        Tehlike: {$tehlike}
+        Risk (olası sonuç): {$risk}
+        Mevcut önlemler: {$mevcutOnlem}
+
+        Yanıtı SADECE JSON nesnesi olarak ver (ör. {"onlem": "..."}).
+        PROMPT;
+
+        return static::onlemOner($tehlike, $risk, $bolum, $faaliyet, $istem);
+    }
+
     /** @return array<string, mixed> */
-    private static function onlemIstekGovdesi(string $tehlike, ?string $risk, ?string $bolum, ?string $faaliyet): array
+    private static function onlemIstekGovdesi(string $istem): array
     {
         return [
             'contents' => [[
                 'role' => 'user',
-                'parts' => [['text' => static::onlemIstem($tehlike, $risk, $bolum, $faaliyet)]],
+                'parts' => [['text' => $istem]],
             ]],
             'generationConfig' => [
                 'temperature' => 0.3,
