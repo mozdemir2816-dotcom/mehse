@@ -65,7 +65,7 @@ return [
         'Sütunlu Pergel Vinç' => ['risk_kategorileri' => ['ekipman_pergel_vinc']],
         'Tavan Vinci / Gezer Köprülü Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Köprü Vinç'],
         'Portal Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Portal Vinç'],
-        'Mobil Vinç / Hiyap' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Mobil Vinç'],
+        'Mobil Vinç / Hiyap' => ['risk_kategorileri' => ['santiye_mobil_vinc'], 'kontrol_formu' => 'Mobil Vinç', 'ortak_riskler' => false], // MV-RA: mobil vinçle kalıp taşıma
         'Kule Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Kule Vinç', 'talimat' => 'Kule Vinç ile Çalışma ve Sinyalizasyon Talimatı'],
         'Caraskal & Halatlı/Zincirli Çektirme' => ['risk_kategorileri' => ['ekipman_caraskal'], 'kontrol_formu' => 'Caraskal'],
         'Yükseltilebilir Seyyar İş Platformu (Manlift)' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Makaslı Platform (Manlift)'],
