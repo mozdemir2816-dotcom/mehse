@@ -48,6 +48,10 @@ class RiskKutuphanesi
             'olasilik' => $t->olasilik !== null ? (float) $t->olasilik : null,
             'frekans' => $t->frekans !== null ? (float) $t->frekans : null,
             'siddet' => $t->siddet !== null ? (float) $t->siddet : null,
+            // Hedef (önlem sonrası) puanlar — dosyadaki "Hedef P/F/S"; boşsa model varsayımı.
+            'son_olasilik' => $t->son_olasilik !== null ? (float) $t->son_olasilik : null,
+            'son_frekans' => $t->son_frekans !== null ? (float) $t->son_frekans : null,
+            'son_siddet' => $t->son_siddet !== null ? (float) $t->son_siddet : null,
         ];
     }
 
@@ -70,6 +74,9 @@ class RiskKutuphanesi
             'olasilik' => null,
             'frekans' => null,
             'siddet' => null,
+            'son_olasilik' => null,
+            'son_frekans' => null,
+            'son_siddet' => null,
         ];
     }
 }

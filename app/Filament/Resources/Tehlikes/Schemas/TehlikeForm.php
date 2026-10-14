@@ -39,6 +39,10 @@ class TehlikeForm
                     TextInput::make('olasilik')->label('Olasılık')->numeric()->step('0.1'),
                     TextInput::make('frekans')->label('Frekans (yalnız Fine-Kinney)')->numeric()->step('0.1'),
                     TextInput::make('siddet')->label('Şiddet')->numeric()->step('0.1'),
+                    TextInput::make('son_olasilik')->label('Hedef olasılık')->numeric()->step('0.1'),
+                    TextInput::make('son_frekans')->label('Hedef frekans')->numeric()->step('0.1'),
+                    TextInput::make('son_siddet')->label('Hedef şiddet')->numeric()->step('0.1')
+                        ->helperText('Önlem sonrası (Son) puan. Boşsa olasılık 1 kabul edilir.'),
                 ]),
         ]);
     }

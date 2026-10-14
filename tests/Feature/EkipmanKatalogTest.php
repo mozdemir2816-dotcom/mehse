@@ -168,6 +168,9 @@ class EkipmanKatalogTest extends TestCase
         $t = Tehlike::find($secilen[0]);
         $this->assertSame([(float) $t->olasilik, (float) $t->frekans, (float) $t->siddet], [$m->olasilik, $m->frekans, $m->siddet]);
         $this->assertNotNull($m->puan);
+        // Hedef puanlar da kütüphaneden gelir (varsayılan O=1 yerine).
+        $this->assertSame([(float) $t->son_olasilik, (float) $t->son_frekans, (float) $t->son_siddet], [$m->son_olasilik, $m->son_frekans, $m->son_siddet]);
+        $this->assertNotSame(1.0, $m->son_olasilik);
 
         // Dosyadaki "Açıklayıcı DÖF" kütüphanede "Alınacak önlem"de; değerlendirmede Önerilen önlem olur (PDF Öneri sütunu).
         $this->assertNotEmpty($t->oneri);

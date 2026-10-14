@@ -180,6 +180,7 @@ class EkipmanKatalogu
         foreach (Tehlike::query()->whereIn('id', $eklenecekIds)->orderBy('kod')->orderBy('id')->get() as $t) {
             $m = RiskKutuphanesi::maddeyeCevir($t);
             [$o, $s] = $fk ? [$m['olasilik'], $m['siddet']] : RiskYontemDonusturucu::fineKinneyDegeriniMatrise($m['olasilik'], $m['siddet']);
+            [$so, $ss] = $fk ? [$m['son_olasilik'], $m['son_siddet']] : RiskYontemDonusturucu::fineKinneyDegeriniMatrise($m['son_olasilik'], $m['son_siddet']);
 
             $rd->maddeler()->create([
                 'sira' => ++$sira,
@@ -195,6 +196,10 @@ class EkipmanKatalogu
                 'olasilik' => $o,
                 'frekans' => $fk ? $m['frekans'] : null,
                 'siddet' => $s,
+                // Hedef puan kütüphanede yoksa model varsayımı devreye girer.
+                'son_olasilik' => $so,
+                'son_frekans' => $fk ? $m['son_frekans'] : null,
+                'son_siddet' => $ss,
                 'durum' => 'acik',
             ]);
             $eklenen++;

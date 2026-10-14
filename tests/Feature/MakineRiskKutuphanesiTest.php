@@ -73,6 +73,8 @@ class MakineRiskKutuphanesiTest extends TestCase
         $this->assertStringStartsWith('İşleme uygun mandren ve işlem bölgesi', $madde['oneri']); // DÖF → Önerilen önlem
         $this->assertNull($madde['mevcut_onlem']);
         $this->assertSame([6.0, 6.0, 15.0], [$madde['olasilik'], $madde['frekans'], $madde['siddet']]);
+        // Dosyadaki Hedef P/F/S → önlem sonrası (Son) puanlar.
+        $this->assertSame([0.2, 6.0, 15.0], [$madde['son_olasilik'], $madde['son_frekans'], $madde['son_siddet']]);
         $this->assertStringContainsString('ISO 12100', $madde['mevzuat']);
     }
 }
