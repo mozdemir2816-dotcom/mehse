@@ -238,6 +238,11 @@
                 @if (($imzali ?? true) && ! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $destekElemani['ad'] ?? '—' }}</span>
             </td>
+            <td>
+                <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
+                @if (($imzali ?? true) && ! empty($bilgiSahibiCalisan['imza_gorseli']))<img src="{{ storage_path('app/public/'.$bilgiSahibiCalisan['imza_gorseli']) }}">@endif
+                <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '—' }}</span>
+            </td>
         </tr>
     </table>
 </div>
@@ -413,7 +418,7 @@
                 <span class="ad">{{ $destekElemani['ad'] ?? '' }}</span>
             </td>
             <td>
-                <span class="rol">BİLGİ SAHİBİ ÇALIŞAN</span>
+                <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
                 @if (($imzali ?? true) && ! empty($bilgiSahibiCalisan['imza_gorseli']))<img src="{{ storage_path('app/public/'.$bilgiSahibiCalisan['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '' }}</span>
             </td>

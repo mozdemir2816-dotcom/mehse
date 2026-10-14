@@ -382,9 +382,10 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('İŞYERİ HEKİMİ', $sayfa);
         $this->assertStringContainsString('ÇALIŞAN TEMSİLCİSİ', $sayfa);
         $this->assertStringContainsString('DESTEK ELEMANI', $sayfa);
-        $this->assertStringContainsString('BİLGİ SAHİBİ ÇALIŞAN', $sayfa);
+        $this->assertStringContainsString('BİLGİ SAHİBİ PERSONEL', $sayfa);
+        $this->assertSame(2, substr_count($sayfa, 'BİLGİ SAHİBİ PERSONEL</span>')); // her sayfanın imza şeridi + ONAY
         // atama yapılmadığında hata vermez, isim boş kalır ("—" değil).
-        $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ ÇALIŞAN<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
+        $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ PERSONEL<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
     }
 
     public function test_onay_tablosunda_bilgi_sahibi_calisan_atanmissa_adi_gorunur(): void
