@@ -14,3 +14,7 @@ Schedule::command('model:prune', ['--model' => [\App\Models\Firma::class]])->dai
 
 // Telefon bildirimi: her sabah yeni kritik/uyarıların özeti (App\Support\TelefonBildirimi).
 Schedule::command('mehse:telefon-bildirimi')->dailyAt('08:30')->timezone('Europe/Istanbul');
+
+// Büyük risk değerlendirmesi PDF'leri (RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI üstü) arka planda.
+// cPanel cron her dakika "artisan schedule:run" çalıştırmalı (PHP CLI ile; CGI komut adını iletmez).
+Schedule::command('risk:pdf-uret')->everyMinute()->withoutOverlapping(30);

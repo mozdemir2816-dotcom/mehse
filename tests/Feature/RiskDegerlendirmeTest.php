@@ -656,6 +656,28 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertNull($rd->pdf_hazir_at);
     }
 
+    public function test_bekleyen_talep_5_dakikayi_gecince_cron_uyarisi_verilir_talep_yenilenmez(): void
+    {
+        $rd = $this->buyukRdOlustur();
+        $eski = now()->subMinutes(7)->startOfSecond();
+        $rd->forceFill(['pdf_talep_edildi_at' => $eski])->saveQuietly();
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->callAction('pdf')
+            ->assertNotified('PDF hâlâ hazırlanmadı');
+
+        $this->assertTrue($rd->refresh()->pdf_talep_edildi_at->equalTo($eski));
+    }
+
+    public function test_arka_plan_pdf_komutu_her_dakika_zamanlanir(): void
+    {
+        $olay = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->first(fn ($e) => str_contains($e->command ?? '', 'risk:pdf-uret'));
+
+        $this->assertNotNull($olay);
+        $this->assertSame('* * * * *', $olay->expression);
+    }
+
     public function test_esik_alti_rapor_dogrudan_indirilir_talep_birakilmaz(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

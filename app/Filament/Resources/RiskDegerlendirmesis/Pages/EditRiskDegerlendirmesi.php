@@ -107,6 +107,20 @@ class EditRiskDegerlendirmesi extends EditRecord
                         return response()->download(Storage::disk('local')->path($this->record->pdf_yolu), $ad);
                     }
 
+                    // Önceki talep 5 dk'dır bekliyorsa arka plan görevi (cron) çalışmıyor olabilir —
+                    // kullanıcı sonsuza kadar "hazırlanıyor" görmesin (14.10.2026: canlıda cron yanlış PHP ile çalışıyordu).
+                    $bekleyen = $this->record->pdf_talep_edildi_at;
+                    if ($bekleyen && $bekleyen->between(now()->subMinutes(15), now()->subMinutes(5))) {
+                        Notification::make()
+                            ->title('PDF hâlâ hazırlanmadı')
+                            ->body('Talep '.$bekleyen->diffForHumans().' verildi ama arka plan görevi henüz işlemedi; sunucudaki zamanlanmış görev (cron) çalışmıyor olabilir. Bu arada Excel veya Word olarak indirebilirsiniz.')
+                            ->warning()
+                            ->persistent()
+                            ->send();
+
+                        return null;
+                    }
+
                     // Büyük rapor + henüz üretilmemiş: arka plana talep bırak, tıklama anında indirme yok.
                     $this->record->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
 

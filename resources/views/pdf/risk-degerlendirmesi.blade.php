@@ -328,18 +328,22 @@
             <span style="background:{{ $bant['renk'] }}">{{ $bant['kisa'] }}</span> {{ $bant['ad'] }}@if(! $loop->last) &nbsp; @endif
         @endforeach
     </p>
-    <table class="risk">
+    @php
+        $basliklar = array_values(array_filter([
+            ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike'], ['', 'Risk'],
+            ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Dü<br>zey'],
+            ['col-oneri', 'Öneri'], ['col-sorumlu', 'Sorumlu'], ['', 'Termin'],
+            ['sayi', 'Son O'], $ucEksen ? ['sayi', 'Son '.$fBaslik] : null, ['sayi', 'Son Ş'], ['sayi', 'Son Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
+            ['col-aciklama', 'Açıklama'],
+        ]));
+        $kolonlar = array_values($kolonlar);
+        $sira = 0;
+    @endphp
+    {{-- dompdf'te tek uzun tablo yavaş: 100'er maddelik ardışık tablolar süreyi yaklaşık yarıya
+         indirir (14.10.2026 yerel ölçüm: 400 madde 58 → 34 sn, 352 madde 37 → 27 sn). Başlık her parçada bir kez daha görünür. --}}
+    @foreach ($rd->maddeler->chunk($parcaBoyutu ?? 100) as $parca)
+    <table class="risk" @unless($loop->first) style="margin-top:0" @endunless>
         {{-- dompdf <col> genişliğini yok sayar; fixed düzende ilk satır (başlık) hücrelerinin genişliği geçerlidir. --}}
-        @php
-            $basliklar = array_values(array_filter([
-                ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike'], ['', 'Risk'],
-                ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Dü<br>zey'],
-                ['col-oneri', 'Öneri'], ['col-sorumlu', 'Sorumlu'], ['', 'Termin'],
-                ['sayi', 'Son O'], $ucEksen ? ['sayi', 'Son '.$fBaslik] : null, ['sayi', 'Son Ş'], ['sayi', 'Son Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
-                ['col-aciklama', 'Açıklama'],
-            ]));
-            $kolonlar = array_values($kolonlar);
-        @endphp
         <thead>
         <tr>
             @foreach ($basliklar as $i => [$sinif, $etiket])
@@ -348,9 +352,9 @@
         </tr>
         </thead>
         <tbody>
-        @foreach ($rd->maddeler as $m)
+        @foreach ($parca as $m)
             <tr>
-                <td class="col-no">{{ $loop->iteration }}</td>
+                <td class="col-no">{{ ++$sira }}</td>
                 <td>{{ $m->bolum }}@if($m->faaliyet)<br><em>{{ $m->faaliyet }}</em>@endif</td>
                 <td>{{ $m->tehlike }}</td>
                 <td>{{ $m->risk }}</td>
@@ -376,6 +380,7 @@
         @endforeach
         </tbody>
     </table>
+    @endforeach
 </div>
 
 {{-- EKİP + ONAY --}}

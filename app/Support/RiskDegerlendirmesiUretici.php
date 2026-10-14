@@ -165,7 +165,8 @@ class RiskDegerlendirmesiUretici
         }
 
         if (function_exists('set_time_limit')) {
-            @set_time_limit(600);
+            // Arka plan komutunda (cron) sınır yok — 800+ maddelik rapor 600 sn'yi aşabiliyor.
+            @set_time_limit(app()->runningInConsole() ? 0 : 600);
         }
 
         $veri = self::veri($rd, $imzali);
