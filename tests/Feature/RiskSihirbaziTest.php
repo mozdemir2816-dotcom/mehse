@@ -90,6 +90,31 @@ class RiskSihirbaziTest extends TestCase
         $this->assertCount($kategori->tehlikeler()->count(), $component->get('secilenler'));
     }
 
+    public function test_egitim_ve_acil_durum_maddeleri_genel_sanal_klasorden_secilir(): void
+    {
+        $this->seed(\Database\Seeders\MakineRiskKutuphanesiSeeder::class);
+
+        $kategoriler = \App\Support\RiskKutuphanesi::kategoriler();
+        $egitim = $kategoriler->firstWhere('id', -1);
+        $acil = $kategoriler->firstWhere('id', -2);
+
+        // Ekipman klasörlerine dağılmış E / A sayfa maddeleri + atölye eğitim/acil klasörleri tek yerde.
+        $this->assertTrue($egitim->tehlikeler->contains('kod', 'SK-E-001'));
+        $this->assertTrue($egitim->tehlikeler->contains(fn ($t) => $t->kategori->anahtar === 'atolye_egitim_ve_yetkilendirme'));
+        $this->assertTrue($acil->tehlikeler->contains('kod', 'EKP-A-023'));
+        $this->assertFalse($acil->tehlikeler->contains('kod', 'SK-R-001'));
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('yontemSecim', 'manuel')
+            ->set('adim', 3)
+            ->call('kategoriToggle', -2)
+            ->assertSee('Genel – Acil durumlar (tüm ekipmanlar)')
+            ->assertSee('border-left:4px solid rgb(220 38 38)', false)
+            ->call('kategoriTumunuEkle', -2);
+
+        $this->assertCount($acil->tehlikeler->count(), $component->get('secilenler'));
+    }
+
     public function test_puansiz_madde_ile_6_adima_gecilemez(): void
     {
         Livewire::test(RiskSihirbazi::class)

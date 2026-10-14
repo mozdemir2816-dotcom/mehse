@@ -12,13 +12,48 @@ use Illuminate\Support\Collection;
  */
 class RiskKutuphanesi
 {
-    /** @return Collection<int, TehlikeKategorisi> tehlikeleriyle birlikte, sıralı */
+    /**
+     * Ekipman / şantiye dosyalarının "Eğitim Riskleri" ve "Acil Durum Riskleri" sayfa
+     * maddeleri (kod ...-E-/...-A-) her ekipmanın klasörüne dağılmış durumda; manuel
+     * seçimde tek klasörden seçilebilsin diye sanal gruplar (negatif id). Kullanıcı 14.10.2026.
+     */
+    public const SANAL_GRUPLAR = [
+        -1 => ['ad' => 'Genel – Eğitim ve yetkilendirme (tüm ekipmanlar)', 'kod' => '%-E-%', 'anahtar' => 'atolye_egitim_ve_yetkilendirme'],
+        -2 => ['ad' => 'Genel – Acil durumlar (tüm ekipmanlar)', 'kod' => '%-A-%', 'anahtar' => 'atolye_acil_durumlar'],
+    ];
+
+    /** @return Collection<int, TehlikeKategorisi> tehlikeleriyle birlikte, sıralı; başta sanal Eğitim / Acil durum grupları */
     public static function kategoriler(): Collection
     {
-        return TehlikeKategorisi::query()
+        $sanal = collect(self::SANAL_GRUPLAR)
+            ->map(function (array $g, int $id) {
+                $kat = new TehlikeKategorisi(['ad' => $g['ad'], 'anahtar' => 'sanal_'.abs($id)]);
+                $kat->id = $id;
+
+                return $kat->setRelation('tehlikeler', static::grupTehlikeleri($id));
+            })
+            ->filter(fn (TehlikeKategorisi $k) => $k->tehlikeler->isNotEmpty());
+
+        return $sanal->values()->concat(TehlikeKategorisi::query()
             ->with(['tehlikeler' => fn ($q) => $q->orderBy('kod')])
             ->orderBy('sira')
             ->orderBy('ad')
+            ->get());
+    }
+
+    /** @return Collection<int, Tehlike> bir kategorinin (sanal grup dahil) tehlikeleri */
+    public static function grupTehlikeleri(int $kategoriId): Collection
+    {
+        $g = self::SANAL_GRUPLAR[$kategoriId] ?? null;
+
+        if (! $g) {
+            return Tehlike::where('tehlike_kategorisi_id', $kategoriId)->orderBy('kod')->get();
+        }
+
+        return Tehlike::query()
+            ->where(fn ($q) => $q->where('kod', 'like', $g['kod'])
+                ->orWhereHas('kategori', fn ($k) => $k->where('anahtar', $g['anahtar'])))
+            ->orderBy('bolum')->orderBy('kod')
             ->get();
     }
 

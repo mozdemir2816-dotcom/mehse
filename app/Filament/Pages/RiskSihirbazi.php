@@ -362,7 +362,7 @@ class RiskSihirbazi extends Page
 
     public function kategoriTumunuEkle(int $kategoriId): void
     {
-        foreach (Tehlike::where('tehlike_kategorisi_id', $kategoriId)->get() as $t) {
+        foreach (RiskKutuphanesi::grupTehlikeleri($kategoriId) as $t) {
             if (! $this->tehlikeSecili($t->id)) {
                 $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t);
             }

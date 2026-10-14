@@ -156,11 +156,22 @@
 
             <div style="display:flex;flex-direction:column;gap:.5rem">
                 @foreach ($this->kategoriler as $kat)
-                    @php $acik = in_array($kat->id, $acikKategoriler, true); @endphp
-                    <div style="{{ $kutu }};overflow:hidden">
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:rgb(107 114 128 / .07)">
+                    @php
+                        $acik = in_array($kat->id, $acikKategoriler, true);
+                        // Klasör başlığı rengi: grup türüne göre (Genel eğitim / acil, Şantiye, Atölye, Ekipman, diğer).
+                        $renk = match (true) {
+                            $kat->id === -1 => '22 163 74',
+                            $kat->id === -2 => '220 38 38',
+                            str_starts_with($kat->ad, 'Şantiye') => '217 119 6',
+                            str_starts_with($kat->ad, 'Atölye') => '37 99 235',
+                            str_starts_with($kat->ad, 'Ekipman') => '124 58 237',
+                            default => '13 148 136',
+                        };
+                    @endphp
+                    <div style="{{ $kutu }};overflow:hidden;border-left:4px solid rgb({{ $renk }})">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:rgb({{ $renk }} / .14)">
                             <button type="button" wire:click="kategoriToggle({{ $kat->id }})"
-                                style="display:flex;align-items:center;gap:.5rem;background:none;border:none;cursor:pointer;font-weight:600">
+                                style="display:flex;align-items:center;gap:.5rem;background:none;border:none;cursor:pointer;font-weight:700;color:rgb({{ $renk }})">
                                 <span>{{ $acik ? '▾' : '▸' }}</span> {{ $kat->ad }}
                                 <x-filament::badge color="gray">{{ $kat->tehlikeler->count() }}</x-filament::badge>
                             </button>
