@@ -672,7 +672,7 @@ class RiskDegerlendirmeTest extends TestCase
     public function test_arka_plan_pdf_komutu_her_dakika_zamanlanir(): void
     {
         $olay = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
-            ->first(fn ($e) => str_contains($e->command ?? '', 'risk:pdf-uret'));
+            ->first(fn ($e) => $e->description === 'risk:pdf-uret');
 
         $this->assertNotNull($olay);
         $this->assertSame('* * * * *', $olay->expression);

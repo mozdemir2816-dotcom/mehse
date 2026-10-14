@@ -8,13 +8,19 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Canlı sunucuda proc_open kapalı (14.10.2026): Schedule::command() görevi ayrı süreç olarak
+// başlatamıyor, bu yüzden görevler Schedule::call() + Artisan::call() ile aynı süreçte çalışır.
+// cPanel cron her dakika "/usr/local/bin/php artisan schedule:run" çalıştırır.
+
 // Firmalar Çöp Kutusu: süresi (Firma::COP_SURESI_AY) dolanları kalıcı sil.
 // Sunucuda cron yoksa Firmalar listesi açılırken de temizlenir (ListFirmas::mount).
-Schedule::command('model:prune', ['--model' => [\App\Models\Firma::class]])->daily();
+Schedule::call(fn () => Artisan::call('model:prune', ['--model' => [\App\Models\Firma::class]]))
+    ->name('model:prune')->daily();
 
 // Telefon bildirimi: her sabah yeni kritik/uyarıların özeti (App\Support\TelefonBildirimi).
-Schedule::command('mehse:telefon-bildirimi')->dailyAt('08:30')->timezone('Europe/Istanbul');
+Schedule::call(fn () => Artisan::call('mehse:telefon-bildirimi'))
+    ->name('mehse:telefon-bildirimi')->dailyAt('08:30')->timezone('Europe/Istanbul');
 
 // Büyük risk değerlendirmesi PDF'leri (RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI üstü) arka planda.
-// cPanel cron her dakika "artisan schedule:run" çalıştırmalı (PHP CLI ile; CGI komut adını iletmez).
-Schedule::command('risk:pdf-uret')->everyMinute()->withoutOverlapping(30);
+Schedule::call(fn () => Artisan::call('risk:pdf-uret'))
+    ->name('risk:pdf-uret')->everyMinute()->withoutOverlapping(30);
