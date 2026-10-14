@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\User;
+use App\Support\RiskSkorlama;
 use App\Support\RiskYontemDonusturucu;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -77,5 +78,42 @@ class RiskYontemDonusturucuTest extends TestCase
         $madde = $geriDonus->maddeler()->first();
         $this->assertEquals(3, $madde->olasilik);
         $this->assertEquals(2, $madde->siddet);
+    }
+
+    /** 0,1 / 0,2 ondalık olarak kalmalı — eskiden dizi anahtarında 0'a kırpılıp Matris 2 oluyordu. */
+    public function test_fine_kinney_ondalik_olasiliklar_dogru_eslenir(): void
+    {
+        $this->assertSame([1, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.1, 1));
+        $this->assertSame([1, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.2, 1));
+        $this->assertSame([2, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.5, 1));
+        $this->assertSame([2, 2], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(1, 3));
+        $this->assertSame([5, 5], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(10, 40));
+    }
+
+    public function test_ondalik_olasilik_kaydedilip_matrise_donusturulur(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $firma = Firma::factory()->create();
+        $kaynak = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
+        $kaynak->maddeler()->create(['tehlike' => 'Teorik', 'olasilik' => 0.2, 'frekans' => 1, 'siddet' => 7]);
+
+        $this->assertEquals(0.2, $kaynak->maddeler()->first()->olasilik); // 2 değil
+
+        $madde = RiskYontemDonusturucu::fineKinneydenMatrise($kaynak)->maddeler()->first();
+        $this->assertEquals(1, $madde->olasilik);
+        $this->assertEquals(3, $madde->siddet);
+    }
+
+    public function test_virgullu_puan_ondalik_okunur(): void
+    {
+        $this->assertSame(0.2, RiskSkorlama::sayi('0,2'));
+        $this->assertSame(0.2, RiskSkorlama::sayi(' 0,2 '));
+        $this->assertSame(0.5, RiskSkorlama::sayi('0.5'));
+        $this->assertSame(0.1, RiskSkorlama::sayi(0.1));
+        $this->assertSame(3.0, RiskSkorlama::sayi(3));
+        $this->assertSame(10.0, RiskSkorlama::sayi('10'));
+        $this->assertNull(RiskSkorlama::sayi('Yüksek'));
+        $this->assertNull(RiskSkorlama::sayi(null));
+        $this->assertNull(RiskSkorlama::sayi(''));
     }
 }

@@ -22,6 +22,33 @@ class RiskSkorlama
     }
 
     /**
+     * Puan hücresini ondalığı koruyarak sayıya çevirir: "0,2" / "0.2" / 0.2 → 0.2.
+     * Türkçe yazımda virgül ondalık ayırıcıdır; Fine-Kinney'de 0,2 ile 2 çok
+     * farklı olasılıktır, virgül asla yutulmamalı (kullanıcı kararı 14.10.2026).
+     * Sayı değilse null.
+     */
+    public static function sayi(mixed $deger): ?float
+    {
+        if (is_int($deger) || is_float($deger)) {
+            return (float) $deger;
+        }
+
+        if (! is_string($deger)) {
+            return null;
+        }
+
+        $metin = str_replace([' ', "\u{00A0}"], '', trim($deger));
+
+        // Tek virgül ve nokta yoksa virgül ondalıktır ("0,2"); "1.000,5" gibi
+        // binlik ayırıcılı yazım puan ölçeklerinde yok, bilerek desteklenmez.
+        if (substr_count($metin, ',') === 1 && ! str_contains($metin, '.')) {
+            $metin = str_replace(',', '.', $metin);
+        }
+
+        return is_numeric($metin) ? (float) $metin : null;
+    }
+
+    /**
      * @return array{puan:int|float, duzey:string, renk:string, eylem:string}
      */
     public static function hesapla(string $yontem, ?float $olasilik, ?float $siddet, ?float $frekans = null): array

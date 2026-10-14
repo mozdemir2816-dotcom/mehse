@@ -26,11 +26,15 @@ class RiskYontemDonusturucu
     /** Matris Şiddet (1-5) → Fine-Kinney Şiddet ölçeği. */
     private const SIDDET_MATRIS_TO_FK = [1 => 1.0, 2 => 3.0, 3 => 7.0, 4 => 15.0, 5 => 40.0];
 
-    /** Fine-Kinney Olasılık (tüm resmi değerler) → Matris Olasılık (1-5). */
-    private const OLASILIK_FK_TO_MATRIS = [0.1 => 1, 0.2 => 1, 0.5 => 2, 1.0 => 2, 3.0 => 3, 6.0 => 4, 10.0 => 5];
+    /**
+     * Fine-Kinney Olasılık (tüm resmi değerler) → Matris Olasılık (1-5).
+     * [FK, Matris] çiftleri: PHP dizi anahtarında ondalık (0.1/0.2/0.5) tam sayıya
+     * kırpılıp 0'da çakışıyordu → 0,1 ve 0,2 yanlışlıkla Matris 2 oluyordu.
+     */
+    private const OLASILIK_FK_TO_MATRIS = [[0.1, 1], [0.2, 1], [0.5, 2], [1.0, 2], [3.0, 3], [6.0, 4], [10.0, 5]];
 
-    /** Fine-Kinney Şiddet (tüm resmi değerler) → Matris Şiddet (1-5). */
-    private const SIDDET_FK_TO_MATRIS = [1.0 => 1, 3.0 => 2, 7.0 => 3, 15.0 => 4, 40.0 => 5];
+    /** Fine-Kinney Şiddet (tüm resmi değerler) → Matris Şiddet (1-5), [FK, Matris] çiftleri. */
+    private const SIDDET_FK_TO_MATRIS = [[1.0, 1], [3.0, 2], [7.0, 3], [15.0, 4], [40.0, 5]];
 
     public static function matristenFineKinneye(RiskDegerlendirmesi $kaynak): RiskDegerlendirmesi
     {
@@ -132,7 +136,7 @@ class RiskYontemDonusturucu
         return $tablo[(int) round($matrisDegeri)] ?? null;
     }
 
-    /** FK → Matris: en yakın resmi FK değerini bulup tablodan okur. @param  array<float, int>  $tablo */
+    /** FK → Matris: en yakın resmi FK değerini bulup tablodan okur. @param  array<int, array{0: float, 1: int}>  $tablo */
     private static function esleTersten(?float $fkDegeri, array $tablo): ?int
     {
         if ($fkDegeri === null) {
@@ -142,7 +146,7 @@ class RiskYontemDonusturucu
         $enYakin = null;
         $enKucukFark = null;
 
-        foreach ($tablo as $fkAnahtar => $matrisDegeri) {
+        foreach ($tablo as [$fkAnahtar, $matrisDegeri]) {
             $fark = abs($fkDegeri - $fkAnahtar);
 
             if ($enKucukFark === null || $fark < $enKucukFark) {

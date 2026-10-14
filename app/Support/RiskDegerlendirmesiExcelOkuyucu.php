@@ -160,7 +160,7 @@ class RiskDegerlendirmesiExcelOkuyucu
                 $doluMu = true;
 
                 if (in_array($alan, $puanAlanlari, true)) {
-                    $veri[$alan] = is_numeric($deger) ? (float) $deger : ($veri[$alan] ?? null);
+                    $veri[$alan] = RiskSkorlama::sayi($deger) ?? ($veri[$alan] ?? null);
 
                     continue;
                 }
@@ -559,7 +559,7 @@ class RiskDegerlendirmesiExcelOkuyucu
 
             $kontrolEdilen++;
 
-            if (! is_numeric($deger)) {
+            if (RiskSkorlama::sayi($deger) === null) {
                 return false;
             }
         }

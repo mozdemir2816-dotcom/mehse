@@ -76,12 +76,12 @@ class GeminiRiskPdfOkuyucu
             'sorumlu' => $m['sorumlu'] ?? null,
             'termin' => $m['termin'] ?? null,
             'aciklama' => null,
-            'olasilik' => is_numeric($m['olasilik'] ?? null) ? (float) $m['olasilik'] : null,
-            'frekans' => is_numeric($m['frekans'] ?? null) ? (float) $m['frekans'] : null,
-            'siddet' => is_numeric($m['siddet'] ?? null) ? (float) $m['siddet'] : null,
-            'son_olasilik' => is_numeric($m['son_olasilik'] ?? null) ? (float) $m['son_olasilik'] : null,
-            'son_frekans' => is_numeric($m['son_frekans'] ?? null) ? (float) $m['son_frekans'] : null,
-            'son_siddet' => is_numeric($m['son_siddet'] ?? null) ? (float) $m['son_siddet'] : null,
+            'olasilik' => RiskSkorlama::sayi($m['olasilik'] ?? null),
+            'frekans' => RiskSkorlama::sayi($m['frekans'] ?? null),
+            'siddet' => RiskSkorlama::sayi($m['siddet'] ?? null),
+            'son_olasilik' => RiskSkorlama::sayi($m['son_olasilik'] ?? null),
+            'son_frekans' => RiskSkorlama::sayi($m['son_frekans'] ?? null),
+            'son_siddet' => RiskSkorlama::sayi($m['son_siddet'] ?? null),
         ];
     }
 
