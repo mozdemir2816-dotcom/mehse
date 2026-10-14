@@ -254,21 +254,23 @@ return [
             '6' => 'Kuvvetle muhtemel',
             '10' => 'Beklenir, kesin',
         ],
+        // Frekans ve Şiddet açıklamaları kullanıcının SK-RA-01 "Yöntem ve Kaynaklar"
+        // ölçekleriyle birebir (kullanıcı kararı 14.10.2026: ölüm = 40).
         'frekans' => [
-            '0.5' => 'Çok seyrek (yılda birkaç kez)',
-            '1' => 'Oldukça seyrek (ayda bir)',
-            '2' => 'Ara sıra (haftada bir)',
-            '3' => 'Sık (günde bir)',
-            '6' => 'Sürekli (saatte bir / gün boyu)',
-            '10' => 'Devamlı',
+            '0.5' => 'Yılda bir veya daha az',
+            '1' => 'Yılda birkaç',
+            '2' => 'Ayda bir',
+            '3' => 'Haftada bir',
+            '6' => 'Günlük',
+            '10' => 'Sürekli / çok sık',
         ],
         'siddet' => [
-            '1' => 'Önemsiz (dikkate değmez)',
-            '3' => 'Önemli (yaralanma, küçük hasar)',
-            '7' => 'Ciddi (kalıcı hasar / uzuv kaybı)',
-            '15' => 'Çok ciddi (bir ölüm)',
-            '40' => 'Felaket (birden çok ölüm)',
-            '100' => 'Çok büyük felaket (kitlesel kayıp, çevre felaketi)',
+            '1' => 'Hafif',
+            '3' => 'Küçük yaralanma',
+            '7' => 'Ciddi yaralanma',
+            '15' => 'Kalıcı hasar',
+            '40' => 'Ölüm',
+            '100' => 'Çoklu ölüm / felaket',
         ],
         // Etiketler kullanıcının inşaat Fine-Kinney master analiziyle hizalı
         // (200-400 = "Yüksek Risk", <20 = "Kabul Edilebilir Risk").
