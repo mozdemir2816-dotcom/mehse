@@ -191,6 +191,8 @@ class EkipmanKatalogu
                 'risk' => $m['risk'],
                 'mevcut_onlem' => $m['mevcut_onlem'],
                 'oneri' => $m['oneri'],
+                'sorumlu' => $m['sorumlu'],
+                'termin' => $m['termin'],
                 'etkilenen_calisan' => true,
                 'etkilenen_diger' => false,
                 'olasilik' => $o,

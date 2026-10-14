@@ -76,8 +76,8 @@ class RiskKutuphanesi
             'mevzuat' => $t->mevzuat,
             // Kütüphanedeki "Alınacak önlem" (ekipman / şantiye dosyalarının DÖF metni) → Önerilen önlem.
             'oneri' => $t->oneri,
-            'sorumlu' => null,
-            'termin' => null,
+            'sorumlu' => $t->sorumlu,
+            'termin' => $t->termin,
             // Kütüphaneye sektörel bir analizden (ör. İnşaat Fine-Kinney) O/F/Ş ile
             // aktarıldıysa sihirbaz formuna önceden dolsun.
             'olasilik' => $t->olasilik !== null ? (float) $t->olasilik : null,
@@ -105,7 +105,7 @@ class RiskKutuphanesi
             'mevzuat' => null,
             'oneri' => null,
             'sorumlu' => null,
-            'termin' => null,
+            'termin' => $t->termin,
             'olasilik' => null,
             'frekans' => null,
             'siddet' => null,

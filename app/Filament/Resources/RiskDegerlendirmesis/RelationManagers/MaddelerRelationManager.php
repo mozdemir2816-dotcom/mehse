@@ -210,6 +210,8 @@ class MaddelerRelationManager extends RelationManager
                                 'risk' => $t->risk,
                                 'mevcut_onlem' => $t->mevcut_onlem,
                                 'oneri' => $t->oneri,
+                                'sorumlu' => $t->sorumlu,
+                                'termin' => $t->termin,
                                 'durum' => 'acik',
                                 'created_at' => now(),
                                 'updated_at' => now(),
