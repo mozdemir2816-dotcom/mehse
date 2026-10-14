@@ -19,7 +19,7 @@ class MakineRiskKutuphanesiTest extends TestCase
         $this->seed(MakineRiskKutuphanesiSeeder::class);
         $this->seed(MakineRiskKutuphanesiSeeder::class);
 
-        $this->assertSame(49, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
+        $this->assertSame(51, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
         // MAK: torna → TFD, ekstrüzyon/kırıcı/merdane/bant zımpara/kesme → EKP ile güncellendi.
         $this->assertSame(176 - 20 - 84, Tehlike::where('kod', 'like', 'MAK-%')->count());
         $this->assertSame(80, Tehlike::where('kod', 'like', 'CNC-%')->count());
@@ -36,6 +36,10 @@ class MakineRiskKutuphanesiTest extends TestCase
         // YMK (yemekhane, 14.10.2026): 30 tüplü mutfak + 12 odun-kömür sobası, kaynak numaraları 59–100.
         $this->assertSame(30, TehlikeKategorisi::where('anahtar', 'yemekhane_tuplu_mutfak')->sole()->tehlikeler()->count());
         $this->assertSame(12, TehlikeKategorisi::where('anahtar', 'yemekhane_soba')->sole()->tehlikeler()->count());
+        // ESY (eğitim, sağlık gözetimi, mesleki yeterlilik) 50 + OFS (ofis çalışmaları) 56, 14.10.2026.
+        $this->assertSame(50, TehlikeKategorisi::where('anahtar', 'egitim_saglik_yeterlilik')->sole()->tehlikeler()->count());
+        $this->assertSame(56, TehlikeKategorisi::where('anahtar', 'ofis_calismalari')->sole()->tehlikeler()->count());
+        $this->assertSame(30.0, (float) Tehlike::where('kod', 'ESY-E-001')->value('siddet'));
         $this->assertSame(0, Tehlike::where('kod', 'like', 'MAK-%')->whereHas('kategori', fn ($q) => $q->where('anahtar', 'atolye_ekstruzyon_hatti'))->count());
         $this->assertSame(16, TehlikeKategorisi::where('anahtar', 'atolye_ekstruzyon_hatti')->sole()->tehlikeler()->count());
         $this->assertSame(1, Tehlike::where('kod', 'EKP-E-019')->where('bolum', 'Açık vals (iki silindir)')->count()); // sayfa harfi: numaralar sayfalar arası tekrar ediyor
