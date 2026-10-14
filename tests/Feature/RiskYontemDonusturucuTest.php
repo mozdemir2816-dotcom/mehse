@@ -33,10 +33,10 @@ class RiskYontemDonusturucuTest extends TestCase
         $this->assertSame('Korkuluksuz kenar', $madde->tehlike);
         $this->assertEquals(6.0, $madde->olasilik);   // Matris 4 -> FK olasılık 6
         $this->assertEquals(6.0, $madde->frekans);    // Matris 4 -> FK frekans 6
-        $this->assertEquals(40.0, $madde->siddet);    // Matris 5 -> FK şiddet 40
+        $this->assertEquals(30.0, $madde->siddet);    // Matris 5 (ölüm) -> FK şiddet 30 (Ölüm)
         $this->assertEquals(1.0, $madde->son_olasilik); // Matris 2 -> FK olasılık 1
         $this->assertEquals(1.0, $madde->son_frekans);  // Matris 2 -> FK frekans 1
-        $this->assertEquals(40.0, $madde->son_siddet);  // Matris 5 -> FK şiddet 40
+        $this->assertEquals(30.0, $madde->son_siddet);  // Matris 5 -> FK 30
         $this->assertNotNull($madde->puan);
         $this->assertNotNull($madde->duzey);
 
@@ -88,6 +88,7 @@ class RiskYontemDonusturucuTest extends TestCase
         $this->assertSame([2, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.5, 1));
         $this->assertSame([2, 2], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(1, 3));
         $this->assertSame([5, 5], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(10, 40));
+        $this->assertSame([5, 5], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(10, 30)); // ölüm
     }
 
     public function test_ondalik_olasilik_kaydedilip_matrise_donusturulur(): void

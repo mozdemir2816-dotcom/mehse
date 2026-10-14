@@ -255,7 +255,8 @@ return [
             '10' => 'Beklenir, kesin',
         ],
         // Frekans ve Şiddet açıklamaları kullanıcının SK-RA-01 "Yöntem ve Kaynaklar"
-        // ölçekleriyle birebir (kullanıcı kararı 14.10.2026: ölüm = 40).
+        // ölçekleriyle; Şiddet'te 100 yok — ölüm 30, çoklu ölüm 40 (kullanıcı kararı 14.10.2026).
+        // Eski 100'ler 40'a, SK-RA-01 kaynaklı 40 (ölüm) 30'a çevrildi.
         'frekans' => [
             '0.5' => 'Yılda bir veya daha az',
             '1' => 'Yılda birkaç',
@@ -269,8 +270,8 @@ return [
             '3' => 'Küçük yaralanma',
             '7' => 'Ciddi yaralanma',
             '15' => 'Kalıcı hasar',
-            '40' => 'Ölüm',
-            '100' => 'Çoklu ölüm / felaket',
+            '30' => 'Ölüm',
+            '40' => 'Çoklu ölüm / felaket',
         ],
         // Etiketler kullanıcının inşaat Fine-Kinney master analiziyle hizalı
         // (200-400 = "Yüksek Risk", <20 = "Kabul Edilebilir Risk").

@@ -82,7 +82,9 @@ class InsaatFineKinneySablonuTest extends TestCase
     public function test_fine_kinney_olcek_ve_bantlar_master_analizle_hizali(): void
     {
         $this->assertArrayHasKey('0.1', config('isg.risk_fine_kinney.olasilik'));
-        $this->assertArrayHasKey('100', config('isg.risk_fine_kinney.siddet'));
+        $this->assertArrayNotHasKey('100', config('isg.risk_fine_kinney.siddet')); // 14.10.2026: 100 yok
+        $this->assertSame('Ölüm', config('isg.risk_fine_kinney.siddet.30'));
+        $this->assertSame('Çoklu ölüm / felaket', config('isg.risk_fine_kinney.siddet.40'));
 
         $bantAdlari = collect(config('isg.risk_fine_kinney.bantlar'))->pluck('ad', 'min');
         $this->assertSame('Yüksek Risk', $bantAdlari[200]);

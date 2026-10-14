@@ -23,8 +23,8 @@ class RiskYontemDonusturucu
     /** Matris Olasılık (1-5) → Fine-Kinney FREKANS ölçeği (kullanıcı onaylı eşleme). */
     private const FREKANS_MATRIS_OLASILIK_TO_FK = [1 => 0.5, 2 => 1.0, 3 => 3.0, 4 => 6.0, 5 => 10.0];
 
-    /** Matris Şiddet (1-5) → Fine-Kinney Şiddet ölçeği. */
-    private const SIDDET_MATRIS_TO_FK = [1 => 1.0, 2 => 3.0, 3 => 7.0, 4 => 15.0, 5 => 40.0];
+    /** Matris Şiddet (1-5) → Fine-Kinney Şiddet ölçeği (Matris 5 "ölüm" → FK 30 "Ölüm"; 14.10.2026). */
+    private const SIDDET_MATRIS_TO_FK = [1 => 1.0, 2 => 3.0, 3 => 7.0, 4 => 15.0, 5 => 30.0];
 
     /**
      * Fine-Kinney Olasılık (tüm resmi değerler) → Matris Olasılık (1-5).
@@ -35,7 +35,7 @@ class RiskYontemDonusturucu
     private const OLASILIK_FK_TO_MATRIS = [[0.1, 2], [0.2, 2], [0.5, 2], [1.0, 2], [3.0, 3], [6.0, 4], [10.0, 5]];
 
     /** Fine-Kinney Şiddet (tüm resmi değerler) → Matris Şiddet (1-5), [FK, Matris] çiftleri. */
-    private const SIDDET_FK_TO_MATRIS = [[1.0, 1], [3.0, 2], [7.0, 3], [15.0, 4], [40.0, 5]];
+    private const SIDDET_FK_TO_MATRIS = [[1.0, 1], [3.0, 2], [7.0, 3], [15.0, 4], [30.0, 5], [40.0, 5]];
 
     public static function matristenFineKinneye(RiskDegerlendirmesi $kaynak): RiskDegerlendirmesi
     {
