@@ -80,11 +80,11 @@ class RiskYontemDonusturucuTest extends TestCase
         $this->assertEquals(2, $madde->siddet);
     }
 
-    /** 0,1 / 0,2 ondalık olarak kalmalı — eskiden dizi anahtarında 0'a kırpılıp Matris 2 oluyordu. */
+    /** 0,1 / 0,2 / 0,5 → Matris 2 (kullanıcı kararı 14.10.2026, eski davranış). */
     public function test_fine_kinney_ondalik_olasiliklar_dogru_eslenir(): void
     {
-        $this->assertSame([1, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.1, 1));
-        $this->assertSame([1, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.2, 1));
+        $this->assertSame([2, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.1, 1));
+        $this->assertSame([2, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.2, 1));
         $this->assertSame([2, 1], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(0.5, 1));
         $this->assertSame([2, 2], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(1, 3));
         $this->assertSame([5, 5], RiskYontemDonusturucu::fineKinneyDegeriniMatrise(10, 40));
@@ -100,7 +100,7 @@ class RiskYontemDonusturucuTest extends TestCase
         $this->assertEquals(0.2, $kaynak->maddeler()->first()->olasilik); // 2 değil
 
         $madde = RiskYontemDonusturucu::fineKinneydenMatrise($kaynak)->maddeler()->first();
-        $this->assertEquals(1, $madde->olasilik);
+        $this->assertEquals(2, $madde->olasilik);
         $this->assertEquals(3, $madde->siddet);
     }
 
