@@ -194,9 +194,9 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('41.00', $html); // kapakta NACE kodu
 
         // Öneri/Sorumlu/Termin ayrı sütunlar olmalı.
-        $this->assertStringContainsString('<th class="col-oneri">Öneri</th>', $html);
-        $this->assertStringContainsString('<th class="col-sorumlu">Sorumlu</th>', $html);
-        $this->assertStringContainsString('<th>Termin</th>', $html);
+        $this->assertStringContainsString('%">Öneri</th>', $html);
+        $this->assertStringContainsString('%">Sorumlu</th>', $html);
+        $this->assertStringContainsString('%">Termin</th>', $html);
         $this->assertStringNotContainsString('Öneri / Sorumlu / Termin', $html);
 
         // Her sayfada tekrarlanan başlık (<thead>) ve alt bilgi imza şeridi.
@@ -207,13 +207,14 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('DESTEK ELEMANI', $html);
 
         // Risk tablosunda sıra numarası sütunu.
-        $this->assertStringContainsString('<th class="col-no">No</th>', $html);
+        $this->assertStringContainsString('%">No</th>', $html);
         $this->assertStringContainsString('<td class="col-no">1</td>', $html);
 
-        // Termin'in yanına önlem sonrası Olasılık/Şiddet sütunları eklendi
-        // (mevcut O/Ş sütunlarıyla birlikte toplam 2'şer tane olmalı).
-        $this->assertSame(2, substr_count($html, '<th>O</th>'));
-        $this->assertSame(2, substr_count($html, '<th>Ş</th>'));
+        // Mevcut O/Ş + Termin'in yanında önlem sonrası "Son O / Son Ş" sütunları.
+        $this->assertSame(1, substr_count($html, '%">O</th>'));
+        $this->assertSame(1, substr_count($html, '%">Son O</th>'));
+        $this->assertSame(1, substr_count($html, '%">Ş</th>'));
+        $this->assertSame(1, substr_count($html, '%">Son Ş</th>'));
     }
 
     public function test_pdf_mevcut_onlem_sutunu_kaldirildi_aciklama_en_sagda(): void
@@ -236,12 +237,12 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringNotContainsString('Mevcut Önlem', $html);
         $this->assertStringNotContainsString('Bu metin artık tabloda görünmemeli', $html);
 
-        $this->assertStringContainsString('<th class="col-aciklama">Açıklama</th>', $html);
+        $this->assertStringContainsString('col-aciklama" style="width:12.5%">Açıklama</th>', $html);
         $this->assertStringContainsString('Firmaya özel not: X ekipmanı beklemede', $html);
 
         // Açıklama başlığı Son Düzey'den SONRA (en sağda) olmalı.
-        $sonDuzeyPos = strpos($html, '>Son Düzey<');
-        $aciklamaPos = strpos($html, 'col-aciklama">Açıklama');
+        $sonDuzeyPos = strpos($html, '>Son<br>Dü<br>zey<');
+        $aciklamaPos = strpos($html, '%">Açıklama</th>');
         $this->assertNotFalse($sonDuzeyPos);
         $this->assertNotFalse($aciklamaPos);
         $this->assertTrue($sonDuzeyPos < $aciklamaPos);
@@ -460,20 +461,20 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame('hesap/imza.png', $hazirlayan->imza_gorseli);
     }
 
-    public function test_risk_maddesi_duzey_dikey_harf_harf_alt_alta_yazar(): void
+    public function test_risk_maddesi_duzey_dikey_iki_harf_kisaltma_alt_alta_yazar(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
         $m = $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 15]);
 
-        $this->assertSame(implode("\n", mb_str_split('Çok Yüksek Risk')), $m->duzeyDikey());
+        $this->assertSame("Ç\nY", $m->duzeyDikey()); // Çok Yüksek Risk → ÇY
         // Önlem sonrası olasılık/şiddet girilmemişse varsayılan uygulanır:
         // olasılık 1'e düşer, şiddet+frekans öneri öncesiyle aynı kalır.
         $this->assertSame(1.0, $m->son_olasilik);
         $this->assertSame(15.0, $m->son_siddet);
         $this->assertSame(6.0, $m->son_frekans);
         $this->assertSame(90.0, $m->son_puan);
-        $this->assertSame(implode("\n", mb_str_split('Önemli Risk')), $m->sonDuzeyDikey());
+        $this->assertSame("Ö\nN", $m->sonDuzeyDikey()); // Önemli Risk → ÖN
     }
 
     public function test_onlem_sonrasi_olasilik_siddet_varsayilani_kendisi_girilince_ezilmez(): void
@@ -609,5 +610,29 @@ class RiskDegerlendirmeTest extends TestCase
         $rd->refresh();
         $this->assertFalse($rd->pdfHazirMi());
         $this->assertNull($rd->pdf_yolu);
+    }
+
+    public function test_pdf_fine_kinney_son_frekans_virgullu_ondalik_ve_kisaltma(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(), 'proje_adi' => 'Deneme Şantiyesi']);
+        $rd->maddeler()->create([
+            'tehlike' => 'Kazı', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 40,
+            'son_olasilik' => 0.2, 'son_frekans' => 2, 'son_siddet' => 40,
+        ]);
+        $rd->refresh();
+
+        $html = view('pdf.risk-degerlendirmesi', [
+            'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman,
+            'hekim' => null, 'temsilci' => null, 'destekElemani' => null,
+            'metodoloji' => config('isg.risk_fine_kinney'), 'prosedur' => null,
+            'eksenEtiketleri' => \App\Support\RiskSkorlama::eksenEtiketleri('fine_kinney'),
+        ])->render();
+
+        $this->assertStringContainsString('%">Son F</th>', $html);
+        $this->assertStringContainsString('<td class="sayi">0,2</td>', $html);   // 0.2 değil
+        $this->assertStringContainsString('<td class="sayi">16</td>', $html);    // 0,2 × 2 × 40
+        $this->assertStringContainsString("Ç\nY", $html);                         // Çok Yüksek (1440)
+        $this->assertStringContainsString('Deneme Şantiyesi', $html);            // kapak proje adı
     }
 }

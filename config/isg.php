@@ -234,11 +234,11 @@ return [
         ],
         // puan >= min → düzey (üstten alta)
         'bantlar' => [
-            ['min' => 25, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Bu risk kontrol altına alınıncaya kadar çalışma yapılmamalıdır.'],
-            ['min' => 15, 'ad' => 'Yüksek Risk', 'renk' => '#dc2626', 'eylem' => 'Bu risk azaltılıncaya kadar iş başlatılmamalı; devam eden işte acil önlem alınmalıdır.'],
-            ['min' => 8, 'ad' => 'Orta Düzeyde Risk', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde risk azaltıcı önlemler alınmalıdır.'],
-            ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'renk' => '#84cc16', 'eylem' => 'Ek kontrol gerekmeyebilir; maliyeti düşük iyileştirmeler düşünülmelidir.'],
-            ['min' => 1, 'ad' => 'Önemsiz Risk', 'renk' => '#22c55e', 'eylem' => 'Önlem planlamaya / kayıt tutmaya gerek yoktur.'],
+            ['min' => 25, 'ad' => 'Çok Yüksek Risk', 'kisa' => 'ÇY', 'renk' => '#7f1d1d', 'eylem' => 'Bu risk kontrol altına alınıncaya kadar çalışma yapılmamalıdır.'],
+            ['min' => 15, 'ad' => 'Yüksek Risk', 'kisa' => 'YK', 'renk' => '#dc2626', 'eylem' => 'Bu risk azaltılıncaya kadar iş başlatılmamalı; devam eden işte acil önlem alınmalıdır.'],
+            ['min' => 8, 'ad' => 'Orta Düzeyde Risk', 'kisa' => 'OD', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde risk azaltıcı önlemler alınmalıdır.'],
+            ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'kisa' => 'KT', 'renk' => '#84cc16', 'eylem' => 'Ek kontrol gerekmeyebilir; maliyeti düşük iyileştirmeler düşünülmelidir.'],
+            ['min' => 1, 'ad' => 'Önemsiz Risk', 'kisa' => 'ÖS', 'renk' => '#22c55e', 'eylem' => 'Önlem planlamaya / kayıt tutmaya gerek yoktur.'],
         ],
     ],
 
@@ -273,11 +273,11 @@ return [
         // Etiketler kullanıcının inşaat Fine-Kinney master analiziyle hizalı
         // (200-400 = "Yüksek Risk", <20 = "Kabul Edilebilir Risk").
         'bantlar' => [
-            ['min' => 400, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Tolere edilemez risk! Çalışma derhal durdurulmalıdır.'],
-            ['min' => 200, 'ad' => 'Yüksek Risk', 'renk' => '#dc2626', 'eylem' => 'Acil tedbir gerektirir; kısa dönemde (birkaç ay) iyileştirme yapılmalıdır.'],
-            ['min' => 70, 'ad' => 'Önemli Risk', 'renk' => '#f59e0b', 'eylem' => 'DÖF planlanmalı; yıl içinde iyileştirme yapılmalıdır.'],
-            ['min' => 20, 'ad' => 'Olası Risk', 'renk' => '#84cc16', 'eylem' => 'Gözetim altında tutulmalı, iyileştirme planlanmalıdır.'],
-            ['min' => 0, 'ad' => 'Kabul Edilebilir Risk', 'renk' => '#22c55e', 'eylem' => 'Mevcut kontrol tedbirleri yeterlidir; sürekli izlenir.'],
+            ['min' => 400, 'ad' => 'Çok Yüksek Risk', 'kisa' => 'ÇY', 'renk' => '#7f1d1d', 'eylem' => 'Tolere edilemez risk! Çalışma derhal durdurulmalıdır.'],
+            ['min' => 200, 'ad' => 'Yüksek Risk', 'kisa' => 'YK', 'renk' => '#dc2626', 'eylem' => 'Acil tedbir gerektirir; kısa dönemde (birkaç ay) iyileştirme yapılmalıdır.'],
+            ['min' => 70, 'ad' => 'Önemli Risk', 'kisa' => 'ÖN', 'renk' => '#f59e0b', 'eylem' => 'DÖF planlanmalı; yıl içinde iyileştirme yapılmalıdır.'],
+            ['min' => 20, 'ad' => 'Olası Risk', 'kisa' => 'OL', 'renk' => '#84cc16', 'eylem' => 'Gözetim altında tutulmalı, iyileştirme planlanmalıdır.'],
+            ['min' => 0, 'ad' => 'Kabul Edilebilir Risk', 'kisa' => 'KE', 'renk' => '#22c55e', 'eylem' => 'Mevcut kontrol tedbirleri yeterlidir; sürekli izlenir.'],
         ],
     ],
 
@@ -300,11 +300,11 @@ return [
             '5' => 'Felaket (ölüm, büyük patlama/yangın, ağır çevresel etki)',
         ],
         'bantlar' => [
-            ['min' => 20, 'ad' => 'Çok Yüksek Risk', 'renk' => '#7f1d1d', 'eylem' => 'Kabul edilemez — proses/ekipman devreye alınmadan tasarım değişikliği veya ek koruma zorunlu.'],
-            ['min' => 12, 'ad' => 'Yüksek Risk', 'renk' => '#dc2626', 'eylem' => 'Acil ek koruma/alarm/kilitleme gerekir; kısa sürede kapatılmalıdır.'],
-            ['min' => 6, 'ad' => 'Orta Düzeyde Risk', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde iyileştirme planlanmalıdır.'],
-            ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'renk' => '#84cc16', 'eylem' => 'Mevcut korumalar izlenerek sürdürülebilir; ek iyileştirme düşünülebilir.'],
-            ['min' => 1, 'ad' => 'Önemsiz Risk', 'renk' => '#22c55e', 'eylem' => 'Ek tedbir gerekmez, kayıt yeterlidir.'],
+            ['min' => 20, 'ad' => 'Çok Yüksek Risk', 'kisa' => 'ÇY', 'renk' => '#7f1d1d', 'eylem' => 'Kabul edilemez — proses/ekipman devreye alınmadan tasarım değişikliği veya ek koruma zorunlu.'],
+            ['min' => 12, 'ad' => 'Yüksek Risk', 'kisa' => 'YK', 'renk' => '#dc2626', 'eylem' => 'Acil ek koruma/alarm/kilitleme gerekir; kısa sürede kapatılmalıdır.'],
+            ['min' => 6, 'ad' => 'Orta Düzeyde Risk', 'kisa' => 'OD', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde iyileştirme planlanmalıdır.'],
+            ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'kisa' => 'KT', 'renk' => '#84cc16', 'eylem' => 'Mevcut korumalar izlenerek sürdürülebilir; ek iyileştirme düşünülebilir.'],
+            ['min' => 1, 'ad' => 'Önemsiz Risk', 'kisa' => 'ÖS', 'renk' => '#22c55e', 'eylem' => 'Ek tedbir gerekmez, kayıt yeterlidir.'],
         ],
     ],
 
@@ -352,11 +352,11 @@ return [
         ],
         // RPN teorik aralığı 1-1000; pratikte çoğu değer 1-343 (7'nin küpü) bandında yoğunlaşır.
         'bantlar' => [
-            ['min' => 200, 'ad' => 'Çok Yüksek Risk (RPN)', 'renk' => '#7f1d1d', 'eylem' => 'Öncelikli, acil önleyici faaliyet zorunlu.'],
-            ['min' => 100, 'ad' => 'Yüksek Risk (RPN)', 'renk' => '#dc2626', 'eylem' => 'Kısa sürede önleyici faaliyet planlanmalıdır.'],
-            ['min' => 50, 'ad' => 'Orta Risk (RPN)', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde iyileştirme değerlendirilmelidir.'],
-            ['min' => 20, 'ad' => 'Düşük Risk (RPN)', 'renk' => '#84cc16', 'eylem' => 'İzlenmeye devam edilmeli, düşük öncelikli iyileştirme düşünülebilir.'],
-            ['min' => 0, 'ad' => 'Önemsiz Risk (RPN)', 'renk' => '#22c55e', 'eylem' => 'Ek faaliyet gerekmez.'],
+            ['min' => 200, 'ad' => 'Çok Yüksek Risk (RPN)', 'kisa' => 'ÇY', 'renk' => '#7f1d1d', 'eylem' => 'Öncelikli, acil önleyici faaliyet zorunlu.'],
+            ['min' => 100, 'ad' => 'Yüksek Risk (RPN)', 'kisa' => 'YK', 'renk' => '#dc2626', 'eylem' => 'Kısa sürede önleyici faaliyet planlanmalıdır.'],
+            ['min' => 50, 'ad' => 'Orta Risk (RPN)', 'kisa' => 'OR', 'renk' => '#f59e0b', 'eylem' => 'Belirli bir süre içinde iyileştirme değerlendirilmelidir.'],
+            ['min' => 20, 'ad' => 'Düşük Risk (RPN)', 'kisa' => 'DŞ', 'renk' => '#84cc16', 'eylem' => 'İzlenmeye devam edilmeli, düşük öncelikli iyileştirme düşünülebilir.'],
+            ['min' => 0, 'ad' => 'Önemsiz Risk (RPN)', 'kisa' => 'ÖS', 'renk' => '#22c55e', 'eylem' => 'Ek faaliyet gerekmez.'],
         ],
     ],
 
@@ -730,6 +730,9 @@ return [
                 ['ad' => 'Seyyar / Çok Amaçlı Merdiven', 'periyot_ay' => 12, 'standart' => 'TS EN 131', 'deney' => 'Periyodik muayene yok — kullanım öncesi gözle kontrol'],
                 ['ad' => 'Şirket Aracı', 'periyot_ay' => 12, 'standart' => 'Karayolları Trafik Yön. (araç muayenesi ayrıca)', 'deney' => 'İSG periyodik muayenesi yok — araç muayene ve bakım takibi'],
                 ['ad' => 'Endüstriyel Raf', 'periyot_ay' => 12, 'standart' => 'TS EN 15635', 'deney' => 'Ek-III kapsamı dışı — raf sorumlusu kontrolü ve uzman muayenesi önerilir'],
+                // Şantiye iş makineleri (14.10.2026, SK-RA-01) — üretici talimatına göre bakım + kullanım öncesi kontrol formu.
+                ['ad' => 'Kazıcı Yükleyici (Beko Loder)', 'periyot_ay' => 12, 'standart' => 'TS EN 474-1 / TS EN 474-4', 'deney' => 'Üretici talimatına göre bakım; kullanım öncesi günlük kontrol formu'],
+                ['ad' => 'Damperli Kamyon', 'periyot_ay' => 12, 'standart' => 'Karayolları Trafik Yön. (araç muayenesi ayrıca)', 'deney' => 'Araç muayene ve bakım takibi; kullanım öncesi günlük kontrol formu'],
             ],
         ],
     ],

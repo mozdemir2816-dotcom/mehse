@@ -14,18 +14,21 @@ class MakineRiskKutuphanesiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_ekipman_maddeleri_31_kategoriye_yuklenir_ve_tekrar_calistirinca_cogalmaz(): void
+    public function test_ekipman_ve_santiye_maddeleri_46_kategoriye_yuklenir_ve_tekrar_calistirinca_cogalmaz(): void
     {
         $this->seed(MakineRiskKutuphanesiSeeder::class);
         $this->seed(MakineRiskKutuphanesiSeeder::class);
 
-        $this->assertSame(31, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
+        $this->assertSame(46, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
         // MAK: torna → TFD, ekstrüzyon/kırıcı/merdane/bant zımpara/kesme → EKP ile güncellendi.
         $this->assertSame(176 - 20 - 84, Tehlike::where('kod', 'like', 'MAK-%')->count());
         $this->assertSame(80, Tehlike::where('kod', 'like', 'CNC-%')->count());
         $this->assertSame(156, Tehlike::where('kod', 'like', 'TFD-%')->count());
         // EKP-RA-01: 448 maddeden torna/freze/trafo (TFD ile birebir aynı, 156) atlandı.
         $this->assertSame(292, Tehlike::where('kod', 'like', 'EKP-%')->count());
+        // SK-RA-01 (şantiye ve kamp, 14.10.2026): 119 iş + 30 eğitim + 30 acil durum, 15 ayrı kategori.
+        $this->assertSame(179, Tehlike::where('kod', 'like', 'SK-%')->count());
+        $this->assertSame(12, TehlikeKategorisi::where('anahtar', 'santiye_kazici_yukleyici')->sole()->tehlikeler()->count());
         $this->assertSame(0, Tehlike::where('kod', 'like', 'MAK-%')->whereHas('kategori', fn ($q) => $q->where('anahtar', 'atolye_ekstruzyon_hatti'))->count());
         $this->assertSame(16, TehlikeKategorisi::where('anahtar', 'atolye_ekstruzyon_hatti')->sole()->tehlikeler()->count());
         $this->assertSame(1, Tehlike::where('kod', 'EKP-E-019')->where('bolum', 'Açık vals (iki silindir)')->count()); // sayfa harfi: numaralar sayfalar arası tekrar ediyor

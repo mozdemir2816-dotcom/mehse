@@ -80,6 +80,27 @@ class RiskSkorlama
         return ['duzey' => '—', 'renk' => '#6b7280', 'eylem' => ''];
     }
 
+    /**
+     * Düzey adının iki harflik kısaltması (PDF'te dar düzey sütunu — config bantlar.kisa).
+     * Bantta tanım yoksa adın kelime baş harflerinden ("Risk" hariç) türetilir.
+     */
+    public static function kisaltma(string $yontem, ?string $duzey): ?string
+    {
+        if (blank($duzey)) {
+            return null;
+        }
+
+        foreach (config('isg.risk_'.$yontem.'.bantlar', []) as $bant) {
+            if ($bant['ad'] === $duzey && filled($bant['kisa'] ?? null)) {
+                return $bant['kisa'];
+            }
+        }
+
+        $kelimeler = array_filter(preg_split('/\s+/u', $duzey), fn ($k) => mb_strtolower($k) !== 'risk' && ! str_starts_with($k, '('));
+
+        return mb_strtoupper(mb_substr(implode('', array_map(fn ($k) => mb_substr($k, 0, 1), $kelimeler)), 0, 2)) ?: null;
+    }
+
     /** @return array<int|float, string> yöntem + eksen için ölçek seçenekleri */
     public static function olcek(string $yontem, string $eksen): array
     {

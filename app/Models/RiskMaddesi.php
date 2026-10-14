@@ -90,15 +90,24 @@ class RiskMaddesi extends Model
      * PDF'te dar sütuna sığan dikey düzey yazısı — her harf ayrı satırda
      * (transform:rotate yerine; dompdf'te rotate edilen kutu, satırın
      * kendi hücresine göre kayabiliyor, harf harf alt alta yazmak tabloya
-     * bağlı kalıp satırla her zaman hizalı kalır).
+     * bağlı kalıp satırla her zaman hizalı kalır). Tam ad harf harf çok
+     * uzun sütun oluşturuyordu → iki harflik kısaltma (ÇY, YK…), açıklaması
+     * PDF'te tablonun üstünde (kullanıcı kararı 14.10.2026).
      */
     public function duzeyDikey(): ?string
     {
-        return $this->duzey ? implode("\n", mb_str_split($this->duzey)) : null;
+        return $this->dikey($this->duzey);
     }
 
     public function sonDuzeyDikey(): ?string
     {
-        return $this->son_duzey ? implode("\n", mb_str_split($this->son_duzey)) : null;
+        return $this->dikey($this->son_duzey);
+    }
+
+    private function dikey(?string $duzey): ?string
+    {
+        $kisa = RiskSkorlama::kisaltma($this->riskDegerlendirmesi?->yontem ?? 'matris_5x5', $duzey);
+
+        return $kisa ? implode("\n", mb_str_split($kisa)) : null;
     }
 }

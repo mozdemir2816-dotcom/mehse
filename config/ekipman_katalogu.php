@@ -47,6 +47,9 @@ return [
         'Seyyar / Çok Amaçlı Merdiven' => ['risk_kategorileri' => ['ekipman_seyyar_merdiven'], 'kontrol_formu' => 'Seyyar El Merdiveni', 'talimat' => 'SEYYAR EL MERDİVENİ GÜVENLİ ÇALIŞMA TALİMATI'],
         'Şirket Aracı' => ['risk_kategorileri' => ['ekipman_sirket_araci']],
         'Endüstriyel Raf' => ['risk_kategorileri' => ['ekipman_endustriyel_raf']],
+        // Şantiye iş makineleri — risk: SK-RA-01 (Şantiye ve kamp); kendi eğitim/acil maddeleri var.
+        'Kazıcı Yükleyici (Beko Loder)' => ['risk_kategorileri' => ['santiye_kazici_yukleyici'], 'kontrol_formu' => 'Beko Loder (Kazıcı Yükleyici)', 'ortak_riskler' => false],
+        'Damperli Kamyon' => ['risk_kategorileri' => ['santiye_damperli_kamyon'], 'kontrol_formu' => 'Damperli Şantiye Kamyonu', 'ortak_riskler' => false],
 
         // Periyodik muayeneli ekipmanlar
         'Trafo & Yüksek Gerilim İşletmesi' => ['risk_kategorileri' => ['ekipman_trafo'], 'kontrol_formu' => 'Trafo (OG/AG)', 'talimat' => 'TRAFO MERKEZİ VE YG TESİSLERİ GÜVENLİ ÇALIŞMA TALİMATI'],

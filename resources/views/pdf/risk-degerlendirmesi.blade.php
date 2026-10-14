@@ -29,19 +29,25 @@
     .kunye td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
     .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 35%; }
     .sayfa { padding: 25px 30px; page-break-after: always; }
-    h2 { font-size: 15px; border-bottom: 2px solid #7c3aed; padding-bottom: 4px; color: #7c3aed; }
-    table.olcek { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9.5px; }
+    /* Prosedür → künye/yöntem → risk tablosu arasında zorunlu sayfa sonu yok:
+       bölüm bitince sayfanın kalanı boş kalıyordu (kullanıcı 14.10.2026). */
+    .sayfa.akis { page-break-after: auto; padding-bottom: 0; }
+    h2 { font-size: 15px; border-bottom: 2px solid #7c3aed; padding-bottom: 4px; color: #7c3aed; page-break-after: avoid; }
+    table.olcek { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9.5px; page-break-inside: avoid; }
     table.olcek th, table.olcek td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     table.olcek th { background: #f0f0f0; }
     table.bant td:first-child { font-weight: bold; color: #fff; text-align: center; width: 22%; }
-    table.risk { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; }
-    table.risk th, table.risk td { border: 1px solid #999; padding: 3px 4px; text-align: left; vertical-align: top; }
+    /* table-layout:fixed + <colgroup> genişlikleri: otomatik düzende uzun kelimeler
+       tabloyu sayfanın sağ kenarından taşırıyordu. */
+    table.risk { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; table-layout: fixed; }
+    table.risk th, table.risk td { border: 1px solid #999; padding: 3px 3px; text-align: left; vertical-align: top; word-wrap: break-word; }
     table.risk thead th { background: #f0f0f0; }
-    table.risk .col-no { width: 16px; text-align: center; }
-    table.risk .col-duzey { width: 11px; padding: 2px 1px; text-align: center; vertical-align: middle; }
-    table.risk .col-oneri { width: 22%; }
-    table.risk .col-sorumlu { width: 2.5%; }
-    table.risk .col-aciklama { width: 12.5%; }
+    table.risk .col-no { text-align: center; }
+    table.risk .col-duzey { padding: 2px 1px; text-align: center; vertical-align: middle; }
+    table.risk th.col-duzey { font-size: 6px; }
+    table.risk .sayi { text-align: center; padding: 3px 1px; }
+    .kisaltma-acik { font-size: 8px; color: #333; margin: 4px 0 0; }
+    .kisaltma-acik span { display: inline-block; color: #fff; font-weight: bold; padding: 0 3px; border-radius: 2px; }
     table.ekip { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
     table.ekip th, table.ekip td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
     table.ekip th { background: #f0f0f0; }
@@ -51,7 +57,7 @@
        normal tablo akışında kalır, satırla her zaman hizalı kalması garanti olur.
        Renk artık span'e değil kutunun tamamını dolduran <td>'ye uygulanıyor
        (col-duzey vertical-align:middle ile satırın ortasında kalıyor). */
-    .duzey-dikey { color: #fff; font-size: 6px; line-height: 1.05;
+    .duzey-dikey { color: #fff; font-size: 8px; font-weight: bold; line-height: 1.1;
         white-space: pre-line; display: block; text-align: center; }
     .imza { margin-top: 50px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
@@ -83,10 +89,12 @@
         border-bottom: 1px solid #999; padding-bottom: 3px; margin-bottom: 4px;
     }
     table.ust-bilgi { width: 100%; border-collapse: collapse; font-size: 8px; color: #333; }
-    table.ust-bilgi td { padding: 0; white-space: nowrap; }
-    table.ust-bilgi td:last-child { text-align: right; }
+    /* 1. satır: unvan tam genişlik; 2. satır: adres solda, sicil/tarih sağda —
+       uzun unvanla sicil/tarih aynı satırda üst üste biniyor, tarih kesiliyordu. */
+    table.ust-bilgi td { padding: 0; white-space: nowrap; overflow: hidden; }
+    table.ust-bilgi td.sag { text-align: right; width: 40%; }
     .sayfa-ust b { color: #111; }
-    .sayfa-ust .adres { font-size: 7px; color: #666; margin-top: 1px; white-space: nowrap; }
+    .sayfa-ust .adres { font-size: 7px; color: #666; }
     table.alt-imza { width: 100%; border-collapse: collapse; font-size: 6.5px; table-layout: fixed; }
     table.alt-imza td { border: 1px solid #ccc; text-align: center; padding: 2px 2px 4px; vertical-align: bottom; }
     table.alt-imza .rol { font-weight: bold; display: block; margin-bottom: 12px; }
@@ -114,6 +122,18 @@
     $naceKod = $firma?->nace_kodu ?: $rd->firma_nace;
     $faaliyet = collect([$firma?->nace_aciklama, $naceKod])->filter()->unique()->implode(' / ');
     $tehlike = collect([$firma?->tehlikeSinifiEtiketi(), $firma?->calisan_sayisi ? $firma->calisan_sayisi.' çalışan' : null])->filter()->implode(' / ');
+    // Puanlar Türkçe ondalıkla: 0.2 → "0,2", 120.0 → "120".
+    $sayi = fn ($v) => $v === null || $v === '' ? '—' : str_replace('.', ',', rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.'));
+    $ucEksen = $rd->ucEksenliMi();
+    // Sütun genişlikleri (%): üç eksenli yöntemde iki F sütunu (2×3) eklenir, Tehlike ve Öneri'den düşülür.
+    $kolonlar = array_filter([
+        3, 8.5, $ucEksen ? 12 : 15,                       // No, Bölüm/Faaliyet, Tehlike/Risk
+        3, $ucEksen ? 3 : null, 3, 4, 2.5,                // O, F, Ş, Puan, Düzey
+        $ucEksen ? 17 : 20, 8, 8,                         // Öneri, Sorumlu, Termin
+        3, $ucEksen ? 3 : null, 3, 4, 2.5,                // Son O, F, Ş, Puan, Düzey
+        12.5,                                             // Açıklama
+    ]);
+    $bantlar = collect($metodoloji['bantlar'] ?? [])->map(fn ($b) => $b + ['kisa' => \App\Support\RiskSkorlama::kisaltma($rd->yontem, $b['ad'])]);
 @endphp
 <div class="kapak">
     <div class="k-ort k-ort-ust"></div>
@@ -132,7 +152,7 @@
 
     <div class="k-baslik">İŞYERİ BİLGİLERİ</div>
     <table class="k-tablo">
-        <tr><td class="e" style="width:28.8%">İşyeri / proje adı</td><td></td></tr>
+        <tr><td class="e" style="width:28.8%">İşyeri / proje adı</td><td>{{ $rd->proje_adi }}</td></tr>
         <tr><td class="e">İşyeri adresi</td><td style="height:34px">{{ $rd->firma_adres }}</td></tr>
         <tr><td class="e">SGK işyeri sicil numarası</td><td>{{ $rd->firma_sgk_sicil_no }}</td></tr>
         <tr><td class="e">Faaliyet konusu / NACE kodu</td><td>{{ $faaliyet }}</td></tr>
@@ -178,12 +198,12 @@
 {{-- HER SAYFANIN ÜST BİLGİSİ (firma adı / sicil no / tarih / adres) --}}
 <div class="sayfa-ust">
     <table class="ust-bilgi">
+        <tr><td colspan="2"><b>{{ $firma?->unvan }}</b>@if($rd->proje_adi) &nbsp;·&nbsp; {{ $rd->proje_adi }}@endif</td></tr>
         <tr>
-            <td><b>{{ $firma?->unvan }}</b></td>
-            <td>SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; Tarih: {{ $rd->rapor_tarihi?->format('d.m.Y') }}</td>
+            <td class="adres">{{ Illuminate\Support\Str::limit($rd->firma_adres, 90, '') }}</td>
+            <td class="sag">SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; Tarih: {{ $rd->rapor_tarihi?->format('d.m.Y') }}</td>
         </tr>
     </table>
-    <div class="adres">{{ Illuminate\Support\Str::limit($rd->firma_adres, 110, '') }}</div>
 </div>
 
 {{-- HER SAYFANIN ALT BİLGİSİ (imza/kaşe şeridi) --}}
@@ -224,7 +244,7 @@
 
 {{-- RİSK ANALİZİ PROSEDÜRÜ (seçilen yönteme göre) --}}
 @if ($prosedur)
-    <div class="sayfa prosedur">
+    <div class="sayfa akis prosedur">
         <h2>{{ $prosedur->ad }}</h2>
         @foreach ($prosedur->icerik as $blok)
             @if ($blok['tip'] === 'baslik')
@@ -237,7 +257,7 @@
 @endif
 
 {{-- KÜNYE + METODOLOJİ --}}
-<div class="sayfa">
+<div class="sayfa akis">
     <h2>1. İŞYERİ KÜNYESİ</h2>
     <table class="kunye">
         <tr><td>Ticari Unvan</td><td>{{ $rd->firma_unvan }}</td></tr>
@@ -253,7 +273,7 @@
     <table class="olcek">
         <tr><th>Olasılık</th><th>Açıklama</th></tr>
         @foreach ($metodoloji['olasilik'] as $puan => $aciklama)
-            <tr><td>{{ $puan }}</td><td>{{ $aciklama }}</td></tr>
+            <tr><td>{{ $sayi($puan) }}</td><td>{{ $aciklama }}</td></tr>
         @endforeach
     </table>
 
@@ -261,7 +281,7 @@
         <table class="olcek">
             <tr><th>{{ $eksenEtiketleri['frekans'] }}</th><th>Açıklama</th></tr>
             @foreach ($metodoloji['frekans'] as $puan => $aciklama)
-                <tr><td>{{ $puan }}</td><td>{{ $aciklama }}</td></tr>
+                <tr><td>{{ $sayi($puan) }}</td><td>{{ $aciklama }}</td></tr>
             @endforeach
         </table>
     @endif
@@ -274,11 +294,12 @@
     </table>
 
     <table class="olcek bant">
-        <tr><th>Düzey</th><th>Puan aralığı</th><th>Yapılacak eylem</th></tr>
-        @foreach ($metodoloji['bantlar'] as $bant)
+        <tr><th>Düzey</th><th>Kısaltma</th><th>Puan aralığı</th><th>Yapılacak eylem</th></tr>
+        @foreach ($bantlar as $bant)
             <tr>
                 <td style="background:{{ $bant['renk'] }}">{{ $bant['ad'] }}</td>
-                <td>≥ {{ $bant['min'] }}</td>
+                <td style="text-align:center;font-weight:bold">{{ $bant['kisa'] }}</td>
+                <td>≥ {{ $sayi($bant['min']) }}</td>
                 <td>{{ $bant['eylem'] }}</td>
             </tr>
         @endforeach
@@ -288,28 +309,29 @@
 {{-- RİSK TABLOSU --}}
 <div class="sayfa">
     <h2>3. TEHLİKELERİN TANIMLANMASI VE RİSK DEĞERLENDİRME TABLOSU</h2>
+    @php $fBaslik = $rd->yontem === 'fmea' ? 'D' : 'F'; @endphp
+    <p class="kisaltma-acik">Düzey kısaltmaları:
+        @foreach ($bantlar as $bant)
+            <span style="background:{{ $bant['renk'] }}">{{ $bant['kisa'] }}</span> {{ $bant['ad'] }}@if(! $loop->last) &nbsp; @endif
+        @endforeach
+    </p>
     <table class="risk">
+        {{-- dompdf <col> genişliğini yok sayar; fixed düzende ilk satır (başlık) hücrelerinin genişliği geçerlidir. --}}
+        @php
+            $basliklar = array_values(array_filter([
+                ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike / Risk'],
+                ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Dü<br>zey'],
+                ['col-oneri', 'Öneri'], ['col-sorumlu', 'Sorumlu'], ['', 'Termin'],
+                ['sayi', 'Son O'], $ucEksen ? ['sayi', 'Son '.$fBaslik] : null, ['sayi', 'Son Ş'], ['sayi', 'Son Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
+                ['col-aciklama', 'Açıklama'],
+            ]));
+            $kolonlar = array_values($kolonlar);
+        @endphp
         <thead>
         <tr>
-            <th class="col-no">No</th>
-            <th>Bölüm / Faaliyet</th>
-            <th>Tehlike / Risk</th>
-            @if ($rd->ucEksenliMi())
-                <th>O</th><th>{{ $rd->yontem === 'fmea' ? 'D' : 'F' }}</th>
-            @else
-                <th>O</th>
-            @endif
-            <th>Ş</th>
-            <th>Puan</th>
-            <th class="col-duzey">Düzey</th>
-            <th class="col-oneri">Öneri</th>
-            <th class="col-sorumlu">Sorumlu</th>
-            <th>Termin</th>
-            <th>O</th>
-            <th>Ş</th>
-            <th>Son Puan</th>
-            <th class="col-duzey">Son Düzey</th>
-            <th class="col-aciklama">Açıklama</th>
+            @foreach ($basliklar as $i => [$sinif, $etiket])
+                <th class="{{ $sinif }}" style="width:{{ $kolonlar[$i] }}%">{!! $etiket !!}</th>
+            @endforeach
         </tr>
         </thead>
         <tbody>
@@ -318,19 +340,22 @@
                 <td class="col-no">{{ $loop->iteration }}</td>
                 <td>{{ $m->bolum }}@if($m->faaliyet)<br><em>{{ $m->faaliyet }}</em>@endif</td>
                 <td>{{ $m->tehlike }}@if($m->risk)<br>{{ $m->risk }}@endif</td>
-                <td>{{ $m->olasilik }}</td>
-                @if ($rd->ucEksenliMi())
-                    <td>{{ $m->frekans }}</td>
+                <td class="sayi">{{ $sayi($m->olasilik) }}</td>
+                @if ($ucEksen)
+                    <td class="sayi">{{ $sayi($m->frekans) }}</td>
                 @endif
-                <td>{{ $m->siddet }}</td>
-                <td>{{ $m->puan }}</td>
+                <td class="sayi">{{ $sayi($m->siddet) }}</td>
+                <td class="sayi">{{ $sayi($m->puan) }}</td>
                 <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-dikey">{{ $m->duzeyDikey() }}</span></td>
                 <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
                 <td class="col-sorumlu">{{ $m->sorumlu ?: '—' }}</td>
                 <td>{{ $m->termin ?: '—' }}</td>
-                <td>{{ $m->son_olasilik ?? '—' }}</td>
-                <td>{{ $m->son_siddet ?? '—' }}</td>
-                <td>{{ $m->son_puan ?: '—' }}</td>
+                <td class="sayi">{{ $sayi($m->son_olasilik) }}</td>
+                @if ($ucEksen)
+                    <td class="sayi">{{ $sayi($m->son_frekans) }}</td>
+                @endif
+                <td class="sayi">{{ $sayi($m->son_siddet) }}</td>
+                <td class="sayi">{{ $m->son_puan ? $sayi($m->son_puan) : '—' }}</td>
                 <td class="col-duzey" @if($m->son_duzey) style="background:{{ \App\Support\RiskSkorlama::bant($rd->yontem, (float) $m->son_puan)['renk'] }}" @endif>@if($m->son_duzey)<span class="duzey-dikey">{{ $m->sonDuzeyDikey() }}</span>@else — @endif</td>
                 <td class="col-aciklama">{{ $m->aciklama ?: '' }}</td>
             </tr>

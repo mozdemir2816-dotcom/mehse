@@ -47,6 +47,9 @@ class RiskDegerlendirmesiForm
                         ->helperText('Boş bırakılırsa tehlike sınıfına göre otomatik (6 / 4 / 2 yıl).'),
                     Select::make('durum')->label('Durum')
                         ->options(['taslak' => 'Taslak', 'yayinlandi' => 'Yayınlandı'])->default('taslak')->required(),
+                    TextInput::make('proje_adi')->label('İşyeri / proje adı')->maxLength(191)
+                        ->placeholder('Örn. X Şantiyesi ve Kampı')
+                        ->helperText('Kapakta yazılır; firmanın ayrı şantiye / işyerleri için.'),
                     Textarea::make('kapsam_notu')->label('Kapsam notu')->rows(2),
                     Textarea::make('revizyon_nedeni')->label('Revizyon nedeni')->rows(2),
                 ]),
