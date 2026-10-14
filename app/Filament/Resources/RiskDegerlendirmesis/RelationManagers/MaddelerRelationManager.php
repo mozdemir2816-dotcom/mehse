@@ -75,10 +75,10 @@ class MaddelerRelationManager extends RelationManager
         return true;
     }
 
-    /** Mevcut Önlem metni boşsa AI'dan kısa bir öneri alıp yazar; doluysa dokunmaz. */
+    /** Mevcut Önlem ve Önerilen önlem ikisi de boşsa AI'dan kısa bir öneri alıp yazar; doluysa dokunmaz. */
     private function onlemVerAiIle(RiskMaddesi $madde): bool
     {
-        if (filled($madde->mevcut_onlem)) {
+        if (filled($madde->mevcut_onlem) || filled($madde->oneri)) {
             return false;
         }
 
@@ -209,6 +209,7 @@ class MaddelerRelationManager extends RelationManager
                                 'tehlike' => $t->tehlike,
                                 'risk' => $t->risk,
                                 'mevcut_onlem' => $t->mevcut_onlem,
+                                'oneri' => $t->oneri,
                                 'durum' => 'acik',
                                 'created_at' => now(),
                                 'updated_at' => now(),
@@ -244,8 +245,10 @@ class MaddelerRelationManager extends RelationManager
 
                         $eksikSorgu = $this->getOwnerRecord()->maddeler()
                             ->where(function ($q) use ($fk) {
+                                // Önlem eksik = mevcut önlem VE önerilen önlem ikisi de boş (sihirbazla aynı kural).
                                 $q->whereNull('olasilik')->orWhereNull('siddet')
-                                    ->orWhereNull('mevcut_onlem')->orWhere('mevcut_onlem', '');
+                                    ->orWhere(fn ($o) => $o->where(fn ($a) => $a->whereNull('mevcut_onlem')->orWhere('mevcut_onlem', ''))
+                                        ->where(fn ($b) => $b->whereNull('oneri')->orWhere('oneri', '')));
 
                                 if ($fk) {
                                     $q->orWhereNull('frekans');

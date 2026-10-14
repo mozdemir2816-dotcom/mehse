@@ -70,7 +70,8 @@ class MakineRiskKutuphanesiTest extends TestCase
 
         $this->assertSame('Sütunlu matkap', $madde['bolum']);
         $this->assertSame('Dönen mandrene doğrudan erişim', $madde['tehlike']);
-        $this->assertStringStartsWith('İşleme uygun mandren ve işlem bölgesi', $madde['mevcut_onlem']);
+        $this->assertStringStartsWith('İşleme uygun mandren ve işlem bölgesi', $madde['oneri']); // DÖF → Önerilen önlem
+        $this->assertNull($madde['mevcut_onlem']);
         $this->assertSame([6.0, 6.0, 15.0], [$madde['olasilik'], $madde['frekans'], $madde['siddet']]);
         $this->assertStringContainsString('ISO 12100', $madde['mevzuat']);
     }

@@ -168,6 +168,11 @@ class EkipmanKatalogTest extends TestCase
         $t = Tehlike::find($secilen[0]);
         $this->assertSame([(float) $t->olasilik, (float) $t->frekans, (float) $t->siddet], [$m->olasilik, $m->frekans, $m->siddet]);
         $this->assertNotNull($m->puan);
+
+        // Dosyadaki "Açıklayıcı DÖF" kütüphanede "Alınacak önlem"de; değerlendirmede Önerilen önlem olur (PDF Öneri sütunu).
+        $this->assertNotEmpty($t->oneri);
+        $this->assertNull($t->mevcut_onlem);
+        $this->assertSame($t->oneri, $m->oneri);
     }
 
     public function test_matris_degerlendirmesine_puan_donusturulerek_eklenir(): void

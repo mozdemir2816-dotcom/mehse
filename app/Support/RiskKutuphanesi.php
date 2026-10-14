@@ -39,7 +39,8 @@ class RiskKutuphanesi
             'risk' => $t->risk,
             'mevcut_onlem' => $t->mevcut_onlem,
             'mevzuat' => $t->mevzuat,
-            'oneri' => null,
+            // Kütüphanedeki "Alınacak önlem" (ekipman / şantiye dosyalarının DÖF metni) → Önerilen önlem.
+            'oneri' => $t->oneri,
             'sorumlu' => null,
             'termin' => null,
             // Kütüphaneye sektörel bir analizden (ör. İnşaat Fine-Kinney) O/F/Ş ile

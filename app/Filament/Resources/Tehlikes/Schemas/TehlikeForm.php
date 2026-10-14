@@ -27,6 +27,8 @@ class TehlikeForm
                 Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
                 Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
                 Textarea::make('mevcut_onlem')->label('Önerilen kontrol tedbiri')->rows(2)->columnSpanFull(),
+                Textarea::make('oneri')->label('Alınacak önlem (DÖF)')->rows(3)->columnSpanFull()
+                    ->helperText('Değerlendirmeye eklenince "Önerilen önlem" alanına geçer ve PDF\'te Öneri sütununda basılır.'),
                 Textarea::make('mevzuat')->label('Mevzuat dayanağı')->rows(2)->columnSpanFull(),
             ]),
             Section::make('Önerilen Puanlar')

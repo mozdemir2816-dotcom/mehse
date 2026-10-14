@@ -70,7 +70,7 @@ class RiskUretici
                 'tehlike' => $t->tehlike,
                 'risk' => $t->risk,
                 'mevcut_onlem' => $t->mevcut_onlem,
-                'oneri' => null,
+                'oneri' => $t->oneri,
                 'mevzuat' => $t->mevzuat,
                 'olasilik' => null,
                 'siddet' => null,
