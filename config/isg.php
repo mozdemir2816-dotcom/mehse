@@ -2086,11 +2086,11 @@ return [
                 ],
             ],
 
-            // ---- Atölye / ekipman formları (13.10.2026) — AI TASLAĞI, uzman onayı bekliyor
-            // ('taslak' => true). Sorular kütüphanedeki ekipman risk maddeleriyle aynı
+            // ---- Atölye / ekipman formları (13.10.2026) — AI taslağı, kullanıcı 14.10.2026'da ONAYLADI
+            // Sorular kütüphanedeki ekipman risk maddeleriyle aynı
             // tehlikeleri kapsayacak şekilde hazırlandı. Kullanıcının kendi formu gelince
             // aynı 'ad'lı kayıt onunla değiştirilir (CNC, Torna gibi).
-            ['ad' => 'Sütunlu Matkap', 'taslak' => true, 'sorular' => [
+            ['ad' => 'Sütunlu Matkap', 'sorular' => [
                 'Mandren koruyucusu yerinde ve sağlam mı?',
                 'Mandren anahtarı çalıştırmadan önce mandrenden alındı mı?',
                 'Stop/acil durdurma butonu erişilebilir ve çalışıyor mu?',
@@ -2104,7 +2104,7 @@ return [
                 'Talaş fırçayla temizleniyor, çevre düzenli mi?',
                 'Operatör göz koruyucu kullanıyor; eldiven, bol giysi ve takı yok, saç toplanmış mı?',
             ]],
-            ['ad' => 'Kesme Tezgâhı (Disk / Testere)', 'taslak' => true, 'sorular' => [
+            ['ad' => 'Kesme Tezgâhı (Disk / Testere)', 'sorular' => [
                 'Disk/bıçak sağlam; çatlak, eksik diş veya aşınma yok, devri makineye uygun mu?',
                 'Disk/bıçak koruyucusu yerinde, yalnız kesim bölgesi açık mı?',
                 'Acil durdurma butonu erişilebilir ve çalışıyor mu?',
@@ -2406,7 +2406,7 @@ return [
                     'İş Güvenliği Uzmanı (İSG)',
                 ],
             ],
-            ['ad' => 'Gaz Tüpü ve Şaloma Seti', 'taslak' => true, 'sorular' => [
+            ['ad' => 'Gaz Tüpü ve Şaloma Seti', 'sorular' => [
                 'Tüp içeriği etiketten doğrulanmış, renk ve etiket okunaklı mı?',
                 'Tüpler dik ve zincir/kelepçeyle devrilmeye karşı sabitlenmiş mi?',
                 'Vana koruma başlıkları kullanılmayan tüplerde takılı mı?',

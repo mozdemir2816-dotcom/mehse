@@ -469,10 +469,11 @@ class SahaDenetimiTest extends TestCase
         $tipler = collect(\App\Support\EkipmanKatalogu::kontrolFormlari());
 
         // 41 kullanıcı referansı (düz, 12 soru) + kullanıcının kendi ekipman formları (form_no'lu:
-        // gruplu U/UD/Y/X ya da kabul kriterli ✓/X/-) + kalan AI taslakları ('taslak' => true).
+        // gruplu U/UD/Y/X ya da kabul kriterli ✓/X/-) + kullanıcının 14.10.2026'da onayladığı 3 AI formu
+        // (Matkap, Kesme Tezgâhı, Gaz Tüpü — artık taslak değil, düz 12 soru).
         $kullaniciFormlari = $tipler->filter(fn ($t) => filled($t['form_no'] ?? null));
-        $this->assertCount(41, $tipler->filter(fn ($t) => blank($t['form_no'] ?? null) && ($t['taslak'] ?? false) !== true));
-        $this->assertSame(['Gaz Tüpü ve Şaloma Seti', 'Kesme Tezgâhı (Disk / Testere)', 'Sütunlu Matkap'], $tipler->where('taslak', true)->pluck('ad')->sort()->values()->all());
+        $this->assertCount(44, $tipler->filter(fn ($t) => blank($t['form_no'] ?? null)));
+        $this->assertSame([], $tipler->where('taslak', true)->pluck('ad')->all());
         $this->assertCount(13, $kullaniciFormlari); // 14 talimat; ekstrüzyonda eski+yeni talimat, tek (yeni) form
         $this->assertSame($tipler->count(), $tipler->pluck('ad')->unique()->count(), 'form adları tekil olmalı');
 
