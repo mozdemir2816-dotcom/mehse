@@ -30,6 +30,22 @@ class AtamaYazisi extends Model
         static::saving(function (AtamaYazisi $a): void {
             $a->dokuman_no ??= 'ATM-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
         });
+
+        // Risk değerlendirmesi PDF'inin imza sahipleri bu atamalardan gelir
+        // (RiskEkibiOtomatik::imzaSahipleri) — firmanın saklı PDF'leri yenilensin.
+        $pdfYenile = function (AtamaYazisi $a): void {
+            if (! in_array($a->rol_anahtari, ['calisan_temsilcisi', 'bilgi_sahibi', 'risk_degerlendirme_ekibi'], true)) {
+                return;
+            }
+
+            RiskDegerlendirmesi::where('firma_id', $a->firma_id)->whereNotNull('pdf_hazir_at')->get()
+                ->each(function (RiskDegerlendirmesi $rd): void {
+                    $rd->pdfOnbellegiTemizle();
+                    $rd->saveQuietly();
+                });
+        };
+        static::saved($pdfYenile);
+        static::deleted($pdfYenile);
     }
 
     public function firma(): BelongsTo

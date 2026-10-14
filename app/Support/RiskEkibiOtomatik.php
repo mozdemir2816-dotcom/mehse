@@ -66,6 +66,29 @@ class RiskEkibiOtomatik
         ];
     }
 
+    /**
+     * Risk değerlendirmesi PDF'inin imza sahipleri, firmanın atamalarından:
+     * Çalışan Temsilcisi ve Bilgi Sahibi Çalışan(lar) yukarıdaki kaynaklardan,
+     * Destek Elemanı son "Risk Değerlendirme Ekibi" yazısından. Değerlendirmenin
+     * kendi ekip listesinde o rol elle girilmişse o kullanılır (RiskDegerlendirmesiUretici).
+     *
+     * @return array<int, array{ad: string, unvan: string}>
+     */
+    public static function imzaSahipleri(Firma $firma): array
+    {
+        $uyeler = self::uyeler($firma);
+        $destek = collect((array) ($firma->atamaYazilari()->where('rol_anahtari', 'risk_degerlendirme_ekibi')
+            ->latest('tarih')->latest('id')->first()?->uyeler ?? []))
+            ->filter(fn ($u) => ($u['ekip_gorevi'] ?? null) === 'Destek Elemanı' && filled($u['ad_soyad'] ?? null))
+            ->values()->all();
+
+        return collect([
+            ...array_slice($uyeler['Çalışan Temsilcisi'], 0, 1),
+            ...$destek,
+            ...$uyeler['Bilgi Sahibi Çalışan'],
+        ])->map(fn (array $u) => ['ad' => $u['ad_soyad'], 'unvan' => $u['ekip_gorevi']])->all();
+    }
+
     private static function anahtar(?string $ad): string
     {
         return preg_replace('/\s+/u', ' ', trim(mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], (string) $ad))));

@@ -388,6 +388,48 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ PERSONEL<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
     }
 
+    public function test_imza_sahipleri_atama_yazilarindan_otomatik_gelir_elle_girilen_oncelikli(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Temsilci Atanan', 'tc' => null, 'gorev' => null, 'bas_uye' => true]]]);
+        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'bilgi_sahibi', 'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Bilgi Atanan', 'tc' => null, 'gorev' => null, 'bas_uye' => false]]]);
+        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'risk_degerlendirme_ekibi', 'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Destek Atanan', 'tc' => null, 'gorev' => null, 'bas_uye' => false, 'ekip_gorevi' => 'Destek Elemanı']]]);
+
+        $rd = RiskDegerlendirmesi::create([
+            'firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now(),
+            'ekip' => [['ad' => 'Elle Temsilci', 'unvan' => 'Çalışan Temsilcisi']],
+        ]);
+        $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
+
+        $veri = null;
+        \Illuminate\Support\Facades\View::composer('pdf.risk-degerlendirmesi', function ($v) use (&$veri) {
+            $veri = $v->getData();
+        });
+        $yanit = RiskDegerlendirmesiUretici::pdf($rd, false);
+        ob_start();
+        $yanit->sendContent();
+        ob_end_clean();
+
+        $this->assertSame('Elle Temsilci', $veri['temsilci']['ad']); // elle girilen öncelikli
+        $this->assertSame('Destek Atanan', $veri['destekElemani']['ad']);
+        $this->assertSame('Bilgi Atanan', $veri['bilgiSahibiCalisan']['ad']);
+    }
+
+    public function test_atama_degisince_saklanan_risk_pdfi_yenilenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->forceFill(['pdf_yolu' => 'risk-pdf/x.pdf', 'pdf_hazir_at' => now()])->saveQuietly();
+
+        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Yeni Temsilci', 'tc' => null, 'gorev' => null, 'bas_uye' => true]]]);
+
+        $this->assertNull($rd->fresh()->pdf_hazir_at);
+    }
+
     public function test_onay_tablosunda_bilgi_sahibi_calisan_atanmissa_adi_gorunur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

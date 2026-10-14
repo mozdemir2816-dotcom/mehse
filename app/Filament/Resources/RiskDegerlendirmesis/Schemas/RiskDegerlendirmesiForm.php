@@ -55,6 +55,7 @@ class RiskDegerlendirmesiForm
                 ]),
 
             Section::make('Risk Değerlendirme Ekibi')
+                ->description('Çalışan temsilcisi, destek elemanı ve bilgi sahibi çalışan burada girilmezse firmanın Atama Yazıları\'ndan otomatik alınır ve PDF\'teki imza alanlarına basılır.')
                 ->collapsed()
                 ->schema([
                     Repeater::make('ekip')->hiddenLabel()
