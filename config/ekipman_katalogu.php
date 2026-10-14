@@ -40,6 +40,11 @@ return [
         'Satıh Taşlama Tezgâhı' => ['risk_kategorileri' => ['atolye_satih_taslama'], 'ortak_riskler' => false],
         'Dalma Erozyon (EDM) Tezgâhı' => ['risk_kategorileri' => ['atolye_dalma_erozyon'], 'ortak_riskler' => false],
         'Ayaklı Taş Motoru' => ['risk_kategorileri' => ['atolye_ayakli_tas_motoru'], 'kontrol_formu' => 'Ayaklı Taş Motoru', 'talimat' => 'ÇİFT TAŞLAMA MOTORU (ZIMPARA TAŞ MOTORU) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
+        // Havalandırma kanalı ve sac işleme (TLT-SPK/KRD/SMV/PLZ) — kendi risk dosyası yok; ortak atölye maddeleri önerilir.
+        'Spiral Hava Kanalı Makinesi' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Spiral Hava Kanalı Makinesi', 'talimat' => 'SPİRAL HAVA KANALI MAKİNESİ (DFC MACHINERY) GÜVENLİ ÇALIŞMA TALİMATI'],
+        'Kordon Tezgâhı (Motorlu Pedallı)' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Kordon Tezgâhı (Motorlu Pedallı)', 'talimat' => 'MOTORLU PEDALLI KORDON TEZGÂHI GÜVENLİ ÇALIŞMA TALİMATI'],
+        'Sac Silindir Büküm Makinesi (Vals)' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Sac Silindir Büküm Makinesi (Vals)', 'talimat' => 'MOTORLU SAC SİLİNDİR BÜKÜM MAKİNESİ (VALS) GÜVENLİ ÇALIŞMA TALİMATI'],
+        'CNC Plazma Sac Kesim Tezgâhı' => ['risk_kategorileri' => [], 'kontrol_formu' => 'CNC Plazma Sac Kesim Tezgâhı', 'talimat' => 'CNC PLAZMA SAC KESİM TEZGÂHI & ÇAPAK MASASI GÜVENLİ ÇALIŞMA TALİMATI'],
         'Pürmüz ve LPG Tüpü' => ['risk_kategorileri' => ['ekipman_purmuz_lpg'], 'kontrol_formu' => 'Pürmüz ve LPG Tüpü', 'talimat' => 'PÜRMÜZ VE PİKNİK TÜPÜ (LPG TAVLAMA SETİ) GÜVENLİ ÇALIŞMA TALİMATI', 'ortak_riskler' => false],
 
         // Diğer iş ekipmanları & araçlar (periyodik muayene yok) — EKP-RA-01

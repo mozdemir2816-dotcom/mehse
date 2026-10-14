@@ -474,7 +474,7 @@ class SahaDenetimiTest extends TestCase
         $kullaniciFormlari = $tipler->filter(fn ($t) => filled($t['form_no'] ?? null));
         $this->assertCount(44, $tipler->filter(fn ($t) => blank($t['form_no'] ?? null)));
         $this->assertSame([], $tipler->where('taslak', true)->pluck('ad')->all());
-        $this->assertCount(13, $kullaniciFormlari); // 14 talimat; ekstrüzyonda eski+yeni talimat, tek (yeni) form
+        $this->assertCount(17, $kullaniciFormlari); // 18 talimat; ekstrüzyonda eski+yeni talimat, tek (yeni) form; +4 havalandırma/sac (14.10.2026)
         $this->assertSame($tipler->count(), $tipler->pluck('ad')->unique()->count(), 'form adları tekil olmalı');
 
         foreach ($tipler as $t) {

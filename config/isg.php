@@ -727,6 +727,11 @@ return [
                 ['ad' => 'Dalma Erozyon (EDM) Tezgâhı', 'periyot_ay' => 12, 'standart' => 'TS EN 12957', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
                 ['ad' => 'Ayaklı Taş Motoru', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 16089', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
                 ['ad' => 'Pürmüz ve LPG Tüpü', 'periyot_ay' => 12, 'standart' => 'Üretici talimatı', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol'],
+                // Havalandırma kanalı ve sac işleme atölyesi (14.10.2026, TLT-SPK/KRD/SMV/PLZ) — kullanıcının talimat + kontrol formu.
+                ['ad' => 'Spiral Hava Kanalı Makinesi', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Kordon Tezgâhı (Motorlu Pedallı)', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Sac Silindir Büküm Makinesi (Vals)', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'CNC Plazma Sac Kesim Tezgâhı', 'periyot_ay' => 12, 'standart' => 'TS EN 60974-1 / TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
             ],
             'diger_ekipman' => [
                 ['ad' => 'Endüstriyel Zemin Temizleme Otomatı', 'periyot_ay' => 12, 'standart' => 'TS EN 60335-2-72', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol'],
@@ -2079,6 +2084,298 @@ return [
                         'no' => '3.2',
                         'soru' => 'Operatör Koruyucu Gözlük Kullanımı',
                         'kabul' => 'Operatörün gözlük/siperlik taktığı, eldivensiz olduğu teyit edildi mi?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx, TLT-SPK-01) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Spiral Hava Kanalı Makinesi',
+                'baslik' => 'SPİRAL HAVA KANALI MAKİNESİ (DFC MACHINERY) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-SPK-01',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. EMNİYET VE ACİL DURDURMA DONANIMLARI',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Acil Stop (E-Stop) Butonu',
+                        'kabul' => 'Panel altındaki acil stop basıldığında motor ve hareket derhal duruyor mu?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Dokunmatik Ekran & Butonlar',
+                        'kabul' => 'HMI ekran, \'Açı İleri/Geri\' ve \'İleri/Geri\' kontrol butonları sağlam mı?',
+                    ],
+                    [
+                        'no' => '1.3',
+                        'soru' => 'Kesici Bıçak/Testere Muhafazası',
+                        'kabul' => 'Boru boy kesme ünitesi koruma kapağı yerinde ve kilitli mi?',
+                    ],
+                    [
+                        'grup' => '2. RULO BESLEME, MAKARA VE KESİCİ KAFA',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Giriş Baskı Merdaneleri',
+                        'kabul' => 'Rulo sac giriş kılavuz merdanelerinde boşluksuzluk ve paralellik tam mı?',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Kenetleme Makaraları Durumu',
+                        'kabul' => 'Kenet ezme makaralarında çatlak, aşırı aşınma veya çapak birikmesi yok mu?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Çıkış Sehpası ve Destek Ruloları',
+                        'kabul' => 'Üretilen boruyu taşıyan boru sehpası sağlam ve ekseninde mi?',
+                    ],
+                    [
+                        'grup' => '3. ELEKTRİK, PANO VE ÇEVRE GÜVENLİĞİ',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Kablo Hatları ve Kumanda Panosu',
+                        'kabul' => 'Pano kapağı kilitli, açıkta ezilmiş/yıpranmış kablo yok mu?',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Operatör Kesilmez Eldiven & KKD',
+                        'kabul' => 'Operatör sac taşırken EN 388 Seviye 4/5 eldiven ve kulaklık takıyor mu?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx, TLT-KRD-02) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Kordon Tezgâhı (Motorlu Pedallı)',
+                'baslik' => 'MOTORLU PEDALLI KORDON TEZGÂHI — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-KRD-02',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. DİŞLİ VE KAYIŞ-KASNAK MUHAFAZALARI',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Açık Dişli Muhafaza Kapağı',
+                        'kabul' => 'Arka büyük dişli grubu üzerindeki koruma sacı takılı ve kapalı mı? (Kritik DÖF)',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'V-Kayış ve Kasnak Koruması',
+                        'kabul' => 'Alt tahrik kasnağı ve kayış grubu tamamen kapalı muhafaza içinde mi?',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Ayak Pedalı & Yay Fonksiyonu',
+                        'kabul' => 'Pedala basıldığında dönüyor, ayak bırakıldığında mil derhal duruyor mu?',
+                    ],
+                    [
+                        'grup' => '2. AYAK PEDALI VE KORDON MAKARALARI',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Kordon Topları / Makaralar',
+                        'kabul' => 'Makaralarda çatlak, kırık, salgı veya aşırı aşınma yok mu?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Merdane Baskı / Ayar Kolu',
+                        'kabul' => 'Üst mil sıkma kolu ve ayar cıvatası boşluksuz sıkıyor mu?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Gövde / Şalter Sağlamlığı',
+                        'kabul' => 'Açma/kapama pako şalteri sağlam, şase topraklaması bağlı mı?',
+                    ],
+                    [
+                        'grup' => '3. ŞALTER, GÖVDE VE OPERATÖR EMNİYETİ',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Zemin Sabitlemesi & Yağ Kaçağı',
+                        'kabul' => 'Gövde flanşı zemine sabit, redüktörde yağ sızıntısı yok mu?',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Operatör Kıyafet & Eldiven Uyumu',
+                        'kabul' => 'Operatörün döner makara başında kumaş eldivensiz ve takısız olduğu teyit edildi mi?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx, TLT-SMV-03) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'Sac Silindir Büküm Makinesi (Vals)',
+                'baslik' => 'MOTORLU SAC SİLİNDİR BÜKÜM MAKİNESİ (VALS) — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-SMV-03',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. AÇIK DİŞLİ MUHAFAZALARI VE EMNİYET TELİ',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Yan Tahrik Dişli Muhafazası',
+                        'kabul' => 'Sağdaki açık dişli grubu sac koruyucu kapakla kapatılmış mı? (Kritik DÖF)',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'Acil Durdurma Halatı / Butonu',
+                        'kabul' => 'Merdane boyu uzanan acil stop teli çekildiğinde dönüş derhal duruyor mu?',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Açılır Üst Mil Yatak Kilidi',
+                        'kabul' => 'Boru tahliyesinde açılan üst mil mafsalı sıkıca kilitleniyor mu?',
+                    ],
+                    [
+                        'grup' => '2. SİLİNDİR TOPLARI VE AÇILIR MİL KİLİDİ',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Merdane Yüzeyleri & Paralellik',
+                        'kabul' => '3 silindir yüzeyinde çatlak, eğrilik yok ve miller birbirine paralel mi?',
+                    ],
+                    [
+                        'no' => '2.3',
+                        'soru' => 'Top Ayar Milleri / Boşluk',
+                        'kabul' => 'Baskı silindiri ayar kolları rahat dönüyor ve ayarı koruyor mu?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Motor & V-Kayış Muhafazası',
+                        'kabul' => 'Sol taraftaki motor/kayış koruma kapağı sağlam ve monteli mi?',
+                    ],
+                    [
+                        'grup' => '3. MOTOR, REDÜKTÖR VE ÇEVRESEL İSG',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Topraklama & Kaçak Akım',
+                        'kabul' => 'Makine şase topraklaması bağlı ve gevşeklik yok mu?',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Operatör Güvenlik Mesafesi',
+                        'kabul' => 'Operatör sac sürerken ellerini merdane ağzından uzakta tutuyor mu?',
+                    ],
+                ],
+                'karar' => [
+                    'Ekipman Güvenli (Kullanılabilir)',
+                    'KUSURLU / EMNİYETSİZ (KULLANIM DIŞI - EKED TAKILDI)',
+                ],
+                'imzalar' => [
+                    'Kontrolü Yapan Operatör',
+                    'Vardiya / Bakım Amiri',
+                    'İş Güvenliği Uzmanı (İSG)',
+                ],
+            ],
+
+            // Kullanıcının kendi formu (Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx, TLT-PLZ-04) — BİREBİR;
+            // gruplu, ✓/X/- kriterli. AI taslağının yerini aldı.
+            [
+                'ad' => 'CNC Plazma Sac Kesim Tezgâhı',
+                'baslik' => 'CNC PLAZMA SAC KESİM TEZGÂHI & ÇAPAK MASASI — GÜNLÜK / VARDİYALI KONTROL VE DENETİM FORMU',
+                'form_no' => 'TLT-PLZ-04',
+                'kriterler' => [
+                    '✓' => 'Uygun',
+                    'X' => 'Uygun Değil (DÖF / Müdahale Gerekli)',
+                    '-' => 'Uygulanamaz',
+                ],
+                'satirlar' => [
+                    [
+                        'grup' => '1. IZGARA TABLASI, DÜZEN VE ÇAPAK MASASI',
+                    ],
+                    [
+                        'no' => '1.1',
+                        'soru' => 'Izgara Tablası Sağlamlığı',
+                        'kabul' => 'Sac taşıyıcı lama ızgaralar düzgün, yanık deformasyonu kritik seviyede değil mi?',
+                    ],
+                    [
+                        'no' => '1.2',
+                        'soru' => 'İstif Düzeni ve Malzeme Dağınıklığı',
+                        'kabul' => 'Masadaki dirsek sacları güvenli istiflenmiş, düşme tehlikesi giderilmiş mi?',
+                    ],
+                    [
+                        'no' => '1.3',
+                        'soru' => 'El Aletleri Durumu (Çekiç/Levye)',
+                        'kabul' => 'Masa üzerindeki çapak kırma çekicinde gevşek sap veya çatlak kafa yok mu?',
+                    ],
+                    [
+                        'grup' => '2. BASINÇLI GAZ TÜPÜ VE YANGIN EMNİYETİ',
+                    ],
+                    [
+                        'no' => '2.1',
+                        'soru' => 'Basınçlı Gaz Tüpü Sabitleme Zinciri',
+                        'kabul' => 'Gaz tüpü dik vaziyette, devrilmeye karşı zincirle bağlı mı? (Kritik DÖF)',
+                    ],
+                    [
+                        'no' => '2.2',
+                        'soru' => 'Tüp Manometre ve Hortum Kaçak',
+                        'kabul' => 'Regülatör saatleri sağlam, hortumlarda çatlak veya kaçak yok mu?',
+                    ],
+                    [
+                        'no' => '3.1',
+                        'soru' => 'Duman Tahliye / Emiş Fanı',
+                        'kabul' => 'Plazma dumanını çeken aspiratör ve baca kanalı aktif mi?',
+                    ],
+                    [
+                        'grup' => '3. DUMAN EMİŞ, ELEKTRİK VE KORUYUCU DONANIM',
+                    ],
+                    [
+                        'no' => '3.2',
+                        'soru' => 'Kablo Kanalları ve Topraklama',
+                        'kabul' => 'Masa gövde topraklaması tam, zemin kablo dağınıklığı giderilmiş mi?',
+                    ],
+                    [
+                        'no' => '3.3',
+                        'soru' => 'Operatör Kesilmez Eldiven & Gözlük',
+                        'kabul' => 'Parça toplayan personel Seviye 5 kesilmez eldiven ve gözlük takıyor mu?',
                     ],
                 ],
                 'karar' => [

@@ -21,6 +21,10 @@
  * TLT-PUR-05: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
  * TLT-KIR-06: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
  * TLT-TAS-07: Atolye_Is_Ekipmanlari_Guvenli_Calisma_Talimati_ve_Kontrol_Formlari.docx
+ * TLT-SPK-01: Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx
+ * TLT-KRD-02: Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx
+ * TLT-SMV-03: Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx
+ * TLT-PLZ-04: Havalandirma_Kanal_ve_Sac_Isleme_Makineleri_ISG_Talimat_ve_Kontrol_Formu.docx
  */
 
 return [
@@ -774,6 +778,210 @@ return [
                 'aciklama' => '',
                 'maddeler' => [
                     'Taş motoru kapatıldıktan sonra taşın kendi kendine durması beklenmeli, parça bastırılarak durdurulmamalıdır.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'SPİRAL HAVA KANALI MAKİNESİ (DFC MACHINERY) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-SPK-01',
+        'aciklama' => 'Rulo Sac Beslemeli Kenetlemeli Yuvarlak Spiral Boru İmalat Tezgâhı — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Galvaniz rulo sacdan spiral kenetli yuvarlak havalandırma borusu bükme ve kenetleme hattında döner silindir kapması, kesik ve gürültü risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: SAC BESLEME RULOLARINA VE DÖNER ŞAFTA MÜDAHALE YASAKTIR!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Rulo sac kılavuz makaralara girerken kesinlikle çıplak elle itilmez veya tutulmaz; kesilmeye dirençli eldiven (EN 388 Level 4/5) kullanılmalıdır.',
+                    'Makine otomatik büküm ve dairesel uçan testere/bıçakla kesim yaparken kesim kafası siperliği asla açılmamalıdır.',
+                    'Acil durumlarda dokunmatik panel altındaki E-Stop mantar butonuna basılmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Dokunmatik operatör paneli (HMI) ve \'EMERGENCY STOP\' butonunun fonksiyonelliği test edilmelidir.',
+                    'Rulo açıcı sehpadaki sac kılavuz makaralarının ve baskı merdanelerinin boşluk ayarları kontrol edilmelidir.',
+                    'Form verme ve kenetleme makaralarının (kenet kafası) yağlama seviyesi teyit edilmelidir.',
+                    'Uçan kesici testere/bıçak koruma siperliğinin kapalı ve kilitli olduğu kontrol edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Sac rulo yüklenirken vinç veya istifleyici kullanılmalı, sac açılma fırlamasına karşı çember kesilirken dikkat edilmelidir.',
+                    'Kanal üretimi sırasında otomatik kenet form makaralarının arasına el veya herhangi bir alet sokulmamalıdır.',
+                    'Çıkan spiral borular boy sehpasından alınırken keskin sac kenarlarına karşı koruyucu eldiven takılmalıdır.',
+                    'Hammadde sıkışması halinde makine dokunmatik ekrandan durdurulmadan ve hidrolik/pnömatik basınç kesilmeden müdahale edilmemelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Vardiya bitiminde makine ana şalterden kapatılmalı, kordon ve makara yüzeyleri çapaklardan fırça yardımıyla temizlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'MOTORLU PEDALLI KORDON TEZGÂHI GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-KRD-02',
+        'aciklama' => 'Ayak Pedallı Sac Kanal Boğaz Açma / Kordon Çekme Makinesi (Kısmet / DFC) — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Yuvarlak ve dirsek havalandırma kanallarının boğazlarına kordon çekme, kenet payı açma ve ezme işlemlerinde merdane kapması ve açık dişli risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: AÇIK DİŞLİ VE KAYIŞ-KASNAK KORUYUCUSUZ ÇALIŞTIRILAMAZ!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'DİKKAT: Fotoğraftaki makinede açıkta bulunan çift kademeli dişli çarklar ve tahrik kasnağı KORUYUCU SAC MUHAFAZASIZ ASLA ÇALIŞTIRILAMAZ! (Fotoğraftaki muhafazasız durum acil giderilmelidir.)',
+                    'Kordon makaraları arasına parça yönlendirirken KESİNLİKLE KUMAŞ ELDİVEN KULLANILMAZ (kapılma anında eli içeri çeker).',
+                    'Ayak pedalı yaylı koruma kılıflı (pedal muhafazalı) olmalı, istemsiz basılmaya karşı korunmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Açıkta bulunan tahrik dişlilerinin ve V-kayış kasnağının muhafaza kapağının takılı ve kilitli olduğu kontrol edilmelidir.',
+                    'Ayak kumanda pedalının takılma yapmadığı, ayağı çekince motoru anında kestiği kontrol edilmelidir.',
+                    'Üst mil ayar kolunun ve kordon makarası baskı vidasının düzgün sıktığı test edilmelidir.',
+                    'Tezgâh gövdesinin zemine cıvatalı ve sarsıntısız olduğu teyit edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Kordon açılacak silindirik sac parça iki elle yan yüzeylerinden tutulmalı, parmaklar makara ağzına 5 cm\'den fazla yaklaştırılmamalıdır.',
+                    'Pedala basarken dikkatin tamamen iş parçası ve makara hizasında olması sağlanmalıdır.',
+                    'Makara arasına sıkışan parça makine çalışırken ve pedal basılıyken elle çekilmeye çalışılmamalıdır.',
+                    'Tezgâh çalışırken mil mesafesi veya kordon derinlik ayarı kesinlikle yapılmamalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İş bitiminde açma/kapama şalteri (0) konumuna getirilmeli, tezgâh tabanındaki sac talaşları fırçayla süpürülmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'MOTORLU SAC SİLİNDİR BÜKÜM MAKİNESİ (VALS) GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-SMV-03',
+        'aciklama' => '3 Toplu Mekanik / Motorlu Sac Bükme ve Kanal Yuvarlama Valsi — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Kanal imalatında sac levhaların dairesel kıvrılması ve boru haline getirilmesinde merdane arasına el/kol kapılması, açık dişli ve malzeme çarpma risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: AÇIK DİŞLİ ÇARKLARA VE MERDANE AĞZINA YAKLAŞMA YASAKTIR!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'FOTOĞRAFTAKİ TEHLİKE: Silindirin sağ tarafındaki açıkta çalışan tahrik dişli çarkları kapaksız KESİNLİKLE ÇALIŞTIRILAMAZ!',
+                    'Merdanelere sac sürülürken eller merdane temas çizgisine (ısırıcı \'nip\' noktasına) asla 10 cm\'den fazla yaklaştırılmamalıdır.',
+                    'Tezgâh çevresinde acil emniyet teli/halatı veya acil stop pedalı mutlaka çalışır durumda olmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Sağ kısımdaki açık ayna ve tahrik dişlilerinin muhafaza kapağının yerinde olduğu kontrol edilmelidir.',
+                    'Acil durdurma teli / butonu tezgâh boşta çalıştırılarak test edilmelidir.',
+                    'Üst top açma kilit mekanizmasının (boru çıkartma mil kapağı) kilitli ve emniyette olduğu teyit edilmelidir.',
+                    'Merdane paralellik ayar vidalarının her iki tarafta eşit ayarlandığı kontrol edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Bükülecek sac levha iki elle dış uçlarından tutularak sürülmeli; sac merdaneye girdiğinde sacın arkasından itilmemelidir.',
+                    'Kıvrılan sacın serbest ucu yukarı kalkarken operatörün göğsüne veya yüzüne çarpmaması için güvenli mesafede durulmalıdır.',
+                    'Bükülen yuvarlak boru çıkarılırken üst mil yatağı açılmadan önce motor tamamen durdurulmalıdır.',
+                    'Merdaneler dönerken silindir üzerindeki sac talaşı veya pas elle silinmemeli, fırça kullanılmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'İş bitiminde üst mil kilitlenmeli, ana elektrik şalteri indirilerek kilitlenmelidir.',
+                ],
+            ],
+        ],
+    ],
+    [
+        'baslik' => 'CNC PLAZMA SAC KESİM TEZGÂHI & ÇAPAK MASASI GÜVENLİ ÇALIŞMA TALİMATI',
+        'kategori' => 'is_makineleri',
+        'dokuman_no' => 'TLT-PLZ-04',
+        'aciklama' => 'Kanal Parçaları Kesim Masası, Izgaralı Toplama Tablası ve Kaynak Gazı Tüpü — Kullanıcı talimatı, Rev. 00',
+        'kkdler' => [],
+        'maddeler' => [],
+        'bolumler' => [
+            [
+                'baslik' => 'AMAÇ VE KAPSAM',
+                'aciklama' => 'Havalandırma dirsek, redüksiyon ve kanal saclarının plazma kesiminde ve çapak temizliğinde kesik, ultraviyole ışın, duman soluma ve devrilme risklerini önlemek.',
+                'maddeler' => [],
+            ],
+            [
+                'baslik' => 'HAYATİ İSG UYARISI: SAC KESİKLERİ VE GAZ TÜPÜ DEVRİLME RİSKİ!',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Kesilen galvaniz parçalar son derece keskin jilet kenarlara sahiptir; saclar toplanırken mutlaka EN 388 Seviye 5 Kesilmez Eldiven kullanılmalıdır.',
+                    'Masadaki parçalar gelişigüzel yığılmamalı, istif yüksekliği ve devrilme riski kontrol edilmelidir.',
+                    'Arkada duran basınçlı gaz tüpü KESİNLİKLE ZİNCİRLE SABİTLENMELİ, koruma başlığı takılı olmalıdır!',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ÖNCESİ KONTROLLER',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Kesim ızgaralarının aşırı erimemiş olduğu ve parçaların ızgara arasına düşmeyeceği kontrol edilmelidir.',
+                    'Plazma kesim masası altındaki duman emiş fanının ve filtre sisteminin çalıştığı kontrol edilmelidir.',
+                    'Basınçlı gaz tüpünün duvara veya arabaya zincirle sabitlendiği teyit edilmelidir.',
+                    'Çapak temizleme çekici ve keskilerinin mantarlaşmamış (baş kısmında çatlak/saçaklanma olmayan) olduğu kontrol edilmelidir.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA ESNASINDA UYULACAK KURALLAR',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Plazma kesim torcu aktifken doğrudan ışığa çıplak gözle bakılmamalı (DIN 5 kaynak gözlüğü şarttır).',
+                    'Izgara üzerinde biriken kesilmiş dirsek parçaları eldivenle dikkatlice toplanmalı ve taşıma kasalarına düzgün istiflenmelidir.',
+                    'Çapak alma çekiciyle vururken fırlayan sac parçacıklarına karşı koruyucu gözlük mutlaka takılmalıdır.',
+                    'Masa üzerinde gelişi güzel çekiç, boru ve levyeler bırakılmamalı, düzenli tutulmalıdır.',
+                ],
+            ],
+            [
+                'baslik' => 'ÇALIŞMA SONRASI VE BAKIM',
+                'aciklama' => '',
+                'maddeler' => [
+                    'Izgara altı cüruf çekmecesi dolduğunda temizlenmeli, gaz tüpü vanası mesai bitiminde kapatılmalıdır.',
                 ],
             ],
         ],
