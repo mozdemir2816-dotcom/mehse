@@ -227,6 +227,12 @@ class RiskDegerlendirmesiUretici
                 return;
             }
 
+            // Son sayfada (Ekip + ONAY) imzalar ONAY tablosunda: alt imza şeridi beyazla örtülür,
+            // aynı kişiler iki kez imza atmasın (kullanıcı 14.10.2026). Şerit = alt 78px = 58.5pt.
+            if ($no === $toplam) {
+                $canvas->filled_rectangle(0, $canvas->get_height() - 59, $canvas->get_width(), 59, [1, 1, 1]);
+            }
+
             $canvas->text($canvas->get_width() - 90, $canvas->get_height() - 64, "Sayfa {$no} / {$toplam}", $font, 8, [0.4, 0.4, 0.4]);
         });
     }
