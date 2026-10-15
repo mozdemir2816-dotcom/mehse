@@ -63,12 +63,16 @@ return [
         'Forklift / Akülü & Dizel İstifleyici' => ['risk_kategorileri' => ['ekipman_forklift'], 'kontrol_formu' => 'Forklift', 'talimat' => 'Forklift Kullanma Talimatı'],
         'Transpalet (Motorlu / Manuel)' => ['risk_kategorileri' => ['ekipman_transpalet']],
         'Sütunlu Pergel Vinç' => ['risk_kategorileri' => ['ekipman_pergel_vinc']],
-        'Tavan Vinci / Gezer Köprülü Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Köprü Vinç'],
-        'Portal Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Portal Vinç'],
+        // KEK (kaldırma ekipmanları/aksesuarları) + KLD (kaldırma işlemleri), 15.10.2026
+        'Tavan Vinci / Gezer Köprülü Vinç' => ['risk_kategorileri' => ['ekipman_kaldirma_ekipmanlari', 'kaldirma_islemleri'], 'kontrol_formu' => 'Köprü Vinç'],
+        'Portal Vinç' => ['risk_kategorileri' => ['ekipman_kaldirma_ekipmanlari', 'kaldirma_islemleri'], 'kontrol_formu' => 'Portal Vinç'],
         'Mobil Vinç / Hiyap' => ['risk_kategorileri' => ['santiye_mobil_vinc'], 'kontrol_formu' => 'Mobil Vinç', 'ortak_riskler' => false], // MV-RA: mobil vinçle kalıp taşıma
-        'Kule Vinç' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Kule Vinç', 'talimat' => 'Kule Vinç ile Çalışma ve Sinyalizasyon Talimatı'],
-        'Caraskal & Halatlı/Zincirli Çektirme' => ['risk_kategorileri' => ['ekipman_caraskal'], 'kontrol_formu' => 'Caraskal'],
-        'Yükseltilebilir Seyyar İş Platformu (Manlift)' => ['risk_kategorileri' => [], 'kontrol_formu' => 'Makaslı Platform (Manlift)'],
+        // KLV dosyası bağlama/sapan/kör kaldırmayı kendi içinde kapsar — KLD ayrıca bağlanmaz (tekrar olmasın).
+        'Kule Vinç' => ['risk_kategorileri' => ['ekipman_kule_vinc'], 'kontrol_formu' => 'Kule Vinç', 'talimat' => 'Kule Vinç ile Çalışma ve Sinyalizasyon Talimatı'],
+        'Caraskal & Halatlı/Zincirli Çektirme' => ['risk_kategorileri' => ['ekipman_caraskal', 'ekipman_kaldirma_ekipmanlari'], 'kontrol_formu' => 'Caraskal'],
+        'Yükseltilebilir Seyyar İş Platformu (Manlift)' => ['risk_kategorileri' => ['ekipman_manlift'], 'kontrol_formu' => 'Makaslı Platform (Manlift)'],
+        'Kaldırma Aksesuarları (sapan, zincir, halat, mapa)' => ['risk_kategorileri' => ['ekipman_kaldirma_ekipmanlari']],
+        'Teleskopik Yükleyici (Manitou / Telehandler)' => ['risk_kategorileri' => ['ekipman_teleskopik_yukleyici'], 'kontrol_formu' => 'Telehandler (Teleskobik Bomlu Yükleyici)'],
     ],
 
     // Kategoride en az bir ekipman varsa ayrıca beklenen ortak risk kategorileri. Kendi risk

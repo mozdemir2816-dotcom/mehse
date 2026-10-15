@@ -670,6 +670,7 @@ return [
                 ['ad' => 'Araç Kaldırma Lifti', 'periyot_ay' => 12, 'standart' => 'TS EN 1493', 'deney' => 'Nominal yük + %10 aşırı yük testi'],
                 ['ad' => 'Caraskal & Halatlı/Zincirli Çektirme', 'periyot_ay' => 12, 'standart' => 'TS EN 13157', 'deney' => 'Statik 1.25 kat yük testi'],
                 ['ad' => 'Sütunlu Pergel Vinç', 'periyot_ay' => 12, 'standart' => 'TS EN 14985', 'deney' => 'Statik 1.25 kat, Dinamik 1.1 kat yük testi'],
+                ['ad' => 'Teleskopik Yükleyici (Manitou / Telehandler)', 'periyot_ay' => 12, 'standart' => 'TS EN 1459-1', 'deney' => 'Yük diyagramına göre kaldırma ve stabilite kontrolü; kullanım öncesi günlük kontrol formu'],
                 ['ad' => 'Yükseltilebilir Seyyar İş Platformu (Manlift)', 'periyot_ay' => 6, 'standart' => 'TS EN 280', 'deney' => 'Stabilite + yük testi, acil indirme'],
                 ['ad' => 'Asansör (İnsan / Yük)', 'periyot_ay' => 12, 'standart' => 'TS EN 81-20 / Asansör Yön.', 'deney' => 'A tipi muayene kuruluşu yıllık kontrolü'],
                 ['ad' => 'Yapı / Cephe İskelesi', 'periyot_ay' => 6, 'standart' => 'TS EN 12811 / Yapı İşleri Yön.', 'deney' => 'Kurulum sonrası ve periyodik statik muayene'],

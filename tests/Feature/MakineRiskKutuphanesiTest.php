@@ -19,7 +19,7 @@ class MakineRiskKutuphanesiTest extends TestCase
         $this->seed(MakineRiskKutuphanesiSeeder::class);
         $this->seed(MakineRiskKutuphanesiSeeder::class);
 
-        $this->assertSame(51, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
+        $this->assertSame(56, TehlikeKategorisi::whereIn('anahtar', array_keys(MakineRiskKutuphanesiSeeder::KATEGORILER))->count());
         // MAK: torna → TFD, ekstrüzyon/kırıcı/merdane/bant zımpara/kesme → EKP ile güncellendi.
         $this->assertSame(176 - 20 - 84, Tehlike::where('kod', 'like', 'MAK-%')->count());
         $this->assertSame(80, Tehlike::where('kod', 'like', 'CNC-%')->count());
@@ -51,7 +51,13 @@ class MakineRiskKutuphanesiTest extends TestCase
         $this->assertSame(30.0, (float) Tehlike::where('kod', 'ESY-E-001')->value('siddet'));
         // Sorumlu / Termin kaynak Excel'den (EKP, MV, YMK, ESY, OFS).
         $this->assertSame(['İşveren / bölüm amiri / İK', 'İlgili işe başlamadan'], array_values(Tehlike::where('kod', 'ESY-E-001')->first(['sorumlu', 'termin'])->toArray()));
-        $this->assertSame(498 - 12 + 70, Tehlike::whereNotNull('sorumlu')->count());
+        $this->assertSame(498 - 12 + 70 + 190, Tehlike::whereNotNull('sorumlu')->count());
+        // Kaldırma / platform dosyaları (15.10.2026): her biri ayrı kategori, aynı 26 sütun düzeni.
+        foreach (['ekipman_kule_vinc' => 40, 'ekipman_manlift' => 40, 'ekipman_teleskopik_yukleyici' => 40, 'ekipman_kaldirma_ekipmanlari' => 30, 'kaldirma_islemleri' => 40] as $anahtar => $adet) {
+            $this->assertSame($adet, TehlikeKategorisi::where('anahtar', $anahtar)->sole()->tehlikeler()->count(), $anahtar);
+        }
+        $this->assertSame(0, Tehlike::where('kod', 'like', 'KLV-%')->where('siddet', '>', 40)->count()); // 100 → 40
+        $this->assertSame(1, Tehlike::where('kod', 'like', 'KLV-%')->where('faaliyet', 'like', '%(Raylı model)')->count());
         $this->assertSame(0, Tehlike::where('kod', 'like', 'MAK-%')->whereHas('kategori', fn ($q) => $q->where('anahtar', 'atolye_ekstruzyon_hatti'))->count());
         $this->assertSame(16, TehlikeKategorisi::where('anahtar', 'atolye_ekstruzyon_hatti')->sole()->tehlikeler()->count());
         $this->assertSame(1, Tehlike::where('kod', 'EKP-E-019')->where('bolum', 'Açık vals (iki silindir)')->count()); // sayfa harfi: numaralar sayfalar arası tekrar ediyor
