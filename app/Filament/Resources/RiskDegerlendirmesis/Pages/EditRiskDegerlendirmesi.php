@@ -113,8 +113,12 @@ class EditRiskDegerlendirmesi extends EditRecord
 
                     // Önceki talep 5 dk'dır bekliyorsa arka plan görevi (cron) çalışmıyor olabilir —
                     // kullanıcı sonsuza kadar "hazırlanıyor" görmesin (14.10.2026: canlıda cron yanlış PHP ile çalışıyordu).
+                    // Yalnız henüz işlenmemiş talep sayılır — işlenmiş ama istenen nüsha (ör. imzasız)
+                    // yoksa yeni talep açılır (15.10.2026: eski talep yüzünden yanlış "cron çalışmıyor" uyarısı).
                     $bekleyen = $this->record->pdf_talep_edildi_at;
-                    if ($bekleyen && $bekleyen->between(now()->subMinutes(15), now()->subMinutes(5))) {
+                    $hazir = $this->record->pdf_hazir_at;
+                    $islenmedi = $bekleyen && (! $hazir || $hazir->lt($bekleyen));
+                    if ($islenmedi && $bekleyen->between(now()->subMinutes(15), now()->subMinutes(5))) {
                         Notification::make()
                             ->title('PDF hâlâ hazırlanmadı')
                             ->body('Talep '.$bekleyen->diffForHumans().' verildi ama arka plan görevi henüz işlemedi; sunucudaki zamanlanmış görev (cron) çalışmıyor olabilir. Bu arada Excel veya Word olarak indirebilirsiniz.')

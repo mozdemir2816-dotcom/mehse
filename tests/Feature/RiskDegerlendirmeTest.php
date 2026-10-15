@@ -815,6 +815,24 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertFalse(Storage::disk('local')->exists($imzasiz));
     }
 
+    public function test_islenmis_eski_talepte_imzasiz_istenince_cron_uyarisi_degil_yeni_talep_acilir(): void
+    {
+        // Düzeltmeden önce yalnız imzalı nüsha üretilmiş, talep 10 dk önce işlenmiş.
+        $rd = $this->buyukRdOlustur();
+        Storage::disk('local')->put(RiskDegerlendirmesiUretici::onbellekYolu($rd), 'eski');
+        $rd->forceFill(['pdf_talep_edildi_at' => now()->subMinutes(10), 'pdf_hazir_at' => now()->subMinutes(9),
+            'pdf_yolu' => RiskDegerlendirmesiUretici::onbellekYolu($rd)])->saveQuietly();
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->callAction('pdf', data: ['imzali' => '0'])
+            ->assertNotified('PDF hazırlanıyor');
+
+        $this->assertTrue($rd->refresh()->pdf_talep_edildi_at->gt(now()->subMinute()));
+
+        $this->artisan('risk:pdf-uret')->assertExitCode(0);
+        $this->assertTrue($rd->refresh()->pdfHazirMi(false));
+    }
+
     public function test_madde_degisince_onbellek_temizlenir(): void
     {
         $rd = $this->buyukRdOlustur();
