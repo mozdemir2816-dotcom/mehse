@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Support\RiskDegerlendirmesiUretici;
+use App\Support\RiskSkorlama;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Firma risk değerlendirmesi (rapor). Firma künyesi kayıt anında snapshot'lanır;
@@ -104,7 +107,7 @@ class RiskDegerlendirmesi extends Model
     /** Üç eksenli (Olasılık × Frekans/Saptanabilirlik × Şiddet) yöntem mi — bkz. RiskSkorlama::ucEksenliMi(). */
     public function ucEksenliMi(): bool
     {
-        return \App\Support\RiskSkorlama::ucEksenliMi($this->yontem);
+        return RiskSkorlama::ucEksenliMi($this->yontem);
     }
 
     public function gecerlilikGecti(): bool
@@ -116,12 +119,18 @@ class RiskDegerlendirmesi extends Model
      * Arka planda üretilmiş PDF hâlâ güncel mi — talep edildikten sonra
      * içerik değişmemiş VE dosya diskte gerçekten var mı.
      */
-    public function pdfHazirMi(): bool
+    public function pdfHazirMi(bool $imzali = true): bool
     {
         return $this->pdf_yolu
             && $this->pdf_hazir_at
             && (! $this->pdf_talep_edildi_at || $this->pdf_hazir_at->gte($this->pdf_talep_edildi_at))
-            && \Illuminate\Support\Facades\Storage::disk('local')->exists($this->pdf_yolu);
+            && Storage::disk('local')->exists($this->pdfDosyasi($imzali));
+    }
+
+    /** Önbellekteki PDF'in seçilen nüshası (imzalı = pdf_yolu, imzasız yanında ayrı dosya). */
+    public function pdfDosyasi(bool $imzali = true): string
+    {
+        return $imzali ? (string) $this->pdf_yolu : RiskDegerlendirmesiUretici::onbellekYolu($this, false);
     }
 
     /**
@@ -132,7 +141,7 @@ class RiskDegerlendirmesi extends Model
     public function pdfOnbellegiTemizle(): void
     {
         if ($this->pdf_yolu) {
-            \Illuminate\Support\Facades\Storage::disk('local')->delete($this->pdf_yolu);
+            Storage::disk('local')->delete([$this->pdf_yolu, $this->pdfDosyasi(false)]);
         }
 
         $this->pdf_yolu = null;

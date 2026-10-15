@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\RiskDegerlendirmesis\Pages;
 
+use App\Filament\Concerns\KaydetUstte;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\Tehlike;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\EkipmanKatalogu;
 use App\Support\RiskDegerlendirmesiOfisUretici;
 use App\Support\RiskDegerlendirmesiUretici;
@@ -15,12 +16,13 @@ use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class EditRiskDegerlendirmesi extends EditRecord
 {
-    use \App\Filament\Concerns\KaydetUstte;
+    use KaydetUstte;
 
     protected static string $resource = RiskDegerlendirmesiResource::class;
 
@@ -31,7 +33,7 @@ class EditRiskDegerlendirmesi extends EditRecord
         return $this->pdfBuyukCache ??= $this->record->maddeler()->count() > RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI;
     }
 
-    /** @var array{rd: ?RiskDegerlendirmesi, gruplar: array<string, \Illuminate\Support\Collection<int, Tehlike>>, toplam: int}|null */
+    /** @var array{rd: ?RiskDegerlendirmesi, gruplar: array<string, Collection<int, Tehlike>>, toplam: int}|null */
     private ?array $ekipmanEksikCache = null;
 
     private function ekipmanEksikleri(): array
@@ -100,11 +102,13 @@ class EditRiskDegerlendirmesi extends EditRecord
                         return RiskDegerlendirmesiUretici::pdf($this->record, ImzaSecenegi::secili($data));
                     }
 
-                    // Büyük rapor + önbellekte güncel bir PDF hazır: diskten doğrudan indir.
-                    if ($this->record->pdfHazirMi()) {
-                        $ad = 'risk-degerlendirmesi-'.Str::slug($this->record->firma_unvan ?: 'firma').'.pdf';
+                    // Büyük rapor + önbellekte güncel bir PDF hazır: seçilen nüshayı (imzalı/imzasız) diskten indir.
+                    $imzali = ImzaSecenegi::secili($data);
 
-                        return response()->download(Storage::disk('local')->path($this->record->pdf_yolu), $ad);
+                    if ($this->record->pdfHazirMi($imzali)) {
+                        $ad = 'risk-degerlendirmesi-'.Str::slug($this->record->firma_unvan ?: 'firma').($imzali ? '' : '-imzasiz').'.pdf';
+
+                        return response()->download(Storage::disk('local')->path($this->record->pdfDosyasi($imzali)), $ad);
                     }
 
                     // Önceki talep 5 dk'dır bekliyorsa arka plan görevi (cron) çalışmıyor olabilir —

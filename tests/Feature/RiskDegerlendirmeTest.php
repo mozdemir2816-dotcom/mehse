@@ -23,7 +23,9 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use PhpOffice\PhpWord\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -785,6 +787,32 @@ class RiskDegerlendirmeTest extends TestCase
         Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
             ->assertOk()
             ->callAction('pdf');
+    }
+
+    public function test_buyuk_raporda_imzasiz_secilince_imzasiz_nusha_indirilir(): void
+    {
+        $rd = $this->buyukRdOlustur();
+        $rd->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
+
+        $this->artisan('risk:pdf-uret')->assertExitCode(0);
+        $rd->refresh();
+
+        $this->assertTrue($rd->pdfHazirMi(true));
+        $this->assertTrue($rd->pdfHazirMi(false));
+        $this->assertNotSame($rd->pdfDosyasi(true), $rd->pdfDosyasi(false));
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->callAction('pdf', data: ['imzali' => '0'])
+            ->assertFileDownloaded('risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'-imzasiz.pdf');
+
+        Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->callAction('pdf', data: ['imzali' => '1'])
+            ->assertFileDownloaded('risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'.pdf');
+
+        // Madde değişince iki nüsha da silinir.
+        $imzasiz = $rd->pdfDosyasi(false);
+        $rd->maddeler()->first()->update(['siddet' => 5]);
+        $this->assertFalse(Storage::disk('local')->exists($imzasiz));
     }
 
     public function test_madde_degisince_onbellek_temizlenir(): void

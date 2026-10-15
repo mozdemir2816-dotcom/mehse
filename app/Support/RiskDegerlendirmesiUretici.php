@@ -5,8 +5,11 @@ namespace App\Support;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskProsedur;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Dompdf\Dompdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\PdfParser\StreamReader;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -45,23 +48,25 @@ class RiskDegerlendirmesiUretici
         ];
     }
 
-    public static function onbellekYolu(RiskDegerlendirmesi $rd): string
+    /** İmzasız (matbu) nüsha ayrı dosyada — bkz. uretVeKaydet(). */
+    public static function onbellekYolu(RiskDegerlendirmesi $rd, bool $imzali = true): string
     {
-        return 'risk-pdf/'.$rd->id.'.pdf';
+        return 'risk-pdf/'.$rd->id.($imzali ? '' : '-imzasiz').'.pdf';
     }
 
     /**
      * Arka planda (cron/RiskPdfUret) çağrılır: PDF'i render edip diske yazar,
-     * göreli storage yolunu döndürür. Kullanıcıya hiçbir HTTP yanıtı üretmez.
+     * göreli storage yolunu (imzalı nüsha) döndürür. Kullanıcıya hiçbir HTTP yanıtı
+     * üretmez. İmzalı ve imzasız iki nüsha birden üretilir — indirirken "İmzasız"
+     * seçilse de önceden imzalı hazırlanan dosya veriliyordu (kullanıcı 15.10.2026).
      */
     public static function uretVeKaydet(RiskDegerlendirmesi $rd): string
     {
-        $pdf = self::olustur($rd);
-        $yol = self::onbellekYolu($rd);
+        foreach ([true, false] as $imzali) {
+            Storage::disk('local')->put(self::onbellekYolu($rd, $imzali), self::olustur($rd, $imzali));
+        }
 
-        Storage::disk('local')->put($yol, $pdf);
-
-        return $yol;
+        return self::onbellekYolu($rd);
     }
 
     public static function pdf(RiskDegerlendirmesi $rd, bool $imzali = true): StreamedResponse
@@ -139,7 +144,7 @@ class RiskDegerlendirmesiUretici
             'bilgiSahibiCalisan' => $bilgiSahibiCalisan,
             'ekipGosterim' => $ekipGosterim,
             'metodoloji' => config('isg.'.$yontemAnahtari),
-            'eksenEtiketleri' => \App\Support\RiskSkorlama::eksenEtiketleri($rd->yontem),
+            'eksenEtiketleri' => RiskSkorlama::eksenEtiketleri($rd->yontem),
             'prosedur' => $userId ? RiskProsedur::aktifIcin($userId, $rd->yontem) : null,
             'imzali' => $imzali,
         ];
@@ -198,13 +203,14 @@ class RiskDegerlendirmesiUretici
      * Sayfa numarası kapakta (1. sayfa) gösterilmez, diğer sayfalarda devam eder.
      * Üstte DEĞİL, alt marjda (tablo bittikten SONRA, imza şeridinden ÖNCE)
      * konumlanır — üstte tabloya çok yakın olduğu için üstüne biniyordu.
+     *
      * @page alt marjı 78px, imza şeridi (.sayfa-alt) tam o marjın altına
      * yaslanmış durumda (bottom:-78px). $oncekiSayfa: birleştirilen belgede bu
      * parçadan önceki sayfa sayısı; $toplam: tüm belgenin sayfa sayısı.
      *
      * @param  array{0: float, 1: float, 2: float, 3: float}|null  $toplamHucre
      */
-    private static function sayfaNumaralari(\Dompdf\Dompdf $dompdf, int $oncekiSayfa, int $toplam, ?array $toplamHucre): void
+    private static function sayfaNumaralari(Dompdf $dompdf, int $oncekiSayfa, int $toplam, ?array $toplamHucre): void
     {
         $canvas = $dompdf->getCanvas();
         $fontMetrics = $dompdf->getFontMetrics();
@@ -244,11 +250,11 @@ class RiskDegerlendirmesiUretici
      */
     private static function birlestir(array $parcalar): string
     {
-        $fpdi = new \setasign\Fpdi\Fpdi;
+        $fpdi = new Fpdi;
         $fpdi->SetAutoPageBreak(false);
 
         foreach ($parcalar as $icerik) {
-            $sayfaSayisi = $fpdi->setSourceFile(\setasign\Fpdi\PdfParser\StreamReader::createByString($icerik));
+            $sayfaSayisi = $fpdi->setSourceFile(StreamReader::createByString($icerik));
             for ($i = 1; $i <= $sayfaSayisi; $i++) {
                 $sablon = $fpdi->importPage($i);
                 $boyut = $fpdi->getTemplateSize($sablon);
@@ -267,7 +273,7 @@ class RiskDegerlendirmesiUretici
      *
      * @param  array{0: float, 1: float, 2: float, 3: float}|null  $konum
      */
-    public static function konumYakala(\Dompdf\Dompdf $dompdf, string $id, ?array &$konum): void
+    public static function konumYakala(Dompdf $dompdf, string $id, ?array &$konum): void
     {
         $dompdf->setCallbacks([[
             'event' => 'end_frame',
