@@ -870,6 +870,19 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertTrue($rd->refresh()->pdfHazirMi(false));
     }
 
+    public function test_bos_sorumlu_ve_termin_kayitta_varsayilanla_dolar_dolu_olana_dokunulmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $bos = $rd->maddeler()->create(['tehlike' => 'Boş', 'olasilik' => 3, 'siddet' => 4, 'sorumlu' => ' ', 'termin' => null]);
+        $dolu = $rd->maddeler()->create(['tehlike' => 'Dolu', 'olasilik' => 3, 'siddet' => 4, 'sorumlu' => 'Bakım şefi', 'termin' => '1 ay']);
+
+        $this->assertSame('İşveren / İşveren Vekili', $bos->fresh()->sorumlu);
+        $this->assertSame('SÜREKLİ', $bos->fresh()->termin);
+        $this->assertSame('Bakım şefi', $dolu->fresh()->sorumlu);
+        $this->assertSame('1 ay', $dolu->fresh()->termin);
+    }
+
     public function test_madde_degisince_onbellek_temizlenir(): void
     {
         $rd = $this->buyukRdOlustur();

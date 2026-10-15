@@ -58,6 +58,15 @@ class RiskMaddesi extends Model
             $son = RiskSkorlama::hesapla($yontem, $m->son_olasilik, $m->son_siddet, $m->son_frekans);
             $m->son_puan = $son['puan'] ?: null;
             $m->son_duzey = $son['puan'] ? $son['duzey'] : null;
+
+            // Boş sorumlu / termin kayıtta da varsayılanla dolar — ekranda ve
+            // çıktılarda aynı görünsün (kullanıcı 15.10.2026).
+            if (blank($m->sorumlu)) {
+                $m->sorumlu = self::VARSAYILAN_SORUMLU;
+            }
+            if (blank($m->termin)) {
+                $m->termin = self::VARSAYILAN_TERMIN;
+            }
         });
 
         // Madde eklenip/değişip/silinince üst rapordaki önbelleklenmiş PDF
@@ -80,6 +89,8 @@ class RiskMaddesi extends Model
     }
 
     public const VARSAYILAN_SORUMLU = 'İşveren / İşveren Vekili';
+
+    public const VARSAYILAN_TERMIN = 'SÜREKLİ';
 
     /**
      * Çıktılarda (PDF/Excel/Word) gösterilen sorumlu: boşsa varsayılan; "İşveren/Vekili",

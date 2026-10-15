@@ -368,7 +368,7 @@
                 <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-dikey">{{ $m->duzeyDikey() }}</span></td>
                 <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
                 <td class="col-sorumlu">{{ $m->sorumluMetni() }}</td>
-                <td>{{ $m->termin ?: '—' }}</td>
+                <td>{{ $m->termin ?: \App\Models\RiskMaddesi::VARSAYILAN_TERMIN }}</td>
                 <td class="sayi">{{ $sayi($m->son_olasilik) }}</td>
                 @if ($ucEksen)
                     <td class="sayi">{{ $sayi($m->son_frekans) }}</td>

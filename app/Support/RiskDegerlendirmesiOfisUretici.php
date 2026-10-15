@@ -6,6 +6,7 @@ use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -15,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpWord\Element\Section;
+use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\SimpleType\Jc;
@@ -60,7 +62,7 @@ class RiskDegerlendirmesiOfisUretici
             ['Düzey', fn ($m) => $m->duzey, 14],
             ['Öneri', fn ($m) => $m->oneri, 40],
             ['Sorumlu', fn ($m) => $m->sorumluMetni(), 14],
-            ['Termin', fn ($m) => $m->termin, 12],
+            ['Termin', fn ($m) => $m->termin ?: RiskMaddesi::VARSAYILAN_TERMIN, 12],
             ['Son O', fn ($m) => $s($m->son_olasilik), 7],
             $uc ? ['Son '.$f, fn ($m) => $s($m->son_frekans), 7] : null,
             ['Son Ş', fn ($m) => $s($m->son_siddet), 7],
@@ -297,7 +299,7 @@ class RiskDegerlendirmesiOfisUretici
             $sayfa->mergeCells("B{$satir}:D{$satir}");
             foreach ($degerler as $puan => $aciklama) {
                 $satir++;
-                $sayfa->setCellValueExplicit("A{$satir}", str_replace('.', ',', (string) $puan), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sayfa->setCellValueExplicit("A{$satir}", str_replace('.', ',', (string) $puan), DataType::TYPE_STRING);
                 $sayfa->setCellValue("B{$satir}", $aciklama);
                 $sayfa->mergeCells("B{$satir}:D{$satir}");
             }
@@ -498,7 +500,7 @@ class RiskDegerlendirmesiOfisUretici
         }
     }
 
-    private static function wordTablo(Section $bolum): \PhpOffice\PhpWord\Element\Table
+    private static function wordTablo(Section $bolum): Table
     {
         return $bolum->addTable(['borderSize' => 4, 'borderColor' => '9CA3AF', 'cellMargin' => 40, 'layout' => \PhpOffice\PhpWord\Style\Table::LAYOUT_FIXED]);
     }
