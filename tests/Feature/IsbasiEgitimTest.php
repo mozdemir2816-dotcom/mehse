@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\IsbasiEgitim;
 use App\Filament\Pages\IsbasiEgitim as IsbasiSayfasi;
 use App\Models\Calisan;
 use App\Models\EgitimSunumu;
@@ -329,5 +330,18 @@ class IsbasiEgitimTest extends TestCase
 
         $this->assertDatabaseMissing('egitim_sunumlari', ['id' => $sunum->id]);
         Storage::disk('public')->assertMissing('egitim-sunumlari/'.$this->uzman->id.'/s.pdf');
+    }
+
+    public function test_bos_tutanak_calisan_kaydetmeden_cikti_verir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(IsbasiEgitim::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('bosTutanak')
+            ->assertFileDownloaded();
+
+        $this->assertSame(0, IsbasiEgitimTutanagi::count());
+        $this->assertSame(0, Calisan::count());
     }
 }

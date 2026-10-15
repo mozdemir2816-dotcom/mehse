@@ -348,7 +348,7 @@ class TalimatOlusturTest extends TestCase
 
     public function test_excelden_arsiv_sablonlari_toplu_yuklenir(): void
     {
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(TalimatSablonuExcelIceAktarici::SABLON_BASLIKLARI, null, 'A1');
         $sayfa->fromArray(['Kompresör Kullanma Talimatı', 'İş Makineleri', 'Açıklama', 'Kulak tıkacı, Koruyucu gözlük', "Madde bir.\nMadde iki."], null, 'A2');
@@ -372,5 +372,20 @@ class TalimatOlusturTest extends TestCase
         $yanit = TalimatSablonuExcelIceAktarici::sablonIndir();
 
         $this->assertInstanceOf(StreamedResponse::class, $yanit);
+    }
+
+    public function test_talimat_pdfine_cok_kisilik_bos_tebellug_listesi_eklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bert Plastik']);
+        $talimat = new Talimat(['firma_id' => $firma->id, 'baslik' => 'Torna Tezgâhı Kullanma Talimatı']);
+        $talimat->setRelation('firma', $firma);
+        $veri = ['talimat' => $talimat, 'firma' => $firma, 'logo' => null, 'tebligEden' => (object) ['ad' => '', 'unvan' => '', 'kase_gorseli' => null, 'imza_gorseli' => null], 'imzali' => false];
+
+        $html = view('pdf.talimat', $veri + ['tebellugSatiri' => 5])->render();
+        $this->assertStringContainsString('TALİMAT TEBELLÜĞ İMZA LİSTESİ', $html);
+        $this->assertStringContainsString('Torna Tezgâhı Kullanma Talimatı', $html);
+        $this->assertSame(5, substr_count($html, 'height:24px'));
+
+        $this->assertStringNotContainsString('TEBELLÜĞ İMZA LİSTESİ', view('pdf.talimat', $veri + ['tebellugSatiri' => 0])->render());
     }
 }

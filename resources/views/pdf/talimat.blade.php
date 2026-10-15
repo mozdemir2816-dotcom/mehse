@@ -128,5 +128,30 @@
 </table>
     </div>{{-- .kapanis: taahhüt + imza aynı sayfada --}}
 
+@if ($tebellugSatiri ?? 0)
+    {{-- Çok kişilik tebellüğ: firmada kalemle doldurulur (kullanıcı 15.10.2026) --}}
+    <div style="page-break-before: always">
+        <h2 style="text-align:center;font-size:12px">TALİMAT TEBELLÜĞ İMZA LİSTESİ</h2>
+        <p style="font-size:9px;margin:4px 0 8px">
+            <strong>{{ $firma?->unvan }}</strong> — "{{ $talimat->baslik }}" talimatı aşağıda imzası bulunan çalışanlara
+            okunarak / anlatılarak tebliğ edilmiş, bir nüshası teslim edilmiştir.
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:9px">
+            <tr>
+                @foreach (['Sıra' => '6%', 'Adı Soyadı' => '30%', 'Görevi' => '24%', 'Tarih' => '16%', 'İmza' => '24%'] as $baslik => $gen)
+                    <th style="border:1px solid #555;background:#eee;padding:4px;width:{{ $gen }}">{{ $baslik }}</th>
+                @endforeach
+            </tr>
+            @for ($i = 1; $i <= $tebellugSatiri; $i++)
+                <tr>
+                    <td style="border:1px solid #555;height:24px;text-align:center">{{ $i }}</td>
+                    <td style="border:1px solid #555"></td><td style="border:1px solid #555"></td>
+                    <td style="border:1px solid #555"></td><td style="border:1px solid #555"></td>
+                </tr>
+            @endfor
+        </table>
+    </div>
+@endif
+
 </body>
 </html>

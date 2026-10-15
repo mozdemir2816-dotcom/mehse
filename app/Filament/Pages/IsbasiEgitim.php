@@ -2,10 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\KaydetSecenegi;
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\EgitimSunumu;
 use App\Models\Firma;
 use App\Models\IsbasiEgitimTutanagi as IsbasiEgitimTutanagiModel;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\IsbasiEgitimTutanagiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -19,15 +21,14 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * İşbaşı / Oryantasyon Eğitim Tutanağı — isgpratik 60.jpg. İşe yeni başlayan
  * her çalışan için ayrı, tek sayfalık tutanak.
  */
 class IsbasiEgitim extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-    use \App\Filament\Concerns\KaydetSecenegi;
+    use KaydetSecenegi;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.isbasi-egitim';
 
@@ -335,6 +336,34 @@ class IsbasiEgitim extends Page
                         'gorev' => $c->gorev,
                     ])->all(),
                 ])),
+
+            Action::make('bosTutanak')
+                ->label('Boş Tutanak (Elle Doldurulacak)')
+                ->icon('heroicon-o-pencil-square')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->tooltip('Çalışan kaydetmeden, adı / T.C. boş tek kişilik tutanak — seçili konular ve eğitim bilgileriyle')
+                ->action(function () {
+                    // Kaydedilmez; çalışan alanları kalemle doldurulur.
+                    $t = new IsbasiEgitimTutanagiModel([
+                        'firma_id' => $this->firma->id,
+                        'calisan_ad_soyad' => '.......................................',
+                        'calisan_tc' => '...........................',
+                        'tc_gizli' => false,
+                        'egitim_tarihi' => $this->egitimTarihi ?: null,
+                        'sure_saat' => $this->sureSaat,
+                        'egitim_yeri' => $this->egitimYeri,
+                        'egitimi_veren' => $this->egitimiVeren,
+                        'egitim_yontemi' => $this->egitimYontemi,
+                        'belge_tarihi' => $this->belgeTarihi ?: null,
+                        'igu_imzasi' => $this->iguImzasi,
+                        'isyeri_hekimi_imzasi' => $this->isyeriHekimiImzasi,
+                        'konular' => $this->secilenKonular,
+                    ]);
+                    $t->setRelation('firma', $this->firma);
+
+                    return IsbasiEgitimTutanagiUretici::pdf($t);
+                }),
 
             Action::make('bosKatilimFormu')
                 ->label('Boş Katılım Formu')

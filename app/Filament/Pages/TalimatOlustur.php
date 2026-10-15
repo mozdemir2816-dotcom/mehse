@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\KaydetSecenegi;
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\Talimat as TalimatModel;
@@ -16,7 +18,12 @@ use App\Support\TalimatWordUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -25,7 +32,6 @@ use Livewire\Attributes\Computed;
 use Throwable;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Talimat Oluştur — isgpratik 82-83.jpg. Hazır şablon kütüphanesinden veya
  * uzmanın kendi arşivinden Excel ile yüklediği şablonlardan bir talimat
@@ -33,8 +39,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class TalimatOlustur extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-    use \App\Filament\Concerns\KaydetSecenegi;
+    use KaydetSecenegi;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.talimat-olustur';
 
@@ -482,9 +488,9 @@ class TalimatOlustur extends Page
                 ->modalSubmitActionLabel('İndir')
                 ->fillForm(['bicim' => 'pdf', 'tarih' => now()->toDateString()])
                 ->schema([
-                    \Filament\Forms\Components\Radio::make('bicim')->label('Biçim')
+                    Radio::make('bicim')->label('Biçim')
                         ->options(['pdf' => 'PDF', 'excel' => 'Excel'])->inline()->required(),
-                    \Filament\Forms\Components\DatePicker::make('tarih')->label('Teslim tarihi')->native(false)->displayFormat('d.m.Y')->required(),
+                    DatePicker::make('tarih')->label('Teslim tarihi')->native(false)->displayFormat('d.m.Y')->required(),
                 ])
                 ->action(fn (array $data) => $data['bicim'] === 'excel'
                     ? TalimatListesiUretici::excel($this->firma, $data['tarih'] ?? null)
@@ -515,10 +521,10 @@ class TalimatOlustur extends Page
                         ])
                         ->helperText('Word (.docx), PDF veya Excel (.xlsx). Eski .doc dosyalarını Word\'de .docx olarak kaydedin; taranmış (resim) PDF okunamaz.')
                         ->required(),
-                    \Filament\Forms\Components\Select::make('kategori')->label('Kategori')
+                    Select::make('kategori')->label('Kategori')
                         ->options(fn () => $this->kategoriler())->native(false)
                         ->placeholder('Seçmeyin — kategorisiz'),
-                    \Filament\Forms\Components\Toggle::make('firmayaEkle')
+                    Toggle::make('firmayaEkle')
                         ->label(fn () => 'Seçili firmaya da talimat olarak ekle'.($this->firma ? ' ('.$this->firma->unvan.')' : ''))
                         ->visible(fn () => $this->firma !== null),
                 ])
@@ -581,8 +587,8 @@ class TalimatOlustur extends Page
                 ->modalDescription('Kendi hazırladığınız Word veya PDF dosyasını doğrudan bu firmaya talimat olarak kaydedin — madde/AI akışına gerek kalmadan indirilebilir olarak saklanır.')
                 ->modalSubmitActionLabel('Yükle')
                 ->schema([
-                    \Filament\Forms\Components\TextInput::make('baslik')->label('Başlık')->required(),
-                    \Filament\Forms\Components\Select::make('kategori')->label('Kategori')
+                    TextInput::make('baslik')->label('Başlık')->required(),
+                    Select::make('kategori')->label('Kategori')
                         ->options(fn () => $this->kategoriler())->native(false),
                     FileUpload::make('dosya')->label('Dosya (Word/PDF)')
                         ->disk('public')
@@ -614,14 +620,20 @@ class TalimatOlustur extends Page
                 ->label('PDF İndir (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([
+                    ImzaSecenegi::alan(),
+                    TextInput::make('tebellug_satiri')
+                        ->label('Tebellüğ imza listesi (boş satır sayısı)')
+                        ->helperText('Talimatı birden çok çalışana imzalatmak için sona ad soyad / görev / tarih / imza satırları eklenir. 0 = ekleme.')
+                        ->numeric()->minValue(0)->maxValue(60)->default(20),
+                ])
                 ->action(function (array $data) {
                     $talimat = $this->kaydet();
                     if ($talimat) {
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $talimat ? TalimatUretici::pdf($talimat, ImzaSecenegi::secili($data)) : null;
+                    return $talimat ? TalimatUretici::pdf($talimat, ImzaSecenegi::secili($data), (int) ($data['tebellug_satiri'] ?? 0)) : null;
                 }),
 
             Action::make('word')

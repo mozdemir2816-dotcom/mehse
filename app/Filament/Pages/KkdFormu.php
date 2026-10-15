@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\KaydetSecenegi;
+use App\Filament\Concerns\SinirliErisim;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\KkdMatrisi;
@@ -10,21 +12,21 @@ use App\Support\KkdZimmetFormuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * KKD Zimmet Formu — isgpratik 71-75.jpg. Çoklu çalışan × çoklu KKD seçimi
  * (6 kategori) → her çalışan için ayrı teslim tutanağı sayfası.
  */
 class KkdFormu extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-    use \App\Filament\Concerns\KaydetSecenegi;
+    use KaydetSecenegi;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.kkd-formu';
 
@@ -345,6 +347,40 @@ class KkdFormu extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            Action::make('bosForm')
+                ->label('Boş Form (Elle Doldurulacak)')
+                ->icon('heroicon-o-pencil-square')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalDescription('Seçili KKD\'ler listelenir; personel adı / T.C. / görev ve imza boş kalır — firmada kalemle doldurulur. Çalışan kaydı ve form kaydı oluşturulmaz.')
+                ->modalSubmitActionLabel('PDF İndir')
+                ->schema([
+                    TextInput::make('adet')->label('Kaç kişilik (sayfa)')->numeric()->minValue(1)->maxValue(50)->default(1)->required(),
+                ])
+                ->action(function (array $data) {
+                    $kkdler = $this->kkdleriTopla();
+
+                    if (! $kkdler) {
+                        Notification::make()->title('Önce teslim edilecek KKD\'leri seçin')->danger()->send();
+
+                        return null;
+                    }
+
+                    // Kaydedilmez; her sayfa bir kişi için boş.
+                    $form = new KkdZimmetFormuModel([
+                        'firma_id' => $this->firma->id,
+                        'teslim_tarihi' => $this->teslimTarihi ?: null,
+                        'periyodik_kontrol_tarihi' => $this->periyodikKontrolTarihi ?: null,
+                        'teslim_eden' => $this->teslimEden,
+                        'calisanlar' => array_fill(0, max(1, min(50, (int) $data['adet'])), null),
+                        'kkdler' => $kkdler,
+                    ]);
+                    $form->form_no = 'BOŞ FORM';
+                    $form->setRelation('firma', $this->firma);
+
+                    return KkdZimmetFormuUretici::pdf($form);
+                }),
+
             Action::make('pdf')
                 ->label('PDF Oluştur (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')

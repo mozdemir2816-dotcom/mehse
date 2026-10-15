@@ -208,4 +208,28 @@ class KkdFormuTest extends TestCase
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    public function test_bos_form_calisan_kaydetmeden_secili_kkdlerle_cikti_verir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $ilkKkd = config('isg.kkd.kategoriler.bas_yuz.maddeler.0.ad');
+
+        Livewire::test(KkdSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('bosForm', data: ['adet' => 2])
+            ->assertNotified('Önce teslim edilecek KKD\'leri seçin')
+            ->call('kkdToggle', 'bas_yuz', $ilkKkd)
+            ->callAction('bosForm', data: ['adet' => 2])
+            ->assertHasNoActionErrors()
+            ->assertFileDownloaded();
+
+        $this->assertSame(0, KkdZimmetFormu::count());
+        $this->assertSame(0, Calisan::count());
+
+        $form = new KkdZimmetFormu(['calisanlar' => [null, null], 'kkdler' => [['ad' => $ilkKkd, 'standart' => 'EN 397', 'kategori' => 'Baş']]]);
+        $form->form_no = 'BOŞ FORM';
+        $html = view('pdf.kkd-zimmet-formu', ['form' => $form, 'firma' => $firma])->render();
+        $this->assertSame(2, substr_count($html, 'KİŞİSEL KORUYUCU DONANIM TESLİM TUTANAĞI'));
+        $this->assertStringContainsString($ilkKkd, $html);
+    }
 }
