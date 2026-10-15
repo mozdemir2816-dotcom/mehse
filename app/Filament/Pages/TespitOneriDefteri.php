@@ -8,6 +8,7 @@ use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\SahaBulgusu;
 use App\Models\TespitOneriDefteri as TespitOneriDefteriModel;
+use App\Support\BilgilendirmeYazisiOkuyucu;
 use App\Support\BulguDonusturucu;
 use App\Support\BulguHavuzu;
 use App\Support\DofTabloOkuyucu;
@@ -251,8 +252,12 @@ class TespitOneriDefteri extends Page
         $yol = (string) ($data['dosya'] ?? '');
         $adi = (string) ($data['dosya_adi'] ?? $yol);
 
+        $yazi = null;
+
         try {
-            $okunan = DofTabloOkuyucu::oku(Storage::disk('local')->path($yol), pathinfo($adi, PATHINFO_EXTENSION))['maddeler'];
+            $tam = Storage::disk('local')->path($yol);
+            $okunan = DofTabloOkuyucu::oku($tam, pathinfo($adi, PATHINFO_EXTENSION))['maddeler'];
+            $yazi = ! $okunan && strtolower(pathinfo($adi, PATHINFO_EXTENSION)) === 'docx' ? BilgilendirmeYazisiOkuyucu::oku($tam) : null;
         } catch (\Throwable $e) {
             report($e);
             $okunan = [];
@@ -260,10 +265,26 @@ class TespitOneriDefteri extends Page
             Storage::disk('local')->delete($yol);
         }
 
+        // Tablo yoksa: tek bir bilgilendirme yazısı (firmaya önceden bildirilen tedbirler).
+        if ($d && ! $okunan && $yazi) {
+            $d->update(['maddeler' => [...($d->maddeler ?? []), [
+                'tur' => 'bilgilendirme',
+                'tarih' => $yazi['tarih'],
+                'tespit' => $yazi['tespit'],
+                'oneri' => $yazi['oneri'],
+                'dayanak' => $yazi['dayanak'],
+                'oncelik' => 'orta',
+                'foto_yolu' => null,
+            ]]]);
+            Notification::make()->title('Bilgilendirme yazısı deftere eklendi')->body('Ön bilgilendirme olarak: konu + firmanın alması gereken önlemler.')->success()->send();
+
+            return;
+        }
+
         if (! $d || ! $okunan) {
             Notification::make()
                 ->title('Dosyada tespit-öneri tablosu bulunamadı')
-                ->body('Tabloda "Tespit" ve "Öneri" başlıklı sütunlar olmalı.')
+                ->body('Tabloda "Tespit" ve "Öneri" başlıklı sütunlar ya da başlıklar altında maddeler olan bir bilgilendirme yazısı olmalı.')
                 ->danger()->send();
 
             return;
@@ -290,7 +311,7 @@ class TespitOneriDefteri extends Page
                 ->color('success')
                 ->visible(fn () => $this->defter() !== null)
                 ->modalHeading('Hazırladığınız Word/Excel defterini ekle')
-                ->modalDescription('Bilgisayarda hazırladığınız tablodaki her satır deftere madde olarak eklenir. Sütun başlıkları: Tespit, Öneri; isteğe bağlı Öncelik, Dayanak/Mevzuat, Fotoğraf. Mevcut maddeler silinmez.')
+                ->modalDescription('Bilgisayarda hazırladığınız tablodaki her satır deftere madde olarak eklenir. Tablo ise her satır bir madde olur (sütunlar: Tespit, Öneri; isteğe bağlı Öncelik, Dayanak/Mevzuat, Fotoğraf). Tablosuz bilgilendirme yazısı ise tek madde olarak "Ön Bilgilendirme" şeklinde eklenir: konu, firmanın alması gereken önlemler ve dayanak. Mevcut maddeler silinmez.')
                 ->modalSubmitActionLabel('Ekle')
                 ->schema([
                     // MIME yerine uzantı — gerekçe DosyaKabul'de.

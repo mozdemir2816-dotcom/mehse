@@ -3,10 +3,13 @@
 namespace App\Support;
 
 use App\Models\DofRaporu;
+use App\Models\Firma;
 use App\Models\SahaAnalizi;
 use App\Models\SahaBulgusu;
+use App\Models\SahaDenetimi;
 use App\Models\TespitOneriDefteri;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -30,7 +33,7 @@ class BulguHavuzu
         DofRaporu::class => ['maddeler', 'dof'],
         TespitOneriDefteri::class => ['maddeler', 'tespit_oneri'],
         SahaAnalizi::class => ['bulgular', 'gozlem'],
-        \App\Models\SahaDenetimi::class => ['cevaplar', 'denetim'],   // yalnız "uygun değil" maddeler
+        SahaDenetimi::class => ['cevaplar', 'denetim'],   // yalnız "uygun değil" maddeler
     ];
 
     /** esle() bulguyu güncellerken dofaYansit() geri tetiklenmesin. */
@@ -57,7 +60,8 @@ class BulguHavuzu
             foreach ($maddeler as $i => $m) {
                 $denetimDisi = $bicim === 'denetim' && (! is_array($m) || ($m['sonuc'] ?? null) !== 'uygun_degil');
 
-                if (! is_array($m) || blank($m['tespit'] ?? $m['ifade'] ?? null) || $denetimDisi) {
+                if (! is_array($m) || blank($m['tespit'] ?? $m['ifade'] ?? null) || $denetimDisi
+                    || (($m['tur'] ?? null) === 'bilgilendirme')) {   // ön bilgilendirme saha bulgusu değil
                     continue;
                 }
 
@@ -150,7 +154,7 @@ class BulguHavuzu
      * bağlanmamış (eski) DÖF maddeleri. Ana Sayfa görevleri ve İşyeri Durumu
      * bunu kullanır — aynı uygunsuzluk iki kez sayılmaz.
      *
-     * @return Collection<int, array{baslik: string, termin: ?\Illuminate\Support\Carbon, sorumlu: ?string, acik: bool, belge: ?string}>
+     * @return Collection<int, array{baslik: string, termin: ?Carbon, sorumlu: ?string, acik: bool, belge: ?string}>
      */
     public static function aksiyonlar(int $firmaId): Collection
     {
@@ -168,7 +172,7 @@ class BulguHavuzu
                 ->filter(fn ($m) => is_array($m) && empty($m['bulgu_id']))
                 ->map(fn (array $m) => [
                     'baslik' => (string) ($m['tespit'] ?? 'DÖF maddesi'),
-                    'termin' => filled($m['termin'] ?? null) ? \Illuminate\Support\Carbon::parse($m['termin']) : null,
+                    'termin' => filled($m['termin'] ?? null) ? Carbon::parse($m['termin']) : null,
                     'sorumlu' => $m['sorumlu'] ?? null,
                     'acik' => in_array($m['durum'] ?? 'acik', ['acik', 'devam_ediyor'], true),
                     'belge' => $r->belge_no,
@@ -188,7 +192,7 @@ class BulguHavuzu
      */
     public static function baglanmamislar(int $userId): Collection
     {
-        $firmaIdler = \App\Models\Firma::query()->where('user_id', $userId)->pluck('id');
+        $firmaIdler = Firma::query()->where('user_id', $userId)->pluck('id');
         $eksik = fn (array $maddeler) => collect($maddeler)->contains(fn ($m) => is_array($m) && filled($m['tespit'] ?? null) && empty($m['bulgu_id']));
 
         return collect()
@@ -211,7 +215,7 @@ class BulguHavuzu
      */
     public static function eskileriBagla(int $userId): int
     {
-        $firmaIdler = \App\Models\Firma::query()->where('user_id', $userId)->pluck('id');
+        $firmaIdler = Firma::query()->where('user_id', $userId)->pluck('id');
         $once = SahaBulgusu::query()->whereIn('firma_id', $firmaIdler)->count();
 
         static::baglanmamislar($userId)->each(fn (Model $rapor) => static::esle($rapor));

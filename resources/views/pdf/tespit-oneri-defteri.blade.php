@@ -16,6 +16,8 @@
     .tespit { font-weight: bold; font-size: 10.5px; margin-bottom: 3px; }
     .oneri { font-size: 10px; margin-bottom: 3px; }
     .dayanak { font-size: 8.5px; color: #666; }
+    .satirli { white-space: pre-line; }
+    .on-bilgi { background: #2563eb; }
     .imza { margin-top: 40px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     .foto-sayfa { page-break-before: always; }
@@ -44,9 +46,16 @@
             $etiket = match ($m['oncelik'] ?? 'orta') { 'yuksek' => 'Yüksek Öncelik', 'dusuk' => 'Düşük Öncelik', default => 'Orta Öncelik' };
         @endphp
         <div class="madde">
-            <span class="oncelik" style="background:{{ $renk }}">{{ $etiket }}</span>
-            <div class="tespit">{{ $i + 1 }}. {{ $m['tespit'] ?? '' }}</div>
-            <div class="oneri">Öneri: {{ $m['oneri'] ?? '—' }}</div>
+            @if (($m['tur'] ?? null) === 'bilgilendirme')
+                <span class="oncelik on-bilgi">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span>
+                <div class="tespit satirli">{{ $i + 1 }}. {{ $m['tespit'] ?? '' }}</div>
+                <div class="oneri satirli"><strong>Firmanın alması gereken önlemler:</strong>
+{{ $m['oneri'] ?? '—' }}</div>
+            @else
+                <span class="oncelik" style="background:{{ $renk }}">{{ $etiket }}</span>
+                <div class="tespit satirli">{{ $i + 1 }}. {{ $m['tespit'] ?? '' }}</div>
+                <div class="oneri satirli">Öneri: {{ $m['oneri'] ?? '—' }}</div>
+            @endif
             @if ($m['dayanak'] ?? null)
                 <div class="dayanak">Dayanak: {{ $m['dayanak'] }}</div>
             @endif

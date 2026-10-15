@@ -126,11 +126,9 @@
                     </tr>
                     @foreach ($this->defter->maddeler as $i => $m)
                         <tr>
-                            <td style="padding:.3rem .5rem">
-                                @if (! empty($m['foto_yolu'])) <span title="Fotoğraf kanıtı ekli">📷</span> @endif
-                                {{ $m['tespit'] }}
-                            </td>
-                            <td style="padding:.3rem .5rem">{{ $m['oneri'] }}</td>
+                            <td style="padding:.3rem .5rem;white-space:pre-line;vertical-align:top">@if (($m['tur'] ?? null) === 'bilgilendirme')<span style="display:inline-block;background:#2563eb;color:#fff;border-radius:4px;padding:0 .4rem;font-size:.72rem">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span>
+@endif @if (! empty($m['foto_yolu'])) <span title="Fotoğraf kanıtı ekli">📷</span> @endif{{ $m['tespit'] }}</td>
+                            <td style="padding:.3rem .5rem;white-space:pre-line;vertical-align:top">{{ $m['oneri'] }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
                                 <button type="button" wire:click="maddeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
                             </td>

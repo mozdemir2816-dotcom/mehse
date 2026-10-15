@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\TespitOneriDefteri as DefterSayfasi;
 use App\Models\Firma;
+use App\Models\SahaBulgusu;
 use App\Models\TespitOneriDefteri;
 use App\Models\User;
 use App\Support\GeminiOneriDanismani;
@@ -219,5 +220,45 @@ class TespitOneriDefteriTest extends TestCase
         $this->assertSame('Yangın Yönetmeliği', $maddeler[1]['dayanak']);
         $this->assertSame('Kapak kilitlenmeli', $maddeler[2]['oneri']);
         $this->assertNull($maddeler[2]['dayanak']);
+    }
+
+    public function test_tablosuz_bilgilendirme_yazisi_on_bilgilendirme_maddesi_olur(): void
+    {
+        Storage::fake('local');
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $defter = TespitOneriDefteri::firmaIcin($firma);
+
+        $word = new PhpWord;
+        $word->addTitleStyle(1, ['bold' => true]);
+        $b = $word->addSection();
+        $b->addText('İskele ve Elektrik Hatları Güvenliği');
+        $b->addText('İŞ GÜVENLİĞİ BİLGİLENDİRMESİ');
+        $b->addText('İşyeri: Örnek Firma   Tarih: 15.10.2026');
+        $b->addText('İskelenin yakınında elektrik hatları bulunduğu bildirilmiştir.');
+        $b->addTitle('1 Elektrik hatları yakınında alınacak önlemler', 1);
+        $b->addText('Dağıtım şirketine yazılı başvuru yapılmalıdır.');
+        $b->addText('Hattın enerjisi kesilmelidir.');
+        $b->addText('Bilgilerinize sunarım.');
+        $b->addText('Uzman Adı');
+        $b->addText('Dayanak: Yapı İşlerinde İSG Yönetmeliği.');
+        $yol = tempnam(sys_get_temp_dir(), 'tod').'.docx';
+        IOFactory::createWriter($word, 'Word2007')->save($yol);
+
+        Livewire::test(DefterSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('wordAktar', data: ['dosya' => UploadedFile::fake()->createWithContent('yazi.docx', file_get_contents($yol))])
+            ->assertHasNoActionErrors();
+
+        $m = $defter->fresh()->maddeler[0];
+        $this->assertSame('bilgilendirme', $m['tur']);
+        $this->assertSame('15.10.2026', $m['tarih']);
+        $this->assertSame("İskele ve Elektrik Hatları Güvenliği\nİskelenin yakınında elektrik hatları bulunduğu bildirilmiştir.", $m['tespit']);
+        $this->assertSame("1 Elektrik hatları yakınında alınacak önlemler\n• Dağıtım şirketine yazılı başvuru yapılmalıdır.\n• Hattın enerjisi kesilmelidir.", $m['oneri']);
+        $this->assertSame('Yapı İşlerinde İSG Yönetmeliği.', $m['dayanak']);
+        $this->assertSame(0, SahaBulgusu::count()); // saha bulgusu açılmaz
+
+        $html = view('pdf.tespit-oneri-defteri', ['defter' => $defter->fresh(), 'firma' => $firma])->render();
+        $this->assertStringContainsString('Ön Bilgilendirme — 15.10.2026', $html);
+        $this->assertStringContainsString('Firmanın alması gereken önlemler', $html);
     }
 }
