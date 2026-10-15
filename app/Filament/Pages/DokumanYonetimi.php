@@ -439,7 +439,7 @@ class DokumanYonetimi extends Page
                         'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
                         'application/zip',
                     ])
-                    ->maxSize(20480)
+                    ->maxSize(40960)
                     ->maxFiles(30)
                     ->reorderable()
                     ->helperText('Belge birden fazla sayfaysa sayfaları tek tek çekebilir veya hepsini birlikte seçebilirsiniz; fotoğraflar sırasıyla tek bir PDF\'te birleştirilir.')
@@ -624,7 +624,7 @@ class DokumanYonetimi extends Page
                         'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel',
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword',
-                    ])->maxSize(20480)->maxFiles(30)->reorderable(),
+                    ])->maxSize(40960)->maxFiles(30)->reorderable(),
                 DatePicker::make('baslangic_tarihi')->label('Belge Tarihi')->native(false)->displayFormat('d.m.Y')->required(),
             ])
             ->action(function (array $data, array $arguments): void {
@@ -672,7 +672,7 @@ class DokumanYonetimi extends Page
                 ...$this->kategoriAlanlari(),
                 Textarea::make('aciklama')->label('Not')->rows(2),
                 FileUpload::make('dosya')->storeFileNamesIn('dosya_adi_ozgun')->label('Yeni dosya (boş bırakılırsa mevcut dosya korunur)')
-                    ->disk('public')->directory('arsiv/gecici')->maxSize(20480),
+                    ->disk('public')->directory('arsiv/gecici')->maxSize(40960),
             ])
             ->action(function (array $data, array $arguments): void {
                 $d = $this->bul($arguments['id'] ?? null);
