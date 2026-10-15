@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\CalisanTemsilcisiSecimi as SecimSayfasi;
+use App\Models\Calisan;
+use App\Models\CalisanTemsilcisiSecimi;
 use App\Models\CalisanTemsilcisiSecimi as SecimModel;
 use App\Models\Firma;
 use App\Models\User;
@@ -30,7 +32,7 @@ class CalisanTemsilcisiSecimiTest extends TestCase
     public function test_sayfa_acilir_ve_firma_secilince_zorunlu_temsilci_sayisi_onerilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
-        \App\Models\Calisan::factory()->count(5)->for($firma)->create();
+        Calisan::factory()->count(5)->for($firma)->create();
 
         $component = Livewire::test(SecimSayfasi::class)
             ->assertOk()
@@ -182,5 +184,20 @@ class CalisanTemsilcisiSecimiTest extends TestCase
         $component = Livewire::test(SecimSayfasi::class);
 
         $this->assertEmpty($component->get('firmalar'));
+    }
+
+    public function test_bos_sablon_firma_secilince_firma_adini_basar_kisi_alanlari_bos_kalir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bert Plastik Ltd.', 'adres' => 'Adaköy Nilüfer']);
+        $secim = new CalisanTemsilcisiSecimi;
+
+        foreach (['duyuru', 'basvuru', 'aday-listesi', 'tutanak'] as $belge) {
+            $html = view('pdf.calisan-temsilcisi-'.$belge, ['secim' => $secim, 'firma' => $firma, 'bos' => true])->render();
+            $this->assertStringContainsString('Bert Plastik Ltd.', $html, $belge);
+        }
+
+        $firmasiz = view('pdf.calisan-temsilcisi-tutanak', ['secim' => $secim, 'firma' => null, 'bos' => true])->render();
+        $this->assertStringNotContainsString('Bert Plastik', $firmasiz);
+        $this->assertInstanceOf(StreamedResponse::class, CalisanTemsilcisiSecimiUretici::bosSablonZip($firma));
     }
 }

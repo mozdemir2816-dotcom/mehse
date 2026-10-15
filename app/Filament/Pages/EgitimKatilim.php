@@ -2,30 +2,33 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\AileAnaSayfasi;
+use App\Filament\Concerns\KaydetSecenegi;
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Calisan;
 use App\Models\EgitimKatilim as EgitimKatilimModel;
 use App\Models\Firma;
 use App\Models\Sertifika;
 use App\Models\YillikPlan;
 use App\Support\EgitimIcerikOlusturucu;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\EgitimKatilimUretici;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
 use BackedEnum;
-use Illuminate\Support\Carbon;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Eğitim Katılım Formu — isgpratik EĞİTİM ekranları. "İş Sağlığı ve Güvenliği"
  * seçilince Genel/Sağlık/Teknik/İşyerine Özgü Riskler 4 bloğu birden gösterilir;
@@ -34,11 +37,9 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class EgitimKatilim extends Page
 {
-    use \App\Filament\Concerns\AileAnaSayfasi;
-
-    use \App\Filament\Concerns\SinirliErisim;
-    use \App\Filament\Concerns\KaydetSecenegi;
-
+    use AileAnaSayfasi;
+    use KaydetSecenegi;
+    use SinirliErisim;
     use WithFileUploads;
 
     protected string $view = 'filament.pages.egitim-katilim';
@@ -704,7 +705,7 @@ class EgitimKatilim extends Page
      */
     /**
      * @param  array<int, string>|null  $egitimTarihleri  gün gün eğitim tarihleri (kullanıcı sorulunca);
-     *                                                     boş ise belge tarihi gün sayısı kadar tekrarlanır
+     *                                                    boş ise belge tarihi gün sayısı kadar tekrarlanır
      */
     private function sertifikaKur(EgitimKatilimModel $kayit, ?array $egitimTarihleri = null): Sertifika
     {
@@ -779,8 +780,9 @@ class EgitimKatilim extends Page
 
     private function kaydet(): ?EgitimKatilimModel
     {
-        if (! $this->firma || ! $this->belgeTarihi) {
-            Notification::make()->title('Firma ve tarih zorunlu')->danger()->send();
+        // Tarih ve ders saati boş bırakılabilir — belgede elle doldurulacak boşluk çıkar (kullanıcı 15.10.2026).
+        if (! $this->firma) {
+            Notification::make()->title('Firma seçin')->danger()->send();
 
             return null;
         }
@@ -794,18 +796,15 @@ class EgitimKatilim extends Page
 
         if ($this->gecersizTcler) {
             Notification::make()->title('T.C. 11 haneli olmadığı için çalışan kaydına T.C.\'siz eklendi')
-                ->body(implode("
-", $this->gecersizTcler)."
-Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirsiniz.")
+                ->body(implode('
+', $this->gecersizTcler).'
+Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirsiniz.')
                 ->warning()->persistent()->send();
         }
 
-        // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse onu kaydet.
+        // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse ya da sildiyse (elle yazılacak) onu kaydet.
         $icerik = $this->icerik;
-
-        if (($icerik['tip'] ?? null) === 'genel' && $this->dersSaati) {
-            $icerik['saat'] = $this->dersSaati;
-        }
+        $icerik['saat'] = $this->dersSaati ?: null;
 
         $kayit = $this->kayitIcin(EgitimKatilimModel::class, [
             'firma_id' => $this->firma->id,
@@ -890,7 +889,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 ->modalDescription('Sertifikaya basılacak eğitim tarih(ler)ini girin. Her katılımcı için ayrı sertifika sayfası oluşturulur.')
                 ->schema(fn () => [
                     ...array_map(
-                        fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
+                        fn (int $g) => DatePicker::make("egitim_gun_{$g}")
                             ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
                             ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
                             ->required(),
@@ -923,7 +922,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 ->modalHeading('Yıldız Grup Eğitim Sertifikası')
                 ->modalDescription('Eğitim konuları ve süreleri bu katılım formundan alınır. Sertifikaya basılacak eğitim tarih(ler)ini girin; her katılımcı için ayrı Excel sayfası oluşturulur.')
                 ->schema(fn () => [ImzaSecenegi::alan(), ...array_map(
-                    fn (int $g) => \Filament\Forms\Components\DatePicker::make("egitim_gun_{$g}")
+                    fn (int $g) => DatePicker::make("egitim_gun_{$g}")
                         ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
                         ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
                         ->required(),

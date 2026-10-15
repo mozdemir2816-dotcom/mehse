@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
 use App\Models\CalisanTemsilcisiSecimi as SecimModel;
 use App\Models\Firma;
 use App\Support\CalisanTemsilcisiSecimiUretici;
@@ -13,7 +14,6 @@ use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Çalışan Temsilcisi Seçim süreci — isgpratik ATAMA YAZISI/ÇALIŞAN TEMSİLCİSİ
  * referansı. Atama Yazıları'ndaki direkt "atama" akışının aksine, burada
@@ -22,7 +22,7 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class CalisanTemsilcisiSecimi extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.calisan-temsilcisi-secimi';
 
@@ -181,7 +181,7 @@ class CalisanTemsilcisiSecimi extends Page
                 ->icon('heroicon-o-document-duplicate')
                 ->color('gray')
                 ->tooltip('Firma adı ve aday listesi boş — elle doldurmak için 5 belgenin tamamı')
-                ->action(fn () => CalisanTemsilcisiSecimiUretici::bosSablonZip()),
+                ->action(fn () => CalisanTemsilcisiSecimiUretici::bosSablonZip($this->firma)),
 
             Action::make('duyuru')
                 ->label('Seçim Duyuru İlanı')

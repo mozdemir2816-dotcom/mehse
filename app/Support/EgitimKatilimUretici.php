@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\EgitimKatilim;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -101,7 +102,7 @@ class EgitimKatilimUretici
         $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
 
         $tarihler = collect($kayit->gun_tarihleri ?? [])->filter()
-            ->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d.m.Y'))->values();
+            ->map(fn ($t) => Carbon::parse($t)->format('d.m.Y'))->values();
         if ($tarihler->isEmpty() && $kayit->belge_tarihi) {
             $tarihler = collect([$kayit->belge_tarihi->format('d.m.Y')]);
         }
@@ -116,10 +117,10 @@ class EgitimKatilimUretici
         if (filled($kayit->egitim_yeri)) {
             $s->setCellValue('F4', $kayit->egitim_yeri);
         }
-        if ($saat = $icerik['saat'] ?? null) {
-            $s->setCellValue('L26', "Eğitim Süresi: / {$saat} Ders Saati");
-            $s->setCellValue('M26', "Eğitim Süresi: / {$saat} Ders Saati");
-        }
+        // Ders saati boşsa şablondaki örnek "8" kalmasın — elle doldurulacak boşluk.
+        $saat = ($icerik['saat'] ?? null) ?: '..........';
+        $s->setCellValue('L26', "Eğitim Süresi: / {$saat} Ders Saati");
+        $s->setCellValue('M26', "Eğitim Süresi: / {$saat} Ders Saati");
         $s->getColumnDimension('M')->setVisible($ikiGun);
         if ($ikiGun) {
             // Şablonda L26 ve M26 aynı metni taşır (M gizliyken tek görünür); 2 günde tek hücre olsun.

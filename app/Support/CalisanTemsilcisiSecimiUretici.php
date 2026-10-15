@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\CalisanTemsilcisiSecimi;
+use App\Models\Firma;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -60,7 +61,8 @@ class CalisanTemsilcisiSecimiUretici
      * blade'i `bos=true` ile render eder; şablonlar kendi içinde firma/aday
      * alanlarını boş çizgi/hücreyle değiştirir.
      */
-    public static function bosSablonZip(): StreamedResponse
+    /** Firma verilirse boş belgelerde firma adı/adresi basılır, kişi alanları boş kalır. */
+    public static function bosSablonZip(?Firma $firma = null): StreamedResponse
     {
         $secim = new CalisanTemsilcisiSecimi;
 
@@ -77,7 +79,7 @@ class CalisanTemsilcisiSecimiUretici
         $zip->open($zipYolu, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
         foreach ($belgeler as $dosyaAdi => $view) {
-            $pdf = Pdf::loadView($view, ['secim' => $secim, 'firma' => null, 'bos' => true])->setPaper('a4');
+            $pdf = Pdf::loadView($view, ['secim' => $secim, 'firma' => $firma, 'bos' => true])->setPaper('a4');
             $zip->addFromString($dosyaAdi, $pdf->output());
         }
 

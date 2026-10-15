@@ -82,21 +82,20 @@
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Belge Düzenleme Tarihi <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Belge Düzenleme Tarihi</label>
                 <input type="date" wire:model="belgeTarihi"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             </div>
-            @if ($baslikAnahtari === 'genel')
-                <div>
+            <div>
                     <label style="font-weight:600;font-size:.82rem">Ders Saati</label>
                     <input type="number" min="1" wire:model.live="dersSaati"
                         style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
                         Tehlike sınıfına göre otomatik (Az Tehl. 8 · Tehl. 12 · Çok Tehl. 16). Az tehlikeli işyeri için
                         gerekirse 16 yapabilirsiniz — belgede "{{ $dersSaati ?? '…' }} Ders Saati" yazar.
+                        Tarihi veya ders saatini boş bırakırsanız belgede kalemle doldurulacak boşluk çıkar.
                     </p>
                 </div>
-            @endif
             <div>
                 <label style="font-weight:600;font-size:.82rem">Eğitim Süresi (Gün)</label>
                 <input type="number" min="1" wire:model="sureGun"

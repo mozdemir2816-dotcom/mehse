@@ -29,7 +29,7 @@
 
     <div class="ust">
         <div class="sol">
-            <div class="firma">@if ($bosMi)<span class="bos" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
+            <div class="firma">@if ($bosMi && ! $firma)<span class="bos" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
             <h1>ÇALIŞAN TEMSİLCİSİ ADAY BAŞVURU DİLEKÇESİ</h1>
         </div>
         <div class="sag">
@@ -38,12 +38,12 @@
         </div>
     </div>
 
-    <div class="adres">İşyeri Adresi: @if ($bosMi)<span class="bos" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
+    <div class="adres">İşyeri Adresi: @if ($bosMi && ! $firma)<span class="bos" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
 
     <div class="hitap">Sayın İşveren / İşveren Vekili</div>
 
     <div class="govde">
-        @if ($bosMi)<span class="bos" style="min-width:220px">&nbsp;</span>@else{{ $firma?->unvan }}@endif işyerinde çalışan temsilcisi seçimi yapılacağını öğrendim. 6331 sayılı İş Sağlığı ve
+        @if ($bosMi && ! $firma)<span class="bos" style="min-width:220px">&nbsp;</span>@else{{ $firma?->unvan }}@endif işyerinde çalışan temsilcisi seçimi yapılacağını öğrendim. 6331 sayılı İş Sağlığı ve
         Güvenliği Kanununun 20 nci maddesi ile ilgili Tebliğ hükümleri kapsamındaki adaylık şartlarını taşıdığımı
         beyan eder; çalışan temsilcisi adaylığımın kabul edilmesini arz ederim.
     </div>
@@ -57,7 +57,7 @@
     <table class="kunye">
         <tr><td>Adayın Adı Soyadı</td><td>&nbsp;</td></tr>
         <tr><td>Unvanı / Görevi</td><td>&nbsp;</td></tr>
-        <tr><td>İşyeri</td><td>@if ($bosMi)&nbsp;@else{{ $firma?->unvan }}@endif</td></tr>
+        <tr><td>İşyeri</td><td>@if ($bosMi && ! $firma)&nbsp;@else{{ $firma?->unvan }}@endif</td></tr>
         <tr><td>Başvuru Tarihi</td><td>&nbsp;</td></tr>
     </table>
 

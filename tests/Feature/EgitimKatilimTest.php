@@ -905,4 +905,25 @@ class EgitimKatilimTest extends TestCase
         $this->assertSame(0, Calisan::count());
         $this->assertSame([[], [], [], []], EgitimKatilim::pluck('katilimcilar')->map(fn ($k) => (array) $k)->all());
     }
+
+    public function test_tarih_ve_ders_saati_bos_birakilirsa_elle_doldurulacak_bosluk_basilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'calisan_temsilcisi')
+            ->set('belgeTarihi', null)
+            ->set('dersSaati', null)
+            ->callAction('pdf', data: ['imzali' => '0'])
+            ->assertFileDownloaded();
+
+        $kayit = EgitimKatilim::firstOrFail();
+        $this->assertNull($kayit->belge_tarihi);
+        $this->assertNull($kayit->konu_secimleri['saat']);
+
+        $html = view('pdf.egitim-katilim', ['kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri, 'imzali' => false])->render();
+        $this->assertStringContainsString('..... / ..... / ..........', $html);
+        $this->assertStringContainsString('.......... Ders Saati', $html);
+    }
 }

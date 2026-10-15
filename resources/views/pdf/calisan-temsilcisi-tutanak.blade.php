@@ -32,7 +32,7 @@
 
     <div class="ust">
         <div class="sol">
-            <div class="firma">@if ($bosMi)<span class="cizgi" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
+            <div class="firma">@if ($bosMi && ! $firma)<span class="cizgi" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
             <h1>ÇALIŞAN TEMSİLCİSİ ATAMA TUTANAĞI</h1>
         </div>
         <div class="sag">
@@ -41,10 +41,10 @@
         </div>
     </div>
 
-    <div class="adres">İşyeri Adresi: @if ($bosMi)<span class="cizgi" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
+    <div class="adres">İşyeri Adresi: @if ($bosMi && ! $firma)<span class="cizgi" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
 
     <div class="govde">
-        @if ($bosMi)<span class="cizgi" style="min-width:220px">&nbsp;</span>@else{{ $firma?->unvan }}@endif işyerinde gerçekleştirilen çalışan temsilcisi seçimi sonucunda aşağıda bilgileri yer
+        @if ($bosMi && ! $firma)<span class="cizgi" style="min-width:220px">&nbsp;</span>@else{{ $firma?->unvan }}@endif işyerinde gerçekleştirilen çalışan temsilcisi seçimi sonucunda aşağıda bilgileri yer
         alan çalışan, 6331 sayılı İş Sağlığı ve Güvenliği Kanununun 20 nci maddesi kapsamında çalışan temsilcisi
         olarak görevlendirilmiştir.
     </div>

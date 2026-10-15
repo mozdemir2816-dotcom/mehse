@@ -104,13 +104,15 @@
 
     @php
         $ikiGun = ($kayit->sure_gun ?? 1) >= 2;
-        $sureMetni = (($icerik['saat'] ?? null) ? $icerik['saat'].' Ders Saati · ' : '')
-            .($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '');
+        // Ders saati / tarih boşsa elle doldurulacak noktalı yer basılır.
+        $sureMetni = ($icerik['saat'] ?? null)
+            ? $icerik['saat'].' Ders Saati · '.($kayit->sure_gun ?? 1).' gün'.($ikiGun ? ' (1. ve 2. gün)' : '')
+            : '.......... Ders Saati';
         $gunTarihleri = collect($kayit->gun_tarihleri ?? [])->filter()
             ->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d.m.Y'))->values();
         $tarihMetni = $gunTarihleri->count() > 1
             ? $gunTarihleri->map(fn ($t, $i) => ($i + 1).'. Gün: '.$t)->implode(' · ')
-            : ($gunTarihleri->first() ?? $kayit->belge_tarihi?->format('d.m.Y'));
+            : ($gunTarihleri->first() ?? $kayit->belge_tarihi?->format('d.m.Y') ?? '..... / ..... / ..........');
         $tekrarMi = ($kayit->egitim_turu ?? 'ilk') === 'tekrar';
         $sekil = $kayit->egitim_sekli ?? 'yuz_yuze';
         $tik = fn (bool $v) => '<span class="kutu">'.($v ? 'X' : '').'</span>';

@@ -30,7 +30,7 @@
 
     <div class="ust">
         <div class="sol">
-            <div class="firma">@if ($bosMi)<span class="cizgi" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
+            <div class="firma">@if ($bosMi && ! $firma)<span class="cizgi" style="min-width:260px">&nbsp;</span>@else{{ $firma?->unvan }}@endif</div>
             <h1>ÇALIŞAN TEMSİLCİSİ KESİN ADAY LİSTESİ</h1>
         </div>
         <div class="sag">
@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <div class="adres">İşyeri Adresi: @if ($bosMi)<span class="cizgi" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
+    <div class="adres">İşyeri Adresi: @if ($bosMi && ! $firma)<span class="cizgi" style="min-width:320px">&nbsp;</span>@else{{ $firma?->adres }}@endif</div>
 
     <div class="govde">
         Çalışan temsilcisi seçimi için süresi içinde başvuruda bulunan adayların listesi aşağıdadır. Bu liste
