@@ -60,27 +60,38 @@ class CalisanTemsilcisiSecimiUretici
      * basılıp elle doldurulacak evrak istendiği için). Her 5 belge de aynı
      * blade'i `bos=true` ile render eder; şablonlar kendi içinde firma/aday
      * alanlarını boş çizgi/hücreyle değiştirir.
+     *
+     * @return array<string, string> dosya adı => PDF içeriği (5 boş seçim belgesi)
      */
-    /** Firma verilirse boş belgelerde firma adı/adresi basılır, kişi alanları boş kalır. */
-    public static function bosSablonZip(?Firma $firma = null): StreamedResponse
+    public static function bosBelgeler(?Firma $firma = null): array
     {
         $secim = new CalisanTemsilcisiSecimi;
+        $cikti = [];
 
-        $belgeler = [
+        foreach ([
             'secim-duyuru-ilani-bos.pdf' => 'pdf.calisan-temsilcisi-duyuru',
             'aday-basvuru-dilekcesi-bos.pdf' => 'pdf.calisan-temsilcisi-basvuru',
             'kesin-aday-listesi-bos.pdf' => 'pdf.calisan-temsilcisi-aday-listesi',
             'oy-pusulasi-bos.pdf' => 'pdf.calisan-temsilcisi-oy-pusulasi',
             'atama-tutanagi-bos.pdf' => 'pdf.calisan-temsilcisi-tutanak',
-        ];
+        ] as $dosyaAdi => $view) {
+            $cikti[$dosyaAdi] = Pdf::loadView($view, ['secim' => $secim, 'firma' => $firma, 'bos' => true])->setPaper('a4')->output();
+        }
+
+        return $cikti;
+    }
+
+    /** Firma verilirse boş belgelerde firma adı/adresi basılır, kişi alanları boş kalır. */
+    public static function bosSablonZip(?Firma $firma = null): StreamedResponse
+    {
+        $secim = new CalisanTemsilcisiSecimi;
 
         $zipYolu = tempnam(sys_get_temp_dir(), 'mehse-ct-bos').'.zip';
         $zip = new ZipArchive;
         $zip->open($zipYolu, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
-        foreach ($belgeler as $dosyaAdi => $view) {
-            $pdf = Pdf::loadView($view, ['secim' => $secim, 'firma' => $firma, 'bos' => true])->setPaper('a4');
-            $zip->addFromString($dosyaAdi, $pdf->output());
+        foreach (static::bosBelgeler($firma) as $dosyaAdi => $icerik) {
+            $zip->addFromString($dosyaAdi, $icerik);
         }
 
         $zip->close();

@@ -531,26 +531,13 @@ class AtamaYazilari extends Page
     /** Kaydedilmeyen, kişi alanları noktalı boş atama yazısı (elle doldurmak için). */
     private function bosFormKaydi(array $data): AtamaYazisiModel
     {
-        $bos = AtamaYazisiUretici::BOS_ALAN;
-        $uye = fn (?string $ekipGorevi = null) => array_filter([
-            'ad_soyad' => $bos, 'tc' => $bos, 'gorev' => $bos, 'bas_uye' => false, 'ekip_gorevi' => $ekipGorevi,
-        ], fn ($v) => $v !== null);
-
-        $uyeler = $this->topluMu()
-            ? array_map($uye, ['İş Güvenliği Uzmanı', 'İşyeri Hekimi', 'Çalışan Temsilcisi', 'Destek Elemanı', 'Bilgi Sahibi Çalışan'])
-            : array_fill(0, max(1, min(30, (int) ($data['adet'] ?? 1))), $uye());
-
-        $kayit = new AtamaYazisiModel([
-            'firma_id' => $this->firma->id,
-            'rol_anahtari' => $this->rolAnahtari,
-            'tarih' => ($data['tarihsiz'] ?? false) ? null : $this->tarih,
-            'isveren_vekili_adi' => $this->isverenVekiliAdi,
-            'uyeler' => $uyeler,
-        ]);
-        $kayit->dokuman_no = 'BOŞ FORM';
-        $kayit->setRelation('firma', $this->firma);
-
-        return $kayit;
+        return AtamaYazisiUretici::bosKayit(
+            $this->firma,
+            $this->rolAnahtari,
+            (int) ($data['adet'] ?? 1),
+            ($data['tarihsiz'] ?? false) ? null : $this->tarih,
+            $this->isverenVekiliAdi,
+        );
     }
 
     public function egitimFormuOlustur()

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Firma;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -24,7 +25,7 @@ class FirmaEvrakZipUretici
             ->all();
     }
 
-    /** @return array<int, array{anahtar: string, tip: string, tarih: \Carbon\CarbonInterface}> en yeni üstte (İşyeri paneli listesi) */
+    /** @return array<int, array{anahtar: string, tip: string, tarih: CarbonInterface}> en yeni üstte (İşyeri paneli listesi) */
     public static function liste(Firma $firma): array
     {
         return static::firmaSatirlari($firma)
@@ -49,13 +50,35 @@ class FirmaEvrakZipUretici
 
     public static function zip(Firma $firma, array $secilenAnahtarlar): StreamedResponse
     {
-        $secilenler = static::firmaSatirlari($firma)
-            ->filter(fn (array $s) => in_array(static::anahtar($s), $secilenAnahtarlar, true));
-
         $zipYolu = tempnam(sys_get_temp_dir(), 'mehse-evrak').'.zip';
         $zip = new ZipArchive;
         $zip->open($zipYolu, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
+        foreach (static::icerikler($firma, $secilenAnahtarlar) as $ad => $icerik) {
+            $zip->addFromString($ad, $icerik);
+        }
+
+        $zip->close();
+
+        $dosyaAdi = Str::slug($firma->unvan).'-evraklar.zip';
+
+        return response()->streamDownload(function () use ($zipYolu) {
+            echo file_get_contents($zipYolu);
+            @unlink($zipYolu);
+        }, $dosyaAdi);
+    }
+
+    /**
+     * Seçilen kayıtlı evrakların PDF içerikleri (FirmaEvrakPaketi de kullanır).
+     *
+     * @return array<string, string> dosya adı => PDF
+     */
+    public static function icerikler(Firma $firma, array $secilenAnahtarlar): array
+    {
+        $secilenler = static::firmaSatirlari($firma)
+            ->filter(fn (array $s) => in_array(static::anahtar($s), $secilenAnahtarlar, true));
+
+        $cikti = [];
         $kullanilanAdlar = [];
 
         foreach ($secilenler as $s) {
@@ -83,17 +106,10 @@ class FirmaEvrakZipUretici
             }
             $kullanilanAdlar[] = $ad;
 
-            $zip->addFromString($ad, $icerik);
+            $cikti[$ad] = $icerik;
         }
 
-        $zip->close();
-
-        $dosyaAdi = Str::slug($firma->unvan).'-evraklar.zip';
-
-        return response()->streamDownload(function () use ($zipYolu) {
-            echo file_get_contents($zipYolu);
-            @unlink($zipYolu);
-        }, $dosyaAdi);
+        return $cikti;
     }
 
     /** @return Collection<int, array> */

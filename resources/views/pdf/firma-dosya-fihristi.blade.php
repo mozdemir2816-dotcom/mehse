@@ -63,6 +63,24 @@
     $toplam = $tumSatirlar->count();
     $tamam = $tumSatirlar->where('durum', 'tamamlandi')->count();
 @endphp
+@if (! empty($bosFormlar))
+    {{-- Firma adıyla hazır, elle doldurulacak formlar — Firmalar > Evrakları İndir'den seçilerek iner --}}
+    <h2>Hazır Boş Formlar (elle doldurulacak)</h2>
+    <table class="liste">
+        <tr><th style="width:22px">#</th><th>Form</th><th style="width:170px">Grup</th></tr>
+        @foreach ($bosFormlar as $grup => $formlar)
+            @foreach ($formlar as $ad)
+                <tr>
+                    <td class="no">{{ $sira++ }}</td>
+                    <td>{{ $ad }}</td>
+                    <td>{{ ['atama' => 'Atama Yazısı', 'egitim' => 'Eğitim Katılım Formu', 'diger' => 'Diğer'][$grup] ?? $grup }}</td>
+                </tr>
+            @endforeach
+        @endforeach
+    </table>
+    <p style="font-size:8px;color:#666;margin-top:3px">Bu formlar firma adıyla "Evrakları İndir" penceresinden seçilerek indirilir; ad soyad, T.C. ve imzalar eğitim/atama sırasında kalemle doldurulur.</p>
+@endif
+
 <div class="ozet">
     <strong>Genel Durum:</strong> {{ $tamam }} / {{ $toplam }} kalem tamam
     ({{ $toplam > 0 ? round($tamam / $toplam * 100) : 0 }}%).

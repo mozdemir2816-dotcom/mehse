@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\Firmas\Tables;
 
 use App\Filament\Pages\AcilDurumPlani;
+use App\Filament\Resources\Firmas\EvrakPaketiAksiyonu;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
 use App\Models\Firma;
-use App\Support\FirmaEvrakZipUretici;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -17,7 +17,6 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -87,22 +86,7 @@ class FirmasTable
                     ->color('danger')
                     ->hidden(fn (Firma $record) => $record->trashed())
                     ->url(fn (Firma $record) => AcilDurumPlani::getUrl(['firma' => $record->id])),
-                Action::make('evrakIndir')
-                    ->label('Evrakları İndir')
-                    ->icon('heroicon-o-archive-box-arrow-down')
-                    ->color('gray')
-                    ->visible(fn (Firma $record) => ! $record->trashed() && filled(FirmaEvrakZipUretici::secenekler($record)))
-                    ->schema(fn (Firma $record) => [
-                        CheckboxList::make('secilenler')
-                            ->label('İndirilecek evraklar')
-                            ->options(FirmaEvrakZipUretici::secenekler($record))
-                            ->default(array_keys(FirmaEvrakZipUretici::secenekler($record)))
-                            ->searchable()
-                            ->bulkToggleable()
-                            ->columns(1),
-                    ])
-                    ->modalSubmitActionLabel('ZIP Olarak İndir')
-                    ->action(fn (Firma $record, array $data) => FirmaEvrakZipUretici::zip($record, $data['secilenler'] ?? [])),
+                EvrakPaketiAksiyonu::make(),
                 EditAction::make()->hidden(fn (Firma $record) => $record->trashed()),
                 ActionGroup::make([
                     IsyeriGirisAksiyonu::make(),

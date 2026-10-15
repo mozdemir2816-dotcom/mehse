@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\EgitimKatilim;
+use App\Models\Firma;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -58,7 +59,8 @@ class EgitimKatilimUretici
      * gelenlerin kendi el yazısıyla ad/T.C./imza atması için (en az 10 satır,
      * bkz. pdf.egitim-katilim şablonundaki satır tamamlama mantığı).
      */
-    public static function bosFormPdf(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi, string $egitimTuru): StreamedResponse
+    /** Firma verilirse belgede firma adı basılır (firma evrak paketi); katılımcılar yine boş. */
+    public static function bosFormPdf(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi, string $egitimTuru, ?Firma $firma = null): StreamedResponse
     {
         $icerik = EgitimIcerikOlusturucu::olustur($baslikAnahtari, $sektorAnahtari, $tehlikeSinifi, $egitimTuru);
 
@@ -74,7 +76,7 @@ class EgitimKatilimUretici
 
         $ad = 'bos-egitim-katilim-'.Str::slug($kayit->basliklarEtiketi()).'.pdf';
 
-        return static::pdfCikti($kayit, null, $icerik, $ad);
+        return static::pdfCikti($kayit, $firma, $icerik, $ad);
     }
 
     /** Kullanıcının kendi formu (resources/belge) — konular/başlık/logo elle düzenlenir, kod dokunmaz. */

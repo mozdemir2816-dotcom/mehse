@@ -2,15 +2,16 @@
 
 namespace App\Filament\Resources\Firmas\Pages;
 
+use App\Filament\Concerns\KaydetUstte;
 use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\IsyeriDurumMerkezi;
+use App\Filament\Resources\Firmas\EvrakPaketiAksiyonu;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
 use App\Filament\Resources\Firmas\Tables\FirmasTable;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Support\FirmaDosyaFihristiUretici;
-use App\Support\FirmaEvrakZipUretici;
 use App\Support\IsKalemiEvrakHazirlayici;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -19,7 +20,7 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditFirma extends EditRecord
 {
-    use \App\Filament\Concerns\KaydetUstte;
+    use KaydetUstte;
 
     protected static string $resource = FirmaResource::class;
 
@@ -48,15 +49,7 @@ class EditFirma extends EditRecord
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (Firma $record) => FirmaDosyaFihristiUretici::pdf($record)),
 
-            Action::make('tumEvrakIndir')
-                ->label('Tüm Evrakları İndir (ZIP)')
-                ->icon('heroicon-o-archive-box-arrow-down')
-                ->color('gray')
-                ->visible(fn (Firma $record): bool => filled(FirmaEvrakZipUretici::secenekler($record)))
-                ->action(fn (Firma $record) => FirmaEvrakZipUretici::zip(
-                    $record,
-                    array_keys(FirmaEvrakZipUretici::secenekler($record)),
-                )),
+            EvrakPaketiAksiyonu::make('tumEvrakIndir')->label('Tüm Evrakları İndir (ZIP)'),
 
             Action::make('isKalemiEvraklariniHazirla')
                 ->label('İş Kalemlerine Göre Evrakları Hazırla')

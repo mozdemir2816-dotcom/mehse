@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Firmas\Pages\EditFirma;
 use App\Filament\Resources\Firmas\Pages\ListFirmas;
+use App\Models\AtamaYazisi;
 use App\Models\DofRaporu;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\User;
+use App\Support\FirmaEvrakPaketi;
 use App\Support\FirmaEvrakZipUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -106,16 +108,50 @@ class FirmaEvrakZipUreticiTest extends TestCase
         RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
 
         Livewire::test(ListFirmas::class)
-            ->callTableAction('evrakIndir', $firma, data: ['secilenler' => array_keys(FirmaEvrakZipUretici::secenekler($firma))])
-            ->assertSuccessful();
+            ->callTableAction('evrakIndir', $firma, data: ['kayitli' => array_keys(FirmaEvrakZipUretici::secenekler($firma))])
+            ->assertSuccessful()
+            ->assertFileDownloaded();
     }
 
-    public function test_evrak_yoksa_evrak_indir_aksiyonu_gorunmez(): void
+    public function test_kayitli_evrak_yoksa_da_bos_formlar_icin_aksiyon_gorunur_secimsiz_indirmez(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
         Livewire::test(ListFirmas::class)
-            ->assertTableActionHidden('evrakIndir', $firma);
+            ->assertTableActionVisible('evrakIndir', $firma)
+            ->callTableAction('evrakIndir', $firma, data: ['kayitli' => [], 'atama' => [], 'egitim' => [], 'diger' => []])
+            ->assertNotified('En az bir evrak seçin')
+            ->assertNoFileDownloaded();
+    }
+
+    public function test_evrak_paketi_kayitli_ve_bos_formlari_firma_adiyla_tek_zipte_toplar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bert Plastik', 'tehlike_sinifi' => 'tehlikeli']);
+        RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+
+        $yanit = FirmaEvrakPaketi::zip($firma, [
+            'kayitli' => array_keys(FirmaEvrakZipUretici::secenekler($firma)),
+            'atama' => ['calisan_temsilcisi', 'sondurme_ekibi', 'risk_degerlendirme_ekibi'],
+            'egitim' => ['genel', 'isg_kurulu'],
+            'diger' => ['calisan_temsilcisi_secim', 'isbasi_katilim'],
+        ]);
+
+        ob_start();
+        $yanit->sendContent();
+        $gecici = tempnam(sys_get_temp_dir(), 'pkt');
+        file_put_contents($gecici, ob_get_clean());
+
+        $zip = new ZipArchive;
+        $zip->open($gecici);
+        $adlar = collect(range(0, $zip->numFiles - 1))->map(fn ($i) => $zip->getNameIndex($i));
+        $zip->close();
+        unlink($gecici);
+
+        // 1 kayıtlı + 3 atama + 2 eğitim + 5 seçim belgesi + 1 işbaşı
+        $this->assertCount(12, $adlar);
+        $this->assertTrue($adlar->contains('bos-formlar/atama-calisan-temsilcisi.pdf'));
+        $this->assertTrue($adlar->contains('bos-formlar/calisan-temsilcisi/oy-pusulasi-bos.pdf'));
+        $this->assertSame(0, AtamaYazisi::count()); // boş formlar kayıt oluşturmaz
     }
 
     public function test_firma_duzenleme_sayfasinda_tek_tikla_tum_evrak_indirilir(): void
@@ -129,11 +165,13 @@ class FirmaEvrakZipUreticiTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_firma_duzenleme_sayfasinda_evrak_yoksa_indir_butonu_gizli(): void
+    public function test_firma_duzenleme_sayfasinda_bos_formlar_secilip_indirilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
         Livewire::test(EditFirma::class, ['record' => $firma->getRouteKey()])
-            ->assertActionHidden('tumEvrakIndir');
+            ->assertActionVisible('tumEvrakIndir')
+            ->callAction('tumEvrakIndir', data: ['atama' => ['koruma_ekibi'], 'egitim' => ['calisan_temsilcisi']])
+            ->assertFileDownloaded();
     }
 }

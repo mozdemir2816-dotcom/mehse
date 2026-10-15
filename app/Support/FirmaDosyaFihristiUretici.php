@@ -46,6 +46,7 @@ class FirmaDosyaFihristiUretici
         $pdf = Pdf::loadView('pdf.firma-dosya-fihristi', [
             'firma' => $firma,
             'gruplu' => $gruplu,
+            'bosFormlar' => FirmaEvrakPaketi::bosFormlar(),
         ])->setPaper('a4');
 
         $ad = 'dosya-fihristi-'.Str::slug($firma->unvan).'.pdf';
