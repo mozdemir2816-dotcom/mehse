@@ -24,8 +24,17 @@ class MakineRiskKutuphanesiTest extends TestCase
         $this->assertSame(176 - 20 - 84, Tehlike::where('kod', 'like', 'MAK-%')->count());
         $this->assertSame(80, Tehlike::where('kod', 'like', 'CNC-%')->count());
         $this->assertSame(156, Tehlike::where('kod', 'like', 'TFD-%')->count());
-        // EKP-RA-01: 448 maddeden torna/freze/trafo (TFD ile birebir aynı, 156) atlandı.
-        $this->assertSame(292, Tehlike::where('kod', 'like', 'EKP-%')->count());
+        // EKP-RA-01: 448 maddeden torna/freze/trafo (TFD ile birebir aynı, 156) atlandı;
+        // forklift'in 12 maddesi 15.10.2026'da FRK (70 madde) ile değiştirildi.
+        $this->assertSame(280, Tehlike::where('kod', 'like', 'EKP-%')->count());
+        // FRK (Forklift_Fine_Kinney_70_Madde.xlsx): P-F-S sırası, Şiddet 40→30, 100→40; Sorumlu/Termin dosyadan.
+        $forklift = TehlikeKategorisi::where('anahtar', 'ekipman_forklift')->sole()->tehlikeler();
+        $this->assertSame(70, (clone $forklift)->count());
+        $this->assertSame(70, (clone $forklift)->where('kod', 'like', 'FRK-%')->count());
+        $frk = Tehlike::where('kod', 'FRK-E-001')->sole();
+        $this->assertSame([3.0, 6.0, 30.0, 0.2], [(float) $frk->olasilik, (float) $frk->frekans, (float) $frk->siddet, (float) $frk->son_olasilik]);
+        $this->assertSame('İşveren / İK / Lojistik', $frk->sorumlu);
+        $this->assertSame(1, Tehlike::where('kod', 'like', 'FRK-%')->where('faaliyet', 'like', '%(Patlayıcı ortam)')->count());
         // SK-RA-01 (şantiye ve kamp, 14.10.2026): 119 iş + 30 eğitim + 30 acil durum, 15 ayrı kategori.
         $this->assertSame(179, Tehlike::where('kod', 'like', 'SK-%')->count());
         $this->assertSame(12, TehlikeKategorisi::where('anahtar', 'santiye_kazici_yukleyici')->sole()->tehlikeler()->count());
@@ -42,7 +51,7 @@ class MakineRiskKutuphanesiTest extends TestCase
         $this->assertSame(30.0, (float) Tehlike::where('kod', 'ESY-E-001')->value('siddet'));
         // Sorumlu / Termin kaynak Excel'den (EKP, MV, YMK, ESY, OFS).
         $this->assertSame(['İşveren / bölüm amiri / İK', 'İlgili işe başlamadan'], array_values(Tehlike::where('kod', 'ESY-E-001')->first(['sorumlu', 'termin'])->toArray()));
-        $this->assertSame(498, Tehlike::whereNotNull('sorumlu')->count());
+        $this->assertSame(498 - 12 + 70, Tehlike::whereNotNull('sorumlu')->count());
         $this->assertSame(0, Tehlike::where('kod', 'like', 'MAK-%')->whereHas('kategori', fn ($q) => $q->where('anahtar', 'atolye_ekstruzyon_hatti'))->count());
         $this->assertSame(16, TehlikeKategorisi::where('anahtar', 'atolye_ekstruzyon_hatti')->sole()->tehlikeler()->count());
         $this->assertSame(1, Tehlike::where('kod', 'EKP-E-019')->where('bolum', 'Açık vals (iki silindir)')->count()); // sayfa harfi: numaralar sayfalar arası tekrar ediyor
