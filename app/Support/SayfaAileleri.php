@@ -37,6 +37,7 @@ class SayfaAileleri
                 [Pages\AiSahaAnalizi::class, 'Gözlem Raporu (AI)'],
                 [Pages\DofOlustur::class, 'DÖF'],
                 [Pages\TespitOneriDefteri::class, 'Tespit Öneri Defteri'],
+                [Pages\OnBilgilendirmeler::class, 'Ön Bilgilendirme / Tebliğ'],
             ],
             'risk' => [
                 [Pages\RiskSihirbazi::class, 'Yeni Değerlendirme'],

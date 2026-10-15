@@ -267,15 +267,7 @@ class TespitOneriDefteri extends Page
 
         // Tablo yoksa: tek bir bilgilendirme yazısı (firmaya önceden bildirilen tedbirler).
         if ($d && ! $okunan && $yazi) {
-            $d->update(['maddeler' => [...($d->maddeler ?? []), [
-                'tur' => 'bilgilendirme',
-                'tarih' => $yazi['tarih'],
-                'tespit' => $yazi['tespit'],
-                'oneri' => $yazi['oneri'],
-                'dayanak' => $yazi['dayanak'],
-                'oncelik' => 'orta',
-                'foto_yolu' => null,
-            ]]]);
+            $d->bilgilendirmeEkle($yazi);
             Notification::make()->title('Bilgilendirme yazısı deftere eklendi')->body('Ön bilgilendirme olarak: konu + firmanın alması gereken önlemler.')->success()->send();
 
             return;

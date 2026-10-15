@@ -51,6 +51,40 @@
         @endforeach
     </div>
 
+    {{-- İSG BİLGİLENDİRMELERİ (Ön Bilgilendirme / Tebliğ) --}}
+    @if ($this->bilgilendirmeler->isNotEmpty())
+        @php $bekleyen = $this->bilgilendirmeler->whereNull('isyeri_okundu_at')->count(); @endphp
+        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#f59e0b' : '#10b981' }}">
+            <div style="font-weight:700;margin-bottom:.2rem">İSG Bilgilendirmeleri</div>
+            <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.6rem">
+                İSG uzmanınızın işe başlamadan önce bildirdiği tedbirler.
+                @if ($bekleyen)
+                    <strong style="color:#92400e">{{ $bekleyen }} yazı okuma onayınızı bekliyor.</strong>
+                @endif
+            </div>
+            @foreach ($this->bilgilendirmeler as $b)
+                <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;border-top:1px solid rgb(107 114 128 / .15);padding:.55rem 0">
+                    <div style="flex:1;min-width:14rem">
+                        <div style="font-weight:600;font-size:.88rem">{{ $b->konu }}</div>
+                        <div style="font-size:.76rem;color:rgb(107 114 128)">
+                            {{ $b->bildirim_tarihi?->format('d.m.Y') }}
+                            @if ($b->isyeri_okundu_at)
+                                · <span style="color:#047857">Onaylandı {{ $b->isyeri_okundu_at->format('d.m.Y H:i') }}</span>
+                            @endif
+                        </div>
+                        @if ($b->aciklama)
+                            <div style="font-size:.78rem;margin-top:.15rem">{{ $b->aciklama }}</div>
+                        @endif
+                    </div>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="bilgilendirmeIndir({{ $b->id }})">Yazıyı İndir</x-filament::button>
+                    @unless ($b->isyeri_okundu_at)
+                        <x-filament::button size="sm" color="warning" icon="heroicon-o-check-badge" wire:click="mountAction('tebellug', { id: {{ $b->id }} })">Okudum, tebellüğ ettim</x-filament::button>
+                    @endunless
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- PERSONEL --}}
     <div style="{{ $kart }}">
         <div style="font-weight:700;margin-bottom:.6rem">Personel</div>

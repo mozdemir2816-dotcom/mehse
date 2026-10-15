@@ -5,13 +5,19 @@ namespace App\Filament\Isyeri\Pages;
 use App\Models\Firma;
 use App\Models\IsIzinFormu;
 use App\Models\IsyeriHesabi;
+use App\Models\OnBilgilendirme;
 use App\Support\CalisanDosyasiUretici;
 use App\Support\CalisanListesiUretici;
 use App\Support\FirmaEvrakZipUretici;
 use BackedEnum;
+use Carbon\CarbonInterface;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -45,7 +51,7 @@ class IsyeriEvraklari extends Page
         return Firma::with(['igu', 'isyeriHekimi'])->findOrFail($hesap->firma_id);
     }
 
-    /** @return array<int, array{anahtar: string, tip: string, tarih: \Carbon\CarbonInterface}> */
+    /** @return array<int, array{anahtar: string, tip: string, tarih: CarbonInterface}> */
     #[Computed]
     public function evraklar(): array
     {
@@ -63,6 +69,60 @@ class IsyeriEvraklari extends Page
             'evrak' => count($this->evraklar),
             'aktif_izin' => $izinler->filter(fn (IsIzinFormu $f) => $f->aktifMi())->count(),
         ];
+    }
+
+    /**
+     * İGU'nun panele gönderdiği ön bilgilendirme yazıları (Ön Bilgilendirme / Tebliğ).
+     *
+     * @return Collection<int, OnBilgilendirme>
+     */
+    #[Computed]
+    public function bilgilendirmeler(): Collection
+    {
+        return OnBilgilendirme::where('firma_id', $this->firma->id)
+            ->whereNotNull('isyerine_gonderildi_at')
+            ->latest('bildirim_tarihi')->latest('id')
+            ->get();
+    }
+
+    private function bilgilendirme(int $id): ?OnBilgilendirme
+    {
+        return OnBilgilendirme::where('firma_id', $this->firma->id)->whereNotNull('isyerine_gonderildi_at')->find($id);
+    }
+
+    public function bilgilendirmeIndir(int $id)
+    {
+        $b = $this->bilgilendirme($id);
+
+        if (! $b || ! Storage::disk('local')->exists($b->dosya_yolu)) {
+            Notification::make()->title('Dosya bulunamadı')->danger()->send();
+
+            return null;
+        }
+
+        return Storage::disk('local')->download($b->dosya_yolu, $b->dosya_adi);
+    }
+
+    /** İşveren yazıyı okuduğunu onaylar — tebliğ kaydı (yalnız bir kez). */
+    public function tebellugAction(): Action
+    {
+        return Action::make('tebellug')
+            ->modalHeading('Okudum, tebellüğ ettim')
+            ->modalDescription('Bu yazıyı okuduğunuzu ve içeriğinden haberdar olduğunuzu onaylarsınız; onay tarihi ve adınız İSG uzmanınızın kaydına işlenir.')
+            ->modalSubmitActionLabel('Onaylıyorum')
+            ->schema([
+                TextInput::make('ad')->label('Adınız soyadınız / göreviniz')->required()->maxLength(150),
+            ])
+            ->action(function (array $data, array $arguments): void {
+                $b = $this->bilgilendirme((int) ($arguments['id'] ?? 0));
+
+                if ($b && ! $b->isyeri_okundu_at) {
+                    $b->update(['isyeri_okundu_at' => now(), 'isyeri_onaylayan' => trim($data['ad'])]);
+                }
+
+                unset($this->bilgilendirmeler);
+                Notification::make()->title('Onayınız kaydedildi')->success()->send();
+            });
     }
 
     public function evrakIndir(string $anahtar): ?StreamedResponse
