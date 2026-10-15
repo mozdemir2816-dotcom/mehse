@@ -2,29 +2,36 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Firma;
-use App\Models\TespitOneriDefteri as TespitOneriDefteriModel;
-use App\Support\GeminiOneriDanismani;
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\DosyaKabul;
 use App\Filament\Support\ImzaSecenegi;
+use App\Models\Firma;
+use App\Models\SahaBulgusu;
+use App\Models\TespitOneriDefteri as TespitOneriDefteriModel;
+use App\Support\BulguDonusturucu;
+use App\Support\BulguHavuzu;
+use App\Support\DofTabloOkuyucu;
+use App\Support\GeminiOneriDanismani;
 use App\Support\TespitOneriDefteriUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Tespit ve Öneri Defteri — isgpratik 65-66.jpg. Hazır katalogdan tek tıkla
  * madde ekleme + serbest (opsiyonel AI destekli) tespit/öneri yazma.
  */
 class TespitOneriDefteri extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-
+    use SinirliErisim;
     use WithFileUploads;
 
     protected string $view = 'filament.pages.tespit-oneri-defteri';
@@ -237,9 +244,63 @@ class TespitOneriDefteri extends Page
         Notification::make()->title('Not kaydedildi')->success()->send();
     }
 
+    /** Kullanıcının Word/Excel'de hazırladığı tespit-öneri tablosunu deftere ekler (DÖF ile aynı okuyucu). */
+    public function wordAktar(array $data): void
+    {
+        $d = $this->defter();
+        $yol = (string) ($data['dosya'] ?? '');
+        $adi = (string) ($data['dosya_adi'] ?? $yol);
+
+        try {
+            $okunan = DofTabloOkuyucu::oku(Storage::disk('local')->path($yol), pathinfo($adi, PATHINFO_EXTENSION))['maddeler'];
+        } catch (\Throwable $e) {
+            report($e);
+            $okunan = [];
+        } finally {
+            Storage::disk('local')->delete($yol);
+        }
+
+        if (! $d || ! $okunan) {
+            Notification::make()
+                ->title('Dosyada tespit-öneri tablosu bulunamadı')
+                ->body('Tabloda "Tespit" ve "Öneri" başlıklı sütunlar olmalı.')
+                ->danger()->send();
+
+            return;
+        }
+
+        $maddeler = collect($okunan)->map(fn (array $m) => [
+            'tespit' => $m['tespit'],
+            'oneri' => $m['oneri'] ?? '',
+            'dayanak' => $m['dayanak'] ?? null,
+            'oncelik' => $m['oncelik'] ?? 'orta',
+            'foto_yolu' => $m['foto_yolu'] ?? null,
+        ]);
+
+        $d->update(['maddeler' => [...($d->maddeler ?? []), ...$maddeler->all()]]);
+        Notification::make()->title($maddeler->count().' madde deftere eklendi')->success()->send();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('wordAktar')
+                ->label("Word/Excel'den Ekle")
+                ->icon('heroicon-o-document-arrow-up')
+                ->color('success')
+                ->visible(fn () => $this->defter() !== null)
+                ->modalHeading('Hazırladığınız Word/Excel defterini ekle')
+                ->modalDescription('Bilgisayarda hazırladığınız tablodaki her satır deftere madde olarak eklenir. Sütun başlıkları: Tespit, Öneri; isteğe bağlı Öncelik, Dayanak/Mevzuat, Fotoğraf. Mevcut maddeler silinmez.')
+                ->modalSubmitActionLabel('Ekle')
+                ->schema([
+                    // MIME yerine uzantı — gerekçe DosyaKabul'de.
+                    DosyaKabul::uygula(FileUpload::make('dosya')->storeFileNamesIn('dosya_adi')
+                        ->label('Word (.docx) veya Excel (.xlsx/.xls) dosyası')
+                        ->disk('local')->directory('tespit-oneri-aktarim'), ['docx', 'xlsx', 'xls'])
+                        ->maxSize(20480)
+                        ->required(),
+                ])
+                ->action(fn (array $data) => $this->wordAktar($data)),
             Action::make('bulgulardanEkle')
                 ->label('Saha Bulgularından Ekle')
                 ->icon('heroicon-o-queue-list')
@@ -247,16 +308,16 @@ class TespitOneriDefteri extends Page
                 ->visible(fn () => $this->defter() !== null)
                 ->modalDescription('Saha Bulguları\'nda kayıtlı açık bulgular deftere tespit / öneri olarak eklenir.')
                 ->schema([
-                    \Filament\Forms\Components\CheckboxList::make('idler')
+                    CheckboxList::make('idler')
                         ->label('Açık bulgular')
-                        ->options(fn () => \App\Support\BulguHavuzu::secenekler($this->firma->id, $this->defter()->maddeler ?? []))
+                        ->options(fn () => BulguHavuzu::secenekler($this->firma->id, $this->defter()->maddeler ?? []))
                         ->required()
                         ->bulkToggleable(),
                 ])
                 ->action(function (array $data): void {
                     $d = $this->defter();
-                    $eklenen = \App\Models\SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereIn('id', $data['idler'])->orderBy('id')->get();
-                    $d->update(['maddeler' => [...($d->maddeler ?? []), ...$eklenen->map(fn ($b) => \App\Support\BulguDonusturucu::tespitOneriMaddesi($b))->all()]]);
+                    $eklenen = SahaBulgusu::query()->where('firma_id', $this->firma->id)->whereIn('id', $data['idler'])->orderBy('id')->get();
+                    $d->update(['maddeler' => [...($d->maddeler ?? []), ...$eklenen->map(fn ($b) => BulguDonusturucu::tespitOneriMaddesi($b))->all()]]);
                     Notification::make()->title($eklenen->count().' bulgu eklendi')->success()->send();
                 }),
 

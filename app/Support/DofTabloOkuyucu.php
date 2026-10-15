@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelTarih;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use ZipArchive;
 
 /**
@@ -35,6 +36,7 @@ class DofTabloOkuyucu
         'termin' => ['termin', 'tarih'],
         'durum' => ['durum'],
         'foto' => ['foto', 'görsel', 'resim'],
+        'dayanak' => ['dayanak', 'mevzuat'],   // Tespit Öneri Defteri
     ];
 
     /** Üst bilgi etiketi => DofOlustur özelliği. */
@@ -179,6 +181,7 @@ class DofTabloOkuyucu
             'termin' => static::tarih($al('termin')),
             'durum' => static::durum($al('durum')),
             'foto_yolu' => $resim,
+            'dayanak' => $al('dayanak') ?: null,
         ];
     }
 
@@ -360,7 +363,7 @@ class DofTabloOkuyucu
                 if ($cizim instanceof Drawing && is_file($cizim->getPath())) {
                     $satirNo = (int) preg_replace('/\D/', '', $cizim->getCoordinates());
                     $resimler[$satirNo] ??= static::resimKaydet((string) file_get_contents($cizim->getPath()), $cizim->getPath());
-                } elseif ($cizim instanceof \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing) {
+                } elseif ($cizim instanceof MemoryDrawing) {
                     $satirNo = (int) preg_replace('/\D/', '', $cizim->getCoordinates());
                     ob_start();
                     imagepng($cizim->getImageResource());

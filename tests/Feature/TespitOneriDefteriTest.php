@@ -13,6 +13,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
@@ -179,5 +181,43 @@ class TespitOneriDefteriTest extends TestCase
         $firmalar = Livewire::test(DefterSayfasi::class)->instance()->firmalar();
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    public function test_hazirlanan_word_tablosu_deftere_eklenir(): void
+    {
+        Storage::fake('local');
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $defter = TespitOneriDefteri::firmaIcin($firma);
+        $defter->update(['maddeler' => [['tespit' => 'Eski madde', 'oneri' => 'Eski öneri', 'dayanak' => null, 'oncelik' => 'orta', 'foto_yolu' => null]]]);
+
+        $word = new PhpWord;
+        $t = $word->addSection()->addTable();
+        $t->addRow();
+        foreach (['Sıra', 'Tespit', 'Öneri', 'Öncelik', 'Dayanak'] as $b) {
+            $t->addCell()->addText($b);
+        }
+        foreach ([['1', 'Yangın tüpü dolum tarihi geçmiş', 'Tüp dolumu yaptırılmalı', 'Yüksek', 'Yangın Yönetmeliği'], ['2', 'Pano kapağı açık', 'Kapak kilitlenmeli', '', '']] as $satir) {
+            $t->addRow();
+            foreach ($satir as $h) {
+                $t->addCell()->addText($h);
+            }
+        }
+        $yol = tempnam(sys_get_temp_dir(), 'tod').'.docx';
+        IOFactory::createWriter($word, 'Word2007')->save($yol);
+
+        Livewire::test(DefterSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('wordAktar', data: ['dosya' => UploadedFile::fake()->createWithContent('defter.docx', file_get_contents($yol))])
+            ->assertHasNoActionErrors();
+
+        $maddeler = $defter->fresh()->maddeler;
+        $this->assertCount(3, $maddeler);
+        $this->assertSame('Eski madde', $maddeler[0]['tespit']);
+        $this->assertSame('Yangın tüpü dolum tarihi geçmiş', $maddeler[1]['tespit']);
+        $this->assertSame('Tüp dolumu yaptırılmalı', $maddeler[1]['oneri']);
+        $this->assertSame('yuksek', $maddeler[1]['oncelik']);
+        $this->assertSame('Yangın Yönetmeliği', $maddeler[1]['dayanak']);
+        $this->assertSame('Kapak kilitlenmeli', $maddeler[2]['oneri']);
+        $this->assertNull($maddeler[2]['dayanak']);
     }
 }
