@@ -35,6 +35,16 @@ class GeminiIstemciTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_kapatilmis_modelde_yedek_denenir(): void
+    {
+        Http::fake([
+            '*models/ana:*' => Http::response(['error' => ['code' => 404, 'message' => 'no longer available']], 404),
+            '*models/yedek1:*' => Http::response(['candidates' => [['content' => ['parts' => [['text' => '["Madde 1"]']]]]]]),
+        ]);
+
+        $this->assertSame(['Madde 1'], GeminiTalimatUretici::uret('Forklift', 'Makine', []));
+    }
+
     public function test_tum_modeller_yogunsa_son_yanit_doner(): void
     {
         Http::fake(['*' => Http::response(['error' => 'yogun'], 503)]);

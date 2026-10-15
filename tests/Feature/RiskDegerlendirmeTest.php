@@ -2,19 +2,30 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\RiskOneriTamamla;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\CreateRiskDegerlendirmesi;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\EditRiskDegerlendirmesi;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\ListRiskDegerlendirmesis;
 use App\Filament\Resources\Tehlikes\Pages\ListTehlikes;
+use App\Models\AtamaYazisi;
 use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
+use App\Models\RiskProsedur;
 use App\Models\User;
+use App\Support\RiskDegerlendirmesiOfisUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskSkorlama;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
+use PhpOffice\PhpWord\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
@@ -173,7 +184,7 @@ class RiskDegerlendirmeTest extends TestCase
         $rd->maddeler()->create(['bolum' => 'Şantiye', 'tehlike' => 'Test tehlikesi', 'olasilik' => 3, 'siddet' => 5]);
         $rd->refresh();
 
-        $prosedur = \App\Models\RiskProsedur::aktifIcin($this->uzman->id, 'matris_5x5');
+        $prosedur = RiskProsedur::aktifIcin($this->uzman->id, 'matris_5x5');
 
         $html = view('pdf.risk-degerlendirmesi', [
             'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman,
@@ -304,7 +315,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringNotContainsString('Toplam Sayfa:', $html);
 
         // Render sonrası hücrenin konumu bulunabilmeli (yoksa sayı kapağa yazılamaz).
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.risk-degerlendirmesi', [
+        $pdf = Pdf::loadView('pdf.risk-degerlendirmesi', [
             'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman, 'hekim' => null, 'temsilci' => null,
             'destekElemani' => null, 'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
         ])->setPaper('a4');
@@ -328,7 +339,7 @@ class RiskDegerlendirmeTest extends TestCase
             'isveren_imza_gorseli' => 'isveren/imza.png',
         ]);
         $this->uzman->forceFill(['kase_gorseli' => 'uzman/kase.png', 'imza_gorseli' => 'uzman/imza.png'])->save();
-        $hekim = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim/kase.png']);
+        $hekim = IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim/kase.png']);
         $temsilci = ['ad' => 'Temsilci Test', 'unvan' => 'Çalışan Temsilcisi', 'imza_gorseli' => 'temsilci/imza.png'];
         $destekElemani = ['ad' => 'Destek Test', 'unvan' => 'Destek Elemanı', 'imza_gorseli' => 'destek/imza.png'];
 
@@ -391,11 +402,11 @@ class RiskDegerlendirmeTest extends TestCase
     public function test_imza_sahipleri_atama_yazilarindan_otomatik_gelir_elle_girilen_oncelikli(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
-        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
+        AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
             'uyeler' => [['ad_soyad' => 'Temsilci Atanan', 'tc' => null, 'gorev' => null, 'bas_uye' => true]]]);
-        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'bilgi_sahibi', 'tarih' => now(),
+        AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'bilgi_sahibi', 'tarih' => now(),
             'uyeler' => [['ad_soyad' => 'Bilgi Atanan', 'tc' => null, 'gorev' => null, 'bas_uye' => false]]]);
-        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'risk_degerlendirme_ekibi', 'tarih' => now(),
+        AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'risk_degerlendirme_ekibi', 'tarih' => now(),
             'uyeler' => [['ad_soyad' => 'Destek Atanan', 'tc' => null, 'gorev' => null, 'bas_uye' => false, 'ekip_gorevi' => 'Destek Elemanı']]]);
 
         $rd = RiskDegerlendirmesi::create([
@@ -405,7 +416,7 @@ class RiskDegerlendirmeTest extends TestCase
         $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
 
         $veri = null;
-        \Illuminate\Support\Facades\View::composer('pdf.risk-degerlendirmesi', function ($v) use (&$veri) {
+        View::composer('pdf.risk-degerlendirmesi', function ($v) use (&$veri) {
             $veri = $v->getData();
         });
         $yanit = RiskDegerlendirmesiUretici::pdf($rd, false);
@@ -424,7 +435,7 @@ class RiskDegerlendirmeTest extends TestCase
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
         $rd->forceFill(['pdf_yolu' => 'risk-pdf/x.pdf', 'pdf_hazir_at' => now()])->saveQuietly();
 
-        \App\Models\AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
+        AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
             'uyeler' => [['ad_soyad' => 'Yeni Temsilci', 'tc' => null, 'gorev' => null, 'bas_uye' => true]]]);
 
         $this->assertNull($rd->fresh()->pdf_hazir_at);
@@ -447,7 +458,7 @@ class RiskDegerlendirmeTest extends TestCase
 
     public function test_igu_secilmezse_firmanin_atanmis_igusu_kullanilir(): void
     {
-        $igu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $igu = IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
         $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu->id]);
 
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
@@ -457,8 +468,8 @@ class RiskDegerlendirmeTest extends TestCase
 
     public function test_igu_ayrica_secilirse_firmanin_atanmisindan_farkli_kalir(): void
     {
-        $firmaIgu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
-        $farkliIgu = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $firmaIgu = IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
+        $farkliIgu = IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
         $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $firmaIgu->id]);
 
         $rd = RiskDegerlendirmesi::create([
@@ -470,7 +481,7 @@ class RiskDegerlendirmeTest extends TestCase
 
     public function test_hazirlayan_secilen_igunun_kase_imza_ve_unvanini_dondurur(): void
     {
-        $igu = \App\Models\IsgProfesyoneli::factory()->create([
+        $igu = IsgProfesyoneli::factory()->create([
             'tip' => 'igu', 'user_id' => $this->uzman->id, 'ad_soyad' => 'Ayşe Örnek',
             'unvan' => 'A Sınıfı İş Güvenliği Uzmanı', 'kase_gorseli' => 'ozel-igu/kase.png', 'imza_gorseli' => 'ozel-igu/imza.png',
         ]);
@@ -570,7 +581,7 @@ class RiskDegerlendirmeTest extends TestCase
             ->callAction('excel')->assertHasNoActionErrors()
             ->callAction('word')->assertHasNoActionErrors();
 
-        $kitap = \App\Support\RiskDegerlendirmesiOfisUretici::excelKitabi($rd->fresh());
+        $kitap = RiskDegerlendirmesiOfisUretici::excelKitabi($rd->fresh());
         $hucreler = collect($kitap->getSheet(0)->toArray())->flatten()->filter()->map(fn ($v) => (string) $v);
         $this->assertTrue($hucreler->contains('Düşme & kayma'));
         $this->assertTrue($hucreler->contains('Korkuluk takılmalı'));
@@ -580,7 +591,7 @@ class RiskDegerlendirmeTest extends TestCase
 
         // Word: geçerli docx, "&" kaçışlı.
         $yol = tempnam(sys_get_temp_dir(), 'rdt').'.docx';
-        \PhpOffice\PhpWord\IOFactory::createWriter(\App\Support\RiskDegerlendirmesiOfisUretici::wordBelgesi($rd->fresh()), 'Word2007')->save($yol);
+        IOFactory::createWriter(RiskDegerlendirmesiOfisUretici::wordBelgesi($rd->fresh()), 'Word2007')->save($yol);
         $zip = new \ZipArchive;
         $zip->open($yol);
         $xml = $zip->getFromName('word/document.xml');
@@ -671,7 +682,7 @@ class RiskDegerlendirmeTest extends TestCase
 
     public function test_arka_plan_pdf_komutu_her_dakika_zamanlanir(): void
     {
-        $olay = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+        $olay = collect(app(Schedule::class)->events())
             ->first(fn ($e) => $e->description === 'risk:pdf-uret');
 
         $this->assertNotNull($olay);
@@ -689,31 +700,62 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame('İşveren / İşveren Vekili', $m->fill(['sorumlu' => null])->sorumluMetni());
         $this->assertSame('ANA İŞVEREN', $m->fill(['sorumlu' => 'ANA İŞVEREN'])->sorumluMetni());
 
-        $this->assertSame(\App\Support\RiskSkorlama::bant('matris_5x5', 16)['eylem'], $m->aciklamaMetni());
+        $this->assertSame(RiskSkorlama::bant('matris_5x5', 16)['eylem'], $m->aciklamaMetni());
         $this->assertSame('Elle yazılan', $m->fill(['aciklama' => 'Elle yazılan'])->aciklamaMetni());
     }
 
     public function test_onerisi_bos_maddeler_yapay_zeka_ile_doldurulur_dolu_olana_dokunulmaz(): void
     {
         config(['services.gemini.key' => 'test-key']);
-        \Illuminate\Support\Facades\Http::fake([
-            '*generativelanguage.googleapis.com*' => \Illuminate\Support\Facades\Http::response([
-                'candidates' => [['content' => ['parts' => [['text' => json_encode(['onlem' => 'Panoya kaçak akım rölesi takılmalı.'])]]]]],
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $bos = $rd->maddeler()->create(['tehlike' => 'Topraklama yok', 'olasilik' => 3, 'siddet' => 4]);
+        $bos2 = $rd->maddeler()->create(['tehlike' => 'Islak zemin', 'olasilik' => 3, 'siddet' => 4]);
+        $dolu = $rd->maddeler()->create(['tehlike' => 'Kablo', 'oneri' => 'Elle yazılan', 'olasilik' => 3, 'siddet' => 4]);
+        $yeni = $rd->maddeler()->create(['tehlike' => 'Yeni madde', 'olasilik' => 3, 'siddet' => 4]);
+        RiskMaddesi::whereKey([$bos->id, $bos2->id, $dolu->id])->update(['created_at' => now()->subHour()]);
+
+        // Yanıtta istenmeyen maddeler (dolu, yeni) de olsa yalnız gönderilenler yazılır.
+        Http::fake([
+            '*generativelanguage.googleapis.com*' => Http::response([
+                'candidates' => [['content' => ['parts' => [['text' => json_encode([
+                    ['no' => $bos->id, 'oneri' => 'Panoya kaçak akım rölesi takılmalı.'],
+                    ['no' => $bos2->id, 'oneri' => 'Zemin kaymaz kaplanmalı.'],
+                    ['no' => $dolu->id, 'oneri' => 'Üzerine yazılmamalı'],
+                    ['no' => $yeni->id, 'oneri' => 'Gönderilmedi'],
+                ])]]]]],
+            ]),
+        ]);
+
+        $this->artisan('risk:oneri-tamamla')->assertSuccessful();
+
+        $this->assertSame('Panoya kaçak akım rölesi takılmalı.', $bos->fresh()->oneri);
+        $this->assertSame('Zemin kaymaz kaplanmalı.', $bos2->fresh()->oneri);
+        $this->assertSame('Elle yazılan', $dolu->fresh()->oneri);
+        $this->assertNull($yeni->fresh()->oneri); // 10 dk'dan yeni: kullanıcı yazıyor olabilir
+        Http::assertSentCount(1); // iki madde tek istekte
+    }
+
+    public function test_oneri_tamamlama_gunluk_istek_sinirini_asmaz(): void
+    {
+        config(['services.gemini.key' => 'test-key']);
+        Http::fake([
+            '*generativelanguage.googleapis.com*' => Http::response([
+                'candidates' => [['content' => ['parts' => [['text' => '[]']]]]],
             ]),
         ]);
 
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
-        $bos = $rd->maddeler()->create(['tehlike' => 'Topraklama yok', 'olasilik' => 3, 'siddet' => 4]);
-        $dolu = $rd->maddeler()->create(['tehlike' => 'Kablo', 'oneri' => 'Elle yazılan', 'olasilik' => 3, 'siddet' => 4]);
-        $yeni = $rd->maddeler()->create(['tehlike' => 'Yeni madde', 'olasilik' => 3, 'siddet' => 4]);
-        RiskMaddesi::whereKey([$bos->id, $dolu->id])->update(['created_at' => now()->subHour()]);
+        $rd->maddeler()->create(['tehlike' => 'Topraklama yok', 'olasilik' => 3, 'siddet' => 4]);
+        RiskMaddesi::query()->update(['created_at' => now()->subHour()]);
+
+        Cache::put('risk-oneri-tamamla-istek-'.now()->toDateString(), RiskOneriTamamla::GUNLUK_ISTEK);
 
         $this->artisan('risk:oneri-tamamla')->assertSuccessful();
 
-        $this->assertSame('Panoya kaçak akım rölesi takılmalı.', $bos->fresh()->oneri);
-        $this->assertSame('Elle yazılan', $dolu->fresh()->oneri);
-        $this->assertNull($yeni->fresh()->oneri); // 10 dk'dan yeni: kullanıcı yazıyor olabilir
+        Http::assertNothingSent();
     }
 
     public function test_esik_alti_rapor_dogrudan_indirilir_talep_birakilmaz(): void
@@ -774,7 +816,7 @@ class RiskDegerlendirmeTest extends TestCase
             'rd' => $rd, 'firma' => $firma, 'uzman' => $this->uzman,
             'hekim' => null, 'temsilci' => null, 'destekElemani' => null,
             'metodoloji' => config('isg.risk_fine_kinney'), 'prosedur' => null,
-            'eksenEtiketleri' => \App\Support\RiskSkorlama::eksenEtiketleri('fine_kinney'),
+            'eksenEtiketleri' => RiskSkorlama::eksenEtiketleri('fine_kinney'),
         ])->render();
 
         $this->assertStringContainsString('%">Son F</th>', $html);

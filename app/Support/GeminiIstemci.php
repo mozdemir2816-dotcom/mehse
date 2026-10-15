@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Log;
  */
 class GeminiIstemci
 {
-    /** Yedek modele geçilen geçici hata kodları. */
-    private const GECICI = [429, 500, 503];
+    /** Yedek modele geçilen hata kodları — 404: model Google tarafında kapatılmış
+     *  (15.10.2026 gemini-2.5-flash "no longer available"). */
+    private const GECICI = [404, 429, 500, 503];
 
     /** @return array<int, string> denenecek modeller, sırasıyla */
     public static function modeller(): array
