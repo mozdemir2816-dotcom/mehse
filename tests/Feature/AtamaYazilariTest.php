@@ -4,11 +4,15 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\AtamaYazilari as AtamaSayfasi;
 use App\Filament\Pages\EgitimKatilim;
+use App\Models\AcilDurumPlani;
+use App\Models\AcilEkip;
+use App\Models\AcilEkipUyesi;
 use App\Models\AtamaYazisi;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\User;
+use App\Support\AcilDurumBelgeVerisi;
 use App\Support\AtamaYazisiUretici;
 use App\Support\AtamaYazisiWordUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -296,7 +300,7 @@ class AtamaYazilariTest extends TestCase
         $gecici = tempnam(sys_get_temp_dir(), 'tst').'.docx';
         file_put_contents($gecici, $binaryIcerik);
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($gecici);
         $xml = $zip->getFromName('word/document.xml');
         $zip->close();
@@ -539,5 +543,73 @@ class AtamaYazilariTest extends TestCase
         $this->assertTrue($adlar->contains('Temsilci Ali'));
         $this->assertFalse($adlar->contains('İK Ayşe'));
         $this->assertFalse($adlar->contains('Diğer İşçi'));
+    }
+
+    public function test_ekip_atamasi_acil_durum_ekiplerine_mukerrersiz_aktarilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $c1 = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Çalışan Bir', 'telefon' => '05551112233']);
+        $c2 = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Çalışan İki']);
+
+        // Ekipler sayfasında elle eklenmiş üye — atamada aynı kişi tekrar eklenmemeli.
+        $ekip = AcilEkip::create(['firma_id' => $firma->id, 'tur' => 'sondurme', 'ad' => 'Söndürme Ekibi']);
+        $ekip->uyeler()->create(['ad_soyad' => 'ÇALIŞAN İKİ', 'belge_no' => 'B-1']);
+
+        $sayfa = Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'sondurme_ekibi')
+            ->call('calisanToggle', $c1->id)
+            ->call('calisanToggle', $c2->id)
+            ->call('basUyeSec', $c1->id)
+            ->callAction('kaydet')
+            ->callAction('pdf');
+
+        // Kaydet + PDF aynı yazıyı iki kez kaydetmez.
+        $this->assertSame(1, AtamaYazisi::where('firma_id', $firma->id)->count());
+
+        $uyeler = $ekip->uyeler()->get();
+        $this->assertCount(2, $uyeler);
+        $bir = $uyeler->firstWhere('calisan_id', $c1->id);
+        $this->assertTrue($bir->lider);
+        $this->assertSame('05551112233', $bir->telefon);
+        $iki = $uyeler->firstWhere('ad_soyad', 'ÇALIŞAN İKİ');
+        $this->assertSame('B-1', $iki->belge_no);
+        $this->assertSame($c2->id, $iki->calisan_id);
+        $this->assertSame(1, AcilEkip::where('firma_id', $firma->id)->count());
+
+        // Plan ekip listesi aynı kişileri gösterir.
+        $this->assertCount(2, AcilDurumPlani::firmaIcin($firma)->ekipListesi()['sondurme']);
+
+        // Aynı ekip yeniden yazılınca (farklı tarih) yine mükerrer olmaz.
+        $sayfa->set('tarih', now()->addDay()->toDateString())->callAction('kaydet');
+        $this->assertSame(2, AtamaYazisi::where('firma_id', $firma->id)->count());
+        $this->assertCount(2, $ekip->uyeler()->get());
+    }
+
+    public function test_ekip_yoksa_olusturulur_ekip_disi_roller_aktarilmaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $c = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Yardımcı Ayşe']);
+
+        Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'ilkyardim_ekibi')
+            ->call('calisanToggle', $c->id)
+            ->callAction('kaydet')
+            ->set('rolAnahtari', 'calisan_temsilcisi')
+            ->set('tekAdSoyad', 'Temsilci Veli')
+            ->callAction('kaydet');
+
+        $this->assertSame(['ilk_yardim'], AcilEkip::where('firma_id', $firma->id)->pluck('tur')->all());
+        $this->assertSame(['Yardımcı Ayşe'], AcilEkipUyesi::pluck('ad_soyad')->all());
+    }
+
+    public function test_koordinator_atamasi_plan_bos_ise_plana_yazilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['isveren_vekili' => 'Vekil Bey']);
+        AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'acil_durum_koordinatoru', 'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Koordinatör Kemal', 'tc' => null, 'gorev' => 'Müdür', 'bas_uye' => false]]]);
+
+        $this->assertSame('Koordinatör Kemal', AcilDurumBelgeVerisi::hazirla(AcilDurumPlani::firmaIcin($firma))['koordinator']['ad']);
     }
 }

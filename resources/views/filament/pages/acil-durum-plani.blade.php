@@ -262,7 +262,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem">
                 @foreach ([
-                    'koordinator_ad' => ['Acil durum koordinatörü', 'Boşsa işveren vekili / işveren yazılır'],
+                    'koordinator_ad' => ['Acil durum koordinatörü', 'Boşsa Atama Yazılarındaki koordinatör, o da yoksa işveren vekili / işveren yazılır'],
                     'koordinator_tel' => ['Koordinatör telefonu', '05xx xxx xx xx'],
                     'koordinator_vekil' => ['Koordinatör vekili', 'Adı soyadı'],
                     'koordinator_vekil_tel' => ['Vekil telefonu', '05xx xxx xx xx'],

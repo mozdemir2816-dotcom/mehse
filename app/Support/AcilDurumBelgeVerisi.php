@@ -41,8 +41,12 @@ class AcilDurumBelgeVerisi
 
         $ekipler = $plan->ekipDetaylari(array_keys(config('isg.acil_durum.belge_ekipleri')));
 
+        // Plandaki alan boşsa Atama Yazıları'ndaki son koordinatör görevlendirmesi.
+        $atananKoordinator = $firma?->atamaYazilari()->where('rol_anahtari', 'acil_durum_koordinatoru')
+            ->latest('tarih')->latest('id')->first()?->uyeler[0]['ad_soyad'] ?? null;
+
         $koordinator = [
-            'ad' => $dolu($u['koordinator_ad']) ?? $isverenVekili ?? $isveren,
+            'ad' => $dolu($u['koordinator_ad']) ?? $dolu($atananKoordinator) ?? $isverenVekili ?? $isveren,
             'tel' => $dolu($u['koordinator_tel']),
             'vekil' => $dolu($u['koordinator_vekil']),
             'vekil_tel' => $dolu($u['koordinator_vekil_tel']),

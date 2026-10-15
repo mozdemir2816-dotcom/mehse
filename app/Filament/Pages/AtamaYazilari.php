@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\AtamaYazisi as AtamaYazisiModel;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
-use App\Filament\Support\ImzaSecenegi;
+use App\Support\AcilEkipAtamaSenkron;
 use App\Support\AtamaYazisiUretici;
 use App\Support\AtamaYazisiWordUretici;
 use App\Support\RiskEkibiOtomatik;
@@ -19,7 +21,6 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Atama Yazıları — isgpratik 38-44.jpg. 10 görev tipinden biri seçilir;
  * 'tekli' roller tek çalışan (+ görev tarihi aralığı), 'ekip' roller çoklu
@@ -29,7 +30,7 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class AtamaYazilari extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.atama-yazilari';
 
@@ -360,6 +361,7 @@ class AtamaYazilari extends Page
                 $kurulGorevi = $kurulMu ? ($this->kurulGorevleri[$c->id] ?? null) : null;
 
                 return [
+                    'calisan_id' => $c->id,
                     'ad_soyad' => $c->ad_soyad,
                     'tc' => $c->tc,
                     'gorev' => filled($kurulGorevi)
@@ -401,16 +403,37 @@ class AtamaYazilari extends Page
             return null;
         }
 
-        $kayit = new AtamaYazisiModel([
-            'firma_id' => $this->firma->id,
-            'rol_anahtari' => $this->rolAnahtari,
+        $alanlar = [
             'tarih' => $this->tarih,
             'isveren_vekili_adi' => $this->isverenVekiliAdi,
             'gorev_baslangic' => $this->ekipMi() ? null : $this->gorevBaslangic,
             'gorev_bitis' => $this->ekipMi() ? null : $this->gorevBitis,
             'uyeler' => $uyeler,
+        ];
+
+        // Kaydet → PDF → Word art arda basılınca aynı yazı tekrar tekrar kaydedilmesin.
+        $son = $this->firma->atamaYazilari()->where('rol_anahtari', $this->rolAnahtari)->latest('id')->first();
+        $ayni = $son
+            && $son->tarih?->toDateString() === $alanlar['tarih']
+            && $son->isveren_vekili_adi === $alanlar['isveren_vekili_adi']
+            && $son->gorev_baslangic?->toDateString() === $alanlar['gorev_baslangic']
+            && $son->gorev_bitis?->toDateString() === $alanlar['gorev_bitis']
+            && $son->uyeler == $uyeler;
+
+        $kayit = $ayni ? $son : AtamaYazisiModel::create([
+            'firma_id' => $this->firma->id,
+            'rol_anahtari' => $this->rolAnahtari,
+            ...$alanlar,
         ]);
-        $kayit->save();
+
+        $eklenen = AcilEkipAtamaSenkron::aktar($kayit);
+
+        if ($eklenen > 0) {
+            Notification::make()
+                ->title($eklenen.' kişi Acil Durum Ekipleri listesine eklendi')
+                ->body('Acil Durum Planı ekip listesi güncellendi.')
+                ->success()->send();
+        }
 
         unset($this->gecmisKayitlar);
 
@@ -420,6 +443,17 @@ class AtamaYazilari extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('kaydet')
+                ->label('Kaydet')
+                ->icon('heroicon-o-check')
+                ->color('primary')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function (): void {
+                    if ($kayit = $this->kaydet()) {
+                        Notification::make()->title('Atama yazısı kaydedildi')->body($kayit->dokuman_no)->success()->send();
+                    }
+                }),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
