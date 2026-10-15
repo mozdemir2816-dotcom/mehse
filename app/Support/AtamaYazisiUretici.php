@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class AtamaYazisiUretici
 {
+    /** Boş (elle doldurulacak) formda kişi alanlarının yerine basılan noktalı çizgi. */
+    public const BOS_ALAN = '.......................................';
+
     public static function pdf(AtamaYazisi $kayit, bool $imzali = true): StreamedResponse
     {
         $kayit->loadMissing('firma');

@@ -10,11 +10,13 @@ use App\Models\IsgProfesyoneli;
 use App\Models\User;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
-use App\Support\KatilimciExcelOkuyucu;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -320,7 +322,7 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('.xlsx', $yanit->headers->get('content-disposition'));
     }
 
-    /** @return \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet */
+    /** @return Worksheet */
     private function excelSayfasi(EgitimKatilim $kayit)
     {
         ob_start();
@@ -328,7 +330,7 @@ class EgitimKatilimTest extends TestCase
         $yol = tempnam(sys_get_temp_dir(), 'egt').'.xlsx';
         file_put_contents($yol, ob_get_clean());
 
-        return \PhpOffice\PhpSpreadsheet\IOFactory::load($yol)->getSheet(0);
+        return IOFactory::load($yol)->getSheet(0);
     }
 
     public function test_excel_kullanici_sablonuna_yalniz_firma_tarih_ve_katilimcilar_yazilir(): void
@@ -498,7 +500,7 @@ class EgitimKatilimTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
-        $kitap = new Spreadsheet();
+        $kitap = new Spreadsheet;
         $sayfa = $kitap->getActiveSheet();
         $sayfa->fromArray(['Ad Soyad', 'T.C. Kimlik No', 'Görevi'], null, 'A1');
         $sayfa->fromArray(['Zeynep Kaya', '11122233344', 'Formen'], null, 'A2');
@@ -667,20 +669,20 @@ class EgitimKatilimTest extends TestCase
 
         $gecici = tempnam(sys_get_temp_dir(), 'ekyg').'.xlsx';
         file_put_contents($gecici, $xlsx);
-        $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
+        $sheet = IOFactory::load($gecici)->getSheetByName('Çıktı Sayfası');
         unlink($gecici);
 
         // 4. kategori (İşe Özgü, satır 68+) katılım formundaki maddeleri ve dakikaları taşır.
         $ozguMetinler = collect(range(68, 83))
             ->map(fn ($r) => $sheet->getCell('E'.$r)->getValue())
-            ->map(fn ($v) => $v instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText ? $v->getPlainText() : (string) $v)
+            ->map(fn ($v) => $v instanceof RichText ? $v->getPlainText() : (string) $v)
             ->all();
 
         $this->assertNotEmpty(array_filter($ozguMetinler));
         $this->assertStringContainsString('Kule vinç yük altında durmama', implode(' ', $ozguMetinler));
 
         $satir = collect(range(68, 83))->first(fn ($r) => str_contains(
-            ($sheet->getCell('E'.$r)->getValue() instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText
+            ($sheet->getCell('E'.$r)->getValue() instanceof RichText
                 ? $sheet->getCell('E'.$r)->getValue()->getPlainText()
                 : (string) $sheet->getCell('E'.$r)->getValue()),
             'Kule vinç',
@@ -885,5 +887,22 @@ class EgitimKatilimTest extends TestCase
         $firmalar = Livewire::test(EgitimSayfasi::class)->instance()->firmalar();
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    public function test_ozel_baslikli_form_katilimci_kaydetmeden_bos_satirlarla_alinir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bert Plastik']);
+
+        foreach (['calisan_temsilcisi', 'sondurme_ekibi', 'isg_kurulu', 'risk_degerlendirme_ekibi'] as $baslik) {
+            Livewire::test(EgitimSayfasi::class)
+                ->set('firmaId', $firma->id)
+                ->set('baslikAnahtari', $baslik)
+                ->set('belgeTarihi', now()->toDateString())
+                ->callAction('pdf', data: ['imzali' => '0'])
+                ->assertFileDownloaded();
+        }
+
+        $this->assertSame(0, Calisan::count());
+        $this->assertSame([[], [], [], []], EgitimKatilim::pluck('katilimcilar')->map(fn ($k) => (array) $k)->all());
     }
 }

@@ -15,6 +15,8 @@ use App\Support\RiskEkibiOtomatik;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -454,6 +456,25 @@ class AtamaYazilari extends Page
                     }
                 }),
 
+            Action::make('bosForm')
+                ->label('Boş Form (Elle Doldurulacak)')
+                ->icon('heroicon-o-pencil-square')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalDescription('Kişi kaydetmeden, ad soyad / T.C. / görev yerleri boş (noktalı) çıktı — firmada kalemle doldurulur. Kayıt oluşturulmaz.')
+                ->modalSubmitActionLabel('PDF İndir')
+                ->schema([
+                    TextInput::make('adet')
+                        ->label('Kaç kişilik (sayfa)')
+                        ->numeric()->minValue(1)->maxValue(30)
+                        ->default(fn () => $this->ekipMi() ? 4 : 1)
+                        ->hidden(fn () => $this->topluMu())
+                        ->required(fn () => ! $this->topluMu()),
+                    Toggle::make('tarihsiz')->label('Tarihi de boş bırak'),
+                    ImzaSecenegi::alan(),
+                ])
+                ->action(fn (array $data) => AtamaYazisiUretici::pdf($this->bosFormKaydi($data), ImzaSecenegi::secili($data))),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
@@ -505,6 +526,31 @@ class AtamaYazilari extends Page
                 ->visible(fn () => $this->firma !== null)
                 ->action(fn () => $this->egitimFormuOlustur()),
         ];
+    }
+
+    /** Kaydedilmeyen, kişi alanları noktalı boş atama yazısı (elle doldurmak için). */
+    private function bosFormKaydi(array $data): AtamaYazisiModel
+    {
+        $bos = AtamaYazisiUretici::BOS_ALAN;
+        $uye = fn (?string $ekipGorevi = null) => array_filter([
+            'ad_soyad' => $bos, 'tc' => $bos, 'gorev' => $bos, 'bas_uye' => false, 'ekip_gorevi' => $ekipGorevi,
+        ], fn ($v) => $v !== null);
+
+        $uyeler = $this->topluMu()
+            ? array_map($uye, ['İş Güvenliği Uzmanı', 'İşyeri Hekimi', 'Çalışan Temsilcisi', 'Destek Elemanı', 'Bilgi Sahibi Çalışan'])
+            : array_fill(0, max(1, min(30, (int) ($data['adet'] ?? 1))), $uye());
+
+        $kayit = new AtamaYazisiModel([
+            'firma_id' => $this->firma->id,
+            'rol_anahtari' => $this->rolAnahtari,
+            'tarih' => ($data['tarihsiz'] ?? false) ? null : $this->tarih,
+            'isveren_vekili_adi' => $this->isverenVekiliAdi,
+            'uyeler' => $uyeler,
+        ]);
+        $kayit->dokuman_no = 'BOŞ FORM';
+        $kayit->setRelation('firma', $this->firma);
+
+        return $kayit;
     }
 
     public function egitimFormuOlustur()

@@ -31,7 +31,7 @@
         <table class="kunye">
             <tr>
                 <td>Doküman No</td><td>{{ $kayit->dokuman_no }}</td>
-                <td>Tarih</td><td>{{ $kayit->tarih?->format('d.m.Y') }}</td>
+                <td>Tarih</td><td>{{ $kayit->tarih?->format('d.m.Y') ?? '..... / ..... / ..........' }}</td>
             </tr>
             <tr>
                 <td>Ad Soyad</td><td>{{ $u['ad_soyad'] ?? '—' }}</td>
@@ -56,7 +56,7 @@
 
         <div class="govde">
             {{ $firma?->unvan }} işyerinde görevli <strong>{{ $u['ad_soyad'] ?? '' }}</strong>,
-            {{ $kayit->tarih?->format('d.m.Y') }} tarihinden itibaren
+            {{ $kayit->tarih?->format('d.m.Y') ?? '..... / ..... / ..........' }} tarihinden itibaren
             <strong>{{ $rol['ad'] ?? $kayit->rolEtiketi() }}</strong>@if (! empty($u['ekip_gorevi'])) içinde <strong>{{ $u['ekip_gorevi'] }}</strong>@endif olarak görevlendirilmiştir.
             @if ($u['bas_uye'] ?? false)
                 Adı geçen personel ekibin baş üyesi olarak görevlendirilmiştir.

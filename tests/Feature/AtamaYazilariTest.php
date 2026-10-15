@@ -612,4 +612,43 @@ class AtamaYazilariTest extends TestCase
 
         $this->assertSame('Koordinatör Kemal', AcilDurumBelgeVerisi::hazirla(AcilDurumPlani::firmaIcin($firma))['koordinator']['ad']);
     }
+
+    public function test_bos_form_kisi_kaydetmeden_noktali_cikti_verir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bert Plastik']);
+
+        $sayfa = Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'sondurme_ekibi')
+            ->callAction('bosForm', data: ['adet' => 3, 'tarihsiz' => true, 'imzali' => '0'])
+            ->assertHasNoActionErrors()
+            ->assertFileDownloaded();
+
+        $this->assertSame(0, AtamaYazisi::count());
+        $this->assertSame(0, AcilEkip::count());
+
+        $kayit = (fn () => $this->bosFormKaydi(['adet' => 3, 'tarihsiz' => true]))->call($sayfa->instance());
+        $this->assertCount(3, $kayit->uyeler);
+
+        $html = view('pdf.atama-yazisi', ['kayit' => $kayit, 'firma' => $firma, 'rol' => $kayit->rol(), 'imzali' => false])->render();
+        $this->assertSame(3, substr_count($html, 'Görevlendirme Yazısı</h1>'));
+        $this->assertStringContainsString(AtamaYazisiUretici::BOS_ALAN, $html);
+        $this->assertStringContainsString('..... / ..... / ..........', $html);
+        $this->assertStringContainsString('BOŞ FORM', $html);
+    }
+
+    public function test_risk_ekibi_bos_formu_her_ekip_gorevi_icin_sayfa_basar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $sayfa = Livewire::test(AtamaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('rolAnahtari', 'risk_degerlendirme_ekibi')
+            ->callAction('bosForm', data: ['imzali' => '1'])
+            ->assertHasNoActionErrors();
+
+        $kayit = (fn () => $this->bosFormKaydi([]))->call($sayfa->instance());
+        $this->assertSame(['İş Güvenliği Uzmanı', 'İşyeri Hekimi', 'Çalışan Temsilcisi', 'Destek Elemanı', 'Bilgi Sahibi Çalışan'], array_column($kayit->uyeler, 'ekip_gorevi'));
+        $this->assertSame(0, AtamaYazisi::count());
+    }
 }
