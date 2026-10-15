@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\RiskMaddesi;
 use App\Support\GeminiRiskPuanTamamlayici;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -32,6 +34,24 @@ class RiskOneriTamamla extends Command
     /** Günde en fazla bu kadar Gemini isteği (25 madde × 10 = 250 madde/gün). */
     public const GUNLUK_ISTEK = 10;
 
+    /** Kullanıcının "Boş Önerileri AI ile Doldur" dediği raporlar (id listesi): önce bunlar,
+     *  günlük sınır ve 10 dk bekleme uygulanmadan doldurulur — bkz. oncelikliyeAl(). */
+    public const ONCELIK_ANAHTARI = 'risk-oneri-tamamla-oncelik';
+
+    public static function oncelikliyeAl(int $riskDegerlendirmesiId): void
+    {
+        Cache::forever(self::ONCELIK_ANAHTARI, array_values(array_unique([...Cache::get(self::ONCELIK_ANAHTARI, []), $riskDegerlendirmesiId])));
+        Cache::forget(self::ARA_ANAHTARI);
+    }
+
+    /** Önerisi boş, tehlikesi dolu maddeler. */
+    public static function bosOneriSorgusu(): Builder
+    {
+        return RiskMaddesi::query()
+            ->where(fn ($q) => $q->whereNull('oneri')->orWhere('oneri', ''))
+            ->whereNotNull('tehlike')->where('tehlike', '!=', '');
+    }
+
     public function handle(): int
     {
         // Gemini kota / yoğunluk verdiyse bir süre deneme — her dakika boş istek ve log olmasın.
@@ -41,20 +61,21 @@ class RiskOneriTamamla extends Command
 
         $sayacAnahtari = 'risk-oneri-tamamla-istek-'.now()->toDateString();
         $istekSayisi = (int) Cache::get($sayacAnahtari, 0);
+        $maddeler = $this->oncelikliMaddeler();
 
-        if ($istekSayisi >= self::GUNLUK_ISTEK) {
-            return self::SUCCESS;
+        if ($maddeler->isEmpty()) {
+            if ($istekSayisi >= self::GUNLUK_ISTEK) {
+                return self::SUCCESS;
+            }
+
+            $maddeler = self::bosOneriSorgusu()
+                ->where('created_at', '<=', now()->subMinutes(self::BEKLEME_DK))
+                ->whereHas('riskDegerlendirmesi')
+                ->orderBy('id')
+                ->limit((int) $this->option('limit'))
+                ->get()
+                ->keyBy('id');
         }
-
-        $maddeler = RiskMaddesi::query()
-            ->where(fn ($q) => $q->whereNull('oneri')->orWhere('oneri', ''))
-            ->whereNotNull('tehlike')->where('tehlike', '!=', '')
-            ->where('created_at', '<=', now()->subMinutes(self::BEKLEME_DK))
-            ->whereHas('riskDegerlendirmesi')
-            ->orderBy('id')
-            ->limit((int) $this->option('limit'))
-            ->get()
-            ->keyBy('id');
 
         if ($maddeler->isEmpty()) {
             return self::SUCCESS;
@@ -79,5 +100,24 @@ class RiskOneriTamamla extends Command
         $this->info("{$dolan} maddenin önerisi dolduruldu.");
 
         return self::SUCCESS;
+    }
+
+    /** Öncelik listesindeki raporların boş maddeleri; boşu kalmayan rapor listeden çıkar. */
+    private function oncelikliMaddeler(): Collection
+    {
+        foreach (Cache::get(self::ONCELIK_ANAHTARI, []) as $rdId) {
+            $maddeler = self::bosOneriSorgusu()->where('risk_degerlendirmesi_id', $rdId)
+                ->orderBy('sira')->orderBy('id')
+                ->limit((int) $this->option('limit'))
+                ->get()->keyBy('id');
+
+            if ($maddeler->isNotEmpty()) {
+                return $maddeler;
+            }
+
+            Cache::forever(self::ONCELIK_ANAHTARI, array_values(array_diff(Cache::get(self::ONCELIK_ANAHTARI, []), [$rdId])));
+        }
+
+        return collect();
     }
 }

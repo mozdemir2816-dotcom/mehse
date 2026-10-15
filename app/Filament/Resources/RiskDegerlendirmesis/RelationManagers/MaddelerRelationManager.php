@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RiskDegerlendirmesis\RelationManagers;
 
+use App\Console\Commands\RiskOneriTamamla;
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
 use App\Support\GeminiRiskPuanTamamlayici;
@@ -231,6 +232,29 @@ class MaddelerRelationManager extends RelationManager
                         Notification::make()
                             ->title(count($satirlar).' risk maddesi eklendi')
                             ->body('Puanları girmek veya AI ile tamamlamak için "Eksik Puan/Önlemleri AI ile Tamamla" butonunu kullanabilirsiniz.')
+                            ->success()->send();
+                    }),
+                Action::make('bosOnerileriDoldur')
+                    ->label('Boş Önerileri AI ile Doldur')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('primary')
+                    ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi())
+                    ->requiresConfirmation()
+                    ->modalDescription(fn () => 'Bu rapordaki önerisi (düzeltici/önleyici faaliyet) boş '.RiskOneriTamamla::bosOneriSorgusu()->where('risk_degerlendirmesi_id', $this->getOwnerRecord()->id)->count().' madde sıraya alınır; arka planda dakikada 25 madde yapay zekâ ile doldurulur. Dolu önerilere dokunulmaz. Sayfayı birkaç dakika sonra yenileyin.')
+                    ->action(function (): void {
+                        $bos = RiskOneriTamamla::bosOneriSorgusu()->where('risk_degerlendirmesi_id', $this->getOwnerRecord()->id)->count();
+
+                        if (! $bos) {
+                            Notification::make()->title('Önerisi boş madde yok')->success()->send();
+
+                            return;
+                        }
+
+                        RiskOneriTamamla::oncelikliyeAl($this->getOwnerRecord()->id);
+
+                        Notification::make()
+                            ->title($bos.' madde sıraya alındı')
+                            ->body('Yaklaşık '.max(1, (int) ceil($bos / 25)).'-'.max(2, (int) ceil($bos / 25) * 2).' dakika içinde dolar; sayfayı yenileyerek takip edin.')
                             ->success()->send();
                     }),
                 Action::make('eksikPuanlariTamamla')

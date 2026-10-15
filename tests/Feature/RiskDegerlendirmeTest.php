@@ -6,6 +6,7 @@ use App\Console\Commands\RiskOneriTamamla;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\CreateRiskDegerlendirmesi;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\EditRiskDegerlendirmesi;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\ListRiskDegerlendirmesis;
+use App\Filament\Resources\RiskDegerlendirmesis\RelationManagers\MaddelerRelationManager;
 use App\Filament\Resources\Tehlikes\Pages\ListTehlikes;
 use App\Models\AtamaYazisi;
 use App\Models\Firma;
@@ -737,6 +738,42 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame('Elle yazılan', $dolu->fresh()->oneri);
         $this->assertNull($yeni->fresh()->oneri); // 10 dk'dan yeni: kullanıcı yazıyor olabilir
         Http::assertSentCount(1); // iki madde tek istekte
+    }
+
+    public function test_bos_onerileri_doldur_dugmesi_raporu_oncelige_alir_gunluk_sinir_dolu_olsa_da_doldurulur(): void
+    {
+        config(['services.gemini.key' => 'test-key']);
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $diger = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $digerMadde = $diger->maddeler()->create(['tehlike' => 'Başka rapor', 'olasilik' => 3, 'siddet' => 4]);
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $bos = $rd->maddeler()->create(['tehlike' => 'Az önce eklenen', 'olasilik' => 3, 'siddet' => 4]); // 10 dk beklemesi uygulanmaz
+        $dolu = $rd->maddeler()->create(['tehlike' => 'Dolu', 'oneri' => 'Elle', 'olasilik' => 3, 'siddet' => 4]);
+
+        Cache::put('risk-oneri-tamamla-istek-'.now()->toDateString(), RiskOneriTamamla::GUNLUK_ISTEK);
+        Cache::put('risk-oneri-tamamla-ara', true, now()->addMinutes(15));
+
+        Livewire::test(MaddelerRelationManager::class, [
+            'ownerRecord' => $rd,
+            'pageClass' => EditRiskDegerlendirmesi::class,
+        ])->callTableAction('bosOnerileriDoldur')->assertNotified('1 madde sıraya alındı');
+
+        Http::fake([
+            '*generativelanguage.googleapis.com*' => Http::response([
+                'candidates' => [['content' => ['parts' => [['text' => json_encode([['no' => $bos->id, 'oneri' => 'AI önerisi']])]]]]],
+            ]),
+        ]);
+
+        $this->artisan('risk:oneri-tamamla')->assertSuccessful();
+
+        $this->assertSame('AI önerisi', $bos->fresh()->oneri);
+        $this->assertSame('Elle', $dolu->fresh()->oneri);
+        $this->assertNull($digerMadde->fresh()->oneri);
+
+        // Boşu kalmayan rapor öncelikten çıkar; günlük sınır dolu olduğundan başka rapora geçilmez.
+        $this->artisan('risk:oneri-tamamla')->assertSuccessful();
+        $this->assertSame([], Cache::get(RiskOneriTamamla::ONCELIK_ANAHTARI));
+        Http::assertSentCount(1);
     }
 
     public function test_oneri_tamamlama_gunluk_istek_sinirini_asmaz(): void
