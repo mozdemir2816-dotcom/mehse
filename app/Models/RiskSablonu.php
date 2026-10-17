@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -46,6 +47,41 @@ class RiskSablonu extends Model
     public function maddeSayisi(): int
     {
         return count($this->maddeler ?? []);
+    }
+
+    /**
+     * Gruplama ifadesi (SQL): sektör kodu varsa o, yoksa kırpılmış serbest sektör metni.
+     * Baştaki/sondaki boşluk farkı tek başlıkta toplanır. Büyük/küçük harf farkı bilerek birleştirilmez:
+     * SQL'in LOWER() fonksiyonu Türkçe harfleri (Ç, ı, İ) MySQL ve SQLite'ta tutarlı küçültmez.
+     * Tablo gruplaması ve grupAnahtari() aynı kuralı kullanır.
+     */
+    public const GRUP_IFADESI = "COALESCE(NULLIF(sektor, ''), TRIM(COALESCE(sektor_adi, '')))";
+
+    /** Gruplama anahtarı (PHP tarafı): GRUP_IFADESI ile aynı kural. */
+    public function grupAnahtari(): string
+    {
+        return $this->sektor ?: trim((string) $this->sektor_adi);
+    }
+
+    /**
+     * Kullanıcının kendi şablonlarını gruba göre toplar: anahtar => "Etiket (n şablon)".
+     *
+     * @return Collection<string, string>
+     */
+    public static function benimGruplari(int $userId): Collection
+    {
+        return static::query()->where('user_id', $userId)->get()
+            ->groupBy(fn (self $s) => $s->grupAnahtari())
+            ->map(fn (Collection $grup) => $grup->first()->sektorEtiketi().' ('.$grup->count().' şablon)');
+    }
+
+    /** Yalnız $userId'nin sahibi olduğu kayıtları siler; silinen sayısını döndürür (başkasının şablonuna dokunmaz). */
+    public static function topluSil(iterable $kayitlar, int $userId): int
+    {
+        $silinecek = collect($kayitlar)->filter(fn (self $s) => $s->user_id === $userId);
+        $silinecek->each->delete();
+
+        return $silinecek->count();
     }
 
     /**

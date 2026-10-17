@@ -87,6 +87,29 @@ class ListRiskSablonus extends ListRecords
                         ->success()->send();
                 }),
 
+            Action::make('grubaGoreSil')
+                ->label('Gruba göre toplu sil')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->visible(fn () => RiskSablonu::benimGruplari(Filament::auth()->id())->isNotEmpty())
+                ->modalDescription('Seçtiğiniz sektör grubundaki YALNIZ sizin şablonlarınız silinir. Eski şablonları temizleyip yenilerini yüklemek için kullanın. Geri alınamaz.')
+                ->modalSubmitActionLabel('Grubu sil')
+                ->schema([
+                    Select::make('grup')->label('Silinecek grup')
+                        ->options(fn () => RiskSablonu::benimGruplari(Filament::auth()->id())->all())
+                        ->required()->native(false),
+                ])
+                ->action(function (array $data): void {
+                    $uid = Filament::auth()->id();
+
+                    $hedef = RiskSablonu::where('user_id', $uid)->get()
+                        ->filter(fn (RiskSablonu $s) => $s->grupAnahtari() === $data['grup']);
+
+                    $sayi = RiskSablonu::topluSil($hedef, $uid);
+
+                    Notification::make()->title($sayi.' şablon silindi')->success()->send();
+                }),
+
             Action::make('sihirbaz')
                 ->label('Sihirbazdan oluştur')
                 ->icon('heroicon-o-sparkles')

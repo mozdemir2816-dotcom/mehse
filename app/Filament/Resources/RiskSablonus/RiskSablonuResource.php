@@ -7,9 +7,12 @@ use App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus;
 use App\Models\RiskSablonu;
 use App\Support\RiskSkorlama;
 use BackedEnum;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -26,6 +29,8 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -136,10 +141,29 @@ class RiskSablonuResource extends Resource
             ])
             ->groups([
                 Group::make('sektor')->label('Sektör')
+                    ->groupQueryUsing(fn (Builder $query) => $query->groupBy(DB::raw(RiskSablonu::GRUP_IFADESI)))
+                    ->scopeQueryByKeyUsing(fn (Builder $query, ?string $key) => $query->whereRaw(RiskSablonu::GRUP_IFADESI.' = ?', [$key ?? '']))
+                    ->getKeyFromRecordUsing(fn (RiskSablonu $r) => $r->grupAnahtari())
                     ->getTitleFromRecordUsing(fn (RiskSablonu $r) => $r->sektorEtiketi())
                     ->collapsible(),
             ])
             ->defaultGroup('sektor')
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('secileniSil')
+                        ->label('Seçilenleri sil')
+                        ->icon(Heroicon::OutlinedTrash)
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalDescription('Yalnız sizin şablonlarınız silinir; başkasının paylaştığı şablonlar atlanır. Geri alınamaz.')
+                        ->action(function (Collection $records): void {
+                            $sayi = RiskSablonu::topluSil($records, Filament::auth()->id());
+
+                            Notification::make()->title($sayi.' şablon silindi')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                ]),
+            ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make()
