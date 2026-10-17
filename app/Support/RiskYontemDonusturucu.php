@@ -81,6 +81,21 @@ class RiskYontemDonusturucu
         ];
     }
 
+    /**
+     * Tek bir Matris O/Ş çiftini Fine-Kinney'e çevirir (5x5 Excel'i kütüphaneye
+     * yüklenirken — kütüphane puanları Fine-Kinney ölçeğinde tutulur).
+     *
+     * @return array{0: ?float, 1: ?float, 2: ?float} [olasılık, frekans, şiddet]
+     */
+    public static function matrisDegeriniFineKinneye(?float $olasilik, ?float $siddet): array
+    {
+        return [
+            static::esle($olasilik, self::OLASILIK_MATRIS_TO_FK),
+            static::esle($olasilik, self::FREKANS_MATRIS_OLASILIK_TO_FK),
+            static::esle($siddet, self::SIDDET_MATRIS_TO_FK),
+        ];
+    }
+
     /** @param  \Closure(RiskMaddesi): array<string, mixed>  $esleyici */
     private static function donustur(RiskDegerlendirmesi $kaynak, string $hedefYontem, \Closure $esleyici, string $kaynakAdi): RiskDegerlendirmesi
     {

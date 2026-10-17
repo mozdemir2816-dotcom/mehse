@@ -8,12 +8,36 @@
 
 <x-filament-panels::page>
     <div style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.75rem">
-        Ekipman risk analizi Excel'lerinizi (No · Ekipman · Faaliyet · Tehlike · Olasılık P · Frekans F · Şiddet S · Açıklayıcı DÖF · Hedef P/F/S · Sorumlu · Önerilen termin · dayanaklar)
-        seçin. Her ekipman kütüphanede ayrı kategori olur; şiddet 40 → 30 (ölüm), 100 → 40 (çoklu ölüm) çevrilir.
+        Önce yöntemi seçin, sonra Excel dosyalarınızı yükleyin. Her ekipman (HAZOP'ta her düğüm) kütüphanede ayrı kategori olur.
         <strong>Ekipman tipi</strong> seçerseniz, o ekipman bir firmaya eklendiğinde bu maddeler firmanın risk değerlendirmesine otomatik önerilir.
     </div>
 
     <div style="{{ $kart }}">
+        <label style="display:block;font-size:.75rem;font-weight:600;margin-bottom:.45rem">Yöntem</label>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.6rem">
+            @foreach (\App\Support\EkipmanRiskKutuphanesi::YONTEMLER as $kod => $ad)
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .75rem;border-radius:.5rem;border:1px solid {{ $yontem === $kod ? 'var(--primary-600)' : 'rgb(107 114 128 / .35)' }};{{ $yontem === $kod ? 'background:color-mix(in srgb, var(--primary-500) 10%, transparent);font-weight:600' : '' }};font-size:.85rem">
+                    <input type="radio" wire:model.live="yontem" value="{{ $kod }}"> {{ $ad }}
+                </label>
+            @endforeach
+        </div>
+        <div style="font-size:.78rem;color:rgb(107 114 128);margin-bottom:.75rem">
+            @switch($yontem)
+                @case('fine_kinney')
+                    No · Ekipman · Faaliyet · Tehlike · Risk / sonuç · Olasılık P · Frekans F · Şiddet S · Açıklayıcı DÖF · Hedef P/F/S · Sorumlu · Önerilen termin · dayanaklar.
+                    Şiddet sizin ölçeğinize çevrilir: 40 → 30 (ölüm), 100 → 40 (çoklu ölüm).
+                    @break
+                @case('matris_5x5')
+                    Fine-Kinney ile aynı düzen, Frekans yok; Olasılık ve Şiddet 1-5.
+                    Kütüphane puanları Fine-Kinney ölçeğinde tutulur; 5x5 değerlendirmeye eklenirken matrise geri çevrilir.
+                    @break
+                @case('hazop')
+                    Senaryo ID · Düğüm / ekipman · Parametre · Kılavuz sözcük · Sapma · Olası nedenler · Olası sonuçlar · Sahada araştırılacak korumalar · Önerilen aksiyon · Öncelik · Sorumlu · Önerilen termin.
+                    Puansız yüklenir; puanı firmanın değerlendirmesine eklerken verirsiniz.
+                    @break
+            @endswitch
+        </div>
+
         <label style="display:block;font-size:.75rem;font-weight:600;margin-bottom:.35rem">Excel dosyaları (birden çok seçebilirsiniz)</label>
         <input type="file" wire:model="dosyalar" multiple accept=".xlsx,.xls" style="{{ $girdi }};width:100%;max-width:520px">
         <div wire:loading wire:target="dosyalar" style="font-size:.8rem;color:rgb(107 114 128);margin-top:.35rem">Dosyalar okunuyor…</div>
@@ -46,7 +70,7 @@
                         <tr wire:key="satir-{{ $s['anahtar'] }}">
                             <td style="{{ $td }}">
                                 <div style="font-weight:600">{{ $s['ekipman'] }}</div>
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['dosya'] }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['dosya'] }} · {{ $s['yontem'] ?? '' }}</div>
                             </td>
                             <td style="{{ $td }};white-space:nowrap">{{ $s['madde'] }}</td>
                             <td style="{{ $td }};min-width:240px">

@@ -22,7 +22,7 @@ class ListTehlikes extends ListRecords
     {
         return [
             Action::make('ekipmanRiskYukle')
-                ->label('Ekipman Risk Analizi Yükle')
+                ->label('Risk Analizi Yükle (Excel)')
                 ->icon('heroicon-o-wrench-screwdriver')
                 ->url(fn () => EkipmanRiskYukle::getUrl()),
 

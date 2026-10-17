@@ -9,35 +9,47 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use RuntimeException;
 
 /**
- * Kullanıcının ekipman risk analizi şablonu ("<Ekipman>_Fine_Kinney_N_Madde.xlsx":
- * No | Ekipman | Faaliyet | Tehlike | Risk / sonuç | … | Olasılık P | Frekans F |
- * Şiddet S | … | Açıklayıcı DÖF | Hedef P/F/S | … | Sorumlu | Önerilen termin | … |
- * Standart / Makina Emniyeti / İş Ekipmanları dayanağı) → Risk Kütüphanesi.
+ * Kullanıcının risk analizi Excel şablonları → Risk Kütüphanesi (Risk Kütüphanesi →
+ * Risk Analizi Yükle). Üç yöntem (17.10.2026):
  *
- * Önceden her dosya sohbette betikle (seeder + canlı SQL) aktarılıyordu; bu sınıf
- * aynı dönüşümü panelden yapar (Risk Kütüphanesi → Ekipman Risk Analizi Yükle):
- *  - sütunlar başlık metniyle bulunur (sıra değişse de okunur),
- *  - "Ekipman" sütununun " — " öncesi kısmı kategoriyi belirler (çok ekipmanlı
- *    dosyada her ekipman ayrı kategori), sonrası faaliyete eklenir,
- *  - Şiddet kullanıcı ölçeğine çevrilir: 40 → 30 (ölüm), 100 → 40 (çoklu ölüm),
- *  - Açıklayıcı DÖF → oneri ("Alınacak önlem"), mevcut_onlem boş,
- *  - kod: ÖNEK-R/E/A-### (E eğitim/yetki, A acil durum, R diğer).
+ *  - Fine-Kinney: "<Ekipman>_Fine_Kinney_N_Madde.xlsx" — No | Ekipman | Faaliyet |
+ *    Tehlike | Risk / sonuç | … | Olasılık P | Frekans F | Şiddet S | … | Açıklayıcı DÖF |
+ *    Hedef P/F/S | … | Sorumlu | Önerilen termin | … | 3 dayanak sütunu.
+ *    Şiddet kullanıcı ölçeğine çevrilir: 40 → 30 (ölüm), 100 → 40 (çoklu ölüm).
+ *  - 5x5 L Matris: aynı düzen, Frekans yok, P/Ş 1-5. Kütüphane puanları Fine-Kinney
+ *    ölçeğinde tutulduğu için RiskYontemDonusturucu tablosuyla çevrilir (5x5
+ *    değerlendirmeye eklenirken geri çevrilir).
+ *  - HAZOP: Senaryo ID | Düğüm / ekipman | Parametre | Kılavuz sözcük | Sapma | Olası
+ *    nedenler | Olası sonuçlar | … | Sahada araştırılacak korumalar | Önerilen aksiyon |
+ *    Öncelik | … | Sorumlu | Önerilen termin. Puansız yüklenir (kullanıcı kararı);
+ *    puan firmaya eklenince verilir.
+ *
+ * Sütunlar başlık metniyle bulunur (sıra değişse de okunur). "Ekipman" / "Düğüm"
+ * sütununun " — " öncesi kısmı kategoriyi belirler (çok ekipmanlı dosyada her ekipman
+ * ayrı kategori). Açıklayıcı DÖF / önerilen aksiyon → oneri ("Alınacak önlem").
+ * kod: ÖNEK-R/E/A-### (E eğitim/yetki, A acil durum, R diğer).
  *
  * Aynı kategori tekrar yüklenirse maddeler kodla güncellenir, dosyada artık olmayan
  * aynı önekli maddeler silinir (revizyonda eski madde kalmasın — kullanıcı tercihi).
  */
 class EkipmanRiskKutuphanesi
 {
+    public const YONTEMLER = [
+        'fine_kinney' => 'Fine-Kinney',
+        'matris_5x5' => '5x5 L Matris',
+        'hazop' => 'HAZOP',
+    ];
+
     /** Başlık (normalize) → alan. Mobil vinç dosyasındaki F/O/Ş düzeni de tanınır. */
     private const BASLIKLAR = [
-        'ekipman' => ['ekipman', 'ekipman / bölüm'],
+        'ekipman' => ['ekipman', 'ekipman / bölüm', 'düğüm / ekipman', 'düğüm'],
         'faaliyet' => ['faaliyet', 'bölüm / faaliyet'],
         'tehlike' => ['tehlike', 'tehlike / uygunsuzluk'],
         'risk' => ['risk / sonuç', 'risk / olası sonuç'],
         'olasilik' => ['olasılık p', 'olasılık', 'o'],
         'frekans' => ['frekans f', 'frekans', 'f'],
         'siddet' => ['şiddet s', 'şiddet', 'ş'],
-        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet'],
+        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon'],
         'son_olasilik' => ['hedef p', 'hedef o'],
         'son_frekans' => ['hedef f'],
         'son_siddet' => ['hedef s', 'hedef ş'],
@@ -46,9 +58,21 @@ class EkipmanRiskKutuphanesi
         'd_standart' => ['standart dayanağı', 'standart / teknik dayanak'],
         'd_makina' => ['makina emniyeti dayanağı'],
         'd_ekipman' => ['iş ekipmanları dayanağı'],
+        // HAZOP
+        'parametre' => ['parametre'],
+        'kilavuz' => ['kılavuz sözcük', 'kılavuz kelime'],
+        'sapma' => ['sapma'],
+        'neden' => ['olası nedenler', 'nedenler', 'neden'],
+        'sonuc' => ['olası sonuçlar', 'sonuçlar', 'sonuç'],
+        'korumalar' => ['sahada araştırılacak korumalar'],
+        'oncelik' => ['öncelik'],
     ];
 
-    private const ZORUNLU = ['tehlike', 'olasilik', 'frekans', 'siddet'];
+    private const ZORUNLU = [
+        'fine_kinney' => ['tehlike', 'olasilik', 'frekans', 'siddet'],
+        'matris_5x5' => ['tehlike', 'olasilik', 'siddet'],
+        'hazop' => ['ekipman', 'kilavuz', 'sapma'],
+    ];
 
     private const DAYANAKLAR = [
         'd_standart' => 'Standart: ',
@@ -59,24 +83,30 @@ class EkipmanRiskKutuphanesi
     /** Kategori adı ön eki (mevcut kütüphane adlarıyla aynı biçim). */
     public const KATEGORI_ONEKI = 'Ekipman – ';
 
+    public const HAZOP_ONEKI = 'HAZOP – ';
+
     /**
-     * Dosyayı okur; ekipman başına bir grup döner.
+     * Dosyayı okur; ekipman (HAZOP'ta düğüm) başına bir grup döner.
      *
      * @return array<int, array{ekipman: string, kategori_adi: string, maddeler: array<int, array<string, mixed>>}>
      */
-    public static function oku(string $dosyaYolu, ?string $dosyaAdi = null): array
+    public static function oku(string $dosyaYolu, ?string $dosyaAdi = null, string $yontem = 'fine_kinney'): array
     {
+        if (! isset(self::YONTEMLER[$yontem])) {
+            throw new RuntimeException("Bilinmeyen yöntem: {$yontem}");
+        }
+
         ExcelBellek::artir();
 
         $reader = IOFactory::createReaderForFile($dosyaYolu);
         $reader->setReadDataOnly(true);
         $kitap = $reader->load($dosyaYolu);
-        $sayfa = $kitap->getSheetByName('Risk Analizi') ?? $kitap->getSheet(0);
+        $sayfa = $kitap->getSheetByName($yontem === 'hazop' ? 'HAZOP' : 'Risk Analizi') ?? $kitap->getSheet(0);
         $satirlar = $sayfa->toArray(null, true, false, false);
 
-        [$baslikSatiri, $sutun] = static::baslikBul($satirlar);
+        [$baslikSatiri, $sutun] = static::baslikBul($satirlar, self::ZORUNLU[$yontem]);
         if ($baslikSatiri === null) {
-            throw new RuntimeException('Ekipman risk analizi şablonu tanınmadı: "Tehlike", "Olasılık", "Frekans" ve "Şiddet" sütunları bulunamadı.');
+            throw new RuntimeException(static::tanimadiMesaji($yontem, $satirlar));
         }
 
         $varsayilanEkipman = static::dosyaAdindanEkipman($dosyaAdi ?? basename($dosyaYolu));
@@ -85,47 +115,126 @@ class EkipmanRiskKutuphanesi
         foreach (array_slice($satirlar, $baslikSatiri + 1) as $r) {
             $hucre = fn (string $alan) => isset($sutun[$alan]) ? static::temiz($r[$sutun[$alan]] ?? null) : '';
 
-            if ($hucre('tehlike') === '' || ! is_numeric(RiskSkorlama::sayi($r[$sutun['olasilik']] ?? null))) {
+            $madde = $yontem === 'hazop' ? static::hazopMaddesi($hucre) : static::puanliMadde($hucre, $r, $sutun, $yontem);
+            if (! $madde) {
                 continue;
             }
 
+            // "Kule Vinç — Raylı model — varsa" → kategori "Kule Vinç", faaliyete "(Raylı model)";
+            // HAZOP "N1 – Dispersiyoner" → "Dispersiyoner".
             $parcalar = explode(' — ', $hucre('ekipman'));
-            $ekipman = trim(array_shift($parcalar)) ?: $varsayilanEkipman;
+            $ekipman = trim(array_shift($parcalar));
+            if ($yontem === 'hazop') {
+                $ekipman = trim(preg_replace('/^[A-Z]{1,3}\d+\s*[–-]\s*/u', '', $ekipman));
+            }
+            $ekipman = $ekipman ?: $varsayilanEkipman;
+
             $tur = implode(' — ', array_filter(array_map('trim', $parcalar), fn ($p) => $p !== '' && ! in_array(mb_strtolower($p), ['varsa', 'genel'], true)));
-            $faaliyet = $hucre('faaliyet');
+            $faaliyet = (string) $madde['faaliyet'];
             if ($tur !== '' && ! str_contains(mb_strtolower($faaliyet), mb_strtolower($tur))) {
                 $faaliyet = trim($faaliyet.' ('.$tur.')');
             }
 
-            $dayanak = collect(self::DAYANAKLAR)
-                ->map(fn ($etiket, $alan) => $hucre($alan) !== '' ? $etiket.$hucre($alan) : null)
-                ->filter()->implode('; ');
-
-            $gruplar[$ekipman][] = [
-                'bolum' => Str::limit($ekipman, 250, ''),
+            $gruplar[$ekipman][] = array_merge($madde, [
+                'bolum' => Str::limit($yontem === 'hazop' ? $hucre('ekipman') : $ekipman, 250, ''),
                 'faaliyet' => $faaliyet !== '' ? Str::limit($faaliyet, 250, '') : null,
-                'tehlike' => $hucre('tehlike'),
-                'risk' => $hucre('risk') ?: null,
-                'mevcut_onlem' => null,
-                'oneri' => $hucre('oneri') ?: null,
-                'sorumlu' => $hucre('sorumlu') ? Str::limit($hucre('sorumlu'), 250, '') : null,
-                'termin' => $hucre('termin') ? Str::limit($hucre('termin'), 250, '') : null,
-                'mevzuat' => $dayanak ?: null,
-                'olasilik' => static::puan($r, $sutun, 'olasilik'),
-                'frekans' => static::puan($r, $sutun, 'frekans'),
-                'siddet' => static::siddet(static::puan($r, $sutun, 'siddet')),
-                'son_olasilik' => static::puan($r, $sutun, 'son_olasilik'),
-                'son_frekans' => static::puan($r, $sutun, 'son_frekans'),
-                'son_siddet' => static::siddet(static::puan($r, $sutun, 'son_siddet')),
                 'harf' => static::harf($faaliyet),
-            ];
+            ]);
         }
+
+        $onek = $yontem === 'hazop' ? self::HAZOP_ONEKI : self::KATEGORI_ONEKI;
 
         return collect($gruplar)->map(fn (array $maddeler, string $ekipman) => [
             'ekipman' => $ekipman,
-            'kategori_adi' => static::kategoriAdi($ekipman),
+            'kategori_adi' => static::kategoriAdi($ekipman, $onek),
             'maddeler' => $maddeler,
         ])->values()->all();
+    }
+
+    /**
+     * Fine-Kinney / 5x5 satırı. Puanı olmayan satır (not, ara başlık) atlanır.
+     *
+     * @param  array<string, int>  $sutun
+     * @return array<string, mixed>|null
+     */
+    private static function puanliMadde(\Closure $hucre, array $r, array $sutun, string $yontem): ?array
+    {
+        if ($hucre('tehlike') === '' || static::puan($r, $sutun, 'olasilik') === null) {
+            return null;
+        }
+
+        [$o, $f, $s] = [static::puan($r, $sutun, 'olasilik'), static::puan($r, $sutun, 'frekans'), static::puan($r, $sutun, 'siddet')];
+        [$so, $sf, $ss] = [static::puan($r, $sutun, 'son_olasilik'), static::puan($r, $sutun, 'son_frekans'), static::puan($r, $sutun, 'son_siddet')];
+
+        if ($yontem === 'matris_5x5') {
+            foreach ([$o, $s, $so, $ss] as $deger) {
+                if ($deger !== null && ($deger < 1 || $deger > 5)) {
+                    throw new RuntimeException('5x5 L Matris puanları 1-5 arasında olmalı ("'.Str::limit($hucre('tehlike'), 60).'" satırında '.$deger.' var). Dosya Fine-Kinney ise yöntemi "Fine-Kinney" seçin.');
+                }
+            }
+            [$o, $f, $s] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($o, $s);
+            [$so, $sf, $ss] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($so, $ss);
+        } else {
+            [$s, $ss] = [static::siddet($s), static::siddet($ss)];
+        }
+
+        $dayanak = collect(self::DAYANAKLAR)
+            ->map(fn ($etiket, $alan) => $hucre($alan) !== '' ? $etiket.$hucre($alan) : null)
+            ->filter()->implode('; ');
+
+        return [
+            'faaliyet' => $hucre('faaliyet'),
+            'tehlike' => $hucre('tehlike'),
+            'risk' => $hucre('risk') ?: null,
+            'mevcut_onlem' => null,
+            'oneri' => $hucre('oneri') ?: null,
+            'sorumlu' => $hucre('sorumlu') ? Str::limit($hucre('sorumlu'), 250, '') : null,
+            'termin' => $hucre('termin') ? Str::limit($hucre('termin'), 250, '') : null,
+            'mevzuat' => $dayanak ?: null,
+            'olasilik' => $o,
+            'frekans' => $f,
+            'siddet' => $s,
+            'son_olasilik' => $so,
+            'son_frekans' => $sf,
+            'son_siddet' => $ss,
+        ];
+    }
+
+    /**
+     * HAZOP senaryosu: Sapma → tehlike, Parametre / Kılavuz sözcük → faaliyet,
+     * Neden + Sonuç → risk, [Öncelik] Önerilen aksiyon + doğrulanacak korumalar → oneri.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function hazopMaddesi(\Closure $hucre): ?array
+    {
+        if ($hucre('sapma') === '') {
+            return null;
+        }
+
+        $risk = collect(['Neden: ' => $hucre('neden'), 'Sonuç: ' => $hucre('sonuc')])
+            ->filter()->map(fn ($v, $etiket) => $etiket.$v)->implode("\n");
+        $oneri = collect([
+            ($hucre('oncelik') !== '' ? '['.$hucre('oncelik').'] ' : '').$hucre('oneri'),
+            $hucre('korumalar') !== '' ? 'Sahada doğrulanacak korumalar: '.$hucre('korumalar') : '',
+        ])->map(fn ($v) => trim($v))->filter()->implode("\n");
+
+        return [
+            'faaliyet' => collect([$hucre('parametre'), $hucre('kilavuz')])->filter()->implode(' / '),
+            'tehlike' => $hucre('sapma'),
+            'risk' => $risk ?: null,
+            'mevcut_onlem' => null,
+            'oneri' => $oneri ?: null,
+            'sorumlu' => $hucre('sorumlu') ? Str::limit($hucre('sorumlu'), 250, '') : null,
+            'termin' => $hucre('termin') ? Str::limit($hucre('termin'), 250, '') : null,
+            'mevzuat' => 'IEC 61882 (HAZOP)',
+            'olasilik' => null,
+            'frekans' => null,
+            'siddet' => null,
+            'son_olasilik' => null,
+            'son_frekans' => null,
+            'son_siddet' => null,
+        ];
     }
 
     /**
@@ -176,16 +285,16 @@ class EkipmanRiskKutuphanesi
     }
 
     /** "Kazıcı Yükleyici" → "Ekipman – Kazıcı yükleyici" (mevcut kategori adlarıyla aynı yazım). */
-    public static function kategoriAdi(string $ekipman): string
+    public static function kategoriAdi(string $ekipman, string $onek = self::KATEGORI_ONEKI): string
     {
         $kucuk = mb_strtolower(strtr($ekipman, ['I' => 'ı', 'İ' => 'i']));
         $ilk = mb_substr($kucuk, 0, 1);
         $ilk = $ilk === 'i' ? 'İ' : ($ilk === 'ı' ? 'I' : mb_strtoupper($ilk));
 
-        return self::KATEGORI_ONEKI.$ilk.mb_substr($kucuk, 1);
+        return $onek.$ilk.mb_substr($kucuk, 1);
     }
 
-    /** Kategorinin mevcut kod öneki; yoksa addan türetilir ("Kazıcı yükleyici" → "KAZ"). */
+    /** Kategorinin mevcut kod öneki; yoksa addan türetilir ("Ekipman – Kazıcı yükleyici" → "KAZ"). */
     private static function onek(TehlikeKategorisi $kategori): string
     {
         $mevcut = Tehlike::query()->where('tehlike_kategorisi_id', $kategori->id)
@@ -194,7 +303,7 @@ class EkipmanRiskKutuphanesi
             return $e[1];
         }
 
-        $ad = str_starts_with($kategori->ad, self::KATEGORI_ONEKI) ? mb_substr($kategori->ad, mb_strlen(self::KATEGORI_ONEKI)) : $kategori->ad;
+        $ad = preg_replace('/^.*?\s–\s/u', '', $kategori->ad);
         $harfler = strtoupper(preg_replace('/[^a-z]/i', '', Str::ascii($ad)));
 
         return str_pad(substr($harfler, 0, 3), 3, 'X');
@@ -202,24 +311,15 @@ class EkipmanRiskKutuphanesi
 
     /**
      * @param  array<int, array<int, mixed>>  $satirlar
+     * @param  array<int, string>  $zorunlu
      * @return array{0: ?int, 1: array<string, int>}
      */
-    private static function baslikBul(array $satirlar): array
+    private static function baslikBul(array $satirlar, array $zorunlu): array
     {
         foreach (array_slice($satirlar, 0, 20, true) as $i => $r) {
-            $sutun = [];
-            foreach ($r as $c => $deger) {
-                $n = mb_strtolower(strtr(static::temiz($deger), ['I' => 'ı', 'İ' => 'i']));
-                foreach (self::BASLIKLAR as $alan => $esler) {
-                    if (! isset($sutun[$alan]) && in_array($n, $esler, true)) {
-                        $sutun[$alan] = $c;
+            $sutun = static::sutunlar($r);
 
-                        continue 2;
-                    }
-                }
-            }
-
-            if (count(array_intersect(self::ZORUNLU, array_keys($sutun))) === count(self::ZORUNLU)) {
+            if (count(array_intersect($zorunlu, array_keys($sutun))) === count($zorunlu)) {
                 return [$i, $sutun];
             }
         }
@@ -227,9 +327,44 @@ class EkipmanRiskKutuphanesi
         return [null, []];
     }
 
+    /**
+     * @param  array<int, mixed>  $r
+     * @return array<string, int>
+     */
+    private static function sutunlar(array $r): array
+    {
+        $sutun = [];
+        foreach ($r as $c => $deger) {
+            $n = mb_strtolower(strtr(static::temiz($deger), ['I' => 'ı', 'İ' => 'i']));
+            foreach (self::BASLIKLAR as $alan => $esler) {
+                if (! isset($sutun[$alan]) && in_array($n, $esler, true)) {
+                    $sutun[$alan] = $c;
+
+                    continue 2;
+                }
+            }
+        }
+
+        return $sutun;
+    }
+
+    /** Seçilen yönteme uymayan dosyada, dosyanın hangi yönteme benzediğini söyler. */
+    private static function tanimadiMesaji(string $yontem, array $satirlar): string
+    {
+        foreach (self::ZORUNLU as $diger => $zorunlu) {
+            if ($diger !== $yontem && static::baslikBul($satirlar, $zorunlu)[0] !== null) {
+                return 'Bu dosya '.self::YONTEMLER[$yontem].' şablonuna uymuyor; '.self::YONTEMLER[$diger].' dosyasına benziyor — yöntemi "'.self::YONTEMLER[$diger].'" seçin.';
+            }
+        }
+
+        $gerekli = ['fine_kinney' => '"Tehlike", "Olasılık", "Frekans" ve "Şiddet"', 'matris_5x5' => '"Tehlike", "Olasılık" ve "Şiddet"', 'hazop' => '"Düğüm / ekipman", "Kılavuz sözcük" ve "Sapma"'][$yontem];
+
+        return self::YONTEMLER[$yontem].' şablonu tanınmadı: '.$gerekli.' sütunları bulunamadı.';
+    }
+
     private static function dosyaAdindanEkipman(string $dosyaAdi): string
     {
-        $ad = preg_replace('/(_Fine_Kinney.*)?\.xlsx?$/i', '', $dosyaAdi);
+        $ad = preg_replace('/(_(Fine_Kinney|HAZOP|5x5|Matris).*)?\.xlsx?$/i', '', $dosyaAdi);
 
         return trim(str_replace('_', ' ', $ad)) ?: 'Ekipman';
     }

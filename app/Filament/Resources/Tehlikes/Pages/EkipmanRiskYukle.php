@@ -15,7 +15,7 @@ use Livewire\WithFileUploads;
 use Throwable;
 
 /**
- * Risk Kütüphanesi → Ekipman Risk Analizi Yükle (17.10.2026). Kullanıcının ekipman
+ * Risk Kütüphanesi → Risk Analizi Yükle (17.10.2026; Fine-Kinney / 5x5 / HAZOP). Kullanıcının
  * risk analizi Excel'leri (EkipmanRiskKutuphanesi şablonu) önizlenir, kategori adı
  * ve bağlanacak ekipman tipi seçilip kütüphaneye yazılır. Bağlanan tip firmaya
  * eklendiğinde maddeler risk değerlendirmesine "Ekipman Eksikleri" ile önerilir.
@@ -28,7 +28,10 @@ class EkipmanRiskYukle extends Page
 
     protected string $view = 'filament.resources.tehlikes.ekipman-risk-yukle';
 
-    protected static ?string $title = 'Ekipman Risk Analizi Yükle';
+    protected static ?string $title = 'Risk Analizi Yükle';
+
+    /** Dosyaların yöntemi (EkipmanRiskKutuphanesi::YONTEMLER). */
+    public string $yontem = 'fine_kinney';
 
     /** @var array<int, TemporaryUploadedFile> */
     public array $dosyalar = [];
@@ -45,11 +48,14 @@ class EkipmanRiskYukle extends Page
 
     public function updatedDosyalar(): void
     {
-        $this->validate(['dosyalar.*' => 'file|mimes:xlsx,xls|max:20480']);
+        $this->validate([
+            'yontem' => 'required|in:'.implode(',', array_keys(EkipmanRiskKutuphanesi::YONTEMLER)),
+            'dosyalar.*' => 'file|mimes:xlsx,xls|max:20480',
+        ]);
 
         foreach ($this->dosyalar as $dosya) {
             try {
-                $gruplar = EkipmanRiskKutuphanesi::oku($dosya->getRealPath(), $dosya->getClientOriginalName());
+                $gruplar = EkipmanRiskKutuphanesi::oku($dosya->getRealPath(), $dosya->getClientOriginalName(), $this->yontem);
             } catch (Throwable $e) {
                 $this->hatalar[] = $dosya->getClientOriginalName().': '.$e->getMessage();
 
@@ -67,6 +73,7 @@ class EkipmanRiskYukle extends Page
                 $this->onizleme[] = [
                     'anahtar' => $anahtar,
                     'dosya' => $dosya->getClientOriginalName(),
+                    'yontem' => EkipmanRiskKutuphanesi::YONTEMLER[$this->yontem],
                     'ekipman' => $g['ekipman'],
                     'kategori_adi' => $g['kategori_adi'],
                     'ekipman_tipi' => static::tahminiTip($g['ekipman']),

@@ -208,7 +208,92 @@ class EkipmanRiskKutuphanesiTest extends TestCase
     public function test_risk_kutuphanesinde_yukleme_butonu_var(): void
     {
         $this->get(TehlikeResource::getUrl('index'))
-            ->assertOk()->assertSee('Ekipman Risk Analizi Yükle');
-        $this->get(EkipmanRiskYukle::getUrl())->assertOk();
+            ->assertOk()->assertSee('Risk Analizi Yükle (Excel)');
+        $this->get(EkipmanRiskYukle::getUrl())->assertOk()->assertSee('HAZOP')->assertSee('5x5 L Matris');
+    }
+
+    /** @param  array<int, array<int, mixed>>  $satirlar */
+    private function matrisExcel(array $satirlar): string
+    {
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('Risk Analizi');
+        $s->fromArray(['No', 'Ekipman', 'Faaliyet', 'Tehlike', 'Risk / sonuç', 'Olasılık P', 'Şiddet S', 'Risk R', 'Açıklayıcı DÖF', 'Hedef P', 'Hedef S', 'Sorumlu', 'Önerilen termin'], null, 'A3');
+        $s->fromArray($satirlar, null, 'A4');
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-matris.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        return $yol;
+    }
+
+    public function test_matris_5x5_puanlari_kutuphane_olcegine_cevrilir(): void
+    {
+        $yol = $this->matrisExcel([[1, 'Silindir', 'Kenar', 'Devrilme', 'Ölüm', 3, 5, 15, 'Kenar işaretlenir.', 1, 5, 'Şef', 'Hemen']]);
+        $m = EkipmanRiskKutuphanesi::oku($yol, null, 'matris_5x5')[0]['maddeler'][0];
+
+        // RiskYontemDonusturucu tablosu: O 3 → 3 (F 3), Ş 5 → 30; hedef O 1 → 0,2
+        $this->assertSame([3.0, 3.0, 30.0], [$m['olasilik'], $m['frekans'], $m['siddet']]);
+        $this->assertSame([0.2, 0.5, 30.0], [$m['son_olasilik'], $m['son_frekans'], $m['son_siddet']]);
+
+        // Fine-Kinney seçilirse Frekans olmadığı için yöntem önerilir.
+        $this->expectExceptionMessage('5x5 L Matris dosyasına benziyor');
+        EkipmanRiskKutuphanesi::oku($yol, null, 'fine_kinney');
+    }
+
+    public function test_matris_5x5_secilip_fine_kinney_puani_gelirse_hata(): void
+    {
+        $this->expectExceptionMessage('1-5 arasında olmalı');
+        EkipmanRiskKutuphanesi::oku($this->excel([$this->satir(1, 'Kenar', 'Devrilme')]), null, 'matris_5x5');
+    }
+
+    private function hazopExcel(): string
+    {
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('HAZOP');
+        $s->fromArray(['BOYA ÜRETİM TESİSİ HAZOP ÇALIŞMASI'], null, 'A1');
+        $s->fromArray(['Senaryo ID', 'Düğüm / ekipman', 'Parametre', 'Kılavuz sözcük', 'Sapma', 'Olası nedenler', 'Olası sonuçlar', 'Mevcut koruma durumu', 'Sahada araştırılacak korumalar', 'Önerilen aksiyon', 'Öncelik', 'Aksiyon ID', 'Sorumlu', 'Önerilen termin', 'Durum', 'Kapanış / doğrulama kanıtı', 'Kontrol tarihi', 'Fine–Kinney referansı'], null, 'A7');
+        $s->fromArray([
+            ['HZ-001', 'N1 – Dispersiyoner', 'Devir', 'Fazla', 'Devrin güvenli sınırı aşması', 'Yanlış sürücü ayarı', 'Disk hasarı, parça fırlaması', 'Doğrulanmadı', 'Devir sınırı, kap kilidi', 'Azami devri doğrulayın.', 'A – İşletme öncesi', 'AKS-001', 'Proses', 'İşletme öncesi', 'Açık', '', '', 'FK-001'],
+            ['HZ-002', 'N1 – Dispersiyoner', 'Karıştırma', 'Yok', 'Karıştırmanın durması', 'Motor arızası', 'Topaklanma', 'Doğrulanmadı', '', 'Şarj kilidi kurun.', 'B – Planlı', 'AKS-002', 'Bakım', '3 ay', 'Açık', '', '', 'FK-002'],
+            ['HZ-003', 'N2 – Basket Mill', 'Seviye', 'Az', 'Sepetin yetersiz daldırılması', 'Eksik dolum', 'Sıçrama', 'Doğrulanmadı', '', 'Seviye kilidi.', 'A – İşletme öncesi', 'AKS-003', 'Proses', 'İşletme öncesi', 'Açık', '', '', 'FK-011'],
+        ], null, 'A8');
+        $kitap->createSheet()->setTitle('Düğümler');
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-Boya_HAZOP.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        return $yol;
+    }
+
+    public function test_hazop_dugum_basina_kategori_puansiz_yuklenir(): void
+    {
+        $gruplar = EkipmanRiskKutuphanesi::oku($this->hazopExcel(), null, 'hazop');
+
+        $this->assertSame(['HAZOP – Dispersiyoner', 'HAZOP – Basket mill'], array_column($gruplar, 'kategori_adi'));
+        $m = $gruplar[0]['maddeler'][0];
+        $this->assertSame('N1 – Dispersiyoner', $m['bolum']);
+        $this->assertSame('Devir / Fazla', $m['faaliyet']);
+        $this->assertSame('Devrin güvenli sınırı aşması', $m['tehlike']);
+        $this->assertSame("Neden: Yanlış sürücü ayarı\nSonuç: Disk hasarı, parça fırlaması", $m['risk']);
+        $this->assertSame("[A – İşletme öncesi] Azami devri doğrulayın.\nSahada doğrulanacak korumalar: Devir sınırı, kap kilidi", $m['oneri']);
+        $this->assertNull($m['olasilik']);
+        $this->assertNull($m['son_siddet']);
+
+        $sonuc = EkipmanRiskKutuphanesi::kaydet($gruplar[0]['kategori_adi'], $gruplar[0]['maddeler']);
+        $this->assertSame(2, $sonuc['eklenen']);
+        $this->assertSame(['DIS-R-001', 'DIS-R-002'], $sonuc['kategori']->tehlikeler()->orderBy('kod')->pluck('kod')->all());
+        $this->assertNull(Tehlike::where('kod', 'DIS-R-001')->value('olasilik'));
+    }
+
+    public function test_sayfada_hazop_secilince_hazop_okunur(): void
+    {
+        Livewire::test(EkipmanRiskYukle::class)
+            ->set('yontem', 'hazop')
+            ->set('dosyalar', [UploadedFile::fake()->createWithContent('Boya_HAZOP.xlsx', file_get_contents($this->hazopExcel()))])
+            ->assertCount('onizleme', 2)
+            ->assertSet('onizleme.0.kategori_adi', 'HAZOP – Dispersiyoner')
+            ->assertSet('onizleme.0.yontem', 'HAZOP')
+            ->assertSet('hatalar', [])
+            ->call('kaydet');
+
+        $this->assertSame(3, Tehlike::whereHas('kategori', fn ($q) => $q->where('ad', 'like', 'HAZOP – %'))->count());
     }
 }
