@@ -156,6 +156,49 @@ class EkipmanRiskKutuphanesi
     }
 
     /**
+     * Dosya HAZOP şablonu mu? (Sapma + Kılavuz sözcük + Düğüm sütunları.) Risk Sihirbazı
+     * Excel akışında "bu HAZOP" demek için; puan sütunu olmadığı için 5x5 / Fine-Kinney
+     * okuyucusuna gitmemeli.
+     */
+    public static function hazopMi(string $dosyaYolu): bool
+    {
+        try {
+            $reader = IOFactory::createReaderForFile($dosyaYolu);
+            $reader->setReadDataOnly(true);
+            $kitap = $reader->load($dosyaYolu);
+            $sayfa = $kitap->getSheetByName('HAZOP') ?? $kitap->getSheet(0);
+
+            return static::baslikBul($sayfa->toArray(null, true, false, false), self::ZORUNLU['hazop'])[0] !== null;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * HAZOP dosyasını Risk Sihirbazı'nın aday biçimine çevirir (puansız, hücre metinleri
+     * olduğu gibi). Her aday `hazop` alanını taşır; çıktı bu alandan basılır.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function hazopAdaylari(string $dosyaYolu, ?string $dosyaAdi = null): array
+    {
+        $adaylar = [];
+
+        foreach (static::oku($dosyaYolu, $dosyaAdi, 'hazop') as $grup) {
+            foreach ($grup['maddeler'] as $madde) {
+                $adaylar[] = $madde + [
+                    'anahtar' => 'hz-'.substr(md5(($madde['tehlike'] ?? '').uniqid('', true)), 0, 10),
+                    'kaynak' => 'excel',
+                    'tehlike_id' => null,
+                    'aciklama' => null,
+                ];
+            }
+        }
+
+        return $adaylar;
+    }
+
+    /**
      * Fine-Kinney / 5x5 satırı. Puanı olmayan satır (not, ara başlık) atlanır.
      *
      * @param  array<string, int>  $sutun

@@ -692,6 +692,8 @@
                                 style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;flex-shrink:0">✕</button>
                         </div>
 
+                        {{-- HAZOP puansızdır: Olasılık / Şiddet seçicileri ve puan gösterilmez. --}}
+                        @unless ($yontem === 'hazop')
                         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem;margin-top:.6rem">
                             <div>
                                 <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['olasilik'] }}</label>
@@ -729,6 +731,7 @@
                                 {{ $p['puan'] ? $p['puan'].' · '.$p['duzey'] : 'puan yok' }}
                             </div>
                         </div>
+                        @endunless
                     </div>
                 @endforeach
             </div>

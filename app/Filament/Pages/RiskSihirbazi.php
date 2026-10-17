@@ -12,6 +12,7 @@ use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPdfOkuyucu;
 use App\Support\GeminiRiskPuanTamamlayici;
+use App\Support\EkipmanRiskKutuphanesi;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskDegerlendirmesiOlusturucu;
 use App\Support\RiskKutuphanesi;
@@ -708,16 +709,38 @@ class RiskSihirbazi extends Page
     {
         $this->validate(['excelDosya' => 'required|file|mimes:xlsx,xls,csv']);
 
-        try {
-            $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($this->excelDosya->getRealPath());
-        } catch (\Throwable $e) {
-            Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+        $yol = $this->excelDosya->getRealPath();
 
-            return;
+        // HAZOP dosyası: puansız okunur ve yöntem HAZOP olur (yoksa 5x5 sayılıp puanlanırdı).
+        if (EkipmanRiskKutuphanesi::hazopMi($yol)) {
+            try {
+                $adaylar = EkipmanRiskKutuphanesi::hazopAdaylari($yol, $this->excelDosya->getClientOriginalName());
+            } catch (\Throwable $e) {
+                Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                return;
+            }
+
+            $this->yontem = 'hazop';
+            $this->excelAdaylar = $adaylar;
+            $this->excelHatalar = [];
+
+            Notification::make()->title('HAZOP dosyası algılandı')
+                ->body('Yöntem HAZOP olarak ayarlandı; maddeler puansız eklenecek.')
+                ->success()->send();
+        } else {
+            try {
+                $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($yol);
+            } catch (\Throwable $e) {
+                Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                return;
+            }
+
+            $this->excelAdaylar = $sonuc['adaylar'];
+            $this->excelHatalar = $sonuc['hatalar'];
         }
 
-        $this->excelAdaylar = $sonuc['adaylar'];
-        $this->excelHatalar = $sonuc['hatalar'];
         // Kullanıcının kendi belgesindeki maddeler zaten kendi onayından geçmiş
         // kabul edilir (kütüphane/AI önerilerinin aksine) — hepsi seçili gelir.
         $this->excelSecilenAdaylar = collect($this->excelAdaylar)->pluck('anahtar')->all();
@@ -919,6 +942,11 @@ class RiskSihirbazi extends Page
      */
     private function excelEksikleriAiIleTamamla(array $indeksler): array
     {
+        // HAZOP puansızdır; AI'nin puan üretmesi istenmez.
+        if ($this->yontem === 'hazop') {
+            return [0, 0];
+        }
+
         if (! GeminiRiskPuanTamamlayici::aktifMi()) {
             return [0, 0];
         }

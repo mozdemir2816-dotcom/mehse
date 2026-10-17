@@ -98,6 +98,8 @@ class MaddelerRelationManager extends RelationManager
     {
         $yontem = $this->yontem();
         $ucEksenli = $this->ucEksenli();
+        // HAZOP puansızdır: puan alanları (olasılık / şiddet / önlem sonrası) gösterilmez.
+        $hazop = $this->yontem() === 'hazop';
         $etiket = RiskSkorlama::eksenEtiketleri($yontem);
         $yontemBasligi = config('isg.risk_yontemleri.'.$yontem, $yontem);
 
@@ -123,6 +125,7 @@ class MaddelerRelationManager extends RelationManager
 
             Section::make("Mevcut Risk ({$yontemBasligi})")
                 ->columns(3)
+                ->visible(! $hazop)
                 ->schema(array_values(array_filter([
                     Select::make('olasilik')->label($etiket['olasilik'])
                         ->options(RiskSkorlama::olcek($yontem, 'olasilik'))
@@ -145,11 +148,13 @@ class MaddelerRelationManager extends RelationManager
                     Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
                         ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)
                         ->default(1)
+                        ->visible(! $hazop)
                         ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
                     $ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
                         ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null,
                     Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
                         ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)
+                        ->visible(! $hazop)
                         ->helperText('Boş bırakılırsa öneri öncesindeki '.$etiket['siddet'].' değeriyle aynı kabul edilir.'),
                 ]))),
         ]);
@@ -164,9 +169,11 @@ class MaddelerRelationManager extends RelationManager
                 TextColumn::make('tehlike')->label('Tehlike')->searchable()->wrap()->limit(80),
                 TextColumn::make('puan')->label('Puan')->badge()->alignCenter()
                     ->color(fn (RiskMaddesi $r) => static::rozetRengi($r->rengi()))
-                    ->formatStateUsing(fn ($state, RiskMaddesi $r) => $state ? "{$state} · {$r->duzey}" : '—'),
+                    ->formatStateUsing(fn ($state, RiskMaddesi $r) => $state ? "{$state} · {$r->duzey}" : '—')
+                    ->visible(fn (): bool => $this->yontem() !== 'hazop'),
                 TextColumn::make('son_puan')->label('Rezidüel')->alignCenter()->placeholder('—')
-                    ->formatStateUsing(fn ($state, RiskMaddesi $r) => $state ? "{$state} · {$r->son_duzey}" : '—'),
+                    ->formatStateUsing(fn ($state, RiskMaddesi $r) => $state ? "{$state} · {$r->son_duzey}" : '—')
+                    ->visible(fn (): bool => $this->yontem() !== 'hazop'),
                 TextColumn::make('termin')->label('Termin')->placeholder('—')->toggleable(),
                 TextColumn::make('durum')->label('Durum')->badge()
                     ->formatStateUsing(fn (string $state) => config('isg.risk_madde_durumlari.'.$state, $state))
