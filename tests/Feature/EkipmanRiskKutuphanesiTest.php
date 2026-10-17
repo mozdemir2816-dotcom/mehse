@@ -283,6 +283,34 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         $this->assertNull(Tehlike::where('kod', 'DIS-R-001')->value('olasilik'));
     }
 
+    public function test_hazop_yeni_duzen_dugum_adi_ve_alanlar_okunur(): void
+    {
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('HAZOP');
+        $s->fromArray(['HAZIR SIVA ÜRETİM TESİSİ — HAZOP ÖN ÇALIŞMASI'], null, 'A2');
+        $s->fromArray(['No', 'Düğüm', 'Parametre', 'Kılavuz kelime', 'Sapma', 'Olası nedenler', 'Olası sonuçlar', 'Doğrulanacak korumalar', 'Öneri / aksiyon', 'Öncelik', 'Sorumlu rol', 'Hedef tarih', 'Kapanış kanıtı', 'Durum'], null, 'A6');
+        $s->fromArray([
+            [1, 'N1 — Silo dolumu', 'Basınç', 'FAZLA', 'Silo basıncı tasarım sınırını aşar', 'Filtre tıkanması', 'Gövde hasarı, ölüm', 'Basınç alarmı, tahliye valfi', 'Tahliye kapasitesini doğrulayın.', 'P1', 'Üretim / bakım', 'Atanacak', '', 'Açık'],
+        ], null, 'A7');
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-Siva_HAZOP.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $gruplar = EkipmanRiskKutuphanesi::oku($yol, null, 'hazop');
+
+        $this->assertSame(['HAZOP – Silo dolumu'], array_column($gruplar, 'kategori_adi'));
+        $m = $gruplar[0]['maddeler'][0];
+        $this->assertSame('N1 — Silo dolumu', $m['bolum']);
+        $this->assertSame('Basınç / FAZLA', $m['faaliyet']);
+        $this->assertSame('Silo basıncı tasarım sınırını aşar', $m['tehlike']);
+        $this->assertSame("Neden: Filtre tıkanması\nSonuç: Gövde hasarı, ölüm", $m['risk']);
+        $this->assertSame("[P1] Tahliye kapasitesini doğrulayın.\nSahada doğrulanacak korumalar: Basınç alarmı, tahliye valfi", $m['oneri']);
+        $this->assertSame('Üretim / bakım', $m['sorumlu']);
+        $this->assertSame('Atanacak', $m['termin']);
+        $this->assertNull($m['olasilik']);
+        $this->assertSame(['dugum' => 'N1 — Silo dolumu', 'parametre' => 'Basınç', 'kilavuz' => 'FAZLA'], array_intersect_key($m['hazop'], array_flip(['dugum', 'parametre', 'kilavuz'])));
+        $this->assertSame('Açık', $m['hazop']['durum']);
+    }
+
     public function test_sayfada_hazop_secilince_hazop_okunur(): void
     {
         Livewire::test(EkipmanRiskYukle::class)

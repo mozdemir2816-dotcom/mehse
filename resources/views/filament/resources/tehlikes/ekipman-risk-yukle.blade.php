@@ -32,7 +32,7 @@
                     Kütüphane puanları Fine-Kinney ölçeğinde tutulur; 5x5 değerlendirmeye eklenirken matrise geri çevrilir.
                     @break
                 @case('hazop')
-                    Senaryo ID · Düğüm / ekipman · Parametre · Kılavuz sözcük · Sapma · Olası nedenler · Olası sonuçlar · Sahada araştırılacak korumalar · Önerilen aksiyon · Öncelik · Sorumlu · Önerilen termin.
+                    No · Düğüm · Parametre · Kılavuz kelime · Sapma · Olası nedenler · Olası sonuçlar · Doğrulanacak korumalar · Öneri / aksiyon · Öncelik · Sorumlu rol · Hedef tarih · Kapanış kanıtı · Durum.
                     Puansız yüklenir; puanı firmanın değerlendirmesine eklerken verirsiniz.
                     @break
             @endswitch

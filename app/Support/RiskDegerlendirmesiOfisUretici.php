@@ -44,6 +44,11 @@ class RiskDegerlendirmesiOfisUretici
     /** @return array<int, array{0: string, 1: \Closure(RiskMaddesi, int): mixed, 2: int}> [başlık, değer, Excel genişliği] */
     private static function sutunlar(RiskDegerlendirmesi $rd, bool $excel): array
     {
+        // HAZOP: kaynak Excel'deki düzen, puan sütunları yok.
+        if ($rd->yontem === 'hazop') {
+            return HazopCiktisi::sutunlar();
+        }
+
         $uc = RiskSkorlama::ucEksenliMi($rd->yontem);
         $f = $rd->yontem === 'fmea' ? 'D' : 'F';
         $s = fn ($v) => $v === null || $v === '' ? null : (float) $v;
@@ -222,7 +227,10 @@ class RiskDegerlendirmesiOfisUretici
         $sayfa->getPageMargins()->setLeft(0.3)->setRight(0.3)->setTop(0.4)->setBottom(0.4);
         $sayfa->getHeaderFooter()->setOddFooter('&L'.$rd->belge_no.'&RSayfa &P / &N');
 
-        self::excelYontemSayfasi($kitap, $v, $rd);
+        // HAZOP'ta puanlama ölçeği yok; yöntem sayfası eklenmez.
+        if ($rd->yontem !== 'hazop') {
+            self::excelYontemSayfasi($kitap, $v, $rd);
+        }
         $kitap->setActiveSheetIndex(0);
 
         return $kitap;
@@ -378,9 +386,11 @@ class RiskDegerlendirmesiOfisUretici
             $tablo->addCell(7900)->addText(self::metin($deger));
         }
 
-        // 2. Yöntem
-        $bolum->addTextBreak();
-        self::wordYontem($bolum, $v);
+        // 2. Yöntem (HAZOP'ta puanlama ölçeği yok)
+        if ($rd->yontem !== 'hazop') {
+            $bolum->addTextBreak();
+            self::wordYontem($bolum, $v);
+        }
 
         // 3. Risk tablosu
         $bolum = $phpWord->addSection([

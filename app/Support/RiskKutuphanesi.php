@@ -87,6 +87,8 @@ class RiskKutuphanesi
             'son_olasilik' => $t->son_olasilik !== null ? (float) $t->son_olasilik : null,
             'son_frekans' => $t->son_frekans !== null ? (float) $t->son_frekans : null,
             'son_siddet' => $t->son_siddet !== null ? (float) $t->son_siddet : null,
+            // HAZOP senaryosunun Excel hücre metinleri (puansız çıktı bunlardan basılır).
+            'hazop' => $t->hazop,
         ];
     }
 

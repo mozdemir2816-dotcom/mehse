@@ -19,10 +19,10 @@ use RuntimeException;
  *  - 5x5 L Matris: aynı düzen, Frekans yok, P/Ş 1-5. Kütüphane puanları Fine-Kinney
  *    ölçeğinde tutulduğu için RiskYontemDonusturucu tablosuyla çevrilir (5x5
  *    değerlendirmeye eklenirken geri çevrilir).
- *  - HAZOP: Senaryo ID | Düğüm / ekipman | Parametre | Kılavuz sözcük | Sapma | Olası
- *    nedenler | Olası sonuçlar | … | Sahada araştırılacak korumalar | Önerilen aksiyon |
- *    Öncelik | … | Sorumlu | Önerilen termin. Puansız yüklenir (kullanıcı kararı);
- *    puan firmaya eklenince verilir.
+ *  - HAZOP: No | Düğüm | Parametre | Kılavuz kelime | Sapma | Olası nedenler | Olası
+ *    sonuçlar | Doğrulanacak korumalar | Öneri / aksiyon | Öncelik | Sorumlu rol | Hedef
+ *    tarih | Kapanış kanıtı | Durum. Puansız yüklenir (kullanıcı kararı); puan firmaya
+ *    eklenince verilir. Eski HAZOP başlıkları (Senaryo ID, Önerilen aksiyon …) da okunur.
  *
  * Sütunlar başlık metniyle bulunur (sıra değişse de okunur). "Ekipman" / "Düğüm"
  * sütununun " — " öncesi kısmı kategoriyi belirler (çok ekipmanlı dosyada her ekipman
@@ -49,12 +49,12 @@ class EkipmanRiskKutuphanesi
         'olasilik' => ['olasılık p', 'olasılık', 'o'],
         'frekans' => ['frekans f', 'frekans', 'f'],
         'siddet' => ['şiddet s', 'şiddet', 'ş'],
-        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon'],
+        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon'],
         'son_olasilik' => ['hedef p', 'hedef o'],
         'son_frekans' => ['hedef f'],
         'son_siddet' => ['hedef s', 'hedef ş'],
-        'sorumlu' => ['sorumlu'],
-        'termin' => ['önerilen termin', 'termin'],
+        'sorumlu' => ['sorumlu', 'sorumlu rol'],
+        'termin' => ['önerilen termin', 'termin', 'hedef tarih'],
         'd_standart' => ['standart dayanağı', 'standart / teknik dayanak'],
         'd_makina' => ['makina emniyeti dayanağı'],
         'd_ekipman' => ['iş ekipmanları dayanağı'],
@@ -64,8 +64,10 @@ class EkipmanRiskKutuphanesi
         'sapma' => ['sapma'],
         'neden' => ['olası nedenler', 'nedenler', 'neden'],
         'sonuc' => ['olası sonuçlar', 'sonuçlar', 'sonuç'],
-        'korumalar' => ['sahada araştırılacak korumalar'],
+        'korumalar' => ['sahada araştırılacak korumalar', 'doğrulanacak korumalar'],
         'oncelik' => ['öncelik'],
+        'kapanis' => ['kapanış kanıtı', 'kapanış / doğrulama kanıtı'],
+        'durum' => ['durum'],
     ];
 
     private const ZORUNLU = [
@@ -121,11 +123,13 @@ class EkipmanRiskKutuphanesi
             }
 
             // "Kule Vinç — Raylı model — varsa" → kategori "Kule Vinç", faaliyete "(Raylı model)";
-            // HAZOP "N1 – Dispersiyoner" → "Dispersiyoner".
-            $parcalar = explode(' — ', $hucre('ekipman'));
-            $ekipman = trim(array_shift($parcalar));
+            // HAZOP "N1 — Silo dolumu" / "N1 – Dispersiyoner" → "Silo dolumu" / "Dispersiyoner".
             if ($yontem === 'hazop') {
-                $ekipman = trim(preg_replace('/^[A-Z]{1,3}\d+\s*[–-]\s*/u', '', $ekipman));
+                $parcalar = [];
+                $ekipman = trim(preg_replace('/^[A-Z]{1,3}\d+\s*[–—-]\s*/u', '', $hucre('ekipman')));
+            } else {
+                $parcalar = explode(' — ', $hucre('ekipman'));
+                $ekipman = trim(array_shift($parcalar));
             }
             $ekipman = $ekipman ?: $varsayilanEkipman;
 
@@ -234,6 +238,22 @@ class EkipmanRiskKutuphanesi
             'son_olasilik' => null,
             'son_frekans' => null,
             'son_siddet' => null,
+            // Kaynak Excel'deki hücre metinleri olduğu gibi (çıktı bunlardan basılır).
+            'hazop' => [
+                'dugum' => $hucre('ekipman'),
+                'parametre' => $hucre('parametre'),
+                'kilavuz' => $hucre('kilavuz'),
+                'sapma' => $hucre('sapma'),
+                'neden' => $hucre('neden'),
+                'sonuc' => $hucre('sonuc'),
+                'korumalar' => $hucre('korumalar'),
+                'oneri' => $hucre('oneri'),
+                'oncelik' => $hucre('oncelik'),
+                'sorumlu' => $hucre('sorumlu'),
+                'termin' => $hucre('termin'),
+                'kapanis' => $hucre('kapanis'),
+                'durum' => $hucre('durum'),
+            ],
         ];
     }
 

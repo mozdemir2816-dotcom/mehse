@@ -14,6 +14,10 @@ class Tehlike extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'hazop' => 'array',
+    ];
+
     public function kategori(): BelongsTo
     {
         return $this->belongsTo(TehlikeKategorisi::class, 'tehlike_kategorisi_id');

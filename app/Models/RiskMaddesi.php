@@ -30,6 +30,7 @@ class RiskMaddesi extends Model
         'son_frekans' => 'float',
         'son_siddet' => 'float',
         'son_puan' => 'float',
+        'hazop' => 'array',
     ];
 
     protected static function booted(): void

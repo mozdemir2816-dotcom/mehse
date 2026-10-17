@@ -1137,6 +1137,7 @@ class RiskSihirbazi extends Page
                 'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',
                 'risk' => $m['risk'] ?? null,
                 'mevcut_onlem' => $m['mevcut_onlem'] ?? null,
+                'hazop' => $m['hazop'] ?? null,
                 'etkilenen_calisan' => true,
                 'etkilenen_diger' => $this->etkilenenDiger,
                 'olasilik' => $this->sayiVeyaNull($m['olasilik'] ?? null),

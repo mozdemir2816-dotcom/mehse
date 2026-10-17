@@ -277,6 +277,7 @@
         <tr><td>Adres</td><td>{{ $rd->firma_adres ?: '—' }}</td></tr>
     </table>
 
+    @if ($rd->yontem !== 'hazop')
     <h2 style="margin-top:20px">2. DEĞERLENDİRME YÖNTEMİ</h2>
     <p style="font-size:10.5px">{{ $metodoloji['aciklama'] }}</p>
 
@@ -314,6 +315,7 @@
             </tr>
         @endforeach
     </table>
+    @endif
 </div>
 
 @endif
@@ -322,6 +324,9 @@
 {{-- RİSK TABLOSU --}}
 <div class="sayfa">
     <h2>3. TEHLİKELERİN TANIMLANMASI VE RİSK DEĞERLENDİRME TABLOSU</h2>
+    @if ($rd->yontem === 'hazop')
+        @include('pdf.partials.hazop-tablo')
+    @else
     @php $fBaslik = $rd->yontem === 'fmea' ? 'D' : 'F'; @endphp
     <p class="kisaltma-acik">Düzey kısaltmaları:
         @foreach ($bantlar as $bant)
@@ -382,6 +387,7 @@
         </tbody>
     </table>
     @endforeach
+    @endif
 </div>
 
 {{-- EKİP + ONAY --}}

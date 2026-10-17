@@ -71,6 +71,8 @@ class RiskDegerlendirmesiOlusturucu
                     'tehlike' => ($m['tehlike'] ?? '') ?: '(tanımsız)',
                     'risk' => $m['risk'] ?? null,
                     'mevcut_onlem' => $m['mevcut_onlem'] ?? null,
+                    // insert() cast uygulamaz: JSON kolonu elle kodlanır.
+                    'hazop' => isset($m['hazop']) ? json_encode($m['hazop'], JSON_UNESCAPED_UNICODE) : null,
                     'etkilenen_calisan' => true,
                     'etkilenen_diger' => $etkilenenDiger,
                     'olasilik' => $o,
