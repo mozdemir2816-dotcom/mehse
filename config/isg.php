@@ -733,6 +733,8 @@ return [
                 ['ad' => 'Kordon Tezgâhı (Motorlu Pedallı)', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
                 ['ad' => 'Sac Silindir Büküm Makinesi (Vals)', 'periyot_ay' => 12, 'standart' => 'TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
                 ['ad' => 'CNC Plazma Sac Kesim Tezgâhı', 'periyot_ay' => 12, 'standart' => 'TS EN 60974-1 / TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Parça Taşıma Konveyörü', 'periyot_ay' => 12, 'standart' => 'TS EN 619 / TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
+                ['ad' => 'Toz Boya Fırını', 'periyot_ay' => 12, 'standart' => 'TS EN 1539 / TS EN ISO 12100', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol formu'],
             ],
             'diger_ekipman' => [
                 ['ad' => 'Endüstriyel Zemin Temizleme Otomatı', 'periyot_ay' => 12, 'standart' => 'TS EN 60335-2-72', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol'],
@@ -742,6 +744,9 @@ return [
                 // Şantiye iş makineleri (14.10.2026, SK-RA-01) — üretici talimatına göre bakım + kullanım öncesi kontrol formu.
                 ['ad' => 'Kazıcı Yükleyici (Beko Loder)', 'periyot_ay' => 12, 'standart' => 'TS EN 474-1 / TS EN 474-4', 'deney' => 'Üretici talimatına göre bakım; kullanım öncesi günlük kontrol formu'],
                 ['ad' => 'Damperli Kamyon', 'periyot_ay' => 12, 'standart' => 'Karayolları Trafik Yön. (araç muayenesi ayrıca)', 'deney' => 'Araç muayene ve bakım takibi; kullanım öncesi günlük kontrol formu'],
+                ['ad' => 'Loder / Lastikli Yükleyici', 'periyot_ay' => 12, 'standart' => 'TS EN 474-1 / TS EN 474-3', 'deney' => 'Üretici talimatına göre bakım; kullanım öncesi günlük kontrol formu'],
+                ['ad' => 'Silindir (Toprak / Asfalt)', 'periyot_ay' => 12, 'standart' => 'ISO 20500-1 / ISO 20500-4 (EN 500 serisi)', 'deney' => 'Üretici talimatına göre bakım; kullanım öncesi günlük kontrol formu'],
+                ['ad' => 'Ekskavatör ve Diğer Yol Yapım Makineleri', 'periyot_ay' => 12, 'standart' => 'TS EN 474-1 / TS EN 474-5', 'deney' => 'Üretici talimatına göre bakım; kullanım öncesi günlük kontrol formu'],
             ],
         ],
     ],

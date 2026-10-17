@@ -21,6 +21,11 @@ class ListTehlikes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('ekipmanRiskYukle')
+                ->label('Ekipman Risk Analizi Yükle')
+                ->icon('heroicon-o-wrench-screwdriver')
+                ->url(fn () => EkipmanRiskYukle::getUrl()),
+
             Action::make('excelSablon')
                 ->label('Şablon İndir')
                 ->icon('heroicon-o-document-arrow-down')

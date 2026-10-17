@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Tehlikes;
 
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Resources\Tehlikes\Pages\CreateTehlike;
 use App\Filament\Resources\Tehlikes\Pages\EditTehlike;
+use App\Filament\Resources\Tehlikes\Pages\EkipmanRiskYukle;
 use App\Filament\Resources\Tehlikes\Pages\ListTehlikes;
 use App\Filament\Resources\Tehlikes\Schemas\TehlikeForm;
 use App\Filament\Resources\Tehlikes\Tables\TehlikesTable;
@@ -15,10 +17,9 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 class TehlikeResource extends Resource
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected static ?string $model = Tehlike::class;
 
@@ -51,6 +52,7 @@ class TehlikeResource extends Resource
         return [
             'index' => ListTehlikes::route('/'),
             'create' => CreateTehlike::route('/create'),
+            'ekipman-yukle' => EkipmanRiskYukle::route('/ekipman-yukle'),
             'edit' => EditTehlike::route('/{record}/edit'),
         ];
     }

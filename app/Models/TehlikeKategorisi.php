@@ -14,6 +14,10 @@ class TehlikeKategorisi extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'ekipman_tipleri' => 'array',
+    ];
+
     public function tehlikeler(): HasMany
     {
         return $this->hasMany(Tehlike::class);

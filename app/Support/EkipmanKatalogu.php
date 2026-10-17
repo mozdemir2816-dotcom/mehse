@@ -8,6 +8,7 @@ use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\Talimat;
 use App\Models\Tehlike;
+use App\Models\TehlikeKategorisi;
 use Illuminate\Support\Collection;
 
 /**
@@ -39,8 +40,49 @@ class EkipmanKatalogu
     public static function tanim(?string $tip): ?array
     {
         $t = config('ekipman_katalogu.tipler.'.$tip);
+        $bagli = $tip ? (static::kutuphaneBaglari()[$tip] ?? []) : [];
 
-        return is_array($t) ? $t + ['risk_kategorileri' => [], 'kontrol_formu' => null, 'talimat' => null] : null;
+        if (! is_array($t) && ! $bagli) {
+            return null;
+        }
+
+        $t = (is_array($t) ? $t : []) + ['risk_kategorileri' => [], 'kontrol_formu' => null, 'talimat' => null];
+        $t['risk_kategorileri'] = array_values(array_unique([...$t['risk_kategorileri'], ...$bagli]));
+
+        return $t;
+    }
+
+    /**
+     * Panelden yüklenen ekipman risk analizlerinin bağı (tehlike_kategorileri.ekipman_tipleri).
+     *
+     * @return array<string, array<int, string>> tip => kategori anahtarları
+     */
+    public static function kutuphaneBaglari(): array
+    {
+        $baglar = [];
+
+        foreach (TehlikeKategorisi::query()->whereNotNull('ekipman_tipleri')->get(['anahtar', 'ekipman_tipleri']) as $k) {
+            foreach ($k->ekipman_tipleri ?? [] as $tip) {
+                $baglar[$tip][] = $k->anahtar;
+            }
+        }
+
+        return $baglar;
+    }
+
+    /**
+     * Ekipman tipi seçenekleri, periyodik kontrol kategorisine göre gruplu.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public static function tipSecenekleri(): array
+    {
+        $kategoriler = config('isg.periyodik_kontrol.kategoriler', []);
+
+        return collect(config('isg.periyodik_kontrol.tipler', []))
+            ->mapWithKeys(fn (array $tipler, string $k) => [
+                $kategoriler[$k]['ad'] ?? $k => collect($tipler)->pluck('ad', 'ad')->all(),
+            ])->all();
     }
 
     /** Kategori periyodik muayene (vize) takibine tabi mi? Bilinmeyen kategori: evet. */
@@ -112,7 +154,9 @@ class EkipmanKatalogu
             $liste = collect($anahtarlar)
                 ->flatMap(fn ($a) => $tehlikeler->get($a, collect()))
                 ->reject(fn (Tehlike $t) => isset($gorulen[$t->id]))
-                ->each(function (Tehlike $t) use (&$gorulen) { $gorulen[$t->id] = true; })
+                ->each(function (Tehlike $t) use (&$gorulen) {
+                    $gorulen[$t->id] = true;
+                })
                 ->values();
             if ($liste->isNotEmpty()) {
                 $sonuc[$etiket] = $liste;
