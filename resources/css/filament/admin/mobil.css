@@ -209,6 +209,13 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         min-height: 2.5rem;
     }
 
+    /* Sabit form alt çubuğu (Oluştur · Oluştur & yeni oluştur · İptal, Ayarları Kaydet):
+       Filament kenardan kenara olsun diye -16px dış boşluk veriyor; bu da çubuğu
+       390px ekranda 4px sağa taşırıyordu. Telefonda içerik kenarına hizalanır. */
+    html .fi-sc-actions .fi-ac {
+        margin-inline: 0 !important;
+    }
+
     /* Alt menü etiketleri dar ekranda taşmasın. */
     html .fi-mobil-alt-nav-label {
         max-width: 100%;
@@ -344,4 +351,81 @@ html .mehse-pwa-bant-kapat {
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior-y: none;
     }
+}
+
+/* ---- Saha Ekranı (telefon ana ekranı): büyük, net kartlar ------------------- */
+html .mehse-saha-izgara {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    margin-block: .5rem 1rem;
+}
+
+@media (min-width: 900px) {
+    html .mehse-saha-izgara {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+html .mehse-saha-kart {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .9rem;
+    min-height: 8.5rem;
+    padding: 1rem;
+    border-radius: 16px;
+    background: var(--panel-bg, #fff);
+    border: 1px solid var(--border, #CBD5E1);
+    box-shadow: 0 1px 2px rgb(15 23 42 / .06), 0 6px 16px rgb(15 23 42 / .05);
+    text-decoration: none;
+    color: var(--text-heading, #0F172A);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .08s ease, box-shadow .15s ease;
+}
+
+html .mehse-saha-kart:active {
+    transform: scale(.98);
+}
+
+html .mehse-saha-kart:focus-visible {
+    outline: 3px solid var(--primary, #0B4F8A);
+    outline-offset: 2px;
+}
+
+html .mehse-saha-kart-ikon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    background: var(--primary-50, #EFF6FF);
+    color: var(--primary, #0B4F8A);
+}
+
+html .mehse-saha-kart-ikon .fi-icon,
+html .mehse-saha-kart-ikon svg {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+html .mehse-saha-kart-etiket {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+html .mehse-saha-not {
+    font-size: .85rem;
+    color: var(--text-label, #475569);
+}
+
+html .mehse-saha-bos {
+    padding: 1.5rem;
+    text-align: center;
+    border-radius: 14px;
+    background: var(--panel-bg, #fff);
+    border: 1px dashed var(--border, #CBD5E1);
 }

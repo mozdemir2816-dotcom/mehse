@@ -1144,3 +1144,115 @@ html[data-mehse-tema="saha"] {
         color: var(--saha-sari);
     }
 }
+
+/* -------------------------------------------------------------------------
+   AÇIK ALAN — telefonda açık havada okunaklı, sade ve kurumsal.
+   Beyaz zemin, koyu lacivert metin, tek vurgu rengi (lacivert). Köşeler yumuşak,
+   dokunma alanları büyük. Kontrast WCAG AA üzerinde (metin / zemin ≥ 7:1).
+   ------------------------------------------------------------------------- */
+html[data-mehse-tema="acik_alan"] {
+    --primary: #0B4F8A;
+    --bg: #F2F5F8;
+    --panel-bg: #FFFFFF;
+    --sidebar-from: #FFFFFF;
+    --sidebar-to: #FFFFFF;
+    --text-heading: #0F172A;
+    --text-secondary: #334155;
+    --text-label: #475569;
+    --border: #CBD5E1;
+    --border-light: #E2E8F0;
+    --info-bg: #E0F2FE;
+    --info-text: #075985;
+    --info-border: #7DD3FC;
+    --success-bg: #DCFCE7;
+    --success-text: #14532D;
+    --success-border: #22C55E;
+    --warning-bg: #FEF3C7;
+    --warning-text: #78350F;
+    --warning-border: #F59E0B;
+    --metric-blue: #0B4F8A;
+    --metric-green: #15803D;
+    --metric-orange: #C2410C;
+    --metric-purple: #6D28D9;
+
+    --primary-50: #EFF6FF;
+    --primary-100: #DBEAFE;
+    --primary-200: #BFDBFE;
+    --primary-300: #93C5FD;
+    --primary-400: #3B82F6;
+    --primary-500: #1D64B0;
+    --primary-600: #0B4F8A;
+    --primary-700: #093E6E;
+    --primary-800: #072F53;
+    --primary-900: #05213A;
+    --primary-950: #031425;
+
+    .fi-body {
+        font-size: 14px;
+        background-color: var(--bg);
+    }
+
+    /* Kartlar: yumuşak köşe, hafif gölge — tek bir düzen. */
+    .fi-section:not(.fi-aside) {
+        border-radius: 14px !important;
+        box-shadow: 0 1px 2px rgb(15 23 42 / .06), 0 4px 14px rgb(15 23 42 / .04) !important;
+    }
+
+    .fi-ta-ctn {
+        border-radius: 14px !important;
+    }
+
+    /* Üst çubuk ve kenar çubuğu beyaz; ayırıcı ince çizgi. */
+    .fi-topbar {
+        background: #FFFFFF !important;
+        box-shadow: 0 1px 0 var(--border) !important;
+    }
+
+    .fi-sidebar {
+        background: #FFFFFF !important;
+        border-inline-end: 1px solid var(--border);
+    }
+
+    .fi-sidebar-item-label,
+    .fi-sidebar-group-label {
+        color: var(--text-heading) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: var(--primary-50) !important;
+        border-inline-start-color: var(--primary) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: var(--primary) !important;
+    }
+
+    /* Butonlar: lacivert dolgu, beyaz yazı, yumuşak köşe. */
+    .fi-btn {
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+    }
+
+    .fi-btn.fi-color-primary:not(.fi-outlined) {
+        --bg: var(--primary) !important;
+        --hover-bg: var(--primary-700) !important;
+        --text: #FFFFFF !important;
+        --hover-text: #FFFFFF !important;
+    }
+}
+
+/* Telefonda açık alan teması: dokunma alanı ve yazı boyutu büyütülür. */
+@media (max-width: 640px) {
+    html[data-mehse-tema="acik_alan"] .fi-body {
+        font-size: 15px;
+    }
+
+    html[data-mehse-tema="acik_alan"] .fi-btn {
+        min-height: 2.75rem;
+    }
+
+    html[data-mehse-tema="acik_alan"] .fi-input-wrp {
+        border-radius: 10px;
+    }
+}

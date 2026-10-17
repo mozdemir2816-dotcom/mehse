@@ -55,6 +55,8 @@ class Ayarlar extends Page
             'tema' => $ayar['tema'],
             'yogunluk' => $ayar['yogunluk'],
             'yazi_boyutu' => $ayar['yazi_boyutu'],
+            'ana_ekran' => $ayar['ana_ekran'],
+            'saha_kisayollar' => array_keys(array_filter((array) $ayar['saha_kisayollar'])),
             'esikler' => $ayar['esikler'],
             'kontrol_takip' => array_values(array_diff($tumKriterler, (array) $ayar['kontrol_haric'])),
             'kontrol_yalniz_takip' => KullaniciAyarlari::kontrolYalnizTakip($this->kullanici()->id),
@@ -80,6 +82,7 @@ class Ayarlar extends Page
                                 'material' => 'heroicon-o-squares-2x2',
                                 'windows11' => 'heroicon-o-window',
                                 'saha' => 'heroicon-o-wrench-screwdriver',
+                                'acik_alan' => 'heroicon-o-sun',
                             ])
                             ->inline()
                             ->required()
@@ -96,6 +99,26 @@ class Ayarlar extends Page
                             ->options(KullaniciAyarlari::YAZI_BOYUTLARI)
                             ->inline()
                             ->required(),
+                    ]),
+
+                Section::make('Telefon ana ekranı')
+                    ->description('Telefonda ilk açılan ekran. Saha Ekranı, sahada sık yapılan işleri büyük kartlarla açar. İstediğiniz zaman buradan değiştirebilirsiniz.')
+                    ->icon('heroicon-o-device-phone-mobile')
+                    ->columns(2)
+                    ->schema([
+                        ToggleButtons::make('ana_ekran')
+                            ->label('Açılış ekranı')
+                            ->options(KullaniciAyarlari::ANA_EKRANLAR)
+                            ->inline()
+                            ->required()
+                            ->columnSpanFull(),
+                        CheckboxList::make('saha_kisayollar')
+                            ->label('Saha Ekranı kartları')
+                            ->helperText('Seçtiğiniz kartlar Saha Ekranı\'nda görünür.')
+                            ->options(array_map(fn (array $k) => $k[0], KullaniciAyarlari::SAHA_KISAYOLLARI))
+                            ->columns(2)
+                            ->bulkToggleable()
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Telefon bildirimleri')
@@ -187,6 +210,11 @@ class Ayarlar extends Page
             'tema' => $veri['tema'],
             'yogunluk' => $veri['yogunluk'],
             'yazi_boyutu' => $veri['yazi_boyutu'],
+            'ana_ekran' => $veri['ana_ekran'],
+            'saha_kisayollar' => array_map(
+                fn (string $anahtar) => in_array($anahtar, $veri['saha_kisayollar'] ?? [], true),
+                array_combine(array_keys(KullaniciAyarlari::SAHA_KISAYOLLARI), array_keys(KullaniciAyarlari::SAHA_KISAYOLLARI)),
+            ),
             'esikler' => array_map('intval', $veri['esikler']),
             'kontrol_haric' => array_values(array_diff($tumKriterler, $veri['kontrol_takip'] ?? [])),
             'kontrol_yalniz_takip' => array_values($veri['kontrol_yalniz_takip'] ?? []),

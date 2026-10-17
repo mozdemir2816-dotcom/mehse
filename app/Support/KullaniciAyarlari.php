@@ -28,6 +28,7 @@ class KullaniciAyarlari
         'material' => 'Google Material',
         'windows11' => 'Windows 11',
         'saha' => 'Saha',
+        'acik_alan' => 'Açık alan',
     ];
 
     public const YOGUNLUKLAR = [
@@ -40,6 +41,31 @@ class KullaniciAyarlari
         'normal' => 'Normal',
         'buyuk' => 'Büyük',
     ];
+
+    /** Telefon ana ekranı: standart Ana Sayfa (pano) ya da Saha Ekranı (kısayol kartları). */
+    public const ANA_EKRANLAR = [
+        'standart' => 'Ana Sayfa (pano)',
+        'saha' => 'Saha Ekranı (hızlı işlemler)',
+    ];
+
+    /**
+     * Saha Ekranı kısayolları: anahtar => [etiket, heroicon, rota adı, rota parametreleri].
+     * Sıra burada tanımlanan sıradır. Hangilerinin görüneceği kullanıcı ayarında.
+     */
+    public const SAHA_KISAYOLLARI = [
+        'ziyaret' => ['Bugün · Ziyaret', 'heroicon-o-map-pin', 'filament.admin.pages.ziyaret', []],
+        'saha_gozlem' => ['Saha Gözlem', 'heroicon-o-document-magnifying-glass', 'filament.admin.pages.ai-saha-analizi', []],
+        'bulgu' => ['Hızlı Bulgu', 'heroicon-o-camera', 'filament.admin.pages.hizli-saha-bulgusu', []],
+        'ptw' => ['İş İzni Kapat', 'heroicon-o-shield-check', 'filament.admin.pages.ziyaret', ['islem' => 'ptw']],
+        'ramak' => ['Ramak Kala', 'heroicon-o-exclamation-triangle', 'filament.admin.pages.ziyaret', ['islem' => 'ramak']],
+        'olay' => ['Olay Kayıtları', 'heroicon-o-clipboard-document-list', 'filament.admin.pages.olay-kayitlari', []],
+        'dof' => ['DÖF Defteri', 'heroicon-o-clipboard-document-check', 'filament.admin.pages.tespit-oneri-defteri', []],
+        'arsiv' => ['Arşiv', 'heroicon-o-folder-open', 'filament.admin.pages.dokuman-yonetimi', []],
+        'firmalar' => ['Firmalar', 'heroicon-o-building-office-2', 'filament.admin.resources.firmalar.index', []],
+    ];
+
+    /** Kayıt yoksa seçili kısayollar (DÖF Defteri varsayılan değil). */
+    public const SAHA_VARSAYILAN_KISAYOLLAR = ['ziyaret', 'saha_gozlem', 'bulgu', 'ptw', 'ramak', 'olay', 'arsiv', 'firmalar'];
 
     /**
      * Uyarı eşikleri: anahtar => [etiket, açıklama, varsayılan gün].
@@ -81,7 +107,35 @@ class KullaniciAyarlari
             'kontrol_yalniz_takip' => null,
             // Arşiv hatırlatma ayarları (Arşiv > Hatırlatma Ayarları).
             'arsiv' => ['yaklasan_gun' => (int) config('arsiv.yaklasan_gun', 30)],
+            'ana_ekran' => 'standart',
+            // Anahtar => açık mı. Map olduğu için kaydedilen değer varsayılanı ezer, liste gibi kaymaz.
+            'saha_kisayollar' => array_map(
+                fn (string $anahtar) => in_array($anahtar, self::SAHA_VARSAYILAN_KISAYOLLAR, true),
+                array_combine(array_keys(self::SAHA_KISAYOLLARI), array_keys(self::SAHA_KISAYOLLARI)),
+            ),
         ];
+    }
+
+    /** Kullanıcının telefon ana ekranı Saha Ekranı mı? */
+    public static function sahaAnaEkrani(?User $user = null): bool
+    {
+        return self::hepsi($user)['ana_ekran'] === 'saha';
+    }
+
+    /**
+     * Saha Ekranı'nda görünecek kısayollar (katalog sırasıyla).
+     *
+     * @return array<string, array{0: string, 1: string, 2: string, 3: array<string, string>}>
+     */
+    public static function sahaKisayollari(?User $user = null): array
+    {
+        $secili = self::hepsi($user)['saha_kisayollar'];
+
+        return array_filter(
+            self::SAHA_KISAYOLLARI,
+            fn (string $anahtar) => ! empty($secili[$anahtar]),
+            ARRAY_FILTER_USE_KEY,
+        );
     }
 
     /** @return array<string, mixed> kayıtlı değerler varsayılanlarla birleştirilmiş */

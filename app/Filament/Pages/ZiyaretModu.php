@@ -61,6 +61,10 @@ class ZiyaretModu extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    /** Saha Ekranı kısayolu: ?islem=ptw (iş izni kapat) ya da ?islem=ramak (ramak kala) paneli açar. */
+    #[Url(as: 'islem')]
+    public ?string $islem = null;
+
     /** @var array<string, mixed> "b12" / "d5_2" → kapanış fotoğrafı */
     public array $kapanisFoto = [];
 
@@ -82,6 +86,10 @@ class ZiyaretModu extends Page
             : ($this->bugunPlanli->count() === 1 ? $this->bugunPlanli->first()['firma_id'] : null);
 
         $this->firmaSecildi();
+
+        if (in_array($this->islem, ['ptw', 'ramak'], true)) {
+            $this->hizliIslemAc($this->islem);
+        }
     }
 
     public function updatedFirmaId(): void

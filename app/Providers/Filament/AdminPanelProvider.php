@@ -11,8 +11,10 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
 use App\Filament\Pages\AnaSayfa;
+use App\Filament\Pages\Ayarlar;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -81,6 +83,14 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->registration(KayitOl::class)
             ->profile(isSimple: false)
+            // Ayarlar kenar çubuğunun en altındaki gruptaydı; telefonda bulmak zordu.
+            // Avatar menüsünden de tek dokunuşla açılır.
+            ->userMenuItems([
+                'ayarlar' => MenuItem::make()
+                    ->label('Ayarlar')
+                    ->url(fn (): string => Ayarlar::getUrl())
+                    ->icon('heroicon-o-cog-6-tooth'),
+            ])
             // İki adımlı doğrulama (Google/Microsoft Authenticator) — isteğe bağlı;
             // kurulum Profil sayfasında, durum Güvenlik sayfasında.
             ->multiFactorAuthentication([

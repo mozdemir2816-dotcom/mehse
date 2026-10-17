@@ -12,6 +12,7 @@
         'material' => ['ad' => 'Google Material', 'aciklama' => 'Material 3 · Material You', 'renkler' => ['#F8FAFD', '#0B57D0', '#D3E3FD']],
         'windows11' => ['ad' => 'Windows 11', 'aciklama' => 'Fluent · Mica', 'renkler' => ['#F3F3F3', '#005FB8', '#FFFFFF']],
         'saha' => ['ad' => 'Saha', 'aciklama' => 'Baret sarısı · endüstriyel', 'renkler' => ['#1C1917', '#F5B400', '#FAFAF7']],
+        'acik_alan' => ['ad' => 'Açık alan', 'aciklama' => 'Beyaz zemin · lacivert · telefonda okunaklı', 'renkler' => ['#0F172A', '#0B4F8A', '#F2F5F8']],
     ];
 @endphp
 
