@@ -44,7 +44,7 @@ class EkipmanRiskKutuphanesi
     private const BASLIKLAR = [
         'ekipman' => ['ekipman', 'ekipman / bölüm', 'düğüm / ekipman', 'düğüm'],
         'faaliyet' => ['faaliyet', 'bölüm / faaliyet'],
-        'tehlike' => ['tehlike', 'tehlike / uygunsuzluk'],
+        'tehlike' => ['tehlike', 'tehlike / uygunsuzluk', 'tehlike / eksiklik'],
         'risk' => ['risk / sonuç', 'risk / olası sonuç'],
         'olasilik' => ['olasılık p', 'olasılık', 'o'],
         'frekans' => ['frekans f', 'frekans', 'f'],

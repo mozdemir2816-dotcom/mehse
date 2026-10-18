@@ -6,6 +6,8 @@ use App\Console\Commands\RiskOneriTamamla;
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
 use App\Support\GeminiRiskPuanTamamlayici;
+use App\Support\NaceGrubu;
+use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -38,6 +40,14 @@ class MaddelerRelationManager extends RelationManager
     protected function yontem(): string
     {
         return $this->getOwnerRecord()->yontem;
+    }
+
+    /** Değerlendirmenin firma NACE'sinden sabit grup (config/risk_nace.php); yoksa null. */
+    protected function firmaNaceGrubu(): ?string
+    {
+        $rd = $this->getOwnerRecord();
+
+        return NaceGrubu::bul($rd->firma_nace ?: $rd->firma?->nace_kodu);
     }
 
     protected function ucEksenli(): bool
@@ -104,6 +114,21 @@ class MaddelerRelationManager extends RelationManager
         $yontemBasligi = config('isg.risk_yontemleri.'.$yontem, $yontem);
 
         return $schema->components([
+            // HAZOP senaryosunun Excel alanları (kaynak düzenle aynı): düzenlemede görünsün.
+            Section::make('HAZOP senaryosu')->columns(2)->visible($hazop)->schema([
+                TextInput::make('hazop.dugum')->label('Düğüm'),
+                TextInput::make('hazop.parametre')->label('Parametre'),
+                TextInput::make('hazop.kilavuz')->label('Kılavuz kelime'),
+                TextInput::make('hazop.sapma')->label('Sapma'),
+                Textarea::make('hazop.neden')->label('Olası nedenler')->rows(2),
+                Textarea::make('hazop.sonuc')->label('Olası sonuçlar')->rows(2),
+                Textarea::make('hazop.korumalar')->label('Doğrulanacak korumalar')->rows(2),
+                Textarea::make('hazop.oneri')->label('Öneri / aksiyon')->rows(2),
+                TextInput::make('hazop.oncelik')->label('Öncelik'),
+                TextInput::make('hazop.kapanis')->label('Kapanış kanıtı'),
+                TextInput::make('hazop.durum')->label('Durum'),
+            ]),
+
             Section::make('Tanım')->columns(2)->schema([
                 TextInput::make('sira')->label('Sıra')->numeric()
                     ->default(fn () => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1),
@@ -167,6 +192,10 @@ class MaddelerRelationManager extends RelationManager
                 TextColumn::make('sira')->label('#')->sortable()->width(48),
                 TextColumn::make('bolum')->label('Bölüm')->searchable()->placeholder('—')->toggleable(),
                 TextColumn::make('tehlike')->label('Tehlike')->searchable()->wrap()->limit(80),
+                TextColumn::make('hazop.kilavuz')->label('Kılavuz')->placeholder('—')
+                    ->visible(fn (): bool => $this->yontem() === 'hazop'),
+                TextColumn::make('hazop.sonuc')->label('Olası sonuçlar')->wrap()->limit(60)->placeholder('—')
+                    ->visible(fn (): bool => $this->yontem() === 'hazop'),
                 TextColumn::make('puan')->label('Puan')->badge()->alignCenter()
                     ->color(fn (RiskMaddesi $r) => static::rozetRengi($r->rengi()))
                     ->formatStateUsing(fn ($state, RiskMaddesi $r) => $state ? "{$state} · {$r->duzey}" : '—')
@@ -191,7 +220,9 @@ class MaddelerRelationManager extends RelationManager
                     ->modalDescription('Birden fazla tehlike seçip tek seferde ekleyebilirsiniz (ör. yeni makine/ekipman geldiğinde ilgili tüm maddeler). Puan/önlem AI önerisi burada çalışmaz — eklendikten sonra "Eksik Puan/Önlemleri AI ile Tamamla" ile toplu tamamlayabilirsiniz.')
                     ->schema([
                         Select::make('tehlike_idler')->label('Tehlikeler')
-                            ->options(fn () => Tehlike::query()->with('kategori')->get()
+                            ->options(fn () => Tehlike::query()->with('kategori')
+                                ->whereHas('kategori', fn ($q) => $q->uygun($this->yontem(), $this->firmaNaceGrubu()))
+                                ->get()
                                 ->mapWithKeys(fn (Tehlike $t) => [$t->id => "[{$t->kategori->ad}] ".Str::limit($t->tehlike, 70)]))
                             ->multiple()
                             ->searchable()->required(),
@@ -208,22 +239,16 @@ class MaddelerRelationManager extends RelationManager
                                 continue;
                             }
 
+                            // Kütüphane maddesinin tüm alanları (HAZOP, O/F/Ş, son puanlar, tehlike_id) taşınır.
                             $sira++;
-                            $satirlar[] = [
-                                'risk_degerlendirmesi_id' => $this->getOwnerRecord()->id,
-                                'sira' => $sira,
-                                'bolum' => $t->bolum,
-                                'faaliyet' => $t->faaliyet,
-                                'tehlike' => $t->tehlike,
-                                'risk' => $t->risk,
-                                'mevcut_onlem' => $t->mevcut_onlem,
-                                'oneri' => $t->oneri,
-                                'sorumlu' => $t->sorumlu,
-                                'termin' => $t->termin,
-                                'durum' => 'acik',
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
+                            $satirlar[] = array_merge(
+                                collect(RiskKutuphanesi::maddeyeCevir($t))->except('anahtar', 'kaynak')->all(),
+                                [
+                                    'risk_degerlendirmesi_id' => $this->getOwnerRecord()->id,
+                                    'sira' => $sira,
+                                    'durum' => 'acik',
+                                ],
+                            );
                         }
 
                         if ($satirlar === []) {
@@ -232,7 +257,9 @@ class MaddelerRelationManager extends RelationManager
                             return;
                         }
 
-                        RiskMaddesi::insert($satirlar);
+                        foreach ($satirlar as $satir) {
+                            RiskMaddesi::create($satir);
+                        }
                         $this->getOwnerRecord()->pdfOnbellegiTemizle();
                         $this->getOwnerRecord()->saveQuietly();
 

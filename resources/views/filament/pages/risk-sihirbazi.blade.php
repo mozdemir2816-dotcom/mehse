@@ -82,6 +82,18 @@
                     </div>
                 @endif
 
+                <div>
+                    <label style="font-weight:600;font-size:.85rem">Analiz Yöntemi <span style="color:#ef4444">*</span></label>
+                    <select wire:model.live="yontem"
+                        style="margin-top:.35rem;width:100%;padding:.6rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        <option value="">— Yöntem seçin —</option>
+                        @foreach (config('isg.risk_yontemleri') as $k => $v)
+                            <option value="{{ $k }}">{{ $v }}</option>
+                        @endforeach
+                    </select>
+                    <p style="margin-top:.3rem;font-size:.78rem;color:rgb(107 114 128)">Kütüphane ve şablonlar bu yönteme göre süzülür. Yöntem tüm adımlarda aynı kalır.</p>
+                </div>
+
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
                     <div>
                         <label style="font-weight:600;font-size:.85rem">Rapor Tarihi <span style="color:#ef4444">*</span></label>
@@ -419,13 +431,9 @@
             <x-slot name="description">Sektöre göre kaydettiğiniz risk setleri — tıklayın, tabloya toplu eklensin</x-slot>
 
             <div style="max-width:20rem;margin-bottom:1rem">
-                <label style="font-weight:600;font-size:.85rem">Puanlama Yöntemi</label>
-                <select wire:model.live="yontem"
-                    style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                    @foreach (config('isg.risk_yontemleri') as $k => $v)
-                        <option value="{{ $k }}">{{ $v }}</option>
-                    @endforeach
-                </select>
+                <label style="font-weight:600;font-size:.85rem">Analiz yöntemi</label>
+                <div style="margin-top:.35rem"><x-filament::badge color="gray">{{ config('isg.risk_yontemleri.'.$yontem) }}</x-filament::badge></div>
+                <p style="margin-top:.3rem;font-size:.75rem;color:rgb(107 114 128)">Yöntem adım 1'de seçildi; burada değiştirilemez.</p>
                 <p style="margin-top:.3rem;font-size:.75rem;color:rgb(107 114 128)">
                     Sadece seçili yönteme ait şablonlar listelenir.
                 </p>
@@ -637,13 +645,9 @@
 
             <div style="display:flex;flex-direction:column;gap:1rem;max-width:32rem">
                 <div>
-                    <label style="font-weight:600;font-size:.85rem">Puanlama yöntemi</label>
-                    <select wire:model.live="yontem"
-                        style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                        @foreach (config('isg.risk_yontemleri') as $k => $v)
-                            <option value="{{ $k }}">{{ $v }}</option>
-                        @endforeach
-                    </select>
+                    <label style="font-weight:600;font-size:.85rem">Analiz yöntemi</label>
+                    <div style="margin-top:.35rem"><x-filament::badge color="gray">{{ config('isg.risk_yontemleri.'.$yontem) }}</x-filament::badge></div>
+                    <p style="margin-top:.3rem;font-size:.75rem;color:rgb(107 114 128)">Yöntem adım 1'de seçildi; burada değiştirilemez.</p>
                 </div>
                 <label style="display:flex;align-items:center;gap:.6rem;font-size:.9rem">
                     <input type="checkbox" wire:model="etkilenenDiger">
@@ -686,6 +690,17 @@
                                 </div>
                                 @if (!empty($m['mevzuat']))
                                     <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.3rem">📖 {{ $m['mevzuat'] }}</div>
+                                @endif
+                                @if (!empty($m['hazop']))
+                                    {{-- HAZOP senaryosu: Excel'den gelen alanlar (kılavuz, nedenler, sonuçlar, korumalar). --}}
+                                    <dl style="display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem;font-size:.78rem;margin-top:.4rem">
+                                        @foreach (['parametre' => 'Parametre', 'kilavuz' => 'Kılavuz', 'neden' => 'Olası nedenler', 'sonuc' => 'Olası sonuçlar', 'korumalar' => 'Doğrulanacak korumalar'] as $alan => $etiket)
+                                            @if (filled($m['hazop'][$alan] ?? null))
+                                                <dt style="color:rgb(107 114 128)">{{ $etiket }}</dt>
+                                                <dd style="margin:0">{{ $m['hazop'][$alan] }}</dd>
+                                            @endif
+                                        @endforeach
+                                    </dl>
                                 @endif
                             </div>
                             <button type="button" wire:click="maddeCikar('{{ $m['anahtar'] }}')"

@@ -177,6 +177,7 @@ class EkipmanRiskKutuphanesiTest extends TestCase
 
         $sayfa->set('onizleme.0.ekipman_tipi', 'Silindir (Toprak / Asfalt)')
             ->set('onizleme.0.kategori_adi', 'Ekipman – Silindir (yol)')
+            ->set('naceGruplari', ['insaat'])
             ->call('kaydet')
             ->assertSet('onizleme', [])
             ->assertNotified();
@@ -184,6 +185,8 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         $kategori = TehlikeKategorisi::where('ad', 'Ekipman – Silindir (yol)')->sole();
         $this->assertSame(2, $kategori->tehlikeler()->count());
         $this->assertSame(['Silindir (Toprak / Asfalt)'], $kategori->ekipman_tipleri);
+        $this->assertSame('fine_kinney', $kategori->yontem);
+        $this->assertSame(['insaat'], $kategori->nace_gruplari);
     }
 
     public function test_sayfa_tip_adini_birebir_eslesince_onerir_ve_hatali_dosyayi_bildirir(): void
@@ -320,8 +323,10 @@ class EkipmanRiskKutuphanesiTest extends TestCase
             ->assertSet('onizleme.0.kategori_adi', 'HAZOP – Dispersiyoner')
             ->assertSet('onizleme.0.yontem', 'HAZOP')
             ->assertSet('hatalar', [])
+            ->set('naceGruplari', ['ortak'])
             ->call('kaydet');
 
         $this->assertSame(3, Tehlike::whereHas('kategori', fn ($q) => $q->where('ad', 'like', 'HAZOP – %'))->count());
+        $this->assertSame('hazop', TehlikeKategorisi::where('ad', 'like', 'HAZOP – %')->first()->yontem);
     }
 }

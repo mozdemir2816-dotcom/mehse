@@ -13,6 +13,7 @@ use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPdfOkuyucu;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\EkipmanRiskKutuphanesi;
+use App\Support\NaceGrubu;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskDegerlendirmesiOlusturucu;
 use App\Support\RiskKutuphanesi;
@@ -113,7 +114,8 @@ class RiskSihirbazi extends Page
 
     public ?string $gecerlilikTarihi = null;
 
-    public string $yontem = 'matris_5x5';
+    /** Analiz yöntemi (Fine-Kinney / 5x5 / HAZOP). Adım 1'de seçilir; kütüphane ve şablonlar buna göre süzülür. */
+    public string $yontem = '';
 
     public ?string $yontemSecim = null;
 
@@ -248,7 +250,23 @@ class RiskSihirbazi extends Page
     #[Computed]
     public function kategoriler(): Collection
     {
-        return RiskKutuphanesi::kategoriler();
+        return RiskKutuphanesi::kategoriler($this->yontem, NaceGrubu::bul($this->firma?->nace_kodu));
+    }
+
+    /**
+     * Yöntem değişince önceki yöntemin maddeleri listede kalmasın (karışıklığı önler).
+     */
+    public function updatedYontem(): void
+    {
+        unset($this->fineKinney);
+
+        if ($this->secilenler !== []) {
+            $this->secilenler = [];
+
+            Notification::make()->title('Yöntem değişti')
+                ->body('Önceki yönteme ait seçilen maddeler temizlendi; yeni yönteme göre yeniden ekleyin.')
+                ->warning()->send();
+        }
     }
 
     #[Computed]
@@ -298,11 +316,6 @@ class RiskSihirbazi extends Page
     public function updatedRaporTarihi(): void
     {
         $this->gecerlilikTarihiHesapla();
-    }
-
-    public function updatedYontem(): void
-    {
-        unset($this->fineKinney);
     }
 
     private function gecerlilikTarihiHesapla(): void
@@ -711,8 +724,21 @@ class RiskSihirbazi extends Page
 
         $yol = $this->excelDosya->getRealPath();
 
-        // HAZOP dosyası: puansız okunur ve yöntem HAZOP olur (yoksa 5x5 sayılıp puanlanırdı).
-        if (EkipmanRiskKutuphanesi::hazopMi($yol)) {
+        // Yöntem adım 1'de seçilir ve Excel yüklemesi onu değiştirmez; dosya seçilen
+        // yöntemin şablonuna uymuyorsa içe aktarma yapılmaz.
+        $hazopDosyasi = EkipmanRiskKutuphanesi::hazopMi($yol);
+
+        if ($hazopDosyasi !== ($this->yontem === 'hazop')) {
+            Notification::make()->title('Yöntem uyuşmuyor')
+                ->body($hazopDosyasi
+                    ? 'Bu dosya HAZOP şablonu; seçili yöntem "'.config('isg.risk_yontemleri.'.$this->yontem).'". Yöntemi HAZOP yapmak için adım 1\'e dönün.'
+                    : 'Bu dosya HAZOP şablonu değil; seçili yöntem HAZOP. Yöntemi değiştirmek için adım 1\'e dönün.')
+                ->danger()->send();
+
+            return;
+        }
+
+        if ($hazopDosyasi) {
             try {
                 $adaylar = EkipmanRiskKutuphanesi::hazopAdaylari($yol, $this->excelDosya->getClientOriginalName());
             } catch (\Throwable $e) {
@@ -721,12 +747,11 @@ class RiskSihirbazi extends Page
                 return;
             }
 
-            $this->yontem = 'hazop';
             $this->excelAdaylar = $adaylar;
             $this->excelHatalar = [];
 
-            Notification::make()->title('HAZOP dosyası algılandı')
-                ->body('Yöntem HAZOP olarak ayarlandı; maddeler puansız eklenecek.')
+            Notification::make()->title('HAZOP dosyası okundu')
+                ->body('Maddeler puansız eklenecek.')
                 ->success()->send();
         } else {
             try {
@@ -845,11 +870,11 @@ class RiskSihirbazi extends Page
         // puanlar "kayboldu" gibi görünür — kullanıcı elle girmek zorunda kalır.
         // NOT: bu kontrol AI tamamlamadan ÖNCE yapılır — aksi halde AI, henüz
         // eski (yanlış) yönteme göre puan üretip ölçek dışı kalabilir.
+        // Yöntem otomatik değişmez; puanlar seçilen yönteme uymuyorsa yalnız uyarılır.
         if ($eklenenler && $this->yontem === 'matris_5x5' && RiskSkorlama::fineKinneyeUyuyorMu($eklenenler)) {
-            $this->yontem = 'fine_kinney';
             Notification::make()
-                ->title('Puanlama yöntemi Fine-Kinney\'e çevrildi')
-                ->body('Excel dosyanızdaki olasılık/şiddet değerleri Fine-Kinney ölçeğine uyuyor, 5x5 Matris\'te görünmüyorlardı.')
+                ->title('Puanlar Fine-Kinney ölçeğinde')
+                ->body('Excel\'deki olasılık/şiddet değerleri 5x5 Matris ölçeğine uymuyor. Yöntem değişmedi; gerekirse adım 1\'den Fine-Kinney seçin.')
                 ->warning()->send();
         }
 
@@ -908,15 +933,8 @@ class RiskSihirbazi extends Page
             return null;
         }
 
-        // Excel puanları Fine-Kinney ölçeğindeyse yöntemi ona çevir (5x5'te "kayıp" görünmesin).
-        // Yalnız varsayılan 5x5 Matris'ten otomatik yükseltilir — kullanıcı zaten
-        // HAZOP/FMEA gibi başka bir yöntem seçtiyse bu tercihi ezmez.
-        $yontem = ($this->yontem === 'matris_5x5' && RiskSkorlama::fineKinneyeUyuyorMu($maddeler))
-            ? 'fine_kinney'
-            : $this->yontem;
-
         $rd = RiskDegerlendirmesiOlusturucu::maddelerdenOlustur(
-            $firma, $yontem, $maddeler,
+            $firma, $this->yontem, $maddeler,
             $this->raporTarihi, $this->gecerlilikTarihi,
             $this->etkilenenDiger, $this->varsayilanTermin,
             iguId: $this->iguId,
@@ -1086,7 +1104,7 @@ class RiskSihirbazi extends Page
     public function adimGecerli(int $adim): bool
     {
         return match ($adim) {
-            1 => filled($this->firmaId) && filled($this->raporTarihi),
+            1 => filled($this->firmaId) && filled($this->raporTarihi) && filled($this->yontem),
             2 => filled($this->yontemSecim),
             3 => count($this->secilenler) > 0,
             4 => true,
@@ -1099,6 +1117,11 @@ class RiskSihirbazi extends Page
     {
         if (count($this->secilenler) === 0) {
             return false;
+        }
+
+        // HAZOP puansızdır: her madde yalnız açıklama metniyle yeterli.
+        if ($this->yontem === 'hazop') {
+            return true;
         }
 
         foreach ($this->secilenler as $m) {

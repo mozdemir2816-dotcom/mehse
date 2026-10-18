@@ -22,8 +22,13 @@ class RiskKutuphanesi
         -2 => ['ad' => 'Genel – Acil durumlar (tüm ekipmanlar)', 'kod' => '%-A-%', 'anahtar' => 'atolye_acil_durumlar'],
     ];
 
-    /** @return Collection<int, TehlikeKategorisi> tehlikeleriyle birlikte, sıralı; başta sanal Eğitim / Acil durum grupları */
-    public static function kategoriler(): Collection
+    /**
+     * Yöntem verilirse veritabanı kategorileri yalnız o yönteme ait ve firma NACE grubuna uyan
+     * (ya da "ortak") olanlarla süzülür. Sanal Eğitim / Acil durum grupları her yöntemde gösterilir.
+     *
+     * @return Collection<int, TehlikeKategorisi> tehlikeleriyle birlikte, sıralı; başta sanal gruplar
+     */
+    public static function kategoriler(?string $yontem = null, ?string $naceGrubu = null): Collection
     {
         $sanal = collect(self::SANAL_GRUPLAR)
             ->map(function (array $g, int $id) {
@@ -34,8 +39,14 @@ class RiskKutuphanesi
             })
             ->filter(fn (TehlikeKategorisi $k) => $k->tehlikeler->isNotEmpty());
 
-        return $sanal->values()->concat(TehlikeKategorisi::query()
-            ->with(['tehlikeler' => fn ($q) => $q->orderBy('kod')])
+        $sorgu = TehlikeKategorisi::query()
+            ->with(['tehlikeler' => fn ($q) => $q->orderBy('kod')]);
+
+        if ($yontem !== null) {
+            $sorgu->uygun($yontem, $naceGrubu);
+        }
+
+        return $sanal->values()->concat($sorgu
             ->orderBy('sira')
             ->orderBy('ad')
             ->get());

@@ -35,7 +35,7 @@ class HazopSihirbaziTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         Livewire::test(RiskSihirbazi::class)
-            ->set('yontem', 'matris_5x5')
+            ->set('yontem', 'hazop')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('Siva_HAZOP.xlsx', file_get_contents($this->hazopXlsx())))
             ->call('excelIceAktar')
             ->assertSet('yontem', 'hazop')
@@ -48,6 +48,46 @@ class HazopSihirbaziTest extends TestCase
                 $this->assertSame('Basınç', $aday['hazop']['parametre']);
                 $this->assertSame('N1 — Silo dolumu', $aday['hazop']['dugum']);
             });
+    }
+
+    public function test_hazop_maddeleri_puansiz_iken_onizlemeye_gecilir(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('yontem', 'hazop')
+            ->set('secilenler', [[
+                'tehlike' => 'Silo basıncı tasarım sınırını aşar',
+                'olasilik' => null,
+                'siddet' => null,
+                'hazop' => ['parametre' => 'Basınç', 'kilavuz' => 'FAZLA'],
+            ]])
+            ->assertSet('yontem', 'hazop')
+            ->tap(function ($bilesen): void {
+                $this->assertTrue($bilesen->instance()->tumMaddelerPuanli());
+                $this->assertTrue($bilesen->instance()->adimGecerli(5));
+            });
+    }
+
+    public function test_hazop_alanlari_duzenleme_ekraninda_gorunur(): void
+    {
+        $this->actingAs($uzman = User::factory()->create());
+
+        $firma = \App\Models\Firma::factory()->for($uzman)->create();
+        $rd = \App\Models\RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'hazop', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create([
+            'sira' => 1,
+            'tehlike' => 'Silo basıncı tasarım sınırını aşar',
+            'hazop' => ['parametre' => 'Basınç', 'kilavuz' => 'FAZLA', 'sonuc' => 'Gövde hasarı, ölüm', 'korumalar' => 'Basınç alarmı'],
+        ]);
+
+        Livewire::test(\App\Filament\Resources\RiskDegerlendirmesis\RelationManagers\MaddelerRelationManager::class, [
+            'ownerRecord' => $rd->fresh(),
+            'pageClass' => \App\Filament\Resources\RiskDegerlendirmesis\Pages\EditRiskDegerlendirmesi::class,
+        ])
+            ->assertSee('Olası sonuçlar')
+            ->assertSee('Gövde hasarı, ölüm')
+            ->assertSee('FAZLA');
     }
 
     public function test_hazop_dosyasi_hazop_olarak_algilanir(): void

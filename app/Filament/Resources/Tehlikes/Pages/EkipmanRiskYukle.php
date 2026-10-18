@@ -33,6 +33,9 @@ class EkipmanRiskYukle extends Page
     /** Dosyaların yöntemi (EkipmanRiskKutuphanesi::YONTEMLER). */
     public string $yontem = 'fine_kinney';
 
+    /** Maddelerin geçerli olduğu sabit NACE grupları (NaceGrubu::secenekler). */
+    public array $naceGruplari = [];
+
     /** @var array<int, TemporaryUploadedFile> */
     public array $dosyalar = [];
 
@@ -105,7 +108,8 @@ class EkipmanRiskYukle extends Page
         $this->validate([
             'onizleme' => 'required|array|min:1',
             'onizleme.*.kategori_adi' => 'required|string|max:200',
-        ], [], ['onizleme' => 'yüklenecek dosya', 'onizleme.*.kategori_adi' => 'kategori adı']);
+            'naceGruplari' => 'required|array|min:1',
+        ], [], ['onizleme' => 'yüklenecek dosya', 'onizleme.*.kategori_adi' => 'kategori adı', 'naceGruplari' => 'NACE grubu']);
 
         $ozet = [];
         $kalan = [];
@@ -120,6 +124,7 @@ class EkipmanRiskYukle extends Page
             }
 
             $sonuc = EkipmanRiskKutuphanesi::kaydet($s['kategori_adi'], $maddeler, array_filter([$s['ekipman_tipi'] ?? null]));
+            $sonuc['kategori']->update(['yontem' => $this->yontem, 'nace_gruplari' => array_values($this->naceGruplari)]);
             Cache::forget($s['anahtar']);
 
             $ozet[] = $sonuc['kategori']->ad.': '

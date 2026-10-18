@@ -49,6 +49,7 @@ class RiskSihirbaziTest extends TestCase
         Livewire::test(RiskSihirbazi::class)
             ->set('raporTarihi', '2026-01-01')
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->assertSet('gecerlilikTarihi', '2028-01-01'); // +2 yıl
     }
 
@@ -58,6 +59,9 @@ class RiskSihirbaziTest extends TestCase
             ->call('ileri')
             ->assertSet('adim', 1)                  // firma yok
             ->set('firmaId', Firma::factory()->for($this->uzman)->create()->id)
+            ->call('ileri')
+            ->assertSet('adim', 1)                  // yöntem yok
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')
             ->assertSet('adim', 2)
             ->call('yontemSec', 'kayitli')           // hazır değil
@@ -133,6 +137,7 @@ class RiskSihirbaziTest extends TestCase
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
             ->set('yontem', 'matris_5x5')
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')                        // 1 -> 2
             ->call('yontemSec', 'manuel')
             ->call('ileri')                        // 2 -> 3
@@ -167,7 +172,7 @@ class RiskSihirbaziTest extends TestCase
         $igu2 = \App\Models\IsgProfesyoneli::factory()->create(['tip' => 'igu', 'user_id' => $this->uzman->id]);
         $firma = Firma::factory()->for($this->uzman)->create(['igu_id' => $igu1->id]);
 
-        $bilesen = Livewire::test(RiskSihirbazi::class)->set('firmaId', $firma->id);
+        $bilesen = Livewire::test(RiskSihirbazi::class)->set('firmaId', $firma->id)->set('yontem', 'matris_5x5');
         $bilesen->assertSet('iguId', $igu1->id);
 
         $t = Tehlike::first();
@@ -201,6 +206,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')
             ->call('yontemSec', 'ai')
             ->assertSet('yontemSecim', 'ai')
@@ -222,6 +228,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'ai')->call('ileri')
             ->call('aiBaslat')
             ->call('aiSektorSec', 'ofis')
@@ -300,6 +307,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'ai')->call('ileri')
             ->call('aiBaslat')->call('aiSektorSec', 'ofis')->call('aiSektorOnayla')->call('aiAltKategoriOnayla')
             ->call('aiSoruAtla', 'calisan_sayisi')
@@ -321,6 +329,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -351,6 +360,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'pdf')->call('ileri')
             ->set('pdfDosya', UploadedFile::fake()->createWithContent('riskler.pdf', file_get_contents($yol)))
             ->call('pdfIceAktar')
@@ -373,6 +383,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'pdf')->call('ileri')
             ->set('pdfDosya', UploadedFile::fake()->createWithContent('riskler.pdf', file_get_contents($yol)))
             ->call('pdfIceAktar')
@@ -382,7 +393,7 @@ class RiskSihirbaziTest extends TestCase
         unlink($yol);
     }
 
-    public function test_excel_fine_kinney_puanlari_getirince_yontem_otomatik_degisir(): void
+    public function test_excel_fine_kinney_puanlari_getirince_yontem_degismez_uyari_verilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
 
@@ -399,12 +410,13 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->assertSet('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
             ->call('excelSecilenleriEkle')
-            ->assertSet('yontem', 'fine_kinney');
+            ->assertSet('yontem', 'matris_5x5');
 
         $madde = $component->get('secilenler')[0];
         $this->assertEquals(6, $madde['olasilik']);
@@ -444,6 +456,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -478,6 +491,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -508,6 +522,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('riskler.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -541,6 +556,7 @@ class RiskSihirbaziTest extends TestCase
         // Varsayılan: tekrarları da ekler (kullanıcının kendi belgesi).
         $c = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('r.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -551,6 +567,7 @@ class RiskSihirbaziTest extends TestCase
         // "Birleştir" işaretli: tekrar eden satırlar tek maddeye iner.
         $c2 = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('r.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -577,6 +594,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('buyuk.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -607,6 +625,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'excel')->call('ileri')
             ->set('excelDosya', UploadedFile::fake()->createWithContent('r.xlsx', file_get_contents($yol)))
             ->call('excelIceAktar')
@@ -633,6 +652,7 @@ class RiskSihirbaziTest extends TestCase
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'manuel')->call('ileri')
             ->call('tehlikeEkle', Tehlike::all()->get(0)->id)
             ->call('tehlikeEkle', Tehlike::all()->get(1)->id)
@@ -658,6 +678,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'sablon')->call('ileri')
             ->assertSet('adim', 3);
 
@@ -687,6 +708,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'sablon')->call('ileri')
             ->call('sablonUygula', $sablon->id);
 
@@ -728,6 +750,7 @@ class RiskSihirbaziTest extends TestCase
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
             ->call('ileri')->call('yontemSec', 'ai')->call('ileri')
             ->call('aiBaslat')
             ->call('aiSektorSec', 'ofis');

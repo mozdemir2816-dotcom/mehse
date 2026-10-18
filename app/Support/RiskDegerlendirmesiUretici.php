@@ -91,21 +91,9 @@ class RiskDegerlendirmesiUretici
 
         $yontemAnahtari = 'risk_'.$rd->yontem;
         $userId = $rd->firma?->user_id;
+        // Kapaktaki ve "Risk Değerlendirme Ekibi" tablosundaki adlar yalnız bu
+        // değerlendirmenin kendi ekip listesinden gelir; liste boşsa satır boş kalır.
         $ekip = collect($rd->ekip ?? []);
-
-        // Ekip listesinde elle girilmeyen roller (temsilci / destek / bilgi sahibi)
-        // firmanın Atama Yazıları'ndan otomatik gelir.
-        if ($rd->firma) {
-            $rolu = fn (array $u) => match (true) {
-                str_contains(mb_strtolower($u['unvan'] ?? ''), 'temsilci') => 'temsilci',
-                str_contains(mb_strtolower($u['unvan'] ?? ''), 'destek') => 'destek',
-                str_contains(mb_strtolower($u['unvan'] ?? ''), 'bilgi sahibi') => 'bilgi',
-                default => null,
-            };
-            $girilen = $ekip->map($rolu)->filter()->unique()->all();
-            $ekip = $ekip->merge(collect(RiskEkibiOtomatik::imzaSahipleri($rd->firma))
-                ->reject(fn (array $u) => in_array($rolu($u), $girilen, true)))->values();
-        }
 
         $uzman = self::hazirlayan($rd);
         $hekim = $rd->firma?->isyeriHekimi;

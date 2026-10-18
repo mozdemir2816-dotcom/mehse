@@ -402,7 +402,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ PERSONEL<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
     }
 
-    public function test_imza_sahipleri_atama_yazilarindan_otomatik_gelir_elle_girilen_oncelikli(): void
+    public function test_imza_sahipleri_yalniz_degerlendirme_ekibinden_gelir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
@@ -428,8 +428,8 @@ class RiskDegerlendirmeTest extends TestCase
         ob_end_clean();
 
         $this->assertSame('Elle Temsilci', $veri['temsilci']['ad']); // elle girilen öncelikli
-        $this->assertSame('Destek Atanan', $veri['destekElemani']['ad']);
-        $this->assertSame('Bilgi Atanan', $veri['bilgiSahibiCalisan']['ad']);
+        $this->assertNull($veri['destekElemani']);
+        $this->assertNull($veri['bilgiSahibiCalisan']);
     }
 
     public function test_atama_degisince_saklanan_risk_pdfi_yenilenir(): void

@@ -21,6 +21,14 @@
                 </label>
             @endforeach
         </div>
+        <label style="display:block;font-size:.75rem;font-weight:600;margin-bottom:.45rem">NACE grubu (bu dosyadaki maddelerin geçerli olduğu firmalar)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.6rem">
+            @foreach (\App\Support\NaceGrubu::secenekler() as $kod => $ad)
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.3rem .6rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);font-size:.8rem">
+                    <input type="checkbox" wire:model="naceGruplari" value="{{ $kod }}"> {{ $ad }}
+                </label>
+            @endforeach
+        </div>
         <div style="font-size:.78rem;color:rgb(107 114 128);margin-bottom:.75rem">
             @switch($yontem)
                 @case('fine_kinney')
