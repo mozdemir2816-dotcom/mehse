@@ -2,10 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\KaydetSecenegi;
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\MuayeneFormu as MuayeneFormuModel;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\MuayeneFormuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -17,7 +19,6 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Muayene Formu (EK-2) — İşyeri Hekimi ve Diğer Sağlık Personelinin Görev,
  * Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik EK-2'ye göre. isgpratik'te
@@ -25,8 +26,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class MuayeneFormu extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-    use \App\Filament\Concerns\KaydetSecenegi;
+    use KaydetSecenegi;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.muayene-formu';
 
@@ -85,9 +86,14 @@ class MuayeneFormu extends Page
 
     public ?string $hekimAdi = null;
 
+    /** EK-2 referans şablonunun yeni alanları — bkz. MuayeneFormuModel::ek2Sablon(). */
+    public array $ek2 = [];
+
     public function mount(): void
     {
         $this->muayeneTarihi = now()->toDateString();
+        $this->ek2 = MuayeneFormuModel::ek2Sablon();
+        $this->ek2['beyan_tarih'] = $this->muayeneTarihi;
 
         $this->sistemikMuayene = collect(config('isg.muayene.sistemik_muayene_basliklari'))
             ->map(fn (string $baslik) => ['baslik' => $baslik, 'sonuc' => 'normal', 'not' => null])
@@ -166,6 +172,9 @@ class MuayeneFormu extends Page
 
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->hekimAdi = $this->firma?->isyeriHekimi?->ad_soyad;
+        $this->ek2['isyeri_tel'] = $this->firma?->telefon;
+        $this->ek2['isyeri_eposta'] = $this->firma?->eposta;
+        $this->ek2['hekim']['belge_no'] = $this->firma?->isyeriHekimi?->sertifika_no;
     }
 
     public function updatedCalisanHizliSecId(): void
@@ -176,6 +185,46 @@ class MuayeneFormu extends Page
         $this->calisanTc = $c?->tc;
         $this->calisanGorevi = $c?->gorev;
         $this->iseGirisTarihi = $c?->ise_giris?->toDateString();
+        $this->calisanDogumTarihi = $c?->dogum_tarihi?->toDateString();
+
+        // Çalışan kaydındaki bilgiler EK-2'ye önceden yazılır (boşsa boş kalır).
+        $this->ek2['kan_grubu'] = $c?->kan_grubu;
+        $this->ek2['cinsiyet'] = $c?->cinsiyet ? (Calisan::CINSIYETLER[$c->cinsiyet] ?? $c->cinsiyet) : null;
+        $this->ek2['calisan_tel'] = $c?->telefon;
+        $this->ek2['meslegi'] = $c?->gorev;
+        $this->ek2['calistigi_bolum'] = $c?->departman;
+        $this->ek2['yaptigi_is'] = $c?->gorev;
+    }
+
+    public function oncekiIsEkle(): void
+    {
+        $this->ek2['onceki'][] = ['isyeri' => null, 'is' => null, 'baslama' => null, 'ayrilma' => null];
+    }
+
+    public function oncekiIsSil(int $index): void
+    {
+        if (count($this->ek2['onceki']) > 1) {
+            unset($this->ek2['onceki'][$index]);
+            $this->ek2['onceki'] = array_values($this->ek2['onceki']);
+        }
+    }
+
+    /** Tıbbi anamnez sorularının tamamını "Hayır" yapar (referans şablondaki hızlı doldurma). */
+    public function anamnezHayir(): void
+    {
+        foreach (array_keys(MuayeneFormuModel::OZGECMIS_SORULARI) as $no) {
+            $this->ek2['oz'][$no]['cevap'] = 'Hayır';
+        }
+    }
+
+    /** Boş fizik muayene sistemlerini "Normal" bulgu metniyle doldurur; dolu olana dokunmaz. */
+    public function fizikNormalDoldur(): void
+    {
+        foreach (MuayeneFormuModel::FIZIK_SISTEMLERI as $anahtar => [, , $normal]) {
+            if (blank($this->ek2['fizik'][$anahtar] ?? null)) {
+                $this->ek2['fizik'][$anahtar] = $normal;
+            }
+        }
     }
 
     public function kontrolTarihiOner(): void
@@ -229,6 +278,7 @@ class MuayeneFormu extends Page
             'onerilen_kontrol_tarihi' => $this->onerilenKontrolTarihi,
             'hekim_adi' => $this->hekimAdi,
             'hekim_kase' => $this->firma->isyeriHekimi?->kase_gorseli,
+            'ek2' => MuayeneFormuModel::ek2Birlestir($this->ek2),
         ]);
         $m->save();
 
