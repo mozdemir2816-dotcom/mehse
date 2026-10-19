@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\AileAnaSayfasi;
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\DosyaKabul;
 use App\Models\Firma;
 use App\Models\SahaBulgusu;
@@ -36,9 +38,8 @@ use UnitEnum;
  */
 class HizliSahaBulgusu extends Page
 {
-    use \App\Filament\Concerns\AileAnaSayfasi;
-
-    use \App\Filament\Concerns\SinirliErisim;
+    use AileAnaSayfasi;
+    use SinirliErisim;
     use WithFileUploads;
 
     protected string $view = 'filament.pages.hizli-saha-bulgusu';
@@ -94,6 +95,9 @@ class HizliSahaBulgusu extends Page
 
     /** "AI ile doldur" sırasında diske yazılmış fotoğraflar (kayıtta yeniden yüklenmez). */
     public array $kaydedilenFotolar = [];
+
+    /** Fotoğraf işaretleme penceresinden gelen (kırmızı çemberli) resim; bkz. fotoIsaretliUygula(). */
+    public $isaretliFoto = null;
 
     public string $kaynak = 'manuel';
 
@@ -194,6 +198,28 @@ class HizliSahaBulgusu extends Page
     {
         unset($this->yeniFotograflar[$index]);
         $this->yeniFotograflar = array_values($this->yeniFotograflar);
+    }
+
+    /**
+     * Tarayıcıda çember çizilmiş fotoğrafı kaydeder ve taslaktaki orijinalin yerine koyar
+     * ('yeni' = henüz yazılmamış yükleme, 'kayitli' = diske yazılmış). Fotoğraf sayısı değişmez.
+     */
+    public function fotoIsaretliUygula(string $tur, int $index): void
+    {
+        $this->validate(['isaretliFoto' => ['required', 'image', 'max:15360']], [], ['isaretliFoto' => 'işaretli fotoğraf']);
+
+        $yol = $this->isaretliFoto->store('saha-bulgu-foto', 'public');
+        $this->reset('isaretliFoto');
+
+        if ($tur === 'yeni' && isset($this->yeniFotograflar[$index])) {
+            unset($this->yeniFotograflar[$index]);
+            $this->yeniFotograflar = array_values($this->yeniFotograflar);
+            $this->kaydedilenFotolar[] = $yol;
+        } elseif ($tur === 'kayitli' && isset($this->kaydedilenFotolar[$index])) {
+            $this->kaydedilenFotolar[$index] = $yol;
+        } else {
+            Storage::disk('public')->delete($yol);
+        }
     }
 
     private function fotoSayisi(): int

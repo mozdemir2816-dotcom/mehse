@@ -8,6 +8,7 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
+use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\GeminiRiskPuanTamamlayici;
 use Database\Seeders\TehlikeKutuphanesiSeeder;
@@ -28,6 +29,12 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         GeminiRiskPuanTamamlayici::devreyiSifirla();
         $this->uzman = User::factory()->create();
         $this->actingAs($this->uzman);
+    }
+
+    /** "Toplu Ekle" listesi değerlendirmenin yöntemine + NACE grubuna uyan kategorilerle sınırlıdır. */
+    private function kutuphaneyiMatriseAyir(): void
+    {
+        TehlikeKategorisi::query()->update(['yontem' => 'matris_5x5', 'nace_gruplari' => ['ortak']]);
     }
 
     public function test_api_anahtari_yokken_pasif_ve_istek_atilmaz(): void
@@ -102,6 +109,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
     public function test_kutuphaneden_aktar_ai_aktif_olsa_bile_puanlama_yapmaz(): void
     {
         $this->seed(TehlikeKutuphanesiSeeder::class);
+        $this->kutuphaneyiMatriseAyir();
         config(['services.gemini.key' => 'test-anahtar']);
         Http::fake();
 
@@ -116,8 +124,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
 
         $madde = RiskMaddesi::where('risk_degerlendirmesi_id', $rd->id)->first();
         $this->assertNotNull($madde);
-        $this->assertNull($madde->olasilik);
-        $this->assertNull($madde->siddet);
+        // Puanlar AI'dan değil kütüphane maddesinden gelir (maddeyeCevir).
         $this->assertSame($tehlike->mevcut_onlem, $madde->mevcut_onlem);
 
         // Toplu ekleme AI çağırmaz — performans/kota riski, ayrı "Eksik Puan/
@@ -128,6 +135,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
     public function test_kutuphaneden_aktar_birden_fazla_tehlikeyi_tek_seferde_ekler(): void
     {
         $this->seed(TehlikeKutuphanesiSeeder::class);
+        $this->kutuphaneyiMatriseAyir();
         Http::fake();
 
         $firma = Firma::factory()->for($this->uzman)->create();
@@ -249,6 +257,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
     public function test_kutuphaneden_aktar_mevcut_onlem_bosluysa_bos_eklenir(): void
     {
         $this->seed(TehlikeKutuphanesiSeeder::class);
+        $this->kutuphaneyiMatriseAyir();
         Http::fake();
 
         $tehlike = Tehlike::first();

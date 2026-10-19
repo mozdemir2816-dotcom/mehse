@@ -14,6 +14,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 use Tests\TestCase;
 
 class HizliSahaBulgusuTest extends TestCase
@@ -120,6 +122,37 @@ class HizliSahaBulgusuTest extends TestCase
         $this->assertCount(1, $b->fotograflar);
     }
 
+    public function test_isaretli_fotograf_taslaktaki_orijinalin_yerine_gecer(): void
+    {
+        Storage::fake('public');
+
+        $sayfa = Livewire::test(HizliSahaBulgusu::class)
+            ->set('yeniFotograflar', [UploadedFile::fake()->image('a.jpg'), UploadedFile::fake()->image('b.jpg')])
+            ->assertSee('İşaretle')
+            ->assertSee('Tehlike Noktası İşaretleme')
+            ->set('isaretliFoto', UploadedFile::fake()->image('isaretli.jpg'))
+            ->call('fotoIsaretliUygula', 'yeni', 0)
+            ->assertHasNoErrors();
+
+        // Yeni yükleme diske yazılmış işaretli kopyayla değişir; toplam sayı aynı kalır.
+        $this->assertCount(1, $sayfa->get('yeniFotograflar'));
+        $this->assertCount(1, $sayfa->get('kaydedilenFotolar'));
+        Storage::disk('public')->assertExists($sayfa->get('kaydedilenFotolar')[0]);
+
+        // Diske yazılmış bir fotoğraf da yerinde değiştirilir.
+        $eski = $sayfa->get('kaydedilenFotolar')[0];
+        $sayfa->set('isaretliFoto', UploadedFile::fake()->image('ikinci.jpg'))
+            ->call('fotoIsaretliUygula', 'kayitli', 0)
+            ->assertHasNoErrors();
+        $this->assertCount(1, $sayfa->get('kaydedilenFotolar'));
+        $this->assertNotSame($eski, $sayfa->get('kaydedilenFotolar')[0]);
+
+        // Resim olmayan dosya reddedilir.
+        $sayfa->set('isaretliFoto', UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'))
+            ->call('fotoIsaretliUygula', 'yeni', 0)
+            ->assertHasErrors(['isaretliFoto']);
+    }
+
     public function test_kapat_yeniden_ac_dofe_aktar_ve_ozet(): void
     {
         $a = SahaBulgusu::create(['firma_id' => $this->firma->id, 'uygunsuzluk' => 'Kablo açıkta', 'olasilik' => 4, 'siddet' => 4, 'termin' => now()->subDay(), 'aksiyon' => 'Kanal içine alınacak', 'fotograflar' => ['saha-bulgu-foto/a.jpg']]);
@@ -156,7 +189,7 @@ class HizliSahaBulgusuTest extends TestCase
         ob_start();
         SahaBulgusuUretici::excel(SahaBulgusu::with('firma')->get())->sendContent();
         file_put_contents($tmp, ob_get_clean());
-        $s = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmp)->getActiveSheet();
+        $s = IOFactory::load($tmp)->getActiveSheet();
         @unlink($tmp);
         $this->assertSame(12, $s->getCell('L2')->getValue());
         $this->assertSame('Yüksek', $s->getCell('M2')->getValue());
@@ -248,7 +281,7 @@ class HizliSahaBulgusuTest extends TestCase
         Storage::fake('public');
         Storage::fake('local');
 
-        $word = new \PhpOffice\PhpWord\PhpWord;
+        $word = new PhpWord;
         $s = $word->addSection();
         $bilgi = $s->addTable();
         $bilgi->addRow();

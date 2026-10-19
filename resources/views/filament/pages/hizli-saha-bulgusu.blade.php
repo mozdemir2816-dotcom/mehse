@@ -143,13 +143,20 @@
         @if ($hata('yeniFotograflar.*'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('yeniFotograflar.*') }}</div>@endif
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
-            @foreach ($kaydedilenFotolar as $yol)
-                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($yol) }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
+            @php $isaretDugme = 'position:absolute;left:0;right:0;bottom:0;background:rgb(0 0 0 / .6);color:#fff;border:none;border-radius:0 0 .4rem .4rem;font-size:.68rem;padding:.15rem 0;cursor:pointer'; @endphp
+            @foreach ($kaydedilenFotolar as $i => $yol)
+                @php $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($yol); @endphp
+                <div style="position:relative">
+                    <img src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
+                    <button type="button" x-data x-on:click="$dispatch('foto-isaretle', { src: @js($fotoUrl), tur: 'kayitli', index: {{ $i }} })" style="{{ $isaretDugme }}">✎ İşaretle</button>
+                </div>
             @endforeach
             @foreach ($yeniFotograflar as $i => $f)
+                @php $fotoUrl = $f->temporaryUrl(); @endphp
                 <div style="position:relative">
-                    <img src="{{ $f->temporaryUrl() }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
+                    <img src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
                     <button type="button" wire:click="fotoSil({{ $i }})" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;cursor:pointer">✕</button>
+                    <button type="button" x-data x-on:click="$dispatch('foto-isaretle', { src: @js($fotoUrl), tur: 'yeni', index: {{ $i }} })" style="{{ $isaretDugme }}">✎ İşaretle</button>
                 </div>
             @endforeach
         </div>
@@ -232,4 +239,6 @@
             <p style="font-size:.83rem;color:rgb(107 114 128)">Bu filtrede saha bulgusu yok.</p>
         @endif
     </x-filament::section>
+
+    @include('filament.pages.partials.foto-isaretle')
 </x-filament-panels::page>
