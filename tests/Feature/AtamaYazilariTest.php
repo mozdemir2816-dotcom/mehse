@@ -384,6 +384,52 @@ class AtamaYazilariTest extends TestCase
         $this->assertStringNotContainsString('HASAN ASDAD', $metin);
     }
 
+    public function test_isg_kurulu_word_tek_tek_her_uye_icin_ayri_docx_zip_doner(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id,
+            'rol_anahtari' => 'isg_kurulu',
+            'tarih' => now(),
+            'uyeler' => [
+                ['ad_soyad' => 'Birinci Uye', 'tc' => '11111111111', 'gorev' => 'Başkan', 'bas_uye' => true],
+                ['ad_soyad' => 'Ikinci Uye', 'tc' => '22222222222', 'gorev' => 'İGU', 'bas_uye' => false],
+            ],
+        ]);
+
+        $yanit = AtamaYazisiWordUretici::zipTekTek($kayit);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $gecici = tempnam(sys_get_temp_dir(), 'tz').'.zip';
+        file_put_contents($gecici, $icerik);
+        $zip = new \ZipArchive;
+        $zip->open($gecici);
+
+        $this->assertSame(2, $zip->numFiles);
+        $ilk = $this->docxMetni($zip->getFromIndex(0));
+        $ikinci = $this->docxMetni($zip->getFromIndex(1));
+        $zip->close();
+        unlink($gecici);
+
+        $this->assertStringContainsString('BİRİNCİ UYE', $ilk);
+        $this->assertStringNotContainsString('IKİNCİ UYE', $ilk);
+        $this->assertStringContainsString('IKİNCİ UYE', $ikinci);
+        $this->assertStringNotContainsString('BİRİNCİ UYE', $ikinci);
+    }
+
+    public function test_tekli_rol_icin_word_tek_tek_zip_uretilmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = AtamaYazisi::create([
+            'firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
+            'uyeler' => [['ad_soyad' => 'Test', 'tc' => null, 'gorev' => null, 'bas_uye' => false]],
+        ]);
+
+        $this->assertNull(AtamaYazisiWordUretici::zipTekTek($kayit));
+    }
+
     public function test_acil_durum_koordinatoru_icin_word_sablonu_yok(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

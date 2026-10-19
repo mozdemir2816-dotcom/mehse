@@ -519,6 +519,31 @@ class AtamaYazilari extends Page
                     return $docx;
                 }),
 
+            Action::make('wordTekTek')
+                ->label('Word İndir (Tek Tek)')
+                ->icon('heroicon-o-document-duplicate')
+                ->color('info')
+                ->visible(fn () => $this->firma !== null && $this->ekipMi() && AtamaYazisiWordUretici::sablonVarMi($this->rolAnahtari))
+                ->action(function () {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    $zip = AtamaYazisiWordUretici::zipTekTek($kayit);
+
+                    if (! $zip) {
+                        Notification::make()->title('Bu görev tipi için tek tek Word üretilemedi')->warning()->send();
+
+                        return null;
+                    }
+
+                    Notification::make()->title('Atama yazısı kaydedildi')->body($kayit->dokuman_no)->success()->send();
+
+                    return $zip;
+                }),
+
             Action::make('egitimFormu')
                 ->label('Eğitim Katılım Formu Oluştur')
                 ->icon('heroicon-o-academic-cap')

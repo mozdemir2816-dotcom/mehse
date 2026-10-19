@@ -54,6 +54,62 @@ class AtamaYazisiWordUretici
 
     public static function docx(AtamaYazisi $kayit): ?StreamedResponse
     {
+        $icerik = static::icerik($kayit);
+
+        if ($icerik === null) {
+            return null;
+        }
+
+        $ad = 'atama-yazisi-'.Str::slug($kayit->rolEtiketi()).'-'.Str::slug($kayit->firma->unvan ?: 'firma').'.docx';
+
+        return response()->streamDownload(fn () => print ($icerik), $ad, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]);
+    }
+
+    /**
+     * Ekip yazısında (İSG Kurulu, söndürme/kurtarma/koruma/ilkyardım) her üye için AYRI bir
+     * .docx üretir (PDF'teki "üye başına bir sayfa" gibi) ve hepsini tek ZIP olarak verir.
+     */
+    public static function zipTekTek(AtamaYazisi $kayit): ?StreamedResponse
+    {
+        $kayit->loadMissing('firma');
+        $uyeler = array_values($kayit->uyeler ?: []);
+
+        if (! $kayit->ekipMi() || ! $uyeler || ! self::sablonVarMi($kayit->rol_anahtari)) {
+            return null;
+        }
+
+        $gecici = tempnam(sys_get_temp_dir(), 'atz').'.zip';
+        $zip = new ZipArchive;
+        $zip->open($gecici, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        foreach ($uyeler as $i => $uye) {
+            $tek = $kayit->replicate();
+            $tek->setRelation('firma', $kayit->firma);
+            $tek->uyeler = [$uye];
+
+            $icerik = static::icerik($tek);
+
+            if ($icerik === null) {
+                continue;
+            }
+
+            $zip->addFromString(sprintf('%02d-%s.docx', $i + 1, Str::slug($uye['ad_soyad'] ?? 'uye') ?: 'uye'), $icerik);
+        }
+
+        $zip->close();
+        $veri = file_get_contents($gecici);
+        unlink($gecici);
+
+        $ad = 'atama-yazisi-tek-tek-'.Str::slug($kayit->rolEtiketi()).'-'.Str::slug($kayit->firma->unvan ?: 'firma').'.zip';
+
+        return response()->streamDownload(fn () => print ($veri), $ad, ['Content-Type' => 'application/zip']);
+    }
+
+    /** Şablonu kayıtla doldurup .docx baytlarını döndürür; şablon yoksa null. */
+    private static function icerik(AtamaYazisi $kayit): ?string
+    {
         $kayit->loadMissing('firma');
         $firma = $kayit->firma;
 
@@ -96,11 +152,7 @@ class AtamaYazisiWordUretici
         $icerik = file_get_contents($gecici);
         unlink($gecici);
 
-        $ad = 'atama-yazisi-'.Str::slug($kayit->rolEtiketi()).'-'.Str::slug($firma->unvan ?: 'firma').'.docx';
-
-        return response()->streamDownload(fn () => print ($icerik), $ad, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ]);
+        return $icerik;
     }
 
     /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string, ekip_gorevi?: string} $uye */
