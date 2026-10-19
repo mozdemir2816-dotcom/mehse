@@ -835,4 +835,28 @@ class RiskSihirbaziTest extends TestCase
         $this->assertArrayHasKey($benim->id, $firmalar);
         $this->assertArrayNotHasKey($baskasi->id, $firmalar);
     }
+
+    public function test_bos_madde_eklenir_ve_5x5_kutuphane_maddesi_kaynak_degerle_gelir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kategori = \App\Models\TehlikeKategorisi::create(['anahtar' => 'matris_test', 'ad' => 'Ekipman – Matris test', 'sira' => 99]);
+        $tehlike = Tehlike::create([
+            'tehlike_kategorisi_id' => $kategori->id, 'kod' => 'MT-R-001', 'faaliyet' => 'F', 'tehlike' => 'T',
+            'olasilik' => 3, 'frekans' => 3, 'siddet' => 30, 'son_olasilik' => 0.2, 'son_frekans' => 1, 'son_siddet' => 30,
+            'matris' => ['olasilik' => 3, 'siddet' => 5, 'son_olasilik' => 1, 'son_siddet' => 5],
+        ]);
+
+        $c = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
+            ->call('tehlikeEkle', $tehlike->id)
+            ->call('bosMaddeEkle')
+            ->assertSet('secilenler.0.olasilik', 3)
+            ->assertSet('secilenler.0.siddet', 5)
+            ->assertSet('secilenler.0.son_olasilik', 1)
+            ->assertSet('secilenler.0.son_siddet', 5);
+
+        $this->assertCount(2, $c->get('secilenler'));
+        $this->assertNull($c->get('secilenler')[1]['termin']);
+    }
 }

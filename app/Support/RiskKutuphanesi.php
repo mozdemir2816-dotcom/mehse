@@ -136,7 +136,7 @@ class RiskKutuphanesi
             'mevzuat' => null,
             'oneri' => null,
             'sorumlu' => null,
-            'termin' => $t->termin,
+            'termin' => null,
             'olasilik' => null,
             'frekans' => null,
             'siddet' => null,
