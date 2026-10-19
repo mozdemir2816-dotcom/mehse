@@ -105,7 +105,7 @@
         <tr>
             <td class="orta">@if ($c['kritik'])<span class="kritik">KRİTİK</span>@endif</td>
             <td class="orta">{{ $c['kod'] }}</td>
-            <td>{{ $c['ifade'] }}</td>
+            <td>{{ $c['ifade'] }}@if (filled($c['dayanak'] ?? null))<br><span style="font-size:7px;color:#666">Dayanak: {{ $c['dayanak'] }}</span>@endif</td>
             <td class="orta sonuc-{{ $c['sonuc'] ?? '' }}">{{ config('isg.saha_denetimi.sonuc_secenekleri.'.($c['sonuc'] ?? ''), '-') }}</td>
             <td class="foto">
                 @forelse ($fotolar as $yol)
@@ -114,7 +114,7 @@
                     -
                 @endforelse
             </td>
-            <td @if (blank($c['aciklama'] ?? null)) class="orta" @endif>{{ $c['aciklama'] ?: '-' }}</td>
+            <td @if (blank($c['aciklama'] ?? null)) class="orta" @endif>{{ $c['aciklama'] ?: '-' }}@if (filled($c['oneri'] ?? null) && ($c['sonuc'] ?? null) === 'uygun_degil' && ! str_contains((string) ($c['aciklama'] ?? ''), $c['oneri']))<br><span style="font-size:7px;color:#666">Öneri: {{ $c['oneri'] }}</span>@endif</td>
         </tr>
     @empty
         <tr><td colspan="6" class="orta" style="color:#888">Gösterilecek madde yok.</td></tr>

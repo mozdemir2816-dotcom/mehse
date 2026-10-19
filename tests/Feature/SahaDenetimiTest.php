@@ -9,7 +9,10 @@ use App\Models\IsgProfesyoneli;
 use App\Models\SahaDenetimi;
 use App\Models\SahaDenetimiOzelMadde;
 use App\Models\User;
+use App\Support\EkipmanKatalogu;
+use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\SahaDenetimiUretici;
+use App\Support\SahaSektorDefteri;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +38,85 @@ class SahaDenetimiTest extends TestCase
         $toplam = collect(config('isg.saha_denetimi.kategoriler'))->sum(fn ($k) => count($k['maddeler']));
 
         $this->assertSame(41, $toplam);
+    }
+
+    public function test_master_defter_40_sektor_ve_her_sektorde_40_madde_icerir(): void
+    {
+        $sektorler = SahaSektorDefteri::sektorler();
+
+        $this->assertCount(40, $sektorler);
+        $this->assertArrayHasKey('insaat', $sektorler);
+        $this->assertArrayHasKey('kagit_ve_matbaa', $sektorler);
+
+        foreach (array_keys($sektorler) as $anahtar) {
+            $maddeler = SahaSektorDefteri::maddeler($anahtar);
+            $this->assertCount(40, $maddeler, $anahtar);
+            $this->assertSame('SD1', $maddeler[0]['kod']);
+            $this->assertCount(40, array_unique(array_column($maddeler, 'kod')), $anahtar);
+            $this->assertNotContains('', array_column($maddeler, 'dayanak'), $anahtar);
+            $this->assertNotContains('', array_column($maddeler, 'oneri'), $anahtar);
+        }
+
+        $this->assertSame([], SahaSektorDefteri::maddeler('yok'));
+    }
+
+    public function test_sektore_ozgu_kontrol_secilince_40_madde_eklenir_taslakla_pdfe_tasinir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $sayfa = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertArrayNotHasKey('sektor_defteri', $sayfa->instance()->kategoriler());
+
+        $sayfa->set('defterSektoru', 'insaat');
+        $kategori = $sayfa->instance()->kategoriler()['sektor_defteri'];
+        $this->assertSame('Sektöre Özgü Kontrol — İnşaat', $kategori['ad']);
+        $this->assertCount(40, $kategori['maddeler']);
+        // Sabit 41 madde yerinde, özel olmayan kategoriler bozulmadı
+        $this->assertArrayHasKey('yangin', $sayfa->instance()->kategoriler());
+
+        $sayfa->assertSee('Dayanak: Risk Değerlendirmesi Yönetmeliği')
+            ->call('cevapVer', 'SD1', 'uygun_degil')
+            ->call('oneriyiAciklamayaEkle', 'SD1')
+            ->call('oneriyiAciklamayaEkle', 'SD1') // ikinci çağrı tekrar eklemez
+            ->call('cevapVer', 'SD2', 'uygun');
+
+        $aciklama = $sayfa->get('cevaplar')['SD1']['aciklama'];
+        $this->assertSame(1, substr_count($aciklama, 'Öneri: Risk değerlendirmesini düşme ve malzeme çarpması dahil güncelleyin'));
+
+        // Taslak: sektör seçimi ve cevaplar geri yüklenir
+        $sayfa->call('taslakKaydet');
+        $yeni = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id);
+        $yeni->assertSet('defterSektoru', 'insaat');
+        $this->assertSame('uygun_degil', $yeni->get('cevaplar')['SD1']['sonuc']);
+        $this->assertSame('uygun', $yeni->get('cevaplar')['SD2']['sonuc']);
+
+        // Tamamla → kayıtta dayanak/öneri anlık görüntüsü, PDF'te görünür
+        $yeni->callAction('pdf');
+        $d = SahaDenetimi::where('firma_id', $firma->id)->where('durum', 'tamamlandi')->firstOrFail();
+        $sd1 = collect($d->cevaplar)->firstWhere('kod', 'SD1');
+        $this->assertSame('Risk Değerlendirmesi Yönetmeliği', $sd1['dayanak']);
+        $this->assertSame('insaat', $sd1['defter_sektoru']);
+        $this->assertCount(40, collect($d->cevaplar)->where('kategori_ad', 'Sektöre Özgü Kontrol — İnşaat'));
+
+        $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
+        $this->assertStringContainsString('Dayanak: Risk Değerlendirmesi Yönetmeliği', $html);
+        $this->assertStringContainsString('SEKTÖRE ÖZGÜ KONTROL', $html);
+    }
+
+    public function test_sektore_ozgu_kontrol_degisince_eski_cevaplar_listeden_duser(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $sayfa = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id)->set('defterSektoru', 'insaat');
+        $this->assertSame('Sektöre Özgü Kontrol — İnşaat', $sayfa->instance()->kategoriler()['sektor_defteri']['ad']);
+
+        $sayfa->set('defterSektoru', 'tekstil');
+        $this->assertSame('Sektöre Özgü Kontrol — Tekstil', $sayfa->instance()->kategoriler()['sektor_defteri']['ad']);
+
+        $sayfa->set('defterSektoru', '');
+        $sayfa->assertSet('defterSektoru', null);
+        $this->assertArrayNotHasKey('sektor_defteri', $sayfa->instance()->kategoriler());
     }
 
     public function test_firma_secilince_denetci_otomatik_dolar(): void
@@ -455,7 +537,7 @@ class SahaDenetimiTest extends TestCase
 
     public function test_haftalik_ekipman_kontrol_uretici_dogru_tipleri_pdfe_yazar(): void
     {
-        $yanit = \App\Support\HaftalikEkipmanKontrolUretici::pdf([0, 15], 'ABC İnşaat');
+        $yanit = HaftalikEkipmanKontrolUretici::pdf([0, 15], 'ABC İnşaat');
 
         $this->assertInstanceOf(StreamedResponse::class, $yanit);
         ob_start();
@@ -466,7 +548,7 @@ class SahaDenetimiTest extends TestCase
 
     public function test_haftalik_ekipman_kontrol_konfigurasyonu_kullanici_formlari_ve_taslaklari_icerir(): void
     {
-        $tipler = collect(\App\Support\EkipmanKatalogu::kontrolFormlari());
+        $tipler = collect(EkipmanKatalogu::kontrolFormlari());
 
         // 41 kullanıcı referansı (düz, 12 soru) + kullanıcının kendi ekipman formları (form_no'lu:
         // gruplu U/UD/Y/X ya da kabul kriterli ✓/X/-) + kullanıcının 14.10.2026'da onayladığı 3 AI formu
@@ -487,11 +569,12 @@ class SahaDenetimiTest extends TestCase
             }
         }
     }
+
     public function test_gruplu_kullanici_formu_haftalik_pdfe_de_yazilir(): void
     {
-        $cnc = collect(\App\Support\EkipmanKatalogu::kontrolFormlari())->search(fn ($f) => $f['ad'] === 'CNC Tezgâhı');
+        $cnc = collect(EkipmanKatalogu::kontrolFormlari())->search(fn ($f) => $f['ad'] === 'CNC Tezgâhı');
 
-        $yanit = \App\Support\HaftalikEkipmanKontrolUretici::pdf([$cnc], 'ABC Makina');
+        $yanit = HaftalikEkipmanKontrolUretici::pdf([$cnc], 'ABC Makina');
 
         ob_start();
         $yanit->sendContent();

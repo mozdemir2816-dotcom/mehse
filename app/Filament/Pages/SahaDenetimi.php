@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Calisan;
 use App\Models\Firma;
@@ -9,6 +10,7 @@ use App\Models\SahaDenetimi as SahaDenetimiModel;
 use App\Models\SahaDenetimiOzelMadde;
 use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\SahaDenetimiUretici;
+use App\Support\SahaSektorDefteri;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -23,7 +25,6 @@ use Livewire\Attributes\Computed;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Saha Denetimi ("Şantiye Denetim ve Değerlendirme") — isgpratik SAHA
  * DENETİMİ/1-15.jpg + gerçek örnek PDF. 9 kategori / 41 maddelik kontrol
@@ -32,8 +33,7 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class SahaDenetimi extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
-
+    use SinirliErisim;
     use WithFileUploads;
 
     protected string $view = 'filament.pages.saha-denetimi';
@@ -71,6 +71,9 @@ class SahaDenetimi extends Page
 
     /** null = tüm sektörler için ortak liste — config isg.risk_ai.sektorler */
     public ?string $sektorAnahtari = null;
+
+    /** "Sektöre Özgü Kontrol" bölümü: SahaSektorDefteri sektör anahtarı (40 sektör). */
+    public ?string $defterSektoru = null;
 
     /** @var array<string, array{sonuc: ?string, aciklama: ?string, foto_yolu: ?string, fotolar?: array<int, string>}> kod => cevap */
     public array $cevaplar = [];
@@ -166,7 +169,19 @@ class SahaDenetimi extends Page
             }
         }
 
+        // Master defterdeki sektöre özgü 40 maddelik liste (dayanak mevzuat + öneri ile).
+        if ($defter = SahaSektorDefteri::kategori($this->defterSektoru)) {
+            $kategoriler['sektor_defteri'] = $defter;
+        }
+
         return $kategoriler;
+    }
+
+    /** @return array<string, string> */
+    #[Computed]
+    public function defterSektorleri(): array
+    {
+        return SahaSektorDefteri::sektorler();
     }
 
     #[Computed]
@@ -331,6 +346,7 @@ class SahaDenetimi extends Page
         $this->denetimSaati = $taslak->denetim_saati ?? $this->denetimSaati;
         $this->denetciAdi = $taslak->denetci_adi ?: $this->denetciAdi;
         $this->sektorAnahtari = $taslak->sektor_anahtari;
+        $this->defterSektoru = collect($taslak->cevaplar ?? [])->pluck('defter_sektoru')->filter()->first();
         $this->ekipUyeleri = $taslak->ekip_uyeleri ?? [];
         $this->genelNotlar = $taslak->genel_notlar;
 
@@ -354,7 +370,7 @@ class SahaDenetimi extends Page
         unset($this->aktifTaslak);
 
         $this->reset([
-            'isTanimi', 'santiyeAdi', 'santiyeSorumlusu', 'isReferansNo', 'sektorAnahtari',
+            'isTanimi', 'santiyeAdi', 'santiyeSorumlusu', 'isReferansNo', 'sektorAnahtari', 'defterSektoru',
             'ekipUyeleri', 'genelNotlar', 'cevaplar', 'taslakYuklendi',
         ]);
         $this->denetciAdi = $this->firma?->igu?->ad_soyad;
@@ -368,6 +384,32 @@ class SahaDenetimi extends Page
     {
         unset($this->kategoriler);
         $this->cevaplariSenkronizeEt();
+    }
+
+    public function updatedDefterSektoru(): void
+    {
+        $this->defterSektoru = $this->defterSektoru ?: null;
+        unset($this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+    }
+
+    /** Maddenin önerisini (düzeltici faaliyet) uygunsuzluk açıklamasına ekler. */
+    public function oneriyiAciklamayaEkle(string $kod): void
+    {
+        $oneri = $this->tumMaddeler()[$kod]['oneri'] ?? null;
+        $anahtar = $this->anahtar($kod);
+
+        if (! $oneri || ! isset($this->cevaplar[$anahtar])) {
+            return;
+        }
+
+        $mevcut = trim((string) ($this->cevaplar[$anahtar]['aciklama'] ?? ''));
+        $satir = 'Öneri: '.$oneri;
+
+        if (! str_contains($mevcut, $satir)) {
+            $this->cevaplar[$anahtar]['aciklama'] = $mevcut === '' ? $satir : $mevcut.'
+'.$satir;
+        }
     }
 
     public function ozelMaddeEkle(): void
@@ -529,6 +571,9 @@ class SahaDenetimi extends Page
                 'kod' => $kod,
                 'ifade' => $this->ifadeYaz($madde['ifade']),
                 'kritik' => $madde['kritik'],
+                'dayanak' => $madde['dayanak'] ?? null,
+                'oneri' => $madde['oneri'] ?? null,
+                'defter_sektoru' => isset($madde['dayanak']) ? $this->defterSektoru : null,
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
                 'foto_yolu' => $fotolar[0] ?? null,
@@ -592,6 +637,9 @@ class SahaDenetimi extends Page
                 'kod' => $kod,
                 'ifade' => $this->ifadeYaz($madde['ifade']),
                 'kritik' => $madde['kritik'],
+                'dayanak' => $madde['dayanak'] ?? null,
+                'oneri' => $madde['oneri'] ?? null,
+                'defter_sektoru' => isset($madde['dayanak']) ? $this->defterSektoru : null,
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
                 'foto_yolu' => $fotolar[0] ?? null,

@@ -89,6 +89,17 @@
                 </select>
                 <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Sektör seçilince aşağıya o sektöre eklediğiniz özel maddeler de dahil olur.</p>
             </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Sektöre özgü kontrol listesi</label>
+                <select wire:model.live="defterSektoru"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    <option value="">— Ekleme —</option>
+                    @foreach ($this->defterSektorleri as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Seçilen sektörün 40 maddelik kontrol listesi (dayanak mevzuat ve öneriyle) aşağıya eklenir.</p>
+            </div>
         </div>
 
         @if ($this->firma && ! $this->firma->igu)
@@ -204,6 +215,9 @@
                                 @endif
                                 <span style="font-size:.85rem">{{ $ifade }}</span>
                             </div>
+                            @if (! empty($madde['dayanak']))
+                                <div style="font-size:.72rem;color:rgb(107 114 128);margin:-.2rem 0 .5rem">Dayanak: {{ $madde['dayanak'] }}</div>
+                            @endif
                             <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun')"
                                     style="padding:.35rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.78rem;
@@ -228,6 +242,12 @@
                                     <label style="font-size:.75rem;font-weight:600;color:#dc2626">Uygunsuzluk açıklaması <span style="color:#ef4444">*</span></label>
                                     <textarea wire:model="cevaplar.{{ $anahtar }}.aciklama" rows="2"
                                         style="width:100%;margin-top:.2rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(220 38 38 / .4);background:transparent;font-size:.8rem"></textarea>
+                                    @if (! empty($madde['oneri']))
+                                        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.3rem;font-size:.75rem;color:rgb(107 114 128)">
+                                            <span>Önerilen düzeltici faaliyet: <strong>{{ $madde['oneri'] }}</strong></span>
+                                            <button type="button" wire:click="oneriyiAciklamayaEkle('{{ $kod }}')" style="padding:.15rem .5rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4);cursor:pointer">Açıklamaya ekle</button>
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
 
