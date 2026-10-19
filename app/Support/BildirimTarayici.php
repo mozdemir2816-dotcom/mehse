@@ -146,6 +146,13 @@ class BildirimTarayici
         } elseif (! $ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0 && EkipmanKatalogu::ekipmanlar($firma)->isNotEmpty()) {
             $ekle('ekipman_risk_yok', 'kritik', 'Ekipmanı olan firmada risk değerlendirmesi yok', 'Firmaya tanımlı ekipmanlar için kütüphanede '.$ekipmanRisk['toplam'].' risk maddesi hazır; Risk Değerlendirme sihirbazıyla değerlendirmeyi oluşturun.', null, static::url(fn () => RiskSihirbazi::getUrl()));
         }
+
+        // Ad bazlı: envanterdeki ekipman hiçbir risk değerlendirmesinde geçmiyorsa uyar.
+        $adEksik = EkipmanRiskEslesme::eksikEkipmanlar($firma);
+        if ($adEksik->isNotEmpty()) {
+            $ekle('ekipman_ad_risk', 'uyari', 'Envanterdeki ekipman risk analizinde yok', $adEksik->count().' ekipman: '.Str::limit($adEksik->pluck('ekipman_adi')->implode(', '), 140).'. Risk değerlendirmesine ekleyin ya da envanterden kaldırın.', null, $rdUrl);
+        }
+
         $eksikTalimat = EkipmanKatalogu::eksikTalimatlar($firma);
         if ($eksikTalimat) {
             $ekle('ekipman_talimat', 'uyari', 'Ekipman talimatı firmada yok', count($eksikTalimat).' talimat: '.Str::limit(implode(', ', array_keys($eksikTalimat)), 140).'. Talimat Oluştur sayfasından ekleyip teslim tutanağıyla tebliğ edin.', null, static::url(fn () => TalimatOlustur::getUrl(['firma' => $firma->id])));
