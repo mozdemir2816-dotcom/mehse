@@ -157,7 +157,7 @@ class AcilDurumHazirlik
         // Tahliye planı: yüklenen görsel (içeriği denetlenemez) ya da editör
         // krokisi — editör krokisinde Md.12(1)(f) zorunlu unsurları aranır.
         $kroki = AcilDurumKrokisi::query()->where('firma_id', $plan->firma_id)->first();
-        $krokiCizili = $kroki && (count($kroki->semboller ?? []) > 0 || count($kroki->duvarlar ?? []) > 0);
+        $krokiCizili = $kroki && (count($kroki->semboller ?? []) > 0 || count($kroki->duvarlar ?? []) > 0 || $kroki->kroki3bVar());
         $krokiEksik = $krokiCizili ? $kroki->eksikZorunluUnsurlar() : [];
         $krokiVar = filled($plan->tahliye_plani_gorseli) || ($krokiCizili && $krokiEksik === []);
         $krokiAciklama = match (true) {

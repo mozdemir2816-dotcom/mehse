@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumKrokisi as KrokiModel;
 use App\Models\Firma;
@@ -28,7 +29,7 @@ use UnitEnum;
  */
 class AcilDurumKrokisi extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.acil-durum-krokisi';
 
@@ -49,10 +50,27 @@ class AcilDurumKrokisi extends Page
 
     public ?int $firmaId = null;
 
+    /** 'klasik' (2B SVG editör) | '3b' (izometrik editör, yan yana çalışır). */
+    public string $editor = '3b';
+
     public function mount(): void
     {
         $id = request()->integer('firma');
         $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
+        $this->editor = in_array(request()->query('editor'), ['klasik', '3b'], true) ? request()->query('editor') : $this->varsayilanEditor();
+    }
+
+    /** Klasik editörde çizim varsa ve 3B boşsa klasik açılır; aksi halde (yeni / 3B çizimli) 3B. */
+    private function varsayilanEditor(): string
+    {
+        $kroki = $this->firma ? KrokiModel::where('firma_id', $this->firma->id)->first() : null;
+
+        return $kroki && ! $kroki->kroki3bVar() && (count($kroki->semboller ?? []) > 0 || count($kroki->duvarlar ?? []) > 0) ? 'klasik' : '3b';
+    }
+
+    public function editorSec(string $editor): void
+    {
+        $this->editor = $editor === 'klasik' ? 'klasik' : '3b';
     }
 
     #[Computed]
@@ -75,6 +93,7 @@ class AcilDurumKrokisi extends Page
     /** Editör tarayıcıda yaşadığı için firma değişince sayfa yeniden yüklenir. */
     public function updatedFirmaId(): void
     {
+        $this->editor = $this->varsayilanEditor();
         $this->redirect(static::getUrl($this->firmaId ? ['firma' => $this->firmaId] : []));
     }
 
@@ -116,24 +135,87 @@ class AcilDurumKrokisi extends Page
         $temiz = KrokiModel::temizle($veri);
         $kroki->forceFill([...$temiz, 'hazirlanma_tarihi' => now()]);
 
-        if ($png && str_starts_with($png, 'data:image/png;base64,') && strlen($png) < 11_000_000) {
-            $ikili = base64_decode(substr($png, 22), true);
-
-            if ($ikili !== false && str_starts_with($ikili, "\x89PNG")) {
-                $eski = $kroki->gorsel_yolu;
-                $yol = 'acil-durum-kroki/'.$kroki->firma_id.'-'.now()->format('YmdHis').'.png';
-                Storage::disk('public')->put($yol, $ikili);
-                $kroki->gorsel_yolu = $yol;
-
-                if ($eski && $eski !== $yol) {
-                    Storage::disk('public')->delete($eski);
-                }
-            }
-        }
+        $this->pngYaz($kroki, $png);
 
         $kroki->save();
 
         Notification::make()->title('Kroki kaydedildi')->success()->send();
+    }
+
+    /** O anki görünümün PNG'sini (data URL, en fazla ~8 MB) diske yazar; PDF ve plan bunu basar. */
+    private function pngYaz(KrokiModel $kroki, ?string $png): void
+    {
+        if (! $png || ! str_starts_with($png, 'data:image/png;base64,') || strlen($png) >= 11_000_000) {
+            return;
+        }
+
+        $ikili = base64_decode(substr($png, 22), true);
+
+        if ($ikili === false || ! str_starts_with($ikili, "\x89PNG")) {
+            return;
+        }
+
+        $eski = $kroki->gorsel_yolu;
+        $yol = 'acil-durum-kroki/'.$kroki->firma_id.'-'.now()->format('YmdHis').'.png';
+        Storage::disk('public')->put($yol, $ikili);
+        $kroki->gorsel_yolu = $yol;
+
+        if ($eski && $eski !== $yol) {
+            Storage::disk('public')->delete($eski);
+        }
+    }
+
+    /** 3B editör iframe'inin başlangıç verisi: kayıtlı çizim + firma/plan bilgileri. */
+    public function kroki3bVerisi(): array
+    {
+        $kroki = $this->kroki();
+        $firma = $this->firma;
+
+        return [
+            'veri' => $kroki?->kroki3b,
+            'bilgi' => [
+                'firma' => $firma?->unvan,
+                'tarih' => ($kroki?->hazirlanma_tarihi ?? now())->format('Y-m-d'),
+                'haz' => Filament::auth()->user()?->name,
+                'onay' => $firma?->isveren_vekili ?: $firma?->isveren_ad,
+            ],
+        ];
+    }
+
+    /** 3B editör sayfasının HTML'i (iframe srcdoc). */
+    #[Computed]
+    public function editor3bHtml(): string
+    {
+        return view('kroki3b.editor')->render();
+    }
+
+    /**
+     * 3B editörden: çizim (S/G/I) + ilk sayfanın PNG'si. Aynı PNG alanına yazılır; böylece kroki PDF'i,
+     * Acil Durum Planı tahliye sayfası ve hazırlık kontrolü klasik editörle aynı yoldan çalışır.
+     */
+    public function kaydet3b(array $veri, ?string $png = null): void
+    {
+        $kroki = $this->kroki();
+
+        if (! $kroki) {
+            Notification::make()->title('Önce firma seçin')->danger()->send();
+
+            return;
+        }
+
+        $temiz = KrokiModel::temizle3b($veri);
+
+        if ($temiz === null) {
+            Notification::make()->title('Kroki verisi geçersiz veya çok büyük')->danger()->send();
+
+            return;
+        }
+
+        $kroki->forceFill(['kroki3b' => $temiz, 'hazirlanma_tarihi' => now()]);
+        $this->pngYaz($kroki, $png);
+        $kroki->save();
+
+        Notification::make()->title('3B kroki kaydedildi')->success()->send();
     }
 
     protected function getHeaderActions(): array

@@ -22,6 +22,7 @@ class AcilDurumKrokisi extends Model
         'semboller' => 'array',
         'ogeler' => 'array',
         'antet' => 'array',
+        'kroki3b' => 'array',
         'hazirlanma_tarihi' => 'date',
     ];
 
@@ -163,6 +164,10 @@ class AcilDurumKrokisi extends Model
      */
     public function yonetmelikKontrolu(): array
     {
+        if ($this->kroki3bVar() && empty($this->semboller) && empty($this->duvarlar)) {
+            return $this->yonetmelikKontrolu3b();
+        }
+
         $tipler = collect($this->semboller ?? [])->pluck('tip')->unique()->all();
         $yolVar = ! empty($this->ogeler['yollar'] ?? []);
 
@@ -179,6 +184,104 @@ class AcilDurumKrokisi extends Model
         return collect($this->yonetmelikKontrolu())
             ->filter(fn (array $u) => $u['zorunlu'] && ! $u['var'])
             ->pluck('baslik')->values()->all();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | 3B (izometrik) editör — kroki3b: {S: öğeler, G: ızgara, I: işletme/plan bilgisi}
+    |--------------------------------------------------------------------------
+    | S öğe türleri: b = kutu/duvar/makine, z = zemin/alan, s = ISO 7010 işareti (k = kod),
+    | a = yön oku, r = tahliye rotası (p = noktalar).
+    */
+
+    /** 3B editörde çizim var mı? */
+    public function kroki3bVar(): bool
+    {
+        return count($this->kroki3b['S'] ?? []) > 0;
+    }
+
+    /**
+     * 3B editör verisini doğrular / sınırlar. Editör iframe'i mehse ile aynı kaynaktan çalıştığı için
+     * metinlerden HTML/tırnak karakterleri atılır; yalnız bilinen öğe türleri kalır, sayılar
+     * sınırlanır, toplam boyut sınırlıdır. Geçersiz/boş veri null döner.
+     *
+     * @return array{S: array, G: array, I: array}|null
+     */
+    public static function temizle3b(array $veri): ?array
+    {
+        $metin = fn ($v, int $uz = 200) => mb_substr(preg_replace('/[<>"`\\\\\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', trim(strip_tags((string) $v))), 0, $uz);
+        $temizDeger = null;
+        $temizDeger = function ($v, int $derinlik) use (&$temizDeger, $metin) {
+            if (is_bool($v) || $v === null) {
+                return $v;
+            }
+            if (is_int($v) || is_float($v)) {
+                return round(max(-100000, min(100000, (float) $v)), 3);
+            }
+            if (is_string($v)) {
+                return $metin($v, 600);
+            }
+            if (is_array($v) && $derinlik < 4) {
+                $cikti = [];
+                foreach (array_slice($v, 0, 400, true) as $a => $d) {
+                    $anahtar = is_int($a) ? $a : (preg_match('/^[A-Za-z0-9_]{1,16}$/', (string) $a) ? (string) $a : null);
+                    if ($anahtar !== null) {
+                        $cikti[$anahtar] = $temizDeger($d, $derinlik + 1);
+                    }
+                }
+
+                return array_is_list($v) ? array_values($cikti) : $cikti;
+            }
+
+            return null;
+        };
+
+        $ogeler = collect($veri['S'] ?? [])->take(3000)
+            ->filter(fn ($o) => is_array($o) && in_array($o['t'] ?? null, ['b', 'z', 's', 'a', 'r'], true))
+            ->map(fn ($o) => $temizDeger($o, 1))
+            ->values()->all();
+
+        $g = $veri['G'] ?? [];
+        $izgara = [
+            'w' => (int) max(4, min(120, (float) ($g['w'] ?? 24))),
+            'h' => (int) max(4, min(120, (float) ($g['h'] ?? 16))),
+            'cell' => round(max(0.5, min(20, (float) ($g['cell'] ?? 2.5))), 2),
+        ];
+
+        $bilgi = is_array($veri['I'] ?? null) ? $temizDeger($veri['I'], 1) : [];
+
+        $sonuc = ['S' => $ogeler, 'G' => $izgara, 'I' => $bilgi];
+
+        return strlen((string) json_encode($sonuc)) > 1_500_000 ? null : $sonuc;
+    }
+
+    /**
+     * 3B krokide bulunması gereken unsurlar (işaret kodlarına göre; Md.12(1)(f)).
+     *
+     * @var array<string, array{0: string, 1: array<int, string>, 2: bool}>
+     */
+    public const YONETMELIK_UNSURLARI_3B = [
+        'sondurme' => ['Yangın söndürme ekipmanı (Md.12/1-f-1)', ['F001', 'F002'], true],
+        'ilkyardim' => ['İlk yardım malzemesi (Md.12/1-f-2)', ['E003'], true],
+        'cikis' => ['Acil çıkış (Md.12/1-f-3)', ['E001', 'E002'], true],
+        'kacis' => ['Kaçış yolu / yönü (Md.12/1-f-3) — rota veya en az 3 yön oku', [], true],
+        'toplanma' => ['Toplanma yeri (Md.12/1-f-3)', ['E007'], true],
+        'uyari' => ['Yangın alarm butonu — varsa (Md.12/1-f-3)', ['F005'], false],
+        'buradasiniz' => ['"Buradasınız" işareti (asılacak her kopyada)', ['YOU'], false],
+    ];
+
+    /** @return array<string, array{baslik: string, var: bool, zorunlu: bool}> */
+    public function yonetmelikKontrolu3b(): array
+    {
+        $ogeler = collect($this->kroki3b['S'] ?? []);
+        $kodlar = $ogeler->where('t', 's')->pluck('k')->unique()->all();
+        $yonVar = $ogeler->contains(fn ($o) => ($o['t'] ?? null) === 'r' && count($o['p'] ?? []) > 1) || $ogeler->where('t', 'a')->count() >= 3;
+
+        return collect(static::YONETMELIK_UNSURLARI_3B)->map(fn (array $u, string $k) => [
+            'baslik' => $u[0],
+            'var' => $k === 'kacis' ? $yonVar : array_intersect($u[1], $kodlar) !== [],
+            'zorunlu' => $u[2],
+        ])->all();
     }
 
     /** Sembol tiplerinin adet dağılımı — lejant için. */

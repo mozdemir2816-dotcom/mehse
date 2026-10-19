@@ -119,7 +119,7 @@ class AcilDurumKrokisiTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Kroki Firması']);
         $baska = Firma::factory()->for(User::factory())->create();
 
-        $this->get(KrokiSayfasi::getUrl(['firma' => $firma->id]))->assertOk()
+        $this->get(KrokiSayfasi::getUrl(['firma' => $firma->id, 'editor' => 'klasik']))->assertOk()
             ->assertSee('krokiEditoru', false)->assertSee('Kaçış Yolu')->assertSee('Antet');
 
         $c = Livewire::test(KrokiSayfasi::class)->set('firmaId', $baska->id);
@@ -196,6 +196,138 @@ class AcilDurumKrokisiTest extends TestCase
         $kroki->save();
         $this->get(KrokiSayfasi::getUrl(['firma' => $kroki->firma_id]))->assertOk()
             ->assertSee('3 zorunlu unsur eksik');
+    }
+
+    // ---------- 3B (izometrik) editör ----------
+
+    /** @return array{S: array, G: array, I: array} */
+    private function veri3b(): array
+    {
+        return [
+            'S' => [
+                ['t' => 'z', 'x' => 1, 'y' => 1, 'w' => 8, 'h' => 6, 'c' => '#dfe9f6', 'l' => '<b>Atölye</b>', 'p' => ''],
+                ['t' => 'b', 'x' => 2, 'y' => 2, 'w' => 3, 'h' => 2, 'hz' => 1.8, 'c' => '#7b8fa6', 'l' => 'CNC "X"'],
+                ['t' => 's', 'k' => 'E001', 'x' => 1, 'y' => 1, 'l' => ''],
+                ['t' => 's', 'k' => 'E007', 'x' => 9, 'y' => 9, 'l' => ''],
+                ['t' => 's', 'k' => 'E003', 'x' => 3, 'y' => 1, 'l' => ''],
+                ['t' => 's', 'k' => 'F001', 'x' => 4, 'y' => 1, 'l' => ''],
+                ['t' => 'r', 'open' => false, 'p' => [[1, 1], [5, 1], [5, 9]]],
+                ['t' => 'a', 'x' => 2, 'y' => 8, 'd' => 1],
+                ['t' => 'x', 'x' => 1, 'y' => 1],                                // bilinmeyen tür atılır
+                'metin',                                                          // dizi olmayan öğe atılır
+                ['t' => 'b', 'x' => 999999, 'y' => -999999, 'w' => 1, 'h' => 1],  // sayı sınırlanır
+            ],
+            'G' => ['w' => 9999, 'h' => 1, 'cell' => 'abc'],
+            'I' => ['firma' => 'Örnek <i>AŞ</i>', 'tarih' => '2026-10-20', 'notes' => [['t' => 'Not', 'b' => "Satır 1\nSatır 2"]], 'at' => str_repeat('a', 5000)],
+        ];
+    }
+
+    public function test_3b_kaydet_veriyi_temizler_ve_png_saklar(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(KrokiSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('kaydet3b', $this->veri3b(), $this->png())
+            ->assertNotified('3B kroki kaydedildi');
+
+        $k = AcilDurumKrokisi::where('firma_id', $firma->id)->sole();
+        $b = $k->kroki3b;
+
+        $this->assertCount(9, $b['S']);                                   // x türü + düz metin atıldı
+        $this->assertSame('Atölye', $b['S'][0]['l']);                      // HTML temizlendi
+        $this->assertSame('CNC X', $b['S'][1]['l']);                       // tırnak temizlendi
+        $this->assertEquals(100000, $b['S'][8]['x']);                      // sayı sınırlandı
+        $this->assertSame([[1, 1], [5, 1], [5, 9]], $b['S'][6]['p']);      // rota noktaları korunur
+        $this->assertSame(['w' => 120, 'h' => 4, 'cell' => 0.5], $b['G']); // ızgara sınırlandı
+        $this->assertSame('Örnek AŞ', $b['I']['firma']);
+        $this->assertSame("Satır 1\nSatır 2", $b['I']['notes'][0]['b']);
+        $this->assertSame(600, mb_strlen($b['I']['at']));                  // uzun metin kısaltıldı
+        $this->assertTrue($k->kroki3bVar());
+        $this->assertNotNull($k->gorsel_yolu);
+        Storage::disk('public')->assertExists($k->gorsel_yolu);
+        // klasik editör alanlarına dokunulmaz
+        $this->assertSame([], $k->duvarlar);
+        $this->assertSame([], $k->semboller);
+
+        // Yeniden kayıtta eski PNG silinir; PNG olmayan veri dosya olarak yazılmaz
+        $eski = $k->gorsel_yolu;
+        $this->travel(2)->seconds();
+        Livewire::test(KrokiSayfasi::class)->set('firmaId', $firma->id)->call('kaydet3b', $this->veri3b(), $this->png());
+        Storage::disk('public')->assertMissing($eski);
+        $yeni = $k->fresh()->gorsel_yolu;
+        Livewire::test(KrokiSayfasi::class)->set('firmaId', $firma->id)->call('kaydet3b', $this->veri3b(), 'data:image/png;base64,'.base64_encode('<?php echo 1;'));
+        $this->assertSame($yeni, $k->fresh()->gorsel_yolu);
+    }
+
+    public function test_3b_asiri_buyuk_veri_reddedilir_ve_baska_firmaya_yazilamaz(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $baska = Firma::factory()->for(User::factory())->create();
+
+        $dev = ['S' => array_fill(0, 3000, ['t' => 'b', 'x' => 1, 'y' => 1, 'l' => str_repeat('m', 600), 'n' => str_repeat('m', 600)]), 'G' => [], 'I' => []];
+        Livewire::test(KrokiSayfasi::class)->set('firmaId', $firma->id)->call('kaydet3b', $dev)->assertNotified('Kroki verisi geçersiz veya çok büyük');
+        $this->assertNull(AcilDurumKrokisi::where('firma_id', $firma->id)->sole()->kroki3b);
+
+        Livewire::test(KrokiSayfasi::class)->set('firmaId', $baska->id)->call('kaydet3b', $this->veri3b());
+        $this->assertSame(0, AcilDurumKrokisi::where('firma_id', $baska->id)->count());
+    }
+
+    public function test_sayfa_varsayilan_3b_editoru_iframe_olarak_yukler_klasik_cizimli_firmada_klasik_acilir(): void
+    {
+        $yeni = Firma::factory()->for($this->uzman)->create(['unvan' => 'Yeni Kroki AŞ']);
+        $this->get(KrokiSayfasi::getUrl(['firma' => $yeni->id]))->assertOk()
+            ->assertSee('3B Editör')->assertSee('Klasik Editör (2B)')
+            ->assertSee('srcdoc=', false)->assertSee('Tahliye rotası')
+            ->assertDontSee('krokiEditoru', false)->assertDontSee('İSGCEO');
+
+        // Klasik editörde çizimi olan firma klasik açılır; 3B'ye geçilebilir
+        $klasik = Firma::factory()->for($this->uzman)->create();
+        AcilDurumKrokisi::firmaIcin($klasik)->update(['duvarlar' => [['x1' => 1, 'y1' => 1, 'x2' => 9, 'y2' => 1]]]);
+        $this->get(KrokiSayfasi::getUrl(['firma' => $klasik->id]))->assertOk()->assertSee('krokiEditoru', false);
+
+        $c = Livewire::test(KrokiSayfasi::class)->set('firmaId', $klasik->id);
+        $c->assertSet('editor', 'klasik')->call('editorSec', '3b')->assertSet('editor', '3b')->assertSee('srcdoc=', false);
+        $c->set('firmaId', $yeni->id)->assertSet('editor', '3b');
+
+        // 3B verisi iframe'e kayıtlı çizim + firma bilgisiyle gider
+        $c->call('kaydet3b', $this->veri3b());
+        $veri = $c->instance()->kroki3bVerisi();
+        $this->assertSame('Yeni Kroki AŞ', $veri['bilgi']['firma']);
+        $this->assertCount(9, $veri['veri']['S']);
+    }
+
+    public function test_3b_yonetmelik_kontrolu_ve_hazirlik_plan_kontrolu(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['adres' => 'Merkez', 'isveren_ad' => 'Ali Veli']);
+        $kroki = AcilDurumKrokisi::firmaIcin($firma);
+        $plan = AcilDurumPlani::firmaIcin($firma);
+
+        // Eksik 3B çizim: yalnız çıkış + tüp
+        $kroki->update(['kroki3b' => ['S' => [['t' => 's', 'k' => 'E001'], ['t' => 's', 'k' => 'F001']], 'G' => [], 'I' => []]]);
+        $kroki = $kroki->fresh();
+        $this->assertSame(['İlk yardım malzemesi (Md.12/1-f-2)', 'Kaçış yolu / yönü (Md.12/1-f-3) — rota veya en az 3 yön oku', 'Toplanma yeri (Md.12/1-f-3)'], $kroki->eksikZorunluUnsurlar());
+        $k = collect(AcilDurumHazirlik::kontrol($plan->fresh())['kontroller'])->keyBy('baslik');
+        $this->assertFalse($k['Tahliye krokisi']['tamam']);
+        $this->assertStringContainsString('Krokide eksik', $k['Tahliye krokisi']['aciklama']);
+
+        // Tam 3B çizim: zorunlu unsurlar tamam, plan "Tahliye krokisi" tamam
+        $kroki->update(['kroki3b' => $this->veri3b()]);
+        $this->assertSame([], $kroki->fresh()->eksikZorunluUnsurlar());
+        $k = collect(AcilDurumHazirlik::kontrol($plan->fresh())['kontroller'])->keyBy('baslik');
+        $this->assertTrue($k['Tahliye krokisi']['tamam']);
+
+        // Ok ile kaçış yönü (rota yok, 3 ok)
+        $oklu = $this->veri3b();
+        $oklu['S'] = array_values(array_filter($oklu['S'], fn ($o) => is_array($o) && ($o['t'] ?? null) !== 'r'));
+        $oklu['S'][] = ['t' => 'a', 'x' => 1, 'y' => 1, 'd' => 0];
+        $oklu['S'][] = ['t' => 'a', 'x' => 2, 'y' => 1, 'd' => 0];
+        $kroki->update(['kroki3b' => $oklu]);
+        $this->assertTrue($kroki->fresh()->yonetmelikKontrolu3b()['kacis']['var']);
+
+        // Sayfa 3B kontrolünü gösterir
+        $this->get(KrokiSayfasi::getUrl(['firma' => $firma->id, 'editor' => '3b']))->assertOk()->assertSee('kayıtlı 3B krokiye göre');
     }
 
     public function test_plan_tahliye_sayfasi_gorsel_yoksa_kayitli_kroki_goruntusunu_kullanir(): void

@@ -16,6 +16,69 @@
     </div>
 
     @if ($this->firma)
+        {{-- Editör seçimi: 3B (izometrik, yeni) / Klasik (2B). İkisi yan yana; kayıtlı klasik krokiler korunur. --}}
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+            @foreach (['3b' => '3B Editör', 'klasik' => 'Klasik Editör (2B)'] as $anahtar => $ad)
+                <button type="button" wire:click="editorSec('{{ $anahtar }}')"
+                    style="{{ $btn }};{{ $editor === $anahtar ? 'background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700' : '' }}">{{ $ad }}</button>
+            @endforeach
+            @if ($editor === '3b' && $this->kroki()->kroki3bVar() === false && (count($this->kroki()->semboller ?? []) > 0 || count($this->kroki()->duvarlar ?? []) > 0))
+                <span style="font-size:.74rem;color:rgb(107 114 128)">Bu firmanın klasik editörde kayıtlı çizimi var — "Klasik Editör" sekmesinden açılır.</span>
+            @endif
+        </div>
+
+        @if ($editor === '3b')
+            @php
+                $k3 = $this->kroki();
+                $unsurlar3 = $k3->kroki3bVar() ? $k3->yonetmelikKontrolu3b() : [];
+                $eksik3 = collect($unsurlar3)->filter(fn ($u) => $u['zorunlu'] && ! $u['var'])->count();
+            @endphp
+            @if ($unsurlar3)
+                <div style="{{ $kutu }};font-size:.78rem">
+                    <div style="font-weight:600;margin-bottom:.35rem">
+                        Yönetmelik kontrolü (Acil Durumlar Yön. Md.12/1-f) —
+                        @if ($eksik3) <span style="color:#dc2626">{{ $eksik3 }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
+                        <span style="font-weight:400;color:rgb(107 114 128)">· kayıtlı 3B krokiye göre</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">
+                        @foreach ($unsurlar3 as $u)
+                            <span style="color:{{ $u['var'] ? '#16a34a' : ($u['zorunlu'] ? '#dc2626' : 'rgb(107 114 128)') }}">{{ $u['var'] ? '✓' : ($u['zorunlu'] ? '✗' : '○') }} {{ $u['baslik'] }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- 3B editör: yalıtılmış iframe (kendi CSS/JS'i). Çizim ve PNG postMessage ile gelir, kaydet3b'ye gider. --}}
+            <div wire:ignore wire:key="kroki3b-{{ $this->firma->id }}"
+                x-data="{
+                    kaydediliyor: false, degisti: false,
+                    gonder() {
+                        this.$refs.cerceve.contentWindow.postMessage({
+                            tip: 'yukle', ...@js($this->kroki3bVerisi()),
+                            tema: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+                        }, '*');
+                    },
+                    mesaj(e) {
+                        if (e.source !== this.$refs.cerceve.contentWindow) { return; }
+                        const m = e.data || {};
+                        if (m.tip === 'hazir') { this.gonder(); }
+                        else if (m.tip === 'degisti') { this.degisti = true; }
+                        else if (m.tip === 'kaydet') {
+                            this.kaydediliyor = true;
+                            this.$wire.kaydet3b(m.veri, m.png).then(() => { this.degisti = false; }).finally(() => { this.kaydediliyor = false; });
+                        }
+                    },
+                }"
+                x-on:message.window="mesaj($event)">
+                <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.3rem">
+                    Çizimi bitirince editördeki <strong>Dosya → Kroki'yi kaydet</strong> düğmesine basın.
+                    <span x-show="degisti && !kaydediliyor" style="color:#d97706;font-weight:600">· Kaydedilmemiş değişiklik var</span>
+                    <span x-show="kaydediliyor" style="color:#2563eb;font-weight:600">· Kaydediliyor…</span>
+                </div>
+                <iframe x-ref="cerceve" title="3B Acil Durum Kroki Editörü" srcdoc="{{ $this->editor3bHtml }}"
+                    style="width:100%;height:calc(100vh - 260px);min-height:640px;border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;background:#fff"></iframe>
+            </div>
+        @else
         @php $unsurlar = $this->kroki()->yonetmelikKontrolu(); $eksikSayi = collect($unsurlar)->filter(fn ($u) => $u['zorunlu'] && ! $u['var'])->count(); @endphp
         <div style="{{ $kutu }};font-size:.78rem">
             <div style="font-weight:600;margin-bottom:.35rem">
@@ -473,6 +536,7 @@
                 </div>
             </div>
         </div>
+        @endif
     @else
         <p style="color:rgb(107 114 128);margin-top:1rem">Kroki çizmek için önce bir firma seçin.</p>
     @endif
