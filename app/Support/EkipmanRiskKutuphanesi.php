@@ -106,7 +106,7 @@ class EkipmanRiskKutuphanesi
         $sayfa = $kitap->getSheetByName($yontem === 'hazop' ? 'HAZOP' : 'Risk Analizi') ?? $kitap->getSheet(0);
         $satirlar = $sayfa->toArray(null, true, false, false);
 
-        [$baslikSatiri, $sutun] = static::baslikBul($satirlar, self::ZORUNLU[$yontem]);
+        [$baslikSatiri, $sutun] = static::baslikBul($satirlar, self::ZORUNLU[$yontem], $yontem === 'matris_5x5');
         if ($baslikSatiri === null) {
             throw new RuntimeException(static::tanimadiMesaji($yontem, $satirlar));
         }
@@ -377,10 +377,10 @@ class EkipmanRiskKutuphanesi
      * @param  array<int, string>  $zorunlu
      * @return array{0: ?int, 1: array<string, int>}
      */
-    private static function baslikBul(array $satirlar, array $zorunlu): array
+    private static function baslikBul(array $satirlar, array $zorunlu, bool $ikinciBlok = false): array
     {
         foreach (array_slice($satirlar, 0, 20, true) as $i => $r) {
-            $sutun = static::sutunlar($r);
+            $sutun = static::sutunlar($r, $ikinciBlok);
 
             if (count(array_intersect($zorunlu, array_keys($sutun))) === count($zorunlu)) {
                 return [$i, $sutun];
@@ -391,20 +391,30 @@ class EkipmanRiskKutuphanesi
     }
 
     /**
+     * Başlık "O (1–5)" gibi ölçek ifadesi taşıyabilir; ölçek kırpılarak eşlenir.
+     * $ikinciBlok: 5x5 şablonunda ikinci O/Ş bloğu önlem sonrası (artık) risk olur.
+     *
      * @param  array<int, mixed>  $r
      * @return array<string, int>
      */
-    private static function sutunlar(array $r): array
+    private static function sutunlar(array $r, bool $ikinciBlok = false): array
     {
         $sutun = [];
         foreach ($r as $c => $deger) {
             $n = mb_strtolower(strtr(static::temiz($deger), ['I' => 'ı', 'İ' => 'i']));
+            $n = trim(preg_replace('/\s*\(\s*\d+\s*[–-]\s*\d+\s*\)$/u', '', $n));
             foreach (self::BASLIKLAR as $alan => $esler) {
-                if (! isset($sutun[$alan]) && in_array($n, $esler, true)) {
-                    $sutun[$alan] = $c;
-
-                    continue 2;
+                if (! in_array($n, $esler, true)) {
+                    continue;
                 }
+
+                if (! isset($sutun[$alan])) {
+                    $sutun[$alan] = $c;
+                } elseif ($ikinciBlok && in_array($alan, ['olasilik', 'frekans', 'siddet'], true) && ! isset($sutun['son_'.$alan])) {
+                    $sutun['son_'.$alan] = $c;
+                }
+
+                continue 2;
             }
         }
 

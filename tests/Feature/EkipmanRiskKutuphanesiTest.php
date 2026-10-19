@@ -248,6 +248,22 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         EkipmanRiskKutuphanesi::oku($this->excel([$this->satir(1, 'Kenar', 'Devrilme')]), null, 'matris_5x5');
     }
 
+    public function test_matris_5x5_olcekli_basliklar_ve_ikinci_risk_blogu_taninir(): void
+    {
+        // Firma risk analizi düzeni: "O (1–5)" / "Ş (1–5)" başlıkları, ikinci blok önlem sonrası risk.
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('Sayfa1');
+        $s->fromArray(['NO', 'BÖLÜM/ EKİPMAN', 'TEHLİKE KAYNAĞI', 'RİSK/SONUÇ', 'ETKİLENEN', 'O (1–5)', 'Ş (1–5)', '—', 'RİSK PUANI', 'RİSK DÜZEYİ', 'AÇIKLAMA', 'ALINACAK ÖNLEMLER', 'O (1–5)', 'Ş (1–5)', '—', 'RİSK PUANI', 'RİSK DÜZEYİ', 'SORUMLU', 'TERMİN'], null, 'A4');
+        $s->fromArray([1, 'Temel İSG Eğitimi', 'Eğitim verilmemesi', 'Bilinmeyen tehlike', 'Tüm çalışanlar', 3, 5, '—', '=F5*G5', '', 'Açıklama', 'Eğitim verilir', 1, 5, '—', '=M5*N5', '', 'İşveren', 'Sürekli'], null, 'A5');
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-olcekli.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $m = EkipmanRiskKutuphanesi::oku($yol, null, 'matris_5x5')[0]['maddeler'][0];
+
+        $this->assertSame([3.0, 3.0, 30.0], [$m['olasilik'], $m['frekans'], $m['siddet']]);
+        $this->assertSame([0.2, 0.5, 30.0], [$m['son_olasilik'], $m['son_frekans'], $m['son_siddet']]);
+    }
+
     private function hazopExcel(): string
     {
         $kitap = new Spreadsheet;
