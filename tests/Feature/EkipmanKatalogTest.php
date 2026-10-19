@@ -83,6 +83,86 @@ class EkipmanKatalogTest extends TestCase
         }
     }
 
+    /** ISG_Ekipman_Degerlendirme_Araci.html karşılaştırmasında eksik çıkan ekipmanlar (19.10.2026). */
+    private const YENI_EKIPMANLAR = [
+        'kaldirma_iletme' => [
+            'Araç Üstü Yüksek Platform (Sepetli Platform / Cherry Picker)', 'Gondol (Asılı Çalışma Platformu)',
+            'Seyyar Yük Kaldırma Lifti (Sepetli Vinç / Mobilya Asansörü)',
+        ],
+        'diger_ekipman' => [
+            'Düşmeyi Önleyici Ekipman (Yaşam Hattı / Emniyet Kemeri)', 'Traktör', 'Greyder', 'Transmikser (Beton Mikseri Kamyonu)',
+            'Mobil Beton Pompası', 'Sabit Beton Pompası', 'Beton Vibratörü', 'Beton Karıştırıcı (Mikser)',
+            'Fore Kazık / Kazık Çakma / Sondaj Makinesi', 'Konsolidasyon Ekipmanı (Drenaj / Zemin İyileştirme)',
+            'Asfalt Finişeri / Distribütörü (Yol Kaplama)', 'Lowbed (Ağır Yük Taşıyıcı Dorse)',
+        ],
+        'uretim_atolye' => [
+            'Hidrolik Pres', 'El Matkabı / Darbeli Matkap / Tornavida', 'Avuç Taşlama (Spiral)', 'Dekupaj / El Tipi Daire Testere',
+            'Kırıcı / Delici (Jack Hammer)', 'Ark Kaynak / Tig / Plazma Kesme Makinesi',
+            'Isı Makineleri (Sıcak Hava Tabancası / Havya / PVC Kaynak)', 'Uzatma Kablosu / Kablo Makarası', 'Seyyar Transformatör ve Vantilatör',
+        ],
+    ];
+
+    public function test_ekipman_degerlendirme_araci_ekipmanlari_katalogda_formlu_ve_gruplu_gelir(): void
+    {
+        $gruplar = config('isg.periyodik_kontrol.tipler');
+        $formlar = collect(config('isg.haftalik_ekipman_kontrol.tipler'))->keyBy('ad');
+        $toplam = 0;
+
+        foreach (self::YENI_EKIPMANLAR as $grup => $tipler) {
+            foreach ($tipler as $tip) {
+                $toplam++;
+                $kayit = collect($gruplar[$grup])->firstWhere('ad', $tip);
+                $this->assertNotNull($kayit, "$grup grubunda yok: $tip");
+                $this->assertNotEmpty($kayit['standart']);
+                $this->assertSame(1, collect($gruplar[$grup])->where('ad', $tip)->count(), "Çift kayıt: $tip");
+
+                $katalog = EkipmanKatalogu::tanim($tip);
+                $this->assertNotNull($katalog, "Katalogda yok: $tip");
+                $this->assertNotNull($katalog['kontrol_formu'], "Kontrol formu bağı yok: $tip");
+
+                $form = $formlar[$katalog['kontrol_formu']] ?? null;
+                $this->assertNotNull($form, "Kontrol formu bulunamadı: {$katalog['kontrol_formu']}");
+                $sorular = $form['sorular'] ?? collect($form['satirlar'] ?? [])->where('no')->all();
+                $this->assertGreaterThanOrEqual(6, count($sorular), $katalog['kontrol_formu']);
+            }
+        }
+        $this->assertSame(24, $toplam);
+
+        // Yeni açılan kontrol formu soruları soru işaretiyle biter ve tekrar etmez
+        foreach (self::YENI_EKIPMANLAR as $tipler) {
+            foreach ($tipler as $tip) {
+                $form = $formlar[EkipmanKatalogu::tanim($tip)['kontrol_formu']];
+                if ($form['ad'] !== $tip || empty($form['sorular'])) {
+                    continue;   // mevcut formla bağlanan tip
+                }
+                foreach ($form['sorular'] as $soru) {
+                    $this->assertStringEndsWith('?', $soru, $form['ad']);
+                }
+                $this->assertSame(count($form['sorular']), count(array_unique($form['sorular'])), $form['ad'].' tekrarlı soru');
+            }
+        }
+    }
+
+    public function test_yeni_ekipmanlar_sayfadan_eklenir_formlari_ve_vize_durumu_dogru(): void
+    {
+        Livewire::test(PeriyodikKontrolSayfasi::class)->set('firmaId', $this->firma->id)
+            ->callAction('yeniEkipman', ['kategori' => 'uretim_atolye', 'tip' => 'Hidrolik Pres', 'ekipman_adi' => 'Pres-1'])->assertHasNoActionErrors()
+            ->callAction('yeniEkipman', ['kategori' => 'kaldirma_iletme', 'tip' => 'Gondol (Asılı Çalışma Platformu)', 'ekipman_adi' => 'Gondol-1'])->assertHasNoActionErrors()
+            ->callAction('yeniEkipman', ['kategori' => 'diger_ekipman', 'tip' => 'Traktör', 'ekipman_adi' => 'Traktör-1'])->assertHasNoActionErrors();
+
+        $this->assertSame('muaf', IsEkipmani::where('ekipman_adi', 'Pres-1')->sole()->vizeDurumu());
+        $this->assertSame('muaf', IsEkipmani::where('ekipman_adi', 'Traktör-1')->sole()->vizeDurumu());
+        $this->assertSame('Kaldırma & İletme Araçları', IsEkipmani::where('ekipman_adi', 'Gondol-1')->sole()->kategori_adi);
+
+        $adlar = collect(EkipmanKatalogu::kontrolFormuIndeksleri($this->firma))
+            ->map(fn ($i) => config('isg.haftalik_ekipman_kontrol.tipler')[$i]['ad'])->sort()->values()->all();
+        $this->assertSame(['Gondol (Asılı Çalışma Platformu)', 'Hidrolik Pres', 'Traktör'], $adlar);
+
+        Livewire::test(PeriyodikKontrolSayfasi::class)->set('firmaId', $this->firma->id)
+            ->callAction('kontrolFormu')->assertFileDownloaded();
+        $this->assertCount(3, GunlukEkipmanKontrolUretici::sayfalar($this->firma));
+    }
+
     public function test_torna_eklenince_kendi_52_maddesi_eksik_gorunur(): void
     {
         $this->torna();

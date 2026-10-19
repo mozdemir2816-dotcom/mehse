@@ -598,7 +598,7 @@ class SahaDenetimiTest extends TestCase
         // gruplu U/UD/Y/X ya da kabul kriterli ✓/X/-) + kullanıcının 14.10.2026'da onayladığı 3 AI formu
         // (Matkap, Kesme Tezgâhı, Gaz Tüpü — artık taslak değil, düz 12 soru).
         $kullaniciFormlari = $tipler->filter(fn ($t) => filled($t['form_no'] ?? null));
-        $this->assertCount(44, $tipler->filter(fn ($t) => blank($t['form_no'] ?? null)));
+        $this->assertCount(60, $tipler->filter(fn ($t) => blank($t['form_no'] ?? null))); // 44 + 16 yeni (Ekipman Değerlendirme Aracı, 19.10.2026)
         $this->assertSame([], $tipler->where('taslak', true)->pluck('ad')->all());
         $this->assertCount(17, $kullaniciFormlari); // 18 talimat; ekstrüzyonda eski+yeni talimat, tek (yeni) form; +4 havalandırma/sac (14.10.2026)
         $this->assertSame($tipler->count(), $tipler->pluck('ad')->unique()->count(), 'form adları tekil olmalı');
