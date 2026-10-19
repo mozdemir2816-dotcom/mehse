@@ -374,6 +374,53 @@
             @endif
         </x-filament::section>
 
+        {{-- ÖNCEKİ TOPLANTILARDAN DEVREDEN KARARLAR --}}
+        @php $devreden = $t->devredenKararlar(); @endphp
+        @if ($devreden)
+            <x-filament::section icon="heroicon-o-arrow-path">
+                <x-slot name="heading">Önceki toplantılardan devreden kararlar ({{ count($devreden) }})</x-slot>
+                <x-slot name="description">Kapanmamış kararlar otomatik gelir. Bu toplantıdaki durumu ve görüşme notunu girin; tutanağa işlenir, "Tamamlandı" yapılan karar sonraki toplantılara devretmez.</x-slot>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                                <th class="px-3 py-2 text-left">Alındığı toplantı</th>
+                                <th class="px-3 py-2 text-left">Karar</th>
+                                <th class="px-3 py-2 text-left">Sorumlu</th>
+                                <th class="px-3 py-2 text-left">Termin</th>
+                                <th class="px-3 py-2 text-left">Bu toplantıdaki durum</th>
+                                <th class="px-3 py-2 text-left">Görüşme notu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($devreden as $d)
+                                <tr wire:key="devreden-{{ $d['kaynak_id'] }}-{{ $d['id'] }}" style="border-top:1px solid var(--border-light);background:rgb(251 191 36 / .07)">
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $d['kaynak_no'] ?: '—' }}<br><span style="font-size:.72rem;color:var(--text-secondary)">{{ $d['kaynak_tarih']?->format('d.m.Y') }}</span></td>
+                                    <td class="px-3 py-2">@if ($d['gundem'])<span style="font-size:.72rem;color:var(--text-secondary)">{{ $d['gundem'] }}</span><br>@endif{{ $d['karar'] }}</td>
+                                    <td class="px-3 py-2">{{ $d['sorumlu'] ?: '—' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap" @if ($d['gecikti']) style="color:#dc2626;font-weight:600" @endif>
+                                        {{ filled($d['termin']) ? \Illuminate\Support\Carbon::parse($d['termin'])->format('d.m.Y') : '—' }}
+                                        @if ($d['gecikti'])<br><span style="font-size:.72rem">süresi geçti</span>@endif
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <select x-on:change="$wire.devredenDurum({{ $d['kaynak_id'] }}, '{{ $d['id'] }}', $event.target.value)" style="{{ $girdi }};width:auto;padding:.25rem .45rem">
+                                            @foreach (\App\Models\KurulToplantisi::KARAR_DURUMLARI as $kod => $ad)
+                                                <option value="{{ $kod }}" @selected($d['durum'] === $kod)>{{ $ad }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <textarea x-on:change="$wire.devredenNotu({{ $d['kaynak_id'] }}, '{{ $d['id'] }}', $event.target.value)" rows="2" placeholder="Görüşme notu" style="{{ $girdi }};font-family:inherit;min-width:12rem">{{ $d['not'] }}</textarea>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        @endif
+
         {{-- KARARLAR --}}
         <x-filament::section icon="heroicon-o-check-circle">
             <x-slot name="heading">Kararlar ve takip ({{ count($t->kararlar ?? []) }})</x-slot>
@@ -403,7 +450,11 @@
                                             <option value="beklemede" @selected(($k['durum'] ?? '') === 'beklemede')>Beklemede</option>
                                             <option value="devam_ediyor" @selected(($k['durum'] ?? '') === 'devam_ediyor')>Devam ediyor</option>
                                             <option value="tamamlandi" @selected(($k['durum'] ?? '') === 'tamamlandi')>Tamamlandı</option>
+                                            <option value="ertelendi" @selected(($k['durum'] ?? '') === 'ertelendi')>Ertelendi</option>
                                         </select>
+                                        @if (filled($k['kapanis_tarihi'] ?? null) && ($k['durum'] ?? '') === 'tamamlandi')
+                                            <div style="font-size:.7rem;color:var(--text-secondary)">Kapanış: {{ \Illuminate\Support\Carbon::parse($k['kapanis_tarihi'])->format('d.m.Y') }}</div>
+                                        @endif
                                     </td>
                                     <td class="px-3 py-2 text-right whitespace-nowrap">
                                         <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="kararDuzenle({{ $i }})">Düzenle</x-filament::button>

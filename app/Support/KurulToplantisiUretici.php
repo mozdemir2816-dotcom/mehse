@@ -8,15 +8,15 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use PhpOffice\PhpWord\IOFactory as WordIO;
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\SimpleType\Jc;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpWord\IOFactory as WordIO;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\SimpleType\Jc;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -113,6 +113,27 @@ class KurulToplantisiUretici
         }
         $satir++;
 
+        // ÖNCEKİ TOPLANTILARDAN DEVREDEN KARARLAR (varsa)
+        $devreden = $toplanti->devredenKararlar();
+        if ($devreden) {
+            $satir = self::bolumBasligi($s, $satir, 'ÖNCEKİ TOPLANTILARDAN DEVREDEN KARARLAR');
+            $satir = self::tabloBasligi($s, $satir, ['#', 'Alındığı Toplantı', 'Karar Metni', 'Sorumlu', 'Termin', 'Bu Toplantıdaki Durum / Görüşme']);
+            foreach ($devreden as $i => $d) {
+                $s->fromArray([
+                    $i + 1,
+                    trim(($d['kaynak_no'] ?: '—').' '.($d['kaynak_tarih']?->format('d.m.Y') ?? '')),
+                    $d['karar'] ?: '—',
+                    $d['sorumlu'] ?: '—',
+                    filled($d['termin']) ? Carbon::parse($d['termin'])->format('d.m.Y') : '—',
+                    KurulToplantisi::devredenOzet($d),
+                ], null, "A{$satir}");
+                $s->getStyle("C{$satir}")->getAlignment()->setWrapText(true);
+                $s->getStyle("F{$satir}")->getAlignment()->setWrapText(true);
+                $satir++;
+            }
+            $satir++;
+        }
+
         // ALINAN KARARLAR — "Durum" sütunu yok
         $satir = self::bolumBasligi($s, $satir, 'ALINAN KARARLAR');
         $satir = self::tabloBasligi($s, $satir, ['#', 'İlgili Gündem', 'Karar Metni', 'Sorumlu', 'Termin']);
@@ -134,6 +155,7 @@ class KurulToplantisiUretici
         $s->getColumnDimension('C')->setWidth(70);
         $s->getColumnDimension('D')->setWidth(16);
         $s->getColumnDimension('E')->setWidth(14);
+        $s->getColumnDimension('F')->setWidth(34);
 
         $yazici = new Xlsx($kitap);
 
@@ -286,8 +308,28 @@ class KurulToplantisiUretici
             $t->addCell(9700)->addText($madde);
         }
 
-        // 2. sayfadan itibaren: kararlar
-        $bolum->addText('Kararlar ve Takip', $h2, ['pageBreakBefore' => true, 'spaceAfter' => 80]);
+        // 2. sayfadan itibaren: önceki toplantılardan devreden kararlar (varsa), sonra bu toplantının kararları
+        $devreden = $toplanti->devredenKararlar();
+        if ($devreden) {
+            $bolum->addText('Önceki Toplantılardan Devreden Kararlar', $h2, ['pageBreakBefore' => true, 'spaceAfter' => 80]);
+            $t = $bolum->addTable($kenar + ['width' => 100 * 50, 'unit' => 'pct']);
+            $t->addRow();
+            foreach ([['#', 500], ['Alındığı Toplantı', 1500], ['Karar Metni', 3800], ['Sorumlu', 1300], ['Termin', 1100], ['Durum / Görüşme', 2000]] as [$b, $g]) {
+                $t->addCell($g, $baslikHucre)->addText($b, $kalin);
+            }
+            foreach ($devreden as $i => $d) {
+                $t->addRow();
+                $t->addCell(500)->addText((string) ($i + 1), [], ['alignment' => Jc::CENTER]);
+                $t->addCell(1500)->addText(trim(($d['kaynak_no'] ?: '—').' '.($d['kaynak_tarih']?->format('d.m.Y') ?? '')));
+                $t->addCell(3800)->addText((string) ($d['karar'] ?: '—'));
+                $t->addCell(1300)->addText((string) ($d['sorumlu'] ?: '—'));
+                $t->addCell(1100)->addText(filled($d['termin']) ? Carbon::parse($d['termin'])->format('d.m.Y') : '—');
+                $t->addCell(2000)->addText(KurulToplantisi::devredenOzet($d));
+            }
+            $bolum->addText('Bu Toplantıda Alınan Kararlar', $h2, $h2p);
+        } else {
+            $bolum->addText('Kararlar ve Takip', $h2, ['pageBreakBefore' => true, 'spaceAfter' => 80]);
+        }
         $t = $bolum->addTable($kenar + ['width' => 100 * 50, 'unit' => 'pct']);
         $t->addRow();
         foreach ([['#', 500], ['İlgili Gündem', 2400], ['Karar Metni', 4500], ['Sorumlu', 1500], ['Termin', 1300]] as [$b, $g]) {

@@ -5,11 +5,12 @@ namespace App\Support;
 use App\Filament\Pages\AcilDurumPlani as AcilDurumPlaniSayfasi;
 use App\Filament\Pages\DokumanYonetimi;
 use App\Filament\Pages\KimyasalSicili;
+use App\Filament\Pages\KurulToplantisi;
 use App\Filament\Pages\PeriyodikKontrol as PeriyodikKontrolSayfasi;
-use App\Filament\Pages\RiskSihirbazi;
-use App\Filament\Pages\TalimatOlustur;
 use App\Filament\Pages\PkdSicili;
+use App\Filament\Pages\RiskSihirbazi;
 use App\Filament\Pages\SaglikGozetimi as SaglikGozetimiSayfasi;
+use App\Filament\Pages\TalimatOlustur;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
@@ -151,6 +152,14 @@ class BildirimTarayici
         $adEksik = EkipmanRiskEslesme::eksikEkipmanlar($firma);
         if ($adEksik->isNotEmpty()) {
             $ekle('ekipman_ad_risk', 'uyari', 'Envanterdeki ekipman risk analizinde yok', $adEksik->count().' ekipman: '.Str::limit($adEksik->pluck('ekipman_adi')->implode(', '), 140).'. Risk değerlendirmesine ekleyin ya da envanterden kaldırın.', null, $rdUrl);
+        }
+
+        // Kurul kararları: termini geçmiş ve kapanmamış (tamamlanmamış) kararlar
+        $gecikenKararlar = $firma->kurulToplantilari()->get()
+            ->flatMap(fn ($kt) => collect($kt->kararlar ?? [])
+                ->filter(fn ($k) => filled($k['termin'] ?? null) && ($k['durum'] ?? 'beklemede') !== 'tamamlandi' && $k['termin'] < $bugun->toDateString()));
+        if ($gecikenKararlar->isNotEmpty()) {
+            $ekle('kurul_karar_gecikme', 'uyari', 'Kurul kararlarında termini geçen iş var', $gecikenKararlar->count().' karar: '.Str::limit($gecikenKararlar->pluck('karar_metni')->take(3)->implode(' | '), 140).'. Kurul Toplantısı sayfasında durumunu güncelleyin.', null, static::url(fn () => KurulToplantisi::getUrl()));
         }
 
         $eksikTalimat = EkipmanKatalogu::eksikTalimatlar($firma);

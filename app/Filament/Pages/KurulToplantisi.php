@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\KurulToplantisi as KurulToplantisiModel;
 use App\Models\KurulUyesi;
+use App\Support\BagliKayitGuncelleyici;
 use App\Support\GeminiKararDanismani;
 use App\Support\KurulCagriUretici;
 use App\Support\KurulToplantisiUretici;
@@ -42,7 +44,7 @@ use UnitEnum;
  */
 class KurulToplantisi extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.kurul-toplantisi';
 
@@ -370,7 +372,7 @@ class KurulToplantisi extends Page
         foreach ($this->firma->kurulToplantilari()->get() as $t) {
             $degisti = false;
             $katilimcilar = collect($t->katilimcilar ?? [])->map(function (array $k) use ($eskiAd, $ad, $rol, &$degisti) {
-                if (! \App\Support\BagliKayitGuncelleyici::ayni($k['ad_soyad'] ?? '', $eskiAd)) {
+                if (! BagliKayitGuncelleyici::ayni($k['ad_soyad'] ?? '', $eskiAd)) {
                     return $k;
                 }
                 $degisti = true;
@@ -803,6 +805,7 @@ class KurulToplantisi extends Page
             'termin' => $this->yeniKararTermin,
             'durum' => 'beklemede',
         ];
+        // Tekil kimlik KurulToplantisi::saving() ile verilir.
         $t->update(['kararlar' => $kararlar]);
 
         $this->kararGundemIndex = null;
@@ -818,8 +821,25 @@ class KurulToplantisi extends Page
             return;
         }
 
+        if (! isset(KurulToplantisiModel::KARAR_DURUMLARI[$durum])) {
+            return;
+        }
+
         $kararlar[$index]['durum'] = $durum;
+        $kararlar[$index]['kapanis_tarihi'] = $durum === 'tamamlandi' ? now()->toDateString() : null;
         $t->update(['kararlar' => $kararlar]);
+    }
+
+    /** Devreden kararın bu toplantıdaki durumunu kaydeder (kaynak toplantının kararı güncellenir). */
+    public function devredenDurum(int $kaynakId, string $kararId, string $durum): void
+    {
+        $this->toplanti()?->devredenGuncelle($kaynakId, $kararId, $durum, null);
+    }
+
+    /** Devreden karar için bu toplantıdaki görüşme notu. */
+    public function devredenNotu(int $kaynakId, string $kararId, string $not): void
+    {
+        $this->toplanti()?->devredenGuncelle($kaynakId, $kararId, null, trim($not) !== '' ? trim($not) : null);
     }
 
     public function kararSil(int $index): void

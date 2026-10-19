@@ -127,8 +127,34 @@
     @endforelse
 </table>
 
-{{-- 2. SAYFADAN İTİBAREN: kararlar --}}
-<h2 style="page-break-before:always;margin-top:0">Kararlar ve Takip</h2>
+{{-- 2. SAYFADAN İTİBAREN: önceki toplantılardan devreden kararlar (varsa), sonra bu toplantının kararları --}}
+@php $devreden = $toplanti->devredenKararlar(); @endphp
+@if ($devreden)
+    <h2 style="page-break-before:always;margin-top:0">Önceki Toplantılardan Devreden Kararlar</h2>
+    <table class="liste">
+        <tr>
+            <th style="width:4%">#</th>
+            <th style="width:14%">Alındığı Toplantı</th>
+            <th>Karar Metni</th>
+            <th style="width:12%">Sorumlu</th>
+            <th style="width:10%">Termin</th>
+            <th style="width:22%">Bu Toplantıdaki Durum / Görüşme</th>
+        </tr>
+        @foreach ($devreden as $i => $d)
+            <tr>
+                <td class="ortala">{{ $i + 1 }}</td>
+                <td>{{ $d['kaynak_no'] ?: '—' }}<br>{{ $d['kaynak_tarih']?->format('d.m.Y') }}</td>
+                <td>{{ $d['karar'] ?: '—' }}</td>
+                <td>{{ $d['sorumlu'] ?: '—' }}</td>
+                <td style="white-space:nowrap">{{ filled($d['termin']) ? \Illuminate\Support\Carbon::parse($d['termin'])->format('d.m.Y') : '—' }}</td>
+                <td>{{ \App\Models\KurulToplantisi::devredenOzet($d) }}</td>
+            </tr>
+        @endforeach
+    </table>
+    <h2 style="margin-top:14px">Bu Toplantıda Alınan Kararlar</h2>
+@else
+    <h2 style="page-break-before:always;margin-top:0">Kararlar ve Takip</h2>
+@endif
 <table class="liste">
     <tr>
         <th style="width:4%">#</th>
