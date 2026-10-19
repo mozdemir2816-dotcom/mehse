@@ -42,32 +42,32 @@ class EkipmanRiskKutuphanesi
 
     /** Başlık (normalize) → alan. Mobil vinç dosyasındaki F/O/Ş düzeni de tanınır. */
     private const BASLIKLAR = [
-        'ekipman' => ['ekipman', 'ekipman / bölüm', 'düğüm / ekipman', 'düğüm'],
+        'ekipman' => ['ekipman', 'ekipman / bölüm', 'düğüm / ekipman', 'düğüm', 'düğüm / süreç'],
         'faaliyet' => ['faaliyet', 'bölüm / faaliyet'],
         'tehlike' => ['tehlike', 'tehlike / uygunsuzluk', 'tehlike / eksiklik', 'tehlike kaynağı'],
         'risk' => ['risk / sonuç', 'risk/sonuç', 'risk / olası sonuç'],
         'olasilik' => ['olasılık p', 'olasılık', 'o'],
         'frekans' => ['frekans f', 'frekans', 'f'],
         'siddet' => ['şiddet s', 'şiddet', 'ş'],
-        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon', 'alınacak önlemler'],
+        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon', 'alınacak önlemler', 'önerilen önlem / faaliyet'],
         'son_olasilik' => ['hedef p', 'hedef o'],
         'son_frekans' => ['hedef f'],
         'son_siddet' => ['hedef s', 'hedef ş'],
-        'sorumlu' => ['sorumlu', 'sorumlu rol'],
-        'termin' => ['önerilen termin', 'termin', 'hedef tarih'],
+        'sorumlu' => ['sorumlu', 'sorumlu rol', 'önerilen sorumlu'],
+        'termin' => ['önerilen termin', 'termin', 'hedef tarih', 'termin tarihi'],
         'd_standart' => ['standart dayanağı', 'standart / teknik dayanak'],
         'd_makina' => ['makina emniyeti dayanağı'],
         'd_ekipman' => ['iş ekipmanları dayanağı'],
         // HAZOP
-        'parametre' => ['parametre'],
+        'parametre' => ['parametre', 'parametre / işlem'],
         'kilavuz' => ['kılavuz sözcük', 'kılavuz kelime'],
         'sapma' => ['sapma'],
         'neden' => ['olası nedenler', 'nedenler', 'neden'],
-        'sonuc' => ['olası sonuçlar', 'sonuçlar', 'sonuç'],
-        'korumalar' => ['sahada araştırılacak korumalar', 'doğrulanacak korumalar'],
+        'sonuc' => ['olası sonuçlar', 'sonuçlar', 'sonuç', 'olası sonuç / etkilenen'],
+        'korumalar' => ['sahada araştırılacak korumalar', 'doğrulanacak korumalar', 'mevcut koruma / kanıt durumu'],
         'oncelik' => ['öncelik'],
-        'kapanis' => ['kapanış kanıtı', 'kapanış / doğrulama kanıtı'],
-        'durum' => ['durum'],
+        'kapanis' => ['kapanış kanıtı', 'kapanış / doğrulama kanıtı', 'kapanış için doğrulama'],
+        'durum' => ['durum', 'faaliyet durumu'],
     ];
 
     private const ZORUNLU = [

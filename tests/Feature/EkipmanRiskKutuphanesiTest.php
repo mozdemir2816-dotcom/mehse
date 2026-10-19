@@ -330,6 +330,31 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         $this->assertSame('Açık', $m['hazop']['durum']);
     }
 
+    public function test_hazop_firma_duzeni_basliklari_taninir(): void
+    {
+        // 18.10 kaynak HAZOP dosyaları: "Düğüm / Süreç", "Parametre / İşlem", "Önerilen Önlem / Faaliyet" başlıkları.
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('HAZOP');
+        $s->fromArray(['HAZOP / Kaynak No', 'Düğüm / Süreç', 'Tasarım / İşletme Amacı', 'Parametre / İşlem', 'Kılavuz Kelime', 'Sapma', 'Olası Nedenler', 'Olası Sonuç / Etkilenen', 'Mevcut Koruma / Kanıt Durumu', 'Önerilen Önlem / Faaliyet', 'Kapanış İçin Doğrulama', 'Önerilen Sorumlu', 'Hedef / Termin Kuralı', 'Termin Tarihi', 'Faaliyet Durumu', 'Kapanış Kanıtı / Tarihi'], null, 'A6');
+        $s->fromArray([
+            ['1', 'Acil durum ekipleri', 'Ekip', 'Ekip organizasyonu', 'YOK', 'Ekiplerin oluşturulmaması', 'Görevlendirme yok', 'Tahliye yapılamaz', 'Ekip listesi', 'Ekip kur.', 'Liste', 'İşveren', 'Sürekli', 'Atanacak', 'Açık', ''],
+        ], null, 'A7');
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-firma-hazop.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $gruplar = EkipmanRiskKutuphanesi::oku($yol, null, 'hazop');
+
+        $this->assertSame('HAZOP – Acil durum ekipleri', $gruplar[0]['kategori_adi']);
+        $m = $gruplar[0]['maddeler'][0];
+        $this->assertSame('Ekiplerin oluşturulmaması', $m['tehlike']);
+        $this->assertSame('Ekip organizasyonu / YOK', $m['faaliyet']);
+        $this->assertSame('İşveren', $m['sorumlu']);
+        $this->assertSame('Atanacak', $m['termin']);
+        $this->assertStringContainsString('Tahliye yapılamaz', $m['risk']);
+        $this->assertStringContainsString('Ekip kur.', $m['oneri']);
+        $this->assertStringContainsString('Ekip listesi', $m['oneri']);
+    }
+
     public function test_sayfada_hazop_secilince_hazop_okunur(): void
     {
         Livewire::test(EkipmanRiskYukle::class)
