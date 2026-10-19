@@ -16,6 +16,7 @@ class Tehlike extends Model
 
     protected $casts = [
         'hazop' => 'array',
+        'matris' => 'array',
     ];
 
     public function kategori(): BelongsTo

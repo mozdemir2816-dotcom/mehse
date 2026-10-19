@@ -222,9 +222,8 @@ class EkipmanKatalogu
         $eklenen = 0;
 
         foreach (Tehlike::query()->whereIn('id', $eklenecekIds)->orderBy('kod')->orderBy('id')->get() as $t) {
-            $m = RiskKutuphanesi::maddeyeCevir($t);
-            [$o, $s] = $fk ? [$m['olasilik'], $m['siddet']] : RiskYontemDonusturucu::fineKinneyDegeriniMatrise($m['olasilik'], $m['siddet']);
-            [$so, $ss] = $fk ? [$m['son_olasilik'], $m['son_siddet']] : RiskYontemDonusturucu::fineKinneyDegeriniMatrise($m['son_olasilik'], $m['son_siddet']);
+            $m = RiskKutuphanesi::maddeyeCevir($t, $rd->yontem);
+            [$o, $s, $so, $ss] = [$m['olasilik'], $m['siddet'], $m['son_olasilik'], $m['son_siddet']];
 
             $rd->maddeler()->create([
                 'sira' => ++$sira,

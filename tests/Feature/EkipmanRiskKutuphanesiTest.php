@@ -11,6 +11,7 @@ use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\EkipmanKatalogu;
 use App\Support\EkipmanRiskKutuphanesi;
+use App\Support\RiskKutuphanesi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -226,6 +227,27 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         (new Xlsx($kitap))->save($yol);
 
         return $yol;
+    }
+
+    public function test_matris_5x5_kaynak_degerleri_5x5_degerlendirmeye_aynen_gelir(): void
+    {
+        $yol = $this->matrisExcel([[1, 'Silindir', 'Kenar', 'Devrilme', 'Ölüm', 3, 5, 15, 'Kenar işaretlenir.', 1, 5, 'Şef', 'Hemen']]);
+        $maddeler = EkipmanRiskKutuphanesi::oku($yol, null, 'matris_5x5')[0]['maddeler'];
+        $kategori = EkipmanRiskKutuphanesi::kaydet('Silindir 5x5', $maddeler)['kategori'];
+        $t = Tehlike::where('tehlike_kategorisi_id', $kategori->id)->sole();
+
+        // Kütüphane FK ölçeğinde (hedef O 0,2); 5x5'e geri dönüş 2 değil, kaynak 1 olmalı.
+        $this->assertSame(0.2, (float) $t->son_olasilik);
+        $m = RiskKutuphanesi::maddeyeCevir($t, 'matris_5x5');
+        $this->assertSame([3, 5, 1, 5], array_map('intval', [$m['olasilik'], $m['siddet'], $m['son_olasilik'], $m['son_siddet']]));
+        $this->assertNull($m['frekans']);
+
+        // Kaynak 5x5 değeri olmayan (eski) maddede ölçek eşlemesine düşer.
+        $t->update(['matris' => null]);
+        $this->assertSame(2, (int) RiskKutuphanesi::maddeyeCevir($t->fresh(), 'matris_5x5')['son_olasilik']);
+
+        // Fine-Kinney değerlendirmede dokunulmaz.
+        $this->assertSame(30.0, RiskKutuphanesi::maddeyeCevir($t->fresh(), 'fine_kinney')['siddet']);
     }
 
     public function test_matris_5x5_puanlari_kutuphane_olcegine_cevrilir(): void

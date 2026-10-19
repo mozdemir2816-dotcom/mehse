@@ -71,11 +71,15 @@ class RiskKutuphanesi
     /**
      * Kütüphane tehlikesini sihirbaz "seçilen madde" dizisine çevirir.
      *
+     * Kütüphane puanları Fine-Kinney ölçeğindedir; $yontem 'matris_5x5' ise O/Ş 1-5 ölçeğine
+     * çevrilir (5x5 Excel'inden yüklenmişse kaynak değerler aynen, yoksa ölçek eşlemesiyle)
+     * ve frekans boş bırakılır.
+     *
      * @return array<string, mixed>
      */
-    public static function maddeyeCevir(Tehlike $t): array
+    public static function maddeyeCevir(Tehlike $t, ?string $yontem = null): array
     {
-        return [
+        $madde = [
             'anahtar' => 'lib-'.$t->id.'-'.substr(md5(uniqid('', true)), 0, 6),
             'kaynak' => 'kutuphane',
             'tehlike_id' => $t->id,
@@ -101,6 +105,20 @@ class RiskKutuphanesi
             // HAZOP senaryosunun Excel hücre metinleri (puansız çıktı bunlardan basılır).
             'hazop' => $t->hazop,
         ];
+
+        if ($yontem === 'matris_5x5') {
+            [$o, $s] = RiskYontemDonusturucu::fineKinneyDegeriniMatrise($madde['olasilik'], $madde['siddet']);
+            [$so, $ss] = RiskYontemDonusturucu::fineKinneyDegeriniMatrise($madde['son_olasilik'], $madde['son_siddet']);
+            $kaynak = $t->matris ?? [];
+
+            $madde['olasilik'] = $kaynak['olasilik'] ?? $o;
+            $madde['siddet'] = $kaynak['siddet'] ?? $s;
+            $madde['son_olasilik'] = $kaynak['son_olasilik'] ?? $so;
+            $madde['son_siddet'] = $kaynak['son_siddet'] ?? $ss;
+            $madde['frekans'] = $madde['son_frekans'] = null;
+        }
+
+        return $madde;
     }
 
     /** Boş (elle doldurulacak) madde iskeleti. */

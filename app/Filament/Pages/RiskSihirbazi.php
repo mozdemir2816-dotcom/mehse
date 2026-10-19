@@ -370,7 +370,7 @@ class RiskSihirbazi extends Page
         $t = Tehlike::find($tehlikeId);
 
         if ($t) {
-            $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t);
+            $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t, $this->yontem);
         }
     }
 
@@ -378,7 +378,7 @@ class RiskSihirbazi extends Page
     {
         foreach (RiskKutuphanesi::grupTehlikeleri($kategoriId) as $t) {
             if (! $this->tehlikeSecili($t->id)) {
-                $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t);
+                $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t, $this->yontem);
             }
         }
     }

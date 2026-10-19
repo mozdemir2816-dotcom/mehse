@@ -242,7 +242,7 @@ class MaddelerRelationManager extends RelationManager
                             // Kütüphane maddesinin tüm alanları (HAZOP, O/F/Ş, son puanlar, tehlike_id) taşınır.
                             $sira++;
                             $satirlar[] = array_merge(
-                                collect(RiskKutuphanesi::maddeyeCevir($t))->except('anahtar', 'kaynak')->all(),
+                                collect(RiskKutuphanesi::maddeyeCevir($t, $this->getOwnerRecord()->yontem))->except('anahtar', 'kaynak')->all(),
                                 [
                                     'risk_degerlendirmesi_id' => $this->getOwnerRecord()->id,
                                     'sira' => $sira,

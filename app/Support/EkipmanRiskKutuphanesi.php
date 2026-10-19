@@ -213,12 +213,16 @@ class EkipmanRiskKutuphanesi
         [$o, $f, $s] = [static::puan($r, $sutun, 'olasilik'), static::puan($r, $sutun, 'frekans'), static::puan($r, $sutun, 'siddet')];
         [$so, $sf, $ss] = [static::puan($r, $sutun, 'son_olasilik'), static::puan($r, $sutun, 'son_frekans'), static::puan($r, $sutun, 'son_siddet')];
 
+        $matris = null;
+
         if ($yontem === 'matris_5x5') {
             foreach ([$o, $s, $so, $ss] as $deger) {
                 if ($deger !== null && ($deger < 1 || $deger > 5)) {
                     throw new RuntimeException('5x5 L Matris puanları 1-5 arasında olmalı ("'.Str::limit($hucre('tehlike'), 60).'" satırında '.$deger.' var). Dosya Fine-Kinney ise yöntemi "Fine-Kinney" seçin.');
                 }
             }
+            // FK'ye çevirme kayıplı geri döner; kaynak 5x5 değerleri aynen saklanır.
+            $matris = ['olasilik' => $o, 'siddet' => $s, 'son_olasilik' => $so, 'son_siddet' => $ss];
             [$o, $f, $s] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($o, $s);
             [$so, $sf, $ss] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($so, $ss);
         } else {
@@ -244,6 +248,7 @@ class EkipmanRiskKutuphanesi
             'son_olasilik' => $so,
             'son_frekans' => $sf,
             'son_siddet' => $ss,
+            'matris' => $matris,
         ];
     }
 
