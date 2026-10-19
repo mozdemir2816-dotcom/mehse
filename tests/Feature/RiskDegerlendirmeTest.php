@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
+use Filament\Actions\Testing\TestAction;
 use Livewire\Livewire;
 use PhpOffice\PhpWord\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -146,6 +147,37 @@ class RiskDegerlendirmeTest extends TestCase
         Livewire::test(CreateRiskDegerlendirmesi::class)->assertOk();
         Livewire::test(EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])->assertOk();
         Livewire::test(ListTehlikes::class)->assertOk()->assertCountTableRecords(25);
+    }
+
+    public function test_kutuphane_yonteme_gore_suzulur(): void
+    {
+        $fk = \App\Models\TehlikeKategorisi::create(['anahtar' => 'fk-kat', 'ad' => 'FK Kat', 'yontem' => 'fine_kinney']);
+        $eski = \App\Models\TehlikeKategorisi::create(['anahtar' => 'eski-kat', 'ad' => 'Eski Kat']);
+        $hz = \App\Models\TehlikeKategorisi::create(['anahtar' => 'hz-reaktor', 'ad' => 'HAZOP – Reaktör', 'yontem' => 'hazop']);
+        foreach ([$fk, $eski, $hz] as $i => $k) {
+            \App\Models\Tehlike::create(['tehlike_kategorisi_id' => $k->id, 'kod' => 'T'.$i, 'tehlike' => 'Tehlike '.$i, 'bolum' => 'B']);
+        }
+
+        Livewire::test(ListTehlikes::class)->assertCountTableRecords(3)
+            ->filterTable('yontem', 'hazop')->assertCountTableRecords(1)
+            ->filterTable('yontem', 'fine_kinney')->assertCountTableRecords(2);
+    }
+
+    public function test_kutuphane_grup_toplu_silme(): void
+    {
+        $k = \App\Models\TehlikeKategorisi::create(['anahtar' => 'sil-kat', 'ad' => 'Silinecek', 'yontem' => 'hazop']);
+        foreach (['A', 'A', 'B'] as $i => $b) {
+            \App\Models\Tehlike::create(['tehlike_kategorisi_id' => $k->id, 'kod' => 'S'.$i, 'tehlike' => 'Madde '.$i, 'bolum' => $b]);
+        }
+
+        Livewire::test(ListTehlikes::class)
+            ->callAction(TestAction::make('grupSil')->table(), ['kategori' => $k->id, 'bolum' => 'A']);
+        $this->assertSame(1, \App\Models\Tehlike::count());
+
+        Livewire::test(ListTehlikes::class)
+            ->callAction(TestAction::make('grupSil')->table(), ['kategori' => $k->id, 'kategoriyiSil' => true]);
+        $this->assertSame(0, \App\Models\Tehlike::count());
+        $this->assertNull(\App\Models\TehlikeKategorisi::find($k->id));
     }
 
     public function test_pdf_matris_5x5_uretilir(): void

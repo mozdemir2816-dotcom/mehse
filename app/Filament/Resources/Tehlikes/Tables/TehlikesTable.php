@@ -4,11 +4,17 @@ namespace App\Filament\Resources\Tehlikes\Tables;
 
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
+use App\Support\EkipmanRiskKutuphanesi;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
@@ -29,7 +35,9 @@ class TehlikesTable
             ->groups([
                 Group::make('kategori_bolum')->label('Kategori › Bölüm')->collapsible()
                     ->getKeyFromRecordUsing(fn (Tehlike $r): string => $r->tehlike_kategorisi_id.'|'.($r->bolum ?? ''))
-                    ->getTitleFromRecordUsing(fn (Tehlike $r): string => ($r->kategori?->ad ?? 'Kategorisiz').' › '.(filled($r->bolum) ? $r->bolum : 'Bölümsüz'))
+                    ->getTitleFromRecordUsing(fn (Tehlike $r): string => '['.(EkipmanRiskKutuphanesi::YONTEMLER[$r->kategori?->yontem ?? 'fine_kinney'] ?? 'Fine-Kinney').'] '.($r->kategori?->ad ?? 'Kategorisiz').' › '.(filled($r->bolum) ? $r->bolum : 'Bölümsüz'))
+                    ->getDescriptionFromRecordUsing(fn (Tehlike $r): string => Tehlike::where('tehlike_kategorisi_id', $r->tehlike_kategorisi_id)
+                        ->where(fn ($q) => filled($r->bolum) ? $q->where('bolum', $r->bolum) : $q->whereNull('bolum')->orWhere('bolum', ''))->count().' madde')
                     ->groupQueryUsing(fn ($query) => $query->groupBy('tehlikeler.tehlike_kategorisi_id', 'tehlikeler.bolum'))
                     ->orderQueryUsing(fn ($query, string $direction) => $query
                         ->orderBy(TehlikeKategorisi::select('ad')->whereColumn('tehlike_kategorileri.id', 'tehlikeler.tehlike_kategorisi_id')->limit(1), $direction)
@@ -42,7 +50,51 @@ class TehlikesTable
                     }),
             ])
             ->defaultGroup('kategori_bolum')
+            ->collapsedGroupsByDefault()
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->headerActions([
+                Action::make('grupSil')
+                    ->label('Grubu Toplu Sil')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->modalHeading('Kategori / bölüm maddelerini toplu sil')
+                    ->modalDescription('Seçilen kategorideki (ve bölümdeki) tüm kütüphane maddeleri silinir. Daha önce oluşturulmuş risk değerlendirmeleri etkilenmez. Geri alınamaz.')
+                    ->modalSubmitActionLabel('Sil')
+                    ->schema([
+                        Select::make('kategori')->label('Kategori')->required()->searchable()->live()
+                            ->options(fn () => TehlikeKategorisi::withCount('tehlikeler')->orderBy('ad')->get()
+                                ->mapWithKeys(fn ($k) => [$k->id => '['.(EkipmanRiskKutuphanesi::YONTEMLER[$k->yontem ?? 'fine_kinney'] ?? 'Fine-Kinney').'] '.$k->ad.' ('.$k->tehlikeler_count.' madde)'])->all())
+                            ->afterStateUpdated(fn ($set) => $set('bolum', null)),
+                        Select::make('bolum')->label('Bölüm (boş = kategorinin tamamı)')->searchable()
+                            ->options(fn ($get) => $get('kategori')
+                                ? Tehlike::where('tehlike_kategorisi_id', $get('kategori'))->whereNotNull('bolum')->where('bolum', '!=', '')->distinct()->orderBy('bolum')->pluck('bolum', 'bolum')->all()
+                                : []),
+                        Checkbox::make('kategoriyiSil')->label('Kategorinin kendisini de sil')
+                            ->visible(fn ($get) => filled($get('kategori')) && blank($get('bolum'))),
+                    ])
+                    ->action(function (array $data): void {
+                        $sorgu = Tehlike::where('tehlike_kategorisi_id', $data['kategori']);
+                        if (filled($data['bolum'] ?? null)) {
+                            $sorgu->where('bolum', $data['bolum']);
+                        }
+                        $adet = $sorgu->delete();
+
+                        if (blank($data['bolum'] ?? null) && ($data['kategoriyiSil'] ?? false)) {
+                            TehlikeKategorisi::whereKey($data['kategori'])->delete();
+                        }
+
+                        Notification::make()->title($adet.' madde silindi')->success()->send();
+                    }),
+            ])
             ->filters([
+                SelectFilter::make('yontem')->label('Risk değerlendirme yöntemi')
+                    ->options(EkipmanRiskKutuphanesi::YONTEMLER)
+                    ->query(fn ($query, array $data) => filled($data['value'] ?? null)
+                        ? $query->whereHas('kategori', fn ($k) => $k->where(fn ($q) => $q->where('yontem', $data['value'])
+                            ->when($data['value'] === 'fine_kinney', fn ($q) => $q->orWhereNull('yontem'))))
+                        : $query),
                 SelectFilter::make('tehlike_kategorisi_id')->label('Kategori')->relationship('kategori', 'ad'),
             ])
             ->recordActions([
