@@ -387,22 +387,20 @@ class RiskDegerlendirmeTest extends TestCase
             'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => null,
         ];
 
-        $imzali = view('pdf.risk-degerlendirmesi', [...$veri, 'imzali' => true])->render();
-        $this->assertStringContainsString('isveren/kase.png', $imzali);
-        $this->assertStringContainsString('uzman/kase.png', $imzali);
-        $this->assertStringContainsString('hekim/kase.png', $imzali);
-        $this->assertStringContainsString('temsilci/imza.png', $imzali);
-        $this->assertStringContainsString('destek/imza.png', $imzali);
+        // Kullanıcı 19.10.2026: kapak ve imza şeritlerinde kaşe/imza görseli basılmaz, adlar yazılır;
+        // imza elle atılır. İmzalı ve imzasız nüshada aynı.
+        $veri += ['isverenAdi' => 'Isveren Test', 'iguAdi' => 'Iguuzman Test', 'hekimAdi' => $hekim->ad_soyad];
 
-        $imzasiz = view('pdf.risk-degerlendirmesi', [...$veri, 'imzali' => false])->render();
-        $this->assertStringNotContainsString('isveren/kase.png', $imzasiz);
-        $this->assertStringNotContainsString('isveren/imza.png', $imzasiz);
-        $this->assertStringNotContainsString('uzman/kase.png', $imzasiz);
-        $this->assertStringNotContainsString('hekim/kase.png', $imzasiz);
-        $this->assertStringNotContainsString('temsilci/imza.png', $imzasiz);
-        $this->assertStringNotContainsString('destek/imza.png', $imzasiz);
-        // Ad soyad ve rol etiketleri imzasız modda da görünmeye devam eder.
-        $this->assertStringNotContainsString($hekim->ad_soyad, $imzasiz);
+        foreach ([true, false] as $imzaliMi) {
+            $html = view('pdf.risk-degerlendirmesi', [...$veri, 'imzali' => $imzaliMi])->render();
+            foreach (['isveren/kase.png', 'isveren/imza.png', 'uzman/kase.png', 'uzman/imza.png', 'hekim/kase.png', 'temsilci/imza.png', 'destek/imza.png'] as $gorsel) {
+                $this->assertStringNotContainsString($gorsel, $html);
+            }
+            foreach (['Isveren Test', 'Iguuzman Test', $hekim->ad_soyad, 'Temsilci Test', 'Destek Test'] as $ad) {
+                $this->assertStringContainsString($ad, $html);
+            }
+        }
+        $imzasiz = $html;
 
         $yanit = RiskDegerlendirmesiUretici::pdf($rd, false);
         ob_start();
@@ -434,7 +432,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ PERSONEL<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
     }
 
-    public function test_imza_sahipleri_yalniz_degerlendirme_ekibinden_gelir(): void
+    public function test_imza_sahipleri_elle_girilen_oncelikli_eksikler_atamadan_gelir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         AtamaYazisi::create(['firma_id' => $firma->id, 'rol_anahtari' => 'calisan_temsilcisi', 'tarih' => now(),
@@ -460,8 +458,30 @@ class RiskDegerlendirmeTest extends TestCase
         ob_end_clean();
 
         $this->assertSame('Elle Temsilci', $veri['temsilci']['ad']); // elle girilen öncelikli
-        $this->assertNull($veri['destekElemani']);
-        $this->assertNull($veri['bilgiSahibiCalisan']);
+        // Elle girilmeyen roller firmanın atama yazılarından otomatik gelir (kullanıcı 19.10.2026).
+        $this->assertSame('Destek Atanan', $veri['destekElemani']['ad']);
+        $this->assertSame('Bilgi Atanan', $veri['bilgiSahibiCalisan']['ad']);
+    }
+
+    public function test_kapak_kapsam_insaatta_varsayilan_ve_gorevli_adlari_basilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'nace_kodu' => '43.99.01', 'isveren_vekili' => 'Veli Vekil',
+        ]);
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 2, 'siddet' => 2]);
+
+        $html = view('pdf.risk-degerlendirmesi', RiskDegerlendirmesiUretici::veri($rd, false))->render();
+
+        $this->assertStringContainsString('Kazı çalışmaları, kalıp, demir, beton ve kamp alanı', $html);
+        $this->assertStringContainsString('Veli Vekil', $html);
+        $this->assertStringContainsString((string) RiskDegerlendirmesiUretici::hazirlayan($rd)->name, $html);
+
+        // Kapsam notu doluysa o yazılır.
+        $rd->update(['kapsam_notu' => 'Özel kapsam']);
+        $html = view('pdf.risk-degerlendirmesi', RiskDegerlendirmesiUretici::veri($rd->fresh(), false))->render();
+        $this->assertStringContainsString('Özel kapsam', $html);
+        $this->assertStringNotContainsString('Kazı çalışmaları, kalıp', $html);
     }
 
     public function test_atama_degisince_saklanan_risk_pdfi_yenilenir(): void

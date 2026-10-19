@@ -91,12 +91,29 @@ class RiskDegerlendirmesiUretici
 
         $yontemAnahtari = 'risk_'.$rd->yontem;
         $userId = $rd->firma?->user_id;
-        // Kapaktaki ve "Risk Değerlendirme Ekibi" tablosundaki adlar yalnız bu
-        // değerlendirmenin kendi ekip listesinden gelir; liste boşsa satır boş kalır.
-        $ekip = collect($rd->ekip ?? []);
+        // Kapaktaki ve "Risk Değerlendirme Ekibi" tablosundaki adlar önce bu değerlendirmenin
+        // kendi ekip listesinden, o rol boşsa firmanın atama yazılarından (RiskEkibiOtomatik) gelir.
+        $elleEkip = collect($rd->ekip ?? [])->filter(fn (array $u) => filled($u['ad'] ?? null));
+        $otoEkip = collect($rd->firma ? RiskEkibiOtomatik::imzaSahipleri($rd->firma) : []);
+        $rolVarMi = fn (string $anahtar) => $elleEkip->contains(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), $anahtar));
+        $ekip = $elleEkip->concat($otoEkip->filter(function (array $u) use ($rolVarMi) {
+            $unvan = mb_strtolower($u['unvan'] ?? '');
+
+            foreach (['temsilci', 'destek', 'bilgi sahibi'] as $anahtar) {
+                if (str_contains($unvan, $anahtar)) {
+                    return ! $rolVarMi($anahtar);
+                }
+            }
+
+            return false;
+        }))->values();
 
         $uzman = self::hazirlayan($rd);
         $hekim = $rd->firma?->isyeriHekimi;
+        // Kapak ve imza şeridinde kaşeli görevlilerin adı da yazılır (kullanıcı 19.10.2026, yalnız risk raporu).
+        $isverenAdi = $rd->firma?->isveren_vekili ?: $rd->firma?->isveren_ad;
+        $iguAdi = $uzman->name;
+        $hekimAdi = $hekim?->ad_soyad;
         $temsilci = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'temsilci'));
         $destekElemani = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'destek'));
         $bilgiSahibiCalisanlar = $ekip->filter(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'bilgi sahibi'))->values();
@@ -111,9 +128,9 @@ class RiskDegerlendirmesiUretici
         // diye "—" DEĞİL boş). Sonda ayrıca tamamen boş bir satır bırakılır —
         // sonradan elle bir isim eklenmesi gerekirse şablonu bozmadan yazılabilsin.
         $ekipGosterim = [
-            ['unvan' => 'İşveren', 'ad' => ''], // kaşeli görevlilerin adı basılmaz
-            ['unvan' => 'İş Güvenliği Uzmanı', 'ad' => ''],
-            ['unvan' => 'İşyeri Hekimi', 'ad' => ''],
+            ['unvan' => 'İşveren', 'ad' => $isverenAdi ?? ''],
+            ['unvan' => 'İş Güvenliği Uzmanı', 'ad' => $iguAdi ?? ''],
+            ['unvan' => 'İşyeri Hekimi', 'ad' => $hekimAdi ?? ''],
             ['unvan' => 'Çalışan Temsilcisi', 'ad' => $temsilci['ad'] ?? ''],
             ['unvan' => 'Destek Elemanı', 'ad' => $destekElemani['ad'] ?? ''],
             ...($bilgiSahibiCalisanlar->isNotEmpty()
@@ -127,6 +144,9 @@ class RiskDegerlendirmesiUretici
             'firma' => $rd->firma,
             'uzman' => $uzman,
             'hekim' => $hekim,
+            'isverenAdi' => $isverenAdi,
+            'iguAdi' => $iguAdi,
+            'hekimAdi' => $hekimAdi,
             'temsilci' => $temsilci,
             'destekElemani' => $destekElemani,
             'bilgiSahibiCalisan' => $bilgiSahibiCalisan,

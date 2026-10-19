@@ -110,12 +110,15 @@
      RiskDegerlendirmesiUretici'nde page_script ile doldurulur (tek render). --}}
 @php
     $bosTarih = '…… / …… / …………';
+    // Kapsam notu boşsa inşaat firmalarında şantiye faaliyetleri yazılır (kullanıcı 19.10.2026).
+    $kapsam = filled($rd->kapsam_notu) ? $rd->kapsam_notu
+        : (\App\Support\NaceGrubu::bul($firma?->nace_kodu ?: $rd->firma_nace) === 'insaat' ? 'Kazı çalışmaları, kalıp, demir, beton ve kamp alanı' : '');
     $kapakEkip = [
-        ['İşveren / işveren vekili', '', ($imzali ?? true) ? [$firma?->isveren_kase_gorseli, $firma?->isveren_imza_gorseli] : []],
-        ['İş Güvenliği Uzmanı', '', ($imzali ?? true) ? [$uzman?->kase_gorseli, $uzman?->imza_gorseli] : []],
-        ['İşyeri Hekimi', '', ($imzali ?? true) ? [$hekim?->kase_gorseli, $hekim?->imza_gorseli] : []],
-        ['Çalışan Temsilcisi', $temsilci['ad'] ?? '', ($imzali ?? true) ? [$temsilci['imza_gorseli'] ?? null] : []],
-        ['Destek Elemanı', $destekElemani['ad'] ?? '', ($imzali ?? true) ? [$destekElemani['imza_gorseli'] ?? null] : []],
+        ['İşveren / işveren vekili', $isverenAdi ?? '', []],
+        ['İş Güvenliği Uzmanı', $iguAdi ?? '', []],
+        ['İşyeri Hekimi', $hekimAdi ?? '', []],
+        ['Çalışan Temsilcisi', $temsilci['ad'] ?? '', []],
+        ['Destek Elemanı', $destekElemani['ad'] ?? '', []],
         ['Bilgi Sahibi Personel', $bilgiSahibiCalisan['ad'] ?? '', []],
     ];
     // firma_nace bazen açıklamayı da içerir ("22.12.01 Plastik ...") → kodu firmadan al.
@@ -159,7 +162,7 @@
         <tr><td class="e">SGK işyeri sicil numarası</td><td>{{ $rd->firma_sgk_sicil_no }}</td></tr>
         <tr><td class="e">Faaliyet konusu / NACE kodu</td><td>{{ $faaliyet }}</td></tr>
         <tr><td class="e">Tehlike sınıfı / çalışan sayısı</td><td>{{ $tehlike }}</td></tr>
-        <tr><td class="e">Kapsam / değerlendirilen bölümler</td><td>{{ $rd->kapsam_notu }}</td></tr>
+        <tr><td class="e">Kapsam / değerlendirilen bölümler</td><td>{{ $kapsam }}</td></tr>
         <tr><td class="e">Toplam sayfa sayısı</td><td id="kapak-toplam-sayfa">&nbsp;</td></tr>
     </table>
 
@@ -182,16 +185,11 @@
     <div class="k-baslik">RİSK DEĞERLENDİRMESİ EKİBİ</div>
     <table class="k-tablo k-ekip">
         <tr class="bas"><td style="width:33.8%">Görevi</td><td style="width:43.7%">Adı soyadı</td><td>İmza</td></tr>
-        @foreach ($kapakEkip as [$gorev, $ad, $gorseller])
+        @foreach ($kapakEkip as [$gorev, $ad])
             <tr>
                 <td>{{ $gorev }}</td>
-                {{-- Kaşeli görevlilerin (işveren, İGU, hekim) adı basılmaz — kaşe ad/unvanı taşır. --}}
                 <td>{{ $ad }}</td>
-                <td class="imza">
-                    @foreach (array_filter($gorseller) as $g)
-                        @if (is_file(storage_path('app/public/'.$g)))<img src="{{ storage_path('app/public/'.$g) }}">@endif
-                    @endforeach
-                </td>
+                <td class="imza">&nbsp;</td>
             </tr>
         @endforeach
     </table>
@@ -215,35 +213,26 @@
         <tr>
             <td>
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
-                @if (($imzali ?? true) && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
-                @if (($imzali ?? true) && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
-                
+                <span class="ad">{{ $isverenAdi ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
-                @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
-                @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
-                
+                <span class="ad">{{ $iguAdi ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">İŞYERİ HEKİMİ</span>
-                @if (($imzali ?? true) && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
-                @if (($imzali ?? true) && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
-                
+                <span class="ad">{{ $hekimAdi ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
-                @if (($imzali ?? true) && ! empty($temsilci['imza_gorseli']))<img src="{{ storage_path('app/public/'.$temsilci['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $temsilci['ad'] ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">DESTEK ELEMANI</span>
-                @if (($imzali ?? true) && ! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $destekElemani['ad'] ?? '—' }}</span>
             </td>
             <td>
                 <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
-                @if (($imzali ?? true) && ! empty($bilgiSahibiCalisan['imza_gorseli']))<img src="{{ storage_path('app/public/'.$bilgiSahibiCalisan['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '—' }}</span>
             </td>
         </tr>
@@ -410,37 +399,28 @@
         <tr>
             <td>
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
-                @if (($imzali ?? true) && $firma?->isveren_kase_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_kase_gorseli) }}">@endif
-                @if (($imzali ?? true) && $firma?->isveren_imza_gorseli)<img src="{{ storage_path('app/public/'.$firma->isveren_imza_gorseli) }}">@endif
-                
+                <span class="ad">{{ $isverenAdi ?? '' }}</span>
             </td>
             <td>
                 <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
-                @if (($imzali ?? true) && $uzman?->kase_gorseli)<img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}">@endif
-                @if (($imzali ?? true) && $uzman?->imza_gorseli)<img src="{{ storage_path('app/public/'.$uzman->imza_gorseli) }}">@endif
-                
+                <span class="ad">{{ $iguAdi ?? '' }}</span>
             </td>
             <td>
                 <span class="rol">İŞYERİ HEKİMİ</span>
-                @if (($imzali ?? true) && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}">@endif
-                @if (($imzali ?? true) && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}">@endif
-                
+                <span class="ad">{{ $hekimAdi ?? '' }}</span>
             </td>
         </tr>
         <tr>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
-                @if (($imzali ?? true) && ! empty($temsilci['imza_gorseli']))<img src="{{ storage_path('app/public/'.$temsilci['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $temsilci['ad'] ?? '' }}</span>
             </td>
             <td>
                 <span class="rol">DESTEK ELEMANI</span>
-                @if (($imzali ?? true) && ! empty($destekElemani['imza_gorseli']))<img src="{{ storage_path('app/public/'.$destekElemani['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $destekElemani['ad'] ?? '' }}</span>
             </td>
             <td>
                 <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
-                @if (($imzali ?? true) && ! empty($bilgiSahibiCalisan['imza_gorseli']))<img src="{{ storage_path('app/public/'.$bilgiSahibiCalisan['imza_gorseli']) }}">@endif
                 <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '' }}</span>
             </td>
         </tr>
