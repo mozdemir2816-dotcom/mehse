@@ -24,18 +24,18 @@ class RiskKutuphanesi
 
     /**
      * Yöntem verilirse veritabanı kategorileri yalnız o yönteme ait ve firma NACE grubuna uyan
-     * (ya da "ortak") olanlarla süzülür. Sanal Eğitim / Acil durum grupları her yöntemde gösterilir.
+     * (ya da "ortak") olanlarla süzülür. Sanal Eğitim / Acil durum grupları yalnız seçilen yöntemin maddelerini toplar (boşsa gösterilmez).
      *
      * @return Collection<int, TehlikeKategorisi> tehlikeleriyle birlikte, sıralı; başta sanal gruplar
      */
     public static function kategoriler(?string $yontem = null, ?string $naceGrubu = null): Collection
     {
         $sanal = collect(self::SANAL_GRUPLAR)
-            ->map(function (array $g, int $id) {
+            ->map(function (array $g, int $id) use ($yontem) {
                 $kat = new TehlikeKategorisi(['ad' => $g['ad'], 'anahtar' => 'sanal_'.abs($id)]);
                 $kat->id = $id;
 
-                return $kat->setRelation('tehlikeler', static::grupTehlikeleri($id));
+                return $kat->setRelation('tehlikeler', static::grupTehlikeleri($id, $yontem));
             })
             ->filter(fn (TehlikeKategorisi $k) => $k->tehlikeler->isNotEmpty());
 
@@ -52,8 +52,11 @@ class RiskKutuphanesi
             ->get());
     }
 
-    /** @return Collection<int, Tehlike> bir kategorinin (sanal grup dahil) tehlikeleri */
-    public static function grupTehlikeleri(int $kategoriId): Collection
+    /**
+     * @param  ?string  $yontem  verilirse sanal grup yalnız bu yöntemin kategorilerindeki maddeleri toplar
+     * @return Collection<int, Tehlike> bir kategorinin (sanal grup dahil) tehlikeleri
+     */
+    public static function grupTehlikeleri(int $kategoriId, ?string $yontem = null): Collection
     {
         $g = self::SANAL_GRUPLAR[$kategoriId] ?? null;
 
@@ -64,6 +67,8 @@ class RiskKutuphanesi
         return Tehlike::query()
             ->where(fn ($q) => $q->where('kod', 'like', $g['kod'])
                 ->orWhereHas('kategori', fn ($k) => $k->where('anahtar', $g['anahtar'])))
+            ->when(filled($yontem), fn ($q) => $q->whereHas('kategori', fn ($k) => $k->where(fn ($w) => $w->where('yontem', $yontem)
+                ->when($yontem === 'fine_kinney', fn ($w) => $w->orWhereNull('yontem')))))
             ->orderBy('bolum')->orderBy('kod')
             ->get();
     }

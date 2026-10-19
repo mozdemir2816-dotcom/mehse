@@ -119,6 +119,20 @@ class RiskSihirbaziTest extends TestCase
         $this->assertCount($acil->tehlikeler->count(), $component->get('secilenler'));
     }
 
+    public function test_sanal_gruplar_yalniz_secilen_yontemin_maddelerini_toplar(): void
+    {
+        $this->seed(\Database\Seeders\MakineRiskKutuphanesiSeeder::class);
+
+        // Seeder maddeleri Fine-Kinney; 5x5 seçilince FK ölçekli sanal gruplar görünmemeli.
+        $matris = \App\Support\RiskKutuphanesi::kategoriler('matris_5x5');
+        $this->assertNull($matris->firstWhere('id', -1));
+        $this->assertNull($matris->firstWhere('id', -2));
+
+        $fk = \App\Support\RiskKutuphanesi::kategoriler('fine_kinney');
+        $this->assertNotNull($fk->firstWhere('id', -1));
+        $this->assertNotNull($fk->firstWhere('id', -2));
+    }
+
     public function test_puansiz_madde_ile_6_adima_gecilemez(): void
     {
         Livewire::test(RiskSihirbazi::class)

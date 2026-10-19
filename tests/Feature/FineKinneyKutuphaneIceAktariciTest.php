@@ -8,6 +8,7 @@ use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\FineKinneyKutuphaneIceAktarici;
 use App\Support\RiskKutuphanesi;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -147,5 +148,15 @@ class FineKinneyKutuphaneIceAktariciTest extends TestCase
             ->callAction('fineKinneyYukle', ['dosya' => $dosya]);
 
         $this->assertGreaterThan(0, Tehlike::whereNotNull('olasilik')->count());
+    }
+
+    public function test_grup_toplu_sil_tek_kategori_varsa_onu_onceden_secer(): void
+    {
+        $k = TehlikeKategorisi::create(['ad' => 'Tek Kategori', 'anahtar' => 'tek_kategori', 'sira' => 1]);
+        Tehlike::create(['tehlike_kategorisi_id' => $k->id, 'kod' => 'TEK-R-001', 'tehlike' => 'T', 'risk' => 'R', 'bolum' => 'B']);
+
+        Livewire::test(ListTehlikes::class)
+            ->mountAction(TestAction::make('grupSil')->table())
+            ->assertActionDataSet(["kategori" => $k->id]);
     }
 }

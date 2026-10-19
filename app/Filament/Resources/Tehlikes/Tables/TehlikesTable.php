@@ -51,6 +51,8 @@ class TehlikesTable
             ])
             ->defaultGroup('kategori_bolum')
             ->collapsedGroupsByDefault()
+            ->paginationPageOptions([10, 25, 50, 100, 'all'])
+            ->defaultPaginationPageOption('all')
             ->persistFiltersInSession()
             ->persistSearchInSession()
             ->filtersLayout(FiltersLayout::AboveContent)
@@ -62,6 +64,12 @@ class TehlikesTable
                     ->modalHeading('Kategori / bölüm maddelerini toplu sil')
                     ->modalDescription('Seçilen kategorideki (ve bölümdeki) tüm kütüphane maddeleri silinir. Daha önce oluşturulmuş risk değerlendirmeleri etkilenmez. Geri alınamaz.')
                     ->modalSubmitActionLabel('Sil')
+                    ->fillForm(function ($livewire): array {
+                        // Filtrelenen listede tek kategori varsa onu önceden seç.
+                        $kategoriler = $livewire->getFilteredTableQuery()->reorder()->pluck('tehlikeler.tehlike_kategorisi_id')->unique();
+
+                        return $kategoriler->count() === 1 ? ['kategori' => $kategoriler->first()] : [];
+                    })
                     ->schema([
                         Select::make('kategori')->label('Kategori')->required()->searchable()->live()
                             ->options(fn () => TehlikeKategorisi::withCount('tehlikeler')->orderBy('ad')->get()

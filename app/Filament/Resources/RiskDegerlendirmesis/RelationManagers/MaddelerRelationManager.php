@@ -21,8 +21,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -129,59 +132,68 @@ class MaddelerRelationManager extends RelationManager
                 TextInput::make('hazop.durum')->label('Durum'),
             ]),
 
-            Section::make('Tanım')->columns(2)->schema([
-                TextInput::make('sira')->label('Sıra')->numeric()
-                    ->default(fn () => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1),
-                // isgsuite "Bölümler": bu değerlendirmede kullanılan + önerilen bölüm adları
-                TextInput::make('bolum')->label('Bölüm / Ünite')
-                    ->datalist(fn () => $this->getOwnerRecord()->maddeler()->whereNotNull('bolum')->distinct()->pluck('bolum')
-                        ->merge(config('risk_nace.bolum_onerileri', []))->unique()->values()->all()),
-                TextInput::make('faaliyet')->label('Faaliyet')->columnSpanFull(),
-                Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
-                Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
-                Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
-                Toggle::make('etkilenen_calisan')->label('Çalışanlar etkilenir')->default(true),
-                Toggle::make('etkilenen_diger')->label('Taşeron / ziyaretçi etkilenir'),
-                // Tehlike ve Risk Analitiği: tür boşsa metinden tahmin edilir; dominans = puan × maruz kişi
-                Select::make('tehlike_turu')->label('Tehlike türü')->placeholder('Otomatik (metinden tahmin)')
-                    ->options(collect(config('risk_nace.tehlike_turleri'))->map(fn ($t) => $t['ad'])->all()),
-                TextInput::make('maruz_kisi')->label('Maruz kalan kişi sayısı')->numeric()->minValue(0)->maxValue(100000),
+            // Modal sayfaya sığsın diye iki sütun: solda tanım, sağda puan + önlem.
+            Grid::make(['default' => 1, 'lg' => 2])->schema([
+                Section::make('Tanım')->columns(2)->compact()->schema([
+                    TextInput::make('sira')->label('Sıra')->numeric()
+                        ->default(fn () => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1),
+                    // isgsuite "Bölümler": bu değerlendirmede kullanılan + önerilen bölüm adları
+                    TextInput::make('bolum')->label('Bölüm / Ünite')
+                        ->datalist(fn () => $this->getOwnerRecord()->maddeler()->whereNotNull('bolum')->distinct()->pluck('bolum')
+                            ->merge(config('risk_nace.bolum_onerileri', []))->unique()->values()->all()),
+                    TextInput::make('faaliyet')->label('Faaliyet')->columnSpanFull(),
+                    Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
+                    Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
+                    Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
+                ]),
+
+                Group::make([
+                    Section::make("Mevcut Risk ({$yontemBasligi})")
+                        ->columns(3)
+                        ->compact()
+                        ->visible(! $hazop)
+                        ->schema(array_values(array_filter([
+                            Select::make('olasilik')->label($etiket['olasilik'])
+                                ->options(RiskSkorlama::olcek($yontem, 'olasilik'))
+                                ->native(false)->required(),
+                            $ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
+                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required() : null,
+                            Select::make('siddet')->label($etiket['siddet'])
+                                ->options(RiskSkorlama::olcek($yontem, 'siddet'))
+                                ->native(false)->required(),
+                        ]))),
+
+                    Section::make('Maruziyet')->columns(2)->compact()->schema([
+                        Toggle::make('etkilenen_calisan')->label('Çalışanlar etkilenir')->default(true),
+                        Toggle::make('etkilenen_diger')->label('Taşeron / ziyaretçi etkilenir'),
+                        // Tehlike ve Risk Analitiği: tür boşsa metinden tahmin edilir; dominans = puan × maruz kişi
+                        Select::make('tehlike_turu')->label('Tehlike türü')->placeholder('Otomatik (metinden tahmin)')
+                            ->options(collect(config('risk_nace.tehlike_turleri'))->map(fn ($t) => $t['ad'])->all()),
+                        TextInput::make('maruz_kisi')->label('Maruz kalan kişi sayısı')->numeric()->minValue(0)->maxValue(100000),
+                    ]),
+
+                    Section::make('Planlanan Önlem & Rezidüel Risk')
+                        ->columns(2)
+                        ->compact()
+                        ->schema(array_values(array_filter([
+                            Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpanFull(),
+                            TextInput::make('sorumlu')->label('Sorumlu'),
+                            TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
+                            Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
+                            Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
+                                ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)
+                                ->default(1)
+                                ->visible(! $hazop)
+                                ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
+                            $ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
+                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null,
+                            Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
+                                ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)
+                                ->visible(! $hazop)
+                                ->helperText('Boş bırakılırsa öneri öncesindeki '.$etiket['siddet'].' değeriyle aynı kabul edilir.'),
+                        ]))),
+                ]),
             ]),
-
-            Section::make("Mevcut Risk ({$yontemBasligi})")
-                ->columns(3)
-                ->visible(! $hazop)
-                ->schema(array_values(array_filter([
-                    Select::make('olasilik')->label($etiket['olasilik'])
-                        ->options(RiskSkorlama::olcek($yontem, 'olasilik'))
-                        ->native(false)->required(),
-                    $ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
-                        ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required() : null,
-                    Select::make('siddet')->label($etiket['siddet'])
-                        ->options(RiskSkorlama::olcek($yontem, 'siddet'))
-                        ->native(false)->required(),
-                ]))),
-
-            Section::make('Planlanan Önlem & Rezidüel Risk')
-                ->columns(3)
-                ->collapsed()
-                ->schema(array_values(array_filter([
-                    Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpan(3),
-                    TextInput::make('sorumlu')->label('Sorumlu'),
-                    TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
-                    Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
-                    Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
-                        ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)
-                        ->default(1)
-                        ->visible(! $hazop)
-                        ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
-                    $ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
-                        ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null,
-                    Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
-                        ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)
-                        ->visible(! $hazop)
-                        ->helperText('Boş bırakılırsa öneri öncesindeki '.$etiket['siddet'].' değeriyle aynı kabul edilir.'),
-                ]))),
         ]);
     }
 
@@ -214,7 +226,8 @@ class MaddelerRelationManager extends RelationManager
                 SelectFilter::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari')),
             ])
             ->headerActions([
-                CreateAction::make()->label('Risk Maddesi Ekle'),
+                CreateAction::make()->label('Risk Maddesi Ekle')->modalWidth(Width::SixExtraLarge)
+                    ->stickyModalHeader()->stickyModalFooter(),
                 Action::make('kutuphanedenAktar')
                     ->label('Kütüphaneden Toplu Ekle')->icon('heroicon-o-book-open')->color('gray')
                     ->modalDescription('Birden fazla tehlike seçip tek seferde ekleyebilirsiniz (ör. yeni makine/ekipman geldiğinde ilgili tüm maddeler). Puan/önlem AI önerisi burada çalışmaz — eklendikten sonra "Eksik Puan/Önlemleri AI ile Tamamla" ile toplu tamamlayabilirsiniz.')
@@ -272,6 +285,9 @@ class MaddelerRelationManager extends RelationManager
                     ->label('Boş Önerileri AI ile Doldur')
                     ->icon('heroicon-o-sparkles')
                     ->color('primary')
+                    // Arka planda çalıştığı için kalan sayı rozetle izlenir (tablo da kendiliğinden yenilenir).
+                    ->badge(fn () => $this->bosOneriSayisi() ?: null)
+                    ->tooltip(fn () => $this->bosOneriSayisi() ? $this->bosOneriSayisi().' maddenin önerisi hâlâ boş' : 'Tüm önerileri dolu')
                     ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi())
                     ->requiresConfirmation()
                     ->modalDescription(fn () => 'Bu rapordaki önerisi (düzeltici/önleyici faaliyet) boş '.RiskOneriTamamla::bosOneriSorgusu()->where('risk_degerlendirmesi_id', $this->getOwnerRecord()->id)->count().' madde sıraya alınır; arka planda dakikada 25 madde yapay zekâ ile doldurulur. Dolu önerilere dokunulmaz. Sayfayı birkaç dakika sonra yenileyin.')
@@ -356,14 +372,22 @@ class MaddelerRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()->modalWidth(Width::SixExtraLarge)
+                    ->stickyModalHeader()->stickyModalFooter(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),
             ])
             ->defaultSort('sira')
+            ->poll(fn () => $this->bosOneriSayisi() ? '15s' : null)
             ->reorderable('sira');
+    }
+
+    /** Bu değerlendirmede önerisi (düzeltici/önleyici faaliyet) hâlâ boş madde sayısı. */
+    private function bosOneriSayisi(): int
+    {
+        return RiskOneriTamamla::bosOneriSorgusu()->where('risk_degerlendirmesi_id', $this->getOwnerRecord()->id)->count();
     }
 
     private static function rozetRengi(string $hex): string
