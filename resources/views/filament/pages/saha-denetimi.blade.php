@@ -248,6 +248,25 @@
                                             <button type="button" wire:click="oneriyiAciklamayaEkle('{{ $kod }}')" style="padding:.15rem .5rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4);cursor:pointer">Açıklamaya ekle</button>
                                         </div>
                                     @endif
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem">
+                                        <div>
+                                            <label style="font-size:.72rem;font-weight:600">Risk</label>
+                                            <select wire:model="cevaplar.{{ $anahtar }}.risk" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                                                <option value="">—</option>
+                                                @foreach (config('isg.saha_denetimi.risk_seviyeleri') as $rk => $re)
+                                                    <option value="{{ $rk }}">{{ $re }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="font-size:.72rem;font-weight:600">Sorumlu</label>
+                                            <input type="text" wire:model="cevaplar.{{ $anahtar }}.sorumlu" placeholder="Kişi / birim" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                                        </div>
+                                        <div>
+                                            <label style="font-size:.72rem;font-weight:600">Termin</label>
+                                            <input type="date" wire:model="cevaplar.{{ $anahtar }}.termin" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                                        </div>
+                                    </div>
                                 </div>
                             @endif
 

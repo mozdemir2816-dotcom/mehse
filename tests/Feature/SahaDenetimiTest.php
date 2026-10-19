@@ -104,6 +104,50 @@ class SahaDenetimiTest extends TestCase
         $this->assertStringContainsString('SEKTÖRE ÖZGÜ KONTROL', $html);
     }
 
+    public function test_uygunsuz_maddede_risk_sorumlu_termin_kaydedilir_taslakta_korunur_pdfte_gorunur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $sayfa = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('cevapVer', '1.1', 'uygun_degil')
+            ->set('cevaplar.1_1.aciklama', 'Tüpün etiketi yok')
+            ->set('cevaplar.1_1.risk', 'yuksek')
+            ->set('cevaplar.1_1.sorumlu', 'Bakım şefi')
+            ->set('cevaplar.1_1.termin', '2026-11-05')
+            // Uygun maddede girilen risk/sorumlu/termin kayda taşınmaz
+            ->call('cevapVer', '1.2', 'uygun')
+            ->set('cevaplar.1_2.risk', 'orta')
+            ->set('cevaplar.1_2.sorumlu', 'Gereksiz')
+            ->call('taslakKaydet');
+
+        $taslak = SahaDenetimi::where('firma_id', $firma->id)->where('durum', 'taslak')->firstOrFail();
+        $m11 = collect($taslak->cevaplar)->firstWhere('kod', '1.1');
+        $this->assertSame(['yuksek', 'Bakım şefi', '2026-11-05'], [$m11['risk'], $m11['sorumlu'], $m11['termin']]);
+        $m12 = collect($taslak->cevaplar)->firstWhere('kod', '1.2');
+        $this->assertSame([null, null, null], [$m12['risk'], $m12['sorumlu'], $m12['termin']]);
+
+        // Taslaktan yüklenince alanlar geri gelir
+        $yeni = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertSame('yuksek', $yeni->get('cevaplar')['1_1']['risk']);
+        $this->assertSame('Bakım şefi', $yeni->get('cevaplar')['1_1']['sorumlu']);
+        $this->assertSame('2026-11-05', $yeni->get('cevaplar')['1_1']['termin']);
+
+        $yeni->callAction('pdf');
+        $d = SahaDenetimi::where('firma_id', $firma->id)->where('durum', 'tamamlandi')->firstOrFail();
+        $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
+        $this->assertStringContainsString('Risk: Yüksek', $html);
+        $this->assertStringContainsString('Sorumlu: Bakım şefi', $html);
+        $this->assertStringContainsString('Termin: 05.11.2026', $html);
+        $this->assertStringNotContainsString('Gereksiz', $html);
+
+        // Eski kayıtlarda (risk/sorumlu/termin anahtarı yok) PDF hatasız çıkar
+        $eski = SahaDenetimi::create(['firma_id' => $firma->id, 'revizyon' => 9, 'cevaplar' => [
+            ['kategori_ad' => 'Yangın', 'kod' => '1.1', 'ifade' => 'Eski madde', 'kritik' => false, 'sonuc' => 'uygun_degil', 'aciklama' => 'x', 'foto_yolu' => null],
+        ]]);
+        $this->assertStringContainsString('Eski madde', view('pdf.saha-denetimi', ['denetim' => $eski, 'firma' => $firma])->render());
+    }
+
     public function test_sektore_ozgu_kontrol_degisince_eski_cevaplar_listeden_duser(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

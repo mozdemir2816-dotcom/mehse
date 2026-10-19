@@ -4341,6 +4341,12 @@ return [
             'uygun_degil' => 'Uygun Değil',
             'uygulanamaz' => 'Uygulanamaz',
         ],
+        // Uygun Değil maddelerde isteğe bağlı risk seviyesi (master saha gözlem defteri: Düşük / Orta / Yüksek).
+        'risk_seviyeleri' => [
+            'dusuk' => 'Düşük',
+            'orta' => 'Orta',
+            'yuksek' => 'Yüksek',
+        ],
         'kategoriler' => [
             'yangin' => [
                 'ad' => 'Yangın',

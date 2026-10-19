@@ -114,7 +114,14 @@
                     -
                 @endforelse
             </td>
-            <td @if (blank($c['aciklama'] ?? null)) class="orta" @endif>{{ $c['aciklama'] ?: '-' }}@if (filled($c['oneri'] ?? null) && ($c['sonuc'] ?? null) === 'uygun_degil' && ! str_contains((string) ($c['aciklama'] ?? ''), $c['oneri']))<br><span style="font-size:7px;color:#666">Öneri: {{ $c['oneri'] }}</span>@endif</td>
+            <td @if (blank($c['aciklama'] ?? null)) class="orta" @endif>{{ $c['aciklama'] ?: '-' }}@if (filled($c['oneri'] ?? null) && ($c['sonuc'] ?? null) === 'uygun_degil' && ! str_contains((string) ($c['aciklama'] ?? ''), $c['oneri']))<br><span style="font-size:7px;color:#666">Öneri: {{ $c['oneri'] }}</span>@endif
+                @if (filled($c['risk'] ?? null) || filled($c['sorumlu'] ?? null) || filled($c['termin'] ?? null))
+                    <br><span style="font-size:7px;color:#444">{{ collect([
+                        filled($c['risk'] ?? null) ? 'Risk: '.config('isg.saha_denetimi.risk_seviyeleri.'.$c['risk'], $c['risk']) : null,
+                        filled($c['sorumlu'] ?? null) ? 'Sorumlu: '.$c['sorumlu'] : null,
+                        filled($c['termin'] ?? null) ? 'Termin: '.\Illuminate\Support\Carbon::parse($c['termin'])->format('d.m.Y') : null,
+                    ])->filter()->implode(' · ') }}</span>
+                @endif</td>
         </tr>
     @empty
         <tr><td colspan="6" class="orta" style="color:#888">Gösterilecek madde yok.</td></tr>

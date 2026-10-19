@@ -280,7 +280,7 @@ class SahaDenetimi extends Page
             $anahtar = $this->anahtar($kod);
 
             if (! isset($this->cevaplar[$anahtar])) {
-                $this->cevaplar[$anahtar] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null, 'fotolar' => []];
+                $this->cevaplar[$anahtar] = ['sonuc' => null, 'aciklama' => null, 'foto_yolu' => null, 'fotolar' => [], 'risk' => null, 'sorumlu' => null, 'termin' => null];
             }
         }
     }
@@ -357,7 +357,7 @@ class SahaDenetimi extends Page
             $anahtar = $this->anahtar($c['kod']);
             if (isset($this->cevaplar[$anahtar])) {
                 $fotolar = SahaDenetimiModel::maddeFotolari($c);
-                $this->cevaplar[$anahtar] = ['sonuc' => $c['sonuc'], 'aciklama' => $c['aciklama'], 'foto_yolu' => $fotolar[0] ?? null, 'fotolar' => $fotolar];
+                $this->cevaplar[$anahtar] = ['sonuc' => $c['sonuc'], 'aciklama' => $c['aciklama'], 'foto_yolu' => $fotolar[0] ?? null, 'fotolar' => $fotolar, 'risk' => $c['risk'] ?? null, 'sorumlu' => $c['sorumlu'] ?? null, 'termin' => $c['termin'] ?? null];
             }
         }
 
@@ -576,6 +576,10 @@ class SahaDenetimi extends Page
                 'defter_sektoru' => isset($madde['dayanak']) ? $this->defterSektoru : null,
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
+                // Risk / sorumlu / termin yalnız uygunsuz maddede anlamlı (master saha gözlem defteri sütunları).
+                'risk' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['risk'] ?? null) : null,
+                'sorumlu' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['sorumlu'] ?? null) : null,
+                'termin' => $cevap['sonuc'] === 'uygun_degil' ? (($cevap['termin'] ?? null) ?: null) : null,
                 'foto_yolu' => $fotolar[0] ?? null,
                 'fotolar' => $fotolar,
             ];
@@ -642,6 +646,10 @@ class SahaDenetimi extends Page
                 'defter_sektoru' => isset($madde['dayanak']) ? $this->defterSektoru : null,
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
+                // Risk / sorumlu / termin yalnız uygunsuz maddede anlamlı (master saha gözlem defteri sütunları).
+                'risk' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['risk'] ?? null) : null,
+                'sorumlu' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['sorumlu'] ?? null) : null,
+                'termin' => $cevap['sonuc'] === 'uygun_degil' ? (($cevap['termin'] ?? null) ?: null) : null,
                 'foto_yolu' => $fotolar[0] ?? null,
                 'fotolar' => $fotolar,
             ];
