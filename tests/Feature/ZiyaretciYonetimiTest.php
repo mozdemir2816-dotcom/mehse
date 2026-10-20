@@ -140,8 +140,9 @@ class ZiyaretciYonetimiTest extends TestCase
         $sayfa = Livewire::test(ZiyaretciYonetimi::class)->set('donem', 'hepsi');
         $this->assertCount(0, $sayfa->instance()->ziyaretciler);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $sayfa->call('sil', $z->id);
+        $sayfa->call('sil', $z->id)->assertNotFound();
+
+        $this->assertDatabaseHas('ziyaretciler', ['id' => $z->id]);
     }
 
     public function test_kart_iceridekiler_ve_defter_ciktilari(): void

@@ -197,11 +197,12 @@ class KkdTakipTest extends TestCase
         $baska = Firma::factory()->for(User::factory())->create();
         $z = $baska->kkdZimmetleri()->create(['tur' => 'Baret', 'personel_ad_soyad' => 'X']);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-
         Livewire::test(KkdTakip::class)
             ->set('firmaId', $this->firma->id)
-            ->call('zimmetSil', $z->id);
+            ->call('zimmetSil', $z->id)
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('kkd_zimmetleri', ['id' => $z->id]);
     }
 
     public function test_excel_ve_personel_zimmet_formu_uretilir(): void

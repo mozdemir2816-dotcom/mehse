@@ -83,6 +83,7 @@ class ModalOlusturmaTest extends TestCase
         // sayfa yüklenince tarayıcıda wire:init ile açar (sunucu testinde mount olmaz).
         Livewire::withQueryParams(['action' => 'create'])
             ->test(ListFirmas::class)
-            ->assertSeeHtml("wire:init=\"mountAction('create'");
+            ->assertSeeHtml('wire:init="mountDefaultActions"')
+            ->assertSet('defaultAction', 'create');
     }
 }

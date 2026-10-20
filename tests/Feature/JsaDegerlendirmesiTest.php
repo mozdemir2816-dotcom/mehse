@@ -360,15 +360,10 @@ class JsaDegerlendirmesiTest extends TestCase
             'user_id' => $baskasi->id, 'baslik' => 'Yabancı JSA', 'adimlar' => [],
         ]);
 
-        try {
-            Livewire::test(JsaSayfasi::class)
-                ->callAction('kunyeDuzenle', data: [
-                    'baslik' => 'Ele geçirildi', 'dokuman_ref' => '', 'revizyon' => '', 'belge_tarihi' => '', 'kapsam' => '',
-                ], arguments: ['id' => $yabanci->id]);
-            $this->fail('Yabancı kayda erişim engellenmeliydi.');
-        } catch (ModelNotFoundException $e) {
-            // beklenen
-        }
+        // Yabancı kayıt için eylem açılamaz: sayfa 404 döner (eski Livewire istisna fırlatıyordu).
+        Livewire::test(JsaSayfasi::class)
+            ->call('mountAction', 'kunyeDuzenle', ['id' => $yabanci->id])
+            ->assertNotFound();
 
         $this->assertDatabaseHas('jsa_sablonlari', ['id' => $yabanci->id, 'baslik' => 'Yabancı JSA']);
     }
