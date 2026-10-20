@@ -21,6 +21,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 
 use App\Filament\Concerns\SinirliErisim;
 /**
@@ -49,6 +50,7 @@ class KimyasalSicili extends Page
     // Kimyasal Yönetimi sayfasından açılır.
     protected static bool $shouldRegisterNavigation = false;
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $arama = null;

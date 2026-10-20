@@ -8,6 +8,7 @@ use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -41,8 +42,10 @@ class KontrolMerkezi extends Page
         'calisan' => 'Çalışan Asistanı',
     ];
 
+    #[Url(as: 'sekme')]
     public string $sekme = 'firma';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     /** Portföy kriter listesinde "eksik firmaları göster" için açık olan kriter anahtarı. */

@@ -12,6 +12,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -38,6 +39,7 @@ class YanginGuvenligi extends Page
 
     protected static ?string $navigationLabel = 'Yangın Güvenliği';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $incelemeYeri = null;

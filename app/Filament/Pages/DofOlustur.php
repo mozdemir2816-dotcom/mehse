@@ -18,6 +18,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -52,6 +53,7 @@ class DofOlustur extends Page
 
     protected static ?string $navigationLabel = 'DÖF Oluştur';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $alanBolge = null;

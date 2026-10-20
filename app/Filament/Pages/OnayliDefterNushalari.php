@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -52,6 +53,7 @@ class OnayliDefterNushalari extends Page
 
     protected static ?string $navigationLabel = 'Onaylı Defter Nüshaları';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $defterTuru = 'tespit_oneri';

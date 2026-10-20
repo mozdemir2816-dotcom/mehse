@@ -21,6 +21,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -48,6 +49,7 @@ class AtamaYazilari extends Page
 
     protected static ?string $navigationLabel = 'Atama Yazıları';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $rolAnahtari = 'calisan_temsilcisi';

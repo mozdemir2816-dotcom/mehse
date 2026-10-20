@@ -18,6 +18,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -46,6 +47,7 @@ class IsIzinFormu extends Page
 
     protected static ?string $navigationLabel = 'İş İzin Formu';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $calismaAlani = null;

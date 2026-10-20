@@ -11,6 +11,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -40,6 +41,7 @@ class KkdSecimMatrisi extends Page
 
     protected static ?string $navigationLabel = 'KKD Seçim Matrisi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     /** @var array<int, array<string, mixed>> */

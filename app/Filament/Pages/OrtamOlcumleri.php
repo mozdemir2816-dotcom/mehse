@@ -12,6 +12,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -39,6 +40,7 @@ class OrtamOlcumleri extends Page
 
     protected static ?string $navigationLabel = 'Ortam Ölçümleri';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     /** @var array<int, array<string, mixed>> */

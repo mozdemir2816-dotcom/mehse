@@ -29,6 +29,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -105,6 +106,7 @@ class RiskSihirbazi extends Page
 
     public int $adim = 1;
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     /** Bu değerlendirmeyi hazırlayan İGU — boşsa firmanın atanmış İGU'su kullanılır. */

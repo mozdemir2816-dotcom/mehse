@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -43,6 +44,7 @@ class IseDonusBelgesi extends Page
 
     protected static ?string $navigationLabel = 'İşe Dönüş Belgesi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $calisanHizliSecId = null;

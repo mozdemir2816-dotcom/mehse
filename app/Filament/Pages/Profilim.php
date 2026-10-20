@@ -30,6 +30,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Throwable;
 use UnitEnum;
 
@@ -77,6 +78,7 @@ class Profilim extends Page
         'firma_ziyaretleri' => 'Firma Ziyaretleri',
     ];
 
+    #[Url(as: 'sekme')]
     public string $sekme = 'genel';
 
     public string $pazarlamaArama = '';

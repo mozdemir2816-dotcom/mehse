@@ -23,6 +23,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -57,6 +58,7 @@ class HizliSahaBulgusu extends Page
     protected static ?string $navigationLabel = 'Saha';
 
     // --- Form ---
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $bolum = null;

@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -43,6 +44,7 @@ class ZiyaretProgrami extends Page
 
     protected static ?string $navigationLabel = 'Ziyaret Programı';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public int $yil;

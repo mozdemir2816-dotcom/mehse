@@ -16,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
@@ -46,6 +47,7 @@ class CezaTeblig extends Page
 
     protected static ?string $navigationLabel = 'Ceza ve Tebliğ Tutanağı';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $calisanHizliSecId = null;
@@ -102,6 +104,7 @@ class CezaTeblig extends Page
     |--------------------------------------------------------------------------
     */
 
+    #[Url(as: 'sekme')]
     public string $aktifSekme = 'tutanak';
 
     public ?string $tebligTarihiIpc = null;

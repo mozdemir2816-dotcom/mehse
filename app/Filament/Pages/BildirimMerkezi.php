@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -42,6 +43,7 @@ class BildirimMerkezi extends Page
 
     protected static ?string $navigationLabel = 'Bildirimler';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $seviye = null;

@@ -24,6 +24,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -52,6 +53,7 @@ class KkdTakip extends Page
 
     protected static ?string $navigationLabel = 'KKD';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $arama = null;

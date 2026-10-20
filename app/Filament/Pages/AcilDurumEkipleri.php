@@ -23,6 +23,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -54,6 +55,7 @@ class AcilDurumEkipleri extends Page
 
     protected static ?string $navigationLabel = 'Acil Durum Ekipleri';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $arama = '';

@@ -26,6 +26,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -56,6 +57,7 @@ class EgitimKatilim extends Page
 
     protected static ?string $navigationLabel = 'Eğitim Katılım';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $baslikAnahtari = 'genel';

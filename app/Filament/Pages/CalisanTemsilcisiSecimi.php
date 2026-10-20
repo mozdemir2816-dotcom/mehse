@@ -12,6 +12,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -38,6 +39,7 @@ class CalisanTemsilcisiSecimi extends Page
 
     protected static ?string $navigationLabel = 'Çalışan Temsilcisi Seçimi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $adayBasvuruSonTarihi = null;

@@ -9,6 +9,7 @@ use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -38,6 +39,7 @@ class TesisUygunlukOzeti extends Page
 
     protected static ?string $navigationLabel = 'Tesis Uygunluk Özeti';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public function mount(): void

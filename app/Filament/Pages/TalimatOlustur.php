@@ -29,6 +29,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Throwable;
 use UnitEnum;
 
@@ -56,6 +57,7 @@ class TalimatOlustur extends Page
 
     protected static ?string $navigationLabel = 'Talimat Oluştur';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $kategoriFiltre = '';

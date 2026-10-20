@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -57,6 +58,7 @@ class PeriyodikKontrol extends Page
 
     protected static ?string $navigationLabel = 'Periyodik Kontrol';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $kategoriFiltre = '';

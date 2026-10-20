@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -48,8 +49,10 @@ class EgitimYenilemeTakibi extends Page
 
     protected static ?string $navigationLabel = 'Eğitim Takibi (Yenileme)';
 
+    #[Url(as: 'sekme')]
     public string $sekme = 'yenileme';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $durumFiltre = null;

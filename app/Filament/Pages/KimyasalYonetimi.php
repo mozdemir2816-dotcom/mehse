@@ -11,6 +11,7 @@ use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -37,6 +38,7 @@ class KimyasalYonetimi extends Page
 
     protected static ?string $navigationLabel = 'Kimyasal Yönetimi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public function mount(): void

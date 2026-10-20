@@ -22,6 +22,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -53,6 +54,7 @@ class SahaDenetimi extends Page
 
     protected static ?string $navigationLabel = 'Saha Denetimi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $isTanimi = null;

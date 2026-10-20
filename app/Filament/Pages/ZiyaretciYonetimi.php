@@ -12,6 +12,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -38,6 +39,7 @@ class ZiyaretciYonetimi extends Page
     protected static ?string $navigationLabel = 'Ziyaretçiler';
 
     // --- Liste filtreleri ---
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $donem = 'bugun';

@@ -17,6 +17,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -46,6 +47,7 @@ class MuayeneFormu extends Page
 
     protected static ?string $navigationLabel = 'Muayene Form (EK-2)';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $calisanHizliSecId = null;

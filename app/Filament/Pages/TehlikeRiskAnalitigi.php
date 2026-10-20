@@ -11,6 +11,7 @@ use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -37,6 +38,7 @@ class TehlikeRiskAnalitigi extends Page
 
     protected static ?string $navigationLabel = 'Tehlike ve Risk Analitiği';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $rdId = null;

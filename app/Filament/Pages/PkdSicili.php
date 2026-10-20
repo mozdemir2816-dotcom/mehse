@@ -22,6 +22,7 @@ use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -46,6 +47,7 @@ class PkdSicili extends Page
 
     protected static ?string $title = 'PKD Sicili — Patlamadan Korunma Dokümanı';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $arama = null;

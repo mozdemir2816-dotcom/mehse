@@ -14,6 +14,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -47,10 +48,12 @@ class RiskMerkezi extends Page
 
     protected static ?string $navigationLabel = 'Risk Merkezi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $rdId = null;
 
+    #[Url(as: 'sekme')]
     public string $sekme = 'merkez';
 
     public string $aksiyonFiltre = 'acik';

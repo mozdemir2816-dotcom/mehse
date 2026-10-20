@@ -23,6 +23,7 @@ use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -50,6 +51,7 @@ class TaseronYonetimi extends Page
     protected static ?string $navigationLabel = 'Taşeron / Alt İşveren';
 
     /** Liste filtresi (boş = tüm işyerleri). */
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public bool $pasifleriGoster = false;

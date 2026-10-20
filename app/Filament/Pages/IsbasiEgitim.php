@@ -19,6 +19,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -44,6 +45,7 @@ class IsbasiEgitim extends Page
 
     protected static ?string $navigationLabel = 'İşbaşı Eğt. Tutanağı';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $calisanHizliSecId = null;

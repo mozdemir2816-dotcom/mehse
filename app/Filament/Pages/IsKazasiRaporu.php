@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use UnitEnum;
@@ -47,6 +48,7 @@ class IsKazasiRaporu extends Page
 
     protected static ?string $navigationLabel = 'İş Kazası Raporu';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $duzenlenenId = null;

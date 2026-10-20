@@ -23,6 +23,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -52,6 +53,7 @@ class TespitOneriDefteri extends Page
 
     protected static ?string $navigationLabel = 'Tespit Öneri Defteri';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $konuFiltre = '';

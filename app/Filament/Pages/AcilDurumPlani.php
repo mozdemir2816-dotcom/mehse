@@ -22,6 +22,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use UnitEnum;
@@ -50,6 +51,7 @@ class AcilDurumPlani extends Page
 
     protected static ?string $navigationLabel = 'Acil Durum Planı';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     // Form durumu (seçili plana bağlanır)

@@ -16,6 +16,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -49,6 +50,7 @@ class UzaktanEgitimAtama extends Page
 
     protected static ?string $navigationLabel = 'Uzaktan Eğitim Atama';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?int $paketId = null;

@@ -34,6 +34,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -60,8 +61,10 @@ class KurulToplantisi extends Page
 
     protected static ?string $navigationLabel = 'İSG Kurulu';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    #[Url(as: 'toplanti')]
     public ?int $toplantiId = null;
 
     // Seçili toplantının künye alanları (detay bölümünde düzenlenir)
@@ -140,7 +143,12 @@ class KurulToplantisi extends Page
 
     public function mount(): void
     {
-        $this->firmaId = request()->integer('firma') ?: (int) array_key_first($this->firmalar()) ?: null;
+        $this->firmaId = request()->integer('firma') ?: $this->firmaId ?: (int) array_key_first($this->firmalar()) ?: null;
+
+        // Sayfa yenilenince URL'deki toplantı açık kalsın; firmaya ait değilse kapat
+        if ($this->toplantiId) {
+            $this->toplanti() ? $this->toplantiSec($this->toplantiId) : $this->toplantiId = null;
+        }
     }
 
     /*

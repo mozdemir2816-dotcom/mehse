@@ -19,6 +19,7 @@ use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -54,6 +55,7 @@ class SertifikaOlustur extends Page
 
     protected static ?string $navigationLabel = 'Sertifika Oluştur';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $tip = 'isg';

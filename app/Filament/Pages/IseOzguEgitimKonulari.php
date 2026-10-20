@@ -16,6 +16,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -47,6 +48,7 @@ class IseOzguEgitimKonulari extends Page
 
     public string $kaynakFiltre = '';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public function mount(): void

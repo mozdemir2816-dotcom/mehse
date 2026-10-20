@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -46,6 +47,7 @@ class IsyeriDurumMerkezi extends Page
 
     protected static ?string $navigationLabel = 'İşyeri Durum Merkezi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $takvimKategori = '';

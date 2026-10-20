@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -54,6 +55,7 @@ class OnBilgilendirmeler extends Page
 
     protected static ?string $navigationLabel = 'Ön Bilgilendirme / Tebliğ';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public function mount(): void

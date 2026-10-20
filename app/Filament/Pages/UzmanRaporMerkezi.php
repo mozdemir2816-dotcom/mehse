@@ -9,6 +9,7 @@ use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -38,6 +39,7 @@ class UzmanRaporMerkezi extends Page
 
     protected static ?string $navigationLabel = 'Uzman Rapor Merkezi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public int $gosterilen = 20;

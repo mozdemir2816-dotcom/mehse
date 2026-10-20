@@ -22,6 +22,7 @@ use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
 
@@ -66,6 +67,7 @@ class AiSahaAnalizi extends Page
 
     public string $durum = SahaAnalizi::TASLAK;
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $alanBolge = null;

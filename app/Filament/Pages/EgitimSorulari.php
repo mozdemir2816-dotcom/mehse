@@ -18,6 +18,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 use App\Filament\Concerns\SinirliErisim;
@@ -47,6 +48,7 @@ class EgitimSorulari extends Page
 
     protected static ?string $navigationLabel = 'Eğitim Soruları';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public ?string $sektorAnahtari = null;

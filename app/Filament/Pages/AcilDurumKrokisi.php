@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -48,6 +49,7 @@ class AcilDurumKrokisi extends Page
 
     protected static ?string $navigationLabel = 'Acil Durum Krokisi';
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     /** 'klasik' (2B SVG editör) | '3b' (izometrik editör, yan yana çalışır). */

@@ -19,6 +19,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Throwable;
 use UnitEnum;
 
@@ -48,6 +49,7 @@ class JsaDegerlendirmesi extends Page
     protected static ?string $navigationLabel = 'JSA (İşe Özgü Risk)';
 
     /** Çıktı alınırken künyeye eklenecek firma (opsiyonel). */
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public string $arama = '';

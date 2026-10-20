@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Locked;
 use Throwable;
 use UnitEnum;
@@ -63,11 +64,13 @@ abstract class YillikPlanlar extends Page
 
     public const DURUM_SIRASI = ['bos', 'planlandi', 'tamamlandi'];
 
+    #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
     public int $yil;
 
     #[Locked]
+    #[Url(as: 'sekme')]
     public string $sekme = 'calisma';
 
     public ?string $yeniFaaliyet = null;
