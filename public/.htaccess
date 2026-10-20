@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # HTTP -> HTTPS (20.10.2026). Sertifika yenileme (ACME) yolu hariç; proxy arkasında döngü olmasın.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -33,4 +39,13 @@
     <Files "sw.js">
         Header set Cache-Control "no-cache, max-age=0"
     </Files>
+</IfModule>
+
+# Güvenlik başlıkları (20.10.2026). HSTS kısa tutuldu (1 gün); sorun yoksa uzatılır.
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=86400"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header unset X-Powered-By
 </IfModule>
