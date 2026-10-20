@@ -22,7 +22,8 @@
 
 @if ($gorsel)
     {{-- Editörün kaydettiği görüntü: antet + lejant görüntünün içindedir --}}
-    <img src="{{ $gorsel }}" style="width:100%;height:auto;border:1px solid #ccc">
+    {{-- A4 yatay kullanılabilir alan ≈ 1078×757 px: görsel sığmazsa dompdf onu sonraki sayfaya atar, ilk sayfa boş kalır --}}
+    <div style="text-align:center"><img src="{{ $gorsel }}" style="width:1000px;height:707px"></div>
     <div class="kunye" style="margin-top:4px">
         {{ $firma?->unvan }} · Hazırlanma: {{ $kroki->hazirlanma_tarihi?->format('d.m.Y') ?? '—' }}
         @if ($kroki->antet['revizyon'] ?? null) · Rev. {{ $kroki->antet['revizyon'] }} @endif
