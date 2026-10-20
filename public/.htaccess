@@ -5,7 +5,9 @@
 
     RewriteEngine On
 
-    # HTTP -> HTTPS (20.10.2026). Sertifika yenileme (ACME) yolu hariç; proxy arkasında döngü olmasın.
+    # HTTP -> HTTPS (20.10.2026). Sertifika yenileme (ACME) yolu ve yerel geliştirme (localhost) hariç;
+    # proxy arkasında döngü olmasın.
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
     RewriteCond %{HTTPS} !=on
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
     RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge/
