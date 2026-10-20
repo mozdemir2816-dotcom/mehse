@@ -90,5 +90,86 @@
                 <input type="text" wire:model.blur="genelNot" style="{{ $girdi }}" placeholder="örn. Tüm KKD'ler CE işaretli ve zimmetle teslim edilir; risk değerlendirmesi ref. no">
             </div>
         </x-filament::section>
+
+        <x-filament::section icon="heroicon-o-book-open" icon-color="gray" collapsible collapsed>
+            <x-slot name="heading">KKD Standartları ve Teknik Özellikleri Rehberi</x-slot>
+            <x-slot name="description">Salt-okunur referans (Şantiye KKD Teknik Standartlar Matrisi) — yukarıdaki tabloya hiçbir etkisi yoktur.</x-slot>
+
+            <div style="display:flex;flex-direction:column;gap:1rem">
+                <div style="{{ $kutu }}">
+                    <div style="font-weight:600;font-size:.85rem;margin-bottom:.4rem">Bu firma için geçerli faaliyet bölümleri</div>
+                    <p style="font-size:.72rem;color:rgb(107 114 128);margin:0 0 .5rem">
+                        Firma her inşaat aşamasını yapmıyor olabilir (örn. sadece kazı, veya sadece dış cephe/iskele/sıva/boya).
+                        Hiçbiri seçilmezse tüm bölümler gösterilir. Seçim bu firma için kaydedilir.
+                    </p>
+                    <div style="display:flex;flex-wrap:wrap;gap:.9rem">
+                        @foreach ($this->faaliyetBolumleri as $bolum)
+                            <label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;cursor:pointer">
+                                <input type="checkbox" wire:click="bolumToggle('{{ addslashes($bolum) }}')" @checked(in_array($bolum, $gecerliBolumler, true))>
+                                {{ $bolum }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                @foreach ($this->teknikStandartlar as $bolum => $bolumSatirlari)
+                    <div style="{{ $kutu }}">
+                        <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem">{{ $bolum }}</div>
+                        <div style="overflow-x:auto">
+                            <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:900px">
+                                <thead>
+                                    <tr style="text-align:left;background:rgb(107 114 128 / .08)">
+                                        <th style="padding:.3rem">İş Kolu</th>
+                                        <th style="padding:.3rem">Vücut Bölgesi</th>
+                                        <th style="padding:.3rem">KKD Tanımı</th>
+                                        <th style="padding:.3rem">Standart</th>
+                                        <th style="padding:.3rem">Performans / Kod Detayı</th>
+                                        <th style="padding:.3rem">Koruma Amacı</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($bolumSatirlari as $s)
+                                        <tr style="border-top:1px solid rgb(107 114 128 / .18)">
+                                            <td style="padding:.3rem">{{ $s['is_kolu'] }}</td>
+                                            <td style="padding:.3rem">{{ $s['vucut_bolgesi'] }}</td>
+                                            <td style="padding:.3rem;font-weight:600">{{ $s['kkd'] }}</td>
+                                            <td style="padding:.3rem">{{ $s['standart'] }}</td>
+                                            <td style="padding:.3rem">{{ $s['performans'] }}</td>
+                                            <td style="padding:.3rem;color:rgb(107 114 128)">{{ $s['koruma_amaci'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endforeach
+
+                <div style="{{ $kutu }}">
+                    <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem">Standart Kod Okuma Rehberi</div>
+                    <div style="overflow-x:auto">
+                        <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:900px">
+                            <thead>
+                                <tr style="text-align:left;background:rgb(107 114 128 / .08)">
+                                    <th style="padding:.3rem">Standart</th>
+                                    <th style="padding:.3rem">Temel Tanım</th>
+                                    <th style="padding:.3rem">Kodlama / Performans Basamakları</th>
+                                    <th style="padding:.3rem">Sahadaki Pratik Karşılığı</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($this->standartRehberi as $r)
+                                    <tr style="border-top:1px solid rgb(107 114 128 / .18)">
+                                        <td style="padding:.3rem;font-weight:600">{{ $r['standart'] }}</td>
+                                        <td style="padding:.3rem">{{ $r['tanim'] }}</td>
+                                        <td style="padding:.3rem">{{ $r['kodlama'] }}</td>
+                                        <td style="padding:.3rem;color:rgb(107 114 128)">{{ $r['pratik'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </x-filament::section>
     @endif
 </x-filament-panels::page>

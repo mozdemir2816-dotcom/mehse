@@ -21,6 +21,7 @@ class KkdMatrisi extends Model
 
     protected $casts = [
         'satirlar' => 'array',
+        'gecerli_bolumler' => 'array',
     ];
 
     protected static function booted(): void

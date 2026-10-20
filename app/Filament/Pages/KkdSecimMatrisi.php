@@ -51,6 +51,9 @@ class KkdSecimMatrisi extends Page
 
     public ?string $yeniIsKalemi = null;
 
+    /** Bu firma için geçerli faaliyet bölümleri (referans paneli filtresi); boş = tümü. */
+    public array $gecerliBolumler = [];
+
     public function mount(): void
     {
         if ($firmaId = request()->integer('firma')) {
@@ -95,6 +98,47 @@ class KkdSecimMatrisi extends Page
         return config('isg.kkd_matris.is_kalemleri', []);
     }
 
+    /** @return array<int, string> Teknik standart referansındaki tüm faaliyet bölümleri. */
+    #[Computed]
+    public function faaliyetBolumleri(): array
+    {
+        return collect(config('kkd_teknik_standartlar.satirlar', []))
+            ->pluck('faaliyet_bolumu')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Teknik standart referansı — gecerliBolumler boşsa tümü, doluysa sadece
+     * seçili faaliyet bölümleri. Firma her inşaat aşamasını yapmıyor olabilir.
+     *
+     * @return array<string, array<int, array<string, string>>>
+     */
+    #[Computed]
+    public function teknikStandartlar(): array
+    {
+        return collect(config('kkd_teknik_standartlar.satirlar', []))
+            ->when($this->gecerliBolumler, fn ($c) => $c->whereIn('faaliyet_bolumu', $this->gecerliBolumler))
+            ->groupBy('faaliyet_bolumu')
+            ->all();
+    }
+
+    #[Computed]
+    public function standartRehberi(): array
+    {
+        return config('kkd_teknik_standartlar.standart_rehberi', []);
+    }
+
+    public function bolumToggle(string $bolum): void
+    {
+        $this->gecerliBolumler = in_array($bolum, $this->gecerliBolumler, true)
+            ? array_values(array_diff($this->gecerliBolumler, [$bolum]))
+            : [...$this->gecerliBolumler, $bolum];
+
+        $this->kaydet(sessiz: true);
+    }
+
     public function updatedFirmaId(): void
     {
         unset($this->firma, $this->matris);
@@ -102,6 +146,7 @@ class KkdSecimMatrisi extends Page
         $matris = $this->matris();
         $this->satirlar = $matris?->satirlar ?? [];
         $this->genelNot = $matris?->genel_not;
+        $this->gecerliBolumler = $matris?->gecerli_bolumler ?? [];
     }
 
     public function katalogdanEkle(string $grup, string $ad): void
@@ -160,7 +205,7 @@ class KkdSecimMatrisi extends Page
             return;
         }
 
-        $matris->update(['satirlar' => $this->satirlar, 'genel_not' => $this->genelNot]);
+        $matris->update(['satirlar' => $this->satirlar, 'genel_not' => $this->genelNot, 'gecerli_bolumler' => $this->gecerliBolumler]);
         $this->satirlar = $matris->fresh()->satirlar ?? [];
 
         if (! $sessiz) {

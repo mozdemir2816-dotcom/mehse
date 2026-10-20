@@ -8,6 +8,7 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu as KkdZimmetFormuModel;
+use App\Support\KkdZimmetFormuSenkron;
 use App\Support\KkdZimmetFormuUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -283,16 +284,20 @@ class KkdFormu extends Page
     |--------------------------------------------------------------------------
     */
 
-    /** @return array<int, array{ad_soyad: string, tc: ?string, departman: ?string}> */
+    /** @return array<int, array{ad_soyad: string, tc: ?string, departman: ?string, calisan_id: ?int}> */
     private function calisanlariTopla(): array
     {
         $firmaCalisanlari = $this->calisanlar
             ->whereIn('id', $this->secilenCalisanIdler)
-            ->map(fn (Calisan $c) => ['ad_soyad' => $c->ad_soyad, 'tc' => $c->tc, 'departman' => $c->gorev])
+            ->map(fn (Calisan $c) => ['ad_soyad' => $c->ad_soyad, 'tc' => $c->tc, 'departman' => $c->gorev, 'calisan_id' => $c->id])
             ->values()
             ->all();
 
-        return [...$firmaCalisanlari, ...$this->manuelCalisanlar];
+        $manuel = collect($this->manuelCalisanlar)
+            ->map(fn (array $c) => [...$c, 'calisan_id' => null])
+            ->all();
+
+        return [...$firmaCalisanlari, ...$manuel];
     }
 
     /** @return array<int, array{ad: string, standart: string, kategori: string}> */
@@ -310,6 +315,42 @@ class KkdFormu extends Page
             ->filter();
 
         return $katalogdan->concat($this->matristenGelenKkdler)->values()->all();
+    }
+
+    /**
+     * kkdleriTopla() ile paralel ama bridge için kategori ANAHTARINI da
+     * taşır (kkdleriTopla() PDF/JSON için görünen adı üretir, o metoda
+     * dokunulmaz). Bkz. App\Support\KkdZimmetFormuSenkron.
+     *
+     * @return array<int, array{ad: string, standart: ?string, kategori_anahtari: ?string, kategori_adi: string}>
+     */
+    private function kkdKalemleriBridgeIcin(): array
+    {
+        $kategoriler = $this->kategoriler();
+
+        $katalogdan = collect($this->secilenKkdler)
+            ->map(function (string $anahtar) use ($kategoriler) {
+                [$kategoriAnahtari, $ad] = explode('|', $anahtar, 2);
+                $madde = collect($kategoriler[$kategoriAnahtari]['maddeler'] ?? [])->firstWhere('ad', $ad);
+
+                return $madde ? [
+                    'ad' => $ad,
+                    'standart' => $madde['standart'],
+                    'kategori_anahtari' => $kategoriAnahtari,
+                    'kategori_adi' => $kategoriler[$kategoriAnahtari]['ad'],
+                ] : null;
+            })
+            ->filter();
+
+        $matristen = collect($this->matristenGelenKkdler)
+            ->map(fn (array $k) => [
+                'ad' => $k['ad'],
+                'standart' => $k['standart'] ?? null,
+                'kategori_anahtari' => null,
+                'kategori_adi' => $k['kategori'],
+            ]);
+
+        return $katalogdan->concat($matristen)->values()->all();
     }
 
     private function kaydet(): ?KkdZimmetFormuModel
@@ -338,6 +379,8 @@ class KkdFormu extends Page
             'kkdler' => $kkdler,
         ]);
         $form->save();
+
+        KkdZimmetFormuSenkron::senkronEt($form, $calisanlar, $this->kkdKalemleriBridgeIcin());
 
         unset($this->gecmisFormlar);
 
