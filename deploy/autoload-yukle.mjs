@@ -1,4 +1,11 @@
-// Sunucu vendor/composer + vendor/autoload.php dosyalarını --no-dev kurulumdan yükler./n// deploy.mjs bunları bilerek atlar: yerel autoload dev paketlerini ister, sunucuda/n// yoklar -> site 500 (10.10.2026, smalot/pdfparser eklenince yaşandı)./n// composer.lock değiştiğinde (paket ekleme/güncelleme), deploy.mjs ile birlikte:/n//   1) geçici klasöre composer.json, composer.lock, app/, database/ kopyala/n//   2) orada: php composer.phar install --no-dev --no-scripts --no-interaction/n//   3) node deploy/autoload-yukle.mjs <geçici klasör>/nimport { Client } from 'basic-ftp';
+// Sunucu vendor/composer + vendor/autoload.php dosyalarını --no-dev kurulumdan yükler.
+// deploy.mjs bunları bilerek atlar: yerel autoload dev paketlerini ister, sunucuda
+// yoklar -> site 500 (10.10.2026, smalot/pdfparser eklenince yaşandı).
+// composer.lock değiştiğinde (paket ekleme/güncelleme), deploy.mjs ile birlikte:
+//   1) geçici klasöre composer.json, composer.lock, app/, database/ kopyala
+//   2) orada: php composer.phar install --no-dev --no-scripts --no-interaction
+//   3) node deploy/autoload-yukle.mjs <geçici klasör>
+import { Client } from 'basic-ftp';
 import fs from 'node:fs';
 const kaynak = process.argv[2];
 const env = {};
