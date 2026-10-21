@@ -4072,6 +4072,11 @@ return [
                 'Ticari araç sürüş güvenliği', 'Yük sabitleme ve bağlama', 'Tehlikeli madde taşımacılığı (ADR)',
                 'Uzun sürüş ve yorgunluk yönetimi', 'Yük indirme-bindirme güvenliği',
             ]],
+            'asansor' => ['ad' => 'Asansör', 'maddeler' => [
+                'Asansör kuyusu ve makine dairesinde çalışma güvenliği', 'Halat, kılavuz ray ve fren sistemlerinin kontrolü',
+                'Sıkışma, ezilme ve yüksekten düşme riskleri', 'Kabin ve karşı ağırlık sisteminde güvenli çalışma',
+                'Acil durum ve mahsur kalan kullanıcı kurtarma prosedürleri',
+            ]],
         ],
 
         // "Özel" (tek bloklu) eğitim başlıkları — her biri kendi sabit konu
