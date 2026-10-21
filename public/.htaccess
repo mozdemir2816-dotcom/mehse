@@ -13,6 +13,11 @@
     RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge/
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+    # Yerel geliştirme (localhost) işaretle — HSTS SADECE canlıda gönderilsin (21.10.2026: localhost'ta
+    # HSTS tarayıcıya önbelleğe alınıp geçerli sertifika olmadan https'e zorluyordu).
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
+    RewriteRule ^ - [E=CANLI_HOST:1]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -44,8 +49,10 @@
 </IfModule>
 
 # Güvenlik başlıkları (20.10.2026). HSTS kısa tutuldu (1 gün); sorun yoksa uzatılır.
+# HSTS SADECE canlı hostlarda (21.10.2026) — localhost'ta tarayıcıya önbelleğe alınıp
+# geçersiz yerel sertifikayla güvenlik hatasına yol açıyordu.
 <IfModule mod_headers.c>
-    Header always set Strict-Transport-Security "max-age=86400"
+    Header always set Strict-Transport-Security "max-age=86400" env=CANLI_HOST
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-Content-Type-Options "nosniff"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
