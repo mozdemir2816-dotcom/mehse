@@ -56,10 +56,36 @@ class KkdMatrisi extends Model
 
         if (! $kayit->exists) {
             $kayit->satirlar = [];
+            $kayit->gecerli_bolumler = static::onerilenBolumler($firma->nace_kodu);
             $kayit->save();
         }
 
         return $kayit;
+    }
+
+    /**
+     * Firma NACE koduna göre `config/kkd_teknik_standartlar.php`'deki
+     * `nace_eslesme` tablosundan öngörülen faaliyet bölümleri (önek eşleşmesi,
+     * örn. "25.62.00" → "25.62"). Yalnız firmanın İLK KKD Matrisi kaydı
+     * oluşturulurken varsayılan olarak uygulanır (bkz. firmaIcin()).
+     *
+     * @return array<int, string>
+     */
+    public static function onerilenBolumler(?string $naceKodu): array
+    {
+        if (blank($naceKodu)) {
+            return [];
+        }
+
+        $sonuc = [];
+
+        foreach ((array) config('kkd_teknik_standartlar.nace_eslesme', []) as $onek => $bolumler) {
+            if (str_starts_with($naceKodu, $onek)) {
+                $sonuc = [...$sonuc, ...$bolumler];
+            }
+        }
+
+        return array_values(array_unique($sonuc));
     }
 
     public function doluMu(): bool
