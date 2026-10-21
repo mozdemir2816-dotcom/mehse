@@ -322,6 +322,7 @@
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisExcel({{ $k->id }})">Excel</x-filament::button>
+                                <x-filament::button size="xs" color="gray" wire:click="gecmisWord({{ $k->id }})">Word</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisSertifika({{ $k->id }})">Sertifika</x-filament::button>
                                 @if ($k->baslik_anahtari === 'genel')
                                     <x-filament::button size="xs" color="gray" wire:click="mountAction('gecmisYildizGrup', { id: {{ $k->id }} })">Yıldız Grup</x-filament::button>

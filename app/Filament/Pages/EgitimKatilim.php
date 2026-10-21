@@ -882,6 +882,26 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                     return EgitimKatilimUretici::excel($kayit);
                 }),
 
+            Action::make('word')
+                ->label('Word (Kaydet ve İndir)')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
+                ->action(function (array $data) {
+                    $kayit = $this->kaydet();
+
+                    if (! $kayit) {
+                        return null;
+                    }
+
+                    $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
+
+                    Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no)->success()->send();
+
+                    return EgitimKatilimUretici::word($kayit, ImzaSecenegi::secili($data));
+                }),
+
             Action::make('sertifika')
                 ->label('Katılımcı Sertifikaları (Kaydet ve İndir)')
                 ->icon('heroicon-o-check-badge')
@@ -967,6 +987,13 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         $kayit = $this->firma?->egitimKatilimlari()->find($id);
 
         return $kayit ? EgitimKatilimUretici::excel($kayit) : null;
+    }
+
+    public function gecmisWord(int $id)
+    {
+        $kayit = $this->firma?->egitimKatilimlari()->find($id);
+
+        return $kayit ? EgitimKatilimUretici::word($kayit) : null;
     }
 
     public function gecmisSertifika(int $id)

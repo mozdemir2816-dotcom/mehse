@@ -322,6 +322,116 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('.xlsx', $yanit->headers->get('content-disposition'));
     }
 
+    public function test_egitim_katilim_formu_word_olarak_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'sure_gun' => 1,
+            'isg_uzmani_var' => true,
+            'isg_uzmani_adi' => 'Vural Gündüz',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+        ]);
+
+        $yanit = EgitimKatilimUretici::word($kayit);
+        $this->assertInstanceOf(StreamedResponse::class, $yanit);
+
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $this->assertStringStartsWith('PK', $icerik);   // geçerli .docx (zip)
+        $this->assertStringContainsString('.docx', $yanit->headers->get('content-disposition'));
+    }
+
+    public function test_word_gercek_konu_icerigiyle_ve_katilimci_listesiyle_doldurulur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'BERT PLASTİK LTD']);
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 1,
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => '01234567890', 'gorev' => 'Kalıpçı']],
+        ]);
+
+        $xml = $this->wordDokumanXml($kayit);
+
+        $this->assertStringContainsString('BERT PLASTİK LTD', $xml);
+        $this->assertStringContainsString('Ali Veli', $xml);
+        $this->assertStringContainsString('01234567890', $xml);
+        $this->assertStringContainsString('Kalıpçı', $xml);
+        $this->assertStringContainsString('Genel Konular', $xml);
+        $this->assertStringContainsString('Teknik Konular', $xml);
+        $this->assertStringContainsString('İmza', $xml);
+        $this->assertStringNotContainsString('İmza (1. Gün)', $xml);   // 1 gün: tek imza sütunu
+    }
+
+    public function test_word_iki_gunluk_egitimde_gun_bazli_imza_sutunlari_olusur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 2,
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Ali Veli', 'tc' => null, 'gorev' => null]],
+        ]);
+
+        $xml = $this->wordDokumanXml($kayit);
+
+        $this->assertStringContainsString('İmza (1. Gün)', $xml);
+        $this->assertStringContainsString('İmza (2. Gün)', $xml);
+    }
+
+    public function test_ozel_baslikta_word_tek_bloklu_icerikle_uretilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'yuksekte_calisma', 'sure_gun' => 1,
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('yuksekte_calisma', null, 'az_tehlikeli'),
+            'katilimcilar' => [],
+        ]);
+
+        $xml = $this->wordDokumanXml($kayit);
+
+        $this->assertStringContainsString($kayit->konu_secimleri['ad'], $xml);
+    }
+
+    public function test_word_imzasiz_secilince_egitmen_kasesi_basilmaz(): void
+    {
+        $kaseYolu = storage_path('app/public/isg-profesyonel-kase/word-test.png');
+        @mkdir(dirname($kaseYolu), 0777, true);
+        file_put_contents($kaseYolu, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 1,
+            'isg_uzmani_var' => true, 'isg_uzmani_kase' => 'isg-profesyonel-kase/word-test.png',
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
+            'katilimcilar' => [],
+        ]);
+
+        try {
+            $this->assertGreaterThan(0, $this->wordResimSayisi($kayit, true));
+            $this->assertSame(0, $this->wordResimSayisi($kayit, false));
+        } finally {
+            @unlink($kaseYolu);
+        }
+    }
+
+    public function test_word_aksiyonu_kayit_olusturur_ve_docx_doner(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($firma)->create(['ad_soyad' => 'Test Çalışan']);
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'genel')
+            ->set('belgeTarihi', now()->toDateString())
+            ->callAction('word');
+
+        $this->assertDatabaseHas('egitim_katilimlari', ['firma_id' => $firma->id]);
+    }
+
     /** @return Worksheet */
     private function excelSayfasi(EgitimKatilim $kayit)
     {
@@ -331,6 +441,37 @@ class EgitimKatilimTest extends TestCase
         file_put_contents($yol, ob_get_clean());
 
         return IOFactory::load($yol)->getSheet(0);
+    }
+
+    private function wordZip(EgitimKatilim $kayit, bool $imzali = true): \ZipArchive
+    {
+        ob_start();
+        EgitimKatilimUretici::word($kayit, $imzali)->sendContent();
+        $yol = tempnam(sys_get_temp_dir(), 'egt').'.docx';
+        file_put_contents($yol, ob_get_clean());
+
+        $z = new \ZipArchive;
+        $z->open($yol);
+
+        return $z;
+    }
+
+    private function wordDokumanXml(EgitimKatilim $kayit, bool $imzali = true): string
+    {
+        return $this->wordZip($kayit, $imzali)->getFromName('word/document.xml');
+    }
+
+    private function wordResimSayisi(EgitimKatilim $kayit, bool $imzali = true): int
+    {
+        $z = $this->wordZip($kayit, $imzali);
+        $sayi = 0;
+        for ($i = 0; $i < $z->numFiles; $i++) {
+            if (str_starts_with($z->getNameIndex($i), 'word/media/')) {
+                $sayi++;
+            }
+        }
+
+        return $sayi;
     }
 
     public function test_excel_kullanici_sablonuna_yalniz_firma_tarih_ve_katilimcilar_yazilir(): void
