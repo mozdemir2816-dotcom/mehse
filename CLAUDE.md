@@ -15,8 +15,8 @@ görüntüleri referans (`C:\Users\mozde\Desktop\isgpratik\`), yol haritası: `M
 ### Komutlar
 
 ```bash
-"C:/xampp2/php/php.exe" artisan <komut>
-"C:/xampp2/php/php.exe" "C:/xampp2/php/composer.phar" <komut>
+"C:/xampp/php/php.exe" artisan <komut>
+"C:/xampp/php/php.exe" "C:/xampp/php/composer.phar" <komut>
 
 php artisan migrate        # yalnızca yeni migration'lar
 php artisan db:seed --class=TehlikeKutuphanesiSeeder
@@ -36,5 +36,5 @@ php artisan test           # 443 test (bkz. MIMARI.md için güncel sayı)
 
 ### Diğer projeler (KARIŞTIRMA)
 
-- `C:\xampp2\htdocs\yeni-proje\` — ayrı İSG/OSGB projesi
-- `C:\xampp2\htdocs\katip-isg\` — ayrı tek-firma İSG projesi
+- `yeni-proje` — ayrı İSG/OSGB projesi
+- `katip-isg` — ayrı tek-firma İSG projesi
