@@ -351,6 +351,11 @@ class Firma extends Model
         return $this->hasOne(AcilDurumKrokisi::class);
     }
 
+    public function tabelaTasarimlari(): HasMany
+    {
+        return $this->hasMany(TabelaTasarimi::class);
+    }
+
     /**
      * İGU'nun bu firmada ayda çalışması gereken süre (dk). İSG-KATİP sözleşmesindeki süre
      * (en son yüklenen KATİP Excel'i — güncel çalışan sayısı ve tehlike sınıfına göre KATİP
