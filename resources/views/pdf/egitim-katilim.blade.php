@@ -7,8 +7,8 @@
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 8px; }
     /* alt-şerit position:fixed olduğundan her sayfada tekrarlar; içerik onun
-       üstünde kalsın diye alta 80px boşluk bırakılır. */
-    .sayfa { padding: 14px 20px 82px; }
+       üstünde kalsın diye alta boşluk bırakılır (kaşe/imza büyüyünce bu da büyütüldü). */
+    .sayfa { padding: 14px 20px 110px; }
 
     .baslik { text-align: center; border-bottom: 2px double #111; padding-bottom: 4px; margin-bottom: 6px; }
     .baslik img { max-height: 34px; float: left; }
@@ -44,11 +44,11 @@
 
     .alt-serit { position: fixed; left: 20px; right: 20px; bottom: 8px; background: #fff; }
     table.imza { width: 100%; border-collapse: collapse; }
-    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 4px 7px; font-size: 8px; }
+    table.imza td { width: 50%; vertical-align: top; border: 1px solid #999; padding: 4px 7px; font-size: 8px; text-align: center; }
     table.imza .rol { font-weight: bold; margin-bottom: 1px; }
     table.imza .ad { margin-bottom: 2px; }
-    table.imza .kase { height: 28px; }
-    table.imza .kase img { max-height: 28px; max-width: 85%; }
+    table.imza .kase { height: 55px; }
+    table.imza .kase img { max-height: 55px; max-width: 90%; }
     table.imza .imza-satir { color: #666; }
 
     .yasal { margin: 3px 0 0; font-size: 6.5px; color: #666; text-align: center; }
