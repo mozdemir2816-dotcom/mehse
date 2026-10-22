@@ -38,6 +38,18 @@ class ZiyaretProgramiTest extends TestCase
         $this->assertSame('bos', $program->ziyaretler[0][0]['durum']);
     }
 
+    public function test_otomatik_doldur_butonu_bos_firmalari_doldurur(): void
+    {
+        Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli', 'calisan_sayisi' => 30, 'aktif' => true]);
+
+        Livewire::test(ZiyaretSayfasi::class)->set('yil', 2026)
+            ->callAction('otomatikDoldur')
+            ->assertNotified();
+
+        $program = ZiyaretProgrami::where('yil', 2026)->first();
+        $this->assertNotSame('bos', collect($program->ziyaretler)->last()[0]['durum']);
+    }
+
     public function test_ayni_firma_yil_icin_tekrar_cagrilinca_ayni_kayit_doner(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -79,14 +79,18 @@
                 <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.85rem;display:flex;flex-direction:column;gap:.5rem">
                     <div style="display:flex;gap:.35rem;flex-wrap:wrap">
                         @if ($bot['osgb']) <x-filament::badge size="sm" color="gray">OSGB</x-filament::badge> @endif
-                        <x-filament::badge size="sm" color="warning">Eklenti gerekli</x-filament::badge>
+                        @if ($bot['hazir'] ?? false)
+                            <x-filament::badge size="sm" color="success">Hazır</x-filament::badge>
+                        @else
+                            <x-filament::badge size="sm" color="warning">Eklenti gerekli</x-filament::badge>
+                        @endif
                         @if ($bot['yeni']) <x-filament::badge size="sm" color="success">YENİ</x-filament::badge> @endif
                     </div>
                     <div style="font-weight:700;font-size:.9rem">{{ $bot['ad'] }}</div>
                     <div style="font-size:.78rem;color:rgb(107 114 128);flex:1">{{ $bot['aciklama'] }}</div>
-                    <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-right" icon-position="after"
+                    <x-filament::button size="xs" :color="($bot['hazir'] ?? false) ? 'primary' : 'gray'" icon="heroicon-o-arrow-right" icon-position="after"
                         wire:click="botKur('{{ addslashes($bot['ad']) }}')">
-                        Kurmak için tıklayın
+                        {{ ($bot['hazir'] ?? false) ? 'Sözleşmeleri Görüntüle' : 'Kurmak için tıklayın' }}
                     </x-filament::button>
                 </div>
             @endforeach

@@ -54,7 +54,9 @@ class BildirimTarayici
             ->when($firmaId, fn ($q) => $q->whereKey($firmaId))
             ->get();
 
-        $bulunan = $firmalar->flatMap(fn (Firma $f) => static::firmaBildirimleri($f))->keyBy('anahtar');
+        $bulunan = $firmalar->flatMap(fn (Firma $f) => static::firmaBildirimleri($f))
+            ->merge(static::genelBildirimler())
+            ->keyBy('anahtar');
 
         $yeni = 0;
         foreach ($bulunan as $anahtar => $b) {
@@ -86,6 +88,34 @@ class BildirimTarayici
         if (! $son || Carbon::parse($son)->lt(now()->subMinutes(static::OTOMATIK_TARAMA_DK))) {
             static::tara($kullanici);
         }
+    }
+
+    /**
+     * Firmaya bağlı olmayan, kullanıcı geneli uyarılar. Şu an: ayın son 2
+     * gününde "gelecek ayın İSG-KATİP sözleşme verisini güncelle" hatırlatması
+     * — Ziyaret Programı'ndaki "Boş Ayları Otomatik Doldur" bunu kullanır.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function genelBildirimler(): Collection
+    {
+        $bugun = Carbon::today();
+
+        if ($bugun->day < $bugun->daysInMonth - 1) {
+            return collect();
+        }
+
+        $gelecekAy = $bugun->copy()->addMonthNoOverflow()->translatedFormat('F');
+
+        return collect([[
+            'anahtar' => 'genel:isg_katip_guncelle:'.$bugun->format('Y-m'),
+            'firma_id' => null,
+            'seviye' => 'uyari',
+            'baslik' => 'İSG-KATİP sözleşme verilerini güncelleyin',
+            'aciklama' => $gelecekAy.' ayı ziyaret takvimini doğru oluşturabilmek için İSG-KATİP\'te "Tümünü Dışa aktar" ile güncel Excel\'i indirip İSG-KATİP Sözleşmeleri sayfasından yükleyin; ardından Ziyaret Programı\'nda "Boş Ayları Otomatik Doldur" ile takvimi oluşturun.',
+            'tarih' => $bugun->toDateString(),
+            'url' => static::url(fn () => \App\Filament\Pages\IsgKatipSozlesmeleri::getUrl()),
+        ]]);
     }
 
     /** @return Collection<int, array<string, mixed>> */

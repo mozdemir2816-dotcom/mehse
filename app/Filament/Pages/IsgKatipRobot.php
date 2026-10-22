@@ -13,7 +13,8 @@ use App\Filament\Concerns\SinirliErisim;
  * İSG-KATİP Robot — isgpratik 7-9.jpg. İSG-KATİP portalını otomatikleştiren Chrome
  * eklentisinin BİLGİ SAYFASI. mehse'de gerçek eklenti / portal erişimi yok:
  * gereksinimler + kurulum rehberi + bot kataloğu + günlük hak sayacı gösterilir,
- * "Kurmak için tıklayın" bildirim döndürür.
+ * "Kurmak için tıklayın" bildirim döndürür — tek istisna "hazir" işaretli bot(lar),
+ * bkz. botKur(): bunlar gerçekten çalışır (IsgKatipSozlesmeleri'ne yönlendirir).
  */
 class IsgKatipRobot extends Page
 {
@@ -54,6 +55,14 @@ class IsgKatipRobot extends Page
 
     public function botKur(string $ad): void
     {
+        $bot = collect(config('isg.isg_katip.botlar'))->firstWhere('ad', $ad);
+
+        if (data_get($bot, 'hazir', false)) {
+            $this->redirect(IsgKatipSozlesmeleri::getUrl());
+
+            return;
+        }
+
         $this->stubBildirim('"'.$ad.'" botu için Chrome eklentisi gerekli. Eklenti yayınlanınca aktifleşecek.');
     }
 

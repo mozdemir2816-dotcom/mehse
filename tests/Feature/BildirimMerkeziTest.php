@@ -130,4 +130,28 @@ class BildirimMerkeziTest extends TestCase
 
         $this->get('/admin')->assertOk()->assertSee(BildirimMerkezi::getUrl(), false)->assertSee('okunmamış');
     }
+
+    public function test_ay_sonunda_isg_katip_guncelleme_hatirlatmasi_cikar(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow('2026-10-30');
+
+        BildirimTarayici::tara($this->uzman);
+        $a = $this->anahtarlar();
+
+        $this->assertSame('uyari', $a['genel:isg_katip_guncelle:2026-10']);
+
+        \Illuminate\Support\Carbon::setTestNow();
+    }
+
+    public function test_ay_ortasinda_isg_katip_guncelleme_hatirlatmasi_cikmaz(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow('2026-10-15');
+
+        BildirimTarayici::tara($this->uzman);
+        $a = $this->anahtarlar();
+
+        $this->assertArrayNotHasKey('genel:isg_katip_guncelle:2026-10', $a);
+
+        \Illuminate\Support\Carbon::setTestNow();
+    }
 }

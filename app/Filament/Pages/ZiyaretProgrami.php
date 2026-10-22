@@ -8,6 +8,7 @@ use App\Models\Firma;
 use App\Models\YillikPlan;
 use App\Models\ZiyaretProgrami as ZiyaretProgramiModel;
 use App\Support\GeminiZiyaretDanismani;
+use App\Support\ZiyaretOtomatikPlanlayici;
 use App\Support\ZiyaretProgramiUretici;
 use App\Support\ZiyaretTakvimi;
 use BackedEnum;
@@ -332,6 +333,25 @@ class ZiyaretProgrami extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('otomatikDoldur')
+                ->label('Boş Ayları Otomatik Doldur')
+                ->icon('heroicon-o-sparkles')
+                ->color('gray')
+                ->requiresConfirmation()
+                ->modalHeading('Boş ayları otomatik doldur')
+                ->modalDescription('Seçtiğiniz yıl için: elle veya daha önce doldurulmuş aylara DOKUNULMAZ. Hâlâ boş olan aylar; FOM MAKİNA / Orman Müdürlükleri gibi sabit kurallı firmalarda o kurala göre, diğer tüm aktif firmalarda ise İSG-KATİP süresine göre (günde en fazla 10 saat) otomatik doldurulur. Bugünden önceki günlere ziyaret konmaz.')
+                ->modalSubmitActionLabel('Doldur')
+                ->action(function (): void {
+                    $sonuc = ZiyaretOtomatikPlanlayici::calistir($this->yil);
+
+                    unset($this->program);
+
+                    Notification::make()
+                        ->title($sonuc['firma'].' firmada '.$sonuc['doldurulan_ay'].' ay dolduruldu')
+                        ->body($sonuc['atlanan_ay'].' ay zaten planlıydı, dokunulmadı.'.($sonuc['detay'] ? ' Doldurulan: '.implode(', ', array_slice($sonuc['detay'], 0, 6)).(count($sonuc['detay']) > 6 ? '…' : '.') : ''))
+                        ->success()
+                        ->send();
+                }),
             Action::make('kaydet')
                 ->label('Kaydet')
                 ->icon('heroicon-o-check')
