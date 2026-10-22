@@ -73,6 +73,7 @@
                                 <th style="padding:.4rem;width:110px">Sonraki</th>
                                 <th style="padding:.4rem;width:140px">Sonuç</th>
                                 <th style="padding:.4rem;width:120px">Rapor No</th>
+                                <th style="padding:.4rem;width:110px">Kurşun (µg/dL)</th>
                                 <th style="padding:.4rem"></th>
                             </tr>
                         </thead>
@@ -100,6 +101,13 @@
                                         </select>
                                     </td>
                                     <td style="padding:.35rem"><input type="text" wire:model.blur="satirlar.{{ $i }}.rapor_no" style="{{ $girdi }}"></td>
+                                    <td style="padding:.35rem">
+                                        @if (($s['tetkik_turu'] ?? null) === 'kan_kursunu')
+                                            <input type="number" step="0.1" min="0" wire:model.blur="satirlar.{{ $i }}.kursun_deger" style="{{ $girdi }}" placeholder="µg/dL">
+                                        @else
+                                            <span style="color:rgb(107 114 128)">—</span>
+                                        @endif
+                                    </td>
                                     <td style="padding:.35rem;text-align:center">
                                         <button type="button" wire:click="satirSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>

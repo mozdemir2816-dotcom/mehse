@@ -885,6 +885,7 @@ return [
             'sft' => ['ad' => 'Solunum Fonksiyon Testi (SFT)', 'periyot_ay' => 12, 'aciklama' => 'Toz / gaz / kimyasal maruziyeti'],
             'akciger_grafisi' => ['ad' => 'Akciğer Grafisi (PA)', 'periyot_ay' => 12, 'aciklama' => 'Tozlu işler — pnömokonyoz taraması'],
             'kan_tahlili' => ['ad' => 'Hemogram / Biyokimya', 'periyot_ay' => 12, 'aciklama' => 'Kurşun, benzen, çözücü vb. maruziyette'],
+            'kan_kursunu' => ['ad' => 'Kan Kurşunu Düzeyi', 'periyot_ay' => 12, 'aciklama' => 'Kurşun maruziyeti olan işler (batarya, döküm, boya, radyatör vb.) — µg/dL değeri girilir, sınır/uygunluk kararı hekime aittir'],
             'idrar_tahlili' => ['ad' => 'Tam İdrar Tahlili', 'periyot_ay' => 12, 'aciklama' => 'Ağır metal / çözücü maruziyeti'],
             'portor' => ['ad' => 'Portör Muayenesi', 'periyot_ay' => 3, 'aciklama' => 'Gıda ile temaslı çalışanlar (Hijyen Yön.)'],
             'psikoteknik' => ['ad' => 'Psikoteknik Değerlendirme', 'periyot_ay' => 60, 'aciklama' => 'Araç sürücüleri / vinç-forklift operatörleri'],

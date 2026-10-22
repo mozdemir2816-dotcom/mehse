@@ -85,6 +85,23 @@ class SaglikGozetimiTest extends TestCase
         $this->assertCount(1, $g->refresh()->yaklasanlar());
     }
 
+    public function test_kan_kursunu_degeri_girilir_ve_kaydedilir(): void
+    {
+        $c = Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Ayşe Yıldız']);
+
+        Livewire::test(SaglikGozetimiSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('yeniCalisanId', $c->id)
+            ->set('yeniTur', 'kan_kursunu')
+            ->call('satirEkle')
+            ->set('satirlar.0.kursun_deger', '18.5')
+            ->call('kaydet');
+
+        $g = SaglikGozetimi::where('firma_id', $this->firma->id)->sole();
+        $this->assertSame('kan_kursunu', $g->satirlar[0]['tetkik_turu']);
+        $this->assertSame('18.5', $g->satirlar[0]['kursun_deger']);
+    }
+
     public function test_pdf_uretilir(): void
     {
         $g = SaglikGozetimi::firmaIcin($this->firma);

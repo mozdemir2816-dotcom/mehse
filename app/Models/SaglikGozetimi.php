@@ -34,7 +34,7 @@ class SaglikGozetimi extends Model
                 $s = array_merge([
                     'calisan_id' => null, 'calisan_adi' => '', 'gorev' => null,
                     'tetkik_turu' => 'periyodik', 'tarih' => null, 'sonraki_tarih' => null,
-                    'sonuc' => 'bekliyor', 'rapor_no' => null, 'not' => null,
+                    'sonuc' => 'bekliyor', 'rapor_no' => null, 'not' => null, 'kursun_deger' => null,
                 ], $s);
 
                 $s['sonuc'] = array_key_exists($s['sonuc'], config('isg.saglik_tetkik.sonuclar')) ? $s['sonuc'] : 'bekliyor';

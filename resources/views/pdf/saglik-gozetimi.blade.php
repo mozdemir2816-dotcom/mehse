@@ -53,6 +53,7 @@
             <th style="width:60px">Sonraki Tetkik</th>
             <th style="width:90px">Sonuç</th>
             <th style="width:70px">Rapor No</th>
+            <th style="width:70px">Kurşun (µg/dL)</th>
             <th>Açıklama</th>
         </tr>
     </thead>
@@ -72,10 +73,11 @@
                 <td class="{{ $gecmis ? 'gecti' : '' }}">{{ $sonraki ? $sonraki->format('d.m.Y') : '—' }}</td>
                 <td class="s-{{ $s['sonuc'] ?? 'bekliyor' }}">{{ $sonuclar[$s['sonuc'] ?? 'bekliyor'] ?? '' }}</td>
                 <td>{{ $s['rapor_no'] ?? '—' }}</td>
+                <td>{{ $s['kursun_deger'] ?? '—' }}</td>
                 <td>{{ $s['not'] ?? '' }}</td>
             </tr>
         @empty
-            <tr><td colspan="9" style="text-align:center;color:#888">Kayıt girilmemiş.</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:#888">Kayıt girilmemiş.</td></tr>
         @endforelse
     </tbody>
 </table>

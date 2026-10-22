@@ -126,6 +126,7 @@ class SaglikGozetimi extends Page
             'sonuc' => 'bekliyor',
             'rapor_no' => null,
             'not' => null,
+            'kursun_deger' => null,
         ];
     }
 
