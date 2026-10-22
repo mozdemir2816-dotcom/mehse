@@ -190,8 +190,7 @@ class ProfilimTest extends TestCase
             ->call('sekmeSec', 'pazarlama')->assertSet('sekme', 'pazarlama')
             ->call('sekmeSec', 'arsiv')->assertSet('sekme', 'arsiv')
             ->call('sekmeSec', 'raporlar')->assertSet('sekme', 'raporlar')
-            ->call('sekmeSec', 'firma_ziyaretleri')->assertSet('sekme', 'firma_ziyaretleri')
-            ->call('sekmeSec', 'yok')->assertSet('sekme', 'firma_ziyaretleri');
+            ->call('sekmeSec', 'yok')->assertSet('sekme', 'raporlar');
     }
 
     public function test_unvan_ayari_action_kullaniciyi_gunceller(): void

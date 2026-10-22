@@ -191,8 +191,8 @@
         <x-filament::section icon="heroicon-o-map" icon-color="primary">
             <x-slot name="heading">Nereye Gideceğim — Aylık Takvim</x-slot>
             <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:-.5rem;margin-bottom:.8rem">
-                Yukarıdaki tabloya girdiğiniz tarihli ziyaretler burada işaretlenir — Profilim &gt;
-                Firma Ziyaretleri'ndeki takvimle aynı kayıtlardan gelir, sadece bu firmaya süzülmüştür.
+                Yukarıdaki tabloya girdiğiniz tarihli ziyaretler burada işaretlenir — Saha
+                Takvimi'ndeki takvimle aynı kayıtlardan gelir, sadece bu firmaya süzülmüştür.
             </p>
             <div style="display:grid;grid-template-columns:20rem 1fr;gap:1rem">
                 <div>

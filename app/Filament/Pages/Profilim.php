@@ -13,7 +13,6 @@ use App\Support\EgitimKayitExcelIceAktarici;
 use App\Support\PortfoyExcelPanosuUretici;
 use App\Support\PortfoyKarne;
 use App\Support\RaporKayitlari;
-use App\Support\ZiyaretTakvimi;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -75,7 +74,6 @@ class Profilim extends Page
         'pazarlama' => 'Pazarlama',
         'arsiv' => 'Arşiv',
         'raporlar' => 'Raporlar',
-        'firma_ziyaretleri' => 'Firma Ziyaretleri',
     ];
 
     #[Url(as: 'sekme')]
@@ -90,10 +88,6 @@ class Profilim extends Page
     public string $raporArama = '';
 
     public string $raporTipFiltre = '';
-
-    public string $ziyaretSeciliTarih = '';
-
-    public string $ziyaretGosterilenAy = '';
 
     public string $egitimArama = '';
 
@@ -113,9 +107,6 @@ class Profilim extends Page
             ->where('user_id', Filament::auth()->id())
             ->orderBy('unvan')
             ->value('id') ?? 0);
-
-        $this->ziyaretSeciliTarih = now()->toDateString();
-        $this->ziyaretGosterilenAy = now()->format('Y-m');
     }
 
     public function sekmeSec(string $sekme): void
@@ -481,42 +472,6 @@ class Profilim extends Page
     public function raporTipSecenekleri()
     {
         return RaporKayitlari::tipSecenekleri();
-    }
-
-    /**
-     * Profilim > Firma Ziyaretleri — ZiyaretProgrami'ndeki tarihli ay
-     * satırlarından türetilen salt-okunur takvim (isgpratik 147.jpg).
-     *
-     * @return array<string, array<int, array{firma: Firma, amac: ?string, sure_saat: ?float, durum: string}>>
-     */
-    #[Computed]
-    public function ziyaretGunlukGruplar(): array
-    {
-        return ZiyaretTakvimi::gunlukGruplar(Filament::auth()->id());
-    }
-
-    /** @return array{ziyaret: int, firma: int} */
-    #[Computed]
-    public function ziyaretOzeti(): array
-    {
-        return ZiyaretTakvimi::ozet(Filament::auth()->id());
-    }
-
-    /** @return array<int, array{firma: Firma, amac: ?string, sure_saat: ?float, durum: string}> */
-    #[Computed]
-    public function ziyaretlerGunluk(): array
-    {
-        return $this->ziyaretGunlukGruplar[$this->ziyaretSeciliTarih] ?? [];
-    }
-
-    public function ziyaretTarihSec(string $tarih): void
-    {
-        $this->ziyaretSeciliTarih = $tarih;
-    }
-
-    public function ziyaretAyDegistir(int $fark): void
-    {
-        $this->ziyaretGosterilenAy = Carbon::parse($this->ziyaretGosterilenAy.'-01')->addMonths($fark)->format('Y-m');
     }
 
     public function egitimSablonIndirAction(): Action

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\Profilim;
+use App\Filament\Pages\SahaTakvimi;
 use App\Models\Firma;
 use App\Models\User;
 use App\Models\ZiyaretProgrami;
@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class FirmaZiyaretleriTest extends TestCase
+class SahaTakvimiTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -87,10 +87,10 @@ class FirmaZiyaretleriTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'A Firma']);
         $this->ziyaretEkle($firma, 4, '2026-05-20', 'Eğitim');
 
-        $liste = Livewire::test(Profilim::class)
-            ->call('ziyaretTarihSec', '2026-05-20')
+        $liste = Livewire::test(SahaTakvimi::class)
+            ->call('tarihSec', '2026-05-20')
             ->instance()
-            ->ziyaretlerGunluk();
+            ->gunlukListe();
 
         $this->assertCount(1, $liste);
         $this->assertSame('Eğitim', $liste[0]['amac']);
@@ -98,11 +98,38 @@ class FirmaZiyaretleriTest extends TestCase
 
     public function test_ay_degistir_gosterilen_ayi_ileri_geri_alir(): void
     {
-        $test = Livewire::test(Profilim::class)->assertSet('ziyaretGosterilenAy', now()->format('Y-m'));
+        $test = Livewire::test(SahaTakvimi::class)->assertSet('gosterilenAy', now()->format('Y-m'));
 
-        $test->call('ziyaretAyDegistir', 1)
-            ->assertSet('ziyaretGosterilenAy', now()->addMonth()->format('Y-m'))
-            ->call('ziyaretAyDegistir', -1)
-            ->assertSet('ziyaretGosterilenAy', now()->format('Y-m'));
+        $test->call('ayDegistir', 1)
+            ->assertSet('gosterilenAy', now()->addMonth()->format('Y-m'))
+            ->call('ayDegistir', -1)
+            ->assertSet('gosterilenAy', now()->format('Y-m'));
+    }
+
+    public function test_bugune_git_ay_ve_tarihi_sifirlar(): void
+    {
+        Livewire::test(SahaTakvimi::class)
+            ->call('ayDegistir', 3)
+            ->call('buguneGit')
+            ->assertSet('gosterilenAy', now()->format('Y-m'))
+            ->assertSet('seciliTarih', now()->toDateString());
+    }
+
+    public function test_ay_rozetleri_tamamlandi_ve_planlandi_ayri_sayar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $bugun = now()->startOfMonth()->addDays(4);
+
+        $program = ZiyaretProgrami::firmaYilIcin($firma, (int) $bugun->format('Y'));
+        $ziyaretler = $program->ziyaretler;
+        $ziyaretler[$bugun->month - 1] = [
+            ['tarih' => $bugun->toDateString(), 'amac' => null, 'durum' => 'tamamlandi', 'sure_saat' => 1, 'notlar' => null],
+            ['tarih' => $bugun->toDateString(), 'amac' => null, 'durum' => 'planlandi', 'sure_saat' => 1, 'notlar' => null],
+        ];
+        $program->update(['ziyaretler' => $ziyaretler]);
+
+        $rozetler = Livewire::test(SahaTakvimi::class)->instance()->ayRozetleri();
+
+        $this->assertSame(['tamamlandi' => 1, 'planlandi' => 1], $rozetler[$bugun->toDateString()]);
     }
 }

@@ -113,8 +113,8 @@ class ZiyaretProgrami extends Page
     }
 
     /**
-     * Seçili firmanın tarihli ziyaret günleri — Profilim > Firma Ziyaretleri
-     * takvimiyle AYNI kaynaktan (ZiyaretTakvimi) türetilir, ayrı bir
+     * Seçili firmanın tarihli ziyaret günleri — Saha Takvimi sayfasıyla AYNI
+     * kaynaktan (ZiyaretTakvimi) türetilir, ayrı bir
      * gruplama mantığı tekrarlanmaz; sadece bu firmaya süzülür.
      *
      * @return array<string, array<int, array{firma: Firma, amac: ?string, sure_saat: mixed, durum: string}>>

@@ -14,7 +14,7 @@ use Livewire\Attributes\Computed;
 /**
  * Panel ana sayfası — bu ayın ziyaret takvimi + o ay gidilmesi planlanan
  * firmaların toplu listesi. Kaynak ZiyaretTakvimi::gunlukGruplar() ile
- * Profilim > Firma Ziyaretleri ve Ziyaret Programı sayfalarıyla AYNIdır,
+ * Saha Takvimi ve Ziyaret Programı sayfalarıyla AYNIdır,
  * ayrı bir sorgu/gruplama tekrarlanmaz.
  */
 class BuAyZiyaretlerWidget extends Widget

@@ -6,7 +6,8 @@ use App\Models\Firma;
 use App\Models\ZiyaretProgrami;
 
 /**
- * Profilim > Firma Ziyaretleri (isgpratik 147.jpg) — yeni tablo YOK, mevcut
+ * Saha Takvimi sayfası (eskiden Profilim > Firma Ziyaretleri, bkz. isgpratik
+ * 147.jpg / İSG Suite referansı) — yeni tablo YOK, mevcut
  * ZiyaretProgrami kayıtlarının (firma × yıl, 12 aylık satır) tarihli ay
  * satırlarını gün bazında gruplayan salt-okunur takvim görünümü.
  */
