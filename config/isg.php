@@ -900,10 +900,18 @@ return [
     | KKD Seçim Matrisi — iş kalemi × KKD türü
     |--------------------------------------------------------------------------
     | Hangi işte hangi KKD'nin gerektiği (KKD'lerin İşyerlerinde Kullanılması
-    | Hakkında Yönetmelik + risk değerlendirmesi). Sütunlar sabit; hücre metni
-    | "✔", "Gerekirse", standart no ya da serbest metin olabilir.
+    | Hakkında Yönetmelik + risk değerlendirmesi). Sütunlar sabit; her hücre
+    | 'durumlar' altındaki 4 sabit durumdan biridir (tıklayınca sırayla değişir),
+    | isteğe bağlı kısa bir not ("_not" alanı, örn. "mekanik", "iskelede") eklenebilir.
     */
     'kkd_matris' => [
+        'durumlar' => [
+            'zorunlu' => ['etiket' => 'Zorunlu', 'sembol' => '✔', 'renk' => '#2e9e4f'],
+            'duruma_gore' => ['etiket' => 'Duruma göre', 'sembol' => '!', 'renk' => '#f0a500'],
+            'gerekmez' => ['etiket' => 'Gerekmez', 'sembol' => '–', 'renk' => '#9aa3af'],
+            'uygulanamaz' => ['etiket' => 'Uygulanamaz', 'sembol' => '⊘', 'renk' => '#6b7280'],
+        ],
+
         'sutunlar' => [
             'baret' => 'Baret (EN 397)',
             'gozluk' => 'Koruyucu Gözlük / Siperlik (EN 166)',

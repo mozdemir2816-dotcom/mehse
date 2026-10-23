@@ -252,11 +252,22 @@ class KkdFormu extends Page
         }
 
         $sutunlar = config('isg.kkd_matris.sutunlar', []);
+        $durumlar = config('isg.kkd_matris.durumlar', []);
 
         $this->matristenGelenKkdler = collect($sutunlar)
-            ->map(fn (string $etiket, string $sutun) => filled($satir[$sutun] ?? null)
-                ? ['ad' => $etiket, 'standart' => $satir[$sutun], 'kategori' => 'İş Kalemi Standardı: '.$isKalemi]
-                : null)
+            ->map(function (string $etiket, string $sutun) use ($satir, $durumlar, $isKalemi) {
+                $durum = $satir[$sutun] ?? 'gerekmez';
+                if (! in_array($durum, ['zorunlu', 'duruma_gore'], true)) {
+                    return null;
+                }
+
+                $standart = $durumlar[$durum]['etiket'] ?? $durum;
+                if (filled($satir[$sutun.'_not'] ?? null)) {
+                    $standart .= ' — '.$satir[$sutun.'_not'];
+                }
+
+                return ['ad' => $etiket, 'standart' => $standart, 'kategori' => 'İş Kalemi Standardı: '.$isKalemi];
+            })
             ->filter()
             ->values()
             ->all();

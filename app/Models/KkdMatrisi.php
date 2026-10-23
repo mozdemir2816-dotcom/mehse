@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * KKD Seçim Matrisi — firma başına bir kayıt. Her satır bir iş kalemi/görevdir;
- * `config isg.kkd_matris.sutunlar` anahtarları (baret, gozluk, kulaklik, maske,
- * eldiven, ayakkabi, yelek, kemer, diger) için gereklilik metni tutar.
+ * `config isg.kkd_matris.sutunlar` anahtarlarının her biri için hücre değeri
+ * `config isg.kkd_matris.durumlar` anahtarlarından biridir (zorunlu/duruma_gore/
+ * gerekmez/uygulanamaz), ayrıca aynı sütun için isteğe bağlı kısa bir not
+ * ("{sutun}_not" alanı, örn. "mekanik", "iskelede") taşıyabilir.
  */
 class KkdMatrisi extends Model
 {
@@ -28,13 +30,17 @@ class KkdMatrisi extends Model
     {
         static::saving(function (KkdMatrisi $m): void {
             $sutunlar = array_keys(config('isg.kkd_matris.sutunlar'));
+            $gecerliDurumlar = array_keys(config('isg.kkd_matris.durumlar'));
 
             $m->satirlar = collect($m->satirlar ?? [])
-                ->map(function (array $s) use ($sutunlar): array {
+                ->map(function (array $s) use ($sutunlar, $gecerliDurumlar): array {
                     $temiz = ['is_kalemi' => trim((string) ($s['is_kalemi'] ?? '')), 'grup' => $s['grup'] ?? null];
 
                     foreach ($sutunlar as $sutun) {
-                        $temiz[$sutun] = isset($s[$sutun]) ? trim((string) $s[$sutun]) : '';
+                        $durum = $s[$sutun] ?? 'gerekmez';
+                        $temiz[$sutun] = in_array($durum, $gecerliDurumlar, true) ? $durum : 'gerekmez';
+                        $not = trim((string) ($s[$sutun.'_not'] ?? ''));
+                        $temiz[$sutun.'_not'] = $not !== '' ? $not : null;
                     }
 
                     return $temiz;

@@ -61,7 +61,17 @@
             <tr>
                 <td class="is">{{ $s['is_kalemi'] ?? '' }}</td>
                 @foreach (array_keys($sutunlar) as $anahtar)
-                    <td>{{ $s[$anahtar] ?? '' ?: '–' }}</td>
+                    @php
+                        $durum = $s[$anahtar] ?? 'gerekmez';
+                        $meta = $durumlar[$durum] ?? $durumlar['gerekmez'];
+                        $not = $s[$anahtar.'_not'] ?? null;
+                    @endphp
+                    <td style="background:{{ $meta['renk'] }}22">
+                        {{ $meta['sembol'] }}
+                        @if ($not)
+                            <br><span style="font-size:6px">{{ $not }}</span>
+                        @endif
+                    </td>
                 @endforeach
             </tr>
         @empty
@@ -71,9 +81,11 @@
 </table>
 
 <p class="yasal">
-    "✔" = zorunlu; "Gerekirse" = risk değerlendirmesi / işin niteliğine göre. KKD'ler ilgili
-    uyumlaştırılmış standarda (EN) uygun, CE işaretli olmalı; çalışanlara zimmetle teslim edilmeli
-    ve kullanımı denetlenmelidir. Bu matris risk değerlendirmesinin ekidir.
+    @foreach ($durumlar as $meta)
+        "{{ $meta['sembol'] }}" = {{ $meta['etiket'] }};
+    @endforeach
+    KKD'ler ilgili uyumlaştırılmış standarda (EN) uygun, CE işaretli olmalı; çalışanlara zimmetle
+    teslim edilmeli ve kullanımı denetlenmelidir. Bu matris risk değerlendirmesinin ekidir.
 </p>
 
 <table class="imza">

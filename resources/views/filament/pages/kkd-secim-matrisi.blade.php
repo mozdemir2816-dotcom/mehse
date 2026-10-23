@@ -6,8 +6,9 @@
 <x-filament-panels::page>
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Hangi işte hangi KKD'nin gerektiğini belirleyin. Sektörel katalogdan iş kalemi ekleyin
-        (varsayılan KKD önerileriyle gelir) veya serbest satır girin; her hücreyi elle düzenleyin
-        (“✔”, “Gerekirse”, standart no ya da serbest metin). Matris, risk değerlendirmesinin ekidir.
+        (varsayılan KKD önerileriyle gelir) veya serbest satır girin; hücreye tıklayarak durumu
+        değiştirin, isterseniz altına kısa bir not yazın (ör. "mekanik", "iskelede"). Matris, risk
+        değerlendirmesinin ekidir.
     </p>
 
     <x-filament::section icon="heroicon-o-shield-exclamation" icon-color="primary">
@@ -49,7 +50,7 @@
 
         <x-filament::section icon="heroicon-o-table-cells" icon-color="primary">
             <x-slot name="heading">KKD Matrisi ({{ count($satirlar) }} iş kalemi)</x-slot>
-            <x-slot name="description">Kaydetmek için sağ üstteki “Kaydet”. Hücreye “✔”, “Gerekirse” veya standart yazın; boş bırakılırsa gerekli değil sayılır.</x-slot>
+            <x-slot name="description">Hücreye tıklayarak durumu değiştirin (sırayla Zorunlu → Duruma göre → Gerekmez → Uygulanamaz). Her tıklama otomatik kaydedilir.</x-slot>
 
             @if (count($satirlar) === 0)
                 <p style="color:rgb(107 114 128);font-size:.85rem">Yukarıdan iş kalemi ekleyin.</p>
@@ -73,7 +74,18 @@
                                         <div style="font-size:.66rem;color:rgb(107 114 128)">{{ $s['grup'] ?? '' }}</div>
                                     </td>
                                     @foreach (array_keys($this->sutunlar) as $anahtar)
-                                        <td style="padding:.3rem"><input type="text" wire:model.blur="satirlar.{{ $i }}.{{ $anahtar }}" style="{{ $girdi }};text-align:center" placeholder="–"></td>
+                                        @php
+                                            $durum = $s[$anahtar] ?? 'gerekmez';
+                                            $meta = $this->durumlar[$durum] ?? $this->durumlar['gerekmez'];
+                                        @endphp
+                                        <td style="padding:.3rem;text-align:center">
+                                            <button type="button" wire:click="hucreDegistir({{ $i }}, '{{ $anahtar }}')"
+                                                title="{{ $meta['etiket'] }}"
+                                                style="width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;font-weight:700;font-size:.85rem;color:#fff;background:{{ $meta['renk'] }}">{{ $meta['sembol'] }}</button>
+                                            <input type="text" wire:model.blur="satirlar.{{ $i }}.{{ $anahtar }}_not"
+                                                placeholder="not" title="İsteğe bağlı kısa not"
+                                                style="width:100%;margin-top:.2rem;padding:.1rem .25rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .25);background:transparent;font-size:.62rem;text-align:center">
+                                        </td>
                                     @endforeach
                                     <td style="padding:.3rem;text-align:center">
                                         <button type="button" wire:click="satirSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
@@ -82,6 +94,15 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:.72rem;margin-top:.75rem;align-items:center">
+                    @foreach ($this->durumlar as $meta)
+                        <span style="display:inline-flex;align-items:center;gap:.35rem">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:{{ $meta['renk'] }};color:#fff;font-size:.68rem;font-weight:700">{{ $meta['sembol'] }}</span>
+                            {{ $meta['etiket'] }}
+                        </span>
+                    @endforeach
                 </div>
             @endif
 

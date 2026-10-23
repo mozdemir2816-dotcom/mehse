@@ -148,7 +148,7 @@ class KkdFormuTest extends TestCase
         $calisan = Calisan::factory()->for($firma)->create(['ad_soyad' => 'Kalıpçı Veli']);
 
         KkdMatrisi::firmaIcin($firma)->update(['satirlar' => [
-            ['is_kalemi' => 'Kalıp İşleri', 'grup' => 'İnşaat / Şantiye', 'baret' => '✔', 'eldiven' => 'EN 388', 'ayakkabi' => ''],
+            ['is_kalemi' => 'Kalıp İşleri', 'grup' => 'İnşaat / Şantiye', 'baret' => 'zorunlu', 'eldiven' => 'zorunlu', 'eldiven_not' => 'EN 388', 'ayakkabi' => 'gerekmez'],
         ]]);
 
         $component = Livewire::test(KkdSayfasi::class)
@@ -158,21 +158,21 @@ class KkdFormuTest extends TestCase
             ->call('isKalemindenDoldur');
 
         $matristen = $component->get('matristenGelenKkdler');
-        $this->assertCount(2, $matristen); // sadece dolu sütunlar (baret + eldiven), boş ayakkabı hariç
+        $this->assertCount(2, $matristen); // sadece zorunlu/duruma göre sütunlar (baret + eldiven), gerekmez ayakkabı hariç
         $this->assertSame('İş Kalemi Standardı: Kalıp İşleri', $matristen[0]['kategori']);
 
         $component->call('calisanToggle', $calisan->id)->callAction('pdf');
 
         $form = KkdZimmetFormu::where('firma_id', $firma->id)->firstOrFail();
         $this->assertCount(2, $form->kkdler);
-        $this->assertTrue(collect($form->kkdler)->contains('standart', 'EN 388'));
+        $this->assertTrue(collect($form->kkdler)->contains('standart', 'Zorunlu — EN 388'));
     }
 
     public function test_matristen_satir_tek_tek_silinir_ve_topluca_temizlenir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         KkdMatrisi::firmaIcin($firma)->update(['satirlar' => [
-            ['is_kalemi' => 'Kalıp İşleri', 'grup' => 'İnşaat / Şantiye', 'baret' => '✔', 'eldiven' => 'EN 388'],
+            ['is_kalemi' => 'Kalıp İşleri', 'grup' => 'İnşaat / Şantiye', 'baret' => 'zorunlu', 'eldiven' => 'zorunlu', 'eldiven_not' => 'EN 388'],
         ]]);
 
         $component = Livewire::test(KkdSayfasi::class)

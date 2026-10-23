@@ -93,6 +93,12 @@ class KkdSecimMatrisi extends Page
     }
 
     #[Computed]
+    public function durumlar(): array
+    {
+        return config('isg.kkd_matris.durumlar', []);
+    }
+
+    #[Computed]
     public function katalog(): array
     {
         return config('isg.kkd_matris.is_kalemleri', []);
@@ -186,6 +192,17 @@ class KkdSecimMatrisi extends Page
             ->success()->send();
 
         $this->reset('yeniIsKalemi');
+    }
+
+    public function hucreDegistir(int $index, string $sutun): void
+    {
+        $durumlar = array_keys($this->durumlar());
+        $mevcut = $this->satirlar[$index][$sutun] ?? 'gerekmez';
+        $sira = array_search($mevcut, $durumlar, true);
+        $sonraki = $durumlar[($sira === false ? 0 : $sira + 1) % count($durumlar)];
+
+        $this->satirlar[$index][$sutun] = $sonraki;
+        $this->kaydet(sessiz: true);
     }
 
     public function satirSil(int $index): void

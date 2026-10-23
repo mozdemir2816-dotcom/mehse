@@ -37,7 +37,8 @@ class KkdSecimMatrisiTest extends TestCase
         $matris = KkdMatrisi::where('firma_id', $this->firma->id)->sole();
         $this->assertCount(1, $matris->satirlar);
         $this->assertSame('Yüksekte Çalışma (Çatı, Dış Cephe)', $matris->satirlar[0]['is_kalemi']);
-        $this->assertStringContainsString('tam vücut', $matris->satirlar[0]['kemer']);
+        $this->assertSame('zorunlu', $matris->satirlar[0]['kemer']);
+        $this->assertStringContainsString('tam vücut', $matris->satirlar[0]['kemer_not']);
     }
 
     public function test_serbest_satir_eklenir_ve_bos_is_kalemi_saving_ile_temizlenir(): void
@@ -100,6 +101,38 @@ class KkdSecimMatrisiTest extends TestCase
             ->assertActionHidden('pdf')
             ->call('katalogdanEkle', 'İnşaat / Şantiye', 'Yüksekte Çalışma (Çatı, Dış Cephe)')
             ->assertActionVisible('pdf');
+    }
+
+    public function test_hucreye_tiklayinca_durum_sirayla_degisir(): void
+    {
+        $component = Livewire::test(KkdSecimMatrisiSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('yeniIsKalemi', 'Test İşi')
+            ->call('serbestEkle');
+
+        $component->call('hucreDegistir', 0, 'baret')
+            ->assertSet('satirlar.0.baret', 'zorunlu')
+            ->call('hucreDegistir', 0, 'baret')
+            ->assertSet('satirlar.0.baret', 'duruma_gore')
+            ->call('hucreDegistir', 0, 'baret')
+            ->assertSet('satirlar.0.baret', 'gerekmez')
+            ->call('hucreDegistir', 0, 'baret')
+            ->assertSet('satirlar.0.baret', 'uygulanamaz')
+            ->call('hucreDegistir', 0, 'baret')
+            ->assertSet('satirlar.0.baret', 'zorunlu');
+
+        $matris = KkdMatrisi::where('firma_id', $this->firma->id)->sole();
+        $this->assertSame('zorunlu', $matris->satirlar[0]['baret']);
+    }
+
+    public function test_gecersiz_durum_degeri_kaydedilirken_gerekmeze_cekilir(): void
+    {
+        $matris = KkdMatrisi::firmaIcin($this->firma);
+        $matris->update(['satirlar' => [
+            ['is_kalemi' => 'Eski kayıt', 'baret' => '✔ eski serbest metin'],
+        ]]);
+
+        $this->assertSame('gerekmez', $matris->refresh()->satirlar[0]['baret']);
     }
 
     public function test_baska_uzmanin_firmasi_secilemez(): void
