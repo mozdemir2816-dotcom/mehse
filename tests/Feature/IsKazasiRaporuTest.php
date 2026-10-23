@@ -89,6 +89,128 @@ class IsKazasiRaporuTest extends TestCase
         $this->assertCount(0, $component->get('taniklar'));
     }
 
+    /** Yaralanma kaydı (24.10.2026) — ekleme, silme, kaydetme ve geçmiş kayıttan geri yükleme. */
+    public function test_yaralanma_eklenir_silinir_ve_kaydedilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('yaralanmaEkle')
+            ->call('yaralanmaEkle');
+
+        $this->assertCount(2, $component->get('yaralanmalar'));
+
+        $component->call('yaralanmaSil', 0);
+        $this->assertCount(1, $component->get('yaralanmalar'));
+
+        $component
+            ->set('yaralanmalar.0.bolge', 'el_parmak')
+            ->set('yaralanmalar.0.tur', 'kesik_yirtik')
+            ->set('yaralanmalar.0.aciklama', 'Sağ el işaret parmağı')
+            ->set('kazazedeAdSoyad', 'Ahmet Yılmaz')
+            ->set('kazaTanimi', 'Elin tezgâha sıkışması.')
+            ->callAction('taslakKaydet');
+
+        $r = IsKazasiRaporu::where('firma_id', $firma->id)->sole();
+        $this->assertSame([['bolge' => 'el_parmak', 'tur' => 'kesik_yirtik', 'aciklama' => 'Sağ el işaret parmağı']], $r->yaralanmalar);
+        $this->assertSame('El / Parmak', $r->yaralanmaSatirlari()[0]['bolge']);
+
+        Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('duzenle', $r->id)
+            ->assertSet('yaralanmalar', [['bolge' => 'el_parmak', 'tur' => 'kesik_yirtik', 'aciklama' => 'Sağ el işaret parmağı']]);
+    }
+
+    /** Kazanın Fine-Kinney puanı (24.10.2026) — hesaplanır, kaydedilir, geri yüklenir. */
+    public function test_kinney_puani_hesaplanir_kaydedilir_ve_geri_yuklenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        $component = Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kinneyOlasilik', 6)
+            ->set('kinneyFrekans', 6)
+            ->set('kinneySiddet', 3);
+
+        $this->assertSame(108.0, $component->get('kinneySonuc')['puan']);
+
+        $component
+            ->set('kazazedeAdSoyad', 'Ahmet Yılmaz')
+            ->set('kazaTanimi', 'Düşme kazası.')
+            ->callAction('taslakKaydet');
+
+        $r = IsKazasiRaporu::where('firma_id', $firma->id)->sole();
+        $this->assertSame([6.0, 6.0, 3.0], [$r->kinney_olasilik, $r->kinney_frekans, $r->kinney_siddet]);
+        $this->assertSame(108.0, $r->kinneySonucu()['puan']);
+
+        Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('duzenle', $r->id)
+            ->assertSet('kinneyOlasilik', 6.0)
+            ->assertSet('kinneyFrekans', 6.0)
+            ->assertSet('kinneySiddet', 3.0);
+    }
+
+    /** "Risk Analizine Ekle" (24.10.2026): firmanın risk değerlendirmesi yoksa Risk Sihirbazı'na yönlendirir. */
+    public function test_risk_analizine_ekle_degerlendirme_yoksa_sihirbaza_yonlendirir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+
+        Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kazazedeAdSoyad', 'Ahmet Yılmaz')
+            ->set('kazaTanimi', 'Düşme kazası.')
+            ->callAction('riskAnalizineEkle')
+            ->assertRedirect(\App\Filament\Pages\RiskSihirbazi::getUrl(['firma' => $firma->id]));
+
+        $this->assertDatabaseCount('risk_maddeleri', 0);
+    }
+
+    /** Risk değerlendirmesi varsa kaza bilgisiyle (Kinney puanları dahil) yeni madde eklenir. */
+    public function test_risk_analizine_ekle_kinney_puanlariyla_madde_olusturur(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = \App\Models\RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(), 'revizyon_no' => '00']);
+
+        Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kazazedeAdSoyad', 'Ahmet Yılmaz')
+            ->set('kazazedeGorev', 'Operatör')
+            ->set('kazaYeri', 'Pres bölümü')
+            ->set('kazaTuru', 'sikisma')
+            ->set('kazaTanimi', 'Elin prese sıkışması.')
+            ->set('kinneyOlasilik', 6)
+            ->set('kinneyFrekans', 6)
+            ->set('kinneySiddet', 3)
+            ->callAction('riskAnalizineEkle');
+
+        $m = $rd->maddeler()->sole();
+        $this->assertSame('Pres bölümü', $m->bolum);
+        $this->assertSame('Operatör', $m->faaliyet);
+        $this->assertSame('Elin prese sıkışması.', $m->tehlike);
+        $this->assertSame('Sıkışma / Ezilme sonucu yaralanma', $m->risk);
+        $this->assertSame([6.0, 6.0, 3.0], [$m->olasilik, $m->frekans, $m->siddet]);
+        $this->assertSame('acik', $m->durum);
+    }
+
+    /** Kaza özeti güncel risk değerlendirmesinde zaten varsa "kazaRiskteVarMi" true döner. */
+    public function test_kaza_riskte_var_mi_benzer_metni_yakalar(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = \App\Models\RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(), 'revizyon_no' => '00']);
+        $rd->maddeler()->create(['tehlike' => 'Elin prese sıkışması sonucu yaralanma riski']);
+
+        $component = Livewire::test(KazaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('kazaTanimi', 'Elin prese sıkışması');
+
+        $this->assertTrue($component->get('kazaRiskteVarMi'));
+
+        $component->set('kazaTanimi', 'Tamamen alakasız bir elektrik çarpması olayı');
+        $this->assertFalse($component->get('kazaRiskteVarMi'));
+    }
+
     public function test_kazazede_veya_tanim_olmadan_kaydedilemez(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

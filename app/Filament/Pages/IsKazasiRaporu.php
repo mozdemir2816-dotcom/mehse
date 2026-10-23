@@ -2,11 +2,15 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\IsKazasiRaporu as IsKazasiRaporuModel;
+use App\Models\RiskDegerlendirmesi;
 use App\Filament\Support\ImzaSecenegi;
+use App\Support\EkipmanKatalogu;
 use App\Support\IsKazasiRaporuUretici;
+use App\Support\RiskSkorlama;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -77,6 +81,16 @@ class IsKazasiRaporu extends Page
     public ?int $kayipGunSayisi = null;
 
     public ?string $kazaTanimi = null;
+
+    // 1b. Yaralanma kaydı (24.10.2026) ve kazanın Fine-Kinney puanı
+    /** @var array<int, array{bolge: ?string, tur: ?string, aciklama: ?string}> */
+    public array $yaralanmalar = [];
+
+    public ?float $kinneyOlasilik = null;
+
+    public ?float $kinneyFrekans = null;
+
+    public ?float $kinneySiddet = null;
 
     // 2. 5 Neden — sabit 5 soruya karşılık gelen yanıtlar
     /** @var array<int, string> */
@@ -201,6 +215,66 @@ class IsKazasiRaporu extends Page
         return config('isg.is_kazasi.dof_durumlari');
     }
 
+    #[Computed]
+    public function vucutBolgeleri(): array
+    {
+        return config('isg.is_kazasi.vucut_bolgeleri');
+    }
+
+    #[Computed]
+    public function yaralanmaTurleri(): array
+    {
+        return config('isg.is_kazasi.yaralanma_turleri');
+    }
+
+    #[Computed]
+    public function kinneyOlcekleri(): array
+    {
+        return [
+            'olasilik' => RiskSkorlama::olcek('fine_kinney', 'olasilik'),
+            'frekans' => RiskSkorlama::olcek('fine_kinney', 'frekans'),
+            'siddet' => RiskSkorlama::olcek('fine_kinney', 'siddet'),
+        ];
+    }
+
+    /** @return array{puan:int|float, duzey:string, renk:string, eylem:string} */
+    #[Computed]
+    public function kinneySonuc(): array
+    {
+        return RiskSkorlama::hesapla('fine_kinney', $this->kinneyOlasilik, $this->kinneySiddet, $this->kinneyFrekans);
+    }
+
+    /** Firmanın en güncel risk değerlendirmesi — "Risk Analizine Ekle" aksiyonu için. */
+    #[Computed]
+    public function sonRiskDegerlendirmesi(): ?RiskDegerlendirmesi
+    {
+        return $this->firma ? EkipmanKatalogu::sonDegerlendirme($this->firma) : null;
+    }
+
+    /**
+     * Kaza özeti, firmanın güncel risk değerlendirmesinde (metin benzerliğiyle) zaten
+     * var mı? Kesin değil, yalnız "muhtemelen zaten var" uyarısı için — engelleyici değil.
+     */
+    #[Computed]
+    public function kazaRiskteVarMi(): bool
+    {
+        $rd = $this->sonRiskDegerlendirmesi;
+        if (! $rd || blank($this->kazaTanimi)) {
+            return false;
+        }
+
+        $aranan = EkipmanKatalogu::norm($this->kazaTanimi);
+        if ($aranan === '') {
+            return false;
+        }
+
+        return $rd->maddeler->contains(function ($m) use ($aranan) {
+            $mevcut = EkipmanKatalogu::norm($m->tehlike);
+
+            return $mevcut !== '' && (str_contains($mevcut, $aranan) || str_contains($aranan, $mevcut));
+        });
+    }
+
     /** Önizleme özeti — anlık. */
     #[Computed]
     public function onizleme(): array
@@ -247,6 +321,20 @@ class IsKazasiRaporu extends Page
         $this->kazazedeAdSoyad = $c?->ad_soyad;
         $this->kazazedeTc = $c?->tc;
         $this->kazazedeGorev = $c?->gorev;
+    }
+
+    /*
+    | Yaralanma kaydı
+    */
+    public function yaralanmaEkle(): void
+    {
+        $this->yaralanmalar[] = ['bolge' => null, 'tur' => null, 'aciklama' => null];
+    }
+
+    public function yaralanmaSil(int $index): void
+    {
+        unset($this->yaralanmalar[$index]);
+        $this->yaralanmalar = array_values($this->yaralanmalar);
     }
 
     /*
@@ -361,6 +449,12 @@ class IsKazasiRaporu extends Page
             'agirlik_derecesi' => $this->agirlikDerecesi,
             'kayip_gun_sayisi' => $this->kayipGunSayisi,
             'kaza_tanimi' => $this->kazaTanimi,
+            'yaralanmalar' => collect($this->yaralanmalar)
+                ->filter(fn (array $y) => filled($y['bolge'] ?? null) || filled($y['tur'] ?? null))
+                ->values()->all(),
+            'kinney_olasilik' => $this->kinneyOlasilik,
+            'kinney_frekans' => $this->kinneyFrekans,
+            'kinney_siddet' => $this->kinneySiddet,
             'kok_neden_kategorileri' => $this->kokNedenKategorileri,
             'bes_neden' => array_map('trim', $this->besNeden),
             'kaza_nedeni' => trim((string) ($this->besNeden[4] ?? '')) ?: null,
@@ -429,6 +523,46 @@ class IsKazasiRaporu extends Page
 
                     return IsKazasiRaporuUretici::pdf($kayit, ImzaSecenegi::secili($data));
                 }),
+
+            Action::make('riskAnalizineEkle')
+                ->label(fn () => $this->sonRiskDegerlendirmesi ? 'Risk Analizine Ekle' : 'Önce Risk Değerlendirmesi Oluşturun')
+                ->icon('heroicon-o-shield-exclamation')
+                ->color('warning')
+                ->visible(fn () => $this->firma !== null && filled($this->kazaTanimi))
+                ->requiresConfirmation(fn () => $this->kazaRiskteVarMi)
+                ->modalDescription('Bu kazaya benzer bir madde firmanın güncel risk değerlendirmesinde zaten var görünüyor. Yine de yeni bir madde eklemek istiyor musunuz?')
+                ->action(function () {
+                    if (! $this->sonRiskDegerlendirmesi) {
+                        $this->redirect(RiskSihirbazi::getUrl(['firma' => $this->firma->id]));
+
+                        return;
+                    }
+
+                    $rd = $this->sonRiskDegerlendirmesi;
+                    $sira = (int) $rd->maddeler()->max('sira');
+
+                    $rd->maddeler()->create([
+                        'sira' => $sira + 1,
+                        'bolum' => $this->kazaYeri,
+                        'faaliyet' => $this->kazazedeGorev,
+                        'tehlike' => $this->kazaTanimi,
+                        'risk' => $this->kazaTuru ? $this->kazaTurleri[$this->kazaTuru].' sonucu yaralanma' : 'Kazaya bağlı yaralanma',
+                        'etkilenen_calisan' => true,
+                        'etkilenen_diger' => false,
+                        'olasilik' => $this->kinneyOlasilik,
+                        'frekans' => RiskSkorlama::ucEksenliMi($rd->yontem) ? $this->kinneyFrekans : null,
+                        'siddet' => $this->kinneySiddet,
+                        'durum' => 'acik',
+                    ]);
+
+                    unset($this->sonRiskDegerlendirmesi, $this->kazaRiskteVarMi);
+
+                    Notification::make()
+                        ->title('Risk değerlendirmesine eklendi')
+                        ->body('Puanları ve önlemi gözden geçirip revize edin.')
+                        ->success()
+                        ->send();
+                }),
         ];
     }
 
@@ -452,6 +586,10 @@ class IsKazasiRaporu extends Page
         $this->agirlikDerecesi = $r->agirlik_derecesi;
         $this->kayipGunSayisi = $r->kayip_gun_sayisi;
         $this->kazaTanimi = $r->kaza_tanimi;
+        $this->yaralanmalar = $r->yaralanmalar ?? [];
+        $this->kinneyOlasilik = $r->kinney_olasilik;
+        $this->kinneyFrekans = $r->kinney_frekans;
+        $this->kinneySiddet = $r->kinney_siddet;
         $this->kokNedenKategorileri = $r->kok_neden_kategorileri ?? [];
         $this->besNeden = array_pad($r->bes_neden ?? [], 5, '');
         $this->balikKilcigi = array_merge(

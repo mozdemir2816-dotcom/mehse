@@ -5342,6 +5342,37 @@ return [
             'taslak' => 'Taslak',
             'tamamlandi' => 'Tamamlandı',
         ],
+
+        // Yaralanma kaydı (24.10.2026) — vücut bölgesi + tür, birden çok eklenebilir.
+        'vucut_bolgeleri' => [
+            'bas' => 'Baş / Kafa',
+            'yuz' => 'Yüz',
+            'goz' => 'Göz',
+            'boyun' => 'Boyun',
+            'sirt_bel' => 'Sırt / Bel',
+            'omuz' => 'Omuz',
+            'kol' => 'Kol / Dirsek / Bilek',
+            'el_parmak' => 'El / Parmak',
+            'govde_karin' => 'Gövde / Karın / Göğüs',
+            'bacak' => 'Bacak / Diz',
+            'ayak_parmak' => 'Ayak / Ayak Parmağı',
+            'ic_organ' => 'İç Organ',
+            'coklu_bolge' => 'Çoklu Bölge',
+            'diger' => 'Diğer',
+        ],
+        'yaralanma_turleri' => [
+            'kesik_yirtik' => 'Kesik / Yırtık',
+            'kirik_catlak' => 'Kırık / Çatlak',
+            'ezilme_sikisma' => 'Ezilme / Sıkışma',
+            'yanik' => 'Yanık (termal/kimyasal)',
+            'burkulma_zorlanma' => 'Burkulma / Zorlanma',
+            'morarma_catlak' => 'Morarma / Künt Travma',
+            'ampute' => 'Uzuv Kaybı (Ampütasyon)',
+            'yabanci_cisim' => 'Yabancı Cisim Batması / Kaçması',
+            'elektrik_yanigi' => 'Elektrik Yanığı / Çarpması',
+            'zehirlenme' => 'Zehirlenme / Kimyasal Maruziyet',
+            'diger' => 'Diğer',
+        ],
     ],
 
     /*

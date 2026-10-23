@@ -70,6 +70,64 @@
                 <textarea wire:model="kazaTanimi" rows="4" style="{{ $inp }}"></textarea>
             </div>
 
+            {{-- YARALANMA KAYDI --}}
+            <div style="margin-top:1.25rem;border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.8rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+                    <label style="{{ $lbl }};margin-bottom:0">Yaralanma(lar) — Vücut Bölgesi & Tür</label>
+                    <x-filament::button size="xs" color="gray" icon="heroicon-o-plus" wire:click="yaralanmaEkle">Yaralanma Ekle</x-filament::button>
+                </div>
+                @forelse ($yaralanmalar as $i => $y)
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr)) 2fr auto;gap:.5rem;align-items:start;margin-bottom:.5rem">
+                        <select wire:model="yaralanmalar.{{ $i }}.bolge" style="{{ $inp }}">
+                            <option value="">— vücut bölgesi —</option>
+                            @foreach ($this->vucutBolgeleri as $a => $ad) <option value="{{ $a }}">{{ $ad }}</option> @endforeach
+                        </select>
+                        <select wire:model="yaralanmalar.{{ $i }}.tur" style="{{ $inp }}">
+                            <option value="">— yaralanma türü —</option>
+                            @foreach ($this->yaralanmaTurleri as $a => $ad) <option value="{{ $a }}">{{ $ad }}</option> @endforeach
+                        </select>
+                        <input type="text" wire:model="yaralanmalar.{{ $i }}.aciklama" placeholder="Açıklama (isteğe bağlı)" style="{{ $inp }}">
+                        <button type="button" wire:click="yaralanmaSil({{ $i }})" style="color:{{ $kirmizi }};background:none;border:none;cursor:pointer;font-size:1rem" title="Sil">✕</button>
+                    </div>
+                @empty
+                    <p style="font-size:.78rem;color:rgb(107 114 128)">Henüz yaralanma eklenmedi.</p>
+                @endforelse
+            </div>
+
+            {{-- KAZANIN FINE-KINNEY PUANI --}}
+            <div style="margin-top:.75rem;border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.8rem">
+                <label style="{{ $lbl }}">Kazanın Risk Puanı (Fine-Kinney)</label>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">İsteğe bağlı — DÖF önceliklendirme ve "Risk Analizine Ekle" için kullanılır.</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;align-items:end">
+                    <div>
+                        <label style="font-size:.72rem;color:rgb(107 114 128)">Olasılık</label>
+                        <select wire:model.live="kinneyOlasilik" style="{{ $inp }}">
+                            <option value="">—</option>
+                            @foreach ($this->kinneyOlcekleri['olasilik'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:.72rem;color:rgb(107 114 128)">Frekans (maruz kalma)</label>
+                        <select wire:model.live="kinneyFrekans" style="{{ $inp }}">
+                            <option value="">—</option>
+                            @foreach ($this->kinneyOlcekleri['frekans'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:.72rem;color:rgb(107 114 128)">Şiddet</label>
+                        <select wire:model.live="kinneySiddet" style="{{ $inp }}">
+                            <option value="">—</option>
+                            @foreach ($this->kinneyOlcekleri['siddet'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
+                        </select>
+                    </div>
+                    @php $kinney = $this->kinneySonuc @endphp
+                    <div style="text-align:center;padding:.5rem;border-radius:.4rem;background:{{ $kinney['renk'] }}22">
+                        <div style="font-size:1.3rem;font-weight:800;color:{{ $kinney['renk'] }}">{{ $kinney['puan'] ?: '—' }}</div>
+                        <div style="font-size:.7rem;color:{{ $kinney['renk'] }}">{{ $kinney['duzey'] }}</div>
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center">
                 <label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem"><input type="checkbox" wire:model.live="sgkBildirimiYapildi"> SGK bildirimi yapıldı</label>
                 @if ($sgkBildirimiYapildi)

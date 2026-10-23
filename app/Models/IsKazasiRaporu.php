@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\RiskSkorlama;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -26,8 +27,12 @@ class IsKazasiRaporu extends Model
         'dof_maddeleri' => 'array',
         'taniklar' => 'array',
         'fotograflar' => 'array',
+        'yaralanmalar' => 'array',
         'sgk_bildirimi_yapildi' => 'boolean',
         'isyeri_hekimi_dahil' => 'boolean',
+        'kinney_olasilik' => 'float',
+        'kinney_frekans' => 'float',
+        'kinney_siddet' => 'float',
     ];
 
     protected static function booted(): void
@@ -68,6 +73,33 @@ class IsKazasiRaporu extends Model
         return collect($this->kok_neden_kategorileri ?? [])
             ->map(fn ($k) => config('isg.is_kazasi.kok_neden_kategorileri.'.$k, $k))
             ->all();
+    }
+
+    /**
+     * Yaralanma satırları, etiketleriyle (PDF/ekran gösterimi).
+     *
+     * @return array<int, array{bolge: string, tur: string, aciklama: ?string}>
+     */
+    public function yaralanmaSatirlari(): array
+    {
+        return collect($this->yaralanmalar ?? [])
+            ->map(fn (array $y) => [
+                'bolge' => config('isg.is_kazasi.vucut_bolgeleri.'.($y['bolge'] ?? ''), $y['bolge'] ?? '—'),
+                'tur' => config('isg.is_kazasi.yaralanma_turleri.'.($y['tur'] ?? ''), $y['tur'] ?? '—'),
+                'aciklama' => filled($y['aciklama'] ?? null) ? trim($y['aciklama']) : null,
+            ])
+            ->all();
+    }
+
+    /** Kazanın Fine-Kinney puanı (O×F×Ş) — üçü de girilmişse. */
+    public function kinneySonucu(): array
+    {
+        return RiskSkorlama::hesapla('fine_kinney', $this->kinney_olasilik, $this->kinney_siddet, $this->kinney_frekans);
+    }
+
+    public function kinneyDoluMu(): bool
+    {
+        return $this->kinney_olasilik !== null && $this->kinney_frekans !== null && $this->kinney_siddet !== null;
     }
 
     /**

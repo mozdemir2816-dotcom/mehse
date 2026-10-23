@@ -77,6 +77,31 @@
     <div style="font-weight:bold;font-size:8.5px;color:#555;margin:6px 0 2px">KAZA ÖZETİ</div>
     <p class="ozet">{{ $rapor->kaza_tanimi ?: '—' }}</p>
 
+    @if ($rapor->yaralanmaSatirlari())
+        <div style="font-weight:bold;font-size:8.5px;color:#555;margin:6px 0 2px">YARALANMA(LAR)</div>
+        <table class="tbl">
+            <tr><th style="width:28%">Vücut Bölgesi</th><th style="width:28%">Yaralanma Türü</th><th>Açıklama</th></tr>
+            @foreach ($rapor->yaralanmaSatirlari() as $y)
+                <tr><td>{{ $y['bolge'] }}</td><td>{{ $y['tur'] }}</td><td>{{ $y['aciklama'] ?: '—' }}</td></tr>
+            @endforeach
+        </table>
+    @endif
+
+    @if ($rapor->kinneyDoluMu())
+        @php $kinney = $rapor->kinneySonucu() @endphp
+        <div style="font-weight:bold;font-size:8.5px;color:#555;margin:6px 0 2px">KAZANIN RİSK PUANI (FINE-KINNEY)</div>
+        <table class="tbl">
+            <tr><th>Olasılık</th><th>Frekans</th><th>Şiddet</th><th>Puan</th><th>Düzey</th></tr>
+            <tr>
+                <td>{{ $rapor->kinney_olasilik }}</td>
+                <td>{{ $rapor->kinney_frekans }}</td>
+                <td>{{ $rapor->kinney_siddet }}</td>
+                <td>{{ $kinney['puan'] }}</td>
+                <td>{{ $kinney['duzey'] }}</td>
+            </tr>
+        </table>
+    @endif
+
     {{-- 2. 5 NEDEN --}}
     <h2>2. KÖK NEDEN ANALİZİ (5 NEDEN)</h2>
     <table class="tbl">
