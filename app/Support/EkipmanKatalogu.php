@@ -105,6 +105,43 @@ class EkipmanKatalogu
         return IsEkipmani::query()->where('firma_id', $firma->id)->where('aktif', true)->get();
     }
 
+    private const IS_KALEMI_GRUBU = 'İnşaat / Şantiye';
+
+    /**
+     * Firmanın seçili iş kalemlerine (isg.kkd_matris.is_kalemleri[grup][].tehlike_kategorileri,
+     * kategori ADI ile) karşılık gelen kütüphane kategori anahtarları — "İş Kalemi: <ad>" etiketiyle.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public static function isKalemiRiskGruplari(Firma $firma): array
+    {
+        $anahtarlar = $firma->is_kalemleri ?? [];
+        if (! $anahtarlar) {
+            return [];
+        }
+
+        $maddeler = collect(config('isg.kkd_matris.is_kalemleri.'.self::IS_KALEMI_GRUBU, []))
+            ->whereIn('anahtar', $anahtarlar);
+        if ($maddeler->isEmpty()) {
+            return [];
+        }
+
+        $adToAnahtar = TehlikeKategorisi::query()->pluck('anahtar', 'ad');
+        $gruplar = [];
+
+        foreach ($maddeler as $m) {
+            $kategoriAnahtarlari = collect($m['tehlike_kategorileri'] ?? [])
+                ->map(fn (string $ad) => $adToAnahtar[$ad] ?? null)
+                ->filter()->values()->all();
+
+            if ($kategoriAnahtarlari) {
+                $gruplar['İş Kalemi: '.$m['ad']] = $kategoriAnahtarlari;
+            }
+        }
+
+        return $gruplar;
+    }
+
     /**
      * Firmanın ekipmanlarından beklenen kütüphane maddeleri, ekipman tipine göre gruplu.
      * Bir madde birden çok grupta çıkmaz (ilk grup kazanır).
@@ -132,9 +169,23 @@ class EkipmanKatalogu
             $gruplar[self::ORTAK_ETIKET] = $ortak;
         }
 
-        // Ekipmandan bağımsız, her firmada beklenen ortak set (eğitim + acil durum) — kullanıcı kararı 14.10.2026.
-        if ($herFirma = config('ekipman_katalogu.her_firma_riskleri', [])) {
+        // Ekipmandan bağımsız, her firmada beklenen evrensel set (eğitim/sağlık + bina) +
+        // NACE grubuna göre acil durum seti — kullanıcı kararı 14.10.2026 / 23.10.2026.
+        $herFirma = config('ekipman_katalogu.her_firma_riskleri', []);
+        $naceGrubu = NaceGrubu::bul($firma->nace_kodu);
+        $acilDurum = config('ekipman_katalogu.her_firma_acil_durum.'.$naceGrubu)
+            ?? config('ekipman_katalogu.her_firma_acil_durum.varsayilan', []);
+        $herFirma = [...$herFirma, ...$acilDurum];
+        if ($herFirma) {
             $gruplar[self::HER_FIRMA_ETIKET] = $herFirma;
+        }
+
+        // Firmanın seçili iş kalemlerine (bkz. isg.kkd_matris.is_kalemleri, Firma::$is_kalemleri)
+        // göre beklenen risk kategorileri — aynı NACE kodundaki farklı kapsamlı firmaları ayırt
+        // eder (ör. kalıp/kazı/beton/demir yapan şantiye ile +sıva/çatı/kaplama/mobilya da yapan
+        // şantiye aynı öneriyi almaz). Kullanıcı kararı 23.10.2026.
+        foreach (static::isKalemiRiskGruplari($firma) as $etiket => $anahtarlar) {
+            $gruplar[$etiket] = $anahtarlar;
         }
 
         if (! $gruplar) {
@@ -382,6 +433,20 @@ class EkipmanKatalogu
             ->filter(fn ($ad) => $ad !== null && $indeks->has($ad))
             ->map(fn ($ad) => $indeks[$ad])
             ->unique()->sort()->values()->all();
+    }
+
+    /**
+     * Firmanın ekipmanlarından, katalogda (veya panelden yüklenmiş kütüphane bağından) hiç
+     * risk kategorisi tanımlı olmayan tipler — kullanıcı kararı 23.10.2026: böyle bir ekipman
+     * eklenince "kütüphanede yok, Excel yükleyin" uyarısı verilsin, sessizce atlanmasın.
+     *
+     * @return array<int, string> ekipman tipi adları
+     */
+    public static function kutuphanesizTipler(Firma $firma): array
+    {
+        return static::ekipmanlar($firma)->pluck('tip')->filter()->unique()
+            ->reject(fn (string $tip) => filled(static::tanim($tip)['risk_kategorileri'] ?? []))
+            ->values()->all();
     }
 
     /**

@@ -29,6 +29,26 @@ class IsKazasiRaporuTest extends TestCase
         $this->actingAs($this->uzman);
     }
 
+    /**
+     * Kök neden kategorileri grup gösterimi (23.10.2026 genişletme): her grup her
+     * anahtarı tam bir kez kapsar, her anahtarın bir etiketi ve 6M eşlemesi var.
+     */
+    public function test_kok_neden_gruplari_tum_anahtarlari_tekrarsiz_kapsar(): void
+    {
+        $tumAnahtarlar = array_keys(config('isg.is_kazasi.kok_neden_kategorileri'));
+        $gruplanmis = collect(config('isg.is_kazasi.kok_neden_gruplari'))->flatten()->all();
+
+        $this->assertSame(count($tumAnahtarlar), count($gruplanmis), 'Gruplardaki toplam anahtar sayısı eşleşmeli');
+        $this->assertSame(count($gruplanmis), count(array_unique($gruplanmis)), 'Bir anahtar birden çok grupta olmamalı');
+        $this->assertEqualsCanonicalizing($tumAnahtarlar, $gruplanmis, 'Her kategori anahtarı tam bir grupta olmalı');
+
+        $harita = config('isg.balik_kilcigi.kok_neden_6m');
+        foreach ($tumAnahtarlar as $a) {
+            $this->assertArrayHasKey($a, $harita, "6M eşlemesi yok: $a");
+            $this->assertContains($harita[$a], ['insan', 'makine', 'metot', 'malzeme', 'olcum', 'cevre'], "Geçersiz 6M hedefi: $a");
+        }
+    }
+
     public function test_firma_calisanindan_hizli_secim_alanlari_doldurur(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

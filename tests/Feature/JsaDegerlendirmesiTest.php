@@ -6,6 +6,7 @@ use App\Filament\Pages\JsaDegerlendirmesi as JsaSayfasi;
 use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use App\Models\JsaSablonu;
+use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\FirmaEvrakZipUretici;
 use App\Support\JsaExcelOkuyucu;
@@ -306,6 +307,7 @@ class JsaDegerlendirmesiTest extends TestCase
             'belge_tarihi' => '1 Ocak 2026',
             'adimlar' => [],
         ]);
+        $kategori = TehlikeKategorisi::create(['anahtar' => 'test_duvar_orme', 'ad' => 'Duvar Örme', 'sira' => 1]);
 
         Livewire::test(JsaSayfasi::class)
             ->callAction('kunyeDuzenle', data: [
@@ -314,6 +316,7 @@ class JsaDegerlendirmesiTest extends TestCase
                 'revizyon' => '01',
                 'belge_tarihi' => '15 Eylül 2026',
                 'kapsam' => 'Tüm sahalar',
+                'tehlike_kategorileri' => [$kategori->anahtar],
             ], arguments: ['id' => $sablon->id])
             ->assertNotified('JSA künyesi güncellendi');
 
@@ -323,6 +326,7 @@ class JsaDegerlendirmesiTest extends TestCase
         $this->assertSame('01', $sablon->revizyon);
         $this->assertSame('15 Eylül 2026', $sablon->belge_tarihi);
         $this->assertSame('Tüm sahalar', $sablon->kapsam);
+        $this->assertSame([$kategori->anahtar], $sablon->tehlike_kategorileri);
     }
 
     public function test_kunye_duzenle_bos_alanlari_null_yapar(): void

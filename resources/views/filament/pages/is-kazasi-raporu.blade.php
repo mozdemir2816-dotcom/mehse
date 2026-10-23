@@ -94,11 +94,18 @@
 
             <div style="margin-top:1rem">
                 <label style="{{ $lbl }}">Kök Neden Kategorileri (balık kılçığına otomatik dağıtılır)</label>
-                <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-                    @foreach ($this->kokNedenSecenekleri as $a => $ad)
-                        <label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer">
-                            <input type="checkbox" wire:model="kokNedenKategorileri" value="{{ $a }}"> {{ $ad }}
-                        </label>
+                <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:.4rem">
+                    @foreach ($this->kokNedenGruplari as $grup => $anahtarlar)
+                        <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.6rem">
+                            <div style="font-weight:600;font-size:.76rem;color:rgb(107 114 128);margin-bottom:.4rem">{{ $grup }}</div>
+                            <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+                                @foreach ($anahtarlar as $a)
+                                    <label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer">
+                                        <input type="checkbox" wire:model="kokNedenKategorileri" value="{{ $a }}"> {{ $this->kokNedenSecenekleri[$a] ?? $a }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
                 </div>
             </div>

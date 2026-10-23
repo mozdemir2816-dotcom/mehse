@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property array<int, array{sira: string, is_adimi: string, tehlikeler: string, sonuclar: string, baslangic_risk: string, kontrol_tedbirleri: string, kalinti_risk: string, sorumlu: string}> $adimlar
  * @property array<int, string> $notlar
  * @property array<int, array{rol: string, ad: ?string, imza: ?string, tarih: ?string}> $imza_rolleri
+ * @property ?array<int, string> $tehlike_kategorileri Risk Kütüphanesi kategori anahtarları — bu
+ *   JSA'nın kapsadığı işler; Risk Sihirbazı'nda eşleşen kategoriden madde eklenince önerilir.
  */
 class JsaSablonu extends Model
 {
@@ -31,6 +33,7 @@ class JsaSablonu extends Model
         'adimlar' => 'array',
         'notlar' => 'array',
         'imza_rolleri' => 'array',
+        'tehlike_kategorileri' => 'array',
     ];
 
     /** Örnek şablondaki (DUVAR ÖRME) imza bloğu — Excel'de bulunamazsa varsayılan. */

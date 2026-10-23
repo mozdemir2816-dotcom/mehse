@@ -170,6 +170,13 @@ class IsKazasiRaporu extends Page
         return config('isg.is_kazasi.kok_neden_kategorileri');
     }
 
+    /** @return array<string, array<int, string>> grup başlığı => anahtar listesi */
+    #[Computed]
+    public function kokNedenGruplari(): array
+    {
+        return config('isg.is_kazasi.kok_neden_gruplari');
+    }
+
     #[Computed]
     public function besNedenSorulari(): array
     {

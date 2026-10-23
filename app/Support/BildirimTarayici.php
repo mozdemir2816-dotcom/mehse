@@ -14,6 +14,7 @@ use App\Filament\Pages\TalimatOlustur;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Filament\Resources\Tehlikes\TehlikeResource;
 use App\Models\AcilDurumPlani;
 use App\Models\ArsivDosya;
 use App\Models\Bildirim;
@@ -176,6 +177,13 @@ class BildirimTarayici
             $ekle('ekipman_risk', 'uyari', 'Risk değerlendirmesinde ekipman / ortak maddeler eksik', $ekipmanRisk['toplam'].' madde eklenmemiş: '.Str::limit($ozet, 140).'. Değerlendirmeyi açıp "Eksik Maddeler" ile ekleyin.', null, static::url(fn () => RiskDegerlendirmesiResource::getUrl('edit', ['record' => $ekipmanRisk['rd']])));
         } elseif (! $ekipmanRisk['rd'] && $ekipmanRisk['toplam'] > 0 && EkipmanKatalogu::ekipmanlar($firma)->isNotEmpty()) {
             $ekle('ekipman_risk_yok', 'kritik', 'Ekipmanı olan firmada risk değerlendirmesi yok', 'Firmaya tanımlı ekipmanlar için kütüphanede '.$ekipmanRisk['toplam'].' risk maddesi hazır; Risk Değerlendirme sihirbazıyla değerlendirmeyi oluşturun.', null, static::url(fn () => RiskSihirbazi::getUrl()));
+        }
+
+        // Katalogda hiç risk kategorisi tanımlı olmayan ekipman tipi: "eksik" değil "kütüphanede
+        // yok" — Excel yüklenmeden hiç önerilmeyeceği için ayrı ve daha dikkat çekici bir uyarı.
+        $kutuphanesiz = EkipmanKatalogu::kutuphanesizTipler($firma);
+        if ($kutuphanesiz) {
+            $ekle('ekipman_kutuphane_yok', 'kritik', 'Ekipman için kütüphanede risk analizi yok', implode(', ', $kutuphanesiz).' için kütüphanede hazır risk maddesi yok; Risk Kütüphanesi\'ne Excel yükleyin, yoksa bu ekipmanın riskleri hiç önerilmez.', null, static::url(fn () => TehlikeResource::getUrl('ekipman-yukle')));
         }
 
         // Ad bazlı: envanterdeki ekipman hiçbir risk değerlendirmesinde geçmiyorsa uyar.

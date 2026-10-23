@@ -6,6 +6,8 @@ use App\Filament\Pages\RiskSihirbazi;
 use App\Filament\Resources\RiskSablonus\Pages\EditRiskSablonu;
 use App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus;
 use App\Models\Firma;
+use App\Models\FirmaJsa;
+use App\Models\JsaSablonu;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
@@ -82,6 +84,42 @@ class RiskSihirbaziTest extends TestCase
 
         $this->assertCount(1, $component->get('secilenler'));
         $this->assertSame($tehlike->tehlike, $component->get('secilenler.0.tehlike'));
+    }
+
+    /**
+     * İş kalemine göre işe özgü risk değerlendirmesi (JSA) uyarısı (23.10.2026 kullanıcı kararı):
+     * eklenen maddenin kategorisi kütüphanedeki bir JSA'nın kapsamıyla eşleşiyorsa ve bu JSA
+     * firmaya henüz atanmamışsa, bildirim verilir; aynı kategori için ikinci eklemede tekrarlanmaz.
+     */
+    public function test_kategorisine_jsa_eslesen_madde_eklenince_bildirim_verilir(): void
+    {
+        $tehlike = Tehlike::first();
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $sablon = JsaSablonu::create([
+            'user_id' => $this->uzman->id,
+            'baslik' => 'Test İşi JSA',
+            'adimlar' => [],
+            'tehlike_kategorileri' => [$tehlike->kategori->anahtar],
+        ]);
+
+        $component = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('tehlikeEkle', $tehlike->id)
+            ->assertNotified('İşe özgü risk değerlendirmesi (JSA) mevcut');
+
+        // Aynı kategoriden ikinci madde eklenince tekrar bildirim gelmez (dedupe).
+        $digerAyniKategori = Tehlike::where('tehlike_kategorisi_id', $tehlike->tehlike_kategorisi_id)->where('id', '!=', $tehlike->id)->first();
+        if ($digerAyniKategori) {
+            $component->call('tehlikeEkle', $digerAyniKategori->id)
+                ->assertNotNotified('İşe özgü risk değerlendirmesi (JSA) mevcut');
+        }
+
+        // Firmaya zaten atanmışsa bildirim gelmez.
+        FirmaJsa::create(['firma_id' => $firma->id, 'jsa_sablonu_id' => $sablon->id]);
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->call('tehlikeEkle', $tehlike->id)
+            ->assertNotNotified('İşe özgü risk değerlendirmesi (JSA) mevcut');
     }
 
     public function test_kategori_tumunu_ekle(): void

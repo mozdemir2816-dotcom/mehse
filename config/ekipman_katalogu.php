@@ -106,8 +106,18 @@ return [
         'uretim_atolye' => ['atolye_elektrik_ve_ortak_makine_guvenligi'],
     ],
 
-    // Ekipmandan bağımsız, HER firmanın risk değerlendirmesinde beklenen ortak set (kullanıcı
-    // kararı 14.10.2026: "eğitim, acil durum gibi maddeler her firmanın ortağı"). Yoksa uyarı +
-    // "Ekipman Eksikleri" ile tek tıkla eklenir; değerlendirmede olan / "gerekmiyor" denen gelmez.
-    'her_firma_riskleri' => ['atolye_egitim_ve_yetkilendirme', 'atolye_acil_durumlar'],
+    // Ekipmandan/sektörden bağımsız, HER firmanın risk değerlendirmesinde beklenen evrensel set
+    // (kullanıcı kararı 23.10.2026: eğitim + sağlık gözetimi + bina/işyeri genel güvenliği —
+    // sektöre özgü eski "atölye eğitimi" setinin yerini aldı, o maddeler Risk Sihirbazı'nda
+    // "Genel – Eğitim ve yetkilendirme" sanal grubundan elle de eklenebilir). Yoksa uyarı +
+    // "Eksik Maddeler" ile tek tıkla eklenir; değerlendirmede olan / "gerekmiyor" denen gelmez.
+    'her_firma_riskleri' => ['egitim_saglik_yeterlilik', 'genel_isyeri'],
+
+    // "her_firma_riskleri"ne ek olarak, firmanın NACE grubuna göre (App\Support\NaceGrubu) seçilen
+    // acil durum seti — inşaat/şantiye firmalarında atölye acil durumu yerine şantiyeye uygun genel
+    // çalışma/tesis maddeleri önerilir; diğer tüm sektörlerde eski davranış (atölye seti) korunur.
+    'her_firma_acil_durum' => [
+        'insaat' => ['santiye_genel_calismalar', 'santiye_genel_calismalar_tesisler'],
+        'varsayilan' => ['atolye_acil_durumlar'],
+    ],
 ];

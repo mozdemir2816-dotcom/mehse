@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\JsaSablonu;
+use App\Models\TehlikeKategorisi;
 use App\Support\JsaExcelOkuyucu;
 use App\Support\JsaUretici;
 use App\Support\JsaWordUretici;
@@ -12,6 +13,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -136,7 +138,7 @@ class JsaDegerlendirmesi extends Page
             ->modalSubmitActionLabel('Kaydet')
             ->fillForm(fn (array $arguments): array => JsaSablonu::sahip((int) Filament::auth()->id())
                 ->findOrFail($arguments['id'])
-                ->only(['baslik', 'dokuman_ref', 'revizyon', 'belge_tarihi', 'kapsam']))
+                ->only(['baslik', 'dokuman_ref', 'revizyon', 'belge_tarihi', 'kapsam', 'tehlike_kategorileri']))
             ->schema([
                 TextInput::make('baslik')
                     ->label('Başlık')
@@ -156,6 +158,13 @@ class JsaDegerlendirmesi extends Page
                 Textarea::make('kapsam')
                     ->label('Kapsam')
                     ->rows(2),
+                Select::make('tehlike_kategorileri')
+                    ->label('Risk Kütüphanesi kategorileri (eşleştirme)')
+                    ->helperText('Bu JSA hangi işi kapsıyor? İşaretlenen kategoriden Risk Sihirbazı\'nda madde eklenince bu JSA önerilir.')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->options(fn () => TehlikeKategorisi::query()->orderBy('ad')->pluck('ad', 'anahtar')),
             ])
             ->action(function (array $data, array $arguments): void {
                 $sablon = JsaSablonu::sahip((int) Filament::auth()->id())->findOrFail($arguments['id']);
@@ -166,6 +175,7 @@ class JsaDegerlendirmesi extends Page
                     'revizyon' => filled($data['revizyon']) ? trim($data['revizyon']) : null,
                     'belge_tarihi' => filled($data['belge_tarihi']) ? trim($data['belge_tarihi']) : null,
                     'kapsam' => filled($data['kapsam']) ? trim($data['kapsam']) : null,
+                    'tehlike_kategorileri' => filled($data['tehlike_kategorileri'] ?? null) ? array_values($data['tehlike_kategorileri']) : null,
                 ]);
 
                 unset($this->sablonlar);

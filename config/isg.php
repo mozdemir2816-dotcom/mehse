@@ -5230,6 +5230,10 @@ return [
             'olumlu' => 'Ölümlü',
         ],
         // Kök neden analizi — birden çok seçilebilir (balık kılçığı/5N1K yöntemine göre).
+        // İlk 8 madde (insan_faktoru…diger) orijinal sürüm — eski kayıtlarla uyum için
+        // anahtarları değişmedi. Geri kalanı 23.10.2026'da standart kaza nedenleri modeline
+        // (doğrudan mekanizma, uygunsuz davranış/koşul, kişisel ve yönetimsel nedenler) göre
+        // eklendi; gruplama yalnız arayüzde kullanılır, bkz. 'kok_neden_gruplari'.
         'kok_neden_kategorileri' => [
             'insan_faktoru' => 'İnsan Faktörü (dikkatsizlik, tedbirsizlik)',
             'ekipman_arizasi' => 'Ekipman / Makine Arızası',
@@ -5239,6 +5243,78 @@ return [
             'calisma_ortami' => 'Çalışma Ortamı Koşulları',
             'yonetim_sistemi' => 'Yönetim Sistemi / Denetim Eksikliği',
             'diger' => 'Diğer',
+
+            // Doğrudan neden / olay mekanizması
+            'mek_sikisma' => 'Sıkışma (hareketli parça, silindir, pres)',
+            'mek_parca_firlamasi' => 'Parça / Talaş / Kıvılcım Fırlaması',
+            'mek_malzeme_dusmesi' => 'Malzeme Düşmesi / Devrilmesi',
+            'mek_yukseklik' => 'Yükseklikten Düşme',
+            'mek_kayma_takilma' => 'Kayma / Takılma / Aynı Seviyede Düşme',
+            'mek_sicak_yuzey' => 'Sıcak Yüzey / Madde ile Temas',
+            'mek_elektrik' => 'Elektrik Çarpması / Ark Maruziyeti',
+            'mek_kesici_batici' => 'Kesici / Batıcı Alet Yaralanması',
+            'mek_basincli_patlama' => 'Basınçlı Kap / Hat Patlaması',
+            'mek_yangin_kimyasal' => 'Yangın / Parlama / Kimyasal Döküntü',
+
+            // Uygunsuz davranış
+            'dvr_tehlikeli_mudahale' => 'Çalışır Haldeki Ekipmana Müdahale',
+            'dvr_guvenlik_baypas' => 'Güvenlik Tertibatını Devre Dışı Bırakma',
+            'dvr_yetkisiz_ekipman' => 'Yetki Dışı Ekipman / Araç Kullanımı',
+            'dvr_dikkatsizlik' => 'Dikkatsizlik / Aceleci Çalışma',
+            'dvr_onlemsiz_baslama' => 'Güvenlik Önlemi Almadan İşe Başlama',
+            'dvr_talimata_aykiri' => 'İş Talimatına Aykırı Çalışma',
+            'dvr_hatali_tasima' => 'Hatalı Taşıma / Kaldırma',
+
+            // Uygunsuz çalışma koşulları
+            'kos_koruma_eksik' => 'Korkuluk / Bariyer / Muhafaza Eksikliği',
+            'kos_emniyet_arizali' => 'Arızalı Emniyet Donanımı (Acil Stop, Fotosel)',
+            'kos_duzen_eksik' => 'Yetersiz Tertip / Düzen / Temizlik (5S)',
+            'kos_aydinlatma' => 'Yetersiz Aydınlatma',
+            'kos_havalandirma' => 'Yetersiz Havalandırma / Toz / Gaz',
+            'kos_ariza_yipranma' => 'Arızalı / Yıpranmış Ekipman',
+            'kos_isaret_levha' => 'Yetersiz Uyarı / İkaz Levhası',
+            'kos_loto_eksik' => 'Enerji Kesme (LOTO) Eksikliği',
+
+            // Kişisel nedenler
+            'kis_yorgunluk' => 'Aşırı Yorgunluk / Vardiya Sonu',
+            'kis_dikkat_dagin' => 'Uykusuzluk / Dikkat Dağınıklığı',
+            'kis_stres' => 'Psikolojik Stres / İş Baskısı',
+            'kis_fiziksel' => 'Bedensel / Fiziksel Yetersizlik',
+
+            // Yönetimsel nedenler
+            'yon_denetim_eksik' => 'Sahada Denetim ve Kontrol Eksikliği',
+            'yon_prosedur_tanimsiz' => 'Standart İş Talimatı Tanımlanmamış',
+            'yon_egitim_pratik_eksik' => 'Pratik / Saha İSG Eğitimi Eksikliği',
+            'yon_saglik_kontrol_eksik' => 'Yetersiz Periyodik Sağlık Kontrolü',
+            'yon_uygun_olmayan_istihdam' => 'Göreve Uygun Olmayan Personel İstihdamı',
+        ],
+
+        // 'kok_neden_kategorileri' seçeneklerinin arayüzde grup başlıkları altında gösterimi
+        // (23.10.2026). Bir grupta olmayan anahtar genel listede (gruplanmamış) gösterilir.
+        'kok_neden_gruplari' => [
+            'Doğrudan Neden / Olay Mekanizması' => [
+                'mek_sikisma', 'mek_parca_firlamasi', 'mek_malzeme_dusmesi', 'mek_yukseklik',
+                'mek_kayma_takilma', 'mek_sicak_yuzey', 'mek_elektrik', 'mek_kesici_batici',
+                'mek_basincli_patlama', 'mek_yangin_kimyasal',
+            ],
+            'Uygunsuz Davranış' => [
+                'kkd_kullanilmamasi', 'dvr_tehlikeli_mudahale', 'dvr_guvenlik_baypas', 'dvr_yetkisiz_ekipman',
+                'dvr_dikkatsizlik', 'dvr_onlemsiz_baslama', 'dvr_talimata_aykiri', 'dvr_hatali_tasima',
+            ],
+            'Uygunsuz Çalışma Koşulları' => [
+                'ekipman_arizasi', 'calisma_ortami', 'kos_koruma_eksik', 'kos_emniyet_arizali',
+                'kos_duzen_eksik', 'kos_aydinlatma', 'kos_havalandirma', 'kos_ariza_yipranma',
+                'kos_isaret_levha', 'kos_loto_eksik',
+            ],
+            'Kişisel Nedenler' => [
+                'insan_faktoru', 'kis_yorgunluk', 'kis_dikkat_dagin', 'kis_stres', 'kis_fiziksel',
+            ],
+            'Yönetimsel Nedenler' => [
+                'egitim_eksikligi', 'talimat_eksikligi', 'yonetim_sistemi', 'yon_denetim_eksik',
+                'yon_prosedur_tanimsiz', 'yon_egitim_pratik_eksik', 'yon_saglik_kontrol_eksik',
+                'yon_uygun_olmayan_istihdam',
+            ],
+            'Diğer' => ['diger'],
         ],
 
         // 5 Neden (5N) — sabit sıralı sorular (isgpratik İş Kazası İnceleme Raporu).
@@ -5437,6 +5513,45 @@ return [
             'calisma_ortami' => 'cevre',
             'yonetim_sistemi' => 'olcum',
             'diger' => 'metot',
+
+            'mek_sikisma' => 'makine',
+            'mek_parca_firlamasi' => 'makine',
+            'mek_malzeme_dusmesi' => 'cevre',
+            'mek_yukseklik' => 'cevre',
+            'mek_kayma_takilma' => 'cevre',
+            'mek_sicak_yuzey' => 'makine',
+            'mek_elektrik' => 'makine',
+            'mek_kesici_batici' => 'makine',
+            'mek_basincli_patlama' => 'makine',
+            'mek_yangin_kimyasal' => 'malzeme',
+
+            'dvr_tehlikeli_mudahale' => 'insan',
+            'dvr_guvenlik_baypas' => 'insan',
+            'dvr_yetkisiz_ekipman' => 'insan',
+            'dvr_dikkatsizlik' => 'insan',
+            'dvr_onlemsiz_baslama' => 'insan',
+            'dvr_talimata_aykiri' => 'metot',
+            'dvr_hatali_tasima' => 'insan',
+
+            'kos_koruma_eksik' => 'makine',
+            'kos_emniyet_arizali' => 'makine',
+            'kos_duzen_eksik' => 'cevre',
+            'kos_aydinlatma' => 'cevre',
+            'kos_havalandirma' => 'cevre',
+            'kos_ariza_yipranma' => 'makine',
+            'kos_isaret_levha' => 'metot',
+            'kos_loto_eksik' => 'metot',
+
+            'kis_yorgunluk' => 'insan',
+            'kis_dikkat_dagin' => 'insan',
+            'kis_stres' => 'insan',
+            'kis_fiziksel' => 'insan',
+
+            'yon_denetim_eksik' => 'olcum',
+            'yon_prosedur_tanimsiz' => 'metot',
+            'yon_egitim_pratik_eksik' => 'insan',
+            'yon_saglik_kontrol_eksik' => 'olcum',
+            'yon_uygun_olmayan_istihdam' => 'insan',
         ],
     ],
 

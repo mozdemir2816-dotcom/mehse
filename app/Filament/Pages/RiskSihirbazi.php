@@ -4,7 +4,9 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Firma;
+use App\Models\FirmaJsa;
 use App\Models\IsgProfesyoneli;
+use App\Models\JsaSablonu;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\RiskSablonu;
@@ -20,6 +22,7 @@ use App\Support\RiskKutuphanesi;
 use App\Support\RiskSkorlama;
 use App\Support\RiskUretici;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -213,7 +216,7 @@ class RiskSihirbazi extends Page
             'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
             'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
             'excelDosya', 'excelAdaylar', 'excelSecilenAdaylar', 'excelHatalar',
-            'excelTekrarSayisi', 'excelTekrarBirlestir', 'pdfDosya',
+            'excelTekrarSayisi', 'excelTekrarBirlestir', 'pdfDosya', 'jsaOnerildiKategoriler',
         ]);
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
@@ -373,6 +376,7 @@ class RiskSihirbazi extends Page
 
         if ($t) {
             $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t, $this->yontem);
+            $this->jsaOneriKontrolEt($t->tehlike_kategorisi_id);
         }
     }
 
@@ -383,6 +387,51 @@ class RiskSihirbazi extends Page
                 $this->secilenler[] = RiskKutuphanesi::maddeyeCevir($t, $this->yontem);
             }
         }
+        $this->jsaOneriKontrolEt($kategoriId);
+    }
+
+    /** Bir madde eklenen kategori için bu oturumda zaten önerilmiş olanlar (tekrar bildirim gelmesin). */
+    public array $jsaOnerildiKategoriler = [];
+
+    /**
+     * Manuel seçimde eklenen maddenin kategorisi, kütüphanedeki bir JSA'nın kapsadığı iş ile
+     * eşleşiyorsa (JsaSablonu::tehlike_kategorileri) ve bu JSA firmaya henüz atanmamışsa,
+     * "işe özgü risk değerlendirmesi de hazırlanmalı" uyarısı verir — kullanıcı kararı 23.10.2026.
+     */
+    private function jsaOneriKontrolEt(?int $kategoriId): void
+    {
+        if (! $kategoriId || ! $this->firmaId) {
+            return;
+        }
+
+        $kategori = TehlikeKategorisi::find($kategoriId);
+        if (! $kategori || in_array($kategori->anahtar, $this->jsaOnerildiKategoriler, true)) {
+            return;
+        }
+
+        $atanmisSablonIdler = FirmaJsa::where('firma_id', $this->firmaId)->pluck('jsa_sablonu_id');
+
+        $sablon = JsaSablonu::query()
+            ->sahip((int) Filament::auth()->id())
+            ->whereNotNull('tehlike_kategorileri')
+            ->whereNotIn('id', $atanmisSablonIdler)
+            ->get()
+            ->first(fn (JsaSablonu $s) => in_array($kategori->anahtar, $s->tehlike_kategorileri ?? [], true));
+
+        $this->jsaOnerildiKategoriler[] = $kategori->anahtar;
+
+        if (! $sablon) {
+            return;
+        }
+
+        Notification::make()
+            ->title('İşe özgü risk değerlendirmesi (JSA) mevcut')
+            ->body('"'.$kategori->ad.'" için kütüphanede "'.$sablon->baslik.'" adlı JSA var. Firmaya ekleyip imzalatmak isterseniz JSA sayfasından "Firmalara Ekle" kullanın.')
+            ->info()
+            ->actions([
+                Action::make('jsaGit')->label('JSA Kütüphanesine Git')->url(JsaDegerlendirmesi::getUrl(['firma' => $this->firmaId]))->button(),
+            ])
+            ->send();
     }
 
     public function tehlikeSecili(int $tehlikeId): bool

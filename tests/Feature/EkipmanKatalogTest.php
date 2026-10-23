@@ -27,6 +27,14 @@ class EkipmanKatalogTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Her firmada beklenen evrensel set (config ekipman_katalogu.her_firma_riskleri +
+     * NACE'siz firmada varsayılan acil durum seti): egitim_saglik_yeterlilik (50) +
+     * atolye_acil_durumlar (8). "genel_isyeri" bu testin seeder'ında (MakineRiskKutuphanesiSeeder)
+     * yok, üretimde ayrıca seedleniyor — 23.10.2026.
+     */
+    private const HER_FIRMA_TOPLAM = 58;
+
     private User $uzman;
 
     private Firma $firma;
@@ -172,7 +180,7 @@ class EkipmanKatalogTest extends TestCase
 
         // TFD-RA-01 torna: 40 risk + 6 eğitim + 6 acil durum; ortak atölye maddelerini tetiklemez.
         $this->assertSame(['Torna Tezgâhı', EkipmanKatalogu::HER_FIRMA_ETIKET], array_keys($eksik['gruplar']));
-        $this->assertSame(52 + 16, $eksik['toplam']);
+        $this->assertSame(52 + self::HER_FIRMA_TOPLAM, $eksik['toplam']);
         $this->assertTrue($eksik['gruplar']['Torna Tezgâhı']->every(fn (Tehlike $t) => str_starts_with($t->kod, 'TFD-')));
     }
 
@@ -185,7 +193,7 @@ class EkipmanKatalogTest extends TestCase
         $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
 
         $this->assertEqualsCanonicalizing(['Dikey Freze Tezgâhı', 'Trafo & Yüksek Gerilim İşletmesi', EkipmanKatalogu::HER_FIRMA_ETIKET], array_keys($eksik['gruplar']));
-        $this->assertSame(52 + 52 + 16, $eksik['toplam']);
+        $this->assertSame(52 + 52 + self::HER_FIRMA_TOPLAM, $eksik['toplam']);
         // Trafo periyodik muayeneye tabi: tarih girilmeyince uyarı listesinde.
         $this->assertSame(['Trafo & Yüksek Gerilim İşletmesi'], EkipmanKatalogu::muayeneTarihiEksik($this->firma)->pluck('tip')->all());
     }
@@ -197,14 +205,14 @@ class EkipmanKatalogTest extends TestCase
 
         $yalnizCnc = EkipmanKatalogu::riskEksikleri($this->firma);
         $this->assertSame(['CNC Tezgâhı', EkipmanKatalogu::HER_FIRMA_ETIKET], array_keys($yalnizCnc['gruplar']));
-        $this->assertSame(80 + 16, $yalnizCnc['toplam']);
+        $this->assertSame(80 + self::HER_FIRMA_TOPLAM, $yalnizCnc['toplam']);
 
         // Sütunlu matkap (RA-MAK, eğitim/elektrik maddesi yok) eklenince ortak maddeler gelir.
         $this->ekipman('uretim_atolye', 'Sütunlu Matkap');
         $ikisi = EkipmanKatalogu::riskEksikleri($this->firma);
         $this->assertSame(['CNC Tezgâhı', 'Sütunlu Matkap', EkipmanKatalogu::ORTAK_ETIKET, EkipmanKatalogu::HER_FIRMA_ETIKET], array_keys($ikisi['gruplar']));
-        // Ortak makine güvenliği artık yalnız elektrik (14); eğitim + acil durum her firmada (16).
-        $this->assertSame(80 + 14 + 14 + 16, $ikisi['toplam']);
+        // Ortak makine güvenliği artık yalnız elektrik (14); evrensel set her firmada (HER_FIRMA_TOPLAM).
+        $this->assertSame(80 + 14 + 14 + self::HER_FIRMA_TOPLAM, $ikisi['toplam']);
     }
 
     public function test_degerlendirmede_olan_madde_id_veya_benzer_metinle_tekrar_onerilmez(): void
@@ -283,7 +291,7 @@ class EkipmanKatalogTest extends TestCase
 
         $rd->refresh();
         $this->assertSame(3, $rd->maddeler()->count());
-        $this->assertCount(52 - 3 + 16, $rd->haric_tehlikeler);
+        $this->assertCount(52 - 3 + self::HER_FIRMA_TOPLAM, $rd->haric_tehlikeler);
         $this->assertSame(0, EkipmanKatalogu::riskEksikleri($this->firma)['toplam']);
     }
 
@@ -389,13 +397,29 @@ class EkipmanKatalogTest extends TestCase
 
         $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
         $this->assertSame([EkipmanKatalogu::HER_FIRMA_ETIKET], array_keys($eksik['gruplar']));
-        $this->assertSame(16, $eksik['toplam']);
+        $this->assertSame(self::HER_FIRMA_TOPLAM, $eksik['toplam']);
         $this->assertContains('f'.$this->firma->id.':ekipman_risk', BildirimTarayici::firmaBildirimleri($this->firma)->pluck('anahtar'));
 
         // Eklenince revizyon nedeni "ekipman" değil ortak set olarak yazılır, bir daha önerilmez.
         EkipmanKatalogu::revizeEt($rd, $eksik['gruplar'][EkipmanKatalogu::HER_FIRMA_ETIKET]->pluck('id')->all(), [], []);
         $this->assertStringStartsWith('Ortak eğitim / acil durum maddeleri eklendi', $rd->fresh()->revizyon_nedeni);
         $this->assertSame(0, EkipmanKatalogu::riskEksikleri($this->firma)['toplam']);
+    }
+
+    /**
+     * Katalogda risk kategorisi tanımlı olmayan ekipman tipi eklenince "eksik" değil, ayrı ve
+     * daha dikkat çekici bir "kütüphanede yok" uyarısı verilir (23.10.2026 kullanıcı kararı).
+     */
+    public function test_kutuphanesiz_ekipman_tipi_icin_ozel_uyari_verilir(): void
+    {
+        $this->ekipman('kaldirma_iletme', 'Araç Üstü Yüksek Platform (Sepetli Platform / Cherry Picker)');
+
+        $this->assertSame(['Araç Üstü Yüksek Platform (Sepetli Platform / Cherry Picker)'], EkipmanKatalogu::kutuphanesizTipler($this->firma));
+        $this->assertContains('f'.$this->firma->id.':ekipman_kutuphane_yok', BildirimTarayici::firmaBildirimleri($this->firma)->pluck('anahtar'));
+
+        // Kütüphanesi olan bir ekipman (torna) bu uyarıyı tetiklemez.
+        $bosFirma = Firma::factory()->for($this->uzman)->create();
+        $this->assertSame([], EkipmanKatalogu::kutuphanesizTipler($bosFirma));
     }
 
     public function test_risk_degerlendirmesi_olmayan_ekipmansiz_firmaya_kritik_uyari_verilmez(): void
@@ -413,6 +437,49 @@ class EkipmanKatalogTest extends TestCase
 
         $this->assertContains('f'.$this->firma->id.':ekipman_risk', $anahtarlar);
         $this->assertContains('f'.$this->firma->id.':ekipman_muayene', $anahtarlar);
+    }
+
+    /**
+     * İş kalemi bazlı eksik kontrolü (23.10.2026): firma hangi iş kalemlerini yaptığını
+     * işaretleyince (isg.kkd_matris.is_kalemleri[İnşaat / Şantiye]), o iş kaleminin
+     * tehlike_kategorileri'ne karşılık gelen kütüphane maddeleri "eksik" sayılır — aynı NACE
+     * kodundaki farklı kapsamlı firmaları ayırt eder.
+     */
+    public function test_is_kalemi_isaretlenince_kendi_kategorisi_eksik_gorunur(): void
+    {
+        $kategori = TehlikeKategorisi::create(['anahtar' => 'test_hafriyat', 'ad' => 'Hafriyat ve Kazı İşleri', 'sira' => 1]);
+        Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'kod' => 'TST-001', 'tehlike' => 'Kazı kenarının göçmesi']);
+        Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'kod' => 'TST-002', 'tehlike' => 'Kazı içinde yeraltı tesisatına zarar']);
+
+        $this->firma->update(['is_kalemleri' => ['hafriyat_kazi']]);
+        $this->degerlendirme();
+
+        $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
+
+        $this->assertSame([EkipmanKatalogu::HER_FIRMA_ETIKET, 'İş Kalemi: Hafriyat ve Kazı İşleri'], array_keys($eksik['gruplar']));
+        $this->assertCount(2, $eksik['gruplar']['İş Kalemi: Hafriyat ve Kazı İşleri']);
+        $this->assertSame(2 + self::HER_FIRMA_TOPLAM, $eksik['toplam']);
+
+        // İş kalemi işaretli değilse hiç önerilmez.
+        $this->firma->update(['is_kalemleri' => null]);
+        $bos = EkipmanKatalogu::riskEksikleri($this->firma);
+        $this->assertArrayNotHasKey('İş Kalemi: Hafriyat ve Kazı İşleri', $bos['gruplar']);
+    }
+
+    /**
+     * NACE grubu inşaat olan firmada acil durum seti atölyeye özgü yerine şantiyeye uygun
+     * genel çalışma/tesis maddelerinden gelir (23.10.2026 kullanıcı kararı).
+     */
+    public function test_insaat_naceli_firmada_acil_durum_santiye_setinden_gelir(): void
+    {
+        $this->firma->update(['nace_kodu' => '41.20']);
+        $this->degerlendirme();
+
+        $eksik = EkipmanKatalogu::riskEksikleri($this->firma);
+        $anahtarlar = $eksik['gruplar'][EkipmanKatalogu::HER_FIRMA_ETIKET]->pluck('tehlike_kategorisi_id')
+            ->map(fn ($id) => TehlikeKategorisi::find($id)->anahtar)->unique()->values()->all();
+
+        $this->assertNotContains('atolye_acil_durumlar', $anahtarlar);
     }
 
     public function test_sayfadan_cnc_eklenir_periyot_istenmez(): void
