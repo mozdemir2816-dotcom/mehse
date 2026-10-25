@@ -13,6 +13,7 @@ use App\Models\Sertifika;
 use App\Models\YillikPlan;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
+use App\Support\EgitimKonulari;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
@@ -832,6 +833,9 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
             'katilimcilar' => $this->katilimcilarTopla(),
         ]);
         $kayit->save();
+
+        // İşlenen temel/işe özgü konular yıllık eğitim planında o aya "tamamlandı" işlenir.
+        EgitimKonulari::planiIsle($kayit);
 
         unset($this->gecmisKayitlar);
 

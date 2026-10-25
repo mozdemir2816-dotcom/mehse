@@ -67,7 +67,7 @@ class EgitimIcerikOlusturucu
     {
         return collect($maddeler)
             ->map(fn ($m) => is_array($m)
-                ? ['madde' => $m['madde'], 'dakika' => $m['dakika'], 'dahil' => true]
+                ? [...(isset($m['kod']) ? ['kod' => $m['kod']] : []), 'madde' => $m['madde'], 'dakika' => $m['dakika'], 'dahil' => true]
                 : ['madde' => $m, 'dakika' => (int) round($varsayilanDakika), 'dahil' => true])
             ->values()
             ->all();
@@ -97,7 +97,7 @@ class EgitimIcerikOlusturucu
                 $agirlik = is_array($m) ? $m['dakika'] : self::OZEL_VARSAYILAN_DAKIKA;
                 $ad = is_array($m) ? $m['madde'] : $m;
 
-                return ['madde' => $ad, 'dakika' => max(1, (int) round($agirlik * $olcek)), 'dahil' => true];
+                return [...(is_array($m) && isset($m['kod']) ? ['kod' => $m['kod']] : []), 'madde' => $ad, 'dakika' => max(1, (int) round($agirlik * $olcek)), 'dahil' => true];
             })
             ->values()
             ->all();

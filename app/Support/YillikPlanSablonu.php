@@ -71,7 +71,8 @@ class YillikPlanSablonu
     {
         return [
             'faaliyetler' => YillikPlan::maddeAylarIle(config('yillik_plan_sablonu.faaliyetler', []), $kilitAy),
-            'egitimler' => YillikPlan::maddeAylarIle(config('yillik_plan_sablonu.egitimler', []), $kilitAy),
+            // Temel konular ortak ana listeye (EgitimKonulari) çevrilir — Eğitim Katılım ile aynı kod/metin.
+            'egitimler' => EgitimKonulari::planSatirlariniCevir(YillikPlan::maddeAylarIle(config('yillik_plan_sablonu.egitimler', []), $kilitAy)),
         ];
     }
 

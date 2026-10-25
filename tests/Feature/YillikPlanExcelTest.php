@@ -72,13 +72,13 @@ class YillikPlanExcelTest extends TestCase
 
         $this->assertSame('2026 YILLIK EĞİTİM PLANI', $s->getCell('C1')->getValue());
         $this->assertStringContainsString('ÖRNEK İNŞAAT LTD. ŞTİ.', $s->getCell('H1')->getValue());
-        $this->assertSame(' İŞE VE İŞYERİNE ÖZGÜ RİSKLER ', $s->getCell('A27')->getValue());
-        $this->assertSame('Yüksekte Çalışma', $s->getCell('B27')->getValue());
-        // Ocak, 2. hafta = F; 5. Diğer Eğitimlerde Kasım 3. hafta = AU.
-        $this->assertSame('P', $s->getCell('F27')->getValue());
-        $this->assertSame('P', $s->getCell('AU33')->getValue());
-        $this->assertSame('A1:BC41', $s->getPageSetup()->getPrintArea());
-        $this->assertArrayHasKey('A32', $s->getBreaks());
+        $this->assertSame(' İŞE VE İŞYERİNE ÖZGÜ RİSKLER ', $s->getCell('A28')->getValue());
+        $this->assertSame('Yüksekte Çalışma', $s->getCell('B28')->getValue());
+        // Ocak, 2. hafta = F; 5. Diğer Eğitimlerde Kasım 3. hafta = AU. Teknik bölüm ortak konu listesiyle 12 satır (25.10.2026).
+        $this->assertSame('P', $s->getCell('F28')->getValue());
+        $this->assertSame('P', $s->getCell('AU34')->getValue());
+        $this->assertSame('A1:BC42', $s->getPageSetup()->getPrintArea());
+        $this->assertArrayHasKey('A33', $s->getBreaks());
         $this->assertArrayHasKey('CF', $s->getHeaderFooter()->getImages()); // imza şeridi
     }
 
@@ -94,12 +94,12 @@ class YillikPlanExcelTest extends TestCase
 
         $s = YillikPlanExcelUretici::egitimDoldur($plan->fresh())->getSheet(0);
 
-        // 4. bölüm 6 → 9 satır: 27..35, 5. bölüm 36'dan başlar, alt satırlar 3 kayar.
-        $this->assertSame('Özgü konu 9', $s->getCell('B35')->getValue());
-        $this->assertSame('5. DİĞER EĞİTİMLER', $s->getCell('A36')->getValue());
-        $this->assertArrayHasKey('A27:A35', $s->getMergeCells());
-        $this->assertSame('A1:BC44', $s->getPageSetup()->getPrintArea());
-        $this->assertArrayHasKey('A35', $s->getBreaks());
+        // 4. bölüm 6 → 9 satır: 28..36 (teknik 12 konu), 5. bölüm 37'den başlar, alt satırlar 3 kayar.
+        $this->assertSame('Özgü konu 9', $s->getCell('B36')->getValue());
+        $this->assertSame('5. DİĞER EĞİTİMLER', $s->getCell('A37')->getValue());
+        $this->assertArrayHasKey('A28:A36', $s->getMergeCells());
+        $this->assertSame('A1:BC45', $s->getPageSetup()->getPrintArea());
+        $this->assertArrayHasKey('A36', $s->getBreaks());
     }
 
     public function test_calisma_plani_excel_sablon_duzeninde_uretilir(): void

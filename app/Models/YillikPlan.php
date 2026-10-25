@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EgitimKonulari;
 use App\Support\YillikPlanSablonu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -52,6 +53,9 @@ class YillikPlan extends Model
             // sekmesine dokunulmaz.
             $icerik = YillikPlanSablonu::icerik($firma, $yil);
             $plan->update(['faaliyetler' => $icerik['faaliyetler'], 'egitimler' => $icerik['egitimler']]);
+        } elseif (EgitimKonulari::cevrilmeliMi($plan->egitimler ?? [])) {
+            // Temel konular ortak ana listeye (kodlu) bir kez çevrilir (25.10.2026); ay durumları korunur.
+            $plan->update(['egitimler' => EgitimKonulari::planSatirlariniCevir($plan->egitimler ?? [])]);
         }
 
         return $plan;
