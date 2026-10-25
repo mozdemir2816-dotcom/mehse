@@ -100,6 +100,17 @@
                 </select>
                 <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Seçilen sektörün 40 maddelik kontrol listesi (dayanak mevzuat ve öneriyle) aşağıya eklenir.</p>
             </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Fine-Kinney saha gözetimi (40 sektör)</label>
+                <select wire:model.live="fkSektoru"
+                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    <option value="">— Ekleme —</option>
+                    @foreach ($this->fkSektorleri as $anahtar => $ad)
+                        <option value="{{ $anahtar }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Firmanın NACE koduna göre otomatik seçilir. 20 madde; uygunsuz işaretlenince varsayılan Fine-Kinney puanı ve DÖF önerisi gelir.</p>
+            </div>
         </div>
 
         @if ($this->firma && ! $this->firma->igu)
@@ -213,6 +224,9 @@
                                 @if ($madde['kritik'])
                                     <span style="font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:.3rem;color:#dc2626;background:rgb(220 38 38 / .1)">KRİTİK</span>
                                 @endif
+                                @if (! empty($madde['fk_kategori']))
+                                    <span style="font-size:.68rem;font-weight:600;padding:.1rem .4rem;border-radius:.3rem;background:rgb(107 114 128 / .12)">{{ $madde['fk_kategori'] }}</span>
+                                @endif
                                 <span style="font-size:.85rem">{{ $ifade }}</span>
                             </div>
                             @if (! empty($madde['dayanak']))
@@ -248,9 +262,29 @@
                                             <button type="button" wire:click="oneriyiAciklamayaEkle('{{ $kod }}')" style="padding:.15rem .5rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4);cursor:pointer">Açıklamaya ekle</button>
                                         </div>
                                     @endif
+                                    @if (! empty($madde['fk']))
+                                        @php $fkPuan = $this->fkPuani($kod); @endphp
+                                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem;align-items:end">
+                                            @foreach (['olasilik' => 'Olasılık (O)', 'frekans' => 'Frekans (F)', 'siddet' => 'Şiddet (Ş)'] as $eksen => $etiket)
+                                                <div>
+                                                    <label style="font-size:.72rem;font-weight:600">{{ $etiket }}</label>
+                                                    <select wire:model.live="cevaplar.{{ $anahtar }}.fk_{{ $eksen }}" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                                                        <option value="">—</option>
+                                                        @foreach ($this->kinneyOlcekleri[$eksen] as $deger => $aciklama)
+                                                            <option value="{{ $deger }}">{{ $deger }} — {{ $aciklama }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            @endforeach
+                                            <div style="text-align:center;padding:.35rem;border-radius:.4rem;background:{{ $fkPuan['renk'] }}22;border:1px solid {{ $fkPuan['renk'] }}66">
+                                                <div style="font-size:.95rem;font-weight:700;color:{{ $fkPuan['renk'] }}">R = {{ $fkPuan['seviye'] ? $fkPuan['puan'] : '—' }}</div>
+                                                <div style="font-size:.68rem">{{ $fkPuan['duzey'] }}</div>
+                                            </div>
+                                        </div>
+                                    @endif
                                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem">
                                         <div>
-                                            <label style="font-size:.72rem;font-weight:600">Risk</label>
+                                            <label style="font-size:.72rem;font-weight:600">Risk @if (! empty($madde['fk']))<span style="font-weight:400;color:rgb(107 114 128)">(boşsa puandan)</span>@endif</label>
                                             <select wire:model="cevaplar.{{ $anahtar }}.risk" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
                                                 <option value="">—</option>
                                                 @foreach (config('isg.saha_denetimi.risk_seviyeleri') as $rk => $re)

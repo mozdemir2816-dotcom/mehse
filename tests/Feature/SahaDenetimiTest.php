@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Support\EkipmanKatalogu;
 use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\SahaDenetimiUretici;
+use App\Support\SahaFineKinneyKutuphanesi;
 use App\Support\SahaSektorDefteri;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -102,6 +103,91 @@ class SahaDenetimiTest extends TestCase
         $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
         $this->assertStringContainsString('Dayanak: Risk Değerlendirmesi Yönetmeliği', $html);
         $this->assertStringContainsString('SEKTÖRE ÖZGÜ KONTROL', $html);
+    }
+
+    public function test_fine_kinney_kutuphanesi_40_sektor_ve_her_sektorde_20_madde_icerir(): void
+    {
+        $sektorler = SahaFineKinneyKutuphanesi::sektorler();
+        $olcek = config('isg.risk_fine_kinney');
+
+        $this->assertCount(40, $sektorler);
+        $this->assertSame('İnşaat ve Yapı İşleri', $sektorler['insaat']);
+        $this->assertSame('Havalimanı Yer Hizmetleri (Apron)', $sektorler['havalimani_apron']);
+
+        foreach (array_keys($sektorler) as $anahtar) {
+            $maddeler = SahaFineKinneyKutuphanesi::maddeler($anahtar);
+            $this->assertCount(20, $maddeler, $anahtar);
+            $this->assertSame('FK1', $maddeler[0]['kod']);
+            $this->assertNotContains('', array_column($maddeler, 'oneri'), $anahtar);
+
+            // Varsayılan puanlar sistem ölçeğinde (şiddette 100 yok)
+            foreach ($maddeler as $m) {
+                $this->assertArrayHasKey((string) $m['fk']['olasilik'], $olcek['olasilik'], $anahtar);
+                $this->assertArrayHasKey((string) $m['fk']['frekans'], $olcek['frekans'], $anahtar);
+                $this->assertArrayHasKey((string) $m['fk']['siddet'], $olcek['siddet'], $anahtar);
+            }
+        }
+
+        $this->assertSame([], SahaFineKinneyKutuphanesi::maddeler('yok'));
+    }
+
+    public function test_fine_kinney_sektoru_nace_kodundan_secilir(): void
+    {
+        $this->assertSame('insaat', SahaFineKinneyKutuphanesi::naceSektoru('41.00.01'));
+        $this->assertSame('plastik', SahaFineKinneyKutuphanesi::naceSektoru('22.12.01'));
+        $this->assertSame('ambalaj', SahaFineKinneyKutuphanesi::naceSektoru('17.21.01'));
+        $this->assertSame('tersane', SahaFineKinneyKutuphanesi::naceSektoru('30.11'));
+        $this->assertSame('saglik', SahaFineKinneyKutuphanesi::naceSektoru('86.10.05'));
+        $this->assertSame('tarim', SahaFineKinneyKutuphanesi::naceSektoru('02.10 01'));
+        $this->assertNull(SahaFineKinneyKutuphanesi::naceSektoru(null));
+        $this->assertNull(SahaFineKinneyKutuphanesi::naceSektoru('99.00'));
+
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '29.32.21']);
+        $sayfa = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id)->assertSet('fkSektoru', 'otomotiv');
+        $this->assertCount(20, $sayfa->instance()->kategoriler()['fine_kinney']['maddeler']);
+
+        $sayfa->set('fkSektoru', '');
+        $sayfa->assertSet('fkSektoru', null);
+        $this->assertArrayNotHasKey('fine_kinney', $sayfa->instance()->kategoriler());
+    }
+
+    public function test_fine_kinney_maddesi_uygunsuzda_varsayilan_puan_gelir_taslakta_korunur_pdfe_yazilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '41.00.01']);
+
+        // FK1 (inşaat): yüksekte çalışma — kaynakta O6 F6 Ş40 (tek ölüm) → sistemde Ş30
+        $sayfa = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->assertSee('Yüksekte Çalışma')
+            ->call('cevapVer', 'FK1', 'uygun_degil');
+
+        $c = $sayfa->get('cevaplar')['FK1'];
+        $this->assertSame(['6', '6', '30'], [$c['fk_olasilik'], $c['fk_frekans'], $c['fk_siddet']]);
+        $this->assertSame(1080.0, $sayfa->instance()->fkPuani('FK1')['puan']);
+
+        // Kullanıcı puanı düşürür → risk seviyesi puandan türetilir (6×3×7=126 → orta)
+        $sayfa->set('cevaplar.FK1.fk_frekans', '3')
+            ->set('cevaplar.FK1.fk_siddet', '7')
+            ->set('cevaplar.FK1.aciklama', 'Korkuluk eksik')
+            ->call('taslakKaydet');
+
+        $yeni = Livewire::test(SahaSayfasi::class)->set('firmaId', $firma->id)->assertSet('fkSektoru', 'insaat');
+        $c = $yeni->get('cevaplar')['FK1'];
+        $this->assertSame(['6', '3', '7'], [$c['fk_olasilik'], $c['fk_frekans'], $c['fk_siddet']]);
+        $this->assertNull($c['risk']); // türetilmiş risk taslakta sabitlenmez
+
+        $yeni->callAction('pdf');
+        $d = SahaDenetimi::where('firma_id', $firma->id)->where('durum', 'tamamlandi')->firstOrFail();
+        $fk1 = collect($d->cevaplar)->firstWhere('kod', 'FK1');
+        $this->assertSame(126.0, (float) $fk1['fk_puan']);
+        $this->assertSame('Önemli Risk', $fk1['fk_duzey']);
+        $this->assertSame('orta', $fk1['risk']);
+        $this->assertSame('insaat', $fk1['fk_sektoru']);
+        $this->assertNull(collect($d->cevaplar)->firstWhere('kod', 'FK2')['fk_puan']);
+
+        $html = view('pdf.saha-denetimi', ['denetim' => $d, 'firma' => $firma])->render();
+        $this->assertStringContainsString('O 6 × F 3 × Ş 7 = <strong>126</strong> (Önemli Risk)', $html);
+        $this->assertStringContainsString('FİNE-KİNNEY SAHA GÖZETİMİ', $html);
     }
 
     public function test_uygunsuz_maddede_risk_sorumlu_termin_kaydedilir_taslakta_korunur_pdfte_gorunur(): void

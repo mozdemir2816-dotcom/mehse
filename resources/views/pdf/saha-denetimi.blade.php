@@ -105,7 +105,7 @@
         <tr>
             <td class="orta">@if ($c['kritik'])<span class="kritik">KRİTİK</span>@endif</td>
             <td class="orta">{{ $c['kod'] }}</td>
-            <td>{{ $c['ifade'] }}@if (filled($c['dayanak'] ?? null))<br><span style="font-size:7px;color:#666">Dayanak: {{ $c['dayanak'] }}</span>@endif</td>
+            <td>@if (filled($c['fk_kategori'] ?? null))<span style="font-size:7px;color:#666">[{{ $c['fk_kategori'] }}]</span> @endif{{ $c['ifade'] }}@if (filled($c['dayanak'] ?? null))<br><span style="font-size:7px;color:#666">Dayanak: {{ $c['dayanak'] }}</span>@endif</td>
             <td class="orta sonuc-{{ $c['sonuc'] ?? '' }}">{{ config('isg.saha_denetimi.sonuc_secenekleri.'.($c['sonuc'] ?? ''), '-') }}</td>
             <td class="foto">
                 @forelse ($fotolar as $yol)
@@ -121,6 +121,9 @@
                         filled($c['sorumlu'] ?? null) ? 'Sorumlu: '.$c['sorumlu'] : null,
                         filled($c['termin'] ?? null) ? 'Termin: '.\Illuminate\Support\Carbon::parse($c['termin'])->format('d.m.Y') : null,
                     ])->filter()->implode(' · ') }}</span>
+                @endif
+                @if (filled($c['fk_puan'] ?? null))
+                    <br><span style="font-size:7px;color:#444">Fine-Kinney: O {{ $c['fk_olasilik'] + 0 }} × F {{ $c['fk_frekans'] + 0 }} × Ş {{ $c['fk_siddet'] + 0 }} = <strong>{{ $c['fk_puan'] + 0 }}</strong> ({{ $c['fk_duzey'] }})</span>
                 @endif</td>
         </tr>
     @empty

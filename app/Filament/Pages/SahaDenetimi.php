@@ -10,6 +10,8 @@ use App\Models\SahaDenetimi as SahaDenetimiModel;
 use App\Models\SahaDenetimiOzelMadde;
 use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\SahaDenetimiUretici;
+use App\Support\RiskSkorlama;
+use App\Support\SahaFineKinneyKutuphanesi;
 use App\Support\SahaSektorDefteri;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -76,6 +78,9 @@ class SahaDenetimi extends Page
 
     /** "Sektöre Özgü Kontrol" bölümü: SahaSektorDefteri sektör anahtarı (40 sektör). */
     public ?string $defterSektoru = null;
+
+    /** "Fine-Kinney Saha Gözetimi" bölümü: SahaFineKinneyKutuphanesi sektör anahtarı (40 sektör × 20 madde). */
+    public ?string $fkSektoru = null;
 
     /** @var array<string, array{sonuc: ?string, aciklama: ?string, foto_yolu: ?string, fotolar?: array<int, string>}> kod => cevap */
     public array $cevaplar = [];
@@ -176,6 +181,11 @@ class SahaDenetimi extends Page
             $kategoriler['sektor_defteri'] = $defter;
         }
 
+        // Fine-Kinney saha gözetimi kütüphanesi — varsayılan O/F/Ş puanı ve DÖF önerisiyle.
+        if ($fk = SahaFineKinneyKutuphanesi::kategori($this->fkSektoru)) {
+            $kategoriler['fine_kinney'] = $fk;
+        }
+
         return $kategoriler;
     }
 
@@ -184,6 +194,24 @@ class SahaDenetimi extends Page
     public function defterSektorleri(): array
     {
         return SahaSektorDefteri::sektorler();
+    }
+
+    /** @return array<string, string> */
+    #[Computed]
+    public function fkSektorleri(): array
+    {
+        return SahaFineKinneyKutuphanesi::sektorler();
+    }
+
+    /** @return array{olasilik: array<string, string>, frekans: array<string, string>, siddet: array<string, string>} */
+    #[Computed]
+    public function kinneyOlcekleri(): array
+    {
+        return [
+            'olasilik' => RiskSkorlama::olcek('fine_kinney', 'olasilik'),
+            'frekans' => RiskSkorlama::olcek('fine_kinney', 'frekans'),
+            'siddet' => RiskSkorlama::olcek('fine_kinney', 'siddet'),
+        ];
     }
 
     #[Computed]
@@ -306,6 +334,25 @@ class SahaDenetimi extends Page
         return array_values(array_unique($yollar));
     }
 
+    /** Uygunsuz Fine-Kinney maddesinin O/F/Ş + puan + düzey alanları (diğer maddelerde boş). */
+    private function fkSnapshot(array $madde, array $cevap): array
+    {
+        if (! isset($madde['fk']) || ($cevap['sonuc'] ?? null) !== 'uygun_degil') {
+            return ['fk_olasilik' => null, 'fk_frekans' => null, 'fk_siddet' => null, 'fk_puan' => null, 'fk_duzey' => null, 'fk_seviye' => null];
+        }
+
+        $p = SahaFineKinneyKutuphanesi::puanla($cevap['fk_olasilik'] ?? null, $cevap['fk_frekans'] ?? null, $cevap['fk_siddet'] ?? null);
+
+        return [
+            'fk_olasilik' => RiskSkorlama::sayi($cevap['fk_olasilik'] ?? null),
+            'fk_frekans' => RiskSkorlama::sayi($cevap['fk_frekans'] ?? null),
+            'fk_siddet' => RiskSkorlama::sayi($cevap['fk_siddet'] ?? null),
+            'fk_puan' => $p['seviye'] ? $p['puan'] : null,
+            'fk_duzey' => $p['seviye'] ? $p['duzey'] : null,
+            'fk_seviye' => $p['seviye'],
+        ];
+    }
+
     private function ifadeYaz(string $ifade): string
     {
         return str_replace('{FIRMA}', $this->firma?->unvan ?? '{FİRMA}', $ifade);
@@ -333,6 +380,11 @@ class SahaDenetimi extends Page
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->aktifTaslak);
         $this->denetciAdi = $this->firma?->igu?->ad_soyad;
 
+        // Firma NACE kodundan Fine-Kinney sektörü otomatik seçilir (taslak varsa taslaktaki geçerli).
+        $this->fkSektoru = SahaFineKinneyKutuphanesi::naceSektoru($this->firma?->nace_kodu);
+        unset($this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+
         if ($taslak = $this->aktifTaslak) {
             $this->taslaktanYukle($taslak);
         }
@@ -349,6 +401,7 @@ class SahaDenetimi extends Page
         $this->denetciAdi = $taslak->denetci_adi ?: $this->denetciAdi;
         $this->sektorAnahtari = $taslak->sektor_anahtari;
         $this->defterSektoru = collect($taslak->cevaplar ?? [])->pluck('defter_sektoru')->filter()->first();
+        $this->fkSektoru = collect($taslak->cevaplar ?? [])->pluck('fk_sektoru')->filter()->first() ?? $this->fkSektoru;
         $this->ekipUyeleri = $taslak->ekip_uyeleri ?? [];
         $this->genelNotlar = $taslak->genel_notlar;
 
@@ -360,6 +413,14 @@ class SahaDenetimi extends Page
             if (isset($this->cevaplar[$anahtar])) {
                 $fotolar = SahaDenetimiModel::maddeFotolari($c);
                 $this->cevaplar[$anahtar] = ['sonuc' => $c['sonuc'], 'aciklama' => $c['aciklama'], 'foto_yolu' => $fotolar[0] ?? null, 'fotolar' => $fotolar, 'risk' => $c['risk'] ?? null, 'sorumlu' => $c['sorumlu'] ?? null, 'termin' => $c['termin'] ?? null];
+
+                // Fine-Kinney puanı; risk puandan türetilmişse boş bırakılır ki puan değişince yeniden türesin.
+                foreach (['fk_olasilik', 'fk_frekans', 'fk_siddet'] as $alan) {
+                    $this->cevaplar[$anahtar][$alan] = isset($c[$alan]) ? (string) $c[$alan] : null;
+                }
+                if (filled($c['fk_seviye'] ?? null) && ($c['risk'] ?? null) === $c['fk_seviye']) {
+                    $this->cevaplar[$anahtar]['risk'] = null;
+                }
             }
         }
 
@@ -372,7 +433,7 @@ class SahaDenetimi extends Page
         unset($this->aktifTaslak);
 
         $this->reset([
-            'isTanimi', 'santiyeAdi', 'santiyeSorumlusu', 'isReferansNo', 'sektorAnahtari', 'defterSektoru',
+            'isTanimi', 'santiyeAdi', 'santiyeSorumlusu', 'isReferansNo', 'sektorAnahtari', 'defterSektoru', 'fkSektoru',
             'ekipUyeleri', 'genelNotlar', 'cevaplar', 'taslakYuklendi',
         ]);
         $this->denetciAdi = $this->firma?->igu?->ad_soyad;
@@ -384,6 +445,13 @@ class SahaDenetimi extends Page
 
     public function updatedSektorAnahtari(): void
     {
+        unset($this->kategoriler);
+        $this->cevaplariSenkronizeEt();
+    }
+
+    public function updatedFkSektoru(): void
+    {
+        $this->fkSektoru = $this->fkSektoru ?: null;
         unset($this->kategoriler);
         $this->cevaplariSenkronizeEt();
     }
@@ -458,7 +526,23 @@ class SahaDenetimi extends Page
 
         if (isset($this->cevaplar[$anahtar])) {
             $this->cevaplar[$anahtar]['sonuc'] = $sonuc;
+
+            // Fine-Kinney maddesi uygunsuz işaretlenince kütüphanedeki varsayılan puan gelir (değiştirilebilir).
+            $fk = $this->tumMaddeler()[$kod]['fk'] ?? null;
+            if ($sonuc === 'uygun_degil' && $fk && blank($this->cevaplar[$anahtar]['fk_olasilik'] ?? null)) {
+                $this->cevaplar[$anahtar]['fk_olasilik'] = (string) $fk['olasilik'];
+                $this->cevaplar[$anahtar]['fk_frekans'] = (string) $fk['frekans'];
+                $this->cevaplar[$anahtar]['fk_siddet'] = (string) $fk['siddet'];
+            }
         }
+    }
+
+    /** Fine-Kinney maddesinin o anki puanı (cevaptaki O/F/Ş ile). */
+    public function fkPuani(string $kod): array
+    {
+        $c = $this->cevaplar[$this->anahtar($kod)] ?? [];
+
+        return SahaFineKinneyKutuphanesi::puanla($c['fk_olasilik'] ?? null, $c['fk_frekans'] ?? null, $c['fk_siddet'] ?? null);
     }
 
     /** Bir maddeye eklenen (yeni yüklenen ve taslaktan gelen) tüm fotoğrafları kaldırır. */
@@ -576,10 +660,14 @@ class SahaDenetimi extends Page
                 'dayanak' => $madde['dayanak'] ?? null,
                 'oneri' => $madde['oneri'] ?? null,
                 'defter_sektoru' => isset($madde['dayanak']) ? $this->defterSektoru : null,
+                'fk_sektoru' => isset($madde['fk']) ? $this->fkSektoru : null,
+                'fk_kategori' => $madde['fk_kategori'] ?? null,
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
+                ...$this->fkSnapshot($madde, $cevap),
                 // Risk / sorumlu / termin yalnız uygunsuz maddede anlamlı (master saha gözlem defteri sütunları).
-                'risk' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['risk'] ?? null) : null,
+                // Fine-Kinney maddesinde risk seçilmemişse puandan türetilir.
+                'risk' => $cevap['sonuc'] === 'uygun_degil' ? (($cevap['risk'] ?? null) ?: $this->fkSnapshot($madde, $cevap)['fk_seviye']) : null,
                 'sorumlu' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['sorumlu'] ?? null) : null,
                 'termin' => $cevap['sonuc'] === 'uygun_degil' ? (($cevap['termin'] ?? null) ?: null) : null,
                 'foto_yolu' => $fotolar[0] ?? null,
@@ -646,10 +734,14 @@ class SahaDenetimi extends Page
                 'dayanak' => $madde['dayanak'] ?? null,
                 'oneri' => $madde['oneri'] ?? null,
                 'defter_sektoru' => isset($madde['dayanak']) ? $this->defterSektoru : null,
+                'fk_sektoru' => isset($madde['fk']) ? $this->fkSektoru : null,
+                'fk_kategori' => $madde['fk_kategori'] ?? null,
                 'sonuc' => $cevap['sonuc'],
                 'aciklama' => $cevap['aciklama'],
+                ...$this->fkSnapshot($madde, $cevap),
                 // Risk / sorumlu / termin yalnız uygunsuz maddede anlamlı (master saha gözlem defteri sütunları).
-                'risk' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['risk'] ?? null) : null,
+                // Fine-Kinney maddesinde risk seçilmemişse puandan türetilir.
+                'risk' => $cevap['sonuc'] === 'uygun_degil' ? (($cevap['risk'] ?? null) ?: $this->fkSnapshot($madde, $cevap)['fk_seviye']) : null,
                 'sorumlu' => $cevap['sonuc'] === 'uygun_degil' ? ($cevap['sorumlu'] ?? null) : null,
                 'termin' => $cevap['sonuc'] === 'uygun_degil' ? (($cevap['termin'] ?? null) ?: null) : null,
                 'foto_yolu' => $fotolar[0] ?? null,
