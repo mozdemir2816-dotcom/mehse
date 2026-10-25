@@ -182,6 +182,34 @@ class EgitimKatilim extends Page
         return EgitimIcerikOlusturucu::sektorler();
     }
 
+    /** Sektör kullanıcı tarafından NACE önerisinden farklı seçildi (kayıtta `konu_secimleri.sektor_elle`). */
+    public bool $sektorElle = false;
+
+    /** Firmanın NACE kodundan türetilen işyerine özgü risk sektörü (yoksa null). */
+    #[Computed]
+    public function naceSektoru(): ?string
+    {
+        return EgitimIcerikOlusturucu::naceSektoru($this->firma?->nace_kodu);
+    }
+
+    /** Bu firmanın son temel eğitiminde kullanıcının ELLE seçtiği sektör (yoksa null). */
+    private function elleSecilenSektor(): ?string
+    {
+        $kayit = $this->firma?->egitimKatilimlari()->where('baslik_anahtari', 'genel')
+            ->whereNotNull('sektor_anahtari')->latest('belge_tarihi')->latest('id')->first();
+
+        return ($kayit?->konu_secimleri['sektor_elle'] ?? false) ? $kayit->sektor_anahtari : null;
+    }
+
+    /** "NACE'ye göre seç" — elle seçimi bırakıp firmanın NACE sektörüne döner. */
+    public function naceSektorunuKullan(): void
+    {
+        $this->sektorAnahtari = $this->naceSektoru;
+        $this->sektorElle = false;
+        $this->oncekiIcerikYoksay = false;
+        $this->icerikYenile();
+    }
+
     /** "Sıfırdan başlat" dendiyse önceki kayıttan konu yükleme atlanır (sektör/başlık değişince sıfırlanır). */
     public bool $oncekiIcerikYoksay = false;
 
@@ -193,12 +221,13 @@ class EgitimKatilim extends Page
 
     private function icerikYenile(): void
     {
-        // Sektör seçilmemişse, NACE'si aynı firmada daha önce seçilen sektör gelir
-        // (ör. metal firması için bir kez "enerji" seçildiyse sonraki metal firmalarında da).
+        // Sektör firmanın NACE kodundan gelir; kullanıcı bu firmada daha önce elle
+        // farklı sektör seçtiyse (NACE ile yapılan iş uyuşmuyor) o seçim gelir —
+        // kullanıcı kararı 25.10.2026. Başka firmadaki seçim artık taşınmaz.
         if ($this->baslikAnahtari === 'genel' && blank($this->sektorAnahtari) && ! $this->oncekiIcerikYoksay) {
-            $this->sektorAnahtari = $this->firma?->egitimKatilimlari()->where('baslik_anahtari', 'genel')->whereNotNull('sektor_anahtari')->latest('belge_tarihi')->value('sektor_anahtari')
-                ?? $this->ayniNaceKaydi(sektorsuz: true)?->sektor_anahtari
-                ?? EgitimIcerikOlusturucu::naceSektoru($this->firma?->nace_kodu);
+            $elle = $this->elleSecilenSektor();
+            $this->sektorAnahtari = $elle ?? $this->naceSektoru;
+            $this->sektorElle = $elle !== null;
         }
 
         $taze = EgitimIcerikOlusturucu::olustur(
@@ -330,10 +359,9 @@ class EgitimKatilim extends Page
 
     /**
      * Kullanıcının NACE kodu bu firmayla aynı olan diğer firmalarındaki en son
-     * eğitim katılım kaydı (tam kod → xx.yy → xx). $sektorsuz: sektör seçimini
-     * türetmek için sektör filtresi uygulanmaz.
+     * eğitim katılım kaydı (tam kod → xx.yy → xx), aynı sektörde.
      */
-    private function ayniNaceKaydi(bool $sektorsuz = false): ?EgitimKatilimModel
+    private function ayniNaceKaydi(): ?EgitimKatilimModel
     {
         $nace = (string) $this->firma?->nace_kodu;
         $rakam = preg_replace('/\D/', '', $nace);
@@ -354,9 +382,7 @@ class EgitimKatilim extends Page
                 ->where('firma_id', '!=', $this->firma->id)
                 ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id())->where('nace_kodu', 'like', $onek.'%'))
                 ->where('baslik_anahtari', $this->baslikAnahtari)
-                ->when($this->baslikAnahtari === 'genel', fn ($q) => $sektorsuz
-                    ? $q->whereNotNull('sektor_anahtari')
-                    : $q->where('sektor_anahtari', $this->sektorAnahtari))
+                ->when($this->baslikAnahtari === 'genel', fn ($q) => $q->where('sektor_anahtari', $this->sektorAnahtari))
                 ->orderByRaw('egitim_turu = ? desc', [$this->egitimTuru])
                 ->latest('belge_tarihi')
                 ->latest('id')
@@ -513,7 +539,10 @@ class EgitimKatilim extends Page
     {
         $this->kayitUnut();
 
-        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru);
+        // Önceki firmanın sektörü yeni firmaya taşınmasın — icerikYenile NACE'den/elle seçimden kurar.
+        $this->sektorAnahtari = null;
+        $this->sektorElle = false;
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egitmenBilgileriYenile();
         $this->oncekiIcerikYoksay = false;
@@ -544,6 +573,8 @@ class EgitimKatilim extends Page
 
     public function updatedSektorAnahtari(): void
     {
+        // Kullanıcı açılır listeden seçti: NACE önerisinden farklıysa "elle" sayılır ve bu firmada hatırlanır.
+        $this->sektorElle = filled($this->sektorAnahtari) && $this->sektorAnahtari !== $this->naceSektoru;
         $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
     }
@@ -808,6 +839,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse ya da sildiyse (elle yazılacak) onu kaydet.
         $icerik = $this->icerik;
         $icerik['saat'] = $this->dersSaati ?: null;
+        $icerik['sektor_elle'] = $this->baslikAnahtari === 'genel' && $this->sektorElle;
 
         $kayit = $this->kayitIcin(EgitimKatilimModel::class, [
             'firma_id' => $this->firma->id,

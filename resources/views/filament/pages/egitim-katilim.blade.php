@@ -151,6 +151,16 @@
                             <option value="{{ $anahtar }}">{{ $ad }}</option>
                         @endforeach
                     </select>
+                    @if (! $this->naceSektoru)
+                        <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan sektör çıkarılamadı — elle seçin.</p>
+                    @elseif ($sektorAnahtari && $sektorAnahtari !== $this->naceSektoru)
+                        <p style="font-size:.72rem;color:rgb(217 119 6);margin-top:.25rem">
+                            NACE koduna ({{ $this->firma?->nace_kodu }}) göre önerilen: <strong>{{ $this->sektorler[$this->naceSektoru] ?? $this->naceSektoru }}</strong>. Elle değiştirdiniz; bu firmada sonraki eğitimlerde de sizin seçiminiz gelir.
+                            <button type="button" wire:click="naceSektorunuKullan" style="text-decoration:underline;margin-left:.25rem">NACE'ye göre seç</button>
+                        </p>
+                    @else
+                        <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) geldi. Yapılan iş farklıysa değiştirebilirsiniz.</p>
+                    @endif
                 </div>
             @endif
         </div>
