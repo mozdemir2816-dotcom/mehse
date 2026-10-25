@@ -71,7 +71,7 @@ class JsaDegerlendirmesi extends Page
         return Firma::query()
             ->where('user_id', Filament::auth()->id())
             ->orderBy('unvan')
-            ->pluck('unvan', 'id')
+            ->secenekler()
             ->all();
     }
 

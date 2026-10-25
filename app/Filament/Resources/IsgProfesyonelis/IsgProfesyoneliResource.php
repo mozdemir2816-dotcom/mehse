@@ -112,7 +112,7 @@ class IsgProfesyoneliResource extends Resource
                             ->options(fn () => Firma::query()
                                 ->where('user_id', Filament::auth()->id())
                                 ->orderBy('unvan')
-                                ->pluck('unvan', 'id'))
+                                ->secenekler())
                             ->helperText($record->firmaAlani()
                                 ? null
                                 : 'Bu tip için atama alanı tanımlı değil.'),

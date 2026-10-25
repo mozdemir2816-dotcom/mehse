@@ -26,7 +26,7 @@ class RiskDegerlendirmesiForm
                     Select::make('firma_id')->label('Firma')
                         ->options(fn () => Firma::query()
                             ->where('user_id', Filament::auth()->id())
-                            ->orderBy('unvan')->pluck('unvan', 'id'))
+                            ->orderBy('unvan')->secenekler())
                         ->searchable()->preload()->required()
                         ->disabledOn('edit'),
                     // Yöntem seçilmeden kayıt yok; kütüphane seçicisi bu yönteme göre süzülür.

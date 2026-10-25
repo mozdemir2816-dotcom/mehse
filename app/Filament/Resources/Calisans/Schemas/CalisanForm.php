@@ -33,7 +33,7 @@ class CalisanForm
                         Select::make('firma_id')->label('Firma')
                             ->options(fn () => Firma::query()
                                 ->where('user_id', Filament::auth()->id())
-                                ->orderBy('unvan')->pluck('unvan', 'id'))
+                                ->orderBy('unvan')->secenekler())
                             ->searchable()->preload()->required()->live(),
                     ] : []),
                     TextInput::make('ad_soyad')->label('Ad soyad')->required()->maxLength(255),

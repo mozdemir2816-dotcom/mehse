@@ -141,7 +141,7 @@ class DofOlustur extends Page
     {
         return Firma::query()
             ->orderBy('unvan')
-            ->pluck('unvan', 'id')
+            ->secenekler()
             ->all();
     }
 

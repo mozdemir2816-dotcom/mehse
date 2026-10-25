@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use App\Models\Builders\FirmaBuilder;
 
 class Firma extends Model
 {
@@ -22,6 +24,25 @@ class Firma extends Model
     public const COP_SURESI_AY = 3;
 
     protected $table = 'firmalar';
+
+    public function newEloquentBuilder($query): FirmaBuilder
+    {
+        return new FirmaBuilder($query);
+    }
+
+    /**
+     * Seçim listesindeki ad: kısa ad unvanın baş kısmı değilse (ör. "FOM – Şube") öne yazılır,
+     * böylece aynı unvanlı şube/şantiye kayıtları ayırt edilir.
+     */
+    public function secimEtiketi(): string
+    {
+        $kisa = trim((string) $this->kisa_ad);
+        $sade = fn (string $s) => preg_replace('/[^a-z0-9]/', '', Str::lower(Str::ascii($s)));
+
+        return $kisa === '' || str_starts_with($sade($this->unvan), $sade($kisa))
+            ? (string) $this->unvan
+            : $kisa.' · '.$this->unvan;
+    }
 
     protected $guarded = ['id'];
 

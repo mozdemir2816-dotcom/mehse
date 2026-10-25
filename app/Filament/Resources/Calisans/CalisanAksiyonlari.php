@@ -123,7 +123,7 @@ class CalisanAksiyonlari
             Select::make('firma_id')->label('Firma')
                 ->options(fn () => Firma::query()
                     ->where('user_id', Filament::auth()->id())
-                    ->orderBy('unvan')->pluck('unvan', 'id'))
+                    ->orderBy('unvan')->secenekler())
                 ->default(fn () => $varsayilanFirmaId ? $varsayilanFirmaId() : null)
                 ->searchable()->required(),
         ];

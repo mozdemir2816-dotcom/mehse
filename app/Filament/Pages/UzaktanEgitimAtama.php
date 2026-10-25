@@ -68,7 +68,7 @@ class UzaktanEgitimAtama extends Page
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()->where('user_id', Filament::auth()->id())->orderBy('unvan')->pluck('unvan', 'id')->all();
+        return Firma::query()->where('user_id', Filament::auth()->id())->orderBy('unvan')->secenekler()->all();
     }
 
     #[Computed]

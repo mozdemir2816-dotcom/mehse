@@ -90,7 +90,7 @@ class TaseronYonetimi extends Page
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()->orderBy('unvan')->pluck('unvan', 'id')->all();
+        return Firma::query()->orderBy('unvan')->secenekler()->all();
     }
 
     /** @return Collection<int, Taseron> */

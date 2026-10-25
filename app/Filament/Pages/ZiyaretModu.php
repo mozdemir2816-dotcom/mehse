@@ -130,7 +130,7 @@ class ZiyaretModu extends Page
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->pluck('unvan', 'id')->all();
+        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
     }
 
     /** @return Collection<int, array{firma_id: int, unvan: string, amac: ?string, durum: string}> bugün ziyaret programında planlı firmalar */
