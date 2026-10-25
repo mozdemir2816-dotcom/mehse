@@ -106,6 +106,38 @@ class EgitimKonulariTest extends TestCase
         $this->assertNotSame('tamamlandi', $egitimler->firstWhere('kod', 'G1')['aylar'][3]);
     }
 
+    public function test_gecmis_egitimler_plana_islenir_cevrimde_dugmeyle_ve_komutla(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $icerik = EgitimIcerikOlusturucu::olustur('genel', null, 'az_tehlikeli');
+        // Eski kayıt: maddelerde kod yok, yalnız metin.
+        $eski = collect($icerik)->map(fn ($v, $k) => in_array($k, ['genel_konular', 'saglik_konulari', 'teknik_konular'])
+            ? collect($v)->map(fn ($m) => collect($m)->except('kod')->all())->all() : $v)->all();
+        $kayit = fn (string $tarih, array $ic) => \App\Models\EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'egitim_turu' => 'ilk',
+            'belge_tarihi' => $tarih, 'konu_secimleri' => $ic, 'katilimcilar' => [],
+        ]);
+        $kayit('2026-02-12', $eski);
+        $kayit('2025-06-01', $icerik); // başka yıl — işlenmez
+
+        // Plan, eğitimden sonra açılırsa geçmiş kayıt kendiliğinden işlenir.
+        $egitimler = collect(YillikPlan::firmaYilIcin($firma, 2026)->egitimler);
+        $this->assertSame('tamamlandi', $egitimler->firstWhere('kod', 'S4')['aylar'][1]);
+        $this->assertNotSame('tamamlandi', $egitimler->firstWhere('kod', 'S4')['aylar'][5]);
+
+        // Sonradan girilen kayıt düğmeyle işlenir; tekrar basmak bir şey değiştirmez.
+        $kayit('2026-04-03', $icerik);
+        Livewire::test(\App\Filament\Pages\YillikPlan\YillikEgitimPlani::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('egitimKayitlariniIsle');
+        $this->assertSame('tamamlandi', collect(YillikPlan::firstWhere('firma_id', $firma->id)->egitimler)->firstWhere('kod', 'G1')['aylar'][3]);
+        $this->assertSame(0, EgitimKonulari::kayitlariPlanaIsle(YillikPlan::firstWhere('firma_id', $firma->id)));
+
+        $kayit('2026-05-04', $icerik);
+        $this->artisan('egitim:planlara-isle')->assertSuccessful();
+        $this->assertSame('tamamlandi', collect(YillikPlan::firstWhere('firma_id', $firma->id)->egitimler)->firstWhere('kod', 'T12')['aylar'][4]);
+    }
+
     public function test_plan_yoksa_egitim_kaydi_plan_acmaz(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

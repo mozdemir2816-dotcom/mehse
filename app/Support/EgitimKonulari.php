@@ -240,6 +240,51 @@ class EgitimKonulari
         }
 
         $plan = YillikPlan::firmaYilIcin($kayit->firma, (int) $kayit->belge_tarihi->year);
+        [$satirlar, $sayi] = self::isaretle($plan->egitimler ?? [], $kayit);
+
+        if ($sayi) {
+            $plan->update(['egitimler' => $satirlar]);
+        }
+
+        return $sayi;
+    }
+
+    /**
+     * Firmanın plan yılındaki TÜM temel İSG eğitimi kayıtlarını plana işler
+     * (geçmiş kayıtlar — 25.10.2026 kullanıcı kararı). Tekrar çalıştırmak
+     * güvenlidir; yalnız "tamamlandı" olmayan hücreler işaretlenir. Değişiklik
+     * varsa planı kaydeder; işaretlenen hücre sayısı döner.
+     */
+    public static function kayitlariPlanaIsle(YillikPlan $plan): int
+    {
+        $satirlar = $plan->egitimler ?? [];
+        $toplam = 0;
+
+        $kayitlar = EgitimKatilim::query()
+            ->where('firma_id', $plan->firma_id)
+            ->where('baslik_anahtari', 'genel')
+            ->whereYear('belge_tarihi', $plan->yil)
+            ->orderBy('belge_tarihi')
+            ->get();
+
+        foreach ($kayitlar as $kayit) {
+            [$satirlar, $sayi] = self::isaretle($satirlar, $kayit);
+            $toplam += $sayi;
+        }
+
+        if ($toplam) {
+            $plan->update(['egitimler' => $satirlar]);
+        }
+
+        return $toplam;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $satirlar
+     * @return array{0: array<int, array<string, mixed>>, 1: int}
+     */
+    private static function isaretle(array $satirlar, EgitimKatilim $kayit): array
+    {
         $icerik = $kayit->konu_secimleri ?? [];
         $kodlar = [];
         $ozgu = [];
@@ -259,7 +304,6 @@ class EgitimKonulari
         }
 
         $ay = (int) $kayit->belge_tarihi->month - 1;
-        $satirlar = $plan->egitimler ?? [];
         $sayi = 0;
 
         foreach ($satirlar as $i => $s) {
@@ -273,10 +317,6 @@ class EgitimKonulari
             }
         }
 
-        if ($sayi) {
-            $plan->update(['egitimler' => $satirlar]);
-        }
-
-        return $sayi;
+        return [$satirlar, $sayi];
     }
 }

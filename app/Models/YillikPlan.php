@@ -47,15 +47,20 @@ class YillikPlan extends Model
             // Kullanıcının İSG Yıllık Değerlendirme Raporu şablonu (36 satır) — kayıtlardan dolu gelir.
             $plan->degerlendirmeler = \App\Support\YillikDegerlendirmeVerisi::planiDoldur($firma, $yil, [])['satirlar'];
             $plan->save();
+            // Plan açılmadan önce girilmiş eğitimler de "tamamlandı" işlenir.
+            EgitimKonulari::kayitlariPlanaIsle($plan);
         } elseif (YillikPlanSablonu::eskiYapidaMi($plan)) {
             // Eski genel varsayılanlarla açılmış plan — kullanıcı kararıyla (01.10.2026)
             // çalışma + eğitim satırları bir kez yeni şablona çevrilir. Değerlendirme
             // sekmesine dokunulmaz.
             $icerik = YillikPlanSablonu::icerik($firma, $yil);
             $plan->update(['faaliyetler' => $icerik['faaliyetler'], 'egitimler' => $icerik['egitimler']]);
+            EgitimKonulari::kayitlariPlanaIsle($plan);
         } elseif (EgitimKonulari::cevrilmeliMi($plan->egitimler ?? [])) {
-            // Temel konular ortak ana listeye (kodlu) bir kez çevrilir (25.10.2026); ay durumları korunur.
+            // Temel konular ortak ana listeye (kodlu) bir kez çevrilir (25.10.2026); ay durumları korunur
+            // ve o yıl girilmiş eğitim kayıtları plana işlenir.
             $plan->update(['egitimler' => EgitimKonulari::planSatirlariniCevir($plan->egitimler ?? [])]);
+            EgitimKonulari::kayitlariPlanaIsle($plan);
         }
 
         return $plan;

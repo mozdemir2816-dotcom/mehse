@@ -6,6 +6,7 @@ use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\IseOzguEgitimKonusu;
 use App\Models\YillikPlan as YillikPlanModel;
+use App\Support\EgitimKonulari;
 use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\YillikDegerlendirmeExcelUretici;
 use App\Support\YillikDegerlendirmeFormUretici;
@@ -618,6 +619,26 @@ abstract class YillikPlanlar extends Page
                 ->color('gray')
                 ->visible(fn () => $this->plan() !== null)
                 ->action(fn () => $this->planiKaydet()),
+
+            Action::make('egitimKayitlariniIsle')
+                ->label('Verilen Eğitimleri İşle')
+                ->icon('heroicon-o-academic-cap')
+                ->color('gray')
+                ->tooltip('Bu yıl Eğitim Katılım ile kaydedilen temel İSG eğitimlerinin konularını, eğitim ayına "Gerçekleşti" olarak işler')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'egitim')
+                ->requiresConfirmation()
+                ->modalHeading('Verilen eğitimler plana işlensin mi?')
+                ->modalDescription('Bu yıl kaydedilmiş temel İSG eğitimlerinde işlenen konular, eğitimin yapıldığı aya "Gerçekleşti" olarak işaretlenir. Diğer hücrelere dokunulmaz.')
+                ->modalSubmitActionLabel('İşle')
+                ->action(function () {
+                    $sayi = EgitimKonulari::kayitlariPlanaIsle($this->plan());
+                    unset($this->plan);
+
+                    Notification::make()
+                        ->title($sayi ? $sayi.' plan hücresi "Gerçekleşti" işaretlendi' : 'İşlenecek yeni eğitim bulunamadı')
+                        ->body($sayi ? null : 'Bu yılın eğitim kayıtları planda zaten işli.')
+                        ->success()->send();
+                }),
 
             // Çalışma/eğitim planı çıktısı Excel şablonlarıyla (aşağıda); PDF yalnız
             // Değerlendirme Raporu için kaldı.
