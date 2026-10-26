@@ -44,18 +44,18 @@ class EkipmanRiskKutuphanesi
     private const BASLIKLAR = [
         'ekipman' => ['ekipman', 'ekipman / bölüm', 'düğüm / ekipman', 'düğüm', 'düğüm / süreç'],
         'faaliyet' => ['faaliyet', 'bölüm / faaliyet'],
-        'tehlike' => ['tehlike', 'tehlike / uygunsuzluk', 'tehlike / eksiklik', 'tehlike kaynağı'],
-        'risk' => ['risk / sonuç', 'risk/sonuç', 'risk / olası sonuç'],
-        'olasilik' => ['olasılık p', 'olasılık', 'o'],
+        'tehlike' => ['tehlike', 'tehlike / uygunsuzluk', 'tehlike / eksiklik', 'tehlike kaynağı', 'tehlike & risk konusu'],
+        'risk' => ['risk / sonuç', 'risk/sonuç', 'risk / olası sonuç', 'tehlikeli durum / olası zarar ve sonuç'],
+        'olasilik' => ['olasılık p', 'olasılık', 'o', 'ihtimal', 'i'],
         'frekans' => ['frekans f', 'frekans', 'f'],
         'siddet' => ['şiddet s', 'şiddet', 'ş'],
-        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon', 'alınacak önlemler', 'önerilen önlem / faaliyet'],
+        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon', 'alınacak önlemler', 'önerilen önlem / faaliyet', 'alınacak kontrol önlemleri (döf)'],
         'son_olasilik' => ['hedef p', 'hedef o'],
         'son_frekans' => ['hedef f'],
         'son_siddet' => ['hedef s', 'hedef ş'],
         'sorumlu' => ['sorumlu', 'sorumlu rol', 'önerilen sorumlu'],
         'termin' => ['önerilen termin', 'termin', 'hedef tarih', 'termin tarihi'],
-        'd_standart' => ['standart dayanağı', 'standart / teknik dayanak'],
+        'd_standart' => ['standart dayanağı', 'standart / teknik dayanak', 'yasal dayanak & standart açıklaması (neye göre olduğu)'],
         'd_makina' => ['makina emniyeti dayanağı'],
         'd_ekipman' => ['iş ekipmanları dayanağı'],
         // HAZOP
@@ -389,6 +389,24 @@ class EkipmanRiskKutuphanesi
 
             if (count(array_intersect($zorunlu, array_keys($sutun))) === count($zorunlu)) {
                 return [$i, $sutun];
+            }
+
+            // İki satırlık başlık: "MEVCUT DURUM" / "HEDEF DURUM" üst başlığının altında
+            // İ / F / Ş alt başlıkları. Alt satırda değer varsa o, yoksa üst satır geçerli;
+            // ikinci puan bloğu önlem sonrası (hedef) risk olur. Veri alt satırdan sonra başlar.
+            $alt = $satirlar[$i + 1] ?? null;
+            if ($alt === null) {
+                continue;
+            }
+
+            $birlesik = [];
+            foreach ($r + $alt as $c => $_) {
+                $birlesik[$c] = static::temiz($alt[$c] ?? null) !== '' ? $alt[$c] : ($r[$c] ?? null);
+            }
+            $sutun = static::sutunlar($birlesik, true);
+
+            if (count(array_intersect($zorunlu, array_keys($sutun))) === count($zorunlu)) {
+                return [$i + 1, $sutun];
             }
         }
 

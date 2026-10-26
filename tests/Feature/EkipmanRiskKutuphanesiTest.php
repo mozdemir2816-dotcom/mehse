@@ -286,6 +286,25 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         $this->assertSame([0.2, 0.5, 30.0], [$m['son_olasilik'], $m['son_frekans'], $m['son_siddet']]);
     }
 
+    public function test_fine_kinney_iki_satirlik_baslik_ve_ihtimal_kisaltmasi_taninir(): void
+    {
+        // "MEVCUT DURUM" / "HEDEF DURUM" üst başlığı, altında İ / F / Ş.
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('Risk Değerlendirmesi');
+        $s->fromArray(['No', 'Tehlike & Risk Konusu', 'Tehlikeli Durum / Olası Zarar ve Sonuç', 'MEVCUT DURUM (ÖNLEM ÖNCESİ)', null, null, null, null, 'Alınacak Kontrol Önlemleri (DÖF)', 'HEDEF DURUM (ÖNLEM SONRASI)', null, null, null, null, 'Sorumlu', 'Termin', "Yasal Dayanak & Standart Açıklaması\n(Neye Göre Olduğu)"], null, 'A4');
+        $s->fromArray([null, null, null, 'İ', 'F', 'Ş', 'Skor (R)', 'Risk Düzeyi', null, 'İ', 'F', 'Ş', 'Skor (R)', 'Risk Düzeyi'], null, 'A5');
+        $s->fromArray([1, 'Zemin yetersizliği', 'Aracın devrilmesi', 6, 6, 15, '=D6*E6*F6', '', 'Takoz konulur', 0.5, 6, 15, '=J6*K6*L6', '', 'Operatör', 'Sürekli', 'TS EN 280-1'], null, 'A6');
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-iki-satir.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $m = EkipmanRiskKutuphanesi::oku($yol, 'Sepetli_Platform_Fine_Kinney.xlsx')[0]['maddeler'][0];
+
+        $this->assertSame(['Zemin yetersizliği', 'Aracın devrilmesi', 'Takoz konulur', 'Operatör', 'Sürekli'], [$m['tehlike'], $m['risk'], $m['oneri'], $m['sorumlu'], $m['termin']]);
+        $this->assertSame([6.0, 6.0, 15.0], [$m['olasilik'], $m['frekans'], $m['siddet']]);
+        $this->assertSame([0.5, 6.0, 15.0], [$m['son_olasilik'], $m['son_frekans'], $m['son_siddet']]);
+        $this->assertStringContainsString('TS EN 280-1', $m['mevzuat']);
+    }
+
     private function hazopExcel(): string
     {
         $kitap = new Spreadsheet;
