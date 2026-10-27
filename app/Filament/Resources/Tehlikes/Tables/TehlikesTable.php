@@ -36,8 +36,7 @@ class TehlikesTable
                 Group::make('kategori_bolum')->label('Kategori › Bölüm')->collapsible()
                     ->getKeyFromRecordUsing(fn (Tehlike $r): string => $r->tehlike_kategorisi_id.'|'.($r->bolum ?? ''))
                     ->getTitleFromRecordUsing(fn (Tehlike $r): string => '['.(EkipmanRiskKutuphanesi::YONTEMLER[$r->kategori?->yontem ?? 'fine_kinney'] ?? 'Fine-Kinney').'] '.($r->kategori?->ad ?? 'Kategorisiz').' › '.(filled($r->bolum) ? $r->bolum : 'Bölümsüz'))
-                    ->getDescriptionFromRecordUsing(fn (Tehlike $r): string => Tehlike::where('tehlike_kategorisi_id', $r->tehlike_kategorisi_id)
-                        ->where(fn ($q) => filled($r->bolum) ? $q->where('bolum', $r->bolum) : $q->whereNull('bolum')->orWhere('bolum', ''))->count().' madde')
+                    ->getDescriptionFromRecordUsing(fn (Tehlike $r): string => (static::grupSayilari()[$r->tehlike_kategorisi_id.'|'.($r->bolum ?? '')] ?? 0).' madde')
                     ->groupQueryUsing(fn ($query) => $query->groupBy('tehlikeler.tehlike_kategorisi_id', 'tehlikeler.bolum'))
                     ->orderQueryUsing(fn ($query, string $direction) => $query
                         ->orderBy(TehlikeKategorisi::select('ad')->whereColumn('tehlike_kategorileri.id', 'tehlikeler.tehlike_kategorisi_id')->limit(1), $direction)
@@ -51,8 +50,10 @@ class TehlikesTable
             ])
             ->defaultGroup('kategori_bolum')
             ->collapsedGroupsByDefault()
-            ->paginationPageOptions([10, 25, 50, 100, 'all'])
-            ->defaultPaginationPageOption('all')
+            // Kütüphane binlerce madde; "Tümü" her satırı aksiyonlarıyla birlikte basıp
+            // sayfayı kilitliyordu — kategori filtresi / arama ile daraltılır.
+            ->paginationPageOptions([25, 50, 100])
+            ->defaultPaginationPageOption(50)
             ->persistFiltersInSession()
             ->persistSearchInSession()
             ->filtersLayout(FiltersLayout::AboveContent)
@@ -113,5 +114,21 @@ class TehlikesTable
                 BulkActionGroup::make([DeleteBulkAction::make()]),
             ])
             ->defaultSort('kod');
+    }
+
+    /**
+     * Grup başlıklarındaki "N madde" sayıları — her grup için ayrı COUNT yerine tek sorgu.
+     * Bölümü boş (null / '') maddeler aynı grupta sayılır.
+     *
+     * @return array<string, int> "kategori_id|bolum" => adet
+     */
+    private static function grupSayilari(): array
+    {
+        return once(fn () => Tehlike::query()
+            ->selectRaw("tehlike_kategorisi_id, COALESCE(bolum, '') AS grup_bolum, COUNT(*) AS adet")
+            ->groupBy('tehlike_kategorisi_id', 'grup_bolum')
+            ->toBase()->get()
+            ->mapWithKeys(fn ($s) => [$s->tehlike_kategorisi_id.'|'.$s->grup_bolum => (int) $s->adet])
+            ->all());
     }
 }
