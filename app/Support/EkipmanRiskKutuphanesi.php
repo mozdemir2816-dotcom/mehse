@@ -42,20 +42,22 @@ class EkipmanRiskKutuphanesi
 
     /** Başlık (normalize) → alan. Mobil vinç dosyasındaki F/O/Ş düzeni de tanınır. */
     private const BASLIKLAR = [
-        'ekipman' => ['ekipman', 'ekipman / bölüm', 'düğüm / ekipman', 'düğüm', 'düğüm / süreç'],
-        'faaliyet' => ['faaliyet', 'bölüm / faaliyet'],
-        'tehlike' => ['tehlike', 'tehlike / uygunsuzluk', 'tehlike / eksiklik', 'tehlike kaynağı', 'tehlike & risk konusu'],
+        'ekipman' => ['ekipman', 'ekipman / bölüm', 'bölüm / alan', 'düğüm / ekipman', 'düğüm', 'düğüm / süreç'],
+        'faaliyet' => ['faaliyet', 'bölüm / faaliyet', 'ekipman / proses / alt sistem'],
+        'tehlike' => ['tehlike', 'tehlike / uygunsuzluk', 'tehlike / eksiklik', 'tehlike kaynağı', 'tehlike & risk konusu', 'spesifik tehlike ve risk tanımı'],
         'risk' => ['risk / sonuç', 'risk/sonuç', 'risk / olası sonuç', 'tehlikeli durum / olası zarar ve sonuç'],
         'olasilik' => ['olasılık p', 'olasılık', 'o', 'ihtimal', 'i'],
         'frekans' => ['frekans f', 'frekans', 'f'],
         'siddet' => ['şiddet s', 'şiddet', 'ş'],
-        'oneri' => ['açıklayıcı döf', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon', 'alınacak önlemler', 'önerilen önlem / faaliyet', 'alınacak kontrol önlemleri (döf)'],
+        'oneri' => ['açıklayıcı döf', 'alınması gereken önleyici ve düzeltici faaliyetler (döf)', 'düzeltici / önleyici faaliyet', 'önerilen aksiyon', 'öneri / aksiyon', 'alınacak önlemler', 'önerilen önlem / faaliyet', 'alınacak kontrol önlemleri (döf)'],
         'son_olasilik' => ['hedef p', 'hedef o'],
+        // Yalnız "Son Risk Skoru" veren dosyalar: hedef olasılık skor ÷ (F × Ş) ile türetilir.
+        'son_skor' => ['son risk skoru'],
         'son_frekans' => ['hedef f'],
         'son_siddet' => ['hedef s', 'hedef ş'],
-        'sorumlu' => ['sorumlu', 'sorumlu rol', 'önerilen sorumlu'],
-        'termin' => ['önerilen termin', 'termin', 'hedef tarih', 'termin tarihi'],
-        'd_standart' => ['standart dayanağı', 'standart / teknik dayanak', 'yasal dayanak & standart açıklaması (neye göre olduğu)'],
+        'sorumlu' => ['sorumlu', 'sorumlu rol', 'önerilen sorumlu', 'sorumlu birim / kişi'],
+        'termin' => ['önerilen termin', 'termin', 'hedef tarih', 'termin tarihi', 'termin süresi'],
+        'd_standart' => ['standart dayanağı', 'ilgili yönetmelik, standart ve mevzuat maddesi', 'standart / teknik dayanak', 'yasal dayanak & standart açıklaması (neye göre olduğu)'],
         'd_makina' => ['makina emniyeti dayanağı'],
         'd_ekipman' => ['iş ekipmanları dayanağı'],
         // HAZOP
@@ -108,6 +110,12 @@ class EkipmanRiskKutuphanesi
 
         [$baslikSatiri, $sutun] = static::baslikBul($satirlar, self::ZORUNLU[$yontem], $yontem === 'matris_5x5');
         if ($baslikSatiri === null) {
+            // Birebir şablon başlıkları yoksa (ör. "Başlangıç S", "Aktivite / Görev", ilk sayfa künye)
+            // Risk Sihirbazı'nın esnek başlık algılamasına düşülür.
+            if ($yontem !== 'hazop' && ($gruplar = static::esnekOku($dosyaYolu, $dosyaAdi ?? basename($dosyaYolu), $yontem))) {
+                return $gruplar;
+            }
+
             throw new RuntimeException(static::tanimadiMesaji($yontem, $satirlar));
         }
 
@@ -151,6 +159,75 @@ class EkipmanRiskKutuphanesi
         return collect($gruplar)->map(fn (array $maddeler, string $ekipman) => [
             'ekipman' => $ekipman,
             'kategori_adi' => static::kategoriAdi($ekipman, $onek),
+            'maddeler' => $maddeler,
+        ])->values()->all();
+    }
+
+    /**
+     * Şablon dışı düzendeki 5x5 / Fine-Kinney dosyası: esnek okuyucudan gelen adaylar ekipman grubuna çevrilir.
+     *
+     * @return array<int, array{ekipman: string, kategori_adi: string, maddeler: array<int, array<string, mixed>>}>
+     */
+    private static function esnekOku(string $dosyaYolu, string $dosyaAdi, string $yontem): array
+    {
+        $adaylar = RiskDegerlendirmesiExcelOkuyucu::oku($dosyaYolu)['adaylar'];
+        $adaylar = array_values(array_filter($adaylar, fn ($a) => ($a['olasilik'] ?? null) !== null && ($a['siddet'] ?? null) !== null));
+
+        if (! $adaylar) {
+            return [];
+        }
+
+        $frekansli = collect($adaylar)->contains(fn ($a) => ($a['frekans'] ?? null) !== null);
+        if ($yontem === 'matris_5x5' && $frekansli) {
+            throw new RuntimeException('Bu dosya '.self::YONTEMLER['matris_5x5'].' şablonuna uymuyor; '.self::YONTEMLER['fine_kinney'].' dosyasına benziyor — yöntemi "'.self::YONTEMLER['fine_kinney'].'" seçin.');
+        }
+        if ($yontem === 'fine_kinney' && ! $frekansli) {
+            throw new RuntimeException('Bu dosya '.self::YONTEMLER['fine_kinney'].' şablonuna uymuyor; '.self::YONTEMLER['matris_5x5'].' dosyasına benziyor — yöntemi "'.self::YONTEMLER['matris_5x5'].'" seçin.');
+        }
+
+        $varsayilanEkipman = static::dosyaAdindanEkipman($dosyaAdi);
+        $gruplar = [];
+
+        foreach ($adaylar as $a) {
+            [$o, $f, $s, $so, $sf, $ss] = [$a['olasilik'], $a['frekans'] ?? null, $a['siddet'], $a['son_olasilik'] ?? null, $a['son_frekans'] ?? null, $a['son_siddet'] ?? null];
+            $matris = null;
+
+            if ($yontem === 'matris_5x5') {
+                foreach ([$o, $s, $so, $ss] as $deger) {
+                    if ($deger !== null && ($deger < 1 || $deger > 5)) {
+                        throw new RuntimeException('5x5 L Matris puanları 1-5 arasında olmalı ("'.Str::limit((string) $a['tehlike'], 60).'" satırında '.$deger.' var). Dosya Fine-Kinney ise yöntemi "Fine-Kinney" seçin.');
+                    }
+                }
+                $matris = ['olasilik' => $o, 'siddet' => $s, 'son_olasilik' => $so, 'son_siddet' => $ss];
+                [$o, $f, $s] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($o, $s);
+                [$so, $sf, $ss] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($so, $ss);
+            } else {
+                [$s, $ss] = [static::siddet($s), static::siddet($ss)];
+            }
+
+            $ekipman = trim((string) ($a['bolum'] ?? '')) ?: $varsayilanEkipman;
+            $faaliyet = trim((string) ($a['faaliyet'] ?? ''));
+
+            $gruplar[$ekipman][] = [
+                'bolum' => Str::limit($ekipman, 250, ''),
+                'faaliyet' => $faaliyet !== '' ? Str::limit($faaliyet, 250, '') : null,
+                'harf' => static::harf($faaliyet),
+                'tehlike' => $a['tehlike'],
+                'risk' => $a['risk'] ?: null,
+                'mevcut_onlem' => $a['mevcut_onlem'] ?: null,
+                'oneri' => $a['oneri'] ?: null,
+                'sorumlu' => $a['sorumlu'] ? Str::limit((string) $a['sorumlu'], 250, '') : null,
+                'termin' => $a['termin'] ? Str::limit((string) $a['termin'], 250, '') : null,
+                'mevzuat' => $a['mevzuat'] ?: null,
+                'olasilik' => $o, 'frekans' => $f, 'siddet' => $s,
+                'son_olasilik' => $so, 'son_frekans' => $sf, 'son_siddet' => $ss,
+                'matris' => $matris,
+            ];
+        }
+
+        return collect($gruplar)->map(fn (array $maddeler, string $ekipman) => [
+            'ekipman' => $ekipman,
+            'kategori_adi' => static::kategoriAdi($ekipman, self::KATEGORI_ONEKI),
             'maddeler' => $maddeler,
         ])->values()->all();
     }
@@ -226,6 +303,9 @@ class EkipmanRiskKutuphanesi
             [$o, $f, $s] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($o, $s);
             [$so, $sf, $ss] = RiskYontemDonusturucu::matrisDegeriniFineKinneye($so, $ss);
         } else {
+            if ($so === null && ($skor = static::puan($r, $sutun, 'son_skor')) !== null && $f && $s) {
+                [$so, $sf, $ss] = [static::olasilikaYuvarla($skor / ($f * $s)), $f, $s];
+            }
             [$s, $ss] = [static::siddet($s), static::siddet($ss)];
         }
 
@@ -474,6 +554,15 @@ class EkipmanRiskKutuphanesi
     private static function puan(array $r, array $sutun, string $alan): ?float
     {
         return isset($sutun[$alan]) ? RiskSkorlama::sayi($r[$sutun[$alan]] ?? null) : null;
+    }
+
+    /** Fine-Kinney olasılık ölçeğindeki en yakın değer (0,1 – 10). */
+    private static function olasilikaYuvarla(float $v): float
+    {
+        $olcek = [0.1, 0.2, 0.5, 1.0, 3.0, 6.0, 10.0];
+        usort($olcek, fn ($a, $b) => abs($a - $v) <=> abs($b - $v));
+
+        return $olcek[0];
     }
 
     /** Standart Fine-Kinney → kullanıcı ölçeği: 40 ölüm → 30, 100 çoklu ölüm → 40. */

@@ -171,6 +171,24 @@ class RiskDegerlendirmesiExcelOkuyucuTest extends TestCase
         $this->assertStringNotContainsString('12', (string) $ilk['risk']);   // "RİSK = O X Ş" skoru sızmadı
     }
 
+    public function test_tek_harfli_s_p_basliklari_ve_aktivite_gorev_taninir(): void
+    {
+        $yol = $this->xlsxOlustur([
+            ['Sıra No', 'Aktivite / Görev', 'Tehlike', 'Olası Sonuçlar', 'Başlangıç S', 'Başlangıç P', 'Başlangıç Risk (S×P)', 'Başlangıç Risk Seviyesi', 'Nihai S', 'Nihai P', 'Nihai Risk (S×P)'],
+            [1, 'Tank girişi', 'Yanıcı buhar', 'Patlama', 5, 4, 20, 'Yüksek', 5, 1, 5],
+        ]);
+
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($yol);
+        unlink($yol);
+
+        $a = $sonuc['adaylar'][0];
+        $this->assertSame('Tank girişi', $a['faaliyet']);
+        $this->assertEquals(4, $a['olasilik']);
+        $this->assertEquals(5, $a['siddet']);
+        $this->assertEquals(1, $a['son_olasilik']);
+        $this->assertEquals(5, $a['son_siddet']);
+    }
+
     public function test_yalin_risk_ve_alan_basliklari_taninir(): void
     {
         $yol = $this->xlsxOlustur([

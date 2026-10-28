@@ -411,4 +411,54 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         $this->assertSame(3, Tehlike::whereHas('kategori', fn ($q) => $q->where('ad', 'like', 'HAZOP – %'))->count());
         $this->assertSame('hazop', TehlikeKategorisi::where('ad', 'like', 'HAZOP – %')->first()->yontem);
     }
+    public function test_ameliyathane_basliklari_taninir_bolum_kategori_olur_son_skordan_hedef_olasilik_turetilir(): void
+    {
+        $kitap = new Spreadsheet;
+        $sayfa = $kitap->getActiveSheet()->setTitle('Risk Değerlendirmesi');
+        $sayfa->fromArray(['AMELİYATHANE 500 MADDE'], null, 'A1');
+        $sayfa->fromArray(['No', 'Bölüm / Alan', 'Ekipman / Proses / Alt Sistem', 'Spesifik Tehlike ve Risk Tanımı', 'İ', 'F', 'Ş',
+            'Risk Skoru (İ×F×Ş)', 'Mevcut Risk Seviyesi', 'Alınması Gereken Önleyici ve Düzeltici Faaliyetler (DÖF)',
+            'İlgili Yönetmelik, Standart ve Mevzuat Maddesi', 'Sorumlu Birim / Kişi', 'Termin Süresi', 'Son Risk Skoru'], null, 'A2');
+        $sayfa->fromArray([1, 'Ameliyathane - Radyoloji', 'C-Kollu Skopi', 'Radyasyon dozu aşımı', 1, 6, 15, 90, 'Önemli Risk', 'Zırhlama testi', 'NDK Yönetmeliği', 'Biyomedikal', '15 Gün', 18], null, 'A3');
+        $sayfa->fromArray([2, 'Sterilizasyon', 'Otoklav', 'Basınçlı buhar', 3, 6, 40, 720, 'Tolerans Gösterilemez', 'Periyodik muayene', 'İş Ekipmanları', 'Teknik servis', 'Derhal', 48], null, 'A4');
+        $yol = tempnam(sys_get_temp_dir(), 'amh').'.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        $gruplar = EkipmanRiskKutuphanesi::oku($yol, 'Ameliyathane_500_Madde_Fine_Kinney.xlsx');
+        @unlink($yol);
+
+        $this->assertSame(['Ameliyathane - Radyoloji', 'Sterilizasyon'], array_column($gruplar, 'ekipman'));
+        $m = $gruplar[0]['maddeler'][0];
+        $this->assertSame('C-Kollu Skopi', $m['faaliyet']);
+        $this->assertSame('Radyasyon dozu aşımı', $m['tehlike']);
+        $this->assertSame('Zırhlama testi', $m['oneri']);
+        $this->assertSame('Biyomedikal', $m['sorumlu']);
+        $this->assertSame('15 Gün', $m['termin']);
+        $this->assertSame([1.0, 6.0, 15.0], [$m['olasilik'], $m['frekans'], $m['siddet']]);
+        $this->assertSame([0.2, 6.0, 15.0], [$m['son_olasilik'], $m['son_frekans'], $m['son_siddet']]);
+        // 18 ÷ (6 × 15) = 0,2 ; 48 ÷ (6 × 40) = 0,2
+        $this->assertSame(0.2, $gruplar[1]['maddeler'][0]['son_olasilik']);
+    }
+    public function test_sablon_disi_s_p_basliklari_ve_kunye_sayfali_5x5_dosya_okunur(): void
+    {
+        $kitap = new Spreadsheet;
+        $kitap->getActiveSheet()->setTitle("Genel Bilgiler")->fromArray([["RİSK DEĞERLENDİRMESİ"], ["Doküman No:", "RA-1"]], null, "A1");
+        $sayfa = $kitap->createSheet()->setTitle("Risk Değerlendirmesi");
+        $sayfa->fromArray([
+            ["TANK İÇİ KAYNAK"],
+            ["Sıra No", "Aktivite / Görev", "Tehlike", "Olası Sonuçlar", "Başlangıç S", "Başlangıç P", "Başlangıç Risk (S×P)", "İlave Kontrol Tedbirleri", "Nihai S", "Nihai P", "Sorumluluk"],
+            [1, "Tank girişi", "Yanıcı buhar", "Patlama", 5, 4, 20, "Gaz ölçümü yapın", 5, 1, "İSG"],
+        ], null, "A1");
+        $yol = tempnam(sys_get_temp_dir(), "xlsx").".xlsx";
+        (new Xlsx($kitap))->save($yol);
+
+        $gruplar = EkipmanRiskKutuphanesi::oku($yol, "Tank_Ici_Kaynak.xlsx", "matris_5x5");
+        unlink($yol);
+
+        $madde = $gruplar[0]["maddeler"][0];
+        $this->assertSame("Tank girişi", $madde["faaliyet"]);
+        $this->assertEquals(4, $madde["matris"]["olasilik"]);
+        $this->assertEquals(5, $madde["matris"]["siddet"]);
+        $this->assertEquals(1, $madde["matris"]["son_olasilik"]);
+    }
 }

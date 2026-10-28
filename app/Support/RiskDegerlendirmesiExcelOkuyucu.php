@@ -186,6 +186,7 @@ class RiskDegerlendirmesiExcelOkuyucu
             $adaylar[] = [
                 'anahtar' => 'exc-'.substr(md5(($veri['tehlike'] ?? '').$r.uniqid('', true)), 0, 10),
                 'kaynak' => 'excel',
+                'sayfa' => $sheet->getTitle(),
                 'tehlike_id' => null,
                 'bolum' => $veri['bolum'] ?? null,
                 'faaliyet' => $veri['faaliyet'] ?? null,
@@ -337,7 +338,8 @@ class RiskDegerlendirmesiExcelOkuyucu
                 $uzunHucre++;
             }
 
-            if (preg_match('/(olasilik|olasılık|ihtimal|frekans|maruziyet|siddet|şiddet|puan|skor|seviye|derece|önem|onem|öncelik|oncelik)/iu', $deger)) {
+            // normalize(): "ŞİDDET" / "SEVİYESİ" gibi noktalı İ'li büyük harfler /i ile "iddet"e uymuyordu.
+            if (preg_match('/(olasilik|ihtimal|frekans|maruziyet|siddet|puan|skor|seviye|derece|onem|oncelik)/', static::normalize($deger))) {
                 $isaret++;
             }
         }
@@ -383,7 +385,7 @@ class RiskDegerlendirmesiExcelOkuyucu
                 }
 
                 // --- Puan sütunları (yalnız altındaki veri sayısalsa) ---
-                $eksen = static::puanEkseni($n);
+                $eksen = static::puanEkseni($n) ?? static::tekHarfEkseni(implode(' ', $parcalar));
 
                 if ($eksen !== null) {
                     if (static::sutunSayisalMi($sheet, $c, $veriBaslangic)) {
@@ -452,6 +454,21 @@ class RiskDegerlendirmesiExcelOkuyucu
     }
 
     /**
+     * Başlık yalnız tek harfli bir eksen kısaltması taşıyorsa ("Başlangıç S", "Nihai P").
+     * "Risk (S×P)" gibi iki harfli çarpım başlıkları hesaplanan sütundur — eksen sayılmaz.
+     */
+    private static function tekHarfEkseni(string $ham): ?string
+    {
+        preg_match_all('/(?<!\p{L})([SŞPOF])(?!\p{L})/u', $ham, $m);
+
+        if (count($m[1]) !== 1) {
+            return null;
+        }
+
+        return ['S' => 'siddet', 'Ş' => 'siddet', 'P' => 'olasilik', 'O' => 'olasilik', 'F' => 'frekans'][$m[1][0]];
+    }
+
+    /**
      * @param  callable():bool  $sayisalMi  sütunun altındaki verinin sayısal olup olmadığı (tembel)
      */
     private static function metinAlani(string $n, bool $puanBasladi, callable $sayisalMi): ?string
@@ -466,7 +483,10 @@ class RiskDegerlendirmesiExcelOkuyucu
 
         // Risk / sonuç — yalnız puan bloğundan ÖNCE ve metin sütunuysa (hesaplanan
         // "RİSK" skor sütunu olasılık/şiddetten sonra gelir ve sayısaldır).
-        if (! $puanBasladi && ! $sayisalMi()
+        $tedbirBasligi = str_contains($n, 'azaltma') || str_contains($n, 'onlem') || str_contains($n, 'tedbir')
+            || str_contains($n, 'oneri') || str_contains($n, 'aksiyon');
+
+        if (! $puanBasladi && ! $tedbirBasligi && ! $sayisalMi()
             && (str_contains($n, 'risk') || str_contains($n, 'sonuc') || str_contains($n, 'zarar'))) {
             return 'risk';
         }
@@ -532,7 +552,7 @@ class RiskDegerlendirmesiExcelOkuyucu
             return 'faaliyet';
         }
 
-        if (str_contains($n, 'faaliyet') || str_contains($n, 'proses') || str_contains($n, 'imalat')
+        if (str_contains($n, 'faaliyet') || str_contains($n, 'aktivite') || str_contains($n, 'proses') || str_contains($n, 'imalat')
             || str_contains($n, 'surec') || str_contains($n, 'operasyon') || str_contains($n, 'ismakinesi')) {
             return 'faaliyet';
         }
