@@ -66,6 +66,7 @@
                                 </td>
                                 <td style="padding:.5rem">
                                     <button wire:click="mountAction('kimyasalDuzenle', { id: {{ $u->id }} })" style="background:none;border:0;color:rgb(124 58 237);cursor:pointer;margin-right:.5rem">Düzenle</button>
+                                    <button wire:click="kutuphaneyeKaydet({{ $u->id }})" title="Bu ürünü kendi kütüphanene kaydet" style="background:none;border:0;color:rgb(20 184 166);cursor:pointer;margin-right:.5rem">Kütüphaneye</button>
                                     <button wire:click="kimyasalSil({{ $u->id }})" wire:confirm="'{{ $u->urun_adi }}' silinsin mi?" style="background:none;border:0;color:#ef4444;cursor:pointer">Sil</button>
                                 </td>
                             </tr>
@@ -76,6 +77,58 @@
             @endif
         </x-filament::section>
     @endif
+
+    {{-- KİMYASAL KÜTÜPHANESİ --}}
+    <x-filament::section id="kutuphane" icon="heroicon-o-book-open" icon-color="primary">
+        <x-slot name="heading">Kimyasal Kütüphanesi ({{ $this->kutuphane->count() }})</x-slot>
+        <p style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.75rem">
+            Kimyasalları işaretleyip seçili firmanın envanterine ekleyin. Hazır kayıtlar genel madde bilgisidir;
+            ürününüzün kendi SDS'ine göre düzeltin. Kendi kayıtlarınızı "Kütüphaneye Kimyasal Ekle" ile ya da envanterdeki "Kütüphaneye" bağlantısıyla ekleyebilirsiniz.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.75rem">
+            <input type="search" wire:model.live.debounce.300ms="kutuphaneArama" placeholder="Kütüphanede ara (ad, CAS)…" style="flex:1 1 220px;max-width:420px;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            <x-filament::button size="sm" icon="heroicon-o-plus" wire:click="kutuphanedenEkle" :disabled="! $this->firma || count($secilenKutuphane) === 0">
+                Seçilenleri Envantere Ekle ({{ count($secilenKutuphane) }})
+            </x-filament::button>
+            @unless ($this->firma)
+                <span style="font-size:.78rem;color:#b45309">Önce yukarıdan firma seçin.</span>
+            @endunless
+        </div>
+        <div style="overflow:auto;max-height:420px;border:1px solid rgb(107 114 128 / .2);border-radius:.5rem">
+            <table style="width:100%;font-size:.82rem;border-collapse:collapse;min-width:640px">
+                <thead style="position:sticky;top:0;background:rgb(243 244 246)"><tr style="text-align:left">
+                    <th style="padding:.5rem;width:2rem"></th><th style="padding:.5rem">Kimyasal</th>
+                    <th style="padding:.5rem">CAS</th><th style="padding:.5rem">Hal</th>
+                    <th style="padding:.5rem">GHS</th><th style="padding:.5rem"></th>
+                </tr></thead>
+                <tbody>
+                @forelse ($this->kutuphane as $k)
+                    <tr wire:key="kut-{{ $k->id }}" style="border-top:1px solid rgb(107 114 128 / .15)">
+                        <td style="padding:.5rem"><input type="checkbox" wire:model.live="secilenKutuphane" value="{{ $k->id }}"></td>
+                        <td style="padding:.5rem">
+                            <div style="font-weight:600">{{ $k->urun_adi }}</div>
+                            @if ($k->tedarikci || $k->kullanim_alani)
+                                <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $k->tedarikci }} {{ $k->kullanim_alani }}</div>
+                            @endif
+                        </td>
+                        <td style="padding:.5rem;font-family:monospace">{{ $k->cas_no ?: '—' }}</td>
+                        <td style="padding:.5rem">{{ config('isg.kimyasal.fiziksel_hal.'.$k->fiziksel_hal) ?: '—' }}</td>
+                        <td style="padding:.5rem;font-size:.72rem">{{ implode(', ', $k->ghsKodlari()) ?: '—' }}</td>
+                        <td style="padding:.5rem;text-align:right">
+                            @if ($k->hazirMi())
+                                <span style="font-size:.7rem;color:rgb(107 114 128)">Hazır</span>
+                            @else
+                                <button wire:click="kutuphaneKayitSil({{ $k->id }})" wire:confirm="'{{ $k->urun_adi }}' kütüphaneden silinsin mi?" style="background:none;border:0;color:#ef4444;cursor:pointer">Sil</button>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" style="padding:1rem;color:rgb(107 114 128)">Kütüphanede kayıt yok.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </x-filament::section>
 
     {{-- AFİŞLER --}}
     <x-filament::section id="afisler" icon="heroicon-o-photo" icon-color="gray" collapsible>

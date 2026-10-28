@@ -109,6 +109,24 @@
             </table>
         </div>
 
+        @if ($onayBekleyen)
+            <div style="border:1px solid rgb(217 119 6 / .5);background:rgb(217 119 6 / .08);border-radius:.6rem;padding:.75rem 1rem">
+                <div style="font-weight:600;font-size:.9rem">Aynı kayıt kütüphanede var. Güncelleyeyim mi?</div>
+                <ul style="font-size:.82rem;margin:.35rem 0 .6rem 1.1rem;list-style:disc">
+                    @foreach ($onayBekleyen as $ad)
+                        <li>{{ $ad }}</li>
+                    @endforeach
+                </ul>
+                <div style="font-size:.78rem;color:rgb(107 114 128);margin-bottom:.6rem">
+                    Evet derseniz bu kategorilerin maddeleri dosyadakiyle güncellenir. Hayır derseniz hiçbir şey yazılmaz.
+                </div>
+                <div style="display:flex;gap:.5rem">
+                    <x-filament::button color="warning" wire:click="guncellemeyiOnayla" wire:loading.attr="disabled">Evet, güncelle</x-filament::button>
+                    <x-filament::button color="gray" wire:click="guncellemedenVazgec">Hayır, iptal</x-filament::button>
+                </div>
+            </div>
+        @endif
+
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
             <x-filament::button icon="heroicon-o-check" color="success" wire:click="kaydet" wire:loading.attr="disabled">Kütüphaneye Kaydet</x-filament::button>
             <x-filament::button color="gray" wire:click="temizle">Vazgeç</x-filament::button>

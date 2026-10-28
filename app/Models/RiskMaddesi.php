@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\HastaneRisk;
 use App\Support\RiskSkorlama;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,13 @@ class RiskMaddesi extends Model
     protected static function booted(): void
     {
         static::saving(function (RiskMaddesi $m): void {
+            // Hastane şablonu: puanlar dosyadaki gibi korunur, boş alanlar varsayılanla doldurulmaz.
+            if ($m->riskDegerlendirmesi?->hastaneMi()) {
+                HastaneRisk::maddeyiHesapla($m);
+
+                return;
+            }
+
             $yontem = $m->riskDegerlendirmesi?->yontem ?? 'matris_5x5';
 
             $mevcut = RiskSkorlama::hesapla($yontem, $m->olasilik, $m->siddet, $m->frekans);
@@ -131,6 +139,10 @@ class RiskMaddesi extends Model
 
     public function rengi(): string
     {
+        if ($this->riskDegerlendirmesi?->hastaneMi()) {
+            return '#'.(HastaneRisk::renk($this->duzey ?: HastaneRisk::harf($this->puan)) ?? '6b7280');
+        }
+
         $yontem = $this->riskDegerlendirmesi?->yontem ?? 'matris_5x5';
 
         return RiskSkorlama::bant($yontem, (float) $this->puan)['renk'];

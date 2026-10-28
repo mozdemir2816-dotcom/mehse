@@ -190,6 +190,38 @@ class EkipmanRiskKutuphanesiTest extends TestCase
         $this->assertSame(['insaat'], $kategori->nace_gruplari);
     }
 
+    public function test_ayni_kategori_varsa_sorar_evet_gunceller_hayir_iptal_eder(): void
+    {
+        $yol = $this->excel([
+            $this->satir(1, 'Devrilme', 'Yan devrilme', ekipman: 'Damperli Kamyon'),
+            $this->satir(2, 'Çarpma', 'Geri manevra', ekipman: 'Damperli Kamyon'),
+        ], 'Damperli_Kamyon.xlsx');
+
+        $hazirla = fn () => Livewire::test(EkipmanRiskYukle::class)
+            ->set('dosyalar', [UploadedFile::fake()->createWithContent('Damperli_Kamyon.xlsx', file_get_contents($yol))])
+            ->set('naceGruplari', ['insaat']);
+
+        // İlk yükleme: kayıt yok, soru çıkmaz.
+        $hazirla()->call('kaydet')->assertSet('onayBekleyen', [])->assertSet('onizleme', []);
+        $kategori = TehlikeKategorisi::sole();
+        $this->assertSame(2, $kategori->tehlikeler()->count());
+
+        // İkinci yükleme: aynı kategori var → sorar, hiçbir şey yazmaz.
+        $sayfa = $hazirla()->call('kaydet');
+        $this->assertCount(1, $sayfa->get('onayBekleyen'));
+        $this->assertCount(1, $sayfa->get('onizleme'));
+        $this->assertSame(1, TehlikeKategorisi::count());
+
+        // Hayır → iptal: soru kapanır, önizleme durur, kayıt değişmez.
+        $kategori->tehlikeler()->first()->update(['tehlike' => 'Elle değiştirildi']);
+        $sayfa->call('guncellemedenVazgec')->assertSet('onayBekleyen', []);
+        $this->assertSame(1, Tehlike::where('tehlike', 'Elle değiştirildi')->count());
+
+        // Evet → güncelle: kaydedilir, önizleme boşalır.
+        $sayfa->call('kaydet')->call('guncellemeyiOnayla')->assertSet('onayBekleyen', [])->assertSet('onizleme', []);
+        $this->assertSame(0, Tehlike::where('tehlike', 'Elle değiştirildi')->count());
+    }
+
     public function test_sayfa_tip_adini_birebir_eslesince_onerir_ve_hatali_dosyayi_bildirir(): void
     {
         $yol = $this->excel([$this->satir(1, 'Damper', 'Devrilme', ekipman: 'Damperli Kamyon — Genel')], 'Damperli_Kamyon.xlsx');

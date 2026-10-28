@@ -27,6 +27,7 @@ class RiskDegerlendirmesi extends Model
         'rapor_tarihi' => 'date',
         'gecerlilik_tarihi' => 'date',
         'ekip' => 'array',
+        'sablon_verisi' => 'array',
         'haric_tehlikeler' => 'array',
         'pdf_talep_edildi_at' => 'datetime',
         'pdf_hazir_at' => 'datetime',
@@ -60,6 +61,11 @@ class RiskDegerlendirmesi extends Model
                 }
             }
 
+            // Hastane formu seçili firmada (Fine-Kinney) yeni değerlendirme hastane şablonunda açılır.
+            if (! $rd->exists && blank($rd->cikti_sablonu) && $rd->yontem === 'fine_kinney' && $firma?->risk_cikti_sablonu === 'hastane') {
+                $rd->cikti_sablonu = 'hastane';
+            }
+
             $rd->belge_no ??= static::belgeNoUret();
 
             // İçerik değiştiyse (pdf_* alanları hariç) önbellekteki PDF artık
@@ -68,6 +74,12 @@ class RiskDegerlendirmesi extends Model
                 $rd->pdfOnbellegiTemizle();
             }
         });
+    }
+
+    /** Bursa Şehir Hastanesi formu: çıktı (Excel/PDF) hastanenin kendi şablonunda üretilir. */
+    public function hastaneMi(): bool
+    {
+        return $this->cikti_sablonu === 'hastane';
     }
 
     public static function belgeNoUret(): string

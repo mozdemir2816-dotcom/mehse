@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\IsgAfis;
+use App\Models\KimyasalKutuphane;
 use App\Models\KimyasalUrun;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\KimyasalEnvanterUretici;
@@ -18,6 +19,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
@@ -55,6 +58,11 @@ class KimyasalSicili extends Page
 
     public ?string $arama = null;
 
+    public ?string $kutuphaneArama = null;
+
+    /** @var array<int, int|string> kütüphanede işaretlenen kayıtlar */
+    public array $secilenKutuphane = [];
+
     public function mount(): void
     {
         if ($firmaId = request()->integer('firma')) {
@@ -91,6 +99,23 @@ class KimyasalSicili extends Page
             mb_strtolower(implode(' ', [$u->urun_adi, $u->cas_no, $u->tedarikci, $u->kullanim_alani])),
             $aranan,
         ))->values();
+    }
+
+    /** @return Collection<int, KimyasalKutuphane> hazır kayıtlar + uzmanın kendi kayıtları (aramaya göre) */
+    #[Computed]
+    public function kutuphane(): Collection
+    {
+        $aranan = mb_strtolower(trim((string) $this->kutuphaneArama));
+
+        return KimyasalKutuphane::query()
+            ->erisilebilir(Filament::auth()->id())
+            ->orderBy('urun_adi')
+            ->get()
+            ->when($aranan !== '', fn (Collection $c) => $c->filter(fn (KimyasalKutuphane $k) => str_contains(
+                mb_strtolower(implode(' ', [$k->urun_adi, $k->cas_no, $k->tedarikci, $k->kullanim_alani])),
+                $aranan,
+            )))
+            ->values();
     }
 
     public function updatedArama(): void
@@ -139,9 +164,9 @@ class KimyasalSicili extends Page
             Select::make('fiziksel_hal')->label('Fiziksel hal')->options(config('isg.kimyasal.fiziksel_hal'))->native(false),
             TextInput::make('kullanim_alani')->label('Kullanım alanı / bölüm'),
             TextInput::make('miktar')->label('Yaklaşık miktar')->placeholder('örn. 200 L/ay'),
-            Textarea::make('depolama')->label('Depolama koşulları')->rows(2)->columnSpanFull(),
+            Textarea::make('depolama')->label('Depolama koşulları')->rows(2)->columnSpan(['default' => 1, 'md' => 2]),
             CheckboxList::make('ghs')->label('GHS / CLP tehlike sınıfları')
-                ->options(config('isg.kimyasal.ghs'))->columns(2)->columnSpanFull(),
+                ->options(config('isg.kimyasal.ghs'))->columns(['default' => 2, 'md' => 3])->columnSpanFull(),
             DatePicker::make('sds_tarihi')->label('SDS düzenlenme / revizyon tarihi'),
             DatePicker::make('sonraki_gozden_gecirme')->label('Sonraki gözden geçirme')
                 ->helperText('Boş bırakılırsa SDS tarihinden +1 yıl.'),
@@ -158,6 +183,12 @@ class KimyasalSicili extends Page
         ];
     }
 
+    /** Form 3 sütunlu ızgarada gösterilir; pencere ekrana sığar, içerik kendi içinde kayar. */
+    private function kimyasalFormGrid(): array
+    {
+        return [Grid::make(['default' => 1, 'md' => 3])->schema($this->kimyasalForm())];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -171,8 +202,34 @@ class KimyasalSicili extends Page
                 ->label('Kimyasal Ekle')
                 ->icon('heroicon-o-plus')
                 ->visible(fn () => $this->firma !== null)
-                ->schema($this->kimyasalForm())
+                ->schema($this->kimyasalFormGrid())
+                ->modalWidth(Width::FiveExtraLarge)
+                ->stickyModalHeader()
+                ->stickyModalFooter()
                 ->action(fn (array $data) => $this->kimyasalKaydet($data)),
+
+            Action::make('kutuphaneEkle')
+                ->label('Kütüphaneye Kimyasal Ekle')
+                ->icon('heroicon-o-book-open')
+                ->color('gray')
+                ->schema([Grid::make(['default' => 1, 'md' => 2])->schema([
+                    TextInput::make('urun_adi')->label('Ürün adı')->required(),
+                    TextInput::make('cas_no')->label('CAS No')->placeholder('örn. 64-17-5'),
+                    TextInput::make('tedarikci')->label('Tedarikçi / Üretici'),
+                    Select::make('fiziksel_hal')->label('Fiziksel hal')->options(config('isg.kimyasal.fiziksel_hal'))->native(false),
+                    TextInput::make('kullanim_alani')->label('Kullanım alanı / bölüm')->columnSpanFull(),
+                    CheckboxList::make('ghs')->label('GHS / CLP tehlike sınıfları')
+                        ->options(config('isg.kimyasal.ghs'))->columns(['default' => 2, 'md' => 3])->columnSpanFull(),
+                    Textarea::make('depolama')->label('Depolama koşulları')->rows(2)->columnSpanFull(),
+                ])])
+                ->modalWidth(Width::ThreeExtraLarge)
+                ->stickyModalHeader()
+                ->stickyModalFooter()
+                ->action(function (array $data): void {
+                    KimyasalKutuphane::create($data + ['user_id' => Filament::auth()->id()]);
+                    unset($this->kutuphane);
+                    Notification::make()->title('Kütüphaneye eklendi')->success()->send();
+                }),
 
             Action::make('afisEkle')
                 ->label('Afiş / Pano Ekle')
@@ -226,7 +283,10 @@ class KimyasalSicili extends Page
                     'sonraki_gozden_gecirme' => $u->sonraki_gozden_gecirme?->toDateString(),
                 ];
             })
-            ->schema(fn () => $this->kimyasalForm())
+            ->schema(fn () => $this->kimyasalFormGrid())
+            ->modalWidth(Width::FiveExtraLarge)
+            ->stickyModalHeader()
+            ->stickyModalFooter()
             ->action(function (array $data, array $arguments): void {
                 $u = $this->urun($arguments['id']);
                 $yol = $data['sds'] ?? null;
@@ -289,6 +349,63 @@ class KimyasalSicili extends Page
 
         unset($this->afisler);
         Notification::make()->title('Afiş eklendi')->success()->send();
+    }
+
+    /** İşaretli kütüphane kayıtlarını seçili firmanın envanterine kopyalar (aynı adlı ürün atlanır). */
+    public function kutuphanedenEkle(): void
+    {
+        if (! $this->firma || $this->secilenKutuphane === []) {
+            Notification::make()->title('Önce firma seçin ve kütüphaneden kimyasal işaretleyin')->warning()->send();
+
+            return;
+        }
+
+        $mevcut = $this->urunler->pluck('urun_adi')->map(fn ($a) => mb_strtolower($a))->all();
+        $eklenen = 0;
+
+        $kayitlar = KimyasalKutuphane::query()
+            ->erisilebilir(Filament::auth()->id())
+            ->whereIn('id', $this->secilenKutuphane)
+            ->orderBy('urun_adi')
+            ->get();
+
+        foreach ($kayitlar as $k) {
+            if (in_array(mb_strtolower($k->urun_adi), $mevcut, true)) {
+                continue;
+            }
+            $this->firma->kimyasalUrunler()->create($k->envanterVerisi() + ['aktif' => true]);
+            $eklenen++;
+        }
+
+        $atlanan = $kayitlar->count() - $eklenen;
+        $this->secilenKutuphane = [];
+        unset($this->urunler, $this->gosterilenUrunler, $this->ozet);
+
+        Notification::make()
+            ->title($eklenen.' kimyasal envantere eklendi')
+            ->body($atlanan ? $atlanan.' kayıt zaten envanterde olduğu için atlandı. SDS dosyasını ve miktarı ürün bazında ekleyin.' : 'SDS dosyasını ve miktarı ürün bazında ekleyin.')
+            ->success()
+            ->send();
+    }
+
+    /** Envanterdeki ürünü kendi kütüphanesine kaydeder. */
+    public function kutuphaneyeKaydet(int $id): void
+    {
+        $urun = $this->urun($id);
+
+        KimyasalKutuphane::create($urun->only(['urun_adi', 'cas_no', 'tedarikci', 'fiziksel_hal', 'kullanim_alani', 'depolama', 'ghs', 'aciklama'])
+            + ['user_id' => Filament::auth()->id()]);
+
+        unset($this->kutuphane);
+        Notification::make()->title('Kütüphaneye kaydedildi')->success()->send();
+    }
+
+    public function kutuphaneKayitSil(int $id): void
+    {
+        KimyasalKutuphane::where('user_id', Filament::auth()->id())->whereKey($id)->delete();
+
+        $this->secilenKutuphane = array_values(array_diff($this->secilenKutuphane, [$id, (string) $id]));
+        unset($this->kutuphane);
     }
 
     public function kimyasalSil(int $id): void

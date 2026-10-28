@@ -166,10 +166,14 @@
             <x-slot name="heading">Manuel Risk Seçimi</x-slot>
             <x-slot name="description">Risk Kütüphanesinden seçim yapın — seçilenler: {{ count($secilenler) }}</x-slot>
 
+            @php $seciliTehlikeler = array_flip(array_filter(array_column($secilenler, 'tehlike_id'))); @endphp
             <div style="display:flex;flex-direction:column;gap:.5rem">
                 @foreach ($this->kategoriler as $kat)
                     @php
                         $acik = in_array($kat->id, $acikKategoriler, true);
+                        // Kapalıyken de görünsün: bu klasörden kaç madde eklendi.
+                        $toplam = $kat->tehlikeler->count();
+                        $eklenen = $kat->tehlikeler->filter(fn ($t) => isset($seciliTehlikeler[$t->id]))->count();
                         // Klasör başlığı rengi: grup türüne göre (Genel eğitim / acil, Şantiye, Atölye, Ekipman, diğer).
                         $renk = match (true) {
                             $kat->id === -1 => '22 163 74',
@@ -185,9 +189,15 @@
                             <button type="button" wire:click="kategoriToggle({{ $kat->id }})"
                                 style="display:flex;align-items:center;gap:.5rem;background:none;border:none;cursor:pointer;font-weight:700;color:rgb({{ $renk }})">
                                 <span>{{ $acik ? '▾' : '▸' }}</span> {{ $kat->ad }}
-                                <x-filament::badge color="gray">{{ $kat->tehlikeler->count() }}</x-filament::badge>
+                                <x-filament::badge :color="$eklenen === 0 ? 'gray' : ($eklenen === $toplam ? 'success' : 'warning')">
+                                    {{ $eklenen > 0 ? "{$eklenen} / {$toplam} eklendi" : $toplam }}
+                                </x-filament::badge>
                             </button>
-                            <x-filament::button size="xs" color="gray" wire:click="kategoriTumunuEkle({{ $kat->id }})">Tümünü ekle</x-filament::button>
+                            @if ($toplam > 0 && $eklenen === $toplam)
+                                <x-filament::button size="xs" color="success" disabled>Tümü eklendi ✓</x-filament::button>
+                            @else
+                                <x-filament::button size="xs" color="gray" wire:click="kategoriTumunuEkle({{ $kat->id }})">Tümünü ekle</x-filament::button>
+                            @endif
                         </div>
                         @if ($acik)
                             <div style="display:flex;flex-direction:column">

@@ -31,6 +31,10 @@ class FirmaForm
                     TextInput::make('kisa_ad')->label('Kısa ad')->maxLength(255),
                     Select::make('tehlike_sinifi')->label('Tehlike sınıfı')
                         ->options(config('isg.tehlike_siniflari'))->default('az_tehlikeli')->required(),
+                    Select::make('risk_cikti_sablonu')->label('Risk çıktı şablonu')
+                        ->options(['hastane' => 'Hastane formu (Bursa Şehir Hastanesi)'])
+                        ->placeholder('Standart (sistem çıktısı)')
+                        ->helperText('Hastane formu seçilirse bu firmanın Fine-Kinney risk değerlendirmeleri Excel/PDF çıktısında hastanenin kendi formatında üretilir.'),
                     TextInput::make('sgk_sicil_no')->label('SGK sicil no')->maxLength(50)
                         ->live(onBlur: true)
                         ->afterStateUpdated(fn (?string $state, Get $get, Set $set, ?Model $record) => static::katiptenDoldur($state, $get, $set, $record))

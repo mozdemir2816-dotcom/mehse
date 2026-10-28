@@ -111,6 +111,26 @@ class EkipmanRiskYukle extends Page
             'naceGruplari' => 'required|array|min:1',
         ], [], ['onizleme' => 'yüklenecek dosya', 'onizleme.*.kategori_adi' => 'kategori adı', 'naceGruplari' => 'NACE grubu']);
 
+        // Kütüphanede aynı adlı kategori varsa yazmadan önce sor (evet → güncelle, hayır → hiçbir şey yazılmaz).
+        if (! $this->guncellemeOnayli) {
+            $var = [];
+
+            foreach ($this->onizleme as $s) {
+                $mevcut = $this->mevcutMadde($s['kategori_adi']);
+
+                if ($mevcut !== null) {
+                    $var[] = trim($s['kategori_adi']).' ('.$mevcut.' madde)';
+                }
+            }
+
+            if ($var) {
+                $this->onayBekleyen = $var;
+
+                return;
+            }
+        }
+
+        $this->onayBekleyen = [];
         $ozet = [];
         $kalan = [];
 
@@ -141,6 +161,25 @@ class EkipmanRiskYukle extends Page
             Notification::make()->title(count($ozet).' kategori kütüphaneye kaydedildi')
                 ->body(implode("\n", $ozet))->success()->persistent()->send();
         }
+    }
+
+    /** "Aynı kayıt var, güncelleyeyim mi?" sorusunu bekleyen kategoriler ("Ad (N madde)"). */
+    public array $onayBekleyen = [];
+
+    private bool $guncellemeOnayli = false;
+
+    public function guncellemeyiOnayla(): void
+    {
+        $this->guncellemeOnayli = true;
+        $this->kaydet();
+        $this->guncellemeOnayli = false;
+    }
+
+    public function guncellemedenVazgec(): void
+    {
+        $this->onayBekleyen = [];
+
+        Notification::make()->title('Güncelleme iptal edildi')->body('Kütüphaneye hiçbir şey yazılmadı.')->send();
     }
 
     /** @return array<string, array<string, string>> */

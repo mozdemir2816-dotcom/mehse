@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Filament\Pages\RiskSihirbazi;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
+use App\Models\Tehlike;
+use App\Models\TehlikeKategorisi;
 use App\Models\User;
 use App\Support\RiskMaddeMukerrer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -72,6 +74,25 @@ class RiskMaddeMukerrerTest extends TestCase
 
         $this->assertSame(0, RiskMaddeMukerrer::degerlendirmeTemizle($hastane));
         $this->assertCount(2, $hastane->maddeler()->get());
+    }
+
+    public function test_kutuphane_klasoru_kapaliyken_eklenen_sayisini_gosterir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $kategori = TehlikeKategorisi::create(['anahtar' => 'ekipman_test_forklift', 'ad' => 'Ekipman – Test forklift', 'sira' => 1, 'yontem' => 'matris_5x5', 'nace_gruplari' => ['ortak']]);
+        $ilk = Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'kod' => 'TST-001', 'tehlike' => 'Devrilme']);
+        Tehlike::create(['tehlike_kategorisi_id' => $kategori->id, 'kod' => 'TST-002', 'tehlike' => 'Çarpma']);
+
+        $test = Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
+            ->set('yontemSecim', 'manuel')
+            ->set('adim', 3)
+            ->assertSee('Ekipman – Test forklift')
+            ->assertDontSee('eklendi');
+
+        $test->call('tehlikeEkle', $ilk->id)->assertSee('1 / 2 eklendi');
+        $test->call('kategoriTumunuEkle', $kategori->id)->assertSee('2 / 2 eklendi')->assertSee('Tümü eklendi');
     }
 
     public function test_sihirbazda_mukerrerleri_sil_dugmesi_listeden_cikarir(): void

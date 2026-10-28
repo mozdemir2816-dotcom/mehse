@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\KimyasalSicili;
 use App\Models\Firma;
 use App\Models\IsgAfis;
+use App\Models\KimyasalKutuphane;
 use App\Models\KimyasalUrun;
 use App\Models\User;
 use App\Support\KimyasalEnvanterUretici;
@@ -117,5 +118,62 @@ class KimyasalSiciliTest extends TestCase
 
         $firmalar = Livewire::test(KimyasalSicili::class)->instance()->firmalar();
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+    public function test_kutuphaneden_firmaya_kimyasal_eklenir_ve_mukerrer_atlanir(): void
+    {
+        $aseton = KimyasalKutuphane::create(['urun_adi' => 'Aseton', 'cas_no' => '67-64-1', 'ghs' => ['ghs02', 'ghs07']]);
+        $etanol = KimyasalKutuphane::create(['urun_adi' => 'Etanol', 'cas_no' => '64-17-5']);
+        KimyasalUrun::create(['firma_id' => $this->firma->id, 'urun_adi' => 'aseton']);
+
+        Livewire::test(KimyasalSicili::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('secilenKutuphane', [$aseton->id, $etanol->id])
+            ->call('kutuphanedenEkle')
+            ->assertSet('secilenKutuphane', []);
+
+        $this->assertSame(['aseton', 'Etanol'], $this->firma->kimyasalUrunler()->orderBy('id')->pluck('urun_adi')->all());
+        $this->assertSame('64-17-5', $this->firma->kimyasalUrunler()->where('urun_adi', 'Etanol')->value('cas_no'));
+    }
+
+    public function test_baska_uzmanin_kutuphane_kaydi_gorunmez_ve_silinemez(): void
+    {
+        $baska = User::factory()->create();
+        $gizli = KimyasalKutuphane::create(['urun_adi' => 'Gizli', 'user_id' => $baska->id]);
+        $hazir = KimyasalKutuphane::create(['urun_adi' => 'Hazır madde']);
+
+        Livewire::test(KimyasalSicili::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('secilenKutuphane', [$gizli->id])
+            ->call('kutuphanedenEkle')
+            ->call('kutuphaneKayitSil', $gizli->id)
+            ->call('kutuphaneKayitSil', $hazir->id);
+
+        $this->assertSame(0, $this->firma->kimyasalUrunler()->count());
+        $this->assertDatabaseHas('kimyasal_kutuphanesi', ['id' => $gizli->id]);
+        $this->assertDatabaseHas('kimyasal_kutuphanesi', ['id' => $hazir->id]);
+    }
+
+    public function test_kutuphaneye_kimyasal_eklenir_ve_urun_kutuphaneye_kaydedilir(): void
+    {
+        $urun = KimyasalUrun::create(['firma_id' => $this->firma->id, 'urun_adi' => 'Tiner', 'ghs' => ['ghs02']]);
+
+        Livewire::test(KimyasalSicili::class)
+            ->callAction('kutuphaneEkle', ['urun_adi' => 'Boya', 'ghs' => ['ghs07']])
+            ->assertHasNoActionErrors()
+            ->set('firmaId', $this->firma->id)
+            ->call('kutuphaneyeKaydet', $urun->id);
+
+        $this->assertSame(2, KimyasalKutuphane::where('user_id', $this->uzman->id)->count());
+        $this->assertSame(['ghs02'], KimyasalKutuphane::where('urun_adi', 'Tiner')->value('ghs'));
+    }
+
+    public function test_hazir_kutuphane_seeder_idempotent(): void
+    {
+        $this->seed(\Database\Seeders\KimyasalKutuphanesiSeeder::class);
+        $ilk = KimyasalKutuphane::whereNull('user_id')->count();
+        $this->seed(\Database\Seeders\KimyasalKutuphanesiSeeder::class);
+
+        $this->assertGreaterThan(20, $ilk);
+        $this->assertSame($ilk, KimyasalKutuphane::whereNull('user_id')->count());
     }
 }
