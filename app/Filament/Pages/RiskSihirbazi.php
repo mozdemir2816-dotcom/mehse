@@ -19,6 +19,7 @@ use App\Support\NaceGrubu;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskDegerlendirmesiOlusturucu;
 use App\Support\RiskKutuphanesi;
+use App\Support\RiskMaddeMukerrer;
 use App\Support\RiskSkorlama;
 use App\Support\RiskUretici;
 use BackedEnum;
@@ -1209,6 +1210,23 @@ class RiskSihirbazi extends Page
     | Adım 6 — Kaydet
     |--------------------------------------------------------------------------
     */
+
+    /** Seçili maddeler arasındaki mükerrer (bölüm + faaliyet + tehlike + risk aynı) madde sayısı. */
+    public function mukerrerSayisi(): int
+    {
+        return count(RiskMaddeMukerrer::tekrarlar($this->secilenler));
+    }
+
+    public function mukerrerleriSil(): void
+    {
+        $once = count($this->secilenler);
+        $this->secilenler = RiskMaddeMukerrer::temizle($this->secilenler);
+
+        Notification::make()
+            ->title(($once - count($this->secilenler)).' mükerrer madde silindi')
+            ->body(count($this->secilenler).' madde kaldı.')
+            ->success()->send();
+    }
 
     public function kaydet()
     {

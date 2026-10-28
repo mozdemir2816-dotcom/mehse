@@ -42,6 +42,7 @@ class RiskExcelYukleyici
         return $girdi + [
             'tur' => 'standart',
             'yontem' => 'otomatik',
+            'mukerrer_sil' => true,
             'sayfalar' => array_map(fn ($s) => $s + ['kullan' => $s['onerilen']], $sayfalar),
         ];
     }
@@ -100,6 +101,16 @@ class RiskExcelYukleyici
         $eklenen = $madde = 0;
 
         foreach ($bolunmus as $proje => $adaylar) {
+            if ($girdi['mukerrer_sil'] ?? false) {
+                $temiz = array_values(RiskMaddeMukerrer::temizle($adaylar));
+
+                if (count($temiz) < count($adaylar)) {
+                    $notlar[] = "{$proje}: ".(count($adaylar) - count($temiz)).' mükerrer madde yazılmadı';
+                }
+
+                $adaylar = $temiz;
+            }
+
             $yontem = $secilen === 'otomatik' ? ($frekansli($adaylar) ? 'fine_kinney' : 'matris_5x5') : $secilen;
             $rd = RiskDegerlendirmesiOlusturucu::maddelerdenOlustur($firma, $yontem, $adaylar);
             $rd->update(['proje_adi' => $proje]);

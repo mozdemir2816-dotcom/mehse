@@ -777,6 +777,16 @@
                 <p style="margin-top:1rem;color:#ef4444;font-size:.85rem">Bazı maddelerin puanı eksik — Adım 5'e dönün.</p>
             @endunless
 
+            @if (($mukerrer = $this->mukerrerSayisi()) > 0)
+                <div style="{{ $kutu }};margin-top:1rem;padding:.75rem 1rem;border-color:rgb(217 119 6 / .5);background:rgb(217 119 6 / .06);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
+                    <div style="font-size:.88rem;flex:1;min-width:240px">
+                        <strong>{{ $mukerrer }}</strong> mükerrer madde var (bölüm, faaliyet, tehlike ve risk metni aynı).
+                        Kaydetmeden önce silmek ister misiniz? En dolu olan kalır.
+                    </div>
+                    <x-filament::button color="warning" icon="heroicon-o-trash" wire:click="mukerrerleriSil">Mükerrerleri sil</x-filament::button>
+                </div>
+            @endif
+
             <div style="margin-top:1.25rem;display:flex;gap:.75rem">
                 <x-filament::button color="primary" icon="heroicon-o-check" wire:click="kaydet" :disabled="! $this->tumMaddelerPuanli()">Kaydet</x-filament::button>
             </div>

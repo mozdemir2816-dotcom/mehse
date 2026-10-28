@@ -66,6 +66,9 @@
                             <option value="{{ $kod }}">{{ $ad }}</option>
                         @endforeach
                     </select>
+                    <label style="display:inline-flex;align-items:center;gap:.4rem;margin-left:1.25rem;font-size:.8rem;cursor:pointer">
+                        <input type="checkbox" wire:model="girdiler.{{ $i }}.mukerrer_sil"> Mükerrer maddeleri yazma (bölüm, faaliyet, tehlike ve risk aynıysa)
+                    </label>
                 </div>
 
                 @foreach ($g['sayfalar'] as $j => $s)

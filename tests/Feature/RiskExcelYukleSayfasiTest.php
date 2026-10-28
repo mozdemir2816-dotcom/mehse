@@ -121,6 +121,20 @@ class RiskExcelYukleSayfasiTest extends TestCase
         $this->assertSame('Devrilme', $rd->maddeler->first()->tehlike);
     }
 
+    public function test_mukerrer_maddeler_yazilmaz(): void
+    {
+        $dosya = $this->dosya([
+            ['Sıra', 'Faaliyet', 'Tehlike', 'Risk', 'Olasılık', 'Şiddet'],
+            [1, 'Kalıp', 'Yüksekten düşme', 'Yaralanma', 3, 5],
+            [2, 'Kalıp', 'yüksekten  düşme', 'Yaralanma', 3, 5],
+            [3, 'Beton', 'Yüksekten düşme', 'Yaralanma', 3, 5],
+        ]);
+
+        Livewire::test(ExcelYukle::class)->set('dosyalar', [$dosya])->set('firma_id', $this->firma->id)->call('kaydet');
+
+        $this->assertCount(2, RiskDegerlendirmesi::where('firma_id', $this->firma->id)->firstOrFail()->maddeler);
+    }
+
     public function test_ayni_alan_iki_sutuna_atanirsa_kayit_engellenir(): void
     {
         $dosya = $this->dosya([
