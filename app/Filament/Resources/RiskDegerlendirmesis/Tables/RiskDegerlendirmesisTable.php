@@ -21,6 +21,7 @@ class RiskDegerlendirmesisTable
             ->columns([
                 TextColumn::make('belge_no')->label('Belge No')->searchable()->sortable(),
                 TextColumn::make('firma.unvan')->label('Firma')->searchable()->sortable()->weight('bold')->limit(45),
+                TextColumn::make('proje_adi')->label('Birim / Proje')->searchable()->placeholder('—')->limit(40),
                 TextColumn::make('yontem')->label('Yöntem')->badge()
                     ->formatStateUsing(fn (RiskDegerlendirmesi $r) => $r->yontemEtiketi()),
                 TextColumn::make('maddeler_count')->label('Madde')->alignCenter()->badge()->color('gray'),

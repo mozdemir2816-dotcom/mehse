@@ -113,6 +113,9 @@ class MaddelerRelationManager extends RelationManager
         $ucEksenli = $this->ucEksenli();
         // HAZOP puansızdır: puan alanları (olasılık / şiddet / önlem sonrası) gösterilmez.
         $hazop = $this->yontem() === 'hazop';
+        // Hastane formu: puanlar dosyadaki ölçekte (Ş 40 = ölüm, ara değerler) olduğu gibi tutulur → sayısal giriş.
+        $hastane = $this->getOwnerRecord()->hastaneMi();
+        $puan = fn (string $alan, string $etiket, bool $zorunlu = false) => TextInput::make($alan)->label($etiket)->numeric()->step('any')->minValue(0)->required($zorunlu);
         $etiket = RiskSkorlama::eksenEtiketleri($yontem);
         $yontemBasligi = config('isg.risk_yontemleri.'.$yontem, $yontem);
 
@@ -144,6 +147,7 @@ class MaddelerRelationManager extends RelationManager
                     TextInput::make('faaliyet')->label('Faaliyet')->columnSpanFull(),
                     Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
                     Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
+                    Textarea::make('etki_alani')->label('Etki alanı')->rows(2)->columnSpanFull()->visible($hastane),
                     Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
                 ]),
 
@@ -153,12 +157,12 @@ class MaddelerRelationManager extends RelationManager
                         ->compact()
                         ->visible(! $hazop)
                         ->schema(array_values(array_filter([
-                            Select::make('olasilik')->label($etiket['olasilik'])
+                            $hastane ? $puan('olasilik', 'Olasılık (O)', true) : Select::make('olasilik')->label($etiket['olasilik'])
                                 ->options(RiskSkorlama::olcek($yontem, 'olasilik'))
                                 ->native(false)->required(),
-                            $ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
-                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required() : null,
-                            Select::make('siddet')->label($etiket['siddet'])
+                            $hastane ? $puan('frekans', 'Frekans (F)', true) : ($ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
+                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required() : null),
+                            $hastane ? $puan('siddet', 'Şiddet (Ş)', true) : Select::make('siddet')->label($etiket['siddet'])
                                 ->options(RiskSkorlama::olcek($yontem, 'siddet'))
                                 ->native(false)->required(),
                         ]))),
@@ -177,17 +181,18 @@ class MaddelerRelationManager extends RelationManager
                         ->compact()
                         ->schema(array_values(array_filter([
                             Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpanFull(),
+                            Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull()->visible($hastane),
                             TextInput::make('sorumlu')->label('Sorumlu'),
                             TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
                             Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
-                            Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
+                            $hastane ? $puan('son_olasilik', 'Son risk: Olasılık (O)') : Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
                                 ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)
                                 ->default(1)
                                 ->visible(! $hazop)
                                 ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
-                            $ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
-                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null,
-                            Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
+                            $hastane ? $puan('son_frekans', 'Son risk: Frekans (F)') : ($ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
+                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null),
+                            $hastane ? $puan('son_siddet', 'Son risk: Şiddet (Ş)') : Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
                                 ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)
                                 ->visible(! $hazop)
                                 ->helperText('Boş bırakılırsa öneri öncesindeki '.$etiket['siddet'].' değeriyle aynı kabul edilir.'),
@@ -392,10 +397,11 @@ class MaddelerRelationManager extends RelationManager
 
     private static function rozetRengi(string $hex): string
     {
-        return match ($hex) {
-            '#7f1d1d', '#dc2626' => 'danger',
-            '#f59e0b' => 'warning',
-            '#84cc16', '#22c55e' => 'success',
+        return match (strtolower($hex)) {
+            '#7f1d1d', '#dc2626', '#ff0000' => 'danger',
+            '#f59e0b', '#ffc000', '#ffff00' => 'warning',
+            '#84cc16', '#22c55e', '#92d050' => 'success',
+            '#00b0f0' => 'info',
             default => 'gray',
         };
     }

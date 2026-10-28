@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RiskDegerlendirmesis;
 
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\CreateRiskDegerlendirmesi;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\EditRiskDegerlendirmesi;
+use App\Filament\Resources\RiskDegerlendirmesis\Pages\ExcelYukle;
 use App\Filament\Resources\RiskDegerlendirmesis\Pages\ListRiskDegerlendirmesis;
 use App\Filament\Resources\RiskDegerlendirmesis\RelationManagers\MaddelerRelationManager;
 use App\Filament\Resources\RiskDegerlendirmesis\Schemas\RiskDegerlendirmesiForm;
@@ -72,6 +73,7 @@ class RiskDegerlendirmesiResource extends Resource
         return [
             'index' => ListRiskDegerlendirmesis::route('/'),
             'create' => CreateRiskDegerlendirmesi::route('/create'),
+            'excel-yukle' => ExcelYukle::route('/excel-yukle'),
             'edit' => EditRiskDegerlendirmesi::route('/{record}/edit'),
         ];
     }

@@ -33,6 +33,26 @@ class RiskDegerlendirmesiExcelOkuyucu
         'onemderecesi', 'onceliksirasi', 'onemsirasi',
     ];
 
+    /** Eşleme ekranında seçilebilen alanlar (alan => görünen ad). */
+    public const ALAN_ETIKETLERI = [
+        'bolum' => 'Bölüm / Alan',
+        'faaliyet' => 'Faaliyet',
+        'tehlike' => 'Tehlike',
+        'risk' => 'Risk / Sonuç',
+        'mevcut_onlem' => 'Mevcut önlem',
+        'oneri' => 'Önerilen önlem',
+        'mevzuat' => 'Mevzuat',
+        'sorumlu' => 'Sorumlu',
+        'termin' => 'Termin',
+        'aciklama' => 'Açıklama',
+        'olasilik' => 'Olasılık (O)',
+        'frekans' => 'Frekans (F)',
+        'siddet' => 'Şiddet (Ş)',
+        'son_olasilik' => 'Önlem sonrası Olasılık',
+        'son_frekans' => 'Önlem sonrası Frekans',
+        'son_siddet' => 'Önlem sonrası Şiddet',
+    ];
+
     private const BASLIK_TARAMA_SATIR_LIMIT = 25;
 
     private const BOS_SATIR_TOLERANSI = 25;
@@ -45,30 +65,49 @@ class RiskDegerlendirmesiExcelOkuyucu
     /**
      * @return array{basarili: int, adaylar: array<int, array<string, mixed>>, hatalar: array<int, string>}
      */
-    public static function oku(string $dosyaYolu): array
+    /**
+     * @param  array<string, array{kullan?: bool, veri_baslangic?: int, sutunlar?: array<int, string>}>|null  $duzeltme
+     *         Eşleme ekranından gelen elle düzeltme (sayfa adı => ayar). Verilirse yalnız işaretli sayfalar,
+     *         verilen sütun → alan eşlemesiyle okunur; otomatik sayfa/puan süzgeci uygulanmaz.
+     */
+    public static function oku(string $dosyaYolu, ?array $duzeltme = null): array
     {
         ExcelBellek::artir();
 
-        $reader = IOFactory::createReaderForFile($dosyaYolu);
-        $reader->setReadDataOnly(true);
-
-        // Şişmiş boyutlu dosyalar (ör. Altın Yakut: 42.000 satır × 16.000 sütun,
-        // hepsi boş hücre) filtresiz yüklenince yalnız load() 40+ sn sürüyor.
-        // Boş hücreleri parse ETMEMEK bunu ~2 sn'ye indirir; okuyucu zaten
-        // null'ı boş kabul eder. (setReadFilter bu dosyalarda tersine ~40 sn
-        // ekliyor — hızlı toplu okuma yolunu kapattığından — kullanılmıyor.)
-        if (method_exists($reader, 'setReadEmptyCells')) {
-            $reader->setReadEmptyCells(false);
-        }
-
-        $kitap = $reader->load($dosyaYolu);
+        $kitap = static::kitapYukle($dosyaYolu);
 
         // 1. Geçiş — her sayfada başlık bandını bul.
         $sayfalar = [];
+        $uyarilar = [];
 
         foreach ($kitap->getAllSheets() as $sheet) {
             $maxRow = min($sheet->getHighestRow(), self::MUTLAK_SATIR_TAVANI);
             $maxCol = static::etkinSutunSayisi($sheet, $maxRow);
+
+            if ($duzeltme !== null) {
+                $d = $duzeltme[$sheet->getTitle()] ?? null;
+
+                if (! $d || empty($d['kullan'])) {
+                    continue;
+                }
+
+                $sutunlar = array_filter(
+                    array_intersect_key((array) ($d['sutunlar'] ?? []), array_flip(range(1, max(1, $maxCol)))),
+                    fn ($alan) => isset(self::ALAN_ETIKETLERI[$alan]),
+                );
+
+                if (! in_array('tehlike', $sutunlar, true)) {
+                    $uyarilar[] = '"'.$sheet->getTitle().'" sayfasında hiçbir sütun "Tehlike" olarak eşlenmedi.';
+
+                    continue;
+                }
+
+                $veriBaslangic = max(1, (int) ($d['veri_baslangic'] ?? 0)) ?: 1;
+                $sayfalar[] = ['sheet' => $sheet, 'veriBaslangic' => $veriBaslangic, 'sutunlar' => $sutunlar, 'maxRow' => min($maxRow, $veriBaslangic + 3000), 'maxCol' => $maxCol];
+
+                continue;
+            }
+
             [$veriBaslangic, $sutunlar] = static::baslikBandiBul($sheet, $maxRow, $maxCol);
 
             if ($veriBaslangic !== null && in_array('tehlike', $sutunlar, true)) {
@@ -80,13 +119,14 @@ class RiskDegerlendirmesiExcelOkuyucu
         }
 
         if (! $sayfalar) {
-            return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ['Tanıdık bir başlık satırı bulunamadı (en az "Tehlike" sütunu gerekli, dosyanın hiçbir sayfasında).']];
+            return ['basarili' => 0, 'adaylar' => [], 'hatalar' => $uyarilar ?: ['Tanıdık bir başlık satırı bulunamadı (en az "Tehlike" sütunu gerekli, dosyanın hiçbir sayfasında).']];
         }
 
         // Herhangi bir sayfada O/Ş(/F) puan sütunu varsa, yalnız o sayfaları oku —
         // böylece "içindekiler / özet / arama" gibi yardımcı sayfalar elenir. Hiçbir
         // sayfada puan yoksa (kullanıcı puanları AI'ye bıraktıysa) hepsi okunur.
-        $puanliVar = collect($sayfalar)->contains(fn ($s) => static::puanSutunuVar($s['sutunlar']));
+        // Elle düzeltmede (kullanıcı sayfaları kendisi seçti) süzgeç uygulanmaz.
+        $puanliVar = $duzeltme === null && collect($sayfalar)->contains(fn ($s) => static::puanSutunuVar($s['sutunlar']));
 
         if ($puanliVar) {
             $sayfalar = array_values(array_filter($sayfalar, fn ($s) => static::puanSutunuVar($s['sutunlar'])));
@@ -104,7 +144,136 @@ class RiskDegerlendirmesiExcelOkuyucu
             return ['basarili' => 0, 'adaylar' => [], 'hatalar' => ['Başlık satırı bulundu ama altında okunabilir risk maddesi yok.']];
         }
 
-        return ['basarili' => count($adaylar), 'adaylar' => $adaylar, 'hatalar' => []];
+        return ['basarili' => count($adaylar), 'adaylar' => $adaylar, 'hatalar' => $uyarilar];
+    }
+
+    /**
+     * Eşleme ekranı için dosyanın her sayfasını inceler: algılanan başlık bandı, sütun → alan eşlemesi,
+     * sütun başlıkları ve ilk veri satırlarından örnek. Başlığı tanınmayan sayfalar da döner
+     * (`taninmadi`) — kullanıcı sütunları elle eşleyebilsin.
+     *
+     * @return list<array{ad: string, taninmadi: bool, onerilen: bool, veri_baslangic: int, sutunlar: array<int, string>, etiketler: array<int, string>, ornek: list<array<int, string>>}>
+     */
+    public static function incele(string $dosyaYolu): array
+    {
+        ExcelBellek::artir();
+
+        $kitap = static::kitapYukle($dosyaYolu);
+        $sonuc = [];
+
+        foreach ($kitap->getAllSheets() as $sheet) {
+            $maxRow = min($sheet->getHighestRow(), self::MUTLAK_SATIR_TAVANI);
+            $maxCol = static::etkinSutunSayisi($sheet, $maxRow);
+            [$veriBaslangic, $sutunlar] = static::baslikBandiBul($sheet, $maxRow, $maxCol);
+            $taninmadi = $veriBaslangic === null || ! in_array('tehlike', $sutunlar, true);
+
+            if ($veriBaslangic === null) {
+                $veriBaslangic = static::tahminiVeriBaslangici($sheet, $maxRow, $maxCol);
+                $sutunlar = [];
+            }
+
+            if ($taninmadi && $maxRow < 2) {
+                continue;
+            }
+
+            // Başlık metni: veri satırından önceki (en çok 3) başlık satırı, yukarıdan aşağı birleşik.
+            $etiketler = [];
+
+            for ($c = 1; $c <= $maxCol; $c++) {
+                $parca = [];
+
+                for ($r = max(1, $veriBaslangic - 3); $r < $veriBaslangic; $r++) {
+                    if (static::satirVeriGibi($sheet, $r, $maxCol) || static::kunyeSatiriMi($sheet, $r, $maxCol)) {
+                        continue;
+                    }
+
+                    $v = trim(preg_replace('/\s+/u', ' ', (string) $sheet->getCell([$c, $r])->getValue()));
+
+                    if ($v !== '' && ! in_array($v, $parca, true)) {
+                        $parca[] = $v;
+                    }
+                }
+
+                if ($parca) {
+                    $etiketler[$c] = mb_strimwidth(implode(' / ', $parca), 0, 60, '…');
+                }
+            }
+
+            $ornek = [];
+
+            for ($r = $veriBaslangic; $r <= min($maxRow, $veriBaslangic + 40) && count($ornek) < 3; $r++) {
+                $satir = [];
+
+                for ($c = 1; $c <= $maxCol; $c++) {
+                    $v = static::hucreDegeri($sheet, $c, $r);
+
+                    if ($v !== null && $v !== '') {
+                        $satir[$c] = mb_strimwidth(trim(preg_replace('/\s+/u', ' ', (string) $v)), 0, 45, '…');
+                    }
+                }
+
+                if ($satir) {
+                    $ornek[] = $satir;
+                }
+            }
+
+            $sonuc[] = [
+                'ad' => $sheet->getTitle(),
+                'taninmadi' => $taninmadi,
+                // Otomatik yüklemede alınacak sayfa mı? (puan sütunu olan sayfalar öncelikli — oku() ile aynı kural)
+                'onerilen' => ! $taninmadi,
+                'veri_baslangic' => $veriBaslangic,
+                'sutunlar' => $sutunlar,
+                'etiketler' => $etiketler,
+                'ornek' => $ornek,
+            ];
+        }
+
+        $puanliVar = collect($sonuc)->contains(fn ($s) => ! $s['taninmadi'] && static::puanSutunuVar($s['sutunlar']));
+
+        if ($puanliVar) {
+            $sonuc = array_map(fn ($s) => ['onerilen' => $s['onerilen'] && static::puanSutunuVar($s['sutunlar'])] + $s, $sonuc);
+        }
+
+        return $sonuc;
+    }
+
+    /** Başlığı hiç tanınmayan sayfada tahmini ilk veri satırı: ilk "çok dolu" satırın (başlık) altı. */
+    private static function tahminiVeriBaslangici($sheet, int $maxRow, int $maxCol): int
+    {
+        for ($r = 1; $r <= min($maxRow, self::BASLIK_TARAMA_SATIR_LIMIT); $r++) {
+            $dolu = 0;
+
+            for ($c = 1; $c <= $maxCol; $c++) {
+                if (trim((string) $sheet->getCell([$c, $r])->getValue()) !== '') {
+                    $dolu++;
+                }
+            }
+
+            if ($dolu >= 3 && ! static::satirVeriGibi($sheet, $r, $maxCol)) {
+                return $r + 1;
+            }
+        }
+
+        return 2;
+    }
+
+    /** Şişmiş boyutlu dosyalar için boş hücre parse'ı kapalı, yalnız-veri okuyucuyla yükler. */
+    private static function kitapYukle(string $dosyaYolu)
+    {
+        $reader = IOFactory::createReaderForFile($dosyaYolu);
+        $reader->setReadDataOnly(true);
+
+        // Şişmiş boyutlu dosyalar (ör. Altın Yakut: 42.000 satır × 16.000 sütun,
+        // hepsi boş hücre) filtresiz yüklenince yalnız load() 40+ sn sürüyor.
+        // Boş hücreleri parse ETMEMEK bunu ~2 sn'ye indirir; okuyucu zaten
+        // null'ı boş kabul eder. (setReadFilter bu dosyalarda tersine ~40 sn
+        // ekliyor — hızlı toplu okuma yolunu kapattığından — kullanılmıyor.)
+        if (method_exists($reader, 'setReadEmptyCells')) {
+            $reader->setReadEmptyCells(false);
+        }
+
+        return $reader->load($dosyaYolu);
     }
 
     private static function puanSutunuVar(array $sutunlar): bool

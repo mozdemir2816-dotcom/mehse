@@ -8,6 +8,8 @@ use App\Filament\Support\ImzaSecenegi;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\Tehlike;
 use App\Support\EkipmanKatalogu;
+use App\Support\HastaneRiskExcelUretici;
+use App\Support\HastaneRiskPdfUretici;
 use App\Support\RiskDegerlendirmesiOfisUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskYontemDonusturucu;
@@ -91,7 +93,20 @@ class EditRiskDegerlendirmesi extends EditRecord
         return [
             $this->ustKaydet(),
             $this->ekipmanEksikleriAksiyonu(),
+            Action::make('hastanePdf')
+                ->label('PDF İndir')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->visible(fn () => $this->record->hastaneMi())
+                ->action(fn () => HastaneRiskPdfUretici::pdf($this->record)),
+            Action::make('hastaneExcel')
+                ->label('Excel İndir')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->visible(fn () => $this->record->hastaneMi())
+                ->action(fn () => HastaneRiskExcelUretici::excel($this->record)),
             Action::make('pdf')
+                ->visible(fn () => ! $this->record->hastaneMi())
                 ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
@@ -141,12 +156,14 @@ class EditRiskDegerlendirmesi extends EditRecord
                     return null;
                 }),
             Action::make('excel')
+                ->visible(fn () => ! $this->record->hastaneMi())
                 ->label('Excel İndir')
                 ->icon('heroicon-o-table-cells')
                 ->color('success')
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::excel($this->record, ImzaSecenegi::secili($data))),
             Action::make('word')
+                ->visible(fn () => ! $this->record->hastaneMi())
                 ->label('Word İndir')
                 ->icon('heroicon-o-document-text')
                 ->color('info')
@@ -156,7 +173,7 @@ class EditRiskDegerlendirmesi extends EditRecord
                 ->label('Fine-Kinney\'e Dönüştür')
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
-                ->visible(fn () => $this->record->yontem === 'matris_5x5')
+                ->visible(fn () => $this->record->yontem === 'matris_5x5' && ! $this->record->hastaneMi())
                 ->requiresConfirmation()
                 ->modalDescription('Bu değerlendirmenin Fine-Kinney yöntemiyle YENİ bir kopyası oluşturulur (bu kayıt değişmez). Frekans, mevcut Olasılık değerinden tahmini olarak türetilir — yeni kayıtta puanları gözden geçirin.')
                 ->action(function () {
@@ -174,7 +191,7 @@ class EditRiskDegerlendirmesi extends EditRecord
                 ->label('Matris (5x5)\'e Dönüştür')
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
-                ->visible(fn () => $this->record->yontem === 'fine_kinney')
+                ->visible(fn () => $this->record->yontem === 'fine_kinney' && ! $this->record->hastaneMi())
                 ->requiresConfirmation()
                 ->modalDescription('Bu değerlendirmenin Matris (5x5) yöntemiyle YENİ bir kopyası oluşturulur (bu kayıt değişmez). Frekans ekseni Matris\'te olmadığından yok sayılır — yeni kayıtta puanları gözden geçirin.')
                 ->action(function () {
