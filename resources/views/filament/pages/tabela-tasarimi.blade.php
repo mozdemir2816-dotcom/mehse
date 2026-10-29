@@ -31,6 +31,8 @@
                     <button type="button" wire:click="ac({{ $t->id }})" style="background:none;border:none;cursor:pointer;font-size:.76rem;font-weight:{{ $tasarimId === $t->id ? '700' : '500' }}">
                         {{ $t->baslik }}
                     </button>
+                    <button type="button" wire:click="svgIndir({{ $t->id }})" style="{{ $btn }};padding:.15rem .4rem;font-size:.68rem" title="Gerçek vektör SVG (baskıya hazır)">SVG</button>
+                    <button type="button" wire:click="pdfIndir({{ $t->id }})" style="{{ $btn }};padding:.15rem .4rem;font-size:.68rem" title="Gerçek ölçüde A4 PDF şablonu">PDF</button>
                     <button type="button" wire:click="sil({{ $t->id }})" wire:confirm="'{{ $t->baslik }}' silinsin mi?" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.76rem" title="Sil">✕</button>
                 </div>
             @empty
@@ -38,8 +40,39 @@
             @endforelse
         </div>
 
+        {{-- Risk analizi ve saha bulgularından türetilen levha önerileri --}}
+        <div style="{{ $kutu }}">
+            <div style="font-weight:700;font-size:.85rem">Risk Analizi & Saha Bulgularından Önerilen Levhalar</div>
+            <div style="font-size:.74rem;color:rgb(107 114 128);margin:.15rem 0 .6rem">
+                Firmanın son risk değerlendirmesindeki açık maddeler ve açık saha bulguları taranır; tehlikeye uygun ikaz / yasak / emredici levha şablonu hazır gelir.
+                Sinyal sözcüğü en yüksek risk düzeyine göre seçilir (Tehlike · Uyarı · Dikkat).
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.6rem">
+            @forelse ($this->oneriler as $o)
+                <div style="display:flex;gap:.6rem;border:1px solid {{ $oneri === $o['anahtar'] ? '#2563eb' : 'rgb(107 114 128 / .25)' }};border-radius:.75rem;padding:.55rem;background:#fff">
+                    <img src="data:image/svg+xml;base64,{{ base64_encode(\App\Support\TabelaSvgUretici::svg($o['tasarim'])) }}" alt="" style="width:72px;height:auto;flex-shrink:0;align-self:flex-start">
+                    <div style="min-width:0;flex:1">
+                        <div style="font-weight:700;font-size:.78rem">{{ $o['etiket'] }}</div>
+                        <div style="display:flex;gap:.3rem;margin:.15rem 0;flex-wrap:wrap">
+                            <span style="font-size:.64rem;font-weight:700;padding:1px 6px;border-radius:9999px;color:#fff;background:{{ $o['seviye'] === 'yuksek' ? '#dc2626' : ($o['seviye'] === 'orta' ? '#d97706' : '#64748b') }}">
+                                {{ $o['tasarim']['signalTr'] }}
+                            </span>
+                            <span style="font-size:.64rem;color:rgb(107 114 128)">{{ $o['sayi'] }} kayıt</span>
+                        </div>
+                        <ul style="font-size:.66rem;color:rgb(107 114 128);margin:0;padding-left:.9rem">
+                            @foreach ($o['kaynaklar'] as $k)<li>{{ $k }}</li>@endforeach
+                        </ul>
+                        <button type="button" wire:click="oneriyiAc('{{ $o['anahtar'] }}')" style="{{ $btn }};margin-top:.35rem;background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700">Tasarla</button>
+                    </div>
+                </div>
+            @empty
+                <span style="font-size:.76rem;color:rgb(107 114 128)">Önerilecek levha bulunamadı — firmanın risk değerlendirmesinde ya da açık saha bulgularında tanınan bir tehlike (elektrik, yüksekte çalışma, kimyasal, yangın vb.) yok.</span>
+            @endforelse
+            </div>
+        </div>
         {{-- Editör: yalıtılmış iframe (kendi Tailwind CDN teması). Kaydet butonu postMessage ile gönderir, kaydet()'e gider. --}}
-        <div wire:ignore wire:key="tabela-{{ $this->firma->id }}-{{ $tasarimId ?? 'yeni' }}"
+        <div wire:ignore wire:key="tabela-{{ $this->firma->id }}-{{ $tasarimId ?? ($oneri ? 'o-'.$oneri : 'yeni') }}"
             x-data="{
                 kaydediliyor: false,
                 mesaj(e) {

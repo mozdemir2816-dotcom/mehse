@@ -5,6 +5,8 @@ namespace App\Filament\Pages;
 use App\Filament\Concerns\SinirliErisim;
 use App\Models\Firma;
 use App\Models\TabelaTasarimi as TabelaTasarimiModel;
+use App\Support\TabelaOnerisi;
+use App\Support\TabelaPdfUretici;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -12,6 +14,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use UnitEnum;
 
 /**
@@ -50,6 +53,10 @@ class TabelaTasarimi extends Page
     #[Url(as: 'id')]
     public ?int $tasarimId = null;
 
+    /** Risk / saha bulgusu önerisinden açılan tasarım (TabelaOnerisi::KURALLAR anahtarı); kayıtlı tasarım açıksa yok sayılır. */
+    #[Url(as: 'oneri')]
+    public ?string $oneri = null;
+
     public function mount(): void
     {
         $id = request()->integer('firma');
@@ -57,6 +64,9 @@ class TabelaTasarimi extends Page
 
         $tasarimId = request()->integer('id');
         $this->tasarimId = $tasarimId && $this->tasarimlar->has($tasarimId) ? $tasarimId : null;
+
+        $oneri = request()->query('oneri');
+        $this->oneri = ! $this->tasarimId && is_string($oneri) && isset(TabelaOnerisi::KURALLAR[$oneri]) ? $oneri : null;
     }
 
     #[Computed]
@@ -92,10 +102,51 @@ class TabelaTasarimi extends Page
     {
         $aktif = $this->aktifTasarim();
 
+        if (! $aktif && $this->oneri && ($o = collect($this->oneriler)->firstWhere('anahtar', $this->oneri))) {
+            return ['baslik' => $o['etiket'], ...$o['tasarim']];
+        }
+
         return [
             'baslik' => $aktif?->baslik ?? '',
             ...($aktif?->tasarim ?? TabelaTasarimiModel::varsayilanTasarim()),
         ];
+    }
+
+    /**
+     * Risk değerlendirmesi ve saha bulgularından türetilen levha önerileri (TabelaOnerisi).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    #[Computed]
+    public function oneriler(): array
+    {
+        return $this->firma ? TabelaOnerisi::firmaIcin($this->firma) : [];
+    }
+
+    /** Bir öneriyi editörde açar (kayıtlı tasarım seçimi kalkar). */
+    public function oneriyiAc(string $anahtar): void
+    {
+        if (! $this->firma || ! isset(TabelaOnerisi::KURALLAR[$anahtar])) {
+            return;
+        }
+
+        $this->redirect(static::getUrl(['firma' => $this->firmaId, 'oneri' => $anahtar]));
+    }
+
+    /** Kayıtlı tasarımı gerçek vektör SVG olarak indirir (baskıya hazır; <foreignObject> kullanmaz). */
+    public function svgIndir(int $id): ?StreamedResponse
+    {
+        $tasarim = $this->tasarimlar->get($id);
+
+        return $tasarim ? TabelaPdfUretici::svgIndir($tasarim) : null;
+    }
+
+    /** Kayıtlı tasarımı gerçek ölçüde A4 PDF şablonu olarak indirir. */
+    public function pdfIndir(int $id): ?StreamedResponse
+    {
+        $tasarim = $this->tasarimlar->get($id);
+
+        return $tasarim ? TabelaPdfUretici::pdf($tasarim) : null;
     }
 
     #[Computed]

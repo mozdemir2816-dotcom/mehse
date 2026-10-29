@@ -568,7 +568,7 @@ class AcilDurumPlaniTest extends TestCase
         $uzman = $this->uzman;
         $uzman->forceFill(['name' => 'Mehmet Özdemir', 'unvan' => 'a_sinifi'])->save();
 
-        $firma = Firma::factory()->for($uzman)->create(['nace_kodu' => '41.00', 'isveren_ad' => 'Hasan Kaya', 'adres' => 'OSB 3. Cad. No:7']);
+        $firma = Firma::factory()->for($uzman)->create(['nace_kodu' => '41.00', 'isveren_ad' => 'Hasan Kaya', 'adres' => 'OSB 3. Cad. No:7', 'unvan' => 'Test Yapı A.Ş.', 'il' => 'Bursa', 'calisan_sayisi' => 20]);   // sabit: '155' yokluğu doğrulanıyor, rastgele değer çakışmasın
         $plan = AcilDurumPlani::firmaIcin($firma);
         $plan->forceFill([
             'revizyon_no' => 'Rev.01 — 01.01.2027',
