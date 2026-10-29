@@ -11,9 +11,11 @@ use App\Filament\Pages\TespitOneriDefteri;
 use App\Filament\Pages\ZiyaretModu;
 use App\Models\Firma;
 use App\Models\User;
+use App\Models\YillikPlan;
 use App\Support\KomutaFirma;
 use App\Support\SayfaAileleri;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -34,6 +36,12 @@ class SahaModuluTest extends TestCase
         $this->firma = Firma::factory()->for($this->uzman)->create([
             'unvan' => 'Beta Yapı', 'nace_kodu' => '41.20.01', 'tehlike_sinifi' => 'cok_tehlikeli', 'isveren_vekili' => 'Yasin Şener',
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     public function test_yedi_sayfa_uc_ana_sekmede_toplanir(): void
@@ -104,6 +112,17 @@ class SahaModuluTest extends TestCase
         $this->get(DofOlustur::getUrl())->assertOk()->assertSee('Firma seçilmedi');
     }
 
+    public function test_adresten_gelen_firma_tum_saha_sayfalarinda_ortak_baglama_yazilir(): void
+    {
+        foreach ([HizliSahaBulgusu::class, OnBilgilendirmeler::class, DofOlustur::class, TespitOneriDefteri::class, SahaDenetimi::class, AiSahaAnalizi::class] as $sinif) {
+            KomutaFirma::sec(null);
+
+            $this->get($sinif::getUrl(['firma' => $this->firma->id]))->assertOk();
+
+            $this->assertSame($this->firma->id, KomutaFirma::oturumdaki(), $sinif);
+        }
+    }
+
     public function test_baska_uzmanin_firmasi_baglamda_gosterilmez(): void
     {
         $yabanci = Firma::factory()->for(User::factory())->create(['unvan' => 'Yabancı Firma']);
@@ -111,5 +130,57 @@ class SahaModuluTest extends TestCase
 
         // Bilgi çubuğu yalnız kullanıcının kendi firmasını gösterir (sahip rolündeki kullanıcının sayfa listesi geniştir).
         $this->get(DofOlustur::getUrl())->assertOk()->assertSee('Firma seçilmedi')->assertDontSee('mehse-saha-baglam-liste', false);
+    }
+    private function planKur(): void
+    {
+        Carbon::setTestNow('2026-10-15 10:00');
+
+        YillikPlan::create(['firma_id' => $this->firma->id, 'yil' => 2026, 'egitimler' => [], 'faaliyetler' => [
+            ['faaliyet' => 'Risk değerlendirmesi gözden geçirilmesi', 'ana_konu' => 'RİSK YÖNETİMİ', 'aylar' => [9 => 'planlandi']],
+            ['faaliyet' => 'İskele kontrolü', 'ana_konu' => 'İŞ EKİPMANLARI', 'aylar' => [9 => 'planlandi']],
+            ['faaliyet' => 'Yangın tüpü kontrolü', 'ana_konu' => 'ACİL DURUM', 'aylar' => [9 => 'planlandi']],
+            ['faaliyet' => 'KKD zimmet kontrolü', 'ana_konu' => 'KKD', 'aylar' => [9 => 'planlandi']],
+            ['faaliyet' => 'Ortam aydınlatma', 'ana_konu' => 'İŞYERİ DÜZENİ', 'aylar' => [9 => 'planlandi']],
+        ]]);
+    }
+
+    public function test_ziyaret_kontrol_listesi_dort_kategoride_toplanir_ve_toplu_isaretlenir(): void
+    {
+        $this->planKur();
+
+        $sayfa = Livewire::test(ZiyaretModu::class, ['firmaId' => $this->firma->id]);
+        $gruplar = $sayfa->instance()->planGruplari;
+
+        $this->assertSame(['risk', 'yangin', 'egitim', 'ortam'], array_keys($gruplar));
+        $this->assertSame([2, 1, 1, 1], array_column($gruplar, 'toplam'));
+        $sayfa->assertSee('Risk & Ekipman / İskele')->assertSee('Yangın & Acil Durum')->assertSee('Eğitim & KKD')->assertSee('Ortam & Hijyen')
+            ->assertSee('Tümünü Uygun İşaretle');
+
+        $sayfa->call('kategoriTumunuUygunIsaretle', 'risk');
+
+        $plan = YillikPlan::sole();
+        $this->assertSame('tamamlandi', $plan->faaliyetler[0]['aylar'][9]);
+        $this->assertSame('tamamlandi', $plan->faaliyetler[1]['aylar'][9]);
+        $this->assertSame('planlandi', $plan->faaliyetler[2]['aylar'][9], 'Diğer kategori etkilenmemeli.');
+        $this->assertSame(2, $sayfa->instance()->planGruplari['risk']['yapilan']);
+
+        // İkinci çağrı işaretlenenleri geri almaz.
+        $sayfa->call('kategoriTumunuUygunIsaretle', 'risk');
+        $this->assertSame('tamamlandi', YillikPlan::sole()->faaliyetler[0]['aylar'][9]);
+    }
+
+    public function test_plan_maddesi_uygunsuz_isareti_hizli_bulgu_taslagi_acar(): void
+    {
+        $this->planKur();
+
+        Livewire::test(ZiyaretModu::class, ['firmaId' => $this->firma->id])
+            ->call('planMaddesiUygunsuz', 'faaliyetler', 2)
+            ->assertRedirect(HizliSahaBulgusu::getUrl());
+
+        Livewire::test(HizliSahaBulgusu::class)
+            ->assertSet('firmaId', $this->firma->id)
+            ->assertSet('uygunsuzluk', 'Plan maddesi uygulanmıyor / uygun değil: Yangın tüpü kontrolü');
+
+        Carbon::setTestNow();
     }
 }

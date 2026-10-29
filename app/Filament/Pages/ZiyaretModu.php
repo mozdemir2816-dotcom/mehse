@@ -284,7 +284,83 @@ class ZiyaretModu extends Page
     {
         $plan = $this->firma ? YillikPlan::query()->where('firma_id', $this->firma->id)->where('yil', now()->year)->first() : null;
         $plan?->gerceklestiDegistir($alan, $index, (int) now()->month - 1);
-        unset($this->planMaddeleri);
+        unset($this->planMaddeleri, $this->planGruplari);
+    }
+
+    /**
+     * Ziyaret kontrol listesinin 4 kategorisi (29.10.2026): yıllık plandaki ~20 konu grubu (`grup`) sahada tek
+     * akordeonda toplanır. Anahtar → [görünen ad, grup öneki listesi]; eşleşmeyen grup son kategoriye düşer.
+     */
+    public const PLAN_KATEGORILERI = [
+        'risk' => ['Risk & Ekipman / İskele', ['RİSK YÖNETİMİ', 'İŞ EKİPMANLARI', 'ELEKTRİK', 'MAKİNE GÜVENLİĞİ', 'ARAÇ GÜVENLİĞİ', 'ALT İŞVEREN', 'KAZA', 'BELGELER']],
+        'yangin' => ['Yangın & Acil Durum', ['ACİL DURUM', 'YANGIN']],
+        'egitim' => ['Eğitim & KKD', ['EĞİTİM', 'KKD']],
+        'ortam' => ['Ortam & Hijyen', ['İŞYERİ DÜZENİ', 'KİMYASAL', 'ERGONOMİ', 'SAĞLIK']],
+    ];
+
+    /**
+     * Bu ayın plan maddeleri 4 kategoride.
+     *
+     * @return array<string, array{ad: string, maddeler: array<int, array<string, mixed>>, yapilan: int, toplam: int}>
+     */
+    #[Computed]
+    public function planGruplari(): array
+    {
+        $gruplar = [];
+        foreach (self::PLAN_KATEGORILERI as $kod => [$ad]) {
+            $gruplar[$kod] = ['ad' => $ad, 'maddeler' => [], 'yapilan' => 0, 'toplam' => 0];
+        }
+        $son = array_key_last(self::PLAN_KATEGORILERI);
+
+        foreach ($this->planMaddeleri['maddeler'] as $m) {
+            $kod = $son;
+            foreach (self::PLAN_KATEGORILERI as $k => [, $onekler]) {
+                foreach ($onekler as $onek) {
+                    if (str_starts_with(mb_strtoupper((string) ($m['grup'] ?? '')), $onek)) {
+                        $kod = $k;
+                        break 2;
+                    }
+                }
+            }
+
+            $gruplar[$kod]['maddeler'][] = $m;
+            $gruplar[$kod]['toplam']++;
+            $gruplar[$kod]['yapilan'] += $m['gerceklesti'] ? 1 : 0;
+        }
+
+        return array_filter($gruplar, fn (array $g) => $g['toplam'] > 0);
+    }
+
+    /** Bir kategorideki henüz işaretlenmemiş tüm maddeleri "uygun / yapıldı" yapar. */
+    public function kategoriTumunuUygunIsaretle(string $kod): void
+    {
+        $plan = $this->firma ? YillikPlan::query()->where('firma_id', $this->firma->id)->where('yil', now()->year)->first() : null;
+
+        foreach ($this->planGruplari[$kod]['maddeler'] ?? [] as $m) {
+            if (! $m['gerceklesti']) {
+                $plan?->gerceklestiDegistir($m['alan'], $m['index'], (int) now()->month - 1);
+            }
+        }
+
+        unset($this->planMaddeleri, $this->planGruplari);
+    }
+
+    /** Tek tıkla uygunsuzluk: plan maddesi Hızlı Bulgu formuna taslak olarak taşınır. */
+    public function planMaddesiUygunsuz(string $alan, int $index)
+    {
+        $madde = collect($this->planMaddeleri['maddeler'])->first(fn (array $m) => $m['alan'] === $alan && $m['index'] === $index);
+
+        if (! $madde || ! $this->firmaId) {
+            return null;
+        }
+
+        session(['hizli_bulgu_taslak' => [
+            'firma_id' => $this->firmaId,
+            'uygunsuzluk' => 'Plan maddesi uygulanmıyor / uygun değil: '.$madde['baslik'],
+            'bolum' => $madde['grup'] ?? null,
+        ]]);
+
+        return $this->redirect(HizliSahaBulgusu::getUrl());
     }
 
     public function kapanisAc(?string $anahtar): void

@@ -160,12 +160,13 @@ class HizliSahaBulgusuTest extends TestCase
         SahaBulgusu::create(['firma_id' => Firma::factory()->for(User::factory())->create()->id, 'uygunsuzluk' => 'X']);
 
         $sayfa = Livewire::test(HizliSahaBulgusu::class);
-        $this->assertSame(['acik' => 2, 'kritik' => 1, 'gecikmis' => 1, 'kapandi' => 0], $sayfa->instance()->ozet);
+        $this->assertSame(['toplam' => 2, 'acik' => 2, 'kritik' => 1, 'gecikmis' => 1, 'kapandi' => 0, 'basari' => 0], $sayfa->instance()->ozet);
 
         $sayfa->callAction('kapat', ['kapanis_tarihi' => now()->toDateString(), 'kapanis_notu' => 'Kablo kanala alındı'], ['id' => $a->id])
             ->assertHasNoActionErrors();
         $this->assertSame('kapandi', $a->fresh()->durum);
         $this->assertCount(1, $sayfa->instance()->bulgular);
+        $this->assertSame(50, $sayfa->instance()->ozet['basari']); // 1 kapalı / 2 toplam
 
         $sayfa->call('yenidenAc', $a->id);
         $this->assertSame('acik', $a->fresh()->durum);
@@ -175,6 +176,81 @@ class HizliSahaBulgusuTest extends TestCase
         $this->assertSame('kritik', $aktarim['maddeler'][0]['oncelik']);
         $this->assertSame('Kanal içine alınacak', $aktarim['maddeler'][0]['oneri']);
         $this->assertSame('saha-bulgu-foto/a.jpg', $aktarim['maddeler'][0]['foto_yolu']);
+    }
+
+    public function test_hizli_kapat_not_ister_ve_bulguyu_kapatir(): void
+    {
+        $b = SahaBulgusu::create(['firma_id' => $this->firma->id, 'uygunsuzluk' => 'Korkuluk yok', 'olasilik' => 3, 'siddet' => 3]);
+
+        $sayfa = Livewire::test(HizliSahaBulgusu::class);
+
+        // Not yazılmadan kapanmaz.
+        $sayfa->call('hizliKapat', $b->id);
+        $this->assertSame('acik', $b->fresh()->durum);
+
+        $sayfa->set('kapatNotlari.'.$b->id, 'Korkuluk monte edildi')->call('hizliKapat', $b->id);
+        $b->refresh();
+        $this->assertSame('kapandi', $b->durum);
+        $this->assertSame('Korkuluk monte edildi', $b->kapanis_notu);
+        $this->assertSame(now()->toDateString(), $b->kapanis_tarihi->toDateString());
+        $sayfa->assertSet('kapatNotlari', []);
+    }
+
+    public function test_liste_tek_ucnokta_menusu_ve_kpi_cubugu_gosterir(): void
+    {
+        SahaBulgusu::create(['firma_id' => $this->firma->id, 'uygunsuzluk' => 'Etiket eksik', 'olasilik' => 2, 'siddet' => 2]);
+
+        Livewire::test(HizliSahaBulgusu::class)
+            ->assertSee('Toplam bulgu')
+            ->assertSee('Başarı oranı')
+            ->assertSee('Kapatma notu')
+            ->assertSee('Tutanak Al')
+            ->assertSee('Diğer işlemler');
+    }
+
+    public function test_ai_degerlendir_foto_veya_not_olmadan_uyarir(): void
+    {
+        Livewire::test(HizliSahaBulgusu::class)->call('aiDegerlendir')->assertNotified('Fotoğraf ekleyin ya da gördüğünüzü yazın');
+    }
+
+    public function test_coklu_dagitim_deftere_yazar_ve_dofe_yonlendirir(): void
+    {
+        $sayfa = Livewire::test(HizliSahaBulgusu::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('uygunsuzluk', 'Döşeme kenarında korkuluk yok.')
+            ->set('olasilik', 4)->set('siddet', 4)
+            ->set('dagitDefter', true)
+            ->call('kaydet')
+            ->assertHasNoErrors();
+
+        $bulgu = SahaBulgusu::sole();
+        $defter = \App\Models\TespitOneriDefteri::where('firma_id', $this->firma->id)->sole();
+        $this->assertCount(1, $defter->maddeler);
+        $this->assertSame($bulgu->id, $defter->maddeler[0]['bulgu_id']);
+        $sayfa->assertNoRedirect();
+
+        // DÖF seçiliyse kayıttan sonra DÖF Oluştur ekranına bulguyla gider; defter seçili değilse yazılmaz.
+        Livewire::test(HizliSahaBulgusu::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('uygunsuzluk', 'Yangın tüpü dolum tarihi geçmiş.')
+            ->set('dagitDof', true)
+            ->call('kaydet')
+            ->assertRedirect(DofOlustur::getUrl());
+
+        $this->assertCount(1, \App\Models\TespitOneriDefteri::where('firma_id', $this->firma->id)->sole()->maddeler);
+        $this->assertSame(1, count(session('dof_aktarim')['maddeler']));
+    }
+
+    public function test_dagitim_secilmezse_yalniz_bulgu_kaydedilir(): void
+    {
+        Livewire::test(HizliSahaBulgusu::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('uygunsuzluk', 'Etiket eksik, düzeltilecek.')
+            ->call('kaydet')
+            ->assertNoRedirect();
+
+        $this->assertSame(1, SahaBulgusu::count());
+        $this->assertSame(0, \App\Models\TespitOneriDefteri::count());
     }
 
     public function test_tutanak_pdf_ve_excel(): void

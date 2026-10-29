@@ -59,21 +59,55 @@
             <a href="{{ \App\Filament\Pages\TespitOneriDefteri::getUrl(['firma' => $f->id]) }}" style="{{ $buyukDugme }};background:rgb(107 114 128 / .1);color:inherit;border:1px solid rgb(107 114 128 / .25)"><span style="font-size:1.4rem">📖</span>Tespit-Öneri</a>
         </div>
 
-        {{-- 1. BU AYIN PLAN MADDELERİ --}}
-        @php $plan = $this->planMaddeleri; $yapilan = collect($plan['maddeler'])->where('gerceklesti', true)->count(); @endphp
-        <div style="{{ $kart }}">
+        {{-- 1. BU AYIN PLAN MADDELERİ — 4 kategorili akordeon (Risk & Ekipman / Yangın & Acil Durum / Eğitim & KKD / Ortam & Hijyen) --}}
+        @php
+            $plan = $this->planMaddeleri;
+            $yapilan = collect($plan['maddeler'])->where('gerceklesti', true)->count();
+            $gruplar = $this->planGruplari;
+            // İlk tamamlanmamış kategori açık başlar.
+            $ilkAcik = collect($gruplar)->filter(fn ($g) => $g['yapilan'] < $g['toplam'])->keys()->first();
+        @endphp
+        <div style="{{ $kart }}" x-data="{ acik: @js($ilkAcik) }">
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem">
                 <span style="{{ $baslik }}">Bu ziyarette yapılacaklar · {{ \App\Models\ZiyaretProgrami::AYLAR[$plan['ay']] }}</span>
                 @if ($plan['maddeler'])<span style="font-size:.82rem;font-weight:700;color:{{ $yapilan === count($plan['maddeler']) ? '#15803d' : '#b45309' }}">{{ $yapilan }}/{{ count($plan['maddeler']) }}</span>@endif
             </div>
-            @forelse ($plan['maddeler'] as $m)
-                <label wire:key="pm-{{ $m['alan'] }}-{{ $m['index'] }}" style="display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid rgb(107 114 128 / .12);cursor:pointer">
-                    <input type="checkbox" @checked($m['gerceklesti']) wire:click="planMaddesiIsaretle('{{ $m['alan'] }}', {{ $m['index'] }})" style="width:1.35rem;height:1.35rem;margin-top:.1rem;flex-shrink:0">
-                    <span style="flex:1;{{ $m['gerceklesti'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">
-                        <span style="display:block;font-size:.92rem">{{ $m['baslik'] }}</span>
-                        <span style="display:block;font-size:.72rem;{{ $soluk }}">{{ $m['grup'] }}@if ($m['sorumlu']) · {{ $m['sorumlu'] }}@endif</span>
-                    </span>
-                </label>
+
+            @forelse ($gruplar as $kod => $g)
+                @php $tamam = $g['yapilan'] === $g['toplam']; @endphp
+                <div wire:key="pg-{{ $kod }}" style="border-top:1px solid rgb(107 114 128 / .15)">
+                    <button type="button" x-on:click="acik = acik === '{{ $kod }}' ? null : '{{ $kod }}'" :aria-expanded="acik === '{{ $kod }}'"
+                        style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:.6rem;min-height:3rem;padding:.4rem 0;background:none;border:none;cursor:pointer;color:inherit;text-align:left">
+                        <span style="display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.95rem">
+                            <span x-text="acik === '{{ $kod }}' ? '▾' : '▸'" style="width:1rem"></span>
+                            {{ $g['ad'] }}
+                        </span>
+                        <span style="font-size:.72rem;font-weight:700;padding:.1rem .6rem;border-radius:9999px;{{ $tamam ? 'background:rgb(22 163 74 / .14);color:#15803d' : 'background:rgb(217 119 6 / .14);color:#b45309' }}">{{ $g['yapilan'] }}/{{ $g['toplam'] }}</span>
+                    </button>
+
+                    <div x-show="acik === '{{ $kod }}'" x-cloak style="padding-bottom:.5rem">
+                        @if (! $tamam)
+                            <button type="button" wire:click="kategoriTumunuUygunIsaretle('{{ $kod }}')"
+                                style="min-height:2.75rem;padding:0 1rem;margin-bottom:.4rem;border-radius:9999px;border:1px solid rgb(22 163 74 / .5);background:rgb(22 163 74 / .08);color:#15803d;font-weight:700;font-size:.82rem;cursor:pointer">
+                                ✓ Tümünü Uygun İşaretle
+                            </button>
+                        @endif
+
+                        @foreach ($g['maddeler'] as $m)
+                            <div wire:key="pm-{{ $m['alan'] }}-{{ $m['index'] }}" style="display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid rgb(107 114 128 / .1)">
+                                <input type="checkbox" @checked($m['gerceklesti']) wire:click="planMaddesiIsaretle('{{ $m['alan'] }}', {{ $m['index'] }})" aria-label="Uygun" style="width:1.5rem;height:1.5rem;margin-top:.1rem;flex-shrink:0;cursor:pointer">
+                                <span style="flex:1;{{ $m['gerceklesti'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">
+                                    <span style="display:block;font-size:.92rem">{{ $m['baslik'] }}</span>
+                                    <span style="display:block;font-size:.72rem;{{ $soluk }}">{{ $m['grup'] }}@if ($m['sorumlu']) · {{ $m['sorumlu'] }}@endif</span>
+                                </span>
+                                @unless ($m['gerceklesti'])
+                                    <button type="button" wire:click="planMaddesiUygunsuz('{{ $m['alan'] }}', {{ $m['index'] }})" title="Uygunsuz — bulgu kaydı aç" aria-label="Uygunsuzluk işaretle"
+                                        style="flex-shrink:0;min-width:2.75rem;min-height:2.75rem;border-radius:.6rem;border:1px solid rgb(234 88 12 / .4);background:rgb(234 88 12 / .08);color:#c2410c;font-size:1.05rem;cursor:pointer">⚠</button>
+                                @endunless
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             @empty
                 <p style="font-size:.85rem;{{ $soluk }}">{{ $plan['plan_var'] ? 'Bu ay için planlanmış madde yok.' : 'Bu yılın yıllık planı oluşturulmamış.' }}</p>
             @endforelse

@@ -126,7 +126,11 @@ class TespitOneriDefteri extends Page
             }
 
             $filtrelenen = $this->arama
-                ? array_values(array_filter($maddeler, fn ($m) => str_contains(mb_strtolower($m['tespit']), mb_strtolower($this->arama))))
+                // Tespit metni + öneri + yasal dayanak (mevzuat maddesine göre de bulunur: "6331 m.10", "Yangın Yönetmeliği").
+                ? array_values(array_filter($maddeler, fn ($m) => str_contains(
+                    mb_strtolower($m['tespit'].' '.($m['oneri'] ?? '').' '.($m['dayanak'] ?? '')),
+                    mb_strtolower($this->arama),
+                )))
                 : $maddeler;
 
             if ($filtrelenen) {

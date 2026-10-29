@@ -121,8 +121,22 @@ class HizliSahaBulgusu extends Page
             $this->firmaId = $firmaId;
         }
 
+        // Ziyaret Modu "uygunsuz" işareti: plan maddesi taslak olarak gelir (yalnız kendi firması).
+        if ($taslak = session()->pull('hizli_bulgu_taslak')) {
+            if (array_key_exists((int) $taslak['firma_id'], $this->firmalar)) {
+                $this->firmaId = (int) $taslak['firma_id'];
+                $this->uygunsuzluk = $taslak['uygunsuzluk'] ?? null;
+                $this->bolum = $taslak['bolum'] ?? null;
+            }
+        }
+
         // Saha modülü ortak firma bağlamı (App\Support\KomutaFirma): başka sayfada seçilen firma burada açılır.
         $this->firmaId ??= \App\Support\KomutaFirma::baslangic($this->firmalar);
+
+        // Adresten / taslaktan gelen firma da ortak bağlama yazılır (üstteki firma bilgi çubuğu için).
+        if ($this->firmaId) {
+            \App\Support\KomutaFirma::sec($this->firmaId);
+        }
     }
 
     #[Computed]
@@ -161,7 +175,7 @@ class HizliSahaBulgusu extends Page
             ->get();
     }
 
-    /** @return array{acik: int, kritik: int, gecikmis: int, kapandi: int} */
+    /** @return array{toplam: int, acik: int, kritik: int, gecikmis: int, kapandi: int, basari: int} */
     #[Computed]
     public function ozet(): array
     {
@@ -170,13 +184,38 @@ class HizliSahaBulgusu extends Page
             ->when($this->firmaId, fn ($q) => $q->where('firma_id', $this->firmaId))
             ->get();
         $acik = $hepsi->filter->acikMi();
+        $kapandi = $hepsi->where('durum', 'kapandi')->count();
 
         return [
+            'toplam' => $hepsi->count(),
             'acik' => $acik->count(),
             'kritik' => $acik->filter(fn (SahaBulgusu $b) => $b->oncelikAnahtari() === 'kritik')->count(),
             'gecikmis' => $acik->filter->terminGectiMi()->count(),
-            'kapandi' => $hepsi->where('durum', 'kapandi')->count(),
+            'kapandi' => $kapandi,
+            // Başarı oranı = kapatılan / toplam bulgu.
+            'basari' => $hepsi->count() > 0 ? (int) round($kapandi / $hepsi->count() * 100) : 0,
         ];
+    }
+
+    /** Listedeki hızlı kapatma notları (bulgu id => not). */
+    public array $kapatNotlari = [];
+
+    /** Satırdaki "Kapatma notu" + Kapat: not zorunlu, kapanış tarihi bugün. Ayrıntılı kapatma modalı menüde kalır. */
+    public function hizliKapat(int $id): void
+    {
+        $not = trim((string) ($this->kapatNotlari[$id] ?? ''));
+
+        if (mb_strlen($not) < 3) {
+            Notification::make()->title('Kapatma notu yazın')->body('Yapılan düzeltmeyi kısaca belirtin.')->warning()->send();
+
+            return;
+        }
+
+        $this->bulgu($id)->update(['durum' => 'kapandi', 'kapanis_tarihi' => now()->toDateString(), 'kapanis_notu' => $not]);
+        unset($this->kapatNotlari[$id]);
+        $this->yenile();
+
+        Notification::make()->title('Bulgu kapatıldı')->success()->send();
     }
 
     public function updated(string $alan): void
@@ -262,6 +301,32 @@ class HizliSahaBulgusu extends Page
         $this->kategori ??= static::kategoriEslestir($t['kategori'] ?? '');
         $this->gozlemKonumu ??= $t['bina_bolge'] ?? null;
         $this->kaynak = 'ai';
+    }
+
+    /** Kaydedince bulgunun gideceği yerler (kayıttan sonra da kalır: sahada art arda giriş). */
+    public bool $dagitDof = false;
+
+    public bool $dagitDefter = false;
+
+    /**
+     * "✨ Yapay Zekâ ile Değerlendir": fotoğraf varsa fotoğraftan, yoksa yazılan nottan taslak üretir
+     * (tehlike, olasılık/şiddet, yasal gerekçe forma yazılır; kaydetmeden önce kontrol edilir).
+     */
+    public function aiDegerlendir(): void
+    {
+        if ($this->fotoSayisi() > 0) {
+            $this->aiIleDoldur();
+
+            return;
+        }
+
+        if (filled($this->aciklamaMetni)) {
+            $this->aciklamadanDoldur();
+
+            return;
+        }
+
+        Notification::make()->title('Fotoğraf ekleyin ya da gördüğünüzü yazın')->body('AI değerlendirmesi için en az biri gerekir.')->warning()->send();
     }
 
     /** Fotoğraftan AI taslağı: ilk tespit forma, diğerleri toplu eklemeye hazır. */
@@ -422,7 +487,21 @@ class HizliSahaBulgusu extends Page
         $this->reset('gozlemKonumu', 'enlem', 'boylam', 'kategori', 'tehlike', 'uygunsuzluk', 'mevcutOnlemler', 'yasalGerekce', 'aksiyon', 'sorumlu', 'termin', 'yeniFotograflar', 'kaydedilenFotolar', 'kaynak', 'olasilik', 'siddet', 'oncelik');
         $this->yenile();
 
-        Notification::make()->title('Bulgu kaydedildi')->body($b->bulgu_no.' — risk '.$b->skor().' ('.$b->oncelikEtiketi().')')->success()->send();
+        $mesaj = $b->bulgu_no.' — risk '.$b->skor().' ('.$b->oncelikEtiketi().')';
+
+        // Çoklu dağıtım: "Onaylı Deftere Yaz" bulguyu firmanın Tespit-Öneri defterine ekler.
+        if ($this->dagitDefter) {
+            $defter = \App\Models\TespitOneriDefteri::firmaIcin($b->firma);
+            $defter->update(['maddeler' => [...($defter->maddeler ?? []), BulguDonusturucu::tespitOneriMaddesi($b)]]);
+            $mesaj .= ' · deftere yazıldı';
+        }
+
+        Notification::make()->title('Bulgu kaydedildi')->body($mesaj)->success()->send();
+
+        // "DÖF Listesine Ekle": bulgu fotoğraflarıyla DÖF Oluştur ekranına taşınır.
+        if ($this->dagitDof) {
+            $this->dofeAktar($b->id);
+        }
     }
 
     private function bulgu(int $id): SahaBulgusu

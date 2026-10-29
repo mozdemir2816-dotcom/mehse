@@ -63,6 +63,7 @@ class OnBilgilendirmeler extends Page
         // ?firma= yoksa Saha modülü ortak firma bağlamı (App\Support\KomutaFirma) açılır.
         if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
+            \App\Support\KomutaFirma::sec($firmaId);
         }
     }
 

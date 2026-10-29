@@ -45,7 +45,8 @@ class EkipmanKatalogTest extends TestCase
         $this->seed(MakineRiskKutuphanesiSeeder::class);
         $this->uzman = User::factory()->create();
         $this->actingAs($this->uzman);
-        $this->firma = Firma::factory()->for($this->uzman)->create();
+        // NACE sabit: fabrika rastgele 41–43 üretirse firma "inşaat" grubuna düşüp acil durum seti değişiyordu (kararsız test).
+        $this->firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '28.29.01']);
     }
 
     private function ekipman(string $kategori, string $tip, array $ek = []): IsEkipmani
