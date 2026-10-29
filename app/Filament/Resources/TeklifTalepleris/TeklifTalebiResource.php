@@ -5,10 +5,13 @@ namespace App\Filament\Resources\TeklifTalepleris;
 use App\Filament\Resources\TeklifTalepleris\Pages\ListTeklifTalepleris;
 use App\Models\TeklifTalebi;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -47,7 +50,7 @@ class TeklifTalebiResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false;
+        return static::canAccess();
     }
 
     public static function getNavigationBadge(): ?string
@@ -66,6 +69,15 @@ class TeklifTalebiResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
+            ->emptyStateIcon('heroicon-o-inbox-arrow-down')
+            ->emptyStateHeading('Bekleyen Teklif Talebi Bulunmuyor')
+            ->emptyStateDescription('Web siteniz üzerinden (mehse.com) gelen teklif formları otomatik olarak buraya düşer.')
+            ->emptyStateActions([static::formBaglantisiAksiyonu(), static::yeniGirisAksiyonu()])
+            // Boş ekranda aynı düğmeler orta alanda çıkar; liste doluyken üstte durur.
+            ->headerActions([
+                static::formBaglantisiAksiyonu()->hidden(fn () => ! TeklifTalebi::exists()),
+                static::yeniGirisAksiyonu()->hidden(fn () => ! TeklifTalebi::exists()),
+            ])
             ->columns([
                 TextColumn::make('created_at')->label('Tarih')->dateTime('d.m.Y H:i')->sortable(),
                 TextColumn::make('firma_adi')->label('Firma')->weight('bold')->searchable(),
@@ -93,6 +105,42 @@ class TeklifTalebiResource extends Resource
                         Textarea::make('not')->label('Not')->rows(3),
                     ]),
                 DeleteAction::make(),
+            ]);
+    }
+
+    /** Tanıtım sayfasındaki teklif formunun herkese açık adresi. */
+    public static function formBaglantisiAksiyonu(): Action
+    {
+        return Action::make('formBaglantisi')
+            ->label('Web Formu Bağlantısını Al')
+            ->icon('heroicon-o-link')
+            ->color('gray')
+            ->modalHeading('Teklif formu bağlantısı')
+            ->modalDescription('Müşterilere gönderebileceğiniz herkese açık tanıtım sayfası ve teklif formu adresi:')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Kapat')
+            ->schema([
+                TextInput::make('adres')->label('Bağlantı')->readOnly()->default(fn () => url('/'))
+                    ->extraInputAttributes(['onclick' => 'this.select()']),
+            ]);
+    }
+
+    /** Telefonla / yüz yüze gelen talebi elle kaydetmek için. */
+    public static function yeniGirisAksiyonu(): CreateAction
+    {
+        return CreateAction::make('yeniGiris')
+            ->label('Yeni Teklif Girişi Yap')
+            ->icon('heroicon-o-plus')
+            ->modalHeading('Yeni teklif talebi')
+            ->createAnother(false)
+            ->schema([
+                TextInput::make('firma_adi')->label('Firma')->required()->maxLength(255),
+                TextInput::make('kisi')->label('İletişim kişisi')->required()->maxLength(255),
+                TextInput::make('telefon')->label('Telefon')->tel()->required()->maxLength(30),
+                TextInput::make('calisan_sayisi')->label('Çalışan sayısı')->numeric()->minValue(1)->required(),
+                Select::make('tehlike_sinifi')->label('Tehlike sınıfı')->options(array_combine(TeklifTalebi::TEHLIKE_SINIFLARI, TeklifTalebi::TEHLIKE_SINIFLARI))->required(),
+                Select::make('durum')->label('Durum')->options(TeklifTalebi::DURUMLAR)->default('yeni')->required(),
+                Textarea::make('not')->label('Not')->rows(3),
             ]);
     }
 

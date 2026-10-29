@@ -1,72 +1,79 @@
 <?php /** @var \App\Filament\Pages\EkipEvraklari $this */ ?>
 @php
-    $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
-    $girdi = 'margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
+    $kart = 'background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem 1.1rem';
+    $girdi = 'width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-size:.85rem';
+    $rozet = 'display:inline-block;font-size:.68rem;font-weight:700;padding:.12rem .55rem;border-radius:999px;';
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
-        Yetki verdiğiniz kişilerin kendi hesaplarında oluşturduğu firmalardaki Risk
-        Değerlendirmesi ve Acil Durum Planı kayıtları burada listelenir. Bir risk
-        değerlendirmesini paylaşılan Risk Şablonu kütüphanesine ("havuz") eklemek
-        için ilgili satırdaki butonu kullanın.
+    <p style="font-size:.85rem;color:#64748b;margin-top:-.5rem">
+        Yetki verdiğiniz kişilerin kendi hesaplarında hazırladığı risk değerlendirmeleri ve acil durum planları burada toplanır.
+        Beğendiğiniz bir değerlendirmeyi kendi Risk Şablonu havuzunuza kopyalayabilirsiniz; orijinali değişmez.
     </p>
 
-    <x-filament::section icon="heroicon-o-users" icon-color="primary">
-        <x-slot name="heading">Kişi Filtresi</x-slot>
-
-        <div style="max-width:320px">
-            <label style="font-weight:600;font-size:.82rem">Kişi</label>
-            <select wire:model.live="kullaniciId" style="{{ $girdi }}">
-                <option value="">— Tümü —</option>
+    <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;justify-content:space-between">
+        <div style="min-width:240px;max-width:320px;flex:1">
+            <label style="font-weight:600;font-size:.78rem;color:#475569">Hazırlayan kişi</label>
+            <select wire:model.live="kullaniciId" style="{{ $girdi }};margin-top:.25rem">
+                <option value="">Tüm ekip</option>
                 @foreach ($this->kullanicilar as $k)
                     <option value="{{ $k->id }}">{{ $k->name }}</option>
                 @endforeach
             </select>
         </div>
-    </x-filament::section>
+        <div style="display:flex;gap:.5rem;font-size:.78rem;color:#475569">
+            <span style="{{ $rozet }}background:#e0e7ff;color:#3730a3">{{ $this->riskDegerlendirmeleri->count() }} risk değerlendirmesi</span>
+            <span style="{{ $rozet }}background:#fee2e2;color:#991b1b">{{ $this->acilDurumPlanlari->count() }} acil durum planı</span>
+        </div>
+    </div>
 
-    <x-filament::section :heading="'Risk Değerlendirmeleri ('.$this->riskDegerlendirmeleri->count().')'" icon="heroicon-o-shield-exclamation">
-        @forelse ($this->riskDegerlendirmeleri as $rd)
-            <div style="{{ $kutu }};display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.5rem">
-                <div style="font-size:.86rem">
-                    <div style="font-weight:700">{{ $rd->firma_unvan ?? $rd->firma?->unvan ?? '—' }}</div>
-                    <div style="color:rgb(107 114 128);margin-top:.15rem">
-                        {{ $rd->firma?->user?->name ?? '—' }} ·
-                        {{ $rd->rapor_tarihi?->format('d.m.Y') }} ·
-                        {{ $rd->yontemEtiketi() }} ·
-                        {{ $rd->maddeler_count }} madde
+    <div>
+        <h3 style="font-weight:700;font-size:.95rem;margin-bottom:.6rem">Paylaşılan Risk Değerlendirmeleri</h3>
+        @if ($this->riskDegerlendirmeleri->isEmpty())
+            <div style="{{ $kart }};text-align:center;color:#64748b;padding:1.8rem 1rem">Henüz görüntülenecek risk değerlendirmesi yok.</div>
+        @else
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem">
+                @foreach ($this->riskDegerlendirmeleri as $rd)
+                    <div style="{{ $kart }};display:flex;flex-direction:column;gap:.6rem;justify-content:space-between">
+                        <div>
+                            <div style="font-weight:700;font-size:.9rem;color:#0f172a">{{ $rd->firma_unvan ?? $rd->firma?->unvan ?? '—' }}</div>
+                            <div style="font-size:.78rem;color:#64748b;margin-top:.2rem">
+                                Hazırlayan: <strong style="color:#334155">{{ $rd->firma?->user?->name ?? '—' }}</strong>
+                                · {{ $rd->rapor_tarihi?->format('d.m.Y') }}
+                            </div>
+                            <div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.3rem">
+                                <span style="{{ $rozet }}background:#f1f5f9;color:#475569">{{ $rd->yontemEtiketi() }}</span>
+                                <span style="{{ $rozet }}background:#fef3c7;color:#92400e">{{ $rd->maddeler_count }} madde</span>
+                            </div>
+                        </div>
+                        <x-filament::button size="sm" color="primary" icon="heroicon-o-document-duplicate"
+                            wire:click="havuzaEkle({{ $rd->id }})"
+                            wire:confirm="Bu değerlendirmenin {{ $rd->maddeler_count }} maddesi Risk Şablonu havuzunuza kopyalansın mı? Değerlendirmenin kendisi değişmez, kopyası eklenir.">
+                            + Havuzuma Kopyala
+                        </x-filament::button>
                     </div>
-                </div>
-                <div style="flex-shrink:0">
-                    <x-filament::button size="xs" color="primary" icon="heroicon-o-plus-circle"
-                        wire:click="havuzaEkle({{ $rd->id }})"
-                        wire:confirm="Bu değerlendirmenin {{ $rd->maddeler_count }} maddesi paylaşılan Risk Şablonu havuzuna eklensin mi? Değerlendirmenin kendisi değişmez, kopyası eklenir.">
-                        Havuza Ekle
-                    </x-filament::button>
-                </div>
+                @endforeach
             </div>
-        @empty
-            <div style="text-align:center;color:rgb(107 114 128);padding:1.5rem 0">
-                Henüz görüntülenecek risk değerlendirmesi yok.
-            </div>
-        @endforelse
-    </x-filament::section>
+        @endif
+    </div>
 
-    <x-filament::section :heading="'Acil Durum Planları ('.$this->acilDurumPlanlari->count().')'" icon="heroicon-o-fire">
-        @forelse ($this->acilDurumPlanlari as $p)
-            <div style="{{ $kutu }};margin-bottom:.5rem">
-                <div style="font-size:.86rem;font-weight:700">{{ $p->firma?->unvan ?? '—' }}</div>
-                <div style="font-size:.86rem;color:rgb(107 114 128);margin-top:.15rem">
-                    {{ $p->firma?->user?->name ?? '—' }} ·
-                    {{ $p->updated_at?->format('d.m.Y') }} ·
-                    {{ implode(', ', $p->konuAdlari()) ?: '—' }}
-                </div>
+    <div>
+        <h3 style="font-weight:700;font-size:.95rem;margin-bottom:.6rem">Acil Durum Planları</h3>
+        @if ($this->acilDurumPlanlari->isEmpty())
+            <div style="{{ $kart }};text-align:center;color:#64748b;padding:1.8rem 1rem">Henüz görüntülenecek acil durum planı yok.</div>
+        @else
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem">
+                @foreach ($this->acilDurumPlanlari as $p)
+                    <div style="{{ $kart }}">
+                        <div style="font-weight:700;font-size:.9rem;color:#0f172a">{{ $p->firma?->unvan ?? '—' }}</div>
+                        <div style="font-size:.78rem;color:#64748b;margin-top:.2rem">
+                            Hazırlayan: <strong style="color:#334155">{{ $p->firma?->user?->name ?? '—' }}</strong>
+                            · {{ $p->updated_at?->format('d.m.Y') }}
+                        </div>
+                        <div style="margin-top:.5rem;font-size:.78rem;color:#475569">{{ implode(', ', $p->konuAdlari()) ?: '—' }}</div>
+                    </div>
+                @endforeach
             </div>
-        @empty
-            <div style="text-align:center;color:rgb(107 114 128);padding:1.5rem 0">
-                Henüz görüntülenecek acil durum planı yok.
-            </div>
-        @endforelse
-    </x-filament::section>
+        @endif
+    </div>
 </x-filament-panels::page>

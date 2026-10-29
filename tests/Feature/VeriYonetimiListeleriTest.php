@@ -12,6 +12,7 @@ use App\Models\KkdZimmet;
 use App\Models\MuayeneFormu;
 use App\Models\User;
 use App\Support\CalisanIsgDurumu;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -106,5 +107,35 @@ class VeriYonetimiListeleriTest extends TestCase
             ->assertSee('Rol / Unvan')
             ->assertSee('A Sınıfı İGU')
             ->assertSee('İşyeri Hekimi');
+    }
+
+    public function test_teklif_talepleri_bos_durum_ve_elle_giris(): void
+    {
+        $this->actingAs(User::factory()->create(['rol' => 'sahip']));
+
+        $sayfa = Livewire::test(\App\Filament\Resources\TeklifTalepleris\Pages\ListTeklifTalepleris::class)
+            ->assertSee('Bekleyen Teklif Talebi Bulunmuyor')
+            ->assertSee('mehse.com')
+            ->assertSee('Web Formu Bağlantısını Al')
+            ->assertSee('Yeni Teklif Girişi Yap');
+
+        // Liste dolunca aynı düğmeler üst çubukta durur; elle giriş kaydı ekler.
+        \App\Models\TeklifTalebi::create(['firma_adi' => 'İlk Ltd.', 'kisi' => 'X', 'telefon' => '1', 'calisan_sayisi' => 1, 'tehlike_sinifi' => 'Tehlikeli']);
+        $sayfa = Livewire::test(\App\Filament\Resources\TeklifTalepleris\Pages\ListTeklifTalepleris::class);
+
+        $sayfa->callAction(TestAction::make('yeniGiris')->table(), data: [
+            'firma_adi' => 'Deneme Ltd.', 'kisi' => 'Ali Veli', 'telefon' => '05551112233',
+            'calisan_sayisi' => 12, 'tehlike_sinifi' => 'Tehlikeli', 'durum' => 'yeni',
+        ])->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('teklif_talepleri', ['firma_adi' => 'Deneme Ltd.', 'calisan_sayisi' => 12]);
+    }
+
+    public function test_ekip_evraklari_merkezi_risk_havuzu_adiyla_acilir(): void
+    {
+        $this->actingAs(User::factory()->create(['rol' => 'sahip']));
+
+        $this->assertSame('Risk & Evrak Havuzu', \App\Filament\Pages\EkipEvraklari::getNavigationLabel());
+        Livewire::test(\App\Filament\Pages\EkipEvraklari::class)->assertSee('Merkezi Risk')->assertSee('Hazırlayan kişi');
     }
 }

@@ -36,9 +36,9 @@ class EkipEvraklari extends Page
 
     protected static ?string $slug = 'ekip-evraklari';
 
-    protected static ?string $title = 'Ekip Evrakları';
+    protected static ?string $title = 'Merkezi Risk & Evrak Havuzu';
 
-    protected static ?string $navigationLabel = 'Ekip Evrakları';
+    protected static ?string $navigationLabel = 'Risk & Evrak Havuzu';
 
     public ?int $kullaniciId = null;
 
