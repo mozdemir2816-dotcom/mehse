@@ -24,11 +24,11 @@ class SayfaAileleri
     {
         return [
             'kontrol' => [
-                [Pages\KontrolMerkezi::class, 'Kontrol Merkezi'],
-                [Pages\IsyeriDurumMerkezi::class, 'İşyeri Durumu'],
-                [Pages\TesisUygunlukOzeti::class, 'Tesis Uygunluğu'],
-                [Pages\UzmanRaporMerkezi::class, 'Uzman Raporları'],
-                [Pages\RiskMerkezi::class, 'Risk Merkezi'],
+                // Komuta Merkezi 5 sekmeden 3'e indi (29.10.2026): İşyeri Durumu + Tesis Uygunluğu + Uzman Raporları
+                // "Firma Denetim & Operasyon" altında birleşti; eski adresler geriye uyum için çalışmaya devam eder.
+                [Pages\KontrolMerkezi::class, 'Portföy Genel Bakış'],
+                [Pages\FirmaDenetimOperasyon::class, 'Firma Denetim & Operasyon'],
+                [Pages\RiskMerkezi::class, 'Risk & Tehlike Analitiği'],
             ],
             'saha' => [
                 [Pages\HizliSahaBulgusu::class, 'Bulgular'],

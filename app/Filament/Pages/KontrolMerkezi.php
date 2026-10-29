@@ -48,6 +48,17 @@ class KontrolMerkezi extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    /** Komuta Merkezi ortak firma seçimi (App\Support\KomutaFirma): null = Tüm Portföy. */
+    public function mount(): void
+    {
+        $this->firmaId = \App\Support\KomutaFirma::baslangic($this->firmalar);
+    }
+
+    public function updatedFirmaId(): void
+    {
+        \App\Support\KomutaFirma::sec($this->firmaId);
+    }
+
     /** Portföy kriter listesinde "eksik firmaları göster" için açık olan kriter anahtarı. */
     public ?string $acikKriter = null;
 

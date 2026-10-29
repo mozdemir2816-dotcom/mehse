@@ -60,8 +60,7 @@ class RiskMerkezi extends Page
 
     public function mount(): void
     {
-        $id = request()->integer('firma');
-        $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : array_key_first($this->firmalar);
+        $this->firmaId = \App\Support\KomutaFirma::baslangic($this->firmalar) ?? array_key_first($this->firmalar);
         $this->rdId = $this->degerlendirmeler->first()?->id;
     }
 
@@ -126,6 +125,7 @@ class RiskMerkezi extends Page
     public function updated(string $alan): void
     {
         if ($alan === 'firmaId') {
+            \App\Support\KomutaFirma::sec($this->firmaId);
             unset($this->firma, $this->degerlendirmeler);
             $this->rdId = $this->degerlendirmeler->first()?->id;
         }

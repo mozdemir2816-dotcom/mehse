@@ -12,14 +12,10 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.komuta-firma-cubugu', ['tumPortfoy' => false])
+
     <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end;justify-content:space-between">
         <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end">
-            <div>
-                <label style="display:block;font-size:.75rem;font-weight:600">İşyeri</label>
-                <select wire:model.live="firmaId" style="{{ $girdi }};min-width:280px">
-                    @foreach ($this->firmalar as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
-                </select>
-            </div>
             @if ($this->degerlendirmeler->count() > 1)
                 <div>
                     <label style="display:block;font-size:.75rem;font-weight:600">Değerlendirme</label>

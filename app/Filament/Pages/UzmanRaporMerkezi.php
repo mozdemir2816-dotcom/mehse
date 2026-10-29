@@ -2,13 +2,10 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Firma;
-use App\Support\UzmanRaporu;
+use App\Filament\Pages\Concerns\KomutaFirmaSecimi;
+use App\Filament\Pages\Concerns\UzmanRaporVerisi;
 use BackedEnum;
-use Filament\Facades\Filament;
 use Filament\Pages\Page;
-use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
 
@@ -17,9 +14,14 @@ use UnitEnum;
  * dışı İSG görünümü. Firma seçilmeden rapor verisi yüklenmez. Göstergeler,
  * işyeri uygunluk özeti (yasal dayanak bağlantılarıyla), kalem bazında
  * öncelikli aksiyonlar ve TXT çıktısı. Klinik sağlık kayıtları dahil değildir.
+ *
+ * 29.10.2026: Komuta Merkezi sadeleştirmesinde "Firma Denetim & Operasyon" sayfasına katıldı
+ * (aynı veri, Concerns\UzmanRaporVerisi); bu adres geriye uyum için çalışır.
  */
 class UzmanRaporMerkezi extends Page
 {
+    use KomutaFirmaSecimi;
+    use UzmanRaporVerisi;
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.uzman-rapor-merkezi';
@@ -42,56 +44,20 @@ class UzmanRaporMerkezi extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
-    public int $gosterilen = 20;
-
     public function mount(): void
     {
-        $id = request()->integer('firma');
-        $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
-    }
-
-    #[Computed]
-    public function firmalar(): array
-    {
-        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
-    }
-
-    #[Computed]
-    public function firma(): ?Firma
-    {
-        return $this->firmaId && array_key_exists($this->firmaId, $this->firmalar) ? Firma::find($this->firmaId) : null;
-    }
-
-    #[Computed]
-    public function rapor(): ?array
-    {
-        return $this->firma ? UzmanRaporu::rapor($this->firma) : null;
+        $this->firmaBaslat(ilkiniSec: false);
     }
 
     public function updatedFirmaId(): void
     {
+        $this->firmaSecildi();
         $this->gosterilen = 20;
         $this->yenile();
-    }
-
-    public function dahaFazla(): void
-    {
-        $this->gosterilen += 20;
     }
 
     public function yenile(): void
     {
         unset($this->firma, $this->rapor);
-    }
-
-    public function txtIndir()
-    {
-        if (! $this->firma) {
-            return null;
-        }
-
-        $metin = UzmanRaporu::txt($this->firma);
-
-        return response()->streamDownload(fn () => print ("\xEF\xBB\xBF".$metin), 'uzman-raporu-'.Str::slug($this->firma->kisa_ad ?: $this->firma->unvan).'.txt', ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 }

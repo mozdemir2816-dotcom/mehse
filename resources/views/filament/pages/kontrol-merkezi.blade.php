@@ -44,16 +44,7 @@
 
     {{-- FİRMA SEÇ (firma / calisan sekmeleri) --}}
     @if (in_array($sekme, ['firma', 'calisan'], true))
-        <div>
-            <label style="font-weight:600;font-size:.82rem">Firma Seçin</label>
-            <select wire:model.live="firmaId"
-                style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(128 116 148 / .35);background:transparent">
-                <option value="">★ Tüm Firmalar (portföy geneli)</option>
-                @foreach ($this->firmalar as $id => $unvan)
-                    <option value="{{ $id }}">{{ $unvan }}</option>
-                @endforeach
-            </select>
-        </div>
+        @include('filament.pages.partials.komuta-firma-cubugu', ['tumPortfoy' => true])
     @endif
 
     {{-- ==================== GÜNLÜK AKIŞ ==================== --}}

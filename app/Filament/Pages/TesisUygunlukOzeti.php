@@ -2,13 +2,10 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Firma;
-use App\Models\User;
-use App\Support\TesisUygunlugu;
+use App\Filament\Pages\Concerns\KomutaFirmaSecimi;
+use App\Filament\Pages\Concerns\TesisUygunlukVerisi;
 use BackedEnum;
-use Filament\Facades\Filament;
 use Filament\Pages\Page;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
 
@@ -17,9 +14,14 @@ use UnitEnum;
  * taşeron, PTW, periyodik kontrol, saha denetimi, birleşik aksiyon ve hizmet
  * süresi durumundan açıklanabilir 0–100 operasyon skoru ve "bugün neye
  * müdahale etmeliyim?" listesi. Salt okunur; kısayollar mevcut modülleri açar.
+ *
+ * 29.10.2026: Komuta Merkezi sadeleştirmesinde "Firma Denetim & Operasyon" sayfasına katıldı
+ * (aynı veri, Concerns\TesisUygunlukVerisi); bu adres geriye uyum için çalışır.
  */
 class TesisUygunlukOzeti extends Page
 {
+    use KomutaFirmaSecimi;
+    use TesisUygunlukVerisi;
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.tesis-uygunluk-ozeti';
@@ -44,32 +46,12 @@ class TesisUygunlukOzeti extends Page
 
     public function mount(): void
     {
-        $this->firmaId = request()->integer('firma') ?: array_key_first($this->firmalar);
-    }
-
-    #[Computed]
-    public function firmalar(): array
-    {
-        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
-    }
-
-    #[Computed]
-    public function firma(): ?Firma
-    {
-        return $this->firmaId && array_key_exists($this->firmaId, $this->firmalar) ? Firma::find($this->firmaId) : null;
-    }
-
-    #[Computed]
-    public function sonuc(): ?array
-    {
-        /** @var User $kullanici */
-        $kullanici = Filament::auth()->user();
-
-        return $this->firma ? TesisUygunlugu::hesapla($this->firma, $kullanici) : null;
+        $this->firmaBaslat();
     }
 
     public function updatedFirmaId(): void
     {
+        $this->firmaSecildi();
         $this->yenile();
     }
 
