@@ -1554,3 +1554,89 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
     color: #0369A1;
     transform: translateY(-1px);
 }
+
+/* ==========================================================================
+   SAHA YÖNETİM & DENETİM (29.10.2026): 7 saha sayfası 3 ana sekmede — ana sekmeler, alt hap şeridi ve
+   otomatik firma bağlamı çubuğu. Dokunmatik uyumlu (min 44px).
+   ========================================================================== */
+.mehse-saha-ana-sekmeler .fi-tabs-item {
+    min-height: 44px;
+}
+
+.mehse-saha-alt-sekmeler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: .25rem 0 .5rem;
+}
+
+.mehse-saha-hap {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1rem;
+    border: 1px solid rgb(100 116 139 / .3);
+    border-radius: 9999px;
+    color: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color .15s, background-color .15s, color .15s;
+}
+
+.mehse-saha-hap:hover {
+    border-color: #0284C7;
+    background: rgb(2 132 199 / .07);
+}
+
+.mehse-saha-hap-aktif {
+    border-color: #0284C7;
+    background: rgb(2 132 199 / .12);
+    color: #0369A1;
+}
+
+.mehse-saha-baglam {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem 1.25rem;
+    margin-bottom: .5rem;
+    padding: .65rem 1rem;
+    border: 1px solid rgb(100 116 139 / .22);
+    border-radius: 1rem;
+    background: rgb(100 116 139 / .05);
+    box-shadow: 0 1px 2px rgb(15 23 42 / .05);
+}
+
+.mehse-saha-baglam-ad {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .85rem;
+}
+
+.mehse-saha-baglam-liste {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem 1.4rem;
+    margin: 0;
+}
+
+.mehse-saha-baglam-liste > div {
+    display: flex;
+    flex-direction: column;
+    gap: .05rem;
+}
+
+.mehse-saha-baglam-liste dt {
+    color: rgb(100 116 139);
+    font-size: .64rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.mehse-saha-baglam-liste dd {
+    margin: 0;
+    font-size: .8rem;
+    font-weight: 600;
+}

@@ -120,6 +120,9 @@ class HizliSahaBulgusu extends Page
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
         }
+
+        // Saha modülü ortak firma bağlamı (App\Support\KomutaFirma): başka sayfada seçilen firma burada açılır.
+        $this->firmaId ??= \App\Support\KomutaFirma::baslangic($this->firmalar);
     }
 
     #[Computed]
@@ -178,6 +181,10 @@ class HizliSahaBulgusu extends Page
 
     public function updated(string $alan): void
     {
+        if ($alan === 'firmaId') {
+            \App\Support\KomutaFirma::sec($this->firmaId);
+        }
+
         if (in_array($alan, ['firmaId', 'listeDurum'], true)) {
             unset($this->bulgular, $this->ozet, $this->bolumOnerileri);
             $this->secili = [];

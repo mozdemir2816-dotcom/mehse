@@ -85,6 +85,9 @@ class ZiyaretModu extends Page
             ? (int) session('ziyaret_firma')
             : ($this->bugunPlanli->count() === 1 ? $this->bugunPlanli->first()['firma_id'] : null);
 
+        // Saha modülü ortak firma bağlamı (App\Support\KomutaFirma): başka sayfada seçilen firma burada açılır.
+        $this->firmaId ??= \App\Support\KomutaFirma::baslangic($this->firmalar);
+
         $this->firmaSecildi();
 
         if (in_array($this->islem, ['ptw', 'ramak'], true)) {
@@ -103,6 +106,7 @@ class ZiyaretModu extends Page
         if ($this->firmaId) {
             // Alt menüdeki Saha Gözlem / Arşiv kısayolları bu firmayla açılır.
             session(['ziyaret_firma' => $this->firmaId]);
+            \App\Support\KomutaFirma::sec($this->firmaId);
         }
     }
 

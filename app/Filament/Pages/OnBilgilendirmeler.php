@@ -60,7 +60,8 @@ class OnBilgilendirmeler extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        // ?firma= yoksa Saha modülü ortak firma bağlamı (App\Support\KomutaFirma) açılır.
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -100,6 +101,7 @@ class OnBilgilendirmeler extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->kayitlar, $this->panelHesabiVar);
     }
 

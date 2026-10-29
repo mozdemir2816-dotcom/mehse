@@ -88,6 +88,78 @@ class SayfaAileleri
     }
 
     /**
+     * Üst sekme grupları: bir ailenin sayfaları az sayıda ana sekmede toplanır (29.10.2026, Saha Yönetim & Denetim).
+     * Sayfalar eski adreslerinde kalır; ana sekme grubun ilk sayfasını açar, grubun diğer sayfaları alt hap şeridinden.
+     *
+     * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
+     */
+    public const GRUPLAR = [
+        'saha' => [
+            [
+                'etiket' => 'Aktif Saha Denetimi & Ziyaret Modu',
+                'ikon' => 'heroicon-o-bolt',
+                'siniflar' => [Pages\ZiyaretModu::class, Pages\HizliSahaBulgusu::class, Pages\SahaDenetimi::class],
+            ],
+            [
+                'etiket' => 'Bulgu & DÖF Takip Havuzu',
+                'ikon' => 'heroicon-o-clipboard-document-check',
+                'siniflar' => [Pages\DofOlustur::class],
+            ],
+            [
+                'etiket' => 'Yasal Rapor & Defter Çıktıları',
+                'ikon' => 'heroicon-o-document-text',
+                'siniflar' => [Pages\TespitOneriDefteri::class, Pages\AiSahaAnalizi::class, Pages\OnBilgilendirmeler::class],
+            ],
+        ],
+    ];
+
+    /**
+     * Gruplu ailenin sekmeleri: `ust` ana sekmeler (grubun ilk erişilebilir sayfasına gider), `alt` aktif grubun
+     * birden çok sayfası varsa o sayfalar. Aile gruplu değilse (veya sayfa ailede yoksa) null — düz `sekmeler()` kullanılır.
+     *
+     * @param  array<int, string>  $kapsamlar
+     * @return array{ust: array<int, array{etiket: string, ikon: string, url: string, aktif: bool}>, alt: array<int, array{etiket: string, url: string, aktif: bool}>}|null
+     */
+    public static function sekmeGruplari(array $kapsamlar): ?array
+    {
+        foreach (static::GRUPLAR as $aile => $gruplar) {
+            $uyeler = static::aileler()[$aile] ?? [];
+            $aktifSinif = collect($uyeler)->pluck(0)->first(fn (string $s) => in_array($s, $kapsamlar, true));
+
+            if (! $aktifSinif) {
+                continue;
+            }
+
+            $etiketler = collect($uyeler)->mapWithKeys(fn (array $u) => [$u[0] => $u[1]]);
+            $firma = request()->integer('firma') ?: null;
+            $ust = $alt = [];
+
+            foreach ($gruplar as $grup) {
+                $erisilebilir = collect($grup['siniflar'])->filter(fn (string $s) => $s::canAccess())->values();
+
+                if ($erisilebilir->isEmpty()) {
+                    continue;
+                }
+
+                $aktif = in_array($aktifSinif, $grup['siniflar'], true);
+                $ust[] = ['etiket' => $grup['etiket'], 'ikon' => $grup['ikon'], 'url' => static::url($erisilebilir->first(), $firma), 'aktif' => $aktif];
+
+                if ($aktif && $erisilebilir->count() > 1) {
+                    $alt = $erisilebilir->map(fn (string $s) => [
+                        'etiket' => $etiketler[$s] ?? class_basename($s),
+                        'url' => static::url($s, $firma),
+                        'aktif' => $s === $aktifSinif,
+                    ])->all();
+                }
+            }
+
+            return ['ust' => $ust, 'alt' => $alt];
+        }
+
+        return null;
+    }
+
+    /**
      * Render hook kapsamlarına (sayfa sınıfı; Resource sayfasında + Resource
      * sınıfı) göre ailenin sekmeleri. Aile yoksa boş dizi.
      *

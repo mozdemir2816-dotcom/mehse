@@ -1,9 +1,29 @@
 @php
     // Aynı işi yapan sayfaların ortak sekme şeridi — App\Support\SayfaAileleri.
-    $sekmeler = \App\Support\SayfaAileleri::sekmeler($scopes ?? []);
+    // Gruplu aile (Saha: 7 sayfa → 3 ana sekme): ana sekmeler + aktif grubun alt hap şeridi + otomatik firma bilgi çubuğu.
+    $gruplu = \App\Support\SayfaAileleri::sekmeGruplari($scopes ?? []);
+    $sekmeler = $gruplu ? [] : \App\Support\SayfaAileleri::sekmeler($scopes ?? []);
 @endphp
 
-@if (count($sekmeler) > 1)
+@if ($gruplu && count($gruplu['ust']) > 0)
+    <x-filament::tabs class="mehse-sayfa-sekmeleri mehse-saha-ana-sekmeler" style="margin-bottom:.25rem">
+        @foreach ($gruplu['ust'] as $s)
+            <x-filament::tabs.item tag="a" :href="$s['url']" :active="$s['aktif']" :icon="$s['ikon']">
+                {{ $s['etiket'] }}
+            </x-filament::tabs.item>
+        @endforeach
+    </x-filament::tabs>
+
+    @if ($gruplu['alt'])
+        <nav class="mehse-saha-alt-sekmeler" aria-label="Alt bölümler">
+            @foreach ($gruplu['alt'] as $s)
+                <a href="{{ $s['url'] }}" @class(['mehse-saha-hap', 'mehse-saha-hap-aktif' => $s['aktif']]) @if ($s['aktif']) aria-current="page" @endif>{{ $s['etiket'] }}</a>
+            @endforeach
+        </nav>
+    @endif
+
+    @include('filament.components.saha-firma-baglami')
+@elseif (count($sekmeler) > 1)
     <x-filament::tabs class="mehse-sayfa-sekmeleri" style="margin-bottom:.25rem">
         @foreach ($sekmeler as $s)
             <x-filament::tabs.item tag="a" :href="$s['url']" :active="$s['aktif']">
