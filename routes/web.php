@@ -31,6 +31,18 @@ Route::redirect('/admin/yillik-planlar', '/admin/yillik-calisma-plani');
 // — saha kontrolleri 5. aşama, 08.10.2026. Eski bağlantı firma seçimiyle yönlenir.
 Route::get('/admin/saha-hizli-islem', fn (Request $request) => redirect('/admin/ziyaret'.($request->integer('firma') ? '?firma='.$request->integer('firma') : '')));
 
+// Profilim: uzmanın kaşe / imza görseli. Önizleme /storage bağlantısına (hosting'de eksik olabilir) ve APP_URL'e
+// bağlı kalmasın diye dosya doğrudan akıtılır; yalnız oturum açmış kullanıcı kendi görselini görür.
+Route::get('/mehse/ayar/uzman-gorsel/{tur}', function (Request $request, string $tur) {
+    abort_unless(in_array($tur, ['kase', 'imza'], true), 404);
+
+    $yol = $request->user()?->{$tur.'_gorseli'};
+    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    abort_unless($yol && $disk->exists($yol), 404);
+
+    return response()->file($disk->path($yol), ['Cache-Control' => 'private, max-age=300']);
+})->middleware('auth')->where('tur', 'kase|imza')->name('mehse.uzman-gorsel');
+
 // Topbar tema seçicisi (filament.components.tema-secici) seçimi hesaba kaydeder;
 // böylece tema her cihazda aynı gelir. Ayarlar sayfası aynı alanı yazar.
 Route::post('/mehse/ayar/tema', function (Request $request) {

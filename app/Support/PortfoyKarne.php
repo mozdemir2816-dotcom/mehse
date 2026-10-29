@@ -598,6 +598,40 @@ class PortfoyKarne
         ];
     }
 
+    /**
+     * Profilim: en çok çalışanı ve kritik riski olan firmalar (öncelik = çalışan × kritik risk maddesi;
+     * eşitlikte önce çalışan sayısı). Kritik = puanı `isg.onemli_risk_esigi` üstünde (Profilim sayaçlarıyla aynı kural).
+     *
+     * @return array<int, array{id: int, unvan: string, calisan: int, kritik_risk: int}>
+     */
+    public static function oncelikliFirmalar(int $userId, int $limit = 5): array
+    {
+        $esik = (int) config('isg.onemli_risk_esigi', 140);
+
+        $kritik = RiskMaddesi::query()
+            ->join('risk_degerlendirmeleri', 'risk_degerlendirmeleri.id', '=', 'risk_maddeleri.risk_degerlendirmesi_id')
+            ->where('risk_maddeleri.puan', '>', $esik)
+            ->selectRaw('risk_degerlendirmeleri.firma_id as firma_id, COUNT(*) as adet')
+            ->groupBy('risk_degerlendirmeleri.firma_id')
+            ->pluck('adet', 'firma_id');
+
+        return Firma::query()->where('user_id', $userId)->where('aktif', true)->get(['id', 'unvan', 'calisan_sayisi'])
+            ->map(fn (Firma $f) => [
+                'id' => $f->id,
+                'unvan' => (string) $f->unvan,
+                'calisan' => (int) $f->calisan_sayisi,
+                'kritik_risk' => (int) ($kritik[$f->id] ?? 0),
+            ])
+            ->sortBy([
+                fn (array $a, array $b) => ($b['calisan'] * $b['kritik_risk']) <=> ($a['calisan'] * $a['kritik_risk']),
+                fn (array $a, array $b) => $b['calisan'] <=> $a['calisan'],
+                fn (array $a, array $b) => $a['unvan'] <=> $b['unvan'],
+            ])
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
     private static function firmaTamUyumluMu(Firma $firma): bool
     {
         foreach (static::firmaTakipKriterleri($firma->user_id) as $kriter) {

@@ -76,6 +76,9 @@ class Profilim extends Page
         'raporlar' => 'Raporlar',
     ];
 
+    /** Sekme şeridinde gösterilmeyenler: Arşiv sol menüdeki "Arşiv" sayfasında (29.10.2026); eski ?sekme=arsiv adresi çalışır. */
+    public const GIZLI_SEKMELER = ['arsiv'];
+
     #[Url(as: 'sekme')]
     public string $sekme = 'genel';
 
@@ -116,22 +119,31 @@ class Profilim extends Page
         }
     }
 
-    /**
-     * @return array<Action>
-     */
+    /** Hero kartındaki düğmeler görünümde `{{ $this->xAction }}` ile çizilir; sayfa başlığında düğme yok. */
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('excelPanosu')
-                ->label('Excel Panosu İndir')
-                ->icon('heroicon-o-table-cells')
-                ->color('gray')
-                ->action(fn () => PortfoyExcelPanosuUretici::indir(Filament::auth()->user())),
+        return [];
+    }
 
-            Action::make('unvanAyari')
-                ->label('Ünvan & İletişim')
+    public function excelPanosuAction(): Action
+    {
+        return Action::make('excelPanosu')
+            ->label('Excel Portföy Raporu İndir')
+            ->icon('heroicon-o-table-cells')
+            ->color('gray')
+            ->outlined()
+            ->size('sm')
+            ->action(fn () => PortfoyExcelPanosuUretici::indir(Filament::auth()->user()));
+    }
+
+    public function unvanAyariAction(): Action
+    {
+        return Action::make('unvanAyari')
+                ->label('Ünvan & İletişim Düzenle')
                 ->icon('heroicon-o-identification')
                 ->color('gray')
+                ->outlined()
+                ->size('sm')
                 ->fillForm(fn (): array => [
                     'unvan' => $this->kullanici->unvan,
                     'telefon' => $this->kullanici->telefon,
@@ -152,12 +164,16 @@ class Profilim extends Page
                     Filament::auth()->user()->forceFill($data)->save();
                     unset($this->kullanici);
                     Notification::make()->title('Ünvan bilgileri güncellendi')->success()->send();
-                }),
+                });
+    }
 
-            Action::make('kaseBilgisi')
-                ->label('Kaşe Bilgisi')
+    public function kaseBilgisiAction(): Action
+    {
+        return Action::make('kaseBilgisi')
+                ->label('Kaşe / İmza Yükle')
                 ->icon('heroicon-o-finger-print')
-                ->color('gray')
+                ->color('primary')
+                ->size('sm')
                 ->modalDescription('Kaşe ve imza görselleri PDF / Word belge çıktılarında kullanılır.')
                 ->fillForm(fn (): array => [
                     'kase_gorseli' => $this->kullanici->kase_gorseli,
@@ -176,8 +192,7 @@ class Profilim extends Page
                     Filament::auth()->user()->forceFill($data)->save();
                     unset($this->kullanici);
                     Notification::make()->title('Kaşe bilgisi kaydedildi')->success()->send();
-                }),
-        ];
+                });
     }
 
     #[Computed]
@@ -266,6 +281,26 @@ class Profilim extends Page
     public function calisanDagilimi(): array
     {
         return PortfoyKarne::calisanDagilimi(Filament::auth()->id());
+    }
+
+    /** @return array<int, array{id: int, unvan: string, calisan: int, kritik_risk: int}> en çok çalışanlı ve kritik riskli ilk 5 firma */
+    #[Computed]
+    public function oncelikliFirmalar(): array
+    {
+        return PortfoyKarne::oncelikliFirmalar(Filament::auth()->id(), 5);
+    }
+
+    /**
+     * Kaşe / imza durumu: 'yuklu' (dosya var) | 'dosya_yok' (kayıtta var ama dosya bulunamadı — yeniden yüklenmeli) | 'yok'.
+     *
+     * @return array{kase: string, imza: string}
+     */
+    public function gorselDurumu(): array
+    {
+        $disk = Storage::disk('public');
+        $durum = fn (?string $yol) => ! $yol ? 'yok' : ($disk->exists($yol) ? 'yuklu' : 'dosya_yok');
+
+        return ['kase' => $durum($this->kullanici->kase_gorseli), 'imza' => $durum($this->kullanici->imza_gorseli)];
     }
 
     /** @return array<string, int> son 90 gün: 'Y-m-d' => aktivite adedi */

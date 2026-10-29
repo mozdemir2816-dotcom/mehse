@@ -1,78 +1,103 @@
 @php
-    $sekmeler = \App\Filament\Pages\Profilim::SEKMELER;
+    $sekmeler = array_diff_key(\App\Filament\Pages\Profilim::SEKMELER, array_flip(\App\Filament\Pages\Profilim::GIZLI_SEKMELER));
     $u = $this->kullanici;
     $o = $this->ozet;
+    $gorsel = $this->gorselDurumu();
     $mor = 'rgb(139 92 246)';
+    $indigo = 'rgb(99 102 241)';
     $turkuaz = 'rgb(20 184 166)';
     $yesil = 'rgb(34 197 94)';
     $sari = 'rgb(245 158 11)';
     $kirmizi = 'rgb(239 68 68)';
+    $gri = 'rgb(128 116 148)';
     $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
-    // Md.4 "önerilen" — öne çıkması gereken kartlar için belirgin gölge (çerçeve yerine).
-    $golge = 'border:1px solid rgb(128 116 148 / .18);border-radius:.75rem;padding:1rem;'
-        .'box-shadow:0 22px 46px -14px rgb(0 0 0 / .6), 0 8px 18px -6px rgb(0 0 0 / .5)';
+    // Kartlar: yuvarlak köşe + yumuşak gölge (Profilim yeniden tasarımı, 29.10.2026).
+    $golge = 'border:1px solid rgb(128 116 148 / .2);border-radius:1rem;padding:1rem;box-shadow:0 1px 3px rgb(15 23 42 / .08)';
     $bas = strtoupper(mb_substr($u->name ?? '?', 0, 1));
+    $say = fn ($n) => number_format((int) $n, 0, ',', '.');
+    $onemliEsik = (int) config('isg.onemli_risk_esigi', 140);
 @endphp
 
 <x-filament-panels::page>
-    {{-- KÜNYE --}}
-    <div style="{{ $golge }};display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-        <div style="width:3.5rem;height:3.5rem;border-radius:9999px;background:{{ $mor }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;flex-shrink:0">{{ $bas }}</div>
-        <div style="flex:1;min-width:180px">
-            <div style="font-size:1.15rem;font-weight:700">{{ $u->name }}</div>
-            <div style="font-size:.82rem;color:rgb(128 116 148)">{{ $u->email }}{{ $u->telefon ? ' · '.$u->telefon : '' }}</div>
+    {{-- ==================== HERO: PROFİL & YASAL YETKİ ==================== --}}
+    <div style="{{ $golge }};display:flex;gap:1.25rem 2rem;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:1rem;flex:1 1 340px;min-width:260px">
+            <div style="width:4rem;height:4rem;border-radius:9999px;background:linear-gradient(135deg,#0F172A,#0284C7);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;flex-shrink:0">{{ $bas }}</div>
+            <div style="min-width:0">
+                <div style="font-size:1.2rem;font-weight:800;line-height:1.2">{{ $u->name }}</div>
+                <div style="font-size:.82rem;font-weight:600;color:#0284C7;margin-top:.1rem">{{ $u->unvanEtiketi() }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:.2rem .9rem;font-size:.78rem;color:{{ $gri }};margin-top:.3rem">
+                    <span style="display:inline-flex;align-items:center;gap:.3rem"><x-filament::icon icon="heroicon-o-envelope" style="width:.9rem;height:.9rem"/>{{ $u->email }}</span>
+                    @if ($u->telefon)<span style="display:inline-flex;align-items:center;gap:.3rem"><x-filament::icon icon="heroicon-o-phone" style="width:.9rem;height:.9rem"/>{{ $u->telefon }}</span>@endif
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem">
+                    <x-filament::badge color="success">● İSG-KATİP: Aktif</x-filament::badge>
+                    <x-filament::badge :color="match ($gorsel['kase']) { 'yuklu' => 'success', default => 'warning' }">
+                        {{ match ($gorsel['kase']) { 'yuklu' => 'Kaşe Yüklü', 'dosya_yok' => 'Kaşe dosyası bulunamadı', default => 'Kaşe eksik' } }}
+                    </x-filament::badge>
+                </div>
+            </div>
         </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-            <x-filament::badge>{{ $u->unvanEtiketi() }}</x-filament::badge>
-            <x-filament::badge :color="$u->kase_gorseli ? 'success' : 'warning'">
-                {{ $u->kase_gorseli ? 'Kaşe yüklü' : 'Kaşe eksik' }}
-            </x-filament::badge>
-            <x-filament::badge color="success">● Aktif</x-filament::badge>
-            <x-filament::button size="sm" color="gray" icon="heroicon-o-cog-6-tooth" tag="a" :href="filament()->getProfileUrl()">
-                Hesap Ayarları
-            </x-filament::button>
+
+        <div style="display:flex;align-items:center;gap:.9rem 1rem;flex-wrap:wrap">
+            {{-- Kaşe / imza önizleme avatarları --}}
+            <div style="display:flex;gap:.6rem">
+                @foreach ([['kase', 'Kaşe'], ['imza', 'İmza']] as [$tur, $ad])
+                    <div style="text-align:center">
+                        <div style="width:4rem;height:4rem;border-radius:.75rem;border:1px dashed {{ $gorsel[$tur] === 'yuklu' ? 'rgb(34 197 94 / .6)' : 'rgb(128 116 148 / .45)' }};background:rgb(128 116 148 / .07);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                            @if ($gorsel[$tur] === 'yuklu')
+                                <img src="{{ route('mehse.uzman-gorsel', ['tur' => $tur]) }}?v={{ md5((string) $u->{$tur.'_gorseli'}) }}" alt="{{ $ad }}" style="max-width:100%;max-height:100%;object-fit:contain">
+                            @else
+                                <x-filament::icon :icon="$tur === 'kase' ? 'heroicon-o-finger-print' : 'heroicon-o-pencil'" style="width:1.4rem;height:1.4rem;color:{{ $gri }}"/>
+                            @endif
+                        </div>
+                        <div style="font-size:.66rem;margin-top:.2rem;color:{{ $gorsel[$tur] === 'yuklu' ? 'rgb(21 128 61)' : $gri }}">
+                            {{ $ad }}{{ $gorsel[$tur] === 'yuklu' ? ' ✓' : ($gorsel[$tur] === 'dosya_yok' ? ' (dosya yok)' : '') }}
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                {{ $this->kaseBilgisiAction }}
+                {{ $this->unvanAyariAction }}
+                {{ $this->excelPanosuAction }}
+            </div>
         </div>
     </div>
 
-    @if ($u->kase_gorseli || $u->imza_gorseli)
-        <div style="{{ $kutu }};display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center">
-            <span style="font-weight:600;font-size:.85rem">Belge çıktısı görselleri:</span>
-            @if ($u->kase_gorseli)
-                <span style="text-align:center;font-size:.72rem;color:rgb(128 116 148)">
-                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($u->kase_gorseli) }}" alt="Kaşe"
-                        style="max-height:3.5rem;display:block;margin:0 auto .2rem">Kaşe
-                </span>
-            @endif
-            @if ($u->imza_gorseli)
-                <span style="text-align:center;font-size:.72rem;color:rgb(128 116 148)">
-                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($u->imza_gorseli) }}" alt="İmza"
-                        style="max-height:3.5rem;display:block;margin:0 auto .2rem">İmza
-                </span>
-            @endif
-        </div>
-    @endif
-
-    {{-- SAYAÇ KARTLARI --}}
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.6rem">
+    {{-- ==================== KPI ŞERİDİ (mükerrer sayaçlar tek satırda) ==================== --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem">
         @foreach ([
-            ['Firmalarım', $o['firma'], 'heroicon-o-building-office-2', $mor],
-            ['Çalışanlarım', $o['calisan'], 'heroicon-o-user-group', $yesil],
-            ['Risk Değerlendirmesi', $o['risk_degerlendirmesi'], 'heroicon-o-sparkles', $sari],
-            ['Risk Şablonları', $o['risk_sablonu'], 'heroicon-o-rectangle-stack', $mor],
-            ['Önemli Risk', $o['onemli_risk'], 'heroicon-o-exclamation-triangle', $kirmizi],
-            ['Raporlarım', 0, 'heroicon-o-document-text', 'rgb(128 116 148)'],
-        ] as [$etiket, $deger, $ikon, $renk])
-            <div style="{{ $golge }};padding:.75rem">
+            ['Aktif Firma', $o['firma'], 'heroicon-o-building-office-2', $indigo, null],
+            ['Çalışan', $o['calisan'], 'heroicon-o-user-group', $yesil, null],
+            ['Risk Analizi', $o['risk_degerlendirmesi'], 'heroicon-o-sparkles', $sari, null],
+            ['Sektör Şablonu', $o['risk_sablonu'], 'heroicon-o-rectangle-stack', $mor, null],
+            ['Kritik Risk Maddesi', $o['onemli_risk'], 'heroicon-o-exclamation-triangle', $kirmizi, 'Skor > '.$onemliEsik],
+        ] as [$etiket, $deger, $ikon, $renk, $alt])
+            <div style="{{ $golge }};padding:.8rem 1rem;{{ $alt ? 'background:rgb(244 63 94 / .06);border-color:rgb(244 63 94 / .35)' : '' }}">
                 <div style="display:flex;align-items:center;gap:.5rem">
-                    <div style="width:1.75rem;height:1.75rem;border-radius:9999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:{{ str_replace(')', ' / .14)', $renk) }}">
+                    <div style="width:1.8rem;height:1.8rem;border-radius:9999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, {{ $renk }} 15%, transparent)">
                         <x-filament::icon :icon="$ikon" style="width:1rem;height:1rem;color:{{ $renk }}"/>
                     </div>
-                    <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">{{ $etiket }}</div>
+                    <div style="font-size:.72rem;color:{{ $gri }};font-weight:600">{{ $etiket }}</div>
                 </div>
-                <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }};margin-top:.35rem">{{ $deger }}</div>
+                <div style="font-size:1.6rem;font-weight:800;color:{{ $renk }};margin-top:.3rem;line-height:1.1">{{ $say($deger) }}</div>
+                @if ($alt)<div style="font-size:.68rem;color:{{ $gri }}">{{ $alt }}</div>@endif
             </div>
         @endforeach
     </div>
+
+    @if ($o['calisansiz_firma'] > 0 || $o['evrak_eksigi'] > 0)
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;font-size:.76rem">
+            @if ($o['calisansiz_firma'] > 0)
+                <span style="padding:.2rem .7rem;border-radius:9999px;background:rgb(245 158 11 / .12);color:rgb(180 83 9)">⚠ {{ $o['calisansiz_firma'] }} firmada aktif çalışan eklenmemiş</span>
+            @endif
+            @if ($o['evrak_eksigi'] > 0)
+                <span style="padding:.2rem .7rem;border-radius:9999px;background:rgb(245 158 11 / .12);color:rgb(180 83 9)">⚠ {{ $o['evrak_eksigi'] }} firmada risk değerlendirmesi yok</span>
+            @endif
+        </div>
+    @endif
 
     {{-- SEKME PILL'LERİ --}}
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(128 116 148 / .1);padding:.3rem;border-radius:.6rem">
@@ -88,167 +113,190 @@
 
     {{-- ==================== GENEL BAKIŞ ==================== --}}
     @if ($sekme === 'genel')
-        {{-- Genel Bakış mini istatistikleri (isgpratik 6.jpg) --}}
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
-            @foreach ([
-                ['Eğitimsiz Çalışan', '—', 'Hiç eğitim kaydı olmayan (modül yakında)', 'rgb(128 116 148)'],
-                ['Önemli Risk', $o['onemli_risk'], 'Risk skoru >'.config('isg.onemli_risk_esigi').' olan maddeler', $kirmizi],
-                ['Çalışansız Firma', $o['calisansiz_firma'], 'Hiç aktif çalışan eklenmemiş firma', $sari],
-                ['Evrak Eksiği', $o['evrak_eksigi'], 'Risk değerlendirmesi olmayan firma', $sari],
-            ] as [$etiket, $deger, $alt, $renk])
-                <div style="{{ $kutu }};padding:.7rem">
-                    <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">{{ $etiket }}</div>
-                    <div style="font-size:1.35rem;font-weight:800;color:{{ $renk }}">{{ $deger }}</div>
-                    <div style="font-size:.68rem;color:rgb(128 116 148)">{{ $alt }}</div>
-                </div>
-            @endforeach
-        </div>
-
-        {{-- Dönemsel Aktivite Trendi (son 30 gün) --}}
         @php
+            // ---- Aktivite: son 30 gün yumuşak eğri ----
             $akt = $this->aktivite;
-            $son30 = array_slice($akt, -30, null, true);
+            $son30 = array_values(array_slice($akt, -30, null, true));
             $enYuksek = max(1, max($son30 ?: [0]));
-            $noktalar = [];
-            $idx = 0; $adet = count($son30);
-            foreach ($son30 as $sayi) {
-                $x = $adet > 1 ? round($idx / ($adet - 1) * 100, 2) : 0;
-                $y = round(100 - ($sayi / $enYuksek * 100), 2);
-                $noktalar[] = "$x,$y";
-                $idx++;
+            $n30 = count($son30);
+            $pts = [];
+            foreach ($son30 as $i => $deger) {
+                $pts[] = [$n30 > 1 ? round($i / ($n30 - 1) * 100, 2) : 0, round(34 - ($deger / $enYuksek) * 30, 2)];
             }
+            $egri = $pts ? 'M'.$pts[0][0].','.$pts[0][1] : '';
+            for ($i = 1; $i < $n30; $i++) {
+                $cx = round(($pts[$i - 1][0] + $pts[$i][0]) / 2, 2);
+                $egri .= " C{$cx},{$pts[$i - 1][1]} {$cx},{$pts[$i][1]} {$pts[$i][0]},{$pts[$i][1]}";
+            }
+            $alan = $egri ? $egri.' L100,40 L0,40 Z' : '';
+
+            // ---- Heatmap: hafta sütunlu (GitHub tarzı), Pzt başlangıç ----
+            $enYuksekAkt = max(1, max($akt ?: [0]));
+            $ilkGun = $akt ? \Illuminate\Support\Carbon::parse(array_key_first($akt)) : null;
+            $bosluk = $ilkGun ? $ilkGun->dayOfWeekIso - 1 : 0;
+            $hRenk = ['rgb(128 116 148 / .18)', 'rgb(99 102 241 / .3)', 'rgb(99 102 241 / .55)', 'rgb(99 102 241 / .8)', 'rgb(99 102 241)'];
+            $toplam90 = array_sum($akt);
+
+            // ---- Radar ----
+            $eksenler = $this->performansEksenleri;
+            $n = count($eksenler);
+            $merkez = 50; $yaricap = 40;
+            $noktaHesapla = fn (float $yuzde, int $i) => [
+                $merkez + $yaricap * ($yuzde / 100) * cos((-90 + $i * 360 / $n) * M_PI / 180),
+                $merkez + $yaricap * ($yuzde / 100) * sin((-90 + $i * 360 / $n) * M_PI / 180),
+            ];
+            $poligon = collect($eksenler)->values()->map(fn ($y, $i) => implode(',', $noktaHesapla($y, $i)))->implode(' ');
+            $izgara = fn (float $yuzde) => collect(range(0, $n - 1))->map(fn ($i) => implode(',', $noktaHesapla($yuzde, $i)))->implode(' ');
+
+            $uyum = $o['uyum_yuzde'];
+            $uyumRenk = $uyum < 40 ? $kirmizi : ($uyum < 75 ? $sari : $yesil);
+            $renkler = [$yesil, $sari, $kirmizi];
         @endphp
-        <div style="{{ $kutu }}">
-            <div style="font-weight:700">Dönemsel Aktivite Trendi</div>
-            <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.5rem">Son 30 gün — risk / şablon / firma / çalışan eklemeleri</div>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:90px">
-                <polyline points="{{ implode(' ', $noktalar) }}" fill="none" stroke="{{ $mor }}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-            </svg>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:1rem;align-items:start">
+            {{-- SOL: Yasal Uyum & Risk Dağılımı --}}
+            <div style="{{ $golge }};display:flex;flex-direction:column;gap:1.1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem">
+                    <div style="font-weight:800">Yasal Uyum &amp; Risk Dağılımı</div>
+                    <span style="font-size:.72rem;font-weight:700;padding:.15rem .65rem;border-radius:9999px;color:{{ $uyumRenk }};background:color-mix(in srgb, {{ $uyumRenk }} 14%, transparent)" title="Takip edilen yasal kriterlerin portföy geneli ortalama karşılanma oranı">Portföy uyumu %{{ $uyum }}</span>
+                </div>
+
+                <div>
+                    <div style="font-size:.78rem;font-weight:700;margin-bottom:.4rem">Tehlike Sınıfı Dağılımı <span style="font-weight:400;color:{{ $gri }}">· {{ $o['firma'] }} firma</span></div>
+                    @php $ri = 0; @endphp
+                    @foreach ($o['tehlike_dagilimi'] as $ad => $sayi)
+                        @php $yuzde = $o['firma'] > 0 ? round($sayi / $o['firma'] * 100) : 0; $c = $renkler[$ri++ % 3]; @endphp
+                        <div style="margin-bottom:.45rem">
+                            <div style="display:flex;justify-content:space-between;font-size:.8rem">
+                                <span>{{ $ad }}</span><strong>{{ $sayi }} · %{{ $yuzde }}</strong>
+                            </div>
+                            <div style="height:7px;border-radius:9999px;background:rgb(128 116 148 / .18);margin-top:.2rem;overflow:hidden">
+                                <div style="height:100%;width:{{ max($yuzde, 1) }}%;background:{{ $c }};border-radius:9999px"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid rgb(16 185 129 / .35);background:rgb(16 185 129 / .07);border-radius:.8rem;padding:.7rem .9rem">
+                    <div>
+                        <div style="font-size:.78rem;font-weight:700">İlk Yardımcı İhtiyacı</div>
+                        <div style="font-size:.68rem;color:{{ $gri }};line-height:1.35;margin-top:.15rem">
+                            İlkyardım Yönetmeliği md.19 · çok tehlikeli her 10, tehlikeli her 15, az tehlikeli her 20 çalışana 1 kişi
+                        </div>
+                    </div>
+                    <span style="flex-shrink:0;font-size:1.3rem;font-weight:800;color:rgb(4 120 87);padding:.15rem .8rem;border-radius:9999px;background:rgb(16 185 129 / .16)">{{ $this->ilkyardimciIhtiyaci }} kişi</span>
+                </div>
+
+                <div>
+                    <div style="font-size:.78rem;font-weight:700;margin-bottom:.2rem">Performans Profili <span style="font-weight:400;color:{{ $gri }}">· kurulu modüllerin portföy ortalaması</span></div>
+                    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                        <svg viewBox="0 0 100 100" style="width:190px;max-width:100%;flex-shrink:0">
+                            @foreach ([25, 50, 75, 100] as $g)
+                                <polygon points="{{ $izgara($g) }}" fill="none" stroke="rgb(128 116 148 / .22)" stroke-width="0.5"/>
+                            @endforeach
+                            @foreach (range(0, $n - 1) as $i)
+                                @php [$x, $y] = $noktaHesapla(100, $i); @endphp
+                                <line x1="{{ $merkez }}" y1="{{ $merkez }}" x2="{{ $x }}" y2="{{ $y }}" stroke="rgb(128 116 148 / .22)" stroke-width="0.5"/>
+                            @endforeach
+                            <polygon points="{{ $poligon }}" fill="{{ $turkuaz }}" fill-opacity="0.25" stroke="{{ $turkuaz }}" stroke-width="1.5"/>
+                        </svg>
+                        <div style="display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:150px">
+                            @foreach ($eksenler as $ad => $yuzde)
+                                <div style="display:flex;justify-content:space-between;font-size:.76rem">
+                                    <span style="color:{{ $gri }}">{{ $ad }}</span><strong>%{{ $yuzde }}</strong>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- SAĞ: Saha & Denetim Aktivite Yoğunluğu --}}
+            <div style="{{ $golge }};display:flex;flex-direction:column;gap:1.1rem">
+                <div>
+                    <div style="font-weight:800">Saha &amp; Denetim Aktivite Yoğunluğu</div>
+                    <div style="font-size:.74rem;color:{{ $gri }}">Risk / şablon / firma / çalışan eklemeleri</div>
+                </div>
+
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:.78rem;font-weight:700;margin-bottom:.2rem">
+                        <span>Dönemsel Trend <span style="font-weight:400;color:{{ $gri }}">· son 30 gün</span></span>
+                        <span style="font-weight:400;color:{{ $gri }}">toplam {{ array_sum($son30) }} · en yoğun gün {{ max($son30 ?: [0]) }}</span>
+                    </div>
+                    <svg viewBox="0 0 100 40" preserveAspectRatio="none" style="width:100%;height:110px;display:block">
+                        <defs>
+                            <linearGradient id="trendDolgu" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="{{ $indigo }}" stop-opacity=".3"/>
+                                <stop offset="100%" stop-color="{{ $indigo }}" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        @if ($alan)
+                            <path d="{{ $alan }}" fill="url(#trendDolgu)"/>
+                            <path d="{{ $egri }}" fill="none" stroke="{{ $indigo }}" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linecap="round"/>
+                        @endif
+                    </svg>
+                </div>
+
+                <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.45rem">
+                        <div style="font-size:.78rem;font-weight:700">Son 90 Gün Aktivite <span style="font-weight:400;color:{{ $gri }}">· {{ $toplam90 }} işlem</span></div>
+                        <div style="display:flex;align-items:center;gap:.25rem;font-size:.68rem;color:{{ $gri }}">
+                            Az
+                            @foreach ($hRenk as $c)<span style="width:.7rem;height:.7rem;border-radius:2px;background:{{ $c }}"></span>@endforeach
+                            Çok
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.4rem;justify-content:center;overflow-x:auto;padding-bottom:.2rem">
+                        <div style="display:grid;grid-template-rows:repeat(7,15px);gap:4px;font-size:.6rem;color:{{ $gri }};line-height:15px;text-align:right">
+                            @foreach (['Pzt', '', 'Çar', '', 'Cum', '', ''] as $etiket)<span>{{ $etiket }}</span>@endforeach
+                        </div>
+                        <div style="display:grid;grid-template-rows:repeat(7,15px);grid-auto-flow:column;grid-auto-columns:15px;gap:4px">
+                            @for ($b = 0; $b < $bosluk; $b++)<span></span>@endfor
+                            @foreach ($akt as $gun => $sayi)
+                                @php $seviye = $sayi === 0 ? 0 : (int) ceil($sayi / $enYuksekAkt * 4); @endphp
+                                <span title="{{ \Illuminate\Support\Carbon::parse($gun)->format('d.m.Y') }} — {{ $sayi }} işlem"
+                                    style="border-radius:3px;background:{{ $hRenk[$seviye] }}"></span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
-            {{-- Uyumluluk skoru --}}
-            <div style="{{ $kutu }};text-align:center">
-                <div style="font-weight:700">Uyumluluk Skoru</div>
-                @php $y = $o['uyum_yuzde']; $renk = $y < 40 ? $kirmizi : ($y < 75 ? $sari : $yesil); @endphp
-                <div style="width:9rem;height:9rem;margin:1rem auto;border-radius:9999px;
-                    background:conic-gradient({{ $renk }} {{ $y * 3.6 }}deg, rgb(128 116 148 / .2) 0);
-                    display:flex;align-items:center;justify-content:center">
-                    <div style="width:6.5rem;height:6.5rem;border-radius:9999px;background:var(--fi-color-white,#fff);
-                        display:flex;flex-direction:column;align-items:center;justify-content:center;color:#111">
-                        <span style="font-size:1.6rem;font-weight:800;color:{{ $renk }}">%{{ $y }}</span>
-                        <span style="font-size:.65rem;color:#666">portföy geneli</span>
-                    </div>
-                </div>
-                <div style="font-size:.8rem;color:rgb(128 116 148)">Takip edilen yasal kriterlerin ortalama karşılanma oranı</div>
+        {{-- ==================== EN YÜKSEK ÇALIŞANLI VE RİSKLİ İLK 5 FİRMA ==================== --}}
+        <div style="{{ $golge }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+                <div style="font-weight:800">En Yüksek Çalışanlı ve Riskli İlk 5 Firma</div>
+                <div style="font-size:.72rem;color:{{ $gri }}">Sıralama: çalışan sayısı × kritik risk maddesi (skor &gt; {{ $onemliEsik }})</div>
             </div>
-
-            {{-- Tehlike sınıfı dağılımı --}}
-            <div style="{{ $kutu }}">
-                <div style="font-weight:700">Tehlike Sınıfı Dağılımı</div>
-                <div style="font-size:.8rem;color:rgb(128 116 148);margin-bottom:.6rem">Toplam {{ $o['firma'] }} firma</div>
-                @php $renkler = [$yesil, $sari, $kirmizi]; $i = 0; @endphp
-                @foreach ($o['tehlike_dagilimi'] as $ad => $sayi)
-                    @php $yuzde = $o['firma'] > 0 ? round($sayi / $o['firma'] * 100) : 0; $c = $renkler[$i++ % 3]; @endphp
-                    <div style="margin-bottom:.5rem">
-                        <div style="display:flex;justify-content:space-between;font-size:.82rem">
-                            <span>{{ $ad }}</span><strong>{{ $sayi }} · %{{ $yuzde }}</strong>
-                        </div>
-                        <div style="height:6px;border-radius:9999px;background:rgb(128 116 148 / .2);margin-top:.25rem;overflow:hidden">
-                            <div style="height:100%;width:{{ max($yuzde, 1) }}%;background:{{ $c }}"></div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- İlk yardım ihtiyacı --}}
-            <div style="{{ $kutu }}">
-                <div style="font-weight:700">İlk Yardım Sertifikası</div>
-                <div style="font-size:.72rem;color:rgb(128 116 148);text-transform:uppercase;margin-top:.5rem">Toplam İlkyardımcı İhtiyacı</div>
-                <div style="font-size:1.8rem;font-weight:800;color:{{ $yesil }}">{{ $this->ilkyardimciIhtiyaci }} kişi</div>
-                <p style="font-size:.78rem;color:rgb(128 116 148);margin-top:.4rem">
-                    Aktif firmalarınızın bildirdiği çalışan sayısına göre — İlkyardım Yönetmeliği md.19
-                    (çok tehlikeli her 10, tehlikeli her 15, az tehlikeli her 20 çalışana 1 ilkyardımcı).
-                </p>
-            </div>
-
-            {{-- Performans Profili (5 eksen) --}}
-            @php
-                $eksenler = $this->performansEksenleri;
-                $n = count($eksenler);
-                $merkez = 50; $yaricap = 42;
-                $noktaHesapla = fn (float $yuzde, int $i) => [
-                    $merkez + $yaricap * ($yuzde / 100) * cos((-90 + $i * 360 / $n) * M_PI / 180),
-                    $merkez + $yaricap * ($yuzde / 100) * sin((-90 + $i * 360 / $n) * M_PI / 180),
-                ];
-                $poligonNoktalari = collect($eksenler)->values()
-                    ->map(fn ($y, $i) => implode(',', $noktaHesapla($y, $i)))
-                    ->implode(' ');
-                $izgaraNoktalari = fn (float $yuzde) => collect(range(0, $n - 1))
-                    ->map(fn ($i) => implode(',', $noktaHesapla($yuzde, $i)))
-                    ->implode(' ');
-            @endphp
-            <div style="{{ $kutu }}">
-                <div style="font-weight:700">Performans Profili</div>
-                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.4rem">Yalnız kurulu modüllerin portföy ortalaması</div>
-                <svg viewBox="0 0 100 100" style="width:100%;max-width:220px;display:block;margin:0 auto">
-                    @foreach ([25, 50, 75, 100] as $izgaraYuzde)
-                        <polygon points="{{ $izgaraNoktalari($izgaraYuzde) }}" fill="none" stroke="rgb(128 116 148 / .2)" stroke-width="0.5"/>
-                    @endforeach
-                    @foreach (range(0, $n - 1) as $i)
-                        @php [$x, $y] = $noktaHesapla(100, $i); @endphp
-                        <line x1="{{ $merkez }}" y1="{{ $merkez }}" x2="{{ $x }}" y2="{{ $y }}" stroke="rgb(128 116 148 / .2)" stroke-width="0.5"/>
-                    @endforeach
-                    <polygon points="{{ $poligonNoktalari }}" fill="{{ $turkuaz }}" fill-opacity="0.25" stroke="{{ $turkuaz }}" stroke-width="1.5"/>
-                </svg>
-                <div style="display:flex;flex-direction:column;gap:.2rem;margin-top:.5rem">
-                    @foreach ($eksenler as $ad => $yuzde)
-                        <div style="display:flex;justify-content:space-between;font-size:.72rem">
-                            <span style="color:rgb(128 116 148)">{{ $ad }}</span><strong>%{{ $yuzde }}</strong>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
-            {{-- Çalışan Dağılımı --}}
-            <div style="{{ $kutu }};max-height:20rem;overflow-y:auto">
-                <div style="font-weight:700">Çalışan Dağılımı</div>
-                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.5rem">Firma başına aktif çalışan sayısı</div>
-                @forelse ($this->calisanDagilimi as $firmaAd => $sayi)
-                    <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.3rem 0;border-top:1px solid rgb(128 116 148 / .12)">
-                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:14rem">{{ $firmaAd }}</span>
-                        <strong>{{ $sayi }}</strong>
-                    </div>
-                @empty
-                    <div style="font-size:.82rem;color:rgb(128 116 148)">Firma yok.</div>
-                @endforelse
-            </div>
-
-            {{-- Son 90 Gün Aktivite (heatmap) --}}
-            <div style="{{ $kutu }}">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="font-weight:700">Son 90 Gün Aktivite</div>
-                    <div style="display:flex;align-items:center;gap:.25rem;font-size:.7rem;color:rgb(128 116 148)">
-                        Az
-                        @foreach (['rgb(128 116 148 / .2)','rgb(139 92 246 / .35)','rgb(139 92 246 / .6)','rgb(139 92 246 / .85)','rgb(139 92 246)'] as $c)
-                            <span style="width:.7rem;height:.7rem;border-radius:2px;background:{{ $c }}"></span>
-                        @endforeach
-                        Çok
-                    </div>
-                </div>
-                @php $enYuksekAkt = max(1, max($this->aktivite ?: [0])); @endphp
-                <div style="display:grid;grid-template-columns:repeat(18,1fr);gap:3px;margin-top:.6rem">
-                    @foreach ($this->aktivite as $gun => $sayi)
-                        @php
-                            $seviye = $sayi === 0 ? 0 : (int) ceil($sayi / $enYuksekAkt * 4);
-                            $renkler = ['rgb(128 116 148 / .2)','rgb(139 92 246 / .35)','rgb(139 92 246 / .6)','rgb(139 92 246 / .85)','rgb(139 92 246)'];
-                        @endphp
-                        <span title="{{ \Illuminate\Support\Carbon::parse($gun)->format('d.m.Y') }} — {{ $sayi }} işlem"
-                            style="aspect-ratio:1;border-radius:2px;background:{{ $renkler[$seviye] }}"></span>
-                    @endforeach
-                </div>
+            <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:.82rem;min-width:480px">
+                    <thead>
+                        <tr style="text-align:left;color:{{ $gri }};font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">
+                            <th style="padding:.4rem">Firma</th>
+                            <th style="padding:.4rem;text-align:right">Çalışan</th>
+                            <th style="padding:.4rem;text-align:right">Kritik risk</th>
+                            <th style="padding:.4rem;text-align:right">Hızlı git</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($this->oncelikliFirmalar as $f)
+                            <tr style="border-top:1px solid rgb(128 116 148 / .15)">
+                                <td style="padding:.5rem .4rem;font-weight:600">{{ \Illuminate\Support\Str::limit($f['unvan'], 48) }}</td>
+                                <td style="padding:.5rem .4rem;text-align:right">{{ $say($f['calisan']) }}</td>
+                                <td style="padding:.5rem .4rem;text-align:right">
+                                    <span style="font-size:.72rem;font-weight:700;padding:.1rem .55rem;border-radius:9999px;{{ $f['kritik_risk'] > 0 ? 'color:rgb(190 18 60);background:rgb(244 63 94 / .1)' : 'color:'.$gri.';background:rgb(128 116 148 / .12)' }}">{{ $say($f['kritik_risk']) }}</span>
+                                </td>
+                                <td style="padding:.5rem .4rem;text-align:right;white-space:nowrap">
+                                    <a href="{{ \App\Filament\Pages\RiskMerkezi::getUrl(['firma' => $f['id']]) }}" style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid rgb(2 132 199 / .4);color:#0369A1;text-decoration:none">Risk →</a>
+                                    <a href="{{ \App\Filament\Pages\FirmaDenetimOperasyon::getUrl(['firma' => $f['id']]) }}" style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid rgb(128 116 148 / .4);color:inherit;text-decoration:none">Denetim →</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" style="padding:1rem;text-align:center;color:{{ $gri }}">Aktif firma yok.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     @endif
