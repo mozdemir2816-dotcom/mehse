@@ -26,3 +26,9 @@
         @endforeach
     </div>
 </div>
+
+{{-- Teklif arayan firmalar yanlışlıkla giriş ekranına gelirse tanıtım sayfasına yönlensin. --}}
+<p style="margin-top:1rem;text-align:center;font-size:.8rem;color:#64748B">
+    İş güvenliği hizmeti için teklif almak mı istiyorsunuz?
+    <a href="{{ url('/') }}#teklif" style="color:#099291;font-weight:600;text-decoration:underline">Tanıtım sayfası</a>
+</p>

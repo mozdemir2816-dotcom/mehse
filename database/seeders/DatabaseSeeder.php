@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TehlikeKutuphanesiSeeder::class,
+            KimyasalKutuphanesiSeeder::class,
             NaceKoduSeeder::class,
             MykMeslekSeeder::class,
             RiskSablonuInsaatFineKinneySeeder::class,

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TeklifTalebiController;
 use App\Models\SahaAnalizi;
 use App\Models\User;
 use App\Models\Ziyaretci;
@@ -16,8 +17,12 @@ Route::get('/ziyaretci/{token}', function (string $token) {
     return response()->view('ziyaretci-dogrula', ['z' => $z], $z ? 200 : 404);
 })->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('ziyaretci.dogrula');
 
-// Kök adres doğrudan panele yönlensin (stok Laravel karşılama sayfası yerine).
-Route::redirect('/', '/admin');
+// Kök adres = herkese açık tanıtım sayfası (29.10.2026); üye olmayanlar teklif isteyebilir,
+// panel /admin'de. Teklif formu kayıt açar (TeklifTalebi), sahip hesap panelde görür.
+Route::view('/', 'tanitim')->name('tanitim');
+// url() alt klasörde (localhost/mehse) de doğru adresi üretir; düz '/admin' klasör adını düşürüyordu.
+Route::get('/tanitim', fn () => redirect(url('/'), 301));
+Route::post('/teklif-talebi', TeklifTalebiController::class)->middleware('throttle:5,60')->name('tanitim.teklif');
 
 // Yıllık Planlar tek sayfadan üç ayrı sayfaya bölündü (01.10.2026) — eski yer imleri.
 Route::redirect('/admin/yillik-planlar', '/admin/yillik-calisma-plani');
