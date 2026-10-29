@@ -6,6 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Firma, sertifika tipi ve katılımcı listesini seçin; "Sertifikayı Oluştur" ile
         katılımcı başına ayrı bir sayfa halinde eğitim sertifikası PDF'i indirin.

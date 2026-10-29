@@ -63,17 +63,17 @@ class SayfaAileleri
                 [Pages\YanginGuvenligi::class, 'Yangın Güvenliği'],
                 [Pages\TatbikatTutanagi::class, 'Tatbikat Tutanağı'],
             ],
-            'egitim_katilim' => [
+            // Eğitim & Yetkinlik Yönetim Merkezi: 9 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['egitim'] bkz.
+            'egitim' => [
                 [Pages\EgitimKatilim::class, 'Eğitim Katılım'],
+                [Pages\IsbasiEgitim::class, 'İşbaşı Eğitimi'],
+                [Pages\EgitimYenilemeTakibi::class, 'Eğitim Takibi (Yenileme)'],
                 [Pages\SertifikaOlustur::class, 'Sertifika'],
-            ],
-            'uzaktan' => [
                 [EgitimPaketiResource::class, 'Paketler'],
                 [Pages\UzaktanEgitimAtama::class, 'Atama'],
-            ],
-            'soru' => [
                 [Pages\SoruBankasi::class, 'Soru Bankası'],
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
+                [Pages\ToolboxKonusmalari::class, 'Toolbox Konuşmaları'],
             ],
             'saglik' => [
                 [Pages\SaglikGozetimi::class, 'Sağlık Gözetimi'],
@@ -109,6 +109,23 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        'egitim' => [
+            [
+                'etiket' => 'Yasal Eğitim Takibi & Tutanaklar',
+                'ikon' => 'heroicon-o-clipboard-document-list',
+                'siniflar' => [Pages\EgitimKatilim::class, Pages\IsbasiEgitim::class, Pages\EgitimYenilemeTakibi::class, Pages\SertifikaOlustur::class],
+            ],
+            [
+                'etiket' => 'Uzaktan Eğitim (LMS) & Sınav Portalı',
+                'ikon' => 'heroicon-o-computer-desktop',
+                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimAtama::class],
+            ],
+            [
+                'etiket' => 'Soru & İçerik Bankası',
+                'ikon' => 'heroicon-o-book-open',
+                'siniflar' => [Pages\SoruBankasi::class, Pages\EgitimSorulari::class, Pages\ToolboxKonusmalari::class],
+            ],
+        ],
         // Acil Durum & Yangın: 5 sayfa → 3 ana sekme, tek menü girişi (30.10.2026)
         'acil' => [
             [

@@ -3,6 +3,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İşe yeni başlayan her çalışan için ayrı, tek sayfalık işbaşı/oryantasyon
         eğitim tutanağı oluşturun. Firma seçmeden, üstteki <strong>"Boş Katılım Formu"</strong>

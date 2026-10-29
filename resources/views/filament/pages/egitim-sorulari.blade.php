@@ -4,6 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Sektör ve zorluk seçip AI ile 10 soruluk sınav üretin (veya elle ekleyin),
         katılımcı listesi oluşturup PDF sınav kağıdını indirin.

@@ -41,6 +41,9 @@ class EgitimYenilemeTakibi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Eğitimler';
 
+    /** Menüde gizli — Eğitim Yönetim Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'egitim-takibi';

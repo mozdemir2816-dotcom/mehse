@@ -11,6 +11,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <button type="button" wire:click="$set('sekme', 'yenileme')" style="{{ $sekmeStil('yenileme') }}">Yenileme Takibi</button>
         <button type="button" wire:click="$set('sekme', 'kayitlar')" style="{{ $sekmeStil('kayitlar') }}">Yüz Yüze Kayıtlar</button>

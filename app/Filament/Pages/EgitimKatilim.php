@@ -56,7 +56,7 @@ class EgitimKatilim extends Page
 
     protected static ?string $title = 'Eğitim Katılım Formu';
 
-    protected static ?string $navigationLabel = 'Eğitim Katılım';
+    protected static ?string $navigationLabel = 'Eğitim Yönetim Merkezi';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;

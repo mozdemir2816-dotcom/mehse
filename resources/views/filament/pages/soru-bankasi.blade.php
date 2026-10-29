@@ -12,6 +12,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     {{-- BAŞLIK --}}
     <div style="border-radius:.9rem;padding:1.1rem 1.3rem;background:linear-gradient(120deg,#0f2b46,#115e59);color:#fff">
         <div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:700">Denetlenebilir içerik · editoryal onay</div>

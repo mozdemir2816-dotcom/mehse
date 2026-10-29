@@ -1,4 +1,4 @@
-{{-- Acil Durum & Yangın Merkezi ortak görünüm: slate-50 zemin, rounded-2xl beyaz kartlar (yalnız bu sayfalarda: işaretçi + :has). --}}
+{{-- Slate/beyaz kart görünümü (Acil Durum & Yangın + Eğitim Yönetim Merkezi): işaretçi + :has ile yalnız bu sayfalarda geçerli. --}}
 <div class="acil-merkez" hidden></div>
 <style>
     html:not(.dark) .fi-page:has(.acil-merkez) .fi-page-content {

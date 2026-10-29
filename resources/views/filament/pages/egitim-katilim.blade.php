@@ -4,6 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Firma, eğitim başlığı ve katılımcı listesini seçin; "Form PDF" ile 6331 Sayılı Kanun
         Madde 17 kapsamındaki eğitim katılım formunu oluşturun.
