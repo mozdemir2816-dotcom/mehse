@@ -24,23 +24,26 @@ class CalisansTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => \App\Support\CalisanIsgDurumu::sorgu($query)->with('firma:id,unvan,tehlike_sinifi'))
             // Telefonda yalnız ana sütunlar görünür; diğerleri ->visibleFrom('md') (13.10.2026).
             ->columns([
                 TextColumn::make('ad_soyad')->label('Ad soyad')->searchable()->sortable()->weight('bold'),
                 TextColumn::make('tc')->visibleFrom('md')->label('T.C. Kimlik')->searchable()->placeholder('—')
-                    ->formatStateUsing(fn (Calisan $record) => $record->maskeliTc())->toggleable(),
-                TextColumn::make('firma.unvan')->label('Firma')->searchable()->sortable()->limit(40)->toggleable(),
-                TextColumn::make('gorev')->visibleFrom('md')->label('Görevi')->searchable()->placeholder('—'),
-                TextColumn::make('departman')->visibleFrom('md')->label('Departman')->searchable()->placeholder('—')->toggleable(),
-                TextColumn::make('sube')->visibleFrom('md')->label('Şube')->searchable()->placeholder('—')->toggleable(),
-                TextColumn::make('ise_giris')->visibleFrom('md')->label('İşe giriş')->date('d.m.Y')->sortable()->placeholder('—'),
+                    ->formatStateUsing(fn (Calisan $record) => $record->maskeliTc()),
+                TextColumn::make('firma.unvan')->label('Firma')->searchable()->sortable()->limit(26)->tooltip(fn (Calisan $r) => $r->firma?->unvan),
+                TextColumn::make('gorev')->visibleFrom('md')->label('Görev / Departman')->searchable(['gorev', 'departman'])->placeholder('—')
+                    ->description(fn (Calisan $r) => $r->departman ?: null)->limit(24)->wrap(),
+                \Filament\Tables\Columns\ViewColumn::make('isg_durumu')->label('İSG Durumu')->view('filament.tables.columns.calisan-isg-durumu')
+                    ->extraCellAttributes(['style' => 'min-width:15rem']),
+                TextColumn::make('sube')->visibleFrom('md')->label('Şube')->searchable()->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('ise_giris')->visibleFrom('md')->label('İşe giriş')->date('d.m.Y')->sortable()->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('isten_cikis')->visibleFrom('md')->label('İşten çıkış')->date('d.m.Y')->sortable()->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('cinsiyet')->visibleFrom('md')->label('Cinsiyet')->placeholder('—')
-                    ->formatStateUsing(fn ($state) => Calisan::CINSIYETLER[$state] ?? $state)->toggleable(),
-                TextColumn::make('ozel_durum')->visibleFrom('md')->label('Özel durum')->placeholder('—')->badge()->color('warning')->toggleable(),
-                IconColumn::make('agir_tehlikeli_iste')->visibleFrom('md')->label('Ağır-tehlikeli')->boolean()->toggleable(),
-                TextColumn::make('aktif')->label('Durum')->badge()
+                    ->formatStateUsing(fn ($state) => Calisan::CINSIYETLER[$state] ?? $state)->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('ozel_durum')->visibleFrom('md')->label('Özel durum')->placeholder('—')->badge()->color('warning')->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('agir_tehlikeli_iste')->visibleFrom('md')->label('Ağır-tehlikeli')->boolean()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('aktif')->label('Durum')->badge()->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(fn ($state) => $state ? 'Aktif' : 'Pasif')
                     ->color(fn ($state) => $state ? 'success' : 'gray'),
             ])
@@ -54,7 +57,8 @@ class CalisansTable
                 SelectFilter::make('cinsiyet')->label('Cinsiyet')->options(Calisan::CINSIYETLER),
             ])
             ->recordActions([
-                EditAction::make()->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge),
+                EditAction::make()->iconButton()->tooltip('Düzenle')->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge),
+                \Filament\Actions\ActionGroup::make([
                 Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')->color('gray')
                     ->visible(fn (Calisan $record) => $record->aktif)
                     ->requiresConfirmation()
@@ -63,7 +67,8 @@ class CalisansTable
                 Action::make('aktifEt')->label('Aktifleştir')->icon('heroicon-o-play-circle')->color('success')
                     ->visible(fn (Calisan $record) => ! $record->aktif)
                     ->action(fn (Calisan $record) => $record->update(['aktif' => true, 'isten_cikis' => null])),
-                DeleteAction::make()->label('Kalıcı Sil'),
+                ]),
+                DeleteAction::make()->iconButton()->tooltip('Kalıcı Sil')->label('Kalıcı Sil'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -81,6 +86,11 @@ class CalisansTable
                     DeleteBulkAction::make()->label('Seçilenleri Kalıcı Sil'),
                 ]),
             ])
+            ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
+            ->filtersFormColumns(4)
+            ->deferFilters(false)
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(25)
             ->defaultSort('ad_soyad');
     }
 

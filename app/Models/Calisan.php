@@ -108,4 +108,14 @@ class Calisan extends Model implements AuthenticatableContract, FilamentUser, Ha
     {
         return $this->hasMany(EgitimAtamasi::class);
     }
+
+    public function kkdZimmetleri(): HasMany
+    {
+        return $this->hasMany(KkdZimmet::class);
+    }
+
+    public function muayeneFormlari(): HasMany
+    {
+        return $this->hasMany(MuayeneFormu::class);
+    }
 }

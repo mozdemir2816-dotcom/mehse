@@ -13,6 +13,16 @@ class ListCalisans extends ListRecords
 {
     protected static string $resource = CalisanResource::class;
 
+    /** Portföy toplamı: aktif / pasif / toplam. Tablo sayacı filtreye göre değişir; fark burada görünür. */
+    public function getSubheading(): ?string
+    {
+        $sayim = CalisanResource::getEloquentQuery()->toBase()->selectRaw('count(*) as toplam, sum(case when calisanlar.aktif = 1 then 1 else 0 end) as aktif')->first();
+        $toplam = (int) ($sayim->toplam ?? 0);
+        $aktif = (int) ($sayim->aktif ?? 0);
+
+        return $aktif.' aktif · '.($toplam - $aktif).' pasif · portföyde toplam '.$toplam.' çalışan';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

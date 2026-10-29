@@ -9,6 +9,7 @@ use App\Models\Firma;
 use App\Models\IsgProfesyoneli;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
@@ -86,19 +87,24 @@ class IsgProfesyoneliResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('ad_soyad')->label('Ad Soyad')->searchable()->weight('bold'),
-                TextColumn::make('tip')->label('Tip')->badge()
-                    ->formatStateUsing(fn (IsgProfesyoneli $r) => $r->tipEtiketi()),
-                TextColumn::make('unvan')->label('Unvan')->toggleable(),
+                // Tip ve Unvan tek sütunda: yazılmış unvan (örn. A Sınıfı İş Güvenliği Uzmanı) yoksa tip adı.
+                TextColumn::make('tip')->label('Rol / Unvan')->badge()
+                    ->formatStateUsing(fn (IsgProfesyoneli $r) => $r->unvan ?: $r->tipEtiketi())
+                    ->color(fn (IsgProfesyoneli $r) => match ($r->tip) {
+                        'igu' => 'success',
+                        'isyeri_hekimi' => 'info',
+                        default => 'gray',
+                    }),
                 TextColumn::make('sertifika_no')->label('Sertifika No')->toggleable(),
                 IconColumn::make('kase_var')->label('Kaşe')->boolean()
                     ->state(fn (IsgProfesyoneli $r) => filled($r->kase_gorseli)),
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
             ])
             ->recordActions([
+                ActionGroup::make([
                 Action::make('firmalaraAta')
                     ->label('Firmalara Ata')
                     ->icon('heroicon-o-building-office-2')
-                    ->color('gray')
                     ->modalHeading(fn (IsgProfesyoneli $record) => $record->ad_soyad.' — Firmalara Toplu Ata')
                     ->modalDescription('Seçilen firmaların ilgili alanına bu kişi atanır; işaretini kaldırdığınız firmalardan atama silinir.')
                     ->modalSubmitActionLabel('Ata')
@@ -146,7 +152,10 @@ class IsgProfesyoneliResource extends Resource
 
                 EditAction::make(),
                 DeleteAction::make(),
+                ]),
             ])
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(25)
             ->defaultSort('ad_soyad');
     }
 

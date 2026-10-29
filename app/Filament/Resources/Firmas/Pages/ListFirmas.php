@@ -52,15 +52,14 @@ class ListFirmas extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('excelSablon')
-                ->label('Şablon İndir')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->action(fn () => FirmaExcelIceAktarici::sablonIndir()),
-
             ActionGroup::make([
+                Action::make('excelSablon')
+                    ->label('Excel Şablonu İndir')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(fn () => FirmaExcelIceAktarici::sablonIndir()),
+
                 Action::make('katipAktar')
-                    ->label('Listeyi Yükle')
+                    ->label('İSG-KATİP Listesini Yükle')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->modalHeading('İSG-KATİP sözleşme listesini yükle')
                     ->modalDescription('İSG-KATİP → Sözleşme İşlemleri → "Dışa Aktar" ile indirilen ISG_HIZMET_SOZLESME_SURECI_DISA_AKTAR_….xlsx dosyasını yükleyin. Liste saklanır: firma eklerken SGK veya KATİP no yazmanız yeterli olur. Aynı unvanlı işyerleri SGK no ile ayrı firma olarak tutulur.')
@@ -110,7 +109,7 @@ class ListFirmas extends ListRecords
                     }),
 
                 Action::make('katipSec')
-                    ->label('Listeden Firma Seç')
+                    ->label('İSG-KATİP Listesinden Firma Seç')
                     ->icon('heroicon-o-queue-list')
                     ->visible(fn () => KatipSozlesmeIceAktarici::liste((int) Filament::auth()->id()) !== null)
                     ->modalHeading('İSG-KATİP listesinden firma aktar')
@@ -136,14 +135,9 @@ class ListFirmas extends ListRecords
 
                         static::katipSonucBildir(KatipSozlesmeIceAktarici::aktar($secilen, (int) Filament::auth()->id()));
                     }),
-            ])
-                ->label('İSG-KATİP')
-                ->icon('heroicon-o-cloud-arrow-down')
-                ->color('primary')
-                ->button(),
 
-            Action::make('excelYukle')
-                ->label('Excel\'den Yükle')
+                Action::make('excelYukle')
+                ->label('Doldurulan Excel\'i Yükle')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('gray')
                 ->modalDescription('İlk satır başlık kabul edilir; sütun adları şablondaki gibi olmalıdır (sırası önemli değil). Yalnızca "Unvan" zorunludur.')
@@ -194,6 +188,11 @@ class ListFirmas extends ListRecords
 
                     $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
                 }),
+            ])
+                ->label('İçe / Dışa Aktar')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->button(),
 
             CreateAction::make()->label('Firma Ekle')->icon('heroicon-o-plus')
                 ->modal()->modalWidth(Width::FiveExtraLarge)->modalHeading('Yeni Firma'),

@@ -37,8 +37,8 @@ class FirmasTable
             // Çöp Kutusu sekmesinde yalnız firma + silinme tarihi (Geri Al telefonda da görünsün).
             ->columns([
                 TextColumn::make('unvan')->label('Firma')->searchable()->sortable()->weight('bold')
-                    ->description(fn (Firma $r) => $r->kisa_ad ?: null)->limit(50),
-                TextColumn::make('nace_kodu')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('NACE')->searchable()->toggleable(),
+                    ->description(fn (Firma $r) => $r->kisa_ad ?: null)->limit(48)->wrap(),
+                TextColumn::make('nace_kodu')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('NACE')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('tehlike_sinifi')->hidden(fn ($livewire) => static::copSekmesi($livewire))->label('Tehlike sınıfı')->badge()
                     ->formatStateUsing(fn (Firma $r) => $r->tehlikeSinifiEtiketi())
                     ->color(fn (string $state) => match ($state) {
@@ -48,8 +48,8 @@ class FirmasTable
                     }),
                 TextColumn::make('calisan_sayisi')->hidden(fn ($livewire) => static::copSekmesi($livewire))->label('Çalışan')->numeric()->sortable()->alignCenter(),
                 TextColumn::make('isveren_ad')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('İşveren / vekili')->searchable(['isveren_ad', 'isveren_vekili'])
-                    ->state(fn (Firma $r) => $r->isveren_ad ?: $r->isveren_vekili)->placeholder('—')->toggleable(),
-                TextColumn::make('telefon')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('Telefon')->searchable()->placeholder('—')->toggleable(),
+                    ->state(fn (Firma $r) => $r->isveren_ad ?: $r->isveren_vekili)->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('telefon')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('Telefon')->searchable()->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('adres')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('Adres')->limit(40)->tooltip(fn (Firma $r) => $r->adres)->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('il')->hidden(fn ($livewire) => static::copSekmesi($livewire))->visibleFrom('md')->label('İl')->searchable()->toggleable(),
@@ -80,15 +80,14 @@ class FirmasTable
                     ->successNotificationTitle('Firma tüm kayıtlarıyla geri alındı'),
                 ForceDeleteAction::make()->label('Kalıcı Sil')
                     ->modalDescription('Firma ve bağlı TÜM kayıtları (çalışanlar, eğitimler, risk değerlendirmeleri...) kalıcı silinir. Bu işlem geri alınamaz.'),
-                Action::make('acilDurumPlani')
-                    ->label('Acil Durum Planı')
-                    ->icon('heroicon-o-exclamation-triangle')
-                    ->color('danger')
-                    ->hidden(fn (Firma $record) => $record->trashed())
-                    ->url(fn (Firma $record) => AcilDurumPlani::getUrl(['firma' => $record->id])),
-                EvrakPaketiAksiyonu::make(),
-                EditAction::make()->hidden(fn (Firma $record) => $record->trashed()),
+                EditAction::make()->iconButton()->tooltip('Düzenle')->hidden(fn (Firma $record) => $record->trashed()),
                 ActionGroup::make([
+                    Action::make('acilDurumPlani')
+                        ->label('Acil Durum Planı')
+                        ->icon('heroicon-o-exclamation-triangle')
+                        ->color('danger')
+                        ->url(fn (Firma $record) => AcilDurumPlani::getUrl(['firma' => $record->id])),
+                    EvrakPaketiAksiyonu::make(),
                     IsyeriGirisAksiyonu::make(),
                     Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')
                         ->visible(fn (Firma $record) => $record->aktif)
@@ -109,6 +108,8 @@ class FirmasTable
                     ForceDeleteBulkAction::make()->label('Seçilenleri Kalıcı Sil'),
                 ]),
             ])
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(25)
             ->defaultSort('unvan');
     }
 

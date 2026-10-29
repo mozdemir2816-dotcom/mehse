@@ -8,6 +8,7 @@ use App\Support\CalisanExcelIceAktarici;
 use App\Support\CalisanListesiUretici;
 use Closure;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -31,6 +32,7 @@ class CalisanAksiyonlari
     public static function hepsi(?Closure $sabitFirma = null, ?Closure $varsayilanFirmaId = null): array
     {
         return [
+            ActionGroup::make([
             static::rapor('excelRapor', 'Excel Rapor', 'heroicon-o-table-cells', $sabitFirma, $varsayilanFirmaId,
                 fn (Firma $f, array $d) => CalisanListesiUretici::excel($f, $d['gorunum'], $d['sube'] ?? null)),
             static::rapor('pdfRapor', 'PDF Rapor', 'heroicon-o-document-text', $sabitFirma, $varsayilanFirmaId,
@@ -42,7 +44,7 @@ class CalisanAksiyonlari
                     .'Sağlık (muayene formları, sağlık gözetimi tetkikleri, kan grubu). Sağlık bilgileri KVKK kapsamında özel nitelikli veridir; yalnız yetkili kişilerle paylaşın.'),
 
             Action::make('excelSablon')
-                ->label('Örnek Excel')
+                ->label('Excel Şablonu İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->action(fn () => CalisanExcelIceAktarici::sablonIndir()),
@@ -91,6 +93,11 @@ class CalisanAksiyonlari
 
                     $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
                 }),
+            ])
+                ->label('Dışa Aktar / İçe Aktar')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->button(),
         ];
     }
 
