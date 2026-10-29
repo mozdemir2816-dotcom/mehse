@@ -64,6 +64,14 @@
             </div>
         </div>
 
-        <div class="mehse-giris-tanitim-dip">© {{ now()->year }} MEHSE İş Sağlığı ve Güvenliği</div>
+        <div class="mehse-giris-tanitim-dip">
+            <span>© {{ now()->year }} MEHSE İş Sağlığı ve Güvenliği</span>
+            <span class="mehse-giris-rozetler">
+                <span><x-filament::icon icon="heroicon-m-check-badge" class="h-4 w-4" /> 6331 Sayılı Kanun Uyumlu</span>
+                <span><x-filament::icon icon="heroicon-m-lock-closed" class="h-4 w-4" /> KVKK Korumalı</span>
+            </span>
+        </div>
     </aside>
+
+    <a href="{{ url('/') }}" class="mehse-giris-geri">← Ana Sayfaya Dön</a>
 @endguest

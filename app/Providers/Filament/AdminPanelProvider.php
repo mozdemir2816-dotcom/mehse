@@ -80,7 +80,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Auth\Login::class)
+            // Şifremi unuttum (29.10.2026): e-posta ile sıfırlama bağlantısı. Canlıda .env'de SMTP (MAIL_*) şart.
+            ->passwordReset()
             ->registration(KayitOl::class)
             ->profile(isSimple: false)
             // Ayarlar kenar çubuğunun en altındaki gruptaydı; telefonda bulmak zordu.

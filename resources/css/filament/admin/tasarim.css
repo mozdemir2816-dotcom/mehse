@@ -1148,15 +1148,166 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 }
 
 .mehse-giris-tanitim-dip {
-    color: rgb(255 255 255 / .45);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1.25rem;
+    color: rgb(255 255 255 / .5);
     font-size: .75rem;
 }
 
-/* Giriş kartının altı: kayıt seçeneği (isgsuite "Başvuru seçenekleri"). */
+.mehse-giris-rozetler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem .6rem;
+}
+
+.mehse-giris-rozetler > span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .55rem;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / .07);
+    color: rgb(255 255 255 / .75);
+}
+
+/* "Beni hatırla" solda, "Şifremi unuttum?" tek satırda tam sağda. */
+.mehse-giris-satir {
+    align-items: center;
+}
+
+.mehse-giris-satir .mehse-giris-unuttum {
+    display: block;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Sağ üst köşe: tanıtım (ana) sayfaya dönüş. */
+.mehse-giris-geri {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.5rem;
+    z-index: 5;
+    padding: .35rem .75rem;
+    border-radius: 9999px;
+    color: #475569;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color .15s, color .15s;
+}
+
+.mehse-giris-geri:hover {
+    background: rgb(9 146 145 / .1);
+    color: #0A6F6E;
+}
+
+@media (min-width: 1024px) {
+    /* Logo solda zaten var; kartın üstünde tekrarlanmasın (dikey alan da kazanılır). */
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main .fi-logo {
+        display: none;
+    }
+
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main-ctn {
+        padding-block: 3.25rem 1.5rem !important;
+    }
+}
+
+/* Alçak ekranlar (dizüstü ~720–800px): kaydırma çıkmasın. */
+@media (min-width: 1024px) and (max-height: 820px) {
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main {
+        padding: 1.75rem 2rem !important;
+    }
+
+    .mehse-giris-tanitim {
+        padding-block: 2rem;
+    }
+
+    .mehse-giris-tanitim-baslik {
+        font-size: 1.75rem !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-height: 720px) {
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main {
+        padding: 1.25rem 1.75rem !important;
+    }
+
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main-ctn {
+        padding-block: 2.75rem 1rem !important;
+    }
+
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main .fi-fo-field-wrp,
+    html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main .fi-sc-form {
+        row-gap: .75rem;
+    }
+
+    .mehse-giris-secenekler {
+        margin-top: .6rem;
+    }
+
+    .mehse-giris-demo {
+        margin-top: .5rem;
+    }
+}
+
+/* Telefon: "Ana Sayfaya Dön" koyu marka bandının üstünde, beyaz. */
+@media (max-width: 1023px) {
+    .mehse-giris-geri {
+        top: .8rem;
+        right: .9rem;
+        color: #fff;
+        background: rgb(255 255 255 / .12);
+    }
+
+    .mehse-giris-geri:hover {
+        color: #fff;
+        background: rgb(255 255 255 / .2);
+    }
+}
+
+/* Giriş kartının altı: "veya" çizgisi + yan yana iki kompakt başvuru düğmesi. */
 .mehse-giris-secenekler {
-    margin-top: 1.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid #E2E8F0;
+    margin-top: 1rem;
+}
+
+.mehse-giris-ayirac {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .75rem;
+    color: #94A3B8;
+    font-size: .75rem;
+}
+
+.mehse-giris-ayirac::before,
+.mehse-giris-ayirac::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #E2E8F0;
+}
+
+.mehse-giris-secenek-izgara {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    gap: .6rem;
+}
+
+.mehse-giris-demo {
+    display: block;
+    margin-top: .8rem;
+    color: #0A6F6E;
+    font-size: .8rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+
+.mehse-giris-demo:hover {
+    text-decoration: underline;
 }
 
 .mehse-giris-secenekler-baslik {

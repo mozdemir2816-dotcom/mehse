@@ -48,7 +48,7 @@ class BasvuruTest extends TestCase
     public function test_giris_ekrani_iki_basvuru_secenegini_gosterir(): void
     {
         $this->get('/admin/login')->assertOk()
-            ->assertSee('Başvuru seçenekleri')
+            ->assertSee('veya başvurun')
             ->assertSee('İş Güvenliği Uzmanı')
             ->assertSee('OSGB Başvurusu')
             ->assertSee(OsgbBasvuru::getUrl(), escape: false);

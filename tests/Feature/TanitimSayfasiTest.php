@@ -46,7 +46,7 @@ class TanitimSayfasiTest extends TestCase
 
     public function test_giris_ekraninda_tanitim_baglantisi_var(): void
     {
-        $this->get('/admin/login')->assertOk()->assertSee('Tanıtım sayfası');
+        $this->get('/admin/login')->assertOk()->assertSee('Ana Sayfaya Dön');
     }
 
     public function test_teklif_formu_talebi_kaydeder(): void
