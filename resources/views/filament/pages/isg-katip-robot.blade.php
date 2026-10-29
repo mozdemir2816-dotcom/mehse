@@ -7,6 +7,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     {{-- ÜST: gereksinimler + hero --}}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
         {{-- Teknik Gereksinimler --}}

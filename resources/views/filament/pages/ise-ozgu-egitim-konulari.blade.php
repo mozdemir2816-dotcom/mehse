@@ -7,6 +7,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <div style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.75rem">
         Yıllık eğitim planının 4. bölümü (<strong>İşe ve İşyerine Özgü Riskler</strong>) bu kütüphaneden dolar: plan oluşturulurken firmada iş kalemi seçiliyse
         iş kalemine, değilse NACE koduna uyan konular <strong>otomatik</strong> gelir. Plandaki konular Eğitim Katılım formunun işyerine özgü bölümüne aktarılır.

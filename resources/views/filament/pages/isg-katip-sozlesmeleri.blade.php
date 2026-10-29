@@ -7,6 +7,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     @if ($this->tumu->isEmpty())
         <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
             <x-filament::icon icon="heroicon-o-document-arrow-up" style="width:2rem;height:2rem;color:{{ $mor }};margin:0 auto .5rem"/>

@@ -32,6 +32,9 @@ class Guvenlik extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
 
+    /** Menüde gizli — Sistem & Ayarlar Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'guvenlik';

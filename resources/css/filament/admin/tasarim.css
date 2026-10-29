@@ -136,8 +136,24 @@ html[data-mehse-tema="saha"] {
 /* -------------------------------------------------------------------------
    Sidebar alt kartı (resources/views/filament/components/sidebar-alt.blade.php)
    ------------------------------------------------------------------------- */
+/* Sidebar dikey düzeni: üstte başlık, ortada kaydırılabilir menü (esner), en altta kullanıcı kartı.
+   Menü kısa olsa da (gruplar kapalıyken) kart ekranın dibine yapışır; uzunsa yalnız menü kayar. */
+.fi-sidebar {
+    display: flex;
+    flex-direction: column;
+}
+
+.fi-sidebar-nav {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .mehse-sidebar-alt {
-    padding: .5rem .75rem .9rem;
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: .6rem .75rem .9rem;
+    border-top: 1px solid var(--mehse-sb-kart-kenar);
 }
 
 .mehse-sidebar-alt-kart {

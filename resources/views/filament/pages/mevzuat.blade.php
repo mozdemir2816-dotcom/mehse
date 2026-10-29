@@ -3,6 +3,7 @@
     $girdi = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
 ?>
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İSG pratiğinde en sık başvurulan mevzuatın kısa dizini — tam metin değil, yönlendirme amaçlıdır.
         Madde numarası/tarih gibi ayrıntılar için resmi kaynağa (mevzuat.gov.tr, resmigazete.gov.tr) bakınız.

@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(128 116 148)">
         Kayıt olan kullanıcılar varsayılan olarak hiçbir sayfa görmez. Aşağıdan her kullanıcı
         için erişebileceği sayfaları ve firmaları seçip kaydedin.

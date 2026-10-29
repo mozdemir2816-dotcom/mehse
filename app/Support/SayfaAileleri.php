@@ -85,6 +85,23 @@ class SayfaAileleri
                 [Pages\IsKazasiRaporu::class, 'Kaza İnceleme Raporu'],
                 [Pages\KazaIstatistikleri::class, 'İstatistikler'],
             ],
+            // Sistem Yönetim & Entegrasyon Merkezi: 8 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['ayarlar'] bkz.
+            'ayarlar' => [
+                [Pages\Ayarlar::class, 'Ayarlar'],
+                [Pages\Guvenlik::class, 'Güvenlik'],
+                [Pages\KullaniciYonetimi::class, 'Kullanıcı Yetkileri'],
+                [Pages\Basvurular::class, 'Başvurular'],
+                [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
+                [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
+                [Pages\Mevzuat::class, 'Mevzuat'],
+                [Pages\IseOzguEgitimKonulari::class, 'İşe Özgü Eğitim Konuları'],
+            ],
+            // İSG Yıllık Planlama & Değerlendirme Merkezi: 3 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['yillik'] bkz.
+            'yillik' => [
+                [Pages\YillikPlan\YillikCalismaPlani::class, 'Yıllık Çalışma Planı'],
+                [Pages\YillikPlan\YillikEgitimPlani::class, 'Yıllık Eğitim Planı'],
+                [Pages\YillikPlan\YillikDegerlendirmeRaporu::class, 'Yıllık Değerlendirme Raporu'],
+            ],
             // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
             'belge' => [
                 [Pages\IsIzinFormu::class, 'İş İzin Formu (PTW)'],
@@ -123,6 +140,18 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        // Sistem Yönetim & Entegrasyon Merkezi (30.10.2026)
+        'ayarlar' => [
+            ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class]],
+            ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class, Pages\Basvurular::class]],
+            ['etiket' => 'İSG-KATİP Robotu & Mevzuat Kütüphanesi', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class, Pages\IseOzguEgitimKonulari::class]],
+        ],
+        // İSG Yıllık Planlama & Değerlendirme Merkezi (30.10.2026)
+        'yillik' => [
+            ['etiket' => 'Yıllık Çalışma Planı (Master P/G Matrisi)', 'ikon' => 'heroicon-o-calendar-days', 'siniflar' => [Pages\YillikPlan\YillikCalismaPlani::class]],
+            ['etiket' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'siniflar' => [Pages\YillikPlan\YillikEgitimPlani::class]],
+            ['etiket' => 'Yıl Sonu Değerlendirme Raporu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\YillikPlan\YillikDegerlendirmeRaporu::class]],
+        ],
         // Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi (30.10.2026)
         'kkd' => [
             [

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\PushAbonelik;
 use App\Models\User;
+use App\Support\KontrolKriterGruplari;
 use App\Support\KullaniciAyarlari;
 use App\Support\TelefonBildirimi;
 use App\Support\WebPush;
@@ -21,6 +22,7 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\View;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\QueryException;
 use Throwable;
@@ -33,6 +35,8 @@ use UnitEnum;
  */
 class Ayarlar extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
     protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
@@ -153,17 +157,18 @@ class Ayarlar extends Page
                     ]),
 
                 Section::make('Kontrol Merkezi kriterleri')
+                    ->headerActions(static::kriterHizliSecimleri())
                     ->description('İşaretli kriterler Kontrol Merkezi, Firma Takip ve Excel panosunda sayılır. Takip etmediğiniz kriterlerin işaretini kaldırın; tamamlanma yüzdeleri buna göre hesaplanır.')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->collapsible()
                     ->schema([
                         CheckboxList::make('kontrol_takip')
                             ->hiddenLabel()
-                            ->options(fn (): array => collect(config('isg.kontrol_merkezi.kriterler', []))
+                            ->options(fn (): array => collect(KontrolKriterGruplari::sirali())
                                 ->mapWithKeys(fn (array $k): array => [$k['anahtar'] => $k['ad']])
                                 ->all())
-                            ->descriptions(fn (): array => collect(config('isg.kontrol_merkezi.kriterler', []))
-                                ->mapWithKeys(fn (array $k): array => [$k['anahtar'] => $k['kategori'] ?? ''])
+                            ->descriptions(fn (): array => collect(KontrolKriterGruplari::sirali())
+                                ->mapWithKeys(fn (array $k): array => [$k['anahtar'] => KontrolKriterGruplari::grup($k['anahtar'])])
                                 ->all())
                             ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
                             ->searchable()
@@ -181,6 +186,30 @@ class Ayarlar extends Page
                             ->bulkToggleable(),
                     ]),
             ]);
+    }
+
+    /**
+     * Kriter listesi için hızlı seçim düğmeleri: tümü, yalnız yasal olanlar ve 4 kategoriden biri
+     * (kategori düğmesi yalnız o kategoriyi işaretler).
+     *
+     * @return array<int, Action>
+     */
+    private static function kriterHizliSecimleri(): array
+    {
+        $dugme = fn (string $ad, string $etiket, \Closure $secim, string $renk = 'gray'): Action => Action::make($ad)
+            ->label($etiket)
+            ->size('xs')
+            ->color($renk)
+            ->action(fn (Set $set) => $set('kontrol_takip', $secim()));
+
+        return [
+            $dugme('kriterTumu', 'Tümünü Seç', fn () => KontrolKriterGruplari::tumAnahtarlar(), 'primary'),
+            $dugme('kriterYasal', 'Yalnızca Yasal Olanları Seç', fn () => KontrolKriterGruplari::yasalAnahtarlar(), 'success'),
+            ...array_map(
+                fn (string $grup) => $dugme('kriterGrup'.md5($grup), $grup, fn () => KontrolKriterGruplari::grubunAnahtarlari($grup)),
+                KontrolKriterGruplari::gruplar(),
+            ),
+        ];
     }
 
     public function content(Schema $schema): Schema
