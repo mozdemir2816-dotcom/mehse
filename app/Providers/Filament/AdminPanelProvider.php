@@ -68,8 +68,11 @@ class AdminPanelProvider extends PanelProvider
     private function navGruplari(): array
     {
         return array_map(
+            // collapsed(false) grubu daraltılamaz yapıyordu; collapsible() sonda — akordeon menü için tüm
+            // gruplar açılır/kapanır (menu-arama.blade.php: tek grup açık).
             fn (string $etiket): NavigationGroup => NavigationGroup::make($etiket)
-                ->collapsed(in_array($etiket, self::KapaliGruplar, true)),
+                ->collapsed(in_array($etiket, self::KapaliGruplar, true))
+                ->collapsible(),
             self::NavGrupSirasi,
         );
     }
@@ -80,6 +83,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            // Üst barda arama kutusu: Ctrl+K (Mac'te ⌘K) ile açılır, kutuda ipucu görünür.
+            ->globalSearchKeyBindings(['ctrl+k', 'command+k'])
+            ->globalSearchFieldKeyBindingSuffix()
             ->login(\App\Filament\Auth\Login::class)
             // Şifremi unuttum (29.10.2026): e-posta ile sıfırlama bağlantısı. Canlıda .env'de SMTP (MAIL_*) şart.
             ->passwordReset()
