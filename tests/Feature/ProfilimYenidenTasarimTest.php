@@ -73,7 +73,7 @@ class ProfilimYenidenTasarimTest extends TestCase
             ->assertSee('Alfa İnşaat')
             ->assertDontSee('Raporlarım')
             ->assertDontSee("sekmeSec('arsiv')", false)
-            ->assertSee("sekmeSec('pazarlama')", false);
+            ->assertDontSee("sekmeSec('pazarlama')", false);
 
         // Eski adres ve test çağrısı yine çalışır (sekme gizli, silinmedi).
         Livewire::test(Profilim::class)->call('sekmeSec', 'arsiv')->assertSet('sekme', 'arsiv');

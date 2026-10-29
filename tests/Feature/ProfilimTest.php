@@ -187,7 +187,6 @@ class ProfilimTest extends TestCase
             ->call('sekmeSec', 'calisanlar')->assertSet('sekme', 'calisanlar')
             ->call('sekmeSec', 'egitimler')->assertSet('sekme', 'egitimler')
             ->call('sekmeSec', 'risklerim')->assertSet('sekme', 'risklerim')
-            ->call('sekmeSec', 'pazarlama')->assertSet('sekme', 'pazarlama')
             ->call('sekmeSec', 'arsiv')->assertSet('sekme', 'arsiv')
             ->call('sekmeSec', 'raporlar')->assertSet('sekme', 'raporlar')
             ->call('sekmeSec', 'yok')->assertSet('sekme', 'raporlar');

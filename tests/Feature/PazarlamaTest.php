@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\Profilim;
+use App\Filament\Pages\Pazarlama;
 use App\Filament\Resources\Firmas\Pages\CreateFirma;
 use App\Models\AdayFirma;
 use App\Models\User;
@@ -30,7 +30,7 @@ class PazarlamaTest extends TestCase
         AdayFirma::create(['user_id' => $this->uzman->id, 'unvan' => 'C', 'asama' => 'kazanildi']);
         AdayFirma::create(['user_id' => $this->uzman->id, 'unvan' => 'D', 'asama' => 'aday', 'hatirlatma_tarihi' => now()->subDay()]);
 
-        $ozet = Livewire::test(Profilim::class)->instance()->pazarlamaOzeti();
+        $ozet = Livewire::test(Pazarlama::class)->instance()->pazarlamaOzeti();
 
         $this->assertSame(4, $ozet['toplam']);
         $this->assertSame(1, $ozet['teklif']);
@@ -40,7 +40,7 @@ class PazarlamaTest extends TestCase
 
     public function test_aday_firma_kaydet_action_olusturur_ve_gunceller(): void
     {
-        Livewire::test(Profilim::class)
+        Livewire::test(Pazarlama::class)
             ->callAction('adayFirmaKaydet', [
                 'unvan' => 'Örnek Aday A.Ş.',
                 'yetkili_ad' => 'Ahmet Yılmaz',
@@ -51,7 +51,7 @@ class PazarlamaTest extends TestCase
         $aday = AdayFirma::where('user_id', $this->uzman->id)->firstOrFail();
         $this->assertSame('Örnek Aday A.Ş.', $aday->unvan);
 
-        Livewire::test(Profilim::class)
+        Livewire::test(Pazarlama::class)
             ->mountAction('adayFirmaKaydet', ['id' => $aday->id])
             ->assertActionDataSet(['unvan' => 'Örnek Aday A.Ş.', 'asama' => 'aday'])
             ->setActionData(['unvan' => 'Örnek Aday A.Ş.', 'asama' => 'teklif'])
@@ -66,7 +66,7 @@ class PazarlamaTest extends TestCase
     {
         $aday = AdayFirma::create(['user_id' => $this->uzman->id, 'unvan' => 'Silinecek', 'asama' => 'aday']);
 
-        Livewire::test(Profilim::class)->call('adayFirmaSil', $aday->id);
+        Livewire::test(Pazarlama::class)->call('adayFirmaSil', $aday->id);
 
         $this->assertDatabaseMissing('aday_firmalar', ['id' => $aday->id]);
     }
@@ -76,7 +76,7 @@ class PazarlamaTest extends TestCase
         $baskasi = User::factory()->create();
         $aday = AdayFirma::create(['user_id' => $baskasi->id, 'unvan' => 'Yabancı', 'asama' => 'aday']);
 
-        Livewire::test(Profilim::class)->call('adayFirmaSil', $aday->id);
+        Livewire::test(Pazarlama::class)->call('adayFirmaSil', $aday->id);
 
         $this->assertDatabaseHas('aday_firmalar', ['id' => $aday->id]);
     }
@@ -88,7 +88,7 @@ class PazarlamaTest extends TestCase
             'telefon' => '5551234567', 'sehir' => 'İstanbul', 'asama' => 'kazanildi',
         ]);
 
-        Livewire::test(Profilim::class)
+        Livewire::test(Pazarlama::class)
             ->call('adayFirmaDonustur', $aday->id)
             ->assertRedirect(CreateFirma::getUrl());
 
@@ -114,5 +114,11 @@ class PazarlamaTest extends TestCase
                 'il' => 'Ankara',
                 'tehlike_sinifi' => 'az_tehlikeli',
             ]);
+    }
+
+    public function test_pazarlama_sol_menude_firmalar_ve_calisanlar_grubunda(): void
+    {
+        $this->assertSame('Firmalar & Çalışanlar', Pazarlama::getNavigationGroup());
+        Livewire::test(Pazarlama::class)->assertSee('Aday Firma Ekle')->assertSee('Toplam Aday');
     }
 }
