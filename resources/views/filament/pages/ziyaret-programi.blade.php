@@ -6,6 +6,20 @@
 @endphp
 
 <x-filament-panels::page>
+    {{-- Görünüm seçici: Genel Ajanda (portföy takvimi) / Firma Bazlı Yıllık Plan (12 ay) --}}
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap" role="tablist" aria-label="Planlama görünümü">
+        @foreach (['ajanda' => 'Genel Ajanda (Portföy Takvimi)', 'plan' => 'Firma Bazlı Yıllık Plan (12 Ay)'] as $kod => $ad)
+            <button type="button" role="tab" aria-selected="{{ $gorunum === $kod ? 'true' : 'false' }}" wire:click="gorunumSec('{{ $kod }}')"
+                style="min-height:2.75rem;padding:0 1.1rem;border-radius:9999px;cursor:pointer;font-size:.88rem;font-weight:700;
+                    border:1px solid {{ $gorunum === $kod ? '#0284C7' : 'rgb(107 114 128 / .35)' }};
+                    background:{{ $gorunum === $kod ? 'rgb(2 132 199 / .1)' : 'transparent' }};
+                    color:{{ $gorunum === $kod ? '#0369A1' : 'inherit' }}">{{ $ad }}</button>
+        @endforeach
+    </div>
+
+    @if ($gorunum === 'ajanda')
+        @include('filament.pages.partials.planlama-ajanda')
+    @else
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Firma başına yıllık, 12 aylık saha ziyaret programı. Durum hücresine tıklayarak
         Boş→Planlandı→Tamamlandı arasında geçiş yapın; isterseniz AI'dan o ay için kısa
@@ -31,6 +45,37 @@
     </div>
 
     @if ($this->firma)
+        @php
+            $yDk = $this->yasalDakika;
+            $sk = \App\Support\YasalZiyaretSuresi::siklik($this->firma->tehlike_sinifi);
+            $kisaYasal = \App\Support\YasalZiyaretSuresi::etiket($yDk);
+            $yDkKatip = (int) $this->firma->katip_aylik_dk > 0;
+        @endphp
+        {{-- YASAL ASGARİ SÜRE (otomatik): çalışan × tehlike sınıfı dakikası ya da İSG-KATİP süresi --}}
+        <div style="border:1px solid rgb(2 132 199 / .35);background:rgb(2 132 199 / .06);border-radius:1rem;padding:.8rem 1rem;display:flex;flex-wrap:wrap;gap:.8rem 1.5rem;align-items:center;justify-content:space-between">
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;align-items:center">
+                <div>
+                    <div style="font-size:.68rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Aylık yasal asgari süre</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#0369A1;line-height:1.1">{{ $kisaYasal }}</div>
+                    <div style="font-size:.72rem;color:rgb(107 114 128)">
+                        @if ($yDkKatip)
+                            İSG-KATİP sözleşme süresi · {{ $yDk }} dk
+                        @else
+                            {{ (int) $this->firma->calisan_sayisi }} çalışan × {{ (int) config('isg.igu_aylik_dk.'.$this->firma->tehlike_sinifi) }} dk ({{ $this->firma->tehlikeSinifiEtiketi() }}) = {{ $yDk }} dk
+                        @endif
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:.68rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Önerilen ziyaret sıklığı</div>
+                    <div style="font-size:1.1rem;font-weight:800">{{ $sk['etiket'] }}</div>
+                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $this->firma->tehlikeSinifiEtiketi() }} sınıf</div>
+                </div>
+            </div>
+            @if ($yDk > 0)
+                <x-filament::button color="gray" icon="heroicon-o-clock" wire:click="yasalSureyiYaz" style="min-height:2.75rem">Boş Aylara Yasal Süreyi Yaz</x-filament::button>
+            @endif
+        </div>
+
         <x-filament::section icon="heroicon-o-calendar" icon-color="primary">
             <x-slot name="heading">{{ $yil }} Yılı Ziyaret Programı</x-slot>
 
@@ -40,6 +85,7 @@
                         <th style="text-align:left;padding:.4rem;width:70px">Ay</th>
                         <th style="text-align:left;padding:.4rem;width:130px">Tarih</th>
                         <th style="text-align:left;padding:.4rem">Amaç / Kapsam</th>
+                        <th style="text-align:left;padding:.4rem;width:110px" title="Firma için aylık yasal asgari süre">Yasal süre</th>
                         <th style="text-align:left;padding:.4rem;width:90px">Süre (sa.)</th>
                         <th style="text-align:left;padding:.4rem;width:110px">Durum</th>
                         <th style="text-align:left;padding:.4rem;width:160px">Notlar</th>
@@ -64,6 +110,14 @@
                                         <x-filament::icon-button icon="heroicon-o-sparkles" color="primary" size="sm"
                                             wire:click="aiAmacOner({{ $i }}, {{ $s }})" tooltip="AI'dan öneri al"/>
                                     </div>
+                                </td>
+                                <td style="padding:.4rem;white-space:nowrap">
+                                    @if ($s === 0 && $yDk > 0)
+                                        @php $planDk = \App\Support\YasalZiyaretSuresi::dakikayaCevir($z['sure_saat']); $yetersiz = filled($z['sure_saat']) && $planDk < $yDk - 1; @endphp
+                                        <span style="display:inline-block;font-size:.7rem;font-weight:700;padding:.15rem .55rem;border-radius:9999px;
+                                            {{ $yetersiz ? 'background:rgb(217 119 6 / .15);color:#b45309' : 'background:rgb(2 132 199 / .1);color:#0369A1' }}"
+                                            title="{{ $yetersiz ? 'Planlanan süre yasal asgari sürenin altında' : 'Yasal asgari süre' }}">{{ $kisaYasal }}{{ $yetersiz ? ' ⚠' : '' }}</span>
+                                    @endif
                                 </td>
                                 <td style="padding:.4rem">
                                     <input type="number" step="0.5" min="0" value="{{ $z['sure_saat'] }}"
@@ -243,5 +297,6 @@
         </x-filament::section>
     @else
         <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+    @endif
     @endif
 </x-filament-panels::page>

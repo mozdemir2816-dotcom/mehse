@@ -3,13 +3,16 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Pages\Concerns\PortfoyAjandasi;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\YillikPlan;
 use App\Models\ZiyaretProgrami as ZiyaretProgramiModel;
 use App\Support\GeminiZiyaretDanismani;
+use App\Support\KomutaFirma;
 use App\Support\ZiyaretOtomatikPlanlayici;
 use App\Support\ZiyaretProgramiUretici;
+use App\Support\YasalZiyaretSuresi;
 use App\Support\ZiyaretTakvimi;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -22,6 +25,9 @@ use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
+ * Saha & Ziyaret Planlama Merkezi (29.10.2026): eski "Ziyaret Programı" (firma bazlı 12 aylık plan) ile eski "Saha Takvimi"
+ * (portföy ajandası) tek ekranda, üstte görünüm seçici. Yasal asgari süre firma seçilince otomatik hesaplanır.
+ *
  * Ziyaret Programı — isgpratik'te ekran görüntüsü yok; kullanıcı onayıyla
  * BASİTLEŞTİRİLMİŞ liste (firma+yıl başına 12 aylık satır) olarak kuruldu.
  * isgpratik'teki tam takvim/sürükle-bırak/çoklu-firma-OSGB arayüzü kapsam
@@ -29,6 +35,7 @@ use UnitEnum;
  */
 class ZiyaretProgrami extends Page
 {
+    use PortfoyAjandasi;
     use SinirliErisim;
 
     protected string $view = 'filament.pages.ziyaret-programi';
@@ -41,12 +48,16 @@ class ZiyaretProgrami extends Page
 
     protected static ?string $slug = 'ziyaret-programi';
 
-    protected static ?string $title = 'Ziyaret Programı';
+    protected static ?string $title = 'Saha & Ziyaret Planlama Merkezi';
 
-    protected static ?string $navigationLabel = 'Ziyaret Programı';
+    protected static ?string $navigationLabel = 'Ziyaret Planlama';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
+
+    /** Görünüm seçici: 'ajanda' = Genel Ajanda (portföy takvimi), 'plan' = Firma Bazlı Yıllık Plan (12 ay). */
+    #[Url(as: 'gorunum')]
+    public string $gorunum = 'plan';
 
     public int $yil;
 
@@ -63,8 +74,16 @@ class ZiyaretProgrami extends Page
         $this->takvimSeciliTarih = now()->toDateString();
         $this->yapilacakAy = now()->month - 1;
 
-        if ($firmaId = request()->integer('firma')) {
+        $this->ajandaBaslat();
+
+        if (! in_array($this->gorunum, ['ajanda', 'plan'], true)) {
+            $this->gorunum = 'plan';
+        }
+
+        // ?firma= yoksa ortak firma bağlamı (App\Support\KomutaFirma) açılır.
+        if ($firmaId = request()->integer('firma') ?: KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
+            KomutaFirma::sec($firmaId);
         }
 
         // Ana sayfa widget'ından gelen bağlantı: ?yil=2026&ay=10 (1–12).
@@ -193,7 +212,8 @@ class ZiyaretProgrami extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
+        KomutaFirma::sec($this->firmaId);
+        unset($this->firma, $this->yasalDakika, $this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
         $this->takvimAy = null;
     }
 
@@ -235,6 +255,12 @@ class ZiyaretProgrami extends Page
         }
 
         $girdiler[$satirIndex][$alan] = $deger;
+
+        // Tarih girilince süre boşsa yasal asgari süre varsayılan olarak yazılır (elle değiştirilebilir).
+        if ($alan === 'tarih' && filled($deger) && blank($girdiler[$satirIndex]['sure_saat'] ?? null) && $this->yasalDakika > 0) {
+            $girdiler[$satirIndex]['sure_saat'] = YasalZiyaretSuresi::saat($this->yasalDakika);
+        }
+
         $aylar[$ayIndex] = $girdiler;
         $p->update(['ziyaretler' => $aylar]);
         unset($this->program, $this->takvimGunler);
@@ -243,6 +269,54 @@ class ZiyaretProgrami extends Page
             $this->takvimAy = Carbon::parse($deger)->format('Y-m');
             $this->takvimSeciliTarih = $deger;
         }
+    }
+
+    public function gorunumSec(string $gorunum): void
+    {
+        if (in_array($gorunum, ['ajanda', 'plan'], true)) {
+            $this->gorunum = $gorunum;
+        }
+    }
+
+    /** Seçili firmanın aylık yasal asgari süresi (dakika): KATİP süresi varsa o, yoksa çalışan × tehlike sınıfı dakikası. */
+    #[Computed]
+    public function yasalDakika(): int
+    {
+        return $this->firma ? YasalZiyaretSuresi::dakika($this->firma) : 0;
+    }
+
+    /**
+     * Yasal süreyi planın tüm aylarının İLK ziyaret satırına yazar — yalnız süresi boş olanlara; elle girilmiş
+     * süreye dokunmaz. Süre saat cinsinden saklanır (200 dk → 3.33).
+     */
+    public function yasalSureyiYaz(): void
+    {
+        $p = $this->program();
+
+        if (! $p || $this->yasalDakika <= 0) {
+            Notification::make()->title('Önce çalışan sayısı olan bir firma seçin')->warning()->send();
+
+            return;
+        }
+
+        $aylar = $p->ziyaretler ?? [];
+        $yazilan = 0;
+
+        foreach ($aylar as $ayIndex => $ay) {
+            $girdiler = ZiyaretProgramiModel::ayGirdileri($ay);
+
+            if (isset($girdiler[0]) && blank($girdiler[0]['sure_saat'] ?? null)) {
+                $girdiler[0]['sure_saat'] = YasalZiyaretSuresi::saat($this->yasalDakika);
+                $aylar[$ayIndex] = $girdiler;
+                $yazilan++;
+            }
+        }
+
+        $p->update(['ziyaretler' => $aylar]);
+        unset($this->program, $this->takvimGunler);
+
+        Notification::make()->title($yazilan.' ayın süresine '.YasalZiyaretSuresi::etiket($this->yasalDakika).' yazıldı')
+            ->body('Elle girilmiş sürelere dokunulmadı.')->success()->send();
     }
 
     public function durumDegistir(int $ayIndex, int $satirIndex): void
@@ -337,6 +411,7 @@ class ZiyaretProgrami extends Page
                 ->label('Boş Ayları Otomatik Doldur')
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
+                ->visible(fn () => $this->gorunum === 'plan')
                 ->requiresConfirmation()
                 ->modalHeading('Boş ayları otomatik doldur')
                 ->modalDescription('Seçtiğiniz yıl için: elle veya daha önce doldurulmuş aylara DOKUNULMAZ. Hâlâ boş olan aylar; FOM MAKİNA / Orman Müdürlükleri gibi sabit kurallı firmalarda o kurala göre, diğer tüm aktif firmalarda ise İSG-KATİP süresine göre (günde en fazla 10 saat) otomatik doldurulur. Bugünden önceki günlere ziyaret konmaz.')
@@ -355,13 +430,13 @@ class ZiyaretProgrami extends Page
             Action::make('kaydet')
                 ->label('Kaydet')
                 ->icon('heroicon-o-check')
-                ->visible(fn () => $this->program() !== null)
+                ->visible(fn () => $this->gorunum === 'plan' && $this->program() !== null)
                 ->action(fn () => $this->kaydet()),
             Action::make('pdf')
                 ->label('Çıktı İndir (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->visible(fn () => $this->program() !== null)
+                ->visible(fn () => $this->gorunum === 'plan' && $this->program() !== null)
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => ZiyaretProgramiUretici::pdf($this->program())),
         ];

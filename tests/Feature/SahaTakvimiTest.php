@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\SahaTakvimi;
+use App\Filament\Pages\ZiyaretProgrami as PlanlamaMerkezi;
 use App\Models\Firma;
 use App\Models\User;
 use App\Models\ZiyaretProgrami;
@@ -87,7 +87,7 @@ class SahaTakvimiTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'A Firma']);
         $this->ziyaretEkle($firma, 4, '2026-05-20', 'Eğitim');
 
-        $liste = Livewire::test(SahaTakvimi::class)
+        $liste = Livewire::test(PlanlamaMerkezi::class)
             ->call('tarihSec', '2026-05-20')
             ->instance()
             ->gunlukListe();
@@ -98,7 +98,7 @@ class SahaTakvimiTest extends TestCase
 
     public function test_ay_degistir_gosterilen_ayi_ileri_geri_alir(): void
     {
-        $test = Livewire::test(SahaTakvimi::class)->assertSet('gosterilenAy', now()->format('Y-m'));
+        $test = Livewire::test(PlanlamaMerkezi::class)->assertSet('gosterilenAy', now()->format('Y-m'));
 
         $test->call('ayDegistir', 1)
             ->assertSet('gosterilenAy', now()->addMonth()->format('Y-m'))
@@ -108,7 +108,7 @@ class SahaTakvimiTest extends TestCase
 
     public function test_bugune_git_ay_ve_tarihi_sifirlar(): void
     {
-        Livewire::test(SahaTakvimi::class)
+        Livewire::test(PlanlamaMerkezi::class)
             ->call('ayDegistir', 3)
             ->call('buguneGit')
             ->assertSet('gosterilenAy', now()->format('Y-m'))
@@ -128,7 +128,7 @@ class SahaTakvimiTest extends TestCase
         ];
         $program->update(['ziyaretler' => $ziyaretler]);
 
-        $rozetler = Livewire::test(SahaTakvimi::class)->instance()->ayRozetleri();
+        $rozetler = Livewire::test(PlanlamaMerkezi::class)->instance()->ayRozetleri();
 
         $this->assertSame(['tamamlandi' => 1, 'planlandi' => 1], $rozetler[$bugun->toDateString()]);
     }
