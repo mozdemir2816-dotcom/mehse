@@ -74,12 +74,12 @@ class GorevDurumuWidget extends Widget
     public function hizliAkislar(): array
     {
         return [
-            ['ad' => 'Risk ve DÖF', 'url' => DofOlustur::getUrl()],
-            ['ad' => 'Eğitim uygunluğu', 'url' => EgitimYenilemeTakibi::getUrl()],
-            ['ad' => 'KKD yenilemeleri', 'url' => KkdTakip::getUrl()],
-            ['ad' => 'Acil durum planı', 'url' => AcilDurumPlani::getUrl()],
-            ['ad' => 'Ortam ölçümleri', 'url' => OrtamOlcumleri::getUrl()],
-            ['ad' => 'Kontrol Merkezi', 'url' => KontrolMerkezi::getUrl()],
+            ['ad' => 'Risk ve DÖF', 'ikon' => 'heroicon-o-exclamation-triangle', 'url' => DofOlustur::getUrl()],
+            ['ad' => 'Eğitim uygunluğu', 'ikon' => 'heroicon-o-academic-cap', 'url' => EgitimYenilemeTakibi::getUrl()],
+            ['ad' => 'KKD yenilemeleri', 'ikon' => 'heroicon-o-shield-check', 'url' => KkdTakip::getUrl()],
+            ['ad' => 'Acil durum planı', 'ikon' => 'heroicon-o-fire', 'url' => AcilDurumPlani::getUrl()],
+            ['ad' => 'Ortam ölçümleri', 'ikon' => 'heroicon-o-beaker', 'url' => OrtamOlcumleri::getUrl()],
+            ['ad' => 'Kontrol Merkezi', 'ikon' => 'heroicon-o-squares-2x2', 'url' => KontrolMerkezi::getUrl()],
         ];
     }
 

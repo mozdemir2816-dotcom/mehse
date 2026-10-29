@@ -38,7 +38,7 @@
             <div style="display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-top:.5rem">
                 <div>
                     <span style="font-size:1.6rem;font-weight:800;color:{{ $doluRenk }}">{{ $saatDk($sure['kullanilan_dk']) }}</span>
-                    <span style="font-size:.95rem;color:rgb(107 114 128)"> / {{ $saatDk($toplamDk) }}</span>
+                    <span style="font-size:.95rem;color:rgb(107 114 128)"> / {{ intdiv($toplamDk, 60) }} saat</span>
                 </div>
                 <div style="font-size:.85rem;font-weight:600;color:{{ $asim ? 'rgb(225 29 72)' : 'rgb(5 150 105)' }}">
                     {{ $asim ? 'Aşım' : 'Kalan' }}: {{ $saatDk(abs($sure['kalan_dk'])) }}
@@ -59,41 +59,39 @@
         </div>
 
         {{-- Hızlı çalışma akışları --}}
-        <div style="{{ $kart }};margin-bottom:1rem">
-            <div style="font-weight:700;font-size:.9rem;margin-bottom:.5rem">Hızlı çalışma akışları</div>
+        <div style="{{ $kart }};margin-bottom:1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem">
+            <div style="font-weight:700;font-size:.85rem">Hızlı çalışma akışları</div>
             <div style="display:flex;flex-wrap:wrap;gap:.4rem">
                 @foreach ($this->hizliAkislar() as $h)
-                    <a href="{{ $h['url'] }}" style="font-size:.8rem;font-weight:600;padding:.4rem .75rem;border-radius:.5rem;background:rgb(124 58 237 / .08);color:rgb(91 33 182);text-decoration:none">{{ $h['ad'] }}</a>
+                    <a href="{{ $h['url'] }}" class="mehse-akis-hap">
+                        <x-filament::icon :icon="$h['ikon']" style="width:.95rem;height:.95rem" />{{ $h['ad'] }}
+                    </a>
                 @endforeach
             </div>
         </div>
 
-        {{-- Arama (solda) + Yenile / Durum raporu (sağa yaslı) --}}
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:.8rem">
-            <div style="flex:1 1 260px;max-width:420px">
-                <label style="font-size:.78rem;font-weight:600">Görev ara</label>
-                <input type="search" wire:model.live.debounce.400ms="arama" placeholder="Firma, görev, açıklama veya modül ara…"
-                       style="display:block;width:100%;margin-top:.25rem;padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
+        {{-- Tek satır: arama (solda) · sayaç rozetleri · Yenile / Durum raporu (sağ uçta) --}}
+        <div style="display:flex;align-items:center;gap:.6rem .9rem;flex-wrap:wrap;margin-bottom:.8rem">
+            <input type="search" wire:model.live.debounce.400ms="arama" placeholder="Firma, görev veya modül ara…" aria-label="Görev ara"
+                   style="flex:1 1 220px;max-width:300px;padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem;flex:1 1 auto">
+                @foreach ([
+                    ['Günü geçen', $o['gecikmis'], 'rgb(220 38 38)'],
+                    ['Yaklaşan', $o['yaklasan'], 'rgb(217 119 6)'],
+                    ['Yapılmayan', $o['yapilmayan'], 'rgb(71 85 105)'],
+                    ['Yapılan', $o['yapilan'], 'rgb(21 128 61)'],
+                    ['Tamamlanma', '%'.$o['tamamlanma'], 'rgb(13 148 136)'],
+                ] as [$ad, $sayi, $renk])
+                    <span @if ($ad === 'Yaklaşan') title="Termini {{ $yaklasanGun }} gün içinde" @endif
+                          style="display:inline-flex;align-items:center;gap:.35rem;font-size:.74rem;padding:.25rem .65rem;border-radius:9999px;border:1px solid color-mix(in srgb, {{ $renk }} 35%, transparent);background:color-mix(in srgb, {{ $renk }} 8%, transparent);color:{{ $renk }}">
+                        {{ $ad }}: <strong style="font-size:.82rem">{{ $sayi }}</strong>
+                    </span>
+                @endforeach
             </div>
-            <div style="display:flex;gap:.5rem">
+            <div style="display:flex;gap:.5rem;margin-left:auto">
                 <x-filament::button size="sm" color="gray" outlined icon="heroicon-o-arrow-path" wire:click="yenile">Yenile</x-filament::button>
                 <x-filament::button size="sm" color="gray" outlined icon="heroicon-o-arrow-down-tray" wire:click="durumRaporu">İndir / Durum raporu</x-filament::button>
             </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:1rem">
-            @foreach ([
-                ['Günü geçen', $o['gecikmis'], 'rgb(220 38 38)'],
-                ['Yaklaşan ('.$yaklasanGun.' gün)', $o['yaklasan'], 'rgb(217 119 6)'],
-                ['Yapılmayan', $o['yapilmayan'], 'rgb(71 85 105)'],
-                ['Yapılan', $o['yapilan'], 'rgb(21 128 61)'],
-                ['Tamamlanma', '%'.$o['tamamlanma'], 'rgb(13 148 136)'],
-            ] as [$ad, $sayi, $renk])
-                <div style="border:1px solid rgb(107 114 128 / .2);border-top:3px solid {{ $renk }};border-radius:.6rem;padding:.55rem .8rem">
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
-                    <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $sayi }}</div>
-                </div>
-            @endforeach
         </div>
 
         @if ($o['gecikmis'] > 0)
@@ -107,7 +105,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem">
             @foreach ($sutunlar as $durum => [$baslik, $ikon, $renk, $zemin])
                 @php $liste = $gorevler->where('durum', $durum); @endphp
-                <div style="border:1px solid color-mix(in srgb, {{ $renk }} 28%, transparent);border-radius:.75rem;background:{{ $zemin }};padding:.6rem;display:flex;flex-direction:column;max-height:520px">
+                <div style="border:1px solid color-mix(in srgb, {{ $renk }} 28%, transparent);border-radius:.75rem;background:{{ $zemin }};padding:.6rem;display:flex;flex-direction:column;height:420px">
                     <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;color:{{ $renk }};font-size:.88rem;padding:.1rem .2rem .5rem">
                         <span style="display:flex;align-items:center;gap:.3rem"><x-filament::icon :icon="$ikon" style="width:1rem;height:1rem" /> {{ $baslik }}</span>
                         <span style="font-size:.72rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 14%, transparent)">{{ $liste->count() }}</span>

@@ -1503,3 +1503,54 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
         justify-content: center;
     }
 }
+
+/* ==========================================================================
+   ANA SAYFA yeniden düzenleme (29.10.2026): kompakt KPI kartları (Portföy
+   Özeti karşılama kartının altında) ve ikonlu hızlı akış hapları.
+   ========================================================================== */
+.mehse-ana-sayfa .fi-wi-stats-overview-stat {
+    padding: .7rem 1rem !important;
+    border-radius: 12px !important;
+}
+
+.mehse-ana-sayfa .fi-wi-stats-overview-stat-value {
+    font-size: 1.45rem !important;
+}
+
+.mehse-ana-sayfa .fi-wi-stats-overview-stat-label {
+    font-size: .78rem;
+}
+
+.mehse-ana-sayfa .fi-wi-stats-overview-stat-description {
+    font-size: .72rem;
+}
+
+.mehse-ana-sayfa .fi-wi-stats-overview-stat::after {
+    display: none;
+}
+
+.mehse-akis-hap {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .32rem .75rem;
+    border: 1px solid rgb(100 116 139 / .3);
+    border-radius: 9999px;
+    background: transparent;
+    color: #0F172A;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color .15s, background-color .15s, color .15s, transform .15s;
+}
+
+.mehse-akis-hap .fi-icon {
+    color: #0284C7;
+}
+
+.mehse-akis-hap:hover {
+    border-color: #0284C7;
+    background: rgb(2 132 199 / .08);
+    color: #0369A1;
+    transform: translateY(-1px);
+}

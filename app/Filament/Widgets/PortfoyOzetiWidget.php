@@ -10,7 +10,10 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class PortfoyOzetiWidget extends StatsOverviewWidget
 {
-    protected ?string $heading = 'Portföy Özeti';
+    // Karşılama kartının hemen altında kompakt KPI (29.10.2026); başlık yok.
+    protected static ?int $sort = -9;
+
+    protected ?string $heading = null;
 
     protected function getStats(): array
     {
