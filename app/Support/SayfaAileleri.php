@@ -60,6 +60,8 @@ class SayfaAileleri
                 [Pages\AcilDurumPlani::class, 'Acil Durum Planı'],
                 [Pages\AcilDurumKrokisi::class, 'Kroki'],
                 [Pages\AcilDurumEkipleri::class, 'Ekipler'],
+                [Pages\YanginGuvenligi::class, 'Yangın Güvenliği'],
+                [Pages\TatbikatTutanagi::class, 'Tatbikat Tutanağı'],
             ],
             'egitim_katilim' => [
                 [Pages\EgitimKatilim::class, 'Eğitim Katılım'],
@@ -107,6 +109,24 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        // Acil Durum & Yangın: 5 sayfa → 3 ana sekme, tek menü girişi (30.10.2026)
+        'acil' => [
+            [
+                'etiket' => 'Acil Durum Eylem Planı (ADEP)',
+                'ikon' => 'heroicon-o-exclamation-triangle',
+                'siniflar' => [Pages\AcilDurumPlani::class, Pages\AcilDurumEkipleri::class, Pages\AcilDurumKrokisi::class],
+            ],
+            [
+                'etiket' => 'Yangın Güvenliği & Risk Belirleme',
+                'ikon' => 'heroicon-o-fire',
+                'siniflar' => [Pages\YanginGuvenligi::class],
+            ],
+            [
+                'etiket' => 'Tatbikat Tutanağı & Senaryolar',
+                'ikon' => 'heroicon-o-flag',
+                'siniflar' => [Pages\TatbikatTutanagi::class],
+            ],
+        ],
         'risk' => [
             [
                 'etiket' => 'Risk Analiz Sihirbazı & Değerlendirmeler',

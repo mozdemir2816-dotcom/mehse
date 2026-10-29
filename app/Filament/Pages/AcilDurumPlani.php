@@ -49,7 +49,7 @@ class AcilDurumPlani extends Page
 
     protected static ?string $title = 'Acil Durum Eylem Planı';
 
-    protected static ?string $navigationLabel = 'Acil Durum Planı';
+    protected static ?string $navigationLabel = 'Acil Durum & Yangın Merkezi';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
@@ -117,6 +117,40 @@ class AcilDurumPlani extends Page
         return $this->firmaId
             ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId)
             : null;
+    }
+
+    /**
+     * Plan ekipleri için yasal asgari (Acil Durumlar Yön. md.11 / İlkyardım Yön.) ile atanan kişi sayısı.
+     * Atanan: Acil Durum Ekipleri'ndeki üyeler, yoksa buradaki virgülle yazılan isimler.
+     *
+     * @return array<string, array{gereken: int, atanan: int, eksik: int}>
+     */
+    public function ekipSayaclari(): array
+    {
+        $firma = $this->firma;
+
+        if (! $firma) {
+            return [];
+        }
+
+        $calisan = $firma->calisanlar()->where('aktif', true)->count() ?: (int) $firma->calisan_sayisi;
+        $sonuc = [];
+
+        foreach (config('isg.acil_durum.ekip_turleri') as $tur => $bilgi) {
+            if (! $bilgi['plan'] || ! $bilgi['oran']) {
+                continue;
+            }
+
+            $ekip = \App\Models\AcilEkip::where('firma_id', $firma->id)->where('tur', $tur)->first();
+            $gereken = \App\Models\AcilEkip::yasalMinimum($tur, $firma->tehlike_sinifi, $calisan);
+            $atanan = $ekip
+                ? $ekip->uyeler()->count()
+                : count(array_filter(array_map('trim', explode(',', (string) ($this->ekipMetni[$bilgi['plan']] ?? '')))));
+
+            $sonuc[$bilgi['plan']] = ['gereken' => $gereken, 'atanan' => $atanan, 'eksik' => max($gereken - $atanan, 0)];
+        }
+
+        return $sonuc;
     }
 
     public function plan(): ?PlanModel

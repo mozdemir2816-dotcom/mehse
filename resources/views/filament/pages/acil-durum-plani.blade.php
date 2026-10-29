@@ -117,8 +117,12 @@
                 <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">İsimleri virgülle ayırın. <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="color:rgb(13 148 136);font-weight:600">Acil Durum Ekipleri</a> sayfasında üyesi girilen ekip, plana oradan (asıl/yedek, lider, belge) gelir ve buradaki isimlerin yerine geçer.</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem">
                     @foreach ($ekipler as $anahtar => $ad)
+                        @php $sayac = $this->ekipSayaclari()[$anahtar] ?? null; @endphp
                         <div>
                             <label style="font-size:.78rem;color:rgb(107 114 128)">{{ $ad }}</label>
+                            @if ($sayac)
+                                <span style="margin-left:.3rem;font-size:.7rem;font-weight:600;color:{{ $sayac['eksik'] ? 'rgb(225 29 72)' : 'rgb(5 150 105)' }}">Gereken {{ $sayac['gereken'] }} | Atanan {{ $sayac['atanan'] }}{{ $sayac['eksik'] ? ' (⚠ '.$sayac['eksik'].' eksik)' : ' ✓' }}</span>
+                            @endif
                             <input type="text" wire:model="ekipMetni.{{ $anahtar }}" placeholder="Ad Soyad, Ad Soyad"
                                 style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                         </div>

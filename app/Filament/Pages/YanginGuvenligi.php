@@ -31,6 +31,9 @@ class YanginGuvenligi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Acil Durum & Yangın';
 
+    /** Menüde gizli — Acil Durum & Yangın sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'yangin-guvenligi';
