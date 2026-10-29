@@ -42,6 +42,9 @@ class OlayKayitlari extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Sağlık & Olaylar';
 
+    /** Menüde gizli — Sağlık & Olay Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'olay-kayitlari';

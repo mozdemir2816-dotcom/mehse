@@ -75,13 +75,12 @@ class SayfaAileleri
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
                 [Pages\ToolboxKonusmalari::class, 'Toolbox Konuşmaları'],
             ],
-            'saglik' => [
+            // Sağlık & Olay Yönetim Merkezi: 7 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['saglik_olay'] bkz.
+            'saglik_olay' => [
                 [Pages\SaglikGozetimi::class, 'Sağlık Gözetimi'],
                 [Pages\MuayeneFormu::class, 'Muayene Formu (EK-2)'],
                 [Pages\IseDonusBelgesi::class, 'İşe Dönüş Belgesi'],
                 [Pages\MeslekHastaligiBildirimi::class, 'Meslek Hastalığı Bildirimi'],
-            ],
-            'olay' => [
                 [Pages\OlayKayitlari::class, 'Olay Kayıtları'],
                 [Pages\IsKazasiRaporu::class, 'Kaza İnceleme Raporu'],
                 [Pages\KazaIstatistikleri::class, 'İstatistikler'],
@@ -109,6 +108,23 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        'saglik_olay' => [
+            [
+                'etiket' => 'Sağlık Gözetimi & EK-2 Muayene Formu',
+                'ikon' => 'heroicon-o-heart',
+                'siniflar' => [Pages\SaglikGozetimi::class, Pages\MuayeneFormu::class, Pages\IseDonusBelgesi::class, Pages\MeslekHastaligiBildirimi::class],
+            ],
+            [
+                'etiket' => 'Olay / Kaza / Ramak Kala & Kök Neden Analizi',
+                'ikon' => 'heroicon-o-exclamation-triangle',
+                'siniflar' => [Pages\OlayKayitlari::class, Pages\IsKazasiRaporu::class],
+            ],
+            [
+                'etiket' => 'Kaza İstatistikleri & Sıklık/Ağırlık Oranları',
+                'ikon' => 'heroicon-o-chart-bar',
+                'siniflar' => [Pages\KazaIstatistikleri::class],
+            ],
+        ],
         'egitim' => [
             [
                 'etiket' => 'Yasal Eğitim Takibi & Tutanaklar',

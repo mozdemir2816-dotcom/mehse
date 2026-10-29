@@ -5,6 +5,8 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
+    @include('filament.pages.partials.kvkk-rozeti')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Uzun süreli rapor, iş kazası veya meslek hastalığı sonrası çalışanın işe dönüşünde
         işyeri hekiminin uygunluk değerlendirmesi ve geçici iş kısıtlamaları (6331 s.K. Md.15).

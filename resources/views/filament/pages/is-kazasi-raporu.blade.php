@@ -6,6 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İş Kazası İnceleme ve Kök Neden Analiz Raporu — 6331 s.K. Madde 14. Bölümleri sırayla
         doldurun; "Taslak Kaydet" ile ara kayıt alın, "Raporu Tamamla ve İndir" ile PDF üretin.
@@ -127,6 +128,9 @@
                     </div>
                 </div>
             </div>
+
+            @php $sgk = \App\Support\SgkBildirimSayaci::hesapla($kazaTarihi, (bool) $sgkBildirimiYapildi); [$sgkMetin, $sgkRenk, $sgkZemin] = $sgk ? \App\Support\SgkBildirimSayaci::metin($sgk) : [null, null, null]; @endphp
+            @if ($sgkMetin)<div style="background:{{ $sgkZemin }};color:{{ $sgkRenk }};border:1px solid {{ $sgkRenk }}33;border-radius:.75rem;padding:.55rem .9rem;font-size:.82rem;font-weight:700;margin-top:1rem">{{ $sgkMetin }}</div>@endif
 
             <div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center">
                 <label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem"><input type="checkbox" wire:model.live="sgkBildirimiYapildi"> SGK bildirimi yapıldı</label>

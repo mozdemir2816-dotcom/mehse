@@ -40,7 +40,7 @@ class SaglikGozetimi extends Page
 
     protected static ?string $title = 'Sağlık Gözetimi Takibi';
 
-    protected static ?string $navigationLabel = 'Sağlık Gözetimi';
+    protected static ?string $navigationLabel = 'Sağlık & Olay Merkezi';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;

@@ -5,6 +5,8 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
+    @include('filament.pages.partials.kvkk-rozeti')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Çalışanların işe giriş / periyodik muayene ve işe özgü tetkiklerini (odyometri, SFT,
         portör, psikoteknik vb.) takip edin. Tetkik tarihi girince sonraki tetkik tarihi

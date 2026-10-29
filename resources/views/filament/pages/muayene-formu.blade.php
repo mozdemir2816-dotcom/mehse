@@ -8,6 +8,8 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
+    @include('filament.pages.partials.kvkk-rozeti')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         EK-2 İşe Giriş / Periyodik Muayene Formu'nu doldurun; sonuç ve kanaat ile PDF çıktısı üretilir.
     </p>

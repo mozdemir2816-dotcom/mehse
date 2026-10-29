@@ -6,6 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İş Kazası Raporu'ndan ayrı olay defteri: yaralanma olmasa da (ramak kala, tehlikeli
         durum/davranış, maddi hasar, çevre) her olayı kaydedin. Her kayıtta sınıflandırma,
@@ -396,6 +397,8 @@
             <x-filament::section icon="heroicon-o-exclamation-circle" icon-color="danger">
                 <x-slot name="heading">6. İş Kazası / Meslek Hastalığı Bildirimi</x-slot>
 
+@php $sgk = \App\Support\SgkBildirimSayaci::hesapla($olayTarihi, (bool) $sgkBildirimiYapildi); [$sgkMetin, $sgkRenk, $sgkZemin] = $sgk ? \App\Support\SgkBildirimSayaci::metin($sgk) : [null, null, null]; @endphp
+                @if ($sgkMetin)<div style="background:{{ $sgkZemin }};color:{{ $sgkRenk }};border:1px solid {{ $sgkRenk }}33;border-radius:.75rem;padding:.55rem .9rem;font-size:.82rem;font-weight:700;margin-bottom:1rem">{{ $sgkMetin }}</div>@endif
                 <div style="{{ $kutu }};background:rgb(220 38 38 / .06);border-color:rgb(220 38 38 / .3);font-size:.78rem;color:#991b1b;margin-bottom:1rem">
                     İş kazası, kazadan sonraki <strong>3 iş günü içinde</strong> SGK'ya bildirilmelidir (6331 m.14).
                 </div>

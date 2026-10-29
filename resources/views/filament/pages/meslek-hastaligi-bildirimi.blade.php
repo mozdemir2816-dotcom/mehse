@@ -4,6 +4,8 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
+    @include('filament.pages.partials.kvkk-rozeti')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         6331 s.K. m.14 — hastalığın meslek hastalığı olduğunun işyeri hekimi, sağlık kuruluşu veya
         sigortalı tarafından öğrenildiği tarihten itibaren işveren <strong>3 iş günü</strong> içinde
