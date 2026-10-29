@@ -9,6 +9,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İşyerine gelen tedarikçi, denetçi, misafir gibi dış kişilere süreli ve QR'lı geçiş kartı verin.
         Güvenlik QR'ı okutarak kartın geçerliliğini görür. Giriş / çıkış kaydı tutulur ve acil durumda

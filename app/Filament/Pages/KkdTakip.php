@@ -6,6 +6,8 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\KkdStokKarti;
 use App\Models\KkdZimmet;
+use App\Support\KkdDegisimSuresi;
+use App\Support\KkdGorevOnerisi;
 use App\Support\KkdStok;
 use App\Support\KkdTakipUretici;
 use BackedEnum;
@@ -195,6 +197,24 @@ class KkdTakip extends Page
             ->all();
     }
 
+    /** Tür + teslim tarihine göre raf ömrü ve yenileme tarihini önerir; elle girilmiş alanın üzerine yazmaz. */
+    private function degisimiHesapla(Get $get, Set $set): void
+    {
+        $sure = KkdDegisimSuresi::sure($get('tur'));
+
+        if (! $sure) {
+            return;
+        }
+
+        if (blank($get('raf_omru'))) {
+            $set('raf_omru', $sure['etiket']);
+        }
+
+        if (blank($get('yenileme_tarihi')) && ($tarih = KkdDegisimSuresi::sonrakiDegisim($get('tur'), $get('teslim_tarihi')))) {
+            $set('yenileme_tarihi', $tarih);
+        }
+    }
+
     /** Kartın bilgilerini zimmet formuna kopyalar (boş bırakılan alanlar dolar). */
     private function kartiFormaAktar(?int $kartId, Set $set): void
     {
@@ -231,9 +251,35 @@ class KkdTakip extends Page
                             $set('bolum', $c->sube ?: $c->gorev);
                         }
                     }),
+                Select::make('onerilen_kkd')
+                    ->label('Görevine göre önerilen KKD (KKD Seçim Matrisi)')
+                    ->placeholder('Önce personel seçin')
+                    ->options(function (Get $get): array {
+                        $c = $get('calisan_id') ? Calisan::find($get('calisan_id')) : null;
+
+                        return $c && $this->firma ? KkdGorevOnerisi::oner($this->firma, $c->gorev)['kalemler'] : [];
+                    })
+                    ->helperText(function (Get $get): ?string {
+                        $c = $get('calisan_id') ? Calisan::find($get('calisan_id')) : null;
+                        $oner = $c && $this->firma ? KkdGorevOnerisi::oner($this->firma, $c->gorev) : null;
+
+                        return $oner && $oner['is_kalemi'] !== '' ? 'Matris satırı: '.$oner['is_kalemi'].' — seçince KKD türü ve değişim tarihi dolar' : ($c ? 'Görev "'.($c->gorev ?: '—').'" için matriste eşleşen satır yok; türü elle seçin.' : null);
+                    })
+                    ->live()
+                    ->dehydrated(false)
+                    ->visible(! $duzenleme)
+                    ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                        $etiket = $state ? config('isg.kkd_matris.sutunlar.'.$state) : null;
+
+                        if ($etiket) {
+                            $set('tur', KkdGorevOnerisi::turAdi($etiket));
+                            $this->degisimiHesapla($get, $set);
+                        }
+                    }),
                 TextInput::make('personel_ad_soyad')->label('Personel Ad Soyad')->required()->maxLength(255),
                 TextInput::make('bolum')->label('Bölüm / Görev')->maxLength(255),
-                DatePicker::make('teslim_tarihi')->label('Teslim Tarihi')->required(),
+                DatePicker::make('teslim_tarihi')->label('Teslim Tarihi')->required()->live()
+                    ->afterStateUpdated(fn (Get $get, Set $set) => $this->degisimiHesapla($get, $set)),
                 Select::make('kategori')
                     ->label('KKD Kategorisi')
                     ->options(fn () => $this->kategoriSecenekleri())
@@ -243,7 +289,9 @@ class KkdTakip extends Page
                     ->required()
                     ->maxLength(255)
                     ->datalist(fn (Get $get) => $this->turOnerileri($get('kategori')))
-                    ->helperText('Listeden seçin ya da yazın'),
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn (Get $get, Set $set) => $this->degisimiHesapla($get, $set))
+                    ->helperText('Listeden seçin ya da yazın — baret/emniyet kemeri için 5 yıllık değişim tarihi otomatik hesaplanır'),
                 Select::make('kkd_stok_karti_id')
                     ->label('Stoktan düş (isteğe bağlı)')
                     ->placeholder('Stok kartı seçmeden devam et')

@@ -94,10 +94,16 @@ class SayfaAileleri
                 [Pages\CalisanTemsilcisiSecimi::class, 'Çalışan Temsilcisi Seçimi'],
                 [Pages\CezaTeblig::class, 'Ceza ve Tebliğ Tutanağı'],
             ],
+            // Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi: 8 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['kkd'] bkz.
             'kkd' => [
                 [Pages\KkdTakip::class, 'Zimmet & Stok'],
                 [Pages\KkdFormu::class, 'KKD Formu'],
                 [Pages\KkdSecimMatrisi::class, 'Seçim Matrisi'],
+                [Pages\PeriyodikKontrol::class, 'Periyodik Kontrol'],
+                [Pages\OrtamOlcumleri::class, 'Ortam Ölçümleri'],
+                [Pages\TaseronYonetimi::class, 'Taşeron Yönetimi'],
+                [Pages\ZiyaretciYonetimi::class, 'Ziyaretçi Girişi'],
+                [Pages\TabelaTasarimi::class, 'Tabela & Levha'],
             ],
             'arsiv' => [
                 [Pages\DokumanYonetimi::class, 'Arşiv'],
@@ -117,6 +123,24 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        // Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi (30.10.2026)
+        'kkd' => [
+            [
+                'etiket' => 'KKD Matrisi, Stok & Personel Zimmeti',
+                'ikon' => 'heroicon-o-shield-check',
+                'siniflar' => [Pages\KkdTakip::class, Pages\KkdFormu::class, Pages\KkdSecimMatrisi::class],
+            ],
+            [
+                'etiket' => 'Ekipman Periyodik Kontrol & Ortam Ölçümü',
+                'ikon' => 'heroicon-o-cog-6-tooth',
+                'siniflar' => [Pages\PeriyodikKontrol::class, Pages\OrtamOlcumleri::class],
+            ],
+            [
+                'etiket' => 'Dış Paydaş & Saha Erişimi (Taşeron, Ziyaretçi, Levha)',
+                'ikon' => 'heroicon-o-building-office-2',
+                'siniflar' => [Pages\TaseronYonetimi::class, Pages\ZiyaretciYonetimi::class, Pages\TabelaTasarimi::class],
+            ],
+        ],
         // Resmi Belge & Kurul Yönetim Merkezi (30.10.2026)
         'belge' => [
             [

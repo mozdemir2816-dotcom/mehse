@@ -6,6 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         6331 sayılı Kanun & EKİPNET doğrulamalı muayene takip sistemi. Her iş ekipmanını kategori
         ve tipiyle tanımlayın (tip seçilince yasal standart, deney/test ve önerilen periyot

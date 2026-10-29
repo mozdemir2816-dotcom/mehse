@@ -33,6 +33,9 @@ class TabelaTasarimi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
 
+    /** Menüde gizli — Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 6;
 
     protected static ?string $slug = 'tabela-tasarimi';

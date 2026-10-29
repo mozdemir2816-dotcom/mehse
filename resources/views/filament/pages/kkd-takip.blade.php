@@ -9,6 +9,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Personel bazlı KKD zimmet sicili: kategori → tür, yenileme / SKT takibi, iade ve yenileme, zimmet formu ve Excel.
         Stok kartlarıyla giriş, zimmet çıkışı, iade ve fire izlenir. Toplu teslim tutanağı için

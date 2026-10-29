@@ -661,6 +661,7 @@ return [
 
         'tipler' => [
             'kaldirma_iletme' => [
+                ['ad' => 'İskele (Cephe / Mobil / Asma)', 'periyot_ay' => 6, 'standart' => 'TS EN 12810 / TS EN 12811-1', 'deney' => 'Kurulum sonrası ve 6 ayda bir yetkili kişi muayenesi; ankraj, korkuluk ve platform kontrolü'],
                 ['ad' => 'Tavan Vinci / Gezer Köprülü Vinç', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1', 'deney' => 'Statik 1.25 kat, Dinamik 1.1 kat yük testi'],
                 ['ad' => 'Portal Vinç', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1', 'deney' => 'Statik 1.25 kat, Dinamik 1.1 kat yük testi'],
                 ['ad' => 'Mobil Vinç / Hiyap', 'periyot_ay' => 12, 'standart' => 'TS ISO 9927-1 / FEM', 'deney' => 'Yük testi + yapısal muayene'],

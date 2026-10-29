@@ -5,6 +5,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
         <div style="flex:1;min-width:260px;max-width:560px">
             <label style="font-weight:600;font-size:.8rem">Firma</label>

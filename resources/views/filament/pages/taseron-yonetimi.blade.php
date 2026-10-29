@@ -12,6 +12,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İşyerlerinizin altında çalışan alt işveren ve taşeron firmaların sözleşme, çalışan, belge ve iş izni
         uygunluğunu işyeri bazında yönetin. Taşeron çalışanları ana personel listesine ve personel sayısına eklenmez.

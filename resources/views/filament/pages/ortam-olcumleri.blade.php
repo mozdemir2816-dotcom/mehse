@@ -4,6 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         İşyerinde risk değerlendirmesine göre yapılması gereken ortam ölçümlerini (gürültü, toz,
         aydınlatma, termal konfor, kimyasal maruziyet vb.) listeleyin; her ölçüm için tarih,

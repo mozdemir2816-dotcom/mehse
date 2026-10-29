@@ -60,7 +60,7 @@ class KurulUyeleriTest extends TestCase
 
     public function test_eksik_zorunlu_uye_varken_toplanti_yalniz_taslak_kaydedilir(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create();
+        $firma = Firma::factory()->for($this->uzman)->create(['calisan_sayisi' => 80]);
         $firma->kurulUyeleri()->create(['rol' => 'baskan', 'ad_soyad' => 'Başkan']);
 
         $this->assertCount(4, KurulUyeleri::eksikZorunlular($firma));
