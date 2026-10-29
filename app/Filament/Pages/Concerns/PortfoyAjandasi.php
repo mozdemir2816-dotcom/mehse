@@ -40,6 +40,13 @@ trait PortfoyAjandasi
         return ZiyaretTakvimi::ozet(Filament::auth()->id());
     }
 
+    /** Portföyün aylık İSG-KATİP doluluğu: tüm aktif firmaların yasal süreleri toplamı / aylık kapasite (Ana Sayfa ile aynı hesap). */
+    #[Computed]
+    public function katipDoluluk(): array
+    {
+        return \App\Support\GorevDurumu::sureOzeti(Filament::auth()->user());
+    }
+
     /** @return array<int, array<string, mixed>> */
     #[Computed]
     public function gunlukListe(): array

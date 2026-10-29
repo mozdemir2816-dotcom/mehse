@@ -28,6 +28,11 @@
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $yesil }}">{{ $ozet['firma'] }}</div>
                 <div style="font-size:.68rem;color:rgb(128 116 148)">Firma</div>
             </div>
+            @php $kd = $this->katipDoluluk; $kdRenk = $kd['yuzde'] > 100 ? '#dc2626' : ($kd['yuzde'] >= 90 ? '#d97706' : '#16a34a'); @endphp
+            <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center" title="Aylık İSG-KATİP doluluk: aktif firmaların yasal süreleri toplamı / aylık kapasite">
+                <div style="font-size:1.2rem;font-weight:800;color:{{ $kdRenk }}">%{{ $kd['yuzde'] }}</div>
+                <div style="font-size:.68rem;color:rgb(128 116 148)">İSG-KATİP doluluk</div>
+            </div>
         </div>
     </div>
 
@@ -81,18 +86,34 @@
         <div style="{{ $kutu }}">
             <div style="font-weight:700;margin-bottom:.6rem">{{ \Illuminate\Support\Carbon::parse($seciliTarih)->translatedFormat('d F Y') }}</div>
             @forelse ($this->gunlukListe as $z)
-                <div style="border-top:1px solid rgb(128 116 148 / .15);padding:.5rem 0;display:flex;justify-content:space-between;align-items:start">
-                    <div>
-                        <div style="font-weight:600;font-size:.85rem">{{ $z['firma']?->unvan }}</div>
-                        <div style="font-size:.78rem;color:rgb(128 116 148)">
-                            {{ $z['amac'] ?: 'Amaç belirtilmemiş' }}
-                            @if ($z['sure_saat']) · {{ $z['sure_saat'] }} saat @endif
+                @php
+                    $zFirma = $z['firma'];
+                    $durum = $z['durum'];
+                    $sureDk = \App\Support\YasalZiyaretSuresi::dakikayaCevir($z['sure_saat']);
+                    $durumRenk = $durum === 'tamamlandi' ? '#059669' : ($durum === 'planlandi' ? '#f59e0b' : '#94a3b8');
+                @endphp
+                <div style="border:1px solid rgb(128 116 148 / .22);border-radius:1rem;padding:.8rem 1rem;margin-bottom:.6rem">
+                    <div style="display:flex;justify-content:space-between;align-items:start;gap:.5rem">
+                        <div style="min-width:0">
+                            <div style="font-weight:700;font-size:.92rem">{{ $zFirma?->unvan }}</div>
+                            <div style="font-size:.78rem;color:rgb(128 116 148);margin-top:.15rem">{{ $z['amac'] ?: 'Amaç belirtilmemiş' }}</div>
                         </div>
+                        <span style="flex-shrink:0;font-size:.68rem;font-weight:700;padding:.15rem .6rem;border-radius:999px;color:#fff;background:{{ $durumRenk }}">
+                            {{ $durum === 'tamamlandi' ? 'Tamamlandı' : ($durum === 'planlandi' ? 'Planlandı' : 'Boş') }}
+                        </span>
                     </div>
-                    <span style="font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:999px;
-                        color:#fff;background:{{ $z['durum'] === 'tamamlandi' ? $yesil : ($z['durum'] === 'planlandi' ? $mavi : 'rgb(128 116 148)') }}">
-                        {{ $z['durum'] === 'tamamlandi' ? 'Tamamlandı' : ($z['durum'] === 'planlandi' ? 'Planlandı' : 'Boş') }}
-                    </span>
+                    <div style="display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;margin-top:.5rem;font-size:.76rem;color:rgb(100 116 139)">
+                        <span>👷 Atanan İGU: <strong style="color:inherit">{{ $zFirma?->igu?->ad_soyad ?: '—' }}</strong></span>
+                        <span>⏱ Ziyaret süresi: <strong style="color:inherit">{{ $z['sure_saat'] ? \App\Support\YasalZiyaretSuresi::etiket($sureDk) : '—' }}</strong></span>
+                    </div>
+                    @if ($zFirma)
+                        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.7rem">
+                            @if ($durum !== 'tamamlandi')
+                                <x-filament::button tag="a" :href="\App\Filament\Pages\ZiyaretModu::getUrl(['firma' => $zFirma->id])" icon="heroicon-o-play" style="min-height:2.75rem">Ziyaret Modunu Başlat</x-filament::button>
+                            @endif
+                            <x-filament::button color="gray" icon="heroicon-o-calendar-days" wire:click="planAc({{ $zFirma->id }})" style="min-height:2.75rem">Yıllık planı aç</x-filament::button>
+                        </div>
+                    @endif
                 </div>
             @empty
                 <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">Bu tarihte ziyaret kaydı bulunmuyor.</div>

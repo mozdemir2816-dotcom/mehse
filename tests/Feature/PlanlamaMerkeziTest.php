@@ -119,6 +119,90 @@ class PlanlamaMerkeziTest extends TestCase
             ->assertSee('İSG-KATİP sözleşme süresi');
     }
 
+    public function test_yapilacaklar_sayfada_degil_pencerede_acilir_ve_kapanir(): void
+    {
+        $firma = $this->firma('tehlikeli', 10);
+
+        $sayfa = Livewire::test(PlanlamaMerkezi::class)->set('firmaId', $firma->id)->set('yil', 2026)
+            ->assertSet('yapilacakModalAcik', false)
+            ->assertDontSee('Ekim Ziyaretinde Yapılacaklar');
+
+        $sayfa->call('yapilacakAySec', 9)
+            ->assertSet('yapilacakModalAcik', true)
+            ->assertSee('Ekim Ziyaretinde Yapılacaklar')
+            ->call('yapilacakModalKapat')
+            ->assertSet('yapilacakModalAcik', false)
+            ->assertDontSee('Ekim Ziyaretinde Yapılacaklar');
+    }
+
+    public function test_ayin_en_fazla_iki_oncelikli_gorevi_secilir_ve_satirda_etiket_olur(): void
+    {
+        $firma = $this->firma('tehlikeli', 10);
+        $sayfa = Livewire::test(PlanlamaMerkezi::class)->set('firmaId', $firma->id)->set('yil', 2026)->call('yapilacakAySec', 9);
+
+        $plan = \App\Models\YillikPlan::where('firma_id', $firma->id)->where('yil', 2026)->firstOrFail();
+        [$a, $b, $c] = array_slice($plan->ayinYapilacaklari(9), 0, 3);
+
+        $sayfa->call('kritikGorevToggle', $a['alan'], $a['index'])->call('kritikGorevToggle', $b['alan'], $b['index']);
+
+        $kayit = ZiyaretProgrami::where('firma_id', $firma->id)->where('yil', 2026)->firstOrFail()->ziyaretler[9][0]['kritik'];
+        $this->assertSame([$a['alan'].':'.$a['index'], $b['alan'].':'.$b['index']], $kayit);
+
+        // Üçüncü reddedilir; ilk ikisi kalır.
+        $sayfa->call('kritikGorevToggle', $c['alan'], $c['index'])->assertNotified('En fazla 2 öne çıkan görev');
+        $this->assertCount(2, ZiyaretProgrami::where('firma_id', $firma->id)->firstOrFail()->ziyaretler[9][0]['kritik']);
+
+        $etiketler = collect($sayfa->instance()->ayKritikGorevleri[9])->pluck('baslik')->all();
+        $this->assertSame([$a['baslik'], $b['baslik']], $etiketler);
+        $sayfa->call('yapilacakModalKapat')->assertSee(\Illuminate\Support\Str::limit($a['baslik'], 28));
+
+        // Aynı görev tekrar tıklanınca kalkar; yerine yenisi seçilebilir.
+        $sayfa->call('kritikGorevToggle', $a['alan'], $a['index'])->call('kritikGorevToggle', $c['alan'], $c['index']);
+        $this->assertSame([$b['alan'].':'.$b['index'], $c['alan'].':'.$c['index']], ZiyaretProgrami::where('firma_id', $firma->id)->firstOrFail()->ziyaretler[9][0]['kritik']);
+    }
+
+    public function test_ajanda_gun_karti_igu_sure_ziyaret_modu_dugmesi_ve_doluluk_gosterir(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::factory()->create(['ad_soyad' => 'Ayşe Demir']);
+        $firma = $this->firma('cok_tehlikeli', 5);
+        $firma->update(['igu_id' => $igu->id]);
+        $bitmis = $this->firma('tehlikeli', 5);
+
+        foreach ([[$firma, 'planlandi', 3.33], [$bitmis, 'tamamlandi', 2]] as [$f, $durum, $sure]) {
+            $p = ZiyaretProgrami::firmaYilIcin($f, 2026);
+            $z = $p->ziyaretler;
+            $z[4] = [['tarih' => '2026-05-20', 'amac' => 'Yangın tatbikatı', 'durum' => $durum, 'sure_saat' => $sure, 'notlar' => null]];
+            $p->update(['ziyaretler' => $z]);
+        }
+
+        $sayfa = Livewire::test(PlanlamaMerkezi::class, ['gorunum' => 'ajanda'])->call('tarihSec', '2026-05-20');
+
+        $sayfa->assertSee('İSG-KATİP doluluk')
+            ->assertSee('Ayşe Demir')
+            ->assertSee('3 sa 20 dk')
+            ->assertSee('2 sa')
+            ->assertSee('Planlandı')
+            ->assertSee('Tamamlandı');
+
+        // Başlat düğmesi yalnız tamamlanmamış ziyarette ve ilgili firmanın Ziyaret Modu adresine gider.
+        $html = $sayfa->html();
+        $this->assertSame(1, substr_count($html, 'Ziyaret Modunu Başlat'));
+        $this->assertStringContainsString(\App\Filament\Pages\ZiyaretModu::getUrl(['firma' => $firma->id]), $html);
+
+        // "Yıllık planı aç": o firmanın 12 aylık plan görünümüne geçer.
+        $sayfa->call('planAc', $bitmis->id)->assertSet('gorunum', 'plan')->assertSet('firmaId', $bitmis->id);
+    }
+
+    public function test_katip_doluluk_portfoy_yasal_surelerinin_kapasiteye_orani(): void
+    {
+        $this->firma('cok_tehlikeli', 100); // 100 × 40 = 4000 dk
+
+        $kd = Livewire::test(PlanlamaMerkezi::class, ['gorunum' => 'ajanda'])->instance()->katipDoluluk;
+
+        $this->assertSame(4000, $kd['kullanilan_dk']);
+        $this->assertSame((int) min(999, round(4000 * 100 / ($kd['kapasite_dk']))), $kd['yuzde']);
+    }
+
     public function test_eski_saha_takvimi_adresi_ajanda_gorunumune_yonlenir(): void
     {
         $this->get(SahaTakvimi::getUrl(['tarih' => '2026-05-20', 'ay' => '2026-05']))

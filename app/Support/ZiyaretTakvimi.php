@@ -24,7 +24,7 @@ class ZiyaretTakvimi
 
         ZiyaretProgrami::query()
             ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
-            ->with('firma:id,unvan')
+            ->with(['firma:id,unvan,igu_id', 'firma.igu:id,ad_soyad'])
             ->get()
             ->each(function (ZiyaretProgrami $program) use (&$gruplar): void {
                 foreach ($program->ziyaretler ?? [] as $ayIndex => $ay) {

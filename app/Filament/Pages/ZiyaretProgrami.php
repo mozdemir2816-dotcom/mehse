@@ -68,6 +68,12 @@ class ZiyaretProgrami extends Page
     /** "Ziyarette Yapılacaklar" listesinin gösterdiği ay (0–11). */
     public int $yapilacakAy = 0;
 
+    /** Yapılacaklar penceresi (modal) açık mı. */
+    public bool $yapilacakModalAcik = false;
+
+    /** Bir ay için öne çıkarılabilecek kritik görev sayısı. */
+    public const KRITIK_GOREV_SINIRI = 2;
+
     public function mount(): void
     {
         $this->yil = (int) now()->format('Y');
@@ -191,17 +197,101 @@ class ZiyaretProgrami extends Page
             ->all();
     }
 
+    /** Ayı seçer ve "Yapılacaklar" penceresini (modal) açar — uzun liste artık sayfada değil, pencerede. */
     public function yapilacakAySec(int $ay): void
     {
         $this->yapilacakAy = max(0, min(11, $ay));
+        $this->yapilacakModalAcik = true;
         unset($this->yapilacaklar);
+    }
+
+    public function yapilacakModalKapat(): void
+    {
+        $this->yapilacakModalAcik = false;
+    }
+
+    /** Ajanda gün kartındaki "Yıllık planı aç": firma seçilip 12 aylık plan görünümüne geçilir. */
+    public function planAc(int $firmaId): void
+    {
+        if (! array_key_exists($firmaId, $this->firmalar)) {
+            return;
+        }
+
+        $this->firmaId = $firmaId;
+        $this->gorunum = 'plan';
+        $this->updatedFirmaId();
+    }
+
+    /**
+     * Ayın öne çıkan (kritik) görevleri: o ayın ilk ziyaret satırında "alan:index" olarak en fazla 2 tane saklanır.
+     * Satırda kompakt etiket olarak görünür; tüm liste pencerede.
+     */
+    public function kritikGorevToggle(string $alan, int $index): void
+    {
+        $p = $this->program();
+        $aylar = $p?->ziyaretler ?? [];
+
+        if (! $p || ! in_array($alan, ['faaliyetler', 'egitimler'], true) || ! isset($aylar[$this->yapilacakAy])) {
+            return;
+        }
+
+        $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$this->yapilacakAy]);
+        $anahtar = $alan.':'.$index;
+        $kritik = array_values(array_filter((array) ($girdiler[0]['kritik'] ?? [])));
+
+        if (in_array($anahtar, $kritik, true)) {
+            $kritik = array_values(array_diff($kritik, [$anahtar]));
+        } elseif (count($kritik) >= self::KRITIK_GOREV_SINIRI) {
+            Notification::make()->title('En fazla '.self::KRITIK_GOREV_SINIRI.' öne çıkan görev')->body('Önce birini kaldırın.')->warning()->send();
+
+            return;
+        } else {
+            $kritik[] = $anahtar;
+        }
+
+        $girdiler[0]['kritik'] = $kritik;
+        $aylar[$this->yapilacakAy] = $girdiler;
+        $p->update(['ziyaretler' => $aylar]);
+        unset($this->program, $this->ayKritikGorevleri);
+    }
+
+    /**
+     * Her ayın seçili öne çıkan görevleri: ay indeksi => [{alan, index, baslik, gerceklesti}].
+     *
+     * @return array<int, array<int, array{alan: string, index: int, baslik: string, gerceklesti: bool}>>
+     */
+    #[Computed]
+    public function ayKritikGorevleri(): array
+    {
+        $sonuc = [];
+
+        foreach ($this->program?->ziyaretler ?? [] as $ayIndex => $ay) {
+            $kritik = (array) (ZiyaretProgramiModel::ayGirdileri($ay)[0]['kritik'] ?? []);
+
+            if (! $kritik) {
+                continue;
+            }
+
+            $liste = collect($this->yillikPlan?->ayinYapilacaklari((int) $ayIndex) ?? []);
+
+            foreach ($kritik as $anahtar) {
+                [$alan, $index] = array_pad(explode(':', (string) $anahtar, 2), 2, null);
+                $madde = $liste->first(fn (array $m) => $m['alan'] === $alan && (string) $m['index'] === (string) $index);
+
+                if ($madde) {
+                    $sonuc[(int) $ayIndex][] = ['alan' => $alan, 'index' => (int) $index, 'baslik' => $madde['baslik'], 'gerceklesti' => (bool) $madde['gerceklesti']];
+                }
+            }
+        }
+
+        return $sonuc;
     }
 
     /** Listeden "Gerçekleşti" işareti — Yıllık Plan'daki ilgili ayın G hücresine yazılır. */
     public function yapilacakGerceklesti(string $alan, int $index): void
     {
         $this->yillikPlan?->gerceklestiDegistir($alan, $index, $this->yapilacakAy);
-        unset($this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
+        unset($this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari, $this->ayKritikGorevleri);
     }
 
     #[Computed]
@@ -213,13 +303,13 @@ class ZiyaretProgrami extends Page
     public function updatedFirmaId(): void
     {
         KomutaFirma::sec($this->firmaId);
-        unset($this->firma, $this->yasalDakika, $this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
+        unset($this->firma, $this->yasalDakika, $this->ayKritikGorevleri, $this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
         $this->takvimAy = null;
     }
 
     public function updatedYil(): void
     {
-        unset($this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
+        unset($this->ayKritikGorevleri, $this->program, $this->takvimGunler, $this->yillikPlan, $this->yapilacaklar, $this->aylikYapilacakSayilari);
         $this->takvimAy = null;
     }
 
