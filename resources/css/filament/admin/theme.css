@@ -9,6 +9,7 @@
 /* MEHSE teması (varsayılan, logo renkleri) — tasarim.css'teki ortak bileşen
    değişkenlerini ezdiği için ondan sonra gelir. */
 @import './tema-mehse.css';
+@import './tema-modern.css';
 /* Telefon düzeni — her temada; en sonda ki tema kurallarını dar ekranda ezsin. */
 @import './mobil.css';
 

@@ -8,6 +8,7 @@
 @php
     $temalar = [
         'mehse' => ['ad' => 'MEHSE', 'aciklama' => 'Logo renkleri · lacivert + turkuaz', 'renkler' => ['#0A2E4D', '#099291', '#F3F6F8']],
+        'modern' => ['ad' => 'MEHSE Modern', 'aciklama' => 'Slate lacivert · petrol mavisi · soft rozetler', 'renkler' => ['#0F172A', '#0284C7', '#F8FAFC']],
         'klasik' => ['ad' => 'Klasik', 'aciklama' => 'Lacivert mehse', 'renkler' => ['#1E3A5F', '#2563EB', '#F0F4F8']],
         'material' => ['ad' => 'Google Material', 'aciklama' => 'Material 3 · Material You', 'renkler' => ['#F8FAFD', '#0B57D0', '#D3E3FD']],
         'windows11' => ['ad' => 'Windows 11', 'aciklama' => 'Fluent · Mica', 'renkler' => ['#F3F3F3', '#005FB8', '#FFFFFF']],

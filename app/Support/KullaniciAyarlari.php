@@ -24,6 +24,7 @@ class KullaniciAyarlari
 
     public const TEMALAR = [
         'mehse' => 'MEHSE',
+        'modern' => 'MEHSE Modern',
         'klasik' => 'Klasik',
         'material' => 'Google Material',
         'windows11' => 'Windows 11',
