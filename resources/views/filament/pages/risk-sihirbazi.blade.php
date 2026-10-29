@@ -160,6 +160,23 @@
         </x-filament::section>
     @endif
 
+    {{-- ==================== ADIM 3 — KÜTÜPHANE EKSİKLERİ ================= --}}
+    @if ($adim === 3 && $this->kutuphaneEksikleri)
+        <div style="border:1px solid rgb(220 38 38 / .4);background:rgb(220 38 38 / .05);border-radius:.6rem;padding:.75rem 1rem">
+            <div style="font-weight:700;font-size:.9rem;color:rgb(185 28 28)">Kütüphanede eksik tanım var ({{ count($this->kutuphaneEksikleri) }})</div>
+            <ul style="margin:.4rem 0 .5rem 1.1rem;list-style:disc;font-size:.82rem;color:rgb(185 28 28)">
+                @foreach ($this->kutuphaneEksikleri as $e)
+                    <li>{{ $e['mesaj'] }}</li>
+                @endforeach
+            </ul>
+            <div style="font-size:.78rem;color:rgb(107 114 128)">
+                Bu riskler listeye gelmeyecek; elle ekleyebilir ya da
+                <a href="{{ \App\Filament\Resources\Tehlikes\TehlikeResource::getUrl('ekipman-yukle') }}" style="text-decoration:underline;font-weight:600">Risk Kütüphanesi → Risk Analizi Yükle</a>
+                ile kütüphaneye ekleyebilirsiniz.
+            </div>
+        </div>
+    @endif
+
     {{-- ==================== ADIM 3 — MANUEL ============================= --}}
     @if ($adim === 3 && $yontemSecim === 'manuel')
         <x-filament::section icon="heroicon-o-book-open" icon-color="primary">

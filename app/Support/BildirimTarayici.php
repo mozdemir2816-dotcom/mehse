@@ -186,6 +186,18 @@ class BildirimTarayici
             $ekle('ekipman_kutuphane_yok', 'kritik', 'Ekipman için kütüphanede risk analizi yok', implode(', ', $kutuphanesiz).' için kütüphanede hazır risk maddesi yok; Risk Kütüphanesi\'ne Excel yükleyin, yoksa bu ekipmanın riskleri hiç önerilmez.', null, static::url(fn () => TehlikeResource::getUrl('ekipman-yukle')));
         }
 
+        // NACE kodu girilmemiş / kütüphanede yok / o sektör için risk tanımlı değil → sektörel riskler gelmez.
+        $naceEksik = KutuphaneEksikleri::nace($firma);
+        if ($naceEksik) {
+            $ekle('nace_kutuphane_yok', 'uyari', 'NACE kodu için sektörel risk kütüphanesi eksik', $naceEksik[0]['mesaj'].' Firma kartında NACE kodunu kontrol edin ya da Risk Kütüphanesi\'ne sektörel riskleri ekleyin.', null, static::url(fn () => TehlikeResource::getUrl('index')));
+        }
+
+        // Ekipman tipi seçilmemişse kütüphane eşleşemez; riskleri sessizce atlanır.
+        $tipsiz = EkipmanKatalogu::ekipmanlar($firma)->filter(fn ($e) => blank(trim((string) $e->tip)));
+        if ($tipsiz->isNotEmpty()) {
+            $ekle('ekipman_tip_yok', 'uyari', 'Ekipman tipi seçilmemiş', $tipsiz->count().' ekipman: '.Str::limit($tipsiz->pluck('ekipman_adi')->implode(', '), 120).'. Tip seçilmeden kütüphanedeki riskleri önerilemez.', null, static::url(fn () => PeriyodikKontrolSayfasi::getUrl(['firma' => $firma->id])));
+        }
+
         // Ad bazlı: envanterdeki ekipman hiçbir risk değerlendirmesinde geçmiyorsa uyar.
         $adEksik = EkipmanRiskEslesme::eksikEkipmanlar($firma);
         if ($adEksik->isNotEmpty()) {

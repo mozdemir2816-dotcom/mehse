@@ -15,6 +15,7 @@ use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPdfOkuyucu;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\EkipmanRiskKutuphanesi;
+use App\Support\KutuphaneEksikleri;
 use App\Support\NaceGrubu;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskDegerlendirmesiOlusturucu;
@@ -253,6 +254,18 @@ class RiskSihirbazi extends Page
     }
 
     /** @return Collection<int, TehlikeKategorisi> */
+    /**
+     * Seçili firmanın NACE kodu / ekipmanları için kütüphanede olmayan kayıtlar (28.10.2026) —
+     * sessizce atlanmasın, İSG uzmanı kütüphaneye eklesin.
+     *
+     * @return list<array{tur: string, ad: string, mesaj: string}>
+     */
+    #[Computed]
+    public function kutuphaneEksikleri(): array
+    {
+        return $this->firma ? KutuphaneEksikleri::firma($this->firma, $this->yontem) : [];
+    }
+
     #[Computed]
     public function kategoriler(): Collection
     {

@@ -39,6 +39,7 @@ class EkipmanKatalogu
     /** @return array{risk_kategorileri: array<int, string>, kontrol_formu: ?string, talimat: ?string, ortak_riskler?: bool}|null */
     public static function tanim(?string $tip): ?array
     {
+        $tip = static::tipBul($tip) ?? $tip;
         $t = config('ekipman_katalogu.tipler.'.$tip);
         $bagli = $tip ? (static::kutuphaneBaglari()[$tip] ?? []) : [];
 
@@ -50,6 +51,57 @@ class EkipmanKatalogu
         $t['risk_kategorileri'] = array_values(array_unique([...$t['risk_kategorileri'], ...$bagli]));
 
         return $t;
+    }
+
+    /**
+     * Serbest yazılmış ekipman tipini katalog / kütüphane bağlarındaki bilinen bir tipe eşler
+     * (28.10.2026). Sırayla: birebir → büyük-küçük harf/noktalama farkı → bilinen ad girdinin içinde
+     * geçiyor ("Vidalı Kompresör 75 kW") → yakın yazım ("Forklıft"). Eşleşme yoksa null.
+     */
+    public static function tipBul(?string $tip): ?string
+    {
+        $tip = trim((string) $tip);
+        if ($tip === '') {
+            return null;
+        }
+
+        $bilinen = array_values(array_unique([
+            ...array_keys(config('ekipman_katalogu.tipler', [])),
+            ...array_keys(static::kutuphaneBaglari()),
+        ]));
+        if (in_array($tip, $bilinen, true)) {
+            return $tip;
+        }
+
+        $n = static::sade($tip);
+        $adaylar = [];
+        foreach ($bilinen as $b) {
+            $nb = static::sade($b);
+            if ($nb === $n) {
+                return $b;
+            }
+            $adaylar[$b] = $nb;
+        }
+
+        // Uzun ad önce: "Kule Vinç 40 m" → "Kule Vinç", "Vinç"e düşmesin.
+        uasort($adaylar, fn (string $a, string $b) => mb_strlen($b) <=> mb_strlen($a));
+        foreach ($adaylar as $b => $nb) {
+            if (mb_strlen($nb) >= 4 && str_contains(' '.$n.' ', ' '.$nb.' ')) {
+                return (string) $b;
+            }
+        }
+
+        $en = null;
+        $enSkor = 0;
+        foreach ($adaylar as $b => $nb) {
+            $skor = static::benzerlik($n, $nb);
+            if ($skor >= self::BENZERLIK_ESIGI && $skor > $enSkor) {
+                $en = (string) $b;
+                $enSkor = $skor;
+            }
+        }
+
+        return $en;
     }
 
     /**
@@ -491,6 +543,12 @@ class EkipmanKatalogu
         similar_text($a, $b, $yuzde);
 
         return $yuzde;
+    }
+
+    /** norm() + Türkçe/şapkalı harfleri ASCII'ye indirir (yakın yazım karşılaştırması için: "Forklıft" ≈ "Forklift"). */
+    private static function sade(?string $metin): string
+    {
+        return strtr(static::norm($metin), ['ı' => 'i', 'ş' => 's', 'ğ' => 'g', 'ü' => 'u', 'ö' => 'o', 'ç' => 'c', 'â' => 'a', 'î' => 'i', 'û' => 'u']);
     }
 
     /** Türkçe küçük harf, noktalama/boşluk sadeleştirme. */
