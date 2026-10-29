@@ -40,8 +40,26 @@ class RiskSablonu extends Model
     public function sektorEtiketi(): string
     {
         return config('isg.risk_ai.sektorler.'.$this->sektor.'.ad')
+            ?? config('risk_nace.gruplar.'.$this->sektor.'.ad')
             ?? $this->sektor_adi
             ?? 'Sektörsüz';
+    }
+
+    /**
+     * Şablon sektörü seçenekleri (anahtar => ad): mevcut risk sektörleri + gerçek NACE sektör kategorileri
+     * (Metal, İnşaat, Kimya, Sağlık, Ağaç İşleri…). Firma adıyla açılmış şablonlar buradan bir sektöre bağlanır.
+     *
+     * @return array<string, string>
+     */
+    public static function sektorSecenekleri(): array
+    {
+        $secenekler = collect(config('isg.risk_ai.sektorler', []))->map(fn ($s) => $s['ad'])->all();
+
+        foreach (config('risk_nace.gruplar', []) as $anahtar => $grup) {
+            $secenekler[$anahtar] ??= $grup['ad'];
+        }
+
+        return $secenekler;
     }
 
     public function maddeSayisi(): int

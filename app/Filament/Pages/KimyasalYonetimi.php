@@ -28,7 +28,10 @@ class KimyasalYonetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
+
+    /** Menüde gizli — Risk & Tehlike Yönetimi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 3;
 

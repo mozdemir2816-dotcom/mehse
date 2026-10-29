@@ -49,7 +49,7 @@ class AdminPanelProvider extends PanelProvider
     private const NavGrupSirasi = [
         'Genel',
         'Firmalar & Çalışanlar',
-        'Risk Değerlendirmesi',
+        'Risk & Tehlike Yönetimi',
         'Acil Durum & Yangın',
         'Eğitimler',
         'Sağlık & Olaylar',

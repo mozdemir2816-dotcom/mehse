@@ -22,7 +22,9 @@
         </nav>
     @endif
 
-    @include('filament.components.saha-firma-baglami')
+    @if ($gruplu['aile'] === 'saha')
+        @include('filament.components.saha-firma-baglami')
+    @endif
 @elseif (count($sekmeler) > 1)
     <x-filament::tabs class="mehse-sayfa-sekmeleri" style="margin-bottom:.25rem">
         @foreach ($sekmeler as $s)

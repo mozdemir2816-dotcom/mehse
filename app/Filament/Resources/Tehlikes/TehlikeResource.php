@@ -25,7 +25,10 @@ class TehlikeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
+
+    /** Menüde gizli — Risk & Tehlike Yönetimi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 7;
 

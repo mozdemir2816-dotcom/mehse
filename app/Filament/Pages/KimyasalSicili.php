@@ -40,7 +40,7 @@ class KimyasalSicili extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|\UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
 
     protected static ?int $navigationSort = 26;
 

@@ -68,6 +68,29 @@ class RiskSkorlama
         return array_merge(['puan' => $puan], static::bant($yontem, $puan));
     }
 
+    /**
+     * Ekranlardaki tek tutarlı risk rengi (30.10.2026): Fine-Kinney puanında 400+ Çok Yüksek (rose), 200-400 Yüksek (amber),
+     * 70-200 Orta (sarı), 70 altı Düşük (emerald). Diğer yöntemlerde kendi bantları kullanılır. Yalnız ekran içindir —
+     * resmi PDF/Excel çıktıları yöntemin config bantlarını kullanmaya devam eder.
+     *
+     * @return array{duzey: string, renk: string}
+     */
+    public static function panoRengi(string $yontem, int|float $puan): array
+    {
+        if ($yontem !== 'fine_kinney') {
+            $bant = static::bant($yontem, $puan);
+
+            return ['duzey' => $bant['duzey'], 'renk' => $bant['renk']];
+        }
+
+        return match (true) {
+            $puan >= 400 => ['duzey' => 'Çok Yüksek', 'renk' => '#e11d48'],
+            $puan >= 200 => ['duzey' => 'Yüksek', 'renk' => '#d97706'],
+            $puan >= 70 => ['duzey' => 'Orta', 'renk' => '#eab308'],
+            default => ['duzey' => 'Düşük', 'renk' => '#059669'],
+        };
+    }
+
     /** Puana karşılık gelen bant (üstten alta ilk eşleşen). */
     public static function bant(string $yontem, int|float $puan): array
     {

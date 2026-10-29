@@ -6,6 +6,7 @@ use App\Filament\Resources\Tehlikes\TehlikeResource;
 use App\Support\FineKinneyKutuphaneIceAktarici;
 use App\Support\TehlikeExcelIceAktarici;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -21,21 +22,15 @@ class ListTehlikes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('ekipmanRiskYukle')
-                ->label('Risk Analizi Yükle (Excel)')
-                ->icon('heroicon-o-wrench-screwdriver')
-                ->url(fn () => EkipmanRiskYukle::getUrl()),
-
+            ActionGroup::make([
             Action::make('excelSablon')
-                ->label('Şablon İndir')
+                ->label('Excel Şablonu İndir')
                 ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
                 ->action(fn () => TehlikeExcelIceAktarici::sablonIndir()),
 
             Action::make('excelYukle')
-                ->label('Excel\'den Toplu Yükle')
+                ->label('Toplu Kütüphane Yükle')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('gray')
                 ->modalDescription('İlk satır başlık kabul edilir. "Kategori" mevcut değilse otomatik oluşturulur — böylece "Kazı Çalışmaları", "Cam Üretimi" gibi yeni iş/sektör kategorilerini de bu yolla ekleyebilirsiniz. Aynı kategoride aynı tehlike metni tekrar yüklenirse üzerine güncellenir.')
                 ->modalSubmitActionLabel('Yükle')
                 ->schema([
@@ -83,9 +78,8 @@ class ListTehlikes extends ListRecords
                 }),
 
             Action::make('fineKinneyYukle')
-                ->label('Fine-Kinney Analizi Yükle')
+                ->label('Fine-Kinney Aktar')
                 ->icon('heroicon-o-table-cells')
-                ->color('gray')
                 ->modalDescription('Sektörel bir Fine-Kinney risk analizi Excel\'i (ör. "İnşaat İSG Risk Analizi ve Fine-Kinney Programı"). Başlık satırı ve sütunlar otomatik bulunur; "Faaliyet Alanı / Ana Kategori" değeri kütüphane kategorisi olur, Olasılık / Frekans / Şiddet de yüklenir. Risk Sihirbazı → Manuel Seçim\'de kategoriye göre süzüp ilgili maddeleri seçersiniz. Aynı kategoride aynı tehlike tekrar yüklenirse güncellenir.')
                 ->modalSubmitActionLabel('Yükle')
                 ->schema([
@@ -130,7 +124,17 @@ class ListTehlikes extends ListRecords
                     Notification::make()->title($baslik)->success()->send();
                 }),
 
-            CreateAction::make()->icon('heroicon-o-plus')
+                Action::make('ekipmanRiskYukle')
+                    ->label('Ekipman Risk Analizi Yükle (Excel)')
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->url(fn () => EkipmanRiskYukle::getUrl()),
+            ])
+                ->label('İçe / Dışa Aktar')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->button(),
+
+            CreateAction::make()->label('Yeni Tehlike / Ekipman Tanımla')->icon('heroicon-o-plus')
                 ->modal()->modalWidth(Width::ThreeExtraLarge),
         ];
     }

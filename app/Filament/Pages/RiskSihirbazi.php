@@ -59,7 +59,7 @@ class RiskSihirbazi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
 
     protected static ?int $navigationSort = 1;
 
@@ -67,7 +67,7 @@ class RiskSihirbazi extends Page
 
     protected static ?string $title = 'Risk Değerlendirme';
 
-    protected static ?string $navigationLabel = 'Risk Değerlendirme';
+    protected static ?string $navigationLabel = 'Risk Yönetim Merkezi';
 
     public const ADIMLAR = [
         1 => 'Firma Bilgileri',

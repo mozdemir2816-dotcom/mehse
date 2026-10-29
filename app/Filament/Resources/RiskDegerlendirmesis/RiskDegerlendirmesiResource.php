@@ -28,7 +28,7 @@ class RiskDegerlendirmesiResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolderOpen;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
 
     /** Menüde gizli — ana sayfasının sekme şeridinden açılır (App\Support\SayfaAileleri). */
     protected static bool $shouldRegisterNavigation = false;

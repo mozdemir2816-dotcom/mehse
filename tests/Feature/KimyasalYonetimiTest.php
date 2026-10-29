@@ -57,7 +57,7 @@ class KimyasalYonetimiTest extends TestCase
         $this->assertFalse(KimyasalSicili::shouldRegisterNavigation());
         $this->assertFalse(KimyasalRiskDegerlendirmesi::shouldRegisterNavigation());
         $this->assertFalse(PkdSicili::shouldRegisterNavigation());
-        $this->assertTrue(KimyasalYonetimi::shouldRegisterNavigation());
+        $this->assertFalse(KimyasalYonetimi::shouldRegisterNavigation());   // Risk & Tehlike Yönetimi sekmesinden açılır
     }
 
     public function test_pkd_kaydi_olusturulur_duzenlenir_ve_dosya_yuklenir(): void

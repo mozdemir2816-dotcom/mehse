@@ -7,6 +7,7 @@ use App\Filament\Resources\RiskSablonus\Pages\ListRiskSablonus;
 use App\Models\RiskSablonu;
 use App\Support\RiskSkorlama;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -25,6 +26,8 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,7 +49,10 @@ class RiskSablonuResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
+
+    /** Menüde gizli — Risk & Tehlike Yönetimi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 8;
 
@@ -77,7 +83,7 @@ class RiskSablonuResource extends Resource
             Section::make()->columns(2)->schema([
                 TextInput::make('ad')->label('Şablon adı')->required()->maxLength(120),
                 Select::make('sektor')->label('Sektör')
-                    ->options(collect(config('isg.risk_ai.sektorler'))->map(fn ($s) => $s['ad']))
+                    ->options(fn () => RiskSablonu::sektorSecenekleri())
                     ->native(false)->searchable(),
                 TextInput::make('sektor_adi')->label('Sektör (serbest metin)')
                     ->helperText('Sektör listede yoksa buraya yazın'),
@@ -150,6 +156,22 @@ class RiskSablonuResource extends Resource
             ->defaultGroup('sektor')
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('sektoreAta')
+                        ->label('Sektöre ata')
+                        ->icon(Heroicon::OutlinedTag)
+                        ->modalDescription('Firma adıyla açılmış şablonları gerçek bir sektör kategorisine bağlayın. Yalnız sizin şablonlarınız değişir.')
+                        ->schema([
+                            Select::make('sektor')->label('Sektör')->options(fn () => RiskSablonu::sektorSecenekleri())
+                                ->native(false)->searchable()->required(),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $sayi = RiskSablonu::query()->whereKey($records->modelKeys())
+                                ->where('user_id', Filament::auth()->id())
+                                ->update(['sektor' => $data['sektor'], 'sektor_adi' => null]);
+
+                            Notification::make()->title($sayi.' şablon sektöre bağlandı')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     BulkAction::make('secileniSil')
                         ->label('Seçilenleri sil')
                         ->icon(Heroicon::OutlinedTrash)
@@ -164,11 +186,25 @@ class RiskSablonuResource extends Resource
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ])
-            ->recordActions([
-                EditAction::make(),
-                DeleteAction::make()
-                    ->visible(fn (RiskSablonu $r) => $r->user_id === Filament::auth()->id()),
+            ->filters([
+                SelectFilter::make('sektor')->label('Sektör')
+                    ->options(fn () => RiskSablonu::sektorSecenekleri())
+                    ->query(fn (Builder $query, array $data) => filled($data['value'] ?? null)
+                        ? $query->where('sektor', $data['value'])
+                        : $query),
+                SelectFilter::make('yontem')->label('Yöntem')->options(config('isg.risk_yontemleri')),
             ])
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->deferFilters(false)
+            ->recordActions([
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make()
+                        ->visible(fn (RiskSablonu $r) => $r->user_id === Filament::auth()->id()),
+                ]),
+            ])
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(25)
             ->defaultSort('kullanim_sayisi', 'desc');
     }
 

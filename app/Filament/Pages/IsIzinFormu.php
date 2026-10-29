@@ -115,6 +115,12 @@ class IsIzinFormu extends Page
             $this->firmaId = $firmaId;
         }
 
+        // JSA kartından gelen izin türü (?tur=sicak_is) ön seçili açılır.
+        $tur = (string) request()->query('tur');
+        if ($tur !== '' && array_key_exists($tur, config('isg.is_izin.turler', []))) {
+            $this->izinTurleri = [$tur];
+        }
+
         $this->kontroller = IsIzinFormuModel::varsayilanKontroller([]);
     }
 

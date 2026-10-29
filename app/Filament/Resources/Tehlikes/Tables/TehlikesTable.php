@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Tehlikes\Tables;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
 use App\Support\EkipmanRiskKutuphanesi;
+use App\Support\NaceGrubu;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -27,9 +29,9 @@ class TehlikesTable
             ->modifyQueryUsing(fn ($query) => $query->with('kategori'))
             ->columns([
                 TextColumn::make('kod')->label('Kod')->width(64),
-                TextColumn::make('bolum')->label('Bölüm')->placeholder('—')->toggleable(),
+                TextColumn::make('bolum')->label('Bölüm')->placeholder('—')->searchable()->toggleable(),
                 TextColumn::make('tehlike')->label('Tehlike')->searchable()->wrap()->limit(90),
-                TextColumn::make('risk')->label('Risk')->limit(60)->placeholder('—')->toggleable(),
+                TextColumn::make('risk')->label('Risk')->limit(60)->placeholder('—')->searchable()->toggleable(),
                 TextColumn::make('mevzuat')->label('Mevzuat')->placeholder('—')->limit(80)->toggleable(),
             ])
             ->groups([
@@ -104,11 +106,24 @@ class TehlikesTable
                         ? $query->whereHas('kategori', fn ($k) => $k->where(fn ($q) => $q->where('yontem', $data['value'])
                             ->when($data['value'] === 'fine_kinney', fn ($q) => $q->orWhereNull('yontem'))))
                         : $query),
-                SelectFilter::make('tehlike_kategorisi_id')->label('Kategori')->relationship('kategori', 'ad'),
+                SelectFilter::make('nace_grubu')->label('Sektör / NACE')
+                    ->options(fn () => NaceGrubu::secenekler())
+                    ->query(fn ($query, array $data) => filled($data['value'] ?? null)
+                        ? $query->whereHas('kategori', fn ($k) => $k->whereJsonContains('nace_gruplari', $data['value']))
+                        : $query),
+                SelectFilter::make('ekipman')->label('Ekipman')->searchable()
+                    ->options(fn () => once(fn () => TehlikeKategorisi::query()->whereNotNull('ekipman_tipleri')->pluck('ekipman_tipleri')
+                        ->flatten()->filter()->unique()->sort()->mapWithKeys(fn ($e) => [$e => $e])->all()))
+                    ->query(fn ($query, array $data) => filled($data['value'] ?? null)
+                        ? $query->whereHas('kategori', fn ($k) => $k->whereJsonContains('ekipman_tipleri', $data['value']))
+                        : $query),
+                SelectFilter::make('tehlike_kategorisi_id')->label('Kategori')->relationship('kategori', 'ad')->searchable(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),

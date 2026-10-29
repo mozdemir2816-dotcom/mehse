@@ -23,7 +23,7 @@ class TehlikeCakismalari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-square-3-stack-3d';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
 
     protected static ?int $navigationSort = 6;
 
@@ -33,6 +33,7 @@ class TehlikeCakismalari extends Page
 
     protected static ?string $navigationLabel = 'Kütüphane Çakışmaları';
 
+    /** Yalnız bekleyen çakışma varken menüde (rozetle uyarı); her zaman Risk & Tehlike Yönetimi sekme şeridinden de açılır. */
     public static function shouldRegisterNavigation(): bool
     {
         return TehlikeCakismasi::query()->exists();

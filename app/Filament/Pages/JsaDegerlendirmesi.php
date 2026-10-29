@@ -40,7 +40,10 @@ class JsaDegerlendirmesi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
+
+    /** Menüde gizli — Risk & Tehlike Yönetimi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 2;
 
@@ -81,6 +84,18 @@ class JsaDegerlendirmesi extends Page
         return $this->firmaId
             ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId)
             : null;
+    }
+
+    /**
+     * Seçili firmanın risk değerlendirmesindeki izin gerektiren işler (sıcak iş, kapalı alan, yüksekte çalışma…) —
+     * her biri tek tıkla iş izni formu / talimat kartına dönüşür.
+     *
+     * @return array<int, array{tur: string, ad: string, adet: int, en_yuksek: float, ornek: string}>
+     */
+    #[Computed]
+    public function yuksekRiskliIsler(): array
+    {
+        return $this->firma ? \App\Support\YuksekRiskliIsler::firma($this->firma) : [];
     }
 
     /** @return Collection<int, JsaSablonu> */

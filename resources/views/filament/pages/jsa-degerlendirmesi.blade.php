@@ -41,6 +41,31 @@
         @endif
     </x-filament::section>
 
+    {{-- RİSK ANALİZİNDEN BESLENEN YÜKSEK RİSKLİ İŞLER --}}
+    @if ($this->firma)
+        <x-filament::section icon="heroicon-o-fire" icon-color="danger">
+            <x-slot name="heading">Risk Analizinden Gelen Yüksek Riskli İşler</x-slot>
+            <x-slot name="description">{{ $this->firma->unvan }} firmasının en güncel risk değerlendirmesindeki sıcak iş, kapalı alan, yüksekte çalışma gibi izin gerektiren işler. Kartlardan tek tıkla iş izni formu veya talimat hazırlayın.</x-slot>
+
+            @forelse ($this->yuksekRiskliIsler as $is)
+                @if ($loop->first)<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.7rem">@endif
+                    @php $renk = \App\Support\RiskSkorlama::panoRengi('fine_kinney', $is['en_yuksek'])['renk']; @endphp
+                    <div style="border:1px solid #e2e8f0;border-left:4px solid {{ $renk }};border-radius:.9rem;padding:.8rem .95rem;background:#fff;display:flex;flex-direction:column;gap:.45rem">
+                        <div style="font-weight:700;font-size:.9rem">{{ $is['ad'] }}</div>
+                        <div style="font-size:.74rem;color:#64748b">{{ $is['adet'] }} risk maddesi · en yüksek puan <strong style="color:{{ $renk }}">{{ number_format($is['en_yuksek'], 0, ',', '.') }}</strong></div>
+                        <div style="font-size:.72rem;color:#64748b">{{ \Illuminate\Support\Str::limit($is['ornek'], 80) }}</div>
+                        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:auto">
+                            <x-filament::button size="xs" icon="heroicon-o-document-check" tag="a" :href="\App\Filament\Pages\IsIzinFormu::getUrl(['firma' => $this->firma->id, 'tur' => $is['tur']])">İş İzni Formu</x-filament::button>
+                            <x-filament::button size="xs" color="gray" icon="heroicon-o-clipboard-document-list" tag="a" :href="\App\Filament\Pages\TalimatOlustur::getUrl(['firma' => $this->firma->id])">Talimat Hazırla</x-filament::button>
+                        </div>
+                    </div>
+                @if ($loop->last)</div>@endif
+            @empty
+                <div style="font-size:.82rem;color:#64748b">Bu firmanın risk değerlendirmesinde izin gerektiren iş (sıcak iş, kapalı alan, yüksekte çalışma…) tespit edilmedi ya da henüz değerlendirme yok.</div>
+            @endforelse
+        </x-filament::section>
+    @endif
+
     {{-- KÜTÜPHANE --}}
     <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="primary">
         <x-slot name="heading">JSA Kütüphanem ({{ $this->sablonlar->count() }})</x-slot>

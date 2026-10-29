@@ -8,6 +8,7 @@ use App\Models\RiskSablonu;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskSkorlama;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -24,16 +25,16 @@ class ListRiskSablonus extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ActionGroup::make([
             Action::make('excelSektorSablonu')
                 ->label('Excel\'den Sektörel Şablon Oluştur')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('gray')
                 ->modalDescription('Kütüphanenizdeki (veya elinizdeki) tam risk analizini bir sektöre etiketleyerek olduğu gibi saklar — hiçbir satır/puan değiştirilmez, seçilmez. Sonra aynı sektörden yeni bir firma geldiğinde Risk Sihirbazı → "Şablonlar" adımından tek tıkla uygularsınız.')
                 ->modalSubmitActionLabel('Oluştur')
                 ->schema([
                     TextInput::make('ad')->label('Şablon adı')->required()->maxLength(120),
                     Select::make('sektor')->label('Sektör')
-                        ->options(collect(config('isg.risk_ai.sektorler'))->map(fn ($s) => $s['ad']))
+                        ->options(fn () => RiskSablonu::sektorSecenekleri())
                         ->native(false)->searchable(),
                     TextInput::make('sektor_adi')->label('Sektör (serbest metin)')
                         ->helperText('Sektör listede yoksa (örn. "Kazı Çalışmaları") buraya yazın'),
@@ -110,8 +111,14 @@ class ListRiskSablonus extends ListRecords
                     Notification::make()->title($sayi.' şablon silindi')->success()->send();
                 }),
 
+            ])
+                ->label('İçe / Dışa Aktar')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->button(),
+
             Action::make('sihirbaz')
-                ->label('Sihirbazdan oluştur')
+                ->label('+ Sihirbazdan Yeni Şablon')
                 ->icon('heroicon-o-sparkles')
                 ->url(RiskSihirbazi::getUrl()),
         ];

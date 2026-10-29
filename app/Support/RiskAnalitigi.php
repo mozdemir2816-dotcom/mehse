@@ -13,7 +13,8 @@ use Illuminate\Support\Collection;
  * biyolojik / ergonomik / psikososyal) göre toplar ve maruz kalan kişi
  * sayısıyla ağırlıklandırır:
  *
- *   dominans skoru = risk puanı × max(maruz kalan kişi, 1)
+ *   dominans skoru = risk puanı × maruz kalan kişi
+ *   (maruz kişi girilmemişse firmanın çalışan sayısı varsayılır; yalnız istisnai maddeler elle değiştirilir)
  *
  * NACE'ye göre olası tehlike kaynakları (config/risk_nace.php) risk
  * kayıtlarıyla karşılaştırılır; kayıtta karşılığı olmayan başlık
@@ -52,9 +53,15 @@ class RiskAnalitigi
         return 'fiziksel';
     }
 
-    public static function dominans(RiskMaddesi $m): float
+    /** Maddede girilen maruz kişi; boşsa firmanın çalışan sayısı (50 maddeye tek tek yazmamak için), o da yoksa 1. */
+    public static function maruz(RiskMaddesi $m, int $varsayilan = 1): int
     {
-        return (float) $m->puan * max((int) $m->maruz_kisi, 1);
+        return filled($m->maruz_kisi) ? max((int) $m->maruz_kisi, 1) : max($varsayilan, 1);
+    }
+
+    public static function dominans(RiskMaddesi $m, int $varsayilan = 1): float
+    {
+        return (float) $m->puan * static::maruz($m, $varsayilan);
     }
 
     /** @return array<string, mixed> */
@@ -62,12 +69,15 @@ class RiskAnalitigi
     {
         $maddeler = $rd ? $rd->maddeler()->orderBy('sira')->get() : collect();
         $turler = static::turler();
+        $calisan = $firma->calisanlar()->where('aktif', true)->count() ?: (int) $firma->calisan_sayisi;
 
         $satirlar = $maddeler->map(fn (RiskMaddesi $m) => [
             'madde' => $m,
             'tur' => static::tur($m),
             'tahmin' => blank($m->tehlike_turu),
-            'dominans' => static::dominans($m),
+            'maruz' => static::maruz($m, $calisan),
+            'maruz_varsayilan' => blank($m->maruz_kisi),
+            'dominans' => static::dominans($m, $calisan),
         ]);
 
         $toplamDominans = $satirlar->sum('dominans');
@@ -80,7 +90,7 @@ class RiskAnalitigi
                 'ad' => $t['ad'],
                 'renk' => $t['renk'],
                 'kayit' => $grup->count(),
-                'maruz' => $grup->sum(fn ($s) => (int) $s['madde']->maruz_kisi),
+                'maruz' => $grup->sum('maruz'),
                 'skor' => $skor,
                 'pay' => $toplamDominans > 0 ? round($skor / $toplamDominans * 100, 1) : 0.0,
             ];
@@ -92,15 +102,17 @@ class RiskAnalitigi
             'kapsam' => [
                 'nace' => $firma->nace_kodu,
                 'tehlike_sinifi' => $firma->tehlikeSinifiEtiketi(),
-                'calisan' => $firma->calisanlar()->where('aktif', true)->count() ?: (int) $firma->calisan_sayisi,
+                'calisan' => $calisan,
                 'risk_kaydi' => $maddeler->count(),
             ],
             'baskin' => $baskin,
             'dagilim' => $dagilim,
             'satirlar' => $satirlar,
-            'en_yuksek' => $satirlar->filter(fn ($s) => $s['dominans'] > 0)->sortByDesc('dominans')->take(10)->values(),
-            'maruz_toplam' => $maddeler->sum(fn ($m) => (int) $m->maruz_kisi),
-            'maruz_eksik' => $maddeler->filter(fn ($m) => blank($m->maruz_kisi))->count(),
+            'en_yuksek' => $satirlar->filter(fn ($s) => $s['dominans'] > 0)->sortByDesc('dominans')->take(5)->values(),
+            'maruz_toplam' => $satirlar->sum('maruz'),
+            // Kişi sayısı girilmemiş kayıtlar çalışan sayısıyla hesaplandı (istisnalar elle değiştirilir)
+            'maruz_eksik' => $satirlar->where('maruz_varsayilan', true)->count(),
+            'maruz_varsayilan' => max($calisan, 1),
             'tur_tahmin' => $satirlar->where('tahmin', true)->count(),
             'kaynaklar' => static::kaynaklar($firma, $maddeler),
         ];

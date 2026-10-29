@@ -48,7 +48,7 @@
         </div>
 
         <div style="border:1px solid rgb(217 119 6);background:rgb(217 119 6 / .07);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
-            <strong style="color:rgb(217 119 6)">Bilgi</strong> — NACE'ye göre listelenen tehlike kaynakları başlangıç kapsamıdır; otomatik risk üretmez. Her kaynak sahada doğrulanmalı ve risk değerlendirmesine işlenmelidir. Dominans skoru = <strong>risk puanı × max(maruz kalan kişi sayısı, 1)</strong>; maruz kişi girilmeyen kayıtlar 1 kişi sayılır.
+            <strong style="color:rgb(217 119 6)">Bilgi</strong> — NACE'ye göre listelenen tehlike kaynakları başlangıç kapsamıdır; otomatik risk üretmez. Her kaynak sahada doğrulanmalı ve risk değerlendirmesine işlenmelidir. Dominans skoru = <strong>risk puanı × maruz kalan kişi sayısı</strong>; kişi sayısı girilmeyen kayıtlar firmanın çalışan sayısı (<strong>{{ $a['maruz_varsayilan'] }}</strong> kişi) ile hesaplanır — yalnız istisnai maddeleri aşağıdan değiştirmeniz yeterli.
         </div>
 
         @php $baskin = $a['baskin'] ? $a['dagilim'][$a['baskin']] : null; @endphp
@@ -64,9 +64,9 @@
                 <div style="font-size:.72rem;color:rgb(107 114 128)">NACE listesinden · {{ collect($a['kaynaklar'])->where('eslesen', 0)->count() }} doğrulama bekliyor</div>
             </div>
             <div style="{{ $kart }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Bildirilen maruz kişi</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam maruz kişi</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $sayi($a['maruz_toplam']) }}</div>
-                <div style="font-size:.72rem;color:{{ $a['maruz_eksik'] ? 'rgb(217 119 6)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta kişi sayısı eksik' : 'Tüm kayıtlarda girilmiş' }}</div>
+                <div style="font-size:.72rem;color:{{ $a['maruz_eksik'] ? 'rgb(217 119 6)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta çalışan sayısı ('.$a['maruz_varsayilan'].') varsayıldı' : 'Tüm kayıtlarda elle girilmiş' }}</div>
             </div>
             <div style="{{ $kart }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Risk değerlendirmesi</div>
@@ -92,7 +92,7 @@
                         <span style="font-weight:800;color:rgb(107 114 128);min-width:1.2rem">{{ $i + 1 }}</span>
                         <div style="flex:1">
                             <div style="font-weight:600">{{ \Illuminate\Support\Str::limit($s['madde']->tehlike, 90) }}</div>
-                            <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $s['madde']->bolum ?: 'Bölüm yok' }} · <span style="color:{{ $turler[$s['tur']]['renk'] }}">{{ $turler[$s['tur']]['ad'] }}</span> · puan {{ $sayi($s['madde']->puan) }} × {{ max((int) $s['madde']->maruz_kisi, 1) }} kişi</div>
+                            <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $s['madde']->bolum ?: 'Bölüm yok' }} · <span style="color:{{ $turler[$s['tur']]['renk'] }}">{{ $turler[$s['tur']]['ad'] }}</span> · puan <strong style="color:{{ \App\Support\RiskSkorlama::panoRengi($rd->yontem ?? 'fine_kinney', (float) $s['madde']->puan)['renk'] }}">{{ $sayi($s['madde']->puan) }}</strong> × {{ $s['maruz'] }} kişi{{ $s['maruz_varsayilan'] ? ' (varsayılan)' : '' }}</div>
                         </div>
                         <span style="font-weight:800">{{ $sayi($s['dominans']) }}</span>
                     </div>
@@ -143,7 +143,7 @@
         @if ($rd && $a['satirlar']->isNotEmpty())
             <x-filament::section heading="Tehlike türü ve maruz kişi" description="Tür seçilmemiş kayıtlar metinden tahmin edilir (italik). Değişiklik anında kaydedilir.">
                 <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem">
-                    <label style="font-size:.8rem;display:flex;gap:.3rem;align-items:center"><input type="checkbox" wire:model.live="sadeceEksik"> Yalnız türü tahmin edilen / kişi sayısı eksik olanlar</label>
+                    <label style="font-size:.8rem;display:flex;gap:.3rem;align-items:center"><input type="checkbox" wire:model.live="sadeceEksik"> Yalnız türü tahmin edilenler</label>
                     @if ($a['tur_tahmin'])
                         <x-filament::button size="xs" color="gray" wire:click="tahminleriKaydet" wire:confirm="Tahmin edilen {{ $a['tur_tahmin'] }} türü maddelere kaydedilsin mi?">Tahminleri kaydet ({{ $a['tur_tahmin'] }})</x-filament::button>
                     @endif
@@ -154,19 +154,19 @@
                         <tbody>
                             @foreach ($a['satirlar'] as $s)
                                 @php $m = $s['madde']; @endphp
-                                @continue($sadeceEksik && ! $s['tahmin'] && filled($m->maruz_kisi))
+                                @continue($sadeceEksik && ! $s['tahmin'])
                                 <tr wire:key="m-{{ $m->id }}">
                                     <td style="{{ $td }}">{{ $m->sira }}</td>
                                     <td style="{{ $td }}">{{ $m->bolum ?: '—' }}</td>
                                     <td style="{{ $td }}">{{ \Illuminate\Support\Str::limit($m->tehlike, 110) }}</td>
-                                    <td style="{{ $td }}">{{ $m->puan ? $sayi($m->puan) : '—' }}</td>
+                                    <td style="{{ $td }}">@if ($m->puan)<span style="font-weight:700;color:{{ \App\Support\RiskSkorlama::panoRengi($rd->yontem ?? 'fine_kinney', (float) $m->puan)['renk'] }}">{{ $sayi($m->puan) }}</span>@else — @endif</td>
                                     <td style="{{ $td }}">
                                         <select style="{{ $kucukGirdi }};{{ $s['tahmin'] ? 'font-style:italic;color:rgb(107 114 128)' : '' }}" wire:change="maddeGuncelle({{ $m->id }}, 'tehlike_turu', $event.target.value)">
                                             <option value="" @selected($s['tahmin'])>Tahmin: {{ $turler[$s['tur']]['ad'] }}</option>
                                             @foreach ($turler as $k => $t)<option value="{{ $k }}" @selected(! $s['tahmin'] && $s['tur'] === $k)>{{ $t['ad'] }}</option>@endforeach
                                         </select>
                                     </td>
-                                    <td style="{{ $td }}"><input type="number" min="0" value="{{ $m->maruz_kisi }}" placeholder="—" style="{{ $kucukGirdi }};width:5.5rem" wire:change="maddeGuncelle({{ $m->id }}, 'maruz_kisi', $event.target.value)"></td>
+                                    <td style="{{ $td }}"><input type="number" min="0" value="{{ $m->maruz_kisi }}" placeholder="{{ $a['maruz_varsayilan'] }}" title="Boşsa çalışan sayısı kullanılır" style="{{ $kucukGirdi }};width:5.5rem" wire:change="maddeGuncelle({{ $m->id }}, 'maruz_kisi', $event.target.value)"></td>
                                 </tr>
                             @endforeach
                         </tbody>

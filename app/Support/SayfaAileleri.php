@@ -5,6 +5,9 @@ namespace App\Support;
 use App\Filament\Pages;
 use App\Filament\Resources\EgitimPaketis\EgitimPaketiResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Filament\Resources\RiskProsedurs\RiskProsedurResource;
+use App\Filament\Resources\RiskSablonus\RiskSablonuResource;
+use App\Filament\Resources\Tehlikes\TehlikeResource;
 use Filament\Resources\Resource;
 
 /**
@@ -39,9 +42,19 @@ class SayfaAileleri
                 [Pages\TespitOneriDefteri::class, 'Tespit Öneri Defteri'],
                 [Pages\OnBilgilendirmeler::class, 'Ön Bilgilendirme / Tebliğ'],
             ],
+            // Risk & Tehlike Yönetimi: 12 sayfa → 3 ana sekme (30.10.2026); GRUPLAR['risk'] bkz.
             'risk' => [
                 [Pages\RiskSihirbazi::class, 'Yeni Değerlendirme'],
                 [RiskDegerlendirmesiResource::class, 'Kayıtlı Değerlendirmeler'],
+                [Pages\JsaDegerlendirmesi::class, 'JSA (İşe Özgü Risk)'],
+                [Pages\KimyasalYonetimi::class, 'Kimyasal Yönetimi'],
+                [Pages\KimyasalRiskDegerlendirmesi::class, 'Kimyasal Risk Değ.'],
+                [Pages\KimyasalSicili::class, 'Kimyasal Sicili / Afiş'],
+                [Pages\TehlikeRiskAnalitigi::class, 'Tehlike ve Risk Analitiği'],
+                [TehlikeResource::class, 'Tehlike Kütüphanesi'],
+                [RiskSablonuResource::class, 'Sektör Şablonları'],
+                [RiskProsedurResource::class, 'Risk Prosedürleri'],
+                [Pages\TehlikeCakismalari::class, 'Kütüphane Çakışmaları'],
             ],
             'acil' => [
                 [Pages\AcilDurumPlani::class, 'Acil Durum Planı'],
@@ -94,6 +107,23 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        'risk' => [
+            [
+                'etiket' => 'Risk Analiz Sihirbazı & Değerlendirmeler',
+                'ikon' => 'heroicon-o-bolt',
+                'siniflar' => [Pages\RiskSihirbazi::class, RiskDegerlendirmesiResource::class, Pages\JsaDegerlendirmesi::class],
+            ],
+            [
+                'etiket' => 'Kimyasal & Tehlike Analitiği',
+                'ikon' => 'heroicon-o-beaker',
+                'siniflar' => [Pages\KimyasalYonetimi::class, Pages\KimyasalRiskDegerlendirmesi::class, Pages\KimyasalSicili::class, Pages\TehlikeRiskAnalitigi::class],
+            ],
+            [
+                'etiket' => 'Merkezi Kütüphane & Şablonlar',
+                'ikon' => 'heroicon-o-book-open',
+                'siniflar' => [TehlikeResource::class, RiskSablonuResource::class, RiskProsedurResource::class, Pages\TehlikeCakismalari::class],
+            ],
+        ],
         'saha' => [
             [
                 'etiket' => 'Aktif Saha Denetimi & Ziyaret Modu',
@@ -118,7 +148,7 @@ class SayfaAileleri
      * birden çok sayfası varsa o sayfalar. Aile gruplu değilse (veya sayfa ailede yoksa) null — düz `sekmeler()` kullanılır.
      *
      * @param  array<int, string>  $kapsamlar
-     * @return array{ust: array<int, array{etiket: string, ikon: string, url: string, aktif: bool}>, alt: array<int, array{etiket: string, url: string, aktif: bool}>}|null
+     * @return array{aile: string, ust: array<int, array{etiket: string, ikon: string, url: string, aktif: bool}>, alt: array<int, array{etiket: string, url: string, aktif: bool}>}|null
      */
     public static function sekmeGruplari(array $kapsamlar): ?array
     {
@@ -153,7 +183,7 @@ class SayfaAileleri
                 }
             }
 
-            return ['ust' => $ust, 'alt' => $alt];
+            return ['aile' => $aile, 'ust' => $ust, 'alt' => $alt];
         }
 
         return null;

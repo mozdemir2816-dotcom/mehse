@@ -39,7 +39,7 @@ class PkdSicili extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-fire';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk Değerlendirmesi';
+    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
 
     protected static bool $shouldRegisterNavigation = false;
 
