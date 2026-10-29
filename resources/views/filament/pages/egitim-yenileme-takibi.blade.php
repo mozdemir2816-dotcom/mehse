@@ -92,12 +92,21 @@
             <x-filament::section icon="heroicon-o-user-group" icon-color="gray">
                 <x-slot name="heading">Kimin eğitimi dolmuş? ({{ $this->gosterilenSatirlar->count() }})</x-slot>
                 <x-slot name="description">Uyumluluk: {{ $o['uyum'] !== null ? '%'.$o['uyum'] : '—' }} (geçerli + yaklaşan / aktif çalışan)</x-slot>
+                @if (count($this->secili) > 0)
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:.75rem;padding:.6rem .9rem;margin-bottom:.7rem;font-size:.82rem">
+                        <strong>{{ count($this->secili) }} çalışan seçili</strong>
+                        <x-filament::button size="sm" icon="heroicon-o-document-text" wire:click="topluTutanak">Seçilenlere Toplu Tutanak Oluştur</x-filament::button>
+                        <x-filament::button size="sm" color="gray" icon="heroicon-o-computer-desktop" wire:click="topluUzaktan">Seçilenlere Uzaktan Eğitim Paketi Ata</x-filament::button>
+                        <button type="button" wire:click="secimiTemizle" style="background:none;border:0;color:#64748b;text-decoration:underline;cursor:pointer;font-size:.78rem">Seçimi temizle</button>
+                    </div>
+                @endif
                 @if ($this->gosterilenSatirlar->isNotEmpty())
                     <div style="overflow-x:auto">
                         <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:760px">
-                            <tr>@foreach (['Personel', 'Bölüm', 'Son eğitim', 'Yenileme', 'Durum', 'İşbaşı'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
+                            <tr><th style="{{ $th }};width:28px"><input type="checkbox" wire:click="{{ count($this->secili) === $this->gosterilenSatirlar->count() ? 'secimiTemizle' : 'tumunuSec' }}" @checked(count($this->secili) > 0 && count($this->secili) === $this->gosterilenSatirlar->count()) title="Görünenlerin tümünü seç"></th>@foreach (['Personel', 'Bölüm', 'Son eğitim', 'Yenileme', 'Durum', 'İşbaşı'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                             @foreach ($this->gosterilenSatirlar as $s)
-                                <tr>
+                                <tr wire:key="satir-{{ $s['calisan']->id }}">
+                                    <td style="{{ $td }}"><input type="checkbox" value="{{ $s['calisan']->id }}" wire:model.live="secili"></td>
                                     <td style="{{ $td }}"><strong>{{ $s['calisan']->ad_soyad }}</strong><div style="font-size:.72rem;color:rgb(107 114 128)">{{ $s['calisan']->gorev }}</div></td>
                                     <td style="{{ $td }}">{{ $s['calisan']->departman ?: '—' }}</td>
                                     <td style="{{ $td }};white-space:nowrap">{{ $s['son_egitim']?->format('d.m.Y') ?? '—' }}@if ($s['kaynak'])<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $s['kaynak'] }}</div>@endif</td>

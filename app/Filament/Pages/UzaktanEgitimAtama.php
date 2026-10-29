@@ -219,8 +219,17 @@ class UzaktanEgitimAtama extends Page
         }
     }
 
-    public function updatedFirmaId(): void
+    /** Eğitim Takibi'nden toplu atama: firma ve çalışanlar hazır seçili gelir. */
+    public function mount(): void
     {
+        if ($aktarim = session()->pull('uzaktan_atama_aktarim')) {
+            $this->firmaId = (int) $aktarim['firma_id'];
+            $this->updatedFirmaId();
+            $this->secilenCalisanlar = array_values(array_intersect($aktarim['calisan_idleri'], $this->calisanlar->pluck('id')->all()));
+        }
+    }
+
+    public function updatedFirmaId(): void    {
         unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu);
         $this->secilenCalisanlar = [];
         $this->sonUretilenGiris = [];

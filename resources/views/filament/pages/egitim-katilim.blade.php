@@ -10,7 +10,7 @@
         Madde 17 kapsamındaki eğitim katılım formunu oluşturun.
     </p>
 
-    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'egitim_katilim_formu'])
+    @php $eksikIdler = \App\Support\PortfoyKarne::eksikFirmalar(\Filament\Facades\Filament::auth()->id(), 'egitim_katilim_formu')->pluck('id')->all(); @endphp
 
     {{-- 0. BOŞ İMZA FORMU — firma/katılımcı seçmeden, tek tıkla --}}
     <x-filament::section icon="heroicon-o-pencil-square" icon-color="gray" collapsible collapsed>
@@ -64,7 +64,7 @@
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
-                        <option value="{{ $id }}">{{ $ad }}</option>
+                        <option value="{{ $id }}">{{ $ad }}{{ in_array($id, $eksikIdler, true) ? ' (Eksik)' : '' }}</option>
                     @endforeach
                 </select>
             </div>

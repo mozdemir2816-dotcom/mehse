@@ -172,4 +172,54 @@ class EgitimYenilemeTakibiTest extends TestCase
         $this->assertSame('Gıda ve Su Sektöründe Hijyen Eğitimi', $icerik['ad']);
         $this->assertCount(6, $icerik['maddeler']);
     }
+
+    public function test_toplu_tutanak_secilenleri_katilim_formuna_aktarir(): void
+    {
+        $a = $this->calisan('Ali Veli', '11111111110');
+        $b = $this->calisan('Ayşe Demir');
+        $this->calisan('Seçilmeyen Kişi');
+
+        Livewire::test(EgitimYenilemeTakibi::class, ['firmaId' => $this->firma->id])
+            ->set('secili', [$a->id, $b->id])
+            ->assertSee('2 çalışan seçili')
+            ->call('topluTutanak')
+            ->assertRedirect(\App\Filament\Pages\EgitimKatilim::getUrl());
+
+        $aktarim = session('egitim_katilim_aktarim');
+        $this->assertSame($this->firma->id, $aktarim['firma_id']);
+        $this->assertEqualsCanonicalizing(['Ali Veli', 'Ayşe Demir'], array_column($aktarim['katilimcilar'], 'ad_soyad'));
+    }
+
+    public function test_toplu_uzaktan_atama_secilenleri_hazir_acar_ve_baskasinin_calisanini_almaz(): void
+    {
+        $a = $this->calisan('Ali Veli');
+        $yabanci = Calisan::factory()->for(Firma::factory()->for(User::factory()->create())->create())->create(['aktif' => true]);
+
+        Livewire::test(EgitimYenilemeTakibi::class, ['firmaId' => $this->firma->id])
+            ->set('secili', [$a->id, $yabanci->id])
+            ->call('topluUzaktan')
+            ->assertRedirect(\App\Filament\Pages\UzaktanEgitimAtama::getUrl());
+
+        $this->assertSame([$a->id], session('uzaktan_atama_aktarim')['calisan_idleri']);
+
+        Livewire::test(\App\Filament\Pages\UzaktanEgitimAtama::class)
+            ->assertSet('firmaId', $this->firma->id)
+            ->assertSet('secilenCalisanlar', [$a->id]);
+    }
+
+    public function test_toolbox_hazir_kartlar_ve_imza_foyu(): void
+    {
+        Livewire::test(\App\Filament\Pages\ToolboxKonusmalari::class)
+            ->assertSee('İskele Güvenliği')
+            ->assertSee('Kapalı Alan Çalışması')
+            ->call('imzaFoyu', 'iskele')
+            ->assertFileDownloaded();
+    }
+
+    public function test_katilim_formunda_eksik_firma_dropdownda_rozetli_ve_sari_bant_yok(): void
+    {
+        Livewire::test(\App\Filament\Pages\EgitimKatilim::class)
+            ->assertSee('(Eksik)')
+            ->assertDontSee('Eksik Olan Firmalar');
+    }
 }

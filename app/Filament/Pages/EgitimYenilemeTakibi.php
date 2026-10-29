@@ -62,6 +62,9 @@ class EgitimYenilemeTakibi extends Page
 
     public ?string $arama = null;
 
+    /** @var array<int, int> toplu işlem için seçilen çalışan id'leri */
+    public array $secili = [];
+
     public function mount(): void
     {
         if ($firmaId = request()->integer('firma')) {
@@ -128,8 +131,59 @@ class EgitimYenilemeTakibi extends Page
             ->values();
     }
 
+    public function tumunuSec(): void
+    {
+        $this->secili = $this->gosterilenSatirlar->map(fn (array $s) => (int) $s['calisan']->id)->all();
+    }
+
+    public function secimiTemizle(): void
+    {
+        $this->secili = [];
+    }
+
+    /** Seçili çalışanları Eğitim Katılım formuna katılımcı olarak aktarır (Atama Yazıları ile aynı oturum anahtarı). */
+    public function topluTutanak()
+    {
+        $calisanlar = $this->seciliCalisanlar();
+
+        if (! $this->firma || $calisanlar->isEmpty()) {
+            return null;
+        }
+
+        session(['egitim_katilim_aktarim' => [
+            'firma_id' => $this->firma->id,
+            'baslik_anahtari' => 'genel',
+            'katilimcilar' => $calisanlar->map(fn ($c) => ['ad_soyad' => $c->ad_soyad, 'tc' => $c->tc, 'gorev' => $c->gorev])->values()->all(),
+        ]]);
+
+        return $this->redirect(\App\Filament\Pages\EgitimKatilim::getUrl());
+    }
+
+    /** Seçili çalışanları Uzaktan Eğitim Atama sayfasında hazır seçili açar. */
+    public function topluUzaktan()
+    {
+        $calisanlar = $this->seciliCalisanlar();
+
+        if (! $this->firma || $calisanlar->isEmpty()) {
+            return null;
+        }
+
+        session(['uzaktan_atama_aktarim' => ['firma_id' => $this->firma->id, 'calisan_idleri' => $calisanlar->pluck('id')->all()]]);
+
+        return $this->redirect(UzaktanEgitimAtama::getUrl());
+    }
+
+    /** Yalnız bu firmanın satırlarındaki seçili çalışanlar. */
+    private function seciliCalisanlar(): Collection
+    {
+        return $this->satirlar->map(fn (array $s) => $s['calisan'])->whereIn('id', $this->secili)->values();
+    }
+
     public function updated(string $alan): void
     {
+        if ($alan === 'firmaId') {
+            $this->secili = [];
+        }
         if (in_array($alan, ['firmaId', 'durumFiltre', 'arama'], true)) {
             unset($this->firma, $this->satirlar, $this->ozet, $this->gosterilenSatirlar, $this->oturumlar);
         }

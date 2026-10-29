@@ -46,6 +46,20 @@ class ToolboxKonusmalari extends Page
 
     protected static ?string $navigationLabel = 'Toolbox Konuşması';
 
+    /** Hazır kartın boş katılım imza föyü (A4 PDF, sahada elle imza için). */
+    public function imzaFoyu(string $anahtar)
+    {
+        $kart = \App\Support\ToolboxKartlari::liste()[$anahtar] ?? null;
+
+        if (! $kart) {
+            return null;
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.toolbox-imza-foyu', ['kart' => $kart])->setPaper('a4');
+
+        return response()->streamDownload(fn () => print ($pdf->output()), 'toolbox-imza-foyu-'.\Illuminate\Support\Str::slug($kart['baslik']).'.pdf');
+    }
+
     /** @return Collection<int, ToolboxKonusmasi> */
     #[Computed]
     public function konusmalar(): Collection
