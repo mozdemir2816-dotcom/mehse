@@ -9,6 +9,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'isg_kurulu'])
 
     {{-- AKTİF İŞYERİ BAĞLAMI --}}
@@ -37,6 +38,11 @@
                     <x-filament::badge :color="($firma->calisan_sayisi ?? 0) >= 50 ? 'warning' : 'gray'">
                         {{ (int) $firma->calisan_sayisi }} çalışan{{ ($firma->calisan_sayisi ?? 0) >= 50 ? ' · kurul zorunlu' : '' }}
                     </x-filament::badge>
+                    @if (($firma->calisan_sayisi ?? 0) < 50)
+                        <x-filament::badge color="info" icon="heroicon-o-information-circle">
+                            50'den az çalışan: İSG Kurulu yasal zorunluluk değildir (6331 s.K. m.22) — isteğe bağlı kurul yönetebilirsiniz
+                        </x-filament::badge>
+                    @endif
                 </div>
             @endif
         </div>
@@ -457,6 +463,11 @@
                                         @endif
                                     </td>
                                     <td class="px-3 py-2 text-right whitespace-nowrap">
+                                        @if (filled($k['bulgu_id'] ?? null))
+                                            <x-filament::badge color="success" size="sm" icon="heroicon-o-check-circle">DÖF'te</x-filament::badge>
+                                        @else
+                                            <x-filament::button size="xs" color="info" icon="heroicon-o-arrow-right-circle" wire:click="kararDofAktar({{ $i }})">DÖF Havuzuna Aktar</x-filament::button>
+                                        @endif
                                         <x-filament::button size="xs" color="gray" icon="heroicon-o-pencil" wire:click="kararDuzenle({{ $i }})">Düzenle</x-filament::button>
                                         <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm" label="Sil" wire:click="kararSil({{ $i }})" />
                                     </td>

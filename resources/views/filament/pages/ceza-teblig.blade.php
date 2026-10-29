@@ -4,6 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Çalışana yönelik ceza/ihtar tutanağını ve işverene idari para cezası bilgilendirme
         tebliğini — resmi PDF çıktısı ile — hazırlayın.

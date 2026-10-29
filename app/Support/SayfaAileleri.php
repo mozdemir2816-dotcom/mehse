@@ -85,6 +85,15 @@ class SayfaAileleri
                 [Pages\IsKazasiRaporu::class, 'Kaza İnceleme Raporu'],
                 [Pages\KazaIstatistikleri::class, 'İstatistikler'],
             ],
+            // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
+            'belge' => [
+                [Pages\IsIzinFormu::class, 'İş İzin Formu (PTW)'],
+                [Pages\TalimatOlustur::class, 'Talimat Oluştur'],
+                [Pages\KurulToplantisi::class, 'İSG Kurulu'],
+                [Pages\AtamaYazilari::class, 'Atama Yazıları'],
+                [Pages\CalisanTemsilcisiSecimi::class, 'Çalışan Temsilcisi Seçimi'],
+                [Pages\CezaTeblig::class, 'Ceza ve Tebliğ Tutanağı'],
+            ],
             'kkd' => [
                 [Pages\KkdTakip::class, 'Zimmet & Stok'],
                 [Pages\KkdFormu::class, 'KKD Formu'],
@@ -108,6 +117,24 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
+        // Resmi Belge & Kurul Yönetim Merkezi (30.10.2026)
+        'belge' => [
+            [
+                'etiket' => 'İş İzni (PTW) & Güvenli Çalışma Talimatları',
+                'ikon' => 'heroicon-o-shield-check',
+                'siniflar' => [Pages\IsIzinFormu::class, Pages\TalimatOlustur::class],
+            ],
+            [
+                'etiket' => 'İSG Kurulu & Toplantı Yönetimi',
+                'ikon' => 'heroicon-o-users',
+                'siniflar' => [Pages\KurulToplantisi::class],
+            ],
+            [
+                'etiket' => 'Yasal Atamalar, Temsilci & Tebliğler',
+                'ikon' => 'heroicon-o-scale',
+                'siniflar' => [Pages\AtamaYazilari::class, Pages\CalisanTemsilcisiSecimi::class, Pages\CezaTeblig::class],
+            ],
+        ],
         'saglik_olay' => [
             [
                 'etiket' => 'Sağlık Gözetimi & EK-2 Muayene Formu',

@@ -60,6 +60,11 @@ class KurulUyeleri
     /** @return array<string, string> eksik zorunlu rol anahtarı => etiket */
     public static function eksikZorunlular(Firma $firma): array
     {
+        // 6331 m.22: kurul yalnız 50+ çalışanda zorunlu; altında üye eksikliği toplantıyı engellemez.
+        if (($firma->calisan_sayisi ?? 0) < 50) {
+            return [];
+        }
+
         $dolu = self::aktifUyeler($firma)->pluck('rol')->unique()->all();
 
         return collect(self::roller())

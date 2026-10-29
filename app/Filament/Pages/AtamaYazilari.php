@@ -41,6 +41,9 @@ class AtamaYazilari extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
 
+    /** Menüde gizli — Resmi Belge & Kurul Yönetim Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'atama-yazilari';

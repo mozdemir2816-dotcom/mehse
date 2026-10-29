@@ -30,6 +30,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class IsIzinFormu extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     use \App\Filament\Concerns\SinirliErisim;
     use \App\Filament\Concerns\KaydetSecenegi;
 

@@ -10,6 +10,7 @@ use App\Models\KurulToplantisi as KurulToplantisiModel;
 use App\Models\KurulUyesi;
 use App\Support\BagliKayitGuncelleyici;
 use App\Support\GeminiKararDanismani;
+use App\Support\KararDofAktarici;
 use App\Support\KurulCagriUretici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\KurulUyeleri;
@@ -52,6 +53,9 @@ class KurulToplantisi extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
+
+    /** Menüde gizli — Resmi Belge & Kurul Yönetim Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 4;
 
@@ -848,6 +852,25 @@ class KurulToplantisi extends Page
     public function devredenNotu(int $kaynakId, string $kararId, string $not): void
     {
         $this->toplanti()?->devredenGuncelle($kaynakId, $kararId, null, trim($not) !== '' ? trim($not) : null);
+    }
+
+    /** Kurul kararını Saha Bulgu & DÖF Takip Havuzu'na görev olarak aktarır (tekrar basılırsa çift kayıt açmaz). */
+    public function kararDofAktar(int $index): void
+    {
+        $t = $this->toplanti();
+        $mevcutMu = filled(($t?->kararlar[$index]['bulgu_id'] ?? null));
+        $bulgu = $t ? KararDofAktarici::aktar($t, $index) : null;
+
+        if (! $bulgu) {
+            return;
+        }
+
+        unset($this->toplanti);
+        Notification::make()
+            ->title($mevcutMu ? 'Karar zaten DÖF havuzunda' : 'Karar DÖF havuzuna görev olarak aktarıldı')
+            ->body($bulgu->bulgu_no)
+            ->success()
+            ->send();
     }
 
     public function kararSil(int $index): void

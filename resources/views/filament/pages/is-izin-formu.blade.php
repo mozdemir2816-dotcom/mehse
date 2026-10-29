@@ -12,6 +12,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Yüksek riskli çalışmalar için iş izni (Permit to Work) düzenleyin. Kütüphaneden hazır bir
         izin türü seçip önlem/KKD listesini otomatik doldurabilir; düzenledikten sonra izni onaya

@@ -12,6 +12,7 @@ use App\Support\GeminiTalimatUretici;
 use App\Support\TalimatDosyaOkuyucu;
 use App\Support\TalimatKutuphanesi;
 use App\Support\TalimatListesiUretici;
+use App\Support\TalimatOnerisi;
 use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TalimatUretici;
 use App\Support\TalimatWordUretici;
@@ -48,6 +49,9 @@ class TalimatOlustur extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-duplicate';
 
     protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
+
+    /** Menüde gizli — Resmi Belge & Kurul Yönetim Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 2;
 
@@ -158,9 +162,14 @@ class TalimatOlustur extends Page
                 'kaynak' => 'ozel', 'anahtar' => $s->id,
             ]);
 
+        // Firmanın ekipman envanterine uyan talimatlar en üstte "önerilen" olarak gelir.
+        $anahtarlar = $this->firma ? TalimatOnerisi::anahtarlar($this->firma) : [];
+
         return $hazir->concat($ozel)
             ->filter(fn ($s) => ! $this->kategoriFiltre || $s['kategori'] === $this->kategoriFiltre)
             ->filter(fn ($s) => ! $this->arama || str_contains(mb_strtolower($s['baslik']), mb_strtolower($this->arama)))
+            ->map(fn ($s) => [...$s, 'onerilen' => $anahtarlar !== [] && TalimatOnerisi::onerilenMi($s['baslik'], $anahtarlar)])
+            ->sortBy(fn ($s) => $s['onerilen'] ? 0 : 1)   // kararlı sıralama: öneriler üstte, kalan sıra korunur
             ->values()
             ->all();
     }

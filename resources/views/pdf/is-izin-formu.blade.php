@@ -34,6 +34,7 @@
         <div style="margin-top:6px">
             <span class="damga">DURUM — {{ $form->durumEtiketi() }}</span>
         </div>
+        <div style="margin-top:6px"><img src="{{ \App\Support\IsIzinFormuUretici::qrDataUri($form) }}" style="width:70px;height:70px"></div>
     </div>
 
     <table class="kunye">

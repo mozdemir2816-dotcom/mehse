@@ -5,6 +5,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         6331 sayılı Kanun md.20 uyarınca çalışan temsilcisi <strong>seçim</strong> süreci: duyuru → aday başvuruları →
         kesin aday listesi → oy pusulası → seçim sonucu atama tutanağı. Doğrudan atama için "Atama Yazıları"

@@ -5,6 +5,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Hazır şablonlardan veya kendi arşivinizden yüklediğiniz talimatlardan seçin ya
         da yapay zeka ile saniyeler içinde profesyonel İSG talimatı oluşturun.
@@ -63,6 +64,9 @@
                     </div>
                     <div style="font-weight:700;font-size:.85rem;margin:.15rem 0">
                         {{ $s['baslik'] }}
+                        @if (! empty($s['onerilen']))
+                            <span title="Firmanın ekipman envanterinde bu talimatla ilgili makine var" style="font-size:.62rem;background:#0ea5e9;color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Önerilen</span>
+                        @endif
                         @if (! empty($s['bolumler']))
                             <span style="font-size:.62rem;background:rgb(16 185 129);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
                         @endif
