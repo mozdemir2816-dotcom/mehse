@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\FirmaDenetimOperasyon;
 use App\Filament\Pages\UzmanRaporMerkezi;
 use App\Models\Calisan;
 use App\Models\Firma;
@@ -77,10 +78,14 @@ class UzmanRaporMerkeziTest extends TestCase
         $this->veriKur();
         $yabanci = Firma::factory()->for(User::factory())->create(['unvan' => 'Yabancı Firma']);
 
-        $sayfa = Livewire::test(UzmanRaporMerkezi::class)
-            ->assertSee('Rapor verisi için yukarıdan bir firma')
+        $sayfa = Livewire::test(FirmaDenetimOperasyon::class)
+            ->call('bolumSec', 'uzman')
+            ->set('firmaId', null)
+            ->assertSee('yukarıdan bir firma seçin')
             ->assertDontSee('Öncelikli aksiyonlar');
         $this->assertNull($sayfa->instance()->rapor);
+
+        $this->get(UzmanRaporMerkezi::getUrl())->assertRedirect(FirmaDenetimOperasyon::getUrl(['bolum' => 'uzman']));
 
         $sayfa->set('firmaId', $this->firma->id)
             ->assertSee('İşyeri uygunluk özeti')

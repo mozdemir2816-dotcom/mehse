@@ -129,57 +129,73 @@
             <div style="font-size:.75rem;color:{{ $gri }};margin-bottom:.5rem">
                 Eksiği olan bir kritere tıklayın — hangi firmalarda eksik olduğu listelenir.
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.5rem">
-                @foreach ($this->kriterler as $k)
-                    @php
-                        $kRenk = $k['takip'] ? $gri : ($k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil));
-                        $eksikSayi = max($k['toplam'] - $k['tamam'], 0);
-                        $tiklanir = $k['hazir'] && ! $k['takip'] && $eksikSayi > 0;
-                        $acik = $acikKriter === $k['anahtar'];
-                    @endphp
-                    <div style="border:1px solid {{ $acik ? $kRenk : 'rgb(128 116 148 / .2)' }};border-radius:.5rem;padding:.6rem .75rem;{{ $tiklanir ? 'cursor:pointer' : '' }}"
-                        @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif>
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
-                            <span style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;font-weight:600">
-                                <span style="width:1.5rem;height:1.5rem;border-radius:9999px;flex-shrink:0;
-                                        background:color-mix(in srgb, {{ $kRenk }} 18%, transparent);
-                                        display:flex;align-items:center;justify-content:center">
-                                    <x-filament::icon :icon="$k['ikon']" style="width:.85rem;height:.85rem;color:{{ $kRenk }}"/>
-                                </span>
-                                {{ $k['ad'] }}
-                                @unless ($k['hazir']) <span style="font-size:.65rem;color:{{ $gri }}">(modül yakında)</span> @endunless
-                                @if ($k['takip']) <span style="font-size:.65rem;color:{{ $gri }}" title="Olay bazlı kayıt — eksik sayılmaz, uyum yüzdesine girmez">(yalnız takip)</span> @endif
+            {{-- 3 mantıksal grup: Temel Yasal Belgeler / Saha & Kurul Süreçleri / Sağlık & Takip (App\Support\PortfoyKarne::grupla) --}}
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:.75rem;align-items:start">
+                @foreach ($this->kriterGruplari as $grup)
+                    @php $gRenk = $grup['kapsam'] === 0 ? $gri : ($grup['yuzde'] < 40 ? $kirmizi : ($grup['yuzde'] < 75 ? $sari : $yesil)); @endphp
+                    <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.6rem;padding:.7rem .8rem">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem">
+                            <span style="display:flex;align-items:center;gap:.45rem;font-size:.88rem;font-weight:700">
+                                <x-filament::icon :icon="$grup['ikon']" style="width:1.05rem;height:1.05rem;color:{{ $gRenk }}"/>
+                                {{ $grup['ad'] }}
                             </span>
-                            <span style="display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:{{ $gri }};white-space:nowrap">
-                                {{ $k['tamam'] }}/{{ $k['toplam'] }} · %{{ $k['yuzde'] }}
-                                @if ($tiklanir)
-                                    <x-filament::icon icon="{{ $acik ? 'heroicon-m-chevron-up' : 'heroicon-m-chevron-down' }}" style="width:.85rem;height:.85rem"/>
-                                @endif
+                            <span style="font-size:.72rem;font-weight:700;padding:.12rem .55rem;border-radius:9999px;color:{{ $gRenk }};background:color-mix(in srgb, {{ $gRenk }} 14%, transparent)">
+                                %{{ $grup['yuzde'] }}
                             </span>
                         </div>
-                        <div style="height:6px;border-radius:9999px;background:rgb(128 116 148 / .2);margin-top:.4rem;overflow:hidden">
-                            <div style="height:100%;width:{{ max($k['yuzde'], 1) }}%;background:{{ $kRenk }}"></div>
+                        <div style="height:5px;border-radius:9999px;background:rgb(128 116 148 / .2);margin-bottom:.55rem;overflow:hidden">
+                            <div style="height:100%;width:{{ max($grup['yuzde'], 1) }}%;background:{{ $gRenk }}"></div>
                         </div>
 
-                        @if ($acik)
-                            @php $eksikFirmalar = $this->acikKriterEksikFirmalar; @endphp
-                            <div style="margin-top:.6rem;padding-top:.55rem;border-top:1px dashed rgb(128 116 148 / .3)" onclick="event.stopPropagation()">
-                                <div style="font-size:.72rem;font-weight:700;color:{{ $kirmizi }};margin-bottom:.4rem">
-                                    Bu kriterin eksik olduğu {{ count($eksikFirmalar) }} firma:
+                        <div style="display:flex;flex-direction:column">
+                            @foreach ($grup['kriterler'] as $k)
+                                @php
+                                    $kRenk = $k['takip'] ? $gri : ($k['yuzde'] < 40 ? $kirmizi : ($k['yuzde'] < 75 ? $sari : $yesil));
+                                    $eksikSayi = max($k['toplam'] - $k['tamam'], 0);
+                                    $tiklanir = $k['hazir'] && ! $k['takip'] && $eksikSayi > 0;
+                                    $acik = $acikKriter === $k['anahtar'];
+                                @endphp
+                                <div style="border-top:1px solid rgb(128 116 148 / .15);padding:.4rem 0"
+                                    @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;{{ $tiklanir ? 'cursor:pointer' : '' }}">
+                                        <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:600;min-width:0">
+                                            <x-filament::icon :icon="$k['ikon']" style="width:.85rem;height:.85rem;flex-shrink:0;color:{{ $kRenk }}"/>
+                                            <span style="overflow:hidden;text-overflow:ellipsis" title="{{ $k['ad'] }}">{{ $k['ad'] }}</span>
+                                            @unless ($k['hazir']) <span style="font-size:.62rem;color:{{ $gri }};white-space:nowrap">(yakında)</span> @endunless
+                                            @if ($k['takip']) <span style="font-size:.62rem;color:{{ $gri }};white-space:nowrap" title="Olay bazlı kayıt — eksik sayılmaz, uyum yüzdesine girmez">(yalnız takip)</span> @endif
+                                        </span>
+                                        <span style="display:flex;align-items:center;gap:.3rem;white-space:nowrap">
+                                            <span style="font-size:.68rem;font-weight:700;padding:.08rem .45rem;border-radius:9999px;color:{{ $kRenk }};background:color-mix(in srgb, {{ $kRenk }} 14%, transparent)">%{{ $k['yuzde'] }}</span>
+                                            @if ($k['hazir'] && ! $k['takip'] && $eksikSayi > 0)
+                                                <span style="font-size:.66rem;font-weight:700;padding:.08rem .45rem;border-radius:9999px;color:{{ $kirmizi }};background:color-mix(in srgb, {{ $kirmizi }} 12%, transparent)" title="Bu kriteri karşılamayan firma sayısı">{{ $eksikSayi }} eksik</span>
+                                            @elseif ($k['hazir'] && ! $k['takip'])
+                                                <span style="font-size:.66rem;color:{{ $yesil }}">✓</span>
+                                            @endif
+                                        </span>
+                                    </div>
+
+                                    @if ($acik)
+                                        @php $eksikFirmalar = $this->acikKriterEksikFirmalar; @endphp
+                                        <div style="margin-top:.5rem;padding-top:.45rem;border-top:1px dashed rgb(128 116 148 / .3)" onclick="event.stopPropagation()">
+                                            <div style="font-size:.7rem;font-weight:700;color:{{ $kirmizi }};margin-bottom:.35rem">
+                                                Bu kriterin eksik olduğu {{ count($eksikFirmalar) }} firma:
+                                            </div>
+                                            <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+                                                @forelse ($eksikFirmalar as $fId => $fUnvan)
+                                                    <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $fId]) }}"
+                                                        style="display:inline-block;padding:.12rem .5rem;border-radius:9999px;font-size:.7rem;
+                                                            border:1px solid {{ $kirmizi }};color:{{ $kirmizi }};text-decoration:none">
+                                                        {{ $fUnvan }} ↗
+                                                    </a>
+                                                @empty
+                                                    <span style="font-size:.72rem;color:{{ $gri }}">Eksik firma yok.</span>
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
-                                <div style="display:flex;flex-wrap:wrap;gap:.35rem">
-                                    @forelse ($eksikFirmalar as $fId => $fUnvan)
-                                        <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $fId]) }}"
-                                            style="display:inline-block;padding:.15rem .55rem;border-radius:9999px;font-size:.72rem;
-                                                border:1px solid {{ $kirmizi }};color:{{ $kirmizi }};text-decoration:none">
-                                            {{ $fUnvan }} ↗
-                                        </a>
-                                    @empty
-                                        <span style="font-size:.75rem;color:{{ $gri }}">Eksik firma yok.</span>
-                                    @endforelse
-                                </div>
-                            </div>
-                        @endif
+                            @endforeach
+                        </div>
                     </div>
                 @endforeach
             </div>

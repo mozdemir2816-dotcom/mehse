@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\IsyeriDurumMerkezi;
+use App\Filament\Pages\FirmaDenetimOperasyon;
 use App\Models\Calisan;
 use App\Models\DofRaporu;
 use App\Models\Firma;
@@ -96,7 +96,8 @@ class IsyeriDurumMerkeziTest extends TestCase
                 'son_muayene_tarihi' => now()->subMonths(6), 'sonraki_vize_tarihi' => now()->addMonths(6)]);
         }
 
-        $sayfa = Livewire::test(IsyeriDurumMerkezi::class, [])
+        $sayfa = Livewire::test(FirmaDenetimOperasyon::class)
+            ->call('bolumSec', 'firma360')
             ->set('firmaId', $this->firma->id)
             ->assertSee('Genel uyum durumu')
             ->assertSee('Eksikler, tamamlanan süreçler ve sorumlular')
@@ -123,6 +124,12 @@ class IsyeriDurumMerkeziTest extends TestCase
 
     public function test_firma_parametresiyle_acilir(): void
     {
-        $this->get(IsyeriDurumMerkezi::getUrl(['firma' => $this->firma->id]))->assertOk()->assertSee('Alfa İnşaat');
+        $this->get(FirmaDenetimOperasyon::getUrl(['firma' => $this->firma->id, 'bolum' => 'firma360']))->assertOk()->assertSee('Alfa İnşaat');
+    }
+
+    public function test_eski_isyeri_durumu_adresi_yeni_sayfaya_yonlenir(): void
+    {
+        $this->get('/admin/isyeri-durum-merkezi?firma='.$this->firma->id)
+            ->assertRedirect(FirmaDenetimOperasyon::getUrl(['firma' => $this->firma->id, 'bolum' => 'firma360']));
     }
 }

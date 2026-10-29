@@ -116,6 +116,13 @@ class KontrolMerkezi extends Page
         return PortfoyKarne::kriterler(Filament::auth()->id());
     }
 
+    /** Kriterler 3 mantıksal grupta (Temel Yasal Belgeler / Saha & Kurul / Sağlık & Takip). */
+    #[Computed]
+    public function kriterGruplari(): array
+    {
+        return PortfoyKarne::grupla($this->kriterler);
+    }
+
     #[Computed]
     public function secilenFirma(): ?Firma
     {

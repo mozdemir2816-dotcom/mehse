@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Firmas\Pages;
 
 use App\Filament\Concerns\KaydetUstte;
 use App\Filament\Pages\DokumanYonetimi;
-use App\Filament\Pages\IsyeriDurumMerkezi;
+use App\Filament\Pages\FirmaDenetimOperasyon;
 use App\Filament\Resources\Firmas\EvrakPaketiAksiyonu;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\Firmas\IsyeriGirisAksiyonu;
@@ -32,7 +32,7 @@ class EditFirma extends EditRecord
                 ->label('Durum Merkezi')
                 ->icon('heroicon-o-building-office-2')
                 ->color('gray')
-                ->url(fn (Firma $record) => IsyeriDurumMerkezi::getUrl(['firma' => $record->id])),
+                ->url(fn (Firma $record) => FirmaDenetimOperasyon::getUrl(['firma' => $record->id, 'bolum' => 'firma360'])),
 
             Action::make('arsivDosyasi')
                 ->label('Arşiv Dosyası')

@@ -228,6 +228,84 @@ class PortfoyKarne
     }
 
     /**
+     * Portföy kriterlerinin 3 mantıksal grubu (Komuta Merkezi, 29.10.2026). Listede olmayan / yeni eklenen
+     * kriter son gruba düşer; boş grup gösterilmez.
+     */
+    public const KRITER_GRUPLARI = [
+        'temel' => [
+            'ad' => 'Temel Yasal Belgeler',
+            'ikon' => 'heroicon-o-document-check',
+            'anahtarlar' => [
+                'risk_degerlendirmesi', 'yillik_calisma_plani', 'yillik_egitim_plani', 'yillik_degerlendirme',
+                'igu_atamasi', 'hekim_atamasi', 'acil_durum_plani', 'acil_durum_destek', 'acil_durum_tatbikat', 'egitim_katilim_formu',
+            ],
+        ],
+        'saha' => [
+            'ad' => 'Saha & Kurul Süreçleri',
+            'ikon' => 'heroicon-o-building-office-2',
+            'anahtarlar' => [
+                'isg_kurulu', 'calisan_temsilcisi', 'onayli_defter_nushalari', 'tespit_oneri',
+                'periyodik_kontrol_raporu', 'calisma_izin_formu', 'saha_denetim_formu',
+            ],
+        ],
+        'saglik' => [
+            'ad' => 'Sağlık & Takip',
+            'ikon' => 'heroicon-o-heart',
+            'anahtarlar' => [
+                'ise_donus_muayenesi', 'kaza_sonrasi_isbasi_egitimi', 'is_kazasi_bildirimi', 'olay_ramak_kala_kaydi',
+                'meslek_hastaligi_bildirimi', 'saglik_raporu', 'diger_evrak',
+            ],
+        ],
+    ];
+
+    /**
+     * `kriterler()` çıktısını gruplara böler; her grup için ölçülen (hazır ve "yalnız takip" olmayan) kriterlerin
+     * firma kapsamına göre ağırlıklı tamamlanma yüzdesi ve eksiği olan kriter sayısı.
+     *
+     * @param  array<int, array<string, mixed>>  $kriterler
+     * @return array<string, array{ad: string, ikon: string, kriterler: array<int, array<string, mixed>>, yuzde: int, tamam: int, kapsam: int, eksik_kriter: int}>
+     */
+    public static function grupla(array $kriterler): array
+    {
+        $gruplar = [];
+        foreach (self::KRITER_GRUPLARI as $kod => $grup) {
+            $gruplar[$kod] = ['ad' => $grup['ad'], 'ikon' => $grup['ikon'], 'kriterler' => []];
+        }
+        $sonGrup = array_key_last(self::KRITER_GRUPLARI);
+
+        foreach ($kriterler as $kriter) {
+            $hedef = $sonGrup;
+            foreach (self::KRITER_GRUPLARI as $kod => $grup) {
+                if (in_array($kriter['anahtar'], $grup['anahtarlar'], true)) {
+                    $hedef = $kod;
+                    break;
+                }
+            }
+            $gruplar[$hedef]['kriterler'][] = $kriter;
+        }
+
+        foreach ($gruplar as $kod => &$grup) {
+            if (! $grup['kriterler']) {
+                unset($gruplar[$kod]);
+
+                continue;
+            }
+
+            $olculen = array_filter($grup['kriterler'], fn (array $k) => $k['hazir'] && ! $k['takip']);
+            $tamam = (int) array_sum(array_column($olculen, 'tamam'));
+            $kapsam = (int) array_sum(array_column($olculen, 'kapsam'));
+
+            $grup['tamam'] = $tamam;
+            $grup['kapsam'] = $kapsam;
+            $grup['yuzde'] = $kapsam > 0 ? (int) round($tamam / $kapsam * 100) : 0;
+            $grup['eksik_kriter'] = count(array_filter($olculen, fn (array $k) => $k['kapsam'] > $k['tamam']));
+        }
+        unset($grup);
+
+        return $gruplar;
+    }
+
+    /**
      * Firma Takip'in sütun listesi: config'teki sabit kriterler, kullanıcının
      * Ayarlar > Kontrol Merkezi'nde takip dışı bıraktıkları hariç.
      *

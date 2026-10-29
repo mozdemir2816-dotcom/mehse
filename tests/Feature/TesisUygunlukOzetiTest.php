@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\FirmaDenetimOperasyon;
 use App\Filament\Pages\TesisUygunlukOzeti;
 use App\Models\DofRaporu;
 use App\Models\Firma;
@@ -95,7 +96,7 @@ class TesisUygunlukOzetiTest extends TestCase
         $diger = Firma::factory()->for($this->uzman)->create(['unvan' => 'Gama']);
         $yabanci = Firma::factory()->for(User::factory())->create(['unvan' => 'Yabancı']);
 
-        $sayfa = Livewire::test(TesisUygunlukOzeti::class)
+        $sayfa = Livewire::test(FirmaDenetimOperasyon::class)
             ->set('firmaId', $diger->id)
             ->assertSee('İşyeri İSG operasyon skoru')
             ->assertSee('Skor dökümü')
@@ -104,6 +105,10 @@ class TesisUygunlukOzetiTest extends TestCase
         $sayfa->set('firmaId', $yabanci->id);
         $this->assertNull($sayfa->instance()->sonuc);
 
-        $this->get(TesisUygunlukOzeti::getUrl(['firma' => $this->firma->id]))->assertOk()->assertSee('Ahmet Yapı');
+        $this->get(FirmaDenetimOperasyon::getUrl(['firma' => $this->firma->id]))->assertOk()->assertSee('Ahmet Yapı');
+
+        // Eski adres yeni sayfanın "skor" bölümüne yönlenir.
+        $this->get(TesisUygunlukOzeti::getUrl(['firma' => $this->firma->id]))
+            ->assertRedirect(FirmaDenetimOperasyon::getUrl(['firma' => $this->firma->id, 'bolum' => 'skor']));
     }
 }
