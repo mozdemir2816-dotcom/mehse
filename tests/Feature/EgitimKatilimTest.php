@@ -398,14 +398,15 @@ class EgitimKatilimTest extends TestCase
 
     public function test_word_imzasiz_secilince_egitmen_kasesi_basilmaz(): void
     {
-        $kaseYolu = storage_path('app/public/isg-profesyonel-kase/word-test.png');
+        $kaseGoreli = 'isg-profesyonel-kase/word-test-'.uniqid().'.png';
+        $kaseYolu = storage_path('app/public/'.$kaseGoreli);
         @mkdir(dirname($kaseYolu), 0777, true);
         file_put_contents($kaseYolu, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
 
         $firma = Firma::factory()->for($this->uzman)->create();
         $kayit = EgitimKatilim::create([
             'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'sure_gun' => 1,
-            'isg_uzmani_var' => true, 'isg_uzmani_kase' => 'isg-profesyonel-kase/word-test.png',
+            'isg_uzmani_var' => true, 'isg_uzmani_kase' => $kaseGoreli,
             'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'az_tehlikeli'),
             'katilimcilar' => [],
         ]);

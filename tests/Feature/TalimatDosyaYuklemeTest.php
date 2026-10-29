@@ -35,7 +35,7 @@ class TalimatDosyaYuklemeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->klasor = storage_path('framework/testing/talimat-okuyucu');
+        $this->klasor = storage_path('framework/testing/talimat-okuyucu-'.($_SERVER['TEST_TOKEN'] ?? 'tek'));
         @mkdir($this->klasor, 0777, true);
     }
 
