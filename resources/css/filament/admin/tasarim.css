@@ -518,6 +518,22 @@ html[data-mehse-yazi="buyuk"] :is(.fi-layout, .fi-modal-window, .fi-dropdown-pan
     zoom: 1.1;
 }
 
+/* Zoom'lanan yerleşimde 100dvh görsel olarak zoom kadar büyür/küçülür: küçükte (.92) sidebar ekranın %92'sinde
+   bitiyor, alt kullanıcı kartı sidebar'ın bittiği yerde kalıyordu (büyükte (1.1) taşıp kesiliyordu).
+   Sidebar yüksekliği zoom'a bölünerek tam ekran yapılır; üst çubuk varsa onun (zoom'lu) yüksekliği düşülür. */
+html[data-mehse-yazi="kucuk"] { --mehse-zoom: .92; }
+html[data-mehse-yazi="buyuk"] { --mehse-zoom: 1.1; }
+
+html:is([data-mehse-yazi="kucuk"], [data-mehse-yazi="buyuk"]) .fi-sidebar {
+    height: calc(100dvh / var(--mehse-zoom));
+}
+
+@media (min-width: 1024px) {
+    html:is([data-mehse-yazi="kucuk"], [data-mehse-yazi="buyuk"]) .fi-body-has-topbar .fi-sidebar {
+        height: calc(100dvh / var(--mehse-zoom) - var(--topbar-height));
+    }
+}
+
 /* ==========================================================================
    KLASİK TEMA ZENGİNLEŞTİRMESİ
    ========================================================================== */
