@@ -13,6 +13,7 @@ use App\Support\YillikDegerlendirmeFormUretici;
 use App\Support\YillikDegerlendirmeVerisi;
 use App\Support\YillikPlanExcelIceAktarici;
 use App\Support\YillikPlanExcelUretici;
+use App\Support\YillikPlanGerceklesme;
 use App\Support\YillikPlanSablonu;
 use App\Support\YillikPlanUretici;
 use Filament\Actions\Action;
@@ -112,6 +113,16 @@ abstract class YillikPlanlar extends Page
         }
 
         $this->degerlendirmeyiOtomatikGuncelle();
+        $this->gerceklesmeleriIsle();
+    }
+
+    /** Çalışma planı sekmesi açılınca sistem kayıtlarından (tatbikat, denetim, DÖF, kurul vb.) G'ler işlenir. */
+    protected function gerceklesmeleriIsle(): void
+    {
+        if ($this->sekme === 'calisma' && ($p = $this->plan())) {
+            YillikPlanGerceklesme::isle($p);
+            unset($this->plan);
+        }
     }
 
     /**
@@ -165,12 +176,14 @@ abstract class YillikPlanlar extends Page
     {
         unset($this->firma, $this->plan);
         $this->degerlendirmeyiOtomatikGuncelle();
+        $this->gerceklesmeleriIsle();
     }
 
     public function updatedYil(): void
     {
         unset($this->plan);
         $this->degerlendirmeyiOtomatikGuncelle();
+        $this->gerceklesmeleriIsle();
     }
 
     /** Atanmış uzman (sözleşme başlangıcı) öncesi ay indeksi — bu aylar kilitli. */
@@ -619,6 +632,21 @@ abstract class YillikPlanlar extends Page
                 ->color('gray')
                 ->visible(fn () => $this->plan() !== null)
                 ->action(fn () => $this->planiKaydet()),
+
+            Action::make('gerceklesmeleriIsle')
+                ->label('Sistem Kayıtlarından G İşle')
+                ->icon('heroicon-o-check-badge')
+                ->color('gray')
+                ->tooltip('Tatbikat, saha denetimi, DÖF, kurul toplantısı, olay, KKD zimmeti ve temel eğitim kayıtlarının aylarını plan satırlarında Gerçekleşti yapar')
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'calisma')
+                ->action(function () {
+                    $sayi = YillikPlanGerceklesme::isle($this->plan());
+                    unset($this->plan);
+
+                    Notification::make()
+                        ->title($sayi ? $sayi.' plan hücresi "Gerçekleşti" işaretlendi' : 'İşlenecek yeni kayıt bulunamadı')
+                        ->success()->send();
+                }),
 
             Action::make('egitimKayitlariniIsle')
                 ->label('Verilen Eğitimleri İşle')

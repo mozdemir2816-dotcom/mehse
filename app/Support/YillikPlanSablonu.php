@@ -39,8 +39,44 @@ class YillikPlanSablonu
             ->map(fn (array $k) => IseOzguEgitimKutuphanesi::planSatiri($k, $kilitAy))->values()->all();
 
         $icerik['egitimler'] = self::iseOzguYerlestir($icerik['egitimler'], $iseOzgu);
+        $icerik['faaliyetler'] = self::kurulPeriyodunuYerlestir($icerik['faaliyetler'], $firma, $kilitAy);
 
         return $icerik;
+    }
+
+    /**
+     * İSG Kurulu satırının ayları tehlike sınıfı periyoduna göre (çok tehlikeli: ayda 1, tehlikeli: 2 ayda 1,
+     * az tehlikeli: 3 ayda 1) ve yalnız 50+ çalışanlı işyerinde yerleşir; altında şablondaki varsayılan kalır.
+     *
+     * @param  array<int, array<string, mixed>>  $faaliyetler
+     * @return array<int, array<string, mixed>>
+     */
+    public static function kurulPeriyodunuYerlestir(array $faaliyetler, Firma $firma, int $kilitAy): array
+    {
+        if (($firma->calisan_sayisi ?? 0) < 50) {
+            return $faaliyetler;
+        }
+
+        $periyot = max(1, (int) config('isg.kurul_toplantisi.periyot_ay.'.$firma->tehlike_sinifi, 3));
+
+        foreach ($faaliyetler as $i => $f) {
+            if (($f['ana_konu'] ?? null) !== 'İSG KURULU') {
+                continue;
+            }
+
+            $aylar = array_fill(0, 12, 'bos');
+
+            for ($ay = 0; $ay < 12; $ay += $periyot) {
+                if ($ay >= $kilitAy) {
+                    $aylar[$ay] = 'planlandi';
+                }
+            }
+
+            $faaliyetler[$i]['aylar'] = $aylar;
+            $faaliyetler[$i]['frekans'] = $periyot === 1 ? 'Ayda 1' : $periyot.' ayda 1';
+        }
+
+        return $faaliyetler;
     }
 
     /**

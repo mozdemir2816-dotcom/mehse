@@ -106,6 +106,52 @@ class YillikPlan extends Model
         return $mevcut === 'bos' ? 'planlandi' : 'bos';
     }
 
+    /**
+     * Gecikme sınırı: bu aydan ÖNCEKİ (0–11) aylarda P'de kalmış hücre gecikmiştir.
+     * Geçmiş yıl: 12 (hepsi), gelecek yıl: 0 (hiçbiri), bu yıl: içinde bulunulan ay.
+     */
+    public function gecikmeAyIndeksi(): int
+    {
+        return match (true) {
+            $this->yil < (int) now()->format('Y') => 12,
+            $this->yil > (int) now()->format('Y') => 0,
+            default => (int) now()->format('n') - 1,
+        };
+    }
+
+    /**
+     * Çalışma + eğitim planının P/G özeti. Vadesi gelmiş hücreler (gecikme sınırından önceki
+     * aylar) ile G olan hücreler "planlanan" sayılır; oran = gerçekleşen / planlanan.
+     *
+     * @return array{planlanan: int, gerceklesen: int, geciken: int, oran: int|null}
+     */
+    public function gerceklesmeOzeti(): array
+    {
+        $sinir = $this->gecikmeAyIndeksi();
+        $planlanan = $gerceklesen = $geciken = 0;
+
+        foreach (['faaliyetler', 'egitimler'] as $alan) {
+            foreach (($this->{$alan} ?? []) as $satir) {
+                foreach (($satir['aylar'] ?? []) as $ay => $durum) {
+                    if ($durum === 'tamamlandi') {
+                        $planlanan++;
+                        $gerceklesen++;
+                    } elseif ($durum === 'planlandi' && $ay < $sinir) {
+                        $planlanan++;
+                        $geciken++;
+                    }
+                }
+            }
+        }
+
+        return [
+            'planlanan' => $planlanan,
+            'gerceklesen' => $gerceklesen,
+            'geciken' => $geciken,
+            'oran' => $planlanan > 0 ? (int) round(100 * $gerceklesen / $planlanan) : null,
+        ];
+    }
+
     /** Satırın genel durumu — Excel "Durum" sütunu ve ekran aynı metni kullanır. */
     public static function faaliyetDurumu(array $aylar): string
     {

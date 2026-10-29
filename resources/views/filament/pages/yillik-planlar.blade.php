@@ -8,6 +8,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         @switch ($sekme)
             @case('egitim')
@@ -31,6 +32,24 @@
         };
     @endphp
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => $yillikKriter])
+
+    @if ($p)
+        @php $oz = $p->gerceklesmeOzeti(); @endphp
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem">
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
+                <div style="font-size:.7rem;color:#64748b;font-weight:600">Yıllık Plan Gerçekleşme Oranı</div>
+                <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['oran'] === null ? '#64748b' : ($oz['oran'] >= 80 ? '#059669' : ($oz['oran'] >= 50 ? '#d97706' : '#dc2626')) }}">
+                    {{ $oz['oran'] === null ? '—' : '%'.$oz['oran'] }}
+                </div>
+                <div style="font-size:.7rem;color:#64748b">{{ $oz['gerceklesen'] }} G / {{ $oz['planlanan'] }} vadesi gelen faaliyet (çalışma + eğitim)</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
+                <div style="font-size:.7rem;color:#64748b;font-weight:600">Geciken Faaliyet</div>
+                <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['geciken'] > 0 ? '#dc2626' : '#059669' }}">{{ $oz['geciken'] }}</div>
+                <div style="font-size:.7rem;color:#64748b">P'de kalan, ayı geçmiş hücre (kırmızı nokta ●)</div>
+            </div>
+        </div>
+    @endif
 
     @if ($p && $kilit > 0 && $kilit < 12)
         <div style="border:1px solid rgb(245 158 11 / .4);background:rgb(245 158 11 / .08);border-radius:.6rem;padding:.6rem .85rem;font-size:.8rem;color:#b45309">
@@ -142,7 +161,7 @@
                                             <button type="button" @disabled($kilitli)
                                                 @unless ($kilitli) wire:click="ayHucresiDegistir('faaliyetler', {{ $fi }}, {{ $ai }}, '{{ $hucre }}')" @endunless
                                                 title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : \App\Models\ZiyaretProgrami::AYLAR[$ai].' — '.$ad.($dolu ? ' (kaldırmak için tıklayın)' : '') }}"
-                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.72rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}</button>
+                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.72rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}@if ($hucre === 'G' && $durum === 'planlandi' && $ai < $p->gecikmeAyIndeksi())<span title="Gecikmiş faaliyet" style="color:#dc2626">●</span>@endif</button>
                                         </td>
                                     @endforeach
                                 @endforeach

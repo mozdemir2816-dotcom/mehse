@@ -7,6 +7,8 @@ use BackedEnum;
 
 class YillikCalismaPlani extends YillikPlanlar
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
+
     protected static string $planTuru = 'calisma';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
