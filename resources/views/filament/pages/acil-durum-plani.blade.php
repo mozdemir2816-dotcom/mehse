@@ -10,6 +10,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Firma bilgilerini seçin, dahil edilecek acil durum konularını işaretleyin ve
         Acil Durum Eylem Planı PDF’ini oluşturun. 6331 SK kapsamında her işyerinde zorunludur.
@@ -151,9 +152,10 @@
                 @foreach ($konular as $i => $k)
                     @php $secili = in_array($k['anahtar'], $this->konular, true); @endphp
                     <button type="button" wire:click="konuToggle('{{ $k['anahtar'] }}')"
-                        style="text-align:left;padding:.5rem .7rem;border-radius:.45rem;cursor:pointer;font-size:.82rem;
-                            border:1px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};
-                            background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }}">
+                        class="acil-merkez-secenek"
+                        style="text-align:left;padding:.55rem .75rem;cursor:pointer;font-size:.8rem;font-weight:{{ $secili ? 600 : 500 }};
+                            border:1px solid {{ $secili ? '#e11d48' : '#e2e8f0' }};
+                            background:{{ $secili ? '#fff1f2' : '#fff' }};color:{{ $secili ? '#9f1239' : '#334155' }}">
                         {{ $secili ? '☑' : '☐' }}
                         <span style="display:inline-block;width:1.4rem;text-align:center;color:rgb(107 114 128)">{{ $i + 1 }}</span>
                         ACİL DURUM: {{ mb_strtoupper($k['ad'], 'UTF-8') }}

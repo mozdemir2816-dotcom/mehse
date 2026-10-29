@@ -5,6 +5,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Acil Durumlar Yönetmeliği md.13 — yılda en az bir tatbikat zorunlu, tutanakla
         denetime kanıttır. Senaryo seçin, tatbikat bilgilerini doldurup PDF alın.
@@ -31,9 +32,10 @@
             @foreach ($this->senaryolar as $anahtar => $s)
                 @php $secili = $senaryoAnahtari === $anahtar; @endphp
                 <button type="button" wire:click="senaryoSec('{{ $anahtar }}')"
-                    style="text-align:center;padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;
-                        border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};
-                        background:{{ $secili ? 'rgb(239 68 68 / .08)' : 'transparent' }}">
+                    class="acil-merkez-secenek"
+                    style="text-align:center;padding:.75rem;cursor:pointer;font-size:.8rem;
+                        border:2px solid {{ $secili ? '#e11d48' : '#e2e8f0' }};
+                        background:{{ $secili ? '#fff1f2' : '#fff' }};color:{{ $secili ? '#9f1239' : '#334155' }}">
                     <div style="font-weight:700">{{ $s['ad'] }}</div>
                     <div style="font-size:.7rem;color:rgb(107 114 128)">≈{{ $s['sure_dk'] }} dk</div>
                 </button>

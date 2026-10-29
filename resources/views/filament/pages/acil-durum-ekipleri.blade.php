@@ -12,6 +12,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <div style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.75rem">Söndürme, kurtarma, koruma, ilk yardım, tahliye ve haberleşme ekipleri ile destek elemanı görevlendirmeleri.</div>
 
     <div style="display:flex;flex-wrap:wrap;gap:.4rem">

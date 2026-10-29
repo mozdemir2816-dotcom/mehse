@@ -6,6 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
+    @include('filament.pages.partials.acil-slate-stil')
     <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
         Bina kullanımı, kat/kullanıcı yükü, bölümler ve faaliyet/depolama risklerini girin;
         bina yangın tehlike sınıfı otomatik belirlenir (Binaların Yangından Korunması Hakkında
