@@ -132,6 +132,24 @@ class TabelaMotoruTest extends TestCase
         $this->assertStringContainsString('TEHLİKESİ', TabelaSvgUretici::svg($oneriler['yuksekte']['tasarim']));
     }
 
+    public function test_hastane_harf_duzeyi_seviyeye_cevrilir_ve_kaynaklar_en_ciddiden_baslar(): void
+    {
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(), 'proje_adi' => 'Hastane', 'cikti_sablonu' => 'hastane']);
+        // Puanlar hastane bantlarına göre: ≥200 B, ≥70 C, ≥20 D, altı E.
+        $rd->maddeler()->create(['tehlike' => 'Elektrik panosu önünde engel', 'olasilik' => 1, 'frekans' => 1, 'siddet' => 1]);
+        $rd->maddeler()->create(['tehlike' => 'Halojen free olmayan elektrik kabloları', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 7]);
+        $rd->maddeler()->create(['tehlike' => 'Oksijen tüpü basınçlı kap devrilmesi', 'olasilik' => 5, 'frekans' => 3, 'siddet' => 5]);
+        $rd->maddeler()->create(['tehlike' => 'Lazer ışını maruziyeti', 'olasilik' => 2, 'frekans' => 2, 'siddet' => 6]);
+
+        $oneriler = collect(TabelaOnerisi::firmaIcin($this->firma))->keyBy('anahtar');
+
+        $this->assertSame('yuksek', $oneriler['elektrik']['seviye']);                      // B → yüksek (E'den etkilenmez)
+        $this->assertStringContainsString('(B)', $oneriler['elektrik']['kaynaklar'][0]);   // en ciddi kaynak başta
+        $this->assertSame('orta', $oneriler['patlayici']['seviye']);                       // C → orta
+        $this->assertSame('dusuk', $oneriler['lazer']['seviye']);                          // D → düşük
+        $this->assertLessThan(array_search('lazer', $oneriler->keys()->all()), array_search('elektrik', $oneriler->keys()->all()));
+    }
+
     public function test_oneri_firmanin_tum_degerlendirmelerinden_gelir_yalniz_sonuncusundan_degil(): void
     {
         $eski = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => '2026-01-10', 'proje_adi' => 'Ameliyathane']);

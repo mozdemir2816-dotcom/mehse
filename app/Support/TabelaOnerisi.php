@@ -90,7 +90,11 @@ class TabelaOnerisi
     {
         $oneriler = [];
 
-        foreach (self::kaynakKayitlari($firma) as $kayit) {
+        // Önce en ciddi kayıtlar: kartta gösterilen ilk 3 kaynak da en riskli olanlardır.
+        $kayitlar = self::kaynakKayitlari($firma);
+        usort($kayitlar, fn (array $a, array $b) => self::SEVIYE_SIRA[$b['seviye']] <=> self::SEVIYE_SIRA[$a['seviye']]);
+
+        foreach ($kayitlar as $kayit) {
             $anahtar = self::kuralBul($kayit['metin']);
 
             if ($anahtar === null) {
@@ -200,7 +204,7 @@ class TabelaOnerisi
 
             $kayitlar[] = [
                 'metin' => implode(' ', array_filter([$m->tehlike, $m->risk, $m->faaliyet, $m->bolum])),
-                'seviye' => in_array($duzey, $yuksekDuzeyler, true) ? 'yuksek' : (str_contains(mb_strtolower($duzey), 'orta') ? 'orta' : 'dusuk'),
+                'seviye' => self::duzeySeviyesi($duzey, $yuksekDuzeyler),
                 'kaynak' => 'Risk: '.Str::limit((string) $m->tehlike, 60).($duzey !== '' ? ' ('.$duzey.')' : ''),
             ];
         }
@@ -236,6 +240,21 @@ class TabelaOnerisi
         }
 
         return $kayitlar;
+    }
+
+    /**
+     * Risk düzeyi → seviye. Hastane formunda düzey harftir (A çok yüksek, B yüksek, C önemli; D/E düşük),
+     * diğer yöntemlerde ad ("Yüksek Risk" ...).
+     *
+     * @param  array<int, string>  $yuksekDuzeyler
+     */
+    private static function duzeySeviyesi(string $duzey, array $yuksekDuzeyler): string
+    {
+        return match (true) {
+            in_array($duzey, ['A', 'B'], true), in_array($duzey, $yuksekDuzeyler, true) => 'yuksek',
+            $duzey === 'C', str_contains(mb_strtolower($duzey), 'orta') => 'orta',
+            default => 'dusuk',
+        };
     }
 
     private static function sade(string $metin): string
