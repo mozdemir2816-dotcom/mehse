@@ -36,6 +36,13 @@ class TabelaOnerisi
         'kapali_alan' => ['etiket' => 'Kapalı / dar alan', 'tip' => 'yasak', 'kelimeler' => ['kapali alan', 'dar alan', 'tank', 'kuyu', 'silo'],
             'slots' => ['no_entry', 'warn_general'], 'baslik' => 'KAPALI ALANA GİRİLMEZ',
             'aciklama' => 'İş izni ve gaz ölçümü olmadan kapalı/dar alana girmek yasaktır.'],
+        // Kaldırma/vinç ve makine kurallarından ÖNCE: "hasta kaldırma", "kesici delici alet" bunlara düşmesin.
+        'kesici_delici' => ['etiket' => 'Kesici-delici alet', 'tip' => 'uyari', 'kelimeler' => ['kesici delici', 'kesici-delici', 'delici kesici', 'delici-kesici', 'igne batma', 'igne yaralanma', 'bisturi', 'sivri alet'],
+            'slots' => ['warn_general', 'warn_biological', 'cmd_gloves'], 'baslik' => 'KESİCİ-DELİCİ ALET — BATMA / KESİLME TEHLİKESİ',
+            'aciklama' => 'Kullanılmış iğne ve kesici aletleri delinmeye dayanıklı kutuya atınız. İğne kapağını geri takmayınız, eldiven kullanınız.'],
+        'elle_tasima' => ['etiket' => 'Elle kaldırma / hasta taşıma', 'tip' => 'uyari', 'kelimeler' => ['hasta kaldirma', 'hasta tasima', 'elle kaldirma', 'elle tasima', 'manuel tasima', 'ergonomi', 'kas-iskelet', 'kas iskelet', 'sedye'],
+            'slots' => ['warn_general'], 'baslik' => 'ELLE KALDIRMA — KAS-İSKELET SİSTEMİ RİSKİ',
+            'aciklama' => 'Ağır yükü ve hastayı tek başına kaldırmayınız; yardımcı ekipman veya ekip desteği kullanınız. Doğru kaldırma tekniğini uygulayınız.'],
         'kaldirma' => ['etiket' => 'Kaldırma / vinç', 'tip' => 'uyari', 'kelimeler' => ['kaldirma', 'vinc', 'asili yuk', 'sapan', 'yuk dusme'],
             'slots' => ['warn_overhead_load', 'cmd_helmet'], 'baslik' => 'ASILI YÜK TEHLİKESİ',
             'aciklama' => 'Askıdaki yükün altında durmak ve geçmek yasaktır. Baret kullanınız.'],

@@ -154,7 +154,10 @@ class TabelaMotoruTest extends TestCase
     {
         $this->assertNull(TabelaOnerisi::kuralBul('Mobbing, stres ve depresyon'));          // "pres" ≠ pres makinesi
         $this->assertNull(TabelaOnerisi::kuralBul('Otopark kapasitesinin yetersizliği'));   // "asit" ≠ asit
-        $this->assertNull(TabelaOnerisi::kuralBul('Kas-iskelet sistemi rahatsızlıkları'));  // "iskele" ≠ iskele
+        $this->assertNotSame('yuksekte', TabelaOnerisi::kuralBul('Kas-iskelet sistemi rahatsızlıkları'));  // "iskele" ≠ iskele
+        $this->assertSame('elle_tasima', TabelaOnerisi::kuralBul('Kas-iskelet sistemi rahatsızlıkları'));
+        $this->assertSame('elle_tasima', TabelaOnerisi::kuralBul('Hasta kaldırma / taşıma işlemleri'));   // vinç değil
+        $this->assertSame('kesici_delici', TabelaOnerisi::kuralBul('Kesici delici alet yaralanması, enfekte materyal'));   // makine/biyolojik değil
         $this->assertNull(TabelaOnerisi::kuralBul('Etanol-izopropanol kullanımı'));         // "pano" ≠ pano
         $this->assertSame('yangin', TabelaOnerisi::kuralBul('Kapalı alanlarda sigara içilmesi'));
         $this->assertSame('kapali_alan', TabelaOnerisi::kuralBul('Su tankı içinde çalışma'));
