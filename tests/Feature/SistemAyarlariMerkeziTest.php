@@ -38,10 +38,10 @@ class SistemAyarlariMerkeziTest extends TestCase
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame('İSG-KATİP Robotu & Mevzuat Kütüphanesi', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertCount(4, $g['alt']);
-        $this->assertCount(3, SayfaAileleri::sekmeGruplari([Guvenlik::class])['alt']);
+        $this->assertCount(3, $g['alt']);
+        $this->assertCount(2, SayfaAileleri::sekmeGruplari([Guvenlik::class])['alt']);
 
-        foreach ([Ayarlar::class, Guvenlik::class, KullaniciYonetimi::class, Basvurular::class, IsgKatipRobot::class, Mevzuat::class, IseOzguEgitimKonulari::class] as $sayfa) {
+        foreach ([Ayarlar::class, Guvenlik::class, KullaniciYonetimi::class, IsgKatipRobot::class, Mevzuat::class] as $sayfa) {
             $this->get($sayfa::getUrl())->assertSuccessful()->assertSee('Genel Ayarlar &amp; Görünüm', false);
         }
     }

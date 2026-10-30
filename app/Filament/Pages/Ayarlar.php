@@ -41,7 +41,7 @@ class Ayarlar extends Page
 
     protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 17;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $slug = 'ayarlar';
 

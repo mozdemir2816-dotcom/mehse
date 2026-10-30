@@ -42,24 +42,23 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class PeriyodikKontrol extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.periyodik-kontrol';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    /** Menüde gizli — Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
-    protected static bool $shouldRegisterNavigation = false;
-
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 17;
 
     protected static ?string $slug = 'periyodik-kontrol';
 
     protected static ?string $title = 'Ekipman & Periyodik Kontrol Motoru';
 
-    protected static ?string $navigationLabel = 'Periyodik Kontrol';
+    /** Menüde "Ekipman & Ölçüm" tek girişi; Ortam Ölçümleri sekme şeridinden açılır (App\Support\SayfaAileleri, 'ekipman'). */
+    protected static ?string $navigationLabel = 'Ekipman & Ölçüm';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;

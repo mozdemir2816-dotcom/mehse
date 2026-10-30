@@ -116,9 +116,18 @@ class PazarlamaTest extends TestCase
             ]);
     }
 
-    public function test_pazarlama_sol_menude_firmalar_ve_calisanlar_grubunda(): void
+    public function test_pazarlama_ve_talepler_tek_menu_girisinde_uc_sekme(): void
     {
-        $this->assertSame('Firmalar & Çalışanlar', Pazarlama::getNavigationGroup());
+        $menu = collect(\Filament\Facades\Filament::getNavigation())->flatMap(fn ($g) => $g->getItems())->map(fn ($i) => $i->getLabel());
+
+        $this->assertCount(1, $menu->filter(fn ($e) => $e === 'Pazarlama & Talepler'));
+        $this->assertCount(0, $menu->filter(fn ($e) => in_array($e, ['Pazarlama', 'Teklif Talepleri', 'Başvurular'], true)));
+
+        $this->assertSame(
+            ['Aday Firmalar', 'Teklif Talepleri', 'OSGB Başvuruları'],
+            array_column(\App\Support\SayfaAileleri::sekmeler([Pazarlama::class]), 'etiket'),
+        );
+
         Livewire::test(Pazarlama::class)->assertSee('Aday Firma Ekle')->assertSee('Toplam Aday');
     }
 }

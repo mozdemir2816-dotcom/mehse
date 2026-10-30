@@ -37,7 +37,7 @@ class AcilYonetimMerkeziTest extends TestCase
 
         $g = SayfaAileleri::sekmeGruplari([TatbikatTutanagi::class]);
         $this->assertSame('acil', $g['aile']);
-        $this->assertCount(3, $g['ust']);
+        $this->assertCount(4, $g['ust']);
         $this->assertSame('Tatbikat Tutanağı & Senaryolar', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
     }
 

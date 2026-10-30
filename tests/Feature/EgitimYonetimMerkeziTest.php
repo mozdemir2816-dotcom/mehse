@@ -31,7 +31,7 @@ class EgitimYonetimMerkeziTest extends TestCase
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame('Soru & İçerik Bankası', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertCount(3, $g['alt']);
+        $this->assertCount(4, $g['alt']);
 
         $this->get(EgitimKatilim::getUrl())->assertSuccessful()->assertSee('Yasal Eğitim Takibi');
     }

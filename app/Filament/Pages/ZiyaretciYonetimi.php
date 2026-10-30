@@ -39,7 +39,7 @@ class ZiyaretciYonetimi extends Page
 
     protected static ?string $title = 'Ziyaretçi Yönetimi';
 
-    protected static ?string $navigationLabel = 'Ziyaretçiler';
+    protected static ?string $navigationLabel = 'Tesis Giriş / Ziyaretçi Kartı';
 
     // --- Liste filtreleri ---
     #[Url(as: 'firma')]

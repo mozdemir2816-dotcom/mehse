@@ -7,6 +7,7 @@ use App\Filament\Resources\EgitimPaketis\EgitimPaketiResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Filament\Resources\RiskProsedurs\RiskProsedurResource;
 use App\Filament\Resources\RiskSablonus\RiskSablonuResource;
+use App\Filament\Resources\TeklifTalepleris\TeklifTalebiResource;
 use App\Filament\Resources\Tehlikes\TehlikeResource;
 use Filament\Resources\Resource;
 
@@ -62,6 +63,7 @@ class SayfaAileleri
                 [Pages\AcilDurumEkipleri::class, 'Ekipler'],
                 [Pages\YanginGuvenligi::class, 'Yangın Güvenliği'],
                 [Pages\TatbikatTutanagi::class, 'Tatbikat Tutanağı'],
+                [Pages\TabelaTasarimi::class, 'Tabela & Levha'],
             ],
             // Eğitim & Yetkinlik Yönetim Merkezi: 9 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['egitim'] bkz.
             'egitim' => [
@@ -74,6 +76,7 @@ class SayfaAileleri
                 [Pages\SoruBankasi::class, 'Soru Bankası'],
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
                 [Pages\ToolboxKonusmalari::class, 'Toolbox Konuşmaları'],
+                [Pages\IseOzguEgitimKonulari::class, 'İşe Özgü Eğitim Konuları'],
             ],
             // Sağlık & Olay Yönetim Merkezi: 7 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['saglik_olay'] bkz.
             'saglik_olay' => [
@@ -90,11 +93,9 @@ class SayfaAileleri
                 [Pages\Ayarlar::class, 'Ayarlar'],
                 [Pages\Guvenlik::class, 'Güvenlik'],
                 [Pages\KullaniciYonetimi::class, 'Kullanıcı Yetkileri'],
-                [Pages\Basvurular::class, 'Başvurular'],
                 [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
                 [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
                 [Pages\Mevzuat::class, 'Mevzuat'],
-                [Pages\IseOzguEgitimKonulari::class, 'İşe Özgü Eğitim Konuları'],
             ],
             // İSG Yıllık Planlama & Değerlendirme Merkezi: 3 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['yillik'] bkz.
             'yillik' => [
@@ -116,11 +117,21 @@ class SayfaAileleri
                 [Pages\KkdTakip::class, 'Zimmet & Stok'],
                 [Pages\KkdFormu::class, 'KKD Formu'],
                 [Pages\KkdSecimMatrisi::class, 'Seçim Matrisi'],
+            ],
+            // Menü mantık denetimi (30.10.2026): "KKD" menüsünde KKD dışı sayfalar vardı; başlıkla içerik eşleşsin diye ayrıldı.
+            'ekipman' => [
                 [Pages\PeriyodikKontrol::class, 'Periyodik Kontrol'],
                 [Pages\OrtamOlcumleri::class, 'Ortam Ölçümleri'],
-                [Pages\TaseronYonetimi::class, 'Taşeron Yönetimi'],
-                [Pages\ZiyaretciYonetimi::class, 'Ziyaretçi Girişi'],
-                [Pages\TabelaTasarimi::class, 'Tabela & Levha'],
+            ],
+            'dis_paydas' => [
+                [Pages\TaseronYonetimi::class, 'Taşeron / Alt İşveren'],
+                [Pages\ZiyaretciYonetimi::class, 'Tesis Giriş / Ziyaretçi Kartı'],
+            ],
+            // Satış/üyelik girişleri tek yerde: aday firmalar + web teklif formu + OSGB üyelik başvuruları.
+            'pazarlama' => [
+                [Pages\Pazarlama::class, 'Aday Firmalar'],
+                [TeklifTalebiResource::class, 'Teklif Talepleri'],
+                [Pages\Basvurular::class, 'OSGB Başvuruları'],
             ],
             'arsiv' => [
                 [Pages\DokumanYonetimi::class, 'Arşiv'],
@@ -143,32 +154,14 @@ class SayfaAileleri
         // Sistem Yönetim & Entegrasyon Merkezi (30.10.2026)
         'ayarlar' => [
             ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class]],
-            ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class, Pages\Basvurular::class]],
-            ['etiket' => 'İSG-KATİP Robotu & Mevzuat Kütüphanesi', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class, Pages\IseOzguEgitimKonulari::class]],
+            ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class]],
+            ['etiket' => 'İSG-KATİP Robotu & Mevzuat Kütüphanesi', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class]],
         ],
         // İSG Yıllık Planlama & Değerlendirme Merkezi (30.10.2026)
         'yillik' => [
             ['etiket' => 'Yıllık Çalışma Planı (Master P/G Matrisi)', 'ikon' => 'heroicon-o-calendar-days', 'siniflar' => [Pages\YillikPlan\YillikCalismaPlani::class]],
             ['etiket' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'siniflar' => [Pages\YillikPlan\YillikEgitimPlani::class]],
             ['etiket' => 'Yıl Sonu Değerlendirme Raporu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\YillikPlan\YillikDegerlendirmeRaporu::class]],
-        ],
-        // Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi (30.10.2026)
-        'kkd' => [
-            [
-                'etiket' => 'KKD Matrisi, Stok & Personel Zimmeti',
-                'ikon' => 'heroicon-o-shield-check',
-                'siniflar' => [Pages\KkdTakip::class, Pages\KkdFormu::class, Pages\KkdSecimMatrisi::class],
-            ],
-            [
-                'etiket' => 'Ekipman Periyodik Kontrol & Ortam Ölçümü',
-                'ikon' => 'heroicon-o-cog-6-tooth',
-                'siniflar' => [Pages\PeriyodikKontrol::class, Pages\OrtamOlcumleri::class],
-            ],
-            [
-                'etiket' => 'Dış Paydaş & Saha Erişimi (Taşeron, Ziyaretçi, Levha)',
-                'ikon' => 'heroicon-o-building-office-2',
-                'siniflar' => [Pages\TaseronYonetimi::class, Pages\ZiyaretciYonetimi::class, Pages\TabelaTasarimi::class],
-            ],
         ],
         // Resmi Belge & Kurul Yönetim Merkezi (30.10.2026)
         'belge' => [
@@ -219,7 +212,7 @@ class SayfaAileleri
             [
                 'etiket' => 'Soru & İçerik Bankası',
                 'ikon' => 'heroicon-o-book-open',
-                'siniflar' => [Pages\SoruBankasi::class, Pages\EgitimSorulari::class, Pages\ToolboxKonusmalari::class],
+                'siniflar' => [Pages\SoruBankasi::class, Pages\EgitimSorulari::class, Pages\ToolboxKonusmalari::class, Pages\IseOzguEgitimKonulari::class],
             ],
         ],
         // Acil Durum & Yangın: 5 sayfa → 3 ana sekme, tek menü girişi (30.10.2026)
@@ -238,6 +231,11 @@ class SayfaAileleri
                 'etiket' => 'Tatbikat Tutanağı & Senaryolar',
                 'ikon' => 'heroicon-o-flag',
                 'siniflar' => [Pages\TatbikatTutanagi::class],
+            ],
+            [
+                'etiket' => 'Güvenlik Levhaları (Tabela)',
+                'ikon' => 'heroicon-o-exclamation-circle',
+                'siniflar' => [Pages\TabelaTasarimi::class],
             ],
         ],
         'risk' => [

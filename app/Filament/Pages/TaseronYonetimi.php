@@ -34,24 +34,23 @@ use UnitEnum;
  */
 class TaseronYonetimi extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.taseron-yonetimi';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Saha Dışı Kayıtlar';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    /** Menüde gizli — Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
-    protected static bool $shouldRegisterNavigation = false;
-
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 18;
 
     protected static ?string $slug = 'taseron-yonetimi';
 
     protected static ?string $title = 'Taşeron / Alt İşveren Yönetimi';
 
-    protected static ?string $navigationLabel = 'Taşeron / Alt İşveren';
+    /** Menüde "Dış Paydaş" tek girişi; Ziyaretçi sekme şeridinden açılır (App\Support\SayfaAileleri, 'dis_paydas'). */
+    protected static ?string $navigationLabel = 'Dış Paydaş';
 
     /** Liste filtresi (boş = tüm işyerleri). */
     #[Url(as: 'firma')]

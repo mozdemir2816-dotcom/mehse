@@ -32,6 +32,9 @@ class TeklifTalebiResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
+    /** Menüde gizli — "Pazarlama & Talepler" sekme şeridinden açılır (App\Support\SayfaAileleri, 'pazarlama'). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 90;
 
     protected static ?string $modelLabel = 'Teklif Talebi';

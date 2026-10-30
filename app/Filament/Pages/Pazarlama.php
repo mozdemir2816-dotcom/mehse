@@ -23,15 +23,19 @@ use UnitEnum;
  */
 class Pazarlama extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
     use SinirliErisim;
 
     protected string $view = 'filament.pages.pazarlama';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 19;
+
+    /** Menüde "Pazarlama & Talepler" tek girişi; Teklif Talepleri ve OSGB Başvuruları sekme şeridinden açılır ('pazarlama' ailesi). */
+    protected static ?string $navigationLabel = 'Pazarlama & Talepler';
 
     protected static ?string $slug = 'pazarlama';
 

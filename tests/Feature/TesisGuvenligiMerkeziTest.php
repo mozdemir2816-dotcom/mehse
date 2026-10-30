@@ -27,28 +27,37 @@ class TesisGuvenligiMerkeziTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_menude_tek_giris_ve_uc_ana_sekme(): void
+    public function test_kkd_yalniz_kkd_sayfalarini_tasir_diger_sayfalar_kendi_girislerinde(): void
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
         $menu = collect(Filament::getNavigation());
         $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Saha Dışı Kayıtlar'));
-        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'KKD'));
-        $this->assertFalse(TabelaTasarimi::shouldRegisterNavigation());
+        $etiketler = $menu->flatMap(fn ($g) => $g->getItems())->map(fn ($i) => $i->getLabel());
+        foreach (['KKD', 'Ekipman & Ölçüm', 'Dış Paydaş'] as $giris) {
+            $this->assertCount(1, $etiketler->filter(fn ($e) => $e === $giris), $giris);
+        }
 
+        foreach ([OrtamOlcumleri::class, ZiyaretciYonetimi::class, TabelaTasarimi::class] as $gizli) {
+            $this->assertFalse($gizli::shouldRegisterNavigation());
+        }
+
+        // KKD ailesi yalnız KKD sayfaları; periyodik kontrol/ölçüm/taşeron/ziyaretçi/tabela ona karışmaz.
+        $kkd = SayfaAileleri::sekmeler([KkdTakip::class]);
+        $this->assertSame(['Zimmet & Stok', 'KKD Formu', 'Seçim Matrisi'], array_column($kkd, 'etiket'));
+
+        $this->assertSame(['Periyodik Kontrol', 'Ortam Ölçümleri'], array_column(SayfaAileleri::sekmeler([OrtamOlcumleri::class]), 'etiket'));
+        $this->assertSame(['Taşeron / Alt İşveren', 'Tesis Giriş / Ziyaretçi Kartı'], array_column(SayfaAileleri::sekmeler([ZiyaretciYonetimi::class]), 'etiket'));
+
+        // Tabela güvenlik levhasıdır: Acil Durum & Yangın merkezinin sekmesi.
         $g = SayfaAileleri::sekmeGruplari([TabelaTasarimi::class]);
-        $this->assertSame('kkd', $g['aile']);
-        $this->assertSame(
-            ['KKD Matrisi, Stok & Personel Zimmeti', 'Ekipman Periyodik Kontrol & Ortam Ölçümü', 'Dış Paydaş & Saha Erişimi (Taşeron, Ziyaretçi, Levha)'],
-            array_column($g['ust'], 'etiket'),
-        );
-        $this->assertSame('Dış Paydaş & Saha Erişimi (Taşeron, Ziyaretçi, Levha)', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertCount(3, $g['alt']);
-        $this->assertCount(2, SayfaAileleri::sekmeGruplari([OrtamOlcumleri::class])['alt']);
+        $this->assertSame('acil', $g['aile']);
+        $this->assertSame('Güvenlik Levhaları (Tabela)', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
 
         foreach ([KkdTakip::class, PeriyodikKontrol::class, OrtamOlcumleri::class, TaseronYonetimi::class, ZiyaretciYonetimi::class, TabelaTasarimi::class] as $sayfa) {
-            $this->get($sayfa::getUrl())->assertSuccessful()->assertSee('Ekipman Periyodik Kontrol &amp; Ortam Ölçümü', false);
+            $this->get($sayfa::getUrl())->assertSuccessful();
         }
+        $this->get(OrtamOlcumleri::getUrl())->assertSee('Periyodik Kontrol')->assertSee('Ortam Ölçümleri');
     }
 
     public function test_degisim_suresi_baret_ve_kemer_bes_yil_kartus_alti_ay(): void
