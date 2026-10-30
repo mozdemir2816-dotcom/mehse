@@ -47,9 +47,10 @@ class HizliSahaBulgusu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-camera';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Genel';
+    /** Sol menüde üst düzey giriş (30.10.2026): "Genel" grubundan çıkarıldı, Ana Sayfa'nın hemen altında. */
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'hizli-saha-bulgusu';
 

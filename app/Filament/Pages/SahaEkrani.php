@@ -21,6 +21,9 @@ class SahaEkrani extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Genel';
 
+    /** Menüde gizli — Ayarlar > "Genel Ayarlar & Görünüm" sekmesinin alt sayfasıdır (App\Support\SayfaAileleri, 'ayarlar'). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 0;
 
     protected static ?string $slug = 'saha-ekrani';

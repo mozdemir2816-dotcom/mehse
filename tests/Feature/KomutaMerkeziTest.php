@@ -35,13 +35,19 @@ class KomutaMerkeziTest extends TestCase
 
     public function test_sekme_seridi_besten_uce_indi(): void
     {
-        $sekmeler = SayfaAileleri::sekmeler([FirmaDenetimOperasyon::class]);
+        $g = SayfaAileleri::sekmeGruplari([FirmaDenetimOperasyon::class]);
 
+        $this->assertSame('kontrol', $g['aile']);
         $this->assertSame(
             ['Portföy Genel Bakış', 'Firma Denetim & Operasyon', 'Risk & Tehlike Analitiği'],
-            array_column($sekmeler, 'etiket'),
+            array_column($g['ust'], 'etiket'),
         );
-        $this->assertSame([false, true, false], array_column($sekmeler, 'aktif'));
+        $this->assertSame([false, true, false], array_column($g['ust'], 'aktif'));
+
+        // Profilim, "Portföy Genel Bakış" sekmesinin alt sayfası (ayrı menü girişi değil).
+        $genel = SayfaAileleri::sekmeGruplari([\App\Filament\Pages\Profilim::class]);
+        $this->assertSame('Portföy Genel Bakış', collect($genel['ust'])->firstWhere('aktif', true)['etiket']);
+        $this->assertSame(['Portföy Genel Bakış', 'Profilim'], array_column($genel['alt'], 'etiket'));
     }
 
     public function test_birlesik_sayfa_acilir_ve_uc_bolum_gosterir(): void

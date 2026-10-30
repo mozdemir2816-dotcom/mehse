@@ -33,6 +33,7 @@ class SayfaAileleri
                 [Pages\KontrolMerkezi::class, 'Portföy Genel Bakış'],
                 [Pages\FirmaDenetimOperasyon::class, 'Firma Denetim & Operasyon'],
                 [Pages\RiskMerkezi::class, 'Risk & Tehlike Analitiği'],
+                [Pages\Profilim::class, 'Profilim'],
             ],
             'saha' => [
                 [Pages\HizliSahaBulgusu::class, 'Bulgular'],
@@ -95,6 +96,7 @@ class SayfaAileleri
             // Sistem Yönetim & Entegrasyon Merkezi: 8 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['ayarlar'] bkz.
             'ayarlar' => [
                 [Pages\Ayarlar::class, 'Ayarlar'],
+                [Pages\SahaEkrani::class, 'Saha Ekranı'],
                 [Pages\Guvenlik::class, 'Güvenlik'],
                 [Pages\KullaniciYonetimi::class, 'Kullanıcı Yetkileri'],
                 [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
@@ -148,9 +150,15 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
-        // Sistem Yönetim & Entegrasyon Merkezi (30.10.2026)
+        // Kontrol Merkezi: Profilim "Portföy Genel Bakış" sekmesinin alt sayfası (30.10.2026)
+        'kontrol' => [
+            ['etiket' => 'Portföy Genel Bakış', 'ikon' => 'heroicon-o-squares-2x2', 'siniflar' => [Pages\KontrolMerkezi::class, Pages\Profilim::class]],
+            ['etiket' => 'Firma Denetim & Operasyon', 'ikon' => 'heroicon-o-clipboard-document-check', 'siniflar' => [Pages\FirmaDenetimOperasyon::class]],
+            ['etiket' => 'Risk & Tehlike Analitiği', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\RiskMerkezi::class]],
+        ],
+        // Sistem Yönetim & Entegrasyon Merkezi (30.10.2026); Saha Ekranı "Genel Ayarlar & Görünüm" sekmesinin alt sayfası
         'ayarlar' => [
-            ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class]],
+            ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class, Pages\SahaEkrani::class]],
             ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class]],
             ['etiket' => 'İSG-KATİP Robotu & Mevzuat Kütüphanesi', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class]],
         ],

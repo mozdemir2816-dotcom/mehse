@@ -63,7 +63,7 @@ class MenuSadelestirmeTest extends TestCase
 
     public function test_ailesiz_sayfada_sekme_seridi_yok(): void
     {
-        $this->get(Pages\Profilim::getUrl())
+        $this->get(Pages\ZiyaretProgrami::getUrl())
             ->assertSuccessful()
             ->assertDontSee('mehse-sayfa-sekmeleri', false);
     }
@@ -77,7 +77,7 @@ class MenuSadelestirmeTest extends TestCase
         $this->assertSame(['Sağlık Gözetimi', 'Muayene Formu (EK-2)', 'İşe Dönüş Belgesi', 'Meslek Hastalığı Bildirimi', 'Olay Kayıtları', 'Kaza İnceleme Raporu', 'İstatistikler'], array_column($sekmeler, 'etiket'));
         $this->assertTrue($sekmeler[1]['aktif']);
         $this->assertFalse($sekmeler[0]['aktif']);
-        $this->assertSame([], SayfaAileleri::sekmeler([Pages\Profilim::class]));
+        $this->assertSame([], SayfaAileleri::sekmeler([Pages\ZiyaretProgrami::class]));
     }
 
     public function test_menude_arama_kutusu_ve_gizli_sayfa_sonuclari_var(): void

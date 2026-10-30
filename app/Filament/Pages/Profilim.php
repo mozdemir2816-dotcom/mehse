@@ -50,6 +50,15 @@ class Profilim extends Page
 
     protected static ?int $navigationSort = 2;
 
+    /**
+     * Profilim, Kontrol Merkezi > "Portföy Genel Bakış" sekmesinin alt sayfasıdır (App\Support\SayfaAileleri, 'kontrol').
+     * Kontrol Merkezi'ne yetkisi olmayan kullanıcı sayfayı kaybetmesin diye menüde yalnız o durumda görünür.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ! KontrolMerkezi::canAccess();
+    }
+
     protected static ?string $slug = 'profilim';
 
     protected static ?string $title = 'Profilim';

@@ -66,7 +66,7 @@ class SahaModuluTest extends TestCase
         }
 
         // Saha ailesinde olmayan sayfa düz sekme şeridini kullanır.
-        $this->assertNull(SayfaAileleri::sekmeGruplari([\App\Filament\Pages\KontrolMerkezi::class]));
+        $this->assertNull(SayfaAileleri::sekmeGruplari([\App\Filament\Pages\ZiyaretProgrami::class]));
     }
 
     public function test_firma_secimi_saha_sayfalari_arasinda_paylasilir(): void
