@@ -6,6 +6,7 @@ use App\Filament\Resources\TeklifTalepleris\Pages\ListTeklifTalepleris;
 use App\Models\TeklifTalebi;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -99,12 +100,14 @@ class TeklifTalebiResource extends Resource
                 SelectFilter::make('durum')->label('Durum')->options(TeklifTalebi::DURUMLAR),
             ])
             ->recordActions([
-                EditAction::make()->label('Durum / not')->modalHeading('Talebi güncelle')
-                    ->schema([
-                        Select::make('durum')->label('Durum')->options(TeklifTalebi::DURUMLAR)->required(),
-                        Textarea::make('not')->label('Not')->rows(3),
-                    ]),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make()->label('Durum / not')->modalHeading('Talebi güncelle')
+                        ->schema([
+                            Select::make('durum')->label('Durum')->options(TeklifTalebi::DURUMLAR)->required(),
+                            Textarea::make('not')->label('Not')->rows(3),
+                        ]),
+                    DeleteAction::make(),
+                ]),
             ]);
     }
 

@@ -31,9 +31,9 @@ class BelgeKurulMerkeziTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
-        $grup = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Belgeler & Yazışmalar');
-        $this->assertNotNull($grup);
-        $this->assertCount(1, $grup->getItems());
+        $menu = collect(Filament::getNavigation());
+        $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Belgeler & Yazışmalar'));
+        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'İş İzin Formu'));
         $this->assertFalse(KurulToplantisi::shouldRegisterNavigation());
 
         $g = SayfaAileleri::sekmeGruplari([CezaTeblig::class]);

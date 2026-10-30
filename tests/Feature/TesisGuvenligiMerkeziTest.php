@@ -31,9 +31,9 @@ class TesisGuvenligiMerkeziTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
-        $grup = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Saha Dışı Kayıtlar');
-        $this->assertNotNull($grup);
-        $this->assertCount(1, $grup->getItems());
+        $menu = collect(Filament::getNavigation());
+        $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Saha Dışı Kayıtlar'));
+        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'KKD'));
         $this->assertFalse(TabelaTasarimi::shouldRegisterNavigation());
 
         $g = SayfaAileleri::sekmeGruplari([TabelaTasarimi::class]);

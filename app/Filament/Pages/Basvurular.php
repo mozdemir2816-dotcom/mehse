@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\BasvuruIslemleri;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
@@ -91,6 +92,7 @@ class Basvurular extends Page implements HasTable
                 SelectFilter::make('durum')->label('Durum')->options(Basvuru::DURUMLAR),
             ])
             ->recordActions([
+                ActionGroup::make([
                 Action::make('detay')
                     ->label('Detay')
                     ->icon('heroicon-o-eye')
@@ -165,6 +167,7 @@ class Basvurular extends Page implements HasTable
 
                         Notification::make()->title('Başvuru reddedildi')->success()->send();
                     }),
+                ]),
             ])
             ->emptyStateHeading('Başvuru yok')
             ->emptyStateDescription('Giriş ekranındaki "OSGB Başvurusu" ve bireysel kayıtlar burada listelenir.')

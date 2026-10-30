@@ -8,6 +8,7 @@ use App\Support\ExcelBellek;
 use App\Support\RiskProsedurDocxOkuyucu;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
@@ -132,6 +133,7 @@ class RiskProsedurResource extends Resource
                     }),
             ])
             ->recordActions([
+                ActionGroup::make([
                 Action::make('goster')
                     ->label('İçeriği Görüntüle')
                     ->icon('heroicon-o-eye')
@@ -148,6 +150,7 @@ class RiskProsedurResource extends Resource
                     )),
                 DeleteAction::make()
                     ->modalDescription('Bu prosedür silinir ve yöntem prosedürsüz kalır (varsayılan metin otomatik geri gelmez) — Risk Değerlendirmesi PDF\'inde bu yöntem için prosedür sayfası basılmaz. Yeni bir .docx yükleyerek yeniden ekleyebilirsiniz.'),
+                ]),
             ])
             ->defaultSort('yontem');
     }

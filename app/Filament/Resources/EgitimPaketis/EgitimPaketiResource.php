@@ -7,6 +7,7 @@ use App\Filament\Resources\EgitimPaketis\Pages\EditEgitimPaketi;
 use App\Filament\Resources\EgitimPaketis\Pages\ListEgitimPaketis;
 use App\Models\EgitimPaketi;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
@@ -157,8 +158,10 @@ class EgitimPaketiResource extends Resource
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
             ])
             ->defaultSort('created_at', 'desc');
     }

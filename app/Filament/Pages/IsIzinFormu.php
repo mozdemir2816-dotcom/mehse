@@ -39,9 +39,9 @@ class IsIzinFormu extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-key';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 15;
 
     protected static ?string $slug = 'is-izin-formu';
 

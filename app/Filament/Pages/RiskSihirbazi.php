@@ -59,9 +59,9 @@ class RiskSihirbazi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $slug = 'risk-degerlendirme';
 

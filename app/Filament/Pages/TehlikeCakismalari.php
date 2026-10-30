@@ -23,9 +23,9 @@ class TehlikeCakismalari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-square-3-stack-3d';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Risk & Tehlike Yönetimi';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 11;
 
     protected static ?string $slug = 'tehlike-cakismalari';
 

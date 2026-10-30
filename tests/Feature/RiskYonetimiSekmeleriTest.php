@@ -56,10 +56,9 @@ class RiskYonetimiSekmeleriTest extends TestCase
 
     public function test_menude_tek_risk_girisi_kalir_ve_grup_adi_degisti(): void
     {
-        $grup = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Risk & Tehlike Yönetimi');
-        $etiketler = $grup->getItems()->map(fn ($i) => $i->getLabel())->values()->all();
-
-        $this->assertSame(['Risk Yönetim Merkezi'], $etiketler);
+        $menu = collect(Filament::getNavigation());
+        $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Risk & Tehlike Yönetimi'));
+        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'Risk Yönetim Merkezi'));
 
         foreach ([JsaDegerlendirmesi::class, KimyasalYonetimi::class, TehlikeRiskAnalitigi::class, KimyasalSicili::class,
             TehlikeResource::class, RiskSablonuResource::class, RiskProsedurResource::class, RiskDegerlendirmesiResource::class] as $sinif) {

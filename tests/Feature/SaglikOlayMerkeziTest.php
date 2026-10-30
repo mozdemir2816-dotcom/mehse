@@ -20,9 +20,9 @@ class SaglikOlayMerkeziTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
-        $grup = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Sağlık & Olaylar');
-        $this->assertNotNull($grup);
-        $this->assertCount(1, $grup->getItems());
+        $menu = collect(Filament::getNavigation());
+        $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Sağlık & Olaylar'));
+        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'Sağlık & Olay Merkezi'));
         $this->assertFalse(OlayKayitlari::shouldRegisterNavigation());
 
         $g = SayfaAileleri::sekmeGruplari([KazaIstatistikleri::class]);

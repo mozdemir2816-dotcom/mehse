@@ -29,9 +29,9 @@ class AcilYonetimMerkeziTest extends TestCase
 
     public function test_menude_tek_giris_ve_uc_ana_sekme(): void
     {
-        $grup = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Acil Durum & Yangın');
-        $this->assertNotNull($grup);
-        $this->assertCount(1, $grup->getItems());
+        $menu = collect(Filament::getNavigation());
+        $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Acil Durum & Yangın'));
+        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'Acil Durum & Yangın Merkezi'));
         $this->assertFalse(YanginGuvenligi::shouldRegisterNavigation());
         $this->assertFalse(TatbikatTutanagi::shouldRegisterNavigation());
 
