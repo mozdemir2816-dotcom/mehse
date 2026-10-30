@@ -43,7 +43,7 @@ class TaseronYonetimi extends Page
 
     protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 18;
+    protected static ?int $navigationSort = 19;
 
     protected static ?string $slug = 'taseron-yonetimi';
 

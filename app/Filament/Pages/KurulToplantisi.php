@@ -52,12 +52,10 @@ class KurulToplantisi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Belgeler & Yazışmalar';
+    /** Sol menüde kendi girişi (30.10.2026): Belge merkezinden ayrıldı, İş İzin Formu'nun hemen altında. */
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    /** Menüde gizli — Resmi Belge & Kurul Yönetim Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
-    protected static bool $shouldRegisterNavigation = false;
-
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 16;
 
     protected static ?string $slug = 'kurul-toplantisi';
 

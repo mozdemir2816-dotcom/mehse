@@ -77,6 +77,10 @@ class SayfaAileleri
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
                 [Pages\ToolboxKonusmalari::class, 'Toolbox Konuşmaları'],
                 [Pages\IseOzguEgitimKonulari::class, 'İşe Özgü Eğitim Konuları'],
+                // Yıllık planlar Eğitim Yönetim Merkezi'ne taşındı (30.10.2026); eski adresler aynı.
+                [Pages\YillikPlan\YillikEgitimPlani::class, 'Yıllık Eğitim Planı'],
+                [Pages\YillikPlan\YillikCalismaPlani::class, 'Yıllık Çalışma Planı'],
+                [Pages\YillikPlan\YillikDegerlendirmeRaporu::class, 'Yıllık Değerlendirme Raporu'],
             ],
             // Sağlık & Olay Yönetim Merkezi: 7 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['saglik_olay'] bkz.
             'saglik_olay' => [
@@ -97,17 +101,10 @@ class SayfaAileleri
                 [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
                 [Pages\Mevzuat::class, 'Mevzuat'],
             ],
-            // İSG Yıllık Planlama & Değerlendirme Merkezi: 3 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['yillik'] bkz.
-            'yillik' => [
-                [Pages\YillikPlan\YillikCalismaPlani::class, 'Yıllık Çalışma Planı'],
-                [Pages\YillikPlan\YillikEgitimPlani::class, 'Yıllık Eğitim Planı'],
-                [Pages\YillikPlan\YillikDegerlendirmeRaporu::class, 'Yıllık Değerlendirme Raporu'],
-            ],
             // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
             'belge' => [
                 [Pages\IsIzinFormu::class, 'İş İzin Formu (PTW)'],
                 [Pages\TalimatOlustur::class, 'Talimat Oluştur'],
-                [Pages\KurulToplantisi::class, 'İSG Kurulu'],
                 [Pages\AtamaYazilari::class, 'Atama Yazıları'],
                 [Pages\CalisanTemsilcisiSecimi::class, 'Çalışan Temsilcisi Seçimi'],
                 [Pages\CezaTeblig::class, 'Ceza ve Tebliğ Tutanağı'],
@@ -157,23 +154,12 @@ class SayfaAileleri
             ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class]],
             ['etiket' => 'İSG-KATİP Robotu & Mevzuat Kütüphanesi', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class]],
         ],
-        // İSG Yıllık Planlama & Değerlendirme Merkezi (30.10.2026)
-        'yillik' => [
-            ['etiket' => 'Yıllık Çalışma Planı (Master P/G Matrisi)', 'ikon' => 'heroicon-o-calendar-days', 'siniflar' => [Pages\YillikPlan\YillikCalismaPlani::class]],
-            ['etiket' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'siniflar' => [Pages\YillikPlan\YillikEgitimPlani::class]],
-            ['etiket' => 'Yıl Sonu Değerlendirme Raporu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\YillikPlan\YillikDegerlendirmeRaporu::class]],
-        ],
         // Resmi Belge & Kurul Yönetim Merkezi (30.10.2026)
         'belge' => [
             [
                 'etiket' => 'İş İzni (PTW) & Güvenli Çalışma Talimatları',
                 'ikon' => 'heroicon-o-shield-check',
                 'siniflar' => [Pages\IsIzinFormu::class, Pages\TalimatOlustur::class],
-            ],
-            [
-                'etiket' => 'İSG Kurulu & Toplantı Yönetimi',
-                'ikon' => 'heroicon-o-users',
-                'siniflar' => [Pages\KurulToplantisi::class],
             ],
             [
                 'etiket' => 'Yasal Atamalar, Temsilci & Tebliğler',
@@ -213,6 +199,11 @@ class SayfaAileleri
                 'etiket' => 'Soru & İçerik Bankası',
                 'ikon' => 'heroicon-o-book-open',
                 'siniflar' => [Pages\SoruBankasi::class, Pages\EgitimSorulari::class, Pages\ToolboxKonusmalari::class, Pages\IseOzguEgitimKonulari::class],
+            ],
+            [
+                'etiket' => 'Yıllık Planlar & Değerlendirme',
+                'ikon' => 'heroicon-o-calendar-days',
+                'siniflar' => [Pages\YillikPlan\YillikEgitimPlani::class, Pages\YillikPlan\YillikCalismaPlani::class, Pages\YillikPlan\YillikDegerlendirmeRaporu::class],
             ],
         ],
         // Acil Durum & Yangın: 5 sayfa → 3 ana sekme, tek menü girişi (30.10.2026)

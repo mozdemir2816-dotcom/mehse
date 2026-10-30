@@ -27,7 +27,7 @@ class EgitimYonetimMerkeziTest extends TestCase
         $g = SayfaAileleri::sekmeGruplari([ToolboxKonusmalari::class]);
         $this->assertSame('egitim', $g['aile']);
         $this->assertSame(
-            ['Yasal Eğitim Takibi & Tutanaklar', 'Uzaktan Eğitim (LMS) & Sınav Portalı', 'Soru & İçerik Bankası'],
+            ['Yasal Eğitim Takibi & Tutanaklar', 'Uzaktan Eğitim (LMS) & Sınav Portalı', 'Soru & İçerik Bankası', 'Yıllık Planlar & Değerlendirme'],
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame('Soru & İçerik Bankası', collect($g['ust'])->firstWhere('aktif', true)['etiket']);

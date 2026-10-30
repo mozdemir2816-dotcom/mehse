@@ -44,24 +44,26 @@ class YillikPlanMerkeziTest extends TestCase
         return Firma::factory()->for($this->uzman)->create($ek + ['sozlesme_baslangic' => '2026-01-01', 'calisan_sayisi' => 80, 'tehlike_sinifi' => 'cok_tehlikeli']);
     }
 
-    public function test_menude_tek_giris_ve_uc_ana_sekme(): void
+    public function test_yillik_planlar_egitim_merkezinin_sekmesi_ve_menuden_gizli(): void
     {
-        $grup = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Planlama & Arşiv');
-        $this->assertNotNull($grup);
-        $this->assertFalse(YillikEgitimPlani::shouldRegisterNavigation());
-        $this->assertFalse(YillikDegerlendirmeRaporu::shouldRegisterNavigation());
-        $this->assertTrue(YillikCalismaPlani::shouldRegisterNavigation());
+        foreach ([YillikCalismaPlani::class, YillikEgitimPlani::class, YillikDegerlendirmeRaporu::class] as $sayfa) {
+            $this->assertFalse($sayfa::shouldRegisterNavigation());
+        }
 
-        $g = SayfaAileleri::sekmeGruplari([YillikDegerlendirmeRaporu::class]);
-        $this->assertSame('yillik', $g['aile']);
+        $menu = collect(Filament::getNavigation());
+        $grup = $menu->first(fn ($g) => $g->getLabel() === 'Planlama & Arşiv');
+        $this->assertSame(['Arşiv', 'Araçlar'], $grup->getItems()->map(fn ($i) => $i->getLabel())->values()->all());
+
+        $g = SayfaAileleri::sekmeGruplari([YillikCalismaPlani::class]);
+        $this->assertSame('egitim', $g['aile']);
+        $this->assertSame('Yıllık Planlar & Değerlendirme', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
         $this->assertSame(
-            ['Yıllık Çalışma Planı (Master P/G Matrisi)', 'Yıllık Eğitim Planı', 'Yıl Sonu Değerlendirme Raporu'],
-            array_column($g['ust'], 'etiket'),
+            ['Yıllık Eğitim Planı', 'Yıllık Çalışma Planı', 'Yıllık Değerlendirme Raporu'],
+            array_column($g['alt'], 'etiket'),
         );
-        $this->assertSame('Yıl Sonu Değerlendirme Raporu', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
 
         foreach ([YillikCalismaPlani::class, YillikEgitimPlani::class, YillikDegerlendirmeRaporu::class] as $sayfa) {
-            $this->get($sayfa::getUrl())->assertSuccessful()->assertSee('Yıl Sonu Değerlendirme Raporu', false);
+            $this->get($sayfa::getUrl())->assertSuccessful()->assertSee('Yıllık Planlar &amp; Değerlendirme', false);
         }
     }
 

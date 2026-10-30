@@ -27,28 +27,35 @@ class BelgeKurulMerkeziTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_menude_tek_giris_ve_uc_ana_sekme(): void
+    public function test_isg_kurulu_kendi_menu_girisinde_belge_merkezi_iki_ana_sekme(): void
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
         $menu = collect(Filament::getNavigation());
         $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Belgeler & Yazışmalar'));
-        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'İş İzin Formu'));
-        $this->assertFalse(KurulToplantisi::shouldRegisterNavigation());
+        $etiketler = $menu->flatMap(fn ($g) => $g->getItems())->map(fn ($i) => $i->getLabel());
+        $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'İş İzin Formu'));
+        $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'İSG Kurulu'));
+        $this->assertTrue(KurulToplantisi::shouldRegisterNavigation());
+
+        // Kurul artık Belge merkezi sekmesi değil; kendi sayfasında sekme şeridi yok.
+        $this->assertNull(SayfaAileleri::sekmeGruplari([KurulToplantisi::class]));
+        $this->assertSame([], SayfaAileleri::sekmeler([KurulToplantisi::class]));
 
         $g = SayfaAileleri::sekmeGruplari([CezaTeblig::class]);
         $this->assertSame('belge', $g['aile']);
         $this->assertSame(
-            ['İş İzni (PTW) & Güvenli Çalışma Talimatları', 'İSG Kurulu & Toplantı Yönetimi', 'Yasal Atamalar, Temsilci & Tebliğler'],
+            ['İş İzni (PTW) & Güvenli Çalışma Talimatları', 'Yasal Atamalar, Temsilci & Tebliğler'],
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame('Yasal Atamalar, Temsilci & Tebliğler', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
         $this->assertCount(3, $g['alt']);
         $this->assertCount(2, SayfaAileleri::sekmeGruplari([TalimatOlustur::class])['alt']);
 
-        foreach ([IsIzinFormu::class, TalimatOlustur::class, KurulToplantisi::class, AtamaYazilari::class, CezaTeblig::class] as $sayfa) {
+        foreach ([IsIzinFormu::class, TalimatOlustur::class, AtamaYazilari::class, CezaTeblig::class] as $sayfa) {
             $this->get($sayfa::getUrl())->assertSuccessful()->assertSee('Yasal Atamalar, Temsilci &amp; Tebliğler', false);
         }
+        $this->get(KurulToplantisi::getUrl())->assertSuccessful();
     }
 
     public function test_kurul_karari_dof_havuzuna_bir_kez_aktarilir(): void

@@ -47,7 +47,7 @@ class KkdTakip extends Page
 
     protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 16;
+    protected static ?int $navigationSort = 17;
 
     protected static ?string $slug = 'kkd-takip';
 

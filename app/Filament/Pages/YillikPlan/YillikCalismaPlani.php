@@ -7,7 +7,8 @@ use BackedEnum;
 
 class YillikCalismaPlani extends YillikPlanlar
 {
-    use \App\Filament\Concerns\AileAnaSayfasi;
+    /** Menüde gizli — Eğitim Yönetim Merkezi "Yıllık Planlar & Değerlendirme" sekmesinden açılır (App\Support\SayfaAileleri). */
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static string $planTuru = 'calisma';
 

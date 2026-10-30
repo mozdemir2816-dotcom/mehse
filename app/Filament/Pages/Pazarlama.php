@@ -32,7 +32,7 @@ class Pazarlama extends Page
 
     protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 19;
+    protected static ?int $navigationSort = 20;
 
     /** Menüde "Pazarlama & Talepler" tek girişi; Teklif Talepleri ve OSGB Başvuruları sekme şeridinden açılır ('pazarlama' ailesi). */
     protected static ?string $navigationLabel = 'Pazarlama & Talepler';

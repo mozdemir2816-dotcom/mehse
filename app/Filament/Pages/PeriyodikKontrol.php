@@ -51,7 +51,7 @@ class PeriyodikKontrol extends Page
 
     protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 17;
+    protected static ?int $navigationSort = 18;
 
     protected static ?string $slug = 'periyodik-kontrol';
 
