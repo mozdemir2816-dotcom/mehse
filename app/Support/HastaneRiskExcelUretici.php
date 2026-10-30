@@ -7,6 +7,7 @@ use App\Models\RiskMaddesi;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
@@ -95,6 +96,7 @@ class HastaneRiskExcelUretici
         $yukVeri = $ws->getRowDimension($protoVeri)->getRowHeight();
         $yukBant = $protoBant ? $ws->getRowDimension($protoBant)->getRowHeight() : 20;
         $altBilgi = static::altBilgiAl($ws, $duzen);
+        $zengin = static::zenginMetinler($ws, $duzen);
 
         // Künye bandı dışındaki resimler (veri hücrelerine yapışmış 0 genişlikli kalıntılar) satırlar
         // yeniden yazılınca yanlış yere düşer — logo ve künye resimleri kalır.
@@ -112,7 +114,7 @@ class HastaneRiskExcelUretici
             }
         }
         foreach (array_keys($ws->getConditionalStylesCollection()) as $aralik) {
-            $ws->setConditionalStyles($aralik, []);
+            $ws->removeConditionalStyles($aralik);
         }
         $silinecek = $ws->getHighestRow() - $duzen['alt'];
         if ($silinecek > 0) {
@@ -137,11 +139,9 @@ class HastaneRiskExcelUretici
             $no++;
             static::kopyala($ws, $stilVeri, $r);
             $ws->setCellValue('A'.$r, $no);
-            $ws->setCellValue('B'.$r, $m->tehlike);
-            $ws->setCellValue('C'.$r, $m->risk);
-            $ws->setCellValue('D'.$r, $m->etki_alani);
-            $ws->setCellValue('E'.$r, $m->mevcut_onlem);
-            $ws->setCellValue('K'.$r, $m->oneri);
+            foreach (['B' => 'tehlike', 'C' => 'risk', 'D' => 'etki_alani', 'E' => 'mevcut_onlem', 'K' => 'oneri'] as $s => $alan) {
+                static::metinYaz($ws, $zengin, $s, $r, $m->{$alan});
+            }
             foreach (['F' => 'olasilik', 'G' => 'frekans', 'H' => 'siddet', 'L' => 'son_olasilik', 'M' => 'son_frekans', 'N' => 'son_siddet'] as $s => $alan) {
                 $ws->setCellValue($s.$r, $m->{$alan});
             }
@@ -157,9 +157,9 @@ class HastaneRiskExcelUretici
                     $ws->getStyle($s.$r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($renk);
                 }
             }
-            $ws->setCellValue('Q'.$r, $m->sorumlu);
-            $ws->setCellValue('R'.$r, $m->termin);
-            $ws->setCellValue('S'.$r, $m->aciklama);
+            static::metinYaz($ws, $zengin, 'Q', $r, $m->sorumlu);
+            static::metinYaz($ws, $zengin, 'R', $r, $m->termin);
+            static::metinYaz($ws, $zengin, 'S', $r, $m->aciklama);
 
             if ($m->duzey && isset($sayim[$m->duzey])) {
                 $sayim[$m->duzey]++;
@@ -170,6 +170,41 @@ class HastaneRiskExcelUretici
         }
 
         static::altBilgiYaz($ws, $altBilgi, $r, $no, $sayim);
+    }
+
+    /**
+     * Şablon veri satırlarındaki karışık renkli/biçimli (zengin) metinler: sütun + düz metin → RichText.
+     * Veritabanında yalnız düz metin var; aynı metin yazılırken şablondaki renkler geri konur.
+     *
+     * @param  array<string, int|null>  $duzen
+     * @return array<string, RichText>
+     */
+    private static function zenginMetinler(Worksheet $ws, array $duzen): array
+    {
+        $harita = [];
+        for ($r = $duzen['ilk']; $r <= $ws->getHighestRow(); $r++) {
+            foreach (array_keys(static::METIN_SUTUNLARI) as $s) {
+                $deger = $ws->getCell($s.$r)->getValue();
+                if ($deger instanceof RichText && count($deger->getRichTextElements()) > 1) {
+                    $harita[$s.'|'.static::duzMetin($deger->getPlainText())] ??= $deger;
+                }
+            }
+        }
+
+        return $harita;
+    }
+
+    private static function duzMetin(string $metin): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $metin));
+    }
+
+    /** @param  array<string, RichText>  $zengin */
+    private static function metinYaz(Worksheet $ws, array $zengin, string $sutun, int $satir, mixed $deger): void
+    {
+        $kalip = is_string($deger) ? ($zengin[$sutun.'|'.static::duzMetin($deger)] ?? null) : null;
+
+        $ws->getCell($sutun.$satir)->setValue($kalip ? clone $kalip : $deger);
     }
 
     /** @return array<string, int> sütun → xf indeksi */
@@ -297,7 +332,7 @@ class HastaneRiskExcelUretici
         }
 
         // 1 genişlik birimi ≈ 7 px; Times New Roman ortalama karakter ≈ 0,47 em (1 pt = 4/3 px).
-        $sigan = max(4, (int) floor((($genislik > 0 ? $genislik : 9.14) * 7 - 4) / (0.47 * $punto * 4 / 3)));
+        $sigan = max(4, (int) floor((($genislik > 0 ? $genislik : 9.14) * 7 - 4) / (0.5 * $punto * 4 / 3)));
         $toplam = 0;
 
         foreach (preg_split('/\n/u', $metin) as $paragraf) {
