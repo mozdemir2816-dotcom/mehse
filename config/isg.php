@@ -812,6 +812,10 @@ return [
                 ['ad' => 'Gürültü Maruziyeti (LEX,8h)', 'periyot_ay' => 24, 'birim' => 'dB(A)', 'sinir_deger' => '85'],
                 ['ad' => 'Aydınlatma Şiddeti', 'periyot_ay' => 24, 'birim' => 'lüks', 'sinir_deger' => '—'],
                 ['ad' => 'Termal Konfor (sıcaklık / nem / hava akış hızı)', 'periyot_ay' => 24, 'birim' => '°C / % / m/s', 'sinir_deger' => '—'],
+                // Termal konfor için iç ortamda bağlayıcı sayısal yasal sınır yok (TS EN ISO 7730 / 7243 referans alınır);
+                // sınır boş bırakıldı ki otomatik "Uygun/Aşım" sonucu yasal hüküm gibi görünmesin — ölçüm raporundaki değer girilir.
+                ['ad' => 'Termal Konfor — PMV/PPD (TS EN ISO 7730)', 'periyot_ay' => 24, 'birim' => 'PMV / %PPD', 'sinir_deger' => '—'],
+                ['ad' => 'Sıcak Ortam — WBGT (TS EN ISO 7243)', 'periyot_ay' => 24, 'birim' => '°C WBGT', 'sinir_deger' => '—'],
                 ['ad' => 'El-Kol Titreşimi (A(8))', 'periyot_ay' => 24, 'birim' => 'm/s²', 'sinir_deger' => '5'],
                 ['ad' => 'Tüm Vücut Titreşimi (A(8))', 'periyot_ay' => 24, 'birim' => 'm/s²', 'sinir_deger' => '1.15'],
                 ['ad' => 'Elektromanyetik Alan', 'periyot_ay' => 24, 'birim' => 'µT / V/m', 'sinir_deger' => '—'],
@@ -820,6 +824,10 @@ return [
             'Toz Maruziyeti' => [
                 ['ad' => 'Toplam Toz', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
                 ['ad' => 'Solunabilir Toz', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],
+                // PM sınırları (HKDY: PM10 günlük 50 / yıllık 40 µg/m³) dış ortam hava kalitesi içindir; işyeri iç ortamı için
+                // yasal sınır olmadığından boş bırakıldı.
+                ['ad' => 'Partikül Madde PM10', 'periyot_ay' => 24, 'birim' => 'µg/m³', 'sinir_deger' => '—'],
+                ['ad' => 'Partikül Madde PM2.5', 'periyot_ay' => 24, 'birim' => 'µg/m³', 'sinir_deger' => '—'],
                 ['ad' => 'Kristal Yapıda Silika (Kuvars)', 'periyot_ay' => 12, 'birim' => 'mg/m³', 'sinir_deger' => '0.1'],
                 ['ad' => 'Ahşap Tozu', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '5'],
                 ['ad' => 'Un / Tahıl Tozu', 'periyot_ay' => 24, 'birim' => 'mg/m³', 'sinir_deger' => '—'],

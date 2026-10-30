@@ -32,7 +32,7 @@ class SayfaAileleri
                 // "Firma Denetim & Operasyon" altında birleşti; eski adresler geriye uyum için çalışmaya devam eder.
                 [Pages\KontrolMerkezi::class, 'Portföy Genel Bakış'],
                 [Pages\FirmaDenetimOperasyon::class, 'Firma Denetim & Operasyon'],
-                [Pages\RiskMerkezi::class, 'Risk & Tehlike Analitiği'],
+                [Pages\RiskMerkezi::class, 'Risk Panosu'],
                 [Pages\Profilim::class, 'Profilim'],
             ],
             'saha' => [
@@ -57,6 +57,7 @@ class SayfaAileleri
                 [RiskSablonuResource::class, 'Sektör Şablonları'],
                 [RiskProsedurResource::class, 'Risk Prosedürleri'],
                 [Pages\TehlikeCakismalari::class, 'Kütüphane Çakışmaları'],
+                [Pages\EkipEvraklari::class, 'Risk & Evrak Havuzu'],
             ],
             'acil' => [
                 [Pages\AcilDurumPlani::class, 'Acil Durum Planı'],
@@ -154,7 +155,7 @@ class SayfaAileleri
         'kontrol' => [
             ['etiket' => 'Portföy Genel Bakış', 'ikon' => 'heroicon-o-squares-2x2', 'siniflar' => [Pages\KontrolMerkezi::class, Pages\Profilim::class]],
             ['etiket' => 'Firma Denetim & Operasyon', 'ikon' => 'heroicon-o-clipboard-document-check', 'siniflar' => [Pages\FirmaDenetimOperasyon::class]],
-            ['etiket' => 'Risk & Tehlike Analitiği', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\RiskMerkezi::class]],
+            ['etiket' => 'Risk Panosu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\RiskMerkezi::class]],
         ],
         // Sistem Yönetim & Entegrasyon Merkezi (30.10.2026); Saha Ekranı "Genel Ayarlar & Görünüm" sekmesinin alt sayfası
         'ayarlar' => [
@@ -251,7 +252,7 @@ class SayfaAileleri
             [
                 'etiket' => 'Merkezi Kütüphane & Şablonlar',
                 'ikon' => 'heroicon-o-book-open',
-                'siniflar' => [TehlikeResource::class, RiskSablonuResource::class, RiskProsedurResource::class, Pages\TehlikeCakismalari::class],
+                'siniflar' => [TehlikeResource::class, RiskSablonuResource::class, RiskProsedurResource::class, Pages\TehlikeCakismalari::class, Pages\EkipEvraklari::class],
             ],
         ],
         'saha' => [

@@ -32,6 +32,9 @@ class EkipEvraklari extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
+    /** Menüde gizli — Risk Yönetim Merkezi "Merkezi Kütüphane & Şablonlar" sekmesinden açılır (App\Support\SayfaAileleri, 'risk'). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'ekip-evraklari';

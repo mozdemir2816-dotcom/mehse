@@ -39,7 +39,7 @@ class KomutaMerkeziTest extends TestCase
 
         $this->assertSame('kontrol', $g['aile']);
         $this->assertSame(
-            ['Portföy Genel Bakış', 'Firma Denetim & Operasyon', 'Risk & Tehlike Analitiği'],
+            ['Portföy Genel Bakış', 'Firma Denetim & Operasyon', 'Risk Panosu'],
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame([false, true, false], array_column($g['ust'], 'aktif'));

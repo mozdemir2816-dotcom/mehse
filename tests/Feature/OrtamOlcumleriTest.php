@@ -42,6 +42,27 @@ class OrtamOlcumleriTest extends TestCase
         $this->assertSame('bekliyor', $olcum->olcumler[0]['sonuc']);
     }
 
+    public function test_termal_konfor_ve_pm_parametreleri_sinirsiz_eklenir_sonuc_bekliyor_kalir(): void
+    {
+        Livewire::test(OrtamOlcumleriSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'Fiziksel Etkenler', 'Termal Konfor — PMV/PPD (TS EN ISO 7730)')
+            ->call('katalogdanEkle', 'Fiziksel Etkenler', 'Sıcak Ortam — WBGT (TS EN ISO 7243)')
+            ->call('katalogdanEkle', 'Toz Maruziyeti', 'Partikül Madde PM10')
+            ->call('katalogdanEkle', 'Toz Maruziyeti', 'Partikül Madde PM2.5')
+            ->call('kaydet');
+
+        $olcumler = OrtamOlcumu::where('firma_id', $this->firma->id)->sole()->olcumler;
+        $this->assertSame(
+            ['Termal Konfor — PMV/PPD (TS EN ISO 7730)', 'Sıcak Ortam — WBGT (TS EN ISO 7243)', 'Partikül Madde PM10', 'Partikül Madde PM2.5'],
+            array_column($olcumler, 'parametre'),
+        );
+        $this->assertSame(['PMV / %PPD', '°C WBGT', 'µg/m³', 'µg/m³'], array_column($olcumler, 'birim'));
+        // Yasal sınır olmadığından otomatik "Uygun/Aşım" üretilmez; ölçülen değer girilse de sonuç elle seçilene kadar bekler.
+        $this->assertSame(['bekliyor'], array_values(array_unique(array_column($olcumler, 'sonuc'))));
+        $this->assertNull(OrtamOlcumu::otomatikSonuc('0.4', '—'));
+    }
+
     public function test_olcum_tarihinden_sonraki_tarih_periyoda_gore_hesaplanir(): void
     {
         $olcum = OrtamOlcumu::firmaIcin($this->firma);
