@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\YeniTeklifTalebi;
 use App\Models\TeklifTalebi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 /** Herkese açık tanıtım sayfasının teklif formu. */
 class TeklifTalebiController extends Controller
@@ -32,7 +35,7 @@ class TeklifTalebiController extends Controller
             'firma' => 'firma adı', 'kisi' => 'iletişim kişisi', 'calisan' => 'çalışan sayısı', 'sinif' => 'tehlike sınıfı',
         ]);
 
-        TeklifTalebi::create([
+        $talep = TeklifTalebi::create([
             'firma_adi' => $veri['firma'],
             'kisi' => $veri['kisi'],
             'telefon' => $veri['telefon'],
@@ -42,6 +45,24 @@ class TeklifTalebiController extends Controller
             'tarayici' => Str::limit((string) $request->userAgent(), 250, ''),
         ]);
 
+        $this->bildir($talep);
+
         return redirect(url('/').'#teklif')->with('teklif_gonderildi', true);
+    }
+
+    /** E-posta gitmese de talep kayıtlıdır; ziyaretçi hata görmez, sorun log'a yazılır. */
+    private function bildir(TeklifTalebi $talep): void
+    {
+        $alici = config('isg.teklif_bildirim_eposta');
+
+        if (! $alici) {
+            return;
+        }
+
+        try {
+            Mail::to($alici)->send(new YeniTeklifTalebi($talep));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 }

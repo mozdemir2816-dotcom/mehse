@@ -6966,4 +6966,10 @@ return [
         ],
     ],
 
+    /*
+    | Tanıtım sayfasından teklif talebi gelince bildirim gidecek adres.
+    | .env: TEKLIF_BILDIRIM_EPOSTA; boşsa MAIL_FROM_ADDRESS'e, o da yoksa gönderilmez.
+    */
+    'teklif_bildirim_eposta' => env('TEKLIF_BILDIRIM_EPOSTA') ?: env('MAIL_FROM_ADDRESS'),
+
 ];
