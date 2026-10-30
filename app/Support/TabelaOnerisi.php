@@ -24,12 +24,15 @@ class TabelaOnerisi
      * @var array<string, array{etiket: string, tip: string, kelimeler: array<int, string>, slots: array<int, string>, baslik: string, aciklama: string}>
      */
     public const KURALLAR = [
-        'yuksekte' => ['etiket' => 'Yüksekte çalışma / düşme', 'tip' => 'uyari', 'kelimeler' => ['yuksekte', 'dusme', 'iskele', 'cati', 'korkuluk', 'merdiven'],
+        'yuksekte' => ['etiket' => 'Yüksekte çalışma / düşme', 'tip' => 'uyari', 'kelimeler' => ['yuksekte', 'dusme', 'iskele ', 'iskeleler', 'cati', 'korkuluk', 'merdiven'],
             'slots' => ['warn_falling', 'cmd_harness', 'cmd_helmet'], 'baslik' => 'YÜKSEKTE ÇALIŞMA — DÜŞME TEHLİKESİ',
             'aciklama' => 'Yüksekte çalışmada emniyet kemeri ve baret kullanımı zorunludur. Korkuluksuz kenara yaklaşmayınız.'],
         'elektrik' => ['etiket' => 'Elektrik', 'tip' => 'uyari', 'kelimeler' => ['elektrik', 'gerilim', 'pano', 'kacak akim', 'topraklama', 'kablo'],
             'slots' => ['warn_electric', 'no_touch'], 'baslik' => 'ELEKTRİK TEHLİKESİ',
             'aciklama' => 'Panolara ve elektrikli ekipmana yetkisiz müdahale kesinlikle yasaktır. Yalnızca yetkili personel çalışabilir.'],
+        'yangin' => ['etiket' => 'Yangın / yanıcı madde', 'tip' => 'yasak', 'kelimeler' => ['yangin', 'yanici', 'parlayici', 'alev', 'sicak is', 'kivilcim', 'sigara'],
+            'slots' => ['warn_flammable', 'no_flame', 'no_smoking'], 'baslik' => 'YANICI MADDE — AÇIK ALEV VE SİGARA YASAKTIR',
+            'aciklama' => 'Bu alanda sigara içmek ve açık alev kullanmak yasaktır.'],
         'kapali_alan' => ['etiket' => 'Kapalı / dar alan', 'tip' => 'yasak', 'kelimeler' => ['kapali alan', 'dar alan', 'tank', 'kuyu', 'silo'],
             'slots' => ['no_entry', 'warn_general'], 'baslik' => 'KAPALI ALANA GİRİLMEZ',
             'aciklama' => 'İş izni ve gaz ölçümü olmadan kapalı/dar alana girmek yasaktır.'],
@@ -39,9 +42,6 @@ class TabelaOnerisi
         'forklift' => ['etiket' => 'Forklift / araç trafiği', 'tip' => 'uyari', 'kelimeler' => ['forklift', 'istif', 'arac trafigi', 'is makinesi', 'yaya'],
             'slots' => ['warn_forklift', 'no_pedestrian'], 'baslik' => 'FORKLİFT TRAFİĞİ',
             'aciklama' => 'Araç yolunda yürümeyiniz. Yaya yollarını ve belirlenen geçitleri kullanınız.'],
-        'yangin' => ['etiket' => 'Yangın / yanıcı madde', 'tip' => 'yasak', 'kelimeler' => ['yangin', 'yanici', 'parlayici', 'alev', 'sicak is', 'kivilcim'],
-            'slots' => ['warn_flammable', 'no_flame', 'no_smoking'], 'baslik' => 'YANICI MADDE — AÇIK ALEV VE SİGARA YASAKTIR',
-            'aciklama' => 'Bu alanda sigara içmek ve açık alev kullanmak yasaktır.'],
         // Kimyasal / biyolojik kurallarından ÖNCE: "iyonize radyasyon", "MR" gibi metinler kimyasal sayılmasın.
         'radyasyon' => ['etiket' => 'Radyasyon', 'tip' => 'uyari', 'kelimeler' => ['radyasyon', 'iyonize', 'radyoaktif', 'rontgen', 'nukleer', 'x isini', 'tomografi'],
             'slots' => ['warn_radioactive', 'no_entry'], 'baslik' => 'RADYASYON TEHLİKESİ',
@@ -55,7 +55,7 @@ class TabelaOnerisi
         'soguk' => ['etiket' => 'Düşük sıcaklık', 'tip' => 'uyari', 'kelimeler' => ['soguk oda', 'soguk depo', 'dondurucu', 'soguk hava', 'dusuk sicaklik', 'kriyo'],
             'slots' => ['warn_low_temp', 'cmd_gloves'], 'baslik' => 'DÜŞÜK SICAKLIK',
             'aciklama' => 'Soğuk ortamda uygun iş kıyafeti ve eldiven kullanınız, çalışma süresini sınırlayınız.'],
-        'kimyasal' => ['etiket' => 'Kimyasal', 'tip' => 'uyari', 'kelimeler' => ['kimyasal', 'asit', 'toksik', 'zehir', 'solvent', 'cozucu', 'boya'],
+        'kimyasal' => ['etiket' => 'Kimyasal', 'tip' => 'uyari', 'kelimeler' => ['kimyasal', 'asit', 'toksik', 'zehir', 'solvent', 'cozucu', 'boya', 'sitotoksik'],
             'slots' => ['warn_toxic', 'cmd_gloves', 'cmd_glasses'], 'baslik' => 'KİMYASAL MADDE TEHLİKESİ',
             'aciklama' => 'Kimyasal ile çalışırken eldiven ve koruyucu gözlük kullanınız. Güvenlik Bilgi Formunu okuyunuz.'],
         'patlayici' => ['etiket' => 'Patlayıcı / basınçlı', 'tip' => 'uyari', 'kelimeler' => ['patlay', 'basincli', 'kompresor', 'lpg', 'tup '],
@@ -134,8 +134,11 @@ class TabelaOnerisi
 
         foreach (self::KURALLAR as $anahtar => $kural) {
             foreach ($kural['kelimeler'] as $k) {
-                // "tup " gibi sonu boşluklu kelimeler sözcük sınırını da ister; diğerleri alt dize eşleşmesidir
-                if (str_contains($m, $k)) {
+                // Eşleşme sözcük başında aranır ("stres" → "pres", "kapasite" → "asit", "iskelet" → "iskele" yanlış eşleşmesin);
+                // "tup " gibi sonu boşluklu kelimeler sözcük sonunu da ister.
+                $desen = '/(?<![a-z0-9])'.preg_quote(rtrim($k), '/').(str_ends_with($k, ' ') ? '(?![a-z0-9])' : '').'/';
+
+                if (preg_match($desen, $m)) {
                     return $anahtar;
                 }
             }

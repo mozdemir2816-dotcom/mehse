@@ -150,6 +150,18 @@ class TabelaMotoruTest extends TestCase
         $this->assertLessThan(array_search('lazer', $oneriler->keys()->all()), array_search('elektrik', $oneriler->keys()->all()));
     }
 
+    public function test_anahtar_sozcuk_sozcuk_ortasinda_eslesmez_sigara_yangina_gider(): void
+    {
+        $this->assertNull(TabelaOnerisi::kuralBul('Mobbing, stres ve depresyon'));          // "pres" ≠ pres makinesi
+        $this->assertNull(TabelaOnerisi::kuralBul('Otopark kapasitesinin yetersizliği'));   // "asit" ≠ asit
+        $this->assertNull(TabelaOnerisi::kuralBul('Kas-iskelet sistemi rahatsızlıkları'));  // "iskele" ≠ iskele
+        $this->assertNull(TabelaOnerisi::kuralBul('Etanol-izopropanol kullanımı'));         // "pano" ≠ pano
+        $this->assertSame('yangin', TabelaOnerisi::kuralBul('Kapalı alanlarda sigara içilmesi'));
+        $this->assertSame('kapali_alan', TabelaOnerisi::kuralBul('Su tankı içinde çalışma'));
+        $this->assertSame('yuksekte', TabelaOnerisi::kuralBul('İskele kurulumu'));
+        $this->assertSame('kimyasal', TabelaOnerisi::kuralBul('Sitotoksik ilaçların dökülmesi'));
+    }
+
     public function test_oneri_firmanin_tum_degerlendirmelerinden_gelir_yalniz_sonuncusundan_degil(): void
     {
         $eski = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => '2026-01-10', 'proje_adi' => 'Ameliyathane']);
