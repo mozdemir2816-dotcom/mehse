@@ -265,3 +265,163 @@
         padding: 1rem;
     }
 }
+
+/* -------------------------------------------------------------------------
+   Bölünmüş giriş ekranı — /isyeri ve /egitim (filament.components.portal-giris-tanitim).
+   Geniş ekranda solda tanıtım paneli, sağda giriş kartı; telefonda panel
+   kart üstünde kısa bir başlık bloğuna iner. Vurgu rengi panele göre (teal/blue).
+   ------------------------------------------------------------------------- */
+.portal-giris {
+    --pg-from: #1E3A5F;
+    --pg-to: #172f4e;
+    --pg-vurgu: #5EEAD4;
+    padding: 1.25rem 1.5rem;
+    color: #fff;
+    background: linear-gradient(160deg, var(--pg-from) 0%, var(--pg-to) 100%);
+}
+
+.portal-giris--teal {
+    --pg-from: #0F4C5C;
+    --pg-to: #0B3440;
+    --pg-vurgu: #5EEAD4;
+}
+
+.portal-giris--blue {
+    --pg-from: #1E3A5F;
+    --pg-to: #172f4e;
+    --pg-vurgu: #93C5FD;
+}
+
+.portal-giris-ust {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.portal-giris-logo {
+    display: block;
+    height: 2.4rem;
+    width: auto;
+}
+
+.portal-giris-etiket {
+    padding: .2rem .65rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / .12);
+    color: var(--pg-vurgu);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.portal-giris-baslik {
+    margin: 1rem 0 .35rem;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+}
+
+.portal-giris-metin {
+    margin: 0;
+    color: rgb(255 255 255 / .75);
+    font-size: .88rem;
+    line-height: 1.5;
+}
+
+.portal-giris-liste,
+.portal-giris-dip {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .fi-simple-layout:has(.portal-giris) {
+        display: grid !important;
+        grid-template-columns: minmax(420px, 46%) 1fr;
+        align-items: stretch;
+        padding: 0 !important;
+    }
+
+    .fi-simple-layout:has(.portal-giris) > :not(.portal-giris) {
+        grid-column: 2;
+    }
+
+    .fi-simple-layout:has(.portal-giris) .fi-simple-main-ctn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0 !important;
+        padding: 2.5rem;
+    }
+
+    .portal-giris {
+        position: sticky;
+        top: 0;
+        grid-column: 1;
+        grid-row: 1 / span 20;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        padding: 2.75rem 3.25rem;
+    }
+
+    .portal-giris-logo {
+        height: 3rem;
+    }
+
+    .portal-giris-baslik {
+        font-size: 2rem;
+        line-height: 1.15;
+    }
+
+    .portal-giris-metin {
+        font-size: .98rem;
+    }
+
+    .portal-giris-orta {
+        max-width: 29rem;
+    }
+
+    .portal-giris-liste {
+        display: grid;
+        gap: .75rem;
+        margin: 1.75rem 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .portal-giris-liste li {
+        position: relative;
+        padding-inline-start: 1.9rem;
+        color: rgb(255 255 255 / .9);
+        font-size: .92rem;
+        line-height: 1.45;
+    }
+
+    .portal-giris-liste li::before {
+        content: "✓";
+        position: absolute;
+        inset-inline-start: 0;
+        top: .05rem;
+        display: grid;
+        place-items: center;
+        width: 1.3rem;
+        height: 1.3rem;
+        border-radius: 999px;
+        background: rgb(255 255 255 / .12);
+        color: var(--pg-vurgu);
+        font-size: .75rem;
+        font-weight: 800;
+    }
+
+    .portal-giris-dip {
+        display: block;
+        color: rgb(255 255 255 / .55);
+        font-size: .78rem;
+    }
+}

@@ -50,12 +50,18 @@ class IsyeriPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_LAYOUT_START,
-                fn (): HtmlString => new HtmlString(<<<'HTML'
-                    <div class="portal-auth-brand">
-                        <strong>mehse</strong>
-                        <span>İşyeri Evrak Görüntüleme</span>
-                    </div>
-                    HTML),
+                fn () => view('filament.components.portal-giris-tanitim', [
+                    'vurgu' => 'teal',
+                    'etiket' => 'İşyeri Girişi',
+                    'baslik' => 'Çalışanlarınızın eğitim, muayene ve belge durumunu tek ekrandan izleyin.',
+                    'metin' => 'İş güvenliği uzmanınızın hazırladığı evrakları istediğiniz an görüntüleyin ve indirin.',
+                    'maddeler' => [
+                        'Risk değerlendirmesi, acil durum planı ve kurul belgeleri bir arada',
+                        'Çalışan eğitimleri ve sağlık muayenesi geçerlilik durumu',
+                        'Yaklaşan ve süresi dolan belgeleri kaçırmayın',
+                        'Her evrak tek tıkla PDF olarak indirilir',
+                    ],
+                ]),
             )
             ->discoverPages(in: app_path('Filament/Isyeri/Pages'), for: 'App\Filament\Isyeri\Pages')
             ->pages([])

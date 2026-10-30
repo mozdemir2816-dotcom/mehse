@@ -48,12 +48,18 @@ class PortalPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_LAYOUT_START,
-                fn (): HtmlString => new HtmlString(<<<'HTML'
-                    <div class="portal-auth-brand">
-                        <strong>mehse</strong>
-                        <span>Uzaktan Eğitim Portalı</span>
-                    </div>
-                    HTML),
+                fn () => view('filament.components.portal-giris-tanitim', [
+                    'vurgu' => 'blue',
+                    'etiket' => 'Uzaktan Eğitim',
+                    'baslik' => 'Eğitiminize katılın, testi çözün, sertifikanızı indirin.',
+                    'metin' => 'Size atanan iş sağlığı ve güvenliği eğitimlerini telefonunuzdan ya da bilgisayarınızdan izleyin.',
+                    'maddeler' => [
+                        'Atanan eğitimleriniz tek listede',
+                        'Videoyu izleyin, ön ve son testi çözün',
+                        'Başarılı olunca sertifikanız hazır',
+                        'Eğitim geçerlilik süreniz takip edilir',
+                    ],
+                ]),
             )
             ->discoverPages(in: app_path('Filament/Portal/Pages'), for: 'App\Filament\Portal\Pages')
             ->pages([])
