@@ -108,7 +108,79 @@ class YillikPlanMerkeziTest extends TestCase
         $this->assertSame(range(0, 11), $planli($sablon($this->firma(['tehlike_sinifi' => 'cok_tehlikeli']))));
         $this->assertSame([0, 2, 4, 6, 8, 10], $planli($sablon($this->firma(['tehlike_sinifi' => 'tehlikeli']))));
         $this->assertSame([0, 3, 6, 9], $planli($sablon($this->firma(['tehlike_sinifi' => 'az_tehlikeli']))));
-        $this->assertSame([8], $planli($sablon($this->firma(['calisan_sayisi' => 30]))));   // şablon varsayılanı
+        // 50 çalışan altında İSG Kurulu zorunlu değil: plan satırı boş kalır.
+        $this->assertSame([], $planli($sablon($this->firma(['calisan_sayisi' => 30]))));
+        $this->assertSame([], $planli($sablon($this->firma(['calisan_sayisi' => 49, 'tehlike_sinifi' => 'cok_tehlikeli']))));
+        $this->assertSame(range(0, 11), $planli($sablon($this->firma(['calisan_sayisi' => 50, 'tehlike_sinifi' => 'cok_tehlikeli']))));
+    }
+
+    public function test_mevcut_planda_zorunlu_olmayan_firmanin_planli_kurul_aylari_temizlenir(): void
+    {
+        $firma = $this->firma(['calisan_sayisi' => 80, 'tehlike_sinifi' => 'cok_tehlikeli']);
+        $plan = YillikPlan::firmaYilIcin($firma, 2026);
+        $faaliyetler = $plan->faaliyetler;
+        $i = collect($faaliyetler)->search(fn ($f) => $f['ana_konu'] === 'İSG KURULU');
+        $faaliyetler[$i]['aylar'][2] = 'tamamlandi';
+        $plan->update(['faaliyetler' => $faaliyetler]);
+
+        // Çalışan sayısı sonradan 50 altına inince plan açılırken planlı aylar boşalır, tamamlandı kalır.
+        $firma->update(['calisan_sayisi' => 30]);
+        $satir = collect(YillikPlan::firmaYilIcin($firma->fresh(), 2026)->faaliyetler)->first(fn ($f) => $f['ana_konu'] === 'İSG KURULU');
+
+        $this->assertSame('tamamlandi', $satir['aylar'][2]);
+        $this->assertSame([], array_keys(array_filter($satir['aylar'], fn ($d) => $d === 'planlandi')));
+    }
+
+    public function test_egitim_katilim_formundaki_ise_ozgu_konular_plan_4_bolumune_yazilir(): void
+    {
+        $firma = $this->firma(['nace_kodu' => '86.10.05']);
+        $plan = YillikPlan::firmaYilIcin($firma, 2026);
+        $once = collect($plan->egitimler)->where('kategori', 'ise_ozgu')->pluck('konu')->all();
+
+        $kayit = \App\Models\EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'egitim_turu' => 'ilk', 'egitim_sekli' => 'yuz_yuze',
+            'belge_tarihi' => '2026-03-10', 'sure_gun' => 1, 'katilimcilar' => [],
+            'konu_secimleri' => ['tip' => 'genel', 'isyerine_ozgu' => ['maddeler' => [
+                ['madde' => 'Ameliyathane radyasyon güvenliği', 'dakika' => 10, 'dahil' => true],
+                ['madde' => 'Kesici delici alet yaralanmaları', 'dakika' => 10, 'dahil' => true],
+                ['madde' => 'Çıkarılan konu', 'dakika' => 10, 'dahil' => false],
+            ]]],
+        ]);
+
+        $this->assertTrue(\App\Support\IseOzguSenkron::formdanPlana($kayit->fresh()));
+
+        $satirlar = collect(YillikPlan::firmaYilIcin($firma, 2026)->egitimler)->where('kategori', 'ise_ozgu')->values();
+        $this->assertSame(['Ameliyathane radyasyon güvenliği', 'Kesici delici alet yaralanmaları'], $satirlar->pluck('konu')->all());
+        $this->assertNotSame($once, $satirlar->pluck('konu')->all());
+        $this->assertCount(12, $satirlar[0]['aylar']);
+
+        // Aynı kayıt tekrar işlenince değişiklik yok; formda hiç işe özgü konu yoksa plan boşaltılmaz.
+        $this->assertFalse(\App\Support\IseOzguSenkron::formdanPlana($kayit->fresh()));
+        $bos = \App\Models\EgitimKatilim::create([
+            'firma_id' => $firma->id, 'baslik_anahtari' => 'genel', 'egitim_turu' => 'ilk', 'egitim_sekli' => 'yuz_yuze',
+            'belge_tarihi' => '2026-04-10', 'sure_gun' => 1, 'katilimcilar' => [],
+            'konu_secimleri' => ['tip' => 'genel', 'isyerine_ozgu' => ['maddeler' => []]],
+        ]);
+        $this->assertFalse(\App\Support\IseOzguSenkron::formdanPlana($bos));
+        $this->assertCount(2, collect(YillikPlan::firmaYilIcin($firma, 2026)->egitimler)->where('kategori', 'ise_ozgu'));
+    }
+
+    public function test_yeni_plan_4_bolumu_ayni_nace_kodlu_firmanin_planindan_gelir(): void
+    {
+        // Kütüphanede eşleşmeyen NACE (örnek kod) — kaynak firmanın planına elle konu eklenir.
+        $kaynak = $this->firma(['nace_kodu' => '99.99.01']);
+        $plan = YillikPlan::firmaYilIcin($kaynak, 2026);
+        $plan->update(['egitimler' => \App\Support\YillikPlanSablonu::iseOzguYerlestir($plan->egitimler, YillikPlan::maddeAylarIle([[
+            'konu' => 'Özel proses riskleri', 'kategori' => 'ise_ozgu', 'hedef' => 'x', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI', 'hafta' => 2, 'varsayilan_aylar' => [3],
+        ]], 0))]);
+
+        $hedef = $this->firma(['nace_kodu' => '99.99.07']);   // aynı sınıf (99.99), farklı tam kod
+        $satirlar = collect(YillikPlan::firmaYilIcin($hedef, 2026)->egitimler)->where('kategori', 'ise_ozgu')->values();
+
+        $this->assertSame(['Özel proses riskleri'], $satirlar->pluck('konu')->all());
+
+        $baska = $this->firma(['nace_kodu' => '94.99.01']);   // ne kütüphanede ne başka firmada eşleşme yok
+        $this->assertSame([], collect(YillikPlan::firmaYilIcin($baska, 2026)->egitimler)->where('kategori', 'ise_ozgu')->values()->all());
     }
 
     public function test_sayfa_acilinca_g_islenir_ve_oran_gorunur(): void

@@ -63,6 +63,26 @@ class YillikPlan extends Model
             EgitimKonulari::kayitlariPlanaIsle($plan);
         }
 
+        // 50 çalışan altı işyerinde İSG Kurulu zorunlu değil (30.10.2026): planlı ama gerçekleşmemiş kurul ayları boşaltılır,
+        // gerçekleşmiş (tamamlandı) aylara dokunulmaz.
+        if ($plan->exists && ($firma->calisan_sayisi ?? 0) < 50) {
+            $faaliyetler = $plan->faaliyetler ?? [];
+            $degisti = false;
+
+            foreach ($faaliyetler as $i => $f) {
+                if (($f['ana_konu'] ?? null) !== 'İSG KURULU' || ! in_array('planlandi', $f['aylar'] ?? [], true)) {
+                    continue;
+                }
+
+                $faaliyetler[$i]['aylar'] = array_map(fn ($d) => $d === 'planlandi' ? 'bos' : $d, $f['aylar']);
+                $degisti = true;
+            }
+
+            if ($degisti) {
+                $plan->update(['faaliyetler' => $faaliyetler]);
+            }
+        }
+
         return $plan;
     }
 

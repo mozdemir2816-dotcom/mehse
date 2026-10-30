@@ -38,6 +38,12 @@ class YillikPlanSablonu
         $iseOzgu = IseOzguEgitimKutuphanesi::firmaIcin($firma)
             ->map(fn (array $k) => IseOzguEgitimKutuphanesi::planSatiri($k, $kilitAy))->values()->all();
 
+        // Kütüphaneden eşleşme çıkmadıysa NACE'si aynı diğer firmaların son planındaki 4. bölüm başlangıç olur
+        // (önce tam kod, sonra sınıf, sonra bölüm); kullanıcı sonra düzenler.
+        if ($iseOzgu === []) {
+            $iseOzgu = IseOzguSenkron::naceOrtakSatirlar($firma, $yil, $kilitAy);
+        }
+
         $icerik['egitimler'] = self::iseOzguYerlestir($icerik['egitimler'], $iseOzgu);
         $icerik['faaliyetler'] = self::kurulPeriyodunuYerlestir($icerik['faaliyetler'], $firma, $kilitAy);
 
@@ -46,7 +52,8 @@ class YillikPlanSablonu
 
     /**
      * İSG Kurulu satırının ayları tehlike sınıfı periyoduna göre (çok tehlikeli: ayda 1, tehlikeli: 2 ayda 1,
-     * az tehlikeli: 3 ayda 1) ve yalnız 50+ çalışanlı işyerinde yerleşir; altında şablondaki varsayılan kalır.
+     * az tehlikeli: 3 ayda 1) ve yalnız 50+ çalışanlı işyerinde yerleşir. 50 çalışan altında İSG Kurulu zorunlu olmadığından
+     * satır planlanmaz: tüm aylar boş kalır (30.10.2026).
      *
      * @param  array<int, array<string, mixed>>  $faaliyetler
      * @return array<int, array<string, mixed>>
@@ -54,6 +61,13 @@ class YillikPlanSablonu
     public static function kurulPeriyodunuYerlestir(array $faaliyetler, Firma $firma, int $kilitAy): array
     {
         if (($firma->calisan_sayisi ?? 0) < 50) {
+            foreach ($faaliyetler as $i => $f) {
+                if (($f['ana_konu'] ?? null) === 'İSG KURULU') {
+                    $faaliyetler[$i]['aylar'] = array_fill(0, 12, 'bos');
+                    $faaliyetler[$i]['frekans'] = '—';
+                }
+            }
+
             return $faaliyetler;
         }
 
