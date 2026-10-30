@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Firma;
+use App\Models\OrtamOlcumu;
 use App\Models\RiskMaddesi;
 use App\Models\SahaBulgusu;
 use App\Models\TabelaTasarimi;
@@ -41,6 +42,19 @@ class TabelaOnerisi
         'yangin' => ['etiket' => 'Yangın / yanıcı madde', 'tip' => 'yasak', 'kelimeler' => ['yangin', 'yanici', 'parlayici', 'alev', 'sicak is', 'kivilcim'],
             'slots' => ['warn_flammable', 'no_flame', 'no_smoking'], 'baslik' => 'YANICI MADDE — AÇIK ALEV VE SİGARA YASAKTIR',
             'aciklama' => 'Bu alanda sigara içmek ve açık alev kullanmak yasaktır.'],
+        // Kimyasal / biyolojik kurallarından ÖNCE: "iyonize radyasyon", "MR" gibi metinler kimyasal sayılmasın.
+        'radyasyon' => ['etiket' => 'Radyasyon', 'tip' => 'uyari', 'kelimeler' => ['radyasyon', 'iyonize', 'radyoaktif', 'rontgen', 'nukleer', 'x isini', 'tomografi'],
+            'slots' => ['warn_radioactive', 'no_entry'], 'baslik' => 'RADYASYON TEHLİKESİ',
+            'aciklama' => 'Yetkisiz girişler yasaktır. Dozimetre kullanınız, koruyucu önlükle çalışınız ve maruziyet süresini sınırlayınız.'],
+        'manyetik' => ['etiket' => 'Manyetik alan', 'tip' => 'uyari', 'kelimeler' => ['manyetik', 'mrg', 'mr cihazi', 'manyetik rezonans'],
+            'slots' => ['warn_magnetic', 'no_entry'], 'baslik' => 'GÜÇLÜ MANYETİK ALAN',
+            'aciklama' => 'Kalp pili ve metal implantı olanlar ile metal eşya taşıyanlar giremez.'],
+        'lazer' => ['etiket' => 'Lazer', 'tip' => 'uyari', 'kelimeler' => ['lazer'],
+            'slots' => ['warn_laser', 'cmd_glasses'], 'baslik' => 'LAZER IŞINI',
+            'aciklama' => 'Işına doğrudan bakmayınız. Koruyucu gözlük kullanınız.'],
+        'soguk' => ['etiket' => 'Düşük sıcaklık', 'tip' => 'uyari', 'kelimeler' => ['soguk oda', 'soguk depo', 'dondurucu', 'soguk hava', 'dusuk sicaklik', 'kriyo'],
+            'slots' => ['warn_low_temp', 'cmd_gloves'], 'baslik' => 'DÜŞÜK SICAKLIK',
+            'aciklama' => 'Soğuk ortamda uygun iş kıyafeti ve eldiven kullanınız, çalışma süresini sınırlayınız.'],
         'kimyasal' => ['etiket' => 'Kimyasal', 'tip' => 'uyari', 'kelimeler' => ['kimyasal', 'asit', 'toksik', 'zehir', 'solvent', 'cozucu', 'boya'],
             'slots' => ['warn_toxic', 'cmd_gloves', 'cmd_glasses'], 'baslik' => 'KİMYASAL MADDE TEHLİKESİ',
             'aciklama' => 'Kimyasal ile çalışırken eldiven ve koruyucu gözlük kullanınız. Güvenlik Bilgi Formunu okuyunuz.'],
@@ -72,7 +86,7 @@ class TabelaOnerisi
     /**
      * @return array<int, array{anahtar: string, etiket: string, tip: string, seviye: string, sayi: int, kaynaklar: array<int, string>, tasarim: array<string, mixed>}>
      */
-    public static function firmaIcin(Firma $firma, int $limit = 8): array
+    public static function firmaIcin(Firma $firma, int $limit = 20): array
     {
         $oneriler = [];
 
@@ -173,9 +187,14 @@ class TabelaOnerisi
         $kayitlar = [];
         $yuksekDuzeyler = config('isg.acik_risk_duzeyleri', ['Yüksek Risk', 'Çok Yüksek Risk', 'Önemli Risk', 'Esaslı Risk', 'Tolerans Gösterilemez Risk']);
 
-        $rd = $firma->riskDegerlendirmeleri()->orderByDesc('rapor_tarihi')->orderByDesc('id')->first();
+        // Firmanın TÜM değerlendirmelerindeki açık maddeler (hastane gibi birim başına ayrı değerlendirmesi olan
+        // firmalarda yalnız sonuncusuna bakmak çoğu tehlikeyi kaçırıyordu).
+        $maddeler = RiskMaddesi::query()
+            ->whereIn('risk_degerlendirmesi_id', $firma->riskDegerlendirmeleri()->select('id'))
+            ->where('durum', '!=', 'kapali')
+            ->get();
 
-        foreach ($rd ? $rd->maddeler()->where('durum', '!=', 'kapali')->get() : [] as $m) {
+        foreach ($maddeler as $m) {
             /** @var RiskMaddesi $m */
             $duzey = (string) $m->duzey;
 
@@ -197,6 +216,23 @@ class TabelaOnerisi
                 },
                 'kaynak' => 'Saha bulgusu '.($b->bulgu_no ?: '#'.$b->id).': '.Str::limit((string) $b->uygunsuzluk, 50),
             ];
+        }
+
+        // Ortam ölçümlerinde sınır değere yakın / aşım çıkan parametreler (gürültü → kulaklık, toz → maske ...).
+        foreach (OrtamOlcumu::query()->where('firma_id', $firma->id)->get() as $o) {
+            foreach ($o->olcumler ?? [] as $m) {
+                $sonuc = (string) ($m['sonuc'] ?? '');
+
+                if (! in_array($sonuc, ['asim', 'sinir'], true)) {
+                    continue;
+                }
+
+                $kayitlar[] = [
+                    'metin' => (string) ($m['parametre'] ?? ''),
+                    'seviye' => $sonuc === 'asim' ? 'yuksek' : 'orta',
+                    'kaynak' => 'Ölçüm: '.Str::limit((string) ($m['parametre'] ?? ''), 50).' ('.config('isg.ortam_olcum.sonuclar.'.$sonuc).')',
+                ];
+            }
         }
 
         return $kayitlar;

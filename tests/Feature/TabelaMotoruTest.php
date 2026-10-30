@@ -132,6 +132,46 @@ class TabelaMotoruTest extends TestCase
         $this->assertStringContainsString('TEHLİKESİ', TabelaSvgUretici::svg($oneriler['yuksekte']['tasarim']));
     }
 
+    public function test_oneri_firmanin_tum_degerlendirmelerinden_gelir_yalniz_sonuncusundan_degil(): void
+    {
+        $eski = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => '2026-01-10', 'proje_adi' => 'Ameliyathane']);
+        $eski->maddeler()->create(['tehlike' => 'İyonize radyasyona maruziyet', 'olasilik' => 1, 'frekans' => 1, 'siddet' => 1]);
+        $yeni = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => '2026-06-10', 'proje_adi' => 'Asansör']);
+        $yeni->maddeler()->create(['tehlike' => 'Asansör kabininde sıkışma — makine bakımı', 'olasilik' => 1, 'frekans' => 1, 'siddet' => 1]);
+        $yeni->maddeler()->create(['tehlike' => 'Kapatılmış elektrik maddesi', 'durum' => 'kapali', 'olasilik' => 1, 'frekans' => 1, 'siddet' => 1]);
+
+        $anahtarlar = collect(TabelaOnerisi::firmaIcin($this->firma))->pluck('anahtar')->all();
+
+        $this->assertContains('radyasyon', $anahtarlar);   // eski değerlendirmeden
+        $this->assertContains('makine', $anahtarlar);      // yeni değerlendirmeden
+        $this->assertNotContains('elektrik', $anahtarlar); // kapalı madde sayılmaz
+    }
+
+    public function test_yeni_kurallar_radyasyon_manyetik_lazer_ve_soguk_ortami_taniir(): void
+    {
+        $this->assertSame('radyasyon', TabelaOnerisi::kuralBul('İyonize radyasyon kaynağı ve kimyasal kontrast madde'));
+        $this->assertSame('radyasyon', TabelaOnerisi::kuralBul('Röntgen ve bilgisayarlı tomografi odası'));
+        $this->assertSame('manyetik', TabelaOnerisi::kuralBul('MR cihazı güçlü manyetik alan'));
+        $this->assertSame('lazer', TabelaOnerisi::kuralBul('Lazer cihazı ile tedavi'));
+        $this->assertSame('soguk', TabelaOnerisi::kuralBul('Soğuk oda ve dondurucu depoda çalışma'));
+        $this->assertContains('radyoaktif', TabelaOnerisi::KURALLAR['radyasyon']['kelimeler']);
+        $this->assertSame('warn_radioactive', TabelaOnerisi::tasarim('radyasyon', 'dusuk')['slots'][0]);
+    }
+
+    public function test_olcum_siniri_asan_parametre_levha_onerir_uygun_olan_onermez(): void
+    {
+        \App\Models\OrtamOlcumu::create(['firma_id' => $this->firma->id, 'olcumler' => [
+            ['parametre' => 'Gürültü Maruziyeti (LEX,8h)', 'birim' => 'dB(A)', 'sonuc' => 'asim', 'olculen_deger' => '91', 'sinir_deger' => '85'],
+            ['parametre' => 'Solunabilir Toz', 'birim' => 'mg/m³', 'sonuc' => 'uygun'],
+        ]]);
+
+        $oneriler = collect(TabelaOnerisi::firmaIcin($this->firma))->keyBy('anahtar');
+
+        $this->assertSame(['gurultu'], $oneriler->keys()->all());
+        $this->assertSame('yuksek', $oneriler['gurultu']['seviye']);
+        $this->assertStringContainsString('Ölçüm:', $oneriler['gurultu']['kaynaklar'][0]);
+    }
+
     public function test_sayfa_onerileri_gosterir_oneriyi_editore_tasir_ve_indirir(): void
     {
         $rd = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(), 'proje_adi' => 'Şantiye']);
