@@ -301,7 +301,7 @@
                 </ul>
                 <p class="giris" style="margin-top:28px;font-size:.92rem">
                     Doğrudan ulaşın:
-                    <a href="tel:{{ $telUri }}" style="font-weight:600;color:var(--lacivert-900)">{{ $telefon }}</a> ·
+                    <a href="tel:+905064754855" style="font-weight:600;color:var(--lacivert-900)">{{ $telefon }}</a> ·
                     <a href="mailto:{{ $eposta }}" style="font-weight:600;color:var(--lacivert-900)">{{ $eposta }}</a>
                 </p>
             </div>
@@ -371,7 +371,7 @@
             </div>
             <p class="sss-alt">Başka bir sorunuz mu var?
                 <a href="{{ $waLink }}" target="_blank" rel="noopener">WhatsApp'tan sorun</a> veya
-                <a href="tel:{{ $telUri }}">{{ $telefon }}</a> numarasından arayın.</p>
+                <a href="tel:+905064754855">{{ $telefon }}</a> numarasından arayın.</p>
         </div>
     </section>
 </main>
@@ -405,7 +405,7 @@
             <h3>İletişim</h3>
             <ul>
                 <li>E-posta: <a href="mailto:{{ $eposta }}">{{ $eposta }}</a></li>
-                <li>Telefon: <a href="tel:{{ $telUri }}">{{ $telefon }}</a></li>
+                <li>Telefon: <a href="tel:+905064754855">{{ $telefon }}</a></li>
             </ul>
             <a href="{{ $waLink }}" target="_blank" rel="noopener" class="dugme dugme-yesil dugme-kucuk">{!! $wa !!} WhatsApp Destek</a>
         </div>
