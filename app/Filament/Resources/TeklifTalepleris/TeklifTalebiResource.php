@@ -15,6 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -59,7 +60,7 @@ class TeklifTalebiResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $yeni = TeklifTalebi::where('durum', 'yeni')->count();
+        $yeni = TeklifTalebi::yeniSayisi();
 
         return $yeni ? (string) $yeni : null;
     }
@@ -73,6 +74,8 @@ class TeklifTalebiResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
+            ->paginated([15, 30, 50])
+            ->defaultPaginationPageOption(15)
             ->emptyStateIcon('heroicon-o-inbox-arrow-down')
             ->emptyStateHeading('Bekleyen Teklif Talebi Bulunmuyor')
             ->emptyStateDescription('Web siteniz üzerinden (mehse.com) gelen teklif formları otomatik olarak buraya düşer.')
@@ -89,20 +92,26 @@ class TeklifTalebiResource extends Resource
                 TextColumn::make('telefon')->label('Telefon')->url(fn (TeklifTalebi $r) => 'tel:'.preg_replace('/[^0-9+]/', '', $r->telefon))->searchable(),
                 TextColumn::make('calisan_sayisi')->label('Çalışan')->numeric()->sortable(),
                 TextColumn::make('tehlike_sinifi')->label('Tehlike sınıfı')->badge(),
-                TextColumn::make('durum')->label('Durum')->badge()
-                    ->formatStateUsing(fn ($state) => TeklifTalebi::DURUMLAR[$state] ?? $state)
-                    ->color(fn ($state) => match ($state) {
-                        'yeni' => 'danger',
-                        'arandi' => 'warning',
-                        'teklif_verildi' => 'info',
-                        default => 'gray',
-                    }),
+                // Durum tablodan doğrudan değişir; seçim anında kaydedilir.
+                SelectColumn::make('durum')->label('Durum')
+                    ->options(TeklifTalebi::DURUMLAR)
+                    ->selectablePlaceholder(false)
+                    ->rules(['required', 'in:'.implode(',', array_keys(TeklifTalebi::DURUMLAR))]),
                 TextColumn::make('not')->label('Not')->limit(40)->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('durum')->label('Durum')->options(TeklifTalebi::DURUMLAR),
             ])
             ->recordActions([
+                Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->tooltip('Müşteriye hazır şablonla WhatsApp mesajı aç')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    ->button()
+                    ->size('sm')
+                    ->url(fn (TeklifTalebi $r) => $r->whatsappUrl(), shouldOpenInNewTab: true)
+                    ->visible(fn (TeklifTalebi $r) => $r->whatsappUrl() !== null),
                 ActionGroup::make([
                     EditAction::make()->label('Durum / not')->modalHeading('Talebi güncelle')
                         ->schema([

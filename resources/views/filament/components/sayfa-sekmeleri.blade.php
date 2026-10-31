@@ -28,7 +28,7 @@
 @elseif (count($sekmeler) > 1)
     <x-filament::tabs class="mehse-sayfa-sekmeleri" style="margin-bottom:.25rem">
         @foreach ($sekmeler as $s)
-            <x-filament::tabs.item tag="a" :href="$s['url']" :active="$s['aktif']">
+            <x-filament::tabs.item tag="a" :href="$s['url']" :active="$s['aktif']" :badge="$s['rozet'] ?? null" badge-color="danger">
                 {{ $s['etiket'] }}
             </x-filament::tabs.item>
         @endforeach

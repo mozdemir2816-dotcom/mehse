@@ -348,6 +348,9 @@ class SayfaAileleri
                     'etiket' => $u[1],
                     'url' => static::url($u[0], $firma),
                     'aktif' => $u[0] === $aktifSinif,
+                    // Menüde gizli üyelerin rozeti (ör. yeni teklif talebi) sekmede görünsün;
+                    // ailenin ana sayfası rozetini zaten sol menüde gösterir.
+                    'rozet' => $u[0] !== $uyeler[0][0] && method_exists($u[0], 'getNavigationBadge') ? $u[0]::getNavigationBadge() : null,
                 ])
                 ->values()
                 ->all();

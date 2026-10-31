@@ -46,6 +46,31 @@ class Pazarlama extends Page
 
     public string $pazarlamaAsamaFiltre = '';
 
+    /**
+     * Teklif Talepleri menüde gizli (sekme şeridinden açılır); yeni talep rozeti bu
+     * yüzden ailenin menüdeki tek girişinde görünür. Talepleri yalnız sahip görür.
+     */
+    public static function getNavigationBadge(): ?string
+    {
+        if (! auth()->user()?->sahipMi()) {
+            return null;
+        }
+
+        $yeni = \App\Models\TeklifTalebi::yeniSayisi();
+
+        return $yeni ? (string) $yeni : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Yeni teklif talebi';
+    }
+
     protected function getHeaderActions(): array
     {
         return [];
