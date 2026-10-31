@@ -165,6 +165,16 @@ class TabelaMotoruTest extends TestCase
         $this->assertSame('kimyasal', TabelaOnerisi::kuralBul('Sitotoksik ilaçların dökülmesi'));
     }
 
+    public function test_kesici_delici_ve_elle_kaldirma_kendi_piktogramlarini_kullanir(): void
+    {
+        $this->assertSame('warn_sharp', TabelaOnerisi::KURALLAR['kesici_delici']['slots'][0]);
+        $this->assertSame('warn_manual_lifting', TabelaOnerisi::KURALLAR['elle_tasima']['slots'][0]);
+
+        foreach (['warn_sharp', 'warn_manual_lifting'] as $p) {
+            $this->assertNotNull(\App\Support\TabelaPiktogramlari::ic($p), $p);
+        }
+    }
+
     public function test_oneri_firmanin_tum_degerlendirmelerinden_gelir_yalniz_sonuncusundan_degil(): void
     {
         $eski = RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => '2026-01-10', 'proje_adi' => 'Ameliyathane']);

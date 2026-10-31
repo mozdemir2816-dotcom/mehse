@@ -143,6 +143,18 @@
   "cat": "uyari",
   "svg": "<svg viewBox=\"0 0 100 100\" class=\"w-full h-full\"><polygon points=\"50,6 96,90 4,90\" fill=\"#FFC82E\" stroke=\"#000\" stroke-width=\"6\" stroke-linejoin=\"round\"/><line x1=\"50\" y1=\"32\" x2=\"50\" y2=\"78\" stroke=\"#000\" stroke-width=\"4\"/><line x1=\"28\" y1=\"55\" x2=\"72\" y2=\"55\" stroke=\"#000\" stroke-width=\"4\"/><line x1=\"34\" y1=\"39\" x2=\"66\" y2=\"71\" stroke=\"#000\" stroke-width=\"4\"/><line x1=\"66\" y1=\"39\" x2=\"34\" y2=\"71\" stroke=\"#000\" stroke-width=\"4\"/><circle cx=\"50\" cy=\"55\" r=\"4\" fill=\"#000\"/></svg>"
  },
+ "warn_sharp": {
+  "name": "Kesici-Delici Alet / İğne Batması",
+  "section": "3.2 Uyarı",
+  "cat": "uyari",
+  "svg": "<svg viewBox=\"0 0 100 100\" class=\"w-full h-full\"><polygon points=\"50,6 96,90 4,90\" fill=\"#FFC82E\" stroke=\"#000\" stroke-width=\"6\" stroke-linejoin=\"round\"/><g transform=\"rotate(-25 50 62)\"><rect x=\"25\" y=\"55\" width=\"4\" height=\"14\" fill=\"#000\"/><rect x=\"29\" y=\"60.5\" width=\"7\" height=\"3\" fill=\"#000\"/><rect x=\"36\" y=\"56\" width=\"24\" height=\"12\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\"/><rect x=\"38\" y=\"58\" width=\"11\" height=\"8\" fill=\"#000\"/><line x1=\"52\" y1=\"56\" x2=\"52\" y2=\"60\" stroke=\"#000\" stroke-width=\"1.5\"/><line x1=\"56\" y1=\"56\" x2=\"56\" y2=\"60\" stroke=\"#000\" stroke-width=\"1.5\"/><polygon points=\"60,58.5 66,60.5 66,63.5 60,65.5\" fill=\"#000\"/><line x1=\"66\" y1=\"62\" x2=\"77\" y2=\"62\" stroke=\"#000\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></g><path d=\"M74,69 C72,73 72,75 74,76 C76,75 76,73 74,69 Z\" fill=\"#000\"/></svg>"
+ },
+ "warn_manual_lifting": {
+  "name": "Elle Kaldırma / Kas-İskelet Riski",
+  "section": "3.2 Uyarı",
+  "cat": "uyari",
+  "svg": "<svg viewBox=\"0 0 100 100\" class=\"w-full h-full\"><polygon points=\"50,6 96,90 4,90\" fill=\"#FFC82E\" stroke=\"#000\" stroke-width=\"6\" stroke-linejoin=\"round\"/><circle cx=\"44\" cy=\"40\" r=\"5\" fill=\"#000\"/><path d=\"M44,48 L40,64\" stroke=\"#000\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M40,64 L50,68 L46,82\" stroke=\"#000\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M43,52 L50,62 L56,63\" stroke=\"#000\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"54\" y=\"60\" width=\"18\" height=\"16\" fill=\"#000\"/><path d=\"M63,54 L63,44 M59,48 L63,44 L67,48\" stroke=\"#000\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
+ },
  "cmd_glasses": {
   "name": "Gözlük Tak",
   "section": "3.3 Emredici",
