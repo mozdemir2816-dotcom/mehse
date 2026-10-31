@@ -3,6 +3,13 @@
     $telefon = '0506 475 48 55';
     $telUri = '+905064754855';
     $waNo = '905064754855';
+    $waLink = 'https://wa.me/905064754855?text=Merhaba,%20saha%20ke%C5%9Ffi%20ve%20%C4%B0SG%20hizmetleri%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.';
+    $sss = [
+        ['İşyerimizin İSG hizmeti alma yasal zorunluluğu var mı?', '6331 sayılı Kanun kapsamında çalışan sayısı ve tehlike sınıfına göre her işletmenin İSG yükümlülükleri ve uzman bulundurma periyotları mevcuttur.'],
+        ['Ücretsiz ön keşif süreci nasıl işler?', 'İşyerinizi sahada ziyaret ederek mevcut riskleri ve evrak durumunu inceler, herhangi bir taahhüt gerektirmeden size durum raporu sunarız.'],
+        ['Dijital DÖF takibi işletmemize ne kazandırır?', 'Tespit edilen eksikler kağıt üzerinde unutulmaz; sorumlu personeller ve termin tarihleri üzerinden dijital olarak kapanana kadar izlenir.'],
+        ['İSG-KATİP sözleşmesi ne kadar sürede aktif olur?', 'Karşılıklı mutabakat ve e-Devlet/İSG-KATİP onaylarının ardından aynı gün içinde resmi atama ve sözleşme süreci tamamlanır.'],
+    ];
     $matris = [
         ['m1', 'm1', 'm2', 'm3', 'm3'],
         ['m1', 'm1', 'm2', 'm3', 'm4'],
@@ -14,6 +21,23 @@
     $ok = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     $wa = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.8-.1 1.3z"/></svg>';
     $logoIkon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8.2-8 9-4.8-.8-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>';
+    $jsonBayrak = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG;
+    $jsonLdHizmet = json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'ProfessionalService',
+        'name' => 'Mehse İSG',
+        'description' => 'Mühendislik temelli iş sağlığı ve güvenliği danışmanlığı, saha denetimi ve eğitim hizmetleri.',
+        'url' => 'https://mehse.com/',
+        'email' => $eposta,
+        'telephone' => $telUri,
+        'areaServed' => ['Bursa', 'Türkiye'],
+        'serviceType' => ['Risk Değerlendirmesi', 'Saha Denetimi', 'Acil Durum Eylem Planı', 'İSG Eğitimi', 'Periyodik Kontrol Koordinasyonu'],
+    ], $jsonBayrak);
+    $jsonLdSss = json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'FAQPage',
+        'mainEntity' => array_map(fn ($m) => ['@type' => 'Question', 'name' => $m[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $m[1]]], $sss),
+    ], $jsonBayrak);
 @endphp
 <!DOCTYPE html>
 <html lang="tr">
@@ -21,28 +45,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mehse İSG | Mühendislik Temelli İş Sağlığı ve Güvenliği Danışmanlığı</title>
-    <meta name="description" content="Sanayi tesisleri ve şantiyeler için kök neden analizine dayalı risk değerlendirmesi, saha denetimi, dijital DÖF takibi, acil durum planları ve İSG eğitimleri. 6331 sayılı Kanun ve ISO 45001 uyumu.">
+    <meta name="description" content="6331 sayılı Kanun ve ISO 45001 uyumlu mühendislik temelli İSG danışmanlığı, risk analizi, dijital DÖF ve saha takip hizmetleri.">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="{{ url('/') }}">
+    <link rel="canonical" href="https://mehse.com/">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Mehse İSG | Mühendislik Temelli İş Sağlığı ve Güvenliği">
-    <meta property="og:description" content="Evrak değil sonuç: kök neden analizi, saha denetimi ve İSG-KATİP uyumlu sürekli takip.">
-    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:site_name" content="Mehse İSG">
+    <meta property="og:title" content="Mehse İSG | Mühendislik Temelli İş Sağlığı ve Güvenliği Danışmanlığı">
+    <meta property="og:description" content="6331 sayılı Kanun ve ISO 45001 uyumlu mühendislik temelli İSG danışmanlığı, risk analizi, dijital DÖF ve saha takip hizmetleri.">
+    <meta property="og:url" content="https://mehse.com/">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=70">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mehse İSG | Mühendislik Temelli İş Sağlığı ve Güvenliği Danışmanlığı">
+    <meta name="twitter:description" content="6331 sayılı Kanun ve ISO 45001 uyumlu mühendislik temelli İSG danışmanlığı, risk analizi, dijital DÖF ve saha takip hizmetleri.">
     <meta name="theme-color" content="#0F172A">
     <link rel="stylesheet" href="{{ asset('css/tanitim.css') }}">
-    <script type="application/ld+json">
-    {!! json_encode([
-        '@context' => 'https://schema.org',
-        '@type' => 'ProfessionalService',
-        'name' => 'Mehse İSG',
-        'description' => 'Mühendislik temelli iş sağlığı ve güvenliği danışmanlığı, saha denetimi ve eğitim hizmetleri.',
-        'url' => url('/'),
-        'email' => $eposta,
-        'telephone' => $telUri,
-        'areaServed' => 'TR',
-        'serviceType' => ['Risk Değerlendirmesi', 'Saha Denetimi', 'Acil Durum Eylem Planı', 'İSG Eğitimi', 'Periyodik Kontrol Koordinasyonu'],
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
-    </script>
+    {{-- JSON-LD @php bloğunda kurulur: şablonda '@context' yazılırsa Blade onu @context komutu sanıyor. --}}
+    <script type="application/ld+json">{!! $jsonLdHizmet !!}</script>
+    <script type="application/ld+json">{!! $jsonLdSss !!}</script>
 </head>
 <body>
 <a href="#icerik" class="atla">İçeriğe geç</a>
@@ -54,7 +76,7 @@
             <a href="#hizmetler">Hizmetler</a>
             <a href="#sektorler">Sektörler</a>
             <a href="#surec">Süreç</a>
-            <a href="#mevzuat">Blog / Mevzuat</a>
+            <a href="#sss">SSS</a>
         </nav>
         <div class="ust-sag">
             <a href="{{ url('/admin') }}" class="dugme dugme-cerceve dugme-kucuk uye-giris">Üye Girişi</a>
@@ -68,7 +90,7 @@
         <a href="#hizmetler">Hizmetler</a>
         <a href="#sektorler">Sektörler</a>
         <a href="#surec">Süreç</a>
-        <a href="#mevzuat">Blog / Mevzuat</a>
+        <a href="#sss">SSS</a>
         <a href="#teklif" class="dugme dugme-yesil">Hızlı Teklif Al</a>
         <a href="{{ url('/admin') }}" class="dugme dugme-cerceve">Üye Girişi</a>
     </nav>
@@ -84,11 +106,11 @@
         <div class="kap">
             <div>
                 <p class="rozet"><i></i>6331 SAYILI KANUN · ISO 45001 UYUMLU</p>
-                <h1>Evrakla değil, <em>mühendislikle</em> güvenli işyeri.</h1>
-                <p class="hero-alt">Kazanın belirtisini değil kök nedenini çözüyoruz. Sahada gözlemliyor, riski ölçüyor, uygunsuzluğu dijital DÖF ile kapanana kadar takip ediyoruz.</p>
+                <h1>Evrakla Değil, <em>Mühendislikle</em> Güvenli İşyeri.</h1>
+                <p class="hero-alt">Bursa ve çevre sanayi bölgeleri için olası iş kazası risklerini ve yasal cezaları sıfıra indiren saha mühendisliği. Dijital DÖF altyapısıyla uygunsuzluklar kapanana kadar kesintisiz takip.</p>
                 <div class="hero-dugmeler">
-                    <a href="#teklif" class="dugme dugme-yesil">Ücretsiz Ön Keşif &amp; Analiz İste {!! $ok !!}</a>
-                    <a href="#hizmetler" class="dugme dugme-cerceve">Hizmetleri İncele</a>
+                    <a href="#teklif" class="dugme dugme-yesil">Ücretsiz Ön Keşif İste {!! $ok !!}</a>
+                    <a href="{{ $waLink }}" target="_blank" rel="noopener" class="dugme dugme-cerceve">{!! $wa !!} WhatsApp Destek</a>
                 </div>
             </div>
             <div aria-hidden="true">
@@ -133,32 +155,32 @@
             <div class="kartlar">
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7"/></svg></span>
-                    <h3>Risk Değerlendirmesi &amp; Matrisler</h3>
-                    <p>Fine-Kinney, 5×5 L matris, FMEA ve HAZOP ile tehlikeleri puanlar, önceliklendirir, önlemleri sorumlu ve termin ile bağlarız.</p>
+                    <h3>Risk Değerlendirmesi</h3>
+                    <p>Müfettiş denetimlerine ve ISO 45001 kriterlerine tam uyumlu Fine-Kinney, 5×5 ve FMEA analizleri.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg></span>
-                    <h3>Saha Denetimi &amp; Dijital DÖF Raporlama</h3>
-                    <p>Fotoğraflı saha tespitleri, kök neden analizi ve düzeltici-önleyici faaliyetlerin kapanana kadar dijital takibi.</p>
+                    <h3>Saha Denetimi &amp; Dijital DÖF</h3>
+                    <p>Sahadaki her uygunsuzluk fotoğraflanır, sorumlu atanır ve giderilene kadar sistem üzerinden dijital takip edilir.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
-                    <h3>Acil Durum Eylem Planları &amp; Tatbikatlar</h3>
-                    <p>Yangın, deprem, kimyasal sızıntı senaryoları için plan hazırlığı, ekip kurulumu ve belgelenmiş tatbikat uygulaması.</p>
+                    <h3>Acil Durum &amp; Tatbikat</h3>
+                    <p>Yangın, deprem, tahliye planları, acil durum ekiplerinin kurulması ve resmi tatbikat raporlama.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg></span>
-                    <h3>Yasal İSG Eğitimleri &amp; Belgelendirme</h3>
-                    <p>Temel, tekrar ve işe özgü eğitimler; katılım kayıtları ve sertifikalar plana bağlı, denetime hazır tutulur.</p>
+                    <h3>Yasal İSG Eğitimleri</h3>
+                    <p>Çalışanlara yönelik uygulamalı saha eğitimleri, sınav kayıtları ve denetime hazır arşivleme.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart genis">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z"/></svg></span>
-                    <h3>Periyodik Kontrol &amp; Ortam Ölçüm Koordinasyonu</h3>
-                    <p>Basınçlı kap, kaldırma ekipmanı, elektrik tesisatı ve topraklama kontrolleri ile gürültü, aydınlatma, toz ve kimyasal ortam ölçümlerinin takvimi; yetkili kuruluşlarla koordinasyon ve rapor takibi tarafımızdan yürütülür.</p>
+                    <h3>Periyodik Kontrol &amp; Ölçüm</h3>
+                    <p>Vinç, kompresör, topraklama kontrolleri ile ortam ölçümlerinin (gürültü, toz, kimyasal) yetkili kuruluşlarla eksiksiz koordinasyonu.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
             </div>
@@ -264,16 +286,22 @@
         </div>
     </section>
 
-    {{-- ============ MEVZUAT / BLOG ============ --}}
-    <section id="mevzuat" style="padding-bottom:80px">
+    {{-- ============ SSS ============ --}}
+    <section id="sss" class="bolum sss">
         <div class="kap">
-            <p class="ust-yazi">BLOG / MEVZUAT</p>
-            <h2 style="margin-top:8px;font-size:clamp(1.7rem,4vw,2.4rem);font-weight:800;letter-spacing:-.02em;color:var(--lacivert-900)">Bilmeniz gereken yasal çerçeve</h2>
-            <div class="yazi-kartlar">
-                <a href="#teklif" class="yazi"><small>MEVZUAT</small><h3>6331 sayılı Kanun: işveren yükümlülükleri</h3><p>Risk değerlendirmesi, eğitim ve sağlık gözetimi yükümlülüklerine kısa bakış.</p></a>
-                <a href="#teklif" class="yazi"><small>REHBER</small><h3>Fine-Kinney mi, 5×5 matris mi?</h3><p>Hangi işyeri için hangi risk yöntemi daha uygun, nasıl seçilir.</p></a>
-                <a href="#teklif" class="yazi"><small>SÜREÇ</small><h3>İSG-KATİP sözleşmesi nasıl yapılır?</h3><p>Atama, sözleşme ve bildirim adımlarının sırası.</p></a>
+            <p class="ust-yazi">SIKÇA SORULAN SORULAR</p>
+            <h2>Aklınızdaki soruların kısa cevapları</h2>
+            <div class="sss-liste">
+                @foreach ($sss as $i => [$soru, $cevap])
+                    <details class="sss-madde" @if ($i === 0) open @endif>
+                        <summary>{{ $soru }}<span class="sss-isaret" aria-hidden="true"></span></summary>
+                        <p>{{ $cevap }}</p>
+                    </details>
+                @endforeach
             </div>
+            <p class="sss-alt">Başka bir sorunuz mu var?
+                <a href="{{ $waLink }}" target="_blank" rel="noopener">WhatsApp'tan sorun</a> veya
+                <a href="tel:{{ $telUri }}">{{ $telefon }}</a> numarasından arayın.</p>
         </div>
     </section>
 </main>
@@ -290,6 +318,7 @@
                 <li><a href="#hizmetler">Hizmetler</a></li>
                 <li><a href="#sektorler">Sektörler</a></li>
                 <li><a href="#surec">Süreç</a></li>
+                <li><a href="#sss">SSS</a></li>
                 <li><a href="#teklif">Teklif Al</a></li>
                 <li><a href="{{ url('/admin') }}">Üye Girişi</a></li>
             </ul>
@@ -308,13 +337,13 @@
                 <li>E-posta: <a href="mailto:{{ $eposta }}">{{ $eposta }}</a></li>
                 <li>Telefon: <a href="tel:{{ $telUri }}">{{ $telefon }}</a></li>
             </ul>
-            <a href="https://wa.me/{{ $waNo }}" target="_blank" rel="noopener" class="dugme dugme-yesil dugme-kucuk">{!! $wa !!} WhatsApp Destek</a>
+            <a href="{{ $waLink }}" target="_blank" rel="noopener" class="dugme dugme-yesil dugme-kucuk">{!! $wa !!} WhatsApp Destek</a>
         </div>
     </div>
     <div class="telif"><div class="kap"><p>© {{ date('Y') }} Mehse İSG. Tüm hakları saklıdır.</p></div></div>
 </footer>
 
-<a href="https://wa.me/{{ $waNo }}" target="_blank" rel="noopener" class="wa-sabit" aria-label="WhatsApp ile yazın">{!! $wa !!}</a>
+<a href="{{ $waLink }}" target="_blank" rel="noopener" class="wa-sabit" aria-label="WhatsApp ile yazın">{!! $wa !!}</a>
 
 <script>
     (function () {

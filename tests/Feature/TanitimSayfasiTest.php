@@ -32,7 +32,10 @@ class TanitimSayfasiTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('Evrakla değil, ', false)
+            ->assertSee('Evrakla Değil, ', false)
+            ->assertSee('"@context":"https://schema.org"', false)
+            ->assertSee('"@type":"FAQPage"', false)
+            ->assertSee('İSG-KATİP sözleşmesi ne kadar sürede aktif olur?')
             ->assertSee('Üye Girişi')
             ->assertSee('mozdemir2816@gmail.com')
             ->assertSee('0506 475 48 55')
