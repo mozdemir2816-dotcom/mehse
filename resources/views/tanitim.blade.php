@@ -3,26 +3,26 @@
     $telefon = '0506 475 48 55';
     $telUri = '+905064754855';
     $waNo = '905064754855';
-    $waLink = 'https://wa.me/905064754855?text=Merhaba,%20hizmetler%20ve%20yaz%C4%B1l%C4%B1m%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.';
+    $waLink = 'https://wa.me/905064754855?text=Merhaba,%20%C4%B0SG%20hizmetleri%20ve%20yaz%C4%B1l%C4%B1m%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.';
     $girisUrl = url('/admin/login');
     $kayitUrl = url('/admin/register');
     $osgbUrl = url('/admin/osgb-basvuru');
-    $baslik = 'Mehse İSG | Mühendislik Temelli İSG Danışmanlığı ve Bulut Yönetim Yazılımı';
-    $aciklama = '6331 ve ISO 45001 uyumlu saha denetimi, risk analizi ve İSG uzmanları için tek panelden firma yönetim yazılımı.';
+    $baslik = 'Mehse İSG | Mühendislik Temelli İSG Danışmanlığı ve Bulut Yönetim Platformu';
+    $aciklama = '6331 ve ISO 45001 uyumlu mühendislik danışmanlığı, saha denetimi, risk analizi ve İSG profesyonelleri için bulut yönetim yazılımı.';
     $ikon = fn (string $yol) => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$yol.'</svg>';
     $moduller = [
         ['<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>', 'Risk Değerlendirmesi', '5×5 Matris, Fine-Kinney ve sektörel şablonlarla dakikalar içinde risk analizi.'],
         ['<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>', 'Kontrol Merkezi', 'Hangi işyerinde hangi evrak eksik, süresi yaklaşan yenilemeler tek ekranda.'],
         ['<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>', 'Eğitim &amp; Sertifikasyon', 'Katılım formları, ön/son testler, uzaktan eğitim portalı ve tek tıkla sertifika.'],
-        ['<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', 'İSG Kurulu Yönetimi', 'Zorunlu üye denetimi, gündem hazırlığı ve resmî toplantı tutanağı.'],
-        ['<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/>', 'Periyodik Kontrol', 'İş ekipmanı muayene takvimi, hatırlatıcılar ve teftiş paketi.'],
-        ['<path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/>', 'Acil Durum Planı', 'Otomatik acil durum planları, ekipler ve afiş paketi.'],
+        ['<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', 'İSG Kurulu Yönetimi', 'Zorunlu üye denetimi, periyodik kurul gündemi, kararlar ve resmî tutanak.'],
+        ['<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>', 'Periyodik Kontrol Takibi', 'İş ekipmanları envanteri, periyodik muayene takvimi ve teftiş paketi.'],
+        ['<path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/>', 'Acil Durum Eylem Planı', 'Otomatik senaryolar, tahliye planları, ekip atamaları ve afiş paketi.'],
     ];
     $sss = [
-        ['İşyerimizin İSG hizmeti alma zorunluluğu var mı?', '6331 sayılı Kanun gereği çalışan sayısı ve tehlike sınıfına göre her işyerinin yasal uzman, hekim ve risk analizi yükümlülükleri bulunur.'],
-        ['Ücretsiz ön keşif süreci nasıl işler?', 'Uzman mühendisimiz işyerinizi sahada ziyaret ederek eksikleri ve riskleri analiz eder, bağlayıcı bir taahhüt olmadan durum raporu sunar.'],
-        ['Mehse İSG Yazılımını kimler kullanabilir?', 'Bireysel İSG uzmanları ücretsiz uzman kaydıyla, OSGB firmaları ise OSGB başvurusuyla başvurabilir. Başvurunuz onaylanıp erişiminiz tanımlandığında portföyünüzdeki firmaları tek panelden yönetmeye başlarsınız.'],
-        ['İSG-KATİP sözleşmesi ne kadar sürede tamamlanır?', 'Karşılıklı mutabakat ve e-Devlet onaylarının ardından atama süreci aynı iş günü içinde tamamlanır.'],
+        ['İşyerimizin İSG hizmeti alma yasal zorunluluğu var mı?', '6331 sayılı Kanun gereğince çalışan sayısı ve tehlike sınıfına göre her işyerinin iş güvenliği uzmanı, işyeri hekimi görevlendirmesi ve risk değerlendirmesi yaptırması zorunludur.'],
+        ['Ücretsiz ön keşif süreci nasıl işler?', 'Uzman mühendisimiz işyerinizi sahada ziyaret ederek mevcut riskleri, ortam şartlarını ve yasal evrak durumunu inceler; hiçbir taahhüt gerektirmeyen durum raporu sunar.'],
+        ['Mehse İSG Bulut Yazılımını kimler kullanabilir?', 'Bireysel İSG uzmanları ücretsiz uzman hesabı açabilir; OSGB firmaları ise 90 günlük ücretsiz deneme için başvurabilir. Hesabınız onaylanıp erişiminiz tanımlandığında portföyünüzdeki işletmeleri tek panelden yönetirsiniz.'],
+        ['İSG-KATİP sözleşmesi ne kadar sürede tamamlanır?', 'Karşılıklı mutabakat ve e-Devlet/İSG-KATİP onaylarının ardından resmi atama süreci aynı iş günü içinde tamamlanarak yasal koruma başlar.'],
     ];
     $matris = [
         ['m1', 'm1', 'm2', 'm3', 'm3'],
@@ -74,6 +74,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $baslik }}">
     <meta name="twitter:description" content="{{ $aciklama }}">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=70">
     <meta name="theme-color" content="#0F172A">
     <link rel="stylesheet" href="{{ asset('css/tanitim.css') }}">
     {{-- JSON-LD @php bloğunda kurulur: şablonda '@context' yazılırsa Blade onu @context komutu sanıyor. --}}
@@ -89,12 +90,12 @@
         <nav class="menu" aria-label="Ana menü">
             <a href="#hizmetler">Hizmetler</a>
             <a href="#sektorler">Sektörler</a>
-            <a href="#yazilim">İSG Bulut Yazılımı</a>
+            <a href="#yazilim">İSG Yazılımı</a>
             <a href="#surec">Süreç</a>
-            <a href="#sss">Sıkça Sorulanlar</a>
+            <a href="#sss">S.S.S.</a>
         </nav>
         <div class="ust-sag">
-            <a href="{{ $girisUrl }}" class="dugme dugme-cerceve dugme-kucuk uye-giris">Üye Girişi</a>
+            <a href="{{ $girisUrl }}" class="ust-link uye-giris">Üye Girişi</a>
             <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve dugme-kucuk ust-kayit">Uzman Kaydı</a>
             <a href="#teklif" class="dugme dugme-yesil dugme-kucuk ust-teklif">Teklif Al</a>
             <button type="button" class="menu-dugme" id="menuDugme" aria-controls="mobilMenu" aria-expanded="false" aria-label="Menüyü aç">
@@ -105,12 +106,12 @@
     <nav class="mobil" id="mobilMenu" aria-label="Mobil menü">
         <a href="#hizmetler">Hizmetler</a>
         <a href="#sektorler">Sektörler</a>
-        <a href="#yazilim">İSG Bulut Yazılımı</a>
+        <a href="#yazilim">İSG Yazılımı</a>
         <a href="#surec">Süreç</a>
-        <a href="#sss">Sıkça Sorulanlar</a>
-        <a href="#teklif" class="dugme dugme-yesil">Teklif Al</a>
+        <a href="#sss">S.S.S.</a>
+        <a href="{{ $girisUrl }}">Üye Girişi</a>
         <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve">Uzman Kaydı</a>
-        <a href="{{ $girisUrl }}" class="dugme dugme-cerceve">Üye Girişi</a>
+        <a href="#teklif" class="dugme dugme-yesil">Teklif Al</a>
     </nav>
 </header>
 
@@ -125,7 +126,7 @@
             <div>
                 <p class="rozet"><i></i>6331 SAYILI KANUN · ISO 45001 UYUMLU</p>
                 <h1>Evrakla Değil, <em>Mühendislikle</em> Güvenli İşyeri.</h1>
-                <p class="hero-alt">Bursa ve sanayi bölgeleri için iş kazası risklerini ve cezaları sıfıra indiren saha mühendisliği. İSG profesyonelleri için ise tüm firmalarını tek ekrandan yöneten bulut platformu.</p>
+                <p class="hero-alt">Bursa ve sanayi bölgelerinde iş kazası risklerini ve cezaları sıfıra indiren saha mühendisliği. İSG profesyonelleri için ise tüm firmalarını tek ekrandan yöneten bulut platformu.</p>
                 <div class="hero-dugmeler">
                     <a href="#teklif" class="dugme dugme-yesil">Fabrikanız İçin Keşif &amp; Teklif Alın {!! $ok !!}</a>
                     <a href="{{ $osgbUrl }}" class="dugme dugme-cerceve">OSGB'ler İçin 90 Gün Ücretsiz Deneme</a>
@@ -167,22 +168,22 @@
     <section class="segment" aria-label="Kimler için">
         <div class="kap segment-izgara">
             <article class="seg-kart">
-                <p class="seg-etiket">İŞVERENLER &amp; FABRİKALAR</p>
+                <p class="seg-etiket">İŞLETMELER VE SANAYİ TESİSLERİ İÇİN</p>
                 <h2>Saha İSG Danışmanlığı &amp; Denetim</h2>
                 <ul class="tik-liste">
-                    <li>{!! $tik !!}6331 sayılı Kanun &amp; ISO 45001 tam uyum</li>
+                    <li>{!! $tik !!}6331 sayılı Kanun ve ISO 45001 tam uyum</li>
                     <li>{!! $tik !!}Fotoğraflı saha denetimi ve kök neden analizi</li>
-                    <li>{!! $tik !!}Dijital DÖF ile kapanana kadar takip</li>
-                    <li>{!! $tik !!}İSG-KATİP sözleşmesi ve resmi onaylar</li>
+                    <li>{!! $tik !!}Dijital DÖF ile uygunsuzluklar kapanana kadar takip</li>
+                    <li>{!! $tik !!}İSG-KATİP sözleşmesi ve yasal bildirimler</li>
                 </ul>
                 <a href="#teklif" class="dugme dugme-yesil">Keşif ve Fiyat Teklifi İsteyin {!! $ok !!}</a>
             </article>
             <article class="seg-kart seg-koyu">
-                <p class="seg-etiket">İSG UZMANLARI &amp; OSGB'LER</p>
+                <p class="seg-etiket">İSG PROFESYONELLERİ &amp; OSGB'LER İÇİN</p>
                 <h2>Bulut Tabanlı İSG Yönetim Paneli</h2>
                 <ul class="tik-liste">
-                    <li>{!! $tik !!}Tüm firmaların evrak durumunu tek ekrandan izleme</li>
-                    <li>{!! $tik !!}Yapay zekâ destekli Fine-Kinney ve 5×5 matrisler</li>
+                    <li>{!! $tik !!}Firmaların evrak durumunu tek ekrandan izleme</li>
+                    <li>{!! $tik !!}Yapay zekâ destekli Fine-Kinney ve 5×5 risk matrisleri</li>
                     <li>{!! $tik !!}Tek tıkla eğitim formu ve sertifika baskısı</li>
                     <li>{!! $tik !!}İş ekipmanı muayene takvimi ve otomatik hatırlatıcılar</li>
                 </ul>
@@ -203,39 +204,61 @@
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7"/></svg></span>
                     <h3>Risk Değerlendirmesi</h3>
-                    <p>Müfettiş denetimlerine ve ISO 45001 kriterlerine tam uyumlu Fine-Kinney, 5×5 ve FMEA analizleri.</p>
+                    <p>Müfettiş denetimlerine ve ISO 45001 kriterlerine tam uyumlu Fine-Kinney ve FMEA puanlamaları.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg></span>
                     <h3>Saha Denetimi &amp; Dijital DÖF</h3>
-                    <p>Sahadaki her uygunsuzluk fotoğraflanır, sorumlu atanır ve giderilene kadar sistem üzerinden dijital takip edilir.</p>
+                    <p>Sahadaki her uygunsuzluk fotoğraflanır, sorumlu atanır ve giderilene kadar sistemde izlenir.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
                     <h3>Acil Durum &amp; Tatbikat</h3>
-                    <p>Yangın, deprem, tahliye planları, acil durum ekiplerinin kurulması ve resmi tatbikat raporlama.</p>
+                    <p>Yangın, deprem, tahliye planları, acil durum ekipleri ve resmi tatbikat raporlama.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg></span>
                     <h3>Yasal İSG Eğitimleri</h3>
-                    <p>Çalışanlara yönelik uygulamalı saha eğitimleri, sınav kayıtları ve denetime hazır arşivleme.</p>
+                    <p>Çalışanlara yönelik uygulamalı eğitimler, sınavlar ve denetime hazır arşivleme.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
                 <article class="kart genis">
                     <span class="ikon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z"/></svg></span>
                     <h3>Periyodik Kontrol &amp; Ölçüm</h3>
-                    <p>Vinç, kompresör, topraklama kontrolleri ile ortam ölçümlerinin (gürültü, toz, kimyasal) yetkili kuruluşlarla eksiksiz koordinasyonu.</p>
+                    <p>Kaldırma, basınçlı kap kontrolleri ve ortam ölçümlerinin (gürültü, toz, kimyasal) eksiksiz takibi.</p>
                     <a href="#teklif">Teklif iste →</a>
                 </article>
             </div>
         </div>
     </section>
 
+    {{-- ============ İSG YAZILIMI ============ --}}
+    <section id="yazilim" class="bolum yazilim">
+        <div class="kap">
+            <p class="ust-yazi">İSG BULUT YAZILIMI</p>
+            <h2>İSG uzmanları ve OSGB'ler için tek panel</h2>
+            <p class="giris">Firmalarınızın risk, eğitim, kurul, periyodik kontrol ve acil durum süreçlerini tek bulut panelden yönetin.</p>
+            <div class="modul-izgara">
+                @foreach ($moduller as [$yol, $ad, $metin])
+                    <article class="modul">
+                        <span class="modul-icon-wrapper">{!! $ikon($yol) !!}</span>
+                        <div><h3>{!! $ad !!}</h3><p>{{ $metin }}</p></div>
+                    </article>
+                @endforeach
+            </div>
+            <div class="yazilim-cta">
+                <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Ücretsiz Uzman Kaydı {!! $ok !!}</a>
+                <a href="{{ $osgbUrl }}" class="dugme dugme-acik">OSGB: 90 Gün Ücretsiz Deneme</a>
+                <p>Zaten üye misiniz? <a href="{{ $girisUrl }}">Giriş yapın</a></p>
+            </div>
+        </div>
+    </section>
+
     {{-- ============ SEKTÖRLER ============ --}}
-    <section id="sektorler" style="padding-bottom:80px">
+    <section id="sektorler" style="padding:80px 0">
         <div class="kap">
             <div class="sektor-kutu bolum" style="padding:32px">
                 <div>
@@ -333,28 +356,6 @@
         </div>
     </section>
 
-    {{-- ============ İSG YAZILIMI ============ --}}
-    <section id="yazilim" class="bolum yazilim">
-        <div class="kap">
-            <p class="ust-yazi">İSG BULUT YAZILIMI</p>
-            <h2>İSG uzmanları ve OSGB'ler için tek panel</h2>
-            <p class="giris">Firmalarınızın risk, eğitim, kurul, periyodik kontrol ve acil durum süreçlerini tek bulut panelden yönetin.</p>
-            <div class="modul-izgara">
-                @foreach ($moduller as [$yol, $ad, $metin])
-                    <article class="modul">
-                        <span class="modul-icon-wrapper">{!! $ikon($yol) !!}</span>
-                        <div><h3>{!! $ad !!}</h3><p>{{ $metin }}</p></div>
-                    </article>
-                @endforeach
-            </div>
-            <div class="yazilim-cta">
-                <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Ücretsiz Uzman Kaydı {!! $ok !!}</a>
-                <a href="{{ $osgbUrl }}" class="dugme dugme-acik">OSGB: 90 Gün Ücretsiz Deneme</a>
-                <p>Zaten üye misiniz? <a href="{{ $girisUrl }}">Giriş yapın</a></p>
-            </div>
-        </div>
-    </section>
-
     {{-- ============ SSS ============ --}}
     <section id="sss" class="bolum sss">
         <div class="kap">
@@ -386,11 +387,9 @@
             <ul>
                 <li><a href="#hizmetler">Hizmetler</a></li>
                 <li><a href="#sektorler">Sektörler</a></li>
-                <li><a href="#yazilim">İSG Bulut Yazılımı</a></li>
-                <li><a href="#surec">Süreç</a></li>
+                <li><a href="#yazilim">İSG Yazılımı</a></li>
                 <li><a href="#sss">Sıkça Sorulanlar</a></li>
                 <li><a href="#teklif">Teklif Al</a></li>
-                <li><a href="{{ $kayitUrl }}">Uzman Kaydı</a></li>
                 <li><a href="{{ $girisUrl }}">Üye Girişi</a></li>
             </ul>
         </nav>

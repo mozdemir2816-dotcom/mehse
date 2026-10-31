@@ -59,6 +59,8 @@ section[id] { scroll-margin-top: 80px; }
 .menu a:hover { color: #fff; }
 .ust-sag { display: flex; align-items: center; gap: 12px; }
 .ust-teklif, .ust-kayit { display: none; }
+.ust-link { color: #e2e8f0; font-size: .9rem; font-weight: 600; padding: 9px 6px; }
+.ust-link:hover { color: #fff; }
 .menu-dugme { background: none; border: 0; color: #fff; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
 .menu-dugme:hover { background: rgba(255, 255, 255, .1); }
 .mobil { display: none; background: var(--lacivert-900); border-top: 1px solid rgba(255, 255, 255, .1); padding: 10px 20px 16px; }
