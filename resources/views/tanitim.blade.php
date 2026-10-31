@@ -11,10 +11,10 @@
     $aciklama = '6331 ve ISO 45001 uyumlu saha denetimi, risk analizi ve İSG uzmanları için tek panelden firma yönetim yazılımı.';
     $ikon = fn (string $yol) => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$yol.'</svg>';
     $moduller = [
-        ['<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7"/>', 'Risk Değerlendirmesi', '5×5 L matris, Fine-Kinney ve sektörel hazır şablonlarla hızlı ve denetime hazır risk analizi.'],
-        ['<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/>', 'Kontrol Merkezi', 'Tüm firmalarınızın belge ve uyum durumu tek ekranda.'],
-        ['<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/>', 'Eğitim &amp; Sertifikasyon', 'Sınavlar, dijital katılım kayıtları ve tek tıkla sertifika.'],
-        ['<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/>', 'İSG Kurulu', 'Zorunlu üye denetimi, gündem hazırlığı ve resmî toplantı tutanağı.'],
+        ['<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>', 'Risk Değerlendirmesi', '5×5 Matris, Fine-Kinney ve sektörel şablonlarla dakikalar içinde risk analizi.'],
+        ['<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>', 'Kontrol Merkezi', 'Hangi işyerinde hangi evrak eksik, süresi yaklaşan yenilemeler tek ekranda.'],
+        ['<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>', 'Eğitim &amp; Sertifikasyon', 'Katılım formları, ön/son testler, uzaktan eğitim portalı ve tek tıkla sertifika.'],
+        ['<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', 'İSG Kurulu Yönetimi', 'Zorunlu üye denetimi, gündem hazırlığı ve resmî toplantı tutanağı.'],
         ['<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/>', 'Periyodik Kontrol', 'İş ekipmanı muayene takvimi, hatırlatıcılar ve teftiş paketi.'],
         ['<path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/>', 'Acil Durum Planı', 'Otomatik acil durum planları, ekipler ve afiş paketi.'],
     ];
@@ -89,12 +89,13 @@
         <nav class="menu" aria-label="Ana menü">
             <a href="#hizmetler">Hizmetler</a>
             <a href="#sektorler">Sektörler</a>
-            <a href="#yazilim">İSG Yazılımı</a>
-            <a href="#sss">SSS</a>
+            <a href="#yazilim">İSG Bulut Yazılımı</a>
+            <a href="#surec">Süreç</a>
+            <a href="#sss">Sıkça Sorulanlar</a>
         </nav>
         <div class="ust-sag">
             <a href="{{ $girisUrl }}" class="dugme dugme-cerceve dugme-kucuk uye-giris">Üye Girişi</a>
-            <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve dugme-kucuk ust-kayit">Ücretsiz Kayıt Ol</a>
+            <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve dugme-kucuk ust-kayit">Uzman Kaydı</a>
             <a href="#teklif" class="dugme dugme-yesil dugme-kucuk ust-teklif">Teklif Al</a>
             <button type="button" class="menu-dugme" id="menuDugme" aria-controls="mobilMenu" aria-expanded="false" aria-label="Menüyü aç">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -104,10 +105,11 @@
     <nav class="mobil" id="mobilMenu" aria-label="Mobil menü">
         <a href="#hizmetler">Hizmetler</a>
         <a href="#sektorler">Sektörler</a>
-        <a href="#yazilim">İSG Yazılımı</a>
-        <a href="#sss">SSS</a>
+        <a href="#yazilim">İSG Bulut Yazılımı</a>
+        <a href="#surec">Süreç</a>
+        <a href="#sss">Sıkça Sorulanlar</a>
         <a href="#teklif" class="dugme dugme-yesil">Teklif Al</a>
-        <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve">Ücretsiz Kayıt Ol</a>
+        <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve">Uzman Kaydı</a>
         <a href="{{ $girisUrl }}" class="dugme dugme-cerceve">Üye Girişi</a>
     </nav>
 </header>
@@ -123,10 +125,10 @@
             <div>
                 <p class="rozet"><i></i>6331 SAYILI KANUN · ISO 45001 UYUMLU</p>
                 <h1>Evrakla Değil, <em>Mühendislikle</em> Güvenli İşyeri.</h1>
-                <p class="hero-alt">Bursa ve çevre sanayi bölgeleri için kaza risklerini ve cezaları sıfırlayan saha mühendisliği. İSG profesyonelleri için ise tüm süreçleri tek ekrandan yöneten bulut platformu.</p>
+                <p class="hero-alt">Bursa ve sanayi bölgeleri için iş kazası risklerini ve cezaları sıfıra indiren saha mühendisliği. İSG profesyonelleri için ise tüm firmalarını tek ekrandan yöneten bulut platformu.</p>
                 <div class="hero-dugmeler">
                     <a href="#teklif" class="dugme dugme-yesil">Fabrikanız İçin Keşif &amp; Teklif Alın {!! $ok !!}</a>
-                    <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve">İSG Yazılımına Ücretsiz Başvurun</a>
+                    <a href="{{ $osgbUrl }}" class="dugme dugme-cerceve">OSGB'ler İçin 90 Gün Ücretsiz Deneme</a>
                 </div>
             </div>
             <div aria-hidden="true">
@@ -165,25 +167,27 @@
     <section class="segment" aria-label="Kimler için">
         <div class="kap segment-izgara">
             <article class="seg-kart">
-                <p class="seg-etiket">İŞVERENLER &amp; SANAYİCİLER</p>
+                <p class="seg-etiket">İŞVERENLER &amp; FABRİKALAR</p>
                 <h2>Saha İSG Danışmanlığı &amp; Denetim</h2>
                 <ul class="tik-liste">
-                    <li>{!! $tik !!}Sahada fotoğraflı denetim ve kök neden analizi</li>
-                    <li>{!! $tik !!}İSG-KATİP sözleşmesi ve yasal bildirimler</li>
-                    <li>{!! $tik !!}Acil durum planları, tatbikat ve ortam ölçümleri</li>
+                    <li>{!! $tik !!}6331 sayılı Kanun &amp; ISO 45001 tam uyum</li>
+                    <li>{!! $tik !!}Fotoğraflı saha denetimi ve kök neden analizi</li>
+                    <li>{!! $tik !!}Dijital DÖF ile kapanana kadar takip</li>
+                    <li>{!! $tik !!}İSG-KATİP sözleşmesi ve resmi onaylar</li>
                 </ul>
                 <a href="#teklif" class="dugme dugme-yesil">Keşif ve Fiyat Teklifi İsteyin {!! $ok !!}</a>
             </article>
             <article class="seg-kart seg-koyu">
                 <p class="seg-etiket">İSG UZMANLARI &amp; OSGB'LER</p>
-                <h2>Bulut Tabanlı İSG Yönetim Yazılımı</h2>
+                <h2>Bulut Tabanlı İSG Yönetim Paneli</h2>
                 <ul class="tik-liste">
-                    <li>{!! $tik !!}Yapay zekâ destekli 5×5 ve Fine-Kinney matrisleri</li>
+                    <li>{!! $tik !!}Tüm firmaların evrak durumunu tek ekrandan izleme</li>
+                    <li>{!! $tik !!}Yapay zekâ destekli Fine-Kinney ve 5×5 matrisler</li>
                     <li>{!! $tik !!}Tek tıkla eğitim formu ve sertifika baskısı</li>
                     <li>{!! $tik !!}İş ekipmanı muayene takvimi ve otomatik hatırlatıcılar</li>
                 </ul>
-                <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Uzman Paneli İçin Ücretsiz Başvurun {!! $ok !!}</a>
-                <p class="seg-not">OSGB misiniz? <a href="{{ $osgbUrl }}">OSGB başvurusu yapın →</a></p>
+                <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Ücretsiz Uzman Hesabı Açın {!! $ok !!}</a>
+                <p class="seg-not">OSGB misiniz? <a href="{{ $osgbUrl }}">90 gün ücretsiz deneme için başvurun →</a></p>
             </article>
         </div>
     </section>
@@ -332,20 +336,20 @@
     {{-- ============ İSG YAZILIMI ============ --}}
     <section id="yazilim" class="bolum yazilim">
         <div class="kap">
-            <p class="ust-yazi">İSG YAZILIMI</p>
+            <p class="ust-yazi">İSG BULUT YAZILIMI</p>
             <h2>İSG uzmanları ve OSGB'ler için tek panel</h2>
             <p class="giris">Firmalarınızın risk, eğitim, kurul, periyodik kontrol ve acil durum süreçlerini tek bulut panelden yönetin.</p>
             <div class="modul-izgara">
                 @foreach ($moduller as [$yol, $ad, $metin])
                     <article class="modul">
-                        <span class="ikon">{!! $ikon($yol) !!}</span>
+                        <span class="modul-icon-wrapper">{!! $ikon($yol) !!}</span>
                         <div><h3>{!! $ad !!}</h3><p>{{ $metin }}</p></div>
                     </article>
                 @endforeach
             </div>
             <div class="yazilim-cta">
                 <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Ücretsiz Uzman Kaydı {!! $ok !!}</a>
-                <a href="{{ $osgbUrl }}" class="dugme dugme-acik">OSGB Başvurusu</a>
+                <a href="{{ $osgbUrl }}" class="dugme dugme-acik">OSGB: 90 Gün Ücretsiz Deneme</a>
                 <p>Zaten üye misiniz? <a href="{{ $girisUrl }}">Giriş yapın</a></p>
             </div>
         </div>
@@ -382,10 +386,11 @@
             <ul>
                 <li><a href="#hizmetler">Hizmetler</a></li>
                 <li><a href="#sektorler">Sektörler</a></li>
-                <li><a href="#yazilim">İSG Yazılımı</a></li>
-                <li><a href="#sss">SSS</a></li>
+                <li><a href="#yazilim">İSG Bulut Yazılımı</a></li>
+                <li><a href="#surec">Süreç</a></li>
+                <li><a href="#sss">Sıkça Sorulanlar</a></li>
                 <li><a href="#teklif">Teklif Al</a></li>
-                <li><a href="{{ $kayitUrl }}">Ücretsiz Kayıt Ol</a></li>
+                <li><a href="{{ $kayitUrl }}">Uzman Kaydı</a></li>
                 <li><a href="{{ $girisUrl }}">Üye Girişi</a></li>
             </ul>
         </nav>
