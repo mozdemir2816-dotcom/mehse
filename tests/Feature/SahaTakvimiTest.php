@@ -101,7 +101,7 @@ class SahaTakvimiTest extends TestCase
         $test = Livewire::test(PlanlamaMerkezi::class)->assertSet('gosterilenAy', now()->format('Y-m'));
 
         $test->call('ayDegistir', 1)
-            ->assertSet('gosterilenAy', now()->addMonth()->format('Y-m'))
+            ->assertSet('gosterilenAy', now()->addMonthNoOverflow()->format('Y-m'))
             ->call('ayDegistir', -1)
             ->assertSet('gosterilenAy', now()->format('Y-m'));
     }

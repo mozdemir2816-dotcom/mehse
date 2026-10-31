@@ -79,9 +79,12 @@ class SayfaAileleri
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
                 [Pages\ToolboxKonusmalari::class, 'Toolbox Konuşmaları'],
                 [Pages\IseOzguEgitimKonulari::class, 'İşe Özgü Eğitim Konuları'],
-                // Yıllık planlar Eğitim Yönetim Merkezi'ne taşındı (30.10.2026); eski adresler aynı.
-                [Pages\YillikPlan\YillikEgitimPlani::class, 'Yıllık Eğitim Planı'],
+            ],
+            // İSG Yıllık Planlama & Değerlendirme Merkezi: 3 sayfa → 3 ana sekme, Planlama & Arşiv'de tek menü girişi
+            // (30.10.2026; 31.10.2026 kullanıcı isteğiyle Eğitim merkezinden geri alındı); GRUPLAR['yillik'] bkz.
+            'yillik' => [
                 [Pages\YillikPlan\YillikCalismaPlani::class, 'Yıllık Çalışma Planı'],
+                [Pages\YillikPlan\YillikEgitimPlani::class, 'Yıllık Eğitim Planı'],
                 [Pages\YillikPlan\YillikDegerlendirmeRaporu::class, 'Yıllık Değerlendirme Raporu'],
             ],
             // Sağlık & Olay Yönetim Merkezi: 7 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['saglik_olay'] bkz.
@@ -209,11 +212,12 @@ class SayfaAileleri
                 'ikon' => 'heroicon-o-book-open',
                 'siniflar' => [Pages\SoruBankasi::class, Pages\EgitimSorulari::class, Pages\ToolboxKonusmalari::class, Pages\IseOzguEgitimKonulari::class],
             ],
-            [
-                'etiket' => 'Yıllık Planlar & Değerlendirme',
-                'ikon' => 'heroicon-o-calendar-days',
-                'siniflar' => [Pages\YillikPlan\YillikEgitimPlani::class, Pages\YillikPlan\YillikCalismaPlani::class, Pages\YillikPlan\YillikDegerlendirmeRaporu::class],
-            ],
+        ],
+        // İSG Yıllık Planlama & Değerlendirme Merkezi (30.10.2026)
+        'yillik' => [
+            ['etiket' => 'Yıllık Çalışma Planı (Master P/G Matrisi)', 'ikon' => 'heroicon-o-calendar-days', 'siniflar' => [Pages\YillikPlan\YillikCalismaPlani::class]],
+            ['etiket' => 'Yıllık Eğitim Planı', 'ikon' => 'heroicon-o-academic-cap', 'siniflar' => [Pages\YillikPlan\YillikEgitimPlani::class]],
+            ['etiket' => 'Yıl Sonu Değerlendirme Raporu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\YillikPlan\YillikDegerlendirmeRaporu::class]],
         ],
         // Acil Durum & Yangın: 5 sayfa → 3 ana sekme, tek menü girişi (30.10.2026)
         'acil' => [

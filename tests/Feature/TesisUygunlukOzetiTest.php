@@ -82,7 +82,7 @@ class TesisUygunlukOzetiTest extends TestCase
     {
         $this->firma->update(['calisan_sayisi' => 6]);   // 6 × 20 = 120 dk
         ZiyaretProgrami::create(['firma_id' => $this->firma->id, 'yil' => now()->year, 'ziyaretler' => [
-            now()->month - 1 => [['tarih' => now()->addDay()->toDateString(), 'sure_saat' => '2', 'durum' => 'planlandi']],
+            now()->month - 1 => [['tarih' => now()->toDateString(), 'sure_saat' => '2', 'durum' => 'planlandi']],
         ]]);
 
         $s = TesisUygunlugu::hesapla($this->firma, $this->uzman);
