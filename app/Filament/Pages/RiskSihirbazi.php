@@ -82,6 +82,9 @@ class RiskSihirbazi extends Page
         'ai' => ['ad' => 'Yapay Zeka Sohbeti ile Risk Üret', 'onerilen' => true, 'hazir' => true,
             'aciklama' => 'Önce işyeriniz hakkında sektöre özel sorular sorulur, sonra kütüphane + duruma özel öneriler üretilir.',
             'maddeler' => ['Sektör-spesifik soru akışı', 'Cevaplardaki eksiklik → mevzuat riski', 'Mevzuat referanslı öneriler']],
+        'hizli' => ['ad' => 'Hızlı Kurulum: Genel + Ekipman', 'onerilen' => false, 'hazir' => true,
+            'aciklama' => 'Önce her işyerinde ortak genel riskleri tek tıkla ekleyin, sonra tesisteki ekipmanları işaretleyip risklerini toplu aktarın.',
+            'maddeler' => ['Tek tıkla ortak genel riskler', 'Çoklu ekipman / proses seçimi', 'Yönteme (5x5 / Fine-Kinney) göre puanlanır']],
         'manuel' => ['ad' => 'Manuel Seçim', 'onerilen' => false, 'hazir' => true,
             'aciklama' => 'Risk kütüphanesinden kendiniz seçin.',
             'maddeler' => ['Kategori bazlı filtreleme', 'Detaylı risk listesi', 'Tam kontrol']],
@@ -128,6 +131,22 @@ class RiskSihirbazi extends Page
 
     /** @var array<int, int> açık accordion kategori id'leri */
     public array $acikKategoriler = [];
+
+    /** Hızlı Kurulum: işaretlenen ekipman anahtarları (config isg.risk_hizli_kurulum.ekipmanlar). */
+    public array $hizliEkipmanSecim = [];
+
+    /** "Kütüphanede Olmayan Ekipman (Yapay Zekâ)" penceresi — App\Support\GeminiEkipmanRiskUretici. */
+    public string $aiEkipmanAdi = '';
+
+    /** @var array<int, array<string, mixed>> üretilen, henüz eklenmemiş maddeler */
+    public array $aiEkipmanAdaylar = [];
+
+    /** @var array<int, int> seçili aday indeksleri */
+    public array $aiEkipmanSecim = [];
+
+    public bool $aiKutuphaneyeKaydet = true;
+
+    public ?string $aiEkipmanHata = null;
 
     /** @var array<int, array<string, mixed>> seçilen risk maddeleri */
     public array $secilenler = [];
@@ -402,6 +421,217 @@ class RiskSihirbazi extends Page
             }
         }
         $this->jsaOneriKontrolEt($kategoriId);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Adım 3 — Hızlı Kurulum (genel riskler + ekipman ızgarası)
+    |--------------------------------------------------------------------------
+    | Kütüphane klasörleri config isg.risk_hizli_kurulum'daki anahtarlardan bulunur;
+    | maddeler mevcut manuel akıştaki gibi RiskKutuphanesi::maddeyeCevir ile seçili
+    | yönteme (5x5 / Fine-Kinney) çevrilerek eklenir, zaten ekli olan madde tekrar eklenmez.
+    */
+
+    /**
+     * @return array{genel: array{kategoriler: array<int, int>, maddeler: Collection}, ekipmanlar: array<string, array{ad: string, ikon: string, kategoriler: array<int, int>, adet: int, eklenen: int}>}
+     */
+    #[Computed]
+    public function hizliGruplar(): array
+    {
+        $ayar = config('isg.risk_hizli_kurulum', []);
+        $tum = collect($ayar['genel'] ?? [])
+            ->merge(collect($ayar['ekipmanlar'] ?? [])->pluck('kategoriler')->flatten())
+            ->unique()->values();
+        $idler = TehlikeKategorisi::whereIn('anahtar', $tum)->pluck('id', 'anahtar');
+        $secili = array_flip(array_filter(array_column($this->secilenler, 'tehlike_id')));
+
+        $maddeler = fn (array $anahtarlar): Collection => collect($anahtarlar)
+            ->map(fn ($k) => $idler[$k] ?? null)->filter()
+            ->flatMap(fn ($id) => RiskKutuphanesi::grupTehlikeleri((int) $id, $this->yontem));
+
+        $genelKat = collect($ayar['genel'] ?? [])->map(fn ($k) => $idler[$k] ?? null)->filter()->values()->all();
+
+        $ekipmanlar = [];
+        foreach ($ayar['ekipmanlar'] ?? [] as $anahtar => $e) {
+            $liste = $maddeler($e['kategoriler']);
+            $ekipmanlar[$anahtar] = [
+                'ad' => $e['ad'],
+                'ikon' => $e['ikon'],
+                'kategoriler' => collect($e['kategoriler'])->map(fn ($k) => $idler[$k] ?? null)->filter()->values()->all(),
+                'adet' => $liste->count(),
+                'eklenen' => $liste->filter(fn ($t) => isset($secili[$t->id]))->count(),
+            ];
+        }
+
+        return [
+            'genel' => ['kategoriler' => $genelKat, 'maddeler' => $maddeler($ayar['genel'] ?? [])],
+            'ekipmanlar' => $ekipmanlar,
+        ];
+    }
+
+    /** Adım 1 — ortak genel riskleri (genel işyeri, acil durum, eğitim, elektrik) tek tıkla ekler. */
+    public function genelRiskleriAktar(): void
+    {
+        $once = count($this->secilenler);
+        foreach ($this->hizliGruplar['genel']['kategoriler'] as $kategoriId) {
+            $this->kategoriTumunuEkle($kategoriId);
+        }
+        unset($this->hizliGruplar);
+
+        $eklenen = count($this->secilenler) - $once;
+        Notification::make()
+            ->title($eklenen ? $eklenen.' genel risk eklendi' : 'Genel riskler zaten ekli')
+            ->body('Toplam '.count($this->secilenler).' madde. Şimdi tesisteki ekipmanları seçebilirsiniz.')
+            ->success()->send();
+    }
+
+    public function hizliEkipmanToggle(string $anahtar): void
+    {
+        $this->hizliEkipmanSecim = in_array($anahtar, $this->hizliEkipmanSecim, true)
+            ? array_values(array_diff($this->hizliEkipmanSecim, [$anahtar]))
+            : [...$this->hizliEkipmanSecim, $anahtar];
+    }
+
+    /** Adım 2 — işaretlenen tüm ekipmanların kütüphane maddelerini toplu ekler. */
+    public function ekipmanRiskleriAktar(): void
+    {
+        $gruplar = $this->hizliGruplar['ekipmanlar'];
+        $secim = array_values(array_filter($this->hizliEkipmanSecim, fn ($k) => ($gruplar[$k]['adet'] ?? 0) > 0));
+
+        if (! $secim) {
+            Notification::make()->title('Önce en az bir ekipman işaretleyin')->warning()->send();
+
+            return;
+        }
+
+        $once = count($this->secilenler);
+        foreach ($secim as $anahtar) {
+            foreach ($gruplar[$anahtar]['kategoriler'] as $kategoriId) {
+                $this->kategoriTumunuEkle($kategoriId);
+            }
+        }
+        unset($this->hizliGruplar);
+        $this->hizliEkipmanSecim = [];
+
+        $eklenen = count($this->secilenler) - $once;
+        Notification::make()
+            ->title($eklenen ? $eklenen.' ekipman riski eklendi' : 'Seçilen ekipmanların riskleri zaten ekli')
+            ->body(collect($secim)->map(fn ($k) => $gruplar[$k]['ad'])->implode(', ').' · toplam '.count($this->secilenler).' madde')
+            ->success()->send();
+    }
+
+    /*
+    | Kütüphanede olmayan ekipman / proses — yapay zekâ ile madde üretimi
+    */
+
+    /** Genel kütüphane tüm kullanıcılarda ortak: yalnız sahip hesap yapay zekâ maddelerini oraya kaydedebilir. */
+    public function aiKutuphaneyeKaydedebilir(): bool
+    {
+        return (bool) Filament::auth()->user()?->sahipMi();
+    }
+
+    public function aiEkipmanUret(): void
+    {
+        $this->validate(['aiEkipmanAdi' => 'required|string|min:3|max:120'], [
+            'aiEkipmanAdi.required' => 'Ekipman veya proses adını yazın.',
+            'aiEkipmanAdi.min' => 'Ekipman adını biraz daha açık yazın.',
+        ]);
+
+        $sonuc = \App\Support\GeminiEkipmanRiskUretici::uret(trim($this->aiEkipmanAdi), (string) $this->yontem);
+        $this->aiEkipmanAdaylar = $sonuc['maddeler'];
+        $this->aiEkipmanSecim = array_keys($sonuc['maddeler']);
+        $this->aiEkipmanHata = $sonuc['hata'];
+    }
+
+    public function aiEkipmanAdayToggle(int $i): void
+    {
+        $this->aiEkipmanSecim = in_array($i, $this->aiEkipmanSecim, true)
+            ? array_values(array_diff($this->aiEkipmanSecim, [$i]))
+            : [...$this->aiEkipmanSecim, $i];
+    }
+
+    /** Seçilen yapay zekâ maddelerini analize ekler; istenirse (yalnız sahip) genel kütüphaneye de kaydeder. */
+    public function aiEkipmanEkle(): void
+    {
+        $secilen = collect($this->aiEkipmanSecim)->map(fn ($i) => $this->aiEkipmanAdaylar[$i] ?? null)->filter()->values();
+
+        if ($secilen->isEmpty()) {
+            Notification::make()->title('Eklenecek madde seçin')->warning()->send();
+
+            return;
+        }
+
+        $kaydet = $this->aiKutuphaneyeKaydet && $this->aiKutuphaneyeKaydedebilir();
+        $kategori = null;
+
+        if ($kaydet) {
+            $ad = Str::limit(trim($this->aiEkipmanAdi), 80, '');
+            $kategori = TehlikeKategorisi::firstOrCreate(
+                ['anahtar' => 'ekipman_ai_'.Str::slug($ad, '_')],
+                ['ad' => 'Ekipman – '.$ad.' (AI)', 'yontem' => null, 'sira' => 600],
+            );
+        }
+
+        $eklenen = 0;
+        foreach ($secilen as $m) {
+            $tehlike = null;
+            if ($kategori) {
+                $tehlike = Tehlike::firstOrCreate(
+                    ['tehlike_kategorisi_id' => $kategori->id, 'tehlike' => $m['tehlike']],
+                    [
+                        'kod' => 'AI-'.strtoupper(Str::random(6)),
+                        'bolum' => $m['bolum'], 'faaliyet' => $m['faaliyet'], 'risk' => $m['risk'],
+                        'mevcut_onlem' => $m['mevcut_onlem'], 'oneri' => $m['oneri'], 'mevzuat' => $m['mevzuat'],
+                        'olasilik' => $m['olasilik'], 'frekans' => $m['frekans'], 'siddet' => $m['siddet'],
+                        'matris' => $m['matris'],
+                    ],
+                );
+                if ($this->tehlikeSecili($tehlike->id)) {
+                    continue;
+                }
+            }
+
+            $madde = $tehlike
+                ? RiskKutuphanesi::maddeyeCevir($tehlike, $this->yontem)
+                : array_merge(RiskKutuphanesi::bosMadde(), \Illuminate\Support\Arr::except($m, ['matris']), [
+                    'anahtar' => 'ai-'.substr(md5(uniqid('', true)), 0, 8),
+                    'kaynak' => 'ai',
+                ]);
+
+            if (! $tehlike && $this->yontem === 'matris_5x5') {
+                $madde['olasilik'] = $m['matris']['olasilik'];
+                $madde['siddet'] = $m['matris']['siddet'];
+                $madde['frekans'] = null;
+            }
+
+            $this->secilenler[] = $madde;
+            $eklenen++;
+        }
+
+        unset($this->hizliGruplar);
+        $this->aiEkipmanAdaylar = [];
+        $this->aiEkipmanSecim = [];
+        $this->aiEkipmanAdi = '';
+        $this->dispatch('close-modal', id: 'ai-ekipman-risk');
+
+        Notification::make()
+            ->title($kaydet
+                ? 'Maddeler risk tablosuna eklendi ve Genel Kütüphaneye kaydedildi'
+                : 'Maddeler risk tablosuna eklendi')
+            ->body($eklenen.' madde eklendi · toplam '.count($this->secilenler).' madde. Puanları Adım 5’te kontrol edin.')
+            ->success()->send();
+    }
+
+    /**
+     * Önizleme (Adım 6): risk değerlendirme ekibi — firmanın atanmış İSG profesyonelleri ve atama
+     * yazılarından otomatik (App\Support\RiskEkibiOtomatik). Kayıttan sonra düzenleme sayfasında değiştirilebilir.
+     *
+     * @return array<string, array<int, array{ad_soyad: string, tc: ?string, gorev: ?string, bas_uye: bool, ekip_gorevi: string}>>
+     */
+    #[Computed]
+    public function ekipOnizleme(): array
+    {
+        return $this->firma ? \App\Support\RiskEkibiOtomatik::uyeler($this->firma) : [];
     }
 
     /** Bir madde eklenen kategori için bu oturumda zaten önerilmiş olanlar (tekrar bildirim gelmesin). */

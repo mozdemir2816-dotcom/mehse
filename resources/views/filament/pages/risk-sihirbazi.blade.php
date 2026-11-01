@@ -178,10 +178,114 @@
     @endif
 
     {{-- ==================== ADIM 3 — MANUEL ============================= --}}
+    {{-- ==================== ADIM 3 — HIZLI KURULUM ===================== --}}
+    @if ($adim === 3 && $yontemSecim === 'hizli')
+        @php
+            $hg = $this->hizliGruplar;
+            $genelMaddeler = $hg['genel']['maddeler'];
+            $seciliIdler = array_flip(array_filter(array_column($secilenler, 'tehlike_id')));
+            $genelEklenen = $genelMaddeler->filter(fn ($t) => isset($seciliIdler[$t->id]))->count();
+        @endphp
+        <x-filament::section icon="heroicon-o-bolt" icon-color="primary">
+            <x-slot name="heading">Hızlı Kurulum</x-slot>
+            <x-slot name="description">Analize eklenen: {{ count($secilenler) }} madde · sonra "İleri" ile tercihlere geçin</x-slot>
+
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;align-items:center">
+                <span style="font-size:.8rem;color:rgb(107 114 128)">Yöntem:</span>
+                <x-filament::badge :color="$yontem === 'fine_kinney' ? 'warning' : 'info'">{{ config('isg.risk_yontemleri.'.$yontem, $yontem) }}</x-filament::badge>
+                <span style="font-size:.78rem;color:rgb(107 114 128)">Maddeler bu yönteme göre puanlanarak eklenir.</span>
+            </div>
+
+            {{-- 1 · Genel riskler --}}
+            <div style="{{ $kutu }};padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between">
+                    <div style="min-width:220px;flex:1">
+                        <div style="font-weight:700">1 · Ortak genel riskler</div>
+                        <div style="font-size:.8rem;color:rgb(107 114 128)">Genel işyeri, acil durum, eğitim/yetkilendirme, elektrik ve ortak makine güvenliği — her işyerinde bulunması gereken maddeler.</div>
+                    </div>
+                    @if ($genelMaddeler->isEmpty())
+                        <x-filament::badge color="gray">Kütüphanede genel madde bulunamadı</x-filament::badge>
+                    @elseif ($genelEklenen >= $genelMaddeler->count())
+                        <x-filament::badge color="success" icon="heroicon-o-check">{{ $genelMaddeler->count() }} genel risk eklendi</x-filament::badge>
+                    @else
+                        <x-filament::button size="lg" icon="heroicon-o-plus-circle" wire:click="genelRiskleriAktar" wire:loading.attr="disabled">
+                            {{ $genelMaddeler->count() - $genelEklenen }} Ortak Genel Riski Analize Ekle
+                        </x-filament::button>
+                    @endif
+                </div>
+                @if ($genelMaddeler->isNotEmpty())
+                    <details style="margin-top:.6rem">
+                        <summary style="cursor:pointer;font-size:.8rem;color:{{ $mor }}">Eklenecek maddeleri göster ({{ $genelMaddeler->count() }})</summary>
+                        <ol style="margin:.5rem 0 0;padding-left:1.25rem;font-size:.8rem;max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:.2rem">
+                            @foreach ($genelMaddeler as $t)
+                                <li @style(['color:rgb(107 114 128)' => isset($seciliIdler[$t->id])])>{{ \Illuminate\Support\Str::limit($t->tehlike, 140) }}@if (isset($seciliIdler[$t->id])) ✓@endif</li>
+                            @endforeach
+                        </ol>
+                    </details>
+                @endif
+            </div>
+
+            {{-- 2 · Ekipman / proses ızgarası --}}
+            <div style="{{ $kutu }};padding:1rem">
+                <div style="font-weight:700">2 · Tesisteki ekipman ve prosesler</div>
+                <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.75rem">Bulunanları işaretleyin; hepsinin risk maddeleri tek seferde eklenir.</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:.6rem">
+                    @foreach ($hg['ekipmanlar'] as $ek => $e)
+                        @php
+                            $isaretli = in_array($ek, $hizliEkipmanSecim, true);
+                            $yok = $e['adet'] === 0;
+                            $tamam = ! $yok && $e['eklenen'] >= $e['adet'];
+                        @endphp
+                        <button type="button" wire:key="hizli-{{ $ek }}" @if (! $yok && ! $tamam) wire:click="hizliEkipmanToggle('{{ $ek }}')" @endif
+                            @disabled($yok || $tamam)
+                            @style([
+                                'text-align:left;display:flex;gap:.6rem;align-items:flex-start;padding:.7rem;border-radius:.6rem;background:transparent',
+                                'border:2px solid '.($isaretli ? $mor : 'rgb(107 114 128 / .3)'),
+                                'background:rgb(139 92 246 / .08)' => $isaretli,
+                                'cursor:pointer' => ! $yok && ! $tamam,
+                                'opacity:.5;cursor:not-allowed' => $yok,
+                                'border-color:rgb(34 197 94 / .6);background:rgb(34 197 94 / .06)' => $tamam,
+                            ])>
+                            <span style="flex:none;margin-top:.1rem;width:1.1rem;height:1.1rem;border-radius:.25rem;border:2px solid {{ $isaretli || $tamam ? ($tamam ? $yesil : $mor) : 'rgb(107 114 128 / .5)' }};background:{{ $isaretli ? $mor : ($tamam ? $yesil : 'transparent') }};display:grid;place-items:center;color:#fff;font-size:.7rem;line-height:1">{{ $isaretli || $tamam ? '✓' : '' }}</span>
+                            <x-filament::icon :icon="$e['ikon']" style="flex:none;width:1.4rem;height:1.4rem;color:{{ $mor }}" />
+                            <span style="min-width:0">
+                                <span style="display:block;font-weight:600;font-size:.85rem">{{ $e['ad'] }}</span>
+                                <span style="display:block;font-size:.72rem;color:rgb(107 114 128)">
+                                    @if ($yok) kütüphanede yok — manuel ekleyin
+                                    @elseif ($tamam) {{ $e['adet'] }} madde eklendi
+                                    @else {{ $e['adet'] }} madde @if ($e['eklenen']) · {{ $e['eklenen'] }} ekli @endif
+                                    @endif
+                                </span>
+                            </span>
+                        </button>
+                    @endforeach
+                </div>
+                <div style="margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
+                    <x-filament::button icon="heroicon-o-table-cells" wire:click="ekipmanRiskleriAktar" wire:loading.attr="disabled" :disabled="count($hizliEkipmanSecim) === 0">
+                        Seçilen Ekipmanların Risklerini Tabloya Ekle @if (count($hizliEkipmanSecim)) ({{ count($hizliEkipmanSecim) }}) @endif
+                    </x-filament::button>
+                </div>
+            </div>
+
+            {{-- 3 · Kütüphanede olmayan ekipman — yapay zekâ --}}
+            <div style="{{ $kutu }};padding:1rem;margin-top:1rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between">
+                <div style="min-width:220px;flex:1">
+                    <div style="font-weight:700">3 · Listede olmayan ekipman veya proses</div>
+                    <div style="font-size:.8rem;color:rgb(107 114 128)">Adını yazın, yapay zekâ teknik risk maddelerini önersin; beğendiklerinizi seçip tabloya ekleyin.</div>
+                </div>
+                @include('filament.pages.partials.ai-ekipman-risk')
+            </div>
+        </x-filament::section>
+    @endif
+
     @if ($adim === 3 && $yontemSecim === 'manuel')
         <x-filament::section icon="heroicon-o-book-open" icon-color="primary">
             <x-slot name="heading">Manuel Risk Seçimi</x-slot>
             <x-slot name="description">Risk Kütüphanesinden seçim yapın — seçilenler: {{ count($secilenler) }}</x-slot>
+
+            <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
+                @include('filament.pages.partials.ai-ekipman-risk')
+            </div>
 
             @php $seciliTehlikeler = array_flip(array_filter(array_column($secilenler, 'tehlike_id'))); @endphp
             <div style="display:flex;flex-direction:column;gap:.5rem">
@@ -790,6 +894,9 @@
                 <x-filament::badge>{{ $this->firma?->unvan }}</x-filament::badge>
                 <x-filament::badge color="gray">{{ config('isg.risk_yontemleri.'.$yontem) }}</x-filament::badge>
                 <x-filament::badge color="gray">Rapor: {{ $raporTarihi }}</x-filament::badge>
+                @if ($this->firma?->tehlike_sinifi)
+                    <x-filament::badge :color="match ($this->firma->tehlike_sinifi) { 'cok_tehlikeli' => 'danger', 'tehlikeli' => 'warning', default => 'success' }">{{ $this->firma->tehlikeSinifiEtiketi() }} · {{ $this->firma->riskGecerlilikYili() }} yıl geçerli</x-filament::badge>
+                @endif
                 <x-filament::badge color="gray">Geçerlilik: {{ $gecerlilikTarihi }}</x-filament::badge>
                 <x-filament::badge color="gray">{{ count($secilenler) }} madde</x-filament::badge>
             </div>
@@ -798,6 +905,26 @@
                 @foreach ($this->duzeyDagilimi as $duzey => $adet)
                     <div style="{{ $kutu }};padding:.4rem .75rem;font-size:.85rem"><strong>{{ $adet }}</strong> · {{ $duzey }}</div>
                 @endforeach
+            </div>
+
+            {{-- Risk değerlendirme ekibi (imza bloğu) — sistemden otomatik --}}
+            <div style="{{ $kutu }};padding:.85rem;margin-top:1rem">
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.5rem">Risk Değerlendirme Ekibi (imza bloğu)</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:.5rem">
+                    @foreach ($this->ekipOnizleme as $gorev => $uyeler)
+                        <div style="font-size:.82rem">
+                            <div style="color:rgb(107 114 128);font-size:.75rem">{{ $gorev }}</div>
+                            @forelse ($uyeler as $u)
+                                <div style="font-weight:600">{{ $u['ad_soyad'] }}@if (! empty($u['imza_gorseli'])) <span style="color:{{ $yesil }};font-weight:400;font-size:.72rem">· imza kayıtlı</span>@endif</div>
+                            @empty
+                                <div style="color:#b45309">Tanımlı değil</div>
+                            @endforelse
+                        </div>
+                    @endforeach
+                </div>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.5rem">
+                    Ekip; firmaya atanan İSG profesyonelleri ve Atama Yazıları'ndan otomatik gelir. İşveren / vekili ve destek elemanı kayıttan sonra açılan sayfada eklenir.
+                </p>
             </div>
 
             @unless ($this->tumMaddelerPuanli())
@@ -818,7 +945,7 @@
                 <x-filament::button color="primary" icon="heroicon-o-check" wire:click="kaydet" :disabled="! $this->tumMaddelerPuanli()">Kaydet</x-filament::button>
             </div>
             <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:.4rem">
-                Kaydettikten sonra açılan sayfada "PDF İndir" ile çıktı alabilirsiniz.
+                Kaydettikten sonra açılan sayfada kapak, prosedür, risk tablosu ve ekip imzalarıyla birlikte "PDF", "Word" veya "Excel" olarak indirebilirsiniz.
             </p>
 
             {{-- Sektör şablonu olarak kaydet --}}

@@ -93,6 +93,33 @@ return [
         'cok_tehlikeli' => 2,
     ],
 
+    /*
+    | Risk Sihirbazı "Hızlı Kurulum" yöntemi (App\Filament\Pages\RiskSihirbazi, yontemSecim='hizli').
+    | Değerler tehlike_kategorileri.anahtar — kütüphanede bulunmayan anahtar sessizce atlanır;
+    | hiç maddesi olmayan ekipman kutusu "kütüphanede yok" olarak pasif görünür.
+    */
+    'risk_hizli_kurulum' => [
+        // Adım 1 — her işyerinde ortak genel riskler (genel işyeri, acil durum, eğitim/yetki, elektrik ve ortak makine güvenliği)
+        'genel' => ['genel_isyeri', 'atolye_acil_durumlar', 'atolye_egitim_ve_yetkilendirme', 'atolye_elektrik_ve_ortak_makine_guvenligi'],
+        // Adım 2 — ekipman / proses ızgarası: anahtar => [ad, heroicon, kategori anahtarları]
+        'ekipmanlar' => [
+            'eksantrik_pres' => ['ad' => 'Eksantrik Pres', 'ikon' => 'heroicon-o-arrows-pointing-in', 'kategoriler' => ['ekipman_eksantrik_pres']],
+            'hidrolik_pres' => ['ad' => 'Hidrolik Pres', 'ikon' => 'heroicon-o-arrows-pointing-in', 'kategoriler' => ['ekipman_hidrolik_pres', 'ekipman_11_hidrolik_atolye_presi_risk_degerlendirmesi']],
+            'abkant_pres' => ['ad' => 'Abkant Pres (Sac Büküm)', 'ikon' => 'heroicon-o-square-3-stack-3d', 'kategoriler' => ['ekipman_abkant_pres']],
+            'tavan_vinci' => ['ad' => 'Tavan Vinci / Caraskal', 'ikon' => 'heroicon-o-arrow-up-on-square', 'kategoriler' => ['ekipman_elektrikli_zincirli_caraskal', 'kaldirma_islemleri']],
+            'forklift' => ['ad' => 'Forklift', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_forklift']],
+            'kompresor' => ['ad' => 'Kompresör & Hava Tankı', 'ikon' => 'heroicon-o-circle-stack', 'kategoriler' => ['ekipman_kompresor_ve_hava_tanki']],
+            'kaynak' => ['ad' => 'Gazaltı / Elektrik Kaynağı', 'ikon' => 'heroicon-o-fire', 'kategoriler' => ['ekipman_gazalti_kaynak_ve_koruyucu_gaz_tupu', 'kaynakla_calisma']],
+            'torna' => ['ad' => 'Torna', 'ikon' => 'heroicon-o-cog-6-tooth', 'kategoriler' => ['ekipman_torna']],
+            'freze' => ['ad' => 'Freze', 'ikon' => 'heroicon-o-cog-8-tooth', 'kategoriler' => ['ekipman_dikey_kalipci_frezesi']],
+            'cnc' => ['ad' => 'CNC İşleme Merkezi', 'ikon' => 'heroicon-o-cpu-chip', 'kategoriler' => ['atolye_cnc_isleme_merkezi']],
+            'taslama' => ['ad' => 'Taşlama (Avuç / Satıh)', 'ikon' => 'heroicon-o-sparkles', 'kategoriler' => ['ekipman_15_avuc_taslama_spiral_risk_degerlendirmesi', 'ekipman_satih_taslama_manuel_hidrolik_cnc']],
+            'boyahane' => ['ad' => 'Boyahane / Kimyasal Depo', 'ikon' => 'heroicon-o-beaker', 'kategoriler' => ['ekipman_toz_boya_firini', 'boya']],
+            'raf' => ['ad' => 'Ağır Yük Depo Rafı', 'ikon' => 'heroicon-o-building-storefront', 'kategoriler' => ['ekipman_endustriyel_raf', 'atolye_depolama_ve_calisma_alani']],
+            'elektrik_panosu' => ['ad' => 'Elektrik Panosu', 'ikon' => 'heroicon-o-bolt', 'kategoriler' => ['ekipman_anatali_elektrik_panosu']],
+        ],
+    ],
+
     // Acil durum planı yenileme süresi (yıl) — İşyerlerinde Acil Durumlar Yön.
     'acil_durum_gecerlilik_yili' => [
         'az_tehlikeli' => 6,
