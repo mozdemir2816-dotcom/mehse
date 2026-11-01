@@ -261,14 +261,31 @@ class TanitimSayfasiTest extends TestCase
         $url = $cep->whatsappUrl();
         $this->assertStringStartsWith('https://wa.me/905321112233?text=', $url);
         $mesaj = rawurldecode(substr($url, strpos($url, '=') + 1));
-        $this->assertStringContainsString('Merhaba Ali Veli', $mesaj);
-        $this->assertStringContainsString('Örnek Metal için', $mesaj);
+        $this->assertStringContainsString('Merhaba Sayın Ali Veli', $mesaj);
+        $this->assertStringContainsString('mehse.com üzerinden Örnek Metal adına', $mesaj);
 
         Livewire::test(ListTeklifTalepleris::class)
             ->assertTableActionVisible('whatsapp', $cep)
             ->assertTableActionHasUrl('whatsapp', $url, $cep)
             ->assertTableActionShouldOpenUrlInNewTab('whatsapp', $cep)
             ->assertTableActionHidden('whatsapp', $sabit);
+    }
+
+    public function test_tehlike_sinifina_gore_suzulur_ve_renkli_rozetle_gosterilir(): void
+    {
+        $az = TeklifTalebi::create(['firma_adi' => 'Az A.Ş.', 'kisi' => 'K', 'telefon' => '0532 000 00 01', 'calisan_sayisi' => 1, 'tehlike_sinifi' => 'Az Tehlikeli']);
+        $cok = TeklifTalebi::create(['firma_adi' => 'Çok A.Ş.', 'kisi' => 'K', 'telefon' => '0532 000 00 02', 'calisan_sayisi' => 1, 'tehlike_sinifi' => 'Çok Tehlikeli']);
+        $this->actingAs(User::factory()->create(['rol' => 'sahip']));
+
+        Livewire::test(ListTeklifTalepleris::class)
+            ->assertTableColumnStateSet('tehlike_sinifi', 'Az Tehlikeli', $az)
+            ->filterTable('tehlike_sinifi', 'Çok Tehlikeli')
+            ->assertCanSeeTableRecords([$cok])
+            ->assertCanNotSeeTableRecords([$az]);
+
+        $sutun = Livewire::test(ListTeklifTalepleris::class)->instance()->getTable()->getColumn('tehlike_sinifi');
+        $renk = fn (string $sinif) => $sutun->getColor($sinif);
+        $this->assertSame(['success', 'warning', 'danger', 'gray'], array_map($renk, TeklifTalebi::TEHLIKE_SINIFLARI));
     }
 
     public function test_liste_ustunde_durum_sayaclari_ve_15li_sayfalama(): void

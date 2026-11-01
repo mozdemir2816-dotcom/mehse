@@ -91,7 +91,13 @@ class TeklifTalebiResource extends Resource
                 TextColumn::make('kisi')->label('İletişim kişisi')->searchable(),
                 TextColumn::make('telefon')->label('Telefon')->url(fn (TeklifTalebi $r) => 'tel:'.preg_replace('/[^0-9+]/', '', $r->telefon))->searchable(),
                 TextColumn::make('calisan_sayisi')->label('Çalışan')->numeric()->sortable(),
-                TextColumn::make('tehlike_sinifi')->label('Tehlike sınıfı')->badge(),
+                TextColumn::make('tehlike_sinifi')->label('Tehlike sınıfı')->badge()
+                    ->color(fn (?string $state) => match ($state) {
+                        'Az Tehlikeli' => 'success',
+                        'Tehlikeli' => 'warning',
+                        'Çok Tehlikeli' => 'danger',
+                        default => 'gray',
+                    }),
                 // Durum tablodan doğrudan değişir; seçim anında kaydedilir.
                 SelectColumn::make('durum')->label('Durum')
                     ->options(TeklifTalebi::DURUMLAR)
@@ -101,6 +107,8 @@ class TeklifTalebiResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('durum')->label('Durum')->options(TeklifTalebi::DURUMLAR),
+                SelectFilter::make('tehlike_sinifi')->label('Tehlike sınıfı')
+                    ->options(array_combine(TeklifTalebi::TEHLIKE_SINIFLARI, TeklifTalebi::TEHLIKE_SINIFLARI)),
             ])
             ->recordActions([
                 Action::make('whatsapp')

@@ -43,8 +43,8 @@ class TeklifTalebi extends Model
     /** Müşteriye hazır şablonla WhatsApp mesajı. */
     public function whatsappMesaji(): string
     {
-        return "Merhaba {$this->kisi}, Mehse İSG'den yazıyorum. {$this->firma_adi} için web sitemizden ilettiğiniz "
-            .'teklif talebiniz bize ulaştı, teşekkür ederiz. Ücretsiz ön keşif için işyerinizi ziyaret etmek isteriz; '
+        return "Merhaba Sayın {$this->kisi}, mehse.com üzerinden {$this->firma_adi} adına yaptığınız İSG keşif/teklif "
+            .'başvurunuz hakkında yazıyorum. Ücretsiz ön keşif için işyerinizi ziyaret etmek isteriz; '
             .'size uygun gün ve saati paylaşabilir misiniz?';
     }
 
