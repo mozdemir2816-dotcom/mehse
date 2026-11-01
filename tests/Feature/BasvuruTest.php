@@ -164,8 +164,25 @@ class BasvuruTest extends TestCase
         $this->get(OsgbBasvuru::getUrl())->assertOk()
             ->assertSee('Mehse Hizmet ve Kullanım Sözleşmesini')
             ->assertSee('kişisel verilerimin işlenmesi hakkında bilgilendirildim', escape: false)
-            ->assertSee('Sürüm 1.1 · 30.09.2026')
+            ->assertSee('Sürüm 1.2 · 01.11.2026')
             ->assertSee('Sağlayıcı: Mehse adıyla faaliyet gösteren');
+    }
+
+    public function test_sozlesmede_saglayici_ve_hizmet_kosullari_dolu_taslak_isareti_kalmaz(): void
+    {
+        config(['isg.kayit.saglayici.unvan' => 'Deneme Kişi', 'isg.kayit.saglayici.vergi' => 'Nilüfer V.D. / 123']);
+        $html = view('yasal.sozlesme')->render();
+
+        $this->assertStringNotContainsString('<mark', $html);
+        $this->assertStringNotContainsString('[', strip_tags($html));
+        foreach (['Deneme Kişi', 'Nilüfer V.D. / 123', 'Nilüfer / Bursa', 'mozdemir2816@gmail.com', '0506 475 48 55',
+            '90 gün ücretsiz kurumsal deneme', 'hafta içi 09:00 - 18:00', 'günlük otomatik veritabanı yedeklemesi'] as $metin) {
+            $this->assertStringContainsString($metin, $html);
+        }
+
+        // Sağlayıcı kimliği girilmemişse taslak işareti görünür kalır (boş bırakılmaz).
+        config(['isg.kayit.saglayici.unvan' => null]);
+        $this->assertStringContainsString('<mark class="mehse-yasal-bos">[gerçek kişi adı', view('yasal.sozlesme')->render());
     }
 
     public function test_onay_kutulari_isaretlenmeden_basvuru_yapilamaz(): void

@@ -28,3 +28,7 @@ Schedule::call(fn () => Artisan::call('risk:pdf-uret'))
 // Öneri (düzeltici faaliyet) metni boş risk maddeleri Gemini ile doldurulur; boş kalmayınca anında biter.
 Schedule::call(fn () => Artisan::call('risk:oneri-tamamla'))
     ->name('risk:oneri-tamamla')->everyMinute()->withoutOverlapping(10);
+
+// Günlük veritabanı yedeği (Hizmet Sözleşmesi md.5): storage/app/private/yedekler, 30 gün saklanır.
+Schedule::call(fn () => Artisan::call('mehse:yedekle'))
+    ->name('mehse:yedekle')->dailyAt('03:00')->timezone('Europe/Istanbul');

@@ -6948,6 +6948,15 @@ return [
     */
     'kayit' => [
         'osgb_deneme_gun' => 90,
+        // Hizmet sözleşmesi md.1 Sağlayıcı kimliği (resources/views/yasal/sozlesme.blade.php).
+        // unvan/vergi boşsa sözleşmede sarı taslak işareti görünür.
+        'saglayici' => [
+            'unvan' => null,
+            'adres' => 'Nilüfer / Bursa',
+            'vergi' => null,
+            'eposta' => 'mozdemir2816@gmail.com',
+            'telefon' => '0506 475 48 55',
+        ],
         'sertifika_siniflari' => [
             'a_sinifi' => 'A Sınıfı',
             'b_sinifi' => 'B Sınıfı',
@@ -6962,7 +6971,7 @@ return [
                 'baglanti' => 'Mehse Hizmet ve Kullanım Sözleşmesini',
                 'onay_sonrasi' => 'okudum ve kabul ediyorum',
                 'gorunum' => 'yasal.sozlesme',
-                'revizyon' => 'Sürüm 1.1 · 30.09.2026',
+                'revizyon' => 'Sürüm 1.2 · 01.11.2026',
             ],
             'kvkk' => [
                 'baslik' => 'Mehse KVKK Aydınlatma Metni',
