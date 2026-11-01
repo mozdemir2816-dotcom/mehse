@@ -3357,6 +3357,9 @@ return [
             ['ifadeler' => ['kompresör', 'hava tankı', 'basınçlı kap', 'buhar kazanı', 'kazan dairesi'], 'konular' => ['basincli_kap']],
             ['ifadeler' => ['forklift', 'transpalet', 'istif makinesi'], 'konular' => ['trafik']],
             ['ifadeler' => ['asansör'], 'konular' => ['asansor']],
+            ['ifadeler' => ['bor yağı', 'kesme yağı', 'hidrolik yağ', 'madeni yağ', 'atık yağ'], 'konular' => ['kimyasal']],
+            ['ifadeler' => ['lpg', 'doğalgaz', 'doğal gaz', 'propan', 'gaz tüpü', 'akaryakıt'], 'konular' => ['patlama']],
+            ['ifadeler' => ['kaynak dumanı', 'solvent', 'gaz kaçağı', 'gaz sızıntı', 'karbonmonoksit', 'karbon monoksit', 'amonyak', 'klor gazı'], 'konular' => ['zehirlenme']],
         ],
         // EK-3 KKD sütunları: faaliyet => firmanın verisinde geçen ifadeler. Hiçbir veri yoksa tüm sütunlar basılır.
         // TEMİZLİK ve GÜVENLİK her işyerinde vardır.

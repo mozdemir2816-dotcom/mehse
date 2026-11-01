@@ -74,6 +74,10 @@ class AcilDurumSenaryoSecimiTest extends TestCase
         $this->assertNotContains('ARITMA BÖLGESİ', $kkd);
         $this->assertNotContains('TANK/SİLO GİRİŞ', $kkd); // hava tankı ≠ tank içi çalışma
 
+        $cnc = $this->firmaRiskli(['CNC tezgahında bor yağı sıçraması', 'Kaynak dumanı solunması', 'Doğalgaz hattında kaçak']);
+        $this->assertSame(['kimyasal', 'zehirlenme', 'patlama', 'makine_arizasi'], AcilDurumKonuSecici::riskAnalizindenOner($cnc));
+        $this->assertNotContains('heyelan', AcilDurumKonuSecici::riskAnalizindenOner($cnc));
+
         $bos = Firma::factory()->for($this->uzman)->create();
         $this->assertSame([], AcilDurumKonuSecici::riskAnalizindenOner($bos));
         $this->assertNull(AcilDurumKonuSecici::kkdFaaliyetleri($bos));
