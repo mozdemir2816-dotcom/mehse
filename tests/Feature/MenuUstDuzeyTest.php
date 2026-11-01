@@ -27,7 +27,7 @@ class MenuUstDuzeyTest extends TestCase
         $this->assertContains('Saha', $ustDuzey);
 
         $genel = $menu->first(fn ($g) => $g->getLabel() === 'Genel')->getItems()->map(fn ($i) => $i->getLabel())->all();
-        $this->assertSame(['Kontrol Merkezi', 'Ziyaret Planlama', 'Dış Paydaş', 'Pazarlama & Talepler'], $genel);
+        $this->assertSame(['Kontrol Merkezi', 'Ziyaret Planlama', 'Dış Paydaş', 'Pazarlama & Talepler', 'Fatura & Profil'], $genel);
 
         $this->assertTrue(HizliSahaBulgusu::shouldRegisterNavigation());
         $this->assertFalse(SahaEkrani::shouldRegisterNavigation());
