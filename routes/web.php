@@ -22,6 +22,8 @@ Route::get('/ziyaretci/{token}', function (string $token) {
 Route::view('/', 'tanitim')->name('tanitim');
 // url() alt klasörde (localhost/mehse) de doğru adresi üretir; düz '/admin' klasör adını düşürüyordu.
 Route::get('/tanitim', fn () => redirect(url('/'), 301));
+Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
+Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
 Route::post('/teklif-talebi', TeklifTalebiController::class)->middleware('throttle:5,60')->name('tanitim.teklif');
 
 // Yıllık Planlar tek sayfadan üç ayrı sayfaya bölündü (01.10.2026) — eski yer imleri.

@@ -5,12 +5,15 @@ namespace Tests\Feature;
 use App\Filament\Auth\KayitOl;
 use App\Filament\Auth\OsgbBasvuru;
 use App\Filament\Pages\Basvurular;
+use App\Mail\OsgbOnayMail;
 use App\Models\Basvuru;
 use App\Models\User;
 use App\Support\YasalMetinler;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -142,6 +145,64 @@ class BasvuruTest extends TestCase
         $this->assertSame($sahip->id, $basvuru->inceleyen_id);
     }
 
+    public function test_onayda_karsilama_epostasi_giris_bilgileriyle_gider_ve_whatsapp_dugmesi_cikar(): void
+    {
+        Mail::fake();
+        $this->actingAs(User::factory()->create());
+        $basvuru = Basvuru::create([...Arr::except($this->osgbVerisi(), ['yasal_onay_sozlesme', 'yasal_onay_kvkk']), 'telefon' => '0532 111 22 33', 'tip' => 'osgb', 'durum' => 'beklemede']);
+
+        Livewire::test(Basvurular::class)
+            ->assertTableActionVisible('onayla', $basvuru)
+            ->assertTableActionHidden('whatsapp', $basvuru)
+            ->callTableAction('onayla', $basvuru)
+            ->assertHasNoTableActionErrors()
+            ->assertNotified();
+
+        $user = User::query()->where('email', 'ayse@ornekosgb.com')->firstOrFail();
+        $giden = null;
+        Mail::assertSent(OsgbOnayMail::class, function (OsgbOnayMail $m) use ($user, &$giden) {
+            $giden = $m;
+
+            return $m->hasTo('ayse@ornekosgb.com') && $m->user->is($user);
+        });
+
+        // Gönderilen geçici şifre hesabın gerçek şifresi; e-posta bilgileri içerir.
+        $this->assertTrue(Hash::check($giden->geciciSifre, $user->password));
+        $this->assertSame('Örnek OSGB Ltd.', $giden->osgbUnvani);
+        $this->assertSame(today()->addDays(90)->format('d.m.Y'), $giden->denemeBitis);
+        $giden->assertHasSubject('Mehse İSG Platformu - OSGB Hesabınız ve 90 Günlük Denemeniz Başlatıldı');
+        $giden->assertSeeInHtml($giden->geciciSifre);
+        $giden->assertSeeInHtml('Örnek OSGB Ltd. adına ilettiğiniz kurumsal OSGB başvurusu onaylanmıştır', false);
+        $giden->assertSeeInHtml(url('/admin/login'));
+        $giden->assertSeeInHtml('Panele Giriş Yap');
+
+        $basvuru->refresh();
+        $url = $basvuru->whatsappUrl();
+        $this->assertStringStartsWith('https://wa.me/905321112233?text=', $url);
+        $mesaj = rawurldecode(substr($url, strpos($url, '=') + 1));
+        $this->assertStringContainsString('Ayşe Başvuran', $mesaj);
+        $this->assertStringContainsString('ayse@ornekosgb.com', $mesaj);
+        $this->assertStringNotContainsString($giden->geciciSifre, $mesaj);
+
+        Livewire::test(Basvurular::class)
+            ->assertTableActionHidden('onayla', $basvuru)
+            ->assertTableActionVisible('whatsapp', $basvuru)
+            ->assertTableActionHasUrl('whatsapp', $url, $basvuru);
+    }
+
+    public function test_eposta_gitmese_de_hesap_acilir(): void
+    {
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP kapalı'));
+        $this->actingAs(User::factory()->create());
+        $basvuru = Basvuru::create([...Arr::except($this->osgbVerisi(), ['yasal_onay_sozlesme', 'yasal_onay_kvkk']), 'tip' => 'osgb', 'durum' => 'beklemede']);
+
+        ['eposta_gitti' => $gitti] = \App\Support\BasvuruIslemleri::onayla($basvuru, auth()->user());
+
+        $this->assertFalse($gitti);
+        $this->assertSame('onaylandi', $basvuru->fresh()->durum);
+        $this->assertTrue(User::query()->where('email', 'ayse@ornekosgb.com')->exists());
+    }
+
     public function test_sahip_osgb_basvurusunu_nedenle_reddeder(): void
     {
         $this->actingAs(User::factory()->create());
@@ -164,25 +225,25 @@ class BasvuruTest extends TestCase
         $this->get(OsgbBasvuru::getUrl())->assertOk()
             ->assertSee('Mehse Hizmet ve Kullanım Sözleşmesini')
             ->assertSee('kişisel verilerimin işlenmesi hakkında bilgilendirildim', escape: false)
-            ->assertSee('Sürüm 1.2 · 01.11.2026')
+            ->assertSee('Sürüm 1.3 · 01.11.2026')
             ->assertSee('Sağlayıcı: Mehse adıyla faaliyet gösteren');
     }
 
     public function test_sozlesmede_saglayici_ve_hizmet_kosullari_dolu_taslak_isareti_kalmaz(): void
     {
-        config(['isg.kayit.saglayici.unvan' => 'Deneme Kişi', 'isg.kayit.saglayici.vergi' => 'Nilüfer V.D. / 123']);
+        config(['isg.kayit.saglayici.unvan' => 'Deneme Kişi', 'isg.kayit.saglayici.vergi_no' => '1234567890']);
         $html = view('yasal.sozlesme')->render();
 
         $this->assertStringNotContainsString('<mark', $html);
         $this->assertStringNotContainsString('[', strip_tags($html));
-        foreach (['Deneme Kişi', 'Nilüfer V.D. / 123', 'Nilüfer / Bursa', 'mozdemir2816@gmail.com', '0506 475 48 55',
-            '90 gün ücretsiz kurumsal deneme', 'hafta içi 09:00 - 18:00', 'günlük otomatik veritabanı yedeklemesi'] as $metin) {
+        foreach (['Deneme Kişi', 'Uludağ Vergi Dairesi / 1234567890', 'Nilüfer / Bursa', 'mozdemir2816@gmail.com', '0506 475 48 55',
+            '90 gün ücretsiz kurumsal deneme', 'hafta içi 09:00 - 18:00', 'İSG Kurulu, Periyodik Kontrol', 'günlük otomatik veritabanı yedeklemesi'] as $metin) {
             $this->assertStringContainsString($metin, $html);
         }
 
         // Sağlayıcı kimliği girilmemişse taslak işareti görünür kalır (boş bırakılmaz).
-        config(['isg.kayit.saglayici.unvan' => null]);
-        $this->assertStringContainsString('<mark class="mehse-yasal-bos">[gerçek kişi adı', view('yasal.sozlesme')->render());
+        config(['isg.kayit.saglayici.vergi_no' => null]);
+        $this->assertStringContainsString('<mark class="mehse-yasal-bos">[vergi numarası]', view('yasal.sozlesme')->render());
     }
 
     public function test_onay_kutulari_isaretlenmeden_basvuru_yapilamaz(): void

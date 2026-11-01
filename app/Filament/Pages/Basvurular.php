@@ -92,6 +92,51 @@ class Basvurular extends Page implements HasTable
                 SelectFilter::make('durum')->label('Durum')->options(Basvuru::DURUMLAR),
             ])
             ->recordActions([
+                Action::make('onayla')
+                    ->label('Onayla & Hesap Aç')
+                    ->button()
+                    ->size('sm')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Basvuru $b): bool => $b->tip === 'osgb' && $b->durum === 'beklemede')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Basvuru $b): string => $b->baslik().' onaylansın mı?')
+                    ->modalDescription(fn (Basvuru $b): string => "{$b->eposta} adına hesap açılacak ve "
+                        .config('isg.kayit.osgb_deneme_gun', 90).' günlük deneme başlayacak. Giriş bilgileri başvurana e-postayla gönderilir; geçici şifre ayrıca bir sonraki ekranda bir kez gösterilir.')
+                    ->action(function (Basvuru $b): void {
+                        /** @var User $sahip */
+                        $sahip = Filament::auth()->user();
+
+                        try {
+                            ['user' => $user, 'sifre' => $sifre, 'eposta_gitti' => $epostaGitti] = BasvuruIslemleri::onayla($b, $sahip);
+                        } catch (ValidationException $e) {
+                            Notification::make()->title('Onaylanamadı')->body(collect($e->errors())->flatten()->first())->danger()->send();
+
+                            return;
+                        }
+
+                        $eposta = $epostaGitti
+                            ? "Giriş bilgileri {$user->email} adresine e-postayla gönderildi."
+                            : "E-POSTA GÖNDERİLEMEDİ — şifreyi kişiye kendiniz iletin.";
+
+                        Notification::make()
+                            ->title('Hesap açıldı — '.$user->name)
+                            ->body("{$eposta}\nE-posta: {$user->email}\nGeçici şifre: {$sifre}\n\nBu şifre yalnız şimdi gösteriliyor. Sayfa yetkilerini Kullanıcı Yönetimi'nden tanımlayın.")
+                            ->color($epostaGitti ? 'success' : 'warning')
+                            ->status($epostaGitti ? 'success' : 'warning')
+                            ->persistent()
+                            ->send();
+                    }),
+
+                Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->tooltip('Yetkiliye "hesabınız açıldı, giriş bilgileri e-postanızda" mesajı aç')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    ->button()
+                    ->size('sm')
+                    ->url(fn (Basvuru $b): ?string => $b->whatsappUrl(), shouldOpenInNewTab: true)
+                    ->visible(fn (Basvuru $b): bool => $b->whatsappUrl() !== null),
                 ActionGroup::make([
                 Action::make('detay')
                     ->label('Detay')
@@ -121,35 +166,6 @@ class Basvurular extends Page implements HasTable
                             TextEntry::make('red_nedeni')->label('Red nedeni')->visible($b->durum === 'reddedildi')->columnSpanFull(),
                         ]))),
                     ]),
-
-                Action::make('onayla')
-                    ->label('Onayla')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (Basvuru $b): bool => $b->tip === 'osgb' && $b->durum === 'beklemede')
-                    ->requiresConfirmation()
-                    ->modalHeading(fn (Basvuru $b): string => $b->baslik().' onaylansın mı?')
-                    ->modalDescription(fn (Basvuru $b): string => "{$b->eposta} adına hesap açılacak ve "
-                        .config('isg.kayit.osgb_deneme_gun', 90).' günlük deneme başlayacak. Geçici şifre bir sonraki ekranda bir kez gösterilir.')
-                    ->action(function (Basvuru $b): void {
-                        /** @var User $sahip */
-                        $sahip = Filament::auth()->user();
-
-                        try {
-                            ['user' => $user, 'sifre' => $sifre] = BasvuruIslemleri::onayla($b, $sahip);
-                        } catch (ValidationException $e) {
-                            Notification::make()->title('Onaylanamadı')->body(collect($e->errors())->flatten()->first())->danger()->send();
-
-                            return;
-                        }
-
-                        Notification::make()
-                            ->title('Hesap açıldı — '.$user->name)
-                            ->body("E-posta: {$user->email}\nGeçici şifre: {$sifre}\n\nBu şifre yalnız şimdi gösteriliyor; kişiye iletin, ilk girişte değiştirmesini isteyin. Sayfa yetkilerini Kullanıcı Yönetimi'nden tanımlayın.")
-                            ->success()
-                            ->persistent()
-                            ->send();
-                    }),
 
                 Action::make('reddet')
                     ->label('Reddet')

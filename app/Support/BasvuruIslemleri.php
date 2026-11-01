@@ -2,21 +2,25 @@
 
 namespace App\Support;
 
+use App\Mail\OsgbOnayMail;
 use App\Models\Basvuru;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
  * OSGB başvurusunun sahip tarafından incelenmesi (App\Filament\Pages\Basvurular).
  * Onay: başvuran adına hesap açılır, deneme süresi başlar, geçici şifre
- * yalnız bir kez döndürülür (e-posta gönderilmez — sahip kişiye iletir).
+ * yalnız bir kez döndürülür ve başvurana karşılama e-postasıyla gönderilir
+ * (App\Mail\OsgbOnayMail). E-posta gitmezse hesap yine açılır; sahip şifreyi
+ * ekrandaki bildirimden kişiye iletir.
  */
 class BasvuruIslemleri
 {
     /**
-     * @return array{user: User, sifre: string}
+     * @return array{user: User, sifre: string, eposta_gitti: bool}
      *
      * @throws ValidationException e-posta başka bir hesapta kayıtlıysa
      */
@@ -57,7 +61,26 @@ class BasvuruIslemleri
             return $user;
         });
 
-        return ['user' => $user, 'sifre' => $sifre];
+        return ['user' => $user, 'sifre' => $sifre, 'eposta_gitti' => self::karsilamaGonder($basvuru, $user, $sifre)];
+    }
+
+    /** Karşılama e-postası; gönderilemezse onay geri alınmaz, sorun log'a yazılır. */
+    private static function karsilamaGonder(Basvuru $basvuru, User $user, string $sifre): bool
+    {
+        try {
+            Mail::to($user->email)->send(new OsgbOnayMail(
+                $user,
+                $sifre,
+                $basvuru->baslik(),
+                $user->abonelik_bitis->format('d.m.Y'),
+            ));
+
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
     }
 
     public static function reddet(Basvuru $basvuru, User $inceleyen, ?string $neden): void

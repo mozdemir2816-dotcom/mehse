@@ -261,3 +261,27 @@ section[id] { scroll-margin-top: 80px; }
   html { scroll-behavior: auto; }
   .kart, .dugme, .modul { transition: none; }
 }
+
+/* KVKK onay bağlantısı + alt bilgi yasal bağlantılar */
+.kvkk a { color: var(--lacivert-800); text-decoration: underline; }
+.telif a { color: #94a3b8; text-decoration: underline; }
+.telif a:hover { color: #fff; }
+
+/* Herkese açık yasal sayfalar (/kvkk, /cerez-politikasi) */
+.yasal-sayfa { background: #f8fafc; padding: 48px 0 72px; }
+.yasal-kap { max-width: 860px; }
+.yasal-sayfa h1 { font-size: 1.9rem; font-weight: 800; color: var(--lacivert-950); margin-bottom: 24px; }
+.yasal-metin { background: #fff; border: 1px solid var(--cizgi); border-radius: 16px; padding: 28px; font-size: .95rem; line-height: 1.7; color: #334155; }
+.yasal-metin p, .yasal-metin ul { margin: 0 0 14px; }
+.yasal-metin ul { padding-left: 22px; list-style: disc; }
+.yasal-metin li { margin-bottom: 6px; }
+.yasal-metin h3 { font-size: 1.05rem; font-weight: 700; color: var(--lacivert-950); margin: 24px 0 10px; }
+.yasal-metin h4 { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--soluk); margin: 28px 0 4px; }
+.yasal-metin a { color: var(--lacivert-800); text-decoration: underline; }
+.yasal-metin .mehse-yasal-bos { background: #fef08a; padding: 0 3px; border-radius: 3px; }
+.yasal-tablo-kap { overflow-x: auto; margin-bottom: 14px; }
+.yasal-tablo { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.yasal-tablo th, .yasal-tablo td { border: 1px solid var(--cizgi); padding: 10px 12px; text-align: left; vertical-align: top; }
+.yasal-tablo th { background: #f1f5f9; font-weight: 700; color: var(--lacivert-950); }
+.yasal-alt { display: flex; flex-wrap: wrap; gap: 0 24px; justify-content: space-between; }
+@media (min-width: 640px) { .yasal-metin { padding: 40px; } }

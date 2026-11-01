@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Support\WhatsApp;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 
 /** Tanıtım sayfasındaki teklif formundan gelen talep (üye olmayan ziyaretçi). */
 class TeklifTalebi extends Model
 {
+    use Prunable;
+
     protected $table = 'teklif_talepleri';
 
     protected $guarded = ['id'];
@@ -27,17 +32,7 @@ class TeklifTalebi extends Model
      */
     public function whatsappNumarasi(): ?string
     {
-        $rakam = preg_replace('/\D/', '', (string) $this->telefon);
-
-        $rakam = match (true) {
-            str_starts_with($rakam, '0090') => substr($rakam, 2),
-            str_starts_with($rakam, '90') && strlen($rakam) === 12 => $rakam,
-            str_starts_with($rakam, '0') && strlen($rakam) === 11 => '9'.$rakam,
-            strlen($rakam) === 10 => '90'.$rakam,
-            default => $rakam,
-        };
-
-        return preg_match('/^905\d{9}$/', $rakam) ? $rakam : null;
+        return WhatsApp::numara($this->telefon);
     }
 
     /** Müşteriye hazır şablonla WhatsApp mesajı. */
@@ -50,9 +45,13 @@ class TeklifTalebi extends Model
 
     public function whatsappUrl(): ?string
     {
-        $no = $this->whatsappNumarasi();
+        return WhatsApp::url($this->telefon, $this->whatsappMesaji());
+    }
 
-        return $no ? 'https://wa.me/'.$no.'?text='.rawurlencode($this->whatsappMesaji()) : null;
+    /** KVKK md.3A: son işlemden 1 yıl sonra otomatik silinir (routes/console.php model:prune). */
+    public function prunable(): Builder
+    {
+        return static::where('updated_at', '<', now()->subYear());
     }
 
     /** Sol menü ve sekme rozeti: henüz ilgilenilmemiş talepler. */

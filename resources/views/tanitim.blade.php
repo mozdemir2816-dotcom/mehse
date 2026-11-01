@@ -348,7 +348,7 @@
                             </select>
                         </label>
                     </div>
-                    <label class="kvkk"><input type="checkbox" name="kvkk" value="1" required><span>Kişisel verilerimin teklif sürecinde işlenmesini kabul ediyorum.</span></label>
+                    <label class="kvkk"><input type="checkbox" name="kvkk" value="1" required><span><a href="{{ route('kvkk') }}" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni okudum; kişisel verilerimin teklif sürecinde işlenmesi hakkında bilgilendirildim.</span></label>
                     <button type="submit" class="dugme dugme-yesil">Teklif Talebi Gönder</button>
                     <p class="form-not">Bilgileriniz yalnızca teklif için sizinle iletişime geçmekte kullanılır.</p>
                 </form>
@@ -410,7 +410,7 @@
             <a href="{{ $waLink }}" target="_blank" rel="noopener" class="dugme dugme-yesil dugme-kucuk">{!! $wa !!} WhatsApp Destek</a>
         </div>
     </div>
-    <div class="telif"><div class="kap"><p>© {{ date('Y') }} Mehse İSG. Tüm hakları saklıdır.</p></div></div>
+    <div class="telif"><div class="kap"><p>© {{ date('Y') }} Mehse İSG. Tüm hakları saklıdır. · <a href="{{ route('kvkk') }}">KVKK Aydınlatma Metni</a> · <a href="{{ route('cerez') }}">Çerez Politikası</a></p></div></div>
 </footer>
 
 <a href="{{ $waLink }}" target="_blank" rel="noopener" class="wa-sabit" aria-label="WhatsApp ile yazın">{!! $wa !!}</a>

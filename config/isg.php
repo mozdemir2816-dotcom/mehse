@@ -6949,11 +6949,12 @@ return [
     'kayit' => [
         'osgb_deneme_gun' => 90,
         // Hizmet sözleşmesi md.1 Sağlayıcı kimliği (resources/views/yasal/sozlesme.blade.php).
-        // unvan/vergi boşsa sözleşmede sarı taslak işareti görünür.
+        // unvan / vergi_no boşsa sözleşmede sarı taslak işareti görünür.
         'saglayici' => [
-            'unvan' => null,
+            'unvan' => 'Mehmet Özdemir - Mehse İş Sağlığı ve Güvenliği',
             'adres' => 'Nilüfer / Bursa',
-            'vergi' => null,
+            'vergi_dairesi' => 'Uludağ Vergi Dairesi',
+            'vergi_no' => null,
             'eposta' => 'mozdemir2816@gmail.com',
             'telefon' => '0506 475 48 55',
         ],
@@ -6971,14 +6972,14 @@ return [
                 'baglanti' => 'Mehse Hizmet ve Kullanım Sözleşmesini',
                 'onay_sonrasi' => 'okudum ve kabul ediyorum',
                 'gorunum' => 'yasal.sozlesme',
-                'revizyon' => 'Sürüm 1.2 · 01.11.2026',
+                'revizyon' => 'Sürüm 1.3 · 01.11.2026',
             ],
             'kvkk' => [
                 'baslik' => 'Mehse KVKK Aydınlatma Metni',
                 'baglanti' => 'Mehse KVKK Aydınlatma Metnini',
                 'onay_sonrasi' => 'okudum ve kişisel verilerimin işlenmesi hakkında bilgilendirildim.',
                 'gorunum' => 'yasal.kvkk',
-                'revizyon' => 'Sürüm 1.2 · 30.09.2026',
+                'revizyon' => 'Sürüm 1.3 · 01.11.2026',
             ],
         ],
     ],

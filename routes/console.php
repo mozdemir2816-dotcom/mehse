@@ -13,8 +13,9 @@ Artisan::command('inspire', function () {
 // cPanel cron her dakika "/usr/local/bin/php artisan schedule:run" çalıştırır.
 
 // Firmalar Çöp Kutusu: süresi (Firma::COP_SURESI_AY) dolanları kalıcı sil.
+// KVKK saklama süreleri: teklif talepleri 1 yıl, reddedilen başvurular 1 yıl (yasal/kvkk.blade.php).
 // Sunucuda cron yoksa Firmalar listesi açılırken de temizlenir (ListFirmas::mount).
-Schedule::call(fn () => Artisan::call('model:prune', ['--model' => [\App\Models\Firma::class]]))
+Schedule::call(fn () => Artisan::call('model:prune', ['--model' => [\App\Models\Firma::class, \App\Models\TeklifTalebi::class, \App\Models\Basvuru::class]]))
     ->name('model:prune')->daily();
 
 // Telefon bildirimi: her sabah yeni kritik/uyarıların özeti (App\Support\TelefonBildirimi).
