@@ -103,6 +103,20 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'kurumsal' => 'Kurumsal & Sanayi',
     ];
 
+    /** Fatura & Profil sayfası (users.fatura_tipi). */
+    public const FATURA_TIPLERI = [
+        'bireysel' => 'Bireysel (şahıs)',
+        'kurumsal' => 'Kurumsal (şirket)',
+    ];
+
+    /** Fatura bilgileri eksiksiz girilmiş mi (ad/ünvan, vergi/TC no, adres, il, ilçe). */
+    public function faturaBilgisiTamMi(): bool
+    {
+        return filled($this->fatura_tipi) && filled($this->fatura_unvan) && filled($this->vergi_no)
+            && filled($this->fatura_adresi) && filled($this->fatura_il) && filled($this->fatura_ilce)
+            && ($this->fatura_tipi !== 'kurumsal' || filled($this->vergi_dairesi));
+    }
+
     /**
      * Panel erişimi açık mı (App\Http\Middleware\CheckTrialPeriod). Sahip hesap ve
      * bitiş tarihi olmayan hesaplar muaf; bitiş günü dahil erişim sürer.

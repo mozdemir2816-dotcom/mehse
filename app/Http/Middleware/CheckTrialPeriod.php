@@ -18,6 +18,7 @@ class CheckTrialPeriod
     public const MUAF_ROTALAR = [
         'filament.admin.deneme-bitti',
         'filament.admin.paketler',
+        'filament.admin.pages.fatura-profil',
         'filament.admin.auth.logout',
     ];
 
