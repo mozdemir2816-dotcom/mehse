@@ -181,28 +181,14 @@ class RiskMaddesi extends Model
         return RiskSkorlama::bant($yontem, (float) $this->puan)['renk'];
     }
 
-    /**
-     * PDF'te dar sütuna sığan dikey düzey yazısı — her harf ayrı satırda
-     * (transform:rotate yerine; dompdf'te rotate edilen kutu, satırın
-     * kendi hücresine göre kayabiliyor, harf harf alt alta yazmak tabloya
-     * bağlı kalıp satırla her zaman hizalı kalır). Tam ad harf harf çok
-     * uzun sütun oluşturuyordu → iki harflik kısaltma (ÇY, YK…), açıklaması
-     * PDF'te tablonun üstünde (kullanıcı kararı 14.10.2026).
-     */
-    public function duzeyDikey(): ?string
+    /** PDF düzey sütunundaki iki harflik kısaltma (ÇY, YK, ÖN, OL, KE); açıklaması tablonun üstünde. */
+    public function duzeyKisa(): ?string
     {
-        return $this->dikey($this->duzey);
+        return RiskSkorlama::kisaltma($this->riskDegerlendirmesi?->yontem ?? 'matris_5x5', $this->duzey);
     }
 
-    public function sonDuzeyDikey(): ?string
+    public function sonDuzeyKisa(): ?string
     {
-        return $this->dikey($this->son_duzey);
-    }
-
-    private function dikey(?string $duzey): ?string
-    {
-        $kisa = RiskSkorlama::kisaltma($this->riskDegerlendirmesi?->yontem ?? 'matris_5x5', $duzey);
-
-        return $kisa ? implode("\n", mb_str_split($kisa)) : null;
+        return RiskSkorlama::kisaltma($this->riskDegerlendirmesi?->yontem ?? 'matris_5x5', $this->son_duzey);
     }
 }

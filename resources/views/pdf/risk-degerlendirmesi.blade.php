@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <style>
-    @page { margin: 46px 25px 78px 25px; }
+    @page { margin: 46px 25px 95px 25px; }
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 11px; }
     /* KAPAK — Risk_Degerlendirmesi_Kapak.docx: ortalı başlık, açık gri etiket hücreli tablolar */
     .kapak { margin: 0 35px; page-break-after: always; position: relative; }
-    /* Sabit şeritleri kapakta örter: @page marjları üst 46px / alt 78px, yatay 25px; içerik yüksekliği 1123-46-78 = 999px. */
+    /* Sabit şeritleri kapakta örter: @page marjları üst 46px / alt 95px, yatay 25px; içerik yüksekliği 1123-46-95 = 982px. */
     .kapak .k-ort { position: absolute; left: -60px; right: -60px; background: #fff; z-index: 50; }
     .kapak .k-ort-ust { top: -46px; height: 46px; }
-    .kapak .k-ort-alt { top: 999px; height: 78px; }
+    .kapak .k-ort-alt { top: 982px; height: 95px; }
     .kapak .k-logo { text-align: center; font-size: 12px; margin-top: 4px; }
     .kapak .k-logo img { max-height: 54px; max-width: 220px; }
     .kapak .k-ust { text-align: center; font-size: 13px; margin-top: 22px; }
@@ -59,8 +59,8 @@
        normal tablo akışında kalır, satırla her zaman hizalı kalması garanti olur.
        Renk artık span'e değil kutunun tamamını dolduran <td>'ye uygulanıyor
        (col-duzey vertical-align:middle ile satırın ortasında kalıyor). */
-    .duzey-dikey { color: #fff; font-size: 8px; font-weight: bold; line-height: 1.1;
-        white-space: pre-line; display: block; text-align: center; }
+    /* 01.11.2026: harf harf alt alta (Ç/Y) yerine tek satır; sütun 2 → 3%. */
+    .duzey-kisa { color: #fff; font-size: 7.5px; font-weight: bold; white-space: nowrap; display: block; text-align: center; }
     .imza { margin-top: 50px; width: 100%; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     table.onay { width: 100%; border-collapse: collapse; margin-top: 30px; table-layout: fixed; }
@@ -72,11 +72,11 @@
     .prosedur p { font-size: 10.5px; margin: 2px 0 8px; white-space: pre-line; }
 
     /* HER SAYFANIN ALT BİLGİSİ — imza/kaşe şeridi (@page margin-bottom bunun için ayrıldı).
-       -78px = @page'in alt marjıyla (bottom:78px) aynı: şerit sayfanın gerçek alt
+       -95px = @page'in alt marjıyla (bottom:95px) aynı: şerit sayfanın gerçek alt
        kenarına dayanır, böylece içerik kutusu ile şerit arasında sayfa numarası
        için boşluk kalır (bkz. RiskDegerlendirmesiUretici::pdf() page_script). */
     .sayfa-alt {
-        position: fixed; bottom: -78px; left: 0; right: 0;
+        position: fixed; bottom: -95px; left: 0; right: 0;
         border-top: 1px solid #999; padding-top: 3px;
     }
 
@@ -98,10 +98,12 @@
     .sayfa-ust b { color: #111; }
     .sayfa-ust .adres { font-size: 7px; color: #666; }
     table.alt-imza { width: 100%; border-collapse: collapse; font-size: 6.5px; table-layout: fixed; }
-    table.alt-imza td { border: 1px solid #ccc; text-align: center; padding: 2px 2px 4px; vertical-align: bottom; }
-    table.alt-imza .rol { font-weight: bold; display: block; margin-bottom: 12px; }
-    table.alt-imza img { max-height: 22px; max-width: 90%; display: block; margin: 0 auto 1px; }
+    /* İmza kutuları 01.11.2026'da 1,5 kat yükseltildi (alt marj 78 → 95px — sayfa no artık şeridin içinde, imza alanı 12 → 30px, görsel 22 → 33px). */
+    table.alt-imza td { border: 1px solid #ccc; text-align: center; padding: 3px 3px 6px; vertical-align: bottom; height: 72px; }
+    table.alt-imza .rol { font-weight: bold; display: block; margin-bottom: 30px; }
+    table.alt-imza img { max-height: 33px; max-width: 90%; display: block; margin: 0 auto 1px; }
     table.alt-imza .ad { font-weight: normal; }
+    table.alt-imza td.sayfa-no { border: none; }
 </style>
 </head>
 <body>
@@ -134,9 +136,9 @@
     // Tehlike ve Risk'ten düşülür. Tehlike ile Risk ayrı sütun (kullanıcı 14.10.2026).
     $kolonlar = array_filter([
         2.5, 8, $ucEksen ? 11 : 13.5, $ucEksen ? 10 : 12.5, // No, Bölüm/Faaliyet, Tehlike, Risk
-        2.5, $ucEksen ? 2.5 : null, 2.5, 3.5, 2,           // O, F, Ş, Puan, Düzey
-        20, 7, 6,                                         // Öneri, Sorumlu, Termin
-        2.5, $ucEksen ? 2.5 : null, 2.5, 3.5, 2,           // Son O, F, Ş, Puan, Düzey
+        2.5, $ucEksen ? 2.5 : null, 2.5, 3.5, 3,           // O, F, Ş, Puan, Düzey
+        18, 7, 6,                                         // Öneri, Sorumlu, Termin (Öneri 20→18: düzey sütunları 2→3, 01.11.2026)
+        2.5, $ucEksen ? 2.5 : null, 2.5, 3.5, 3,           // Son O, F, Ş, Puan, Düzey
         9.5,                                              // Açıklama
     ]);
     $bantlar = collect($metodoloji['bantlar'] ?? [])->map(fn ($b) => $b + ['kisa' => \App\Support\RiskSkorlama::kisaltma($rd->yontem, $b['ad'])]);
@@ -237,6 +239,8 @@
                 <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
                 <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '—' }}</span>
             </td>
+            {{-- Sayfa numarası bu boş hücrenin ortasına page_script ile yazılır (RiskDegerlendirmesiUretici::SAYFA_NO_HUCRE). --}}
+            <td class="sayfa-no" style="width:9%"></td>
         </tr>
     </table>
 </div>
@@ -327,9 +331,9 @@
     @php
         $basliklar = array_values(array_filter([
             ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike'], ['', 'Risk'],
-            ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Dü<br>zey'],
+            ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Düzey'],
             ['col-oneri', 'Öneri'], ['col-sorumlu', 'Sorumlu'], ['', 'Termin'],
-            ['sayi', 'Son<br>O'], $ucEksen ? ['sayi', 'Son<br>'.$fBaslik] : null, ['sayi', 'Son<br>Ş'], ['sayi', 'Son<br>Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
+            ['sayi', 'Son<br>O'], $ucEksen ? ['sayi', 'Son<br>'.$fBaslik] : null, ['sayi', 'Son<br>Ş'], ['sayi', 'Son<br>Puan'], ['col-duzey', 'Son<br>Düzey'],
             ['col-aciklama', 'Açıklama'],
         ]));
         $kolonlar = array_values($kolonlar);
@@ -361,7 +365,7 @@
                 @endif
                 <td class="sayi">{{ $sayi($m->siddet) }}</td>
                 <td class="sayi">{{ $sayi($m->puan) }}</td>
-                <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-dikey">{{ $m->duzeyDikey() }}</span></td>
+                <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-kisa">{{ $m->duzeyKisa() }}</span></td>
                 <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
                 <td class="col-sorumlu">{{ $m->sorumluMetni() }}</td>
                 <td>{{ $m->termin ?: \App\Models\RiskMaddesi::VARSAYILAN_TERMIN }}</td>
@@ -371,7 +375,7 @@
                 @endif
                 <td class="sayi">{{ $sayi($m->son_siddet) }}</td>
                 <td class="sayi">{{ $m->son_puan ? $sayi($m->son_puan) : '—' }}</td>
-                <td class="col-duzey" @if($m->son_duzey) style="background:{{ \App\Support\RiskSkorlama::bant($rd->yontem, (float) $m->son_puan)['renk'] }}" @endif>@if($m->son_duzey)<span class="duzey-dikey">{{ $m->sonDuzeyDikey() }}</span>@else — @endif</td>
+                <td class="col-duzey" @if($m->son_duzey) style="background:{{ \App\Support\RiskSkorlama::bant($rd->yontem, (float) $m->son_puan)['renk'] }}" @endif>@if($m->son_duzey)<span class="duzey-kisa">{{ $m->sonDuzeyKisa() }}</span>@else — @endif</td>
                 <td class="col-aciklama">{{ $m->aciklamaMetni() }}</td>
             </tr>
         @endforeach

@@ -287,7 +287,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('Firmaya özel not: X ekipmanı beklemede', $html);
 
         // Açıklama başlığı Son Düzey'den SONRA (en sağda) olmalı.
-        $sonDuzeyPos = strpos($html, '>Son<br>Dü<br>zey<');
+        $sonDuzeyPos = strpos($html, '>Son<br>Düzey<');
         $aciklamaPos = strpos($html, '%">Açıklama</th>');
         $this->assertNotFalse($sonDuzeyPos);
         $this->assertNotFalse($aciklamaPos);
@@ -570,20 +570,20 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame('hesap/imza.png', $hazirlayan->imza_gorseli);
     }
 
-    public function test_risk_maddesi_duzey_dikey_iki_harf_kisaltma_alt_alta_yazar(): void
+    public function test_risk_maddesi_duzey_iki_harf_kisaltma(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
         $m = $rd->maddeler()->create(['tehlike' => 'Test', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 15]);
 
-        $this->assertSame("Ç\nY", $m->duzeyDikey()); // Çok Yüksek Risk → ÇY
+        $this->assertSame('ÇY', $m->duzeyKisa()); // Çok Yüksek Risk → ÇY
         // Önlem sonrası olasılık/şiddet girilmemişse varsayılan uygulanır:
         // olasılık 1'e düşer, şiddet+frekans öneri öncesiyle aynı kalır.
         $this->assertSame(1.0, $m->son_olasilik);
         $this->assertSame(15.0, $m->son_siddet);
         $this->assertSame(6.0, $m->son_frekans);
         $this->assertSame(90.0, $m->son_puan);
-        $this->assertSame("Ö\nN", $m->sonDuzeyDikey()); // Önemli Risk → ÖN
+        $this->assertSame('ÖN', $m->sonDuzeyKisa()); // Önemli Risk → ÖN
     }
 
     public function test_onlem_sonrasi_olasilik_siddet_varsayilani_kendisi_girilince_ezilmez(): void
@@ -970,7 +970,7 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('%">Son<br>F</th>', $html);
         $this->assertStringContainsString('<td class="sayi">0,2</td>', $html);   // 0.2 değil
         $this->assertStringContainsString('<td class="sayi">16</td>', $html);    // 0,2 × 2 × 40
-        $this->assertStringContainsString("Ç\nY", $html);                         // Çok Yüksek (1440)
+        $this->assertStringContainsString('>ÇY</span>', $html);                   // Çok Yüksek (1440), tek satır
         $this->assertStringContainsString('Deneme Şantiyesi', $html);            // kapak proje adı
     }
 }

@@ -209,11 +209,11 @@ class RiskDegerlendirmesiUretici
 
     /**
      * Sayfa numarası kapakta (1. sayfa) gösterilmez, diğer sayfalarda devam eder.
-     * Üstte DEĞİL, alt marjda (tablo bittikten SONRA, imza şeridinden ÖNCE)
-     * konumlanır — üstte tabloya çok yakın olduğu için üstüne biniyordu.
+     * Alt imza şeridinin sağındaki boş hücrenin ortasında (kullanıcı 01.11.2026; önceden şeridin üstündeydi)
+     * — sayfanın üstünde tabloya çok yakın olduğu için üstüne biniyordu.
      *
-     * @page alt marjı 78px, imza şeridi (.sayfa-alt) tam o marjın altına
-     * yaslanmış durumda (bottom:-78px). $oncekiSayfa: birleştirilen belgede bu
+     * @page alt marjı 95px, imza şeridi (.sayfa-alt) tam o marjın altına
+     * yaslanmış durumda (bottom:-95px). $oncekiSayfa: birleştirilen belgede bu
      * parçadan önceki sayfa sayısı; $toplam: tüm belgenin sayfa sayısı.
      *
      * @param  array{0: float, 1: float, 2: float, 3: float}|null  $toplamHucre
@@ -242,12 +242,20 @@ class RiskDegerlendirmesiUretici
             }
 
             // Son sayfada (Ekip + ONAY) imzalar ONAY tablosunda: alt imza şeridi beyazla örtülür,
-            // aynı kişiler iki kez imza atmasın (kullanıcı 14.10.2026). Şerit = alt 78px = 58.5pt.
+            // aynı kişiler iki kez imza atmasın (kullanıcı 14.10.2026). Şerit = alt 95px ≈ 72pt.
             if ($no === $toplam) {
-                $canvas->filled_rectangle(0, $canvas->get_height() - 59, $canvas->get_width(), 59, [1, 1, 1]);
+                $canvas->filled_rectangle(0, $canvas->get_height() - 72, $canvas->get_width(), 72, [1, 1, 1]);
             }
 
-            $canvas->text($canvas->get_width() - 90, $canvas->get_height() - 64, "Sayfa {$no} / {$toplam}", $font, 8, [0.4, 0.4, 0.4]);
+            // İmza şeridinin sağındaki boş hücrenin (td.sayfa-no, içerik genişliğinin %9'u) ortasına iki satır
+            // (kullanıcı 01.11.2026). Yatay kenar boşluğu 25px = 18.75pt; şerit ≈ alttan 64pt, ortası alttan ~32pt.
+            $w = $canvas->get_width();
+            $ortaX = $w - 18.75 - 0.045 * ($w - 37.5);
+            $ortaY = $canvas->get_height() - 32;
+            foreach (['Sayfa' => -9.5, "{$no} / {$toplam}" => 0.5] as $metin => $dy) {
+                $x = $ortaX - $fontMetrics->getTextWidth($metin, $font, 8) / 2;
+                $canvas->text($x, $ortaY + $dy, $metin, $font, 8, [0.4, 0.4, 0.4]);
+            }
         });
     }
 
