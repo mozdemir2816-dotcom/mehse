@@ -338,4 +338,19 @@ class TanitimSayfasiTest extends TestCase
         $this->actingAs(User::factory()->create(['rol' => 'uzman']));
         $this->assertNull(\App\Filament\Pages\Pazarlama::getNavigationBadge());
     }
+
+    public function test_segment_sinerji_ve_standart_rozetleri(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSeeInOrder(['Kime Nasıl Çözüm Üretiyoruz?', 'Kurumsal OSGB Çözümü', 'Uzman &amp; Hekim Paketi', 'Bursa Yerinde Danışmanlık'], false)
+            ->assertSee('OSGB Paneli Kurumsal Başvuru')
+            ->assertSee('Uzman Hesabınızı Oluşturun')
+            ->assertSee('Ücretsiz Saha Keşfi İsteyin')
+            ->assertSee('Hem Güçlü Yazılım, Hem Yerinde Mühendislik Danışmanlığı')
+            ->assertSee('class="sinerji-arti"', false)
+            ->assertSeeInOrder(['Uzmanlık Alanlarımız ve Standartlarımız', 'Fine-Kinney', 'LOTO', 'TS EN 15635', 'ATEX', 'İSG-KATİP &amp; 6331', '2006/42/AT', '</main>'], false)
+            ->assertSee('role="tooltip"', false)
+            ->assertDontSee('%60')
+            ->assertDontSee('garanti');
+    }
 }

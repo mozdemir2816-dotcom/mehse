@@ -56,6 +56,15 @@
         '@type' => 'FAQPage',
         'mainEntity' => array_map(fn ($m) => ['@type' => 'Question', 'name' => $m[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $m[1]]], $sss),
     ], $jsonBayrak);
+    // Alt rozet barı: Uzmanlık Alanlarımız ve Standartlarımız (açıklama fare üstünde / dokununca).
+    $standartlar = [
+        ['Fine-Kinney & 5×5 Matris', 'Olasılık, frekans ve şiddet parametreleriyle matematiksel risk skorlama.'],
+        ['LOTO (Kilitleme / Etiketleme)', 'Bakım-onarım sırasında tehlikeli enerji kontrolü (EKED).'],
+        ['TS EN 15635 Raf Denetimi', 'Ağır yük lojistik raflarında yeşil / turuncu / kırmızı hasar sınıflandırması.'],
+        ['ATEX / Patlamadan Korunma (PKD)', 'Yanıcı gaz ve toz patlamalarına karşı EN 60079-10 esaslı bölge (zon) sınıflandırması.'],
+        ['İSG-KATİP & 6331 Uyum', 'Yasal süre atamaları ve çalışan eğitim periyotlarının mevzuata göre takibi.'],
+        ['Makine Emniyeti (2006/42/AT)', 'Pres ışık bariyerleri, çift el kumandası ve acil durdurma sistemlerinin kontrolü.'],
+    ];
 @endphp
 <!DOCTYPE html>
 <html lang="tr">
@@ -81,7 +90,7 @@
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=70">
     <meta name="theme-color" content="#0F172A">
     <link rel="stylesheet" href="{{ asset('css/tanitim.css') }}">
-    {{-- JSON-LD @php bloğunda kurulur: şablonda '@context' yazılırsa Blade onu @context komutu sanıyor. --}}
+    {{-- JSON-LD üstteki php bloğunda kurulur (yorumda bile at-php yazmayın: Blade blok başı sanıyor): şablonda '@context' yazılırsa Blade onu @context komutu sanıyor. --}}
     <script type="application/ld+json">{!! $jsonLdHizmet !!}</script>
     <script type="application/ld+json">{!! $jsonLdSss !!}</script>
 </head>
@@ -168,32 +177,49 @@
         </div>
     </section>
 
-    {{-- ============ KİMLER İÇİN (SEGMENT) ============ --}}
-    <section class="segment" aria-label="Kimler için">
-        <div class="kap segment-izgara">
-            <article class="seg-kart">
-                <p class="seg-etiket">İŞLETMELER VE SANAYİ TESİSLERİ İÇİN</p>
-                <h2>Saha İSG Danışmanlığı &amp; Denetim</h2>
-                <ul class="tik-liste">
-                    <li>{!! $tik !!}6331 sayılı Kanun ve ISO 45001 tam uyum</li>
-                    <li>{!! $tik !!}Fotoğraflı saha denetimi ve kök neden analizi</li>
-                    <li>{!! $tik !!}Dijital DÖF ile uygunsuzluklar kapanana kadar takip</li>
-                    <li>{!! $tik !!}İSG-KATİP sözleşmesi ve yasal bildirimler</li>
-                </ul>
-                <a href="#teklif" class="dugme dugme-yesil">Keşif ve Fiyat Teklifi İsteyin {!! $ok !!}</a>
-            </article>
-            <article class="seg-kart seg-koyu">
-                <p class="seg-etiket">İSG PROFESYONELLERİ &amp; OSGB'LER İÇİN</p>
-                <h2>Bulut Tabanlı İSG Yönetim Paneli</h2>
-                <ul class="tik-liste">
-                    <li>{!! $tik !!}Firmaların evrak durumunu tek ekrandan izleme</li>
-                    <li>{!! $tik !!}Yapay zekâ destekli Fine-Kinney ve 5×5 risk matrisleri</li>
-                    <li>{!! $tik !!}Tek tıkla eğitim formu ve sertifika baskısı</li>
-                    <li>{!! $tik !!}İş ekipmanı muayene takvimi ve otomatik hatırlatıcılar</li>
-                </ul>
-                <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Ücretsiz Uzman Hesabı Açın {!! $ok !!}</a>
-                <p class="seg-not">OSGB misiniz? <a href="{{ $osgbUrl }}">90 gün ücretsiz deneme için başvurun →</a></p>
-            </article>
+    {{-- ============ KİMLER İÇİN (SEGMENT) — 3 kitle ============ --}}
+    <section class="segment" aria-labelledby="segment-baslik">
+        <div class="kap">
+            <p class="ust-yazi">KİMLER İÇİN</p>
+            <h2 id="segment-baslik" class="segment-baslik">Kime Nasıl Çözüm Üretiyoruz?</h2>
+            <div class="segment-izgara uclu">
+                <article class="seg-kart">
+                    <span class="seg-rozet">Kurumsal OSGB Çözümü</span>
+                    <p class="seg-etiket">OSGB YÖNETİCİLERİ İÇİN</p>
+                    <h3>OSGB Firmaları İçin Merkezi Operasyon &amp; Yazılım</h3>
+                    <ul class="tik-liste">
+                        <li>{!! $tik !!}<span>Çoklu uzman, hekim ve sağlık personeli portföy yönetimi</span></li>
+                        <li>{!! $tik !!}<span>İSG-KATİP sözleşme periyotları ve atama takvimi</span></li>
+                        <li>{!! $tik !!}<span>Kurumsal logonuzla tek tıkla çıkan DÖF, kurul ve denetim raporları</span></li>
+                        <li>{!! $tik !!}<span>90 gün ücretsiz deneme ve bulut altyapısı</span></li>
+                    </ul>
+                    <a href="{{ $osgbUrl }}" class="dugme dugme-yesil">OSGB Paneli Kurumsal Başvuru {!! $ok !!}</a>
+                </article>
+                <article class="seg-kart seg-koyu">
+                    <span class="seg-rozet">Uzman &amp; Hekim Paketi</span>
+                    <p class="seg-etiket">BİREYSEL ÇALIŞAN İSG UZMANLARI İÇİN</p>
+                    <h3>Serbest Çalışan Uzmanlar İçin Dijital Saha Çantası</h3>
+                    <ul class="tik-liste">
+                        <li>{!! $tik !!}<span>Fine-Kinney ve 5×5 matrisli otomatik risk analiz modülü</span></li>
+                        <li>{!! $tik !!}<span>Sahada cep telefonundan fotoğraflı uygunsuzluk (DÖF) raporlama</span></li>
+                        <li>{!! $tik !!}<span>Yasal eğitim katılım tutanağı ve sınav değerlendirme otomasyonu</span></li>
+                        <li>{!! $tik !!}<span>Ekipman periyodik kontrol ve ortam ölçümü hatırlatma takvimi</span></li>
+                    </ul>
+                    <a href="{{ $kayitUrl }}" class="dugme dugme-yesil">Uzman Hesabınızı Oluşturun {!! $ok !!}</a>
+                </article>
+                <article class="seg-kart">
+                    <span class="seg-rozet">Bursa Yerinde Danışmanlık</span>
+                    <p class="seg-etiket">FABRİKA VE SANAYİ İŞVERENLERİ İÇİN</p>
+                    <h3>Sanayi Tesisleri İçin Mühendislik &amp; İSG Saha Danışmanlığı</h3>
+                    <ul class="tik-liste">
+                        <li>{!! $tik !!}<span>Otomotiv, talaşlı imalat ve lojistikte pres güvenliği, LOTO ve PKD çalışmaları</span></li>
+                        <li>{!! $tik !!}<span>Müfettiş ve kalite denetimlerine (IATF 16949, ISO 45001) hazır, düzenli yasal arşiv</span></li>
+                        <li>{!! $tik !!}<span>A Sınıfı İş Güvenliği Uzmanı ve Otomotiv Mühendisi olarak yerinde rehberlik</span></li>
+                        <li>{!! $tik !!}<span>Tesisinize özel acil durum ve tahliye tatbikatı kurguları</span></li>
+                    </ul>
+                    <a href="#teklif" class="dugme dugme-yesil">Ücretsiz Saha Keşfi İsteyin {!! $ok !!}</a>
+                </article>
+            </div>
         </div>
     </section>
 
@@ -258,6 +284,40 @@
                 <a href="{{ $osgbUrl }}" class="dugme dugme-acik">OSGB: 90 Gün Ücretsiz Deneme</a>
                 <p>Zaten üye misiniz? <a href="{{ $girisUrl }}">Giriş yapın</a></p>
             </div>
+        </div>
+    </section>
+
+    {{-- ============ YAZILIM + DANIŞMANLIK SİNERJİSİ ============ --}}
+    <section class="bolum sinerji" aria-labelledby="sinerji-baslik">
+        <div class="kap">
+            <p class="ust-yazi">İKİSİ BİR ARADA</p>
+            <h2 id="sinerji-baslik">Hem Güçlü Yazılım, Hem Yerinde Mühendislik Danışmanlığı</h2>
+            <div class="sinerji-izgara">
+                <article class="sinerji-kart">
+                    <p class="sinerji-ust">Mehse İSG Bulut Yazılımı · Dijital Altyapı</p>
+                    <p class="sinerji-etiket"><span class="ikon ikon-mavi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>Sıfır Bürokrasi, %100 Dijital Takip</p>
+                    <ul class="sinerji-liste">
+                        <li><strong>Kâğıt Formlara Son:</strong> Tüm risk analizleri, kurul kararları ve saha gözlemleri bulutta.</li>
+                        <li><strong>Gecikmeyen Periyodik Kontroller:</strong> Kompresör, vinç, forklift ve paratoner için otomatik bildirimler.</li>
+                        <li><strong>Anında Raporlama:</strong> Sahadan çekilen fotoğraflarla saniyeler içinde PDF DÖF çıktısı.</li>
+                        <li><strong>Veri Güvenliği:</strong> KVKK’ya (6698) uygun işleme, her gün yedeklenen, Türkiye’deki sunucular.</li>
+                    </ul>
+                    <a href="{{ $kayitUrl }}" class="dugme dugme-lacivert">Yazılımı Ücretsiz Deneyin {!! $ok !!}</a>
+                </article>
+                <div class="sinerji-arti" aria-hidden="true"><span>+</span><small>Sinerji</small></div>
+                <article class="sinerji-kart">
+                    <p class="sinerji-ust">A Sınıfı İSG &amp; Mühendislik Danışmanlığı · Saha Gücü</p>
+                    <p class="sinerji-etiket"><span class="ikon ikon-yesil"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4 4 2v12H3V9l4-2 1-4z"/><path d="M8 3c0 2 1.8 3 4 3s4-1 4-3M12 6v15M3 14h6M15 14h6"/></svg></span>Sahada Bizzat Yanınızdayız</p>
+                    <ul class="sinerji-liste">
+                        <li><strong>Mühendislik Yaklaşımı:</strong> Otomotiv sanayi tecrübesiyle pres emniyeti, robotik hücre ve makine koruyucuları denetimi.</li>
+                        <li><strong>Kapsamlı Risk Değerlendirmesi:</strong> Sadece matris doldurmak değil; kök neden analizi ve tehlike eliminasyonu.</li>
+                        <li><strong>Yasal Uyum Takibi:</strong> 6331 sayılı Kanun ve alt yönetmeliklere uyumun sürekli takibi; eksikler cezaya dönüşmeden raporlanır.</li>
+                        <li><strong>Uygulamalı Yangın ve Tahliye:</strong> Gerçekçi senaryolarla saha tatbikatları ve çalışan eğitimleri.</li>
+                    </ul>
+                    <a href="#teklif" class="dugme dugme-yesil">Saha Keşfi İsteyin {!! $ok !!}</a>
+                </article>
+            </div>
+            <p class="sinerji-serit">Yazılımımız saha denetimlerindeki kâğıt işini ortadan kaldırır; saha danışmanlığı verdiğimiz tesisler ise Mehse İSG yazılımına <strong>ücretsiz</strong> erişir.</p>
         </div>
     </section>
 
@@ -382,6 +442,20 @@
             <p class="sss-alt">Başka bir sorunuz mu var?
                 <a href="{{ $waLink }}" target="_blank" rel="noopener">WhatsApp'tan sorun</a> veya
                 <a href="tel:+905064754855">{{ $telefon }}</a> numarasından arayın.</p>
+        </div>
+    </section>
+    {{-- ============ UZMANLIK ALANLARI & STANDARTLAR (rozetler; açıklama fare üstünde / dokununca) ============ --}}
+    <section class="standart-bar" aria-labelledby="standart-baslik">
+        <div class="kap">
+            <h2 id="standart-baslik">Uzmanlık Alanlarımız ve Standartlarımız</h2>
+            <ul class="standart-liste">
+                @foreach ($standartlar as $i => [$ad, $aciklama])
+                    <li class="standart-rozet" tabindex="0" aria-describedby="standart-{{ $i }}">
+                        {{ $ad }}
+                        <span class="standart-ipucu" role="tooltip" id="standart-{{ $i }}">{{ $aciklama }}</span>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </section>
 </main>

@@ -80,4 +80,27 @@ class SektorSayfalariTest extends TestCase
             $this->assertSame('0.8', $adresler['https://mehse.com/sektor/'.$slug] ?? null);
         }
     }
+
+    public function test_sss_json_ld_gecerli_ve_akordiyonla_ayni(): void
+    {
+        foreach (config('sektorler') as $slug => $sektor) {
+            $this->assertCount(3, $sektor['sss']);
+            $html = $this->get(route('sektor.show', $slug))->assertOk()->getContent();
+
+            preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $bloklar);
+            $this->assertCount(1, $bloklar[1], $slug);
+            $this->assertLessThan(strpos($html, '</head>'), strpos($html, 'application/ld+json'), 'JSON-LD head içinde olmalı');
+
+            $ld = json_decode($bloklar[1][0], true, flags: JSON_THROW_ON_ERROR);
+            $this->assertSame('https://schema.org', $ld['@context']);
+            $this->assertSame('FAQPage', $ld['@type']);
+            $this->assertCount(3, $ld['mainEntity']);
+
+            foreach ($sektor['sss'] as $i => [$soru, $cevap]) {
+                $this->assertSame(['@type' => 'Question', 'name' => $soru, 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $cevap]], $ld['mainEntity'][$i]);
+                $this->assertStringContainsString('<summary>'.e($soru).'<span class="sss-isaret"', $html);
+                $this->assertStringContainsString('<p>'.e($cevap).'</p>', $html);
+            }
+        }
+    }
 }

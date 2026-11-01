@@ -31,6 +31,11 @@ return [
             ['Fabrika içi forklift trafiği', 'Yaya ve araç yollarının ayrılması, kör noktalar, hız sınırları ve operatör belgelerinin takibi.'],
             ['Gürültü ve titreşim', 'Pres ve taşlama bölümlerinde gürültü ölçümü, kulak koruyucu seçimi ve maruziyete göre sağlık gözetimi.'],
         ],
+        'sss' => [
+            ['Otomotiv yan sanayide pres emniyeti denetimleri ne sıklıkla yapılmalıdır?', 'İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği uyarınca hidrolik ve eksantrik preslerin emniyet aksamlarının (ışık bariyeri, çift el kumandası) çalışırlığı her kullanım öncesinde kontrol edilmeli; pres, yetkili kişilerce periyodik kontrolden geçirilmelidir. Mehse İSG, presler için günlük denetim ve LOTO prosedürlerini devreye alır.'],
+            ['IATF 16949 denetimlerinde İSG risk analizi nasıl hazırlanır?', 'IATF 16949 bir kalite yönetim standardıdır; ancak denetimlerde acil durum planları, çalışma ortamı ve makine emniyeti de sorgulanır. Bu denetimler için robotik hücreler, kimyasal buhar ve ergonomi risklerini kapsayan Fine-Kinney veya 5x5 raporları sunuyoruz.'],
+            ['Bursa genelinde OSB içi yerinde ön keşif süresi nedir?', 'NOSAB, DOSAB, BTSO OSB ve Hasanağa OSB bölgelerindeki otomotiv tesislerine 24 saat içinde yerinde ücretsiz ön keşif gerçekleştiriyoruz.'],
+        ],
     ],
 
     'metal-talasli-imalat' => [
@@ -53,6 +58,11 @@ return [
             ['Kaldırma ekipmanları', 'Tavan vinci ve caraskalların periyodik kontrolleri, sapan-zincir uygunluğu ve yük altında durmama kuralı.'],
             ['Lazer kesim', 'Lazer ışınımı, kesim dumanı ve yangın riski; bu faaliyet tebliğde "Çok Tehlikeli" sınıftadır.'],
         ],
+        'sss' => [
+            ['Talaşlı imalat ve CNC atölyelerinde Patlamadan Korunma Dokümanı (PKD) zorunlu mu?', 'Metal tozu çıkaran taşlama/parlatma ve yanıcı gaz kullanılan kaynaklı sahalarda patlayıcı ortam oluşma ihtimali varsa, Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yönetmelik gereği PKD hazırlanması zorunludur. Bu ihtimal risk değerlendirmesiyle belirlenir.'],
+            ['Metal işleme sektöründe hangi eldiven standartları (EN 388) uygulanmalıdır?', 'Dönen parçalara kapılma riskinde eldivensiz çalışma; çapak alma ve sac taşımada ise EN 388 Seviye D veya F kesilme dirençli eldiven matrisi uygulanır.'],
+            ['Kompresör ve basınçlı kap kontrolleri nasıl takip edilir?', 'Hava tankı ve kompresörler, İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği gereği yetkili kişilerce periyodik kontrole tabidir; kontrol periyodu ve yapılacak testler yönetmeliğin Ek-III’ünde belirlenmiştir. Panelimiz son muayene ve bir sonraki kontrol tarihlerini otomatik izler.'],
+        ],
     ],
 
     'lojistik-ve-depolama' => [
@@ -74,6 +84,11 @@ return [
             ['Yüksekte çalışma', 'Raf üst seviyelerine erişimde uygun kişi kaldırma platformu; forklift çatalında insan taşınmaması.'],
             ['Yangın güvenliği', 'Yüksek yangın yükü, sprinkler ve yangın dolabı erişimi, kaçış yollarının açık tutulması ve tatbikatlar.'],
             ['Elle taşıma ve ergonomi', 'Ağır ve tekrarlı kaldırma işlerinde bel yaralanmalarını önleyen yöntem ve yardımcı ekipman seçimi.'],
+        ],
+        'sss' => [
+            ['Endüstriyel ağır yük depo raflarının periyodik kontrolü zorunlu mudur?', 'Raf güvenliğini sağlamak 6331 sayılı Kanun kapsamında işverenin yükümlülüğüdür. TS EN 15635 standardı bu kontrolün kabul gören yöntemidir: endüstriyel raf sistemlerinin yılda en az bir kez teknik yetkin kişilerce denetlenmesini ve hasarların yeşil, turuncu, kırmızı risk seviyelerinde raporlanmasını öngörür.'],
+            ['Depolarda forklift ve yaya yolu ayrımı nasıl projelendirilir?', 'Fiziki bariyerler, darbe koruyucular, kör nokta aynaları ve epoksi zemin güvenlik çizgileri ile sıfır kaza standartlarında saha trafik planı çizilir.'],
+            ['Depo yangın yükü ve acil durum tahliye planı nasıl hazırlanır?', 'Binaların Yangından Korunması Hakkında Yönetmelik kapsamında depolanan malzemeler, palet yükseklikleri ve sprinkler yerleşimi analiz edilerek tahliye şemaları hazırlanır.'],
         ],
     ],
 

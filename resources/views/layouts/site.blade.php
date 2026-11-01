@@ -15,6 +15,7 @@
     <link rel="canonical" href="{{ url()->current() }}">
     <meta name="theme-color" content="#0F172A">
     <link rel="stylesheet" href="{{ asset('css/tanitim.css') }}">
+    @stack('head')
 </head>
 <body>
 <a href="#icerik" class="atla">İçeriğe geç</a>
