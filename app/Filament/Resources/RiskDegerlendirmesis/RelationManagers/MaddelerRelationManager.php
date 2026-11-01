@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RiskDegerlendirmesis\RelationManagers;
 use App\Console\Commands\RiskOneriTamamla;
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
+use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\NaceGrubu;
 use App\Support\RiskKutuphanesi;
@@ -237,20 +238,36 @@ class MaddelerRelationManager extends RelationManager
                     ->label('Kütüphaneden Toplu Ekle')->icon('heroicon-o-book-open')->color('gray')
                     ->modalDescription('Birden fazla tehlike seçip tek seferde ekleyebilirsiniz (ör. yeni makine/ekipman geldiğinde ilgili tüm maddeler). Puan/önlem AI önerisi burada çalışmaz — eklendikten sonra "Eksik Puan/Önlemleri AI ile Tamamla" ile toplu tamamlayabilirsiniz.')
                     ->schema([
-                        Select::make('tehlike_idler')->label('Tehlikeler')
+                        // 01.11.2026: ekipman/klasör seçince tüm maddeleri gelir (yeni makine geldiğinde tek tek seçmeye gerek yok).
+                        Select::make('kategori_idler')->label('Ekipman / klasörün tüm maddeleri')
+                            ->options(fn () => TehlikeKategorisi::query()->uygun($this->yontem(), $this->firmaNaceGrubu())
+                                ->orWhere(fn ($q) => $q->whereNull('yontem')->where(fn ($w) => $w->where('anahtar', 'like', 'ekipman_%')->orWhere('anahtar', 'like', 'atolye_%')))
+                                ->withCount('tehlikeler')->orderBy('ad')->get()
+                                ->filter(fn (TehlikeKategorisi $k) => $k->tehlikeler_count > 0)
+                                ->mapWithKeys(fn (TehlikeKategorisi $k) => [$k->id => $k->ad.' ('.$k->tehlikeler_count.' madde)']))
+                            ->multiple()->searchable()
+                            ->helperText('Analizde zaten bulunan kütüphane maddeleri tekrar eklenmez.'),
+                        Select::make('tehlike_idler')->label('Tek tek tehlikeler')
                             ->options(fn () => Tehlike::query()->with('kategori')
                                 ->whereHas('kategori', fn ($q) => $q->uygun($this->yontem(), $this->firmaNaceGrubu()))
                                 ->get()
                                 ->mapWithKeys(fn (Tehlike $t) => [$t->id => "[{$t->kategori->ad}] ".Str::limit($t->tehlike, 70)]))
                             ->multiple()
-                            ->searchable()->required(),
+                            ->searchable()
+                            ->requiredWithout('kategori_idler'),
                     ])
                     ->action(function (array $data): void {
-                        $tehlikeler = Tehlike::whereIn('id', $data['tehlike_idler'])->get()->keyBy('id');
+                        $idler = collect($data['tehlike_idler'] ?? [])
+                            ->merge(Tehlike::whereIn('tehlike_kategorisi_id', $data['kategori_idler'] ?? [])->orderBy('tehlike_kategorisi_id')->orderBy('kod')->pluck('id'))
+                            ->map(fn ($id) => (int) $id)->unique()
+                            // Analizde zaten olan kütüphane maddesi mükerrer eklenmez.
+                            ->diff($this->getOwnerRecord()->maddeler()->whereNotNull('tehlike_id')->pluck('tehlike_id')->map(fn ($id) => (int) $id))
+                            ->values();
+                        $tehlikeler = Tehlike::whereIn('id', $idler)->get()->keyBy('id');
                         $sira = (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0);
                         $satirlar = [];
 
-                        foreach ($data['tehlike_idler'] as $id) {
+                        foreach ($idler as $id) {
                             $t = $tehlikeler->get($id);
 
                             if (! $t) {
@@ -270,7 +287,7 @@ class MaddelerRelationManager extends RelationManager
                         }
 
                         if ($satirlar === []) {
-                            Notification::make()->title('Eklenecek tehlike bulunamadı')->danger()->send();
+                            Notification::make()->title('Eklenecek yeni tehlike yok')->body('Seçilenler analizde zaten var.')->warning()->send();
 
                             return;
                         }

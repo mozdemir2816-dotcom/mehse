@@ -465,8 +465,51 @@ class RiskSihirbazi extends Page
 
         return [
             'genel' => ['kategoriler' => $genelKat, 'maddeler' => $maddeler($ayar['genel'] ?? [])],
-            'ekipmanlar' => $ekipmanlar,
+            'ekipmanlar' => $ekipmanlar + $this->digerEkipmanKutulari($tum->all(), $secili),
         ];
+    }
+
+    /**
+     * Manuel yöntemde listelenen diğer tüm ekipman klasörleri (ekipman_* / atölye makineleri) — config'teki
+     * kutularda ve genel risklerde OLMAYANLAR, ayrı kutu olarak (kullanıcı 01.11.2026: aynı ekipman iki yerden
+     * eklenip mükerrer olmasın). Manuel listeyle aynı süzgeç: yöntem (FK klasörleri 5x5'e çevrilir) + NACE grubu.
+     * Anahtar "kat_{kategori anahtarı}", 'diger' => true (görünümde ayrı, aramalı bölüm).
+     *
+     * @param  array<int, string>  $haric  config'te kullanılan kategori anahtarları
+     * @param  array<int, int>  $secili  tehlike_id => sıra (secilenler)
+     * @return array<string, array<string, mixed>>
+     */
+    private function digerEkipmanKutulari(array $haric, array $secili): array
+    {
+        $nace = NaceGrubu::bul($this->firma?->nace_kodu);
+        $ayar = config('isg.risk_hizli_kurulum.diger_ekipman', []);
+
+        $kategoriler = TehlikeKategorisi::query()
+            ->where(fn ($q) => collect($ayar['onekler'] ?? ['ekipman_'])->each(fn ($o) => $q->orWhere('anahtar', 'like', $o.'%')))
+            ->whereNotIn('anahtar', [...$haric, ...($ayar['haric'] ?? [])])
+            ->where(fn ($q) => $q->whereNull('yontem')->orWhere('yontem', $this->yontem)
+                ->when($this->yontem === 'matris_5x5', fn ($w) => $w->orWhere('yontem', 'fine_kinney')))
+            ->where(fn ($q) => $q->whereNull('nace_gruplari')->orWhereJsonContains('nace_gruplari', 'ortak')
+                ->when($nace, fn ($w) => $w->orWhereJsonContains('nace_gruplari', $nace)))
+            ->withCount('tehlikeler')
+            ->get()
+            ->where('tehlikeler_count', '>', 0);
+
+        $ekliSayisi = $secili
+            ? Tehlike::whereIn('id', array_keys($secili))->selectRaw('tehlike_kategorisi_id, count(*) n')->groupBy('tehlike_kategorisi_id')->pluck('n', 'tehlike_kategorisi_id')
+            : collect();
+
+        return $kategoriler
+            ->mapWithKeys(fn (TehlikeKategorisi $k) => ['kat_'.$k->anahtar => [
+                'ad' => Str::of($k->ad)->replaceMatches('/^(Ekipman|Atölye)\s*[–-]\s*/u', '')->ucfirst()->toString(),
+                'ikon' => 'heroicon-o-wrench-screwdriver',
+                'kategoriler' => [$k->id],
+                'adet' => $k->tehlikeler_count,
+                'eklenen' => (int) ($ekliSayisi[$k->id] ?? 0),
+                'diger' => true,
+            ]])
+            ->sortBy('ad', SORT_NATURAL | SORT_FLAG_CASE)
+            ->all();
     }
 
     /** Adım 1 — ortak genel riskleri (genel işyeri, acil durum, eğitim, elektrik) tek tıkla ekler. */

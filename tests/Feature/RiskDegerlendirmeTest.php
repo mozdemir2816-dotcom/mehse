@@ -258,9 +258,9 @@ class RiskDegerlendirmeTest extends TestCase
 
         // Mevcut O/Ş + Termin'in yanında önlem sonrası "Son O / Son Ş" sütunları.
         $this->assertSame(1, substr_count($html, '%">O</th>'));
-        $this->assertSame(1, substr_count($html, '%">Son O</th>'));
+        $this->assertSame(1, substr_count($html, '%">Son<br>O</th>'));
         $this->assertSame(1, substr_count($html, '%">Ş</th>'));
-        $this->assertSame(1, substr_count($html, '%">Son Ş</th>'));
+        $this->assertSame(1, substr_count($html, '%">Son<br>Ş</th>'));
     }
 
     public function test_pdf_mevcut_onlem_sutunu_kaldirildi_aciklama_en_sagda(): void
@@ -930,7 +930,7 @@ class RiskDegerlendirmeTest extends TestCase
         $dolu = $rd->maddeler()->create(['tehlike' => 'Dolu', 'olasilik' => 3, 'siddet' => 4, 'sorumlu' => 'Bakım şefi', 'termin' => '1 ay']);
 
         $this->assertSame('İşveren / İşveren Vekili', $bos->fresh()->sorumlu);
-        $this->assertSame('SÜREKLİ', $bos->fresh()->termin);
+        $this->assertSame('3 Ay', $bos->fresh()->termin); // 3×4=12 Orta Düzey → düzeye göre (01.11.2026)
         $this->assertSame('Bakım şefi', $dolu->fresh()->sorumlu);
         $this->assertSame('1 ay', $dolu->fresh()->termin);
     }
@@ -967,7 +967,7 @@ class RiskDegerlendirmeTest extends TestCase
             'eksenEtiketleri' => RiskSkorlama::eksenEtiketleri('fine_kinney'),
         ])->render();
 
-        $this->assertStringContainsString('%">Son F</th>', $html);
+        $this->assertStringContainsString('%">Son<br>F</th>', $html);
         $this->assertStringContainsString('<td class="sayi">0,2</td>', $html);   // 0.2 değil
         $this->assertStringContainsString('<td class="sayi">16</td>', $html);    // 0,2 × 2 × 40
         $this->assertStringContainsString("Ç\nY", $html);                         // Çok Yüksek (1440)

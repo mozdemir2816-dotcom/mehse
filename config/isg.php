@@ -110,13 +110,20 @@ return [
             'forklift' => ['ad' => 'Forklift', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_forklift']],
             'kompresor' => ['ad' => 'Kompresör & Hava Tankı', 'ikon' => 'heroicon-o-circle-stack', 'kategoriler' => ['ekipman_kompresor_ve_hava_tanki']],
             'kaynak' => ['ad' => 'Gazaltı / Elektrik Kaynağı', 'ikon' => 'heroicon-o-fire', 'kategoriler' => ['ekipman_gazalti_kaynak_ve_koruyucu_gaz_tupu', 'kaynakla_calisma']],
-            'torna' => ['ad' => 'Torna', 'ikon' => 'heroicon-o-cog-6-tooth', 'kategoriler' => ['ekipman_torna']],
-            'freze' => ['ad' => 'Freze', 'ikon' => 'heroicon-o-cog-8-tooth', 'kategoriler' => ['ekipman_dikey_kalipci_frezesi']],
+            'torna' => ['ad' => 'Torna', 'ikon' => 'heroicon-o-cog-6-tooth', 'kategoriler' => ['ekipman_torna', 'atolye_torna_tezgahi']],
+            'freze' => ['ad' => 'Freze', 'ikon' => 'heroicon-o-cog-8-tooth', 'kategoriler' => ['ekipman_dikey_kalipci_frezesi', 'atolye_dikey_freze']],
             'cnc' => ['ad' => 'CNC İşleme Merkezi', 'ikon' => 'heroicon-o-cpu-chip', 'kategoriler' => ['atolye_cnc_isleme_merkezi']],
-            'taslama' => ['ad' => 'Taşlama (Avuç / Satıh)', 'ikon' => 'heroicon-o-sparkles', 'kategoriler' => ['ekipman_15_avuc_taslama_spiral_risk_degerlendirmesi', 'ekipman_satih_taslama_manuel_hidrolik_cnc']],
+            'taslama' => ['ad' => 'Taşlama / Zımpara / Taş Motoru', 'ikon' => 'heroicon-o-sparkles', 'kategoriler' => ['ekipman_15_avuc_taslama_spiral_risk_degerlendirmesi', 'ekipman_satih_taslama_manuel_hidrolik_cnc', 'ekipman_ayakli_tas_motoru', 'ekipman_sutunlu_bant_zimpara', 'atolye_bant_zimpara_taslama']],
+            'matkap' => ['ad' => 'Sütunlu Matkap', 'ikon' => 'heroicon-o-arrow-down-circle', 'kategoriler' => ['atolye_sutunlu_matkap']],
             'boyahane' => ['ad' => 'Boyahane / Kimyasal Depo', 'ikon' => 'heroicon-o-beaker', 'kategoriler' => ['ekipman_toz_boya_firini', 'boya']],
             'raf' => ['ad' => 'Ağır Yük Depo Rafı', 'ikon' => 'heroicon-o-building-storefront', 'kategoriler' => ['ekipman_endustriyel_raf', 'atolye_depolama_ve_calisma_alani']],
             'elektrik_panosu' => ['ad' => 'Elektrik Panosu', 'ikon' => 'heroicon-o-bolt', 'kategoriler' => ['ekipman_anatali_elektrik_panosu']],
+        ],
+        // Yukarıdakilerde olmayan diğer ekipman klasörleri de (manuel listedeki gibi yöntem + NACE süzgeciyle)
+        // "Kütüphanedeki diğer ekipmanlar" bölümünde ayrı kutu olur. Önek eşleşmesi; haric: listelenmeyecek anahtarlar.
+        'diger_ekipman' => [
+            'onekler' => ['ekipman_', 'atolye_'],
+            'haric' => [],
         ],
     ],
 
@@ -267,6 +274,18 @@ return [
             ['min' => 3, 'ad' => 'Katlanılabilir Risk', 'kisa' => 'KT', 'renk' => '#84cc16', 'eylem' => 'Ek kontrol gerekmeyebilir; maliyeti düşük iyileştirmeler düşünülmelidir.'],
             ['min' => 1, 'ad' => 'Önemsiz Risk', 'kisa' => 'ÖS', 'renk' => '#22c55e', 'eylem' => 'Önlem planlamaya / kayıt tutmaya gerek yoktur.'],
         ],
+    ],
+
+    /*
+    | Boş bırakılan termin, maddenin İLK risk düzeyi kısaltmasına göre dolar (01.11.2026).
+    | Listede olmayan düzeyler ile eğitim/talimat/periyodik maddeler "SÜREKLİ" kalır.
+    | ÇY/YK her iki yöntemde ortak; ÖN = Fine-Kinney "Önemli", OD = 5x5 "Orta Düzeyde".
+    */
+    'risk_termin_duzey' => [
+        'ÇY' => 'Derhal / 3 Gün',
+        'YK' => '1 Ay',
+        'ÖN' => '3 Ay',
+        'OD' => '3 Ay',
     ],
 
     'risk_fine_kinney' => [

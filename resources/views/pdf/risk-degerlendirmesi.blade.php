@@ -46,6 +46,8 @@
     table.risk .col-duzey { padding: 2px 1px; text-align: center; vertical-align: middle; }
     table.risk th.col-duzey { font-size: 6px; }
     table.risk .sayi { text-align: center; padding: 3px 1px; }
+    /* Dar puan sütunu başlıkları ("Son<br>O") kelime ortasından kırılmasın (01.11.2026). */
+    table.risk th.sayi { font-size: 7px; white-space: nowrap; padding: 3px 0; }
     .kisaltma-acik { font-size: 8px; color: #333; margin: 4px 0 0; }
     .kisaltma-acik span { display: inline-block; color: #fff; font-weight: bold; padding: 0 3px; border-radius: 2px; }
     table.ekip { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
@@ -327,7 +329,7 @@
             ['col-no', 'No'], ['', 'Bölüm / Faaliyet'], ['', 'Tehlike'], ['', 'Risk'],
             ['sayi', 'O'], $ucEksen ? ['sayi', $fBaslik] : null, ['sayi', 'Ş'], ['sayi', 'Puan'], ['col-duzey', 'Dü<br>zey'],
             ['col-oneri', 'Öneri'], ['col-sorumlu', 'Sorumlu'], ['', 'Termin'],
-            ['sayi', 'Son O'], $ucEksen ? ['sayi', 'Son '.$fBaslik] : null, ['sayi', 'Son Ş'], ['sayi', 'Son Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
+            ['sayi', 'Son<br>O'], $ucEksen ? ['sayi', 'Son<br>'.$fBaslik] : null, ['sayi', 'Son<br>Ş'], ['sayi', 'Son<br>Puan'], ['col-duzey', 'Son<br>Dü<br>zey'],
             ['col-aciklama', 'Açıklama'],
         ]));
         $kolonlar = array_values($kolonlar);

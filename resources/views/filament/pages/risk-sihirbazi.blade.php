@@ -230,36 +230,26 @@
                 <div style="font-weight:700">2 · Tesisteki ekipman ve prosesler</div>
                 <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.75rem">Bulunanları işaretleyin; hepsinin risk maddeleri tek seferde eklenir.</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:.6rem">
-                    @foreach ($hg['ekipmanlar'] as $ek => $e)
-                        @php
-                            $isaretli = in_array($ek, $hizliEkipmanSecim, true);
-                            $yok = $e['adet'] === 0;
-                            $tamam = ! $yok && $e['eklenen'] >= $e['adet'];
-                        @endphp
-                        <button type="button" wire:key="hizli-{{ $ek }}" @if (! $yok && ! $tamam) wire:click="hizliEkipmanToggle('{{ $ek }}')" @endif
-                            @disabled($yok || $tamam)
-                            @style([
-                                'text-align:left;display:flex;gap:.6rem;align-items:flex-start;padding:.7rem;border-radius:.6rem;background:transparent',
-                                'border:2px solid '.($isaretli ? $mor : 'rgb(107 114 128 / .3)'),
-                                'background:rgb(139 92 246 / .08)' => $isaretli,
-                                'cursor:pointer' => ! $yok && ! $tamam,
-                                'opacity:.5;cursor:not-allowed' => $yok,
-                                'border-color:rgb(34 197 94 / .6);background:rgb(34 197 94 / .06)' => $tamam,
-                            ])>
-                            <span style="flex:none;margin-top:.1rem;width:1.1rem;height:1.1rem;border-radius:.25rem;border:2px solid {{ $isaretli || $tamam ? ($tamam ? $yesil : $mor) : 'rgb(107 114 128 / .5)' }};background:{{ $isaretli ? $mor : ($tamam ? $yesil : 'transparent') }};display:grid;place-items:center;color:#fff;font-size:.7rem;line-height:1">{{ $isaretli || $tamam ? '✓' : '' }}</span>
-                            <x-filament::icon :icon="$e['ikon']" style="flex:none;width:1.4rem;height:1.4rem;color:{{ $mor }}" />
-                            <span style="min-width:0">
-                                <span style="display:block;font-weight:600;font-size:.85rem">{{ $e['ad'] }}</span>
-                                <span style="display:block;font-size:.72rem;color:rgb(107 114 128)">
-                                    @if ($yok) kütüphanede yok — manuel ekleyin
-                                    @elseif ($tamam) {{ $e['adet'] }} madde eklendi
-                                    @else {{ $e['adet'] }} madde @if ($e['eklenen']) · {{ $e['eklenen'] }} ekli @endif
-                                    @endif
-                                </span>
-                            </span>
-                        </button>
+                    @foreach (collect($hg['ekipmanlar'])->reject(fn ($e) => $e['diger'] ?? false) as $ek => $e)
+                        @include('filament.pages.partials.hizli-ekipman-kutu')
                     @endforeach
                 </div>
+                @php $digerler = collect($hg['ekipmanlar'])->filter(fn ($e) => $e['diger'] ?? false); @endphp
+                @if ($digerler->isNotEmpty())
+                    {{-- Manuel listedeki diğer ekipman klasörleri (config'te kutusu olmayanlar) --}}
+                    <details x-data="{ ara: '' }" @if (collect($hizliEkipmanSecim)->contains(fn ($k) => str_starts_with($k, 'kat_'))) open @endif style="margin-top:.8rem">
+                        <summary style="cursor:pointer;font-size:.85rem;font-weight:600">Kütüphanedeki diğer ekipman ve prosesler ({{ $digerler->count() }})</summary>
+                        <input type="search" x-model="ara" placeholder="Ekipman ara… (ör. vinç, kaynak, konveyör)"
+                            style="margin:.6rem 0;width:100%;max-width:360px;padding:.4rem .6rem;border:1px solid rgb(107 114 128 / .35);border-radius:.45rem;background:transparent;font-size:.82rem">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:.6rem">
+                            @foreach ($digerler as $ek => $e)
+                                <div wire:key="hizli-sar-{{ $ek }}" x-show="! ara || @js(mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], $e['ad']))).includes(ara.toLocaleLowerCase('tr'))">
+                                    @include('filament.pages.partials.hizli-ekipman-kutu')
+                                </div>
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
                 <div style="margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
                     <x-filament::button icon="heroicon-o-table-cells" wire:click="ekipmanRiskleriAktar" wire:loading.attr="disabled" :disabled="count($hizliEkipmanSecim) === 0">
                         Seçilen Ekipmanların Risklerini Tabloya Ekle @if (count($hizliEkipmanSecim)) ({{ count($hizliEkipmanSecim) }}) @endif

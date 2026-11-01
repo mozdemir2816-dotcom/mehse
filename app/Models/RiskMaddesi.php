@@ -54,8 +54,10 @@ class RiskMaddesi extends Model
             // önlem genelde olasılığı düşürür (varsayılan "1" — çok düşük),
             // şiddet ve maruz kalma frekansı önlemden ETKİLENMEZ, öneri
             // öncesindeki değerle aynı kabul edilir.
+            // Fine-Kinney'de ilk olasılık zaten 1 veya altındaysa (0,2 / 0,5 / 1) "1" önlem sonrası
+            // puanı YÜKSELTİYORDU (ör. 0,5×3×15=22,5 → 1×3×15=45); bu durumda bir alt basamağa iner.
             if ($m->olasilik !== null && $m->son_olasilik === null) {
-                $m->son_olasilik = 1;
+                $m->son_olasilik = self::varsayilanSonOlasilik($yontem, (float) $m->olasilik);
             }
             if ($m->siddet !== null && $m->son_siddet === null) {
                 $m->son_siddet = $m->siddet;
@@ -73,8 +75,10 @@ class RiskMaddesi extends Model
             if (blank($m->sorumlu)) {
                 $m->sorumlu = self::VARSAYILAN_SORUMLU;
             }
+            // 01.11.2026: termin risk düzeyine göre (ÇY → Derhal / 3 Gün, YK → 1 Ay, orta → 3 Ay);
+            // eğitim/talimat gibi periyodik maddeler ve düşük riskler "SÜREKLİ".
             if (blank($m->termin)) {
-                $m->termin = self::VARSAYILAN_TERMIN;
+                $m->termin = self::varsayilanTermin($yontem, $m->duzey, $m->tehlike.' '.$m->oneri);
             }
         });
 
@@ -90,6 +94,9 @@ class RiskMaddesi extends Model
         };
         static::saved($temizle);
         static::deleted($temizle);
+
+        // Puansız kütüphane maddesi ilk kez puanlanınca puan kütüphaneye öğrenilir.
+        static::saved(fn (RiskMaddesi $m) => \App\Support\KutuphanePuanOgrenme::ogren($m));
     }
 
     public function riskDegerlendirmesi(): BelongsTo
@@ -100,6 +107,32 @@ class RiskMaddesi extends Model
     public const VARSAYILAN_SORUMLU = 'İşveren / İşveren Vekili';
 
     public const VARSAYILAN_TERMIN = 'SÜREKLİ';
+
+    /** Önlem sonrası olasılık girilmemişse: 1; Fine-Kinney'de ilk olasılık ≤ 1 ise ölçekte bir alt basamak. */
+    public static function varsayilanSonOlasilik(string $yontem, float $ilk): float
+    {
+        if ($yontem !== 'fine_kinney' || $ilk > 1) {
+            return 1;
+        }
+
+        $olcek = array_map('floatval', array_keys(config('isg.risk_fine_kinney.olasilik', [])));
+        sort($olcek);
+        $alt = array_values(array_filter($olcek, fn ($o) => $o < $ilk));
+
+        return $alt ? end($alt) : ($olcek[0] ?? $ilk);
+    }
+
+    /** Boş termin: periyodik (eğitim/talimat) madde → SÜREKLİ; değilse düzey kısaltmasına göre config isg.risk_termin_duzey. */
+    public static function varsayilanTermin(string $yontem, ?string $duzey, ?string $metin = null): string
+    {
+        if (preg_match('/eğitim|egitim|talimat|periyodik/iu', (string) $metin)) {
+            return self::VARSAYILAN_TERMIN;
+        }
+
+        $kisa = RiskSkorlama::kisaltma($yontem, $duzey);
+
+        return config('isg.risk_termin_duzey.'.$kisa) ?? self::VARSAYILAN_TERMIN;
+    }
 
     /**
      * Çıktılarda (PDF/Excel/Word) gösterilen sorumlu: boşsa varsayılan; "İşveren/Vekili",
