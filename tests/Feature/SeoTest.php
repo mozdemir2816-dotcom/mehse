@@ -6,7 +6,7 @@ use Tests\TestCase;
 
 class SeoTest extends TestCase
 {
-    public function test_sitemap_gecerli_xml_ve_uc_sayfa(): void
+    public function test_sitemap_gecerli_xml_ana_yasal_ve_sektor_sayfalari(): void
     {
         $yanit = $this->get('/sitemap.xml')->assertOk()
             ->assertHeader('Content-Type', 'application/xml; charset=utf-8');
@@ -24,6 +24,9 @@ class SeoTest extends TestCase
             'https://mehse.com/' => '1.0',
             'https://mehse.com/kvkk' => '0.5',
             'https://mehse.com/cerez-politikasi' => '0.5',
+            'https://mehse.com/sektor/otomotiv-yan-sanayi' => '0.8',
+            'https://mehse.com/sektor/metal-talasli-imalat' => '0.8',
+            'https://mehse.com/sektor/lojistik-ve-depolama' => '0.8',
         ], $adresler);
     }
 

@@ -26,6 +26,7 @@ class YoneticiBildirimi
             '• Telefon: '.$teklif->telefon,
             '• Çalışan: '.$teklif->calisan_sayisi,
             '• Tehlike Sınıfı: '.$teklif->tehlike_sinifi,
+            ...($teklif->not ? ['• '.$teklif->not] : []),
             '🔗 Panele Git: '.url('/admin/teklif-talepleri'),
         ]));
 

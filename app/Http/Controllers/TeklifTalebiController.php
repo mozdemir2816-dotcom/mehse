@@ -26,6 +26,7 @@ class TeklifTalebiController extends Controller
             'calisan' => ['required', 'integer', 'min:1', 'max:100000'],
             'sinif' => ['required', Rule::in(TeklifTalebi::TEHLIKE_SINIFLARI)],
             'kvkk' => ['accepted'],
+            'sektor' => ['nullable', 'string', Rule::in(array_keys(config('sektorler', [])))],
         ], [
             'telefon.regex' => 'Telefon numarasını rakamlarla yazın (ör. 0506 000 00 00).',
             'kvkk.accepted' => 'Devam etmek için onay kutusunu işaretleyin.',
@@ -39,6 +40,8 @@ class TeklifTalebiController extends Controller
             'telefon' => $veri['telefon'],
             'calisan_sayisi' => $veri['calisan'],
             'tehlike_sinifi' => $veri['sinif'],
+            // Sektör sayfasından gelen talepte hangi sayfadan geldiği nota yazılır (ayrı sütun yok).
+            'not' => filled($veri['sektor'] ?? null) ? 'Sektör sayfası: '.config('sektorler.'.$veri['sektor'].'.baslik') : null,
             'ip' => $request->ip(),
             'tarayici' => Str::limit((string) $request->userAgent(), 250, ''),
         ]);

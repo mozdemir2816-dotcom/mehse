@@ -7,6 +7,10 @@
     $girisUrl = url('/admin/login');
     $kayitUrl = url('/admin/register');
     $osgbUrl = url('/admin/osgb-basvuru');
+    // Sektör sayfasından gelindiyse (/?sektor=slug#teklif): sektör forma eklenir, tehlike sınıfı önceden seçilir.
+    $sektorSlug = old('sektor', request()->query('sektor'));
+    $formSektor = is_string($sektorSlug) ? (config('sektorler', [])[$sektorSlug] ?? null) : null;
+    $seciliSinif = old('sinif', $formSektor['tehlike'] ?? null);
     $baslik = 'Mehse İSG | Mühendislik Temelli İSG Danışmanlığı ve Bulut Yönetim Platformu';
     $aciklama = '6331 ve ISO 45001 uyumlu mühendislik danışmanlığı, saha denetimi, risk analizi ve İSG profesyonelleri için bulut yönetim yazılımı.';
     $ikon = fn (string $yol) => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$yol.'</svg>';
@@ -267,8 +271,10 @@
                     <p class="giris">Her sektörün tehlike profili farklıdır; risk kütüphanemiz de faaliyete özeldir.</p>
                 </div>
                 <ul class="sektor-liste">
-                    <li>Metal &amp; Makine İmalat</li><li>İnşaat &amp; Şantiye</li><li>Gıda &amp; İçecek</li>
-                    <li>Kimya &amp; Boya</li><li>Depolama &amp; Lojistik</li><li>Sağlık Tesisleri</li>
+                    <li><a href="{{ route('sektor.show', 'otomotiv-yan-sanayi') }}">Otomotiv Yan Sanayi →</a></li>
+                    <li><a href="{{ route('sektor.show', 'metal-talasli-imalat') }}">Metal &amp; Talaşlı İmalat →</a></li>
+                    <li><a href="{{ route('sektor.show', 'lojistik-ve-depolama') }}">Depolama &amp; Lojistik →</a></li>
+                    <li>İnşaat &amp; Şantiye</li><li>Gıda &amp; İçecek</li><li>Kimya &amp; Boya</li><li>Sağlık Tesisleri</li>
                 </ul>
             </div>
         </div>
@@ -317,6 +323,10 @@
                     @csrf
                     {{-- Bot tuzağı: insanlara görünmez, doluysa talep kaydedilmez. --}}
                     <div class="bal" aria-hidden="true"><label>Web sitesi<input type="text" name="web" tabindex="-1" autocomplete="off"></label></div>
+                    @if ($formSektor)
+                        <input type="hidden" name="sektor" value="{{ $sektorSlug }}">
+                        <p class="form-sektor">Sektör: {{ $formSektor['baslik'] }}</p>
+                    @endif
 
                     @if ($errors->any())
                         <div class="hata-kutu" role="alert">
@@ -341,9 +351,9 @@
                         </label>
                         <label class="alan">Tehlike Sınıfı
                             <select name="sinif" required>
-                                <option value="" disabled @selected(! old('sinif'))>Seçin…</option>
+                                <option value="" disabled @selected(! $seciliSinif)>Seçin…</option>
                                 @foreach (\App\Models\TeklifTalebi::TEHLIKE_SINIFLARI as $s)
-                                    <option @selected(old('sinif') === $s)>{{ $s }}</option>
+                                    <option @selected($seciliSinif === $s)>{{ $s }}</option>
                                 @endforeach
                             </select>
                         </label>

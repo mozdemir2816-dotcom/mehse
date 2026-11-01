@@ -285,3 +285,28 @@ section[id] { scroll-margin-top: 80px; }
 .yasal-tablo th { background: #f1f5f9; font-weight: 700; color: var(--lacivert-950); }
 .yasal-alt { display: flex; flex-wrap: wrap; gap: 0 24px; justify-content: space-between; }
 @media (min-width: 640px) { .yasal-metin { padding: 40px; } }
+
+/* Sektör sayfaları (/sektor/{slug}) */
+.sektor-ust { background: linear-gradient(135deg, var(--lacivert-950), var(--lacivert-900)); color: #cbd5e1; padding: 72px 0 80px; }
+.sektor-ust h1 { margin-top: 10px; font-size: clamp(1.9rem, 4.5vw, 2.8rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; color: #fff; max-width: 820px; }
+.sektor-giris { margin-top: 18px; max-width: 720px; font-size: 1.05rem; }
+.sektor-rozetler { margin: 24px 0 32px; display: flex; flex-wrap: wrap; gap: 10px; }
+.tehlike-rozet, .bolge-rozet { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 14px; font-size: .85rem; font-weight: 700; }
+.tehlike-rozet svg { width: 16px; height: 16px; }
+.tehlike-az { background: #d1fae5; color: #065f46; }
+.tehlike-orta { background: #fef3c7; color: #92400e; }
+.tehlike-cok { background: #fee2e2; color: #991b1b; }
+.tehlike-rozet.kucuk { padding: 2px 10px; font-size: .75rem; margin-left: 6px; }
+.bolge-rozet { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .15); color: #e2e8f0; font-weight: 600; }
+.risk-kartlar .kart h3, .avantaj-kartlar .kart h3 { margin-top: 16px; }
+.nace-kutu { margin-top: 40px; background: #fff; border: 1px solid var(--cizgi); border-left: 4px solid var(--kehribar); border-radius: 12px; padding: 20px 24px; font-size: .92rem; }
+.nace-kutu h3 { font-size: 1rem; font-weight: 700; color: var(--lacivert-900); margin: 0 0 6px; }
+.nace-kutu ul { margin-top: 10px; display: grid; gap: 8px; }
+.nace-kod { display: inline-block; min-width: 72px; font-family: ui-monospace, Consolas, monospace; font-weight: 700; color: var(--lacivert-800); }
+.sektor-avantaj { background: #fff; }
+.sektor-cta { background: var(--lacivert-900); color: #cbd5e1; padding: 64px 0; text-align: center; }
+.sektor-cta h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); font-weight: 800; color: #fff; }
+.sektor-cta p { margin: 12px auto 28px; max-width: 600px; }
+.sektor-liste a { display: block; color: inherit; }
+.sektor-liste a:hover { color: var(--zumrut); }
+.form-sektor { margin: 0 0 12px; font-size: .88rem; color: var(--zumrut-koyu); font-weight: 600; }

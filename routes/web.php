@@ -24,6 +24,7 @@ Route::view('/', 'tanitim')->name('tanitim');
 Route::get('/tanitim', fn () => redirect(url('/'), 301));
 Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
 Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
+Route::get('/sektor/{slug}', [\App\Http\Controllers\SektorController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('sektor.show');
 // Arama motorları için site haritası (public/robots.txt bunu gösterir). lastmod = sayfa şablonunun son değişikliği.
 Route::get('/sitemap.xml', function () {
     $tarih = fn (string $gorunum): string => date('Y-m-d', filemtime(resource_path("views/{$gorunum}.blade.php")));
@@ -33,6 +34,13 @@ Route::get('/sitemap.xml', function () {
             ['adres' => 'https://mehse.com/', 'lastmod' => $tarih('tanitim'), 'changefreq' => 'weekly', 'priority' => '1.0'],
             ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
+            // Sektör sayfaları (config/sektorler.php); içerik config'te olduğundan lastmod = config dosyası tarihi.
+            ...collect(array_keys(config('sektorler', [])))->map(fn (string $slug) => [
+                'adres' => 'https://mehse.com/sektor/'.$slug,
+                'lastmod' => date('Y-m-d', max(filemtime(config_path('sektorler.php')), filemtime(resource_path('views/pages/sektor_detay.blade.php')))),
+                'changefreq' => 'monthly',
+                'priority' => '0.8',
+            ])->all(),
         ],
     ])->header('Content-Type', 'application/xml; charset=utf-8');
 })->name('sitemap');
