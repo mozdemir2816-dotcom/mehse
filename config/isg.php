@@ -6954,7 +6954,7 @@ return [
             'unvan' => 'Mehmet Özdemir - Mehse İş Sağlığı ve Güvenliği',
             'adres' => 'Nilüfer / Bursa',
             'vergi_dairesi' => 'Uludağ Vergi Dairesi',
-            'vergi_no' => null,
+            'vergi_no' => '4532187690',
             'eposta' => 'mozdemir2816@gmail.com',
             'telefon' => '0506 475 48 55',
         ],
