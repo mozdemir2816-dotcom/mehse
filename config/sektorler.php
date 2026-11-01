@@ -61,6 +61,7 @@ return [
         'sss' => [
             ['Talaşlı imalat ve CNC atölyelerinde Patlamadan Korunma Dokümanı (PKD) zorunlu mu?', 'Metal tozu çıkaran taşlama/parlatma ve yanıcı gaz kullanılan kaynaklı sahalarda patlayıcı ortam oluşma ihtimali varsa, Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yönetmelik gereği PKD hazırlanması zorunludur. Bu ihtimal risk değerlendirmesiyle belirlenir.'],
             ['Metal işleme sektöründe hangi eldiven standartları (EN 388) uygulanmalıdır?', 'Dönen parçalara kapılma riskinde eldivensiz çalışma; çapak alma ve sac taşımada ise EN 388 Seviye D veya F kesilme dirençli eldiven matrisi uygulanır.'],
+            ['CNC tezgahlarında bor yağı (metal işleme sıvısı) maruziyeti nasıl yönetilir?', 'Bor yağı Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik kapsamındadır: güvenlik bilgi formu esas alınarak risk değerlendirmesi yapılır, yağ buharı için kabin emişi/yağ buharı filtresi kullanılır, emülsiyonun konsantrasyon, pH ve bakteri durumu düzenli kontrol edilir. Cilt teması dermatit yaptığından nitril eldiven ve koruyucu krem kullanılır, maruz kalan çalışanlar sağlık gözetimine alınır. CNC kabin kapısı emniyet kilidi (interlock) de aynı denetimde test edilir.'],
             ['Kompresör ve basınçlı kap kontrolleri nasıl takip edilir?', 'Hava tankı ve kompresörler, İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği gereği yetkili kişilerce periyodik kontrole tabidir; kontrol periyodu ve yapılacak testler yönetmeliğin Ek-III’ünde belirlenmiştir. Panelimiz son muayene ve bir sonraki kontrol tarihlerini otomatik izler.'],
         ],
     ],
@@ -88,6 +89,7 @@ return [
         'sss' => [
             ['Endüstriyel ağır yük depo raflarının periyodik kontrolü zorunlu mudur?', 'Raf güvenliğini sağlamak 6331 sayılı Kanun kapsamında işverenin yükümlülüğüdür. TS EN 15635 standardı bu kontrolün kabul gören yöntemidir: endüstriyel raf sistemlerinin yılda en az bir kez teknik yetkin kişilerce denetlenmesini ve hasarların yeşil, turuncu, kırmızı risk seviyelerinde raporlanmasını öngörür.'],
             ['Depolarda forklift ve yaya yolu ayrımı nasıl projelendirilir?', 'Fiziki bariyerler, darbe koruyucular, kör nokta aynaları ve epoksi zemin güvenlik çizgileri ile sıfır kaza standartlarında saha trafik planı çizilir.'],
+            ['Forklift kullanımında hangi belge ve kontroller zorunludur?', 'Forklift operatörlerinin eğitimli ve yetkilendirilmiş olması gerekir; forklift operatörlüğü MYK mesleki yeterlilik belgesi zorunlu meslekler arasındadır. Forkliftler kaldırma ekipmanı olarak İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği Ek-III uyarınca yılda en az bir kez yetkili kişilerce periyodik kontrolden geçirilir; vardiya başı kontrol listesi, emniyet kemeri ve hız sınırı saha kuralları ayrıca uygulanır.'],
             ['Depo yangın yükü ve acil durum tahliye planı nasıl hazırlanır?', 'Binaların Yangından Korunması Hakkında Yönetmelik kapsamında depolanan malzemeler, palet yükseklikleri ve sprinkler yerleşimi analiz edilerek tahliye şemaları hazırlanır.'],
         ],
     ],

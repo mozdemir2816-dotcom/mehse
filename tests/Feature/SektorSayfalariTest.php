@@ -84,17 +84,17 @@ class SektorSayfalariTest extends TestCase
     public function test_sss_json_ld_gecerli_ve_akordiyonla_ayni(): void
     {
         foreach (config('sektorler') as $slug => $sektor) {
-            $this->assertCount(3, $sektor['sss']);
+            $this->assertGreaterThanOrEqual(3, count($sektor['sss']));
             $html = $this->get(route('sektor.show', $slug))->assertOk()->getContent();
 
             preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $bloklar);
-            $this->assertCount(1, $bloklar[1], $slug);
+            $this->assertCount(2, $bloklar[1], $slug); // Service + FAQPage (01.11.2026)
             $this->assertLessThan(strpos($html, '</head>'), strpos($html, 'application/ld+json'), 'JSON-LD head içinde olmalı');
 
-            $ld = json_decode($bloklar[1][0], true, flags: JSON_THROW_ON_ERROR);
+            $ld = collect($bloklar[1])->map(fn ($j) => json_decode($j, true, flags: JSON_THROW_ON_ERROR))->firstWhere('@type', 'FAQPage');
             $this->assertSame('https://schema.org', $ld['@context']);
             $this->assertSame('FAQPage', $ld['@type']);
-            $this->assertCount(3, $ld['mainEntity']);
+            $this->assertCount(count($sektor['sss']), $ld['mainEntity']);
 
             foreach ($sektor['sss'] as $i => [$soru, $cevap]) {
                 $this->assertSame(['@type' => 'Question', 'name' => $soru, 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $cevap]], $ld['mainEntity'][$i]);

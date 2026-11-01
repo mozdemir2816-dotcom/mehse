@@ -13,6 +13,26 @@
     <meta name="description" content="@yield('aciklama')">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url()->current() }}">
+    {{-- Open Graph / Twitter (01.11.2026): paylaşım kartı tüm site sayfalarında; görsel ana sayfayla aynı. --}}
+    @php
+        $ogGorsel = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&h=630&q=70';
+        $ogBaslik = $__env->hasSection('seo_baslik') ? trim($__env->yieldContent('seo_baslik')) : trim($__env->yieldContent('baslik')).' | Mehse İSG';
+        $ogAciklama = trim($__env->yieldContent('aciklama'));
+        // Bölüm içerikleri (section ikinci argümanı) Blade tarafından zaten kaçışlı → aşağıda {!! !!}.
+    @endphp
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:site_name" content="Mehse İSG">
+    <meta property="og:title" content="{!! $ogBaslik !!}">
+    <meta property="og:description" content="{!! $ogAciklama !!}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ $ogGorsel }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{!! $ogBaslik !!}">
+    <meta name="twitter:description" content="{!! $ogAciklama !!}">
+    <meta name="twitter:image" content="{{ $ogGorsel }}">
     <meta name="theme-color" content="#0F172A">
     <link rel="stylesheet" href="{{ asset('css/tanitim.css') }}">
     @stack('head')

@@ -11,6 +11,22 @@
         '@type' => 'FAQPage',
         'mainEntity' => array_map(fn ($m) => ['@type' => 'Question', 'name' => $m[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $m[1]]], $sektor['sss']),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
+    // Schema.org Service (01.11.2026): sektöre özel hizmet; sağlayıcı ana sayfadaki ProfessionalService ile aynı ad/url.
+    $jsonLdHizmet = json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'Service',
+        'name' => $sektor['seo_baslik'],
+        'description' => $sektor['aciklama'],
+        'serviceType' => 'İş Sağlığı ve Güvenliği Hizmeti — '.$sektor['baslik'],
+        'url' => url()->current(),
+        'areaServed' => array_values(array_unique(array_merge(['Bursa'], $sektor['bolgeler']))),
+        'provider' => ['@type' => 'ProfessionalService', 'name' => 'Mehse İSG', 'url' => url('/').'/'],
+        'hasOfferCatalog' => [
+            '@type' => 'OfferCatalog',
+            'name' => $sektor['baslik'].' kritik risk denetimleri',
+            'itemListElement' => array_map(fn ($r) => ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => $r[0], 'description' => $r[1]]], $sektor['riskler']),
+        ],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
     $avantajlar = [
         ['<path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>', 'Otomotiv mühendisliği altyapısı', 'Üretim hattını, makineyi ve prosesi mühendis gözüyle okuyoruz; önlemler kâğıtta kalmaz, hatta uygulanabilir olur.'],
         ['<path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>', 'Bursa içi yerinde hızlı keşif', 'Bursa\'daki OSB\'lere ve sanayi bölgelerine kısa sürede ulaşıyor, ücretsiz ön keşfi işyerinizde yapıyoruz.'],
@@ -24,6 +40,9 @@
 @section('teklif_url', $teklifUrl)
 
 {{-- Google zengin sonuç (FAQPage) — sorular aşağıdaki SSS bölümüyle birebir aynı olmalı. --}}
+@push('head')
+    <script type="application/ld+json">{!! $jsonLdHizmet !!}</script>
+@endpush
 @if (! empty($sektor['sss']))
     @push('head')
         <script type="application/ld+json">{!! $jsonLdSss !!}</script>
