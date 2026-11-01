@@ -1,2 +1,12 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /kvkk
+Allow: /cerez-politikasi
+Disallow: /admin
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /password/
+Disallow: /storage/logs/
+
+Sitemap: https://mehse.com/sitemap.xml

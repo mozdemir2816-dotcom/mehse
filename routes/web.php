@@ -24,6 +24,18 @@ Route::view('/', 'tanitim')->name('tanitim');
 Route::get('/tanitim', fn () => redirect(url('/'), 301));
 Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
 Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
+// Arama motorları için site haritası (public/robots.txt bunu gösterir). lastmod = sayfa şablonunun son değişikliği.
+Route::get('/sitemap.xml', function () {
+    $tarih = fn (string $gorunum): string => date('Y-m-d', filemtime(resource_path("views/{$gorunum}.blade.php")));
+
+    return response()->view('sitemap', [
+        'sayfalar' => [
+            ['adres' => 'https://mehse.com/', 'lastmod' => $tarih('tanitim'), 'changefreq' => 'weekly', 'priority' => '1.0'],
+            ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
+            ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
+        ],
+    ])->header('Content-Type', 'application/xml; charset=utf-8');
+})->name('sitemap');
 Route::post('/teklif-talebi', TeklifTalebiController::class)->middleware('throttle:5,60')->name('tanitim.teklif');
 
 // Yıllık Planlar tek sayfadan üç ayrı sayfaya bölündü (01.10.2026) — eski yer imleri.
