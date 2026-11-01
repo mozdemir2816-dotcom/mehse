@@ -81,7 +81,8 @@ class AcilDurumPlaniTest extends TestCase
             ->set('firmaId', $firma->id)
             ->assertSet('kapakCercevesi', 'klasik')
             ->call('konuToggle', 'kimyasal')        // ekle (varsayılan seçili değil)
-            ->call('konuToggle', 'yangin')          // çıkar (koşulsuz varsayılan)
+            ->call('konuToggle', 'sel')             // çıkar (koşulsuz varsayılan)
+            ->call('konuToggle', 'yangin')          // zorunlu: çıkarılamaz (01.11.2026)
             ->set('ekipMetni.sondurme', 'Ali Veli, Ayşe Fatma')
             ->set('kapakCercevesi', 'altin')
             ->set('revizyonNo', 'Rev.01 — 01.01.2027')
@@ -91,7 +92,8 @@ class AcilDurumPlaniTest extends TestCase
 
         $plan = AcilDurumPlani::where('firma_id', $firma->id)->firstOrFail();
         $this->assertContains('kimyasal', $plan->konular);
-        $this->assertNotContains('yangin', $plan->konular);
+        $this->assertNotContains('sel', $plan->konular);
+        $this->assertContains('yangin', $plan->konular);
         $this->assertSame('altin', $plan->kapak_cercevesi);
         $this->assertSame(['Ali Veli', 'Ayşe Fatma'], $plan->ekipListesi()['sondurme']);
         $this->assertSame('Rev.01 — 01.01.2027', $plan->revizyon_no);
@@ -508,8 +510,9 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('Selin Ak', $belge);
         $this->assertStringContainsString('İkinci tedbir', $belge);
         $this->assertStringContainsString('Kemal Usta', $belge);
+        // Yangın, iş kazası ve elektrik zorunlu (01.11.2026) → sel 4. sırada; numaralar seçime göre atlamasız.
         $this->assertStringContainsString('1. ACİL DURUM: YANGIN', $belge);
-        $this->assertStringContainsString('2. ACİL DURUM: SEL VE SU BASKINI', $belge);
+        $this->assertStringContainsString('4. ACİL DURUM: SEL VE SU BASKINI', $belge);
         $this->assertStringContainsString('EK-7 TAHLİYE VE ÇIKIŞ PLANI', $belge);
         // Yangın akış şeması resim olarak eklendi
         $this->assertStringContainsString('rIdAdep', $belge);
@@ -545,7 +548,7 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertCount(count(config('isg.acil_durum.konular')), $component->get('konular'));
 
         $component->call('tumKonular', false);
-        $this->assertCount(0, $component->get('konular'));
+        $this->assertSame(['yangin', 'is_kazasi', 'elektrik'], $component->get('konular')); // zorunlular kalır
     }
 
     public function test_plan_pdf_uretilir(): void
@@ -815,9 +818,9 @@ class AcilDurumPlaniTest extends TestCase
     {
         $firma = Firma::factory()->for($this->uzman)->create();
         $plan = AcilDurumPlani::firmaIcin($firma);
-        $plan->forceFill(['konular' => array_values(array_diff($plan->konular, ['yangin']))])->save();
+        $plan->forceFill(['konular' => array_values(array_diff($plan->konular, ['deprem']))])->save();
 
-        $this->assertNotContains('yangin', AcilDurumPlaniUretici::afisTipleri($plan->fresh()));
+        $this->assertNotContains('deprem', AcilDurumPlaniUretici::afisTipleri($plan->fresh()));
     }
 
     public function test_tum_afisler_zip_olarak_indirilir(): void

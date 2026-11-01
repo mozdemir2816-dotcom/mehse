@@ -13,7 +13,7 @@
     $unvan = $d['unvan'];
     $ekipAd = config('isg.acil_durum.belge_ekipleri');
     $kolonlar = config('isg.acil_durum.risk_kolonlari');
-    $kkd = config('isg.acil_durum.kkd_matrisi');
+    $kkd = $d['kkd']; // firmaya göre süzülmüş (AcilDurumBelgeVerisi)
     $cerceve = match ($plan->kapak_cercevesi) {
         'altin' => 'double #b8860b', 'mavi_zarif' => 'double #1e3a8a', 'minimalist' => 'solid #111',
         'yesil_doga' => 'double #15803d', 'golgeli' => 'double #333', default => 'double #8c1e1e',
@@ -391,7 +391,7 @@
     <tr>
         <th style="width:19%"></th>
         @foreach ($kkd['faaliyetler'] as $f)
-            <th class="orta" style="width:8.1%;font-size:5.6pt;padding:3pt 1pt">{{ str_replace('/', '/ ', $f) }}</th>
+            <th class="orta" style="width:{{ round(81 / max(1, count($kkd['faaliyetler'])), 2) }}%;font-size:{{ count($kkd['faaliyetler']) > 7 ? '5.6pt' : '6.5pt' }};padding:3pt 1pt">{{ str_replace('/', '/ ', $f) }}</th>
         @endforeach
     </tr>
     @foreach ($kkd['kkd'] as $ad => $isaret)
@@ -403,6 +403,9 @@
         </tr>
     @endforeach
 </table>
+@unless ($kkd['tum'])
+    <p class="kucuk" style="margin-top:4pt">Sütunlar işyerinde yürütülen faaliyetlerdir (risk değerlendirmesi, iş ekipmanı ve kimyasal envanterinden belirlenmiştir); bu faaliyetlerde gerekmeyen KKD'ler listelenmemiştir.</p>
+@endunless
 <p class="kucuk" style="margin-top:4pt">D: Faaliyet gerçekten yapılıyorsa risk değerlendirmesi / SDS / elektrik ve düşme tehlikesine göre uygun özellikte KKD seçilir; otomatik zorunluluk veya yasak anlamına gelmez.</p>
 
 {{-- EK-4 DESTEK ELEMANI ATAMA --}}
@@ -456,7 +459,11 @@
 {{-- EK-6 ÇEVRESEL RİSKLER --}}
 <div class="yeni-sayfa"></div>
 <h2>EK-6 ÇEVRESEL RİSKLER VE KOMŞU TESİSLER DEĞERLENDİRMESİ</h2>
+@if ($d['cevresel_dogrulandi'])
+<p>Yönetmeliğin 8 ve 10/7. maddeleri kapsamında işyeri çevresi sahada değerlendirilmiş; varlığı veya yokluğu doğrulanan etkenler aşağıda verilmiştir.</p>
+@else
 <p>Yönetmeliğin 8 ve 10/7. maddeleri kapsamında aşağıdaki etkenlerin varlığı sahada doğrulanır. Her satıra VAR / YOK, komşu adı / konumu, etki ve gerekli tedbir yazılır. Liste, bu tesislerin gerçekten bulunduğu anlamına gelmez.</p>
+@endif
 <table class="tablo">
     <tr><th class="orta" style="width:6%">S.No</th><th style="width:32%">Komşu Tesis / Çevresel Risk Faktörü</th><th class="orta" style="width:11%">Durum</th><th>Etki Durumu ve Olası Tehlike</th></tr>
     @foreach ($d['cevresel'] as $i => $r)

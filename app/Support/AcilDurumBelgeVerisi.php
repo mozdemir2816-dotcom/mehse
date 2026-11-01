@@ -77,7 +77,8 @@ class AcilDurumBelgeVerisi
                 ];
             })->values()->all();
 
-        $riskler = collect(config('isg.acil_durum.risk_listesi'))->map(function ($ad, $anahtar) use ($u) {
+        // Yalnız seçili konuların satırları (01.11.2026).
+        $riskler = collect(AcilDurumKonuSecici::riskSatirlari($plan->konular ?? []))->map(function ($ad, $anahtar) use ($u) {
             $puan = collect(config('isg.acil_durum.risk_kolonlari'))->keys()
                 ->mapWithKeys(fn ($k) => [$k => $u['risk_puanlari'][$anahtar][$k] ?? null])->all();
             $girilen = array_filter($puan);
@@ -120,7 +121,27 @@ class AcilDurumBelgeVerisi
             ...$r,
             'durum' => $u['cevresel_riskler'][$i]['durum'] ?? '',
             'not' => $dolu($u['cevresel_riskler'][$i]['not'] ?? null),
-        ])->all();
+        ]);
+        // Sahada VAR / YOK işaretlendiyse yalnız doğrulanmış satırlar basılır; hiçbiri işaretlenmediyse
+        // boş kontrol listesi (elle doldurulacak) olarak kalır (01.11.2026).
+        $cevreselDogrulandi = $cevresel->contains(fn ($r) => in_array($r['durum'], ['var', 'yok'], true));
+        if ($cevreselDogrulandi) {
+            $cevresel = $cevresel->filter(fn ($r) => in_array($r['durum'], ['var', 'yok'], true));
+        }
+        $cevresel = $cevresel->values()->all();
+
+        // EK-3 KKD: planda seçili faaliyetler, yoksa firmanın risk analizi / ekipman / kimyasal verisinden;
+        // hiç veri yoksa tüm sütunlar. Seçili sütunlarda hiç "D" almayan KKD satırı basılmaz.
+        $matris = config('isg.acil_durum.kkd_matrisi');
+        $faaliyetler = $u['kkd_faaliyetler'] ?: ($firma ? AcilDurumKonuSecici::kkdFaaliyetleri($firma) : null) ?: $matris['faaliyetler'];
+        $sutunlar = array_keys(array_intersect($matris['faaliyetler'], $faaliyetler));
+        $kkd = [
+            'faaliyetler' => array_values(array_intersect($matris['faaliyetler'], $faaliyetler)),
+            'kkd' => collect($matris['kkd'])
+                ->map(fn ($isaret) => implode('', array_map(fn ($i) => $isaret[$i] ?? '0', $sutunlar)))
+                ->filter(fn ($isaret) => str_contains($isaret, '1'))->all(),
+            'tum' => count($sutunlar) === count($matris['faaliyetler']),
+        ];
 
         $makineler = $firma ? $firma->isEkipmanlari()->where('aktif', true)->pluck('ekipman_adi')
             ->countBy()->map(fn ($n, $ad) => $n > 1 ? "{$ad} ({$n})" : $ad)->values()->all() : [];
@@ -169,6 +190,8 @@ class AcilDurumBelgeVerisi
             'ic_iletisim' => $icIletisim,
             'dis_iletisim' => $disIletisim,
             'cevresel' => $cevresel,
+            'cevresel_dogrulandi' => $cevreselDogrulandi,
+            'kkd' => $kkd,
             'disaridan' => $dolu($plan->disaridan_etkileyebilecek_isyerleri),
             'makineler' => $makineler,
             'kimyasallar' => $kimyasallar,

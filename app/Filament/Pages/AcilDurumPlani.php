@@ -9,6 +9,7 @@ use App\Models\AcilDurumPlani as PlanModel;
 use App\Models\Firma;
 use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
+use App\Support\AcilDurumKonuSecici;
 use App\Support\AcilDurumPlaniUretici;
 use App\Support\AcilDurumSektor;
 use App\Support\AcilDurumWordUretici;
@@ -202,6 +203,12 @@ class AcilDurumPlani extends Page
 
     public function konuToggle(string $anahtar): void
     {
+        if (in_array($anahtar, AcilDurumKonuSecici::zorunlu(), true)) {
+            Notification::make()->title('Bu senaryo her planda bulunur')->body('Yangın, iş kazası / ilkyardım ve elektrik çarpması kaldırılamaz.')->warning()->send();
+
+            return;
+        }
+
         $this->konular = in_array($anahtar, $this->konular, true)
             ? array_values(array_diff($this->konular, [$anahtar]))
             : [...$this->konular, $anahtar];
@@ -211,7 +218,55 @@ class AcilDurumPlani extends Page
     {
         $this->konular = $sec
             ? collect(config('isg.acil_durum.konular'))->pluck('anahtar')->all()
-            : [];
+            : AcilDurumKonuSecici::zorunlu();
+    }
+
+    /**
+     * "Risk Analizinden Otomatik Belirle" (01.11.2026): firmanın risk değerlendirmesi maddeleri, iş ekipmanları
+     * ve kimyasal envanterinden senaryo ekler (kaldırmaz) ve EK-3 KKD faaliyetlerini belirler. Kaydet'e basılınca kalıcı olur.
+     */
+    public function riskAnalizindenBelirle(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $oneri = AcilDurumKonuSecici::riskAnalizindenOner($this->firma);
+        $yeni = array_values(array_diff($oneri, $this->konular));
+        $this->konular = AcilDurumKonuSecici::zorunluEkle([...$this->konular, ...$yeni]);
+
+        $kkd = AcilDurumKonuSecici::kkdFaaliyetleri($this->firma);
+        if ($kkd !== null) {
+            $this->uygulama['kkd_faaliyetler'] = $kkd;
+        }
+
+        if ($oneri === [] && $kkd === null) {
+            Notification::make()->title('Firmada risk analizi verisi bulunamadı')
+                ->body('Risk değerlendirmesi, iş ekipmanı veya kimyasal envanteri girildikten sonra tekrar deneyin. Senaryoları elle seçebilirsiniz.')->warning()->send();
+
+            return;
+        }
+
+        $adlar = collect(config('isg.acil_durum.konular'))->whereIn('anahtar', $yeni)->pluck('ad')->implode(', ');
+        Notification::make()->title($yeni ? count($yeni).' senaryo eklendi' : 'Yeni senaryo gerekmedi')
+            ->body(($yeni ? $adlar.'. ' : 'Risk analizindeki senaryolar zaten seçili. ').'EK-3 KKD faaliyetleri güncellendi. Kalıcı olması için Kaydet düğmesine basın.')
+            ->success()->send();
+    }
+
+    /** EK-3 KKD faaliyet sütunu aç / kapat (boşsa otomatik listeden başlar). */
+    public function kkdFaaliyetToggle(string $faaliyet): void
+    {
+        $mevcut = $this->kkdFaaliyetleri();
+        $this->uygulama['kkd_faaliyetler'] = in_array($faaliyet, $mevcut, true)
+            ? array_values(array_diff($mevcut, [$faaliyet]))
+            : array_values(array_intersect(config('isg.acil_durum.kkd_matrisi.faaliyetler'), [...$mevcut, $faaliyet]));
+    }
+
+    /** @return array<int, string> EK-3'te basılacak faaliyetler: seçili, yoksa otomatik, o da yoksa hepsi. */
+    public function kkdFaaliyetleri(): array
+    {
+        return ($this->uygulama['kkd_faaliyetler'] ?? []) ?: ($this->firma ? AcilDurumKonuSecici::kkdFaaliyetleri($this->firma) : null)
+            ?: config('isg.acil_durum.kkd_matrisi.faaliyetler');
     }
 
     public function kaydet(): void

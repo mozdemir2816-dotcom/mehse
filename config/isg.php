@@ -3329,6 +3329,48 @@ return [
             'kavga' => 'Toplu Kavga', 'trafik' => 'Trafik Kazası', 'intihar' => 'İntihar',
             'ziyaretci' => 'Ziyaretçi Hastalanması, Ölmesi', 'kemirgen' => 'Kemirgen', 'hasarat' => 'Haşarat',
             'hirsizlik' => 'Hırsızlık', 'gaz_patlamasi' => 'Gaz Patlaması',
+            // 01.11.2026: tabloda karşılığı olmayan konular için satırlar (konu seçilince görünür).
+            'elektrik' => 'Elektrik Çarpması', 'makine_arizasi' => 'Makine Arızası ve Sıkışma', 'yuksekten_dusme' => 'Yüksekten Düşme',
+            'basincli_kap' => 'Basınçlı Kap Patlaması', 'heyelan' => 'Heyelan ve Toprak Kayması', 'radyasyon' => 'Radyasyon Sızıntısı',
+            'bogulma' => 'Boğulma ve Su Kazası', 'gida_zehirlenmesi' => 'Toplu Gıda Zehirlenmesi', 'asansor' => 'Asansörde Mahsur Kalma',
+        ],
+        // Risk tablosu satırı => planın acil durum konusu. Tabloda (ekran + PDF/Word) yalnız konusu
+        // SEÇİLİ satırlar görünür (kullanıcı 01.11.2026: seçilmeyen senaryo tablodan kalksın).
+        'risk_konusu' => [
+            'deprem' => 'deprem', 'yangin' => 'yangin', 'bomba' => 'bomba', 'sel' => 'sel', 'firtina' => 'yildirim',
+            'supheli_paket' => 'sabotaj', 'teror_disi_patlama' => 'patlama', 'kar_don' => 'yildirim', 'zehirlenme' => 'zehirlenme',
+            'is_kazasi' => 'is_kazasi', 'bulasici' => 'salgin', 'kimyasal' => 'kimyasal', 'kavga' => 'sabotaj', 'trafik' => 'trafik',
+            'intihar' => 'is_kazasi', 'ziyaretci' => 'is_kazasi', 'kemirgen' => 'salgin', 'hasarat' => 'salgin',
+            'hirsizlik' => 'sabotaj', 'gaz_patlamasi' => 'patlama',
+            'elektrik' => 'elektrik', 'makine_arizasi' => 'makine_arizasi', 'yuksekten_dusme' => 'yuksekten_dusme',
+            'basincli_kap' => 'basincli_kap', 'heyelan' => 'heyelan', 'radyasyon' => 'radyasyon', 'bogulma' => 'bogulma',
+            'gida_zehirlenmesi' => 'gida_zehirlenmesi', 'asansor' => 'asansor',
+        ],
+        // Her işyerinde planda bulunan senaryolar — kaldırılamaz (tahliye ayrıca 4. bölümde her planda var).
+        'zorunlu_konular' => ['yangin', 'is_kazasi', 'elektrik'],
+        // "Risk Analizinden Otomatik Belirle": firmanın risk değerlendirmesi maddeleri, iş ekipmanları ve
+        // kimyasal envanterinde (küçük harf) geçen ifade => işaretlenecek konular. Yalnız EKLER, kaldırmaz.
+        'otomatik_konu_kurallari' => [
+            ['ifadeler' => ['pres', 'torna', 'cnc', 'freze', 'abkant', 'giyotin', 'taşlama', 'matkap', 'konveyör', 'merdane', 'testere'], 'konular' => ['makine_arizasi']],
+            ['ifadeler' => ['kimyasal', 'boya', 'tiner', 'solvent', 'asit', 'yanıcı sıvı', 'parlayıcı'], 'konular' => ['kimyasal', 'patlama']],
+            ['ifadeler' => ['tavan vinci', 'vinç', 'caraskal', 'iskele', 'yüksekte', 'çatı', 'platform', 'seyyar merdiven'], 'konular' => ['yuksekten_dusme']],
+            ['ifadeler' => ['kompresör', 'hava tankı', 'basınçlı kap', 'buhar kazanı', 'kazan dairesi'], 'konular' => ['basincli_kap']],
+            ['ifadeler' => ['forklift', 'transpalet', 'istif makinesi'], 'konular' => ['trafik']],
+            ['ifadeler' => ['asansör'], 'konular' => ['asansor']],
+        ],
+        // EK-3 KKD sütunları: faaliyet => firmanın verisinde geçen ifadeler. Hiçbir veri yoksa tüm sütunlar basılır.
+        // TEMİZLİK ve GÜVENLİK her işyerinde vardır.
+        'kkd_faaliyet_ifadeleri' => [
+            'ELEKTRİK TAMİR' => ['elektrik', 'pano'],
+            'KAYNAK' => ['kaynak'],
+            'KİMYASALLA ÇALIŞMA' => ['kimyasal', 'boya', 'tiner', 'solvent', 'asit'],
+            'MEKANİK TAMİR' => ['bakım', 'onarım', 'tamir', 'makine'],
+            'ARITMA BÖLGESİ' => ['arıtma'],
+            'YÜKLEME BOŞALTMA' => ['yükleme', 'boşaltma', 'forklift', 'transpalet', 'depo', 'istif'],
+            'TEMİZLİK' => null,
+            'GÜVENLİK' => null,
+            'TANK/SİLO GİRİŞ' => ['tank içi', 'tank temizli', 'silo', 'kapalı alan'],
+            'YÜKSEKTE ÇALIŞMA' => ['yüksekte', 'iskele', 'çatı', 'platform'],
         ],
         'risk_kolonlari' => [
             'olasilik' => 'Meydana Gelme Olasılığı', 'insan' => 'İnsan', 'isyeri' => 'İşyeri', 'is' => 'İş',

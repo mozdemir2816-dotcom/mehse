@@ -35,9 +35,10 @@ class AcilDurumPlani extends Model
             $p->dokuman_no ??= 'AD-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 2, '0', STR_PAD_LEFT);
             $p->kapak_cercevesi ??= 'klasik';
 
-            if (empty($p->konular)) {
-                $p->konular = AcilDurumKonuSecici::firmaIcin($p->firma);
-            }
+            // Yangın, iş kazası ve elektrik çarpması her planda (01.11.2026).
+            $p->konular = empty($p->konular)
+                ? AcilDurumKonuSecici::firmaIcin($p->firma)
+                : AcilDurumKonuSecici::zorunluEkle($p->konular);
 
             if ($p->rapor_tarihi && ! $p->gecerlilik_tarihi) {
                 $sinif = $p->firma?->tehlike_sinifi ?? 'az_tehlikeli';

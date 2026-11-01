@@ -37,6 +37,7 @@ class AcilDurumHazirlik
             'kroki_asildi' => false, 'calisan_bilgilendirildi' => false, 'ek_not' => '',
             ...array_fill_keys(array_keys(static::BELGE_ALANLARI), ''),
             'risk_puanlari' => [], 'cevresel_riskler' => [], 'sektor' => '',
+            'kkd_faaliyetler' => [], // EK-3 sütunları; boşsa firmanın verisinden otomatik (AcilDurumKonuSecici::kkdFaaliyetleri)
         ];
     }
 
@@ -124,6 +125,7 @@ class AcilDurumHazirlik
                     ->filter()->all()])
                 ->filter()->all(),
             'sektor' => AcilDurumSektor::gecerliMi($u['sektor'] ?? null) ? $u['sektor'] : '',
+            'kkd_faaliyetler' => array_values(array_intersect(config('isg.acil_durum.kkd_matrisi.faaliyetler'), (array) ($u['kkd_faaliyetler'] ?? []))),
             'cevresel_riskler' => collect(config('isg.acil_durum.cevresel_riskler'))->keys()
                 ->mapWithKeys(fn ($i) => [$i => [
                     'durum' => in_array($u['cevresel_riskler'][$i]['durum'] ?? '', ['var', 'yok'], true) ? $u['cevresel_riskler'][$i]['durum'] : '',

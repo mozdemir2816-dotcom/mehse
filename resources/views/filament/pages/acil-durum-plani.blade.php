@@ -146,25 +146,38 @@
                 Acil Durum Konuları
                 <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ count($konular) }} konudan {{ count($this->konular) }} seçili)</span>
             </x-slot>
-            <x-slot name="description">PDF çıktısına dahil edilecek acil durum sayfalarını seçin</x-slot>
+            <x-slot name="description">Uygulanabilir acil durum senaryoları — yalnız seçilenler PDF / Word'e (EK-1 sayfaları ve risk tablosu) girer, numaralar seçime göre sıralanır. 🔒 işaretliler her planda bulunur.</x-slot>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.35rem">
+                @php $zorunlu = \App\Support\AcilDurumKonuSecici::zorunlu(); $sira = 0; @endphp
                 @foreach ($konular as $i => $k)
-                    @php $secili = in_array($k['anahtar'], $this->konular, true); @endphp
+                    @php $secili = in_array($k['anahtar'], $this->konular, true); $kilit = in_array($k['anahtar'], $zorunlu, true); @endphp
                     <button type="button" wire:click="konuToggle('{{ $k['anahtar'] }}')"
                         class="acil-merkez-secenek"
                         style="text-align:left;padding:.55rem .75rem;cursor:pointer;font-size:.8rem;font-weight:{{ $secili ? 600 : 500 }};
                             border:1px solid {{ $secili ? '#e11d48' : '#e2e8f0' }};
                             background:{{ $secili ? '#fff1f2' : '#fff' }};color:{{ $secili ? '#9f1239' : '#334155' }}">
-                        {{ $secili ? '☑' : '☐' }}
-                        <span style="display:inline-block;width:1.4rem;text-align:center;color:rgb(107 114 128)">{{ $i + 1 }}</span>
+                        {{ $kilit ? '🔒' : ($secili ? '☑' : '☐') }}
+                        <span style="display:inline-block;width:1.4rem;text-align:center;color:rgb(107 114 128)">{{ $secili ? ++$sira : '' }}</span>
                         ACİL DURUM: {{ mb_strtoupper($k['ad'], 'UTF-8') }}
                     </button>
                 @endforeach
             </div>
-            <div style="margin-top:.6rem;display:flex;gap:.5rem">
+            <div style="margin-top:.6rem;display:flex;gap:.5rem;flex-wrap:wrap">
+                <x-filament::button size="xs" color="danger" icon="heroicon-o-sparkles" wire:click="riskAnalizindenBelirle">Risk Analizinden Otomatik Belirle</x-filament::button>
                 <x-filament::button size="xs" color="gray" wire:click="tumKonular(true)">Tümünü Seç</x-filament::button>
-                <x-filament::button size="xs" color="gray" wire:click="tumKonular(false)">Tümünü Kaldır</x-filament::button>
+                <x-filament::button size="xs" color="gray" wire:click="tumKonular(false)">Zorunlular Hariç Kaldır</x-filament::button>
+            </div>
+            <p style="margin-top:.35rem;font-size:.72rem;color:rgb(107 114 128)">Otomatik belirleme firmanın risk değerlendirmesi maddelerine, iş ekipmanlarına ve kimyasal envanterine bakar (pres / torna / CNC → makine sıkışma; boya / tiner / kimyasal → kimyasal dökülme + patlama; tavan vinci / iskele → yüksekten düşme…). Yalnız ekler; deprem, sel, heyelan gibi başlıkları yukarıdan tek tıkla açıp kapatın.</p>
+
+            @php $kkdSecili = $this->kkdFaaliyetleri(); @endphp
+            <div style="margin-top:.9rem;font-size:.8rem;font-weight:700">EK-3 KKD tablosu — işyerindeki faaliyetler <span style="font-weight:400;color:rgb(107 114 128)">({{ count($kkdSecili) }} seçili; seçilmeyen sütun ve yalnız onda gereken KKD'ler basılmaz)</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem">
+                @foreach (config('isg.acil_durum.kkd_matrisi.faaliyetler') as $f)
+                    @php $on = in_array($f, $kkdSecili, true); @endphp
+                    <button type="button" wire:click="kkdFaaliyetToggle(@js($f))" wire:key="kkd-{{ $loop->index }}"
+                        style="padding:.3rem .55rem;border-radius:.4rem;font-size:.72rem;cursor:pointer;border:1px solid {{ $on ? '#e11d48' : '#e2e8f0' }};background:{{ $on ? '#fff1f2' : '#fff' }};color:{{ $on ? '#9f1239' : '#64748b' }}">{{ $on ? '☑' : '☐' }} {{ $f }}</button>
+                @endforeach
             </div>
         </x-filament::section>
 
@@ -305,7 +318,7 @@
                         @endforeach
                     </tr></thead>
                     <tbody>
-                        @foreach (config('isg.acil_durum.risk_listesi') as $r => $riskAd)
+                        @foreach (\App\Support\AcilDurumKonuSecici::riskSatirlari($this->konular) as $r => $riskAd)
                             <tr style="border-top:1px solid rgb(107 114 128 / .2)">
                                 <td style="padding:.2rem .25rem;white-space:nowrap">{{ $riskAd }}</td>
                                 @foreach (array_keys(config('isg.acil_durum.risk_kolonlari')) as $k)
