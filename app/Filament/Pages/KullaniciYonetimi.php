@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use App\Support\SayfaKatalogu;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -42,6 +43,11 @@ class KullaniciYonetimi extends Page
 
     /** @var array<int,bool> */
     public array $firmaSecim = [];
+
+    /** Abonelik / deneme süresi — boş bitiş = süresiz (App\Http\Middleware\CheckTrialPeriod). */
+    public ?string $abonelikPlani = null;
+
+    public ?string $abonelikBitis = null;
 
     public static function canAccess(): bool
     {
@@ -82,6 +88,9 @@ class KullaniciYonetimi extends Page
             $this->sayfaSecim[$anahtar] = true;
         }
 
+        $this->abonelikPlani = $user->abonelik_plani;
+        $this->abonelikBitis = $user->abonelik_bitis?->toDateString();
+
         $this->firmaSecim = [];
         $sahipOlunan = DB::table('firmalar')->where('user_id', $userId)->pluck('id');
         $paylasilan = DB::table('kullanici_firmalar')->where('user_id', $userId)->pluck('firma_id');
@@ -107,6 +116,16 @@ class KullaniciYonetimi extends Page
         }
 
         $user = User::findOrFail($this->acikKullaniciId);
+
+        $this->validate([
+            'abonelikPlani' => ['required', 'in:'.implode(',', array_keys(User::ABONELIK_PLANLARI))],
+            'abonelikBitis' => ['nullable', 'date'],
+        ], attributes: ['abonelikPlani' => 'abonelik planı', 'abonelikBitis' => 'bitiş tarihi']);
+
+        $user->update([
+            'abonelik_plani' => $this->abonelikPlani,
+            'abonelik_bitis' => $this->abonelikBitis ?: null,
+        ]);
 
         $secilenSayfalar = array_keys(array_filter($this->sayfaSecim));
         $user->sayfaYetkileri()->delete();
@@ -136,6 +155,15 @@ class KullaniciYonetimi extends Page
             ->title($user->name.' için yetkiler kaydedildi')
             ->success()
             ->send();
+    }
+
+    /** Bitişi mevcut bitişten (gelecekteyse) ya da bugünden uzatır; "Kaydet" ile yazılır. */
+    public function abonelikUzat(int $gun): void
+    {
+        $bitis = $this->abonelikBitis ? Carbon::parse($this->abonelikBitis) : null;
+        $taban = $bitis && $bitis->isFuture() ? $bitis : today();
+
+        $this->abonelikBitis = $taban->addDays($gun)->toDateString();
     }
 
     public function aktifDegistir(int $userId): void

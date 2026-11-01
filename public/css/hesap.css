@@ -1,0 +1,45 @@
+/* Panel dışı hesap ekranları: resources/views/admin/layouts/hesap.blade.php */
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: #f1f5f9; color: #1e293b; line-height: 1.55; }
+a { color: inherit; }
+.h-kap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.h-ust { background: #0f172a; color: #fff; }
+.h-ust-ic { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.h-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; text-decoration: none; }
+.h-logo-kutu { width: 32px; height: 32px; border-radius: 8px; background: #059669; display: grid; place-items: center; }
+.h-ust-sag { display: flex; align-items: center; gap: 14px; }
+.h-ust-sag form { margin: 0; }
+.h-kisi { font-size: .9rem; color: #cbd5e1; display: none; }
+@media (min-width: 640px) { .h-kisi { display: inline; } }
+.h-icerik { padding-top: 48px; padding-bottom: 72px; }
+.h-dugme { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-weight: 700; font-size: .95rem; text-decoration: none; border: 1px solid transparent; cursor: pointer; font-family: inherit; }
+.h-dugme-yesil { background: #059669; color: #fff; }
+.h-dugme-yesil:hover { background: #047857; }
+.h-dugme-mavi { background: #0284c7; color: #fff; }
+.h-dugme-mavi:hover { background: #0369a1; }
+.h-dugme-cerceve { background: transparent; color: inherit; border-color: currentColor; padding: 8px 16px; font-size: .85rem; }
+.h-dugme-acik { background: #fff; color: #0f172a; border-color: #cbd5e1; }
+.h-kart { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px -12px rgba(15, 23, 42, .15); }
+.h-ortala { max-width: 640px; margin: 0 auto; text-align: center; }
+.h-ikon { width: 64px; height: 64px; border-radius: 50%; background: #fef3c7; color: #b45309; display: grid; place-items: center; margin: 0 auto 20px; }
+.h-baslik { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 12px; }
+.h-alt-baslik { color: #64748b; margin: 0 0 24px; }
+.h-guven { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 12px; padding: 14px 18px; text-align: left; font-size: .92rem; margin-bottom: 28px; }
+.h-dugmeler { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.h-not { margin-top: 24px; font-size: .85rem; color: #64748b; }
+.h-geri { display: inline-block; margin-bottom: 24px; font-size: .9rem; color: #0284c7; text-decoration: none; }
+
+/* Paketler */
+.p-baslik { text-align: center; margin-bottom: 40px; }
+.p-izgara { display: grid; gap: 24px; }
+@media (min-width: 900px) { .p-izgara { grid-template-columns: repeat(3, 1fr); align-items: stretch; } }
+.p-kart { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; position: relative; }
+.p-one { border: 2px solid #0284c7; box-shadow: 0 20px 40px -16px rgba(2, 132, 199, .35); }
+.p-rozet { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: #0284c7; color: #fff; font-size: .75rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+.p-ad { font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0 0 6px; }
+.p-kime { font-size: .9rem; color: #64748b; margin: 0 0 18px; min-height: 2.8em; }
+.p-fiyat { font-size: .95rem; font-weight: 700; color: #0f172a; margin-bottom: 18px; }
+.p-liste { list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 10px; font-size: .92rem; flex: 1; }
+.p-liste li { display: flex; gap: 10px; align-items: flex-start; }
+.p-liste svg { flex: none; margin-top: 3px; color: #059669; }
+.p-kart .h-dugme { width: 100%; }

@@ -7,6 +7,7 @@ use App\Filament\Auth\OsgbBasvuru;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\GoogleFontProvider;
+use App\Http\Middleware\CheckTrialPeriod;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -211,6 +212,19 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                // Deneme / abonelik süresi dolunca "Süreniz doldu" ekranına yönlendirir.
+                CheckTrialPeriod::class,
+            ])
+            // Süre dolunca açık kalan ekranlar (CheckTrialPeriod::MUAF_ROTALAR).
+            ->authenticatedRoutes(function () {
+                $veri = fn () => ['user' => auth()->user(), 'waNo' => '905064754855'];
+                Route::get('deneme-bitti', fn () => view('admin.deneme_bitti', $veri()))->name('deneme-bitti');
+                Route::get('paketler', fn () => view('admin.paketler', $veri()))->name('paketler');
+            })
+            // Bitişe ≤ 7 gün kalınca en üstte sarı uyarı bandı.
+            ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn () => view('admin.partials.trial_warning'),
+            );
     }
 }

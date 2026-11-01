@@ -95,6 +95,40 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return config('isg.uzman_unvanlari.'.$this->unvan, $this->unvan ?: '—');
     }
 
+    /** Kullanıcı Yetkileri ekranındaki abonelik planı seçenekleri (users.abonelik_plani). */
+    public const ABONELIK_PLANLARI = [
+        'deneme' => 'Deneme',
+        'uzman' => 'Bireysel Uzman',
+        'osgb' => 'Profesyonel OSGB',
+        'kurumsal' => 'Kurumsal & Sanayi',
+    ];
+
+    /**
+     * Panel erişimi açık mı (App\Http\Middleware\CheckTrialPeriod). Sahip hesap ve
+     * bitiş tarihi olmayan hesaplar muaf; bitiş günü dahil erişim sürer.
+     */
+    public function hasActiveTrial(): bool
+    {
+        if ($this->sahipMi() || ! $this->abonelik_bitis) {
+            return true;
+        }
+
+        return $this->abonelikKalanGun() >= 0;
+    }
+
+    public function trialDaysRemaining(): ?int
+    {
+        return $this->abonelikKalanGun();
+    }
+
+    /** Panel üstündeki sarı uyarı bandı: bitişe 7 gün veya daha az kaldıysa. */
+    public function shouldShowTrialWarning(): bool
+    {
+        $kalan = $this->abonelikKalanGun();
+
+        return ! $this->sahipMi() && $kalan !== null && $kalan >= 0 && $kalan <= 7;
+    }
+
     /** Aboneliğin bitişine kalan gün (negatifse süresi geçmiş). */
     public function abonelikKalanGun(): ?int
     {

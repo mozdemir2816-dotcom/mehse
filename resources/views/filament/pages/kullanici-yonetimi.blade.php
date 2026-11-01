@@ -15,6 +15,19 @@
                         <div style="font-size:.8rem;color:rgb(128 116 148)">
                             {{ $kullanici->email }} · {{ $kullanici->telefon ?: '—' }} · {{ $kullanici->rol }}
                         </div>
+                        @php
+                            $kalan = $kullanici->abonelikKalanGun();
+                        @endphp
+                        <div style="font-size:.78rem;margin-top:.2rem;color:{{ $kalan === null ? 'rgb(128 116 148)' : ($kalan < 0 ? '#b91c1c' : ($kalan <= 7 ? '#b45309' : '#047857')) }}">
+                            {{ \App\Models\User::ABONELIK_PLANLARI[$kullanici->abonelik_plani] ?? $kullanici->abonelik_plani }} ·
+                            @if ($kalan === null)
+                                süresiz
+                            @elseif ($kalan < 0)
+                                süresi doldu ({{ $kullanici->abonelik_bitis->format('d.m.Y') }}) — panele erişemiyor
+                            @else
+                                {{ $kullanici->abonelik_bitis->format('d.m.Y') }} tarihine kadar ({{ $kalan }} gün)
+                            @endif
+                        </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:.6rem">
                         <label style="display:flex;align-items:center;gap:.35rem;font-size:.8rem;cursor:pointer">
@@ -28,6 +41,23 @@
                 </div>
 
                 @if ($acik)
+                    <div style="padding:1rem;border-top:1px solid rgb(128 116 148 / .2);display:flex;flex-wrap:wrap;align-items:flex-end;gap:.75rem">
+                        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;font-weight:600">
+                            Abonelik planı
+                            <select wire:model="abonelikPlani" style="border:1px solid rgb(128 116 148 / .4);border-radius:.5rem;padding:.35rem .5rem;font-weight:400;background:transparent">
+                                @foreach (\App\Models\User::ABONELIK_PLANLARI as $k => $ad)
+                                    <option value="{{ $k }}">{{ $ad }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;font-weight:600">
+                            Bitiş tarihi (boş = süresiz)
+                            <input type="date" wire:model="abonelikBitis" style="border:1px solid rgb(128 116 148 / .4);border-radius:.5rem;padding:.3rem .5rem;font-weight:400;background:transparent">
+                        </label>
+                        <x-filament::button size="sm" color="gray" wire:click="abonelikUzat(30)">+30 gün</x-filament::button>
+                        <x-filament::button size="sm" color="gray" wire:click="abonelikUzat(365)">+1 yıl</x-filament::button>
+                        <span style="font-size:.75rem;color:rgb(128 116 148)">Değişiklik "Kaydet" ile uygulanır.</span>
+                    </div>
                     <div style="padding:1rem;border-top:1px solid rgb(128 116 148 / .2);display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
