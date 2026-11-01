@@ -97,6 +97,68 @@ class AiEkipmanRiskTest extends TestCase
         $this->assertSame('ai', $maddeler[0]['kaynak']);
     }
 
+    public function test_reziduel_puan_eski_duz_yanittan_hedefe_dusurulur_ve_kutuphaneye_yazilir(): void
+    {
+        $this->geminiYaniti();
+        $s = $this->sihirbaz(User::factory()->create(['rol' => 'sahip']))
+            ->set('aiEkipmanAdi', 'Şerit testere')
+            ->call('aiEkipmanUret')
+            // Rezidüel önerisi yok: Ş ve F sabit, O hedefin (70) altına inene kadar düşer → 0,2×6×40 = 48
+            ->assertSee('Mevcut Risk: O 6 × F 6 × Ş 40 = 1440')
+            ->assertSee('Önlem Sonrası Risk: O 0,2 × F 6 × Ş 40 = 48');
+
+        $aday = $s->get('aiEkipmanAdaylar')[0];
+        $this->assertSame([0.2, 6.0, 40.0], [$aday['son_olasilik'], $aday['son_frekans'], $aday['son_siddet']]);
+        $this->assertSame(['olasilik' => 4, 'siddet' => 4, 'son_olasilik' => 1, 'son_siddet' => 4], $aday['matris']);
+
+        $s->call('aiEkipmanEkle');
+        $t = Tehlike::firstOrFail();
+        $this->assertSame([0.2, 6.0, 40.0], [(float) $t->son_olasilik, (float) $t->son_frekans, (float) $t->son_siddet]);
+        $this->assertSame(1, $t->matris['son_olasilik']);
+        $this->assertEquals(0.2, $s->get('secilenler')[0]['son_olasilik']);
+    }
+
+    public function test_yeni_puanlar_semasi_siddeti_sabit_tutar_ve_5x5_rezidueli_ekler(): void
+    {
+        $madde = fn (string $tehlike, array $ilk, array $rez) => [
+            'bolum' => 'Pres', 'faaliyet' => 'Operasyon', 'tehlike' => $tehlike, 'kok_neden' => 'Koruyucu yok', 'risk' => 'Ezilme',
+            'mevcut_onlem' => 'Belirlenmedi', 'oneri' => 'Işık perdesi', 'mevzuat' => 'Makine Emniyeti Yönetmeliği',
+            'puanlar' => ['ilk' => $ilk, 'reziduel' => $rez],
+        ];
+        $maddeler = [
+            $madde('Kalıp arasına el girmesi',
+                ['matris_o' => 5, 'matris_s' => 3, 'fk_o' => 10, 'fk_f' => 6, 'fk_s' => 15],
+                // Yapay zekâ şiddeti de düşürmeye çalışıyor → yok sayılır; O=1 hedefe yetmez (90) → 0,5 (45)
+                ['reziduel_matris_o' => 2, 'reziduel_matris_s' => 1, 'reziduel_fk_o' => 1, 'reziduel_fk_f' => 1, 'reziduel_fk_s' => 3]),
+            $madde('Volan kopması',
+                ['matris_o' => 3, 'matris_s' => 5, 'fk_o' => 3, 'fk_f' => 10, 'fk_s' => 100],
+                ['reziduel_matris_o' => 1, 'reziduel_matris_s' => 5, 'reziduel_fk_o' => 0.2, 'reziduel_fk_f' => 10, 'reziduel_fk_s' => 100]),
+        ];
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response([
+            'candidates' => [['content' => ['parts' => [['text' => json_encode($maddeler, JSON_UNESCAPED_UNICODE)]]]]],
+        ])]);
+
+        $uzman = User::factory()->create(['rol' => 'uzman']);
+        $uzman->sayfaYetkileri()->create(['sayfa_anahtari' => 'risk-sihirbazi']);
+
+        $this->sihirbaz(User::factory()->create(['rol' => 'sahip']))
+            ->set('aiEkipmanAdi', 'Pres')->call('aiEkipmanUret')
+            ->assertSee('Önlem Sonrası Risk: O 0,5 × F 6 × Ş 15 = 45')
+            // 0,2×10×100 = 200: en düşük olasılıkta bile hedefe inilemiyor → uyarı
+            ->assertSee('Önlem Sonrası Risk: O 0,2 × F 10 × Ş 100 = 200')
+            ->assertSee('ek mühendislik önlemi gerekir');
+
+        $s = $this->sihirbaz($uzman, 'matris_5x5')
+            ->set('aiEkipmanAdi', 'Pres')->call('aiEkipmanUret')
+            ->assertSee('Mevcut Risk: O 5 × Ş 3 = 15')
+            ->assertSee('Önlem Sonrası Risk: O 2 × Ş 3 = 6')
+            ->assertSee('Önlem Sonrası Risk: O 1 × Ş 5 = 5')
+            ->call('aiEkipmanEkle');
+
+        $ilk = $s->get('secilenler')[0];
+        $this->assertSame([5, 3, 2, 3, null, null], [$ilk['olasilik'], $ilk['siddet'], $ilk['son_olasilik'], $ilk['son_siddet'], $ilk['frekans'], $ilk['son_frekans']]);
+    }
+
     public function test_hata_ve_anahtarsiz_durum_bildirilir(): void
     {
         Http::fake(['generativelanguage.googleapis.com/*' => Http::response('hata', 503)]);

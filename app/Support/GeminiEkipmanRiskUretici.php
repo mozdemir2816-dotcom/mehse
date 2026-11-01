@@ -57,12 +57,35 @@ class GeminiEkipmanRiskUretici
         }
     }
 
-    /** @return array<string, mixed> sihirbazın madde alanları + `matris` (5x5) */
+    /** Önlem sonrası hedef: 5x5'te bu puan ve altı (katlanılabilir), Fine-Kinney'de bu puanın altı. */
+    public const HEDEF_5X5_EN_FAZLA = 6;
+
+    public const HEDEF_FK_ALTI = 70;
+
+    /**
+     * @return array<string, mixed> sihirbazın madde alanları (ilk + son_* Fine-Kinney) + `matris`
+     *                              (5x5: olasilik, siddet, son_olasilik, son_siddet)
+     */
     public static function normalize(array $m, string $ekipman): array
     {
         $metin = fn ($k) => trim((string) ($m[$k] ?? '')) ?: null;
         $kok = $metin('kok_neden');
         $risk = $metin('risk');
+
+        // Yeni şema: puanlar.ilk / puanlar.reziduel; eski düz alanlar da kabul edilir.
+        $ilk = (array) data_get($m, 'puanlar.ilk', []);
+        $rez = (array) data_get($m, 'puanlar.reziduel', []);
+        $al = fn (array $kaynak, string $anahtar, string $duz) => $kaynak[$anahtar] ?? $m[$duz] ?? null;
+
+        $fkO = static::enYakin($al($ilk, 'fk_o', 'fk_olasilik'), self::FK_OLASILIK);
+        $fkF = static::enYakin($al($ilk, 'fk_f', 'fk_frekans'), self::FK_FREKANS);
+        $fkS = static::enYakin($al($ilk, 'fk_s', 'fk_siddet'), self::FK_SIDDET);
+        $mO = static::besli($al($ilk, 'matris_o', 'x5_olasilik'));
+        $mS = static::besli($al($ilk, 'matris_s', 'x5_siddet'));
+
+        // Rezidüel: Şiddet ve frekans önlemden etkilenmez (ilk değerde sabit); yalnız olasılık düşer.
+        $fkSonO = static::fkReziduelOlasilik($al($rez, 'reziduel_fk_o', 'reziduel_fk_olasilik'), $fkO, $fkF, $fkS);
+        $mSonO = static::matrisReziduelOlasilik($al($rez, 'reziduel_matris_o', 'reziduel_x5_olasilik'), $mO, $mS);
 
         return [
             'bolum' => $metin('bolum') ?: $ekipman,
@@ -72,14 +95,56 @@ class GeminiEkipmanRiskUretici
             'mevcut_onlem' => $metin('mevcut_onlem'),
             'oneri' => $metin('oneri'),
             'mevzuat' => $metin('mevzuat'),
-            'olasilik' => static::enYakin($m['fk_olasilik'] ?? null, self::FK_OLASILIK),
-            'frekans' => static::enYakin($m['fk_frekans'] ?? null, self::FK_FREKANS),
-            'siddet' => static::enYakin($m['fk_siddet'] ?? null, self::FK_SIDDET),
+            'olasilik' => $fkO,
+            'frekans' => $fkF,
+            'siddet' => $fkS,
+            'son_olasilik' => $fkSonO,
+            'son_frekans' => $fkF,
+            'son_siddet' => $fkS,
             'matris' => [
-                'olasilik' => max(1, min(5, (int) round((float) ($m['x5_olasilik'] ?? 3)))),
-                'siddet' => max(1, min(5, (int) round((float) ($m['x5_siddet'] ?? 3)))),
+                'olasilik' => $mO,
+                'siddet' => $mS,
+                'son_olasilik' => $mSonO,
+                'son_siddet' => $mS,
             ],
         ];
+    }
+
+    private static function besli(mixed $deger): int
+    {
+        return max(1, min(5, (int) round(is_numeric($deger) ? (float) $deger : 3)));
+    }
+
+    /**
+     * Önerilen değer ölçeğe yuvarlanır, ilk olasılıktan en az bir basamak aşağıda olur (mümkünse) ve
+     * O×F×Ş hedefin (70) altına inene kadar ölçekte düşürülür. Şiddet×frekans çok yüksekse (ör. 100×10)
+     * en düşük olasılıkta bile hedefe inilemez — o zaman en düşük olasılık döner, puan dürüstçe gösterilir.
+     */
+    private static function fkReziduelOlasilik(mixed $oneri, float $o, float $f, float $s): float
+    {
+        $olcek = self::FK_OLASILIK;
+        $ilkSira = (int) array_search($o, $olcek, false);
+        $sira = is_numeric($oneri) ? (int) array_search(static::enYakin($oneri, $olcek), $olcek, false) : $ilkSira;
+        $sira = min($sira, max(0, $ilkSira - 1));
+
+        while ($sira > 0 && $olcek[$sira] * $f * $s >= self::HEDEF_FK_ALTI) {
+            $sira--;
+        }
+
+        return (float) $olcek[$sira];
+    }
+
+    /** 5x5: olasılık ilkten en az 1 düşük (mümkünse) ve O×Ş ≤ 6 olana kadar düşürülür (en az 1). */
+    private static function matrisReziduelOlasilik(mixed $oneri, int $o, int $s): int
+    {
+        $son = is_numeric($oneri) ? static::besli($oneri) : $o;
+        $son = min($son, max(1, $o - 1));
+
+        while ($son > 1 && $son * $s > self::HEDEF_5X5_EN_FAZLA) {
+            $son--;
+        }
+
+        return $son;
     }
 
     private static function enYakin(mixed $deger, array $olcek): float
@@ -112,14 +177,24 @@ class GeminiEkipmanRiskUretici
         - oneri: somut, uygulanabilir düzeltici aksiyon
         - mevzuat: ilgili Türk mevzuatı ve standart adı. Emin olmadığın madde numarası YAZMA; yalnız
           emin olduğun yönetmelik ve standart adlarını yaz.
-        - fk_olasilik (0.2/0.5/1/3/6/10), fk_frekans (0.5/1/2/3/6/10), fk_siddet (1/3/7/15/40/100):
-          önlem alınmamış mevcut durum için Fine-Kinney puanları
-        - x5_olasilik ve x5_siddet: 1-5 arası 5x5 matris puanları
+        - puanlar.ilk: önlem alınmamış MEVCUT durum puanları —
+          matris_o ve matris_s (1-5 arası 5x5 matris), fk_o (0.2/0.5/1/3/6/10),
+          fk_f (0.5/1/2/3/6/10), fk_s (1/3/7/15/40/100) Fine-Kinney
+        - puanlar.reziduel: "oneri" alanındaki önlemler UYGULANDIKTAN SONRAKİ hedef puanlar —
+          reziduel_matris_o, reziduel_matris_s, reziduel_fk_o, reziduel_fk_f, reziduel_fk_s
+
+        REZİDÜEL RİSK KURALI: Önerilen önlemler uygulandıktan sonra tehlike izole edildiği için
+        Olasılık (O) değeri belirgin şekilde düşürülmeli, Şiddet (S) değeri sabit kalmalıdır
+        (Fine-Kinney frekansı da maruziyet süresi olduğundan aynı kalır). 5x5 rezidüel skoru
+        (O×S) 6 ve altına (kabul edilebilir yeşil bölgeye), Fine-Kinney rezidüel skoru (O×F×S)
+        ise 70'in altına (kabul edilebilir seviyeye) düşecek şekilde rezidüel puanlar üretilmelidir.
         Türkçe yaz. Yanıtı SADECE JSON dizisi olarak ver.
         PROMPT;
 
         $metin = ['type' => 'STRING'];
         $sayi = ['type' => 'NUMBER'];
+        $tam = ['type' => 'INTEGER'];
+        $nesne = fn (array $alanlar) => ['type' => 'OBJECT', 'properties' => $alanlar, 'required' => array_keys($alanlar)];
 
         return [
             'contents' => [['role' => 'user', 'parts' => [['text' => $istem]]]],
@@ -133,10 +208,16 @@ class GeminiEkipmanRiskUretici
                         'properties' => [
                             'bolum' => $metin, 'faaliyet' => $metin, 'tehlike' => $metin, 'kok_neden' => $metin,
                             'risk' => $metin, 'mevcut_onlem' => $metin, 'oneri' => $metin, 'mevzuat' => $metin,
-                            'fk_olasilik' => $sayi, 'fk_frekans' => $sayi, 'fk_siddet' => $sayi,
-                            'x5_olasilik' => ['type' => 'INTEGER'], 'x5_siddet' => ['type' => 'INTEGER'],
+                            // Skorlar (çarpımlar) yapay zekâdan istenmez; sistem kendisi hesaplar.
+                            'puanlar' => $nesne([
+                                'ilk' => $nesne(['matris_o' => $tam, 'matris_s' => $tam, 'fk_o' => $sayi, 'fk_f' => $sayi, 'fk_s' => $sayi]),
+                                'reziduel' => $nesne([
+                                    'reziduel_matris_o' => $tam, 'reziduel_matris_s' => $tam,
+                                    'reziduel_fk_o' => $sayi, 'reziduel_fk_f' => $sayi, 'reziduel_fk_s' => $sayi,
+                                ]),
+                            ]),
                         ],
-                        'required' => ['tehlike', 'kok_neden', 'risk', 'oneri', 'mevzuat', 'fk_olasilik', 'fk_frekans', 'fk_siddet', 'x5_olasilik', 'x5_siddet'],
+                        'required' => ['tehlike', 'kok_neden', 'risk', 'oneri', 'mevzuat', 'puanlar'],
                     ],
                 ],
             ],

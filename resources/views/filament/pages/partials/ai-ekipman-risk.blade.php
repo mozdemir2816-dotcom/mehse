@@ -35,9 +35,22 @@
             @foreach ($aiEkipmanAdaylar as $i => $m)
                 @php
                     $isaretli = in_array($i, $aiEkipmanSecim, true);
-                    $puan = $yontem === 'matris_5x5'
-                        ? 'O '.$m['matris']['olasilik'].' × Ş '.$m['matris']['siddet'].' = '.($m['matris']['olasilik'] * $m['matris']['siddet'])
-                        : 'O '.$m['olasilik'].' × F '.$m['frekans'].' × Ş '.$m['siddet'].' = '.rtrim(rtrim(number_format($m['olasilik'] * $m['frekans'] * $m['siddet'], 1, ',', ''), '0'), ',');
+                    $sayi = fn ($d) => rtrim(rtrim(number_format((float) $d, 1, ',', ''), '0'), ',');
+                    // Mevcut ve önlem sonrası (rezidüel) puan; skor sistemce hesaplanır (RiskSkorlama).
+                    if ($yontem === 'matris_5x5') {
+                        $x = $m['matris'];
+                        $ilk = \App\Support\RiskSkorlama::hesapla('matris_5x5', $x['olasilik'], $x['siddet']);
+                        $son = \App\Support\RiskSkorlama::hesapla('matris_5x5', $x['son_olasilik'], $x['son_siddet']);
+                        $ilkMetin = 'O '.$x['olasilik'].' × Ş '.$x['siddet'].' = '.$ilk['puan'];
+                        $sonMetin = 'O '.$x['son_olasilik'].' × Ş '.$x['son_siddet'].' = '.$son['puan'];
+                        $kabul = $son['puan'] <= \App\Support\GeminiEkipmanRiskUretici::HEDEF_5X5_EN_FAZLA;
+                    } else {
+                        $ilk = \App\Support\RiskSkorlama::hesapla('fine_kinney', $m['olasilik'], $m['siddet'], $m['frekans']);
+                        $son = \App\Support\RiskSkorlama::hesapla('fine_kinney', $m['son_olasilik'], $m['son_siddet'], $m['son_frekans']);
+                        $ilkMetin = 'O '.$sayi($m['olasilik']).' × F '.$sayi($m['frekans']).' × Ş '.$sayi($m['siddet']).' = '.$sayi($ilk['puan']);
+                        $sonMetin = 'O '.$sayi($m['son_olasilik']).' × F '.$sayi($m['son_frekans']).' × Ş '.$sayi($m['son_siddet']).' = '.$sayi($son['puan']);
+                        $kabul = $son['puan'] < \App\Support\GeminiEkipmanRiskUretici::HEDEF_FK_ALTI;
+                    }
                 @endphp
                 <label wire:key="ai-aday-{{ $i }}" @style([
                     'display:flex;gap:.7rem;align-items:flex-start;padding:.75rem;border-radius:.6rem;cursor:pointer',
@@ -48,13 +61,21 @@
                     <span style="min-width:0;font-size:.82rem;display:flex;flex-direction:column;gap:.25rem">
                         <span style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center">
                             <strong style="font-size:.9rem">{{ $m['tehlike'] }}</strong>
-                            <x-filament::badge size="sm" color="gray">{{ $puan }}</x-filament::badge>
                         </span>
                         @if ($m['faaliyet']) <span style="color:rgb(107 114 128)">{{ $m['bolum'] }} · {{ $m['faaliyet'] }}</span> @endif
                         <span><strong>Risk:</strong> {{ $m['risk'] }}</span>
                         @if ($m['mevcut_onlem']) <span><strong>Mevcut durum:</strong> {{ $m['mevcut_onlem'] }}</span> @endif
                         <span><strong>Önerilen aksiyon:</strong> {{ $m['oneri'] }}</span>
                         @if ($m['mevzuat']) <span style="color:rgb(107 114 128)"><strong>Yasal dayanak:</strong> {{ $m['mevzuat'] }}</span> @endif
+                        {{-- Mevcut risk → önlem sonrası (rezidüel) risk karşılaştırma şeridi --}}
+                        <span style="display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin-top:.3rem;padding-top:.45rem;border-top:1px dashed rgb(107 114 128 / .3)">
+                            <x-filament::badge size="sm" color="danger" title="{{ $ilk['duzey'] }}">Mevcut Risk: {{ $ilkMetin }}</x-filament::badge>
+                            <span aria-hidden="true" style="color:rgb(107 114 128)">→</span>
+                            <x-filament::badge size="sm" :color="$kabul ? 'success' : 'warning'" title="{{ $son['duzey'] }}">Önlem Sonrası Risk: {{ $sonMetin }}</x-filament::badge>
+                            @unless ($kabul)
+                                <span style="font-size:.72rem;color:#b45309">Şiddet/frekans çok yüksek: olasılık en alta inse de kabul edilebilir seviyeye inmiyor — ek mühendislik önlemi gerekir.</span>
+                            @endunless
+                        </span>
                     </span>
                 </label>
             @endforeach

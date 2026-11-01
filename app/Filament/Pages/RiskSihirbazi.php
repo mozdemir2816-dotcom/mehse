@@ -583,6 +583,8 @@ class RiskSihirbazi extends Page
                         'bolum' => $m['bolum'], 'faaliyet' => $m['faaliyet'], 'risk' => $m['risk'],
                         'mevcut_onlem' => $m['mevcut_onlem'], 'oneri' => $m['oneri'], 'mevzuat' => $m['mevzuat'],
                         'olasilik' => $m['olasilik'], 'frekans' => $m['frekans'], 'siddet' => $m['siddet'],
+                        // Önlem sonrası (rezidüel) hedef puanlar da kütüphaneye yazılır.
+                        'son_olasilik' => $m['son_olasilik'], 'son_frekans' => $m['son_frekans'], 'son_siddet' => $m['son_siddet'],
                         'matris' => $m['matris'],
                     ],
                 );
@@ -601,7 +603,9 @@ class RiskSihirbazi extends Page
             if (! $tehlike && $this->yontem === 'matris_5x5') {
                 $madde['olasilik'] = $m['matris']['olasilik'];
                 $madde['siddet'] = $m['matris']['siddet'];
-                $madde['frekans'] = null;
+                $madde['son_olasilik'] = $m['matris']['son_olasilik'];
+                $madde['son_siddet'] = $m['matris']['son_siddet'];
+                $madde['frekans'] = $madde['son_frekans'] = null;
             }
 
             $this->secilenler[] = $madde;
