@@ -15,6 +15,9 @@
         </div>
 
         <x-slot name="footerActions">
+            @if ($anahtar === 'sozlesme' && auth()->check())
+                <x-filament::button tag="a" color="success" icon="heroicon-o-arrow-down-tray" :href="route('filament.admin.sozlesme.pdf')">Onaylı Sözleşmeyi PDF İndir</x-filament::button>
+            @endif
             <x-filament::button x-on:click="close()">Okudum, kapat</x-filament::button>
         </x-slot>
     </x-filament::modal>

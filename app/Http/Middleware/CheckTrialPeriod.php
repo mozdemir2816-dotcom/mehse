@@ -19,6 +19,7 @@ class CheckTrialPeriod
         'filament.admin.deneme-bitti',
         'filament.admin.paketler',
         'filament.admin.pages.fatura-profil',
+        'filament.admin.sozlesme.pdf',
         'filament.admin.auth.logout',
     ];
 

@@ -220,6 +220,8 @@ class AdminPanelProvider extends PanelProvider
                 $veri = fn () => ['user' => auth()->user(), 'waNo' => '905064754855'];
                 Route::get('deneme-bitti', fn () => view('admin.deneme_bitti', $veri()))->name('deneme-bitti');
                 Route::get('paketler', fn () => view('admin.paketler', $veri()))->name('paketler');
+                // Onaylı Hizmet ve Kullanım Sözleşmesi PDF'i (Fatura & Profil + Güvenlik'teki sözleşme penceresi).
+                Route::get('sozlesme/pdf-indir', fn () => \App\Support\SozlesmePdf::indir(auth()->user()))->name('sozlesme.pdf');
             })
             // Bitişe ≤ 7 gün kalınca en üstte sarı uyarı bandı.
             ->renderHook(

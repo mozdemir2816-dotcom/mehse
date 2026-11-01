@@ -5,12 +5,35 @@
 @php
     $saglayici = config('isg.kayit.saglayici');
     $bos = fn (string $t) => new \Illuminate\Support\HtmlString('<mark class="mehse-yasal-bos">'.e($t).'</mark>');
+    // Müşteri (md.1): giriş yapmış kullanıcı Fatura & Profil'de ünvan veya vergi/TC no girdiyse onun bilgileri;
+    // değilse (kayıt/başvuru ekranı, misafir) genel tanım.
+    $u = auth()->user();
+    $musteri = null;
+    if ($u && (filled($u->fatura_unvan) || filled($u->vergi_no))) {
+        $vd = trim((string) $u->vergi_dairesi);
+        if ($vd !== '' && ! str_contains(mb_strtolower($vd), 'vergi dairesi')) {
+            $vd .= ' Vergi Dairesi';
+        }
+        $musteri = [
+            'ad' => $u->fatura_unvan ?: $u->name,
+            'vergi' => filled($u->vergi_no) ? ($vd !== '' ? $vd.', ' : '').'VKN/TCKN: '.$u->vergi_no : null,
+            'adres' => trim(implode(' ', array_filter([$u->fatura_adresi, collect([$u->fatura_ilce, $u->fatura_il])->filter()->implode(' / ')]))) ?: null,
+            'eposta' => $u->email,
+        ];
+        $musteri['kunye'] = $musteri['ad'].($musteri['vergi'] ? ' ('.$musteri['vergi'].')' : '').'.'
+            .($musteri['adres'] ? ' Adres: '.$musteri['adres'].'.' : '')
+            .' Bildirim e-postası: '.$musteri['eposta'].'.';
+    }
 @endphp
 <p>İnternet sitesi: Mehse.com  |  Revizyon: 01.11.2026  |  Sürüm: 1.3</p>
 <p>Bu sözleşme, Mehse tarafından sunulan İSG yönetim platformunun kullanımını düzenler. Pakete özgü ticari koşullar (ücret, ödeme ve abonelik dönemi) müşteriye ayrıca yazılı olarak bildirilir ve müşterinin kabulüyle uygulanır.</p>
 <h3>1 Taraflar</h3>
 <p>Sağlayıcı: Mehse adıyla faaliyet gösteren {{ $saglayici['unvan'] ?: $bos('[gerçek kişi adı veya tam ticaret unvanı]') }}. Adres: {{ $saglayici['adres'] }}. Vergi dairesi ve numarası: {{ $saglayici['vergi_dairesi'] }} / {{ $saglayici['vergi_no'] ?: $bos('[vergi numarası]') }}. Bildirim e-postası: {{ $saglayici['eposta'] }}. Telefon: {{ $saglayici['telefon'] }}.</p>
+@if ($musteri)
+<p>Müşteri: {{ $musteri['kunye'] }} Bu bilgiler müşterinin Fatura &amp; Profil sayfasında beyan ettiği bilgilerdir; müşteri bu bilgilerin doğruluğundan ve güncel tutulmasından sorumludur.</p>
+@else
 <p>Müşteri: Başvuru veya kayıt formunda kimlik ve iletişim bilgilerini beyan eden OSGB, işyeri ya da bireysel uzmandır. Müşterinin unvanı veya adı, adresi, vergi bilgileri, yetkili kişisi ve bildirim e-postası başvuru kaydındaki bilgilerdir; müşteri bu bilgilerin doğruluğundan ve güncel tutulmasından sorumludur.</p>
+@endif
 <p>Mehse firma adı, Mehse.com ise internet sitesi adresi olarak kullanılır; sözleşmenin tarafı yukarıda kimliği belirtilen Sağlayıcıdır.</p>
 <h3>2 Konu ve kapsam</h3>
 <p>Platform; işyeri ve çalışan kayıtları, görev ve saha ziyaretleri, risk değerlendirmesi, eğitim, acil durum, belge ve süre takibi gibi İSG süreçlerinin dijital ortamda yönetimine yardımcı olur. Kullanıma açılan modüller satın alınan pakette belirtilir. Yazılım kullanımı, ayrıca sözleşme yapılmadıkça iş güvenliği uzmanlığı, işyeri hekimliği, OSGB hizmeti, resmî onay veya hukuki danışmanlık hizmeti oluşturmaz. Hatırlatmalar ve örnek belgeler, müşterinin mevzuata uygunluk kontrolünün ve yetkili kişilerin incelemesinin yerine geçmez. Platform, işyeri, görevlendirme, saha ziyareti ve performans gibi operasyonel kayıtların tutulmasına imkân sağlar. Resmî kurumlarla entegrasyon veya resmî bildirim hizmeti, yalnızca pakette açıkça belirtilmişse kapsama dahildir.</p>
@@ -54,6 +77,6 @@
 <p>Sağlayıcı: Mehse</p>
 <p>Yetkili adı ve soyadı: __________________________</p>
 <p>Tarih ve imza: _________________________________</p>
-<p>Müşteri unvanı veya adı: _______________________</p>
+<p>Müşteri unvanı veya adı: {{ $musteri['ad'] ?? '_______________________' }}</p>
 <p>Yetkili adı ve soyadı: __________________________</p>
 <p>Tarih ve imza: _________________________________</p>

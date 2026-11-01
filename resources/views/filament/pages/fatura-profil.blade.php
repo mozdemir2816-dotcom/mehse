@@ -33,6 +33,7 @@
             <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.3rem">
                 <x-filament::button tag="a" size="sm" color="gray" :href="filament()->getProfileUrl()" icon="heroicon-o-user-circle">Ad, e-posta, şifre</x-filament::button>
                 <x-filament::button tag="a" size="sm" color="success" :href="route('filament.admin.paketler')" icon="heroicon-o-sparkles">Paketler</x-filament::button>
+                <x-filament::button tag="a" size="sm" color="success" :href="route('filament.admin.sozlesme.pdf')" icon="heroicon-o-arrow-down-tray">Onaylı Sözleşmeyi PDF İndir</x-filament::button>
             </div>
         </div>
     </div>

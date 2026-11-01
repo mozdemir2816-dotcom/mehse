@@ -141,7 +141,7 @@ class OsgbBasvuru extends SimplePage
 
         $veri = $this->form->getState();
 
-        Basvuru::create([
+        $basvuru = Basvuru::create([
             'tip' => 'osgb',
             'durum' => 'beklemede',
             'ad_soyad' => $veri['ad_soyad'],
@@ -157,6 +157,9 @@ class OsgbBasvuru extends SimplePage
             'onaylar' => YasalMetinler::onayKaydi(),
             'ip' => request()->ip(),
         ]);
+
+        // Telegram + e-posta; gönderilemese de başvuru kayıtlıdır.
+        app(\App\Support\YoneticiBildirimi::class)->yeniOsgbBasvuruBildir($basvuru);
 
         Notification::make()
             ->title('Başvurunuz alındı')

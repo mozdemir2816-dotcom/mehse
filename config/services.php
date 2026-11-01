@@ -42,4 +42,11 @@ return [
         'yedek_modeller' => array_values(array_filter(explode(',', (string) env('GEMINI_YEDEK_MODELLER', 'gemini-3.5-flash,gemini-3.8-flash')))),
     ],
 
+    // Yönetici anlık bildirimi (App\Support\YoneticiBildirimi): BotFather'dan alınan token + kendi sohbet kimliğiniz.
+    // İkisinden biri boşsa Telegram bildirimi sessizce atlanır.
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+    ],
+
 ];

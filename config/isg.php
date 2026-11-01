@@ -6986,8 +6986,8 @@ return [
 
     /*
     | Tanıtım sayfasından teklif talebi gelince bildirim gidecek adres.
-    | .env: TEKLIF_BILDIRIM_EPOSTA; boşsa MAIL_FROM_ADDRESS'e, o da yoksa gönderilmez.
+    | .env: TEKLIF_BILDIRIM_EPOSTA; boşsa mozdemir2816@gmail.com. Yeni OSGB başvurusu bildirimi de buraya gider.
     */
-    'teklif_bildirim_eposta' => env('TEKLIF_BILDIRIM_EPOSTA') ?: env('MAIL_FROM_ADDRESS'),
+    'teklif_bildirim_eposta' => env('TEKLIF_BILDIRIM_EPOSTA') ?: 'mozdemir2816@gmail.com',
 
 ];
