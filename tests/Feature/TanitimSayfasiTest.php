@@ -342,14 +342,17 @@ class TanitimSayfasiTest extends TestCase
     public function test_segment_sinerji_ve_standart_rozetleri(): void
     {
         $this->get('/')->assertOk()
-            ->assertSeeInOrder(['Kime Nasıl Çözüm Üretiyoruz?', 'Kurumsal OSGB Çözümü', 'Uzman &amp; Hekim Paketi', 'Bursa Yerinde Danışmanlık'], false)
+            ->assertSeeInOrder(['Kime Nasıl Çözüm Üretiyoruz?', 'Kurumsal OSGB Çözümü', 'Uzman &amp; Hekim Çözümü', 'Bursa Yerinde Danışmanlık'], false)
             ->assertSee('OSGB Paneli Kurumsal Başvuru')
             ->assertSee('Uzman Hesabınızı Oluşturun')
             ->assertSee('Ücretsiz Saha Keşfi İsteyin')
-            ->assertSee('Hem Güçlü Yazılım, Hem Yerinde Mühendislik Danışmanlığı')
+            ->assertSeeInOrder(['Kime Nasıl Çözüm Üretiyoruz?', 'Tek Başına Yazılım Yetmez, Sahasız Danışmanlık Eksik Kalır', 'Mehse İSG Bulut Platformu', 'Yerinde Mühendislik &amp; Danışmanlık', 'Hibrid Avantaj', 'id="hizmetler"'], false)
             ->assertSee('class="sinerji-arti"', false)
-            ->assertSeeInOrder(['Uzmanlık Alanlarımız ve Standartlarımız', 'Fine-Kinney', 'LOTO', 'TS EN 15635', 'ATEX', 'İSG-KATİP &amp; 6331', '2006/42/AT', '</main>'], false)
-            ->assertSee('role="tooltip"', false)
+            ->assertDontSee('Hem Güçlü Yazılım')
+            ->assertSeeInOrder(['Mühendislik Standartları &amp; Yasal Altyapı', 'Fine-Kinney', 'LOTO / EKED', 'TS EN 15635', 'ATEX', 'EN 388', 'İSG-KATİP &amp; 6331', '</main>'], false)
+            ->assertSee('standart-kirmizi', false)
+            ->assertSee('standart-mor', false)
+            ->assertDontSee('Uzmanlık Alanlarımız ve Standartlarımız')
             ->assertDontSee('%60')
             ->assertDontSee('garanti');
     }

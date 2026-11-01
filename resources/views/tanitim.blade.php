@@ -56,14 +56,14 @@
         '@type' => 'FAQPage',
         'mainEntity' => array_map(fn ($m) => ['@type' => 'Question', 'name' => $m[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $m[1]]], $sss),
     ], $jsonBayrak);
-    // Alt rozet barı: Uzmanlık Alanlarımız ve Standartlarımız (açıklama fare üstünde / dokununca).
+    // Alt bölüm: Mühendislik Standartları & Yasal Altyapı — [başlık, açıklama, etiket, rozet rengi].
     $standartlar = [
-        ['Fine-Kinney & 5×5 Matris', 'Olasılık, frekans ve şiddet parametreleriyle matematiksel risk skorlama.'],
-        ['LOTO (Kilitleme / Etiketleme)', 'Bakım-onarım sırasında tehlikeli enerji kontrolü (EKED).'],
-        ['TS EN 15635 Raf Denetimi', 'Ağır yük lojistik raflarında yeşil / turuncu / kırmızı hasar sınıflandırması.'],
-        ['ATEX / Patlamadan Korunma (PKD)', 'Yanıcı gaz ve toz patlamalarına karşı EN 60079-10 esaslı bölge (zon) sınıflandırması.'],
-        ['İSG-KATİP & 6331 Uyum', 'Yasal süre atamaları ve çalışan eğitim periyotlarının mevzuata göre takibi.'],
-        ['Makine Emniyeti (2006/42/AT)', 'Pres ışık bariyerleri, çift el kumandası ve acil durdurma sistemlerinin kontrolü.'],
+        ['Fine-Kinney & 5×5 Matris', 'Olasılık, frekans ve şiddet parametreleriyle matematiksel risk skorlama.', 'Risk Analizi', 'mavi'],
+        ['LOTO / EKED Prosedürleri', 'Bakım-onarım sırasında tehlikeli enerjinin kesilmesi, kilitlenmesi, etiketlenmesi ve doğrulanması.', 'Enerji Kontrolü', 'kirmizi'],
+        ['TS EN 15635 Depo Raf Kontrolü', 'Ağır yük raflarında yeşil / turuncu / kırmızı hasar sınıflandırması ve periyodik muayene.', 'Depolama', 'sari'],
+        ['ATEX / Patlamadan Korunma Dokümanı', 'EN 60079-10 esaslı bölge (zon) sınıflandırması; yanıcı toz ve gaz güvenliği.', 'Patlayıcı Ortam', 'mor'],
+        ['EN 388 & Mekanik KKD Standartları', 'Kesilme direnci seviyeleri ve dönen millerde kapılmayı önleyen eldiven seçim matrisi.', 'KKD', 'yesil'],
+        ['İSG-KATİP & 6331 Mevzuat Uyumu', 'Süre atamaları, kurul periyotları ve eğitim takvimi mevzuata göre takip edilir.', 'Mevzuat', 'mavi'],
     ];
 @endphp
 <!DOCTYPE html>
@@ -195,8 +195,8 @@
                     </ul>
                     <a href="{{ $osgbUrl }}" class="dugme dugme-yesil">OSGB Paneli Kurumsal Başvuru {!! $ok !!}</a>
                 </article>
-                <article class="seg-kart seg-koyu">
-                    <span class="seg-rozet">Uzman &amp; Hekim Paketi</span>
+                <article class="seg-kart seg-one">
+                    <span class="seg-rozet">Uzman &amp; Hekim Çözümü</span>
                     <p class="seg-etiket">BİREYSEL ÇALIŞAN İSG UZMANLARI İÇİN</p>
                     <h3>Serbest Çalışan Uzmanlar İçin Dijital Saha Çantası</h3>
                     <ul class="tik-liste">
@@ -220,6 +220,40 @@
                     <a href="#teklif" class="dugme dugme-yesil">Ücretsiz Saha Keşfi İsteyin {!! $ok !!}</a>
                 </article>
             </div>
+        </div>
+    </section>
+
+    {{-- ============ HİBRİD MODEL: YAZILIM + YERİNDE DANIŞMANLIK ============ --}}
+    <section class="bolum sinerji" aria-labelledby="sinerji-baslik">
+        <div class="kap">
+            <p class="ust-yazi">HİBRİD MODEL</p>
+            <h2 id="sinerji-baslik">Tek Başına Yazılım Yetmez, Sahasız Danışmanlık Eksik Kalır</h2>
+            <div class="sinerji-izgara">
+                <article class="sinerji-kart sinerji-gri">
+                    <p class="sinerji-ust">Dijital Altyapı</p>
+                    <p class="sinerji-etiket"><span class="ikon ikon-mavi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 100-9h-1.8A7 7 0 104 16.3"/><path d="M8 17h9.5"/></svg></span>Mehse İSG Bulut Platformu</p>
+                    <ul class="sinerji-liste">
+                        <li><strong>Mobilden fotoğraflı DÖF:</strong> Sahada çekilen fotoğraflarla uygunsuzluk kaydı ve PDF DÖF çıktısı.</li>
+                        <li><strong>Periyodik kontrol alarmları:</strong> Kompresör, vinç, forklift ve paratoner muayeneleri yaklaşınca otomatik hatırlatma.</li>
+                        <li><strong>Yasal eğitim takvimi:</strong> Eğitim yenileme tarihleri, katılım tutanakları ve sınavlar tek yerde.</li>
+                        <li><strong>Veri güvenliği:</strong> KVKK’ya uygun işleme, SSL/TLS şifreli bağlantı, Türkiye’deki sunucularda her gün yedekleme.</li>
+                    </ul>
+                    <a href="{{ $kayitUrl }}" class="dugme dugme-lacivert">Platformu Ücretsiz Deneyin {!! $ok !!}</a>
+                </article>
+                <div class="sinerji-arti" aria-hidden="true"><span>+</span><small>Hibrid</small></div>
+                <article class="sinerji-kart sinerji-yesil">
+                    <p class="sinerji-ust">Saha Gücü</p>
+                    <p class="sinerji-etiket"><span class="ikon ikon-yesil"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4 4 2v12H3V9l4-2 1-4z"/><path d="M8 3c0 2 1.8 3 4 3s4-1 4-3M12 6v15M3 14h6M15 14h6"/></svg></span>Yerinde Mühendislik &amp; Danışmanlık</p>
+                    <ul class="sinerji-liste">
+                        <li><strong>Makine ve pres emniyeti:</strong> Işık bariyeri, çift el kumandası, koruyucular ve acil durdurma kontrolü.</li>
+                        <li><strong>LOTO / EKED prosedürleri:</strong> Bakım-onarımda tehlikeli enerjinin kesilmesi, kilitlenmesi ve doğrulanması.</li>
+                        <li><strong>IATF 16949 denetim hazırlığı:</strong> Müşteri ve kalite denetimlerine hazır, düzenli İSG kayıtları.</li>
+                        <li><strong>Uygulamalı yangın tatbikatları:</strong> Tesise özel senaryolarla tahliye tatbikatı ve çalışan eğitimi.</li>
+                    </ul>
+                    <a href="#teklif" class="dugme dugme-yesil">Saha Keşfi İsteyin {!! $ok !!}</a>
+                </article>
+            </div>
+            <p class="sinerji-serit"><span class="sinerji-serit-rozet">Hibrid Avantaj</span> Saha danışmanlığı verdiğimiz tesisler Mehse İSG yazılımını <strong>ücretsiz</strong> kullanır; yazılımı kullanan uzmanlar saha raporlarını kâğıtla uğraşmadan, sahada hazırlar.</p>
         </div>
     </section>
 
@@ -284,40 +318,6 @@
                 <a href="{{ $osgbUrl }}" class="dugme dugme-acik">OSGB: 90 Gün Ücretsiz Deneme</a>
                 <p>Zaten üye misiniz? <a href="{{ $girisUrl }}">Giriş yapın</a></p>
             </div>
-        </div>
-    </section>
-
-    {{-- ============ YAZILIM + DANIŞMANLIK SİNERJİSİ ============ --}}
-    <section class="bolum sinerji" aria-labelledby="sinerji-baslik">
-        <div class="kap">
-            <p class="ust-yazi">İKİSİ BİR ARADA</p>
-            <h2 id="sinerji-baslik">Hem Güçlü Yazılım, Hem Yerinde Mühendislik Danışmanlığı</h2>
-            <div class="sinerji-izgara">
-                <article class="sinerji-kart">
-                    <p class="sinerji-ust">Mehse İSG Bulut Yazılımı · Dijital Altyapı</p>
-                    <p class="sinerji-etiket"><span class="ikon ikon-mavi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>Sıfır Bürokrasi, %100 Dijital Takip</p>
-                    <ul class="sinerji-liste">
-                        <li><strong>Kâğıt Formlara Son:</strong> Tüm risk analizleri, kurul kararları ve saha gözlemleri bulutta.</li>
-                        <li><strong>Gecikmeyen Periyodik Kontroller:</strong> Kompresör, vinç, forklift ve paratoner için otomatik bildirimler.</li>
-                        <li><strong>Anında Raporlama:</strong> Sahadan çekilen fotoğraflarla saniyeler içinde PDF DÖF çıktısı.</li>
-                        <li><strong>Veri Güvenliği:</strong> KVKK’ya (6698) uygun işleme, her gün yedeklenen, Türkiye’deki sunucular.</li>
-                    </ul>
-                    <a href="{{ $kayitUrl }}" class="dugme dugme-lacivert">Yazılımı Ücretsiz Deneyin {!! $ok !!}</a>
-                </article>
-                <div class="sinerji-arti" aria-hidden="true"><span>+</span><small>Sinerji</small></div>
-                <article class="sinerji-kart">
-                    <p class="sinerji-ust">A Sınıfı İSG &amp; Mühendislik Danışmanlığı · Saha Gücü</p>
-                    <p class="sinerji-etiket"><span class="ikon ikon-yesil"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4 4 2v12H3V9l4-2 1-4z"/><path d="M8 3c0 2 1.8 3 4 3s4-1 4-3M12 6v15M3 14h6M15 14h6"/></svg></span>Sahada Bizzat Yanınızdayız</p>
-                    <ul class="sinerji-liste">
-                        <li><strong>Mühendislik Yaklaşımı:</strong> Otomotiv sanayi tecrübesiyle pres emniyeti, robotik hücre ve makine koruyucuları denetimi.</li>
-                        <li><strong>Kapsamlı Risk Değerlendirmesi:</strong> Sadece matris doldurmak değil; kök neden analizi ve tehlike eliminasyonu.</li>
-                        <li><strong>Yasal Uyum Takibi:</strong> 6331 sayılı Kanun ve alt yönetmeliklere uyumun sürekli takibi; eksikler cezaya dönüşmeden raporlanır.</li>
-                        <li><strong>Uygulamalı Yangın ve Tahliye:</strong> Gerçekçi senaryolarla saha tatbikatları ve çalışan eğitimleri.</li>
-                    </ul>
-                    <a href="#teklif" class="dugme dugme-yesil">Saha Keşfi İsteyin {!! $ok !!}</a>
-                </article>
-            </div>
-            <p class="sinerji-serit">Yazılımımız saha denetimlerindeki kâğıt işini ortadan kaldırır; saha danışmanlığı verdiğimiz tesisler ise Mehse İSG yazılımına <strong>ücretsiz</strong> erişir.</p>
         </div>
     </section>
 
@@ -444,18 +444,20 @@
                 <a href="tel:+905064754855">{{ $telefon }}</a> numarasından arayın.</p>
         </div>
     </section>
-    {{-- ============ UZMANLIK ALANLARI & STANDARTLAR (rozetler; açıklama fare üstünde / dokununca) ============ --}}
-    <section class="standart-bar" aria-labelledby="standart-baslik">
+    {{-- ============ MÜHENDİSLİK STANDARTLARI & YASAL ALTYAPI (koyu, 6 kart) ============ --}}
+    <section class="standart-bolum" aria-labelledby="standart-baslik">
         <div class="kap">
-            <h2 id="standart-baslik">Uzmanlık Alanlarımız ve Standartlarımız</h2>
-            <ul class="standart-liste">
-                @foreach ($standartlar as $i => [$ad, $aciklama])
-                    <li class="standart-rozet" tabindex="0" aria-describedby="standart-{{ $i }}">
-                        {{ $ad }}
-                        <span class="standart-ipucu" role="tooltip" id="standart-{{ $i }}">{{ $aciklama }}</span>
-                    </li>
+            <p class="ust-yazi">METODOLOJİ</p>
+            <h2 id="standart-baslik">Mühendislik Standartları &amp; Yasal Altyapı</h2>
+            <div class="standart-izgara">
+                @foreach ($standartlar as [$ad, $aciklama, $etiket, $renk])
+                    <article class="standart-kart">
+                        <span class="standart-etiket standart-{{ $renk }}">{{ $etiket }}</span>
+                        <h3>{{ $ad }}</h3>
+                        <p>{{ $aciklama }}</p>
+                    </article>
                 @endforeach
-            </ul>
+            </div>
         </div>
     </section>
 </main>

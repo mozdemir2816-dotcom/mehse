@@ -342,14 +342,35 @@ section[id] { scroll-margin-top: 80px; }
 .sinerji-serit strong { color: #6ee7b7; }
 @media (min-width: 900px) { .sinerji-izgara { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); } }
 
-/* Uzmanlık alanları & standartlar rozet barı */
-.standart-bar { background: #fff; border-top: 1px solid var(--cizgi); padding: 40px 0 48px; }
-.standart-bar h2 { font-size: 1.15rem; font-weight: 800; color: var(--lacivert-900); text-align: center; }
-.standart-liste { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-.standart-rozet { position: relative; cursor: help; border: 1px solid #cbd5e1; background: var(--zemin); color: var(--lacivert-900); border-radius: 999px; padding: 7px 14px; font-size: .82rem; font-weight: 700; transition: border-color .15s, background .15s; }
-.standart-rozet:hover, .standart-rozet:focus { border-color: var(--zumrut); background: #ecfdf5; outline: none; }
-.standart-rozet:focus-visible { box-shadow: 0 0 0 3px rgba(5, 150, 105, .35); }
-.standart-ipucu { position: absolute; z-index: 20; left: 50%; bottom: calc(100% + 10px); width: max-content; max-width: min(260px, 80vw); transform: translateX(-50%) translateY(4px); background: var(--lacivert-900); color: #f1f5f9; border-radius: 10px; padding: 9px 12px; font-size: .8rem; font-weight: 500; line-height: 1.45; text-align: left; box-shadow: var(--golge); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .15s, transform .15s; }
-.standart-ipucu::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border: 6px solid transparent; border-top-color: var(--lacivert-900); }
-.standart-rozet:hover .standart-ipucu, .standart-rozet:focus .standart-ipucu { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-@media (prefers-reduced-motion: reduce) { .standart-ipucu { transition: none; } }
+/* Segment: öne çıkan (bireysel uzman) kart — mavi çerçeve */
+.seg-one { border: 2px solid #2563eb; box-shadow: 0 16px 40px rgba(37, 99, 235, .18); }
+.seg-one .seg-rozet { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.seg-one .seg-etiket, .seg-one .tik-liste svg { color: #2563eb; }
+@media (min-width: 960px) { .segment-izgara.uclu .seg-one { transform: translateY(-8px); } }
+
+/* Mühendislik Standartları & Yasal Altyapı — koyu zemin, 6 kart */
+.standart-bolum { background: #0f172a; color: #cbd5e1; padding: 72px 0; }
+.standart-bolum h2 { margin-top: 8px; font-size: clamp(1.6rem, 3.6vw, 2.2rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; color: #fff; }
+.standart-bolum .ust-yazi { color: #34d399; }
+.standart-izgara { margin-top: 36px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+.standart-kart { min-width: 0; background: rgba(255, 255, 255, .04); border: 1px solid rgba(148, 163, 184, .22); border-radius: 16px; padding: 22px; transition: border-color .2s, background .2s; }
+.standart-kart:hover { border-color: rgba(52, 211, 153, .5); background: rgba(255, 255, 255, .07); }
+.standart-kart h3 { margin-top: 14px; font-size: 1.05rem; font-weight: 700; color: #fff; line-height: 1.3; overflow-wrap: anywhere; }
+.standart-kart p { margin-top: 8px; font-size: .9rem; line-height: 1.6; color: #94a3b8; }
+.standart-etiket { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: 1px solid; }
+.standart-mavi { color: #93c5fd; background: rgba(59, 130, 246, .14); border-color: rgba(59, 130, 246, .4); }
+.standart-kirmizi { color: #fca5a5; background: rgba(239, 68, 68, .14); border-color: rgba(239, 68, 68, .4); }
+.standart-sari { color: #fde68a; background: rgba(234, 179, 8, .14); border-color: rgba(234, 179, 8, .4); }
+.standart-mor { color: #d8b4fe; background: rgba(168, 85, 247, .14); border-color: rgba(168, 85, 247, .4); }
+.standart-yesil { color: #6ee7b7; background: rgba(16, 185, 129, .14); border-color: rgba(16, 185, 129, .4); }
+@media (min-width: 640px) { .standart-izgara { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 960px) { .standart-izgara { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Hibrid model kart renkleri ve açık özet şeridi */
+.sinerji { background: #fff; }
+.sinerji-gri { background: #f1f5f9; border-color: #e2e8f0; }
+.sinerji-yesil { background: #ecfdf5; border-color: #a7f3d0; }
+.sinerji-yesil .sinerji-liste li { border-left-color: #a7f3d0; }
+.sinerji-serit { background: #f1f5f9; color: var(--metin); border: 1px solid var(--cizgi); text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.sinerji-serit strong { color: var(--zumrut-koyu); }
+.sinerji-serit-rozet { flex: none; background: var(--zumrut); color: #fff; border-radius: 999px; padding: 4px 12px; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
