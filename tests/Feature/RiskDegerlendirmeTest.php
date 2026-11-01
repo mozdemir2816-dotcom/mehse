@@ -578,12 +578,12 @@ class RiskDegerlendirmeTest extends TestCase
 
         $this->assertSame('ÇY', $m->duzeyKisa()); // Çok Yüksek Risk → ÇY
         // Önlem sonrası olasılık/şiddet girilmemişse varsayılan uygulanır:
-        // olasılık 1'e düşer, şiddet+frekans öneri öncesiyle aynı kalır.
-        $this->assertSame(1.0, $m->son_olasilik);
+        // olasılık son puan 70'in altına inene kadar düşer (6 → 1 → 0,5), şiddet+frekans öneri öncesiyle aynı kalır.
+        $this->assertSame(0.5, $m->son_olasilik);
         $this->assertSame(15.0, $m->son_siddet);
         $this->assertSame(6.0, $m->son_frekans);
-        $this->assertSame(90.0, $m->son_puan);
-        $this->assertSame('ÖN', $m->sonDuzeyKisa()); // Önemli Risk → ÖN
+        $this->assertSame(45.0, $m->son_puan);
+        $this->assertSame('OL', $m->sonDuzeyKisa()); // Olası Risk → OL
     }
 
     public function test_onlem_sonrasi_olasilik_siddet_varsayilani_kendisi_girilince_ezilmez(): void

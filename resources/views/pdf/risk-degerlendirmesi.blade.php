@@ -203,7 +203,7 @@
 {{-- HER SAYFANIN ÜST BİLGİSİ (firma adı / sicil no / tarih / adres) --}}
 <div class="sayfa-ust">
     <table class="ust-bilgi">
-        <tr><td colspan="2"><b>{{ $firma?->unvan }}</b>@if($rd->proje_adi) &nbsp;·&nbsp; {{ $rd->proje_adi }}@endif</td></tr>
+        <tr><td colspan="2"><b>{{ $firma?->unvan }}</b>@if($rd->proje_adi) &nbsp;-&nbsp; {{ $rd->proje_adi }}@endif</td></tr>
         <tr>
             <td class="adres">{{ Illuminate\Support\Str::limit($rd->firma_adres, 90, '') }}</td>
             <td class="sag">SGK Sicil No: {{ $rd->firma_sgk_sicil_no ?: '—' }} &nbsp;·&nbsp; Tarih: {{ $rd->rapor_tarihi?->format('d.m.Y') }}</td>

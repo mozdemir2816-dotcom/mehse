@@ -46,7 +46,16 @@ class RiskVarsayilanSonPuanTerminTest extends TestCase
         $this->assertLessThan($bir->puan, $bir->son_puan);
 
         $yuksek = RiskMaddesi::create(['risk_degerlendirmesi_id' => $rd->id, 'tehlike' => 'Ezilme', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 40]);
-        $this->assertEquals(1, $yuksek->son_olasilik);
+        $this->assertEquals(0.2, $yuksek->son_olasilik);   // 1440 → 48: önlem sonrası 70'in altına iner
+
+        // Madde 50 (bant zımpara gövde kaçağı): 3×6×40=720 → eskiden 1×6×40=240 (Yüksek kalıyordu) → 0,2 → 48
+        $zimpara = RiskMaddesi::create(['risk_degerlendirmesi_id' => $rd->id, 'tehlike' => 'Gövde kaçağı', 'olasilik' => 3, 'frekans' => 6, 'siddet' => 40]);
+        $this->assertEquals(0.2, $zimpara->son_olasilik);
+        $this->assertEquals(48, $zimpara->son_puan);
+        $this->assertSame('Olası Risk', $zimpara->son_duzey);
+
+        // Madde 20 (yangın): 3×6×10=180 → 1×6×10=60
+        $this->assertEquals(60, RiskMaddesi::create(['risk_degerlendirmesi_id' => $rd->id, 'tehlike' => 'Yangın', 'olasilik' => 3, 'frekans' => 6, 'siddet' => 10])->son_puan);
 
         // Elle girilen son olasılık korunur
         $elle = RiskMaddesi::create(['risk_degerlendirmesi_id' => $rd->id, 'tehlike' => 'X', 'olasilik' => 0.5, 'frekans' => 3, 'siddet' => 15, 'son_olasilik' => 0.5]);

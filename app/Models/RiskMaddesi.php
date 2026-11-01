@@ -56,14 +56,18 @@ class RiskMaddesi extends Model
             // öncesindeki değerle aynı kabul edilir.
             // Fine-Kinney'de ilk olasılık zaten 1 veya altındaysa (0,2 / 0,5 / 1) "1" önlem sonrası
             // puanı YÜKSELTİYORDU (ör. 0,5×3×15=22,5 → 1×3×15=45); bu durumda bir alt basamağa iner.
-            if ($m->olasilik !== null && $m->son_olasilik === null) {
-                $m->son_olasilik = self::varsayilanSonOlasilik($yontem, (float) $m->olasilik);
-            }
             if ($m->siddet !== null && $m->son_siddet === null) {
                 $m->son_siddet = $m->siddet;
             }
             if (RiskSkorlama::ucEksenliMi($yontem) && $m->frekans !== null && $m->son_frekans === null) {
                 $m->son_frekans = $m->frekans;
+            }
+            if ($m->olasilik !== null && $m->son_olasilik === null) {
+                $m->son_olasilik = self::varsayilanSonOlasilik(
+                    $yontem, (float) $m->olasilik,
+                    $m->son_frekans !== null ? (float) $m->son_frekans : null,
+                    $m->son_siddet !== null ? (float) $m->son_siddet : null,
+                );
             }
 
             $son = RiskSkorlama::hesapla($yontem, $m->son_olasilik, $m->son_siddet, $m->son_frekans);
@@ -108,18 +112,36 @@ class RiskMaddesi extends Model
 
     public const VARSAYILAN_TERMIN = 'SÜREKLİ';
 
-    /** Önlem sonrası olasılık girilmemişse: 1; Fine-Kinney'de ilk olasılık ≤ 1 ise ölçekte bir alt basamak. */
-    public static function varsayilanSonOlasilik(string $yontem, float $ilk): float
+    /** Fine-Kinney önlem sonrası varsayılan hedef: puan bu değerin ALTINA (Olası Risk ve altı) iner — AI üreticiyle aynı. */
+    public const HEDEF_FK_SON_PUAN_ALTI = 70;
+
+    /**
+     * Önlem sonrası olasılık girilmemişse. 5x5: 1. Fine-Kinney: ölçekte en az bir alt basamak, gerekirse
+     * önlem sonrası puan 70'in altına inene kadar daha aşağı (en düşük 0,1). Önceden sabit "1" idi:
+     * 0,5×3×15=22,5 → 45 (puan YÜKSELİYORDU) ve 3×6×40=720 → 240 (önlemden sonra hâlâ Yüksek) çıkıyordu
+     * (FOM MAKİNA RD-2026-122/123 bulguları, tüm firmalar için genel kural — kullanıcı 01.11.2026).
+     */
+    public static function varsayilanSonOlasilik(string $yontem, float $ilk, ?float $frekans = null, ?float $siddet = null): float
     {
-        if ($yontem !== 'fine_kinney' || $ilk > 1) {
+        if ($yontem !== 'fine_kinney') {
             return 1;
         }
 
         $olcek = array_map('floatval', array_keys(config('isg.risk_fine_kinney.olasilik', [])));
-        sort($olcek);
+        rsort($olcek);
         $alt = array_values(array_filter($olcek, fn ($o) => $o < $ilk));
+        if (! $alt) {
+            return $olcek ? end($olcek) : $ilk;
+        }
 
-        return $alt ? end($alt) : ($olcek[0] ?? $ilk);
+        $carpan = ($frekans ?? 1) * ($siddet ?? 1);
+        foreach ($alt as $o) {
+            if ($frekans === null || $siddet === null || $o * $carpan < self::HEDEF_FK_SON_PUAN_ALTI) {
+                return $o;
+            }
+        }
+
+        return end($alt);
     }
 
     /** Boş termin: periyodik (eğitim/talimat) madde → SÜREKLİ; değilse düzey kısaltmasına göre config isg.risk_termin_duzey. */
