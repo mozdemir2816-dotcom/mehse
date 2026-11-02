@@ -179,7 +179,7 @@ class RiskAlanTamamlamaTest extends TestCase
         $this->assertSame('Geri manevrada işaretçi görevlendirilir, araç-yaya yolları ayrılır.', $yanlis->oneri);
         $this->assertSame('Yapı İşlerinde İSG Yönetmeliği Ek-4', $yanlis->mevzuat);
         $this->assertSame(3.0, (float) $yanlis->olasilik);   // dolu puan korunur
-        $this->assertSame(1.0, (float) $yanlis->son_olasilik);
+        $this->assertSame(RiskMaddesi::varsayilanSonOlasilik('fine_kinney', 3, 6, 40), (float) $yanlis->son_olasilik);   // kotasız adımda hesaplandı
         $this->assertSame('Derhal', $yanlis->termin);         // 3 × 6 × 40 = 720 → çok yüksek
 
         $dogru->refresh();
@@ -192,6 +192,37 @@ class RiskAlanTamamlamaTest extends TestCase
 
         // Doldurulamayan alanı kalan madde yeniden istenmez (kota döngüsü yok).
         $this->artisan('risk:repair-library-all-fields', ['--limit' => 25])->assertSuccessful();
+        Http::assertSentCount(1);
+    }
+
+    public function test_kutuphane_onarimi_rezidueli_ve_termini_kotasiz_hesaplar(): void
+    {
+        Http::fake();
+        $t = $this->kutuphane(['olasilik' => 3, 'frekans' => 6, 'siddet' => 40]);
+
+        $this->artisan('risk:repair-library-all-fields', ['--limit' => 0])->assertSuccessful();
+
+        $t->refresh();
+        $this->assertSame(40.0, (float) $t->son_siddet);        // önlem şiddeti değiştirmez
+        $this->assertSame(6.0, (float) $t->son_frekans);
+        $this->assertSame(RiskMaddesi::varsayilanSonOlasilik('fine_kinney', 3, 6, 40), (float) $t->son_olasilik);
+        $this->assertSame('Derhal', $t->termin);                // 720 → çok yüksek
+        Http::assertNothingSent();
+    }
+
+    public function test_zamanlanmis_onarim_kota_dolunca_ertesi_gune_kadar_durur(): void
+    {
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response(['error' => 'kota'], 429)]);
+        $this->kutuphane();
+
+        $this->artisan('risk:repair-library-all-fields', ['--zamanlanmis' => true, '--limit' => 40])
+            ->expectsOutputToContain('günlük kotası doldu')
+            ->assertSuccessful();
+        Http::assertSentCount(1);
+        $this->assertTrue(\Illuminate\Support\Facades\Cache::has(\App\Console\Commands\RiskKutuphaneOnar::KOTA_ANAHTARI));
+
+        // Kota dolu işaretliyken zamanlanmış çalıştırma istek atmaz.
+        $this->artisan('risk:repair-library-all-fields', ['--zamanlanmis' => true, '--limit' => 40])->assertSuccessful();
         Http::assertSentCount(1);
     }
 

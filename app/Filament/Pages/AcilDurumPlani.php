@@ -42,6 +42,7 @@ class AcilDurumPlani extends Page
 {
     use AileAnaSayfasi;
     use SinirliErisim;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected string $view = 'filament.pages.acil-durum-plani';
 
@@ -199,6 +200,19 @@ class AcilDurumPlani extends Page
         $this->disaridanEtkileyebilecekIsyerleri = $plan->disaridan_etkileyebilecek_isyerleri;
         $this->konular = $plan->konular ?? [];
         $this->uygulama = array_replace(AcilDurumHazirlik::varsayilan(), $plan->uygulama ?? []);
+
+        // Yeni plan (02.11.2026): NACE'ye göre seçilen senaryolara firmanın risk analizi / iş ekipmanı /
+        // kimyasal envanterinden gelenler de "Risk Analizinden Otomatik Belirle"ye basılmadan eklenir.
+        if ($plan->wasRecentlyCreated && $this->firma) {
+            $oneri = AcilDurumKonuSecici::riskAnalizindenOner($this->firma);
+            $this->konular = AcilDurumKonuSecici::zorunluEkle([...$this->konular, ...$oneri]);
+            $plan->forceFill(['konular' => $this->konular])->save();
+
+            Notification::make()->title(count($this->konular).' acil durum senaryosu otomatik seçildi')
+                ->body('Firmanın NACE kodu ('.($this->firma->nace_kodu ?: '—').'), tehlike sınıfı'.($oneri ? ' ve risk analizi' : '').' esas alındı: '
+                    .collect(config('isg.acil_durum.konular'))->whereIn('anahtar', $this->konular)->pluck('ad')->implode(', ').'. Gerekirse değiştirip Kaydet\'e basın.')
+                ->success()->send();
+        }
 
         // Sektör: kayıtlı seçim yoksa NACE önerisi (uzman değiştirebilir).
         if (! AcilDurumSektor::gecerliMi($this->uygulama['sektor'] ?? null)) {
@@ -375,9 +389,15 @@ class AcilDurumPlani extends Page
 
     /* ---------- Saha bilgileri ve iletişim tamamlama sihirbazı (02.11.2026) ---------- */
 
+    /**
+     * "Adrese Göre Kurumları Bul (Yapay Zekâ)" (02.11.2026): firmanın açık adresi + ilçe / il ile en yakın
+     * hastane, itfaiye, emniyet / jandarma, kaymakamlık, elektrik ve doğalgaz arıza kurumları bulunur;
+     * telefonu bulunanlar acil iletişim listesine (EK-2) OTOMATİK eklenip kaydedilir, telefonu bulunamayanlar
+     * elle tamamlamak için listede kalır.
+     */
     public function iletisimBul(): void
     {
-        $sonuc = GeminiAcilIletisimBulucu::bul($this->firma?->adres);
+        $sonuc = GeminiAcilIletisimBulucu::bul($this->firmaAdresi());
 
         if ($sonuc['hata']) {
             Notification::make()->title($sonuc['hata'])->warning()->send();
@@ -386,7 +406,41 @@ class AcilDurumPlani extends Page
         }
 
         $this->iletisimAramali = $sonuc['aramali'];
-        $this->iletisimOnerileri = collect($sonuc['satirlar'])->map(fn ($r) => [...$r, 'sec' => filled($r['telefon'])])->all();
+        $satirlar = collect($sonuc['satirlar'])->map(fn ($r) => [...$r, 'sec' => filled($r['telefon'])]);
+        $telefonlu = $satirlar->where('sec', true);
+
+        if ($telefonlu->isEmpty()) {
+            $this->iletisimOnerileri = $satirlar->all();
+            Notification::make()->title('Kurumlar bulundu ama telefon numarası bulunamadı')->body('Numaraları elle girip ekleyin.')->warning()->send();
+
+            return;
+        }
+
+        $this->iletisimOnerileri = $telefonlu->all();
+        $this->iletisimOnerileriniEkle();
+        $this->iletisimOnerileri = $satirlar->where('sec', false)->values()->all();
+
+        Notification::make()->title($telefonlu->count().' kurum acil iletişim listesine eklendi')
+            ->body($telefonlu->pluck('birim')->implode(', ').'. Numaraları yapay zekâ buldu — çıktı almadan önce kontrol edin.'
+                .($this->iletisimOnerileri ? ' Telefonu bulunamayan '.count($this->iletisimOnerileri).' kurum aşağıda; elle tamamlayın.' : ''))
+            ->success()->persistent()->send();
+    }
+
+    /** Açık adres; ilçe / il adreste geçmiyorsa sona eklenir. */
+    private function firmaAdresi(): ?string
+    {
+        $f = $this->firma;
+        if (! $f) {
+            return null;
+        }
+        $adres = trim((string) $f->adres);
+        foreach ([$f->ilce, $f->il] as $parca) {
+            if (filled($parca) && ! str_contains(mb_strtolower($adres), mb_strtolower(trim($parca)))) {
+                $adres = trim($adres.' '.trim($parca), ' ,');
+            }
+        }
+
+        return $adres ?: null;
     }
 
     /** Onaylanan kurumlar: hastane plan alanlarına, diğerleri acil iletişim listesine (EK-2) yazılır ve kaydedilir. */
@@ -588,6 +642,18 @@ class AcilDurumPlani extends Page
                     return ($data['bicim'] ?? 'pdf') === 'word'
                         ? AcilDurumWordUretici::docx($this->plan(), 'fom', ImzaSecenegi::secili($data))
                         : AcilDurumPlaniUretici::pdf($this->plan(), ImzaSecenegi::secili($data));
+                }),
+
+            Action::make('whatsapp')
+                ->label('📲 WhatsApp ile İşverene Gönder')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->tooltip('İşverenin cep telefonuna 30 gün geçerli plan (PDF) bağlantısıyla hazır mesaj.')
+                ->action(function (): void {
+                    $this->kaydet();
+                    $plan = $this->plan();
+                    $this->whatsappAc(\App\Support\IsverenWhatsApp::url($this->firma, \App\Support\IsverenWhatsApp::adepMesaji($plan)), 'Acil Durum Eylem Planı');
                 }),
 
             Action::make('word')

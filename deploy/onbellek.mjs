@@ -80,7 +80,9 @@ export async function onbellekYenile({ temizle = false, sessiz = false, ozelKomu
         const metin = await yanit.text();
         const basarili = yanit.ok && /SONUC=0/.test(metin);
         log(metin.split('\n').filter((s) => s.trim()).map((s) => '[onbellek]   ' + s.trim()).join('\n'));
-        log(basarili ? '[onbellek] tamamlandı.' : `[onbellek] UYARI: başarısız (HTTP ${yanit.status}). Geri almak için: node deploy/onbellek.mjs --temizle`);
+        log(basarili ? '[onbellek] tamamlandı.' : ozelKomut
+            ? `[onbellek] UYARI: komut yanıtı alınamadı (HTTP ${yanit.status}) — sunucu uzun isteği kesmiş olabilir; iş arka planda sürüyor olabilir.`
+            : `[onbellek] UYARI: başarısız (HTTP ${yanit.status}). Geri almak için: node deploy/onbellek.mjs --temizle`);
 
         return basarili;
     } finally {

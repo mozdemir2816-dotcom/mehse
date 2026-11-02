@@ -3686,9 +3686,10 @@ return [
 
         'gunluk_hak' => 5, // yumuşak sayaç (kural tabanlıda engellemez)
 
-        // Kütüphane onarımı (risk:repair-library-all-fields --zamanlanmis): günde en fazla bu kadar Gemini isteği
-        // (istek başına 25 madde). Ücretsiz kota ~20 istek/gün; kalan kota analiz düğmelerine kalsın (02.11.2026).
-        'kutuphane_onarim_gunluk_istek' => 5,
+        // Kütüphane onarımı (risk:repair-library-all-fields --zamanlanmis, 15 dk'da bir): günde en fazla bu kadar
+        // Gemini isteği (istek başına 40 madde → günde ~1000 madde). Kota (ana + yedek model ~40 istek/gün)
+        // dolarsa (429) ertesi güne kadar durur; analiz düğmeleri her zaman önce gelir (02.11.2026).
+        'kutuphane_onarim_gunluk_istek' => 25,
 
         // 1. Aşama — Ana Sektör (isgpratik 105.jpg)
         'sektorler' => [

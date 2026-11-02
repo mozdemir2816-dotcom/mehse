@@ -59,6 +59,9 @@ class GeminiRiskPuanTamamlayici
         static::$sonlanma = microtime(true) + self::BUTCE_SN;
     }
 
+    /** Son toplu tam alan isteğinin HTTP durumu (başarısızsa) — 429: günlük kota doldu. */
+    public static ?int $sonHataDurumu = null;
+
     private static function basarisizlikKaydet(): void
     {
         static::$ardArdaBasarisiz++;
@@ -406,6 +409,7 @@ class GeminiRiskPuanTamamlayici
      */
     public static function alanTopluOner(iterable $maddeler, string $yontem, ?string $baglam = null, bool $riskDenetle = false): array
     {
+        static::$sonHataDurumu = null;
         if (! static::aktifMi() || ! in_array($yontem, ['fine_kinney', 'matris_5x5'], true)) {
             return [];
         }
@@ -488,6 +492,7 @@ class GeminiRiskPuanTamamlayici
 
             if ($yanit->failed()) {
                 Log::warning('Gemini tam alan tamamlama başarısız', ['durum' => $yanit->status(), 'govde' => mb_substr($yanit->body(), 0, 500)]);
+                static::$sonHataDurumu = $yanit->status();
                 static::basarisizlikKaydet();
 
                 return [];

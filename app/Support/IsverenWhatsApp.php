@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\AcilDurumPlani;
 use App\Models\DofRaporu;
 use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
@@ -29,6 +30,7 @@ class IsverenWhatsApp
         'saha-denetimi' => SahaDenetimi::class,
         'tespit-defteri' => TespitOneriDefteri::class,
         'risk' => RiskDegerlendirmesi::class,
+        'adep' => AcilDurumPlani::class,
     ];
 
     public static function telefon(?Firma $firma): ?string
@@ -142,6 +144,27 @@ class IsverenWhatsApp
             '- İncelenen Risk Sayısı: '.$rd->maddeler()->count(),
             $rd->gecerlilik_tarihi ? '- Geçerlilik: '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihine kadar'.($sinif ? ' ('.$sinif.($yil ? ' - '.$yil.' Yıl' : '').')' : '') : null,
             'Raporu incelemek ve imzalamak için bağlantı: '.self::pdfBaglantisi('risk', $rd->id),
+            '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
+            'Bilgilerinize sunarız.',
+            self::imza($f),
+        ]));
+    }
+
+    /** Acil Durum Eylem Planı (02.11.2026). */
+    public static function adepMesaji(AcilDurumPlani $p): string
+    {
+        $p->loadMissing('firma');
+        $f = $p->firma;
+        $u = $p->uygulama ?? [];
+        $senaryo = count($p->konular ?? []) + count($u['ozel_senaryolar'] ?? []);
+
+        return implode("\n", array_filter([
+            'Sayın '.self::isverenAdi($f).' ('.$f?->unvan.'),',
+            ($p->rapor_tarihi ?? now())->format('d.m.Y').' tarihli ve 6331 sayılı Kanun kapsamındaki Acil Durum Eylem Planınız ('.$p->dokuman_no.') hazırlanmıştır.',
+            '- Acil Durum Konu Sayısı: '.$senaryo,
+            filled($u['koordinator_ad'] ?? null) ? '- Acil Durum Koordinatörü: '.$u['koordinator_ad'] : null,
+            $p->gecerlilik_tarihi ? '- Gözden Geçirme Tarihi: '.$p->gecerlilik_tarihi->format('d.m.Y') : null,
+            'Planınızı ve ekiplerinizi incelemek için bağlantı: '.self::pdfBaglantisi('adep', $p->id),
             '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
             'Bilgilerinize sunarız.',
             self::imza($f),

@@ -34,9 +34,10 @@ Schedule::call(fn () => Artisan::call('risk:oneri-tamamla'))
 Schedule::call(fn () => Artisan::call('risk:puan-tamamla'))
     ->name('risk:puan-tamamla')->everyMinute()->withoutOverlapping(10);
 
-// Kütüphane onarımı: eksik alanlı kütüphane maddeleri saatte bir parti (günlük sınırlı), analiz kuyrukları boşken (02.11.2026).
-Schedule::call(fn () => Artisan::call('risk:repair-library-all-fields', ['--zamanlanmis' => true, '--limit' => 25]))
-    ->name('risk:repair-library-all-fields')->hourly()->withoutOverlapping(30);
+// Kütüphane onarımı: eksik alanlı kütüphane maddeleri 15 dakikada bir parti (40 madde; günlük sınırlı, kota dolunca
+// ertesi güne kadar durur), analiz kuyrukları boşken (02.11.2026).
+Schedule::call(fn () => Artisan::call('risk:repair-library-all-fields', ['--zamanlanmis' => true, '--limit' => 40]))
+    ->name('risk:repair-library-all-fields')->everyFifteenMinutes()->withoutOverlapping(30);
 
 // Günlük veritabanı yedeği (Hizmet Sözleşmesi md.5): storage/app/private/yedekler, 30 gün saklanır.
 Schedule::call(fn () => Artisan::call('mehse:yedekle'))

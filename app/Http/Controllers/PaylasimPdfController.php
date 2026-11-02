@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcilDurumPlani;
 use App\Models\DofRaporu;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaDenetimi;
 use App\Models\TespitOneriDefteri;
+use App\Support\AcilDurumPlaniUretici;
 use App\Support\DofRaporuUretici;
 use App\Support\HastaneRiskPdfUretici;
 use App\Support\RiskDegerlendirmesiUretici;
@@ -32,6 +34,7 @@ class PaylasimPdfController extends Controller
             'saha-denetimi' => SahaDenetimiUretici::pdf(SahaDenetimi::where('durum', 'tamamlandi')->findOrFail($id)),
             'tespit-defteri' => TespitOneriDefteriUretici::pdf(TespitOneriDefteri::findOrFail($id)),
             'risk' => $this->risk(RiskDegerlendirmesi::findOrFail($id)),
+            'adep' => AcilDurumPlaniUretici::pdf(AcilDurumPlani::findOrFail($id)),
         };
     }
 

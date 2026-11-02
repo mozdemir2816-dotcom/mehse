@@ -86,8 +86,10 @@ class AcilDurumAiSihirbazTest extends TestCase
         $this->assertSame('Lityum İyon Batarya Termal Kaçağı', AcilDurumPlani::where('firma_id', $diger->id)->first()->uygulama['ozel_senaryolar'][0]['ad']);
     }
 
-    public function test_adrese_gore_kurumlar_dogrulaninca_ek2ye_yazilir(): void
+    /** 02.11.2026: telefonu bulunan kurumlar EK-2'ye otomatik yazılır; telefonsuzlar elle tamamlanmak üzere kalır. */
+    public function test_adrese_gore_kurumlar_otomatik_ek2ye_yazilir_telefonsuzlar_elle_tamamlanir(): void
     {
+        $this->firma->update(['adres' => 'Minareliçavuş OSB 3. Cad. No:5', 'ilce' => 'Nilüfer', 'il' => 'Bursa']);
         $json = json_encode(['kurumlar' => [
             ['kurum' => 'hastane', 'ad' => 'Bursa Şehir Hastanesi', 'telefon' => '0224 975 00 00', 'not' => 'Nilüfer'],
             ['kurum' => 'itfaiye', 'ad' => 'Bursa İtfaiyesi Nilüfer Grubu', 'telefon' => '0224 000 00 00 (santral)', 'not' => ''],
@@ -100,23 +102,27 @@ class AcilDurumAiSihirbazTest extends TestCase
             ->set('firmaId', $this->firma->id)
             ->call('iletisimBul')
             ->assertSet('iletisimAramali', true)
-            ->assertCount('iletisimOnerileri', 3)
-            ->assertSet('iletisimOnerileri.1.telefon', '0224 000 00 00 ()') // harfler ayıklanır
-            ->assertSet('iletisimOnerileri.2.sec', false);                  // telefonsuz satır işaretsiz gelir
+            ->assertNotified('2 kurum acil iletişim listesine eklendi')
+            ->assertCount('iletisimOnerileri', 1)                // yalnız telefonu bulunamayan kaldı
+            ->assertSet('iletisimOnerileri.0.ad', 'Bursagaz');
 
-        Http::assertSent(fn ($r) => isset($r['tools'][0]['google_search']));
-
-        $sayfa->set('iletisimOnerileri.1.telefon', '0224 444 11 22')->call('iletisimOnerileriniEkle');
+        // İlçe / il adrese eklenerek sorulur.
+        Http::assertSent(fn ($r) => isset($r['tools'][0]['google_search']) && str_contains(json_encode($r->data(), JSON_UNESCAPED_UNICODE), 'No:5 Nilüfer Bursa'));
 
         $u = AcilDurumPlani::where('firma_id', $this->firma->id)->first()->uygulama;
         $this->assertSame('Bursa Şehir Hastanesi', $u['hastane_ad']);
         $this->assertContains('Bursa İtfaiyesi Nilüfer Grubu', array_column($u['iletisim'], 'ad'));
         $this->assertNotContains('Bursagaz', array_column($u['iletisim'], 'ad'));
 
+        // Telefonu elle girilen kurum eklenir.
+        $sayfa->set('iletisimOnerileri.0.telefon', '187')->set('iletisimOnerileri.0.sec', true)->call('iletisimOnerileriniEkle');
+        $u = AcilDurumPlani::where('firma_id', $this->firma->id)->first()->uygulama;
+        $this->assertContains('Bursagaz', array_column($u['iletisim'], 'ad'));
+
         $d = AcilDurumBelgeVerisi::hazirla(AcilDurumPlani::where('firma_id', $this->firma->id)->first());
         $dis = collect($d['dis_iletisim']);
         $this->assertSame('0224 975 00 00', $dis->firstWhere('birim', 'EN YAKIN HASTANE')['tel']);
-        $this->assertSame('0224 444 11 22', $dis->firstWhere('birim', 'BURSA İTFAİYESİ NİLÜFER GRUBU')['tel']);
+        $this->assertSame('0224 000 00 00 ()', $dis->firstWhere('birim', 'BURSA İTFAİYESİ NİLÜFER GRUBU')['tel']); // harfler ayıklanır
     }
 
     public function test_arama_araci_desteklenmezse_yapilandirilmis_yanita_duser(): void

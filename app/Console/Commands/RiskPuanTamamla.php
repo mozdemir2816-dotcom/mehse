@@ -28,7 +28,8 @@ class RiskPuanTamamla extends Command
 {
     protected $signature = 'risk:puan-tamamla
         {--limit=25 : Tek istekte gönderilecek madde sayısı}
-        {--rapor=* : Belge numarası (ör. RD-2026-127) — kuyruğa alınır ve ilk parti hemen işlenir}';
+        {--rapor=* : Belge numarası (ör. RD-2026-127) — kuyruğa alınır ve ilk parti hemen işlenir}
+        {--sadece-kuyruk : --rapor ile: hemen işlemeden yalnız kuyruğa al (zamanlayıcı dakikada bir parti işler)}';
 
     protected $description = 'Eksik alanlı risk maddelerini (öneri, mevzuat, puan, sorumlu…) yapay zekâ ile toplu tamamlar';
 
@@ -136,11 +137,14 @@ class RiskPuanTamamla extends Command
                 }
                 self::denemeleriSifirla($rd->id);
                 $eksik = self::eksikSorgu($rd)->count();
+                // Önce kuyruğa: web üzerinden çağrıda bağlantı zaman aşımına uğrasa da zamanlayıcı devam eder.
+                self::oncelikliyeAl($rd->id);
+                $this->info("{$belgeNo} ({$rd->firma_unvan}): {$eksik} eksik madde kuyruğa alındı.");
+                if ($this->option('sadece-kuyruk')) {
+                    continue;
+                }
                 $sayi = self::isle($rd, (int) $this->option('limit'));
                 $kalan = self::eksikSorgu($rd)->count();
-                if ($kalan) {
-                    self::oncelikliyeAl($rd->id);
-                }
                 $rd->pdfOnbellegiTemizle();
                 $rd->saveQuietly();
                 $this->info("{$belgeNo} ({$rd->firma_unvan}): {$eksik} eksik maddeden {$sayi} tamamlandı, kalan {$kalan} arka planda dakikada ".self::PARTI.' madde.');

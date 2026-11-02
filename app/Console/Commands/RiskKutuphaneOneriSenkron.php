@@ -10,7 +10,7 @@ namespace App\Console\Commands;
 class RiskKutuphaneOneriSenkron extends RiskKutuphaneOnar
 {
     protected $signature = 'risk:sync-library-recommendations
-        {--limit=50 : Yapay zekâya gönderilecek en fazla madde (25\'lik partiler)}
+        {--limit=80 : Yapay zekâya gönderilecek en fazla madde (40\'lık partiler)}
         {--kategori= : Yalnız bu kütüphane klasörü (tehlike_kategorileri.anahtar)}
         {--zamanlanmis : Zamanlayıcıdan çağrı — günlük istek sınırı uygulanır}
         {--sifirla : Daha önce denenip doldurulamayan maddeleri yeniden dene}

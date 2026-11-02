@@ -16,19 +16,22 @@ use Illuminate\Support\Facades\Cache;
  *
  *  1. Kotasız: aynı kütüphane maddesinden (tehlike_id) ya da aynı tehlike metninden eklenmiş analiz
  *     maddelerinde doldurulmuş öneri / önlem / mevzuat / risk / sorumlu kütüphaneye kopyalanır.
- *  2. Kalanlar 25'lik partilerle yapay zekâya gider (Fine-Kinney ölçeği — kütüphane ölçeği): yalnız boş
+ *  2. Kotasız: puanı olup rezidüel puanı / termini boş maddelerde bunlar analizdeki kuralla hesaplanır
+ *     (önlem sonrası şiddet ve frekans aynı, olasılık bir alt basamak — RiskMaddesi::varsayilanSonOlasilik).
+ *  3. Kalanlar 40'lık partilerle yapay zekâya gider (Fine-Kinney ölçeği — kütüphane ölçeği): yalnız boş
  *     alanlar dolar; tehlikeyle ÇELİŞEN risk tanımı (ör. mikser çarpmasına "elektrik çarpması") düzeltilir;
  *     termin puandan hesaplanır.
  *
- * Ücretsiz Gemini kotası günde ~20 istek: zamanlayıcı (--zamanlanmis) yalnız analiz kuyrukları boşken ve
- * günde en fazla config('isg.risk_ai.kutuphane_onarim_gunluk_istek') istek atar. Elle çalıştırmada sınır
+ * Ücretsiz Gemini kotası model başına günde ~20 istek: zamanlayıcı (--zamanlanmis, 15 dakikada bir) yalnız
+ * analiz kuyrukları boşken ve günde en fazla config('isg.risk_ai.kutuphane_onarim_gunluk_istek') istek atar;
+ * Gemini kotanın dolduğunu bildirince (429) ertesi gün 10:30'a kadar durur — kütüphane günler içinde kendiliğinden dolar. Elle çalıştırmada sınır
  * --limit'tir. Yapay zekânın dolduramadığı madde 30 gün yeniden denenmez (--sifirla ile sıfırlanır).
  * HAZOP klasörleri puan / öneri kullanmadığından kapsam dışıdır.
  */
 class RiskKutuphaneOnar extends Command
 {
     protected $signature = 'risk:repair-library-all-fields
-        {--limit=50 : Yapay zekâya gönderilecek en fazla madde (25\'lik partiler)}
+        {--limit=80 : Yapay zekâya gönderilecek en fazla madde (40\'lık partiler)}
         {--kategori= : Yalnız bu kütüphane klasörü (tehlike_kategorileri.anahtar)}
         {--sadece-oneri : Yalnız önerisi boş maddeler}
         {--zamanlanmis : Zamanlayıcıdan çağrı — günlük istek sınırı ve kuyruk önceliği uygulanır}
@@ -36,9 +39,15 @@ class RiskKutuphaneOnar extends Command
 
     protected $description = 'Risk kütüphanesindeki eksik alanları (öneri, mevzuat, puan, rezidüel, sorumlu, termin) analizlerden ve yapay zekâ ile kalıcı tamamlar';
 
-    public const PARTI = 25;
+    public const PARTI = 40;
 
     private const DENENEN_ANAHTARI = 'risk-kutuphane-onar-denenen';
+
+    /** Gemini 429 (günlük kota doldu) verdiyse zamanlanmış onarım bu ana kadar bekler. */
+    public const KOTA_ANAHTARI = 'risk-kutuphane-onar-kota-doldu';
+
+    /** Zamanlanmış çalıştırmada kotasız (tarama) adımlar saatte bir yeter. */
+    private const TARAMA_ANAHTARI = 'risk-kutuphane-onar-tarama';
 
     public function handle(): int
     {
@@ -47,8 +56,12 @@ class RiskKutuphaneOnar extends Command
         }
 
         $once = $this->eksikSorgu()->count();
-        $kopyalanan = $this->analizlerdenDoldur();
-        $this->info("Analizlerden kopyalanan (kotasız): {$kopyalanan} kütüphane maddesi.");
+
+        if (! $this->option('zamanlanmis') || Cache::add(self::TARAMA_ANAHTARI, true, now()->addHour())) {
+            $kopyalanan = $this->analizlerdenDoldur();
+            $hesaplanan = $this->hesaplananlariDoldur();
+            $this->info("Analizlerden kopyalanan (kotasız): {$kopyalanan} · rezidüel puan / termini hesaplanan (kotasız): {$hesaplanan} kütüphane maddesi.");
+        }
 
         $aiDolan = $this->yapayZekaIleDoldur();
 
@@ -121,7 +134,34 @@ class RiskKutuphaneOnar extends Command
         return $sayi;
     }
 
-    /** 2. adım — kalanları yapay zekâ ile (25'lik partiler). */
+    /** 2. adım — puanı olan maddede rezidüel puan ve termin hesaplanır (API yok). */
+    private function hesaplananlariDoldur(): int
+    {
+        $sayi = 0;
+
+        $this->kapsam(Tehlike::query())
+            ->whereNotNull('olasilik')->whereNotNull('frekans')->whereNotNull('siddet')
+            ->where(fn ($w) => $w->whereNull('son_olasilik')->orWhereNull('son_frekans')->orWhereNull('son_siddet')
+                ->orWhereNull('termin')->orWhere('termin', ''))
+            ->chunkById(500, function ($tehlikeler) use (&$sayi) {
+                foreach ($tehlikeler as $t) {
+                    $t->son_siddet ??= $t->siddet;
+                    $t->son_frekans ??= $t->frekans;
+                    $t->son_olasilik ??= RiskMaddesi::varsayilanSonOlasilik('fine_kinney', (float) $t->olasilik, (float) $t->son_frekans, (float) $t->son_siddet);
+                    if (RiskAlanTamamlama::bosMu($t->termin)) {
+                        $t->termin = RiskAlanTamamlama::kutuphaneTermini($t);
+                    }
+                    if ($t->isDirty()) {
+                        $t->save();
+                        $sayi++;
+                    }
+                }
+            });
+
+        return $sayi;
+    }
+
+    /** 3. adım — kalanları yapay zekâ ile (40'lık partiler). */
     private function yapayZekaIleDoldur(): int
     {
         if (! GeminiRiskPuanTamamlayici::aktifMi()) {
@@ -134,11 +174,14 @@ class RiskKutuphaneOnar extends Command
         $gunAnahtari = 'risk-kutuphane-onar-istek-'.now()->toDateString();
 
         if ($this->option('zamanlanmis')) {
+            if (Cache::has(self::KOTA_ANAHTARI)) {
+                return 0;
+            }
             // Kullanıcının bastığı analiz kuyrukları önce; kota onlara kalsın.
             if (Cache::get(RiskPuanTamamla::ONCELIK_ANAHTARI) || Cache::get(RiskOneriTamamla::ONCELIK_ANAHTARI)) {
                 return 0;
             }
-            $kalanIstek = (int) config('isg.risk_ai.kutuphane_onarim_gunluk_istek', 8) - (int) Cache::get($gunAnahtari, 0);
+            $kalanIstek = (int) config('isg.risk_ai.kutuphane_onarim_gunluk_istek', 25) - (int) Cache::get($gunAnahtari, 0);
             $limit = min($limit, max(0, $kalanIstek) * self::PARTI);
         }
 
@@ -158,7 +201,13 @@ class RiskKutuphaneOnar extends Command
             $oneriler = GeminiRiskPuanTamamlayici::alanTopluOner($tehlikeler->values(), 'fine_kinney', $baglam, riskDenetle: true);
 
             if ($oneriler === []) {
-                $this->warn('Yapay zekâ yanıt vermedi (kota / yoğunluk) — sonraki çalıştırmada devam edilir.');
+                if (GeminiRiskPuanTamamlayici::$sonHataDurumu === 429) {
+                    // Günlük kota doldu: Gemini kotası Pasifik gece yarısı (TR ~10:00-11:00) yenilenir.
+                    Cache::put(self::KOTA_ANAHTARI, true, now()->hour < 10 ? now()->setTime(10, 30) : now()->addDay()->setTime(10, 30));
+                    $this->warn('Gemini günlük kotası doldu — onarım kota yenilenince kendiliğinden devam eder.');
+                } else {
+                    $this->warn('Yapay zekâ yanıt vermedi (yoğunluk) — sonraki çalıştırmada devam edilir.');
+                }
                 break;
             }
 
