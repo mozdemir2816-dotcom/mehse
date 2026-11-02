@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
@@ -77,6 +78,12 @@ class TatbikatTutanagi extends Page
     public ?string $bitisSaati = null;
 
     public ?int $tahliyeDk = null;
+
+    /** Planlanan (hedef) tahliye süresi, dk — senaryo seçilince önerilen değer gelir. */
+    public ?int $hedefTahliyeDk = null;
+
+    /** Son otomatik üretilen senaryo metni — uzman elle değiştirmediyse yer/toplanma değişince yenilenir. */
+    public ?string $otomatikMetin = null;
 
     public bool $haberliTatbikat = true;
 
@@ -148,6 +155,12 @@ class TatbikatTutanagi extends Page
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
+            $this->yetkilileriDoldur();
+        }
+
+        // Firma sayfasındaki "Tatbikatlar" sekmesinden ?duzenle=ID ile gelinir.
+        if ($duzenle = request()->integer('duzenle')) {
+            $this->duzenle($duzenle);
         }
     }
 
@@ -260,6 +273,20 @@ class TatbikatTutanagi extends Page
     {
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
         $this->duzenlenenId = null;
+        $this->isverenVekili = $this->isGuvenligiUzmani = null;
+        $this->yetkilileriDoldur();
+    }
+
+    /** İmza bloğu adları firmada tanımlı işveren / vekil ve atanmış İGU'dan önden gelir (düzenlenebilir). */
+    private function yetkilileriDoldur(): void
+    {
+        $firma = $this->firma;
+        if (! $firma) {
+            return;
+        }
+
+        $this->isverenVekili ??= ($firma->isveren_ad ?: $firma->isveren_vekili) ?: null;
+        $this->isGuvenligiUzmani ??= ($firma->igu?->ad_soyad ?: $firma->user?->name) ?: null;
     }
 
     public function updatedListeArama(): void
@@ -295,6 +322,7 @@ class TatbikatTutanagi extends Page
         $this->baslamaSaati = $t->baslama_saati;
         $this->bitisSaati = $t->bitis_saati;
         $this->tahliyeDk = $t->tahliye_dk;
+        $this->hedefTahliyeDk = $t->hedef_tahliye_dk;
         $this->katilimciSayisi = $t->katilimci_sayisi;
         $this->haberliTatbikat = (bool) $t->haberli_tatbikat;
         $this->yillikPlanDahilinde = (bool) $t->yillik_plan_dahilinde;
@@ -322,6 +350,7 @@ class TatbikatTutanagi extends Page
         $this->mount();
         $this->firmaId = $firmaId;
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
+        $this->yetkilileriDoldur();
     }
 
     /*
@@ -339,7 +368,36 @@ class TatbikatTutanagi extends Page
         }
 
         $this->senaryoAnahtari = $anahtar;
-        $this->senaryoMetni = $senaryo['metin'];
+        $this->senaryoMetni = $this->otomatikMetin = $this->senaryoMetniUret($senaryo['metin']);
+        $this->hedefTahliyeDk ??= $senaryo['hedef_tahliye_dk'] ?? null;
+    }
+
+    private function senaryoMetniUret(string $sablon): string
+    {
+        return TatbikatTutanagiModel::senaryoMetniDoldur(
+            $sablon, $this->firma, $this->tatbikatYeri,
+            $this->toplanmaAlani ?: $this->firma?->acilDurumPlani?->toplanma_yeri,
+        );
+    }
+
+    /** Yer / toplanma alanı sonradan yazılırsa, elle değiştirilmemiş senaryo metni yenilenir. */
+    public function updatedTatbikatYeri(): void
+    {
+        $this->otomatikMetniYenile();
+    }
+
+    public function updatedToplanmaAlani(): void
+    {
+        $this->otomatikMetniYenile();
+    }
+
+    private function otomatikMetniYenile(): void
+    {
+        $sablon = $this->senaryolar()[$this->senaryoAnahtari]['metin'] ?? null;
+
+        if ($sablon && $this->otomatikMetin !== null && $this->senaryoMetni === $this->otomatikMetin) {
+            $this->senaryoMetni = $this->otomatikMetin = $this->senaryoMetniUret($sablon);
+        }
     }
 
     /*
@@ -497,12 +555,90 @@ class TatbikatTutanagi extends Page
     |--------------------------------------------------------------------------
     */
 
+    /** Tahliye kontrol sorusu (config degerlendirme_sorulari) metninin ayırt edici kısmı. */
+    private const TAHLIYE_SORUSU = 'Tahliye planlanan sürede';
+
+    private const GECIKME_EKSIKLIGI = 'Tahliye süresinde gecikme yaşandı';
+
+    /**
+     * Kaydetmeden önce tutanak tutarlılığı (02.11.2026):
+     * - tahliye süresi boşsa başlama–bitiş farkı yazılır;
+     * - "Tahliye planlanan sürede tamamlandı mı?" hedefe göre cevaplanır (boşsa Evet/Hayır, hedef aşıldıysa Hayır);
+     * - Hayır ise "gecikme" eksikliği ve sorumlu + 30 gün terminli DÖF eklenir (bir kez);
+     * - yangın türünde söndürme ekibi tabloda yoksa firmanın Acil Durum Ekipleri'nden eklenir;
+     * - işveren / İGU adı boşsa firmadaki tanımlı yetkililerden doldurulur.
+     */
+    private function tutarlilikUygula(): void
+    {
+        $gecici = new TatbikatTutanagiModel([
+            'senaryo_anahtari' => $this->senaryoAnahtari, 'baslama_saati' => $this->baslamaSaati, 'bitis_saati' => $this->bitisSaati,
+            'tahliye_dk' => $this->tahliyeDk, 'hedef_tahliye_dk' => $this->hedefTahliyeDk, 'ekipler' => $this->ekipler,
+            'isveren_vekili' => $this->isverenVekili, 'is_guvenligi_uzmani' => $this->isGuvenligiUzmani,
+        ]);
+        $gecici->setRelation('firma', $this->firma);
+
+        $this->tahliyeDk = $this->tahliyeDk ?: $gecici->toplamSureDk();
+        $gecici->tahliye_dk = $this->tahliyeDk;
+        $tuttu = $gecici->hedefTuttuMu();
+
+        foreach ($this->degerlendirmeler as $i => $d) {
+            if (! str_contains((string) ($d['soru'] ?? ''), self::TAHLIYE_SORUSU)) {
+                continue;
+            }
+            if ($tuttu === false) {
+                $this->degerlendirmeler[$i]['cevap'] = 'hayir';
+            } elseif ($tuttu === true && blank($d['cevap'] ?? null)) {
+                $this->degerlendirmeler[$i]['cevap'] = 'evet';
+            }
+
+            if (($this->degerlendirmeler[$i]['cevap'] ?? null) === 'hayir') {
+                $this->gecikmeDofEkle();
+            }
+        }
+
+        if ($gecici->yanginTuruMu() && ! $gecici->sondurmeEkibiVarMi()) {
+            $uyeler = TatbikatTutanagiModel::sondurmeEkibiUyeleri($this->firma);
+            foreach ($uyeler as $ad) {
+                $this->ekipler[] = ['ad_soyad' => $ad, 'ekip' => 'Söndürme Ekibi'];
+            }
+            Notification::make()
+                ->title($uyeler ? 'Söndürme Ekibi görev alan ekiplere eklendi' : 'Söndürme Ekibi eksik')
+                ->body($uyeler ? implode(', ', $uyeler) : 'Yangın tatbikatında söndürme ekibi görev almalıdır. Firmanın Acil Durum Ekipleri\'nde söndürme ekibi tanımlı değil; ekibi tanımlayın veya burada elle ekleyin.')
+                ->{$uyeler ? 'success' : 'warning'}()->send();
+        }
+
+        $this->isverenVekili = $this->isverenVekili ?: $gecici->isverenAdi();
+        $this->isGuvenligiUzmani = $this->isGuvenligiUzmani ?: $gecici->iguAdi();
+    }
+
+    private function gecikmeDofEkle(): void
+    {
+        $hedef = $this->hedefTahliyeDk ?: ($this->senaryolar()[$this->senaryoAnahtari]['hedef_tahliye_dk'] ?? null);
+        $eksiklik = self::GECIKME_EKSIKLIGI.($this->tahliyeDk && $hedef ? " (gerçekleşen {$this->tahliyeDk} dk / hedef {$hedef} dk)." : '.');
+
+        if (! collect($this->eksiklikler)->contains(fn ($e) => str_starts_with((string) $e, self::GECIKME_EKSIKLIGI))) {
+            $this->eksiklikler[] = $eksiklik;
+        }
+
+        if (! collect($this->dofOnerileri)->contains(fn ($d) => str_starts_with((string) ($d['faaliyet'] ?? ''), 'Tahliye gecikmesinin'))) {
+            $this->dofOnerileri[] = [
+                'faaliyet' => 'Tahliye gecikmesinin nedenleri (alarm duyulabilirliği, kaçış yolu engelleri, yönlendirme) giderilecek; çalışanlara tahliye eğitimi tekrarlanacak ve tahliye tatbikatı yinelenecek.',
+                'sorumlu' => $this->tatbikatKoordinatoru ?: 'Acil Durum Koordinatörü',
+                'tarih' => Carbon::parse($this->tatbikatTarihi ?: today())->addDays(30)->toDateString(),
+            ];
+        }
+    }
+
     private function kaydet(): ?TatbikatTutanagiModel
     {
         if (! $this->firma) {
             Notification::make()->title('Önce firma seçin')->danger()->send();
 
             return null;
+        }
+
+        if ($this->durum !== 'planlandi') {
+            $this->tutarlilikUygula();
         }
 
         // Eksiklik / DÖF önerisi olan yapılmış tatbikat "takip gerekiyor" olur.
@@ -526,6 +662,7 @@ class TatbikatTutanagi extends Page
             'baslama_saati' => $this->baslamaSaati,
             'bitis_saati' => $this->bitisSaati,
             'tahliye_dk' => $this->tahliyeDk,
+            'hedef_tahliye_dk' => $this->hedefTahliyeDk ?: null,
             'haberli_tatbikat' => $this->haberliTatbikat,
             'yillik_plan_dahilinde' => $this->yillikPlanDahilinde,
             'isveren_vekili' => $this->isverenVekili,
@@ -584,6 +721,17 @@ class TatbikatTutanagi extends Page
 
                     return $t ? TatbikatTutanagiUretici::pdf($t) : null;
                 }),
+
+            Action::make('word')
+                ->label('Word İndir')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $t = $this->kaydet();
+
+                    return $t ? TatbikatTutanagiUretici::word($t) : null;
+                }),
         ];
     }
 
@@ -608,5 +756,10 @@ class TatbikatTutanagi extends Page
     public function kayitPdf(int $id)
     {
         return TatbikatTutanagiUretici::pdf($this->kayit($id));
+    }
+
+    public function kayitWord(int $id)
+    {
+        return TatbikatTutanagiUretici::word($this->kayit($id));
     }
 }

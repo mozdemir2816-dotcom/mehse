@@ -72,12 +72,12 @@
                 </div>
                 <div>
                     <label style="font-weight:600;font-size:.8rem">Tatbikat Yeri</label>
-                    <input type="text" wire:model="tatbikatYeri" placeholder="Örn: Üretim sahası ve idari bina"
+                    <input type="text" wire:model.live.blur="tatbikatYeri" placeholder="Örn: Üretim sahası ve idari bina"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
                 <div>
                     <label style="font-weight:600;font-size:.8rem">Toplanma Alanı</label>
-                    <input type="text" wire:model="toplanmaAlani" placeholder="Örn: Ana kapı önü otopark"
+                    <input type="text" wire:model.live.blur="toplanmaAlani" placeholder="Örn: Ana kapı önü otopark"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
                 <div>
@@ -96,9 +96,19 @@
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tahliye Süresi (dk)</label>
-                    <input type="number" wire:model="tahliyeDk" placeholder="Örn: 4"
+                    <label style="font-weight:600;font-size:.8rem">Gerçekleşen Tahliye Süresi (dk)</label>
+                    <input type="number" min="0" wire:model.live.debounce.500ms="tahliyeDk" placeholder="Kronometre — örn: 4"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                </div>
+                <div>
+                    <label style="font-weight:600;font-size:.8rem">Hedef (Planlanan) Tahliye Süresi (dk)</label>
+                    <input type="number" min="0" wire:model.live.debounce.500ms="hedefTahliyeDk" placeholder="Senaryo seçince önerilen gelir"
+                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    @if ($tahliyeDk && $hedefTahliyeDk)
+                        <div style="font-size:.72rem;margin-top:.2rem;color:{{ $tahliyeDk <= $hedefTahliyeDk ? '#16a34a' : '#dc2626' }}">
+                            {{ $tahliyeDk <= $hedefTahliyeDk ? '✓ Tahliye hedef süre içinde' : '✗ Hedef süre '.($tahliyeDk - $hedefTahliyeDk).' dk aşıldı — DÖF önerisi ekleyin' }}
+                        </div>
+                    @endif
                 </div>
                 <div>
                     <label style="font-weight:600;font-size:.8rem">İşveren / Vekili</label>
@@ -137,7 +147,8 @@
         {{-- 3. SENARYO METNİ --}}
         <x-filament::section icon="heroicon-o-document-text" icon-color="danger">
             <x-slot name="heading">3. Senaryo Metni</x-slot>
-            <textarea wire:model="senaryoMetni" rows="3" placeholder="Yukarıdan bir senaryo seçin — hazır metin buraya gelir ve düzenlenebilir."
+            <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.4rem">Senaryo seçildiğinde firma unvanı, adresi, tatbikat yeri ve toplanma alanı metne otomatik yerleşir (önce yer / toplanma alanını yazıp sonra senaryo seçin). Metni dilediğiniz gibi düzenleyebilirsiniz.</div>
+            <textarea wire:model="senaryoMetni" rows="8" placeholder="Yukarıdan bir senaryo seçin — hazır metin buraya gelir ve düzenlenebilir."
                 style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-family:inherit;font-size:.85rem"></textarea>
         </x-filament::section>
 
@@ -385,6 +396,7 @@
                                 <x-filament::button size="xs" color="primary" wire:click="duzenle({{ $t->id }})">Düzenle</x-filament::button>
                                 @if ($t->yapildiMi())
                                     <x-filament::button size="xs" color="gray" wire:click="kayitPdf({{ $t->id }})">PDF</x-filament::button>
+                                    <x-filament::button size="xs" color="gray" wire:click="kayitWord({{ $t->id }})">Word</x-filament::button>
                                 @endif
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $t->id }})" wire:confirm="Tatbikat kaydı silinsin mi?">Sil</x-filament::button>
                             </td>

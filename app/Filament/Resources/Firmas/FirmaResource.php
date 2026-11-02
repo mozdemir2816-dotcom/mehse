@@ -6,6 +6,7 @@ use App\Filament\Resources\Firmas\Pages\CreateFirma;
 use App\Filament\Resources\Firmas\Pages\EditFirma;
 use App\Filament\Resources\Firmas\Pages\ListFirmas;
 use App\Filament\Resources\Firmas\RelationManagers\CalisanlarRelationManager;
+use App\Filament\Resources\Firmas\RelationManagers\TatbikatlarRelationManager;
 use App\Filament\Resources\Firmas\Schemas\FirmaForm;
 use App\Filament\Resources\Firmas\Tables\FirmasTable;
 use App\Models\Firma;
@@ -64,6 +65,7 @@ class FirmaResource extends Resource
     {
         return [
             CalisanlarRelationManager::class,
+            TatbikatlarRelationManager::class,
         ];
     }
 
