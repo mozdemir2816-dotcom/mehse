@@ -51,6 +51,6 @@ class AcilYonetimMerkeziTest extends TestCase
         $s = $sayfa->instance()->ekipSayaclari();
         $this->assertSame(['gereken' => 2, 'atanan' => 1, 'eksik' => 1], $s['sondurme']);
         $this->assertSame(6, $s['ilk_yardim']['gereken']);
-        $sayfa->assertSee('1 eksik');
+        $sayfa->call('adimaGit', 2)->assertSee('1 eksik');   // 02.11.2026: ekip atamaları 2. adımda (Saha Bilgileri)
     }
 }
