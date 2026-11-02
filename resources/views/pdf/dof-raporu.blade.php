@@ -22,7 +22,8 @@
     table.maddeler thead { display: table-header-group; }
     table.maddeler tr { page-break-inside: avoid; }
     table.maddeler th, table.maddeler td { border: 1px solid #999; padding: 4px 5px; text-align: left; vertical-align: top; word-wrap: break-word; }
-    table.maddeler th { background: #f0f0f0; font-size: 8.6px; }
+    /* Başlıklar tek satır, ortalı (02.11.2026: Durum / Foto başlığı kırılıyordu) */
+    table.maddeler thead th { background: #f0f0f0; font-size: 9.5px; white-space: nowrap; vertical-align: middle; text-align: center; padding: 5px 4px; }
     table.maddeler td.sira { text-align: center; font-weight: bold; }
     table.maddeler td.orta { text-align: center; }
     table.maddeler td.varsayilan { color: #555; font-style: italic; }
@@ -80,13 +81,13 @@
     <thead>
         <tr>
             <th style="width:4%">#</th>
-            <th style="width:28%">Tespit</th>
+            <th style="width:26%">Tespit</th>
             <th style="width:10%">Öncelik</th>
-            <th style="width:24%">Öneri / Düzeltici Faaliyet</th>
-            <th style="width:14%">Sorumlu</th>
+            <th style="width:22%">Öneri / Düzeltici Faaliyet</th>
+            <th style="width:12%">Sorumlu</th>
             <th style="width:10%">Termin</th>
-            <th style="width:5%">Durum</th>
-            <th style="width:5%">Foto</th>
+            <th style="width:8%">Durum</th>
+            <th style="width:8%">Foto</th>
         </tr>
     </thead>
     <tbody>
