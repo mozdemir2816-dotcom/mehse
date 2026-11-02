@@ -88,6 +88,56 @@ class AcilDurumWhatsAppTest extends TestCase
         $this->assertContains('deprem', $tekrar);
     }
 
+    public function test_dort_adimli_duzen_her_adim_acilir_kayitli_planlar_kapali(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['adres' => null]);
+
+        $sayfa = Livewire::test(AcilDurumSayfasi::class)
+            ->assertSee('📂 Kayıtlı Planlar ve Hazırlık Durumu', false)
+            ->assertSet('adim', 1)
+            ->call('adimaGit', 3)->assertSet('adim', 1)            // firma seçilmeden ileri adıma geçilmez
+            ->set('firmaId', $firma->id)
+            ->assertSee('Acil Durum Senaryoları');
+
+        $sayfa->call('kaydetVeIlerle')->assertSet('adim', 2)
+            ->assertSee('Fiziksel Konumlar')->assertSee('Yetkililer')->assertSee('Bina Özellikleri')
+            ->assertSee('Elektrik ana şalteri nerede?');
+
+        $sayfa->call('kaydetVeIlerle')->assertSet('adim', 3)
+            ->assertSee('Acil İletişim ve Resmî Kurumlar (EK-2)')
+            ->assertSee('✓ Örnek mevzuat metni uygulandı');
+
+        $sayfa->call('kaydetVeIlerle')->assertSet('adim', 4)
+            ->assertSee('Hazırlık kontrolü')
+            ->assertSee('📲 WhatsApp ile İşverene Gönder')
+            ->assertSee('Acil Durum Afişleri');
+
+        $sayfa->call('adimaGit', 2)->assertSet('adim', 2);
+    }
+
+    public function test_firma_secilince_kurumlar_arka_planda_bir_kez_aranir(): void
+    {
+        config(['services.gemini.key' => 'test-anahtar', 'services.gemini.yedek_modeller' => []]);
+        \Illuminate\Support\Facades\Http::fake(['generativelanguage.googleapis.com/*' => \Illuminate\Support\Facades\Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode(['kurumlar' => [
+            ['kurum' => 'itfaiye', 'ad' => 'Nilüfer İtfaiye Grubu', 'telefon' => '0224 111 11 11', 'not' => ''],
+        ]], JSON_UNESCAPED_UNICODE)]]]]]])]);
+        $firma = Firma::factory()->for($this->uzman)->create(['adres' => 'Minareliçavuş OSB, Nilüfer / Bursa']);
+
+        $sayfa = Livewire::test(AcilDurumSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertTrue($sayfa->instance()->iletisimOtomatikGerekli());
+        $sayfa->assertSee('arka planda aranıyor')
+            ->call('iletisimOtomatikBul')
+            ->assertNotified('1 kurum acil iletişim listesine eklendi');
+
+        $this->assertContains('Nilüfer İtfaiye Grubu', array_column(AcilDurumPlani::where('firma_id', $firma->id)->first()->uygulama['iletisim'], 'ad'));
+
+        // Bir kez denenir — sayfa yeniden açılınca tekrar istek atılmaz.
+        $tekrar = Livewire::test(AcilDurumSayfasi::class)->set('firmaId', $firma->id);
+        $this->assertFalse($tekrar->instance()->iletisimOtomatikGerekli());
+        $tekrar->call('iletisimOtomatikBul');
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+    }
+
     public function test_yeni_planda_risk_analizindeki_senaryo_de_eklenir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '62.01.01', 'tehlike_sinifi' => 'az_tehlikeli']);

@@ -411,7 +411,8 @@ class AcilDurumKrokisiTest extends TestCase
 
         Livewire::test(PlanSayfasi::class)
             ->set('firmaId', $firma->id)
-            ->assertSee('Risk, tedbir ve uygulama')
+            ->call('adimaGit', 3)
+            ->assertSee('Müdahale ve Tedbir Metinleri')
             ->set('toplanmaYeri', 'Otopark')
             ->set('uygulama.onleyici_tedbirler', 'Yanıcılar ayrı depoda')
             ->set('uygulama.ekipman_kkd', '6 KKT söndürücü')
@@ -470,7 +471,7 @@ class AcilDurumKrokisiTest extends TestCase
         $this->assertNotNull($p->firstWhere(fn ($r) => $r['firma']->id === $f1->id)['kontrol']);
 
         Livewire::test(PlanSayfasi::class)
-            ->assertSee('İşyerlerinizin acil durum hazırlığı')
+            ->assertSee('Kayıtlı Planlar ve Hazırlık Durumu')
             ->assertDontSee('Yabancı')
             ->call('portfoyExcel')->assertFileDownloaded('acil-durum-hazirligi.xlsx');
     }

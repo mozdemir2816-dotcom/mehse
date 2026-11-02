@@ -87,11 +87,13 @@ class AcilDurumSenaryoSecimiTest extends TestCase
     {
         $firma = $this->firmaRiskli(['CNC torna tezgahında dönen ayna, bakım sırasında sıkışma']);
 
-        Livewire::test(AcilDurumSayfasi::class)
-            ->set('firmaId', $firma->id)
-            ->call('konuToggle', 'deprem')          // uzman deprem'i kapatır
+        $sayfa = Livewire::test(AcilDurumSayfasi::class)->set('firmaId', $firma->id);
+        // 02.11.2026: yeni planda risk analizinden gelen senaryo firma seçilince zaten eklenir.
+        $this->assertContains('makine_arizasi', $sayfa->get('konular'));
+
+        $sayfa->call('konuToggle', 'deprem')          // uzman deprem'i kapatır
             ->call('riskAnalizindenBelirle')
-            ->assertNotified('1 senaryo eklendi')
+            ->assertNotified('Yeni senaryo gerekmedi')
             ->call('kkdFaaliyetToggle', 'GÜVENLİK')
             ->call('kaydet');
 

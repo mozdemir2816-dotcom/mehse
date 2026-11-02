@@ -61,6 +61,15 @@ class AcilDurumPlani extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    /**
+     * 4 adımlı düzen (02.11.2026): 1 Firma & Senaryolar · 2 Saha Bilgileri · 3 Müdahale & İletişim ·
+     * 4 Onay & Çıktı. Adres geçmişine yazılır — tarayıcının "geri" tuşu bir önceki adıma döner.
+     */
+    #[Url(as: 'adim', history: true, except: 1)]
+    public int $adim = 1;
+
+    public const ADIMLAR = [1 => 'Firma & Senaryolar', 2 => 'Saha Bilgileri', 3 => 'Müdahale & İletişim', 4 => 'Onay & Çıktı'];
+
     // Form durumu (seçili plana bağlanır)
     public ?string $dokumanNo = null;
 
@@ -120,6 +129,59 @@ class AcilDurumPlani extends Page
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
+
+        if (! $this->firma || ! isset(self::ADIMLAR[$this->adim])) {
+            $this->adim = 1;
+        }
+    }
+
+    public function adimaGit(int $adim): void
+    {
+        if (isset(self::ADIMLAR[$adim]) && ($adim === 1 || $this->firma)) {
+            $this->adim = $adim;
+        }
+    }
+
+    /** Adımın altındaki "Kaydet ve İleri". */
+    public function kaydetVeIlerle(): void
+    {
+        $this->kaydet();
+        $this->adimaGit(min(4, $this->adim + 1));
+    }
+
+    /**
+     * Firma seçilince (02.11.2026) adrese göre resmî kurum telefonları arka planda bir kez aranır: görünüm
+     * yüklendikten sonra ayrı istekle (x-init) çağrılır, sayfa beklemez. Yalnız EK-2'de kurum yokken,
+     * adres girilmişken ve bu plan için daha önce denenmemişse çalışır.
+     */
+    public function iletisimOtomatikBul(): void
+    {
+        $plan = $this->plan();
+
+        if (! $plan || ! $this->iletisimOtomatikGerekli()) {
+            return;
+        }
+
+        // Aynı anda ikinci istek olmasın; yapay zekâ yanıt vermezse ertesi gün yeniden denenir, bulursa bir daha aranmaz.
+        $anahtar = 'adep-iletisim-otomatik-'.$plan->id;
+        \Illuminate\Support\Facades\Cache::put($anahtar, true, now()->addDay());
+        $this->iletisimBul();
+
+        if (filled($this->uygulama['hastane_ad'] ?? null) || $this->iletisimOnerileri || count($this->uygulama['iletisim'] ?? []) > 1) {
+            \Illuminate\Support\Facades\Cache::forever($anahtar, true);
+        }
+    }
+
+    public function iletisimOtomatikGerekli(): bool
+    {
+        $plan = $this->plan();
+
+        return $plan !== null
+            && GeminiAcilIletisimBulucu::aktifMi()
+            && mb_strlen(trim((string) $this->firmaAdresi())) >= 8
+            && blank($this->uygulama['hastane_ad'] ?? null)
+            && collect($this->uygulama['iletisim'] ?? [])->reject(fn ($i) => trim((string) ($i['telefon'] ?? '')) === '112')->isEmpty()
+            && ! \Illuminate\Support\Facades\Cache::has('adep-iletisim-otomatik-'.$plan->id);
     }
 
     #[Computed]
