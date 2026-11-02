@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Pages\AcilDurumKrokisi;
-use App\Filament\Pages\HizliSahaBulgusu;
 use App\Filament\Pages\KontrolMerkezi;
 use App\Filament\Pages\RiskSihirbazi;
 use App\Filament\Pages\SahaDenetimi;
@@ -11,7 +10,6 @@ use App\Filament\Resources\Firmas\FirmaResource;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\User;
-use App\Support\BulguHavuzu;
 use App\Support\GorevDurumu;
 use App\Support\PortfoyKarne;
 use Filament\Facades\Filament;
@@ -19,7 +17,7 @@ use Filament\Widgets\Widget;
 
 /**
  * Ana sayfa kokpiti (02.11.2026): tek şeritte selamlama + unvan rozeti + hızlı işlemler + evrak uyumu
- * halkası; altında tek satır 4 kart — Aktif Portföy, İSG-KATİP kapasitesi, Sözleşme durumu, Kritik DÖF.
+ * halkası; altında tek satır 4 kart — Aktif Portföy, İSG-KATİP kapasitesi, Sözleşme durumu, Kritik Görevler (DÖF / Saha).
  * Eski ayrık Portföy Özeti (3 kutu) ve görev panosundaki kapasite kartı / açıklama satırı buraya taşındı.
  */
 class HosGeldinWidget extends Widget
@@ -74,36 +72,27 @@ class HosGeldinWidget extends Widget
                     ->whereDate('sozlesme_bitis', '<=', today()->addDays(30))->count(),
                 'url' => FirmaResource::getUrl('index'),
             ],
-            'dof' => $this->dofOzeti((clone $aktifFirmalar)->pluck('id')->all()),
+            'kritik' => $this->kritikGorevler($kullanici),
         ];
     }
 
     /**
-     * Açık saha bulgusu / DÖF maddeleri: termini geçen ve yaklaşan (görev panosuyla aynı kaynak ve gün eşiği).
+     * Görev panosuyla birebir aynı liste (GorevDurumu::gorevlerOnbellekli): günü geçen ve yaklaşan görev
+     * sayıları + günü geçenlerin modül dağılımı. 02.11.2026: kart açık DÖF maddesi (9), pano firma
+     * başına görev (2) sayıyordu.
      *
-     * @param  array<int, int>  $firmaIdler
-     * @return array{geciken: int, yaklasan: int, url: string}
+     * @return array{geciken: int, yaklasan: int, moduller: array<string, int>, url: string}
      */
-    private function dofOzeti(array $firmaIdler): array
+    private function kritikGorevler(User $kullanici): array
     {
-        $bugun = today();
-        $sinir = today()->addDays(GorevDurumu::yaklasanGun());
-        $geciken = $yaklasan = 0;
+        $gorevler = GorevDurumu::gorevlerOnbellekli($kullanici);
+        $ozet = GorevDurumu::ozet($gorevler);
 
-        foreach ($firmaIdler as $id) {
-            foreach (BulguHavuzu::aksiyonlar($id) as $a) {
-                if (! $a['acik'] || ! $a['termin']) {
-                    continue;
-                }
-                $termin = $a['termin']->copy()->startOfDay();
-                if ($termin->lt($bugun)) {
-                    $geciken++;
-                } elseif ($termin->lte($sinir)) {
-                    $yaklasan++;
-                }
-            }
-        }
-
-        return ['geciken' => $geciken, 'yaklasan' => $yaklasan, 'url' => HizliSahaBulgusu::getUrl()];
+        return [
+            'geciken' => $ozet['gecikmis'],
+            'yaklasan' => $ozet['yaklasan'],
+            'moduller' => $gorevler->where('durum', 'gecikmis')->countBy('modul')->sortDesc()->all(),
+            'url' => '#gorev-panosu',
+        ];
     }
 }

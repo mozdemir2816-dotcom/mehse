@@ -89,7 +89,7 @@ class AylikPlanGerceklesmeTest extends TestCase
         $this->ziyaretler($a, [['2026-10-20', 'planlandi']]);
 
         Livewire::test(BuAyZiyaretlerWidget::class)
-            ->assertSee('ziyaret planlanmamış 1 firma')
+            ->assertSee('Ziyaret planlanmamış 1 firma')   // 02.11.2026: tek satır
             ->assertSee('Unutulan Firma')
             ->assertSee('/ziyaret-programi?firma=', false);
     }
@@ -118,7 +118,8 @@ class AylikPlanGerceklesmeTest extends TestCase
         $this->ziyaretler($firma, [['2026-10-03', 'tamamlandi'], ['2026-09-05', 'planlandi']]);
 
         $widget = Livewire::test(BuAyZiyaretlerWidget::class)
-            ->assertSee('gitmeniz gereken')->assertSee('%100');
+            ->assertSee('Gidilen firma')->assertSee('1 / 1')->assertSee('%100')   // 02.11.2026: firma düğme yığını kaldırıldı, sayaçta
+            ->assertDontSee('gitmeniz gereken')->assertDontSee('Eksik saha süresi');
 
         $widget->call('ayDegistir', -1);
         $oz = $widget->instance()->ziyaretOzeti();
@@ -135,6 +136,6 @@ class AylikPlanGerceklesmeTest extends TestCase
     public function test_ziyaret_yoksa_bilgi_mesaji(): void
     {
         Livewire::test(BuAyZiyaretlerWidget::class)
-            ->assertSee('tarihi girilmiş firma ziyareti yok');
+            ->assertSee('Bu ay için planlanan ziyaret bulunmuyor.');
     }
 }

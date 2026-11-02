@@ -85,6 +85,28 @@ class GorevDurumu
         return (int) config('isg.ana_sayfa.yaklasan_gun', 14);
     }
 
+    /** Ana sayfa kokpiti ve görev panosunun paylaştığı kısa süreli önbellek (saniye). */
+    public const ONBELLEK_SN = 120;
+
+    /**
+     * Ana sayfa için görevler: kokpitteki "Kritik Görevler" kartı ile görev panosu aynı listeyi okur
+     * (02.11.2026: kart 9 / pano 2 gösteriyordu). Hesap ~1,3 sn sürdüğü için sayfa başına bir kez yapılır.
+     */
+    public static function gorevlerOnbellekli(User $kullanici): Collection
+    {
+        return \Illuminate\Support\Facades\Cache::remember(static::onbellekAnahtari($kullanici), static::ONBELLEK_SN, fn () => static::gorevler($kullanici));
+    }
+
+    public static function onbellegiTemizle(User $kullanici): void
+    {
+        \Illuminate\Support\Facades\Cache::forget(static::onbellekAnahtari($kullanici));
+    }
+
+    private static function onbellekAnahtari(User $kullanici): string
+    {
+        return 'ana-sayfa-gorevler:'.$kullanici->id;
+    }
+
     /**
      * @return Collection<int, array{firma_id: int, firma: string, baslik: string, aciklama: string, dayanak: ?string, termin: ?Carbon, durum: string, modul: string, url: ?string}>
      */

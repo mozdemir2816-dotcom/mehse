@@ -1869,3 +1869,8 @@ a.mehse-kokpit-kart:hover {
 
 html[data-mehse-tema="saha"] .mehse-kokpit-kart { border-radius: 3px; }
 html[data-mehse-tema="windows11"] .mehse-kokpit-kart { border-radius: 6px; }
+
+/* Ziyaret takvimi (02.11.2026): geniş ekranda takvim + ziyaret kartları yan yana, dar ekranda alt alta. */
+@media (max-width: 820px) {
+    .mehse-ziyaret-izgara { grid-template-columns: minmax(0, 1fr) !important; }
+}

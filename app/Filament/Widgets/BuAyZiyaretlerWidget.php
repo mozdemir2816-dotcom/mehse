@@ -236,7 +236,7 @@ class BuAyZiyaretlerWidget extends Widget
 
     private function yenile(): void
     {
-        unset($this->ayinZiyaretleri, $this->ziyaretOzeti, $this->ayOzeti, $this->sureEksikleri, $this->takvimGunleri, $this->tamamlananSayisi);
+        unset($this->ayinZiyaretleri, $this->ziyaretOzeti, $this->ayOzeti, $this->takvimGunleri, $this->tamamlananSayisi);
     }
 
     /** Planlanmış ama tarihi geçmiş ve tamamlanmamış ziyaret. */
@@ -268,54 +268,5 @@ class BuAyZiyaretlerWidget extends Widget
             'tamamlanan' => $tamamlanan,
             'gecikmis' => $gecikmis,
         ];
-    }
-
-    /**
-     * Eksik saha süresi — aktif firmalarda gereken aylık İGU süresi (çalışan ×
-     * tehlike sınıfı dakikası) ile o ay tamamlanan + planlanan ziyaret
-     * sürelerinin farkı. Yalnız eksiği olan firmalar döner; "plan_var" = ayın
-     * kalan günlerinde tamamlanmamış ziyaret var mı.
-     *
-     * @return array<int, array{firma_id: int, firma: string, calisan: int, gerekli: int, yapilan: int, planli: int, eksik: int, plan_var: bool}>
-     */
-    #[Computed]
-    public function sureEksikleri(): array
-    {
-        $bugun = now()->toDateString();
-        $ziyaretler = collect($this->gunlukGruplar)
-            ->filter(fn ($_, string $tarih) => str_starts_with($tarih, $this->gosterilenAy))
-            ->flatMap(fn (array $gun, string $tarih) => collect($gun)->map(fn (array $z) => $z + ['tarih' => $tarih]))
-            ->filter(fn (array $z) => $z['firma'])
-            ->groupBy(fn (array $z) => $z['firma']->id);
-
-        $dk = fn ($liste) => (int) round(collect($liste)->sum(fn (array $z) => (float) str_replace(',', '.', (string) ($z['sure_saat'] ?? 0))) * 60);
-
-        return \App\Models\Firma::query()
-            ->where('user_id', Filament::auth()->id())
-            ->where('aktif', true)
-            ->where(fn ($q) => $q->where('calisan_sayisi', '>', 0)->orWhere('katip_aylik_dk', '>', 0))
-            ->orderBy('unvan')
-            ->get(['id', 'unvan', 'calisan_sayisi', 'tehlike_sinifi', 'katip_aylik_dk'])
-            ->map(function (\App\Models\Firma $f) use ($ziyaretler, $dk, $bugun): array {
-                $z = $ziyaretler->get($f->id, collect());
-                $gerekli = $f->iguAylikDk();
-                $yapilan = $dk($z->where('durum', 'tamamlandi'));
-                $planli = $dk($z->where('durum', '!=', 'tamamlandi')->filter(fn (array $x) => $x['tarih'] >= $bugun));
-
-                return [
-                    'firma_id' => $f->id,
-                    'firma' => $f->unvan,
-                    'calisan' => (int) $f->calisan_sayisi,
-                    'gerekli' => $gerekli,
-                    'yapilan' => $yapilan,
-                    'planli' => $planli,
-                    'eksik' => max(0, $gerekli - $yapilan - $planli),
-                    'plan_var' => $z->contains(fn (array $x) => $x['durum'] !== 'tamamlandi' && $x['tarih'] >= $bugun),
-                ];
-            })
-            ->filter(fn (array $s) => $s['eksik'] > 0)
-            ->sortByDesc('eksik')
-            ->values()
-            ->all();
     }
 }

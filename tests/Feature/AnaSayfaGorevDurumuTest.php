@@ -99,8 +99,13 @@ class AnaSayfaGorevDurumuTest extends TestCase
         $w = Livewire::test(GorevDurumuWidget::class)
             ->assertSee('Hızlı çalışma akışları')
             ->assertDontSee('Aylık görevlendirme süresi')   // 02.11.2026: kokpite (HosGeldinWidget) taşındı
-            ->assertSee('Alfa Yapı')
+            ->assertDontSee('Görev durumu')                 // 02.11.2026: başlık bandı kaldırıldı
+            ->assertSee('Öncelikli')->assertSee('Yapılmayanlar')->assertSee('Yapılanlar')
             ->assertDontSee('Başkasının Firması');
+
+        // Varsayılan sekme yalnız günü geçen + yaklaşan; yapılmayanlar sekmesinde firma görevleri görünür.
+        $w->assertSet('pano', 'kritik')->call('panoSec', 'yapilmayan')->assertSee('Alfa Yapı')->assertDontSee('Başkasının Firması');
+        $w->call('panoSec', 'kritik');
 
         $w->set('arama', 'beta');
         $this->assertTrue($w->instance()->gorevler->isNotEmpty());

@@ -1,4 +1,4 @@
-<x-filament-widgets::widget class="mehse-mobilde-gizle">
+<x-filament-widgets::widget class="mehse-mobilde-gizle" id="gorev-panosu">
     @php
         $o = $this->ozet;
         $sure = $this->sure;
@@ -15,9 +15,9 @@
         $saatDk = fn (int $dk) => \App\Support\GorevDurumu::saatDk($dk);
     @endphp
 
-    <x-filament::section icon="heroicon-o-shield-check" icon-color="primary">
-        <x-slot name="heading">Görev durumu</x-slot>
-        {{-- 02.11.2026: kullanıcı / unvan satırı ve İSG-KATİP kapasite kartı ana sayfa kokpitine taşındı (HosGeldinWidget). --}}
+    {{-- 02.11.2026: "Görev durumu" başlık bandı kaldırıldı; kullanıcı / unvan satırı ve İSG-KATİP kapasite kartı
+         ana sayfa kokpitine (HosGeldinWidget) taşındı. Pano sekmeli: varsayılan yalnız günü geçen + yaklaşan. --}}
+    <x-filament::section>
 
         {{-- Hızlı çalışma akışları --}}
         <div style="{{ $kart }};margin-bottom:1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem">
@@ -62,16 +62,36 @@
             </div>
         @endif
 
-        {{-- Dört sütunlu pano --}}
+        {{-- Pano sekmeleri --}}
+        @php
+            $sekmeler = [
+                'kritik' => ['Öncelikli', $o['gecikmis'] + $o['yaklasan'], 'rgb(220 38 38)'],
+                'yapilmayan' => ['Yapılmayanlar', $o['yapilmayan'], 'rgb(71 85 105)'],
+                'yapilan' => ['Yapılanlar', $o['yapilan'], 'rgb(21 128 61)'],
+            ];
+            $gorunen = $pano === 'kritik' ? ['gecikmis', 'yaklasan'] : [$pano];
+            $tekSutun = count($gorunen) === 1;
+        @endphp
+        <div role="tablist" style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.7rem;border-bottom:1px solid rgb(107 114 128 / .2)">
+            @foreach ($sekmeler as $anahtar => [$ad, $sayi, $renk])
+                @php $aktif = $pano === $anahtar; @endphp
+                <button type="button" role="tab" aria-selected="{{ $aktif ? 'true' : 'false' }}" wire:click="panoSec('{{ $anahtar }}')"
+                        style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .8rem;margin-bottom:-1px;border:none;border-bottom:2px solid {{ $aktif ? $renk : 'transparent' }};background:transparent;cursor:pointer;font-size:.82rem;font-weight:{{ $aktif ? 700 : 600 }};color:{{ $aktif ? $renk : 'rgb(100 116 139)' }}">
+                    {{ $ad }}
+                    <span style="font-size:.7rem;font-weight:700;padding:.02rem .45rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 12%, transparent);color:{{ $renk }}">{{ $sayi }}</span>
+                </button>
+            @endforeach
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem">
-            @foreach ($sutunlar as $durum => [$baslik, $ikon, $renk, $zemin])
+            @foreach (array_intersect_key($sutunlar, array_flip($gorunen)) as $durum => [$baslik, $ikon, $renk, $zemin])
                 @php $liste = $gorevler->where('durum', $durum); @endphp
-                <div style="border:1px solid color-mix(in srgb, {{ $renk }} 28%, transparent);border-radius:.75rem;background:{{ $zemin }};padding:.6rem;display:flex;flex-direction:column;height:420px">
+                <div style="border:1px solid color-mix(in srgb, {{ $renk }} 28%, transparent);border-radius:.75rem;background:{{ $zemin }};padding:.6rem;display:flex;flex-direction:column;max-height:{{ $tekSutun ? '560px' : '420px' }}">
                     <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;color:{{ $renk }};font-size:.88rem;padding:.1rem .2rem .5rem">
                         <span style="display:flex;align-items:center;gap:.3rem"><x-filament::icon :icon="$ikon" style="width:1rem;height:1rem" /> {{ $baslik }}</span>
                         <span style="font-size:.72rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 14%, transparent)">{{ $liste->count() }}</span>
                     </div>
-                    <div style="overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;min-height:0">
+                    <div style="overflow-y:auto;min-height:0;gap:.5rem;{{ $tekSutun ? 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));align-items:start' : 'display:flex;flex-direction:column' }}">
                         @forelse ($liste->take(60) as $g)
                             <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.6rem .7rem;box-shadow:0 1px 2px rgb(15 23 42 / .05)">
                                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem">
@@ -96,7 +116,7 @@
                                 @endif
                             </div>
                         @empty
-                            <div style="font-size:.78rem;color:rgb(107 114 128);padding:.3rem">Görev yok.</div>
+                            <div style="font-size:.78rem;color:rgb(107 114 128);padding:.3rem">{{ $durum === 'gecikmis' ? 'Günü geçen görev yok.' : ($durum === 'yaklasan' ? 'Yaklaşan görev yok.' : 'Görev yok.') }}</div>
                         @endforelse
                         @if ($liste->count() > 60)
                             <div style="font-size:.75rem;color:rgb(107 114 128);padding:.3rem">… ve {{ $liste->count() - 60 }} görev daha — firma adıyla arayın ya da durum raporunu indirin.</div>

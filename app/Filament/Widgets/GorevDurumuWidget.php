@@ -31,6 +31,9 @@ class GorevDurumuWidget extends Widget
 
     public string $arama = '';
 
+    /** Pano sekmesi: kritik (günü geçen + yaklaşan, varsayılan) | yapilmayan | yapilan. */
+    public string $pano = 'kritik';
+
     private function kullanici(): User
     {
         /** @var User */
@@ -41,7 +44,7 @@ class GorevDurumuWidget extends Widget
     #[Computed]
     public function tumGorevler(): Collection
     {
-        return GorevDurumu::gorevler($this->kullanici());
+        return GorevDurumu::gorevlerOnbellekli($this->kullanici());
     }
 
     /** @return Collection<int, array<string, mixed>> */
@@ -83,8 +86,14 @@ class GorevDurumuWidget extends Widget
         ];
     }
 
+    public function panoSec(string $pano): void
+    {
+        $this->pano = in_array($pano, ['kritik', 'yapilmayan', 'yapilan'], true) ? $pano : 'kritik';
+    }
+
     public function yenile(): void
     {
+        GorevDurumu::onbellegiTemizle($this->kullanici());
         unset($this->tumGorevler, $this->gorevler, $this->ozet, $this->sure);
     }
 

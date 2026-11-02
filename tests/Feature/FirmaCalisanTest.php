@@ -66,6 +66,10 @@ class FirmaCalisanTest extends TestCase
         Firma::factory()->create(['aktif' => true]); // başka uzmanın firması
         \App\Models\SahaBulgusu::create(['firma_id' => $firma->id, 'uygunsuzluk' => 'Korkuluk eksik', 'termin' => now()->subDays(3)]);
 
+        // Kokpit kartı = görev panosunun "Günü geçen" / "Yaklaşan" sayısı (aynı liste; 02.11.2026: 9 ↔ 2 uyuşmazlığı)
+        $pano = \App\Support\GorevDurumu::ozet(\App\Support\GorevDurumu::gorevler($this->uzman));
+        $this->assertGreaterThanOrEqual(1, $pano['gecikmis']);
+
         Livewire::test(\App\Filament\Widgets\HosGeldinWidget::class)
             ->assertSee('Aktif Portföy')
             ->assertSeeHtml('1 <small>firma</small>')
@@ -73,7 +77,9 @@ class FirmaCalisanTest extends TestCase
             ->assertSee('İSG-KATİP Kapasitesi')
             ->assertSeeHtml('1 <small>geciken sözleşme</small>')
             ->assertSee('Yenileme gerekli')
-            ->assertSeeHtml('1 <small>günü geçen</small>')
+            ->assertSeeHtml($pano['gecikmis'].' <small>günü geçen</small>')
+            ->assertSeeHtml($pano['yaklasan'].' <small>yaklaşan</small>')
+            ->assertSee('Risk ve DÖF: 1')
             ->assertSee('Acil Durum / Kroki')
             ->assertSee('az tehlikeli 10');   // KATİP formülü yalnız ipucunda
     }

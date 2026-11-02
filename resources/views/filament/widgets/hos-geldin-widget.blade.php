@@ -76,10 +76,18 @@
             </span>
         </a>
 
-        <a href="{{ $dof['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $dof['geciken'] ? '#E11D48' : ($dof['yaklasan'] ? '#D97706' : '#059669') }}">
-            <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-exclamation-triangle" />Kritik DÖF / Saha</span>
-            <span class="mehse-kokpit-kart-deger">{{ $dof['geciken'] }} <small>günü geçen</small> <span class="mehse-kokpit-ayrac">/</span> {{ $dof['yaklasan'] }} <small>yaklaşan</small></span>
-            <span class="mehse-kokpit-kart-alt">{{ $dof['geciken'] || $dof['yaklasan'] ? 'DÖF takip listesine git →' : 'Açık termin sorunu yok' }}</span>
+        {{-- Görev panosuyla aynı liste: sayılar panodaki "Günü geçen" / "Yaklaşan" ile birebir aynıdır --}}
+        <a href="{{ $kritik['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $kritik['geciken'] ? '#E11D48' : ($kritik['yaklasan'] ? '#D97706' : '#059669') }}"
+           title="Görev panosundaki Günü geçen / Yaklaşan sütunlarıyla aynı sayım (firma başına görev)">
+            <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-exclamation-triangle" />Kritik Görevler (DÖF / Saha)</span>
+            <span class="mehse-kokpit-kart-deger">{{ $kritik['geciken'] }} <small>günü geçen</small> <span class="mehse-kokpit-ayrac">/</span> {{ $kritik['yaklasan'] }} <small>yaklaşan</small></span>
+            <span class="mehse-kokpit-kart-alt">
+                @forelse ($kritik['moduller'] as $modul => $sayi)
+                    <span class="mehse-kokpit-hap kotu">{{ $modul }}: {{ $sayi }}</span>
+                @empty
+                    {{ $kritik['yaklasan'] ? 'Görev panosuna in ↓' : 'Termini geçen görev yok' }}
+                @endforelse
+            </span>
         </a>
     </div>
 </x-filament-widgets::widget>

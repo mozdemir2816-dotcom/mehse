@@ -142,30 +142,28 @@ class BuAyZiyaretlerWidgetTest extends TestCase
         \Illuminate\Support\Carbon::setTestNow();
     }
 
-    public function test_eksik_saha_suresi_calisan_ve_tehlike_sinifina_gore(): void
+    /**
+     * 02.11.2026: "Eksik saha süresi — plan önerisi" tablosu ve süre uyarısı kaldırıldı. O ayın takviminde
+     * planı olan firmaya (süresi az olsa da) uyarı verilmez; yalnız takvimde HİÇ kaydı olmayan firma
+     * "Ziyaret planlanmamış" satırında görünür.
+     */
+    public function test_plani_olan_firmaya_sure_uyarisi_verilmez_yalniz_plansiz_firma_gorunur(): void
     {
         \Illuminate\Support\Carbon::setTestNow('2026-10-15 10:00');
 
-        // Çok tehlikeli, 10 çalışan → 400 dk gerekli; 2 saat yapıldı + 3 saat planlı = 300 dk → 100 eksik, plan var
-        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'A Firma', 'tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 10]);
-        $this->ekimZiyaretleri($a, [['2026-10-05', 'tamamlandi', 2], ['2026-10-22', 'planlandi', 3]]);
+        // Çok tehlikeli 10 çalışan (400 dk gerekir) ama yalnız 1 saatlik planı var → uyarı YOK
+        $a = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planlı Az Süreli', 'tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 10]);
+        $this->ekimZiyaretleri($a, [['2026-10-22', 'planlandi', 1]]);
+        // Takvimde hiç kaydı yok → planlanmamış
+        Firma::factory()->for($this->uzman)->create(['unvan' => 'Takvimde Yok', 'tehlike_sinifi' => 'tehlikeli', 'calisan_sayisi' => 3]);
 
-        // Tehlikeli, 3 çalışan → 60 dk; hiç ziyaret yok → 60 eksik, plan yok
-        Firma::factory()->for($this->uzman)->create(['unvan' => 'B Firma', 'tehlike_sinifi' => 'tehlikeli', 'calisan_sayisi' => 3]);
+        $w = Livewire::test(BuAyZiyaretlerWidget::class);
+        $this->assertSame(['Takvimde Yok'], array_column($w->instance()->ziyaretOzeti['plansiz'], 'firma'));
+        $this->assertFalse(method_exists($w->instance(), 'sureEksikleri'));
 
-        // Az tehlikeli, 6 çalışan → 60 dk; 1 saat tamamlandı → eksik yok (listede çıkmaz)
-        $c = Firma::factory()->for($this->uzman)->create(['unvan' => 'C Firma', 'tehlike_sinifi' => 'az_tehlikeli', 'calisan_sayisi' => 6]);
-        $this->ekimZiyaretleri($c, [['2026-10-02', 'tamamlandi', 1]]);
-
-        // Pasif firma ve başkasının firması sayılmaz
-        Firma::factory()->for($this->uzman)->create(['aktif' => false, 'tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 50]);
-        Firma::factory()->for(User::factory()->create())->create(['tehlike_sinifi' => 'cok_tehlikeli', 'calisan_sayisi' => 50]);
-
-        $eksik = Livewire::test(BuAyZiyaretlerWidget::class)->instance()->sureEksikleri;
-
-        $this->assertSame(['A Firma', 'B Firma'], array_column($eksik, 'firma'));
-        $this->assertSame([400, 120, 180, 100, true], [$eksik[0]['gerekli'], $eksik[0]['yapilan'], $eksik[0]['planli'], $eksik[0]['eksik'], $eksik[0]['plan_var']]);
-        $this->assertSame([60, 60, false], [$eksik[1]['gerekli'], $eksik[1]['eksik'], $eksik[1]['plan_var']]);
+        $w->assertSee('Ziyaret planlanmamış 1 firma')
+            ->assertDontSee('Eksik saha süresi')->assertDontSee('Eksik süre')->assertDontSee('saha süresi eksik')
+            ->assertDontSee('gitmeniz gereken');
         \Illuminate\Support\Carbon::setTestNow();
     }
 
