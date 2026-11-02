@@ -6521,6 +6521,103 @@ return [
             'sabotaj_guvenlik' => ['ad' => 'Sabotaj/Güvenlik Tehdidi Tatbikatı', 'sure_dk' => '30-45', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde, {yer} bölümünde sahipsiz şüpheli bir paket bulunduğu ve telefonla sabotaj / bomba ihbarı alındığı senaryosu kurgulanmıştır. İhbarı alan personel arayanın söylediklerini, ses özelliklerini ve saatini ihbar formuna not etmiş; şüpheli pakete dokunulmamış, yerinden oynatılmamış ve yakınında telsiz / cep telefonu kullanılmamıştır. Koordinatörün talimatıyla alan geniş bir güvenlik çemberiyle boşaltılmış, çalışanlar şüpheli paketin bulunduğu güzergâhtan uzak çıkışlar kullanılarak {toplanma} toplanma alanına tahliye edilmiştir. 155 Polis İmdat aranarak ihbar simüle edilmiş, koruma ekibi bina girişlerini kontrol altına almış ve yetkililer alanı güvenli ilan edene kadar binaya dönülmemiştir.'],
             'gida_zehirlenmesi' => ['ad' => 'Gıda Zehirlenmesi Tatbikatı', 'sure_dk' => '45-60', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde öğle yemeğinin ardından {yer} bölümünde birden fazla çalışanda bulantı, kusma ve karın ağrısı şikâyetleri başladığı, toplu gıda zehirlenmesinden şüphelenildiği senaryosu kurgulanmıştır. Durumu bildiren bölüm sorumlusunun ardından ilk yardım ekibi etkilenen çalışanları tespit ederek sakin ve havadar bir alana almış, yaşamsal bulgularını takip etmiş ve sıvı kaybına karşı önlem almıştır. 112 aranarak etkilenen kişi sayısı ve belirtiler bildirilmiş, işyeri hekimi bilgilendirilmiş, yemekhane servisi durdurularak şüpheli yemeklerden numune (şahit numune) muhafaza altına alınmıştır. Etkilenen çalışanların listesi çıkarılarak sağlık kuruluşuna sevkleri ve yemek firması ile iletişim süreci uygulanmıştır.'],
         ],
+        // Çoklu / bileşik tatbikat (02.11.2026). Sıra = olayların birbirini tetikleme sırası; seçilen
+        // senaryolar bu sırayla birleştirilir. {tetik}: ilk olayda 'İlk olarak ', sonrakilerde '<önceki> sonrası '.
+        'bilesik' => [
+            'deprem' => [
+                'kisa' => 'Deprem', 'baslik' => 'Sarsıntı anı (Çök – Kapan – Tutun)',
+                'ekipler' => ['kurtarma', 'ilk_yardim', 'koruma'],
+                'sorular' => [
+                    'Sarsıntı anında "Çök – Kapan – Tutun" hareketi doğru uygulandı mı?',
+                    'Sarsıntı sonrası elektrik / gaz ana kesme noktaları kapatıldı mı?',
+                    'Kurtarma ekibi bölümlerde kalan / mahsur personel kontrolünü yaptı mı?',
+                ],
+                'asama' => 'Çalışma saatleri içinde büyük bir deprem meydana geldiği varsayılmış, sarsıntı anons / sesli uyarı ile başlatılmıştır. Çalışanlar makinelerden, camlardan ve devrilebilecek raf ve dolaplardan uzaklaşarak "ÇÖK – KAPAN – TUTUN" hareketini uygulamış, sarsıntı süresince yerlerinden ayrılmamıştır. Sarsıntının bitimiyle makineler durdurulmuş, elektrik ve doğalgaz ana kesme noktaları kapatılmıştır.',
+            ],
+            'sel_su_baskini' => [
+                'kisa' => 'Su baskını', 'baslik' => 'Su baskını',
+                'ekipler' => ['kurtarma', 'koruma'],
+                'sorular' => [
+                    'Su baskınında etkilenen alanların elektriği kesildi ve malzemeler yükseğe alındı mı?',
+                ],
+                'asama' => '{tetik}{yer} bölümünde ve alçak kotlu alanlarda su baskını yaşandığı varsayılmıştır. Etkilenen alanların elektrik beslemesi ana panodan kesilmiş, kritik malzeme ve kimyasallar yüksek alanlara taşınmış, akıntılı sudan geçilmemesi konusunda uyarı yapılmıştır.',
+            ],
+            'sabotaj_guvenlik' => [
+                'kisa' => 'Güvenlik tehdidi', 'baslik' => 'Şüpheli paket / sabotaj ihbarı',
+                'ekipler' => ['koruma'],
+                'sorular' => [
+                    'Şüpheli pakete dokunulmadan alan güvenlik çemberiyle boşaltıldı mı?',
+                ],
+                'asama' => '{tetik}{yer} bölümünde sahipsiz şüpheli bir paket bulunduğu ve sabotaj ihbarı alındığı varsayılmıştır. Pakete dokunulmamış, yakınında telsiz / cep telefonu kullanılmamış, alan geniş bir güvenlik çemberiyle boşaltılmış ve 155 Polis İmdat aranarak ihbar simüle edilmiştir.',
+            ],
+            'dogalgaz_lpg' => [
+                'kisa' => 'Gaz kaçağı', 'baslik' => 'Doğalgaz / LPG kaçağı',
+                'ekipler' => ['sondurme', 'koruma'],
+                'sorular' => [
+                    'Gaz ana kesme vanası hızla kapatıldı ve kıvılcım kaynaklarından kaçınıldı mı?',
+                ],
+                'asama' => '{tetik}{yer} bölümünde yoğun gaz kokusu alınmış ve doğalgaz / LPG kaçağından şüphelenilmiştir. Kıvılcım çıkarabilecek anahtar ve cihazlara dokunulmadan gaz ana kesme vanası kapatılmış, kapı ve pencereler açılarak havalandırma sağlanmış, ihbar (187 / 112) güvenli alandan yapılmıştır.',
+            ],
+            'elektrik_yangini' => [
+                'kisa' => 'Elektrik yangını', 'baslik' => 'Elektrik panosu yangını ve enerji izolasyonu',
+                'ekipler' => ['sondurme', 'kurtarma', 'koruma', 'ilk_yardim'],
+                'sorular' => [
+                    'Söndürme ekibi uygun söndürücüye (CO₂) hızla ulaştı ve doğru kullandı mı?',
+                    'Enerji kesilmeden enerjili ekipmana su ile müdahale edilmemesi kuralına uyuldu mu?',
+                ],
+                'asama' => '{tetik}{yer} bölümündeki elektrik panosunda yangın başladığı varsayılmıştır. Yetkili personel ilgili bölümün ve gerekirse ana şalterin enerjisini kesmiş; söndürme ekibi enerjili ekipmana su ile müdahale etmeden karbondioksitli (CO₂) söndürücüyle ilk müdahaleyi yapmış, 112 aranarak itfaiyeye ihbar simüle edilmiştir.',
+            ],
+            'yangin' => [
+                'kisa' => 'Yangın', 'baslik' => 'Yangın ve duman — söndürme ekibi müdahalesi ve enerji izolasyonu',
+                'ekipler' => ['sondurme', 'kurtarma', 'koruma', 'ilk_yardim'],
+                'sorular' => [
+                    'Söndürme ekibi en yakın uygun söndürücüye hızla ulaştı ve doğru kullandı mı?',
+                    'Enerji izolasyonu (ana elektrik şalteri / gaz vanası) sağlandı mı?',
+                    'Dumanlı ortamda çalışanlar eğilerek ve ağız-burun kapatılarak ilerledi mi?',
+                ],
+                'asama' => '{tetik}{yer} bölümünde yangın çıkmış ve ortam dumanla dolmaya başlamıştır. Yangını fark eden çalışan "YANGIN VAR" diye bağırarak ihbar butonuna basmış, alarm tüm işyerinde duyurulmuştur. Söndürme ekibi en yakın uygun söndürücüyle (KKT / CO₂) ilk müdahaleyi yapmış, ana elektrik şalteri ve gaz vanası kapatılarak enerji izolasyonu sağlanmış, 112 aranarak itfaiyeye ihbar simüle edilmiştir. Koruma ekibi bina girişlerini kontrol altına alarak itfaiyenin ulaşım yolunu açık tutmuştur.',
+            ],
+            'kimyasal_dokulme' => [
+                'kisa' => 'Kimyasal sızıntı', 'baslik' => 'Kimyasal dökülme / sızıntı',
+                'ekipler' => ['sondurme', 'kurtarma', 'ilk_yardim'],
+                'sorular' => [
+                    'Dökülme kiti ve uygun KKD kullanılarak yayılma durduruldu mu?',
+                    'Müdahalede Güvenlik Bilgi Formu (GBF) esas alındı mı?',
+                ],
+                'asama' => '{tetik}{yer} bölümünde kimyasal madde bulunan bir kabın devrilerek döküldüğü ve ortama buhar yayıldığı varsayılmıştır. Güvenlik Bilgi Formu (GBF) esas alınarak müdahale ekibi uygun KKD ile dökülme kitini kullanmış, alan şeritle izole edilmiş ve havalandırma sağlanmıştır.',
+            ],
+            'gida_zehirlenmesi' => [
+                'kisa' => 'Gıda zehirlenmesi', 'baslik' => 'Toplu gıda zehirlenmesi şüphesi',
+                'ekipler' => ['ilk_yardim'],
+                'sorular' => [
+                    'Yemek servisi durdurulup şahit numune muhafaza altına alındı mı?',
+                ],
+                'asama' => '{tetik}birden fazla çalışanda bulantı, kusma ve karın ağrısı şikâyetleri başlamış, toplu gıda zehirlenmesinden şüphelenilmiştir. Yemek servisi durdurulmuş, şüpheli yemeklerden şahit numune muhafaza altına alınmış ve işyeri hekimi bilgilendirilmiştir.',
+            ],
+            'ilkyardim_is_kazasi' => [
+                'kisa' => 'İlk yardım', 'baslik' => 'Yaralıya ilk yardım ve 112 bildirimi',
+                'ekipler' => ['ilk_yardim', 'koruma'],
+                'sorular' => [
+                    'İlk yardım ekibi yaralıya hızla ulaştı ve doğru müdahale etti mi?',
+                    '112 aramasında adres, yaralı sayısı ve durumu doğru bildirildi mi?',
+                ],
+                'asama' => '{tetik}bir çalışanın yaralandığı (kanamalı yaralanma / bilinç kaybı) varsayılmıştır. Ortam güvenliği sağlanarak ilk yardım ekibi yaralının bilinç ve solunum değerlendirmesini yapmış, kanamayı durdurmuş, uygun pozisyon vermiş ve 112\'ye adres, yaralı sayısı ve durumu doğru şekilde bildirilmiştir. Koruma ekibinden bir kişi ambulansı karşılamak üzere giriş kapısına yönlendirilmiştir.',
+            ],
+            'genel_tahliye' => [
+                'kisa' => 'Tahliye', 'baslik' => 'Güvenli tahliye, toplanma alanında sayım ve ilk yardım',
+                'ekipler' => ['koruma', 'kurtarma', 'ilk_yardim'],
+                'sorular' => [
+                    'Engelli / hareket kısıtlı çalışanların tahliyesine refakat edildi mi?',
+                ],
+                'asama' => 'Koordinatörün tahliye talimatıyla çalışanlar, ziyaretçiler ve alt işveren personeli asansör kullanmadan, yönlendirme levhalarını takip ederek en yakın güvenli çıkışlardan {toplanma} toplanma alanına tahliye edilmiştir. Bölüm sorumluları alanlarının boşaldığını koordinatöre bildirmiş, toplanma alanında personel listesine göre sayım yapılmış, eksik personel bilgisi kurtarma ekibine iletilmiş ve yaralı olduğu varsayılan çalışanlara ilk yardım ekibince müdahale edilmiştir. Tahliye süresi kronometre ile ölçülmüştür.',
+            ],
+        ],
+        // Hızlı seçim düğmeleri ('ozel' = seçimi temizler, uzman kendisi işaretler).
+        'kombinasyonlar' => [
+            'standart' => ['ad' => 'Standart Yangın & Tahliye', 'senaryolar' => ['yangin', 'genel_tahliye']],
+            'deprem_yangin' => ['ad' => 'Deprem Sonrası Yangın & Tahliye (Bileşik Tatbikat)', 'senaryolar' => ['deprem', 'yangin', 'genel_tahliye']],
+            'ozel' => ['ad' => 'Özel Kombinasyon', 'senaryolar' => []],
+        ],
         'degerlendirme_sorulari' => [
             'Alarm/anons tüm çalışma alanlarında duyuldu mu?',
             'Tahliye planlanan sürede tamamlandı mı?',

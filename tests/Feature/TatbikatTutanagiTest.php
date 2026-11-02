@@ -453,7 +453,67 @@ class TatbikatTutanagiTest extends TestCase
         ]);
         $html = view('pdf.tatbikat-tutanagi', ['tutanak' => $eski, 'firma' => $firma])->render();
         $this->assertStringContainsString('Kısa Metin Ltd. işyerinde', $html);
-        $this->assertStringContainsString('Söndürme Ekibi görev almalıdır', $html);
+        $this->assertStringContainsString('Söndürme Ekibi, Kurtarma Ekibi, Koruma Ekibi, İlk Yardım Ekibi görev almalıdır', $html);
         $this->assertStringNotContainsString('Fotoğraf 1', $html);
+    }
+
+    public function test_bilesik_deprem_yangin_tahliye_tatbikati(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Bileşik A.Ş.', 'adres' => 'Nilüfer / Bursa']);
+        \App\Support\AcilEkipDurumu::temelEkipleriOlustur($firma);
+        foreach (['sondurme' => 'Söndüren Kişi', 'kurtarma' => 'Kurtaran Kişi', 'ilk_yardim' => 'İlkyardımcı Kişi'] as $tur => $ad) {
+            \App\Models\AcilEkip::where('firma_id', $firma->id)->where('tur', $tur)->first()->uyeler()->create(['ad_soyad' => $ad]);
+        }
+
+        $sayfa = Livewire::test(TatbikatSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->call('degerlendirmeCevapla', 0, 'evet')
+            ->set('yeniOzelSoru', 'Jeneratör devreye girdi mi?')->call('ozelSoruEkle')
+            ->call('hazirKombinasyon', 'deprem_yangin')
+            ->assertSet('secilenSenaryolar', ['deprem', 'yangin', 'genel_tahliye'])
+            ->assertSet('senaryoAnahtari', 'deprem,yangin,genel_tahliye')
+            ->assertSet('hedefTahliyeDk', 5);
+
+        $metin = $sayfa->get('senaryoMetni');
+        $this->assertStringContainsString('Bileşik A.Ş. (Nilüfer / Bursa) işyerinde, birbirini tetikleyen', $metin);
+        $this->assertStringContainsString('Senaryo akışı: Deprem → Yangın → Tahliye.', $metin);
+        $this->assertStringContainsString('1. Sarsıntı anı (Çök – Kapan – Tutun):', $metin);
+        $this->assertStringContainsString('2. Yangın ve duman — söndürme ekibi müdahalesi ve enerji izolasyonu: Deprem sonrası ilgili bölümünde yangın', $metin);
+        $this->assertStringContainsString('3. Güvenli tahliye, toplanma alanında sayım ve ilk yardım:', $metin);
+
+        // Kontrol listesi: genel + seçili senaryoların kritik soruları; cevap ve özel soru korunur.
+        $sorular = array_column($sayfa->get('degerlendirmeler'), 'soru');
+        $this->assertContains('Sarsıntı anında "Çök – Kapan – Tutun" hareketi doğru uygulandı mı?', $sorular);
+        $this->assertContains('Söndürme ekibi en yakın uygun söndürücüye hızla ulaştı ve doğru kullandı mı?', $sorular);
+        $this->assertContains('Tahliye planlanan sürede tamamlandı mı?', $sorular);
+        $this->assertContains('Jeneratör devreye girdi mi?', $sorular);
+        $this->assertSame('evet', $sayfa->get('degerlendirmeler')[0]['cevap']);
+
+        // Ekipler: söndürme + kurtarma + ilk yardım firmadan geldi; koruma tanımlı değil.
+        $ekipler = collect($sayfa->get('ekipler'));
+        $this->assertSame(['Söndürme Ekibi', 'Kurtarma Ekibi', 'İlk Yardım Ekibi'], $ekipler->pluck('ekip')->unique()->values()->all());
+
+        // Deprem çıkarılınca tek senaryoya döner; deprem soruları kalkar, özel soru kalır.
+        $sayfa->call('senaryoSec', 'deprem');
+        $this->assertSame('Bileşik Acil Durum Tatbikatı (Yangın ve Tahliye)', TatbikatTutanagi::senaryoBasligi($sayfa->get('secilenSenaryolar')));
+        $this->assertNotContains('Sarsıntı anında "Çök – Kapan – Tutun" hareketi doğru uygulandı mı?', array_column($sayfa->get('degerlendirmeler'), 'soru'));
+        $this->assertContains('Jeneratör devreye girdi mi?', array_column($sayfa->get('degerlendirmeler'), 'soru'));
+        $sayfa->call('senaryoSec', 'deprem')->set('tahliyeDk', 4)->callAction('kaydet');
+
+        $t = TatbikatTutanagi::where('firma_id', $firma->id)->firstOrFail();
+        $this->assertSame('deprem,yangin,genel_tahliye', $t->senaryo_anahtari);
+        $this->assertTrue($t->bilesikMi());
+        $this->assertSame('Bileşik Acil Durum Tatbikatı (Deprem ve İkincil Yangın)', $t->senaryoEtiketi());
+        $this->assertSame('BİLEŞİK ACİL DURUM TATBİKATI (DEPREM VE İKİNCİL YANGIN)', TatbikatTutanagi::buyukHarf($t->senaryoEtiketi()));
+
+        $html = view('pdf.tatbikat-tutanagi', ['tutanak' => $t, 'firma' => $firma])->render();
+        foreach (['BİLEŞİK ACİL DURUM TATBİKATI (DEPREM VE İKİNCİL YANGIN)', 'Deprem → Yangın → Tahliye', '1. Sarsıntı anı (Çök – Kapan – Tutun):</b>',
+            'Söndüren Kişi', 'Kurtaran Kişi', 'Koruma Ekibi görev almalıdır'] as $parca) {
+            $this->assertStringContainsString($parca, $html);
+        }
+
+        // Düzenlemeye açılınca seçim geri yüklenir; Word de bileşik başlığı taşır.
+        Livewire::test(TatbikatSayfasi::class)->call('duzenle', $t->id)->assertSet('secilenSenaryolar', ['deprem', 'yangin', 'genel_tahliye']);
+        $this->assertStringContainsString('Senaryo Akışı', serialize(TatbikatTutanagiUretici::wordBelgesi($t)));
     }
 }

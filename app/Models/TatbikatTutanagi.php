@@ -45,9 +45,204 @@ class TatbikatTutanagi extends Model
         return $this->belongsTo(Firma::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Çoklu / bileşik senaryo (02.11.2026)
+    |--------------------------------------------------------------------------
+    | senaryo_anahtari tek anahtar ("yangin") ya da virgülle ayrılmış birden çok
+    | anahtar ("deprem,yangin,genel_tahliye") tutar; yeni sütun gerekmez.
+    */
+
+    /**
+     * Geçerli senaryo anahtarlarını olayların tetikleme sırasına göre döndürür.
+     *
+     * @return array<int, string>
+     */
+    public static function siraliSenaryolar(array $anahtarlar): array
+    {
+        $sira = array_flip(array_keys(config('isg.tatbikat.bilesik', [])));
+        $gecerli = array_values(array_unique(array_filter($anahtarlar, fn ($a) => is_string($a) && config('isg.tatbikat.senaryolar.'.$a))));
+        usort($gecerli, fn ($a, $b) => ($sira[$a] ?? 99) <=> ($sira[$b] ?? 99));
+
+        return $gecerli;
+    }
+
+    /** @return array<int, string> */
+    public function bilesenler(): array
+    {
+        return static::siraliSenaryolar(explode(',', (string) $this->senaryo_anahtari));
+    }
+
+    public function bilesikMi(): bool
+    {
+        return count($this->bilesenler()) > 1;
+    }
+
     public function senaryoEtiketi(): string
     {
-        return config('isg.tatbikat.senaryolar.'.$this->senaryo_anahtari.'.ad', 'Genel Tatbikat');
+        return static::senaryoBasligi($this->bilesenler());
+    }
+
+    /**
+     * Tek senaryoda kütüphanedeki ad; birden çoğunda "Bileşik Acil Durum Tatbikatı (Deprem ve İkincil Yangın)".
+     * Tahliye ve ilk yardım olay değil aşamadır: başka olay varsa başlıkta yer almaz.
+     */
+    public static function senaryoBasligi(array $anahtarlar): string
+    {
+        $anahtarlar = static::siraliSenaryolar($anahtarlar);
+
+        if (count($anahtarlar) <= 1) {
+            return config('isg.tatbikat.senaryolar.'.($anahtarlar[0] ?? '').'.ad', 'Genel Tatbikat');
+        }
+
+        $kisa = fn ($a) => static::basHarfler(config('isg.tatbikat.bilesik.'.$a.'.kisa', $a));
+        $asamalar = ['genel_tahliye', 'ilkyardim_is_kazasi'];
+        $olaylar = array_values(array_diff($anahtarlar, $asamalar));
+
+        if ($olaylar === []) {
+            $ic = implode(' ve ', array_map($kisa, $anahtarlar));
+        } elseif (count($olaylar) === 1) {
+            $ic = $kisa($olaylar[0]).' ve '.implode(' ve ', array_map($kisa, array_values(array_intersect($anahtarlar, $asamalar))));
+        } else {
+            $ic = $kisa($olaylar[0]).' ve İkincil '.implode(', ', array_map($kisa, array_slice($olaylar, 1)));
+        }
+
+        return 'Bileşik Acil Durum Tatbikatı ('.$ic.')';
+    }
+
+    /** "Gaz kaçağı" → "Gaz Kaçağı" (Türkçe i/ı korunur). */
+    private static function basHarfler(string $metin): string
+    {
+        return implode(' ', array_map(fn ($k) => static::buyukHarf(mb_substr($k, 0, 1)).mb_substr($k, 1), explode(' ', $metin)));
+    }
+
+    /** Türkçe büyük harf: i → İ, ı → I (mb_strtoupper "Tatbikatı"nı "TATBIKATI" yapıyordu). */
+    public static function buyukHarf(string $metin): string
+    {
+        return mb_strtoupper(strtr($metin, ['i' => 'İ', 'ı' => 'I']), 'UTF-8');
+    }
+
+    /** Senaryo akışı "Deprem → Yangın → Tahliye" (bileşik tatbikatta künyede gösterilir). */
+    public function senaryoAkisi(): string
+    {
+        return implode(' → ', array_map(fn ($a) => config('isg.tatbikat.bilesik.'.$a.'.kisa', $a), $this->bilesenler()));
+    }
+
+    /**
+     * Seçilen senaryoların şablon metni: tek senaryoda kütüphane metni; birden çoğunda olayların
+     * tetikleme sırasına göre numaralı aşamalarla bileşik metin. Yer tutucular senaryoMetniDoldur'da dolar.
+     */
+    public static function senaryoSablonu(array $anahtarlar): ?string
+    {
+        $anahtarlar = static::siraliSenaryolar($anahtarlar);
+
+        if (count($anahtarlar) <= 1) {
+            return config('isg.tatbikat.senaryolar.'.($anahtarlar[0] ?? '').'.metin');
+        }
+
+        $b = config('isg.tatbikat.bilesik');
+        $satirlar = ['{firma} ({adres}) işyerinde, birbirini tetikleyen olaylardan oluşan bileşik acil durum senaryosu kurgulanmıştır. Senaryo akışı: '
+            .implode(' → ', array_map(fn ($a) => $b[$a]['kisa'], $anahtarlar)).'.'];
+
+        $onceki = null;
+        foreach ($anahtarlar as $i => $a) {
+            $tetik = $onceki === null ? 'İlk olarak ' : $b[$onceki]['kisa'].' sonrası ';
+            $satirlar[] = ($i + 1).'. '.$b[$a]['baslik'].': '.str_replace('{tetik}', $tetik, $b[$a]['asama']);
+            if ($a !== 'genel_tahliye') {
+                $onceki = $a;
+            }
+        }
+
+        // Tahliye seçilmemiş olsa da bileşik tatbikat toplanma ve sayımla kapanır.
+        if (! in_array('genel_tahliye', $anahtarlar, true)) {
+            $satirlar[] = (count($anahtarlar) + 1).'. '.$b['genel_tahliye']['baslik'].': '.$b['genel_tahliye']['asama'];
+        }
+
+        return implode("\n", $satirlar);
+    }
+
+    /** Seçilen senaryoların kritik kontrol soruları (genel sorulara eklenir). */
+    public static function senaryoSorulari(array $anahtarlar): array
+    {
+        return collect(static::siraliSenaryolar($anahtarlar))
+            ->flatMap(fn ($a) => config('isg.tatbikat.bilesik.'.$a.'.sorular', []))
+            ->unique()->values()->all();
+    }
+
+    /**
+     * Seçilen senaryoların gerektirdiği acil durum ekip türleri (sondurme, kurtarma, koruma, ilk_yardim …).
+     *
+     * @return array<int, string>
+     */
+    public static function gerekenEkipTurleri(array $anahtarlar): array
+    {
+        $sira = array_keys(config('isg.acil_durum.ekip_turleri', []));
+        $turler = collect(static::siraliSenaryolar($anahtarlar))
+            ->flatMap(fn ($a) => config('isg.tatbikat.bilesik.'.$a.'.ekipler', []))->unique()->all();
+
+        return array_values(array_intersect($sira, $turler));
+    }
+
+    public static function ekipEtiketi(string $tur): string
+    {
+        return config('isg.acil_durum.ekip_turleri.'.$tur.'.ad', $tur);
+    }
+
+    /** Ekip tablosunda bu türden bir satır var mı ("Söndürme Ekibi", "söndürme" …). */
+    public static function ekipVarMi(array $ekipler, string $tur): bool
+    {
+        $kok = mb_strtolower(str_replace(' Ekibi', '', static::ekipEtiketi($tur)));
+
+        return collect($ekipler)->contains(fn ($e) => str_contains(mb_strtolower((string) ($e['ekip'] ?? '')), $kok));
+    }
+
+    /**
+     * Firmanın Acil Durum Ekipleri'ndeki üyeler, ekip türüne göre (ad soyad).
+     *
+     * @return array<string, array<int, string>>
+     */
+    public static function firmaEkipUyeleri(?Firma $firma): array
+    {
+        if (! $firma) {
+            return [];
+        }
+
+        $liste = [];
+        foreach (\App\Support\AcilEkipDurumu::ekipler($firma) as $ekip) {
+            $liste[$ekip->tur] = array_values(array_unique([...($liste[$ekip->tur] ?? []), ...$ekip->uyeler->pluck('ad_soyad')->filter()->all()]));
+        }
+
+        return $liste;
+    }
+
+    /**
+     * Ekip tablosunda olmayan gerekli ekipleri firmanın tanımlı üyeleriyle tamamlar.
+     *
+     * @return array{ekipler: array<int, array{ad_soyad: string, ekip: ?string}>, eklenen: array<int, string>, eksik: array<int, string>}
+     */
+    public static function ekipleriTamamla(array $ekipler, array $anahtarlar, ?Firma $firma): array
+    {
+        $ekipler = array_values($ekipler);
+        $uyeler = null;
+        $eklenen = $eksik = [];
+
+        foreach (static::gerekenEkipTurleri($anahtarlar) as $tur) {
+            if (static::ekipVarMi($ekipler, $tur)) {
+                continue;
+            }
+            $uyeler ??= static::firmaEkipUyeleri($firma);
+            if (($uyeler[$tur] ?? []) === []) {
+                $eksik[] = static::ekipEtiketi($tur);
+
+                continue;
+            }
+            foreach ($uyeler[$tur] as $ad) {
+                $ekipler[] = ['ad_soyad' => $ad, 'ekip' => static::ekipEtiketi($tur)];
+            }
+            $eklenen[] = static::ekipEtiketi($tur);
+        }
+
+        return ['ekipler' => $ekipler, 'eklenen' => $eklenen, 'eksik' => $eksik];
     }
 
     public function durumEtiketi(): string
@@ -107,7 +302,13 @@ class TatbikatTutanagi extends Model
     /** Hedef tahliye süresi: kayıttaki değer, yoksa senaryonun önerilen değeri. */
     public function hedefTahliyeDk(): ?int
     {
-        return $this->hedef_tahliye_dk ?: (config('isg.tatbikat.senaryolar.'.$this->senaryo_anahtari.'.hedef_tahliye_dk') ?: null);
+        return $this->hedef_tahliye_dk ?: static::onerilenHedefDk($this->bilesenler());
+    }
+
+    /** Seçili senaryoların önerilen hedef tahliye sürelerinin en büyüğü. */
+    public static function onerilenHedefDk(array $anahtarlar): ?int
+    {
+        return collect($anahtarlar)->map(fn ($a) => (int) config('isg.tatbikat.senaryolar.'.$a.'.hedef_tahliye_dk'))->max() ?: null;
     }
 
     /** Tahliye hedef süre içinde mi? (iki değerden biri yoksa null) */
@@ -141,7 +342,7 @@ class TatbikatTutanagi extends Model
     public function raporSenaryoMetni(): ?string
     {
         $metin = trim((string) $this->senaryo_metni);
-        $sablon = config('isg.tatbikat.senaryolar.'.$this->senaryo_anahtari.'.metin');
+        $sablon = static::senaryoSablonu($this->bilesenler());
 
         if ($sablon && ($metin === '' || in_array(md5($metin), self::ESKI_KISA_METINLER, true))) {
             return static::senaryoMetniDoldur($sablon, $this->firma, $this->tatbikat_yeri, $this->toplanma_alani ?: $this->firma?->acilDurumPlani?->toplanma_yeri);
@@ -150,40 +351,27 @@ class TatbikatTutanagi extends Model
         return $metin !== '' ? $metin : null;
     }
 
-    /** Yangın türü tatbikatlarda söndürme ekibi görev almak zorundadır. */
+    /** Yangın türü (yangın / elektrik yangını) bileşen içeriyor mu — söndürme ekibi zorunlu. */
     public function yanginTuruMu(): bool
     {
-        return in_array($this->senaryo_anahtari, ['yangin', 'elektrik_yangini'], true);
-    }
-
-    public function sondurmeEkibiVarMi(): bool
-    {
-        return collect($this->ekipler ?? [])->contains(fn ($e) => str_contains(mb_strtolower((string) ($e['ekip'] ?? '')), 'söndürme'));
-    }
-
-    /** Firmanın Acil Durum Ekipleri'ndeki söndürme ekibi üyeleri (ad soyad). */
-    public static function sondurmeEkibiUyeleri(?Firma $firma): array
-    {
-        return $firma ? (\App\Support\AcilEkipDurumu::planListesi($firma)['sondurme'] ?? []) : [];
+        return array_intersect($this->bilesenler(), ['yangin', 'elektrik_yangini']) !== [];
     }
 
     /**
-     * Rapordaki ekipler: yangın türünde söndürme ekibi tabloda yoksa firmanın tanımlı söndürme
-     * ekibi üyeleri eklenir.
+     * Rapordaki ekipler: seçili senaryoların gerektirdiği ekipler tabloda yoksa firmanın Acil Durum
+     * Ekipleri'ndeki üyeler eklenir.
      *
      * @return array<int, array{ad_soyad: string, ekip: ?string}>
      */
     public function raporEkipleri(): array
     {
-        $ekipler = array_values($this->ekipler ?? []);
+        return static::ekipleriTamamla($this->ekipler ?? [], $this->bilesenler(), $this->firma)['ekipler'];
+    }
 
-        if ($this->yanginTuruMu() && ! $this->sondurmeEkibiVarMi()) {
-            foreach (static::sondurmeEkibiUyeleri($this->firma) as $ad) {
-                $ekipler[] = ['ad_soyad' => $ad, 'ekip' => 'Söndürme Ekibi'];
-            }
-        }
-
-        return $ekipler;
+    /** Tutanakta görev almamış ve firmada da tanımlı olmayan gerekli ekipler (uyarı için). */
+    public function eksikEkipler(): array
+    {
+        return static::ekipleriTamamla($this->ekipler ?? [], $this->bilesenler(), $this->firma)['eksik'];
     }
 
     /** Yalnız diskte gerçekten bulunan fotoğrafların tam yolları. */

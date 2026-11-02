@@ -28,19 +28,48 @@
             </select>
         </div>
 
+        {{-- Hızlı kombinasyonlar (02.11.2026: çoklu / bileşik tatbikat) --}}
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">
+            @foreach ($this->kombinasyonlar as $kAnahtar => $k)
+                @php $aktif = $k['senaryolar'] !== [] && \App\Models\TatbikatTutanagi::siraliSenaryolar($k['senaryolar']) === $secilenSenaryolar; @endphp
+                <x-filament::button size="sm" :color="$aktif ? 'danger' : 'gray'" :outlined="! $aktif" wire:click="hazirKombinasyon('{{ $kAnahtar }}')">
+                    {{ $k['ad'] }}
+                </x-filament::button>
+            @endforeach
+        </div>
+        <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">
+            Birden fazla senaryo işaretleyebilirsiniz; seçilenler olayların birbirini tetikleme sırasına göre tek bir bileşik tatbikatta birleştirilir.
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem">
             @foreach ($this->senaryolar as $anahtar => $s)
-                @php $secili = $senaryoAnahtari === $anahtar; @endphp
+                @php $secili = in_array($anahtar, $secilenSenaryolar, true); $no = array_search($anahtar, $secilenSenaryolar, true); @endphp
                 <button type="button" wire:click="senaryoSec('{{ $anahtar }}')"
                     class="acil-merkez-secenek"
-                    style="text-align:center;padding:.75rem;cursor:pointer;font-size:.8rem;
+                    style="position:relative;text-align:center;padding:.75rem;cursor:pointer;font-size:.8rem;
                         border:2px solid {{ $secili ? '#e11d48' : '#e2e8f0' }};
                         background:{{ $secili ? '#fff1f2' : '#fff' }};color:{{ $secili ? '#9f1239' : '#334155' }}">
+                    <span style="position:absolute;top:.35rem;left:.45rem;font-size:.9rem">{{ $secili ? '☑' : '☐' }}</span>
+                    @if ($secili && count($secilenSenaryolar) > 1)
+                        <span style="position:absolute;top:.3rem;right:.45rem;font-size:.68rem;font-weight:700;background:#e11d48;color:#fff;border-radius:999px;padding:0 .4rem">{{ $no + 1 }}</span>
+                    @endif
                     <div style="font-weight:700">{{ $s['ad'] }}</div>
                     <div style="font-size:.7rem;color:rgb(107 114 128)">≈{{ $s['sure_dk'] }} dk</div>
                 </button>
             @endforeach
         </div>
+
+        @if ($secilenSenaryolar)
+            <div style="margin-top:.7rem;padding:.55rem .8rem;border-radius:.5rem;border:1px solid rgb(225 29 72 / .35);background:rgb(225 29 72 / .05);font-size:.82rem">
+                <b>{{ \App\Models\TatbikatTutanagi::senaryoBasligi($secilenSenaryolar) }}</b>
+                @if (count($secilenSenaryolar) > 1)
+                    <div style="font-size:.75rem;margin-top:.15rem">Akış: {{ collect($secilenSenaryolar)->map(fn ($a) => config('isg.tatbikat.bilesik.'.$a.'.kisa'))->implode(' → ') }}</div>
+                @endif
+                <div style="font-size:.75rem;margin-top:.15rem;color:rgb(107 114 128)">
+                    Görev alması gereken ekipler: {{ collect(\App\Models\TatbikatTutanagi::gerekenEkipTurleri($secilenSenaryolar))->map(fn ($t) => \App\Models\TatbikatTutanagi::ekipEtiketi($t))->implode(', ') ?: '—' }}
+                </div>
+            </div>
+        @endif
     </x-filament::section>
 
     @if ($this->firma)
@@ -148,7 +177,10 @@
         <x-filament::section icon="heroicon-o-document-text" icon-color="danger">
             <x-slot name="heading">3. Senaryo Metni</x-slot>
             <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.4rem">Senaryo seçildiğinde firma unvanı, adresi, tatbikat yeri ve toplanma alanı metne otomatik yerleşir (önce yer / toplanma alanını yazıp sonra senaryo seçin). Metni dilediğiniz gibi düzenleyebilirsiniz.</div>
-            <textarea wire:model="senaryoMetni" rows="8" placeholder="Yukarıdan bir senaryo seçin — hazır metin buraya gelir ve düzenlenebilir."
+            @if ($secilenSenaryolar)
+                <div style="margin-bottom:.4rem"><x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-path" wire:click="metniYenidenOlustur" wire:confirm="Senaryo metni seçime göre yeniden oluşturulsun mu? Elle yaptığınız değişiklikler kaybolur.">Metni seçime göre yeniden oluştur</x-filament::button></div>
+            @endif
+            <textarea wire:model="senaryoMetni" rows="{{ count($secilenSenaryolar) > 1 ? 14 : 8 }}" placeholder="Yukarıdan bir senaryo seçin — hazır metin buraya gelir ve düzenlenebilir."
                 style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-family:inherit;font-size:.85rem"></textarea>
         </x-filament::section>
 

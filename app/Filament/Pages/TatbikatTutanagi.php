@@ -51,7 +51,14 @@ class TatbikatTutanagi extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    /** Kayıtta saklanan biçim: tek anahtar veya virgülle ayrılmış (bileşik) anahtarlar. */
     public ?string $senaryoAnahtari = null;
+
+    /** @var array<int, string> Çoklu / bileşik tatbikat için seçilen senaryolar (tetikleme sırasında). */
+    public array $secilenSenaryolar = [];
+
+    /** Son otomatik önerilen hedef tahliye süresi — uzman değiştirmediyse seçim değişince yenilenir. */
+    public ?int $otomatikHedef = null;
 
     public ?string $senaryoMetni = null;
 
@@ -315,6 +322,7 @@ class TatbikatTutanagi extends Page
         $this->duzenlenenId = $t->id;
         $this->durum = $yeniDurum ?? ($t->durum ?: 'yapildi');
         $this->senaryoAnahtari = $t->senaryo_anahtari;
+        $this->secilenSenaryolar = $t->bilesenler();
         $this->senaryoMetni = $t->senaryo_metni;
         $this->tatbikatTarihi = $t->tatbikat_tarihi?->toDateString();
         $this->tatbikatYeri = $t->tatbikat_yeri;
@@ -359,17 +367,100 @@ class TatbikatTutanagi extends Page
     |--------------------------------------------------------------------------
     */
 
+    #[Computed]
+    public function kombinasyonlar(): array
+    {
+        return config('isg.tatbikat.kombinasyonlar', []);
+    }
+
+    /** Senaryo kartı tıklanınca seçime eklenir / seçimden çıkar (çoklu seçim). */
     public function senaryoSec(string $anahtar): void
     {
-        $senaryo = $this->senaryolar()[$anahtar] ?? null;
-
-        if (! $senaryo) {
+        if (! isset($this->senaryolar()[$anahtar])) {
             return;
         }
 
-        $this->senaryoAnahtari = $anahtar;
-        $this->senaryoMetni = $this->otomatikMetin = $this->senaryoMetniUret($senaryo['metin']);
-        $this->hedefTahliyeDk ??= $senaryo['hedef_tahliye_dk'] ?? null;
+        $this->secilenSenaryolar = in_array($anahtar, $this->secilenSenaryolar, true)
+            ? array_values(array_diff($this->secilenSenaryolar, [$anahtar]))
+            : [...$this->secilenSenaryolar, $anahtar];
+
+        $this->senaryolarDegisti();
+    }
+
+    /** Hızlı düğmeler: "Standart Yangın & Tahliye", "Deprem Sonrası Yangın & Tahliye", "Özel Kombinasyon". */
+    public function hazirKombinasyon(string $ad): void
+    {
+        $kombinasyon = $this->kombinasyonlar()[$ad] ?? null;
+
+        if ($kombinasyon === null) {
+            return;
+        }
+
+        $this->secilenSenaryolar = $kombinasyon['senaryolar'];
+        $this->senaryolarDegisti();
+    }
+
+    /**
+     * Seçim değişince: anahtar, başlık, metin (elle değiştirilmediyse), hedef süre (değiştirilmediyse),
+     * kontrol listesi soruları ve gerekli acil durum ekipleri güncellenir.
+     */
+    private function senaryolarDegisti(): void
+    {
+        $this->secilenSenaryolar = TatbikatTutanagiModel::siraliSenaryolar($this->secilenSenaryolar);
+        $this->senaryoAnahtari = $this->secilenSenaryolar ? implode(',', $this->secilenSenaryolar) : null;
+
+        $sablon = TatbikatTutanagiModel::senaryoSablonu($this->secilenSenaryolar);
+        if (blank($this->senaryoMetni) || $this->senaryoMetni === $this->otomatikMetin) {
+            $this->senaryoMetni = $this->otomatikMetin = $sablon ? $this->senaryoMetniUret($sablon) : null;
+        } elseif ($sablon) {
+            Notification::make()->title('Senaryo metni elle düzenlendiği için değiştirilmedi')
+                ->body('Seçime göre yeni metin için "Metni seçime göre yeniden oluştur" düğmesini kullanın.')->warning()->send();
+        }
+
+        if ($this->hedefTahliyeDk === null || $this->hedefTahliyeDk === $this->otomatikHedef) {
+            $this->hedefTahliyeDk = $this->otomatikHedef = TatbikatTutanagiModel::onerilenHedefDk($this->secilenSenaryolar);
+        }
+
+        $this->degerlendirmeleriGuncelle();
+        $this->ekipleriTamamla(bildir: false);
+    }
+
+    public function metniYenidenOlustur(): void
+    {
+        $sablon = TatbikatTutanagiModel::senaryoSablonu($this->secilenSenaryolar);
+        $this->senaryoMetni = $this->otomatikMetin = $sablon ? $this->senaryoMetniUret($sablon) : null;
+    }
+
+    /**
+     * Kontrol listesi = genel sorular + seçili senaryoların kritik soruları. Verilen cevaplar ve
+     * uzmanın eklediği özel sorular korunur; seçimden çıkan senaryonun soruları kaldırılır.
+     */
+    private function degerlendirmeleriGuncelle(): void
+    {
+        $cevaplar = collect($this->degerlendirmeler)->mapWithKeys(fn ($d) => [(string) ($d['soru'] ?? '') => $d['cevap'] ?? null]);
+        $tumSenaryoSorulari = TatbikatTutanagiModel::senaryoSorulari(array_keys($this->senaryolar()));
+        $genel = config('isg.tatbikat.degerlendirme_sorulari', []);
+        $ozel = $cevaplar->keys()->reject(fn ($s) => in_array($s, $genel, true) || in_array($s, $tumSenaryoSorulari, true));
+
+        $this->degerlendirmeler = collect([...$genel, ...TatbikatTutanagiModel::senaryoSorulari($this->secilenSenaryolar), ...$ozel->all()])
+            ->unique()->values()
+            ->map(fn ($s) => ['soru' => $s, 'cevap' => $cevaplar[$s] ?? null])->all();
+    }
+
+    /** Seçili senaryoların gerektirdiği ekipleri firmanın Acil Durum Ekipleri'nden ekler. */
+    private function ekipleriTamamla(bool $bildir): void
+    {
+        $sonuc = TatbikatTutanagiModel::ekipleriTamamla($this->ekipler, $this->secilenSenaryolar, $this->firma);
+        $this->ekipler = $sonuc['ekipler'];
+
+        if ($sonuc['eklenen']) {
+            Notification::make()->title('Görev alan ekiplere eklendi: '.implode(', ', $sonuc['eklenen']))->success()->send();
+        }
+        if ($bildir && $sonuc['eksik']) {
+            Notification::make()->title('Eksik ekip: '.implode(', ', $sonuc['eksik']))
+                ->body('Seçilen senaryolarda bu ekipler görev almalıdır. Firmanın Acil Durum Ekipleri\'nde tanımlı değiller; ekibi tanımlayın veya burada elle ekleyin.')
+                ->warning()->send();
+        }
     }
 
     private function senaryoMetniUret(string $sablon): string
@@ -393,7 +484,7 @@ class TatbikatTutanagi extends Page
 
     private function otomatikMetniYenile(): void
     {
-        $sablon = $this->senaryolar()[$this->senaryoAnahtari]['metin'] ?? null;
+        $sablon = TatbikatTutanagiModel::senaryoSablonu($this->secilenSenaryolar);
 
         if ($sablon && $this->otomatikMetin !== null && $this->senaryoMetni === $this->otomatikMetin) {
             $this->senaryoMetni = $this->otomatikMetin = $this->senaryoMetniUret($sablon);
@@ -596,16 +687,7 @@ class TatbikatTutanagi extends Page
             }
         }
 
-        if ($gecici->yanginTuruMu() && ! $gecici->sondurmeEkibiVarMi()) {
-            $uyeler = TatbikatTutanagiModel::sondurmeEkibiUyeleri($this->firma);
-            foreach ($uyeler as $ad) {
-                $this->ekipler[] = ['ad_soyad' => $ad, 'ekip' => 'Söndürme Ekibi'];
-            }
-            Notification::make()
-                ->title($uyeler ? 'Söndürme Ekibi görev alan ekiplere eklendi' : 'Söndürme Ekibi eksik')
-                ->body($uyeler ? implode(', ', $uyeler) : 'Yangın tatbikatında söndürme ekibi görev almalıdır. Firmanın Acil Durum Ekipleri\'nde söndürme ekibi tanımlı değil; ekibi tanımlayın veya burada elle ekleyin.')
-                ->{$uyeler ? 'success' : 'warning'}()->send();
-        }
+        $this->ekipleriTamamla(bildir: true);
 
         $this->isverenVekili = $this->isverenVekili ?: $gecici->isverenAdi();
         $this->isGuvenligiUzmani = $this->isGuvenligiUzmani ?: $gecici->iguAdi();
@@ -613,7 +695,7 @@ class TatbikatTutanagi extends Page
 
     private function gecikmeDofEkle(): void
     {
-        $hedef = $this->hedefTahliyeDk ?: ($this->senaryolar()[$this->senaryoAnahtari]['hedef_tahliye_dk'] ?? null);
+        $hedef = $this->hedefTahliyeDk ?: TatbikatTutanagiModel::onerilenHedefDk($this->secilenSenaryolar);
         $eksiklik = self::GECIKME_EKSIKLIGI.($this->tahliyeDk && $hedef ? " (gerçekleşen {$this->tahliyeDk} dk / hedef {$hedef} dk)." : '.');
 
         if (! collect($this->eksiklikler)->contains(fn ($e) => str_starts_with((string) $e, self::GECIKME_EKSIKLIGI))) {

@@ -57,7 +57,7 @@
     <div class="baslik">
         <h1>ACİL DURUM TATBİKAT TUTANAĞI</h1>
         <div class="firma">{{ $firma?->unvan }}</div>
-        <div style="font-size:10px;margin-top:2px">{{ mb_strtoupper($t->senaryoEtiketi(), 'UTF-8') }}</div>
+        <div style="font-size:{{ $t->bilesikMi() ? '11px;font-weight:bold;color:#7f1d1d' : '10px' }};margin-top:2px">{{ \App\Models\TatbikatTutanagi::buyukHarf($t->senaryoEtiketi()) }}</div>
         <div class="dayanak">İşyerlerinde Acil Durumlar Hakkında Yönetmelik Md. 13 (Tatbikat) uyarınca düzenlenmiştir.</div>
     </div>
 
@@ -81,6 +81,9 @@
             <td class="e">Tatbikat Türü</td><td>{{ $t->senaryoEtiketi() }}</td>
             <td class="e">Tatbikat Tarihi</td><td>{{ $t->tatbikat_tarihi?->format('d.m.Y') ?: '—' }}</td>
         </tr>
+        @if ($t->bilesikMi())
+            <tr><td class="e">Senaryo Akışı</td><td colspan="3"><b>{{ $t->senaryoAkisi() }}</b></td></tr>
+        @endif
         <tr>
             <td class="e">Tatbikat Yeri</td><td>{{ $t->tatbikat_yeri ?: '—' }}</td>
             <td class="e">Toplanma Alanı</td><td>{{ $t->toplanma_alani ?: '—' }}</td>
@@ -110,7 +113,12 @@
 
     <h2>4. TATBİKAT SENARYOSU</h2>
     @foreach (preg_split('/\R+/u', trim((string) $t->raporSenaryoMetni())) ?: [] as $paragraf)
-        <p class="metin">{{ $paragraf !== '' ? $paragraf : '—' }}</p>
+        @if (preg_match('/^(\d+\.\s[^:]{3,90}):\s(.+)$/su', $paragraf, $asama))
+            {{-- Bileşik senaryo aşaması: "2. Yangın ve duman — …: metin" --}}
+            <p class="metin" style="margin-left:8px"><b style="color:#7f1d1d">{{ $asama[1] }}:</b> {{ $asama[2] }}</p>
+        @else
+            <p class="metin">{{ $paragraf !== '' ? $paragraf : '—' }}</p>
+        @endif
     @endforeach
 
     <h2>5. GÖREV ALAN ACİL DURUM EKİPLERİ</h2>
@@ -121,8 +129,8 @@
         @empty
             <tr><td colspan="3" class="bos">Ekip üyesi eklenmedi.</td></tr>
         @endforelse
-        @if ($t->yanginTuruMu() && ! collect($ekipler)->contains(fn ($e) => str_contains(mb_strtolower((string) ($e['ekip'] ?? '')), 'söndürme')))
-            <tr><td colspan="3" class="kotu">Uyarı: Yangın tatbikatında Söndürme Ekibi görev almalıdır — firmada söndürme ekibi tanımlı değil (Acil Durum Ekipleri).</td></tr>
+        @if ($eksikEkip = $t->eksikEkipler())
+            <tr><td colspan="3" class="kotu">Uyarı: Bu senaryoda {{ implode(', ', $eksikEkip) }} görev almalıdır — firmada tanımlı değil (Acil Durum Ekipleri).</td></tr>
         @endif
     </table>
 

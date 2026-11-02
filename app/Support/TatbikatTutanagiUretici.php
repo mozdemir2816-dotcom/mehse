@@ -60,7 +60,7 @@ class TatbikatTutanagiUretici
 
         $b->addText('ACİL DURUM TATBİKAT TUTANAĞI', ['bold' => true, 'size' => 14, 'color' => '7F1D1D'], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
         $b->addText((string) $firma?->unvan, ['bold' => true, 'size' => 11], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
-        $b->addText(mb_strtoupper($t->senaryoEtiketi(), 'UTF-8'), ['size' => 10], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
+        $b->addText(TatbikatTutanagi::buyukHarf($t->senaryoEtiketi()), ['size' => $t->bilesikMi() ? 11 : 10, 'bold' => $t->bilesikMi(), 'color' => $t->bilesikMi() ? '7F1D1D' : null], ['alignment' => Jc::CENTER, 'spaceAfter' => 0]);
         $b->addText('İşyerlerinde Acil Durumlar Hakkında Yönetmelik Md. 13 (Tatbikat) uyarınca düzenlenmiştir.', ['italic' => true, 'size' => 8, 'color' => '555555'], ['alignment' => Jc::CENTER, 'spaceAfter' => 120]);
 
         $tarih = fn ($d) => filled($d) ? Carbon::parse($d)->format('d.m.Y') : '—';
@@ -79,6 +79,7 @@ class TatbikatTutanagiUretici
             ['Tatbikat Yeri', $t->tatbikat_yeri, 'Toplanma Alanı', $t->toplanma_alani],
             ['Niteliği', ($t->haberli_tatbikat ? 'Haberli' : 'Habersiz').', '.($t->yillik_plan_dahilinde ? 'yıllık plan dahilinde' : 'plan dışı'),
                 'Katılımcı Sayısı', $t->katilimciSayisi() ? $t->katilimciSayisi().' kişi' : null],
+            ...($t->bilesikMi() ? [['Senaryo Akışı', $t->senaryoAkisi(), null, null]] : []),
             ['Tatbikat Koordinatörü', $t->tatbikat_koordinatoru, null, null],
         ]);
 
@@ -109,8 +110,8 @@ class TatbikatTutanagiUretici
         self::liste($b, [['#', 500], ['Ad Soyad', 6000], ['Ekip', 3900]],
             collect($t->raporEkipleri())->map(fn ($e, $i) => [$i + 1, $e['ad_soyad'] ?? '', $e['ekip'] ?? '—'])->all(),
             'Ekip üyesi eklenmedi.');
-        if ($t->yanginTuruMu() && ! collect($t->raporEkipleri())->contains(fn ($e) => str_contains(mb_strtolower((string) ($e['ekip'] ?? '')), 'söndürme'))) {
-            $b->addText('Uyarı: Yangın tatbikatında Söndürme Ekibi görev almalıdır — firmada söndürme ekibi tanımlı değil (Acil Durum Ekipleri).', ['size' => 8.5, 'color' => self::KIRMIZI]);
+        if ($eksikEkip = $t->eksikEkipler()) {
+            $b->addText('Uyarı: Bu senaryoda '.implode(', ', $eksikEkip).' görev almalıdır — firmada tanımlı değil (Acil Durum Ekipleri).', ['size' => 8.5, 'color' => self::KIRMIZI]);
         }
 
         self::baslik($b, '6. DEĞERLENDİRME KONTROL LİSTESİ');
@@ -182,6 +183,13 @@ class TatbikatTutanagiUretici
         $satirlar = array_values(array_filter(array_map('trim', preg_split('/\R/u', (string) $metin)), fn ($s) => $s !== ''));
 
         foreach ($satirlar ?: ['—'] as $satir) {
+            if (preg_match('/^(\d+\.\s[^:]{3,90}):\s(.+)$/su', $satir, $asama)) {   // bileşik senaryo aşaması
+                $p = $b->addTextRun(['alignment' => Jc::BOTH, 'spaceAfter' => 60, 'indentation' => ['left' => 160]]);
+                $p->addText(self::temiz($asama[1]).': ', ['bold' => true, 'color' => '7F1D1D']);
+                $p->addText(self::temiz($asama[2]));
+
+                continue;
+            }
             $b->addText(self::temiz($satir), [], ['alignment' => Jc::BOTH, 'spaceAfter' => 60]);
         }
     }
