@@ -489,7 +489,7 @@
     @else
         <p style="text-align:center;font-weight:bold;margin:40pt 0">İŞYERİNE AİT GERÇEK TAHLİYE KROKİSİ BURAYA EKLENECEKTİR.</p>
     @endif
-    <p style="margin-top:6pt">Kat / bölüm: <b>{{ $n($u['kroki_kat']) }}</b> &nbsp;·&nbsp; Çizimi hazırlayan / tarih: <b>{{ $hz['ad'] }} / {{ $d['yayin'] }}</b></p>
+    <p style="margin-top:6pt">Kat / bölüm: <b>{{ $n($u['kroki_kat']) }}</b> &nbsp;·&nbsp; Çizimi hazırlayan: <b>{{ $n($u['kroki_hazirlayan']) }}</b></p>
     <p class="kucuk">Krokide gösterilecekler: bulunulan konum; kaçış yönleri, kapılar ve alternatif güvenli güzergâhlar · asıl ve yedek toplanma alanı; müdahale ekiplerinin erişim yolu · söndürücüler, ilkyardım malzemesi ve varsa alarm butonları · elektrik / gaz kesme noktaları ve vanalar · kimyasal, parlama / patlama ve diğer özel riskli bölümler · acil irtibatlar ve Ek-4 görevlilerinin iletişim bilgileri. Saha ölçüleri ve yerleşim doğrulanarak hazırlanır; tamamlanan kroki giriş, çıkış ve katlarda görünür biçimde asılır (Md.12/3).</p>
 </div>
 

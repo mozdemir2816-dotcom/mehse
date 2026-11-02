@@ -158,5 +158,16 @@ class AcilDurumAiSihirbazTest extends TestCase
         $this->assertSame('Elektrik ana şalteri: Trafo binası ana giriş panosu. Doğalgaz / LPG ana kesme vanası: Saha girişindeki gaz istasyonu.', $d['enerji_kesme']);
         $this->assertSame('Ayşe Kaya (Üretim Şefi)', $d['koordinator']['ad']);
         $this->assertSame('Ana nizamiye önü otopark', $d['toplanma']);
+
+        // Krokiyi çizen İGU değil; sorulan kişi basılır, boşsa noktalı satır (02.11.2026).
+        $plan = AcilDurumPlani::where('firma_id', $this->firma->id)->first();
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan, 'firma' => $this->firma, 'd' => $d])->render();
+        $this->assertStringContainsString('Çizimi hazırlayan: <b>........................</b>', $html);
+        $this->assertArrayHasKey('kroki_hazirlayan', $sayfa->instance()->eksikSorular());
+
+        $sayfa->set('uygulama.kroki_hazirlayan', 'Mimar Ali Veli')->call('kaydet');
+        $plan = $plan->fresh();
+        $html = view('pdf.acil-durum-plani', ['plan' => $plan, 'firma' => $this->firma, 'd' => AcilDurumBelgeVerisi::hazirla($plan)])->render();
+        $this->assertStringContainsString('Çizimi hazırlayan: <b>Mimar Ali Veli</b>', $html);
     }
 }

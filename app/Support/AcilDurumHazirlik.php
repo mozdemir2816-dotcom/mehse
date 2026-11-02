@@ -51,7 +51,7 @@ class AcilDurumHazirlik
         'isveren_tel' => 40, 'isveren_vekili_tel' => 40,
         'alarm_yontemi' => 600, 'yedek_toplanma' => 300, 'refakatci' => 300, 'tatbikat_sorumlusu' => 120,
         'bina_bilgisi' => 600, 'vardiyalar' => 200, 'kayit_yedekleme' => 600,
-        'hastane_ad' => 200, 'hastane_tel' => 40, 'kroki_kat' => 200,
+        'hastane_ad' => 200, 'hastane_tel' => 40, 'kroki_kat' => 200, 'kroki_hazirlayan' => 200,
         'elektrik_salteri' => 300, 'gaz_vanasi' => 300,
     ];
 
@@ -77,6 +77,7 @@ class AcilDurumHazirlik
         'bina_bilgisi' => ['Çıkış sayısı / kat / kullanım alanı?', '2 çıkış, tek kat, 800 m²'],
         'kayit_yedekleme' => ['Kritik kayıtlar nerede yedekleniyor, sorumlusu kim?', 'Bulut yedek — muhasebe sorumlusu'],
         'kroki_kat' => ['Tahliye krokisi hangi kat / bölüm için?', 'Zemin kat — üretim alanı'],
+        'kroki_hazirlayan' => ['Tahliye krokisini kim çizdi?', 'Adı soyadı / unvanı (ör. mimar, harita teknikeri)'],
     ];
 
     /** Kullanıcının bir kez doldurup tüm firmalarına önerilen alanlar (aynı bölgedeki işyerleri). */

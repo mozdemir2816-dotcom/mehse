@@ -432,6 +432,7 @@
                     'vardiyalar' => ['Vardiyalar', 'Örn. Gündüz 08:00-18:00'],
                     'bina_bilgisi' => ['Çıkış sayısı / kat / kullanım alanı', 'Örn. 2 çıkış, tek kat, 800 m²'],
                     'kroki_kat' => ['Kroki kat / bölüm', 'Örn. Zemin kat — üretim alanı'],
+                    'kroki_hazirlayan' => ['Krokiyi çizen', 'Adı soyadı / unvanı'],
                 ] as $k => [$ad, $ipucu])
                     <div><label style="{{ $lb }}">{{ $ad }}</label>
                         <input type="text" wire:model="uygulama.{{ $k }}" placeholder="{{ $ipucu }}" style="{{ $alan }}"></div>
