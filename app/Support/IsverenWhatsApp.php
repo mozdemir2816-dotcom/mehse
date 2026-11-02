@@ -48,20 +48,16 @@ class IsverenWhatsApp
 
     public static function isverenAdi(?Firma $firma): string
     {
-        return trim((string) ($firma?->isveren_vekili ?: $firma?->isveren_ad)) ?: 'Yetkili';
+        return FirmaImza::isveren($firma) ?? 'Yetkili';
     }
 
     /** "Mehmet ÖZDEMİR - A Sınıfı İSG Uzmanı" */
     public static function imza(?Firma $firma): string
     {
-        $igu = $firma?->igu;
-        $sahip = $firma?->user;
-        $ad = $igu?->ad_soyad ?: $sahip?->name;
-        $ham = (string) ($igu?->unvan ?: ($sahip?->unvan ? $sahip->unvanEtiketi() : ''));
-        $sinif = preg_match('/\b([ABC])\s*SINIFI/u', mb_strtoupper(strtr($ham, ['ı' => 'I', 'i' => 'İ']), 'UTF-8'), $e) ? $e[1] : null;
-        $unvan = $sinif ? $sinif.' Sınıfı İSG Uzmanı' : 'İSG Uzmanı';
+        $u = FirmaImza::uzman($firma);
+        $unvan = $u['sinif'] ? $u['sinif'].' Sınıfı İSG Uzmanı' : 'İSG Uzmanı';
 
-        return trim(($ad ? $ad.' - ' : '').$unvan);
+        return trim(($u['ad'] ? $u['ad'].' - ' : '').$unvan);
     }
 
     public static function pdfBaglantisi(string $tur, int $id): string

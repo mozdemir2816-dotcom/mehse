@@ -62,26 +62,19 @@ class DofRaporu extends Model
     /** Gözetim yapan İGU: ad, tam unvan, kısa unvan ("A Sınıfı İGU"), belge no. */
     public function gozetimYapanBilgisi(): array
     {
-        $igu = $this->firma?->igu;
-        $sahip = $this->firma?->user;
-        $ham = (string) ($igu?->unvan ?: ($sahip?->unvan ? $sahip->unvanEtiketi() : ''));
-
-        // "A SINIFI İŞ GÜVENLİĞİ UZMANI" / "A Sınıfı …" → sınıf harfinden standart unvan.
-        $sinif = preg_match('/\b([ABC])\s*SINIFI/u', mb_strtoupper(strtr($ham, ['ı' => 'I', 'i' => 'İ']), 'UTF-8'), $e) ? $e[1] : null;
-        $unvan = $sinif ? $sinif.' Sınıfı İş Güvenliği Uzmanı' : ($ham !== '' ? $ham : 'İş Güvenliği Uzmanı');
+        $u = \App\Support\FirmaImza::uzman($this->firma);
 
         return [
-            'ad' => $this->gozetim_yapan ?: ($igu?->ad_soyad ?: $sahip?->name),
-            'unvan' => $unvan,
-            'kisa_unvan' => $sinif ? $sinif.' Sınıfı İGU' : 'İGU',
-            'belge_no' => $this->gozetim_yapan_sertifika_no ?: ($igu?->sertifika_no ?: $sahip?->sertifika_no),
+            ...$u,
+            'ad' => $this->gozetim_yapan ?: $u['ad'],
+            'belge_no' => $this->gozetim_yapan_sertifika_no ?: $u['belge_no'],
         ];
     }
 
     /** İşveren / işveren vekili adı (imza kutusu). */
     public function isverenAdi(): ?string
     {
-        return $this->isveren_vekili_adi ?: ($this->firma?->isveren_vekili ?: $this->firma?->isveren_ad) ?: null;
+        return $this->isveren_vekili_adi ?: \App\Support\FirmaImza::isveren($this->firma);
     }
 
     /** Künyedeki "Sorumlu Kişi": kayıttaki ad, yoksa firma yetkilisi. */
