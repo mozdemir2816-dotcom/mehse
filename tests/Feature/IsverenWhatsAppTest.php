@@ -164,4 +164,25 @@ class IsverenWhatsAppTest extends TestCase
         $this->assertStringNotContainsString('ÖZDEMİR', $z->instance()->ozetMetni());   // genel özet isimsiz (04.10.2026 kararı)
         $this->assertStringEndsWith('Mehmet ÖZDEMİR - A Sınıfı İSG Uzmanı', $z->instance()->isverenImzasi());   // yalnız işverene gönderimde
     }
+
+    /** 02.11.2026: Ziyaret Modu tamamlandı durumu, DÖF manuel giriş daraltma, defter önizleme varsayılan önerisi. */
+    public function test_ziyaret_tamamlandi_durumu_dof_manuel_giris_ve_defter_onizleme(): void
+    {
+        $z = Livewire::test(ZiyaretModu::class)->set('firmaId', $this->firma->id)
+            ->assertDontSee('Ziyaret Raporunu WhatsApp ile Gönder');
+        $this->assertFalse($z->instance()->ziyaretTamamlandiMi());
+
+        $z->call('ziyaretiBitir')->assertSee('Bugünkü ziyaret tamamlandı')->assertSee('Ziyaret Raporunu WhatsApp ile Gönder')->assertSee('Ziyaret Raporu (PDF İndir)');
+        $this->assertTrue($z->instance()->ziyaretTamamlandiMi());
+        ob_start();
+        $z->instance()->ozetPdf()->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        Livewire::test(DofOlustur::class)->set('firmaId', $this->firma->id)->assertSee('Manuel Madde Girişi')->assertSee('Opsiyonel');
+
+        $d = TespitOneriDefteri::firmaIcin($this->firma);
+        $d->update(['maddeler' => [['tespit' => 'Korkuluk eksik', 'oneri' => '', 'oncelik' => 'orta']]]);
+        Livewire::test(DefterSayfasi::class)->set('firmaId', $this->firma->id)->assertSee(TespitOneriDefteri::VARSAYILAN_ONERI);
+        $this->assertStringContainsString(TespitOneriDefteri::VARSAYILAN_ONERI, view('pdf.tespit-oneri-defteri', ['defter' => $d->fresh(), 'firma' => $this->firma])->render());
+    }
 }

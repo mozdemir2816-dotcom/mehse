@@ -52,7 +52,7 @@
         'orta' => ['Orta Öncelik', '#d97706'],
         'dusuk' => ['Düşük Öncelik', '#6b7280'],
     ];
-    $varsayilanOneri = 'Mevzuata uygun koruyucu tedbirler ivedilikle alınmalı ve uygunsuzluk giderilmelidir.';
+    $varsayilanOneri = \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI;
     $fotoYolu = fn (array $m) => \Illuminate\Support\Facades\Storage::disk('public')->path((string) ($m['foto_yolu'] ?? ''));
     $fotoVar = fn (array $m) => filled($m['foto_yolu'] ?? null) && is_file($fotoYolu($m));
     $nace = trim(($firma?->nace_kodu ?? '').($firma?->nace_aciklama ? ' — '.$firma->nace_aciklama : ''));

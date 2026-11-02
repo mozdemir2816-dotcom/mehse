@@ -93,7 +93,7 @@
                     <span wire:loading.remove wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">✨ Yapay Zekâ ile Değerlendir</span>
                     <span wire:loading wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">Değerlendiriliyor…</span>
                 </x-filament::button>
-                @if ($kaynak === 'ai')<div style="font-size:.78rem;color:rgb(124 58 237);margin-top:.4rem">AI taslağı forma yazıldı — aşağıdaki alanları kontrol edip kaydedin.</div>@endif
+                @if ($kaynak === 'ai')<div style="font-size:.78rem;color:rgb(124 58 237);margin-top:.4rem">AI taslağı yazıldı — aşağıdaki özet kartını kontrol edin; gerekirse "Ayrıntıları düzenle" ile açıp kaydedin.</div>@endif
                 @if ($aiEkTespitler)
                     <x-filament::button color="warning" icon="heroicon-o-plus" wire:click="kalanTespitleriEkle" style="margin-top:.5rem">Kalan {{ count($aiEkTespitler) }} tespiti de ekle</x-filament::button>
                 @endif
@@ -101,9 +101,10 @@
         </div>
     </x-filament::section>
 
-    <x-filament::section icon="heroicon-o-map-pin" icon-color="primary">
-        <x-slot name="heading">Yer</x-slot>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+    {{-- BULGU (02.11.2026 sadeleştirme): zorunlu iki alan + kompakt özet; ayrıntılar varsayılan kapalı --}}
+    <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="primary">
+        <x-slot name="heading">Bulgu</x-slot>
+        <div style="display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,2fr);gap:1rem;align-items:start">
             <div>
                 <label style="{{ $lbl }}">İşyeri *</label>
                 <select wire:model.live="firmaId" style="{{ $inp }}">
@@ -115,6 +116,39 @@
                 @if ($hata('firmaId'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('firmaId') }}</div>@endif
             </div>
             <div>
+                <label style="{{ $lbl }}">Uygunsuzluk / risk tanımı *</label>
+                <textarea wire:model="uygunsuzluk" rows="3" placeholder="Ne gördünüz, hangi çalışanı veya süreci etkiliyor?" style="{{ $inp }}"></textarea>
+                @if ($hata('uygunsuzluk'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('uygunsuzluk') }}</div>@endif
+            </div>
+        </div>
+
+        {{-- Özet kartı: AI / elle doldurulan ayrıntıların tek satırlık görünümü --}}
+        @php
+            $ozetParca = array_filter([
+                $bolum ? '📍 '.$bolum.($gozlemKonumu ? ' · '.$gozlemKonumu : '') : ($gozlemKonumu ? '📍 '.$gozlemKonumu : null),
+                $kategori ? '⚠ '.$kategori : null,
+                $tehlike ? 'Tehlike: '.\Illuminate\Support\Str::limit($tehlike, 50) : null,
+                $yasalGerekce ? '§ '.\Illuminate\Support\Str::limit($yasalGerekce, 60) : null,
+                $sorumlu || $termin ? '👤 '.($sorumlu ?: '—').($termin ? ' · '.\Illuminate\Support\Carbon::parse($termin)->format('d.m.Y') : '') : null,
+            ]);
+        @endphp
+        <div x-data="{ acik: false }" style="margin-top:.9rem">
+            <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.55rem .8rem;border-radius:.6rem;border:1px solid rgb(107 114 128 / .25);background:rgb(107 114 128 / .04)">
+                <span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:3.2rem;padding:.2rem .5rem;border-radius:.5rem;color:#fff;background:{{ \App\Models\SahaBulgusu::ONCELIK_RENK[$gecerliOncelik] }}">
+                    <strong style="font-size:1.05rem;line-height:1">{{ $skor }}</strong><span style="font-size:.62rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</span>
+                </span>
+                <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.3rem .8rem;font-size:.8rem;color:rgb(71 85 105)">
+                    @forelse ($ozetParca as $p)<span>{{ $p }}</span>@empty<span style="color:rgb(107 114 128)">Bölüm, kategori, dayanak, aksiyon henüz girilmedi — AI ile doldurun ya da ayrıntıları açın.</span>@endforelse
+                </div>
+                <x-filament::button size="sm" color="gray" outlined x-on:click="acik = ! acik">
+                    <span x-text="acik ? 'Ayrıntıları gizle ▴' : 'Ayrıntıları düzenle ▾'">Ayrıntıları düzenle ▾</span>
+                </x-filament::button>
+            </div>
+
+            <div x-show="acik" x-cloak style="margin-top:1rem;display:flex;flex-direction:column;gap:1rem">
+                <div style="font-weight:700;font-size:.85rem">Yer</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+            <div>
                 <label style="{{ $lbl }}">Bölüm / saha alanı</label>
                 <input type="text" wire:model="bolum" list="bolum-onerileri" placeholder="Örn. Pres hattı" style="{{ $inp }}">
                 <datalist id="bolum-onerileri">
@@ -125,7 +159,7 @@
                 <label style="{{ $lbl }}">Gözlem konumu</label>
                 <input type="text" wire:model="gozlemKonumu" placeholder="Örn. Üretim alanı, pres önü" style="{{ $inp }}">
             </div>
-        </div>
+                </div>
         <div x-data="{ hata: '' }" style="margin-top:.75rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;font-size:.8rem">
             <x-filament::button size="sm" color="gray" icon="heroicon-o-map-pin"
                 x-on:click="hata = ''; if (! navigator.geolocation) { hata = 'Tarayıcı konum desteklemiyor.'; return; }
@@ -139,10 +173,8 @@
             @endif
             <span x-show="hata" x-text="hata" style="color:#dc2626"></span>
         </div>
-    </x-filament::section>
 
-    <x-filament::section icon="heroicon-o-exclamation-triangle" icon-color="warning">
-        <x-slot name="heading">Tehlike ve Uygunsuzluk</x-slot>
+                <div style="font-weight:700;font-size:.85rem;margin-top:.4rem">Tehlike ve risk</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
             <div>
                 <label style="{{ $lbl }}">Tehlike kategorisi</label>
@@ -159,11 +191,6 @@
             </div>
         </div>
         <div style="margin-top:1rem">
-            <label style="{{ $lbl }}">Uygunsuzluk / risk tanımı *</label>
-            <textarea wire:model="uygunsuzluk" rows="3" placeholder="Ne gördünüz, hangi çalışanı veya süreci etkiliyor?" style="{{ $inp }}"></textarea>
-            @if ($hata('uygunsuzluk'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('uygunsuzluk') }}</div>@endif
-        </div>
-        <div style="margin-top:1rem">
             <label style="{{ $lbl }}">Mevcut önlemler</label>
             <textarea wire:model="mevcutOnlemler" rows="2" placeholder="Varsa mevcut kontrol / bariyer" style="{{ $inp }}"></textarea>
         </div>
@@ -171,7 +198,6 @@
             <label style="{{ $lbl }}">Yasal gerekçe / dayanak</label>
             <input type="text" wire:model="yasalGerekce" placeholder="Örn. Yapı İşlerinde İSG Yönetmeliği Ek-4 / TS EN 13374" style="{{ $inp }}">
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:end;margin-top:1rem">
             <div>
                 <label style="{{ $lbl }}">Olasılık</label>
@@ -197,15 +223,17 @@
                 <div style="font-size:.7rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</div>
             </div>
         </div>
-    </x-filament::section>
 
-    <x-filament::section icon="heroicon-o-wrench" icon-color="primary">
-        <x-slot name="heading">Düzeltici Faaliyet</x-slot>
+                <div style="font-weight:700;font-size:.85rem;margin-top:.4rem">Düzeltici faaliyet</div>
+                <div>
         <label style="{{ $lbl }}">Aksiyon açıklaması</label>
         <textarea wire:model="aksiyon" rows="2" placeholder="Kapatmak için yapılması gereken iş" style="{{ $inp }}"></textarea>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem">
             <div><label style="{{ $lbl }}">Sorumlu kişi</label><input type="text" wire:model="sorumlu" style="{{ $inp }}"></div>
             <div><label style="{{ $lbl }}">Termin</label><input type="date" wire:model="termin" style="{{ $inp }}"></div>
+        </div>
+                </div>
+            </div>
         </div>
     </x-filament::section>
 

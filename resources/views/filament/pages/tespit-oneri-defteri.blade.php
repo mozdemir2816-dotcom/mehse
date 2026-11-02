@@ -156,7 +156,8 @@
                                     <tr wire:key="defter-madde-{{ $i }}">
                                         <td style="padding:.35rem .3rem;vertical-align:top;border-bottom:1px solid #e5e7eb">{{ $i + 1 }}</td>
                                         <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb">@if (($m['tur'] ?? null) === 'bilgilendirme')<span style="display:inline-block;background:#2563eb;color:#fff;border-radius:4px;padding:0 .35rem;font-size:.66rem;font-family:sans-serif">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span> @endif @if (! empty($m['foto_yolu']))<span title="Fotoğraf kanıtı ekli">📷</span> @endif{{ $m['tespit'] }}</td>
-                                        <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb">{{ $m['oneri'] }}</td>
+                                        @php $oneriBos = blank(trim((string) ($m['oneri'] ?? ''))); @endphp
+                                        <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb;{{ $oneriBos ? 'color:#6b7280;font-style:italic' : '' }}" @if ($oneriBos) title="Öneri boş — PDF'e bu varsayılan metin basılır" @endif>{{ $oneriBos ? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI : $m['oneri'] }}</td>
                                         <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb">
                                             <button type="button" wire:click="maddeSil({{ $i }})" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#ef4444;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
                                         </td>

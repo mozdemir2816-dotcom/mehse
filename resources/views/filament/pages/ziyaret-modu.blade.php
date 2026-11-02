@@ -220,8 +220,18 @@
             </div>
         @endif
 
-        {{-- ZİYARETİ BİTİR --}}
-        <x-filament::button color="success" size="xl" icon="heroicon-o-check-badge" wire:click="ziyaretiBitir" style="width:100%">Ziyareti Bitir</x-filament::button>
+        {{-- ZİYARETİ BİTİR — bugünkü ziyaret zaten tamamlandıysa rapor düğmeleri (02.11.2026) --}}
+        @if ($this->ziyaretTamamlandiMi())
+            <div style="border:1px solid rgb(22 163 74 / .4);background:rgb(22 163 74 / .07);border-radius:.75rem;padding:.75rem;display:flex;flex-direction:column;gap:.5rem">
+                <div style="font-weight:700;color:#15803d;text-align:center">✅ Bugünkü ziyaret tamamlandı</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem">
+                    <x-filament::button color="success" size="lg" icon="heroicon-o-chat-bubble-left-right" wire:click="$set('ozetAcik', true)">📲 Ziyaret Raporunu WhatsApp ile Gönder</x-filament::button>
+                    <x-filament::button color="gray" size="lg" icon="heroicon-o-document-arrow-down" wire:click="ozetPdf">Ziyaret Raporu (PDF İndir)</x-filament::button>
+                </div>
+            </div>
+        @else
+            <x-filament::button color="success" size="xl" icon="heroicon-o-check-badge" wire:click="ziyaretiBitir" style="width:100%">Ziyareti Bitir</x-filament::button>
+        @endif
 
         @if ($ozetAcik)
             <div style="position:fixed;inset:0;z-index:30;background:rgb(0 0 0 / .45);display:flex;align-items:flex-end;justify-content:center" wire:click.self="$set('ozetAcik', false)">

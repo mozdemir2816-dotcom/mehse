@@ -306,7 +306,8 @@ class HizliSahaBulgusu extends Page
     }
 
     /** Kaydedince bulgunun gideceği yerler (kayıttan sonra da kalır: sahada art arda giriş). */
-    public bool $dagitDof = false;
+    /** 02.11.2026: varsayılan seçili; sayfadan atmaz, bulguyu bekleyen DÖF taslağına ekler. */
+    public bool $dagitDof = true;
 
     public bool $dagitDefter = false;
 
@@ -498,12 +499,37 @@ class HizliSahaBulgusu extends Page
             $mesaj .= ' · deftere yazıldı';
         }
 
-        Notification::make()->title('Bulgu kaydedildi')->body($mesaj)->success()->send();
+        // "DÖF Listesine Ekle" (02.11.2026): sahada art arda bulgu girerken sayfadan atmaz; bulgu
+        // fotoğraflarıyla bekleyen DÖF taslağına eklenir (aynı işyerinde birikir), DÖF Oluştur açılınca gelir.
+        $bildirim = Notification::make()->title('Bulgu kaydedildi')->success();
 
-        // "DÖF Listesine Ekle": bulgu fotoğraflarıyla DÖF Oluştur ekranına taşınır.
         if ($this->dagitDof) {
-            $this->dofeAktar($b->id);
+            $bekleyen = $this->dofTaslaginaEkle($b);
+            $mesaj .= ' · DÖF taslağına eklendi ('.$bekleyen.' madde bekliyor)';
+            $bildirim->actions([
+                Action::make('dofAc')->label('DÖF Oluştur\'u aç ('.$bekleyen.')')->url(DofOlustur::getUrl())->button()->color('primary'),
+            ]);
         }
+
+        $bildirim->body($mesaj)->send();
+    }
+
+    /** Bulguyu oturumdaki bekleyen DÖF taslağına ekler (başka işyerinin taslağı varsa yenisiyle değişir); bekleyen madde sayısı. */
+    private function dofTaslaginaEkle(SahaBulgusu $b): int
+    {
+        $taslak = session('dof_aktarim');
+        $madde = BulguDonusturucu::dofMaddesi($b, bolumOnEki: true);
+
+        if (is_array($taslak) && ($taslak['firma_id'] ?? null) === $b->firma_id && ! isset($taslak['tablo'])) {
+            $taslak['maddeler'][] = $madde;
+            $taslak['kaynak'] = 'Saha Bulguları';
+        } else {
+            $taslak = ['firma_id' => $b->firma_id, 'kaynak' => 'Saha Bulgusu '.$b->bulgu_no, 'maddeler' => [$madde]];
+        }
+
+        session(['dof_aktarim' => $taslak]);
+
+        return count($taslak['maddeler']);
     }
 
     private function bulgu(int $id): SahaBulgusu

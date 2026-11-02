@@ -154,6 +154,14 @@
                 <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ count($maddeler) }} madde)</span>
             </x-slot>
 
+            {{-- 02.11.2026: hazır havuz (üstteki "Saha Bulgularından Ekle", Word/Excel aktarımı) öne çıkar;
+                 elle madde girişi daraltılabilir — Alpine durumu Livewire yenilemesinde korunur. --}}
+            <div x-data="{ acik: {{ $maddeler ? 'false' : 'true' }} }" style="border:1px dashed rgb(107 114 128 / .4);border-radius:.6rem;padding:.55rem .8rem">
+            <button type="button" x-on:click="acik = ! acik" style="display:flex;width:100%;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;padding:0;font-weight:700;font-size:.85rem;color:inherit">
+                <span>✍️ Manuel Madde Girişi <span style="font-weight:400;color:rgb(107 114 128)">(Opsiyonel — havuzda olmayan madde için)</span></span>
+                <span x-text="acik ? '▴' : '▾'">▾</span>
+            </button>
+            <div x-show="acik" x-cloak style="margin-top:.7rem">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
                 <div style="grid-column:1/-1">
                     <label style="font-weight:600;font-size:.8rem">Tespit <span style="color:#ef4444">*</span></label>
@@ -199,6 +207,8 @@
             </div>
 
             <x-filament::button size="sm" color="danger" wire:click="maddeEkle" style="margin-top:.75rem">Madde Ekle</x-filament::button>
+            </div>
+            </div>
 
             @if ($maddeler)
                 <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:1rem">

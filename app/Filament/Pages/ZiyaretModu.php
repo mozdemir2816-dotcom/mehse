@@ -507,6 +507,29 @@ class ZiyaretModu extends Page
         return "Bilgilerinize sunar, iyi çalışmalar dileriz.\n".\App\Support\IsverenWhatsApp::imza($this->firma);
     }
 
+    /** Bugünkü ziyaret Ziyaret Programı'nda zaten "Tamamlandı" mı (02.11.2026: Bitir düğmesi yerine rapor düğmeleri). */
+    public function ziyaretTamamlandiMi(): bool
+    {
+        return ($this->bugunkuZiyaret['girdi']['durum'] ?? null) === 'tamamlandi';
+    }
+
+    /** Ziyaret özetinden künyeli ve imzalı tek sayfalık PDF. */
+    public function ozetPdf()
+    {
+        if (! $this->firma) {
+            return null;
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.ziyaret-ozeti', [
+            'firma' => $this->firma,
+            'tarih' => Carbon::today()->format('d.m.Y'),
+            'ozet' => $this->ozetMetni(),
+        ])->setPaper('a4');
+
+        return response()->streamDownload(fn () => print ($pdf->output()),
+            'ziyaret-raporu-'.\Illuminate\Support\Str::slug($this->firma->unvan).'-'.Carbon::today()->format('Y-m-d').'.pdf');
+    }
+
     /** İşverenin cep telefonu (905xxxxxxxxx) — yoksa null; özet penceresindeki düğme buna göre. */
     public function isverenWhatsappNo(): ?string
     {

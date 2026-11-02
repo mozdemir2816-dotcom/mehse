@@ -19,6 +19,9 @@ class TespitOneriDefteri extends Model
 
     protected $guarded = ['id'];
 
+    /** Önerisi boş maddede PDF ve canlı önizlemenin gösterdiği metin (02.11.2026). */
+    public const VARSAYILAN_ONERI = 'Mevzuata uygun koruyucu tedbirler ivedilikle alınmalı ve uygunsuzluk giderilmelidir.';
+
     protected $casts = [
         'maddeler' => 'array',
     ];

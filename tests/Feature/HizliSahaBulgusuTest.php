@@ -229,16 +229,22 @@ class HizliSahaBulgusuTest extends TestCase
         $this->assertSame($bulgu->id, $defter->maddeler[0]['bulgu_id']);
         $sayfa->assertNoRedirect();
 
-        // DÖF seçiliyse kayıttan sonra DÖF Oluştur ekranına bulguyla gider; defter seçili değilse yazılmaz.
+        // 02.11.2026: "DÖF Listesine Ekle" varsayılan seçili ve sayfadan atmaz — bulgular bekleyen DÖF
+        // taslağında birikir (ilk kayıt da seçiliydi → 1), DÖF Oluştur açılınca maddeler gelir.
+        $this->assertSame(1, count(session('dof_aktarim')['maddeler']));
         Livewire::test(HizliSahaBulgusu::class)
+            ->assertSet('dagitDof', true)
             ->set('firmaId', $this->firma->id)
             ->set('uygunsuzluk', 'Yangın tüpü dolum tarihi geçmiş.')
-            ->set('dagitDof', true)
             ->call('kaydet')
-            ->assertRedirect(DofOlustur::getUrl());
+            ->assertNoRedirect()
+            ->assertNotified();
 
         $this->assertCount(1, \App\Models\TespitOneriDefteri::where('firma_id', $this->firma->id)->sole()->maddeler);
-        $this->assertSame(1, count(session('dof_aktarim')['maddeler']));
+        $this->assertSame(2, count(session('dof_aktarim')['maddeler']));
+
+        Livewire::test(DofOlustur::class)->assertSet('firmaId', $this->firma->id)->assertCount('maddeler', 2);
+        $this->assertNull(session('dof_aktarim'));
     }
 
     public function test_dagitim_secilmezse_yalniz_bulgu_kaydedilir(): void
@@ -246,11 +252,25 @@ class HizliSahaBulgusuTest extends TestCase
         Livewire::test(HizliSahaBulgusu::class)
             ->set('firmaId', $this->firma->id)
             ->set('uygunsuzluk', 'Etiket eksik, düzeltilecek.')
+            ->set('dagitDof', false)
             ->call('kaydet')
             ->assertNoRedirect();
 
         $this->assertSame(1, SahaBulgusu::count());
         $this->assertSame(0, \App\Models\TespitOneriDefteri::count());
+        $this->assertNull(session('dof_aktarim'));
+    }
+
+    /** 02.11.2026: ayrıntı alanları varsayılan kapalı; özet kartı AI / elle doldurulan değerleri gösterir. */
+    public function test_form_ozet_karti_ve_kapali_ayrintilar(): void
+    {
+        Livewire::test(HizliSahaBulgusu::class)
+            ->set('firmaId', $this->firma->id)
+            ->assertSee('Ayrıntıları düzenle')
+            ->assertSee('henüz girilmedi')
+            ->set('bolum', 'Pres hattı')->set('kategori', 'Makine')->set('yasalGerekce', 'İş Ekipmanları Yönetmeliği')
+            ->set('sorumlu', 'Bakım')
+            ->assertSee('📍 Pres hattı')->assertSee('⚠ Makine')->assertSee('§ İş Ekipmanları Yönetmeliği')->assertSee('👤 Bakım');
     }
 
     public function test_tutanak_pdf_ve_excel(): void
