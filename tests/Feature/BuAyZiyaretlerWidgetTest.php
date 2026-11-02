@@ -84,6 +84,29 @@ class BuAyZiyaretlerWidgetTest extends TestCase
         $this->assertSame('planlandi', $p->ziyaretler[0][0]['durum']);
     }
 
+    /** 02.11.2026: tarihi girilmiş, durumu seçilmemiş ziyaret "Boş" değil "Planlandı" görünür; Boş'a düşmez. */
+    public function test_tarihli_ziyaret_durum_secilmemisse_planlandi_gorunur(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow('2026-10-01 10:00');
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'FOM Makina']);
+        $this->ekimZiyaretleri($firma, [['2026-10-05', 'bos', 2]]);
+
+        $w = Livewire::test(BuAyZiyaretlerWidget::class);
+        $this->assertSame('planlandi', $w->instance()->ayinZiyaretleri()[0]['durum']);
+        $w->assertSee('Planlandı')->assertDontSee('>Boş<', false);
+
+        // Rozet: tarihli ziyarette Planlandı ⇄ Tamamlandı (Boş'a dönmez)
+        $p = ZiyaretProgrami::where('firma_id', $firma->id)->first();
+        $p->durumIlerlet(9, 0);
+        $this->assertSame('tamamlandi', $p->fresh()->ziyaretler[9][0]['durum']);
+        $p->fresh()->durumIlerlet(9, 0);
+        $this->assertSame('planlandi', $p->fresh()->ziyaretler[9][0]['durum']);
+
+        // Tarihsiz girdi eski döngüde kalır
+        $this->assertSame('bos', ZiyaretProgrami::ayGirdileri(['tarih' => null, 'durum' => 'bos'])[0]['durum']);
+        \Illuminate\Support\Carbon::setTestNow();
+    }
+
     public function test_panel_ana_sayfasi_widget_ile_birlikte_hatasiz_acilir(): void
     {
         $this->get('/admin')->assertOk();

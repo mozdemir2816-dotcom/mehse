@@ -61,14 +61,28 @@ class ZiyaretProgrami extends Model
             return [static::bosGirdi()];
         }
 
-        if (array_key_exists('tarih', $ay)) {
-            return [$ay];
-        }
+        $girdiler = array_key_exists('tarih', $ay) ? [$ay] : array_values($ay);
 
-        return array_values($ay);
+        return array_map(fn ($g) => is_array($g) ? static::durumuDuzelt($g) : $g, $girdiler);
     }
 
-    /** Bir ay/satır girdisinin durumunu Boş→Planlandı→Tamamlandı sırasıyla ilerletir ve kaydeder. */
+    /**
+     * Tarihi girilmiş ziyaret en az "Planlandı"dır: durum hiç seçilmemişse (varsayılan "bos") okurken
+     * "planlandi" sayılır (02.11.2026 — tarihli ziyaret listede "Boş" görünüyordu).
+     */
+    public static function durumuDuzelt(array $girdi): array
+    {
+        if (filled($girdi['tarih'] ?? null) && in_array($girdi['durum'] ?? 'bos', ['bos', '', null], true)) {
+            $girdi['durum'] = 'planlandi';
+        }
+
+        return $girdi;
+    }
+
+    /**
+     * Bir ay/satır girdisinin durumunu ilerletir ve kaydeder: tarihsiz girdide Boş→Planlandı→Tamamlandı,
+     * tarihli girdide Planlandı⇄Tamamlandı (tarihli ziyaret "Boş"a düşmez).
+     */
     public function durumIlerlet(int $ayIndex, int $satirIndex): void
     {
         $aylar = $this->ziyaretler ?? [];
@@ -84,8 +98,13 @@ class ZiyaretProgrami extends Model
         }
 
         $mevcut = $girdiler[$satirIndex]['durum'] ?? 'bos';
-        $siraIndex = array_search($mevcut, static::DURUM_SIRASI, true);
-        $girdiler[$satirIndex]['durum'] = static::DURUM_SIRASI[($siraIndex + 1) % count(static::DURUM_SIRASI)];
+
+        if (filled($girdiler[$satirIndex]['tarih'] ?? null)) {
+            $girdiler[$satirIndex]['durum'] = $mevcut === 'tamamlandi' ? 'planlandi' : 'tamamlandi';
+        } else {
+            $siraIndex = array_search($mevcut, static::DURUM_SIRASI, true);
+            $girdiler[$satirIndex]['durum'] = static::DURUM_SIRASI[($siraIndex + 1) % count(static::DURUM_SIRASI)];
+        }
 
         $aylar[$ayIndex] = $girdiler;
         $this->update(['ziyaretler' => $aylar]);

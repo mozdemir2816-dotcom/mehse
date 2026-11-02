@@ -55,12 +55,7 @@
             </div>
         </div>
 
-        @if ($o['gecikmis'] > 0)
-            <div style="border:1px solid rgb(220 38 38 / .35);background:rgb(220 38 38 / .06);border-radius:.6rem;padding:.6rem .9rem;margin-bottom:1rem;font-size:.82rem">
-                <strong>{{ $o['gecikmis'] }} süresi geçen faaliyet — öncelikli.</strong>
-                <span style="color:rgb(107 114 128)">Karttaki “İncele” ile ilgili sayfada kayıt oluşturun veya tamamlayın. Durum raporunu indirip işverene / OSGB'ye iletebilirsiniz.</span>
-            </div>
-        @endif
+        {{-- 02.11.2026: "N süresi geçen faaliyet — öncelikli" açıklama kutusu kaldırıldı; sekmeler doğrudan gelir. --}}
 
         {{-- Pano sekmeleri --}}
         @php
