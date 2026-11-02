@@ -47,7 +47,7 @@
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
                 <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">TOPLAM KAPALI ALAN</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['alan'] ? $say($h['alan']).' m²' : '—' }}</div>
-                <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $h['alan'] ? 'Taban alanı × zemin üstü kat sayısı' : 'Taban alanını girin' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $h['alan'] ? 'Tüm katların toplamı (girdiğiniz değer)' : 'Toplam kapalı alanı girin' }}</div>
             </div>
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
                 <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">KULLANICI YÜKÜ (Md.32, Ek-5/A)</div>
@@ -61,9 +61,9 @@
             </div>
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
                 <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">ASGARİ SÖNDÜRÜCÜ (Md.99/2)</div>
-                <div style="font-size:1.15rem;font-weight:800">{{ $h['ysc'] ? $h['ysc']['adet'].' adet 6 kg KKT' : '—' }}</div>
+                <div style="font-size:1.15rem;font-weight:800">{{ $h['ysc'] ? $h['ysc']['adet'].' adet 6 kg KKT' : '—' }}@if ($h['ysc']['uzman_adet'] ?? null) <span style="font-size:.85rem;color:#b91c1c">· uzman önerisi {{ $h['ysc']['uzman_adet'] }} adet</span>@endif</div>
                 <div style="font-size:.7rem;color:rgb(107 114 128)">
-                    @if ($h['ysc']) Her {{ $h['ysc']['birim'] }} m²'ye 1 adet, ulaşma ≤ 25 m{{ $h['ysc']['tekerlekli'] ? ' · tekerlekli: '.implode(', ', $h['ysc']['tekerlekli']) : '' }} @else Taban alanını girin @endif
+                    @if ($h['ysc']) Her {{ $h['ysc']['birim'] }} m²'ye 1 adet, ulaşma ≤ 25 m{{ $h['ysc']['tekerlekli'] ? ' · tekerlekli: '.implode(', ', $h['ysc']['tekerlekli']) : '' }} @else Toplam kapalı alanı girin @endif
                 </div>
             </div>
         </div>
@@ -88,7 +88,8 @@
                         @foreach ($this->kullanimTurleri as $a => $ad) <option value="{{ $a }}">{{ $ad }}</option> @endforeach
                     </select>
                 </div>
-                <div><label style="{{ $lbl }}">Bina Taban / Yerleşim Alanı (m²)</label><input type="number" min="0" step="0.01" wire:model.live.debounce.500ms="tabanAlaniM2" style="{{ $inp }}"></div>
+                <div><label style="{{ $lbl }}">Toplam Kapalı Alan (m²) <span style="font-weight:400">— tüm katların toplamı, bodrum dahil</span></label><input type="number" min="0" step="0.01" wire:model.live.debounce.500ms="tabanAlaniM2" style="{{ $inp }}"></div>
+                <div><label style="{{ $lbl }}">Uzman önerisi: her … m²'ye 1 söndürücü <span style="font-weight:400">(boşsa yalnız yönetmelik; ör. 200)</span></label><input type="number" min="50" max="499" wire:model.live.debounce.500ms="yscUzmanM2" placeholder="Yönetmelik: {{ $h['ysc']['birim'] ?? 250 }} m²" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">Zemin Üstü Kat Sayısı</label><input type="number" min="0" wire:model.live.debounce.500ms="katSayisi" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">Bilinen azami kişi sayısı <span style="font-weight:400">(boşsa alan ve çalışan sayısından hesaplanır)</span></label><input type="number" min="0" wire:model.live.debounce.500ms="kullaniciYuku" style="{{ $inp }}"></div>
             </div>

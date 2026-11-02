@@ -47,9 +47,8 @@
     <tr><td class="e">İnceleme Yeri</td><td>{{ $kayit->inceleme_yeri ?: '—' }}</td></tr>
     <tr><td class="e">Yapı Durumu</td><td>{{ $kayit->yapi_durumu ?: '—' }}</td></tr>
     <tr><td class="e">İşletme / Kullanım Türü</td><td>{{ $kayit->kullanimTuruEtiketi() }}</td></tr>
-    <tr><td class="e">Bina Taban / Yerleşim Alanı</td><td>{{ $kayit->taban_alani_m2 ? number_format((float) $kayit->taban_alani_m2, 2, ',', '.').' m²' : '—' }}</td></tr>
     <tr><td class="e">Zemin Üstü Kat Sayısı</td><td>{{ $kayit->kat_sayisi ?? '—' }}</td></tr>
-    <tr><td class="e">Toplam Kapalı Alan</td><td>{{ $alan ? $sayi($alan).' m²'.(($kayit->kat_sayisi ?? 1) > 1 ? ' (taban alanı × kat sayısı)' : '') : '—' }}</td></tr>
+    <tr><td class="e">Toplam Kapalı Alan</td><td>{{ $alan ? $sayi($alan).' m²'.(($kayit->kat_sayisi ?? 1) > 1 ? ' (tüm katların toplamı)' : '') : '—' }}</td></tr>
     <tr><td class="e">Azami Toplam Kullanıcı Yükü</td><td>
         @if ($ky['esas'])
             <b>{{ $sayi($ky['esas']) }} kişi</b>
@@ -79,6 +78,7 @@
     <div style="margin:4px 0 6px;font-size:9px">
         <strong>ASGARİ TAŞINABİLİR SÖNDÜRÜCÜ İHTİYACI (BYKHY Md.99/2):&nbsp;</strong>
         {{ $sayi($ysc['alan']) }} m² ÷ {{ $ysc['birim'] }} m² = <b>en az {{ $ysc['adet'] }} adet 6 kg KKT</b>; ulaşma mesafesi en fazla 25 m.
+        @if ($ysc['uzman_m2']) <b>Uzman önerisi:</b> her {{ $ysc['uzman_m2'] }} m²'ye 1 adet → <b>{{ $ysc['uzman_adet'] }} adet</b>. @endif
         @if ($ysc['tekerlekli']) Ayrıca tekerlekli tip: {{ implode(', ', $ysc['tekerlekli']) }}. @endif
     </div>
 @endif

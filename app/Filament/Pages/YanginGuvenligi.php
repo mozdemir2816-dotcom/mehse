@@ -57,6 +57,9 @@ class YanginGuvenligi extends Page
 
     public ?int $katSayisi = null;
 
+    /** Uzman önerisi: her X m²'ye 1 söndürücü (yönetmelikten sıkıysa raporda ayrıca yazılır). */
+    public ?int $yscUzmanM2 = null;
+
     public ?int $kullaniciYuku = null;
 
     /** @var array<string, bool> */
@@ -172,6 +175,7 @@ class YanginGuvenligi extends Page
             'kullanim_turu' => $this->kullanimTuru,
             'taban_alani_m2' => is_numeric($this->tabanAlaniM2) ? $this->tabanAlaniM2 : null,
             'kat_sayisi' => $this->katSayisi,
+            'ysc_uzman_m2' => $this->yscUzmanM2,
             'kullanici_yuku' => $this->kullaniciYuku,
             'bolumler' => $this->bolumler,
             'riskler' => $this->riskler,
@@ -194,6 +198,7 @@ class YanginGuvenligi extends Page
         $this->kullanimTuru = $k?->kullanim_turu;
         $this->tabanAlaniM2 = $k?->taban_alani_m2 ? (string) $k->taban_alani_m2 : null;
         $this->katSayisi = $k?->kat_sayisi;
+        $this->yscUzmanM2 = $k?->ysc_uzman_m2;
         $this->kullaniciYuku = $k?->kullanici_yuku;
         $this->ozelKullanimlar = $k?->ozel_kullanimlar ?? [];
         $this->bolumler = $k?->bolumler ?? [];
@@ -260,6 +265,7 @@ class YanginGuvenligi extends Page
             'kullanim_turu' => $this->kullanimTuru,
             'taban_alani_m2' => $this->tabanAlaniM2 ?: null,
             'kat_sayisi' => $this->katSayisi,
+            'ysc_uzman_m2' => $this->yscUzmanM2 ?: null,
             'kullanici_yuku' => $this->kullaniciYuku,
             'ozel_kullanimlar' => $this->ozelKullanimlar,
             'bolumler' => array_values($this->bolumler),

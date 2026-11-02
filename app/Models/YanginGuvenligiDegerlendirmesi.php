@@ -27,6 +27,7 @@ class YanginGuvenligiDegerlendirmesi extends Model
         'kat_sayisi' => 'integer',
         'kullanici_yuku' => 'integer',
         'taban_alani_m2' => 'decimal:2',
+        'ysc_uzman_m2' => 'integer',
         'sinif_elle' => 'boolean',
         'degerlendirme_tarihi' => 'date',
     ];
@@ -84,12 +85,15 @@ class YanginGuvenligiDegerlendirmesi extends Model
         return array_flip($agirlik)[$enYuksek] ?? 'dusuk';
     }
 
-    /** Toplam kapalı (yapı inşaat) alanı: taban alanı × zemin üstü kat sayısı (en az 1). */
+    /**
+     * Toplam kapalı (yapı inşaat) alanı. `taban_alani_m2` sütununa uzman TÜM KATLARIN TOPLAMINI girer
+     * (kullanıcı 02.11.2026: taban × kat çarpımı alanı iki kez sayıyordu); kat sayısıyla çarpılmaz.
+     */
     public function toplamAlan(): ?float
     {
-        $taban = (float) ($this->taban_alani_m2 ?? 0);
+        $alan = (float) ($this->taban_alani_m2 ?? 0);
 
-        return $taban > 0 ? round($taban * max(1, (int) ($this->kat_sayisi ?? 1)), 2) : null;
+        return $alan > 0 ? round($alan, 2) : null;
     }
 
     /**
@@ -116,7 +120,9 @@ class YanginGuvenligiDegerlendirmesi extends Model
      * yapı inşaat alanı için 1 adet 6 kg KKT; ulaşma mesafesi en fazla 25 m; depo / otopark / tesisat
      * dairelerinde ayrıca tekerlekli tip. Alan girilmemişse null.
      *
-     * @return array{alan: float, birim: int, adet: int, tekerlekli: array<int, string>}|null
+     * Uzman önerisi (`ysc_uzman_m2`) yalnız yönetmelikten SIKI ise (daha küçük m²) dikkate alınır.
+     *
+     * @return array{alan: float, birim: int, adet: int, uzman_m2: ?int, uzman_adet: ?int, tekerlekli: array<int, string>}|null
      */
     public function yscHesabi(): ?array
     {
@@ -134,7 +140,14 @@ class YanginGuvenligiDegerlendirmesi extends Model
             $tekerlekli[] = 'Kazan dairesi';
         }
 
-        return ['alan' => $alan, 'birim' => $birim, 'adet' => max(1, (int) ceil($alan / $birim)), 'tekerlekli' => $tekerlekli];
+        $uzman = (int) ($this->ysc_uzman_m2 ?? 0);
+        $uzman = $uzman >= 50 && $uzman < $birim ? $uzman : null;
+
+        return [
+            'alan' => $alan, 'birim' => $birim, 'adet' => max(1, (int) ceil($alan / $birim)),
+            'uzman_m2' => $uzman, 'uzman_adet' => $uzman ? max(1, (int) ceil($alan / $uzman)) : null,
+            'tekerlekli' => $tekerlekli,
+        ];
     }
 
     /** Tespit listesindeki söndürücü maddesinin firmaya göre hesaplanmış metni (alan yoksa null). */
@@ -146,12 +159,18 @@ class YanginGuvenligiDegerlendirmesi extends Model
         }
 
         $sayi = fn ($n) => number_format($n, fmod($n, 1) ? 2 : 0, ',', '.');
-        $kat = max(1, (int) ($this->kat_sayisi ?? 1));
-        $alanAciklama = $kat > 1 ? ' ('.$sayi((float) $this->taban_alani_m2).' m² × '.$kat.' kat)' : '';
+        $kat = (int) ($this->kat_sayisi ?? 0);
+        $alanAciklama = $kat > 1 ? ' ('.$kat.' katın toplamı)' : '';
 
-        return 'Toplam '.$sayi($h['alan']).' m² kapalı alan'.$alanAciklama.' için en az '.$h['adet'].' adet 6 kg ABC kuru kimyevi tozlu (KKT) '
-            .'yangın söndürme cihazı, her '.$h['birim'].' m²\'ye 1 adet düşecek ve ulaşma mesafesi en fazla 25 m olacak şekilde '
-            .'dengeli yerleştirilmeli (BYKHY Md.99/2, 99/4). Elektrik panoları ve trafo yakınında ayrıca karbondioksitli (CO₂) söndürücü bulundurulmalı.'
+        $giris = 'Toplam '.$sayi($h['alan']).' m² kapalı alan'.$alanAciklama.' için ';
+        $yerlesim = $h['uzman_m2']
+            ? 'her '.$h['uzman_m2'].' m²\'ye 1 adet düşecek şekilde en az '.$h['uzman_adet'].' adet 6 kg ABC kuru kimyevi tozlu (KKT) yangın söndürme cihazı '
+                .'(uzman önerisi; BYKHY Md.99/2 asgarisi her '.$h['birim'].' m²\'ye 1 adet = '.$h['adet'].' adet), ulaşma mesafesi en fazla 25 m olacak şekilde '
+                .'dengeli yerleştirilmeli (Md.99/4).'
+            : 'en az '.$h['adet'].' adet 6 kg ABC kuru kimyevi tozlu (KKT) yangın söndürme cihazı, her '.$h['birim'].' m²\'ye 1 adet düşecek ve '
+                .'ulaşma mesafesi en fazla 25 m olacak şekilde dengeli yerleştirilmeli (BYKHY Md.99/2, 99/4).';
+
+        return $giris.$yerlesim.' Elektrik panoları ve trafo yakınında ayrıca karbondioksitli (CO₂) söndürücü bulundurulmalı.'
             .($h['tekerlekli'] ? ' '.implode(', ', $h['tekerlekli']).' için ayrıca tekerlekli tip söndürücü gerekir (Md.99/3).' : '');
     }
 

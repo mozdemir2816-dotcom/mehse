@@ -115,7 +115,7 @@ class YanginGuvenligiTest extends TestCase
         $this->firma->update(['calisan_sayisi' => 10]);
         $d = YanginGuvenligiDegerlendirmesi::firmaIcin($this->firma);
         $d->update([
-            'kullanim_turu' => 'endustriyel', 'taban_alani_m2' => 1250, 'kat_sayisi' => 2, 'kullanici_yuku' => 1,
+            'kullanim_turu' => 'endustriyel', 'taban_alani_m2' => 2500, 'kat_sayisi' => 2, 'kullanici_yuku' => 1, // tüm katların toplamı
             'bolumler' => ['Üretim / atölye', 'Ürün veya ham madde deposu'],
             'tespitler' => [['madde' => 'Yangın söndürme cihazları (YSC) her 200 m² için 1 adet ve max 25 m aralıkla yerleştirilmeli', 'oncelik' => 'orta']],
         ]);
@@ -132,7 +132,7 @@ class YanginGuvenligiTest extends TestCase
 
         // Eski "200 m²" tespiti raporda firmaya göre hesaplanmış metinle değişir.
         $madde = $d->raporTespitleri()[0]['madde'];
-        $this->assertStringContainsString('Toplam 2.500 m² kapalı alan (1.250 m² × 2 kat) için en az 10 adet 6 kg ABC', $madde);
+        $this->assertStringContainsString('Toplam 2.500 m² kapalı alan (2 katın toplamı) için en az 10 adet 6 kg ABC', $madde);
         $this->assertStringContainsString("her 250 m²'ye 1 adet", $madde);
         $this->assertStringNotContainsString('200 m²', $madde);
 
@@ -164,5 +164,30 @@ class YanginGuvenligiTest extends TestCase
             ->call('kaydet');
 
         $this->assertSame('yuksek', $d->fresh()->tespitler[0]['oncelik']);
+    }
+
+    /** Uzman önerisi (ör. her 200 m²) yönetmelik asgarisiyle (250 m²) birlikte yazılır; gevşek öneri yok sayılır. */
+    public function test_uzman_onerisi_sondurucu_yonetmelik_asgarisiyle_birlikte_yazilir(): void
+    {
+        $d = YanginGuvenligiDegerlendirmesi::firmaIcin($this->firma);
+        $d->update(['kullanim_turu' => 'endustriyel', 'riskler' => ['Yanıcı kimyasal madde'], 'taban_alani_m2' => 1520, 'kat_sayisi' => 2,
+            'tespitler' => [['madde' => 'Yangın söndürme cihazları (YSC) her 250 m² için 1 adet', 'oncelik' => 'orta']]]);
+
+        $this->assertSame([7, null], [$d->fresh()->yscHesabi()['adet'], $d->fresh()->yscHesabi()['uzman_adet']]);
+
+        Livewire::test(YanginSayfasi::class)->set('firmaId', $this->firma->id)
+            ->set('yscUzmanM2', 200)->assertSee('uzman önerisi 8 adet')->call('kaydet');
+
+        $d = $d->fresh();
+        $this->assertSame('yuksek', $d->belirlenen_tehlike_sinifi);
+        $this->assertSame([7, 200, 8], [$d->yscHesabi()['adet'], $d->yscHesabi()['uzman_m2'], $d->yscHesabi()['uzman_adet']]);
+        $madde = $d->raporTespitleri()[0]['madde'];
+        $this->assertStringContainsString("Toplam 1.520 m² kapalı alan (2 katın toplamı) için her 200 m²'ye 1 adet düşecek şekilde en az 8 adet 6 kg ABC", $madde);
+        $this->assertStringContainsString("BYKHY Md.99/2 asgarisi her 250 m²'ye 1 adet = 7 adet", $madde);
+        $html = view('pdf.yangin-guvenligi', ['kayit' => $d, 'firma' => $this->firma])->render();
+        $this->assertStringContainsString('<b>Uzman önerisi:</b> her 200 m²', $html);
+
+        $d->update(['ysc_uzman_m2' => 400]); // yönetmelikten gevşek → yok sayılır
+        $this->assertNull($d->fresh()->yscHesabi()['uzman_m2']);
     }
 }
