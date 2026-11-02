@@ -3833,6 +3833,7 @@ return [
             ],
             [
                 'anahtar' => 'egitimler',
+                'genel_bina' => true, // 02.11.2026: zorunlu_ortak risklerle karşılanır, AI sohbetinde sorulmaz
                 'soru' => 'Yangın güvenliği, ilk yardım, acil durum tahliye eğitimi verildi mi?',
                 'ipucu' => 'Yangın eğitimi Binaların Yangından Korunması Yön. m.129, ilk yardım İlk Yardım Yön. m.16 (çok tehlikeli işyerlerinde her 10 kişide 1 sertifikalı) zorunludur.',
                 'tip' => 'coklu',
@@ -3852,6 +3853,7 @@ return [
             ],
             [
                 'anahtar' => 'tatbikat',
+                'genel_bina' => true, // 02.11.2026: zorunlu_ortak risklerle karşılanır, AI sohbetinde sorulmaz
                 'soru' => 'Acil durum tahliye tatbikatı son 12 ayda yapıldı mı?',
                 'ipucu' => 'Acil Durumlar Yön. m.11 ve Yangın Yön. m.129; yılda en az 1 tatbikat zorunlu, sonuçlar kayıt altına alınır.',
                 'tip' => 'radyo',
@@ -3882,6 +3884,7 @@ return [
             ],
             [
                 'anahtar' => 'yangin_altyapi',
+                'genel_bina' => true, // 02.11.2026: zorunlu_ortak risklerle karşılanır, AI sohbetinde sorulmaz
                 'soru' => 'Yangın altyapısı (acil çıkış + söndürücü) durumu nasıl?',
                 'ipucu' => 'Yangın Yön. m.32 + TS EN 1838 acil aydınlatma + TS EN ISO 7010 işaretleme + panik bar (TS EN 1125). Yangın Yön. m.99 + TS ISO 11602-2; her 100 m²’de 1 adet 6 kg ABC tüp + yılda 1 dolum/test.',
                 'tip' => 'radyo',
@@ -3912,6 +3915,7 @@ return [
             ],
             [
                 'anahtar' => 'elektrik',
+                'genel_bina' => true, // 02.11.2026: zorunlu_ortak risklerle karşılanır, AI sohbetinde sorulmaz
                 'soru' => 'Elektrik güvenlik kontrolleri (30 mA kaçak akım rölesi + yıllık topraklama ölçümü) durumu?',
                 'ipucu' => 'Elektrik İç Tesisleri Yön. + TS HD 60364-4-41 (30 mA KAKR zorunlu, aylık test). Topraklama Yön. m.10 (yılda 1 EKAT belgeli ölçüm).',
                 'tip' => 'radyo',
@@ -3942,6 +3946,7 @@ return [
             ],
             [
                 'anahtar' => 'havalandirma',
+                'genel_bina' => true, // 02.11.2026: zorunlu_ortak risklerle karşılanır, AI sohbetinde sorulmaz
                 'soru' => 'Mekanik havalandırma / iklimlendirme sisteminiz var ve filtreler 3 ayda 1 değişiyor mu?',
                 'ipucu' => 'TS EN 16798; kapalı ofis min 6 ACH (hava değişim/saat), CO₂ < 1000 ppm. Legionella için yıllık su analizi.',
                 'tip' => 'radyo',
@@ -4077,6 +4082,375 @@ return [
                     ]]],
                 ],
             ],
+            /*
+             | NACE grubuna duyarlı sektörel sorular (02.11.2026). 'nace_gruplari' firmanın NACE grubuyla
+             | (App\Support\NaceGrubu, config/risk_nace.php) eşleşir; firmanın NACE'si yoksa / sektör elle
+             | seçildiyse 'sektorler' ile eşleşir. Puanlar 5x5 ölçeğinde — Fine-Kinney'e otomatik çevrilir.
+            */
+            // — Yapı / İnşaat (NACE 41, 42, 43) —
+            [
+                'anahtar' => 'insaat_yuksekte_calisma',
+                'soru' => 'Yüksekte çalışmalarda (2 m ve üzeri) düşmeye karşı koruma nasıl sağlanıyor?',
+                'ipucu' => 'Yapı İşlerinde İSG Yön. Ek-4 B/4: önce toplu koruma (korkuluk, ağ, kapak), sonra kişisel koruma (tam vücut kemeri + yaşam hattı).',
+                'tip' => 'radyo',
+                'sektorler' => ['insaat'],
+                'nace_gruplari' => ['insaat'],
+                'secenekler' => [
+                    ['deger' => 'tam', 'etiket' => 'Kenar korkuluğu, boşluk kapakları ve yaşam hattı tam'],
+                    ['deger' => 'kemer', 'etiket' => 'Yalnız emniyet kemeri kullanılıyor, toplu koruma eksik', 'riskler' => [[
+                        'bolum' => 'Şantiye', 'faaliyet' => 'Yüksekte çalışma',
+                        'tehlike' => 'Döşeme kenarı ve boşluklarda toplu korumanın (korkuluk, ağ, kapak) eksik olması',
+                        'risk' => 'Yüksekten düşme, ölüm veya ağır yaralanma',
+                        'oneri' => 'Döşeme kenarlarına 1 m yükseklikte ara ve topuk levhalı korkuluk, boşluklara sabitlenmiş kapak ve güvenlik ağı yapılır; kişisel koruma toplu korumanın tamamlayıcısıdır.',
+                        'mevzuat' => 'Yapı İşlerinde İSG Yön. Ek-4 B/4', 'olasilik' => 4, 'siddet' => 5,
+                    ]]],
+                    ['deger' => 'yok', 'etiket' => 'Düzenli bir koruma yok', 'riskler' => [[
+                        'bolum' => 'Şantiye', 'faaliyet' => 'Yüksekte çalışma',
+                        'tehlike' => 'Yüksekte korumasız çalışma (korkuluk, yaşam hattı, kemer yok)',
+                        'risk' => 'Yüksekten düşme sonucu ölüm',
+                        'oneri' => 'Yüksekte çalışma izin sistemi kurulur; toplu korumalar tamamlanır, tam vücut kemeri ve ankraj noktaları sağlanır, çalışanlara yüksekte çalışma eğitimi verilir.',
+                        'mevzuat' => 'Yapı İşlerinde İSG Yön. Ek-4 B/4; KKD Yön.', 'olasilik' => 5, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'insaat_derin_kazi',
+                'soru' => 'Şantiyede 1,5 m’den derin kazı / temel çukuru var mı, şev veya iksa yapılıyor mu?',
+                'ipucu' => 'Yapı İşlerinde İSG Yön. Ek-4 B/10: kazı yan yüzeyleri şevlenir veya iksa edilir; kenarlara malzeme ve araç yaklaştırılmaz.',
+                'tip' => 'radyo',
+                'sektorler' => ['insaat'],
+                'nace_gruplari' => ['insaat'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Derin kazı yok'],
+                    ['deger' => 'guvenli', 'etiket' => 'Var — şev / iksa, kenar barikatı ve iniş merdiveni mevcut'],
+                    ['deger' => 'eksik', 'etiket' => 'Var — şev / iksa yetersiz veya kenarlar korumasız', 'riskler' => [[
+                        'bolum' => 'Şantiye', 'faaliyet' => 'Kazı ve temel işleri',
+                        'tehlike' => 'Derin kazıda şev / iksa yapılmaması, kazı kenarının korumasız olması',
+                        'risk' => 'Göçük altında kalma, kazıya düşme, ölüm',
+                        'oneri' => 'Zemin etüdüne göre şev açısı veya iksa uygulanır; kazı kenarına barikat ve uyarı, 1 m içine malzeme / araç yaklaştırılmaz, güvenli iniş-çıkış merdiveni konur, kazı her vardiya öncesi yetkili kişice kontrol edilir.',
+                        'mevzuat' => 'Yapı İşlerinde İSG Yön. Ek-4 B/10', 'olasilik' => 4, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'insaat_santiye_panosu',
+                'soru' => 'Şantiye elektrik panoları (geçici tesisat) ne durumda?',
+                'ipucu' => 'Şantiye panoları kilitli, topraklı, 30 mA kaçak akım korumalı ve dış ortama uygun (IP) olmalıdır; kablolar zeminde ezilmemelidir.',
+                'tip' => 'coklu',
+                'sektorler' => ['insaat'],
+                'nace_gruplari' => ['insaat'],
+                'secenekler' => [
+                    ['deger' => 'uygun', 'etiket' => 'Kilitli, topraklı, kaçak akım röleli ve IP uygun'],
+                    ['deger' => 'kacak_akim', 'etiket' => 'Kaçak akım rölesi / topraklama eksik veya test edilmiyor', 'riskler' => [[
+                        'bolum' => 'Şantiye', 'faaliyet' => 'Geçici elektrik tesisatı',
+                        'tehlike' => 'Şantiye panosunda kaçak akım koruması / topraklama eksikliği',
+                        'risk' => 'Elektrik çarpması sonucu ölüm',
+                        'oneri' => 'Tüm prizli çıkışlarda 30 mA kaçak akım rölesi bulunur, aylık test butonu ile denenir; topraklama ölçümü yetkili elektrik mühendisince yapılır ve raporlanır.',
+                        'mevzuat' => 'Yapı İşlerinde İSG Yön. Ek-4 A/2; Elektrik Tesislerinde Topraklamalar Yön.', 'olasilik' => 3, 'siddet' => 5,
+                    ]]],
+                    ['deger' => 'acik_pano', 'etiket' => 'Pano kapakları açık / kilitsiz, kablolar yerde dağınık', 'riskler' => [[
+                        'bolum' => 'Şantiye', 'faaliyet' => 'Geçici elektrik tesisatı',
+                        'tehlike' => 'Şantiye panosunun kilitsiz, kablolarının zeminde ve suyla temas halinde olması',
+                        'risk' => 'Elektrik çarpması, kablo hasarı nedeniyle yangın',
+                        'oneri' => 'Panolar kilitlenir ve anahtarı yetkili elektrikçide tutulur; kablolar askıya alınır veya koruyucu kanala alınır, ek yerleri IP uyumlu yapılır.',
+                        'mevzuat' => 'Yapı İşlerinde İSG Yön. Ek-4 A/2', 'olasilik' => 4, 'siddet' => 4,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'insaat_iskele',
+                'soru' => 'Cephe / yapı iskeleleri nasıl kuruluyor ve kontrol ediliyor?',
+                'ipucu' => 'İş Ekipmanları Yön. Ek-2 / 4.3: iskele ehil kişilerce, montaj planına göre kurulur; kullanım öncesi ve periyodik olarak kontrol edilip etiketlenir.',
+                'tip' => 'radyo',
+                'sektorler' => ['insaat'],
+                'nace_gruplari' => ['insaat'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'İskele kullanılmıyor'],
+                    ['deger' => 'uygun', 'etiket' => 'Sertifikalı sistem iskele, yeşil / kırmızı kart kontrolü var'],
+                    ['deger' => 'eksik', 'etiket' => 'İskele var ama kontrol / etiket / korkuluk eksik', 'riskler' => [[
+                        'bolum' => 'Şantiye', 'faaliyet' => 'İskele kurulumu ve kullanımı',
+                        'tehlike' => 'Kontrolsüz, eksik korkuluklu veya sağlam zemine oturmayan iskele',
+                        'risk' => 'İskeleden düşme, iskele çökmesi, malzeme düşmesi',
+                        'oneri' => 'İskele TS EN 12810/12811’e uygun, ehil kişilerce kurulur; tabanı sağlam zemine ve ayarlı ayaklara oturtulur, yapıya ankrajlanır; korkuluk, ara korkuluk ve topuk levhası tamamlanır; her kullanım öncesi kontrol edilip yeşil / kırmızı kartla işaretlenir.',
+                        'mevzuat' => 'İş Ekipmanları Yön. Ek-2 / 4.3; Yapı İşlerinde İSG Yön.', 'olasilik' => 4, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            // — Metal / Makine imalatı (NACE 24–30, 33) —
+            [
+                'anahtar' => 'metal_presler',
+                'soru' => 'Pres (eksantrik, hidrolik, abkant) güvenliği nasıl sağlanıyor?',
+                'ipucu' => 'İş Ekipmanları Yön. Ek-1 / Makine Emniyeti Yön.: tehlikeli bölgeye erişim ışık perdesi, iki el kumanda veya kilitli koruyucu ile engellenir; periyodik kontrol zorunludur.',
+                'tip' => 'radyo',
+                'sektorler' => ['fabrika', 'servis'],
+                'nace_gruplari' => ['metal'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Pres kullanılmıyor'],
+                    ['deger' => 'uygun', 'etiket' => 'Işık perdesi / iki el kumanda var, periyodik kontrolleri yapılıyor'],
+                    ['deger' => 'eksik', 'etiket' => 'Koruyucu devre dışı / eksik veya periyodik kontrol yok', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Pres ile şekillendirme',
+                        'tehlike' => 'Preste ışık perdesi / iki el kumandanın bulunmaması veya köprülenmesi',
+                        'risk' => 'Kalıp arasında el-parmak ezilmesi, uzuv kaybı',
+                        'oneri' => 'Pres tipine uygun ışık perdesi veya iki el kumanda takılır, güvenlik devresi köprülenemez hale getirilir; yıllık periyodik kontrol yetkili kişiye yaptırılır, kalıp değişimi enerji kesilip kilitlenerek (LOTO) yapılır.',
+                        'mevzuat' => 'İş Ekipmanları Yön. Ek-1, Ek-3; Makine Emniyeti Yön.', 'olasilik' => 4, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'metal_talasli',
+                'soru' => 'Torna, freze ve CNC gibi talaşlı imalat tezgâhlarında koruyucular ve kullanım kuralları uygulanıyor mu?',
+                'ipucu' => 'Döner aynaya kapılma talaşlı imalattaki en ağır kaza türüdür: ayna koruyucu, acil stop ve döner makinede eldiven yasağı uygulanır.',
+                'tip' => 'radyo',
+                'sektorler' => ['fabrika', 'servis'],
+                'nace_gruplari' => ['metal'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Talaşlı imalat tezgâhı yok'],
+                    ['deger' => 'uygun', 'etiket' => 'Ayna / kapak koruyucuları ve acil stop çalışır, eldiven yasağı uygulanıyor'],
+                    ['deger' => 'eksik', 'etiket' => 'Koruyucular sökük / eksik, eldivenle çalışılıyor', 'riskler' => [[
+                        'bolum' => 'Talaşlı imalat', 'faaliyet' => 'Torna / freze / CNC işleme',
+                        'tehlike' => 'Döner aynaya veya iş parçasına koruyucusuz yaklaşma, eldivenle çalışma',
+                        'risk' => 'Kapılma, uzuv kopması, talaş sıçramasıyla göz yaralanması',
+                        'oneri' => 'Ayna koruyucusu ve kilitli kapı emniyet şalterleri takılır; acil stop butonları erişilebilir ve test edilir; döner makinede eldiven, bol giysi ve takı yasaklanır, koruyucu gözlük zorunlu tutulur; talaş elle değil fırça / kancayla alınır.',
+                        'mevzuat' => 'İş Ekipmanları Yön. Ek-1; Makine Emniyeti Yön.', 'olasilik' => 3, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'metal_sicak_islem',
+                'soru' => 'Kaynak, kesme, taşlama gibi sıcak işler nasıl yönetiliyor?',
+                'ipucu' => 'Sıcak işlerde sıcak çalışma izni, yanıcıların uzaklaştırılması, yangın nöbetçisi ve kaynak dumanının yerinde emilmesi gerekir.',
+                'tip' => 'coklu',
+                'sektorler' => ['fabrika', 'servis', 'insaat'],
+                'nace_gruplari' => ['metal', 'insaat'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Sıcak iş yapılmıyor'],
+                    ['deger' => 'uygun', 'etiket' => 'Sıcak çalışma izni, yangın nöbetçisi ve duman emişi var'],
+                    ['deger' => 'izin_yok', 'etiket' => 'Sıcak çalışma izni / yangın nöbetçisi yok', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Kaynak, kesme ve taşlama',
+                        'tehlike' => 'Sıcak işlerin izin sistemi ve yangın önlemi olmadan yapılması',
+                        'risk' => 'Kıvılcımla yangın, patlama, yanık',
+                        'oneri' => 'Sıcak çalışma izin formu uygulanır; 11 m çevredeki yanıcılar uzaklaştırılır veya örtülür, iş süresince ve sonrasında 30 dk yangın nöbetçisi ile söndürücü bulundurulur; gaz tüpleri dik, zincirli ve geri tepme ventilli tutulur.',
+                        'mevzuat' => 'Binaların Yangından Korunması Hakkında Yön.; İş Ekipmanları Yön.', 'olasilik' => 3, 'siddet' => 5,
+                    ]]],
+                    ['deger' => 'duman', 'etiket' => 'Kaynak dumanı için lokal emiş yok', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Kaynak',
+                        'tehlike' => 'Kaynak duman ve gazlarının lokal emiş olmadan solunması',
+                        'risk' => 'Metal dumanı ateşi, kronik akciğer hastalığı, mesleki kanser',
+                        'oneri' => 'Kaynak noktasında lokal egzoz havalandırması (hareketli emiş kolu / torç emişli) kurulur; kapalı alanda zorlanmış havalandırma ve uygun solunum koruyucu kullanılır; ortam ölçümü ve periyodik akciğer grafisi / SFT yapılır.',
+                        'mevzuat' => 'Kimyasal Maddelerle Çalışmalarda SG Önlemleri Yön.; Kanserojen veya Mutajen Maddelerle Çalışmalarda SG Önlemleri Yön.', 'olasilik' => 4, 'siddet' => 3,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'metal_kaldirma',
+                'soru' => 'Tavan vinci, caraskal veya pergel vinç gibi kaldırma araçlarının periyodik kontrolü ve operatör yetkisi?',
+                'ipucu' => 'İş Ekipmanları Yön. Ek-3: kaldırma araçları yılda en az bir kez yetkili kişilerce kontrol edilir; sapan, zincir ve kancalar kullanım öncesi gözden geçirilir.',
+                'tip' => 'radyo',
+                'sektorler' => ['fabrika', 'depo', 'servis'],
+                'nace_gruplari' => ['metal'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Kaldırma aracı yok'],
+                    ['deger' => 'uygun', 'etiket' => 'Periyodik kontrolleri güncel, operatörler eğitimli'],
+                    ['deger' => 'eksik', 'etiket' => 'Periyodik kontrol / operatör belgesi eksik', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Yük kaldırma ve taşıma',
+                        'tehlike' => 'Periyodik kontrolü yapılmamış kaldırma aracı ve yetkisiz operatör',
+                        'risk' => 'Askıdaki yükün düşmesi, ezilme, ölüm',
+                        'oneri' => 'Tavan vinci / caraskal yıllık periyodik kontrole tabi tutulur, kapasite etiketleri görünür olur; sapan ve kancalar kullanım öncesi kontrol edilir, emniyet mandalı takılır; operatörlere belgeli eğitim verilir, yük altında durmak yasaklanır.',
+                        'mevzuat' => 'İş Ekipmanları Yön. Ek-3 / 2.1', 'olasilik' => 3, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            // — Kimya / Plastik (NACE 19–22) —
+            [
+                'anahtar' => 'kimya_havalandirma_ex',
+                'soru' => 'Parlayıcı solvent / toz bulunan alanlarda havalandırma ve Ex-proof (ATEX) ekipman durumu?',
+                'ipucu' => 'Patlayıcı Ortamlar Yön.: Patlamadan Korunma Dokümanı hazırlanır, bölgeler (Zone 0/1/2, 20/21/22) belirlenir; bu bölgelerde Ex sertifikalı ekipman kullanılır.',
+                'tip' => 'radyo',
+                'sektorler' => ['fabrika'],
+                'nace_gruplari' => ['kimya', 'plastik'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Parlayıcı / patlayıcı ortam yok'],
+                    ['deger' => 'uygun', 'etiket' => 'Patlamadan Korunma Dokümanı var, Ex ekipman ve havalandırma uygun'],
+                    ['deger' => 'eksik', 'etiket' => 'Doküman yok / normal (Ex olmayan) ekipman kullanılıyor', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Parlayıcı madde ile çalışma',
+                        'tehlike' => 'Patlayıcı ortamda Ex sertifikasız elektrik ekipmanı ve yetersiz havalandırma',
+                        'risk' => 'Buhar / toz patlaması, yangın, toplu ölüm',
+                        'oneri' => 'Patlamadan Korunma Dokümanı hazırlanır ve bölge sınıflandırması yapılır; bölgedeki aydınlatma, motor ve prizler Ex sertifikalı ekipmanla değiştirilir; LEL altında tutacak genel ve lokal havalandırma kurulup gaz dedektörü ile izlenir.',
+                        'mevzuat' => 'Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yön.', 'olasilik' => 3, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'kimya_depolama',
+                'soru' => 'Kimyasallar nasıl depolanıyor (uyumsuz maddeler, sızıntı havuzu, SDS)?',
+                'ipucu' => 'Kimyasal Maddelerle Çalışmalarda SG Önlemleri Yön.: uyumsuz kimyasallar ayrı depolanır, sızıntı toplama havuzu bulunur, Türkçe Güvenlik Bilgi Formları (SDS) erişilebilir tutulur.',
+                'tip' => 'coklu',
+                'sektorler' => ['fabrika', 'depo'],
+                'nace_gruplari' => ['kimya', 'plastik'],
+                'secenekler' => [
+                    ['deger' => 'uygun', 'etiket' => 'Ayrık depolama, sızıntı havuzu ve güncel SDS mevcut'],
+                    ['deger' => 'uyumsuz', 'etiket' => 'Uyumsuz kimyasallar bir arada / sızıntı havuzu yok', 'riskler' => [[
+                        'bolum' => 'Depo', 'faaliyet' => 'Kimyasal depolama',
+                        'tehlike' => 'Uyumsuz kimyasalların birlikte, sızıntı havuzu olmadan depolanması',
+                        'risk' => 'Tehlikeli reaksiyon, zehirli gaz çıkışı, yangın, çevre kirliliği',
+                        'oneri' => 'Uyumluluk tablosuna göre ayrık depolama yapılır (asit-baz, oksitleyici-yanıcı); raflarda kap hacminin en az %110’u kadar sızıntı havuzu, depo girişinde dökülme kiti ve göz duşu bulunur; depo havalandırılır.',
+                        'mevzuat' => 'Kimyasal Maddelerle Çalışmalarda SG Önlemleri Yön.; SEA Yön.', 'olasilik' => 3, 'siddet' => 4,
+                    ]]],
+                    ['deger' => 'sds', 'etiket' => 'Güvenlik Bilgi Formları (SDS) / etiketler eksik', 'riskler' => [[
+                        'bolum' => 'Depo', 'faaliyet' => 'Kimyasal kullanımı',
+                        'tehlike' => 'Kimyasalların Türkçe Güvenlik Bilgi Formu ve etiketinin bulunmaması',
+                        'risk' => 'Yanlış kullanım, zehirlenme, uygunsuz ilk müdahale',
+                        'oneri' => 'Tüm kimyasalların güncel Türkçe SDS’leri temin edilip kullanım noktasında bulundurulur; aktarma kapları CLP’ye uygun etiketlenir; kimyasal envanteri tutulur ve çalışanlara eğitim verilir.',
+                        'mevzuat' => 'Kimyasal Maddelerle Çalışmalarda SG Önlemleri Yön.; SDS Yön.', 'olasilik' => 3, 'siddet' => 3,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'kimya_statik',
+                'soru' => 'Parlayıcı sıvı aktarımı ve toz taşımada statik elektriğe karşı topraklama / eş potansiyel bağlantı yapılıyor mu?',
+                'ipucu' => 'Varil, tank ve aktarma ekipmanı arasında eş potansiyel bağlantı ve topraklama yapılmazsa statik kıvılcım parlayıcı buharı tutuşturabilir.',
+                'tip' => 'radyo',
+                'sektorler' => ['fabrika'],
+                'nace_gruplari' => ['kimya', 'plastik'],
+                'secenekler' => [
+                    ['deger' => 'yok', 'etiket' => 'Parlayıcı sıvı / toz aktarımı yok'],
+                    ['deger' => 'uygun', 'etiket' => 'Topraklama klipsleri ve eş potansiyel bağlantı kullanılıyor, ölçülüyor'],
+                    ['deger' => 'eksik', 'etiket' => 'Statik elektriğe karşı önlem yok', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Parlayıcı sıvı aktarma / toz taşıma',
+                        'tehlike' => 'Aktarma sırasında statik elektrik birikmesi (topraklama ve eş potansiyel bağlantı yok)',
+                        'risk' => 'Statik kıvılcımla yangın / patlama',
+                        'oneri' => 'Varil, tank, pompa ve hortumlar arasında topraklama klipsli eş potansiyel bağlantı yapılır; iletken hortum ve antistatik ayakkabı / kıyafet kullanılır; topraklama sürekliliği periyodik ölçülür.',
+                        'mevzuat' => 'Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yön.; Elektrik Tesislerinde Topraklamalar Yön.', 'olasilik' => 3, 'siddet' => 5,
+                    ]]],
+                ],
+            ],
+            [
+                'anahtar' => 'kimya_kkd',
+                'soru' => 'Kullanılan kimyasala uygun KKD (kimyasal eldiven, yüz siperi, filtreli maske) seçilip kullanılıyor mu?',
+                'ipucu' => 'KKD; SDS’nin 8. bölümüne göre seçilir (eldiven malzemesi, maske filtre tipi). Göz duşu / acil duş kimyasal kullanım alanında bulunmalıdır.',
+                'tip' => 'radyo',
+                'sektorler' => ['fabrika'],
+                'nace_gruplari' => ['kimya', 'plastik'],
+                'secenekler' => [
+                    ['deger' => 'uygun', 'etiket' => 'SDS’ye göre seçilmiş KKD ve göz duşu / acil duş mevcut'],
+                    ['deger' => 'eksik', 'etiket' => 'Genel amaçlı eldiven / maske kullanılıyor, göz duşu yok', 'riskler' => [[
+                        'bolum' => 'Üretim', 'faaliyet' => 'Kimyasal kullanımı',
+                        'tehlike' => 'Kimyasala uygun olmayan KKD kullanılması, göz duşu / acil duş bulunmaması',
+                        'risk' => 'Kimyasal yanık, göz hasarı, solunum yoluyla zehirlenme',
+                        'oneri' => 'SDS bölüm 8’e göre uygun malzemeden kimyasal eldiven, yüz siperi ve doğru filtre tipli maske (ör. A2B2E2K2-P3) seçilir, KKD zimmet ve değişim takibi yapılır; kullanım alanına 10 sn mesafede göz duşu ve acil duş kurulur.',
+                        'mevzuat' => 'KKD’lerin İşyerlerinde Kullanılması Hakkında Yön.; Kimyasal Maddelerle Çalışmalarda SG Önlemleri Yön.', 'olasilik' => 3, 'siddet' => 4,
+                    ]]],
+                ],
+            ],
+        ],
+
+        /*
+         | Her işyerinde zorunlu ortak riskler (02.11.2026) — yapay zekâ akışı başlarken SORU SORULMADAN
+         | analize eklenir (App\Filament\Pages\RiskSihirbazi::aiZorunluOrtakEkle). Bu yüzden genel bina
+         | soruları ('genel_bina' => true) sohbette sorulmaz. Puanlar 5x5 ölçeğinde; Fine-Kinney
+         | yönteminde RiskYontemDonusturucu::matrisDegeriniFineKinneye ile çevrilir.
+        */
+        'zorunlu_ortak' => [
+            // Yangın
+            ['bolum' => 'Genel', 'faaliyet' => 'Yangından korunma', 'tehlike' => 'Yangın söndürücülerin sayıca yetersiz, erişilemez veya periyodik bakımsız olması', 'risk' => 'Yangına ilk müdahalenin yapılamaması, yangının büyümesi, can ve mal kaybı', 'oneri' => 'Söndürücüler yangın sınıfına uygun tipte ve yeterli sayıda, yerden en fazla 90 cm yükseklikte asılır; önleri kapatılmaz, 6 ayda bir gözle kontrol ve yılda bir yetkili firma bakımı yapılıp etiketlenir.', 'mevzuat' => 'Binaların Yangından Korunması Hakkında Yön. m.94', 'olasilik' => 2, 'siddet' => 5],
+            ['bolum' => 'Genel', 'faaliyet' => 'Yangından korunma', 'tehlike' => 'Yangın algılama / alarm sisteminin bulunmaması veya test edilmemesi', 'risk' => 'Yangının geç fark edilmesi, tahliyenin gecikmesi', 'oneri' => 'Bina kullanım sınıfına uygun duman / ısı dedektörü ve alarm butonları kurulur; sistem periyodik olarak test edilip kayıt altına alınır.', 'mevzuat' => 'Binaların Yangından Korunması Hakkında Yön. m.75', 'olasilik' => 2, 'siddet' => 5],
+            ['bolum' => 'Genel', 'faaliyet' => 'Yangından korunma', 'tehlike' => 'Yanıcı malzemelerin (ambalaj, karton, atık) gelişigüzel biriktirilmesi', 'risk' => 'Yangın yükünün artması, yangının hızla yayılması', 'oneri' => 'Yanıcı atıklar düzenli toplanır, kapaklı metal kaplarda biriktirilir; ısı kaynaklarından ve elektrik panolarından uzak tutulur.', 'mevzuat' => 'Binaların Yangından Korunması Hakkında Yön.; İşyeri Bina ve Eklentileri Yön.', 'olasilik' => 3, 'siddet' => 4],
+            // Acil durum
+            ['bolum' => 'Genel', 'faaliyet' => 'Acil durum yönetimi', 'tehlike' => 'Acil durum planının hazırlanmamış veya güncel olmaması', 'risk' => 'Acil durumda organizasyonsuz müdahale, can kaybı', 'oneri' => 'İşyerinin tehlike sınıfına göre (2 / 4 / 6 yılda bir) acil durum planı hazırlanır ve güncellenir; plan çalışanlara duyurulur.', 'mevzuat' => 'İşyerlerinde Acil Durumlar Hakkında Yön. m.9, m.12', 'olasilik' => 2, 'siddet' => 4],
+            ['bolum' => 'Genel', 'faaliyet' => 'Acil durum yönetimi', 'tehlike' => 'Acil durum ekiplerinin (söndürme, kurtarma, koruma, ilk yardım) oluşturulmamış veya eğitimsiz olması', 'risk' => 'Acil durumda etkin müdahale yapılamaması', 'oneri' => 'Çalışan sayısı ve tehlike sınıfına göre destek elemanları görevlendirilir, Yangın / Kurtarma / Koruma ekipleri oluşturulup eğitilir, ekip listeleri ilan edilir.', 'mevzuat' => 'İşyerlerinde Acil Durumlar Hakkında Yön. m.11', 'olasilik' => 2, 'siddet' => 4],
+            ['bolum' => 'Genel', 'faaliyet' => 'Acil durum yönetimi', 'tehlike' => 'Yılda en az bir kez acil durum tatbikatı yapılmaması', 'risk' => 'Panik, tahliyenin gecikmesi, ezilme ve can kaybı', 'oneri' => 'Yılda en az bir kez tahliye ve yangın tatbikatı yapılır, sonuçları raporlanarak eksikler giderilir.', 'mevzuat' => 'İşyerlerinde Acil Durumlar Hakkında Yön. m.13', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Genel', 'faaliyet' => 'Tahliye', 'tehlike' => 'Acil çıkış yollarının ve kapılarının kapalı, kilitli veya malzemeyle daraltılmış olması', 'risk' => 'Tahliyenin engellenmesi, mahsur kalma, can kaybı', 'oneri' => 'Kaçış yolları sürekli açık tutulur, acil çıkış kapıları dışa doğru ve panik barlı açılır, kilitlenmez; düzenli kontrol edilir.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön. Ek-1; Binaların Yangından Korunması Hakkında Yön.', 'olasilik' => 2, 'siddet' => 5],
+            ['bolum' => 'Genel', 'faaliyet' => 'Tahliye', 'tehlike' => 'Acil çıkış yönlendirme işaretleri ve acil aydınlatmanın bulunmaması / çalışmaması', 'risk' => 'Elektrik kesintisinde veya dumanda kaçış yolunun bulunamaması', 'oneri' => 'Kaçış yolları ve çıkışlar fotolüminesan / aydınlatmalı işaretlerle gösterilir; en az 1 saat çalışan acil aydınlatma kurulur ve aylık test edilir.', 'mevzuat' => 'Sağlık ve Güvenlik İşaretleri Yön.; Binaların Yangından Korunması Hakkında Yön.', 'olasilik' => 2, 'siddet' => 4],
+            ['bolum' => 'Genel', 'faaliyet' => 'Acil durum yönetimi', 'tehlike' => 'Deprem anında devrilebilecek dolap, raf ve ekipmanların sabitlenmemiş olması', 'risk' => 'Devrilen eşya altında kalma, kaçış yolunun kapanması', 'oneri' => 'Yüksek dolap, raf ve ağır ekipmanlar duvara / zemine sabitlenir; kaçış yolları üzerinde devrilebilecek eşya bırakılmaz, toplanma alanı belirlenip işaretlenir.', 'mevzuat' => 'İşyerlerinde Acil Durumlar Hakkında Yön.', 'olasilik' => 2, 'siddet' => 4],
+            // İlk yardım
+            ['bolum' => 'Genel', 'faaliyet' => 'İlk yardım', 'tehlike' => 'Mevzuatın öngördüğü sayıda sertifikalı ilk yardımcı bulunmaması', 'risk' => 'Kaza anında hayati ilk müdahalenin yapılamaması', 'oneri' => 'Az tehlikelide 20, tehlikelide 15, çok tehlikelide 10 çalışana bir sertifikalı ilk yardımcı görevlendirilir; sertifikalar 3 yılda bir yenilenir.', 'mevzuat' => 'İlkyardım Yönetmeliği m.18', 'olasilik' => 2, 'siddet' => 4],
+            ['bolum' => 'Genel', 'faaliyet' => 'İlk yardım', 'tehlike' => 'İlk yardım dolabının / çantasının eksik, son kullanma tarihi geçmiş malzemeli olması', 'risk' => 'Yaralanmalarda etkin ilk müdahale yapılamaması', 'oneri' => 'Herkesin erişebileceği yerde, işaretli ilk yardım dolabı bulundurulur; içerik listesi asılı tutulur, malzemeler aylık kontrol edilip yenilenir.', 'mevzuat' => 'İlkyardım Yönetmeliği; İşyeri Bina ve Eklentileri Yön.', 'olasilik' => 3, 'siddet' => 2],
+            ['bolum' => 'Genel', 'faaliyet' => 'İlk yardım', 'tehlike' => 'Acil telefon numaralarının ve ilk yardımcı listesinin ilan edilmemesi', 'risk' => 'Acil durumda yardım çağrısının ve müdahalenin gecikmesi', 'oneri' => '112, itfaiye, işyeri hekimi ve ilk yardımcıların adı / telefonu görünür yerlere asılır.', 'mevzuat' => 'İşyerlerinde Acil Durumlar Hakkında Yön.; İlkyardım Yönetmeliği', 'olasilik' => 3, 'siddet' => 2],
+            // Genel bina
+            ['bolum' => 'Genel', 'faaliyet' => 'Bina ve eklentileri', 'tehlike' => 'Kaygan, ıslak veya düzensiz zemin; zeminde açıkta kablo ve malzeme', 'risk' => 'Kayma, takılma, düşme sonucu yaralanma', 'oneri' => 'Zemin kaymaz malzemeyle kaplanır, ıslak zemin uyarı levhası kullanılır, dökülmeler hemen temizlenir; kablolar kanal içine alınır, geçişler malzemeden arındırılır.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön. Ek-1', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Genel', 'faaliyet' => 'Bina ve eklentileri', 'tehlike' => 'Merdivenlerde korkuluk / küpeşte eksikliği, kaymaz bant bulunmaması', 'risk' => 'Merdivenden düşme, kırık ve kafa travması', 'oneri' => 'Merdivenlerin açık kenarlarına korkuluk ve küpeşte, basamaklara kaymaz bant yapılır; merdivenler yeterince aydınlatılır.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön. Ek-1', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Genel', 'faaliyet' => 'Bina ve eklentileri', 'tehlike' => 'Yüksek istif ve sabitlenmemiş raflardan malzeme düşmesi', 'risk' => 'Malzeme düşmesi, raf devrilmesi, ezilme', 'oneri' => 'Raflar duvara sabitlenir, taşıma kapasitesi etiketlenir; ağır malzemeler alt raflara konur, istif yüksekliği sınırlandırılır.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön.; İş Ekipmanları Yön.', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Genel', 'faaliyet' => 'Bina ve eklentileri', 'tehlike' => 'Tuvalet, lavabo, soyunma ve dinlenme alanlarının yetersiz veya hijyensiz olması', 'risk' => 'Enfeksiyon, hijyen kaynaklı sağlık sorunları', 'oneri' => 'Çalışan sayısına yeterli, temiz, havalandırmalı sıhhi tesisler ve dinlenme alanı sağlanır; düzenli temizlik çizelgesi uygulanır.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön. Ek-1', 'olasilik' => 2, 'siddet' => 2],
+            ['bolum' => 'Genel', 'faaliyet' => 'Bina ve eklentileri', 'tehlike' => 'Uygun olmayan ortam sıcaklığı ve doğal / genel havalandırma yetersizliği', 'risk' => 'Isıl stres, baş ağrısı, konsantrasyon kaybı', 'oneri' => 'Kapalı çalışma alanlarında yapılan işe uygun sıcaklık ve yeterli temiz hava sağlanır; havalandırma / iklimlendirme sistemleri periyodik bakımdan geçirilir.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön. Ek-1', 'olasilik' => 3, 'siddet' => 2],
+            // Aydınlatma
+            ['bolum' => 'Genel', 'faaliyet' => 'Aydınlatma', 'tehlike' => 'Çalışma alanlarında, geçiş yollarında ve merdivenlerde yetersiz aydınlatma', 'risk' => 'Görememeye bağlı çarpma, takılma, düşme; göz yorgunluğu', 'oneri' => 'Yapılan işe uygun aydınlık düzeyi (TS EN 12464-1) sağlanır, arızalı armatürler derhal değiştirilir, aydınlatma ölçümü yapılır.', 'mevzuat' => 'İşyeri Bina ve Eklentileri Yön. Ek-1 / 8', 'olasilik' => 3, 'siddet' => 2],
+            // Elektrik (genel)
+            ['bolum' => 'Genel', 'faaliyet' => 'Elektrik tesisatı', 'tehlike' => 'Kaçak akım rölesi bulunmaması, topraklama ölçümünün yılda bir yapılmaması', 'risk' => 'Elektrik çarpması sonucu ölüm, elektrik kaynaklı yangın', 'oneri' => 'Tesisatta 30 mA kaçak akım rölesi bulunur ve test edilir; topraklama ve paratoner ölçümleri yılda bir yetkili kişiye yaptırılıp raporlanır.', 'mevzuat' => 'Elektrik Tesislerinde Topraklamalar Yön.; İş Ekipmanları Yön. Ek-3', 'olasilik' => 2, 'siddet' => 5],
+            ['bolum' => 'Genel', 'faaliyet' => 'Elektrik tesisatı', 'tehlike' => 'Elektrik panolarının kilitsiz, önünün kapalı, uyarı levhasız olması', 'risk' => 'Yetkisiz müdahale ile elektrik çarpması, ark parlaması', 'oneri' => 'Panolar kilitli tutulur, önünde 1 m boş alan ve yalıtkan paspas bulunur, "Tehlike – Yüksek Gerilim" levhası asılır; müdahale yalnız yetkili elektrikçi tarafından yapılır.', 'mevzuat' => 'Elektrik İç Tesisleri Yön.; Sağlık ve Güvenlik İşaretleri Yön.', 'olasilik' => 3, 'siddet' => 4],
+            ['bolum' => 'Genel', 'faaliyet' => 'Elektrik tesisatı', 'tehlike' => 'Hasarlı fiş, priz, kablo ve aşırı yüklenmiş uzatma kablosu kullanımı', 'risk' => 'Elektrik çarpması, kısa devre kaynaklı yangın', 'oneri' => 'Hasarlı fiş / kablolar kullanımdan kaldırılır; uzatma kabloları kalıcı tesisat yerine kullanılmaz ve seri bağlanmaz; elektrikli cihazlar düzenli gözle kontrol edilir.', 'mevzuat' => 'Elektrik İç Tesisleri Yön.; İş Ekipmanları Yön.', 'olasilik' => 3, 'siddet' => 4],
+            // İşaretler, eğitim, sağlık gözetimi, KKD
+            ['bolum' => 'Genel', 'faaliyet' => 'İşaretleme', 'tehlike' => 'Sağlık ve güvenlik işaretlerinin (yasak, uyarı, zorunluluk, acil durum) eksik olması', 'risk' => 'Tehlikenin fark edilmemesi, yanlış davranış', 'oneri' => 'Risk değerlendirmesi sonucuna göre gerekli tüm alanlara standart güvenlik işaretleri asılır ve okunur durumda tutulur.', 'mevzuat' => 'Sağlık ve Güvenlik İşaretleri Yön.', 'olasilik' => 3, 'siddet' => 2],
+            ['bolum' => 'Organizasyon', 'faaliyet' => 'İSG eğitimi', 'tehlike' => 'Çalışanlara temel İSG eğitimlerinin verilmemesi veya yenilenmemesi', 'risk' => 'Tehlikeleri bilmeme nedeniyle iş kazası, idari para cezası', 'oneri' => 'İşe girişte ve tehlike sınıfına göre (az tehlikeli 3, tehlikeli 2, çok tehlikeli 1 yılda bir) en az 8 / 12 / 16 saat temel İSG eğitimi verilir, kayıtları özlük dosyasında saklanır.', 'mevzuat' => '6331 SK m.17; Çalışanların İSG Eğitimlerinin Usul ve Esasları Hakkında Yön.', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Organizasyon', 'faaliyet' => 'Sağlık gözetimi', 'tehlike' => 'İşe giriş ve periyodik sağlık muayenelerinin yapılmaması', 'risk' => 'Meslek hastalıklarının geç tespiti, uygun olmayan işe yerleştirme', 'oneri' => 'İşe giriş, iş değişikliği ve tehlike sınıfına göre periyodik (5 / 3 / 1 yıl) sağlık muayeneleri işyeri hekimince yapılır ve kayıt altına alınır.', 'mevzuat' => '6331 SK m.15; İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yön.', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Organizasyon', 'faaliyet' => 'Kişisel koruyucu donanım', 'tehlike' => 'Riske uygun KKD’nin verilmemesi, zimmet ve kullanım takibinin yapılmaması', 'risk' => 'Korunmasız çalışma nedeniyle yaralanma', 'oneri' => 'Risk değerlendirmesine göre CE işaretli uygun KKD ücretsiz verilir, zimmet tutanağıyla teslim edilir, kullanımı denetlenir ve yıpranınca yenilenir.', 'mevzuat' => 'KKD’lerin İşyerlerinde Kullanılması Hakkında Yön.', 'olasilik' => 3, 'siddet' => 3],
+            ['bolum' => 'Organizasyon', 'faaliyet' => 'Çalışan katılımı', 'tehlike' => 'Çalışanların tehlike / ramak kala bildirimi yapabileceği bir sistemin bulunmaması', 'risk' => 'Tehlikelerin geç fark edilmesi, kazaların tekrarlanması', 'oneri' => 'Ramak kala ve tehlike bildirim formu / kutusu oluşturulur, bildirimler kayıt altına alınıp DÖF ile kapatılır, çalışan temsilcisi sürece katılır.', 'mevzuat' => '6331 SK m.18', 'olasilik' => 3, 'siddet' => 2],
+        ],
+
+        /*
+         | Yapay zekâ akışındaki "İşyerinde Kullanılan Ekipman ve Prosesler" adımında NACE grubuna
+         | (config/risk_nace.php) göre ÖNE ÇIKAN ekipman kutuları (02.11.2026). Değer: risk_hizli_kurulum.ekipmanlar
+         | anahtarı (string) ya da [ad, ikon, kategoriler]. Kütüphanede maddesi olmayan kutu gösterilmez;
+         | geri kalan ekipman klasörleri "diğer ekipmanlar" bölümünde aranabilir.
+        */
+        'nace_ekipmanlari' => [
+            'insaat' => [
+                'iskele' => ['ad' => 'İskele & Kalıp', 'ikon' => 'heroicon-o-building-office-2', 'kategoriler' => ['kaba_yapi_kalip_iskele', 'santiye_kalip_isleri', 'ekipman_kalip_isleri']],
+                'yuksekte' => ['ad' => 'Yüksekte Çalışma', 'ikon' => 'heroicon-o-arrow-trending-up', 'kategoriler' => ['ekipman_yuksekte_calisma', 'santiye_yuksekte_calisma']],
+                'kazi' => ['ad' => 'Hafriyat & Derin Kazı', 'ikon' => 'heroicon-o-arrow-down-tray', 'kategoriler' => ['ekipman_kazi_calismasi', 'santiye_kazi_calismasi']],
+                'kule_vinc' => ['ad' => 'Kule Vinç', 'ikon' => 'heroicon-o-arrow-up-on-square', 'kategoriler' => ['ekipman_kule_vinc', 'kulevinc_calismasi']],
+                'mobil_vinc' => ['ad' => 'Mobil Vinç', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['mobil_vinc_kullanimi']],
+                'kazici_yukleyici' => ['ad' => 'Kazıcı Yükleyici / Ekskavatör', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_kazici_yukleyici', 'santiye_kazici_yukleyici']],
+                'manlift' => ['ad' => 'Manlift / Sepetli Platform', 'ikon' => 'heroicon-o-arrows-up-down', 'kategoriler' => ['ekipman_manlift']],
+                'beton' => ['ad' => 'Beton Pompası & Beton İşleri', 'ikon' => 'heroicon-o-beaker', 'kategoriler' => ['ekipman_01_mobil_beton_pompasi_risk_degerlendirmesi', 'santiye_beton_isleri']],
+                'transmikser' => ['ad' => 'Transmikser', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_transmikser_beton_mikseri_isg_50_madde']],
+                'damperli' => ['ad' => 'Damperli Kamyon', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_damperli_kamyon']],
+                'demir' => ['ad' => 'Demir Donatı İşleri', 'ikon' => 'heroicon-o-wrench', 'kategoriler' => ['kaba_yapi_demir_donati', 'ekipman_demir_isleri']],
+                'santiye_panosu' => ['ad' => 'Şantiye Elektrik Panosu', 'ikon' => 'heroicon-o-bolt', 'kategoriler' => ['ekipman_anatali_elektrik_panosu']],
+                'kaynak',
+                'forklift',
+                'ufo' => ['ad' => 'UFO Tipi Isıtıcı', 'ikon' => 'heroicon-o-sun', 'kategoriler' => ['santiye_ufo_isitici']],
+                'mazot' => ['ad' => 'Mazot Deposu & Yakıt İkmali', 'ikon' => 'heroicon-o-fire', 'kategoriler' => ['santiye_mazot_deposu']],
+            ],
+            'metal' => [
+                'eksantrik_pres', 'hidrolik_pres', 'abkant_pres', 'torna', 'freze', 'cnc', 'taslama', 'matkap', 'kaynak',
+                'tavan_vinci',
+                'pergel_vinc' => ['ad' => 'Sütunlu Pergel Vinç', 'ikon' => 'heroicon-o-arrow-up-on-square', 'kategoriler' => ['ekipman_sutunlu_pergel_vinc']],
+                'profil_kesme' => ['ad' => 'Profil / Metal Kesme Testeresi', 'ikon' => 'heroicon-o-scissors', 'kategoriler' => ['ekipman_profil_metal_kesme_testeresi']],
+                'forklift', 'kompresor',
+                'transpalet' => ['ad' => 'Manuel Transpalet', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_manuel_transpalet']],
+                'boyahane', 'raf', 'elektrik_panosu',
+            ],
+            'kimya' => [
+                'lokal_havalandirma' => ['ad' => 'Lokal Havalandırma', 'ikon' => 'heroicon-o-arrow-path', 'kategoriler' => ['ekipman_lokal_havalandirma']],
+                'tanklar' => ['ad' => 'Hammadde / Mamul Tankları', 'ikon' => 'heroicon-o-circle-stack', 'kategoriler' => ['ekipman_hammadde_ve_mamul_tanklari']],
+                'transfer_pompasi' => ['ad' => 'Transfer Pompaları', 'ikon' => 'heroicon-o-arrows-right-left', 'kategoriler' => ['ekipman_transfer_pompalari']],
+                'dispersiyoner' => ['ad' => 'Dispersiyoner', 'ikon' => 'heroicon-o-cog-6-tooth', 'kategoriler' => ['ekipman_dispersiyoner']],
+                'degirmen' => ['ad' => 'Basket / Pearl Mill', 'ikon' => 'heroicon-o-cog-8-tooth', 'kategoriler' => ['ekipman_basket_mill', 'ekipman_pearl_mill']],
+                'dolum' => ['ad' => 'Dolum Makineleri', 'ikon' => 'heroicon-o-beaker', 'kategoriler' => ['ekipman_dolum_makineleri']],
+                'boyahane', 'forklift', 'kompresor', 'raf', 'elektrik_panosu',
+            ],
+            'plastik' => [
+                'ekstruzyon' => ['ad' => 'Plastik Ekstrüzyon Hattı', 'ikon' => 'heroicon-o-arrow-long-right', 'kategoriler' => ['ekipman_plastik_ekstruzyon_hatti']],
+                'granulator' => ['ad' => 'Kırıcı / Granülatör', 'ikon' => 'heroicon-o-cog-8-tooth', 'kategoriler' => ['ekipman_plastik_kirici_granulator', 'atolye_plastik_kirici_granulator']],
+                'vals' => ['ad' => 'Açık Vals / Merdane', 'ikon' => 'heroicon-o-arrows-pointing-in', 'kategoriler' => ['ekipman_acik_vals_iki_silindir', 'ekipman_lastikplastik_cekici_ezici_merdane']],
+                'hidrolik_pres', 'tavan_vinci', 'forklift', 'kompresor', 'raf', 'elektrik_panosu',
+            ],
+            'madencilik' => [
+                'kazici_yukleyici' => ['ad' => 'Kazıcı Yükleyici / Ekskavatör', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_kazici_yukleyici']],
+                'loder' => ['ad' => 'Loder / Yükleyici', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_loder_yukleyici']],
+                'damperli' => ['ad' => 'Damperli Kamyon', 'ikon' => 'heroicon-o-truck', 'kategoriler' => ['ekipman_damperli_kamyon']],
+                'kazi' => ['ad' => 'Kazı Çalışması', 'ikon' => 'heroicon-o-arrow-down-tray', 'kategoriler' => ['ekipman_kazi_calismasi']],
+                'forklift', 'kompresor', 'kaynak', 'elektrik_panosu',
+            ],
+            // Eşleşmeyen NACE grupları (gıda, ticaret, taşıma vb.)
+            'varsayilan' => ['forklift', 'raf', 'kompresor', 'elektrik_panosu', 'kaynak'],
+            'ofis' => [],
+        ],
+
+        // NACE'si olmayan / sektörü elle seçilen firmada ekipman önerisi için sektör → NACE grubu.
+        'sektor_nace_grubu' => [
+            'insaat' => 'insaat', 'fabrika' => 'metal', 'servis' => 'metal', 'maden' => 'madencilik',
+            'ofis' => 'ofis', 'egitim' => 'ofis', 'saglik' => 'ofis',
         ],
     ],
 

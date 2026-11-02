@@ -272,6 +272,9 @@ class RiskSihirbaziTest extends TestCase
             ->assertSet('aiAsama', 'altkategori')
             ->call('aiAltKategoriToggle', 0)
             ->call('aiAltKategoriOnayla')
+            ->assertSet('aiAsama', 'ekipman')
+            ->assertSee('İşyerinde Kullanılan Ekipman ve Prosesler')
+            ->call('aiEkipmanAdiminiTamamla')
             ->assertSet('aiAsama', 'sohbet');
     }
 
@@ -293,7 +296,7 @@ class RiskSihirbaziTest extends TestCase
             ->call('yontemSec', 'ai')
             ->call('ileri')
             ->call('aiBaslat')
-            ->assertSet('aiAsama', 'sohbet')
+            ->assertSet('aiAsama', 'ekipman')
             ->assertSet('aiSektor', 'insaat')
             ->assertSet('aiSektorOtomatik', true)
             ->assertSee('NACE kodundan')
@@ -841,7 +844,8 @@ class RiskSihirbaziTest extends TestCase
         $component->call('aiSablonKullan', $sablon->id)
             ->assertSet('adim', 4);
 
-        $this->assertCount(1, $component->get('secilenler'));
+        // şablon maddesi + akış başında soru sorulmadan eklenen zorunlu ortak riskler
+        $this->assertCount(1 + count(config('isg.risk_ai.zorunlu_ortak')), $component->get('secilenler'));
     }
 
     public function test_excelden_dogrudan_sektorel_sablon_olusturulur(): void

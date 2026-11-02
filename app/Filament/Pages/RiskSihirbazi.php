@@ -234,7 +234,7 @@ class RiskSihirbazi extends Page
         $this->reset([
             'adim', 'firmaId', 'gecerlilikTarihi', 'yontem', 'yontemSecim',
             'acikKategoriler', 'secilenler', 'etkilenenDiger', 'varsayilanTermin',
-            'aiAsama', 'aiSektor', 'aiSektorOtomatik', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
+            'aiAsama', 'aiSektor', 'aiSektorOtomatik', 'aiOrtakEklenen', 'aiOzelSonuc', 'hizliEkipmanSecim', 'aiEkipmanAdi', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
             'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
             'excelDosya', 'excelAdaylar', 'excelSecilenAdaylar', 'excelHatalar',
             'excelTekrarSayisi', 'excelTekrarBirlestir', 'pdfDosya', 'jsaOnerildiKategoriler',
@@ -611,7 +611,7 @@ class RiskSihirbazi extends Page
             $ad = Str::limit(trim($this->aiEkipmanAdi), 80, '');
             $kategori = TehlikeKategorisi::firstOrCreate(
                 ['anahtar' => 'ekipman_ai_'.Str::slug($ad, '_')],
-                ['ad' => 'Ekipman – '.$ad.' (AI)', 'yontem' => null, 'sira' => 600],
+                ['ad' => 'Ekipman – '.$ad.' (Özel Ekipman)', 'yontem' => null, 'sira' => 600],
             );
         }
 
@@ -781,24 +781,223 @@ class RiskSihirbazi extends Page
         };
     }
 
-    /** Firma NACE'sinden tespit edilen sektör (02.11.2026): varsa sektör / alt kategori sorulmadan mülakata geçilir. */
+    /** Firma NACE'sinden tespit edilen sektör (02.11.2026): varsa sektör / alt kategori sorulmadan ekipman adımına geçilir. */
     public bool $aiSektorOtomatik = false;
 
+    /** Akış başında soru sorulmadan eklenen zorunlu ortak risk sayısı (bilgi şeridi). */
+    public int $aiOrtakEklenen = 0;
+
+    /** Ekipman adımındaki "Listede olmayan ekipman" sonucunun açıklaması (kütüphaneden mi, AI'dan mı). */
+    public ?string $aiOzelSonuc = null;
+
+    /**
+     * Akış (02.11.2026): zorunlu ortak riskler soru sorulmadan eklenir → sektör (NACE'den otomatik ya da
+     * seçim) → İşyerinde Kullanılan Ekipman ve Prosesler → yalnız sektöre / NACE'ye özgü sorular → adaylar.
+     */
     public function aiBaslat(): void
     {
+        $this->aiZorunluOrtakEkle();
         $sektor = static::naceAiSektoru($this->firma?->nace_kodu);
 
         if ($sektor && config('isg.risk_ai.sektorler.'.$sektor)) {
             $this->aiSektor = $sektor;
             $this->aiAltKategoriler = [];
             $this->aiSektorOtomatik = true;
-            $this->aiAsama = 'sohbet';
+            $this->aiAsama = 'ekipman';
             $this->aiGecici = [];
 
             return;
         }
 
         $this->aiAsama = 'sektor';
+    }
+
+    /** Yangın, acil durum, ilk yardım, genel bina, aydınlatma, elektrik… — her işyerinde ortak maddeler. */
+    private function aiZorunluOrtakEkle(): void
+    {
+        $mevcut = collect($this->secilenler)->map(fn ($m) => Str::lower(trim($m['tehlike'] ?? '')))->flip();
+        $eklenen = 0;
+
+        foreach (RiskUretici::zorunluOrtakMaddeler($this->yontem) as $madde) {
+            if (! isset($mevcut[Str::lower(trim($madde['tehlike']))])) {
+                $this->secilenler[] = array_merge(RiskKutuphanesi::bosMadde(), $madde);
+                $eklenen++;
+            }
+        }
+
+        $this->aiOrtakEklenen += $eklenen;
+    }
+
+    /**
+     * Soru filtresi için NACE grubu: yalnız sektör firmanın NACE'sinden belirlendiyse. Sektör elle
+     * seçildiyse null → sorular sektöre göre süzülür.
+     */
+    public function aiSoruNaceGrubu(): ?string
+    {
+        return $this->aiSektorOtomatik ? NaceGrubu::bul($this->firma?->nace_kodu) : null;
+    }
+
+    /** Ekipman önerileri için NACE grubu: firmanın NACE'si, yoksa seçilen sektörün karşılığı. */
+    private function aiEkipmanNaceGrubu(): ?string
+    {
+        return NaceGrubu::bul($this->firma?->nace_kodu)
+            ?? config('isg.risk_ai.sektor_nace_grubu.'.$this->aiSektor);
+    }
+
+    /**
+     * Ekipman adımı kutuları: NACE grubuna göre öne çıkanlar + kütüphanedeki diğer ekipman klasörleri.
+     * Kutu yapısı Hızlı Kurulum'la aynı (partials.hizli-ekipman-kutu); seçim $hizliEkipmanSecim'de tutulur.
+     *
+     * @return array{one_cikan: array<string, array<string, mixed>>, diger: array<string, array<string, mixed>>}
+     */
+    #[Computed]
+    public function aiEkipmanKutulari(): array
+    {
+        $grup = $this->aiEkipmanNaceGrubu();
+        $ayar = config('isg.risk_ai.nace_ekipmanlari', []);
+        $tanimlar = $ayar[$grup] ?? $ayar['varsayilan'] ?? [];
+        $hizli = config('isg.risk_hizli_kurulum.ekipmanlar', []);
+
+        $kutular = [];
+        foreach ($tanimlar as $anahtar => $tanim) {
+            if (is_int($anahtar)) {
+                [$anahtar, $tanim] = [$tanim, $hizli[$tanim] ?? null];
+            }
+            if ($tanim) {
+                $kutular['oz_'.$anahtar] = $tanim;
+            }
+        }
+
+        $kategoriAnahtarlari = collect($kutular)->pluck('kategoriler')->flatten()->unique()->all();
+        $idler = TehlikeKategorisi::whereIn('anahtar', $kategoriAnahtarlari)->pluck('id', 'anahtar');
+        $secili = array_flip(array_filter(array_column($this->secilenler, 'tehlike_id')));
+
+        $oneCikan = [];
+        foreach ($kutular as $anahtar => $e) {
+            $katIdler = collect($e['kategoriler'])->map(fn ($k) => $idler[$k] ?? null)->filter()->values()->all();
+            $liste = collect($katIdler)->flatMap(fn ($id) => RiskKutuphanesi::grupTehlikeleri((int) $id, $this->yontem));
+
+            if ($liste->isEmpty()) {
+                continue; // kütüphanede maddesi olmayan öneri gösterilmez
+            }
+
+            $oneCikan[$anahtar] = [
+                'ad' => $e['ad'], 'ikon' => $e['ikon'], 'kategoriler' => $katIdler,
+                'adet' => $liste->count(),
+                'eklenen' => $liste->filter(fn ($t) => isset($secili[$t->id]))->count(),
+            ];
+        }
+
+        $onerilenIdler = collect($oneCikan)->pluck('kategoriler')->flatten()->all();
+        $diger = collect($this->digerEkipmanKutulari([], $secili))
+            ->reject(fn ($e) => array_intersect($e['kategoriler'], $onerilenIdler))
+            ->all();
+
+        return ['one_cikan' => $oneCikan, 'diger' => $diger];
+    }
+
+    /** Ekipman adımı → işaretlenen ekipmanların kütüphane risklerini ekler ve sektör sorularına geçer. */
+    public function aiEkipmanAdiminiTamamla(): void
+    {
+        $kutular = $this->aiEkipmanKutulari['one_cikan'] + $this->aiEkipmanKutulari['diger'];
+        $secim = array_values(array_filter($this->hizliEkipmanSecim, fn ($k) => isset($kutular[$k])));
+
+        if ($secim) {
+            $once = count($this->secilenler);
+            foreach ($secim as $anahtar) {
+                foreach ($kutular[$anahtar]['kategoriler'] as $kategoriId) {
+                    $this->kategoriTumunuEkle($kategoriId);
+                }
+            }
+
+            Notification::make()
+                ->title((count($this->secilenler) - $once).' ekipman riski kütüphaneden eklendi')
+                ->body(collect($secim)->map(fn ($k) => $kutular[$k]['ad'])->implode(', '))
+                ->success()->send();
+        }
+
+        $this->hizliEkipmanSecim = [];
+        unset($this->aiEkipmanKutulari, $this->hizliGruplar);
+        $this->aiAsama = 'sohbet';
+        $this->aiGecici = [];
+
+        if ($this->aiSiradakiSoru() === null) {
+            $this->aiAdaylariUret();
+        }
+    }
+
+    /**
+     * "Listede Olmayan Ekipman / Özel İş Ekle" — önce kütüphane, yoksa yapay zekâ (02.11.2026).
+     * a) Kütüphanede adı eşleşen ekipman klasörü varsa maddeleri (puanlarıyla) anında eklenir, API çağrılmaz.
+     * b) Yoksa Gemini; firmanın NACE'si ve tehlike sınıfıyla puanlı maddeler üretilir, hepsi analize eklenir
+     *    ve "Özel Ekipman" olarak kütüphaneye kaydedilir — bir dahaki sefere (a) ile gelir.
+     */
+    public function aiOzelEkipmanEkle(): void
+    {
+        $this->validate(['aiEkipmanAdi' => 'required|string|min:3|max:120'], [
+            'aiEkipmanAdi.required' => 'Ekipman veya iş adını yazın.',
+            'aiEkipmanAdi.min' => 'Ekipman adını biraz daha açık yazın.',
+        ]);
+
+        $ad = trim($this->aiEkipmanAdi);
+        $bulunan = RiskKutuphanesi::ekipmanAra($ad, $this->yontem);
+
+        if ($bulunan->isNotEmpty()) {
+            $once = count($this->secilenler);
+            foreach ($bulunan as $kategori) {
+                $this->kategoriTumunuEkle($kategori->id);
+            }
+            $eklenen = count($this->secilenler) - $once;
+            $adlar = $bulunan->map(fn ($k) => RiskKutuphanesi::sadeAd($k->ad))->implode(', ');
+
+            $this->aiOzelSonuc = '📚 Kütüphanede bulundu: '.$adlar.' — '.$eklenen.' madde eklendi (yapay zekâ kullanılmadı).';
+            $this->aiEkipmanAdi = '';
+            unset($this->aiEkipmanKutulari, $this->hizliGruplar);
+
+            Notification::make()
+                ->title($eklenen ? $eklenen.' madde kütüphaneden eklendi' : 'Bu ekipmanın maddeleri zaten ekli')
+                ->body($adlar.' · yapay zekâ kotası harcanmadı')
+                ->success()->send();
+
+            return;
+        }
+
+        $sonuc = \App\Support\GeminiEkipmanRiskUretici::uret($ad, (string) $this->yontem, $this->aiFirmaBaglami());
+
+        if (! $sonuc['maddeler']) {
+            $this->aiEkipmanHata = $sonuc['hata'];
+            $this->aiOzelSonuc = null;
+            Notification::make()->title('Kütüphanede yok, yapay zekâ da madde üretemedi')->body($sonuc['hata'])->warning()->send();
+
+            return;
+        }
+
+        $this->aiEkipmanAdaylar = $sonuc['maddeler'];
+        $this->aiEkipmanSecim = array_keys($sonuc['maddeler']);
+        $this->aiEkipmanHata = null;
+        $this->aiKutuphaneyeKaydet = true;
+        $sayi = count($sonuc['maddeler']);
+
+        $this->aiEkipmanEkle();
+
+        $this->aiOzelSonuc = '✨ Kütüphanede bulunamadı — yapay zekâ "'.$ad.'" için '.$sayi.' madde üretti ve analize ekledi'
+            .($this->aiKutuphaneyeKaydedebilir() ? '; "Özel Ekipman" olarak kütüphaneye kaydedildi.' : '.');
+        unset($this->aiEkipmanKutulari);
+    }
+
+    /** Yapay zekâya gönderilen işyeri bağlamı: ünvan yok — yalnız NACE, faaliyet ve tehlike sınıfı. */
+    private function aiFirmaBaglami(): ?string
+    {
+        $f = $this->firma;
+
+        if (! $f) {
+            return null;
+        }
+
+        return collect([
+            $f->nace_kodu ? 'NACE '.$f->nace_kodu.($f->nace_aciklama ? ' ('.$f->nace_aciklama.')' : '') : null,
+            $f->tehlike_sinifi ? 'Tehlike sınıfı: '.$f->tehlikeSinifiEtiketi() : null,
+        ])->filter()->implode(' · ') ?: null;
     }
 
     /** Otomatik tespit edilen sektörü değiştirmek isteyen kullanıcı sektör seçimine döner. */
@@ -837,7 +1036,7 @@ class RiskSihirbazi extends Page
 
     public function aiAltKategoriOnayla(): void
     {
-        $this->aiAsama = 'sohbet';
+        $this->aiAsama = 'ekipman';
         $this->aiGecici = [];
     }
 
@@ -848,6 +1047,7 @@ class RiskSihirbazi extends Page
             (string) $this->aiSektor,
             array_keys($this->aiCevaplar),
             $this->aiAtlananlar,
+            $this->aiSoruNaceGrubu(),
         );
     }
 
@@ -905,11 +1105,17 @@ class RiskSihirbazi extends Page
 
     public function aiAdaylariUret(): void
     {
-        $this->aiAdaylar = RiskUretici::uret(
+        // Zaten analizde olan (zorunlu ortak, ekipman) maddeler aday olarak tekrar gösterilmez.
+        $ekliIdler = array_flip(array_filter(array_column($this->secilenler, 'tehlike_id')));
+        $ekliMetinler = collect($this->secilenler)->map(fn ($m) => Str::lower(trim($m['tehlike'] ?? '')))->flip();
+
+        $this->aiAdaylar = collect(RiskUretici::uret(
             (string) $this->aiSektor,
             $this->aiAltKategoriler,
             $this->aiCevaplar,
-        );
+            $this->yontem ?: null,
+        ))->reject(fn ($a) => isset($ekliIdler[$a['tehlike_id'] ?? 0]) || isset($ekliMetinler[Str::lower(trim($a['tehlike'] ?? ''))]))
+            ->values()->all();
 
         // Varsayılan: puanı önerilmiş (cevap kaynaklı) adaylar seçili gelir
         $this->aiSecilenAdaylar = collect($this->aiAdaylar)
@@ -984,7 +1190,7 @@ class RiskSihirbazi extends Page
     {
         $cevaplanan = count($this->aiCevaplar) + count($this->aiAtlananlar);
 
-        return $cevaplanan.' / '.RiskUretici::soruSayisi((string) $this->aiSektor);
+        return $cevaplanan.' / '.RiskUretici::soruSayisi((string) $this->aiSektor, $this->aiSoruNaceGrubu());
     }
 
     /** AI'da seçilen sektör için kayıtlı şablonlar (kısayol). */

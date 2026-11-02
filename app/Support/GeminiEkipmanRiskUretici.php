@@ -27,14 +27,14 @@ class GeminiEkipmanRiskUretici
     /**
      * @return array{maddeler: array<int, array<string, mixed>>, hata: ?string}
      */
-    public static function uret(string $ekipman, string $yontem): array
+    public static function uret(string $ekipman, string $yontem, ?string $baglam = null): array
     {
         if (! static::aktifMi()) {
             return ['maddeler' => [], 'hata' => 'Yapay zekâ anahtarı (Gemini) tanımlı değil.'];
         }
 
         try {
-            $yanit = GeminiIstemci::post(static::govde($ekipman, $yontem), 45);
+            $yanit = GeminiIstemci::post(static::govde($ekipman, $yontem, $baglam), 45);
 
             if ($yanit->failed()) {
                 Log::warning('Gemini ekipman riski başarısız', ['durum' => $yanit->status()]);
@@ -155,15 +155,17 @@ class GeminiEkipmanRiskUretici
     }
 
     /** @return array<string, mixed> */
-    private static function govde(string $ekipman, string $yontem): array
+    private static function govde(string $ekipman, string $yontem, ?string $baglam = null): array
     {
         $yontemAdi = $yontem === 'matris_5x5' ? '5x5 Matris' : 'Fine-Kinney';
+        // İşyeri bağlamı (NACE, tehlike sınıfı) — maddeler o sektördeki kullanıma göre yazılsın (02.11.2026).
+        $isyeri = $baglam ? "\n        İşyeri: {$baglam}" : '';
 
         $istem = <<<PROMPT
         Sen Türkiye 6331 sayılı İş Sağlığı ve Güvenliği Kanunu, Makine Emniyeti Yönetmeliği (2006/42/AT)
         ve EN ISO standartlarına hâkim A Sınıfı bir İş Güvenliği Uzmanı ve Makine Mühendisisin.
 
-        Ekipman / proses: "{$ekipman}"
+        Ekipman / proses: "{$ekipman}"{$isyeri}
         Kullanılan yöntem: {$yontemAdi}
 
         Bu ekipman/proses için risk değerlendirmesine girecek 3-5 adet TEKNİK risk maddesi üret.

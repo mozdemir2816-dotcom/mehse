@@ -65,7 +65,7 @@ class AiEkipmanRiskTest extends TestCase
             ->assertNotified('Maddeler risk tablosuna eklendi ve Genel Kütüphaneye kaydedildi');
 
         $kategori = TehlikeKategorisi::where('anahtar', 'ekipman_ai_serit_testere')->firstOrFail();
-        $this->assertSame('Ekipman – Şerit testere (AI)', $kategori->ad);
+        $this->assertSame('Ekipman – Şerit testere (Özel Ekipman)', $kategori->ad);
         $this->assertSame(1, Tehlike::where('tehlike_kategorisi_id', $kategori->id)->count());
         $this->assertCount(1, $s->get('secilenler'));
         $this->assertSame(Tehlike::first()->id, $s->get('secilenler')[0]['tehlike_id']);

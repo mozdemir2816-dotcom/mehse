@@ -74,6 +74,65 @@ class RiskKutuphanesi
     }
 
     /**
+     * "Önce kütüphane, yoksa AI" (02.11.2026): serbest yazılan ekipman / iş adına uyan kütüphane klasörleri.
+     * Eşleşme: klasörün sade adı aranan metni (kelime başından) içerir ya da aranan metin klasörün sade
+     * adını içerir (Türkçe karakter ve büyük/küçük harf duyarsız). HAZOP klasörleri ve maddesiz klasörler hariç;
+     * yöntem süzgeci manuel listedeki gibidir (5x5'te Fine-Kinney klasörleri çevrilerek kullanılır).
+     * En iyi 3 eşleşme: önce ekipman klasörleri, sonra madde sayısı.
+     *
+     * @return Collection<int, TehlikeKategorisi>
+     */
+    public static function ekipmanAra(string $ad, ?string $yontem = null): Collection
+    {
+        $aranan = static::aramaMetni($ad);
+
+        if (mb_strlen($aranan) < 3) {
+            return collect();
+        }
+
+        return TehlikeKategorisi::query()
+            ->where(fn ($q) => $q->whereNull('yontem')->orWhere('yontem', '!=', 'hazop'))
+            ->when($yontem, fn ($q) => $q->where(fn ($w) => $w->whereNull('yontem')->orWhere('yontem', $yontem)
+                ->when($yontem === 'matris_5x5', fn ($x) => $x->orWhere('yontem', 'fine_kinney'))))
+            ->withCount('tehlikeler')
+            ->get()
+            ->filter(function (TehlikeKategorisi $k) use ($aranan) {
+                $sade = static::aramaMetni(static::sadeAd($k->ad));
+
+                // Kelime başından eşleşme: "pres" → "Hidrolik pres(i)" evet, "Kompresör" hayır.
+                $kelimeBasi = fn (string $samanlik, string $igne) => (bool) preg_match('/(^| )'.preg_quote($igne, '/').'/', $samanlik);
+
+                return $k->tehlikeler_count > 0 && $sade !== ''
+                    && ($kelimeBasi($sade, $aranan) || (mb_strlen($sade) >= 4 && $kelimeBasi($aranan, $sade)));
+            })
+            ->sortBy([
+                fn ($a, $b) => (int) ! str_starts_with($a->anahtar, 'ekipman_') <=> (int) ! str_starts_with($b->anahtar, 'ekipman_'),
+                fn ($a, $b) => $b->tehlikeler_count <=> $a->tehlikeler_count,
+            ])
+            ->take(3)
+            ->values();
+    }
+
+    /** "Ekipman – 15 avuc taslama spiral risk degerlendirmesi" → "avuc taslama spiral"; "(AI)" / "(Özel Ekipman)" eki atılır. */
+    public static function sadeAd(string $ad): string
+    {
+        return trim((string) preg_replace(
+            ['/^(Ekipman|Atölye|Şantiye)\s*[–-]\s*/u', '/^\d+\s+/u', '/\s*risk\s+de[gğ]erlendirmesi\b/iu', '/\s*\((AI|Özel Ekipman)\)\s*$/u', '/\s*\d+\s+madde$/iu'],
+            '',
+            $ad,
+        ));
+    }
+
+    /** Karşılaştırma için: küçük harf, Türkçe karakterler ASCII, tek boşluk. */
+    private static function aramaMetni(string $metin): string
+    {
+        $metin = mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], $metin));
+        $metin = strtr($metin, ['ı' => 'i', 'ğ' => 'g', 'ü' => 'u', 'ş' => 's', 'ö' => 'o', 'ç' => 'c', 'â' => 'a', 'î' => 'i', 'û' => 'u']);
+
+        return trim((string) preg_replace('/[^a-z0-9]+/', ' ', $metin));
+    }
+
+    /**
      * Kütüphane tehlikesini sihirbaz "seçilen madde" dizisine çevirir.
      *
      * Kütüphane puanları Fine-Kinney ölçeğindedir; $yontem 'matris_5x5' ise O/Ş 1-5 ölçeğine

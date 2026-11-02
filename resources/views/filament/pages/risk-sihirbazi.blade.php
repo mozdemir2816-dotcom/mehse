@@ -367,9 +367,10 @@
                 <div style="text-align:center;padding:1.75rem 1rem;border:1px dashed rgb(139 92 246 / .5);border-radius:.75rem;margin-top:1rem">
                     <div style="font-size:1.5rem">✨</div>
                     <div style="font-weight:700;margin-top:.35rem">AI ile Risk Değerlendirmesi Başlat</div>
-                    <p style="font-size:.85rem;color:rgb(107 114 128);max-width:34rem;margin:.5rem auto">
-                        Önce işyeriniz hakkında sektöre özel sorular sorulacak, ardından hem kütüphaneden hem de
-                        cevaplarınıza özel risk maddeleri önerilecek.
+                    <p style="font-size:.85rem;color:rgb(107 114 128);max-width:36rem;margin:.5rem auto">
+                        Yangın, acil durum, ilk yardım, genel bina, aydınlatma ve elektrik gibi her işyerinde zorunlu
+                        ortak riskler soru sorulmadan eklenir. Ardından işyerinde kullanılan ekipmanları seçersiniz;
+                        son olarak yalnız firmanın NACE koduna / sektörüne özgü sorular sorulur.
                     </p>
                     <x-filament::button icon="heroicon-o-chat-bubble-left-right" wire:click="aiBaslat">Sohbeti Başlat</x-filament::button>
                 </div>
@@ -440,7 +441,93 @@
                     </div>
                     <div style="display:flex;justify-content:space-between;margin-top:1rem">
                         <x-filament::button color="gray" wire:click="$set('aiAsama','sektor')">← Geri</x-filament::button>
-                        <x-filament::button icon="heroicon-o-check" wire:click="aiAltKategoriOnayla">Onayla ve Sohbete Geç</x-filament::button>
+                        <x-filament::button icon="heroicon-o-check" wire:click="aiAltKategoriOnayla">Onayla ve Ekipmanlara Geç</x-filament::button>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Zorunlu ortak riskler bilgisi (soru sorulmadan eklendi) --}}
+            @if ($aiOrtakEklenen && in_array($aiAsama, ['sektor', 'altkategori', 'ekipman', 'sohbet', 'sonuc'], true))
+                <div style="margin-top:.75rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(34 197 94 / .08);border:1px solid rgb(34 197 94 / .3)">
+                    ✅ Her işyerinde zorunlu <strong>{{ $aiOrtakEklenen }} ortak risk</strong> (yangın, acil durum, ilk yardım, genel bina, aydınlatma, elektrik, eğitim, sağlık gözetimi, KKD) soru sorulmadan analize eklendi · analizde toplam {{ count($secilenler) }} madde
+                </div>
+            @endif
+
+            {{-- Ekipman ve Prosesler — NACE'ye göre öne çıkanlar + önce kütüphane, yoksa AI --}}
+            @if ($aiAsama === 'ekipman')
+                @php $ak = $this->aiEkipmanKutulari; @endphp
+                <div style="margin-top:1rem">
+                    <div style="background:{{ $grad }};color:#fff;border-radius:.5rem;padding:.5rem .85rem;font-weight:600">İşyerinde Kullanılan Ekipman ve Prosesler</div>
+                    @if ($aiSektorOtomatik)
+                        <div style="margin-top:.6rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(124 58 237 / .07);border:1px solid rgb(124 58 237 / .25)">
+                            <span>🏷 Sektör firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) belirlendi: <strong>{{ $this->aiSektorEtiketi() }}</strong></span>
+                            <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
+                        </div>
+                    @endif
+                    <div style="font-size:.82rem;color:rgb(107 114 128);margin:.6rem 0">
+                        İşyerinde bulunanları işaretleyin — her birinin kütüphanedeki hazır riskleri (puanlarıyla) doğrudan analize eklenir.
+                    </div>
+
+                    @if ($ak['one_cikan'])
+                        <div style="font-size:.8rem;font-weight:600;margin-bottom:.4rem">Bu sektörde sık kullanılanlar</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:.6rem">
+                            @foreach ($ak['one_cikan'] as $ek => $e)
+                                @include('filament.pages.partials.hizli-ekipman-kutu')
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($ak['diger'])
+                        <details x-data="{ ara: '' }" @if (collect($hizliEkipmanSecim)->contains(fn ($k) => str_starts_with($k, 'kat_')) || ! $ak['one_cikan']) open @endif style="margin-top:.8rem">
+                            <summary style="cursor:pointer;font-size:.85rem;font-weight:600">Kütüphanedeki diğer ekipman ve prosesler ({{ count($ak['diger']) }}) — ara ve çoklu seç</summary>
+                            <input type="search" x-model="ara" placeholder="Ekipman ara… (ör. vinç, kaynak, konveyör)"
+                                style="margin:.6rem 0;width:100%;max-width:360px;padding:.4rem .6rem;border:1px solid rgb(107 114 128 / .35);border-radius:.45rem;background:transparent;font-size:.82rem">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:.6rem;max-height:22rem;overflow:auto">
+                                @foreach ($ak['diger'] as $ek => $e)
+                                    <div wire:key="ai-ek-{{ $ek }}" x-show="! ara || @js(mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], $e['ad']))).includes(ara.toLocaleLowerCase('tr'))">
+                                        @include('filament.pages.partials.hizli-ekipman-kutu')
+                                    </div>
+                                @endforeach
+                            </div>
+                        </details>
+                    @endif
+
+                    {{-- Listede olmayan ekipman / özel iş: önce kütüphane, yoksa yapay zekâ --}}
+                    <div style="{{ $kutu }};padding:.85rem;margin-top:1rem">
+                        <div style="font-weight:600;font-size:.88rem">Listede Olmayan Ekipman / Özel İş Ekle</div>
+                        <div style="font-size:.78rem;color:rgb(107 114 128);margin:.2rem 0 .6rem">
+                            Önce kütüphanede aranır (kota harcanmaz); bulunamazsa yapay zekâ firmanın NACE kodu ve tehlike sınıfıyla
+                            puanlı maddeler üretir, analize ekler ve "Özel Ekipman" olarak kütüphaneye kaydeder.
+                        </div>
+                        <form wire:submit="aiOzelEkipmanEkle" style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-start">
+                            <div style="flex:1;min-width:220px">
+                                <x-filament::input.wrapper :valid="! $errors->has('aiEkipmanAdi')">
+                                    <x-filament::input type="text" wire:model="aiEkipmanAdi" placeholder="Örn. Ultrasonik kaynak makinesi, Kumlama kabini, Şerit testere" maxlength="120" />
+                                </x-filament::input.wrapper>
+                                @error('aiEkipmanAdi') <div style="color:#dc2626;font-size:.78rem;margin-top:.25rem">{{ $message }}</div> @enderror
+                            </div>
+                            <x-filament::button type="submit" icon="heroicon-o-plus" wire:loading.attr="disabled" wire:target="aiOzelEkipmanEkle">Ekle</x-filament::button>
+                        </form>
+                        <div wire:loading.flex wire:target="aiOzelEkipmanEkle" style="align-items:center;gap:.5rem;margin-top:.6rem;font-size:.8rem;color:rgb(107 114 128)">
+                            <x-filament::loading-indicator style="width:1.1rem;height:1.1rem" />
+                            Kütüphanede aranıyor; yoksa yapay zekâ maddeleri hazırlıyor… (10-30 sn)
+                        </div>
+                        @if ($aiOzelSonuc)
+                            <div wire:loading.remove wire:target="aiOzelEkipmanEkle" style="margin-top:.6rem;font-size:.82rem">{{ $aiOzelSonuc }}</div>
+                        @elseif ($aiEkipmanHata)
+                            <div wire:loading.remove wire:target="aiOzelEkipmanEkle" style="margin-top:.6rem;font-size:.82rem;color:#b45309">{{ $aiEkipmanHata }}</div>
+                        @endif
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-top:1rem">
+                        <x-filament::button color="gray" wire:click="$set('aiAsama', '{{ $aiSektorOtomatik ? 'baslangic' : 'altkategori' }}')">← Geri</x-filament::button>
+                        <x-filament::button icon="heroicon-o-chevron-right" icon-position="after" wire:click="aiEkipmanAdiminiTamamla" wire:loading.attr="disabled">
+                            @if (count($hizliEkipmanSecim))
+                                Seçilen {{ count($hizliEkipmanSecim) }} Ekipmanın Risklerini Ekle ve Sorulara Geç
+                            @else
+                                Sektöre Özel Sorulara Geç
+                            @endif
+                        </x-filament::button>
                     </div>
                 </div>
             @endif
@@ -448,12 +535,13 @@
             {{-- Sohbet — Sorular --}}
             @if ($aiAsama === 'sohbet')
                 @php $siradaki = $this->aiSiradakiSoru(); @endphp
-                @if ($aiSektorOtomatik)
-                    <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(124 58 237 / .07);border:1px solid rgb(124 58 237 / .25)">
-                        <span>🏷 Sektör firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) belirlendi: <strong>{{ $this->aiSektorEtiketi() }}</strong></span>
+                <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(124 58 237 / .07);border:1px solid rgb(124 58 237 / .25)">
+                    <span>🏷 {{ $aiSektorOtomatik ? 'NACE kodundan ('.$this->firma?->nace_kodu.') belirlenen sektör' : 'Sektör' }}: <strong>{{ $this->aiSektorEtiketi() }}</strong> — yalnız bu işyerine özgü sorular soruluyor</span>
+                    <button type="button" wire:click="$set('aiAsama', 'ekipman')" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">← Ekipmanlara dön</button>
+                    @if ($aiSektorOtomatik)
                         <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
-                    </div>
-                @endif
+                    @endif
+                </div>
                 <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem;max-height:22rem;overflow-y:auto;padding-right:.25rem">
                     @foreach ($sorular as $s)
                         @php
