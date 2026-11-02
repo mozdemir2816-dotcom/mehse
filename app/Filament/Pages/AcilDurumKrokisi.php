@@ -172,13 +172,16 @@ class AcilDurumKrokisi extends Page
     {
         $kroki = $this->kroki();
         $firma = $this->firma;
+        $plan = $firma?->acilDurumPlani?->uygulama ?? [];
 
         return [
             'veri' => $kroki?->kroki3b,
             'bilgi' => [
                 'firma' => $firma?->unvan,
+                // Bölüm / kat ve çizen kişi Acil Durum Planı sihirbazından gelir (İGU krokiyi çizmez — 02.11.2026).
+                'bolum' => $plan['kroki_kat'] ?? null,
                 'tarih' => ($kroki?->hazirlanma_tarihi ?? now())->format('Y-m-d'),
-                'haz' => Filament::auth()->user()?->name,
+                'haz' => $plan['kroki_hazirlayan'] ?? null,
                 'onay' => $firma?->isveren_vekili ?: $firma?->isveren_ad,
             ],
         ];
