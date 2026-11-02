@@ -121,9 +121,9 @@
         ['İşveren / işveren vekili', $isverenAdi ?? '', []],
         ['İş Güvenliği Uzmanı', $iguAdi ?? '', []],
         ['İşyeri Hekimi', $hekimAdi ?? '', []],
-        ['Çalışan Temsilcisi', $temsilci['ad'] ?? '', []],
-        ['Destek Elemanı', $destekElemani['ad'] ?? '', []],
-        ['Bilgi Sahibi Personel', $bilgiSahibiCalisan['ad'] ?? '', []],
+        ['Çalışan Temsilcisi', ($temsilci['ad'] ?? null) ?: '........................................', []],
+        ['Destek Elemanı', ($destekElemani['ad'] ?? null) ?: '........................................', []],
+        ['Bilgi Sahibi Personel', ($bilgiSahibiCalisan['ad'] ?? null) ?: '........................................', []],
     ];
     // firma_nace bazen açıklamayı da içerir ("22.12.01 Plastik ...") → kodu firmadan al.
     $naceKod = $firma?->nace_kodu ?: $rd->firma_nace;
@@ -161,7 +161,7 @@
 
     <div class="k-baslik">İŞYERİ BİLGİLERİ</div>
     <table class="k-tablo">
-        <tr><td class="e" style="width:28.8%">İşyeri / proje adı</td><td>{{ $rd->proje_adi }}</td></tr>
+        <tr><td class="e" style="width:28.8%">İşyeri / proje adı</td><td>{{ $rd->proje_adi ?: ($rd->firma_unvan ?: 'Şantiye / Merkez İşyeri') }}</td></tr>
         <tr><td class="e">İşyeri adresi</td><td style="height:34px">{{ $rd->firma_adres }}</td></tr>
         <tr><td class="e">SGK işyeri sicil numarası</td><td>{{ $rd->firma_sgk_sicil_no }}</td></tr>
         <tr><td class="e">Faaliyet konusu / NACE kodu</td><td>{{ $faaliyet }}</td></tr>
@@ -229,15 +229,15 @@
             </td>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
-                <span class="ad">{{ $temsilci['ad'] ?? '—' }}</span>
+                <span class="ad">{{ ($temsilci['ad'] ?? null) ?: '........................................' }}</span>
             </td>
             <td>
                 <span class="rol">DESTEK ELEMANI</span>
-                <span class="ad">{{ $destekElemani['ad'] ?? '—' }}</span>
+                <span class="ad">{{ ($destekElemani['ad'] ?? null) ?: '........................................' }}</span>
             </td>
             <td>
                 <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
-                <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '—' }}</span>
+                <span class="ad">{{ ($bilgiSahibiCalisan['ad'] ?? null) ?: '........................................' }}</span>
             </td>
             {{-- Sayfa numarası bu boş hücrenin ortasına page_script ile yazılır (RiskDegerlendirmesiUretici::SAYFA_NO_HUCRE). --}}
             <td class="sayfa-no" style="width:9%"></td>
@@ -368,7 +368,7 @@
                 <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-kisa">{{ $m->duzeyKisa() }}</span></td>
                 <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
                 <td class="col-sorumlu">{{ $m->sorumluMetni() }}</td>
-                <td>{{ $m->termin ?: \App\Models\RiskMaddesi::VARSAYILAN_TERMIN }}</td>
+                <td>{{ $m->terminMetni($rd->yontem) }}</td>
                 <td class="sayi">{{ $sayi($m->son_olasilik) }}</td>
                 @if ($ucEksen)
                     <td class="sayi">{{ $sayi($m->son_frekans) }}</td>
@@ -391,7 +391,7 @@
     <table class="ekip">
         <tr><th>Ad Soyad</th><th>Unvan / Görev</th></tr>
         @foreach ($ekipGosterim ?? [] as $uye)
-            <tr><td>{{ $uye['ad'] }}&nbsp;</td><td>{{ $uye['unvan'] }}&nbsp;</td></tr>
+            <tr><td>{{ filled($uye['ad']) ? $uye['ad'] : (filled($uye['unvan']) ? '........................................' : '') }}&nbsp;</td><td>{{ $uye['unvan'] }}&nbsp;</td></tr>
         @endforeach
     </table>
     <p style="font-size:9.5px;color:#666;margin-top:6px">
@@ -405,29 +405,29 @@
         <tr>
             <td>
                 <span class="rol">İŞVEREN / İŞVEREN VEKİLİ</span>
-                <span class="ad">{{ $isverenAdi ?? '' }}</span>
+                <span class="ad">{{ ($isverenAdi ?? null) ?: '........................................' }}</span>
             </td>
             <td>
                 <span class="rol">İŞ GÜVENLİĞİ UZMANI</span>
-                <span class="ad">{{ $iguAdi ?? '' }}</span>
+                <span class="ad">{{ ($iguAdi ?? null) ?: '........................................' }}</span>
             </td>
             <td>
                 <span class="rol">İŞYERİ HEKİMİ</span>
-                <span class="ad">{{ $hekimAdi ?? '' }}</span>
+                <span class="ad">{{ ($hekimAdi ?? null) ?: '........................................' }}</span>
             </td>
         </tr>
         <tr>
             <td>
                 <span class="rol">ÇALIŞAN TEMSİLCİSİ</span>
-                <span class="ad">{{ $temsilci['ad'] ?? '' }}</span>
+                <span class="ad">{{ ($temsilci['ad'] ?? null) ?: '........................................' }}</span>
             </td>
             <td>
                 <span class="rol">DESTEK ELEMANI</span>
-                <span class="ad">{{ $destekElemani['ad'] ?? '' }}</span>
+                <span class="ad">{{ ($destekElemani['ad'] ?? null) ?: '........................................' }}</span>
             </td>
             <td>
                 <span class="rol">BİLGİ SAHİBİ PERSONEL</span>
-                <span class="ad">{{ $bilgiSahibiCalisan['ad'] ?? '' }}</span>
+                <span class="ad">{{ ($bilgiSahibiCalisan['ad'] ?? null) ?: '........................................' }}</span>
             </td>
         </tr>
     </table>

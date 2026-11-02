@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RiskDegerlendirmesis\RelationManagers;
 
 use App\Console\Commands\RiskOneriTamamla;
+use App\Console\Commands\RiskPuanTamamla;
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
@@ -38,9 +39,6 @@ class MaddelerRelationManager extends RelationManager
 
     protected static ?string $title = 'Risk Maddeleri';
 
-    /** "Eksik Puan/Önlemleri AI ile Tamamla" tek çalıştırmada en fazla bu kadar madde işler. */
-    private const AI_TOPLU_LIMIT = 40;
-
     protected function yontem(): string
     {
         return $this->getOwnerRecord()->yontem;
@@ -57,55 +55,6 @@ class MaddelerRelationManager extends RelationManager
     protected function ucEksenli(): bool
     {
         return RiskSkorlama::ucEksenliMi($this->yontem());
-    }
-
-    /** AI'dan puan alıp maddeye yazar; öneri gelmezse (AI kapalı/hatalı) dokunmadan false döner. */
-    private function puanlaAiIle(RiskMaddesi $madde): bool
-    {
-        $oneri = GeminiRiskPuanTamamlayici::oner(
-            $madde->tehlike,
-            $madde->risk,
-            $madde->bolum,
-            $madde->faaliyet,
-            $this->getOwnerRecord()->yontem,
-        );
-
-        if (! $oneri) {
-            return false;
-        }
-
-        // Yalnızca gerçekten boş olan eksen(ler) yazılır — örn. Fine-Kinney'de
-        // yalnız Frekans eksikse, kullanıcının elle girdiği Olasılık/Şiddet
-        // AI önerisiyle EZİLMEZ.
-        $doldurulacak = collect($oneri)
-            ->only(collect(['olasilik', 'siddet', 'frekans'])->filter(fn ($eksen) => blank($madde->{$eksen}))->all())
-            ->all();
-
-        if (! $doldurulacak) {
-            return false;
-        }
-
-        $madde->forceFill($doldurulacak)->save();
-
-        return true;
-    }
-
-    /** Mevcut Önlem ve Önerilen önlem ikisi de boşsa AI'dan kısa bir öneri alıp yazar; doluysa dokunmaz. */
-    private function onlemVerAiIle(RiskMaddesi $madde): bool
-    {
-        if (filled($madde->mevcut_onlem) || filled($madde->oneri)) {
-            return false;
-        }
-
-        $onlem = GeminiRiskPuanTamamlayici::onlemOner($madde->tehlike, $madde->risk, $madde->bolum, $madde->faaliyet);
-
-        if (! $onlem) {
-            return false;
-        }
-
-        $madde->forceFill(['mevcut_onlem' => $onlem])->save();
-
-        return true;
     }
 
     public function form(Schema $schema): Schema
@@ -333,64 +282,42 @@ class MaddelerRelationManager extends RelationManager
                     ->label('Eksik Puan/Önlemleri AI ile Tamamla')
                     ->icon('heroicon-o-sparkles')
                     ->color('gray')
-                    ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi())
+                    ->badge(fn () => $this->eksikPuanSayisi() ?: null)
+                    ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi() && in_array($this->getOwnerRecord()->yontem, ['fine_kinney', 'matris_5x5'], true))
                     ->requiresConfirmation()
-                    ->modalDescription('Olasılık/Şiddet puanı veya Mevcut Önlem metni boş olan maddeler için Gemini\'den öneri istenir (her çalıştırmada en fazla '.self::AI_TOPLU_LIMIT.' madde; kalanlar için tekrar çalıştırın). Puan önerisi yalnız ölçekteki değerlerden seçilir, yine de gözden geçirin.')
+                    ->modalDescription(fn () => 'Puanı (Olasılık / Frekans / Şiddet) eksik '.$this->eksikPuanSayisi().' madde yapay zekâ ile tamamlanır: Fine-Kinney ölçeğindeki geçerli değerler, önlem sonrası (Son O/F/Ş) değerleri ve boşsa kısa mevcut önlem. Termin risk düzeyine göre (Derhal / 1 Ay / 3 Ay / Sürekli-Rutin) atanır. İlk '.RiskPuanTamamla::PARTI.' madde hemen, kalanı arka planda dakikada '.RiskPuanTamamla::PARTI.' madde işlenir. Girilmiş puan ve önlemlere dokunulmaz; sonuçları gözden geçirin.')
                     ->action(function (): void {
                         @set_time_limit(300);
                         GeminiRiskPuanTamamlayici::devreyiSifirla();
-                        $fk = $this->ucEksenli();
+                        $rd = $this->getOwnerRecord();
+                        $toplam = $this->eksikPuanSayisi();
 
-                        $eksikSorgu = $this->getOwnerRecord()->maddeler()
-                            ->where(function ($q) use ($fk) {
-                                // Önlem eksik = mevcut önlem VE önerilen önlem ikisi de boş (sihirbazla aynı kural).
-                                $q->whereNull('olasilik')->orWhereNull('siddet')
-                                    ->orWhere(fn ($o) => $o->where(fn ($a) => $a->whereNull('mevcut_onlem')->orWhere('mevcut_onlem', ''))
-                                        ->where(fn ($b) => $b->whereNull('oneri')->orWhere('oneri', '')));
-
-                                if ($fk) {
-                                    $q->orWhereNull('frekans');
-                                }
-                            });
-
-                        $toplamEksik = (clone $eksikSorgu)->count();
-                        $eksikler = $eksikSorgu->orderBy('sira')->limit(self::AI_TOPLU_LIMIT)->get();
-
-                        if ($eksikler->isEmpty()) {
-                            Notification::make()->title('Eksik puan/önlem içeren madde yok')->success()->send();
+                        if (! $toplam) {
+                            Notification::make()->title('Puanı eksik madde yok')->success()->send();
 
                             return;
                         }
 
-                        $tamamlanan = 0;
+                        // 25 madde tek istekte — madde başına istek ücretsiz kotayı birkaç maddede bitiriyordu.
+                        $tamamlanan = RiskPuanTamamla::isle($rd);
+                        $kalan = $this->eksikPuanSayisi();
 
-                        foreach ($eksikler as $m) {
-                            if (GeminiRiskPuanTamamlayici::devreKesikMi()) {
-                                break;
-                            }
-
-                            $puanEksik = blank($m->olasilik) || blank($m->siddet) || ($fk && blank($m->frekans));
-                            $puanlandi = $puanEksik && $this->puanlaAiIle($m);
-                            $onlemVerildi = $this->onlemVerAiIle($m);
-
-                            if ($puanlandi || $onlemVerildi) {
-                                $tamamlanan++;
-                            }
+                        if ($kalan > 0) {
+                            RiskPuanTamamla::oncelikliyeAl($rd->id);
                         }
+                        $rd->pdfOnbellegiTemizle();
+                        $rd->saveQuietly();
 
-                        $kalan = max(0, $toplamEksik - $tamamlanan);
+                        $bildirim = Notification::make()->title($tamamlanan
+                            ? "✓ {$tamamlanan} adet maddenin ".($this->ucEksenli() ? 'Fine-Kinney ' : '').'puanları ve terminleri yapay zekâ ile mevzuata uygun olarak tamamlandı'
+                            : 'Yapay zekâ şu an yanıt vermedi');
 
-                        $body = match (true) {
-                            GeminiRiskPuanTamamlayici::devreKesikMi() => 'Gemini yanıt vermiyor (kota / hız sınırı olabilir); birkaç dakika sonra tekrar deneyin.'.($kalan ? " Kalan: {$kalan} madde." : ''),
-                            $kalan > 0 => "{$kalan} madde hâlâ eksik — aksiyonu tekrar çalıştırın.",
-                            default => null,
+                        match (true) {
+                            $tamamlanan && $kalan => $bildirim->body("Kalan {$kalan} madde arka planda tamamlanıyor (dakikada ".RiskPuanTamamla::PARTI." madde); tablo kendiliğinden yenilenir.")->success(),
+                            $tamamlanan > 0 => $bildirim->success(),
+                            default => $bildirim->body('Kota / yoğunluk olabilir. '.$kalan.' madde kuyruğa alındı; arka planda denenecek.')->warning(),
                         };
-
-                        Notification::make()
-                            ->title("{$tamamlanan} madde AI ile tamamlandı")
-                            ->body($body)
-                            ->success()
-                            ->send();
+                        $bildirim->send();
                     }),
             ])
             ->recordActions([
@@ -402,8 +329,16 @@ class MaddelerRelationManager extends RelationManager
                 BulkActionGroup::make([DeleteBulkAction::make()]),
             ])
             ->defaultSort('sira')
-            ->poll(fn () => $this->bosOneriSayisi() ? '15s' : null)
+            ->poll(fn () => $this->bosOneriSayisi() || RiskPuanTamamla::kuyruktaMi($this->getOwnerRecord()->id) ? '15s' : null)
             ->reorderable('sira');
+    }
+
+    /** Puanı (O / F / Ş) eksik madde sayısı — "Eksik Puan" rozeti ve sayaç. */
+    private function eksikPuanSayisi(): int
+    {
+        return in_array($this->getOwnerRecord()->yontem, ['fine_kinney', 'matris_5x5'], true)
+            ? RiskPuanTamamla::eksikSorgu($this->getOwnerRecord())->count()
+            : 0;
     }
 
     /** Bu değerlendirmede önerisi (düzeltici/önleyici faaliyet) hâlâ boş madde sayısı. */

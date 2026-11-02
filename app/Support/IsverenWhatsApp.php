@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\DofRaporu;
 use App\Models\Firma;
+use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaBulgusu;
 use App\Models\SahaDenetimi;
 use App\Models\TespitOneriDefteri;
@@ -27,6 +28,7 @@ class IsverenWhatsApp
         'dof' => DofRaporu::class,
         'saha-denetimi' => SahaDenetimi::class,
         'tespit-defteri' => TespitOneriDefteri::class,
+        'risk' => RiskDegerlendirmesi::class,
     ];
 
     public static function telefon(?Firma $firma): ?string
@@ -124,6 +126,26 @@ class IsverenWhatsApp
             'Bilgilerinize sunar, iyi çalışmalar dileriz.',
             self::imza($t->firma),
         ]);
+    }
+
+    /** İSG Risk Değerlendirmesi raporu (02.11.2026). */
+    public static function riskMesaji(RiskDegerlendirmesi $rd): string
+    {
+        $rd->loadMissing('firma');
+        $f = $rd->firma;
+        $yil = $f?->tehlike_sinifi ? $f->riskGecerlilikYili() : null;
+        $sinif = $f?->tehlike_sinifi ? $f->tehlikeSinifiEtiketi() : null;
+
+        return implode("\n", array_filter([
+            'Sayın '.self::isverenAdi($f).' ('.($rd->firma_unvan ?: $f?->unvan).'),',
+            ($rd->rapor_tarihi ?? now())->format('d.m.Y').' tarihli ve '.$rd->belge_no.' numaralı 6331 sayılı Kanun kapsamındaki İş Sağlığı ve Güvenliği Risk Değerlendirmesi Raporunuz hazırlanmıştır.',
+            '- İncelenen Risk Sayısı: '.$rd->maddeler()->count(),
+            $rd->gecerlilik_tarihi ? '- Geçerlilik: '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihine kadar'.($sinif ? ' ('.$sinif.($yil ? ' - '.$yil.' Yıl' : '').')' : '') : null,
+            'Raporu incelemek ve imzalamak için bağlantı: '.self::pdfBaglantisi('risk', $rd->id),
+            '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
+            'Bilgilerinize sunarız.',
+            self::imza($f),
+        ]));
     }
 
     /** Açık bulgu / DÖF maddesi için hatırlatma. */

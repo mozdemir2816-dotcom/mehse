@@ -428,8 +428,8 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertStringContainsString('DESTEK ELEMANI', $sayfa);
         $this->assertStringContainsString('BİLGİ SAHİBİ PERSONEL', $sayfa);
         $this->assertSame(2, substr_count($sayfa, 'BİLGİ SAHİBİ PERSONEL</span>')); // her sayfanın imza şeridi + ONAY
-        // atama yapılmadığında hata vermez, isim boş kalır ("—" değil).
-        $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ PERSONEL<\/span>\s*<span class="ad">\s*<\/span>/u', $sayfa);
+        // atama yapılmadığında hata vermez, isim yerine elle doldurulacak noktalı çizgi basılır (02.11.2026).
+        $this->assertMatchesRegularExpression('/BİLGİ SAHİBİ PERSONEL<\/span>\s*<span class="ad">\s*\.{20,}\s*<\/span>/u', $sayfa);
     }
 
     public function test_imza_sahipleri_elle_girilen_oncelikli_eksikler_atamadan_gelir(): void

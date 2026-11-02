@@ -25,6 +25,7 @@ use Illuminate\Support\Str;
 class EditRiskDegerlendirmesi extends EditRecord
 {
     use KaydetUstte;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected static string $resource = RiskDegerlendirmesiResource::class;
 
@@ -169,6 +170,11 @@ class EditRiskDegerlendirmesi extends EditRecord
                 ->color('info')
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::word($this->record, ImzaSecenegi::secili($data))),
+            Action::make('whatsapp')
+                ->label('📲 WhatsApp ile İşverene Gönder')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('success')
+                ->action(fn () => $this->whatsappAc(\App\Support\IsverenWhatsApp::url($this->record->firma, \App\Support\IsverenWhatsApp::riskMesaji($this->record)), 'Risk değerlendirmesi')),
             Action::make('fineKinneyeDonustur')
                 ->label('Fine-Kinney\'e Dönüştür')
                 ->icon('heroicon-o-arrow-path')

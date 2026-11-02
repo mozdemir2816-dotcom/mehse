@@ -234,7 +234,7 @@ class RiskSihirbazi extends Page
         $this->reset([
             'adim', 'firmaId', 'gecerlilikTarihi', 'yontem', 'yontemSecim',
             'acikKategoriler', 'secilenler', 'etkilenenDiger', 'varsayilanTermin',
-            'aiAsama', 'aiSektor', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
+            'aiAsama', 'aiSektor', 'aiSektorOtomatik', 'aiAltKategoriler', 'aiCevaplar', 'aiAtlananlar',
             'aiGecici', 'aiAdaylar', 'aiSecilenAdaylar', 'sablonAd', 'sablonSektor',
             'excelDosya', 'excelAdaylar', 'excelSecilenAdaylar', 'excelHatalar',
             'excelTekrarSayisi', 'excelTekrarBirlestir', 'pdfDosya', 'jsaOnerildiKategoriler',
@@ -753,8 +753,60 @@ class RiskSihirbazi extends Page
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * NACE bölümü (ilk iki hane) → yapay zekâ akışının sektörü (config isg.risk_ai.sektorler).
+     * Eşleşme yoksa null — kullanıcıya sektör sorulur.
+     */
+    public static function naceAiSektoru(?string $nace): ?string
+    {
+        if (! preg_match('/^\s*(\d{2})/', (string) $nace, $e)) {
+            return null;
+        }
+        $b = (int) $e[1];
+
+        return match (true) {
+            $b >= 1 && $b <= 3 => 'tarim',
+            $b >= 5 && $b <= 9 => 'maden',
+            in_array($b, [10, 11, 56], true) => 'gida',
+            $b >= 12 && $b <= 33 => 'fabrika',
+            $b >= 35 && $b <= 39, $b === 45, $b === 81, $b === 95 => 'servis',
+            $b >= 41 && $b <= 43 => 'insaat',
+            in_array($b, [46, 52], true) => 'depo',
+            in_array($b, [49, 50, 51, 53], true) => 'ulasim',
+            in_array($b, [55, 90, 91, 92, 93], true) => 'eglence',
+            $b === 85 => 'egitim',
+            $b >= 86 && $b <= 88 => 'saglik',
+            $b === 47, $b >= 58 && $b <= 84, $b === 94, $b === 96 => 'ofis',
+            default => null,
+        };
+    }
+
+    /** Firma NACE'sinden tespit edilen sektör (02.11.2026): varsa sektör / alt kategori sorulmadan mülakata geçilir. */
+    public bool $aiSektorOtomatik = false;
+
     public function aiBaslat(): void
     {
+        $sektor = static::naceAiSektoru($this->firma?->nace_kodu);
+
+        if ($sektor && config('isg.risk_ai.sektorler.'.$sektor)) {
+            $this->aiSektor = $sektor;
+            $this->aiAltKategoriler = [];
+            $this->aiSektorOtomatik = true;
+            $this->aiAsama = 'sohbet';
+            $this->aiGecici = [];
+
+            return;
+        }
+
+        $this->aiAsama = 'sektor';
+    }
+
+    /** Otomatik tespit edilen sektörü değiştirmek isteyen kullanıcı sektör seçimine döner. */
+    public function aiSektorDegistir(): void
+    {
+        $this->aiSektorOtomatik = false;
+        $this->aiCevaplar = [];
+        $this->aiAtlananlar = [];
         $this->aiAsama = 'sektor';
     }
 

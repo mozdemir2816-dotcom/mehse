@@ -79,9 +79,10 @@ class RiskMaddesi extends Model
             if (blank($m->sorumlu)) {
                 $m->sorumlu = self::VARSAYILAN_SORUMLU;
             }
-            // 01.11.2026: termin risk düzeyine göre (ÇY → Derhal / 3 Gün, YK → 1 Ay, orta → 3 Ay);
-            // eğitim/talimat gibi periyodik maddeler ve düşük riskler "SÜREKLİ".
-            if (blank($m->termin)) {
+            // Termin risk düzeyine göre (02.11.2026: ÇY → Derhal, YK → 1 Ay, ÖN/OD → 3 Ay, düşük → Sürekli / Rutin).
+            // Sistemin koyduğu termin puan değişince yeniden hesaplanır — puansız eklenen madde "SÜREKLİ"
+            // alıp sonra Çok Yüksek çıksa da "SÜREKLİ" kalıyordu. Elle yazılan termine dokunulmaz.
+            if (blank($m->termin) || ($m->exists && self::otomatikTerminMi($m->termin) && $m->isDirty(['olasilik', 'frekans', 'siddet', 'duzey']))) {
                 $m->termin = self::varsayilanTermin($yontem, $m->duzey, $m->tehlike.' '.$m->oneri);
             }
         });
@@ -110,7 +111,34 @@ class RiskMaddesi extends Model
 
     public const VARSAYILAN_SORUMLU = 'İşveren / İşveren Vekili';
 
-    public const VARSAYILAN_TERMIN = 'SÜREKLİ';
+    public const VARSAYILAN_TERMIN = 'Sürekli / Rutin';
+
+    /** Sistemin daha önce otomatik koyduğu termin metinleri (elle yazılmış sayılmaz). */
+    /** Kullanıcının elle yazdığı 'Sürekli' gibi değerler burada YOK — onlar korunur. */
+    public const OTOMATIK_TERMINLER = ['SÜREKLİ', 'Sürekli / Rutin', 'Derhal / 3 Gün', 'Derhal', '1 Ay', '3 Ay'];
+
+    public static function otomatikTerminMi(?string $termin): bool
+    {
+        return in_array(trim((string) $termin), self::OTOMATIK_TERMINLER, true);
+    }
+
+    /**
+     * Çıktıda (PDF / Excel / Word) gösterilen termin: elle yazılmışsa olduğu gibi; boş ya da sistemin
+     * otomatik koyduğu bir değerse güncel risk düzeyine göre yeniden (eski kayıtlarda ÇY maddeye
+     * "SÜREKLİ" basılıyordu — 02.11.2026).
+     */
+    public function terminMetni(?string $yontem = null): string
+    {
+        if (filled($this->termin) && ! self::otomatikTerminMi($this->termin)) {
+            return (string) $this->termin;
+        }
+
+        $yontem ??= $this->riskDegerlendirmesi?->yontem ?? 'fine_kinney';
+
+        return $this->duzey
+            ? self::varsayilanTermin($yontem, $this->duzey, $this->tehlike.' '.$this->oneri)
+            : ((string) $this->termin ?: self::VARSAYILAN_TERMIN);
+    }
 
     /** Fine-Kinney önlem sonrası varsayılan hedef: puan bu değerin ALTINA (Olası Risk ve altı) iner — AI üreticiyle aynı. */
     public const HEDEF_FK_SON_PUAN_ALTI = 70;
@@ -144,13 +172,13 @@ class RiskMaddesi extends Model
         return end($alt);
     }
 
-    /** Boş termin: periyodik (eğitim/talimat) madde → SÜREKLİ; değilse düzey kısaltmasına göre config isg.risk_termin_duzey. */
+    /**
+     * Boş termin, düzey kısaltmasına göre (config isg.risk_termin_duzey): ÇY → Derhal, YK → 1 Ay, ÖN / OD → 3 Ay;
+     * Olası ve Kabul Edilebilir → "Sürekli / Rutin". 02.11.2026: eğitim / talimat maddesi düzeyi ne olursa olsun
+     * "SÜREKLİ" alıyordu (Çok Yüksek riskli maddede bile) — o istisna kaldırıldı. $metin geriye uyum için.
+     */
     public static function varsayilanTermin(string $yontem, ?string $duzey, ?string $metin = null): string
     {
-        if (preg_match('/eğitim|egitim|talimat|periyodik/iu', (string) $metin)) {
-            return self::VARSAYILAN_TERMIN;
-        }
-
         $kisa = RiskSkorlama::kisaltma($yontem, $duzey);
 
         return config('isg.risk_termin_duzey.'.$kisa) ?? self::VARSAYILAN_TERMIN;

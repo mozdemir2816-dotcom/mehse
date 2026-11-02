@@ -279,6 +279,120 @@ class GeminiRiskPuanTamamlayici
         PROMPT;
     }
 
+    /**
+     * Puanı (ve önlemi) eksik birden çok maddeyi TEK istekte tamamlar (02.11.2026). Madde başına ayrı
+     * istek (puan + önlem = 2 istek) ücretsiz günlük kotayı (~20) birkaç maddede bitiriyordu; 25 madde
+     * tek istekte gider. Değerler ölçekteki izinli değerlere yuvarlanır; önlem sonrası (son_*) değerler
+     * ilk değerden yüksek olamaz. İşyeri bağlamı (NACE / sektör) prompta eklenir.
+     *
+     * @param  iterable<RiskMaddesi>  $maddeler
+     * @return array<int, array{olasilik: ?float, frekans: ?float, siddet: ?float, son_olasilik: ?float, son_frekans: ?float, son_siddet: ?float, mevcut_onlem: ?string}>
+     */
+    public static function puanTopluOner(iterable $maddeler, string $yontem, ?string $baglam = null): array
+    {
+        if (! static::aktifMi() || ! in_array($yontem, ['fine_kinney', 'matris_5x5'], true)) {
+            return [];
+        }
+
+        $fk = RiskSkorlama::ucEksenliMi($yontem);
+        $liste = [];
+        foreach ($maddeler as $m) {
+            $liste[] = array_filter([
+                'no' => $m->id, 'bolum' => $m->bolum, 'faaliyet' => $m->faaliyet,
+                'tehlike' => $m->tehlike, 'risk' => $m->risk, 'mevcut_onlem' => $m->mevcut_onlem, 'oneri' => $m->oneri,
+            ], 'filled');
+        }
+        if ($liste === []) {
+            return [];
+        }
+
+        $olcek = fn (string $e) => implode(', ', array_keys(RiskSkorlama::olcek($yontem, $e)));
+        $olcekMetni = $fk
+            ? "Fine-Kinney: olasilik ∈ [{$olcek('olasilik')}], frekans ∈ [{$olcek('frekans')}], siddet ∈ [{$olcek('siddet')}]; Risk = O × F × Ş."
+            : "5x5 Matris: olasilik ∈ [{$olcek('olasilik')}], siddet ∈ [{$olcek('siddet')}]; Risk = O × Ş.";
+        $maddelerJson = json_encode($liste, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $baglamMetni = $baglam ? "İşyeri: {$baglam}\n" : '';
+        $istem = <<<PROMPT
+        Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu ve İSG Risk Değerlendirmesi
+        Yönetmeliği'ne göre çalışan deneyimli bir İş Güvenliği Uzmanısın.
+        {$baglamMetni}Ölçek: {$olcekMetni}
+        Aşağıdaki risk maddelerinin HER BİRİ için mevcut duruma göre gerçekçi puanları ver ve
+        önerilen önlemler uygulandıktan sonraki (önlem sonrası / rezidüel) puanları makul ölçüde
+        düşürerek ver (son değerler ilk değerlerden büyük olamaz). Değerleri YALNIZ ölçekteki
+        listelerden seç. "mevcut_onlem" alanı verilmemiş maddeler için 1 cümlelik mevcut önlem
+        tahmini yaz; verilmişse boş bırak.
+
+        Maddeler (no = madde numarası, yanıtta aynen kullan):
+        {$maddelerJson}
+
+        Yanıtı SADECE JSON dizisi olarak ver.
+        PROMPT;
+
+        $ozellikler = [
+            'no' => ['type' => 'INTEGER'],
+            'olasilik' => ['type' => 'NUMBER'], 'siddet' => ['type' => 'NUMBER'],
+            'son_olasilik' => ['type' => 'NUMBER'], 'son_siddet' => ['type' => 'NUMBER'],
+            'mevcut_onlem' => ['type' => 'STRING'],
+        ];
+        $zorunlu = ['no', 'olasilik', 'siddet', 'son_olasilik', 'son_siddet'];
+        if ($fk) {
+            $ozellikler += ['frekans' => ['type' => 'NUMBER'], 'son_frekans' => ['type' => 'NUMBER']];
+            $zorunlu = [...$zorunlu, 'frekans', 'son_frekans'];
+        }
+
+        try {
+            $yanit = GeminiIstemci::post([
+                'contents' => [['role' => 'user', 'parts' => [['text' => $istem]]]],
+                'generationConfig' => [
+                    'temperature' => 0.2,
+                    'responseMimeType' => 'application/json',
+                    'responseSchema' => ['type' => 'ARRAY', 'items' => ['type' => 'OBJECT', 'properties' => $ozellikler, 'required' => $zorunlu]],
+                ],
+            ], self::TOPLU_ISTEK_TIMEOUT, 5);
+
+            if ($yanit->failed()) {
+                Log::warning('Gemini toplu puan başarısız', ['durum' => $yanit->status(), 'govde' => mb_substr($yanit->body(), 0, 500)]);
+                static::basarisizlikKaydet();
+
+                return [];
+            }
+
+            $sonuc = json_decode((string) data_get($yanit->json(), 'candidates.0.content.parts.0.text'), true);
+            $gecerli = array_column($liste, 'no');
+            $cikti = [];
+
+            foreach (is_array($sonuc) ? $sonuc : [] as $s) {
+                $id = (int) ($s['no'] ?? 0);
+                if (! in_array($id, $gecerli, true) || ! isset($s['olasilik'], $s['siddet'])) {
+                    continue;
+                }
+                $d = fn (string $alan, string $eksen) => isset($s[$alan]) ? static::enYakinDeger($s[$alan], $yontem, $eksen) : null;
+                $o = $d('olasilik', 'olasilik');
+                $f = $fk ? ($d('frekans', 'frekans') ?? 1.0) : null;
+                $sd = $d('siddet', 'siddet');
+                $cikti[$id] = [
+                    'olasilik' => $o, 'frekans' => $f, 'siddet' => $sd,
+                    // Önlem sonrası değer ilkten büyük olamaz.
+                    'son_olasilik' => min($o, $d('son_olasilik', 'olasilik') ?? $o),
+                    'son_frekans' => $fk ? min($f, $d('son_frekans', 'frekans') ?? $f) : null,
+                    'son_siddet' => min($sd, $d('son_siddet', 'siddet') ?? $sd),
+                    'mevcut_onlem' => filled($s['mevcut_onlem'] ?? null) ? trim((string) $s['mevcut_onlem']) : null,
+                ];
+            }
+
+            if ($cikti) {
+                static::basariKaydet();
+            }
+
+            return $cikti;
+        } catch (Throwable $e) {
+            Log::warning('Gemini toplu puan istisna', ['hata' => $e->getMessage()]);
+            static::basarisizlikKaydet();
+
+            return [];
+        }
+    }
+
     /** LLM'in döndürdüğü sayı, ölçekteki İZİN VERİLEN değerlerden en yakınına yuvarlanır (ölçek dışı değer sızmasın diye). */
     private static function enYakinDeger(mixed $deger, string $yontem, string $eksen): float
     {

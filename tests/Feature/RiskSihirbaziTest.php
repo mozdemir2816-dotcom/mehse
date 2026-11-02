@@ -254,7 +254,8 @@ class RiskSihirbaziTest extends TestCase
 
     public function test_ai_yontemi_sektor_ve_alt_kategori_akisi(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create();
+        // NACE yoksa sektör ve alt kategori sorulur (NACE'li firmada kısayol: aşağıdaki test).
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => null]);
 
         Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
@@ -272,6 +273,33 @@ class RiskSihirbaziTest extends TestCase
             ->call('aiAltKategoriToggle', 0)
             ->call('aiAltKategoriOnayla')
             ->assertSet('aiAsama', 'sohbet');
+    }
+
+    /** 02.11.2026: firma NACE'sinden sektör tespit edilirse sektör / alt kategori sorulmadan mülakata geçilir. */
+    public function test_ai_nace_den_sektor_tespit_edilir_ve_dogrudan_mulakata_gecilir(): void
+    {
+        $this->assertSame('insaat', RiskSihirbazi::naceAiSektoru('41.00.01'));
+        $this->assertSame('gida', RiskSihirbazi::naceAiSektoru('10.71.01'));
+        $this->assertSame('fabrika', RiskSihirbazi::naceAiSektoru('28.41.03'));
+        $this->assertSame('saglik', RiskSihirbazi::naceAiSektoru('86.10.01'));
+        $this->assertNull(RiskSihirbazi::naceAiSektoru(null));
+
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '41.00.01']);
+
+        Livewire::test(RiskSihirbazi::class)
+            ->set('firmaId', $firma->id)
+            ->set('yontem', 'matris_5x5')
+            ->call('ileri')
+            ->call('yontemSec', 'ai')
+            ->call('ileri')
+            ->call('aiBaslat')
+            ->assertSet('aiAsama', 'sohbet')
+            ->assertSet('aiSektor', 'insaat')
+            ->assertSet('aiSektorOtomatik', true)
+            ->assertSee('NACE kodundan')
+            ->call('aiSektorDegistir')
+            ->assertSet('aiAsama', 'sektor')
+            ->assertSet('aiSektorOtomatik', false);
     }
 
     public function test_ai_sohbet_cevaplari_aday_risk_uretir_ve_maddelere_eklenir(): void

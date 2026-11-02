@@ -67,12 +67,27 @@ class RiskVarsayilanSonPuanTerminTest extends TestCase
         $rd = $this->rd();
         $yeni = fn (array $a) => RiskMaddesi::create(['risk_degerlendirmesi_id' => $rd->id, 'tehlike' => 'Ezilme'] + $a);
 
-        $this->assertSame('Derhal / 3 Gün', $yeni(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40])->termin); // 1440 ÇY
+        // 02.11.2026: ÇY → Derhal, YK → 1 Ay, ÖN → 3 Ay, düşük → Sürekli / Rutin; eğitim istisnası kaldırıldı.
+        $this->assertSame('Derhal', $yeni(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40])->termin);         // 1440 ÇY
         $this->assertSame('1 Ay', $yeni(['olasilik' => 3, 'frekans' => 6, 'siddet' => 15])->termin);           // 270 YK
         $this->assertSame('3 Ay', $yeni(['olasilik' => 1, 'frekans' => 6, 'siddet' => 15])->termin);           // 90 ÖN
-        $this->assertSame('SÜREKLİ', $yeni(['olasilik' => 1, 'frekans' => 2, 'siddet' => 7])->termin);         // 14 KE
-        $this->assertSame('SÜREKLİ', $yeni(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40, 'oneri' => 'Operatörlere eğitim verilmeli'])->termin);
+        $this->assertSame('Sürekli / Rutin', $yeni(['olasilik' => 1, 'frekans' => 2, 'siddet' => 7])->termin); // 14 KE
+        $this->assertSame('Derhal', $yeni(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40, 'oneri' => 'Operatörlere eğitim verilmeli'])->termin);
         $this->assertSame('15.12.2026', $yeni(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40, 'termin' => '15.12.2026'])->termin);
+
+        // Puansız eklenen madde "Sürekli / Rutin" alır; puanlanınca termin düzeye göre yenilenir.
+        $puansiz = $yeni([]);
+        $this->assertSame('Sürekli / Rutin', $puansiz->termin);
+        $puansiz->update(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40]);
+        $this->assertSame('Derhal', $puansiz->fresh()->termin);
+        // Elle yazılan termin puan değişse de korunur.
+        $elle = $yeni(['olasilik' => 1, 'frekans' => 2, 'siddet' => 7, 'termin' => 'Her vardiya başı']);
+        $elle->update(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40]);
+        $this->assertSame('Her vardiya başı', $elle->fresh()->termin);
+        // Eski kayıtta saklı otomatik "SÜREKLİ" çıktıda düzeye göre basılır.
+        $eski = $yeni(['olasilik' => 6, 'frekans' => 6, 'siddet' => 40]);
+        $eski->forceFill(['termin' => 'SÜREKLİ'])->saveQuietly();
+        $this->assertSame('Derhal', $eski->fresh()->terminMetni('fine_kinney'));
 
         $matris = $this->rd('matris_5x5');
         $this->assertSame('1 Ay', RiskMaddesi::create(['risk_degerlendirmesi_id' => $matris->id, 'tehlike' => 'A', 'olasilik' => 4, 'siddet' => 4])->termin);

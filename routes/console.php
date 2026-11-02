@@ -30,6 +30,10 @@ Schedule::call(fn () => Artisan::call('risk:pdf-uret'))
 Schedule::call(fn () => Artisan::call('risk:oneri-tamamla'))
     ->name('risk:oneri-tamamla')->everyMinute()->withoutOverlapping(10);
 
+// "Eksik Puan/Önlemleri AI ile Tamamla" kuyruğu: dakikada bir istekte 25 madde (02.11.2026).
+Schedule::call(fn () => Artisan::call('risk:puan-tamamla'))
+    ->name('risk:puan-tamamla')->everyMinute()->withoutOverlapping(10);
+
 // Günlük veritabanı yedeği (Hizmet Sözleşmesi md.5): storage/app/private/yedekler, 30 gün saklanır.
 Schedule::call(fn () => Artisan::call('mehse:yedekle'))
     ->name('mehse:yedekle')->dailyAt('03:00')->timezone('Europe/Istanbul');

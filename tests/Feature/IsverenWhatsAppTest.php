@@ -185,4 +185,39 @@ class IsverenWhatsAppTest extends TestCase
         Livewire::test(DefterSayfasi::class)->set('firmaId', $this->firma->id)->assertSee(TespitOneriDefteri::VARSAYILAN_ONERI);
         $this->assertStringContainsString(TespitOneriDefteri::VARSAYILAN_ONERI, view('pdf.tespit-oneri-defteri', ['defter' => $d->fresh(), 'firma' => $this->firma])->render());
     }
+
+    /** 02.11.2026: risk raporu WhatsApp (imzalı bağlantı), PDF kapak / ekip / onay noktalı yer tutucu, termin. */
+    public function test_risk_raporu_whatsapp_ve_pdf_ekip_yer_tutuculari(): void
+    {
+        $this->cepTelefonuGir();
+        $this->firma->update(['tehlike_sinifi' => 'cok_tehlikeli']);
+        $rd = \App\Models\RiskDegerlendirmesi::create(['firma_id' => $this->firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => '2026-11-02']);
+        $rd->maddeler()->create(['sira' => 1, 'tehlike' => 'Ezilme', 'olasilik' => 6, 'frekans' => 6, 'siddet' => 40, 'durum' => 'acik']);
+        $rd->refresh();
+
+        $mesaj = IsverenWhatsApp::riskMesaji($rd);
+        $this->assertStringContainsString('Sayın Yakup MERAL (FOM MAKİNA),', $mesaj);
+        $this->assertStringContainsString('02.11.2026 tarihli ve '.$rd->belge_no.' numaralı 6331 sayılı Kanun', $mesaj);
+        $this->assertStringContainsString('- İncelenen Risk Sayısı: 1', $mesaj);
+        $this->assertStringContainsString('- Geçerlilik: 02.11.2028 tarihine kadar (Çok Tehlikeli - 2 Yıl)', $mesaj);
+        $this->assertStringEndsWith('Mehmet ÖZDEMİR - A Sınıfı İSG Uzmanı', $mesaj);
+
+        preg_match('#https?://\S+/paylasim/risk/'.$rd->id.'\S+#', $mesaj, $e);
+        $this->assertNotEmpty($e);
+        auth()->logout();
+        $this->get($e[0])->assertOk();
+        $this->get('/paylasim/risk/'.$rd->id)->assertForbidden();
+        $this->actingAs($this->uzman);
+
+        Livewire::test(\App\Filament\Resources\RiskDegerlendirmesis\Pages\EditRiskDegerlendirmesi::class, ['record' => $rd->getRouteKey()])
+            ->callAction('whatsapp')->assertNotified("Risk değerlendirmesi WhatsApp'ta hazırlandı");
+
+        $veri = \App\Support\RiskDegerlendirmesiUretici::veri($rd->fresh());
+        $dikey = view('pdf.risk-degerlendirmesi', $veri + ['bolum' => 'dikey'])->render();
+        $yatay = view('pdf.risk-degerlendirmesi', $veri + ['bolum' => 'yatay'])->render();
+        $this->assertStringContainsString('FOM MAKİNA', $dikey);   // boş proje adı → unvan
+        $this->assertStringContainsString('........................................', $dikey);   // kapak: temsilci / destek
+        $this->assertStringContainsString('........................................', $yatay);   // ekip tablosu + onay
+        $this->assertStringContainsString('<td>Derhal</td>', $yatay);   // ÇY → Derhal
+    }
 }

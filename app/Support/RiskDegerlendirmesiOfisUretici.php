@@ -67,7 +67,7 @@ class RiskDegerlendirmesiOfisUretici
             ['Düzey', fn ($m) => $m->duzey, 14],
             ['Öneri', fn ($m) => $m->oneri, 40],
             ['Sorumlu', fn ($m) => $m->sorumluMetni(), 14],
-            ['Termin', fn ($m) => $m->termin ?: RiskMaddesi::VARSAYILAN_TERMIN, 12],
+            ['Termin', fn ($m) => $m->terminMetni(), 12],
             ['Son O', fn ($m) => $s($m->son_olasilik), 7],
             $uc ? ['Son '.$f, fn ($m) => $s($m->son_frekans), 7] : null,
             ['Son Ş', fn ($m) => $s($m->son_siddet), 7],

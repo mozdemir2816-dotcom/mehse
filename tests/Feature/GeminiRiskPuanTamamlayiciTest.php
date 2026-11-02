@@ -154,21 +154,25 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         Http::assertNothingSent();
     }
 
+    /**
+     * Toplu puan isteğine (02.11.2026) sahte yanıt: istemdeki her "no" için verilen değerler.
+     * Toplu istek dizisi (ARRAY şema) döner.
+     */
+    private function topluPuanFake(array $degerler): void
+    {
+        Http::fake(function ($request) use ($degerler) {
+            $metin = (string) data_get(json_decode($request->body(), true), 'contents.0.parts.0.text');
+            preg_match_all('/"no":\s*(\d+)/', $metin, $e);
+            $yanit = array_map(fn ($no) => ['no' => (int) $no] + $degerler, $e[1]);
+
+            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($yanit)]]]]]]);
+        });
+    }
+
     public function test_eksik_puanlari_tamamla_sadece_eksik_eksenleri_doldurur(): void
     {
         config(['services.gemini.key' => 'test-anahtar']);
-
-        Http::fake(function ($request) {
-            $govde = json_decode($request->body(), true);
-            $ozellikler = array_keys(data_get($govde, 'generationConfig.responseSchema.properties', []));
-            $onlemIstegi = in_array('onlem', $ozellikler, true);
-
-            $json = $onlemIstegi
-                ? ['onlem' => 'Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.']
-                : ['olasilik' => 2, 'siddet' => 3];
-
-            return Http::response(['candidates' => [['content' => ['parts' => [['text' => json_encode($json)]]]]]]);
-        });
+        $this->topluPuanFake(['olasilik' => 2, 'siddet' => 3, 'son_olasilik' => 1, 'son_siddet' => 3, 'mevcut_onlem' => 'Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.']);
 
         $firma = Firma::factory()->for($this->uzman)->create();
         $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
@@ -180,11 +184,15 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         Livewire::test(MaddelerRelationManager::class, [
             'ownerRecord' => $rd,
             'pageClass' => EditRiskDegerlendirmesi::class,
-        ])->callTableAction('eksikPuanlariTamamla');
+        ])->callTableAction('eksikPuanlariTamamla')
+            ->assertNotified('✓ 2 adet maddenin puanları ve terminleri yapay zekâ ile mevzuata uygun olarak tamamlandı');
 
         $this->assertSame(2.0, $eksik->fresh()->olasilik);
         $this->assertSame(3.0, $eksik->fresh()->siddet);
+        $this->assertSame(1.0, $eksik->fresh()->son_olasilik);
         $this->assertSame('Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.', $eksik->fresh()->mevcut_onlem);
+        // Termin, AI puanından hesaplanan düzeye göre atanır.
+        $this->assertSame(\App\Models\RiskMaddesi::varsayilanTermin('matris_5x5', $eksik->fresh()->duzey), $eksik->fresh()->termin);
 
         // Puanı zaten dolu olan madde AI önerisiyle EZİLMEZ, yalnız eksik önlemi tamamlanır.
         $this->assertSame(4.0, $sadeceOnlemEksik->fresh()->olasilik);
@@ -195,8 +203,8 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         $this->assertSame(5.0, $tamOlan->fresh()->olasilik);
         $this->assertSame('Zaten yazılmış önlem.', $tamOlan->fresh()->mevcut_onlem);
 
-        // eksik: 1 puan + 1 önlem; sadeceOnlemEksik: 1 önlem; tamOlan: 0 = toplam 3.
-        Http::assertSentCount(3);
+        // 02.11.2026: madde başına ayrı istek yerine tek toplu istek.
+        Http::assertSentCount(1);
     }
 
     public function test_art_arda_basarisizlikta_devre_kesilir_ve_istek_atilmaz(): void
@@ -231,15 +239,14 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         $this->assertTrue(GeminiRiskPuanTamamlayici::devreKesikMi());
     }
 
-    public function test_eksik_puanlari_tamamla_tek_calistirmada_40_madde_ile_sinirli(): void
+    /** 02.11.2026: ilk 25 madde hemen (tek istek), kalanı arka plan kuyruğunda dakikada 25. */
+    public function test_eksik_puanlari_tamamla_ilk_parti_hemen_kalan_kuyrukta(): void
     {
         config(['services.gemini.key' => 'test-anahtar']);
-        Http::fake(fn () => Http::response([
-            'candidates' => [['content' => ['parts' => [['text' => json_encode(['olasilik' => 3, 'siddet' => 3])]]]]],
-        ]));
+        $this->topluPuanFake(['olasilik' => 3, 'frekans' => 6, 'siddet' => 15, 'son_olasilik' => 1, 'son_frekans' => 6, 'son_siddet' => 15]);
 
         $firma = Firma::factory()->for($this->uzman)->create();
-        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
         for ($i = 1; $i <= 55; $i++) {
             $rd->maddeler()->create(['sira' => $i, 'tehlike' => 'Puansız madde '.$i, 'mevcut_onlem' => 'var', 'durum' => 'acik']);
         }
@@ -249,9 +256,19 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
             'pageClass' => EditRiskDegerlendirmesi::class,
         ])->callTableAction('eksikPuanlariTamamla');
 
-        // 40 madde puanlandı, 15'i hâlâ eksik
-        $this->assertSame(40, $rd->maddeler()->whereNotNull('olasilik')->count());
-        $this->assertSame(15, $rd->maddeler()->whereNull('olasilik')->count());
+        $this->assertSame(25, $rd->maddeler()->whereNotNull('olasilik')->count());
+        $this->assertTrue(\App\Console\Commands\RiskPuanTamamla::kuyruktaMi($rd->id));
+
+        // Zamanlayıcı her dakika bir parti: iki çalıştırmada kalan 30 madde biter, rapor kuyruktan çıkar.
+        $this->artisan('risk:puan-tamamla')->assertSuccessful();
+        $this->artisan('risk:puan-tamamla')->assertSuccessful();
+        $this->assertSame(0, $rd->maddeler()->whereNull('olasilik')->count());
+        $m = $rd->maddeler()->first();
+        $this->assertSame(270.0, (float) $m->puan);   // 3×6×15 → Yüksek
+        $this->assertSame('1 Ay', $m->termin);
+        $this->artisan('risk:puan-tamamla')->assertSuccessful();
+        $this->assertFalse(\App\Console\Commands\RiskPuanTamamla::kuyruktaMi($rd->id));
+        Http::assertSentCount(3);
     }
 
     public function test_kutuphaneden_aktar_mevcut_onlem_bosluysa_bos_eklenir(): void

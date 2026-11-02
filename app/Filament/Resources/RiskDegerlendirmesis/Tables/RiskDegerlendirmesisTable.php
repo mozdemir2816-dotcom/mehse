@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\RiskDegerlendirmesis\Tables;
 
 use App\Models\RiskDegerlendirmesi;
+use App\Support\IsverenWhatsApp;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -43,6 +45,10 @@ class RiskDegerlendirmesisTable
             ])
             ->defaultGroup('firma.unvan')
             ->recordActions([
+                // 02.11.2026: işverene WhatsApp ile risk raporu (30 günlük imzalı PDF bağlantısı); cep telefonu yoksa gizli.
+                Action::make('whatsapp')->label('WhatsApp')->icon('heroicon-o-chat-bubble-left-right')->color('success')
+                    ->visible(fn (RiskDegerlendirmesi $record) => IsverenWhatsApp::telefon($record->firma) !== null)
+                    ->action(fn (RiskDegerlendirmesi $record, $livewire) => $livewire->js('window.open('.json_encode(IsverenWhatsApp::url($record->firma, IsverenWhatsApp::riskMesaji($record))).', "_blank")')),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

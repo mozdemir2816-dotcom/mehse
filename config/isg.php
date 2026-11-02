@@ -277,12 +277,12 @@ return [
     ],
 
     /*
-    | Boş bırakılan termin, maddenin İLK risk düzeyi kısaltmasına göre dolar (01.11.2026).
-    | Listede olmayan düzeyler ile eğitim/talimat/periyodik maddeler "SÜREKLİ" kalır.
+    | Boş bırakılan termin, maddenin İLK risk düzeyi kısaltmasına göre dolar (01.11.2026; 02.11.2026
+    | ÇY → "Derhal"). Listede olmayan düzeyler (Olası, Kabul Edilebilir) "Sürekli / Rutin" alır.
     | ÇY/YK her iki yöntemde ortak; ÖN = Fine-Kinney "Önemli", OD = 5x5 "Orta Düzeyde".
     */
     'risk_termin_duzey' => [
-        'ÇY' => 'Derhal / 3 Gün',
+        'ÇY' => 'Derhal',
         'YK' => '1 Ay',
         'ÖN' => '3 Ay',
         'OD' => '3 Ay',

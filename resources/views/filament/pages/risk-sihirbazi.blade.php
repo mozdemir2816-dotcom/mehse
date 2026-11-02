@@ -448,6 +448,12 @@
             {{-- Sohbet — Sorular --}}
             @if ($aiAsama === 'sohbet')
                 @php $siradaki = $this->aiSiradakiSoru(); @endphp
+                @if ($aiSektorOtomatik)
+                    <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(124 58 237 / .07);border:1px solid rgb(124 58 237 / .25)">
+                        <span>🏷 Sektör firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) belirlendi: <strong>{{ $this->aiSektorEtiketi() }}</strong></span>
+                        <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
+                    </div>
+                @endif
                 <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem;max-height:22rem;overflow-y:auto;padding-right:.25rem">
                     @foreach ($sorular as $s)
                         @php
@@ -915,6 +921,14 @@
                 <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.5rem">
                     Ekip; firmaya atanan İSG profesyonelleri ve Atama Yazıları'ndan otomatik gelir. İşveren / vekili ve destek elemanı kayıttan sonra açılan sayfada eklenir.
                 </p>
+                {{-- 02.11.2026: İSG Risk Değerlendirmesi Yönetmeliği Md. 6 — ekipte çalışan temsilcisi bulunur --}}
+                @if ($this->firma && empty($this->ekipOnizleme['Çalışan Temsilcisi'] ?? []))
+                    <div role="alert" style="margin-top:.6rem;padding:.6rem .8rem;border-radius:.5rem;border:1px solid rgb(220 38 38 / .45);background:rgb(220 38 38 / .07);font-size:.82rem;color:#b91c1c">
+                        <strong>⚠️ Yasal Uyarı:</strong> Çalışan temsilcisi imzası bulunmayan risk analizi teftişte geçersiz sayılabilir (6331 s. Kanun Md. 6, İSG Risk Değerlendirmesi Yönetmeliği Md. 6).
+                        Çalışan temsilcisini <a href="{{ \App\Filament\Pages\CalisanTemsilcisiSecimi::getUrl(['firma' => $this->firma->id]) }}" style="text-decoration:underline;color:inherit">Çalışan Temsilcisi Seçimi</a>
+                        ya da Atama Yazıları'ndan belirleyin; PDF'te imza yeri noktalı çizgiyle açık bırakılır.
+                    </div>
+                @endif
             </div>
 
             @unless ($this->tumMaddelerPuanli())
