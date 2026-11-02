@@ -41,7 +41,7 @@ class JsaUretici
     public static function topluPdf(iterable $sablonlar, ?Firma $firma = null, bool $imzali = true): StreamedResponse
     {
         if (function_exists('set_time_limit')) {
-            @set_time_limit(300);
+            @set_time_limit(app()->runningInConsole() ? 0 : 300);
         }
 
         $pdf = Pdf::loadView('pdf.jsa-toplu', [

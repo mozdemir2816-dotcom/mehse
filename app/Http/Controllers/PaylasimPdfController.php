@@ -50,7 +50,7 @@ class PaylasimPdfController extends Controller
                 'risk-degerlendirmesi-'.Str::slug($rd->firma_unvan ?: 'firma').'.pdf');
         }
 
-        @set_time_limit(180);
+        @set_time_limit(app()->runningInConsole() ? 0 : 180);
 
         return RiskDegerlendirmesiUretici::pdf($rd);
     }

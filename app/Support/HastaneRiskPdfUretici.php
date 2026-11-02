@@ -35,7 +35,7 @@ class HastaneRiskPdfUretici
     public static function olustur(RiskDegerlendirmesi $rd): string
     {
         ExcelBellek::artir();
-        @set_time_limit(300);
+        @set_time_limit(app()->runningInConsole() ? 0 : 300);
 
         $sablon = HastaneRiskExcelUretici::sablon($rd);
         $kitap = HastaneRiskSablonu::yukle(HastaneRiskSablonu::yol($sablon['dosya']));

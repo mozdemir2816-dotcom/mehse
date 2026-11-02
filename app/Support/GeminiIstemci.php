@@ -33,7 +33,7 @@ class GeminiIstemci
         $modeller = self::modeller();
 
         // Yedekli deneme paylaşımlı sunucunun 30 sn PHP sınırını aşabilir (yerelde 42 sn ölçüldü).
-        @set_time_limit($timeout * count($modeller) + 30);
+        @set_time_limit(app()->runningInConsole() ? 0 : $timeout * count($modeller) + 30);   // komut satırında (zamanlayıcı, test) sınırsız kalır
 
         foreach ($modeller as $i => $model) {
             $istek = Http::timeout($timeout);

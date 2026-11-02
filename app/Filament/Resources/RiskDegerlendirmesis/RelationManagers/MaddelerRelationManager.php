@@ -287,7 +287,7 @@ class MaddelerRelationManager extends RelationManager
                     ->requiresConfirmation()
                     ->modalDescription(fn () => 'Eksik alanı olan '.$this->eksikPuanSayisi().' madde yapay zekâ ile tamamlanır: risk tanımı, mevcut önlem, öneri (düzeltici/önleyici faaliyet), mevzuat dayanağı, rol bazlı sorumlu, Olasılık / '.($this->ucEksenli() ? 'Frekans / ' : '').'Şiddet ve önlem sonrası puanlar. Termin risk düzeyine göre (Derhal / 1 Ay / 3 Ay / Sürekli-Rutin) atanır. Yalnız BOŞ alanlar dolar, yazdıklarınıza dokunulmaz. Dolan alanlar Risk Kütüphanesindeki karşılığına da kaydedilir — bir sonraki analizde dolu gelir. İlk '.RiskPuanTamamla::PARTI.' madde hemen, kalanı arka planda dakikada '.RiskPuanTamamla::PARTI.' madde işlenir.')
                     ->action(function (): void {
-                        @set_time_limit(300);
+                        @set_time_limit(app()->runningInConsole() ? 0 : 300);
                         GeminiRiskPuanTamamlayici::devreyiSifirla();
                         $rd = $this->getOwnerRecord();
                         $toplam = $this->eksikPuanSayisi();

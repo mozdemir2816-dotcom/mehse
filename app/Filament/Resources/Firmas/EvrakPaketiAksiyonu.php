@@ -56,7 +56,7 @@ class EvrakPaketiAksiyonu
                     return null;
                 }
 
-                @set_time_limit(300);
+                @set_time_limit(app()->runningInConsole() ? 0 : 300);
 
                 return FirmaEvrakPaketi::zip($record, $data);
             });

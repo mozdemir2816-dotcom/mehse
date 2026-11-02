@@ -29,7 +29,7 @@ class RiskDegerlendirmesiOlusturucu
         string $durum = 'taslak',
         ?int $iguId = null,
     ): RiskDegerlendirmesi {
-        @set_time_limit(300);
+        @set_time_limit(app()->runningInConsole() ? 0 : 300);
 
         $raporTarihi ??= now()->toDateString();
         $gecerlilikTarihi ??= now()->addYears($firma->riskGecerlilikYili())->toDateString();

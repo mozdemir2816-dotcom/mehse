@@ -1439,7 +1439,7 @@ class RiskSihirbazi extends Page
     public function excelSecilenleriEkle()
     {
         // Büyük dosya + AI tamamlama toplamı 120 sn'yi aşabilir; sayfa çökmesin.
-        @set_time_limit(300);
+        @set_time_limit(app()->runningInConsole() ? 0 : 300);
 
         $secilenAdaylar = collect($this->excelAdaylar)
             ->filter(fn ($a) => in_array($a['anahtar'], $this->excelSecilenAdaylar, true));

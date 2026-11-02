@@ -44,7 +44,7 @@ class JsaWordUretici
     public static function topluWord(iterable $sablonlar, ?Firma $firma = null, bool $imzali = true): StreamedResponse
     {
         if (function_exists('set_time_limit')) {
-            @set_time_limit(300);
+            @set_time_limit(app()->runningInConsole() ? 0 : 300);
         }
 
         $phpWord = new PhpWord;
