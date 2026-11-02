@@ -5,6 +5,7 @@
 //   node deploy/deploy.mjs --dry-run   -> hiçbir şey yüklemeden, ne yükleneceğini listele
 //   node deploy/deploy.mjs --full      -> state dosyasını yok say, her şeyi yükle
 //   node deploy/deploy.mjs --skip-build -> `npm run build` adımını atla
+//   node deploy/deploy.mjs --onbelleksiz -> yüklemeden sonra Laravel önbelleğini yenileme (bkz. deploy/onbellek.mjs)
 //
 // Sunucu düzeni (root = FTP ana dizini = public_html; FTP hesabı deploy@mehse.com):
 //   /index.php, /.htaccess, /build, /css, /js, /fonts, /favicon.ico, /robots.txt  (public/ içeriği)
@@ -21,6 +22,7 @@
 //   - Script hiçbir zaman sunucudan dosya SİLMEZ, sadece yeni/değişen dosyaları yükler.
 
 import { Client } from 'basic-ftp';
+import { onbellekYenile } from './onbellek.mjs';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,6 +42,7 @@ if (bilinmeyen.length) {
 const DRY_RUN = args.includes('--dry-run');
 const FULL = args.includes('--full');
 const SKIP_BUILD = args.includes('--skip-build');
+const NO_CACHE = args.includes('--onbelleksiz');
 
 const STATE_FILE = path.join(ROOT, '.deploy-state.json');
 const ENV_DEPLOY_FILE = path.join(ROOT, '.env.deploy');
@@ -301,6 +304,16 @@ async function main() {
         saveState({ lastDeployAt: runStartedAt });
     } finally {
         try { client.close(); } catch { /* zaten kopmuş olabilir */ }
+    }
+
+    // Laravel önbellekleri (config / rota / view / Filament) — 02.11.2026 canlı yavaşlık incelemesi.
+    // Önbellek kuruluyken config/*.php değişiklikleri ancak bu yenilemeyle canlıya yansır.
+    if (NO_CACHE) {
+        console.log('[deploy] --onbelleksiz: önbellek yenilenmedi.');
+    } else if (!(await onbellekYenile())) {
+        console.warn('[deploy] UYARI: önbellek yenilenemedi — yeni config değişiklikleri canlıda görünmeyebilir.');
+        console.warn('[deploy] Tekrar deneyin: node deploy/onbellek.mjs   ·   Geri almak için: node deploy/onbellek.mjs --temizle');
+        process.exitCode = 1;
     }
 }
 
