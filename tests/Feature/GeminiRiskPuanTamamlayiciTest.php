@@ -185,7 +185,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
             'ownerRecord' => $rd,
             'pageClass' => EditRiskDegerlendirmesi::class,
         ])->callTableAction('eksikPuanlariTamamla')
-            ->assertNotified('✓ 2 adet maddenin puanları ve terminleri yapay zekâ ile mevzuata uygun olarak tamamlandı');
+            ->assertNotified('✓ 2 adet maddenin eksik alanları (öneri, mevzuat, puan, sorumlu, termin) yapay zekâ ile mevzuata uygun olarak tamamlandı ve kütüphaneye kaydedildi');
 
         $this->assertSame(2.0, $eksik->fresh()->olasilik);
         $this->assertSame(3.0, $eksik->fresh()->siddet);
@@ -199,7 +199,7 @@ class GeminiRiskPuanTamamlayiciTest extends TestCase
         $this->assertSame(4.0, $sadeceOnlemEksik->fresh()->siddet);
         $this->assertSame('Kaymaz zemin kaplaması ve uyarı levhası kullanılmalı.', $sadeceOnlemEksik->fresh()->mevcut_onlem);
 
-        // Tamamen dolu madde hiç dokunulmadan kalır — sorgu kapsamına bile girmez.
+        // Dolu puan ve önlem hiç değişmez (öneri boş olduğu için madde kapsama girer ama yalnız boş alanlar dolar).
         $this->assertSame(5.0, $tamOlan->fresh()->olasilik);
         $this->assertSame('Zaten yazılmış önlem.', $tamOlan->fresh()->mevcut_onlem);
 

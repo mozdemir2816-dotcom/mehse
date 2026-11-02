@@ -393,6 +393,150 @@ class GeminiRiskPuanTamamlayici
         }
     }
 
+    /**
+     * Tam alan tamamlama (02.11.2026) — tek istekte en fazla 25 madde: boş olan risk tanımı, mevcut önlem,
+     * öneri (düzeltici/önleyici faaliyet), mevzuat dayanağı, rol bazlı sorumlu ve O/F/Ş + önlem sonrası
+     * (rezidüel) puanlar. Hangi alanın doldurulacağına çağıran karar verir (yalnız boşlar); burada yapay
+     * zekâ her alan için öneri döndürür. $riskDenetle: verilen risk tanımı tehlikeyle çelişiyorsa
+     * (ör. mikser çarpmasına "elektrik çarpması") risk_uyumlu=false ve düzeltilmiş "risk" döner.
+     * Termin istenmez — risk düzeyinden hesaplanır (RiskMaddesi::varsayilanTermin).
+     *
+     * @param  iterable<\Illuminate\Database\Eloquent\Model>  $maddeler  RiskMaddesi ya da Tehlike (kütüphane)
+     * @return array<int, array<string, mixed>> id => alanlar
+     */
+    public static function alanTopluOner(iterable $maddeler, string $yontem, ?string $baglam = null, bool $riskDenetle = false): array
+    {
+        if (! static::aktifMi() || ! in_array($yontem, ['fine_kinney', 'matris_5x5'], true)) {
+            return [];
+        }
+
+        $fk = RiskSkorlama::ucEksenliMi($yontem);
+        $liste = [];
+        foreach ($maddeler as $m) {
+            $liste[] = array_filter([
+                'no' => $m->id, 'bolum' => $m->bolum, 'faaliyet' => $m->faaliyet, 'tehlike' => $m->tehlike,
+                'risk' => $m->risk, 'mevcut_onlem' => $m->mevcut_onlem, 'oneri' => $m->oneri,
+                'mevzuat' => $m->mevzuat,
+                'sorumlu' => $m->sorumlu === \App\Models\RiskMaddesi::VARSAYILAN_SORUMLU ? null : $m->sorumlu,
+            ], 'filled');
+        }
+        if ($liste === []) {
+            return [];
+        }
+
+        $olcek = fn (string $e) => implode(', ', array_keys(RiskSkorlama::olcek($yontem, $e)));
+        $olcekMetni = $fk
+            ? "Fine-Kinney: olasilik ∈ [{$olcek('olasilik')}], frekans ∈ [{$olcek('frekans')}], siddet ∈ [{$olcek('siddet')}]; Risk = O × F × Ş."
+            : "5x5 Matris: olasilik ∈ [{$olcek('olasilik')}], siddet ∈ [{$olcek('siddet')}]; Risk = O × Ş.";
+        $maddelerJson = json_encode($liste, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $baglamMetni = $baglam ? "İşyeri / kütüphane grubu: {$baglam}\n" : '';
+        $riskKurali = $riskDenetle
+            ? '- Verilen "risk" tanımı tehlikeyle ÇELİŞİYORSA (ör. beton mikserinin çarpmasına "elektrik çarpması" yazılmış) risk_uyumlu=false ver ve "risk" alanına tehlikeye uygun doğru tanımı yaz (ör. "Ezilme, iç kanama, uzuv kaybı ve ölüm"); uyumluysa risk_uyumlu=true.'
+            : '- Verilen "risk" tanımı tehlikeyle uyumluysa risk_uyumlu=true ver.';
+
+        $istem = <<<PROMPT
+        Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu, İSG Risk Değerlendirmesi Yönetmeliği,
+        Yapı İşlerinde İSG Yönetmeliği (Ek-4), İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları
+        Yönetmeliği ve ilgili mevzuata hâkim, deneyimli bir A Sınıfı İş Güvenliği Uzmanısın.
+        {$baglamMetni}Ölçek: {$olcekMetni}
+
+        Aşağıdaki risk maddelerinin HER BİRİ için şu alanları üret (madde için verilmiş alanları değiştirme
+        ihtiyacı yok; sistem yalnız boş alanları kullanır):
+        - risk: tehlikenin doğurabileceği somut sonuç (yaralanma / hastalık / kayıp), kısa. Tehlike metninin kopyası OLMASIN.
+        - mevcut_onlem: sahada tipik olarak bulunan mevcut kontrol tedbiri, 1 cümle.
+        - oneri: somut, teknik ve uygulanabilir düzeltici / önleyici faaliyet (1-3 cümle); yapı işlerinde
+          Yapı İşlerinde İSG Yönetmeliği Ek-4'e uygun.
+        - mevzuat: ilgili yönetmelik / standart adı; emin olmadığın madde numarasını YAZMA.
+        - sorumlu: rol bazlı (ör. İşveren / İşveren Vekili, Şantiye Şefi, Ustabaşı, Elektrik Teknisyeni,
+          Bakım Sorumlusu, Depo Sorumlusu, Operatör, İSG Uzmanı, İşyeri Hekimi). Kişi adı yazma.
+        - olasilik, siddet[FREKANS]: mevcut duruma göre gerçekçi puanlar (YALNIZ ölçekteki değerler).
+        - son_olasilik, son_siddet[SON_FREKANS]: öneri uygulandıktan sonraki puanlar; ilk değerlerden büyük olamaz,
+          şiddet genellikle aynı kalır, olasılık düşer.
+        {$riskKurali}
+
+        Maddeler (no = madde numarası, yanıtta aynen kullan):
+        {$maddelerJson}
+
+        Türkçe yaz. Yanıtı SADECE JSON dizisi olarak ver.
+        PROMPT;
+        $istem = strtr($istem, [
+            '[FREKANS]' => $fk ? ', frekans' : '',
+            '[SON_FREKANS]' => $fk ? ', son_frekans' : '',
+        ]);
+
+        $metin = ['type' => 'STRING'];
+        $sayi = ['type' => 'NUMBER'];
+        $ozellikler = [
+            'no' => ['type' => 'INTEGER'],
+            'risk' => $metin, 'mevcut_onlem' => $metin, 'oneri' => $metin, 'mevzuat' => $metin, 'sorumlu' => $metin,
+            'risk_uyumlu' => ['type' => 'BOOLEAN'],
+            'olasilik' => $sayi, 'siddet' => $sayi, 'son_olasilik' => $sayi, 'son_siddet' => $sayi,
+        ];
+        if ($fk) {
+            $ozellikler += ['frekans' => $sayi, 'son_frekans' => $sayi];
+        }
+
+        try {
+            $yanit = GeminiIstemci::post([
+                'contents' => [['role' => 'user', 'parts' => [['text' => $istem]]]],
+                'generationConfig' => [
+                    'temperature' => 0.2,
+                    'responseMimeType' => 'application/json',
+                    'responseSchema' => ['type' => 'ARRAY', 'items' => ['type' => 'OBJECT', 'properties' => $ozellikler, 'required' => ['no']]],
+                ],
+            ], self::TOPLU_ISTEK_TIMEOUT, 5);
+
+            if ($yanit->failed()) {
+                Log::warning('Gemini tam alan tamamlama başarısız', ['durum' => $yanit->status(), 'govde' => mb_substr($yanit->body(), 0, 500)]);
+                static::basarisizlikKaydet();
+
+                return [];
+            }
+
+            $sonuc = json_decode((string) data_get($yanit->json(), 'candidates.0.content.parts.0.text'), true);
+            $gecerli = array_column($liste, 'no');
+            $cikti = [];
+
+            foreach (is_array($sonuc) ? $sonuc : [] as $s) {
+                $id = (int) ($s['no'] ?? 0);
+                if (! in_array($id, $gecerli, true)) {
+                    continue;
+                }
+                $d = fn (string $alan, string $eksen) => isset($s[$alan]) && is_numeric($s[$alan]) ? static::enYakinDeger($s[$alan], $yontem, $eksen) : null;
+                $t = fn (string $alan) => filled($s[$alan] ?? null) ? trim((string) $s[$alan]) : null;
+
+                $o = $d('olasilik', 'olasilik');
+                $f = $fk ? $d('frekans', 'frekans') : null;
+                $sd = $d('siddet', 'siddet');
+                $so = $d('son_olasilik', 'olasilik');
+                $sf = $fk ? $d('son_frekans', 'frekans') : null;
+                $ss = $d('son_siddet', 'siddet');
+
+                $cikti[$id] = [
+                    'risk' => $t('risk'), 'mevcut_onlem' => $t('mevcut_onlem'), 'oneri' => $t('oneri'),
+                    'mevzuat' => $t('mevzuat'), 'sorumlu' => $t('sorumlu'),
+                    'risk_uyumlu' => ($s['risk_uyumlu'] ?? true) !== false,
+                    'olasilik' => $o, 'frekans' => $f, 'siddet' => $sd,
+                    // Önlem sonrası değer ilkten büyük olamaz.
+                    'son_olasilik' => $o !== null && $so !== null ? min($o, $so) : $so,
+                    'son_frekans' => $f !== null && $sf !== null ? min($f, $sf) : $sf,
+                    'son_siddet' => $sd !== null && $ss !== null ? min($sd, $ss) : $ss,
+                ];
+            }
+
+            if ($cikti) {
+                static::basariKaydet();
+            }
+
+            return $cikti;
+        } catch (Throwable $e) {
+            Log::warning('Gemini tam alan tamamlama istisna', ['hata' => $e->getMessage()]);
+            static::basarisizlikKaydet();
+
+            return [];
+        }
+    }
+
     /** LLM'in döndürdüğü sayı, ölçekteki İZİN VERİLEN değerlerden en yakınına yuvarlanır (ölçek dışı değer sızmasın diye). */
     private static function enYakinDeger(mixed $deger, string $yontem, string $eksen): float
     {

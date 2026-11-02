@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\RiskMaddesi;
 use App\Support\GeminiRiskPuanTamamlayici;
+use App\Support\KutuphanePuanOgrenme;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -83,15 +84,21 @@ class RiskOneriTamamla extends Command
 
         Cache::put($sayacAnahtari, $istekSayisi + 1, now()->addDays(2));
 
-        $dolan = 0;
+        $oneriler = GeminiRiskPuanTamamlayici::oneriTopluOner($maddeler);
 
-        foreach (GeminiRiskPuanTamamlayici::oneriTopluOner($maddeler) as $id => $oneri) {
-            // Bu arada kullanıcı elle doldurduysa üzerine yazma.
-            if (RiskMaddesi::whereKey($id)->where(fn ($q) => $q->whereNull('oneri')->orWhere('oneri', ''))->exists()) {
-                $maddeler[$id]->forceFill(['oneri' => $oneri])->save();
-                $dolan++;
+        // Dolan öneri kütüphanedeki karşılığına da kalıcı yazılır (02.11.2026) — sonraki analizde dolu gelir.
+        $dolan = KutuphanePuanOgrenme::sistemOlarak(function () use ($oneriler, $maddeler): int {
+            $dolan = 0;
+            foreach ($oneriler as $id => $oneri) {
+                // Bu arada kullanıcı elle doldurduysa üzerine yazma.
+                if (RiskMaddesi::whereKey($id)->where(fn ($q) => $q->whereNull('oneri')->orWhere('oneri', ''))->exists()) {
+                    $maddeler[$id]->forceFill(['oneri' => $oneri])->save();
+                    $dolan++;
+                }
             }
-        }
+
+            return $dolan;
+        });
 
         if ($dolan === 0) {
             Cache::put(self::ARA_ANAHTARI, true, now()->addMinutes(self::ARA_DK));

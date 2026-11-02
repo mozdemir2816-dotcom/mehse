@@ -112,6 +112,11 @@ class RiskSihirbazi extends Page
      */
     private const EXCEL_DOGRUDAN_ESIGI = 400;
 
+    /**
+     * Adım ve AI aşaması adres çubuğuna geçmiş kaydı olarak yazılır (02.11.2026): tarayıcının / telefonun
+     * "geri" tuşu sihirbazdan çıkıp Risk Yönetimi'ne dönmek yerine bir önceki adıma / aşamaya döner.
+     */
+    #[Url(as: 'adim', history: true, except: 1)]
     public int $adim = 1;
 
     #[Url(as: 'firma')]
@@ -160,6 +165,7 @@ class RiskSihirbazi extends Page
     | Adım 3 — "Yapay Zeka" (kural tabanlı) alt akışı (isgpratik 103-115)
     | aiAsama: baslangic | sektor | altkategori | sohbet | sonuc
     */
+    #[Url(as: 'ai', history: true, except: 'baslangic')]
     public string $aiAsama = 'baslangic';
 
     public ?string $aiSektor = null;
@@ -227,6 +233,13 @@ class RiskSihirbazi extends Page
     {
         $this->raporTarihi = now()->toDateString();
         $this->gecerlilikTarihiHesapla();
+
+        // Sayfa yenilenince / adres paylaşılınca seçimler bellekte olmadığından adresteki ileri adım
+        // geçersizdir — sihirbaz baştan (firma seçili kalarak) açılır.
+        if ($this->adim !== 1 || $this->aiAsama !== 'baslangic') {
+            $this->adim = 1;
+            $this->aiAsama = 'baslangic';
+        }
     }
 
     public function sifirla(): void

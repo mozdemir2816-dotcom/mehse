@@ -279,21 +279,22 @@ class MaddelerRelationManager extends RelationManager
                             ->success()->send();
                     }),
                 Action::make('eksikPuanlariTamamla')
-                    ->label('Eksik Puan/Önlemleri AI ile Tamamla')
+                    ->label('Eksik Alanları AI ile Tamamla')
                     ->icon('heroicon-o-sparkles')
                     ->color('gray')
                     ->badge(fn () => $this->eksikPuanSayisi() ?: null)
                     ->visible(fn () => GeminiRiskPuanTamamlayici::aktifMi() && in_array($this->getOwnerRecord()->yontem, ['fine_kinney', 'matris_5x5'], true))
                     ->requiresConfirmation()
-                    ->modalDescription(fn () => 'Puanı (Olasılık / Frekans / Şiddet) eksik '.$this->eksikPuanSayisi().' madde yapay zekâ ile tamamlanır: Fine-Kinney ölçeğindeki geçerli değerler, önlem sonrası (Son O/F/Ş) değerleri ve boşsa kısa mevcut önlem. Termin risk düzeyine göre (Derhal / 1 Ay / 3 Ay / Sürekli-Rutin) atanır. İlk '.RiskPuanTamamla::PARTI.' madde hemen, kalanı arka planda dakikada '.RiskPuanTamamla::PARTI.' madde işlenir. Girilmiş puan ve önlemlere dokunulmaz; sonuçları gözden geçirin.')
+                    ->modalDescription(fn () => 'Eksik alanı olan '.$this->eksikPuanSayisi().' madde yapay zekâ ile tamamlanır: risk tanımı, mevcut önlem, öneri (düzeltici/önleyici faaliyet), mevzuat dayanağı, rol bazlı sorumlu, Olasılık / '.($this->ucEksenli() ? 'Frekans / ' : '').'Şiddet ve önlem sonrası puanlar. Termin risk düzeyine göre (Derhal / 1 Ay / 3 Ay / Sürekli-Rutin) atanır. Yalnız BOŞ alanlar dolar, yazdıklarınıza dokunulmaz. Dolan alanlar Risk Kütüphanesindeki karşılığına da kaydedilir — bir sonraki analizde dolu gelir. İlk '.RiskPuanTamamla::PARTI.' madde hemen, kalanı arka planda dakikada '.RiskPuanTamamla::PARTI.' madde işlenir.')
                     ->action(function (): void {
                         @set_time_limit(300);
                         GeminiRiskPuanTamamlayici::devreyiSifirla();
                         $rd = $this->getOwnerRecord();
                         $toplam = $this->eksikPuanSayisi();
+                        RiskPuanTamamla::denemeleriSifirla($rd->id);
 
                         if (! $toplam) {
-                            Notification::make()->title('Puanı eksik madde yok')->success()->send();
+                            Notification::make()->title('Eksik alanı olan madde yok')->success()->send();
 
                             return;
                         }
@@ -309,7 +310,7 @@ class MaddelerRelationManager extends RelationManager
                         $rd->saveQuietly();
 
                         $bildirim = Notification::make()->title($tamamlanan
-                            ? "✓ {$tamamlanan} adet maddenin ".($this->ucEksenli() ? 'Fine-Kinney ' : '').'puanları ve terminleri yapay zekâ ile mevzuata uygun olarak tamamlandı'
+                            ? "✓ {$tamamlanan} adet maddenin eksik alanları (öneri, mevzuat, ".($this->ucEksenli() ? 'Fine-Kinney ' : '').'puan, sorumlu, termin) yapay zekâ ile mevzuata uygun olarak tamamlandı ve kütüphaneye kaydedildi'
                             : 'Yapay zekâ şu an yanıt vermedi');
 
                         match (true) {
@@ -333,7 +334,7 @@ class MaddelerRelationManager extends RelationManager
             ->reorderable('sira');
     }
 
-    /** Puanı (O / F / Ş) eksik madde sayısı — "Eksik Puan" rozeti ve sayaç. */
+    /** Eksik alanı olan madde sayısı (RiskAlanTamamlama) — "Eksik Alanlar" rozeti ve sayaç. */
     private function eksikPuanSayisi(): int
     {
         return in_array($this->getOwnerRecord()->yontem, ['fine_kinney', 'matris_5x5'], true)

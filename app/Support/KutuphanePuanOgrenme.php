@@ -15,22 +15,47 @@ use Filament\Facades\Filament;
  *   {olasilik, siddet, son_olasilik, son_siddet}. 5x5 madde FK puanı varsa zaten dönüştürülerek
  *   dolu geldiği için puansız sayılmaz. HAZOP/FMEA ve hastane şablonu öğrenilmez.
  * - Genel kütüphane tüm kullanıcılarda ortak olduğundan yalnız sahip hesabın puanı yazılır
- *   (yapay zekâ maddelerinin kütüphaneye kaydıyla aynı kural).
+ *   (yapay zekâ maddelerinin kütüphaneye kaydıyla aynı kural). Arka planda yapay zekânın doldurduğu
+ *   alanlar (sistemYazimi) da yazılır.
+ * - 02.11.2026: puanla birlikte metin alanları da (öneri, mevcut önlem, mevzuat, risk tanımı, sorumlu)
+ *   kütüphanedeki BOŞ karşılığına yazılır — App\Support\RiskAlanTamamlama::kutuphaneyeYaz.
  */
 class KutuphanePuanOgrenme
 {
+    /** Yapay zekâ ile toplu tamamlama sırasında (komutlar) kütüphaneye yazmaya izin verir. */
+    public static bool $sistemYazimi = false;
+
+    /** İşi, kütüphaneye yazma izniyle çalıştırır (arka plan yapay zekâ tamamlaması). */
+    public static function sistemOlarak(callable $is): mixed
+    {
+        $once = static::$sistemYazimi;
+        static::$sistemYazimi = true;
+
+        try {
+            return $is();
+        } finally {
+            static::$sistemYazimi = $once;
+        }
+    }
+
     public static function ogren(RiskMaddesi $m): void
     {
-        if (! $m->tehlike_id || $m->olasilik === null || $m->siddet === null) {
-            return;
-        }
-
-        if (! Filament::auth()->user()?->sahipMi()) {
+        if (! static::$sistemYazimi && ! Filament::auth()->user()?->sahipMi()) {
             return;
         }
 
         $rd = $m->riskDegerlendirmesi;
         if (! $rd || $rd->hastaneMi()) {
+            return;
+        }
+
+        // Metin alanları: kütüphaneden eklenip sonradan doldurulan / düzeltilen madde (yeni oluşturma hariç —
+        // kütüphaneden kopyalanan değerler zaten oradan gelir).
+        if (! $m->wasRecentlyCreated && $m->wasChanged(RiskAlanTamamlama::KUTUPHANE_METIN_ALANLARI)) {
+            RiskAlanTamamlama::kutuphaneyeYaz($m);
+        }
+
+        if (! $m->tehlike_id || $m->olasilik === null || $m->siddet === null) {
             return;
         }
 

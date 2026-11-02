@@ -278,6 +278,26 @@ class RiskSihirbaziTest extends TestCase
             ->assertSet('aiAsama', 'sohbet');
     }
 
+    /** 02.11.2026: adım ve AI aşaması adres geçmişinde — tarayıcının "geri" tuşu bir önceki adıma döner. */
+    public function test_adim_ve_ai_asamasi_adres_gecmisine_yazilir_yenilemede_bastan_acilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => '41.00.01']);
+
+        $sinif = new \ReflectionClass(RiskSihirbazi::class);
+        foreach (['adim' => 'adim', 'aiAsama' => 'ai'] as $ozellik => $ad) {
+            $url = $sinif->getProperty($ozellik)->getAttributes(\Livewire\Attributes\Url::class)[0]->getArguments();
+            $this->assertSame($ad, $url['as']);
+            $this->assertTrue($url['history']);
+        }
+
+        // Yenilenen / paylaşılan adreste seçimler bellekte olmadığından sihirbaz 1. adımdan açılır, firma korunur.
+        Livewire::withQueryParams(['firma' => $firma->id, 'adim' => 4, 'ai' => 'sohbet'])
+            ->test(RiskSihirbazi::class)
+            ->assertSet('adim', 1)
+            ->assertSet('aiAsama', 'baslangic')
+            ->assertSet('firmaId', $firma->id);
+    }
+
     /** 02.11.2026: firma NACE'sinden sektör tespit edilirse sektör / alt kategori sorulmadan mülakata geçilir. */
     public function test_ai_nace_den_sektor_tespit_edilir_ve_dogrudan_mulakata_gecilir(): void
     {
@@ -307,7 +327,8 @@ class RiskSihirbaziTest extends TestCase
 
     public function test_ai_sohbet_cevaplari_aday_risk_uretir_ve_maddelere_eklenir(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create();
+        // NACE yok: rastgele NACE sektörel soru ekleyip testi kararsız yapmasın.
+        $firma = Firma::factory()->for($this->uzman)->create(['nace_kodu' => null]);
 
         $component = Livewire::test(RiskSihirbazi::class)
             ->set('firmaId', $firma->id)
