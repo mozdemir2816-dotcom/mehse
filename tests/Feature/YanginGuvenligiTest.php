@@ -153,4 +153,16 @@ class YanginGuvenligiTest extends TestCase
         $this->assertStringContainsString('en az 10 adet 6 kg KKT', $html);
         $this->assertStringContainsString('İşveren / İşveren Vekili', $html);
     }
+
+    public function test_tespit_onceligi_ekrandan_degistirilir(): void
+    {
+        $d = YanginGuvenligiDegerlendirmesi::firmaIcin($this->firma);
+        $d->update(['tespitler' => [['madde' => 'Yangın dolabı / hidrant sayısı ve yerleşimi yönetmeliğe uygun hale getirilmeli', 'oncelik' => 'orta']]]);
+
+        Livewire::test(YanginSayfasi::class)->set('firmaId', $this->firma->id)
+            ->call('oncelikDegistir', 0)->assertSet('tespitler.0.oncelik', 'yuksek')
+            ->call('kaydet');
+
+        $this->assertSame('yuksek', $d->fresh()->tespitler[0]['oncelik']);
+    }
 }

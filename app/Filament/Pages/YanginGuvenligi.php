@@ -226,6 +226,14 @@ class YanginGuvenligi extends Page
         $this->tespitler = array_values($this->tespitler);
     }
 
+    /** Tespit önceliği Orta ⇄ Yüksek (02.11.2026). Kaydet ile kalıcı olur. */
+    public function oncelikDegistir(int $index): void
+    {
+        if (isset($this->tespitler[$index])) {
+            $this->tespitler[$index]['oncelik'] = ($this->tespitler[$index]['oncelik'] ?? 'orta') === 'yuksek' ? 'orta' : 'yuksek';
+        }
+    }
+
     public function serbestTespitEkle(string $metin): void
     {
         if (trim($metin) === '') {

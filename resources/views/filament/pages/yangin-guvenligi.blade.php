@@ -157,7 +157,7 @@
                 <div style="display:flex;gap:.5rem;align-items:start;margin-bottom:.3rem;font-size:.82rem">
                     <span style="font-weight:700;color:rgb(107 114 128)">{{ $i + 1 }}.</span>
                     <span style="flex:1">{{ $t['madde'] }}</span>
-                    <span style="font-size:.68rem;color:{{ $t['oncelik'] === 'yuksek' ? '#dc2626' : '#d97706' }};font-weight:700">{{ $t['oncelik'] === 'yuksek' ? 'Yüksek' : 'Orta' }}</span>
+                    <button type="button" wire:click="oncelikDegistir({{ $i }})" title="Önceliği değiştirmek için tıklayın" style="font-size:.68rem;color:{{ $t['oncelik'] === 'yuksek' ? '#dc2626' : '#d97706' }};font-weight:700;border:1px solid currentColor;border-radius:.3rem;padding:0 .35rem;background:none;cursor:pointer">{{ $t['oncelik'] === 'yuksek' ? 'Yüksek' : 'Orta' }} ⇄</button>
                     <button type="button" wire:click="tespitSil({{ $i }})" style="color:#ef4444;border:none;background:none;cursor:pointer">✕</button>
                 </div>
             @empty

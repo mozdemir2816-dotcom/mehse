@@ -5533,7 +5533,7 @@ return [
         'tespit_kutuphanesi' => [
             ['madde' => 'Yangın algılama ve alarm sistemi kurulmalı / kapsamı genişletilmeli', 'oncelik' => 'yuksek'],
             ['madde' => 'Otomatik yağmurlama (sprinkler) sistemi değerlendirilmeli', 'oncelik' => 'yuksek'],
-            ['madde' => 'Yangın dolabı / hidrant sayısı ve yerleşimi yönetmeliğe uygun hale getirilmeli', 'oncelik' => 'orta'],
+            ['madde' => 'Yangın dolabı / hidrant sayısı ve yerleşimi yönetmeliğe uygun hale getirilmeli', 'oncelik' => 'yuksek'],
             ['madde' => 'Yangın söndürme cihazları (YSC) her 250 m² için 1 adet (düşük tehlikede 500 m²) ve en fazla 25 m ulaşma mesafesiyle yerleştirilmeli', 'oncelik' => 'orta'],
             ['madde' => 'Kaçış yolları ve yönlendirme/acil aydınlatma armatürleri tamamlanmalı', 'oncelik' => 'yuksek'],
             ['madde' => 'Yangın merdiveni / korunumlu kaçış koridoru sağlanmalı', 'oncelik' => 'yuksek'],
