@@ -298,12 +298,12 @@ class TabelaSvgUretici
         switch ($t['picWrapper']) {
             case 'warning_triangle':
                 return sprintf(
-                    '<polygon points="%s,%s %s,%s %s,%s" fill="#FFC82E" stroke="#000000" stroke-width="%s" stroke-linejoin="round"/>',
+                    '<polygon points="%s,%s %s,%s %s,%s" fill="#FED402" stroke="#000000" stroke-width="%s" stroke-linejoin="round"/>',
                     self::n($x + $s * .5), self::n($y + $s * .06), self::n($x + $s * .94), self::n($y + $s * .92), self::n($x + $s * .06), self::n($y + $s * .92), self::n($s * .06),
                 ).$ikon($x + $s * .25, $y + $s * .36, $s * .5);
 
             case 'mandatory_circle':
-                return sprintf('<circle cx="%s" cy="%s" r="%s" fill="#005596" stroke="#ffffff" stroke-width="%s"/>', self::n($x + $s / 2), self::n($y + $s / 2), self::n($s * .47), self::n($s * .04))
+                return sprintf('<circle cx="%s" cy="%s" r="%s" fill="#005AA9" stroke="#ffffff" stroke-width="%s"/>', self::n($x + $s / 2), self::n($y + $s / 2), self::n($s * .47), self::n($s * .04))
                     .$ikon($x + $s * .21, $y + $s * .21, $s * .58, true);
 
             case 'prohibition_circle':

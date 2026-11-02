@@ -762,49 +762,49 @@
         name: "Sigara İçilmez",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><rect x="26" y="46" width="38" height="8" fill="#000"/><rect x="68" y="46" width="6" height="8" fill="#F96302"/><path d="M76,46 C76,42 80,40 80,36 C80,32 76,30 76,26" stroke="#94a3b8" stroke-width="2.5" fill="none"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><rect x="20" y="52" width="40" height="10" fill="#000"/><rect x="62" y="52" width="10" height="10" fill="#000"/><path d="M68,48 C64,42 72,38 68,30 M75,48 C71,42 79,38 75,30" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_flame": {
         name: "Açık Alev Kullanmak Yasaktır",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><path d="M50,22 C42,32 40,42 45,50 C40,50 36,44 36,38 C30,46 32,58 40,66 C46,72 56,74 62,68 C70,60 72,46 62,36 C62,44 58,48 54,48 C58,38 56,28 50,22 Z" fill="#000"/><rect x="47" y="66" width="6" height="18" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><rect x="46" y="56" width="8" height="28" rx="2" fill="#000"/><ellipse cx="50" cy="54" rx="7" ry="8" fill="#000"/><path transform="translate(50,46) scale(0.85)" d="M0,0 C-12,0 -16,-10 -11,-20 C-9,-14 -6,-12 -4,-12 C-8,-22 -2,-32 4,-38 C3,-28 10,-24 12,-16 C13,-22 12,-26 11,-28 C18,-20 18,-8 12,-3 C9,0 4,0 0,0 Z" fill="#000"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_pedestrian": {
         name: "Yaya Giremez",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><circle cx="50" cy="28" r="5.5" fill="#000"/><path d="M44,38 L56,38 L52,55 L44,70" stroke="#000" stroke-width="4.5" stroke-linecap="round" fill="none"/><path d="M52,55 L60,70" stroke="#000" stroke-width="4.5" stroke-linecap="round"/><path d="M44,44 L36,54" stroke="#000" stroke-width="4" stroke-linecap="round"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><circle cx="52" cy="24" r="7" fill="#000"/><polyline points="50,33 46,55" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="49,37 43,46 40,55" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,37 57,45 60,53" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="46,55 40,68 36,79" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="46,55 53,67 58,78" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_water": {
         name: "Suyla Söndürmek Yasaktır",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><path d="M50,26 C50,26 36,42 36,52 C36,60 42,66 50,66 C58,66 64,60 64,52 C64,42 50,26 50,26 Z" fill="#000"/><line x1="32" y1="74" x2="68" y2="74" stroke="#000" stroke-width="4"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><g transform="rotate(-25 34 30)"><path d="M22,22 L48,22 L44,42 L26,42 Z" fill="#000"/><rect x="20" y="19" width="30" height="4" fill="#000"/></g><path d="M50,30 C56,34 58,40 58,46" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><circle cx="58" cy="51" r="2.6" fill="#000"/><circle cx="53" cy="56" r="2.6" fill="#000"/><circle cx="61" cy="57" r="2.4" fill="#000"/><path transform="translate(55,84) scale(0.9)" d="M0,0 C-12,0 -16,-10 -11,-20 C-9,-14 -6,-12 -4,-12 C-8,-22 -2,-32 4,-38 C3,-28 10,-24 12,-16 C13,-22 12,-26 11,-28 C18,-20 18,-8 12,-3 C9,0 4,0 0,0 Z" fill="#000"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_drinking": {
         name: "İçilmez (İçme Suyu Değildir)",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><path d="M35,32 L65,32 L60,56 C60,64 54,68 50,68 C46,68 40,64 40,56 Z" fill="none" stroke="#000" stroke-width="4"/><line x1="50" y1="68" x2="50" y2="80" stroke="#000" stroke-width="4"/><line x1="38" y1="80" x2="62" y2="80" stroke="#000" stroke-width="4"/><path d="M30,22 L45,22 L45,30" stroke="#000" stroke-width="3" fill="none"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><path d="M22,30 L44,30 L44,26 L52,26 L52,30 C60,30 64,34 64,42 L64,46 L56,46 L56,42 C56,40 55,39 53,39 L22,39 Z" fill="#000"/><path d="M60,50 C62,54 62,56 60,57 C58,56 58,54 60,50 Z" fill="#000"/><path d="M48,60 L72,60 L69,82 L51,82 Z" fill="#000"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_entry": {
         name: "Yetkisiz Kimse Giremez",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#D02C2F"/><rect x="16" y="42" width="68" height="16" rx="3" fill="#ffffff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><circle cx="42" cy="24" r="7" fill="#000"/><polyline points="42,33 42,56" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="42,37 36,47 35,56" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="42,37 52,33 58,26" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="42,56 38,79" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="42,56 46,79" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="54" y="12" width="10" height="13" rx="3" fill="#000"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_industrial_vehicle": {
         name: "İş Makinesi Giremez",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><rect x="26" y="46" width="30" height="20" rx="2" fill="#000"/><circle cx="34" cy="70" r="6" fill="#000"/><circle cx="50" cy="70" r="6" fill="#000"/><path d="M56,34 L56,66 L74,66 L74,60 L62,60 L62,34 Z" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><g transform="translate(7,8) scale(0.82)"><rect x="22" y="44" width="30" height="20" rx="2" fill="#000"/><path d="M30,44 L30,30 L48,30 L52,44" fill="none" stroke="#000" stroke-width="4" stroke-linejoin="round"/><rect x="56" y="24" width="5" height="42" fill="#000"/><rect x="61" y="58" width="18" height="4" fill="#000"/><circle cx="30" cy="68" r="7" fill="#000"/><circle cx="50" cy="68" r="7" fill="#000"/></g><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
       "no_touch": {
         name: "Dokunma",
         section: "3.1 Yasaklayıcı",
         cat: "yasak",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="none" stroke="#D02C2F" stroke-width="8"/><line x1="20" y1="20" x2="80" y2="80" stroke="#D02C2F" stroke-width="8"/><path d="M38,72 L38,44 C38,40 42,40 42,44 L42,72 Z" fill="#000"/><path d="M44,72 L44,36 C44,32 48,32 48,36 L48,72 Z" fill="#000"/><path d="M50,72 L50,32 C50,28 54,28 54,32 L54,72 Z" fill="#000"/><path d="M56,72 L56,40 C56,36 60,36 60,40 L60,72 Z" fill="#000"/><path d="M38,58 L30,52 C26,48 24,54 28,58 L38,72 Z" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/><path d="M36,80 C30,70 26,62 26,56 C26,52 31,51 33,55 L37,62 L37,30 C37,26 43,26 43,30 L43,52 L43,24 C43,20 49,20 49,24 L49,52 L49,26 C49,22 55,22 55,26 L55,53 L55,32 C55,28 61,28 61,32 L61,62 C61,72 57,80 52,84 Z" fill="#000"/><line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>`
       },
 
       // -----------------------------------------------------------------------
@@ -814,109 +814,109 @@
         name: "Parlayıcı Madde veya Yüksek Isı",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M50,26 C44,36 42,44 46,52 C42,52 38,46 38,42 C32,48 34,60 42,68 C48,74 56,74 62,68 C70,60 70,48 62,38 C62,46 58,50 54,50 C58,40 56,32 50,26 Z" fill="#000"/><line x1="34" y1="78" x2="66" y2="78" stroke="#000" stroke-width="4"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path transform="translate(50,76) scale(0.95)" d="M0,0 C-12,0 -16,-10 -11,-20 C-9,-14 -6,-12 -4,-12 C-8,-22 -2,-32 4,-38 C3,-28 10,-24 12,-16 C13,-22 12,-26 11,-28 C18,-20 18,-8 12,-3 C9,0 4,0 0,0 Z" fill="#000"/><rect x="30" y="78" width="40" height="5" fill="#000"/></svg>`
       },
       "warn_explosive": {
         name: "Patlayıcı Madde",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="56" r="10" fill="#000"/><path d="M50,30 L50,42 M50,70 L50,82 M26,56 L38,56 M62,56 L74,56 M34,40 L42,48 M58,64 L66,72 M66,40 L58,48 M42,64 L34,72" stroke="#000" stroke-width="4" stroke-linecap="round"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><polygon points="50,40 54,52 66,46 58,56 70,62 57,63 60,76 50,67 40,76 43,63 30,62 42,56 34,46 46,52" fill="#000"/><rect x="26" y="40" width="5" height="5" transform="rotate(20 28 42)" fill="#000"/><rect x="69" y="42" width="5" height="5" transform="rotate(-25 71 44)" fill="#000"/><rect x="24" y="78" width="52" height="5" fill="#000"/></svg>`
       },
       "warn_toxic": {
         name: "Toksik (Zehirli) Madde",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M50,30 C36,30 32,42 32,54 C32,64 40,70 44,72 L44,78 L56,78 L56,72 C60,70 68,64 68,54 C68,42 64,30 50,30 Z" fill="#000"/><circle cx="42" cy="50" r="4.5" fill="#FFC82E"/><circle cx="58" cy="50" r="4.5" fill="#FFC82E"/><polygon points="50,58 47,64 53,64" fill="#FFC82E"/><line x1="48" y1="72" x2="48" y2="78" stroke="#FFC82E" stroke-width="2"/><line x1="52" y1="72" x2="52" y2="78" stroke="#FFC82E" stroke-width="2"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><line x1="32" y1="56" x2="68" y2="80" stroke="#000" stroke-width="5" stroke-linecap="round"/><line x1="68" y1="56" x2="32" y2="80" stroke="#000" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="54" r="3.5" fill="#000"/><circle cx="33" cy="59" r="3.5" fill="#000"/><circle cx="70" cy="54" r="3.5" fill="#000"/><circle cx="67" cy="59" r="3.5" fill="#000"/><circle cx="30" cy="82" r="3.5" fill="#000"/><circle cx="33" cy="77" r="3.5" fill="#000"/><circle cx="70" cy="82" r="3.5" fill="#000"/><circle cx="67" cy="77" r="3.5" fill="#000"/><path d="M50,34 C61,34 66,42 65,51 C64,56 61,58 59,60 L59,66 L41,66 L41,60 C39,58 36,56 35,51 C34,42 39,34 50,34 Z" fill="#000"/><circle cx="44" cy="50" r="4.2" fill="#FED402"/><circle cx="56" cy="50" r="4.2" fill="#FED402"/><path d="M50,55 L47.5,60 L52.5,60 Z" fill="#FED402"/><rect x="44" y="62" width="2" height="4" fill="#FED402"/><rect x="49" y="62" width="2" height="4" fill="#FED402"/><rect x="54" y="62" width="2" height="4" fill="#FED402"/></svg>`
       },
       "warn_corrosive": {
         name: "Aşındırıcı (Korozif) Madde",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><rect x="22" y="70" width="22" height="6" rx="1.5" fill="#000"/><path d="M26,36 L36,24 L42,30 L32,42 Z" fill="#000"/><circle cx="34" cy="52" r="2.5" fill="#000"/><circle cx="33" cy="62" r="3" fill="#000"/><path d="M74,36 L64,24 L58,30 L68,42 Z" fill="#000"/><circle cx="66" cy="52" r="2.5" fill="#000"/><path d="M52,72 C55,68 62,68 65,70 L78,70 L78,76 L64,76 Z" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><rect x="30" y="34" width="7" height="16" rx="1.5" transform="rotate(-35 33 42)" fill="#000"/><rect x="58" y="34" width="7" height="16" rx="1.5" transform="rotate(35 62 42)" fill="#000"/><circle cx="38" cy="56" r="2" fill="#000"/><circle cx="62" cy="56" r="2" fill="#000"/><path d="M24,74 C24,66 30,64 34,66 L44,66 L44,72 L36,72 C34,76 28,78 24,74 Z" fill="#000"/><path d="M56,66 L76,66 L76,74 L68,74 L66,70 L63,74 L56,74 Z" fill="#000"/><rect x="20" y="78" width="60" height="4" fill="#000"/></svg>`
       },
       "warn_radioactive": {
         name: "Radyoaktif Madde",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="58" r="6" fill="#000"/><path d="M50,48 L44,34 C48,32 52,32 56,34 Z" fill="#000"/><path d="M42,62 L28,68 C26,64 26,60 28,56 L42,58 Z" fill="#000"/><path d="M58,62 L72,68 C74,64 74,60 72,56 L58,58 Z" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M46.75,56.37 L40.00,44.68 A20,20 0 0 1 60.00,44.68 L53.25,56.37 A6.5,6.5 0 0 0 46.75,56.37 Z" fill="#000"/><path d="M56.50,62.00 L70.00,62.00 A20,20 0 0 1 60.00,79.32 L53.25,67.63 A6.5,6.5 0 0 0 56.50,62.00 Z" fill="#000"/><path d="M46.75,67.63 L40.00,79.32 A20,20 0 0 1 30.00,62.00 L43.50,62.00 A6.5,6.5 0 0 0 46.75,67.63 Z" fill="#000"/><circle cx="50" cy="62" r="4.2" fill="#000"/></svg>`
       },
       "warn_overhead_load": {
         name: "Asılı Yük",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><line x1="50" y1="24" x2="50" y2="44" stroke="#000" stroke-width="4"/><path d="M45,44 C45,50 55,50 55,44" stroke="#000" stroke-width="4" fill="none"/><rect x="30" y="54" width="40" height="20" rx="2" fill="#000"/><circle cx="50" cy="82" r="3.5" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><rect x="48.5" y="30" width="3" height="12" fill="#000"/><path d="M50,42 C56,42 57,50 51,51 L49,51" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><path d="M50,51 L38,62 M50,51 L62,62" stroke="#000" stroke-width="2.5"/><rect x="34" y="62" width="32" height="18" fill="#000"/></svg>`
       },
       "warn_forklift": {
         name: "İş Makinesi / Forklift",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><rect x="25" y="52" width="28" height="20" rx="2" fill="#000"/><circle cx="32" cy="74" r="6" fill="#000"/><circle cx="48" cy="74" r="6" fill="#000"/><path d="M53,40 L53,70 L75,70 L75,65 L60,65 L60,40 Z" fill="#000"/><rect x="75" y="50" width="6" height="18" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><g transform="translate(19,33) scale(0.62)"><rect x="22" y="44" width="30" height="20" rx="2" fill="#000"/><path d="M30,44 L30,30 L48,30 L52,44" fill="none" stroke="#000" stroke-width="4" stroke-linejoin="round"/><rect x="56" y="24" width="5" height="42" fill="#000"/><rect x="61" y="58" width="18" height="4" fill="#000"/><circle cx="30" cy="68" r="7" fill="#000"/><circle cx="50" cy="68" r="7" fill="#000"/></g></svg>`
       },
       "warn_electric": {
         name: "Elektrik Tehlikesi / Yüksek Gerilim",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><polygon points="54,26 26,56 46,56 38,82 72,48 52,48" fill="#000" stroke="#000" stroke-width="1.5"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><polygon points="56,34 40,60 50,60 42,78 39,76 42,86 51,78 47,79 64,54 54,54 62,34" fill="#000"/></svg>`
       },
       "warn_general": {
         name: "Genel Tehlike",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><line x1="50" y1="36" x2="50" y2="62" stroke="#000" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="74" r="4.5" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M45.5,38 L54.5,38 L52.5,68 L47.5,68 Z" fill="#000"/><circle cx="50" cy="76" r="5" fill="#000"/></svg>`
       },
       "warn_laser": {
         name: "Lazer Işını",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="58" r="7" fill="#000"/><line x1="50" y1="36" x2="50" y2="46" stroke="#000" stroke-width="4"/><line x1="50" y1="70" x2="50" y2="80" stroke="#000" stroke-width="4"/><line x1="28" y1="58" x2="38" y2="58" stroke="#000" stroke-width="4"/><line x1="62" y1="58" x2="72" y2="58" stroke="#000" stroke-width="4"/><line x1="36" y1="44" x2="43" y2="51" stroke="#000" stroke-width="3"/><line x1="57" y1="65" x2="64" y2="72" stroke="#000" stroke-width="3"/><line x1="64" y1="44" x2="57" y2="51" stroke="#000" stroke-width="3"/><line x1="43" y1="65" x2="36" y2="72" stroke="#000" stroke-width="3"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="58" cy="62" r="6" fill="#000"/><line x1="58" y1="62" x2="72.0" y2="62.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="70.1" y2="69.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="65.0" y2="74.1" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="58.0" y2="76.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="51.0" y2="74.1" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="45.9" y2="69.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="45.9" y2="55.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="51.0" y2="49.9" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="58.0" y2="48.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="65.0" y2="49.9" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><line x1="58" y1="62" x2="70.1" y2="55.0" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><rect x="22" y="60.5" width="34" height="3" fill="#000"/></svg>`
       },
       "warn_oxidizing": {
         name: "Oksitleyici Madde",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="62" r="14" fill="none" stroke="#000" stroke-width="5"/><path d="M50,30 C44,38 42,46 47,52 C44,52 40,46 40,42 C34,48 36,58 43,64 C48,68 54,68 59,64 C66,58 66,48 59,40 C59,46 56,50 53,50 C56,42 55,36 50,30 Z" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path transform="translate(50,66) scale(0.75)" d="M0,0 C-12,0 -16,-10 -11,-20 C-9,-14 -6,-12 -4,-12 C-8,-22 -2,-32 4,-38 C3,-28 10,-24 12,-16 C13,-22 12,-26 11,-28 C18,-20 18,-8 12,-3 C9,0 4,0 0,0 Z" fill="#000"/><circle cx="50" cy="71" r="8" fill="none" stroke="#000" stroke-width="5"/><rect x="30" y="81" width="40" height="4" fill="#000"/></svg>`
       },
       "warn_non_ionizing": {
         name: "İyonlaştırıcı Olmayan Radyasyon",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="44" r="5" fill="#000"/><line x1="50" y1="49" x2="50" y2="80" stroke="#000" stroke-width="4"/><line x1="38" y1="80" x2="62" y2="80" stroke="#000" stroke-width="4"/><path d="M38,36 C34,40 34,48 38,52" stroke="#000" stroke-width="3" fill="none"/><path d="M62,36 C66,40 66,48 62,52" stroke="#000" stroke-width="3" fill="none"/><path d="M32,30 C26,38 26,50 32,58" stroke="#000" stroke-width="3" fill="none"/><path d="M68,30 C74,38 74,50 68,58" stroke="#000" stroke-width="3" fill="none"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M47,48 L53,48 L58,82 L42,82 Z" fill="#000"/><circle cx="50" cy="44" r="4.5" fill="#000"/><path d="M41,37.7 A9,9 0 0 0 41,50.3 M59,37.7 A9,9 0 0 1 59,50.3" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round"/><path d="M35,33.5 A15,15 0 0 0 35,54.5 M65,33.5 A15,15 0 0 1 65,54.5" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round"/></svg>`
       },
       "warn_magnetic": {
         name: "Kuvvetli Manyetik Alan",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M34,40 L34,60 C34,68 40,74 50,74 C60,74 66,68 66,60 L66,40 L56,40 L56,60 C56,64 53,66 50,66 C47,66 44,64 44,60 L44,40 Z" fill="#000"/><rect x="34" y="40" width="10" height="8" fill="#fff" stroke="#000" stroke-width="1.5"/><rect x="56" y="40" width="10" height="8" fill="#fff" stroke="#000" stroke-width="1.5"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><path d="M38,44 L46,44 L46,62 C46,67 54,67 54,62 L54,44 L62,44 L62,62 C62,78 38,78 38,62 Z" fill="#000"/><rect x="38" y="40" width="8" height="6" fill="#FED402" stroke="#000" stroke-width="1.5"/><rect x="54" y="40" width="8" height="6" fill="#FED402" stroke="#000" stroke-width="1.5"/><path d="M32,40 C26,52 28,70 34,78 M68,40 C74,52 72,70 66,78" fill="none" stroke="#000" stroke-width="2.2" stroke-dasharray="3 3"/></svg>`
       },
       "warn_falling": {
         name: "Düşme Tehlikesi",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><rect x="22" y="70" width="26" height="15" fill="#000"/><circle cx="62" cy="36" r="5" fill="#000"/><path d="M56,46 L64,50 L70,42 L64,62 L54,58" stroke="#000" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M54,58 L48,74 L40,70" stroke="#000" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><rect x="20" y="68" width="22" height="14" fill="#000"/><circle cx="60" cy="44" r="5" fill="#000"/><polyline points="56,52 48,64" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="55,54 64,60 70,56" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="54,55 46,50" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="48,64 56,72 62,78" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="48,64 40,70" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
       },
       "warn_biological": {
         name: "Biyolojik Risk",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="56" r="6" fill="#000"/><path d="M50,34 C44,34 40,38 40,44 C40,48 43,51 47,53 C44,55 38,54 34,50 C29,46 26,40 28,34 C34,34 39,37 42,42 C43,36 49,34 50,34 Z" fill="#000"/><path d="M50,34 C56,34 60,38 60,44 C60,48 57,51 53,53 C56,55 62,54 66,50 C71,46 74,40 72,34 C66,34 61,37 58,42 C57,36 51,34 50,34 Z" fill="#000"/><circle cx="50" cy="56" r="22" fill="none" stroke="#000" stroke-width="4.5"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><g transform="translate(50,62)"><g transform="rotate(0)"><circle cx="0" cy="-9" r="9.5" fill="#000"/><circle cx="0" cy="-12" r="6.5" fill="#FED402"/></g><g transform="rotate(120)"><circle cx="0" cy="-9" r="9.5" fill="#000"/><circle cx="0" cy="-12" r="6.5" fill="#FED402"/></g><g transform="rotate(240)"><circle cx="0" cy="-9" r="9.5" fill="#000"/><circle cx="0" cy="-12" r="6.5" fill="#FED402"/></g><circle cx="0" cy="0" r="5.5" fill="none" stroke="#000" stroke-width="2.5"/><circle cx="0" cy="0" r="2.6" fill="#FED402"/><rect x="-1" y="-3" width="2" height="6" transform="rotate(60) translate(0,-4)" fill="#FED402"/><rect x="-1" y="-3" width="2" height="6" transform="rotate(180) translate(0,-4)" fill="#FED402"/><rect x="-1" y="-3" width="2" height="6" transform="rotate(300) translate(0,-4)" fill="#FED402"/></g></svg>`
       },
       "warn_low_temp": {
         name: "Düşük Sıcaklık / Donma Tehlikesi",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><line x1="50" y1="32" x2="50" y2="78" stroke="#000" stroke-width="4"/><line x1="28" y1="55" x2="72" y2="55" stroke="#000" stroke-width="4"/><line x1="34" y1="39" x2="66" y2="71" stroke="#000" stroke-width="4"/><line x1="66" y1="39" x2="34" y2="71" stroke="#000" stroke-width="4"/><circle cx="50" cy="55" r="4" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><g transform="translate(50,62)"><g transform="rotate(0)"><line x1="0" y1="-20" x2="0" y2="20" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><path d="M-5,-15 L0,-10 L5,-15 M-5,15 L0,10 L5,15" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="rotate(60)"><line x1="0" y1="-20" x2="0" y2="20" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><path d="M-5,-15 L0,-10 L5,-15 M-5,15 L0,10 L5,15" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="rotate(120)"><line x1="0" y1="-20" x2="0" y2="20" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><path d="M-5,-15 L0,-10 L5,-15 M-5,15 L0,10 L5,15" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>`
       },
       "warn_sharp": {
         name: "Kesici-Delici Alet / İğne Batması",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><g transform="rotate(-25 50 62)"><rect x="25" y="55" width="4" height="14" fill="#000"/><rect x="29" y="60.5" width="7" height="3" fill="#000"/><rect x="36" y="56" width="24" height="12" fill="none" stroke="#000" stroke-width="3.5"/><rect x="38" y="58" width="11" height="8" fill="#000"/><line x1="52" y1="56" x2="52" y2="60" stroke="#000" stroke-width="1.5"/><line x1="56" y1="56" x2="56" y2="60" stroke="#000" stroke-width="1.5"/><polygon points="60,58.5 66,60.5 66,63.5 60,65.5" fill="#000"/><line x1="66" y1="62" x2="77" y2="62" stroke="#000" stroke-width="1.8" stroke-linecap="round"/></g><path d="M74,69 C72,73 72,75 74,76 C76,75 76,73 74,69 Z" fill="#000"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><g transform="translate(50,62) scale(0.78) translate(-50,-62)"><g transform="rotate(-30 50 62)"><rect x="34" y="57" width="24" height="10" rx="1" fill="#000"/><rect x="26" y="59" width="8" height="6" fill="#000"/><rect x="22" y="55" width="4" height="14" fill="#000"/><rect x="58" y="60" width="6" height="4" fill="#000"/><polygon points="64,61 82,62 64,63" fill="#000"/></g><path d="M70,74 C72,78 72,80 70,81 C68,80 68,78 70,74 Z" fill="#000"/></g></svg>`
       },
       "warn_manual_lifting": {
         name: "Elle Kaldırma / Kas-İskelet Riski",
         section: "3.2 Uyarı",
         cat: "uyari",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FFC82E" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="44" cy="40" r="5" fill="#000"/><path d="M44,48 L40,64" stroke="#000" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M40,64 L50,68 L46,82" stroke="#000" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M43,52 L50,62 L56,63" stroke="#000" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="54" y="60" width="18" height="16" fill="#000"/><path d="M63,54 L63,44 M59,48 L63,44 L67,48" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,6 96,90 4,90" fill="#FED402" stroke="#000" stroke-width="6" stroke-linejoin="round"/><circle cx="40" cy="44" r="5" fill="#000"/><polyline points="43,51 54,60" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="47,54 54,64" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="54,60 48,70 50,82" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="54,60 58,70 58,82" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><rect x="52" y="62" width="16" height="13" fill="#000"/><path d="M70,44 L70,58 M66,48 L70,44 L74,48" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
       },
 
       // -----------------------------------------------------------------------
@@ -926,61 +926,61 @@
         name: "Gözlük Tak",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><circle cx="35" cy="52" r="14" fill="none" stroke="#fff" stroke-width="5"/><circle cx="65" cy="52" r="14" fill="none" stroke="#fff" stroke-width="5"/><path d="M49,52 L51,52" stroke="#fff" stroke-width="5"/><path d="M21,50 L12,44 M79,50 L88,44" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><circle cx="50" cy="44" r="15" fill="#ffffff"/><path d="M26,84 C26,70 36,63 50,63 C64,63 74,70 74,84 Z" fill="#ffffff"/><rect x="34" y="38" width="32" height="10" rx="4" fill="#005AA9"/><rect x="37" y="40" width="11" height="6" rx="2.5" fill="#ffffff"/><rect x="52" y="40" width="11" height="6" rx="2.5" fill="#ffffff"/></svg>`
       },
       "cmd_helmet": {
         name: "Baret Tak",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M24,54 C24,34 36,24 50,24 C64,24 76,34 76,54 L82,58 L82,64 L18,64 L18,58 Z" fill="#fff"/><rect x="46" y="18" width="8" height="12" rx="2" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><circle cx="50" cy="44" r="15" fill="#ffffff"/><path d="M26,84 C26,70 36,63 50,63 C64,63 74,70 74,84 Z" fill="#ffffff"/><path d="M30,38 C30,22 40,16 50,16 C60,16 70,22 70,38 L74,38 L74,42 L26,42 L26,38 Z" fill="#ffffff" stroke="#005AA9" stroke-width="2"/></svg>`
       },
       "cmd_ear": {
         name: "Kulaklık Tak",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M28,52 C28,34 38,24 50,24 C62,24 72,34 72,52" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><ellipse cx="27" cy="58" rx="8" ry="14" fill="#fff"/><ellipse cx="73" cy="58" rx="8" ry="14" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><circle cx="50" cy="44" r="15" fill="#ffffff"/><path d="M26,84 C26,70 36,63 50,63 C64,63 74,70 74,84 Z" fill="#ffffff"/><path d="M32,44 C32,22 68,22 68,44" fill="none" stroke="#005AA9" stroke-width="5"/><path d="M32,44 C32,22 68,22 68,44" fill="none" stroke="#ffffff" stroke-width="2.5"/><rect x="27" y="38" width="10" height="16" rx="4" fill="#ffffff" stroke="#005AA9" stroke-width="2"/><rect x="63" y="38" width="10" height="16" rx="4" fill="#ffffff" stroke="#005AA9" stroke-width="2"/></svg>`
       },
       "cmd_mask": {
         name: "Maske Tak",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M26,46 C26,36 38,30 50,30 C62,30 74,36 74,46 L70,68 C66,74 58,76 50,76 C42,76 34,74 30,68 Z" fill="#fff"/><circle cx="50" cy="54" r="7" fill="#005596"/><circle cx="50" cy="54" r="3.5" fill="#fff"/><path d="M26,42 L16,40 M74,42 L84,40 M28,62 L18,66 M72,62 L82,66" stroke="#fff" stroke-width="3"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><circle cx="50" cy="44" r="15" fill="#ffffff"/><path d="M26,84 C26,70 36,63 50,63 C64,63 74,70 74,84 Z" fill="#ffffff"/><path d="M37,46 C42,44 58,44 63,46 L60,58 C56,61 44,61 40,58 Z" fill="#ffffff" stroke="#005AA9" stroke-width="2.5"/><path d="M37,47 L30,42 M63,47 L70,42" stroke="#005AA9" stroke-width="2"/><circle cx="50" cy="53" r="2.5" fill="#005AA9"/></svg>`
       },
       "cmd_boots": {
         name: "İş Ayakkabısı Giy",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M32,24 L52,24 L52,50 L74,58 C80,60 84,66 84,72 L84,80 L22,80 L22,66 C22,50 26,38 32,24 Z" fill="#fff"/><line x1="22" y1="74" x2="84" y2="74" stroke="#005596" stroke-width="3"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><path d="M32,22 L52,22 L52,52 C52,56 56,58 62,60 L72,63 C76,64 78,67 78,71 L78,76 L28,76 L28,26 C28,24 30,22 32,22 Z" fill="#ffffff"/><rect x="26" y="77" width="54" height="5" rx="1.5" fill="#ffffff"/><path d="M60,63 C64,64 66,68 66,76" fill="none" stroke="#005AA9" stroke-width="2"/></svg>`
       },
       "cmd_gloves": {
         name: "Eldiven Giy",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M36,82 L36,52 C36,48 33,46 29,50 L24,55 L22,50 L33,38 C37,34 43,38 43,44 L43,82 Z" fill="#fff"/><path d="M45,82 L45,34 C45,30 49,30 49,34 L49,82 Z" fill="#fff"/><path d="M51,82 L51,30 C51,26 55,26 55,30 L55,82 Z" fill="#fff"/><path d="M57,82 L57,36 C57,32 61,32 61,36 L61,82 Z" fill="#fff"/><rect x="32" y="78" width="38" height="6" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><path d="M38,82 L38,58 C34,56 30,52 28,46 C27,43 31,41 33,43 L38,49 L38,26 C38,22 44,22 44,26 L44,44 L44,20 C44,16 50,16 50,20 L50,44 L50,22 C50,18 56,18 56,22 L56,46 L56,28 C56,24 62,24 62,28 L62,60 C62,68 60,72 58,74 L58,82 Z" fill="#ffffff"/><rect x="36" y="76" width="24" height="4" fill="#005AA9"/></svg>`
       },
       "cmd_clothing": {
         name: "Koruyucu Giysi Giy",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M40,24 L60,24 L72,34 L66,44 L58,38 L58,78 L42,78 L42,38 L34,44 L28,34 Z" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><path d="M38,22 L44,22 C45,26 55,26 56,22 L62,22 L76,36 L70,44 L64,38 L64,80 L36,80 L36,38 L30,44 L24,36 Z" fill="#ffffff"/><line x1="50" y1="28" x2="50" y2="80" stroke="#005AA9" stroke-width="2"/></svg>`
       },
       "cmd_face_shield": {
         name: "Yüz Siperi Tak",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><path d="M30,30 C30,22 40,18 50,18 C60,18 70,22 70,30 L74,34 L26,34 Z" fill="#fff"/><path d="M32,36 L68,36 C68,58 60,78 50,82 C40,78 32,58 32,36 Z" fill="none" stroke="#fff" stroke-width="5"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><circle cx="50" cy="44" r="15" fill="#ffffff"/><path d="M26,84 C26,70 36,63 50,63 C64,63 74,70 74,84 Z" fill="#ffffff"/><path d="M32,32 L68,32 L66,62 C60,66 40,66 34,62 Z" fill="none" stroke="#005AA9" stroke-width="2.5"/><rect x="32" y="28" width="36" height="5" fill="#ffffff" stroke="#005AA9" stroke-width="1.5"/></svg>`
       },
       "cmd_harness": {
         name: "Emniyet Kemeri Bağla",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><circle cx="50" cy="24" r="6" fill="#fff"/><path d="M38,34 L62,34 L56,72 L44,72 Z" fill="none" stroke="#fff" stroke-width="4.5"/><line x1="38" y1="34" x2="56" y2="72" stroke="#fff" stroke-width="4"/><line x1="62" y1="34" x2="44" y2="72" stroke="#fff" stroke-width="4"/><rect x="42" y="50" width="16" height="5" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><circle cx="46" cy="26" r="6" fill="#ffffff"/><polyline points="46,35 46,58" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><polyline points="46,39 38,50 37,58" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><polyline points="46,39 54,50 55,58" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><polyline points="46,58 42,78" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><polyline points="46,58 50,78" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M41,38 L51,56 M51,38 L41,56 M40,60 L52,60" stroke="#005AA9" stroke-width="2.5" fill="none"/><polyline points="48,40 62,30 66,14" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="66" cy="14" r="3" fill="none" stroke="#ffffff" stroke-width="2.5"/></svg>`
       },
       "cmd_general": {
         name: "Genel Emredici İşaret",
         section: "3.3 Emredici",
         cat: "emredici",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005596"/><line x1="50" y1="28" x2="50" y2="58" stroke="#fff" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="70" r="4.5" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="44" fill="#005AA9"/><path d="M45.5,22 L54.5,22 L52.5,64 L47.5,64 Z" fill="#ffffff"/><circle cx="50" cy="74" r="5.5" fill="#ffffff"/></svg>`
       },
 
       // -----------------------------------------------------------------------
@@ -990,49 +990,49 @@
         name: "Acil Çıkış / Kaçış Yolu (Sol)",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><rect x="16" y="16" width="18" height="68" fill="#fff"/><circle cx="64" cy="30" r="5.5" fill="#fff"/><path d="M56,42 L68,42 L62,58 L52,76" stroke="#fff" stroke-width="4.5" stroke-linecap="round" fill="none"/><polygon points="44,50 32,50 32,42 20,55 32,68 32,60 44,60" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><g transform="translate(100,0) scale(-1,1)"><rect x="64" y="16" width="20" height="50" fill="none" stroke="#ffffff" stroke-width="4"/><rect x="70" y="16" width="14" height="50" fill="#ffffff"/><circle cx="44" cy="22" r="5.5" fill="#ffffff"/><polyline points="41,30 35,46" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="40,32 50,38 58,34" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="40,32 30,36 24,44" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="35,46 46,54 44,66" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="35,46 28,56 18,58" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M18,80 L56,80 L56,74 L70,82 L56,90 L56,84 L18,84 Z" fill="#ffffff"/></g></svg>`
       },
       "exit_right": {
         name: "Acil Çıkış / Kaçış Yolu (Sağ)",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><rect x="66" y="16" width="18" height="68" fill="#fff"/><circle cx="36" cy="30" r="5.5" fill="#fff"/><path d="M44,42 L32,42 L38,58 L48,76" stroke="#fff" stroke-width="4.5" stroke-linecap="round" fill="none"/><polygon points="56,50 68,50 68,42 80,55 68,68 68,60 56,60" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><rect x="64" y="16" width="20" height="50" fill="none" stroke="#ffffff" stroke-width="4"/><rect x="70" y="16" width="14" height="50" fill="#ffffff"/><circle cx="44" cy="22" r="5.5" fill="#ffffff"/><polyline points="41,30 35,46" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="40,32 50,38 58,34" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="40,32 30,36 24,44" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="35,46 46,54 44,66" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="35,46 28,56 18,58" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M18,80 L56,80 L56,74 L70,82 L56,90 L56,84 L18,84 Z" fill="#ffffff"/></svg>`
       },
       "first_aid": {
         name: "İlk Yardım",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><polygon points="40,20 60,20 60,40 80,40 80,60 60,60 60,80 40,80 40,60 20,60 20,40 40,40" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><path d="M40,18 L60,18 L60,40 L82,40 L82,60 L60,60 L60,82 L40,82 L40,60 L18,60 L18,40 L40,40 Z" fill="#ffffff"/></svg>`
       },
       "stretcher": {
         name: "Sedye",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><line x1="16" y1="48" x2="84" y2="48" stroke="#fff" stroke-width="5"/><circle cx="32" cy="38" r="5" fill="#fff"/><path d="M38,46 L68,46" stroke="#fff" stroke-width="8"/><line x1="24" y1="48" x2="24" y2="62" stroke="#fff" stroke-width="4"/><line x1="76" y1="48" x2="76" y2="62" stroke="#fff" stroke-width="4"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><rect x="16" y="56" width="68" height="7" rx="2" fill="#ffffff"/><rect x="10" y="58" width="8" height="3" fill="#ffffff"/><rect x="82" y="58" width="8" height="3" fill="#ffffff"/><path d="M26,63 L22,76 M74,63 L78,76" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M45,22 L55,22 L55,30 L63,30 L63,40 L55,40 L55,48 L45,48 L45,40 L37,40 L37,30 L45,30 Z" fill="#ffffff"/></svg>`
       },
       "safety_shower": {
         name: "Güvenlik Duşu",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><line x1="24" y1="20" x2="50" y2="20" stroke="#fff" stroke-width="5"/><line x1="50" y1="20" x2="50" y2="30" stroke="#fff" stroke-width="5"/><polygon points="40,34 60,34 66,42 34,42" fill="#fff"/><circle cx="50" cy="54" r="5" fill="#fff"/><path d="M46,62 L54,62 L52,78 L48,78 Z" fill="#fff"/><line x1="42" y1="46" x2="38" y2="58" stroke="#fff" stroke-width="2" stroke-dasharray="2 2"/><line x1="50" y1="46" x2="50" y2="58" stroke="#fff" stroke-width="2" stroke-dasharray="2 2"/><line x1="58" y1="46" x2="62" y2="58" stroke="#fff" stroke-width="2" stroke-dasharray="2 2"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><path d="M30,16 L60,16 L60,22 L50,22 L50,26 L58,32 L42,32 L50,26" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/><line x1="44" y1="36" x2="41" y2="44" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="50" y1="36" x2="50" y2="44" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><line x1="56" y1="36" x2="59" y2="44" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/><circle cx="50" cy="52" r="5" fill="#ffffff"/><polyline points="50,59 50,74" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,62 43,70" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,62 57,70" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,74 46,88" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,74 54,88" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
       },
       "eye_wash": {
         name: "Göz Duşu",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><circle cx="38" cy="38" r="5" fill="#fff"/><circle cx="62" cy="38" r="5" fill="#fff"/><path d="M30,56 C30,46 46,46 46,56" stroke="#fff" stroke-width="4" fill="none"/><path d="M54,56 C54,46 70,46 70,56" stroke="#fff" stroke-width="4" fill="none"/><line x1="50" y1="64" x2="50" y2="82" stroke="#fff" stroke-width="5"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><path d="M38,22 C52,22 60,30 60,42 L64,48 L60,50 L60,56 C60,60 56,62 50,62 L50,74 L32,74 L32,58 C26,54 24,46 26,36 C28,28 32,22 38,22 Z" fill="#ffffff"/><circle cx="52" cy="38" r="2.5" fill="#008851"/><path d="M74,84 C74,64 68,50 58,40" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4"/><rect x="68" y="84" width="14" height="6" fill="#ffffff"/></svg>`
       },
       "emergency_phone": {
         name: "Acil Durum Telefonu",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><path d="M34,26 C30,26 26,30 28,36 C32,48 40,60 52,68 C58,72 64,70 66,66 L70,58 C71,55 70,52 66,50 L58,46 C55,45 52,46 50,48 L46,52 C40,46 38,40 42,36 L46,32 C48,30 49,27 48,24 Z" fill="#fff"/><line x1="32" y1="78" x2="68" y2="78" stroke="#fff" stroke-width="4"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><path d="M26,30 C30,24 36,24 38,28 L44,40 C45,43 43,45 41,46 L37,48 C40,56 46,62 54,66 L56,62 C57,60 60,58 62,59 L74,65 C78,67 78,73 72,78 C64,84 50,80 38,68 C26,56 20,40 26,30 Z" fill="#ffffff"/><path d="M64,16 L72,16 L72,24 L80,24 L80,32 L72,32 L72,40 L64,40 L64,32 L56,32 L56,24 L64,24 Z" fill="#ffffff"/></svg>`
       },
       "assembly_point": {
         name: "Acil Toplanma Alanı",
         section: "3.4 Acil & İlkyardım",
         cat: "acil",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008752"/><circle cx="50" cy="46" r="6" fill="#fff"/><path d="M44,56 L56,56 L53,74 L47,74 Z" fill="#fff"/><polygon points="20,20 32,20 26,10" fill="#fff"/><polygon points="80,20 68,20 74,10" fill="#fff"/><polygon points="20,80 32,80 26,90" fill="#fff"/><polygon points="80,80 68,80 74,90" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#008851"/><circle cx="38" cy="48" r="4" fill="#ffffff"/><polyline points="38,55 38,67" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="38,57 33,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="38,57 43,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="38,67 35,77" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="38,67 41,77" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="48" r="4" fill="#ffffff"/><polyline points="50,55 50,67" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,57 45,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,57 55,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,67 47,77" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="50,67 53,77" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="62" cy="48" r="4" fill="#ffffff"/><polyline points="62,55 62,67" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="62,57 57,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="62,57 67,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="62,67 59,77" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="62,67 65,77" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><g transform="rotate(0 50 50)"><path d="M28,28 L28,15 L23.5,19.5 L16,12 L12,16 L19.5,23.5 L15,28 Z" fill="#ffffff"/></g><g transform="rotate(90 50 50)"><path d="M28,28 L28,15 L23.5,19.5 L16,12 L12,16 L19.5,23.5 L15,28 Z" fill="#ffffff"/></g><g transform="rotate(180 50 50)"><path d="M28,28 L28,15 L23.5,19.5 L16,12 L12,16 L19.5,23.5 L15,28 Z" fill="#ffffff"/></g><g transform="rotate(270 50 50)"><path d="M28,28 L28,15 L23.5,19.5 L16,12 L12,16 L19.5,23.5 L15,28 Z" fill="#ffffff"/></g></svg>`
       },
 
       // -----------------------------------------------------------------------
@@ -1042,31 +1042,31 @@
         name: "Yangın Hortumu",
         section: "3.5 Yangınla Mücadele",
         cat: "yangin",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><circle cx="50" cy="50" r="30" fill="none" stroke="#fff" stroke-width="10"/><circle cx="50" cy="50" r="12" fill="#fff"/><rect x="46" y="12" width="8" height="24" fill="#fff"/><polygon points="36,18 64,18 50,6" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><circle cx="42" cy="44" r="22" fill="none" stroke="#ffffff" stroke-width="5"/><circle cx="42" cy="44" r="13" fill="none" stroke="#ffffff" stroke-width="4"/><circle cx="42" cy="44" r="4" fill="#ffffff"/><path d="M42,66 C44,78 58,80 66,74" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/><path d="M64,70 L80,62 L82,68 L68,78 Z" fill="#ffffff"/></svg>`
       },
       "fire_ladder": {
         name: "Yangın Merdiveni",
         section: "3.5 Yangınla Mücadele",
         cat: "yangin",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><line x1="32" y1="14" x2="32" y2="86" stroke="#fff" stroke-width="5"/><line x1="68" y1="14" x2="68" y2="86" stroke="#fff" stroke-width="5"/><line x1="32" y1="26" x2="68" y2="26" stroke="#fff" stroke-width="4"/><line x1="32" y1="42" x2="68" y2="42" stroke="#fff" stroke-width="4"/><line x1="32" y1="58" x2="68" y2="58" stroke="#fff" stroke-width="4"/><line x1="32" y1="74" x2="68" y2="74" stroke="#fff" stroke-width="4"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><rect x="32" y="16" width="6" height="70" fill="#ffffff"/><rect x="62" y="16" width="6" height="70" fill="#ffffff"/><rect x="38" y="24" width="24" height="5" fill="#ffffff"/><rect x="38" y="38" width="24" height="5" fill="#ffffff"/><rect x="38" y="52" width="24" height="5" fill="#ffffff"/><rect x="38" y="66" width="24" height="5" fill="#ffffff"/></svg>`
       },
       "fire_extinguisher": {
         name: "Yangın Söndürme Cihazı",
         section: "3.5 Yangınla Mücadele",
         cat: "yangin",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><rect x="36" y="32" width="28" height="52" rx="7" fill="#fff"/><rect x="42" y="22" width="16" height="10" fill="#fff"/><path d="M40,24 L24,18 L24,38 L36,38" fill="none" stroke="#fff" stroke-width="3.5"/><rect x="44" y="14" width="12" height="8" rx="2" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><rect x="40" y="32" width="22" height="52" rx="6" fill="#ffffff"/><rect x="46" y="22" width="10" height="10" fill="#ffffff"/><path d="M46,24 L34,20 L34,26 L46,28 Z" fill="#ffffff"/><path d="M56,26 C66,26 70,34 70,46" fill="none" stroke="#ffffff" stroke-width="3"/><rect x="67" y="46" width="6" height="12" rx="1" fill="#ffffff"/><path transform="translate(24,50) scale(0.45)" d="M0,0 C-12,0 -16,-10 -11,-20 C-9,-14 -6,-12 -4,-12 C-8,-22 -2,-32 4,-38 C3,-28 10,-24 12,-16 C13,-22 12,-26 11,-28 C18,-20 18,-8 12,-3 C9,0 4,0 0,0 Z" fill="#ffffff"/></svg>`
       },
       "fire_alarm_call": {
         name: "Yangın Butonu / Acil Yangın Telefonu",
         section: "3.5 Yangınla Mücadele",
         cat: "yangin",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><rect x="20" y="20" width="60" height="60" rx="8" fill="#fff"/><circle cx="50" cy="50" r="18" fill="#D02C2F"/><circle cx="50" cy="50" r="10" fill="#000"/><path d="M44,28 L56,28 M50,22 L50,28" stroke="#D02C2F" stroke-width="3"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><rect x="38" y="24" width="44" height="44" rx="3" fill="#ffffff"/><rect x="45" y="31" width="30" height="30" rx="2" fill="#D02C2F"/><circle cx="60" cy="46" r="8" fill="#ffffff"/><path d="M14,78 L28,68 L44,56 C47,54 50,57 48,60 L42,66 L50,68 L50,84 L22,86 Z" fill="#ffffff" stroke="#D02C2F" stroke-width="2"/><path transform="translate(22,46) scale(0.45)" d="M0,0 C-12,0 -16,-10 -11,-20 C-9,-14 -6,-12 -4,-12 C-8,-22 -2,-32 4,-38 C3,-28 10,-24 12,-16 C13,-22 12,-26 11,-28 C18,-20 18,-8 12,-3 C9,0 4,0 0,0 Z" fill="#ffffff"/></svg>`
       },
       "fire_arrow_dir": {
         name: "Yangın Yön Oku",
         section: "3.5 Yangınla Mücadele",
         cat: "yangin",
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><polygon points="50,18 82,50 64,50 64,82 36,82 36,50 18,50" fill="#fff"/></svg>`
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/><path d="M50,16 L80,48 L62,48 L62,84 L38,84 L38,48 L20,48 Z" fill="#ffffff"/></svg>`
       }
     };
 
@@ -1465,7 +1465,7 @@
         return `
           <div class="relative w-full h-full flex items-center justify-center p-1" style="transform:scale(${state.picScale / 100})">
             <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
-              <polygon points="50,6 94,92 6,92" fill="#FFC82E" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+              <polygon points="50,6 94,92 6,92" fill="#FED402" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
             </svg>
             <div class="absolute inset-0 flex items-center justify-center pt-2 p-3">
               <div class="w-12 h-12 flex items-center justify-center">${coreSvg}</div>
@@ -1475,7 +1475,7 @@
       } else if (state.picWrapper === "mandatory_circle") {
         return `
           <div class="relative w-full h-full flex items-center justify-center p-1" style="transform:scale(${state.picScale / 100})">
-            <div class="w-24 h-24 rounded-full bg-[#005596] border-4 border-white shadow flex items-center justify-center p-3 text-white">
+            <div class="w-24 h-24 rounded-full bg-[#005AA9] border-4 border-white shadow flex items-center justify-center p-3 text-white">
               <div class="w-14 h-14 [&_svg]:fill-white [&_svg]:stroke-white [&_polygon]:fill-white [&_path]:fill-white">${coreSvg}</div>
             </div>
           </div>

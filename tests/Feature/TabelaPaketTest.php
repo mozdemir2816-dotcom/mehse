@@ -87,6 +87,28 @@ class TabelaPaketTest extends TestCase
         $this->assertSame('WARNING', $sonuc['sinyal']);
     }
 
+    /** 02.11.2026: piktogramlar Yönetmelik Ek-2 geometrisi ve renklerinde; editör ile sunucu çizimi aynı. */
+    public function test_piktogramlar_yonetmelik_cercevesinde_ve_editorle_ayni(): void
+    {
+        $editor = file_get_contents(resource_path('views/tabela/editor.blade.php'));
+        $cerceve = [
+            'yasak' => '<circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#D02C2F" stroke-width="8"/>',
+            'uyari' => 'fill="#FED402" stroke="#000" stroke-width="6"',
+            'emredici' => '<circle cx="50" cy="50" r="44" fill="#005AA9"/>',
+            'acil' => 'fill="#008851"',
+            'yangin' => '<rect x="6" y="6" width="88" height="88" rx="8" fill="#D02C2F"/>',
+        ];
+
+        foreach (\App\Support\TabelaPiktogramlari::tum() as $anahtar => $p) {
+            $this->assertStringContainsString($cerceve[$p['cat']], $p['svg'], $anahtar);
+            $this->assertStringContainsString($p['svg'], $editor, "editör kopyası farklı: {$anahtar}");
+            if ($p['cat'] === 'yasak') {
+                // Çapraz bant piktogramın üstünde: son öğe.
+                $this->assertStringEndsWith('<line x1="20.3" y1="20.3" x2="79.7" y2="79.7" stroke="#D02C2F" stroke-width="8"/></svg>', $p['svg'], $anahtar);
+            }
+        }
+    }
+
     public function test_editorde_ai_cevir_dugmesi_ve_mesaj_dinleyicisi_var(): void
     {
         $html = view('tabela.editor', ['veri' => ['baslik' => '', ...TabelaTasarimi::varsayilanTasarim()]])->render();
