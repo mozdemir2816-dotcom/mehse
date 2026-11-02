@@ -68,6 +68,36 @@ class AcilEkipUretici
     }
 
     /** @param  Collection<int, AcilEkip>  $ekipler */
+    /**
+     * Destek elemanı görevlendirme ve tebellüğ belgeleri (02.11.2026) — her üye için tek sayfa
+     * (Acil Durumlar Yön. Md.11). T.C. kimlik no kayıtlı çalışandan; yoksa elle doldurulacak noktalı satır.
+     * $uyeId verilirse yalnız o üyenin belgesi.
+     */
+    public static function tebellugPdf(Firma $firma, Collection $ekipler, ?int $uyeId = null): ?StreamedResponse
+    {
+        $uyeler = $ekipler
+            ->flatMap(fn (AcilEkip $e) => $e->uyeler->each(fn (AcilEkipUyesi $u) => $u->setRelation('ekip', $e)))
+            ->when($uyeId, fn ($c) => $c->where('id', $uyeId))
+            ->values();
+
+        if ($uyeler->isEmpty()) {
+            return null;
+        }
+        $uyeler = (new \Illuminate\Database\Eloquent\Collection($uyeler->all()))->load('calisan');   // T.C. kimlik no
+
+        $pdf = Pdf::loadView('pdf.acil-ekip-tebellug', [
+            'firma' => $firma,
+            'uyeler' => $uyeler,
+            'isveren' => \App\Support\FirmaImza::isveren($firma),
+            'uzman' => \App\Support\FirmaImza::uzman($firma),
+            'tarih' => now()->format('d.m.Y'),
+        ])->setPaper('a4');
+
+        $ad = 'destek-elemani-tebellug-'.Str::slug($firma->unvan).($uyeId ? '-'.Str::slug($uyeler->first()->ad_soyad) : '').'.pdf';
+
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+    }
+
     public static function pdf(Firma $firma, Collection $ekipler): StreamedResponse
     {
         $pdf = Pdf::loadView('pdf.acil-durum-ekipleri', [

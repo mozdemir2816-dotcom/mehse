@@ -3562,6 +3562,59 @@ return [
             'teknik' => ['ad' => 'Teknik Müdahale Ekibi', 'oran' => null, 'belge_ay' => 12, 'plan' => 'teknik'],
             'diger' => ['ad' => 'Diğer Ekip', 'oran' => null, 'belge_ay' => 12, 'plan' => null],
         ],
+        // Destek elemanı görevlendirme ve tebellüğ belgesindeki görev ve sorumluluklar (Acil Durumlar Yön. Md.11,
+        // İlkyardım Yön.; 02.11.2026). 'lider' maddeleri yalnız ekip liderinin belgesine eklenir.
+        'ekip_gorevleri' => [
+            'ortak' => [
+                'Acil durum planını, toplanma yerini ve kaçış yollarını bilmek; acil durum ve tahliye tatbikatlarına katılmak.',
+                'Görevle ilgili eğitimleri almak ve belge geçerlilik süresi dolmadan yenilemek.',
+                'Görev başında olamayacağı durumları (izin, rapor, vardiya değişikliği) ekip liderine ve işverene önceden bildirmek.',
+                'Acil durumda kendi can güvenliğini tehlikeye atmadan, aldığı eğitim çerçevesinde hareket etmek.',
+            ],
+            'lider' => [
+                'Ekibi acil durumda toplamak, görev dağılımını yapmak ve acil durum koordinatörüyle iletişimi sağlamak.',
+                'Ekip ekipmanlarının yerini, sayısını ve kullanıma hazır olduğunu periyodik olarak kontrol ettirmek.',
+                'Olay sonrası ekip faaliyetlerini ve eksiklikleri raporlamak.',
+            ],
+            'sondurme' => [
+                'Yangını ilk fark edildiği anda yangın alarmı / ihbar butonu ile bildirmek ve 112\'ye haber verilmesini sağlamak.',
+                'Uygun tip yangın söndürücü, yangın dolabı ve hortumları kullanarak yangına ilk müdahaleyi yapmak.',
+                'Elektrik ve gaz enerjisinin kesilmesini sağlamak; itfaiye geldiğinde bilgi vererek gerektiğinde destek olmak.',
+                'Yangın söndürme ekipmanlarının kullanım sonrası yeniden doldurulmasını / yenilenmesini bildirmek.',
+            ],
+            'kurtarma' => [
+                'Acil durumda mahsur kalan, yaralanan veya tahliye edilemeyen kişileri güvenli şekilde kurtarmak.',
+                'Kurtarılan kişileri ilk yardım ekibine teslim etmek; tahliye sonrası yoklamada eksik kişileri aramak.',
+                'Kurtarma ekipmanlarını (sedye, kurtarma seti, fener) hazır tutmak.',
+            ],
+            'koruma' => [
+                'Acil durumda önemli evrak, malzeme ve ekipmanı korumaya almak; olay yerinde güvenlik çemberi oluşturmak.',
+                'Yetkisiz kişilerin olay yerine girişini engellemek; resmî ekiplerin girişini yönlendirmek.',
+                'Kurtarılan malzemenin güvenli alanda muhafazasını sağlamak; yağma ve kargaşayı önlemek.',
+            ],
+            'ilk_yardim' => [
+                'Yaralılara olay yerinde, sağlık ekibi gelene kadar İlkyardım Yönetmeliği\'ne uygun ilk yardım uygulamak.',
+                '112\'yi aramak / arattırmak ve yaralı hakkında doğru bilgi vermek.',
+                'İlk yardım dolabı / çantası malzemelerini kontrol etmek, eksikleri bildirmek.',
+            ],
+            'tahliye' => [
+                'Alarm verildiğinde çalışan ve ziyaretçileri kaçış yollarından sakin ve düzenli şekilde toplanma yerine yönlendirmek.',
+                'Özel desteğe ihtiyaç duyan (engelli, yaşlı, gebe) kişilerin tahliyesine yardımcı olmak.',
+                'Toplanma yerinde yoklama alarak eksik kişileri kurtarma ekibine ve koordinatöre bildirmek.',
+            ],
+            'haberlesme' => [
+                'Acil durumu 112 ve ilgili kurumlara (itfaiye, emniyet, doğalgaz / elektrik arıza) bildirmek.',
+                'Ekipler, acil durum koordinatörü ve dış kurumlar arasındaki iletişimi sağlamak.',
+                'Acil iletişim listesinin güncel ve ulaşılabilir olmasını sağlamak.',
+            ],
+            'teknik' => [
+                'Acil durumda elektrik, doğalgaz, su ve makinelerin enerjisini güvenli şekilde kesmek.',
+                'Teknik altyapı arızalarına (pompa, jeneratör, havalandırma) ilk müdahaleyi yapmak.',
+            ],
+            'diger' => [
+                'Ekip görev tanımındaki acil durum faaliyetlerini acil durum koordinatörünün talimatlarıyla yürütmek.',
+            ],
+        ],
         'ekip_belge_yaklasan_gun' => 30,
         'vardiyalar' => ['Gündüz', 'Akşam', 'Gece', 'Tüm vardiyalar'],
 

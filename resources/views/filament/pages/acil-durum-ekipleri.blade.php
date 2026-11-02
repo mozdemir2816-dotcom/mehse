@@ -17,12 +17,16 @@
 
     <div style="display:flex;flex-wrap:wrap;gap:.4rem">
         @if ($firma)
+            <x-filament::button size="sm" color="warning" icon="heroicon-o-bolt" wire:click="otomatikDagit" wire:loading.attr="disabled" wire:target="otomatikDagit" :disabled="$this->ekipler->isEmpty()"
+                tooltip="Lideri olmayan ekipte ilk asıl üyeyi lider yapar; yedeği olmayan ekibe görevi olmayan çalışanlardan 1 yedek atar">⚡ Otomatik Dağıt & Lider Ata</x-filament::button>
             <x-filament::button size="sm" icon="heroicon-o-user-plus" wire:click="mountAction('uyeEkle')" :disabled="$this->ekipler->isEmpty()">Destek Elemanı Ekle</x-filament::button>
             <x-filament::button size="sm" color="gray" icon="heroicon-o-plus" wire:click="mountAction('yeniEkip')">Yeni Ekip</x-filament::button>
             <x-filament::button size="sm" color="gray" icon="heroicon-o-squares-plus" wire:click="temelEkipler">Temel Ekipleri Oluştur</x-filament::button>
             <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-uturn-left" wire:click="$toggle('silinenlerAcik')">Silinenleri Geri Al</x-filament::button>
             <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="excel">Excel</x-filament::button>
             <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-down" wire:click="pdf">PDF</x-filament::button>
+            <x-filament::button size="sm" color="gray" icon="heroicon-o-document-text" wire:click="tebellugPdf" :disabled="$this->ekipler->flatMap->uyeler->isEmpty()"
+                tooltip="Her destek elemanı için tek sayfalık görevlendirme ve tebellüğ belgesi (Acil Durumlar Yön. Md.11)">📄 Tebellüğ Belgeleri (PDF)</x-filament::button>
         @endif
     </div>
 
@@ -43,7 +47,7 @@
         <x-filament::section><div style="text-align:center;padding:1rem;color:rgb(107 114 128)">Aktif işyeri yok.</div></x-filament::section>
     @else
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem">
-            @foreach ([['Ekip', $o['ekip'], null], ['Üye', $o['uye'], null], ['Lider', $o['lider'], null], ['Tam Ekip', $o['tam'], 'rgb(21 128 61)'], ['Kritik Ekip', $o['kritik'], $o['kritik'] ? 'rgb(220 38 38)' : null], ['Belge Süresi Dolan', $o['belge_dolan'], $o['belge_dolan'] ? 'rgb(220 38 38)' : null], ['30 Gün İçinde', $o['yaklasan'], $o['yaklasan'] ? 'rgb(217 119 6)' : null]] as [$ad, $deger, $renk])
+            @foreach ([['Ekip', $o['ekip'], null], ['Üye', $o['uye'], null], ['Lider', $o['lider'], $o['lider'] < $o['ekip'] ? 'rgb(217 119 6)' : 'rgb(21 128 61)'], ['Tam Ekip', $o['tam'].' / '.$o['ekip'], $o['tam'] === $o['ekip'] && $o['ekip'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)'], ['Kritik Ekip', $o['kritik'], $o['kritik'] ? 'rgb(220 38 38)' : null], ['Belge Süresi Dolan', $o['belge_dolan'], $o['belge_dolan'] ? 'rgb(220 38 38)' : null], ['30 Gün İçinde', $o['yaklasan'], $o['yaklasan'] ? 'rgb(217 119 6)' : null]] as [$ad, $deger, $renk])
                 <div style="{{ $kart }}">
                     <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:800;{{ $renk ? 'color:'.$renk : '' }}">{{ $deger }}</div>
@@ -106,9 +110,15 @@
                         @if ($e->uyeler->isNotEmpty())
                             <div style="font-size:.74rem;line-height:1.5">
                                 @foreach ($e->uyeler as $u)
-                                    <div style="display:flex;justify-content:space-between;gap:.3rem">
-                                        <span>{{ $u->ad_soyad }}@if ($u->lider) <strong style="color:rgb(13 148 136)">★</strong>@endif @if ($u->uyelik === 'yedek')<span style="color:rgb(107 114 128)">(yedek)</span>@endif</span>
-                                        <span style="width:.5rem;height:.5rem;border-radius:9999px;margin-top:.35rem;flex:none;background:{{ $belgeRenk[$u->belgeDurumu()] }}" title="{{ AcilEkipUyesi::BELGE_DURUMLARI[$u->belgeDurumu()] }}"></span>
+                                    @php $yedek = $u->uyelik === 'yedek'; @endphp
+                                    <div wire:key="kart-uye-{{ $u->id }}" style="display:flex;align-items:center;gap:.3rem;padding:.1rem 0">
+                                        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@if ($u->lider)<span title="Ekip lideri">👑</span> @endif{{ $u->ad_soyad }}</span>
+                                        <span style="flex:none;font-size:.62rem;font-weight:700;padding:0 .35rem;border-radius:9999px;{{ $yedek ? 'color:rgb(107 114 128);background:rgb(107 114 128 / .12)' : 'color:rgb(13 148 136);background:rgb(13 148 136 / .12)' }}">{{ $yedek ? 'Yedek' : 'Asıl' }}</span>
+                                        @unless ($u->lider)
+                                            <button type="button" wire:click="liderYap({{ $u->id }})" title="{{ $u->ad_soyad }} ekip lideri yapılsın" aria-label="{{ $u->ad_soyad }} lider yap"
+                                                style="flex:none;font-size:.62rem;padding:0 .3rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">👑 Lider Yap</button>
+                                        @endunless
+                                        <span style="width:.5rem;height:.5rem;border-radius:9999px;flex:none;background:{{ $belgeRenk[$u->belgeDurumu()] }}" title="{{ AcilEkipUyesi::BELGE_DURUMLARI[$u->belgeDurumu()] }}"></span>
                                     </div>
                                 @endforeach
                             </div>
@@ -153,6 +163,7 @@
                                     <td style="{{ $td }};color:{{ $belgeRenk[$bd] }}">{{ AcilEkipUyesi::BELGE_DURUMLARI[$bd] }}@if ($u->belge_no)<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $u->belge_no }}</div>@endif</td>
                                     <td style="{{ $td }}">{{ $u->belgeBitisTarihi()?->format('d.m.Y') ?? '—' }}</td>
                                     <td style="{{ $td }};white-space:nowrap">
+                                        <x-filament::button size="xs" color="gray" icon="heroicon-o-document-text" wire:click="tebellugPdf({{ $u->id }})" tooltip="Bu üyenin tebellüğ belgesi">Tebellüğ</x-filament::button>
                                         <x-filament::button size="xs" color="gray" wire:click="mountAction('uyeDuzenle', { id: {{ $u->id }} })">Düzenle</x-filament::button>
                                         <x-filament::button size="xs" color="danger" wire:click="uyeSil({{ $u->id }})" wire:confirm="{{ $u->ad_soyad }} ekipten çıkarılsın mı? (Geri alınabilir)">Sil</x-filament::button>
                                     </td>

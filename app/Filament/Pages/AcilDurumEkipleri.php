@@ -356,4 +356,50 @@ class AcilDurumEkipleri extends Page
     {
         return $this->firma ? AcilEkipUretici::pdf($this->firma, $this->ekipler) : null;
     }
+
+    /** "📄 Tebellüğ Belgeleri (PDF)" — tüm üyeler; $uyeId ile tek üye (02.11.2026). */
+    public function tebellugPdf(?int $uyeId = null)
+    {
+        $yanit = $this->firma ? AcilEkipUretici::tebellugPdf($this->firma, $this->ekipler, $uyeId) : null;
+
+        if (! $yanit) {
+            Notification::make()->warning()->title('Önce ekiplere destek elemanı ekleyin')->send();
+        }
+
+        return $yanit;
+    }
+
+    /** "⚡ Otomatik Dağıt & Lider Ata" (02.11.2026). */
+    public function otomatikDagit(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $once = $this->ozet['tam'];
+        $s = AcilEkipDurumu::otomatikTamamla($this->firma);
+        $this->yenile();
+        $sonra = $this->ozet['tam'];
+
+        $bildirim = Notification::make()
+            ->title($s['lider'] || $s['yedek'] ? "{$s['lider']} ekibe lider, {$s['yedek']} ekibe yedek üye atandı" : 'Atanacak lider / yedek bulunmadı')
+            ->body(collect([
+                "Tam ekip: {$once} → {$sonra}.",
+                $s['yedeksiz'] ? "{$s['yedeksiz']} ekibe yedek atanamadı — görevi olmayan çalışan kalmadı." : null,
+                $s['yedek'] ? 'Yedek üyeler kayıtlı çalışanlardan seçildi; eğitim belgelerini girin.' : null,
+                $this->ozet['kritik'] || $this->ozet['tam'] < $this->ekipler->count() ? 'Kalan uyarılar asıl üye sayısı veya eğitim belgesiyle ilgili; bunlar elle tamamlanır.' : null,
+            ])->filter()->implode(' '));
+
+        ($s['lider'] || $s['yedek'] ? $bildirim->success() : $bildirim->info())->send();
+    }
+
+    /** Kartlardaki "👑 Lider Yap". */
+    public function liderYap(int $uyeId): void
+    {
+        $uye = AcilEkipUyesi::query()->whereIn('acil_ekip_id', $this->ekipler->pluck('id'))->findOrFail($uyeId);
+        AcilEkipDurumu::liderYap($uye);
+        $this->yenile();
+
+        Notification::make()->success()->title($uye->ad_soyad.' ekip lideri yapıldı')->send();
+    }
 }

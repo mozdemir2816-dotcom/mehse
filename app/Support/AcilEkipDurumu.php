@@ -116,6 +116,65 @@ class AcilEkipDurumu
         ];
     }
 
+    /**
+     * "⚡ Otomatik Dağıt & Lider Ata" (02.11.2026):
+     *  - Lideri olmayan ekipte ilk asıl üye (asıl yoksa ilk üye) ekip lideri yapılır.
+     *  - Yedek üyesi olmayan ekibe, hiçbir ekipte görevi olmayan aktif çalışanlardan 1 yedek üye atanır
+     *    (yeterli çalışan yoksa atanabildiği kadar).
+     * Asıl üye sayısı ve eğitim belgeleri değiştirilmez — destek elemanlarının eğitimli olması gerekir.
+     *
+     * @return array{lider: int, yedek: int, yedeksiz: int}
+     */
+    public static function otomatikTamamla(Firma $firma): array
+    {
+        $ekipler = static::ekipler($firma);
+        $lider = 0;
+        $yedek = 0;
+        $yedeksiz = 0;
+
+        foreach ($ekipler as $e) {
+            if ($e->uyeler->isNotEmpty() && ! $e->uyeler->contains('lider', true)) {
+                $aday = $e->uyeler->firstWhere('uyelik', '!=', 'yedek') ?? $e->uyeler->first();
+                $aday->update(['lider' => true]);
+                $lider++;
+            }
+        }
+
+        // Herhangi bir ekipte görevi olan çalışanlar (kayıt ya da ad ile) atanmaz.
+        $tumUyeler = $ekipler->flatMap->uyeler;
+        $atanmisIdler = $tumUyeler->pluck('calisan_id')->filter()->all();
+        $atanmisAdlar = $tumUyeler->map(fn ($u) => mb_strtolower(trim($u->ad_soyad)))->all();
+        $bostakiler = $firma->calisanlar()->where('aktif', true)->orderBy('ad_soyad')->get()
+            ->reject(fn ($c) => in_array($c->id, $atanmisIdler, true) || in_array(mb_strtolower(trim($c->ad_soyad)), $atanmisAdlar, true))
+            ->values();
+
+        foreach ($ekipler as $e) {
+            if ($e->uyeler->contains('uyelik', 'yedek')) {
+                continue;
+            }
+            $c = $bostakiler->shift();
+            if (! $c) {
+                $yedeksiz++;
+
+                continue;
+            }
+            $e->uyeler()->create([
+                'calisan_id' => $c->id, 'ad_soyad' => $c->ad_soyad, 'gorev' => $c->gorev, 'bolum' => $c->departman,
+                'telefon' => $c->telefon, 'uyelik' => 'yedek', 'lider' => false,
+            ]);
+            $yedek++;
+        }
+
+        return ['lider' => $lider, 'yedek' => $yedek, 'yedeksiz' => $yedeksiz];
+    }
+
+    /** Ekip içinde lideri değiştirir (tek lider). */
+    public static function liderYap(AcilEkipUyesi $uye): void
+    {
+        AcilEkipUyesi::query()->where('acil_ekip_id', $uye->acil_ekip_id)->whereKeyNot($uye->id)->update(['lider' => false]);
+        $uye->update(['lider' => true]);
+    }
+
     /** Eksik temel ekipleri oluşturur; oluşturulan sayısını döndürür. */
     public static function temelEkipleriOlustur(Firma $firma): int
     {
