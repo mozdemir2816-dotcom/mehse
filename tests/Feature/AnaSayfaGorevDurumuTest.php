@@ -97,7 +97,8 @@ class AnaSayfaGorevDurumuTest extends TestCase
         Firma::factory()->for(User::factory())->create(['unvan' => 'Başkasının Firması']);
 
         $w = Livewire::test(GorevDurumuWidget::class)
-            ->assertSee('Aylık görevlendirme süresi')
+            ->assertSee('Hızlı çalışma akışları')
+            ->assertDontSee('Aylık görevlendirme süresi')   // 02.11.2026: kokpite (HosGeldinWidget) taşındı
             ->assertSee('Alfa Yapı')
             ->assertDontSee('Başkasının Firması');
 

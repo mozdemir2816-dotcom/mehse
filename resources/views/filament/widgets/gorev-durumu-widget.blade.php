@@ -17,46 +17,7 @@
 
     <x-filament::section icon="heroicon-o-shield-check" icon-color="primary">
         <x-slot name="heading">Görev durumu</x-slot>
-        <x-slot name="description">
-            <span style="display:block;font-weight:600;font-size:.92em;line-height:1.35">
-                {{ collect([$kullanici->name, config('isg.uzman_unvanlari.'.$kullanici->unvan), $sure['isyeri'].' işyeri'])->filter()->implode(' · ') }}
-            </span>
-            <span style="display:block;font-size:.8em;margin-top:.15rem">Faaliyetlerin durumu tek bakışta; kartta “İncele” ile ilgili kaydı açın.</span>
-        </x-slot>
-        {{-- Aylık görevlendirme süresi: tek parça kapasite kartı (İSG-KATİP) --}}
-        @php
-            $toplamDk = (int) config('isg.ana_sayfa.aylik_kapasite_saat') * 60;
-            $asim = $sure['yuzde'] > 100;
-            $doluRenk = $asim ? 'rgb(225 29 72)' : 'rgb(2 132 199)';
-            $dolu = min(100, max(0, $sure['yuzde']));
-        @endphp
-        <div style="{{ $kart }};margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap">
-                <div style="font-weight:700;font-size:.9rem">Aylık görevlendirme süresi · {{ now()->format('Y-m') }}</div>
-                <span style="font-size:.72rem;font-weight:700;padding:.15rem .6rem;border-radius:9999px;background:color-mix(in srgb, {{ $doluRenk }} 12%, transparent);color:{{ $doluRenk }}">%{{ $sure['yuzde'] }} kapasite</span>
-            </div>
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-top:.5rem">
-                <div>
-                    <span style="font-size:1.6rem;font-weight:800;color:{{ $doluRenk }}">{{ $saatDk($sure['kullanilan_dk']) }}</span>
-                    <span style="font-size:.95rem;color:rgb(107 114 128)"> / {{ intdiv($toplamDk, 60) }} saat</span>
-                </div>
-                <div style="font-size:.85rem;font-weight:600;color:{{ $asim ? 'rgb(225 29 72)' : 'rgb(5 150 105)' }}">
-                    {{ $asim ? 'Aşım' : 'Kalan' }}: {{ $saatDk(abs($sure['kalan_dk'])) }}
-                </div>
-            </div>
-            <div style="height:8px;border-radius:9999px;background:rgb(16 185 129 / .18);margin-top:.5rem;overflow:hidden">
-                <div style="height:8px;border-radius:9999px;width:{{ $dolu }}%;background:{{ $doluRenk }}"></div>
-            </div>
-            <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.5rem">
-                Kullanılan süre = aktif işyerlerinde çalışan sayısı × aylık süre (az tehlikeli {{ config('isg.igu_aylik_dk.az_tehlikeli') }}, tehlikeli {{ config('isg.igu_aylik_dk.tehlikeli') }}, çok tehlikeli {{ config('isg.igu_aylik_dk.cok_tehlikeli') }} dk).
-                Kalan süre = {{ config('isg.ana_sayfa.aylik_kapasite_saat') }} saatlik normal aylık kapasite − kullanılan süre.
-            </div>
-            @if ($sure['sinif_uygunsuz'])
-                <div style="font-size:.78rem;color:rgb(185 28 28);margin-top:.4rem">
-                    ⚠ Belge sınıfınızın görev alamayacağı tehlike sınıfında işyeri: {{ implode(', ', $sure['sinif_uygunsuz']) }}
-                </div>
-            @endif
-        </div>
+        {{-- 02.11.2026: kullanıcı / unvan satırı ve İSG-KATİP kapasite kartı ana sayfa kokpitine taşındı (HosGeldinWidget). --}}
 
         {{-- Hızlı çalışma akışları --}}
         <div style="{{ $kart }};margin-bottom:1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem">

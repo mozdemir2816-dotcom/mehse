@@ -7,7 +7,6 @@ use App\Filament\Resources\Calisans\Pages\ListCalisans;
 use App\Filament\Resources\Firmas\Pages\CreateFirma;
 use App\Filament\Resources\Firmas\Pages\EditFirma;
 use App\Filament\Resources\Firmas\Pages\ListFirmas;
-use App\Filament\Widgets\PortfoyOzetiWidget;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\User;
@@ -59,14 +58,23 @@ class FirmaCalisanTest extends TestCase
         Livewire::test(CreateCalisan::class)->assertOk();
     }
 
-    public function test_portfoy_ozeti_widget_kendi_sayaclarini_verir(): void
+    /** 02.11.2026: Portföy Özeti (3 kutu) ana sayfa kokpitine (HosGeldinWidget) taşındı. */
+    public function test_ana_sayfa_kokpiti_kendi_sayaclarini_verir(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create(['aktif' => true]);
+        $firma = Firma::factory()->for($this->uzman)->create(['aktif' => true, 'sozlesme_bitis' => now()->subDay(), 'calisan_sayisi' => 3, 'tehlike_sinifi' => 'az_tehlikeli', 'katip_aylik_dk' => null]);
         Calisan::factory()->count(3)->for($firma)->create(['aktif' => true]);
-        Firma::factory()->create(); // başka uzmanın firması
+        Firma::factory()->create(['aktif' => true]); // başka uzmanın firması
+        \App\Models\SahaBulgusu::create(['firma_id' => $firma->id, 'uygunsuzluk' => 'Korkuluk eksik', 'termin' => now()->subDays(3)]);
 
-        Livewire::test(PortfoyOzetiWidget::class)
-            ->assertSee('Aktif firma')
-            ->assertSee('Çalışan');
+        Livewire::test(\App\Filament\Widgets\HosGeldinWidget::class)
+            ->assertSee('Aktif Portföy')
+            ->assertSeeHtml('1 <small>firma</small>')
+            ->assertSeeHtml('3 <small>çalışan</small>')
+            ->assertSee('İSG-KATİP Kapasitesi')
+            ->assertSeeHtml('1 <small>geciken sözleşme</small>')
+            ->assertSee('Yenileme gerekli')
+            ->assertSeeHtml('1 <small>günü geçen</small>')
+            ->assertSee('Acil Durum / Kroki')
+            ->assertSee('az tehlikeli 10');   // KATİP formülü yalnız ipucunda
     }
 }

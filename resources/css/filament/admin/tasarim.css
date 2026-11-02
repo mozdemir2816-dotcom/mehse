@@ -1672,3 +1672,200 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
     font-size: .8rem;
     font-weight: 600;
 }
+
+/* ==========================================================================
+   ANA SAYFA KOKPİTİ (02.11.2026): karşılama bandı kompakt şerit + tek satır
+   4 kart (Aktif Portföy · İSG-KATİP · Sözleşme · Kritik DÖF). Eski Portföy
+   Özeti widget'ı ve görev panosundaki kapasite kartı buraya taşındı.
+   ========================================================================== */
+.mehse-kokpit {
+    padding: 1rem 1.35rem;
+    gap: 1rem;
+}
+
+.mehse-kokpit .mehse-hosgeldin-baslik {
+    font-size: 1.3rem;
+}
+
+html[data-mehse-tema="saha"] .mehse-kokpit .mehse-hosgeldin-baslik { font-size: 1.55rem; }
+
+.mehse-kokpit-baslik-satir {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem .6rem;
+}
+
+.mehse-kokpit-rozet {
+    display: inline-flex;
+    align-items: center;
+    padding: .18rem .6rem;
+    border: 1px solid var(--mehse-hero-eylem-kenar);
+    border-radius: 9999px;
+    background: var(--mehse-hero-eylem-bg);
+    color: var(--mehse-hero-eylem-metin);
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.mehse-kokpit .mehse-hosgeldin-alt {
+    margin-top: .2rem;
+    font-size: .82rem;
+}
+
+.mehse-kokpit .mehse-hosgeldin-eylemler {
+    gap: .4rem;
+    margin-top: .65rem;
+}
+
+.mehse-kokpit .mehse-hosgeldin-eylem {
+    padding: .38rem .75rem;
+    font-size: .78rem;
+}
+
+.mehse-kokpit .mehse-hosgeldin-halka {
+    width: 5.6rem;
+    height: 5.6rem;
+}
+
+.mehse-kokpit .mehse-hosgeldin-halka::before { inset: 7px; }
+.mehse-kokpit .mehse-hosgeldin-halka-deger { font-size: 1.25rem; }
+.mehse-kokpit .mehse-hosgeldin-halka-etiket { font-size: .62rem; }
+
+/* 4 kart */
+.mehse-kokpit-kartlar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+@media (max-width: 1180px) {
+    .mehse-kokpit-kartlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.mehse-kokpit-kart {
+    --ton: #0284C7;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    min-width: 0;
+    padding: .7rem .9rem .75rem 1rem;
+    overflow: hidden;
+    border: 1px solid rgb(100 116 139 / .22);
+    border-radius: 12px;
+    background: #fff;
+    color: #0F172A;
+    text-decoration: none;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+
+.mehse-kokpit-kart::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--ton);
+}
+
+a.mehse-kokpit-kart:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--ton) 45%, transparent);
+    box-shadow: 0 8px 18px -10px rgb(15 23 42 / .35);
+}
+
+.dark .mehse-kokpit-kart {
+    border-color: rgb(255 255 255 / .1);
+    background: rgb(255 255 255 / .04);
+    color: #F1F5F9;
+}
+
+.mehse-kokpit-kart-etiket {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    color: rgb(100 116 139);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.mehse-kokpit-kart-etiket .fi-icon {
+    width: .95rem;
+    height: .95rem;
+    color: var(--ton);
+}
+
+.mehse-kokpit-bilgi {
+    margin-left: auto;
+    color: rgb(100 116 139);
+    font-size: .85rem;
+    cursor: help;
+}
+
+.mehse-kokpit-kart-deger {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--ton);
+}
+
+.mehse-kokpit-kart-deger small {
+    color: rgb(100 116 139);
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+.mehse-kokpit-ayrac {
+    color: rgb(148 163 184);
+    font-weight: 400;
+}
+
+.mehse-kokpit-kart-alt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+    color: rgb(100 116 139);
+    font-size: .72rem;
+}
+
+.mehse-kokpit-hap {
+    display: inline-flex;
+    align-items: center;
+    padding: .08rem .5rem;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--ton) 12%, transparent);
+    color: var(--ton);
+    font-size: .7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.mehse-kokpit-hap.iyi { background: rgb(5 150 105 / .12); color: #047857; }
+.mehse-kokpit-hap.uyari { background: rgb(217 119 6 / .12); color: #B45309; }
+.mehse-kokpit-hap.kotu { background: rgb(225 29 72 / .12); color: #BE123C; }
+
+.mehse-kokpit-cubuk {
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: rgb(100 116 139 / .15);
+}
+
+.mehse-kokpit-cubuk > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--ton);
+}
+
+html[data-mehse-tema="saha"] .mehse-kokpit-kart { border-radius: 3px; }
+html[data-mehse-tema="windows11"] .mehse-kokpit-kart { border-radius: 6px; }
