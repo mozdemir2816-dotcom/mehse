@@ -41,6 +41,33 @@
             </label>
         </div>
 
+        {{-- BYKHY hesapları (02.11.2026) --}}
+        @php $h = $this->hesap; $say = fn ($n) => number_format((float) $n, fmod((float) $n, 1) ? 2 : 0, ',', '.'); @endphp
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem">
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
+                <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">TOPLAM KAPALI ALAN</div>
+                <div style="font-size:1.15rem;font-weight:800">{{ $h['alan'] ? $say($h['alan']).' m²' : '—' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $h['alan'] ? 'Taban alanı × zemin üstü kat sayısı' : 'Taban alanını girin' }}</div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
+                <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">KULLANICI YÜKÜ (Md.32, Ek-5/A)</div>
+                <div style="font-size:1.15rem;font-weight:800">{{ $h['yuk']['esas'] ? $say($h['yuk']['esas']).' kişi' : '—' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">
+                    @if ($h['yuk']['hesaplanan']) {{ $say($h['alan']) }} m² ÷ {{ $say($h['yuk']['katsayi']) }} m²/kişi = {{ $h['yuk']['hesaplanan'] }} · @endif
+                    @if ($h['yuk']['calisan']) çalışan {{ $h['yuk']['calisan'] }} · @endif
+                    @if ($h['yuk']['girilen']) beyan {{ $h['yuk']['girilen'] }} · @endif
+                    büyük olan esas alınır
+                </div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
+                <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">ASGARİ SÖNDÜRÜCÜ (Md.99/2)</div>
+                <div style="font-size:1.15rem;font-weight:800">{{ $h['ysc'] ? $h['ysc']['adet'].' adet 6 kg KKT' : '—' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">
+                    @if ($h['ysc']) Her {{ $h['ysc']['birim'] }} m²'ye 1 adet, ulaşma ≤ 25 m{{ $h['ysc']['tekerlekli'] ? ' · tekerlekli: '.implode(', ', $h['ysc']['tekerlekli']) : '' }} @else Taban alanını girin @endif
+                </div>
+            </div>
+        </div>
+
         {{-- 1. BİNA / KULLANIM --}}
         <x-filament::section icon="heroicon-o-building-office-2" icon-color="danger">
             <x-slot name="heading">1. Bina Kullanımı ve Yangın Tehlike Sınıfı Ön Belirlemesi</x-slot>
@@ -61,9 +88,9 @@
                         @foreach ($this->kullanimTurleri as $a => $ad) <option value="{{ $a }}">{{ $ad }}</option> @endforeach
                     </select>
                 </div>
-                <div><label style="{{ $lbl }}">Bina Taban / Yerleşim Alanı (m²)</label><input type="number" min="0" step="0.01" wire:model="tabanAlaniM2" style="{{ $inp }}"></div>
-                <div><label style="{{ $lbl }}">Zemin Üstü Kat Sayısı</label><input type="number" min="0" wire:model="katSayisi" style="{{ $inp }}"></div>
-                <div><label style="{{ $lbl }}">Azami Toplam Kullanıcı Yükü</label><input type="number" min="0" wire:model.live.debounce.500ms="kullaniciYuku" style="{{ $inp }}"></div>
+                <div><label style="{{ $lbl }}">Bina Taban / Yerleşim Alanı (m²)</label><input type="number" min="0" step="0.01" wire:model.live.debounce.500ms="tabanAlaniM2" style="{{ $inp }}"></div>
+                <div><label style="{{ $lbl }}">Zemin Üstü Kat Sayısı</label><input type="number" min="0" wire:model.live.debounce.500ms="katSayisi" style="{{ $inp }}"></div>
+                <div><label style="{{ $lbl }}">Bilinen azami kişi sayısı <span style="font-weight:400">(boşsa alan ve çalışan sayısından hesaplanır)</span></label><input type="number" min="0" wire:model.live.debounce.500ms="kullaniciYuku" style="{{ $inp }}"></div>
             </div>
 
             <div style="margin-top:1rem">
@@ -89,7 +116,7 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.35rem">
                 @foreach ($this->bolumKutuphanesi as $b)
                     <label style="display:flex;align-items:center;gap:.35rem;font-size:.8rem;cursor:pointer">
-                        <input type="checkbox" wire:model="bolumler" value="{{ $b }}"> {{ $b }}
+                        <input type="checkbox" wire:model.live="bolumler" value="{{ $b }}"> {{ $b }}
                     </label>
                 @endforeach
             </div>

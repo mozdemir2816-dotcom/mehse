@@ -5534,7 +5534,7 @@ return [
             ['madde' => 'Yangın algılama ve alarm sistemi kurulmalı / kapsamı genişletilmeli', 'oncelik' => 'yuksek'],
             ['madde' => 'Otomatik yağmurlama (sprinkler) sistemi değerlendirilmeli', 'oncelik' => 'yuksek'],
             ['madde' => 'Yangın dolabı / hidrant sayısı ve yerleşimi yönetmeliğe uygun hale getirilmeli', 'oncelik' => 'orta'],
-            ['madde' => 'Yangın söndürme cihazları (YSC) her 200 m² için 1 adet ve max 25 m aralıkla yerleştirilmeli', 'oncelik' => 'orta'],
+            ['madde' => 'Yangın söndürme cihazları (YSC) her 250 m² için 1 adet (düşük tehlikede 500 m²) ve en fazla 25 m ulaşma mesafesiyle yerleştirilmeli', 'oncelik' => 'orta'],
             ['madde' => 'Kaçış yolları ve yönlendirme/acil aydınlatma armatürleri tamamlanmalı', 'oncelik' => 'yuksek'],
             ['madde' => 'Yangın merdiveni / korunumlu kaçış koridoru sağlanmalı', 'oncelik' => 'yuksek'],
             ['madde' => 'Yangın kapıları (EI 60/90) yangın bölmelerine takılmalı, kendinden kapanır olmalı', 'oncelik' => 'orta'],
@@ -5546,6 +5546,28 @@ return [
             ['madde' => 'Yıllık yangın tatbikatı yapılmalı ve kaydı tutulmalı', 'oncelik' => 'orta'],
             ['madde' => 'Acil durum ekipleri (söndürme / kurtarma / ilk yardım / koruma) görevlendirilmeli ve eğitilmeli', 'oncelik' => 'orta'],
             ['madde' => 'Duman tahliye / basınçlandırma sistemi kapalı otopark ve atrium için değerlendirilmeli', 'oncelik' => 'orta'],
+        ],
+
+        // BYKHY Ek-5/A kullanıcı yükü katsayısı (m²/kişi, brüt alan) — kullanım türüne göre. Karma
+        // kullanımda tek katsayı yoktur; girilen / fiili kişi sayısı esas alınır. (Resmî metinden 02.11.2026)
+        'kullanici_yuku_katsayilari' => [
+            'endustriyel' => 10,   // 13: paketleme yerleri, fabrika üretim alanları
+            'depolama' => 30,      // 19: depolar, ambarlar, makine daireleri
+            'ticaret' => 5,        // 8: süpermarketler, mağazalar, dükkânlar
+            'buro' => 10,          // 11: ofisler
+            'toplanma' => 1.5,     // 1: lokanta, kantin, konferans ve çok amaçlı salonlar
+            'konaklama' => 20,     // 16: otel yatak odaları
+            'saglik' => 20,        // 14: hastane yatak odaları
+            'egitim' => 1.5,       // 5: derslikler
+        ],
+
+        // BYKHY Md.99/2: her X m² yapı inşaat alanı için 1 adet 6 kg KKT (veya eşdeğeri gazlı) söndürücü.
+        'ysc_m2_basina' => ['dusuk' => 500, 'orta' => 250, 'yuksek' => 250],
+
+        // Md.99/3: otopark, depo, tesisat daireleri ve benzeri yerlerde ayrıca tekerlekli söndürücü.
+        'tekerlekli_ysc_bolumleri' => [
+            'Ürün veya ham madde deposu', 'Kimyasal depolama alanı', 'Yüksek raflı depo', 'Soğuk hava deposu',
+            'Kazan dairesi', 'Jeneratör / enerji odası', 'Kapalı otopark',
         ],
 
         'tehlike_siniflari' => [

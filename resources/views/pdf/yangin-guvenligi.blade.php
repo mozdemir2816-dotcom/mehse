@@ -36,6 +36,12 @@
     <div class="firma">{{ $firma?->unvan }}</div>
 </div>
 
+@php
+    $sayi = fn ($n) => number_format((float) $n, fmod((float) $n, 1) ? 2 : 0, ',', '.');
+    $alan = $kayit->toplamAlan();
+    $ky = $kayit->kullaniciYukuHesabi();
+    $ysc = $kayit->yscHesabi();
+@endphp
 <h2>1. BİNA VE KULLANIM BİLGİLERİ</h2>
 <table class="k">
     <tr><td class="e">İnceleme Yeri</td><td>{{ $kayit->inceleme_yeri ?: '—' }}</td></tr>
@@ -43,7 +49,15 @@
     <tr><td class="e">İşletme / Kullanım Türü</td><td>{{ $kayit->kullanimTuruEtiketi() }}</td></tr>
     <tr><td class="e">Bina Taban / Yerleşim Alanı</td><td>{{ $kayit->taban_alani_m2 ? number_format((float) $kayit->taban_alani_m2, 2, ',', '.').' m²' : '—' }}</td></tr>
     <tr><td class="e">Zemin Üstü Kat Sayısı</td><td>{{ $kayit->kat_sayisi ?? '—' }}</td></tr>
-    <tr><td class="e">Azami Toplam Kullanıcı Yükü</td><td>{{ $kayit->kullanici_yuku ? number_format($kayit->kullanici_yuku, 0, ',', '.').' kişi' : '—' }}</td></tr>
+    <tr><td class="e">Toplam Kapalı Alan</td><td>{{ $alan ? $sayi($alan).' m²'.(($kayit->kat_sayisi ?? 1) > 1 ? ' (taban alanı × kat sayısı)' : '') : '—' }}</td></tr>
+    <tr><td class="e">Azami Toplam Kullanıcı Yükü</td><td>
+        @if ($ky['esas'])
+            <b>{{ $sayi($ky['esas']) }} kişi</b>
+            <span style="font-size:8px;color:#555">— @if ($ky['hesaplanan'])BYKHY Ek-5/A: {{ $sayi($alan) }} m² ÷ {{ $sayi($ky['katsayi']) }} m²/kişi = {{ $sayi($ky['hesaplanan']) }} kişi; @endif @if ($ky['calisan'])fiili çalışan: {{ $ky['calisan'] }}; @endif @if ($ky['girilen'])beyan edilen: {{ $sayi($ky['girilen']) }}; @endif büyük olan esas alınmıştır (Md.32).</span>
+        @else
+            —
+        @endif
+    </td></tr>
     @if ($kayit->kullanim_aciklamasi)
         <tr><td class="e">Kullanım Açıklaması</td><td>{{ $kayit->kullanim_aciklamasi }}</td></tr>
     @endif
@@ -61,6 +75,13 @@
     <span class="sinif s-{{ $kayit->belirlenen_tehlike_sinifi }}">{{ $kayit->tehlikeSinifiEtiketi() }}</span>
     @if ($kayit->sinif_elle) <span style="font-size:8px;color:#666">(elle belirlendi)</span> @endif
 </div>
+@if ($ysc)
+    <div style="margin:4px 0 6px;font-size:9px">
+        <strong>ASGARİ TAŞINABİLİR SÖNDÜRÜCÜ İHTİYACI (BYKHY Md.99/2):&nbsp;</strong>
+        {{ $sayi($ysc['alan']) }} m² ÷ {{ $ysc['birim'] }} m² = <b>en az {{ $ysc['adet'] }} adet 6 kg KKT</b>; ulaşma mesafesi en fazla 25 m.
+        @if ($ysc['tekerlekli']) Ayrıca tekerlekli tip: {{ implode(', ', $ysc['tekerlekli']) }}. @endif
+    </div>
+@endif
 
 @if ($kayit->bolumler)
     <h2>2. İŞLETMEDE BULUNAN BÖLÜMLER</h2>
@@ -79,7 +100,7 @@
 <h2>4. TESPİT VE ÖNERİLER</h2>
 <table class="tespit">
     <tr><th style="width:22px">#</th><th>Tespit / Öneri</th><th style="width:60px">Öncelik</th></tr>
-    @forelse ($kayit->tespitler ?? [] as $i => $t)
+    @forelse ($kayit->raporTespitleri() as $i => $t)
         <tr>
             <td>{{ $i + 1 }}</td>
             <td>{{ $t['madde'] ?? '' }}</td>

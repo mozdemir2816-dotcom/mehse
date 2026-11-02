@@ -108,4 +108,49 @@ class YanginGuvenligiTest extends TestCase
         $firmalar = Livewire::test(YanginSayfasi::class)->instance()->firmalar();
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    /** 02.11.2026: BYKHY Md.32 / Ek-5/A kullanıcı yükü ve Md.99/2 söndürücü adedi (resmî metinden). */
+    public function test_kullanici_yuku_ve_sondurucu_adedi_bykhy_ye_gore_hesaplanir(): void
+    {
+        $this->firma->update(['calisan_sayisi' => 10]);
+        $d = YanginGuvenligiDegerlendirmesi::firmaIcin($this->firma);
+        $d->update([
+            'kullanim_turu' => 'endustriyel', 'taban_alani_m2' => 1250, 'kat_sayisi' => 2, 'kullanici_yuku' => 1,
+            'bolumler' => ['Üretim / atölye', 'Ürün veya ham madde deposu'],
+            'tespitler' => [['madde' => 'Yangın söndürme cihazları (YSC) her 200 m² için 1 adet ve max 25 m aralıkla yerleştirilmeli', 'oncelik' => 'orta']],
+        ]);
+        $d = $d->fresh();
+
+        // 2500 m² ÷ 10 m²/kişi = 250 kişi > çalışan 10 > beyan 1
+        $this->assertSame(2500.0, $d->toplamAlan());
+        $this->assertSame(['katsayi' => 10.0, 'hesaplanan' => 250, 'girilen' => 1, 'calisan' => 10, 'esas' => 250], $d->kullaniciYukuHesabi());
+
+        // Endüstriyel → en az orta tehlike → her 250 m² için 1 adet: 2500 / 250 = 10
+        $this->assertSame('orta', $d->belirlenen_tehlike_sinifi);
+        $ysc = $d->yscHesabi();
+        $this->assertSame([10, 250, ['Ürün veya ham madde deposu']], [$ysc['adet'], $ysc['birim'], $ysc['tekerlekli']]);
+
+        // Eski "200 m²" tespiti raporda firmaya göre hesaplanmış metinle değişir.
+        $madde = $d->raporTespitleri()[0]['madde'];
+        $this->assertStringContainsString('Toplam 2.500 m² kapalı alan (1.250 m² × 2 kat) için en az 10 adet 6 kg ABC', $madde);
+        $this->assertStringContainsString("her 250 m²'ye 1 adet", $madde);
+        $this->assertStringNotContainsString('200 m²', $madde);
+
+        // Düşük tehlike: her 500 m²; alan küçükse en az 1. Alan yoksa hesap yok, çalışan sayısı esas.
+        $buro = new YanginGuvenligiDegerlendirmesi(['kullanim_turu' => 'buro', 'taban_alani_m2' => 120]);
+        $buro->belirlenen_tehlike_sinifi = 'dusuk';
+        $this->assertSame([1, 500], [$buro->yscHesabi()['adet'], $buro->yscHesabi()['birim']]);
+        $alansiz = new YanginGuvenligiDegerlendirmesi(['kullanim_turu' => 'karma']);
+        $alansiz->setRelation('firma', $this->firma);
+        $this->assertNull($alansiz->yscHesabi());
+        $this->assertSame(10, $alansiz->kullaniciYukuHesabi()['esas']);
+
+        // Ekran ve PDF
+        Livewire::test(YanginSayfasi::class)->set('firmaId', $this->firma->id)
+            ->assertSee('10 adet 6 kg KKT')->assertSee('250 kişi');
+        $html = view('pdf.yangin-guvenligi', ['kayit' => $d, 'firma' => $this->firma])->render();
+        $this->assertStringContainsString('<b>250 kişi</b>', $html);
+        $this->assertStringContainsString('en az 10 adet 6 kg KKT', $html);
+        $this->assertStringContainsString('İşveren / İşveren Vekili', $html);
+    }
 }

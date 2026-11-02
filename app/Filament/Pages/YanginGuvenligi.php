@@ -2,9 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\YanginGuvenligiDegerlendirmesi as YanginModel;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\YanginGuvenligiUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -15,7 +16,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Yangın Güvenliği Genel Durum Değerlendirmesi — bina kullanımı, kat/kullanıcı
  * yükü, bölümler ve faaliyet/depolama risklerinden bina yangın tehlike sınıfı
@@ -23,7 +23,7 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class YanginGuvenligi extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.yangin-guvenligi';
 
@@ -162,6 +162,25 @@ class YanginGuvenligi extends Page
         return $this->sinifElle && $this->elleSinif
             ? $this->elleSinif
             : $gecici->hesaplaTehlikeSinifi();
+    }
+
+    /** Ekrandaki (kaydedilmemiş) değerlerle kapalı alan, kullanıcı yükü ve söndürücü hesabı (BYKHY Md.32, 99). */
+    #[Computed]
+    public function hesap(): array
+    {
+        $gecici = new YanginModel([
+            'kullanim_turu' => $this->kullanimTuru,
+            'taban_alani_m2' => is_numeric($this->tabanAlaniM2) ? $this->tabanAlaniM2 : null,
+            'kat_sayisi' => $this->katSayisi,
+            'kullanici_yuku' => $this->kullaniciYuku,
+            'bolumler' => $this->bolumler,
+            'riskler' => $this->riskler,
+            'ozel_kullanimlar' => $this->ozelKullanimlar,
+        ]);
+        $gecici->belirlenen_tehlike_sinifi = $this->anlikSinif;
+        $gecici->setRelation('firma', $this->firma);
+
+        return ['alan' => $gecici->toplamAlan(), 'yuk' => $gecici->kullaniciYukuHesabi(), 'ysc' => $gecici->yscHesabi()];
     }
 
     public function updatedFirmaId(): void
