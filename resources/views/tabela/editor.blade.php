@@ -505,7 +505,11 @@
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
             <div class="flex items-center justify-between">
               <label class="font-bold text-slate-800">Çift Dil / İngilizce Çeviri Ekle</label>
-              <input type="checkbox" id="showEnToggle" checked onchange="updateSign()" class="accent-red-600 w-4 h-4 cursor-pointer">
+              <div class="flex items-center gap-2">
+                <button type="button" id="aiCevirBtn" onclick="aiCevir()" title="Türkçe başlık ve açıklamayı ANSI / OSHA levha İngilizcesine çevirir"
+                  class="px-2 py-1 rounded-md bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold">🤖 AI ile Çevir</button>
+                <input type="checkbox" id="showEnToggle" checked onchange="updateSign()" class="accent-red-600 w-4 h-4 cursor-pointer">
+              </div>
             </div>
             <div id="enFieldsContainer" class="space-y-1.5">
               <input type="text" id="enTitleInput" value="HIGH VOLTAGE - 380 VOLTS" oninput="updateSign()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs font-black uppercase">
@@ -1805,6 +1809,39 @@
         a.click();
       });
     }
+
+    /** 🤖 AI ile Çevir (02.11.2026): metin dış sayfaya gider (Gemini), çeviri postMessage ile döner. */
+    function aiCevir() {
+      const btn = document.getElementById("aiCevirBtn");
+      btn.disabled = true;
+      btn.textContent = "Çevriliyor…";
+      parent.postMessage({
+        tip: "cevir",
+        baslik: document.getElementById("mainTitleInput").value,
+        aciklama: document.getElementById("descTextInput").value,
+        sinyal: state.signalTr || "",
+      }, "*");
+    }
+
+    window.addEventListener("message", (e) => {
+      if (e.source !== parent) { return; }
+      const m = e.data || {};
+      if (m.tip !== "ceviri") { return; }
+      const btn = document.getElementById("aiCevirBtn");
+      btn.disabled = false;
+      if (m.hata) {
+        btn.textContent = "⚠ " + m.hata;
+        setTimeout(() => { btn.textContent = "🤖 AI ile Çevir"; }, 4000);
+        return;
+      }
+      btn.textContent = "✓ Çevrildi";
+      setTimeout(() => { btn.textContent = "🤖 AI ile Çevir"; }, 2500);
+      if (m.baslik) { document.getElementById("enTitleInput").value = m.baslik; }
+      if (m.aciklama) { document.getElementById("enDescInput").value = m.aciklama; }
+      if (m.sinyal) { document.getElementById("signalEnInput").value = m.sinyal; }
+      document.getElementById("showEnToggle").checked = true;
+      updateSign();
+    });
 
     /** mehse'ye kaydet: tasarım JSON'u + o anki görünümün PNG'si, dış sayfaya postMessage ile gönderilir. */
     function tabelayiKaydet() {

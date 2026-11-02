@@ -29,6 +29,7 @@ use UnitEnum;
 class TabelaTasarimi extends Page
 {
     use SinirliErisim;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected string $view = 'filament.pages.tabela-tasarimi';
 
@@ -147,6 +148,38 @@ class TabelaTasarimi extends Page
         $tasarim = $this->tasarimlar->get($id);
 
         return $tasarim ? TabelaPdfUretici::pdf($tasarim) : null;
+    }
+
+    /** "⚡ Önerilen Tüm Levhaları Otomatik Paketle (ZIP)" — A4 / A3 baskı PDF'i + vektör SVG (02.11.2026). */
+    public function oneriPaketi(string $ebat = 'a4'): ?StreamedResponse
+    {
+        $yanit = $this->firma ? TabelaPdfUretici::oneriPaketi($this->firma, $ebat) : null;
+
+        if (! $yanit) {
+            Notification::make()->title('Önerilecek levha bulunamadı')->body('Firmanın risk değerlendirmesinde ya da açık saha bulgularında tanınan bir tehlike yok.')->warning()->send();
+        }
+
+        return $yanit;
+    }
+
+    /** Editördeki "🤖 AI ile Çevir": Türkçe ikaz metni → ANSI / OSHA levha İngilizcesi (iframe'e postMessage ile döner). */
+    public function cevir(?string $baslik, ?string $aciklama, ?string $sinyal = null): array
+    {
+        return \App\Support\GeminiTabelaCevirmen::cevir($baslik, $aciklama, $sinyal);
+    }
+
+    /** "📲 WhatsApp ile Paylaş": açık (kayıtlı) tasarımın 30 gün geçerli PDF bağlantısı — işverene ya da tabelacıya. */
+    public function whatsapp(?int $id = null): void
+    {
+        $tasarim = $this->tasarimlar->get($id ?? $this->tasarimId);
+
+        if (! $tasarim) {
+            Notification::make()->title('Önce tasarımı kaydedin')->body('Paylaşım bağlantısı kayıtlı tasarım için oluşturulur.')->warning()->send();
+
+            return;
+        }
+
+        $this->whatsappAc(\App\Support\IsverenWhatsApp::url($this->firma, \App\Support\IsverenWhatsApp::tabelaMesaji($tasarim), kisiSecilir: true), 'Levha baskı dosyası');
     }
 
     #[Computed]

@@ -38,11 +38,26 @@
             @empty
                 <span style="font-size:.76rem;color:rgb(107 114 128)">Bu firma için henüz kayıtlı tabela tasarımı yok.</span>
             @endforelse
+
+            @if ($tasarimId)
+                <button type="button" wire:click="whatsapp" style="{{ $btn }};margin-left:auto;background:#16a34a;color:#fff;border-color:#16a34a;font-weight:700"
+                    title="Açık tasarımın 30 gün geçerli baskı PDF bağlantısı — işverenin telefonu yoksa WhatsApp'ta alıcıyı (ör. tabelacı) siz seçersiniz">📲 WhatsApp ile Paylaş</button>
+            @endif
         </div>
 
         {{-- Risk analizi ve saha bulgularından türetilen levha önerileri --}}
         <div style="{{ $kutu }}">
-            <div style="font-weight:700;font-size:.85rem">Risk Analizi & Saha Bulgularından Önerilen Levhalar</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+                <div style="font-weight:700;font-size:.85rem">Risk Analizi & Saha Bulgularından Önerilen Levhalar ({{ count($this->oneriler) }})</div>
+                @if ($this->oneriler)
+                    <div style="display:flex;gap:.35rem;align-items:center">
+                        <span style="font-size:.74rem;font-weight:700">⚡ Önerilen Tüm Levhaları Otomatik Paketle (ZIP):</span>
+                        <button type="button" wire:click="oneriPaketi('a4')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A4</button>
+                        <button type="button" wire:click="oneriPaketi('a3')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A3</button>
+                        <span wire:loading wire:target="oneriPaketi" style="font-size:.72rem;color:#d97706">Hazırlanıyor…</span>
+                    </div>
+                @endif
+            </div>
             <div style="font-size:.74rem;color:rgb(107 114 128);margin:.15rem 0 .6rem">
                 Firmanın son risk değerlendirmesindeki açık maddeler ve açık saha bulguları taranır; tehlikeye uygun ikaz / yasak / emredici levha şablonu hazır gelir.
                 Sinyal sözcüğü en yüksek risk düzeyine göre seçilir (Tehlike · Uyarı · Dikkat).
@@ -81,6 +96,11 @@
                     if (m.tip === 'kaydet') {
                         this.kaydediliyor = true;
                         this.$wire.kaydet(m.baslik, m.veri, m.png).then(() => { this.kaydediliyor = false; });
+                    }
+                    if (m.tip === 'cevir') {
+                        this.$wire.cevir(m.baslik, m.aciklama, m.sinyal).then((s) => {
+                            this.$refs.cerceve.contentWindow.postMessage({ tip: 'ceviri', ...(s || { hata: 'Çeviri alınamadı' }) }, '*');
+                        });
                     }
                 },
             }"

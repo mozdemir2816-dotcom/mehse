@@ -8,6 +8,7 @@ use App\Models\Firma;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaBulgusu;
 use App\Models\SahaDenetimi;
+use App\Models\TabelaTasarimi;
 use App\Models\TespitOneriDefteri;
 use Illuminate\Support\Facades\URL;
 
@@ -31,6 +32,7 @@ class IsverenWhatsApp
         'tespit-defteri' => TespitOneriDefteri::class,
         'risk' => RiskDegerlendirmesi::class,
         'adep' => AcilDurumPlani::class,
+        'tabela' => TabelaTasarimi::class,
     ];
 
     public static function telefon(?Firma $firma): ?string
@@ -69,12 +71,19 @@ class IsverenWhatsApp
         return URL::temporarySignedRoute('paylasim.pdf', now()->addDays(self::BAGLANTI_GUN), ['tur' => $tur, 'id' => $id]);
     }
 
-    /** WhatsApp bağlantısı; işverenin cep telefonu yoksa null. */
-    public static function url(?Firma $firma, string $mesaj): ?string
+    /**
+     * WhatsApp bağlantısı; işverenin cep telefonu yoksa null. $kisiSecilir: telefon yoksa numarasız bağlantı
+     * (WhatsApp'ta alıcı elle seçilir — ör. levhayı tabelacıya göndermek için).
+     */
+    public static function url(?Firma $firma, string $mesaj, bool $kisiSecilir = false): ?string
     {
         $no = self::telefon($firma);
 
-        return $no ? 'https://api.whatsapp.com/send?phone='.$no.'&text='.rawurlencode($mesaj) : null;
+        return match (true) {
+            (bool) $no => 'https://api.whatsapp.com/send?phone='.$no.'&text='.rawurlencode($mesaj),
+            $kisiSecilir => 'https://api.whatsapp.com/send?text='.rawurlencode($mesaj),
+            default => null,
+        };
     }
 
     /*
@@ -169,6 +178,20 @@ class IsverenWhatsApp
             'Bilgilerinize sunarız.',
             self::imza($f),
         ]));
+    }
+
+    /** Güvenlik levhası baskı dosyası — işverene ya da tabelacıya (02.11.2026). */
+    public static function tabelaMesaji(TabelaTasarimi $t): string
+    {
+        $t->loadMissing('firma');
+
+        return implode("\n", [
+            'Sayın Yetkili,',
+            $t->firma?->unvan.' işyeri için hazırlanan "'.$t->baslik.'" İSG Güvenlik Levhası baskı dosyası ('.TabelaPdfUretici::olcuMetni((array) $t->tasarim).', PDF) hazırdır: '.self::pdfBaglantisi('tabela', $t->id),
+            '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
+            'Bilgilerinize sunarız.',
+            self::imza($t->firma),
+        ]);
     }
 
     /** Açık bulgu / DÖF maddesi için hatırlatma. */

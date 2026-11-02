@@ -6,6 +6,7 @@ use App\Models\AcilDurumPlani;
 use App\Models\DofRaporu;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\SahaDenetimi;
+use App\Models\TabelaTasarimi;
 use App\Models\TespitOneriDefteri;
 use App\Support\AcilDurumPlaniUretici;
 use App\Support\DofRaporuUretici;
@@ -35,6 +36,7 @@ class PaylasimPdfController extends Controller
             'tespit-defteri' => TespitOneriDefteriUretici::pdf(TespitOneriDefteri::findOrFail($id)),
             'risk' => $this->risk(RiskDegerlendirmesi::findOrFail($id)),
             'adep' => AcilDurumPlaniUretici::pdf(AcilDurumPlani::findOrFail($id)),
+            'tabela' => \App\Support\TabelaPdfUretici::pdf(TabelaTasarimi::findOrFail($id)),
         };
     }
 
