@@ -170,6 +170,64 @@
             </div>
             <p style="margin-top:.35rem;font-size:.72rem;color:rgb(107 114 128)">Otomatik belirleme firmanın risk değerlendirmesi maddelerine, iş ekipmanlarına ve kimyasal envanterine bakar (pres / torna / CNC → makine sıkışma; boya / tiner / kimyasal → kimyasal dökülme + patlama; tavan vinci / iskele → yüksekten düşme…). Yalnız ekler; deprem, sel, heyelan gibi başlıkları yukarıdan tek tıkla açıp kapatın.</p>
 
+
+            {{-- ÖZEL SENARYOLAR — yapay zekâ ile (02.11.2026) --}}
+            @php $ozeller = $this->uygulama['ozel_senaryolar'] ?? []; $kutuphane = $this->ozelKutuphanesi(); @endphp
+            <div style="margin-top:.9rem;font-size:.8rem;font-weight:700">Listede olmayan özel senaryolar <span style="font-weight:400;color:rgb(107 114 128)">(EK-1'de seçili senaryolardan sonra numaralanır)</span></div>
+            @foreach ($ozeller as $oi => $o)
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:.35rem;padding:.45rem .7rem;border:1px solid #e11d48;background:#fff1f2;color:#9f1239;font-size:.8rem;font-weight:600" wire:key="ozel-{{ $o['anahtar'] }}">
+                    <span>✨ <span style="display:inline-block;width:1.4rem;text-align:center;color:rgb(107 114 128)">{{ $sira + $loop->iteration }}</span> ACİL DURUM: {{ mb_strtoupper(str_replace('i', 'İ', $o['ad']), 'UTF-8') }}
+                        <span style="font-weight:400;color:rgb(107 114 128);font-size:.72rem">— {{ count($o['mudahale']) }} müdahale, {{ count($o['olay_sonrasi']) }} olay sonrası, {{ count($o['onleyici']) }} önleyici, {{ count($o['kkd']) }} KKD maddesi</span></span>
+                    <x-filament::icon-button icon="heroicon-o-trash" color="danger" size="sm" wire:click="ozelSenaryoSil({{ $oi }})" wire:confirm="Bu özel senaryo plandan kaldırılsın mı? (Kütüphanenizde kalır.)" label="Kaldır" />
+                </div>
+            @endforeach
+
+            @php $kutuphaneEklenebilir = collect($kutuphane)->reject(fn ($k) => collect($ozeller)->pluck('ad')->map(fn ($a) => mb_strtolower($a))->contains(mb_strtolower($k['ad']))); @endphp
+            @if ($kutuphaneEklenebilir->isNotEmpty())
+                <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem;align-items:center">
+                    <span style="font-size:.72rem;color:rgb(107 114 128)">Kütüphanenizden ekle:</span>
+                    @foreach ($kutuphaneEklenebilir as $ki => $k)
+                        <button type="button" wire:click="kutuphanedenEkle({{ $ki }})" wire:key="kutuphane-{{ $ki }}"
+                            style="padding:.25rem .55rem;border-radius:.4rem;font-size:.72rem;cursor:pointer;border:1px dashed #e11d48;background:#fff;color:#9f1239">+ {{ $k['ad'] }}</button>
+                    @endforeach
+                </div>
+            @endif
+
+            <div style="margin-top:.5rem">
+                @unless ($ozelPanel)
+                    <x-filament::button size="xs" color="danger" outlined icon="heroicon-o-sparkles" wire:click="$set('ozelPanel', true)">✨ Listede Olmayan Özel Senaryo Ekle (Yapay Zekâ)</x-filament::button>
+                @else
+                    @php $oAlan = 'width:100%;padding:.4rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.78rem'; @endphp
+                    <div style="border:1px solid #fda4af;border-radius:.6rem;padding:.75rem .85rem;background:rgb(255 241 242 / .5)">
+                        <div style="font-size:.82rem;font-weight:700;margin-bottom:.35rem">✨ Özel senaryo üret</div>
+                        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                            <input type="text" wire:model="ozelBaslik" wire:keydown.enter="ozelSenaryoUret" placeholder="Örn: COVID-19 Benzeri Solunum Yolu Salgını · Amonyak Tankı Sızıntısı · Lityum İyon Batarya Termal Kaçağı" style="{{ $oAlan }};flex:1;min-width:260px">
+                            <x-filament::button size="sm" color="danger" icon="heroicon-o-sparkles" wire:click="ozelSenaryoUret" wire:loading.attr="disabled" wire:target="ozelSenaryoUret">
+                                <span wire:loading.remove wire:target="ozelSenaryoUret">Yapay Zekâ ile Üret</span>
+                                <span wire:loading wire:target="ozelSenaryoUret">Üretiliyor…</span>
+                            </x-filament::button>
+                            <x-filament::button size="sm" color="gray" wire:click="$set('ozelPanel', false)">Kapat</x-filament::button>
+                        </div>
+
+                        @if ($ozelOnizleme)
+                            <div style="margin-top:.7rem;font-size:.74rem;color:rgb(107 114 128)">Önizleme — maddeleri okuyup gerekirse düzeltin (her satır bir madde). Onaylamadan plana hiçbir şey eklenmez.</div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.55rem;margin-top:.4rem">
+                                <div><label style="font-size:.74rem;font-weight:600">Başlık</label><input type="text" wire:model="ozelOnizleme.ad" style="{{ $oAlan }}"></div>
+                                <div style="grid-column:1/-1"><label style="font-size:.74rem;font-weight:600">Tanım</label><textarea wire:model="ozelOnizleme.aciklama" rows="3" style="{{ $oAlan }}"></textarea></div>
+                                @foreach (\App\Support\GeminiAcilSenaryoUretici::LISTELER as $lk => $lad)
+                                    <div><label style="font-size:.74rem;font-weight:600">{{ $lad }}</label><textarea wire:model="ozelOnizleme.{{ $lk }}" rows="7" style="{{ $oAlan }}"></textarea></div>
+                                @endforeach
+                            </div>
+                            <div style="margin-top:.6rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+                                <x-filament::button size="sm" icon="heroicon-o-check" wire:click="ozelSenaryoOnayla">Onayla ve Plana Ekle</x-filament::button>
+                                <label style="display:flex;gap:.35rem;align-items:center;font-size:.76rem"><input type="checkbox" wire:model="ozelKutuphaneye"> Senaryo kütüphaneme de kaydet (diğer firmalarda tek tıkla eklenir)</label>
+                                <x-filament::button size="sm" color="gray" wire:click="$set('ozelOnizleme', null)">Vazgeç</x-filament::button>
+                            </div>
+                        @endif
+                    </div>
+                @endunless
+            </div>
+
             @php $kkdSecili = $this->kkdFaaliyetleri(); @endphp
             <div style="margin-top:.9rem;font-size:.8rem;font-weight:700">EK-3 KKD tablosu — işyerindeki faaliyetler <span style="font-weight:400;color:rgb(107 114 128)">({{ count($kkdSecili) }} seçili; seçilmeyen sütun ve yalnız onda gereken KKD'ler basılmaz)</span></div>
             <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem">
@@ -178,6 +236,85 @@
                     <button type="button" wire:click="kkdFaaliyetToggle(@js($f))" wire:key="kkd-{{ $loop->index }}"
                         style="padding:.3rem .55rem;border-radius:.4rem;font-size:.72rem;cursor:pointer;border:1px solid {{ $on ? '#e11d48' : '#e2e8f0' }};background:{{ $on ? '#fff1f2' : '#fff' }};color:{{ $on ? '#9f1239' : '#64748b' }}">{{ $on ? '☑' : '☐' }} {{ $f }}</button>
                 @endforeach
+            </div>
+        </x-filament::section>
+
+        {{-- SAHA BİLGİLERİ VE İLETİŞİM TAMAMLAMA SİHİRBAZI (02.11.2026) --}}
+        @php
+            $sorular = \App\Support\AcilDurumHazirlik::SIHIRBAZ_SORULARI;
+            $eksik = $this->eksikSorular();
+            $sAlan = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem';
+        @endphp
+        <x-filament::section icon="heroicon-o-map-pin" icon-color="danger" collapsible :collapsed="$eksik === [] && $iletisimOnerileri === []">
+            <x-slot name="heading">
+                Saha Bilgileri ve İletişim Tamamlama Sihirbazı
+                <span style="font-weight:400;font-size:.8rem;color:{{ $eksik ? 'rgb(217 119 6)' : 'rgb(22 163 74)' }}">({{ count($sorular) - count($eksik) }} / {{ count($sorular) }} tamam)</span>
+            </x-slot>
+            <x-slot name="description">Belgede noktalı (elle doldurulacak) kalan yerleri tek listede tamamlayın. Kurum telefonlarını adrese göre yapay zekâ önerir; siz doğrulayıp EK-2'ye eklersiniz.</x-slot>
+
+            {{-- 1) Adrese göre resmî kurumlar --}}
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.75rem .85rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap">
+                    <div>
+                        <div style="font-size:.82rem;font-weight:700">1. Adrese göre resmî kurumlar ve telefonlar (EK-2)</div>
+                        <div style="font-size:.72rem;color:rgb(107 114 128)">Adres: {{ $this->firma->adres ?: 'girilmemiş — Firmalar ekranından açık adresi (ilçe / il) doldurun' }}</div>
+                    </div>
+                    <x-filament::button size="sm" color="danger" icon="heroicon-o-sparkles" wire:click="iletisimBul" wire:loading.attr="disabled" wire:target="iletisimBul" :disabled="blank($this->firma->adres)">
+                        <span wire:loading.remove wire:target="iletisimBul">Adrese Göre Kurumları Bul (Yapay Zekâ)</span>
+                        <span wire:loading wire:target="iletisimBul">Aranıyor…</span>
+                    </x-filament::button>
+                </div>
+
+                @if ($iletisimOnerileri)
+                    <div style="margin-top:.6rem;padding:.45rem .6rem;border-radius:.4rem;background:rgb(217 119 6 / .1);font-size:.74rem">
+                        ⚠ Telefonlar {{ $iletisimAramali ? 'web aramasıyla bulundu' : 'yapay zekânın kendi bilgisinden geldi (web araması yapılamadı)' }} — acil durum belgesine girmeden önce <b>her numarayı kurumun resmî sitesinden doğrulayın</b>. Telefonu bulunamayan satır işaretsiz gelir. Acil çağrı her durumda 112'dir.
+                    </div>
+                    <div style="display:grid;gap:.35rem;margin-top:.5rem">
+                        @foreach ($iletisimOnerileri as $i => $o)
+                            <div style="display:grid;grid-template-columns:auto 170px 2fr 1fr 1.4fr;gap:.4rem;align-items:center;font-size:.75rem" wire:key="oneri-{{ $i }}">
+                                <input type="checkbox" wire:model="iletisimOnerileri.{{ $i }}.sec">
+                                <b style="font-size:.7rem">{{ $o['birim'] }}</b>
+                                <input type="text" wire:model="iletisimOnerileri.{{ $i }}.ad" style="{{ $sAlan }}">
+                                <input type="text" wire:model="iletisimOnerileri.{{ $i }}.telefon" placeholder="Telefon (bulunamadı)" style="{{ $sAlan }}">
+                                <input type="text" wire:model="iletisimOnerileri.{{ $i }}.not" placeholder="Not" style="{{ $sAlan }}">
+                            </div>
+                        @endforeach
+                    </div>
+                    <div style="margin-top:.55rem;display:flex;gap:.5rem;flex-wrap:wrap">
+                        <x-filament::button size="sm" icon="heroicon-o-check" wire:click="iletisimOnerileriniEkle">Doğruladım — Seçilenleri EK-2'ye Ekle ve Kaydet</x-filament::button>
+                        <x-filament::button size="sm" color="gray" wire:click="$set('iletisimOnerileri', [])">Vazgeç</x-filament::button>
+                    </div>
+                    <p style="margin-top:.3rem;font-size:.7rem;color:rgb(107 114 128)">Hastane, "En yakın hastane" alanına; diğerleri Acil iletişim listesine yazılır (aynı adlı kayıt güncellenir).</p>
+                @endif
+            </div>
+
+            {{-- 2) Eksik saha bilgileri kontrol listesi --}}
+            <div style="margin-top:.8rem;font-size:.82rem;font-weight:700">2. Saha bilgileri kontrol listesi
+                <span style="font-weight:400;font-size:.72rem;color:rgb(107 114 128)">— ○ boş (belgede noktalı çıkar), ✓ dolu</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:.55rem .9rem;margin-top:.45rem">
+                @foreach ($sorular as $alan => [$soru, $ornek])
+                    @php $bos = array_key_exists($alan, $eksik); $model = $alan === 'toplanma_yeri' ? 'toplanmaYeri' : 'uygulama.'.$alan; @endphp
+                    <div wire:key="soru-{{ $alan }}">
+                        <label style="display:block;font-size:.76rem;font-weight:600;margin-bottom:.2rem;color:{{ $bos ? 'rgb(180 83 9)' : 'rgb(21 128 61)' }}">{{ $bos ? '○' : '✓' }} {{ $loop->iteration }}) {{ $soru }}</label>
+                        @if (in_array($alan, ['koordinator_ad', 'koordinator_vekil'], true))
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem">
+                                <select style="{{ $sAlan }}" wire:change="koordinatorSec('{{ $alan === 'koordinator_ad' ? 'koordinator' : 'koordinator_vekil' }}', $event.target.value)">
+                                    <option value="">{{ $this->calisanSecenekleri->isEmpty() ? 'Çalışan kaydı yok' : 'Çalışanlardan seç…' }}</option>
+                                    @foreach ($this->calisanSecenekleri as $c)
+                                        <option value="{{ $c->id }}">{{ $c->ad_soyad }}{{ $c->gorev ? ' — '.$c->gorev : '' }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="text" wire:model="{{ $model }}" placeholder="veya elle yazın" style="{{ $sAlan }}">
+                            </div>
+                        @else
+                            <input type="text" wire:model="{{ $model }}" placeholder="Örn: {{ $ornek }}" style="{{ $sAlan }}">
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            <div style="margin-top:.7rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+                <x-filament::button icon="heroicon-o-check" wire:click="kaydet">Kaydet</x-filament::button>
+                <span style="font-size:.72rem;color:rgb(107 114 128)">Şalter ve vana yerleri belgede "Enerji kesme noktaları" maddesine ve EK-7 krokisine; toplanma alanları 3. bölüm ve EK-5'e; koordinatör 2. bölüm ve EK-2'ye yazılır. İmza / tebellüğ satırları ıslak imza içindir, boş kalır.</span>
             </div>
         </x-filament::section>
 

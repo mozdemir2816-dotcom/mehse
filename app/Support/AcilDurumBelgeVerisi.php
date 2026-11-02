@@ -77,6 +77,21 @@ class AcilDurumBelgeVerisi
                 ];
             })->values()->all();
 
+        // Yapay zekâ ile üretilip uzmanca onaylanan özel senaryolar EK-1'in sonuna, sıradaki numarayla (02.11.2026).
+        foreach (AcilDurumHazirlik::temizle(['ozel_senaryolar' => $u['ozel_senaryolar'] ?? []])['ozel_senaryolar'] as $o) {
+            $senaryolar[] = [
+                'anahtar' => $o['anahtar'],
+                'ad' => $o['ad'],
+                'aciklama' => $o['aciklama'],
+                'mudahale' => $o['mudahale'],
+                'olay_sonrasi' => $o['olay_sonrasi'],
+                'ek' => collect(['onleyici', 'kkd'])->filter(fn ($k) => $o[$k])
+                    ->map(fn ($k) => ['baslik' => GeminiAcilSenaryoUretici::LISTELER[$k], 'maddeler' => $o[$k]])->values()->all(),
+                'akis' => null,
+                'ozel' => true,
+            ];
+        }
+
         // Yalnız seçili konuların satırları (01.11.2026).
         $riskler = collect(AcilDurumKonuSecici::riskSatirlari($plan->konular ?? []))->map(function ($ad, $anahtar) use ($u) {
             $puan = collect(config('isg.acil_durum.risk_kolonlari'))->keys()
@@ -153,6 +168,15 @@ class AcilDurumBelgeVerisi
             default => null,
         };
 
+        // Sihirbazdaki şalter / vana yerleri, "Enerji kesme" notundan önce gelir (02.11.2026).
+        $kesmeNoktalari = implode(' ', array_filter([
+            $dolu($u['elektrik_salteri'] ?? null) ? 'Elektrik ana şalteri: '.rtrim($dolu($u['elektrik_salteri']), '.').'.' : null,
+            $dolu($u['gaz_vanasi'] ?? null) ? 'Doğalgaz / LPG ana kesme vanası: '.rtrim($dolu($u['gaz_vanasi']), '.').'.' : null,
+        ]));
+        $enerjiKesme = $kesmeNoktalari !== ''
+            ? trim($kesmeNoktalari.' '.($u['enerji_kesme'] === 'var' ? (string) $u['enerji_kesme_notu'] : ''))
+            : $durumYazi($u['enerji_kesme'], (string) $u['enerji_kesme_notu']);
+
         $degisiklikler = [[
             'no' => '01', 'konu' => 'İlk düzenleme', 'yapan' => $hazirlayan['ad'], 'tarih' => $tarih($plan->rapor_tarihi),
         ]];
@@ -197,7 +221,7 @@ class AcilDurumBelgeVerisi
             'kimyasallar' => $kimyasallar,
             'toplanma' => $dolu($plan->toplanma_yeri),
             'ozel_risk' => $durumYazi($u['ozel_risk_alanlari'], (string) $u['ozel_risk_notu']),
-            'enerji_kesme' => $durumYazi($u['enerji_kesme'], (string) $u['enerji_kesme_notu']),
+            'enerji_kesme' => $enerjiKesme,
             'son_tatbikat' => $tarih($u['son_tatbikat']),
             'sonraki_tatbikat' => $tarih($u['sonraki_tatbikat']),
             'tahliye_gorsel' => $plan->tahliyeGorselYolu(),

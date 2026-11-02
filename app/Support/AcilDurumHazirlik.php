@@ -38,6 +38,7 @@ class AcilDurumHazirlik
             ...array_fill_keys(array_keys(static::BELGE_ALANLARI), ''),
             'risk_puanlari' => [], 'cevresel_riskler' => [], 'sektor' => '',
             'kkd_faaliyetler' => [], // EK-3 sütunları; boşsa firmanın verisinden otomatik (AcilDurumKonuSecici::kkdFaaliyetleri)
+            'ozel_senaryolar' => [], // yapay zekâ ile üretilip uzmanca onaylanan, listede olmayan senaryolar (EK-1 sonuna)
         ];
     }
 
@@ -51,6 +52,31 @@ class AcilDurumHazirlik
         'alarm_yontemi' => 600, 'yedek_toplanma' => 300, 'refakatci' => 300, 'tatbikat_sorumlusu' => 120,
         'bina_bilgisi' => 600, 'vardiyalar' => 200, 'kayit_yedekleme' => 600,
         'hastane_ad' => 200, 'hastane_tel' => 40, 'kroki_kat' => 200,
+        'elektrik_salteri' => 300, 'gaz_vanasi' => 300,
+    ];
+
+    /**
+     * "Saha Bilgileri ve İletişim Tamamlama Sihirbazı" (02.11.2026): belgede noktalı satır olarak kalacak
+     * alanlar sırayla sorulur. alan => [soru, örnek]. `toplanma_yeri` planın kendi sütunudur, diğerleri uygulama.*.
+     */
+    public const SIHIRBAZ_SORULARI = [
+        'toplanma_yeri' => ['Asıl toplanma alanı neresi?', 'Fabrika ana nizamiye önü açık otopark alanı'],
+        'yedek_toplanma' => ['Yedek toplanma alanı neresi?', 'Bina arka bahçesi yeşil alan'],
+        'elektrik_salteri' => ['Elektrik ana şalteri nerede?', 'Trafo binası ana giriş panosu'],
+        'gaz_vanasi' => ['Doğalgaz / LPG ana kesme vanası nerede?', 'Saha giriş kapısı yanındaki gaz istasyonu — yoksa "İşyerinde doğalgaz / LPG yok"'],
+        'koordinator_ad' => ['Acil durum koordinatörü kim?', 'Çalışanlar listesinden seçin'],
+        'koordinator_tel' => ['Koordinatörün telefonu?', '05xx xxx xx xx'],
+        'koordinator_vekil' => ['Koordinatör vekili kim?', 'Çalışanlar listesinden seçin'],
+        'koordinator_vekil_tel' => ['Vekilin telefonu?', '05xx xxx xx xx'],
+        'hastane_ad' => ['En yakın hastane?', 'Adrese göre bulucu doldurur'],
+        'hastane_tel' => ['Hastanenin telefonu?', 'Adrese göre bulucu doldurur'],
+        'alarm_yontemi' => ['Alarm nasıl verilir?', 'Sesli siren ve yangın ihbar butonları'],
+        'refakatci' => ['Yaşlı / engelli / gebe çalışanlara kim refakat eder?', 'Ad soyad / görev'],
+        'tatbikat_sorumlusu' => ['Tatbikat sorumlusu kim?', 'Ad soyad / görev'],
+        'vardiyalar' => ['Vardiyalar?', 'Gündüz 08:00-18:00'],
+        'bina_bilgisi' => ['Çıkış sayısı / kat / kullanım alanı?', '2 çıkış, tek kat, 800 m²'],
+        'kayit_yedekleme' => ['Kritik kayıtlar nerede yedekleniyor, sorumlusu kim?', 'Bulut yedek — muhasebe sorumlusu'],
+        'kroki_kat' => ['Tahliye krokisi hangi kat / bölüm için?', 'Zemin kat — üretim alanı'],
     ];
 
     /** Kullanıcının bir kez doldurup tüm firmalarına önerilen alanlar (aynı bölgedeki işyerleri). */
@@ -126,6 +152,8 @@ class AcilDurumHazirlik
                 ->filter()->all(),
             'sektor' => AcilDurumSektor::gecerliMi($u['sektor'] ?? null) ? $u['sektor'] : '',
             'kkd_faaliyetler' => array_values(array_intersect(config('isg.acil_durum.kkd_matrisi.faaliyetler'), (array) ($u['kkd_faaliyetler'] ?? []))),
+            'ozel_senaryolar' => collect((array) ($u['ozel_senaryolar'] ?? []))->filter(fn ($s) => is_array($s))
+                ->map(fn ($s) => GeminiAcilSenaryoUretici::normalize($s))->filter()->unique('anahtar')->take(10)->values()->all(),
             'cevresel_riskler' => collect(config('isg.acil_durum.cevresel_riskler'))->keys()
                 ->mapWithKeys(fn ($i) => [$i => [
                     'durum' => in_array($u['cevresel_riskler'][$i]['durum'] ?? '', ['var', 'yok'], true) ? $u['cevresel_riskler'][$i]['durum'] : '',
@@ -184,9 +212,9 @@ class AcilDurumHazirlik
             ['Senaryolar (acil durum konuları)', count($plan->konular ?? []) > 0, count($plan->konular ?? []).' senaryo seçili'],
             ['Önleyici ve sınırlandırıcı tedbirler', filled($u['onleyici_tedbirler']), filled($u['onleyici_tedbirler']) ? 'Yazıldı' : 'Tedbirler yazılmamış'],
             ['Acil durum ekipmanı ve KKD listesi', filled($u['ekipman_kkd']), filled($u['ekipman_kkd']) ? 'Yazıldı' : 'Liste yok'],
-            ['Özel risk alanları / enerji kesme noktaları', $yerYazili($u['ozel_risk_alanlari'], $u['ozel_risk_notu']) && $yerYazili($u['enerji_kesme'], $u['enerji_kesme_notu']),
+            ['Özel risk alanları / enerji kesme noktaları', $yerYazili($u['ozel_risk_alanlari'], $u['ozel_risk_notu']) && ($yerYazili($u['enerji_kesme'], $u['enerji_kesme_notu']) || filled($u['elektrik_salteri'])),
                 'Özel risk: '.static::UC_DURUM[$u['ozel_risk_alanlari']].($u['ozel_risk_alanlari'] === 'var' && blank($u['ozel_risk_notu']) ? ' (yeri yazılmamış)' : '')
-                .' · Enerji / vana: '.static::UC_DURUM[$u['enerji_kesme']].($u['enerji_kesme'] === 'var' && blank($u['enerji_kesme_notu']) ? ' (yeri yazılmamış)' : '')],
+                .' · Enerji / vana: '.(filled($u['elektrik_salteri']) ? 'şalter yeri yazıldı' : static::UC_DURUM[$u['enerji_kesme']]).($u['enerji_kesme'] === 'var' && blank($u['enerji_kesme_notu']) ? ' (yeri yazılmamış)' : '')],
             ['Destek ekipleri (söndürme, kurtarma, koruma, ilk yardım)', $bosEkip === [], $bosEkip === [] ? 'Tüm ekiplerde kişi var' : 'Boş ekip: '.implode(', ', $bosEkip)],
             ['Müdahale, haberleşme ve tahliye yöntemi', filled($u['mudahale_yontemi']), filled($u['mudahale_yontemi']) ? 'Yazıldı' : 'Yöntem yazılmamış'],
             ['Toplanma alanı', filled($plan->toplanma_yeri), $plan->toplanma_yeri ?: 'Toplanma yeri girilmemiş'],

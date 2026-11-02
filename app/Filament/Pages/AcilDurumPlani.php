@@ -6,6 +6,8 @@ use App\Filament\Concerns\AileAnaSayfasi;
 use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumPlani as PlanModel;
+use App\Models\AcilEkip;
+use App\Models\Calisan;
 use App\Models\Firma;
 use App\Support\AcilDurumHazirlik;
 use App\Support\AcilDurumKapakUretici;
@@ -14,6 +16,9 @@ use App\Support\AcilDurumPlaniUretici;
 use App\Support\AcilDurumSektor;
 use App\Support\AcilDurumWordUretici;
 use App\Support\ExcelBellek;
+use App\Support\GeminiAcilIletisimBulucu;
+use App\Support\GeminiAcilSenaryoUretici;
+use App\Support\KullaniciAyarlari;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -93,6 +98,20 @@ class AcilDurumPlani extends Page
     /** Risk puanları / çevresel riskler bu planda boştu, kullanıcının şablonundan getirildi. */
     public bool $puanlarSablondan = false;
 
+    /** Yapay zekâ özel senaryo: başlık, düzenlenebilir önizleme (listeler satır satır metin), kütüphaneye kaydet. */
+    public string $ozelBaslik = '';
+
+    public ?array $ozelOnizleme = null;
+
+    public bool $ozelKutuphaneye = true;
+
+    public bool $ozelPanel = false;
+
+    /** Adrese göre bulunan kurumlar (uzman onaylayana kadar yalnız öneri). */
+    public array $iletisimOnerileri = [];
+
+    public bool $iletisimAramali = false;
+
     /** Firmalar listesinden "Acil Durum Planı" satır aksiyonuyla ?firma= ile gelinir. */
     public function mount(): void
     {
@@ -142,8 +161,8 @@ class AcilDurumPlani extends Page
                 continue;
             }
 
-            $ekip = \App\Models\AcilEkip::where('firma_id', $firma->id)->where('tur', $tur)->first();
-            $gereken = \App\Models\AcilEkip::yasalMinimum($tur, $firma->tehlike_sinifi, $calisan);
+            $ekip = AcilEkip::where('firma_id', $firma->id)->where('tur', $tur)->first();
+            $gereken = AcilEkip::yasalMinimum($tur, $firma->tehlike_sinifi, $calisan);
             $atanan = $ekip
                 ? $ekip->uyeler()->count()
                 : count(array_filter(array_map('trim', explode(',', (string) ($this->ekipMetni[$bilgi['plan']] ?? '')))));
@@ -161,7 +180,10 @@ class AcilDurumPlani extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma);
+        unset($this->firma, $this->calisanSecenekleri);
+        $this->ozelOnizleme = null;
+        $this->ozelPanel = false;
+        $this->iletisimOnerileri = [];
 
         $plan = $this->plan();
 
@@ -267,6 +289,167 @@ class AcilDurumPlani extends Page
     {
         return ($this->uygulama['kkd_faaliyetler'] ?? []) ?: ($this->firma ? AcilDurumKonuSecici::kkdFaaliyetleri($this->firma) : null)
             ?: config('isg.acil_durum.kkd_matrisi.faaliyetler');
+    }
+
+    /* ---------- Yapay zekâ ile özel senaryo (02.11.2026) ---------- */
+
+    public function ozelSenaryoUret(): void
+    {
+        $sonuc = GeminiAcilSenaryoUretici::uret($this->ozelBaslik, AcilDurumSektor::liste()[$this->uygulama['sektor'] ?? ''] ?? null);
+
+        if ($sonuc['hata']) {
+            Notification::make()->title($sonuc['hata'])->warning()->send();
+
+            return;
+        }
+
+        $s = $sonuc['senaryo'];
+        $this->ozelOnizleme = [
+            'ad' => $s['ad'], 'aciklama' => (string) $s['aciklama'],
+            ...collect(array_keys(GeminiAcilSenaryoUretici::LISTELER))->mapWithKeys(fn ($k) => [$k => implode("\n", $s[$k])])->all(),
+        ];
+    }
+
+    /** Önizlemedeki (düzeltilmiş) senaryo plana kalıcı eklenir; istenirse kullanıcının kütüphanesine de. */
+    public function ozelSenaryoOnayla(): void
+    {
+        $plan = $this->plan();
+        $s = $this->ozelOnizleme ? GeminiAcilSenaryoUretici::normalize($this->ozelOnizleme) : null;
+
+        if (! $plan || ! $s || ! $s['mudahale']) {
+            Notification::make()->title('Senaryonun başlığı ve en az bir müdahale adımı olmalı')->warning()->send();
+
+            return;
+        }
+
+        $this->ozelSenaryolariKaydet([...($this->uygulama['ozel_senaryolar'] ?? []), $s]);
+
+        if ($this->ozelKutuphaneye && ($user = Filament::auth()->user())) {
+            $kutuphane = collect($this->ozelKutuphanesi())->reject(fn ($k) => mb_strtolower($k['ad']) === mb_strtolower($s['ad']));
+            KullaniciAyarlari::kaydet($user, ['acil_durum_ozel_senaryolari' => $kutuphane->push($s)->take(-30)->values()->all()]);
+        }
+
+        $this->ozelOnizleme = null;
+        $this->ozelBaslik = '';
+        $this->ozelPanel = false;
+        Notification::make()->title('"'.$s['ad'].'" plana eklendi')
+            ->body('EK-1’de seçili senaryolardan sonra numaralanır.'.($this->ozelKutuphaneye ? ' Diğer firmalarınızda da kütüphaneden tek tıkla eklenebilir.' : ''))->success()->send();
+    }
+
+    public function ozelSenaryoSil(int $i): void
+    {
+        $liste = $this->uygulama['ozel_senaryolar'] ?? [];
+        unset($liste[$i]);
+        $this->ozelSenaryolariKaydet(array_values($liste));
+    }
+
+    /** Kütüphanedeki senaryoyu bu plana yeni anahtarla ekler. */
+    public function kutuphanedenEkle(int $i): void
+    {
+        $s = $this->ozelKutuphanesi()[$i] ?? null;
+        $mevcut = collect($this->uygulama['ozel_senaryolar'] ?? [])->pluck('ad')->map(fn ($a) => mb_strtolower($a));
+
+        if (! $s || $mevcut->contains(mb_strtolower($s['ad']))) {
+            return;
+        }
+
+        $this->ozelSenaryolariKaydet([...($this->uygulama['ozel_senaryolar'] ?? []), [...$s, 'anahtar' => null]]);
+        Notification::make()->title('"'.$s['ad'].'" plana eklendi')->success()->send();
+    }
+
+    /** @return array<int, array> kullanıcının kaydettiği özel senaryolar (users.ayarlar) */
+    public function ozelKutuphanesi(): array
+    {
+        $kayitli = (array) (((array) (Filament::auth()->user()?->ayarlar ?? []))['acil_durum_ozel_senaryolari'] ?? []);
+
+        return collect($kayitli)->filter(fn ($s) => is_array($s))->map(fn ($s) => GeminiAcilSenaryoUretici::normalize($s))->filter()->values()->all();
+    }
+
+    private function ozelSenaryolariKaydet(array $liste): void
+    {
+        $plan = $this->plan();
+        $temiz = AcilDurumHazirlik::temizle(['ozel_senaryolar' => $liste])['ozel_senaryolar'];
+        $this->uygulama['ozel_senaryolar'] = $temiz;
+        $plan?->forceFill(['uygulama' => [...($plan->uygulama ?? []), 'ozel_senaryolar' => $temiz]])->save();
+    }
+
+    /* ---------- Saha bilgileri ve iletişim tamamlama sihirbazı (02.11.2026) ---------- */
+
+    public function iletisimBul(): void
+    {
+        $sonuc = GeminiAcilIletisimBulucu::bul($this->firma?->adres);
+
+        if ($sonuc['hata']) {
+            Notification::make()->title($sonuc['hata'])->warning()->send();
+
+            return;
+        }
+
+        $this->iletisimAramali = $sonuc['aramali'];
+        $this->iletisimOnerileri = collect($sonuc['satirlar'])->map(fn ($r) => [...$r, 'sec' => filled($r['telefon'])])->all();
+    }
+
+    /** Onaylanan kurumlar: hastane plan alanlarına, diğerleri acil iletişim listesine (EK-2) yazılır ve kaydedilir. */
+    public function iletisimOnerileriniEkle(): void
+    {
+        $secilen = collect($this->iletisimOnerileri)->filter(fn ($r) => ($r['sec'] ?? false) && filled($r['ad'] ?? null));
+
+        if ($secilen->isEmpty()) {
+            Notification::make()->title('Eklenecek kurum seçilmedi')->warning()->send();
+
+            return;
+        }
+
+        $liste = collect($this->uygulama['iletisim'] ?? []);
+        foreach ($secilen as $r) {
+            $ad = trim($r['ad']);
+            $tel = trim((string) $r['telefon']);
+
+            if ($r['kurum'] === 'hastane') {
+                $this->uygulama['hastane_ad'] = $ad;
+                $this->uygulama['hastane_tel'] = $tel;
+
+                continue;
+            }
+
+            $birim = GeminiAcilIletisimBulucu::KURUMLAR[$r['kurum']] ?? '';
+            $liste = $liste->reject(fn ($i) => mb_strtolower(trim((string) ($i['ad'] ?? ''))) === mb_strtolower($ad))
+                ->push(['ad' => $ad, 'telefon' => $tel, 'aciklama' => trim($birim.(filled($r['not'] ?? null) ? ' — '.$r['not'] : ''))]);
+        }
+
+        $this->uygulama['iletisim'] = $liste->values()->all();
+        $this->iletisimOnerileri = [];
+        $this->kaydet();
+    }
+
+    /** Sihirbazda boş kalan sorular (alan => [soru, örnek]); ekrandaki değere bakar. */
+    public function eksikSorular(): array
+    {
+        return collect(AcilDurumHazirlik::SIHIRBAZ_SORULARI)
+            ->filter(fn ($soru, $alan) => blank($alan === 'toplanma_yeri' ? $this->toplanmaYeri : ($this->uygulama[$alan] ?? null)))
+            ->all();
+    }
+
+    /** @return Collection<int, Calisan> firmanın aktif çalışanları (koordinatör seçimi) */
+    #[Computed]
+    public function calisanSecenekleri(): Collection
+    {
+        return $this->firma ? $this->firma->calisanlar()->where('aktif', true)->whereNull('isten_cikis')
+            ->orderBy('ad_soyad')->get(['id', 'ad_soyad', 'gorev', 'telefon']) : collect();
+    }
+
+    /** Çalışanlar listesinden koordinatör / vekil seçimi: adı ve (varsa) telefonu yazar. */
+    public function koordinatorSec(string $rol, int|string|null $calisanId): void
+    {
+        $c = $this->calisanSecenekleri->firstWhere('id', (int) $calisanId);
+        if (! $c || ! in_array($rol, ['koordinator', 'koordinator_vekil'], true)) {
+            return;
+        }
+
+        $this->uygulama[$rol === 'koordinator' ? 'koordinator_ad' : 'koordinator_vekil'] = $c->ad_soyad.($c->gorev ? ' ('.$c->gorev.')' : '');
+        if (filled($c->telefon)) {
+            $this->uygulama[$rol === 'koordinator' ? 'koordinator_tel' : 'koordinator_vekil_tel'] = $c->telefon;
+        }
     }
 
     public function kaydet(): void
