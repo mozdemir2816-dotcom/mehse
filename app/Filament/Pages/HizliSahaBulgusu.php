@@ -42,6 +42,7 @@ class HizliSahaBulgusu extends Page
     use AileAnaSayfasi;
     use SinirliErisim;
     use WithFileUploads;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected string $view = 'filament.pages.hizli-saha-bulgusu';
 
@@ -567,6 +568,14 @@ class HizliSahaBulgusu extends Page
         ]]);
 
         return $this->redirect(DofOlustur::getUrl());
+    }
+
+    /** Açık bulgu / DÖF maddesi için işverene WhatsApp hatırlatması (02.11.2026). */
+    public function whatsappHatirlat(int $id): void
+    {
+        $b = $this->bulgu($id);
+
+        $this->whatsappAc(\App\Support\IsverenWhatsApp::url($b->firma, \App\Support\IsverenWhatsApp::bulguHatirlatmasi($b)), 'Hatırlatma');
     }
 
     public function pdf(int $id)

@@ -280,6 +280,9 @@
                                 @endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">
+                                @if ($b->durum !== 'kapandi')
+                                    <x-filament::button size="xs" color="success" outlined wire:click="whatsappHatirlat({{ $b->id }})" title="İşverene WhatsApp hatırlatması">📲 WhatsApp</x-filament::button>
+                                @endif
                                 {{-- Diğer işlemler tek `···` menüsünde (eskiden satır başına 6 renkli düğme) --}}
                                 <x-filament::dropdown placement="bottom-end">
                                     <x-slot name="trigger">

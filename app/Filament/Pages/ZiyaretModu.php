@@ -462,7 +462,7 @@ class ZiyaretModu extends Page
         Notification::make()->title('Ziyaret tamamlandı olarak işlendi')->body('Ziyaret Programı\'na yazıldı.')->success()->send();
     }
 
-    /** Ziyaret özeti (WhatsApp / paylaşım metni). Görevli adı yazılmaz. */
+    /** Ziyaret özeti (WhatsApp / paylaşım metni). Görevli adı yazılmaz (04.10.2026); işverene gönderimde imza ayrıca eklenir. */
     public function ozetMetni(): string
     {
         if (! $this->firma) {
@@ -499,5 +499,17 @@ class ZiyaretModu extends Page
             '⚠️ Kalan eksikler',
             $kalanlar ? implode("\n", $kalanlar) : '• Eksik yok',
         ]));
+    }
+
+    /** Yalnız "İşverene WhatsApp ile Gönder"de özetin sonuna eklenen kapanış + İGU imzası (02.11.2026). */
+    public function isverenImzasi(): string
+    {
+        return "Bilgilerinize sunar, iyi çalışmalar dileriz.\n".\App\Support\IsverenWhatsApp::imza($this->firma);
+    }
+
+    /** İşverenin cep telefonu (905xxxxxxxxx) — yoksa null; özet penceresindeki düğme buna göre. */
+    public function isverenWhatsappNo(): ?string
+    {
+        return \App\Support\IsverenWhatsApp::telefon($this->firma);
     }
 }

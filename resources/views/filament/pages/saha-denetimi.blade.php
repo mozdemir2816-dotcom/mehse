@@ -1,6 +1,8 @@
 @php
     $turuncu = 'rgb(234 88 12)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
+    // Kontrol listesi maddeleri kompakt (02.11.2026: dikey kaydırma ~yarıya)
+    $madde_kutu = 'border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.45rem .7rem';
     $sonucRengi = fn ($s) => match ($s) {
         'uygun' => ['#16a34a', 'rgb(22 163 74 / .1)'],
         'uygun_degil' => ['#dc2626', 'rgb(220 38 38 / .1)'],
@@ -32,6 +34,25 @@
     <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="warning">
         <x-slot name="heading">1. Denetim Bilgileri</x-slot>
 
+        {{-- Künye firmadan otomatik (02.11.2026): denetçi = firmaya atanmış İGU, tarih/saat = şimdi, NACE / tehlike / SGK firma kaydından --}}
+        @if ($this->firma)
+            @php
+                $f = $this->firma;
+                $igu = $f->igu;
+                $kunyeHucre = 'display:flex;flex-direction:column;min-width:0';
+                $kunyeEtiket = 'font-size:.68rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:rgb(107 114 128)';
+            @endphp
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.4rem 1rem;padding:.6rem .85rem;margin-bottom:1rem;border-radius:.6rem;background:rgb(234 88 12 / .05);border:1px solid rgb(234 88 12 / .25);font-size:.82rem">
+                <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">Denetçi</span><strong>{{ $denetciAdi ?: '—' }}</strong>
+                    <span style="font-size:.72rem;color:rgb(107 114 128)">{{ collect([$igu?->unvan ? \Illuminate\Support\Str::title(mb_strtolower($igu->unvan)) : null, $igu?->sertifika_no ? 'Belge No: '.$igu->sertifika_no : null])->filter()->implode(' · ') ?: 'Firmaya atanmış İGU' }}</span></div>
+                <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">Tarih / Saat</span><strong>{{ $denetimTarihi ? \Illuminate\Support\Carbon::parse($denetimTarihi)->format('d.m.Y') : '—' }} · {{ $denetimSaati ?: '—' }}</strong></div>
+                <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">NACE</span><strong title="{{ $f->nace_aciklama }}">{{ $f->nace_kodu ?: '—' }}</strong>
+                    <span style="font-size:.72rem;color:rgb(107 114 128);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $f->nace_aciklama }}</span></div>
+                <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">Tehlike Sınıfı</span><strong>{{ $f->tehlike_sinifi ? $f->tehlikeSinifiEtiketi() : '—' }}</strong></div>
+                <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">SGK Sicil</span><strong style="font-size:.78rem">{{ $f->sgk_sicil_no ?: '—' }}</strong></div>
+            </div>
+        @endif
+
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
                 <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
@@ -42,41 +63,6 @@
                         <option value="{{ $id }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">İş Tanımı</label>
-                <input type="text" wire:model="isTanimi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Şantiye Adı</label>
-                <input type="text" wire:model="santiyeAdi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Şantiye Sorumlusu</label>
-                <input type="text" wire:model="santiyeSorumlusu"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">İş Referans No</label>
-                <input type="text" wire:model="isReferansNo"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Denetim Tarihi</label>
-                <input type="date" wire:model="denetimTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Denetim Saati</label>
-                <input type="time" wire:model="denetimSaati"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-            </div>
-            <div>
-                <label style="font-weight:600;font-size:.82rem">Denetçi</label>
-                <input type="text" wire:model="denetciAdi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             </div>
             <div>
                 <label style="font-weight:600;font-size:.82rem">Sektör (opsiyonel)</label>
@@ -119,6 +105,46 @@
                 panelinden İGU ekleyip Firma düzenleme sayfasından atayın.
             </p>
         @endif
+        <details style="margin-top:.9rem;border:1px dashed rgb(107 114 128 / .35);border-radius:.6rem;padding:.5rem .8rem">
+            <summary style="cursor:pointer;font-size:.82rem;font-weight:600">Ek bilgiler / künyeyi düzelt <span style="font-weight:400;color:rgb(107 114 128)">(iş tanımı, şantiye, referans no, tarih, denetçi — isteğe bağlı)</span></summary>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:.7rem">
+            <div>
+                <label style="font-weight:600;font-size:.82rem">İş Tanımı</label>
+                <input type="text" wire:model="isTanimi"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Şantiye Adı</label>
+                <input type="text" wire:model="santiyeAdi"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Şantiye Sorumlusu</label>
+                <input type="text" wire:model="santiyeSorumlusu"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">İş Referans No</label>
+                <input type="text" wire:model="isReferansNo"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Denetim Tarihi</label>
+                <input type="date" wire:model="denetimTarihi"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Denetim Saati</label>
+                <input type="time" wire:model="denetimSaati"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            <div>
+                <label style="font-weight:600;font-size:.82rem">Denetçi</label>
+                <input type="text" wire:model="denetciAdi"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+            </div>
+            </div>
+        </details>
     </x-filament::section>
 
     {{-- SEKTÖRE ÖZEL KONTROL MADDELERİ (firma seçmeden de eklenebilir/yönetilebilir) --}}
@@ -205,11 +231,18 @@
         </div>
 
         {{-- 2. KONTROL LİSTESİ --}}
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.6rem .9rem;border-radius:.6rem;border:1px solid rgb(22 163 74 / .35);background:rgb(22 163 74 / .06)">
+            <div style="font-size:.82rem">Sorunsuz alanları tek tıkla geçin; yalnız sorunlu maddeleri <strong>✕ Uygun Değil</strong> yapın (açıklama, foto, risk, sorumlu ve termin aynı kartta açılır; denetim tamamlanınca DÖF havuzuna düşer).</div>
+            <x-filament::button color="success" size="lg" icon="heroicon-o-check-badge" wire:click="tumunuUygunIsaretle">✓ Tümünü Uygun İşaretle</x-filament::button>
+        </div>
         @foreach ($this->kategoriler as $kategoriAnahtari => $kategori)
-            <x-filament::section icon="heroicon-o-list-bullet" icon-color="warning">
+            <x-filament::section icon="heroicon-o-list-bullet" icon-color="warning" compact>
                 <x-slot name="heading">{{ $kategori['ad'] }}</x-slot>
+                <x-slot name="afterHeader">
+                    <x-filament::button size="xs" color="success" outlined wire:click="tumunuUygunIsaretle('{{ $kategoriAnahtari }}')">✓ Bu bölümü uygun işaretle</x-filament::button>
+                </x-slot>
 
-                <div style="display:flex;flex-direction:column;gap:.9rem">
+                <div style="display:flex;flex-direction:column;gap:.4rem">
                     @foreach ($kategori['maddeler'] as $madde)
                         @php
                             $kod = $madde['kod'];
@@ -218,8 +251,8 @@
                             [$renk, $bgRenk] = $sonucRengi($cevap['sonuc']);
                             $ifade = str_replace('{FIRMA}', $this->firma->unvan, $madde['ifade']);
                         @endphp
-                        <div style="{{ $kutu }};border-left:4px solid {{ $renk }}">
-                            <div style="display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.5rem">
+                        <div style="{{ $madde_kutu }};border-left:4px solid {{ $renk }}">
+                            <div style="display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.3rem">
                                 <span style="font-size:.72rem;font-weight:700;color:rgb(107 114 128)">{{ $kod }}</span>
                                 @if ($madde['kritik'])
                                     <span style="font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:.3rem;color:#dc2626;background:rgb(220 38 38 / .1)">KRİTİK</span>
@@ -230,22 +263,22 @@
                                 <span style="font-size:.85rem">{{ $ifade }}</span>
                             </div>
                             @if (! empty($madde['dayanak']))
-                                <div style="font-size:.72rem;color:rgb(107 114 128);margin:-.2rem 0 .5rem">Dayanak: {{ $madde['dayanak'] }}</div>
+                                <div style="font-size:.7rem;color:rgb(107 114 128);margin:-.15rem 0 .3rem">Dayanak: {{ $madde['dayanak'] }}</div>
                             @endif
                             <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun')"
-                                    style="padding:.35rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.78rem;
+                                    style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
                                         border:1px solid {{ $cevap['sonuc'] === 'uygun' ? '#16a34a' : 'rgb(107 114 128 / .3)' }};
                                         background:{{ $cevap['sonuc'] === 'uygun' ? 'rgb(22 163 74 / .1)' : 'transparent' }};
                                         color:{{ $cevap['sonuc'] === 'uygun' ? '#16a34a' : 'inherit' }}">✓ Uygun</button>
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun_degil')"
-                                    style="padding:.35rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.78rem;
+                                    style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
                                         border:1px solid {{ $cevap['sonuc'] === 'uygun_degil' ? '#dc2626' : 'rgb(107 114 128 / .3)' }};
                                         background:{{ $cevap['sonuc'] === 'uygun_degil' ? 'rgb(220 38 38 / .1)' : 'transparent' }};
                                         color:{{ $cevap['sonuc'] === 'uygun_degil' ? '#dc2626' : 'inherit' }}">✕ Uygun Değil</button>
                                 @if ($madde['uygulanamaz_izni'])
                                     <button type="button" wire:click="cevapVer('{{ $kod }}','uygulanamaz')"
-                                        style="padding:.35rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.78rem;
+                                        style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
                                             border:1px solid {{ $cevap['sonuc'] === 'uygulanamaz' ? 'rgb(107 114 128)' : 'rgb(107 114 128 / .3)' }};
                                             background:{{ $cevap['sonuc'] === 'uygulanamaz' ? 'rgb(107 114 128 / .15)' : 'transparent' }}">Uygulanamaz</button>
                                 @endif
@@ -414,6 +447,7 @@
                             <td style="padding:.35rem .5rem">{{ $k->sonucEtiketi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
+                                <x-filament::button size="xs" color="success" wire:click="gecmisWhatsapp({{ $k->id }})" title="İşverene WhatsApp ile gönder">📲 WhatsApp</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

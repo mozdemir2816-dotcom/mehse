@@ -226,18 +226,25 @@
         @if ($ozetAcik)
             <div style="position:fixed;inset:0;z-index:30;background:rgb(0 0 0 / .45);display:flex;align-items:flex-end;justify-content:center" wire:click.self="$set('ozetAcik', false)">
                 <div class="zm-panel" style="width:100%;max-width:560px;max-height:88vh;overflow-y:auto;border-radius:1rem 1rem 0 0;padding:1.1rem;display:flex;flex-direction:column;gap:.7rem"
-                    x-data="{ kopyalandi: false, paylas() {
+                    x-data="{ kopyalandi: false, isverenNo: @js($this->isverenWhatsappNo()), imza: @js($this->isverenImzasi()), paylas() {
                         const metin = this.$refs.ozet.value;
                         if (navigator.share) { navigator.share({ text: metin }).catch(() => {}); return; }
                         window.open('https://wa.me/?text=' + encodeURIComponent(metin), '_blank');
+                    }, isverene() {
+                        window.open('https://api.whatsapp.com/send?phone=' + this.isverenNo + '&text=' + encodeURIComponent(this.$refs.ozet.value + '\n\n' + this.imza), '_blank');
                     } }">
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <strong style="font-size:1.05rem">Ziyaret özeti</strong>
                         <button type="button" wire:click="$set('ozetAcik', false)" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit">✕</button>
                     </div>
                     <textarea x-ref="ozet" readonly rows="12" style="width:100%;font-size:.85rem;padding:.6rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .3);background:transparent;color:inherit">{{ $this->ozetMetni() }}</textarea>
+                    @if ($this->isverenWhatsappNo())
+                        <x-filament::button color="success" size="lg" icon="heroicon-o-chat-bubble-left-right" x-on:click="isverene()" style="width:100%">📲 İşverene WhatsApp ile Gönder</x-filament::button>
+                    @else
+                        <div style="font-size:.75rem;color:rgb(180 83 9)">Firma yetkili telefonu tanımlı değil — işverene doğrudan göndermek için Firmalar ekranında cep telefonu (05xx…) girin. Aşağıdaki "Paylaş" ile kişiyi elle seçebilirsiniz.</div>
+                    @endif
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                        <x-filament::button color="success" icon="heroicon-o-share" x-on:click="paylas()">WhatsApp / Paylaş</x-filament::button>
+                        <x-filament::button color="gray" icon="heroicon-o-share" x-on:click="paylas()">WhatsApp / Paylaş</x-filament::button>
                         <x-filament::button color="gray" icon="heroicon-o-clipboard" x-on:click="navigator.clipboard.writeText($refs.ozet.value); kopyalandi = true">
                             <span x-text="kopyalandi ? 'Kopyalandı' : 'Kopyala'"></span>
                         </x-filament::button>

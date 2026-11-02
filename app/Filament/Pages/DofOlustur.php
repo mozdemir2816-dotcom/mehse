@@ -35,6 +35,7 @@ class DofOlustur extends Page
 
     use \App\Filament\Concerns\HazirRaporYukleme;
     use WithFileUploads;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected string $view = 'filament.pages.dof-olustur';
 
@@ -562,7 +563,34 @@ class DofOlustur extends Page
 
                     return DofRaporuUretici::pdf($d, ImzaSecenegi::secili($data));
                 }),
+
+            Action::make('whatsapp')
+                ->label('📲 WhatsApp ile İşverene Gönder')
+                ->color('success')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function (): void {
+                    if ($d = $this->kaydet()) {
+                        $this->whatsappAc($this->getWhatsappShareUrl($d->id), 'DÖF raporu');
+                    }
+                }),
         ];
+    }
+
+    /**
+     * DÖF raporunu işverene gönderen WhatsApp bağlantısı (imzalı 30 günlük PDF bağlantısıyla).
+     * İşverenin cep telefonu yoksa null.
+     */
+    public function getWhatsappShareUrl(int $dofReportId): ?string
+    {
+        $d = $this->firma?->dofRaporlari()->find($dofReportId);
+
+        return $d ? \App\Support\IsverenWhatsApp::url($d->firma, \App\Support\IsverenWhatsApp::dofMesaji($d)) : null;
+    }
+
+    public function gecmisWhatsapp(int $id): void
+    {
+        $this->whatsappAc($this->getWhatsappShareUrl($id), 'DÖF raporu');
     }
 
     public function gecmisPdf(int $id)

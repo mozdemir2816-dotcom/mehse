@@ -270,6 +270,7 @@
                             <td style="padding:.35rem .5rem">{{ count($k->maddeler ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
+                                <x-filament::button size="xs" color="success" wire:click="gecmisWhatsapp({{ $k->id }})" title="İşverene WhatsApp ile gönder">📲 WhatsApp</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>
                             </td>
                         </tr>

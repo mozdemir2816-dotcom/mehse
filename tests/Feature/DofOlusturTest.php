@@ -120,9 +120,25 @@ class DofOlusturTest extends TestCase
             'maddeler' => [['tespit' => 'Kaygan zemin', 'oncelik' => 'orta', 'durum' => 'acik', 'foto_yolu' => 'dof-foto/kanit.jpg']],
         ]);
 
+        // Yalnız diskte gerçekten bulunan foto basılır (02.11.2026); yoksa "Görsel yok".
         $html = view('pdf.dof-raporu', ['rapor' => $rapor, 'firma' => $firma])->render();
+        $this->assertStringNotContainsString('class="satir-foto"', $html);
+        $this->assertStringContainsString('Görsel yok', $html);
 
-        $this->assertStringContainsString('class="satir-foto"', $html);
+        $yol = storage_path('app/public/dof-foto/kanit.jpg');
+        @mkdir(dirname($yol), 0777, true);
+        $varmiydi = is_file($yol);
+        if (! $varmiydi) {
+            imagejpeg(imagecreatetruecolor(4, 4), $yol);
+        }
+        try {
+            $html = view('pdf.dof-raporu', ['rapor' => $rapor, 'firma' => $firma])->render();
+            $this->assertStringContainsString('class="satir-foto"', $html);
+        } finally {
+            if (! $varmiydi) {
+                @unlink($yol);
+            }
+        }
     }
 
     public function test_durum_guncellenir(): void

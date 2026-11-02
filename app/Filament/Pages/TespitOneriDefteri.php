@@ -35,6 +35,7 @@ class TespitOneriDefteri extends Page
 {
     use SinirliErisim;
     use WithFileUploads;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected string $view = 'filament.pages.tespit-oneri-defteri';
 
@@ -322,6 +323,13 @@ class TespitOneriDefteri extends Page
                         ->required(),
                 ])
                 ->action(fn (array $data) => $this->wordAktar($data)),
+            Action::make('bugununBulgulari')
+                ->label('Bugünkü Saha Bulgularından Çek')
+                ->icon('heroicon-o-bolt')
+                ->color('warning')
+                ->visible(fn () => $this->defter() !== null)
+                ->action(fn () => $this->bugununBulgulariniCek()),
+
             Action::make('bulgulardanEkle')
                 ->label('Saha Bulgularından Ekle')
                 ->icon('heroicon-o-queue-list')
@@ -348,6 +356,42 @@ class TespitOneriDefteri extends Page
                 ->visible(fn () => $this->defter() !== null)
                 ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => TespitOneriDefteriUretici::pdf($this->defter())),
+
+            Action::make('whatsapp')
+                ->label('📲 WhatsApp ile Gönder')
+                ->color('success')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->visible(fn () => $this->defter() !== null)
+                ->action(function (): void {
+                    $d = $this->defter();
+                    $this->whatsappAc($d ? \App\Support\IsverenWhatsApp::url($d->firma, \App\Support\IsverenWhatsApp::defterMesaji($d)) : null, 'Defter sayfası');
+                }),
         ];
+    }
+
+    /**
+     * Bugün açılan saha bulguları (Saha Denetimi'nde "Uygun Değil" yapılanlar, DÖF maddeleri, hızlı
+     * bulgular) deftere resmî dille eklenir; deftere zaten bağlı bulgular atlanır (bulgu_id).
+     */
+    public function bugununBulgulariniCek(): void
+    {
+        $d = $this->defter();
+        if (! $d) {
+            return;
+        }
+
+        $bugun = \App\Support\BulguHavuzu::eklenebilirler($this->firma->id, $d->maddeler ?? [])
+            ->filter(fn (SahaBulgusu $b) => $b->created_at?->isToday())
+            ->sortBy('id')->values();
+
+        if ($bugun->isEmpty()) {
+            Notification::make()->title('Bugün deftere eklenecek yeni saha bulgusu yok')
+                ->body('Bugün açılan bulgular zaten defterde ya da henüz kayıt yok (Saha Denetimi\'ni "Tamamla" ile kaydedin).')->warning()->send();
+
+            return;
+        }
+
+        $d->update(['maddeler' => [...($d->maddeler ?? []), ...$bugun->map(fn (SahaBulgusu $b) => BulguDonusturucu::tespitOneriResmiMaddesi($b))->all()]]);
+        Notification::make()->title($bugun->count().' bugünkü bulgu deftere eklendi')->success()->send();
     }
 }

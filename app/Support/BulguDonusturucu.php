@@ -202,6 +202,51 @@ class BulguDonusturucu
         ];
     }
 
+    /**
+     * Bulgu → defter maddesi, onaylı defter diliyle (02.11.2026 "Bugünkü Saha Bulgularından Çek"):
+     * tespit "…tespit edilmiştir." kalıbında, öneri "…sağlanmalıdır." kalıbında; boş öneriye mevzuata
+     * uygun genel düzeltici faaliyet cümlesi.
+     *
+     * @return array<string, mixed>
+     */
+    public static function tespitOneriResmiMaddesi(SahaBulgusu $b): array
+    {
+        $m = static::tespitOneriMaddesi($b);
+        $m['tespit'] = static::resmiTespit((string) $m['tespit']);
+        $m['oneri'] = static::resmiOneri((string) $m['oneri']);
+        $m['dayanak'] = $m['dayanak'] ?: '6331 sayılı İş Sağlığı ve Güvenliği Kanunu Md. 4 ve Md. 8';
+
+        return $m;
+    }
+
+    /** Fiil kipiyle biten cümle olduğu gibi kalır; değilse "… tespit edilmiştir." kalıbına alınır. */
+    public static function resmiTespit(string $metin): string
+    {
+        $metin = trim(preg_replace('/\s+/u', ' ', $metin));
+        if ($metin === '') {
+            return 'Yapılan saha incelemesinde uygunsuzluk tespit edilmiştir.';
+        }
+        if (preg_match('/(mıştır|miştir|muştur|müştür|maktadır|mektedir|dır|dir|dur|dür|tır|tir|tur|tür|yor|yorlar)\.?$/u', $metin)) {
+            return rtrim($metin, '.').'.';
+        }
+
+        return 'Yapılan saha incelemesinde; '.rtrim($metin, '.').' durumu tespit edilmiştir.';
+    }
+
+    public static function resmiOneri(string $metin): string
+    {
+        $metin = trim(preg_replace('/\s+/u', ' ', $metin));
+
+        if ($metin === '') {
+            return 'Tespit edilen uygunsuzluk giderilmeli, ilgili mevzuat hükümlerine uygun düzeltici ve önleyici faaliyetler belirlenen termin içinde tamamlanmalı ve çalışanlara gerekli bilgilendirme yapılmalıdır.';
+        }
+        if (preg_match('/(malıdır|melidir|lmalı|lmeli|malı|meli|sağlanmalıdır)\.?$/u', $metin)) {
+            return rtrim($metin, '.').'.';
+        }
+
+        return rtrim($metin, '.').' sağlanmalıdır.';
+    }
+
     private static function oncelik(mixed $deger): string
     {
         $deger = (string) $deger;

@@ -44,6 +44,11 @@ Route::get('/sitemap.xml', function () {
         ],
     ])->header('Content-Type', 'application/xml; charset=utf-8');
 })->name('sitemap');
+// İşverene WhatsApp ile gönderilen rapor PDF'i — yalnız imzalı, süreli bağlantıyla (App\Support\IsverenWhatsApp).
+Route::get('/paylasim/{tur}/{id}', \App\Http\Controllers\PaylasimPdfController::class)
+    ->whereIn('tur', array_keys(\App\Support\IsverenWhatsApp::TURLER))->whereNumber('id')
+    ->middleware(['signed', 'throttle:30,1'])->name('paylasim.pdf');
+
 Route::post('/teklif-talebi', TeklifTalebiController::class)->middleware('throttle:5,60')->name('tanitim.teklif');
 
 // Yıllık Planlar tek sayfadan üç ayrı sayfaya bölündü (01.10.2026) — eski yer imleri.

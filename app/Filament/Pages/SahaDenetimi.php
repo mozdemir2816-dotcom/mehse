@@ -38,6 +38,7 @@ class SahaDenetimi extends Page
 {
     use SinirliErisim;
     use WithFileUploads;
+    use \App\Filament\Concerns\WhatsAppGonderir;
 
     protected string $view = 'filament.pages.saha-denetimi';
 
@@ -522,6 +523,32 @@ class SahaDenetimi extends Page
         unset($this->ozelMaddeler, $this->kategoriler);
     }
 
+    /**
+     * "✓ Tümünü Uygun İşaretle" (02.11.2026): yalnız henüz cevaplanmamış maddeler "uygun" olur;
+     * "Uygun Değil" / "Uygulanamaz" seçimlerine dokunulmaz. $kategori verilirse yalnız o kategori.
+     */
+    public function tumunuUygunIsaretle(?string $kategori = null): void
+    {
+        $sayi = 0;
+
+        foreach ($this->kategoriler as $anahtar => $k) {
+            if ($kategori !== null && (string) $anahtar !== $kategori) {
+                continue;
+            }
+
+            foreach ($k['maddeler'] as $madde) {
+                $a = $this->anahtar($madde['kod']);
+                if (isset($this->cevaplar[$a]) && blank($this->cevaplar[$a]['sonuc'] ?? null)) {
+                    $this->cevaplar[$a]['sonuc'] = 'uygun';
+                    $sayi++;
+                }
+            }
+        }
+
+        Notification::make()->title($sayi ? $sayi.' madde "Uygun" işaretlendi' : 'Cevaplanmamış madde yok')
+            ->body($sayi ? 'Uygun Değil / Uygulanamaz seçimleriniz korundu.' : null)->success()->send();
+    }
+
     public function cevapVer(string $kod, string $sonuc): void
     {
         $anahtar = $this->anahtar($kod);
@@ -834,7 +861,28 @@ class SahaDenetimi extends Page
 
                     return SahaDenetimiUretici::pdf($d, ImzaSecenegi::secili($data));
                 }),
+
+            Action::make('whatsapp')
+                ->label('📲 Tamamla ve WhatsApp ile Gönder')
+                ->color('success')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->visible(fn () => $this->firma !== null)
+                ->requiresConfirmation()
+                ->modalHeading('Denetim tamamlansın ve işverene gönderilsin mi?')
+                ->modalDescription('Denetim kaydedilir (uygunsuzluklar Saha Bulguları\'na düşer) ve işverenin cep telefonuna firma adı, tarih, uygunsuzluk sayısı ve 30 gün geçerli PDF bağlantısı içeren WhatsApp mesajı hazırlanır.')
+                ->action(function (): void {
+                    if ($d = $this->kaydet()) {
+                        $this->whatsappAc(\App\Support\IsverenWhatsApp::url($d->firma, \App\Support\IsverenWhatsApp::sahaDenetimiMesaji($d)), 'Denetim raporu');
+                    }
+                }),
         ];
+    }
+
+    public function gecmisWhatsapp(int $id): void
+    {
+        $d = $this->firma?->sahaDenetimleri()->where('durum', 'tamamlandi')->find($id);
+
+        $this->whatsappAc($d ? \App\Support\IsverenWhatsApp::url($d->firma, \App\Support\IsverenWhatsApp::sahaDenetimiMesaji($d)) : null, 'Denetim raporu');
     }
 
     public function gecmisPdf(int $id)

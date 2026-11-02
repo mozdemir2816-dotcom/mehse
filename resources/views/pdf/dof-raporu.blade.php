@@ -12,23 +12,32 @@
     .kunye td { border: 1px solid #999; padding: 4px 8px; }
     .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 16%; }
     table.maddeler { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 10px; }
-    table.maddeler th, table.maddeler td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
+    table.maddeler th, table.maddeler td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: middle; }
+    table.maddeler td.orta { text-align: center; }
+    table.maddeler td.varsayilan { color: #555; font-style: italic; }
     table.maddeler th { background: #f0f0f0; }
-    table.maddeler td.foto { text-align: center; }
+    table.maddeler td.foto { text-align: center; vertical-align: middle; color: #888; font-size: 8px; }
     table.maddeler img.satir-foto { max-width: 100%; max-height: 75px; }
     .oncelik-kritik { color: #b91c1c; font-weight: bold; }
     .oncelik-yuksek { color: #dc2626; }
     .oncelik-orta { color: #d97706; }
     .oncelik-dusuk { color: #16a34a; }
-    .imza { margin-top: 26px; width: 100%; }
-    .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 9.5px; }
-    .imza img { max-height: 40px; display: block; margin: 0 auto 4px; }
+    .imza { margin-top: 22px; width: 100%; border-collapse: separate; border-spacing: 24px 0; page-break-inside: avoid; }
+    .imza td { width: 50%; text-align: center; vertical-align: bottom; font-size: 9.5px; line-height: 1.45; }
+    .imza .alan { height: 46px; border-bottom: 1px solid #111; margin-bottom: 4px; }
+    .imza .alan img { max-height: 44px; }
+    .imza .ad { font-weight: bold; font-size: 10.5px; }
+    .imza .kucuk { color: #555; font-size: 8.5px; }
     .foto-sayfa { page-break-before: always; }
     .foto-sayfa .baslik2 { font-size: 11px; font-weight: bold; margin-bottom: 6px; }
     .foto-sayfa img { max-width: 100%; max-height: 880px; }
 </style>
 </head>
 <body>
+@php
+    $gy = $rapor->gozetimYapanBilgisi();
+    $isveren = $rapor->isverenAdi();
+@endphp
 <div class="sayfa">
 
     <div class="baslik">
@@ -42,15 +51,15 @@
             <td>Rapor Tarihi</td><td>{{ $rapor->rapor_tarihi?->format('d.m.Y') ?: '—' }}</td>
         </tr>
         <tr>
-            <td>Alan / Bölge</td><td>{{ $rapor->alan_bolge ?: '—' }}</td>
-            <td>Gözetim Tarih Aralığı</td><td>{{ $rapor->gozetim_tarih_araligi ?: '—' }}</td>
+            <td>Alan / Bölge</td><td>{{ $rapor->alanBolgeMetni() }}</td>
+            <td>Gözetim Tarih Aralığı</td><td>{{ $rapor->gozetimAraligiMetni() }}</td>
         </tr>
         <tr>
-            <td>Gözetim Yapan</td><td>İş Güvenliği Uzmanı</td>
-            <td>Sertifika No</td><td>{{ $rapor->gozetim_yapan_sertifika_no ?: '—' }}</td>
+            <td>Gözetim Yapan</td><td>{{ $gy['ad'] ? $gy['ad'].' ('.$gy['kisa_unvan'].')' : $gy['unvan'] }}</td>
+            <td>Sertifika No</td><td>{{ $gy['belge_no'] ?: '—' }}</td>
         </tr>
         <tr>
-            <td>Sorumlu Kişi</td><td colspan="3">{{ $rapor->sorumlu_kisi ?: '—' }}</td>
+            <td>Sorumlu Kişi</td><td colspan="3">{{ $rapor->sorumluKisiAdi() ?: '—' }}</td>
         </tr>
     </table>
 
@@ -67,18 +76,18 @@
         </tr>
         @forelse (($rapor->maddeler ?? []) as $i => $m)
             <tr>
-                <td>{{ $i + 1 }}</td>
+                <td class="orta">{{ $i + 1 }}</td>
                 <td>{{ $m['tespit'] ?? '' }}</td>
                 <td class="oncelik-{{ $m['oncelik'] ?? 'orta' }}">{{ \App\Models\DofRaporu::oncelikEtiketi($m['oncelik'] ?? null) }}</td>
                 <td>{!! nl2br(e($m['oneri'] ?? '—')) !!}</td>
-                <td>{{ $m['sorumlu'] ?? '—' }}</td>
-                <td>{{ ! empty($m['termin']) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
+                <td class="{{ blank($m['sorumlu'] ?? null) ? 'varsayilan' : '' }}">{{ \App\Models\DofRaporu::maddeSorumlusu($m) }}</td>
+                <td class="orta {{ blank($m['termin'] ?? null) ? 'varsayilan' : '' }}">{{ $rapor->maddeTermini($m) }}</td>
                 <td>{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>
                 <td class="foto">
-                    @if (! empty($m['foto_yolu']))
+                    @if (! empty($m['foto_yolu']) && is_file(storage_path('app/public/'.$m['foto_yolu'])))
                         <img class="satir-foto" src="{{ storage_path('app/public/'.$m['foto_yolu']) }}">
                     @else
-                        —
+                        Görsel yok
                     @endif
                 </td>
             </tr>
@@ -90,12 +99,22 @@
     <table class="imza">
         <tr>
             <td>
-                @if ($rapor->gozetim_yapan_kase)
-                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">@endif
-                @endif
-                Gözetim Yapan (İSG Uzmanı)<br>(İmza – Kaşe)
+                <div class="alan">
+                    @if ($rapor->gozetim_yapan_kase && ($imzali ?? true) && is_file(storage_path('app/public/'.$rapor->gozetim_yapan_kase)))
+                        <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
+                    @endif
+                </div>
+                <div class="ad">{{ $gy['ad'] ?: '.............................' }}</div>
+                <div>{{ $gy['unvan'] }}</div>
+                @if ($gy['belge_no'])<div>Belge No: {{ $gy['belge_no'] }}</div>@endif
+                <div class="kucuk">(İmza – Kaşe)</div>
             </td>
-            <td>İşveren / İşveren Vekili<br>(İmza – Kaşe)</td>
+            <td>
+                <div class="alan"></div>
+                <div class="ad">{{ $isveren ?: '.............................' }}</div>
+                <div>İşveren / İşveren Vekili</div>
+                <div class="kucuk">(İmza – Kaşe)</div>
+            </td>
         </tr>
     </table>
 
