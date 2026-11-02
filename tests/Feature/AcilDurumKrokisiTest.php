@@ -298,6 +298,41 @@ class AcilDurumKrokisiTest extends TestCase
         $this->assertCount(9, $veri['veri']['S']);
     }
 
+    public function test_3b_editore_firma_ekipleri_telefonlar_bolum_ve_cizen_gider_pdf_indirilir(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Ekipli AŞ', 'isveren_ad' => 'Yasin ŞENER']);
+        \App\Support\AcilEkipDurumu::temelEkipleriOlustur($firma);
+        $sondurme = \App\Models\AcilEkip::where('firma_id', $firma->id)->where('tur', 'sondurme')->first();
+        $sondurme->uyeler()->create(['ad_soyad' => 'İsmail Tezel', 'lider' => true, 'telefon' => '0532 000 11 22']);
+        $sondurme->uyeler()->create(['ad_soyad' => 'Emirhan Girgin']);
+        $sondurme->uyeler()->create(['ad_soyad' => 'Yedek Kişi', 'uyelik' => 'yedek']);
+        AcilDurumPlani::create(['firma_id' => $firma->id, 'uygulama' => ['kroki_kat' => 'Zemin Kat - Üretim Sahası', 'kroki_hazirlayan' => 'Mimar Ali Veli',
+            'iletisim' => [['ad' => 'Bursagaz', 'telefon' => '187', 'aciklama' => null]]]]);
+
+        $c = Livewire::test(KrokiSayfasi::class)->set('firmaId', $firma->id);
+        $veri = $c->instance()->kroki3bVerisi();
+
+        $this->assertSame('Zemin Kat - Üretim Sahası', $veri['bilgi']['bolum']);
+        $this->assertSame('Mimar Ali Veli', $veri['bilgi']['haz']);       // İGU değil, krokiyi çizen
+        $this->assertSame('Yasin ŞENER', $veri['bilgi']['onay']);
+        $this->assertSame([['n' => 'Söndürme Ekibi', 'c' => '#d62718', 'lead' => 'İsmail Tezel', 'mem' => 'Emirhan Girgin', 'tel' => '0532 000 11 22']], $veri['ekipler']);
+        $this->assertSame('Tek acil çağrı (itfaiye / ambulans / polis / jandarma / AFAD): 112', $veri['telefonlar'][0]);
+        $this->assertStringNotContainsString('110', implode(' ', $veri['telefonlar']));
+        $this->assertTrue(collect($veri['telefonlar'])->contains(fn ($s) => str_contains($s, '187')));
+
+        // Editör: sekmeler, özel ekipman, yüzen araç çubuğu, gelişmiş koordinatlar
+        $html = $c->instance()->editor3bHtml();
+        foreach (['Kütüphane &amp; İşaretler', 'Firma &amp; Acil Ekipler', 'Mevzuat &amp; Çıktı', 'Özel Makine / Ekipman', 'Döndür 90°', 'Çoğalt', 'Gelişmiş (koordinat / ölçü)', 'Firma kayıtlarından doldur', 'PDF İndir', 'Tek Acil Çağrı'] as $parca) {
+            $this->assertStringContainsString($parca, $html);
+        }
+        $this->assertStringNotContainsString("'110'", $html);
+
+        // "PDF İndir": kaydet + kaydedilen görüntüden PDF
+        $c->call('kaydet3b', $this->veri3b(), $this->png());
+        $this->assertInstanceOf(StreamedResponse::class, $c->instance()->pdfIndir());
+    }
+
     public function test_3b_yonetmelik_kontrolu_ve_hazirlik_plan_kontrolu(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['adres' => 'Merkez', 'isveren_ad' => 'Ali Veli']);

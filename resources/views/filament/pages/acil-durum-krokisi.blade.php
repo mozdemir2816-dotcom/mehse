@@ -66,13 +66,16 @@
                         else if (m.tip === 'degisti') { this.degisti = true; }
                         else if (m.tip === 'kaydet') {
                             this.kaydediliyor = true;
-                            this.$wire.kaydet3b(m.veri, m.png).then(() => { this.degisti = false; }).finally(() => { this.kaydediliyor = false; });
+                            // m.pdf: editördeki "PDF İndir" — önce kaydet, sonra kaydedilen görüntüden PDF indir.
+                            this.$wire.kaydet3b(m.veri, m.png)
+                                .then(() => { this.degisti = false; return m.pdf ? this.$wire.pdfIndir() : null; })
+                                .finally(() => { this.kaydediliyor = false; });
                         }
                     },
                 }"
                 x-on:message.window="mesaj($event)">
                 <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.3rem">
-                    Çizimi bitirince editördeki <strong>Dosya → Kroki'yi kaydet</strong> düğmesine basın.
+                    Çizimi bitirince editördeki <strong>Mevzuat &amp; Çıktı → Krokiyi Kaydet</strong> (veya <strong>PDF İndir</strong>) düğmesine basın.
                     <span x-show="degisti && !kaydediliyor" style="color:#d97706;font-weight:600">· Kaydedilmemiş değişiklik var</span>
                     <span x-show="kaydediliyor" style="color:#2563eb;font-weight:600">· Kaydediliyor…</span>
                 </div>

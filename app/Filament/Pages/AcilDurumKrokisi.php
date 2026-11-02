@@ -6,7 +6,9 @@ use App\Filament\Concerns\SinirliErisim;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\AcilDurumKrokisi as KrokiModel;
 use App\Models\Firma;
+use App\Support\AcilDurumBelgeVerisi;
 use App\Support\AcilDurumKrokisiUretici;
+use App\Support\AcilEkipDurumu;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -183,8 +185,75 @@ class AcilDurumKrokisi extends Page
                 'tarih' => ($kroki?->hazirlanma_tarihi ?? now())->format('Y-m-d'),
                 'haz' => $plan['kroki_hazirlayan'] ?? null,
                 'onay' => $firma?->isveren_vekili ?: $firma?->isveren_ad,
+                'igu' => $firma?->igu?->ad_soyad ?: Filament::auth()->user()?->name,
             ],
+            'ekipler' => $firma ? $this->firmaEkipleri($firma) : [],
+            'telefonlar' => $firma ? $this->acilTelefonlar($firma) : [],
         ];
+    }
+
+    /**
+     * Firmanın Acil Durum Ekipleri → editörün ekip lejandı (lider, üyeler, iletişim). Üyesi olmayan
+     * ekipler atlanır (02.11.2026: elle tek tek yazma zorunluluğu kalksın).
+     *
+     * @return array<int, array{n: string, c: string, lead: string, mem: string, tel: string}>
+     */
+    public function firmaEkipleri(Firma $firma): array
+    {
+        $renk = ['sondurme' => '#d62718', 'kurtarma' => '#e8a000', 'koruma' => '#1d4e89', 'ilk_yardim' => '#009a44', 'tahliye' => '#2e9e54', 'haberlesme' => '#6b4fbb', 'teknik' => '#5b6b80'];
+
+        return AcilEkipDurumu::ekipler($firma)
+            ->filter(fn ($e) => $e->uyeler->isNotEmpty())
+            ->map(function ($e) use ($renk) {
+                $asil = $e->uyeler->where('uyelik', '!=', 'yedek');
+                $lider = $e->uyeler->firstWhere('lider', true) ?? $asil->first() ?? $e->uyeler->first();
+
+                return [
+                    'n' => $e->ad ?: ($e->turBilgisi()['ad'] ?? 'Ekip'),
+                    'c' => $renk[$e->tur] ?? '#6b7280',
+                    'lead' => (string) $lider->ad_soyad,
+                    'mem' => $asil->reject(fn ($u) => $u->is($lider))->pluck('ad_soyad')->implode(', '),
+                    'tel' => (string) ($lider->telefon ?? ''),
+                ];
+            })->values()->all();
+    }
+
+    /**
+     * Acil Durum Planı'ndaki koordinatör ve dış iletişim numaraları → "Acil durum telefonları" notu.
+     * 112'ye bağlı kurumlar tek satırda toplanır (TS ISO 23601 / tek acil çağrı).
+     *
+     * @return array<int, string>
+     */
+    public function acilTelefonlar(Firma $firma): array
+    {
+        $satirlar = ['Tek acil çağrı (itfaiye / ambulans / polis / jandarma / AFAD): 112'];
+        $plan = $firma->acilDurumPlani;
+
+        if (! $plan) {
+            return [...$satirlar, 'Doğalgaz acil: 187', 'Elektrik arıza: 186', 'Zehir danışma (UZEM): 114'];
+        }
+
+        $d = AcilDurumBelgeVerisi::hazirla($plan);
+        if (filled($d['koordinator']['ad'] ?? null)) {
+            $satirlar[] = 'Acil durum koordinatörü: '.$d['koordinator']['ad'].(filled($d['koordinator']['tel'] ?? null) ? ' – '.$d['koordinator']['tel'] : '');
+        }
+        foreach ($d['dis_iletisim'] ?? [] as $s) {
+            $tel = trim((string) ($s['tel'] ?? ''));
+            if ($tel !== '' && $tel !== '112') {
+                $ad = mb_convert_case(mb_strtolower(str_replace('I', 'ı', (string) $s['birim']), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                $satirlar[] = $ad.(filled($s['aciklama'] ?? null) && $s['birim'] === 'EN YAKIN HASTANE' ? ' ('.$s['aciklama'].')' : '').': '.$tel;
+            }
+        }
+
+        return $satirlar;
+    }
+
+    /** Editörün "PDF İndir" düğmesi: kaydedilen kroki görüntüsünden PDF. */
+    public function pdfIndir()
+    {
+        $kroki = $this->kroki();
+
+        return $kroki ? AcilDurumKrokisiUretici::pdf($kroki) : null;
     }
 
     /** 3B editör sayfasının HTML'i (iframe srcdoc). */
