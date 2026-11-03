@@ -330,7 +330,7 @@ class MaddelerRelationManager extends RelationManager
                 BulkActionGroup::make([DeleteBulkAction::make()]),
             ])
             ->defaultSort('sira')
-            ->poll(fn () => $this->bosOneriSayisi() || RiskPuanTamamla::kuyruktaMi($this->getOwnerRecord()->id) ? '15s' : null)
+            ->poll(fn () => $this->bosOneriSayisi() || RiskPuanTamamla::kuyruktaMi($this->getOwnerRecord()->id) ? '45s' : null)
             ->reorderable('sira');
     }
 

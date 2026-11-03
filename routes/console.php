@@ -37,7 +37,8 @@ Schedule::call(fn () => Artisan::call('risk:puan-tamamla'))
 // Kütüphane onarımı: eksik alanlı kütüphane maddeleri 15 dakikada bir parti (40 madde; günlük sınırlı, kota dolunca
 // ertesi güne kadar durur), analiz kuyrukları boşken (02.11.2026).
 Schedule::call(fn () => Artisan::call('risk:repair-library-all-fields', ['--zamanlanmis' => true, '--limit' => 40]))
-    ->name('risk:repair-library-all-fields')->everyFifteenMinutes()->withoutOverlapping(30);
+    // Paylaşımlı sunucuda gündüz panel yavaşlamasın / zaman aşımı olmasın diye yalnız gece çalışır (03.11.2026: gündüz 14–40 sn sürüyordu).
+    ->name('risk:repair-library-all-fields')->everyFifteenMinutes()->between('00:00', '06:00')->timezone('Europe/Istanbul')->withoutOverlapping(30);
 
 // Günlük veritabanı yedeği (Hizmet Sözleşmesi md.5): storage/app/private/yedekler, 30 gün saklanır.
 Schedule::call(fn () => Artisan::call('mehse:yedekle'))
