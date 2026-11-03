@@ -306,6 +306,21 @@ class GorevDurumu
             $gorevler[] = static::gorev($firma, 'Temel eğitim yenileme', $yakin->count().' çalışanın eğitim yenilemesi yaklaşıyor.', $dayanak, $yakin->min('yenileme'), 'yaklasan', 'Eğitimler', $egitimUrl);
         }
 
+        // İSG Kurulu: üye atama yazısı ve kurul eğitimi (üye atanınca / değişince Kurul sayfasında otomatik hazırlanır)
+        if (KurulAtamaEgitim::uyeler($firma)->isNotEmpty()) {
+            $kurulUrl = static::sayfaUrl(KurulToplantisiSayfasi::class, $firma);
+            $atama = KurulAtamaEgitim::atamaDurumu($firma);
+            $kurulEgitim = KurulAtamaEgitim::egitimDurumu($firma);
+
+            if (! $atama['guncel']) {
+                $gorevler[] = static::gorev($firma, 'İSG Kurulu atama yazısı', $atama['var'] ? 'Kurul üyeleri son atama yazısından farklı — atama yazısı güncellenmeli.' : 'Kurul üyeleri için atama yazısı hazırlanmadı.', 'İSG Kurulları Hakkında Yönetmelik', null, 'yapilmayan', 'İSG Kurulu', $kurulUrl);
+            }
+
+            if ($kurulEgitim['eksik']->isNotEmpty()) {
+                $gorevler[] = static::gorev($firma, 'İSG Kurulu eğitimi', $kurulEgitim['eksik']->count().' kurul üyesine İSG Kurulu eğitimi verilmeli.', 'İSG Kurulları Hakkında Yönetmelik', null, 'yapilmayan', 'İSG Kurulu', $kurulUrl);
+            }
+        }
+
         return $gorevler;
     }
 

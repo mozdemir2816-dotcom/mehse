@@ -138,6 +138,8 @@ class EgitimKatilim extends Page
         if ($aktarim = session()->pull('egitim_katilim_aktarim')) {
             $this->firmaId = $aktarim['firma_id'];
             $this->updatedFirmaId();
+            // Aktarılan kişiler dışında firma çalışanları seçili gelmesin (updatedFirmaId hepsini seçer).
+            $this->secilenCalisanIdler = [];
             $this->baslikAnahtari = $aktarim['baslik_anahtari'];
             $this->icerikYenile();
             $this->manuelKatilimcilar = [...$this->manuelKatilimcilar, ...$aktarim['katilimcilar']];

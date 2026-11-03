@@ -65,6 +65,52 @@
             @endforeach
         </div>
 
+        {{-- ATAMA YAZISI VE EĞİTİM: üye atanınca / değişince atama yazısı otomatik hazırlanır, kurul eğitimi hatırlatılır --}}
+        @php $ae = $this->atamaEgitim; @endphp
+        @if ($ae)
+            <x-filament::section icon="heroicon-o-document-check">
+                <x-slot name="heading">Atama ve eğitim</x-slot>
+                <x-slot name="description">Kurul üyesi atanınca ya da değişince İSG Kurulu atama yazısı otomatik hazırlanır; eğitimi olmayan üyelere İSG Kurulu eğitimi verilmelidir.</x-slot>
+
+                <div class="grid gap-3 md:grid-cols-2">
+                    <div style="border:1px solid {{ $ae['atama']['guncel'] ? 'var(--success-border)' : 'rgb(217 119 6 / .5)' }};border-radius:12px;padding:.8rem 1rem">
+                        <div class="text-sm font-bold">Atama yazısı {!! $ae['atama']['guncel'] ? '<span style="color:rgb(21 128 61)">✓ güncel</span>' : '<span style="color:rgb(217 119 6)">⚠ güncel değil</span>' !!}</div>
+                        <div class="mt-1 text-xs" style="color:var(--text-secondary)">
+                            @if (! $ae['atama']['var'])
+                                Bu işyeri için İSG Kurulu atama yazısı henüz hazırlanmadı.
+                            @elseif ($ae['atama']['guncel'])
+                                Son yazı: {{ $ae['atama']['son']->tarih?->format('d.m.Y') }} · {{ $ae['atama']['son']->dokuman_no }}
+                            @else
+                                Son yazıdan sonra
+                                @if ($ae['atama']['eklenen']) <strong>{{ implode(', ', $ae['atama']['eklenen']) }}</strong> eklendi @endif
+                                @if ($ae['atama']['cikan']) · <strong>{{ implode(', ', $ae['atama']['cikan']) }}</strong> çıktı @endif.
+                            @endif
+                        </div>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <x-filament::button size="xs" icon="heroicon-o-document-arrow-down" wire:click="atamaYazisiPdf">Atama yazısı (PDF)</x-filament::button>
+                            <x-filament::button size="xs" color="info" icon="heroicon-o-document-text" wire:click="atamaYazisiWord">Word</x-filament::button>
+                        </div>
+                    </div>
+
+                    <div style="border:1px solid {{ $ae['egitim']['eksik']->isEmpty() ? 'var(--success-border)' : 'rgb(217 119 6 / .5)' }};border-radius:12px;padding:.8rem 1rem">
+                        <div class="text-sm font-bold">İSG Kurulu eğitimi {!! $ae['egitim']['eksik']->isEmpty() ? '<span style="color:rgb(21 128 61)">✓ tüm üyeler almış</span>' : '<span style="color:rgb(217 119 6)">⚠ '.$ae['egitim']['eksik']->count().' üye bekliyor</span>' !!}</div>
+                        <div class="mt-1 text-xs" style="color:var(--text-secondary)">
+                            @if ($ae['egitim']['eksik']->isEmpty())
+                                {{ $ae['egitim']['toplam'] }} üyenin tamamının İSG Kurulu eğitimi kaydı var.
+                            @else
+                                Eğitim verilmesi gereken: <strong>{{ $ae['egitim']['eksik']->pluck('ad_soyad')->implode(', ') }}</strong>
+                            @endif
+                        </div>
+                        @if ($ae['egitim']['eksik']->isNotEmpty())
+                            <div class="mt-2">
+                                <x-filament::button size="xs" color="warning" icon="heroicon-o-academic-cap" wire:click="kurulEgitimFormunaGit">Eğitim katılım formunu hazırla</x-filament::button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </x-filament::section>
+        @endif
+
         @if ($this->eksikZorunlular)
             <div style="border:1px solid rgb(217 119 6 / .35);background:rgb(217 119 6 / .07);border-radius:12px;padding:.8rem 1rem" class="flex flex-wrap items-center gap-3">
                 <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-5 w-5" style="color:rgb(217 119 6)" />

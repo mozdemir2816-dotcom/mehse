@@ -11,6 +11,9 @@ use App\Models\KurulUyesi;
 use App\Support\BagliKayitGuncelleyici;
 use App\Support\GeminiKararDanismani;
 use App\Support\KararDofAktarici;
+use App\Support\AtamaYazisiUretici;
+use App\Support\AtamaYazisiWordUretici;
+use App\Support\KurulAtamaEgitim;
 use App\Support\KurulCagriUretici;
 use App\Support\KurulKatilimciAktarici;
 use App\Support\KurulToplantisiUretici;
@@ -265,6 +268,79 @@ class KurulToplantisi extends Page
         return GeminiKararDanismani::aktifMi();
     }
 
+    /** Kurul üyelerinin atama yazısı ve eğitim durumu (panel). @return array{atama: array<string, mixed>, egitim: array<string, mixed>}|null */
+    #[Computed]
+    public function atamaEgitim(): ?array
+    {
+        if (! $this->firma || KurulAtamaEgitim::uyeler($this->firma)->isEmpty()) {
+            return null;
+        }
+
+        return ['atama' => KurulAtamaEgitim::atamaDurumu($this->firma), 'egitim' => KurulAtamaEgitim::egitimDurumu($this->firma)];
+    }
+
+    /**
+     * Kurul üyesi atandı / değişti / çıkarıldı: İSG Kurulu atama yazısı otomatik hazırlanır, eğitim bekleyen üyeler
+     * hatırlatılır ve ana sayfa görevleri yenilenir.
+     */
+    private function atamaVeEgitimiGuncelle(): void
+    {
+        unset($this->atamaEgitim);
+
+        if (! $this->firma) {
+            return;
+        }
+
+        $yazi = KurulAtamaEgitim::atamaYazisiHazirla($this->firma);
+        \App\Support\GorevDurumu::onbellegiTemizle(Filament::auth()->user());
+        unset($this->atamaEgitim);
+
+        if (! $yazi) {
+            return;
+        }
+
+        $bekleyen = KurulAtamaEgitim::egitimDurumu($this->firma)['eksik']->count();
+
+        Notification::make()->success()
+            ->title('Atama yazısı hazırlandı')
+            ->body('İSG Kurulu atama yazısı güncel üyelerle hazırlandı (Atama Yazıları > İSG Kurulu, ya da bu sayfadaki "Atama ve eğitim" bölümü).'
+                .($bekleyen ? " {$bekleyen} üyeye İSG Kurulu eğitimi verilmesi gerekiyor." : ''))
+            ->send();
+    }
+
+    /** "Atama yazısı (PDF)": güncel üyelerle hazırlanıp indirilir. */
+    public function atamaYazisiPdf()
+    {
+        $yazi = $this->firma ? KurulAtamaEgitim::atamaYazisiHazirla($this->firma) : null;
+        unset($this->atamaEgitim);
+
+        return $yazi ? AtamaYazisiUretici::pdf($yazi) : null;
+    }
+
+    public function atamaYazisiWord()
+    {
+        $yazi = $this->firma ? KurulAtamaEgitim::atamaYazisiHazirla($this->firma) : null;
+        unset($this->atamaEgitim);
+
+        return $yazi ? AtamaYazisiWordUretici::docx($yazi) : null;
+    }
+
+    /** Eğitimi olmayan kurul üyelerini İSG Kurulu eğitim katılım formuna hazır aktarır. */
+    public function kurulEgitimFormunaGit()
+    {
+        $aktarim = $this->firma ? KurulAtamaEgitim::egitimAktarimi($this->firma) : null;
+
+        if (! $aktarim) {
+            Notification::make()->title('Eğitim bekleyen kurul üyesi yok')->info()->send();
+
+            return null;
+        }
+
+        session(['egitim_katilim_aktarim' => $aktarim]);
+
+        return $this->redirect(\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id]));
+    }
+
     private function onbellekTemizle(): void
     {
         unset($this->firma, $this->calisanlar, $this->uyeler, $this->eksikZorunlular, $this->oneriler,
@@ -335,12 +411,14 @@ class KurulToplantisi extends Page
 
         $this->onbellekTemizle();
         Notification::make()->title("{$adSoyad} kurula eklendi")->success()->send();
+        $this->atamaVeEgitimiGuncelle();
     }
 
     public function uyeKaldir(int $id): void
     {
         $this->firma?->kurulUyeleri()->whereKey($id)->delete();
         $this->onbellekTemizle();
+        $this->atamaVeEgitimiGuncelle();
     }
 
     public function uyeDuzenle(int $id): void
@@ -400,6 +478,7 @@ class KurulToplantisi extends Page
         $this->uyeDuzenlemeIptal();
         $this->onbellekTemizle();
         unset($this->toplanti);
+        $this->atamaVeEgitimiGuncelle();
 
         Notification::make()->title('Kurul üyesi güncellendi')
             ->body($tutanak ? "{$tutanak} toplantı tutanağındaki bilgisi de güncellendi." : null)
