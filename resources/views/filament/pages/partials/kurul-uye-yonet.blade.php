@@ -9,8 +9,8 @@
     $girdi = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid var(--border);background:var(--panel-bg, #fff);font-size:.82rem';
 @endphp
 
-<div class="grid gap-5 lg:grid-cols-[3fr_2fr]">
-    <div class="flex flex-col gap-4">
+{{-- 3 sütun: zorunlu üyeler | aday personel (ekleme yeri) | mevcut üyeler — aday personel kaydırmadan görünsün --}}
+<div class="grid items-start gap-4 lg:grid-cols-3">
         {{-- Zorunlu üyeler --}}
         <div>
             <div class="mb-2 flex items-center justify-between">
@@ -61,7 +61,7 @@
                 <div class="text-xs" style="color:var(--text-secondary)">Rolü seçin, sonra personelin yanındaki "Ekle"ye basın.</div>
             </div>
 
-            <div class="mb-2 grid gap-2 sm:grid-cols-2">
+            <div class="mb-2 grid gap-2">
                 <input type="search" wire:model.live.debounce.300ms="uyeArama" placeholder="Ad, görev veya departman ara" style="{{ $girdi }}">
                 <select wire:model.live="uyeRol" style="{{ $girdi }}">
                     @foreach ($roller as $rol => $tanim)
@@ -70,7 +70,7 @@
                 </select>
             </div>
 
-            <div class="flex flex-col gap-1" style="max-height:11rem;overflow-y:auto">
+            <div class="flex flex-col gap-1" style="max-height:min(26rem, calc(100vh - 21rem));min-height:9rem;overflow-y:auto">
                 @forelse ($this->adayCalisanlar as $c)
                     <div class="flex items-center gap-2" style="border:1px solid var(--border-light);border-radius:10px;padding:.4rem .6rem">
                         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold" style="background:var(--info-bg);color:var(--primary)">
@@ -87,13 +87,12 @@
                 @endforelse
             </div>
 
-            <div class="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <div class="mt-3 grid gap-2">
                 <input type="text" wire:model="elleUyeAd" placeholder="Listede yoksa: ad soyad" style="{{ $girdi }}">
                 <input type="text" wire:model="elleUyeGorev" placeholder="Görevi / unvanı" style="{{ $girdi }}">
                 <x-filament::button size="sm" color="gray" wire:click="elleUyeEkle">Elle ekle</x-filament::button>
             </div>
         </div>
-    </div>
 
     {{-- Mevcut üyeler --}}
     <div style="border:1px dashed var(--border);border-radius:12px;padding:.9rem">
