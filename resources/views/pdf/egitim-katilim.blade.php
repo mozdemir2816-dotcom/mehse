@@ -120,7 +120,7 @@
 
     <table class="kunye">
         <tr>
-            <td class="e">Eğitim Konusu</td><td style="width:38%">{{ $kayit->basliklarEtiketi() }}</td>
+            <td class="e">Eğitim Konusu</td><td style="width:38%">{{ $kayit->basliklarEtiketi() }}@if (filled($kayit->is_kolu))<br><strong>İş Kolu / Grup: {{ $kayit->is_kolu }}</strong>@endif</td>
             <td class="e">Belge No</td><td>{{ $kayit->belge_no }}</td>
         </tr>
         <tr>

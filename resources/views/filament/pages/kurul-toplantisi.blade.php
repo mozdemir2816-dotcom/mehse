@@ -392,11 +392,11 @@
                         <thead>
                             <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
                                 <th class="px-3 py-2 text-left">Alındığı toplantı</th>
-                                <th class="px-3 py-2 text-left">Karar</th>
+                                <th class="px-3 py-2 text-left" style="width:42%">Karar</th>
                                 <th class="px-3 py-2 text-left">Sorumlu</th>
                                 <th class="px-3 py-2 text-left">Termin</th>
-                                <th class="px-3 py-2 text-left">Bu toplantıdaki durum</th>
-                                <th class="px-3 py-2 text-left">Görüşme notu</th>
+                                <th class="px-3 py-2 text-left" style="width:1%;white-space:nowrap">Bu toplantıdaki durum</th>
+                                <th class="px-3 py-2 text-left" style="width:22%">Görüşme notu</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -417,7 +417,7 @@
                                         </select>
                                     </td>
                                     <td class="px-3 py-2">
-                                        <textarea x-on:change="$wire.devredenNotu({{ $d['kaynak_id'] }}, '{{ $d['id'] }}', $event.target.value)" rows="2" placeholder="Görüşme notu" style="{{ $girdi }};font-family:inherit;min-width:12rem">{{ $d['not'] }}</textarea>
+                                        <textarea x-on:change="$wire.devredenNotu({{ $d['kaynak_id'] }}, '{{ $d['id'] }}', $event.target.value)" rows="2" placeholder="Görüşme notu" style="{{ $girdi }};font-family:inherit;min-width:8rem">{{ $d['not'] }}</textarea>
                                     </td>
                                 </tr>
                             @endforeach

@@ -199,7 +199,9 @@ class GeminiSahaAnalizi
 
     private static function uzmanGirisi(): string
     {
-        return "Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu'na göre çalışan deneyimli bir İş Güvenliği Uzmanısın.";
+        return "Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu'na ve ilgili tüm yönetmeliklere (Yapı İşlerinde İSG, KKD Kullanımı, "
+            ."İş Ekipmanlarının Güvenli Kullanımı, Binaların Yangından Korunması vb.) tam hâkim, kıdemli bir A Sınıfı İş Güvenliği Uzmanısın. "
+            .'Profesyonel bir denetim diliyle yazarsın.';
     }
 
     private static function olcekMetni(string $olcek): string
@@ -217,7 +219,9 @@ class GeminiSahaAnalizi
         return $foto.<<<METIN
         - bina_bolge: görülebiliyorsa bina/bölge adı (yoksa boş bırak).
         - kategori: kısa kategori etiketi (örn. "Yüksekte Çalışma", "Düzen/Temizlik", "KKD Eksikliği", "Elektrik Güvenliği").
-        - tespit: uygunsuzluğun/tehlikenin açıklaması (2-4 cümle, somut ve teknik).
+        - tespit: uygunsuzluğun/tehlikenin açıklaması (2-4 cümle, somut ve teknik): nerede, kim tarafından veya hangi ekipmanda
+          gerçekleştiğini, mevcut risk faktörünü (ör. parça fırlaması, elektrik çarpması, takılma, düşme) ve — görüntüde ayırt edilebiliyorsa —
+          ihlalin fotoğraftaki yerini (ör. "merkezde taşlama yapan işçi", "sağ alt zemin yürüme çizgisi üzerinde", "arka plandaki pano") açıkça belirt.
         - oneriler: alınması gereken önlemler, her biri tek cümle olan dizi.
         - yasal_gerekce: ilgili mevzuatın tam adı ve varsa maddesi.
         - Fine-Kinney değerlendirmesi — YALNIZ şu değerlerden birini seç:
@@ -225,13 +229,17 @@ class GeminiSahaAnalizi
           frekans: {$frekansOlcegi}
           siddet: {$siddetOlcegi}
         - risk_derecesi: 1 (Çok Yüksek), 2 (Yüksek), 3 (Orta) veya 4 (Düşük).
+        - Hayati tehlike, uzuv kaybı, açık/yalıtımsız kablo, yüksekten düşme riski gibi durumları en yüksek riskli (risk_derecesi 1) değerlendir:
+          olasılık ve şiddet için ölçeğin üst değerlerini seç.
         Yanıtı SADECE JSON olarak ver — başka açıklama ekleme.
         METIN;
     }
 
     private static function istem(?string $baglamNotu, int $fotoSayisi): string
     {
-        $baglam = filled($baglamNotu) ? "\nBağlam notu (kullanıcı verdi): {$baglamNotu}\n" : '';
+        $baglam = filled($baglamNotu)
+            ? "\nBağlam notu (kullanıcı verdi): {$baglamNotu}\nBu detayı (bölüm, kişi, ekipman vb.) tespit ve öneri cümlelerine doğal bir biçimde yedir.\n"
+            : '';
 
         return static::uzmanGirisi()." Sana {$fotoSayisi} adet iş yeri saha fotoğrafı veriliyor. "
             ."Her fotoğrafı İSG açısından tehlike/uygunsuzluk yönünden dikkatle incele.\n{$baglam}\n"

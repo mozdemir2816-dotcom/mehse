@@ -27,6 +27,7 @@ class EgitimKatilim extends Model
         'isyeri_hekimi_var' => 'boolean',
         'konu_secimleri' => 'array',
         'katilimcilar' => 'array',
+        'is_kolu_kalemleri' => 'array',
     ];
 
     protected static function booted(): void

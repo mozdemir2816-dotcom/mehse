@@ -367,7 +367,7 @@ class EgitimKatilimUretici
 
         $kunye = $bolum->addTable($kunyeStil);
         $satir($kunye, [
-            [1700, 'Eğitim Konusu', true], [3400, $kayit->basliklarEtiketi(), false],
+            [1700, 'Eğitim Konusu', true], [3400, $kayit->basliklarEtiketi().(filled($kayit->is_kolu) ? ' — İş Kolu / Grup: '.$kayit->is_kolu : ''), false],
             [1700, 'Belge No', true], [2600, (string) $kayit->belge_no, false],
         ]);
         $satir($kunye, [

@@ -143,7 +143,7 @@ class KurulDevredenKararTest extends TestCase
         $this->assertSame('ertelendi', $t->fresh()->kararlar[0]['durum']);
     }
 
-    public function test_tutanak_ciktilarinda_devreden_bolumu_var(): void
+    public function test_tutanak_ciktilarinda_yalniz_bu_toplantinin_kararlari_var(): void
     {
         $this->toplanti('2026-01-10', '2026/1', [$this->karar('Devreden iş', 'devam_ediyor', '2026-02-01')]);
         $ikinci = $this->toplanti('2026-03-10', '2026/2', [$this->karar('Yeni karar')]);
@@ -151,15 +151,12 @@ class KurulDevredenKararTest extends TestCase
         $ikinci->devredenGuncelle($d['kaynak_id'], $d['id'], 'devam_ediyor', 'Teklif alındı');
 
         $html = view('pdf.kurul-toplantisi', ['toplanti' => $ikinci->fresh(), 'firma' => $this->firma])->render();
-        $this->assertStringContainsString('Önceki Toplantılardan Devreden Kararlar', $html);
-        $this->assertStringContainsString('Devreden iş', $html);
-        $this->assertStringContainsString('Devam ediyor — Teklif alındı', $html);
-        $this->assertStringContainsString('Bu Toplantıda Alınan Kararlar', $html);
-
-        // İlk toplantıda bölüm yok, eski başlık korunur
-        $ilkHtml = view('pdf.kurul-toplantisi', ['toplanti' => KurulToplantisi::where('toplanti_no', '2026/1')->first(), 'firma' => $this->firma])->render();
-        $this->assertStringNotContainsString('Devreden Kararlar', $ilkHtml);
-        $this->assertStringContainsString('Kararlar ve Takip', $ilkHtml);
+        // Yalnız bu toplantıda alınan kararlar basılır; devreden kararlar ekranda takip edilir, tutanağa basılmaz.
+        $this->assertStringNotContainsString('Devreden Kararlar', $html);
+        $this->assertStringNotContainsString('Devreden iş', $html);
+        $this->assertStringNotContainsString('Teklif alındı', $html);
+        $this->assertStringContainsString('Kararlar ve Takip', $html);
+        $this->assertStringContainsString('Yeni karar', $html);
 
         // PDF / Excel / Word üretimi hatasız
         foreach (['pdf' => '%PDF', 'excel' => 'PK', 'word' => 'PK'] as $tur => $baslangic) {
@@ -168,7 +165,7 @@ class KurulDevredenKararTest extends TestCase
             $this->assertStringStartsWith($baslangic, ob_get_clean(), $tur);
         }
 
-        // Word içeriğinde devreden bölüm
+        // Word içeriğinde yalnız bu toplantının kararı, devreden bölüm yok
         ob_start();
         KurulToplantisiUretici::word($ikinci->fresh())->sendContent();
         $yol = tempnam(sys_get_temp_dir(), 'kurul').'.docx';
@@ -178,8 +175,9 @@ class KurulDevredenKararTest extends TestCase
         $xml = $zip->getFromName('word/document.xml');
         $zip->close();
         @unlink($yol);
-        $this->assertStringContainsString('Önceki Toplantılardan Devreden Kararlar', $xml);
-        $this->assertStringContainsString('Teklif alındı', $xml);
+        $this->assertStringNotContainsString('Devreden Kararlar', $xml);
+        $this->assertStringNotContainsString('Devreden iş', $xml);
+        $this->assertStringContainsString('Yeni karar', $xml);
     }
 
     public function test_termini_gecen_acik_kurul_karari_bildirim_uretir(): void

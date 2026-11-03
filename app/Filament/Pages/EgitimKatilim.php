@@ -68,6 +68,18 @@ class EgitimKatilim extends Page
 
     public string $egitimTuru = 'ilk';
 
+    /** Çalışan grubu / iş kolu adı (ör. "Kazı Ekibi"): aynı firmada farklı gruplara ayrı form + ayrı konu şablonu. */
+    public string $isKolu = '';
+
+    /** @var array<int, string> seçili iş kalemleri (config isg.kkd_matris.is_kalemleri anahtarları) */
+    public array $isKoluKalemleri = [];
+
+    /** Katılımcı süzgeci: şube ya da departman adı (boş = tümü). */
+    public string $calisanFiltre = '';
+
+    /** Sektör → iş kalemi grubu (config isg.kkd_matris.is_kalemleri anahtarı). Yeni sektör eklenince buraya yazılır. */
+    private const SEKTOR_IS_KALEMLERI = ['insaat' => 'İnşaat / Şantiye'];
+
     /** yuz_yuze | uzaktan | karma — formda işaretlenebilir kutu olarak da gösterilir. */
     public string $egitimSekli = 'yuz_yuze';
 
@@ -173,6 +185,71 @@ class EgitimKatilim extends Page
         return $this->firma?->calisanlar()->orderBy('ad_soyad')->get() ?? collect();
     }
 
+    /** Seçili sektörün iş kalemleri (anahtar => ad); sektörün iş kalemi tanımı yoksa boş (yalnız serbest grup adı). */
+    #[Computed]
+    public function isKalemiSecenekleri(): array
+    {
+        $grup = self::SEKTOR_IS_KALEMLERI[$this->sektorAnahtari ?: (string) $this->naceSektoru] ?? null;
+
+        return $grup ? collect(config('isg.kkd_matris.is_kalemleri.'.$grup, []))->pluck('ad', 'anahtar')->all() : [];
+    }
+
+    /** Katılımcı süzgeci seçenekleri: çalışanların şube ve departman adları. @return array<int, string> */
+    #[Computed]
+    public function calisanFiltreSecenekleri(): array
+    {
+        return $this->calisanlar->flatMap(fn (Calisan $c) => [$c->sube, $c->departman])
+            ->map(fn ($d) => trim((string) $d))->filter()->unique()->sort()->values()->all();
+    }
+
+    /** @return Collection<int, Calisan> */
+    #[Computed]
+    public function gorunenCalisanlar(): Collection
+    {
+        return $this->calisanFiltre === ''
+            ? $this->calisanlar
+            : $this->calisanlar->filter(fn (Calisan $c) => trim((string) $c->sube) === $this->calisanFiltre || trim((string) $c->departman) === $this->calisanFiltre)->values();
+    }
+
+    /** İş kalemi seç/kaldır: grup adı boşsa (ya da önceki otomatik addaysa) seçime göre yazılır; konu şablonu yenilenir. */
+    public function isKoluToggle(string $anahtar): void
+    {
+        if (! array_key_exists($anahtar, $this->isKalemiSecenekleri)) {
+            return;
+        }
+
+        $eskiOtomatik = $this->isKoluOtomatikAd();
+        $this->isKoluKalemleri = in_array($anahtar, $this->isKoluKalemleri, true)
+            ? array_values(array_diff($this->isKoluKalemleri, [$anahtar]))
+            : [...$this->isKoluKalemleri, $anahtar];
+
+        if ($this->isKolu === '' || $this->isKolu === $eskiOtomatik) {
+            $this->isKolu = $this->isKoluOtomatikAd();
+        }
+
+        $this->oncekiIcerikYoksay = false;
+        $this->icerikYenile();
+    }
+
+    private function isKoluOtomatikAd(): string
+    {
+        return collect($this->isKoluKalemleri)->map(fn ($a) => $this->isKalemiSecenekleri[$a] ?? null)->filter()->implode(' + ');
+    }
+
+    /** Grup adı elle değişince (kayıtlı o gruba ait önceki konu şablonu varsa) onu yükler. */
+    public function updatedIsKolu(): void
+    {
+        $this->isKolu = trim($this->isKolu);
+        $this->oncekiIcerikYoksay = false;
+        $this->icerikYenile();
+    }
+
+    /** Süzgeçteki (görünen) çalışanları seçer; öncekilerin yerine geçer. */
+    public function filtredekileriSec(): void
+    {
+        $this->secilenCalisanIdler = $this->gorunenCalisanlar->pluck('id')->all();
+    }
+
     #[Computed]
     public function basliklar(): array
     {
@@ -266,6 +343,22 @@ class EgitimKatilim extends Page
      */
     private function isKalemiKonulariniOner(): void
     {
+        // Grup (iş kolu) formu: işe özgü konular YALNIZ seçilen iş kalemlerinden gelir (firma geneli yıllık plan /
+        // tüm iş kalemleri bu gruba karışmaz).
+        if ($this->isKoluKalemleri) {
+            if (isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+                $mevcut = collect($this->icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+
+                foreach (collect(config('isg.kkd_matris.is_kalemleri', []))->flatten(1)->whereIn('anahtar', $this->isKoluKalemleri)->pluck('egitim_konusu')->filter() as $konu) {
+                    if (! in_array($konu, $mevcut, true)) {
+                        $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $konu, 'dakika' => 10, 'dahil' => true];
+                    }
+                }
+            }
+
+            return;
+        }
+
         // Firmaya özgü içerik önceliklidir: yıllık eğitim planının 4. bölümü
         // ("İşe ve İşyerine Özgü Riskler") doluysa formun işyerine özgü bölümü
         // doğrudan o konularla kurulur (sektör seçilmemiş olsa bile) — Yıldız Grup
@@ -341,6 +434,7 @@ class EgitimKatilim extends Page
             ->where('baslik_anahtari', $this->baslikAnahtari)
             ->when($this->baslikAnahtari === 'genel', fn ($q) => $q->where('sektor_anahtari', $this->sektorAnahtari))
             ->where('egitim_turu', $this->egitimTuru)
+            ->when($this->isKolu !== '', fn ($q) => $q->where('is_kolu', $this->isKolu), fn ($q) => $q->where(fn ($w) => $w->whereNull('is_kolu')->orWhere('is_kolu', '')))
             ->latest('belge_tarihi')
             ->latest()
             ->first();
@@ -351,7 +445,8 @@ class EgitimKatilim extends Page
             return $kayit->konu_secimleri;
         }
 
-        $benzer = $this->ayniNaceKaydi();
+        // Grup (iş kolu) formunda başka firmanın genel şablonu taşınmaz — konular seçilen iş kalemlerinden gelir.
+        $benzer = $this->isKolu !== '' ? null : $this->ayniNaceKaydi();
 
         if ($benzer) {
             $this->oncekiKaynak = 'NACE kodu aynı olan '.$benzer->firma?->unvan.' firmasındaki son eğitimden ('.$benzer->belge_tarihi?->format('d.m.Y').')';
@@ -542,10 +637,13 @@ class EgitimKatilim extends Page
     {
         $this->kayitUnut();
 
-        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru);
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru, $this->isKalemiSecenekleri, $this->calisanFiltreSecenekleri, $this->gorunenCalisanlar);
         // Önceki firmanın sektörü yeni firmaya taşınmasın — icerikYenile NACE'den/elle seçimden kurar.
         $this->sektorAnahtari = null;
         $this->sektorElle = false;
+        $this->isKolu = '';
+        $this->isKoluKalemleri = [];
+        $this->calisanFiltre = '';
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egitmenBilgileriYenile();
         $this->oncekiIcerikYoksay = false;
@@ -578,6 +676,8 @@ class EgitimKatilim extends Page
     {
         // Kullanıcı açılır listeden seçti: NACE önerisinden farklıysa "elle" sayılır ve bu firmada hatırlanır.
         $this->sektorElle = filled($this->sektorAnahtari) && $this->sektorAnahtari !== $this->naceSektoru;
+        unset($this->isKalemiSecenekleri);
+        $this->isKoluKalemleri = array_values(array_intersect($this->isKoluKalemleri, array_keys($this->isKalemiSecenekleri)));
         $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
     }
@@ -851,6 +951,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
             'egitim_sekli' => $this->egitimSekli,
             'sektor_anahtari' => $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
             'egitim_yeri' => $this->egitimYeri,
+            'is_kolu' => $this->isKolu !== '' ? $this->isKolu : null,
+            'is_kolu_kalemleri' => $this->isKoluKalemleri ?: null,
             'belge_tarihi' => $this->belgeTarihi,
             'sure_gun' => $this->sureGun,
             'gun_tarihleri' => $this->sureGun >= 2
@@ -885,6 +987,20 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            // Seçili firma adlı BOŞ form (katılımcısız, elle doldurulacak): kayıt oluşturmaz, yıllık planı etkilemez.
+            Action::make('bosFormFirma')
+                ->label('Boş Form (PDF)')
+                ->icon('heroicon-o-document')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->tooltip('Seçili başlık ve firma adıyla boş (katılımcısız) formu indirir; ad/T.C./imza elle doldurulur. Kayıt oluşturmaz.')
+                ->action(fn () => EgitimKatilimUretici::bosFormPdf(
+                    $this->baslikAnahtari,
+                    $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
+                    $this->firma->tehlike_sinifi ?: 'az_tehlikeli',
+                    $this->egitimTuru,
+                    $this->firma,
+                )),
             ActionGroup::make([
             Action::make('pdf')
                 ->label('Eğitim Katılım Formu — PDF')

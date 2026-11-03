@@ -1100,4 +1100,17 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('..... / ..... / ..........', $html);
         $this->assertStringContainsString('.......... Ders Saati', $html);
     }
+
+    public function test_firma_adli_bos_form_kayit_olusturmadan_indirilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'VİZYON TEST LTD', 'tehlike_sinifi' => 'cok_tehlikeli']);
+        $once = EgitimKatilim::count();
+
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('bosFormFirma')
+            ->assertFileDownloaded();
+
+        $this->assertSame($once, EgitimKatilim::count(), 'boş form kayıt oluşturmamalı');
+    }
 }

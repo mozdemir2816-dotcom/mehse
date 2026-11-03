@@ -77,6 +77,25 @@
                     @endforeach
                 </select>
             </div>
+            <div style="grid-column:1/-1">
+                <label style="font-weight:600;font-size:.82rem">Çalışan Grubu / İş Kolu <span style="font-weight:400;color:rgb(107 114 128)">(isteğe bağlı)</span></label>
+                @if ($this->isKalemiSecenekleri)
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0">
+                        @foreach ($this->isKalemiSecenekleri as $anahtar => $ad)
+                            @php $sec = in_array($anahtar, $isKoluKalemleri, true); @endphp
+                            <button type="button" wire:click="isKoluToggle('{{ $anahtar }}')"
+                                style="padding:.3rem .65rem;border-radius:9999px;cursor:pointer;font-size:.78rem;border:1px solid {{ $sec ? $yesil : 'rgb(107 114 128 / .35)' }};background:{{ $sec ? 'rgb(16 185 129 / .12)' : 'transparent' }}">{{ $sec ? '✓ ' : '' }}{{ $ad }}</button>
+                        @endforeach
+                    </div>
+                @endif
+                <input type="text" wire:model.blur="isKolu" placeholder="Örn: Kazı Ekibi, Kaba İnşaat Ekibi, Boyahane"
+                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                    Aynı firmada farklı çalışan gruplarına ayrı form düzenlemek için: önce grubu seçin/yazın, sonra katılımcıları seçin.
+                    İş kalemi seçerseniz işe özgü konular yalnız seçtiğiniz iş kalemlerinden gelir; her grubun konu şablonu ayrı hatırlanır.
+                    Grup değişince konu bölümü yeniden kurulur — konuları grup adını girdikten SONRA düzenleyin. Yeni grup için "Yeni kayıt"a basın.
+                </p>
+            </div>
             <div>
                 <label style="font-weight:600;font-size:.82rem">Eğitim Yeri</label>
                 <input type="text" wire:model="egitimYeri" placeholder="Örn: Şantiye şefliği toplantı odası"
@@ -237,8 +256,20 @@
 
             @if ($this->calisanlar->isNotEmpty())
                 <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Firma Çalışanları</div>
+                @if ($this->calisanFiltreSecenekleri)
+                    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
+                        <label style="font-size:.78rem">Şube / departman:</label>
+                        <select wire:model.live="calisanFiltre" style="padding:.35rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                            <option value="">Tümü</option>
+                            @foreach ($this->calisanFiltreSecenekleri as $f)<option value="{{ $f }}">{{ $f }}</option>@endforeach
+                        </select>
+                        @if ($calisanFiltre !== '')
+                            <x-filament::button size="xs" color="success" wire:click="filtredekileriSec">Yalnız bu listedekileri seç ({{ $this->gorunenCalisanlar->count() }})</x-filament::button>
+                        @endif
+                    </div>
+                @endif
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.35rem;margin-bottom:.5rem">
-                    @foreach ($this->calisanlar as $c)
+                    @foreach ($this->gorunenCalisanlar as $c)
                         @php $secili = in_array($c->id, $secilenCalisanIdler, true); @endphp
                         <button type="button" wire:click="calisanToggle({{ $c->id }})"
                             style="text-align:left;padding:.45rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
@@ -327,7 +358,7 @@
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
                             <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}</td>
+                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.72rem;color:rgb(13 148 136);font-weight:600">{{ $k->is_kolu }}</span>@endif</td>
                             <td style="padding:.35rem .5rem">{{ $k->belge_tarihi?->format('d.m.Y') }}</td>
                             <td style="padding:.35rem .5rem">{{ $k->katilimciSayisi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">

@@ -113,26 +113,7 @@ class KurulToplantisiUretici
         }
         $satir++;
 
-        // ÖNCEKİ TOPLANTILARDAN DEVREDEN KARARLAR (varsa)
-        $devreden = $toplanti->devredenKararlar();
-        if ($devreden) {
-            $satir = self::bolumBasligi($s, $satir, 'ÖNCEKİ TOPLANTILARDAN DEVREDEN KARARLAR');
-            $satir = self::tabloBasligi($s, $satir, ['#', 'Alındığı Toplantı', 'Karar Metni', 'Sorumlu', 'Termin', 'Bu Toplantıdaki Durum / Görüşme']);
-            foreach ($devreden as $i => $d) {
-                $s->fromArray([
-                    $i + 1,
-                    trim(($d['kaynak_no'] ?: '—').' '.($d['kaynak_tarih']?->format('d.m.Y') ?? '')),
-                    $d['karar'] ?: '—',
-                    $d['sorumlu'] ?: '—',
-                    filled($d['termin']) ? Carbon::parse($d['termin'])->format('d.m.Y') : '—',
-                    KurulToplantisi::devredenOzet($d),
-                ], null, "A{$satir}");
-                $s->getStyle("C{$satir}")->getAlignment()->setWrapText(true);
-                $s->getStyle("F{$satir}")->getAlignment()->setWrapText(true);
-                $satir++;
-            }
-            $satir++;
-        }
+        // Önceki toplantılardan devreden kararlar çıktıya basılmaz (ekranda takip edilir; yalnız bu toplantının kararları).
 
         // ALINAN KARARLAR — "Durum" sütunu yok
         $satir = self::bolumBasligi($s, $satir, 'ALINAN KARARLAR');
@@ -308,40 +289,20 @@ class KurulToplantisiUretici
             $t->addCell(9700)->addText($madde);
         }
 
-        // 2. sayfadan itibaren: önceki toplantılardan devreden kararlar (varsa), sonra bu toplantının kararları
-        $devreden = $toplanti->devredenKararlar();
-        if ($devreden) {
-            $bolum->addText('Önceki Toplantılardan Devreden Kararlar', $h2, ['pageBreakBefore' => true, 'spaceAfter' => 80]);
-            $t = $bolum->addTable($kenar + ['width' => 100 * 50, 'unit' => 'pct']);
-            $t->addRow();
-            foreach ([['#', 500], ['Alındığı Toplantı', 1500], ['Karar Metni', 3800], ['Sorumlu', 1300], ['Termin', 1100], ['Durum / Görüşme', 2000]] as [$b, $g]) {
-                $t->addCell($g, $baslikHucre)->addText($b, $kalin);
-            }
-            foreach ($devreden as $i => $d) {
-                $t->addRow();
-                $t->addCell(500)->addText((string) ($i + 1), [], ['alignment' => Jc::CENTER]);
-                $t->addCell(1500)->addText(trim(($d['kaynak_no'] ?: '—').' '.($d['kaynak_tarih']?->format('d.m.Y') ?? '')));
-                $t->addCell(3800)->addText((string) ($d['karar'] ?: '—'));
-                $t->addCell(1300)->addText((string) ($d['sorumlu'] ?: '—'));
-                $t->addCell(1100)->addText(filled($d['termin']) ? Carbon::parse($d['termin'])->format('d.m.Y') : '—');
-                $t->addCell(2000)->addText(KurulToplantisi::devredenOzet($d));
-            }
-            $bolum->addText('Bu Toplantıda Alınan Kararlar', $h2, $h2p);
-        } else {
-            $bolum->addText('Kararlar ve Takip', $h2, ['pageBreakBefore' => true, 'spaceAfter' => 80]);
-        }
+        // 2. sayfadan itibaren: yalnız bu toplantıda alınan kararlar (devreden kararlar ekranda takip edilir, çıktıya basılmaz)
+        $bolum->addText('Kararlar ve Takip', $h2, ['pageBreakBefore' => true, 'spaceAfter' => 80]);
         $t = $bolum->addTable($kenar + ['width' => 100 * 50, 'unit' => 'pct']);
         $t->addRow();
-        foreach ([['#', 500], ['İlgili Gündem', 2400], ['Karar Metni', 4500], ['Sorumlu', 1500], ['Termin', 1300]] as [$b, $g]) {
+        foreach ([['#', 500], ['İlgili Gündem', 1900], ['Karar Metni', 5400], ['Sorumlu', 1400], ['Termin', 1000]] as [$b, $g]) {
             $t->addCell($g, $baslikHucre)->addText($b, $kalin);
         }
         foreach (($toplanti->kararlar ?? []) as $i => $k) {
             $t->addRow();
             $t->addCell(500)->addText((string) ($i + 1), [], ['alignment' => Jc::CENTER]);
-            $t->addCell(2400)->addText((string) ($k['gundem_maddesi'] ?? '—'));
-            $t->addCell(4500)->addText((string) ($k['karar_metni'] ?? '—'));
-            $t->addCell(1500)->addText((string) (($k['sorumlu'] ?? null) ?: '—'));
-            $t->addCell(1300)->addText(filled($k['termin'] ?? null) ? Carbon::parse($k['termin'])->format('d.m.Y') : '—');
+            $t->addCell(1900)->addText((string) ($k['gundem_maddesi'] ?? '—'));
+            $t->addCell(5400)->addText((string) ($k['karar_metni'] ?? '—'));
+            $t->addCell(1400)->addText((string) (($k['sorumlu'] ?? null) ?: '—'));
+            $t->addCell(1000)->addText(filled($k['termin'] ?? null) ? Carbon::parse($k['termin'])->format('d.m.Y') : '—');
         }
         if (! ($toplanti->kararlar ?? [])) {
             // Boş karar satırları — elle doldurmak için
