@@ -222,4 +222,45 @@ class CalisanExcelIceAktariciTest extends TestCase
 
         unlink($yol);
     }
+
+    public function test_tcsiz_eski_kayit_excelde_tc_ile_gelince_mukerrer_acilmaz_guncellenir(): void
+    {
+        // Vizyon vakası: kişi önceden T.C.'siz girilmişti; Excel T.C.'li geliyor.
+        $eski = Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'EYÜP KAÇAR', 'tc' => null, 'gorev' => null, 'aktif' => true]);
+        $baska = Calisan::factory()->create(['ad_soyad' => 'EYÜP KAÇAR', 'tc' => null]);   // başka firma — dokunulmaz
+
+        $yol = $this->xlsxOlustur([
+            ['Ad Soyad', 'T.C. Kimlik No', 'Görevi'],
+            ['Eyüp Kaçar', '2 2 0 7 2 9 5 2 9 6 4', '7114.11 -Beton ve Betonarme Kalıpçısı'],
+            ['Yeni Kişi', '11111111111', 'İşçi'],
+        ]);
+
+        $onizle = CalisanExcelIceAktarici::onizle($yol, $this->firma->id);
+        $this->assertSame(1, $onizle['yeni']);
+        $this->assertSame(1, $onizle['guncellenen']);
+
+        $sonuc = CalisanExcelIceAktarici::iceAktar($yol, $this->firma->id);
+        unlink($yol);
+
+        $this->assertSame(2, $sonuc['basarili']);
+        $this->assertSame(2, Calisan::where('firma_id', $this->firma->id)->count(), 'mükerrer kayıt açılmamalı');
+        $eski->refresh();
+        $this->assertSame('22072952964', $eski->tc);
+        $this->assertSame('7114.11 -Beton ve Betonarme Kalıpçısı', $eski->gorev);
+        $this->assertNull($baska->fresh()->tc);
+    }
+
+    public function test_ayni_isimli_iki_farkli_tc_ayri_kisi_sayilir(): void
+    {
+        $yol = $this->xlsxOlustur([
+            ['Ad Soyad', 'T.C. Kimlik No'],
+            ['Ali Veli', '11111111111'],
+            ['Ali Veli', '22222222222'],
+        ]);
+
+        CalisanExcelIceAktarici::iceAktar($yol, $this->firma->id);
+        unlink($yol);
+
+        $this->assertSame(2, Calisan::where('firma_id', $this->firma->id)->count());
+    }
 }

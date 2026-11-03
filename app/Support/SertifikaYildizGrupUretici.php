@@ -116,8 +116,12 @@ class SertifikaYildizGrupUretici
         $tc = EgitimTakibi::tcAnahtari($katilimci['tc'] ?? null);
         $ad = EgitimTakibi::adAnahtari($katilimci['ad_soyad'] ?? null);
 
-        $calisan = ($tc !== '' ? $calisanlar->first(fn ($c) => EgitimTakibi::tcAnahtari($c->tc) === $tc) : null)
-            ?? ($ad !== '' ? $calisanlar->first(fn ($c) => EgitimTakibi::adAnahtari($c->ad_soyad) === $ad) : null);
+        // Aynı kişi mükerrer kayıtlıysa (biri T.C.'siz / görevsiz eski kayıt) görevi DOLU olan eşleşme seçilir:
+        // önce aynı T.C.'liler, sonra aynı adlılar.
+        $adaylar = $calisanlar->filter(fn ($c) => $tc !== '' && EgitimTakibi::tcAnahtari($c->tc) === $tc)
+            ->concat($calisanlar->filter(fn ($c) => $ad !== '' && EgitimTakibi::adAnahtari($c->ad_soyad) === $ad));
+
+        $calisan = $adaylar->first(fn ($c) => filled($c->gorev));
 
         $gorev = filled($calisan?->gorev) ? $calisan->gorev : ($katilimci['gorev'] ?? null);
 
@@ -146,8 +150,9 @@ class SertifikaYildizGrupUretici
     }
 
     /**
-     * Aynı sertifikanın PDF çıktısı (Excel ile aynı veri ve içerik; her katılımcı için belge + eğitim
-     * konuları sayfası, tek PDF'te). Tasarım Excel şablonunun PDF karşılığıdır.
+     * Aynı sertifikanın PDF çıktısı: Excel şablonunun hücre geometrisinden (sütun/satır ölçüleri, birleşik
+     * hücreler, kenarlıklar, yazı tipleri, görseller, %75 yazdırma ölçeği, sayfa sonu ve ortalama) birebir
+     * çizilir; her katılımcı için belge + eğitim konuları sayfası tek PDF'te döner.
      *
      * @param  bool  $imzali  false → matbu (kaşe/imza görseli basılmaz)
      */
@@ -166,49 +171,76 @@ class SertifikaYildizGrupUretici
             'gorev' => TurkceMetin::buyuk(self::gorevBul($k, $calisanlar) ?? '—'),
         ])->all();
 
-        // Kaşe / imza — Excel çıktısıyla aynı kaynak ve geri dönüş sırası.
-        $iguKase = $firma?->igu?->kase_gorseli
-            ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null)
-            ?: ($s->egitici_igu_dahil || $firma?->igu ? $firma?->user?->kase_gorseli : null);
-        $hekimKase = $firma?->isyeriHekimi?->kase_gorseli ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
-        $iguImza = $s->egitici_igu_dahil || $firma?->igu ? ($firma?->igu?->imza_gorseli ?: $firma?->user?->imza_gorseli) : null;
-        $hekimImza = $firma?->isyeriHekimi?->imza_gorseli;
-        $yol = fn (?string $g) => $g && is_file(storage_path('app/public/'.$g)) ? $g : null;
+        // dompdf, @font-face yazı tiplerinin ölçü önbelleğini bu klasöre yazar (yoksa oluşturulur).
+        \Illuminate\Support\Facades\File::ensureDirectoryExists(storage_path('fonts'));
 
-        // Konu başlıkları şablondan okunur (Excel ile aynı metin).
-        $sablon = IOFactory::load(resource_path(self::SABLON_YOLU))->getSheetByName('Çıktı Sayfası');
-        $baslik = fn (string $h) => trim((string) $sablon->getCell($h)->getValue());
-        $icerik = $s->konu_icerigi ?? [];
-        $dahil = fn ($liste) => collect($liste)->where('dahil', true)->values()->all();
-        $ozgu = $icerik['isyerine_ozgu'] ?? null;
+        // Şablon bir kez doldurulur (katılımcıya özgü yalnız ad/görev — yer tutucu); sayfa modeli bir kez çıkarılır.
+        $kitap = self::doldur($s, ['ad_soyad' => '[[AD]]', 'gorev' => '[[GOREV]]'], $imzali);
+        $sheet = $kitap->getSheetByName('Çıktı Sayfası');
+        $model = ExcelSayfaCizici::sayfalar($sheet);
+        $kagit = ExcelSayfaCizici::kagitBoyutu($sheet);
+        $kenar = $sheet->getPageMargins();
 
-        $kategoriler = array_values(array_filter([
-            ['baslik' => $baslik('E43'), 'maddeler' => $dahil($icerik['genel_konular'] ?? [])],
-            ['baslik' => $baslik('E48'), 'maddeler' => $dahil($icerik['saglik_konulari'] ?? [])],
-            ['baslik' => $baslik('E54'), 'maddeler' => $dahil($icerik['teknik_konular'] ?? [])],
-            ['baslik' => $baslik('E67'), 'maddeler' => $ozgu ? $dahil($ozgu['maddeler'] ?? []) : []],
-        ], fn ($k) => $k['baslik'] !== ''));
+        $goruntule = fn (string $mod, array $liste): string => Pdf::loadView('pdf.sertifika-yildiz-grup', [
+            'mod' => $mod,
+            'model' => $model,
+            'katilimcilar' => $liste,
+            'kagit' => $kagit,
+            'ortalaYatay' => (bool) $sheet->getPageSetup()->getHorizontalCentered(),
+            'ortalaDikey' => (bool) $sheet->getPageSetup()->getVerticalCentered(),
+            'kenar' => ['sol' => $kenar->getLeft() * 72, 'ust' => $kenar->getTop() * 72],
+        ])->setPaper([0, 0, $kagit[0], $kagit[1]])->output();
 
-        $pdf = Pdf::loadView('pdf.sertifika-yildiz-grup', [
-            'firma' => $firma,
-            'katilimcilar' => $katilimcilar,
-            'tarihIfadesi' => self::tarihIfadesi($s),
-            'belgeTarihi' => now()->format('d/m/Y'),
-            'sure' => $s->sure_metni ?: '16 Ders Saati',
-            'tur' => $s->tur === 'tekrar' ? 'tekrar' : 'ilk_defa',
-            'sekil' => $s->sekil === 'uzaktan' ? 'uzaktan' : 'yuz_yuze',
-            'imzali' => $imzali,
-            'iguGorsel' => ($g = $yol($iguKase) ?? $yol($iguImza)) ? storage_path('app/public/'.$g) : null,
-            'hekimGorsel' => ($g = $yol($hekimKase) ?? $yol($hekimImza)) ? storage_path('app/public/'.$g) : null,
-            'kategoriler' => $kategoriler,
-            'harfler' => self::TURKCE_HARFLER,
-        ])->setPaper('a4', 'portrait');
+        try {
+            if (count($katilimcilar) === 1) {
+                $icerik = $goruntule('tam', $katilimcilar);
+            } else {
+                // Çok katılımcı: sabit sayfalar BİR kez çizilir, katılımcıya özgü yalnız ad/görev satırları ayrı bir
+                // katmanda üretilip birleştirilir (57 katılımcıda süre ve bellek ~20 kat azalır).
+                $icerik = self::birlestir($goruntule('statik', [['ad' => '', 'gorev' => '']]), $goruntule('dinamik', $katilimcilar), count($katilimcilar), $kagit);
+            }
+        } finally {
+            ExcelSayfaCizici::temizle();
+        }
 
         $ad = count($katilimcilar) === 1
             ? Str::slug($s->katilimcilar[0]['ad_soyad'] ?? 'katilimci').'.pdf'
             : 'sertifika-yildiz-grup-'.Str::slug($firma?->unvan ?: 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad, ['Content-Type' => 'application/pdf']);
+        return response()->streamDownload(fn () => print ($icerik), $ad, ['Content-Type' => 'application/pdf']);
+    }
+
+    /**
+     * Sabit sayfalar (1. sayfa: belge, 2. sayfa: eğitim konuları) + katılımcı başına şeffaf ad/görev katmanı →
+     * her katılımcı için [belge (+ad/görev), eğitim konuları] sayfa çifti.
+     *
+     * @param  array{0: float, 1: float}  $kagit
+     */
+    private static function birlestir(string $statik, string $dinamik, int $adet, array $kagit): string
+    {
+        $pdf = new \setasign\Fpdi\Fpdi('P', 'pt', $kagit);
+        $pdf->SetAutoPageBreak(false);
+        $pdf->SetCompression(true);
+
+        $pdf->setSourceFile(\setasign\Fpdi\PdfParser\StreamReader::createByString($statik));
+        $belge = $pdf->importPage(1);
+        $konular = $pdf->importPage(2);
+
+        $pdf->setSourceFile(\setasign\Fpdi\PdfParser\StreamReader::createByString($dinamik));
+        $katman = [];
+        for ($i = 1; $i <= $adet; $i++) {
+            $katman[$i] = $pdf->importPage($i);
+        }
+
+        for ($i = 1; $i <= $adet; $i++) {
+            $pdf->AddPage('P', $kagit);
+            $pdf->useTemplate($belge);
+            $pdf->useTemplate($katman[$i]);
+            $pdf->AddPage('P', $kagit);
+            $pdf->useTemplate($konular);
+        }
+
+        return $pdf->Output('S');
     }
 
     /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string} $katilimci */

@@ -346,7 +346,13 @@ class SertifikaOlusturTest extends TestCase
 -"]);
         \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'Ayşe Kaya', 'tc' => null, 'gorev' => 'Makine Teknikeri']);
         \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'Görevsiz Kişi', 'tc' => '22222222222', 'gorev' => null]);
+        // Mükerrer kayıt: T.C.'siz/görevsiz eski kayıt + T.C.'li/görevli yeni kayıt → görevi dolu olan seçilir.
+        \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'EYÜP KAÇAR', 'tc' => null, 'gorev' => null]);
+        \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'EYÜP KAÇAR', 'tc' => '22072952964', 'gorev' => '7114.11 -Beton ve Betonarme Kalıpçısı']);
         $c = $firma->calisanlar()->get();
+        $this->assertSame('Beton ve Betonarme Kalıpçısı', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Eyüp Kaçar', 'tc' => null, 'gorev' => null], $c));
+        $this->assertSame('Beton ve Betonarme Kalıpçısı', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'EYÜP KAÇAR', 'tc' => '22072952964', 'gorev' => null], $c));
+
 
         // Kayıttaki kopya boş / eski olsa da sistemdeki güncel görev gelir; meslek kodu ve sondaki tire atılır.
         $this->assertSame('Şantiye Şefi-İnşaat', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Ahmet Yılmaz', 'tc' => '11111111111', 'gorev' => null], $c));

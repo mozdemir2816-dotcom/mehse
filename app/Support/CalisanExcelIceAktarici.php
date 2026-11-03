@@ -73,6 +73,7 @@ class CalisanExcelIceAktarici
         $basarili = 0;
         $hatalar = [];
         $isleneIdler = [];
+        $mevcut = Calisan::query()->where('firma_id', $firmaId)->get();
 
         foreach ($okunan['satirlar'] as $satirNo => $veri) {
             if ($veri === null) {
@@ -88,7 +89,15 @@ class CalisanExcelIceAktarici
             }
 
             try {
-                $calisan = Calisan::updateOrCreate(static::anahtar($veri, $firmaId), $veri);
+                $calisan = static::bul($mevcut, $veri);
+
+                if ($calisan) {
+                    $calisan->update($veri);
+                } else {
+                    $calisan = Calisan::create($veri);
+                    $mevcut->push($calisan);
+                }
+
                 $isleneIdler[] = $calisan->id;
                 $basarili++;
             } catch (Throwable $e) {
@@ -121,6 +130,7 @@ class CalisanExcelIceAktarici
         }
 
         $mevcut = Calisan::query()->where('firma_id', $firmaId)->get(['id', 'ad_soyad', 'tc', 'aktif']);
+        $aktifOnce = $mevcut->where('aktif', true)->values();
         $eslesenIdler = [];
         $yeni = 0;
         $islenen = 0;
@@ -131,17 +141,23 @@ class CalisanExcelIceAktarici
             }
 
             $islenen++;
-            $anahtar = static::anahtar($veri, $firmaId);
-            $bulunan = $mevcut->first(fn (Calisan $c) => collect($anahtar)->except("firma_id")->every(fn ($d, $k) => (string) $c->{$k} === (string) $d));
+            $bulunan = static::bul($mevcut, $veri);
 
             if ($bulunan) {
                 $eslesenIdler[$bulunan->id] = true;
+                // Yüklemedeki gibi: eşleşen kaydın T.C.'si dolar (aynı Excel'deki aynı adlı 2. satır ayrı kişi sayılır).
+                if (filled($veri['tc'] ?? null) && blank($bulunan->tc)) {
+                    $bulunan->tc = $veri['tc'];
+                }
             } else {
                 $yeni++;
+                $taslak = new Calisan(['firma_id' => $firmaId, 'ad_soyad' => $veri['ad_soyad'], 'tc' => $veri['tc'] ?? null, 'aktif' => true]);
+                $taslak->id = -$yeni;
+                $mevcut->push($taslak);
             }
         }
 
-        $aktifler = $mevcut->where('aktif', true);
+        $aktifler = $aktifOnce;
 
         return [
             'yeni' => $yeni,
@@ -153,12 +169,33 @@ class CalisanExcelIceAktarici
         ];
     }
 
-    /** Eşleşme anahtarı: T.C. varsa T.C., yoksa ad soyad (firma içinde). */
-    private static function anahtar(array $veri, int $firmaId): array
+    /**
+     * Excel satırının firmadaki karşılığı:
+     *  1) T.C. verilmişse aynı T.C.'li kayıt;
+     *  2) bulunamazsa AYNI ADLI ve T.C.'si boş kayıt (kişi önceden T.C.'siz girilmişti → mükerrer açılmaz, T.C. ile güncellenir);
+     *  3) T.C. verilmemişse aynı adlı kayıt (T.C.'li kayıtlar dahil; önce T.C.'si boş olanlar).
+     * Ad karşılaştırması büyük/küçük harf, Türkçe İ/I ve boşluk farkını yok sayar.
+     *
+     * @param  \Illuminate\Support\Collection<int, Calisan>  $mevcut
+     */
+    private static function bul($mevcut, array $veri): ?Calisan
     {
-        return filled($veri['tc'] ?? null)
-            ? ['firma_id' => $firmaId, 'tc' => $veri['tc']]
-            : ['firma_id' => $firmaId, 'ad_soyad' => $veri['ad_soyad']];
+        $tc = EgitimTakibi::tcAnahtari($veri['tc'] ?? null);
+        $ad = EgitimTakibi::adAnahtari($veri['ad_soyad'] ?? null);
+
+        if ($tc !== '') {
+            $bulunan = $mevcut->first(fn (Calisan $c) => EgitimTakibi::tcAnahtari($c->tc) === $tc);
+
+            if ($bulunan) {
+                return $bulunan;
+            }
+
+            return $ad === '' ? null : $mevcut->first(fn (Calisan $c) => EgitimTakibi::tcAnahtari($c->tc) === '' && EgitimTakibi::adAnahtari($c->ad_soyad) === $ad);
+        }
+
+        $adaylar = $ad === '' ? collect() : $mevcut->filter(fn (Calisan $c) => EgitimTakibi::adAnahtari($c->ad_soyad) === $ad);
+
+        return $adaylar->first(fn (Calisan $c) => EgitimTakibi::tcAnahtari($c->tc) === '') ?? $adaylar->first();
     }
 
     /**
