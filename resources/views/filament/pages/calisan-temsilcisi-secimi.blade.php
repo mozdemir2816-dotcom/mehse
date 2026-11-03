@@ -128,7 +128,7 @@
                     @if ($pl)
                         <span style="font-size:.78rem;color:rgb(37 99 235);align-self:center">📋 Eğitim Katılım'da planlandı: <strong>{{ $pl->belge_no }}</strong> ({{ $pl->katilimciSayisi() }} kişi)</span>
                     @endif
-                    <x-filament::button tag="a" size="sm" color="warning" icon="heroicon-o-academic-cap" :href="\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id])">Eğitim Katılım'da aç</x-filament::button>
+                    <x-filament::button tag="a" size="sm" color="warning" icon="heroicon-o-academic-cap" :href="\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id, 'baslik' => 'calisan_temsilcisi'])">Eğitim Katılım'da aç</x-filament::button>
                     <x-filament::button tag="a" size="sm" color="gray" icon="heroicon-o-check-circle" :href="\App\Filament\Pages\EgitimYenilemeTakibi::getUrl(['firma' => $this->firma->id, 'sekme' => 'kayitlar'])">Katılım / Sonuç gir</x-filament::button>
                 </div>
             </x-filament::section>

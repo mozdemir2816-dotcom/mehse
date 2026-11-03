@@ -235,4 +235,47 @@ class EgitimPlanlayiciTest extends TestCase
         $b->assertSet('uyelerOtomatik', false);
         $this->assertCount(2, $b->get('secilenCalisanIdler'));
     }
+
+    public function test_baslik_parametresi_dogru_egitimi_secer_ve_gercek_form_planli_kaydi_mukerrer_birakmaz(): void
+    {
+        $ekip = AcilEkip::create(['firma_id' => $this->firma->id, 'tur' => 'ilk_yardim', 'ad' => 'İlk Yardım Ekibi']);
+        Livewire::test(AcilDurumEkipleri::class)->set('firmaId', $this->firma->id)
+            ->callAction('uyeEkle', ['acil_ekip_id' => $ekip->id, 'ad_soyad' => 'Belgesiz Kişi', 'uyelik' => 'asil'])
+            ->assertSee('baslik=ilkyardim_ekibi');   // "Eğitim Katılım'da aç" bağlantısı ekibin eğitim başlığını taşır
+
+        $this->assertNotNull(EkipAtamaEgitim::acilPlanliEgitim($this->firma, 'ilk_yardim'));
+
+        // Bağlantıdan gelinen sayfa doğru başlık seçili + ekip üyeleri hazır açılır.
+        $e = Livewire::withQueryParams(['firma' => $this->firma->id, 'baslik' => 'ilkyardim_ekibi'])->test(\App\Filament\Pages\EgitimKatilim::class);
+        $e->assertSet('baslikAnahtari', 'ilkyardim_ekibi')->assertSet('uyelerOtomatik', true);
+        $this->assertSame(['Belgesiz Kişi'], array_column($e->get('manuelKatilimcilar'), 'ad_soyad'));
+
+        // Geçersiz başlık yok sayılır.
+        Livewire::withQueryParams(['firma' => $this->firma->id, 'baslik' => 'yok_boyle_baslik'])->test(\App\Filament\Pages\EgitimKatilim::class)
+            ->assertSet('baslikAnahtari', 'genel');
+
+        // Gerçek form kaydedilince planlı kayıt mükerrer kalmaz (silinir); tek kayıt = gerçek form.
+        $e->callAction('sadeceKaydet');
+        $kayitlar = EgitimKatilim::where('firma_id', $this->firma->id)->where('baslik_anahtari', 'ilkyardim_ekibi')->get();
+        $this->assertCount(1, $kayitlar);
+        $this->assertArrayNotHasKey('planli_kaynak', $kayitlar->first()->konu_secimleri);
+        $this->assertNull(EkipAtamaEgitim::acilPlanliEgitim($this->firma, 'ilk_yardim'));
+        $this->assertSame(0, EkipAtamaEgitim::acilEgitimDurumu(EkipAtamaEgitim::acilEkipler($this->firma)->first())['eksik']->count());
+    }
+
+    public function test_uzlastir_yalniz_baska_kayitta_egitimi_alinanlari_cikarir(): void
+    {
+        $planli = EgitimPlanlayici::planla($this->firma, 'isg_kurulu', [$this->e('Ali Veli'), $this->e('Ayşe Kaya')], 'kurul');
+        EgitimKatilim::create(['firma_id' => $this->firma->id, 'baslik_anahtari' => 'isg_kurulu', 'belge_tarihi' => now(), 'konu_secimleri' => [],
+            'katilimcilar' => [['ad_soyad' => 'ALİ VELİ', 'tc' => null, 'gorev' => null]]]);
+
+        $this->assertSame(1, EgitimPlanlayici::uzlastir($this->firma, 'isg_kurulu'));
+        $this->assertSame(['Ayşe Kaya'], array_column($planli->fresh()->katilimcilar, 'ad_soyad'));
+
+        // Ayşe de başka kayıtta eğitim alınca planlı kayıt tamamen silinir.
+        EgitimKatilim::create(['firma_id' => $this->firma->id, 'baslik_anahtari' => 'isg_kurulu', 'belge_tarihi' => now(), 'konu_secimleri' => [],
+            'katilimcilar' => [['ad_soyad' => 'Ayşe Kaya', 'tc' => null, 'gorev' => null, 'katildi' => true]]]);
+        EgitimPlanlayici::uzlastir($this->firma, 'isg_kurulu');
+        $this->assertNull(EgitimKatilim::find($planli->id));
+    }
 }

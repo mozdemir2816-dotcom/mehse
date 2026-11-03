@@ -162,6 +162,17 @@ class EgitimKatilim extends Page
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
+
+        // ?baslik=<anahtar>: ilgili eğitim başlığı hazır seçili açılır (Kurul / Acil Durum Ekipleri / Çalışan Temsilcisi sayfalarındaki
+        // "Eğitim Katılım'da aç" bağlantıları) — yanlış başlık seçilip mükerrer / uyuşmayan evrak oluşmasın.
+        $baslik = (string) request()->query('baslik');
+
+        if ($baslik !== '' && array_key_exists($baslik, $this->basliklar)) {
+            $this->baslikAnahtari = $baslik;
+            $this->sektorAnahtari = $baslik === 'genel' ? $this->sektorAnahtari : null;
+            $this->icerikYenile();
+            $this->grupUyeleriniUygula();
+        }
     }
 
     /*
@@ -1062,6 +1073,9 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
 
         // Formdaki işe özgü konular yıllık eğitim planının 4. bölümüne yazılır (önce), sonra işlenenler "tamamlandı" işaretlenir.
         IseOzguSenkron::formdanPlana($kayit);
+
+        // Aynı başlıkta otomatik açılmış PLANLI kayıt varsa, bu kayıtla eğitimi alınan kişiler oradan çıkarılır (mükerrer kalmasın).
+        \App\Support\EgitimPlanlayici::uzlastir($this->firma, $this->baslikAnahtari);
 
         // İş koluna göre kayıt: işe özgü konular kütüphaneye o iş koluyla yazılır (sonraki formlara / diğer firmalara gelir).
         if (($eklenen = IseOzguEgitimKutuphanesi::isKolundanKaydet($kayit)) > 0) {

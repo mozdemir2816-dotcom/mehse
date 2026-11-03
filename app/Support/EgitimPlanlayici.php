@@ -91,6 +91,38 @@ class EgitimPlanlayici
         ]);
     }
 
+    /**
+     * Gerçek bir eğitim katılım formu kaydedildiğinde: aynı firma + başlıktaki açık planlı kayıtlardan, eğitimi artık başka bir
+     * kayıtta (belge alacak olarak) bulunan bekleyen katılımcıları çıkarır; kimse kalmayan planlı kayıt silinir → aynı eğitim için
+     * mükerrer (planlı + gerçek) kayıt / evrak kalmaz.
+     *
+     * @return int silinen / güncellenen planlı kayıt sayısı
+     */
+    public static function uzlastir(Firma $firma, string $baslik): int
+    {
+        $kayitlar = EgitimKatilim::query()->where('firma_id', $firma->id)->where('baslik_anahtari', $baslik)->latest('id')->limit(60)->get();
+        $planlilar = $kayitlar->filter(fn (EgitimKatilim $k) => isset($k->konu_secimleri['planli_kaynak']) && self::bekleyenler($k)->isNotEmpty());
+        $sayi = 0;
+
+        foreach ($planlilar as $planli) {
+            // Eğitimi alanlar: BU planlı kayıt dışındaki kayıtlarda katılımı onaylı olanlar.
+            $alanlar = $kayitlar->reject(fn (EgitimKatilim $k) => $k->id === $planli->id)
+                ->flatMap(fn (EgitimKatilim $k) => collect($k->belgeAlacakKatilimcilar())->pluck('ad_soyad'))
+                ->map(fn ($ad) => EgitimTakibi::adAnahtari($ad))->filter()->flip();
+
+            $liste = collect($planli->katilimcilar)->reject(fn ($x) => ($x['katildi'] ?? true) === false && $alanlar->has(EgitimTakibi::adAnahtari($x['ad_soyad'] ?? null)))->values();
+
+            if ($liste->count() === count($planli->katilimcilar)) {
+                continue;
+            }
+
+            $liste->isEmpty() ? $planli->delete() : $planli->update(['katilimcilar' => $liste->all()]);
+            $sayi++;
+        }
+
+        return $sayi;
+    }
+
     /** @param  array{ad_soyad: string, tc?: ?string, gorev?: ?string}  $e */
     private static function katilimci(array $e): array
     {
