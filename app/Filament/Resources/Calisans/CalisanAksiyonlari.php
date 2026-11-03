@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Calisans;
 use App\Models\Firma;
 use App\Support\CalisanDosyasiUretici;
 use App\Support\CalisanExcelIceAktarici;
+use App\Support\CalisanMukerrerBirlestirici;
 use App\Support\CalisanListesiUretici;
 use Closure;
 use Filament\Actions\Action;
@@ -120,6 +121,39 @@ class CalisanAksiyonlari
 
                     $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
                 }),
+
+            Action::make('mukerrerBirlestir')
+                ->label('Mükerrer Personeli Birleştir')
+                ->icon('heroicon-o-arrows-pointing-in')
+                ->color('gray')
+                ->modalWidth('5xl')
+                ->modalDescription('Aynı firmada aynı adlı kayıtlar tek kişide birleştirilir: en eski kayıt kalır, diğerlerine bağlı eğitim / muayene / KKD / '
+                    .'ekip kayıtları ona taşınır, alanlar en yeni dolu değerle güncellenir, mükerrerler silinir. Farklı T.C.\'li aynı adlılar birleştirilmez. '
+                    .'Önce aşağıdaki önizlemeyi inceleyin.')
+                ->modalSubmitActionLabel('Birleştir')
+                ->schema([
+                    ...array_map(fn ($alan) => $alan->live(), static::firmaAlani($sabitFirma, $varsayilanFirmaId)),
+                    Placeholder::make('mukerrerOnizleme')
+                        ->label('Önizleme')
+                        ->content(fn (Get $get) => static::mukerrerOnizlemeMetni($get, $sabitFirma)),
+                    Toggle::make('onay')
+                        ->label('Önizlemeyi inceledim; mükerrer kayıtların birleştirilip silinmesini onaylıyorum')
+                        ->accepted(),
+                ])
+                ->action(function (array $data) use ($sabitFirma): void {
+                    $sonuc = CalisanMukerrerBirlestirici::birlestir(static::firmaBul($sabitFirma, $data));
+
+                    if ($sonuc['grup'] === 0) {
+                        Notification::make()->title('Birleştirilecek mükerrer personel bulunamadı')->warning()->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->title($sonuc['grup'].' kişide '.$sonuc['silinen'].' mükerrer kayıt birleştirildi')
+                        ->body($sonuc['tasinan'].' bağlı kayıt tutulan kişiye taşındı'.($sonuc['cakisan'] ? '; '.$sonuc['cakisan'].' çakışan kayıt tek kayda indirildi.' : '.'))
+                        ->success()->send();
+                }),
             ])
                 ->label('Dışa Aktar / İçe Aktar')
                 ->icon('heroicon-o-arrow-down-tray')
@@ -228,6 +262,57 @@ class CalisanAksiyonlari
         }
 
         return new HtmlString($satir);
+    }
+
+    private static function mukerrerOnizlemeMetni(Get $get, ?Closure $sabitFirma): HtmlString|string
+    {
+        $firma = $sabitFirma
+            ? $sabitFirma()
+            : (filled($get('firma_id')) ? Firma::query()->where('user_id', Filament::auth()->id())->find($get('firma_id')) : null);
+
+        return static::mukerrerOnizlemeHtml($firma);
+    }
+
+    /** Mükerrer birleştirme önizlemesi (modal içeriği). */
+    public static function mukerrerOnizlemeHtml(?Firma $firma): HtmlString|string
+    {
+        if (! $firma) {
+            return 'Önce firma seçin.';
+        }
+
+        $o = CalisanMukerrerBirlestirici::onizle($firma);
+
+        if ($o['grup'] === 0 && ! $o['atlanan']) {
+            return 'Bu firmada mükerrer (aynı adlı) personel yok.';
+        }
+
+        $etiket = ['tc' => 'T.C.', 'gorev' => 'Görev', 'departman' => 'Departman', 'sube' => 'Şube', 'cinsiyet' => 'Cinsiyet', 'ozel_durum' => 'Özel durum', 'ise_giris' => 'İşe giriş', 'isten_cikis' => 'İşten çıkış', 'dogum_tarihi' => 'Doğum', 'kan_grubu' => 'Kan grubu', 'telefon' => 'Telefon', 'eposta' => 'E-posta', 'agir_tehlikeli_iste' => 'Ağır/tehlikeli iş', 'notlar' => 'Notlar', 'aktif' => 'Aktif'];
+
+        $html = '<div style="font-size:.85rem"><strong>'.$o['grup'].'</strong> kişide <strong>'.$o['silinecek'].'</strong> mükerrer kayıt silinecek · '
+            .'<strong>'.$o['tasinacak'].'</strong> bağlı kayıt taşınacak'.($o['cakisan'] ? ' · <strong>'.$o['cakisan'].'</strong> çakışan kayıt tek kayda inecek' : '').'</div>';
+
+        if ($o['satirlar']) {
+            $html .= '<div style="max-height:18rem;overflow:auto;margin-top:.5rem"><table style="width:100%;border-collapse:collapse;font-size:.78rem">'
+                .'<tr style="text-align:left"><th style="padding:.25rem .4rem">Kişi</th><th style="padding:.25rem .4rem">Kalacak kayıt ← silinecek</th><th style="padding:.25rem .4rem">Değişecek alanlar</th><th style="padding:.25rem .4rem">Taşınan</th></tr>';
+
+            foreach (array_slice($o['satirlar'], 0, 80) as $s) {
+                $degisen = collect($s['degisen'])->map(fn ($d, $alan) => e(($etiket[$alan] ?? $alan).': '.($d[0] !== '' ? $d[0] : '—').' → '.$d[1]))->implode('<br>');
+                $html .= '<tr style="border-top:1px solid rgb(107 114 128 / .25);vertical-align:top">'
+                    .'<td style="padding:.25rem .4rem"><strong>'.e($s['ad']).'</strong></td>'
+                    .'<td style="padding:.25rem .4rem">#'.$s['tutulan'].' ← '.e(implode(', ', array_map(fn ($i) => '#'.$i, $s['silinecek']))).'</td>'
+                    .'<td style="padding:.25rem .4rem">'.($degisen ?: '—').'</td>'
+                    .'<td style="padding:.25rem .4rem">'.$s['tasinacak'].($s['cakisan'] ? ' (+'.$s['cakisan'].' çakışan)' : '').'</td></tr>';
+            }
+
+            $html .= '</table></div>'.(count($o['satirlar']) > 80 ? '<div style="font-size:.75rem">… ilk 80 kişi gösterildi; hepsi birleştirilir.</div>' : '');
+        }
+
+        if ($o['atlanan']) {
+            $html .= '<div style="margin-top:.5rem;font-size:.78rem;color:#b45309"><strong>Birleştirilmeyecek ('.count($o['atlanan']).'):</strong> '
+                .e(collect($o['atlanan'])->map(fn ($a) => $a['ad'].' — '.$a['neden'])->implode('; ')).'</div>';
+        }
+
+        return new HtmlString($html);
     }
 
     private static function firmaBul(?Closure $sabitFirma, array $data): Firma
