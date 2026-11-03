@@ -86,8 +86,9 @@ class CalisanAksiyonlari
                         ->content(fn (Get $get) => static::onizlemeMetni($get, $sabitFirma)),
                     Toggle::make('pasife_onay')
                         ->label('Yukarıda listelenen personelin pasife alınmasını onaylıyorum')
-                        ->visible(fn (Get $get) => static::pasifeAlinacakVar($get, $sabitFirma))
-                        ->accepted(fn (Get $get) => static::pasifeAlinacakVar($get, $sabitFirma)),
+                        // Önizleme hazırlanamasa bile seçenek açıkken onay kutusu hep görünür (sessizce atlanmasın).
+                        ->visible(fn (Get $get) => (bool) $get('pasife_al'))
+                        ->accepted(fn (Get $get) => (bool) $get('pasife_al')),
                 ])
                 ->action(function (array $data) use ($sabitFirma): void {
                     $yol = Storage::disk('local')->path($data['dosya']);
@@ -103,10 +104,18 @@ class CalisanAksiyonlari
                         Storage::disk('local')->delete($data['dosya']);
                     }
 
-                    $bildirim = Notification::make()->title($sonuc['basarili'].' çalışan eklendi/güncellendi'.($sonuc['pasife'] ? ', '.$sonuc['pasife'].' kişi pasife alındı' : ''));
+                    $pasifeIstendi = (bool) ($data['pasife_al'] ?? false);
+                    $bildirim = Notification::make()->title($sonuc['basarili'].' çalışan eklendi/güncellendi'
+                        .($pasifeIstendi ? ', '.$sonuc['pasife'].' kişi pasife alındı' : ''));
 
-                    if ($sonuc['hatalar']) {
-                        $bildirim->body(implode("\n", array_slice($sonuc['hatalar'], 0, 10)));
+                    $notlar = $sonuc['hatalar'];
+
+                    if ($pasifeIstendi && $sonuc['pasife'] === 0) {
+                        array_unshift($notlar, 'Pasife alınacak (listede olmayan aktif) personel bulunamadı veya yükleme işlenemedi.');
+                    }
+
+                    if ($notlar) {
+                        $bildirim->body(implode("\n", array_slice($notlar, 0, 10)));
                     }
 
                     $sonuc['basarili'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
@@ -176,11 +185,19 @@ class CalisanAksiyonlari
             return null;
         }
 
-        try {
-            return CalisanExcelIceAktarici::onizle($yol, (int) $firmaId);
-        } catch (Throwable) {
-            return null;
+        // Aynı istekte form birkaç kez değerlendirilir; dosyayı her seferinde yeniden okuma.
+        static $onbellek = [];
+        $anahtar = $yol.'|'.$firmaId.'|'.@filemtime($yol).'|'.@filesize($yol);
+
+        if (! array_key_exists($anahtar, $onbellek)) {
+            try {
+                $onbellek[$anahtar] = CalisanExcelIceAktarici::onizle($yol, (int) $firmaId);
+            } catch (Throwable) {
+                $onbellek[$anahtar] = null;
+            }
         }
+
+        return $onbellek[$anahtar];
     }
 
     private static function pasifeAlinacakVar(Get $get, ?Closure $sabitFirma): bool
@@ -193,7 +210,7 @@ class CalisanAksiyonlari
         $o = static::onizleme($get, $sabitFirma);
 
         if (! $o) {
-            return 'Dosya okunuyor veya firma seçilmedi…';
+            return 'Önizleme hazırlanamadı (dosya okunamadı veya firma seçilmedi). Yükleme yine de yapılabilir; pasife alma için aşağıdaki onayı vermeniz gerekir.';
         }
 
         if ($o['hata']) {
