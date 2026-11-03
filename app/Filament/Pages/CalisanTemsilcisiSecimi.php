@@ -5,12 +5,15 @@ namespace App\Filament\Pages;
 use App\Filament\Concerns\SinirliErisim;
 use App\Models\CalisanTemsilcisiSecimi as SecimModel;
 use App\Models\Firma;
+use App\Support\AtamaYazisiUretici;
 use App\Support\CalisanTemsilcisiSecimiUretici;
+use App\Support\EkipAtamaEgitim;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use App\Support\EgitimTakibi;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
@@ -168,7 +171,84 @@ class CalisanTemsilcisiSecimi extends Page
 
         $this->adaylar = $temizAdaylar;
 
+        $this->temsilciAtamasiniHazirla();
+
         return $secim;
+    }
+
+    /** Kazanan seçildiyse atama yazısı otomatik hazırlanır (aynı kişinin son 2 yıldaki yazısı varsa yenisi açılmaz); eğitim hatırlatılır. */
+    private function temsilciAtamasiniHazirla(): void
+    {
+        unset($this->atamaEgitim);
+
+        if (! $this->firma) {
+            return;
+        }
+
+        $yazi = EkipAtamaEgitim::temsilciAtamaHazirla($this->firma);
+        $planli = EkipAtamaEgitim::temsilciEgitimPlanla($this->firma);   // eğitimi olmayan temsilciler Eğitim Katılım'da planlanır
+        \App\Support\GorevDurumu::onbellegiTemizle(Filament::auth()->user());
+        unset($this->atamaEgitim);
+
+        if ($yazi) {
+            $bekleyen = EkipAtamaEgitim::temsilciEgitimDurumu($this->firma)['eksik']->count();
+
+            Notification::make()->success()
+                ->title('Çalışan temsilcisi atama yazısı hazırlandı')
+                ->body(($yazi->uyeler[0]['ad_soyad'] ?? '').' için hazırlandı (Atama Yazıları > Çalışan Temsilcisi).'.($bekleyen ? " {$bekleyen} temsilcinin eğitimi Eğitim Katılım'da planlandı".($planli ? ' ('.$planli->belge_no.')' : '').'.' : ''))
+                ->send();
+        }
+    }
+
+    /** Temsilcilerin atama yazısı ve eğitim durumu (panel). @return array<int, array<string, mixed>> */
+    #[Computed]
+    public function atamaEgitim(): array
+    {
+        if (! $this->firma) {
+            return [];
+        }
+
+        $egitim = EkipAtamaEgitim::temsilciEgitimDurumu($this->firma);
+        $eksikAnahtar = $egitim['eksik']->pluck('ad_soyad')->map(fn ($a) => \App\Support\EgitimTakibi::adAnahtari($a))->flip();
+
+        return EkipAtamaEgitim::temsilciler($this->firma)->map(fn (array $t) => [
+            ...$t,
+            'atama' => EkipAtamaEgitim::temsilciAtamaVar($this->firma, $t['ad_soyad']),
+            'egitim_yok' => $eksikAnahtar->has(\App\Support\EgitimTakibi::adAnahtari($t['ad_soyad'])),
+        ])->all();
+    }
+
+    /** Seçilen kazanan için atama yazısını (yoksa hazırlayıp) indirir. */
+    public function temsilciAtamaPdf()
+    {
+        if ($this->secim()?->secilenAday() === null) {
+            Notification::make()->title('Önce aday listesinden kazananı işaretleyip kaydedin')->warning()->send();
+
+            return null;
+        }
+
+        $this->kaydet();
+        $ad = EgitimTakibi::adAnahtari($this->secim()->secilenAday()['ad_soyad']);
+        $yazi = $this->firma->atamaYazilari()->where('rol_anahtari', EkipAtamaEgitim::TEMSILCI_ROL)->latest('id')->get()
+            ->first(fn ($y) => collect((array) $y->uyeler)->contains(fn ($u) => EgitimTakibi::adAnahtari($u['ad_soyad'] ?? null) === $ad));
+
+        return $yazi ? AtamaYazisiUretici::pdf($yazi) : null;
+    }
+
+    /** Eğitimi olmayan çalışan temsilcilerini eğitim katılım formuna hazır aktarır. */
+    public function temsilciEgitimFormunaGit()
+    {
+        $aktarim = $this->firma ? EkipAtamaEgitim::temsilciEgitimAktarimi($this->firma) : null;
+
+        if (! $aktarim) {
+            Notification::make()->title('Eğitim bekleyen çalışan temsilcisi yok')->info()->send();
+
+            return null;
+        }
+
+        session(['egitim_katilim_aktarim' => $aktarim]);
+
+        return $this->redirect(\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id]));
     }
 
     public function kaydetVeBildir(): void

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Filament\Pages\AcilDurumEkipleri;
 use App\Filament\Pages\AcilDurumPlani;
 use App\Filament\Pages\CalisanTemsilcisiSecimi;
 use App\Filament\Pages\EgitimKatilim;
@@ -318,6 +319,40 @@ class GorevDurumu
 
             if ($kurulEgitim['eksik']->isNotEmpty()) {
                 $gorevler[] = static::gorev($firma, 'İSG Kurulu eğitimi', $kurulEgitim['eksik']->count().' kurul üyesine İSG Kurulu eğitimi verilmeli.', 'İSG Kurulları Hakkında Yönetmelik', null, 'yapilmayan', 'İSG Kurulu', $kurulUrl);
+            }
+        }
+
+        // Acil durum ekipleri: atama yazısı güncel mi, ekip eğitimi (ekip üyesi değişince Acil Durum Ekipleri sayfasında otomatik hazırlanır)
+        $acilEkipler = EkipAtamaEgitim::acilEkipler($firma);
+
+        if ($acilEkipler->isNotEmpty()) {
+            $ekipUrl = static::sayfaUrl(AcilDurumEkipleri::class, $firma);
+            $atamaYok = $acilEkipler->filter(fn ($e) => ! EkipAtamaEgitim::acilAtamaDurumu($e)['guncel']);
+            $egitimYok = $acilEkipler->mapWithKeys(fn ($e) => [$e->ad => EkipAtamaEgitim::acilEgitimDurumu($e)['eksik']->count()])->filter();
+
+            if ($atamaYok->isNotEmpty()) {
+                $gorevler[] = static::gorev($firma, 'Acil durum ekibi atama yazıları', $atamaYok->pluck('ad')->implode(', ').' için atama yazısı hazırlanmadı / güncel değil.', 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11', null, 'yapilmayan', 'Acil Durum Ekipleri', $ekipUrl);
+            }
+
+            if ($egitimYok->isNotEmpty()) {
+                $gorevler[] = static::gorev($firma, 'Acil durum ekibi eğitimi', $egitimYok->sum().' ekip üyesine eğitim verilmeli ('.$egitimYok->map(fn ($n, $ad) => "{$ad}: {$n}")->implode(', ').').', 'İşyerlerinde Acil Durumlar Hakkında Yönetmelik md.11 / İlkyardım Yönetmeliği', null, 'yapilmayan', 'Acil Durum Ekipleri', $ekipUrl);
+            }
+        }
+
+        // Çalışan temsilcisi: atama yazısı ve eğitim
+        $temsilciler = EkipAtamaEgitim::temsilciler($firma);
+
+        if ($temsilciler->isNotEmpty()) {
+            $temsilciUrl = static::sayfaUrl(CalisanTemsilcisiSecimi::class, $firma);
+            $atamasiz = $temsilciler->reject(fn ($t) => EkipAtamaEgitim::temsilciAtamaVar($firma, $t['ad_soyad']));
+            $egitimsiz = EkipAtamaEgitim::temsilciEgitimDurumu($firma)['eksik'];
+
+            if ($atamasiz->isNotEmpty()) {
+                $gorevler[] = static::gorev($firma, 'Çalışan temsilcisi atama yazısı', $atamasiz->pluck('ad_soyad')->implode(', ').' için atama yazısı hazırlanmadı.', '6331 sayılı Kanun md.20', null, 'yapilmayan', 'Çalışan Temsilcisi', $temsilciUrl);
+            }
+
+            if ($egitimsiz->isNotEmpty()) {
+                $gorevler[] = static::gorev($firma, 'Çalışan temsilcisi eğitimi', $egitimsiz->pluck('ad_soyad')->implode(', ').' için çalışan temsilcisi eğitimi verilmeli.', '6331 sayılı Kanun md.20', null, 'yapilmayan', 'Çalışan Temsilcisi', $temsilciUrl);
             }
         }
 

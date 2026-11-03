@@ -60,7 +60,12 @@ class AcilEkipAtamaSenkron
 
         $son = AtamaYazisi::query()->where('firma_id', $ekip->firma_id)->where('rol_anahtari', $rol)->latest('id')->first();
 
-        if ($son && $son->tarih?->isToday() && $son->uyeler == $uyeler) {
+        if ($son && $son->tarih?->isToday()) {
+            // Aynı gün kaydı güncellenir (üye değişikliklerinde kopya birikmez).
+            if ($son->uyeler != $uyeler) {
+                $son->update(['uyeler' => $uyeler]);
+            }
+
             return $son;
         }
 

@@ -108,6 +108,31 @@
                 <x-filament::button size="sm" color="gray" icon="heroicon-o-plus" wire:click="adayEkle">Aday Ekle</x-filament::button>
             </div>
         </x-filament::section>
+
+        @if ($this->atamaEgitim)
+            <x-filament::section icon="heroicon-o-document-check" icon-color="primary">
+                <x-slot name="heading">Atama yazısı ve eğitim</x-slot>
+                <x-slot name="description">Kazanan kaydedilince atama yazısı otomatik hazırlanır; çalışan temsilcisi eğitimi kaydı olmayanlara eğitim verilmelidir.</x-slot>
+                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                    @foreach ($this->atamaEgitim as $t)
+                        <tr style="border-top:1px solid rgb(107 114 128 / .15)">
+                            <td style="padding:.45rem .4rem;font-weight:700">{{ $t['ad_soyad'] }}@if ($t['unvan']) <span style="font-weight:400;color:rgb(107 114 128)">— {{ $t['unvan'] }}</span>@endif</td>
+                            <td style="padding:.45rem .4rem;color:{{ $t['atama'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $t['atama'] ? '✓ Atama yazısı var' : '⚠ Atama yazısı yok' }}</td>
+                            <td style="padding:.45rem .4rem;color:{{ $t['egitim_yok'] ? 'rgb(217 119 6)' : 'rgb(21 128 61)' }}">{{ $t['egitim_yok'] ? '⚠ Eğitimi yok' : '✓ Eğitim kaydı var' }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-down" wire:click="temsilciAtamaPdf">Atama yazısı (PDF)</x-filament::button>
+                    @php $pl = \App\Support\EkipAtamaEgitim::temsilciPlanliEgitim($this->firma); @endphp
+                    @if ($pl)
+                        <span style="font-size:.78rem;color:rgb(37 99 235);align-self:center">📋 Eğitim Katılım'da planlandı: <strong>{{ $pl->belge_no }}</strong> ({{ $pl->katilimciSayisi() }} kişi)</span>
+                    @endif
+                    <x-filament::button tag="a" size="sm" color="warning" icon="heroicon-o-academic-cap" :href="\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id])">Eğitim Katılım'da aç</x-filament::button>
+                    <x-filament::button tag="a" size="sm" color="gray" icon="heroicon-o-check-circle" :href="\App\Filament\Pages\EgitimYenilemeTakibi::getUrl(['firma' => $this->firma->id, 'sekme' => 'kayitlar'])">Katılım / Sonuç gir</x-filament::button>
+                </div>
+            </x-filament::section>
+        @endif
     @else
         <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
     @endif

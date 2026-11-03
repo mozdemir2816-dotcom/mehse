@@ -7,6 +7,7 @@ use App\Models\AcilEkipUyesi;
 use App\Models\Calisan;
 use App\Models\Firma;
 use App\Support\AcilEkipDurumu;
+use App\Support\EkipAtamaEgitim;
 use App\Support\AcilEkipUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -142,6 +143,61 @@ class AcilDurumEkipleri extends Page
         $this->yenile();
     }
 
+    /** Ekiplerin atama yazısı ve eğitim durumu (panel). @return array<int, array<string, mixed>> ekip id => durum */
+    #[Computed]
+    public function atamaEgitim(): array
+    {
+        return $this->firma
+            ? EkipAtamaEgitim::acilEkipler($this->firma)->mapWithKeys(fn (AcilEkip $e) => [$e->id => [
+                'ekip' => $e,
+                'atama' => EkipAtamaEgitim::acilAtamaDurumu($e),
+                'egitim' => EkipAtamaEgitim::acilEgitimDurumu($e),
+                'planli' => EkipAtamaEgitim::acilPlanliEgitim($this->firma, $e->tur),
+            ]])->all()
+            : [];
+    }
+
+    /**
+     * Ekip üyesi atandı / değişti / çıkarıldı: acil ekiplerin atama yazıları otomatik hazırlanır, eğitimi olmayan üyeler
+     * hatırlatılır, ana sayfa görevleri yenilenir.
+     */
+    private function atamaVeEgitimiGuncelle(): void
+    {
+        unset($this->atamaEgitim, $this->ekipler, $this->ozet, $this->uyeler);
+
+        if (! $this->firma) {
+            return;
+        }
+
+        $hazirlanan = EkipAtamaEgitim::acilHepsiniHazirla($this->firma);
+        $planlanan = EkipAtamaEgitim::acilHepsiniPlanla($this->firma);   // eğitimi olmayan üyeler Eğitim Katılım'da planlanır
+        \App\Support\GorevDurumu::onbellegiTemizle(Filament::auth()->user());
+        $bekleyen = collect($this->atamaEgitim)->sum(fn ($d) => $d['egitim']['eksik']->count());
+
+        if ($hazirlanan) {
+            Notification::make()->success()
+                ->title('Ekip atama yazıları hazırlandı')
+                ->body('Güncel üyelerle hazırlandı (ekip kartlarında "Atama Yazısı").'.($bekleyen ? " {$bekleyen} üyenin ekip eğitimi Eğitim Katılım'da planlandı ({$planlanan} kayıt)." : ''))
+                ->send();
+        }
+    }
+
+    /** Eğitimi olmayan ekip üyelerini ekibin eğitim katılım formuna hazır aktarır. */
+    public function ekipEgitimFormunaGit(int $ekipId)
+    {
+        $aktarim = EkipAtamaEgitim::acilEgitimAktarimi($this->ekip($ekipId)->load('uyeler.calisan:id,tc'));
+
+        if (! $aktarim) {
+            Notification::make()->title('Eğitim bekleyen üye yok')->info()->send();
+
+            return null;
+        }
+
+        session(['egitim_katilim_aktarim' => $aktarim]);
+
+        return $this->redirect(\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id]));
+    }
+
     private function yenile(): void
     {
         unset($this->ekipler, $this->ozet, $this->uyeler, $this->silinenler);
@@ -223,6 +279,7 @@ class AcilDurumEkipleri extends Page
     {
         $this->ekip($id)->delete();
         $this->yenile();
+        $this->atamaVeEgitimiGuncelle();
 
         Notification::make()->success()->title('Ekip silindi')->body('"Silinenleri Geri Al" ile geri alınabilir.')->send();
     }
@@ -282,6 +339,7 @@ class AcilDurumEkipleri extends Page
         }
 
         $this->yenile();
+        $this->atamaVeEgitimiGuncelle();
     }
 
     public function uyeEkleAction(): Action
@@ -324,6 +382,7 @@ class AcilDurumEkipleri extends Page
         $ad = $uye->ad_soyad;
         $uye->delete();
         $this->yenile();
+        $this->atamaVeEgitimiGuncelle();
 
         Notification::make()->success()->title($ad.' ekipten çıkarıldı')->body('"Silinenleri Geri Al" ile geri alınabilir.')->send();
     }
@@ -341,6 +400,7 @@ class AcilDurumEkipleri extends Page
 
         $kayit->restore();
         $this->yenile();
+        $this->atamaVeEgitimiGuncelle();
 
         Notification::make()->success()->title('Geri alındı')->send();
     }
@@ -383,6 +443,7 @@ class AcilDurumEkipleri extends Page
         $once = $this->ozet['tam'];
         $s = AcilEkipDurumu::otomatikTamamla($this->firma);
         $this->yenile();
+        $this->atamaVeEgitimiGuncelle();
         $sonra = $this->ozet['tam'];
 
         $bildirim = Notification::make()
@@ -437,6 +498,7 @@ class AcilDurumEkipleri extends Page
         $uye = AcilEkipUyesi::query()->whereIn('acil_ekip_id', $this->ekipler->pluck('id'))->findOrFail($uyeId);
         AcilEkipDurumu::liderYap($uye);
         $this->yenile();
+        $this->atamaVeEgitimiGuncelle();
 
         Notification::make()->success()->title($uye->ad_soyad.' ekip lideri yapıldı')->send();
     }

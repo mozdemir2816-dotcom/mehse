@@ -358,7 +358,7 @@
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
                             <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.72rem;color:rgb(13 148 136);font-weight:600">{{ $k->is_kolu }}</span>@endif</td>
+                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.72rem;color:rgb(13 148 136);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
                             <td style="padding:.35rem .5rem">{{ $k->belge_tarihi?->format('d.m.Y') }}</td>
                             <td style="padding:.35rem .5rem">{{ $k->katilimciSayisi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">

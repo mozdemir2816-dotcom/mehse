@@ -85,6 +85,49 @@
             </div>
         @endif
 
+        {{-- ATAMA YAZISI VE EĞİTİM: üye atanınca / değişince atama yazıları otomatik hazırlanır, ekip eğitimi hatırlatılır --}}
+        @if ($this->atamaEgitim)
+            <x-filament::section icon="heroicon-o-document-check">
+                <x-slot name="heading">Atama yazıları ve eğitim</x-slot>
+                <x-slot name="description">Ekip üyesi atanınca ya da değişince atama yazısı otomatik hazırlanır; eğitim belgesi / eğitim kaydı olmayan üyelere ekip eğitimi verilmelidir.</x-slot>
+                <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                    @foreach ($this->atamaEgitim as $ekipId => $d)
+                        @php $atama = $d['atama']; $egitim = $d['egitim']; @endphp
+                        <tr wire:key="atama-egitim-{{ $ekipId }}" style="border-top:1px solid rgb(107 114 128 / .15);vertical-align:top">
+                            <td style="padding:.5rem .4rem;font-weight:700;white-space:nowrap">{{ $d['ekip']->ad }}</td>
+                            <td style="padding:.5rem .4rem">
+                                <span style="font-weight:600;color:{{ $atama['guncel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $atama['guncel'] ? '✓ Atama yazısı güncel' : '⚠ Atama yazısı güncel değil' }}</span>
+                                @unless ($atama['guncel'])
+                                    <div style="font-size:.72rem;color:rgb(107 114 128)">
+                                        @if (! $atama['var']) Henüz hazırlanmadı.
+                                        @else
+                                            @if ($atama['eklenen']) {{ implode(', ', $atama['eklenen']) }} eklendi @endif
+                                            @if ($atama['cikan']) · {{ implode(', ', $atama['cikan']) }} çıktı @endif
+                                        @endif
+                                    </div>
+                                @endunless
+                                <div style="margin-top:.25rem"><x-filament::button size="xs" color="gray" icon="heroicon-o-document-text" wire:click="atamaPdf({{ $ekipId }})">Atama Yazısı (PDF)</x-filament::button></div>
+                            </td>
+                            <td style="padding:.5rem .4rem">
+                                <span style="font-weight:600;color:{{ $egitim['eksik']->isEmpty() ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $egitim['eksik']->isEmpty() ? '✓ Eğitimler tamam' : '⚠ '.$egitim['eksik']->count().' üyenin eğitimi yok' }}</span>
+                                @if ($egitim['eksik']->isNotEmpty())
+                                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $egitim['eksik']->pluck('ad_soyad')->implode(', ') }}</div>
+                                    @php $pl = $d['planli']; @endphp
+                                    @if ($pl)
+                                        <div style="font-size:.72rem;color:rgb(37 99 235);margin-top:.15rem">📋 Eğitim Katılım'da planlandı: <strong>{{ $pl->belge_no }}</strong> ({{ $pl->katilimciSayisi() }} kişi)</div>
+                                    @endif
+                                    <div style="margin-top:.25rem;display:flex;gap:.3rem;flex-wrap:wrap">
+                                        <x-filament::button tag="a" size="xs" color="warning" icon="heroicon-o-academic-cap" :href="\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firma->id])">Eğitim Katılım'da aç</x-filament::button>
+                                        <x-filament::button tag="a" size="xs" color="gray" icon="heroicon-o-check-circle" :href="\App\Filament\Pages\EgitimYenilemeTakibi::getUrl(['firma' => $firma->id, 'sekme' => 'kayitlar'])">Katılım / Sonuç gir</x-filament::button>
+                                    </div>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </x-filament::section>
+        @endif
+
         @if ($this->ekipler->isEmpty())
             <x-filament::section>
                 <div style="text-align:center;padding:1rem">

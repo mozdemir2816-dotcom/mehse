@@ -128,6 +128,19 @@ class KurulAtamaEgitim
         return ['toplam' => $uyeler->count(), 'alan' => $uyeler->count() - $eksik->count(), 'eksik' => $eksik];
     }
 
+    /** Eğitimi olmayan kurul üyeleri için Eğitim Katılım'da planlı kayıt açar / günceller (bkz. EgitimPlanlayici). */
+    public static function egitimPlanla(Firma $firma): ?EgitimKatilim
+    {
+        $eksik = self::egitimDurumu($firma)['eksik']->map(fn (KurulUyesi $u) => ['ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'gorev' => $u->rolEtiketi()])->values()->all();
+
+        return EgitimPlanlayici::planla($firma, self::EGITIM_BASLIGI, $eksik, 'kurul');
+    }
+
+    public static function planliEgitim(Firma $firma): ?EgitimKatilim
+    {
+        return EgitimPlanlayici::acikKayit($firma, self::EGITIM_BASLIGI, 'kurul');
+    }
+
     /** Eğitim Katılım formuna aktarılacak oturum verisi (eğitimi olmayan üyeler); yoksa null. */
     public static function egitimAktarimi(Firma $firma): ?array
     {

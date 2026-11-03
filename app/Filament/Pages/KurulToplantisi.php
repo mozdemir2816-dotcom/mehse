@@ -276,7 +276,7 @@ class KurulToplantisi extends Page
             return null;
         }
 
-        return ['atama' => KurulAtamaEgitim::atamaDurumu($this->firma), 'egitim' => KurulAtamaEgitim::egitimDurumu($this->firma)];
+        return ['atama' => KurulAtamaEgitim::atamaDurumu($this->firma), 'egitim' => KurulAtamaEgitim::egitimDurumu($this->firma), 'planli' => KurulAtamaEgitim::planliEgitim($this->firma)];
     }
 
     /**
@@ -292,6 +292,7 @@ class KurulToplantisi extends Page
         }
 
         $yazi = KurulAtamaEgitim::atamaYazisiHazirla($this->firma);
+        $planli = KurulAtamaEgitim::egitimPlanla($this->firma);   // eğitimi olmayan üyeler Eğitim Katılım'da planlanır
         \App\Support\GorevDurumu::onbellegiTemizle(Filament::auth()->user());
         unset($this->atamaEgitim);
 
@@ -304,7 +305,7 @@ class KurulToplantisi extends Page
         Notification::make()->success()
             ->title('Atama yazısı hazırlandı')
             ->body('İSG Kurulu atama yazısı güncel üyelerle hazırlandı (Atama Yazıları > İSG Kurulu, ya da bu sayfadaki "Atama ve eğitim" bölümü).'
-                .($bekleyen ? " {$bekleyen} üyeye İSG Kurulu eğitimi verilmesi gerekiyor." : ''))
+                .($bekleyen ? " {$bekleyen} üyenin İSG Kurulu eğitimi Eğitim Katılım'da planlandı".($planli ? ' ('.$planli->belge_no.')' : '').'.' : ''))
             ->send();
     }
 

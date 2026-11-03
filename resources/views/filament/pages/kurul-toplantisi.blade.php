@@ -102,9 +102,14 @@
                             @endif
                         </div>
                         @if ($ae['egitim']['eksik']->isNotEmpty())
-                            <div class="mt-2">
-                                <x-filament::button size="xs" color="warning" icon="heroicon-o-academic-cap" wire:click="kurulEgitimFormunaGit">Eğitim katılım formunu hazırla</x-filament::button>
-                            </div>
+                        @php $pl = $ae['planli']; @endphp
+                        @if ($pl)
+                            <div class="mt-1 text-xs" style="color:rgb(37 99 235)">📋 Eğitim Katılım'da planlandı: <strong>{{ $pl->belge_no }}</strong> ({{ $pl->katilimciSayisi() }} kişi, {{ $pl->belge_tarihi?->format('d.m.Y') }})</div>
+                        @endif
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <x-filament::button tag="a" size="xs" color="warning" icon="heroicon-o-academic-cap" :href="\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firma->id])">Eğitim Katılım'da aç</x-filament::button>
+                            <x-filament::button tag="a" size="xs" color="gray" icon="heroicon-o-check-circle" :href="\App\Filament\Pages\EgitimYenilemeTakibi::getUrl(['firma' => $firma->id, 'sekme' => 'kayitlar'])">Katılım / Sonuç gir</x-filament::button>
+                        </div>
                         @endif
                     </div>
                 </div>
