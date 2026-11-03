@@ -10,6 +10,42 @@
         Madde 17 kapsamındaki eğitim katılım formunu oluşturun.
     </p>
 
+    {{-- ÇIKTI AL: butonun hemen altında açılan sabit konumlu menü (Filament açılır menüsü bazı ekranlarda sol üst köşede açılıyordu).
+         Eylemler başlıkta gizli durur; buradan mountAction ile açılır (önce kaydeder, Kaydet ile aynı belgeyi kullanır). --}}
+    @if ($this->firma)
+        @php
+            $ciktilar = [
+                ['pdf', 'heroicon-o-document-arrow-down', 'Eğitim Katılım Formu — PDF', 'İmza föyü, yazdırmaya hazır'],
+                ['excel', 'heroicon-o-table-cells', 'Eğitim Katılım Formu — Excel', 'Düzenlenebilir tablo'],
+                ['word', 'heroicon-o-document-text', 'Eğitim Katılım Formu — Word', 'Düzenlenebilir belge'],
+                ['sertifika', 'heroicon-o-check-badge', 'Katılımcı Sertifikaları — PDF', 'Her katılımcı için sertifika'],
+            ];
+            if ($baslikAnahtari === 'genel') {
+                $ciktilar[] = ['yildizGrupSertifika', 'heroicon-o-academic-cap', 'Yıldız Grup Eğitim Sertifikası — Excel / PDF', 'Her katılımcı için belge + eğitim konuları'];
+            }
+        @endphp
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+            <div x-data="{ ac: false }" x-on:click.outside="ac = false" x-on:keydown.escape.window="ac = false" style="position:relative;display:inline-block">
+                <x-filament::button type="button" icon="heroicon-o-arrow-down-tray" x-on:click="ac = !ac">Çıktı Al ▾</x-filament::button>
+                <div x-show="ac" x-cloak x-transition.opacity.duration.120ms
+                    style="position:absolute;left:0;top:calc(100% + 6px);z-index:60;width:min(26rem,92vw);padding:.35rem;border-radius:12px;background:var(--panel-bg,#fff);border:1px solid rgb(107 114 128 / .3);box-shadow:0 12px 32px -10px rgb(15 23 42 / .35)">
+                    @foreach ($ciktilar as [$eylem, $ikon, $baslik, $alt])
+                        <button type="button" wire:click="mountAction('{{ $eylem }}')" x-on:click="ac = false"
+                            style="display:flex;align-items:center;gap:.65rem;width:100%;text-align:left;padding:.55rem .7rem;border:0;border-radius:8px;background:transparent;cursor:pointer;color:inherit"
+                            onmouseover="this.style.background='rgb(107 114 128 / .1)'" onmouseout="this.style.background='transparent'">
+                            <x-filament::icon :icon="$ikon" style="width:1.25rem;height:1.25rem;flex:none"/>
+                            <span style="display:flex;flex-direction:column;line-height:1.25">
+                                <span style="font-size:.85rem;font-weight:600">{{ $baslik }}</span>
+                                <span style="font-size:.72rem;color:rgb(107 114 128)">{{ $alt }}</span>
+                            </span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+            <span style="font-size:.75rem;color:rgb(107 114 128)">Seçtiğiniz çıktı için form önce kaydedilir; Kaydet ile aynı belge kullanılır, kopya açılmaz.</span>
+        </div>
+    @endif
+
     @php $eksikIdler = \App\Support\PortfoyKarne::eksikFirmalar(\Filament\Facades\Filament::auth()->id(), 'egitim_katilim_formu')->pluck('id')->all(); @endphp
 
     {{-- 0. BOŞ İMZA FORMU — firma/katılımcı seçmeden, tek tıkla --}}

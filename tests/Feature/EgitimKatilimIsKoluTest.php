@@ -210,4 +210,26 @@ class EgitimKatilimIsKoluTest extends TestCase
         // Firmasız (genel) boş form sektör şablonu olarak kalır.
         $this->assertSame($sablon, $this->ozguMetinler(\App\Support\EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli', 'ilk')));
     }
+
+    public function test_cikti_al_menusu_sayfada_ve_eylemler_mountAction_ile_acilir(): void
+    {
+        $t = Livewire::test(EgitimSayfasi::class)->set('firmaId', $this->firma->id)
+            ->assertSee('Çıktı Al')
+            ->assertSee('Eğitim Katılım Formu — PDF')
+            ->assertSee('Yıldız Grup Eğitim Sertifikası — Excel / PDF');
+
+        // Menüdeki düğmeler wire:click="mountAction('<eylem>')" çağırır: eylemler (başlıkta gizli) bu yolla açılabilmeli.
+        foreach (['pdf', 'excel', 'word', 'sertifika', 'yildizGrupSertifika'] as $eylem) {
+            $c = Livewire::test(EgitimSayfasi::class)->set('firmaId', $this->firma->id)->call('mountAction', $eylem);
+            $this->assertNotEmpty($c->get('mountedActions'), $eylem.' mountAction ile açılmalı');
+        }
+
+        // Yıldız Grup yalnız genel başlıkta menüde.
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', $this->firma->id)->set('baslikAnahtari', 'isg_kurulu')
+            ->assertDontSee('Yıldız Grup Eğitim Sertifikası — Excel / PDF');
+
+        // Firma seçilmeden menü görünmez.
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', null)->assertDontSee('Çıktı Al ▾');
+        $this->assertNotNull($t);
+    }
 }

@@ -1099,8 +1099,10 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                         ? $this->icerik
                         : EgitimFirmaIcerigi::firmaKonulariniEkle($this->icerik, $this->firma, $this->baslikAnahtari, $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null, $this->egitimTuru),
                 )),
-            ActionGroup::make([
+            // Çıktı eylemleri başlıkta GİZLİ kalır (display:none); sayfadaki "Çıktı Al" menüsü (egitim-katilim.blade.php) bunları
+            // mountAction ile açar. Filament'in açılır menüsü bazı ekranlarda sol üst köşede açıldığı için menü sayfaya sabitlendi.
             Action::make('pdf')
+                ->extraAttributes(['style' => 'display:none'])
                 ->label('Eğitim Katılım Formu — PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
@@ -1120,6 +1122,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('excel')
+                ->extraAttributes(['style' => 'display:none'])
                 ->label('Eğitim Katılım Formu — Excel')
                 ->icon('heroicon-o-table-cells')
                 ->color('gray')
@@ -1140,6 +1143,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('word')
+                ->extraAttributes(['style' => 'display:none'])
                 ->label('Eğitim Katılım Formu — Word')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')
@@ -1160,6 +1164,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('sertifika')
+                ->extraAttributes(['style' => 'display:none'])
                 ->label('Katılımcı Sertifikaları — PDF')
                 ->icon('heroicon-o-check-badge')
                 ->color('gray')
@@ -1193,6 +1198,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('yildizGrupSertifika')
+                ->extraAttributes(['style' => 'display:none'])
                 ->label('Yıldız Grup Eğitim Sertifikası — Excel / PDF')
                 ->icon('heroicon-o-check-badge')
                 ->color('gray')
@@ -1229,12 +1235,6 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
 
                     return $indirme;
                 }),
-            ])
-                ->label('Çıktı Al')
-                ->icon('heroicon-o-arrow-down-tray')
-                ->color('primary')
-                ->button()
-                ->tooltip('Seçtiğiniz çıktıyı verir; form henüz kaydedilmediyse önce kaydeder (Kaydet ile aynı belge kullanılır, kopya açılmaz).'),
         ];
     }
 
