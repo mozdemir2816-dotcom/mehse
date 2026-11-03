@@ -131,6 +131,14 @@ class EgitimYenilemeTakibi extends Page
             ->values();
     }
 
+    /** Temel eğitimi kaydı yok / süresi dolmuş ya da işbaşı eğitimi eksik personel (filtreden bağımsız). */
+    public function eksikSatirlar(): Collection
+    {
+        return $this->satirlar
+            ->filter(fn (array $s) => in_array($s['durum'], ['kayit_yok', 'dolmus'], true) || ! $s['isbasi'])
+            ->values();
+    }
+
     public function tumunuSec(): void
     {
         $this->secili = $this->gosterilenSatirlar->map(fn (array $s) => (int) $s['calisan']->id)->all();
@@ -212,6 +220,30 @@ class EgitimYenilemeTakibi extends Page
                         $s['isbasi'] ? 'Var' : 'Eksik',
                     ])->all(),
                     'egitim-yenileme-'.Str::slug($this->firma?->unvan ?? 'firma'),
+                )),
+
+            Action::make('eksik_excel')
+                ->label('Eğitimi Eksik Personel (Excel)')
+                ->icon('heroicon-o-exclamation-triangle')
+                ->color('warning')
+                ->visible(fn () => $this->sekme === 'yenileme' && $this->eksikSatirlar()->isNotEmpty())
+                ->action(fn () => $this->excel(
+                    'Eğitimi Eksik Personel',
+                    ['Personel', 'T.C.', 'Görev', 'Bölüm', 'İşe Giriş', 'Eksik Olan', 'Son Temel Eğitim', 'Yenileme / Yasal Son Tarih'],
+                    $this->eksikSatirlar()->map(fn (array $s) => [
+                        $s['calisan']->ad_soyad,
+                        $s['calisan']->tc,
+                        $s['calisan']->gorev,
+                        $s['calisan']->departman,
+                        $s['calisan']->ise_giris ? \Illuminate\Support\Carbon::parse($s['calisan']->ise_giris)->format('d.m.Y') : null,
+                        collect([
+                            in_array($s['durum'], ['kayit_yok', 'dolmus'], true) ? 'Temel eğitim: '.mb_strtolower(static::durumEtiketi($s['durum'])) : null,
+                            $s['isbasi'] ? null : 'İşbaşı eğitimi eksik',
+                        ])->filter()->implode(' · '),
+                        $s['son_egitim']?->format('d.m.Y'),
+                        ($s['yenileme'] ?? $s['ilk_son_tarih'])?->format('d.m.Y'),
+                    ])->all(),
+                    'egitimi-eksik-personel-'.Str::slug($this->firma?->unvan ?? 'firma'),
                 )),
 
             Action::make('oturum_excel')

@@ -222,4 +222,14 @@ class EgitimYenilemeTakibiTest extends TestCase
             ->assertSee('(Eksik)')
             ->assertDontSee('Eksik Olan Firmalar');
     }
+
+    public function test_egitimi_eksik_personel_excel_indirilir(): void
+    {
+        $this->calisan('Ali Veli', null, ['gorev' => 'Kaynakçı']);
+
+        $sayfa = Livewire::test(EgitimYenilemeTakibi::class)->set('firmaId', $this->firma->id);
+
+        $this->assertCount(1, $sayfa->instance()->eksikSatirlar());
+        $sayfa->callAction('eksik_excel')->assertFileDownloaded();
+    }
 }
