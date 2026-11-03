@@ -117,6 +117,8 @@ class IseOzguEgitimKonulari extends Page
             ]),
             Select::make('is_kalemleri')->label('İş kalemleri (yapılan işe göre)')->multiple()->options($kalemler)
                 ->helperText('Firmada bu iş kalemlerinden biri seçiliyse konu otomatik önerilir.'),
+            TextInput::make('is_kolu')->label('İş kolu / çalışan grubu (isteğe bağlı)')->maxLength(255)
+                ->helperText('Doluysa konu yalnız bu iş koluyla düzenlenen Eğitim Katılım formlarına gelir (ör. Kazı Ekibi); firma geneli plan önerisine girmez.'),
         ];
     }
 
@@ -128,6 +130,7 @@ class IseOzguEgitimKonulari extends Page
             'egitici' => filled($data['egitici'] ?? null) ? trim($data['egitici']) : null,
             'nace_onekleri' => IseOzguEgitimKutuphanesi::naceHazirla($data['nace'] ?? null),
             'is_kalemleri' => array_values($data['is_kalemleri'] ?? []) ?: null,
+            'is_kolu' => filled($data['is_kolu'] ?? null) ? trim($data['is_kolu']) : null,
         ];
     }
 
@@ -156,7 +159,7 @@ class IseOzguEgitimKonulari extends Page
             ->fillForm(function (array $arguments): array {
                 $k = IseOzguEgitimKutuphanesi::tumu(Filament::auth()->id())->get($arguments['anahtar'] ?? '');
 
-                return $k ? ['ad' => $k['ad'], 'hedef' => $k['hedef'], 'egitici' => $k['egitici'], 'nace' => IseOzguEgitimKutuphanesi::naceGoster($k['nace']), 'is_kalemleri' => $k['is_kalemleri']] : [];
+                return $k ? ['ad' => $k['ad'], 'hedef' => $k['hedef'], 'egitici' => $k['egitici'], 'nace' => IseOzguEgitimKutuphanesi::naceGoster($k['nace']), 'is_kalemleri' => $k['is_kalemleri'], 'is_kolu' => $k['is_kolu'] ?? null] : [];
             })
             ->schema(fn () => static::konuSemasi())
             ->action(function (array $data, array $arguments): void {

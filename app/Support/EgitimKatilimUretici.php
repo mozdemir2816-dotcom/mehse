@@ -68,9 +68,13 @@ class EgitimKatilimUretici
      * bkz. pdf.egitim-katilim şablonundaki satır tamamlama mantığı).
      */
     /** Firma verilirse belgede firma adı basılır (firma evrak paketi); katılımcılar yine boş. */
-    public static function bosFormPdf(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi, string $egitimTuru, ?Firma $firma = null): StreamedResponse
+    public static function bosFormPdf(string $baslikAnahtari, ?string $sektorAnahtari, string $tehlikeSinifi, string $egitimTuru, ?Firma $firma = null, ?array $icerik = null): StreamedResponse
     {
-        $icerik = EgitimIcerikOlusturucu::olustur($baslikAnahtari, $sektorAnahtari, $tehlikeSinifi, $egitimTuru);
+        // Firma verilmişse konular firmanın GÜNCEL içeriğinden gelir (yıllık plan 4. bölümü / son form / iş kalemleri);
+        // $icerik verilirse (ekrandaki form) aynen kullanılır. Firmasız çıktı sektörün genel şablonudur.
+        $icerik ??= $firma
+            ? EgitimFirmaIcerigi::bosForm($firma, $baslikAnahtari, $sektorAnahtari, $egitimTuru)
+            : EgitimIcerikOlusturucu::olustur($baslikAnahtari, $sektorAnahtari, $tehlikeSinifi, $egitimTuru);
 
         $kayit = new EgitimKatilim([
             'baslik_anahtari' => $baslikAnahtari,

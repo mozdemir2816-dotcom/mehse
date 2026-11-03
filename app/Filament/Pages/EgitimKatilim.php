@@ -12,9 +12,11 @@ use App\Models\EgitimKatilim as EgitimKatilimModel;
 use App\Models\Firma;
 use App\Models\Sertifika;
 use App\Models\YillikPlan;
+use App\Support\EgitimFirmaIcerigi;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
 use App\Support\EgitimKonulari;
+use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\IseOzguSenkron;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
@@ -231,6 +233,30 @@ class EgitimKatilim extends Page
         $this->icerikYenile();
     }
 
+    /** Grup (iş kolu) formu: kütüphanede bu iş koluna kayıtlı konular (başka firmalardan da) işe özgü bölüme eklenir. */
+    private function isKoluKutuphanedenEkle(): void
+    {
+        if ($this->isKolu === '' || ! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+            return;
+        }
+
+        $konular = IseOzguEgitimKutuphanesi::isKoluKonulari($this->firma?->user_id, $this->isKolu);
+
+        if ($konular->isEmpty()) {
+            return;
+        }
+
+        $mevcut = collect($this->icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->map(fn ($m) => mb_strtolower(trim((string) $m)))->all();
+
+        foreach ($konular as $k) {
+            if (! in_array(mb_strtolower(trim($k['ad'])), $mevcut, true)) {
+                $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $k['ad'], 'dakika' => 10, 'dahil' => true];
+            }
+        }
+
+        $this->oncekiKaynak = '"'.$this->isKolu.'" iş kolu için kütüphaneye kaydedilmiş konulardan';
+    }
+
     private function isKoluOtomatikAd(): string
     {
         return collect($this->isKoluKalemleri)->map(fn ($a) => $this->isKalemiSecenekleri[$a] ?? null)->filter()->implode(' + ');
@@ -328,6 +354,7 @@ class EgitimKatilim extends Page
             $this->icerik = $taze;
             $this->oncekidenYuklendi = false;
             $this->isKalemiKonulariniOner();
+            $this->isKoluKutuphanedenEkle();
         }
 
         // Tehlike sınıfına göre nominal ders saati (8/12/16) — kullanıcı elle değiştirebilir.
@@ -400,22 +427,13 @@ class EgitimKatilim extends Page
         }
 
         $yil = (int) Carbon::parse($this->belgeTarihi ?: now())->year;
-        $konular = collect(YillikPlan::query()->where('firma_id', $this->firma->id)->where('yil', $yil)->value('egitimler') ?? [])
-            ->where('kategori', 'ise_ozgu')->pluck('konu')->filter()->unique()->values();
+        $ozgu = EgitimFirmaIcerigi::planOzguBolumu($this->firma, $this->egitimTuru, $yil);
 
-        if ($konular->isEmpty()) {
+        if (! $ozgu) {
             return false;
         }
 
-        $sure = $this->egitimTuru === 'tekrar'
-            ? config('isg.egitim.sureler.tekrar')
-            : (config('isg.egitim.sureler.ilk.'.$this->firma->tehlike_sinifi) ?? config('isg.egitim.sureler.ilk.az_tehlikeli'));
-        $dakika = (int) round(($sure['blok_fiili_dk'] ?? 40) / $konular->count());
-
-        $this->icerik['isyerine_ozgu'] = [
-            'sektor' => 'Firmaya özgü ('.$yil.' Yıllık Eğitim Planı)',
-            'maddeler' => $konular->map(fn (string $k) => ['madde' => $k, 'dakika' => $dakika, 'dahil' => true])->all(),
-        ];
+        $this->icerik['isyerine_ozgu'] = $ozgu;
 
         return true;
     }
@@ -974,6 +992,11 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         // Formdaki işe özgü konular yıllık eğitim planının 4. bölümüne yazılır (önce), sonra işlenenler "tamamlandı" işaretlenir.
         IseOzguSenkron::formdanPlana($kayit);
 
+        // İş koluna göre kayıt: işe özgü konular kütüphaneye o iş koluyla yazılır (sonraki formlara / diğer firmalara gelir).
+        if (($eklenen = IseOzguEgitimKutuphanesi::isKolundanKaydet($kayit)) > 0) {
+            Notification::make()->title($eklenen.' konu "'.$kayit->is_kolu.'" iş koluyla kütüphaneye kaydedildi')->success()->send();
+        }
+
         // İşlenen temel/işe özgü konular yıllık eğitim planında o aya "tamamlandı" işlenir.
         EgitimKonulari::planiIsle($kayit);
 
@@ -993,13 +1016,17 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 ->icon('heroicon-o-document')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
-                ->tooltip('Seçili başlık ve firma adıyla boş (katılımcısız) formu indirir; ad/T.C./imza elle doldurulur. Kayıt oluşturmaz.')
+                ->tooltip('Ekrandaki konularla (firmanın güncel 4. bölüm konuları dahil) boş, katılımcısız formu indirir; ad/T.C./imza elle doldurulur. Kayıt oluşturmaz.')
                 ->action(fn () => EgitimKatilimUretici::bosFormPdf(
                     $this->baslikAnahtari,
                     $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
                     $this->firma->tehlike_sinifi ?: 'az_tehlikeli',
                     $this->egitimTuru,
                     $this->firma,
+                    // Ekrandaki (düzenlenmiş) konu içeriği + firmanın konuları eklenir; iş kolu (grup) formunda yalnız ekrandakiler.
+                    $this->isKolu !== ''
+                        ? $this->icerik
+                        : EgitimFirmaIcerigi::firmaKonulariniEkle($this->icerik, $this->firma, $this->baslikAnahtari, $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null, $this->egitimTuru),
                 )),
             ActionGroup::make([
             Action::make('pdf')

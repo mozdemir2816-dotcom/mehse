@@ -44,6 +44,14 @@ class IseOzguSenkron
             return false;
         }
 
+        // Çalışan grubu / iş kolu formu: plan firma geneli olduğundan bu grubun konuları plana EKLENİR, planda
+        // zaten olan diğer grupların konuları çıkarılmaz (aksi hâlde ikinci grup formu birincinin konusunu siler).
+        if (filled($kayit->is_kolu)) {
+            $konular = collect($plan->egitimler ?? [])->where('kategori', 'ise_ozgu')->pluck('konu')
+                ->map(fn ($k) => trim((string) $k))->filter()->merge($konular)
+                ->unique(fn (string $k) => mb_strtolower($k))->values();
+        }
+
         $kilit = $firma->planKilitAyIndeksi($yil);
         $mevcutlar = collect($plan->egitimler ?? [])->where('kategori', 'ise_ozgu')
             ->keyBy(fn ($e) => mb_strtolower(trim((string) ($e['konu'] ?? ''))));

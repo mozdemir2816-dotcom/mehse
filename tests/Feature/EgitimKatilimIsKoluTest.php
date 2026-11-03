@@ -133,4 +133,81 @@ class EgitimKatilimIsKoluTest extends TestCase
         $this->assertSame([$a->id, $b->id], $secilen);
         $this->assertNotContains($c->id, $secilen);
     }
+
+    public function test_is_koluna_gore_kayit_kutuphaneye_yazilir_ve_baska_firmaya_gelir(): void
+    {
+        Calisan::factory()->for($this->firma)->create();
+
+        // Kullanıcı kazı grubuna kendi konusunu ekleyip kaydeder.
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $this->firma->id)->set('sektorAnahtari', 'insaat')
+            ->call('isKoluToggle', 'hafriyat_kazi');
+        $icerik = $sayfa->get('icerik');
+        $icerik['isyerine_ozgu']['maddeler'][] = ['madde' => 'Şev stabilitesi ve iksa kontrolü', 'dakika' => 15, 'dahil' => true];
+        $sayfa->set('icerik', $icerik)->callAction('sadeceKaydet');
+
+        $k = \App\Models\IseOzguEgitimKonusu::where('user_id', $this->uzman->id)->where('is_kolu', 'Hafriyat ve Kazı İşleri')->get();
+        $this->assertSame(['Şev stabilitesi ve iksa kontrolü'], $k->pluck('ad')->all(), 'yalnız kullanıcının eklediği konu; sistem iş kalemi konusu tekrar kaydedilmez');
+        $this->assertSame(['hafriyat_kazi'], $k->first()->is_kalemleri);
+
+        // Aynı iş koluyla tekrar kayıt: tekrar eklenmez.
+        $sayfa->call('kayitUnut')->callAction('sadeceKaydet');
+        $this->assertSame(1, \App\Models\IseOzguEgitimKonusu::where('user_id', $this->uzman->id)->where('is_kolu', 'Hafriyat ve Kazı İşleri')->count());
+
+        // BAŞKA firmada aynı iş koluyla yeni form: kütüphanedeki konu gelir.
+        $diger = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $yeni = Livewire::test(EgitimSayfasi::class)->set('firmaId', $diger->id)->set('sektorAnahtari', 'insaat')
+            ->call('isKoluToggle', 'hafriyat_kazi');
+        $this->assertStringContainsString('Şev stabilitesi ve iksa kontrolü', $this->ozguMetinler($yeni->get('icerik')));
+
+        // İş koluna bağlı konu, iş kolu OLMAYAN formlara ve firma geneli plan önerisine girmez.
+        $genel = Livewire::test(EgitimSayfasi::class)->set('firmaId', $diger->id)->set('sektorAnahtari', 'insaat');
+        $this->assertStringNotContainsString('Şev stabilitesi', $this->ozguMetinler($genel->get('icerik')));
+        $this->assertSame(0, \App\Support\IseOzguEgitimKutuphanesi::firmaIcin($diger)->filter(fn ($x) => str_contains($x['ad'], 'Şev stabilitesi'))->count());
+
+        // Başka kullanıcının kütüphanesi karışmaz.
+        $this->assertCount(0, \App\Support\IseOzguEgitimKutuphanesi::isKoluKonulari(User::factory()->create()->id, 'Hafriyat ve Kazı İşleri'));
+    }
+
+    public function test_grup_formu_yillik_plani_daraltmaz(): void
+    {
+        $c = Calisan::factory()->for($this->firma)->create();
+        \App\Models\YillikPlan::create(['firma_id' => $this->firma->id, 'yil' => now()->year, 'egitimler' => [
+            ['konu' => 'Plandaki eski konu', 'kategori' => 'ise_ozgu', 'hedef' => '', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI', 'hafta' => 2, 'aylar' => range(0, 11)],
+        ]]);
+
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', $this->firma->id)->set('sektorAnahtari', 'insaat')
+            ->call('isKoluToggle', 'hafriyat_kazi')
+            ->callAction('sadeceKaydet');
+
+        $konular = collect(\App\Models\YillikPlan::where('firma_id', $this->firma->id)->first()->egitimler)->pluck('konu')->implode(' | ');
+        $this->assertStringContainsString('Plandaki eski konu', $konular, 'diğer grubun/planın konusu silinmemeli');
+        $this->assertStringContainsString('Kazı kenarı', $konular, 'bu grubun konusu eklenir');
+        $this->assertNotNull($c->id);
+    }
+
+    public function test_bos_form_firmanin_guncel_konularini_sablona_ekler(): void
+    {
+        $this->firma->update(['is_kalemleri' => ['hafriyat_kazi']]);
+        \App\Models\YillikPlan::create(['firma_id' => $this->firma->id, 'yil' => now()->year, 'egitimler' => [
+            ['konu' => 'Firmaya özel yeni 4. konu', 'kategori' => 'ise_ozgu', 'hedef' => '', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI', 'hafta' => 2, 'aylar' => range(0, 11)],
+        ]]);
+
+        $icerik = \App\Support\EgitimFirmaIcerigi::bosForm($this->firma, 'genel', 'insaat', 'ilk');
+        $metin = $this->ozguMetinler($icerik);
+
+        $sablon = $this->ozguMetinler(\App\Support\EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli', 'ilk'));
+        $this->assertStringContainsString($sablon, $metin, 'şablon konuları yerinde kalır (yerine geçmez)');
+        $this->assertStringContainsString('Firmaya özel yeni 4. konu', $metin, 'yıllık plan 4. bölüm konusu eklenir');
+        $this->assertStringContainsString('Kazı kenarı', $metin, 'iş kalemi konusu eklenir');
+        $this->assertSame(substr_count($metin, 'Firmaya özel yeni 4. konu'), 1);
+
+        // Çıktı: firma adlı boş form PDF'i üretilir (Evrakları İndir ile aynı çağrı).
+        $yanit = \App\Support\EgitimKatilimUretici::bosFormPdf('genel', 'insaat', 'cok_tehlikeli', 'ilk', $this->firma);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        // Firmasız (genel) boş form sektör şablonu olarak kalır.
+        $this->assertSame($sablon, $this->ozguMetinler(\App\Support\EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'cok_tehlikeli', 'ilk')));
+    }
 }
