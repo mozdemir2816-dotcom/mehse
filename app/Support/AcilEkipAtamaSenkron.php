@@ -32,6 +32,47 @@ class AcilEkipAtamaSenkron
         return isset(self::ROL_EKIP[$rolAnahtari]);
     }
 
+    /**
+     * Acil Durum Ekipleri kartındaki "Atama Yazısı" düğmesi: yazı doğrudan ekibin güncel
+     * üyelerinden üretilir (ayrı giriş yok → mükerrer iş yok). Aynı içerik varsa son kayıt
+     * yeniden kullanılır. Üye yoksa null.
+     */
+    public static function ekiptenKayit(AcilEkip $ekip): ?AtamaYazisi
+    {
+        $rol = array_search($ekip->tur, self::ROL_EKIP, true);
+
+        if (! $rol) {
+            return null;
+        }
+
+        $uyeler = $ekip->uyeler()->orderByDesc('lider')->orderBy('id')->get()
+            ->map(fn (AcilEkipUyesi $u) => [
+                'calisan_id' => $u->calisan_id,
+                'ad_soyad' => $u->ad_soyad,
+                'tc' => $u->calisan?->tc,
+                'gorev' => $u->gorev,
+                'bas_uye' => (bool) $u->lider,
+            ])->values()->all();
+
+        if (! $uyeler) {
+            return null;
+        }
+
+        $son = AtamaYazisi::query()->where('firma_id', $ekip->firma_id)->where('rol_anahtari', $rol)->latest('id')->first();
+
+        if ($son && $son->tarih?->isToday() && $son->uyeler == $uyeler) {
+            return $son;
+        }
+
+        return AtamaYazisi::create([
+            'firma_id' => $ekip->firma_id,
+            'rol_anahtari' => $rol,
+            'tarih' => now()->toDateString(),
+            'isveren_vekili_adi' => $ekip->firma?->isveren_vekili ?: $ekip->firma?->isveren_ad,
+            'uyeler' => $uyeler,
+        ]);
+    }
+
     /** @return int eklenen yeni üye sayısı */
     public static function aktar(AtamaYazisi $atama): int
     {

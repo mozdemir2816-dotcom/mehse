@@ -119,12 +119,22 @@
                                                 style="flex:none;font-size:.62rem;padding:0 .3rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">👑 Lider Yap</button>
                                         @endunless
                                         <span style="width:.5rem;height:.5rem;border-radius:9999px;flex:none;background:{{ $belgeRenk[$u->belgeDurumu()] }}" title="{{ AcilEkipUyesi::BELGE_DURUMLARI[$u->belgeDurumu()] }}"></span>
+                                        <button type="button" wire:click="mountAction('uyeDuzenle', { id: {{ $u->id }} })" title="{{ $u->ad_soyad }} düzenle" aria-label="{{ $u->ad_soyad }} düzenle"
+                                            style="flex:none;font-size:.7rem;padding:0 .25rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">✎</button>
+                                        <button type="button" wire:click="uyeSil({{ $u->id }})" wire:confirm="{{ $u->ad_soyad }} ekipten çıkarılsın mı? (Geri alınabilir)" title="{{ $u->ad_soyad }} ekipten çıkar" aria-label="{{ $u->ad_soyad }} sil"
+                                            style="flex:none;font-size:.7rem;padding:0 .25rem;border:1px solid rgb(220 38 38 / .4);color:rgb(220 38 38);border-radius:.3rem;background:none;cursor:pointer">✕</button>
                                     </div>
                                 @endforeach
                             </div>
                         @endif
                         @if ($d['uyarilar'])
                             <div style="font-size:.7rem;color:{{ $durumRenk[$d['durum'] === 'tam' ? 'eksik' : $d['durum']] }}">{{ $d['uyarilar'][0] }}</div>
+                        @endif
+                        @if ($e->uyeler->isNotEmpty() && in_array($e->tur, \App\Support\AcilEkipAtamaSenkron::ROL_EKIP, true))
+                            <div style="display:flex;gap:.3rem;padding-top:.3rem">
+                                <x-filament::button size="xs" color="gray" icon="heroicon-o-document-text" wire:click="atamaPdf({{ $e->id }})" tooltip="Atama yazısı bu ekibin güncel üyelerinden üretilir">Atama Yazısı (PDF)</x-filament::button>
+                                <x-filament::button size="xs" color="gray" wire:click="atamaWord({{ $e->id }})">Word</x-filament::button>
+                            </div>
                         @endif
                         <div style="display:flex;gap:.3rem;margin-top:auto;padding-top:.3rem">
                             <x-filament::button size="xs" color="gray" icon="heroicon-o-user-plus" wire:click="mountAction('uyeEkle', { ekip: {{ $e->id }} })">Üye</x-filament::button>

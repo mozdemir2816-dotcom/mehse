@@ -320,8 +320,12 @@ class AcilDurumEkipleri extends Page
 
     public function uyeSil(int $id): void
     {
-        $this->uye($id)->delete();
+        $uye = $this->uye($id);
+        $ad = $uye->ad_soyad;
+        $uye->delete();
         $this->yenile();
+
+        Notification::make()->success()->title($ad.' ekipten çıkarıldı')->body('"Silinenleri Geri Al" ile geri alınabilir.')->send();
     }
 
     public function geriAl(string $tur, int $id): void
@@ -391,6 +395,40 @@ class AcilDurumEkipleri extends Page
             ])->filter()->implode(' '));
 
         ($s['lider'] || $s['yedek'] ? $bildirim->success() : $bildirim->info())->send();
+    }
+
+    /** Kartlardaki "Atama Yazısı (PDF)": yazı ekibin güncel üyelerinden üretilir. */
+    public function atamaPdf(int $ekipId)
+    {
+        $kayit = \App\Support\AcilEkipAtamaSenkron::ekiptenKayit($this->ekip($ekipId));
+
+        if (! $kayit) {
+            Notification::make()->warning()->title('Önce ekibe destek elemanı ekleyin')->send();
+
+            return null;
+        }
+
+        return \App\Support\AtamaYazisiUretici::pdf($kayit);
+    }
+
+    /** Kartlardaki "Atama Yazısı (Word)". */
+    public function atamaWord(int $ekipId)
+    {
+        $kayit = \App\Support\AcilEkipAtamaSenkron::ekiptenKayit($this->ekip($ekipId));
+
+        if (! $kayit) {
+            Notification::make()->warning()->title('Önce ekibe destek elemanı ekleyin')->send();
+
+            return null;
+        }
+
+        $docx = \App\Support\AtamaYazisiWordUretici::docx($kayit);
+
+        if (! $docx) {
+            Notification::make()->warning()->title('Bu ekip için Word şablonu yok; PDF kullanın')->send();
+        }
+
+        return $docx;
     }
 
     /** Kartlardaki "👑 Lider Yap". */

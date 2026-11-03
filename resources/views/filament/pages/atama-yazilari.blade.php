@@ -12,9 +12,11 @@
         ilgili yönetmelikler kapsamındaki görevlendirme yazısını oluşturun.
     </p>
 
+    <p style="font-size:.78rem;color:rgb(107 114 128)">Söndürme, kurtarma, koruma ve ilk yardım ekiplerinin atama yazıları artık <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="color:rgb(13 148 136);font-weight:600">Acil Durum Ekipleri</a> sayfasındaki ekip kartından alınır (ekibe eklenen personelle aynı kayıt).</p>
+
     {{-- SEKME PİLLERİ --}}
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(107 114 128 / .06);padding:.5rem;border-radius:9999px">
-        @foreach ($this->roller as $anahtar => $r)
+        @foreach ($this->gorunenRoller as $anahtar => $r)
             @php $secili = $rolAnahtari === $anahtar; @endphp
             <button type="button" wire:click="$set('rolAnahtari','{{ $anahtar }}')"
                 style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .9rem;border-radius:9999px;cursor:pointer;font-size:.78rem;font-weight:600;border:none;white-space:nowrap;
@@ -254,7 +256,7 @@
             Bilgi
         </div>
         <ul style="margin:0;padding-left:1.1rem;font-size:.78rem;color:rgb(75 85 99);display:flex;flex-direction:column;gap:.4rem">
-            @foreach ($this->roller as $r)
+            @foreach ($this->gorunenRoller as $r)
                 <li><strong>{{ $r['ad'] }}:</strong> {{ $r['aciklama'] }}</li>
             @endforeach
         </ul>

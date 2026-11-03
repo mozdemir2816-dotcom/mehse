@@ -112,4 +112,26 @@ class AcilDurumEkipleriTest extends TestCase
         $lw->call('excel')->assertFileDownloaded('acil-durum-ekipleri-ahmet-insaat.xlsx');
         $lw->call('pdf')->assertFileDownloaded('acil-durum-ekipleri-ahmet-insaat.pdf');
     }
+
+    public function test_kartta_tek_uye_silinir_ve_atama_yazisi_ekip_uyelerinden_uretilir(): void
+    {
+        AcilEkipDurumu::temelEkipleriOlustur($this->firma);
+        $e = AcilEkip::where('firma_id', $this->firma->id)->where('tur', 'sondurme')->first();
+        $a = $e->uyeler()->create(['ad_soyad' => 'Ali Veli', 'lider' => true]);
+        $b = $e->uyeler()->create(['ad_soyad' => 'Ayşe Kaya']);
+
+        $lw = Livewire::test(AcilDurumEkipleri::class)->set('firmaId', $this->firma->id);
+        $lw->call('uyeSil', $b->id);
+        $this->assertSoftDeleted('acil_ekip_uyeleri', ['id' => $b->id]);
+        $this->assertNull($a->fresh()->deleted_at);
+
+        $lw->call('atamaPdf', $e->id)->assertFileDownloaded();
+        $kayit = \App\Models\AtamaYazisi::where('firma_id', $this->firma->id)->where('rol_anahtari', 'sondurme_ekibi')->firstOrFail();
+        $this->assertSame(['Ali Veli'], array_column($kayit->uyeler, 'ad_soyad'));
+        $this->assertTrue($kayit->uyeler[0]['bas_uye']);
+
+        // Aynı gün aynı içerik tekrar kaydedilmez.
+        $lw->call('atamaPdf', $e->id);
+        $this->assertSame(1, \App\Models\AtamaYazisi::where('firma_id', $this->firma->id)->count());
+    }
 }

@@ -139,6 +139,13 @@ class AtamaYazilari extends Page
         return config('isg.atama.roller');
     }
 
+    /** Acil durum ekipleri (söndürme/kurtarma/koruma/ilk yardım) Acil Durum Ekipleri sayfasından üretilir. */
+    #[Computed]
+    public function gorunenRoller(): array
+    {
+        return collect($this->roller())->except(array_keys(AcilEkipAtamaSenkron::ROL_EKIP))->all();
+    }
+
     #[Computed]
     public function rol(): array
     {
