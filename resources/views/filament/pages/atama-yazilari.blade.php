@@ -185,19 +185,20 @@
                 @if ($this->calisanlar->isEmpty())
                     <p style="font-size:.82rem;color:rgb(107 114 128)">Bu firmaya kayıtlı çalışan bulunamadı — önce Çalışanlar sekmesinden ekleyin.</p>
                 @else
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.35rem">
+                    {{-- Kurul görevi listesi olan kutular geniş: ad+görev üstte, görev seçimi + baş üye yıldızı alt satırda (sayfaya sığsın). --}}
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({{ $rolAnahtari === 'isg_kurulu' ? '300px' : '240px' }},1fr));gap:.35rem">
                         @foreach ($this->calisanlar as $c)
                             @php $secili = in_array($c->id, $secilenCalisanIdler, true); @endphp
-                            <div style="display:flex;align-items:center;gap:.3rem;padding:.45rem .3rem;border-radius:.4rem;
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;min-width:0;padding:.45rem .3rem;border-radius:.4rem;
                                 border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
-                                <button type="button" wire:click="calisanToggle({{ $c->id }})" style="flex:1;text-align:left;background:none;border:none;cursor:pointer;font-size:.8rem;color:inherit">
+                                <button type="button" wire:click="calisanToggle({{ $c->id }})" style="flex:1 1 {{ $secili && $rolAnahtari === 'isg_kurulu' ? '100%' : '0' }};min-width:0;overflow-wrap:anywhere;text-align:left;background:none;border:none;cursor:pointer;font-size:.8rem;color:inherit">
                                     {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
                                     @if ($c->gorev) <span style="color:rgb(107 114 128)">— {{ $c->gorev }}</span> @endif
                                 </button>
                                 @if ($secili && $rolAnahtari === 'isg_kurulu')
                                     <select wire:model="kurulGorevleri.{{ $c->id }}"
-                                        style="font-size:.72rem;padding:.15rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .35);background:transparent;max-width:9rem">
+                                        style="flex:1 1 0;min-width:0;font-size:.72rem;padding:.2rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                                         <option value="">Kurul görevi seç</option>
                                         @foreach ($this->kurulGorevSecenekleri as $ganahtar => $gad)
                                             <option value="{{ $ganahtar }}">{{ $gad }}</option>

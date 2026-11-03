@@ -28,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
+        // PDF'lerde yazı tipleri yalnız kullanılan karakterlerle (alt küme) gömülür: dosya ~15 kat küçülür, üretim ve indirme hızlanır
+        // (boş eğitim formu 860 KB → çok daha küçük; 16 formluk Evrakları İndir ZIP'inin zaman aşımı riski azalır).
+        config(['dompdf.options.enable_font_subsetting' => true]);
+
         // Yeni şifreler (kayıt, profil, Güvenlik sayfası) en az 10 karakter — mevcut
         // şifreler etkilenmez, yalnız değiştirilirken uygulanır.
         Password::defaults(fn () => Password::min(10));
