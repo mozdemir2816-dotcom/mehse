@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Concerns\AileAnaSayfasi;
 use App\Filament\Concerns\KaydetSecenegi;
 use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\CiktiBicimi;
 use App\Filament\Support\ImzaSecenegi;
 use App\Models\Calisan;
 use App\Models\EgitimKatilim as EgitimKatilimModel;
@@ -20,6 +21,7 @@ use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
@@ -883,8 +885,9 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            ActionGroup::make([
             Action::make('pdf')
-                ->label('Form PDF (Kaydet ve İndir)')
+                ->label('Eğitim Katılım Formu — PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])
@@ -903,7 +906,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('excel')
-                ->label('Excel (Kaydet ve İndir)')
+                ->label('Eğitim Katılım Formu — Excel')
                 ->icon('heroicon-o-table-cells')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
@@ -923,7 +926,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('word')
-                ->label('Word (Kaydet ve İndir)')
+                ->label('Eğitim Katılım Formu — Word')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
@@ -943,7 +946,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('sertifika')
-                ->label('Katılımcı Sertifikaları (Kaydet ve İndir)')
+                ->label('Katılımcı Sertifikaları — PDF')
                 ->icon('heroicon-o-check-badge')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
@@ -976,14 +979,14 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             Action::make('yildizGrupSertifika')
-                ->label('Yıldız Grup Eğitim Sertifikası (Excel)')
+                ->label('Yıldız Grup Eğitim Sertifikası — Excel / PDF')
                 ->icon('heroicon-o-check-badge')
                 ->color('gray')
                 // Şablon 4 sabit kategoriye (Genel/Sağlık/Teknik/İşe Özgü) dayanır → yalnız "genel" başlık.
                 ->visible(fn () => $this->firma !== null && $this->baslikAnahtari === 'genel')
                 ->modalHeading('Yıldız Grup Eğitim Sertifikası')
-                ->modalDescription('Eğitim konuları ve süreleri bu katılım formundan alınır. Sertifikaya basılacak eğitim tarih(ler)ini girin; her katılımcı için ayrı Excel sayfası oluşturulur.')
-                ->schema(fn () => [ImzaSecenegi::alan(), ...array_map(
+                ->modalDescription('Eğitim konuları ve süreleri bu katılım formundan alınır. Sertifikaya basılacak eğitim tarih(ler)ini girin. Excel: her katılımcı için ayrı sayfa/dosya; PDF: tek dosyada her katılımcı için belge + eğitim konuları sayfası.')
+                ->schema(fn () => [CiktiBicimi::alan(), ImzaSecenegi::alan(), ...array_map(
                     fn (int $g) => DatePicker::make("egitim_gun_{$g}")
                         ->label((int) $this->sureGun > 1 ? "{$g}. Gün Eğitim Tarihi" : 'Eğitim Tarihi')
                         ->default($this->gunTarihleri[$g - 1] ?? $this->belgeTarihi)
@@ -1000,7 +1003,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                     $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
                     $tarihler = array_values(array_filter($data, fn ($v, $k) => str_starts_with((string) $k, 'egitim_gun_') && filled($v), ARRAY_FILTER_USE_BOTH));
-                    $indirme = SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit, $tarihler), ImzaSecenegi::secili($data));
+                    $indirme = SertifikaYildizGrupUretici::cikti($this->sertifikaKur($kayit, $tarihler), ImzaSecenegi::secili($data), CiktiBicimi::secili($data));
 
                     if (! $indirme) {
                         Notification::make()->title('Yıldız Grup şablonu bu eğitim için uygun değil')->warning()->send();
@@ -1008,10 +1011,16 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                         return null;
                     }
 
-                    Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — Yıldız Grup sertifikası')->success()->send();
+                    Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no.' — Yıldız Grup sertifikası ('.(CiktiBicimi::secili($data) === 'pdf' ? 'PDF' : 'Excel').')')->success()->send();
 
                     return $indirme;
                 }),
+            ])
+                ->label('Çıktı Al')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->button()
+                ->tooltip('Seçtiğiniz çıktıyı verir; form henüz kaydedilmediyse önce kaydeder (Kaydet ile aynı belge kullanılır, kopya açılmaz).'),
         ];
     }
 
@@ -1049,7 +1058,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return SertifikaUretici::pdf($this->sertifikaKur($kayit));
     }
 
-    public function gecmisYildizGrup(int $id, bool $imzali = true)
+    public function gecmisYildizGrup(int $id, bool $imzali = true, string $bicim = 'xlsx')
     {
         $kayit = $this->firma?->egitimKatilimlari()->find($id);
 
@@ -1059,7 +1068,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
 
         $kayit->setRelation('firma', $this->firma);
 
-        return SertifikaYildizGrupUretici::indir($this->sertifikaKur($kayit), $imzali);
+        return SertifikaYildizGrupUretici::cikti($this->sertifikaKur($kayit), $imzali, $bicim);
     }
 
     /** Geçmiş kayıttan Yıldız Grup sertifikası — imzalı / imzasız sorulur. */
@@ -1068,8 +1077,8 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return Action::make('gecmisYildizGrup')
             ->modalHeading('Yıldız Grup Eğitim Sertifikası')
             ->modalSubmitActionLabel('İndir')
-            ->schema([ImzaSecenegi::alan()])
-            ->action(fn (array $data, array $arguments) => $this->gecmisYildizGrup((int) $arguments['id'], ImzaSecenegi::secili($data)));
+            ->schema([CiktiBicimi::alan(), ImzaSecenegi::alan()])
+            ->action(fn (array $data, array $arguments) => $this->gecmisYildizGrup((int) $arguments['id'], ImzaSecenegi::secili($data), CiktiBicimi::secili($data)));
     }
 
     public function gecmisSil(int $id): void

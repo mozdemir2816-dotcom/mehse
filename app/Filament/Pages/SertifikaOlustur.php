@@ -7,6 +7,7 @@ use App\Models\Firma;
 use App\Models\Sertifika;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\KatilimciExcelOkuyucu;
+use App\Filament\Support\CiktiBicimi;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
@@ -451,11 +452,11 @@ class SertifikaOlustur extends Page
                 }),
 
             Action::make('yildizGrup')
-                ->label('Yıldız Grup Eğitim Sertifikası (Excel)')
+                ->label('Yıldız Grup Eğitim Sertifikası')
                 ->icon('heroicon-o-table-cells')
                 ->color('success')
                 ->visible(fn () => $this->firma !== null && $this->tip === 'isg')
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([CiktiBicimi::alan(), ImzaSecenegi::alan()])
                 ->action(function (array $data) {
                     $s = $this->kaydet();
 
@@ -465,7 +466,7 @@ class SertifikaOlustur extends Page
 
                     $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
 
-                    $indirme = SertifikaYildizGrupUretici::indir($s, ImzaSecenegi::secili($data));
+                    $indirme = SertifikaYildizGrupUretici::cikti($s, ImzaSecenegi::secili($data), CiktiBicimi::secili($data));
 
                     if (! $indirme) {
                         Notification::make()->title('Bu sertifika tipi için Yıldız Grup şablonu uygun değil')->warning()->send();
@@ -487,11 +488,11 @@ class SertifikaOlustur extends Page
         return $s ? SertifikaUretici::pdf($s) : null;
     }
 
-    public function gecmisYildizGrup(int $id, bool $imzali = true)
+    public function gecmisYildizGrup(int $id, bool $imzali = true, string $bicim = 'xlsx')
     {
         $s = $this->firma?->sertifikalar()->find($id);
 
-        return $s ? SertifikaYildizGrupUretici::indir($s, $imzali) : null;
+        return $s ? SertifikaYildizGrupUretici::cikti($s, $imzali, $bicim) : null;
     }
 
     /** Geçmiş sertifikadan Yıldız Grup Excel'i — imzalı / imzasız sorulur. */
@@ -500,8 +501,8 @@ class SertifikaOlustur extends Page
         return Action::make('gecmisYildizGrup')
             ->modalHeading('Yıldız Grup Eğitim Sertifikası')
             ->modalSubmitActionLabel('İndir')
-            ->schema([ImzaSecenegi::alan()])
-            ->action(fn (array $data, array $arguments) => $this->gecmisYildizGrup((int) $arguments['id'], ImzaSecenegi::secili($data)));
+            ->schema([CiktiBicimi::alan(), ImzaSecenegi::alan()])
+            ->action(fn (array $data, array $arguments) => $this->gecmisYildizGrup((int) $arguments['id'], ImzaSecenegi::secili($data), CiktiBicimi::secili($data)));
     }
 
     public function gecmisSil(int $id): void

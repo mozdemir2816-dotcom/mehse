@@ -359,6 +359,37 @@ class SertifikaOlusturTest extends TestCase
         $this->assertNull(SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Bilinmeyen', 'tc' => null, 'gorev' => null], $c));
     }
 
+    public function test_yildiz_grup_pdf_uretilir_her_katilimci_icin_iki_sayfa(): void
+    {
+        $firma = Firma::factory()->create(['unvan' => 'TEST FİRMA A.Ş.']);
+        $s = Sertifika::create([
+            'firma_id' => $firma->id, 'tip' => 'isg', 'tur' => 'ilk_defa', 'sekil' => 'yuz_yuze',
+            'egitim_tarihleri' => ['2026-09-01'], 'sure_metni' => '16 Ders Saati',
+            'katilimcilar' => [
+                ['ad_soyad' => 'Ahmet Yılmaz', 'tc' => '11111111111', 'gorev' => 'Operatör'],
+                ['ad_soyad' => 'Ayşe Kaya', 'tc' => null, 'gorev' => 'Teknisyen'],
+            ],
+            'konu_icerigi' => EgitimIcerikOlusturucu::olustur('genel', 'tekstil', 'az_tehlikeli'),
+        ]);
+
+        $yanit = SertifikaYildizGrupUretici::pdf($s);
+        ob_start();
+        $yanit->sendContent();
+        $icerik = ob_get_clean();
+
+        $this->assertStringStartsWith('%PDF', $icerik);
+        $this->assertStringContainsString('sertifika-yildiz-grup-test-firma-as.pdf', (string) $yanit->headers->get('content-disposition'));
+        // 2 katılımcı × (belge + eğitim konuları) = 4 sayfa.
+        $this->assertSame(4, preg_match_all('/\/Type\s*\/Page[^s]/', $icerik));
+
+        // Tek katılımcıda dosya adı kişinin adı.
+        $tek = Sertifika::create(['firma_id' => $firma->id, 'tip' => 'isg', 'tur' => 'ilk_defa', 'sekil' => 'yuz_yuze', 'katilimcilar' => [['ad_soyad' => 'Ahmet Yılmaz', 'tc' => null, 'gorev' => null]], 'konu_icerigi' => []]);
+        $this->assertStringContainsString('ahmet-yilmaz.pdf', (string) SertifikaYildizGrupUretici::pdf($tek)->headers->get('content-disposition'));
+
+        // Uygun olmayan tip / katılımcısız → null (Excel ile aynı kural).
+        $this->assertNull(SertifikaYildizGrupUretici::pdf(new Sertifika(['tip' => 'yuksekte_calisma', 'katilimcilar' => [['ad_soyad' => 'X']]])));
+    }
+
     public function test_yildiz_grup_firma_logosu_sag_uste_eklenir(): void
     {
         $logoRel = 'firma-logo/test-yildiz-'.uniqid().'.png';

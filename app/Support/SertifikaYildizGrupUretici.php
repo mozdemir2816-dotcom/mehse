@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Sertifika;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -43,6 +44,12 @@ class SertifikaYildizGrupUretici
     public static function uygunMu(Sertifika $s): bool
     {
         return $s->tip === 'isg';
+    }
+
+    /** Seçilen biçime göre (xlsx | pdf) Yıldız Grup çıktısı. */
+    public static function cikti(Sertifika $s, bool $imzali = true, string $bicim = 'xlsx'): ?StreamedResponse
+    {
+        return $bicim === 'pdf' ? self::pdf($s, $imzali) : self::indir($s, $imzali);
     }
 
     /** $imzali: false → matbu (kaşe görseli basılmaz, elle imzalanır). */
@@ -120,6 +127,90 @@ class SertifikaYildizGrupUretici
         return $gorev !== '' ? $gorev : null;
     }
 
+    /** Açıklama paragrafındaki tarih(ler): "… tarihinde" (tek gün) / "… ve … tarihlerinde" (çok gün). */
+    private static function tarihIfadesi(Sertifika $s): string
+    {
+        $tarihler = collect($s->egitim_tarihleri ?? [])
+            ->filter()
+            ->map(fn ($t) => Carbon::parse($t)->format('d/m/Y'))
+            ->unique()
+            ->values();
+
+        if ($tarihler->isEmpty()) {
+            $tarihler = collect([now()->format('d/m/Y')]);
+        }
+
+        return $tarihler->count() > 1
+            ? $tarihler->slice(0, -1)->implode(', ').' ve '.$tarihler->last().' tarihlerinde'
+            : $tarihler->first().' tarihinde';
+    }
+
+    /**
+     * Aynı sertifikanın PDF çıktısı (Excel ile aynı veri ve içerik; her katılımcı için belge + eğitim
+     * konuları sayfası, tek PDF'te). Tasarım Excel şablonunun PDF karşılığıdır.
+     *
+     * @param  bool  $imzali  false → matbu (kaşe/imza görseli basılmaz)
+     */
+    public static function pdf(Sertifika $s, bool $imzali = true): ?StreamedResponse
+    {
+        if (! self::uygunMu($s) || ! ($s->katilimcilar ?? [])) {
+            return null;
+        }
+
+        $s->loadMissing('firma');
+        $firma = $s->firma;
+        $calisanlar = $firma ? $firma->calisanlar()->get(['ad_soyad', 'tc', 'gorev']) : collect();
+
+        $katilimcilar = collect($s->katilimcilar)->map(fn (array $k) => [
+            'ad' => TurkceMetin::buyuk($k['ad_soyad'] ?? '—'),
+            'gorev' => TurkceMetin::buyuk(self::gorevBul($k, $calisanlar) ?? '—'),
+        ])->all();
+
+        // Kaşe / imza — Excel çıktısıyla aynı kaynak ve geri dönüş sırası.
+        $iguKase = $firma?->igu?->kase_gorseli
+            ?: ($s->egitici_igu_dahil ? $s->egitici_igu_kase : null)
+            ?: ($s->egitici_igu_dahil || $firma?->igu ? $firma?->user?->kase_gorseli : null);
+        $hekimKase = $firma?->isyeriHekimi?->kase_gorseli ?: ($s->egitici_hekim_dahil ? $s->egitici_hekim_kase : null);
+        $iguImza = $s->egitici_igu_dahil || $firma?->igu ? ($firma?->igu?->imza_gorseli ?: $firma?->user?->imza_gorseli) : null;
+        $hekimImza = $firma?->isyeriHekimi?->imza_gorseli;
+        $yol = fn (?string $g) => $g && is_file(storage_path('app/public/'.$g)) ? $g : null;
+
+        // Konu başlıkları şablondan okunur (Excel ile aynı metin).
+        $sablon = IOFactory::load(resource_path(self::SABLON_YOLU))->getSheetByName('Çıktı Sayfası');
+        $baslik = fn (string $h) => trim((string) $sablon->getCell($h)->getValue());
+        $icerik = $s->konu_icerigi ?? [];
+        $dahil = fn ($liste) => collect($liste)->where('dahil', true)->values()->all();
+        $ozgu = $icerik['isyerine_ozgu'] ?? null;
+
+        $kategoriler = array_values(array_filter([
+            ['baslik' => $baslik('E43'), 'maddeler' => $dahil($icerik['genel_konular'] ?? [])],
+            ['baslik' => $baslik('E48'), 'maddeler' => $dahil($icerik['saglik_konulari'] ?? [])],
+            ['baslik' => $baslik('E54'), 'maddeler' => $dahil($icerik['teknik_konular'] ?? [])],
+            ['baslik' => $baslik('E67'), 'maddeler' => $ozgu ? $dahil($ozgu['maddeler'] ?? []) : []],
+        ], fn ($k) => $k['baslik'] !== ''));
+
+        $pdf = Pdf::loadView('pdf.sertifika-yildiz-grup', [
+            'firma' => $firma,
+            'katilimcilar' => $katilimcilar,
+            'tarihIfadesi' => self::tarihIfadesi($s),
+            'belgeTarihi' => now()->format('d/m/Y'),
+            'sure' => $s->sure_metni ?: '16 Ders Saati',
+            'tur' => $s->tur === 'tekrar' ? 'tekrar' : 'ilk_defa',
+            'sekil' => $s->sekil === 'uzaktan' ? 'uzaktan' : 'yuz_yuze',
+            'imzali' => $imzali,
+            'iguGorsel' => ($g = $yol($iguKase) ?? $yol($iguImza)) ? storage_path('app/public/'.$g) : null,
+            'hekimGorsel' => ($g = $yol($hekimKase) ?? $yol($hekimImza)) ? storage_path('app/public/'.$g) : null,
+            'kategoriler' => $kategoriler,
+            'harfler' => self::TURKCE_HARFLER,
+        ])->setPaper('a4', 'portrait');
+
+        $ad = count($katilimcilar) === 1
+            ? Str::slug($s->katilimcilar[0]['ad_soyad'] ?? 'katilimci').'.pdf'
+            : 'sertifika-yildiz-grup-'.Str::slug($firma?->unvan ?: 'firma').'.pdf';
+
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad, ['Content-Type' => 'application/pdf']);
+    }
+
     /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string} $katilimci */
     private static function doldur(Sertifika $s, array $katilimci, bool $imzali = true): Spreadsheet
     {
@@ -132,21 +223,7 @@ class SertifikaYildizGrupUretici
         $sheet->setCellValue('D8', 'KATILIMCININ ADI : '.TurkceMetin::buyuk($katilimci['ad_soyad'] ?? '—'));
         $sheet->setCellValue('D9', 'GÖREVİ : '.TurkceMetin::buyuk($katilimci['gorev'] ?? '—'));
 
-        // Açıklama paragrafındaki tarih(ler) — eğitim katılımdaki gün sayısına göre
-        // "… tarihinde" (tek gün) / "… ve … tarihlerinde" (çok gün) olarak yazılır.
-        $tarihler = collect($s->egitim_tarihleri ?? [])
-            ->filter()
-            ->map(fn ($t) => Carbon::parse($t)->format('d/m/Y'))
-            ->unique()
-            ->values();
-
-        if ($tarihler->isEmpty()) {
-            $tarihler = collect([now()->format('d/m/Y')]);
-        }
-
-        $tarihIfadesi = $tarihler->count() > 1
-            ? $tarihler->slice(0, -1)->implode(', ').' ve '.$tarihler->last().' tarihlerinde'
-            : $tarihler->first().' tarihinde';
+        $tarihIfadesi = self::tarihIfadesi($s);
 
         $paragraf = preg_replace(
             '/\d{2}\/\d{2}\/\d{4}(?:\s*(?:,|ve)\s*\d{2}\/\d{2}\/\d{4})*\s*tarih(?:inde|lerinde)/u',

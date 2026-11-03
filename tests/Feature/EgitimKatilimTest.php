@@ -784,6 +784,38 @@ class EgitimKatilimTest extends TestCase
         $this->assertStringContainsString('15.09.2026-16.09.2026', $html);
     }
 
+    public function test_yildiz_grup_sertifikasi_pdf_olarak_da_alinabilir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $kayit = EgitimKatilim::create([
+            'firma_id' => $firma->id,
+            'baslik_anahtari' => 'genel',
+            'sektor_anahtari' => 'insaat',
+            'belge_tarihi' => now(),
+            'sure_gun' => 1,
+            'konu_secimleri' => EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli'),
+            'katilimcilar' => [['ad_soyad' => 'Furkan Bal', 'tc' => '12345678901', 'gorev' => 'İşçi']],
+        ]);
+
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $firma->id)->instance();
+
+        $pdf = $sayfa->gecmisYildizGrup($kayit->id, true, 'pdf');
+        ob_start();
+        $pdf->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+        $this->assertStringEndsWith('.pdf', (string) $pdf->headers->get('content-disposition', ''), 'dosya adı .pdf ile bitmeli');
+
+        // Varsayılan biçim Excel olarak kalır.
+        $this->assertStringContainsString('.xlsx', (string) $sayfa->gecmisYildizGrup($kayit->id)->headers->get('content-disposition'));
+
+        // Menüdeki eylem de biçim seçimiyle çalışır ve kaydı oluşturur.
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('manuelKatilimcilar', [['ad_soyad' => 'Menüden Gelen', 'tc' => null, 'gorev' => 'İşçi']])
+            ->callAction('yildizGrupSertifika', data: ['bicim' => 'pdf', 'imzali' => '1', 'egitim_gun_1' => now()->toDateString()])
+            ->assertFileDownloaded();
+    }
+
     public function test_egitim_katilimindan_yildiz_grup_sertifikasi_ise_ozgu_konu_ve_sureleriyle_uretilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
