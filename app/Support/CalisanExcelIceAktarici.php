@@ -58,42 +58,24 @@ class CalisanExcelIceAktarici
     ];
 
     /**
-     * @return array{basarili: int, hatalar: array<int, string>}
+     * @param  bool  $eksikleriPasifeAl  Excel'de bulunmayan AKTİF çalışanları pasife alır (silmez).
+     *                                   Hiçbir satır işlenemediyse (boş/hatalı dosya) uygulanmaz.
+     * @return array{basarili: int, hatalar: array<int, string>, pasife: int}
      */
-    public static function iceAktar(string $dosyaYolu, int $firmaId): array
+    public static function iceAktar(string $dosyaYolu, int $firmaId, bool $eksikleriPasifeAl = false): array
     {
-        ExcelBellek::artir();
+        $okunan = static::oku($dosyaYolu);
 
-        $reader = IOFactory::createReaderForFile($dosyaYolu);
-        $reader->setReadDataOnly(true);
-
-        $satirlar = $reader->load($dosyaYolu)
-            ->getActiveSheet()
-            ->toArray(null, true, false, false);
-
-        if (count($satirlar) < 2) {
-            return ['basarili' => 0, 'hatalar' => ['Dosyada veri satırı bulunamadı.']];
-        }
-
-        $sutunlar = static::sutunEslestir(array_shift($satirlar));
-
-        if (! in_array('ad_soyad', $sutunlar, true)) {
-            return ['basarili' => 0, 'hatalar' => ['"Ad Soyad" sütunu bulunamadı. Şablonu indirip sütun adlarını kontrol edin.']];
+        if ($okunan['hata']) {
+            return ['basarili' => 0, 'hatalar' => [$okunan['hata']], 'pasife' => 0];
         }
 
         $basarili = 0;
         $hatalar = [];
+        $isleneIdler = [];
 
-        foreach ($satirlar as $i => $satir) {
-            $satirNo = $i + 2;
-
-            if (static::satirBosMu($satir)) {
-                continue;
-            }
-
-            $veri = static::satiriEslestir($satir, $sutunlar);
-
-            if (blank($veri['ad_soyad'] ?? null)) {
+        foreach ($okunan['satirlar'] as $satirNo => $veri) {
+            if ($veri === null) {
                 $hatalar[] = "Satır {$satirNo}: Ad Soyad boş, atlandı.";
 
                 continue;
@@ -106,18 +88,117 @@ class CalisanExcelIceAktarici
             }
 
             try {
-                $anahtar = filled($veri['tc'] ?? null)
-                    ? ['firma_id' => $firmaId, 'tc' => $veri['tc']]
-                    : ['firma_id' => $firmaId, 'ad_soyad' => $veri['ad_soyad']];
-
-                Calisan::updateOrCreate($anahtar, $veri);
+                $calisan = Calisan::updateOrCreate(static::anahtar($veri, $firmaId), $veri);
+                $isleneIdler[] = $calisan->id;
                 $basarili++;
             } catch (Throwable $e) {
                 $hatalar[] = "Satır {$satirNo}: {$e->getMessage()}";
             }
         }
 
-        return ['basarili' => $basarili, 'hatalar' => $hatalar];
+        $pasife = 0;
+
+        if ($eksikleriPasifeAl && $basarili > 0) {
+            $pasife = Calisan::query()->where('firma_id', $firmaId)->where('aktif', true)
+                ->whereNotIn('id', $isleneIdler)->update(['aktif' => false]);
+        }
+
+        return ['basarili' => $basarili, 'hatalar' => $hatalar, 'pasife' => $pasife];
+    }
+
+    /**
+     * Yüklemeden önce önizleme (veritabanına yazmaz): kaç kişi eklenir / güncellenir ve
+     * Excel'de bulunmadığı için pasife alınacak aktif çalışanlar kimler.
+     *
+     * @return array{yeni: int, guncellenen: int, pasife: array<int, string>, aktif: int, hata: ?string}
+     */
+    public static function onizle(string $dosyaYolu, int $firmaId): array
+    {
+        $okunan = static::oku($dosyaYolu);
+
+        if ($okunan['hata']) {
+            return ['yeni' => 0, 'guncellenen' => 0, 'pasife' => [], 'aktif' => 0, 'hata' => $okunan['hata']];
+        }
+
+        $mevcut = Calisan::query()->where('firma_id', $firmaId)->get(['id', 'ad_soyad', 'tc', 'aktif']);
+        $eslesenIdler = [];
+        $yeni = 0;
+        $islenen = 0;
+
+        foreach ($okunan['satirlar'] as $veri) {
+            if ($veri === null) {
+                continue;
+            }
+
+            $islenen++;
+            $anahtar = static::anahtar($veri, $firmaId);
+            $bulunan = $mevcut->first(fn (Calisan $c) => collect($anahtar)->except("firma_id")->every(fn ($d, $k) => (string) $c->{$k} === (string) $d));
+
+            if ($bulunan) {
+                $eslesenIdler[$bulunan->id] = true;
+            } else {
+                $yeni++;
+            }
+        }
+
+        $aktifler = $mevcut->where('aktif', true);
+
+        return [
+            'yeni' => $yeni,
+            'guncellenen' => count($eslesenIdler),
+            // Hiç geçerli satır yoksa yükleme de pasife almaz — önizleme de boş gösterir.
+            'pasife' => $islenen === 0 ? [] : $aktifler->reject(fn (Calisan $c) => isset($eslesenIdler[$c->id]))->pluck('ad_soyad')->values()->all(),
+            'aktif' => $aktifler->count(),
+            'hata' => null,
+        ];
+    }
+
+    /** Eşleşme anahtarı: T.C. varsa T.C., yoksa ad soyad (firma içinde). */
+    private static function anahtar(array $veri, int $firmaId): array
+    {
+        return filled($veri['tc'] ?? null)
+            ? ['firma_id' => $firmaId, 'tc' => $veri['tc']]
+            : ['firma_id' => $firmaId, 'ad_soyad' => $veri['ad_soyad']];
+    }
+
+    /**
+     * Dosyayı okur. satirlar: Excel satır no => alan dizisi (Ad Soyad boşsa null).
+     *
+     * @return array{hata: ?string, satirlar: array<int, ?array<string, mixed>>}
+     */
+    private static function oku(string $dosyaYolu): array
+    {
+        ExcelBellek::artir();
+
+        $reader = IOFactory::createReaderForFile($dosyaYolu);
+        $reader->setReadDataOnly(true);
+
+        $satirlar = $reader->load($dosyaYolu)
+            ->getActiveSheet()
+            ->toArray(null, true, false, false);
+
+        if (count($satirlar) < 2) {
+            return ['hata' => 'Dosyada veri satırı bulunamadı.', 'satirlar' => []];
+        }
+
+        $sutunlar = static::sutunEslestir(array_shift($satirlar));
+
+        if (! in_array('ad_soyad', $sutunlar, true)) {
+            return ['hata' => '"Ad Soyad" sütunu bulunamadı. Şablonu indirip sütun adlarını kontrol edin.', 'satirlar' => []];
+        }
+
+        $sonuc = [];
+
+        foreach ($satirlar as $i => $satir) {
+            if (static::satirBosMu($satir)) {
+                continue;
+            }
+
+            $veri = static::satiriEslestir($satir, $sutunlar);
+            $sonuc[$i + 2] = blank($veri['ad_soyad'] ?? null) ? null : $veri;
+        }
+
+        return ['hata' => null, 'satirlar' => $sonuc];
     }
 
     public static function sablonIndir(): StreamedResponse

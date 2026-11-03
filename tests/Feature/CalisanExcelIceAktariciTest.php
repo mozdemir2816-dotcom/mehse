@@ -156,4 +156,70 @@ class CalisanExcelIceAktariciTest extends TestCase
 
         unlink($yol);
     }
+
+    public function test_listede_olmayan_aktif_personel_yalniz_secenek_acikken_pasife_alinir(): void
+    {
+        Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Listede Var', 'aktif' => true]);
+        Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Listede Yok', 'aktif' => true]);
+        $baskaFirma = Calisan::factory()->create(['ad_soyad' => 'Baska Firma', 'aktif' => true]);
+
+        $yol = $this->xlsxOlustur([['Ad Soyad', 'Görevi'], ['Listede Var', 'Usta'], ['Yeni Kişi', 'İşçi']]);
+
+        // Önizleme yazmaz.
+        $o = CalisanExcelIceAktarici::onizle($yol, $this->firma->id);
+        $this->assertSame(1, $o['yeni']);
+        $this->assertSame(1, $o['guncellenen']);
+        $this->assertSame(['Listede Yok'], $o['pasife']);
+        $this->assertTrue(Calisan::where('ad_soyad', 'Listede Yok')->first()->aktif);
+        $this->assertSame(0, Calisan::where('ad_soyad', 'Yeni Kişi')->count());
+
+        // Seçenek kapalı: kimse pasife alınmaz.
+        $kapali = CalisanExcelIceAktarici::iceAktar($yol, $this->firma->id);
+        $this->assertSame(0, $kapali['pasife']);
+        $this->assertTrue(Calisan::where('ad_soyad', 'Listede Yok')->first()->aktif);
+
+        // Seçenek açık: yalnız bu firmadaki listede olmayan aktif kişi pasife alınır, silinmez.
+        $acik = CalisanExcelIceAktarici::iceAktar($yol, $this->firma->id, true);
+        $this->assertSame(1, $acik['pasife']);
+        $this->assertFalse(Calisan::where('ad_soyad', 'Listede Yok')->first()->aktif);
+        $this->assertTrue(Calisan::where('ad_soyad', 'Listede Var')->first()->aktif);
+        $this->assertTrue(Calisan::where('ad_soyad', 'Yeni Kişi')->first()->aktif);
+        $this->assertTrue($baskaFirma->fresh()->aktif);
+
+        unlink($yol);
+    }
+
+    public function test_islenebilir_satir_yoksa_kimse_pasife_alinmaz(): void
+    {
+        Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Mevcut', 'aktif' => true]);
+
+        $yol = $this->xlsxOlustur([['Ad Soyad', 'Görevi'], ['', 'Boş isimli']]);
+
+        $this->assertSame([], CalisanExcelIceAktarici::onizle($yol, $this->firma->id)['pasife']);
+        $sonuc = CalisanExcelIceAktarici::iceAktar($yol, $this->firma->id, true);
+
+        $this->assertSame(0, $sonuc['pasife']);
+        $this->assertTrue(Calisan::where('ad_soyad', 'Mevcut')->first()->aktif);
+
+        unlink($yol);
+    }
+
+    public function test_arayuzde_onay_verilmeden_pasife_alma_uygulanmaz(): void
+    {
+        Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Listede Yok', 'aktif' => true]);
+        $yol = $this->xlsxOlustur([['Ad Soyad'], ['Yeni Kişi']]);
+        $dosya = fn () => UploadedFile::fake()->createWithContent('calisanlar.xlsx', file_get_contents($yol));
+
+        $rm = fn () => Livewire::test(CalisanlarRelationManager::class, ['ownerRecord' => $this->firma, 'pageClass' => EditFirma::class]);
+
+        // Onay kutusu işaretlenmeden yükleme reddedilir.
+        $rm()->callTableAction('excelYukle', data: ['dosya' => $dosya(), 'pasife_al' => true])->assertHasTableActionErrors();
+        $this->assertTrue(Calisan::where('ad_soyad', 'Listede Yok')->first()->aktif);
+
+        // Onayla: pasife alınır.
+        $rm()->callTableAction('excelYukle', data: ['dosya' => $dosya(), 'pasife_al' => true, 'pasife_onay' => true])->assertHasNoTableActionErrors();
+        $this->assertFalse(Calisan::where('ad_soyad', 'Listede Yok')->first()->aktif);
+
+        unlink($yol);
+    }
 }

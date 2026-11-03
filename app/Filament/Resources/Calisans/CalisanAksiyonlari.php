@@ -11,6 +11,11 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Support\HtmlString;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -55,7 +60,7 @@ class CalisanAksiyonlari
                 ->color('gray')
                 ->modalDescription('İlk satır başlık kabul edilir, sütun sırası önemli değil; yalnızca "Ad Soyad" zorunlu. '
                     .'Boş hücreler mevcut bilgileri silmez; dolu alanlar işlenir. T.C. No (yoksa ad soyad) eşleşen kayıt güncellenir. '
-                    .'İşten çıkış tarihi girilen kayıtlar otomatik pasife alınır. Excel Rapor çıktısı da düzenlenip geri yüklenebilir.')
+                    .'İşten çıkış tarihi girilen kayıtlar otomatik pasife alınır. Listede olmayanlar yalnız aşağıdaki seçeneği açıp onaylarsanız pasife alınır. Excel Rapor çıktısı da düzenlenip geri yüklenebilir.')
                 ->modalSubmitActionLabel('Yükle')
                 ->schema([
                     ...static::firmaAlani($sabitFirma, $varsayilanFirmaId),
@@ -69,14 +74,27 @@ class CalisanAksiyonlari
                             'text/csv',
                         ])
                         ->required()
+                        ->live()
                         ->helperText('Beklenen sütunlar (Örnek Excel\'i indirin): '.implode(', ', CalisanExcelIceAktarici::SABLON_BASLIKLARI)),
+                    Toggle::make('pasife_al')
+                        ->label('Listede olmayan aktif personeli pasife al')
+                        ->helperText('Silinmez, yalnız pasife alınır (sonradan aktif yapılabilir). Önizleme aşağıda görünür.')
+                        ->live(),
+                    Placeholder::make('onizleme')
+                        ->label('Önizleme')
+                        ->visible(fn (Get $get) => filled($get('dosya')))
+                        ->content(fn (Get $get) => static::onizlemeMetni($get, $sabitFirma)),
+                    Toggle::make('pasife_onay')
+                        ->label('Yukarıda listelenen personelin pasife alınmasını onaylıyorum')
+                        ->visible(fn (Get $get) => static::pasifeAlinacakVar($get, $sabitFirma))
+                        ->accepted(fn (Get $get) => static::pasifeAlinacakVar($get, $sabitFirma)),
                 ])
                 ->action(function (array $data) use ($sabitFirma): void {
                     $yol = Storage::disk('local')->path($data['dosya']);
                     $firma = static::firmaBul($sabitFirma, $data);
 
                     try {
-                        $sonuc = CalisanExcelIceAktarici::iceAktar($yol, $firma->id);
+                        $sonuc = CalisanExcelIceAktarici::iceAktar($yol, $firma->id, (bool) ($data['pasife_al'] ?? false) && (bool) ($data['pasife_onay'] ?? false));
                     } catch (Throwable $e) {
                         Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
 
@@ -85,7 +103,7 @@ class CalisanAksiyonlari
                         Storage::disk('local')->delete($data['dosya']);
                     }
 
-                    $bildirim = Notification::make()->title($sonuc['basarili'].' çalışan eklendi/güncellendi');
+                    $bildirim = Notification::make()->title($sonuc['basarili'].' çalışan eklendi/güncellendi'.($sonuc['pasife'] ? ', '.$sonuc['pasife'].' kişi pasife alındı' : ''));
 
                     if ($sonuc['hatalar']) {
                         $bildirim->body(implode("\n", array_slice($sonuc['hatalar'], 0, 10)));
@@ -134,6 +152,65 @@ class CalisanAksiyonlari
                 ->default(fn () => $varsayilanFirmaId ? $varsayilanFirmaId() : null)
                 ->searchable()->required(),
         ];
+    }
+
+    /** Form durumundaki yüklenmiş dosyanın geçici yolu (kaydedilmeden önce). */
+    private static function yuklenenYol(Get $get): ?string
+    {
+        $deger = $get('dosya');
+        $ilk = is_array($deger) ? (reset($deger) ?: null) : $deger;
+
+        if ($ilk instanceof TemporaryUploadedFile) {
+            return $ilk->getRealPath() ?: null;
+        }
+
+        return is_string($ilk) && Storage::disk('local')->exists($ilk) ? Storage::disk('local')->path($ilk) : null;
+    }
+
+    private static function onizleme(Get $get, ?Closure $sabitFirma): ?array
+    {
+        $yol = static::yuklenenYol($get);
+        $firmaId = $sabitFirma ? $sabitFirma()?->id : (int) $get('firma_id');
+
+        if (! $yol || ! $firmaId || ! Firma::query()->where('user_id', Filament::auth()->id())->whereKey($firmaId)->exists()) {
+            return null;
+        }
+
+        try {
+            return CalisanExcelIceAktarici::onizle($yol, (int) $firmaId);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private static function pasifeAlinacakVar(Get $get, ?Closure $sabitFirma): bool
+    {
+        return (bool) $get('pasife_al') && ! empty(static::onizleme($get, $sabitFirma)['pasife'] ?? []);
+    }
+
+    private static function onizlemeMetni(Get $get, ?Closure $sabitFirma): HtmlString|string
+    {
+        $o = static::onizleme($get, $sabitFirma);
+
+        if (! $o) {
+            return 'Dosya okunuyor veya firma seçilmedi…';
+        }
+
+        if ($o['hata']) {
+            return $o['hata'];
+        }
+
+        $satir = '<div><strong>'.$o['yeni'].'</strong> yeni çalışan eklenecek · <strong>'.$o['guncellenen'].'</strong> çalışan güncellenecek</div>';
+
+        if ($get('pasife_al')) {
+            $adlar = $o['pasife'];
+            $satir .= $adlar
+                ? '<div style="margin-top:.4rem;color:#b45309"><strong>'.count($adlar).' / '.$o['aktif'].'</strong> aktif çalışan Excel\'de olmadığı için pasife alınacak: '
+                    .e(implode(', ', array_slice($adlar, 0, 40))).(count($adlar) > 40 ? ' … (+'.(count($adlar) - 40).')' : '').'</div>'
+                : '<div style="margin-top:.4rem">Pasife alınacak personel yok.</div>';
+        }
+
+        return new HtmlString($satir);
     }
 
     private static function firmaBul(?Closure $sabitFirma, array $data): Firma
