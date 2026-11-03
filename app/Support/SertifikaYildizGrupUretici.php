@@ -54,7 +54,11 @@ class SertifikaYildizGrupUretici
 
         $dosyalar = [];
 
+        $s->loadMissing('firma');
+        $calisanlar = $s->firma ? $s->firma->calisanlar()->get(['ad_soyad', 'tc', 'gorev']) : collect();
+
         foreach ($s->katilimcilar as $k) {
+            $k['gorev'] = self::gorevBul($k, $calisanlar);
             $spreadsheet = self::doldur($s, $k, $imzali);
             $gecici = tempnam(sys_get_temp_dir(), 'ygs').'.xlsx';
             IOFactory::createWriter($spreadsheet, 'Xlsx')->save($gecici);
@@ -92,6 +96,30 @@ class SertifikaYildizGrupUretici
         return response()->streamDownload(fn () => print ($icerik), $ad, ['Content-Type' => 'application/zip']);
     }
 
+    /**
+     * Katılımcının görevi: firma çalışan kaydı (T.C., yoksa ad soyad eşleşmesi) güncel ve tek doğru
+     * kaynaktır; eğitim katılım kaydındaki kopya sonradan boş / eski kalabilir. Çalışan bulunamaz ya da
+     * görevi boşsa kayıttaki görev kullanılır. Meslek kodu ("3123.02 - ") ve sondaki tire atılır.
+     *
+     * @param  array{ad_soyad?: string, tc?: ?string, gorev?: ?string}  $katilimci
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Calisan>  $calisanlar
+     */
+    public static function gorevBul(array $katilimci, $calisanlar): ?string
+    {
+        $tc = EgitimTakibi::tcAnahtari($katilimci['tc'] ?? null);
+        $ad = EgitimTakibi::adAnahtari($katilimci['ad_soyad'] ?? null);
+
+        $calisan = ($tc !== '' ? $calisanlar->first(fn ($c) => EgitimTakibi::tcAnahtari($c->tc) === $tc) : null)
+            ?? ($ad !== '' ? $calisanlar->first(fn ($c) => EgitimTakibi::adAnahtari($c->ad_soyad) === $ad) : null);
+
+        $gorev = filled($calisan?->gorev) ? $calisan->gorev : ($katilimci['gorev'] ?? null);
+
+        $gorev = trim(preg_replace('/\s+/u', ' ', (string) $gorev));
+        $gorev = trim(preg_replace(['/^\d{4}\.\d{2}\s*-\s*/u', '/\s*-\s*$/u'], '', $gorev));
+
+        return $gorev !== '' ? $gorev : null;
+    }
+
     /** @param array{ad_soyad?: string, tc?: ?string, gorev?: ?string} $katilimci */
     private static function doldur(Sertifika $s, array $katilimci, bool $imzali = true): Spreadsheet
     {
@@ -102,7 +130,7 @@ class SertifikaYildizGrupUretici
         $sheet = $spreadsheet->getSheetByName('Çıktı Sayfası');
 
         $sheet->setCellValue('D8', 'KATILIMCININ ADI : '.TurkceMetin::buyuk($katilimci['ad_soyad'] ?? '—'));
-        $sheet->setCellValue('D9', 'GÖREVİ : '.TurkceMetin::buyuk($katilimci['gorev'] ?: '—'));
+        $sheet->setCellValue('D9', 'GÖREVİ : '.TurkceMetin::buyuk($katilimci['gorev'] ?? '—'));
 
         // Açıklama paragrafındaki tarih(ler) — eğitim katılımdaki gün sayısına göre
         // "… tarihinde" (tek gün) / "… ve … tarihlerinde" (çok gün) olarak yazılır.

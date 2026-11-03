@@ -339,6 +339,26 @@ class SertifikaOlusturTest extends TestCase
         $this->assertNull($sheet->getCell('E73')->getValue());
     }
 
+    public function test_yildiz_grup_gorevi_sistemdeki_calisan_kaydindan_ceker(): void
+    {
+        $firma = Firma::factory()->create();
+        \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'Ahmet Yılmaz', 'tc' => '11111111111', 'gorev' => "3123.06 - Şantiye Şefi-İnşaat
+-"]);
+        \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'Ayşe Kaya', 'tc' => null, 'gorev' => 'Makine Teknikeri']);
+        \App\Models\Calisan::factory()->for($firma)->create(['ad_soyad' => 'Görevsiz Kişi', 'tc' => '22222222222', 'gorev' => null]);
+        $c = $firma->calisanlar()->get();
+
+        // Kayıttaki kopya boş / eski olsa da sistemdeki güncel görev gelir; meslek kodu ve sondaki tire atılır.
+        $this->assertSame('Şantiye Şefi-İnşaat', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Ahmet Yılmaz', 'tc' => '11111111111', 'gorev' => null], $c));
+        $this->assertSame('Şantiye Şefi-İnşaat', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'AHMET YILMAZ', 'tc' => '1111 1111 111', 'gorev' => 'Eski Görev'], $c));
+        // TC yoksa ad soyad (büyük/küçük harf farkı yok sayılır).
+        $this->assertSame('Makine Teknikeri', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'AYŞE KAYA', 'tc' => null, 'gorev' => null], $c));
+        // Sistemde görev yoksa ya da çalışan bulunamazsa kayıttaki görev kullanılır.
+        $this->assertSame('Kayıttaki Görev', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Görevsiz Kişi', 'tc' => '22222222222', 'gorev' => 'Kayıttaki Görev'], $c));
+        $this->assertSame('Elle Yazılan', SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Bilinmeyen', 'tc' => null, 'gorev' => 'Elle Yazılan'], $c));
+        $this->assertNull(SertifikaYildizGrupUretici::gorevBul(['ad_soyad' => 'Bilinmeyen', 'tc' => null, 'gorev' => null], $c));
+    }
+
     public function test_yildiz_grup_firma_logosu_sag_uste_eklenir(): void
     {
         $logoRel = 'firma-logo/test-yildiz-'.uniqid().'.png';
