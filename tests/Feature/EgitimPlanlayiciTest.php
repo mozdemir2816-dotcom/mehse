@@ -160,4 +160,79 @@ class EgitimPlanlayiciTest extends TestCase
         Livewire::test(CalisanTemsilcisiSecimi::class)->set('firmaId', $this->firma->id)->call('kaydetVeBildir');
         $this->assertSame(1, EgitimKatilim::where('firma_id', $this->firma->id)->where('baslik_anahtari', 'calisan_temsilcisi')->count());
     }
+
+    public function test_grup_egitiminde_uyeler_otomatik_gelir_gorev_gruptaki_roldur_ek_katilimci_kalir(): void
+    {
+        $sef = Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Kemal Şef', 'tc' => '11111111111', 'gorev' => 'Şantiye Şefi']);
+        $isci = Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Ahmet İşçi', 'tc' => '22222222222', 'gorev' => 'Kalıpçı']);
+        $diger = Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Karışmayan', 'gorev' => 'Depocu']);
+
+        // Kurul: Kemal İK sorumlusu, Ahmet çalışan temsilcisi, dışarıdan İGU (çalışan değil).
+        $this->firma->kurulUyeleri()->create(['rol' => 'ik', 'ad_soyad' => 'Kemal Şef', 'calisan_id' => $sef->id, 'aktif' => true]);
+        $this->firma->kurulUyeleri()->create(['rol' => 'calisan_temsilcisi', 'ad_soyad' => 'AHMET İŞÇİ', 'aktif' => true]);
+        $this->firma->kurulUyeleri()->create(['rol' => 'sekreter', 'ad_soyad' => 'Dışarıdan İGU', 'aktif' => true]);
+
+        $e = Livewire::test(\App\Filament\Pages\EgitimKatilim::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('baslikAnahtari', 'isg_kurulu')
+            ->assertSet('uyelerOtomatik', true);
+
+        // Firma çalışanı olan üyeler işaretli (id veya ad eşleşmesiyle), diğer çalışanlar işaretsiz; çalışan olmayan üye ek katılımcı.
+        $secilen = $e->get('secilenCalisanIdler');
+        sort($secilen);
+        $this->assertSame([$sef->id, $isci->id], $secilen);
+        $this->assertNotContains($diger->id, $secilen);
+        $this->assertSame(['Dışarıdan İGU'], array_column($e->get('manuelKatilimcilar'), 'ad_soyad'));
+
+        // Görev = gruptaki rol (normal işi değil).
+        $this->assertSame('İK / Personel / İdari-Mali İşler Sorumlusu', $e->get('grupGorevleri')[$sef->id]);
+        $this->assertSame('Çalışan Temsilcisi (Baş Temsilci)', $e->get('grupGorevleri')[$isci->id], 'ad eşleşmesiyle bulunan temsilcinin görevi de kurul rolü');
+
+        // Kayıtta katılımcı görevi rol olarak yazılır; ek katılımcı eklenebilir (mevcut mekanizma).
+        $e->call('calisanToggle', $diger->id);   // fazladan çalışan seçildi (ek katılımcı)
+        $e->callAction('sadeceKaydet');
+        $kayit = EgitimKatilim::where('firma_id', $this->firma->id)->where('baslik_anahtari', 'isg_kurulu')->latest('id')->firstOrFail();
+        $gorevler = collect($kayit->katilimcilar)->pluck('gorev', 'ad_soyad');
+        $this->assertSame('İK / Personel / İdari-Mali İşler Sorumlusu', $gorevler['Kemal Şef']);
+        $this->assertSame('Depocu', $gorevler['Karışmayan'], 'elle eklenen çalışanın normal görevi');
+        $this->assertTrue($gorevler->has('Dışarıdan İGU'));
+        // Çalışan olmayan grup üyesi çalışan listesine EKLENMEZ.
+        $this->assertSame(0, Calisan::where('firma_id', $this->firma->id)->where('ad_soyad', 'Dışarıdan İGU')->count());
+
+        // Grup eğitimi olmayan başlığa dönünce herkes yeniden işaretli, ek katılımcılar temizlenir.
+        $e->set('baslikAnahtari', 'genel')->assertSet('uyelerOtomatik', false)->assertSet('manuelKatilimcilar', []);
+        $this->assertCount(3, $e->get('secilenCalisanIdler'));
+    }
+
+    public function test_acil_ekip_ve_temsilci_egitiminde_roller_gelir(): void
+    {
+        $c1 = Calisan::factory()->for($this->firma)->create(['ad_soyad' => 'Lider Kişi', 'gorev' => 'Formen']);
+        $ekip = AcilEkip::create(['firma_id' => $this->firma->id, 'tur' => 'sondurme', 'ad' => 'Söndürme Ekibi']);
+        $ekip->uyeler()->create(['calisan_id' => $c1->id, 'ad_soyad' => 'Lider Kişi', 'uyelik' => 'asil', 'lider' => true]);
+        $ekip->uyeler()->create(['ad_soyad' => 'Yedek Dışarıdan', 'uyelik' => 'yedek']);
+        $ekip2 = AcilEkip::create(['firma_id' => $this->firma->id, 'tur' => 'kurtarma', 'ad' => 'Kurtarma Ekibi']);
+        $ekip2->uyeler()->create(['calisan_id' => $c1->id, 'ad_soyad' => 'Lider Kişi', 'uyelik' => 'asil']);
+
+        $e = Livewire::test(\App\Filament\Pages\EgitimKatilim::class)->set('firmaId', $this->firma->id)->set('baslikAnahtari', 'sondurme_ekibi');
+        $this->assertSame([$c1->id], $e->get('secilenCalisanIdler'));
+        $this->assertSame('Söndürme Ekibi — Ekip Lideri', $e->get('grupGorevleri')[$c1->id]);
+        $this->assertSame(['Yedek Dışarıdan'], array_column($e->get('manuelKatilimcilar'), 'ad_soyad'));
+        $this->assertSame('Söndürme Ekibi — Yedek Üye', $e->get('manuelKatilimcilar')[0]['gorev']);
+
+        // Destek elemanları: tüm ekipler, aynı kişinin rolleri birleşir.
+        $d = Livewire::test(\App\Filament\Pages\EgitimKatilim::class)->set('firmaId', $this->firma->id)->set('baslikAnahtari', 'destek_elemanlari');
+        $this->assertSame('Söndürme Ekibi — Ekip Lideri, Kurtarma Ekibi — Üye', $d->get('grupGorevleri')[$c1->id]);
+
+        // Çalışan temsilcisi: görev "Çalışan Temsilcisi".
+        $this->firma->kurulUyeleri()->create(['rol' => 'calisan_temsilcisi', 'ad_soyad' => 'Temsilci Kişi', 'aktif' => true]);
+        $t = Livewire::test(\App\Filament\Pages\EgitimKatilim::class)->set('firmaId', $this->firma->id)->set('baslikAnahtari', 'calisan_temsilcisi');
+        $this->assertSame('Çalışan Temsilcisi', $t->get('manuelKatilimcilar')[0]['gorev']);
+
+        // Üyesi olmayan grup: uyarı, mevcut seçim bozulmaz.
+        $bos = Firma::factory()->for($this->uzman)->create();
+        Calisan::factory()->for($bos)->count(2)->create();
+        $b = Livewire::test(\App\Filament\Pages\EgitimKatilim::class)->set('firmaId', $bos->id)->set('baslikAnahtari', 'koruma_ekibi');
+        $b->assertSet('uyelerOtomatik', false);
+        $this->assertCount(2, $b->get('secilenCalisanIdler'));
+    }
 }

@@ -65,6 +65,12 @@ class EkipAtamaEgitim
             ->unique('tur')->filter(fn (AcilEkip $e) => $e->uyeler->isNotEmpty())->values();
     }
 
+    /** Üyenin ekipteki rolü (ör. Söndürme Ekibi — Ekip Lideri): eğitim katılımcısının görevi olarak yazılır. */
+    public static function acilRol(AcilEkip $ekip, AcilEkipUyesi $u): string
+    {
+        return $ekip->ad.' — '.($u->lider ? 'Ekip Lideri' : ($u->uyelik === 'yedek' ? 'Yedek Üye' : 'Üye'));
+    }
+
     /** @return array<int, array<string, mixed>> atama yazısı üye satırları */
     public static function acilUyeleri(AcilEkip $ekip): array
     {
@@ -119,7 +125,7 @@ class EkipAtamaEgitim
 
         foreach (self::ACIL as $tur => $tanim) {
             $eksik = isset($ekipler[$tur])
-                ? self::acilEgitimDurumu($ekipler[$tur])['eksik']->map(fn (AcilEkipUyesi $u) => ['ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'gorev' => $u->gorev])->values()->all()
+                ? self::acilEgitimDurumu($ekipler[$tur])['eksik']->map(fn (AcilEkipUyesi $u) => ['ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'gorev' => self::acilRol($ekipler[$tur], $u)])->values()->all()
                 : [];
 
             $sayi += EgitimPlanlayici::planla($firma, $tanim['baslik'], $eksik, 'acil_'.$tur) ? 1 : 0;
@@ -140,7 +146,7 @@ class EkipAtamaEgitim
         return $eksik->isEmpty() ? null : [
             'firma_id' => $ekip->firma_id,
             'baslik_anahtari' => self::ACIL[$ekip->tur]['baslik'],
-            'katilimcilar' => $eksik->map(fn (AcilEkipUyesi $u) => ['ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'gorev' => $u->gorev])->values()->all(),
+            'katilimcilar' => $eksik->map(fn (AcilEkipUyesi $u) => ['ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'gorev' => self::acilRol($ekip, $u)])->values()->all(),
         ];
     }
 
@@ -221,10 +227,45 @@ class EkipAtamaEgitim
         return ['toplam' => $temsilciler->count(), 'alan' => $temsilciler->count() - $eksik->count(), 'eksik' => $eksik];
     }
 
+    /**
+     * Eğitim Katılım'da bu başlık bir grup eğitimiyse (İSG Kurulu, çalışan temsilcisi, acil durum ekipleri, destek elemanları)
+     * o grubun TÜM güncel üyeleri; grup eğitimi değilse null.
+     *
+     * @return array<int, array{ad_soyad: string, tc: ?string, gorev: ?string, calisan_id: ?int}>|null
+     */
+    public static function egitimGrubuUyeleri(Firma $firma, string $baslik): ?array
+    {
+        if ($baslik === KurulAtamaEgitim::EGITIM_BASLIGI) {
+            return KurulAtamaEgitim::uyeler($firma)->map(fn ($u) => ['ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'gorev' => $u->rolEtiketi(), 'calisan_id' => $u->calisan_id])->values()->all();
+        }
+
+        if ($baslik === self::TEMSILCI_BASLIK) {
+            return self::temsilciler($firma)->map(fn ($t) => ['ad_soyad' => $t['ad_soyad'], 'tc' => $t['tc'], 'gorev' => 'Çalışan Temsilcisi', 'calisan_id' => null])->values()->all();
+        }
+
+        $turler = $baslik === 'destek_elemanlari'
+            ? array_keys(self::ACIL)
+            : collect(self::ACIL)->filter(fn ($t) => $t['baslik'] === $baslik)->keys()->all();
+
+        if (! $turler) {
+            return null;
+        }
+
+        return self::acilEkipler($firma)->whereIn('tur', $turler)
+            // Görev = ekipteki rolü (ör. "Söndürme Ekibi — Ekip Lideri"); birden çok ekipteyse roller birleşir.
+            ->flatMap(fn (AcilEkip $e) => $e->uyeler->map(fn (AcilEkipUyesi $u) => [
+                'ad_soyad' => $u->ad_soyad, 'tc' => $u->calisan?->tc, 'calisan_id' => $u->calisan_id,
+                'gorev' => self::acilRol($e, $u),
+            ]))
+            ->groupBy(fn ($u) => EgitimTakibi::adAnahtari($u['ad_soyad']))
+            ->map(fn ($g) => [...$g->first(), 'gorev' => $g->pluck('gorev')->implode(', ')])
+            ->values()->all();
+    }
+
     /** Eğitimi olmayan çalışan temsilcileri için Eğitim Katılım'da planlı kayıt açar / günceller. */
     public static function temsilciEgitimPlanla(Firma $firma): ?EgitimKatilim
     {
-        $eksik = self::temsilciEgitimDurumu($firma)['eksik']->map(fn ($t) => ['ad_soyad' => $t['ad_soyad'], 'tc' => $t['tc'], 'gorev' => $t['unvan'] ?: 'Çalışan Temsilcisi'])->all();
+        $eksik = self::temsilciEgitimDurumu($firma)['eksik']->map(fn ($t) => ['ad_soyad' => $t['ad_soyad'], 'tc' => $t['tc'], 'gorev' => 'Çalışan Temsilcisi'])->all();
 
         return EgitimPlanlayici::planla($firma, self::TEMSILCI_BASLIK, $eksik, 'temsilci');
     }
@@ -241,7 +282,7 @@ class EkipAtamaEgitim
         return $eksik->isEmpty() ? null : [
             'firma_id' => $firma->id,
             'baslik_anahtari' => self::TEMSILCI_BASLIK,
-            'katilimcilar' => $eksik->map(fn ($t) => ['ad_soyad' => $t['ad_soyad'], 'tc' => $t['tc'], 'gorev' => $t['unvan'] ?: 'Çalışan Temsilcisi'])->all(),
+            'katilimcilar' => $eksik->map(fn ($t) => ['ad_soyad' => $t['ad_soyad'], 'tc' => $t['tc'], 'gorev' => 'Çalışan Temsilcisi'])->all(),
         ];
     }
 }

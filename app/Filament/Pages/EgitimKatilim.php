@@ -116,6 +116,12 @@ class EgitimKatilim extends Page
     /** @var array<int, array{ad_soyad: string, tc: ?string, gorev: ?string}> */
     public array $manuelKatilimcilar = [];
 
+    /** Katılımcılar ekip / kurul / temsilci üyelerinden otomatik geldi (başlık grup eğitimiyse). */
+    public bool $uyelerOtomatik = false;
+
+    /** @var array<int, string> Grup eğitiminde çalışan id => gruptaki rolü (katılımcı görevi olarak yazılır; çalışanın normal işi değil) */
+    public array $grupGorevleri = [];
+
     public ?string $yeniAdSoyad = null;
 
     public ?string $yeniTc = null;
@@ -668,6 +674,10 @@ class EgitimKatilim extends Page
         $this->egitmenBilgileriYenile();
         $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
+        $this->uyelerOtomatik = false;
+        $this->manuelKatilimcilar = [];
+        $this->grupGorevleri = [];
+        $this->grupUyeleriniUygula();
     }
 
     /**
@@ -690,6 +700,64 @@ class EgitimKatilim extends Page
 
         $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
+        $this->grupUyeleriniUygula();
+    }
+
+    /**
+     * Grup eğitimi (İSG Kurulu, çalışan temsilcisi, acil durum ekipleri, destek elemanları): katılımcılar o grubun güncel
+     * üyelerinden OTOMATİK gelir (firma çalışanı olanlar işaretli, diğerleri ek katılımcı olarak). Fazlası aşağıdan seçilerek
+     * ya da "Ek Katılımcı Ekle" ile eklenebilir. Grup eğitimi olmayan başlığa dönülünce tüm çalışanlar yeniden işaretlenir.
+     */
+    public function grupUyeleriniUygula(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $uyeler = \App\Support\EkipAtamaEgitim::egitimGrubuUyeleri($this->firma, $this->baslikAnahtari);
+
+        if ($uyeler === null) {
+            if ($this->uyelerOtomatik) {
+                $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
+                $this->manuelKatilimcilar = [];
+                $this->grupGorevleri = [];
+                $this->uyelerOtomatik = false;
+            }
+
+            return;
+        }
+
+        if ($uyeler === []) {
+            $this->uyelerOtomatik = false;
+            Notification::make()->warning()->title('Bu grupta kayıtlı üye yok')->body('Katılımcıları aşağıdan seçin ya da önce Kurul / Acil Durum Ekipleri / Çalışan Temsilcisi sayfasında üyeleri atayın.')->send();
+
+            return;
+        }
+
+        $ids = [];
+        $manuel = [];
+        $gorevler = [];
+
+        foreach ($uyeler as $u) {
+            $anahtar = \App\Support\EgitimTakibi::adAnahtari($u['ad_soyad']);
+            $c = ($u['calisan_id'] ? $this->calisanlar->firstWhere('id', $u['calisan_id']) : null)
+                ?? $this->calisanlar->first(fn (Calisan $x) => \App\Support\EgitimTakibi::adAnahtari($x->ad_soyad) === $anahtar);
+
+            if ($c) {
+                $ids[] = $c->id;
+                $gorevler[$c->id] = $u['gorev'];
+            } else {
+                // Firma çalışanı olmayan üye (ör. dışarıdan İGU / hekim): ek katılımcı olarak gelir, çalışan listesine EKLENMEZ.
+                $manuel[] = ['ad_soyad' => $u['ad_soyad'], 'tc' => $u['tc'], 'gorev' => $u['gorev'], 'grup_uyesi' => true];
+            }
+        }
+
+        $this->secilenCalisanIdler = array_values(array_unique($ids));
+        $this->manuelKatilimcilar = $manuel;
+        $this->grupGorevleri = array_filter($gorevler);
+        $this->uyelerOtomatik = true;
+
+        Notification::make()->success()->title(count($uyeler).' üye katılımcı olarak otomatik geldi')->body('Fazlasını aşağıdan seçebilir ya da "Ek Katılımcı Ekle" ile ekleyebilirsiniz.')->send();
     }
 
     public function updatedSektorAnahtari(): void
@@ -788,7 +856,8 @@ class EgitimKatilim extends Page
             ->map(fn (Calisan $c) => [
                 'ad_soyad' => $c->ad_soyad,
                 'tc' => $c->tc,
-                'gorev' => $c->gorev,
+                // Grup eğitiminde görev = gruptaki rolü (örn. İnsan Kaynakları Sorumlusu), çalışanın normal işi değil.
+                'gorev' => $this->grupGorevleri[$c->id] ?? $c->gorev,
             ])
             ->values()
             ->all();
@@ -822,8 +891,8 @@ class EgitimKatilim extends Page
                 $tc = null;
             }
 
-            if ($ad === '') {
-                continue;
+            if ($ad === '' || ! empty($k['grup_uyesi'])) {
+                continue;   // grup üyesi (kurul / ekip / temsilci) çalışan listesine eklenmez
             }
 
             $var = $mevcut->contains(function (Calisan $c) use ($ad, $tc) {

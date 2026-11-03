@@ -254,6 +254,10 @@
                 <span style="font-weight:400;font-size:.8rem;color:rgb(107 114 128)">({{ count($secilenCalisanIdler) + count($manuelKatilimcilar) }} kişi)</span>
             </x-slot>
 
+            @if ($uyelerOtomatik)
+                <p style="font-size:.78rem;color:rgb(37 99 235);margin:0 0 .6rem">📋 Bu eğitimin katılımcıları ilgili ekip / kurul / temsilci üyelerinden <strong>otomatik</strong> geldi. Fazlasını aşağıdan işaretleyerek ya da "Ek Katılımcı Ekle" ile ekleyebilirsiniz. (Başlığı değiştirirseniz liste yeniden kurulur.)</p>
+            @endif
+
             @if ($this->calisanlar->isNotEmpty())
                 <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Firma Çalışanları</div>
                 @if ($this->calisanFiltreSecenekleri)
@@ -276,7 +280,7 @@
                                 border:1px solid {{ $secili ? $yesil : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(16 185 129 / .08)' : 'transparent' }}">
                             {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
-                            @if ($c->gorev) <span style="color:rgb(107 114 128)">— {{ $c->gorev }}</span> @endif
+                            @if ($grupGorevleri[$c->id] ?? $c->gorev) <span style="color:rgb(107 114 128)">— {{ $grupGorevleri[$c->id] ?? $c->gorev }}</span> @endif
                         </button>
                     @endforeach
                 </div>
