@@ -12,6 +12,7 @@ use App\Support\BagliKayitGuncelleyici;
 use App\Support\GeminiKararDanismani;
 use App\Support\KararDofAktarici;
 use App\Support\KurulCagriUretici;
+use App\Support\KurulKatilimciAktarici;
 use App\Support\KurulToplantisiUretici;
 use App\Support\KurulUyeleri;
 use BackedEnum;
@@ -520,6 +521,45 @@ class KurulToplantisi extends Page
         unset($this->toplanti);
     }
 
+    /** "Önceki toplantıdan katılanları aktar": kaynak toplantı kullanıcının herhangi bir firmasından seçilebilir (ortak toplantı). */
+    public function oncekindenAktarAction(): Action
+    {
+        return Action::make('oncekindenAktar')
+            ->modalHeading('Önceki toplantıdan katılanları aktar')
+            ->modalDescription('Seçtiğiniz toplantıda "Katıldı" işaretli olanlar bu toplantının katılım listesine aktarılır. İki firma ortak toplantı '
+                .'yapıyorsa diğer firmanın toplantısını da seçebilirsiniz (köşeli parantezde firma adı yazar).')
+            ->modalWidth(Width::TwoExtraLarge)
+            ->modalSubmitActionLabel('Aktar')
+            ->fillForm(fn () => ['kaynak' => $this->firma ? KurulKatilimciAktarici::varsayilanKaynakId($this->firma, $this->toplanti()) : null, 'mod' => 'degistir'])
+            ->schema(fn () => [
+                Select::make('kaynak')->label('Aktarılacak toplantı')->required()->searchable()
+                    ->options(fn () => $this->firma ? KurulKatilimciAktarici::kaynakSecenekleri($this->firma, $this->toplantiId, (int) Filament::auth()->id()) : [])
+                    ->helperText('Yalnız katılanı olan toplantılar listelenir.'),
+                Radio::make('mod')->label('Mevcut katılım listesi')->required()->default('degistir')
+                    ->options(['degistir' => 'Önceki toplantıdakilerle DEĞİŞTİR', 'ekle' => 'Önceki toplantıdakileri mevcut listeye EKLE (olanlar korunur)']),
+            ])
+            ->action(function (array $data): void {
+                $t = $this->toplanti();
+                $kaynak = KurulToplantisiModel::query()
+                    ->whereIn('firma_id', Firma::query()->where('user_id', Filament::auth()->id())->pluck('id'))
+                    ->find($data['kaynak'] ?? null);
+
+                if (! $t || ! $kaynak) {
+                    Notification::make()->title('Toplantı bulunamadı')->danger()->send();
+
+                    return;
+                }
+
+                $adet = KurulKatilimciAktarici::aktar($t, $kaynak, (string) ($data['mod'] ?? 'degistir'));
+                unset($this->toplanti);
+
+                Notification::make()->success()
+                    ->title($adet.' kişi aktarıldı')
+                    ->body(($kaynak->toplanti_no ?: 'Toplantı').' — '.$kaynak->tarih?->format('d.m.Y').' toplantısında katılanlar. Gerekirse "Katıldı/Katılmadı" işaretlerini düzeltin.')
+                    ->send();
+            });
+    }
+
     public function katilimciEkle(): void
     {
         $t = $this->toplanti();
@@ -1000,6 +1040,9 @@ class KurulToplantisi extends Page
                     'durum' => 'taslak',
                     'sonraki_toplanti' => KurulUyeleri::sonrakiToplanti($this->firma, $tarih)->toDateString(),
                     'gundem_hazir' => ['Bir önceki toplantı kararlarının gözden geçirilmesi'],
+                    // Önceki toplantıda katılanlar otomatik gelsin (varsa): her seferinde listeyi güncellemekle uğraşılmasın.
+                    'katilim_kaynak' => $kaynakId = KurulKatilimciAktarici::varsayilanKaynakId($this->firma, null, $tarih),
+                    'onceki_katilanlar' => $kaynakId !== null,
                 ];
             })
             ->schema([
@@ -1045,6 +1088,15 @@ class KurulToplantisi extends Page
                             ->columns(2)->searchable()->bulkToggleable(),
                     ]),
 
+                Section::make('Katılımcılar')->compact()->schema([
+                    Toggle::make('onceki_katilanlar')->label('Önceki toplantıda katılanları otomatik aktar')->live()
+                        ->helperText('Kapalıysa güncel kurul üyelerinin tamamı katılımcı olarak gelir. Katılım işaretlerini toplantı açıldıktan sonra da düzeltebilirsiniz.'),
+                    Select::make('katilim_kaynak')->label('Katılanların alınacağı toplantı')->searchable()
+                        ->visible(fn (Get $get) => (bool) $get('onceki_katilanlar'))
+                        ->options(fn () => $this->firma ? KurulKatilimciAktarici::kaynakSecenekleri($this->firma, null, (int) Filament::auth()->id()) : [])
+                        ->helperText('İki firma ortak toplantı yapıyorsa diğer firmanın toplantısını da seçebilirsiniz.'),
+                ]),
+
                 Textarea::make('notlar')->label('Notlar')->rows(1),
             ])
             ->action(function (array $data): void {
@@ -1061,6 +1113,22 @@ class KurulToplantisi extends Page
                 $baskan = $this->uyeler->firstWhere('rol', 'baskan');
                 $durum = $this->izinliDurum((string) $data['durum']);
 
+                // Katılımcılar: önceki toplantıda katılanlar (seçildiyse ve kaynağın katılanı varsa), yoksa güncel kurul üyeleri.
+                $katilimcilar = KurulUyeleri::katilimciSnapshot($firma);
+                $aktarildi = false;
+
+                if (! empty($data['onceki_katilanlar']) && filled($data['katilim_kaynak'] ?? null)) {
+                    $kaynak = KurulToplantisiModel::query()
+                        ->whereIn('firma_id', Firma::query()->where('user_id', Filament::auth()->id())->pluck('id'))
+                        ->find($data['katilim_kaynak']);
+                    $katilanlar = $kaynak ? KurulKatilimciAktarici::katilanlar($kaynak) : [];
+
+                    if ($katilanlar) {
+                        $katilimcilar = $katilanlar;
+                        $aktarildi = true;
+                    }
+                }
+
                 $toplanti = $firma->kurulToplantilari()->create([
                     'toplanti_no' => $data['toplanti_no'] ?: KurulToplantisiModel::sonrakiNo($firma, $data['tarih']),
                     'belge_no' => $data['belge_no'] ?? null,
@@ -1073,7 +1141,7 @@ class KurulToplantisi extends Page
                     'tur' => $data['tur'],
                     'durum' => $durum,
                     'sonraki_toplanti' => $data['sonraki_toplanti'] ?? null,
-                    'katilimcilar' => KurulUyeleri::katilimciSnapshot($firma),
+                    'katilimcilar' => $katilimcilar,
                     'gundem' => $gundem,
                     'kararlar' => [],
                     'notlar' => $data['notlar'] ?? null,
@@ -1084,7 +1152,9 @@ class KurulToplantisi extends Page
 
                 Notification::make()
                     ->title('Toplantı kaydedildi')
-                    ->body('Katılımcılar güncel kurul üyelerinden tarihsel kopya olarak sabitlendi.')
+                    ->body($aktarildi
+                        ? 'Katılımcılar önceki toplantıda katılanlardan aktarıldı; gerekirse "Katıldı/Katılmadı" işaretlerini düzeltin.'
+                        : 'Katılımcılar güncel kurul üyelerinden tarihsel kopya olarak sabitlendi.')
                     ->success()->send();
             });
     }

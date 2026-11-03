@@ -238,6 +238,7 @@
             <x-slot name="description">Toplantı anındaki kurul üyeleri — tarihsel kopya. Üyeler değiştiyse "Üyeleri yeniden aktar".</x-slot>
             <x-slot name="afterHeader">
                 <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-path" wire:click="uyeleriAktar">Üyeleri yeniden aktar</x-filament::button>
+                <x-filament::button size="sm" color="success" icon="heroicon-o-clipboard-document-check" wire:click="mountAction('oncekindenAktar')">Önceki toplantıdan katılanları aktar</x-filament::button>
             </x-slot>
 
             @if ($t->katilimcilar)
