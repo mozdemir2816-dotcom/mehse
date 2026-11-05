@@ -6,6 +6,17 @@ use App\Filament\Resources\Firmas\Pages\CreateFirma;
 use App\Filament\Resources\Firmas\Pages\EditFirma;
 use App\Filament\Resources\Firmas\Pages\ListFirmas;
 use App\Filament\Resources\Firmas\RelationManagers\CalisanlarRelationManager;
+use App\Filament\Resources\Firmas\RelationManagers\RiskSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\EgitimKayitlariSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\SertifikalarSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\IsbasiEgitimleriSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\SahaDenetimleriSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\DofRaporlariSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\KkdZimmetleriSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\KurulToplantilariSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\OlaylarSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\IsKazalariSekmesi;
+use App\Filament\Resources\Firmas\RelationManagers\AtamaYazilariSekmesi;
 use App\Filament\Resources\Firmas\RelationManagers\TatbikatlarRelationManager;
 use App\Filament\Resources\Firmas\Schemas\FirmaForm;
 use App\Filament\Resources\Firmas\Tables\FirmasTable;
@@ -65,7 +76,18 @@ class FirmaResource extends Resource
     {
         return [
             CalisanlarRelationManager::class,
+            RiskSekmesi::class,
+            EgitimKayitlariSekmesi::class,
+            SertifikalarSekmesi::class,
+            IsbasiEgitimleriSekmesi::class,
             TatbikatlarRelationManager::class,
+            SahaDenetimleriSekmesi::class,
+            DofRaporlariSekmesi::class,
+            KkdZimmetleriSekmesi::class,
+            KurulToplantilariSekmesi::class,
+            OlaylarSekmesi::class,
+            IsKazalariSekmesi::class,
+            AtamaYazilariSekmesi::class,
         ];
     }
 
