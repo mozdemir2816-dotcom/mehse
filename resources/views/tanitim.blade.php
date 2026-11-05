@@ -108,7 +108,7 @@
             <a href="#sss">S.S.S.</a>
         </nav>
         <div class="ust-sag">
-            <a href="{{ $girisUrl }}" class="ust-link uye-giris">Üye Girişi</a>
+            <a href="{{ $girisUrl }}" class="ust-link uye-giris"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Üye Girişi</a>
             <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve dugme-kucuk ust-kayit">Uzman Kaydı</a>
             <a href="#teklif" class="dugme dugme-yesil dugme-kucuk ust-teklif">Teklif Al</a>
             <button type="button" class="menu-dugme" id="menuDugme" aria-controls="mobilMenu" aria-expanded="false" aria-label="Menüyü aç">
@@ -122,7 +122,7 @@
         <a href="#yazilim">İSG Yazılımı</a>
         <a href="#surec">Süreç</a>
         <a href="#sss">S.S.S.</a>
-        <a href="{{ $girisUrl }}">Üye Girişi</a>
+        <a href="{{ $girisUrl }}" class="uye-giris-mobil">Üye Girişi</a>
         <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve">Uzman Kaydı</a>
         <a href="#teklif" class="dugme dugme-yesil">Teklif Al</a>
     </nav>

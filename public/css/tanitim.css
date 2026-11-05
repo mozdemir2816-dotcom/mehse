@@ -161,6 +161,14 @@ section[id] { scroll-margin-top: 80px; }
 .form.basarili h3 { color: var(--zumrut-koyu); font-size: 1.25rem; }
 .form.basarili p { color: #065f46; }
 .uye-giris { display: none; }
+.ust .uye-giris {
+  align-items: center; gap: 7px; padding: 9px 18px; border-radius: 10px;
+  background: #fff; color: var(--lacivert-900, #0f172a); font-weight: 700; font-size: .92rem;
+  border: 1px solid #fff; box-shadow: 0 4px 14px rgba(255, 255, 255, .18);
+  transition: background .15s, transform .15s;
+}
+.ust .uye-giris:hover { background: #e2e8f0; color: #0f172a; transform: translateY(-1px); }
+.mobil .uye-giris-mobil { background: #fff; color: #0f172a; font-weight: 700; border-radius: 10px; text-align: center; margin-top: 8px; padding: 12px; display: block; }
 .form-not { font-size: .78rem; color: var(--soluk); text-align: center; }
 
 /* ---------- Kimler için (segment kartları) ---------- */
