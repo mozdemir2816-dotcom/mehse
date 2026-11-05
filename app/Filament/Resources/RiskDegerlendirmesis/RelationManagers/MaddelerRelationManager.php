@@ -52,6 +52,14 @@ class MaddelerRelationManager extends RelationManager
         return NaceGrubu::bul($rd->firma_nace ?: $rd->firma?->nace_kodu);
     }
 
+    /** Her firmada beklenen klasörler: eğitim/sağlık + genel işyeri + tüm acil durum setleri (varsayılan ve sektör). */
+    protected function herFirmaKategoriAnahtarlari(): array
+    {
+        return collect(config('ekipman_katalogu.her_firma_riskleri', []))
+            ->merge(collect(config('ekipman_katalogu.her_firma_acil_durum', []))->flatten())
+            ->unique()->values()->all();
+    }
+
     protected function ucEksenli(): bool
     {
         return RiskSkorlama::ucEksenliMi($this->yontem());
@@ -190,7 +198,8 @@ class MaddelerRelationManager extends RelationManager
                         // 01.11.2026: ekipman/klasör seçince tüm maddeleri gelir (yeni makine geldiğinde tek tek seçmeye gerek yok).
                         Select::make('kategori_idler')->label('Ekipman / klasörün tüm maddeleri')
                             ->options(fn () => TehlikeKategorisi::query()->uygun($this->yontem(), $this->firmaNaceGrubu())
-                                ->orWhere(fn ($q) => $q->whereNull('yontem')->where(fn ($w) => $w->where('anahtar', 'like', 'ekipman_%')->orWhere('anahtar', 'like', 'atolye_%')))
+                                ->orWhere(fn ($q) => $q->whereNull('yontem')->where(fn ($w) => $w->where('anahtar', 'like', 'ekipman_%')->orWhere('anahtar', 'like', 'atolye_%')
+                                    ->orWhereIn('anahtar', $this->herFirmaKategoriAnahtarlari())))
                                 ->withCount('tehlikeler')->orderBy('ad')->get()
                                 ->filter(fn (TehlikeKategorisi $k) => $k->tehlikeler_count > 0)
                                 ->mapWithKeys(fn (TehlikeKategorisi $k) => [$k->id => $k->ad.' ('.$k->tehlikeler_count.' madde)']))
@@ -198,7 +207,8 @@ class MaddelerRelationManager extends RelationManager
                             ->helperText('Analizde zaten bulunan kütüphane maddeleri tekrar eklenmez.'),
                         Select::make('tehlike_idler')->label('Tek tek tehlikeler')
                             ->options(fn () => Tehlike::query()->with('kategori')
-                                ->whereHas('kategori', fn ($q) => $q->uygun($this->yontem(), $this->firmaNaceGrubu()))
+                                ->whereHas('kategori', fn ($q) => $q->uygun($this->yontem(), $this->firmaNaceGrubu())
+                                    ->orWhere(fn ($x) => $x->whereNull('yontem')->whereIn('anahtar', $this->herFirmaKategoriAnahtarlari())))
                                 ->get()
                                 ->mapWithKeys(fn (Tehlike $t) => [$t->id => "[{$t->kategori->ad}] ".Str::limit($t->tehlike, 70)]))
                             ->multiple()

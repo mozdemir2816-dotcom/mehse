@@ -100,7 +100,7 @@ return [
     */
     'risk_hizli_kurulum' => [
         // Adım 1 — her işyerinde ortak genel riskler (genel işyeri, acil durum, eğitim/yetki, elektrik ve ortak makine güvenliği)
-        'genel' => ['genel_isyeri', 'atolye_acil_durumlar', 'atolye_egitim_ve_yetkilendirme', 'atolye_elektrik_ve_ortak_makine_guvenligi'],
+        'genel' => ['genel_isyeri', 'egitim_saglik_yeterlilik', 'atolye_acil_durumlar', 'atolye_egitim_ve_yetkilendirme', 'atolye_elektrik_ve_ortak_makine_guvenligi'],
         // Adım 2 — ekipman / proses ızgarası: anahtar => [ad, heroicon, kategori anahtarları]
         'ekipmanlar' => [
             'eksantrik_pres' => ['ad' => 'Eksantrik Pres', 'ikon' => 'heroicon-o-arrows-pointing-in', 'kategoriler' => ['ekipman_eksantrik_pres']],
