@@ -50,4 +50,20 @@ class FirmaKayitSekmeleriTest extends TestCase
             ->callTableAction('pdf', $risk)
             ->assertHasNoTableActionErrors();
     }
+
+    public function test_firma_sayfasi_kayit_bolumlerini_alt_alta_gosterir(): void
+    {
+        $uzman = User::factory()->create();
+        $firma = Firma::factory()->for($uzman)->create();
+        RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
+        $this->actingAs($uzman);
+        Filament::setCurrentPanel('admin');
+
+        Livewire::test(EditFirma::class, ['record' => $firma->getKey()])
+            ->assertSuccessful()
+            ->assertSee('Risk Analizleri (1)')
+            ->assertSee('Eğitim Kayıtları (0)')
+            ->assertSee('Çalışanlar')
+            ->assertSee('Tatbikatlar');
+    }
 }

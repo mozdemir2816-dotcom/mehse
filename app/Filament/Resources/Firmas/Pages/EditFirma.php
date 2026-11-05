@@ -17,12 +17,47 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Livewire;
+use Filament\Schemas\Components\Section;
 
 class EditFirma extends EditRecord
 {
     use KaydetUstte;
 
     protected static string $resource = FirmaResource::class;
+
+    /**
+     * Kayıt sekmeleri yan yana değil, alt alta tıklayınca açılan bölümler olarak gösterilir (05.11.2026,
+     * kullanıcı isteği): başlıkta kayıt sayısı, içerik açılınca (tembel) yüklenir.
+     */
+    public function getRelationManagersContentComponent(): Component
+    {
+        $firma = $this->getRecord();
+        $veri = $this->getRelationManagerLivewireData();
+
+        $bolumler = collect($this->getCachedRelationManagers())
+            ->map(function ($yonetici) use ($firma, $veri): Section {
+                $sinif = $this->normalizeRelationManagerClass($yonetici);
+                $adet = $firma->{$sinif::getRelationshipName()}()->count();
+
+                return Section::make($sinif::getTitle($firma, static::class).' ('.$adet.')')
+                    ->collapsible()
+                    ->collapsed()
+                    ->persistCollapsed()
+                    ->key('bolum-'.class_basename($sinif))
+                    ->schema([
+                        Livewire::make($sinif, [...$veri, ...$sinif::getDefaultProperties()])
+                            ->lazy()
+                            ->key($sinif),
+                    ]);
+            })
+            ->values()
+            ->all();
+
+        return Group::make($bolumler);
+    }
 
     protected function getHeaderActions(): array
     {
