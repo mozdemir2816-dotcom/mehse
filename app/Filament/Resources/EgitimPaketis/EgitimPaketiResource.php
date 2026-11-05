@@ -7,6 +7,8 @@ use App\Filament\Resources\EgitimPaketis\Pages\EditEgitimPaketi;
 use App\Filament\Resources\EgitimPaketis\Pages\ListEgitimPaketis;
 use App\Models\EgitimPaketi;
 use BackedEnum;
+use Closure;
+use App\Models\EgitimDersi;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -95,26 +97,7 @@ class EgitimPaketiResource extends Resource
                 Toggle::make('paylasildi')->label('Diğer uzmanlar da atayabilsin'),
             ]),
 
-            Section::make('Video Dersleri')
-                ->description('Çalışan bu videoları portalda izler. YouTube önerilir (görünürlük: "Liste dışı") — izleme süresi ölçülür, ileri sarma engellenir. Vimeo ve diğer linklerde süre ölçülemez, çalışan "izledim" ile onaylar.')
-                ->schema([
-                    Repeater::make('dersler')
-                        ->relationship()
-                        ->label('')
-                        ->schema([
-                            TextInput::make('baslik')->label('Ders başlığı')->required()->columnSpan(2),
-                            TextInput::make('video_url')->label('Video linki (YouTube / Vimeo)')->required()->url()->columnSpan(2),
-                            TextInput::make('sure_sn')->label('Süre (saniye)')->numeric()->helperText('Boşsa YouTube videosu ilk izlendiğinde otomatik dolar.'),
-                            Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull(),
-                        ])
-                        ->columns(2)
-                        ->orderColumn('sira')
-                        ->itemLabel(fn (array $state): ?string => $state['baslik'] ?? null)
-                        ->addActionLabel('Ders Ekle')
-                        ->collapsible()
-                        ->reorderableWithButtons()
-                        ->defaultItems(0),
-                ]),
+            ...self::modulBolumleri(),
 
             Section::make('Final Sınav Soruları')
                 ->description('Sınavda bu havuzdan rastgele soru seçilir. En az 5 soru gerekir.')
@@ -141,6 +124,65 @@ class EgitimPaketiResource extends Resource
                         ->defaultItems(0),
                 ]),
         ]);
+    }
+
+    /**
+     * Yönetmelik Ek-1'in 4 ana konu grubu (modül) için ayrı ders bölümleri + eski (modülsüz) dersler.
+     * Her modülde dersler 1, 2, 3 … diye numaralanır; sıra numarası kayıtlıdır.
+     *
+     * @return array<int, Section>
+     */
+    public static function modulBolumleri(): array
+    {
+        $aciklamalar = [
+            1 => 'Çalışma mevzuatı, yasal hak ve sorumluluklar, işyeri temizliği ve düzeni, iş kazası/meslek hastalığının hukuki sonuçları.',
+            2 => 'Meslek hastalıkları, korunma, biyolojik/psikososyal etmenler, ilk yardım, bağımlılık.',
+            3 => 'Risk etmenleri, yangın, iş ekipmanları, elektrik, işaretler, KKD, acil durum ve tahliye.',
+            4 => 'Az tehlikelide online verilebilir. Tehlikeli ve Çok Tehlikeli sınıfta bu modül YÜZ YÜZE verilir; online video eklemeyin.',
+        ];
+
+        $bolumler = [];
+
+        foreach (EgitimDersi::MODULLER as $n => $ad) {
+            $bolumler[] = Section::make("Modül {$n}: {$ad}".($n === 4 ? ' (Tehlikeli/Çok Tehlikeli: Yüz Yüze)' : ''))
+                ->description($aciklamalar[$n].' YouTube önerilir (liste dışı) — izleme süresi ölçülür, ileri sarma engellenir.')
+                ->collapsible()
+                ->schema([
+                    self::dersTekrarlayici("modul{$n}_dersler", fn ($query) => $query->where('modul', $n), $n),
+                ]);
+        }
+
+        $bolumler[] = Section::make('Modülsüz dersler (eski paketler)')
+            ->description('Modül atanmadan eklenmiş dersler. Yeni videoları yukarıdaki modüllere ekleyin.')
+            ->collapsible()->collapsed()
+            ->visible(fn (?EgitimPaketi $record) => $record?->dersler()->whereNull('modul')->exists() ?? false)
+            ->schema([
+                self::dersTekrarlayici('eski_dersler', fn ($query) => $query->whereNull('modul'), null),
+            ]);
+
+        return $bolumler;
+    }
+
+    private static function dersTekrarlayici(string $ad, Closure $sorgu, ?int $modul): Repeater
+    {
+        return Repeater::make($ad)
+            ->relationship('dersler', $sorgu)
+            ->label('')
+            ->schema([
+                TextInput::make('baslik')->label('Ders başlığı')->required()->columnSpan(2),
+                TextInput::make('video_url')->label('Video linki (YouTube / Vimeo)')->required()->url()->columnSpan(2),
+                TextInput::make('sure_sn')->label('Süre (saniye)')->numeric()->helperText('Boşsa YouTube videosu ilk izlendiğinde otomatik dolar.'),
+                Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull(),
+            ])
+            ->columns(2)
+            ->orderColumn('sira')
+            ->itemNumbers()
+            ->itemLabel(fn (array $state): ?string => $state['baslik'] ?? null)
+            ->mutateRelationshipDataBeforeCreateUsing(fn (array $data) => [...$data, 'modul' => $modul])
+            ->addActionLabel('Ders Ekle')
+            ->collapsible()
+            ->reorderableWithButtons()
+            ->defaultItems(0);
     }
 
     public static function table(Table $table): Table

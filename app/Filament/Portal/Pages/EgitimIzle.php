@@ -286,7 +286,7 @@ class EgitimIzle extends Page
     {
         $a = $this->atamaKaydi();
 
-        if (! $a || ! $a->basariliMi()) {
+        if (! $a || ! $a->belgeAcikMi()) {
             return null;
         }
 

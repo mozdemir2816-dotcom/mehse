@@ -43,7 +43,8 @@ class EgitimPaketi extends Model
 
     public function dersler(): HasMany
     {
-        return $this->hasMany(EgitimDersi::class)->orderBy('sira');
+        // Önce modülsüz (eski) dersler, sonra Modül 1→4; her modülde kayıtlı sıra (1, 2, 3 …).
+        return $this->hasMany(EgitimDersi::class)->orderByRaw('COALESCE(modul, 0)')->orderBy('sira');
     }
 
     public function sorular(): HasMany

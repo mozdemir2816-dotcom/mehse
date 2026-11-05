@@ -25,6 +25,7 @@ class EgitimAtamasi extends Model
         'son_tarih' => 'date',
         'tamamlandi_at' => 'datetime',
         'on_test_at' => 'datetime',
+        'igu_onay_at' => 'datetime',
         'on_test_puani' => 'integer',
         'yeniden_baslatma' => 'integer',
         'yeniden_baslatildi_at' => 'datetime',
@@ -101,6 +102,35 @@ class EgitimAtamasi extends Model
         return $this->sinavSonuclari()->where('gecti', true)->exists();
     }
 
+    /**
+     * Sınav geçildi ama 4. modül yüz yüze (tehlikeli / çok tehlikeli) ve İGU henüz onaylamadı.
+     * Onay alanı eklenmeden önce tamamlanmış atamalar onaylı sayılır.
+     */
+    public function iguOnayiBekliyorMu(): bool
+    {
+        return $this->basariliMi()
+            && $this->dorduncuKonuYuzYuzeMi()
+            && $this->igu_onay_at === null
+            && $this->durum !== 'tamamlandi';
+    }
+
+    /** Belge yalnız sınav geçilmiş ve (gerekiyorsa) İGU onayı verilmişse açılır. */
+    public function belgeAcikMi(): bool
+    {
+        return $this->basariliMi() && ! $this->iguOnayiBekliyorMu();
+    }
+
+    /** İGU onayı: 4. modülün yüz yüze tamamlandığını doğrular; atama tamamlanır ve eğitim kaydına işlenir. */
+    public function iguOnayla(?int $kullaniciId): void
+    {
+        if (! $this->iguOnayiBekliyorMu()) {
+            return;
+        }
+
+        $this->forceFill(['igu_onay_at' => now(), 'igu_onaylayan_id' => $kullaniciId])->save();
+        $this->durumuTazele();
+    }
+
     public function sonrakiDeneme(): int
     {
         return (int) $this->sinavSonuclari()->max('deneme_no') + 1;
@@ -167,6 +197,7 @@ class EgitimAtamasi extends Model
     public function durumuTazele(): void
     {
         $yeni = match (true) {
+            $this->iguOnayiBekliyorMu() => 'onay_bekliyor',
             $this->basariliMi() => 'tamamlandi',
             $this->donemSinavlari()->exists() => 'basarisiz',
             $this->izlenenDersSayisi() > 0 => 'devam',
@@ -220,7 +251,8 @@ class EgitimAtamasi extends Model
 
     public function egitimKaydinaIslenirMi(): bool
     {
-        return in_array($this->egitim_turu, ['ilk_defa', 'yenileme'], true) && ! $this->dorduncuKonuYuzYuzeMi();
+        return in_array($this->egitim_turu, ['ilk_defa', 'yenileme'], true)
+            && (! $this->dorduncuKonuYuzYuzeMi() || $this->igu_onay_at !== null);
     }
 
     public function durumEtiketi(): string

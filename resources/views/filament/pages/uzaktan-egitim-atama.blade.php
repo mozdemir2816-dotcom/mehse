@@ -91,7 +91,7 @@
             <div style="{{ $kutu }};margin-top:1rem;border-color:rgb(21 128 61 / .5);background:rgb(21 128 61 / .05)">
                 <div style="font-weight:600;font-size:.85rem;margin-bottom:.4rem">Giriş Bilgileri — çalışanlara iletin ({{ url('/egitim') }})</div>
                 <table style="width:100%;font-size:.82rem;border-collapse:collapse">
-                    <tr style="text-align:left;color:rgb(107 114 128)"><th style="padding:.3rem">Ad Soyad</th><th style="padding:.3rem">E-posta / Kullanıcı Kodu</th><th style="padding:.3rem">Geçici Şifre</th></tr>
+                    <tr style="text-align:left;color:rgb(107 114 128)"><th style="padding:.3rem">Ad Soyad</th><th style="padding:.3rem">E-posta / Kullanıcı Kodu</th><th style="padding:.3rem">Geçici Şifre</th><th style="padding:.3rem"></th></tr>
                     @foreach ($sonUretilenGiris as $g)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                             <td style="padding:.3rem">{{ $g['ad_soyad'] }}</td>
@@ -100,6 +100,7 @@
                                 @unless (str_contains($g['eposta'], '@'))<span style="color:#b45309;font-size:.7rem"> (kod)</span>@endunless
                             </td>
                             <td style="padding:.3rem;font-family:monospace">{{ $g['sifre'] ?? '(mevcut şifre korunuyor)' }}</td>
+                            <td style="padding:.3rem"><a href="{{ $this->whatsappLinki($g) }}" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;padding:.2rem .6rem;border-radius:.4rem;font-size:.75rem;text-decoration:none;white-space:nowrap">📲 WhatsApp ile İlet</a></td>
                         </tr>
                     @endforeach
                 </table>
@@ -157,7 +158,9 @@
                                 </div>
                             </td>
                             <td style="padding:.5rem">
-                                @if ($a->durum === 'tamamlandi')
+                                @if ($a->durum === 'onay_bekliyor')
+                                    <span style="color:#b45309;font-weight:700">⏳ Sınav geçti · 4. modül yüz yüze / İGU onayı bekliyor</span>
+                                @elseif ($a->durum === 'tamamlandi')
                                     <span style="color:rgb(21 128 61);font-weight:700">☑ Tamamlandı</span>
                                     <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $a->tamamlandi_at?->format('d.m.Y') }}@if ($a->egitimKaydinaIslenirMi()) · kayda işlendi @elseif ($a->dorduncuKonuYuzYuzeMi()) · <span style="color:#b45309">1–3. konular tamam, 4. konu yüz yüze bekleniyor</span> @endif</div>
                                 @else
@@ -167,7 +170,10 @@
                                 @endif
                             </td>
                             <td style="padding:.5rem;white-space:nowrap">
-                                @if ($a->basariliMi())
+                                @if ($a->iguOnayiBekliyorMu())
+                                    <button wire:click="iguOnayla({{ $a->id }})" wire:confirm="4. modül yüz yüze verildi ve sınav sonucu uygundur; onaylansın mı?" style="background:#b45309;color:#fff;border:0;border-radius:.4rem;padding:.15rem .5rem;cursor:pointer;font-size:.78rem">İGU Onayı</button>
+                                @endif
+                                @if ($a->belgeAcikMi())
                                     <button wire:click="belgeIndir({{ $a->id }})" style="background:none;border:0;color:rgb(20 184 166);cursor:pointer;font-size:.8rem">Belge</button>
                                 @endif
                                 <button wire:click="sifreYenile({{ $a->calisan_id }})" wire:confirm="Yeni geçici şifre üretilsin mi?" style="background:none;border:0;color:rgb(107 114 128);cursor:pointer;font-size:.8rem">Şifre</button>

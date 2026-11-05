@@ -34,6 +34,24 @@ class EditFirma extends EditRecord
                 ->color('gray')
                 ->url(fn (Firma $record) => FirmaDenetimOperasyon::getUrl(['firma' => $record->id, 'bolum' => 'firma360'])),
 
+            Action::make('isgDosyasi')
+                ->label('📁 İSG Dosyası & Evrak Takip')
+                ->color('gray')
+                ->url(fn (Firma $record) => \App\Filament\Pages\FirmaIsgDosyasi::getUrl(['firma' => $record->id])),
+
+            Action::make('teftisPaketi')
+                ->label('📦 Teftiş Paketi (ZIP)')
+                ->color('success')
+                ->action(function (Firma $record) {
+                    $yanit = \App\Support\FirmaIsgDosyasi::teftisPaketi($record);
+
+                    if (! $yanit) {
+                        Notification::make()->title('Pakete eklenecek evrak yok')->warning()->send();
+                    }
+
+                    return $yanit;
+                }),
+
             Action::make('arsivDosyasi')
                 ->label('Arşiv Dosyası')
                 ->icon('heroicon-o-folder-open')

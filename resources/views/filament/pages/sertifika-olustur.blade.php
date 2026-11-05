@@ -40,6 +40,38 @@
                 </button>
             @endforeach
         </div>
+
+        @if ($this->firma)
+            @php
+                $rozetler = [
+                    'cok_tehlikeli' => ['16 Saat / Çok Tehlikeli', '#C02626'],
+                    'tehlikeli' => ['12 Saat / Tehlikeli', '#ea580c'],
+                    'az_tehlikeli' => ['8 Saat / Az Tehlikeli', '#2563eb'],
+                ];
+            @endphp
+            <div style="margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+                <span style="font-size:.78rem;color:rgb(107 114 128)">Firma tehlike sınıfı:</span>
+                @foreach ($rozetler as $anahtar => [$etiket, $renk])
+                    @php $aktif = $this->firma->tehlike_sinifi === $anahtar; @endphp
+                    <span style="padding:.15rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;
+                        color:{{ $aktif ? '#fff' : $renk }};background:{{ $aktif ? $renk : 'transparent' }};border:1px solid {{ $renk }};opacity:{{ $aktif ? 1 : .45 }}">{{ $etiket }}</span>
+                @endforeach
+            </div>
+        @endif
+
+        @if ($tip === 'isg')
+            <div style="margin-top:1rem;display:flex;gap:.8rem;align-items:center;padding:.7rem;border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;background:rgb(248 250 252 / .04)">
+                <div style="width:56px;aspect-ratio:210/297;background:#fff;border:2px double #C02626;display:flex;flex-direction:column;align-items:center;padding:5px 3px;gap:3px;flex-shrink:0">
+                    <span style="font-size:5px;font-weight:800;color:#C02626">YILDIZ GRUP</span>
+                    <span style="width:80%;height:3px;background:#1E293B"></span>
+                    <span style="width:80%;height:2px;background:#cbd5e1"></span><span style="width:80%;height:2px;background:#cbd5e1"></span><span style="width:80%;height:2px;background:#cbd5e1"></span>
+                </div>
+                <div>
+                    <div style="font-weight:700;font-size:.85rem">Yıldız Grup OSGB Orijinal Formatı</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">2 sayfa A4: ön yüz belge + arka yüz eğitim konuları ve süreleri. Çıktı için üstteki "Yıldız Grup Eğitim Sertifikası" / "Toplu Sertifika İndir (PDF)" düğmeleri.</div>
+                </div>
+            </div>
+        @endif
     </x-filament::section>
 
     @if ($this->firma)

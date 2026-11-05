@@ -77,7 +77,7 @@
                                 <div id="izleme-uyari" style="display:none;position:absolute;left:0;right:0;bottom:0;background:rgb(180 83 9 / .92);color:#fff;font-size:.82rem;padding:.45rem .8rem;z-index:4"></div>
                             </div>
                             <div class="portal-card-pad">
-                                <div class="portal-heading" style="font-weight:700">{{ $aktif->baslik }}</div>
+                                <div class="portal-heading" style="font-weight:700">{{ $aktif->numaraliBaslik() }}</div>
                                 @if ($aktif->aciklama)<div class="portal-muted" style="font-size:.85rem;margin-top:.35rem;line-height:1.5">{{ $aktif->aciklama }}</div>@endif
 
                                 <div style="margin-top:.8rem;font-size:.85rem">
@@ -106,7 +106,7 @@
                             <button type="button" wire:click="dersSec({{ $d->id }})"
                                 class="portal-lesson-btn {{ $d->id === $aktifDersId ? 'portal-lesson-active' : '' }}">
                                 <span class="portal-lesson-num {{ $numClass }}">{{ $tamamlandi ? '✓' : $i + 1 }}</span>
-                                <span>{{ $d->baslik }}</span>
+                                <span>{{ $d->numaraliBaslik() }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -263,7 +263,12 @@
                 @endunless
 
                 <div style="margin-top:1.3rem;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap">
-                    @if ($g)
+                    @if ($g && $a->iguOnayiBekliyorMu())
+                        <div class="portal-muted" style="font-size:.9rem;max-width:30rem">
+                            Sınavı geçtiniz. İşyerinizin tehlike sınıfında 4. modül (işyerine özgü riskler) yüz yüze verilir;
+                            iş güvenliği uzmanınız onayladığında belgeniz buradan indirilebilir olacak.
+                        </div>
+                    @elseif ($g)
                         <x-filament::button wire:click="belgeIndir" icon="heroicon-o-arrow-down-tray">Temel Eğitim Belgesini İndir</x-filament::button>
                     @else
                         <x-filament::button color="gray" wire:click="tekrarDene">Dersleri Tekrar İzle / Yeniden Dene</x-filament::button>

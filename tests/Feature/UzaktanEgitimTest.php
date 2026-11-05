@@ -337,15 +337,23 @@ class UzaktanEgitimTest extends TestCase
 
         $this->tamamla($atama);
 
-        $this->assertSame('tamamlandi', $atama->refresh()->durum);
-        $this->assertSame(0, $mehmet->egitimKayitlari()->count());   // temel eğitim henüz tamam sayılmaz
-        $satir = EgitimTakibi::satirlar($this->firma)->first();
-        $this->assertSame('kayit_yok', $satir['durum']);
-        $this->assertTrue($satir['dorduncu_bekleniyor']);
+        // Sınav geçildi ama 4. modül yüz yüze: İGU onayı gelene dek belge kapalı, kayıt işlenmez.
+        $atama->refresh();
+        $this->assertSame('onay_bekliyor', $atama->durum);
+        $this->assertTrue($atama->iguOnayiBekliyorMu());
+        $this->assertFalse($atama->belgeAcikMi());
+        $this->assertSame(0, $mehmet->egitimKayitlari()->count());
 
         Livewire::test(UzaktanEgitimAtama::class)
             ->set('firmaId', $this->firma->id)
-            ->assertSee('4. konu yüz yüze bekleniyor');
+            ->assertSee('İGU onayı bekliyor')
+            ->call('iguOnayla', $atama->id);
+
+        $atama->refresh();
+        $this->assertSame('tamamlandi', $atama->durum);
+        $this->assertTrue($atama->belgeAcikMi());
+        $this->assertNotNull($atama->igu_onay_at);
+        $this->assertSame(1, $mehmet->egitimKayitlari()->count());   // onaydan sonra Eğitim Takibi'ne işlenir
 
         $html = view('pdf.uzaktan-egitim-belgesi', [
             'atama' => $atama, 'calisan' => $mehmet, 'firma' => $this->firma->fresh(), 'paket' => $paket, 'sinav' => $atama->sonSinav(),

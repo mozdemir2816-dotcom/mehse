@@ -451,6 +451,54 @@ class SertifikaOlustur extends Page
                     return SertifikaUretici::pdf($s, ImzaSecenegi::secili($data));
                 }),
 
+            Action::make('onizle')
+                ->label('Canlı Önizle')
+                ->icon('heroicon-o-eye')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null && $this->tip === 'isg')
+                ->modalHeading('Yıldız Grup Sertifikası — Önizleme (kaydedilmez)')
+                ->modalWidth('5xl')
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Kapat')
+                ->modalContent(fn () => view('filament.pages.partials.sertifika-onizleme', [
+                    'katilimci' => $this->katilimcilarTopla()[0] ?? null,
+                    'firmaUnvan' => $this->firma?->unvan,
+                    'icerik' => $this->icerik,
+                    'tarihler' => $this->egitimTarihleri,
+                    'sure' => $this->sureMetni,
+                    'tur' => $this->tur,
+                    'sekil' => $this->sekil,
+                ])),
+
+            Action::make('topluPdf')
+                ->label('Toplu Sertifika İndir (PDF)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null && $this->tip === 'isg')
+                ->schema([ImzaSecenegi::alan()])
+                ->action(function (array $data) {
+                    $s = $this->kaydet();
+
+                    if (! $s) {
+                        return null;
+                    }
+
+                    $this->ciktiAlindi();
+
+                    return SertifikaYildizGrupUretici::pdf($s, ImzaSecenegi::secili($data));
+                }),
+
+            Action::make('whatsapp')
+                ->label('WhatsApp ile Paylaş')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $metin = 'Merhaba, '.$this->firma->unvan.' çalışanlarına ait İSG eğitim sertifikaları hazırlandı. '
+                        .count($this->katilimcilarTopla()).' katılımcı. PDF dosyasını ayrıca ileteceğim.';
+                    $this->js('window.open('.json_encode('https://wa.me/?text='.rawurlencode($metin)).', "_blank")');
+                }),
+
             Action::make('yildizGrup')
                 ->label('Yıldız Grup Eğitim Sertifikası')
                 ->icon('heroicon-o-table-cells')

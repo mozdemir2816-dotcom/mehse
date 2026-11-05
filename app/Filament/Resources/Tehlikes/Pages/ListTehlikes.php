@@ -130,6 +130,7 @@ class ListTehlikes extends ListRecords
                     ->url(fn () => EkipmanRiskYukle::getUrl()),
             ])
                 ->label('İçe / Dışa Aktar')
+                ->dropdownPlacement('bottom-end')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
                 ->button(),

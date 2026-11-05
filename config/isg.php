@@ -575,6 +575,7 @@ return [
             'atandi' => 'Atandı',
             'devam' => 'Devam Ediyor',
             'basarisiz' => 'Sınav Başarısız',
+            'onay_bekliyor' => '4. Modül Yüz Yüze / İGU Onayı Bekliyor',
             'tamamlandi' => 'Tamamlandı',
         ],
         // İşe başlama eğitimi (Yön. 02.04.2026 Md.7) uygulamalı ve yüz yüze

@@ -305,7 +305,7 @@ class UzaktanEgitimAtama extends Page
                 $calisan->forceFill(['sifre' => $gecici, 'sifre_belirlendi_at' => null])->save();
             }
 
-            $giris[] = ['ad_soyad' => $calisan->ad_soyad, 'eposta' => $calisan->eposta, 'sifre' => $gecici];
+            $giris[] = ['ad_soyad' => $calisan->ad_soyad, 'eposta' => $calisan->eposta, 'sifre' => $gecici, 'telefon' => $calisan->telefon];
         }
 
         $this->sonUretilenGiris = $giris;
@@ -320,6 +320,32 @@ class UzaktanEgitimAtama extends Page
         Notification::make()->title($mesaj)
             ->body('Portal adresi: '.url('/egitim').' — giriş bilgileri aşağıda listelendi.')
             ->success()->send();
+    }
+
+    /** Giriş bilgisi satırı için wa.me bağlantısı (telefon yoksa numarasız — kişi WhatsApp'ta seçilir). */
+    public function whatsappLinki(array $g): string
+    {
+        $firma = $this->firma?->unvan ?? 'işyeriniz';
+        $sifre = $g['sifre'] ?? '(mevcut şifreniz)';
+
+        $metin = "Sayın {$g['ad_soyad']}, {$firma} bünyesindeki Yasal İş Sağlığı ve Güvenliği Uzaktan Eğitiminiz tanımlanmıştır.
+"
+            .'Eğitim Portalı: '.url('/egitim')."
+"
+            ."Kullanıcı Kodu: {$g['eposta']}
+"
+            ."Geçici Şifre: {$sifre}
+"
+            .'Eğitimi tamamlayıp sınavdan en az '.(int) config('isg.uzaktan_egitim.gecme_puani_alt_sinir', 60).' puan almanız gerekmektedir. İyi dersler dileriz.';
+
+        $no = preg_replace('/\D/', '', (string) ($g['telefon'] ?? ''));
+        $no = match (true) {
+            strlen($no) === 11 && str_starts_with($no, '0') => '9'.$no,
+            strlen($no) === 10 => '90'.$no,
+            default => $no,
+        };
+
+        return 'https://wa.me/'.$no.'?text='.rawurlencode($metin);
     }
 
     /**
@@ -368,6 +394,23 @@ class UzaktanEgitimAtama extends Page
         unset($this->atamalar);
     }
 
+    /** İGU: 4. modül yüz yüze tamamlandı — belgeyi aç. */
+    public function iguOnayla(int $atamaId): void
+    {
+        $atama = EgitimAtamasi::query()
+            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma?->id))
+            ->find($atamaId);
+
+        if (! $atama || ! $atama->iguOnayiBekliyorMu()) {
+            return;
+        }
+
+        $atama->iguOnayla(Filament::auth()->id());
+        unset($this->atamalar);
+
+        Notification::make()->title('İGU onayı verildi')->body($atama->calisan?->ad_soyad.' — belge açıldı, eğitim kaydına işlendi.')->success()->send();
+    }
+
     public function belgeIndir(int $atamaId)
     {
         $atama = EgitimAtamasi::query()
@@ -375,8 +418,8 @@ class UzaktanEgitimAtama extends Page
             ->with(['calisan.firma', 'paket'])
             ->find($atamaId);
 
-        if (! $atama || ! $atama->basariliMi()) {
-            Notification::make()->title('Bu eğitim henüz başarıyla tamamlanmadı')->warning()->send();
+        if (! $atama || ! $atama->belgeAcikMi()) {
+            Notification::make()->title('Bu eğitim henüz tamamlanmadı ya da İGU onayı bekliyor')->warning()->send();
 
             return null;
         }

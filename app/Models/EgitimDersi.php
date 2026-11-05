@@ -17,7 +17,16 @@ class EgitimDersi extends Model
 
     protected $guarded = ['id'];
 
+    /** Yönetmelik Ek-1 ana konu grupları. */
+    public const MODULLER = [
+        1 => 'Genel Konular',
+        2 => 'Sağlık Konuları',
+        3 => 'Teknik Konular',
+        4 => 'İşyerine Özgü Riskler',
+    ];
+
     protected $casts = [
+        'modul' => 'integer',
         'sira' => 'integer',
         'sure_sn' => 'integer',
     ];
@@ -32,6 +41,12 @@ class EgitimDersi extends Model
     public function paket(): BelongsTo
     {
         return $this->belongsTo(EgitimPaketi::class, 'egitim_paketi_id');
+    }
+
+    /** "Modül 2 · 3. Ders — Başlık" — portalda ve listelerde numaralı gösterim. */
+    public function numaraliBaslik(): string
+    {
+        return ($this->modul ? 'M'.$this->modul.' · ' : '').(int) $this->sira.'. '.$this->baslik;
     }
 
     public static function saglayiciTespit(?string $url): string
