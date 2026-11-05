@@ -58,6 +58,46 @@ class RiskExcelYukleyici
             : static::standartYukle($firma, $girdi);
     }
 
+    /**
+     * Excel'deki maddeleri VAR OLAN değerlendirmenin sonuna ekler (eskisi korunur). Analizde zaten olan
+     * (bölüm|faaliyet|tehlike|risk aynı) maddeler ve dosya içi mükerrerler yazılmaz.
+     *
+     * @return array{eklenen: int, madde: int, notlar: list<string>}
+     */
+    public static function mevcutaEkle(RiskDegerlendirmesi $rd, array $girdi): array
+    {
+        $ad = $girdi['dosya'];
+
+        if (($girdi['tur'] ?? '') !== 'standart') {
+            return ['eklenen' => 0, 'madde' => 0, 'notlar' => ["{$ad}: hastane formu mevcut değerlendirmeye eklenemez; \"Excel Yükle\" ile ayrı yükleyin."]];
+        }
+
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($girdi['yol'], static::duzeltme($girdi));
+
+        if (! $sonuc['adaylar']) {
+            return ['eklenen' => 0, 'madde' => 0, 'notlar' => ["{$ad}: ".($sonuc['hatalar'][0] ?? 'risk maddesi bulunamadı')]];
+        }
+
+        $notlar = array_map(fn ($u) => "{$ad}: {$u}", $sonuc['hatalar']);
+        $adaylar = array_values(RiskMaddeMukerrer::temizle($sonuc['adaylar']));
+        $varOlan = $rd->maddeler()->get(['bolum', 'faaliyet', 'tehlike', 'risk'])
+            ->map(fn ($m) => RiskMaddeMukerrer::kimlik($m->toArray()))->flip();
+        $yeni = array_values(array_filter($adaylar, fn ($a) => ! isset($varOlan[RiskMaddeMukerrer::kimlik($a)])));
+        $atlanan = count($sonuc['adaylar']) - count($yeni);
+
+        if ($atlanan) {
+            $notlar[] = "{$ad}: {$atlanan} madde zaten var/mükerrer olduğu için yazılmadı";
+        }
+
+        if (! $yeni) {
+            return ['eklenen' => 0, 'madde' => 0, 'notlar' => $notlar];
+        }
+
+        RiskDegerlendirmesiOlusturucu::maddelerdenOlustur($rd->firma, $rd->yontem, $yeni, mevcut: $rd);
+
+        return ['eklenen' => 1, 'madde' => count($yeni), 'notlar' => $notlar];
+    }
+
     /** Eşleme ayarı: sayfa adı => [kullan, veri_baslangic, sutunlar(sütun => alan)]. */
     public static function duzeltme(array $girdi): array
     {

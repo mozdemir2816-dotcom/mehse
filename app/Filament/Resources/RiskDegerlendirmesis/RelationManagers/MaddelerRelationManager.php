@@ -6,6 +6,7 @@ use App\Console\Commands\RiskOneriTamamla;
 use App\Console\Commands\RiskPuanTamamla;
 use App\Models\RiskMaddesi;
 use App\Models\Tehlike;
+use App\Filament\Resources\RiskDegerlendirmesis\Pages\ExcelYukle;
 use App\Models\TehlikeKategorisi;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\NaceGrubu;
@@ -262,6 +263,10 @@ class MaddelerRelationManager extends RelationManager
                             ->body('Puanları girmek veya AI ile tamamlamak için "Eksik Puan/Önlemleri AI ile Tamamla" butonunu kullanabilirsiniz.')
                             ->success()->send();
                     }),
+                // Eski değerlendirmeyi koruyup yeni ekipman/madde geldiğinde Excel'den üstüne ekler.
+                Action::make('excelleEkle')
+                    ->label("Excel'den Toplu Ekle")->icon('heroicon-o-arrow-up-tray')->color('gray')
+                    ->url(fn () => ExcelYukle::getUrl(['degerlendirme' => $this->getOwnerRecord()->id])),
                 Action::make('bosOnerileriDoldur')
                     ->label('Boş Önerileri AI ile Doldur')
                     ->icon('heroicon-o-sparkles')

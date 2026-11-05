@@ -10,14 +10,19 @@
 <x-filament-panels::page>
     <div style="font-size:.85rem;{{ $soluk }};margin-top:-.75rem">
         Excel dosyanızı seçin. Sistem sayfaları ve sütunları algılar; <strong>hangi sütunu ne olarak anladığını</strong> aşağıda görür,
-        yanlışsa açılır listeden düzeltirsiniz. Onayladığınızda değerlendirme oluşturulur. Hastane formu önizlemesiz, olduğu gibi alınır.
+        yanlışsa açılır listeden düzeltirsiniz.
+        @if ($this->degerlendirme_id)
+            <strong>Maddeler mevcut değerlendirmenin sonuna eklenir; eski maddeler olduğu gibi korunur</strong>, zaten var olanlar tekrar yazılmaz.
+        @else
+            Onayladığınızda değerlendirme oluşturulur. Hastane formu önizlemesiz, olduğu gibi alınır.
+        @endif
     </div>
 
     <div style="{{ $kart }}">
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end">
             <div>
                 <label style="display:block;font-size:.75rem;font-weight:600;margin-bottom:.35rem">Firma</label>
-                <select wire:model="firma_id" style="{{ $girdi }};min-width:280px">
+                <select wire:model="firma_id" style="{{ $girdi }};min-width:280px" @disabled($this->degerlendirme_id)>
                     <option value="">Seçin…</option>
                     @foreach ($this->firmaSecenekleri() as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>

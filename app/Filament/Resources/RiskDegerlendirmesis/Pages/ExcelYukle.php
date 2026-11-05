@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RiskDegerlendirmesis\Pages;
 
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Firma;
+use App\Models\RiskDegerlendirmesi;
 use App\Support\RiskDegerlendirmesiExcelOkuyucu;
 use App\Support\RiskExcelYukleyici;
 use Filament\Facades\Filament;
@@ -33,6 +34,30 @@ class ExcelYukle extends Page
     protected static ?string $title = 'Risk Analizi Excel Yükle';
 
     public ?int $firma_id = null;
+
+    /** Doluysa yeni kayıt açılmaz: Excel bu değerlendirmenin sonuna eklenir (?degerlendirme=ID). */
+    public ?int $degerlendirme_id = null;
+
+    public function mount(): void
+    {
+        $id = (int) request()->query('degerlendirme');
+
+        if ($id) {
+            $rd = $this->mevcutDegerlendirme($id);
+            $this->degerlendirme_id = $rd->id;
+            $this->firma_id = $rd->firma_id;
+        }
+    }
+
+    private function mevcutDegerlendirme(int $id): RiskDegerlendirmesi
+    {
+        return RiskDegerlendirmesi::whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))->findOrFail($id);
+    }
+
+    public function mevcutRd(): ?RiskDegerlendirmesi
+    {
+        return $this->degerlendirme_id ? $this->mevcutDegerlendirme($this->degerlendirme_id) : null;
+    }
 
     /** @var array<int, TemporaryUploadedFile> */
     public array $dosyalar = [];
@@ -90,7 +115,8 @@ class ExcelYukle extends Page
     {
         $this->validate(['firma_id' => 'required|integer', 'girdiler' => 'required|array|min:1'], [], ['firma_id' => 'firma', 'girdiler' => 'yüklenecek dosya']);
 
-        $firma = Firma::where('user_id', Filament::auth()->id())->findOrFail($this->firma_id);
+        $mevcut = $this->mevcutRd();
+        $firma = $mevcut ? $mevcut->firma : Firma::where('user_id', Filament::auth()->id())->findOrFail($this->firma_id);
 
         // Yüklemeden önce eşleme hatalarını topla: kayıt yarım kalmasın.
         $sorunlar = [];
@@ -127,7 +153,7 @@ class ExcelYukle extends Page
 
         foreach ($this->girdiler as $g) {
             try {
-                $sonuc = RiskExcelYukleyici::yukle($firma, $g);
+                $sonuc = $mevcut ? RiskExcelYukleyici::mevcutaEkle($mevcut, $g) : RiskExcelYukleyici::yukle($firma, $g);
                 $eklenen += $sonuc['eklenen'];
                 $madde += $sonuc['madde'];
                 $notlar = array_merge($notlar, $sonuc['notlar']);
@@ -141,14 +167,18 @@ class ExcelYukle extends Page
         $this->reset('girdiler', 'dosyalar');
 
         Notification::make()
-            ->title($eklenen ? "{$eklenen} değerlendirme, {$madde} madde yüklendi" : 'Hiçbir değerlendirme yüklenemedi')
+            ->title($mevcut
+                ? ($madde ? "{$madde} madde mevcut değerlendirmeye eklendi" : 'Eklenecek yeni madde bulunamadı')
+                : ($eklenen ? "{$eklenen} değerlendirme, {$madde} madde yüklendi" : 'Hiçbir değerlendirme yüklenemedi'))
             ->body($notlar ? implode("\n", array_slice($notlar, 0, 8)) : null)
             ->{$eklenen ? 'success' : 'danger'}()
             ->persistent(! empty($notlar))
             ->send();
 
         if ($eklenen) {
-            $this->redirect(RiskDegerlendirmesiResource::getUrl('index'));
+            $this->redirect($mevcut
+                ? RiskDegerlendirmesiResource::getUrl('edit', ['record' => $mevcut])
+                : RiskDegerlendirmesiResource::getUrl('index'));
         }
     }
 

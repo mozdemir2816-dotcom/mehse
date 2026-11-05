@@ -28,24 +28,32 @@ class RiskDegerlendirmesiOlusturucu
         ?string $varsayilanTermin = null,
         string $durum = 'taslak',
         ?int $iguId = null,
+        ?RiskDegerlendirmesi $mevcut = null,
     ): RiskDegerlendirmesi {
         @set_time_limit(app()->runningInConsole() ? 0 : 300);
 
         $raporTarihi ??= now()->toDateString();
         $gecerlilikTarihi ??= now()->addYears($firma->riskGecerlilikYili())->toDateString();
 
-        $rd = new RiskDegerlendirmesi([
-            'firma_id' => $firma->id,
-            'igu_id' => $iguId,
-            'yontem' => $yontem,
-            'rapor_tarihi' => $raporTarihi,
-            'gecerlilik_tarihi' => $gecerlilikTarihi,
-            'durum' => $durum,
-        ]);
-        $rd->save();
+        // $mevcut verilirse yeni kayıt açılmaz: maddeler eski değerlendirmenin sonuna eklenir (eskisi korunur).
+        if ($mevcut) {
+            $rd = $mevcut;
+            $yontem = $rd->yontem;
+            $sira = (int) ($rd->maddeler()->max('sira') ?? 0);
+        } else {
+            $rd = new RiskDegerlendirmesi([
+                'firma_id' => $firma->id,
+                'igu_id' => $iguId,
+                'yontem' => $yontem,
+                'rapor_tarihi' => $raporTarihi,
+                'gecerlilik_tarihi' => $gecerlilikTarihi,
+                'durum' => $durum,
+            ]);
+            $rd->save();
+            $sira = 0;
+        }
 
         $fk = RiskSkorlama::ucEksenliMi($yontem);
-        $sira = 0;
 
         foreach (array_chunk($maddeler, 250) as $parca) {
             $satirlar = [];
@@ -96,6 +104,11 @@ class RiskDegerlendirmesiOlusturucu
             }
 
             RiskMaddesi::insert($satirlar);
+        }
+
+        if ($mevcut) {
+            $rd->pdfOnbellegiTemizle();
+            $rd->saveQuietly();
         }
 
         return $rd;

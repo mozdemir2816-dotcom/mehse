@@ -75,6 +75,38 @@ class RiskExcelYukleSayfasiTest extends TestCase
         $this->assertCount(2, $rd->maddeler);
     }
 
+    public function test_mevcut_degerlendirmeye_eklenir_eskisi_korunur_tekrar_yazilmaz(): void
+    {
+        $satirlar = [
+            ['Sıra', 'Aktivite / Görev', 'Tehlike', 'Olası Sonuçlar', 'Başlangıç S', 'Başlangıç P', 'İlave Kontrol'],
+            [1, 'Tank girişi', 'Yanıcı buhar', 'Patlama', 5, 4, 'Gaz ölçümü yapın'],
+        ];
+        Livewire::test(ExcelYukle::class)->set('dosyalar', [$this->dosya($satirlar)])
+            ->set('firma_id', $this->firma->id)->call('kaydet');
+        $rd = RiskDegerlendirmesi::where('firma_id', $this->firma->id)->firstOrFail();
+        $this->assertCount(1, $rd->maddeler);
+
+        // Yeni ekipman geldi: dosyada eski + yeni satır var; yalnız yenisi eklenir.
+        $satirlar[] = [2, 'Kaynak', 'Kıvılcım', 'Yangın', 4, 3, 'Yangın battaniyesi'];
+        $test = Livewire::withQueryParams(['degerlendirme' => $rd->id])->test(ExcelYukle::class);
+        $this->assertSame($this->firma->id, $test->get('firma_id'));
+        $test->set('dosyalar', [$this->dosya($satirlar)])->call('kaydet')->assertHasNoErrors();
+
+        $this->assertSame(1, RiskDegerlendirmesi::count());
+        $maddeler = $rd->fresh()->maddeler()->orderBy('sira')->get();
+        $this->assertCount(2, $maddeler);
+        $this->assertSame('Yanıcı buhar', $maddeler[0]->tehlike);
+        $this->assertSame('Kıvılcım', $maddeler[1]->tehlike);
+        $this->assertSame(2, (int) $maddeler[1]->sira);
+    }
+
+    public function test_baskasinin_degerlendirmesine_eklenemez(): void
+    {
+        $baska = RiskDegerlendirmesi::create(['firma_id' => Firma::factory()->create()->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now(), 'gecerlilik_tarihi' => now()->addYear(), 'durum' => 'taslak']);
+
+        $this->get(ExcelYukle::getUrl(['degerlendirme' => $baska->id]))->assertNotFound();
+    }
+
     public function test_yanlis_eslenen_sutun_duzeltilince_kayda_yansir(): void
     {
         $dosya = $this->dosya([
