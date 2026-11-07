@@ -256,6 +256,29 @@ class SertifikaOlustur extends Page
         $this->icerik['isyerine_ozgu']['maddeler'] = array_values($this->icerik['isyerine_ozgu']['maddeler']);
     }
 
+    /**
+     * Özel (tek bloklu) başlıklarda kullanıcının eklediği konular (`ek` işaretli)
+     * — ör. Fiziksel Risk Etmenleri'ne birden fazla yeni konu.
+     */
+    public function ozelMaddeEkle(): void
+    {
+        if (($this->icerik['tip'] ?? null) !== 'ozel') {
+            return;
+        }
+
+        $this->icerik['maddeler'][] = ['madde' => '', 'dakika' => 15, 'dahil' => true, 'ek' => true];
+    }
+
+    public function ozelMaddeCikar(int $index): void
+    {
+        if (empty($this->icerik['maddeler'][$index]['ek'])) {
+            return;
+        }
+
+        unset($this->icerik['maddeler'][$index]);
+        $this->icerik['maddeler'] = array_values($this->icerik['maddeler']);
+    }
+
     public function updatedTur(): void
     {
         $this->icerikYenile();
@@ -417,7 +440,7 @@ class SertifikaOlustur extends Page
             'egitici_hekim_kase' => $this->cokluEgiticiMi && $this->egiticiHekimDahil ? $this->firma->isyeriHekimi?->kase_gorseli : null,
             'logo_konumu' => $this->logoKonumu,
             'cerceve' => $this->cerceve,
-            'konu_icerigi' => $this->icerik,
+            'konu_icerigi' => EgitimIcerikOlusturucu::bosKonulariAyikla($this->icerik),
             'katilimcilar' => $this->katilimcilarTopla(),
         ]);
         $s->save();
@@ -463,7 +486,7 @@ class SertifikaOlustur extends Page
                 ->modalContent(fn () => view('filament.pages.partials.sertifika-onizleme', [
                     'katilimci' => $this->katilimcilarTopla()[0] ?? null,
                     'firmaUnvan' => $this->firma?->unvan,
-                    'icerik' => $this->icerik,
+                    'icerik' => EgitimIcerikOlusturucu::bosKonulariAyikla($this->icerik),
                     'tarihler' => $this->egitimTarihleri,
                     'sure' => $this->sureMetni,
                     'tur' => $this->tur,

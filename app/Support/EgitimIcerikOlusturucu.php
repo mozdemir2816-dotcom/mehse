@@ -113,6 +113,28 @@ class EgitimIcerikOlusturucu
      * @param  array<int, array{dakika: int, dahil: bool}>  $maddeler
      * @return array{fiili: int, dinlenme: int}
      */
+    /**
+     * Kullanıcının "+ Konu Ekle" ile açıp metnini boş bıraktığı satırlar belgeye
+     * boş madde olarak düşmesin: özel başlık ve işyerine özgü maddelerden atılır.
+     *
+     * @param  array<string, mixed>  $icerik
+     * @return array<string, mixed>
+     */
+    public static function bosKonulariAyikla(array $icerik): array
+    {
+        $ayikla = fn (array $maddeler) => array_values(array_filter($maddeler, fn ($m) => trim((string) ($m['madde'] ?? '')) !== ''));
+
+        if (isset($icerik['maddeler']) && is_array($icerik['maddeler'])) {
+            $icerik['maddeler'] = $ayikla($icerik['maddeler']);
+        }
+
+        if (isset($icerik['isyerine_ozgu']['maddeler']) && is_array($icerik['isyerine_ozgu']['maddeler'])) {
+            $icerik['isyerine_ozgu']['maddeler'] = $ayikla($icerik['isyerine_ozgu']['maddeler']);
+        }
+
+        return $icerik;
+    }
+
     public static function bolumSuresi(array $maddeler): array
     {
         // Formda dakika kutusu boşaltılınca '' gelir; int + '' TypeError verir (canlıda 01.10.2026).

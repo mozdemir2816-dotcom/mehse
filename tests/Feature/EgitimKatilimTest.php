@@ -1113,4 +1113,44 @@ class EgitimKatilimTest extends TestCase
 
         $this->assertSame($once, EgitimKatilim::count(), 'boş form kayıt oluşturmamalı');
     }
+
+    public function test_fiziksel_risk_etmenlerine_birden_fazla_konu_eklenir_bos_satir_kaydedilmez(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $sabit = count(config('isg.egitim.ozel_basliklar.fiziksel_risk.maddeler'));
+
+        $sayfa = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'fiziksel_risk')
+            ->set('belgeTarihi', now()->toDateString())
+            ->assertSee('+ Konu Ekle')
+            ->call('ozelMaddeEkle')
+            ->call('ozelMaddeEkle')
+            ->call('ozelMaddeEkle')
+            ->set("icerik.maddeler.{$sabit}.madde", 'Aydınlatma ve görsel konfor')
+            ->set('icerik.maddeler.'.($sabit + 1).'.madde', 'İyonlaştırıcı olmayan radyasyon');
+
+        $this->assertCount($sabit + 3, $sayfa->get('icerik')['maddeler']);
+
+        // Sabit (config) konular silinemez, eklenenler silinir
+        $sayfa->call('ozelMaddeCikar', 0);
+        $this->assertCount($sabit + 3, $sayfa->get('icerik')['maddeler']);
+
+        $sayfa->set('yeniAdSoyad', 'Ali Veli')->call('manuelEkle')->callAction('pdf');
+
+        $kayit = EgitimKatilim::where('firma_id', $firma->id)->firstOrFail();
+        $maddeler = collect($kayit->konu_secimleri['maddeler'])->pluck('madde');
+        $this->assertCount($sabit + 2, $maddeler, 'boş bırakılan üçüncü satır kaydedilmemeli');
+        $this->assertContains('Aydınlatma ve görsel konfor', $maddeler->all());
+        $this->assertContains('İyonlaştırıcı olmayan radyasyon', $maddeler->all());
+
+        // Aynı firmada sonraki eğitimde eklenen konular hazır gelir
+        $yeni = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->set('baslikAnahtari', 'fiziksel_risk');
+        $this->assertContains('Aydınlatma ve görsel konfor', collect($yeni->get('icerik')['maddeler'])->pluck('madde')->all());
+
+        $yeni->call('ozelMaddeCikar', $sabit);
+        $this->assertNotContains('Aydınlatma ve görsel konfor', collect($yeni->get('icerik')['maddeler'])->pluck('madde')->all());
+    }
 }

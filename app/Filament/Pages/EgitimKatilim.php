@@ -657,6 +657,30 @@ class EgitimKatilim extends Page
         $this->sureGunYenile();
     }
 
+    /**
+     * Özel (tek bloklu) başlıklarda kullanıcının eklediği konular (`ek` işaretli)
+     * — ör. Fiziksel Risk Etmenleri'ne birden fazla yeni konu.
+     */
+    public function ozelMaddeEkle(): void
+    {
+        if (($this->icerik['tip'] ?? null) !== 'ozel') {
+            return;
+        }
+
+        $this->icerik['maddeler'][] = ['madde' => '', 'dakika' => 15, 'dahil' => true, 'ek' => true];
+    }
+
+    public function ozelMaddeCikar(int $index): void
+    {
+        if (empty($this->icerik['maddeler'][$index]['ek'])) {
+            return;
+        }
+
+        unset($this->icerik['maddeler'][$index]);
+        $this->icerik['maddeler'] = array_values($this->icerik['maddeler']);
+        $this->sureGunYenile();
+    }
+
     /** @return Collection<int, EgitimKatilimModel> */
     #[Computed]
     public function gecmisKayitlar(): Collection
@@ -1040,7 +1064,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         }
 
         // Belgede görünen "Ders Saati" — kullanıcı elle değiştirdiyse ya da sildiyse (elle yazılacak) onu kaydet.
-        $icerik = $this->icerik;
+        $icerik = EgitimIcerikOlusturucu::bosKonulariAyikla($this->icerik);
         $icerik['saat'] = $this->dersSaati ?: null;
         $icerik['sektor_elle'] = $this->baslikAnahtari === 'genel' && $this->sektorElle;
 
