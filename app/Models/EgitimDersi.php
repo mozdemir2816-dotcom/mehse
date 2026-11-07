@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,10 +44,38 @@ class EgitimDersi extends Model
         return $this->belongsTo(EgitimPaketi::class, 'egitim_paketi_id');
     }
 
-    /** "Modül 2 · 3. Ders — Başlık" — portalda ve listelerde numaralı gösterim. */
+    /** "Modül 2 · 3. Ders — Başlık" — portalda ve listelerde numaralı gösterim (konunun 2. videosu: "3.2"). */
     public function numaraliBaslik(): string
     {
-        return ($this->modul ? 'M'.$this->modul.' · ' : '').(int) $this->sira.'. '.$this->baslik;
+        return ($this->modul ? 'M'.$this->modul.' · ' : '').$this->siraEtiketi().'. '.$this->baslik;
+    }
+
+    /**
+     * Bir konu başlığına birden fazla video eklenebilir (07.11.2026): aynı paket +
+     * konu başlığı (modül) + sıra no'daki videolar aynı konunun parçalarıdır,
+     * eklenme sırasına göre 1, 2, 3 … diye numaralanır.
+     */
+    public function konuVideolari(): Builder
+    {
+        return static::query()
+            ->where('egitim_paketi_id', $this->egitim_paketi_id)
+            ->where(fn (Builder $q) => $this->modul === null ? $q->whereNull('modul') : $q->where('modul', $this->modul))
+            ->where('sira', $this->sira)
+            ->orderBy('id');
+    }
+
+    /** Konudaki kaçıncı video (1 = konunun ilk videosu). */
+    public function konuIciNo(): int
+    {
+        return $this->exists ? $this->konuVideolari()->where('id', '<', $this->id)->count() + 1 : 1;
+    }
+
+    /** "3" ya da konunun ek videosu için "3.2" (konuda tek video varsa yalnız "3"). */
+    public function siraEtiketi(): string
+    {
+        $no = $this->konuIciNo();
+
+        return (int) $this->sira.($no > 1 || ($this->exists && $this->konuVideolari()->count() > 1) ? '.'.$no : '');
     }
 
     public static function saglayiciTespit(?string $url): string

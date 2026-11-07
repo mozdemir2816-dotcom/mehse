@@ -81,4 +81,30 @@ class EgitimPaketiVideolarTest extends TestCase
         $this->assertSame(['Hazır', 'İlk yardım'], $paket->dersler()->pluck('baslik')->all());
         $this->assertSame(0, $paket->videoBekleyenSayisi());
     }
+
+    public function test_bir_konuya_birden_fazla_video_eklenir_ve_konu_birlikte_tasinir(): void
+    {
+        $ergonomi = $this->paket->dersler()->create(['modul' => 3, 'sira' => 1, 'baslik' => 'Ergonomi', 'video_url' => 'https://youtu.be/aaaaaaaaaaa']);
+        $this->paket->dersler()->create(['modul' => 3, 'sira' => 2, 'baslik' => 'Yangın', 'video_url' => 'https://youtu.be/bbbbbbbbbbb']);
+        $taslak = $this->paket->tumDersler()->create(['modul' => 2, 'sira' => 1, 'baslik' => 'İlk yardım', 'video_url' => null]);
+
+        $y = $this->yonetici()
+            ->assertActionHidden(TestAction::make('konuyaVideoEkle')->table($taslak))   // önce video bağlanmalı
+            ->callAction(TestAction::make('konuyaVideoEkle')->table($ergonomi), [
+                'baslik' => 'Ergonomi — oturma düzeni', 'video_url' => 'https://youtu.be/ccccccccccc',
+            ])->assertHasNoFormErrors()
+            ->callAction(TestAction::make('konuyaVideoEkle')->table($ergonomi), [
+                'baslik' => 'Ergonomi — elle taşıma', 'video_url' => 'https://youtu.be/ddddddddddd',
+            ])->assertHasNoFormErrors();
+
+        $d = $this->paket->dersler()->get();
+        $this->assertSame(['Ergonomi', 'Ergonomi — oturma düzeni', 'Ergonomi — elle taşıma', 'Yangın'], $d->pluck('baslik')->all());
+        $this->assertSame(['1.1', '1.2', '1.3', '2'], $d->map->siraEtiketi()->all());
+        $this->assertSame('M3 · 1.2. Ergonomi — oturma düzeni', $d[1]->numaraliBaslik());
+
+        // Konunun sırası değişince ek videolar da birlikte taşınır
+        $y->call('updateTableColumnState', 'sira', (string) $ergonomi->getKey(), '5');
+        $this->assertSame(['Yangın', 'Ergonomi', 'Ergonomi — oturma düzeni', 'Ergonomi — elle taşıma'], $this->paket->dersler()->pluck('baslik')->all());
+        $this->assertSame([2, 5, 5, 5], $this->paket->dersler()->pluck('sira')->all());
+    }
 }

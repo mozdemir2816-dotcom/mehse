@@ -55,7 +55,7 @@
                 @foreach ($grup as $x)
                     @php $il = $ilerleme->get($x->id); @endphp
                     <tr style="border-top:1px solid rgb(107 114 128 / .12)">
-                        <td style="{{ $hucre }}">{{ (int) $x->sira }}. {{ \Illuminate\Support\Str::limit($x->baslik, 60) }}</td>
+                        <td style="{{ $hucre }}">{{ $x->siraEtiketi() }}. {{ \Illuminate\Support\Str::limit($x->baslik, 60) }}</td>
                         <td style="{{ $hucre }}">{{ $dk($x->sure_sn) }}</td>
                         <td style="{{ $hucre }}">{{ $il ? $dk($il->izlenen_sn) : 'Hiç açmadı' }}</td>
                         <td style="{{ $hucre }}">{{ $il ? '%'.$il->izleme_yuzdesi : '—' }}</td>
