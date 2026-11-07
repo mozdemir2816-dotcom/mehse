@@ -89,9 +89,19 @@ class EgitimPaketi extends Model
     }
 
     /** Sınav için havuzdan rastgele soru seç (yetmezse hepsi). */
-    public function sinavSorulari(): array
+    /**
+     * Rastgele sınav soruları. $tur: 'on_test' (seviye tespiti) ya da 'final'.
+     * Soru, kullanımı 'ortak' ya da istenen türse havuza girer; o türe uygun
+     * soru hiç yoksa tüm havuz kullanılır (eski paketler).
+     */
+    public function sinavSorulari(string $tur = 'final'): array
     {
-        $havuz = $this->sorular()->inRandomOrder()->limit($this->sinav_soru_sayisi)->get();
+        $sorgu = fn () => $this->sorular()->inRandomOrder()->limit($this->sinav_soru_sayisi);
+        $havuz = $sorgu()->whereIn('kullanim', ['ortak', $tur])->get();
+
+        if ($havuz->isEmpty()) {
+            $havuz = $sorgu()->get();
+        }
 
         return $havuz->map(fn (EgitimPaketiSorusu $s) => [
             'id' => $s->id,

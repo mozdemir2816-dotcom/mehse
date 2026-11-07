@@ -145,6 +145,57 @@ class UzaktanEgitimAtama extends Page
         ];
     }
 
+    /** Tüm firmalar özeti: durum süzgeci (hepsi | devam | basarisiz | onay_bekliyor | tamamlandi | gecikti). */
+    public string $genelFiltre = 'hepsi';
+
+    /**
+     * Firma seçilmeden önce: uzmanın tüm firmalarındaki atamalar tek listede.
+     *
+     * @return Collection<int, EgitimAtamasi>
+     */
+    #[Computed]
+    public function tumAtamalar(): Collection
+    {
+        return EgitimAtamasi::query()
+            ->whereHas('calisan.firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->with(['calisan.firma', 'paket.dersler', 'ilerlemeler', 'sinavSonuclari', 'girisler'])
+            ->get()
+            ->sortBy([fn ($a, $b) => strcmp((string) $a->calisan->firma->unvan, (string) $b->calisan->firma->unvan), fn ($a, $b) => strcmp((string) $a->calisan->ad_soyad, (string) $b->calisan->ad_soyad)])
+            ->values();
+    }
+
+    /** Süzgece uyuyor mu (genel liste + sayaçlar). */
+    public static function genelFiltreUyar(EgitimAtamasi $a, string $filtre): bool
+    {
+        return match ($filtre) {
+            'hepsi' => true,
+            'devam' => in_array($a->durum, ['atandi', 'devam'], true),
+            'gecikti' => $a->son_tarih && $a->son_tarih->isPast() && ! in_array($a->durum, ['tamamlandi', 'onay_bekliyor'], true),
+            default => $a->durum === $filtre,
+        };
+    }
+
+    /** @return Collection<int, EgitimAtamasi> */
+    #[Computed]
+    public function genelListe(): Collection
+    {
+        return $this->tumAtamalar->filter(fn (EgitimAtamasi $a) => static::genelFiltreUyar($a, $this->genelFiltre))->values();
+    }
+
+    /** Genel listeden: firmayı seçip o çalışanın takip detayını açar. */
+    public function detayaGit(int $atamaId): void
+    {
+        $a = $this->tumAtamalar->firstWhere('id', $atamaId);
+
+        if (! $a) {
+            return;
+        }
+
+        $this->firmaId = $a->calisan->firma_id;
+        $this->updatedFirmaId();
+        $this->detayId = $a->id;
+    }
+
     /** Açık takip detayı: çalışan, oturumlar, ders ilerlemeleri, sınav denemeleri. */
     #[Computed]
     public function detay(): ?EgitimAtamasi

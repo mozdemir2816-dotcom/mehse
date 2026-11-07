@@ -7,6 +7,7 @@ use App\Filament\Resources\EgitimPaketis\Pages\EditEgitimPaketi;
 use App\Filament\Resources\EgitimPaketis\Pages\ListEgitimPaketis;
 use App\Filament\Resources\EgitimPaketis\RelationManagers\DerslerRelationManager;
 use App\Models\EgitimPaketi;
+use App\Models\EgitimPaketiSorusu;
 use BackedEnum;
 use Closure;
 use App\Models\EgitimDersi;
@@ -100,8 +101,8 @@ class EgitimPaketiResource extends Resource
 
             ...self::modulBolumleri(),
 
-            Section::make('Final Sınav Soruları')
-                ->description('Sınavda bu havuzdan rastgele soru seçilir. En az 5 soru gerekir.')
+            Section::make('Sınav Soruları')
+                ->description('Ön test (eğitim öncesi seviye tespiti) ve final sınavı (eğitim sonrası) bu havuzdan rastgele soru çeker. Her sorunun hangi sınavda sorulacağını seçin. En az 5 soru gerekir.')
                 ->schema([
                     Repeater::make('sorular')
                         ->relationship()
@@ -116,9 +117,11 @@ class EgitimPaketiResource extends Resource
                             Radio::make('dogru_index')->label('Doğru şık (sıra no, 0\'dan başlar)')
                                 ->options(fn () => [0 => 'A', 1 => 'B', 2 => 'C', 3 => 'D', 4 => 'E'])
                                 ->inline()->required()->default(0),
+                            Select::make('kullanim')->label('Hangi sınavda sorulur')
+                                ->options(EgitimPaketiSorusu::KULLANIMLAR)->default('ortak')->required()->native(false),
                             Textarea::make('aciklama')->label('Doğru cevabın gerekçesi (opsiyonel)')->rows(2)->columnSpanFull(),
                         ])
-                        ->itemLabel(fn (array $state): ?string => Str::limit($state['soru'] ?? '', 60))
+                        ->itemLabel(fn (array $state): ?string => '['.(EgitimPaketiSorusu::KULLANIMLAR[$state['kullanim'] ?? 'ortak'] ?? '').'] '.Str::limit($state['soru'] ?? '', 60))
                         ->addActionLabel('Soru Ekle')
                         ->collapsible()
                         ->collapsed()

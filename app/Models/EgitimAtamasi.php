@@ -26,6 +26,7 @@ class EgitimAtamasi extends Model
         'son_tarih' => 'date',
         'tamamlandi_at' => 'datetime',
         'on_test_at' => 'datetime',
+        'on_test_cevaplar' => 'array',
         'igu_onay_at' => 'datetime',
         'on_test_puani' => 'integer',
         'yeniden_baslatma' => 'integer',

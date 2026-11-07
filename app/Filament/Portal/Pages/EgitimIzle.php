@@ -74,7 +74,7 @@ class EgitimIzle extends Page
             $this->mod = 'sonuc';
             $this->sonSonuc = $a->sonSinav();
         } elseif ($a->onTestBekliyorMu()) {
-            $this->soruHazirla($a);
+            $this->soruHazirla($a, 'on_test');
             $this->mod = 'on_test';
         }
     }
@@ -200,7 +200,8 @@ class EgitimIzle extends Page
             return;
         }
 
-        $a->forceFill(['on_test_puani' => $this->puanla()['puan'], 'on_test_at' => now()])->save();
+        ['puan' => $puan, 'detay' => $detay] = $this->puanla();
+        $a->forceFill(['on_test_puani' => $puan, 'on_test_cevaplar' => $detay, 'on_test_at' => now()])->save();
 
         $this->sinavSorulari = [];
         $this->cevaplar = [];
@@ -224,7 +225,7 @@ class EgitimIzle extends Page
             return;
         }
 
-        $this->soruHazirla($a);
+        $this->soruHazirla($a, 'final');
         $this->mod = 'sinav';
     }
 
@@ -298,9 +299,9 @@ class EgitimIzle extends Page
     }
 
     /** Soruları hazırlar; doğru cevaplar yalnız sunucu oturumunda tutulur. */
-    private function soruHazirla(EgitimAtamasi $a): void
+    private function soruHazirla(EgitimAtamasi $a, string $tur): void
     {
-        $sorular = $a->paket->sinavSorulari();
+        $sorular = $a->paket->sinavSorulari($tur);
 
         session()->put($this->oturumAnahtari('cevap'), collect($sorular)->pluck('dogru_index', 'id')->all());
 

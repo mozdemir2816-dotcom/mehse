@@ -623,4 +623,91 @@ class UzaktanEgitimTest extends TestCase
             ->call('takipExcel')
             ->assertFileDownloaded('uzaktan-egitim-takibi-ornek-insaat-as.xlsx');
     }
+
+    public function test_on_test_cevaplari_kaydedilir_ve_final_ayri_havuzdan_gelir(): void
+    {
+        $paket = $this->paketKur(ders: 1, soru: 0);
+        $onTest = $finalSoru = [];
+        foreach (range(1, 4) as $i) {
+            $onTest[] = $paket->sorular()->create(['soru' => "Ön soru $i?", 'secenekler' => ['A', 'B'], 'dogru_index' => 1, 'kullanim' => 'on_test'])->id;
+            $finalSoru[] = $paket->sorular()->create(['soru' => "Final soru $i?", 'secenekler' => ['A', 'B'], 'dogru_index' => 1, 'kullanim' => 'final'])->id;
+        }
+        $ortak = $paket->sorular()->create(['soru' => 'Ortak soru?', 'secenekler' => ['A', 'B'], 'dogru_index' => 1])->id;
+        $paket->update(['sinav_soru_sayisi' => 20]);
+
+        $calisan = $this->calisanKur();
+        $atama = $this->atamaKur($paket, $calisan);
+        $this->portalGirisi($calisan);
+
+        $b = Livewire::test(EgitimIzle::class, ['atama' => $atama->id])->assertSet('mod', 'on_test');
+        $ids = collect($b->get('sinavSorulari'))->pluck('id')->sort()->values()->all();
+        $this->assertSame(collect([...$onTest, $ortak])->sort()->values()->all(), $ids);
+
+        // İlk soruyu yanlış, kalanları doğru cevapla
+        foreach ($b->get('sinavSorulari') as $i => $s) {
+            $b->set('cevaplar.'.$s['id'], $i === 0 ? 0 : 1);
+        }
+        $b->call('onTestiGonder')->assertSet('mod', 'izle');
+
+        $atama->refresh();
+        $this->assertSame(80, $atama->on_test_puani);
+        $this->assertCount(5, $atama->on_test_cevaplar);
+        $this->assertSame(0, $atama->on_test_cevaplar[0]['verilen_index']);
+        $this->assertSame(1, $atama->on_test_cevaplar[0]['dogru_index']);
+
+        $this->izlet($b, $paket->dersler()->first()->id, 90);
+        $b->call('sinavaBasla')->assertSet('mod', 'sinav');
+        $finalIds = collect($b->get('sinavSorulari'))->pluck('id')->sort()->values()->all();
+        $this->assertSame(collect([...$finalSoru, $ortak])->sort()->values()->all(), $finalIds);
+
+        Filament::setCurrentPanel('admin');
+        $this->actingAs($this->uzman);
+        Livewire::test(UzaktanEgitimAtama::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('detayAc', $atama->id)
+            ->assertSee('Ön test (seviye tespiti')
+            ->assertSee('4/5 doğru')
+            ->assertSee('Ön soru');
+    }
+
+    public function test_eski_paket_soru_kullanimi_yoksa_tum_havuz_kullanilir(): void
+    {
+        $paket = $this->paketKur(soru: 6);
+
+        $this->assertCount(5, $paket->sinavSorulari('on_test'));
+        $this->assertCount(5, $paket->sinavSorulari('final'));
+    }
+
+    public function test_tum_firmalar_listesi_suzgec_ve_detaya_gecis(): void
+    {
+        $paket = $this->paketKur();
+        $ikinciFirma = Firma::factory()->for($this->uzman)->create(['unvan' => 'İkinci Lojistik', 'tehlike_sinifi' => 'az_tehlikeli']);
+        $baskaUzmanFirmasi = Firma::factory()->create(['unvan' => 'Başkasının Firması']);
+
+        $ali = $this->calisanKur();
+        $zeynep = Calisan::create(['firma_id' => $ikinciFirma->id, 'ad_soyad' => 'Zeynep Kaya', 'eposta' => 'z@ornek.test', 'aktif' => true]);
+        $yabanci = Calisan::create(['firma_id' => $baskaUzmanFirmasi->id, 'ad_soyad' => 'Gizli Kişi', 'eposta' => 'g@ornek.test', 'aktif' => true]);
+
+        $this->atamaKur($paket, $ali);
+        $zAtama = $this->atamaKur($paket, $zeynep);
+        $this->atamaKur($paket, $yabanci);
+        $this->tamamla($zAtama);
+
+        $sayfa = Livewire::test(UzaktanEgitimAtama::class)
+            ->assertSee('Tüm Firmalar — Eğitim Takibi')
+            ->assertSee('Ali Veli')
+            ->assertSee('Zeynep Kaya')
+            ->assertSee('İkinci Lojistik')
+            ->assertDontSee('Gizli Kişi')
+            ->set('genelFiltre', 'tamamlandi')
+            ->assertSee('Zeynep Kaya')
+            ->assertDontSee('Ali Veli')
+            ->call('detayaGit', $zAtama->id)
+            ->assertSet('firmaId', $ikinciFirma->id)
+            ->assertSet('detayId', $zAtama->id)
+            ->assertSee('Takip Detayı — Zeynep Kaya')
+            ->assertDontSee('Tüm Firmalar — Eğitim Takibi');
+
+        $this->assertNotNull($sayfa);
+    }
 }

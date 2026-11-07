@@ -108,6 +108,67 @@
         @endif
     </x-filament::section>
 
+    @if (! $this->firma && $this->tumAtamalar->isNotEmpty())
+        @php
+            $tum = $this->tumAtamalar;
+            $filtreler = ['hepsi' => 'Tümü', 'devam' => 'Devam eden / başlamadı', 'basarisiz' => 'Sınavda kaldı', 'onay_bekliyor' => 'İGU onayı bekliyor', 'tamamlandi' => 'Tamamlandı', 'gecikti' => 'Son tarihi geçti'];
+            $h = 'padding:.45rem .5rem';
+        @endphp
+        <x-filament::section icon="heroicon-o-users" icon-color="primary">
+            <x-slot name="heading">Tüm Firmalar — Eğitim Takibi</x-slot>
+            <x-slot name="description">Bütün firmalarınızdaki uzaktan eğitim atamaları. Bir satırda "Detay"a basınca o firma açılır ve çalışanın tüm kayıtları (izleme, giriş-çıkış, ön test ve sınav cevapları) gösterilir.</x-slot>
+
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem">
+                @foreach ($filtreler as $k => $v)
+                    <button wire:click="$set('genelFiltre', '{{ $k }}')" style="font-size:.78rem;padding:.25rem .65rem;border-radius:999px;cursor:pointer;border:1px solid {{ $genelFiltre === $k ? 'rgb(79 70 229)' : 'rgb(107 114 128 / .3)' }};background:{{ $genelFiltre === $k ? 'rgb(79 70 229)' : 'transparent' }};color:{{ $genelFiltre === $k ? '#fff' : 'inherit' }}">
+                        {{ $v }} ({{ $tum->filter(fn ($a) => \App\Filament\Pages\UzaktanEgitimAtama::genelFiltreUyar($a, $k))->count() }})
+                    </button>
+                @endforeach
+            </div>
+
+            @if ($this->genelListe->isEmpty())
+                <p style="font-size:.82rem;color:rgb(107 114 128)">Bu süzgece uyan atama yok.</p>
+            @else
+                <div style="overflow-x:auto">
+                    <table style="width:100%;font-size:.8rem;border-collapse:collapse;min-width:900px">
+                        <thead><tr style="text-align:left;background:rgb(107 114 128 / .08)">
+                            <th style="{{ $h }}">Firma</th><th style="{{ $h }}">Çalışan</th><th style="{{ $h }}">Eğitim</th>
+                            <th style="{{ $h }}">İlerleme</th><th style="{{ $h }}">Ön test</th><th style="{{ $h }}">Final</th>
+                            <th style="{{ $h }}">Son giriş</th><th style="{{ $h }}">Durum</th><th style="{{ $h }}"></th>
+                        </tr></thead>
+                        <tbody>
+                        @foreach ($this->genelListe as $a)
+                            @php
+                                $toplam = $a->paket->dersler->count();
+                                $biten = $a->ilerlemeler->where('izlendi', true)->count();
+                                $son = $a->sinavSonuclari->first();
+                                $renk = match ($a->durum) { 'tamamlandi' => 'rgb(21 128 61)', 'basarisiz' => 'rgb(185 28 28)', 'onay_bekliyor' => '#b45309', default => 'rgb(107 114 128)' };
+                            @endphp
+                            <tr wire:key="genel-{{ $a->id }}" style="border-top:1px solid rgb(107 114 128 / .15)">
+                                <td style="{{ $h }}">{{ \Illuminate\Support\Str::limit($a->calisan->firma->unvan, 30) }}</td>
+                                <td style="{{ $h }}">{{ $a->calisan->ad_soyad }}<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $a->calisan->gorev }}</div></td>
+                                <td style="{{ $h }}">{{ \Illuminate\Support\Str::limit($a->paket->ad, 32) }}<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $a->turEtiketi() }}</div></td>
+                                <td style="{{ $h }};min-width:110px">
+                                    {{ $biten }}/{{ $toplam }} ders
+                                    <div style="height:5px;background:rgb(107 114 128 / .15);border-radius:3px;margin-top:.2rem"><div style="height:5px;border-radius:3px;background:rgb(79 70 229);width:{{ $toplam ? round($biten / $toplam * 100) : 0 }}%"></div></div>
+                                </td>
+                                <td style="{{ $h }}">{{ $a->on_test_puani !== null ? $a->on_test_puani.' puan' : '—' }}</td>
+                                <td style="{{ $h }}">{{ $son ? $son->puan.' puan' : '—' }}@if ($a->sinavSonuclari->isNotEmpty())<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $a->sinavSonuclari->count() }} deneme</div>@endif</td>
+                                <td style="{{ $h }}">{{ $a->girisler->last()?->giris_at?->format('d.m.Y') ?? 'Girmedi' }}</td>
+                                <td style="{{ $h }}">
+                                    <span style="color:{{ $renk }};font-weight:600">{{ $a->durumEtiketi() }}</span>
+                                    @if (\App\Filament\Pages\UzaktanEgitimAtama::genelFiltreUyar($a, 'gecikti'))<div style="font-size:.7rem;color:rgb(185 28 28)">son tarih {{ $a->son_tarih->format('d.m.Y') }} geçti</div>@endif
+                                </td>
+                                <td style="{{ $h }}"><button wire:click="detayaGit({{ $a->id }})" style="background:none;border:0;color:rgb(79 70 229);cursor:pointer;font-size:.8rem;font-weight:600">Detay</button></td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </x-filament::section>
+    @endif
+
     @if ($this->firma && $this->atamalar->isNotEmpty())
         <x-filament::section icon="heroicon-o-chart-bar" icon-color="gray">
             <x-slot name="heading">Atanan Eğitimler — {{ $this->firma->unvan }}</x-slot>

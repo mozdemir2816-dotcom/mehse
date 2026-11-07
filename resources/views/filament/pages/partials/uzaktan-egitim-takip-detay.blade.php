@@ -105,13 +105,27 @@
         </div>
     @endif
 
+    {{-- Ön test --}}
+    <div style="font-weight:700;margin:1.1rem 0 .4rem;font-size:.9rem">Ön test (seviye tespiti, Md.16/1)</div>
+    @if ($d->on_test_at === null)
+        <div style="font-size:.8rem;{{ $soluk }}">Henüz çözmedi.</div>
+    @elseif (empty($d->on_test_cevaplar))
+        <div style="font-size:.8rem;{{ $soluk }}">{{ $d->on_test_puani }} puan · {{ $d->on_test_at->format('d.m.Y H:i') }} (bu test soru bazlı cevap kaydı başlamadan önce çözüldü, yalnız puanı var).</div>
+    @else
+        @php $ot = collect($d->on_test_cevaplar); $otDogru = $ot->filter(fn ($c) => isset($c['verilen_index'], $c['dogru_index']) && (int) $c['verilen_index'] === (int) $c['dogru_index'])->count(); @endphp
+        <details style="border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.5rem .7rem">
+            <summary style="cursor:pointer;font-size:.83rem">
+                <strong>Ön test</strong> · {{ $d->on_test_at->format('d.m.Y H:i') }} · {{ $d->on_test_puani }} puan ({{ $otDogru }}/{{ $ot->count() }} doğru)
+                <span style="{{ $soluk }}">· puan geçme şartı değildir, yalnız seviye tespiti</span>
+            </summary>
+            @include('filament.pages.partials.uzaktan-egitim-cevaplar', ['cevaplar' => $d->on_test_cevaplar])
+        </details>
+    @endif
+
     {{-- Sınav denemeleri --}}
-    <div style="font-weight:700;margin:1.1rem 0 .4rem;font-size:.9rem">Ölçme-değerlendirme (Md.16): sınav denemeleri</div>
+    <div style="font-weight:700;margin:1.1rem 0 .4rem;font-size:.9rem">Final sınavı (Md.16): denemeler</div>
     @if ($sinavlar->isEmpty())
-        <div style="font-size:.8rem;{{ $soluk }}">
-            Henüz final sınavına girmedi.
-            @if ($d->on_test_puani !== null) Ön test: {{ $d->on_test_puani }} puan (ön testin soru bazlı cevapları saklanmaz, yalnız puanı). @endif
-        </div>
+        <div style="font-size:.8rem;{{ $soluk }}">Henüz final sınavına girmedi.</div>
     @else
         @foreach ($sinavlar as $sn)
             <details style="border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.5rem .7rem;margin-bottom:.45rem" @if ($loop->last) open @endif>
@@ -121,26 +135,7 @@
                     <span style="color:{{ $sn->gecti ? 'rgb(21 128 61)' : 'rgb(185 28 28)' }};font-weight:700">{{ $sn->gecti ? 'GEÇTİ' : 'KALDI' }}</span>
                     <span style="{{ $soluk }}">(geçme: {{ $d->gecmePuani() }})</span>
                 </summary>
-                <div style="margin-top:.5rem;font-size:.78rem;line-height:1.5">
-                    @foreach ($sn->cevaplar ?? [] as $i => $c)
-                        @php
-                            $dogruMu = isset($c['verilen_index'], $c['dogru_index']) && (int) $c['verilen_index'] === (int) $c['dogru_index'];
-                            $sec = $c['secenekler'] ?? [];
-                            $verilen = (int) ($c['verilen_index'] ?? -1);
-                        @endphp
-                        <div style="margin-bottom:.4rem;padding-left:.5rem;border-left:3px solid {{ $dogruMu ? 'rgb(34 197 94)' : 'rgb(239 68 68)' }}">
-                            <div><strong>{{ $i + 1 }}.</strong> {{ $c['soru'] ?? '' }}</div>
-                            <div style="{{ $soluk }}">Verdiği cevap:
-                                <span style="color:{{ $dogruMu ? 'rgb(21 128 61)' : 'rgb(185 28 28)' }}">
-                                    {{ $verilen >= 0 ? chr(65 + $verilen).') '.($sec[$verilen] ?? '') : 'boş' }}
-                                </span>
-                                @unless ($dogruMu)
-                                    · Doğru: <span style="color:rgb(21 128 61)">{{ isset($c['dogru_index']) ? chr(65 + (int) $c['dogru_index']).') '.($sec[$c['dogru_index']] ?? '') : '—' }}</span>
-                                @endunless
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                @include('filament.pages.partials.uzaktan-egitim-cevaplar', ['cevaplar' => $sn->cevaplar])
             </details>
         @endforeach
     @endif

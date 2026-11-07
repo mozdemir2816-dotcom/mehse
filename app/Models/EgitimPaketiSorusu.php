@@ -14,6 +14,13 @@ class EgitimPaketiSorusu extends Model
 
     protected $guarded = ['id'];
 
+    /** Sorunun kullanıldığı sınav: ön test (seviye tespiti), final sınavı ya da ikisi. */
+    public const KULLANIMLAR = [
+        'ortak' => 'Ön test + final',
+        'on_test' => 'Yalnız ön test',
+        'final' => 'Yalnız final sınavı',
+    ];
+
     protected $casts = [
         'secenekler' => 'array',
         'dogru_index' => 'integer',
