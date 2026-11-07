@@ -4,6 +4,8 @@ namespace App\Support;
 
 use App\Models\EgitimAtamasi;
 use Barryvdh\DomPDF\Facade\Pdf;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -13,6 +15,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class UzaktanEgitimBelgesiUretici
 {
+    /** Belgedeki doğrulama QR'ı (SVG data URI — GD gerektirmez). */
+    public static function qr(EgitimAtamasi $atama): string
+    {
+        return (new QRCode(new QROptions(['outputBase64' => true, 'addQuietzone' => true])))->render($atama->dogrulamaUrl());
+    }
+
     public static function pdf(EgitimAtamasi $atama): StreamedResponse
     {
         $atama->loadMissing(['calisan.firma', 'paket', 'atayan']);

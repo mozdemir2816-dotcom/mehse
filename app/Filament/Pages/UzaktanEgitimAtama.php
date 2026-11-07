@@ -55,6 +55,9 @@ class UzaktanEgitimAtama extends Page
 
     public ?int $paketId = null;
 
+    /** Takip detayı açık olan atama (Yönetmelik Md.12/4 kayıtları). */
+    public ?int $detayId = null;
+
     public string $egitimTuru = 'yenileme';
 
     public ?string $sonTarih = null;
@@ -142,6 +145,26 @@ class UzaktanEgitimAtama extends Page
         ];
     }
 
+    /** Açık takip detayı: çalışan, oturumlar, ders ilerlemeleri, sınav denemeleri. */
+    #[Computed]
+    public function detay(): ?EgitimAtamasi
+    {
+        if (! $this->detayId || ! $this->firma) {
+            return null;
+        }
+
+        return EgitimAtamasi::query()
+            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma->id))
+            ->with(['calisan.firma', 'paket', 'girisler', 'ilerlemeler', 'sinavSonuclari'])
+            ->find($this->detayId);
+    }
+
+    public function detayAc(int $id): void
+    {
+        $this->detayId = $this->detayId === $id ? null : $id;
+        unset($this->detay);
+    }
+
     /** Firmadaki eğitimli çalışanların yalnız portala girdiği (eğitim açmadığı) tarihler. */
     #[Computed]
     public function portalGirisleri(): Collection
@@ -163,8 +186,8 @@ class UzaktanEgitimAtama extends Page
 
         ExcelBellek::artir();
 
-        $basliklar = ['Ad Soyad', 'Görev', 'Eğitim', 'Eğitim Türü', 'Atanma', 'Oturumlar (giriş – çıkış)', 'Oturum Sayısı',
-            'Fiili İzleme (dk)', 'Aktif Katılım Cevabı', 'İzlenen Ders', 'Ön Test', 'Sınav Puanı', 'Sınav Denemesi', 'Yeniden Başlatma',
+        $basliklar = ['Ad Soyad', 'T.C. Kimlik No', 'Görev', 'Eğitim', 'Eğitim Türü', 'Atanma', 'Oturumlar (giriş – çıkış)', 'IP / Cihaz', 'KVKK-Taahhüt Onayı', 'Oturum Sayısı',
+            'Fiili İzleme (dk)', 'Aktif Katılım Cevabı', 'İzlenen Ders', 'Konu Başlığı İlerlemesi', 'Ön Test', 'Sınav Puanı', 'Sınav Denemesi', 'Yeniden Başlatma',
             'Tamamlandı', 'Tamamlanma Tarihi', 'Eğitim Kaydı'];
         $son = Coordinate::stringFromColumnIndex(count($basliklar));
 
@@ -179,15 +202,20 @@ class UzaktanEgitimAtama extends Page
             $tamam = $a->durum === 'tamamlandi';
             $sayfa->fromArray([
                 $a->calisan->ad_soyad,
+                // Denetim kanıtı dosyası: TC tam yazılır (listelerdeki maske yalnız ekran içindir).
+                $a->calisan->tc,
                 $a->calisan->gorev,
                 $a->paket->ad,
                 $a->turEtiketi(),
                 $a->atandi_at?->format('d.m.Y'),
                 $a->girisler->map(fn (EgitimGirisi $g) => $g->giris_at->format('d.m.Y H:i').' – '.($g->cikis_at?->format('H:i') ?? '?'))->implode(', '),
+                $a->girisler->map(fn (EgitimGirisi $g) => trim($g->ip.' '.$g->cihaz))->filter()->unique()->implode(' | '),
+                $a->calisan->kvkk_onay_at?->format('d.m.Y H:i') ?? '—',
                 $a->girisler->count(),
                 (int) round($a->ilerlemeler->sum('izlenen_sn') / 60),
                 $a->girisler->sum('yoklama_sayisi'),
                 $a->izlenenDersSayisi().'/'.$a->toplamDersSayisi(),
+                $a->modulOzeti(),
                 $a->on_test_puani,
                 $a->sonSinav()?->puan,
                 $a->sinavSonuclari()->count(),
@@ -230,7 +258,8 @@ class UzaktanEgitimAtama extends Page
     }
 
     public function updatedFirmaId(): void    {
-        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu);
+        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu, $this->detay);
+        $this->detayId = null;
         $this->secilenCalisanlar = [];
         $this->sonUretilenGiris = [];
     }
@@ -272,6 +301,7 @@ class UzaktanEgitimAtama extends Page
         $giris = [];
         $atananSayi = 0;
         $koduUretilenler = [];
+        $silinenEski = 0;
 
         foreach ($this->calisanlar->whereIn('id', $this->secilenCalisanlar) as $calisan) {
             // E-postası olmayan çalışana portala girebilmesi için geçici bir kullanıcı kodu ata.
@@ -279,6 +309,17 @@ class UzaktanEgitimAtama extends Page
                 $calisan->forceFill(['eposta' => $this->geciciKullaniciKodu($calisan)])->save();
                 $koduUretilenler[] = $calisan->ad_soyad;
             }
+
+            // Yeni paket atanırken çalışanın önceki paketlerine ait atamalar tamamen silinir
+            // (ilerleme, sınav, giriş günlüğü dahil). Eğitim Kayıtları'ndaki tarih korunur.
+            EgitimAtamasi::query()
+                ->where('calisan_id', $calisan->id)
+                ->where('egitim_paketi_id', '!=', $paket->id)
+                ->get()
+                ->each(function (EgitimAtamasi $eski) use (&$silinenEski): void {
+                    $eski->delete();
+                    $silinenEski++;
+                });
 
             // Zaten aynı paket atanmışsa atlanır (unique kısıtı).
             $atama = EgitimAtamasi::firstOrNew([
@@ -313,12 +354,18 @@ class UzaktanEgitimAtama extends Page
         unset($this->atamalar);
 
         $mesaj = $atananSayi.' çalışana eğitim atandı';
+        if ($silinenEski) {
+            $mesaj .= ' · önceki paketlerden '.$silinenEski.' atama silindi';
+        }
         if ($koduUretilenler) {
             $mesaj .= ' · e-postası olmayanlara geçici kullanıcı kodu üretildi: '.implode(', ', $koduUretilenler);
         }
 
+        $bekleyen = $paket->videoBekleyenSayisi();
+
         Notification::make()->title($mesaj)
-            ->body('Portal adresi: '.url('/egitim').' — giriş bilgileri aşağıda listelendi.')
+            ->body('Portal adresi: '.url('/egitim').' — giriş bilgileri aşağıda listelendi.'
+                .($bekleyen ? " Not: {$bekleyen} konu başlığı için henüz video bağlanmadı; çalışan şimdilik yalnızca videosu hazır konuları görür." : ''))
             ->success()->send();
     }
 

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\EgitimPaketis;
 use App\Filament\Resources\EgitimPaketis\Pages\CreateEgitimPaketi;
 use App\Filament\Resources\EgitimPaketis\Pages\EditEgitimPaketi;
 use App\Filament\Resources\EgitimPaketis\Pages\ListEgitimPaketis;
+use App\Filament\Resources\EgitimPaketis\RelationManagers\DerslerRelationManager;
 use App\Models\EgitimPaketi;
 use BackedEnum;
 use Closure;
@@ -147,6 +148,9 @@ class EgitimPaketiResource extends Resource
             $bolumler[] = Section::make("Modül {$n}: {$ad}".($n === 4 ? ' (Tehlikeli/Çok Tehlikeli: Yüz Yüze)' : ''))
                 ->description($aciklamalar[$n].' YouTube önerilir (liste dışı) — izleme süresi ölçülür, ileri sarma engellenir.')
                 ->collapsible()
+                // Yeni pakette burada eklenir; düzenlemede videolar "Videolar" sekmesinden anında kaydedilir.
+                // 4. başlık şimdilik kapalı.
+                ->visible(fn (string $operation) => $operation === 'create' && $n < 4)
                 ->schema([
                     self::dersTekrarlayici("modul{$n}_dersler", fn ($query) => $query->where('modul', $n), $n),
                 ]);
@@ -155,7 +159,7 @@ class EgitimPaketiResource extends Resource
         $bolumler[] = Section::make('Modülsüz dersler (eski paketler)')
             ->description('Modül atanmadan eklenmiş dersler. Yeni videoları yukarıdaki modüllere ekleyin.')
             ->collapsible()->collapsed()
-            ->visible(fn (?EgitimPaketi $record) => $record?->dersler()->whereNull('modul')->exists() ?? false)
+            ->visible(false)
             ->schema([
                 self::dersTekrarlayici('eski_dersler', fn ($query) => $query->whereNull('modul'), null),
             ]);
@@ -206,6 +210,13 @@ class EgitimPaketiResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            DerslerRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

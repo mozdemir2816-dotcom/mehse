@@ -48,6 +48,7 @@ class EgitimGirisi extends Model
             'calisan_id' => $calisanId,
             'egitim_atamasi_id' => $atamaId,
             'ip' => request()->ip(),
+            'cihaz' => mb_substr((string) request()->userAgent(), 0, 255) ?: null,
             'giris_at' => now(),
         ]);
     }

@@ -55,8 +55,12 @@ class EgitimIzle extends Page
 
     public ?EgitimSinavSonucu $sonSonuc = null;
 
-    public function mount(): void
+    public function mount()
     {
+        if (Filament::auth()->user()?->kvkk_onay_at === null) {
+            return redirect(KvkkOnay::getUrl());
+        }
+
         $a = $this->atamaKaydi();
 
         abort_unless($a !== null, 404);

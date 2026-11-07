@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * Bir çalışana atanmış uzaktan eğitim. İlerleme (izlenen dersler) + sınav
@@ -85,6 +86,19 @@ class EgitimAtamasi extends Model
         return $toplam > 0 ? (int) round($this->izlenenDersSayisi() / $toplam * 100) : 0;
     }
 
+    /**
+     * Konu başlığı (modül) bazında ilerleme: "Genel Konular 3/5 · Sağlık Konuları 0/2".
+     * Dersi olmayan başlıklar yazılmaz.
+     */
+    public function modulOzeti(): string
+    {
+        $izlenenler = $this->ilerlemeler->where('izlendi', true)->pluck('egitim_dersi_id');
+
+        return $this->paket->dersler->groupBy(fn (EgitimDersi $d) => $d->modul ?? 0)
+            ->map(fn ($grup, $modul) => ($modul ? EgitimDersi::MODULLER[$modul] : 'Diğer').' '.$grup->whereIn('id', $izlenenler)->count().'/'.$grup->count())
+            ->implode(' · ');
+    }
+
     public function tumDerslerIzlendiMi(): bool
     {
         $toplam = $this->toplamDersSayisi();
@@ -129,6 +143,21 @@ class EgitimAtamasi extends Model
 
         $this->forceFill(['igu_onay_at' => now(), 'igu_onaylayan_id' => $kullaniciId])->save();
         $this->durumuTazele();
+    }
+
+    /** Belgedeki QR'ın doğrulama kodu (tahmin edilemez; belge no UE-{id} sıralıdır, doğrulamada kullanılmaz). */
+    public function dogrulamaKodu(): string
+    {
+        if (blank($this->dogrulama_kodu)) {
+            $this->forceFill(['dogrulama_kodu' => Str::upper(Str::random(16))])->save();
+        }
+
+        return $this->dogrulama_kodu;
+    }
+
+    public function dogrulamaUrl(): string
+    {
+        return url('/belge-dogrula/'.$this->dogrulamaKodu());
     }
 
     public function sonrakiDeneme(): int

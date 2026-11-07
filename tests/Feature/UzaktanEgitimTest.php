@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\UzaktanEgitimAtama;
 use App\Filament\Portal\Pages\EgitimIzle;
+use App\Filament\Portal\Pages\Egitimlerim;
+use App\Filament\Portal\Pages\KvkkOnay;
 use App\Models\Calisan;
 use App\Models\EgitimAtamasi;
 use App\Models\EgitimGirisi;
@@ -61,7 +63,7 @@ class UzaktanEgitimTest extends TestCase
 
     private function calisanKur(string $eposta = 'ali@ornek.test'): Calisan
     {
-        return Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Ali Veli', 'eposta' => $eposta, 'aktif' => true, 'sifre' => 'gecici123']);
+        return Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Ali Veli', 'eposta' => $eposta, 'aktif' => true, 'sifre' => 'gecici123', 'kvkk_onay_at' => now()]);
     }
 
     private function portalGirisi(Calisan $calisan): void
@@ -95,6 +97,27 @@ class UzaktanEgitimTest extends TestCase
         $this->assertSame('atandi', $atama->durum);
         $this->assertSame($paket->id, $atama->egitim_paketi_id);
         $this->assertNotNull($calisan->fresh()->sifre);
+    }
+
+    public function test_yeni_paket_atanirken_calisanin_eski_atamalari_silinir(): void
+    {
+        $eski = $this->paketKur();
+        $yeni = $this->paketKur();
+        $calisan = $this->calisanKur();
+        $baskasi = $this->calisanKur('veli@ornek.test');
+
+        $eskiAtama = $this->atamaKur($eski, $calisan);
+        $baskasininAtamasi = $this->atamaKur($eski, $baskasi);
+
+        Livewire::test(UzaktanEgitimAtama::class)
+            ->set('firmaId', $this->firma->id)
+            ->set('paketId', $yeni->id)
+            ->call('calisanToggle', $calisan->id)
+            ->call('ata');
+
+        $this->assertModelMissing($eskiAtama);
+        $this->assertModelExists($baskasininAtamasi);
+        $this->assertSame($yeni->id, EgitimAtamasi::where('calisan_id', $calisan->id)->sole()->egitim_paketi_id);
     }
 
     public function test_epostasiz_calisana_gecici_kullanici_kodu_uretilip_atanir(): void
@@ -230,6 +253,61 @@ class UzaktanEgitimTest extends TestCase
         ob_start();
         $yanit->sendContent();
         $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
+    public function test_kvkk_onayi_olmadan_egitimler_acilmaz_onaydan_sonra_acilir(): void
+    {
+        $paket = $this->paketKur();
+        $calisan = $this->calisanKur();
+        $calisan->forceFill(['kvkk_onay_at' => null])->save();
+        $atama = $this->atamaKur($paket, $calisan);
+        $this->portalGirisi($calisan);
+
+        Livewire::test(Egitimlerim::class)->assertRedirect(KvkkOnay::getUrl());
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id])->assertRedirect(KvkkOnay::getUrl());
+
+        // iki kutu işaretlenmeden onaylanmaz
+        Livewire::test(KvkkOnay::class)->call('onayla');
+        $this->assertNull($calisan->fresh()->kvkk_onay_at);
+
+        Livewire::test(KvkkOnay::class)->set('aydinlatma', true)->set('taahhut', true)->call('onayla')
+            ->assertRedirect(Egitimlerim::getUrl());
+        $this->assertNotNull($calisan->fresh()->kvkk_onay_at);
+
+        Livewire::test(Egitimlerim::class)->assertNoRedirect();
+    }
+
+    public function test_giris_gunlugune_ip_ve_cihaz_yazilir(): void
+    {
+        $calisan = $this->calisanKur();
+        request()->headers->set('User-Agent', 'Mozilla/5.0 (Linux; Android 14) Chrome/130');
+
+        $giris = EgitimGirisi::kaydet($calisan->id);
+
+        $this->assertStringContainsString('Android 14', $giris->cihaz);
+        $this->assertNotNull($giris->ip);
+    }
+
+    public function test_belge_qr_dogrulama_sayfasi_maskeli_gosterir_ve_gecersiz_kodu_reddeder(): void
+    {
+        $paket = $this->paketKur(ders: 1);
+        $calisan = $this->calisanKur();
+        $atama = $this->atamaKur($paket, $calisan);
+        $atama->sinavSonuclari()->create(['deneme_no' => 1, 'puan' => 90, 'gecti' => true, 'cevaplar' => [], 'tamamlandi_at' => now()]);
+        $atama->durumuTazele();
+
+        $kod = $atama->dogrulamaKodu();
+        $this->assertSame($kod, $atama->fresh()->dogrulamaKodu());   // kod sabit kalır
+
+        $this->get('/belge-dogrula/'.$kod)
+            ->assertOk()
+            ->assertSee('BELGE GEÇERLİ')
+            ->assertSee('A** V**')
+            ->assertDontSee('Ali Veli');
+
+        $this->get('/belge-dogrula/YOKTUR0000000000')->assertNotFound();
+
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', \App\Support\UzaktanEgitimBelgesiUretici::qr($atama));
     }
 
     public function test_ileri_sarma_ve_sahte_sure_sayilmaz(): void
@@ -477,6 +555,52 @@ class UzaktanEgitimTest extends TestCase
             'atayan_user_id' => $this->uzman->id, 'atandi_at' => now(), 'durum' => 'atandi',
         ]));
         $this->assertSame(0, $ayse->egitimKayitlari()->count());
+    }
+
+    public function test_takip_detayi_video_oturum_ip_cihaz_ve_sinav_cevaplarini_gosterir(): void
+    {
+        $paket = $this->paketKur(ders: 2);
+        $calisan = $this->calisanKur();
+        $calisan->forceFill(['tc' => '12345678901', 'kvkk_onay_at' => now(), 'kvkk_onay_ip' => '10.1.2.3'])->save();
+        $atama = $this->atamaKur($paket, $calisan);
+        $ders = $paket->dersler()->first();
+
+        $giris = EgitimGirisi::create(['calisan_id' => $calisan->id, 'egitim_atamasi_id' => $atama->id, 'ip' => '203.0.113.9',
+            'cihaz' => 'Mozilla/5.0 (Linux; Android 14) Chrome/130', 'giris_at' => now()]);
+        $giris->nabiz(95, true);
+        $atama->ilerlemeler()->create(['egitim_dersi_id' => $ders->id, 'izleme_yuzdesi' => 95, 'izlenen_sn' => 95, 'izlendi' => true, 'izlendi_at' => now()]);
+        $atama->sinavSonuclari()->create(['deneme_no' => 1, 'puan' => 50, 'gecti' => false, 'tamamlandi_at' => now(), 'cevaplar' => [
+            ['soru' => 'Haftalık çalışma süresi?', 'secenekler' => ['35', '40', '45'], 'dogru_index' => 2, 'verilen_index' => 0],
+            ['soru' => 'Bildirim süresi?', 'secenekler' => ['1 gün', '3 iş günü'], 'dogru_index' => 1, 'verilen_index' => 1],
+        ]]);
+
+        Livewire::test(UzaktanEgitimAtama::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('detayAc', $atama->id)
+            ->assertSee('Takip Detayı')
+            ->assertSee('203.0.113.9')
+            ->assertSee('Android 14')
+            ->assertSee('10.1.2.3')
+            ->assertSee('123******01')
+            ->assertDontSee('12345678901')
+            ->assertSee('1. deneme')
+            ->assertSee('Haftalık çalışma süresi?')
+            ->assertSee('Doğru:')
+            ->call('detayAc', $atama->id)
+            ->assertDontSee('Takip Detayı');
+    }
+
+    public function test_baska_firmanin_atamasinin_detayi_acilmaz(): void
+    {
+        $paket = $this->paketKur();
+        $digerFirma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Diğer Firma']);
+        $yabanci = Calisan::create(['firma_id' => $digerFirma->id, 'ad_soyad' => 'Yabancı Kişi', 'eposta' => 'y@ornek.test', 'aktif' => true, 'sifre' => 'x12345678']);
+        $atama = $this->atamaKur($paket, $yabanci);
+
+        Livewire::test(UzaktanEgitimAtama::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('detayAc', $atama->id)
+            ->assertDontSee('Yabancı Kişi');
     }
 
     public function test_atama_ekrani_gorev_giris_tarihi_tamamlandi_ve_excel(): void

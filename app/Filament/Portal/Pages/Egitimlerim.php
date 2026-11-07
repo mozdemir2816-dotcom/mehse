@@ -27,6 +27,14 @@ class Egitimlerim extends Page
         return 'Eğitimlerim';
     }
 
+    /** KVKK aydınlatma + taahhüt onaylanmadan eğitimler açılmaz. */
+    public function mount()
+    {
+        if (Filament::auth()->user()?->kvkk_onay_at === null) {
+            return redirect(KvkkOnay::getUrl());
+        }
+    }
+
     /** @return Collection<int, EgitimAtamasi> */
     #[Computed]
     public function atamalar(): Collection

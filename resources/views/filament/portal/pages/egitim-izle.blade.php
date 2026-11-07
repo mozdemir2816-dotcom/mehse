@@ -56,12 +56,23 @@
                 <div>
                     @if ($aktif)
                         <div class="portal-card" style="overflow:hidden">
-                            <div wire:ignore style="position:relative;padding-top:56.25%;background:#000">
+                            <div wire:ignore id="oynatici-kutu" style="position:relative;padding-top:56.25%;background:#000">
                                 <iframe id="oynatici"
                                     style="position:absolute;inset:0;width:100%;height:100%;border:0"
-                                    src="{{ $aktif->gommeUrl() }}{{ $aktif->saglayici === 'youtube' ? '&enablejsapi=1&disablekb=1&playsinline=1' : '' }}"
+                                    src="{{ $aktif->gommeUrl() }}{{ $aktif->saglayici === 'youtube' ? '&enablejsapi=1&disablekb=1&playsinline=1&controls=0&fs=0&iv_load_policy=3' : '' }}"
                                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                     allowfullscreen></iframe>
+
+                                @if ($aktif->saglayici === 'youtube')
+                                    {{-- YouTube'un kendi çubuğu gizli (controls=0): ileri sarma çubuğu yok. Video alanına tıklama yalnız oynat/duraklat. --}}
+                                    <div id="tikla" style="position:absolute;left:0;right:0;top:0;bottom:44px;z-index:3;cursor:pointer"></div>
+                                    <div id="kontrol" style="position:absolute;left:0;right:0;bottom:0;height:44px;background:rgb(0 0 0 / .8);z-index:4;display:flex;align-items:center;gap:.7rem;padding:0 .8rem;color:#fff;font-size:.8rem">
+                                        <button type="button" id="oynat" style="background:none;border:0;color:#fff;font-size:1.15rem;cursor:pointer;width:1.6rem" aria-label="Oynat / duraklat">▶</button>
+                                        <div style="flex:1;height:6px;background:rgb(255 255 255 / .25);border-radius:3px;pointer-events:none"><div id="ilerleme-dolu" style="height:100%;width:0;background:#60a5fa;border-radius:3px"></div></div>
+                                        <span id="sure-yazi" style="font-variant-numeric:tabular-nums;white-space:nowrap">0:00 / 0:00</span>
+                                        <button type="button" id="tamekran" style="background:none;border:0;color:#fff;font-size:1rem;cursor:pointer" aria-label="Tam ekran">⛶</button>
+                                    </div>
+                                @endif
 
                                 {{-- Aktif katılım penceresi (Md.12/5-c) --}}
                                 <div id="yoklama" style="display:none;position:absolute;inset:0;background:rgb(0 0 0 / .82);color:#fff;padding:1.2rem;overflow:auto;z-index:5">
@@ -74,7 +85,7 @@
                                 </div>
 
                                 {{-- Uyarı şeridi (ileri sarma / sekme) --}}
-                                <div id="izleme-uyari" style="display:none;position:absolute;left:0;right:0;bottom:0;background:rgb(180 83 9 / .92);color:#fff;font-size:.82rem;padding:.45rem .8rem;z-index:4"></div>
+                                <div id="izleme-uyari" style="display:none;position:absolute;left:0;right:0;bottom:44px;background:rgb(180 83 9 / .92);color:#fff;font-size:.82rem;padding:.45rem .8rem;z-index:4"></div>
                             </div>
                             <div class="portal-card-pad">
                                 <div class="portal-heading" style="font-weight:700">{{ $aktif->numaraliBaslik() }}</div>
@@ -84,7 +95,7 @@
                                     @if (in_array($aktif->id, $izlenen))
                                         <span class="portal-badge portal-badge-success">✓ Bu ders izlendi</span>
                                     @elseif ($aktif->saglayici === 'youtube')
-                                        <span wire:ignore id="izleme-durum" class="portal-muted">Videoyu başlatın — en az %{{ $a->paket->video_zorunlu_yuzde }} izlenmeli. İleri sarılamaz; sekme değiştirirseniz video durur.</span>
+                                        <span wire:ignore id="izleme-durum" class="portal-muted">Videoyu başlatın — en az %{{ $a->paket->video_zorunlu_yuzde }} izlenmeli. Videoyu ileri sarma yoktur; sekme değiştirirseniz video durur.</span>
                                     @else
                                         <x-filament::button size="sm" color="gray" wire:click="dersTamamla({{ $aktif->id }})">Videoyu izledim</x-filament::button>
                                     @endif
@@ -98,11 +109,23 @@
                 <div class="portal-card" style="padding:.7rem;position:sticky;top:1rem;max-height:calc(100dvh - 2rem);display:flex;flex-direction:column">
                     <div class="portal-label" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .65rem;flex-shrink:0">Dersler ({{ $a->paket->dersler->count() }})</div>
                     <div style="display:flex;flex-direction:column;gap:.15rem;overflow-y:auto;min-height:0">
+                        @php $oncekiModul = '__yok__'; @endphp
                         @foreach ($a->paket->dersler as $i => $d)
                             @php
                                 $tamamlandi = in_array($d->id, $izlenen);
                                 $numClass = $tamamlandi ? 'portal-lesson-done' : ($d->id === $aktifDersId ? 'portal-lesson-current' : '');
                             @endphp
+                            @if ($d->modul !== $oncekiModul)
+                                @php
+                                    $oncekiModul = $d->modul;
+                                    $grup = $a->paket->dersler->where('modul', $d->modul);
+                                    $grupBiten = $grup->whereIn('id', $izlenen)->count();
+                                @endphp
+                                <div class="portal-label" style="font-size:.74rem;font-weight:700;padding:.55rem .65rem .2rem;display:flex;justify-content:space-between;gap:.5rem">
+                                    <span>{{ $d->modul ? $d->modul.'. '.\App\Models\EgitimDersi::MODULLER[$d->modul] : 'Diğer dersler' }}</span>
+                                    <span>{{ $grupBiten }}/{{ $grup->count() }} · %{{ (int) round($grupBiten / max(1, $grup->count()) * 100) }}</span>
+                                </div>
+                            @endif
                             <button type="button" wire:click="dersSec({{ $d->id }})"
                                 class="portal-lesson-btn {{ $d->id === $aktifDersId ? 'portal-lesson-active' : '' }}">
                                 <span class="portal-lesson-num {{ $numClass }}">{{ $tamamlandi ? '✓' : $i + 1 }}</span>
@@ -172,32 +195,55 @@
                             });
                             $('yoklama').style.display = 'block';
                         }
-                        function tik() {
-                            if (!player || !player.getPlayerState || yoklamaAcik) return;
-                            if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
-                            if (document.visibilityState !== 'visible') { player.pauseVideo(); return; }
+                        function dk(sn) { sn = Math.max(0, Math.floor(sn || 0)); return Math.floor(sn / 60) + ':' + String(sn % 60).padStart(2, '0'); }
+                        /* İleri sarma denetimi: saniyenin dörtte biri, oynuyor/duraklıyor/yükleniyor fark etmez.
+                           En ileri izlenen konumun 1,5 sn ötesine geçen her konum geri alınır. */
+                        function kontrol() {
+                            if (!player || !player.getCurrentTime || yoklamaAcik) return;
                             const t = player.getCurrentTime();
-                            if (t > enIleri + 3) {
+                            if (t > enIleri + 1.5) {
                                 player.seekTo(enIleri, true);
                                 uyari('İleri sarma yapılamaz — video izlediğiniz yerden devam ediyor.');
                                 return;
                             }
-                            enIleri = Math.max(enIleri, t);
+                            if (player.getPlayerState() === YT.PlayerState.PLAYING) enIleri = Math.max(enIleri, t);
+                            const d = player.getDuration() || 0;
+                            if ($('ilerleme-dolu')) $('ilerleme-dolu').style.width = (d ? Math.min(100, t / d * 100) : 0) + '%';
+                            if ($('sure-yazi')) $('sure-yazi').textContent = dk(t) + ' / ' + dk(d);
+                        }
+                        function tik() {
+                            if (!player || !player.getPlayerState || yoklamaAcik) return;
+                            if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
+                            if (document.visibilityState !== 'visible') { player.pauseVideo(); return; }
                             izlenen++; artis++;
                             if (!bitti && ++yoklamaSayac >= yoklamaSn) yoklamaAc();
                             durumYaz();
                             if (artis >= 15) rapor();
+                        }
+                        function oynatDuraklat() {
+                            if (!player || yoklamaAcik) return;
+                            player.getPlayerState() === YT.PlayerState.PLAYING ? player.pauseVideo() : player.playVideo();
                         }
                         function baslat() {
                             if (!window.YT || !window.YT.Player) { return setTimeout(baslat, 300); }
                             player = new YT.Player('oynatici', {
                                 events: {
                                     onReady: () => { if (enIleri > 5) player.seekTo(Math.max(0, enIleri - 2), true); durumYaz(); },
-                                    onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) rapor(); },
+                                    onStateChange: (e) => {
+                                        if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) rapor();
+                                        if ($('oynat')) $('oynat').textContent = e.data === YT.PlayerState.PLAYING ? '⏸' : '▶';
+                                    },
                                     onPlaybackRateChange: () => { if (player.getPlaybackRate() !== 1) { player.setPlaybackRate(1); uyari('Eğitim videoları normal hızda izlenir.'); } },
                                 }
                             });
                             setInterval(tik, 1000);
+                            setInterval(kontrol, 250);
+                            if ($('tikla')) $('tikla').addEventListener('click', oynatDuraklat);
+                            if ($('oynat')) $('oynat').addEventListener('click', oynatDuraklat);
+                            if ($('tamekran')) $('tamekran').addEventListener('click', () => {
+                                const k = $('oynatici-kutu');
+                                document.fullscreenElement ? document.exitFullscreen() : (k.requestFullscreen && k.requestFullscreen());
+                            });
                             setInterval(() => { if (document.visibilityState === 'visible') @this.call('nabiz'); }, 60000);
                         }
                         document.addEventListener('visibilitychange', () => {

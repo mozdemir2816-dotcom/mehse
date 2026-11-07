@@ -37,6 +37,7 @@ class Calisan extends Model implements AuthenticatableContract, FilamentUser, Ha
         'agir_tehlikeli_iste' => 'boolean',
         'aktif' => 'boolean',
         'sifre_belirlendi_at' => 'datetime',
+        'kvkk_onay_at' => 'datetime',
         'sifre' => 'hashed',
     ];
 

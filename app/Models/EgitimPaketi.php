@@ -41,10 +41,25 @@ class EgitimPaketi extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Çalışana gösterilen (videosu bağlı) dersler. Önce modülsüz (eski) dersler, sonra Modül 1→4;
+     * her modülde kayıtlı sıra (1, 2, 3 …). Video bekleyen taslak konular burada YOKTUR.
+     */
     public function dersler(): HasMany
     {
-        // Önce modülsüz (eski) dersler, sonra Modül 1→4; her modülde kayıtlı sıra (1, 2, 3 …).
-        return $this->hasMany(EgitimDersi::class)->orderByRaw('COALESCE(modul, 0)')->orderBy('sira');
+        return $this->tumDersler()->whereNotNull('video_url')->where('video_url', '!=', '');
+    }
+
+    /** Taslak (video bekleyen) konu başlıkları dahil tüm dersler — yönetim ekranı kullanır. */
+    public function tumDersler(): HasMany
+    {
+        return $this->hasMany(EgitimDersi::class)->orderByRaw('COALESCE(modul, 0)')->orderBy('sira')->orderBy('id');
+    }
+
+    /** Video bağlanmayı bekleyen konu başlığı sayısı. */
+    public function videoBekleyenSayisi(): int
+    {
+        return $this->tumDersler()->where(fn ($q) => $q->whereNull('video_url')->orWhere('video_url', ''))->count();
     }
 
     public function sorular(): HasMany

@@ -82,6 +82,12 @@
                 @if ($atama->on_test_puani !== null) · ön test {{ $atama->on_test_puani }} @endif
                 · belge no UE-{{ $atama->id }}
             </div>
+            <table style="margin-top:8px;border:0"><tr>
+                <td style="border:0;padding:0;width:62px"><img src="{{ \App\Support\UzaktanEgitimBelgesiUretici::qr($atama) }}" style="width:58px;height:58px"></td>
+                <td style="border:0;padding:0 0 0 6px;font-size:7.5px;color:#444;vertical-align:middle">
+                    Belge doğrulama: QR kodu okutun ya da<br>{{ preg_replace('~^https?://~', '', $atama->dogrulamaUrl()) }}
+                </td>
+            </tr></table>
         </td>
 
         <td class="arka">
