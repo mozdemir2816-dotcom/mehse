@@ -4,7 +4,7 @@
     $sira = 0;
 @endphp
 @foreach ($rd->maddeler->chunk($parcaBoyutu ?? 100) as $parca)
-<table class="risk hazop" @if ($loop->first) style="font-size:6.8px" @else style="font-size:6.8px;margin-top:0;page-break-before:always" @endif>
+<table class="risk hazop" @if ($loop->first) style="font-size:6.8px" @else style="font-size:6.8px;margin-top:0" @endif>
     <thead>
     <tr>
         @foreach ($hazopSutunlar as [$baslik, , , $yuzde])
