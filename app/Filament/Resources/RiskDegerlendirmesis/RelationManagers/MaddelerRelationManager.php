@@ -32,6 +32,8 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use App\Support\RiskAlanTamamlama;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class MaddelerRelationManager extends RelationManager
@@ -161,6 +163,22 @@ class MaddelerRelationManager extends RelationManager
         ]);
     }
 
+    /** Boş alan süzgeci (08.11.2026). */
+    public static function bosAlanSuz(Builder $q, ?string $alan, bool $ucEksen): Builder
+    {
+        $bos = fn (string $a) => fn ($w) => $w->whereNull($a)->orWhereRaw('TRIM('.$a.') = ?', ['']);
+
+        return match ($alan) {
+            'herhangi' => RiskAlanTamamlama::eksikKosulu($q, $ucEksen, mevzuat: false),
+            'risk' => $q->where(fn ($w) => $w->where($bos('risk'))->orWhereColumn('risk', 'tehlike')),
+            'mevcut_onlem', 'oneri' => $q->where($bos($alan)),
+            'sorumlu' => $q->where(fn ($w) => $w->where($bos('sorumlu'))->orWhere('sorumlu', RiskMaddesi::VARSAYILAN_SORUMLU)),
+            'puan' => $q->where(fn ($w) => $w->whereNull('olasilik')->orWhereNull('siddet')->when($ucEksen, fn ($x) => $x->orWhereNull('frekans'))),
+            'son_puan' => $q->where(fn ($w) => $w->whereNull('son_olasilik')->orWhereNull('son_siddet')->when($ucEksen, fn ($x) => $x->orWhereNull('son_frekans'))),
+            default => $q,
+        };
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -188,6 +206,18 @@ class MaddelerRelationManager extends RelationManager
             ])
             ->filters([
                 SelectFilter::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari')),
+                // 08.11.2026: boş alanlı maddeleri süz — elle doldurmak için.
+                SelectFilter::make('bos_alan')->label('Boş alan')->visible(fn (): bool => $this->yontem() !== 'hazop')
+                    ->options([
+                        'herhangi' => 'Herhangi bir alanı boş',
+                        'risk' => 'Risk tanımı boş / tehlikenin kopyası',
+                        'mevcut_onlem' => 'Mevcut önlem boş',
+                        'oneri' => 'Öneri boş',
+                        'sorumlu' => 'Sorumlu boş / varsayılan',
+                        'puan' => 'Puan eksik',
+                        'son_puan' => 'Rezidüel puan eksik',
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => static::bosAlanSuz($query, $data['value'] ?? null, RiskSkorlama::ucEksenliMi($this->yontem()))),
             ])
             ->headerActions([
                 CreateAction::make()->label('Risk Maddesi Ekle')->modalWidth(Width::SixExtraLarge)

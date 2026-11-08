@@ -240,4 +240,22 @@ class RiskAlanTamamlamaTest extends TestCase
         $this->assertNull($dolu->fresh()->mevzuat);   // önerisi dolu madde bu komutun kapsamında değil
         Http::assertSent(fn ($istek) => ! str_contains($istek->body(), 'Önerisi dolu madde'));
     }
+
+    public function test_bos_alan_suzgeci_eksik_maddeleri_listeler(): void
+    {
+        $firma = Firma::factory()->for($this->sahip)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now()]);
+        $tam = ['risk' => 'Yaralanma', 'mevcut_onlem' => 'Var', 'oneri' => 'Öneri', 'sorumlu' => 'Ustabaşı',
+            'olasilik' => 3, 'frekans' => 6, 'siddet' => 7, 'son_olasilik' => 1, 'son_frekans' => 6, 'son_siddet' => 7, 'durum' => 'acik'];
+        $dolu = $rd->maddeler()->create(['sira' => 1, 'tehlike' => 'Dolu madde'] + $tam);
+        $onlemsiz = $rd->maddeler()->create(['sira' => 2, 'tehlike' => 'Önlemsiz', 'mevcut_onlem' => null] + $tam);
+        $varsayilan = $rd->maddeler()->create(['sira' => 3, 'tehlike' => 'Varsayılan sorumlu', 'sorumlu' => RiskMaddesi::VARSAYILAN_SORUMLU] + $tam);
+        $kopya = $rd->maddeler()->create(['sira' => 4, 'tehlike' => 'Kaygan zemin', 'risk' => 'Kaygan zemin'] + $tam);
+
+        $lw = Livewire::test(MaddelerRelationManager::class, ['ownerRecord' => $rd, 'pageClass' => EditRiskDegerlendirmesi::class]);
+        $lw->filterTable('bos_alan', 'herhangi')->assertCanSeeTableRecords([$onlemsiz, $varsayilan, $kopya])->assertCanNotSeeTableRecords([$dolu]);
+        $lw->filterTable('bos_alan', 'mevcut_onlem')->assertCanSeeTableRecords([$onlemsiz])->assertCanNotSeeTableRecords([$dolu, $varsayilan, $kopya]);
+        $lw->filterTable('bos_alan', 'sorumlu')->assertCanSeeTableRecords([$varsayilan])->assertCanNotSeeTableRecords([$dolu, $onlemsiz, $kopya]);
+        $lw->filterTable('bos_alan', 'risk')->assertCanSeeTableRecords([$kopya])->assertCanNotSeeTableRecords([$dolu, $onlemsiz, $varsayilan]);
+    }
 }
