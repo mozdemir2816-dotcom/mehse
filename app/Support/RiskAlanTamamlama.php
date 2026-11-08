@@ -78,6 +78,11 @@ class RiskAlanTamamlama
     public static function uygula(Model $m, array $p, bool $ucEksen, bool $riskDuzelt = false): array
     {
         $degisen = [];
+        foreach (static::METIN_ALANLARI as $alan) {
+            if (array_key_exists($alan, $p)) {
+                $p[$alan] = static::aiMetniGecerli($p[$alan], $alan === 'sorumlu' ? 255 : 5000);
+            }
+        }
 
         if (filled($p['risk'] ?? null) && (static::riskEksikMi($m) || ($riskDuzelt && ($p['risk_uyumlu'] ?? true) === false))) {
             $m->risk = $p['risk'];
@@ -105,6 +110,25 @@ class RiskAlanTamamlama
         }
 
         return $degisen;
+    }
+
+    /**
+     * Yapay zekâ metnini doğrular: aynı ifadenin art arda tekrarlandığı bozuk çıktı
+     * ("… free test team free test team …", 07.11.2026 canlı hatası) ya da sütuna
+     * sığmayan metin reddedilir (null) — alan boş kalır, sonraki turda yeniden denenir.
+     */
+    public static function aiMetniGecerli(mixed $deger, int $azami): ?string
+    {
+        if (! is_string($deger) || trim($deger) === '') {
+            return null;
+        }
+        $deger = trim($deger);
+
+        if (mb_strlen($deger) > $azami || preg_match('/(\S+(?:\s+\S+){0,4})(?:\s+){3,}/u', $deger)) {
+            return null;
+        }
+
+        return $deger;
     }
 
     /**
