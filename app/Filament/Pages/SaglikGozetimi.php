@@ -32,9 +32,9 @@ class SaglikGozetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Merkezler';
 
-    protected static ?int $navigationSort = 14;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'saglik-gozetimi';
 

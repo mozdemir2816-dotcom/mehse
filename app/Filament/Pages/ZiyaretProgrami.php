@@ -42,9 +42,9 @@ class ZiyaretProgrami extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Genel';
+    protected static string|UnitEnum|null $navigationGroup = 'Günlük Saha İşi';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'ziyaret-programi';
 

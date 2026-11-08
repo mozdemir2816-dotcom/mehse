@@ -45,9 +45,9 @@ class KkdTakip extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-archive-box';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Günlük Saha İşi';
 
-    protected static ?int $navigationSort = 17;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'kkd-takip';
 

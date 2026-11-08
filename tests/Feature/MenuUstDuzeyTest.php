@@ -18,16 +18,22 @@ class MenuUstDuzeyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_saha_ust_duzey_giris_saha_ekrani_ve_profilim_genel_grubundan_cikti(): void
+    public function test_sade_menu_ust_duzey_ve_dort_grup(): void
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
         $menu = collect(Filament::getNavigation());
-        $ustDuzey = $menu->first(fn ($g) => $g->getLabel() === null)->getItems()->map(fn ($i) => $i->getLabel())->all();
-        $this->assertContains('Saha', $ustDuzey);
 
-        $genel = $menu->first(fn ($g) => $g->getLabel() === 'Genel')->getItems()->map(fn ($i) => $i->getLabel())->all();
-        $this->assertSame(['Kontrol Merkezi', 'Ziyaret Planlama', 'Dış Paydaş', 'Pazarlama & Talepler', 'Fatura & Profil'], $genel);
+        // 08.11.2026 sade menü: Ana Sayfa + Kontrol Merkezi üstte, altında 4 grup.
+        $gorunen = $menu->filter(fn ($g) => $g->getItems()->isNotEmpty())
+            ->mapWithKeys(fn ($g) => [(string) $g->getLabel() => $g->getItems()->map(fn ($i) => $i->getLabel())->values()->all()])->all();
+        $this->assertSame(['', 'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Arşiv'], array_keys($gorunen));
+        $this->assertSame(['Ana Sayfa', 'Kontrol Merkezi'], $gorunen['']);
+        $this->assertSame(['Saha', 'Ziyaret Planlama', 'İş İzin Formu', 'KKD', 'Ekipman & Ölçüm'], $gorunen['Günlük Saha İşi']);
+        $this->assertSame(['Risk Yönetim Merkezi', 'Eğitim Yönetim Merkezi', 'Yıllık Planlar & Değerlendirme',
+            'Sağlık & Olay Merkezi', 'Acil Durum & Yangın Merkezi', 'İSG Kurulu'], $gorunen['Merkezler']);
+        $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş'], $gorunen['Firmalar & Çalışanlar']);
+        $this->assertSame(['Arşiv', 'Araçlar', 'Pazarlama & Talepler', 'Fatura & Profil', 'Ayarlar'], $gorunen['Hesap & Arşiv']);
 
         $this->assertTrue(HizliSahaBulgusu::shouldRegisterNavigation());
         $this->assertFalse(SahaEkrani::shouldRegisterNavigation());

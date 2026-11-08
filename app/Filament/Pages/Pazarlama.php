@@ -31,9 +31,9 @@ class Pazarlama extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';
 
     /** Sidebar ekrana sığsın diye Genel grubunda (31.10.2026 kullanıcı isteği). */
-    protected static string|UnitEnum|null $navigationGroup = 'Genel';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
 
     /** Menüde "Pazarlama & Talepler" tek girişi; Teklif Talepleri ve OSGB Başvuruları sekme şeridinden açılır ('pazarlama' ailesi). */
     protected static ?string $navigationLabel = 'Pazarlama & Talepler';

@@ -23,9 +23,9 @@ class TehlikeCakismalari extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-square-3-stack-3d';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Merkezler';
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 7;
 
     protected static ?string $slug = 'tehlike-cakismalari';
 

@@ -39,9 +39,9 @@ class Ayarlar extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 21;
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $slug = 'ayarlar';
 

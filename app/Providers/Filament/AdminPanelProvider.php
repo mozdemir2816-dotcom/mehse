@@ -48,8 +48,13 @@ class AdminPanelProvider extends PanelProvider
      * yalnız ailenin ana sayfası durur, diğerleri sekme şeridinden açılır.
      */
     private const NavGrupSirasi = [
-        'Genel',
+        // 08.11.2026 sade menü: üstte Ana Sayfa + Kontrol Merkezi, altında 4 grup. Aşağıdaki eski gruplarda
+        // yalnız menüde gizli (merkez sekmelerinden açılan) sayfalar kalır — boş grup menüde görünmez.
+        'Günlük Saha İşi',
+        'Merkezler',
         'Firmalar & Çalışanlar',
+        'Hesap & Arşiv',
+        'Genel',
         'Risk & Tehlike Yönetimi',
         'Acil Durum & Yangın',
         'Eğitimler',

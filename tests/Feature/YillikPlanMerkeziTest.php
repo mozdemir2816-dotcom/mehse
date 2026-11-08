@@ -47,7 +47,8 @@ class YillikPlanMerkeziTest extends TestCase
     public function test_menude_tek_giris_ve_uc_ana_sekme(): void
     {
         // 31.10.2026: kullanıcı isteğiyle Eğitim merkezinden çıkarıldı; her yıl yenilendiği için grupsuz ayrı giriş, Eğitim'in altında.
-        $grupsuz = collect(Filament::getNavigation())->first(fn ($g) => blank($g->getLabel()))
+        // 08.11.2026 sade menü: "Merkezler" grubunda, yine Eğitim'in hemen altında.
+        $grupsuz = collect(Filament::getNavigation())->first(fn ($g) => $g->getLabel() === 'Merkezler')
             ->getItems()->map(fn ($i) => $i->getLabel())->values()->all();
         $i = array_search('Yıllık Planlar & Değerlendirme', $grupsuz, true);
         $this->assertNotFalse($i, implode(' | ', $grupsuz));

@@ -65,9 +65,9 @@ class DokumanYonetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-folder-open';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 40;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'dokuman-yonetimi';
 

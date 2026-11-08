@@ -46,9 +46,9 @@ class Profilim extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Genel';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 5;
 
     /**
      * Profilim, Kontrol Merkezi > "Portföy Genel Bakış" sekmesinin alt sayfasıdır (App\Support\SayfaAileleri, 'kontrol').

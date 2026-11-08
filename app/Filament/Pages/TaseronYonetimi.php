@@ -42,9 +42,9 @@ class TaseronYonetimi extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
 
     /** Sidebar ekrana sığsın diye Genel grubunda (31.10.2026 kullanıcı isteği). */
-    protected static string|UnitEnum|null $navigationGroup = 'Genel';
+    protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'taseron-yonetimi';
 

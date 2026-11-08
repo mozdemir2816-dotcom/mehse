@@ -25,9 +25,9 @@ class Araclar extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Planlama & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 41;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'araclar';
 

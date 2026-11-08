@@ -29,9 +29,9 @@ class FaturaProfil extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-receipt-percent';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Genel';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 90;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $navigationLabel = 'Fatura & Profil';
 

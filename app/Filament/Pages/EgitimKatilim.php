@@ -53,9 +53,9 @@ class EgitimKatilim extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static string|UnitEnum|null $navigationGroup = 'Merkezler';
 
-    protected static ?int $navigationSort = 13;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'egitim-katilim';
 
