@@ -7,6 +7,7 @@ use App\Models\TehlikeKategorisi;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
 /**
  * Sektörel bir Fine-Kinney risk analizi Excel'ini (ör. kullanıcının "İnşaat İSG
@@ -29,7 +30,7 @@ class FineKinneyKutuphaneIceAktarici
     private const METIN_ALANLARI = [
         'faaliyet' => ['altfaaliyet', 'altfaaliyetbolum', 'surec', 'imalat', 'proses', 'faaliyet'],
         'tehlike' => ['tehlikekaynagi', 'tehlikelidurum', 'tehliketanimi', 'hazard', 'tehlike'],
-        'risk' => ['olasirisk', 'riskevent', 'olasisonuc', 'riskvesonuc', 'sonucharm'],
+        'risk' => ['olasirisk', 'riskevent', 'olasisonuc', 'riskvesonuc', 'sonucharm', 'olasizarar', 'zararvesonuc'],
         'mevcut_onlem' => ['alinmasigereken', 'onleyiciveduzeltici', 'duzelticitedbir', 'alinacaktedbir', 'onlem', 'tedbir'],
         'mevzuat' => ['yasalmevzuat', 'yasaldayanak', 'mevzuat', 'yonetmelik', 'standartdayanak'],
     ];
@@ -38,6 +39,17 @@ class FineKinneyKutuphaneIceAktarici
         'olasilik' => ['olasilik', 'ihtimal'],
         'frekans' => ['frekans', 'maruziyet'],
         'siddet' => ['siddet'],
+    ];
+
+    /**
+     * Alt başlıkta tek harfle yazılmış puan sütunları (08.11.2026): "MEVCUT DURUM" altında
+     * İ / F / Ş (İhtimal–Frekans–Şiddet) ya da O / F / S, İngilizce P / E / S. İlk grup
+     * (mevcut durum) alınır; "HEDEF DURUM" altındaki aynı harfler zaten dolu olduğu için atlanır.
+     */
+    private const PUAN_HARFLERI = [
+        'i' => 'olasilik', 'o' => 'olasilik', 'p' => 'olasilik',
+        'f' => 'frekans', 'e' => 'frekans',
+        's' => 'siddet',
     ];
 
     private const BASLIK_TARAMA_LIMIT = 60;
@@ -153,7 +165,7 @@ class FineKinneyKutuphaneIceAktarici
         }
 
         // Kategori sütunu yoksa sayfa adını kategori kabul et.
-        $sayfaKategorisi = in_array('kategori', $sutunlar, true) ? null : trim((string) $sheet->getTitle());
+        $sayfaKategorisi = in_array('kategori', $sutunlar, true) ? null : static::sayfaKategorisi($sheet, $veriBaslangic);
 
         $satirlar = [];
         $bos = 0;
@@ -198,7 +210,7 @@ class FineKinneyKutuphaneIceAktarici
 
             $bos = 0;
 
-            if (blank($veri['tehlike'] ?? null)) {
+            if (blank($veri['tehlike'] ?? null) || static::lejantSatiriMi((string) $veri['tehlike'])) {
                 continue;
             }
 
@@ -257,14 +269,20 @@ class FineKinneyKutuphaneIceAktarici
         $uzunMetin = 0;
 
         for ($c = 1; $c <= $maxCol; $c++) {
-            $deger = $sheet->getCell([$c, $row])->getValue();
+            $deger = static::metin($sheet->getCell([$c, $row])->getValue());
 
-            if (! is_string($deger) || trim($deger) === '') {
+            if ($deger === '') {
                 continue;
             }
 
             if (mb_strlen($deger) > 55) {
                 $uzunMetin++;
+            }
+
+            if (static::puanHarfi($deger) !== null || str_contains(static::normalize($deger), 'duzey')) {
+                $isaret++;
+
+                continue;
             }
 
             if (preg_match('/(olasilik|olasılık|frekans|siddet|şiddet|puan|skor|seviye|derece|maruziyet|^[ofsr]\s*\d)/iu', $deger)) {
@@ -287,12 +305,25 @@ class FineKinneyKutuphaneIceAktarici
         $dolu = [];
 
         for ($c = 1; $c <= $maxCol; $c++) {
-            $ana = $sheet->getCell([$c, $anaSatir])->getValue();
-            $alt = $altSatir ? $sheet->getCell([$c, $altSatir])->getValue() : null;
+            $ana = static::metin($sheet->getCell([$c, $anaSatir])->getValue());
+            $alt = $altSatir ? static::metin($sheet->getCell([$c, $altSatir])->getValue()) : '';
 
-            $n = static::normalize(trim((string) $ana).' '.trim((string) $alt));
+            $n = static::normalize($ana.' '.$alt);
 
             if ($n === '') {
+                continue;
+            }
+
+            // Alt başlık tek harfse (İ / F / Ş) yalnız harfe bakılır: üstteki birleşik
+            // "MEVCUT DURUM (ÖNLEM ÖNCESİ)" yazısı "önlem" sütunu sanılmasın.
+            $harfAlani = static::puanHarfi($alt);
+
+            if ($harfAlani !== null) {
+                if (! isset($dolu[$harfAlani]) && static::sutunSayisalMi($sheet, $c, $veriBaslangic)) {
+                    $sutunlar[$c] = $harfAlani;
+                    $dolu[$harfAlani] = true;
+                }
+
                 continue;
             }
 
@@ -360,6 +391,80 @@ class FineKinneyKutuphaneIceAktarici
         }
 
         return $kontrol > 0;
+    }
+
+    /** Hücre değerini düz metne çevirir (biçimli "zengin metin" hücreleri dahil). */
+    private static function metin($deger): string
+    {
+        if ($deger instanceof RichText) {
+            $deger = $deger->getPlainText();
+        }
+
+        return is_scalar($deger) ? trim((string) $deger) : '';
+    }
+
+    /** "İ", "F", "Ş" gibi tek harflik puan başlığı ise alan adı, değilse null. */
+    private static function puanHarfi(string $deger): ?string
+    {
+        $n = static::normalize($deger);
+
+        return mb_strlen(trim($deger)) === 1 ? (self::PUAN_HARFLERI[$n] ?? null) : null;
+    }
+
+    /**
+     * Kategori sütunu yoksa: sayfa adı; sayfa adı genelse ("Risk Değerlendirmesi", "Sayfa1")
+     * tablonun üstündeki ilk başlık satırı (ör. "BİNA İÇİ MOBİL İSKELE … RİSK DEĞERLENDİRMESİ").
+     */
+    private static function sayfaKategorisi($sheet, int $veriBaslangic): string
+    {
+        $sayfaAdi = trim((string) $sheet->getTitle());
+
+        if (! preg_match('/^(sayfa|sheet)\s*\d*$|risk|degerlendirme|analiz/', static::normalizeBosluklu($sayfaAdi))) {
+            return $sayfaAdi;
+        }
+
+        $maxCol = min(Coordinate::columnIndexFromString($sheet->getHighestColumn()), 30);
+
+        for ($r = 1; $r < $veriBaslangic - 1; $r++) {
+            for ($c = 1; $c <= $maxCol; $c++) {
+                $baslik = static::metin($sheet->getCell([$c, $r])->getValue());
+
+                if (mb_strlen($baslik) >= 4) {
+                    $baslik = static::turkceBaslik($baslik);
+                    $baslik = preg_replace('/\s+(İsg\s+)?Risk\s+(Değerlendirmesi|Analizi)$/u', '', $baslik) ?: $baslik;
+
+                    return Str::limit($baslik, 150, '');
+                }
+            }
+        }
+
+        return $sayfaAdi;
+    }
+
+    /** Tablo altındaki ölçek / lejant satırı mı ("R > 400", "200 < R <= 400", "… SKALA LEJANTI")? */
+    private static function lejantSatiriMi(string $metin): bool
+    {
+        return (bool) preg_match('/(^|\s)R\s*[<>≤≥]|[<>≤≥]=?\s*R(\s|$)|lejant/iu', $metin);
+    }
+
+    /** Türkçe kurallarla "Baş Harfleri Büyük" (I/ı, İ/i doğru). */
+    private static function turkceBaslik(string $metin): string
+    {
+        $kucuk = mb_strtolower(strtr($metin, ['I' => 'ı', 'İ' => 'i']), 'UTF-8');
+
+        return preg_replace_callback('/(^|[\s(\/-])(\p{L})/u', function ($m) {
+            $harf = ['i' => 'İ', 'ı' => 'I'][$m[2]] ?? mb_strtoupper($m[2], 'UTF-8');
+
+            return $m[1].$harf;
+        }, $kucuk) ?? $metin;
+    }
+
+    private static function normalizeBosluklu(string $metin): string
+    {
+        return mb_strtolower(strtr($metin, [
+            'Ç' => 'c', 'ç' => 'c', 'Ğ' => 'g', 'ğ' => 'g', 'İ' => 'i', 'I' => 'i', 'ı' => 'i',
+            'Ö' => 'o', 'ö' => 'o', 'Ş' => 's', 'ş' => 's', 'Ü' => 'u', 'ü' => 'u',
+        ]));
     }
 
     private static function normalize(string $metin): string

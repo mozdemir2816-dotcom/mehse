@@ -159,4 +159,71 @@ class FineKinneyKutuphaneIceAktariciTest extends TestCase
             ->mountAction(TestAction::make('grupSil')->table())
             ->assertActionDataSet(["kategori" => $k->id]);
     }
+    /**
+     * 08.11.2026: dışarıda hazırlanmış "MEVCUT DURUM / HEDEF DURUM" düzeni — başlık iki satır,
+     * puan sütunları tek harf (İ / F / Ş), hücreler biçimli (zengin) metin, altta skala lejantı,
+     * kategori sütunu yok ve sayfa adı genel ("Risk Değerlendirmesi").
+     */
+    private function mevcutHedefDuzeniExcel(): string
+    {
+        $zengin = function (string $metin) {
+            $rt = new \PhpOffice\PhpSpreadsheet\RichText\RichText;
+            $rt->createTextRun($metin)->getFont()->setBold(true);
+
+            return $rt;
+        };
+
+        $kitap = new Spreadsheet;
+        $s = $kitap->getActiveSheet()->setTitle('Risk Değerlendirmesi');
+        $s->setCellValue('A1', $zengin('BİNA İÇİ MOBİL İSKELE KAPSAMLI İSG RİSK DEĞERLENDİRMESİ'));
+        $s->setCellValue('A2', $zengin('FİNE-KİNNEY METODU İLE İSG RİSK ANALİZİ (2 MADDE)'));
+        foreach (['A4' => 'No', 'B4' => 'Tehlike & Risk Konusu', 'C4' => 'Tehlikeli Durum / Olası Zarar ve Sonuç',
+            'D4' => 'MEVCUT DURUM (ÖNLEM ÖNCESİ)', 'I4' => 'Alınacak Kontrol Önlemleri (DÖF)', 'J4' => 'HEDEF DURUM (ÖNLEM SONRASI)',
+            'O4' => 'Sorumlu', 'P4' => 'Termin', 'Q4' => 'Yasal Dayanak & Standart Açıklaması',
+            'D5' => 'İ', 'E5' => 'F', 'F5' => 'Ş', 'G5' => 'Skor (R)', 'H5' => 'Risk Düzeyi',
+            'J5' => 'İ', 'K5' => 'F', 'L5' => 'Ş', 'M5' => 'Skor (R)', 'N5' => 'Risk Düzeyi'] as $hucre => $metin) {
+            $s->setCellValue($hucre, $zengin($metin));
+        }
+        $s->mergeCells('D4:H4');
+        $s->mergeCells('J4:N4');
+        $s->fromArray([
+            [1, 'Tekerlek frenlerinin açık unutulması', 'İskelenin kayması, düşme', 6, 6, 40, '=D6*E6*F6', 'Tolerans gösterilemez', 'Tekerlekler kilitlenmeli', 0.2, 6, 15, '=J6*K6*L6', 'Önemsiz', 'Formen', 'Her çalışma', 'TS EN 1004-1 Md. 7.2'],
+            [2, 'Korkuluk eksikliği', 'Platformdan düşme', 3, 6, 40, '=D7*E7*F7', 'Esaslı', 'Korkuluk takılmalı', 0.2, 6, 15, '=J7*K7*L7', 'Önemsiz', 'Kurucu', 'Kurulumda', 'Yapı İşleri İSG Yön. Ek-IV'],
+        ], null, 'A6');
+        $s->setCellValue('B10', 'FİNE - KİNNEY RİSK DEĞERLENDİRME SKALA LEJANTI');
+        $s->setCellValue('B11', 'R > 400');
+        $s->setCellValue('C11', 'Tolerans Gösterilemez Risk');
+        $s->setCellValue('B12', '200 < R <= 400');
+
+        $yol = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'-mobil-iskele.xlsx';
+        (new Xlsx($kitap))->save($yol);
+
+        return $yol;
+    }
+
+    public function test_tek_harfli_mevcut_hedef_duzeni_okunur_lejant_atlanir(): void
+    {
+        $sonuc = FineKinneyKutuphaneIceAktarici::iceAktar($this->mevcutHedefDuzeniExcel());
+
+        $this->assertSame(2, $sonuc['basarili']);
+        $this->assertSame(2, Tehlike::count());
+
+        $t = Tehlike::where('tehlike', 'Tekerlek frenlerinin açık unutulması')->firstOrFail();
+        $this->assertEquals([6, 6, 40], [(float) $t->olasilik, (float) $t->frekans, (float) $t->siddet]); // mevcut durum, hedef değil
+        $this->assertSame('İskelenin kayması, düşme', $t->risk);
+        $this->assertSame('Tekerlekler kilitlenmeli', $t->mevcut_onlem);
+        $this->assertSame('TS EN 1004-1 Md. 7.2', $t->mevzuat);
+        $this->assertSame('Bina İçi Mobil İskele Kapsamlı', $t->kategori->ad);
+    }
+
+    public function test_toplu_yukle_fine_kinney_dosyasini_otomatik_tanir(): void
+    {
+        $dosya = UploadedFile::fake()->createWithContent('mobil-iskele.xlsx', file_get_contents($this->mevcutHedefDuzeniExcel()));
+
+        Livewire::test(ListTehlikes::class)
+            ->callAction('excelYukle', ['dosya' => $dosya])
+            ->assertNotified();
+
+        $this->assertSame(2, Tehlike::whereNotNull('olasilik')->count());
+    }
 }

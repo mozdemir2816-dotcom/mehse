@@ -58,6 +58,26 @@ class ListTehlikes extends ListRecords
                         return;
                     }
 
+                    // Şablon sütunları (Kategori + Tehlike) yoksa dosya büyük olasılıkla hazır bir
+                    // Fine-Kinney risk analizidir (İ/F/Ş sütunlu): onu Fine-Kinney aktarıcısıyla dene.
+                    if ($sonuc['basarili'] === 0 && $sonuc['cakisma'] === 0) {
+                        try {
+                            $fk = FineKinneyKutuphaneIceAktarici::iceAktar($yol);
+                        } catch (Throwable $e) {
+                            $fk = ['basarili' => 0];
+                        }
+
+                        if ($fk['basarili'] > 0) {
+                            Storage::disk('local')->delete($data['dosya']);
+                            Notification::make()
+                                ->title($fk['basarili'].' tehlike Fine-Kinney risk analizi olarak kütüphaneye eklendi/güncellendi'
+                                    .($fk['yeniKategori'] > 0 ? ' ('.$fk['yeniKategori'].' yeni kategori)' : ''))
+                                ->success()->send();
+
+                            return;
+                        }
+                    }
+
                     Storage::disk('local')->delete($data['dosya']);
 
                     $baslik = $sonuc['basarili'].' tehlike eklendi/güncellendi';
