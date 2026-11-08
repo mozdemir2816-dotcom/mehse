@@ -97,7 +97,7 @@
                             {{ $secilenAdayIndex === $i ? '✓' : '○' }}
                         </button>
                         <button type="button" wire:click="adaySil({{ $i }})" title="Sil"
-                            style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+                            style="background:none;border:none;cursor:pointer;color:#dc2626">✕</button>
                     </div>
                 @empty
                     <p style="font-size:.82rem;color:rgb(107 114 128)">Henüz aday eklenmedi.</p>
@@ -134,7 +134,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 
     <div style="{{ $kutu }};background:rgb(59 130 246 / .06);border-color:rgb(59 130 246 / .25)">

@@ -8,7 +8,7 @@
 @endphp
 @if ($eksikFirmalar->isNotEmpty())
     <details style="border:1px solid rgb(217 119 6 / .35);background:rgb(217 119 6 / .06);border-radius:.75rem;padding:.75rem 1rem;margin-bottom:1rem">
-        <summary style="cursor:pointer;font-weight:600;font-size:.85rem;color:rgb(217 119 6)">
+        <summary style="cursor:pointer;font-weight:600;font-size:.85rem;color:rgb(180 83 9)">
             ⚠ Eksik Olan Firmalar ({{ $eksikFirmalar->count() }})
         </summary>
         <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem">

@@ -182,7 +182,7 @@
             Kaynak: MYK (Mesleki Yeterlilik Kurumu) resmi portalı, "Belge Zorunluluğu Kapsamındaki Meslekler"
             sorgu sayfası — 05.09.2026 anlık görüntüsü, {{ \App\Models\MykMeslek::count() }} yeterlilik kodu.
             MYK bu listeyi periyodik olarak yeni meslek eklemeleriyle günceller; kesinleştirme için
-            <a href="https://portal.myk.gov.tr/index.php?belge_zorunlu=1&option=com_yeterlilik&view=arama" target="_blank" style="color:rgb(217 119 6)">resmi MYK kaynağını</a>
+            <a href="https://portal.myk.gov.tr/index.php?belge_zorunlu=1&option=com_yeterlilik&view=arama" target="_blank" style="color:rgb(180 83 9)">resmi MYK kaynağını</a>
             kontrol edin.
         </p>
     </x-filament::section>

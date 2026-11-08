@@ -18,7 +18,7 @@
         <x-slot name="heading">1. Firma</x-slot>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -98,7 +98,7 @@
                         <input type="file" wire:model="yeniFoto" accept="image/*" style="font-size:.8rem">
                         @if ($yeniFoto)
                             <img src="{{ $yeniFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.35rem;border:1px solid rgb(107 114 128 / .3)">
-                            <button type="button" wire:click="$set('yeniFoto', null)" style="color:#ef4444;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
+                            <button type="button" wire:click="$set('yeniFoto', null)" style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
                         @endif
                     </div>
                     <p style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.5rem">
@@ -159,7 +159,7 @@
                                         @php $oneriBos = blank(trim((string) ($m['oneri'] ?? ''))); @endphp
                                         <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb;{{ $oneriBos ? 'color:#6b7280;font-style:italic' : '' }}" @if ($oneriBos) title="Öneri boş — PDF'e bu varsayılan metin basılır" @endif>{{ $oneriBos ? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI : $m['oneri'] }}</td>
                                         <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb">
-                                            <button type="button" wire:click="maddeSil({{ $i }})" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#ef4444;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
+                                            <button type="button" wire:click="maddeSil({{ $i }})" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#dc2626;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -177,6 +177,6 @@
             </div>
         </div>
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

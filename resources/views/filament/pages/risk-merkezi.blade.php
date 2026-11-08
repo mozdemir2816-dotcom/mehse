@@ -113,7 +113,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        @if ($o['puansiz'])<div style="font-size:.72rem;color:rgb(217 119 6);margin-top:.4rem">{{ $o['puansiz'] }} madde henüz puanlanmadı.</div>@endif
+                        @if ($o['puansiz'])<div style="font-size:.72rem;color:rgb(180 83 9);margin-top:.4rem">{{ $o['puansiz'] }} madde henüz puanlanmadı.</div>@endif
                     </x-filament::section>
                 </div>
 
@@ -201,7 +201,7 @@
                     <div style="font-size:.8rem;font-weight:700;margin-bottom:.3rem">Özel risk senaryoları</div>
                     <div style="display:flex;flex-wrap:wrap;gap:.35rem">@foreach ($ng['senaryolar'] as $b)<span style="font-size:.75rem;padding:.25rem .55rem;border-radius:9999px;border:1px solid rgb(217 119 6 / .45);background:rgb(217 119 6 / .07)">{{ $b }}</span>@endforeach</div>
                 @else
-                    <div style="font-size:.82rem;color:rgb(217 119 6)">Firma kartında NACE kodu yok ya da tanımlı bir sektör grubuyla eşleşmedi. Firma kaydına NACE kodunu girin.</div>
+                    <div style="font-size:.82rem;color:rgb(180 83 9)">Firma kartında NACE kodu yok ya da tanımlı bir sektör grubuyla eşleşmedi. Firma kaydına NACE kodunu girin.</div>
                 @endif
             </x-filament::section>
 
@@ -214,7 +214,7 @@
                         <div style="flex:1;font-size:.8rem">
                             <strong>{{ $i + 1 }}. {{ $k['baslik'] }}</strong>
                             <div style="font-size:.74rem;color:rgb(107 114 128)">{{ $k['aciklama'] }} <em>({{ $k['dayanak'] }})</em></div>
-                            <div style="font-size:.74rem;margin-top:.1rem">{{ $k['sonuc'] }}@if ($k['url']) · <a href="{{ $k['url'] }}" style="color:rgb(13 148 136)">Modüle git →</a>@endif</div>
+                            <div style="font-size:.74rem;margin-top:.1rem">{{ $k['sonuc'] }}@if ($k['url']) · <a href="{{ $k['url'] }}" style="color:rgb(15 118 110)">Modüle git →</a>@endif</div>
                         </div>
                     </div>
                 @endforeach

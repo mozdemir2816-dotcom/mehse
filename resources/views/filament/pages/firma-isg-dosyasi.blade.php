@@ -3,7 +3,7 @@
 @endphp
 <x-filament-panels::page>
     @if (! $this->firma)
-        <p style="color:#f59e0b;font-size:.9rem">Firma seçilmedi. Firmalar listesinden bir firma açıp "İSG Dosyası &amp; Evrak Takip" düğmesini kullanın.</p>
+        <p style="color:#b45309;font-size:.9rem">Firma seçilmedi. Firmalar listesinden bir firma açıp "İSG Dosyası &amp; Evrak Takip" düğmesini kullanın.</p>
     @else
         <p style="font-size:.9rem;color:rgb(107 114 128);margin-top:-.5rem">
             <strong>{{ $this->firma->unvan }}</strong> · {{ $this->firma->tehlikeSinifiEtiketi() }} — tüm modüllerden güncel evrak özeti.

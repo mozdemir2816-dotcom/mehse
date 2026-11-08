@@ -78,7 +78,7 @@
                             <span style="font-size:.7rem;color:rgb(107 114 128)">dk</span>
                             @if ($konularDuzenlenebilir)
                                 <button type="button" wire:click="isyerineOzguMaddeCikar({{ $i }})"
-                                    style="color:#ef4444;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
+                                    style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
                             @endif
                         </div>
                     @endforeach
@@ -90,7 +90,7 @@
                     </button>
                 @endif
             @else
-                <p style="font-size:.78rem;color:#f59e0b;margin:0">Sektör seçilmedi.</p>
+                <p style="font-size:.78rem;color:#b45309;margin:0">Sektör seçilmedi.</p>
             @endif
         </div>
     </div>
@@ -118,7 +118,7 @@
                     <span style="font-size:.7rem;color:rgb(107 114 128)">dk</span>
                     @if ($ozelEklenebilir && ! empty($m['ek']))
                         <button type="button" wire:click="ozelMaddeCikar({{ $i }})" title="Konuyu sil"
-                            style="color:#ef4444;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
+                            style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
                     @endif
                 </div>
             @endforeach

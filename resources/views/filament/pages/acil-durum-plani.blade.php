@@ -92,7 +92,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                     <select wire:model.live="firmaId" style="margin-top:.3rem;{{ $alan }};padding:.55rem .75rem">
                         <option value="">— Firma seçin —</option>
                         @foreach ($this->firmalar as $id => $ad)
@@ -101,7 +101,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Rapor Tarihi <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.82rem">Rapor Tarihi <span style="color:#dc2626">*</span></label>
                     <input type="date" wire:model="raporTarihi" style="margin-top:.3rem;{{ $alan }}">
                 </div>
                 <div>
@@ -140,7 +140,7 @@
                     </select>
                 </div>
             @else
-                <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+                <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
             @endif
         </x-filament::section>
 
@@ -320,7 +320,7 @@
                     </div>
                 @endforeach
             </div>
-            <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="display:inline-block;margin-top:.5rem;color:rgb(13 148 136);font-weight:600;font-size:.78rem">Acil Durum Ekipleri sayfasına git →</a>
+            <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="display:inline-block;margin-top:.5rem;color:rgb(15 118 110);font-weight:600;font-size:.78rem">Acil Durum Ekipleri sayfasına git →</a>
         </x-filament::section>
     @endif
 
@@ -407,7 +407,7 @@
                         </button>
                         <div x-show="acik" x-cloak style="padding:0 .75rem .7rem">
                             <textarea wire:model="uygulama.{{ $metinAlani }}" rows="{{ $satir }}" style="{{ $alan }}"></textarea>
-                            <button type="button" wire:click="ornekMetin('{{ $metinAlani }}')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="margin-top:.25rem;font-size:.7rem;color:rgb(217 119 6);text-decoration:underline;background:none;border:none;cursor:pointer">Örnek metni geri getir</button>
+                            <button type="button" wire:click="ornekMetin('{{ $metinAlani }}')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="margin-top:.25rem;font-size:.7rem;color:rgb(180 83 9);text-decoration:underline;background:none;border:none;cursor:pointer">Örnek metni geri getir</button>
                         </div>
                     </div>
                 @endforeach

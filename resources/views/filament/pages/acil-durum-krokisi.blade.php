@@ -76,7 +76,7 @@
                 x-on:message.window="mesaj($event)">
                 <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.3rem">
                     Çizimi bitirince editördeki <strong>Mevzuat &amp; Çıktı → Krokiyi Kaydet</strong> (veya <strong>PDF İndir</strong>) düğmesine basın.
-                    <span x-show="degisti && !kaydediliyor" style="color:#d97706;font-weight:600">· Kaydedilmemiş değişiklik var</span>
+                    <span x-show="degisti && !kaydediliyor" style="color:#b45309;font-weight:600">· Kaydedilmemiş değişiklik var</span>
                     <span x-show="kaydediliyor" style="color:#2563eb;font-weight:600">· Kaydediliyor…</span>
                 </div>
                 <iframe x-ref="cerceve" title="3B Acil Durum Kroki Editörü" srcdoc="{{ $this->editor3bHtml }}"

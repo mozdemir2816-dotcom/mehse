@@ -20,7 +20,7 @@
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam DÖF</div>
             </div>
             <div style="{{ $kutu }};text-align:center;border-color:rgb(217 119 6 / .4)">
-                <div style="font-size:1.5rem;font-weight:800;color:rgb(217 119 6)">{{ $ozet['acik_madde'] }}</div>
+                <div style="font-size:1.5rem;font-weight:800;color:rgb(180 83 9)">{{ $ozet['acik_madde'] }}</div>
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Açık Madde</div>
             </div>
             <div style="{{ $kutu }};text-align:center;border-color:rgb(16 185 129 / .4)">
@@ -89,7 +89,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -164,7 +164,7 @@
             <div x-show="acik" x-cloak style="margin-top:.7rem">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
                 <div style="grid-column:1/-1">
-                    <label style="font-weight:600;font-size:.8rem">Tespit <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.8rem">Tespit <span style="color:#dc2626">*</span></label>
                     <textarea wire:model="yeniTespit" rows="2" placeholder="Sahada tespit edilen uygunsuzluğu yazın"
                         style="margin-top:.2rem;width:100%;padding:.5rem .65rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem"></textarea>
                 </div>
@@ -229,7 +229,7 @@
                                     @if (! empty($m['foto_yolu']))
                                         <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}"
                                             style="width:40px;height:40px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
-                                        <button type="button" wire:click="maddeFotoKaldir({{ $i }})" style="font-size:.7rem;color:#ef4444;background:none;border:none;cursor:pointer">Fotoğrafı kaldır</button>
+                                        <button type="button" wire:click="maddeFotoKaldir({{ $i }})" style="font-size:.7rem;color:#dc2626;background:none;border:none;cursor:pointer">Fotoğrafı kaldır</button>
                                     @endif
                                     <label style="font-size:.7rem;color:rgb(14 165 233);cursor:pointer">
                                         <input type="file" accept="image/*" wire:model="maddeFotolari.{{ $i }}" style="display:none">
@@ -237,7 +237,7 @@
                                     </label>
                                     <span wire:loading wire:target="maddeFotolari.{{ $i }}" style="font-size:.7rem">yükleniyor…</span>
                                 </div>
-                                @error('maddeFotolari.'.$i) <div style="font-size:.7rem;color:#ef4444">{{ $message }}</div> @enderror
+                                @error('maddeFotolari.'.$i) <div style="font-size:.7rem;color:#dc2626">{{ $message }}</div> @enderror
                             </td>
                             <td style="padding:.3rem .5rem">{{ $this->oncelikler[$m['oncelik']] ?? $m['oncelik'] }}</td>
                             <td style="padding:.3rem .5rem;max-width:16rem;white-space:pre-line">{{ $m['oneri'] ?: '—' }}</td>
@@ -252,7 +252,7 @@
                                 </select>
                             </td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -291,6 +291,6 @@
 
         @include('filament.components.hazir-raporlar')
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

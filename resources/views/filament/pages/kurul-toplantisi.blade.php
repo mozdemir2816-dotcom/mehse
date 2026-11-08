@@ -74,7 +74,7 @@
 
                 <div class="grid gap-3 md:grid-cols-2">
                     <div style="border:1px solid {{ $ae['atama']['guncel'] ? 'var(--success-border)' : 'rgb(217 119 6 / .5)' }};border-radius:12px;padding:.8rem 1rem">
-                        <div class="text-sm font-bold">Atama yazısı {!! $ae['atama']['guncel'] ? '<span style="color:rgb(21 128 61)">✓ güncel</span>' : '<span style="color:rgb(217 119 6)">⚠ güncel değil</span>' !!}</div>
+                        <div class="text-sm font-bold">Atama yazısı {!! $ae['atama']['guncel'] ? '<span style="color:rgb(21 128 61)">✓ güncel</span>' : '<span style="color:rgb(180 83 9)">⚠ güncel değil</span>' !!}</div>
                         <div class="mt-1 text-xs" style="color:var(--text-secondary)">
                             @if (! $ae['atama']['var'])
                                 Bu işyeri için İSG Kurulu atama yazısı henüz hazırlanmadı.
@@ -93,7 +93,7 @@
                     </div>
 
                     <div style="border:1px solid {{ $ae['egitim']['eksik']->isEmpty() ? 'var(--success-border)' : 'rgb(217 119 6 / .5)' }};border-radius:12px;padding:.8rem 1rem">
-                        <div class="text-sm font-bold">İSG Kurulu eğitimi {!! $ae['egitim']['eksik']->isEmpty() ? '<span style="color:rgb(21 128 61)">✓ tüm üyeler almış</span>' : '<span style="color:rgb(217 119 6)">⚠ '.$ae['egitim']['eksik']->count().' üye bekliyor</span>' !!}</div>
+                        <div class="text-sm font-bold">İSG Kurulu eğitimi {!! $ae['egitim']['eksik']->isEmpty() ? '<span style="color:rgb(21 128 61)">✓ tüm üyeler almış</span>' : '<span style="color:rgb(180 83 9)">⚠ '.$ae['egitim']['eksik']->count().' üye bekliyor</span>' !!}</div>
                         <div class="mt-1 text-xs" style="color:var(--text-secondary)">
                             @if ($ae['egitim']['eksik']->isEmpty())
                                 {{ $ae['egitim']['toplam'] }} üyenin tamamının İSG Kurulu eğitimi kaydı var.
@@ -118,7 +118,7 @@
 
         @if ($this->eksikZorunlular)
             <div style="border:1px solid rgb(217 119 6 / .35);background:rgb(217 119 6 / .07);border-radius:12px;padding:.8rem 1rem" class="flex flex-wrap items-center gap-3">
-                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-5 w-5" style="color:rgb(217 119 6)" />
+                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-5 w-5" style="color:rgb(180 83 9)" />
                 <div class="flex-1 text-sm" style="min-width:14rem">
                     <strong style="color:rgb(180 83 9)">Resmî durum engeli.</strong>
                     Eksik zorunlu üyeler: {{ implode(' · ', $this->eksikZorunlular) }}.
@@ -237,7 +237,7 @@
             @endif
         </x-filament::section>
     @else
-        <p class="text-sm" style="color:rgb(217 119 6)">Devam etmek için bir işyeri seçin.</p>
+        <p class="text-sm" style="color:rgb(180 83 9)">Devam etmek için bir işyeri seçin.</p>
     @endif
 
     @if ($t)

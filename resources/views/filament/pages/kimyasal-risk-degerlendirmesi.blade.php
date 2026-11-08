@@ -69,7 +69,7 @@
                             <div style="display:flex;align-items:center;gap:.6rem">
                                 <span style="font-size:.72rem;color:rgb(107 114 128)">Kontrol Yaklaşımı</span>
                                 <span style="background:{{ $yaklasimRenk[$y] }};color:#fff;font-weight:700;border-radius:.35rem;padding:.15rem .55rem;font-size:.9rem">{{ $y }}</span>
-                                <button type="button" wire:click="satirSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                <button type="button" wire:click="satirSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                             </div>
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem">

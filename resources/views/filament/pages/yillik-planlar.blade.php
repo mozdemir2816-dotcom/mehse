@@ -66,7 +66,7 @@
         <x-slot name="heading">Firma & Yıl</x-slot>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -182,7 +182,7 @@
                                 @endphp
                                 <td style="{{ $td }};text-align:center;font-size:.66rem;font-weight:700;color:{{ $durumRenk }}">{{ $genelDurum }}</td>
                                 <td style="{{ $td }};text-align:center">
-                                    <button type="button" wire:click="faaliyetSil({{ $fi }})" wire:confirm="Bu faaliyet plandan silinsin mi?" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="faaliyetSil({{ $fi }})" wire:confirm="Bu faaliyet plandan silinsin mi?" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -252,8 +252,8 @@
                                     </td>
                                 @endforeach
                                 <td style="padding:.3rem .3rem;white-space:nowrap">
-                                    @if (($e['kategori'] ?? null) === 'ise_ozgu' && blank($e['kutuphane_anahtari'] ?? null))<button type="button" wire:click="mountAction('kutuphaneyeKaydet', { index: {{ $ei }} })" title="Kütüphaneye kaydet" style="color:#f59e0b;cursor:pointer;background:none;border:none">★</button>@endif
-                                    <button type="button" wire:click="egitimSil({{ $ei }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                    @if (($e['kategori'] ?? null) === 'ise_ozgu' && blank($e['kutuphane_anahtari'] ?? null))<button type="button" wire:click="mountAction('kutuphaneyeKaydet', { index: {{ $ei }} })" title="Kütüphaneye kaydet" style="color:#b45309;cursor:pointer;background:none;border:none">★</button>@endif
+                                    <button type="button" wire:click="egitimSil({{ $ei }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -322,16 +322,16 @@
                                 <td style="padding:.3rem .5rem">{{ $no }}</td>
                                 <td style="padding:.15rem"><input type="text" value="{{ $d['tarih'] ?? '' }}" placeholder="… / … / …" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'tarih', $event.target.value)" style="{{ $ydGirdi }}"></td>
                                 <td style="padding:.3rem .5rem;font-weight:600">{{ $d['calisma'] }}
-                                    @if ($d['otomatik'] ?? false)<div style="font-size:.66rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@elseif ($d['elle'] ?? false)<div style="font-size:.66rem;color:rgb(217 119 6);font-weight:500">✎ elle</div>@else<div style="font-size:.66rem;color:rgb(107 114 128);font-weight:500">kayıt yok — şablon</div>@endif
+                                    @if ($d['otomatik'] ?? false)<div style="font-size:.66rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@elseif ($d['elle'] ?? false)<div style="font-size:.66rem;color:rgb(180 83 9);font-weight:500">✎ elle</div>@else<div style="font-size:.66rem;color:rgb(107 114 128);font-weight:500">kayıt yok — şablon</div>@endif
                                 </td>
                                 <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yapan_kisi', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['yapan_kisi'] ?? '' }}</textarea></td>
                                 <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yontem', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['yontem'] ?? '' }}</textarea></td>
                                 <td style="padding:.15rem"><textarea rows="3" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'sonuc', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['sonuc'] ?? '' }}</textarea></td>
                                 <td style="padding:.3rem .2rem;white-space:nowrap">
                                     @if (($d['elle'] ?? false) && ! str_starts_with((string) ($d['anahtar'] ?? ''), 'ek_'))
-                                        <button type="button" wire:click="degerlendirmeOtomatigeDondur({{ $di }})" title="Sistem kaydına dön" style="color:rgb(13 148 136);cursor:pointer;background:none;border:none">↺</button>
+                                        <button type="button" wire:click="degerlendirmeOtomatigeDondur({{ $di }})" title="Sistem kaydına dön" style="color:rgb(15 118 110);cursor:pointer;background:none;border:none">↺</button>
                                     @endif
-                                    <button type="button" wire:click="degerlendirmeSil({{ $di }})" wire:confirm="Satır silinsin mi?" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="degerlendirmeSil({{ $di }})" wire:confirm="Satır silinsin mi?" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -363,6 +363,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

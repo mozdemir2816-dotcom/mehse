@@ -48,7 +48,7 @@
         </div>
 
         <div style="border:1px solid rgb(217 119 6);background:rgb(217 119 6 / .07);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
-            <strong style="color:rgb(217 119 6)">Bilgi</strong> — NACE'ye göre listelenen tehlike kaynakları başlangıç kapsamıdır; otomatik risk üretmez. Her kaynak sahada doğrulanmalı ve risk değerlendirmesine işlenmelidir. Dominans skoru = <strong>risk puanı × maruz kalan kişi sayısı</strong>; kişi sayısı girilmeyen kayıtlar firmanın çalışan sayısı (<strong>{{ $a['maruz_varsayilan'] }}</strong> kişi) ile hesaplanır — yalnız istisnai maddeleri aşağıdan değiştirmeniz yeterli.
+            <strong style="color:rgb(180 83 9)">Bilgi</strong> — NACE'ye göre listelenen tehlike kaynakları başlangıç kapsamıdır; otomatik risk üretmez. Her kaynak sahada doğrulanmalı ve risk değerlendirmesine işlenmelidir. Dominans skoru = <strong>risk puanı × maruz kalan kişi sayısı</strong>; kişi sayısı girilmeyen kayıtlar firmanın çalışan sayısı (<strong>{{ $a['maruz_varsayilan'] }}</strong> kişi) ile hesaplanır — yalnız istisnai maddeleri aşağıdan değiştirmeniz yeterli.
         </div>
 
         @php $baskin = $a['baskin'] ? $a['dagilim'][$a['baskin']] : null; @endphp

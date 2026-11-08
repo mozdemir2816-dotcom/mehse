@@ -20,7 +20,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -43,7 +43,7 @@
 
         @if ($this->firma)
             @if (! $this->firma->isyeriHekimi)
-                <p style="margin-top:.75rem;font-size:.78rem;color:#d97706">
+                <p style="margin-top:.75rem;font-size:.78rem;color:#b45309">
                     Bu firmaya atanmış bir işyeri hekimi yok — meslek hastalığı tespiti genelde hekim
                     üzerinden yürüdüğü için "İSG Profesyonelleri" bölümünden atama yapmanız önerilir
                     (yine de sağlık kuruluşu veya sigortalının kendisi de bildirim kaynağı olabilir).
@@ -52,7 +52,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#dc2626">*</span></label>
                     <input type="text" wire:model="calisanAdSoyad" style="{{ $girdi }}">
                 </div>
                 <div>
@@ -81,7 +81,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Öğrenme Tarihi <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.8rem">Öğrenme Tarihi <span style="color:#dc2626">*</span></label>
                     <input type="date" wire:model.live="ogrenmeTarihi" style="{{ $girdi }}">
                 </div>
             </div>
@@ -169,9 +169,9 @@
                             <td style="padding:.3rem .5rem">
                                 {{ $m->belge_no }} — {{ $m->calisan_ad_soyad }} ({{ $m->ogrenme_tarihi?->format('d.m.Y') }})
                                 @if ($m->suresiGectiMi())
-                                    <span style="color:#ef4444;font-weight:600">· süre geçti</span>
+                                    <span style="color:#dc2626;font-weight:600">· süre geçti</span>
                                 @elseif (! $m->sgk_bildirimi_yapildi)
-                                    <span style="color:#d97706;font-weight:600">· bildirim bekliyor</span>
+                                    <span style="color:#b45309;font-weight:600">· bildirim bekliyor</span>
                                 @endif
                             </td>
                             <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
@@ -184,6 +184,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

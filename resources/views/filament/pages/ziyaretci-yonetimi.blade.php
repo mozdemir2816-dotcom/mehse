@@ -140,7 +140,7 @@
                             <td style="{{ $td }};white-space:nowrap">{{ $z->giris_zamani?->format('d.m H:i') ?? '—' }} / {{ $z->cikis_zamani?->format('d.m H:i') ?? '—' }}</td>
                             <td style="{{ $td }}">
                                 <span style="font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $renk[$d] }}">{{ $z->durumEtiketi() }}</span>
-                                @if (! $z->isg_bilgilendirme)<div style="font-size:.68rem;color:#d97706">İSG bilgilendirmesi yok</div>@endif
+                                @if (! $z->isg_bilgilendirme)<div style="font-size:.68rem;color:#b45309">İSG bilgilendirmesi yok</div>@endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" icon="heroicon-o-qr-code" wire:click="kart({{ $z->id }})">Kart</x-filament::button>

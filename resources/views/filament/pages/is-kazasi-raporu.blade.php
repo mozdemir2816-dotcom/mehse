@@ -202,7 +202,7 @@
                         @foreach ($balikKilcigi[$anahtar] ?? [] as $i => $neden)
                             <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
                                 <input type="text" wire:model="balikKilcigi.{{ $anahtar }}.{{ $i }}" placeholder="Neden…" style="{{ $inp }};font-size:.78rem">
-                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer">✕</button>
+                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
                             </div>
                         @endforeach
                         <x-filament::button size="xs" color="gray" wire:click="balikNedenEkle('{{ $anahtar }}')" icon="heroicon-o-plus">Neden</x-filament::button>
@@ -226,7 +226,7 @@
                             </select>
                         </div>
                         <div><label style="{{ $lbl }}">Sorumlu</label><input type="text" wire:model.blur="dofMaddeleri.{{ $i }}.sorumlu" placeholder="Örn: Bakım Md." style="{{ $inp }}"></div>
-                        <button type="button" wire:click="dofSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem;padding-bottom:.4rem">✕</button>
+                        <button type="button" wire:click="dofSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem;padding-bottom:.4rem">✕</button>
                     </div>
                     <div style="margin-bottom:.5rem">
                         <label style="{{ $lbl }}">Açıklama <span style="color:{{ $kirmizi }}">*</span></label>
@@ -258,7 +258,7 @@
                     <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
                         @foreach ($yeniFotograflar as $i => $f)
                             <span style="font-size:.72rem;background:rgb(107 114 128 / .1);padding:.15rem .5rem;border-radius:.3rem">
-                                {{ $f->getClientOriginalName() }} <button type="button" wire:click="fotoSil({{ $i }})" style="color:#ef4444;border:none;background:none;cursor:pointer">✕</button>
+                                {{ $f->getClientOriginalName() }} <button type="button" wire:click="fotoSil({{ $i }})" style="color:#dc2626;border:none;background:none;cursor:pointer">✕</button>
                             </span>
                         @endforeach
                     </div>
@@ -277,7 +277,7 @@
                 </div>
                 @foreach ($taniklar as $i => $t)
                     <div style="font-size:.8rem">• {{ $t['ad_soyad'] }} @if ($t['gorev']) ({{ $t['gorev'] }}) @endif
-                        <button type="button" wire:click="tanikSil({{ $i }})" style="color:#ef4444;border:none;background:none;cursor:pointer">✕</button>
+                        <button type="button" wire:click="tanikSil({{ $i }})" style="color:#dc2626;border:none;background:none;cursor:pointer">✕</button>
                     </div>
                 @endforeach
             </div>

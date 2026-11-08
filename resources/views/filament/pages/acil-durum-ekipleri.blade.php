@@ -38,7 +38,7 @@
         @if ($firma)
             <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.4rem">
                 <strong>SGK Sicil:</strong> {{ $firma->sgk_sicil_no ?: '—' }} · <strong>Tehlike Sınıfı:</strong> {{ $firma->tehlikeSinifiEtiketi() }} · <strong>Personel:</strong> {{ $o['calisan'] ?: '—' }} · <strong>İSG Uzmanı:</strong> {{ $firma->igu?->ad_soyad ?: '—' }}
-                · <a href="{{ \App\Filament\Pages\AcilDurumPlani::getUrl(['firma' => $firma->id]) }}" style="color:rgb(13 148 136);font-weight:600">Acil Durum Planı</a>
+                · <a href="{{ \App\Filament\Pages\AcilDurumPlani::getUrl(['firma' => $firma->id]) }}" style="color:rgb(15 118 110);font-weight:600">Acil Durum Planı</a>
             </div>
         @endif
     </div>
@@ -156,7 +156,7 @@
                                     @php $yedek = $u->uyelik === 'yedek'; @endphp
                                     <div wire:key="kart-uye-{{ $u->id }}" style="display:flex;align-items:center;gap:.3rem;padding:.1rem 0">
                                         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@if ($u->lider)<span title="Ekip lideri">👑</span> @endif{{ $u->ad_soyad }}</span>
-                                        <span style="flex:none;font-size:.62rem;font-weight:700;padding:0 .35rem;border-radius:9999px;{{ $yedek ? 'color:rgb(107 114 128);background:rgb(107 114 128 / .12)' : 'color:rgb(13 148 136);background:rgb(13 148 136 / .12)' }}">{{ $yedek ? 'Yedek' : 'Asıl' }}</span>
+                                        <span style="flex:none;font-size:.62rem;font-weight:700;padding:0 .35rem;border-radius:9999px;{{ $yedek ? 'color:rgb(107 114 128);background:rgb(107 114 128 / .12)' : 'color:rgb(15 118 110);background:rgb(13 148 136 / .12)' }}">{{ $yedek ? 'Yedek' : 'Asıl' }}</span>
                                         @unless ($u->lider)
                                             <button type="button" wire:click="liderYap({{ $u->id }})" title="{{ $u->ad_soyad }} ekip lideri yapılsın" aria-label="{{ $u->ad_soyad }} lider yap"
                                                 style="flex:none;font-size:.62rem;padding:0 .3rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">👑 Lider Yap</button>
@@ -208,7 +208,7 @@
                             @forelse ($this->uyeler as $u)
                                 @php $bd = $u->belgeDurumu(); @endphp
                                 <tr wire:key="uye-{{ $u->id }}">
-                                    <td style="{{ $td }}"><strong>{{ $u->ad_soyad }}</strong>@if ($u->lider) <span style="color:rgb(13 148 136);font-size:.7rem">★ Lider</span>@endif</td>
+                                    <td style="{{ $td }}"><strong>{{ $u->ad_soyad }}</strong>@if ($u->lider) <span style="color:rgb(15 118 110);font-size:.7rem">★ Lider</span>@endif</td>
                                     <td style="{{ $td }}">{{ $u->ekip?->ad }}</td>
                                     <td style="{{ $td }}">{{ $u->uyelikEtiketi() }}</td>
                                     <td style="{{ $td }}">{{ collect([$u->gorev, $u->bolum])->filter()->implode(' / ') ?: '—' }}</td>
@@ -222,7 +222,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" style="{{ $td }};color:rgb(107 114 128)">Bu filtreye uygun üye bulunamadı.@if ($arama || $ekipFiltre || $uyelikFiltre || $belgeFiltre || $vardiyaFiltre) <button type="button" wire:click="filtreTemizle" style="color:rgb(13 148 136);font-weight:600">Filtreleri temizle</button>@endif</td></tr>
+                                <tr><td colspan="8" style="{{ $td }};color:rgb(107 114 128)">Bu filtreye uygun üye bulunamadı.@if ($arama || $ekipFiltre || $uyelikFiltre || $belgeFiltre || $vardiyaFiltre) <button type="button" wire:click="filtreTemizle" style="color:rgb(15 118 110);font-weight:600">Filtreleri temizle</button>@endif</td></tr>
                             @endforelse
                         </tbody>
                     </table>

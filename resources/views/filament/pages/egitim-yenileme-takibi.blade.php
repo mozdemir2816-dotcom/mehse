@@ -37,7 +37,7 @@
 
     @if ($sekme === 'yenileme')
         @if (! $this->firma)
-            <p style="font-size:.85rem;color:#f59e0b">Çalışanların eğitim durumunu görmek için bir işyeri seçin.</p>
+            <p style="font-size:.85rem;color:#b45309">Çalışanların eğitim durumunu görmek için bir işyeri seçin.</p>
         @else
             @php $o = $this->ozet; @endphp
             <div style="border:1px solid rgb(124 58 237 / .3);background:rgb(124 58 237 / .05);border-radius:.75rem;padding:.7rem 1rem;font-size:.82rem">
@@ -144,7 +144,7 @@
                                     @elseif ($k->sonuclandiMi())
                                         <span style="color:rgb(22 163 74);font-weight:600">Sonuçlandı</span> <span style="color:rgb(107 114 128)">({{ count($k->belgeAlacakKatilimcilar()) }}/{{ $k->katilimciSayisi() }} başarılı)</span>
                                     @else
-                                        <span style="color:rgb(217 119 6);font-weight:600">Sonuç bekliyor</span>
+                                        <span style="color:rgb(180 83 9);font-weight:600">Sonuç bekliyor</span>
                                     @endif
                                 </td>
                                 <td style="{{ $td }};text-align:right;white-space:nowrap">@if ($k->katilimciSayisi() > 0)<button type="button" wire:click="mountAction('sonucGir', { id: {{ $k->id }} })" style="color:rgb(22 163 74);font-size:.78rem;margin-right:.6rem">Katılım / Sonuç</button>@endif<a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $k->firma_id]) }}" style="color:rgb(124 58 237);font-size:.78rem">Belgeler →</a></td>

@@ -12,7 +12,7 @@
 
     {{-- FİRMA (paylaşılan) --}}
     <div style="{{ $kutu }}">
-        <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+        <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
         <select wire:model.live="firmaId"
             style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
             <option value="">— Firma seçin —</option>
@@ -64,7 +64,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Adı Soyadı <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.8rem">Adı Soyadı <span style="color:#dc2626">*</span></label>
                     <input type="text" wire:model="calisanAdSoyad"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                 </div>
@@ -146,7 +146,7 @@
                 @foreach ($taniklar as $i => $tk)
                     <div style="display:flex;justify-content:space-between;font-size:.8rem;padding:.2rem .4rem">
                         <span>{{ $tk['ad_soyad'] }} — {{ $tk['gorev'] ?: '—' }}</span>
-                        <button type="button" wire:click="tanikSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                        <button type="button" wire:click="tanikSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                     </div>
                 @endforeach
             </div>
@@ -192,7 +192,7 @@
                         <tr>
                             <td style="padding:.25rem .5rem">{{ $ih['madde'] }}</td>
                             <td style="padding:.25rem .5rem;text-align:right">
-                                <button type="button" wire:click="ihlalSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="ihlalSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -284,7 +284,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 
     @endif{{-- /aktifSekme tutanak --}}
@@ -397,7 +397,7 @@
                 </x-filament::section>
             @endif
         @else
-            <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+            <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
         @endif
     @endif
 </x-filament-panels::page>

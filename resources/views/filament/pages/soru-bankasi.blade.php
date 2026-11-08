@@ -65,7 +65,7 @@
                 <tbody>
                     @forelse ($nk['satirlar'] as $s)
                         <tr wire:key="nace-{{ $s['kod'] }}">
-                            <td style="{{ $td }}"><div style="font-weight:700;color:rgb(13 148 136)">{{ $s['kod'] }}</div><div>{{ $s['tanim'] }}</div><div style="font-size:.7rem;color:rgb(107 114 128)">{{ config('isg.tehlike_siniflari.'.$s['tehlike'], $s['tehlike']) }}</div></td>
+                            <td style="{{ $td }}"><div style="font-weight:700;color:rgb(15 118 110)">{{ $s['kod'] }}</div><div>{{ $s['tanim'] }}</div><div style="font-size:.7rem;color:rgb(107 114 128)">{{ config('isg.tehlike_siniflari.'.$s['tehlike'], $s['tehlike']) }}</div></td>
                             <td style="{{ $td }}">{{ min($s['ortak'], $hedef['temel']) }}/{{ $hedef['temel'] }}</td>
                             <td style="{{ $td }}">{{ $s['nace'] }}/{{ $hedef['ise_ozgu'] }}</td>
                             <td style="{{ $td }}">{{ $s['bekleyen'] }}</td>
@@ -197,13 +197,13 @@
                         @php $kaynaklar = $s->kaynakListesi(); $yayinlanabilir = \App\Filament\Pages\SoruBankasi::yayimlanabilirMi($s); @endphp
                         <div wire:key="soru-{{ $s->id }}" style="{{ $kart }}">
                             <div style="display:flex;justify-content:space-between;gap:.4rem;align-items:flex-start">
-                                <div style="font-size:.72rem;font-weight:800;color:rgb(13 148 136)">{{ $s->kodEtiketi() }}</div>
+                                <div style="font-size:.72rem;font-weight:800;color:rgb(15 118 110)">{{ $s->kodEtiketi() }}</div>
                                 <span style="font-size:.66rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;color:{{ $durumRenk[$s->durum] ?? '#6b7280' }};background:color-mix(in srgb, {{ $durumRenk[$s->durum] ?? '#6b7280' }} 14%, transparent)">● {{ $s->durumEtiketi() }}</span>
                             </div>
                             <div style="font-weight:700;font-size:.86rem;margin:.2rem 0">{{ $s->soru }}</div>
                             <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center;font-size:.68rem;color:rgb(107 114 128)">
                                 <span>{{ $s->konuEtiketi() }} · {{ $s->zorlukEtiketi() }}</span>
-                                @if ($s->naceKapsami())<span style="border:1px solid rgb(13 148 136 / .4);border-radius:.3rem;padding:0 .3rem;color:rgb(13 148 136)">NACE: {{ implode(', ', $s->naceKapsami()) }}</span>
+                                @if ($s->naceKapsami())<span style="border:1px solid rgb(13 148 136 / .4);border-radius:.3rem;padding:0 .3rem;color:rgb(15 118 110)">NACE: {{ implode(', ', $s->naceKapsami()) }}</span>
                                 @elseif ($s->sektor_anahtari)<span style="border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;padding:0 .3rem">Sektör: {{ $s->sektorEtiketi() }}</span>
                                 @else<span style="border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;padding:0 .3rem">Ortak: *</span>@endif
                                 @if ($s->uretim_kaynagi === 'ai')<span style="color:#8b5cf6">✨ AI</span>@endif
@@ -222,7 +222,7 @@
                                 <div style="font-size:.75rem"><strong>Gerekçe:</strong> {!! $s->aciklama ? e($s->aciklama) : '<span style="color:rgb(220 38 38)">girilmemiş</span>' !!}</div>
                                 <div style="font-size:.75rem;margin-top:.2rem"><strong>Kaynaklar:</strong>
                                     @forelse ($kaynaklar as $k)
-                                        <div style="margin-left:.6rem">• @if ($k['url'])<a href="{{ $k['url'] }}" target="_blank" rel="noopener" style="color:rgb(13 148 136);text-decoration:underline">{{ $k['ad'] }}</a>@else{{ $k['ad'] }}@endif{{ $k['madde'] ? ' — '.$k['madde'] : '' }}{{ $k['tarih'] ? ' ('.\Illuminate\Support\Carbon::parse($k['tarih'])->format('d.m.Y').')' : '' }}</div>
+                                        <div style="margin-left:.6rem">• @if ($k['url'])<a href="{{ $k['url'] }}" target="_blank" rel="noopener" style="color:rgb(15 118 110);text-decoration:underline">{{ $k['ad'] }}</a>@else{{ $k['ad'] }}@endif{{ $k['madde'] ? ' — '.$k['madde'] : '' }}{{ $k['tarih'] ? ' ('.\Illuminate\Support\Carbon::parse($k['tarih'])->format('d.m.Y').')' : '' }}</div>
                                     @empty
                                         <span style="color:rgb(220 38 38)">girilmemiş</span>
                                     @endforelse

@@ -22,7 +22,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -46,7 +46,7 @@
         @if ($this->firma)
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#dc2626">*</span></label>
                     <input type="text" wire:model="calisanAdSoyad" style="{{ $girdi }}">
                 </div>
                 <div>
@@ -300,6 +300,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

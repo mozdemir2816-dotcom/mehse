@@ -23,14 +23,14 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Paketi <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Eğitim Paketi <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="paketId" style="{{ $girdi }}">
                     <option value="">— Paket seçin —</option>
                     @foreach ($this->paketler as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach

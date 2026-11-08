@@ -16,7 +16,7 @@
         <x-slot name="heading">1. Firma</x-slot>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -58,7 +58,7 @@
                             <span style="display:flex;align-items:center;gap:.3rem;flex-shrink:0">
                                 <span style="font-size:.65rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px">Arşivim</span>
                                 <span role="button" wire:click.stop="kendiSablonSil({{ $s['anahtar'] }})" title="Şablonu sil"
-                                    style="color:#ef4444;cursor:pointer;font-size:.8rem">✕</span>
+                                    style="color:#dc2626;cursor:pointer;font-size:.8rem">✕</span>
                             </span>
                         @endif
                     </div>
@@ -149,7 +149,7 @@
                                 <span style="white-space:nowrap">
                                     <button type="button" wire:click="bolumTasi({{ $i }}, -1)" title="Yukarı" style="cursor:pointer;background:none;border:none">▲</button>
                                     <button type="button" wire:click="bolumTasi({{ $i }}, 1)" title="Aşağı" style="cursor:pointer;background:none;border:none">▼</button>
-                                    <button type="button" wire:click="bolumSil({{ $i }})" wire:confirm="Bu bölüm silinsin mi?" title="Bölümü sil" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="bolumSil({{ $i }})" wire:confirm="Bu bölüm silinsin mi?" title="Bölümü sil" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                                 </span>
                             </div>
                             <textarea wire:model="bolumler.{{ $i }}.aciklama" rows="2" placeholder="Açıklama paragrafı (isteğe bağlı — Amaç/Kapsam metni veya maddelerden önceki giriş cümlesi)" style="{{ $girdi }};margin-top:.4rem"></textarea>
@@ -164,7 +164,7 @@
                         @foreach ($maddeler as $i => $m)
                             <li style="display:flex;justify-content:space-between;gap:.5rem">
                                 <span style="white-space:pre-line">{{ $m }}</span>
-                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none;flex-shrink:0">✕</button>
+                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none;flex-shrink:0">✕</button>
                             </li>
                         @endforeach
                     </ol>
@@ -219,6 +219,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">PDF olarak kaydetmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">PDF olarak kaydetmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

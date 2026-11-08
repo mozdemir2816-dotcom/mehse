@@ -119,6 +119,8 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('images/marka/favicon-32.png'))
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Light)
+            // Karanlık mod kapalı (08.11.2026): sayfalardaki elle yazılmış renkler karanlık temaya uymuyordu.
+            ->darkMode(false)
             // 200px → 240px (2026-09-30): Türkçe menü adları ("Periyodik Kontrol &
             // Ölçüm", "İş Kazaları & Olaylar") 200px'te iki satıra kırılıyordu.
             ->sidebarWidth('240px')

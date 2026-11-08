@@ -89,7 +89,7 @@
                                         </td>
                                     @endforeach
                                     <td style="padding:.3rem;text-align:center">
-                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>
                             @endforeach

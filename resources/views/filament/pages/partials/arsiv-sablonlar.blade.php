@@ -19,7 +19,7 @@
                         @endif
                     </div>
                     <button type="button" wire:click="sablonIndir({{ $s->id }})" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:rgb(37 99 235)">İndir</button>
-                    <button type="button" wire:click="sablonSil({{ $s->id }})" wire:confirm="Şablon silinsin mi? (Ondan üretilmiş belgeler arşivde kalır.)" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:#ef4444">Sil</button>
+                    <button type="button" wire:click="sablonSil({{ $s->id }})" wire:confirm="Şablon silinsin mi? (Ondan üretilmiş belgeler arşivde kalır.)" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:#dc2626">Sil</button>
                 </div>
             @endforeach
         </div>

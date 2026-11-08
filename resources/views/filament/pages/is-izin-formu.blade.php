@@ -71,7 +71,7 @@
                     @if ($s['kaynak'] === 'ozel')
                         <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;border:1px solid rgb(107 114 128 / .3);border-radius:.4rem;padding:.15rem .5rem">
                             {{ $s['ad'] }}
-                            <button type="button" wire:click="sablonSil({{ $s['anahtar'] }})" style="color:#ef4444;background:none;border:none;cursor:pointer">✕</button>
+                            <button type="button" wire:click="sablonSil({{ $s['anahtar'] }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
                         </span>
                     @endif
                 @endforeach
@@ -85,7 +85,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="{{ $lbl }}">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="{{ $lbl }}">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $inp }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -246,7 +246,7 @@
                     @foreach ($uyarilar as $i => $u)
                         <div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;background:rgb(239 68 68 / .06);border:1px solid rgb(239 68 68 / .25);border-radius:.4rem;padding:.4rem .6rem">
                             <span style="flex:1">⚠ {{ $u }}</span>
-                            <button type="button" wire:click="uyariSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer">✕</button>
+                            <button type="button" wire:click="uyariSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
                         </div>
                     @endforeach
                 </div>
@@ -310,7 +310,7 @@
                                         {{ $f->durumEtiketi() }}
                                     </span>
                                     @if ($f->suresiGectiMi())
-                                        <br><span style="font-size:.7rem;color:#ef4444">süre doldu</span>
+                                        <br><span style="font-size:.7rem;color:#dc2626">süre doldu</span>
                                     @endif
                                 </td>
                                 <td style="padding:.4rem .5rem;font-size:.74rem">
@@ -320,7 +320,7 @@
                                         1: {{ $f->onay1Etiketi() }}{{ $f->onay1_tarih ? ' ('.$f->onay1_tarih->format('d.m H:i').')' : '' }}<br>
                                         2: {{ $f->onay2Etiketi() }}{{ $f->onay2_tarih ? ' ('.$f->onay2_tarih->format('d.m H:i').')' : '' }}
                                         @if ($f->red_gerekcesi)
-                                            <br><span style="color:#ef4444">Ret: {{ $f->red_gerekcesi }}</span>
+                                            <br><span style="color:#dc2626">Ret: {{ $f->red_gerekcesi }}</span>
                                         @endif
                                     @endif
                                     @if ($f->kontroller !== null)
@@ -330,9 +330,9 @@
                                         @endphp
                                         <br>
                                         @if ($uygunDegil)
-                                            <span style="color:#ef4444">✕ Uygun değil: {{ implode(', ', $uygunDegil) }}</span>
+                                            <span style="color:#dc2626">✕ Uygun değil: {{ implode(', ', $uygunDegil) }}</span>
                                         @elseif ($bekleyen)
-                                            <span style="color:#f59e0b">⏳ {{ count($bekleyen) }} kontrol bekliyor</span>
+                                            <span style="color:#b45309">⏳ {{ count($bekleyen) }} kontrol bekliyor</span>
                                         @else
                                             <span style="color:#10b981">✓ Kontroller tamam</span>
                                         @endif
@@ -388,7 +388,7 @@
                                                 @endforeach
                                             </div>
                                         @elseif ($islemTuru === 'reddet')
-                                            <label style="{{ $lbl }}">Ret Gerekçesi <span style="color:#ef4444">*</span></label>
+                                            <label style="{{ $lbl }}">Ret Gerekçesi <span style="color:#dc2626">*</span></label>
                                             <textarea wire:model="islemNotu" rows="2" style="{{ $inp }};font-family:inherit;font-size:.82rem"></textarea>
                                         @else
                                             <label style="{{ $lbl }}">Kapanış Notu</label>
@@ -410,6 +410,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

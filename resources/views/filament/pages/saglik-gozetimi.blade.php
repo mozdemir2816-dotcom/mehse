@@ -29,7 +29,7 @@
             <x-slot name="heading">Tetkik Satırı Ekle</x-slot>
 
             @if ($this->calisanlar->isEmpty())
-                <p style="font-size:.82rem;color:#f59e0b">Bu firmaya kayıtlı aktif çalışan yok — önce Çalışanlar ekranından ekleyin.</p>
+                <p style="font-size:.82rem;color:#b45309">Bu firmaya kayıtlı aktif çalışan yok — önce Çalışanlar ekranından ekleyin.</p>
             @else
                 <div style="{{ $kutu }};display:grid;grid-template-columns:1.4fr 1.6fr auto auto;gap:.5rem;align-items:end">
                     <div>
@@ -92,7 +92,7 @@
                                     </td>
                                     <td style="padding:.35rem">{{ $this->turler[$s['tetkik_turu']]['ad'] ?? $s['tetkik_turu'] }}</td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.tarih" style="{{ $girdi }}"></td>
-                                    <td style="padding:.35rem;{{ $gecmis ? 'color:#ef4444;font-weight:600' : 'color:rgb(107 114 128)' }}">
+                                    <td style="padding:.35rem;{{ $gecmis ? 'color:#dc2626;font-weight:600' : 'color:rgb(107 114 128)' }}">
                                         {{ $sonraki ? $sonraki->format('d.m.Y') : '—' }}
                                     </td>
                                     <td style="padding:.35rem">
@@ -111,7 +111,7 @@
                                         @endif
                                     </td>
                                     <td style="padding:.35rem;text-align:center">
-                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>
                             @endforeach

@@ -18,7 +18,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -290,7 +290,7 @@
                             <td style="padding:.3rem .5rem">{{ $k['tc'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $k['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="manuelCikar({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="manuelCikar({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -308,7 +308,7 @@
                 <x-filament::button size="sm" color="gray" wire:click="excelSablonIndir">Şablon İndir</x-filament::button>
             </div>
             @if ($excelHatalar)
-                <div style="margin-top:.5rem;font-size:.78rem;color:#f59e0b">
+                <div style="margin-top:.5rem;font-size:.78rem;color:#b45309">
                     @foreach ($excelHatalar as $h) <div>{{ $h }}</div> @endforeach
                 </div>
             @endif
@@ -345,6 +345,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

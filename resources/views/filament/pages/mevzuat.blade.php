@@ -40,9 +40,9 @@
         Bu dizin, mehse'nin kendi modüllerinde (Risk Değerlendirme, DÖF, Ceza-Tebliğ, KKD Formu vb.) dayanak
         olarak kullanılan mevzuatla sınırlı bir seçkidir — resmi mevzuat.gov.tr'nin tam kütüphanesi değildir.
         Resmi ve güncel metin için
-        <a href="https://www.mevzuat.gov.tr" target="_blank" style="color:rgb(217 119 6)">mevzuat.gov.tr</a>
+        <a href="https://www.mevzuat.gov.tr" target="_blank" style="color:rgb(180 83 9)">mevzuat.gov.tr</a>
         veya
-        <a href="https://www.resmigazete.gov.tr" target="_blank" style="color:rgb(217 119 6)">resmigazete.gov.tr</a>
+        <a href="https://www.resmigazete.gov.tr" target="_blank" style="color:rgb(180 83 9)">resmigazete.gov.tr</a>
         kullanılmalıdır.
     </p>
 </x-filament-panels::page>

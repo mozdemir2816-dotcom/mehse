@@ -26,7 +26,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
             <div>
-                <label style="{{ $lbl }}">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="{{ $lbl }}">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $inp }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -35,7 +35,7 @@
                 </select>
             </div>
             <div>
-                <label style="{{ $lbl }}">Olay Tipi <span style="color:#ef4444">*</span></label>
+                <label style="{{ $lbl }}">Olay Tipi <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="olayTipi" style="{{ $inp }}">
                     @foreach ($this->tipler as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
@@ -67,7 +67,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
                 <div>
-                    <label style="{{ $lbl }}">Olay Tarihi <span style="color:#ef4444">*</span></label>
+                    <label style="{{ $lbl }}">Olay Tarihi <span style="color:#dc2626">*</span></label>
                     <input type="date" wire:model="olayTarihi" style="{{ $inp }}">
                 </div>
                 <div>
@@ -136,7 +136,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1rem">
                 <div>
-                    <label style="{{ $lbl }}">Kısa Özet (en az 20 karakter) <span style="color:#ef4444">*</span></label>
+                    <label style="{{ $lbl }}">Kısa Özet (en az 20 karakter) <span style="color:#dc2626">*</span></label>
                     <textarea wire:model="olayOzeti" rows="3" placeholder="Ne oldu? Nasıl fark edildi?" style="{{ $inp }}"></textarea>
                 </div>
                 <div>
@@ -291,7 +291,7 @@
                         @foreach ($balikKilcigi[$anahtar] ?? [] as $i => $neden)
                             <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
                                 <input type="text" wire:model="balikKilcigi.{{ $anahtar }}.{{ $i }}" style="{{ $inp }};font-size:.78rem" placeholder="Neden…">
-                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer">✕</button>
+                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
                             </div>
                         @endforeach
                         <x-filament::button size="xs" color="gray" wire:click="balikNedenEkle('{{ $anahtar }}')" icon="heroicon-o-plus">Neden</x-filament::button>
@@ -354,7 +354,7 @@
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
                     <div>
-                        <label style="{{ $lbl }}">Tespit Edilen Uygunsuzluk (en az 10 karakter) <span style="color:#ef4444">*</span></label>
+                        <label style="{{ $lbl }}">Tespit Edilen Uygunsuzluk (en az 10 karakter) <span style="color:#dc2626">*</span></label>
                         <textarea wire:model="dofTespit" rows="2" style="{{ $inp }}"></textarea>
                     </div>
                     <div>
@@ -463,7 +463,7 @@
                             <td style="padding:.3rem .5rem">{{ $t['ad_soyad'] }}</td>
                             <td style="padding:.3rem .5rem">{{ $t['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="tanikSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="tanikSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -575,6 +575,6 @@
             @endif
         </x-filament::section>
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

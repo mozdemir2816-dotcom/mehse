@@ -36,7 +36,7 @@
                             @elseif ($oneri)
                                 <div class="text-sm">{{ $oneri['ad_soyad'] }} <span class="text-xs" style="color:var(--text-label)">· {{ $oneri['gorev'] }}</span></div>
                             @elseif ($tanim['kaynak'])
-                                <div class="text-xs" style="color:rgb(217 119 6)">⚠ Bu işyerine {{ mb_strtolower(explode(' (', $tanim['ad'])[0]) }} atanmamış — firma kaydından atayın ya da aşağıdan seçin.</div>
+                                <div class="text-xs" style="color:rgb(180 83 9)">⚠ Bu işyerine {{ mb_strtolower(explode(' (', $tanim['ad'])[0]) }} atanmamış — firma kaydından atayın ya da aşağıdan seçin.</div>
                             @else
                                 <div class="text-xs" style="color:var(--text-label)">Aşağıdaki personel listesinden "{{ $tanim['ad'] }}" rolüyle ekleyin.</div>
                             @endif

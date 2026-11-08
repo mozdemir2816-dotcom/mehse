@@ -88,7 +88,7 @@
                                 <input type="checkbox" wire:model.live="girdiler.{{ $i }}.sayfalar.{{ $j }}.kullan"> Sayfa: {{ $s['ad'] }}
                             </label>
                             @if ($s['taninmadi'])
-                                <span style="font-size:.75rem;color:rgb(217 119 6)">Başlık satırı otomatik tanınmadı — sütunları kendiniz eşleyin.</span>
+                                <span style="font-size:.75rem;color:rgb(180 83 9)">Başlık satırı otomatik tanınmadı — sütunları kendiniz eşleyin.</span>
                             @endif
                             <label style="font-size:.75rem;{{ $soluk }}">İlk veri satırı
                                 <input type="number" min="1" wire:model.blur="girdiler.{{ $i }}.sayfalar.{{ $j }}.veri_baslangic" style="{{ $girdi }};width:5rem;margin-left:.3rem">

@@ -15,7 +15,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)

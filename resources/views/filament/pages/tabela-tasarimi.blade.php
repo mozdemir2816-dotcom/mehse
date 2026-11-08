@@ -54,7 +54,7 @@
                         <span style="font-size:.74rem;font-weight:700">⚡ Önerilen Tüm Levhaları Otomatik Paketle (ZIP):</span>
                         <button type="button" wire:click="oneriPaketi('a4')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A4</button>
                         <button type="button" wire:click="oneriPaketi('a3')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A3</button>
-                        <span wire:loading wire:target="oneriPaketi" style="font-size:.72rem;color:#d97706">Hazırlanıyor…</span>
+                        <span wire:loading wire:target="oneriPaketi" style="font-size:.72rem;color:#b45309">Hazırlanıyor…</span>
                     </div>
                 @endif
             </div>

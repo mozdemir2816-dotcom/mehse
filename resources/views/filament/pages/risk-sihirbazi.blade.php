@@ -56,7 +56,7 @@
 
             <div style="display:flex;flex-direction:column;gap:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.85rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.85rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                     <select wire:model.live="firmaId"
                         style="margin-top:.35rem;width:100%;padding:.6rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         <option value="">— Firma seçin —</option>
@@ -65,7 +65,7 @@
                         @endforeach
                     </select>
                     @if (empty($this->firmalar))
-                        <p style="margin-top:.35rem;font-size:.8rem;color:#f59e0b">
+                        <p style="margin-top:.35rem;font-size:.8rem;color:#b45309">
                             Henüz firma yok — önce <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl() }}" style="text-decoration:underline">Firmalar</a>'dan ekleyin.
                         </p>
                     @endif
@@ -83,7 +83,7 @@
                 @endif
 
                 <div>
-                    <label style="font-weight:600;font-size:.85rem">Analiz Yöntemi <span style="color:#ef4444">*</span></label>
+                    <label style="font-weight:600;font-size:.85rem">Analiz Yöntemi <span style="color:#dc2626">*</span></label>
                     <select wire:model.live="yontem"
                         style="margin-top:.35rem;width:100%;padding:.6rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         <option value="">— Yöntem seçin —</option>
@@ -96,7 +96,7 @@
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
                     <div>
-                        <label style="font-weight:600;font-size:.85rem">Rapor Tarihi <span style="color:#ef4444">*</span></label>
+                        <label style="font-weight:600;font-size:.85rem">Rapor Tarihi <span style="color:#dc2626">*</span></label>
                         <input type="date" wire:model.live="raporTarihi"
                             style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     </div>
@@ -699,7 +699,7 @@
                 <div style="display:flex;flex-direction:column;gap:.75rem;max-width:28rem">
                     <input type="file" wire:model="excelDosya" accept=".xlsx,.xls,.csv"
                         style="padding:.5rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
-                    @error('excelDosya') <span style="color:#ef4444;font-size:.8rem">{{ $message }}</span> @enderror
+                    @error('excelDosya') <span style="color:#dc2626;font-size:.8rem">{{ $message }}</span> @enderror
                     <div wire:loading wire:target="excelDosya" style="font-size:.8rem;color:rgb(107 114 128)">Yükleniyor…</div>
                     <x-filament::button icon="heroicon-o-magnifying-glass" wire:click="excelIceAktar" :disabled="! $excelDosya">
                         Dosyayı Tara ve Maddeleri Bul
@@ -776,14 +776,14 @@
             </x-slot>
 
             @if (! \App\Support\GeminiRiskPdfOkuyucu::aktifMi())
-                <div style="{{ $kutu }};padding:1rem;font-size:.85rem;color:rgb(217 119 6)">
+                <div style="{{ $kutu }};padding:1rem;font-size:.85rem;color:rgb(180 83 9)">
                     Gemini API anahtarı yapılandırılmamış — bu özellik şu an kullanılamıyor.
                 </div>
             @elseif (empty($excelAdaylar))
                 <div style="display:flex;flex-direction:column;gap:.75rem;max-width:28rem">
                     <input type="file" wire:model="pdfDosya" accept=".pdf"
                         style="padding:.5rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
-                    @error('pdfDosya') <span style="color:#ef4444;font-size:.8rem">{{ $message }}</span> @enderror
+                    @error('pdfDosya') <span style="color:#dc2626;font-size:.8rem">{{ $message }}</span> @enderror
                     <div wire:loading wire:target="pdfDosya,pdfIceAktar" style="font-size:.8rem;color:rgb(107 114 128)">
                         Okunuyor… (büyük belgelerde birkaç dakika sürebilir)
                     </div>
@@ -919,7 +919,7 @@
                                 @endif
                             </div>
                             <button type="button" wire:click="maddeCikar('{{ $m['anahtar'] }}')"
-                                style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;flex-shrink:0">✕</button>
+                                style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1.1rem;flex-shrink:0">✕</button>
                         </div>
 
                         {{-- HAZOP puansızdır: Olasılık / Şiddet seçicileri ve puan gösterilmez. --}}
@@ -1020,7 +1020,7 @@
             </div>
 
             @unless ($this->tumMaddelerPuanli())
-                <p style="margin-top:1rem;color:#ef4444;font-size:.85rem">Bazı maddelerin puanı eksik — Adım 5'e dönün.</p>
+                <p style="margin-top:1rem;color:#dc2626;font-size:.85rem">Bazı maddelerin puanı eksik — Adım 5'e dönün.</p>
             @endunless
 
             @if (($mukerrer = $this->mukerrerSayisi()) > 0)

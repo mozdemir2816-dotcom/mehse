@@ -53,10 +53,10 @@
                             <td style="{{ $td }};font-size:.74rem">
                                 @if ($k['is_kalemleri'])<div>İş kalemi: {{ collect($k['is_kalemleri'])->map(fn ($x) => $kalemAd[$x] ?? $x)->implode(', ') }}</div>@endif
                                 @if ($k['nace'])<div>NACE: {{ K::naceGoster($k['nace']) }}</div>@endif
-                                @if (! $k['is_kalemleri'] && ! $k['nace'])<span style="color:rgb(217 119 6)">Eşleşme yok — yalnız elle seçilir</span>@endif
+                                @if (! $k['is_kalemleri'] && ! $k['nace'])<span style="color:rgb(180 83 9)">Eşleşme yok — yalnız elle seçilir</span>@endif
                             </td>
                             <td style="{{ $td }};font-size:.74rem">{{ $k['egitici'] }}</td>
-                            <td style="{{ $td }};font-size:.74rem">{{ $k['kaynak'] }}@if ($k['duzenlendi'])<div style="color:rgb(13 148 136)">düzenlendi</div>@endif</td>
+                            <td style="{{ $td }};font-size:.74rem">{{ $k['kaynak'] }}@if ($k['duzenlendi'])<div style="color:rgb(15 118 110)">düzenlendi</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="mountAction('konuDuzenle', { anahtar: '{{ $a }}' })">Düzenle</x-filament::button>
                                 @if ($k['duzenlendi'])

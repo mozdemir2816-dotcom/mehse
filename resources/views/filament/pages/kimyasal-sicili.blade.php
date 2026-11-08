@@ -67,7 +67,7 @@
                                 <td style="padding:.5rem">
                                     <button wire:click="mountAction('kimyasalDuzenle', { id: {{ $u->id }} })" style="background:none;border:0;color:rgb(124 58 237);cursor:pointer;margin-right:.5rem">Düzenle</button>
                                     <button wire:click="kutuphaneyeKaydet({{ $u->id }})" title="Bu ürünü kendi kütüphanene kaydet" style="background:none;border:0;color:rgb(20 184 166);cursor:pointer;margin-right:.5rem">Kütüphaneye</button>
-                                    <button wire:click="kimyasalSil({{ $u->id }})" wire:confirm="'{{ $u->urun_adi }}' silinsin mi?" style="background:none;border:0;color:#ef4444;cursor:pointer">Sil</button>
+                                    <button wire:click="kimyasalSil({{ $u->id }})" wire:confirm="'{{ $u->urun_adi }}' silinsin mi?" style="background:none;border:0;color:#dc2626;cursor:pointer">Sil</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -118,7 +118,7 @@
                             @if ($k->hazirMi())
                                 <span style="font-size:.7rem;color:rgb(107 114 128)">Hazır</span>
                             @else
-                                <button wire:click="kutuphaneKayitSil({{ $k->id }})" wire:confirm="'{{ $k->urun_adi }}' kütüphaneden silinsin mi?" style="background:none;border:0;color:#ef4444;cursor:pointer">Sil</button>
+                                <button wire:click="kutuphaneKayitSil({{ $k->id }})" wire:confirm="'{{ $k->urun_adi }}' kütüphaneden silinsin mi?" style="background:none;border:0;color:#dc2626;cursor:pointer">Sil</button>
                             @endif
                         </td>
                     </tr>

@@ -67,7 +67,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId" @disabled($kilitli) style="margin-top:.3rem;{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -220,7 +220,7 @@
                             <span style="font-size:.66rem;color:rgb(107 114 128)">Analiz edildi</span>
                         @endif
                         @if (! $kilitli && ! $kullanim)
-                            <button type="button" wire:click="fotografSil('{{ addslashes($f['yol']) }}')" title="Fotoğrafı kaldır" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.75rem">✕</button>
+                            <button type="button" wire:click="fotografSil('{{ addslashes($f['yol']) }}')" title="Fotoğrafı kaldır" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.75rem">✕</button>
                         @endif
                     </div>
                 </div>
@@ -421,7 +421,7 @@
                     @if ($ref['url'])<a href="{{ $ref['url'] }}" target="_blank" style="font-size:.72rem;color:rgb(37 99 235);word-break:break-all">{{ $ref['url'] }}</a>@endif
                 </div>
                 @unless ($kilitli)
-                    <button type="button" wire:click="referansSil({{ $r }})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+                    <button type="button" wire:click="referansSil({{ $r }})" style="background:none;border:none;cursor:pointer;color:#dc2626">✕</button>
                 @endunless
             </div>
         @empty
@@ -480,7 +480,7 @@
             @endif
         </div>
     @else
-        <p style="font-size:.85rem;color:#f59e0b">Raporu kaydetmek ve PDF almak için Genel Bilgiler'den bir firma seçin (fotoğraf analizi firma seçmeden de yapılabilir).</p>
+        <p style="font-size:.85rem;color:#b45309">Raporu kaydetmek ve PDF almak için Genel Bilgiler'den bir firma seçin (fotoğraf analizi firma seçmeden de yapılabilir).</p>
     @endif
 
     {{-- 7. RAPORU TAMAMLA PANELİ --}}
@@ -529,7 +529,7 @@
                             <div wire:key="dof-{{ $i }}" style="padding:.8rem;border-radius:.7rem;border:1px solid {{ $this->dofHazirMi($i) ? 'rgb(22 163 74 / .5)' : 'rgb(59 130 246 / .5)' }}">
                                 <div style="display:flex;justify-content:space-between;gap:.5rem;margin-bottom:.4rem">
                                     <strong style="font-size:.85rem">{{ $i + 1 }}. {{ \Illuminate\Support\Str::limit($b['tespit'], 90) }}</strong>
-                                    <button type="button" wire:click="dofIsaretiniKaldir({{ $i }})" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:#ef4444;white-space:nowrap">İşareti kaldır</button>
+                                    <button type="button" wire:click="dofIsaretiniKaldir({{ $i }})" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:#dc2626;white-space:nowrap">İşareti kaldır</button>
                                 </div>
                                 <div style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.4rem">Düzeltici faaliyet, "alınması gereken önlemler" alanından doldurulur.</div>
                                 <div style="font-weight:600;font-size:.8rem;margin-bottom:.25rem">Sorumlu</div>

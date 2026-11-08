@@ -18,7 +18,7 @@
         <x-slot name="heading">1. Firma & Tatbikat Senaryosu</x-slot>
 
         <div style="margin-bottom:1rem">
-            <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+            <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
             <select wire:model.live="firmaId"
                 style="margin-top:.3rem;width:100%;max-width:24rem;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                 <option value="">— Firma seçin —</option>
@@ -220,7 +220,7 @@
                         <tr>
                             <td style="padding:.25rem .5rem">{{ $e['ad_soyad'] }} — {{ $e['ekip'] ?: '—' }}</td>
                             <td style="padding:.25rem .5rem;text-align:right">
-                                <button type="button" wire:click="ekipSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="ekipSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -244,7 +244,7 @@
                                 {{ $etiket }}
                             </button>
                         @endforeach
-                        <button type="button" wire:click="degerlendirmeSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                        <button type="button" wire:click="degerlendirmeSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                     </div>
                 </div>
             @endforeach
@@ -274,7 +274,7 @@
             @foreach ($eksiklikler as $i => $e)
                 <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.2rem .4rem">
                     <span>{{ $e }}</span>
-                    <button type="button" wire:click="eksiklikSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                    <button type="button" wire:click="eksiklikSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                 </div>
             @endforeach
         </x-filament::section>
@@ -294,7 +294,7 @@
             @foreach ($dofOnerileri as $i => $d)
                 <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.2rem .4rem">
                     <span>{{ $d['faaliyet'] }} — {{ $d['sorumlu'] ?: '—' }} — {{ $d['tarih'] ?: '—' }}</span>
-                    <button type="button" wire:click="dofOnerisiSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                    <button type="button" wire:click="dofOnerisiSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                 </div>
             @endforeach
         </x-filament::section>
@@ -327,7 +327,7 @@
                         <tr>
                             <td style="padding:.25rem .5rem">{{ $k['ad_soyad'] }}</td>
                             <td style="padding:.25rem .5rem;text-align:right">
-                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -359,7 +359,7 @@
         </x-filament::section>
 
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Yeni tatbikat için bir firma seçin. Aşağıda tüm firmaların tatbikat kayıtları listelenir.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Yeni tatbikat için bir firma seçin. Aşağıda tüm firmaların tatbikat kayıtları listelenir.</p>
     @endif
 
     {{-- TATBİKAT KAYITLARI (isgsuite "Tatbikat Yönetimi") --}}

@@ -12,7 +12,7 @@
         ilgili yönetmelikler kapsamındaki görevlendirme yazısını oluşturun.
     </p>
 
-    <p style="font-size:.78rem;color:rgb(107 114 128)">Söndürme, kurtarma, koruma ve ilk yardım ekiplerinin atama yazıları artık <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="color:rgb(13 148 136);font-weight:600">Acil Durum Ekipleri</a> sayfasındaki ekip kartından alınır (ekibe eklenen personelle aynı kayıt).</p>
+    <p style="font-size:.78rem;color:rgb(107 114 128)">Söndürme, kurtarma, koruma ve ilk yardım ekiplerinin atama yazıları artık <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="color:rgb(15 118 110);font-weight:600">Acil Durum Ekipleri</a> sayfasındaki ekip kartından alınır (ekibe eklenen personelle aynı kayıt).</p>
 
     {{-- SEKME PİLLERİ --}}
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(107 114 128 / .06);padding:.5rem;border-radius:9999px">
@@ -42,7 +42,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -90,7 +90,7 @@
                                     @forelse ($kisiler as $k)
                                         <div>✓ {{ $k['ad_soyad'] }} @if ($k['gorev']) <span style="color:rgb(107 114 128)">— {{ $k['gorev'] }}</span> @endif</div>
                                     @empty
-                                        <span style="color:#f59e0b">Kayıt yok — {{ $ipucu }}</span>
+                                        <span style="color:#b45309">Kayıt yok — {{ $ipucu }}</span>
                                     @endforelse
                                 </td>
                             </tr>
@@ -110,7 +110,7 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Ad Soyad @unless ($this->topluMu)<span style="color:#ef4444">*</span>@endunless</label>
+                        <label style="font-weight:600;font-size:.82rem">Ad Soyad @unless ($this->topluMu)<span style="color:#dc2626">*</span>@endunless</label>
                         <input type="text" wire:model="tekAdSoyad"
                             style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     </div>
@@ -247,7 +247,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 
     {{-- BİLGİ: tüm görev tiplerinin yasal dayanağı --}}

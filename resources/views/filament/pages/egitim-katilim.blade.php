@@ -95,7 +95,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -105,7 +105,7 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Başlığı <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Eğitim Başlığı <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="baslikAnahtari"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     @foreach ($this->basliklar as $anahtar => $ad)
@@ -210,7 +210,7 @@
                     @if (! $this->naceSektoru)
                         <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan sektör çıkarılamadı — elle seçin.</p>
                     @elseif ($sektorAnahtari && $sektorAnahtari !== $this->naceSektoru)
-                        <p style="font-size:.72rem;color:rgb(217 119 6);margin-top:.25rem">
+                        <p style="font-size:.72rem;color:rgb(180 83 9);margin-top:.25rem">
                             NACE koduna ({{ $this->firma?->nace_kodu }}) göre önerilen: <strong>{{ $this->sektorler[$this->naceSektoru] ?? $this->naceSektoru }}</strong>. Elle değiştirdiniz; bu firmada sonraki eğitimlerde de sizin seçiminiz gelir.
                             <button type="button" wire:click="naceSektorunuKullan" style="text-decoration:underline;margin-left:.25rem">NACE'ye göre seç</button>
                         </p>
@@ -359,7 +359,7 @@
                             <td style="padding:.3rem .5rem">{{ $k['tc'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $k['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="manuelCikar({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="manuelCikar({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -377,7 +377,7 @@
                 <x-filament::button size="sm" color="gray" wire:click="excelSablonIndir">Şablon İndir</x-filament::button>
             </div>
             @if ($excelHatalar)
-                <div style="margin-top:.5rem;font-size:.78rem;color:#f59e0b">
+                <div style="margin-top:.5rem;font-size:.78rem;color:#b45309">
                     @foreach ($excelHatalar as $h) <div>{{ $h }}</div> @endforeach
                 </div>
             @endif
@@ -398,7 +398,7 @@
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
                             <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.72rem;color:rgb(13 148 136);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
+                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.72rem;color:rgb(15 118 110);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
                             <td style="padding:.35rem .5rem">{{ $k->belge_tarihi?->format('d.m.Y') }}</td>
                             <td style="padding:.35rem .5rem">{{ $k->katilimciSayisi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
@@ -417,7 +417,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 
     <div style="{{ $kutu }};background:rgb(107 114 128 / .05);font-size:.78rem;color:rgb(107 114 128)">

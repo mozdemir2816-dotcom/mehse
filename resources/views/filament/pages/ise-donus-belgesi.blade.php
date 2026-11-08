@@ -39,7 +39,7 @@
             @endif
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
-                <div><label style="{{ $lbl }}">Ad Soyad <span style="color:#ef4444">*</span></label><input type="text" wire:model="calisanAdSoyad" style="{{ $inp }}"></div>
+                <div><label style="{{ $lbl }}">Ad Soyad <span style="color:#dc2626">*</span></label><input type="text" wire:model="calisanAdSoyad" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">T.C. Kimlik No</label><input type="text" wire:model="calisanTc" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">Görevi</label><input type="text" wire:model="gorev" style="{{ $inp }}"></div>
                 <div>

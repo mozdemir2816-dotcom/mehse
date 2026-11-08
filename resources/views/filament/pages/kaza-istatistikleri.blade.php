@@ -63,7 +63,7 @@
             </div>
 
             @if (($ozet['toplam_saat'] ?? 0) === 0)
-                <p style="margin-top:.6rem;font-size:.78rem;color:#f59e0b">
+                <p style="margin-top:.6rem;font-size:.78rem;color:#b45309">
                     Sıklık/Ağırlık oranı için aşağıdaki aylık tabloya çalışma saati girin.
                 </p>
             @endif
@@ -136,7 +136,7 @@
                     <input type="text" wire:model.blur="hariciKazalar.{{ $i }}.aciklama" placeholder="Açıklama" style="{{ $girdi }}">
                     <input type="number" min="0" wire:model.blur="hariciKazalar.{{ $i }}.kayip_gunu" placeholder="Kayıp gün" style="{{ $girdi }}">
                     <label style="display:flex;align-items:center;gap:.3rem;font-size:.78rem"><input type="checkbox" wire:model.blur="hariciKazalar.{{ $i }}.olumlu"> Ölümlü</label>
-                    <button type="button" wire:click="hariciKazaSil({{ $i }})" style="color:#ef4444;background:none;border:none;cursor:pointer">✕</button>
+                    <button type="button" wire:click="hariciKazaSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
                 </div>
             @endforeach
             <x-filament::button size="xs" color="gray" wire:click="hariciKazaEkle" icon="heroicon-o-plus">Harici kaza satırı</x-filament::button>

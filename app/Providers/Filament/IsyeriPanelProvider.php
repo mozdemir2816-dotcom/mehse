@@ -39,6 +39,8 @@ class IsyeriPanelProvider extends PanelProvider
             ->brandName('mehse')
             ->viteTheme('resources/css/filament/portal/theme.css')
             ->defaultThemeMode(ThemeMode::Light)
+            // Karanlık mod kapalı (08.11.2026): sayfalardaki elle yazılmış renkler karanlık temaya uymuyordu.
+            ->darkMode(false)
             ->topNavigation()
             ->colors([
                 'primary' => Color::Teal,

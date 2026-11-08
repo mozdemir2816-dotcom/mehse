@@ -55,7 +55,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -211,7 +211,7 @@
                         <td style="padding:.3rem .5rem">{{ $m->ifade }}</td>
                         <td style="padding:.3rem .5rem">{{ $m->kritik ? 'Evet' : '—' }}</td>
                         <td style="padding:.3rem .5rem;text-align:right">
-                            <button type="button" wire:click="ozelMaddeSil({{ $m->id }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                            <button type="button" wire:click="ozelMaddeSil({{ $m->id }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                         </td>
                     </tr>
                 @endforeach
@@ -286,7 +286,7 @@
 
                             @if ($cevap['sonuc'] === 'uygun_degil')
                                 <div style="margin-top:.6rem">
-                                    <label style="font-size:.75rem;font-weight:600;color:#dc2626">Uygunsuzluk açıklaması <span style="color:#ef4444">*</span></label>
+                                    <label style="font-size:.75rem;font-weight:600;color:#dc2626">Uygunsuzluk açıklaması <span style="color:#dc2626">*</span></label>
                                     <textarea wire:model="cevaplar.{{ $anahtar }}.aciklama" rows="2"
                                         style="width:100%;margin-top:.2rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(220 38 38 / .4);background:transparent;font-size:.8rem"></textarea>
                                     @if (! empty($madde['oneri']))
@@ -356,7 +356,7 @@
                                 <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" multiple style="font-size:.75rem">
                                 @if ($yuklenenFotolar || $kayitliFotolar)
                                     <button type="button" wire:click="fotoKaldir('{{ $kod }}')"
-                                        style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:.75rem">✕ kaldır</button>
+                                        style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:.75rem">✕ kaldır</button>
                                 @endif
                             </div>
                         </div>
@@ -415,7 +415,7 @@
                             <td style="padding:.3rem .5rem">{{ $e['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $e['kkd'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="ekipSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="ekipSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -456,6 +456,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

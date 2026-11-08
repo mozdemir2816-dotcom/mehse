@@ -19,7 +19,7 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
         <div>
-            <label style="{{ $lbl }}">Firma <span style="color:#ef4444">*</span></label>
+            <label style="{{ $lbl }}">Firma <span style="color:#dc2626">*</span></label>
             <select wire:model.live="firmaId" style="{{ $inp }}">
                 <option value="">— Firma seçin —</option>
                 @foreach ($this->firmalar as $id => $ad)
@@ -157,6 +157,6 @@
             @endif
         </x-filament::section>
     @else
-        <p style="font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

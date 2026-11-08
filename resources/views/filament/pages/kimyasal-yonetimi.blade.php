@@ -64,7 +64,7 @@
         {{-- AFİŞ --}}
         <div style="{{ $kart }}">
             <div style="display:flex;gap:.6rem;align-items:center">
-                <x-filament::icon icon="heroicon-o-photo" style="width:1.6rem;height:1.6rem;color:rgb(217 119 6)" />
+                <x-filament::icon icon="heroicon-o-photo" style="width:1.6rem;height:1.6rem;color:rgb(180 83 9)" />
                 <div>
                     <div style="font-weight:700">Kimyasal Afişleri</div>
                     <div style="font-size:.75rem;color:rgb(107 114 128)">GHS levhaları, kimyasal güvenliği posterleri</div>

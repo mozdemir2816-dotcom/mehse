@@ -16,7 +16,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#ef4444">*</span></label>
+                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
                 <select wire:model.live="firmaId"
                     style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     <option value="">— Firma seçin —</option>
@@ -80,7 +80,7 @@
                 <div style="{{ $kutu }};margin-bottom:.6rem">
                     <div style="display:flex;justify-content:space-between;gap:.5rem">
                         <div style="font-weight:600;font-size:.85rem">{{ $i + 1 }}. {{ $s['soru'] }}</div>
-                        <button type="button" wire:click="soruSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                        <button type="button" wire:click="soruSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                     </div>
                     <div style="margin-top:.4rem;display:flex;flex-direction:column;gap:.15rem">
                         @foreach ($s['secenekler'] as $j => $secenek)
@@ -146,7 +146,7 @@
                             <td style="padding:.3rem .5rem">{{ $k['ad_soyad'] }}</td>
                             <td style="padding:.3rem .5rem">{{ $k['sinav_tarihi'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#ef4444;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -172,6 +172,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#f59e0b">Devam etmek için bir firma seçin.</p>
+        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>
