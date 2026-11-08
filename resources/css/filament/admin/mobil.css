@@ -103,7 +103,7 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
     html .fi-header-actions-ctn > .fi-ac .fi-btn {
         width: 100%;
         justify-content: center;
-        min-height: 2.5rem;
+        min-height: 2.75rem;
         padding: 6px 10px !important;
         font-size: 12px !important;
     }
@@ -198,15 +198,15 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
     html .fi-modal-footer-actions .fi-btn {
         width: 100%;
         justify-content: center;
-        min-height: 2.6rem;
+        min-height: 2.75rem;
         font-size: 12.5px !important;
         white-space: nowrap;
         overflow: hidden;
     }
 
-    /* Formlarda dokunma hedefi en az 40px. */
+    /* Formlarda dokunma hedefi en az 44px (08.11.2026; önce 40px). */
     html .fi-input-wrp {
-        min-height: 2.5rem;
+        min-height: 2.75rem;
     }
 
     /* Sabit form alt çubuğu (Oluştur · Oluştur & yeni oluştur · İptal, Ayarları Kaydet):
@@ -317,7 +317,7 @@ html .mehse-pwa-bant-metin svg {
 
 html .mehse-pwa-bant-yukle {
     flex-shrink: 0;
-    min-height: 2.4rem;
+    min-height: 2.75rem;
     padding: 0 1rem;
     border-radius: 10px;
     font-weight: 600;

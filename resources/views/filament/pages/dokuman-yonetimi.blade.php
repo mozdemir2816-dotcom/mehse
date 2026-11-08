@@ -390,7 +390,7 @@
 
                 <div style="border:1px dashed rgb(107 114 128 / .35);border-radius:.8rem;padding:1.2rem;text-align:center">
                     @if ($gorsel && \Illuminate\Support\Facades\Storage::disk('public')->exists($d->dosya_yolu))
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($d->dosya_yolu) }}" style="max-width:100%;max-height:320px;border-radius:.5rem">
+                        <img alt="Doküman görseli" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($d->dosya_yolu) }}" style="max-width:100%;max-height:320px;border-radius:.5rem">
                     @else
                         <x-filament::icon icon="heroicon-o-document-text" style="width:2.4rem;height:2.4rem;color:rgb(37 99 235);margin:0 auto" />
                     @endif

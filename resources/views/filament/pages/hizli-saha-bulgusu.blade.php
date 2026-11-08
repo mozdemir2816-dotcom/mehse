@@ -69,14 +69,14 @@
                     @foreach ($kaydedilenFotolar as $i => $yol)
                         @php $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($yol); @endphp
                         <div style="position:relative">
-                            <img src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
+                            <img alt="Bulgu fotoğrafı" src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
                             <button type="button" x-data x-on:click="$dispatch('foto-isaretle', { src: @js($fotoUrl), tur: 'kayitli', index: {{ $i }} })" style="{{ $isaretDugme }}">✎ İşaretle</button>
                         </div>
                     @endforeach
                     @foreach ($yeniFotograflar as $i => $f)
                         @php $fotoUrl = $f->temporaryUrl(); @endphp
                         <div style="position:relative">
-                            <img src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
+                            <img alt="Bulgu fotoğrafı" src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
                             <button type="button" wire:click="fotoSil({{ $i }})" aria-label="Fotoğrafı kaldır" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.75rem;cursor:pointer">✕</button>
                             <button type="button" x-data x-on:click="$dispatch('foto-isaretle', { src: @js($fotoUrl), tur: 'yeni', index: {{ $i }} })" style="{{ $isaretDugme }}">✎ İşaretle</button>
                         </div>

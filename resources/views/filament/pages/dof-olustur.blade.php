@@ -200,7 +200,7 @@
                 <div style="grid-column:1/-1">
                     <label class="mehse-etiket">Fotoğraf Kanıtı (opsiyonel)</label><br>
                     @if ($yeniFoto)
-                        <img src="{{ $yeniFoto->temporaryUrl() }}" style="width:60px;height:60px;object-fit:cover;border-radius:.4rem;border:2px solid #dc2626;margin:.3rem 0;display:block">
+                        <img alt="Fotoğraf kanıtı" src="{{ $yeniFoto->temporaryUrl() }}" style="width:60px;height:60px;object-fit:cover;border-radius:.4rem;border:2px solid #dc2626;margin:.3rem 0;display:block">
                     @endif
                     <input type="file" wire:model="yeniFoto" accept="image/*" style="margin-top:.2rem;font-size:.78rem">
                 </div>
@@ -227,7 +227,7 @@
                                 {{ $m['tespit'] }}
                                 <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem" wire:key="dof-foto-{{ $i }}-{{ md5($m['foto_yolu'] ?? '') }}">
                                     @if (! empty($m['foto_yolu']))
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}"
+                                        <img alt="Madde fotoğrafı" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}"
                                             style="width:40px;height:40px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
                                         <button type="button" wire:click="maddeFotoKaldir({{ $i }})" style="font-size:.75rem;color:#dc2626;background:none;border:none;cursor:pointer">Fotoğrafı kaldır</button>
                                     @endif

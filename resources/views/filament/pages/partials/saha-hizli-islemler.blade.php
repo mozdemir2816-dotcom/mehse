@@ -43,7 +43,7 @@
                 <label style="{{ $lbl }}">Kamera kanıtı (isteğe bağlı)</label>
                 <input type="file" wire:model="ptwKapanisFoto" accept="image/*" capture="environment" style="{{ $inp }}">
                 @if ($ptwKapanisFoto && method_exists($ptwKapanisFoto, 'temporaryUrl'))
-                    <img src="{{ $ptwKapanisFoto->temporaryUrl() }}" style="margin-top:.5rem;max-height:140px;border-radius:.4rem">
+                    <img alt="İş izni kapanış fotoğrafı" src="{{ $ptwKapanisFoto->temporaryUrl() }}" style="margin-top:.5rem;max-height:140px;border-radius:.4rem">
                 @endif
                 @if ($hata('ptwKapanisFoto'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ptwKapanisFoto') }}</div>@endif
             </div>
@@ -81,7 +81,7 @@
                 <input type="file" wire:model="ramakFotolar" accept="image/*" multiple style="{{ $inp }}">
                 <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem">
                     @foreach ($ramakFotolar as $f)
-                        @if (method_exists($f, 'temporaryUrl'))<img src="{{ $f->temporaryUrl() }}" style="width:72px;height:72px;object-fit:cover;border-radius:.4rem">@endif
+                        @if (method_exists($f, 'temporaryUrl'))<img alt="Ramak kala fotoğrafı" src="{{ $f->temporaryUrl() }}" style="width:72px;height:72px;object-fit:cover;border-radius:.4rem">@endif
                     @endforeach
                 </div>
                 @if ($hata('ramakFotolar') || $hata('ramakFotolar.*'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ramakFotolar') ?: $hata('ramakFotolar.*') }}</div>@endif

@@ -411,7 +411,7 @@
                     async pngIndir() { const u = await this.pngVerisi(2); const l = document.createElement('a'); l.href = u; l.download = 'acil-durum-krokisi.png'; l.click(); },
                     async yazdir() {
                         const u = await this.pngVerisi(2); const w = window.open('', '_blank'); if (!w) return;
-                        w.document.write(`<html><head><title>Acil Durum Krokisi</title><style>${'@'}page{size:A4 landscape;margin:8mm}body{margin:0}img{width:100%}<\/style><\/head><body><img src="${u}" onload="setTimeout(()=>{print()},200)"><\/body><\/html>`);
+                        w.document.write(`<html><head><title>Acil Durum Krokisi</title><style>${'@'}page{size:A4 landscape;margin:8mm}body{margin:0}img{width:100%}<\/style><\/head><body><img alt="Acil durum krokisi" src="${u}" onload="setTimeout(()=>{print()},200)"><\/body><\/html>`);
                         w.document.close();
                     },
                     projeIndir() { const l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([JSON.stringify({ mehse_kroki: 2, ...this.d }, null, 1)], { type: 'application/json' })); l.download = 'acil-durum-krokisi-proje.json'; l.click(); },

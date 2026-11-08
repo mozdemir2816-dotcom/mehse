@@ -97,7 +97,7 @@
                     <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
                         <input type="file" wire:model="yeniFoto" accept="image/*" style="font-size:.8rem">
                         @if ($yeniFoto)
-                            <img src="{{ $yeniFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.35rem;border:1px solid rgb(107 114 128 / .3)">
+                            <img alt="Tespit fotoğrafı" src="{{ $yeniFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.35rem;border:1px solid rgb(107 114 128 / .3)">
                             <button type="button" wire:click="$set('yeniFoto', null)" style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
                         @endif
                     </div>

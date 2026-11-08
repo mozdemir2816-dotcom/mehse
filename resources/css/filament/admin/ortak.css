@@ -50,3 +50,30 @@
 .mehse-hata { color: var(--mehse-tehlike); }
 .mehse-uyari-not { margin-top: 1rem; font-size: .85rem; color: var(--mehse-uyari); }
 .mehse-sil-dugme { color: var(--mehse-tehlike); cursor: pointer; background: none; border: none; }
+
+/* --------------------------------------------------------------------------
+   Cila (08.11.2026, impeccable polish) — tarayıcı varsayılanları marka rengine,
+   veri tablolarında hizalı rakamlar, elle yazılmış düğmelerde klavye odağı,
+   "daha az hareket" tercihi.
+   -------------------------------------------------------------------------- */
+::selection { background: var(--primary-200, rgb(191 219 254)); color: var(--primary-950, rgb(23 37 84)); }
+:root { accent-color: var(--primary-600, rgb(37 99 235)); }
+.fi-main input, .fi-main textarea { caret-color: var(--primary-600, rgb(37 99 235)); }
+
+/* Puan, sayı, tarih sütunları alt alta hizalı okunur. */
+.mehse-tablo, .fi-ta-table { font-variant-numeric: tabular-nums; }
+
+/* Sayfalardaki elle yazılmış düğme ve bağlantılarda klavye odağı görünür. */
+.fi-main button:not([class*="fi-"]):focus-visible,
+.fi-main a:not([class*="fi-"]):focus-visible,
+.mehse-sil-dugme:focus-visible {
+    outline: 2px solid var(--primary-600, rgb(37 99 235));
+    outline-offset: 2px;
+    border-radius: .25rem;
+}
+
+/* "Daha az hareket": döngüsel ve giriş animasyonları durur, durum geçişleri kısa kalır. */
+@media (prefers-reduced-motion: reduce) {
+    .mehse-pwa-bant, [class*="mehse-iskelet"] { animation: none !important; }
+    .fi-main *, .fi-sidebar * { transition-duration: 80ms !important; }
+}

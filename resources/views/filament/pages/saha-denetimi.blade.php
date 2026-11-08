@@ -345,13 +345,13 @@
                                 <span style="font-size:.75rem;font-weight:600;color:rgb(107 114 128)">📷 Fotoğraf</span>
                                 @foreach ($kayitliFotolar as $fi => $yol)
                                     <span style="position:relative;display:inline-block">
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($yol) }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
+                                        <img alt="Denetim fotoğrafı" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($yol) }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
                                         <button type="button" wire:click="kayitliFotoSil('{{ $kod }}', {{ $fi }})" title="Bu fotoğrafı kaldır"
                                             style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:999px;border:none;background:#ef4444;color:#fff;font-size:.68rem;line-height:16px;cursor:pointer;padding:0">✕</button>
                                     </span>
                                 @endforeach
                                 @foreach ($yuklenenFotolar as $yf)
-                                    <img src="{{ $yf->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px dashed rgb(107 114 128 / .6)">
+                                    <img alt="Denetim fotoğrafı" src="{{ $yf->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px dashed rgb(107 114 128 / .6)">
                                 @endforeach
                                 <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" multiple style="font-size:.75rem">
                                 @if ($yuklenenFotolar || $kayitliFotolar)

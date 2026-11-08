@@ -163,7 +163,7 @@
                 <div wire:key="ab-{{ $b->id }}" style="padding:.6rem 0;border-top:1px solid rgb(107 114 128 / .12)">
                     <div style="display:flex;gap:.6rem">
                         @if ($foto = ($b->fotograflar ?? [])[0] ?? null)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($foto) }}" style="width:3.6rem;height:3.6rem;object-fit:cover;border-radius:.45rem;flex-shrink:0">
+                            <img alt="Bulgu fotoğrafı" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($foto) }}" style="width:3.6rem;height:3.6rem;object-fit:cover;border-radius:.45rem;flex-shrink:0">
                         @endif
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.9rem;font-weight:600">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}</div>
@@ -181,7 +181,7 @@
                 <div wire:key="ad-{{ $an }}" style="padding:.6rem 0;border-top:1px solid rgb(107 114 128 / .12)">
                     <div style="display:flex;gap:.6rem">
                         @if (filled($m['foto_yolu'] ?? null))
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}" style="width:3.6rem;height:3.6rem;object-fit:cover;border-radius:.45rem;flex-shrink:0">
+                            <img alt="Madde fotoğrafı" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($m['foto_yolu']) }}" style="width:3.6rem;height:3.6rem;object-fit:cover;border-radius:.45rem;flex-shrink:0">
                         @endif
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.9rem;font-weight:600">{{ \Illuminate\Support\Str::limit((string) ($m['tespit'] ?? ''), 110) }}</div>

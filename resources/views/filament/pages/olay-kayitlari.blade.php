@@ -479,7 +479,7 @@
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
                     @foreach ($yeniFotograflar as $i => $dosya)
                         <div style="position:relative">
-                            <img src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
+                            <img alt="Yüklenen fotoğraf" src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
                             <button type="button" wire:click="fotoSil({{ $i }})"
                                 style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.75rem;cursor:pointer;line-height:1">✕</button>
                         </div>

@@ -206,7 +206,7 @@
                 <div wire:key="foto-{{ md5($f['yol']) }}">
                     <div @unless ($kilitli) wire:click="fotoSeciminiDegistir('{{ addslashes($f['yol']) }}')" @endunless
                         style="position:relative;aspect-ratio:1;border-radius:.5rem;overflow:hidden;cursor:{{ $kilitli ? 'default' : 'pointer' }};border:{{ $secili ? '3px solid rgb(37 99 235)' : '1px solid rgb(107 114 128 / .3)' }}">
-                        <img src="{{ Storage::disk('public')->url($f['yol']) }}" style="width:100%;height:100%;object-fit:cover">
+                        <img alt="Saha fotoğrafı" src="{{ Storage::disk('public')->url($f['yol']) }}" style="width:100%;height:100%;object-fit:cover">
                         @if ($secili)
                             <span style="position:absolute;top:.3rem;right:.3rem;background:rgb(37 99 235);color:#fff;border-radius:999px;width:1.3rem;height:1.3rem;display:flex;align-items:center;justify-content:center;font-size:.75rem">✓</span>
                         @endif
@@ -298,7 +298,7 @@
                     <div style="display:flex;gap:.8rem;flex-wrap:wrap">
                         <div style="width:120px;flex-shrink:0">
                             @if ($b['foto_yolu'] ?? null)
-                                <img src="{{ Storage::disk('public')->url($b['foto_yolu']) }}" style="width:120px;height:120px;object-fit:cover;border-radius:.5rem">
+                                <img alt="Bulgu fotoğrafı" src="{{ Storage::disk('public')->url($b['foto_yolu']) }}" style="width:120px;height:120px;object-fit:cover;border-radius:.5rem">
                             @else
                                 <div style="width:120px;height:120px;border-radius:.5rem;border:1px dashed rgb(107 114 128 / .4);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:rgb(107 114 128);text-align:center">Görsel yok</div>
                             @endif
