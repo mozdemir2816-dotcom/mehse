@@ -13,7 +13,7 @@
         <span style="font-size:.8rem;font-weight:600;color:#15803d">{{ count($sayfalar) }} sayfa</span>
         @foreach ($sayfalar as $i => $s)
             <button type="button" wire:click="hizliSayfaSil('{{ $kategori }}', {{ $i }})" title="Sayfayı çıkar"
-                style="font-size:.7rem;padding:.1rem .35rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;cursor:pointer;color:inherit">{{ $i + 1 }} ✕</button>
+                style="font-size:.75rem;padding:.1rem .35rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;cursor:pointer;color:inherit">{{ $i + 1 }} ✕</button>
         @endforeach
         <label style="{{ $dugme }};border:1px solid rgb(37 99 235 / .4);color:rgb(37 99 235)">
             ＋ Sayfa

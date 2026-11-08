@@ -40,14 +40,14 @@
                 $f = $this->firma;
                 $igu = $f->igu;
                 $kunyeHucre = 'display:flex;flex-direction:column;min-width:0';
-                $kunyeEtiket = 'font-size:.68rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:rgb(107 114 128)';
+                $kunyeEtiket = 'font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:rgb(107 114 128)';
             @endphp
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.4rem 1rem;padding:.6rem .85rem;margin-bottom:1rem;border-radius:.6rem;background:rgb(234 88 12 / .05);border:1px solid rgb(234 88 12 / .25);font-size:.82rem">
                 <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">Denetçi</span><strong>{{ $denetciAdi ?: '—' }}</strong>
-                    <span style="font-size:.72rem;color:rgb(107 114 128)">{{ collect([$igu?->unvan ? \Illuminate\Support\Str::title(mb_strtolower($igu->unvan)) : null, $igu?->sertifika_no ? 'Belge No: '.$igu->sertifika_no : null])->filter()->implode(' · ') ?: 'Firmaya atanmış İGU' }}</span></div>
+                    <span style="font-size:.75rem;color:rgb(107 114 128)">{{ collect([$igu?->unvan ? \Illuminate\Support\Str::title(mb_strtolower($igu->unvan)) : null, $igu?->sertifika_no ? 'Belge No: '.$igu->sertifika_no : null])->filter()->implode(' · ') ?: 'Firmaya atanmış İGU' }}</span></div>
                 <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">Tarih / Saat</span><strong>{{ $denetimTarihi ? \Illuminate\Support\Carbon::parse($denetimTarihi)->format('d.m.Y') : '—' }} · {{ $denetimSaati ?: '—' }}</strong></div>
                 <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">NACE</span><strong title="{{ $f->nace_aciklama }}">{{ $f->nace_kodu ?: '—' }}</strong>
-                    <span style="font-size:.72rem;color:rgb(107 114 128);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $f->nace_aciklama }}</span></div>
+                    <span style="font-size:.75rem;color:rgb(107 114 128);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $f->nace_aciklama }}</span></div>
                 <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">Tehlike Sınıfı</span><strong>{{ $f->tehlike_sinifi ? $f->tehlikeSinifiEtiketi() : '—' }}</strong></div>
                 <div style="{{ $kunyeHucre }}"><span style="{{ $kunyeEtiket }}">SGK Sicil</span><strong style="font-size:.78rem">{{ $f->sgk_sicil_no ?: '—' }}</strong></div>
             </div>
@@ -73,7 +73,7 @@
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Sektör seçilince aşağıya o sektöre eklediğiniz özel maddeler de dahil olur.</p>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Sektör seçilince aşağıya o sektöre eklediğiniz özel maddeler de dahil olur.</p>
             </div>
             <div>
                 <label style="font-weight:600;font-size:.82rem">Sektöre özgü kontrol listesi</label>
@@ -84,7 +84,7 @@
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Seçilen sektörün 40 maddelik kontrol listesi (dayanak mevzuat ve öneriyle) aşağıya eklenir.</p>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Seçilen sektörün 40 maddelik kontrol listesi (dayanak mevzuat ve öneriyle) aşağıya eklenir.</p>
             </div>
             <div>
                 <label style="font-weight:600;font-size:.82rem">Fine-Kinney saha gözetimi (40 sektör)</label>
@@ -95,7 +95,7 @@
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Firmanın NACE koduna göre otomatik seçilir. 20 madde; uygunsuz işaretlenince varsayılan Fine-Kinney puanı ve DÖF önerisi gelir.</p>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Firmanın NACE koduna göre otomatik seçilir. 20 madde; uygunsuz işaretlenince varsayılan Fine-Kinney puanı ve DÖF önerisi gelir.</p>
             </div>
         </div>
 
@@ -253,17 +253,17 @@
                         @endphp
                         <div style="{{ $madde_kutu }};border-left:4px solid {{ $renk }}">
                             <div style="display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.3rem">
-                                <span style="font-size:.72rem;font-weight:700;color:rgb(107 114 128)">{{ $kod }}</span>
+                                <span style="font-size:.75rem;font-weight:700;color:rgb(107 114 128)">{{ $kod }}</span>
                                 @if ($madde['kritik'])
-                                    <span style="font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:.3rem;color:#dc2626;background:rgb(220 38 38 / .1)">KRİTİK</span>
+                                    <span style="font-size:.75rem;font-weight:700;padding:.1rem .4rem;border-radius:.3rem;color:#dc2626;background:rgb(220 38 38 / .1)">KRİTİK</span>
                                 @endif
                                 @if (! empty($madde['fk_kategori']))
-                                    <span style="font-size:.68rem;font-weight:600;padding:.1rem .4rem;border-radius:.3rem;background:rgb(107 114 128 / .12)">{{ $madde['fk_kategori'] }}</span>
+                                    <span style="font-size:.75rem;font-weight:600;padding:.1rem .4rem;border-radius:.3rem;background:rgb(107 114 128 / .12)">{{ $madde['fk_kategori'] }}</span>
                                 @endif
                                 <span style="font-size:.85rem">{{ $ifade }}</span>
                             </div>
                             @if (! empty($madde['dayanak']))
-                                <div style="font-size:.7rem;color:rgb(107 114 128);margin:-.15rem 0 .3rem">Dayanak: {{ $madde['dayanak'] }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128);margin:-.15rem 0 .3rem">Dayanak: {{ $madde['dayanak'] }}</div>
                             @endif
                             <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun')"
@@ -300,7 +300,7 @@
                                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem;align-items:end">
                                             @foreach (['olasilik' => 'Olasılık (O)', 'frekans' => 'Frekans (F)', 'siddet' => 'Şiddet (Ş)'] as $eksen => $etiket)
                                                 <div>
-                                                    <label style="font-size:.72rem;font-weight:600">{{ $etiket }}</label>
+                                                    <label style="font-size:.75rem;font-weight:600">{{ $etiket }}</label>
                                                     <select wire:model.live="cevaplar.{{ $anahtar }}.fk_{{ $eksen }}" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
                                                         <option value="">—</option>
                                                         @foreach ($this->kinneyOlcekleri[$eksen] as $deger => $aciklama)
@@ -311,13 +311,13 @@
                                             @endforeach
                                             <div style="text-align:center;padding:.35rem;border-radius:.4rem;background:{{ $fkPuan['renk'] }}22;border:1px solid {{ $fkPuan['renk'] }}66">
                                                 <div style="font-size:.95rem;font-weight:700;color:{{ $fkPuan['renk'] }}">R = {{ $fkPuan['seviye'] ? $fkPuan['puan'] : '—' }}</div>
-                                                <div style="font-size:.68rem">{{ $fkPuan['duzey'] }}</div>
+                                                <div style="font-size:.75rem">{{ $fkPuan['duzey'] }}</div>
                                             </div>
                                         </div>
                                     @endif
                                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem">
                                         <div>
-                                            <label style="font-size:.72rem;font-weight:600">Risk @if (! empty($madde['fk']))<span style="font-weight:400;color:rgb(107 114 128)">(boşsa puandan)</span>@endif</label>
+                                            <label style="font-size:.75rem;font-weight:600">Risk @if (! empty($madde['fk']))<span style="font-weight:400;color:rgb(107 114 128)">(boşsa puandan)</span>@endif</label>
                                             <select wire:model="cevaplar.{{ $anahtar }}.risk" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
                                                 <option value="">—</option>
                                                 @foreach (config('isg.saha_denetimi.risk_seviyeleri') as $rk => $re)
@@ -326,11 +326,11 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label style="font-size:.72rem;font-weight:600">Sorumlu</label>
+                                            <label style="font-size:.75rem;font-weight:600">Sorumlu</label>
                                             <input type="text" wire:model="cevaplar.{{ $anahtar }}.sorumlu" placeholder="Kişi / birim" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
                                         </div>
                                         <div>
-                                            <label style="font-size:.72rem;font-weight:600">Termin</label>
+                                            <label style="font-size:.75rem;font-weight:600">Termin</label>
                                             <input type="date" wire:model="cevaplar.{{ $anahtar }}.termin" style="width:100%;margin-top:.15rem;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
                                         </div>
                                     </div>
@@ -342,12 +342,12 @@
                                 $kayitliFotolar = \App\Models\SahaDenetimi::maddeFotolari($cevap);
                             @endphp
                             <div style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-                                <span style="font-size:.72rem;font-weight:600;color:rgb(107 114 128)">📷 Fotoğraf</span>
+                                <span style="font-size:.75rem;font-weight:600;color:rgb(107 114 128)">📷 Fotoğraf</span>
                                 @foreach ($kayitliFotolar as $fi => $yol)
                                     <span style="position:relative;display:inline-block">
                                         <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($yol) }}" style="width:44px;height:44px;object-fit:cover;border-radius:.3rem;border:1px solid rgb(107 114 128 / .4)">
                                         <button type="button" wire:click="kayitliFotoSil('{{ $kod }}', {{ $fi }})" title="Bu fotoğrafı kaldır"
-                                            style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:999px;border:none;background:#ef4444;color:#fff;font-size:.6rem;line-height:16px;cursor:pointer;padding:0">✕</button>
+                                            style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:999px;border:none;background:#ef4444;color:#fff;font-size:.68rem;line-height:16px;cursor:pointer;padding:0">✕</button>
                                     </span>
                                 @endforeach
                                 @foreach ($yuklenenFotolar as $yf)

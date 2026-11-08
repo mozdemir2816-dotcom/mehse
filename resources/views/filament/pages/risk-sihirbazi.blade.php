@@ -39,7 +39,7 @@
                         font-weight:700;color:#fff;background:{{ $renk }};box-shadow:{{ $aktif ? '0 0 0 4px rgb(139 92 246 / .25)' : 'none' }}">
                         {{ $tamam ? '✓' : $no }}
                     </span>
-                    <span style="font-size:.72rem;text-align:center;color:{{ $aktif ? 'inherit' : 'rgb(107 114 128)' }};font-weight:{{ $aktif ? 600 : 400 }}">{{ $ad }}</span>
+                    <span style="font-size:.75rem;text-align:center;color:{{ $aktif ? 'inherit' : 'rgb(107 114 128)' }};font-weight:{{ $aktif ? 600 : 400 }}">{{ $ad }}</span>
                 </button>
                 @if (! $loop->last)
                     <span style="height:2px;flex:1;background:{{ $tamam ? $yesil : 'rgb(107 114 128 / .35)' }};margin-top:-1.1rem"></span>
@@ -138,10 +138,10 @@
                             'opacity:.55' => ! $y['hazir'],
                         ])>
                         @if ($y['onerilen'])
-                            <span style="position:absolute;top:-.6rem;left:1rem;font-size:.62rem;font-weight:700;background:{{ $yesil }};color:#062;padding:.15rem .5rem;border-radius:9999px">ÖNERİLEN</span>
+                            <span style="position:absolute;top:-.6rem;left:1rem;font-size:.68rem;font-weight:700;background:{{ $yesil }};color:#062;padding:.15rem .5rem;border-radius:9999px">ÖNERİLEN</span>
                         @endif
                         @unless ($y['hazir'])
-                            <span style="position:absolute;top:.5rem;right:.5rem;font-size:.62rem;color:rgb(107 114 128)">yakında</span>
+                            <span style="position:absolute;top:.5rem;right:.5rem;font-size:.68rem;color:rgb(107 114 128)">yakında</span>
                         @endunless
                         <div style="font-weight:700">{{ $y['ad'] }}</div>
                         <div style="font-size:.8rem;color:rgb(107 114 128)">{{ $y['aciklama'] }}</div>
@@ -356,8 +356,8 @@
                 </div>
                 @if ($aiAsama === 'sohbet')
                     <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-                        <span style="background:rgb(255 255 255 / .2);padding:.2rem .55rem;border-radius:9999px;font-size:.72rem">Soru {{ $this->aiIlerleme() }}</span>
-                        <span style="background:rgb(255 255 255 / .2);padding:.2rem .55rem;border-radius:9999px;font-size:.72rem">✨ {{ $this->aiTetiklenenSayisi() }} aday risk</span>
+                        <span style="background:rgb(255 255 255 / .2);padding:.2rem .55rem;border-radius:9999px;font-size:.75rem">Soru {{ $this->aiIlerleme() }}</span>
+                        <span style="background:rgb(255 255 255 / .2);padding:.2rem .55rem;border-radius:9999px;font-size:.75rem">✨ {{ $this->aiTetiklenenSayisi() }} aday risk</span>
                     </div>
                 @endif
             </div>
@@ -904,7 +904,7 @@
                                         style="padding:.3rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .25);background:transparent;font-size:.82rem">
                                 </div>
                                 @if (!empty($m['mevzuat']))
-                                    <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.3rem">📖 {{ $m['mevzuat'] }}</div>
+                                    <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.3rem">📖 {{ $m['mevzuat'] }}</div>
                                 @endif
                                 @if (!empty($m['hazop']))
                                     {{-- HAZOP senaryosu: Excel'den gelen alanlar (kılavuz, nedenler, sonuçlar, korumalar). --}}
@@ -926,7 +926,7 @@
                         @unless ($yontem === 'hazop')
                         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem;margin-top:.6rem">
                             <div>
-                                <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['olasilik'] }}</label>
+                                <label style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['olasilik'] }}</label>
                                 <select wire:model.live="secilenler.{{ $i }}.olasilik"
                                     style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">—</option>
@@ -937,7 +937,7 @@
                             </div>
                             @if ($this->fineKinney)
                                 <div>
-                                    <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['frekans'] }}</label>
+                                    <label style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['frekans'] }}</label>
                                     <select wire:model.live="secilenler.{{ $i }}.frekans"
                                         style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                         <option value="">—</option>
@@ -948,7 +948,7 @@
                                 </div>
                             @endif
                             <div>
-                                <label style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['siddet'] }}</label>
+                                <label style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['siddet'] }}</label>
                                 <select wire:model.live="secilenler.{{ $i }}.siddet"
                                     style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">—</option>
@@ -999,7 +999,7 @@
                         <div style="font-size:.82rem">
                             <div style="color:rgb(107 114 128);font-size:.75rem">{{ $gorev }}</div>
                             @forelse ($uyeler as $u)
-                                <div style="font-weight:600">{{ $u['ad_soyad'] }}@if (! empty($u['imza_gorseli'])) <span style="color:{{ $yesil }};font-weight:400;font-size:.72rem">· imza kayıtlı</span>@endif</div>
+                                <div style="font-weight:600">{{ $u['ad_soyad'] }}@if (! empty($u['imza_gorseli'])) <span style="color:{{ $yesil }};font-weight:400;font-size:.75rem">· imza kayıtlı</span>@endif</div>
                             @empty
                                 <div style="color:#b45309">Tanımlı değil</div>
                             @endforelse

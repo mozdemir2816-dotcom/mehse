@@ -44,7 +44,7 @@
                     <label style="font-weight:600;font-size:.82rem">Zorunlu Temsilci Sayısı</label>
                     <input type="number" min="1" wire:model="zorunluTemsilciSayisi"
                         style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                    <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">6331 md.20 kademesine göre önerilir, gerekirse değiştirin.</p>
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">6331 md.20 kademesine göre önerilir, gerekirse değiştirin.</p>
                 </div>
                 <div>
                     <label style="font-weight:600;font-size:.82rem">Aday Başvuru Son Tarihi</label>
@@ -70,7 +70,7 @@
                     <label style="font-weight:600;font-size:.82rem">Görevlendirme Tarihi</label>
                     <input type="date" wire:model="gorevlendirmeTarihi"
                         style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                    <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Boş bırakılırsa seçim tarihi kullanılır (Atama Tutanağı için).</p>
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Boş bırakılırsa seçim tarihi kullanılır (Atama Tutanağı için).</p>
                 </div>
             </div>
 

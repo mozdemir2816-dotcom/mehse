@@ -5,7 +5,7 @@
     $mor = 'rgb(139 92 246)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
-    $etiket = 'font-size:.72rem;font-weight:600;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.03em';
+    $etiket = 'font-size:.75rem;font-weight:600;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.03em';
     $kilitli = $this->kilitliMi();
     $fk = config('isg.risk_fine_kinney');
     $onayli = collect($bulgular)->where('durum', 'onaylandi')->count();
@@ -118,7 +118,7 @@
                         <span style="flex:1">
                             <span style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
                                 <strong>{{ $ad }}</strong>
-                                @if ($ai)<span style="font-size:.65rem;padding:.05rem .35rem;border-radius:.25rem;border:1px solid rgb(59 130 246 / .4);color:rgb(37 99 235)">✦ Yapay Zekâ</span>@endif
+                                @if ($ai)<span style="font-size:.68rem;padding:.05rem .35rem;border-radius:.25rem;border:1px solid rgb(59 130 246 / .4);color:rgb(37 99 235)">✦ Yapay Zekâ</span>@endif
                             </span>
                             <span style="display:block;font-size:.76rem;color:rgb(107 114 128)">{{ $acik }}</span>
                         </span>
@@ -213,11 +213,11 @@
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.2rem;gap:.2rem">
                         @if ($kullanim)
-                            <span style="font-size:.66rem;padding:.05rem .3rem;border-radius:.25rem;background:rgb(22 163 74 / .12);color:#15803d">{{ $kullanim }} maddede</span>
+                            <span style="font-size:.68rem;padding:.05rem .3rem;border-radius:.25rem;background:rgb(22 163 74 / .12);color:#15803d">{{ $kullanim }} maddede</span>
                         @elseif (! $f['analiz_edildi'])
-                            <span style="font-size:.66rem;padding:.05rem .3rem;border-radius:.25rem;background:rgb(59 130 246 / .1);color:rgb(37 99 235)">Analiz edilmedi</span>
+                            <span style="font-size:.68rem;padding:.05rem .3rem;border-radius:.25rem;background:rgb(59 130 246 / .1);color:rgb(37 99 235)">Analiz edilmedi</span>
                         @else
-                            <span style="font-size:.66rem;color:rgb(107 114 128)">Analiz edildi</span>
+                            <span style="font-size:.68rem;color:rgb(107 114 128)">Analiz edildi</span>
                         @endif
                         @if (! $kilitli && ! $kullanim)
                             <button type="button" wire:click="fotografSil('{{ addslashes($f['yol']) }}')" title="Fotoğrafı kaldır" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.75rem">✕</button>
@@ -279,15 +279,15 @@
                         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
                             <strong style="font-size:1.05rem">{{ $i + 1 }}</strong>
                             @if ($onaylandi)
-                                <span style="font-size:.7rem;font-weight:600;padding:.12rem .45rem;border-radius:.3rem;background:rgb(22 163 74 / .12);color:#15803d">Onaylandı</span>
+                                <span style="font-size:.75rem;font-weight:600;padding:.12rem .45rem;border-radius:.3rem;background:rgb(22 163 74 / .12);color:#15803d">Onaylandı</span>
                             @else
-                                <span style="font-size:.7rem;font-weight:600;padding:.12rem .45rem;border-radius:.3rem;background:rgb(245 158 11 / .12);color:#b45309">Onay bekliyor</span>
+                                <span style="font-size:.75rem;font-weight:600;padding:.12rem .45rem;border-radius:.3rem;background:rgb(245 158 11 / .12);color:#b45309">Onay bekliyor</span>
                             @endif
                             @if (($b['kaynak'] ?? 'manuel') !== 'manuel')
-                                <span style="font-size:.66rem;padding:.1rem .35rem;border-radius:.25rem;border:1px solid rgb(59 130 246 / .4);color:rgb(37 99 235)">✦ AI</span>
+                                <span style="font-size:.68rem;padding:.1rem .35rem;border-radius:.25rem;border:1px solid rgb(59 130 246 / .4);color:rgb(37 99 235)">✦ AI</span>
                             @endif
                             @if ($b['kategori'] ?? null)
-                                <span style="font-size:.7rem;padding:.12rem .45rem;border-radius:.3rem;background:rgb(107 114 128 / .1);color:rgb(107 114 128)">{{ $b['kategori'] }}</span>
+                                <span style="font-size:.75rem;padding:.12rem .45rem;border-radius:.3rem;background:rgb(107 114 128 / .1);color:rgb(107 114 128)">{{ $b['kategori'] }}</span>
                             @endif
                         </div>
                         <label style="display:flex;gap:.35rem;align-items:center;font-size:.75rem;font-weight:600;padding:.15rem .5rem;border-radius:.3rem;cursor:{{ $kilitli ? 'default' : 'pointer' }};background:{{ ($b['dof_acilacak'] ?? false) ? 'rgb(37 99 235)' : 'rgb(107 114 128 / .1)' }};color:{{ ($b['dof_acilacak'] ?? false) ? '#fff' : 'inherit' }}">
@@ -300,10 +300,10 @@
                             @if ($b['foto_yolu'] ?? null)
                                 <img src="{{ Storage::disk('public')->url($b['foto_yolu']) }}" style="width:120px;height:120px;object-fit:cover;border-radius:.5rem">
                             @else
-                                <div style="width:120px;height:120px;border-radius:.5rem;border:1px dashed rgb(107 114 128 / .4);display:flex;align-items:center;justify-content:center;font-size:.72rem;color:rgb(107 114 128);text-align:center">Görsel yok</div>
+                                <div style="width:120px;height:120px;border-radius:.5rem;border:1px dashed rgb(107 114 128 / .4);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:rgb(107 114 128);text-align:center">Görsel yok</div>
                             @endif
                             @if ($duzenlenebilir && $fotograflar)
-                                <select wire:model.live="bulgular.{{ $i }}.foto_yolu" style="margin-top:.3rem;width:120px;font-size:.7rem;padding:.2rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
+                                <select wire:model.live="bulgular.{{ $i }}.foto_yolu" style="margin-top:.3rem;width:120px;font-size:.75rem;padding:.2rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">— görsel yok —</option>
                                     @foreach ($fotograflar as $n => $f)
                                         <option value="{{ $f['yol'] }}">Fotoğraf {{ $n + 1 }}</option>
@@ -314,7 +314,7 @@
 
                         <div style="flex:1;min-width:220px">
                             @php $onem = SahaAnalizi::onemEtiketi(SahaAnalizi::skordanDerece(SahaAnalizi::fineKinneySkoru($b), (int) ($b['risk_derecesi'] ?? 3))); @endphp
-                            <div style="margin-bottom:.4rem"><span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;font-size:.72rem;font-weight:700;color:#fff;background:{{ $onem['renk'] }}">Önem: {{ $onem['ad'] }}</span></div>
+                            <div style="margin-bottom:.4rem"><span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff;background:{{ $onem['renk'] }}">Önem: {{ $onem['ad'] }}</span></div>
                             @if ($duzenlenebilir)
                                 <label style="{{ $etiket }}">Bina / Bölge (görsel alt yazısı)</label>
                                 <input type="text" wire:model="bulgular.{{ $i }}.bina_bolge" style="{{ $girdi }};margin-bottom:.5rem">
@@ -418,7 +418,7 @@
                 <span style="font-size:1.1rem">{{ $ref['url'] ? '▣' : '§' }}</span>
                 <div style="flex:1;min-width:0">
                     <div style="font-size:.85rem">{{ $ref['ad'] }}</div>
-                    @if ($ref['url'])<a href="{{ $ref['url'] }}" target="_blank" style="font-size:.72rem;color:rgb(37 99 235);word-break:break-all">{{ $ref['url'] }}</a>@endif
+                    @if ($ref['url'])<a href="{{ $ref['url'] }}" target="_blank" style="font-size:.75rem;color:rgb(37 99 235);word-break:break-all">{{ $ref['url'] }}</a>@endif
                 </div>
                 @unless ($kilitli)
                     <button type="button" wire:click="referansSil({{ $r }})" style="background:none;border:none;cursor:pointer;color:#dc2626">✕</button>
@@ -531,7 +531,7 @@
                                     <strong style="font-size:.85rem">{{ $i + 1 }}. {{ \Illuminate\Support\Str::limit($b['tespit'], 90) }}</strong>
                                     <button type="button" wire:click="dofIsaretiniKaldir({{ $i }})" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:#dc2626;white-space:nowrap">İşareti kaldır</button>
                                 </div>
-                                <div style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.4rem">Düzeltici faaliyet, "alınması gereken önlemler" alanından doldurulur.</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.4rem">Düzeltici faaliyet, "alınması gereken önlemler" alanından doldurulur.</div>
                                 <div style="font-weight:600;font-size:.8rem;margin-bottom:.25rem">Sorumlu</div>
                                 <div style="display:grid;grid-template-columns:1fr 1fr;border-radius:.5rem;overflow:hidden;border:1px solid rgb(107 114 128 / .3)">
                                     @foreach (['kendim' => 'Kendim', 'dis' => 'Dış kişi'] as $tip => $ad)
@@ -553,7 +553,7 @@
                                         <input type="number" step="0.1" min="0" wire:model="bulgular.{{ $i }}.dof_hedef_skor" style="{{ $girdi }}">
                                     </div>
                                 </div>
-                                <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Şu anki skor {{ $skor !== null ? number_format($skor, 2, '.', '') : '—' }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">Şu anki skor {{ $skor !== null ? number_format($skor, 2, '.', '') : '—' }}</div>
                             </div>
                         @endforeach
                     @endif

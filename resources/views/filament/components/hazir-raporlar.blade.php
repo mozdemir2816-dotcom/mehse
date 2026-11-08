@@ -9,8 +9,8 @@
                         <td style="padding:.35rem .5rem;white-space:nowrap">{{ $r->baslangic_tarihi?->format('d.m.Y') }}</td>
                         <td style="padding:.35rem .5rem">
                             {{ $r->dosya_adi }}
-                            <span style="font-size:.72rem;color:rgb(107 114 128)">· {{ $r->boyutEtiketi() }}</span>
-                            @if ($r->aciklama)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $r->aciklama }}</div>@endif
+                            <span style="font-size:.75rem;color:rgb(107 114 128)">· {{ $r->boyutEtiketi() }}</span>
+                            @if ($r->aciklama)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $r->aciklama }}</div>@endif
                         </td>
                         <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                             <x-filament::button size="xs" color="gray" wire:click="hazirRaporIndir({{ $r->id }})">İndir</x-filament::button>

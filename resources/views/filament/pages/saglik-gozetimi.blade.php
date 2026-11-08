@@ -52,7 +52,7 @@
                     <x-filament::button size="sm" wire:click="satirEkle">Ekle</x-filament::button>
                     <x-filament::button size="sm" color="gray" wire:click="tumCalisanlaraEkle" tooltip="Seçili tetkik türünü tüm aktif çalışanlara ekle">Tüm çalışanlara</x-filament::button>
                 </div>
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.4rem">
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.4rem">
                     {{ $this->turler[$yeniTur]['aciklama'] ?? '' }}
                 </p>
             @endif
@@ -88,7 +88,7 @@
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.35rem">
                                         <div style="font-weight:600">{{ $s['calisan_adi'] ?? '' }}</div>
-                                        <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $s['gorev'] ?? '' }}</div>
+                                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['gorev'] ?? '' }}</div>
                                     </td>
                                     <td style="padding:.35rem">{{ $this->turler[$s['tetkik_turu']]['ad'] ?? $s['tetkik_turu'] }}</td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.tarih" style="{{ $girdi }}"></td>

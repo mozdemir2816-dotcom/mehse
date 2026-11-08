@@ -16,7 +16,7 @@
                 ['Açık Hatırlatmalar', $po['acik_hatirlatma'], $kirmizi],
             ] as [$etiket, $deger, $renk])
                 <div style="{{ $kutu }};padding:.75rem">
-                    <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">{{ $etiket }}</div>
+                    <div style="font-size:.75rem;color:rgb(128 116 148);text-transform:uppercase">{{ $etiket }}</div>
                     <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $deger }}</div>
                 </div>
             @endforeach

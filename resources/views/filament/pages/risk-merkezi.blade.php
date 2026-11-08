@@ -5,7 +5,7 @@
     $o = $this->ozet;
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $grupRenk = ['cok_yuksek' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#f59e0b', 'dusuk' => '#16a34a'];
     $yontemAd = $rd ? config('isg.risk_yontemleri.'.$rd->yontem) : null;
@@ -63,7 +63,7 @@
                         <div style="{{ $kart }};border-left:4px solid {{ $renk === 'inherit' ? 'rgb(107 114 128)' : $renk }}">
                             <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $sayi }}</div>
                             <div style="font-size:.78rem;font-weight:600">{{ $ad }}</div>
-                            <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $alt }}</div>
+                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</div>
                         </div>
                     @endforeach
                 </div>
@@ -78,7 +78,7 @@
                                 <span style="min-width:2.4rem;text-align:center;font-weight:800;color:#fff;background:{{ $grupRenk[$g] ?? 'gray' }};border-radius:.4rem;padding:.15rem .3rem;font-size:.8rem">{{ rtrim(rtrim(number_format((float) $m->puan, 1, ',', ''), '0'), ',') }}</span>
                                 <div style="font-size:.8rem;flex:1">
                                     <strong>{{ \Illuminate\Support\Str::limit($m->tehlike, 90) }}</strong>
-                                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $m->bolum ?: 'Bölüm yok' }} · {{ $m->duzey }} · Termin {{ RMV::terminTarihi($m->termin)?->format('d.m.Y') ?? ($m->termin ?: '—') }}</div>
+                                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m->bolum ?: 'Bölüm yok' }} · {{ $m->duzey }} · Termin {{ RMV::terminTarihi($m->termin)?->format('d.m.Y') ?? ($m->termin ?: '—') }}</div>
                                 </div>
                             </div>
                         @empty
@@ -90,7 +90,7 @@
                         <x-slot name="heading">{{ $yontemAd }}</x-slot>
                         <x-slot name="description">{{ $rd->yontem === 'matris_5x5' ? 'Olasılık × şiddet — hücredeki sayı kayıt adedidir' : 'Düzey dağılımı' }}</x-slot>
                         @if ($rd->yontem === 'matris_5x5')
-                            <table style="width:100%;border-collapse:separate;border-spacing:3px;font-size:.72rem;text-align:center">
+                            <table style="width:100%;border-collapse:separate;border-spacing:3px;font-size:.75rem;text-align:center">
                                 <tr><td style="color:rgb(107 114 128)" title="Satır: olasılık · Sütun: şiddet">O\Ş</td>@foreach (range(1, 5) as $s)<td style="color:rgb(107 114 128)">{{ $s }}</td>@endforeach</tr>
                                 @foreach (range(1, 5) as $ol)
                                     <tr>
@@ -113,7 +113,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        @if ($o['puansiz'])<div style="font-size:.72rem;color:rgb(180 83 9);margin-top:.4rem">{{ $o['puansiz'] }} madde henüz puanlanmadı.</div>@endif
+                        @if ($o['puansiz'])<div style="font-size:.75rem;color:rgb(180 83 9);margin-top:.4rem">{{ $o['puansiz'] }} madde henüz puanlanmadı.</div>@endif
                     </x-filament::section>
                 </div>
 
@@ -122,7 +122,7 @@
                         <x-slot name="heading">Son kayıtlar</x-slot>
                         <table style="width:100%;border-collapse:collapse;font-size:.8rem">
                             @foreach ($o['son'] as $m)
-                                <tr><td style="{{ $td }}">{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $m->bolum ?: '—' }}</div></td>
+                                <tr><td style="{{ $td }}">{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m->bolum ?: '—' }}</div></td>
                                     <td style="{{ $td }};white-space:nowrap">{{ $m->duzey ?: 'Puansız' }}</td>
                                     <td style="{{ $td }};white-space:nowrap;color:rgb(107 114 128)">{{ $m->updated_at?->format('d.m.Y') }}</td></tr>
                             @endforeach
@@ -160,11 +160,11 @@
                         @forelse ($this->aksiyonlar->take(150) as $a)
                             @php $m = $a['madde']; @endphp
                             <tr wire:key="aks-{{ $m->id }}">
-                                <td style="{{ $td }};max-width:280px"><strong>{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}</strong><div style="font-size:.7rem;color:rgb(107 114 128)">{{ $m->bolum ?: '—' }} · {{ $a['rd']->belge_no }}</div></td>
+                                <td style="{{ $td }};max-width:280px"><strong>{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m->bolum ?: '—' }} · {{ $a['rd']->belge_no }}</div></td>
                                 <td style="{{ $td }};white-space:nowrap;color:{{ $grupRenk[$a['grup']] ?? 'inherit' }};font-weight:700">{{ $m->puan ?: '—' }}</td>
                                 <td style="{{ $td }};max-width:300px">{{ \Illuminate\Support\Str::limit($m->oneri, 120) }}</td>
                                 <td style="{{ $td }}">{{ $m->sorumlu ?: '—' }}</td>
-                                <td style="{{ $td }};white-space:nowrap;{{ $a['gecikti'] ? 'color:#dc2626;font-weight:700' : '' }}">{{ $a['termin']?->format('d.m.Y') ?? ($m->termin ?: '—') }}@if ($a['gecikti'])<div style="font-size:.7rem">gecikti</div>@endif</td>
+                                <td style="{{ $td }};white-space:nowrap;{{ $a['gecikti'] ? 'color:#dc2626;font-weight:700' : '' }}">{{ $a['termin']?->format('d.m.Y') ?? ($m->termin ?: '—') }}@if ($a['gecikti'])<div style="font-size:.75rem">gecikti</div>@endif</td>
                                 <td style="{{ $td }}">
                                     <select wire:change="maddeDurumu({{ $m->id }}, $event.target.value)" style="{{ $girdi }};padding:.25rem .4rem;font-size:.75rem">
                                         @foreach (config('isg.risk_madde_durumlari') as $k => $v)<option value="{{ $k }}" @selected($m->durum === $k)>{{ $v }}</option>@endforeach
@@ -187,7 +187,7 @@
                 <x-slot name="description">Firma kartındaki NACE ve SGK bilgisi otomatik alınır; NACE yalnız başlangıç kapsamıdır, saha doğrulaması yapılmadan otomatik risk üretmez.</x-slot>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem;font-size:.8rem">
                     @foreach (['Firma' => $firma->unvan, 'SGK sicil' => $firma->sgk_sicil_no, 'NACE kodu' => $firma->nace_kodu, 'Faaliyet' => $firma->nace_aciklama, 'Sektör grubu' => $ng ? $ng['ad'].' (bölüm '.$ng['bolum'].')' : 'Eşleşme yok', 'Tehlike sınıfı' => $firma->tehlikeSinifiEtiketi()] as $e => $v)
-                        <div style="{{ $kart }};padding:.5rem .7rem"><div style="font-size:.68rem;color:rgb(107 114 128);text-transform:uppercase">{{ $e }}</div><div style="font-weight:600">{{ $v ?: '—' }}</div></div>
+                        <div style="{{ $kart }};padding:.5rem .7rem"><div style="font-size:.75rem;color:rgb(107 114 128);text-transform:uppercase">{{ $e }}</div><div style="font-weight:600">{{ $v ?: '—' }}</div></div>
                     @endforeach
                 </div>
             </x-filament::section>
@@ -213,8 +213,8 @@
                         <span style="font-weight:800;min-width:1.4rem;color:{{ $k['tamam'] === true ? 'rgb(21 128 61)' : ($k['tamam'] === null ? 'rgb(107 114 128)' : 'rgb(217 119 6)') }}">{{ $k['tamam'] === true ? '✓' : ($k['tamam'] === null ? '–' : '!') }}</span>
                         <div style="flex:1;font-size:.8rem">
                             <strong>{{ $i + 1 }}. {{ $k['baslik'] }}</strong>
-                            <div style="font-size:.74rem;color:rgb(107 114 128)">{{ $k['aciklama'] }} <em>({{ $k['dayanak'] }})</em></div>
-                            <div style="font-size:.74rem;margin-top:.1rem">{{ $k['sonuc'] }}@if ($k['url']) · <a href="{{ $k['url'] }}" style="color:rgb(15 118 110)">Modüle git →</a>@endif</div>
+                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k['aciklama'] }} <em>({{ $k['dayanak'] }})</em></div>
+                            <div style="font-size:.75rem;margin-top:.1rem">{{ $k['sonuc'] }}@if ($k['url']) · <a href="{{ $k['url'] }}" style="color:rgb(15 118 110)">Modüle git →</a>@endif</div>
                         </div>
                     </div>
                 @endforeach
@@ -226,7 +226,7 @@
                 @foreach (RMV::yolHaritasi($kontroller, $o ?? ['toplam' => 0, 'geciken' => 0]) as $i => [$b, $a, $tamam])
                     <div style="display:flex;gap:.6rem;align-items:flex-start;margin-bottom:.5rem">
                         <span style="width:1.6rem;height:1.6rem;flex:none;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;background:{{ $tamam ? 'rgb(21 128 61)' : 'rgb(13 148 136)' }}">{{ $tamam ? '✓' : $i + 1 }}</span>
-                        <div style="font-size:.8rem"><strong>{{ $b }}</strong><div style="font-size:.74rem;color:rgb(107 114 128)">{{ $a }}</div></div>
+                        <div style="font-size:.8rem"><strong>{{ $b }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a }}</div></div>
                     </div>
                 @endforeach
             </x-filament::section>

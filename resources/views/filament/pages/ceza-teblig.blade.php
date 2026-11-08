@@ -168,7 +168,7 @@
                                     border:1px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};
                                     background:{{ $secili ? 'rgb(239 68 68 / .08)' : 'transparent' }}">
                                 {{ $secili ? '☑' : '☐' }} {{ $m['madde'] }}
-                                <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $m['dayanak'] }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['dayanak'] }}</div>
                             </button>
                         @endforeach
                     </div>
@@ -211,7 +211,7 @@
                             border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};
                             background:{{ $secili ? 'rgb(239 68 68 / .08)' : 'transparent' }}">
                         <div style="font-weight:700">{{ $y['ad'] }}</div>
-                        <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $y['aciklama'] }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $y['aciklama'] }}</div>
                     </button>
                 @endforeach
             </div>
@@ -252,9 +252,9 @@
                     @foreach ($yeniFotograflar as $i => $dosya)
                         <div style="position:relative">
                             <img src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
-                            <span style="position:absolute;bottom:2px;left:2px;background:rgb(0 0 0 / .65);color:#fff;border-radius:.25rem;padding:0 .3rem;font-size:.68rem;line-height:1.3">{{ $i + 1 }}</span>
+                            <span style="position:absolute;bottom:2px;left:2px;background:rgb(0 0 0 / .65);color:#fff;border-radius:.25rem;padding:0 .3rem;font-size:.75rem;line-height:1.3">{{ $i + 1 }}</span>
                             <button type="button" wire:click="fotoSil({{ $i }})"
-                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.75rem;cursor:pointer;line-height:1">✕</button>
                         </div>
                     @endforeach
                 </div>
@@ -331,7 +331,7 @@
                                 border:1px solid {{ $secili ? '#b45309' : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(180 83 9 / .08)' : 'transparent' }}">
                             {{ $secili ? '☑' : '☐' }} {{ $m['baslik'] }}
-                            <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $m['aciklama'] }}</div>
+                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['aciklama'] }}</div>
                         </button>
                     @endforeach
                 </div>

@@ -36,7 +36,7 @@
             </div>
         @endforeach
     </div>
-    <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:-.6rem">
+    <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:-.6rem">
         {{ $this->firma ? $this->firma->unvan.' için' : 'Tüm firmalarınız için' }} — aktif izin: onaylanmış ve geçerlilik süresi içinde.
     </p>
 
@@ -108,7 +108,7 @@
             <div>
                 <label style="{{ $lbl }}">Geçerlilik (saat)</label>
                 <input type="number" min="1" max="72" wire:model="gecerlilikSaat" placeholder="Örn: 8" style="{{ $inp }}">
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Bitiş boşsa başlangıç + bu süre alınır.</p>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Bitiş boşsa başlangıç + bu süre alınır.</p>
             </div>
         </div>
         <div style="margin-top:1rem">
@@ -300,20 +300,20 @@
                                     <strong>{{ $f->izin_no }}</strong><br>
                                     <span style="color:rgb(107 114 128)">{{ $f->calisma_alani ?: 'Alan belirtilmedi' }}</span>
                                     @if ($f->calisanlar || $f->taseron)
-                                        <br><span style="font-size:.72rem;color:rgb(107 114 128)">
+                                        <br><span style="font-size:.75rem;color:rgb(107 114 128)">
                                             {{ $f->calisanlar ? count($f->calisanlar).' çalışan' : '' }}{{ $f->calisanlar && $f->taseron ? ' · ' : '' }}{{ $f->taseron ? 'Taşeron: '.$f->taseron : '' }}
                                         </span>
                                     @endif
                                 </td>
                                 <td style="padding:.4rem .5rem;white-space:nowrap">
-                                    <span style="display:inline-block;padding:.1rem .5rem;border-radius:.4rem;font-size:.72rem;color:#fff;background:{{ $durumRenk[$f->durum] ?? '#6b7280' }}">
+                                    <span style="display:inline-block;padding:.1rem .5rem;border-radius:.4rem;font-size:.75rem;color:#fff;background:{{ $durumRenk[$f->durum] ?? '#6b7280' }}">
                                         {{ $f->durumEtiketi() }}
                                     </span>
                                     @if ($f->suresiGectiMi())
-                                        <br><span style="font-size:.7rem;color:#dc2626">süre doldu</span>
+                                        <br><span style="font-size:.75rem;color:#dc2626">süre doldu</span>
                                     @endif
                                 </td>
-                                <td style="padding:.4rem .5rem;font-size:.74rem">
+                                <td style="padding:.4rem .5rem;font-size:.75rem">
                                     @if ($f->durum === 'taslak')
                                         —
                                     @else
@@ -338,7 +338,7 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td style="padding:.4rem .5rem;font-size:.74rem;white-space:nowrap">
+                                <td style="padding:.4rem .5rem;font-size:.75rem;white-space:nowrap">
                                     {{ $f->baslangic?->format('d.m.Y H:i') ?: '—' }}<br>{{ $f->bitis?->format('d.m.Y H:i') ?: '—' }}
                                 </td>
                                 <td style="padding:.4rem .5rem;text-align:right;white-space:nowrap">

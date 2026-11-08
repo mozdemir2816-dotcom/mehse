@@ -1,9 +1,9 @@
 @php
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
-    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $rozet = fn (string $renk) => "font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {$renk};";
+    $rozet = fn (string $renk) => "font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {$renk};";
     $yesil = 'rgb(22 163 74 / .55)';
     $sari = 'rgb(245 158 11 / .6)';
     $kirmizi = 'rgb(220 38 38 / .6)';
@@ -53,13 +53,13 @@
                         <tr @if ($seciliId === $t->id) style="background:rgb(124 58 237 / .07)" @endif>
                             <td style="{{ $td }}">
                                 <strong>{{ $t->unvan }}</strong>
-                                @if ($t->faaliyet)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $t->faaliyet }}</div>@endif
+                                @if ($t->faaliyet)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $t->faaliyet }}</div>@endif
                             </td>
                             <td style="{{ $td }}">{{ $t->tur === 'taseron' ? 'Taşeron' : 'Alt İşveren' }}</td>
                             <td style="{{ $td }}">{{ $t->firma?->unvan }}</td>
                             <td style="{{ $td }}">
                                 {{ $t->sozlesme_no ?: '—' }}
-                                <div style="font-size:.72rem;color:{{ in_array($t->sozlesmeDurumu(), ['bitti', 'yaklasan'], true) ? '#dc2626' : 'rgb(107 114 128)' }}">bitiş: {{ $tarih($t->sozlesme_bitis) }}</div>
+                                <div style="font-size:.75rem;color:{{ in_array($t->sozlesmeDurumu(), ['bitti', 'yaklasan'], true) ? '#dc2626' : 'rgb(107 114 128)' }}">bitiş: {{ $tarih($t->sozlesme_bitis) }}</div>
                             </td>
                             <td style="{{ $td }}">{{ $t->calisanlar->where('aktif', true)->count() }}</td>
                             <td style="{{ $td }}">{{ $t->belgeler->count() }}</td>
@@ -189,7 +189,7 @@
                         @foreach ($t->belgeler as $b)
                             @php $d = $b->durum(); @endphp
                             <tr>
-                                <td style="{{ $td }}">{{ $b->turEtiketi() }}@if ($b->baslik)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->baslik }}</div>@endif</td>
+                                <td style="{{ $td }}">{{ $b->turEtiketi() }}@if ($b->baslik)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->baslik }}</div>@endif</td>
                                 <td style="{{ $td }}">
                                     <span style="{{ $rozet(['dolmus' => $kirmizi, 'yaklasan' => $sari, 'gecerli' => $yesil, 'suresiz' => $gri][$d]) }}">
                                         {{ $b->gecerlilik_sonu ? $tarih($b->gecerlilik_sonu) : 'Süresiz' }}{{ $d === 'dolmus' ? ' — doldu' : ($d === 'yaklasan' ? ' — yaklaşıyor' : '') }}

@@ -4,7 +4,7 @@
     $o = $this->ozet;
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $durumRenk = ['tam' => 'rgb(21 128 61)', 'eksik' => 'rgb(217 119 6)', 'kritik' => 'rgb(220 38 38)'];
     $durumAd = ['tam' => 'Tam', 'eksik' => 'Eksik', 'kritik' => 'Kritik'];
@@ -49,7 +49,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem">
             @foreach ([['Ekip', $o['ekip'], null], ['Üye', $o['uye'], null], ['Lider', $o['lider'], $o['lider'] < $o['ekip'] ? 'rgb(217 119 6)' : 'rgb(21 128 61)'], ['Tam Ekip', $o['tam'].' / '.$o['ekip'], $o['tam'] === $o['ekip'] && $o['ekip'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)'], ['Kritik Ekip', $o['kritik'], $o['kritik'] ? 'rgb(220 38 38)' : null], ['Belge Süresi Dolan', $o['belge_dolan'], $o['belge_dolan'] ? 'rgb(220 38 38)' : null], ['30 Gün İçinde', $o['yaklasan'], $o['yaklasan'] ? 'rgb(217 119 6)' : null]] as [$ad, $deger, $renk])
                 <div style="{{ $kart }}">
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:800;{{ $renk ? 'color:'.$renk : '' }}">{{ $deger }}</div>
                 </div>
             @endforeach
@@ -98,7 +98,7 @@
                             <td style="padding:.5rem .4rem">
                                 <span style="font-weight:600;color:{{ $atama['guncel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $atama['guncel'] ? '✓ Atama yazısı güncel' : '⚠ Atama yazısı güncel değil' }}</span>
                                 @unless ($atama['guncel'])
-                                    <div style="font-size:.72rem;color:rgb(107 114 128)">
+                                    <div style="font-size:.75rem;color:rgb(107 114 128)">
                                         @if (! $atama['var']) Henüz hazırlanmadı.
                                         @else
                                             @if ($atama['eklenen']) {{ implode(', ', $atama['eklenen']) }} eklendi @endif
@@ -111,10 +111,10 @@
                             <td style="padding:.5rem .4rem">
                                 <span style="font-weight:600;color:{{ $egitim['eksik']->isEmpty() ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $egitim['eksik']->isEmpty() ? '✓ Eğitimler tamam' : '⚠ '.$egitim['eksik']->count().' üyenin eğitimi yok' }}</span>
                                 @if ($egitim['eksik']->isNotEmpty())
-                                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $egitim['eksik']->pluck('ad_soyad')->implode(', ') }}</div>
+                                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $egitim['eksik']->pluck('ad_soyad')->implode(', ') }}</div>
                                     @php $pl = $d['planli']; @endphp
                                     @if ($pl)
-                                        <div style="font-size:.72rem;color:rgb(37 99 235);margin-top:.15rem">📋 Eğitim Katılım'da planlandı: <strong>{{ $pl->belge_no }}</strong> ({{ $pl->katilimciSayisi() }} kişi)</div>
+                                        <div style="font-size:.75rem;color:rgb(37 99 235);margin-top:.15rem">📋 Eğitim Katılım'da planlandı: <strong>{{ $pl->belge_no }}</strong> ({{ $pl->katilimciSayisi() }} kişi)</div>
                                     @endif
                                     <div style="margin-top:.25rem;display:flex;gap:.3rem;flex-wrap:wrap">
                                         <x-filament::button tag="a" size="xs" color="warning" icon="heroicon-o-academic-cap" :href="\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firma->id, 'baslik' => \App\Support\EkipAtamaEgitim::ACIL[$d['ekip']->tur]['baslik']])">Eğitim Katılım'da aç</x-filament::button>
@@ -144,34 +144,34 @@
                         <div style="display:flex;justify-content:space-between;gap:.4rem;align-items:flex-start">
                             <div>
                                 <div style="font-weight:700;font-size:.9rem">{{ $e->ad }}</div>
-                                <div style="font-size:.7rem;color:rgb(107 114 128)">{{ collect([$e->turEtiketi() !== $e->ad ? $e->turEtiketi() : null, $e->yasalOranMetni() ? 'yasal: '.$e->yasalOranMetni() : 'yasal oran yok, öneri'])->filter()->implode(' · ') }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ collect([$e->turEtiketi() !== $e->ad ? $e->turEtiketi() : null, $e->yasalOranMetni() ? 'yasal: '.$e->yasalOranMetni() : 'yasal oran yok, öneri'])->filter()->implode(' · ') }}</div>
                             </div>
-                            <span style="font-size:.68rem;font-weight:700;padding:.1rem .5rem;border-radius:9999px;color:{{ $durumRenk[$d['durum']] }};background:color-mix(in srgb, {{ $durumRenk[$d['durum']] }} 12%, transparent)">{{ $durumAd[$d['durum']] }}</span>
+                            <span style="font-size:.75rem;font-weight:700;padding:.1rem .5rem;border-radius:9999px;color:{{ $durumRenk[$d['durum']] }};background:color-mix(in srgb, {{ $durumRenk[$d['durum']] }} 12%, transparent)">{{ $durumAd[$d['durum']] }}</span>
                         </div>
                         <div style="font-size:.75rem">Asıl: <strong>{{ $d['asil'] }}</strong> · Yedek: <strong>{{ $d['yedek'] }}</strong> · Min: <strong>{{ $d['min'] }}</strong></div>
                         <div style="font-size:.75rem;color:rgb(107 114 128)">Lider: {{ $d['lider'] ?: '—' }}</div>
                         @if ($e->uyeler->isNotEmpty())
-                            <div style="font-size:.74rem;line-height:1.5">
+                            <div style="font-size:.75rem;line-height:1.5">
                                 @foreach ($e->uyeler as $u)
                                     @php $yedek = $u->uyelik === 'yedek'; @endphp
                                     <div wire:key="kart-uye-{{ $u->id }}" style="display:flex;align-items:center;gap:.3rem;padding:.1rem 0">
                                         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@if ($u->lider)<span title="Ekip lideri">👑</span> @endif{{ $u->ad_soyad }}</span>
-                                        <span style="flex:none;font-size:.62rem;font-weight:700;padding:0 .35rem;border-radius:9999px;{{ $yedek ? 'color:rgb(107 114 128);background:rgb(107 114 128 / .12)' : 'color:rgb(15 118 110);background:rgb(13 148 136 / .12)' }}">{{ $yedek ? 'Yedek' : 'Asıl' }}</span>
+                                        <span style="flex:none;font-size:.68rem;font-weight:700;padding:0 .35rem;border-radius:9999px;{{ $yedek ? 'color:rgb(107 114 128);background:rgb(107 114 128 / .12)' : 'color:rgb(15 118 110);background:rgb(13 148 136 / .12)' }}">{{ $yedek ? 'Yedek' : 'Asıl' }}</span>
                                         @unless ($u->lider)
                                             <button type="button" wire:click="liderYap({{ $u->id }})" title="{{ $u->ad_soyad }} ekip lideri yapılsın" aria-label="{{ $u->ad_soyad }} lider yap"
-                                                style="flex:none;font-size:.62rem;padding:0 .3rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">👑 Lider Yap</button>
+                                                style="flex:none;font-size:.68rem;padding:0 .3rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">👑 Lider Yap</button>
                                         @endunless
                                         <span style="width:.5rem;height:.5rem;border-radius:9999px;flex:none;background:{{ $belgeRenk[$u->belgeDurumu()] }}" title="{{ AcilEkipUyesi::BELGE_DURUMLARI[$u->belgeDurumu()] }}"></span>
                                         <button type="button" wire:click="mountAction('uyeDuzenle', { id: {{ $u->id }} })" title="{{ $u->ad_soyad }} düzenle" aria-label="{{ $u->ad_soyad }} düzenle"
-                                            style="flex:none;font-size:.7rem;padding:0 .25rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">✎</button>
+                                            style="flex:none;font-size:.75rem;padding:0 .25rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">✎</button>
                                         <button type="button" wire:click="uyeSil({{ $u->id }})" wire:confirm="{{ $u->ad_soyad }} ekipten çıkarılsın mı? (Geri alınabilir)" title="{{ $u->ad_soyad }} ekipten çıkar" aria-label="{{ $u->ad_soyad }} sil"
-                                            style="flex:none;font-size:.7rem;padding:0 .25rem;border:1px solid rgb(220 38 38 / .4);color:rgb(220 38 38);border-radius:.3rem;background:none;cursor:pointer">✕</button>
+                                            style="flex:none;font-size:.75rem;padding:0 .25rem;border:1px solid rgb(220 38 38 / .4);color:rgb(220 38 38);border-radius:.3rem;background:none;cursor:pointer">✕</button>
                                     </div>
                                 @endforeach
                             </div>
                         @endif
                         @if ($d['uyarilar'])
-                            <div style="font-size:.7rem;color:{{ $durumRenk[$d['durum'] === 'tam' ? 'eksik' : $d['durum']] }}">{{ $d['uyarilar'][0] }}</div>
+                            <div style="font-size:.75rem;color:{{ $durumRenk[$d['durum'] === 'tam' ? 'eksik' : $d['durum']] }}">{{ $d['uyarilar'][0] }}</div>
                         @endif
                         @if ($e->uyeler->isNotEmpty() && in_array($e->tur, \App\Support\AcilEkipAtamaSenkron::ROL_EKIP, true))
                             <div style="display:flex;gap:.3rem;padding-top:.3rem">
@@ -191,14 +191,14 @@
             <x-filament::section heading="Üye Filtreleri" description="Ekip üyelerini görev, ekip, üyelik, belge durumu ve vardiyaya göre süzün.">
                 <x-slot name="afterHeader"><span style="font-size:.75rem;border:1px solid rgb(107 114 128 / .3);border-radius:9999px;padding:.1rem .6rem">{{ $this->uyeler->count() }} sonuç</span></x-slot>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;margin-bottom:.8rem">
-                    <div><label style="font-size:.72rem;font-weight:600">Arama</label><input type="search" wire:model.live.debounce.400ms="arama" placeholder="Ad, görev, bölüm veya sicil no…" style="{{ $girdi }};width:100%"></div>
-                    <div><label style="font-size:.72rem;font-weight:600">Ekip</label>
+                    <div><label style="font-size:.75rem;font-weight:600">Arama</label><input type="search" wire:model.live.debounce.400ms="arama" placeholder="Ad, görev, bölüm veya sicil no…" style="{{ $girdi }};width:100%"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Ekip</label>
                         <select wire:model.live="ekipFiltre" style="{{ $girdi }};width:100%"><option value="">Tüm ekipler</option>@foreach ($this->ekipler as $e)<option value="{{ $e->id }}">{{ $e->ad }}</option>@endforeach</select></div>
-                    <div><label style="font-size:.72rem;font-weight:600">Üyelik</label>
+                    <div><label style="font-size:.75rem;font-weight:600">Üyelik</label>
                         <select wire:model.live="uyelikFiltre" style="{{ $girdi }};width:100%"><option value="">Asıl + Yedek</option><option value="asil">Asıl</option><option value="yedek">Yedek</option></select></div>
-                    <div><label style="font-size:.72rem;font-weight:600">Belge durumu</label>
+                    <div><label style="font-size:.75rem;font-weight:600">Belge durumu</label>
                         <select wire:model.live="belgeFiltre" style="{{ $girdi }};width:100%"><option value="">Tüm belgeler</option>@foreach (AcilEkipUyesi::BELGE_DURUMLARI as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach</select></div>
-                    <div><label style="font-size:.72rem;font-weight:600">Vardiya</label>
+                    <div><label style="font-size:.75rem;font-weight:600">Vardiya</label>
                         <select wire:model.live="vardiyaFiltre" style="{{ $girdi }};width:100%"><option value="">Tümü</option>@foreach (config('isg.acil_durum.vardiyalar') as $v)<option value="{{ $v }}">{{ $v }}</option>@endforeach</select></div>
                 </div>
                 <div style="overflow-x:auto">
@@ -208,12 +208,12 @@
                             @forelse ($this->uyeler as $u)
                                 @php $bd = $u->belgeDurumu(); @endphp
                                 <tr wire:key="uye-{{ $u->id }}">
-                                    <td style="{{ $td }}"><strong>{{ $u->ad_soyad }}</strong>@if ($u->lider) <span style="color:rgb(15 118 110);font-size:.7rem">★ Lider</span>@endif</td>
+                                    <td style="{{ $td }}"><strong>{{ $u->ad_soyad }}</strong>@if ($u->lider) <span style="color:rgb(15 118 110);font-size:.75rem">★ Lider</span>@endif</td>
                                     <td style="{{ $td }}">{{ $u->ekip?->ad }}</td>
                                     <td style="{{ $td }}">{{ $u->uyelikEtiketi() }}</td>
                                     <td style="{{ $td }}">{{ collect([$u->gorev, $u->bolum])->filter()->implode(' / ') ?: '—' }}</td>
                                     <td style="{{ $td }}">{{ $u->vardiya ?: '—' }}</td>
-                                    <td style="{{ $td }};color:{{ $belgeRenk[$bd] }}">{{ AcilEkipUyesi::BELGE_DURUMLARI[$bd] }}@if ($u->belge_no)<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $u->belge_no }}</div>@endif</td>
+                                    <td style="{{ $td }};color:{{ $belgeRenk[$bd] }}">{{ AcilEkipUyesi::BELGE_DURUMLARI[$bd] }}@if ($u->belge_no)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $u->belge_no }}</div>@endif</td>
                                     <td style="{{ $td }}">{{ $u->belgeBitisTarihi()?->format('d.m.Y') ?? '—' }}</td>
                                     <td style="{{ $td }};white-space:nowrap">
                                         <x-filament::button size="xs" color="gray" icon="heroicon-o-document-text" wire:click="tebellugPdf({{ $u->id }})" tooltip="Bu üyenin tebellüğ belgesi">Tebellüğ</x-filament::button>

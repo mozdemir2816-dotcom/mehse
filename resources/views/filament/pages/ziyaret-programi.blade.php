@@ -55,9 +55,9 @@
         <div style="border:1px solid rgb(2 132 199 / .35);background:rgb(2 132 199 / .06);border-radius:1rem;padding:.8rem 1rem;display:flex;flex-wrap:wrap;gap:.8rem 1.5rem;align-items:center;justify-content:space-between">
             <div style="display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;align-items:center">
                 <div>
-                    <div style="font-size:.68rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Aylık yasal asgari süre</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Aylık yasal asgari süre</div>
                     <div style="font-size:1.5rem;font-weight:800;color:#0369A1;line-height:1.1">{{ $kisaYasal }}</div>
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">
                         @if ($yDkKatip)
                             İSG-KATİP sözleşme süresi · {{ $yDk }} dk
                         @else
@@ -66,9 +66,9 @@
                     </div>
                 </div>
                 <div>
-                    <div style="font-size:.68rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Önerilen ziyaret sıklığı</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Önerilen ziyaret sıklığı</div>
                     <div style="font-size:1.1rem;font-weight:800">{{ $sk['etiket'] }}</div>
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $this->firma->tehlikeSinifiEtiketi() }} sınıf</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $this->firma->tehlikeSinifiEtiketi() }} sınıf</div>
                 </div>
             </div>
             @if ($yDk > 0)
@@ -114,7 +114,7 @@
                                 <td style="padding:.4rem;white-space:nowrap">
                                     @if ($s === 0 && $yDk > 0)
                                         @php $planDk = \App\Support\YasalZiyaretSuresi::dakikayaCevir($z['sure_saat']); $yetersiz = filled($z['sure_saat']) && $planDk < $yDk - 1; @endphp
-                                        <span style="display:inline-block;font-size:.7rem;font-weight:700;padding:.15rem .55rem;border-radius:9999px;
+                                        <span style="display:inline-block;font-size:.75rem;font-weight:700;padding:.15rem .55rem;border-radius:9999px;
                                             {{ $yetersiz ? 'background:rgb(217 119 6 / .15);color:#b45309' : 'background:rgb(2 132 199 / .1);color:#0369A1' }}"
                                             title="{{ $yetersiz ? 'Planlanan süre yasal asgari sürenin altında' : 'Yasal asgari süre' }}">{{ $kisaYasal }}{{ $yetersiz ? ' ⚠' : '' }}</span>
                                     @endif
@@ -138,14 +138,14 @@
                                     @if ($s === 0)
                                         @php $say = $this->aylikYapilacakSayilari[$i] ?? ['toplam' => 0, 'yapilan' => 0]; @endphp
                                         <button type="button" wire:click="yapilacakAySec({{ $i }})" title="{{ $ayAdi }} ziyaretinde yapılacakları göster"
-                                            style="padding:.3rem .5rem;border-radius:.4rem;cursor:pointer;font-size:.72rem;font-weight:700;background:transparent;
+                                            style="padding:.3rem .5rem;border-radius:.4rem;cursor:pointer;font-size:.75rem;font-weight:700;background:transparent;
                                                 border:1px solid {{ $i === $yapilacakAy ? $mor : 'rgb(107 114 128 / .3)' }};color:{{ $say['toplam'] && $say['yapilan'] === $say['toplam'] ? 'rgb(21 128 61)' : 'inherit' }}">
                                             📋 {{ $say['yapilan'] }}/{{ $say['toplam'] }}
                                         </button>
                                         {{-- Ayın öne çıkan (★) en fazla 2 görevi: kompakt etiket --}}
                                         @foreach ($this->ayKritikGorevleri[$i] ?? [] as $k)
                                             <button type="button" wire:click="yapilacakAySec({{ $i }})" title="{{ $k['baslik'] }}"
-                                                style="display:block;max-width:11rem;margin-top:.25rem;padding:.12rem .5rem;border-radius:9999px;cursor:pointer;font-size:.66rem;font-weight:700;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+                                                style="display:block;max-width:11rem;margin-top:.25rem;padding:.12rem .5rem;border-radius:9999px;cursor:pointer;font-size:.68rem;font-weight:700;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
                                                     border:1px solid {{ $k['gerceklesti'] ? 'rgb(21 128 61 / .5)' : 'rgb(217 119 6 / .55)' }};
                                                     background:{{ $k['gerceklesti'] ? 'rgb(21 128 61 / .1)' : 'rgb(217 119 6 / .1)' }};color:{{ $k['gerceklesti'] ? '#15803d' : '#b45309' }}">
                                                 {{ $k['gerceklesti'] ? '✓' : '★' }} {{ \Illuminate\Support\Str::limit($k['baslik'], 28) }}
@@ -208,7 +208,7 @@
                                     $aktif = $ai === $yapilacakAy;
                                 @endphp
                                 <button type="button" wire:click="yapilacakAySec({{ $ai }})"
-                                    style="min-height:2.25rem;padding:.3rem .6rem;border-radius:9999px;cursor:pointer;font-size:.74rem;font-weight:600;
+                                    style="min-height:2.25rem;padding:.3rem .6rem;border-radius:9999px;cursor:pointer;font-size:.75rem;font-weight:600;
                                         border:1px solid {{ $aktif ? '#0284C7' : '#d1d5db' }};background:{{ $aktif ? 'rgb(2 132 199 / .1)' : 'transparent' }};color:{{ $aktif ? '#0369A1' : 'inherit' }}">
                                     {{ mb_substr($ayAdi, 0, 3) }}
                                     <span style="font-weight:400;color:#6b7280">{{ $say['yapilan'] }}/{{ $say['toplam'] }}</span>
@@ -218,7 +218,7 @@
 
                         @forelse ($yapilacakGruplari as $grup => $maddeler)
                             <div style="margin-bottom:.8rem">
-                                <div style="font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#0369A1;margin-bottom:.25rem">{{ $grup }}</div>
+                                <div style="font-size:.68rem;font-weight:700;letter-spacing:.04em;color:#0369A1;margin-bottom:.25rem">{{ $grup }}</div>
                                 @foreach ($maddeler as $m)
                                     @php $yildizli = in_array($m['alan'].':'.$m['index'], $secilenKritik, true); @endphp
                                     <div style="display:flex;gap:.6rem;align-items:flex-start;padding:.4rem .2rem;border-top:1px solid #eef0f3">
@@ -226,11 +226,11 @@
                                             style="margin-top:.2rem;width:1.3rem;height:1.3rem;accent-color:#15803d;cursor:pointer;flex-shrink:0">
                                         <span style="flex:1;font-size:.82rem;{{ $m['gerceklesti'] ? 'text-decoration:line-through;color:#6b7280' : '' }}">
                                             {{ $m['baslik'] }}
-                                            @if (filled($m['sorumlu']))<span style="display:block;font-size:.7rem;color:#6b7280;text-decoration:none">{{ $m['sorumlu'] }}</span>@endif
+                                            @if (filled($m['sorumlu']))<span style="display:block;font-size:.75rem;color:#6b7280;text-decoration:none">{{ $m['sorumlu'] }}</span>@endif
                                         </span>
                                         <button type="button" wire:click="kritikGorevToggle('{{ $m['alan'] }}', {{ $m['index'] }})" title="{{ $yildizli ? 'Öne çıkandan kaldır' : 'Ayın öne çıkan görevi yap' }}" aria-label="Öne çıkan görev"
                                             style="flex-shrink:0;min-width:2.5rem;min-height:2.5rem;border-radius:.5rem;border:1px solid {{ $yildizli ? '#d97706' : '#e5e7eb' }};background:{{ $yildizli ? 'rgb(217 119 6 / .12)' : 'transparent' }};color:{{ $yildizli ? '#b45309' : '#9ca3af' }};font-size:1.05rem;cursor:pointer">{{ $yildizli ? '★' : '☆' }}</button>
-                                        <span style="flex-shrink:0;width:5.2rem;font-size:.68rem;font-weight:700;color:{{ $m['gerceklesti'] ? '#15803d' : '#b45309' }}">{{ $m['gerceklesti'] ? 'G · Yapıldı' : 'P · Planlı' }}</span>
+                                        <span style="flex-shrink:0;width:5.2rem;font-size:.75rem;font-weight:700;color:{{ $m['gerceklesti'] ? '#15803d' : '#b45309' }}">{{ $m['gerceklesti'] ? 'G · Yapıldı' : 'P · Planlı' }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -267,7 +267,7 @@
                         <div style="font-weight:700">{{ $takvimAyBaslangic->translatedFormat('F Y') }}</div>
                         <button type="button" wire:click="takvimAyDegistir(1)" style="border:none;background:none;cursor:pointer;font-size:1rem">›</button>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.7rem;text-align:center;color:rgb(107 114 128);margin-bottom:.3rem">
+                    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.75rem;text-align:center;color:rgb(107 114 128);margin-bottom:.3rem">
                         @foreach (['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as $g)
                             <div>{{ $g }}</div>
                         @endforeach

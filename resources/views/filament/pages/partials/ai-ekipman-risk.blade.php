@@ -73,7 +73,7 @@
                             <span aria-hidden="true" style="color:rgb(107 114 128)">→</span>
                             <x-filament::badge size="sm" :color="$kabul ? 'success' : 'warning'" title="{{ $son['duzey'] }}">Önlem Sonrası Risk: {{ $sonMetin }}</x-filament::badge>
                             @unless ($kabul)
-                                <span style="font-size:.72rem;color:#b45309">Şiddet/frekans çok yüksek: olasılık en alta inse de kabul edilebilir seviyeye inmiyor — ek mühendislik önlemi gerekir.</span>
+                                <span style="font-size:.75rem;color:#b45309">Şiddet/frekans çok yüksek: olasılık en alta inse de kabul edilebilir seviyeye inmiyor — ek mühendislik önlemi gerekir.</span>
                             @endunless
                         </span>
                     </span>

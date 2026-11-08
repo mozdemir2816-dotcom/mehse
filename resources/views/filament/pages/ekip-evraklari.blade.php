@@ -2,7 +2,7 @@
 @php
     $kart = 'background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem 1.1rem';
     $girdi = 'width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-size:.85rem';
-    $rozet = 'display:inline-block;font-size:.68rem;font-weight:700;padding:.12rem .55rem;border-radius:999px;';
+    $rozet = 'display:inline-block;font-size:.75rem;font-weight:700;padding:.12rem .55rem;border-radius:999px;';
 @endphp
 
 <x-filament-panels::page>

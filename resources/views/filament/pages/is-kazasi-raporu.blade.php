@@ -101,21 +101,21 @@
                 <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">İsteğe bağlı — DÖF önceliklendirme ve "Risk Analizine Ekle" için kullanılır.</p>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;align-items:end">
                     <div>
-                        <label style="font-size:.72rem;color:rgb(107 114 128)">Olasılık</label>
+                        <label style="font-size:.75rem;color:rgb(107 114 128)">Olasılık</label>
                         <select wire:model.live="kinneyOlasilik" style="{{ $inp }}">
                             <option value="">—</option>
                             @foreach ($this->kinneyOlcekleri['olasilik'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:.72rem;color:rgb(107 114 128)">Frekans (maruz kalma)</label>
+                        <label style="font-size:.75rem;color:rgb(107 114 128)">Frekans (maruz kalma)</label>
                         <select wire:model.live="kinneyFrekans" style="{{ $inp }}">
                             <option value="">—</option>
                             @foreach ($this->kinneyOlcekleri['frekans'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:.72rem;color:rgb(107 114 128)">Şiddet</label>
+                        <label style="font-size:.75rem;color:rgb(107 114 128)">Şiddet</label>
                         <select wire:model.live="kinneySiddet" style="{{ $inp }}">
                             <option value="">—</option>
                             @foreach ($this->kinneyOlcekleri['siddet'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
@@ -124,7 +124,7 @@
                     @php $kinney = $this->kinneySonuc @endphp
                     <div style="text-align:center;padding:.5rem;border-radius:.4rem;background:{{ $kinney['renk'] }}22">
                         <div style="font-size:1.3rem;font-weight:800;color:{{ $kinney['renk'] }}">{{ $kinney['puan'] ?: '—' }}</div>
-                        <div style="font-size:.7rem;color:{{ $kinney['renk'] }}">{{ $kinney['duzey'] }}</div>
+                        <div style="font-size:.75rem;color:{{ $kinney['renk'] }}">{{ $kinney['duzey'] }}</div>
                     </div>
                 </div>
             </div>
@@ -188,12 +188,12 @@
                         <div style="font-weight:700;font-size:.82rem">{{ $tanim['ad'] }}
                             <span style="font-weight:400;color:rgb(107 114 128)">({{ count($balikKilcigi[$anahtar] ?? []) }})</span>
                         </div>
-                        <div style="font-size:.7rem;color:rgb(107 114 128);margin-bottom:.4rem">{{ $tanim['aciklama'] }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.4rem">{{ $tanim['aciklama'] }}</div>
 
                         <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.4rem">
                             @foreach ($tanim['ornekler'] as $ornek)
                                 <button type="button" wire:click="balikNedenEkle('{{ $anahtar }}', @js($ornek))"
-                                    style="font-size:.68rem;border:1px dashed rgb(107 114 128 / .5);border-radius:999px;padding:.1rem .45rem;cursor:pointer;background:transparent">
+                                    style="font-size:.75rem;border:1px dashed rgb(107 114 128 / .5);border-radius:999px;padding:.1rem .45rem;cursor:pointer;background:transparent">
                                     + {{ $ornek }}
                                 </button>
                             @endforeach
@@ -257,7 +257,7 @@
                 @if ($yeniFotograflar)
                     <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
                         @foreach ($yeniFotograflar as $i => $f)
-                            <span style="font-size:.72rem;background:rgb(107 114 128 / .1);padding:.15rem .5rem;border-radius:.3rem">
+                            <span style="font-size:.75rem;background:rgb(107 114 128 / .1);padding:.15rem .5rem;border-radius:.3rem">
                                 {{ $f->getClientOriginalName() }} <button type="button" wire:click="fotoSil({{ $i }})" style="color:#dc2626;border:none;background:none;cursor:pointer">✕</button>
                             </span>
                         @endforeach
@@ -290,15 +290,15 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.75rem">
                 <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.7rem;text-align:center">
                     <div style="font-size:1.4rem;font-weight:800">{{ $ozet['bes_neden'] }}/5</div>
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">Kök Neden</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">Kök Neden</div>
                 </div>
                 <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.7rem;text-align:center">
                     <div style="font-size:1.4rem;font-weight:800">{{ $ozet['ishikawa'] }}</div>
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">Ishikawa Bulgu</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">Ishikawa Bulgu</div>
                 </div>
                 <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.7rem;text-align:center">
                     <div style="font-size:1.4rem;font-weight:800">{{ $ozet['dof'] }}</div>
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">DÖF Aksiyonu</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">DÖF Aksiyonu</div>
                 </div>
             </div>
 

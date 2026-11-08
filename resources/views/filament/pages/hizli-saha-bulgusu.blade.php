@@ -2,7 +2,7 @@
     $inp = 'margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.7rem 1rem';
-    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.45rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $hata = fn (string $alan) => $errors->first($alan);
     $skor = $olasilik * $siddet;
@@ -30,8 +30,8 @@
             <div style="font-size:.75rem;color:rgb(107 114 128)">Açık</div>
             @if ($o['kritik'] > 0 || $o['gecikmis'] > 0)
                 <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">
-                    @if ($o['kritik'] > 0)<span style="font-size:.68rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:rgb(220 38 38 / .12);color:#b91c1c">{{ $o['kritik'] }} kritik</span>@endif
-                    @if ($o['gecikmis'] > 0)<span style="font-size:.68rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:rgb(220 38 38 / .12);color:#b91c1c">{{ $o['gecikmis'] }} termini geçen</span>@endif
+                    @if ($o['kritik'] > 0)<span style="font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:rgb(220 38 38 / .12);color:#b91c1c">{{ $o['kritik'] }} kritik</span>@endif
+                    @if ($o['gecikmis'] > 0)<span style="font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:rgb(220 38 38 / .12);color:#b91c1c">{{ $o['gecikmis'] }} termini geçen</span>@endif
                 </div>
             @endif
         </div>
@@ -59,13 +59,13 @@
                         style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
                     <span style="font-size:1.6rem">📷</span>
                     <span><strong>Fotoğraf çek veya sürükle-bırak</strong></span>
-                    <span style="font-size:.72rem">En fazla {{ config('isg.saha_bulgu.max_foto') }} fotoğraf</span>
+                    <span style="font-size:.75rem">En fazla {{ config('isg.saha_bulgu.max_foto') }} fotoğraf</span>
                 </label>
                 <div wire:loading wire:target="yeniFotograflar" style="font-size:.78rem;color:rgb(107 114 128)">Yükleniyor…</div>
                 @if ($hata('yeniFotograflar.*'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('yeniFotograflar.*') }}</div>@endif
 
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
-                    @php $isaretDugme = 'position:absolute;left:0;right:0;bottom:0;background:rgb(0 0 0 / .6);color:#fff;border:none;border-radius:0 0 .4rem .4rem;font-size:.68rem;padding:.15rem 0;cursor:pointer'; @endphp
+                    @php $isaretDugme = 'position:absolute;left:0;right:0;bottom:0;background:rgb(0 0 0 / .6);color:#fff;border:none;border-radius:0 0 .4rem .4rem;font-size:.75rem;padding:.15rem 0;cursor:pointer'; @endphp
                     @foreach ($kaydedilenFotolar as $i => $yol)
                         @php $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($yol); @endphp
                         <div style="position:relative">
@@ -77,7 +77,7 @@
                         @php $fotoUrl = $f->temporaryUrl(); @endphp
                         <div style="position:relative">
                             <img src="{{ $fotoUrl }}" style="width:80px;height:80px;object-fit:cover;border-radius:.4rem">
-                            <button type="button" wire:click="fotoSil({{ $i }})" aria-label="Fotoğrafı kaldır" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer">✕</button>
+                            <button type="button" wire:click="fotoSil({{ $i }})" aria-label="Fotoğrafı kaldır" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.75rem;cursor:pointer">✕</button>
                             <button type="button" x-data x-on:click="$dispatch('foto-isaretle', { src: @js($fotoUrl), tur: 'yeni', index: {{ $i }} })" style="{{ $isaretDugme }}">✎ İşaretle</button>
                         </div>
                     @endforeach
@@ -135,7 +135,7 @@
         <div x-data="{ acik: false }" style="margin-top:.9rem">
             <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.55rem .8rem;border-radius:.6rem;border:1px solid rgb(107 114 128 / .25);background:rgb(107 114 128 / .04)">
                 <span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:3.2rem;padding:.2rem .5rem;border-radius:.5rem;color:#fff;background:{{ \App\Models\SahaBulgusu::ONCELIK_RENK[$gecerliOncelik] }}">
-                    <strong style="font-size:1.05rem;line-height:1">{{ $skor }}</strong><span style="font-size:.62rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</span>
+                    <strong style="font-size:1.05rem;line-height:1">{{ $skor }}</strong><span style="font-size:.68rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</span>
                 </span>
                 <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.3rem .8rem;font-size:.8rem;color:rgb(71 85 105)">
                     @forelse ($ozetParca as $p)<span>{{ $p }}</span>@empty<span style="color:rgb(107 114 128)">Bölüm, kategori, dayanak, aksiyon henüz girilmedi — AI ile doldurun ya da ayrıntıları açın.</span>@endforelse
@@ -220,7 +220,7 @@
             </div>
             <div style="text-align:center;padding:.35rem .8rem;border-radius:.6rem;color:#fff;background:{{ \App\Models\SahaBulgusu::ONCELIK_RENK[$gecerliOncelik] }}">
                 <div style="font-size:1.4rem;font-weight:800;line-height:1">{{ $skor }}</div>
-                <div style="font-size:.7rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</div>
+                <div style="font-size:.75rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</div>
             </div>
         </div>
 
@@ -286,16 +286,16 @@
                     @foreach ($this->bulgular as $b)
                         <tr wire:key="bulgu-{{ $b->id }}">
                             <td style="{{ $td }}"><input type="checkbox" wire:model.live="secili" value="{{ $b->id }}" title="DÖF'e aktarmak için seç" style="width:1.1rem;height:1.1rem"></td>
-                            <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->created_at?->format('d.m.Y') }}{{ match ($b->kaynak) { 'ai' => ' · AI', 'dosya' => ' · dosya', default => '' } }}@if (count($b->fotograflar ?? [])) · 📷 {{ count($b->fotograflar) }}@endif</div></td>
-                            <td style="{{ $td }}">{{ $b->firma?->unvan }}<div style="font-size:.72rem;color:rgb(107 114 128)">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(124 58 237)">harita</a>@endif</div></td>
-                            <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->kategori }}</div>@endif</td>
+                            <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->created_at?->format('d.m.Y') }}{{ match ($b->kaynak) { 'ai' => ' · AI', 'dosya' => ' · dosya', default => '' } }}@if (count($b->fotograflar ?? [])) · 📷 {{ count($b->fotograflar) }}@endif</div></td>
+                            <td style="{{ $td }}">{{ $b->firma?->unvan }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(124 58 237)">harita</a>@endif</div></td>
+                            <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->kategori }}</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">
-                                <span style="display:inline-block;color:#fff;background:{{ $b->oncelikRengi() }};border-radius:9999px;padding:.15rem .65rem;font-weight:700;font-size:.74rem">{{ $b->skor() }} · {{ $b->oncelikEtiketi() }}</span>
+                                <span style="display:inline-block;color:#fff;background:{{ $b->oncelikRengi() }};border-radius:9999px;padding:.15rem .65rem;font-weight:700;font-size:.75rem">{{ $b->skor() }} · {{ $b->oncelikEtiketi() }}</span>
                                 @if ($b->durum !== 'acik')
-                                    <div style="margin-top:.25rem"><span style="display:inline-block;font-size:.68rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;{{ $b->durum === 'kapandi' ? 'background:rgb(22 163 74 / .12);color:#15803d' : 'background:rgb(217 119 6 / .14);color:#b45309' }}">{{ \App\Models\SahaBulgusu::DURUMLAR[$b->durum] ?? $b->durum }}</span></div>
+                                    <div style="margin-top:.25rem"><span style="display:inline-block;font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;{{ $b->durum === 'kapandi' ? 'background:rgb(22 163 74 / .12);color:#15803d' : 'background:rgb(217 119 6 / .14);color:#b45309' }}">{{ \App\Models\SahaBulgusu::DURUMLAR[$b->durum] ?? $b->durum }}</span></div>
                                 @endif
                             </td>
-                            <td style="{{ $td }};white-space:nowrap">{{ $b->sorumlu ?: '—' }}<div style="font-size:.72rem;color:{{ $b->terminGectiMi() ? '#dc2626' : 'rgb(107 114 128)' }}">{{ $b->termin?->format('d.m.Y') }}{{ $b->terminGectiMi() ? ' · geçti' : '' }}</div></td>
+                            <td style="{{ $td }};white-space:nowrap">{{ $b->sorumlu ?: '—' }}<div style="font-size:.75rem;color:{{ $b->terminGectiMi() ? '#dc2626' : 'rgb(107 114 128)' }}">{{ $b->termin?->format('d.m.Y') }}{{ $b->terminGectiMi() ? ' · geçti' : '' }}</div></td>
                             <td style="{{ $td }};min-width:16rem">
                                 @if ($b->durum !== 'kapandi')
                                     <div style="display:flex;gap:.35rem;align-items:center">
@@ -304,7 +304,7 @@
                                         <x-filament::button size="sm" color="success" wire:click="hizliKapat({{ $b->id }})" style="min-height:2.5rem">Kapat</x-filament::button>
                                     </div>
                                 @else
-                                    <span style="font-size:.74rem;color:rgb(107 114 128)">{{ $b->kapanis_tarihi?->format('d.m.Y') }}@if ($b->kapanis_notu) · {{ \Illuminate\Support\Str::limit($b->kapanis_notu, 60) }}@endif</span>
+                                    <span style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->kapanis_tarihi?->format('d.m.Y') }}@if ($b->kapanis_notu) · {{ \Illuminate\Support\Str::limit($b->kapanis_notu, 60) }}@endif</span>
                                 @endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">

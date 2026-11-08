@@ -1,7 +1,7 @@
 @php
     use App\Support\IseOzguEgitimKutuphanesi as K;
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $kalemAd = collect(config('isg.kkd_matris.is_kalemleri', []))->flatten(1)->filter(fn ($k) => filled($k['anahtar'] ?? null))->pluck('ad', 'anahtar');
 @endphp
@@ -15,16 +15,16 @@
 
     <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;justify-content:space-between">
         <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end">
-            <div><label style="display:block;font-size:.72rem;font-weight:600">Ara</label>
+            <div><label style="display:block;font-size:.75rem;font-weight:600">Ara</label>
                 <input type="search" wire:model.live.debounce.400ms="arama" placeholder="Konu, hedef, NACE…" style="{{ $girdi }};min-width:240px"></div>
-            <div><label style="display:block;font-size:.72rem;font-weight:600">Kaynak</label>
+            <div><label style="display:block;font-size:.75rem;font-weight:600">Kaynak</label>
                 <select wire:model.live="kaynakFiltre" style="{{ $girdi }}">
                     <option value="">Tümü</option>
                     <option value="kendi">Kendi kayıtlarım / düzenlediklerim</option>
                     <option value="kalem">İş kalemine bağlı</option>
                     <option value="nace">NACE'ye bağlı (sistem)</option>
                 </select></div>
-            <div><label style="display:block;font-size:.72rem;font-weight:600">Firmaya önerilenleri göster</label>
+            <div><label style="display:block;font-size:.75rem;font-weight:600">Firmaya önerilenleri göster</label>
                 <select wire:model.live="firmaId" style="{{ $girdi }};min-width:240px">
                     <option value="">— Tüm konular —</option>
                     @foreach ($this->firmalar as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
@@ -50,13 +50,13 @@
                     @forelse ($this->konular as $a => $k)
                         <tr wire:key="k-{{ $a }}">
                             <td style="{{ $td }}"><div style="font-weight:700">{{ $k['ad'] }}</div><div style="color:rgb(107 114 128);font-size:.75rem">{{ $k['hedef'] }}</div></td>
-                            <td style="{{ $td }};font-size:.74rem">
+                            <td style="{{ $td }};font-size:.75rem">
                                 @if ($k['is_kalemleri'])<div>İş kalemi: {{ collect($k['is_kalemleri'])->map(fn ($x) => $kalemAd[$x] ?? $x)->implode(', ') }}</div>@endif
                                 @if ($k['nace'])<div>NACE: {{ K::naceGoster($k['nace']) }}</div>@endif
                                 @if (! $k['is_kalemleri'] && ! $k['nace'])<span style="color:rgb(180 83 9)">Eşleşme yok — yalnız elle seçilir</span>@endif
                             </td>
-                            <td style="{{ $td }};font-size:.74rem">{{ $k['egitici'] }}</td>
-                            <td style="{{ $td }};font-size:.74rem">{{ $k['kaynak'] }}@if ($k['duzenlendi'])<div style="color:rgb(15 118 110)">düzenlendi</div>@endif</td>
+                            <td style="{{ $td }};font-size:.75rem">{{ $k['egitici'] }}</td>
+                            <td style="{{ $td }};font-size:.75rem">{{ $k['kaynak'] }}@if ($k['duzenlendi'])<div style="color:rgb(15 118 110)">düzenlendi</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="mountAction('konuDuzenle', { anahtar: '{{ $a }}' })">Düzenle</x-filament::button>
                                 @if ($k['duzenlendi'])

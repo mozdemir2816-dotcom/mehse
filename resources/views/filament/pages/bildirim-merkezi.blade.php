@@ -1,6 +1,6 @@
 @php
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
-    $th = 'text-align:left;padding:.55rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.55rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $renk = ['kritik' => 'rgb(220 38 38)', 'uyari' => 'rgb(217 119 6)', 'bilgi' => 'rgb(37 99 235)'];
     $s = $this->sayilar;
@@ -66,10 +66,10 @@
                 @forelse ($this->bildirimler as $b)
                     <tr style="{{ $b->okundu_at ? 'opacity:.6' : '' }}">
                         <td style="{{ $td }};white-space:nowrap">
-                            <span style="font-size:.72rem;font-weight:700;color:#fff;background:{{ $renk[$b->seviye] ?? 'gray' }};border-radius:.35rem;padding:.15rem .45rem">{{ $b->seviyeEtiketi() }}</span>
+                            <span style="font-size:.75rem;font-weight:700;color:#fff;background:{{ $renk[$b->seviye] ?? 'gray' }};border-radius:.35rem;padding:.15rem .45rem">{{ $b->seviyeEtiketi() }}</span>
                             @unless ($b->okundu_at)<span title="Okunmamış" style="display:inline-block;width:.45rem;height:.45rem;border-radius:9px;background:rgb(220 38 38);margin-left:.3rem"></span>@endunless
                         </td>
-                        <td style="{{ $td }}"><strong>{{ $b->baslik }}</strong>@unless ($firmaId)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $b->firma?->unvan }}</div>@endunless</td>
+                        <td style="{{ $td }}"><strong>{{ $b->baslik }}</strong>@unless ($firmaId)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->firma?->unvan }}</div>@endunless</td>
                         <td style="{{ $td }};line-height:1.45">{{ $b->aciklama }}</td>
                         <td style="{{ $td }};white-space:nowrap">{{ $b->tarih?->format('d.m.Y') ?? '—' }}</td>
                         <td style="{{ $td }};white-space:nowrap">

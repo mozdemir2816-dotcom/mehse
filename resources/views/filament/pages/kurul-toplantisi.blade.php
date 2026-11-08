@@ -58,9 +58,9 @@
                 ['Zorunlu üyeler', $m['eksik'] ? $m['eksik'].' eksik' : 'Tam', $m['eksik'] ? 'Yalnız taslak kaydedilebilir' : 'Resmî kayıt yapılabilir', $m['eksik'] ? 'var(--metric-orange)' : 'var(--metric-green)'],
             ] as [$baslik, $deger, $alt, $renk])
                 <div style="background:var(--panel-bg,#fff);border-radius:12px;padding:.9rem 1rem;border-left:4px solid {{ $renk }};box-shadow:0 0 0 1px rgb(15 23 42 / .05)">
-                    <div style="font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-label)">{{ $baslik }}</div>
+                    <div style="font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-label)">{{ $baslik }}</div>
                     <div style="font-size:1.5rem;font-weight:700;color:{{ $renk }};line-height:1.3">{{ $deger }}</div>
-                    <div style="font-size:.72rem;color:var(--text-secondary)">{{ $alt }}</div>
+                    <div style="font-size:.75rem;color:var(--text-secondary)">{{ $alt }}</div>
                 </div>
             @endforeach
         </div>
@@ -140,7 +140,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                            <tr style="color:var(--text-secondary);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
                                 <th class="px-3 py-2 text-left">#</th>
                                 <th class="px-3 py-2 text-left">Ad soyad</th>
                                 <th class="px-3 py-2 text-left">Görevi / unvanı</th>
@@ -184,7 +184,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                            <tr style="color:var(--text-secondary);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
                                 <th class="px-3 py-2 text-left">Tarih</th>
                                 <th class="px-3 py-2 text-left">No</th>
                                 <th class="px-3 py-2 text-left">Tür / durum</th>
@@ -442,7 +442,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                            <tr style="color:var(--text-secondary);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
                                 <th class="px-3 py-2 text-left">Alındığı toplantı</th>
                                 <th class="px-3 py-2 text-left" style="width:42%">Karar</th>
                                 <th class="px-3 py-2 text-left">Sorumlu</th>
@@ -454,12 +454,12 @@
                         <tbody>
                             @foreach ($devreden as $d)
                                 <tr wire:key="devreden-{{ $d['kaynak_id'] }}-{{ $d['id'] }}" style="border-top:1px solid var(--border-light);background:rgb(251 191 36 / .07)">
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $d['kaynak_no'] ?: '—' }}<br><span style="font-size:.72rem;color:var(--text-secondary)">{{ $d['kaynak_tarih']?->format('d.m.Y') }}</span></td>
-                                    <td class="px-3 py-2">@if ($d['gundem'])<span style="font-size:.72rem;color:var(--text-secondary)">{{ $d['gundem'] }}</span><br>@endif{{ $d['karar'] }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $d['kaynak_no'] ?: '—' }}<br><span style="font-size:.75rem;color:var(--text-secondary)">{{ $d['kaynak_tarih']?->format('d.m.Y') }}</span></td>
+                                    <td class="px-3 py-2">@if ($d['gundem'])<span style="font-size:.75rem;color:var(--text-secondary)">{{ $d['gundem'] }}</span><br>@endif{{ $d['karar'] }}</td>
                                     <td class="px-3 py-2">{{ $d['sorumlu'] ?: '—' }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap" @if ($d['gecikti']) style="color:#dc2626;font-weight:600" @endif>
                                         {{ filled($d['termin']) ? \Illuminate\Support\Carbon::parse($d['termin'])->format('d.m.Y') : '—' }}
-                                        @if ($d['gecikti'])<br><span style="font-size:.72rem">süresi geçti</span>@endif
+                                        @if ($d['gecikti'])<br><span style="font-size:.75rem">süresi geçti</span>@endif
                                     </td>
                                     <td class="px-3 py-2">
                                         <select x-on:change="$wire.devredenDurum({{ $d['kaynak_id'] }}, '{{ $d['id'] }}', $event.target.value)" style="{{ $girdi }};width:auto;padding:.25rem .45rem">
@@ -487,7 +487,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr style="color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">
+                            <tr style="color:var(--text-secondary);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
                                 <th class="px-3 py-2 text-left">Gündem</th>
                                 <th class="px-3 py-2 text-left">Karar</th>
                                 <th class="px-3 py-2 text-left">Sorumlu</th>
@@ -511,7 +511,7 @@
                                             <option value="ertelendi" @selected(($k['durum'] ?? '') === 'ertelendi')>Ertelendi</option>
                                         </select>
                                         @if (filled($k['kapanis_tarihi'] ?? null) && ($k['durum'] ?? '') === 'tamamlandi')
-                                            <div style="font-size:.7rem;color:var(--text-secondary)">Kapanış: {{ \Illuminate\Support\Carbon::parse($k['kapanis_tarihi'])->format('d.m.Y') }}</div>
+                                            <div style="font-size:.75rem;color:var(--text-secondary)">Kapanış: {{ \Illuminate\Support\Carbon::parse($k['kapanis_tarihi'])->format('d.m.Y') }}</div>
                                         @endif
                                     </td>
                                     <td class="px-3 py-2 text-right whitespace-nowrap">

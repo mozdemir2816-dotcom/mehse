@@ -56,7 +56,7 @@
                     <span style="flex:1">
                         {{ $o['cihaz'] }}
                         @if ($o['bu_cihaz'])
-                            <span style="font-size:.7rem;padding:.05rem .45rem;border-radius:999px;background:rgb(16 185 129 / .12);color:#047857;font-weight:600">bu cihaz</span>
+                            <span style="font-size:.75rem;padding:.05rem .45rem;border-radius:999px;background:rgb(16 185 129 / .12);color:#047857;font-weight:600">bu cihaz</span>
                         @endif
                         <br><span style="{{ $soluk }}">{{ $o['ip'] ?: 'IP yok' }}</span>
                     </span>

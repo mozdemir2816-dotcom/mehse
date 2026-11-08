@@ -157,7 +157,7 @@
                         <input type="checkbox" wire:model.live="etkiler" value="{{ $anahtar }}" style="margin-top:.2rem">
                         <span>
                             <span style="font-weight:600;font-size:.82rem;display:block">{{ $etki['ad'] }}</span>
-                            <span style="font-size:.72rem;color:rgb(107 114 128)">{{ $etki['aciklama'] }}</span>
+                            <span style="font-size:.75rem;color:rgb(107 114 128)">{{ $etki['aciklama'] }}</span>
                         </span>
                     </label>
                 @endforeach
@@ -481,7 +481,7 @@
                         <div style="position:relative">
                             <img src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
                             <button type="button" wire:click="fotoSil({{ $i }})"
-                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.75rem;cursor:pointer;line-height:1">✕</button>
                         </div>
                     @endforeach
                 </div>
@@ -548,7 +548,7 @@
                                 <td style="padding:.35rem .5rem">{{ $k->siniflandirma ? $k->siniflandirmaEtiketi() : '—' }}</td>
                                 <td style="padding:.35rem .5rem">{{ $k->potansiyel_skor ?? '—' }} / {{ $k->potansiyelSeviye() }}</td>
                                 <td style="padding:.35rem .5rem">
-                                    <span style="font-size:.72rem;padding:.1rem .45rem;border-radius:999px;border:1px solid {{ match ($k->durum) { 'kapandi' => 'rgb(22 163 74 / .5)', 'incelemede' => 'rgb(245 158 11 / .5)', default => 'rgb(220 38 38 / .5)' } }}">{{ $k->durumEtiketi() }}</span>
+                                    <span style="font-size:.75rem;padding:.1rem .45rem;border-radius:999px;border:1px solid {{ match ($k->durum) { 'kapandi' => 'rgb(22 163 74 / .5)', 'incelemede' => 'rgb(245 158 11 / .5)', default => 'rgb(220 38 38 / .5)' } }}">{{ $k->durumEtiketi() }}</span>
                                     @if ($k->eksikUyarilari())
                                         <span title="{{ implode("\n", $k->eksikUyarilari()) }}" style="cursor:help">⚠️</span>
                                     @endif

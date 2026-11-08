@@ -15,7 +15,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem">
             @foreach (\App\Support\ToolboxKartlari::liste() as $anahtar => $kart)
                 <details style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
-                    <summary style="cursor:pointer;font-weight:700;font-size:.88rem;color:#0f172a">{{ $kart['baslik'] }} <span style="font-weight:500;font-size:.72rem;color:#64748b">· 5 madde</span></summary>
+                    <summary style="cursor:pointer;font-weight:700;font-size:.88rem;color:#0f172a">{{ $kart['baslik'] }} <span style="font-weight:500;font-size:.75rem;color:#64748b">· 5 madde</span></summary>
                     <ol style="margin:.6rem 0 .6rem 1.1rem;font-size:.82rem;color:#334155;line-height:1.45">
                         @foreach ($kart['maddeler'] as $m)<li style="margin-bottom:.3rem">{{ $m }}</li>@endforeach
                     </ol>

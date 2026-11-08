@@ -51,10 +51,10 @@
                         background:{{ $secili ? '#fff1f2' : '#fff' }};color:{{ $secili ? '#9f1239' : '#334155' }}">
                     <span style="position:absolute;top:.35rem;left:.45rem;font-size:.9rem">{{ $secili ? '☑' : '☐' }}</span>
                     @if ($secili && count($secilenSenaryolar) > 1)
-                        <span style="position:absolute;top:.3rem;right:.45rem;font-size:.68rem;font-weight:700;background:#e11d48;color:#fff;border-radius:999px;padding:0 .4rem">{{ $no + 1 }}</span>
+                        <span style="position:absolute;top:.3rem;right:.45rem;font-size:.75rem;font-weight:700;background:#e11d48;color:#fff;border-radius:999px;padding:0 .4rem">{{ $no + 1 }}</span>
                     @endif
                     <div style="font-weight:700">{{ $s['ad'] }}</div>
-                    <div style="font-size:.7rem;color:rgb(107 114 128)">≈{{ $s['sure_dk'] }} dk</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">≈{{ $s['sure_dk'] }} dk</div>
                 </button>
             @endforeach
         </div>
@@ -134,7 +134,7 @@
                     <input type="number" min="0" wire:model.live.debounce.500ms="hedefTahliyeDk" placeholder="Senaryo seçince önerilen gelir"
                         style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
                     @if ($tahliyeDk && $hedefTahliyeDk)
-                        <div style="font-size:.72rem;margin-top:.2rem;color:{{ $tahliyeDk <= $hedefTahliyeDk ? '#16a34a' : '#dc2626' }}">
+                        <div style="font-size:.75rem;margin-top:.2rem;color:{{ $tahliyeDk <= $hedefTahliyeDk ? '#16a34a' : '#dc2626' }}">
                             {{ $tahliyeDk <= $hedefTahliyeDk ? '✓ Tahliye hedef süre içinde' : '✗ Hedef süre '.($tahliyeDk - $hedefTahliyeDk).' dk aşıldı — DÖF önerisi ekleyin' }}
                         </div>
                     @endif
@@ -344,9 +344,9 @@
                     @foreach ($yeniFotograflar as $i => $dosya)
                         <div style="position:relative">
                             <img src="{{ $dosya->temporaryUrl() }}" style="width:70px;height:70px;object-fit:cover;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3)">
-                            <span style="position:absolute;bottom:2px;left:2px;background:rgb(0 0 0 / .65);color:#fff;border-radius:.25rem;padding:0 .3rem;font-size:.68rem;line-height:1.3">{{ $i + 1 }}</span>
+                            <span style="position:absolute;bottom:2px;left:2px;background:rgb(0 0 0 / .65);color:#fff;border-radius:.25rem;padding:0 .3rem;font-size:.75rem;line-height:1.3">{{ $i + 1 }}</span>
                             <button type="button" wire:click="fotoSil({{ $i }})"
-                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+                                style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.75rem;cursor:pointer;line-height:1">✕</button>
                         </div>
                     @endforeach
                 </div>
@@ -365,7 +365,7 @@
     {{-- TATBİKAT KAYITLARI (isgsuite "Tatbikat Yönetimi") --}}
     @php
         $o = $this->ozet;
-        $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+        $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
         $td = 'padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
         $girdi = 'width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem';
         $durumRenk = ['planlandi' => 'rgb(245 158 11 / .6)', 'yapildi' => 'rgb(22 163 74 / .55)', 'takip' => 'rgb(220 38 38 / .6)', 'iptal' => 'rgb(107 114 128 / .45)'];
@@ -383,7 +383,7 @@
             ] as [$ad, $sayi, $renk, $filtre])
                 <button type="button" wire:click="$set('listeDurum', {{ $filtre ? "'".$filtre."'" : 'null' }})"
                     style="text-align:left;{{ $kutu }};padding:.6rem .85rem;background:transparent;cursor:pointer;{{ $listeDurum === $filtre ? 'border-color:rgb(124 58 237)' : '' }}">
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                 </button>
             @endforeach
@@ -418,8 +418,8 @@
                             <td style="{{ $td }}">{{ $t->katilimciSayisi() }}</td>
                             <td style="{{ $td }}">{{ count($t->fotograflar ?? []) }}</td>
                             <td style="{{ $td }}">
-                                <span style="font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $durumRenk[$t->durum] ?? 'rgb(107 114 128 / .45)' }}">{{ $t->durumEtiketi() }}</span>
-                                @if ($t->gecikmisMi())<div style="font-size:.68rem;color:#dc2626">Planlanan tarih geçti</div>@endif
+                                <span style="font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $durumRenk[$t->durum] ?? 'rgb(107 114 128 / .45)' }}">{{ $t->durumEtiketi() }}</span>
+                                @if ($t->gecikmisMi())<div style="font-size:.75rem;color:#dc2626">Planlanan tarih geçti</div>@endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">
                                 @if ($t->durum === 'planlandi')

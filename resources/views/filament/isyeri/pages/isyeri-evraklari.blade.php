@@ -2,7 +2,7 @@
     $firma = $this->firma;
     $oz = $this->ozet;
     $kart = 'border:1px solid rgb(107 114 128 / .22);border-radius:.75rem;padding:1rem 1.1rem;background:rgb(255 255 255 / .6)';
-    $etiket = 'font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:rgb(107 114 128);font-weight:600';
+    $etiket = 'font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;color:rgb(107 114 128);font-weight:600';
 @endphp
 
 <x-filament-panels::page>

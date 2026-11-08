@@ -153,5 +153,5 @@
         background: color-mix(in srgb, currentColor 5%, transparent);
     }
     .mehse-menu-arama-ek a:hover, .mehse-menu-arama-ek a:focus-visible { background: color-mix(in srgb, currentColor 13%, transparent); }
-    .mehse-menu-arama-ek small { font-size: .68rem; opacity: .65; }
+    .mehse-menu-arama-ek small { font-size: .75rem; opacity: .65; }
 </style>

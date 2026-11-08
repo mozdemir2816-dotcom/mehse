@@ -217,7 +217,7 @@
                 <tr><th style="text-align:left;padding:.3rem;width:28%">Muayene Edilen Sistem / Organ</th><th style="text-align:left;padding:.3rem">Fizik Muayene Bulguları</th></tr>
                 @foreach ($muayeneModeli::FIZIK_SISTEMLERI as $anahtar => [$ad, $alt, $normal])
                     <tr style="border-top:1px solid rgb(107 114 128 / .15)">
-                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span style="font-size:.7rem;color:rgb(107 114 128)">{{ $alt }}</span>@endif</td>
+                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</span>@endif</td>
                         <td style="padding:.3rem"><input type="text" wire:model="ek2.fizik.{{ $anahtar }}" placeholder="{{ $normal }}" style="{{ $kucukGirdi }}"></td>
                     </tr>
                 @endforeach
@@ -231,7 +231,7 @@
                 <tr><th style="text-align:left;padding:.3rem;width:30%">Tetkik Grubu</th><th style="width:150px">Tarih</th><th style="text-align:left;padding:.3rem">Sonuç / Değerlendirme</th></tr>
                 @foreach ($muayeneModeli::LAB_GRUPLARI as $anahtar => [$ad, $alt])
                     <tr style="border-top:1px solid rgb(107 114 128 / .15)">
-                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span style="font-size:.7rem;color:rgb(107 114 128)">{{ $alt }}</span>@endif</td>
+                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</span>@endif</td>
                         <td style="padding:.3rem"><input type="date" wire:model="ek2.lab.{{ $anahtar }}.tarih" style="{{ $kucukGirdi }}"></td>
                         <td style="padding:.3rem"><input type="text" wire:model="ek2.lab.{{ $anahtar }}.sonuc" style="{{ $kucukGirdi }}"></td>
                     </tr>

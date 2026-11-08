@@ -4,7 +4,7 @@
     $s = $this->sds;
     $r = $this->risk;
     $p = $this->pkd;
-    $sayi = fn ($deger, string $ad, string $renk = 'inherit') => '<div><div style="font-size:1.25rem;font-weight:700;color:'.($deger > 0 ? $renk : 'inherit').'">'.e($deger).'</div><div style="font-size:.72rem;color:rgb(107 114 128)">'.e($ad).'</div></div>';
+    $sayi = fn ($deger, string $ad, string $renk = 'inherit') => '<div><div style="font-size:1.25rem;font-weight:700;color:'.($deger > 0 ? $renk : 'inherit').'">'.e($deger).'</div><div style="font-size:.75rem;color:rgb(107 114 128)">'.e($ad).'</div></div>';
 @endphp
 
 <x-filament-panels::page>

@@ -141,7 +141,7 @@ html[data-mehse-tema="modern"] {
 
     .fi-sidebar-group-label {
         color: #94A3B8 !important;
-        font-size: .68rem;
+        font-size: .75rem;
         font-weight: 600;
         letter-spacing: .06em;
         text-transform: uppercase;
@@ -260,7 +260,7 @@ html[data-mehse-tema="modern"] {
     .fi-badge {
         border: 1px solid transparent;
         border-radius: 9999px;
-        font-size: .72rem;
+        font-size: .75rem;
         font-weight: 500;
     }
 

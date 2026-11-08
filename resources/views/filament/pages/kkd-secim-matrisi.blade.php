@@ -62,7 +62,7 @@
                             <tr style="text-align:left;background:rgb(107 114 128 / .08)">
                                 <th style="padding:.4rem;min-width:150px">İş Kalemi</th>
                                 @foreach ($this->sutunlar as $anahtar => $tam)
-                                    <th style="padding:.4rem;font-size:.68rem" title="{{ $tam }}">{{ trim(explode('(', $tam)[0]) }}</th>
+                                    <th style="padding:.4rem;font-size:.75rem" title="{{ $tam }}">{{ trim(explode('(', $tam)[0]) }}</th>
                                 @endforeach
                                 <th></th>
                             </tr>
@@ -72,7 +72,7 @@
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.3rem">
                                         <input type="text" wire:model.blur="satirlar.{{ $i }}.is_kalemi" style="{{ $girdi }};font-weight:600">
-                                        <div style="font-size:.66rem;color:rgb(107 114 128)">{{ $s['grup'] ?? '' }}</div>
+                                        <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $s['grup'] ?? '' }}</div>
                                     </td>
                                     @foreach (array_keys($this->sutunlar) as $anahtar)
                                         @php
@@ -85,7 +85,7 @@
                                                 style="width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;font-weight:700;font-size:.85rem;color:#fff;background:{{ $meta['renk'] }}">{{ $meta['sembol'] }}</button>
                                             <input type="text" wire:model.blur="satirlar.{{ $i }}.{{ $anahtar }}_not"
                                                 placeholder="not" title="İsteğe bağlı kısa not"
-                                                style="width:100%;margin-top:.2rem;padding:.1rem .25rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .25);background:transparent;font-size:.62rem;text-align:center">
+                                                style="width:100%;margin-top:.2rem;padding:.1rem .25rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .25);background:transparent;font-size:.68rem;text-align:center">
                                         </td>
                                     @endforeach
                                     <td style="padding:.3rem;text-align:center">
@@ -97,10 +97,10 @@
                     </table>
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:.72rem;margin-top:.75rem;align-items:center">
+                <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:.75rem;margin-top:.75rem;align-items:center">
                     @foreach ($this->durumlar as $meta)
                         <span style="display:inline-flex;align-items:center;gap:.35rem">
-                            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:{{ $meta['renk'] }};color:#fff;font-size:.68rem;font-weight:700">{{ $meta['sembol'] }}</span>
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:{{ $meta['renk'] }};color:#fff;font-size:.75rem;font-weight:700">{{ $meta['sembol'] }}</span>
                             {{ $meta['etiket'] }}
                         </span>
                     @endforeach
@@ -120,7 +120,7 @@
             <div style="display:flex;flex-direction:column;gap:1rem">
                 <div style="{{ $kutu }}">
                     <div style="font-weight:600;font-size:.85rem;margin-bottom:.4rem">Bu firma için geçerli faaliyet bölümleri</div>
-                    <p style="font-size:.72rem;color:rgb(107 114 128);margin:0 0 .5rem">
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin:0 0 .5rem">
                         Firma her inşaat aşamasını yapmıyor olabilir (örn. sadece kazı, veya sadece dış cephe/iskele/sıva/boya).
                         Hiçbiri seçilmezse tüm bölümler gösterilir. Seçim bu firma için kaydedilir.
                     </p>
@@ -138,7 +138,7 @@
                     <div style="{{ $kutu }}">
                         <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem">{{ $bolum }}</div>
                         <div style="overflow-x:auto">
-                            <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:900px">
+                            <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:900px">
                                 <thead>
                                     <tr style="text-align:left;background:rgb(107 114 128 / .08)">
                                         <th style="padding:.3rem">İş Kolu</th>
@@ -169,7 +169,7 @@
                 <div style="{{ $kutu }}">
                     <div style="font-weight:600;font-size:.85rem;margin-bottom:.5rem">Standart Kod Okuma Rehberi</div>
                     <div style="overflow-x:auto">
-                        <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:900px">
+                        <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:900px">
                             <thead>
                                 <tr style="text-align:left;background:rgb(107 114 128 / .08)">
                                     <th style="padding:.3rem">Standart</th>

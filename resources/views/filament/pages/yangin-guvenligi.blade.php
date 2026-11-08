@@ -45,14 +45,14 @@
         @php $h = $this->hesap; $say = fn ($n) => number_format((float) $n, fmod((float) $n, 1) ? 2 : 0, ',', '.'); @endphp
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem">
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
-                <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">TOPLAM KAPALI ALAN</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">TOPLAM KAPALI ALAN</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['alan'] ? $say($h['alan']).' m²' : '—' }}</div>
-                <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $h['alan'] ? 'Tüm katların toplamı (girdiğiniz değer)' : 'Toplam kapalı alanı girin' }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $h['alan'] ? 'Tüm katların toplamı (girdiğiniz değer)' : 'Toplam kapalı alanı girin' }}</div>
             </div>
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
-                <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">KULLANICI YÜKÜ (Md.32, Ek-5/A)</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">KULLANICI YÜKÜ (Md.32, Ek-5/A)</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['yuk']['esas'] ? $say($h['yuk']['esas']).' kişi' : '—' }}</div>
-                <div style="font-size:.7rem;color:rgb(107 114 128)">
+                <div style="font-size:.75rem;color:rgb(107 114 128)">
                     @if ($h['yuk']['hesaplanan']) {{ $say($h['alan']) }} m² ÷ {{ $say($h['yuk']['katsayi']) }} m²/kişi = {{ $h['yuk']['hesaplanan'] }} · @endif
                     @if ($h['yuk']['calisan']) çalışan {{ $h['yuk']['calisan'] }} · @endif
                     @if ($h['yuk']['girilen']) beyan {{ $h['yuk']['girilen'] }} · @endif
@@ -60,9 +60,9 @@
                 </div>
             </div>
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
-                <div style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">ASGARİ SÖNDÜRÜCÜ (Md.99/2)</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">ASGARİ SÖNDÜRÜCÜ (Md.99/2)</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['ysc'] ? $h['ysc']['adet'].' adet 6 kg KKT' : '—' }}@if ($h['ysc']['uzman_adet'] ?? null) <span style="font-size:.85rem;color:#b91c1c">· uzman önerisi {{ $h['ysc']['uzman_adet'] }} adet</span>@endif</div>
-                <div style="font-size:.7rem;color:rgb(107 114 128)">
+                <div style="font-size:.75rem;color:rgb(107 114 128)">
                     @if ($h['ysc']) Her {{ $h['ysc']['birim'] }} m²'ye 1 adet, ulaşma ≤ 25 m{{ $h['ysc']['tekerlekli'] ? ' · tekerlekli: '.implode(', ', $h['ysc']['tekerlekli']) : '' }} @else Toplam kapalı alanı girin @endif
                 </div>
             </div>
@@ -131,7 +131,7 @@
                 @foreach ($this->riskKutuphanesi as $risk => $sinif)
                     <label style="display:flex;align-items:center;gap:.35rem;font-size:.8rem;cursor:pointer">
                         <input type="checkbox" wire:model.live="riskler" value="{{ $risk }}"> {{ $risk }}
-                        <span style="font-size:.66rem;color:{{ $sinifRenk[$sinif] }};font-weight:700">[{{ $this->siniflar[$sinif] }}]</span>
+                        <span style="font-size:.68rem;color:{{ $sinifRenk[$sinif] }};font-weight:700">[{{ $this->siniflar[$sinif] }}]</span>
                     </label>
                 @endforeach
             </div>
@@ -158,7 +158,7 @@
                 <div style="display:flex;gap:.5rem;align-items:start;margin-bottom:.3rem;font-size:.82rem">
                     <span style="font-weight:700;color:rgb(107 114 128)">{{ $i + 1 }}.</span>
                     <span style="flex:1">{{ $t['madde'] }}</span>
-                    <button type="button" wire:click="oncelikDegistir({{ $i }})" title="Önceliği değiştirmek için tıklayın" style="font-size:.68rem;color:{{ $t['oncelik'] === 'yuksek' ? '#dc2626' : '#d97706' }};font-weight:700;border:1px solid currentColor;border-radius:.3rem;padding:0 .35rem;background:none;cursor:pointer">{{ $t['oncelik'] === 'yuksek' ? 'Yüksek' : 'Orta' }} ⇄</button>
+                    <button type="button" wire:click="oncelikDegistir({{ $i }})" title="Önceliği değiştirmek için tıklayın" style="font-size:.75rem;color:{{ $t['oncelik'] === 'yuksek' ? '#dc2626' : '#d97706' }};font-weight:700;border:1px solid currentColor;border-radius:.3rem;padding:0 .35rem;background:none;cursor:pointer">{{ $t['oncelik'] === 'yuksek' ? 'Yüksek' : 'Orta' }} ⇄</button>
                     <button type="button" wire:click="tespitSil({{ $i }})" style="color:#dc2626;border:none;background:none;cursor:pointer">✕</button>
                 </div>
             @empty

@@ -67,14 +67,14 @@
                         <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.5rem">
                             <input type="text" wire:model.blur="satirlar.{{ $i }}.kimyasal_adi" style="{{ $girdi }};font-weight:700;max-width:320px">
                             <div style="display:flex;align-items:center;gap:.6rem">
-                                <span style="font-size:.72rem;color:rgb(107 114 128)">Kontrol Yaklaşımı</span>
+                                <span style="font-size:.75rem;color:rgb(107 114 128)">Kontrol Yaklaşımı</span>
                                 <span style="background:{{ $yaklasimRenk[$y] }};color:#fff;font-weight:700;border-radius:.35rem;padding:.15rem .55rem;font-size:.9rem">{{ $y }}</span>
                                 <button type="button" wire:click="satirSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                             </div>
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem">
                             <div>
-                                <label style="font-size:.7rem;font-weight:600">Tehlike Grubu</label>
+                                <label style="font-size:.75rem;font-weight:600">Tehlike Grubu</label>
                                 <select wire:model.blur="satirlar.{{ $i }}.tehlike_grubu" style="{{ $girdi }}">
                                     @foreach ($this->gruplar as $g => $ad)
                                         <option value="{{ $g }}">{{ $ad }}</option>
@@ -82,7 +82,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="font-size:.7rem;font-weight:600">Kullanım Miktarı</label>
+                                <label style="font-size:.75rem;font-weight:600">Kullanım Miktarı</label>
                                 <select wire:model.blur="satirlar.{{ $i }}.miktar" style="{{ $girdi }}">
                                     @foreach ($this->miktarlar as $m => $ad)
                                         <option value="{{ $m }}">{{ $ad }}</option>
@@ -90,7 +90,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="font-size:.7rem;font-weight:600">Uçuculuk / Tozlaşma</label>
+                                <label style="font-size:.75rem;font-weight:600">Uçuculuk / Tozlaşma</label>
                                 <select wire:model.blur="satirlar.{{ $i }}.ucuculuk" style="{{ $girdi }}">
                                     @foreach ($this->ucuculukSecenekleri as $u => $ad)
                                         <option value="{{ $u }}">{{ $ad }}</option>
@@ -98,7 +98,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="font-size:.7rem;font-weight:600">Kullanım Alanı / Bölüm</label>
+                                <label style="font-size:.75rem;font-weight:600">Kullanım Alanı / Bölüm</label>
                                 <input type="text" wire:model.blur="satirlar.{{ $i }}.kullanim_alani" style="{{ $girdi }}">
                             </div>
                         </div>
@@ -108,11 +108,11 @@
                         </div>
                         <div style="display:grid;grid-template-columns:2fr 1fr;gap:.5rem">
                             <div>
-                                <label style="font-size:.7rem;font-weight:600">Alınan / Önerilen Önlemler</label>
+                                <label style="font-size:.75rem;font-weight:600">Alınan / Önerilen Önlemler</label>
                                 <input type="text" wire:model.blur="satirlar.{{ $i }}.alinan_onlemler" style="{{ $girdi }}" placeholder="ikame, LEV, kapalı transfer, KKD, eğitim…">
                             </div>
                             <div>
-                                <label style="font-size:.7rem;font-weight:600">Artık Risk</label>
+                                <label style="font-size:.75rem;font-weight:600">Artık Risk</label>
                                 <select wire:model.blur="satirlar.{{ $i }}.artik_risk" style="{{ $girdi }}">
                                     <option value="dusuk">Düşük</option>
                                     <option value="orta">Orta</option>

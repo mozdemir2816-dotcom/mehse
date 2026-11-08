@@ -29,7 +29,7 @@
             ['Tamamlanma', $d->tamamlandi_at?->format('d.m.Y H:i') ?? '—'],
         ] as [$etiket, $deger])
             <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.55rem .7rem">
-                <div style="font-size:.72rem;{{ $soluk }}">{{ $etiket }}</div>
+                <div style="font-size:.75rem;{{ $soluk }}">{{ $etiket }}</div>
                 <div style="font-weight:600;margin-top:.15rem">{{ $deger }}</div>
             </div>
         @endforeach
@@ -61,7 +61,7 @@
                         <td style="{{ $hucre }}">{{ $il ? '%'.$il->izleme_yuzdesi : '—' }}</td>
                         <td style="{{ $hucre }}">
                             @if ($il?->izlendi)
-                                <span style="color:rgb(21 128 61);font-weight:600">✓ İzlendi</span> <span style="font-size:.72rem;{{ $soluk }}">{{ $il->izlendi_at?->format('d.m.Y H:i') }}</span>
+                                <span style="color:rgb(21 128 61);font-weight:600">✓ İzlendi</span> <span style="font-size:.75rem;{{ $soluk }}">{{ $il->izlendi_at?->format('d.m.Y H:i') }}</span>
                             @elseif ($il)
                                 <span style="color:#b45309">Devam ediyor</span>
                             @else
@@ -97,7 +97,7 @@
                         <td style="{{ $hucre }}">{{ $dk($g->izleme_sn) }}</td>
                         <td style="{{ $hucre }}">{{ $g->yoklama_sayisi }}</td>
                         <td style="{{ $hucre }}">{{ $g->ip ?: '—' }}</td>
-                        <td style="{{ $hucre }};font-size:.72rem;{{ $soluk }}">{{ \Illuminate\Support\Str::limit($g->cihaz ?: '—', 70) }}</td>
+                        <td style="{{ $hucre }};font-size:.75rem;{{ $soluk }}">{{ \Illuminate\Support\Str::limit($g->cihaz ?: '—', 70) }}</td>
                     </tr>
                 @endforeach
                 </tbody>

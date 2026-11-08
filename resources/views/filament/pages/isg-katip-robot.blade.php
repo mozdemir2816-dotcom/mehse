@@ -36,7 +36,7 @@
             <p style="font-size:.82rem;opacity:.9;max-width:24rem">
                 İSG-KATİP Bot henüz tarayıcınızda yüklü değil. Google Chrome Eklenti Mağazası’ndan tek tıkla yükleyebilirsiniz.
             </p>
-            <div style="display:inline-flex;align-items:center;gap:.35rem;background:rgb(255 255 255 / .18);padding:.25rem .7rem;border-radius:9999px;font-size:.72rem">
+            <div style="display:inline-flex;align-items:center;gap:.35rem;background:rgb(255 255 255 / .18);padding:.25rem .7rem;border-radius:9999px;font-size:.75rem">
                 <span style="width:.5rem;height:.5rem;border-radius:9999px;background:{{ $eklentiBagli ? $yesil : '#f87171' }}"></span>
                 {{ $eklentiBagli ? 'Eklenti bağlı' : 'Eklenti bağlı değil' }}
             </div>

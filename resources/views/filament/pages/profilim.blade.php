@@ -51,7 +51,7 @@
                                 <x-filament::icon :icon="$tur === 'kase' ? 'heroicon-o-finger-print' : 'heroicon-o-pencil'" style="width:1.4rem;height:1.4rem;color:{{ $gri }}"/>
                             @endif
                         </div>
-                        <div style="font-size:.66rem;margin-top:.2rem;color:{{ $gorsel[$tur] === 'yuklu' ? 'rgb(21 128 61)' : $gri }}">
+                        <div style="font-size:.68rem;margin-top:.2rem;color:{{ $gorsel[$tur] === 'yuklu' ? 'rgb(21 128 61)' : $gri }}">
                             {{ $ad }}{{ $gorsel[$tur] === 'yuklu' ? ' ✓' : ($gorsel[$tur] === 'dosya_yok' ? ' (dosya yok)' : '') }}
                         </div>
                     </div>
@@ -80,10 +80,10 @@
                     <div style="width:1.8rem;height:1.8rem;border-radius:9999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, {{ $renk }} 15%, transparent)">
                         <x-filament::icon :icon="$ikon" style="width:1rem;height:1rem;color:{{ $renk }}"/>
                     </div>
-                    <div style="font-size:.72rem;color:{{ $gri }};font-weight:600">{{ $etiket }}</div>
+                    <div style="font-size:.75rem;color:{{ $gri }};font-weight:600">{{ $etiket }}</div>
                 </div>
                 <div style="font-size:1.6rem;font-weight:800;color:{{ $renk }};margin-top:.3rem;line-height:1.1">{{ $say($deger) }}</div>
-                @if ($alt)<div style="font-size:.68rem;color:{{ $gri }}">{{ $alt }}</div>@endif
+                @if ($alt)<div style="font-size:.75rem;color:{{ $gri }}">{{ $alt }}</div>@endif
             </div>
         @endforeach
     </div>
@@ -158,7 +158,7 @@
             <div style="{{ $golge }};display:flex;flex-direction:column;gap:1.1rem">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem">
                     <div style="font-weight:800">Yasal Uyum &amp; Risk Dağılımı</div>
-                    <span style="font-size:.72rem;font-weight:700;padding:.15rem .65rem;border-radius:9999px;color:{{ $uyumRenk }};background:color-mix(in srgb, {{ $uyumRenk }} 14%, transparent)" title="Takip edilen yasal kriterlerin portföy geneli ortalama karşılanma oranı">Portföy uyumu %{{ $uyum }}</span>
+                    <span style="font-size:.75rem;font-weight:700;padding:.15rem .65rem;border-radius:9999px;color:{{ $uyumRenk }};background:color-mix(in srgb, {{ $uyumRenk }} 14%, transparent)" title="Takip edilen yasal kriterlerin portföy geneli ortalama karşılanma oranı">Portföy uyumu %{{ $uyum }}</span>
                 </div>
 
                 <div>
@@ -180,7 +180,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;border:1px solid rgb(16 185 129 / .35);background:rgb(16 185 129 / .07);border-radius:.8rem;padding:.7rem .9rem">
                     <div>
                         <div style="font-size:.78rem;font-weight:700">İlk Yardımcı İhtiyacı</div>
-                        <div style="font-size:.68rem;color:{{ $gri }};line-height:1.35;margin-top:.15rem">
+                        <div style="font-size:.75rem;color:{{ $gri }};line-height:1.35;margin-top:.15rem">
                             İlkyardım Yönetmeliği md.19 · çok tehlikeli her 10, tehlikeli her 15, az tehlikeli her 20 çalışana 1 kişi
                         </div>
                     </div>
@@ -215,7 +215,7 @@
             <div style="{{ $golge }};display:flex;flex-direction:column;gap:1.1rem">
                 <div>
                     <div style="font-weight:800">Saha &amp; Denetim Aktivite Yoğunluğu</div>
-                    <div style="font-size:.74rem;color:{{ $gri }}">Risk / şablon / firma / çalışan eklemeleri</div>
+                    <div style="font-size:.75rem;color:{{ $gri }}">Risk / şablon / firma / çalışan eklemeleri</div>
                 </div>
 
                 <div>
@@ -240,14 +240,14 @@
                 <div>
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.45rem">
                         <div style="font-size:.78rem;font-weight:700">Son 90 Gün Aktivite <span style="font-weight:400;color:{{ $gri }}">· {{ $toplam90 }} işlem</span></div>
-                        <div style="display:flex;align-items:center;gap:.25rem;font-size:.68rem;color:{{ $gri }}">
+                        <div style="display:flex;align-items:center;gap:.25rem;font-size:.75rem;color:{{ $gri }}">
                             Az
                             @foreach ($hRenk as $c)<span style="width:.7rem;height:.7rem;border-radius:2px;background:{{ $c }}"></span>@endforeach
                             Çok
                         </div>
                     </div>
                     <div style="display:flex;gap:.4rem;justify-content:center;overflow-x:auto;padding-bottom:.2rem">
-                        <div style="display:grid;grid-template-rows:repeat(7,15px);gap:4px;font-size:.6rem;color:{{ $gri }};line-height:15px;text-align:right">
+                        <div style="display:grid;grid-template-rows:repeat(7,15px);gap:4px;font-size:.68rem;color:{{ $gri }};line-height:15px;text-align:right">
                             @foreach (['Pzt', '', 'Çar', '', 'Cum', '', ''] as $etiket)<span>{{ $etiket }}</span>@endforeach
                         </div>
                         <div style="display:grid;grid-template-rows:repeat(7,15px);grid-auto-flow:column;grid-auto-columns:15px;gap:4px">
@@ -267,12 +267,12 @@
         <div style="{{ $golge }}">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
                 <div style="font-weight:800">En Yüksek Çalışanlı ve Riskli İlk 5 Firma</div>
-                <div style="font-size:.72rem;color:{{ $gri }}">Sıralama: çalışan sayısı × kritik risk maddesi (skor &gt; {{ $onemliEsik }})</div>
+                <div style="font-size:.75rem;color:{{ $gri }}">Sıralama: çalışan sayısı × kritik risk maddesi (skor &gt; {{ $onemliEsik }})</div>
             </div>
             <div style="overflow-x:auto">
                 <table style="width:100%;border-collapse:collapse;font-size:.82rem;min-width:480px">
                     <thead>
-                        <tr style="text-align:left;color:{{ $gri }};font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">
+                        <tr style="text-align:left;color:{{ $gri }};font-size:.75rem;text-transform:uppercase;letter-spacing:.04em">
                             <th style="padding:.4rem">Firma</th>
                             <th style="padding:.4rem;text-align:right">Çalışan</th>
                             <th style="padding:.4rem;text-align:right">Kritik risk</th>
@@ -285,11 +285,11 @@
                                 <td style="padding:.5rem .4rem;font-weight:600">{{ \Illuminate\Support\Str::limit($f['unvan'], 48) }}</td>
                                 <td style="padding:.5rem .4rem;text-align:right">{{ $say($f['calisan']) }}</td>
                                 <td style="padding:.5rem .4rem;text-align:right">
-                                    <span style="font-size:.72rem;font-weight:700;padding:.1rem .55rem;border-radius:9999px;{{ $f['kritik_risk'] > 0 ? 'color:rgb(190 18 60);background:rgb(244 63 94 / .1)' : 'color:'.$gri.';background:rgb(128 116 148 / .12)' }}">{{ $say($f['kritik_risk']) }}</span>
+                                    <span style="font-size:.75rem;font-weight:700;padding:.1rem .55rem;border-radius:9999px;{{ $f['kritik_risk'] > 0 ? 'color:rgb(190 18 60);background:rgb(244 63 94 / .1)' : 'color:'.$gri.';background:rgb(128 116 148 / .12)' }}">{{ $say($f['kritik_risk']) }}</span>
                                 </td>
                                 <td style="padding:.5rem .4rem;text-align:right;white-space:nowrap">
-                                    <a href="{{ \App\Filament\Pages\RiskMerkezi::getUrl(['firma' => $f['id']]) }}" style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid rgb(2 132 199 / .4);color:#0369A1;text-decoration:none">Risk →</a>
-                                    <a href="{{ \App\Filament\Pages\FirmaDenetimOperasyon::getUrl(['firma' => $f['id']]) }}" style="font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid rgb(128 116 148 / .4);color:inherit;text-decoration:none">Denetim →</a>
+                                    <a href="{{ \App\Filament\Pages\RiskMerkezi::getUrl(['firma' => $f['id']]) }}" style="font-size:.75rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid rgb(2 132 199 / .4);color:#0369A1;text-decoration:none">Risk →</a>
+                                    <a href="{{ \App\Filament\Pages\FirmaDenetimOperasyon::getUrl(['firma' => $f['id']]) }}" style="font-size:.75rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid rgb(128 116 148 / .4);color:inherit;text-decoration:none">Denetim →</a>
                                 </td>
                             </tr>
                         @empty
@@ -408,14 +408,14 @@
             @php $kullanilanKategoriler = $this->egitimTurleri->map(fn ($t) => $t->kategori() ?? 'ozel')->unique(); @endphp
             @if ($kullanilanKategoriler->count() > 1)
                 <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.4rem">
-                    <span style="font-size:.72rem;color:rgb(128 116 148);align-self:center;font-weight:700">KATEGORİ</span>
+                    <span style="font-size:.75rem;color:rgb(128 116 148);align-self:center;font-weight:700">KATEGORİ</span>
                     <button type="button" wire:click="$set('egitimKategoriFiltre','')"
-                        style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                        style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                             border:1px solid {{ $egitimKategoriFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
                             background:{{ $egitimKategoriFiltre === '' ? 'rgb(139 92 246 / .1)' : 'transparent' }}">Tümü</button>
                     @foreach ($kullanilanKategoriler as $kat)
                         <button type="button" wire:click="$set('egitimKategoriFiltre','{{ $kat }}')"
-                            style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                            style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                                 border:1px solid {{ $egitimKategoriFiltre === $kat ? $mor : 'rgb(128 116 148 / .3)' }};
                                 background:{{ $egitimKategoriFiltre === $kat ? 'rgb(139 92 246 / .1)' : 'transparent' }}">{{ \App\Filament\Pages\Profilim::EGITIM_KATEGORI_ETIKETLERI[$kat] ?? $kat }}</button>
                     @endforeach
@@ -424,14 +424,14 @@
 
             {{-- DURUM FİLTRESİ --}}
             <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">
-                <span style="font-size:.72rem;color:rgb(128 116 148);align-self:center;font-weight:700">DURUM</span>
+                <span style="font-size:.75rem;color:rgb(128 116 148);align-self:center;font-weight:700">DURUM</span>
                 <button type="button" wire:click="$set('egitimDurumFiltre','')"
-                    style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                    style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                         border:1px solid {{ $egitimDurumFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
                         background:{{ $egitimDurumFiltre === '' ? 'rgb(139 92 246 / .1)' : 'transparent' }}">Tümü</button>
                 @foreach ($durumEtiket as $anahtar => $etiket)
                     <button type="button" wire:click="$set('egitimDurumFiltre','{{ $anahtar }}')"
-                        style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;cursor:pointer;
+                        style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                             border:1px solid {{ $egitimDurumFiltre === $anahtar ? ($durumRenk[$anahtar] ?? $mor) : 'rgb(128 116 148 / .3)' }};
                             color:{{ $egitimDurumFiltre === $anahtar ? ($durumRenk[$anahtar] ?? $mor) : 'inherit' }};
                             background:{{ $egitimDurumFiltre === $anahtar ? 'rgb(139 92 246 / .08)' : 'transparent' }}">{{ $etiket }}</button>
@@ -462,7 +462,7 @@
                             <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                                 <td style="padding:.35rem;font-weight:600;position:sticky;left:0;background:inherit">
                                     {{ $satir['calisan']->ad_soyad }}
-                                    <div style="font-weight:400;font-size:.7rem;color:rgb(128 116 148)">{{ $satir['calisan']->firma?->unvan }}</div>
+                                    <div style="font-weight:400;font-size:.75rem;color:rgb(128 116 148)">{{ $satir['calisan']->firma?->unvan }}</div>
                                 </td>
                                 @foreach ($this->egitimTurleriGorunen as $t)
                                     @php $h = $satir['hucreler'][$t->anahtar]; @endphp
@@ -558,7 +558,7 @@
                             <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                                 <td style="padding:.4rem">{{ $satir['ad'] }}</td>
                                 <td style="padding:.4rem;text-align:center">
-                                    <span style="padding:.15rem .6rem;border-radius:9999px;font-size:.72rem;font-weight:600;
+                                    <span style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;font-weight:600;
                                         color:{{ $checklistRenk[$satir['durum']] }};background:{{ $checklistRenk[$satir['durum']] }}1a">
                                         {{ $checklistEtiket[$satir['durum']] }}
                                     </span>
@@ -642,12 +642,12 @@
                             <div style="border:1px solid rgb(128 116 148 / .2);border-radius:.5rem;padding:.6rem;text-align:center">
                                 <div style="font-size:1.5rem">📄</div>
                                 <div style="font-size:.75rem;font-weight:600;word-break:break-word">{{ $dosya->dosya_adi }}</div>
-                                <div style="font-size:.68rem;color:rgb(128 116 148);margin-bottom:.4rem">{{ $dosya->boyutEtiketi() }}</div>
+                                <div style="font-size:.75rem;color:rgb(128 116 148);margin-bottom:.4rem">{{ $dosya->boyutEtiketi() }}</div>
                                 <div style="display:flex;justify-content:center;gap:.3rem">
                                     <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($dosya->dosya_yolu) }}" target="_blank"
-                                        style="font-size:.72rem;color:{{ $mor }}">İndir</a>
+                                        style="font-size:.75rem;color:{{ $mor }}">İndir</a>
                                     <button type="button" wire:click="arsivDosyaSil({{ $dosya->id }})" wire:confirm="Bu dosya silinsin mi?"
-                                        style="font-size:.72rem;color:{{ $kirmizi }};border:none;background:none;cursor:pointer">Sil</button>
+                                        style="font-size:.75rem;color:{{ $kirmizi }};border:none;background:none;cursor:pointer">Sil</button>
                                 </div>
                             </div>
                         @endforeach
@@ -684,7 +684,7 @@
                         <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                             <td style="padding:.4rem;font-weight:600">
                                 {{ $satir['baslik'] }}
-                                <div style="font-weight:400;font-size:.7rem;color:rgb(128 116 148)">Firma: {{ $satir['firma'] ?? '—' }}</div>
+                                <div style="font-weight:400;font-size:.75rem;color:rgb(128 116 148)">Firma: {{ $satir['firma'] ?? '—' }}</div>
                             </td>
                             <td style="padding:.4rem"><x-filament::badge>{{ $satir['tip'] }}</x-filament::badge></td>
                             <td style="padding:.4rem">{{ $satir['tarih']?->format('d.m.Y H:i') }}</td>

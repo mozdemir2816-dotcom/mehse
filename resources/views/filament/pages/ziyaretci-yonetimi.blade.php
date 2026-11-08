@@ -1,7 +1,7 @@
 @php
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
-    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.75rem 1rem';
     $renk = ['gecerli' => 'rgb(22 163 74 / .55)', 'icerde' => 'rgb(124 58 237 / .6)', 'planli' => 'rgb(245 158 11 / .6)', 'cikti' => 'rgb(107 114 128 / .45)', 'suresi_doldu' => 'rgb(220 38 38 / .6)', 'iptal' => 'rgb(220 38 38 / .6)'];
@@ -129,18 +129,18 @@
                         <tr>
                             <td style="{{ $td }}">
                                 <strong>{{ $z->ad_soyad }}</strong>
-                                <div style="font-size:.72rem;color:rgb(107 114 128)">{{ collect([$z->kurum, $z->kart_no])->filter()->implode(' · ') }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ collect([$z->kurum, $z->kart_no])->filter()->implode(' · ') }}</div>
                             </td>
                             <td style="{{ $td }}">{{ $z->firma?->unvan }}</td>
                             <td style="{{ $td }}">
                                 {{ $z->ziyaret_amaci ?: '—' }}
-                                @if ($z->ziyaret_edilen)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $z->ziyaret_edilen }}</div>@endif
+                                @if ($z->ziyaret_edilen)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $z->ziyaret_edilen }}</div>@endif
                             </td>
                             <td style="{{ $td }};white-space:nowrap">{{ $z->gecerlilik_baslangic->format('d.m H:i') }} – {{ $z->gecerlilik_bitis->format('d.m H:i') }}</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $z->giris_zamani?->format('d.m H:i') ?? '—' }} / {{ $z->cikis_zamani?->format('d.m H:i') ?? '—' }}</td>
                             <td style="{{ $td }}">
-                                <span style="font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $renk[$d] }}">{{ $z->durumEtiketi() }}</span>
-                                @if (! $z->isg_bilgilendirme)<div style="font-size:.68rem;color:#b45309">İSG bilgilendirmesi yok</div>@endif
+                                <span style="font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $renk[$d] }}">{{ $z->durumEtiketi() }}</span>
+                                @if (! $z->isg_bilgilendirme)<div style="font-size:.75rem;color:#b45309">İSG bilgilendirmesi yok</div>@endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" icon="heroicon-o-qr-code" wire:click="kart({{ $z->id }})">Kart</x-filament::button>

@@ -37,16 +37,16 @@
         @php $oz = $p->gerceklesmeOzeti(); @endphp
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem">
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
-                <div style="font-size:.7rem;color:#64748b;font-weight:600">Yıllık Plan Gerçekleşme Oranı</div>
+                <div style="font-size:.75rem;color:#64748b;font-weight:600">Yıllık Plan Gerçekleşme Oranı</div>
                 <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['oran'] === null ? '#64748b' : ($oz['oran'] >= 80 ? '#059669' : ($oz['oran'] >= 50 ? '#d97706' : '#dc2626')) }}">
                     {{ $oz['oran'] === null ? '—' : '%'.$oz['oran'] }}
                 </div>
-                <div style="font-size:.7rem;color:#64748b">{{ $oz['gerceklesen'] }} G / {{ $oz['planlanan'] }} vadesi gelen faaliyet (çalışma + eğitim)</div>
+                <div style="font-size:.75rem;color:#64748b">{{ $oz['gerceklesen'] }} G / {{ $oz['planlanan'] }} vadesi gelen faaliyet (çalışma + eğitim)</div>
             </div>
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
-                <div style="font-size:.7rem;color:#64748b;font-weight:600">Geciken Faaliyet</div>
+                <div style="font-size:.75rem;color:#64748b;font-weight:600">Geciken Faaliyet</div>
                 <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['geciken'] > 0 ? '#dc2626' : '#059669' }}">{{ $oz['geciken'] }}</div>
-                <div style="font-size:.7rem;color:#64748b">P'de kalan, ayı geçmiş hücre (kırmızı nokta ●)</div>
+                <div style="font-size:.75rem;color:#64748b">P'de kalan, ayı geçmiş hücre (kırmızı nokta ●)</div>
             </div>
         </div>
     @endif
@@ -106,7 +106,7 @@
         @if ($sekme === 'calisma')
             @php
                 $cizgi = 'border:1px solid rgb(107 114 128 / .25)';
-                $th = $cizgi.';padding:.3rem .4rem;font-size:.66rem;font-weight:700;text-align:center;background:rgb(107 114 128 / .08)';
+                $th = $cizgi.';padding:.3rem .4rem;font-size:.68rem;font-weight:700;text-align:center;background:rgb(107 114 128 / .08)';
                 $td = $cizgi.';padding:.3rem .4rem;vertical-align:top';
                 $pRenk = '#b45309';
                 $gRenk = '#15803d';
@@ -121,7 +121,7 @@
                 </x-slot>
 
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:1500px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1500px">
                         <tr>
                             <th rowspan="2" style="{{ $th }};width:2rem">No</th>
                             <th rowspan="2" style="{{ $th }};width:8rem">Ana Konu</th>
@@ -144,10 +144,10 @@
                         @foreach (($p->faaliyetler ?? []) as $fi => $f)
                             <tr>
                                 <td style="{{ $td }};text-align:center">{{ $fi + 1 }}</td>
-                                <td style="{{ $td }};font-size:.64rem;font-weight:700;letter-spacing:.03em">{{ $f['ana_konu'] ?? '' }}</td>
+                                <td style="{{ $td }};font-size:.68rem;font-weight:700;letter-spacing:.03em">{{ $f['ana_konu'] ?? '' }}</td>
                                 <td style="{{ $td }};font-weight:600">{{ $f['faaliyet'] }}</td>
-                                <td style="{{ $td }};font-size:.68rem">{{ $f['frekans'] ?? '' }}</td>
-                                <td style="{{ $td }};font-size:.68rem">{{ $f['sorumlu'] ?? '' }}</td>
+                                <td style="{{ $td }};font-size:.75rem">{{ $f['frekans'] ?? '' }}</td>
+                                <td style="{{ $td }};font-size:.75rem">{{ $f['sorumlu'] ?? '' }}</td>
                                 @foreach (($f['aylar'] ?? array_fill(0, 12, 'bos')) as $ai => $durum)
                                     @php
                                         $kilitli = $ai < $kilit;
@@ -161,11 +161,11 @@
                                             <button type="button" @disabled($kilitli)
                                                 @unless ($kilitli) wire:click="ayHucresiDegistir('faaliyetler', {{ $fi }}, {{ $ai }}, '{{ $hucre }}')" @endunless
                                                 title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : \App\Models\ZiyaretProgrami::AYLAR[$ai].' — '.$ad.($dolu ? ' (kaldırmak için tıklayın)' : '') }}"
-                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.72rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}@if ($hucre === 'G' && $durum === 'planlandi' && $ai < $p->gecikmeAyIndeksi())<span title="Gecikmiş faaliyet" style="color:#dc2626">●</span>@endif</button>
+                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.75rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}@if ($hucre === 'G' && $durum === 'planlandi' && $ai < $p->gecikmeAyIndeksi())<span title="Gecikmiş faaliyet" style="color:#dc2626">●</span>@endif</button>
                                         </td>
                                     @endforeach
                                 @endforeach
-                                <td style="{{ $td }};font-size:.66rem;color:rgb(107 114 128)">
+                                <td style="{{ $td }};font-size:.68rem;color:rgb(107 114 128)">
                                     {{ $f['yasal_gereklilik'] ?? '' }}
                                     @if (filled($f['kayit_notu'] ?? null))
                                         <div style="margin-top:.2rem"><strong>Kayıt/Not:</strong> {{ $f['kayit_notu'] }}</div>
@@ -180,7 +180,7 @@
                                         default => 'rgb(107 114 128)',
                                     };
                                 @endphp
-                                <td style="{{ $td }};text-align:center;font-size:.66rem;font-weight:700;color:{{ $durumRenk }}">{{ $genelDurum }}</td>
+                                <td style="{{ $td }};text-align:center;font-size:.68rem;font-weight:700;color:{{ $durumRenk }}">{{ $genelDurum }}</td>
                                 <td style="{{ $td }};text-align:center">
                                     <button type="button" wire:click="faaliyetSil({{ $fi }})" wire:confirm="Bu faaliyet plandan silinsin mi?" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                                 </td>
@@ -238,7 +238,7 @@
                         </tr>
                         @foreach (($p->egitimler ?? []) as $ei => $e)
                             <tr>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.7rem">{{ $egitimKategorileri[$e['kategori'] ?? ''] ?? '—' }}</td>
+                                <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.75rem">{{ $egitimKategorileri[$e['kategori'] ?? ''] ?? '—' }}</td>
                                 <td style="padding:.3rem .5rem;font-weight:600">{{ $e['konu'] }}</td>
                                 <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['sure_saat'] ?? '—' }} saat</td>
                                 <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['egitici'] ?? '—' }}</td>
@@ -282,7 +282,7 @@
                     <x-filament::button size="xs" color="primary" icon="heroicon-o-queue-list" wire:click="mountAction('iseOzguSec')">İşe Özgü Konuları Seç</x-filament::button>
                     <x-filament::button size="xs" color="gray" tag="a" :href="\App\Filament\Pages\IseOzguEgitimKonulari::getUrl(['firmaId' => $this->firmaId])">Konu kütüphanesi</x-filament::button>
                     <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
-                    <span style="font-size:.72rem;color:rgb(107 114 128)">4. bölüm firmanın iş kalemine / NACE koduna göre otomatik gelir; ★ ile plandaki konuyu kütüphaneye kaydedebilirsiniz.</span>
+                    <span style="font-size:.75rem;color:rgb(107 114 128)">4. bölüm firmanın iş kalemine / NACE koduna göre otomatik gelir; ★ ile plandaki konuyu kütüphaneye kaydedebilirsiniz.</span>
                 </div>
             </x-filament::section>
         @endif
@@ -291,8 +291,8 @@
             @php
                 $ydKunye = \App\Support\YillikDegerlendirmeVerisi::kunye($this->firma, $yil);
                 $ydSatirlar = collect($p->degerlendirmeler ?? []);
-                $ydGirdi = 'width:100%;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.74rem;font-family:inherit';
-                $ydTh = 'text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.7rem';
+                $ydGirdi = 'width:100%;padding:.3rem .4rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem;font-family:inherit';
+                $ydTh = 'text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem';
             @endphp
             <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="primary">
                 <x-slot name="heading">İSG Yıllık Değerlendirme Raporu — {{ $yil }}</x-slot>
@@ -322,7 +322,7 @@
                                 <td style="padding:.3rem .5rem">{{ $no }}</td>
                                 <td style="padding:.15rem"><input type="text" value="{{ $d['tarih'] ?? '' }}" placeholder="… / … / …" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'tarih', $event.target.value)" style="{{ $ydGirdi }}"></td>
                                 <td style="padding:.3rem .5rem;font-weight:600">{{ $d['calisma'] }}
-                                    @if ($d['otomatik'] ?? false)<div style="font-size:.66rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@elseif ($d['elle'] ?? false)<div style="font-size:.66rem;color:rgb(180 83 9);font-weight:500">✎ elle</div>@else<div style="font-size:.66rem;color:rgb(107 114 128);font-weight:500">kayıt yok — şablon</div>@endif
+                                    @if ($d['otomatik'] ?? false)<div style="font-size:.68rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@elseif ($d['elle'] ?? false)<div style="font-size:.68rem;color:rgb(180 83 9);font-weight:500">✎ elle</div>@else<div style="font-size:.68rem;color:rgb(107 114 128);font-weight:500">kayıt yok — şablon</div>@endif
                                 </td>
                                 <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yapan_kisi', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['yapan_kisi'] ?? '' }}</textarea></td>
                                 <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'yontem', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['yontem'] ?? '' }}</textarea></td>
@@ -350,7 +350,7 @@
                         @foreach (($p->degerlendirmeler ?? []) as $di => $d)
                             @continue(($d['tur'] ?? 'calisma') !== 'genel')
                             <tr wire:key="ydg-{{ $di }}-{{ md5(json_encode($d)) }}" style="border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top">
-                                <td style="padding:.35rem .5rem;font-weight:600;width:14rem">{{ $d['calisma'] }}@if ($d['otomatik'] ?? false)<div style="font-size:.66rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@endif</td>
+                                <td style="padding:.35rem .5rem;font-weight:600;width:14rem">{{ $d['calisma'] }}@if ($d['otomatik'] ?? false)<div style="font-size:.68rem;color:rgb(21 128 61);font-weight:500">● sistemden</div>@endif</td>
                                 <td style="padding:.15rem"><textarea rows="2" x-on:change="$wire.degerlendirmeGuncelle({{ $di }}, 'sonuc', $event.target.value)" style="{{ $ydGirdi }}">{{ $d['sonuc'] ?? '' }}</textarea></td>
                             </tr>
                         @endforeach

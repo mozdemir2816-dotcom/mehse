@@ -63,10 +63,10 @@
                                         <div style="{{ $kutu }};border-radius:1rem">
                                             <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:start">
                                                 <div>
-                                                    <span style="display:inline-block;color:#fff;padding:1px 8px;border-radius:9999px;font-size:.7rem;background:{{ $oncelikRenk($m['oncelik']) }}">{{ $oncelikEtiket($m['oncelik']) }} Öncelik</span>
+                                                    <span style="display:inline-block;color:#fff;padding:1px 8px;border-radius:9999px;font-size:.75rem;background:{{ $oncelikRenk($m['oncelik']) }}">{{ $oncelikEtiket($m['oncelik']) }} Öncelik</span>
                                                     <div style="font-size:.82rem;font-weight:600;margin-top:.3rem">{{ $m['tespit'] }}</div>
                                                     <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.2rem">{{ $m['oneri'] }}</div>
-                                                    <div style="font-size:.7rem;color:rgb(107 114 128);margin-top:.2rem">Dayanak: {{ $m['dayanak'] }}</div>
+                                                    <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Dayanak: {{ $m['dayanak'] }}</div>
                                                 </div>
                                                 <x-filament::button size="sm" color="warning" wire:click="katalogdanEkle('{{ addslashes($m['tespit']) }}')" style="min-height:2.5rem;flex-shrink:0">+ Ekle</x-filament::button>
                                             </div>
@@ -101,7 +101,7 @@
                             <button type="button" wire:click="$set('yeniFoto', null)" style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
                         @endif
                     </div>
-                    <p style="font-size:.72rem;color:rgb(107 114 128);margin-bottom:.5rem">
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">
                         İsteğe bağlı fotoğraf kanıtı — PDF'te ilgili maddenin ardından ayrı bir sayfa olarak eklenir.
                     </p>
 
@@ -135,17 +135,17 @@
                         <div style="text-align:center;border-bottom:2px solid #111827;padding-bottom:.6rem;margin-bottom:.8rem">
                             <div style="font-size:1.05rem;font-weight:700;letter-spacing:.06em">TESPİT VE ÖNERİ DEFTERİ</div>
                             <div style="font-size:.78rem;margin-top:.2rem">{{ $f->unvan }}</div>
-                            <div style="font-size:.68rem;color:#4b5563">
+                            <div style="font-size:.75rem;color:#4b5563">
                                 {{ collect([$f->nace_kodu ? 'NACE '.$f->nace_kodu : null, $f->tehlikeSinifiEtiketi(), $f->sgk_sicil_no ? 'SGK Sicil '.$f->sgk_sicil_no : null])->filter()->implode(' · ') }}
                             </div>
                         </div>
 
                         @if ($this->defter?->genel_not)
-                            <p style="font-size:.74rem;font-style:italic;color:#374151;margin:0 0 .6rem">Not: {{ $this->defter->genel_not }}</p>
+                            <p style="font-size:.75rem;font-style:italic;color:#374151;margin:0 0 .6rem">Not: {{ $this->defter->genel_not }}</p>
                         @endif
 
                         @if ($maddeler)
-                            <table style="width:100%;border-collapse:collapse;font-size:.74rem">
+                            <table style="width:100%;border-collapse:collapse;font-size:.75rem">
                                 <tr>
                                     <th style="width:2rem;text-align:left;padding:.3rem .3rem;border-bottom:1px solid #111827">No</th>
                                     <th style="text-align:left;padding:.3rem .4rem;border-bottom:1px solid #111827">Tespit</th>
@@ -155,7 +155,7 @@
                                 @foreach ($maddeler as $i => $m)
                                     <tr wire:key="defter-madde-{{ $i }}">
                                         <td style="padding:.35rem .3rem;vertical-align:top;border-bottom:1px solid #e5e7eb">{{ $i + 1 }}</td>
-                                        <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb">@if (($m['tur'] ?? null) === 'bilgilendirme')<span style="display:inline-block;background:#2563eb;color:#fff;border-radius:4px;padding:0 .35rem;font-size:.66rem;font-family:sans-serif">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span> @endif @if (! empty($m['foto_yolu']))<span title="Fotoğraf kanıtı ekli">📷</span> @endif{{ $m['tespit'] }}</td>
+                                        <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb">@if (($m['tur'] ?? null) === 'bilgilendirme')<span style="display:inline-block;background:#2563eb;color:#fff;border-radius:4px;padding:0 .35rem;font-size:.68rem;font-family:sans-serif">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span> @endif @if (! empty($m['foto_yolu']))<span title="Fotoğraf kanıtı ekli">📷</span> @endif{{ $m['tespit'] }}</td>
                                         @php $oneriBos = blank(trim((string) ($m['oneri'] ?? ''))); @endphp
                                         <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb;{{ $oneriBos ? 'color:#6b7280;font-style:italic' : '' }}" @if ($oneriBos) title="Öneri boş — PDF'e bu varsayılan metin basılır" @endif>{{ $oneriBos ? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI : $m['oneri'] }}</td>
                                         <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb">
@@ -165,7 +165,7 @@
                                 @endforeach
                             </table>
 
-                            <div style="display:flex;justify-content:space-between;gap:1rem;margin-top:1.8rem;font-size:.7rem;font-family:sans-serif">
+                            <div style="display:flex;justify-content:space-between;gap:1rem;margin-top:1.8rem;font-size:.75rem;font-family:sans-serif">
                                 <div style="flex:1;border-top:1px solid #111827;padding-top:.25rem;text-align:center">İş Güvenliği Uzmanı<br>{{ $f->igu?->ad_soyad ?: $f->user?->name }}</div>
                                 <div style="flex:1;border-top:1px solid #111827;padding-top:.25rem;text-align:center">İşveren / Vekili<br>{{ $f->isveren_vekili ?: $f->isveren_ad }}</div>
                             </div>

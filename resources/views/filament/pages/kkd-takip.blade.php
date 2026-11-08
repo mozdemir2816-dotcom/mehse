@@ -1,9 +1,9 @@
 @php
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
-    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $rozet = fn (string $renk) => "font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {$renk};";
+    $rozet = fn (string $renk) => "font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {$renk};";
     $takipRenk = ['aktif' => 'rgb(22 163 74 / .55)', 'yaklasan' => 'rgb(245 158 11 / .6)', 'gecikmis' => 'rgb(220 38 38 / .6)'];
     $stokRenk = ['yeterli' => 'rgb(22 163 74 / .55)', 'yaklasan' => 'rgb(245 158 11 / .6)', 'dusuk' => 'rgb(245 158 11 / .6)', 'tukendi' => 'rgb(220 38 38 / .6)', 'suresi_gecmis' => 'rgb(220 38 38 / .6)'];
 @endphp
@@ -81,11 +81,11 @@
                                 <td style="{{ $td }};white-space:nowrap">{{ $z->teslim_tarihi?->format('d.m.Y') }}</td>
                                 <td style="{{ $td }}">
                                     {{ $z->personel_ad_soyad }}
-                                    @if ($z->bolum)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $z->bolum }}</div>@endif
+                                    @if ($z->bolum)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $z->bolum }}</div>@endif
                                 </td>
                                 <td style="{{ $td }}">
                                     {{ $z->tur }}@if ($z->beden)<span style="color:rgb(107 114 128)"> · {{ $z->beden }}</span>@endif
-                                    @if ($z->seri_no)<div style="font-size:.72rem;color:rgb(107 114 128)">SN: {{ $z->seri_no }}</div>@endif
+                                    @if ($z->seri_no)<div style="font-size:.75rem;color:rgb(107 114 128)">SN: {{ $z->seri_no }}</div>@endif
                                 </td>
                                 <td style="{{ $td }}">{{ $z->adet }}</td>
                                 <td style="{{ $td }};white-space:nowrap;color:{{ $kalan !== null && $kalan < 0 ? '#dc2626' : 'inherit' }}">
@@ -135,7 +135,7 @@
                             <tr>
                                 <td style="{{ $td }}">
                                     {{ $k->tur }}
-                                    @if ($k->kategori)<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $k->kategoriEtiketi() }}</div>@endif
+                                    @if ($k->kategori)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k->kategoriEtiketi() }}</div>@endif
                                 </td>
                                 <td style="{{ $td }}">{{ collect([$k->marka, $k->model, $k->beden ? 'Beden '.$k->beden : null])->filter()->implode(' · ') ?: '—' }}</td>
                                 <td style="{{ $td }};font-weight:700">{{ $k->mevcut }}</td>

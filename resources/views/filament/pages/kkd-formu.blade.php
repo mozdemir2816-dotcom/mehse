@@ -124,7 +124,7 @@
                                 <div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;border-radius:.4rem;border:1px solid {{ $mavi }};background:rgb(59 130 246 / .08);font-size:.78rem">
                                     <div>
                                         {{ $m['ad'] }}
-                                        <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
+                                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
                                     </div>
                                     <button type="button" wire:click="matristenSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
                                 </div>
@@ -154,7 +154,7 @@
                                     border:1px solid {{ $secili ? $mavi : 'rgb(107 114 128 / .3)' }};
                                     background:{{ $secili ? 'rgb(59 130 246 / .08)' : 'transparent' }}">
                                 {{ $secili ? '☑' : '☐' }} {{ $m['ad'] }}
-                                <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
                             </button>
                         @endforeach
                     </div>

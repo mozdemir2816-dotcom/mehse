@@ -1,7 +1,7 @@
 @php
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $tipler = $this->tipSecenekleri();
 @endphp
@@ -83,7 +83,7 @@
                             <td style="{{ $td }};white-space:nowrap">{{ $s['madde'] }}</td>
                             <td style="{{ $td }};min-width:240px">
                                 <input type="text" wire:model.blur="onizleme.{{ $i }}.kategori_adi" style="{{ $girdi }};width:100%">
-                                <div style="font-size:.72rem;margin-top:.2rem;color:{{ $mevcut !== null ? 'rgb(217 119 6)' : 'rgb(21 128 61)' }}">
+                                <div style="font-size:.75rem;margin-top:.2rem;color:{{ $mevcut !== null ? 'rgb(217 119 6)' : 'rgb(21 128 61)' }}">
                                     {{ $mevcut !== null ? "Kütüphanede var ({$mevcut} madde) — güncellenecek" : 'Yeni kategori' }}
                                 </div>
                                 @error("onizleme.$i.kategori_adi") <div style="font-size:.75rem;color:rgb(220 38 38)">{{ $message }}</div> @enderror

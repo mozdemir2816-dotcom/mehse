@@ -1,9 +1,9 @@
 @php
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
-    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.45rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.7rem 1rem';
-    $rozet = fn (string $renk) => "font-size:.7rem;padding:.08rem .45rem;border-radius:999px;white-space:nowrap;border:1px solid {$renk}";
+    $rozet = fn (string $renk) => "font-size:.75rem;padding:.08rem .45rem;border-radius:999px;white-space:nowrap;border:1px solid {$renk}";
     $durumRenk = ['taslak' => 'rgb(107 114 128 / .45)', 'aktif' => 'rgb(22 163 74 / .55)', 'revizyon' => 'rgb(245 158 11 / .6)', 'arsiv' => 'rgb(107 114 128 / .3)'];
 @endphp
 
@@ -60,9 +60,9 @@
                     @foreach ($this->kayitlar as $p)
                         @php $inc = $p->incelemeDurumu(); @endphp
                         <tr>
-                            <td style="{{ $td }}"><strong>{{ $p->dokuman_no }}</strong><div style="font-size:.72rem;color:rgb(107 114 128)">Rev. {{ $p->revizyon_no ?: '—' }}</div></td>
+                            <td style="{{ $td }}"><strong>{{ $p->dokuman_no }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">Rev. {{ $p->revizyon_no ?: '—' }}</div></td>
                             <td style="{{ $td }}">{{ $p->firma?->unvan }}</td>
-                            <td style="{{ $td }}">{{ $p->bolum }}<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $p->proses ?: 'Proses belirtilmedi' }}</div></td>
+                            <td style="{{ $td }}">{{ $p->bolum }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $p->proses ?: 'Proses belirtilmedi' }}</div></td>
                             <td style="{{ $td }}"><span style="{{ $rozet('rgb(107 114 128 / .4)') }}">{{ $p->ortamEtiketi() }}</span></td>
                             <td style="{{ $td }}">
                                 @foreach ($p->etiketler('zonelar') as $z)

@@ -53,7 +53,7 @@
                 <span style="font-size:.78rem;color:rgb(107 114 128)">Firma tehlike sınıfı:</span>
                 @foreach ($rozetler as $anahtar => [$etiket, $renk])
                     @php $aktif = $this->firma->tehlike_sinifi === $anahtar; @endphp
-                    <span style="padding:.15rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;
+                    <span style="padding:.15rem .65rem;border-radius:999px;font-size:.75rem;font-weight:700;
                         color:{{ $aktif ? '#fff' : $renk }};background:{{ $aktif ? $renk : 'transparent' }};border:1px solid {{ $renk }};opacity:{{ $aktif ? 1 : .45 }}">{{ $etiket }}</span>
                 @endforeach
             </div>

@@ -52,8 +52,8 @@
                     @php $renk = \App\Support\RiskSkorlama::panoRengi('fine_kinney', $is['en_yuksek'])['renk']; @endphp
                     <div style="border:1px solid #e2e8f0;border-left:4px solid {{ $renk }};border-radius:.9rem;padding:.8rem .95rem;background:#fff;display:flex;flex-direction:column;gap:.45rem">
                         <div style="font-weight:700;font-size:.9rem">{{ $is['ad'] }}</div>
-                        <div style="font-size:.74rem;color:#64748b">{{ $is['adet'] }} risk maddesi · en yüksek puan <strong style="color:{{ $renk }}">{{ number_format($is['en_yuksek'], 0, ',', '.') }}</strong></div>
-                        <div style="font-size:.72rem;color:#64748b">{{ \Illuminate\Support\Str::limit($is['ornek'], 80) }}</div>
+                        <div style="font-size:.75rem;color:#64748b">{{ $is['adet'] }} risk maddesi · en yüksek puan <strong style="color:{{ $renk }}">{{ number_format($is['en_yuksek'], 0, ',', '.') }}</strong></div>
+                        <div style="font-size:.75rem;color:#64748b">{{ \Illuminate\Support\Str::limit($is['ornek'], 80) }}</div>
                         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:auto">
                             <x-filament::button size="xs" icon="heroicon-o-document-check" tag="a" :href="\App\Filament\Pages\IsIzinFormu::getUrl(['firma' => $this->firma->id, 'tur' => $is['tur']])">İş İzni Formu</x-filament::button>
                             <x-filament::button size="xs" color="gray" icon="heroicon-o-clipboard-document-list" tag="a" :href="\App\Filament\Pages\TalimatOlustur::getUrl(['firma' => $this->firma->id])">Talimat Hazırla</x-filament::button>
@@ -86,7 +86,7 @@
                 <x-filament::button size="xs" color="gray" wire:click="tumunuSec">Tümünü Seç</x-filament::button>
                 <x-filament::button size="xs" color="gray" wire:click="secimiTemizle">Temizle</x-filament::button>
                 @unless ($this->firma)
-                    <span style="font-size:.74rem;color:rgb(220 38 38)">Firma seçilmedi — çıktı firmasız (genel) gelir</span>
+                    <span style="font-size:.75rem;color:rgb(220 38 38)">Firma seçilmedi — çıktı firmasız (genel) gelir</span>
                 @endunless
             </div>
         @endif
@@ -111,17 +111,17 @@
                             @if ($seviyeler->isNotEmpty())
                                 <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem">
                                     @foreach ($seviyeler as $seviye => $adet)
-                                        <span style="display:inline-block;color:#fff;padding:1px 6px;border-radius:3px;font-size:.68rem;background:{{ $riskRozet($seviye) }}">{{ $seviye }}: {{ $adet }}</span>
+                                        <span style="display:inline-block;color:#fff;padding:1px 6px;border-radius:3px;font-size:.75rem;background:{{ $riskRozet($seviye) }}">{{ $seviye }}: {{ $adet }}</span>
                                     @endforeach
                                 </div>
                             @endif
 
                             <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.45rem;align-items:center">
-                                <span style="font-size:.7rem;color:rgb(107 114 128);font-weight:700">FİRMALAR:</span>
+                                <span style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">FİRMALAR:</span>
                                 @forelse ($s->firmalar as $f)
-                                    <span style="display:inline-block;padding:1px 7px;border-radius:9999px;font-size:.68rem;border:1px solid {{ $mor }};color:{{ $mor }}">{{ $f->unvan }}</span>
+                                    <span style="display:inline-block;padding:1px 7px;border-radius:9999px;font-size:.75rem;border:1px solid {{ $mor }};color:{{ $mor }}">{{ $f->unvan }}</span>
                                 @empty
-                                    <span style="font-size:.7rem;color:rgb(107 114 128)">— hiçbir firmaya eklenmedi —</span>
+                                    <span style="font-size:.75rem;color:rgb(107 114 128)">— hiçbir firmaya eklenmedi —</span>
                                 @endforelse
                             </div>
                         </div>

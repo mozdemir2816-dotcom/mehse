@@ -1,7 +1,7 @@
 @php
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
-    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
+    $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.45rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $sekmeStil = fn (string $s) => 'padding:.45rem .85rem;border-radius:999px;cursor:pointer;font-weight:600;font-size:.82rem;border:1px solid '
         .($sekme === $s ? 'rgb(124 58 237);background:rgb(124 58 237);color:#fff' : 'rgb(107 114 128 / .35);background:transparent');
@@ -84,7 +84,7 @@
                 @foreach ([['Aktif çalışan', $o['toplam'], 'inherit', null], ['Kayıt yok', $o['kayit_yok'], '#b91c1c', 'kayit_yok'], ['Süresi dolmuş', $o['dolmus'], '#c2410c', 'dolmus'], ['Yaklaşan', $o['yaklasan'], '#b45309', 'yaklasan'], ['Geçerli', $o['gecerli'], '#15803d', 'gecerli']] as [$ad, $sayi, $renk, $f])
                     <button type="button" wire:click="$set('durumFiltre', {{ $f ? "'".$f."'" : 'null' }})" style="text-align:left;border:1px solid {{ $durumFiltre === $f ? 'rgb(124 58 237)' : 'rgb(107 114 128 / .3)' }};border-radius:.75rem;padding:.6rem .9rem;background:transparent;cursor:pointer">
                         <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
-                        <div style="font-size:.74rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                     </button>
                 @endforeach
             </div>
@@ -107,11 +107,11 @@
                             @foreach ($this->gosterilenSatirlar as $s)
                                 <tr wire:key="satir-{{ $s['calisan']->id }}">
                                     <td style="{{ $td }}"><input type="checkbox" value="{{ $s['calisan']->id }}" wire:model.live="secili"></td>
-                                    <td style="{{ $td }}"><strong>{{ $s['calisan']->ad_soyad }}</strong><div style="font-size:.72rem;color:rgb(107 114 128)">{{ $s['calisan']->gorev }}</div></td>
+                                    <td style="{{ $td }}"><strong>{{ $s['calisan']->ad_soyad }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['calisan']->gorev }}</div></td>
                                     <td style="{{ $td }}">{{ $s['calisan']->departman ?: '—' }}</td>
-                                    <td style="{{ $td }};white-space:nowrap">{{ $s['son_egitim']?->format('d.m.Y') ?? '—' }}@if ($s['kaynak'])<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $s['kaynak'] }}</div>@endif</td>
-                                    <td style="{{ $td }};white-space:nowrap">{{ $s['yenileme']?->format('d.m.Y') ?? '—' }}@if ($s['kalan_gun'] !== null)<div style="font-size:.7rem;color:rgb(107 114 128)">{{ $s['kalan_gun'] < 0 ? abs($s['kalan_gun']).' gün geçti' : $s['kalan_gun'].' gün kaldı' }}</div>@endif@if ($s['ilk_son_tarih'])<div style="font-size:.7rem;color:{{ $s['ilk_kalan_gun'] < 0 ? '#b91c1c' : '#b45309' }}" title="Yönetmelik Md.8: temel eğitim işe başlamadan itibaren en geç 3 ay içinde">İşe girişten 3 ay: {{ $s['ilk_son_tarih']->format('d.m.Y') }} ({{ $s['ilk_kalan_gun'] < 0 ? abs($s['ilk_kalan_gun']).' gün geçti' : $s['ilk_kalan_gun'].' gün kaldı' }})</div>@endif</td>
-                                    <td style="{{ $td }}"><span style="font-size:.72rem;font-weight:700;color:{{ $durumRenk[$s['durum']] }}">{{ \App\Filament\Pages\EgitimYenilemeTakibi::durumEtiketi($s['durum']) }}</span>@if ($s['dorduncu_bekleniyor'])<div style="font-size:.7rem;color:#b45309">Uzaktan 1–3. konular tamam · 4. konu yüz yüze bekleniyor</div>@endif</td>
+                                    <td style="{{ $td }};white-space:nowrap">{{ $s['son_egitim']?->format('d.m.Y') ?? '—' }}@if ($s['kaynak'])<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['kaynak'] }}</div>@endif</td>
+                                    <td style="{{ $td }};white-space:nowrap">{{ $s['yenileme']?->format('d.m.Y') ?? '—' }}@if ($s['kalan_gun'] !== null)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['kalan_gun'] < 0 ? abs($s['kalan_gun']).' gün geçti' : $s['kalan_gun'].' gün kaldı' }}</div>@endif@if ($s['ilk_son_tarih'])<div style="font-size:.75rem;color:{{ $s['ilk_kalan_gun'] < 0 ? '#b91c1c' : '#b45309' }}" title="Yönetmelik Md.8: temel eğitim işe başlamadan itibaren en geç 3 ay içinde">İşe girişten 3 ay: {{ $s['ilk_son_tarih']->format('d.m.Y') }} ({{ $s['ilk_kalan_gun'] < 0 ? abs($s['ilk_kalan_gun']).' gün geçti' : $s['ilk_kalan_gun'].' gün kaldı' }})</div>@endif</td>
+                                    <td style="{{ $td }}"><span style="font-size:.75rem;font-weight:700;color:{{ $durumRenk[$s['durum']] }}">{{ \App\Filament\Pages\EgitimYenilemeTakibi::durumEtiketi($s['durum']) }}</span>@if ($s['dorduncu_bekleniyor'])<div style="font-size:.75rem;color:#b45309">Uzaktan 1–3. konular tamam · 4. konu yüz yüze bekleniyor</div>@endif</td>
                                     <td style="{{ $td }}">{!! $s['isbasi'] ? '<span style="color:#15803d">Var</span>' : '<span style="color:#b45309">Eksik</span>' !!}</td>
                                 </tr>
                             @endforeach
@@ -132,7 +132,7 @@
                         <tr>@foreach (['Eğitim', 'Firma', 'Tarih', 'Tehlike', 'Gün', 'Katılımcı', 'Sonuç', ''] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                         @foreach ($this->oturumlar as $k)
                             <tr>
-                                <td style="{{ $td }}">{{ $k->basliklarEtiketi() }}<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $k->belge_no }}</div></td>
+                                <td style="{{ $td }}">{{ $k->basliklarEtiketi() }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k->belge_no }}</div></td>
                                 <td style="{{ $td }}">{{ $k->firma?->unvan }}</td>
                                 <td style="{{ $td }};white-space:nowrap">{{ \App\Support\EgitimTakibi::katilimTarihi($k)?->format('d.m.Y') ?? '—' }}</td>
                                 <td style="{{ $td }}">{{ $k->firma?->tehlike_sinifi ? $k->firma->tehlikeSinifiEtiketi() : '—' }}</td>

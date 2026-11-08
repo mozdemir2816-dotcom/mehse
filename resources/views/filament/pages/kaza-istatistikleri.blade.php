@@ -57,7 +57,7 @@
                 ] as [$etiket, $deger])
                     <div style="{{ $kutu }};text-align:center">
                         <div style="font-size:1.35rem;font-weight:700">{{ $deger }}</div>
-                        <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $etiket }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $etiket }}</div>
                     </div>
                 @endforeach
             </div>

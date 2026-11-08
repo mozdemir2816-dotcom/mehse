@@ -26,12 +26,12 @@
 
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
                         <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.65rem .8rem">
-                            <div style="font-size:.72rem;font-weight:700;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.03em">Mevcut madde</div>
+                            <div style="font-size:.75rem;font-weight:700;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.03em">Mevcut madde</div>
                             <div style="font-weight:600;font-size:.88rem;margin-top:.25rem">{{ $c->mevcutTehlike?->tehlike }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.2rem">{{ $c->mevcutTehlike?->risk }}</div>
                         </div>
                         <div style="border:1px solid {{ $mor }};border-radius:.5rem;padding:.65rem .8rem;background:rgb(139 92 246 / .06)">
-                            <div style="font-size:.72rem;font-weight:700;color:{{ $mor }};text-transform:uppercase;letter-spacing:.03em">Yeni (Excel'den)</div>
+                            <div style="font-size:.75rem;font-weight:700;color:{{ $mor }};text-transform:uppercase;letter-spacing:.03em">Yeni (Excel'den)</div>
                             <div style="font-weight:600;font-size:.88rem;margin-top:.25rem">{{ $c->yeni_veri['tehlike'] ?? '—' }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.2rem">{{ $c->yeni_veri['risk'] ?? '—' }}</div>
                         </div>

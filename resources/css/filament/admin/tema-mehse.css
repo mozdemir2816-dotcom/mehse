@@ -106,7 +106,7 @@ html[data-mehse-tema="mehse"] {
 
     .fi-sidebar-group-label {
         color: rgb(127 214 210 / .6) !important;
-        font-size: .64rem !important;
+        font-size: .68rem !important;
         font-weight: 700;
         letter-spacing: .12em;
         text-transform: uppercase;
@@ -329,7 +329,7 @@ html[data-mehse-tema="mehse"] {
     }
 
     .fi-wi-stats-overview-stat-label {
-        font-size: .68rem;
+        font-size: .75rem;
         letter-spacing: .07em;
         color: var(--text-secondary) !important;
     }

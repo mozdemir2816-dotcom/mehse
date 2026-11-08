@@ -33,9 +33,9 @@
                 ['SÜRESİ DOLAN / YASAK', $this->kpi['dolmus'], 'Kullanımı kanunen durdurulmalıdır', '#dc2626'],
             ] as [$baslik, $deger, $aciklama, $renk])
                 <div style="{{ $kutu }}">
-                    <div style="font-size:.7rem;font-weight:700;color:rgb(107 114 128);letter-spacing:.02em">{{ $baslik }}</div>
+                    <div style="font-size:.75rem;font-weight:700;color:rgb(107 114 128);letter-spacing:.02em">{{ $baslik }}</div>
                     <div style="font-size:1.7rem;font-weight:800;color:{{ $renk }};line-height:1.1">{{ $deger }}</div>
-                    <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $aciklama }}</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $aciklama }}</div>
                 </div>
             @endforeach
         </div>
@@ -105,21 +105,21 @@
                             @php $sonKat = null; @endphp
                             @foreach ($satirlar as $i => $s)
                                 @if ($s['kategori_adi'] !== $sonKat)
-                                    <tr><td colspan="9" style="background:rgb(107 114 128 / .06);font-weight:700;font-size:.72rem;padding:.3rem .4rem">{{ $s['kategori_adi'] }}</td></tr>
+                                    <tr><td colspan="9" style="background:rgb(107 114 128 / .06);font-weight:700;font-size:.75rem;padding:.3rem .4rem">{{ $s['kategori_adi'] }}</td></tr>
                                     @php $sonKat = $s['kategori_adi']; @endphp
                                 @endif
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.35rem">
                                         <div style="font-weight:600">{{ $s['ekipman_adi'] }}</div>
-                                        <div style="font-size:.66rem;color:rgb(107 114 128)">
+                                        <div style="font-size:.68rem;color:rgb(107 114 128)">
                                             {{ $s['konum'] ?: '—' }}@if ($s['kapasite']) · {{ $s['kapasite'] }} @endif
                                             @if ($s['yasal_standart']) · {{ $s['yasal_standart'] }} @endif
                                         </div>
                                     </td>
-                                    <td style="padding:.35rem;font-size:.7rem">{{ $s['seri_no'] ?: '—' }}<br><span style="color:rgb(107 114 128)">{{ $s['marka_model'] ?: '' }}</span></td>
+                                    <td style="padding:.35rem;font-size:.75rem">{{ $s['seri_no'] ?: '—' }}<br><span style="color:rgb(107 114 128)">{{ $s['marka_model'] ?: '' }}</span></td>
                                     <td style="padding:.35rem"><input type="number" min="1" wire:model.blur="satirlar.{{ $i }}.muayene_periyodu_ay" style="{{ $girdi }}"></td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.son_muayene_tarihi" style="{{ $girdi }}"></td>
-                                    <td style="padding:.35rem;font-size:.72rem;color:rgb(107 114 128)">{{ $s['sonraki_vize_tarihi'] ? \Illuminate\Support\Carbon::parse($s['sonraki_vize_tarihi'])->format('d.m.Y') : '—' }}</td>
+                                    <td style="padding:.35rem;font-size:.75rem;color:rgb(107 114 128)">{{ $s['sonraki_vize_tarihi'] ? \Illuminate\Support\Carbon::parse($s['sonraki_vize_tarihi'])->format('d.m.Y') : '—' }}</td>
                                     <td style="padding:.35rem">
                                         <input type="text" wire:model.blur="satirlar.{{ $i }}.muayene_yapan" placeholder="A tipi muayene kuruluşu" style="{{ $girdi }};margin-bottom:.2rem">
                                         <input type="text" wire:model.blur="satirlar.{{ $i }}.rapor_no" placeholder="Rapor no" style="{{ $girdi }}">
@@ -132,11 +132,11 @@
                                         </select>
                                     </td>
                                     <td style="padding:.35rem">
-                                        <span style="display:inline-block;background:{{ $durumRenk[$s['vize_durumu']] }};color:#fff;font-size:.68rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">
+                                        <span style="display:inline-block;background:{{ $durumRenk[$s['vize_durumu']] }};color:#fff;font-size:.75rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">
                                             {{ $durumEtiket[$s['vize_durumu']] }}
                                         </span>
                                         @if ($s['kalan_gun'] !== null && ! in_array($s['vize_durumu'], ['bekliyor', 'muaf'], true))
-                                            <div style="font-size:.66rem;color:rgb(107 114 128);margin-top:.15rem">{{ $s['kalan_gun'] }} gün</div>
+                                            <div style="font-size:.68rem;color:rgb(107 114 128);margin-top:.15rem">{{ $s['kalan_gun'] }} gün</div>
                                         @endif
                                     </td>
                                     <td style="padding:.35rem;text-align:center;white-space:nowrap">
@@ -194,13 +194,13 @@
                                         <button type="button" wire:click="firmaSec({{ $e->firma_id }})" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(124 58 237);text-align:left;text-decoration:underline">{{ $e->firma?->unvan }}</button>
                                     </td>
                                     <td style="padding:.35rem">{{ $e->kategoriAdi() }}</td>
-                                    <td style="padding:.35rem;font-weight:600">{{ $e->ekipman_adi }}@if ($e->seri_no)<div style="font-weight:400;font-size:.68rem;color:rgb(107 114 128)">{{ $e->seri_no }}</div>@endif</td>
+                                    <td style="padding:.35rem;font-weight:600">{{ $e->ekipman_adi }}@if ($e->seri_no)<div style="font-weight:400;font-size:.75rem;color:rgb(107 114 128)">{{ $e->seri_no }}</div>@endif</td>
                                     <td style="padding:.35rem">{{ $e->konum ?: '—' }}</td>
                                     <td style="padding:.35rem;white-space:nowrap">{{ $e->son_muayene_tarihi?->format('d.m.Y') ?? '—' }}</td>
                                     <td style="padding:.35rem;white-space:nowrap">{{ $e->sonraki_vize_tarihi?->format('d.m.Y') ?? '—' }}</td>
                                     <td style="padding:.35rem">
-                                        <span style="display:inline-block;background:{{ $durumRenk[$d] }};color:#fff;font-size:.68rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">{{ $durumEtiket[$d] }}</span>
-                                        @if ($kalan !== null && ! in_array($d, ['bekliyor', 'muaf'], true))<div style="font-size:.66rem;color:rgb(107 114 128)">{{ $kalan }} gün</div>@endif
+                                        <span style="display:inline-block;background:{{ $durumRenk[$d] }};color:#fff;font-size:.75rem;font-weight:600;border-radius:.3rem;padding:.15rem .45rem">{{ $durumEtiket[$d] }}</span>
+                                        @if ($kalan !== null && ! in_array($d, ['bekliyor', 'muaf'], true))<div style="font-size:.68rem;color:rgb(107 114 128)">{{ $kalan }} gün</div>@endif
                                     </td>
                                     <td style="padding:.35rem;white-space:nowrap;text-align:right">
                                         <x-filament::button size="xs" color="primary" wire:click="mountAction('kontrolGir', { id: {{ $e->id }} })">Kontrol Gir</x-filament::button>

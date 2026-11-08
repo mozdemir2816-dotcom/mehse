@@ -7,7 +7,7 @@
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $kucukGirdi = 'padding:.25rem .4rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $sayi = fn ($n) => number_format((float) $n, 0, ',', '.');
 @endphp
@@ -41,10 +41,10 @@
     @else
         {{-- NACE kaynaklı tehlike kapsamı --}}
         <div style="{{ $kart }};display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
-            <div><div style="font-size:.7rem;color:rgb(107 114 128)">NACE kodu</div><div style="font-weight:700">{{ $a['kapsam']['nace'] ?: '—' }}</div></div>
-            <div><div style="font-size:.7rem;color:rgb(107 114 128)">Tehlike sınıfı</div><div style="font-weight:700">{{ $a['kapsam']['tehlike_sinifi'] }}</div></div>
-            <div><div style="font-size:.7rem;color:rgb(107 114 128)">Çalışan</div><div style="font-weight:700">{{ $a['kapsam']['calisan'] ?: '—' }}</div></div>
-            <div><div style="font-size:.7rem;color:rgb(107 114 128)">Risk kaydı</div><div style="font-weight:700">{{ $a['kapsam']['risk_kaydi'] }}</div></div>
+            <div><div style="font-size:.75rem;color:rgb(107 114 128)">NACE kodu</div><div style="font-weight:700">{{ $a['kapsam']['nace'] ?: '—' }}</div></div>
+            <div><div style="font-size:.75rem;color:rgb(107 114 128)">Tehlike sınıfı</div><div style="font-weight:700">{{ $a['kapsam']['tehlike_sinifi'] }}</div></div>
+            <div><div style="font-size:.75rem;color:rgb(107 114 128)">Çalışan</div><div style="font-weight:700">{{ $a['kapsam']['calisan'] ?: '—' }}</div></div>
+            <div><div style="font-size:.75rem;color:rgb(107 114 128)">Risk kaydı</div><div style="font-weight:700">{{ $a['kapsam']['risk_kaydi'] }}</div></div>
         </div>
 
         <div style="border:1px solid rgb(217 119 6);background:rgb(217 119 6 / .07);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
@@ -56,22 +56,22 @@
             <div style="{{ $kart }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Baskın tehlike türü</div>
                 <div style="font-size:1.4rem;font-weight:800;color:{{ $baskin['renk'] ?? 'inherit' }}">{{ $baskin['ad'] ?? '—' }}</div>
-                <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $baskin ? '%'.$baskin['pay'].' dominans payı' : 'Puanlı risk kaydı yok' }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $baskin ? '%'.$baskin['pay'].' dominans payı' : 'Puanlı risk kaydı yok' }}</div>
             </div>
             <div style="{{ $kart }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Aday tehlike kaynağı</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ count($a['kaynaklar']) }}</div>
-                <div style="font-size:.72rem;color:rgb(107 114 128)">NACE listesinden · {{ collect($a['kaynaklar'])->where('eslesen', 0)->count() }} doğrulama bekliyor</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">NACE listesinden · {{ collect($a['kaynaklar'])->where('eslesen', 0)->count() }} doğrulama bekliyor</div>
             </div>
             <div style="{{ $kart }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam maruz kişi</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $sayi($a['maruz_toplam']) }}</div>
-                <div style="font-size:.72rem;color:{{ $a['maruz_eksik'] ? 'rgb(217 119 6)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta çalışan sayısı ('.$a['maruz_varsayilan'].') varsayıldı' : 'Tüm kayıtlarda elle girilmiş' }}</div>
+                <div style="font-size:.75rem;color:{{ $a['maruz_eksik'] ? 'rgb(217 119 6)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta çalışan sayısı ('.$a['maruz_varsayilan'].') varsayıldı' : 'Tüm kayıtlarda elle girilmiş' }}</div>
             </div>
             <div style="{{ $kart }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">Risk değerlendirmesi</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $a['kapsam']['risk_kaydi'] }}</div>
-                <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $rd ? ($rd->belge_no.' · '.config('isg.risk_yontemleri.'.$rd->yontem)) : 'Değerlendirme yok' }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $rd ? ($rd->belge_no.' · '.config('isg.risk_yontemleri.'.$rd->yontem)) : 'Değerlendirme yok' }}</div>
             </div>
         </div>
 
@@ -92,7 +92,7 @@
                         <span style="font-weight:800;color:rgb(107 114 128);min-width:1.2rem">{{ $i + 1 }}</span>
                         <div style="flex:1">
                             <div style="font-weight:600">{{ \Illuminate\Support\Str::limit($s['madde']->tehlike, 90) }}</div>
-                            <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $s['madde']->bolum ?: 'Bölüm yok' }} · <span style="color:{{ $turler[$s['tur']]['renk'] }}">{{ $turler[$s['tur']]['ad'] }}</span> · puan <strong style="color:{{ \App\Support\RiskSkorlama::panoRengi($rd->yontem ?? 'fine_kinney', (float) $s['madde']->puan)['renk'] }}">{{ $sayi($s['madde']->puan) }}</strong> × {{ $s['maruz'] }} kişi{{ $s['maruz_varsayilan'] ? ' (varsayılan)' : '' }}</div>
+                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['madde']->bolum ?: 'Bölüm yok' }} · <span style="color:{{ $turler[$s['tur']]['renk'] }}">{{ $turler[$s['tur']]['ad'] }}</span> · puan <strong style="color:{{ \App\Support\RiskSkorlama::panoRengi($rd->yontem ?? 'fine_kinney', (float) $s['madde']->puan)['renk'] }}">{{ $sayi($s['madde']->puan) }}</strong> × {{ $s['maruz'] }} kişi{{ $s['maruz_varsayilan'] ? ' (varsayılan)' : '' }}</div>
                         </div>
                         <span style="font-weight:800">{{ $sayi($s['dominans']) }}</span>
                     </div>
@@ -112,7 +112,7 @@
                         @php $ok = $k['eslesen'] > 0; @endphp
                         <div style="{{ $kart }};border-left:4px solid {{ $ok ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">
                             <div style="font-weight:600;font-size:.85rem">{{ $k['baslik'] }}</div>
-                            <div style="font-size:.72rem;margin-top:.2rem;color:{{ $ok ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $ok ? 'Risk kaydında karşılığı var ('.$k['eslesen'].' kayıt)' : 'Saha doğrulaması bekliyor' }}</div>
+                            <div style="font-size:.75rem;margin-top:.2rem;color:{{ $ok ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $ok ? 'Risk kaydında karşılığı var ('.$k['eslesen'].' kayıt)' : 'Saha doğrulaması bekliyor' }}</div>
                         </div>
                     @endforeach
                 </div>

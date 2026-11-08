@@ -22,7 +22,7 @@
 <x-filament-panels::page>
     {{-- BAŞLIK: sayfa başlığı zaten "İSG Komuta Merkezi" — burada yalnız canlı rozeti (13.10.2026). --}}
     <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
-        <span style="display:inline-flex;align-items:center;gap:.35rem;background:rgb(34 197 94 / .15);color:{{ $yesil }};font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:9999px">
+        <span style="display:inline-flex;align-items:center;gap:.35rem;background:rgb(34 197 94 / .15);color:{{ $yesil }};font-size:.75rem;font-weight:600;padding:.2rem .6rem;border-radius:9999px">
             <span style="width:.5rem;height:.5rem;border-radius:9999px;background:{{ $yesil }}"></span> Canlı İSG Takibi
         </span>
     </div>
@@ -93,13 +93,13 @@
                                 background:conic-gradient({{ $uyumRengi }} {{ $o['uyum_yuzde'] }}%, rgb(128 116 148 / .18) 0);
                                 -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
                                 mask:radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px))"></div>
-                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:{{ $uyumRengi }}">
+                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:{{ $uyumRengi }}">
                             %{{ $o['uyum_yuzde'] }}
                         </div>
                     </div>
                     <div style="text-align:right">
                         <div style="font-size:1.3rem;font-weight:800;color:{{ $uyumRengi }}">%{{ $o['uyum_yuzde'] }}</div>
-                        <div style="font-size:.72rem;color:{{ $gri }}">{{ $o['tam_uyumlu'] }} firma tam uyumlu</div>
+                        <div style="font-size:.75rem;color:{{ $gri }}">{{ $o['tam_uyumlu'] }} firma tam uyumlu</div>
                     </div>
                 </div>
             </div>
@@ -108,7 +108,7 @@
                 @foreach ($ozetKartlari as $kart)
                     <div style="border-radius:.65rem;padding:.85rem;background:color-mix(in srgb, {{ $kart['renk'] }} 14%, transparent)">
                         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">
-                            <span style="font-size:.68rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:{{ $gri }}">{{ $kart['ad'] }}</span>
+                            <span style="font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:{{ $gri }}">{{ $kart['ad'] }}</span>
                             <span style="width:1.8rem;height:1.8rem;border-radius:.5rem;background:rgb(128 116 148 / .12);
                                     display:flex;align-items:center;justify-content:center;flex-shrink:0">
                                 <x-filament::icon :icon="$kart['ikon']" style="width:1rem;height:1rem;color:{{ $kart['renk'] }}"/>
@@ -139,7 +139,7 @@
                                 <x-filament::icon :icon="$grup['ikon']" style="width:1.05rem;height:1.05rem;color:{{ $gRenk }}"/>
                                 {{ $grup['ad'] }}
                             </span>
-                            <span style="font-size:.72rem;font-weight:700;padding:.12rem .55rem;border-radius:9999px;color:{{ $gRenk }};background:color-mix(in srgb, {{ $gRenk }} 14%, transparent)">
+                            <span style="font-size:.75rem;font-weight:700;padding:.12rem .55rem;border-radius:9999px;color:{{ $gRenk }};background:color-mix(in srgb, {{ $gRenk }} 14%, transparent)">
                                 %{{ $grup['yuzde'] }}
                             </span>
                         </div>
@@ -161,15 +161,15 @@
                                         <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:600;min-width:0">
                                             <x-filament::icon :icon="$k['ikon']" style="width:.85rem;height:.85rem;flex-shrink:0;color:{{ $kRenk }}"/>
                                             <span style="overflow:hidden;text-overflow:ellipsis" title="{{ $k['ad'] }}">{{ $k['ad'] }}</span>
-                                            @unless ($k['hazir']) <span style="font-size:.62rem;color:{{ $gri }};white-space:nowrap">(yakında)</span> @endunless
-                                            @if ($k['takip']) <span style="font-size:.62rem;color:{{ $gri }};white-space:nowrap" title="Olay bazlı kayıt — eksik sayılmaz, uyum yüzdesine girmez">(yalnız takip)</span> @endif
+                                            @unless ($k['hazir']) <span style="font-size:.68rem;color:{{ $gri }};white-space:nowrap">(yakında)</span> @endunless
+                                            @if ($k['takip']) <span style="font-size:.68rem;color:{{ $gri }};white-space:nowrap" title="Olay bazlı kayıt — eksik sayılmaz, uyum yüzdesine girmez">(yalnız takip)</span> @endif
                                         </span>
                                         <span style="display:flex;align-items:center;gap:.3rem;white-space:nowrap">
-                                            <span style="font-size:.68rem;font-weight:700;padding:.08rem .45rem;border-radius:9999px;color:{{ $kRenk }};background:color-mix(in srgb, {{ $kRenk }} 14%, transparent)">%{{ $k['yuzde'] }}</span>
+                                            <span style="font-size:.75rem;font-weight:700;padding:.08rem .45rem;border-radius:9999px;color:{{ $kRenk }};background:color-mix(in srgb, {{ $kRenk }} 14%, transparent)">%{{ $k['yuzde'] }}</span>
                                             @if ($k['hazir'] && ! $k['takip'] && $eksikSayi > 0)
-                                                <span style="font-size:.66rem;font-weight:700;padding:.08rem .45rem;border-radius:9999px;color:{{ $kirmizi }};background:color-mix(in srgb, {{ $kirmizi }} 12%, transparent)" title="Bu kriteri karşılamayan firma sayısı">{{ $eksikSayi }} eksik</span>
+                                                <span style="font-size:.68rem;font-weight:700;padding:.08rem .45rem;border-radius:9999px;color:{{ $kirmizi }};background:color-mix(in srgb, {{ $kirmizi }} 12%, transparent)" title="Bu kriteri karşılamayan firma sayısı">{{ $eksikSayi }} eksik</span>
                                             @elseif ($k['hazir'] && ! $k['takip'])
-                                                <span style="font-size:.66rem;color:{{ $yesil }}">✓</span>
+                                                <span style="font-size:.68rem;color:{{ $yesil }}">✓</span>
                                             @endif
                                         </span>
                                     </div>
@@ -177,18 +177,18 @@
                                     @if ($acik)
                                         @php $eksikFirmalar = $this->acikKriterEksikFirmalar; @endphp
                                         <div style="margin-top:.5rem;padding-top:.45rem;border-top:1px dashed rgb(128 116 148 / .3)" onclick="event.stopPropagation()">
-                                            <div style="font-size:.7rem;font-weight:700;color:{{ $kirmizi }};margin-bottom:.35rem">
+                                            <div style="font-size:.75rem;font-weight:700;color:{{ $kirmizi }};margin-bottom:.35rem">
                                                 Bu kriterin eksik olduğu {{ count($eksikFirmalar) }} firma:
                                             </div>
                                             <div style="display:flex;flex-wrap:wrap;gap:.3rem">
                                                 @forelse ($eksikFirmalar as $fId => $fUnvan)
                                                     <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $fId]) }}"
-                                                        style="display:inline-block;padding:.12rem .5rem;border-radius:9999px;font-size:.7rem;
+                                                        style="display:inline-block;padding:.12rem .5rem;border-radius:9999px;font-size:.75rem;
                                                             border:1px solid {{ $kirmizi }};color:{{ $kirmizi }};text-decoration:none">
                                                         {{ $fUnvan }} ↗
                                                     </a>
                                                 @empty
-                                                    <span style="font-size:.72rem;color:{{ $gri }}">Eksik firma yok.</span>
+                                                    <span style="font-size:.75rem;color:{{ $gri }}">Eksik firma yok.</span>
                                                 @endforelse
                                             </div>
                                         </div>
@@ -244,11 +244,11 @@
                 <div style="font-size:.82rem;color:rgb(128 116 148)">{{ $k['toplam'] }} aktif çalışan</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-top:.75rem">
                     <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">Genç Çalışan (&lt;18)</div>
+                        <div style="font-size:.75rem;color:rgb(128 116 148);text-transform:uppercase">Genç Çalışan (&lt;18)</div>
                         <div style="font-size:1.3rem;font-weight:800;color:{{ $k['genc']->count() ? $sari : 'inherit' }}">{{ $k['genc']->count() }}</div>
                     </div>
                     <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.7rem;color:rgb(128 116 148);text-transform:uppercase">Ağır & Tehlikeli İş</div>
+                        <div style="font-size:.75rem;color:rgb(128 116 148);text-transform:uppercase">Ağır & Tehlikeli İş</div>
                         <div style="font-size:1.3rem;font-weight:800">{{ $k['agir_tehlikeli'] }}</div>
                     </div>
                 </div>

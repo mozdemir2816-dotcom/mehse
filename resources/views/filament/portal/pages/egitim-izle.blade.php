@@ -160,9 +160,9 @@
                 {{-- Ders listesi + sınav --}}
                 <div class="portal-card portal-ders-listesi" style="padding:.7rem;position:sticky;top:1rem;max-height:calc(100dvh - 2rem);display:flex;flex-direction:column"
                     x-data="{ acik: window.matchMedia('(min-width: 901px)').matches }">
-                    <div class="portal-label" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .65rem;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;gap:.5rem">
+                    <div class="portal-label" style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .65rem;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;gap:.5rem">
                         <span>Dersler ({{ count($izlenen) }}/{{ $a->paket->dersler->count() }} izlendi)</span>
-                        <button type="button" class="portal-ders-ac" x-on:click="acik = ! acik" style="background:none;border:1px solid var(--p-border-light);border-radius:.5rem;padding:.25rem .6rem;cursor:pointer;font-size:.72rem;color:inherit" x-text="acik ? 'Listeyi gizle ▲' : 'Listeyi aç ▼'">Listeyi aç ▼</button>
+                        <button type="button" class="portal-ders-ac" x-on:click="acik = ! acik" style="background:none;border:1px solid var(--p-border-light);border-radius:.5rem;padding:.25rem .6rem;cursor:pointer;font-size:.75rem;color:inherit" x-text="acik ? 'Listeyi gizle ▲' : 'Listeyi aç ▼'">Listeyi aç ▼</button>
                     </div>
                     <div x-show="acik" x-cloak style="display:flex;flex-direction:column;gap:.15rem;overflow-y:auto;min-height:0">
                         @php $oncekiModul = '__yok__'; @endphp
@@ -177,7 +177,7 @@
                                     $grup = $a->paket->dersler->where('modul', $d->modul);
                                     $grupBiten = $grup->whereIn('id', $izlenen)->count();
                                 @endphp
-                                <div class="portal-label" style="font-size:.74rem;font-weight:700;padding:.55rem .65rem .2rem;display:flex;justify-content:space-between;gap:.5rem">
+                                <div class="portal-label" style="font-size:.75rem;font-weight:700;padding:.55rem .65rem .2rem;display:flex;justify-content:space-between;gap:.5rem">
                                     <span>{{ $d->modul ? $d->modul.'. '.\App\Models\EgitimDersi::MODULLER[$d->modul] : 'Diğer dersler' }}</span>
                                     <span>{{ $grupBiten }}/{{ $grup->count() }} · %{{ (int) round($grupBiten / max(1, $grup->count()) * 100) }}</span>
                                 </div>

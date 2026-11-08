@@ -50,10 +50,10 @@
                             <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                                 <td style="padding:.5rem">
                                     <div style="font-weight:600">{{ $u->urun_adi }}</div>
-                                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $u->tedarikci }} · {{ config('isg.kimyasal.fiziksel_hal.'.$u->fiziksel_hal) }} · {{ $u->kullanim_alani }}</div>
+                                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $u->tedarikci }} · {{ config('isg.kimyasal.fiziksel_hal.'.$u->fiziksel_hal) }} · {{ $u->kullanim_alani }}</div>
                                 </td>
                                 <td style="padding:.5rem;font-family:monospace">{{ $u->cas_no ?: '—' }}</td>
-                                <td style="padding:.5rem;font-size:.72rem">{{ implode(', ', array_map(fn ($e) => explode(' — ', $e)[0], $u->ghsEtiketleri())) ?: '—' }}</td>
+                                <td style="padding:.5rem;font-size:.75rem">{{ implode(', ', array_map(fn ($e) => explode(' — ', $e)[0], $u->ghsEtiketleri())) ?: '—' }}</td>
                                 <td style="padding:.5rem">
                                     @if ($u->sdsVarMi())
                                         <button wire:click="sdsIndir({{ $u->id }})" style="background:none;border:0;color:rgb(20 184 166);cursor:pointer">İndir</button>
@@ -108,15 +108,15 @@
                         <td style="padding:.5rem">
                             <div style="font-weight:600">{{ $k->urun_adi }}</div>
                             @if ($k->tedarikci || $k->kullanim_alani)
-                                <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $k->tedarikci }} {{ $k->kullanim_alani }}</div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k->tedarikci }} {{ $k->kullanim_alani }}</div>
                             @endif
                         </td>
                         <td style="padding:.5rem;font-family:monospace">{{ $k->cas_no ?: '—' }}</td>
                         <td style="padding:.5rem">{{ config('isg.kimyasal.fiziksel_hal.'.$k->fiziksel_hal) ?: '—' }}</td>
-                        <td style="padding:.5rem;font-size:.72rem">{{ implode(', ', $k->ghsKodlari()) ?: '—' }}</td>
+                        <td style="padding:.5rem;font-size:.75rem">{{ implode(', ', $k->ghsKodlari()) ?: '—' }}</td>
                         <td style="padding:.5rem;text-align:right">
                             @if ($k->hazirMi())
-                                <span style="font-size:.7rem;color:rgb(107 114 128)">Hazır</span>
+                                <span style="font-size:.75rem;color:rgb(107 114 128)">Hazır</span>
                             @else
                                 <button wire:click="kutuphaneKayitSil({{ $k->id }})" wire:confirm="'{{ $k->urun_adi }}' kütüphaneden silinsin mi?" style="background:none;border:0;color:#dc2626;cursor:pointer">Sil</button>
                             @endif
@@ -143,7 +143,7 @@
                         @foreach ($liste as $a)
                             <div style="{{ $kutu }};font-size:.82rem">
                                 <div style="font-weight:600">{{ $a->baslik }}</div>
-                                <div style="font-size:.72rem;color:rgb(107 114 128)">
+                                <div style="font-size:.75rem;color:rgb(107 114 128)">
                                     {{ $a->firma_id ? $a->firma?->unvan : 'Genel' }} · {{ $a->dosya_adi }} ({{ $a->boyutEtiketi() }})
                                 </div>
                                 <div style="margin-top:.5rem;display:flex;gap:.4rem">

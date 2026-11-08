@@ -4,7 +4,7 @@
     $firma = $this->firma;
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.55rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $renk = ['tamamlandi' => 'rgb(21 128 61)', 'eksik' => 'rgb(220 38 38)', 'gecikmis' => 'rgb(185 28 28)', 'yaklasan' => 'rgb(217 119 6)', 'bilgi' => 'rgb(37 99 235)'];
     $tRenk = ['gecikmis' => 'rgb(220 38 38)', 'cok_yakin' => 'rgb(234 88 12)', 'yaklasiyor' => 'rgb(217 119 6)', 'ileri' => 'rgb(107 114 128)', 'tamamlandi' => 'rgb(21 128 61)'];
@@ -34,12 +34,12 @@
 
         <div style="{{ $kart }};display:flex;justify-content:space-between;gap:1rem;background:rgb(124 58 237 / .05)">
             <div>
-                <div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(124 58 237);font-weight:700">Firma 360 · yönetici dosyası</div>
+                <div style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(124 58 237);font-weight:700">Firma 360 · yönetici dosyası</div>
                 <div style="font-weight:800;font-size:1.1rem">Tek ekranda firma resmi</div>
                 <div style="font-size:.78rem;color:rgb(107 114 128)">İSG operasyonu, sözleşme ve yetkiniz dahilindeki cari veriler aynı rapor bütününde. Sağlık bilgileri yalnız toplu sayı olarak gösterilir.</div>
             </div>
             <div style="text-align:right;white-space:nowrap">
-                <div style="font-size:.72rem;color:rgb(107 114 128)">Rapor tarihi</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Rapor tarihi</div>
                 <div style="font-weight:800">{{ now()->format('d.m.Y') }}</div>
             </div>
         </div>
@@ -53,13 +53,13 @@
                 </div>
                 <div style="text-align:right">
                     <div style="font-size:1.6rem;font-weight:800;color:rgb(124 58 237)">%{{ $o['yuzde'] }}</div>
-                    <div style="font-size:.7rem;color:rgb(107 114 128)">ölçülebilir süreç tamamlanması</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">ölçülebilir süreç tamamlanması</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-top:.7rem">
                 @foreach ([['Tamamlanan', 'tamamlandi'], ['Eksik', 'eksik'], ['Gecikmiş', 'gecikmis'], ['Yaklaşan', 'yaklasan']] as [$ad, $k])
                     <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.5rem .8rem">
-                        <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                         <div style="font-size:1.4rem;font-weight:800;color:{{ $renk[$k] }}">{{ $o[$k] }}</div>
                     </div>
                 @endforeach
@@ -99,20 +99,20 @@
                 @foreach (['gecikmis', 'cok_yakin', 'yaklasiyor', 'tamamlandi'] as $k)
                     <button type="button" wire:click="$set('takvimDurum', '{{ $takvimDurum === $k ? '' : $k }}')"
                             style="text-align:left;border-radius:.6rem;padding:.55rem .8rem;border:1px solid {{ $tRenk[$k] }};{{ $takvimDurum === $k ? 'background:'.$tRenk[$k].';color:#fff' : '' }}">
-                        <div style="font-size:.72rem">{{ IsyeriDurumu::TAKVIM_DURUMLARI[$k] }}</div>
+                        <div style="font-size:.75rem">{{ IsyeriDurumu::TAKVIM_DURUMLARI[$k] }}</div>
                         <div style="font-size:1.3rem;font-weight:800;{{ $takvimDurum === $k ? '' : 'color:'.$tRenk[$k] }}">{{ $say[$k] ?? 0 }}</div>
                     </button>
                 @endforeach
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;align-items:end" class="idm-yazdirma">
-                <div><label style="font-size:.72rem;font-weight:600">Kategori</label>
+                <div><label style="font-size:.75rem;font-weight:600">Kategori</label>
                     <select wire:model.live="takvimKategori" style="{{ $girdi }};width:100%"><option value="">Tüm kategoriler</option>@foreach ($kategoriler as $k)<option value="{{ $k }}">{{ $k }}</option>@endforeach</select></div>
-                <div><label style="font-size:.72rem;font-weight:600">Durum</label>
+                <div><label style="font-size:.75rem;font-weight:600">Durum</label>
                     <select wire:model.live="takvimDurum" style="{{ $girdi }};width:100%"><option value="">Tüm durumlar</option>@foreach (IsyeriDurumu::TAKVIM_DURUMLARI as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach</select></div>
-                <div><label style="font-size:.72rem;font-weight:600">Başlangıç</label><input type="date" wire:model.live="takvimBaslangic" style="{{ $girdi }};width:100%"></div>
-                <div><label style="font-size:.72rem;font-weight:600">Bitiş</label><input type="date" wire:model.live="takvimBitis" style="{{ $girdi }};width:100%"></div>
-                <div><label style="font-size:.72rem;font-weight:600">Sayfa boyutu</label>
+                <div><label style="font-size:.75rem;font-weight:600">Başlangıç</label><input type="date" wire:model.live="takvimBaslangic" style="{{ $girdi }};width:100%"></div>
+                <div><label style="font-size:.75rem;font-weight:600">Bitiş</label><input type="date" wire:model.live="takvimBitis" style="{{ $girdi }};width:100%"></div>
+                <div><label style="font-size:.75rem;font-weight:600">Sayfa boyutu</label>
                     <select wire:model.live="sayfaBoyutu" style="{{ $girdi }};width:100%">@foreach ([10, 25, 50, 100] as $n)<option value="{{ $n }}">{{ $n }} kayıt</option>@endforeach</select></div>
                 <div><x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-uturn-left" wire:click="takvimSifirla">Sıfırla</x-filament::button></div>
             </div>
@@ -123,9 +123,9 @@
                     <tr>@foreach (['Durum', 'Kategori', 'Kayıt', 'Tarih', 'Süre', 'Sorumlu', 'İşlem'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                     @forelse ($this->takvimSayfasi() as $t)
                         <tr>
-                            <td style="{{ $td }};white-space:nowrap"><span style="font-size:.7rem;font-weight:700;color:#fff;background:{{ $tRenk[$t['durum']] }};border-radius:.35rem;padding:.15rem .45rem">{{ \Illuminate\Support\Str::before(IsyeriDurumu::TAKVIM_DURUMLARI[$t['durum']], ' (') }}</span></td>
+                            <td style="{{ $td }};white-space:nowrap"><span style="font-size:.75rem;font-weight:700;color:#fff;background:{{ $tRenk[$t['durum']] }};border-radius:.35rem;padding:.15rem .45rem">{{ \Illuminate\Support\Str::before(IsyeriDurumu::TAKVIM_DURUMLARI[$t['durum']], ' (') }}</span></td>
                             <td style="{{ $td }}">{{ $t['kategori'] }}</td>
-                            <td style="{{ $td }}"><strong>{{ $t['kayit'] }}</strong>@if ($t['alt'])<div style="font-size:.72rem;color:rgb(107 114 128)">{{ $t['alt'] }}</div>@endif</td>
+                            <td style="{{ $td }}"><strong>{{ $t['kayit'] }}</strong>@if ($t['alt'])<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $t['alt'] }}</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $t['tarih']->format('d.m.Y') }}</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $t['durum'] === 'tamamlandi' ? 'Tamamlandı' : IsyeriDurumu::kalanMetni($t['tarih']) }}</td>
                             <td style="{{ $td }};color:rgb(75 85 99)">{{ $t['sorumlu'] }}</td>
@@ -152,7 +152,7 @@
                 ['Risk maddesi (son RD)', $g['risk_maddesi']], ['Açık DÖF', $g['acik_dof']], ['Gecikmiş muayene', $g['gecikmis_muayene']], ['Eğitim kaydı', $g['egitim_kaydi']],
             ] as [$ad, $deger])
                 <div style="{{ $kart }}">
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:800">{{ $deger }}</div>
                 </div>
             @endforeach
@@ -183,15 +183,15 @@
                     <tr>@foreach (['Profesyonel', 'Rol', 'Otomatik aylık süre'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                     @forelse ($gorev as $r)
                         <tr>
-                            <td style="{{ $td }}">{{ $r['ad'] }}@if ($r['sertifika'])<div style="font-size:.7rem;color:rgb(107 114 128)">Sertifika {{ $r['sertifika'] }}</div>@endif</td>
+                            <td style="{{ $td }}">{{ $r['ad'] }}@if ($r['sertifika'])<div style="font-size:.75rem;color:rgb(107 114 128)">Sertifika {{ $r['sertifika'] }}</div>@endif</td>
                             <td style="{{ $td }}">{{ $r['rol'] }}</td>
-                            <td style="{{ $td }}"><strong>{{ $r['aylik_dk'] }} dk</strong><div style="font-size:.7rem;color:rgb(107 114 128)">{{ \App\Support\GorevDurumu::saatDk($r['aylik_dk']) }} / ay</div></td>
+                            <td style="{{ $td }}"><strong>{{ $r['aylik_dk'] }} dk</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\GorevDurumu::saatDk($r['aylik_dk']) }} / ay</div></td>
                         </tr>
                     @empty
                         <tr><td colspan="3" style="{{ $td }};color:rgb(107 114 128)">Aktif görevlendirme yok.</td></tr>
                     @endforelse
                 </table>
-                <div style="font-size:.7rem;color:rgb(107 114 128);margin-top:.4rem">Süre = çalışan sayısı × İSG Hizmetleri Yönetmeliği aylık asgari süresi (İGU {{ config('isg.igu_aylik_dk.'.$firma->tehlike_sinifi) }}, hekim {{ config('isg.hekim_aylik_dk.'.$firma->tehlike_sinifi) }} dk).</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.4rem">Süre = çalışan sayısı × İSG Hizmetleri Yönetmeliği aylık asgari süresi (İGU {{ config('isg.igu_aylik_dk.'.$firma->tehlike_sinifi) }}, hekim {{ config('isg.hekim_aylik_dk.'.$firma->tehlike_sinifi) }} dk).</div>
             </x-filament::section>
         </div>
 

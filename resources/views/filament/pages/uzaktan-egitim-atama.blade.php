@@ -74,8 +74,8 @@
                                 <input type="checkbox" wire:click="calisanToggle({{ $c->id }})" @checked(in_array($c->id, $secilenCalisanlar))>
                                 <span>
                                     {{ $c->ad_soyad }}
-                                    @if (blank($c->eposta))<span style="color:#b45309;font-size:.72rem"> (e-posta yok — kullanıcı kodu üretilecek)</span>@endif
-                                    @if (filled($c->sifre))<span style="color:rgb(21 128 61);font-size:.72rem"> ✓ hesap var</span>@endif
+                                    @if (blank($c->eposta))<span style="color:#b45309;font-size:.75rem"> (e-posta yok — kullanıcı kodu üretilecek)</span>@endif
+                                    @if (filled($c->sifre))<span style="color:rgb(21 128 61);font-size:.75rem"> ✓ hesap var</span>@endif
                                 </span>
                             </label>
                         @endforeach
@@ -97,7 +97,7 @@
                             <td style="padding:.3rem">{{ $g['ad_soyad'] }}</td>
                             <td style="padding:.3rem;font-family:monospace">
                                 {{ $g['eposta'] }}
-                                @unless (str_contains($g['eposta'], '@'))<span style="color:#b45309;font-size:.7rem"> (kod)</span>@endunless
+                                @unless (str_contains($g['eposta'], '@'))<span style="color:#b45309;font-size:.75rem"> (kod)</span>@endunless
                             </td>
                             <td style="padding:.3rem;font-family:monospace">{{ $g['sifre'] ?? '(mevcut şifre korunuyor)' }}</td>
                             <td style="padding:.3rem"><a href="{{ $this->whatsappLinki($g) }}" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;padding:.2rem .6rem;border-radius:.4rem;font-size:.75rem;text-decoration:none;white-space:nowrap">📲 WhatsApp ile İlet</a></td>

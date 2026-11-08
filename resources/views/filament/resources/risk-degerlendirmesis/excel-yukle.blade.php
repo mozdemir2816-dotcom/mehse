@@ -2,7 +2,7 @@
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
     $soluk = 'color:rgb(107 114 128)';
-    $th = 'text-align:left;padding:.4rem .5rem;font-size:.72rem;border-bottom:1px solid rgb(107 114 128 / .2);vertical-align:top;min-width:150px;max-width:210px';
+    $th = 'text-align:left;padding:.4rem .5rem;font-size:.75rem;border-bottom:1px solid rgb(107 114 128 / .2);vertical-align:top;min-width:150px;max-width:210px';
     $td = 'padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .1);font-size:.75rem;vertical-align:top;'.$soluk;
     $alanlar = $this->alanSecenekleri();
 @endphp

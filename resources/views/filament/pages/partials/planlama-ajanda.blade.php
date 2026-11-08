@@ -22,16 +22,16 @@
         <div style="display:flex;gap:.5rem">
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $mor }}">{{ $ozet['ziyaret'] }}</div>
-                <div style="font-size:.68rem;color:rgb(128 116 148)">Ziyaret</div>
+                <div style="font-size:.75rem;color:rgb(128 116 148)">Ziyaret</div>
             </div>
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $yesil }}">{{ $ozet['firma'] }}</div>
-                <div style="font-size:.68rem;color:rgb(128 116 148)">Firma</div>
+                <div style="font-size:.75rem;color:rgb(128 116 148)">Firma</div>
             </div>
             @php $kd = $this->katipDoluluk; $kdRenk = $kd['yuzde'] > 100 ? '#dc2626' : ($kd['yuzde'] >= 90 ? '#d97706' : '#16a34a'); @endphp
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center" title="Aylık İSG-KATİP doluluk: aktif firmaların yasal süreleri toplamı / aylık kapasite">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $kdRenk }}">%{{ $kd['yuzde'] }}</div>
-                <div style="font-size:.68rem;color:rgb(128 116 148)">İSG-KATİP doluluk</div>
+                <div style="font-size:.75rem;color:rgb(128 116 148)">İSG-KATİP doluluk</div>
             </div>
         </div>
     </div>
@@ -44,9 +44,9 @@
                 <button type="button" wire:click="ayDegistir(1)" style="border:none;background:none;cursor:pointer;font-size:1rem">Sonraki ›</button>
             </div>
             <div style="text-align:center;margin-bottom:.6rem">
-                <button type="button" wire:click="buguneGit" style="border:1px solid rgb(128 116 148 / .35);border-radius:.4rem;background:none;cursor:pointer;font-size:.72rem;padding:.2rem .7rem">Bugün</button>
+                <button type="button" wire:click="buguneGit" style="border:1px solid rgb(128 116 148 / .35);border-radius:.4rem;background:none;cursor:pointer;font-size:.75rem;padding:.2rem .7rem">Bugün</button>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.7rem;text-align:center;color:rgb(128 116 148);margin-bottom:.3rem">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.75rem;text-align:center;color:rgb(128 116 148);margin-bottom:.3rem">
                 @foreach (['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'] as $g)
                     <div>{{ $g }}</div>
                 @endforeach
@@ -71,10 +71,10 @@
                         @if ($r)
                             <div style="display:flex;flex-direction:column;gap:1px;margin-top:1px">
                                 @if ($r['tamamlandi'])
-                                    <span style="font-size:.6rem;font-weight:700;color:{{ $seciliMi ? '#fff' : $yesil }}">{{ $r['tamamlandi'] }} ziyaret</span>
+                                    <span style="font-size:.68rem;font-weight:700;color:{{ $seciliMi ? '#fff' : $yesil }}">{{ $r['tamamlandi'] }} ziyaret</span>
                                 @endif
                                 @if ($r['planlandi'])
-                                    <span style="font-size:.6rem;font-weight:700;color:{{ $seciliMi ? '#fff' : $mavi }}">{{ $r['planlandi'] }} planlı</span>
+                                    <span style="font-size:.68rem;font-weight:700;color:{{ $seciliMi ? '#fff' : $mavi }}">{{ $r['planlandi'] }} planlı</span>
                                 @endif
                             </div>
                         @endif
@@ -98,7 +98,7 @@
                             <div style="font-weight:700;font-size:.92rem">{{ $zFirma?->unvan }}</div>
                             <div style="font-size:.78rem;color:rgb(128 116 148);margin-top:.15rem">{{ $z['amac'] ?: 'Amaç belirtilmemiş' }}</div>
                         </div>
-                        <span style="flex-shrink:0;font-size:.68rem;font-weight:700;padding:.15rem .6rem;border-radius:999px;color:#fff;background:{{ $durumRenk }}">
+                        <span style="flex-shrink:0;font-size:.75rem;font-weight:700;padding:.15rem .6rem;border-radius:999px;color:#fff;background:{{ $durumRenk }}">
                             {{ $durum === 'tamamlandi' ? 'Tamamlandı' : ($durum === 'planlandi' ? 'Planlandı' : 'Boş') }}
                         </span>
                     </div>

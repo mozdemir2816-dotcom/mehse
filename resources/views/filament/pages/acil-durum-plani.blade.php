@@ -33,7 +33,7 @@
         <x-slot name="heading">📂 Kayıtlı Planlar ve Hazırlık Durumu ({{ $pf->count() }})</x-slot>
         <x-slot name="description">{{ $pfSay['toplam'] }} plan · {{ $pfSay['hazir'] }} hazır · {{ $pfSay['aksiyon'] }} aksiyon gerekli · {{ $pfSay['gozden'] }} gözden geçirme — açmak için tıklayın</x-slot>
         <x-slot name="afterHeader"><x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="portfoyExcel">Excel dışa aktar</x-filament::button></x-slot>
-        <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.6rem">Hazırlık düzeyi hukuki uygunluk beyanı değildir; saha doğrulaması, işveren onayı, ekip eğitimleri ve tatbikat kayıtları ayrıca tamamlanmalıdır.</div>
+        <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.6rem">Hazırlık düzeyi hukuki uygunluk beyanı değildir; saha doğrulaması, işveren onayı, ekip eğitimleri ve tatbikat kayıtları ayrıca tamamlanmalıdır.</div>
         <div style="max-height:320px;overflow:auto">
             <table style="width:100%;border-collapse:collapse;font-size:.8rem">
                 @foreach ($pf as $r)
@@ -71,7 +71,7 @@
                     <span style="flex:none;width:1.5rem;height:1.5rem;border-radius:9999px;display:grid;place-items:center;font-size:.75rem;font-weight:800;color:#fff;background:{{ $aktif ? '#e11d48' : 'rgb(107 114 128 / .6)' }}">{{ $no }}</span>
                     <span style="font-weight:700;font-size:.82rem;color:{{ $aktif ? '#9f1239' : 'inherit' }}">{{ $ad }}</span>
                 </div>
-                <div style="font-size:.7rem;color:rgb(107 114 128);margin:.2rem 0 0 1.95rem">{{ $durumlar[$no] }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin:.2rem 0 0 1.95rem">{{ $durumlar[$no] }}</div>
             </button>
         @endforeach
     </div>
@@ -178,7 +178,7 @@
                     @foreach ($ozeller as $oi => $o)
                         <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:.35rem;padding:.45rem .7rem;border:1px solid #e11d48;background:#fff1f2;color:#9f1239;font-size:.8rem;font-weight:600" wire:key="ozel-{{ $o['anahtar'] }}">
                             <span>✨ <span style="display:inline-block;width:1.4rem;text-align:center;color:rgb(107 114 128)">{{ $sira + $loop->iteration }}</span> ACİL DURUM: {{ mb_strtoupper(str_replace('i', 'İ', $o['ad']), 'UTF-8') }}
-                                <span style="font-weight:400;color:rgb(107 114 128);font-size:.72rem">— {{ count($o['mudahale']) }} müdahale, {{ count($o['olay_sonrasi']) }} olay sonrası, {{ count($o['onleyici']) }} önleyici, {{ count($o['kkd']) }} KKD maddesi</span></span>
+                                <span style="font-weight:400;color:rgb(107 114 128);font-size:.75rem">— {{ count($o['mudahale']) }} müdahale, {{ count($o['olay_sonrasi']) }} olay sonrası, {{ count($o['onleyici']) }} önleyici, {{ count($o['kkd']) }} KKD maddesi</span></span>
                             <x-filament::icon-button icon="heroicon-o-trash" color="danger" size="sm" wire:click="ozelSenaryoSil({{ $oi }})" wire:confirm="Bu özel senaryo plandan kaldırılsın mı? (Kütüphanenizde kalır.)" label="Kaldır" />
                         </div>
                     @endforeach
@@ -186,10 +186,10 @@
                     @php $kutuphaneEklenebilir = collect($kutuphane)->reject(fn ($k) => collect($ozeller)->pluck('ad')->map(fn ($a) => mb_strtolower($a))->contains(mb_strtolower($k['ad']))); @endphp
                     @if ($kutuphaneEklenebilir->isNotEmpty())
                         <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem;align-items:center">
-                            <span style="font-size:.72rem;color:rgb(107 114 128)">Kütüphanenizden ekle:</span>
+                            <span style="font-size:.75rem;color:rgb(107 114 128)">Kütüphanenizden ekle:</span>
                             @foreach ($kutuphaneEklenebilir as $ki => $k)
                                 <button type="button" wire:click="kutuphanedenEkle({{ $ki }})" wire:key="kutuphane-{{ $ki }}"
-                                    style="padding:.25rem .55rem;border-radius:.4rem;font-size:.72rem;cursor:pointer;border:1px dashed #e11d48;background:#fff;color:#9f1239">+ {{ $k['ad'] }}</button>
+                                    style="padding:.25rem .55rem;border-radius:.4rem;font-size:.75rem;cursor:pointer;border:1px dashed #e11d48;background:#fff;color:#9f1239">+ {{ $k['ad'] }}</button>
                             @endforeach
                         </div>
                     @endif
@@ -211,12 +211,12 @@
                                 </div>
 
                                 @if ($ozelOnizleme)
-                                    <div style="margin-top:.7rem;font-size:.74rem;color:rgb(107 114 128)">Önizleme — maddeleri okuyup gerekirse düzeltin (her satır bir madde). Onaylamadan plana hiçbir şey eklenmez.</div>
+                                    <div style="margin-top:.7rem;font-size:.75rem;color:rgb(107 114 128)">Önizleme — maddeleri okuyup gerekirse düzeltin (her satır bir madde). Onaylamadan plana hiçbir şey eklenmez.</div>
                                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.55rem;margin-top:.4rem">
-                                        <div><label style="font-size:.74rem;font-weight:600">Başlık</label><input type="text" wire:model="ozelOnizleme.ad" style="{{ $oAlan }}"></div>
-                                        <div style="grid-column:1/-1"><label style="font-size:.74rem;font-weight:600">Tanım</label><textarea wire:model="ozelOnizleme.aciklama" rows="3" style="{{ $oAlan }}"></textarea></div>
+                                        <div><label style="font-size:.75rem;font-weight:600">Başlık</label><input type="text" wire:model="ozelOnizleme.ad" style="{{ $oAlan }}"></div>
+                                        <div style="grid-column:1/-1"><label style="font-size:.75rem;font-weight:600">Tanım</label><textarea wire:model="ozelOnizleme.aciklama" rows="3" style="{{ $oAlan }}"></textarea></div>
                                         @foreach (\App\Support\GeminiAcilSenaryoUretici::LISTELER as $lk => $lad)
-                                            <div><label style="font-size:.74rem;font-weight:600">{{ $lad }}</label><textarea wire:model="ozelOnizleme.{{ $lk }}" rows="7" style="{{ $oAlan }}"></textarea></div>
+                                            <div><label style="font-size:.75rem;font-weight:600">{{ $lad }}</label><textarea wire:model="ozelOnizleme.{{ $lk }}" rows="7" style="{{ $oAlan }}"></textarea></div>
                                         @endforeach
                                     </div>
                                     <div style="margin-top:.6rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
@@ -237,7 +237,7 @@
                         @foreach (config('isg.acil_durum.kkd_matrisi.faaliyetler') as $f)
                             @php $on = in_array($f, $kkdSecili, true); @endphp
                             <button type="button" wire:click="kkdFaaliyetToggle(@js($f))" wire:key="kkd-{{ $loop->index }}"
-                                style="padding:.3rem .55rem;border-radius:.4rem;font-size:.72rem;cursor:pointer;border:1px solid {{ $on ? '#e11d48' : '#e2e8f0' }};background:{{ $on ? '#fff1f2' : '#fff' }};color:{{ $on ? '#9f1239' : '#64748b' }}">{{ $on ? '☑' : '☐' }} {{ $f }}</button>
+                                style="padding:.3rem .55rem;border-radius:.4rem;font-size:.75rem;cursor:pointer;border:1px solid {{ $on ? '#e11d48' : '#e2e8f0' }};background:{{ $on ? '#fff1f2' : '#fff' }};color:{{ $on ? '#9f1239' : '#64748b' }}">{{ $on ? '☑' : '☐' }} {{ $f }}</button>
                         @endforeach
                     </div>
                 </details>
@@ -314,7 +314,7 @@
                     <div>
                         <label style="font-size:.78rem;color:rgb(107 114 128)">{{ $ad }}</label>
                         @if ($sayac)
-                            <span style="margin-left:.3rem;font-size:.7rem;font-weight:600;color:{{ $sayac['eksik'] ? 'rgb(225 29 72)' : 'rgb(5 150 105)' }}">Gereken {{ $sayac['gereken'] }} | Atanan {{ $sayac['atanan'] }}{{ $sayac['eksik'] ? ' (⚠ '.$sayac['eksik'].' eksik)' : ' ✓' }}</span>
+                            <span style="margin-left:.3rem;font-size:.75rem;font-weight:600;color:{{ $sayac['eksik'] ? 'rgb(225 29 72)' : 'rgb(5 150 105)' }}">Gereken {{ $sayac['gereken'] }} | Atanan {{ $sayac['atanan'] }}{{ $sayac['eksik'] ? ' (⚠ '.$sayac['eksik'].' eksik)' : ' ✓' }}</span>
                         @endif
                         <input type="text" wire:model="ekipMetni.{{ $anahtar }}" placeholder="Ad Soyad, Ad Soyad" style="margin-top:.2rem;{{ $alan }}">
                     </div>
@@ -338,14 +338,14 @@
             </x-slot>
 
             @if ($iletisimOnerileri)
-                <div style="padding:.45rem .6rem;border-radius:.4rem;background:rgb(217 119 6 / .1);font-size:.74rem">
+                <div style="padding:.45rem .6rem;border-radius:.4rem;background:rgb(217 119 6 / .1);font-size:.75rem">
                     ⚠ Telefonu bulunamayan kurumlar — numarayı girip işaretleyin. Telefonlar {{ $iletisimAramali ? 'web aramasıyla' : 'yapay zekânın kendi bilgisinden' }} geldi; acil çağrı her durumda 112'dir.
                 </div>
                 <div style="display:grid;gap:.35rem;margin-top:.5rem">
                     @foreach ($iletisimOnerileri as $i => $o)
                         <div style="display:grid;grid-template-columns:auto 170px 2fr 1fr 1.4fr;gap:.4rem;align-items:center;font-size:.75rem" wire:key="oneri-{{ $i }}">
                             <input type="checkbox" wire:model="iletisimOnerileri.{{ $i }}.sec">
-                            <b style="font-size:.7rem">{{ $o['birim'] }}</b>
+                            <b style="font-size:.75rem">{{ $o['birim'] }}</b>
                             <input type="text" wire:model="iletisimOnerileri.{{ $i }}.ad" style="{{ $sAlan }}">
                             <input type="text" wire:model="iletisimOnerileri.{{ $i }}.telefon" placeholder="Telefon (bulunamadı)" style="{{ $sAlan }}">
                             <input type="text" wire:model="iletisimOnerileri.{{ $i }}.not" placeholder="Not" style="{{ $sAlan }}">
@@ -403,11 +403,11 @@
                             @else
                                 <x-filament::badge color="info" size="sm">Düzenlendi</x-filament::badge>
                             @endif
-                            <span x-show="! acik" style="flex:1;min-width:0;font-size:.74rem;color:rgb(107 114 128);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', $deger), 140) }}</span>
+                            <span x-show="! acik" style="flex:1;min-width:0;font-size:.75rem;color:rgb(107 114 128);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', $deger), 140) }}</span>
                         </button>
                         <div x-show="acik" x-cloak style="padding:0 .75rem .7rem">
                             <textarea wire:model="uygulama.{{ $metinAlani }}" rows="{{ $satir }}" style="{{ $alan }}"></textarea>
-                            <button type="button" wire:click="ornekMetin('{{ $metinAlani }}')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="margin-top:.25rem;font-size:.7rem;color:rgb(180 83 9);text-decoration:underline;background:none;border:none;cursor:pointer">Örnek metni geri getir</button>
+                            <button type="button" wire:click="ornekMetin('{{ $metinAlani }}')" wire:confirm="Kutudaki metin örnek metinle değiştirilecek. Devam edilsin mi?" style="margin-top:.25rem;font-size:.75rem;color:rgb(180 83 9);text-decoration:underline;background:none;border:none;cursor:pointer">Örnek metni geri getir</button>
                         </div>
                     </div>
                 @endforeach
@@ -493,7 +493,7 @@
                     @foreach ($h['kontroller'] as $k)
                         <div style="display:flex;gap:.5rem;align-items:flex-start;padding:.45rem .6rem;border-radius:.45rem;border:1px solid {{ $k['tamam'] ? 'rgb(21 128 61 / .35)' : 'rgb(217 119 6 / .45)' }};background:{{ $k['tamam'] ? 'rgb(21 128 61 / .05)' : 'rgb(217 119 6 / .06)' }}">
                             <span style="font-weight:800;color:{{ $k['tamam'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $k['tamam'] ? '✓' : '!' }}</span>
-                            <span><span style="font-size:.8rem;font-weight:600">{{ $k['baslik'] }}</span><br><span style="font-size:.72rem;color:rgb(107 114 128)">{{ $k['aciklama'] }}</span></span>
+                            <span><span style="font-size:.8rem;font-weight:600">{{ $k['baslik'] }}</span><br><span style="font-size:.75rem;color:rgb(107 114 128)">{{ $k['aciklama'] }}</span></span>
                         </div>
                     @endforeach
                 </div>
@@ -527,7 +527,7 @@
                     <button type="button" wire:click="$set('kapakCercevesi','{{ $anahtar }}')"
                         style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;border:2px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
                         <div style="font-weight:600">{{ Str::before($ad, ' — ') }}</div>
-                        <div style="font-size:.7rem;color:rgb(107 114 128)">{{ Str::after($ad, ' — ') }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ Str::after($ad, ' — ') }}</div>
                     </button>
                 @endforeach
             </div>
@@ -538,7 +538,7 @@
                     <button type="button" wire:click="$set('sablonId','{{ $anahtar }}')"
                         style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:left;border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }}">
                         <div style="font-weight:600">{{ $s['ad'] }}</div>
-                        <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
                     </button>
                 @endforeach
             </div>

@@ -19,11 +19,11 @@
         <div>
             <div style="font-size:.75rem;color:rgb(107 114 128)">İşyeri İSG operasyon skoru</div>
             <div style="font-size:2.2rem;font-weight:800;color:{{ $skorRenk($s['skor']) }}">{{ $s['skor'] }}<span style="font-size:1rem;color:rgb(107 114 128)">/100</span></div>
-            <div style="font-size:.72rem;color:rgb(107 114 128)">Taşeron + PTW + periyodik kontrol + saha denetimi + birleşik DÖF / aksiyon + profesyonel kapasite</div>
+            <div style="font-size:.75rem;color:rgb(107 114 128)">Taşeron + PTW + periyodik kontrol + saha denetimi + birleşik DÖF / aksiyon + profesyonel kapasite</div>
         </div>
         <div style="text-align:right">
             <span style="display:inline-block;font-weight:800;font-size:.95rem;padding:.2rem .8rem;border-radius:9999px;color:{{ $skorRenk($s['skor']) }};background:color-mix(in srgb, {{ $skorRenk($s['skor']) }} 12%, transparent)">{{ $s['seviye'] }}</span>
-            <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.3rem">Açıklanabilir · salt okunur</div>
+            <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.3rem">Açıklanabilir · salt okunur</div>
         </div>
     </div>
 
@@ -36,7 +36,7 @@
             ['Kapasite kritik', $n['kapasite_kritik'], 'kritik'], ['Kapasite uyarı', $n['kapasite_uyari'], 'uyari'], ['Kapasite aşımı', $n['kapasite_asimi'], 'uyari'],
         ] as [$ad, $deger, $tur])
             <div style="{{ $kart }};padding:.55rem .75rem">
-                <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                 <div style="font-size:1.3rem;font-weight:800;color:{{ $deger > 0 && $tur ? $renk[$tur] : 'inherit' }}">{{ $deger }}</div>
             </div>
         @endforeach
@@ -74,7 +74,7 @@
                 <tr style="border-top:2px solid rgb(107 114 128 / .3)"><td style="padding:.4rem 0;font-weight:700">Operasyon skoru</td><td style="text-align:right;font-weight:800;color:{{ $skorRenk($s['skor']) }}">{{ $s['skor'] }}</td></tr>
             </table>
             @php $k = $s['kapasite']; @endphp
-            <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.6rem;line-height:1.5">
+            <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.6rem;line-height:1.5">
                 Hizmet süresi (bu ay): gerekli {{ $k['gerekli'] }} dk · yapılan {{ $k['yapilan'] }} dk · planlı {{ $k['planli'] }} dk.
                 Gerekli süre = çalışan × {{ config('isg.igu_aylik_dk.'.$firma->tehlike_sinifi) }} dk (İSG Hizmetleri Yönetmeliği); yapılan / planlı süre Ziyaret Programı'ndaki "saat" alanından.
             </div>

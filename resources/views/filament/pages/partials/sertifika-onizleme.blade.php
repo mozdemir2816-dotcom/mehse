@@ -6,7 +6,7 @@
         '3. TEKNİK KONULAR' => collect($icerik['teknik_konular'] ?? [])->where('dahil', true),
         '4. İŞYERİNE ÖZGÜ RİSKLER' => collect($icerik['isyerine_ozgu']['maddeler'] ?? [])->where('dahil', true),
     ];
-    $sayfa = 'background:#fff;color:#1E293B;border:1px solid #cbd5e1;box-shadow:0 2px 8px rgb(0 0 0/.12);aspect-ratio:210/297;padding:14px;position:relative;font-size:.62rem;line-height:1.35;overflow:hidden';
+    $sayfa = 'background:#fff;color:#1E293B;border:1px solid #cbd5e1;box-shadow:0 2px 8px rgb(0 0 0/.12);aspect-ratio:210/297;padding:14px;position:relative;font-size:.68rem;line-height:1.35;overflow:hidden';
     $cerceve = 'position:absolute;inset:6px;border:3px double #C02626;pointer-events:none';
     $tarih = collect($tarihler ?? [])->filter()->map(fn ($t) => \Illuminate\Support\Carbon::parse($t)->format('d/m/Y'))->implode(' - ') ?: now()->format('d/m/Y');
 @endphp
@@ -15,7 +15,7 @@
         <div style="{{ $cerceve }}"></div>
         <div style="text-align:center;padding-top:10px;position:relative">
             <div style="font-weight:800;color:#C02626;font-size:.9rem;letter-spacing:.04em">YILDIZ GRUP</div>
-            <div style="font-size:.55rem">Ortak Sağlık ve Güvenlik Birimleri</div>
+            <div style="font-size:.68rem">Ortak Sağlık ve Güvenlik Birimleri</div>
             <div style="font-weight:800;font-size:.8rem;margin-top:8px;border-top:1px solid #1E293B;border-bottom:1px solid #1E293B;padding:3px 0">TEMEL EĞİTİM BELGESİ</div>
         </div>
         <p style="margin:10px 4px;position:relative">İşbu belge, aşağıda bilgileri yer alan katılımcının İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik kapsamındaki eğitimi aldığını gösterir.</p>
@@ -44,4 +44,4 @@
         </div>
     </div>
 </div>
-<p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.6rem">Bu yalnızca ekran önizlemesidir; gerçek çıktı Yıldız Grup Excel şablonundan üretilir ve kaşe/imzalar orada yer alır.</p>
+<p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.6rem">Bu yalnızca ekran önizlemesidir; gerçek çıktı Yıldız Grup Excel şablonundan üretilir ve kaşe/imzalar orada yer alır.</p>

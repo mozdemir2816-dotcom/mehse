@@ -206,7 +206,7 @@ html[data-mehse-tema="saha"] .mehse-sidebar-alt-avatar { border-radius: 3px; }
 .mehse-sidebar-alt-kisi small {
     overflow: hidden;
     color: var(--mehse-sb-soluk);
-    font-size: .68rem;
+    font-size: .75rem;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -425,7 +425,7 @@ html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1
 .mehse-hosgeldin-halka-etiket {
     margin-top: .25rem;
     color: var(--mehse-hero-soluk);
-    font-size: .62rem;
+    font-size: .68rem;
     font-weight: 600;
     letter-spacing: .06em;
     text-transform: uppercase;
@@ -578,7 +578,7 @@ html[data-mehse-tema="klasik"] {
 
     .fi-sidebar-group-label {
         color: rgb(255 255 255 / .38) !important;
-        font-size: .64rem !important;
+        font-size: .68rem !important;
         font-weight: 700;
         letter-spacing: .1em;
         text-transform: uppercase;
@@ -1062,7 +1062,7 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
     justify-content: space-between;
     margin-bottom: 1rem;
     color: rgb(255 255 255 / .6);
-    font-size: .68rem;
+    font-size: .75rem;
     font-weight: 700;
     letter-spacing: .1em;
 }
@@ -1095,7 +1095,7 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 
 .mehse-giris-kart-etiket {
     color: #5EEAD4;
-    font-size: .68rem;
+    font-size: .75rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
@@ -1393,7 +1393,7 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 
 .mehse-giris-secenek-metin small {
     color: #64748B;
-    font-size: .72rem;
+    font-size: .75rem;
 }
 
 .mehse-giris-secenek-ok {
@@ -1554,7 +1554,7 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 }
 
 .mehse-ana-sayfa .fi-wi-stats-overview-stat-description {
-    font-size: .72rem;
+    font-size: .75rem;
 }
 
 .mehse-ana-sayfa .fi-wi-stats-overview-stat::after {
@@ -1662,7 +1662,7 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 
 .mehse-saha-baglam-liste dt {
     color: rgb(100 116 139);
-    font-size: .64rem;
+    font-size: .68rem;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
@@ -1704,7 +1704,7 @@ html[data-mehse-tema="saha"] .mehse-kokpit .mehse-hosgeldin-baslik { font-size: 
     border-radius: 9999px;
     background: var(--mehse-hero-eylem-bg);
     color: var(--mehse-hero-eylem-metin);
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -1731,7 +1731,7 @@ html[data-mehse-tema="saha"] .mehse-kokpit .mehse-hosgeldin-baslik { font-size: 
 
 .mehse-kokpit .mehse-hosgeldin-halka::before { inset: 7px; }
 .mehse-kokpit .mehse-hosgeldin-halka-deger { font-size: 1.25rem; }
-.mehse-kokpit .mehse-hosgeldin-halka-etiket { font-size: .62rem; }
+.mehse-kokpit .mehse-hosgeldin-halka-etiket { font-size: .68rem; }
 
 /* 4 kart */
 .mehse-kokpit-kartlar {
@@ -1787,7 +1787,7 @@ a.mehse-kokpit-kart:hover {
     align-items: center;
     gap: .35rem;
     color: rgb(100 116 139);
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 700;
     letter-spacing: .03em;
     text-transform: uppercase;
@@ -1819,7 +1819,7 @@ a.mehse-kokpit-kart:hover {
 
 .mehse-kokpit-kart-deger small {
     color: rgb(100 116 139);
-    font-size: .74rem;
+    font-size: .75rem;
     font-weight: 600;
 }
 
@@ -1833,7 +1833,7 @@ a.mehse-kokpit-kart:hover {
     flex-wrap: wrap;
     gap: .3rem;
     color: rgb(100 116 139);
-    font-size: .72rem;
+    font-size: .75rem;
 }
 
 .mehse-kokpit-hap {
@@ -1843,7 +1843,7 @@ a.mehse-kokpit-kart:hover {
     border-radius: 9999px;
     background: color-mix(in srgb, var(--ton) 12%, transparent);
     color: var(--ton);
-    font-size: .7rem;
+    font-size: .75rem;
     font-weight: 700;
     white-space: nowrap;
 }

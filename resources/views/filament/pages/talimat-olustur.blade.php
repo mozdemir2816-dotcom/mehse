@@ -53,10 +53,10 @@
                         border:1px solid {{ $secili ? $mavi : 'rgb(107 114 128 / .3)' }};
                         background:{{ $secili ? 'rgb(59 130 246 / .08)' : 'transparent' }}">
                     <div style="display:flex;justify-content:space-between;align-items:start;gap:.4rem">
-                        <div style="font-size:.7rem;color:rgb(107 114 128);text-transform:uppercase">{{ $this->kategoriler[$s['kategori']] ?? ($s['kategori'] ?: 'Genel') }}</div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128);text-transform:uppercase">{{ $this->kategoriler[$s['kategori']] ?? ($s['kategori'] ?: 'Genel') }}</div>
                         @if ($s['kaynak'] === 'ozel')
                             <span style="display:flex;align-items:center;gap:.3rem;flex-shrink:0">
-                                <span style="font-size:.65rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px">Arşivim</span>
+                                <span style="font-size:.68rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px">Arşivim</span>
                                 <span role="button" wire:click.stop="kendiSablonSil({{ $s['anahtar'] }})" title="Şablonu sil"
                                     style="color:#dc2626;cursor:pointer;font-size:.8rem">✕</span>
                             </span>
@@ -65,10 +65,10 @@
                     <div style="font-weight:700;font-size:.85rem;margin:.15rem 0">
                         {{ $s['baslik'] }}
                         @if (! empty($s['onerilen']))
-                            <span title="Firmanın ekipman envanterinde bu talimatla ilgili makine var" style="font-size:.62rem;background:#0ea5e9;color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Önerilen</span>
+                            <span title="Firmanın ekipman envanterinde bu talimatla ilgili makine var" style="font-size:.68rem;background:#0ea5e9;color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Önerilen</span>
                         @endif
                         @if (! empty($s['bolumler']))
-                            <span style="font-size:.62rem;background:rgb(16 185 129);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
+                            <span style="font-size:.68rem;background:rgb(16 185 129);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
                         @endif
                     </div>
                     <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
@@ -106,7 +106,7 @@
                 <div style="font-weight:600;font-size:.8rem;margin-bottom:.3rem">Gerekli KKD'ler</div>
                 <div style="display:flex;flex-wrap:wrap;gap:.3rem">
                     @foreach ($kkdler as $kkd)
-                        <span style="display:inline-block;background:{{ $mavi }};color:#fff;padding:2px 8px;border-radius:4px;font-size:.72rem">{{ $kkd }}</span>
+                        <span style="display:inline-block;background:{{ $mavi }};color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem">{{ $kkd }}</span>
                     @endforeach
                 </div>
             </div>
@@ -180,7 +180,7 @@
             <div>
                 <label style="font-weight:600;font-size:.8rem">{{ $bolumlu ? 'Taahhüt (son bölüm)' : 'Talimat sonu tebliğ metni' }}</label>
                 <textarea wire:model="taahhut" rows="{{ $bolumlu ? 2 : 5 }}" style="{{ $girdi }}"></textarea>
-                <div style="font-size:.72rem;color:rgb(107 114 128);margin-top:.2rem">Altına TEBLİĞ EDEN / TEBELLÜĞ EDEN imza alanı basılır.</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Altına TEBLİĞ EDEN / TEBELLÜĞ EDEN imza alanı basılır.</div>
             </div>
         </x-filament::section>
     @endif
@@ -196,10 +196,10 @@
                             <td style="padding:.3rem .5rem">
                                 {{ $t->baslik }} — {{ $t->kategoriEtiketi() }}
                                 @unless ($t->dosyaVarMi())
-                                    <span style="font-size:.72rem;color:rgb(107 114 128)">· {{ $t->dokumanNoGoster() }}@if ($t->revizyon_no) · Rev. {{ $t->revizyon_no }}@endif</span>
+                                    <span style="font-size:.75rem;color:rgb(107 114 128)">· {{ $t->dokumanNoGoster() }}@if ($t->revizyon_no) · Rev. {{ $t->revizyon_no }}@endif</span>
                                 @endunless
                                 @if ($t->dosyaVarMi())
-                                    <span style="font-size:.65rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px;margin-left:.3rem">Yüklenen dosya</span>
+                                    <span style="font-size:.68rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px;margin-left:.3rem">Yüklenen dosya</span>
                                 @endif
                             </td>
                             <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">

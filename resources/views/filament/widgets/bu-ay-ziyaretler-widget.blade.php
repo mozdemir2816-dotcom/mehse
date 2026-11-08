@@ -35,7 +35,7 @@
                 ['Plansız firma', $plansiz->count(), 'rgb(220 38 38)', null],
             ] as [$ad, $sayi, $renk, $ek])
                 <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.5rem .8rem">
-                    <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                     <div style="font-size:1.3rem;font-weight:800;color:{{ (is_int($sayi) ? $sayi > 0 : true) ? $renk : 'inherit' }}">
                         {{ $sayi }}@if ($ek)<span style="font-size:.75rem;font-weight:700;margin-left:.35rem">{{ $ek }}</span>@endif
                     </div>
@@ -55,12 +55,12 @@
                 <summary style="cursor:pointer;font-size:.8rem;display:flex;align-items:center;gap:.5rem;list-style:none;min-width:0">
                     <strong style="color:rgb(185 28 28);white-space:nowrap">⚠ Ziyaret planlanmamış {{ $plansiz->count() }} firma</strong>
                     <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgb(107 114 128)">{{ $plansiz->pluck('firma')->map(fn ($f) => \Illuminate\Support\Str::limit($f, 28))->implode(' · ') }}</span>
-                    <span style="white-space:nowrap;font-size:.72rem;color:rgb(185 28 28);font-weight:600">tümünü göster ▾</span>
+                    <span style="white-space:nowrap;font-size:.75rem;color:rgb(185 28 28);font-weight:600">tümünü göster ▾</span>
                 </summary>
                 <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem">
                     @foreach ($plansiz as $f)
                         <a href="{{ \App\Filament\Pages\ZiyaretProgrami::getUrl(['firma' => $f['firma_id']]) }}"
-                           style="font-size:.72rem;border-radius:.4rem;padding:.12rem .5rem;border:1px solid rgb(220 38 38 / .45);color:rgb(185 28 28);text-decoration:none">+ {{ \Illuminate\Support\Str::limit($f['firma'], 34) }}</a>
+                           style="font-size:.75rem;border-radius:.4rem;padding:.12rem .5rem;border:1px solid rgb(220 38 38 / .45);color:rgb(185 28 28);text-decoration:none">+ {{ \Illuminate\Support\Str::limit($f['firma'], 34) }}</a>
                     @endforeach
                 </div>
             </details>
@@ -76,10 +76,10 @@
                             <button type="button" wire:click="ayDegistir(1)" aria-label="Sonraki ay" style="border:none;background:none;cursor:pointer;font-size:1rem">›</button>
                         </div>
                         <div style="display:flex;gap:.4rem;justify-content:center;margin-bottom:.5rem">
-                            <button type="button" wire:click="bugun" style="font-size:.72rem;padding:.15rem .6rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">Bugün</button>
-                            <button type="button" wire:click="tumunuGoster" style="font-size:.72rem;padding:.15rem .6rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">Tümünü göster</button>
+                            <button type="button" wire:click="bugun" style="font-size:.75rem;padding:.15rem .6rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">Bugün</button>
+                            <button type="button" wire:click="tumunuGoster" style="font-size:.75rem;padding:.15rem .6rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">Tümünü göster</button>
                         </div>
-                        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.66rem;text-align:center;color:rgb(107 114 128);margin-bottom:.3rem">
+                        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.68rem;text-align:center;color:rgb(107 114 128);margin-bottom:.3rem">
                             @foreach (['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as $g)
                                 <div>{{ $g }}</div>
                             @endforeach
@@ -95,7 +95,7 @@
                                     $seciliMi = $tarih === $seciliTarih;
                                 @endphp
                                 <button type="button" wire:click="gunSec('{{ $tarih }}')"
-                                    style="aspect-ratio:1;border-radius:.35rem;border:none;cursor:pointer;font-size:.72rem;
+                                    style="aspect-ratio:1;border-radius:.35rem;border:none;cursor:pointer;font-size:.75rem;
                                         background:{{ $seciliMi ? $mor : ($doluMu ? 'rgb(139 92 246 / .15)' : 'transparent') }};
                                         color:{{ $seciliMi ? '#fff' : 'inherit' }}">
                                     {{ $gun }}
@@ -104,7 +104,7 @@
                         </div>
                         @if ($seciliTarih)
                             <button type="button" wire:click="gunSec('{{ $seciliTarih }}')"
-                                style="margin-top:.6rem;font-size:.72rem;color:{{ $mor }};background:none;border:none;cursor:pointer;padding:0">
+                                style="margin-top:.6rem;font-size:.75rem;color:{{ $mor }};background:none;border:none;cursor:pointer;padding:0">
                                 × Gün filtresini kaldır, tüm ayı göster
                             </button>
                         @endif
@@ -119,7 +119,7 @@
                                 <span style="font-weight:600;color:rgb(107 114 128)">({{ count($ziyaretler) }})</span>
                             </div>
                             @if ($this->tamamlananSayisi > 0)
-                                <button type="button" wire:click="tamamlananlariDegistir" style="font-size:.68rem;padding:.1rem .55rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">
+                                <button type="button" wire:click="tamamlananlariDegistir" style="font-size:.75rem;padding:.1rem .55rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer">
                                     {{ $tamamlananlariGoster ? 'Tamamlananları gizle' : 'Tamamlananları göster ('.$this->tamamlananSayisi.')' }}
                                 </button>
                             @endif
@@ -142,12 +142,12 @@
                                             <div style="font-weight:600;font-size:.76rem;line-height:1.3">{{ $z['firma']?->unvan }}</div>
                                             <button type="button"
                                                 wire:click="durumDegistir({{ $z['program_id'] }}, {{ $z['ay_index'] }}, {{ $z['satir_index'] }})"
-                                                style="flex-shrink:0;padding:.12rem .55rem;border-radius:9999px;cursor:pointer;font-size:.66rem;font-weight:700;
+                                                style="flex-shrink:0;padding:.12rem .55rem;border-radius:9999px;cursor:pointer;font-size:.68rem;font-weight:700;
                                                     border:1px solid {{ $renk }};color:{{ $renk }};background:transparent">
                                                 {{ $durumEtiket[$z['durum']] ?? $z['durum'] }}{{ $gecikmis ? ' (Gecikmiş)' : '' }}
                                             </button>
                                         </div>
-                                        <div style="font-size:.7rem;color:rgb(107 114 128);margin-top:.15rem">
+                                        <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">
                                             {{ \Illuminate\Support\Carbon::parse($z['tarih'])->format('d.m.Y') }}
                                             · {{ $z['amac'] ?: '—' }}@if ($z['sure_saat']) · {{ $z['sure_saat'] }} saat @endif
                                             @if ($say && $say['toplam'] > 0)

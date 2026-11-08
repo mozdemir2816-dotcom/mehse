@@ -44,7 +44,7 @@
                     ['Tamamlanma', '%'.$o['tamamlanma'], 'rgb(13 148 136)'],
                 ] as [$ad, $sayi, $renk])
                     <span @if ($ad === 'Yaklaşan') title="Termini {{ $yaklasanGun }} gün içinde" @endif
-                          style="display:inline-flex;align-items:center;gap:.35rem;font-size:.74rem;padding:.25rem .65rem;border-radius:9999px;border:1px solid color-mix(in srgb, {{ $renk }} 35%, transparent);background:color-mix(in srgb, {{ $renk }} 8%, transparent);color:{{ $renk }}">
+                          style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;padding:.25rem .65rem;border-radius:9999px;border:1px solid color-mix(in srgb, {{ $renk }} 35%, transparent);background:color-mix(in srgb, {{ $renk }} 8%, transparent);color:{{ $renk }}">
                         {{ $ad }}: <strong style="font-size:.82rem">{{ $sayi }}</strong>
                     </span>
                 @endforeach
@@ -73,7 +73,7 @@
                 <button type="button" role="tab" aria-selected="{{ $aktif ? 'true' : 'false' }}" wire:click="panoSec('{{ $anahtar }}')"
                         style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .8rem;margin-bottom:-1px;border:none;border-bottom:2px solid {{ $aktif ? $renk : 'transparent' }};background:transparent;cursor:pointer;font-size:.82rem;font-weight:{{ $aktif ? 700 : 600 }};color:{{ $aktif ? $renk : 'rgb(100 116 139)' }}">
                     {{ $ad }}
-                    <span style="font-size:.7rem;font-weight:700;padding:.02rem .45rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 12%, transparent);color:{{ $renk }}">{{ $sayi }}</span>
+                    <span style="font-size:.75rem;font-weight:700;padding:.02rem .45rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 12%, transparent);color:{{ $renk }}">{{ $sayi }}</span>
                 </button>
             @endforeach
         </div>
@@ -84,7 +84,7 @@
                 <div style="border:1px solid color-mix(in srgb, {{ $renk }} 28%, transparent);border-radius:.75rem;background:{{ $zemin }};padding:.6rem;display:flex;flex-direction:column;max-height:{{ $tekSutun ? '560px' : '420px' }}">
                     <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;color:{{ $renk }};font-size:.88rem;padding:.1rem .2rem .5rem">
                         <span style="display:flex;align-items:center;gap:.3rem"><x-filament::icon :icon="$ikon" style="width:1rem;height:1rem" /> {{ $baslik }}</span>
-                        <span style="font-size:.72rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 14%, transparent)">{{ $liste->count() }}</span>
+                        <span style="font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 14%, transparent)">{{ $liste->count() }}</span>
                     </div>
                     <div style="overflow-y:auto;min-height:0;gap:.5rem;{{ $tekSutun ? 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));align-items:start' : 'display:flex;flex-direction:column' }}">
                         @forelse ($liste->take(60) as $g)
@@ -92,21 +92,21 @@
                                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem">
                                     <div style="font-weight:700;font-size:.8rem;color:{{ $renk }}">{{ $g['baslik'] }}</div>
                                     @if ($g['termin'] && $durum === 'gecikmis')
-                                        <span style="flex-shrink:0;font-size:.64rem;font-weight:700;padding:.1rem .45rem;border-radius:9999px;background:rgb(225 29 72 / .1);color:rgb(190 18 60)">{{ abs($g['kalan_gun']) }} gün gecikmiş</span>
+                                        <span style="flex-shrink:0;font-size:.68rem;font-weight:700;padding:.1rem .45rem;border-radius:9999px;background:rgb(225 29 72 / .1);color:rgb(190 18 60)">{{ abs($g['kalan_gun']) }} gün gecikmiş</span>
                                     @elseif ($g['termin'] && $durum === 'yaklasan')
-                                        <span style="flex-shrink:0;font-size:.64rem;font-weight:700;padding:.1rem .45rem;border-radius:9999px;background:rgb(217 119 6 / .12);color:rgb(180 83 9)">{{ $g['kalan_gun'] === 0 ? 'bugün' : $g['kalan_gun'].' gün kaldı' }}</span>
+                                        <span style="flex-shrink:0;font-size:.68rem;font-weight:700;padding:.1rem .45rem;border-radius:9999px;background:rgb(217 119 6 / .12);color:rgb(180 83 9)">{{ $g['kalan_gun'] === 0 ? 'bugün' : $g['kalan_gun'].' gün kaldı' }}</span>
                                     @endif
                                 </div>
                                 <div style="font-size:.78rem;font-weight:600;margin-top:.2rem">{{ $g['firma'] }}</div>
                                 @if ($g['termin'])
-                                    <div style="font-size:.7rem;color:rgb(107 114 128)">Termin: {{ $g['termin']->format('d.m.Y') }}</div>
+                                    <div style="font-size:.75rem;color:rgb(107 114 128)">Termin: {{ $g['termin']->format('d.m.Y') }}</div>
                                 @endif
-                                <div style="font-size:.74rem;margin-top:.25rem;line-height:1.4">{{ $g['aciklama'] }}</div>
-                                @if ($g['dayanak'])<div style="font-size:.68rem;color:rgb(107 114 128);margin-top:.15rem">{{ $g['dayanak'] }}</div>@endif
+                                <div style="font-size:.75rem;margin-top:.25rem;line-height:1.4">{{ $g['aciklama'] }}</div>
+                                @if ($g['dayanak'])<div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">{{ $g['dayanak'] }}</div>@endif
                                 @if ($g['url'])
                                     <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:.45rem">
-                                        <span style="font-size:.66rem;color:rgb(107 114 128)">{{ $g['modul'] }}</span>
-                                        <a href="{{ $g['url'] }}" style="display:inline-flex;align-items:center;font-size:.72rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid color-mix(in srgb, {{ $renk }} 40%, transparent);color:{{ $renk }};text-decoration:none">İncele →</a>
+                                        <span style="font-size:.68rem;color:rgb(107 114 128)">{{ $g['modul'] }}</span>
+                                        <a href="{{ $g['url'] }}" style="display:inline-flex;align-items:center;font-size:.75rem;font-weight:600;padding:.2rem .65rem;border-radius:9999px;border:1px solid color-mix(in srgb, {{ $renk }} 40%, transparent);color:{{ $renk }};text-decoration:none">İncele →</a>
                                     </div>
                                 @endif
                             </div>

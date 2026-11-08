@@ -198,7 +198,7 @@
                                 </button>
                                 @if ($secili && $rolAnahtari === 'isg_kurulu')
                                     <select wire:model="kurulGorevleri.{{ $c->id }}"
-                                        style="flex:1 1 0;min-width:0;font-size:.72rem;padding:.2rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                                        style="flex:1 1 0;min-width:0;font-size:.75rem;padding:.2rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                                         <option value="">Kurul görevi seç</option>
                                         @foreach ($this->kurulGorevSecenekleri as $ganahtar => $gad)
                                             <option value="{{ $ganahtar }}">{{ $gad }}</option>

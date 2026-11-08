@@ -24,7 +24,7 @@
                     style="{{ $btn }};{{ $editor === $anahtar ? 'background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700' : '' }}">{{ $ad }}</button>
             @endforeach
             @if ($editor === '3b' && $this->kroki()->kroki3bVar() === false && (count($this->kroki()->semboller ?? []) > 0 || count($this->kroki()->duvarlar ?? []) > 0))
-                <span style="font-size:.74rem;color:rgb(107 114 128)">Bu firmanın klasik editörde kayıtlı çizimi var — "Klasik Editör" sekmesinden açılır.</span>
+                <span style="font-size:.75rem;color:rgb(107 114 128)">Bu firmanın klasik editörde kayıtlı çizimi var — "Klasik Editör" sekmesinden açılır.</span>
             @endif
         </div>
 
@@ -74,7 +74,7 @@
                     },
                 }"
                 x-on:message.window="mesaj($event)">
-                <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.3rem">
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.3rem">
                     Çizimi bitirince editördeki <strong>Mevzuat &amp; Çıktı → Krokiyi Kaydet</strong> (veya <strong>PDF İndir</strong>) düğmesine basın.
                     <span x-show="degisti && !kaydediliyor" style="color:#b45309;font-weight:600">· Kaydedilmemiş değişiklik var</span>
                     <span x-show="kaydediliyor" style="color:#2563eb;font-weight:600">· Kaydediliyor…</span>
@@ -457,7 +457,7 @@
                     <input type="search" x-model="arama" placeholder="İşaret ara…" style="{{ $girdi }};margin-bottom:.4rem">
                     <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.4rem" x-show="!arama">
                         <template x-for="kt in Object.entries(ayar.kategoriler)" :key="kt[0]">
-                            <button type="button" style="{{ $btn }};font-size:.68rem;padding:.2rem .4rem" :style="kategori === kt[0] ? { background: '#0f766e', color: '#fff', borderColor: '#0f766e' } : {}" x-on:click="kategori = kt[0]" x-text="kt[1]"></button>
+                            <button type="button" style="{{ $btn }};font-size:.75rem;padding:.2rem .4rem" :style="kategori === kt[0] ? { background: '#0f766e', color: '#fff', borderColor: '#0f766e' } : {}" x-on:click="kategori = kt[0]" x-text="kt[1]"></button>
                         </template>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem">
@@ -465,11 +465,11 @@
                             <button type="button" x-on:click="sembolEkle(sm[0])" :title="sm[1].ad"
                                 style="display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.35rem .2rem;border:1px solid rgb(107 114 128 / .2);border-radius:.45rem;background:transparent;cursor:pointer">
                                 <svg viewBox="-34 -34 68 68" width="40" height="40" x-html="sembolSvg(sm[0])"></svg>
-                                <span style="font-size:.64rem;line-height:1.15;text-align:center" x-text="sm[1].ad"></span>
+                                <span style="font-size:.68rem;line-height:1.15;text-align:center" x-text="sm[1].ad"></span>
                             </button>
                         </template>
                     </div>
-                    <p style="font-size:.68rem;color:rgb(107 114 128);margin-top:.5rem">İşarete tıklayınca görünür alanın ortasına eklenir; sürükleyerek yerleştirin.</p>
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.5rem">İşarete tıklayınca görünür alanın ortasına eklenir; sürükleyerek yerleştirin.</p>
                 </div>
 
                 {{-- Tuval --}}
@@ -486,7 +486,7 @@
                     <div style="{{ $kutu }}">
                         <div style="font-weight:700;font-size:.8rem;margin-bottom:.4rem">Seçili öğe</div>
                         <template x-if="!secili">
-                            <p style="font-size:.74rem;color:rgb(107 114 128);line-height:1.45">
+                            <p style="font-size:.75rem;color:rgb(107 114 128);line-height:1.45">
                                 <span x-show="arac === 'secim'">Bir öğeye tıklayıp sürükleyin. Delete: sil · Ctrl+D: çoğalt · oklar: kaydır.</span>
                                 <span x-show="arac === 'duvar'">Tıkla-tıkla duvar çizin (90°'ye kenetlenir, zincirleme devam eder). Çift tık / Esc bitirir.</span>
                                 <span x-show="arac === 'oda'">Sürükleyerek oda / bölüm dikdörtgeni çizin.</span>
@@ -496,7 +496,7 @@
                         </template>
                         <template x-if="secili">
                             <div style="display:flex;flex-direction:column;gap:.4rem">
-                                <div style="font-size:.74rem;color:rgb(107 114 128)" x-text="({sembol: ayar.semboller[seciliOge()?.tip]?.ad, oda: 'Oda / bölüm', duvar: 'Duvar', yol: 'Kaçış yolu', metin: 'Metin'})[secili.tur]"></div>
+                                <div style="font-size:.75rem;color:rgb(107 114 128)" x-text="({sembol: ayar.semboller[seciliOge()?.tip]?.ad, oda: 'Oda / bölüm', duvar: 'Duvar', yol: 'Kaçış yolu', metin: 'Metin'})[secili.tur]"></div>
                                 <template x-if="['sembol','oda'].includes(secili.tur)">
                                     <input x-ref="etiketGirdi" type="text" placeholder="Etiket (ör. ÇIKIŞ 1)" :value="seciliOge()?.etiket ?? ''" x-on:input="ozellik('etiket', $event.target.value)" style="{{ $girdi }}">
                                 </template>
@@ -504,7 +504,7 @@
                                     <input x-ref="etiketGirdi" type="text" :value="seciliOge()?.metin" x-on:input="ozellik('metin', $event.target.value)" style="{{ $girdi }}">
                                 </template>
                                 <template x-if="['oda','metin'].includes(secili.tur)">
-                                    <label style="font-size:.72rem;display:flex;gap:.4rem;align-items:center">Renk <input type="color" :value="seciliOge()?.renk" x-on:input="ozellik('renk', $event.target.value)"></label>
+                                    <label style="font-size:.75rem;display:flex;gap:.4rem;align-items:center">Renk <input type="color" :value="seciliOge()?.renk" x-on:input="ozellik('renk', $event.target.value)"></label>
                                 </template>
                                 <div style="display:flex;flex-wrap:wrap;gap:.25rem">
                                     <button type="button" style="{{ $btn }}" x-show="['sembol','metin'].includes(secili.tur)" x-on:click="dondur()">⟳ 45°</button>
@@ -528,11 +528,11 @@
                         <input type="text" x-model="d.antet.revizyon" x-on:input="antetDegis()" placeholder="Revizyon no" style="{{ $girdi }}">
                         <textarea x-model="d.antet.notlar" x-on:input="antetDegis()" rows="2" placeholder="Not (ör. Acil durumda asansör kullanmayınız)" style="{{ $girdi }}"></textarea>
                         <template x-if="bilgi.altlik">
-                            <label style="font-size:.72rem">Altlık görünürlüğü <input type="range" min="0" max="1" step="0.05" x-model.number="d.antet.altlik_opaklik" x-on:input="antetDegis()" style="width:100%"></label>
+                            <label style="font-size:.75rem">Altlık görünürlüğü <input type="range" min="0" max="1" step="0.05" x-model.number="d.antet.altlik_opaklik" x-on:input="antetDegis()" style="width:100%"></label>
                         </template>
                     </div>
 
-                    <div style="{{ $kutu }};font-size:.72rem;color:rgb(107 114 128);line-height:1.45">
+                    <div style="{{ $kutu }};font-size:.75rem;color:rgb(107 114 128);line-height:1.45">
                         <strong>Sayım:</strong>
                         <span x-text="`${d.duvarlar.length} duvar · ${d.ogeler.odalar.length} oda · ${d.ogeler.yollar.length} kaçış yolu · ${d.semboller.length} işaret · ${d.ogeler.metinler.length} metin`"></span>
                         <div style="margin-top:.3rem">İşaretler ISO 7010 renk ve biçim kurallarına göre şematiktir; resmî piktogram baskıları için Acil Durum Planı → afişleri kullanın.</div>

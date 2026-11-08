@@ -36,7 +36,7 @@
                             <x-filament::icon :icon="$ikon" style="width:1.25rem;height:1.25rem;flex:none"/>
                             <span style="display:flex;flex-direction:column;line-height:1.25">
                                 <span style="font-size:.85rem;font-weight:600">{{ $baslik }}</span>
-                                <span style="font-size:.72rem;color:rgb(107 114 128)">{{ $alt }}</span>
+                                <span style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</span>
                             </span>
                         </button>
                     @endforeach
@@ -126,7 +126,7 @@
                 @endif
                 <input type="text" wire:model.blur="isKolu" placeholder="Örn: Kazı Ekibi, Kaba İnşaat Ekibi, Boyahane"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                     Aynı firmada farklı çalışan gruplarına ayrı form düzenlemek için: önce grubu seçin/yazın, sonra katılımcıları seçin.
                     İş kalemi seçerseniz işe özgü konular yalnız seçtiğiniz iş kalemlerinden gelir; her grubun konu şablonu ayrı hatırlanır.
                     Grup değişince konu bölümü yeniden kurulur — konuları grup adını girdikten SONRA düzenleyin. Yeni grup için "Yeni kayıt"a basın.
@@ -146,7 +146,7 @@
                     <label style="font-weight:600;font-size:.82rem">Ders Saati</label>
                     <input type="number" min="1" wire:model.live="dersSaati"
                         style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                    <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                    <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                         Tehlike sınıfına göre otomatik (Az Tehl. 8 · Tehl. 12 · Çok Tehl. 16). Az tehlikeli işyeri için
                         gerekirse 16 yapabilirsiniz — belgede "{{ $dersSaati ?? '…' }} Ders Saati" yazar.
                         Tarihi veya ders saatini boş bırakırsanız belgede kalemle doldurulacak boşluk çıkar.
@@ -157,7 +157,7 @@
                 <input type="number" min="1" wire:model="sureGun"
                     style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                 @php $toplamDk = \App\Support\EgitimIcerikOlusturucu::toplamDakika($icerik); @endphp
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                     @if ($sureGun >= 2)
                         <strong>{{ $sureGun }} gün</strong> — imzalar her gün ayrı alınır. Elle değiştirebilirsiniz.
                     @else
@@ -172,7 +172,7 @@
                         <input type="date" wire:model="gunTarihleri.{{ $g - 1 }}"
                             style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         @if ($g === 1)
-                            <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">
+                            <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                                 Formun künyesinde ve sertifikada gün gün yazılır.
                             </p>
                         @endif
@@ -195,7 +195,7 @@
                     <option value="uzaktan">Uzaktan</option>
                     <option value="karma">Karma</option>
                 </select>
-                <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Formda tür ve şekil, elde işaretlenebilir kutu olarak da görünür.</p>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">Formda tür ve şekil, elde işaretlenebilir kutu olarak da görünür.</p>
             </div>
             @if ($baslikAnahtari === 'genel')
                 <div>
@@ -208,14 +208,14 @@
                         @endforeach
                     </select>
                     @if (! $this->naceSektoru)
-                        <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan sektör çıkarılamadı — elle seçin.</p>
+                        <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan sektör çıkarılamadı — elle seçin.</p>
                     @elseif ($sektorAnahtari && $sektorAnahtari !== $this->naceSektoru)
-                        <p style="font-size:.72rem;color:rgb(180 83 9);margin-top:.25rem">
+                        <p style="font-size:.75rem;color:rgb(180 83 9);margin-top:.25rem">
                             NACE koduna ({{ $this->firma?->nace_kodu }}) göre önerilen: <strong>{{ $this->sektorler[$this->naceSektoru] ?? $this->naceSektoru }}</strong>. Elle değiştirdiniz; bu firmada sonraki eğitimlerde de sizin seçiminiz gelir.
                             <button type="button" wire:click="naceSektorunuKullan" style="text-decoration:underline;margin-left:.25rem">NACE'ye göre seç</button>
                         </p>
                     @else
-                        <p style="font-size:.72rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) geldi. Yapılan iş farklıysa değiştirebilirsiniz.</p>
+                        <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">Firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) geldi. Yapılan iş farklıysa değiştirebilirsiniz.</p>
                     @endif
                 </div>
             @endif
@@ -398,7 +398,7 @@
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
                             <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.72rem;color:rgb(15 118 110);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
+                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.75rem;color:rgb(15 118 110);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.75rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
                             <td style="padding:.35rem .5rem">{{ $k->belge_tarihi?->format('d.m.Y') }}</td>
                             <td style="padding:.35rem .5rem">{{ $k->katilimciSayisi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">

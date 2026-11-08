@@ -31,8 +31,8 @@
                     <button type="button" wire:click="ac({{ $t->id }})" style="background:none;border:none;cursor:pointer;font-size:.76rem;font-weight:{{ $tasarimId === $t->id ? '700' : '500' }}">
                         {{ $t->baslik }}
                     </button>
-                    <button type="button" wire:click="svgIndir({{ $t->id }})" style="{{ $btn }};padding:.15rem .4rem;font-size:.68rem" title="Gerçek vektör SVG (baskıya hazır)">SVG</button>
-                    <button type="button" wire:click="pdfIndir({{ $t->id }})" style="{{ $btn }};padding:.15rem .4rem;font-size:.68rem" title="Gerçek ölçüde A4 PDF şablonu">PDF</button>
+                    <button type="button" wire:click="svgIndir({{ $t->id }})" style="{{ $btn }};padding:.15rem .4rem;font-size:.75rem" title="Gerçek vektör SVG (baskıya hazır)">SVG</button>
+                    <button type="button" wire:click="pdfIndir({{ $t->id }})" style="{{ $btn }};padding:.15rem .4rem;font-size:.75rem" title="Gerçek ölçüde A4 PDF şablonu">PDF</button>
                     <button type="button" wire:click="sil({{ $t->id }})" wire:confirm="'{{ $t->baslik }}' silinsin mi?" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.76rem" title="Sil">✕</button>
                 </div>
             @empty
@@ -51,14 +51,14 @@
                 <div style="font-weight:700;font-size:.85rem">Risk Analizi & Saha Bulgularından Önerilen Levhalar ({{ count($this->oneriler) }})</div>
                 @if ($this->oneriler)
                     <div style="display:flex;gap:.35rem;align-items:center">
-                        <span style="font-size:.74rem;font-weight:700">⚡ Önerilen Tüm Levhaları Otomatik Paketle (ZIP):</span>
+                        <span style="font-size:.75rem;font-weight:700">⚡ Önerilen Tüm Levhaları Otomatik Paketle (ZIP):</span>
                         <button type="button" wire:click="oneriPaketi('a4')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A4</button>
                         <button type="button" wire:click="oneriPaketi('a3')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A3</button>
-                        <span wire:loading wire:target="oneriPaketi" style="font-size:.72rem;color:#b45309">Hazırlanıyor…</span>
+                        <span wire:loading wire:target="oneriPaketi" style="font-size:.75rem;color:#b45309">Hazırlanıyor…</span>
                     </div>
                 @endif
             </div>
-            <div style="font-size:.74rem;color:rgb(107 114 128);margin:.15rem 0 .6rem">
+            <div style="font-size:.75rem;color:rgb(107 114 128);margin:.15rem 0 .6rem">
                 Firmanın son risk değerlendirmesindeki açık maddeler ve açık saha bulguları taranır; tehlikeye uygun ikaz / yasak / emredici levha şablonu hazır gelir.
                 Sinyal sözcüğü en yüksek risk düzeyine göre seçilir (Tehlike · Uyarı · Dikkat).
             </div>
@@ -70,12 +70,12 @@
                     <div style="min-width:0;flex:1">
                         <div style="font-weight:700;font-size:.78rem">{{ $o['etiket'] }}</div>
                         <div style="display:flex;gap:.3rem;margin:.15rem 0;flex-wrap:wrap">
-                            <span style="font-size:.64rem;font-weight:700;padding:1px 6px;border-radius:9999px;color:#fff;background:{{ $o['seviye'] === 'yuksek' ? '#dc2626' : ($o['seviye'] === 'orta' ? '#d97706' : '#64748b') }}">
+                            <span style="font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:9999px;color:#fff;background:{{ $o['seviye'] === 'yuksek' ? '#dc2626' : ($o['seviye'] === 'orta' ? '#d97706' : '#64748b') }}">
                                 {{ $o['tasarim']['signalTr'] }}
                             </span>
-                            <span style="font-size:.64rem;color:rgb(107 114 128)">{{ $o['sayi'] }} kayıt</span>
+                            <span style="font-size:.68rem;color:rgb(107 114 128)">{{ $o['sayi'] }} kayıt</span>
                         </div>
-                        <ul style="font-size:.66rem;color:rgb(107 114 128);margin:0;padding-left:.9rem">
+                        <ul style="font-size:.68rem;color:rgb(107 114 128);margin:0;padding-left:.9rem">
                             @foreach ($o['kaynaklar'] as $k)<li>{{ $k }}</li>@endforeach
                         </ul>
                         <button type="button" wire:click="oneriyiAc('{{ $o['anahtar'] }}')" style="{{ $btn }};margin-top:.35rem;background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700">Tasarla</button>
@@ -105,7 +105,7 @@
                 },
             }"
             x-on:message.window="mesaj($event)">
-            <div style="font-size:.74rem;color:rgb(107 114 128);margin-bottom:.3rem">
+            <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.3rem">
                 Tasarımı bitirince <strong>"mehse'ye Kaydet"</strong> düğmesine basın.
                 <span x-show="kaydediliyor" style="color:#2563eb;font-weight:600">· Kaydediliyor…</span>
             </div>

@@ -114,7 +114,7 @@
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.4rem">
                                         <div style="font-weight:600">{{ $s['parametre'] }}</div>
-                                        <div style="color:rgb(107 114 128);font-size:.72rem">{{ $s['grup'] }}</div>
+                                        <div style="color:rgb(107 114 128);font-size:.75rem">{{ $s['grup'] }}</div>
                                     </td>
                                     <td style="padding:.4rem"><input type="text" wire:model.blur="satirlar.{{ $i }}.bolge" style="{{ $girdi }}"></td>
                                     <td style="padding:.4rem"><input type="number" min="1" wire:model.blur="satirlar.{{ $i }}.periyot_ay" style="{{ $girdi }}"></td>
@@ -139,10 +139,10 @@
                                     </td>
                                     <td style="padding:.4rem">
                                         <input type="date" wire:model.blur="satirlar.{{ $i }}.sonraki_olcum_tarihi" style="{{ $girdi }}">
-                                        <div style="font-size:.68rem;color:rgb(107 114 128)">boş = otomatik</div>
+                                        <div style="font-size:.75rem;color:rgb(107 114 128)">boş = otomatik</div>
                                     </td>
                                     <td style="padding:.4rem">
-                                        <span style="font-size:.72rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $terminRenk[$terminler[$i]] }}">{{ $terminEtiket[$terminler[$i]] }}</span>
+                                        <span style="font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $terminRenk[$terminler[$i]] }}">{{ $terminEtiket[$terminler[$i]] }}</span>
                                     </td>
                                     <td style="padding:.4rem;text-align:center;white-space:nowrap">
                                         @if (filled($s['olcum_tarihi'] ?? null))

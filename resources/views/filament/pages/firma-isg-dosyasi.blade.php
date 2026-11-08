@@ -19,7 +19,7 @@
                                 <div style="font-weight:600;font-size:.88rem">{{ $s['ad'] }}</div>
                                 <div style="font-size:.78rem;color:rgb(107 114 128)">{{ $s['bilgi'] }}</div>
                             </div>
-                            <span style="padding:.15rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;color:{{ $renk[$s['durum']][0] }};background:{{ $renk[$s['durum']][1] }}">{{ $s['etiket'] }}</span>
+                            <span style="padding:.15rem .65rem;border-radius:999px;font-size:.75rem;font-weight:700;color:{{ $renk[$s['durum']][0] }};background:{{ $renk[$s['durum']][1] }}">{{ $s['etiket'] }}</span>
                             <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                                 @if ($s['pdf'])
                                     <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="pdf('{{ $s['pdf'] }}')">PDF İndir</x-filament::button>

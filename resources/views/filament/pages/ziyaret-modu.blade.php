@@ -2,7 +2,7 @@
     use App\Support\ArsivKurali;
 
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.9rem;background:var(--zm-kart);padding:.9rem 1rem';
-    $baslik = 'font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgb(107 114 128)';
+    $baslik = 'font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgb(107 114 128)';
     $soluk = 'color:rgb(107 114 128)';
     $renk = ['gecikmis' => '#dc2626', 'yaklasan' => '#d97706', 'eksik' => '#6b7280', 'tamam' => '#15803d', 'muaf' => '#6b7280', 'takipsiz' => '#6b7280', 'yapilmayan' => '#d97706'];
     $buyukDugme = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;min-height:4.6rem;border-radius:.9rem;font-weight:700;font-size:.85rem;text-decoration:none;text-align:center;padding:.5rem';
@@ -82,7 +82,7 @@
                             <span x-text="acik === '{{ $kod }}' ? '▾' : '▸'" style="width:1rem"></span>
                             {{ $g['ad'] }}
                         </span>
-                        <span style="font-size:.72rem;font-weight:700;padding:.1rem .6rem;border-radius:9999px;{{ $tamam ? 'background:rgb(22 163 74 / .14);color:#15803d' : 'background:rgb(217 119 6 / .14);color:#b45309' }}">{{ $g['yapilan'] }}/{{ $g['toplam'] }}</span>
+                        <span style="font-size:.75rem;font-weight:700;padding:.1rem .6rem;border-radius:9999px;{{ $tamam ? 'background:rgb(22 163 74 / .14);color:#15803d' : 'background:rgb(217 119 6 / .14);color:#b45309' }}">{{ $g['yapilan'] }}/{{ $g['toplam'] }}</span>
                     </button>
 
                     <div x-show="acik === '{{ $kod }}'" x-cloak style="padding-bottom:.5rem">
@@ -98,7 +98,7 @@
                                 <input type="checkbox" @checked($m['gerceklesti']) wire:click="planMaddesiIsaretle('{{ $m['alan'] }}', {{ $m['index'] }})" aria-label="Uygun" style="width:1.5rem;height:1.5rem;margin-top:.1rem;flex-shrink:0;cursor:pointer">
                                 <span style="flex:1;{{ $m['gerceklesti'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">
                                     <span style="display:block;font-size:.92rem">{{ $m['baslik'] }}</span>
-                                    <span style="display:block;font-size:.72rem;{{ $soluk }}">{{ $m['grup'] }}@if ($m['sorumlu']) · {{ $m['sorumlu'] }}@endif</span>
+                                    <span style="display:block;font-size:.75rem;{{ $soluk }}">{{ $m['grup'] }}@if ($m['sorumlu']) · {{ $m['sorumlu'] }}@endif</span>
                                 </span>
                                 @unless ($m['gerceklesti'])
                                     <button type="button" wire:click="planMaddesiUygunsuz('{{ $m['alan'] }}', {{ $m['index'] }})" title="Uygunsuz — bulgu kaydı aç" aria-label="Uygunsuzluk işaretle"
@@ -144,7 +144,7 @@
                     <summary style="cursor:pointer;font-size:.8rem;{{ $soluk }}">✓ {{ $tamamlar->count() }} evrak güncel — yine de yükle</summary>
                     @foreach ($tamamlar as $anahtar => $d)
                         <div wire:key="art-{{ $anahtar }}" style="padding:.5rem 0;border-top:1px solid rgb(107 114 128 / .12)">
-                            <div style="font-size:.88rem;margin-bottom:.3rem">{{ $d['ad'] }} <span style="font-size:.74rem;{{ $soluk }}">· {{ $d['mesaj'] }}</span></div>
+                            <div style="font-size:.88rem;margin-bottom:.3rem">{{ $d['ad'] }} <span style="font-size:.75rem;{{ $soluk }}">· {{ $d['mesaj'] }}</span></div>
                             @include('filament.components.hizli-arsiv', ['kategori' => $anahtar])
                         </div>
                     @endforeach
@@ -167,7 +167,7 @@
                         @endif
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.9rem;font-weight:600">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}</div>
-                            <div style="font-size:.74rem;color:{{ $b->terminGectiMi() ? '#dc2626' : 'rgb(107 114 128)' }}">
+                            <div style="font-size:.75rem;color:{{ $b->terminGectiMi() ? '#dc2626' : 'rgb(107 114 128)' }}">
                                 {{ $b->bulgu_no }}@if ($b->bolum) · {{ $b->bolum }}@endif @if ($b->termin) · Termin {{ $b->termin->format('d.m.Y') }}@endif
                             </div>
                         </div>
@@ -186,7 +186,7 @@
                         <div style="flex:1;min-width:0">
                             <div style="font-size:.9rem;font-weight:600">{{ \Illuminate\Support\Str::limit((string) ($m['tespit'] ?? ''), 110) }}</div>
                             @php $terminGecti = filled($m['termin'] ?? null) && \Illuminate\Support\Carbon::parse($m['termin'])->lt(today()); @endphp
-                            <div style="font-size:.74rem;color:{{ $terminGecti ? '#dc2626' : 'rgb(107 114 128)' }}">
+                            <div style="font-size:.75rem;color:{{ $terminGecti ? '#dc2626' : 'rgb(107 114 128)' }}">
                                 DÖF {{ $s['belge_no'] }}@if (filled($m['sorumlu'] ?? null)) · {{ $m['sorumlu'] }}@endif @if (filled($m['termin'] ?? null)) · Termin {{ \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') }}@endif
                             </div>
                         </div>

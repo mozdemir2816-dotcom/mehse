@@ -3,12 +3,12 @@
 
     $girdi = 'width:100%;min-width:0;padding:.55rem .8rem;border-radius:.6rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.9rem';
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.8rem;background:var(--sgr-kart, transparent);box-shadow:0 1px 2px rgb(0 0 0 / .05)';
-    $baslikStil = 'font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgb(107 114 128)';
+    $baslikStil = 'font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgb(107 114 128)';
     $soluk = 'color:rgb(107 114 128)';
     $renk = ['gecikmis' => '#dc2626', 'yaklasan' => '#d97706', 'eksik' => '#6b7280', 'tamam' => '#15803d', 'muaf' => '#6b7280', 'takipsiz' => '#6b7280'];
     $kategoriler = config('arsiv.kategoriler');
     $gecikmisler = $this->sorunlar->where('durum', 'gecikmis');
-    $th = 'text-align:left;padding:.5rem .55rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .55rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .55rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
 @endphp
 
@@ -69,7 +69,7 @@
             @foreach (\App\Filament\Pages\DokumanYonetimi::SEKMELER as $anahtar => $ad)
                 <button type="button" wire:click="$set('sekme', '{{ $anahtar }}')"
                     style="flex:1;white-space:nowrap;padding:.5rem .8rem;border-radius:.55rem;border:none;cursor:pointer;font-size:.88rem;{{ $sekme === $anahtar ? 'background:var(--sgr-kart, #fff);box-shadow:0 1px 3px rgb(0 0 0 / .12);font-weight:600' : 'background:transparent;color:rgb(107 114 128)' }}">
-                    {{ $ad }}@if ($anahtar === 'takip' && $this->sorunlar->isNotEmpty()) <span style="font-size:.72rem;color:#dc2626">({{ $this->sorunlar->count() }})</span>@endif
+                    {{ $ad }}@if ($anahtar === 'takip' && $this->sorunlar->isNotEmpty()) <span style="font-size:.75rem;color:#dc2626">({{ $this->sorunlar->count() }})</span>@endif
                 </button>
             @endforeach
         </div>
@@ -181,7 +181,7 @@
                     <tr>
                         <th style="{{ $th }};position:sticky;left:0;background:var(--sgr-kart, #fff);min-width:160px">Firma</th>
                         @foreach ($takipliler as $anahtar => $k)
-                            <th style="{{ $th }};text-align:center;min-width:76px;text-transform:none;letter-spacing:0;font-size:.68rem">{{ $k['ad'] }}</th>
+                            <th style="{{ $th }};text-align:center;min-width:76px;text-transform:none;letter-spacing:0;font-size:.75rem">{{ $k['ad'] }}</th>
                         @endforeach
                     </tr>
                     @foreach ($this->kapsamFirmalari as $f)
@@ -228,10 +228,10 @@
                             <tr wire:key="dok-{{ $d->id }}" style="{{ $d->aktif ? '' : 'opacity:.6' }}">
                                 <td style="{{ $td }};max-width:320px">
                                     <button type="button" wire:click="goruntule({{ $d->id }})" style="background:none;border:none;padding:0;cursor:pointer;text-align:left;color:inherit"><strong>{{ $d->etiket() }}</strong></button>
-                                    <div style="font-size:.72rem;{{ $soluk }}">{{ $d->firma?->unvan }}@if ($d->kisi_adi) · {{ $d->kisi_adi }}@endif · {{ \Illuminate\Support\Str::limit($d->dosya_adi, 40) }}</div>
+                                    <div style="font-size:.75rem;{{ $soluk }}">{{ $d->firma?->unvan }}@if ($d->kisi_adi) · {{ $d->kisi_adi }}@endif · {{ \Illuminate\Support\Str::limit($d->dosya_adi, 40) }}</div>
                                 </td>
                                 <td style="{{ $td }}">{{ $d->kategoriEtiketi() }}</td>
-                                <td style="{{ $td }};white-space:nowrap">{{ $d->baslangic_tarihi?->format('d.m.Y') ?? '—' }}@if ($d->yil)<div style="font-size:.7rem;{{ $soluk }}">Yıl {{ $d->yil }}</div>@endif</td>
+                                <td style="{{ $td }};white-space:nowrap">{{ $d->baslangic_tarihi?->format('d.m.Y') ?? '—' }}@if ($d->yil)<div style="font-size:.75rem;{{ $soluk }}">Yıl {{ $d->yil }}</div>@endif</td>
                                 <td style="{{ $td }};white-space:nowrap">{{ $d->gecerlilik_sonu?->format('d.m.Y') ?? 'Süresiz' }}</td>
                                 <td style="{{ $td }};white-space:nowrap;font-weight:700;color:{{ ['Aktif' => '#15803d', 'Pasif' => '#6b7280', 'Süresi yaklaşıyor' => '#d97706', 'Süresi doldu' => '#dc2626', 'İmza bekliyor' => '#b45309'][$d->durumEtiketi()] ?? 'inherit' }}">{{ $d->durumEtiketi() }}</td>
                                 <td style="{{ $td }};width:1%"><div style="display:grid;grid-template-columns:1fr 1fr;gap:.25rem;min-width:170px">
@@ -246,7 +246,7 @@
                         @endforelse
                     </table>
                 </div>
-                <p style="font-size:.72rem;{{ $soluk }};margin-top:.6rem">Profilim → Arşiv'e yüklenen dosyalar da burada "Diğer" kategorisinde görünür.</p>
+                <p style="font-size:.75rem;{{ $soluk }};margin-top:.6rem">Profilim → Arşiv'e yüklenen dosyalar da burada "Diğer" kategorisinde görünür.</p>
             </x-filament::section>
         @endif
     @else
@@ -291,7 +291,7 @@
 
             @php $liste = $detay['dosyada']->when($durum && ($durum['gecerli'] ?? null), fn ($c) => $c->reject(fn ($d) => $d->id === $durum['gecerli']->id)); @endphp
             @if ($liste->isNotEmpty())
-                @if ($durum && ArsivKurali::takipliMi($kategoriAnahtari))<div style="{{ $baslikStil }};margin:.8rem 0 .45rem;font-size:.68rem">Önceki kayıtlar</div>@endif
+                @if ($durum && ArsivKurali::takipliMi($kategoriAnahtari))<div style="{{ $baslikStil }};margin:.8rem 0 .45rem;font-size:.75rem">Önceki kayıtlar</div>@endif
                 <div style="display:flex;flex-direction:column;gap:.45rem">
                     @foreach ($liste as $d)
                         <button type="button" wire:key="kayit-{{ $d->id }}" wire:click="goruntule({{ $d->id }})"

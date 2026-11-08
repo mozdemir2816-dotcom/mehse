@@ -2,7 +2,7 @@
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
     $kart = 'border:1px solid rgb(107 114 128 / .22);border-radius:.6rem;padding:.6rem .8rem';
-    $th = 'text-align:left;padding:.5rem .6rem;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
+    $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $durumRenk = ['taslak' => '#6b7280', 'incelemede' => '#f59e0b', 'onaylandi' => '#10b981', 'arsiv' => '#9ca3af'];
     $kapsamaRenk = ['yeterli' => 'rgb(21 128 61)', 'kismi' => 'rgb(217 119 6)', 'eksik' => 'rgb(107 114 128)'];
@@ -15,7 +15,7 @@
     @include('filament.pages.partials.acil-slate-stil')
     {{-- BAŞLIK --}}
     <div style="border-radius:.9rem;padding:1.1rem 1.3rem;background:linear-gradient(120deg,#0f2b46,#115e59);color:#fff">
-        <div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:700">Denetlenebilir içerik · editoryal onay</div>
+        <div style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:700">Denetlenebilir içerik · editoryal onay</div>
         <div style="font-size:1.25rem;font-weight:800;margin:.25rem 0">İSG soru bankası ve sınav havuzu</div>
         <div style="font-size:.82rem;opacity:.9;max-width:720px">
             Sorular kod + sürüm, doğru cevabın gerekçesi ve doğrulanabilir kaynaklarla tutulur; taslak → incelemede → yayımlandı akışından geçer.
@@ -31,7 +31,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem">
         @foreach (['taslak' => ['Taslak', 'taslak'], 'incelemede' => ['İncelemede', 'incelemede'], 'onayli' => ['Yayımlanmış', 'onaylandi'], 'arsiv' => ['Kaldırılmış', 'arsiv']] as $k => [$ad, $durum])
             <button type="button" wire:click="$set('durumFiltre', '{{ $durumFiltre === $durum ? '' : $durum }}')" style="{{ $kart }};text-align:left;display:flex;justify-content:space-between;align-items:center;{{ $durumFiltre === $durum ? 'outline:2px solid '.$durumRenk[$durum] : '' }}">
-                <span style="font-size:.72rem;font-weight:700;padding:.1rem .5rem;border-radius:9999px;color:{{ $durumRenk[$durum] }};background:color-mix(in srgb, {{ $durumRenk[$durum] }} 14%, transparent)">● {{ $ad }}</span>
+                <span style="font-size:.75rem;font-weight:700;padding:.1rem .5rem;border-radius:9999px;color:{{ $durumRenk[$durum] }};background:color-mix(in srgb, {{ $durumRenk[$durum] }} 14%, transparent)">● {{ $ad }}</span>
                 <span style="font-size:1.35rem;font-weight:800">{{ $this->ozet[$k] }}</span>
             </button>
         @endforeach
@@ -43,10 +43,10 @@
         <x-slot name="description">Her NACE için hedef: {{ $hedef['temel'] }} temel (ortak) + {{ $hedef['ise_ozgu'] }} işe özgü (NACE kapsamlı) yayımlanmış soru. Havuz yetersizse eğitim akışı durmaz; sınav ortak ve sektör sorularıyla kurulur, eksik NACE soruları AI ile taslak üretilip incelemeden sonra yayımlanabilir.</x-slot>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.5rem;margin-bottom:.8rem">
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ number_format($nk['toplam'], 0, ',', '.') }}</div><div style="font-size:.72rem;color:rgb(107 114 128)">Resmi NACE</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:{{ $nk['ortak'] >= $hedef['temel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $nk['ortak'] }}</div><div style="font-size:.72rem;color:rgb(107 114 128)">Yayımlanmış ortak (temel) soru</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ $nk['naceli_yayinli'] }}</div><div style="font-size:.72rem;color:rgb(107 114 128)">Yayımlanmış NACE kapsamlı soru</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:rgb(21 128 61)">{{ $nk['yeterli'] }}</div><div style="font-size:.72rem;color:rgb(107 114 128)">Havuzu yeterli NACE · {{ $nk['kismi'] }} kısmi</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ number_format($nk['toplam'], 0, ',', '.') }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Resmi NACE</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:{{ $nk['ortak'] >= $hedef['temel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $nk['ortak'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Yayımlanmış ortak (temel) soru</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ $nk['naceli_yayinli'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Yayımlanmış NACE kapsamlı soru</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:rgb(21 128 61)">{{ $nk['yeterli'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Havuzu yeterli NACE · {{ $nk['kismi'] }} kısmi</div></div>
         </div>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">
@@ -65,11 +65,11 @@
                 <tbody>
                     @forelse ($nk['satirlar'] as $s)
                         <tr wire:key="nace-{{ $s['kod'] }}">
-                            <td style="{{ $td }}"><div style="font-weight:700;color:rgb(15 118 110)">{{ $s['kod'] }}</div><div>{{ $s['tanim'] }}</div><div style="font-size:.7rem;color:rgb(107 114 128)">{{ config('isg.tehlike_siniflari.'.$s['tehlike'], $s['tehlike']) }}</div></td>
+                            <td style="{{ $td }}"><div style="font-weight:700;color:rgb(15 118 110)">{{ $s['kod'] }}</div><div>{{ $s['tanim'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">{{ config('isg.tehlike_siniflari.'.$s['tehlike'], $s['tehlike']) }}</div></td>
                             <td style="{{ $td }}">{{ min($s['ortak'], $hedef['temel']) }}/{{ $hedef['temel'] }}</td>
                             <td style="{{ $td }}">{{ $s['nace'] }}/{{ $hedef['ise_ozgu'] }}</td>
                             <td style="{{ $td }}">{{ $s['bekleyen'] }}</td>
-                            <td style="{{ $td }}"><span style="font-size:.7rem;font-weight:700;padding:.1rem .5rem;border-radius:9999px;color:{{ $kapsamaRenk[$s['durum']] }};background:color-mix(in srgb, {{ $kapsamaRenk[$s['durum']] }} 12%, transparent)">{{ $kapsamaAd[$s['durum']] }}</span></td>
+                            <td style="{{ $td }}"><span style="font-size:.75rem;font-weight:700;padding:.1rem .5rem;border-radius:9999px;color:{{ $kapsamaRenk[$s['durum']] }};background:color-mix(in srgb, {{ $kapsamaRenk[$s['durum']] }} 12%, transparent)">{{ $kapsamaAd[$s['durum']] }}</span></td>
                             <td style="{{ $td }};white-space:nowrap">
                                 @if ($s['durum'] !== 'yeterli' && $this->aiAktif)
                                     <x-filament::button size="xs" color="gray" icon="heroicon-o-sparkles" wire:click="naceIcinUret('{{ $s['kod'] }}')" wire:loading.attr="disabled">Taslak üret</x-filament::button>
@@ -110,7 +110,7 @@
             <div style="margin-top:.6rem">
                 <label style="{{ $lbl }}">NACE kapsamı</label>
                 <input type="text" wire:model="yeniNace" placeholder="Örn. 41, 43.21 — boşsa ortak / sektör sorusu" style="{{ $inp }}">
-                <div style="font-size:.7rem;color:rgb(107 114 128);margin-top:.2rem">NACE değeri alt faaliyetleri kapsar: "30.11" yazılırsa 30.11 ile başlayan tüm kodlara uygulanır. Virgülle birden çok girilebilir.</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">NACE değeri alt faaliyetleri kapsar: "30.11" yazılırsa 30.11 ile başlayan tüm kodlara uygulanır. Virgülle birden çok girilebilir.</div>
             </div>
 
             <div style="margin-top:.6rem"><label style="{{ $lbl }}">Soru metni *</label>
@@ -125,7 +125,7 @@
                         <input type="text" wire:model="yeniSecenekler.{{ $i }}" placeholder="{{ chr(65 + $i) }} seçeneği" style="flex:1;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                     </label>
                 @endforeach
-                <div style="font-size:.7rem;color:rgb(107 114 128)">Doğru cevabın yanındaki yuvarlağı seçin. Seçenekler birbirinden farklı olmalıdır.</div>
+                <div style="font-size:.75rem;color:rgb(107 114 128)">Doğru cevabın yanındaki yuvarlağı seçin. Seçenekler birbirinden farklı olmalıdır.</div>
             </div>
 
             <div style="margin-top:.6rem"><label style="{{ $lbl }}">Doğru cevabın gerekçesi (yayım için zorunlu)</label>
@@ -169,7 +169,7 @@
             <input type="search" wire:model.live.debounce.400ms="arama" placeholder="Kod veya soru ara" style="{{ $inp }};margin-top:0">
             <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin:.5rem 0">
                 @foreach (['' => 'Tümü'] + $this->durumlar as $a => $ad)
-                    <button type="button" wire:click="$set('durumFiltre', '{{ $a }}')" style="font-size:.74rem;font-weight:600;padding:.2rem .7rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .3);{{ $durumFiltre === $a ? 'background:#0f2b46;color:#fff' : '' }}">{{ $ad }}</button>
+                    <button type="button" wire:click="$set('durumFiltre', '{{ $a }}')" style="font-size:.75rem;font-weight:600;padding:.2rem .7rem;border-radius:9999px;border:1px solid rgb(107 114 128 / .3);{{ $durumFiltre === $a ? 'background:#0f2b46;color:#fff' : '' }}">{{ $ad }}</button>
                 @endforeach
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.6rem">
@@ -197,11 +197,11 @@
                         @php $kaynaklar = $s->kaynakListesi(); $yayinlanabilir = \App\Filament\Pages\SoruBankasi::yayimlanabilirMi($s); @endphp
                         <div wire:key="soru-{{ $s->id }}" style="{{ $kart }}">
                             <div style="display:flex;justify-content:space-between;gap:.4rem;align-items:flex-start">
-                                <div style="font-size:.72rem;font-weight:800;color:rgb(15 118 110)">{{ $s->kodEtiketi() }}</div>
-                                <span style="font-size:.66rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;color:{{ $durumRenk[$s->durum] ?? '#6b7280' }};background:color-mix(in srgb, {{ $durumRenk[$s->durum] ?? '#6b7280' }} 14%, transparent)">● {{ $s->durumEtiketi() }}</span>
+                                <div style="font-size:.75rem;font-weight:800;color:rgb(15 118 110)">{{ $s->kodEtiketi() }}</div>
+                                <span style="font-size:.68rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;color:{{ $durumRenk[$s->durum] ?? '#6b7280' }};background:color-mix(in srgb, {{ $durumRenk[$s->durum] ?? '#6b7280' }} 14%, transparent)">● {{ $s->durumEtiketi() }}</span>
                             </div>
                             <div style="font-weight:700;font-size:.86rem;margin:.2rem 0">{{ $s->soru }}</div>
-                            <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center;font-size:.68rem;color:rgb(107 114 128)">
+                            <div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center;font-size:.75rem;color:rgb(107 114 128)">
                                 <span>{{ $s->konuEtiketi() }} · {{ $s->zorlukEtiketi() }}</span>
                                 @if ($s->naceKapsami())<span style="border:1px solid rgb(13 148 136 / .4);border-radius:.3rem;padding:0 .3rem;color:rgb(15 118 110)">NACE: {{ implode(', ', $s->naceKapsami()) }}</span>
                                 @elseif ($s->sektor_anahtari)<span style="border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;padding:0 .3rem">Sektör: {{ $s->sektorEtiketi() }}</span>
@@ -228,7 +228,7 @@
                                     @endforelse
                                 </div>
                                 @if ($s->inceleme_notu)<div style="font-size:.75rem;margin-top:.2rem"><strong>İnceleme notu:</strong> {{ $s->inceleme_notu }}</div>@endif
-                                @if ($s->onaylayan)<div style="font-size:.7rem;color:rgb(107 114 128);margin-top:.2rem">Yayımlayan: {{ $s->onaylayan }} · {{ $s->onay_tarihi?->format('d.m.Y') }}</div>@endif
+                                @if ($s->onaylayan)<div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Yayımlayan: {{ $s->onaylayan }} · {{ $s->onay_tarihi?->format('d.m.Y') }}</div>@endif
                             </details>
 
                             <div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">
