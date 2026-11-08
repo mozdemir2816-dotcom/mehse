@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\EgitimPaketis\RelationManagers;
 
 use App\Models\EgitimDersi;
+use App\Models\EgitimPaketi;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -71,13 +72,14 @@ class DerslerRelationManager extends RelationManager
             ->groups([
                 Group::make('modul')
                     ->label('Konu başlığı')
-                    ->getTitleFromRecordUsing(fn (EgitimDersi $r) => $r->modul
+                    ->getTitleFromRecordUsing(fn (EgitimDersi $r) => ($r->modul
                         ? $r->modul.'. '.(EgitimDersi::MODULLER[$r->modul] ?? '')
-                        : 'Modülsüz (eski dersler)')
+                        : 'Modülsüz (eski dersler)').$this->konuSureOzeti($r->modul))
                     ->orderQueryUsing(fn (Builder $query, string $direction) => $query->orderByRaw('COALESCE(modul, 0) '.$direction))
                     ->collapsible(),
             ])
                         ->defaultGroup('modul')
+            ->description(fn () => $this->yasalSureOzeti())
             ->paginated(false)
             ->emptyStateHeading('Henüz video yok')
             ->emptyStateDescription('"Video Ekle" ile konu başlığını seçip videoyu ekleyin; her video hemen kaydedilir.')
@@ -107,7 +109,7 @@ class DerslerRelationManager extends RelationManager
                     ->color('success')
                     ->visible(fn (EgitimDersi $r) => filled($r->video_url) && $r->konuIciNo() === 1)
                     ->modalHeading(fn (EgitimDersi $r) => 'Konuya video ekle: '.$r->siraEtiketi().'. '.$r->baslik)
-                    ->modalDescription('Video bu konunun altına eklenir; çalışan konunun tüm videolarını sırayla izler.')
+                    ->modalDescription('Mevcut video SİLİNMEZ: yeni video bu konunun altına eklenir (3.1, 3.2 …) ve çalışana peş peşe oynatılır. Süresi paketin toplam süresine eklenir — yasal süreyi tamamlamak için kullanılabilir.')
                     ->schema([
                         TextInput::make('baslik')->label('Video başlığı')->required()->maxLength(255)
                             ->default(fn (EgitimDersi $record) => $record->baslik.' ('.($record->konuVideolari()->count() + 1).'. video)'),
@@ -145,6 +147,50 @@ class DerslerRelationManager extends RelationManager
         $record->update($yeni);
 
         return reset($yeni);
+    }
+
+    /** Grup başlığına: " · 3 video · 42 dk" (süresi bilinmeyen video varsa belirtilir). */
+    private function konuSureOzeti(?int $modul): string
+    {
+        $videolar = $this->getOwnerRecord()->dersler()->get()->where('modul', $modul);
+
+        if ($videolar->isEmpty()) {
+            return '';
+        }
+
+        $suresiz = $videolar->whereNull('sure_sn')->count();
+
+        return ' · '.$videolar->count().' video · '.(int) ceil($videolar->sum('sure_sn') / 60).' dk'
+            .($suresiz ? ' ('.$suresiz.' videonun süresi bilinmiyor)' : '');
+    }
+
+    /**
+     * Paketin toplam video süresi ile Md.13 asgari uzaktan sürelerinin karşılaştırması
+     * (ilk defa: az / tehlikeli / çok tehlikeli; yenileme). Eksik süre, konulara video
+     * eklenerek tamamlanır.
+     */
+    private function yasalSureOzeti(): string
+    {
+        $paket = $this->getOwnerRecord();
+        $paket->unsetRelation('dersler');
+        $toplam = $paket->toplamSureDk();
+        $suresiz = $paket->dersler->whereNull('sure_sn')->count();
+        $etiketler = ['az_tehlikeli' => 'Az tehlikeli', 'tehlikeli' => 'Tehlikeli', 'cok_tehlikeli' => 'Çok tehlikeli'];
+
+        $parcalar = [];
+        foreach ([['ilk_defa', 'İlk defa'], ['yenileme', 'Yenileme']] as [$tur, $turAd]) {
+            $satir = [];
+            foreach ($etiketler as $sinif => $ad) {
+                $g = EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['gereken_dk'];
+                $satir[] = $ad.' '.$g.' dk '.($toplam >= $g ? '✓' : '✗ ('.($g - $toplam).' dk eksik)');
+            }
+            $parcalar[] = $turAd.': '.implode(' · ', $satir);
+        }
+
+        return 'Toplam video süresi: '.$toplam.' dk'
+            .($suresiz ? ' — '.$suresiz.' videonun süresi bilinmiyor (YouTube ilk izlemede doldurur ya da Düzenle ile girin)' : '')
+            .'. Yasal asgari uzaktan süre (Md.13, 1 ders saati = '.(int) config('isg.uzaktan_egitim.ders_saati_dk', 45).' dk; tehlikeli / çok tehlikelide 4. konu yüz yüze düşülür) — '
+            .implode(' | ', $parcalar);
     }
 
     /** Sıra boşsa seçilen konu başlığının sonuna ekler. */

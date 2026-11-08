@@ -16,7 +16,7 @@
                     $yuzde = $a->ilerlemeYuzdesi();
                     [$badgeClass, $barColor] = match ($a->durum) {
                         'tamamlandi' => ['portal-badge-success', 'var(--p-success-text)'],
-                        'onay_bekliyor' => ['portal-badge-warning', 'var(--p-warning-text)'],
+                        'onay_bekliyor', 'ih_onay_bekliyor' => ['portal-badge-warning', 'var(--p-warning-text)'],
                         'basarisiz' => ['portal-badge-danger', 'var(--p-danger-text)'],
                         'devam' => ['portal-badge-warning', 'var(--p-warning-text)'],
                         default => ['portal-badge-neutral', 'var(--p-text-label)'],

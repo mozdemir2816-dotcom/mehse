@@ -4,6 +4,29 @@
     $izlenen = $this->izlenenDersIdler;
     $aktifIlerleme = $aktif ? $a->ilerlemeler->firstWhere('egitim_dersi_id', $aktif->id) : null;
     $kalanHak = $a?->kalanSinavHakki();
+    // Peş peşe oynatma (08.11.2026): video bitince sıradaki video (aynı konunun 3.2'si ya da sonraki konu) kendiliğinden açılır.
+    $sonraki = null;
+    if ($aktif) {
+        $dizi = $a->paket->dersler->values();
+        $sonraki = $dizi->get($dizi->search(fn ($d) => $d->id === $aktif->id) + 1);
+    }
+    // Kalan zorunlu süre (08.11.2026): izlenmemiş derslerin zorunlu oranına kalan saniye toplamı.
+    $kalanSn = 0;
+    $suresizDers = 0;
+    if ($a) {
+        foreach ($a->paket->dersler as $d) {
+            $il = $a->ilerlemeler->firstWhere('egitim_dersi_id', $d->id);
+            if ($il?->izlendi) {
+                continue;
+            }
+            if (! $d->sure_sn) {
+                $suresizDers++;
+                continue;
+            }
+            $kalanSn += max(0, (int) ceil($d->sure_sn * $a->paket->video_zorunlu_yuzde / 100) - (int) ($il?->izlenen_sn ?? 0));
+        }
+    }
+    $sureYaz = fn (int $sn) => sprintf('%d:%02d:%02d', intdiv($sn, 3600), intdiv($sn % 3600, 60), $sn % 60);
 @endphp
 
 <x-filament-panels::page>
@@ -51,12 +74,24 @@
                 </div>
             @endif
 
+            <style>
+                /* Mobil (08.11.2026): video üstte sabit, ders listesi altta açılır-kapanır çekmece. */
+                .portal-ders-ac { display: none; }
+                @media (max-width: 900px) {
+                    .portal-video-sabit { position: sticky; top: 0; z-index: 35; }
+                    .portal-ders-listesi { position: static !important; max-height: none !important; }
+                    .portal-ders-ac { display: inline-flex; }
+                }
+                #oynatici-cerceve:fullscreen { background: #000; display: flex; flex-direction: column; justify-content: center; }
+            </style>
+
             <div class="portal-izle-grid">
                 {{-- Video --}}
                 <div>
                     @if ($aktif)
                         <div class="portal-card" style="overflow:hidden">
-                            <div wire:ignore id="oynatici-kutu" style="position:relative;padding-top:56.25%;background:#000">
+                            <div wire:ignore id="oynatici-cerceve" class="portal-video-sabit" style="background:#000">
+                            <div id="oynatici-kutu" style="position:relative;padding-top:56.25%;background:#000">
                                 <iframe id="oynatici"
                                     style="position:absolute;inset:0;width:100%;height:100%;border:0"
                                     src="{{ $aktif->gommeUrl() }}{{ $aktif->saglayici === 'youtube' ? '&enablejsapi=1&disablekb=1&playsinline=1&controls=0&fs=0&iv_load_policy=3' : '' }}"
@@ -65,13 +100,7 @@
 
                                 @if ($aktif->saglayici === 'youtube')
                                     {{-- YouTube'un kendi çubuğu gizli (controls=0): ileri sarma çubuğu yok. Video alanına tıklama yalnız oynat/duraklat. --}}
-                                    <div id="tikla" style="position:absolute;left:0;right:0;top:0;bottom:44px;z-index:3;cursor:pointer"></div>
-                                    <div id="kontrol" style="position:absolute;left:0;right:0;bottom:0;height:44px;background:rgb(0 0 0 / .8);z-index:4;display:flex;align-items:center;gap:.7rem;padding:0 .8rem;color:#fff;font-size:.8rem">
-                                        <button type="button" id="oynat" style="background:none;border:0;color:#fff;font-size:1.15rem;cursor:pointer;width:1.6rem" aria-label="Oynat / duraklat">▶</button>
-                                        <div style="flex:1;height:6px;background:rgb(255 255 255 / .25);border-radius:3px;pointer-events:none"><div id="ilerleme-dolu" style="height:100%;width:0;background:#60a5fa;border-radius:3px"></div></div>
-                                        <span id="sure-yazi" style="font-variant-numeric:tabular-nums;white-space:nowrap">0:00 / 0:00</span>
-                                        <button type="button" id="tamekran" style="background:none;border:0;color:#fff;font-size:1rem;cursor:pointer" aria-label="Tam ekran">⛶</button>
-                                    </div>
+                                    <div id="tikla" style="position:absolute;inset:0;z-index:3;cursor:pointer"></div>
                                 @endif
 
                                 {{-- Aktif katılım penceresi (Md.12/5-c) --}}
@@ -84,8 +113,31 @@
                                     </div>
                                 </div>
 
+                                {{-- Sıradaki videoya geçiş (peş peşe oynatma) --}}
+                                <div id="sonraki-kutu" style="display:none;position:absolute;inset:0;background:rgb(0 0 0 / .85);color:#fff;z-index:6;align-items:center;justify-content:center;text-align:center;padding:1.2rem">
+                                    <div>
+                                        <div style="font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75">Sıradaki video</div>
+                                        <div style="font-weight:700;font-size:1.05rem;margin:.5rem 0 1rem">{{ $sonraki?->numaraliBaslik() }}</div>
+                                        <button type="button" id="sonraki-git" style="padding:.6rem 1.2rem;border-radius:.6rem;border:0;background:#2563eb;color:#fff;font-weight:600;cursor:pointer">▶ Şimdi başlat (<span id="sonraki-sayac">5</span>)</button>
+                                    </div>
+                                </div>
+
                                 {{-- Uyarı şeridi (ileri sarma / sekme) --}}
-                                <div id="izleme-uyari" style="display:none;position:absolute;left:0;right:0;bottom:44px;background:rgb(180 83 9 / .92);color:#fff;font-size:.82rem;padding:.45rem .8rem;z-index:4"></div>
+                                <div id="izleme-uyari" style="display:none;position:absolute;left:0;right:0;bottom:0;background:rgb(180 83 9 / .92);color:#fff;font-size:.82rem;padding:.45rem .8rem;z-index:4"></div>
+                            </div>
+                            @if ($aktif->saglayici === 'youtube')
+                                <div id="kontrol" style="height:44px;background:#111;display:flex;align-items:center;gap:.7rem;padding:0 .8rem;color:#fff;font-size:.8rem">
+                                    <button type="button" id="oynat" style="background:none;border:0;color:#fff;font-size:1.15rem;cursor:pointer;width:1.6rem" aria-label="Oynat / duraklat">▶</button>
+                                    <div style="flex:1;height:6px;background:rgb(255 255 255 / .25);border-radius:3px;pointer-events:none"><div id="ilerleme-dolu" style="height:100%;width:0;background:#60a5fa;border-radius:3px"></div></div>
+                                    <span id="sure-yazi" style="font-variant-numeric:tabular-nums;white-space:nowrap">0:00 / 0:00</span>
+                                    <button type="button" id="tamekran" style="background:none;border:0;color:#fff;font-size:1rem;cursor:pointer" aria-label="Tam ekran">⛶</button>
+                                </div>
+                            @endif
+                            {{-- Kalan zorunlu süre: tüm derslerin zorunlu izleme oranına kalan süre; oynarken geri sayar. --}}
+                            <div style="background:#1e293b;color:#e2e8f0;font-size:.78rem;padding:.35rem .8rem;display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap">
+                                <span>Kalan zorunlu süre: <strong id="kalan-sure" style="font-variant-numeric:tabular-nums">{{ $sureYaz($kalanSn) }}</strong></span>
+                                @if ($suresizDers)<span style="opacity:.75">{{ $suresizDers }} videonun süresi ilk izlemede eklenecek</span>@endif
+                            </div>
                             </div>
                             <div class="portal-card-pad">
                                 <div class="portal-heading" style="font-weight:700">{{ $aktif->numaraliBaslik() }}</div>
@@ -95,7 +147,7 @@
                                     @if (in_array($aktif->id, $izlenen))
                                         <span class="portal-badge portal-badge-success">✓ Bu ders izlendi</span>
                                     @elseif ($aktif->saglayici === 'youtube')
-                                        <span wire:ignore id="izleme-durum" class="portal-muted">Videoyu başlatın — en az %{{ $a->paket->video_zorunlu_yuzde }} izlenmeli. Videoyu ileri sarma yoktur; sekme değiştirirseniz video durur.</span>
+                                        <span wire:ignore id="izleme-durum" class="portal-muted">Videoyu başlatın — en az %{{ $a->paket->video_zorunlu_yuzde }} izlenmeli. Videoyu ileri sarma yoktur; sekme ya da uygulama değiştirirseniz video durur.</span>
                                     @else
                                         <x-filament::button size="sm" color="gray" wire:click="dersTamamla({{ $aktif->id }})">Videoyu izledim</x-filament::button>
                                     @endif
@@ -106,9 +158,13 @@
                 </div>
 
                 {{-- Ders listesi + sınav --}}
-                <div class="portal-card" style="padding:.7rem;position:sticky;top:1rem;max-height:calc(100dvh - 2rem);display:flex;flex-direction:column">
-                    <div class="portal-label" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .65rem;flex-shrink:0">Dersler ({{ $a->paket->dersler->count() }})</div>
-                    <div style="display:flex;flex-direction:column;gap:.15rem;overflow-y:auto;min-height:0">
+                <div class="portal-card portal-ders-listesi" style="padding:.7rem;position:sticky;top:1rem;max-height:calc(100dvh - 2rem);display:flex;flex-direction:column"
+                    x-data="{ acik: window.matchMedia('(min-width: 901px)').matches }">
+                    <div class="portal-label" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .65rem;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;gap:.5rem">
+                        <span>Dersler ({{ count($izlenen) }}/{{ $a->paket->dersler->count() }} izlendi)</span>
+                        <button type="button" class="portal-ders-ac" x-on:click="acik = ! acik" style="background:none;border:1px solid var(--p-border-light);border-radius:.5rem;padding:.25rem .6rem;cursor:pointer;font-size:.72rem;color:inherit" x-text="acik ? 'Listeyi gizle ▲' : 'Listeyi aç ▼'">Listeyi aç ▼</button>
+                    </div>
+                    <div x-show="acik" x-cloak style="display:flex;flex-direction:column;gap:.15rem;overflow-y:auto;min-height:0">
                         @php $oncekiModul = '__yok__'; @endphp
                         @foreach ($a->paket->dersler as $i => $d)
                             @php
@@ -156,7 +212,16 @@
                         const bitti = {{ in_array($aktif->id, $izlenen) ? 'true' : 'false' }};
                         let izlenen = {{ (int) ($aktifIlerleme?->izlenen_sn ?? 0) }};
                         let enIleri = {{ (int) ($aktifIlerleme?->son_konum_sn ?? 0) }};
-                        let artis = 0, yoklamaSayac = 0, yoklamaAcik = false, soruNo = 0, player = null;
+                        const sonrakiUrl = @json($sonraki ? \App\Filament\Portal\Pages\EgitimIzle::getUrl(['atama' => $a->id]).'?ders='.$sonraki->id.'&oto=1' : null);
+                        const otomatik = new URLSearchParams(location.search).get('oto') === '1';
+                        let artis = 0, yoklamaSayac = 0, yoklamaAcik = false, soruNo = 0, player = null, gecisBasladi = false;
+                        let kalanSn = {{ (int) $kalanSn }};
+                        const dersSure = {{ (int) ($aktif->sure_sn ?? 0) }};
+                        function kalanYaz() {
+                            const el = document.getElementById('kalan-sure'); if (!el) return;
+                            const s = Math.max(0, kalanSn);
+                            el.textContent = Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+                        }
 
                         const $ = (id) => document.getElementById(id);
                         function uyari(metin) {
@@ -171,9 +236,24 @@
                             el.textContent = 'İzlenen süre: %' + y + (y >= zorunlu ? ' — tamamlandı ✓' : ' (en az %' + zorunlu + ')');
                         }
                         function rapor() {
-                            if (!player || !player.getDuration || artis < 1) return;
+                            if (!player || !player.getDuration || artis < 1) return Promise.resolve();
                             const n = artis; artis = 0;
-                            @this.call('dersIlerleme', dersId, Math.floor(enIleri), n, Math.floor(player.getDuration() || 0));
+                            return @this.call('dersIlerleme', dersId, Math.floor(enIleri), n, Math.floor(player.getDuration() || 0));
+                        }
+                        /* Video bitti: süre kaydedilir, 5 sn sonra sıradaki video açılır ve kendiliğinden başlar. */
+                        function sonrakineGec() {
+                            if (!sonrakiUrl) { rapor(); return; }
+                            if (gecisBasladi) return;
+                            gecisBasladi = true;
+                            const git = () => { window.removeEventListener('pagehide', rapor); location.href = sonrakiUrl; };
+                            const kayit = Promise.resolve(rapor()).catch(() => {});
+                            $('sonraki-kutu').style.display = 'flex';
+                            let kalan = 5;
+                            const say = setInterval(() => {
+                                if (--kalan <= 0) { clearInterval(say); kayit.then(git); }
+                                if ($('sonraki-sayac')) $('sonraki-sayac').textContent = Math.max(0, kalan);
+                            }, 1000);
+                            $('sonraki-git').onclick = () => { clearInterval(say); kayit.then(git); };
                         }
                         function yoklamaAc() {
                             if (!sorular.length) { yoklamaSayac = 0; return; }
@@ -215,6 +295,8 @@
                             if (!player || !player.getPlayerState || yoklamaAcik) return;
                             if (player.getPlayerState() !== YT.PlayerState.PLAYING) return;
                             if (document.visibilityState !== 'visible') { player.pauseVideo(); return; }
+                            const gereken = Math.ceil((dersSure || player.getDuration() || 0) * zorunlu / 100);
+                            if (!bitti && dersSure && izlenen < gereken) { kalanSn--; kalanYaz(); }
                             izlenen++; artis++;
                             if (!bitti && ++yoklamaSayac >= yoklamaSn) yoklamaAc();
                             durumYaz();
@@ -228,9 +310,18 @@
                             if (!window.YT || !window.YT.Player) { return setTimeout(baslat, 300); }
                             player = new YT.Player('oynatici', {
                                 events: {
-                                    onReady: () => { if (enIleri > 5) player.seekTo(Math.max(0, enIleri - 2), true); durumYaz(); },
+                                    onReady: () => {
+                                        if (enIleri > 5) player.seekTo(Math.max(0, enIleri - 2), true);
+                                        durumYaz();
+                                        if (otomatik) {
+                                            player.playVideo();
+                                            /* Tarayıcı sesli otomatik oynatmayı engellerse çalışan ▶ ile başlatır. */
+                                            setTimeout(() => { if (player.getPlayerState() !== YT.PlayerState.PLAYING) uyari('Sıradaki video hazır — başlatmak için ▶ düğmesine basın.'); }, 2000);
+                                        }
+                                    },
                                     onStateChange: (e) => {
-                                        if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) rapor();
+                                        if (e.data === YT.PlayerState.ENDED) sonrakineGec();
+                                        else if (e.data === YT.PlayerState.PAUSED) rapor();
                                         if ($('oynat')) $('oynat').textContent = e.data === YT.PlayerState.PLAYING ? '⏸' : '▶';
                                     },
                                     onPlaybackRateChange: () => { if (player.getPlaybackRate() !== 1) { player.setPlaybackRate(1); uyari('Eğitim videoları normal hızda izlenir.'); } },
@@ -241,7 +332,7 @@
                             if ($('tikla')) $('tikla').addEventListener('click', oynatDuraklat);
                             if ($('oynat')) $('oynat').addEventListener('click', oynatDuraklat);
                             if ($('tamekran')) $('tamekran').addEventListener('click', () => {
-                                const k = $('oynatici-kutu');
+                                const k = $('oynatici-cerceve');
                                 document.fullscreenElement ? document.exitFullscreen() : (k.requestFullscreen && k.requestFullscreen());
                             });
                             setInterval(() => { if (document.visibilityState === 'visible') @this.call('nabiz'); }, 60000);
@@ -254,6 +345,13 @@
                             }
                         });
                         window.addEventListener('pagehide', rapor);
+                        /* Başka uygulamaya / pencereye geçilince (sekme değişmeden) de video durur. */
+                        window.addEventListener('blur', () => {
+                            if (player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                                player.pauseVideo(); rapor();
+                                uyari('Pencereden ayrıldığınız için video durduruldu. Devam etmek için oynatın.');
+                            }
+                        });
 
                         if (window.YT && window.YT.Player) baslat();
                         else window.onYouTubeIframeAPIReady = baslat;
@@ -309,10 +407,13 @@
                 @endunless
 
                 <div style="margin-top:1.3rem;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap">
-                    @if ($g && $a->iguOnayiBekliyorMu())
+                    @if ($g && $a->onayBekliyorMu())
                         <div class="portal-muted" style="font-size:.9rem;max-width:30rem">
-                            Sınavı geçtiniz. İşyerinizin tehlike sınıfında 4. modül (işyerine özgü riskler) yüz yüze verilir;
-                            iş güvenliği uzmanınız onayladığında belgeniz buradan indirilebilir olacak.
+                            Sınavı geçtiniz.
+                            @if ($a->dorduncuKonuYuzYuzeMi() && $a->iguOnayiBekliyorMu())
+                                İşyerinizin tehlike sınıfında 4. konu (işe ve işyerine özgü riskler) yüz yüze uygulamalı verilir.
+                            @endif
+                            Belgeniz, iş güvenliği uzmanı ve işyeri hekimi onayladıktan sonra buradan indirilebilir olacak.
                         </div>
                     @elseif ($g)
                         <x-filament::button wire:click="belgeIndir" icon="heroicon-o-arrow-down-tray">Temel Eğitim Belgesini İndir</x-filament::button>

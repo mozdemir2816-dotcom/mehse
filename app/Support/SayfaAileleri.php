@@ -75,6 +75,8 @@ class SayfaAileleri
                 [Pages\SertifikaOlustur::class, 'Sertifika'],
                 [EgitimPaketiResource::class, 'Paketler'],
                 [Pages\UzaktanEgitimAtama::class, 'Atama'],
+                [Pages\UzaktanEgitimTakip::class, 'Takip'],
+                [Pages\UzaktanEgitimSorulari::class, 'Sınav Soruları'],
                 [Pages\SoruBankasi::class, 'Soru Bankası'],
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
                 [Pages\ToolboxKonusmalari::class, 'Toolbox Konuşmaları'],
@@ -203,9 +205,10 @@ class SayfaAileleri
                 'siniflar' => [Pages\EgitimKatilim::class, Pages\IsbasiEgitim::class, Pages\EgitimYenilemeTakibi::class, Pages\SertifikaOlustur::class],
             ],
             [
-                'etiket' => 'Uzaktan Eğitim (LMS) & Sınav Portalı',
+                // Online Eğitim Yönet (08.11.2026): Paketler · Atama · Takip · Sınav Soruları.
+                'etiket' => 'Online Eğitim Yönet',
                 'ikon' => 'heroicon-o-computer-desktop',
-                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimAtama::class],
+                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimAtama::class, Pages\UzaktanEgitimTakip::class, Pages\UzaktanEgitimSorulari::class],
             ],
             [
                 'etiket' => 'Soru & İçerik Bankası',

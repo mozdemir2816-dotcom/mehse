@@ -94,7 +94,6 @@ class EgitimPaketiResource extends Resource
                 TextInput::make('video_zorunlu_yuzde')->label('Videonun izlenmesi gereken oran (%)')
                     ->numeric()->default(90)->minValue(0)->maxValue(100)
                     ->helperText('Ders bu orana ulaşınca "izlendi" sayılır.'),
-                TextInput::make('sinav_soru_sayisi')->label('Sınav soru sayısı')->numeric()->default(20)->minValue(5)->maxValue(50),
                 Toggle::make('aktif')->label('Aktif')->default(true),
                 Toggle::make('paylasildi')->label('Diğer uzmanlar da atayabilsin'),
             ]),
@@ -102,7 +101,8 @@ class EgitimPaketiResource extends Resource
             ...self::modulBolumleri(),
 
             Section::make('Sınav Soruları')
-                ->description('Ön test (eğitim öncesi seviye tespiti) ve final sınavı (eğitim sonrası) bu havuzdan rastgele soru çeker. Her sorunun hangi sınavda sorulacağını seçin. En az 5 soru gerekir.')
+                ->description('Soruları Online Eğitim Yönet > Sınav Soruları sekmesinden yönetmeniz daha kolaydır. Sınav öncesi (ön test) ve sınav sonrası (final) bu havuzdan rastgele '.(int) config('isg.uzaktan_egitim.final_soru_sayisi', 10).' soru çeker.')
+                ->collapsible()->collapsed()
                 ->schema([
                     Repeater::make('sorular')
                         ->relationship()

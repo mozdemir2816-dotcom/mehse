@@ -28,6 +28,7 @@ class EgitimAtamasi extends Model
         'on_test_at' => 'datetime',
         'on_test_cevaplar' => 'array',
         'igu_onay_at' => 'datetime',
+        'ih_onay_at' => 'datetime',
         'on_test_puani' => 'integer',
         'yeniden_baslatma' => 'integer',
         'yeniden_baslatildi_at' => 'datetime',
@@ -121,21 +122,47 @@ class EgitimAtamasi extends Model
      * Sınav geçildi ama 4. modül yüz yüze (tehlikeli / çok tehlikeli) ve İGU henüz onaylamadı.
      * Onay alanı eklenmeden önce tamamlanmış atamalar onaylı sayılır.
      */
+    /**
+     * Çift onay (08.11.2026): sınavı geçen çalışanın eğitimi önce İGU (teknik konular;
+     * tehlikeli / çok tehlikelide ayrıca 4. konunun yüz yüze pratiği), sonra işyeri hekimi
+     * (sağlık konuları) onaylayınca tamamlanır. Daha önce tamamlanmış kayıtlar etkilenmez.
+     */
+    public static function ciftOnayAcikMi(): bool
+    {
+        return (bool) config('isg.uzaktan_egitim.cift_onay', true);
+    }
+
     public function iguOnayiBekliyorMu(): bool
     {
         return $this->basariliMi()
-            && $this->dorduncuKonuYuzYuzeMi()
+            && (static::ciftOnayAcikMi() || $this->dorduncuKonuYuzYuzeMi())
             && $this->igu_onay_at === null
             && $this->durum !== 'tamamlandi';
     }
 
-    /** Belge yalnız sınav geçilmiş ve (gerekiyorsa) İGU onayı verilmişse açılır. */
-    public function belgeAcikMi(): bool
+    /** İGU onayından sonra: işyeri hekimi onayı bekleniyor mu. */
+    public function ihOnayiBekliyorMu(): bool
     {
-        return $this->basariliMi() && ! $this->iguOnayiBekliyorMu();
+        return static::ciftOnayAcikMi()
+            && $this->basariliMi()
+            && ! $this->iguOnayiBekliyorMu()
+            && $this->ih_onay_at === null
+            && $this->durum !== 'tamamlandi';
     }
 
-    /** İGU onayı: 4. modülün yüz yüze tamamlandığını doğrular; atama tamamlanır ve eğitim kaydına işlenir. */
+    /** Herhangi bir onay bekleniyor mu (İGU / pratik ya da İH). */
+    public function onayBekliyorMu(): bool
+    {
+        return $this->iguOnayiBekliyorMu() || $this->ihOnayiBekliyorMu();
+    }
+
+    /** Belge yalnız sınav geçilmiş ve gereken onaylar verilmişse açılır. */
+    public function belgeAcikMi(): bool
+    {
+        return $this->basariliMi() && ! $this->onayBekliyorMu();
+    }
+
+    /** İGU onayı: teknik konular (+ tehlikeli / çok tehlikelide 4. konunun yüz yüze pratiği) onaylanır. */
     public function iguOnayla(?int $kullaniciId): void
     {
         if (! $this->iguOnayiBekliyorMu()) {
@@ -143,6 +170,27 @@ class EgitimAtamasi extends Model
         }
 
         $this->forceFill(['igu_onay_at' => now(), 'igu_onaylayan_id' => $kullaniciId])->save();
+        $this->durumuTazele();
+    }
+
+    /**
+     * İşyeri hekimi onayı (sağlık konuları): İGU, firmanın kayıtlı hekimi adına işaretler;
+     * hekimin adı ve sertifika / diploma no onay anında saklanır.
+     */
+    public function ihOnayla(?int $kullaniciId): void
+    {
+        if (! $this->ihOnayiBekliyorMu()) {
+            return;
+        }
+
+        $hekim = $this->calisan?->firma?->isyeriHekimi;
+
+        $this->forceFill([
+            'ih_onay_at' => now(),
+            'ih_onaylayan_id' => $kullaniciId,
+            'ih_ad_soyad' => $hekim?->ad_soyad,
+            'ih_belge_no' => $hekim?->sertifika_no,
+        ])->save();
         $this->durumuTazele();
     }
 
@@ -228,6 +276,7 @@ class EgitimAtamasi extends Model
     {
         $yeni = match (true) {
             $this->iguOnayiBekliyorMu() => 'onay_bekliyor',
+            $this->ihOnayiBekliyorMu() => 'ih_onay_bekliyor',
             $this->basariliMi() => 'tamamlandi',
             $this->donemSinavlari()->exists() => 'basarisiz',
             $this->izlenenDersSayisi() > 0 => 'devam',
@@ -287,6 +336,11 @@ class EgitimAtamasi extends Model
 
     public function durumEtiketi(): string
     {
+        // Tehlikeli / çok tehlikelide İGU onayı = 4. konunun yüz yüze pratiği.
+        if ($this->durum === 'onay_bekliyor' && $this->dorduncuKonuYuzYuzeMi()) {
+            return config('isg.uzaktan_egitim.durumlar.pratik_bekliyor');
+        }
+
         return config('isg.uzaktan_egitim.durumlar.'.$this->durum, $this->durum);
     }
 

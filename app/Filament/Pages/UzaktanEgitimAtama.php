@@ -127,12 +127,8 @@ class UzaktanEgitimAtama extends Page
             return null;
         }
 
-        $saat = (int) ($this->egitimTuru === 'ilk_defa'
-            ? config("isg.egitim.sureler.ilk.{$sinif}.saat", 8)
-            : config('isg.egitim.sureler.tekrar.saat', 8));
-        $dorduncuYuzYuze = in_array($sinif, config('isg.uzaktan_egitim.yuz_yuze_dorduncu_konu', []), true);
-        $dorduncu = $this->egitimTuru === 'ilk_defa' ? (int) config("isg.uzaktan_egitim.dorduncu_konu_saat.{$sinif}", 0) : intdiv($saat, 4);
-        $gereken = ($saat - ($dorduncuYuzYuze ? $dorduncu : 0)) * (int) config('isg.uzaktan_egitim.ders_saati_dk', 45);
+        ['saat' => $saat, 'gereken_dk' => $gereken, 'dorduncu_yuz_yuze' => $dorduncuYuzYuze]
+            = EgitimPaketi::gerekenUzaktanSure($sinif, $this->egitimTuru);
         $paketDk = $paket->toplamSureDk();
 
         return [
@@ -170,7 +166,8 @@ class UzaktanEgitimAtama extends Page
         return match ($filtre) {
             'hepsi' => true,
             'devam' => in_array($a->durum, ['atandi', 'devam'], true),
-            'gecikti' => $a->son_tarih && $a->son_tarih->isPast() && ! in_array($a->durum, ['tamamlandi', 'onay_bekliyor'], true),
+            'sertifika' => $a->belgeAcikMi(),
+            'gecikti' => $a->son_tarih && $a->son_tarih->isPast() && ! in_array($a->durum, ['tamamlandi', 'onay_bekliyor', 'ih_onay_bekliyor'], true),
             default => $a->durum === $filtre,
         };
     }
@@ -291,6 +288,116 @@ class UzaktanEgitimAtama extends Page
         }, 'uzaktan-egitim-takibi-'.Str::slug($this->firma->unvan).'.xlsx');
     }
 
+    /**
+     * Toplu giriş bilgileri (08.11.2026): firmadaki tamamlanmamış atamaların çalışanları için
+     * kullanıcı kodu + geçici şifre listesi (Excel ya da yazdırılabilir PDF kartlar). Şifreler
+     * şifreli saklandığından, kendi şifresini belirlememiş çalışanlara YENİ geçici şifre üretilir;
+     * kendi şifresini belirleyenlerin şifresine dokunulmaz.
+     */
+    public function girisBilgileriIndir(string $bicim = 'excel')
+    {
+        $satirlar = [];
+
+        foreach ($this->atamalar->where('durum', '!=', 'tamamlandi')->pluck('calisan')->unique('id') as $c) {
+            $sifre = null;
+
+            if ($c->sifre_belirlendi_at === null) {
+                $sifre = Str::upper(Str::random(3)).random_int(100, 999);
+                $c->forceFill(['sifre' => $sifre])->save();
+            }
+
+            $satirlar[] = ['ad_soyad' => $c->ad_soyad, 'gorev' => $c->gorev, 'kod' => $c->eposta, 'sifre' => $sifre ?? '(kendi belirlediği şifre)', 'telefon' => $c->telefon];
+        }
+
+        if (! $satirlar) {
+            Notification::make()->title('Giriş bilgisi verilecek çalışan yok')->body('Bu firmadaki tüm atamalar tamamlanmış.')->warning()->send();
+
+            return null;
+        }
+
+        $ad = 'uzaktan-egitim-giris-bilgileri-'.Str::slug($this->firma->unvan);
+
+        if ($bicim === 'pdf') {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.uzaktan-egitim-giris-kartlari', [
+                'firma' => $this->firma, 'satirlar' => $satirlar, 'portal' => url('/egitim'),
+            ])->setPaper('a4');
+
+            return response()->streamDownload(fn () => print ($pdf->output()), $ad.'.pdf');
+        }
+
+        ExcelBellek::artir();
+        $kitap = new Spreadsheet;
+        $sayfa = $kitap->getActiveSheet();
+        $sayfa->setTitle('Giriş Bilgileri');
+        $sayfa->fromArray(['Ad Soyad', 'Görev', 'Kullanıcı Kodu / E-posta', 'Geçici Şifre', 'Telefon', 'Portal'], null, 'A1');
+        $sayfa->getStyle('A1:F1')->getFont()->setBold(true);
+        foreach ($satirlar as $i => $r) {
+            $sayfa->fromArray([$r['ad_soyad'], $r['gorev'], $r['kod'], $r['sifre'], $r['telefon'], url('/egitim')], null, 'A'.($i + 2));
+        }
+        foreach (range('A', 'F') as $k) {
+            $sayfa->getColumnDimension($k)->setAutoSize(true);
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'ueg').'.xlsx';
+        (new Xlsx($kitap))->save($tmp);
+
+        return response()->streamDownload(function () use ($tmp) {
+            echo file_get_contents($tmp);
+            @unlink($tmp);
+        }, $ad.'.xlsx');
+    }
+
+    /** Eğitimi henüz bitirmeyenler (WhatsApp hatırlatma listesi). */
+    #[Computed]
+    public function hatirlatilacaklar(): Collection
+    {
+        return $this->atamalar->filter(fn (EgitimAtamasi $a) => in_array($a->durum, ['atandi', 'devam', 'basarisiz'], true))->values();
+    }
+
+    /** Hatırlatma mesajı için wa.me bağlantısı (şifre içermez). */
+    public function hatirlatmaLinki(EgitimAtamasi $a): string
+    {
+        $kalan = $a->toplamDersSayisi() - $a->izlenenDersSayisi();
+        $metin = "Sayın {$a->calisan->ad_soyad}, {$this->firma?->unvan} bünyesindeki yasal İSG uzaktan eğitiminiz henüz tamamlanmadı"
+            .($kalan > 0 ? " ({$kalan} ders kaldı)" : ' (final sınavı bekleniyor)').'.'
+            .($a->son_tarih ? ' Son tarih: '.$a->son_tarih->format('d.m.Y').'.' : '')
+            ."\nEğitim Portalı: ".url('/egitim')."\nKullanıcı Kodu: {$a->calisan->eposta}\nŞifrenizi unuttuysanız iş güvenliği uzmanınıza bildirin.";
+
+        return 'https://wa.me/'.$this->telefonNo($a->calisan->telefon).'?text='.rawurlencode($metin);
+    }
+
+    private function telefonNo(?string $tel): string
+    {
+        $no = preg_replace('/\D/', '', (string) $tel);
+
+        return match (true) {
+            strlen($no) === 11 && str_starts_with($no, '0') => '9'.$no,
+            strlen($no) === 10 => '90'.$no,
+            default => $no,
+        };
+    }
+
+    /**
+     * Müfettiş denetimi için firma bazlı toplu İSG eğitim katılım ve kayıt (log) tutanağı (PDF):
+     * her çalışanın oturumları, IP / cihaz, konu bazlı fiili izleme, ön test / final, onaylar.
+     */
+    public function denetimTutanagi()
+    {
+        if (! $this->firma || $this->atamalar->isEmpty()) {
+            return null;
+        }
+
+        $atamalar = $this->atamalar->load(['ilerlemeler.ders', 'sinavSonuclari', 'girisler', 'calisan']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.uzaktan-egitim-denetim-tutanagi', [
+            'firma' => $this->firma->loadMissing(['igu', 'isyeriHekimi']),
+            'atamalar' => $atamalar,
+            'uzman' => Filament::auth()->user(),
+        ])->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(fn () => print ($pdf->output()), 'uzaktan-egitim-denetim-tutanagi-'.Str::slug($this->firma->unvan).'.pdf');
+    }
+
     public function updated(string $alan): void
     {
         if (in_array($alan, ['paketId', 'egitimTuru'], true)) {
@@ -309,7 +416,7 @@ class UzaktanEgitimAtama extends Page
     }
 
     public function updatedFirmaId(): void    {
-        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu, $this->detay);
+        unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu, $this->detay, $this->hatirlatilacaklar);
         $this->detayId = null;
         $this->secilenCalisanlar = [];
         $this->sonUretilenGiris = [];
@@ -495,26 +602,54 @@ class UzaktanEgitimAtama extends Page
     /** İGU: 4. modül yüz yüze tamamlandı — belgeyi aç. */
     public function iguOnayla(int $atamaId): void
     {
-        $atama = EgitimAtamasi::query()
-            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma?->id))
-            ->find($atamaId);
+        $atama = $this->kendiAtamalarim()->find($atamaId);
 
         if (! $atama || ! $atama->iguOnayiBekliyorMu()) {
             return;
         }
 
         $atama->iguOnayla(Filament::auth()->id());
-        unset($this->atamalar);
+        unset($this->atamalar, $this->tumAtamalar, $this->genelListe, $this->detay);
 
-        Notification::make()->title('İGU onayı verildi')->body($atama->calisan?->ad_soyad.' — belge açıldı, eğitim kaydına işlendi.')->success()->send();
+        Notification::make()->title('İGU onayı verildi')
+            ->body($atama->calisan?->ad_soyad.($atama->belgeAcikMi() ? ' — belge açıldı, eğitim kaydına işlendi.' : ' — şimdi işyeri hekimi onayı bekleniyor.'))
+            ->success()->send();
+    }
+
+    /** İşyeri hekimi onayı (sağlık konuları) — İGU, firmanın kayıtlı hekimi adına işaretler. */
+    public function ihOnayla(int $atamaId): void
+    {
+        $atama = $this->kendiAtamalarim()->with('calisan.firma.isyeriHekimi')->find($atamaId);
+
+        if (! $atama || ! $atama->ihOnayiBekliyorMu()) {
+            return;
+        }
+
+        if (! $atama->calisan?->firma?->isyeriHekimi) {
+            Notification::make()->title('Firmada kayıtlı işyeri hekimi yok')
+                ->body('Firma kartında işyeri hekimini seçin; hekimin adı ve diploma / sertifika no belgeye yazılır.')
+                ->warning()->send();
+
+            return;
+        }
+
+        $atama->ihOnayla(Filament::auth()->id());
+        unset($this->atamalar, $this->tumAtamalar, $this->genelListe, $this->detay);
+
+        Notification::make()->title('İşyeri hekimi onayı verildi')->body($atama->calisan?->ad_soyad.' — eğitim tamamlandı, sertifika açıldı.')->success()->send();
+    }
+
+    /** Uzmanın kendi firmalarındaki atamalar (Takip'te firma seçilmeden de onay / sertifika verilebilir). */
+    protected function kendiAtamalarim()
+    {
+        return EgitimAtamasi::query()
+            ->whereHas('calisan.firma', fn ($q) => $q->where('user_id', Filament::auth()->id())
+                ->when($this->firma, fn ($f) => $f->whereKey($this->firma->id)));
     }
 
     public function belgeIndir(int $atamaId)
     {
-        $atama = EgitimAtamasi::query()
-            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma?->id))
-            ->with(['calisan.firma', 'paket'])
-            ->find($atamaId);
+        $atama = $this->kendiAtamalarim()->with(['calisan.firma', 'paket'])->find($atamaId);
 
         if (! $atama || ! $atama->belgeAcikMi()) {
             Notification::make()->title('Bu eğitim henüz tamamlanmadı ya da İGU onayı bekliyor')->warning()->send();

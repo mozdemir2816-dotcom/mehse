@@ -16,14 +16,28 @@ class EgitimPaketiSorusu extends Model
 
     /** Sorunun kullanıldığı sınav: ön test (seviye tespiti), final sınavı ya da ikisi. */
     public const KULLANIMLAR = [
-        'ortak' => 'Ön test + final',
-        'on_test' => 'Yalnız ön test',
-        'final' => 'Yalnız final sınavı',
+        'ortak' => 'Sınav öncesi + sonrası',
+        'on_test' => 'Yalnız sınav öncesi (ön test)',
+        'final' => 'Yalnız sınav sonrası (final)',
     ];
 
     protected $casts = [
         'secenekler' => 'array',
         'dogru_index' => 'integer',
+        'modul' => 'integer',
+    ];
+
+    /** Sorunun Ek-1 konu başlığı (final sınavı konulara dengeli dağıtılır). */
+    public const KONULAR = [
+        1 => 'Genel Konular',
+        2 => 'Sağlık Konuları',
+        3 => 'Teknik Konular',
+    ];
+
+    public const ZORLUKLAR = [
+        'kolay' => 'Kolay',
+        'orta' => 'Orta',
+        'zor' => 'Zor',
     ];
 
     public function paket(): BelongsTo

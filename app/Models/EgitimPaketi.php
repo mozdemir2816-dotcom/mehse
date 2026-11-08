@@ -88,22 +88,62 @@ class EgitimPaketi extends Model
         return (int) ceil($this->dersler->sum('sure_sn') / 60);
     }
 
+    /**
+     * Md.13: tehlike sınıfı + eğitim türüne göre uzaktan verilmesi gereken asgari
+     * video süresi (dk). Tehlikeli / çok tehlikeli işyerinde 4. konu yüz yüze
+     * verildiğinden onun süresi düşülür.
+     *
+     * @return array{saat: int, gereken_dk: int, dorduncu_yuz_yuze: bool}
+     */
+    public static function gerekenUzaktanSure(string $sinif, string $tur = 'ilk_defa'): array
+    {
+        $saat = (int) ($tur === 'ilk_defa'
+            ? config("isg.egitim.sureler.ilk.{$sinif}.saat", 8)
+            : config('isg.egitim.sureler.tekrar.saat', 8));
+        $dorduncuYuzYuze = in_array($sinif, config('isg.uzaktan_egitim.yuz_yuze_dorduncu_konu', []), true);
+        $dorduncu = $tur === 'ilk_defa' ? (int) config("isg.uzaktan_egitim.dorduncu_konu_saat.{$sinif}", 0) : intdiv($saat, 4);
+
+        return [
+            'saat' => $saat,
+            'gereken_dk' => ($saat - ($dorduncuYuzYuze ? $dorduncu : 0)) * (int) config('isg.uzaktan_egitim.ders_saati_dk', 45),
+            'dorduncu_yuz_yuze' => $dorduncuYuzYuze,
+        ];
+    }
+
     /** Sınav için havuzdan rastgele soru seç (yetmezse hepsi). */
     /**
      * Rastgele sınav soruları. $tur: 'on_test' (seviye tespiti) ya da 'final'.
      * Soru, kullanımı 'ortak' ya da istenen türse havuza girer; o türe uygun
      * soru hiç yoksa tüm havuz kullanılır (eski paketler).
      */
-    public function sinavSorulari(string $tur = 'final'): array
+    public function sinavSorulari(string $tur = 'final', array $haric = []): array
     {
-        $sorgu = fn () => $this->sorular()->inRandomOrder()->limit($this->sinav_soru_sayisi);
-        $havuz = $sorgu()->whereIn('kullanim', ['ortak', $tur])->get();
+        $adet = (int) config('isg.uzaktan_egitim.'.($tur === 'on_test' ? 'on_test_soru_sayisi' : 'final_soru_sayisi'), 10);
+        $havuz = $this->sorular()->whereIn('kullanim', ['ortak', $tur])->get();
 
         if ($havuz->isEmpty()) {
-            $havuz = $sorgu()->get();
+            $havuz = $this->sorular()->get();
         }
 
-        return $havuz->map(fn (EgitimPaketiSorusu $s) => [
+        // Önceki denemelerde sorulanlar, havuzda yeterince yeni soru varsa tekrar sorulmaz.
+        $yeni = $havuz->whereNotIn('id', $haric);
+        if ($haric && $yeni->count() >= $adet) {
+            $havuz = $yeni;
+        }
+
+        // Konu dağılımı (08.11.2026): Genel / Sağlık / Teknik gruplarından sırayla birer soru —
+        // konusu girilmemiş sorular ayrı bir grup sayılır.
+        $gruplar = $havuz->shuffle()->groupBy(fn (EgitimPaketiSorusu $s) => (int) $s->modul)->shuffle()->map(fn ($g) => $g->values())->values();
+        $secilen = collect();
+        for ($i = 0; $secilen->count() < $adet && $gruplar->contains(fn ($g) => $g->has($i)); $i++) {
+            foreach ($gruplar as $g) {
+                if ($secilen->count() < $adet && $g->has($i)) {
+                    $secilen->push($g[$i]);
+                }
+            }
+        }
+
+        return $secilen->shuffle()->map(fn (EgitimPaketiSorusu $s) => [
             'id' => $s->id,
             'soru' => $s->soru,
             'secenekler' => $s->secenekler,

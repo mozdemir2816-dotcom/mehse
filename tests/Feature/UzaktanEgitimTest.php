@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\UzaktanEgitimAtama;
+use App\Filament\Pages\UzaktanEgitimTakip;
 use App\Filament\Portal\Pages\EgitimIzle;
 use App\Filament\Portal\Pages\Egitimlerim;
 use App\Filament\Portal\Pages\KvkkOnay;
@@ -230,7 +231,7 @@ class UzaktanEgitimTest extends TestCase
 
         $bilesen->call('sinavaBasla')->assertSet('mod', 'sinav');
         $sorular = $bilesen->get('sinavSorulari');
-        $this->assertCount(5, $sorular);
+        $this->assertCount(6, $sorular);
         $this->assertArrayNotHasKey('dogru_index', $sorular[0]);
 
         foreach ($sorular as $s) {
@@ -240,8 +241,14 @@ class UzaktanEgitimTest extends TestCase
 
         $atama->refresh();
         $this->assertTrue($atama->basariliMi());
-        $this->assertSame('tamamlandi', $atama->durum);
+        $this->assertSame('onay_bekliyor', $atama->durum);   // çift onay: önce İGU, sonra İH
+        $this->assertFalse($atama->belgeAcikMi());
         $this->assertSame(100, $atama->sonSinav()->puan);
+
+        $atama->iguOnayla($this->uzman->id);
+        $this->assertSame('ih_onay_bekliyor', $atama->refresh()->durum);
+        $atama->ihOnayla($this->uzman->id);
+        $this->assertSame('tamamlandi', $atama->refresh()->durum);
 
         // Oturum: giriş + son etkinlik (çıkış) + fiili izleme süresi
         $oturum = $atama->girisler()->sole();
@@ -295,6 +302,8 @@ class UzaktanEgitimTest extends TestCase
         $atama = $this->atamaKur($paket, $calisan);
         $atama->sinavSonuclari()->create(['deneme_no' => 1, 'puan' => 90, 'gecti' => true, 'cevaplar' => [], 'tamamlandi_at' => now()]);
         $atama->durumuTazele();
+        $atama->iguOnayla($this->uzman->id);
+        $atama->ihOnayla($this->uzman->id);
 
         $kod = $atama->dogrulamaKodu();
         $this->assertSame($kod, $atama->fresh()->dogrulamaKodu());   // kod sabit kalır
@@ -413,7 +422,7 @@ class UzaktanEgitimTest extends TestCase
         $mehmet = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Mehmet Yılmaz', 'gorev' => 'İşçi', 'eposta' => 'myilmaz1', 'aktif' => true]);
         $atama = $this->atamaKur($paket, $mehmet, 'ilk_defa');
 
-        $this->tamamla($atama);
+        $this->tamamla($atama, onayli: false);
 
         // Sınav geçildi ama 4. modül yüz yüze: İGU onayı gelene dek belge kapalı, kayıt işlenmez.
         $atama->refresh();
@@ -422,12 +431,21 @@ class UzaktanEgitimTest extends TestCase
         $this->assertFalse($atama->belgeAcikMi());
         $this->assertSame(0, $mehmet->egitimKayitlari()->count());
 
-        Livewire::test(UzaktanEgitimAtama::class)
+        $this->assertSame('Uzaktan Bitti – Yüz Yüze Pratik Bekliyor', $atama->durumEtiketi());
+        $this->hekimKur();
+
+        $sayfa = Livewire::test(UzaktanEgitimTakip::class)
             ->set('firmaId', $this->firma->id)
-            ->assertSee('İGU onayı bekliyor')
+            ->assertSee('Pratik + İGU Onayı')
             ->call('iguOnayla', $atama->id);
 
+        $this->assertSame('ih_onay_bekliyor', $atama->refresh()->durum);
+        $this->assertFalse($atama->belgeAcikMi());
+        $sayfa->assertSee('İH Onayı')->call('ihOnayla', $atama->id);
+
         $atama->refresh();
+        $this->assertSame('Dr. Ayşe Demir', $atama->ih_ad_soyad);
+        $this->assertSame('IH-4521', $atama->ih_belge_no);
         $this->assertSame('tamamlandi', $atama->durum);
         $this->assertTrue($atama->belgeAcikMi());
         $this->assertNotNull($atama->igu_onay_at);
@@ -495,13 +513,27 @@ class UzaktanEgitimTest extends TestCase
             ->assertStatus(404);
     }
 
-    private function tamamla(EgitimAtamasi $atama): void
+    /** Dersleri izletir + sınavı geçirir; $onayli ise İGU ve İH onayları da verilir (çift onay, 08.11.2026). */
+    private function tamamla(EgitimAtamasi $atama, bool $onayli = true): void
     {
         foreach ($atama->paket->dersler as $d) {
             $atama->ilerlemeler()->create(['egitim_dersi_id' => $d->id, 'izleme_yuzdesi' => 100, 'izlendi' => true, 'izlendi_at' => now()]);
         }
         $atama->sinavSonuclari()->create(['deneme_no' => 1, 'puan' => 90, 'gecti' => true, 'cevaplar' => [], 'tamamlandi_at' => now()]);
         $atama->durumuTazele();
+
+        if ($onayli) {
+            $atama->iguOnayla($this->uzman->id);
+            $atama->ihOnayla($this->uzman->id);
+        }
+    }
+
+    private function hekimKur(?Firma $firma = null): \App\Models\IsgProfesyoneli
+    {
+        $hekim = \App\Models\IsgProfesyoneli::create(['user_id' => $this->uzman->id, 'tip' => 'isyeri_hekimi', 'ad_soyad' => 'Dr. Ayşe Demir', 'sertifika_no' => 'IH-4521']);
+        ($firma ?? $this->firma)->update(['isyeri_hekimi_id' => $hekim->id]);
+
+        return $hekim;
     }
 
     public function test_egitime_giris_tarihleri_kaydedilir_ve_yenilemede_tekrar_yazilmaz(): void
@@ -574,7 +606,7 @@ class UzaktanEgitimTest extends TestCase
             ['soru' => 'Bildirim süresi?', 'secenekler' => ['1 gün', '3 iş günü'], 'dogru_index' => 1, 'verilen_index' => 1],
         ]]);
 
-        Livewire::test(UzaktanEgitimAtama::class)
+        Livewire::test(UzaktanEgitimTakip::class)
             ->set('firmaId', $this->firma->id)
             ->call('detayAc', $atama->id)
             ->assertSee('Takip Detayı')
@@ -597,7 +629,7 @@ class UzaktanEgitimTest extends TestCase
         $yabanci = Calisan::create(['firma_id' => $digerFirma->id, 'ad_soyad' => 'Yabancı Kişi', 'eposta' => 'y@ornek.test', 'aktif' => true, 'sifre' => 'x12345678']);
         $atama = $this->atamaKur($paket, $yabanci);
 
-        Livewire::test(UzaktanEgitimAtama::class)
+        Livewire::test(UzaktanEgitimTakip::class)
             ->set('firmaId', $this->firma->id)
             ->call('detayAc', $atama->id)
             ->assertDontSee('Yabancı Kişi');
@@ -614,7 +646,7 @@ class UzaktanEgitimTest extends TestCase
         EgitimGirisi::create(['calisan_id' => $mehmet->id, 'egitim_atamasi_id' => $atama->id, 'giris_at' => now()->setDate(2026, 9, 28)->setTime(10, 15)]);
         $this->tamamla($atama);
 
-        Livewire::test(UzaktanEgitimAtama::class)
+        Livewire::test(UzaktanEgitimTakip::class)
             ->set('firmaId', $this->firma->id)
             ->assertSee('İşçi')
             ->assertSee('28.09.2026 10:15')
@@ -662,7 +694,7 @@ class UzaktanEgitimTest extends TestCase
 
         Filament::setCurrentPanel('admin');
         $this->actingAs($this->uzman);
-        Livewire::test(UzaktanEgitimAtama::class)
+        Livewire::test(UzaktanEgitimTakip::class)
             ->set('firmaId', $this->firma->id)
             ->call('detayAc', $atama->id)
             ->assertSee('Ön test (seviye tespiti')
@@ -674,8 +706,8 @@ class UzaktanEgitimTest extends TestCase
     {
         $paket = $this->paketKur(soru: 6);
 
-        $this->assertCount(5, $paket->sinavSorulari('on_test'));
-        $this->assertCount(5, $paket->sinavSorulari('final'));
+        $this->assertCount(6, $paket->sinavSorulari('on_test'));
+        $this->assertCount(6, $paket->sinavSorulari('final'));
     }
 
     public function test_tum_firmalar_listesi_suzgec_ve_detaya_gecis(): void
@@ -693,7 +725,7 @@ class UzaktanEgitimTest extends TestCase
         $this->atamaKur($paket, $yabanci);
         $this->tamamla($zAtama);
 
-        $sayfa = Livewire::test(UzaktanEgitimAtama::class)
+        $sayfa = Livewire::test(UzaktanEgitimTakip::class)
             ->assertSee('Tüm Firmalar — Eğitim Takibi')
             ->assertSee('Ali Veli')
             ->assertSee('Zeynep Kaya')
@@ -709,5 +741,162 @@ class UzaktanEgitimTest extends TestCase
             ->assertDontSee('Tüm Firmalar — Eğitim Takibi');
 
         $this->assertNotNull($sayfa);
+    }
+
+    public function test_sinav_oncesi_ve_sonrasi_havuzdan_onar_soru_ceker(): void
+    {
+        $paket = $this->paketKur(soru: 0);
+        foreach (['ortak' => 12, 'on_test' => 4, 'final' => 4] as $kullanim => $adet) {
+            for ($i = 1; $i <= $adet; $i++) {
+                $paket->sorular()->create(['soru' => "$kullanim $i?", 'secenekler' => ['A', 'B'], 'dogru_index' => 0, 'kullanim' => $kullanim]);
+            }
+        }
+
+        $on = collect($paket->sinavSorulari('on_test'));
+        $final = collect($paket->sinavSorulari('final'));
+        $this->assertCount(10, $on);
+        $this->assertCount(10, $final);
+        $this->assertFalse($on->contains(fn ($s) => str_starts_with($s['soru'], 'final ')));
+        $this->assertFalse($final->contains(fn ($s) => str_starts_with($s['soru'], 'on_test ')));
+    }
+
+    public function test_sinav_sorulari_sekmesinde_soru_eklenir_ve_havuz_ozeti_gorunur(): void
+    {
+        $paket = $this->paketKur(soru: 0);
+        $geriAl = \Filament\Forms\Components\Repeater::fake();
+
+        $sayfa = Livewire::test(\App\Filament\Pages\UzaktanEgitimSorulari::class)
+            ->assertSet('paketId', $paket->id)
+            ->assertSee('Sınav öncesi (ön test) havuzu')
+            ->callAction(\Filament\Actions\Testing\TestAction::make('create')->table(), [
+                'kullanim' => 'on_test', 'soru' => 'Yangında ilk ne yapılır?', 'secenekler' => [['secenek' => 'Kaç'], ['secenek' => 'Alarm ver']], 'dogru_index' => 1,
+            ])->assertHasNoFormErrors();
+
+        $soru = $paket->sorular()->sole();
+        $this->assertSame('on_test', $soru->kullanim);
+        $this->assertSame(['Kaç', 'Alarm ver'], array_values($soru->secenekler));
+        $this->assertSame(['on_test' => 1, 'final' => 0], array_intersect_key($sayfa->instance()->ozet, ['on_test' => 0, 'final' => 0]));
+        $sayfa->assertSee('Yangında ilk ne yapılır?')->assertSee('9 soru daha ekleyin');
+        $geriAl();
+    }
+
+    public function test_takipte_firma_secmeden_onay_ve_sertifika(): void
+    {
+        $this->firma->update(['tehlike_sinifi' => 'cok_tehlikeli']);
+        $paket = $this->paketKur();
+        $calisan = $this->calisanKur();
+        $atama = $this->atamaKur($paket, $calisan, 'ilk_defa');
+        $this->tamamla($atama, onayli: false);
+        $this->hekimKur();
+
+        $sayfa = Livewire::test(UzaktanEgitimTakip::class)
+            ->assertSee('İGU Onayı')
+            ->call('iguOnayla', $atama->id)
+            ->call('ihOnayla', $atama->id);
+
+        $this->assertTrue($atama->refresh()->belgeAcikMi());
+        $sayfa->set('genelFiltre', 'sertifika')->assertSee('Ali Veli')->assertSee('Sertifika');
+        $this->assertNotNull($sayfa->instance()->belgeIndir($atama->id));
+    }
+
+    public function test_video_bitince_siradaki_videoya_gecis_baglantisi(): void
+    {
+        $paket = $this->paketKur(ders: 2);
+        $calisan = $this->calisanKur();
+        $atama = $this->atamaKur($paket, $calisan);
+        $atama->forceFill(['on_test_puani' => 50, 'on_test_at' => now()])->save();
+        [$ilk, $ikinci] = $paket->dersler->all();
+
+        $this->portalGirisi($calisan);
+
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id, 'ders' => $ilk->id])
+            ->assertSee('?ders='.$ikinci->id.'\u0026oto=1', false);
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id, 'ders' => $ikinci->id])
+            ->assertSee('const sonrakiUrl = null', false);
+    }
+
+    public function test_final_sorulari_konulara_dagilir_ve_onceki_denemedekiler_tekrar_gelmez(): void
+    {
+        $paket = $this->paketKur(soru: 0);
+        foreach ([1, 2, 3] as $modul) {
+            for ($i = 1; $i <= 8; $i++) {
+                $paket->sorular()->create(['soru' => "M$modul S$i?", 'secenekler' => ['A', 'B'], 'dogru_index' => 0, 'kullanim' => 'final', 'modul' => $modul]);
+            }
+        }
+
+        $ilk = collect($paket->sinavSorulari('final'));
+        $this->assertCount(10, $ilk);
+        $dagilim = $ilk->countBy(fn ($s) => substr($s['soru'], 0, 2));
+        $this->assertSame(3, $dagilim->count());
+        $this->assertTrue($dagilim->every(fn ($n) => $n >= 3 && $n <= 4));
+
+        $ikinci = collect($paket->sinavSorulari('final', $ilk->pluck('id')->all()));
+        $this->assertCount(10, $ikinci);
+        $this->assertEmpty($ikinci->pluck('id')->intersect($ilk->pluck('id')));
+    }
+
+    public function test_takipte_giris_bilgileri_denetim_tutanagi_ve_hatirlatma(): void
+    {
+        $paket = $this->paketKur();
+        $ali = $this->calisanKur();
+        $zeynep = Calisan::create(['firma_id' => $this->firma->id, 'ad_soyad' => 'Zeynep Kaya', 'eposta' => 'zk1', 'telefon' => '05321234567', 'aktif' => true, 'sifre' => 'eski123', 'sifre_belirlendi_at' => now()]);
+        $this->atamaKur($paket, $ali);
+        $zAtama = $this->atamaKur($paket, $zeynep);
+        $this->hekimKur();
+        EgitimGirisi::create(['calisan_id' => $zeynep->id, 'egitim_atamasi_id' => $zAtama->id, 'giris_at' => now(), 'ip' => '198.51.100.7']);
+
+        $sayfa = Livewire::test(UzaktanEgitimTakip::class)->set('firmaId', $this->firma->id)
+            ->assertSee('Hatırlatma — eğitimi tamamlamayanlar (2)')
+            ->assertSee('wa.me/905321234567', false);
+
+        $eskiHash = $ali->fresh()->sifre;
+        $this->assertInstanceOf(StreamedResponse::class, $sayfa->instance()->girisBilgileriIndir('excel'));
+        $this->assertNotSame($eskiHash, $ali->fresh()->sifre);                 // kendi şifresini belirlemeyene yeni geçici şifre
+        $this->assertSame($zeynep->sifre, $zeynep->fresh()->sifre);             // kendi şifresini belirleyene dokunulmaz
+
+        $pdf = $sayfa->instance()->girisBilgileriIndir('pdf');
+        ob_start(); $pdf->sendContent(); $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        $html = view('pdf.uzaktan-egitim-denetim-tutanagi', [
+            'firma' => $this->firma->fresh(['igu', 'isyeriHekimi']), 'atamalar' => $sayfa->instance()->atamalar, 'uzman' => $this->uzman,
+        ])->render();
+        $this->assertStringContainsString('KATILIM VE KAYIT (LOG) TUTANAĞI', $html);
+        $this->assertStringContainsString('198.51.100.7', $html);
+        $this->assertStringContainsString('Dr. Ayşe Demir', $html);
+        $tutanak = $sayfa->instance()->denetimTutanagi();
+        ob_start(); $tutanak->sendContent(); $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
+    public function test_ek2_belgede_hekim_ve_konu_sureleri_yazar(): void
+    {
+        $this->firma->update(['tehlike_sinifi' => 'tehlikeli']);
+        $paket = $this->paketKur(ders: 1);
+        $paket->dersler()->update(['modul' => 2]);
+        $calisan = $this->calisanKur();
+        $this->hekimKur();
+        $atama = $this->atamaKur($paket, $calisan, 'ilk_defa');
+        $this->tamamla($atama);
+        $atama->ilerlemeler()->update(['izlenen_sn' => 600]);
+
+        $html = view('pdf.uzaktan-egitim-belgesi', [
+            'atama' => $atama->fresh(), 'calisan' => $calisan, 'firma' => $this->firma->fresh(), 'paket' => $paket, 'sinav' => $atama->sonSinav(),
+        ])->render();
+        $this->assertStringContainsString('Dr. Ayşe Demir', $html);
+        $this->assertStringContainsString('IH-4521', $html);
+        $this->assertStringContainsString('10 dk', $html);                      // sağlık konuları fiili süre
+        $this->assertStringContainsString('3 ders saati (yüz yüze)', $html);    // tehlikeli: 4. konu yüz yüze
+    }
+
+    public function test_oynaticida_kalan_zorunlu_sure_gosterilir(): void
+    {
+        $paket = $this->paketKur(ders: 2);   // 2 × 100 sn, %90 zorunlu → 180 sn
+        $calisan = $this->calisanKur();
+        $atama = $this->atamaKur($paket, $calisan);
+        $atama->forceFill(['on_test_puani' => 50, 'on_test_at' => now()])->save();
+
+        $this->portalGirisi($calisan);
+        Livewire::test(EgitimIzle::class, ['atama' => $atama->id])
+            ->assertSee('Kalan zorunlu süre')
+            ->assertSee('0:03:00');
     }
 }

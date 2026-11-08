@@ -36,6 +36,18 @@
     $egitimci = $atama->atayan;
     $egitimciUnvan = $egitimci ? config('isg.uzman_unvanlari.'.$egitimci->unvan, '') : '';
     $tarih = $atama->tamamlandi_at?->format('d.m.Y') ?? '../../....';
+    // Eğiticiler (08.11.2026): İGU (teknik konular) + işyeri hekimi (sağlık konuları).
+    $igu = $firma?->igu;
+    $iguAd = $igu?->ad_soyad ?? $egitimci?->name;
+    $iguNo = $igu?->sertifika_no;
+    $ihAd = $atama->ih_ad_soyad ?? $firma?->isyeriHekimi?->ad_soyad;
+    $ihNo = $atama->ih_belge_no ?? $firma?->isyeriHekimi?->sertifika_no;
+    // Konu başlığı bazında fiilen izlenen net süre (dk) — Ek-1 1/2/3.
+    $atama->loadMissing('ilerlemeler.ders');
+    $konuDk = $atama->ilerlemeler->groupBy(fn ($il) => (int) ($il->ders?->modul ?? 0))->map(fn ($g) => (int) round($g->sum('izlenen_sn') / 60));
+    $netDk = (int) $konuDk->sum();
+    $yuzYuzeSaat = $dorduncuYuzYuze ? (int) config('isg.uzaktan_egitim.dorduncu_konu_saat.'.$tehlike, 0) : 0;
+    $konuNo = 0;
 @endphp
 
 <div class="ek">Ek-2</div>
@@ -52,13 +64,14 @@
 
             <div style="text-indent:24px;text-align:justify">
                 Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik kapsamında
-                <strong>{{ $egitimci?->name ?? '—' }}</strong>@if ($egitimciUnvan) ({{ $egitimciUnvan }})@endif tarafından
+                <strong>{{ $iguAd ?? '—' }}</strong> (İş Güvenliği Uzmanı)@if ($ihAd) ve <strong>{{ $ihAd }}</strong> (İşyeri Hekimi)@endif tarafından
                 <strong>{{ $tarih }}</strong> tarihinde gerçekleştirilen temel eğitim sonunda düzenlenmiştir.
             </div>
 
             <div style="margin-top:16px">
                 <div class="alan">Belge düzenlenme tarihi: <strong>{{ now()->format('d.m.Y') }}</strong></div>
-                <div class="alan">Eğitimin süresi: <strong>{{ intdiv($dk, 60) }} saat {{ $dk % 60 }} dk</strong> (≈ {{ round($dk / max(1, $dersSaati), 1) }} ders saati, uzaktan)</div>
+                <div class="alan">Eğitimin süresi: <strong>{{ intdiv($dk, 60) }} saat {{ $dk % 60 }} dk</strong> (≈ {{ round($dk / max(1, $dersSaati), 1) }} ders saati, uzaktan)@if ($yuzYuzeSaat) + <strong>{{ $yuzYuzeSaat }} ders saati yüz yüze</strong> (4. konu)@endif</div>
+                <div class="alan">Fiilen izlenen net uzaktan süre: <strong>{{ intdiv($netDk, 60) }} saat {{ $netDk % 60 }} dk</strong></div>
                 <div class="alan">
                     Eğitimin türü: İlk defa verilen temel eğitim {!! $kutu($atama->egitim_turu === 'ilk_defa') !!}
                     <div style="padding-left:62px">Tekrar verilen temel eğitim {!! $kutu($atama->egitim_turu === 'yenileme') !!}</div>
@@ -67,7 +80,11 @@
                     Eğitimin şekli: Uzaktan {!! $kutu(true) !!} (Başlık {{ $uzaktanBasliklar }})
                     <div style="padding-left:62px">Yüz yüze {!! $kutu(false) !!} (Başlık {{ $dorduncuYuzYuze ? '4 — ayrıca yüz yüze verilir' : '……' }})</div>
                 </div>
-                <div class="alan">Eğiticilerin adı soyadı ve ünvanı: <strong>{{ $egitimci?->name }}</strong>@if ($egitimciUnvan) — {{ $egitimciUnvan }}@endif</div>
+                <div class="alan">Eğiticilerin adı soyadı ve ünvanı:</div>
+                <div class="alan" style="padding-left:10px">— <strong>{{ $iguAd }}</strong>, İş Güvenliği Uzmanı@if ($egitimciUnvan && ! $igu) ({{ $egitimciUnvan }})@endif @if ($iguNo) · Belge no: {{ $iguNo }}@endif @if ($atama->igu_onay_at) · onay {{ $atama->igu_onay_at->format('d.m.Y') }}@endif</div>
+                @if ($ihAd)
+                    <div class="alan" style="padding-left:10px">— <strong>{{ $ihAd }}</strong>, İşyeri Hekimi @if ($ihNo) · Diploma / belge no: {{ $ihNo }}@endif @if ($atama->ih_onay_at) · onay {{ $atama->ih_onay_at->format('d.m.Y') }}@endif</div>
+                @endif
                 <div class="alan">Eğiticilerin imzası:</div>
             </div>
 
@@ -95,12 +112,13 @@
             <table class="konu">
                 <tr class="ana"><td>EĞİTİM KONULARI</td><td class="sure">SÜRE</td></tr>
                 @foreach (config('isg.uzaktan_egitim.ek1_konulari') as $baslik => $maddeler)
-                    <tr class="ana"><td>{{ $baslik }}</td><td class="sure"></td></tr>
+                    @php($konuNo++)
+                    <tr class="ana"><td>{{ $baslik }}</td><td class="sure">{{ ($konuDk[$konuNo] ?? 0) ? $konuDk[$konuNo].' dk' : '' }}</td></tr>
                     @foreach ($maddeler as $m)
                         <tr><td>{{ $m }}</td><td class="sure"></td></tr>
                     @endforeach
                 @endforeach
-                <tr class="ana"><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_baslik') }}</td><td class="sure"></td></tr>
+                <tr class="ana"><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_baslik') }}</td><td class="sure">{{ $yuzYuzeSaat ? $yuzYuzeSaat.' ders saati (yüz yüze)' : (($konuDk[4] ?? 0) ? $konuDk[4].' dk' : '') }}</td></tr>
                 <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_a') }} {!! $kutu(false) !!}@if ($dorduncuYuzYuze) <em>(yüz yüze verilir)</em>@endif</td><td class="sure"></td></tr>
                 <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_b') }} {!! $kutu($tehlike === 'az_tehlikeli') !!}</td><td class="sure"></td></tr>
             </table>

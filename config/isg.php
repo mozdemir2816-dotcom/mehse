@@ -575,7 +575,9 @@ return [
             'atandi' => 'Atandı',
             'devam' => 'Devam Ediyor',
             'basarisiz' => 'Sınav Başarısız',
-            'onay_bekliyor' => '4. Modül Yüz Yüze / İGU Onayı Bekliyor',
+            'onay_bekliyor' => 'İGU Onayı Bekliyor',
+            'pratik_bekliyor' => 'Uzaktan Bitti – Yüz Yüze Pratik Bekliyor',
+            'ih_onay_bekliyor' => 'İH Onayı Bekliyor',
             'tamamlandi' => 'Tamamlandı',
         ],
         // İşe başlama eğitimi (Yön. 02.04.2026 Md.7) uygulamalı ve yüz yüze
@@ -593,6 +595,11 @@ return [
         // üçünde de başarısız olan temel eğitime yeniden katılır.
         'gecme_puani_alt_sinir' => 60,
         'sinav_hakki' => 3,
+        // Sınav Soruları havuzundan çekilen soru sayısı (08.11.2026): sınav öncesi (ön test) 10, sınav sonrası (final) 10.
+        'on_test_soru_sayisi' => 10,
+        // Çift onay (08.11.2026): sınavı geçen çalışanın eğitimi İGU + işyeri hekimi onayıyla tamamlanır.
+        'cift_onay' => true,
+        'final_soru_sayisi' => 10,
         // Md.12/5-c: aktif katılım — videonun her N dakikasında açılır pencere + kısa soru.
         'yoklama_dk' => 5,
         // Md.12/3: dördüncü konu başlığı bu sınıflarda yüz yüze verilir; uzaktan

@@ -301,7 +301,11 @@ class EgitimIzle extends Page
     /** Soruları hazırlar; doğru cevaplar yalnız sunucu oturumunda tutulur. */
     private function soruHazirla(EgitimAtamasi $a, string $tur): void
     {
-        $sorular = $a->paket->sinavSorulari($tur);
+        // Final denemelerinde önceki denemelerde sorulan sorular (havuz yetiyorsa) tekrar gelmez.
+        $haric = $tur === 'final'
+            ? $a->donemSinavlari()->get()->flatMap(fn ($s) => collect($s->cevaplar ?? [])->pluck('id'))->filter()->all()
+            : [];
+        $sorular = $a->paket->sinavSorulari($tur, $haric);
 
         session()->put($this->oturumAnahtari('cevap'), collect($sorular)->pluck('dogru_index', 'id')->all());
 
@@ -322,6 +326,7 @@ class EgitimIzle extends Page
             $dogru += $verilen === $dogruIndex ? 1 : 0;
 
             $detay[] = [
+                'id' => $s['id'],
                 'soru' => $s['soru'],
                 'secenekler' => $s['secenekler'],
                 'dogru_index' => $dogruIndex,
