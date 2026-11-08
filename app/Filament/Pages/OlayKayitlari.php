@@ -762,7 +762,7 @@ class OlayKayitlari extends Page
                 }),
 
             Action::make('balik_kilcigi_pdf')
-                ->label('Balık Kılçığı Analizi (Kaydet ve PDF)')
+                ->label('Balık Kılçığı PDF')->tooltip('Balık Kılçığı Analizi (Kaydet ve PDF)')
                 ->icon('heroicon-o-share')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)

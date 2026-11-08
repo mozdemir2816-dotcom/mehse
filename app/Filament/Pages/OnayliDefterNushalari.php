@@ -137,7 +137,7 @@ class OnayliDefterNushalari extends Page
     {
         return [
             Action::make('tespitOneriPdf')
-                ->label('Tespit-Öneri Defterini İndir (imzalanmak üzere)')
+                ->label('Defteri İndir')->tooltip('Tespit-Öneri Defterini İndir (imzalanmak üzere)')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
                 ->visible(fn () => filled($this->firma?->tespitOneriDefteri?->maddeler))

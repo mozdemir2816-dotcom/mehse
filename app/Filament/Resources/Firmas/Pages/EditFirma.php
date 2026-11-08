@@ -105,7 +105,7 @@ class EditFirma extends EditRecord
             EvrakPaketiAksiyonu::make('tumEvrakIndir')->label('Tüm Evrakları İndir (ZIP)'),
 
             Action::make('isKalemiEvraklariniHazirla')
-                ->label('İş Kalemlerine Göre Evrakları Hazırla')
+                ->label('Evrakları Hazırla')->tooltip('İş Kalemlerine Göre Evrakları Hazırla')
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
                 ->requiresConfirmation()

@@ -729,7 +729,7 @@ abstract class YillikPlanlar extends Page
                 }),
 
             Action::make('excelYukleCalisma')
-                ->label('Çalışma Planı Excel’den Yükle')
+                ->label('Excel’den Yükle')->tooltip('Çalışma Planı Excel’den Yükle')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('gray')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'calisma')

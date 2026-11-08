@@ -456,7 +456,7 @@ class SertifikaOlustur extends Page
             $this->kaydetAction(),
             $this->yeniKayitAction(),
             Action::make('pdf')
-                ->label('Sertifikayı Oluştur (Kaydet ve İndir)')
+                ->label('Sertifika Oluştur')->tooltip('Sertifikayı Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])

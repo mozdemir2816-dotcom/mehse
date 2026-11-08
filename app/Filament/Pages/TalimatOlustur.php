@@ -509,7 +509,7 @@ class TalimatOlustur extends Page
 
             // Kullanıcının kendi hazırladığı talimatlar (Word/PDF/Excel) yapısı çıkarılarak arşive.
             Action::make('talimatDosyasiYukle')
-                ->label('Hazır Talimatlarımı Yükle (Word/PDF/Excel)')
+                ->label('Talimat Yükle')->tooltip('Hazır Talimatlarımı Yükle (Word/PDF/Excel)')
                 ->icon('heroicon-o-document-arrow-up')
                 ->color('info')
                 ->modalHeading('Kendi Talimatlarımı Yükle')

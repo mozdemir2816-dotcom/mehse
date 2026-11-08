@@ -417,7 +417,7 @@ class IsIzinFormu extends Page
             $this->kaydetAction(),
             $this->yeniKayitAction(),
             Action::make('kutuphayeEkle')
-                ->label('Formu Kütüphaneye Şablon Olarak Ekle')
+                ->label('Şablon Olarak Kaydet')->tooltip('Formu Kütüphaneye Şablon Olarak Ekle')
                 ->icon('heroicon-o-bookmark')
                 ->color('gray')
                 ->visible(fn () => $this->izinTurleri !== [] || $this->secilenOnlemler !== [])

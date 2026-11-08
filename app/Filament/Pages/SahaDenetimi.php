@@ -843,7 +843,7 @@ class SahaDenetimi extends Page
                 }),
 
             Action::make('pdf')
-                ->label('Denetimi Tamamla (Kaydet ve İndir PDF)')
+                ->label('Tamamla ve PDF')->tooltip('Denetimi Tamamla (Kaydet ve İndir PDF)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->schema([ImzaSecenegi::alan()])

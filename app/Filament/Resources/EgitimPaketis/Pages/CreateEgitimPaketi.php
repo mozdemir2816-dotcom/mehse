@@ -24,7 +24,7 @@ class CreateEgitimPaketi extends CreateRecord
     protected function standartPaketAction(): Action
     {
         return Action::make('standartPaket')
-            ->label('⚡ Yönetmelik Standart Paketini Yükle')
+            ->label('⚡ Standart Paket')->tooltip('⚡ Yönetmelik Standart Paketini Yükle')
             ->color('warning')
             ->modalHeading('Yönetmelik standart paketi')
             ->modalDescription('Modül başlıkları hazır gelir; her derse video linkini siz eklersiniz. İstemediğiniz dersi silebilirsiniz.')
