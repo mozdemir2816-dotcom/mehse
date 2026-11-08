@@ -89,11 +89,11 @@ class EgitimPaketi extends Model
     }
 
     /**
-     * Md.13: tehlike sınıfı + eğitim türüne göre uzaktan verilmesi gereken asgari
-     * video süresi (dk). Tehlikeli / çok tehlikeli işyerinde 4. konu yüz yüze
-     * verildiğinden onun süresi düşülür.
+     * Md.13 + 08.11.2026 kararı: online kısım her sınıfta `uzaktan_hedef_saat` (8 ders saati
+     * = 360 dk, tek video paketi); kalan süre yüz yüze (`yuz_yuze_saat`, 4. konu dahil).
+     * `saat` = yönetmelikteki asgari toplam ders saati.
      *
-     * @return array{saat: int, gereken_dk: int, dorduncu_yuz_yuze: bool}
+     * @return array{saat: int, gereken_dk: int, dorduncu_yuz_yuze: bool, yuz_yuze_saat: int}
      */
     public static function gerekenUzaktanSure(string $sinif, string $tur = 'ilk_defa'): array
     {
@@ -102,11 +102,16 @@ class EgitimPaketi extends Model
             : config('isg.egitim.sureler.tekrar.saat', 8));
         $dorduncuYuzYuze = in_array($sinif, config('isg.uzaktan_egitim.yuz_yuze_dorduncu_konu', []), true);
         $dorduncu = $tur === 'ilk_defa' ? (int) config("isg.uzaktan_egitim.dorduncu_konu_saat.{$sinif}", 0) : intdiv($saat, 4);
+        $yuzYuze = $dorduncuYuzYuze
+            ? max($dorduncu, (int) config('isg.uzaktan_egitim.yuz_yuze_saat.'.($tur === 'ilk_defa' ? 'ilk_defa' : 'yenileme').".{$sinif}", $dorduncu))
+            : 0;
+        $online = (int) config('isg.uzaktan_egitim.uzaktan_hedef_saat', 8);   // tek paket: yenilemede de aynı 8 saat izlenir
 
         return [
             'saat' => $saat,
-            'gereken_dk' => ($saat - ($dorduncuYuzYuze ? $dorduncu : 0)) * (int) config('isg.uzaktan_egitim.ders_saati_dk', 45),
+            'gereken_dk' => $online * (int) config('isg.uzaktan_egitim.ders_saati_dk', 45),
             'dorduncu_yuz_yuze' => $dorduncuYuzYuze,
+            'yuz_yuze_saat' => $yuzYuze,
         ];
     }
 

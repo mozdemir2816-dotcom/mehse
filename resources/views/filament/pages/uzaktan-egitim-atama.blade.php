@@ -52,8 +52,8 @@
             <div style="{{ $kutu }};margin-top:1rem;font-size:.82rem;line-height:1.5;{{ $k['yeterli'] ? 'border-color:rgb(21 128 61 / .45)' : 'border-color:rgb(217 119 6 / .6);background:rgb(217 119 6 / .06)' }}">
                 <strong>{{ $k['yeterli'] ? '✓ Süre yeterli' : '⚠ Süre yetersiz olabilir' }}</strong> —
                 {{ $this->firma->tehlikeSinifiEtiketi() }}, {{ config('isg.uzaktan_egitim.egitim_turleri.'.$egitimTuru) }}: toplam en az {{ $k['saat'] }} ders saati
-                @if ($k['dorduncu_yuz_yuze']) (4. konu yüz yüze verileceği için uzaktan kısım) @endif
-                ≈ {{ $k['gereken_dk'] }} dk video gerekir; pakette {{ $k['paket_dk'] }} dk var.
+                — online kısım için {{ $k['gereken_dk'] }} dk video gerekir; pakette {{ $k['paket_dk'] }} dk var.
+                @if ($k['yuz_yuze_saat']) Kalan {{ $k['yuz_yuze_saat'] }} ders saati (4. konu dahil) yüz yüze verilir. @endif
                 @if ($k['suresiz_ders'] > 0)<span style="color:rgb(107 114 128)"> {{ $k['suresiz_ders'] }} dersin süresi henüz bilinmiyor (ilk izlemede otomatik dolar).</span>@endif
                 @if ($k['dorduncu_yuz_yuze'])<div style="color:rgb(180 83 9)">Bu eğitim tamamlansa da temel eğitim, 4. konu yüz yüze verilip Eğitim Katılım formu girilince tamamlanmış sayılır.</div>@endif
             </div>

@@ -175,22 +175,15 @@ class DerslerRelationManager extends RelationManager
         $paket->unsetRelation('dersler');
         $toplam = $paket->toplamSureDk();
         $suresiz = $paket->dersler->whereNull('sure_sn')->count();
-        $etiketler = ['az_tehlikeli' => 'Az tehlikeli', 'tehlikeli' => 'Tehlikeli', 'cok_tehlikeli' => 'Çok tehlikeli'];
-
-        $parcalar = [];
-        foreach ([['ilk_defa', 'İlk defa'], ['yenileme', 'Yenileme']] as [$tur, $turAd]) {
-            $satir = [];
-            foreach ($etiketler as $sinif => $ad) {
-                $g = EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['gereken_dk'];
-                $satir[] = $ad.' '.$g.' dk '.($toplam >= $g ? '✓' : '✗ ('.($g - $toplam).' dk eksik)');
-            }
-            $parcalar[] = $turAd.': '.implode(' · ', $satir);
-        }
+        $hedef = EgitimPaketi::gerekenUzaktanSure('az_tehlikeli')['gereken_dk'];
+        $ys = fn (string $sinif, string $tur) => EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['yuz_yuze_saat'];
 
         return 'Toplam video süresi: '.$toplam.' dk'
             .($suresiz ? ' — '.$suresiz.' videonun süresi bilinmiyor (YouTube ilk izlemede doldurur ya da Düzenle ile girin)' : '')
-            .'. Yasal asgari uzaktan süre (Md.13, 1 ders saati = '.(int) config('isg.uzaktan_egitim.ders_saati_dk', 45).' dk; tehlikeli / çok tehlikelide 4. konu yüz yüze düşülür) — '
-            .implode(' | ', $parcalar);
+            .'. Online hedef '.intdiv($hedef, (int) config('isg.uzaktan_egitim.ders_saati_dk', 45)).' ders saati = '.$hedef.' dk: '
+            .($toplam >= $hedef ? '✓ tamam' : '✗ '.($hedef - $toplam).' dk eksik')
+            .'. Kalanı yüz yüze (4. konu dahil) — ilk defa: tehlikeli '.$ys('tehlikeli', 'ilk_defa').', çok tehlikeli '.$ys('cok_tehlikeli', 'ilk_defa')
+            .' ders saati; yenileme: tehlikeli '.$ys('tehlikeli', 'yenileme').', çok tehlikeli '.$ys('cok_tehlikeli', 'yenileme').' ders saati; az tehlikelide tamamı online.';
     }
 
     /** Sıra boşsa seçilen konu başlığının sonuna ekler. */

@@ -115,7 +115,7 @@ class UzaktanEgitimAtama extends Page
      * karşılıyor mu. Tehlikeli / çok tehlikeli işyerinde 4. konu yüz yüze
      * verildiğinden onun süresi düşülür.
      *
-     * @return array{gereken_dk: int, paket_dk: int, suresiz_ders: int, yeterli: bool, dorduncu_yuz_yuze: bool, saat: int}|null
+     * @return array{gereken_dk: int, paket_dk: int, suresiz_ders: int, yeterli: bool, dorduncu_yuz_yuze: bool, yuz_yuze_saat: int, saat: int}|null
      */
     #[Computed]
     public function sureKontrolu(): ?array
@@ -127,7 +127,7 @@ class UzaktanEgitimAtama extends Page
             return null;
         }
 
-        ['saat' => $saat, 'gereken_dk' => $gereken, 'dorduncu_yuz_yuze' => $dorduncuYuzYuze]
+        ['saat' => $saat, 'gereken_dk' => $gereken, 'dorduncu_yuz_yuze' => $dorduncuYuzYuze, 'yuz_yuze_saat' => $yuzYuzeSaat]
             = EgitimPaketi::gerekenUzaktanSure($sinif, $this->egitimTuru);
         $paketDk = $paket->toplamSureDk();
 
@@ -137,6 +137,7 @@ class UzaktanEgitimAtama extends Page
             'suresiz_ders' => $paket->dersler->whereNull('sure_sn')->count(),
             'yeterli' => $paketDk >= $gereken,
             'dorduncu_yuz_yuze' => $dorduncuYuzYuze,
+            'yuz_yuze_saat' => $yuzYuzeSaat,
             'saat' => $saat,
         ];
     }

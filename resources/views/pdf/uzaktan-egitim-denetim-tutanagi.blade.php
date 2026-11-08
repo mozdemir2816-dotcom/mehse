@@ -43,8 +43,8 @@
     </tr>
     <tr>
         <td colspan="4" class="k">
-            İlk defa temel eğitim asgari {{ $sure['saat'] }} ders saati; uzaktan verilmesi gereken kısım ≈ {{ $sure['gereken_dk'] }} dk
-            @if ($sure['dorduncu_yuz_yuze']) (4. konu — işe ve işyerine özgü riskler — yüz yüze verilir)@endif.
+            İlk defa temel eğitim asgari {{ $sure['saat'] }} ders saati: online {{ $sure['gereken_dk'] }} dk
+            @if ($sure['yuz_yuze_saat']) + {{ $sure['yuz_yuze_saat'] }} ders saati yüz yüze (4. konu — işe ve işyerine özgü riskler — dahil)@endif.
             Kayıtlar: oturum giriş–çıkış saatleri, IP / cihaz, fiilen oynatılan saniye (ileri sarma sayılmaz), aktif katılım cevapları, ön test ve final sınavı.
         </td>
     </tr>

@@ -471,9 +471,10 @@ class UzaktanEgitimTest extends TestCase
             ->set('paketId', $paket->id)
             ->set('egitimTuru', 'ilk_defa');
 
-        // Tehlikeli ilk defa: 12 saat − 4. konu 3 saat (yüz yüze) = 9 ders saati × 45 dk
+        // Tehlikeli ilk defa: 8 ders saati online (360 dk) + 4 ders saati yüz yüze (08.11.2026 kararı)
         $k = $sayfa->instance()->sureKontrolu;
-        $this->assertSame(405, $k['gereken_dk']);
+        $this->assertSame(360, $k['gereken_dk']);
+        $this->assertSame(4, $k['yuz_yuze_saat']);
         $this->assertFalse($k['yeterli']);
         $sayfa->assertSee('Süre yetersiz olabilir');
 
@@ -884,7 +885,7 @@ class UzaktanEgitimTest extends TestCase
         $this->assertStringContainsString('Dr. Ayşe Demir', $html);
         $this->assertStringContainsString('IH-4521', $html);
         $this->assertStringContainsString('10 dk', $html);                      // sağlık konuları fiili süre
-        $this->assertStringContainsString('3 ders saati (yüz yüze)', $html);    // tehlikeli: 4. konu yüz yüze
+        $this->assertStringContainsString('4 ders saati (yüz yüze)', $html);    // tehlikeli ilk defa: 8 online + 4 yüz yüze
     }
 
     public function test_oynaticida_kalan_zorunlu_sure_gosterilir(): void
@@ -898,5 +899,18 @@ class UzaktanEgitimTest extends TestCase
         Livewire::test(EgitimIzle::class, ['atama' => $atama->id])
             ->assertSee('Kalan zorunlu süre')
             ->assertSee('0:03:00');
+    }
+
+    public function test_online_hedef_8_saat_kalani_yuz_yuze(): void
+    {
+        $beklenen = [
+            ['az_tehlikeli', 'ilk_defa', 360, 0], ['tehlikeli', 'ilk_defa', 360, 4], ['cok_tehlikeli', 'ilk_defa', 360, 8],
+            ['az_tehlikeli', 'yenileme', 360, 0], ['tehlikeli', 'yenileme', 360, 4], ['cok_tehlikeli', 'yenileme', 360, 4],
+        ];
+        foreach ($beklenen as [$sinif, $tur, $dk, $yy]) {
+            $s = \App\Models\EgitimPaketi::gerekenUzaktanSure($sinif, $tur);
+            $this->assertSame($dk, $s['gereken_dk'], "$sinif $tur");
+            $this->assertSame($yy, $s['yuz_yuze_saat'], "$sinif $tur");
+        }
     }
 }

@@ -46,7 +46,7 @@
     $atama->loadMissing('ilerlemeler.ders');
     $konuDk = $atama->ilerlemeler->groupBy(fn ($il) => (int) ($il->ders?->modul ?? 0))->map(fn ($g) => (int) round($g->sum('izlenen_sn') / 60));
     $netDk = (int) $konuDk->sum();
-    $yuzYuzeSaat = $dorduncuYuzYuze ? (int) config('isg.uzaktan_egitim.dorduncu_konu_saat.'.$tehlike, 0) : 0;
+    $yuzYuzeSaat = $dorduncuYuzYuze ? \App\Models\EgitimPaketi::gerekenUzaktanSure((string) $tehlike, $atama->egitim_turu === 'ilk_defa' ? 'ilk_defa' : 'yenileme')['yuz_yuze_saat'] : 0;
     $konuNo = 0;
 @endphp
 
@@ -70,7 +70,7 @@
 
             <div style="margin-top:16px">
                 <div class="alan">Belge düzenlenme tarihi: <strong>{{ now()->format('d.m.Y') }}</strong></div>
-                <div class="alan">Eğitimin süresi: <strong>{{ intdiv($dk, 60) }} saat {{ $dk % 60 }} dk</strong> (≈ {{ round($dk / max(1, $dersSaati), 1) }} ders saati, uzaktan)@if ($yuzYuzeSaat) + <strong>{{ $yuzYuzeSaat }} ders saati yüz yüze</strong> (4. konu)@endif</div>
+                <div class="alan">Eğitimin süresi: <strong>{{ intdiv($dk, 60) }} saat {{ $dk % 60 }} dk</strong> (≈ {{ round($dk / max(1, $dersSaati), 1) }} ders saati, uzaktan)@if ($yuzYuzeSaat) + <strong>{{ $yuzYuzeSaat }} ders saati yüz yüze</strong> (4. konu dahil)@endif</div>
                 <div class="alan">Fiilen izlenen net uzaktan süre: <strong>{{ intdiv($netDk, 60) }} saat {{ $netDk % 60 }} dk</strong></div>
                 <div class="alan">
                     Eğitimin türü: İlk defa verilen temel eğitim {!! $kutu($atama->egitim_turu === 'ilk_defa') !!}

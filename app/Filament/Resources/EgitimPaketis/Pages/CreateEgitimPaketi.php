@@ -32,8 +32,8 @@ class CreateEgitimPaketi extends CreateRecord
                 Select::make('sinif')->label('Tehlike sınıfı')->required()->native(false)->default('az_tehlikeli')
                     ->options([
                         'az_tehlikeli' => 'Az Tehlikeli — 8 saat, tamamı online verilebilir',
-                        'tehlikeli' => 'Tehlikeli — 12 saat, 1-3. modül online, 4. modül yüz yüze',
-                        'cok_tehlikeli' => 'Çok Tehlikeli — 16 saat, 1-3. modül online, 4. modül yüz yüze',
+                        'tehlikeli' => 'Tehlikeli — 12 saat: 8 saat online + 4 saat yüz yüze (4. modül dahil)',
+                        'cok_tehlikeli' => 'Çok Tehlikeli — 16 saat: 8 saat online + 8 saat yüz yüze (4. modül dahil)',
                     ]),
             ])
             ->action(function (array $data): void {

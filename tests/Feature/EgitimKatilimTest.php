@@ -1153,4 +1153,29 @@ class EgitimKatilimTest extends TestCase
         $yeni->call('ozelMaddeCikar', $sabit);
         $this->assertNotContains('Aydınlatma ve görsel konfor', collect($yeni->get('icerik')['maddeler'])->pluck('madde')->all());
     }
+
+    public function test_online_egitim_kullanan_firmada_yuz_yuze_kisim_otomatik_karma_ve_kalan_saat(): void
+    {
+        $tehlikeli = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);
+        $cok = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'cok_tehlikeli']);
+        $paket = \App\Models\EgitimPaketi::create(['user_id' => $this->uzman->id, 'ad' => 'Temel', 'gecme_puani' => 70, 'video_zorunlu_yuzde' => 90]);
+        foreach ([$tehlikeli, $cok] as $f) {
+            $c = Calisan::create(['firma_id' => $f->id, 'ad_soyad' => 'Ali Yılmaz '.$f->id, 'aktif' => true]);
+            \App\Models\EgitimAtamasi::create(['egitim_paketi_id' => $paket->id, 'calisan_id' => $c->id, 'egitim_turu' => 'ilk_defa',
+                'atayan_user_id' => $this->uzman->id, 'atandi_at' => now(), 'durum' => 'atandi']);
+        }
+        $online = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'tehlikeli']);   // online yok
+
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', $tehlikeli->id)
+            ->assertSet('egitimSekli', 'karma')->assertSet('dersSaati', 4)
+            ->set('egitimTuru', 'tekrar')->assertSet('dersSaati', 4)
+            ->set('egitimSekli', 'yuz_yuze')->assertSet('dersSaati', 8)
+            ->set('egitimSekli', 'karma')->assertSet('dersSaati', 4);
+
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', $cok->id)
+            ->assertSet('egitimSekli', 'karma')->assertSet('dersSaati', 8);
+
+        Livewire::test(EgitimSayfasi::class)->set('firmaId', $online->id)
+            ->assertSet('egitimSekli', 'yuz_yuze')->assertSet('dersSaati', 12);
+    }
 }

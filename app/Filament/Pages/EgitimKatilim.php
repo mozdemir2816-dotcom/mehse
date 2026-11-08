@@ -379,6 +379,50 @@ class EgitimKatilim extends Page
         // Tehlike sınıfına göre nominal ders saati (8/12/16) — kullanıcı elle değiştirebilir.
         $this->dersSaati = $this->icerik['saat'] ?? null;
 
+        // 08.11.2026: firma online eğitim kullanıyorsa (tehlikeli / çok tehlikeli) bu form
+        // online 8 saatin yüz yüze tamamlayıcısıdır — şekil "Karma", ders saati kalan yüz yüze süre.
+        if (($yuzYuze = $this->onlineTamamlayiciSaat()) !== null) {
+            $this->egitimSekli = 'karma';
+            $this->dersSaati = $yuzYuze;
+        }
+
+        $this->sureGunYenile();
+    }
+
+    /**
+     * Genel temel eğitimde, firma tehlikeli / çok tehlikeli ve çalışanlarına online
+     * temel eğitim atanmışsa yüz yüze verilecek ders saati; değilse null.
+     */
+    private function onlineTamamlayiciSaat(): ?int
+    {
+        if ($this->baslikAnahtari !== 'genel' || ! $this->firma) {
+            return null;
+        }
+
+        $tur = $this->egitimTuru === 'tekrar' ? 'yenileme' : 'ilk_defa';
+        $sure = \App\Models\EgitimPaketi::gerekenUzaktanSure((string) $this->firma->tehlike_sinifi, $tur);
+
+        if (! $sure['yuz_yuze_saat']) {
+            return null;
+        }
+
+        $onlineVar = \App\Models\EgitimAtamasi::query()
+            ->whereIn('egitim_turu', ['ilk_defa', 'yenileme'])
+            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma->id))
+            ->exists();
+
+        return $onlineVar ? $sure['yuz_yuze_saat'] : null;
+    }
+
+    /** Şekil elle değişince ders saati de uyar: Karma → yüz yüze kısım, diğerleri → tam süre. */
+    public function updatedEgitimSekli(): void
+    {
+        $tur = $this->egitimTuru === 'tekrar' ? 'yenileme' : 'ilk_defa';
+        $yuzYuze = $this->firma
+            ? \App\Models\EgitimPaketi::gerekenUzaktanSure((string) $this->firma->tehlike_sinifi, $tur)['yuz_yuze_saat']
+            : 0;
+
+        $this->dersSaati = ($this->egitimSekli === 'karma' && $yuzYuze) ? $yuzYuze : ($this->icerik['saat'] ?? null);
         $this->sureGunYenile();
     }
 

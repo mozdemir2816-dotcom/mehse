@@ -609,6 +609,13 @@ return [
         'dorduncu_konu_saat' => ['az_tehlikeli' => 2, 'tehlikeli' => 3, 'cok_tehlikeli' => 4],
         // Paket süresi kontrolünde 1 ders saatinin video karşılığı (dk).
         'ders_saati_dk' => 45,
+        // 08.11.2026 (kullanıcı kararı): online kısım her sınıfta 8 ders saati (360 dk) — tek video paketi;
+        // kalan süre yüz yüze verilir (4. konu dahil). Yüz yüze ders saati: tür → sınıf.
+        'uzaktan_hedef_saat' => 8,
+        'yuz_yuze_saat' => [
+            'ilk_defa' => ['az_tehlikeli' => 0, 'tehlikeli' => 4, 'cok_tehlikeli' => 8],
+            'yenileme' => ['az_tehlikeli' => 0, 'tehlikeli' => 4, 'cok_tehlikeli' => 4],
+        ],
         // Md.8: temel eğitim işe başlamadan itibaren en geç 3 ay içinde tamamlanır.
         'temel_egitim_son_ay' => 3,
         // Ek-1 Eğitim Konuları Tablosu (RG 02.04.2026, birebir) — Ek-2 belgenin arka yüzü.
@@ -4586,7 +4593,7 @@ return [
             ['kod' => 'T5', 'madde' => 'İş ekipmanlarının güvenli kullanımı', 'dakika' => 10],
             ['kod' => 'T6', 'madde' => 'Ekranlı araçlarla çalışma', 'dakika' => 10],
             ['kod' => 'T7', 'madde' => 'Elektrik, tehlikeleri, riskleri ve önlemleri', 'dakika' => 10],
-            ['kod' => 'T8', 'madde' => 'İş kazalarının sebepleri ve korunma prensipleri ile teknikleri', 'dakika' => 10],
+            ['kod' => 'T8', 'madde' => 'İş kazalarının sebepleri ve korunma prensipleri ile tekniklerinin uygulanması', 'dakika' => 10],
             ['kod' => 'T9', 'madde' => 'Sağlık ve güvenlik işaretleri', 'dakika' => 10],
             ['kod' => 'T10', 'madde' => 'Kişisel koruyucu donanım kullanımı', 'dakika' => 10],
             ['kod' => 'T11', 'madde' => 'İş sağlığı ve güvenliği genel kuralları ve güvenlik kültürü', 'dakika' => 10],
