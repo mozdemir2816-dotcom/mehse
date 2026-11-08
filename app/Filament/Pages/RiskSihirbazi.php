@@ -1683,8 +1683,22 @@ class RiskSihirbazi extends Page
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Hızlı Kurulum'da işaretlenip "Tabloya Ekle"ye basılmamış ekipmanlar, 3. adımdan çıkarken
+     * kendiliğinden eklenir (08.11.2026, Sonel Boya: 85 ortak madde eklenip ekipmanlar işaretlenince
+     * "İleri" ile geçiliyor, işaretlenenler sessizce kayboluyordu).
+     */
+    private function bekleyenEkipmanlariEkle(): void
+    {
+        if ($this->adim === 3 && $this->yontemSecim === 'hizli' && $this->hizliEkipmanSecim !== []) {
+            $this->ekipmanRiskleriAktar();
+        }
+    }
+
     public function ileri(): void
     {
+        $this->bekleyenEkipmanlariEkle();
+
         if (! $this->adimGecerli($this->adim)) {
             return;
         }
@@ -1694,11 +1708,17 @@ class RiskSihirbazi extends Page
 
     public function geri(): void
     {
+        $this->bekleyenEkipmanlariEkle();
+
         $this->adim = max(1, $this->adim - 1);
     }
 
     public function adimaGit(int $hedef): void
     {
+        if ($hedef !== $this->adim) {
+            $this->bekleyenEkipmanlariEkle();
+        }
+
         if ($hedef <= $this->adim) {
             $this->adim = max(1, $hedef);
 

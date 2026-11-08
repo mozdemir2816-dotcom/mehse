@@ -92,6 +92,30 @@ class RiskHizliKurulumTest extends TestCase
         $s->assertSee('4 madde eklendi');
     }
 
+    /** 08.11.2026 (Sonel Boya): ortak riskler eklendikten sonra işaretlenen ekipmanlar "İleri" ile kaybolmamalı. */
+    public function test_isaretli_ekipmanlar_ileri_ile_gecince_de_eklenir(): void
+    {
+        $s = $this->sihirbaz()
+            ->call('genelRiskleriAktar')
+            ->call('hizliEkipmanToggle', 'forklift')
+            ->call('hizliEkipmanToggle', 'kompresor')
+            ->call('ileri') // "Tabloya Ekle"ye basılmadı
+            ->assertSet('adim', 4)
+            ->assertSet('hizliEkipmanSecim', []);
+
+        $this->assertCount(11, $s->get('secilenler')); // 5 ortak + 4 forklift + 2 kompresör
+    }
+
+    public function test_isaretli_ekipmanlar_adim_cubuguyla_gecince_de_eklenir(): void
+    {
+        $s = $this->sihirbaz()
+            ->call('genelRiskleriAktar')
+            ->call('hizliEkipmanToggle', 'forklift')
+            ->call('adimaGit', 5);
+
+        $this->assertCount(9, $s->get('secilenler'));
+    }
+
     public function test_5x5_yonteminde_frekanssiz_eklenir_ve_kaydedilir(): void
     {
         $s = $this->sihirbaz('matris_5x5')
