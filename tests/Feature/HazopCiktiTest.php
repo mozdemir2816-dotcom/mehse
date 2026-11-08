@@ -75,7 +75,7 @@ class HazopCiktiTest extends TestCase
     {
         $kitap = RiskDegerlendirmesiOfisUretici::excelKitabi($this->hazopDegerlendirmesi());
 
-        $this->assertSame(['Risk Değerlendirmesi'], $kitap->getSheetNames());
+        $this->assertSame(['Kapak', 'Prosedür', 'Risk Değerlendirmesi'], $kitap->getSheetNames());
 
         $sayfa = $kitap->getSheetByName('Risk Değerlendirmesi');
         $baslikSatiri = null;

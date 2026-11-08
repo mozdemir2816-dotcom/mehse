@@ -42,6 +42,8 @@
     table.risk { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; table-layout: fixed; }
     table.risk th, table.risk td { border: 1px solid #999; padding: 3px 3px; text-align: center; vertical-align: middle; word-wrap: break-word; }
     table.risk thead th { background: #7c3aed; color: #fff; }
+    /* Başlık satırı sayfa sonunda tek başına kalmasın: kalırsa dompdf sonraki sayfalarda başlığı hiç tekrarlamıyor (08.11.2026). */
+    table.risk thead tr { page-break-after: avoid; }
     table.risk .col-no { text-align: center; }
     table.risk .col-duzey { padding: 2px 1px; text-align: center; vertical-align: middle; }
     table.risk th.col-duzey { font-size: 6px; }
@@ -114,9 +116,8 @@
      RiskDegerlendirmesiUretici'nde page_script ile doldurulur (tek render). --}}
 @php
     $bosTarih = '…… / …… / …………';
-    // Kapsam notu boşsa inşaat firmalarında şantiye faaliyetleri yazılır (kullanıcı 19.10.2026).
-    $kapsam = filled($rd->kapsam_notu) ? $rd->kapsam_notu
-        : (\App\Support\NaceGrubu::bul($firma?->nace_kodu ?: $rd->firma_nace) === 'insaat' ? 'Kazı çalışmaları, kalıp, demir, beton ve kamp alanı' : '');
+    // Kapak metinleri Excel ile ortak (RiskDegerlendirmesiUretici::kapakBilgileri, 08.11.2026).
+    ['kapsam' => $kapsam, 'faaliyet' => $faaliyet, 'tehlike' => $tehlike] = \App\Support\RiskDegerlendirmesiUretici::kapakBilgileri($rd);
     $kapakEkip = [
         ['İşveren / işveren vekili', $isverenAdi ?? '', []],
         ['İş Güvenliği Uzmanı', $iguAdi ?? '', []],
@@ -125,10 +126,6 @@
         ['Destek Elemanı', ($destekElemani['ad'] ?? null) ?: '........................................', []],
         ['Bilgi Sahibi Personel', ($bilgiSahibiCalisan['ad'] ?? null) ?: '........................................', []],
     ];
-    // firma_nace bazen açıklamayı da içerir ("22.12.01 Plastik ...") → kodu firmadan al.
-    $naceKod = $firma?->nace_kodu ?: $rd->firma_nace;
-    $faaliyet = collect([$firma?->nace_aciklama, $naceKod])->filter()->unique()->implode(' / ');
-    $tehlike = collect([$firma?->tehlikeSinifiEtiketi(), $firma?->calisan_sayisi ? $firma->calisan_sayisi.' çalışan' : null])->filter()->implode(' / ');
     // Puanlar Türkçe ondalıkla: 0.2 → "0,2", 120.0 → "120".
     $sayi = fn ($v) => $v === null || $v === '' ? '—' : str_replace('.', ',', rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.'));
     $ucEksen = $rd->ucEksenliMi();
@@ -344,10 +341,13 @@
          sayfa sonu YOK (06.11.2026): her parça yeni sayfadan başlayınca parça sonundaki sayfada 1-3 madde
          kalıp altı boş kalıyordu; artık parça başlığı sayfa ortasında bir kez tekrarlanır. --}}
     @foreach ($rd->maddeler->chunk($parcaBoyutu ?? 100) as $parca)
-    <table class="risk" @unless($loop->first) style="margin-top:0" @endunless>
+    {{-- 2. parçadan itibaren tablo, gizlenen başlık satırının yüksekliği (21,4pt) kadar yukarı çekilir: araya boşluk girmez. --}}
+    <table class="risk" @unless($loop->first) style="margin-top:-21.4pt" @endunless>
         {{-- dompdf <col> genişliğini yok sayar; fixed düzende ilk satır (başlık) hücrelerinin genişliği geçerlidir. --}}
         <thead>
-        <tr>
+        {{-- 2. parçadan itibaren başlık satırı sayfa ortasına düşerse çizilmez (RiskDegerlendirmesiUretici::araBasliklariGizle,
+             08.11.2026); sayfa başında tekrarlanan kopyası görünür kalır. --}}
+        <tr @unless($loop->first) class="devam-baslik" @endunless>
             @foreach ($basliklar as $i => [$sinif, $etiket])
                 <th class="{{ $sinif }}" style="width:{{ $kolonlar[$i] }}%">{!! $etiket !!}</th>
             @endforeach

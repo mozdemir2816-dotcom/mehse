@@ -83,6 +83,27 @@ class RiskDegerlendirmesiUretici
      *
      * @return array<string, mixed>
      */
+    /**
+     * Kapak "İşyeri bilgileri" metinleri — PDF ve Excel aynı kaynaktan (08.11.2026).
+     *
+     * @return array{kapsam: string, faaliyet: string, tehlike: string}
+     */
+    public static function kapakBilgileri(RiskDegerlendirmesi $rd): array
+    {
+        $firma = $rd->firma;
+        // Kapsam notu boşsa inşaat firmalarında şantiye faaliyetleri yazılır (kullanıcı 19.10.2026).
+        $kapsam = filled($rd->kapsam_notu) ? (string) $rd->kapsam_notu
+            : (NaceGrubu::bul($firma?->nace_kodu ?: $rd->firma_nace) === 'insaat' ? 'Kazı çalışmaları, kalıp, demir, beton ve kamp alanı' : '');
+        // firma_nace bazen açıklamayı da içerir ("22.12.01 Plastik ...") → kodu firmadan al.
+        $naceKod = $firma?->nace_kodu ?: $rd->firma_nace;
+
+        return [
+            'kapsam' => $kapsam,
+            'faaliyet' => collect([$firma?->nace_aciklama, $naceKod])->filter()->unique()->implode(' / '),
+            'tehlike' => collect([$firma?->tehlikeSinifiEtiketi(), $firma?->calisan_sayisi ? $firma->calisan_sayisi.' çalışan' : null])->filter()->implode(' / '),
+        ];
+    }
+
     public static function veri(RiskDegerlendirmesi $rd, bool $imzali = true): array
     {
         $rd->loadMissing('maddeler', 'firma.user', 'firma.isyeriHekimi', 'igu');
@@ -195,6 +216,7 @@ class RiskDegerlendirmesiUretici
         // o hücreye yazılır — çift render yok (300+ maddede süreyi ikiye katlıyordu).
         $toplamHucre = null;
         self::konumYakala($dikey->getDomPDF(), 'kapak-toplam-sayfa', $toplamHucre);
+        self::araBasliklariGizle($yatay->getDomPDF());
         $dikey->render();
         $yatay->render();
 
@@ -289,6 +311,31 @@ class RiskDegerlendirmesiUretici
      *
      * @param  array{0: float, 1: float, 2: float, 3: float}|null  $konum
      */
+    /**
+     * Risk tablosu 100'er maddelik parçalara bölünür (dompdf hızı / belleği — tek tablo 1300 maddede 2 GB'ı aşıyor).
+     * 2. parçadan itibaren her parçanın başlık satırı sayfanın ortasına düşüyor ve tablo içinde başlık tekrarlanıyordu
+     * (kullanıcı 08.11.2026). Bu satır sayfa başında değilse çizilmez; sayfa başına taşan kopyası çizilir.
+     */
+    public static function araBasliklariGizle(Dompdf $dompdf): void
+    {
+        $dompdf->setCallbacks([[
+            'event' => 'begin_frame',
+            'f' => function ($kutu): void {
+                $dugum = $kutu->get_node();
+                if (! $dugum instanceof \DOMElement || $dugum->nodeName !== 'tr' || $dugum->getAttribute('class') !== 'devam-baslik') {
+                    return;
+                }
+                // Sayfa başı: @page üst marjı (46px = 34,5pt). Ortadaki başlık bunun epey altındadır.
+                if ((float) $kutu->get_position('y') > 45) {
+                    // Stil nesnesi sayfa başlarındaki kopyalarla ortak — yalnız bu satıra ait kopya gizlenir.
+                    $stil = clone $kutu->get_style();
+                    $stil->set_prop('visibility', 'hidden');
+                    $kutu->set_style($stil);
+                }
+            },
+        ]]);
+    }
+
     public static function konumYakala(Dompdf $dompdf, string $id, ?array &$konum): void
     {
         $dompdf->setCallbacks([[

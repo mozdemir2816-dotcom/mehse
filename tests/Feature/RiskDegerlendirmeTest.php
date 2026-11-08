@@ -636,13 +636,29 @@ class RiskDegerlendirmeTest extends TestCase
             ->callAction('excel')->assertHasNoActionErrors()
             ->callAction('word')->assertHasNoActionErrors();
 
+        // 08.11.2026: PDF ile aynı — Kapak / Prosedür / Risk Değerlendirmesi, PDF sütunları (Mevcut önlem yok).
         $kitap = RiskDegerlendirmesiOfisUretici::excelKitabi($rd->fresh());
-        $hucreler = collect($kitap->getSheet(0)->toArray())->flatten()->filter()->map(fn ($v) => (string) $v);
-        $this->assertTrue($hucreler->contains('Düşme & kayma'));
-        $this->assertTrue($hucreler->contains('Korkuluk takılmalı'));
-        $this->assertTrue($hucreler->contains('270')); // 3 × 6 × 15
-        $this->assertTrue($hucreler->contains('Destek Kişi'));
-        $this->assertSame('Yöntem', $kitap->getSheet(1)->getTitle());
+        $this->assertSame(['Kapak', 'Prosedür', 'Risk Değerlendirmesi'], $kitap->getSheetNames());
+        $hucre = fn (int $i) => collect($kitap->getSheet($i)->toArray())->flatten()->filter()->map(fn ($v) => (string) $v);
+
+        $kapak = $hucre(0);
+        $this->assertTrue($kapak->contains('RİSK DEĞERLENDİRMESİ'));
+        $this->assertTrue($kapak->contains('Ofis Test A.Ş.'));
+        $this->assertTrue($kapak->contains('DOKÜMAN BİLGİLERİ'));
+        $this->assertTrue($kapak->contains('Destek Kişi'));
+
+        $prosedur = $hucre(1);
+        $this->assertTrue($prosedur->contains('1. İŞYERİ KÜNYESİ'));
+        $this->assertTrue($prosedur->contains('2. DEĞERLENDİRME YÖNTEMİ'));
+
+        $tablo = $hucre(2);
+        $this->assertTrue($tablo->contains('Düşme & kayma'));
+        $this->assertTrue($tablo->contains('Korkuluk takılmalı'));
+        $this->assertTrue($tablo->contains('270')); // 3 × 6 × 15
+        $this->assertTrue($tablo->contains('Bölüm / Faaliyet'));
+        $this->assertFalse($tablo->contains('Mevcut önlem'));
+        $this->assertTrue($tablo->contains('4. RİSK DEĞERLENDİRME EKİBİ'));
+        $this->assertStringContainsString('Sayfa &P / &N', $kitap->getSheet(2)->getHeaderFooter()->getOddFooter());
 
         // Word: geçerli docx, "&" kaçışlı.
         $yol = tempnam(sys_get_temp_dir(), 'rdt').'.docx';
