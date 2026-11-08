@@ -6,6 +6,7 @@ use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
 use App\Support\EkipmanRiskKutuphanesi;
 use App\Support\NaceGrubu;
+use App\Support\RiskAlanTamamlama;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -118,6 +119,10 @@ class TehlikesTable
                         ? $query->whereHas('kategori', fn ($k) => $k->whereJsonContains('ekipman_tipleri', $data['value']))
                         : $query),
                 SelectFilter::make('tehlike_kategorisi_id')->label('Kategori')->relationship('kategori', 'ad')->searchable(),
+                // 08.11.2026: boş alanlı kütüphane maddelerini süz — elle doldurmak için (kütüphane her zaman O/F/Ş tutar).
+                SelectFilter::make('bos_alan')->label('Boş alan')
+                    ->options(RiskAlanTamamlama::bosAlanSecenekleri(mevzuat: true))
+                    ->query(fn ($query, array $data) => RiskAlanTamamlama::bosAlanSuz($query, $data['value'] ?? null, true, true)),
             ])
             ->recordActions([
                 ActionGroup::make([

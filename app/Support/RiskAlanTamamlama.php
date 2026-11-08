@@ -52,6 +52,37 @@ class RiskAlanTamamlama
             });
     }
 
+    /** "Boş alan" süzgeci seçenekleri (08.11.2026) — analiz maddeleri ve kütüphane. */
+    public static function bosAlanSecenekleri(bool $mevzuat): array
+    {
+        return array_filter([
+            'herhangi' => 'Herhangi bir alanı boş',
+            'risk' => 'Risk tanımı boş / tehlikenin kopyası',
+            'mevcut_onlem' => 'Mevcut önlem boş',
+            'oneri' => 'Öneri boş',
+            'mevzuat' => $mevzuat ? 'Mevzuat boş' : null,
+            'sorumlu' => 'Sorumlu boş / varsayılan',
+            'puan' => 'Puan eksik',
+            'son_puan' => 'Rezidüel puan eksik',
+        ]);
+    }
+
+    /** Seçilen boş alana göre sorguyu süzer. */
+    public static function bosAlanSuz(Builder $q, ?string $alan, bool $ucEksen, bool $mevzuat = false): Builder
+    {
+        $bos = fn (string $a) => fn ($w) => $w->whereNull($a)->orWhereRaw('TRIM('.$a.') = ?', ['']);
+
+        return match ($alan) {
+            'herhangi' => static::eksikKosulu($q, $ucEksen, $mevzuat),
+            'risk' => $q->where(fn ($w) => $w->where($bos('risk'))->orWhereColumn('risk', 'tehlike')),
+            'mevcut_onlem', 'oneri', 'mevzuat' => $q->where($bos($alan)),
+            'sorumlu' => $q->where(fn ($w) => $w->where($bos('sorumlu'))->orWhere('sorumlu', RiskMaddesi::VARSAYILAN_SORUMLU)),
+            'puan' => $q->where(fn ($w) => $w->whereNull('olasilik')->orWhereNull('siddet')->when($ucEksen, fn ($x) => $x->orWhereNull('frekans'))),
+            'son_puan' => $q->where(fn ($w) => $w->whereNull('son_olasilik')->orWhereNull('son_siddet')->when($ucEksen, fn ($x) => $x->orWhereNull('son_frekans'))),
+            default => $q,
+        };
+    }
+
     public static function bosMu(mixed $deger): bool
     {
         return $deger === null || trim((string) $deger) === '';

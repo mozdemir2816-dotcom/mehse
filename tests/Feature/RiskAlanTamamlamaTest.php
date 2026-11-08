@@ -258,4 +258,18 @@ class RiskAlanTamamlamaTest extends TestCase
         $lw->filterTable('bos_alan', 'sorumlu')->assertCanSeeTableRecords([$varsayilan])->assertCanNotSeeTableRecords([$dolu, $onlemsiz, $kopya]);
         $lw->filterTable('bos_alan', 'risk')->assertCanSeeTableRecords([$kopya])->assertCanNotSeeTableRecords([$dolu, $onlemsiz, $varsayilan]);
     }
+
+    public function test_kutuphanede_bos_alan_suzgeci(): void
+    {
+        $tam = ['risk' => 'Yaralanma', 'mevcut_onlem' => 'Var', 'oneri' => 'Öneri', 'mevzuat' => 'Yönetmelik', 'sorumlu' => 'Ustabaşı',
+            'olasilik' => 3, 'frekans' => 6, 'siddet' => 7, 'son_olasilik' => 1, 'son_frekans' => 6, 'son_siddet' => 7];
+        $dolu = $this->kutuphane($tam);
+        $mevzuatsiz = $this->kutuphane(['mevzuat' => null] + $tam);
+        $onlemsiz = $this->kutuphane(['mevcut_onlem' => ''] + $tam);
+
+        Livewire::test(\App\Filament\Resources\Tehlikes\Pages\ListTehlikes::class)
+            ->filterTable('bos_alan', 'herhangi')->assertCanSeeTableRecords([$mevzuatsiz, $onlemsiz])->assertCanNotSeeTableRecords([$dolu])
+            ->filterTable('bos_alan', 'mevzuat')->assertCanSeeTableRecords([$mevzuatsiz])->assertCanNotSeeTableRecords([$dolu, $onlemsiz])
+            ->filterTable('bos_alan', 'mevcut_onlem')->assertCanSeeTableRecords([$onlemsiz])->assertCanNotSeeTableRecords([$dolu, $mevzuatsiz]);
+    }
 }
