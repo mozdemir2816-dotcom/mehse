@@ -13,7 +13,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşyerlerinizin altında çalışan alt işveren ve taşeron firmaların sözleşme, çalışan, belge ve iş izni
         uygunluğunu işyeri bazında yönetin. Taşeron çalışanları ana personel listesine ve personel sayısına eklenmez.
     </p>
@@ -53,7 +53,7 @@
                         <tr @if ($seciliId === $t->id) style="background:rgb(124 58 237 / .07)" @endif>
                             <td style="{{ $td }}">
                                 <strong>{{ $t->unvan }}</strong>
-                                @if ($t->faaliyet)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $t->faaliyet }}</div>@endif
+                                @if ($t->faaliyet)<div class="mehse-soluk">{{ $t->faaliyet }}</div>@endif
                             </td>
                             <td style="{{ $td }}">{{ $t->tur === 'taseron' ? 'Taşeron' : 'Alt İşveren' }}</td>
                             <td style="{{ $td }}">{{ $t->firma?->unvan }}</td>
@@ -189,7 +189,7 @@
                         @foreach ($t->belgeler as $b)
                             @php $d = $b->durum(); @endphp
                             <tr>
-                                <td style="{{ $td }}">{{ $b->turEtiketi() }}@if ($b->baslik)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->baslik }}</div>@endif</td>
+                                <td style="{{ $td }}">{{ $b->turEtiketi() }}@if ($b->baslik)<div class="mehse-soluk">{{ $b->baslik }}</div>@endif</td>
                                 <td style="{{ $td }}">
                                     <span style="{{ $rozet(['dolmus' => $kirmizi, 'yaklasan' => $sari, 'gecerli' => $yesil, 'suresiz' => $gri][$d]) }}">
                                         {{ $b->gecerlilik_sonu ? $tarih($b->gecerlilik_sonu) : 'Süresiz' }}{{ $d === 'dolmus' ? ' — doldu' : ($d === 'yaklasan' ? ' — yaklaşıyor' : '') }}

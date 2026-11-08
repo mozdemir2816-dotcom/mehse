@@ -41,10 +41,10 @@
     @else
         {{-- NACE kaynaklı tehlike kapsamı --}}
         <div style="{{ $kart }};display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
-            <div><div style="font-size:.75rem;color:rgb(107 114 128)">NACE kodu</div><div style="font-weight:700">{{ $a['kapsam']['nace'] ?: '—' }}</div></div>
-            <div><div style="font-size:.75rem;color:rgb(107 114 128)">Tehlike sınıfı</div><div style="font-weight:700">{{ $a['kapsam']['tehlike_sinifi'] }}</div></div>
-            <div><div style="font-size:.75rem;color:rgb(107 114 128)">Çalışan</div><div style="font-weight:700">{{ $a['kapsam']['calisan'] ?: '—' }}</div></div>
-            <div><div style="font-size:.75rem;color:rgb(107 114 128)">Risk kaydı</div><div style="font-weight:700">{{ $a['kapsam']['risk_kaydi'] }}</div></div>
+            <div><div class="mehse-soluk">NACE kodu</div><div style="font-weight:700">{{ $a['kapsam']['nace'] ?: '—' }}</div></div>
+            <div><div class="mehse-soluk">Tehlike sınıfı</div><div style="font-weight:700">{{ $a['kapsam']['tehlike_sinifi'] }}</div></div>
+            <div><div class="mehse-soluk">Çalışan</div><div style="font-weight:700">{{ $a['kapsam']['calisan'] ?: '—' }}</div></div>
+            <div><div class="mehse-soluk">Risk kaydı</div><div style="font-weight:700">{{ $a['kapsam']['risk_kaydi'] }}</div></div>
         </div>
 
         <div style="border:1px solid rgb(217 119 6);background:rgb(217 119 6 / .07);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
@@ -54,24 +54,24 @@
         @php $baskin = $a['baskin'] ? $a['dagilim'][$a['baskin']] : null; @endphp
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.6rem">
             <div style="{{ $kart }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Baskın tehlike türü</div>
+                <div class="mehse-soluk">Baskın tehlike türü</div>
                 <div style="font-size:1.4rem;font-weight:800;color:{{ $baskin['renk'] ?? 'inherit' }}">{{ $baskin['ad'] ?? '—' }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $baskin ? '%'.$baskin['pay'].' dominans payı' : 'Puanlı risk kaydı yok' }}</div>
+                <div class="mehse-soluk">{{ $baskin ? '%'.$baskin['pay'].' dominans payı' : 'Puanlı risk kaydı yok' }}</div>
             </div>
             <div style="{{ $kart }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Aday tehlike kaynağı</div>
+                <div class="mehse-soluk">Aday tehlike kaynağı</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ count($a['kaynaklar']) }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">NACE listesinden · {{ collect($a['kaynaklar'])->where('eslesen', 0)->count() }} doğrulama bekliyor</div>
+                <div class="mehse-soluk">NACE listesinden · {{ collect($a['kaynaklar'])->where('eslesen', 0)->count() }} doğrulama bekliyor</div>
             </div>
             <div style="{{ $kart }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam maruz kişi</div>
+                <div class="mehse-soluk">Toplam maruz kişi</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $sayi($a['maruz_toplam']) }}</div>
                 <div style="font-size:.75rem;color:{{ $a['maruz_eksik'] ? 'rgb(217 119 6)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta çalışan sayısı ('.$a['maruz_varsayilan'].') varsayıldı' : 'Tüm kayıtlarda elle girilmiş' }}</div>
             </div>
             <div style="{{ $kart }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Risk değerlendirmesi</div>
+                <div class="mehse-soluk">Risk değerlendirmesi</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $a['kapsam']['risk_kaydi'] }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $rd ? ($rd->belge_no.' · '.config('isg.risk_yontemleri.'.$rd->yontem)) : 'Değerlendirme yok' }}</div>
+                <div class="mehse-soluk">{{ $rd ? ($rd->belge_no.' · '.config('isg.risk_yontemleri.'.$rd->yontem)) : 'Değerlendirme yok' }}</div>
             </div>
         </div>
 
@@ -92,7 +92,7 @@
                         <span style="font-weight:800;color:rgb(107 114 128);min-width:1.2rem">{{ $i + 1 }}</span>
                         <div style="flex:1">
                             <div style="font-weight:600">{{ \Illuminate\Support\Str::limit($s['madde']->tehlike, 90) }}</div>
-                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['madde']->bolum ?: 'Bölüm yok' }} · <span style="color:{{ $turler[$s['tur']]['renk'] }}">{{ $turler[$s['tur']]['ad'] }}</span> · puan <strong style="color:{{ \App\Support\RiskSkorlama::panoRengi($rd->yontem ?? 'fine_kinney', (float) $s['madde']->puan)['renk'] }}">{{ $sayi($s['madde']->puan) }}</strong> × {{ $s['maruz'] }} kişi{{ $s['maruz_varsayilan'] ? ' (varsayılan)' : '' }}</div>
+                            <div class="mehse-soluk">{{ $s['madde']->bolum ?: 'Bölüm yok' }} · <span style="color:{{ $turler[$s['tur']]['renk'] }}">{{ $turler[$s['tur']]['ad'] }}</span> · puan <strong style="color:{{ \App\Support\RiskSkorlama::panoRengi($rd->yontem ?? 'fine_kinney', (float) $s['madde']->puan)['renk'] }}">{{ $sayi($s['madde']->puan) }}</strong> × {{ $s['maruz'] }} kişi{{ $s['maruz_varsayilan'] ? ' (varsayılan)' : '' }}</div>
                         </div>
                         <span style="font-weight:800">{{ $sayi($s['dominans']) }}</span>
                     </div>
@@ -122,7 +122,7 @@
         {{-- Özet tablo --}}
         <x-filament::section heading="İşyeri risk değerlendirmesi özeti">
             <div style="overflow-x:auto">
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <thead><tr><th style="{{ $th }}">Tehlike türü</th><th style="{{ $th }}">Risk kaydı</th><th style="{{ $th }}">Maruz kişi</th><th style="{{ $th }}">Dominans skoru</th><th style="{{ $th }}">Pay</th></tr></thead>
                     <tbody>
                         @foreach ($a['dagilim'] as $d)

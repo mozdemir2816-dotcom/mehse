@@ -8,7 +8,7 @@
         @endphp
         <div style="margin-bottom:.4rem;padding-left:.5rem;border-left:3px solid {{ $dogruMu ? 'rgb(34 197 94)' : 'rgb(239 68 68)' }}">
             <div><strong>{{ $i + 1 }}.</strong> {{ $c['soru'] ?? '' }}</div>
-            <div style="color:rgb(107 114 128)">Verdiği cevap:
+            <div class="mehse-soluk-metin">Verdiği cevap:
                 <span style="color:{{ $dogruMu ? 'rgb(21 128 61)' : 'rgb(185 28 28)' }}">
                     {{ $verilen >= 0 ? chr(65 + $verilen).') '.($sec[$verilen] ?? '') : 'boş' }}
                 </span>

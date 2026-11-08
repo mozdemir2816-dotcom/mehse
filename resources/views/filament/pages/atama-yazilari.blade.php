@@ -7,7 +7,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma ve görev tipini seçin, üye bilgilerini girin; "PDF İndir" ile 6331 sayılı Kanun ve
         ilgili yönetmelikler kapsamındaki görevlendirme yazısını oluşturun.
     </p>
@@ -40,11 +40,11 @@
     <x-filament::section icon="heroicon-o-building-office" icon-color="primary">
         <x-slot name="heading">1. Firma Bilgileri</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -52,14 +52,14 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Tarih</label>
+                <label class="mehse-etiket">Tarih</label>
                 <input type="date" wire:model="tarih"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">İşveren / İşveren Vekili</label>
+                <label class="mehse-etiket">İşveren / İşveren Vekili</label>
                 <input type="text" wire:model="isverenVekiliAdi" placeholder="İşveren / vekili adı"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
         </div>
     </x-filament::section>
@@ -88,7 +88,7 @@
                                 <td style="padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .2);font-weight:600;width:34%">{{ $gorev }}</td>
                                 <td style="padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .2)">
                                     @forelse ($kisiler as $k)
-                                        <div>✓ {{ $k['ad_soyad'] }} @if ($k['gorev']) <span style="color:rgb(107 114 128)">— {{ $k['gorev'] }}</span> @endif</div>
+                                        <div>✓ {{ $k['ad_soyad'] }} @if ($k['gorev']) <span class="mehse-soluk-metin">— {{ $k['gorev'] }}</span> @endif</div>
                                     @empty
                                         <span style="color:#b45309">Kayıt yok — {{ $ipucu }}</span>
                                     @endforelse
@@ -98,11 +98,11 @@
                     </table>
                     <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Destek Elemanı</div>
                 @endif
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+                <div class="mehse-izgara">
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Hızlı Çalışan Seç</label>
+                        <label class="mehse-etiket">Hızlı Çalışan Seç</label>
                         <select wire:model.live="tekHizliSecId"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                             <option value="">Firmaya kayıtlı çalışan yok / manuel gir</option>
                             @foreach ($this->calisanlar as $c)
                                 <option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>
@@ -110,29 +110,29 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Ad Soyad @unless ($this->topluMu)<span style="color:#dc2626">*</span>@endunless</label>
+                        <label class="mehse-etiket">Ad Soyad @unless ($this->topluMu)<span class="mehse-hata">*</span>@endunless</label>
                         <input type="text" wire:model="tekAdSoyad"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">T.C. Kimlik No</label>
+                        <label class="mehse-etiket">T.C. Kimlik No</label>
                         <input type="text" wire:model="tekTc"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Görev / Unvan</label>
+                        <label class="mehse-etiket">Görev / Unvan</label>
                         <input type="text" wire:model="tekGorev"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Görev Başlangıç Tarihi</label>
+                        <label class="mehse-etiket">Görev Başlangıç Tarihi</label>
                         <input type="date" wire:model="gorevBaslangic"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Görev Bitiş Tarihi (Opsiyonel)</label>
+                        <label class="mehse-etiket">Görev Bitiş Tarihi (Opsiyonel)</label>
                         <input type="date" wire:model="gorevBitis"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                     </div>
                 </div>
                 @if ($rolAnahtari === 'calisan_temsilcisi')
@@ -159,7 +159,7 @@
                                             border:1px solid {{ $psecili ? $mor : 'rgb(107 114 128 / .3)' }};
                                             background:{{ $psecili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
                                         {{ $psecili ? '☑' : '☐' }} {{ $p->ad_soyad }}
-                                        <span style="color:rgb(107 114 128)">— {{ $p->tipEtiketi() }}</span>
+                                        <span class="mehse-soluk-metin">— {{ $p->tipEtiketi() }}</span>
                                         @if ($p->kase_gorseli) <span title="Kaşe yüklü">🖋️</span> @endif
                                     </button>
                                 @endforeach
@@ -169,7 +169,7 @@
                 @endif
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-                    <div style="font-weight:600;font-size:.82rem">Ekip Üyeleri</div>
+                    <div class="mehse-etiket">Ekip Üyeleri</div>
                     @if ($rolAnahtari === 'isg_kurulu')
                         <div style="display:flex;gap:.4rem">
                             <x-filament::button size="xs" color="primary" wire:click="kurulOtomatikSec">Sistemden Otomatik Seç</x-filament::button>
@@ -194,7 +194,7 @@
                                 background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
                                 <button type="button" wire:click="calisanToggle({{ $c->id }})" style="flex:1 1 {{ $secili && $rolAnahtari === 'isg_kurulu' ? '100%' : '0' }};min-width:0;overflow-wrap:anywhere;text-align:left;background:none;border:none;cursor:pointer;font-size:.8rem;color:inherit">
                                     {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
-                                    @if ($c->gorev) <span style="color:rgb(107 114 128)">— {{ $c->gorev }}</span> @endif
+                                    @if ($c->gorev) <span class="mehse-soluk-metin">— {{ $c->gorev }}</span> @endif
                                 </button>
                                 @if ($secili && $rolAnahtari === 'isg_kurulu')
                                     <select wire:model="kurulGorevleri.{{ $c->id }}"
@@ -220,20 +220,20 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Atama Yazıları</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Doküman No</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Görev Tipi</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Üye</th>
+                        <th class="mehse-th">Doküman No</th>
+                        <th class="mehse-th">Görev Tipi</th>
+                        <th class="mehse-th">Tarih</th>
+                        <th class="mehse-th">Üye</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
-                            <td style="padding:.35rem .5rem">{{ $k->dokuman_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->rolEtiketi() }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->tarih?->format('d.m.Y') }}</td>
-                            <td style="padding:.35rem .5rem">{{ count($k->uyeler ?? []) }}</td>
+                            <td class="mehse-td">{{ $k->dokuman_no }}</td>
+                            <td class="mehse-td">{{ $k->rolEtiketi() }}</td>
+                            <td class="mehse-td">{{ $k->tarih?->format('d.m.Y') }}</td>
+                            <td class="mehse-td">{{ count($k->uyeler ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 @if (\App\Support\AtamaYazisiWordUretici::sablonVarMi($k->rol_anahtari))
@@ -247,7 +247,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 
     {{-- BİLGİ: tüm görev tiplerinin yasal dayanağı --}}

@@ -16,7 +16,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Acil Durum Eylem Planı 4 adımda hazırlanır. Senaryolar firmanın NACE kodundan, resmî kurum telefonları adresinden
         otomatik gelir; siz yalnız eksik saha bilgilerini (şalter, vana, toplanma yeri…) girersiniz. 6331 SK kapsamında her işyerinde zorunludur.
     </p>
@@ -90,9 +90,9 @@
         <x-filament::section icon="heroicon-o-building-office-2" icon-color="danger">
             <x-slot name="heading">Firma & Rapor Bilgileri</x-slot>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                     <select wire:model.live="firmaId" style="margin-top:.3rem;{{ $alan }};padding:.55rem .75rem">
                         <option value="">— Firma seçin —</option>
                         @foreach ($this->firmalar as $id => $ad)
@@ -101,19 +101,19 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Rapor Tarihi <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Rapor Tarihi <span class="mehse-hata">*</span></label>
                     <input type="date" wire:model="raporTarihi" style="margin-top:.3rem;{{ $alan }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Geçerlilik / Gözden Geçirme</label>
+                    <label class="mehse-etiket">Geçerlilik / Gözden Geçirme</label>
                     <div style="margin-top:.3rem;{{ $alan }};color:rgb(107 114 128)">{{ $this->plan()?->gecerlilik_tarihi?->format('d.m.Y') ?? 'Kaydedince hesaplanır' }}</div>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Doküman No</label>
+                    <label class="mehse-etiket">Doküman No</label>
                     <input type="text" wire:model="dokumanNo" placeholder="Örn: AD-01" style="margin-top:.3rem;{{ $alan }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Rev. Tarihi / No</label>
+                    <label class="mehse-etiket">Rev. Tarihi / No</label>
                     <input type="text" wire:model="revizyonNo" placeholder="Örn: Rev.01 — 15.03.2027" style="margin-top:.3rem;{{ $alan }}">
                 </div>
             </div>
@@ -140,7 +140,7 @@
                     </select>
                 </div>
             @else
-                <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+                <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
             @endif
         </x-filament::section>
 
@@ -186,7 +186,7 @@
                     @php $kutuphaneEklenebilir = collect($kutuphane)->reject(fn ($k) => collect($ozeller)->pluck('ad')->map(fn ($a) => mb_strtolower($a))->contains(mb_strtolower($k['ad']))); @endphp
                     @if ($kutuphaneEklenebilir->isNotEmpty())
                         <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem;align-items:center">
-                            <span style="font-size:.75rem;color:rgb(107 114 128)">Kütüphanenizden ekle:</span>
+                            <span class="mehse-soluk">Kütüphanenizden ekle:</span>
                             @foreach ($kutuphaneEklenebilir as $ki => $k)
                                 <button type="button" wire:click="kutuphanedenEkle({{ $ki }})" wire:key="kutuphane-{{ $ki }}"
                                     style="padding:.25rem .55rem;border-radius:.4rem;font-size:.75rem;cursor:pointer;border:1px dashed #e11d48;background:#fff;color:#9f1239">+ {{ $k['ad'] }}</button>
@@ -213,10 +213,10 @@
                                 @if ($ozelOnizleme)
                                     <div style="margin-top:.7rem;font-size:.75rem;color:rgb(107 114 128)">Önizleme — maddeleri okuyup gerekirse düzeltin (her satır bir madde). Onaylamadan plana hiçbir şey eklenmez.</div>
                                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.55rem;margin-top:.4rem">
-                                        <div><label style="font-size:.75rem;font-weight:600">Başlık</label><input type="text" wire:model="ozelOnizleme.ad" style="{{ $oAlan }}"></div>
-                                        <div style="grid-column:1/-1"><label style="font-size:.75rem;font-weight:600">Tanım</label><textarea wire:model="ozelOnizleme.aciklama" rows="3" style="{{ $oAlan }}"></textarea></div>
+                                        <div><label class="mehse-etiket-kucuk">Başlık</label><input type="text" wire:model="ozelOnizleme.ad" style="{{ $oAlan }}"></div>
+                                        <div style="grid-column:1/-1"><label class="mehse-etiket-kucuk">Tanım</label><textarea wire:model="ozelOnizleme.aciklama" rows="3" style="{{ $oAlan }}"></textarea></div>
                                         @foreach (\App\Support\GeminiAcilSenaryoUretici::LISTELER as $lk => $lad)
-                                            <div><label style="font-size:.75rem;font-weight:600">{{ $lad }}</label><textarea wire:model="ozelOnizleme.{{ $lk }}" rows="7" style="{{ $oAlan }}"></textarea></div>
+                                            <div><label class="mehse-etiket-kucuk">{{ $lad }}</label><textarea wire:model="ozelOnizleme.{{ $lk }}" rows="7" style="{{ $oAlan }}"></textarea></div>
                                         @endforeach
                                     </div>
                                     <div style="margin-top:.6rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
@@ -394,7 +394,7 @@
                     @endphp
                     <div x-data="{ acik: false }" wire:key="metin-{{ $metinAlani }}" style="border:1px solid rgb(107 114 128 / .25);border-radius:.55rem">
                         <button type="button" x-on:click="acik = ! acik" style="width:100%;display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;background:none;border:none;cursor:pointer;text-align:left">
-                            <span x-text="acik ? '▾' : '▸'" style="color:rgb(107 114 128)">▸</span>
+                            <span x-text="acik ? '▾' : '▸'" class="mehse-soluk-metin">▸</span>
                             <span style="font-size:.82rem;font-weight:600;flex:none">{{ $baslik }}</span>
                             @if ($deger === '')
                                 <x-filament::badge color="warning" size="sm">Boş</x-filament::badge>
@@ -493,7 +493,7 @@
                     @foreach ($h['kontroller'] as $k)
                         <div style="display:flex;gap:.5rem;align-items:flex-start;padding:.45rem .6rem;border-radius:.45rem;border:1px solid {{ $k['tamam'] ? 'rgb(21 128 61 / .35)' : 'rgb(217 119 6 / .45)' }};background:{{ $k['tamam'] ? 'rgb(21 128 61 / .05)' : 'rgb(217 119 6 / .06)' }}">
                             <span style="font-weight:800;color:{{ $k['tamam'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $k['tamam'] ? '✓' : '!' }}</span>
-                            <span><span style="font-size:.8rem;font-weight:600">{{ $k['baslik'] }}</span><br><span style="font-size:.75rem;color:rgb(107 114 128)">{{ $k['aciklama'] }}</span></span>
+                            <span><span style="font-size:.8rem;font-weight:600">{{ $k['baslik'] }}</span><br><span class="mehse-soluk">{{ $k['aciklama'] }}</span></span>
                         </div>
                     @endforeach
                 </div>
@@ -527,7 +527,7 @@
                     <button type="button" wire:click="$set('kapakCercevesi','{{ $anahtar }}')"
                         style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;border:2px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
                         <div style="font-weight:600">{{ Str::before($ad, ' — ') }}</div>
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ Str::after($ad, ' — ') }}</div>
+                        <div class="mehse-soluk">{{ Str::after($ad, ' — ') }}</div>
                     </button>
                 @endforeach
             </div>
@@ -538,7 +538,7 @@
                     <button type="button" wire:click="$set('sablonId','{{ $anahtar }}')"
                         style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:left;border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }}">
                         <div style="font-weight:600">{{ $s['ad'] }}</div>
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
+                        <div class="mehse-soluk">{{ $s['aciklama'] }}</div>
                     </button>
                 @endforeach
             </div>

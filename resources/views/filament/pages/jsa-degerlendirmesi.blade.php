@@ -6,7 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         “İş Güvenliği Analizi (JSA)” formatındaki Excel dosyalarınızı yükleyip bir
         <strong>kütüphanede</strong> biriktirin. Bir firmaya lazım olduğunda aşağıdan firmayı
         seçin ve ilgili JSA’nın <strong>PDF</strong> veya <strong>Word</strong> çıktısını alın —
@@ -121,7 +121,7 @@
                                 @forelse ($s->firmalar as $f)
                                     <span style="display:inline-block;padding:1px 7px;border-radius:9999px;font-size:.75rem;border:1px solid {{ $mor }};color:{{ $mor }}">{{ $f->unvan }}</span>
                                 @empty
-                                    <span style="font-size:.75rem;color:rgb(107 114 128)">— hiçbir firmaya eklenmedi —</span>
+                                    <span class="mehse-soluk">— hiçbir firmaya eklenmedi —</span>
                                 @endforelse
                             </div>
                         </div>

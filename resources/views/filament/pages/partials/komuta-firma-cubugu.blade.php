@@ -25,6 +25,6 @@
         </select>
     </div>
     @isset($aciklama)
-        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $aciklama }}</div>
+        <div class="mehse-soluk">{{ $aciklama }}</div>
     @endisset
 </div>

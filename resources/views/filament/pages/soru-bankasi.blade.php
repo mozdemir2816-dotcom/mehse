@@ -43,10 +43,10 @@
         <x-slot name="description">Her NACE için hedef: {{ $hedef['temel'] }} temel (ortak) + {{ $hedef['ise_ozgu'] }} işe özgü (NACE kapsamlı) yayımlanmış soru. Havuz yetersizse eğitim akışı durmaz; sınav ortak ve sektör sorularıyla kurulur, eksik NACE soruları AI ile taslak üretilip incelemeden sonra yayımlanabilir.</x-slot>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.5rem;margin-bottom:.8rem">
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ number_format($nk['toplam'], 0, ',', '.') }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Resmi NACE</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:{{ $nk['ortak'] >= $hedef['temel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $nk['ortak'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Yayımlanmış ortak (temel) soru</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ $nk['naceli_yayinli'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Yayımlanmış NACE kapsamlı soru</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:rgb(21 128 61)">{{ $nk['yeterli'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">Havuzu yeterli NACE · {{ $nk['kismi'] }} kısmi</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ number_format($nk['toplam'], 0, ',', '.') }}</div><div class="mehse-soluk">Resmi NACE</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:{{ $nk['ortak'] >= $hedef['temel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $nk['ortak'] }}</div><div class="mehse-soluk">Yayımlanmış ortak (temel) soru</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ $nk['naceli_yayinli'] }}</div><div class="mehse-soluk">Yayımlanmış NACE kapsamlı soru</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:rgb(21 128 61)">{{ $nk['yeterli'] }}</div><div class="mehse-soluk">Havuzu yeterli NACE · {{ $nk['kismi'] }} kısmi</div></div>
         </div>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">
@@ -65,7 +65,7 @@
                 <tbody>
                     @forelse ($nk['satirlar'] as $s)
                         <tr wire:key="nace-{{ $s['kod'] }}">
-                            <td style="{{ $td }}"><div style="font-weight:700;color:rgb(15 118 110)">{{ $s['kod'] }}</div><div>{{ $s['tanim'] }}</div><div style="font-size:.75rem;color:rgb(107 114 128)">{{ config('isg.tehlike_siniflari.'.$s['tehlike'], $s['tehlike']) }}</div></td>
+                            <td style="{{ $td }}"><div style="font-weight:700;color:rgb(15 118 110)">{{ $s['kod'] }}</div><div>{{ $s['tanim'] }}</div><div class="mehse-soluk">{{ config('isg.tehlike_siniflari.'.$s['tehlike'], $s['tehlike']) }}</div></td>
                             <td style="{{ $td }}">{{ min($s['ortak'], $hedef['temel']) }}/{{ $hedef['temel'] }}</td>
                             <td style="{{ $td }}">{{ $s['nace'] }}/{{ $hedef['ise_ozgu'] }}</td>
                             <td style="{{ $td }}">{{ $s['bekleyen'] }}</td>
@@ -85,7 +85,7 @@
         </div>
         @if ($nk['son_sayfa'] > 1)
             <div style="display:flex;gap:.4rem;align-items:center;justify-content:flex-end;margin-top:.6rem;font-size:.78rem">
-                <span style="color:rgb(107 114 128)">{{ $nk['bulunan'] }} kayıt · sayfa {{ $nk['sayfa'] }}/{{ $nk['son_sayfa'] }}</span>
+                <span class="mehse-soluk-metin">{{ $nk['bulunan'] }} kayıt · sayfa {{ $nk['sayfa'] }}/{{ $nk['son_sayfa'] }}</span>
                 <x-filament::button size="xs" color="gray" wire:click="$set('naceSayfa', {{ max(1, $nk['sayfa'] - 1) }})" :disabled="$nk['sayfa'] <= 1">‹ Önceki</x-filament::button>
                 <x-filament::button size="xs" color="gray" wire:click="$set('naceSayfa', {{ min($nk['son_sayfa'], $nk['sayfa'] + 1) }})" :disabled="$nk['sayfa'] >= $nk['son_sayfa']">Sonraki ›</x-filament::button>
             </div>
@@ -125,7 +125,7 @@
                         <input type="text" wire:model="yeniSecenekler.{{ $i }}" placeholder="{{ chr(65 + $i) }} seçeneği" style="flex:1;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                     </label>
                 @endforeach
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Doğru cevabın yanındaki yuvarlağı seçin. Seçenekler birbirinden farklı olmalıdır.</div>
+                <div class="mehse-soluk">Doğru cevabın yanındaki yuvarlağı seçin. Seçenekler birbirinden farklı olmalıdır.</div>
             </div>
 
             <div style="margin-top:.6rem"><label style="{{ $lbl }}">Doğru cevabın gerekçesi (yayım için zorunlu)</label>

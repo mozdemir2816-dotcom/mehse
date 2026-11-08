@@ -4,7 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşyerindeki tehlikeli kimyasalları SDS (Malzeme Güvenlik Bilgi Formu) ve GHS/CLP sınıflarıyla listeleyin;
         envanter PDF'ini alın. Afiş / pano kütüphanesine GHS levhaları, uyarı posterleri vb. yükleyebilirsiniz.
     </p>
@@ -50,7 +50,7 @@
                             <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                                 <td style="padding:.5rem">
                                     <div style="font-weight:600">{{ $u->urun_adi }}</div>
-                                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $u->tedarikci }} · {{ config('isg.kimyasal.fiziksel_hal.'.$u->fiziksel_hal) }} · {{ $u->kullanim_alani }}</div>
+                                    <div class="mehse-soluk">{{ $u->tedarikci }} · {{ config('isg.kimyasal.fiziksel_hal.'.$u->fiziksel_hal) }} · {{ $u->kullanim_alani }}</div>
                                 </td>
                                 <td style="padding:.5rem;font-family:monospace">{{ $u->cas_no ?: '—' }}</td>
                                 <td style="padding:.5rem;font-size:.75rem">{{ implode(', ', array_map(fn ($e) => explode(' — ', $e)[0], $u->ghsEtiketleri())) ?: '—' }}</td>
@@ -108,7 +108,7 @@
                         <td style="padding:.5rem">
                             <div style="font-weight:600">{{ $k->urun_adi }}</div>
                             @if ($k->tedarikci || $k->kullanim_alani)
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k->tedarikci }} {{ $k->kullanim_alani }}</div>
+                                <div class="mehse-soluk">{{ $k->tedarikci }} {{ $k->kullanim_alani }}</div>
                             @endif
                         </td>
                         <td style="padding:.5rem;font-family:monospace">{{ $k->cas_no ?: '—' }}</td>
@@ -116,7 +116,7 @@
                         <td style="padding:.5rem;font-size:.75rem">{{ implode(', ', $k->ghsKodlari()) ?: '—' }}</td>
                         <td style="padding:.5rem;text-align:right">
                             @if ($k->hazirMi())
-                                <span style="font-size:.75rem;color:rgb(107 114 128)">Hazır</span>
+                                <span class="mehse-soluk">Hazır</span>
                             @else
                                 <button wire:click="kutuphaneKayitSil({{ $k->id }})" wire:confirm="'{{ $k->urun_adi }}' kütüphaneden silinsin mi?" style="background:none;border:0;color:#dc2626;cursor:pointer">Sil</button>
                             @endif
@@ -143,7 +143,7 @@
                         @foreach ($liste as $a)
                             <div style="{{ $kutu }};font-size:.82rem">
                                 <div style="font-weight:600">{{ $a->baslik }}</div>
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">
+                                <div class="mehse-soluk">
                                     {{ $a->firma_id ? $a->firma?->unvan : 'Genel' }} · {{ $a->dosya_adi }} ({{ $a->boyutEtiketi() }})
                                 </div>
                                 <div style="margin-top:.5rem;display:flex;gap:.4rem">

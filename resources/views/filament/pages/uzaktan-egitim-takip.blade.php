@@ -13,7 +13,7 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem">
         <div>
-            <label style="font-weight:600;font-size:.82rem">Firma</label>
+            <label class="mehse-etiket">Firma</label>
             <select wire:model.live="firmaId" style="{{ $girdi }}">
                 <option value="">— Tüm firmalar —</option>
                 @foreach ($this->firmalar as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
@@ -65,14 +65,14 @@
                             @endphp
                             <tr wire:key="genel-{{ $a->id }}" style="border-top:1px solid rgb(107 114 128 / .15)">
                                 <td style="{{ $h }}">{{ \Illuminate\Support\Str::limit($a->calisan->firma->unvan, 30) }}</td>
-                                <td style="{{ $h }}">{{ $a->calisan->ad_soyad }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a->calisan->gorev }}</div></td>
-                                <td style="{{ $h }}">{{ \Illuminate\Support\Str::limit($a->paket->ad, 32) }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a->turEtiketi() }}</div></td>
+                                <td style="{{ $h }}">{{ $a->calisan->ad_soyad }}<div class="mehse-soluk">{{ $a->calisan->gorev }}</div></td>
+                                <td style="{{ $h }}">{{ \Illuminate\Support\Str::limit($a->paket->ad, 32) }}<div class="mehse-soluk">{{ $a->turEtiketi() }}</div></td>
                                 <td style="{{ $h }};min-width:110px">
                                     {{ $biten }}/{{ $toplam }} ders
                                     <div style="height:5px;background:rgb(107 114 128 / .15);border-radius:3px;margin-top:.2rem"><div style="height:5px;border-radius:3px;background:rgb(79 70 229);width:{{ $toplam ? round($biten / $toplam * 100) : 0 }}%"></div></div>
                                 </td>
                                 <td style="{{ $h }}">{{ $a->on_test_puani !== null ? $a->on_test_puani.' puan' : '—' }}</td>
-                                <td style="{{ $h }}">{{ $son ? $son->puan.' puan' : '—' }}@if ($a->sinavSonuclari->isNotEmpty())<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a->sinavSonuclari->count() }} deneme</div>@endif</td>
+                                <td style="{{ $h }}">{{ $son ? $son->puan.' puan' : '—' }}@if ($a->sinavSonuclari->isNotEmpty())<div class="mehse-soluk">{{ $a->sinavSonuclari->count() }} deneme</div>@endif</td>
                                 <td style="{{ $h }}">{{ $a->girisler->last()?->giris_at?->format('d.m.Y') ?? 'Girmedi' }}</td>
                                 <td style="{{ $h }}">
                                     <span style="color:{{ $renk }};font-weight:600">{{ $a->durumEtiketi() }}</span>
@@ -115,11 +115,11 @@
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                             <td style="padding:.5rem">{{ $a->calisan->ad_soyad }}</td>
                             <td style="padding:.5rem">{{ $a->calisan->gorev ?: '—' }}</td>
-                            <td style="padding:.5rem">{{ \Illuminate\Support\Str::limit($a->paket->ad, 40) }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a->turEtiketi() }} · atandı {{ $a->atandi_at?->format('d.m.Y') }}</div></td>
+                            <td style="padding:.5rem">{{ \Illuminate\Support\Str::limit($a->paket->ad, 40) }}<div class="mehse-soluk">{{ $a->turEtiketi() }} · atandı {{ $a->atandi_at?->format('d.m.Y') }}</div></td>
                             <td style="padding:.5rem;vertical-align:top">
                                 @php($portal = $this->portalGirisleri->get($a->calisan_id, collect()))
                                 @if ($a->girisler->isEmpty() && $portal->isEmpty())
-                                    <span style="color:rgb(107 114 128)">Henüz girmedi</span>
+                                    <span class="mehse-soluk-metin">Henüz girmedi</span>
                                 @else
                                     <details>
                                         <summary style="cursor:pointer">
@@ -138,10 +138,10 @@
                                     </details>
                                 @endif
                             </td>
-                            <td style="padding:.5rem">{{ $a->izlenenDersSayisi() }}/{{ $a->toplamDersSayisi() }} ders<div style="font-size:.75rem;color:rgb(107 114 128)">{{ round($a->ilerlemeler->sum('izlenen_sn') / 60) }} dk fiili izleme</div></td>
+                            <td style="padding:.5rem">{{ $a->izlenenDersSayisi() }}/{{ $a->toplamDersSayisi() }} ders<div class="mehse-soluk">{{ round($a->ilerlemeler->sum('izlenen_sn') / 60) }} dk fiili izleme</div></td>
                             <td style="padding:.5rem">
                                 {{ $a->sonSinav() ? $a->sonSinav()->puan.' puan' : '—' }}
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">
+                                <div class="mehse-soluk">
                                     @if ($a->on_test_puani !== null)ön test {{ $a->on_test_puani }} · @endif
                                     {{ $a->sinavSonuclari()->count() }} deneme
                                     @if ($a->yeniden_baslatma) · <span style="color:#b91c1c">{{ $a->yeniden_baslatma }} kez baştan</span>@endif
@@ -152,10 +152,10 @@
                                     <span style="color:#b45309;font-weight:700">⏳ Sınav geçti · {{ $a->durumEtiketi() }}</span>
                                 @elseif ($a->durum === 'ih_onay_bekliyor')
                                     <span style="color:#7c3aed;font-weight:700">⏳ İGU onayladı · İH Onayı Bekliyor</span>
-                                    <div style="font-size:.75rem;color:rgb(107 114 128)">Hekim: {{ $a->calisan?->firma?->isyeriHekimi?->ad_soyad ?? 'firmada kayıtlı değil' }}</div>
+                                    <div class="mehse-soluk">Hekim: {{ $a->calisan?->firma?->isyeriHekimi?->ad_soyad ?? 'firmada kayıtlı değil' }}</div>
                                 @elseif ($a->durum === 'tamamlandi')
                                     <span style="color:rgb(21 128 61);font-weight:700">☑ Tamamlandı</span>
-                                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a->tamamlandi_at?->format('d.m.Y') }}@if ($a->egitimKaydinaIslenirMi()) · kayda işlendi @elseif ($a->dorduncuKonuYuzYuzeMi()) · <span style="color:#b45309">1–3. konular tamam, 4. konu yüz yüze bekleniyor</span> @endif</div>
+                                    <div class="mehse-soluk">{{ $a->tamamlandi_at?->format('d.m.Y') }}@if ($a->egitimKaydinaIslenirMi()) · kayda işlendi @elseif ($a->dorduncuKonuYuzYuzeMi()) · <span style="color:#b45309">1–3. konular tamam, 4. konu yüz yüze bekleniyor</span> @endif</div>
                                 @else
                                     <span style="font-size:.75rem;color:{{ $a->durum === 'basarisiz' ? 'rgb(185 28 28)' : 'rgb(107 114 128)' }}">
                                         ☐ {{ $a->durumEtiketi() }}@if ($a->gecikti()) · gecikti @endif

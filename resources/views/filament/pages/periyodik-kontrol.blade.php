@@ -7,7 +7,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         6331 sayılı Kanun & EKİPNET doğrulamalı muayene takip sistemi. Her iş ekipmanını kategori
         ve tipiyle tanımlayın (tip seçilince yasal standart, deney/test ve önerilen periyot
         otomatik gelir). Son muayene tarihi girilince <strong>sonraki vize</strong> hesaplanır.
@@ -35,7 +35,7 @@
                 <div style="{{ $kutu }}">
                     <div style="font-size:.75rem;font-weight:700;color:rgb(107 114 128);letter-spacing:.02em">{{ $baslik }}</div>
                     <div style="font-size:1.7rem;font-weight:800;color:{{ $renk }};line-height:1.1">{{ $deger }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $aciklama }}</div>
+                    <div class="mehse-soluk">{{ $aciklama }}</div>
                 </div>
             @endforeach
         </div>
@@ -116,7 +116,7 @@
                                             @if ($s['yasal_standart']) · {{ $s['yasal_standart'] }} @endif
                                         </div>
                                     </td>
-                                    <td style="padding:.35rem;font-size:.75rem">{{ $s['seri_no'] ?: '—' }}<br><span style="color:rgb(107 114 128)">{{ $s['marka_model'] ?: '' }}</span></td>
+                                    <td style="padding:.35rem;font-size:.75rem">{{ $s['seri_no'] ?: '—' }}<br><span class="mehse-soluk-metin">{{ $s['marka_model'] ?: '' }}</span></td>
                                     <td style="padding:.35rem"><input type="number" min="1" wire:model.blur="satirlar.{{ $i }}.muayene_periyodu_ay" style="{{ $girdi }}"></td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.son_muayene_tarihi" style="{{ $girdi }}"></td>
                                     <td style="padding:.35rem;font-size:.75rem;color:rgb(107 114 128)">{{ $s['sonraki_vize_tarihi'] ? \Illuminate\Support\Carbon::parse($s['sonraki_vize_tarihi'])->format('d.m.Y') : '—' }}</td>

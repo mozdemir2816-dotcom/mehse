@@ -1,0 +1,52 @@
+/* ==========================================================================
+   ORTAK SINIFLAR (08.11.2026) — sayfa görünümlerinde en sık tekrarlanan elle
+   yazılmış stiller tek yerde. Renkler değişkenden gelir; bir rengi değiştirmek
+   için yalnız buradaki değişkeni değiştirmek yeterli.
+
+   Kullanım (Blade):
+     <p class="mehse-soluk">…</p>            ikincil / açıklama metni (küçük, gri)
+     <p class="mehse-bolum-aciklama">…</p>   başlığın hemen altındaki açıklama
+     <label class="mehse-etiket">…</label>   form alanı etiketi
+     <input class="mehse-girdi">             metin / seçim kutusu (tam genişlik)
+     <input class="mehse-girdi-kompakt">     tablo ve satır içi küçük kutu
+     <table class="mehse-tablo"> + <th class="mehse-th"> + <td class="mehse-td">
+     <div class="mehse-izgara">…</div>       kendiliğinden sığan kart ızgarası
+     <span class="mehse-hata">…</span>       hata / tehlike metni
+     <p class="mehse-uyari-not">…</p>        sarı uyarı notu
+     <button class="mehse-sil-dugme">✕</button>
+   ========================================================================== */
+
+:root {
+    --mehse-metin-soluk: rgb(107 114 128);
+    --mehse-kenar: rgb(107 114 128 / .3);
+    --mehse-kenar-girdi: rgb(107 114 128 / .35);
+    --mehse-tehlike: #dc2626;
+    --mehse-uyari: #b45309;
+}
+
+.mehse-soluk { font-size: .75rem; color: var(--mehse-metin-soluk); }
+.mehse-soluk-metin { color: var(--mehse-metin-soluk); }
+.mehse-bolum-aciklama { font-size: .85rem; color: var(--mehse-metin-soluk); margin-top: -.5rem; }
+
+.mehse-etiket { font-weight: 600; font-size: .82rem; }
+.mehse-etiket-kucuk { font-weight: 600; font-size: .75rem; }
+
+.mehse-girdi {
+    margin-top: .3rem; width: 100%; padding: .5rem .75rem; border-radius: .5rem;
+    border: 1px solid var(--mehse-kenar-girdi); background: transparent;
+}
+.mehse-girdi-kompakt {
+    padding: .45rem .6rem; border-radius: .4rem; border: 1px solid var(--mehse-kenar);
+    background: transparent; font-size: .82rem;
+}
+.mehse-girdi-kompakt.mehse-tam { margin-top: .2rem; width: 100%; }
+
+.mehse-tablo { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.mehse-th { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid var(--mehse-kenar); }
+.mehse-td { padding: .35rem .5rem; }
+
+.mehse-izgara { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+
+.mehse-hata { color: var(--mehse-tehlike); }
+.mehse-uyari-not { margin-top: 1rem; font-size: .85rem; color: var(--mehse-uyari); }
+.mehse-sil-dugme { color: var(--mehse-tehlike); cursor: pointer; background: none; border: none; }

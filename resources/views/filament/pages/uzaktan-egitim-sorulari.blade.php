@@ -13,7 +13,7 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;align-items:end">
         <div>
-            <label style="font-weight:600;font-size:.82rem">Eğitim Paketi</label>
+            <label class="mehse-etiket">Eğitim Paketi</label>
             <select wire:model.live="paketId" style="{{ $girdi }}">
                 @forelse ($this->paketler as $id => $ad)
                     <option value="{{ $id }}">{{ $ad }}</option>
@@ -23,12 +23,12 @@
             </select>
         </div>
         <div style="{{ $kart($o['on_test'] >= $o['on_test_gereken']) }}">
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Sınav öncesi (ön test) havuzu</div>
+            <div class="mehse-soluk">Sınav öncesi (ön test) havuzu</div>
             <div style="font-weight:700;font-size:1.1rem">{{ $o['on_test'] }} soru <span style="font-weight:400;font-size:.8rem">→ {{ $o['on_test_gereken'] }} tanesi sorulur</span></div>
             @if ($o['on_test'] < $o['on_test_gereken'])<div style="font-size:.75rem;color:#b45309">{{ $o['on_test_gereken'] - $o['on_test'] }} soru daha ekleyin</div>@endif
         </div>
         <div style="{{ $kart($o['final'] >= $o['final_gereken']) }}">
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Sınav sonrası (final) havuzu</div>
+            <div class="mehse-soluk">Sınav sonrası (final) havuzu</div>
             <div style="font-weight:700;font-size:1.1rem">{{ $o['final'] }} soru <span style="font-weight:400;font-size:.8rem">→ {{ $o['final_gereken'] }} tanesi sorulur</span></div>
             @if ($o['final'] < $o['final_gereken'])<div style="font-size:.75rem;color:#b45309">{{ $o['final_gereken'] - $o['final'] }} soru daha ekleyin</div>@endif
         </div>

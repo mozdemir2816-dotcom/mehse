@@ -7,7 +7,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İş Kazası Raporu'ndan ayrı olay defteri: yaralanma olmasa da (ramak kala, tehlikeli
         durum/davranış, maddi hasar, çevre) her olayı kaydedin. Her kayıtta sınıflandırma,
         potansiyel risk (olasılık × şiddet) ve <strong>5 Neden (5N)</strong> kök neden analizi yapılır.
@@ -26,7 +26,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
             <div>
-                <label style="{{ $lbl }}">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label style="{{ $lbl }}">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $inp }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -35,7 +35,7 @@
                 </select>
             </div>
             <div>
-                <label style="{{ $lbl }}">Olay Tipi <span style="color:#dc2626">*</span></label>
+                <label style="{{ $lbl }}">Olay Tipi <span class="mehse-hata">*</span></label>
                 <select wire:model.live="olayTipi" style="{{ $inp }}">
                     @foreach ($this->tipler as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
@@ -65,9 +65,9 @@
         <x-filament::section icon="heroicon-o-calendar" icon-color="warning">
             <x-slot name="heading">2. Olay Bilgileri</x-slot>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div>
-                    <label style="{{ $lbl }}">Olay Tarihi <span style="color:#dc2626">*</span></label>
+                    <label style="{{ $lbl }}">Olay Tarihi <span class="mehse-hata">*</span></label>
                     <input type="date" wire:model="olayTarihi" style="{{ $inp }}">
                 </div>
                 <div>
@@ -136,7 +136,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1rem">
                 <div>
-                    <label style="{{ $lbl }}">Kısa Özet (en az 20 karakter) <span style="color:#dc2626">*</span></label>
+                    <label style="{{ $lbl }}">Kısa Özet (en az 20 karakter) <span class="mehse-hata">*</span></label>
                     <textarea wire:model="olayOzeti" rows="3" placeholder="Ne oldu? Nasıl fark edildi?" style="{{ $inp }}"></textarea>
                 </div>
                 <div>
@@ -157,7 +157,7 @@
                         <input type="checkbox" wire:model.live="etkiler" value="{{ $anahtar }}" style="margin-top:.2rem">
                         <span>
                             <span style="font-weight:600;font-size:.82rem;display:block">{{ $etki['ad'] }}</span>
-                            <span style="font-size:.75rem;color:rgb(107 114 128)">{{ $etki['aciklama'] }}</span>
+                            <span class="mehse-soluk">{{ $etki['aciklama'] }}</span>
                         </span>
                     </label>
                 @endforeach
@@ -333,18 +333,18 @@
                     <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:640px">
                         <tr>
                             @foreach (['DÖF No', 'Tespit', 'Düzeltici', 'Sorumlu', 'Termin', 'Öncelik', 'Durum'] as $b)
-                                <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">{{ $b }}</th>
+                                <th class="mehse-th">{{ $b }}</th>
                             @endforeach
                         </tr>
                         @forelse ($this->olayDofMaddeleri as $m)
                             <tr>
                                 <td style="padding:.35rem .5rem;white-space:nowrap">{{ $m['no'] }}</td>
-                                <td style="padding:.35rem .5rem">{{ $m['tespit'] ?? '—' }}</td>
-                                <td style="padding:.35rem .5rem">{{ $m['duzeltici'] ?? $m['oneri'] ?? '—' }}</td>
-                                <td style="padding:.35rem .5rem">{{ $m['sorumlu'] ?: '—' }}</td>
+                                <td class="mehse-td">{{ $m['tespit'] ?? '—' }}</td>
+                                <td class="mehse-td">{{ $m['duzeltici'] ?? $m['oneri'] ?? '—' }}</td>
+                                <td class="mehse-td">{{ $m['sorumlu'] ?: '—' }}</td>
                                 <td style="padding:.35rem .5rem;white-space:nowrap">{{ filled($m['termin'] ?? null) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>
-                                <td style="padding:.35rem .5rem">{{ \App\Models\DofRaporu::oncelikEtiketi($m['oncelik'] ?? null) }}</td>
-                                <td style="padding:.35rem .5rem">{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>
+                                <td class="mehse-td">{{ \App\Models\DofRaporu::oncelikEtiketi($m['oncelik'] ?? null) }}</td>
+                                <td class="mehse-td">{{ \App\Models\DofRaporu::durumEtiketi($m['durum'] ?? null) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="7" style="padding:.6rem .5rem;text-align:center;color:rgb(107 114 128)">Olay DÖF yok</td></tr>
@@ -354,7 +354,7 @@
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
                     <div>
-                        <label style="{{ $lbl }}">Tespit Edilen Uygunsuzluk (en az 10 karakter) <span style="color:#dc2626">*</span></label>
+                        <label style="{{ $lbl }}">Tespit Edilen Uygunsuzluk (en az 10 karakter) <span class="mehse-hata">*</span></label>
                         <textarea wire:model="dofTespit" rows="2" style="{{ $inp }}"></textarea>
                     </div>
                     <div>
@@ -403,7 +403,7 @@
                     İş kazası, kazadan sonraki <strong>3 iş günü içinde</strong> SGK'ya bildirilmelidir (6331 m.14).
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+                <div class="mehse-izgara">
                     <div>
                         <label style="{{ $lbl }}">Kaza Türü</label>
                         <select wire:model="kazaTuru" style="{{ $inp }}">
@@ -463,7 +463,7 @@
                             <td style="padding:.3rem .5rem">{{ $t['ad_soyad'] }}</td>
                             <td style="padding:.3rem .5rem">{{ $t['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="tanikSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="tanikSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -529,31 +529,31 @@
                 <div style="overflow-x:auto">
                     <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:720px">
                         <tr>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Belge No</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tip</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Özet</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sınıf</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Risk</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">DÖF</th>
+                            <th class="mehse-th">Belge No</th>
+                            <th class="mehse-th">Tip</th>
+                            <th class="mehse-th">Tarih</th>
+                            <th class="mehse-th">Özet</th>
+                            <th class="mehse-th">Sınıf</th>
+                            <th class="mehse-th">Risk</th>
+                            <th class="mehse-th">Durum</th>
+                            <th class="mehse-th">DÖF</th>
                             <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                         </tr>
                         @foreach ($this->gecmisKayitlar as $k)
                             <tr @if ($duzenlenenId === $k->id) style="background:rgb(245 158 11 / .08)" @endif>
-                                <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                                <td style="padding:.35rem .5rem">{{ $k->tipEtiketi() }}</td>
-                                <td style="padding:.35rem .5rem">{{ $k->olay_tarihi?->format('d.m.Y') }}</td>
+                                <td class="mehse-td">{{ $k->belge_no }}</td>
+                                <td class="mehse-td">{{ $k->tipEtiketi() }}</td>
+                                <td class="mehse-td">{{ $k->olay_tarihi?->format('d.m.Y') }}</td>
                                 <td style="padding:.35rem .5rem;max-width:16rem" title="{{ $k->olay_ozeti }}">{{ \Illuminate\Support\Str::limit($k->olay_ozeti, 50) }}</td>
-                                <td style="padding:.35rem .5rem">{{ $k->siniflandirma ? $k->siniflandirmaEtiketi() : '—' }}</td>
-                                <td style="padding:.35rem .5rem">{{ $k->potansiyel_skor ?? '—' }} / {{ $k->potansiyelSeviye() }}</td>
-                                <td style="padding:.35rem .5rem">
+                                <td class="mehse-td">{{ $k->siniflandirma ? $k->siniflandirmaEtiketi() : '—' }}</td>
+                                <td class="mehse-td">{{ $k->potansiyel_skor ?? '—' }} / {{ $k->potansiyelSeviye() }}</td>
+                                <td class="mehse-td">
                                     <span style="font-size:.75rem;padding:.1rem .45rem;border-radius:999px;border:1px solid {{ match ($k->durum) { 'kapandi' => 'rgb(22 163 74 / .5)', 'incelemede' => 'rgb(245 158 11 / .5)', default => 'rgb(220 38 38 / .5)' } }}">{{ $k->durumEtiketi() }}</span>
                                     @if ($k->eksikUyarilari())
                                         <span title="{{ implode("\n", $k->eksikUyarilari()) }}" style="cursor:help">⚠️</span>
                                     @endif
                                 </td>
-                                <td style="padding:.35rem .5rem">{{ $k->dofRaporu?->belge_no ?? '—' }}</td>
+                                <td class="mehse-td">{{ $k->dofRaporu?->belge_no ?? '—' }}</td>
                                 <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                     <x-filament::button size="xs" color="primary" wire:click="duzenle({{ $k->id }})">Düzenle</x-filament::button>
                                     <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
@@ -575,6 +575,6 @@
             @endif
         </x-filament::section>
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

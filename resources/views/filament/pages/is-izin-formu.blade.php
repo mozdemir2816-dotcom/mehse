@@ -13,7 +13,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Yüksek riskli çalışmalar için iş izni (Permit to Work) düzenleyin. Kütüphaneden hazır bir
         izin türü seçip önlem/KKD listesini otomatik doldurabilir; düzenledikten sonra izni onaya
         gönderip <strong>onaylandı → iş tamamlandı → kapatıldı</strong> yaşam döngüsünü takip edebilirsiniz.
@@ -31,7 +31,7 @@
             ['Süresi geçen', $oz['suresi_gecen'], '#ef4444'],
         ] as [$etiket, $sayi, $renk])
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.75rem;padding:.8rem 1rem;border-left:4px solid {{ $renk }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $etiket }}</div>
+                <div class="mehse-soluk">{{ $etiket }}</div>
                 <div style="font-size:1.6rem;font-weight:700;color:{{ $renk }}">{{ $sayi }}</div>
             </div>
         @endforeach
@@ -83,9 +83,9 @@
     <x-filament::section icon="heroicon-o-key" icon-color="warning">
         <x-slot name="heading">1. İş Tanımı ve Lokasyon</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="{{ $lbl }}">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label style="{{ $lbl }}">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $inp }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -159,7 +159,7 @@
                                     background:{{ $secili ? 'rgb(14 165 233 / .08)' : 'transparent' }}">
                                 {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
                                 @if ($c->gorev)
-                                    <span style="color:rgb(107 114 128)">· {{ $c->gorev }}</span>
+                                    <span class="mehse-soluk-metin">· {{ $c->gorev }}</span>
                                 @endif
                             </button>
                         @endforeach
@@ -288,19 +288,19 @@
                 <div style="overflow-x:auto">
                     <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:760px">
                         <tr>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">İzin No / Alan</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Onaylar</th>
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Geçerlilik</th>
+                            <th class="mehse-th">İzin No / Alan</th>
+                            <th class="mehse-th">Durum</th>
+                            <th class="mehse-th">Onaylar</th>
+                            <th class="mehse-th">Geçerlilik</th>
                             <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                         </tr>
                         @foreach ($this->gecmisFormlar as $f)
                             <tr style="border-bottom:1px solid rgb(107 114 128 / .12)">
                                 <td style="padding:.4rem .5rem">
                                     <strong>{{ $f->izin_no }}</strong><br>
-                                    <span style="color:rgb(107 114 128)">{{ $f->calisma_alani ?: 'Alan belirtilmedi' }}</span>
+                                    <span class="mehse-soluk-metin">{{ $f->calisma_alani ?: 'Alan belirtilmedi' }}</span>
                                     @if ($f->calisanlar || $f->taseron)
-                                        <br><span style="font-size:.75rem;color:rgb(107 114 128)">
+                                        <br><span class="mehse-soluk">
                                             {{ $f->calisanlar ? count($f->calisanlar).' çalışan' : '' }}{{ $f->calisanlar && $f->taseron ? ' · ' : '' }}{{ $f->taseron ? 'Taşeron: '.$f->taseron : '' }}
                                         </span>
                                     @endif
@@ -320,7 +320,7 @@
                                         1: {{ $f->onay1Etiketi() }}{{ $f->onay1_tarih ? ' ('.$f->onay1_tarih->format('d.m H:i').')' : '' }}<br>
                                         2: {{ $f->onay2Etiketi() }}{{ $f->onay2_tarih ? ' ('.$f->onay2_tarih->format('d.m H:i').')' : '' }}
                                         @if ($f->red_gerekcesi)
-                                            <br><span style="color:#dc2626">Ret: {{ $f->red_gerekcesi }}</span>
+                                            <br><span class="mehse-hata">Ret: {{ $f->red_gerekcesi }}</span>
                                         @endif
                                     @endif
                                     @if ($f->kontroller !== null)
@@ -330,7 +330,7 @@
                                         @endphp
                                         <br>
                                         @if ($uygunDegil)
-                                            <span style="color:#dc2626">✕ Uygun değil: {{ implode(', ', $uygunDegil) }}</span>
+                                            <span class="mehse-hata">✕ Uygun değil: {{ implode(', ', $uygunDegil) }}</span>
                                         @elseif ($bekleyen)
                                             <span style="color:#b45309">⏳ {{ count($bekleyen) }} kontrol bekliyor</span>
                                         @else
@@ -388,7 +388,7 @@
                                                 @endforeach
                                             </div>
                                         @elseif ($islemTuru === 'reddet')
-                                            <label style="{{ $lbl }}">Ret Gerekçesi <span style="color:#dc2626">*</span></label>
+                                            <label style="{{ $lbl }}">Ret Gerekçesi <span class="mehse-hata">*</span></label>
                                             <textarea wire:model="islemNotu" rows="2" style="{{ $inp }};font-family:inherit;font-size:.82rem"></textarea>
                                         @else
                                             <label style="{{ $lbl }}">Kapanış Notu</label>
@@ -410,6 +410,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

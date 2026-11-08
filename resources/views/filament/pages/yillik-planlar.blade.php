@@ -9,7 +9,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         @switch ($sekme)
             @case('egitim')
                 Firmanın yıllık eğitim planı. Ay hücrelerine tıklayarak durumu Boş → Planlandı → Tamamlandı
@@ -66,9 +66,9 @@
         <x-slot name="heading">Firma & Yıl</x-slot>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -76,9 +76,9 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Yıl</label>
+                <label class="mehse-etiket">Yıl</label>
                 <select wire:model.live="yil"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     @foreach (range(now()->year - 1, now()->year + 2) as $y)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endforeach
@@ -161,7 +161,7 @@
                                             <button type="button" @disabled($kilitli)
                                                 @unless ($kilitli) wire:click="ayHucresiDegistir('faaliyetler', {{ $fi }}, {{ $ai }}, '{{ $hucre }}')" @endunless
                                                 title="{{ $kilitli ? 'Uzman atanmadan önce — seçilemez' : \App\Models\ZiyaretProgrami::AYLAR[$ai].' — '.$ad.($dolu ? ' (kaldırmak için tıklayın)' : '') }}"
-                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.75rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}@if ($hucre === 'G' && $durum === 'planlandi' && $ai < $p->gecikmeAyIndeksi())<span title="Gecikmiş faaliyet" style="color:#dc2626">●</span>@endif</button>
+                                                style="width:100%;min-height:1.6rem;border:none;background:{{ $dolu ? $renk.'22' : 'transparent' }};color:{{ $renk }};font-weight:800;font-size:.75rem;{{ $kilitli ? 'cursor:not-allowed' : 'cursor:pointer' }}">{{ $dolu ? $hucre : '' }}@if ($hucre === 'G' && $durum === 'planlandi' && $ai < $p->gecikmeAyIndeksi())<span title="Gecikmiş faaliyet" class="mehse-hata">●</span>@endif</button>
                                         </td>
                                     @endforeach
                                 @endforeach
@@ -182,7 +182,7 @@
                                 @endphp
                                 <td style="{{ $td }};text-align:center;font-size:.68rem;font-weight:700;color:{{ $durumRenk }}">{{ $genelDurum }}</td>
                                 <td style="{{ $td }};text-align:center">
-                                    <button type="button" wire:click="faaliyetSil({{ $fi }})" wire:confirm="Bu faaliyet plandan silinsin mi?" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="faaliyetSil({{ $fi }})" wire:confirm="Bu faaliyet plandan silinsin mi?" class="mehse-sil-dugme">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -191,20 +191,20 @@
 
                 <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 2fr 1fr 1fr 1.5fr auto;gap:.5rem">
                     <input type="text" wire:model="yeniAnaKonu" placeholder="Ana konu" list="ana-konu-listesi"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <datalist id="ana-konu-listesi">
                         @foreach (collect($p->faaliyetler ?? [])->pluck('ana_konu')->filter()->unique() as $konu)
                             <option value="{{ $konu }}"></option>
                         @endforeach
                     </datalist>
                     <input type="text" wire:model="yeniFaaliyet" placeholder="Planlanan faaliyet"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <input type="text" wire:model="yeniPeriyot" placeholder="Periyot"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <input type="text" wire:model="yeniSorumlu" placeholder="Sorumlu"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <input type="text" wire:model="yeniAciklama" placeholder="Mevzuat dayanağı / açıklama"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <x-filament::button size="sm" wire:click="faaliyetEkle">+ Faaliyet Ekle</x-filament::button>
                 </div>
 
@@ -227,10 +227,10 @@
                 <div style="overflow-x:auto">
                     <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1000px">
                         <tr>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Kategori</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Eğitim Konusu</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Süre</th>
-                            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Eğitici</th>
+                            <th class="mehse-th">Kategori</th>
+                            <th class="mehse-th">Eğitim Konusu</th>
+                            <th class="mehse-th">Süre</th>
+                            <th class="mehse-th">Eğitici</th>
                             @foreach (\App\Filament\Pages\YillikPlanlar::AYLAR as $ay)
                                 <th style="padding:.3rem .3rem;border-bottom:1px solid rgb(107 114 128 / .3);width:2.2rem">{{ $ay }}</th>
                             @endforeach
@@ -253,7 +253,7 @@
                                 @endforeach
                                 <td style="padding:.3rem .3rem;white-space:nowrap">
                                     @if (($e['kategori'] ?? null) === 'ise_ozgu' && blank($e['kutuphane_anahtari'] ?? null))<button type="button" wire:click="mountAction('kutuphaneyeKaydet', { index: {{ $ei }} })" title="Kütüphaneye kaydet" style="color:#b45309;cursor:pointer;background:none;border:none">★</button>@endif
-                                    <button type="button" wire:click="egitimSil({{ $ei }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="egitimSil({{ $ei }})" class="mehse-sil-dugme">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -262,19 +262,19 @@
 
                 <div style="margin-top:1rem;display:grid;grid-template-columns:1.2fr 2fr 1fr 1fr 1fr auto;gap:.5rem">
                     <select wire:model="yeniEgitimKategori" title="Eğitim planındaki bölüm"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                         @foreach ($egitimKategorileri as $anahtar => $ad)
                             <option value="{{ $anahtar }}">{{ $ad }}</option>
                         @endforeach
                     </select>
                     <input type="text" wire:model="yeniEgitimKonu" placeholder="Eğitim konusu"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <input type="number" wire:model="yeniEgitimSure" placeholder="Süre (saat)"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <input type="text" wire:model="yeniEgitimEgitici" placeholder="Eğitici"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <input type="text" wire:model="yeniEgitimHedefKitle" placeholder="Hedef kitle"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <x-filament::button size="sm" wire:click="egitimEkle">+ Ekle</x-filament::button>
                 </div>
 
@@ -282,7 +282,7 @@
                     <x-filament::button size="xs" color="primary" icon="heroicon-o-queue-list" wire:click="mountAction('iseOzguSec')">İşe Özgü Konuları Seç</x-filament::button>
                     <x-filament::button size="xs" color="gray" tag="a" :href="\App\Filament\Pages\IseOzguEgitimKonulari::getUrl(['firmaId' => $this->firmaId])">Konu kütüphanesi</x-filament::button>
                     <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
-                    <span style="font-size:.75rem;color:rgb(107 114 128)">4. bölüm firmanın iş kalemine / NACE koduna göre otomatik gelir; ★ ile plandaki konuyu kütüphaneye kaydedebilirsiniz.</span>
+                    <span class="mehse-soluk">4. bölüm firmanın iş kalemine / NACE koduna göre otomatik gelir; ★ ile plandaki konuyu kütüphaneye kaydedebilirsiniz.</span>
                 </div>
             </x-filament::section>
         @endif
@@ -331,7 +331,7 @@
                                     @if (($d['elle'] ?? false) && ! str_starts_with((string) ($d['anahtar'] ?? ''), 'ek_'))
                                         <button type="button" wire:click="degerlendirmeOtomatigeDondur({{ $di }})" title="Sistem kaydına dön" style="color:rgb(15 118 110);cursor:pointer;background:none;border:none">↺</button>
                                     @endif
-                                    <button type="button" wire:click="degerlendirmeSil({{ $di }})" wire:confirm="Satır silinsin mi?" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="degerlendirmeSil({{ $di }})" wire:confirm="Satır silinsin mi?" class="mehse-sil-dugme">✕</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -340,7 +340,7 @@
 
                 <div style="margin-top:1rem;display:grid;grid-template-columns:1fr auto;gap:.5rem">
                     <input type="text" wire:model="yeniDegerlendirmeCalisma" placeholder="Ek çalışma (şablon dışı)"
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <x-filament::button size="sm" wire:click="degerlendirmeEkle">+ Çalışma Ekle</x-filament::button>
                 </div>
 
@@ -363,6 +363,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

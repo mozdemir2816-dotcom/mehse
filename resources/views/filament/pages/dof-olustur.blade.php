@@ -4,7 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma ve gözetim/rapor bilgilerini girin, tespit ettiğiniz maddeleri tek tek ekleyin;
         "DÖF Raporu" ile Çoklu Düzeltici Önleyici Faaliyet raporu PDF'ini indirin.
     </p>
@@ -17,19 +17,19 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1rem">
             <div style="{{ $kutu }};text-align:center">
                 <div style="font-size:1.5rem;font-weight:800">{{ $ozet['toplam_dof'] }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam DÖF</div>
+                <div class="mehse-soluk">Toplam DÖF</div>
             </div>
             <div style="{{ $kutu }};text-align:center;border-color:rgb(217 119 6 / .4)">
                 <div style="font-size:1.5rem;font-weight:800;color:rgb(180 83 9)">{{ $ozet['acik_madde'] }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Açık Madde</div>
+                <div class="mehse-soluk">Açık Madde</div>
             </div>
             <div style="{{ $kutu }};text-align:center;border-color:rgb(16 185 129 / .4)">
                 <div style="font-size:1.5rem;font-weight:800;color:rgb(16 185 129)">{{ $ozet['kapanmis_madde'] }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Kapanmış Madde</div>
+                <div class="mehse-soluk">Kapanmış Madde</div>
             </div>
             <div style="{{ $kutu }};text-align:center">
                 <div style="font-size:1.5rem;font-weight:800">%{{ $ozet['kapatma_orani'] }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Genel Kapatma Başarısı</div>
+                <div class="mehse-soluk">Genel Kapatma Başarısı</div>
             </div>
         </div>
 
@@ -60,7 +60,7 @@
             @forelse ($this->acikMaddelerFiltreli as $m)
                 <div style="{{ $kutu }};display:flex;justify-content:space-between;align-items:start;gap:1rem;flex-wrap:wrap">
                     <div style="flex:1;min-width:220px">
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['firma'] }} · {{ $m['belge_no'] }}</div>
+                        <div class="mehse-soluk">{{ $m['firma'] }} · {{ $m['belge_no'] }}</div>
                         <div style="font-weight:600;font-size:.85rem">{{ $m['tespit'] }}</div>
                         <div style="margin-top:.3rem">
                             <x-filament::badge :color="match ($m['oncelik']) { 'kritik' => 'danger', 'yuksek' => 'warning', 'orta' => 'gray', default => 'success' }">
@@ -87,11 +87,11 @@
     <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="danger">
         <x-slot name="heading">1. Firma & Rapor Bilgileri</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -99,42 +99,42 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Alan / Bölge</label>
+                <label class="mehse-etiket">Alan / Bölge</label>
                 <input type="text" wire:model="alanBolge" placeholder="Örn: Üretim Sahası"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Gözetim Tarih Aralığı</label>
+                <label class="mehse-etiket">Gözetim Tarih Aralığı</label>
                 <input type="text" wire:model="gozetimTarihAraligi" placeholder="Örn: 01.09.2026 - 02.09.2026"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Rapor Tarihi</label>
+                <label class="mehse-etiket">Rapor Tarihi</label>
                 <input type="date" wire:model="raporTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
         </div>
 
         <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Gözetim Yapan (İSG Uzmanı)</label>
+                <label class="mehse-etiket">Gözetim Yapan (İSG Uzmanı)</label>
                 <input type="text" wire:model="gozetimYapan"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">İSG Sertifika No</label>
+                <label class="mehse-etiket">İSG Sertifika No</label>
                 <input type="text" wire:model="gozetimYapanSertifikaNo"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Sorumlu Kişi</label>
+                <label class="mehse-etiket">Sorumlu Kişi</label>
                 <input type="text" wire:model="sorumluKisi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">İşveren / Vekili Adı</label>
+                <label class="mehse-etiket">İşveren / Vekili Adı</label>
                 <input type="text" wire:model="isverenVekiliAdi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
         </div>
 
@@ -164,31 +164,31 @@
             <div x-show="acik" x-cloak style="margin-top:.7rem">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
                 <div style="grid-column:1/-1">
-                    <label style="font-weight:600;font-size:.8rem">Tespit <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Tespit <span class="mehse-hata">*</span></label>
                     <textarea wire:model="yeniTespit" rows="2" placeholder="Sahada tespit edilen uygunsuzluğu yazın"
                         style="margin-top:.2rem;width:100%;padding:.5rem .65rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem"></textarea>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Öncelik</label>
+                    <label class="mehse-etiket">Öncelik</label>
                     <select wire:model="yeniOncelik"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                         @foreach ($this->oncelikler as $anahtar => $ad)
                             <option value="{{ $anahtar }}">{{ $ad }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Sorumlu</label>
+                    <label class="mehse-etiket">Sorumlu</label>
                     <input type="text" wire:model="yeniSorumlu" placeholder="Örn: Bakım Sorumlusu"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Termin Tarihi</label>
+                    <label class="mehse-etiket">Termin Tarihi</label>
                     <input type="date" wire:model="yeniTermin"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div style="grid-column:1/-1">
-                    <label style="font-weight:600;font-size:.8rem">Öneri / Düzeltici Faaliyet</label>
+                    <label class="mehse-etiket">Öneri / Düzeltici Faaliyet</label>
                     <textarea wire:model="yeniOneri" rows="2" placeholder="Alınacak düzeltici/önleyici faaliyet"
                         style="margin-top:.2rem;width:100%;padding:.5rem .65rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem"></textarea>
                     @if ($this->aiAktif)
@@ -198,7 +198,7 @@
                     @endif
                 </div>
                 <div style="grid-column:1/-1">
-                    <label style="font-weight:600;font-size:.8rem">Fotoğraf Kanıtı (opsiyonel)</label><br>
+                    <label class="mehse-etiket">Fotoğraf Kanıtı (opsiyonel)</label><br>
                     @if ($yeniFoto)
                         <img src="{{ $yeniFoto->temporaryUrl() }}" style="width:60px;height:60px;object-fit:cover;border-radius:.4rem;border:2px solid #dc2626;margin:.3rem 0;display:block">
                     @endif
@@ -213,12 +213,12 @@
             @if ($maddeler)
                 <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:1rem">
                     <tr>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tespit</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Öncelik</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Öneri</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sorumlu</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Termin</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Durum</th>
+                        <th class="mehse-th">Tespit</th>
+                        <th class="mehse-th">Öncelik</th>
+                        <th class="mehse-th">Öneri</th>
+                        <th class="mehse-th">Sorumlu</th>
+                        <th class="mehse-th">Termin</th>
+                        <th class="mehse-th">Durum</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($maddeler as $i => $m)
@@ -252,7 +252,7 @@
                                 </select>
                             </td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="maddeSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -264,20 +264,20 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş DÖF Raporları</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Belge No</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Alan/Bölge</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Madde</th>
+                        <th class="mehse-th">Belge No</th>
+                        <th class="mehse-th">Alan/Bölge</th>
+                        <th class="mehse-th">Tarih</th>
+                        <th class="mehse-th">Madde</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
-                            <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->alan_bolge ?: '—' }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->rapor_tarihi?->format('d.m.Y') }}</td>
-                            <td style="padding:.35rem .5rem">{{ count($k->maddeler ?? []) }}</td>
+                            <td class="mehse-td">{{ $k->belge_no }}</td>
+                            <td class="mehse-td">{{ $k->alan_bolge ?: '—' }}</td>
+                            <td class="mehse-td">{{ $k->rapor_tarihi?->format('d.m.Y') }}</td>
+                            <td class="mehse-td">{{ count($k->maddeler ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 <x-filament::button size="xs" color="success" wire:click="gecmisWhatsapp({{ $k->id }})" title="İşverene WhatsApp ile gönder">📲 WhatsApp</x-filament::button>
@@ -291,6 +291,6 @@
 
         @include('filament.components.hazir-raporlar')
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

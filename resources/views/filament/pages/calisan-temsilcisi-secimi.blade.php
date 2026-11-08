@@ -6,7 +6,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         6331 sayılı Kanun md.20 uyarınca çalışan temsilcisi <strong>seçim</strong> süreci: duyuru → aday başvuruları →
         kesin aday listesi → oy pusulası → seçim sonucu atama tutanağı. Doğrudan atama için "Atama Yazıları"
         sayfasını kullanabilirsiniz.
@@ -34,42 +34,42 @@
             <x-slot name="heading">2. Seçim Bilgileri</x-slot>
             <x-slot name="description">Duyuru, aday listesi ve oy pusulasında kullanılır.</x-slot>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">İşyeri Çalışan Sayısı</label>
+                    <label class="mehse-etiket">İşyeri Çalışan Sayısı</label>
                     <input type="number" min="0" wire:model="isyeriCalisanSayisi"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Zorunlu Temsilci Sayısı</label>
+                    <label class="mehse-etiket">Zorunlu Temsilci Sayısı</label>
                     <input type="number" min="1" wire:model="zorunluTemsilciSayisi"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                     <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">6331 md.20 kademesine göre önerilir, gerekirse değiştirin.</p>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Aday Başvuru Son Tarihi</label>
+                    <label class="mehse-etiket">Aday Başvuru Son Tarihi</label>
                     <input type="date" wire:model="adayBasvuruSonTarihi"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Seçim Tarihi</label>
+                    <label class="mehse-etiket">Seçim Tarihi</label>
                     <input type="date" wire:model="secimTarihi"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Seçim Saati</label>
+                    <label class="mehse-etiket">Seçim Saati</label>
                     <input type="time" wire:model="secimSaati"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Seçim Yeri</label>
+                    <label class="mehse-etiket">Seçim Yeri</label>
                     <input type="text" wire:model="secimYeri" placeholder="Örn: Toplantı Salonu"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Görevlendirme Tarihi</label>
+                    <label class="mehse-etiket">Görevlendirme Tarihi</label>
                     <input type="date" wire:model="gorevlendirmeTarihi"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                     <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Boş bırakılırsa seçim tarihi kullanılır (Atama Tutanağı için).</p>
                 </div>
             </div>
@@ -113,7 +113,7 @@
             <x-filament::section icon="heroicon-o-document-check" icon-color="primary">
                 <x-slot name="heading">Atama yazısı ve eğitim</x-slot>
                 <x-slot name="description">Kazanan kaydedilince atama yazısı otomatik hazırlanır; çalışan temsilcisi eğitimi kaydı olmayanlara eğitim verilmelidir.</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->atamaEgitim as $t)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                             <td style="padding:.45rem .4rem;font-weight:700">{{ $t['ad_soyad'] }}@if ($t['unvan']) <span style="font-weight:400;color:rgb(107 114 128)">— {{ $t['unvan'] }}</span>@endif</td>
@@ -134,7 +134,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 
     <div style="{{ $kutu }};background:rgb(59 130 246 / .06);border-color:rgb(59 130 246 / .25)">

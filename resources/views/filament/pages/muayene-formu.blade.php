@@ -10,7 +10,7 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     @include('filament.pages.partials.kvkk-rozeti')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         EK-2 İşe Giriş / Periyodik Muayene Formu'nu doldurun; sonuç ve kanaat ile PDF çıktısı üretilir.
     </p>
 
@@ -20,9 +20,9 @@
     <x-filament::section icon="heroicon-o-heart" icon-color="info">
         <x-slot name="heading">1. Firma & Çalışan</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -32,7 +32,7 @@
             </div>
             @if ($this->firma)
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Hızlı Çalışan Seç</label>
+                    <label class="mehse-etiket">Hızlı Çalışan Seç</label>
                     <select wire:model.live="calisanHizliSecId" style="{{ $girdi }}">
                         <option value="">Firmaya kayıtlı çalışan yok / manuel gir</option>
                         @foreach ($this->calisanlar as $c)
@@ -46,31 +46,31 @@
         @if ($this->firma)
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Ad Soyad <span class="mehse-hata">*</span></label>
                     <input type="text" wire:model="calisanAdSoyad" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">T.C. Kimlik No</label>
+                    <label class="mehse-etiket">T.C. Kimlik No</label>
                     <input type="text" wire:model="calisanTc" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Doğum Tarihi</label>
+                    <label class="mehse-etiket">Doğum Tarihi</label>
                     <input type="date" wire:model="calisanDogumTarihi" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Görevi</label>
+                    <label class="mehse-etiket">Görevi</label>
                     <input type="text" wire:model="calisanGorevi" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">İşe Giriş Tarihi</label>
+                    <label class="mehse-etiket">İşe Giriş Tarihi</label>
                     <input type="date" wire:model="iseGirisTarihi" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Muayene Tarihi</label>
+                    <label class="mehse-etiket">Muayene Tarihi</label>
                     <input type="date" wire:model="muayeneTarihi" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Muayene Türü</label>
+                    <label class="mehse-etiket">Muayene Türü</label>
                     <select wire:model="muayeneTuru" style="{{ $girdi }}">
                         @foreach ($this->muayeneTurleri as $anahtar => $etiket)
                             <option value="{{ $anahtar }}">{{ $etiket }}</option>
@@ -217,7 +217,7 @@
                 <tr><th style="text-align:left;padding:.3rem;width:28%">Muayene Edilen Sistem / Organ</th><th style="text-align:left;padding:.3rem">Fizik Muayene Bulguları</th></tr>
                 @foreach ($muayeneModeli::FIZIK_SISTEMLERI as $anahtar => [$ad, $alt, $normal])
                     <tr style="border-top:1px solid rgb(107 114 128 / .15)">
-                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</span>@endif</td>
+                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span class="mehse-soluk">{{ $alt }}</span>@endif</td>
                         <td style="padding:.3rem"><input type="text" wire:model="ek2.fizik.{{ $anahtar }}" placeholder="{{ $normal }}" style="{{ $kucukGirdi }}"></td>
                     </tr>
                 @endforeach
@@ -231,7 +231,7 @@
                 <tr><th style="text-align:left;padding:.3rem;width:30%">Tetkik Grubu</th><th style="width:150px">Tarih</th><th style="text-align:left;padding:.3rem">Sonuç / Değerlendirme</th></tr>
                 @foreach ($muayeneModeli::LAB_GRUPLARI as $anahtar => [$ad, $alt])
                     <tr style="border-top:1px solid rgb(107 114 128 / .15)">
-                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</span>@endif</td>
+                        <td style="padding:.3rem"><strong>{{ $ad }}</strong>@if ($alt)<br><span class="mehse-soluk">{{ $alt }}</span>@endif</td>
                         <td style="padding:.3rem"><input type="date" wire:model="ek2.lab.{{ $anahtar }}.tarih" style="{{ $kucukGirdi }}"></td>
                         <td style="padding:.3rem"><input type="text" wire:model="ek2.lab.{{ $anahtar }}.sonuc" style="{{ $kucukGirdi }}"></td>
                     </tr>
@@ -260,7 +260,7 @@
 
             <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:end;margin-top:1rem;max-width:420px">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Önerilen Bir Sonraki Kontrol Tarihi</label>
+                    <label class="mehse-etiket">Önerilen Bir Sonraki Kontrol Tarihi</label>
                     <input type="date" wire:model="onerilenKontrolTarihi" style="{{ $girdi }}">
                 </div>
                 <x-filament::button size="sm" color="gray" wire:click="kontrolTarihiOner">
@@ -286,7 +286,7 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Muayene Kayıtları</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisKayitlar as $m)
                         <tr>
                             <td style="padding:.3rem .5rem">{{ $m->belge_no }} — {{ $m->calisan_ad_soyad }} ({{ $m->muayene_tarihi?->format('d.m.Y') }})</td>
@@ -300,6 +300,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

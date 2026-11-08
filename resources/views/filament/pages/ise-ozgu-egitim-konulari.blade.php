@@ -77,7 +77,7 @@
         <x-filament::section heading="Gizlenen sistem konuları" collapsible collapsed>
             @foreach ($this->gizlenenler as $a => $k)
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid rgb(107 114 128 / .12);font-size:.8rem">
-                    <span>{{ $k['ad'] }} <span style="color:rgb(107 114 128)">· {{ $k['kaynak'] }}</span></span>
+                    <span>{{ $k['ad'] }} <span class="mehse-soluk-metin">· {{ $k['kaynak'] }}</span></span>
                     <x-filament::button size="xs" color="gray" wire:click="sistemeDondur('{{ $a }}')">Geri getir</x-filament::button>
                 </div>
             @endforeach

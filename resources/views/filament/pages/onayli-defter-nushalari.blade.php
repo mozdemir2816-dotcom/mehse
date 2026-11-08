@@ -4,7 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Tespit ve Öneri Defteri'ni "İndir" ile alıp imzalatın/onaylatın, taranmış nüshayı
         buraya yükleyin. Nüsha numarası firma ve defter türü başına otomatik artar (1, 2, 3…).
         İSG-KATİP'e yüklenen resmi nüshaların kaydı burada tutulur.
@@ -15,7 +15,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -24,7 +24,7 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Defter Türü</label>
+                <label class="mehse-etiket">Defter Türü</label>
                 <select wire:model.live="defterTuru" style="{{ $girdi }}">
                     @foreach (config('isg.onayli_defter.turleri') as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>

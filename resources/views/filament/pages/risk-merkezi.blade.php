@@ -32,7 +32,7 @@
     </div>
 
     @if ($firma)
-        <div style="font-size:.75rem;color:rgb(107 114 128)">
+        <div class="mehse-soluk">
             {{ $firma->unvan }} · SGK Sicil {{ $firma->sgk_sicil_no ?: '—' }} · NACE {{ $firma->nace_kodu ?: '—' }} · {{ $firma->tehlikeSinifiEtiketi() }}@if ($yontemAd) · {{ $yontemAd }}@endif
         </div>
 
@@ -63,7 +63,7 @@
                         <div style="{{ $kart }};border-left:4px solid {{ $renk === 'inherit' ? 'rgb(107 114 128)' : $renk }}">
                             <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $sayi }}</div>
                             <div style="font-size:.78rem;font-weight:600">{{ $ad }}</div>
-                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</div>
+                            <div class="mehse-soluk">{{ $alt }}</div>
                         </div>
                     @endforeach
                 </div>
@@ -78,7 +78,7 @@
                                 <span style="min-width:2.4rem;text-align:center;font-weight:800;color:#fff;background:{{ $grupRenk[$g] ?? 'gray' }};border-radius:.4rem;padding:.15rem .3rem;font-size:.8rem">{{ rtrim(rtrim(number_format((float) $m->puan, 1, ',', ''), '0'), ',') }}</span>
                                 <div style="font-size:.8rem;flex:1">
                                     <strong>{{ \Illuminate\Support\Str::limit($m->tehlike, 90) }}</strong>
-                                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m->bolum ?: 'Bölüm yok' }} · {{ $m->duzey }} · Termin {{ RMV::terminTarihi($m->termin)?->format('d.m.Y') ?? ($m->termin ?: '—') }}</div>
+                                    <div class="mehse-soluk">{{ $m->bolum ?: 'Bölüm yok' }} · {{ $m->duzey }} · Termin {{ RMV::terminTarihi($m->termin)?->format('d.m.Y') ?? ($m->termin ?: '—') }}</div>
                                 </div>
                             </div>
                         @empty
@@ -91,10 +91,10 @@
                         <x-slot name="description">{{ $rd->yontem === 'matris_5x5' ? 'Olasılık × şiddet — hücredeki sayı kayıt adedidir' : 'Düzey dağılımı' }}</x-slot>
                         @if ($rd->yontem === 'matris_5x5')
                             <table style="width:100%;border-collapse:separate;border-spacing:3px;font-size:.75rem;text-align:center">
-                                <tr><td style="color:rgb(107 114 128)" title="Satır: olasılık · Sütun: şiddet">O\Ş</td>@foreach (range(1, 5) as $s)<td style="color:rgb(107 114 128)">{{ $s }}</td>@endforeach</tr>
+                                <tr><td class="mehse-soluk-metin" title="Satır: olasılık · Sütun: şiddet">O\Ş</td>@foreach (range(1, 5) as $s)<td class="mehse-soluk-metin">{{ $s }}</td>@endforeach</tr>
                                 @foreach (range(1, 5) as $ol)
                                     <tr>
-                                        <td style="color:rgb(107 114 128)">{{ $ol }}</td>
+                                        <td class="mehse-soluk-metin">{{ $ol }}</td>
                                         @foreach (range(1, 5) as $s)
                                             @php $p = $ol * $s; $adet = $o['matris'][$ol][$s] ?? 0; $bg = $p >= 15 ? 'rgb(254 202 202)' : ($p >= 8 ? 'rgb(254 243 199)' : 'rgb(220 252 231)'); @endphp
                                             <td style="background:{{ $bg }};border-radius:.3rem;padding:.4rem 0;{{ $adet ? 'outline:2px solid #0f766e;font-weight:800' : 'color:rgb(107 114 128)' }}">{{ $adet ?: $p }}</td>
@@ -122,7 +122,7 @@
                         <x-slot name="heading">Son kayıtlar</x-slot>
                         <table style="width:100%;border-collapse:collapse;font-size:.8rem">
                             @foreach ($o['son'] as $m)
-                                <tr><td style="{{ $td }}">{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m->bolum ?: '—' }}</div></td>
+                                <tr><td style="{{ $td }}">{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}<div class="mehse-soluk">{{ $m->bolum ?: '—' }}</div></td>
                                     <td style="{{ $td }};white-space:nowrap">{{ $m->duzey ?: 'Puansız' }}</td>
                                     <td style="{{ $td }};white-space:nowrap;color:rgb(107 114 128)">{{ $m->updated_at?->format('d.m.Y') }}</td></tr>
                             @endforeach
@@ -160,7 +160,7 @@
                         @forelse ($this->aksiyonlar->take(150) as $a)
                             @php $m = $a['madde']; @endphp
                             <tr wire:key="aks-{{ $m->id }}">
-                                <td style="{{ $td }};max-width:280px"><strong>{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m->bolum ?: '—' }} · {{ $a['rd']->belge_no }}</div></td>
+                                <td style="{{ $td }};max-width:280px"><strong>{{ \Illuminate\Support\Str::limit($m->tehlike, 70) }}</strong><div class="mehse-soluk">{{ $m->bolum ?: '—' }} · {{ $a['rd']->belge_no }}</div></td>
                                 <td style="{{ $td }};white-space:nowrap;color:{{ $grupRenk[$a['grup']] ?? 'inherit' }};font-weight:700">{{ $m->puan ?: '—' }}</td>
                                 <td style="{{ $td }};max-width:300px">{{ \Illuminate\Support\Str::limit($m->oneri, 120) }}</td>
                                 <td style="{{ $td }}">{{ $m->sorumlu ?: '—' }}</td>
@@ -213,7 +213,7 @@
                         <span style="font-weight:800;min-width:1.4rem;color:{{ $k['tamam'] === true ? 'rgb(21 128 61)' : ($k['tamam'] === null ? 'rgb(107 114 128)' : 'rgb(217 119 6)') }}">{{ $k['tamam'] === true ? '✓' : ($k['tamam'] === null ? '–' : '!') }}</span>
                         <div style="flex:1;font-size:.8rem">
                             <strong>{{ $i + 1 }}. {{ $k['baslik'] }}</strong>
-                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k['aciklama'] }} <em>({{ $k['dayanak'] }})</em></div>
+                            <div class="mehse-soluk">{{ $k['aciklama'] }} <em>({{ $k['dayanak'] }})</em></div>
                             <div style="font-size:.75rem;margin-top:.1rem">{{ $k['sonuc'] }}@if ($k['url']) · <a href="{{ $k['url'] }}" style="color:rgb(15 118 110)">Modüle git →</a>@endif</div>
                         </div>
                     </div>
@@ -226,7 +226,7 @@
                 @foreach (RMV::yolHaritasi($kontroller, $o ?? ['toplam' => 0, 'geciken' => 0]) as $i => [$b, $a, $tamam])
                     <div style="display:flex;gap:.6rem;align-items:flex-start;margin-bottom:.5rem">
                         <span style="width:1.6rem;height:1.6rem;flex:none;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;background:{{ $tamam ? 'rgb(21 128 61)' : 'rgb(13 148 136)' }}">{{ $tamam ? '✓' : $i + 1 }}</span>
-                        <div style="font-size:.8rem"><strong>{{ $b }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a }}</div></div>
+                        <div style="font-size:.8rem"><strong>{{ $b }}</strong><div class="mehse-soluk">{{ $a }}</div></div>
                     </div>
                 @endforeach
             </x-filament::section>

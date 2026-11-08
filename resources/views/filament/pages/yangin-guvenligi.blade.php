@@ -7,7 +7,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Bina kullanımı, kat/kullanıcı yükü, bölümler ve faaliyet/depolama risklerini girin;
         bina yangın tehlike sınıfı otomatik belirlenir (Binaların Yangından Korunması Hakkında
         Yönetmelik). Kütüphaneden tespit seçip "Değerlendirme Raporu" alın.
@@ -47,12 +47,12 @@
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
                 <div style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">TOPLAM KAPALI ALAN</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['alan'] ? $say($h['alan']).' m²' : '—' }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $h['alan'] ? 'Tüm katların toplamı (girdiğiniz değer)' : 'Toplam kapalı alanı girin' }}</div>
+                <div class="mehse-soluk">{{ $h['alan'] ? 'Tüm katların toplamı (girdiğiniz değer)' : 'Toplam kapalı alanı girin' }}</div>
             </div>
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
                 <div style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">KULLANICI YÜKÜ (Md.32, Ek-5/A)</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['yuk']['esas'] ? $say($h['yuk']['esas']).' kişi' : '—' }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">
+                <div class="mehse-soluk">
                     @if ($h['yuk']['hesaplanan']) {{ $say($h['alan']) }} m² ÷ {{ $say($h['yuk']['katsayi']) }} m²/kişi = {{ $h['yuk']['hesaplanan'] }} · @endif
                     @if ($h['yuk']['calisan']) çalışan {{ $h['yuk']['calisan'] }} · @endif
                     @if ($h['yuk']['girilen']) beyan {{ $h['yuk']['girilen'] }} · @endif
@@ -62,7 +62,7 @@
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .85rem">
                 <div style="font-size:.75rem;color:rgb(107 114 128);font-weight:700">ASGARİ SÖNDÜRÜCÜ (Md.99/2)</div>
                 <div style="font-size:1.15rem;font-weight:800">{{ $h['ysc'] ? $h['ysc']['adet'].' adet 6 kg KKT' : '—' }}@if ($h['ysc']['uzman_adet'] ?? null) <span style="font-size:.85rem;color:#b91c1c">· uzman önerisi {{ $h['ysc']['uzman_adet'] }} adet</span>@endif</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">
+                <div class="mehse-soluk">
                     @if ($h['ysc']) Her {{ $h['ysc']['birim'] }} m²'ye 1 adet, ulaşma ≤ 25 m{{ $h['ysc']['tekerlekli'] ? ' · tekerlekli: '.implode(', ', $h['ysc']['tekerlekli']) : '' }} @else Toplam kapalı alanı girin @endif
                 </div>
             </div>

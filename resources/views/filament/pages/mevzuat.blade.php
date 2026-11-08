@@ -4,7 +4,7 @@
 ?>
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İSG pratiğinde en sık başvurulan mevzuatın kısa dizini — tam metin değil, yönlendirme amaçlıdır.
         Madde numarası/tarih gibi ayrıntılar için resmi kaynağa (mevzuat.gov.tr, resmigazete.gov.tr) bakınız.
     </p>

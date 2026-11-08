@@ -7,7 +7,7 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     @include('filament.pages.partials.kvkk-rozeti')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Çalışanların işe giriş / periyodik muayene ve işe özgü tetkiklerini (odyometri, SFT,
         portör, psikoteknik vb.) takip edin. Tetkik tarihi girince sonraki tetkik tarihi
         periyoda / tehlike sınıfına göre otomatik hesaplanır. Muayene formunu (EK-2) “Muayene
@@ -88,7 +88,7 @@
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.35rem">
                                         <div style="font-weight:600">{{ $s['calisan_adi'] ?? '' }}</div>
-                                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['gorev'] ?? '' }}</div>
+                                        <div class="mehse-soluk">{{ $s['gorev'] ?? '' }}</div>
                                     </td>
                                     <td style="padding:.35rem">{{ $this->turler[$s['tetkik_turu']]['ad'] ?? $s['tetkik_turu'] }}</td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.tarih" style="{{ $girdi }}"></td>
@@ -107,7 +107,7 @@
                                         @if (($s['tetkik_turu'] ?? null) === 'kan_kursunu')
                                             <input type="number" step="0.1" min="0" wire:model.blur="satirlar.{{ $i }}.kursun_deger" style="{{ $girdi }}" placeholder="µg/dL">
                                         @else
-                                            <span style="color:rgb(107 114 128)">—</span>
+                                            <span class="mehse-soluk-metin">—</span>
                                         @endif
                                     </td>
                                     <td style="padding:.35rem;text-align:center">

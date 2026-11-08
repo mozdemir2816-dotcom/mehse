@@ -11,7 +11,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Sahada gördüğünüz her uygunsuzluk burada <strong>bir kez</strong> kaydedilir: elle, fotoğraftan ya da kısa açıklamadan AI ile,
         veya başka bir yapay zekaya hazırlattığınız Word/Excel dosyasından ("Word/Excel'den Aktar"). DÖF raporu için listeden bulguları
         seçip "Seçilenleri DÖF'e Aktar"ı kullanın. Kapsamlı kontrol listesi için
@@ -23,11 +23,11 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
         <div style="{{ $kutu }};border-radius:1rem">
             <div style="font-size:1.4rem;font-weight:800">{{ $o['toplam'] }}</div>
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Toplam bulgu</div>
+            <div class="mehse-soluk">Toplam bulgu</div>
         </div>
         <div style="{{ $kutu }};border-radius:1rem">
             <div style="font-size:1.4rem;font-weight:800;color:{{ $o['acik'] > 0 ? '#d97706' : 'inherit' }}">{{ $o['acik'] }}</div>
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Açık</div>
+            <div class="mehse-soluk">Açık</div>
             @if ($o['kritik'] > 0 || $o['gecikmis'] > 0)
                 <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">
                     @if ($o['kritik'] > 0)<span style="font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:rgb(220 38 38 / .12);color:#b91c1c">{{ $o['kritik'] }} kritik</span>@endif
@@ -37,11 +37,11 @@
         </div>
         <div style="{{ $kutu }};border-radius:1rem">
             <div style="font-size:1.4rem;font-weight:800;color:{{ $o['kapandi'] > 0 ? '#16a34a' : 'inherit' }}">{{ $o['kapandi'] }}</div>
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Kapatılan</div>
+            <div class="mehse-soluk">Kapatılan</div>
         </div>
         <div style="{{ $kutu }};border-radius:1rem">
             <div style="font-size:1.4rem;font-weight:800;color:{{ $o['basari'] >= 75 ? '#16a34a' : ($o['basari'] >= 40 ? '#d97706' : '#b91c1c') }}">%{{ $o['basari'] }}</div>
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Başarı oranı</div>
+            <div class="mehse-soluk">Başarı oranı</div>
             <div style="height:5px;border-radius:9999px;background:rgb(107 114 128 / .2);margin-top:.3rem;overflow:hidden"><div style="height:100%;width:{{ max($o['basari'], 1) }}%;background:#16a34a"></div></div>
         </div>
     </div>
@@ -138,7 +138,7 @@
                     <strong style="font-size:1.05rem;line-height:1">{{ $skor }}</strong><span style="font-size:.68rem">{{ \App\Models\SahaBulgusu::ONCELIKLER[$gecerliOncelik] }}</span>
                 </span>
                 <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.3rem .8rem;font-size:.8rem;color:rgb(71 85 105)">
-                    @forelse ($ozetParca as $p)<span>{{ $p }}</span>@empty<span style="color:rgb(107 114 128)">Bölüm, kategori, dayanak, aksiyon henüz girilmedi — AI ile doldurun ya da ayrıntıları açın.</span>@endforelse
+                    @forelse ($ozetParca as $p)<span>{{ $p }}</span>@empty<span class="mehse-soluk-metin">Bölüm, kategori, dayanak, aksiyon henüz girilmedi — AI ile doldurun ya da ayrıntıları açın.</span>@endforelse
                 </div>
                 <x-filament::button size="sm" color="gray" outlined x-on:click="acik = ! acik">
                     <span x-text="acik ? 'Ayrıntıları gizle ▴' : 'Ayrıntıları düzenle ▾'">Ayrıntıları düzenle ▾</span>
@@ -169,9 +169,9 @@
             @if ($enlem !== null)
                 <span>📍 {{ $enlem }}, {{ $boylam }}</span>
             @else
-                <span style="color:rgb(107 114 128)">Konum isteğe bağlıdır.</span>
+                <span class="mehse-soluk-metin">Konum isteğe bağlıdır.</span>
             @endif
-            <span x-show="hata" x-text="hata" style="color:#dc2626"></span>
+            <span x-show="hata" x-text="hata" class="mehse-hata"></span>
         </div>
 
                 <div style="font-weight:700;font-size:.85rem;margin-top:.4rem">Tehlike ve risk</div>
@@ -286,9 +286,9 @@
                     @foreach ($this->bulgular as $b)
                         <tr wire:key="bulgu-{{ $b->id }}">
                             <td style="{{ $td }}"><input type="checkbox" wire:model.live="secili" value="{{ $b->id }}" title="DÖF'e aktarmak için seç" style="width:1.1rem;height:1.1rem"></td>
-                            <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->created_at?->format('d.m.Y') }}{{ match ($b->kaynak) { 'ai' => ' · AI', 'dosya' => ' · dosya', default => '' } }}@if (count($b->fotograflar ?? [])) · 📷 {{ count($b->fotograflar) }}@endif</div></td>
-                            <td style="{{ $td }}">{{ $b->firma?->unvan }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(124 58 237)">harita</a>@endif</div></td>
-                            <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->kategori }}</div>@endif</td>
+                            <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div class="mehse-soluk">{{ $b->created_at?->format('d.m.Y') }}{{ match ($b->kaynak) { 'ai' => ' · AI', 'dosya' => ' · dosya', default => '' } }}@if (count($b->fotograflar ?? [])) · 📷 {{ count($b->fotograflar) }}@endif</div></td>
+                            <td style="{{ $td }}">{{ $b->firma?->unvan }}<div class="mehse-soluk">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(124 58 237)">harita</a>@endif</div></td>
+                            <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div class="mehse-soluk">{{ $b->kategori }}</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">
                                 <span style="display:inline-block;color:#fff;background:{{ $b->oncelikRengi() }};border-radius:9999px;padding:.15rem .65rem;font-weight:700;font-size:.75rem">{{ $b->skor() }} · {{ $b->oncelikEtiketi() }}</span>
                                 @if ($b->durum !== 'acik')
@@ -304,7 +304,7 @@
                                         <x-filament::button size="sm" color="success" wire:click="hizliKapat({{ $b->id }})" style="min-height:2.5rem">Kapat</x-filament::button>
                                     </div>
                                 @else
-                                    <span style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->kapanis_tarihi?->format('d.m.Y') }}@if ($b->kapanis_notu) · {{ \Illuminate\Support\Str::limit($b->kapanis_notu, 60) }}@endif</span>
+                                    <span class="mehse-soluk">{{ $b->kapanis_tarihi?->format('d.m.Y') }}@if ($b->kapanis_notu) · {{ \Illuminate\Support\Str::limit($b->kapanis_notu, 60) }}@endif</span>
                                 @endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">

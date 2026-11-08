@@ -78,7 +78,7 @@
                         <tr wire:key="satir-{{ $s['anahtar'] }}">
                             <td style="{{ $td }}">
                                 <div style="font-weight:600">{{ $s['ekipman'] }}</div>
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['dosya'] }} · {{ $s['yontem'] ?? '' }}</div>
+                                <div class="mehse-soluk">{{ $s['dosya'] }} · {{ $s['yontem'] ?? '' }}</div>
                             </td>
                             <td style="{{ $td }};white-space:nowrap">{{ $s['madde'] }}</td>
                             <td style="{{ $td }};min-width:240px">

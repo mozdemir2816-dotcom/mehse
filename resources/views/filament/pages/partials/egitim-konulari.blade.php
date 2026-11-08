@@ -45,7 +45,7 @@
                             <span style="flex:1;{{ ! $s['dahil'] ? 'text-decoration:line-through;color:rgb(107 114 128)' : '' }}">{{ $s['madde'] }}</span>
                             <input type="number" min="0" wire:model.live="{{ $s['dakika_model'] }}"
                                 style="width:3.5rem;padding:.15rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                            <span style="font-size:.75rem;color:rgb(107 114 128)">dk</span>
+                            <span class="mehse-soluk">dk</span>
                         </div>
                     @endforeach
                 </div>
@@ -75,7 +75,7 @@
                             @endif
                             <input type="number" min="0" wire:model.live="{{ $s['dakika_model'] }}"
                                 style="width:3.5rem;padding:.15rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                            <span style="font-size:.75rem;color:rgb(107 114 128)">dk</span>
+                            <span class="mehse-soluk">dk</span>
                             @if ($konularDuzenlenebilir)
                                 <button type="button" wire:click="isyerineOzguMaddeCikar({{ $i }})"
                                     style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
@@ -115,7 +115,7 @@
                     @endif
                     <input type="number" min="0" wire:model.live="{{ $s['dakika_model'] }}"
                         style="width:3.5rem;padding:.15rem .3rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.75rem">
-                    <span style="font-size:.75rem;color:rgb(107 114 128)">dk</span>
+                    <span class="mehse-soluk">dk</span>
                     @if ($ozelEklenebilir && ! empty($m['ek']))
                         <button type="button" wire:click="ozelMaddeCikar({{ $i }})" title="Konuyu sil"
                             style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>

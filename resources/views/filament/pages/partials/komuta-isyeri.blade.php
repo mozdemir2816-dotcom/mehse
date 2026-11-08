@@ -18,7 +18,7 @@
         <div style="{{ $kart }};display:flex;flex-wrap:wrap;gap:.75rem;justify-content:space-between;align-items:center">
             <div>
                 <div style="font-weight:800;font-size:1.05rem">{{ $firma->unvan }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">
+                <div class="mehse-soluk">
                     İşyeri Durum Merkezi · gerçek kayıtlardan birleşik görünüm
                     @if ($firma->sgk_sicil_no) · Sicil: {{ $firma->sgk_sicil_no }} @endif · {{ $firma->tehlikeSinifiEtiketi() }}
                 </div>
@@ -39,7 +39,7 @@
                 <div style="font-size:.78rem;color:rgb(107 114 128)">İSG operasyonu, sözleşme ve yetkiniz dahilindeki cari veriler aynı rapor bütününde. Sağlık bilgileri yalnız toplu sayı olarak gösterilir.</div>
             </div>
             <div style="text-align:right;white-space:nowrap">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">Rapor tarihi</div>
+                <div class="mehse-soluk">Rapor tarihi</div>
                 <div style="font-weight:800">{{ now()->format('d.m.Y') }}</div>
             </div>
         </div>
@@ -53,13 +53,13 @@
                 </div>
                 <div style="text-align:right">
                     <div style="font-size:1.6rem;font-weight:800;color:rgb(124 58 237)">%{{ $o['yuzde'] }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">ölçülebilir süreç tamamlanması</div>
+                    <div class="mehse-soluk">ölçülebilir süreç tamamlanması</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-top:.7rem">
                 @foreach ([['Tamamlanan', 'tamamlandi'], ['Eksik', 'eksik'], ['Gecikmiş', 'gecikmis'], ['Yaklaşan', 'yaklasan']] as [$ad, $k])
                     <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.5rem .8rem">
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                        <div class="mehse-soluk">{{ $ad }}</div>
                         <div style="font-size:1.4rem;font-weight:800;color:{{ $renk[$k] }}">{{ $o[$k] }}</div>
                     </div>
                 @endforeach
@@ -106,13 +106,13 @@
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;align-items:end" class="idm-yazdirma">
-                <div><label style="font-size:.75rem;font-weight:600">Kategori</label>
+                <div><label class="mehse-etiket-kucuk">Kategori</label>
                     <select wire:model.live="takvimKategori" style="{{ $girdi }};width:100%"><option value="">Tüm kategoriler</option>@foreach ($kategoriler as $k)<option value="{{ $k }}">{{ $k }}</option>@endforeach</select></div>
-                <div><label style="font-size:.75rem;font-weight:600">Durum</label>
+                <div><label class="mehse-etiket-kucuk">Durum</label>
                     <select wire:model.live="takvimDurum" style="{{ $girdi }};width:100%"><option value="">Tüm durumlar</option>@foreach (IsyeriDurumu::TAKVIM_DURUMLARI as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach</select></div>
-                <div><label style="font-size:.75rem;font-weight:600">Başlangıç</label><input type="date" wire:model.live="takvimBaslangic" style="{{ $girdi }};width:100%"></div>
-                <div><label style="font-size:.75rem;font-weight:600">Bitiş</label><input type="date" wire:model.live="takvimBitis" style="{{ $girdi }};width:100%"></div>
-                <div><label style="font-size:.75rem;font-weight:600">Sayfa boyutu</label>
+                <div><label class="mehse-etiket-kucuk">Başlangıç</label><input type="date" wire:model.live="takvimBaslangic" style="{{ $girdi }};width:100%"></div>
+                <div><label class="mehse-etiket-kucuk">Bitiş</label><input type="date" wire:model.live="takvimBitis" style="{{ $girdi }};width:100%"></div>
+                <div><label class="mehse-etiket-kucuk">Sayfa boyutu</label>
                     <select wire:model.live="sayfaBoyutu" style="{{ $girdi }};width:100%">@foreach ([10, 25, 50, 100] as $n)<option value="{{ $n }}">{{ $n }} kayıt</option>@endforeach</select></div>
                 <div><x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-uturn-left" wire:click="takvimSifirla">Sıfırla</x-filament::button></div>
             </div>
@@ -125,7 +125,7 @@
                         <tr>
                             <td style="{{ $td }};white-space:nowrap"><span style="font-size:.75rem;font-weight:700;color:#fff;background:{{ $tRenk[$t['durum']] }};border-radius:.35rem;padding:.15rem .45rem">{{ \Illuminate\Support\Str::before(IsyeriDurumu::TAKVIM_DURUMLARI[$t['durum']], ' (') }}</span></td>
                             <td style="{{ $td }}">{{ $t['kategori'] }}</td>
-                            <td style="{{ $td }}"><strong>{{ $t['kayit'] }}</strong>@if ($t['alt'])<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $t['alt'] }}</div>@endif</td>
+                            <td style="{{ $td }}"><strong>{{ $t['kayit'] }}</strong>@if ($t['alt'])<div class="mehse-soluk">{{ $t['alt'] }}</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $t['tarih']->format('d.m.Y') }}</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $t['durum'] === 'tamamlandi' ? 'Tamamlandı' : IsyeriDurumu::kalanMetni($t['tarih']) }}</td>
                             <td style="{{ $td }};color:rgb(75 85 99)">{{ $t['sorumlu'] }}</td>
@@ -152,7 +152,7 @@
                 ['Risk maddesi (son RD)', $g['risk_maddesi']], ['Açık DÖF', $g['acik_dof']], ['Gecikmiş muayene', $g['gecikmis_muayene']], ['Eğitim kaydı', $g['egitim_kaydi']],
             ] as [$ad, $deger])
                 <div style="{{ $kart }}">
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div class="mehse-soluk">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:800">{{ $deger }}</div>
                 </div>
             @endforeach
@@ -171,7 +171,7 @@
                         'Adres' => trim($firma->adres.' '.$firma->ilce.' '.$firma->il),
                         'Durum' => $firma->aktif ? 'Aktif' : 'Pasif',
                     ] as $etiket => $deger)
-                        <dt style="color:rgb(107 114 128)">{{ $etiket }}</dt><dd>{{ filled($deger) ? $deger : '—' }}</dd>
+                        <dt class="mehse-soluk-metin">{{ $etiket }}</dt><dd>{{ filled($deger) ? $deger : '—' }}</dd>
                     @endforeach
                 </dl>
             </x-filament::section>
@@ -179,13 +179,13 @@
             <x-filament::section icon="heroicon-o-user-group" icon-color="gray">
                 <x-slot name="heading">Görevlendirmeler</x-slot>
                 @php $gorev = \App\Support\IsyeriDurumu::gorevlendirmeler($firma); @endphp
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>@foreach (['Profesyonel', 'Rol', 'Otomatik aylık süre'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                     @forelse ($gorev as $r)
                         <tr>
-                            <td style="{{ $td }}">{{ $r['ad'] }}@if ($r['sertifika'])<div style="font-size:.75rem;color:rgb(107 114 128)">Sertifika {{ $r['sertifika'] }}</div>@endif</td>
+                            <td style="{{ $td }}">{{ $r['ad'] }}@if ($r['sertifika'])<div class="mehse-soluk">Sertifika {{ $r['sertifika'] }}</div>@endif</td>
                             <td style="{{ $td }}">{{ $r['rol'] }}</td>
-                            <td style="{{ $td }}"><strong>{{ $r['aylik_dk'] }} dk</strong><div style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\GorevDurumu::saatDk($r['aylik_dk']) }} / ay</div></td>
+                            <td style="{{ $td }}"><strong>{{ $r['aylik_dk'] }} dk</strong><div class="mehse-soluk">{{ \App\Support\GorevDurumu::saatDk($r['aylik_dk']) }} / ay</div></td>
                         </tr>
                     @empty
                         <tr><td colspan="3" style="{{ $td }};color:rgb(107 114 128)">Aktif görevlendirme yok.</td></tr>
@@ -200,7 +200,7 @@
             <x-filament::section icon="heroicon-o-map-pin" icon-color="gray">
                 <x-slot name="heading">Son ziyaretler</x-slot>
                 <x-slot name="afterHeader"><x-filament::button size="xs" color="gray" tag="a" :href="\App\Filament\Pages\ZiyaretProgrami::getUrl(['firma' => $firma->id])" class="idm-yazdirma">Ziyaret programı</x-filament::button></x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>@foreach (['Tarih', 'Konu', 'Süre', 'Durum'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                     @forelse (\App\Support\IsyeriDurumu::sonZiyaretler($firma) as $z)
                         <tr>
@@ -217,7 +217,7 @@
 
             <x-filament::section icon="heroicon-o-document-text" icon-color="gray">
                 <x-slot name="heading">Hizmet sözleşmesi</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>@foreach (['Başlangıç', 'Bitiş', 'Kalan', 'Durum'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                     @if ($firma->sozlesme_baslangic || $firma->sozlesme_bitis)
                         @php $bitis = $firma->sozlesme_bitis ? \Illuminate\Support\Carbon::parse($firma->sozlesme_bitis) : null; @endphp
@@ -237,7 +237,7 @@
         {{-- Son olaylar --}}
         <x-filament::section icon="heroicon-o-exclamation-circle" icon-color="gray">
             <x-slot name="heading">Son olaylar</x-slot>
-            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+            <table class="mehse-tablo">
                 <tr>@foreach (['Form', 'Tür', 'Özet', 'Tarih'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                 @forelse (\App\Support\IsyeriDurumu::sonOlaylar($firma) as $olay)
                     <tr>

@@ -10,7 +10,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşyerine gelen tedarikçi, denetçi, misafir gibi dış kişilere süreli ve QR'lı geçiş kartı verin.
         Güvenlik QR'ı okutarak kartın geçerliliğini görür. Giriş / çıkış kaydı tutulur ve acil durumda
         içerideki ziyaretçilerin sayım listesi alınabilir.
@@ -20,7 +20,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
         @foreach ([['Bugünkü ziyaretçi', $o['bugun'], 'inherit'], ['Şu an içeride', $o['iceride'], 'rgb(124 58 237)'], ['Geçerli kart', $o['gecerli'], '#16a34a']] as [$ad, $sayi, $c])
             <div style="{{ $kutu }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                <div class="mehse-soluk">{{ $ad }}</div>
                 <div style="font-size:1.5rem;font-weight:700;color:{{ $sayi > 0 ? $c : 'inherit' }}">{{ $sayi }}</div>
             </div>
         @endforeach
@@ -129,12 +129,12 @@
                         <tr>
                             <td style="{{ $td }}">
                                 <strong>{{ $z->ad_soyad }}</strong>
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ collect([$z->kurum, $z->kart_no])->filter()->implode(' · ') }}</div>
+                                <div class="mehse-soluk">{{ collect([$z->kurum, $z->kart_no])->filter()->implode(' · ') }}</div>
                             </td>
                             <td style="{{ $td }}">{{ $z->firma?->unvan }}</td>
                             <td style="{{ $td }}">
                                 {{ $z->ziyaret_amaci ?: '—' }}
-                                @if ($z->ziyaret_edilen)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $z->ziyaret_edilen }}</div>@endif
+                                @if ($z->ziyaret_edilen)<div class="mehse-soluk">{{ $z->ziyaret_edilen }}</div>@endif
                             </td>
                             <td style="{{ $td }};white-space:nowrap">{{ $z->gecerlilik_baslangic->format('d.m H:i') }} – {{ $z->gecerlilik_bitis->format('d.m H:i') }}</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $z->giris_zamani?->format('d.m H:i') ?? '—' }} / {{ $z->cikis_zamani?->format('d.m H:i') ?? '—' }}</td>

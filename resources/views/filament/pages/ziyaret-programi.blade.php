@@ -20,7 +20,7 @@
     @if ($gorunum === 'ajanda')
         @include('filament.pages.partials.planlama-ajanda')
     @else
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma başına yıllık, 12 aylık saha ziyaret programı. Durum hücresine tıklayarak
         Boş→Planlandı→Tamamlandı arasında geçiş yapın; isterseniz AI'dan o ay için kısa
         bir amaç/kapsam önerisi alın. Bir ayda birden fazla ziyaret varsa "+" ile ek
@@ -28,9 +28,9 @@
         Planı'nda o ay planlanan maddelerden otomatik gelir.
     </p>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+    <div class="mehse-izgara">
         <div>
-            <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+            <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
             <select wire:model.live="firmaId" style="{{ $girdi }};margin-top:.3rem;padding:.55rem .75rem">
                 <option value="">— Firma seçin —</option>
                 @foreach ($this->firmalar as $id => $ad)
@@ -39,7 +39,7 @@
             </select>
         </div>
         <div>
-            <label style="font-weight:600;font-size:.82rem">Yıl</label>
+            <label class="mehse-etiket">Yıl</label>
             <input type="number" wire:model.live="yil" style="{{ $girdi }};margin-top:.3rem;padding:.55rem .75rem">
         </div>
     </div>
@@ -57,7 +57,7 @@
                 <div>
                     <div style="font-size:.75rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Aylık yasal asgari süre</div>
                     <div style="font-size:1.5rem;font-weight:800;color:#0369A1;line-height:1.1">{{ $kisaYasal }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">
+                    <div class="mehse-soluk">
                         @if ($yDkKatip)
                             İSG-KATİP sözleşme süresi · {{ $yDk }} dk
                         @else
@@ -68,7 +68,7 @@
                 <div>
                     <div style="font-size:.75rem;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.04em">Önerilen ziyaret sıklığı</div>
                     <div style="font-size:1.1rem;font-weight:800">{{ $sk['etiket'] }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $this->firma->tehlikeSinifiEtiketi() }} sınıf</div>
+                    <div class="mehse-soluk">{{ $this->firma->tehlikeSinifiEtiketi() }} sınıf</div>
                 </div>
             </div>
             @if ($yDk > 0)
@@ -308,7 +308,7 @@
             </div>
         </x-filament::section>
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
     @endif
 </x-filament-panels::page>

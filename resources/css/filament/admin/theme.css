@@ -10,6 +10,8 @@
    değişkenlerini ezdiği için ondan sonra gelir. */
 @import './tema-mehse.css';
 @import './tema-modern.css';
+/* Ortak sınıflar (mehse-soluk, mehse-girdi, mehse-tablo …) — sayfalardaki tekrarlı elle stiller (08.11.2026). */
+@import './ortak.css';
 /* Telefon düzeni — her temada; en sonda ki tema kurallarını dar ekranda ezsin. */
 @import './mobil.css';
 

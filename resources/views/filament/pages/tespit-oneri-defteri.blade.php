@@ -6,7 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Onaylı deftere yazılacak tespit ve önerileri hazır katalogdan seçin veya
         serbest yazın; firma için kaydedip PDF çıktısını alın.
     </p>
@@ -16,11 +16,11 @@
     {{-- 1. FİRMA --}}
     <x-filament::section icon="heroicon-o-book-open" icon-color="warning">
         <x-slot name="heading">1. Firma</x-slot>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -177,6 +177,6 @@
             </div>
         </div>
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

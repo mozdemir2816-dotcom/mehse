@@ -8,7 +8,7 @@
     @include('filament.pages.partials.acil-slate-stil')
     <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
         <div style="flex:1;min-width:260px;max-width:560px">
-            <label style="font-weight:600;font-size:.8rem">Firma</label>
+            <label class="mehse-etiket">Firma</label>
             <select wire:model.live="firmaId" style="{{ $girdi }}">
                 <option value="">Firma seçin...</option>
                 @foreach ($this->firmalar as $id => $unvan)<option value="{{ $id }}">{{ $unvan }}</option>@endforeach
@@ -24,7 +24,7 @@
                     style="{{ $btn }};{{ $editor === $anahtar ? 'background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700' : '' }}">{{ $ad }}</button>
             @endforeach
             @if ($editor === '3b' && $this->kroki()->kroki3bVar() === false && (count($this->kroki()->semboller ?? []) > 0 || count($this->kroki()->duvarlar ?? []) > 0))
-                <span style="font-size:.75rem;color:rgb(107 114 128)">Bu firmanın klasik editörde kayıtlı çizimi var — "Klasik Editör" sekmesinden açılır.</span>
+                <span class="mehse-soluk">Bu firmanın klasik editörde kayıtlı çizimi var — "Klasik Editör" sekmesinden açılır.</span>
             @endif
         </div>
 
@@ -38,7 +38,7 @@
                 <div style="{{ $kutu }};font-size:.78rem">
                     <div style="font-weight:600;margin-bottom:.35rem">
                         Yönetmelik kontrolü (Acil Durumlar Yön. Md.12/1-f) —
-                        @if ($eksik3) <span style="color:#dc2626">{{ $eksik3 }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
+                        @if ($eksik3) <span class="mehse-hata">{{ $eksik3 }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
                         <span style="font-weight:400;color:rgb(107 114 128)">· kayıtlı 3B krokiye göre</span>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">
@@ -87,7 +87,7 @@
         <div style="{{ $kutu }};font-size:.78rem">
             <div style="font-weight:600;margin-bottom:.35rem">
                 Yönetmelik kontrolü (Acil Durumlar Yön. Md.12/1-f) —
-                @if ($eksikSayi) <span style="color:#dc2626">{{ $eksikSayi }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
+                @if ($eksikSayi) <span class="mehse-hata">{{ $eksikSayi }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
                 <span style="font-weight:400;color:rgb(107 114 128)">· kayıtlı krokiye göre, "Kaydet" sonrası güncellenir</span>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">
@@ -496,7 +496,7 @@
                         </template>
                         <template x-if="secili">
                             <div style="display:flex;flex-direction:column;gap:.4rem">
-                                <div style="font-size:.75rem;color:rgb(107 114 128)" x-text="({sembol: ayar.semboller[seciliOge()?.tip]?.ad, oda: 'Oda / bölüm', duvar: 'Duvar', yol: 'Kaçış yolu', metin: 'Metin'})[secili.tur]"></div>
+                                <div class="mehse-soluk" x-text="({sembol: ayar.semboller[seciliOge()?.tip]?.ad, oda: 'Oda / bölüm', duvar: 'Duvar', yol: 'Kaçış yolu', metin: 'Metin'})[secili.tur]"></div>
                                 <template x-if="['sembol','oda'].includes(secili.tur)">
                                     <input x-ref="etiketGirdi" type="text" placeholder="Etiket (ör. ÇIKIŞ 1)" :value="seciliOge()?.etiket ?? ''" x-on:input="ozellik('etiket', $event.target.value)" style="{{ $girdi }}">
                                 </template>

@@ -4,7 +4,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşe yeni başlayan her çalışan için ayrı, tek sayfalık işbaşı/oryantasyon
         eğitim tutanağı oluşturun. Firma seçmeden, üstteki <strong>"Boş Katılım Formu"</strong>
         ile boş imza satırlı formu indirip işyerinde elle doldurabilirsiniz.
@@ -16,9 +16,9 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -26,38 +26,38 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Süre (Saat)</label>
+                <label class="mehse-etiket">Süre (Saat)</label>
                 <input type="number" wire:model="sureSaat" min="1"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Yeri</label>
+                <label class="mehse-etiket">Eğitim Yeri</label>
                 <input type="text" wire:model="egitimYeri" placeholder="Örn: Üretim sahası"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitimi Veren</label>
+                <label class="mehse-etiket">Eğitimi Veren</label>
                 <input type="text" wire:model="egitimiVeren" placeholder="Ad Soyad"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Yöntemi</label>
+                <label class="mehse-etiket">Eğitim Yöntemi</label>
                 <select wire:model="egitimYontemi"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     @foreach ($this->egitimYontemleri as $y)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Tarihi</label>
+                <label class="mehse-etiket">Eğitim Tarihi</label>
                 <input type="date" wire:model="egitimTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Belge Tarihi</label>
+                <label class="mehse-etiket">Belge Tarihi</label>
                 <input type="date" wire:model="belgeTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
         </div>
 
@@ -107,7 +107,7 @@
         <x-slot name="description">Sağ üstteki "Eğitim Sunumu Yükle" ile görev/iş bazlı PowerPoint/PDF slaytlarınızı buraya kaydedin — o göreve yeni biri başladığında aşağıda otomatik önerilir.</x-slot>
 
         @if ($this->sunumlar->isNotEmpty())
-            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+            <table class="mehse-tablo">
                 @foreach ($this->sunumlar as $s)
                     <tr>
                         <td style="padding:.3rem .5rem"><strong>{{ $s->gorev }}</strong> — {{ $s->baslik }}</td>
@@ -130,9 +130,9 @@
 
             @if ($this->calisanlar->isNotEmpty())
                 <div style="margin-bottom:.75rem">
-                    <label style="font-weight:600;font-size:.82rem">Hızlı Çalışan Seç</label>
+                    <label class="mehse-etiket">Hızlı Çalışan Seç</label>
                     <select wire:model.live="calisanHizliSecId"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                         <option value="">Firmaya kayıtlı çalışan yok / manuel gir</option>
                         @foreach ($this->calisanlar as $c)
                             <option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>
@@ -141,21 +141,21 @@
                 </div>
             @endif
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Ad Soyad <span class="mehse-hata">*</span></label>
                     <input type="text" wire:model="calisanAdSoyad"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">T.C. Kimlik No</label>
+                    <label class="mehse-etiket">T.C. Kimlik No</label>
                     <input type="text" wire:model="calisanTc"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Görev / İş</label>
+                    <label class="mehse-etiket">Görev / İş</label>
                     <input type="text" wire:model.live="calisanGorev" placeholder="Örn: Kaynakçı"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
             </div>
 
@@ -176,7 +176,7 @@
         @if ($this->gecmisTutanaklar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Tutanaklar</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisTutanaklar as $t)
                         <tr>
                             <td style="padding:.3rem .5rem">{{ $t->calisan_ad_soyad }} — {{ $t->egitim_tarihi?->format('d.m.Y') }}</td>
@@ -190,6 +190,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

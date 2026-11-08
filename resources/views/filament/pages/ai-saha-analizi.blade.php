@@ -62,12 +62,12 @@
                 <span style="{{ $etiket }}">Genel Bilgiler</span><br>
                 <strong>{{ $this->firma?->unvan ?? 'Firma seçin' }}</strong>
             </span>
-            <span style="color:rgb(107 114 128)">▾</span>
+            <span class="mehse-soluk-metin">▾</span>
         </summary>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" @disabled($kilitli) style="margin-top:.3rem;{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -85,7 +85,7 @@
                 'isverenVekiliAdi' => ['Onaylayan (İşveren / Vekili)', 'text', null],
             ] as $alan => [$ad, $tip, $ornek])
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">{{ $ad }}</label>
+                    <label class="mehse-etiket">{{ $ad }}</label>
                     <input type="{{ $tip }}" wire:model="{{ $alan }}" @if ($ornek) placeholder="{{ $ornek }}" @endif @disabled($kilitli)
                         style="margin-top:.3rem;{{ $girdi }}">
                 </div>
@@ -139,7 +139,7 @@
                         </summary>
                         <label style="display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;margin:.6rem 0">
                             <input type="checkbox" wire:model.live="tumunuTara" style="margin-top:.15rem">
-                            <span><strong>Tüm görünür tehlikeleri tara</strong><br><span style="color:rgb(107 114 128)">Kategori seçimi AI'yı diğer açıkça görülen tehlikeleri değerlendirmekten alıkoymaz.</span></span>
+                            <span><strong>Tüm görünür tehlikeleri tara</strong><br><span class="mehse-soluk-metin">Kategori seçimi AI'yı diğer açıkça görülen tehlikeleri değerlendirmekten alıkoymaz.</span></span>
                         </label>
                         <div style="display:flex;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap">
                             <input type="search" x-model="ara" placeholder="Kategori ara…" style="flex:1;min-width:180px;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
@@ -364,7 +364,7 @@
                             @if ($bant)
                                 <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
                                     <span style="font-weight:800;font-size:1.05rem;color:#fff;background:{{ $bant['renk'] }};padding:.25rem .7rem;border-radius:.35rem">{{ rtrim(rtrim(number_format($skor, 2, '.', ''), '0'), '.') }}</span>
-                                    <span style="font-size:.75rem;font-weight:600">{{ $bant['ad'] }}</span>
+                                    <span class="mehse-etiket-kucuk">{{ $bant['ad'] }}</span>
                                 </div>
                             @else
                                 <div style="font-size:.78rem;color:rgb(107 114 128)">Üç değeri seçin</div>
@@ -578,25 +578,25 @@
         <x-filament::section icon="heroicon-o-clock" icon-color="gray" collapsible>
             <x-slot name="heading">Bu Firmanın Saha Gözlem Raporları</x-slot>
             <div style="overflow-x:auto">
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>
                         @foreach (['Belge No', 'Durum', 'Alan/Bölge', 'Tarih', 'Madde', ''] as $baslik)
-                            <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">{{ $baslik }}</th>
+                            <th class="mehse-th">{{ $baslik }}</th>
                         @endforeach
                     </tr>
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr style="{{ $k->id === $kayitId ? 'background:rgb(59 130 246 / .06)' : '' }}">
-                            <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">
+                            <td class="mehse-td">{{ $k->belge_no }}</td>
+                            <td class="mehse-td">
                                 @if ($k->tamamlandiMi())
                                     <span style="color:#15803d">Tamamlandı</span>
                                 @else
                                     <span style="color:#b45309">Taslak</span>
                                 @endif
                             </td>
-                            <td style="padding:.35rem .5rem">{{ $k->alan_bolge ?: '—' }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->rapor_tarihi?->format('d.m.Y') }}</td>
-                            <td style="padding:.35rem .5rem">{{ count($k->bulgular ?? []) }}</td>
+                            <td class="mehse-td">{{ $k->alan_bolge ?: '—' }}</td>
+                            <td class="mehse-td">{{ $k->rapor_tarihi?->format('d.m.Y') }}</td>
+                            <td class="mehse-td">{{ count($k->bulgular ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 @if ($k->id !== $kayitId)
                                     <x-filament::button size="xs" color="primary" wire:click="raporAc({{ $k->id }})">{{ $k->tamamlandiMi() ? 'Görüntüle' : 'Devam Et' }}</x-filament::button>

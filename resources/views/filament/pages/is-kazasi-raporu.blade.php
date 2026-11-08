@@ -7,7 +7,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İş Kazası İnceleme ve Kök Neden Analiz Raporu — 6331 s.K. Madde 14. Bölümleri sırayla
         doldurun; "Taslak Kaydet" ile ara kayıt alın, "Raporu Tamamla ve İndir" ile PDF üretin.
         @if ($duzenlenenId) <strong style="color:{{ $kirmizi }}">(Geçmiş bir kayıt düzenleniyor.)</strong> @endif
@@ -40,7 +40,7 @@
                 </div>
             @endif
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div><label style="{{ $lbl }}">Kaza Tarihi <span style="color:{{ $kirmizi }}">*</span></label><input type="date" wire:model="kazaTarihi" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">Kaza Saati</label><input type="time" wire:model="kazaSaati" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">Kaza Yeri / Bölümü <span style="color:{{ $kirmizi }}">*</span></label><input type="text" wire:model="kazaYeri" placeholder="Örn: Pres bölümü" style="{{ $inp }}"></div>
@@ -101,21 +101,21 @@
                 <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">İsteğe bağlı — DÖF önceliklendirme ve "Risk Analizine Ekle" için kullanılır.</p>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;align-items:end">
                     <div>
-                        <label style="font-size:.75rem;color:rgb(107 114 128)">Olasılık</label>
+                        <label class="mehse-soluk">Olasılık</label>
                         <select wire:model.live="kinneyOlasilik" style="{{ $inp }}">
                             <option value="">—</option>
                             @foreach ($this->kinneyOlcekleri['olasilik'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:.75rem;color:rgb(107 114 128)">Frekans (maruz kalma)</label>
+                        <label class="mehse-soluk">Frekans (maruz kalma)</label>
                         <select wire:model.live="kinneyFrekans" style="{{ $inp }}">
                             <option value="">—</option>
                             @foreach ($this->kinneyOlcekleri['frekans'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:.75rem;color:rgb(107 114 128)">Şiddet</label>
+                        <label class="mehse-soluk">Şiddet</label>
                         <select wire:model.live="kinneySiddet" style="{{ $inp }}">
                             <option value="">—</option>
                             @foreach ($this->kinneyOlcekleri['siddet'] as $deger => $etiket) <option value="{{ $deger }}">{{ $etiket }}</option> @endforeach
@@ -290,15 +290,15 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.75rem">
                 <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.7rem;text-align:center">
                     <div style="font-size:1.4rem;font-weight:800">{{ $ozet['bes_neden'] }}/5</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">Kök Neden</div>
+                    <div class="mehse-soluk">Kök Neden</div>
                 </div>
                 <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.7rem;text-align:center">
                     <div style="font-size:1.4rem;font-weight:800">{{ $ozet['ishikawa'] }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">Ishikawa Bulgu</div>
+                    <div class="mehse-soluk">Ishikawa Bulgu</div>
                 </div>
                 <div style="border:1px solid rgb(107 114 128 / .3);border-radius:.5rem;padding:.7rem;text-align:center">
                     <div style="font-size:1.4rem;font-weight:800">{{ $ozet['dof'] }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">DÖF Aksiyonu</div>
+                    <div class="mehse-soluk">DÖF Aksiyonu</div>
                 </div>
             </div>
 
@@ -324,12 +324,12 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Raporlar</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
-                            <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->kazazede_ad_soyad }} — {{ $k->kaza_tarihi?->format('d.m.Y') }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->durumEtiketi() }}</td>
+                            <td class="mehse-td">{{ $k->belge_no }}</td>
+                            <td class="mehse-td">{{ $k->kazazede_ad_soyad }} — {{ $k->kaza_tarihi?->format('d.m.Y') }}</td>
+                            <td class="mehse-td">{{ $k->durumEtiketi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="duzenle({{ $k->id }})">Düzenle</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>

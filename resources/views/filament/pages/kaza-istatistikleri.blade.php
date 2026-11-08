@@ -6,7 +6,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İş Kazası Raporları ve Olay Kayıtları (iş kazası tipi) seçilen yıl için otomatik hesaba
         katılır. Aylık çalışan/çalışma saati verisini girin; Kaza Sıklık Oranı ve Kaza Ağırlık
         Oranı hesaplansın. Rapor, yıllık değerlendirmenin ekidir.
@@ -57,7 +57,7 @@
                 ] as [$etiket, $deger])
                     <div style="{{ $kutu }};text-align:center">
                         <div style="font-size:1.35rem;font-weight:700">{{ $deger }}</div>
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $etiket }}</div>
+                        <div class="mehse-soluk">{{ $etiket }}</div>
                     </div>
                 @endforeach
             </div>

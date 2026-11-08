@@ -35,7 +35,7 @@
                 ['Plansız firma', $plansiz->count(), 'rgb(220 38 38)', null],
             ] as [$ad, $sayi, $renk, $ek])
                 <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.5rem .8rem">
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div class="mehse-soluk">{{ $ad }}</div>
                     <div style="font-size:1.3rem;font-weight:800;color:{{ (is_int($sayi) ? $sayi > 0 : true) ? $renk : 'inherit' }}">
                         {{ $sayi }}@if ($ek)<span style="font-size:.75rem;font-weight:700;margin-left:.35rem">{{ $ek }}</span>@endif
                     </div>

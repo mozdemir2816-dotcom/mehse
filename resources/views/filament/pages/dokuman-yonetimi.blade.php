@@ -41,7 +41,7 @@
     @if (! $kategoriAnahtari)
         {{-- ================= GENEL BAKIŞ ================= --}}
         @if ($gecikmisler->isNotEmpty())
-            <details style="color:#dc2626">
+            <details class="mehse-hata">
                 <summary style="cursor:pointer;font-weight:600;font-size:.95rem">⚠ {{ $gecikmisler->count() }} süresi geçmiş</summary>
                 <div style="display:flex;flex-direction:column;gap:.3rem;margin-top:.5rem">
                     @foreach ($gecikmisler as $s)

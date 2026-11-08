@@ -6,7 +6,7 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     @include('filament.pages.partials.kvkk-rozeti')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         6331 s.K. m.14 — hastalığın meslek hastalığı olduğunun işyeri hekimi, sağlık kuruluşu veya
         sigortalı tarafından öğrenildiği tarihten itibaren işveren <strong>3 iş günü</strong> içinde
         SGK'ya bildirmekle yükümlüdür. Meslek hastalığı genelde işyeri hekimi/sağlık gözetimi
@@ -18,9 +18,9 @@
     <x-filament::section icon="heroicon-o-heart" icon-color="info">
         <x-slot name="heading">1. Firma & Çalışan</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
@@ -30,7 +30,7 @@
             </div>
             @if ($this->firma)
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Hızlı Çalışan Seç</label>
+                    <label class="mehse-etiket">Hızlı Çalışan Seç</label>
                     <select wire:model.live="calisanHizliSecId" style="{{ $girdi }}">
                         <option value="">Firmaya kayıtlı çalışan yok / manuel gir</option>
                         @foreach ($this->calisanlar as $c)
@@ -52,15 +52,15 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Ad Soyad <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Ad Soyad <span class="mehse-hata">*</span></label>
                     <input type="text" wire:model="calisanAdSoyad" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">T.C. Kimlik No</label>
+                    <label class="mehse-etiket">T.C. Kimlik No</label>
                     <input type="text" wire:model="calisanTc" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Görevi</label>
+                    <label class="mehse-etiket">Görevi</label>
                     <input type="text" wire:model="calisanGorevi" style="{{ $girdi }}">
                 </div>
             </div>
@@ -71,9 +71,9 @@
         <x-filament::section icon="heroicon-o-clock" icon-color="warning">
             <x-slot name="heading">2. Öğrenme Bilgileri ve Bildirim Süresi</x-slot>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Öğrenme Kaynağı</label>
+                    <label class="mehse-etiket">Öğrenme Kaynağı</label>
                     <select wire:model="ogrenmeKaynagi" style="{{ $girdi }}">
                         @foreach ($this->ogrenmeKaynaklari as $anahtar => $etiket)
                             <option value="{{ $anahtar }}">{{ $etiket }}</option>
@@ -81,7 +81,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Öğrenme Tarihi <span style="color:#dc2626">*</span></label>
+                    <label class="mehse-etiket">Öğrenme Tarihi <span class="mehse-hata">*</span></label>
                     <input type="date" wire:model.live="ogrenmeTarihi" style="{{ $girdi }}">
                 </div>
             </div>
@@ -95,17 +95,17 @@
 
         <x-filament::section icon="heroicon-o-document-text" icon-color="info">
             <x-slot name="heading">3. Tanı Bilgileri</x-slot>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tanı Koyan Hastane</label>
+                    <label class="mehse-etiket">Tanı Koyan Hastane</label>
                     <input type="text" wire:model="taniHastane" placeholder="Yetkili meslek hastalığı hastanesi (üniversite/eğitim-araştırma hastanesi)" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tanı Tarihi</label>
+                    <label class="mehse-etiket">Tanı Tarihi</label>
                     <input type="date" wire:model="taniTarihi" style="{{ $girdi }}">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Sağlık Kurulu Rapor No</label>
+                    <label class="mehse-etiket">Sağlık Kurulu Rapor No</label>
                     <input type="text" wire:model="saglikKuruluRaporNo" style="{{ $girdi }}">
                 </div>
             </div>
@@ -125,11 +125,11 @@
             @if ($sgkBildirimiYapildi)
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:.75rem">
                     <div>
-                        <label style="font-weight:600;font-size:.8rem">Bildirim Tarihi</label>
+                        <label class="mehse-etiket">Bildirim Tarihi</label>
                         <input type="date" wire:model="sgkBildirimTarihi" style="{{ $girdi }}">
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.8rem">Bildirim Yöntemi</label>
+                        <label class="mehse-etiket">Bildirim Yöntemi</label>
                         <select wire:model="sgkBildirimYontemi" style="{{ $girdi }}">
                             <option value="">— Seçin —</option>
                             @foreach ($this->bildirimYontemleri as $anahtar => $etiket)
@@ -142,7 +142,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:.75rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">SGK Sağlık Kurulu Durumu</label>
+                    <label class="mehse-etiket">SGK Sağlık Kurulu Durumu</label>
                     <select wire:model="sgkKurulOnayDurumu" style="{{ $girdi }}">
                         @foreach ($this->kurulOnayDurumlari as $anahtar => $etiket)
                             <option value="{{ $anahtar }}">{{ $etiket }}</option>
@@ -150,7 +150,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Meslekte Kazanma Gücü Kaybı (%)</label>
+                    <label class="mehse-etiket">Meslekte Kazanma Gücü Kaybı (%)</label>
                     <input type="number" step="0.1" min="0" max="100" wire:model="meslekteKazanmaGucuKaybiYuzde" placeholder="≥10 ise meslek hastalığı süreci başlar" style="{{ $girdi }}">
                 </div>
             </div>
@@ -163,7 +163,7 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Bildirimler</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisKayitlar as $m)
                         <tr>
                             <td style="padding:.3rem .5rem">
@@ -184,6 +184,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

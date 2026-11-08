@@ -6,7 +6,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Hazır şablonlardan veya kendi arşivinizden yüklediğiniz talimatlardan seçin ya
         da yapay zeka ile saniyeler içinde profesyonel İSG talimatı oluşturun.
     </p>
@@ -14,11 +14,11 @@
     {{-- 1. FİRMA --}}
     <x-filament::section icon="heroicon-o-document-duplicate" icon-color="info">
         <x-slot name="heading">1. Firma</x-slot>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -71,7 +71,7 @@
                             <span style="font-size:.68rem;background:rgb(16 185 129);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
                         @endif
                     </div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $s['aciklama'] }}</div>
+                    <div class="mehse-soluk">{{ $s['aciklama'] }}</div>
                 </div>
             @empty
                 <p style="font-size:.82rem;color:rgb(107 114 128)">Sonuç bulunamadı.</p>
@@ -86,14 +86,14 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:.75rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Başlık</label>
+                    <label class="mehse-etiket">Başlık</label>
                     <input type="text" wire:model="baslik"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Kategori</label>
+                    <label class="mehse-etiket">Kategori</label>
                     <select wire:model="kategori"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                         <option value="">—</option>
                         @foreach ($this->kategoriler as $anahtar => $ad)
                             <option value="{{ $anahtar }}">{{ $ad }}</option>
@@ -134,7 +134,7 @@
                 @else
                     <x-filament::button color="gray" icon="heroicon-o-queue-list" wire:click="bolumluYap">Bölümlü yapıya çevir (Amaç, Kapsam, KKD…)</x-filament::button>
                 @endif
-                <span style="font-size:.75rem;color:rgb(107 114 128)">
+                <span class="mehse-soluk">
                     {{ $bolumlu ? 'Bölümlü yapı: başlıklar otomatik numaralanır, maddeler madde işaretiyle basılır. Boş bölümler çıktıya girmez.' : 'Düz yapı: maddeler 1, 2, 3… diye numaralanır.' }}
                 </span>
             </div>
@@ -149,7 +149,7 @@
                                 <span style="white-space:nowrap">
                                     <button type="button" wire:click="bolumTasi({{ $i }}, -1)" title="Yukarı" style="cursor:pointer;background:none;border:none">▲</button>
                                     <button type="button" wire:click="bolumTasi({{ $i }}, 1)" title="Aşağı" style="cursor:pointer;background:none;border:none">▼</button>
-                                    <button type="button" wire:click="bolumSil({{ $i }})" wire:confirm="Bu bölüm silinsin mi?" title="Bölümü sil" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="bolumSil({{ $i }})" wire:confirm="Bu bölüm silinsin mi?" title="Bölümü sil" class="mehse-sil-dugme">✕</button>
                                 </span>
                             </div>
                             <textarea wire:model="bolumler.{{ $i }}.aciklama" rows="2" placeholder="Açıklama paragrafı (isteğe bağlı — Amaç/Kapsam metni veya maddelerden önceki giriş cümlesi)" style="{{ $girdi }};margin-top:.4rem"></textarea>
@@ -172,13 +172,13 @@
 
                 <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;margin-bottom:.75rem">
                     <input type="text" wire:model="yeniMadde" placeholder="Madde ekle..."
-                        style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt">
                     <x-filament::button size="sm" wire:click="maddeEkle">+ Ekle</x-filament::button>
                 </div>
             @endif
 
             <div>
-                <label style="font-weight:600;font-size:.8rem">{{ $bolumlu ? 'Taahhüt (son bölüm)' : 'Talimat sonu tebliğ metni' }}</label>
+                <label class="mehse-etiket">{{ $bolumlu ? 'Taahhüt (son bölüm)' : 'Talimat sonu tebliğ metni' }}</label>
                 <textarea wire:model="taahhut" rows="{{ $bolumlu ? 2 : 5 }}" style="{{ $girdi }}"></textarea>
                 <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Altına TEBLİĞ EDEN / TEBELLÜĞ EDEN imza alanı basılır.</div>
             </div>
@@ -190,13 +190,13 @@
         @if ($this->kayitliTalimatlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Kayıtlı Talimatlarım (bu firma)</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->kayitliTalimatlar as $t)
                         <tr>
                             <td style="padding:.3rem .5rem">
                                 {{ $t->baslik }} — {{ $t->kategoriEtiketi() }}
                                 @unless ($t->dosyaVarMi())
-                                    <span style="font-size:.75rem;color:rgb(107 114 128)">· {{ $t->dokumanNoGoster() }}@if ($t->revizyon_no) · Rev. {{ $t->revizyon_no }}@endif</span>
+                                    <span class="mehse-soluk">· {{ $t->dokumanNoGoster() }}@if ($t->revizyon_no) · Rev. {{ $t->revizyon_no }}@endif</span>
                                 @endunless
                                 @if ($t->dosyaVarMi())
                                     <span style="font-size:.68rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px;margin-left:.3rem">Yüklenen dosya</span>
@@ -219,6 +219,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">PDF olarak kaydetmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">PDF olarak kaydetmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

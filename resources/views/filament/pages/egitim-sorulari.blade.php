@@ -5,7 +5,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Sektör ve zorluk seçip AI ile 10 soruluk sınav üretin (veya elle ekleyin),
         katılımcı listesi oluşturup PDF sınav kağıdını indirin.
     </p>
@@ -16,9 +16,9 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -26,27 +26,27 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Sektör</label>
+                <label class="mehse-etiket">Sektör</label>
                 <select wire:model="sektorAnahtari"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     @foreach ($this->sektorler as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Zorluk</label>
+                <label class="mehse-etiket">Zorluk</label>
                 <select wire:model="zorluk"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     @foreach ($this->zorluklar as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Sınav Zamanı</label>
+                <label class="mehse-etiket">Sınav Zamanı</label>
                 <select wire:model="sinavZamani"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     @foreach ($this->zamanlar as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
@@ -80,7 +80,7 @@
                 <div style="{{ $kutu }};margin-bottom:.6rem">
                     <div style="display:flex;justify-content:space-between;gap:.5rem">
                         <div style="font-weight:600;font-size:.85rem">{{ $i + 1 }}. {{ $s['soru'] }}</div>
-                        <button type="button" wire:click="soruSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                        <button type="button" wire:click="soruSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                     </div>
                     <div style="margin-top:.4rem;display:flex;flex-direction:column;gap:.15rem">
                         @foreach ($s['secenekler'] as $j => $secenek)
@@ -126,19 +126,19 @@
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;margin-bottom:.75rem">
                 <input type="text" wire:model="yeniKatilimciAd" placeholder="Ad Soyad"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="text" wire:model="yeniKatilimciTc" placeholder="T.C. Kimlik No (ops.)"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="date" wire:model="yeniSinavTarihi"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <x-filament::button size="sm" wire:click="katilimciEkle">Listeye Ekle</x-filament::button>
             </div>
 
             @if ($katilimcilar)
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Ad Soyad</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Sınav Tarihi</th>
+                        <th class="mehse-th">Ad Soyad</th>
+                        <th class="mehse-th">Sınav Tarihi</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($katilimcilar as $i => $k)
@@ -146,7 +146,7 @@
                             <td style="padding:.3rem .5rem">{{ $k['ad_soyad'] }}</td>
                             <td style="padding:.3rem .5rem">{{ $k['sinav_tarihi'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="katilimciSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -158,7 +158,7 @@
         @if ($this->gecmisSinavlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Sınavlar</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisSinavlar as $s)
                         <tr>
                             <td style="padding:.3rem .5rem">{{ $s->sektorEtiketi() }} — {{ config('isg.egitim_sorulari.zorluklar.'.$s->zorluk) }} ({{ count($s->sorular ?? []) }} soru, {{ count($s->katilimcilar ?? []) }} katılımcı)</td>
@@ -172,6 +172,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

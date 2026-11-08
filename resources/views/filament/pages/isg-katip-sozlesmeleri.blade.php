@@ -48,8 +48,8 @@
                     </div>
 
                     <div style="display:flex;gap:1rem;margin-top:.6rem;font-size:.8rem">
-                        <div><span style="font-weight:700">{{ $kisi['aktif'] }}</span> <span style="color:rgb(107 114 128)">aktif sözleşme</span></div>
-                        <div><span style="font-weight:700">{{ $kisi['firmalar']->count() }}</span> <span style="color:rgb(107 114 128)">firma</span></div>
+                        <div><span style="font-weight:700">{{ $kisi['aktif'] }}</span> <span class="mehse-soluk-metin">aktif sözleşme</span></div>
+                        <div><span style="font-weight:700">{{ $kisi['firmalar']->count() }}</span> <span class="mehse-soluk-metin">firma</span></div>
                         @if ($kisi['onay_bekleyen'] > 0)
                             <div style="color:{{ $sari }}"><span style="font-weight:700">{{ $kisi['onay_bekleyen'] }}</span> onay bekliyor</div>
                         @endif
@@ -81,7 +81,7 @@
                 </div>
 
                 <div style="overflow-x:auto;margin-top:.75rem">
-                    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                    <table class="mehse-tablo">
                         <thead>
                             <tr style="text-align:left;border-bottom:1px solid rgb(107 114 128 / .3)">
                                 <th style="padding:.4rem .5rem">Firma</th>

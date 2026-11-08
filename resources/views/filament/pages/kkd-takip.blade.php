@@ -10,7 +10,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Personel bazlı KKD zimmet sicili: kategori → tür, yenileme / SKT takibi, iade ve yenileme, zimmet formu ve Excel.
         Stok kartlarıyla giriş, zimmet çıkışı, iade ve fire izlenir. Toplu teslim tutanağı için
         <a href="{{ \App\Filament\Pages\KkdFormu::getUrl() }}" style="color:rgb(124 58 237);text-decoration:underline">KKD Zimmet Formu</a>
@@ -19,7 +19,7 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
         <div>
-            <label style="{{ $lbl }}">Firma <span style="color:#dc2626">*</span></label>
+            <label style="{{ $lbl }}">Firma <span class="mehse-hata">*</span></label>
             <select wire:model.live="firmaId" style="{{ $inp }}">
                 <option value="">— Firma seçin —</option>
                 @foreach ($this->firmalar as $id => $ad)
@@ -40,7 +40,7 @@
             ] as [$ad, $sayi, $renk, $filtre])
                 <button type="button" @if ($filtre) wire:click="$set('durumFiltre', '{{ $filtre }}')" @endif
                     style="text-align:left;border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.75rem 1rem;background:transparent;cursor:{{ $filtre ? 'pointer' : 'default' }}">
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div class="mehse-soluk">{{ $ad }}</div>
                     <div style="font-size:1.5rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                 </button>
             @endforeach
@@ -81,11 +81,11 @@
                                 <td style="{{ $td }};white-space:nowrap">{{ $z->teslim_tarihi?->format('d.m.Y') }}</td>
                                 <td style="{{ $td }}">
                                     {{ $z->personel_ad_soyad }}
-                                    @if ($z->bolum)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $z->bolum }}</div>@endif
+                                    @if ($z->bolum)<div class="mehse-soluk">{{ $z->bolum }}</div>@endif
                                 </td>
                                 <td style="{{ $td }}">
-                                    {{ $z->tur }}@if ($z->beden)<span style="color:rgb(107 114 128)"> · {{ $z->beden }}</span>@endif
-                                    @if ($z->seri_no)<div style="font-size:.75rem;color:rgb(107 114 128)">SN: {{ $z->seri_no }}</div>@endif
+                                    {{ $z->tur }}@if ($z->beden)<span class="mehse-soluk-metin"> · {{ $z->beden }}</span>@endif
+                                    @if ($z->seri_no)<div class="mehse-soluk">SN: {{ $z->seri_no }}</div>@endif
                                 </td>
                                 <td style="{{ $td }}">{{ $z->adet }}</td>
                                 <td style="{{ $td }};white-space:nowrap;color:{{ $kalan !== null && $kalan < 0 ? '#dc2626' : 'inherit' }}">
@@ -135,7 +135,7 @@
                             <tr>
                                 <td style="{{ $td }}">
                                     {{ $k->tur }}
-                                    @if ($k->kategori)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $k->kategoriEtiketi() }}</div>@endif
+                                    @if ($k->kategori)<div class="mehse-soluk">{{ $k->kategoriEtiketi() }}</div>@endif
                                 </td>
                                 <td style="{{ $td }}">{{ collect([$k->marka, $k->model, $k->beden ? 'Beden '.$k->beden : null])->filter()->implode(' · ') ?: '—' }}</td>
                                 <td style="{{ $td }};font-weight:700">{{ $k->mevcut }}</td>

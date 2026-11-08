@@ -6,7 +6,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Excel'den Risk Kütüphanesi'ne yüklerken metni mevcut bir maddeye çok benzeyen
         (ama birebir aynı olmayan) satırlar burada birikir. Her biri için karar verin.
     </p>

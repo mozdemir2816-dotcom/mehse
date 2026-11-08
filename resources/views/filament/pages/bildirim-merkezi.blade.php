@@ -69,7 +69,7 @@
                             <span style="font-size:.75rem;font-weight:700;color:#fff;background:{{ $renk[$b->seviye] ?? 'gray' }};border-radius:.35rem;padding:.15rem .45rem">{{ $b->seviyeEtiketi() }}</span>
                             @unless ($b->okundu_at)<span title="Okunmamış" style="display:inline-block;width:.45rem;height:.45rem;border-radius:9px;background:rgb(220 38 38);margin-left:.3rem"></span>@endunless
                         </td>
-                        <td style="{{ $td }}"><strong>{{ $b->baslik }}</strong>@unless ($firmaId)<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $b->firma?->unvan }}</div>@endunless</td>
+                        <td style="{{ $td }}"><strong>{{ $b->baslik }}</strong>@unless ($firmaId)<div class="mehse-soluk">{{ $b->firma?->unvan }}</div>@endunless</td>
                         <td style="{{ $td }};line-height:1.45">{{ $b->aciklama }}</td>
                         <td style="{{ $td }};white-space:nowrap">{{ $b->tarih?->format('d.m.Y') ?? '—' }}</td>
                         <td style="{{ $td }};white-space:nowrap">

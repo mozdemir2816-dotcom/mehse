@@ -86,7 +86,7 @@
             <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:.6rem">
                 @foreach ($cfg['sss'] as $s)
                     <div>
-                        <div style="font-weight:600;font-size:.82rem">{{ $s['soru'] }}</div>
+                        <div class="mehse-etiket">{{ $s['soru'] }}</div>
                         <div style="font-size:.78rem;color:rgb(107 114 128)">{{ $s['cevap'] }}</div>
                     </div>
                 @endforeach

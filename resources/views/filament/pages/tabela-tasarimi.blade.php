@@ -8,7 +8,7 @@
     @include('filament.pages.partials.acil-slate-stil')
     <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
         <div style="flex:1;min-width:260px;max-width:560px">
-            <label style="font-weight:600;font-size:.8rem">Firma</label>
+            <label class="mehse-etiket">Firma</label>
             <select wire:model.live="firmaId" style="{{ $girdi }}">
                 <option value="">Firma seçin...</option>
                 @foreach ($this->firmalar as $id => $unvan)<option value="{{ $id }}">{{ $unvan }}</option>@endforeach

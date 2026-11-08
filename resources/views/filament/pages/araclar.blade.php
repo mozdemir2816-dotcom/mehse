@@ -5,7 +5,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma seçimi gerektirmeyen, bağımsız İSG hesaplayıcıları. Girdiğiniz değerler kaydedilmez.
     </p>
 
@@ -14,17 +14,17 @@
         <x-slot name="heading">Kaza Sıklık Hızı ve Ağırlık Hızı Hesaplayıcı</x-slot>
         <x-slot name="description">Sıklık Hızı = (Kaza Sayısı × 1.000.000) / Toplam Çalışma Saati &nbsp;·&nbsp; Ağırlık Hızı = (Kayıp Gün Sayısı × 1.000) / Toplam Çalışma Saati</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Kaza Sayısı</label>
+                <label class="mehse-etiket">Kaza Sayısı</label>
                 <input type="number" min="0" wire:model.live="kazaSayisi" style="{{ $girdi }}">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Toplam Kayıp Gün Sayısı</label>
+                <label class="mehse-etiket">Toplam Kayıp Gün Sayısı</label>
                 <input type="number" min="0" wire:model.live="kayipGunSayisi" style="{{ $girdi }}">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Toplam Çalışma Saati (adam × saat)</label>
+                <label class="mehse-etiket">Toplam Çalışma Saati (adam × saat)</label>
                 <input type="number" min="0" step="0.01" wire:model.live="toplamCalismaSaati" style="{{ $girdi }}">
             </div>
         </div>
@@ -54,11 +54,11 @@
             @foreach ($gurultuOlcumleri as $i => $olcum)
                 <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.75rem;align-items:end">
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Ölçülen Düzey (dB(A))</label>
+                        <label class="mehse-etiket">Ölçülen Düzey (dB(A))</label>
                         <input type="number" step="0.1" wire:model.live="gurultuOlcumleri.{{ $i }}.db" style="{{ $girdi }}">
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">Maruziyet Süresi (saat)</label>
+                        <label class="mehse-etiket">Maruziyet Süresi (saat)</label>
                         <input type="number" step="0.1" min="0" max="24" wire:model.live="gurultuOlcumleri.{{ $i }}.saat" style="{{ $girdi }}">
                     </div>
                     <div>
@@ -102,7 +102,7 @@
 
         <div style="display:flex;gap:.75rem;align-items:end;flex-wrap:wrap">
             <div style="flex:1;min-width:200px">
-                <label style="font-weight:600;font-size:.82rem">NACE Kodu</label>
+                <label class="mehse-etiket">NACE Kodu</label>
                 <input type="text" placeholder="Örn: 01.11.14 veya 011114" wire:model="naceKoduGirdi" wire:keydown.enter="naceSorgula" style="{{ $girdi }}">
             </div>
             <x-filament::button color="warning" wire:click="naceSorgula">Sorgula</x-filament::button>
@@ -147,7 +147,7 @@
 
         <div style="display:flex;gap:.75rem;align-items:end;flex-wrap:wrap">
             <div style="flex:1;min-width:200px">
-                <label style="font-weight:600;font-size:.82rem">Meslek Adı veya Kodu</label>
+                <label class="mehse-etiket">Meslek Adı veya Kodu</label>
                 <input type="text" placeholder="Örn: Betonarme Demircisi veya 11UY0011" wire:model="mykAramaTerimi" wire:keydown.enter="mykAra" style="{{ $girdi }}">
             </div>
             <x-filament::button color="warning" wire:click="mykAra">Sorgula</x-filament::button>

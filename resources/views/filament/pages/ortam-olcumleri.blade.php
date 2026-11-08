@@ -5,7 +5,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşyerinde risk değerlendirmesine göre yapılması gereken ortam ölçümlerini (gürültü, toz,
         aydınlatma, termal konfor, kimyasal maruziyet vb.) listeleyin; her ölçüm için tarih,
         laboratuvar, ölçülen/sınır değer ve sonucu girin. Sonraki ölçüm tarihi periyoda göre
@@ -41,7 +41,7 @@
                     ['Sınır değer aşımı', $sonucSay['asim'] ?? 0, '#dc2626'],
                 ] as [$ad, $sayi, $renk])
                     <div style="{{ $kutu }};padding:.7rem 1rem">
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                        <div class="mehse-soluk">{{ $ad }}</div>
                         <div style="font-size:1.4rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                     </div>
                 @endforeach
@@ -139,7 +139,7 @@
                                     </td>
                                     <td style="padding:.4rem">
                                         <input type="date" wire:model.blur="satirlar.{{ $i }}.sonraki_olcum_tarihi" style="{{ $girdi }}">
-                                        <div style="font-size:.75rem;color:rgb(107 114 128)">boş = otomatik</div>
+                                        <div class="mehse-soluk">boş = otomatik</div>
                                     </td>
                                     <td style="padding:.4rem">
                                         <span style="font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $terminRenk[$terminler[$i]] }}">{{ $terminEtiket[$terminler[$i]] }}</span>
@@ -155,7 +155,7 @@
                                 @if (! empty($s['gecmis']))
                                     <tr>
                                         <td colspan="10" style="padding:0 .4rem .5rem">
-                                            <details style="font-size:.75rem;color:rgb(107 114 128)">
+                                            <details class="mehse-soluk">
                                                 <summary style="cursor:pointer">Önceki ölçümler ({{ count($s['gecmis']) }})</summary>
                                                 <table style="width:100%;border-collapse:collapse;margin-top:.3rem">
                                                     @foreach (array_reverse($s['gecmis']) as $g)

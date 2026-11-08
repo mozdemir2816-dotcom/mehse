@@ -17,9 +17,9 @@
 @else
     <div style="{{ $kart }};display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;align-items:center">
         <div>
-            <div style="font-size:.75rem;color:rgb(107 114 128)">İşyeri İSG operasyon skoru</div>
+            <div class="mehse-soluk">İşyeri İSG operasyon skoru</div>
             <div style="font-size:2.2rem;font-weight:800;color:{{ $skorRenk($s['skor']) }}">{{ $s['skor'] }}<span style="font-size:1rem;color:rgb(107 114 128)">/100</span></div>
-            <div style="font-size:.75rem;color:rgb(107 114 128)">Taşeron + PTW + periyodik kontrol + saha denetimi + birleşik DÖF / aksiyon + profesyonel kapasite</div>
+            <div class="mehse-soluk">Taşeron + PTW + periyodik kontrol + saha denetimi + birleşik DÖF / aksiyon + profesyonel kapasite</div>
         </div>
         <div style="text-align:right">
             <span style="display:inline-block;font-weight:800;font-size:.95rem;padding:.2rem .8rem;border-radius:9999px;color:{{ $skorRenk($s['skor']) }};background:color-mix(in srgb, {{ $skorRenk($s['skor']) }} 12%, transparent)">{{ $s['seviye'] }}</span>
@@ -36,7 +36,7 @@
             ['Kapasite kritik', $n['kapasite_kritik'], 'kritik'], ['Kapasite uyarı', $n['kapasite_uyari'], 'uyari'], ['Kapasite aşımı', $n['kapasite_asimi'], 'uyari'],
         ] as [$ad, $deger, $tur])
             <div style="{{ $kart }};padding:.55rem .75rem">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                <div class="mehse-soluk">{{ $ad }}</div>
                 <div style="font-size:1.3rem;font-weight:800;color:{{ $deger > 0 && $tur ? $renk[$tur] : 'inherit' }}">{{ $deger }}</div>
             </div>
         @endforeach
@@ -51,7 +51,7 @@
                     <div style="border:1px solid rgb(107 114 128 / .2);border-left:4px solid {{ $renk[$o['seviye']] }};border-radius:.6rem;padding:.6rem .8rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem">
                         <div style="min-width:220px;flex:1">
                             <div style="font-weight:700;font-size:.85rem">{{ $o['baslik'] }}</div>
-                            <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $o['adet'] }} kayıt · {{ $o['aciklama'] }}</div>
+                            <div class="mehse-soluk">{{ $o['adet'] }} kayıt · {{ $o['aciklama'] }}</div>
                         </div>
                         <div style="display:flex;gap:.35rem;align-items:center">
                             @if ($o['url'])<x-filament::button size="xs" tag="a" :href="$o['url']">{{ $o['url_ad'] }} →</x-filament::button>@endif
@@ -66,7 +66,7 @@
         <x-filament::section icon="heroicon-o-calculator" icon-color="gray">
             <x-slot name="heading">Skor dökümü</x-slot>
             <x-slot name="description">100 puandan başlanır; her kalemin düşüşü üst sınırla sınırlıdır.</x-slot>
-            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+            <table class="mehse-tablo">
                 <tr><td style="padding:.35rem 0">Başlangıç</td><td style="text-align:right;font-weight:700">100</td></tr>
                 @foreach ($s['dokum'] as $d)
                     <tr style="border-top:1px solid rgb(107 114 128 / .15)"><td style="padding:.35rem 0">{{ $d['neden'] }}</td><td style="text-align:right;font-weight:700;color:rgb(220 38 38)">−{{ $d['puan'] }}</td></tr>

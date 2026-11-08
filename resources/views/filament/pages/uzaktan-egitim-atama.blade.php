@@ -5,7 +5,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Bir eğitim paketini firmadaki çalışanlara atayın; sistem portal giriş bilgisini (e-posta + geçici şifre)
         üretir. E-postası olmayan çalışanlara otomatik bir geçici kullanıcı kodu oluşturulur. Çalışanlar
         <strong>{{ url('/egitim') }}</strong> adresinden girer. Paketleri
@@ -21,29 +21,29 @@
     <x-filament::section icon="heroicon-o-academic-cap" icon-color="primary">
         <x-slot name="heading">Atama</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId" style="{{ $girdi }}">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Paketi <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Eğitim Paketi <span class="mehse-hata">*</span></label>
                 <select wire:model.live="paketId" style="{{ $girdi }}">
                     <option value="">— Paket seçin —</option>
                     @foreach ($this->paketler as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
+                <label class="mehse-etiket">Eğitim Türü</label>
                 <select wire:model.live="egitimTuru" style="{{ $girdi }}">
                     @foreach (config('isg.uzaktan_egitim.egitim_turleri') as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Son Tarih (opsiyonel)</label>
+                <label class="mehse-etiket">Son Tarih (opsiyonel)</label>
                 <input type="date" wire:model="sonTarih" style="{{ $girdi }}">
             </div>
         </div>
@@ -54,7 +54,7 @@
                 {{ $this->firma->tehlikeSinifiEtiketi() }}, {{ config('isg.uzaktan_egitim.egitim_turleri.'.$egitimTuru) }}: toplam en az {{ $k['saat'] }} ders saati
                 — online kısım için {{ $k['gereken_dk'] }} dk video gerekir; pakette {{ $k['paket_dk'] }} dk var.
                 @if ($k['yuz_yuze_saat']) Kalan {{ $k['yuz_yuze_saat'] }} ders saati (4. konu dahil) yüz yüze verilir. @endif
-                @if ($k['suresiz_ders'] > 0)<span style="color:rgb(107 114 128)"> {{ $k['suresiz_ders'] }} dersin süresi henüz bilinmiyor (ilk izlemede otomatik dolar).</span>@endif
+                @if ($k['suresiz_ders'] > 0)<span class="mehse-soluk-metin"> {{ $k['suresiz_ders'] }} dersin süresi henüz bilinmiyor (ilk izlemede otomatik dolar).</span>@endif
                 @if ($k['dorduncu_yuz_yuze'])<div style="color:rgb(180 83 9)">Bu eğitim tamamlansa da temel eğitim, 4. konu yüz yüze verilip Eğitim Katılım formu girilince tamamlanmış sayılır.</div>@endif
             </div>
         @endif

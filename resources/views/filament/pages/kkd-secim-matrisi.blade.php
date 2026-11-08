@@ -5,7 +5,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Hangi işte hangi KKD'nin gerektiğini belirleyin. Sektörel katalogdan iş kalemi ekleyin
         (varsayılan KKD önerileriyle gelir) veya serbest satır girin; hücreye tıklayarak durumu
         değiştirin, isterseniz altına kısa bir not yazın (ör. "mekanik", "iskelede"). Matris, risk

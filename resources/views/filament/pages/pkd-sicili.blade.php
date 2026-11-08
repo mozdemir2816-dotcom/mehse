@@ -8,14 +8,14 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşyeri, bölüm ve proses bazında PKD künyelerini; zone sınıflarını, tutuşturucu kaynakları ve korunma
         önlemlerini tek yerde tutun. PKD teknik dosyası, revizyonu ve gözden geçirme tarihi aynı kayıttan izlenir.
     </p>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;align-items:end">
         <div>
-            <label style="font-weight:600;font-size:.82rem">İşyeri</label>
+            <label class="mehse-etiket">İşyeri</label>
             <select wire:model.live="firmaId" style="{{ $inp }}">
                 <option value="">Tüm işyerleri</option>
                 @foreach ($this->firmalar as $id => $ad)
@@ -39,7 +39,7 @@
         ] as [$ad, $sayi, $renk, $alt])
             <div style="{{ $kutu }}">
                 <div style="font-size:1.4rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}@if ($alt) <span style="color:{{ $o['dosyasiz'] > 0 ? '#dc2626' : 'inherit' }}">· {{ $alt }}</span>@endif</div>
+                <div class="mehse-soluk">{{ $ad }}@if ($alt) <span style="color:{{ $o['dosyasiz'] > 0 ? '#dc2626' : 'inherit' }}">· {{ $alt }}</span>@endif</div>
             </div>
         @endforeach
     </div>
@@ -60,9 +60,9 @@
                     @foreach ($this->kayitlar as $p)
                         @php $inc = $p->incelemeDurumu(); @endphp
                         <tr>
-                            <td style="{{ $td }}"><strong>{{ $p->dokuman_no }}</strong><div style="font-size:.75rem;color:rgb(107 114 128)">Rev. {{ $p->revizyon_no ?: '—' }}</div></td>
+                            <td style="{{ $td }}"><strong>{{ $p->dokuman_no }}</strong><div class="mehse-soluk">Rev. {{ $p->revizyon_no ?: '—' }}</div></td>
                             <td style="{{ $td }}">{{ $p->firma?->unvan }}</td>
-                            <td style="{{ $td }}">{{ $p->bolum }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $p->proses ?: 'Proses belirtilmedi' }}</div></td>
+                            <td style="{{ $td }}">{{ $p->bolum }}<div class="mehse-soluk">{{ $p->proses ?: 'Proses belirtilmedi' }}</div></td>
                             <td style="{{ $td }}"><span style="{{ $rozet('rgb(107 114 128 / .4)') }}">{{ $p->ortamEtiketi() }}</span></td>
                             <td style="{{ $td }}">
                                 @foreach ($p->etiketler('zonelar') as $z)

@@ -5,7 +5,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma, eğitim başlığı ve katılımcı listesini seçin; "Form PDF" ile 6331 Sayılı Kanun
         Madde 17 kapsamındaki eğitim katılım formunu oluşturun.
     </p>
@@ -36,13 +36,13 @@
                             <x-filament::icon :icon="$ikon" style="width:1.25rem;height:1.25rem;flex:none"/>
                             <span style="display:flex;flex-direction:column;line-height:1.25">
                                 <span style="font-size:.85rem;font-weight:600">{{ $baslik }}</span>
-                                <span style="font-size:.75rem;color:rgb(107 114 128)">{{ $alt }}</span>
+                                <span class="mehse-soluk">{{ $alt }}</span>
                             </span>
                         </button>
                     @endforeach
                 </div>
             </div>
-            <span style="font-size:.75rem;color:rgb(107 114 128)">Seçtiğiniz çıktı için form önce kaydedilir; Kaydet ile aynı belge kullanılır, kopya açılmaz.</span>
+            <span class="mehse-soluk">Seçtiğiniz çıktı için form önce kaydedilir; Kaydet ile aynı belge kullanılır, kopya açılmaz.</span>
         </div>
     @endif
 
@@ -93,11 +93,11 @@
     <x-filament::section icon="heroicon-o-academic-cap" icon-color="success">
         <x-slot name="heading">1. Firma & Eğitim Bilgileri</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}{{ in_array($id, $eksikIdler, true) ? ' (Eksik)' : '' }}</option>
@@ -105,16 +105,16 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Başlığı <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Eğitim Başlığı <span class="mehse-hata">*</span></label>
                 <select wire:model.live="baslikAnahtari"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     @foreach ($this->basliklar as $anahtar => $ad)
                         <option value="{{ $anahtar }}">{{ $ad }}</option>
                     @endforeach
                 </select>
             </div>
             <div style="grid-column:1/-1">
-                <label style="font-weight:600;font-size:.82rem">Çalışan Grubu / İş Kolu <span style="font-weight:400;color:rgb(107 114 128)">(isteğe bağlı)</span></label>
+                <label class="mehse-etiket">Çalışan Grubu / İş Kolu <span style="font-weight:400;color:rgb(107 114 128)">(isteğe bağlı)</span></label>
                 @if ($this->isKalemiSecenekleri)
                     <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0">
                         @foreach ($this->isKalemiSecenekleri as $anahtar => $ad)
@@ -125,7 +125,7 @@
                     </div>
                 @endif
                 <input type="text" wire:model.blur="isKolu" placeholder="Örn: Kazı Ekibi, Kaba İnşaat Ekibi, Boyahane"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                 <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                     Aynı firmada farklı çalışan gruplarına ayrı form düzenlemek için: önce grubu seçin/yazın, sonra katılımcıları seçin.
                     İş kalemi seçerseniz işe özgü konular yalnız seçtiğiniz iş kalemlerinden gelir; her grubun konu şablonu ayrı hatırlanır.
@@ -133,19 +133,19 @@
                 </p>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Yeri</label>
+                <label class="mehse-etiket">Eğitim Yeri</label>
                 <input type="text" wire:model="egitimYeri" placeholder="Örn: Şantiye şefliği toplantı odası"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Belge Düzenleme Tarihi</label>
+                <label class="mehse-etiket">Belge Düzenleme Tarihi</label>
                 <input type="date" wire:model="belgeTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                    <label style="font-weight:600;font-size:.82rem">Ders Saati</label>
+                    <label class="mehse-etiket">Ders Saati</label>
                     <input type="number" min="1" wire:model.live="dersSaati"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                     <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                         Tehlike sınıfına göre otomatik (Az Tehl. 8 · Tehl. 12 · Çok Tehl. 16). Az tehlikeli işyeri için
                         gerekirse 16 yapabilirsiniz — belgede "{{ $dersSaati ?? '…' }} Ders Saati" yazar.
@@ -153,9 +153,9 @@
                     </p>
                 </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Süresi (Gün)</label>
+                <label class="mehse-etiket">Eğitim Süresi (Gün)</label>
                 <input type="number" min="1" wire:model="sureGun"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                 @php $toplamDk = \App\Support\EgitimIcerikOlusturucu::toplamDakika($icerik); @endphp
                 <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                     @if ($sureGun >= 2)
@@ -168,9 +168,9 @@
             @if ($sureGun >= 2)
                 @foreach (range(1, $sureGun) as $g)
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">{{ $g }}. Gün Eğitim Tarihi</label>
+                        <label class="mehse-etiket">{{ $g }}. Gün Eğitim Tarihi</label>
                         <input type="date" wire:model="gunTarihleri.{{ $g - 1 }}"
-                            style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                         @if ($g === 1)
                             <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">
                                 Formun künyesinde ve sertifikada gün gün yazılır.
@@ -180,17 +180,17 @@
                 @endforeach
             @endif
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
+                <label class="mehse-etiket">Eğitim Türü</label>
                 <select wire:model.live="egitimTuru"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="ilk">İlk Defa</option>
                     <option value="tekrar">Tekrar (Yenileme)</option>
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Eğitim Şekli</label>
+                <label class="mehse-etiket">Eğitim Şekli</label>
                 <select wire:model="egitimSekli"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="yuz_yuze">Yüz Yüze</option>
                     <option value="uzaktan">Uzaktan</option>
                     <option value="karma">Karma</option>
@@ -199,9 +199,9 @@
             </div>
             @if ($baslikAnahtari === 'genel')
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">İşyerine Özgü Risk Sektörü</label>
+                    <label class="mehse-etiket">İşyerine Özgü Risk Sektörü</label>
                     <select wire:model.live="sektorAnahtari"
-                        style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                         <option value="">— Sektör seçin —</option>
                         @foreach ($this->sektorler as $anahtar => $ad)
                             <option value="{{ $anahtar }}">{{ $ad }}</option>
@@ -316,7 +316,7 @@
                                 border:1px solid {{ $secili ? $yesil : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(16 185 129 / .08)' : 'transparent' }}">
                             {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
-                            @if ($grupGorevleri[$c->id] ?? $c->gorev) <span style="color:rgb(107 114 128)">— {{ $grupGorevleri[$c->id] ?? $c->gorev }}</span> @endif
+                            @if ($grupGorevleri[$c->id] ?? $c->gorev) <span class="mehse-soluk-metin">— {{ $grupGorevleri[$c->id] ?? $c->gorev }}</span> @endif
                         </button>
                     @endforeach
                 </div>
@@ -348,9 +348,9 @@
             @if ($manuelKatilimcilar)
                 <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:.75rem">
                     <tr>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Ad Soyad</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">T.C. No</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Görevi</th>
+                        <th class="mehse-th">Ad Soyad</th>
+                        <th class="mehse-th">T.C. No</th>
+                        <th class="mehse-th">Görevi</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($manuelKatilimcilar as $i => $k)
@@ -359,7 +359,7 @@
                             <td style="padding:.3rem .5rem">{{ $k['tc'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $k['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="manuelCikar({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="manuelCikar({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -387,20 +387,20 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Eğitim Kayıtları</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Belge No</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Başlık</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tarih</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Katılımcı</th>
+                        <th class="mehse-th">Belge No</th>
+                        <th class="mehse-th">Başlık</th>
+                        <th class="mehse-th">Tarih</th>
+                        <th class="mehse-th">Katılımcı</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
-                            <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.75rem;color:rgb(15 118 110);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.75rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
-                            <td style="padding:.35rem .5rem">{{ $k->belge_tarihi?->format('d.m.Y') }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->katilimciSayisi() }}</td>
+                            <td class="mehse-td">{{ $k->belge_no }}</td>
+                            <td class="mehse-td">{{ $k->basliklarEtiketi() }}@if (filled($k->is_kolu))<br><span style="font-size:.75rem;color:rgb(15 118 110);font-weight:600">{{ $k->is_kolu }}</span>@endif@if (($k->konu_secimleri['planli_kaynak'] ?? null) && collect($k->katilimcilar)->contains(fn ($x) => ($x['katildi'] ?? true) === false))<br><span style="font-size:.75rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:rgb(37 99 235);background:rgb(37 99 235 / .1)" title="Atama / üye değişikliğiyle otomatik planlandı; eğitim yapılınca Eğitim Yenileme Takibi > Yüz Yüze Kayıtlar > Katılım / Sonuç ile işaretleyin">Planlı — sonuç bekliyor</span>@endif</td>
+                            <td class="mehse-td">{{ $k->belge_tarihi?->format('d.m.Y') }}</td>
+                            <td class="mehse-td">{{ $k->katilimciSayisi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisExcel({{ $k->id }})">Excel</x-filament::button>
@@ -417,7 +417,7 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 
     <div style="{{ $kutu }};background:rgb(107 114 128 / .05);font-size:.78rem;color:rgb(107 114 128)">

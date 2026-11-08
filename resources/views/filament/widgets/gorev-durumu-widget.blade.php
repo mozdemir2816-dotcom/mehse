@@ -99,7 +99,7 @@
                                 </div>
                                 <div style="font-size:.78rem;font-weight:600;margin-top:.2rem">{{ $g['firma'] }}</div>
                                 @if ($g['termin'])
-                                    <div style="font-size:.75rem;color:rgb(107 114 128)">Termin: {{ $g['termin']->format('d.m.Y') }}</div>
+                                    <div class="mehse-soluk">Termin: {{ $g['termin']->format('d.m.Y') }}</div>
                                 @endif
                                 <div style="font-size:.75rem;margin-top:.25rem;line-height:1.4">{{ $g['aciklama'] }}</div>
                                 @if ($g['dayanak'])<div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">{{ $g['dayanak'] }}</div>@endif

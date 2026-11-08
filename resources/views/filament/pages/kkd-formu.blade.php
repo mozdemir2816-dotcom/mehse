@@ -5,7 +5,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma, çalışan(lar) ve teslim edilecek kişisel koruyucu donanımları seçip
         "PDF Oluştur" ile her çalışan için ayrı zimmet tutanağı üretin.
     </p>
@@ -16,9 +16,9 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -26,19 +26,19 @@
                 </select>
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Teslim Tarihi</label>
+                <label class="mehse-etiket">Teslim Tarihi</label>
                 <input type="date" wire:model="teslimTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Periyodik Kontrol Tarihi</label>
+                <label class="mehse-etiket">Periyodik Kontrol Tarihi</label>
                 <input type="date" wire:model="periyodikKontrolTarihi"
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
             <div>
-                <label style="font-weight:600;font-size:.82rem">Teslim Eden (Ad Soyad / Ünvan)</label>
+                <label class="mehse-etiket">Teslim Eden (Ad Soyad / Ünvan)</label>
                 <input type="text" wire:model="teslimEden" placeholder="İSG Uzmanı / Depo Sorumlusu vb."
-                    style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
             </div>
         </div>
     </x-filament::section>
@@ -67,11 +67,11 @@
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;margin-bottom:.5rem">
                 <input type="text" wire:model="manuelAdSoyad" placeholder="Ad Soyad"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="text" wire:model="manuelTc" placeholder="T.C. Kimlik No"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="text" wire:model="manuelDepartman" placeholder="Departman / Görev"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <x-filament::button size="sm" wire:click="manuelCalisanEkle">+ Ekle</x-filament::button>
             </div>
 
@@ -81,7 +81,7 @@
                         <tr>
                             <td style="padding:.25rem .5rem">{{ $c['ad_soyad'] }}</td>
                             <td style="padding:.25rem .5rem;text-align:right">
-                                <button type="button" wire:click="manuelCalisanSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="manuelCalisanSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -124,9 +124,9 @@
                                 <div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;border-radius:.4rem;border:1px solid {{ $mavi }};background:rgb(59 130 246 / .08);font-size:.78rem">
                                     <div>
                                         {{ $m['ad'] }}
-                                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
+                                        <div class="mehse-soluk">{{ $m['standart'] }}</div>
                                     </div>
-                                    <button type="button" wire:click="matristenSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                    <button type="button" wire:click="matristenSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                                 </div>
                             @endforeach
                         </div>
@@ -154,7 +154,7 @@
                                     border:1px solid {{ $secili ? $mavi : 'rgb(107 114 128 / .3)' }};
                                     background:{{ $secili ? 'rgb(59 130 246 / .08)' : 'transparent' }}">
                                 {{ $secili ? '☑' : '☐' }} {{ $m['ad'] }}
-                                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $m['standart'] }}</div>
+                                <div class="mehse-soluk">{{ $m['standart'] }}</div>
                             </button>
                         @endforeach
                     </div>
@@ -166,7 +166,7 @@
         @if ($this->gecmisFormlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş KKD Formları</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisFormlar as $f)
                         <tr>
                             <td style="padding:.3rem .5rem">{{ $f->form_no }} — {{ $f->teslim_tarihi?->format('d.m.Y') }} ({{ count($f->calisanlar ?? []) }} çalışan, {{ count($f->kkdler ?? []) }} KKD)</td>
@@ -180,6 +180,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

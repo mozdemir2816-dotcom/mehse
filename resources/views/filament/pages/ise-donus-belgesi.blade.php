@@ -7,7 +7,7 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     @include('filament.pages.partials.kvkk-rozeti')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Uzun süreli rapor, iş kazası veya meslek hastalığı sonrası çalışanın işe dönüşünde
         işyeri hekiminin uygunluk değerlendirmesi ve geçici iş kısıtlamaları (6331 s.K. Md.15).
     </p>
@@ -38,8 +38,8 @@
                 </div>
             @endif
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
-                <div><label style="{{ $lbl }}">Ad Soyad <span style="color:#dc2626">*</span></label><input type="text" wire:model="calisanAdSoyad" style="{{ $inp }}"></div>
+            <div class="mehse-izgara">
+                <div><label style="{{ $lbl }}">Ad Soyad <span class="mehse-hata">*</span></label><input type="text" wire:model="calisanAdSoyad" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">T.C. Kimlik No</label><input type="text" wire:model="calisanTc" style="{{ $inp }}"></div>
                 <div><label style="{{ $lbl }}">Görevi</label><input type="text" wire:model="gorev" style="{{ $inp }}"></div>
                 <div>
@@ -90,12 +90,12 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Belgeler</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
-                            <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->calisan_ad_soyad }} — {{ $k->nedenEtiketi() }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->uygunlukEtiketi() }}</td>
+                            <td class="mehse-td">{{ $k->belge_no }}</td>
+                            <td class="mehse-td">{{ $k->calisan_ad_soyad }} — {{ $k->nedenEtiketi() }}</td>
+                            <td class="mehse-td">{{ $k->uygunlukEtiketi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>

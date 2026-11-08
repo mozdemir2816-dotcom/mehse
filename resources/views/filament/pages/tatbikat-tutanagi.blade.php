@@ -6,7 +6,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Acil Durumlar Yönetmeliği md.13 — yılda en az bir tatbikat zorunlu, tutanakla
         denetime kanıttır. Senaryo seçin, tatbikat bilgilerini doldurup PDF alın.
     </p>
@@ -18,7 +18,7 @@
         <x-slot name="heading">1. Firma & Tatbikat Senaryosu</x-slot>
 
         <div style="margin-bottom:1rem">
-            <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+            <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
             <select wire:model.live="firmaId"
                 style="margin-top:.3rem;width:100%;max-width:24rem;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                 <option value="">— Firma seçin —</option>
@@ -54,7 +54,7 @@
                         <span style="position:absolute;top:.3rem;right:.45rem;font-size:.75rem;font-weight:700;background:#e11d48;color:#fff;border-radius:999px;padding:0 .4rem">{{ $no + 1 }}</span>
                     @endif
                     <div style="font-weight:700">{{ $s['ad'] }}</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">≈{{ $s['sure_dk'] }} dk</div>
+                    <div class="mehse-soluk">≈{{ $s['sure_dk'] }} dk</div>
                 </button>
             @endforeach
         </div>
@@ -86,53 +86,53 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Durum</label>
+                    <label class="mehse-etiket">Durum</label>
                     <select wire:model.live="durum"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                         @foreach ($this->durumlar as $anahtar => $ad)
                             <option value="{{ $anahtar }}">{{ $ad }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tatbikat Tarihi{{ $durum === 'planlandi' ? ' (planlanan)' : '' }}</label>
+                    <label class="mehse-etiket">Tatbikat Tarihi{{ $durum === 'planlandi' ? ' (planlanan)' : '' }}</label>
                     <input type="date" wire:model="tatbikatTarihi"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tatbikat Yeri</label>
+                    <label class="mehse-etiket">Tatbikat Yeri</label>
                     <input type="text" wire:model.live.blur="tatbikatYeri" placeholder="Örn: Üretim sahası ve idari bina"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Toplanma Alanı</label>
+                    <label class="mehse-etiket">Toplanma Alanı</label>
                     <input type="text" wire:model.live.blur="toplanmaAlani" placeholder="Örn: Ana kapı önü otopark"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Katılımcı Sayısı</label>
+                    <label class="mehse-etiket">Katılımcı Sayısı</label>
                     <input type="number" min="0" wire:model="katilimciSayisi" placeholder="Boş = listedeki katılımcılar ({{ count($katilimcilar) }})"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Başlama Saati</label>
+                    <label class="mehse-etiket">Başlama Saati</label>
                     <input type="time" wire:model="baslamaSaati"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Bitiş Saati</label>
+                    <label class="mehse-etiket">Bitiş Saati</label>
                     <input type="time" wire:model="bitisSaati"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Gerçekleşen Tahliye Süresi (dk)</label>
+                    <label class="mehse-etiket">Gerçekleşen Tahliye Süresi (dk)</label>
                     <input type="number" min="0" wire:model.live.debounce.500ms="tahliyeDk" placeholder="Kronometre — örn: 4"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Hedef (Planlanan) Tahliye Süresi (dk)</label>
+                    <label class="mehse-etiket">Hedef (Planlanan) Tahliye Süresi (dk)</label>
                     <input type="number" min="0" wire:model.live.debounce.500ms="hedefTahliyeDk" placeholder="Senaryo seçince önerilen gelir"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                     @if ($tahliyeDk && $hedefTahliyeDk)
                         <div style="font-size:.75rem;margin-top:.2rem;color:{{ $tahliyeDk <= $hedefTahliyeDk ? '#16a34a' : '#dc2626' }}">
                             {{ $tahliyeDk <= $hedefTahliyeDk ? '✓ Tahliye hedef süre içinde' : '✗ Hedef süre '.($tahliyeDk - $hedefTahliyeDk).' dk aşıldı — DÖF önerisi ekleyin' }}
@@ -140,24 +140,24 @@
                     @endif
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">İşveren / Vekili</label>
+                    <label class="mehse-etiket">İşveren / Vekili</label>
                     <input type="text" wire:model="isverenVekili"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">İş Güvenliği Uzmanı</label>
+                    <label class="mehse-etiket">İş Güvenliği Uzmanı</label>
                     <input type="text" wire:model="isGuvenligiUzmani"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Tatbikat Koordinatörü</label>
+                    <label class="mehse-etiket">Tatbikat Koordinatörü</label>
                     <input type="text" wire:model="tatbikatKoordinatoru"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.8rem">Belge Tarihi</label>
+                    <label class="mehse-etiket">Belge Tarihi</label>
                     <input type="date" wire:model="belgeTarihi"
-                        style="margin-top:.2rem;width:100%;padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                        class="mehse-girdi-kompakt mehse-tam">
                 </div>
             </div>
             <div style="margin-top:.75rem;display:flex;gap:1.5rem;flex-wrap:wrap">
@@ -203,9 +203,9 @@
 
             <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin-bottom:.5rem">
                 <input type="text" wire:model="yeniEkipAd" placeholder="Ad Soyad"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <select wire:model="yeniEkipTipi"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                     <option value="">Ekip seçin</option>
                     @foreach ($this->ekipSecenekleri as $ekip)
                         <option value="{{ $ekip }}">{{ $ekip }}</option>
@@ -215,12 +215,12 @@
             </div>
 
             @if ($ekipler)
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($ekipler as $i => $e)
                         <tr>
                             <td style="padding:.25rem .5rem">{{ $e['ad_soyad'] }} — {{ $e['ekip'] ?: '—' }}</td>
                             <td style="padding:.25rem .5rem;text-align:right">
-                                <button type="button" wire:click="ekipSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="ekipSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -244,14 +244,14 @@
                                 {{ $etiket }}
                             </button>
                         @endforeach
-                        <button type="button" wire:click="degerlendirmeSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                        <button type="button" wire:click="degerlendirmeSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                     </div>
                 </div>
             @endforeach
 
             <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;margin-top:.5rem">
                 <input type="text" wire:model="yeniOzelSoru" placeholder="Özel değerlendirme sorusu ekle..."
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <x-filament::button size="sm" wire:click="ozelSoruEkle">+ Ekle</x-filament::button>
             </div>
         </x-filament::section>
@@ -268,13 +268,13 @@
             <x-slot name="heading">7. Tespit Edilen Eksiklikler ({{ count($eksiklikler) }})</x-slot>
             <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;margin-bottom:.5rem">
                 <input type="text" wire:model="yeniEksiklik" placeholder="Örn: Alarm sesi depo alanında zayıf duyuldu"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <x-filament::button size="sm" wire:click="eksiklikEkle">+ Ekle</x-filament::button>
             </div>
             @foreach ($eksiklikler as $i => $e)
                 <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.2rem .4rem">
                     <span>{{ $e }}</span>
-                    <button type="button" wire:click="eksiklikSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                    <button type="button" wire:click="eksiklikSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                 </div>
             @endforeach
         </x-filament::section>
@@ -284,17 +284,17 @@
             <x-slot name="heading">8. Yapılacak Düzenlemeler (DÖF) ({{ count($dofOnerileri) }})</x-slot>
             <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.5rem;margin-bottom:.5rem">
                 <input type="text" wire:model="yeniDofFaaliyet" placeholder="Faaliyet (örn: Depo alanına ek siren montajı)"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="text" wire:model="yeniDofSorumlu" placeholder="Sorumlu"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="date" wire:model="yeniDofTarih"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <x-filament::button size="sm" wire:click="dofOnerisiEkle">+ Ekle</x-filament::button>
             </div>
             @foreach ($dofOnerileri as $i => $d)
                 <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:.2rem .4rem">
                     <span>{{ $d['faaliyet'] }} — {{ $d['sorumlu'] ?: '—' }} — {{ $d['tarih'] ?: '—' }}</span>
-                    <button type="button" wire:click="dofOnerisiSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                    <button type="button" wire:click="dofOnerisiSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                 </div>
             @endforeach
         </x-filament::section>
@@ -313,21 +313,21 @@
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;margin-bottom:.5rem">
                 <input type="text" wire:model="yeniKatilimciAd" placeholder="Ad Soyad"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="text" wire:model="yeniKatilimciTc" placeholder="T.C. Kimlik No"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <input type="text" wire:model="yeniKatilimciGorev" placeholder="Görevi"
-                    style="padding:.45rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem">
+                    class="mehse-girdi-kompakt">
                 <x-filament::button size="sm" wire:click="katilimciEkle">+ Ekle</x-filament::button>
             </div>
 
             @if ($katilimcilar)
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     @foreach ($katilimcilar as $i => $k)
                         <tr>
                             <td style="padding:.25rem .5rem">{{ $k['ad_soyad'] }}</td>
                             <td style="padding:.25rem .5rem;text-align:right">
-                                <button type="button" wire:click="katilimciSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="katilimciSil({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -359,7 +359,7 @@
         </x-filament::section>
 
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Yeni tatbikat için bir firma seçin. Aşağıda tüm firmaların tatbikat kayıtları listelenir.</p>
+        <p class="mehse-uyari-not">Yeni tatbikat için bir firma seçin. Aşağıda tüm firmaların tatbikat kayıtları listelenir.</p>
     @endif
 
     {{-- TATBİKAT KAYITLARI (isgsuite "Tatbikat Yönetimi") --}}
@@ -383,7 +383,7 @@
             ] as [$ad, $sayi, $renk, $filtre])
                 <button type="button" wire:click="$set('listeDurum', {{ $filtre ? "'".$filtre."'" : 'null' }})"
                     style="text-align:left;{{ $kutu }};padding:.6rem .85rem;background:transparent;cursor:pointer;{{ $listeDurum === $filtre ? 'border-color:rgb(124 58 237)' : '' }}">
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                    <div class="mehse-soluk">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                 </button>
             @endforeach

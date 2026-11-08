@@ -7,7 +7,7 @@
 
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Firma, sertifika tipi ve katılımcı listesini seçin; "Sertifikayı Oluştur" ile
         katılımcı başına ayrı bir sayfa halinde eğitim sertifikası PDF'i indirin.
     </p>
@@ -16,11 +16,11 @@
     <x-filament::section icon="heroicon-o-check-badge" icon-color="warning">
         <x-slot name="heading">1. Firma & Sertifika Tipi</x-slot>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div class="mehse-izgara">
             <div>
-                <label style="font-weight:600;font-size:.82rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                <label class="mehse-etiket">Firma Seçin <span class="mehse-hata">*</span></label>
                 <select wire:model.live="firmaId"
-                    style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                    class="mehse-girdi">
                     <option value="">— Firma seçin —</option>
                     @foreach ($this->firmalar as $id => $ad)
                         <option value="{{ $id }}">{{ $ad }}</option>
@@ -68,7 +68,7 @@
                 </div>
                 <div>
                     <div style="font-weight:700;font-size:.85rem">Yıldız Grup OSGB Orijinal Formatı</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">2 sayfa A4: ön yüz belge + arka yüz eğitim konuları ve süreleri. Çıktı için üstteki "Yıldız Grup Eğitim Sertifikası" / "Toplu Sertifika İndir (PDF)" düğmeleri.</div>
+                    <div class="mehse-soluk">2 sayfa A4: ön yüz belge + arka yüz eğitim konuları ve süreleri. Çıktı için üstteki "Yıldız Grup Eğitim Sertifikası" / "Toplu Sertifika İndir (PDF)" düğmeleri.</div>
                 </div>
             </div>
         @endif
@@ -79,12 +79,12 @@
         <x-filament::section icon="heroicon-o-calendar" icon-color="warning">
             <x-slot name="heading">2. Eğitim Bilgileri</x-slot>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div class="mehse-izgara">
                 @if ($coklu)
                     <div>
-                        <label style="font-weight:600;font-size:.82rem">İşyerine Özgü Risk Sektörü</label>
+                        <label class="mehse-etiket">İşyerine Özgü Risk Sektörü</label>
                         <select wire:model.live="sektorAnahtari"
-                            style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                            class="mehse-girdi">
                             <option value="">— Sektör seçin —</option>
                             @foreach ($this->sektorler as $anahtar => $ad)
                                 <option value="{{ $anahtar }}">{{ $ad }}</option>
@@ -93,14 +93,14 @@
                     </div>
                 @endif
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Eğitim Gün Sayısı</label>
+                    <label class="mehse-etiket">Eğitim Gün Sayısı</label>
                     <input type="number" min="1" max="10" wire:model.live="gunSayisi"
-                        style="margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Eğitim Süresi</label>
+                    <label class="mehse-etiket">Eğitim Süresi</label>
                     <select wire:model="sureMetni"
-                        style="margin-top:.3rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
+                        class="mehse-girdi">
                         <option value="">— Seçin —</option>
                         @foreach (config('isg.sertifika.sureler') as $s)
                             <option value="{{ $s }}">{{ $s }}</option>
@@ -111,7 +111,7 @@
 
             <div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Eğitim Türü</label>
+                    <label class="mehse-etiket">Eğitim Türü</label>
                     <div style="display:flex;gap:.4rem;margin-top:.3rem">
                         @foreach (config('isg.sertifika.turler') as $anahtar => $ad)
                             @php $secili = $tur === $anahtar; @endphp
@@ -125,7 +125,7 @@
                     </div>
                 </div>
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Eğitim Şekli</label>
+                    <label class="mehse-etiket">Eğitim Şekli</label>
                     <div style="display:flex;gap:.4rem;margin-top:.3rem">
                         @foreach (config('isg.sertifika.sekiller') as $anahtar => $ad)
                             @php $secili = $sekil === $anahtar; @endphp
@@ -152,7 +152,7 @@
 
             <div style="margin-top:1rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:end">
                 <div>
-                    <label style="font-weight:600;font-size:.82rem">Geçerlilik Tarihi</label>
+                    <label class="mehse-etiket">Geçerlilik Tarihi</label>
                     <input type="date" wire:model="gecerlilikTarihi"
                         style="margin-top:.3rem;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                 </div>
@@ -211,7 +211,7 @@
             </div>
 
             <div style="margin-top:1rem">
-                <label style="font-weight:600;font-size:.82rem">Sertifika Çerçevesi</label>
+                <label class="mehse-etiket">Sertifika Çerçevesi</label>
                 <select wire:model="cerceve"
                     style="margin-top:.3rem;width:100%;max-width:24rem;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;display:block">
                     @foreach (config('isg.sertifika.cerceveler') as $anahtar => $ad)
@@ -247,7 +247,7 @@
                                 border:1px solid {{ $secili ? $altin : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(217 119 6 / .08)' : 'transparent' }}">
                             {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
-                            @if ($c->gorev) <span style="color:rgb(107 114 128)">— {{ $c->gorev }}</span> @endif
+                            @if ($c->gorev) <span class="mehse-soluk-metin">— {{ $c->gorev }}</span> @endif
                         </button>
                     @endforeach
                 </div>
@@ -279,9 +279,9 @@
             @if ($manuelKatilimcilar)
                 <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:.75rem">
                     <tr>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Ad Soyad</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">T.C. No</th>
-                        <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Görevi</th>
+                        <th class="mehse-th">Ad Soyad</th>
+                        <th class="mehse-th">T.C. No</th>
+                        <th class="mehse-th">Görevi</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($manuelKatilimcilar as $i => $k)
@@ -290,7 +290,7 @@
                             <td style="padding:.3rem .5rem">{{ $k['tc'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $k['gorev'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem;text-align:right">
-                                <button type="button" wire:click="manuelCikar({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none">✕</button>
+                                <button type="button" wire:click="manuelCikar({{ $i }})" class="mehse-sil-dugme">✕</button>
                             </td>
                         </tr>
                     @endforeach
@@ -318,20 +318,20 @@
         @if ($this->gecmisKayitlar->isNotEmpty())
             <x-filament::section icon="heroicon-o-clock" icon-color="gray">
                 <x-slot name="heading">Geçmiş Sertifikalar</x-slot>
-                <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                <table class="mehse-tablo">
                     <tr>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Belge No</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Tip</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Geçerlilik</th>
-                        <th style="text-align:left;padding:.35rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3)">Katılımcı</th>
+                        <th class="mehse-th">Belge No</th>
+                        <th class="mehse-th">Tip</th>
+                        <th class="mehse-th">Geçerlilik</th>
+                        <th class="mehse-th">Katılımcı</th>
                         <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                     </tr>
                     @foreach ($this->gecmisKayitlar as $k)
                         <tr>
-                            <td style="padding:.35rem .5rem">{{ $k->belge_no }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->tipEtiketi() }}</td>
-                            <td style="padding:.35rem .5rem">{{ $k->gecerlilik_tarihi?->format('d.m.Y') ?: '—' }}</td>
-                            <td style="padding:.35rem .5rem">{{ count($k->katilimcilar ?? []) }}</td>
+                            <td class="mehse-td">{{ $k->belge_no }}</td>
+                            <td class="mehse-td">{{ $k->tipEtiketi() }}</td>
+                            <td class="mehse-td">{{ $k->gecerlilik_tarihi?->format('d.m.Y') ?: '—' }}</td>
+                            <td class="mehse-td">{{ count($k->katilimcilar ?? []) }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 @if ($k->tip === 'isg')
@@ -345,6 +345,6 @@
             </x-filament::section>
         @endif
     @else
-        <p style="margin-top:1rem;font-size:.85rem;color:#b45309">Devam etmek için bir firma seçin.</p>
+        <p class="mehse-uyari-not">Devam etmek için bir firma seçin.</p>
     @endif
 </x-filament-panels::page>

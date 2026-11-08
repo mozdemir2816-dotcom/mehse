@@ -4,18 +4,18 @@
     $s = $this->sds;
     $r = $this->risk;
     $p = $this->pkd;
-    $sayi = fn ($deger, string $ad, string $renk = 'inherit') => '<div><div style="font-size:1.25rem;font-weight:700;color:'.($deger > 0 ? $renk : 'inherit').'">'.e($deger).'</div><div style="font-size:.75rem;color:rgb(107 114 128)">'.e($ad).'</div></div>';
+    $sayi = fn ($deger, string $ad, string $renk = 'inherit') => '<div><div style="font-size:1.25rem;font-weight:700;color:'.($deger > 0 ? $renk : 'inherit').'">'.e($deger).'</div><div class="mehse-soluk">'.e($ad).'</div></div>';
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         Kimyasal güvenliği ve patlamadan korunma tek merkezde: Güvenlik Bilgi Formları (SDS / GBF), kimyasal risk
         değerlendirmesi, kimyasal afişleri ve Patlamadan Korunma Dokümanları. İşyeri seçerseniz sayılar ve açılan
         sayfalar o işyerine göre gelir.
     </p>
 
     <div>
-        <label style="font-weight:600;font-size:.82rem">İşyeri</label><br>
+        <label class="mehse-etiket">İşyeri</label><br>
         <select wire:model.live="firmaId" style="{{ $inp }}">
             <option value="">Tüm işyerleri</option>
             @foreach ($this->firmalar as $id => $ad)
@@ -31,7 +31,7 @@
                 <x-filament::icon icon="heroicon-o-document-text" style="width:1.6rem;height:1.6rem;color:rgb(20 184 166)" />
                 <div>
                     <div style="font-weight:700">SDS / GBF Sicili</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">Kimyasal envanteri, güvenlik bilgi formları, GHS etiketleri</div>
+                    <div class="mehse-soluk">Kimyasal envanteri, güvenlik bilgi formları, GHS etiketleri</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
@@ -49,7 +49,7 @@
                 <x-filament::icon icon="heroicon-o-shield-exclamation" style="width:1.6rem;height:1.6rem;color:rgb(124 58 237)" />
                 <div>
                     <div style="font-weight:700">Kimyasal Risk Değerlendirmesi</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">Kontrol bantlama (COSHH) — envanterden otomatik satır</div>
+                    <div class="mehse-soluk">Kontrol bantlama (COSHH) — envanterden otomatik satır</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
@@ -67,7 +67,7 @@
                 <x-filament::icon icon="heroicon-o-photo" style="width:1.6rem;height:1.6rem;color:rgb(180 83 9)" />
                 <div>
                     <div style="font-weight:700">Kimyasal Afişleri</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">GHS levhaları, kimyasal güvenliği posterleri</div>
+                    <div class="mehse-soluk">GHS levhaları, kimyasal güvenliği posterleri</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
@@ -82,7 +82,7 @@
                 <x-filament::icon icon="heroicon-o-fire" style="width:1.6rem;height:1.6rem;color:rgb(234 88 12)" />
                 <div>
                     <div style="font-weight:700">PKD Sicili</div>
-                    <div style="font-size:.75rem;color:rgb(107 114 128)">Patlamadan korunma dokümanları, zone ve önlem takibi</div>
+                    <div class="mehse-soluk">Patlamadan korunma dokümanları, zone ve önlem takibi</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">

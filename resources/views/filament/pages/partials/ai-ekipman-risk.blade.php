@@ -27,7 +27,7 @@
     </div>
 
     @if ($aiEkipmanHata)
-        <div style="margin-top:1rem;font-size:.85rem;color:#b45309">{{ $aiEkipmanHata }}</div>
+        <div class="mehse-uyari-not">{{ $aiEkipmanHata }}</div>
     @endif
 
     @if ($aiEkipmanAdaylar)
@@ -62,15 +62,15 @@
                         <span style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center">
                             <strong style="font-size:.9rem">{{ $m['tehlike'] }}</strong>
                         </span>
-                        @if ($m['faaliyet']) <span style="color:rgb(107 114 128)">{{ $m['bolum'] }} · {{ $m['faaliyet'] }}</span> @endif
+                        @if ($m['faaliyet']) <span class="mehse-soluk-metin">{{ $m['bolum'] }} · {{ $m['faaliyet'] }}</span> @endif
                         <span><strong>Risk:</strong> {{ $m['risk'] }}</span>
                         @if ($m['mevcut_onlem']) <span><strong>Mevcut durum:</strong> {{ $m['mevcut_onlem'] }}</span> @endif
                         <span><strong>Önerilen aksiyon:</strong> {{ $m['oneri'] }}</span>
-                        @if ($m['mevzuat']) <span style="color:rgb(107 114 128)"><strong>Yasal dayanak:</strong> {{ $m['mevzuat'] }}</span> @endif
+                        @if ($m['mevzuat']) <span class="mehse-soluk-metin"><strong>Yasal dayanak:</strong> {{ $m['mevzuat'] }}</span> @endif
                         {{-- Mevcut risk → önlem sonrası (rezidüel) risk karşılaştırma şeridi --}}
                         <span style="display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin-top:.3rem;padding-top:.45rem;border-top:1px dashed rgb(107 114 128 / .3)">
                             <x-filament::badge size="sm" color="danger" title="{{ $ilk['duzey'] }}">Mevcut Risk: {{ $ilkMetin }}</x-filament::badge>
-                            <span aria-hidden="true" style="color:rgb(107 114 128)">→</span>
+                            <span aria-hidden="true" class="mehse-soluk-metin">→</span>
                             <x-filament::badge size="sm" :color="$kabul ? 'success' : 'warning'" title="{{ $son['duzey'] }}">Önlem Sonrası Risk: {{ $sonMetin }}</x-filament::badge>
                             @unless ($kabul)
                                 <span style="font-size:.75rem;color:#b45309">Şiddet/frekans çok yüksek: olasılık en alta inse de kabul edilebilir seviyeye inmiyor — ek mühendislik önlemi gerekir.</span>

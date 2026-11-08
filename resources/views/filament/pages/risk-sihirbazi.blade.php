@@ -56,7 +56,7 @@
 
             <div style="display:flex;flex-direction:column;gap:1rem">
                 <div>
-                    <label style="font-weight:600;font-size:.85rem">Firma Seçin <span style="color:#dc2626">*</span></label>
+                    <label style="font-weight:600;font-size:.85rem">Firma Seçin <span class="mehse-hata">*</span></label>
                     <select wire:model.live="firmaId"
                         style="margin-top:.35rem;width:100%;padding:.6rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         <option value="">— Firma seçin —</option>
@@ -83,7 +83,7 @@
                 @endif
 
                 <div>
-                    <label style="font-weight:600;font-size:.85rem">Analiz Yöntemi <span style="color:#dc2626">*</span></label>
+                    <label style="font-weight:600;font-size:.85rem">Analiz Yöntemi <span class="mehse-hata">*</span></label>
                     <select wire:model.live="yontem"
                         style="margin-top:.35rem;width:100%;padding:.6rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         <option value="">— Yöntem seçin —</option>
@@ -96,7 +96,7 @@
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
                     <div>
-                        <label style="font-weight:600;font-size:.85rem">Rapor Tarihi <span style="color:#dc2626">*</span></label>
+                        <label style="font-weight:600;font-size:.85rem">Rapor Tarihi <span class="mehse-hata">*</span></label>
                         <input type="date" wire:model.live="raporTarihi"
                             style="margin-top:.35rem;width:100%;padding:.55rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                     </div>
@@ -317,7 +317,7 @@
                                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:.6rem 1rem;border-top:1px solid rgb(107 114 128 / .18)">
                                         <div style="font-size:.85rem">
                                             <div style="font-weight:600">{{ $t->tehlike }}</div>
-                                            <div style="color:rgb(107 114 128)">{{ $t->bolum }} · {{ $t->faaliyet }}</div>
+                                            <div class="mehse-soluk-metin">{{ $t->bolum }} · {{ $t->faaliyet }}</div>
                                         </div>
                                         <x-filament::button size="xs" :color="$ekli ? 'success' : 'primary'" :disabled="$ekli"
                                             wire:click="tehlikeEkle({{ $t->id }})" style="flex-shrink:0">
@@ -669,7 +669,7 @@
                                 @foreach ($liste as $s)
                                     <div style="{{ $kutu }};padding:.75rem;display:flex;flex-direction:column;gap:.4rem">
                                         <div style="font-weight:600;font-size:.88rem">{{ $s->ad }}</div>
-                                        <div style="font-size:.75rem;color:rgb(107 114 128)">
+                                        <div class="mehse-soluk">
                                             {{ $s->maddeSayisi() }} madde · {{ config('isg.risk_yontemleri.'.$s->yontem) }}
                                             @if ($s->kullanim_sayisi) · {{ $s->kullanim_sayisi }}× kullanıldı @endif
                                             @if ($s->paylasildi) · paylaşılan @endif
@@ -886,7 +886,7 @@
             </x-slot>
 
             @if (count($secilenler) === 0)
-                <p style="color:rgb(107 114 128)">Henüz madde yok. Adım 3'e dönüp ekleyin.</p>
+                <p class="mehse-soluk-metin">Henüz madde yok. Adım 3'e dönüp ekleyin.</p>
             @endif
 
             <div style="display:flex;flex-direction:column;gap:.75rem">
@@ -911,7 +911,7 @@
                                     <dl style="display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem;font-size:.78rem;margin-top:.4rem">
                                         @foreach (['parametre' => 'Parametre', 'kilavuz' => 'Kılavuz', 'neden' => 'Olası nedenler', 'sonuc' => 'Olası sonuçlar', 'korumalar' => 'Doğrulanacak korumalar'] as $alan => $etiket)
                                             @if (filled($m['hazop'][$alan] ?? null))
-                                                <dt style="color:rgb(107 114 128)">{{ $etiket }}</dt>
+                                                <dt class="mehse-soluk-metin">{{ $etiket }}</dt>
                                                 <dd style="margin:0">{{ $m['hazop'][$alan] }}</dd>
                                             @endif
                                         @endforeach
@@ -926,7 +926,7 @@
                         @unless ($yontem === 'hazop')
                         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem;margin-top:.6rem">
                             <div>
-                                <label style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['olasilik'] }}</label>
+                                <label class="mehse-soluk">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['olasilik'] }}</label>
                                 <select wire:model.live="secilenler.{{ $i }}.olasilik"
                                     style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">—</option>
@@ -937,7 +937,7 @@
                             </div>
                             @if ($this->fineKinney)
                                 <div>
-                                    <label style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['frekans'] }}</label>
+                                    <label class="mehse-soluk">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['frekans'] }}</label>
                                     <select wire:model.live="secilenler.{{ $i }}.frekans"
                                         style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                         <option value="">—</option>
@@ -948,7 +948,7 @@
                                 </div>
                             @endif
                             <div>
-                                <label style="font-size:.75rem;color:rgb(107 114 128)">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['siddet'] }}</label>
+                                <label class="mehse-soluk">{{ \App\Support\RiskSkorlama::eksenEtiketleri($yontem)['siddet'] }}</label>
                                 <select wire:model.live="secilenler.{{ $i }}.siddet"
                                     style="display:block;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent">
                                     <option value="">—</option>

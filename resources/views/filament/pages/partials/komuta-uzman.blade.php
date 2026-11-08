@@ -27,7 +27,7 @@
             ['Açık olay', $g['acik_olay'], 'rgb(217 119 6)'], ['KKD zimmet', $g['kkd_zimmet'], 'rgb(124 58 237)'], ['Yaklaşan / geciken', $g['yaklasan_geciken'], 'rgb(220 38 38)'],
         ] as [$ad, $deger, $c])
             <div style="{{ $kart }};border-top:3px solid {{ $c }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
+                <div class="mehse-soluk">{{ $ad }}</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $deger }}</div>
             </div>
         @endforeach
@@ -40,10 +40,10 @@
                 <tr>@foreach (['İşyeri', 'NACE / Tehlike', 'Çalışan', 'Açık risk', 'Kontrol', 'Mevzuat', 'İşlem'] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
                 <tr>
                     <td style="{{ $td }}"><strong>{{ $firma->unvan }}</strong><div style="font-size:.75rem;color:{{ $u['durum'] === 'Uygun' ? 'rgb(21 128 61)' : 'rgb(220 38 38)' }}">{{ $u['durum'] }}</div></td>
-                    <td style="{{ $td }}">{{ $firma->nace_kodu ?: '—' }}<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $firma->tehlikeSinifiEtiketi() }}</div></td>
+                    <td style="{{ $td }}">{{ $firma->nace_kodu ?: '—' }}<div class="mehse-soluk">{{ $firma->tehlikeSinifiEtiketi() }}</div></td>
                     <td style="{{ $td }}">{{ $g['aktif_calisan'] }}</td>
                     <td style="{{ $td }}">{{ $g['acik_risk'] }}</td>
-                    <td style="{{ $td }};white-space:nowrap">{{ $u['basarisiz'] }} başarısız<div style="font-size:.75rem;color:rgb(107 114 128)">{{ $u['yaklasan_geciken'] }} yaklaşan / geciken</div></td>
+                    <td style="{{ $td }};white-space:nowrap">{{ $u['basarisiz'] }} başarısız<div class="mehse-soluk">{{ $u['yaklasan_geciken'] }} yaklaşan / geciken</div></td>
                     <td style="{{ $td }};font-size:.75rem;line-height:1.45">
                         @foreach (array_slice($u['dayanaklar'], 0, 3) as $d)
                             <div>{{ $d['ad'] }}</div>
@@ -56,7 +56,7 @@
                                 @endforeach
                             </details>
                         @endif
-                        @if (! $u['dayanaklar'])<span style="color:rgb(107 114 128)">—</span>@endif
+                        @if (! $u['dayanaklar'])<span class="mehse-soluk-metin">—</span>@endif
                     </td>
                     <td style="{{ $td }};white-space:nowrap">
                         <x-filament::button size="xs" tag="a" :href="\App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource::getUrl('index')">Risk</x-filament::button>
@@ -74,7 +74,7 @@
                 <div style="border:1px solid rgb(107 114 128 / .2);border-left:4px solid {{ $renk[$a['durum']] ?? 'gray' }};border-radius:.6rem;padding:.6rem .8rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;align-items:center">
                     <div style="flex:1;min-width:260px">
                         <div style="font-weight:700;font-size:.85rem">{{ $a['baslik'] }} <span style="font-size:.75rem;font-weight:700;color:{{ $renk[$a['durum']] ?? 'gray' }}">· {{ $durumAd[$a['durum']] ?? '' }}</span></div>
-                        <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $a['alt'] }}</div>
+                        <div class="mehse-soluk">{{ $a['alt'] }}</div>
                         <a href="{{ $a['dayanak']['url'] }}" target="{{ $a['dayanak']['resmi'] ? '_blank' : '_self' }}" rel="noopener" style="font-size:.75rem;color:rgb(37 99 235)" title="{{ $a['dayanak']['ad'] }}">{{ $a['dayanak']['resmi'] ? 'Resmî kaynağı aç ↗' : 'Dayanak: '.$a['dayanak']['ad'] }}</a>
                     </div>
                     <div style="display:flex;gap:.35rem">

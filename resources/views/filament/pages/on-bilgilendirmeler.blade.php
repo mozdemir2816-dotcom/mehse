@@ -4,7 +4,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.5rem">
+    <p class="mehse-bolum-aciklama">
         İşe başlamadan önce firmaya bildirdiğiniz yazıları (Word/PDF) buraya yükleyin; dosya değiştirilmeden saklanır.
         Firmaya tebliğ işveren panelindeki "okudum, tebellüğ ettim" onayıyla ya da elden teslim kaydıyla belgelenir;
         her kayıt için Tebliğ-Tebellüğ Tutanağı alınabilir.
