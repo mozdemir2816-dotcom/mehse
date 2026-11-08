@@ -127,7 +127,7 @@
                         <div class="alt">{{ $b['bina_bolge'] }}</div>
                     @endif
                 </td>
-                <td>{{ $b['tespit'] ?? '' }}</td>
+                <td>{{ $b['tespit'] ?? '' }}@if (! empty($b['fotograftaki_konum']))<br><em>Fotoğraftaki konum: {{ $b['fotograftaki_konum'] }}</em>@endif</td>
                 <td>
                     @if (! empty($b['oneriler']))
                         <ul>
@@ -139,6 +139,8 @@
                 </td>
                 <td style="text-align:center">{{ $b['yasal_gerekce'] ?? '—' }}</td>
                 <td class="risk">
+                    @php $onem = SahaAnalizi::onemEtiketi($b['risk_derecesi'] ?? SahaAnalizi::skordanDerece($skor)); @endphp
+                    <div class="ad" style="color:{{ $onem['renk'] }}">Önem: {{ $onem['ad'] }}</div>
                     @if ($bant)
                         <div class="ad">{{ $bant['ad'] }}</div>
                         <div class="skor" style="background:{{ $bant['renk'] }}">{{ number_format($skor, 2, '.', '') }}</div>

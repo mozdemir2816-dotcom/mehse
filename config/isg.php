@@ -5132,6 +5132,13 @@ return [
             3 => 'Orta',
             4 => 'Düşük',
         ],
+        // Fotoğraf analizi önem etiketi (08.11.2026) — risk derecesinden (Fine-Kinney skoru) türetilir.
+        'onem_etiketleri' => [
+            1 => ['ad' => 'Acil', 'renk' => '#dc2626'],
+            2 => ['ad' => 'Yüksek', 'renk' => '#ea580c'],
+            3 => ['ad' => 'Orta', 'renk' => '#ca8a04'],
+            4 => ['ad' => 'Düşük', 'renk' => '#16a34a'],
+        ],
     ],
 
     /*

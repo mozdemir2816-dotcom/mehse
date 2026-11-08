@@ -313,9 +313,13 @@
                         </div>
 
                         <div style="flex:1;min-width:220px">
+                            @php $onem = SahaAnalizi::onemEtiketi(SahaAnalizi::skordanDerece(SahaAnalizi::fineKinneySkoru($b), (int) ($b['risk_derecesi'] ?? 3))); @endphp
+                            <div style="margin-bottom:.4rem"><span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;font-size:.72rem;font-weight:700;color:#fff;background:{{ $onem['renk'] }}">Önem: {{ $onem['ad'] }}</span></div>
                             @if ($duzenlenebilir)
                                 <label style="{{ $etiket }}">Bina / Bölge (görsel alt yazısı)</label>
                                 <input type="text" wire:model="bulgular.{{ $i }}.bina_bolge" style="{{ $girdi }};margin-bottom:.5rem">
+                                <label style="{{ $etiket }}">Fotoğraftaki konum</label>
+                                <input type="text" wire:model="bulgular.{{ $i }}.fotograftaki_konum" placeholder="ör. sağ alt, zemin yürüme çizgisi üzerinde" style="{{ $girdi }};margin-bottom:.5rem">
                                 <label style="{{ $etiket }}">Uygunsuzluk</label>
                                 <textarea wire:model="bulgular.{{ $i }}.tespit" rows="3" style="{{ $girdi }};margin-bottom:.5rem"></textarea>
                                 <label style="{{ $etiket }}">Alınması gereken önlemler (her satır bir madde)</label>
@@ -324,6 +328,7 @@
                                 <input type="text" wire:model="bulgular.{{ $i }}.yasal_gerekce" style="{{ $girdi }};margin-bottom:.5rem">
                             @else
                                 @if ($b['bina_bolge'] ?? null)<div style="font-size:.75rem;color:rgb(107 114 128);font-style:italic;margin-bottom:.3rem">{{ $b['bina_bolge'] }}</div>@endif
+                                @if ($b['fotograftaki_konum'] ?? null)<div style="font-size:.78rem;margin-bottom:.3rem"><strong>Fotoğraftaki konum:</strong> {{ $b['fotograftaki_konum'] }}</div>@endif
                                 <div style="font-size:.88rem;margin-bottom:.5rem">{{ $b['tespit'] }}</div>
                                 <div style="{{ $etiket }}">Alınması gereken önlemler</div>
                                 <ul style="list-style:disc;padding-left:1.1rem;font-size:.85rem;margin:.2rem 0 .5rem">

@@ -121,6 +121,14 @@ class SahaAnalizi extends Model
         return collect($anahtarlar)->sortBy(fn ($k) => abs((float) $k - (float) $deger))->first();
     }
 
+    /** Önem etiketi (Acil / Yüksek / Orta / Düşük) + renk — risk derecesinden. @return array{ad: string, renk: string} */
+    public static function onemEtiketi(?int $derece): array
+    {
+        $d = max(1, min(4, (int) ($derece ?: 3)));
+
+        return config('isg.saha_analiz.onem_etiketleri.'.$d, ['ad' => (string) $d, 'renk' => '#6b7280']);
+    }
+
     public static function riskDerecesiEtiketi(?int $derece): string
     {
         return config('isg.saha_analiz.risk_dereceleri.'.$derece, (string) $derece);

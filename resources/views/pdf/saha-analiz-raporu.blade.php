@@ -77,7 +77,7 @@
                         <img src="{{ storage_path('app/public/'.$b['foto_yolu']) }}">
                     @endif
                 </td>
-                <td>{{ $b['tespit'] ?? '' }}</td>
+                <td>{{ $b['tespit'] ?? '' }}@if (! empty($b['fotograftaki_konum']))<br><em>Fotoğraftaki konum: {{ $b['fotograftaki_konum'] }}</em>@endif</td>
                 <td>
                     @if (! empty($b['oneriler']))
                         <ol>
@@ -89,7 +89,7 @@
                 </td>
                 <td></td>
                 <td>{{ $b['yasal_gerekce'] ?? '—' }}</td>
-                <td class="orta derece-{{ $b['risk_derecesi'] ?? 3 }}">{{ $b['risk_derecesi'] ?? 3 }}. Derece Risk</td>
+                <td class="orta derece-{{ $b['risk_derecesi'] ?? 3 }}">{{ $b['risk_derecesi'] ?? 3 }}. Derece Risk<br><strong>{{ \App\Models\SahaAnalizi::onemEtiketi($b['risk_derecesi'] ?? 3)['ad'] }}</strong></td>
             </tr>
         @empty
             <tr><td colspan="8" style="color:#888;text-align:center">Bulgu eklenmedi.</td></tr>

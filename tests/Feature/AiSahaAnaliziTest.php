@@ -110,7 +110,7 @@ class AiSahaAnaliziTest extends TestCase
     {
         Storage::fake('public');
         $this->geminiYaniti([[
-            'foto_index' => 1, 'bina_bolge' => 'Depo', 'kategori' => 'Düzen/Temizlik',
+            'foto_index' => 1, 'bina_bolge' => 'Depo', 'fotograftaki_konum' => 'sağ alt, zemin', 'kategori' => 'Düzen/Temizlik',
             'tespit' => 'Hortumlar zeminde dağınık bırakılmış.', 'oneriler' => ['Hortumlar toplanmalı.', 'Kablo köprüsü kullanılmalı.'],
             'yasal_gerekce' => '6331 sayılı Kanun m.4', 'olasilik' => 5, 'frekans' => 3, 'siddet' => 7, 'risk_derecesi' => 3,
         ]]);
@@ -134,6 +134,10 @@ class AiSahaAnaliziTest extends TestCase
         $rapor = SahaAnalizi::where('firma_id', $firma->id)->sole();
         $this->assertSame(SahaAnalizi::TASLAK, $rapor->durum);
         $this->assertEquals(126, $rapor->bulgular[0]['skor']);
+        $this->assertSame('sağ alt, zemin', $rapor->bulgular[0]['fotograftaki_konum']);
+        $component->assertSee('Önem: Orta')->assertSee('sağ alt, zemin');
+        $this->assertSame('Acil', SahaAnalizi::onemEtiketi(1)['ad']);
+        $this->assertSame('Düşük', SahaAnalizi::onemEtiketi(4)['ad']);
         $this->assertSame($rapor->id, $component->get('kayitId'));
     }
 

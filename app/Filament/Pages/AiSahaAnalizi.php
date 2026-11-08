@@ -335,6 +335,7 @@ class AiSahaAnalizi extends Page
             'bulgu_id' => null,   // ortak saha bulgusu bağı (BulguHavuzu)
             'foto_yolu' => null,
             'bina_bolge' => null,
+            'fotograftaki_konum' => null,
             'kategori' => null,
             'tespit' => '',
             'oneriler_metni' => '',
@@ -359,6 +360,7 @@ class AiSahaAnalizi extends Page
         return static::bosBulgu([
             'foto_yolu' => $fotoYolu ?? ($b['foto_yolu'] ?? null),
             'bina_bolge' => $b['bina_bolge'] ?? null,
+            'fotograftaki_konum' => $b['fotograftaki_konum'] ?? null,
             'kategori' => $b['kategori'] ?? null,
             'tespit' => $b['tespit'],
             'oneriler_metni' => implode("\n", $b['oneriler'] ?? []),
@@ -532,6 +534,7 @@ class AiSahaAnalizi extends Page
         $eski = $this->bulgular[$i];
         $this->bulgular[$i] = array_merge(static::aiBulgusu($yeni, $eski['kaynak'] ?? 'manuel', $eski['foto_yolu'] ?? null), [
             'bina_bolge' => $eski['bina_bolge'] ?: ($yeni['bina_bolge'] ?? null),
+            'fotograftaki_konum' => ($yeni['fotograftaki_konum'] ?? null) ?: ($eski['fotograftaki_konum'] ?? null),
             'dof_acilacak' => $eski['dof_acilacak'] ?? false,
         ]);
         $this->iyilestirIndex = null;
@@ -639,6 +642,7 @@ class AiSahaAnalizi extends Page
                     'bulgu_id' => $b['bulgu_id'] ?? null,   // ortak saha bulgusu bağı (BulguHavuzu)
                     'foto_yolu' => $b['foto_yolu'] ?? null,
                     'bina_bolge' => $b['bina_bolge'] ?? null,
+                    'fotograftaki_konum' => filled($b['fotograftaki_konum'] ?? null) ? trim((string) $b['fotograftaki_konum']) : null,
                     'kategori' => $b['kategori'] ?? null,
                     'tespit' => trim((string) ($b['tespit'] ?? '')),
                     'oneriler' => array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) ($b['oneriler_metni'] ?? ''))))),

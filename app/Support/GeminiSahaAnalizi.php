@@ -97,6 +97,7 @@ class GeminiSahaAnalizi
 
         $mevcut = json_encode([
             'tespit' => $bulgu['tespit'] ?? '',
+            'fotograftaki_konum' => $bulgu['fotograftaki_konum'] ?? null,
             'oneriler' => array_values(array_filter(preg_split('/\r\n|\r|\n/', (string) ($bulgu['oneriler_metni'] ?? '')))),
             'yasal_gerekce' => $bulgu['yasal_gerekce'] ?? null,
             'olasilik' => $bulgu['olasilik'] ?? null,
@@ -133,6 +134,7 @@ class GeminiSahaAnalizi
 
         return [
             'bina_bolge' => $b['bina_bolge'] ?? null,
+            'fotograftaki_konum' => filled($b['fotograftaki_konum'] ?? null) ? trim((string) $b['fotograftaki_konum']) : null,
             'kategori' => $b['kategori'] ?? null,
             'tespit' => (string) $b['tespit'],
             'oneriler' => is_array($b['oneriler'] ?? null) ? array_values($b['oneriler']) : [],
@@ -178,6 +180,7 @@ class GeminiSahaAnalizi
     {
         $ozellikler = [
             'bina_bolge' => ['type' => 'STRING'],
+            'fotograftaki_konum' => ['type' => 'STRING'],
             'kategori' => ['type' => 'STRING'],
             'tespit' => ['type' => 'STRING'],
             'oneriler' => ['type' => 'ARRAY', 'items' => ['type' => 'STRING']],
@@ -220,8 +223,9 @@ class GeminiSahaAnalizi
         - bina_bolge: görülebiliyorsa bina/bölge adı (yoksa boş bırak).
         - kategori: kısa kategori etiketi (örn. "Yüksekte Çalışma", "Düzen/Temizlik", "KKD Eksikliği", "Elektrik Güvenliği").
         - tespit: uygunsuzluğun/tehlikenin açıklaması (2-4 cümle, somut ve teknik): nerede, kim tarafından veya hangi ekipmanda
-          gerçekleştiğini, mevcut risk faktörünü (ör. parça fırlaması, elektrik çarpması, takılma, düşme) ve — görüntüde ayırt edilebiliyorsa —
-          ihlalin fotoğraftaki yerini (ör. "merkezde taşlama yapan işçi", "sağ alt zemin yürüme çizgisi üzerinde", "arka plandaki pano") açıkça belirt.
+          gerçekleştiğini ve mevcut risk faktörünü (ör. parça fırlaması, elektrik çarpması, takılma, düşme) açıkça belirt.
+        - fotograftaki_konum: ihlalin fotoğraftaki yeri, kısa (ör. "merkezde taşlama yapan işçi", "sağ alt, zemin yürüme çizgisi üzerinde",
+          "arka plandaki elektrik panosu"). Fotoğraf yoksa ya da ayırt edilemiyorsa boş bırak.
         - oneriler: alınması gereken önlemler, her biri tek cümle olan dizi.
         - yasal_gerekce: ilgili mevzuatın tam adı ve varsa maddesi.
         - Fine-Kinney değerlendirmesi — YALNIZ şu değerlerden birini seç:
