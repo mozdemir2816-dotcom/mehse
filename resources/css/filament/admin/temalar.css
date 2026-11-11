@@ -1261,6 +1261,16 @@ html[data-mehse-tema="acik_alan"] {
         color: var(--primary) !important;
     }
 
+    /* Açılır pencere başlığı: theme.css koyu menü için beyaz yazı veriyor. */
+    .fi-modal-header {
+        color: var(--text-heading) !important;
+    }
+
+    .fi-modal-header .fi-modal-heading,
+    .fi-modal-header .fi-icon {
+        color: var(--text-heading) !important;
+    }
+
     /* Butonlar: lacivert dolgu, beyaz yazı, yumuşak köşe. */
     .fi-btn {
         border-radius: 10px !important;
@@ -1297,54 +1307,55 @@ html[data-mehse-tema="acik_alan"] {
    Kartlar gölgesiz, ince çizgili; tablo satırları defter çizgisi gibi.
    ========================================================================== */
 html[data-mehse-tema="kagit"] {
-    --primary: #A0421F;
-    --bg: #F3EBDA;
-    --panel-bg: #FFFBF2;
-    --sidebar-from: #E9DDC6;
-    --sidebar-to: #E9DDC6;
-    --text-heading: #2B1F17;
-    --text-secondary: #574638;
-    --text-label: #6B5848;
-    --border: #D5C7AE;
-    --border-light: #E8DEC9;
-    --info-bg: #E1EAEE;
-    --info-text: #2B566F;
-    --info-border: #A9C1CE;
-    --success-bg: #E5EDD6;
-    --success-text: #2F6236;
-    --success-border: #A5C08A;
-    --warning-bg: #F7E6C2;
-    --warning-text: #7F4507;
-    --warning-border: #D6A23E;
-    --metric-blue: #2B566F;
-    --metric-green: #2F6236;
-    --metric-orange: #A0421F;
-    --metric-purple: #6B3F6E;
+    /* Düşük doygunluk: ilk sürümdeki sarı zemin ve canlı kiremit uzun kullanımda gözü yordu (11.11.2026). */
+    --primary: #8F4A32;
+    --bg: #F5F2EB;
+    --panel-bg: #FCFAF6;
+    --sidebar-from: #EDE9E0;
+    --sidebar-to: #EDE9E0;
+    --text-heading: #3A322B;
+    --text-secondary: #5E554B;
+    --text-label: #6F665B;
+    --border: #DDD7CB;
+    --border-light: #ECE7DD;
+    --info-bg: #E6ECEF;
+    --info-text: #33586D;
+    --info-border: #B7C8D2;
+    --success-bg: #E8EEE2;
+    --success-text: #39633F;
+    --success-border: #B4C8A4;
+    --warning-bg: #F3E9D3;
+    --warning-text: #7A4D14;
+    --warning-border: #D4B275;
+    --metric-blue: #33586D;
+    --metric-green: #39633F;
+    --metric-orange: #8F4A32;
+    --metric-purple: #694A6C;
 
-    --primary-50: #FBF1E8;
-    --primary-100: #F6DFD0;
-    --primary-200: #EBBDA4;
-    --primary-300: #DC9575;
-    --primary-400: #C76F4B;
-    --primary-500: #B4542E;
-    --primary-600: #A0421F;
-    --primary-700: #823518;
-    --primary-800: #662A14;
-    --primary-900: #4C2011;
-    --primary-950: #2C1209;
+    --primary-50: #F8F2EE;
+    --primary-100: #F0E3DB;
+    --primary-200: #E0C6B7;
+    --primary-300: #CCA28F;
+    --primary-400: #B57F69;
+    --primary-500: #A0624B;
+    --primary-600: #8F4A32;
+    --primary-700: #763C29;
+    --primary-800: #5D3021;
+    --primary-900: #45241A;
+    --primary-950: #2A1610;
 
-    /* Filament'in soğuk grileri yerine kâğıda uyan sıcak gri. */
-    --gray-50: #FAF5EA;
-    --gray-100: #F1EADB;
-    --gray-200: #E2D8C4;
-    --gray-300: #CBBEA7;
-    --gray-400: #7C6D58;
-    --gray-500: #6F604E;
-    --gray-600: #574A3B;
-    --gray-700: #443829;
-    --gray-800: #33291F;
-    --gray-900: #261E16;
-    --gray-950: #1A140E;
+    /* Filament'in soğuk grileri yerine kâğıda uyan, az doygun sıcak gri. */
+    --gray-50: #F8F6F1;
+    --gray-100: #EFECE5;
+    --gray-200: #E2DDD3;
+    --gray-300: #CBC5B9;
+    --gray-400: #7C7468;
+    --gray-500: #6B6358;
+    --gray-600: #544D44;
+    --gray-700: #423C34;
+    --gray-800: #322D27;
+    --gray-900: #25211C;
+    --gray-950: #191612;
 
     .fi-body {
         font-size: 14px;
@@ -1444,6 +1455,16 @@ html[data-mehse-tema="kagit"] {
     .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label,
     .fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
         color: var(--primary) !important;
+    }
+
+    /* Açılır pencere başlığı: theme.css koyu menü için beyaz yazı veriyor. */
+    .fi-modal-header {
+        color: var(--text-heading) !important;
+    }
+
+    .fi-modal-header .fi-modal-heading,
+    .fi-modal-header .fi-icon {
+        color: var(--text-heading) !important;
     }
 
     .fi-btn {

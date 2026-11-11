@@ -46,6 +46,13 @@
     }
 }
 
+/* Açılır pencerede tarih seçici: takvim pencereden uzun olunca alt kısmı kesiliyordu.
+   Yalnız takvim açıkken pencere kırpmayı bırakır. */
+.fi-modal-window:has(.fi-fo-date-time-picker-panel:not([style*="display: none"])),
+.fi-modal-window:has(.fi-fo-date-time-picker-panel:not([style*="display: none"])) .fi-modal-content {
+    overflow: visible !important;
+}
+
 /* 300–380 piksel asgari sütunlu ızgaralar dar telefona ve büyük yazıya sığmıyordu. */
 @media (max-width: 520px) {
     .fi-main :is([style*="repeat(auto-fit,minmax(3"], [style*="repeat(auto-fill,minmax(3"]) {

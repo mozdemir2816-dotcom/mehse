@@ -97,22 +97,22 @@ html[data-mehse-tema="saha"] {
 }
 
 html[data-mehse-tema="kagit"] {
-    --mehse-sb-kart-bg: #F6EFE1;
-    --mehse-sb-kart-kenar: #D5C7AE;
-    --mehse-sb-metin: #2B1F17;
-    --mehse-sb-soluk: #574638;
-    --mehse-sb-avatar-bg: #A0421F;
-    --mehse-sb-ayar-hover: rgb(43 31 23 / .08);
-    --mehse-hero-bg: #E9DDC6;
-    --mehse-hero-metin: #2B1F17;
-    --mehse-hero-soluk: #574638;
-    --mehse-hero-eylem-bg: #FFFBF2;
-    --mehse-hero-eylem-kenar: #CDBEA3;
-    --mehse-hero-eylem-metin: #2B1F17;
-    --mehse-hero-birincil-bg: #A0421F;
+    --mehse-sb-kart-bg: #F5F2EB;
+    --mehse-sb-kart-kenar: #D9D3C6;
+    --mehse-sb-metin: #3A322B;
+    --mehse-sb-soluk: #5E554B;
+    --mehse-sb-avatar-bg: #8F4A32;
+    --mehse-sb-ayar-hover: rgb(58 50 43 / .08);
+    --mehse-hero-bg: #ECE7DC;
+    --mehse-hero-metin: #3A322B;
+    --mehse-hero-soluk: #5E554B;
+    --mehse-hero-eylem-bg: #FCFAF6;
+    --mehse-hero-eylem-kenar: #D3CCBE;
+    --mehse-hero-eylem-metin: #3A322B;
+    --mehse-hero-birincil-bg: #8F4A32;
     --mehse-hero-birincil-metin: #fff;
-    --mehse-hero-halka: #A0421F;
-    --mehse-hero-halka-zemin: rgb(43 31 23 / .12);
+    --mehse-hero-halka: #8F4A32;
+    --mehse-hero-halka-zemin: rgb(58 50 43 / .12);
     --mehse-hero-radius: 6px;
 }
 
@@ -431,7 +431,7 @@ html[data-mehse-tema="windows11"] .mehse-hosgeldin-halka::before { background: #
 html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1D; }
 html[data-mehse-tema="modern"] .mehse-hosgeldin-halka::before { background: #0C4A6E; }
 html[data-mehse-tema="acik_alan"] .mehse-hosgeldin-halka::before { background: #1E3A8A; }
-html[data-mehse-tema="kagit"] .mehse-hosgeldin-halka::before { background: #E9DDC6; }
+html[data-mehse-tema="kagit"] .mehse-hosgeldin-halka::before { background: #ECE7DC; }
 
 .mehse-hosgeldin-halka-deger,
 .mehse-hosgeldin-halka-etiket {
