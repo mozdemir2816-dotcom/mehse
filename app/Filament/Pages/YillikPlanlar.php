@@ -27,6 +27,7 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -762,10 +763,14 @@ abstract class YillikPlanlar extends Page
                 ->modalHeading(fn () => $this->yil.' yıllık planlarını birlikte indir')
                 ->modalDescription('Üç belge tek ZIP dosyasında iner. Her belgenin hazırlanma tarihini ayrı girebilirsiniz.')
                 ->modalSubmitActionLabel('İndir')
+                ->modalWidth(Width::ThreeExtraLarge)
                 ->schema([
-                    static::hazirlanmaTarihiAlani('calisma_tarihi')->label('Yıllık Çalışma Planı — hazırlanma tarihi')->helperText(null),
-                    static::hazirlanmaTarihiAlani('egitim_tarihi')->label('Yıllık Eğitim Planı — hazırlanma tarihi')->helperText(null),
-                    static::hazirlanmaTarihiAlani('degerlendirme_tarihi')->label('Yıllık Değerlendirme Raporu — rapor tarihi')->helperText(null),
+                    // Tarihler yan yana: pencere kısa kalır, dizüstü ekranda kaydırma gerekmez.
+                    Grid::make(['default' => 1, 'md' => 3])->schema([
+                        static::hazirlanmaTarihiAlani('calisma_tarihi')->label('Çalışma Planı tarihi')->helperText(null),
+                        static::hazirlanmaTarihiAlani('egitim_tarihi')->label('Eğitim Planı tarihi')->helperText(null),
+                        static::hazirlanmaTarihiAlani('degerlendirme_tarihi')->label('Değerlendirme Raporu tarihi')->helperText(null),
+                    ]),
                     Radio::make('bicim')
                         ->label('Değerlendirme raporu biçimi')
                         ->options([
@@ -773,8 +778,9 @@ abstract class YillikPlanlar extends Page
                             'ydr' => 'İSG-YDR-01 (7 sayfa)',
                         ])
                         ->default('form')
+                        ->inline()
                         ->required(),
-                    ImzaSecenegi::alan(),
+                    ImzaSecenegi::alan()->inline(),
                 ])
                 ->action(fn (array $data) => YillikPlanTopluIndirme::indir(
                     $this->plan(),

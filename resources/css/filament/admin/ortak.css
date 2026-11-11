@@ -46,6 +46,21 @@
     }
 }
 
+/* Açılır pencere ekrandan uzun olamaz: başlık ve alt düğmeler sabit, yalnızca içerik kayar.
+   Önce yalnız Klasik temadaydı; MEHSE, Windows 11 ve Saha pencereyi overflow:hidden ile kestiği için
+   uzun pencerelerde (ör. Diğer Firmalara Uyarla firma listesi) alt kısım görünmüyor, kaymıyordu (11.11.2026). */
+.fi-modal:not(.fi-modal-slide-over):not(.fi-width-screen) .fi-modal-window {
+    max-height: calc(100dvh - 2rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.fi-modal:not(.fi-modal-slide-over):not(.fi-width-screen) .fi-modal-window > .fi-modal-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 /* Açılır pencerede tarih seçici: takvim pencereden uzun olunca alt kısmı kesiliyordu.
    Yalnız takvim açıkken pencere kırpmayı bırakır. */
 .fi-modal-window:has(.fi-fo-date-time-picker-panel:not([style*="display: none"])),
