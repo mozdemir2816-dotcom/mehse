@@ -6,6 +6,7 @@ use App\Models\YillikPlan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -27,6 +28,24 @@ class YillikDegerlendirmeExcelUretici
     private const BLOK = 19;
 
     public static function excel(YillikPlan $plan, ?Carbon $raporTarihi = null): StreamedResponse
+    {
+        $kitap = static::doldur($plan, $raporTarihi);
+        $tmp = tempnam(sys_get_temp_dir(), 'ydr').'.xlsx';
+        IOFactory::createWriter($kitap, 'Xlsx')->save($tmp);
+
+        return response()->streamDownload(function () use ($tmp) {
+            echo file_get_contents($tmp);
+            @unlink($tmp);
+        }, static::dosyaAdi($plan));
+    }
+
+    public static function dosyaAdi(YillikPlan $plan): string
+    {
+        return 'yillik-degerlendirme-'.$plan->yil.'-'.Str::slug($plan->firma->unvan).'.xlsx';
+    }
+
+    /** İSG-YDR-01 çalışma kitabı (indirmeden; toplu ZIP de kullanır). */
+    public static function doldur(YillikPlan $plan, ?Carbon $raporTarihi = null): Spreadsheet
     {
         ExcelBellek::artir();
 
@@ -95,13 +114,7 @@ class YillikDegerlendirmeExcelUretici
         static::ekSatirlar($s, $calisma->slice(36)->values());
         static::yazdirmaAyari($s);
 
-        $tmp = tempnam(sys_get_temp_dir(), 'ydr').'.xlsx';
-        IOFactory::createWriter($kitap, 'Xlsx')->save($tmp);
-
-        return response()->streamDownload(function () use ($tmp) {
-            echo file_get_contents($tmp);
-            @unlink($tmp);
-        }, 'yillik-degerlendirme-'.$plan->yil.'-'.Str::slug($firma->unvan).'.xlsx');
+        return $kitap;
     }
 
     /** "2026-05-03" → "03.05.2026"; dönem metni olduğu gibi. */

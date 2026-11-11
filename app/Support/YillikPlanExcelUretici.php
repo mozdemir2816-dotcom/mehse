@@ -563,7 +563,7 @@ class YillikPlanExcelUretici
         }
     }
 
-    private static function dosyaAdi(YillikPlan $plan, string $on): string
+    public static function dosyaAdi(YillikPlan $plan, string $on): string
     {
         return $on.'-'.Str::slug($plan->firma?->unvan ?? 'firma').'-'.$plan->yil.'.xlsx';
     }

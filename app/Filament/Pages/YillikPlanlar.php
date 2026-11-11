@@ -15,7 +15,9 @@ use App\Support\YillikPlanExcelIceAktarici;
 use App\Support\YillikPlanExcelUretici;
 use App\Support\YillikPlanGerceklesme;
 use App\Support\YillikPlanSablonu;
+use App\Support\YillikPlanTopluIndirme;
 use App\Support\YillikPlanUretici;
+use App\Support\YillikPlanUyarlayici;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
@@ -606,21 +608,70 @@ abstract class YillikPlanlar extends Page
             ->send();
     }
 
-    /** Çıktıdaki "Hazırlanma Tarihi" — bugün dolu gelir, istenirse değiştirilir. */
-    protected static function hazirlanmaTarihiAlani(): DatePicker
+    /**
+     * Çıktıdaki "Hazırlanma Tarihi" — varsayılanı planın yılına göre gelir
+     * (varsayilanHazirlanmaTarihi), kullanıcı her zaman değiştirebilir.
+     */
+    protected static function hazirlanmaTarihiAlani(string $ad = 'hazirlanma_tarihi'): DatePicker
     {
-        return DatePicker::make('hazirlanma_tarihi')
+        return DatePicker::make($ad)
             ->label('Hazırlanma Tarihi')
-            ->default(now()->toDateString())
+            ->default(fn ($livewire) => static::varsayilanHazirlanmaTarihi((int) ($livewire->yil ?? now()->year)))
             ->native(false)
             ->displayFormat('d.m.Y')
             ->required()
-            ->helperText('Bugünün tarihi otomatik gelir; farklı bir tarih istiyorsanız değiştirin.');
+            ->helperText('Tarih otomatik gelir; farklı bir tarih istiyorsanız değiştirin.');
     }
 
-    protected static function secilenTarih(array $data): ?Carbon
+    /**
+     * Yıl için ayarlanmış tarih (config isg.yillik_plan.hazirlanma_tarihleri) henüz gelmediyse o
+     * tarih, geldiyse ya da ayar yoksa bugün. Ör. 2027 planları 04.01.2027'ye kadar o tarihle çıkar.
+     */
+    public static function varsayilanHazirlanmaTarihi(int $yil): string
     {
-        return filled($data['hazirlanma_tarihi'] ?? null) ? Carbon::parse($data['hazirlanma_tarihi']) : null;
+        $ayarli = config('isg.yillik_plan.hazirlanma_tarihleri.'.$yil);
+        $bugun = now()->toDateString();
+
+        return filled($ayarli) && $bugun < Carbon::parse($ayarli)->toDateString()
+            ? Carbon::parse($ayarli)->toDateString()
+            : $bugun;
+    }
+
+    protected static function secilenTarih(array $data, string $ad = 'hazirlanma_tarihi'): ?Carbon
+    {
+        return filled($data[$ad] ?? null) ? Carbon::parse($data[$ad]) : null;
+    }
+
+    /**
+     * Planın uyarlanabileceği firmalar (kendi firmalarınız, açık olan hariç). Etikette inşaat
+     * firması ve o yıl için zaten plan olup olmadığı yazar.
+     *
+     * @return array<int, string>
+     */
+    protected function uyarlanabilirFirmalar(): array
+    {
+        $planliIdler = YillikPlanModel::where('yil', $this->yil)->pluck('firma_id')->all();
+
+        return Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->whereKeyNot($this->firmaId)
+            ->orderBy('unvan')
+            ->get()
+            ->mapWithKeys(fn (Firma $f) => [$f->id => $f->secimEtiketi()
+                .(YillikPlanSablonu::santiyeMi($f) ? ' · inşaat' : '')
+                .(in_array($f->id, $planliIdler, true) ? ' · '.$this->yil.' planı var, seçilen bölümler değişir' : '')])
+            ->all();
+    }
+
+    /** @return array<int, int> */
+    protected function insaatFirmaIdleri(): array
+    {
+        return Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->whereKeyNot($this->firmaId)
+            ->get()
+            ->filter(fn (Firma $f) => YillikPlanSablonu::santiyeMi($f))
+            ->modelKeys();
     }
 
     protected function getHeaderActions(): array
@@ -701,6 +752,90 @@ abstract class YillikPlanlar extends Page
                 ->modalSubmitActionLabel('İndir')
                 ->schema([static::hazirlanmaTarihiAlani(), ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data), static::secilenTarih($data))),
+
+            Action::make('topluIndir')
+                ->label('3 Planı Birlikte İndir')
+                ->icon('heroicon-o-archive-box-arrow-down')
+                ->color('success')
+                ->tooltip('Yıllık Çalışma Planı, Yıllık Eğitim Planı ve Yıllık Değerlendirme Raporu tek ZIP dosyasında iner')
+                ->visible(fn () => $this->plan() !== null)
+                ->modalHeading(fn () => $this->yil.' yıllık planlarını birlikte indir')
+                ->modalDescription('Üç belge tek ZIP dosyasında iner. Her belgenin hazırlanma tarihini ayrı girebilirsiniz.')
+                ->modalSubmitActionLabel('İndir')
+                ->schema([
+                    static::hazirlanmaTarihiAlani('calisma_tarihi')->label('Yıllık Çalışma Planı — hazırlanma tarihi')->helperText(null),
+                    static::hazirlanmaTarihiAlani('egitim_tarihi')->label('Yıllık Eğitim Planı — hazırlanma tarihi')->helperText(null),
+                    static::hazirlanmaTarihiAlani('degerlendirme_tarihi')->label('Yıllık Değerlendirme Raporu — rapor tarihi')->helperText(null),
+                    Radio::make('bicim')
+                        ->label('Değerlendirme raporu biçimi')
+                        ->options([
+                            'form' => 'İSG Plan ve Değerlendirme Formu (tek sayfa)',
+                            'ydr' => 'İSG-YDR-01 (7 sayfa)',
+                        ])
+                        ->default('form')
+                        ->required(),
+                    ImzaSecenegi::alan(),
+                ])
+                ->action(fn (array $data) => YillikPlanTopluIndirme::indir(
+                    $this->plan(),
+                    static::secilenTarih($data, 'calisma_tarihi'),
+                    static::secilenTarih($data, 'egitim_tarihi'),
+                    static::secilenTarih($data, 'degerlendirme_tarihi'),
+                    ($data['bicim'] ?? 'form') === 'ydr' ? 'ydr' : 'form',
+                    ImzaSecenegi::secili($data),
+                )),
+
+            Action::make('digerFirmalaraUyarla')
+                ->label('Diğer Firmalara Uyarla')
+                ->icon('heroicon-o-document-duplicate')
+                ->color('gray')
+                ->tooltip('Bu firmanın yıllık planlarını seçtiğiniz firmalara, her firmanın bilgilerine göre uyarlayarak kopyalar')
+                ->visible(fn () => $this->plan() !== null)
+                ->modalHeading(fn () => ($this->firma?->secimEtiketi() ?? '').' — '.$this->yil.' planlarını diğer firmalara uyarla')
+                ->modalDescription('Seçtiğiniz firmaların bu yıla ait seçili bölümleri, bu firmadaki planla değiştirilir. '
+                    .'Her firmada: sözleşme başlangıcından önceki aylar boş kalır, İSG Kurulu ayları çalışan sayısı ve tehlike sınıfına göre yerleşir, '
+                    .'gerçekleşenler o firmanın kendi kayıtlarından işlenir, değerlendirmede elle yazdığınız satırlar firma adı değiştirilerek kopyalanır. '
+                    .'İnşaat firmaları önceden seçili gelir.')
+                ->modalWidth(Width::TwoExtraLarge)
+                ->modalSubmitActionLabel('Uyarla')
+                ->schema([
+                    CheckboxList::make('bolumler')
+                        ->label('Kopyalanacak bölümler')
+                        ->options(YillikPlanUyarlayici::BOLUMLER)
+                        ->default(array_keys(YillikPlanUyarlayici::BOLUMLER))
+                        ->required(),
+                    CheckboxList::make('firmalar')
+                        ->label('Hedef firmalar')
+                        ->options(fn () => $this->uyarlanabilirFirmalar())
+                        ->default(fn () => $this->insaatFirmaIdleri())
+                        ->searchable()
+                        ->bulkToggleable()
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $kaynak = $this->plan();
+                    if (! $kaynak) {
+                        return;
+                    }
+
+                    // Yalnız kullanıcının kendi firmaları (formdan gelen kimlikler yeniden süzülür).
+                    $hedefler = Firma::query()
+                        ->where('user_id', Filament::auth()->id())
+                        ->whereKeyNot($this->firmaId)
+                        ->whereKey(array_map('intval', (array) ($data['firmalar'] ?? [])))
+                        ->get();
+                    $bolumler = array_values(array_intersect((array) ($data['bolumler'] ?? []), array_keys(YillikPlanUyarlayici::BOLUMLER)));
+
+                    foreach ($hedefler as $hedef) {
+                        YillikPlanUyarlayici::uyarla($kaynak, $hedef, $bolumler);
+                    }
+
+                    Notification::make()
+                        ->title($hedefler->count().' firmaya uyarlandı')
+                        ->body($hedefler->map(fn (Firma $f) => $f->secimEtiketi())->implode(', '))
+                        ->success()
+                        ->send();
+                }),
 
             Action::make('sablonuUygula')
                 ->label('Standart Şablonu Uygula')

@@ -6891,6 +6891,12 @@ return [
     'yillik_plan' => [
         'ay_durumlari' => ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'],
 
+        // Çıktılarda varsayılan "Hazırlanma Tarihi" (yıl => tarih). Bugün bu tarihten önceyse bu tarih,
+        // sonraysa bugün gelir; kullanıcı her zaman elle değiştirebilir (11.11.2026 kullanıcı isteği).
+        'hazirlanma_tarihleri' => [
+            2027 => '2027-01-04',
+        ],
+
         // Yıllık Eğitim Planı kategori grupları (referans: ABDULLETİF YALÇINKAYA
         // YILLIK EĞİTİM PLANI.xlsx — "GENEL / SAĞLIK / TEKNİK / DİĞER" bölümleri).
         'egitim_kategorileri' => [
