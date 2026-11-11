@@ -112,7 +112,7 @@
         </div>
 
         @if ($naceHata)
-            <div style="margin-top:1rem;color:rgb(220 38 38);font-size:.85rem">{{ $naceHata }}</div>
+            <div style="margin-top:1rem;color:rgb(185 28 28);font-size:.85rem">{{ $naceHata }}</div>
         @endif
 
         @if ($naceSonuc)
@@ -158,7 +158,7 @@
 
         @if ($mykArandi)
             @if ($mykSonuclar->isEmpty())
-                <div style="margin-top:1rem;color:rgb(220 38 38);font-size:.85rem">Eşleşen meslek bulunamadı.</div>
+                <div style="margin-top:1rem;color:rgb(185 28 28);font-size:.85rem">Eşleşen meslek bulunamadı.</div>
             @else
                 <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem">
                     @foreach ($mykSonuclar->groupBy('yeterlilik_adi') as $ad => $kayitlar)

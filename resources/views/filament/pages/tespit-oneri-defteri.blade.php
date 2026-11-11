@@ -98,7 +98,7 @@
                         <input type="file" wire:model="yeniFoto" accept="image/*" style="font-size:.8rem">
                         @if ($yeniFoto)
                             <img alt="Tespit fotoğrafı" src="{{ $yeniFoto->temporaryUrl() }}" style="width:44px;height:44px;object-fit:cover;border-radius:.35rem;border:1px solid rgb(107 114 128 / .3)">
-                            <button type="button" wire:click="$set('yeniFoto', null)" style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
+                            <button type="button" wire:click="$set('yeniFoto', null)" style="color:#b91c1c;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
                         @endif
                     </div>
                     <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">
@@ -159,7 +159,7 @@
                                         @php $oneriBos = blank(trim((string) ($m['oneri'] ?? ''))); @endphp
                                         <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb;{{ $oneriBos ? 'color:#6b7280;font-style:italic' : '' }}" @if ($oneriBos) title="Öneri boş — PDF'e bu varsayılan metin basılır" @endif>{{ $oneriBos ? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI : $m['oneri'] }}</td>
                                         <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb">
-                                            <button type="button" wire:click="maddeSil({{ $i }})" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#dc2626;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
+                                            <button type="button" wire:click="maddeSil({{ $i }})" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#b91c1c;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
                                         </td>
                                     </tr>
                                 @endforeach

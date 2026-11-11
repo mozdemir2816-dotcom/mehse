@@ -71,7 +71,7 @@
                     @if ($s['kaynak'] === 'ozel')
                         <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;border:1px solid rgb(107 114 128 / .3);border-radius:.4rem;padding:.15rem .5rem">
                             {{ $s['ad'] }}
-                            <button type="button" wire:click="sablonSil({{ $s['anahtar'] }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
+                            <button type="button" wire:click="sablonSil({{ $s['anahtar'] }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button>
                         </span>
                     @endif
                 @endforeach
@@ -246,7 +246,7 @@
                     @foreach ($uyarilar as $i => $u)
                         <div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;background:rgb(239 68 68 / .06);border:1px solid rgb(239 68 68 / .25);border-radius:.4rem;padding:.4rem .6rem">
                             <span style="flex:1">⚠ {{ $u }}</span>
-                            <button type="button" wire:click="uyariSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
+                            <button type="button" wire:click="uyariSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button>
                         </div>
                     @endforeach
                 </div>
@@ -310,7 +310,7 @@
                                         {{ $f->durumEtiketi() }}
                                     </span>
                                     @if ($f->suresiGectiMi())
-                                        <br><span style="font-size:.75rem;color:#dc2626">süre doldu</span>
+                                        <br><span style="font-size:.75rem;color:#b91c1c">süre doldu</span>
                                     @endif
                                 </td>
                                 <td style="padding:.4rem .5rem;font-size:.75rem">

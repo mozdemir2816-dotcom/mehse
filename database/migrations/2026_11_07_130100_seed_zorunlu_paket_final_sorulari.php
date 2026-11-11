@@ -29,7 +29,7 @@ return new class extends Migration
                 'Ramak kala olay; yaralanma ya da hasar oluşmadan atlatılan ama kazaya dönüşebilecek olaydır. Bildirilmesi benzer kazaları önler.'],
             ['İş sağlığı ve güvenliği önlemlerinin maliyeti için aşağıdakilerden hangisi doğrudur?',
                 ['Çalışanın maaşından kesilir', 'Yarısı çalışana yansıtılır', 'Çalışana yansıtılamaz', 'Yalnızca KKD bedeli çalışandan alınır'], 2,
-                '6331 sayılı Kanun md.4/3: İSG tedbirlerinin maliyeti çalışanlara yansıtılamaz.'],
+                '6331 sayılı Kanun md.4/4: İSG tedbirlerinin maliyeti çalışanlara yansıtılamaz.'],
             ['50 ve daha fazla çalışanı olan ve altı aydan fazla süren sürekli işlerin yapıldığı işyerlerinde hangisinin kurulması zorunludur?',
                 ['İş sağlığı ve güvenliği kurulu', 'Disiplin kurulu', 'Sendika şubesi', 'Kalite kurulu'], 0,
                 '6331 sayılı Kanun md.22 gereği bu işyerlerinde İSG kurulu oluşturulur.'],

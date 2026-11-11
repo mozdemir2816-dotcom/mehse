@@ -28,7 +28,7 @@
                         <option value="{{ $id }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-                @error('firma_id') <div style="font-size:.78rem;color:rgb(220 38 38);margin-top:.25rem">{{ $message }}</div> @enderror
+                @error('firma_id') <div style="font-size:.78rem;color:rgb(185 28 28);margin-top:.25rem">{{ $message }}</div> @enderror
             </div>
             <div>
                 <label style="display:block;font-size:.75rem;font-weight:600;margin-bottom:.35rem">Excel dosyaları (birden çok seçebilirsiniz)</label>
@@ -36,7 +36,7 @@
             </div>
         </div>
         <div wire:loading wire:target="dosyalar" style="font-size:.8rem;{{ $soluk }};margin-top:.4rem">Dosyalar okunuyor…</div>
-        @error('dosyalar.*') <div style="font-size:.8rem;color:rgb(220 38 38);margin-top:.35rem">{{ $message }}</div> @enderror
+        @error('dosyalar.*') <div style="font-size:.8rem;color:rgb(185 28 28);margin-top:.35rem">{{ $message }}</div> @enderror
     </div>
 
     @if ($hatalar)
@@ -60,7 +60,7 @@
                         @endif
                     </div>
                 </div>
-                <button type="button" wire:click="girdiKaldir({{ $i }})" style="font-size:.78rem;color:rgb(220 38 38);cursor:pointer">Kaldır</button>
+                <button type="button" wire:click="girdiKaldir({{ $i }})" style="font-size:.78rem;color:rgb(185 28 28);cursor:pointer">Kaldır</button>
             </div>
 
             @if ($g['tur'] === 'standart')

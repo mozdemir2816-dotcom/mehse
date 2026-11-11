@@ -113,7 +113,7 @@
                         <td style="padding:.25rem"><input type="text" wire:model="ek2.onceki.{{ $i }}.is" style="{{ $kucukGirdi }}"></td>
                         <td style="padding:.25rem"><input type="date" wire:model="ek2.onceki.{{ $i }}.baslama" style="{{ $kucukGirdi }}"></td>
                         <td style="padding:.25rem"><input type="date" wire:model="ek2.onceki.{{ $i }}.ayrilma" style="{{ $kucukGirdi }}"></td>
-                        <td style="padding:.25rem;text-align:center"><button type="button" wire:click="oncekiIsSil({{ $i }})" style="color:#dc2626;font-weight:700;cursor:pointer;border:none;background:none">×</button></td>
+                        <td style="padding:.25rem;text-align:center"><button type="button" wire:click="oncekiIsSil({{ $i }})" style="color:#b91c1c;font-weight:700;cursor:pointer;border:none;background:none">×</button></td>
                     </tr>
                 @endforeach
             </table>

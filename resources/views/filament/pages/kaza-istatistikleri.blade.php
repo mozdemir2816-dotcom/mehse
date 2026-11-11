@@ -136,7 +136,7 @@
                     <input type="text" wire:model.blur="hariciKazalar.{{ $i }}.aciklama" placeholder="Açıklama" style="{{ $girdi }}">
                     <input type="number" min="0" wire:model.blur="hariciKazalar.{{ $i }}.kayip_gunu" placeholder="Kayıp gün" style="{{ $girdi }}">
                     <label style="display:flex;align-items:center;gap:.3rem;font-size:.78rem"><input type="checkbox" wire:model.blur="hariciKazalar.{{ $i }}.olumlu"> Ölümlü</label>
-                    <button type="button" wire:click="hariciKazaSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
+                    <button type="button" wire:click="hariciKazaSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button>
                 </div>
             @endforeach
             <x-filament::button size="xs" color="gray" wire:click="hariciKazaEkle" icon="heroicon-o-plus">Harici kaza satırı</x-filament::button>

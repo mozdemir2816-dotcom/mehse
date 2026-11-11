@@ -144,7 +144,7 @@
                     style="display:block;width:100%;padding:.3rem .5rem;border:1px solid #d1d5db;border-radius:.4rem"></label>
         </div>
 
-        <div x-show="hata" x-text="hata" style="color:#dc2626;font-size:.8rem;margin-top:.5rem"></div>
+        <div x-show="hata" x-text="hata" style="color:#b91c1c;font-size:.8rem;margin-top:.5rem"></div>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem;justify-content:space-between">
             <div style="display:flex;gap:.5rem;flex-wrap:wrap">

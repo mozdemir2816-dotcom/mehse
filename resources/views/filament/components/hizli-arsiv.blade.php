@@ -21,7 +21,7 @@
         </label>
         <button type="button" wire:click="hizliKaydet('{{ $kategori }}')" wire:loading.attr="disabled" wire:target="hizliKaydet"
             style="{{ $dugme }};border:none;background:#15803d;color:#fff">✓ Kaydet</button>
-        <button type="button" wire:click="hizliIptal('{{ $kategori }}')" style="{{ $dugme }};border:none;background:transparent;color:#dc2626;padding:0 .4rem">✕</button>
+        <button type="button" wire:click="hizliIptal('{{ $kategori }}')" style="{{ $dugme }};border:none;background:transparent;color:#b91c1c;padding:0 .4rem">✕</button>
     @else
         <label title="Fotoğraf çek" style="{{ $dugme }};border:none;background:rgb(37 99 235);color:#fff">
             📷 Çek

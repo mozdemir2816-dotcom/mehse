@@ -139,7 +139,7 @@
                 @foreach ($yeniKaynaklar as $i => $k)
                     <div wire:key="kaynak-{{ $i }}" style="border:1px dashed rgb(107 114 128 / .3);border-radius:.5rem;padding:.5rem;margin-bottom:.4rem">
                         <div style="display:flex;justify-content:space-between;font-size:.75rem;font-weight:700">Kaynak {{ $i + 1 }}
-                            @if (count($yeniKaynaklar) > 1)<button type="button" wire:click="kaynakSil({{ $i }})" style="color:rgb(220 38 38)">Sil</button>@endif
+                            @if (count($yeniKaynaklar) > 1)<button type="button" wire:click="kaynakSil({{ $i }})" style="color:rgb(185 28 28)">Sil</button>@endif
                         </div>
                         <input type="text" wire:model="yeniKaynaklar.{{ $i }}.ad" placeholder="Resmî kaynağın adı" list="kaynak-listesi" style="{{ $inp }}">
                         <input type="url" wire:model="yeniKaynaklar.{{ $i }}.url" placeholder="https://..." style="{{ $inp }}">
@@ -219,12 +219,12 @@
                                         <li style="{{ $si === $s->dogru_index ? 'color:#047857;font-weight:600' : '' }}">{{ $sec }}{{ $si === $s->dogru_index ? ' ✓' : '' }}</li>
                                     @endforeach
                                 </ol>
-                                <div style="font-size:.75rem"><strong>Gerekçe:</strong> {!! $s->aciklama ? e($s->aciklama) : '<span style="color:rgb(220 38 38)">girilmemiş</span>' !!}</div>
+                                <div style="font-size:.75rem"><strong>Gerekçe:</strong> {!! $s->aciklama ? e($s->aciklama) : '<span style="color:rgb(185 28 28)">girilmemiş</span>' !!}</div>
                                 <div style="font-size:.75rem;margin-top:.2rem"><strong>Kaynaklar:</strong>
                                     @forelse ($kaynaklar as $k)
                                         <div style="margin-left:.6rem">• @if ($k['url'])<a href="{{ $k['url'] }}" target="_blank" rel="noopener" style="color:rgb(15 118 110);text-decoration:underline">{{ $k['ad'] }}</a>@else{{ $k['ad'] }}@endif{{ $k['madde'] ? ' — '.$k['madde'] : '' }}{{ $k['tarih'] ? ' ('.\Illuminate\Support\Carbon::parse($k['tarih'])->format('d.m.Y').')' : '' }}</div>
                                     @empty
-                                        <span style="color:rgb(220 38 38)">girilmemiş</span>
+                                        <span style="color:rgb(185 28 28)">girilmemiş</span>
                                     @endforelse
                                 </div>
                                 @if ($s->inceleme_notu)<div style="font-size:.75rem;margin-top:.2rem"><strong>İnceleme notu:</strong> {{ $s->inceleme_notu }}</div>@endif

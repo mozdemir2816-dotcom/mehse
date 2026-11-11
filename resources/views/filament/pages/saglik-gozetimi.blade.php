@@ -92,7 +92,7 @@
                                     </td>
                                     <td style="padding:.35rem">{{ $this->turler[$s['tetkik_turu']]['ad'] ?? $s['tetkik_turu'] }}</td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.tarih" style="{{ $girdi }}"></td>
-                                    <td style="padding:.35rem;{{ $gecmis ? 'color:#dc2626;font-weight:600' : 'color:rgb(107 114 128)' }}">
+                                    <td style="padding:.35rem;{{ $gecmis ? 'color:#b91c1c;font-weight:600' : 'color:rgb(107 114 128)' }}">
                                         {{ $sonraki ? $sonraki->format('d.m.Y') : '—' }}
                                     </td>
                                     <td style="padding:.35rem">
@@ -111,7 +111,7 @@
                                         @endif
                                     </td>
                                     <td style="padding:.35rem;text-align:center">
-                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>
                             @endforeach

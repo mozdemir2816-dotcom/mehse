@@ -144,7 +144,7 @@
                                         <x-filament::button size="xs" color="gray" wire:click="mountAction('kontrolGecmisi', { id: {{ $s['id'] }} })">Geçmiş</x-filament::button>
                                         <button type="button" wire:click="ekipmanSil({{ $s['id'] }})"
                                             wire:confirm="Bu ekipman silinsin mi?"
-                                            style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                            style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>
                             @endforeach

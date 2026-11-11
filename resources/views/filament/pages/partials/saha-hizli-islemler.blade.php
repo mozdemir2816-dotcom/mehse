@@ -30,7 +30,7 @@
                         </option>
                     @endforeach
                 </select>
-                @if ($hata('ptwIzinId'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ptwIzinId') }}</div>@endif
+                @if ($hata('ptwIzinId'))<div style="color:#b91c1c;font-size:.78rem">{{ $hata('ptwIzinId') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Kapanış notu</label>
@@ -45,7 +45,7 @@
                 @if ($ptwKapanisFoto && method_exists($ptwKapanisFoto, 'temporaryUrl'))
                     <img alt="İş izni kapanış fotoğrafı" src="{{ $ptwKapanisFoto->temporaryUrl() }}" style="margin-top:.5rem;max-height:140px;border-radius:.4rem">
                 @endif
-                @if ($hata('ptwKapanisFoto'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ptwKapanisFoto') }}</div>@endif
+                @if ($hata('ptwKapanisFoto'))<div style="color:#b91c1c;font-size:.78rem">{{ $hata('ptwKapanisFoto') }}</div>@endif
             </div>
             <x-filament::button size="lg" icon="heroicon-o-check-circle" wire:click="izniKapat" wire:loading.attr="disabled">Saha kapanışını onayla</x-filament::button>
         </div>
@@ -69,12 +69,12 @@
             <div>
                 <label style="{{ $lbl }}">Kısa özet (en az 20 karakter)</label>
                 <textarea wire:model="ramakOzet" rows="2" style="{{ $inp }}"></textarea>
-                @if ($hata('ramakOzet'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ramakOzet') }}</div>@endif
+                @if ($hata('ramakOzet'))<div style="color:#b91c1c;font-size:.78rem">{{ $hata('ramakOzet') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Detay (en az 30 karakter — isteğe bağlı)</label>
                 <textarea wire:model="ramakDetay" rows="3" placeholder="Olay nasıl gelişti?" style="{{ $inp }}"></textarea>
-                @if ($hata('ramakDetay'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ramakDetay') }}</div>@endif
+                @if ($hata('ramakDetay'))<div style="color:#b91c1c;font-size:.78rem">{{ $hata('ramakDetay') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Kamera fotoğrafı (en fazla 3)</label>
@@ -84,7 +84,7 @@
                         @if (method_exists($f, 'temporaryUrl'))<img alt="Ramak kala fotoğrafı" src="{{ $f->temporaryUrl() }}" style="width:72px;height:72px;object-fit:cover;border-radius:.4rem">@endif
                     @endforeach
                 </div>
-                @if ($hata('ramakFotolar') || $hata('ramakFotolar.*'))<div style="color:#dc2626;font-size:.78rem">{{ $hata('ramakFotolar') ?: $hata('ramakFotolar.*') }}</div>@endif
+                @if ($hata('ramakFotolar') || $hata('ramakFotolar.*'))<div style="color:#b91c1c;font-size:.78rem">{{ $hata('ramakFotolar') ?: $hata('ramakFotolar.*') }}</div>@endif
             </div>
             <x-filament::button size="lg" icon="heroicon-o-shield-exclamation" color="warning" wire:click="ramakKalaKaydet" wire:loading.attr="disabled">Ramak kala kaydını oluştur</x-filament::button>
 

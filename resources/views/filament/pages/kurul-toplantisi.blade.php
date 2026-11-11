@@ -457,7 +457,7 @@
                                     <td class="px-3 py-2 whitespace-nowrap">{{ $d['kaynak_no'] ?: '—' }}<br><span style="font-size:.75rem;color:var(--text-secondary)">{{ $d['kaynak_tarih']?->format('d.m.Y') }}</span></td>
                                     <td class="px-3 py-2">@if ($d['gundem'])<span style="font-size:.75rem;color:var(--text-secondary)">{{ $d['gundem'] }}</span><br>@endif{{ $d['karar'] }}</td>
                                     <td class="px-3 py-2">{{ $d['sorumlu'] ?: '—' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap" @if ($d['gecikti']) style="color:#dc2626;font-weight:600" @endif>
+                                    <td class="px-3 py-2 whitespace-nowrap" @if ($d['gecikti']) style="color:#b91c1c;font-weight:600" @endif>
                                         {{ filled($d['termin']) ? \Illuminate\Support\Carbon::parse($d['termin'])->format('d.m.Y') : '—' }}
                                         @if ($d['gecikti'])<br><span style="font-size:.75rem">süresi geçti</span>@endif
                                     </td>

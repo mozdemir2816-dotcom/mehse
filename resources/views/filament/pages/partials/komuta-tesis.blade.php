@@ -69,7 +69,7 @@
             <table class="mehse-tablo">
                 <tr><td style="padding:.35rem 0">Başlangıç</td><td style="text-align:right;font-weight:700">100</td></tr>
                 @foreach ($s['dokum'] as $d)
-                    <tr style="border-top:1px solid rgb(107 114 128 / .15)"><td style="padding:.35rem 0">{{ $d['neden'] }}</td><td style="text-align:right;font-weight:700;color:rgb(220 38 38)">−{{ $d['puan'] }}</td></tr>
+                    <tr style="border-top:1px solid rgb(107 114 128 / .15)"><td style="padding:.35rem 0">{{ $d['neden'] }}</td><td style="text-align:right;font-weight:700;color:rgb(185 28 28)">−{{ $d['puan'] }}</td></tr>
                 @endforeach
                 <tr style="border-top:2px solid rgb(107 114 128 / .3)"><td style="padding:.4rem 0;font-weight:700">Operasyon skoru</td><td style="text-align:right;font-weight:800;color:{{ $skorRenk($s['skor']) }}">{{ $s['skor'] }}</td></tr>
             </table>

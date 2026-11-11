@@ -78,7 +78,7 @@
                             <span class="mehse-soluk">dk</span>
                             @if ($konularDuzenlenebilir)
                                 <button type="button" wire:click="isyerineOzguMaddeCikar({{ $i }})"
-                                    style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
+                                    style="color:#b91c1c;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
                             @endif
                         </div>
                     @endforeach
@@ -118,7 +118,7 @@
                     <span class="mehse-soluk">dk</span>
                     @if ($ozelEklenebilir && ! empty($m['ek']))
                         <button type="button" wire:click="ozelMaddeCikar({{ $i }})" title="Konuyu sil"
-                            style="color:#dc2626;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
+                            style="color:#b91c1c;cursor:pointer;background:none;border:none;font-size:.85rem;line-height:1">✕</button>
                     @endif
                 </div>
             @endforeach

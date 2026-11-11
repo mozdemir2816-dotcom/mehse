@@ -14,7 +14,7 @@
             <x-filament::input.wrapper :valid="! $errors->has('aiEkipmanAdi')">
                 <x-filament::input type="text" wire:model="aiEkipmanAdi" placeholder="Örn. Plastik enjeksiyon makinesi, Şerit testere, Kumlama kabini" maxlength="120" />
             </x-filament::input.wrapper>
-            @error('aiEkipmanAdi') <div style="color:#dc2626;font-size:.78rem;margin-top:.25rem">{{ $message }}</div> @enderror
+            @error('aiEkipmanAdi') <div style="color:#b91c1c;font-size:.78rem;margin-top:.25rem">{{ $message }}</div> @enderror
         </div>
         <x-filament::button type="submit" icon="heroicon-o-sparkles" wire:loading.attr="disabled" wire:target="aiEkipmanUret">
             Maddeleri Üret

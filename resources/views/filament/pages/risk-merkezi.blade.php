@@ -164,7 +164,7 @@
                                 <td style="{{ $td }};white-space:nowrap;color:{{ $grupRenk[$a['grup']] ?? 'inherit' }};font-weight:700">{{ $m->puan ?: '—' }}</td>
                                 <td style="{{ $td }};max-width:300px">{{ \Illuminate\Support\Str::limit($m->oneri, 120) }}</td>
                                 <td style="{{ $td }}">{{ $m->sorumlu ?: '—' }}</td>
-                                <td style="{{ $td }};white-space:nowrap;{{ $a['gecikti'] ? 'color:#dc2626;font-weight:700' : '' }}">{{ $a['termin']?->format('d.m.Y') ?? ($m->termin ?: '—') }}@if ($a['gecikti'])<div style="font-size:.75rem">gecikti</div>@endif</td>
+                                <td style="{{ $td }};white-space:nowrap;{{ $a['gecikti'] ? 'color:#b91c1c;font-weight:700' : '' }}">{{ $a['termin']?->format('d.m.Y') ?? ($m->termin ?: '—') }}@if ($a['gecikti'])<div style="font-size:.75rem">gecikti</div>@endif</td>
                                 <td style="{{ $td }}">
                                     <select wire:change="maddeDurumu({{ $m->id }}, $event.target.value)" style="{{ $girdi }};padding:.25rem .4rem;font-size:.75rem">
                                         @foreach (config('isg.risk_madde_durumlari') as $k => $v)<option value="{{ $k }}" @selected($m->durum === $k)>{{ $v }}</option>@endforeach

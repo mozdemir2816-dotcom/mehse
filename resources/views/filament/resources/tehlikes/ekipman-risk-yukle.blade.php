@@ -49,7 +49,7 @@
         <label style="display:block;font-size:.75rem;font-weight:600;margin-bottom:.35rem">Excel dosyaları (birden çok seçebilirsiniz)</label>
         <input type="file" wire:model="dosyalar" multiple accept=".xlsx,.xls" style="{{ $girdi }};width:100%;max-width:520px">
         <div wire:loading wire:target="dosyalar" style="font-size:.8rem;color:rgb(107 114 128);margin-top:.35rem">Dosyalar okunuyor…</div>
-        @error('dosyalar.*') <div style="font-size:.8rem;color:rgb(220 38 38);margin-top:.35rem">{{ $message }}</div> @enderror
+        @error('dosyalar.*') <div style="font-size:.8rem;color:rgb(185 28 28);margin-top:.35rem">{{ $message }}</div> @enderror
     </div>
 
     @if ($hatalar)
@@ -86,7 +86,7 @@
                                 <div style="font-size:.75rem;margin-top:.2rem;color:{{ $mevcut !== null ? 'rgb(217 119 6)' : 'rgb(21 128 61)' }}">
                                     {{ $mevcut !== null ? "Kütüphanede var ({$mevcut} madde) — güncellenecek" : 'Yeni kategori' }}
                                 </div>
-                                @error("onizleme.$i.kategori_adi") <div style="font-size:.75rem;color:rgb(220 38 38)">{{ $message }}</div> @enderror
+                                @error("onizleme.$i.kategori_adi") <div style="font-size:.75rem;color:rgb(185 28 28)">{{ $message }}</div> @enderror
                             </td>
                             <td style="{{ $td }};min-width:240px">
                                 <select wire:model="onizleme.{{ $i }}.ekipman_tipi" style="{{ $girdi }};width:100%">

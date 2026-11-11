@@ -291,7 +291,7 @@
                         @foreach ($balikKilcigi[$anahtar] ?? [] as $i => $neden)
                             <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
                                 <input type="text" wire:model="balikKilcigi.{{ $anahtar }}.{{ $i }}" style="{{ $inp }};font-size:.78rem" placeholder="Neden…">
-                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#dc2626;background:none;border:none;cursor:pointer">✕</button>
+                                <button type="button" wire:click="balikNedenSil('{{ $anahtar }}', {{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button>
                             </div>
                         @endforeach
                         <x-filament::button size="xs" color="gray" wire:click="balikNedenEkle('{{ $anahtar }}')" icon="heroicon-o-plus">Neden</x-filament::button>

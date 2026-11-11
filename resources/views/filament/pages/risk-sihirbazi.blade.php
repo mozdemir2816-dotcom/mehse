@@ -504,7 +504,7 @@
                                 <x-filament::input.wrapper :valid="! $errors->has('aiEkipmanAdi')">
                                     <x-filament::input type="text" wire:model="aiEkipmanAdi" placeholder="Örn. Ultrasonik kaynak makinesi, Kumlama kabini, Şerit testere" maxlength="120" />
                                 </x-filament::input.wrapper>
-                                @error('aiEkipmanAdi') <div style="color:#dc2626;font-size:.78rem;margin-top:.25rem">{{ $message }}</div> @enderror
+                                @error('aiEkipmanAdi') <div style="color:#b91c1c;font-size:.78rem;margin-top:.25rem">{{ $message }}</div> @enderror
                             </div>
                             <x-filament::button type="submit" icon="heroicon-o-plus" wire:loading.attr="disabled" wire:target="aiOzelEkipmanEkle">Ekle</x-filament::button>
                         </form>
@@ -699,7 +699,7 @@
                 <div style="display:flex;flex-direction:column;gap:.75rem;max-width:28rem">
                     <input type="file" wire:model="excelDosya" accept=".xlsx,.xls,.csv"
                         style="padding:.5rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
-                    @error('excelDosya') <span style="color:#dc2626;font-size:.8rem">{{ $message }}</span> @enderror
+                    @error('excelDosya') <span style="color:#b91c1c;font-size:.8rem">{{ $message }}</span> @enderror
                     <div wire:loading wire:target="excelDosya" style="font-size:.8rem;color:rgb(107 114 128)">Yükleniyor…</div>
                     <x-filament::button icon="heroicon-o-magnifying-glass" wire:click="excelIceAktar" :disabled="! $excelDosya">
                         Dosyayı Tara ve Maddeleri Bul
@@ -783,7 +783,7 @@
                 <div style="display:flex;flex-direction:column;gap:.75rem;max-width:28rem">
                     <input type="file" wire:model="pdfDosya" accept=".pdf"
                         style="padding:.5rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
-                    @error('pdfDosya') <span style="color:#dc2626;font-size:.8rem">{{ $message }}</span> @enderror
+                    @error('pdfDosya') <span style="color:#b91c1c;font-size:.8rem">{{ $message }}</span> @enderror
                     <div wire:loading wire:target="pdfDosya,pdfIceAktar" style="font-size:.8rem;color:rgb(107 114 128)">
                         Okunuyor… (büyük belgelerde birkaç dakika sürebilir)
                     </div>
@@ -919,7 +919,7 @@
                                 @endif
                             </div>
                             <button type="button" wire:click="maddeCikar('{{ $m['anahtar'] }}')"
-                                style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1.1rem;flex-shrink:0">✕</button>
+                                style="background:none;border:none;color:#b91c1c;cursor:pointer;font-size:1.1rem;flex-shrink:0">✕</button>
                         </div>
 
                         {{-- HAZOP puansızdır: Olasılık / Şiddet seçicileri ve puan gösterilmez. --}}
@@ -1020,7 +1020,7 @@
             </div>
 
             @unless ($this->tumMaddelerPuanli())
-                <p style="margin-top:1rem;color:#dc2626;font-size:.85rem">Bazı maddelerin puanı eksik — Adım 5'e dönün.</p>
+                <p style="margin-top:1rem;color:#b91c1c;font-size:.85rem">Bazı maddelerin puanı eksik — Adım 5'e dönün.</p>
             @endunless
 
             @if (($mukerrer = $this->mukerrerSayisi()) > 0)

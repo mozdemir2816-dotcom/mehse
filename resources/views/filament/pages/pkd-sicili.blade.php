@@ -72,14 +72,14 @@
                             </td>
                             <td style="{{ $td }};white-space:nowrap">
                                 {{ $p->sonraki_gozden_gecirme?->format('d.m.Y') ?? '—' }}
-                                @if ($inc === 'gecikmis')<div><span style="{{ $rozet('rgb(220 38 38 / .6)') }};color:#dc2626">Gecikmiş</span></div>
+                                @if ($inc === 'gecikmis')<div><span style="{{ $rozet('rgb(220 38 38 / .6)') }};color:#b91c1c">Gecikmiş</span></div>
                                 @elseif ($inc === 'yaklasan')<div><span style="{{ $rozet('rgb(245 158 11 / .6)') }}">Yaklaşıyor</span></div>@endif
                             </td>
                             <td style="{{ $td }}">
                                 @if ($p->dosyaVarMi())
                                     <button type="button" wire:click="dosyaIndir({{ $p->id }})" style="background:none;border:0;color:rgb(20 184 166);cursor:pointer;padding:0">İndir</button>
                                 @else
-                                    <span style="color:#dc2626;font-weight:600;font-size:.75rem">Eksik</span>
+                                    <span style="color:#b91c1c;font-weight:600;font-size:.75rem">Eksik</span>
                                 @endif
                             </td>
                             <td style="{{ $td }}"><span style="{{ $rozet($durumRenk[$p->durum] ?? 'rgb(107 114 128 / .45)') }}">{{ $p->durumEtiketi() }}</span></td>

@@ -165,7 +165,7 @@
                                         <button type="button" wire:click="mountAction('uyeDuzenle', { id: {{ $u->id }} })" title="{{ $u->ad_soyad }} düzenle" aria-label="{{ $u->ad_soyad }} düzenle"
                                             style="flex:none;font-size:.75rem;padding:0 .25rem;border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;background:none;cursor:pointer">✎</button>
                                         <button type="button" wire:click="uyeSil({{ $u->id }})" wire:confirm="{{ $u->ad_soyad }} ekipten çıkarılsın mı? (Geri alınabilir)" title="{{ $u->ad_soyad }} ekipten çıkar" aria-label="{{ $u->ad_soyad }} sil"
-                                            style="flex:none;font-size:.75rem;padding:0 .25rem;border:1px solid rgb(220 38 38 / .4);color:rgb(220 38 38);border-radius:.3rem;background:none;cursor:pointer">✕</button>
+                                            style="flex:none;font-size:.75rem;padding:0 .25rem;border:1px solid rgb(220 38 38 / .4);color:rgb(185 28 28);border-radius:.3rem;background:none;cursor:pointer">✕</button>
                                     </div>
                                 @endforeach
                             </div>

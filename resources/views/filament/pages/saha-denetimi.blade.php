@@ -223,10 +223,10 @@
         {{-- CANLI SONUÇ --}}
         <div style="{{ $kutu }};background:rgb(234 88 12 / .05);display:flex;gap:2rem;align-items:center;flex-wrap:wrap">
             <div><strong style="font-size:1.3rem">%{{ $canli['yuzde'] }}</strong> <span style="font-size:.8rem;color:rgb(107 114 128)">uygunluk</span></div>
-            <div style="font-size:.85rem">Uygun: <strong style="color:#16a34a">{{ $canli['uygun'] }}</strong></div>
+            <div style="font-size:.85rem">Uygun: <strong style="color:#15803d">{{ $canli['uygun'] }}</strong></div>
             <div style="font-size:.85rem">Uygun Değil: <strong class="mehse-hata">{{ $canli['uygun_degil'] }}</strong></div>
             @if ($canli['kritik_var'])
-                <div style="font-size:.8rem;color:#dc2626;font-weight:600">⚠ Kritik uygunsuzluk var</div>
+                <div style="font-size:.8rem;color:#b91c1c;font-weight:600">⚠ Kritik uygunsuzluk var</div>
             @endif
         </div>
 
@@ -255,7 +255,7 @@
                             <div style="display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.3rem">
                                 <span style="font-size:.75rem;font-weight:700;color:rgb(107 114 128)">{{ $kod }}</span>
                                 @if ($madde['kritik'])
-                                    <span style="font-size:.75rem;font-weight:700;padding:.1rem .4rem;border-radius:.3rem;color:#dc2626;background:rgb(220 38 38 / .1)">KRİTİK</span>
+                                    <span style="font-size:.75rem;font-weight:700;padding:.1rem .4rem;border-radius:.3rem;color:#b91c1c;background:rgb(220 38 38 / .1)">KRİTİK</span>
                                 @endif
                                 @if (! empty($madde['fk_kategori']))
                                     <span style="font-size:.75rem;font-weight:600;padding:.1rem .4rem;border-radius:.3rem;background:rgb(107 114 128 / .12)">{{ $madde['fk_kategori'] }}</span>
@@ -286,7 +286,7 @@
 
                             @if ($cevap['sonuc'] === 'uygun_degil')
                                 <div style="margin-top:.6rem">
-                                    <label style="font-size:.75rem;font-weight:600;color:#dc2626">Uygunsuzluk açıklaması <span class="mehse-hata">*</span></label>
+                                    <label style="font-size:.75rem;font-weight:600;color:#b91c1c">Uygunsuzluk açıklaması <span class="mehse-hata">*</span></label>
                                     <textarea wire:model="cevaplar.{{ $anahtar }}.aciklama" rows="2"
                                         style="width:100%;margin-top:.2rem;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(220 38 38 / .4);background:transparent;font-size:.8rem"></textarea>
                                     @if (! empty($madde['oneri']))
@@ -356,7 +356,7 @@
                                 <input type="file" wire:model="fotoYuklemeleri.{{ $anahtar }}" accept="image/*" multiple style="font-size:.75rem">
                                 @if ($yuklenenFotolar || $kayitliFotolar)
                                     <button type="button" wire:click="fotoKaldir('{{ $kod }}')"
-                                        style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:.75rem">✕ kaldır</button>
+                                        style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:.75rem">✕ kaldır</button>
                                 @endif
                             </div>
                         </div>

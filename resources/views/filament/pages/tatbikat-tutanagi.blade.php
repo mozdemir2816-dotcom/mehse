@@ -419,7 +419,7 @@
                             <td style="{{ $td }}">{{ count($t->fotograflar ?? []) }}</td>
                             <td style="{{ $td }}">
                                 <span style="font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $durumRenk[$t->durum] ?? 'rgb(107 114 128 / .45)' }}">{{ $t->durumEtiketi() }}</span>
-                                @if ($t->gecikmisMi())<div style="font-size:.75rem;color:#dc2626">Planlanan tarih geçti</div>@endif
+                                @if ($t->gecikmisMi())<div style="font-size:.75rem;color:#b91c1c">Planlanan tarih geçti</div>@endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">
                                 @if ($t->durum === 'planlandi')

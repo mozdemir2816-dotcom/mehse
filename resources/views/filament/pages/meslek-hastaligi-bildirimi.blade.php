@@ -169,7 +169,7 @@
                             <td style="padding:.3rem .5rem">
                                 {{ $m->belge_no }} — {{ $m->calisan_ad_soyad }} ({{ $m->ogrenme_tarihi?->format('d.m.Y') }})
                                 @if ($m->suresiGectiMi())
-                                    <span style="color:#dc2626;font-weight:600">· süre geçti</span>
+                                    <span style="color:#b91c1c;font-weight:600">· süre geçti</span>
                                 @elseif (! $m->sgk_bildirimi_yapildi)
                                     <span style="color:#b45309;font-weight:600">· bildirim bekliyor</span>
                                 @endif

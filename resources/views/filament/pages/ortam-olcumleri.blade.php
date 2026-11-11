@@ -149,7 +149,7 @@
                                             <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-path" wire:click="yeniOlcum({{ $i }})" title="Mevcut sonucu geçmişe al, yeni ölçüm gir">Yeni ölçüm</x-filament::button>
                                         @endif
                                         <button type="button" wire:click="olcumSil({{ $i }})" wire:confirm="Bu ölçüm satırı (geçmişiyle birlikte) silinsin mi?"
-                                            style="color:#dc2626;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                            style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>
                                 @if (! empty($s['gecmis']))

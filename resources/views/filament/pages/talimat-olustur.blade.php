@@ -58,7 +58,7 @@
                             <span style="display:flex;align-items:center;gap:.3rem;flex-shrink:0">
                                 <span style="font-size:.68rem;background:{{ $mor }};color:#fff;padding:1px 6px;border-radius:3px">Arşivim</span>
                                 <span role="button" wire:click.stop="kendiSablonSil({{ $s['anahtar'] }})" title="Şablonu sil"
-                                    style="color:#dc2626;cursor:pointer;font-size:.8rem">✕</span>
+                                    style="color:#b91c1c;cursor:pointer;font-size:.8rem">✕</span>
                             </span>
                         @endif
                     </div>
@@ -164,7 +164,7 @@
                         @foreach ($maddeler as $i => $m)
                             <li style="display:flex;justify-content:space-between;gap:.5rem">
                                 <span style="white-space:pre-line">{{ $m }}</span>
-                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#dc2626;cursor:pointer;background:none;border:none;flex-shrink:0">✕</button>
+                                <button type="button" wire:click="maddeSil({{ $i }})" style="color:#b91c1c;cursor:pointer;background:none;border:none;flex-shrink:0">✕</button>
                             </li>
                         @endforeach
                     </ol>

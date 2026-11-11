@@ -62,7 +62,7 @@
                     <span style="font-size:.75rem">En fazla {{ config('isg.saha_bulgu.max_foto') }} fotoğraf</span>
                 </label>
                 <div wire:loading wire:target="yeniFotograflar" style="font-size:.78rem;color:rgb(107 114 128)">Yükleniyor…</div>
-                @if ($hata('yeniFotograflar.*'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('yeniFotograflar.*') }}</div>@endif
+                @if ($hata('yeniFotograflar.*'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('yeniFotograflar.*') }}</div>@endif
 
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
                     @php $isaretDugme = 'position:absolute;left:0;right:0;bottom:0;background:rgb(0 0 0 / .6);color:#fff;border:none;border-radius:0 0 .4rem .4rem;font-size:.75rem;padding:.15rem 0;cursor:pointer'; @endphp
@@ -113,12 +113,12 @@
                         <option value="{{ $id }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-                @if ($hata('firmaId'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('firmaId') }}</div>@endif
+                @if ($hata('firmaId'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('firmaId') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Uygunsuzluk / risk tanımı *</label>
                 <textarea wire:model="uygunsuzluk" rows="3" placeholder="Ne gördünüz, hangi çalışanı veya süreci etkiliyor?" style="{{ $inp }}"></textarea>
-                @if ($hata('uygunsuzluk'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('uygunsuzluk') }}</div>@endif
+                @if ($hata('uygunsuzluk'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('uygunsuzluk') }}</div>@endif
             </div>
         </div>
 

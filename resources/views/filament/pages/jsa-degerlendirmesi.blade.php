@@ -34,7 +34,7 @@
                 atanmış İş Güvenliği Uzmanı
                 <strong>{{ $this->firma->igu?->ad_soyad ?? '— firmaya uzman atanmamış —' }}</strong>
                 @if ($this->firma->igu && ! $this->firma->igu->kase_gorseli)
-                    <span style="color:rgb(220 38 38)">(kaşe görseli yüklenmemiş)</span>
+                    <span style="color:rgb(185 28 28)">(kaşe görseli yüklenmemiş)</span>
                 @endif
                 bilgisiyle ve kaşesiyle otomatik doldurulur. Diğer satırlar boş kalır.
             </p>
@@ -86,7 +86,7 @@
                 <x-filament::button size="xs" color="gray" wire:click="tumunuSec">Tümünü Seç</x-filament::button>
                 <x-filament::button size="xs" color="gray" wire:click="secimiTemizle">Temizle</x-filament::button>
                 @unless ($this->firma)
-                    <span style="font-size:.75rem;color:rgb(220 38 38)">Firma seçilmedi — çıktı firmasız (genel) gelir</span>
+                    <span style="font-size:.75rem;color:rgb(185 28 28)">Firma seçilmedi — çıktı firmasız (genel) gelir</span>
                 @endunless
             </div>
         @endif

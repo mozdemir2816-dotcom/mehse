@@ -39,12 +39,12 @@
                         <option value="{{ $id }}">{{ $ad }}</option>
                     @endforeach
                 </select>
-                @if ($hata('formFirmaId'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('formFirmaId') }}</div>@endif
+                @if ($hata('formFirmaId'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('formFirmaId') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Ad soyad *</label>
                 <input type="text" wire:model="adSoyad" style="{{ $inp }}">
-                @if ($hata('adSoyad'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('adSoyad') }}</div>@endif
+                @if ($hata('adSoyad'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('adSoyad') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Kurum</label>
@@ -69,7 +69,7 @@
             <div>
                 <label style="{{ $lbl }}">Geçerlilik bitişi *</label>
                 <input type="datetime-local" wire:model="bitis" style="{{ $inp }}">
-                @if ($hata('bitis'))<div style="color:#dc2626;font-size:.75rem">{{ $hata('bitis') }}</div>@endif
+                @if ($hata('bitis'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('bitis') }}</div>@endif
             </div>
             <div>
                 <label style="{{ $lbl }}">Verilen KKD</label>

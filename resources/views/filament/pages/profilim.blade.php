@@ -25,7 +25,7 @@
             <div style="width:4rem;height:4rem;border-radius:9999px;background:linear-gradient(135deg,#0F172A,#0284C7);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;flex-shrink:0">{{ $bas }}</div>
             <div style="min-width:0">
                 <div style="font-size:1.2rem;font-weight:800;line-height:1.2">{{ $u->name }}</div>
-                <div style="font-size:.82rem;font-weight:600;color:#0284C7;margin-top:.1rem">{{ $u->unvanEtiketi() }}</div>
+                <div style="font-size:.82rem;font-weight:600;color:#0369a1;margin-top:.1rem">{{ $u->unvanEtiketi() }}</div>
                 <div style="display:flex;flex-wrap:wrap;gap:.2rem .9rem;font-size:.78rem;color:{{ $gri }};margin-top:.3rem">
                     <span style="display:inline-flex;align-items:center;gap:.3rem"><x-filament::icon icon="heroicon-o-envelope" style="width:.9rem;height:.9rem"/>{{ $u->email }}</span>
                     @if ($u->telefon)<span style="display:inline-flex;align-items:center;gap:.3rem"><x-filament::icon icon="heroicon-o-phone" style="width:.9rem;height:.9rem"/>{{ $u->telefon }}</span>@endif

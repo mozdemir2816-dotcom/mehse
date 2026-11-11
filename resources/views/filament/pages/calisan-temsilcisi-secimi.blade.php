@@ -97,7 +97,7 @@
                             {{ $secilenAdayIndex === $i ? '✓' : '○' }}
                         </button>
                         <button type="button" wire:click="adaySil({{ $i }})" title="Sil"
-                            style="background:none;border:none;cursor:pointer;color:#dc2626">✕</button>
+                            style="background:none;border:none;cursor:pointer;color:#b91c1c">✕</button>
                     </div>
                 @empty
                     <p style="font-size:.82rem;color:rgb(107 114 128)">Henüz aday eklenmedi.</p>

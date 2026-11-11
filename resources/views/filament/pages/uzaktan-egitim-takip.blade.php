@@ -166,7 +166,7 @@
                                 @include('filament.pages.partials.uzaktan-egitim-onay-dugmeleri')
                                 <button wire:click="detayAc({{ $a->id }})" style="background:none;border:0;color:rgb(79 70 229);cursor:pointer;font-size:.8rem;font-weight:600">{{ $this->detayId === $a->id ? 'Detayı Kapat' : 'Detay' }}</button>
                                 <button wire:click="sifreYenile({{ $a->calisan_id }})" wire:confirm="Yeni geçici şifre üretilsin mi?" style="background:none;border:0;color:rgb(107 114 128);cursor:pointer;font-size:.8rem">Şifre</button>
-                                <button wire:click="atamaSil({{ $a->id }})" wire:confirm="Atama silinsin mi?" style="background:none;border:0;color:#dc2626;cursor:pointer;font-size:.8rem">Sil</button>
+                                <button wire:click="atamaSil({{ $a->id }})" wire:confirm="Atama silinsin mi?" style="background:none;border:0;color:#b91c1c;cursor:pointer;font-size:.8rem">Sil</button>
                             </td>
                         </tr>
                     @endforeach

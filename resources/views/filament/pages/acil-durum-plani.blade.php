@@ -553,7 +553,7 @@
                     <button type="button" wire:click="$set('afisTipi','{{ $anahtar }}')"
                         style="position:relative;padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:center;border:2px solid {{ $secili ? $kirmizi : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(239 68 68 / .1)' : 'transparent' }};opacity:{{ $tanimli ? 1 : .55 }}">
                         @if ($tanimli)
-                            <span style="position:absolute;top:2px;right:4px;color:#16a34a;font-size:.75rem" title="Firmaya otomatik tanımlı">✓</span>
+                            <span style="position:absolute;top:2px;right:4px;color:#15803d;font-size:.75rem" title="Firmaya otomatik tanımlı">✓</span>
                         @endif
                         ⚠ {{ $afis['ad'] }}
                     </button>

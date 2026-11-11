@@ -69,7 +69,7 @@
             @foreach (\App\Filament\Pages\DokumanYonetimi::SEKMELER as $anahtar => $ad)
                 <button type="button" wire:click="$set('sekme', '{{ $anahtar }}')"
                     style="flex:1;white-space:nowrap;padding:.5rem .8rem;border-radius:.55rem;border:none;cursor:pointer;font-size:.88rem;{{ $sekme === $anahtar ? 'background:var(--sgr-kart, #fff);box-shadow:0 1px 3px rgb(0 0 0 / .12);font-weight:600' : 'background:transparent;color:rgb(107 114 128)' }}">
-                    {{ $ad }}@if ($anahtar === 'takip' && $this->sorunlar->isNotEmpty()) <span style="font-size:.75rem;color:#dc2626">({{ $this->sorunlar->count() }})</span>@endif
+                    {{ $ad }}@if ($anahtar === 'takip' && $this->sorunlar->isNotEmpty()) <span style="font-size:.75rem;color:#b91c1c">({{ $this->sorunlar->count() }})</span>@endif
                 </button>
             @endforeach
         </div>
