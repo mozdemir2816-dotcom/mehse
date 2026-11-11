@@ -88,6 +88,7 @@ class Ayarlar extends Page
                                 'windows11' => 'heroicon-o-window',
                                 'saha' => 'heroicon-o-wrench-screwdriver',
                                 'acik_alan' => 'heroicon-o-sun',
+                                'kagit' => 'heroicon-o-book-open',
                             ])
                             ->inline()
                             ->required()

@@ -1,5 +1,5 @@
 @php
-    $yesil = 'rgb(16 185 129)';
+    $yesil = 'rgb(4 120 87)';
 @endphp
 
 <x-filament-panels::page>

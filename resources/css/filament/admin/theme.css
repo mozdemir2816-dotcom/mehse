@@ -39,13 +39,13 @@
     --border: #E2E8F0;
     --border-light: #F1F5F9;
     --success-bg: #F0FDF4;
-    --success-text: #16A34A;
+    --success-text: #15803D;
     --success-border: #BBF7D0;
     --info-bg: #EFF6FF;
     --info-text: #2563EB;
     --info-border: #BFDBFE;
     --warning-bg: #FFF7ED;
-    --warning-text: #D97706;
+    --warning-text: #B45309;
     --warning-border: #FED7AA;
     --metric-blue: #2563EB;
     --metric-green: #16A34A;
@@ -440,13 +440,13 @@ body:has(.fi-modal.fi-modal-open) .fi-mobil-alt-nav {
 .fi-mobil-alt-nav-icon {
     width: 20px;
     height: 20px;
-    color: var(--text-label);
+    color: var(--text-secondary);
 }
 
 .fi-mobil-alt-nav-label {
     font-size: 10px;
     font-weight: 600;
-    color: var(--text-label);
+    color: var(--text-secondary);
 }
 
 .fi-mobil-alt-nav-item.fi-active .fi-mobil-alt-nav-icon-ctn {

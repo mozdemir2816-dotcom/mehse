@@ -43,7 +43,7 @@
 
     {{-- ÖZET --}}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
-        @foreach ([['Aktif çalışan', $oz['calisan'], '#0f766e'], ['Evrak', $oz['evrak'], '#2563eb'], ['Aktif iş izni', $oz['aktif_izin'], '#10b981']] as [$ad, $sayi, $renk])
+        @foreach ([['Aktif çalışan', $oz['calisan'], '#0f766e'], ['Evrak', $oz['evrak'], '#2563eb'], ['Aktif iş izni', $oz['aktif_izin'], '#047857']] as [$ad, $sayi, $renk])
             <div style="{{ $kart }};border-left:4px solid {{ $renk }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                 <div style="font-size:1.6rem;font-weight:700;color:{{ $renk }}">{{ $sayi }}</div>

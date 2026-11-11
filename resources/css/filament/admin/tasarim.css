@@ -96,6 +96,26 @@ html[data-mehse-tema="saha"] {
     --mehse-hero-radius: 4px;
 }
 
+html[data-mehse-tema="kagit"] {
+    --mehse-sb-kart-bg: #F6EFE1;
+    --mehse-sb-kart-kenar: #D5C7AE;
+    --mehse-sb-metin: #2B1F17;
+    --mehse-sb-soluk: #574638;
+    --mehse-sb-avatar-bg: #A0421F;
+    --mehse-sb-ayar-hover: rgb(43 31 23 / .08);
+    --mehse-hero-bg: #E9DDC6;
+    --mehse-hero-metin: #2B1F17;
+    --mehse-hero-soluk: #574638;
+    --mehse-hero-eylem-bg: #FFFBF2;
+    --mehse-hero-eylem-kenar: #CDBEA3;
+    --mehse-hero-eylem-metin: #2B1F17;
+    --mehse-hero-birincil-bg: #A0421F;
+    --mehse-hero-birincil-metin: #fff;
+    --mehse-hero-halka: #A0421F;
+    --mehse-hero-halka-zemin: rgb(43 31 23 / .12);
+    --mehse-hero-radius: 6px;
+}
+
 /* -------------------------------------------------------------------------
    Marka (resources/views/filament/components/marka.blade.php) — MEHSE logosu.
    Açık zeminde renkli, koyu zeminde (klasik/saha üst çubuk + sidebar) beyaz +
@@ -409,6 +429,9 @@ html[data-mehse-tema="klasik"] .mehse-hosgeldin-halka::before { background: #1E3
 html[data-mehse-tema="material"] .mehse-hosgeldin-halka::before { background: #E8F0FE; }
 html[data-mehse-tema="windows11"] .mehse-hosgeldin-halka::before { background: #FBFBFB; }
 html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1D; }
+html[data-mehse-tema="modern"] .mehse-hosgeldin-halka::before { background: #0C4A6E; }
+html[data-mehse-tema="acik_alan"] .mehse-hosgeldin-halka::before { background: #1E3A8A; }
+html[data-mehse-tema="kagit"] .mehse-hosgeldin-halka::before { background: #E9DDC6; }
 
 .mehse-hosgeldin-halka-deger,
 .mehse-hosgeldin-halka-etiket {
@@ -807,13 +830,13 @@ html[data-mehse-tema="klasik"] {
         transition: transform .12s, box-shadow .15s, filter .15s;
     }
 
-    /* label: ToggleButtons seçenekleri — seçili olmayanlar degrade almasın. */
-    .fi-btn.fi-color-primary:not(.fi-outlined):not(label) {
+    /* aria-pressed=false: ToggleButtons'ın seçili olmayan seçenekleri degrade almasın. */
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):not([aria-pressed="false"]) {
         background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%) !important;
         box-shadow: 0 1px 2px rgb(37 99 235 / .3), inset 0 1px 0 rgb(255 255 255 / .18) !important;
     }
 
-    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):hover {
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):not([aria-pressed="false"]):hover {
         filter: brightness(1.06);
         box-shadow: 0 6px 16px -6px rgb(37 99 235 / .6), inset 0 1px 0 rgb(255 255 255 / .18) !important;
     }
@@ -1577,13 +1600,13 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 }
 
 .mehse-akis-hap .fi-icon {
-    color: #0284C7;
+    color: var(--primary-600);
 }
 
 .mehse-akis-hap:hover {
-    border-color: #0284C7;
-    background: rgb(2 132 199 / .08);
-    color: #0369A1;
+    border-color: var(--primary-600);
+    background: color-mix(in srgb, var(--primary-600) 8%, transparent);
+    color: var(--primary-700);
     transform: translateY(-1px);
 }
 
@@ -1617,14 +1640,14 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
 }
 
 .mehse-saha-hap:hover {
-    border-color: #0284C7;
-    background: rgb(2 132 199 / .07);
+    border-color: var(--primary-600);
+    background: color-mix(in srgb, var(--primary-600) 7%, transparent);
 }
 
 .mehse-saha-hap-aktif {
-    border-color: #0284C7;
-    background: rgb(2 132 199 / .12);
-    color: #0369A1;
+    border-color: var(--primary-600);
+    background: color-mix(in srgb, var(--primary-600) 12%, transparent);
+    color: var(--primary-700);
 }
 
 .mehse-saha-baglam {
@@ -1731,7 +1754,8 @@ html[data-mehse-tema="saha"] .mehse-kokpit .mehse-hosgeldin-baslik { font-size: 
 
 .mehse-kokpit .mehse-hosgeldin-halka::before { inset: 7px; }
 .mehse-kokpit .mehse-hosgeldin-halka-deger { font-size: 1.25rem; }
-.mehse-kokpit .mehse-hosgeldin-halka-etiket { font-size: .68rem; }
+/* İki satıra iner: tek satırda geniş yazı tipinde (Saha) halkanın kenarına değiyordu. */
+.mehse-kokpit .mehse-hosgeldin-halka-etiket { max-width: 3.6rem; margin-inline: auto; font-size: .68rem; letter-spacing: .02em; line-height: 1.05; }
 
 /* 4 kart */
 .mehse-kokpit-kartlar {

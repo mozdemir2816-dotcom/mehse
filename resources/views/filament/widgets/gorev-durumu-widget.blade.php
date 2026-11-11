@@ -6,8 +6,8 @@
         $kullanici = \Filament\Facades\Filament::auth()->user();
         $yaklasanGun = \App\Support\GorevDurumu::yaklasanGun();
         $sutunlar = [
-            'gecikmis' => ['Günü geçenler', 'heroicon-o-exclamation-triangle', 'rgb(220 38 38)', 'rgb(220 38 38 / .06)'],
-            'yaklasan' => ['Yaklaşanlar', 'heroicon-o-calendar-days', 'rgb(217 119 6)', 'rgb(217 119 6 / .07)'],
+            'gecikmis' => ['Günü geçenler', 'heroicon-o-exclamation-triangle', 'rgb(185 28 28)', 'rgb(220 38 38 / .06)'],
+            'yaklasan' => ['Yaklaşanlar', 'heroicon-o-calendar-days', 'rgb(180 83 9)', 'rgb(217 119 6 / .07)'],
             'yapilmayan' => ['Yapılmayanlar', 'heroicon-o-clock', 'rgb(71 85 105)', 'rgb(100 116 139 / .06)'],
             'yapilan' => ['Yapılanlar', 'heroicon-o-check-circle', 'rgb(21 128 61)', 'rgb(21 128 61 / .06)'],
         ];
@@ -37,11 +37,11 @@
                    style="flex:1 1 220px;max-width:300px;padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem">
             <div style="display:flex;flex-wrap:wrap;gap:.35rem;flex:1 1 auto">
                 @foreach ([
-                    ['Günü geçen', $o['gecikmis'], 'rgb(220 38 38)'],
-                    ['Yaklaşan', $o['yaklasan'], 'rgb(217 119 6)'],
+                    ['Günü geçen', $o['gecikmis'], 'rgb(185 28 28)'],
+                    ['Yaklaşan', $o['yaklasan'], 'rgb(180 83 9)'],
                     ['Yapılmayan', $o['yapilmayan'], 'rgb(71 85 105)'],
                     ['Yapılan', $o['yapilan'], 'rgb(21 128 61)'],
-                    ['Tamamlanma', '%'.$o['tamamlanma'], 'rgb(13 148 136)'],
+                    ['Tamamlanma', '%'.$o['tamamlanma'], 'rgb(15 118 110)'],
                 ] as [$ad, $sayi, $renk])
                     <span @if ($ad === 'Yaklaşan') title="Termini {{ $yaklasanGun }} gün içinde" @endif
                           style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;padding:.25rem .65rem;border-radius:9999px;border:1px solid color-mix(in srgb, {{ $renk }} 35%, transparent);background:color-mix(in srgb, {{ $renk }} 8%, transparent);color:{{ $renk }}">

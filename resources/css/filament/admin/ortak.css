@@ -17,11 +17,53 @@
    ========================================================================== */
 
 :root {
-    --mehse-metin-soluk: rgb(107 114 128);
+    --mehse-metin-soluk: rgb(85 94 108);
     --mehse-kenar: rgb(107 114 128 / .3);
     --mehse-kenar-girdi: rgb(107 114 128 / .35);
-    --mehse-tehlike: #dc2626;
+    --mehse-tehlike: #b91c1c;
     --mehse-uyari: #b45309;
+}
+
+/* Elle yazılmış form alanları: uzun firma adlı seçim kutuları dar ekranda sağdan taşıp kesiliyordu.
+   max-width tek başına yetmez: seçim kutusu, kendisini saran esnek kapsayıcıyı en uzun seçeneğe göre
+   genişletir. Yüzde genişlik verilince kapsayıcı daralabilir. Tablo içindeki küçük kutulara dokunulmaz. */
+.fi-main :is(select, textarea, input:not([type=checkbox], [type=radio])):not(table *) {
+    max-width: 100%;
+}
+
+@media (max-width: 1023px) {
+    .fi-main select:not(table *, .fi-select-input) {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .fi-main input[style*="min-width"]:not(table *) {
+        min-width: 0 !important;
+    }
+
+    .fi-main input[type=file]:not(table *) {
+        width: 100%;
+    }
+}
+
+/* 300–380 piksel asgari sütunlu ızgaralar dar telefona ve büyük yazıya sığmıyordu. */
+@media (max-width: 520px) {
+    .fi-main :is([style*="repeat(auto-fit,minmax(3"], [style*="repeat(auto-fill,minmax(3"]) {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+/* Sabit genişlikli yan sütunlar telefona sığmıyordu: alt alta iner. */
+@media (max-width: 767px) {
+    .fi-main :is(
+        [style*="grid-template-columns:24rem 1fr"],
+        [style*="grid-template-columns:20rem 1fr"],
+        [style*="grid-template-columns:16rem 1fr"],
+        [style*="grid-template-columns:minmax(220px,1fr) minmax(0,2fr)"],
+        [style*="grid-template-columns:minmax(0,3fr) minmax(0,2fr)"]
+    ) {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
 }
 
 .mehse-soluk { font-size: .75rem; color: var(--mehse-metin-soluk); }

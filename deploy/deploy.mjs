@@ -96,7 +96,7 @@ const APP_INCLUDE_TOP_LEVEL = [
 ];
 
 const SKIP_NAMES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);
-const SKIP_EXTENSIONS = new Set(['.log']);
+const SKIP_EXTENSIONS = new Set(['.log', '.sqlite']); // .sqlite: yerel veritabanı dosyası canlıya gitmez
 
 function isSkippedEntry(name) {
     if (SKIP_NAMES.has(name)) return true;

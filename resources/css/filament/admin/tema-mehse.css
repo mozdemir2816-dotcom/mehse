@@ -392,19 +392,19 @@ html[data-mehse-tema="mehse"] {
         border-radius: 8px !important;
     }
 
-    /* label: ToggleButtons seçenekleri — seçili olmayanlar dolgu almasın. */
-    .fi-btn.fi-color-primary:not(.fi-outlined):not(label) {
+    /* aria-pressed=false: ToggleButtons'ın seçili olmayan seçenekleri dolgu almasın. */
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):not([aria-pressed="false"]) {
         background: linear-gradient(180deg, #0A8C8A 0%, #077A79 100%) !important;
         color: #fff !important;
         box-shadow: 0 1px 2px rgb(7 122 121 / .35), inset 0 1px 0 rgb(255 255 255 / .14) !important;
     }
 
-    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):hover {
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):not([aria-pressed="false"]):hover {
         background: linear-gradient(180deg, #0B9896 0%, #088583 100%) !important;
         box-shadow: 0 6px 14px -6px rgb(7 122 121 / .6), inset 0 1px 0 rgb(255 255 255 / .14) !important;
     }
 
-    .fi-btn.fi-color-primary:not(.fi-outlined):not(label) > .fi-icon {
+    .fi-btn.fi-color-primary:not(.fi-outlined):not(label):not([aria-pressed="false"]) > .fi-icon {
         color: #fff !important;
     }
 

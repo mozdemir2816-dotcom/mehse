@@ -9,7 +9,7 @@
     $yesil = 'rgb(34 197 94)';
     $sari = 'rgb(245 158 11)';
     $kirmizi = 'rgb(239 68 68)';
-    $gri = 'rgb(128 116 148)';
+    $gri = 'rgb(95 87 112)';
     $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
     // Kartlar: yuvarlak köşe + yumuşak gölge (Profilim yeniden tasarımı, 29.10.2026).
     $golge = 'border:1px solid rgb(128 116 148 / .2);border-radius:1rem;padding:1rem;box-shadow:0 1px 3px rgb(15 23 42 / .08)';
@@ -309,7 +309,7 @@
                 <x-filament::button size="xs" tag="a" :href="\App\Filament\Resources\Firmas\FirmaResource::getUrl()">Firmalar sayfası →</x-filament::button>
             </div>
             <table style="width:100%;border-collapse:collapse;font-size:.83rem">
-                <thead><tr style="text-align:left;color:rgb(128 116 148)">
+                <thead><tr style="text-align:left;color:rgb(95 87 112)">
                     <th style="padding:.4rem">Firma</th><th style="padding:.4rem">SGK Sicil</th>
                     <th style="padding:.4rem">Çalışan</th><th style="padding:.4rem">Tehlike Sınıfı</th>
                 </tr></thead>
@@ -322,7 +322,7 @@
                         <td style="padding:.4rem"><x-filament::badge>{{ $f->tehlikeSinifiEtiketi() }}</x-filament::badge></td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" style="padding:1rem;text-align:center;color:rgb(128 116 148)">Henüz firma eklenmemiş.</td></tr>
+                    <tr><td colspan="4" style="padding:1rem;text-align:center;color:rgb(95 87 112)">Henüz firma eklenmemiş.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -337,12 +337,12 @@
                 <x-filament::button size="xs" tag="a" :href="\App\Filament\Resources\Calisans\CalisanResource::getUrl()">Çalışanlar sayfası →</x-filament::button>
             </div>
             @if ($this->calisanlar->isEmpty())
-                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">
+                <div style="text-align:center;padding:2rem;color:rgb(95 87 112)">
                     <div style="font-size:1.75rem">👥</div>Henüz çalışan eklenmemiş.
                 </div>
             @else
                 <table style="width:100%;border-collapse:collapse;font-size:.83rem">
-                    <thead><tr style="text-align:left;color:rgb(128 116 148)">
+                    <thead><tr style="text-align:left;color:rgb(95 87 112)">
                         <th style="padding:.4rem">Ad Soyad</th><th style="padding:.4rem">Firma</th>
                         <th style="padding:.4rem">Görev</th><th style="padding:.4rem">Durum</th>
                     </tr></thead>
@@ -374,7 +374,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
                 <div>
                     <div style="font-weight:700">Eğitim Kayıtları ({{ $ozet['toplam'] }} çalışan · {{ $ozet['eksik'] }} eksik)</div>
-                    <div style="font-size:.78rem;color:rgb(128 116 148)">Çalışan × eğitim türü tamamlanma tarihi. Yeşil = geçerli, sarı = 60 gün içinde dolacak, kırmızı = dolmuş/eksik. Varsayılan olarak yalnız Temel İSG Eğitimi takip edilir — "Konu Ekle" ile yeni sütun eklenir.</div>
+                    <div style="font-size:.78rem;color:rgb(95 87 112)">Çalışan × eğitim türü tamamlanma tarihi. Yeşil = geçerli, sarı = 60 gün içinde dolacak, kırmızı = dolmuş/eksik. Varsayılan olarak yalnız Temel İSG Eğitimi takip edilir — "Konu Ekle" ile yeni sütun eklenir.</div>
                 </div>
                 <div style="display:flex;gap:.4rem">
                     {{ $this->egitimSablonIndirAction }}
@@ -408,7 +408,7 @@
             @php $kullanilanKategoriler = $this->egitimTurleri->map(fn ($t) => $t->kategori() ?? 'ozel')->unique(); @endphp
             @if ($kullanilanKategoriler->count() > 1)
                 <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.4rem">
-                    <span style="font-size:.75rem;color:rgb(128 116 148);align-self:center;font-weight:700">KATEGORİ</span>
+                    <span style="font-size:.75rem;color:rgb(95 87 112);align-self:center;font-weight:700">KATEGORİ</span>
                     <button type="button" wire:click="$set('egitimKategoriFiltre','')"
                         style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                             border:1px solid {{ $egitimKategoriFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
@@ -424,7 +424,7 @@
 
             {{-- DURUM FİLTRESİ --}}
             <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">
-                <span style="font-size:.75rem;color:rgb(128 116 148);align-self:center;font-weight:700">DURUM</span>
+                <span style="font-size:.75rem;color:rgb(95 87 112);align-self:center;font-weight:700">DURUM</span>
                 <button type="button" wire:click="$set('egitimDurumFiltre','')"
                     style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                         border:1px solid {{ $egitimDurumFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
@@ -439,13 +439,13 @@
             </div>
 
             @if (empty($this->egitimMatrisi))
-                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">
+                <div style="text-align:center;padding:2rem;color:rgb(95 87 112)">
                     {{ $egitimDurumTab === 'ayrilan' ? 'İşten ayrılan çalışan bulunamadı.' : 'Filtrelere uyan aktif çalışan bulunamadı.' }}
                 </div>
             @else
                 <table style="border-collapse:collapse;font-size:.76rem;white-space:nowrap">
                     <thead>
-                        <tr style="color:rgb(128 116 148)">
+                        <tr style="color:rgb(95 87 112)">
                             <th style="padding:.35rem;text-align:left;position:sticky;left:0;background:inherit">Çalışan</th>
                             @foreach ($this->egitimTurleriGorunen as $t)
                                 <th style="padding:.35rem;text-align:center;max-width:5.5rem;white-space:normal">
@@ -462,7 +462,7 @@
                             <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                                 <td style="padding:.35rem;font-weight:600;position:sticky;left:0;background:inherit">
                                     {{ $satir['calisan']->ad_soyad }}
-                                    <div style="font-weight:400;font-size:.75rem;color:rgb(128 116 148)">{{ $satir['calisan']->firma?->unvan }}</div>
+                                    <div style="font-weight:400;font-size:.75rem;color:rgb(95 87 112)">{{ $satir['calisan']->firma?->unvan }}</div>
                                 </td>
                                 @foreach ($this->egitimTurleriGorunen as $t)
                                     @php $h = $satir['hucreler'][$t->anahtar]; @endphp
@@ -483,13 +483,13 @@
         <div style="{{ $kutu }};overflow-x:auto">
             <div style="margin-bottom:.6rem">
                 <div style="font-weight:700">Firma × Yasal Kriter Matrisi</div>
-                <div style="font-size:.8rem;color:rgb(128 116 148)">
+                <div style="font-size:.8rem;color:rgb(95 87 112)">
                     Her firmanın {{ count($this->firmaTakipKriterleri) }} kriteri karşılama durumu.
                     Koyu ✓/✗ = mehse'de gerçek modül var; açık ✗ = modül henüz kurulmadı. Oran yalnız gerçek modüllere göre hesaplanır.
                 </div>
             </div>
             <table style="border-collapse:collapse;font-size:.78rem;white-space:nowrap">
-                <thead><tr style="color:rgb(128 116 148)">
+                <thead><tr style="color:rgb(95 87 112)">
                     <th style="padding:.35rem;text-align:left;position:sticky;left:0;background:inherit">Firma</th>
                     @foreach ($this->firmaTakipKriterleri as $k)
                         <th style="padding:.35rem;text-align:center;max-width:5rem;white-space:normal">{{ $k['ad'] }}</th>
@@ -501,7 +501,7 @@
                     <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                         <td style="padding:.35rem;font-weight:600;position:sticky;left:0;background:inherit">{{ $satir['firma']->unvan }}</td>
                         @foreach ($this->firmaTakipKriterleri as $k)
-                            @php $var = $satir['hucreler'][$k['anahtar']]; $renk = $var ? $yesil : ($k['takip'] ? 'rgb(128 116 148)' : ($k['hazir'] ? $kirmizi : 'rgb(239 68 68 / .55)')); @endphp
+                            @php $var = $satir['hucreler'][$k['anahtar']]; $renk = $var ? $yesil : ($k['takip'] ? 'rgb(95 87 112)' : ($k['hazir'] ? $kirmizi : 'rgb(239 68 68 / .55)')); @endphp
                             <td style="padding:.35rem;text-align:center;color:{{ $renk }}" title="{{ $k['hazir'] ? 'Gerçek modül' : 'Henüz modül yok' }}">
                                 {{ $var ? '✓' : ($k['takip'] ? '–' : '✗') }}
                             </td>
@@ -509,7 +509,7 @@
                         <td style="padding:.35rem;text-align:center;font-weight:700">%{{ $satir['oran'] }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="{{ count($this->firmaTakipKriterleri) + 2 }}" style="padding:1rem;text-align:center;color:rgb(128 116 148)">Firma yok.</td></tr>
+                    <tr><td colspan="{{ count($this->firmaTakipKriterleri) + 2 }}" style="padding:1rem;text-align:center;color:rgb(95 87 112)">Firma yok.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -520,7 +520,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.6rem">
                 <div>
                     <div style="font-weight:700">Firma Checklist</div>
-                    <div style="font-size:.78rem;color:rgb(128 116 148)">
+                    <div style="font-size:.78rem;color:rgb(95 87 112)">
                         Tek firma seçip her kriter için vade tarihi girin — vadesi 30 gün içinde olan "Yakın",
                         geçmiş veya girilmemiş "Eksik" olarak işaretlenir. Modül gerçekten tamamlanmışsa vadeden
                         bağımsız her zaman "Tamamlandı" gösterilir.
@@ -543,12 +543,12 @@
                 @endphp
                 <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.7rem">
                     <div style="{{ $kutu }};flex:1;min-width:10rem">
-                        <div style="font-size:.75rem;color:rgb(128 116 148)">Uyum Skoru</div>
+                        <div style="font-size:.75rem;color:rgb(95 87 112)">Uyum Skoru</div>
                         <div style="font-size:1.4rem;font-weight:800;color:{{ $mor }}">%{{ $seciliOran }}</div>
                     </div>
                 </div>
                 <table style="width:100%;border-collapse:collapse;font-size:.8rem">
-                    <thead><tr style="color:rgb(128 116 148)">
+                    <thead><tr style="color:rgb(95 87 112)">
                         <th style="padding:.35rem;text-align:left">Kriter</th>
                         <th style="padding:.35rem;text-align:center">Durum</th>
                         <th style="padding:.35rem;text-align:center">Vade Tarihi</th>
@@ -574,7 +574,7 @@
                     </tbody>
                 </table>
             @else
-                <p style="text-align:center;padding:1.5rem;color:rgb(128 116 148);font-size:.85rem">Detay için yukarıdan bir firma seçin.</p>
+                <p style="text-align:center;padding:1.5rem;color:rgb(95 87 112);font-size:.85rem">Detay için yukarıdan bir firma seçin.</p>
             @endif
         </div>
     @endif
@@ -585,19 +585,19 @@
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Sektör Şablonları</div>
                 <div style="font-size:1.5rem;font-weight:800;color:{{ $mor }}">{{ $o['risk_sablonu'] }}</div>
-                <p style="font-size:.8rem;color:rgb(128 116 148)">Sektöre etiketli risk setleri; sihirbazda tek tıkla uygulanır.</p>
+                <p style="font-size:.8rem;color:rgb(95 87 112)">Sektöre etiketli risk setleri; sihirbazda tek tıkla uygulanır.</p>
                 <x-filament::button size="xs" tag="a" :href="\App\Filament\Resources\RiskSablonus\RiskSablonuResource::getUrl()">Şablonları yönet →</x-filament::button>
             </div>
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Risk Kütüphanesi</div>
                 <div style="font-size:1.5rem;font-weight:800;color:{{ $yesil }}">{{ \App\Models\Tehlike::count() }}</div>
-                <p style="font-size:.8rem;color:rgb(128 116 148)">Kategoriye göre gruplu tehlike/önlem maddeleri.</p>
+                <p style="font-size:.8rem;color:rgb(95 87 112)">Kategoriye göre gruplu tehlike/önlem maddeleri.</p>
                 <x-filament::button size="xs" tag="a" :href="\App\Filament\Resources\Tehlikes\TehlikeResource::getUrl()">Kütüphaneye git →</x-filament::button>
             </div>
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Risk Değerlendirmeleri</div>
                 <div style="font-size:1.5rem;font-weight:800;color:{{ $sari }}">{{ $o['risk_degerlendirmesi'] }}</div>
-                <p style="font-size:.8rem;color:rgb(128 116 148)">Kayıtlı firma risk raporları.</p>
+                <p style="font-size:.8rem;color:rgb(95 87 112)">Kayıtlı firma risk raporları.</p>
                 <x-filament::button size="xs" tag="a" :href="\App\Filament\Pages\RiskSihirbazi::getUrl()">Yeni sihirbaz →</x-filament::button>
             </div>
         </div>
@@ -609,7 +609,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
                 <div>
                     <div style="font-weight:700">Dosya Arşivi</div>
-                    <div style="font-size:.78rem;color:rgb(128 116 148)">{{ $this->arsivKullanilanMb }} MB / {{ config('isg.arsiv.kota_mb') }} MB kullanılıyor</div>
+                    <div style="font-size:.78rem;color:rgb(95 87 112)">{{ $this->arsivKullanilanMb }} MB / {{ config('isg.arsiv.kota_mb') }} MB kullanılıyor</div>
                 </div>
                 {{ $this->arsivYukleAction }}
             </div>
@@ -628,21 +628,21 @@
                         {{ $f->unvan }}
                     </button>
                 @empty
-                    <div style="font-size:.8rem;color:rgb(128 116 148)">Firma yok.</div>
+                    <div style="font-size:.8rem;color:rgb(95 87 112)">Firma yok.</div>
                 @endforelse
             </div>
 
             <div style="{{ $kutu }}">
                 <div style="font-weight:700;margin-bottom:.6rem">{{ $this->arsivSeciliFirma?->unvan ?? 'Firma seçin' }}</div>
                 @if ($this->arsivDosyalar->isEmpty())
-                    <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">Bu firmada henüz dosya yok.</div>
+                    <div style="text-align:center;padding:2rem;color:rgb(95 87 112)">Bu firmada henüz dosya yok.</div>
                 @else
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem">
                         @foreach ($this->arsivDosyalar as $dosya)
                             <div style="border:1px solid rgb(128 116 148 / .2);border-radius:.5rem;padding:.6rem;text-align:center">
                                 <div style="font-size:1.5rem">📄</div>
                                 <div style="font-size:.75rem;font-weight:600;word-break:break-word">{{ $dosya->dosya_adi }}</div>
-                                <div style="font-size:.75rem;color:rgb(128 116 148);margin-bottom:.4rem">{{ $dosya->boyutEtiketi() }}</div>
+                                <div style="font-size:.75rem;color:rgb(95 87 112);margin-bottom:.4rem">{{ $dosya->boyutEtiketi() }}</div>
                                 <div style="display:flex;justify-content:center;gap:.3rem">
                                     <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($dosya->dosya_yolu) }}" target="_blank"
                                         style="font-size:.75rem;color:{{ $mor }}">İndir</a>
@@ -672,10 +672,10 @@
             </div>
 
             @if (empty($this->raporlar))
-                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">Bu filtrelerde rapor bulunamadı.</div>
+                <div style="text-align:center;padding:2rem;color:rgb(95 87 112)">Bu filtrelerde rapor bulunamadı.</div>
             @else
                 <table style="width:100%;border-collapse:collapse;font-size:.83rem">
-                    <thead><tr style="text-align:left;color:rgb(128 116 148)">
+                    <thead><tr style="text-align:left;color:rgb(95 87 112)">
                         <th style="padding:.4rem">Rapor</th><th style="padding:.4rem">Tip</th>
                         <th style="padding:.4rem">Tarih</th><th style="padding:.4rem">İşlemler</th>
                     </tr></thead>
@@ -684,7 +684,7 @@
                         <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                             <td style="padding:.4rem;font-weight:600">
                                 {{ $satir['baslik'] }}
-                                <div style="font-weight:400;font-size:.75rem;color:rgb(128 116 148)">Firma: {{ $satir['firma'] ?? '—' }}</div>
+                                <div style="font-weight:400;font-size:.75rem;color:rgb(95 87 112)">Firma: {{ $satir['firma'] ?? '—' }}</div>
                             </td>
                             <td style="padding:.4rem"><x-filament::badge>{{ $satir['tip'] }}</x-filament::badge></td>
                             <td style="padding:.4rem">{{ $satir['tarih']?->format('d.m.Y H:i') }}</td>

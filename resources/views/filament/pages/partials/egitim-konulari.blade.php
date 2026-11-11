@@ -85,7 +85,7 @@
                 </div>
                 @if ($konularDuzenlenebilir)
                     <button type="button" wire:click="isyerineOzguMaddeEkle"
-                        style="margin-top:.5rem;font-size:.75rem;color:rgb(16 185 129);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
+                        style="margin-top:.5rem;font-size:.75rem;color:rgb(4 120 87);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
                         + Konu Ekle
                     </button>
                 @endif
@@ -125,7 +125,7 @@
         </div>
         @if ($ozelEklenebilir)
             <button type="button" wire:click="ozelMaddeEkle"
-                style="margin-top:.5rem;font-size:.75rem;color:rgb(16 185 129);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
+                style="margin-top:.5rem;font-size:.75rem;color:rgb(4 120 87);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
                 + Konu Ekle
             </button>
             <span style="font-size:.75rem;color:rgb(107 114 128);margin-left:.4rem">İstediğiniz kadar konu ekleyebilirsiniz; boş bırakılan satır belgeye yazılmaz. Eklenen konular bu firmadaki bir sonraki eğitimde de hazır gelir.</span>

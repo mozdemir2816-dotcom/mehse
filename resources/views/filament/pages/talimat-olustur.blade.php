@@ -68,7 +68,7 @@
                             <span title="Firmanın ekipman envanterinde bu talimatla ilgili makine var" style="font-size:.68rem;background:#0ea5e9;color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Önerilen</span>
                         @endif
                         @if (! empty($s['bolumler']))
-                            <span style="font-size:.68rem;background:rgb(16 185 129);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
+                            <span style="font-size:.68rem;background:rgb(4 120 87);color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle">Bölümlü</span>
                         @endif
                     </div>
                     <div class="mehse-soluk">{{ $s['aciklama'] }}</div>

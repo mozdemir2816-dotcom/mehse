@@ -84,7 +84,7 @@
                     </div>
                     <div style="margin-top:.4rem;display:flex;flex-direction:column;gap:.15rem">
                         @foreach ($s['secenekler'] as $j => $secenek)
-                            <div style="font-size:.8rem;{{ $j === $s['dogru_index'] ? 'color:#10b981;font-weight:600' : '' }}">
+                            <div style="font-size:.8rem;{{ $j === $s['dogru_index'] ? 'color:#047857;font-weight:600' : '' }}">
                                 {{ chr(65 + $j) }}) {{ $secenek }} {{ $j === $s['dogru_index'] ? '✓' : '' }}
                             </div>
                         @endforeach

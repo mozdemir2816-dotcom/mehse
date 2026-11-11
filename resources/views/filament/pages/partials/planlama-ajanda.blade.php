@@ -2,7 +2,7 @@
 @php
     $mor = 'rgb(139 92 246)';
     $yesil = 'rgb(34 197 94)';
-    $mavi = 'rgb(59 130 246)';
+    $mavi = 'rgb(29 78 216)';
     $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
     $ozet = $this->ozet;
     $gunler = $this->gunlukGruplar;
@@ -14,7 +14,7 @@
 @endphp
     <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-            <p style="font-size:.85rem;color:rgb(128 116 148)">
+            <p style="font-size:.85rem;color:rgb(95 87 112)">
                 Portföy genelinde, tüm firmaların Ziyaret Programı'ndaki tarihli kayıtları tek
                 takvimde. Salt okunur — düzenlemek için ilgili firmanın Ziyaret Programı'na gidin.
             </p>
@@ -22,16 +22,16 @@
         <div style="display:flex;gap:.5rem">
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $mor }}">{{ $ozet['ziyaret'] }}</div>
-                <div style="font-size:.75rem;color:rgb(128 116 148)">Ziyaret</div>
+                <div style="font-size:.75rem;color:rgb(95 87 112)">Ziyaret</div>
             </div>
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $yesil }}">{{ $ozet['firma'] }}</div>
-                <div style="font-size:.75rem;color:rgb(128 116 148)">Firma</div>
+                <div style="font-size:.75rem;color:rgb(95 87 112)">Firma</div>
             </div>
             @php $kd = $this->katipDoluluk; $kdRenk = $kd['yuzde'] > 100 ? '#dc2626' : ($kd['yuzde'] >= 90 ? '#d97706' : '#16a34a'); @endphp
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center" title="Aylık İSG-KATİP doluluk: aktif firmaların yasal süreleri toplamı / aylık kapasite">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $kdRenk }}">%{{ $kd['yuzde'] }}</div>
-                <div style="font-size:.75rem;color:rgb(128 116 148)">İSG-KATİP doluluk</div>
+                <div style="font-size:.75rem;color:rgb(95 87 112)">İSG-KATİP doluluk</div>
             </div>
         </div>
     </div>
@@ -46,12 +46,12 @@
             <div style="text-align:center;margin-bottom:.6rem">
                 <button type="button" wire:click="buguneGit" style="border:1px solid rgb(128 116 148 / .35);border-radius:.4rem;background:none;cursor:pointer;font-size:.75rem;padding:.2rem .7rem">Bugün</button>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.75rem;text-align:center;color:rgb(128 116 148);margin-bottom:.3rem">
+            <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;font-size:.75rem;text-align:center;color:rgb(95 87 112);margin-bottom:.3rem">
                 @foreach (['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'] as $g)
                     <div>{{ $g }}</div>
                 @endforeach
             </div>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+            <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px">
                 @for ($i = 0; $i < $baslangicBosluk; $i++)
                     <div></div>
                 @endfor
@@ -96,7 +96,7 @@
                     <div style="display:flex;justify-content:space-between;align-items:start;gap:.5rem">
                         <div style="min-width:0">
                             <div style="font-weight:700;font-size:.92rem">{{ $zFirma?->unvan }}</div>
-                            <div style="font-size:.78rem;color:rgb(128 116 148);margin-top:.15rem">{{ $z['amac'] ?: 'Amaç belirtilmemiş' }}</div>
+                            <div style="font-size:.78rem;color:rgb(95 87 112);margin-top:.15rem">{{ $z['amac'] ?: 'Amaç belirtilmemiş' }}</div>
                         </div>
                         <span style="flex-shrink:0;font-size:.75rem;font-weight:700;padding:.15rem .6rem;border-radius:999px;color:#fff;background:{{ $durumRenk }}">
                             {{ $durum === 'tamamlandi' ? 'Tamamlandı' : ($durum === 'planlandi' ? 'Planlandı' : 'Boş') }}
@@ -116,7 +116,7 @@
                     @endif
                 </div>
             @empty
-                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">Bu tarihte ziyaret kaydı bulunmuyor.</div>
+                <div style="text-align:center;padding:2rem;color:rgb(95 87 112)">Bu tarihte ziyaret kaydı bulunmuyor.</div>
             @endforelse
         </div>
     </div>

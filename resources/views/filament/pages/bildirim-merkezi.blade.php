@@ -2,7 +2,7 @@
     $girdi = 'padding:.45rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $th = 'text-align:left;padding:.55rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $renk = ['kritik' => 'rgb(220 38 38)', 'uyari' => 'rgb(217 119 6)', 'bilgi' => 'rgb(37 99 235)'];
+    $renk = ['kritik' => 'rgb(220 38 38)', 'uyari' => 'rgb(180 83 9)', 'bilgi' => 'rgb(37 99 235)'];
     $s = $this->sayilar;
     $firmaAdi = $firmaId ? ($this->firmalar[$firmaId] ?? null) : null;
 @endphp

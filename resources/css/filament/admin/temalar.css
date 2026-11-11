@@ -1175,6 +1175,14 @@ html[data-mehse-tema="acik_alan"] {
     --metric-orange: #C2410C;
     --metric-purple: #6D28D9;
 
+    /* Kenar çubuğu beyaz: alt kart varsayılan (koyu menü) renklerini kullanamaz. */
+    --mehse-sb-kart-bg: #F8FAFC;
+    --mehse-sb-kart-kenar: #E2E8F0;
+    --mehse-sb-metin: #0F172A;
+    --mehse-sb-soluk: #475569;
+    --mehse-sb-avatar-bg: #0B4F8A;
+    --mehse-sb-ayar-hover: rgb(15 23 42 / .06);
+
     --primary-50: #EFF6FF;
     --primary-100: #DBEAFE;
     --primary-200: #BFDBFE;
@@ -1218,13 +1226,38 @@ html[data-mehse-tema="acik_alan"] {
         color: var(--text-heading) !important;
     }
 
+    /* theme.css simgeleri koyu menü için saydam beyaz yapıyor; beyaz zeminde görünmüyordu. */
+    .fi-sidebar-group-btn .fi-icon,
+    .fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+    .fi-sidebar-group-collapse-btn .fi-icon,
+    .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-database-notifications-btn-label,
+    .fi-sidebar-database-notifications-btn > .fi-icon,
+    .fi-topbar-open-sidebar-btn .fi-icon,
+    .fi-topbar-close-sidebar-btn .fi-icon,
+    .fi-topbar-open-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-close-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-item-btn > .fi-icon {
+        color: var(--text-label) !important;
+    }
+
+    .fi-sidebar-group-btn:hover,
+    .fi-sidebar-item-btn:hover,
+    .fi-sidebar-database-notifications-btn:hover,
+    .fi-topbar-open-sidebar-btn:hover,
+    .fi-topbar-close-sidebar-btn:hover,
+    .fi-topbar-item-btn:hover {
+        background: var(--primary-50) !important;
+    }
+
     .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
         background: var(--primary-50) !important;
         border-inline-start-color: var(--primary) !important;
     }
 
     .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
-    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label,
+    .fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
         color: var(--primary) !important;
     }
 
@@ -1254,5 +1287,177 @@ html[data-mehse-tema="acik_alan"] {
 
     html[data-mehse-tema="acik_alan"] .fi-input-wrp {
         border-radius: 10px;
+    }
+}
+
+/* ==========================================================================
+   KAĞIT TEMASI (11.11.2026) — <html data-mehse-tema="kagit">. Uzun tablo ve rapor
+   okumak için: defter kâğıdı zemin, koyu kahve yazı, tek vurgu koyu kiremit.
+   Başlıklar tırnaklı (Source Serif 4); tablo ve form yazısı okunaklı kalsın diye düz.
+   Kartlar gölgesiz, ince çizgili; tablo satırları defter çizgisi gibi.
+   ========================================================================== */
+html[data-mehse-tema="kagit"] {
+    --primary: #A0421F;
+    --bg: #F3EBDA;
+    --panel-bg: #FFFBF2;
+    --sidebar-from: #E9DDC6;
+    --sidebar-to: #E9DDC6;
+    --text-heading: #2B1F17;
+    --text-secondary: #574638;
+    --text-label: #6B5848;
+    --border: #D5C7AE;
+    --border-light: #E8DEC9;
+    --info-bg: #E1EAEE;
+    --info-text: #2B566F;
+    --info-border: #A9C1CE;
+    --success-bg: #E5EDD6;
+    --success-text: #2F6236;
+    --success-border: #A5C08A;
+    --warning-bg: #F7E6C2;
+    --warning-text: #7F4507;
+    --warning-border: #D6A23E;
+    --metric-blue: #2B566F;
+    --metric-green: #2F6236;
+    --metric-orange: #A0421F;
+    --metric-purple: #6B3F6E;
+
+    --primary-50: #FBF1E8;
+    --primary-100: #F6DFD0;
+    --primary-200: #EBBDA4;
+    --primary-300: #DC9575;
+    --primary-400: #C76F4B;
+    --primary-500: #B4542E;
+    --primary-600: #A0421F;
+    --primary-700: #823518;
+    --primary-800: #662A14;
+    --primary-900: #4C2011;
+    --primary-950: #2C1209;
+
+    /* Filament'in soğuk grileri yerine kâğıda uyan sıcak gri. */
+    --gray-50: #FAF5EA;
+    --gray-100: #F1EADB;
+    --gray-200: #E2D8C4;
+    --gray-300: #CBBEA7;
+    --gray-400: #7C6D58;
+    --gray-500: #6F604E;
+    --gray-600: #574A3B;
+    --gray-700: #443829;
+    --gray-800: #33291F;
+    --gray-900: #261E16;
+    --gray-950: #1A140E;
+
+    .fi-body {
+        font-size: 14px;
+        background-color: var(--bg);
+        color: var(--text-heading);
+    }
+
+    ::selection {
+        background: var(--primary-200);
+        color: var(--gray-950);
+    }
+
+    .fi-page-header-heading,
+    .fi-header-heading,
+    .fi-section-header-heading,
+    .fi-modal-heading,
+    .mehse-hosgeldin-baslik {
+        color: var(--text-heading) !important;
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-weight: 600;
+        letter-spacing: -.005em;
+    }
+
+    /* Kartlar: gölge yok, tek ince çizgi. */
+    .fi-section:not(.fi-aside),
+    .fi-ta-ctn {
+        border-radius: 6px !important;
+        box-shadow: 0 0 0 1px var(--border) !important;
+    }
+
+    /* Tablo: açık defter başlığı, satırlar arasında ince çizgi. Beyaz yerine kâğıt zemin. */
+    .fi-ta-ctn,
+    .fi-ta-table,
+    .fi-ta-table td,
+    .mehse-kokpit-kart,
+    .fi-tabs {
+        background-color: var(--panel-bg) !important;
+    }
+
+    .fi-ta-table th {
+        background: var(--gray-100) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    .fi-ta-row {
+        border-color: var(--border-light) !important;
+    }
+
+    .fi-ta-row:hover,
+    .fi-ta-row:hover td {
+        background-color: var(--primary-50) !important;
+    }
+
+    .fi-topbar {
+        background: var(--panel-bg) !important;
+        box-shadow: 0 1px 0 var(--border) !important;
+    }
+
+    .fi-sidebar {
+        background: var(--sidebar-from) !important;
+        border-inline-end: 1px solid var(--border);
+    }
+
+    .fi-sidebar-item-label,
+    .fi-sidebar-group-label {
+        color: var(--text-heading) !important;
+    }
+
+    .fi-sidebar-group-btn .fi-icon,
+    .fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+    .fi-sidebar-group-collapse-btn .fi-icon,
+    .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-database-notifications-btn-label,
+    .fi-sidebar-database-notifications-btn > .fi-icon,
+    .fi-topbar-open-sidebar-btn .fi-icon,
+    .fi-topbar-close-sidebar-btn .fi-icon,
+    .fi-topbar-open-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-close-collapse-sidebar-btn .fi-icon,
+    .fi-topbar-item-btn > .fi-icon {
+        color: var(--text-secondary) !important;
+    }
+
+    .fi-sidebar-group-btn:hover,
+    .fi-sidebar-item-btn:hover,
+    .fi-sidebar-database-notifications-btn:hover,
+    .fi-topbar-open-sidebar-btn:hover,
+    .fi-topbar-close-sidebar-btn:hover,
+    .fi-topbar-item-btn:hover {
+        background: rgb(43 31 23 / .07) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: var(--panel-bg) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label,
+    .fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
+        color: var(--primary) !important;
+    }
+
+    .fi-btn {
+        border-radius: 5px !important;
+    }
+
+    .fi-btn.fi-color-primary:not(.fi-outlined):not([aria-pressed="false"]) {
+        --bg: var(--primary) !important;
+        --hover-bg: var(--primary-700) !important;
+        --text: #FFFFFF !important;
+        --hover-text: #FFFFFF !important;
+    }
+
+    :focus-visible {
+        outline-color: var(--primary);
     }
 }

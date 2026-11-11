@@ -4,7 +4,7 @@
     $kart = 'border:1px solid rgb(107 114 128 / .22);border-radius:.6rem;padding:.6rem .8rem';
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $durumRenk = ['taslak' => '#6b7280', 'incelemede' => '#f59e0b', 'onaylandi' => '#10b981', 'arsiv' => '#9ca3af'];
+    $durumRenk = ['taslak' => '#6b7280', 'incelemede' => '#b45309', 'onaylandi' => '#047857', 'arsiv' => '#9ca3af'];
     $kapsamaRenk = ['yeterli' => 'rgb(21 128 61)', 'kismi' => 'rgb(217 119 6)', 'eksik' => 'rgb(107 114 128)'];
     $kapsamaAd = ['yeterli' => 'Yeterli', 'kismi' => 'Kısmi', 'eksik' => 'Eksik'];
     $nk = $this->naceKapsama;
@@ -216,7 +216,7 @@
                                 <summary style="cursor:pointer;font-size:.75rem;font-weight:600">Cevap, gerekçe ve kaynakları göster</summary>
                                 <ol type="A" style="margin:.4rem 0 .3rem 1.1rem;padding:0;font-size:.8rem">
                                     @foreach ($s->secenekler as $si => $sec)
-                                        <li style="{{ $si === $s->dogru_index ? 'color:#10b981;font-weight:600' : '' }}">{{ $sec }}{{ $si === $s->dogru_index ? ' ✓' : '' }}</li>
+                                        <li style="{{ $si === $s->dogru_index ? 'color:#047857;font-weight:600' : '' }}">{{ $sec }}{{ $si === $s->dogru_index ? ' ✓' : '' }}</li>
                                     @endforeach
                                 </ol>
                                 <div style="font-size:.75rem"><strong>Gerekçe:</strong> {!! $s->aciklama ? e($s->aciklama) : '<span style="color:rgb(220 38 38)">girilmemiş</span>' !!}</div>

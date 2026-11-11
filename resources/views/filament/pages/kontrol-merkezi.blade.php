@@ -5,7 +5,7 @@
     $yesil = 'rgb(34 197 94)';
     $kirmizi = 'rgb(239 68 68)';
     $sari = 'rgb(245 158 11)';
-    $gri = 'rgb(128 116 148)';
+    $gri = 'rgb(95 87 112)';
     $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
     $o = $this->ozet;
 
@@ -26,7 +26,7 @@
             <span style="width:.5rem;height:.5rem;border-radius:9999px;background:{{ $yesil }}"></span> Canlı İSG Takibi
         </span>
     </div>
-    <p style="font-size:.85rem;color:rgb(128 116 148);margin-top:-.5rem">
+    <p style="font-size:.85rem;color:rgb(95 87 112);margin-top:-.5rem">
         Tüm firmalarınızın yasal belgeleri, yaklaşan işleri ve çalışan eksiklerini tek kontrol merkezinde.
     </p>
 
@@ -54,7 +54,7 @@
             <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
                 <div style="font-size:2rem">🎉</div>
                 <div style="font-weight:700;margin-top:.4rem">Harika! Tüm Görevler Güncel</div>
-                <p style="font-size:.85rem;color:rgb(128 116 148)">
+                <p style="font-size:.85rem;color:rgb(95 87 112)">
                     Yaklaşan risk değerlendirmesi yenilemesi veya eksik kayıt bulunmuyor.
                 </p>
             </div>
@@ -65,7 +65,7 @@
                         border-left:4px solid {{ $is['durum'] === 'gecikti' ? $kirmizi : $sari }}">
                         <div>
                             <div style="font-weight:600;font-size:.88rem">{{ $is['baslik'] }}</div>
-                            <div style="font-size:.8rem;color:rgb(128 116 148)">{{ $is['firma'] }}</div>
+                            <div style="font-size:.8rem;color:rgb(95 87 112)">{{ $is['firma'] }}</div>
                         </div>
                         <div style="font-size:.8rem;color:{{ $is['durum'] === 'gecikti' ? $kirmizi : $sari }};font-weight:600;white-space:nowrap">
                             {{ $is['durum'] === 'gecikti' ? 'Gecikti' : 'Yaklaşıyor' }}
@@ -205,7 +205,7 @@
             {{-- Yenileme Süreleri --}}
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Yasal Evrak Yenileme Süreleri</div>
-                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.6rem">6331 Sayılı İSG Kanunu uyarınca zorunlu periyotlar</div>
+                <div style="font-size:.78rem;color:rgb(95 87 112);margin-bottom:.6rem">6331 Sayılı İSG Kanunu uyarınca zorunlu periyotlar</div>
                 @foreach (config('isg.tehlike_siniflari') as $anahtar => $ad)
                     <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-top:1px solid rgb(128 116 148 / .15);font-size:.85rem">
                         <span>{{ $ad }} Sınıf</span>
@@ -217,7 +217,7 @@
             {{-- Uzman Tavsiyeleri --}}
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">Uzman Tavsiyeleri & Aksiyonlar</div>
-                <div style="font-size:.78rem;color:rgb(128 116 148);margin-bottom:.6rem">Denetim öncesi dikkat edilmesi gereken noktalar</div>
+                <div style="font-size:.78rem;color:rgb(95 87 112);margin-bottom:.6rem">Denetim öncesi dikkat edilmesi gereken noktalar</div>
                 <ul style="margin:0;padding-left:1.1rem;font-size:.82rem;display:flex;flex-direction:column;gap:.4rem">
                     @foreach (config('isg.kontrol_merkezi.uzman_tavsiyeleri') as $t)
                         <li><strong>{{ $t['baslik'] }}:</strong> {{ $t['metin'] }}</li>
@@ -233,7 +233,7 @@
             <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
                 <div style="font-size:2rem">👥</div>
                 <div style="font-weight:700;margin-top:.4rem">Çalışan İSG Asistanı</div>
-                <p style="font-size:.85rem;color:rgb(128 116 148)">
+                <p style="font-size:.85rem;color:rgb(95 87 112)">
                     Muayene, İSG eğitimi, MYK ve genç çalışan eksiklerini listelemek için yukarıdan bir firma seçin.
                 </p>
             </div>
@@ -241,14 +241,14 @@
             @php $k = $this->calisanKarne; @endphp
             <div style="{{ $kutu }}">
                 <div style="font-weight:700">{{ $this->secilenFirma->unvan }}</div>
-                <div style="font-size:.82rem;color:rgb(128 116 148)">{{ $k['toplam'] }} aktif çalışan</div>
+                <div style="font-size:.82rem;color:rgb(95 87 112)">{{ $k['toplam'] }} aktif çalışan</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-top:.75rem">
                     <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.75rem;color:rgb(128 116 148);text-transform:uppercase">Genç Çalışan (&lt;18)</div>
+                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">Genç Çalışan (&lt;18)</div>
                         <div style="font-size:1.3rem;font-weight:800;color:{{ $k['genc']->count() ? $sari : 'inherit' }}">{{ $k['genc']->count() }}</div>
                     </div>
                     <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.75rem;color:rgb(128 116 148);text-transform:uppercase">Ağır & Tehlikeli İş</div>
+                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">Ağır & Tehlikeli İş</div>
                         <div style="font-size:1.3rem;font-weight:800">{{ $k['agir_tehlikeli'] }}</div>
                     </div>
                 </div>
@@ -265,7 +265,7 @@
                 </div>
             @endif
 
-            <div style="{{ $kutu }};font-size:.82rem;color:rgb(128 116 148)">
+            <div style="{{ $kutu }};font-size:.82rem;color:rgb(95 87 112)">
                 📋 Şu takipler ilgili modüller kurulunca burada listelenecek:
                 <strong>{{ implode(', ', $k['moduller_bekliyor']) }}</strong>.
             </div>

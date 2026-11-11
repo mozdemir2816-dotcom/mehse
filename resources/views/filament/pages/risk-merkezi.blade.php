@@ -7,7 +7,7 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $grupRenk = ['cok_yuksek' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#f59e0b', 'dusuk' => '#16a34a'];
+    $grupRenk = ['cok_yuksek' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#b45309', 'dusuk' => '#16a34a'];
     $yontemAd = $rd ? config('isg.risk_yontemleri.'.$rd->yontem) : null;
 @endphp
 

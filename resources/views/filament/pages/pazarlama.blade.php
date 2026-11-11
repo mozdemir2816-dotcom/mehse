@@ -16,7 +16,7 @@
                 ['Açık Hatırlatmalar', $po['acik_hatirlatma'], $kirmizi],
             ] as [$etiket, $deger, $renk])
                 <div style="{{ $kutu }};padding:.75rem">
-                    <div style="font-size:.75rem;color:rgb(128 116 148);text-transform:uppercase">{{ $etiket }}</div>
+                    <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">{{ $etiket }}</div>
                     <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $deger }}</div>
                 </div>
             @endforeach
@@ -38,10 +38,10 @@
             </div>
 
             @if ($this->adayFirmalar->isEmpty())
-                <div style="text-align:center;padding:2rem;color:rgb(128 116 148)">Bu filtrelerde aday firma bulunamadı.</div>
+                <div style="text-align:center;padding:2rem;color:rgb(95 87 112)">Bu filtrelerde aday firma bulunamadı.</div>
             @else
                 <table style="width:100%;border-collapse:collapse;font-size:.83rem">
-                    <thead><tr style="text-align:left;color:rgb(128 116 148)">
+                    <thead><tr style="text-align:left;color:rgb(95 87 112)">
                         <th style="padding:.4rem">Unvan</th><th style="padding:.4rem">Yetkili</th>
                         <th style="padding:.4rem">Telefon</th><th style="padding:.4rem">Şehir</th>
                         <th style="padding:.4rem">Aşama</th><th style="padding:.4rem">Hatırlatma</th>

@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
-    <p style="font-size:.85rem;color:rgb(128 116 148)">
+    <p style="font-size:.85rem;color:rgb(95 87 112)">
         Kayıt olan kullanıcılar varsayılan olarak hiçbir sayfa görmez. Aşağıdan her kullanıcı
         için erişebileceği sayfaları ve firmaları seçip kaydedin.
     </p>
@@ -12,13 +12,13 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.85rem 1rem;flex-wrap:wrap">
                     <div style="cursor:pointer;flex:1;min-width:220px" wire:click="ac({{ $kullanici->id }})">
                         <div style="font-weight:700">{{ $kullanici->name }}</div>
-                        <div style="font-size:.8rem;color:rgb(128 116 148)">
+                        <div style="font-size:.8rem;color:rgb(95 87 112)">
                             {{ $kullanici->email }} · {{ $kullanici->telefon ?: '—' }} · {{ $kullanici->rol }}
                         </div>
                         @php
                             $kalan = $kullanici->abonelikKalanGun();
                         @endphp
-                        <div style="font-size:.78rem;margin-top:.2rem;color:{{ $kalan === null ? 'rgb(128 116 148)' : ($kalan < 0 ? '#b91c1c' : ($kalan <= 7 ? '#b45309' : '#047857')) }}">
+                        <div style="font-size:.78rem;margin-top:.2rem;color:{{ $kalan === null ? 'rgb(95 87 112)' : ($kalan < 0 ? '#b91c1c' : ($kalan <= 7 ? '#b45309' : '#047857')) }}">
                             {{ \App\Models\User::ABONELIK_PLANLARI[$kullanici->abonelik_plani] ?? $kullanici->abonelik_plani }} ·
                             @if ($kalan === null)
                                 süresiz
@@ -56,7 +56,7 @@
                         </label>
                         <x-filament::button size="sm" color="gray" wire:click="abonelikUzat(30)">+30 gün</x-filament::button>
                         <x-filament::button size="sm" color="gray" wire:click="abonelikUzat(365)">+1 yıl</x-filament::button>
-                        <span style="font-size:.75rem;color:rgb(128 116 148)">Değişiklik "Kaydet" ile uygulanır.</span>
+                        <span style="font-size:.75rem;color:rgb(95 87 112)">Değişiklik "Kaydet" ile uygulanır.</span>
                     </div>
                     <div style="padding:1rem;border-top:1px solid rgb(128 116 148 / .2);display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
                         <div>
@@ -94,7 +94,7 @@
                 @endif
             </div>
         @empty
-            <p style="font-size:.85rem;color:rgb(128 116 148)">Henüz kayıt olan başka kullanıcı yok.</p>
+            <p style="font-size:.85rem;color:rgb(95 87 112)">Henüz kayıt olan başka kullanıcı yok.</p>
         @endforelse
     </div>
 </x-filament-panels::page>

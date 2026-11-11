@@ -75,6 +75,17 @@ class SistemAyarlariMerkeziTest extends TestCase
             ->assertSee('Sağlık ve Olaylar');
     }
 
+    public function test_kagit_tema_secilebilir_ve_hesaba_kaydedilir(): void
+    {
+        $u = User::factory()->create(['rol' => 'sahip']);
+        $this->actingAs($u);
+
+        $this->assertArrayHasKey('kagit', \App\Support\KullaniciAyarlari::TEMALAR);
+
+        $this->post(route('mehse.ayar.tema'), ['tema' => 'kagit'])->assertNoContent();
+        $this->assertSame('kagit', \App\Support\KullaniciAyarlari::tema($u->fresh()));
+    }
+
     public function test_modern_tema_secilebilir_ve_hesaba_kaydedilir(): void
     {
         $u = User::factory()->create(['rol' => 'sahip']);

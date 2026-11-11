@@ -30,6 +30,7 @@ class KullaniciAyarlari
         'windows11' => 'Windows 11',
         'saha' => 'Saha',
         'acik_alan' => 'Açık alan',
+        'kagit' => 'Kağıt',
     ];
 
     public const YOGUNLUKLAR = [

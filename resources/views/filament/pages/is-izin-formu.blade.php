@@ -1,12 +1,12 @@
 @php
     $turuncu = 'rgb(245 158 11)';
-    $yesil = 'rgb(16 185 129)';
+    $yesil = 'rgb(4 120 87)';
     $mor = 'rgb(139 92 246)';
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
 
     $durumRenk = [
-        'taslak' => '#6b7280', 'onay_bekliyor' => '#f59e0b', 'onaylandi' => '#10b981',
+        'taslak' => '#6b7280', 'onay_bekliyor' => '#b45309', 'onaylandi' => '#047857',
         'reddedildi' => '#ef4444', 'is_tamamlandi' => '#3b82f6', 'kapatildi' => '#6b7280', 'iptal' => '#ef4444',
     ];
 @endphp
@@ -26,8 +26,8 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
         @foreach ([
             ['Toplam izin', $oz['toplam'], '#0f766e'],
-            ['Aktif izin', $oz['aktif'], '#10b981'],
-            ['Onay bekleyen', $oz['onay_bekleyen'], '#f59e0b'],
+            ['Aktif izin', $oz['aktif'], '#047857'],
+            ['Onay bekleyen', $oz['onay_bekleyen'], '#b45309'],
             ['Süresi geçen', $oz['suresi_gecen'], '#ef4444'],
         ] as [$etiket, $sayi, $renk])
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.75rem;padding:.8rem 1rem;border-left:4px solid {{ $renk }}">
@@ -334,7 +334,7 @@
                                         @elseif ($bekleyen)
                                             <span style="color:#b45309">⏳ {{ count($bekleyen) }} kontrol bekliyor</span>
                                         @else
-                                            <span style="color:#10b981">✓ Kontroller tamam</span>
+                                            <span style="color:#047857">✓ Kontroller tamam</span>
                                         @endif
                                     @endif
                                 </td>

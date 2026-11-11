@@ -24,7 +24,7 @@
                 <div class="mehse-soluk">Açık Madde</div>
             </div>
             <div style="{{ $kutu }};text-align:center;border-color:rgb(16 185 129 / .4)">
-                <div style="font-size:1.5rem;font-weight:800;color:rgb(16 185 129)">{{ $ozet['kapanmis_madde'] }}</div>
+                <div style="font-size:1.5rem;font-weight:800;color:rgb(4 120 87)">{{ $ozet['kapanmis_madde'] }}</div>
                 <div class="mehse-soluk">Kapanmış Madde</div>
             </div>
             <div style="{{ $kutu }};text-align:center">

@@ -1,5 +1,5 @@
 @php
-    $yesil = 'rgb(16 185 129)';
+    $yesil = 'rgb(4 120 87)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
 @endphp
 
