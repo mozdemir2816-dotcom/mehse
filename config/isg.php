@@ -736,7 +736,7 @@ return [
                 ['ad' => 'Yükseltilebilir Seyyar İş Platformu (Manlift)', 'periyot_ay' => 6, 'standart' => 'TS EN 280', 'deney' => 'Stabilite + yük testi, acil indirme'],
                 ['ad' => 'Asansör (İnsan / Yük)', 'periyot_ay' => 12, 'standart' => 'TS EN 81-20 / Asansör Yön.', 'deney' => 'A tipi muayene kuruluşu yıllık kontrolü'],
                 ['ad' => 'Yapı / Cephe İskelesi', 'periyot_ay' => 6, 'standart' => 'TS EN 12811 / Yapı İşleri Yön.', 'deney' => 'Kurulum sonrası ve periyodik statik muayene'],
-                ['ad' => 'Kaldırma Aksesuarları (sapan, zincir, halat, mapa)', 'periyot_ay' => 6, 'standart' => 'TS EN 13414 / TS EN 818', 'deney' => 'Gözle muayene + deformasyon/aşınma kontrolü'],
+                ['ad' => 'Kaldırma Aksesuarları (sapan, zincir, halat, mapa)', 'periyot_ay' => 12, 'standart' => 'TS EN 13414 / TS EN 818', 'deney' => 'Gözle muayene + deformasyon/aşınma kontrolü'],
                 // Ekipman Değerlendirme Aracı karşılaştırması (19.10.2026)
                 ['ad' => 'Araç Üstü Yüksek Platform (Sepetli Platform / Cherry Picker)', 'periyot_ay' => 6, 'standart' => 'TS EN 280', 'deney' => 'Stabilite + yük testi, acil indirme'],
                 ['ad' => 'Gondol (Asılı Çalışma Platformu)', 'periyot_ay' => 6, 'standart' => 'TS EN 1808', 'deney' => 'Yük testi, düşme önleyici ve halat muayenesi'],
