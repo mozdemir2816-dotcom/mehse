@@ -1845,6 +1845,7 @@ class RiskSihirbazi extends Page
                 'frekans' => $this->fineKinney ? $this->sayiVeyaNull($m['frekans'] ?? null) : null,
                 'siddet' => $this->sayiVeyaNull($m['siddet'] ?? null),
                 'oneri' => $m['oneri'] ?? null,
+                'mevzuat' => filled($m['mevzuat'] ?? null) ? $m['mevzuat'] : null,
                 'sorumlu' => $m['sorumlu'] ?? null,
                 'termin' => ($m['termin'] ?? '') ?: $this->varsayilanTermin,
                 'aciklama' => $m['aciklama'] ?? null,

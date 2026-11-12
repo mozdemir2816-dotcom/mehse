@@ -129,6 +129,7 @@ class RiskYontemDonusturucu
                 'frekans' => $eslenen['frekans'],
                 'siddet' => $eslenen['siddet'],
                 'oneri' => $m->oneri,
+                'mevzuat' => $m->mevzuat,
                 'sorumlu' => $m->sorumlu,
                 'termin' => $m->termin,
                 'son_olasilik' => $eslenen['son_olasilik'],

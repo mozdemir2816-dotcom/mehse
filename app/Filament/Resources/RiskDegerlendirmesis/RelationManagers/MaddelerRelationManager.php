@@ -142,6 +142,8 @@ class MaddelerRelationManager extends RelationManager
                         ->compact()
                         ->schema(array_values(array_filter([
                             Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpanFull(),
+                            Textarea::make('mevzuat')->label('Mevzuat dayanağı')->rows(1)->autosize()->columnSpanFull()
+                                ->helperText('Çıktıda önerilen önlemin altında "Mevzuat: …" olarak basılır.'),
                             Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull()->visible($hastane),
                             TextInput::make('sorumlu')->label('Sorumlu'),
                             TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
@@ -192,7 +194,7 @@ class MaddelerRelationManager extends RelationManager
                 SelectFilter::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari')),
                 // 08.11.2026: boş alanlı maddeleri süz — elle doldurmak için.
                 SelectFilter::make('bos_alan')->label('Boş alan')->visible(fn (): bool => $this->yontem() !== 'hazop')
-                    ->options(RiskAlanTamamlama::bosAlanSecenekleri(mevzuat: false))
+                    ->options(RiskAlanTamamlama::bosAlanSecenekleri(mevzuat: true))
                     ->query(fn (Builder $query, array $data): Builder => RiskAlanTamamlama::bosAlanSuz($query, $data['value'] ?? null, RiskSkorlama::ucEksenliMi($this->yontem()))),
             ])
             ->headerActions([

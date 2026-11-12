@@ -17,8 +17,8 @@ use Illuminate\Support\Str;
  * eksik sayılır), O/Ş(/F) ve önlem sonrası (rezidüel) puanlar. Termin AI'dan istenmez: risk düzeyinden
  * hesaplanır (ÇY Derhal, YK 1 Ay, ÖN 3 Ay, düşük Sürekli / Rutin — RiskMaddesi::varsayilanTermin).
  *
- * Analiz maddesinde (risk_maddeleri) mevzuat sütunu yok — mevzuat yalnız kütüphanede tutulur; analizde
- * yapay zekânın önerdiği mevzuat kütüphanedeki karşılığına yazılır.
+ * Analiz maddesinde mevzuat 12.11.2026'dan beri var: boşsa yapay zekânın önerisi maddeye de yazılır. "Eksik madde"
+ * sayımına analizde mevzuat KATILMAZ (eksikKosulu mevzuat=false) — yalnız mevzuat boş diye AI kotası harcanmasın.
  *
  * Aynı kurallar hem analiz maddesine (RiskMaddesi) hem kütüphane maddesine (Tehlike) uygulanır. Doldurma
  * yalnız BOŞ alanlara yapılır; kullanıcının yazdığına dokunulmaz. Analizde dolan alanlar kütüphanedeki
@@ -119,7 +119,7 @@ class RiskAlanTamamlama
             $m->risk = $p['risk'];
             $degisen[] = 'risk';
         }
-        foreach ($m instanceof Tehlike ? ['mevcut_onlem', 'oneri', 'mevzuat'] : ['mevcut_onlem', 'oneri'] as $alan) {
+        foreach (['mevcut_onlem', 'oneri', 'mevzuat'] as $alan) {
             if (static::bosMu($m->{$alan}) && filled($p[$alan] ?? null)) {
                 $m->{$alan} = $p[$alan];
                 $degisen[] = $alan;

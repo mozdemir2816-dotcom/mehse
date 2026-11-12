@@ -89,6 +89,7 @@ class RiskDegerlendirmesiOlusturucu
                     'puan' => $mevcut['puan'] ?: null,
                     'duzey' => $mevcut['puan'] ? $mevcut['duzey'] : null,
                     'oneri' => $m['oneri'] ?? null,
+                    'mevzuat' => filled($m['mevzuat'] ?? null) ? $m['mevzuat'] : null,
                     'sorumlu' => $m['sorumlu'] ?? null,
                     'termin' => ($m['termin'] ?? '') ?: $varsayilanTermin,
                     'aciklama' => $m['aciklama'] ?? null,

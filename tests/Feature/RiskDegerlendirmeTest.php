@@ -624,6 +624,35 @@ class RiskDegerlendirmeTest extends TestCase
         $this->assertSame(['Yuksek', 'Orta', 'Dusuk'], $veri['rd']->maddeler->pluck('tehlike')->all());
     }
 
+    public function test_mevzuat_kutuphaneden_kopyalanir_ve_oneri_altinda_basilir(): void
+    {
+        // 12.11.2026: analiz maddesinde mevzuat; çıktıda ayrı sütun değil, öneri hücresinin altında.
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'matris_5x5', 'rapor_tarihi' => now()]);
+        $kat = \App\Models\TehlikeKategorisi::firstOrCreate(['anahtar' => 'mvz_test'], ['ad' => 'Mevzuat testi', 'sira' => 1]);
+        $tehlike = \App\Models\Tehlike::create(['tehlike_kategorisi_id' => $kat->id, 'kod' => 'MVZ-1', 'tehlike' => 'Korumasız döşeme boşluğu', 'risk' => 'Düşme',
+            'oneri' => 'Korkuluk yapılmalı', 'mevzuat' => 'Yapı İşlerinde İSG Yönetmeliği Ek-4']);
+
+        $satir = collect(\App\Support\RiskKutuphanesi::maddeyeCevir($tehlike, 'matris_5x5'))->except('anahtar', 'kaynak')->all();
+        $m = RiskMaddesi::create($satir + ['risk_degerlendirmesi_id' => $rd->id, 'sira' => 1, 'olasilik' => 3, 'siddet' => 4]);
+
+        $this->assertSame('Yapı İşlerinde İSG Yönetmeliği Ek-4', $m->fresh()->mevzuat);
+        $this->assertSame("Korkuluk yapılmalı
+Mevzuat: Yapı İşlerinde İSG Yönetmeliği Ek-4", $m->fresh()->oneriVeMevzuat());
+
+        $html = view('pdf.risk-degerlendirmesi', [
+            'rd' => $rd->fresh(), 'firma' => $firma, 'uzman' => $this->uzman,
+            'hekim' => null, 'temsilci' => null, 'destekElemani' => null,
+            'metodoloji' => config('isg.risk_matris_5x5'), 'prosedur' => RiskProsedur::aktifIcin($this->uzman->id, 'matris_5x5'),
+        ])->render();
+        $this->assertStringContainsString('<span class="mevzuat">Mevzuat: Yapı İşlerinde İSG Yönetmeliği Ek-4</span>', $html);
+
+        $tablo = collect(RiskDegerlendirmesiOfisUretici::excelKitabi($rd->fresh())->getSheet(2)->toArray())->flatten()->filter()->map(fn ($v) => (string) $v);
+        $this->assertTrue($tablo->contains("Korkuluk yapılmalı
+Mevzuat: Yapı İşlerinde İSG Yönetmeliği Ek-4"));
+        $this->assertFalse($tablo->contains('Mevzuat'));   // ayrı sütun başlığı yok
+    }
+
     public function test_excel_ve_word_olarak_indirilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Ofis Test A.Ş.']);

@@ -49,6 +49,7 @@
     table.risk th.col-duzey { font-size: 6px; }
     table.risk .sayi { text-align: center; padding: 3px 1px; }
     /* Dar puan sütunu başlıkları ("Son<br>O") kelime ortasından kırılmasın (01.11.2026). */
+    table.risk td .mevzuat { display: inline-block; margin-top: 2px; font-size: 6.5px; font-style: italic; color: #444; }
     table.risk th.sayi { font-size: 7px; white-space: nowrap; padding: 3px 0; }
     .kisaltma-acik { font-size: 8px; color: #333; margin: 4px 0 0; }
     .kisaltma-acik span { display: inline-block; color: #fff; font-weight: bold; padding: 0 3px; border-radius: 2px; }
@@ -367,7 +368,7 @@
                 <td class="sayi">{{ $sayi($m->siddet) }}</td>
                 <td class="sayi">{{ $sayi($m->puan) }}</td>
                 <td class="col-duzey" style="background:{{ $m->rengi() }}"><span class="duzey-kisa">{{ $m->duzeyKisa() }}</span></td>
-                <td class="col-oneri">{{ $m->oneri ?: '—' }}</td>
+                <td class="col-oneri">{{ $m->oneri ?: '—' }}@if (filled($m->mevzuat))<br><span class="mevzuat">Mevzuat: {{ $m->mevzuat }}</span>@endif</td>
                 <td class="col-sorumlu">{{ $m->sorumluMetni() }}</td>
                 <td>{{ $m->terminMetni($rd->yontem) }}</td>
                 <td class="sayi">{{ $sayi($m->son_olasilik) }}</td>

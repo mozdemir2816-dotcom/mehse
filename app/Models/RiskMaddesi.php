@@ -209,6 +209,13 @@ class RiskMaddesi extends Model
     }
 
     /** Çıktılardaki açıklama: boşsa ilk risk düzeyinin karar metni (config bantlar.eylem). */
+    /** Excel/Word "Öneri" hücresi: öneri + alt satırda "Mevzuat: …" (12.11.2026; PDF'te aynı yerde). */
+    public function oneriVeMevzuat(): string
+    {
+        return trim((string) $this->oneri.(filled($this->mevzuat) ? "
+Mevzuat: ".trim($this->mevzuat) : ''));
+    }
+
     public function aciklamaMetni(): string
     {
         if (filled($this->aciklama)) {
