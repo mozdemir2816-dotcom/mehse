@@ -210,6 +210,11 @@ class RiskAlanTamamlamaTest extends TestCase
         $this->assertNull($hazop->fresh()->oneri);
         Http::assertSentCount(1);
 
+        // Kütüphanede mevcut önlem yapay zekâdan istenmez ve yazılmaz — firmaya özgü (kullanıcı kararı 12.11.2026).
+        $this->assertNull($yanlis->mevcut_onlem);
+        Http::assertSent(fn ($r) => ! str_contains($r->body(), 'mevcut_onlem:')
+            && ! array_key_exists('mevcut_onlem', data_get($r->data(), 'generationConfig.responseSchema.items.properties', [])));
+
         // Doldurulamayan alanı kalan madde yeniden istenmez (kota döngüsü yok).
         $this->artisan('risk:repair-library-all-fields', ['--limit' => 25])->assertSuccessful();
         Http::assertSentCount(1);

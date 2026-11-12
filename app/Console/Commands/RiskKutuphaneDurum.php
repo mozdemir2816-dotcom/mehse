@@ -27,7 +27,7 @@ class RiskKutuphaneDurum extends Command
             ->whereHas('kategori', fn ($k) => $k->where(fn ($w) => $w->whereNull('yontem')->orWhere('yontem', '!=', 'hazop')));
         $bos = fn (string $a) => fn ($w) => $w->whereNull($a)->orWhereRaw('TRIM('.$a.') = ?', ['']);
 
-        $this->line('Kapsam (HAZOP dışı): '.$kapsam()->count().' madde · eksik: '.RiskAlanTamamlama::eksikKosulu($kapsam(), true)->count());
+        $this->line('Kapsam (HAZOP dışı): '.$kapsam()->count().' madde · eksik (mevcut önlem hariç — onarım hedefi): '.RiskAlanTamamlama::eksikKosulu($kapsam(), true, mevcutOnlem: false)->count());
         foreach (['risk', 'mevcut_onlem', 'oneri', 'mevzuat', 'sorumlu', 'termin'] as $a) {
             $this->line("  {$a} boş: ".$kapsam()->where($bos($a))->count());
         }

@@ -407,7 +407,7 @@ class GeminiRiskPuanTamamlayici
      * @param  iterable<\Illuminate\Database\Eloquent\Model>  $maddeler  RiskMaddesi ya da Tehlike (kütüphane)
      * @return array<int, array<string, mixed>> id => alanlar
      */
-    public static function alanTopluOner(iterable $maddeler, string $yontem, ?string $baglam = null, bool $riskDenetle = false): array
+    public static function alanTopluOner(iterable $maddeler, string $yontem, ?string $baglam = null, bool $riskDenetle = false, bool $mevcutOnlem = true): array
     {
         static::$sonHataDurumu = null;
         if (! static::aktifMi() || ! in_array($yontem, ['fine_kinney', 'matris_5x5'], true)) {
@@ -447,8 +447,7 @@ class GeminiRiskPuanTamamlayici
         Aşağıdaki risk maddelerinin HER BİRİ için şu alanları üret (madde için verilmiş alanları değiştirme
         ihtiyacı yok; sistem yalnız boş alanları kullanır):
         - risk: tehlikenin doğurabileceği somut sonuç (yaralanma / hastalık / kayıp), kısa. Tehlike metninin kopyası OLMASIN.
-        - mevcut_onlem: sahada tipik olarak bulunan mevcut kontrol tedbiri, 1 cümle.
-        - oneri: somut, teknik ve uygulanabilir düzeltici / önleyici faaliyet (1-3 cümle); yapı işlerinde
+        [MEVCUT_ONLEM]- oneri: somut, teknik ve uygulanabilir düzeltici / önleyici faaliyet (1-3 cümle); yapı işlerinde
           Yapı İşlerinde İSG Yönetmeliği Ek-4'e uygun.
         - mevzuat: ilgili yönetmelik / standart adı; emin olmadığın madde numarasını YAZMA.
         - sorumlu: rol bazlı (ör. İşveren / İşveren Vekili, Şantiye Şefi, Ustabaşı, Elektrik Teknisyeni,
@@ -466,13 +465,17 @@ class GeminiRiskPuanTamamlayici
         $istem = strtr($istem, [
             '[FREKANS]' => $fk ? ', frekans' : '',
             '[SON_FREKANS]' => $fk ? ', son_frekans' : '',
+            // Kütüphanede mevcut önlem istenmez — firmaya özgü, uzman doldurur (kullanıcı kararı 12.11.2026).
+            '[MEVCUT_ONLEM]' => $mevcutOnlem ? "- mevcut_onlem: sahada tipik olarak bulunan mevcut kontrol tedbiri, 1 cümle.
+" : '',
         ]);
 
         $metin = ['type' => 'STRING'];
         $sayi = ['type' => 'NUMBER'];
         $ozellikler = [
             'no' => ['type' => 'INTEGER'],
-            'risk' => $metin, 'mevcut_onlem' => $metin, 'oneri' => $metin, 'mevzuat' => $metin, 'sorumlu' => $metin,
+            'risk' => $metin, 'oneri' => $metin, 'mevzuat' => $metin, 'sorumlu' => $metin,
+            ...($mevcutOnlem ? ['mevcut_onlem' => $metin] : []),
             'risk_uyumlu' => ['type' => 'BOOLEAN'],
             'olasilik' => $sayi, 'siddet' => $sayi, 'son_olasilik' => $sayi, 'son_siddet' => $sayi,
         ];

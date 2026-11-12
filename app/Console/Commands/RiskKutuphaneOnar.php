@@ -86,7 +86,7 @@ class RiskKutuphaneOnar extends Command
 
         return $this->option('sadece-oneri')
             ? $q->where(fn ($w) => $w->whereNull('oneri')->orWhere('oneri', ''))
-            : RiskAlanTamamlama::eksikKosulu($q, true);
+            : RiskAlanTamamlama::eksikKosulu($q, true, mevcutOnlem: false);   // mevcut önlem firmaya özgü (12.11.2026)
     }
 
     /** 1. adım — doldurulmuş analiz maddelerinden kütüphaneye kopya (API yok). */
@@ -198,7 +198,7 @@ class RiskKutuphaneOnar extends Command
 
             $baglam = 'Risk kütüphanesi: '.$tehlikeler->map(fn ($t) => $t->kategori?->ad)->filter()->unique()->take(4)->implode(', ');
             Cache::put($gunAnahtari, (int) Cache::get($gunAnahtari, 0) + 1, now()->addDays(2));
-            $oneriler = GeminiRiskPuanTamamlayici::alanTopluOner($tehlikeler->values(), 'fine_kinney', $baglam, riskDenetle: true);
+            $oneriler = GeminiRiskPuanTamamlayici::alanTopluOner($tehlikeler->values(), 'fine_kinney', $baglam, riskDenetle: true, mevcutOnlem: false);
 
             if ($oneriler === []) {
                 if (GeminiRiskPuanTamamlayici::$sonHataDurumu === 429) {
@@ -216,7 +216,7 @@ class RiskKutuphaneOnar extends Command
             // Teşhis (12.11.2026): yanıt kaç maddeyi kapsıyor, hangi alandan kaç değer geldi.
             $gelen = collect($oneriler);
             $this->line('Parti: '.$tehlikeler->count().' madde gönderildi, '.$gelen->count().' yanıt · gelen alanlar: '
-                .collect(['risk', 'mevcut_onlem', 'oneri', 'mevzuat', 'sorumlu', 'olasilik', 'son_olasilik'])
+                .collect(['risk', 'oneri', 'mevzuat', 'sorumlu', 'olasilik', 'son_olasilik'])
                     ->map(fn ($a) => $a.' '.$gelen->filter(fn ($p) => filled($p[$a] ?? null))->count())->implode(', '));
 
             foreach ($oneriler as $id => $p) {
@@ -224,6 +224,7 @@ class RiskKutuphaneOnar extends Command
                 if (! $t) {
                     continue;
                 }
+                unset($p['mevcut_onlem']);
                 $degisen = RiskAlanTamamlama::uygula($t, $p, true, riskDuzelt: true);
                 if (RiskAlanTamamlama::bosMu($t->termin) && ($termin = RiskAlanTamamlama::kutuphaneTermini($t))) {
                     $t->termin = $termin;

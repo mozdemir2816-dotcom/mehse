@@ -32,10 +32,10 @@ class RiskAlanTamamlama
     public const KUTUPHANE_METIN_ALANLARI = ['risk', 'mevcut_onlem', 'oneri', 'mevzuat', 'sorumlu'];
 
     /** Eksik madde koşulu (RiskMaddesi: $mevzuat=false — sütun yok; Tehlike: true). */
-    public static function eksikKosulu(Builder $q, bool $ucEksen, bool $mevzuat = true): Builder
+    public static function eksikKosulu(Builder $q, bool $ucEksen, bool $mevzuat = true, bool $mevcutOnlem = true): Builder
     {
         $bos = fn (string $alan) => fn ($w) => $w->whereNull($alan)->orWhereRaw('TRIM('.$alan.') = ?', ['']);
-        $alanlar = $mevzuat ? self::METIN_ALANLARI : array_values(array_diff(self::METIN_ALANLARI, ['mevzuat']));
+        $alanlar = array_values(array_diff(self::METIN_ALANLARI, [...($mevzuat ? [] : ['mevzuat']), ...($mevcutOnlem ? [] : ['mevcut_onlem'])]));
 
         return $q->whereNotNull('tehlike')->where('tehlike', '!=', '')
             ->where(function ($w) use ($bos, $ucEksen, $alanlar) {
