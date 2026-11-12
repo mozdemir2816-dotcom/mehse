@@ -9,7 +9,7 @@
 @endphp
 <table class="kunye">
     <tr><td class="e">Ekipman tipi</td><td>{{ $e->tip ?: '—' }}</td><td class="e">Yasal dayanak</td><td>{{ $e->yasal_standart ?: 'İş Ekipmanları Yönetmeliği' }}</td></tr>
-    <tr><td class="e">Zorunlu KKD</td><td colspan="3">{{ $kkdler ? implode(' · ', array_map(fn ($k) => \Illuminate\Support\Str::before($k, ':'), $kkdler)) : 'Talimatta belirtilen' }}</td></tr>
+    <tr><td class="e">Zorunlu KKD</td><td colspan="3">{{ $kkdler ? implode(' · ', array_map(fn ($k) => trim(\Illuminate\Support\Str::before(\Illuminate\Support\Str::before($k, ':'), ' (')), $kkdler)) : 'Talimatta belirtilen' }}</td></tr>
 </table>
 
 @foreach ($talimat->bolumler ?? [] as $b)
