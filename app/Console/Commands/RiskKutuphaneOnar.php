@@ -213,6 +213,12 @@ class RiskKutuphaneOnar extends Command
 
             Cache::put(self::DENENEN_ANAHTARI, array_values(array_unique([...$denenen, ...$tehlikeler->keys()->all()])), now()->addDays(30));
 
+            // Teşhis (12.11.2026): yanıt kaç maddeyi kapsıyor, hangi alandan kaç değer geldi.
+            $gelen = collect($oneriler);
+            $this->line('Parti: '.$tehlikeler->count().' madde gönderildi, '.$gelen->count().' yanıt · gelen alanlar: '
+                .collect(['risk', 'mevcut_onlem', 'oneri', 'mevzuat', 'sorumlu', 'olasilik', 'son_olasilik'])
+                    ->map(fn ($a) => $a.' '.$gelen->filter(fn ($p) => filled($p[$a] ?? null))->count())->implode(', '));
+
             foreach ($oneriler as $id => $p) {
                 $t = $tehlikeler[$id] ?? null;
                 if (! $t) {
@@ -234,6 +240,7 @@ class RiskKutuphaneOnar extends Command
                 }
             }
 
+            $this->line("  → {$dolan} madde kaydedildi (toplam)");
             $limit -= $tehlikeler->count();
             $this->line("  parti: {$tehlikeler->count()} madde gönderildi, ".count($oneriler).' yanıt.');
         }
