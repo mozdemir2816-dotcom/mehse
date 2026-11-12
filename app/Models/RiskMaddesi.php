@@ -102,6 +102,21 @@ class RiskMaddesi extends Model
 
         // Puansız kütüphane maddesi ilk kez puanlanınca puan kütüphaneye öğrenilir.
         static::saved(fn (RiskMaddesi $m) => \App\Support\KutuphanePuanOgrenme::ogren($m));
+
+        // 12.11.2026: kütüphanesiz yeni madde kütüphaneye bağlanır / eklenir; dolan alan aynı kütüphane
+        // maddesini kullanan diğer analizlerin boş alanına yayılır (AnalizKutuphanesi).
+        static::saved(function (RiskMaddesi $m): void {
+            if (! $m->tehlike_id) {
+                if ($m->wasRecentlyCreated) {
+                    \App\Support\AnalizKutuphanesi::maddeyiEsitle($m);
+                }
+
+                return;
+            }
+            if ($m->wasRecentlyCreated || $m->wasChanged(['risk', 'mevcut_onlem', 'oneri', 'mevzuat', 'sorumlu', 'olasilik', 'frekans', 'siddet'])) {
+                \App\Support\AnalizKutuphanesi::kardeslereYay($m);
+            }
+        });
     }
 
     public function riskDegerlendirmesi(): BelongsTo

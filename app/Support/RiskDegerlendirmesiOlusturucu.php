@@ -107,6 +107,9 @@ class RiskDegerlendirmesiOlusturucu
             RiskMaddesi::insert($satirlar);
         }
 
+        // 12.11.2026: toplu eklenen (Excel / şablon) maddeler de kütüphaneye bağlanır / eklenir.
+        AnalizKutuphanesi::esitle($rd);
+
         if ($mevcut) {
             $rd->pdfOnbellegiTemizle();
             $rd->saveQuietly();

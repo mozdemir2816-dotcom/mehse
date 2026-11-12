@@ -99,6 +99,20 @@ class RiskPuanTamamla extends Command
             return 0;
         }
 
+        // 12.11.2026: önce kotasız — kütüphaneden ve aynı maddeyi kullanan diğer analizlerden doldur;
+        // yapay zekâya yalnız hâlâ eksik kalanlar gider.
+        $kotasiz = 0;
+        foreach ($maddeler as $m) {
+            $kotasiz += \App\Support\AnalizKutuphanesi::kotasizDoldur($m) ? 1 : 0;
+        }
+        if ($kotasiz) {
+            $maddeler = ($mevzuat ? self::mevzuatsizSorgu($rd) : self::eksikSorgu($rd))
+                ->whereIn('id', $maddeler->keys())->orderBy('sira')->orderBy('id')->get()->keyBy('id');
+            if ($maddeler->isEmpty()) {
+                return $kotasiz;
+            }
+        }
+
         $f = $rd->firma;
         $baglam = $f ? trim(implode(' · ', array_filter([
             $f->nace_kodu ? 'NACE '.$f->nace_kodu : null, $f->nace_aciklama,
@@ -107,7 +121,7 @@ class RiskPuanTamamla extends Command
 
         $oneriler = GeminiRiskPuanTamamlayici::alanTopluOner($maddeler->values(), $rd->yontem, $baglam ?: null);
         if ($oneriler === []) {
-            return 0;   // yanıt yok (kota / yoğunluk) — denenmiş sayılmaz, sonra yeniden denenir
+            return $kotasiz;   // yanıt yok (kota / yoğunluk) — denenmiş sayılmaz, sonra yeniden denenir
         }
 
         $anahtar = self::denenenAnahtari($rd->id);
@@ -115,7 +129,7 @@ class RiskPuanTamamla extends Command
 
         $ucEksen = RiskSkorlama::ucEksenliMi($rd->yontem);
 
-        return KutuphanePuanOgrenme::sistemOlarak(function () use ($oneriler, $maddeler, $ucEksen): int {
+        return $kotasiz + KutuphanePuanOgrenme::sistemOlarak(function () use ($oneriler, $maddeler, $ucEksen): int {
             $tamamlanan = 0;
             foreach ($oneriler as $id => $p) {
                 $m = $maddeler[$id] ?? null;
