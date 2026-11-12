@@ -144,6 +144,47 @@ class ListTehlikes extends ListRecords
                     Notification::make()->title($baslik)->success()->send();
                 }),
 
+                // 12.11.2026: eksik alanları Gemini sohbetiyle elle doldurma (API kotasına takılmadan).
+                Action::make('eksikExcelIndir')
+                    ->label('Eksikleri Excel indir (Gemini ile doldurmak için)')
+                    ->icon('heroicon-o-table-cells')
+                    ->modalHeading('Eksik kütüphane maddelerini indir')
+                    ->modalDescription(fn () => \App\Support\KutuphaneEksikExcel::eksikSorgu()->count().' maddede boş alan var (mevcut önlem hariç). Gemini sohbeti tek seferde ~100 satırı rahat işler; dosyayı parça parça indirin. Dosyadaki "Gemini istemi" sayfasında adımlar ve yapıştırılacak metin var.')
+                    ->modalSubmitActionLabel('İndir')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('boyut')->label('Parça büyüklüğü (satır)')
+                            ->options([50 => '50', 100 => '100', 200 => '200'])->default(100)->required()->live(),
+                        \Filament\Forms\Components\TextInput::make('parca')->label('Parça no')->numeric()->minValue(1)->default(1)->required()
+                            ->helperText(fn (\Filament\Schemas\Components\Utilities\Get $get) => 'Toplam '.\App\Support\KutuphaneEksikExcel::parcaSayisi((int) ($get('boyut') ?: 100)).' parça. Doldurup yükledikçe eksikler azalır — her seferinde 1. parçayı indirmeniz yeterli.'),
+                    ])
+                    ->action(fn (array $data) => \App\Support\KutuphaneEksikExcel::indir((int) $data['parca'], (int) $data['boyut'])),
+
+                Action::make('eksikExcelYukle')
+                    ->label('Eksikleri doldurulmuş Excel\'i yükle')
+                    ->icon('heroicon-o-arrow-up-on-square')
+                    ->modalDescription('Yalnız boş alanlar doldurulur; dolu alanlar değişmez. Puanlar Fine-Kinney ölçeğindeki en yakın değere çekilir, termin risk düzeyinden hesaplanır.')
+                    ->modalSubmitActionLabel('Yükle')
+                    ->schema([
+                        FileUpload::make('dosya')->label('Doldurulmuş Excel')->disk('local')->directory('excel-ice-aktarim')
+                            ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/csv'])
+                            ->required(),
+                    ])
+                    ->action(function (array $data): void {
+                        try {
+                            $s = \App\Support\KutuphaneEksikExcel::yukle(Storage::disk('local')->path($data['dosya']));
+                        } catch (Throwable $e) {
+                            Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                            return;
+                        } finally {
+                            Storage::disk('local')->delete($data['dosya']);
+                        }
+                        Notification::make()
+                            ->title($s['dolan'].' kütüphane maddesi güncellendi ('.$s['alan'].' alan)')
+                            ->body($s['satir'].' satır okundu'.($s['bulunamayan'] ? ', '.$s['bulunamayan'].' madde bulunamadı (silinmiş olabilir)' : '').'. Kalan eksik: '.\App\Support\KutuphaneEksikExcel::eksikSorgu()->count().'.')
+                            ->success()->persistent()->send();
+                    }),
+
                 Action::make('ekipmanRiskYukle')
                     ->label('Ekipman Risk Analizi Yükle (Excel)')
                     ->icon('heroicon-o-wrench-screwdriver')
