@@ -47,7 +47,7 @@ class KutuphaneEksikExcel
 
     public static function indir(int $parca = 1, int $boyut = 100): StreamedResponse
     {
-        $boyut = max(10, min(500, $boyut));   // 300 / 500: Gemini yanıtı kesebilir, kaydırmaya karşı yüklemede Tehlike kontrolü var
+        $boyut = max(10, min(1000, $boyut));   // 300 / 500: Gemini yanıtı kesebilir, kaydırmaya karşı yüklemede Tehlike kontrolü var
         $maddeler = static::eksikSorgu()->with('kategori')->skip(($parca - 1) * $boyut)->take($boyut)->get();
 
         $kitap = new Spreadsheet;
@@ -111,7 +111,7 @@ class KutuphaneEksikExcel
         - Öneri: somut, uygulanabilir düzeltici / önleyici faaliyet (1-2 cümle).
         - Mevzuat: ilgili yönetmelik / standart adı; emin olmadığın madde numarasını yazma.
         - Sorumlu: rol (İşveren / İşveren Vekili, Bakım Sorumlusu, Ustabaşı, Operatör, İSG Uzmanı vb.); kişi adı yazma.
-        - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle: Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')}.
+        - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle: Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')} (bu ölçekte 100 YOK — en yüksek şiddet 40).
         - Son Olasılık / Son Frekans / Son Şiddet: öneri uygulandıktan sonraki puanlar; ilk değerlerden büyük olamaz (şiddet genelde aynı kalır, olasılık düşer).
         Yanıtı aynı sütun sırasıyla (No, Klasör, Tehlike, Risk, Öneri, Mevzuat, Sorumlu, Olasılık, Frekans, Şiddet, Son Olasılık, Son Frekans, Son Şiddet) başlık satırı dahil TABLO olarak ver; açıklama ekleme.
         Tablo uzunsa 100'er satırlık bloklar hâlinde ver (her blokta başlık satırı olsun); ben "devam" yazınca sonraki bloğu ver. Satır atlama, No ve Tehlike metnini aynen koru.
