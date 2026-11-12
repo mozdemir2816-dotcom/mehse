@@ -25,8 +25,9 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
@@ -96,73 +97,106 @@ class MaddelerRelationManager extends RelationManager
                 TextInput::make('hazop.durum')->label('Durum'),
             ]),
 
-            // Modal sayfaya sığsın diye iki sütun: solda tanım, sağda puan + önlem.
-            Grid::make(['default' => 1, 'lg' => 2])->schema([
-                Section::make('Tanım')->columns(2)->compact()->schema([
-                    TextInput::make('sira')->label('Sıra')->numeric()
-                        ->default(fn () => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1),
-                    // isgsuite "Bölümler": bu değerlendirmede kullanılan + önerilen bölüm adları
-                    TextInput::make('bolum')->label('Bölüm / Ünite')
-                        ->datalist(fn () => $this->getOwnerRecord()->maddeler()->whereNotNull('bolum')->distinct()->pluck('bolum')
-                            ->merge(config('risk_nace.bolum_onerileri', []))->unique()->values()->all()),
-                    TextInput::make('faaliyet')->label('Faaliyet')->columnSpanFull(),
-                    Textarea::make('tehlike')->label('Tehlike')->rows(2)->required()->columnSpanFull(),
-                    Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->columnSpanFull(),
-                    Textarea::make('etki_alani')->label('Etki alanı')->rows(2)->columnSpanFull()->visible($hastane),
-                    Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(2)->columnSpanFull(),
-                ]),
+            // 12.11.2026 karşılaştırmalı düzen: ilişki formu varsayılan 2 sütunluydu, eski Grid yalnız birine
+            // sığıyor, sağ yarı boş kalıyordu → tüm bloklar columnSpanFull. Karşılaştırılan alanlar yan yana:
+            // tehlike ↔ risk, mevcut önlem ↔ önerilen önlem, mevcut puan ↔ önlem sonrası puan.
+            Section::make('Tanım')->compact()->columnSpanFull()->columns(['default' => 1, 'md' => 6])->schema([
+                TextInput::make('sira')->label('Sıra')->numeric()->columnSpan(['md' => 1])
+                    ->default(fn () => (int) ($this->getOwnerRecord()->maddeler()->max('sira') ?? 0) + 1),
+                // isgsuite "Bölümler": bu değerlendirmede kullanılan + önerilen bölüm adları
+                TextInput::make('bolum')->label('Bölüm / Ünite')->columnSpan(['md' => 2])
+                    ->datalist(fn () => $this->getOwnerRecord()->maddeler()->whereNotNull('bolum')->distinct()->pluck('bolum')
+                        ->merge(config('risk_nace.bolum_onerileri', []))->unique()->values()->all()),
+                TextInput::make('faaliyet')->label('Faaliyet')->columnSpan(['md' => 3]),
+                Textarea::make('tehlike')->label('Tehlike')->rows(2)->autosize()->required()->columnSpan(['md' => 3]),
+                Textarea::make('risk')->label('Risk / tehlikeli durum')->rows(2)->autosize()->columnSpan(['md' => 3]),
+                Textarea::make('etki_alani')->label('Etki alanı')->rows(2)->autosize()->columnSpanFull()->visible($hastane),
+            ]),
 
-                Group::make([
-                    Section::make("Mevcut Risk ({$yontemBasligi})")
-                        ->columns(3)
-                        ->compact()
-                        ->visible(! $hazop)
-                        ->schema(array_values(array_filter([
-                            $hastane ? $puan('olasilik', 'Olasılık (O)', true) : Select::make('olasilik')->label($etiket['olasilik'])
-                                ->options(RiskSkorlama::olcek($yontem, 'olasilik'))
-                                ->native(false)->required(),
-                            $hastane ? $puan('frekans', 'Frekans (F)', true) : ($ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
-                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required() : null),
-                            $hastane ? $puan('siddet', 'Şiddet (Ş)', true) : Select::make('siddet')->label($etiket['siddet'])
-                                ->options(RiskSkorlama::olcek($yontem, 'siddet'))
-                                ->native(false)->required(),
-                        ]))),
-
-                    Section::make('Maruziyet')->columns(2)->compact()->schema([
-                        Toggle::make('etkilenen_calisan')->label('Çalışanlar etkilenir')->default(true),
-                        Toggle::make('etkilenen_diger')->label('Taşeron / ziyaretçi etkilenir'),
-                        // Tehlike ve Risk Analitiği: tür boşsa metinden tahmin edilir; dominans = puan × maruz kişi
-                        Select::make('tehlike_turu')->label('Tehlike türü')->placeholder('Otomatik (metinden tahmin)')
-                            ->options(collect(config('risk_nace.tehlike_turleri'))->map(fn ($t) => $t['ad'])->all()),
-                        TextInput::make('maruz_kisi')->label('Maruz kalan kişi sayısı')->numeric()->minValue(0)->maxValue(100000),
-                    ]),
-
-                    Section::make('Planlanan Önlem & Rezidüel Risk')
-                        ->columns(2)
-                        ->compact()
-                        ->schema(array_values(array_filter([
-                            Textarea::make('oneri')->label('Önerilen önlem')->rows(2)->columnSpanFull(),
-                            Textarea::make('mevzuat')->label('Mevzuat dayanağı')->rows(1)->autosize()->columnSpanFull()
-                                ->helperText('Çıktıda önerilen önlemin altında "Mevzuat: …" olarak basılır.'),
-                            Textarea::make('aciklama')->label('Açıklama')->rows(2)->columnSpanFull()->visible($hastane),
-                            TextInput::make('sorumlu')->label('Sorumlu'),
-                            TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
-                            Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
-                            $hastane ? $puan('son_olasilik', 'Son risk: Olasılık (O)') : Select::make('son_olasilik')->label('Önlem sonrası '.$etiket['olasilik'])
-                                ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)
-                                ->default(1)
-                                ->visible(! $hazop)
-                                ->helperText('Boş bırakılırsa önlem sonrası varsayılan olarak 1 kabul edilir.'),
-                            $hastane ? $puan('son_frekans', 'Son risk: Frekans (F)') : ($ucEksenli ? Select::make('son_frekans')->label('Önlem sonrası '.$etiket['frekans'])
-                                ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false) : null),
-                            $hastane ? $puan('son_siddet', 'Son risk: Şiddet (Ş)') : Select::make('son_siddet')->label('Önlem sonrası '.$etiket['siddet'])
-                                ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)
-                                ->visible(! $hazop)
-                                ->helperText('Boş bırakılırsa öneri öncesindeki '.$etiket['siddet'].' değeriyle aynı kabul edilir.'),
-                        ]))),
+            Section::make('Önlemler')->compact()->columnSpanFull()->columns(['default' => 1, 'md' => 2])->schema([
+                Textarea::make('mevcut_onlem')->label('Mevcut önlemler')->rows(3)->autosize(),
+                Textarea::make('oneri')->label('Önerilen önlem')->rows(3)->autosize(),
+                Textarea::make('mevzuat')->label('Mevzuat dayanağı')->rows(1)->autosize()->columnSpanFull()
+                    ->hint('Çıktıda önerilen önlemin altında basılır'),
+                Textarea::make('aciklama')->label('Açıklama')->rows(2)->autosize()->columnSpanFull()->visible($hastane),
+                Grid::make(['default' => 1, 'sm' => 3])->columnSpanFull()->schema([
+                    TextInput::make('sorumlu')->label('Sorumlu'),
+                    TextInput::make('termin')->label('Termin')->placeholder('gg.aa.yyyy veya "Sürekli"'),
+                    Select::make('durum')->label('Durum')->options(config('isg.risk_madde_durumlari'))->default('acik'),
                 ]),
             ]),
+
+            Grid::make(['default' => 1, 'lg' => 2])->columnSpanFull()->visible(! $hazop)->schema([
+                Section::make("Mevcut Risk ({$yontemBasligi})")->compact()
+                    ->columns(['default' => 1, 'sm' => $ucEksenli ? 3 : 2])
+                    ->afterHeader([$this->puanOzeti('')])
+                    ->schema(array_values(array_filter([
+                        $hastane ? $puan('olasilik', 'Olasılık (O)', true) : Select::make('olasilik')->label($etiket['olasilik'])
+                            ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)->required()->live(),
+                        $hastane ? $puan('frekans', 'Frekans (F)', true) : ($ucEksenli ? Select::make('frekans')->label($etiket['frekans'])
+                            ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->required()->live() : null),
+                        $hastane ? $puan('siddet', 'Şiddet (Ş)', true) : Select::make('siddet')->label($etiket['siddet'])
+                            ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)->required()->live(),
+                    ]))),
+
+                Section::make('Önlem Sonrası (Rezidüel)')->compact()
+                    ->columns(['default' => 1, 'sm' => $ucEksenli ? 3 : 2])
+                    ->afterHeader([$this->puanOzeti('son_')])
+                    ->footer($hastane ? [] : [
+                        Text::make('Boş bırakılan olasılık 1, diğerleri önlem öncesindeki değer kabul edilir.')->color('gray')->size('xs'),
+                    ])
+                    ->schema(array_values(array_filter([
+                        $hastane ? $puan('son_olasilik', 'Olasılık (O)') : Select::make('son_olasilik')->label($etiket['olasilik'])
+                            ->options(RiskSkorlama::olcek($yontem, 'olasilik'))->native(false)->default(1)->live(),
+                        $hastane ? $puan('son_frekans', 'Frekans (F)') : ($ucEksenli ? Select::make('son_frekans')->label($etiket['frekans'])
+                            ->options(RiskSkorlama::olcek($yontem, 'frekans'))->native(false)->live() : null),
+                        $hastane ? $puan('son_siddet', 'Şiddet (Ş)') : Select::make('son_siddet')->label($etiket['siddet'])
+                            ->options(RiskSkorlama::olcek($yontem, 'siddet'))->native(false)->live(),
+                    ]))),
+            ]),
+
+            Section::make('Maruziyet ve analitik')->compact()->collapsible()->collapsed()->columnSpanFull()
+                ->description('Etkilenenler, tehlike türü, maruz kalan kişi sayısı')
+                ->columns(['default' => 1, 'md' => 4])->schema([
+                    Toggle::make('etkilenen_calisan')->label('Çalışanlar etkilenir')->default(true),
+                    Toggle::make('etkilenen_diger')->label('Taşeron / ziyaretçi etkilenir'),
+                    // Tehlike ve Risk Analitiği: tür boşsa metinden tahmin edilir; dominans = puan × maruz kişi
+                    Select::make('tehlike_turu')->label('Tehlike türü')->placeholder('Otomatik (metinden tahmin)')
+                        ->options(collect(config('risk_nace.tehlike_turleri'))->map(fn ($t) => $t['ad'])->all()),
+                    TextInput::make('maruz_kisi')->label('Maruz kalan kişi sayısı')->numeric()->minValue(0)->maxValue(100000),
+                ]),
         ]);
+    }
+
+    /**
+     * Bölüm başlığında canlı "Puan 270 · Yüksek Risk" rozeti (kaydetmeden görünür). Hastane formu kendi
+     * harf ölçeğini kullanır, orada gösterilmez. Önlem sonrasında boş eksen modeldeki varsayımla hesaplanır.
+     */
+    private function puanOzeti(string $on): Text
+    {
+        $yontem = $this->yontem();
+        $hesap = function (Get $get) use ($on, $yontem): array {
+            $o = $get($on.'olasilik');
+            $f = $get($on.'frekans');
+            $s = $get($on.'siddet');
+            if ($on === 'son_') {
+                $s = filled($s) ? $s : $get('siddet');
+                $f = filled($f) ? $f : $get('frekans');
+                $o = filled($o) ? $o : (filled($get('olasilik')) ? RiskMaddesi::varsayilanSonOlasilik(
+                    $yontem, (float) $get('olasilik'), filled($f) ? (float) $f : null, filled($s) ? (float) $s : null) : null);
+            }
+
+            return RiskSkorlama::hesapla($yontem, filled($o) ? (float) $o : null, filled($s) ? (float) $s : null, filled($f) ? (float) $f : null);
+        };
+
+        return Text::make(function (Get $get) use ($hesap): string {
+            $h = $hesap($get);
+
+            return $h['puan'] ? 'Puan '.rtrim(rtrim(number_format((float) $h['puan'], 1, ',', ''), '0'), ',').' · '.$h['duzey'] : 'Puan —';
+        })
+            ->badge()
+            ->color(fn (Get $get) => ($p = $hesap($get)['puan']) ? static::rozetRengi(RiskSkorlama::bant($yontem, (float) $p)['renk']) : 'gray')
+            ->visible(! $this->getOwnerRecord()->hastaneMi());
     }
 
     public function table(Table $table): Table
