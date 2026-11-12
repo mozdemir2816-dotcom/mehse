@@ -37,13 +37,17 @@ class RiskAlanTamamlama
         $bos = fn (string $alan) => fn ($w) => $w->whereNull($alan)->orWhereRaw('TRIM('.$alan.') = ?', ['']);
         $alanlar = array_values(array_diff(self::METIN_ALANLARI, [...($mevzuat ? [] : ['mevzuat']), ...($mevcutOnlem ? [] : ['mevcut_onlem'])]));
 
+        $kutuphane = $q->getModel() instanceof \App\Models\Tehlike;
+
         return $q->whereNotNull('tehlike')->where('tehlike', '!=', '')
-            ->where(function ($w) use ($bos, $ucEksen, $alanlar) {
+            ->where(function ($w) use ($bos, $ucEksen, $alanlar, $kutuphane) {
                 foreach ($alanlar as $alan) {
                     $w->orWhere($bos($alan));
                 }
                 $w->orWhereColumn('risk', 'tehlike')
-                    ->orWhere('sorumlu', RiskMaddesi::VARSAYILAN_SORUMLU)
+                    // Varsayılan sorumlu yalnız analiz maddesinde "seçilmemiş" demektir; kütüphaneye sistem
+                    // varsayılanı yazılmaz, oradaki "İşveren / İşveren Vekili" bilerek seçilmiştir (12.11.2026).
+                    ->when(! $kutuphane, fn ($x) => $x->orWhere('sorumlu', RiskMaddesi::VARSAYILAN_SORUMLU))
                     ->orWhereNull('olasilik')->orWhereNull('siddet')
                     ->orWhereNull('son_olasilik')->orWhereNull('son_siddet');
                 if ($ucEksen) {
@@ -76,7 +80,8 @@ class RiskAlanTamamlama
             'herhangi' => static::eksikKosulu($q, $ucEksen, $mevzuat),
             'risk' => $q->where(fn ($w) => $w->where($bos('risk'))->orWhereColumn('risk', 'tehlike')),
             'mevcut_onlem', 'oneri', 'mevzuat' => $q->where($bos($alan)),
-            'sorumlu' => $q->where(fn ($w) => $w->where($bos('sorumlu'))->orWhere('sorumlu', RiskMaddesi::VARSAYILAN_SORUMLU)),
+            'sorumlu' => $q->where(fn ($w) => $w->where($bos('sorumlu'))
+                ->when(! $q->getModel() instanceof \App\Models\Tehlike, fn ($x) => $x->orWhere('sorumlu', RiskMaddesi::VARSAYILAN_SORUMLU))),
             'puan' => $q->where(fn ($w) => $w->whereNull('olasilik')->orWhereNull('siddet')->when($ucEksen, fn ($x) => $x->orWhereNull('frekans'))),
             'son_puan' => $q->where(fn ($w) => $w->whereNull('son_olasilik')->orWhereNull('son_siddet')->when($ucEksen, fn ($x) => $x->orWhereNull('son_frekans'))),
             default => $q,
@@ -96,7 +101,8 @@ class RiskAlanTamamlama
 
     public static function sorumluEksikMi(Model $m): bool
     {
-        return static::bosMu($m->sorumlu) || trim((string) $m->sorumlu) === RiskMaddesi::VARSAYILAN_SORUMLU;
+        return static::bosMu($m->sorumlu)
+            || (! $m instanceof \App\Models\Tehlike && trim((string) $m->sorumlu) === RiskMaddesi::VARSAYILAN_SORUMLU);
     }
 
     /**

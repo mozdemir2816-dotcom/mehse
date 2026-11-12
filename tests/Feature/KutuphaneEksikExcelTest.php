@@ -80,6 +80,11 @@ class KutuphaneEksikExcelTest extends TestCase
         $this->assertNull($bos->mevcut_onlem);                           // mevcut önleme dokunulmaz
         $this->assertNull($yalnizOnlem->fresh()->mevcut_onlem);
         $this->assertNull($hazop->fresh()->oneri);
+        // Kütüphanede "İşveren / İşveren Vekili" bilerek seçilmiş sayılır — madde eksik kalmaz.
+        $kayan->update(['risk' => 'Ezilme', 'oneri' => 'Öneri', 'mevzuat' => 'Yön.', 'sorumlu' => \App\Models\RiskMaddesi::VARSAYILAN_SORUMLU,
+            'olasilik' => 1, 'frekans' => 1, 'siddet' => 1, 'son_olasilik' => 1, 'son_frekans' => 1, 'son_siddet' => 1]);
+        $this->assertSame(0, KutuphaneEksikExcel::eksikSorgu()->count());
+        $kayan->update(['oneri' => null]);
         $this->assertNull($kayan->fresh()->oneri);                         // tehlikesi tutmayan satır yazılmadı
         $this->assertSame([$kayan->id], KutuphaneEksikExcel::eksikSorgu()->pluck('id')->all());
         Http::assertNothingSent();
