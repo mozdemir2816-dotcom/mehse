@@ -146,6 +146,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.pwa-yukle'),
             )
+            // "Gemini'de elle yap" penceresi — yapay zekâ isteği başarısız olunca açılır (GeminiElleMod, 12.11.2026).
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => \Illuminate\Support\Facades\Blade::render('@livewire(\App\Livewire\GeminiEllePencere::class)'),
+            )
             // Bildirim zili (Bildirim Merkezi okunmamış sayısı) — tema seçicinin solunda.
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,

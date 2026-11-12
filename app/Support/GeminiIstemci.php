@@ -30,6 +30,29 @@ class GeminiIstemci
     /** @param  array<string, mixed>  $govde */
     public static function post(array $govde, int $timeout, ?int $connectTimeout = null): Response
     {
+        // "Gemini'de elle yap" ile yapıştırılmış yanıt varsa API'ye gidilmez (GeminiElleMod, 12.11.2026).
+        if ($elle = GeminiElleMod::kayitliYanit($govde)) {
+            return $elle;
+        }
+
+        try {
+            $yanit = self::gonder($govde, $timeout, $connectTimeout);
+        } catch (ConnectionException $e) {
+            GeminiElleMod::hazirla($govde);
+
+            throw $e;
+        }
+
+        if ($yanit->failed()) {
+            GeminiElleMod::hazirla($govde, $yanit->status());
+        }
+
+        return $yanit;
+    }
+
+    /** @param  array<string, mixed>  $govde */
+    private static function gonder(array $govde, int $timeout, ?int $connectTimeout): Response
+    {
         $modeller = self::modeller();
 
         // Yedekli deneme paylaşımlı sunucunun 30 sn PHP sınırını aşabilir (yerelde 42 sn ölçüldü).
