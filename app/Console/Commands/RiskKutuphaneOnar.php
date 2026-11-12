@@ -224,8 +224,13 @@ class RiskKutuphaneOnar extends Command
                     $degisen[] = 'termin';
                 }
                 if ($degisen) {
-                    $t->unsetRelation('kategori')->save();
-                    $dolan++;
+                    try {
+                        $t->unsetRelation('kategori')->save();
+                        $dolan++;
+                    } catch (\Throwable $e) {
+                        // Tek maddenin kayıt hatası partinin geri kalanını düşürmesin (07.11.2026).
+                        \Illuminate\Support\Facades\Log::warning('Kütüphane onarımı: madde kaydedilemedi', ['tehlike' => $t->id, 'hata' => $e->getMessage()]);
+                    }
                 }
             }
 

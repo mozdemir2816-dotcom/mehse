@@ -126,7 +126,7 @@ class RiskAlanTamamlama
             }
         }
         if (static::sorumluEksikMi($m) && filled($p['sorumlu'] ?? null)) {
-            $m->sorumlu = $p['sorumlu'];
+            $m->sorumlu = mb_substr(trim((string) $p['sorumlu']), 0, 190);   // sütun 191 (07.11.2026 canlı hata)
             $degisen[] = 'sorumlu';
         }
 
