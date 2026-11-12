@@ -100,7 +100,7 @@ class KutuphaneEksikExcel
         1) "Maddeler" sayfasındaki tabloyu (başlık satırı dahil) seçip kopyalayın.
         2) Gemini'ye önce aşağıdaki metni, ardından tabloyu yapıştırın.
         3) Gemini'nin verdiği tabloyu kopyalayıp bu dosyanın "Maddeler" sayfasına A1 hücresinden yapıştırın, kaydedin.
-           Gemini tabloyu bloklar hâlinde verirse ("devam" yazarak) her bloğu bir öncekinin altına yapıştırın; araya gelen başlık satırları sorun değil.
+           Gemini yarıda durursa "devam" yazın ve gelen kısmı bir öncekinin altına yapıştırın; araya giren başlık satırı sorun değil.
         4) mehse → Risk Kütüphanesi → İçe / Dışa Aktar → "Eksikleri doldurulmuş Excel'i yükle".
         Not: Dolu hücreler değiştirilmez; yalnız boş olanlar kütüphaneye yazılır. Satır silmek / sıra değiştirmek sorun olmaz, No sütunu kalsın.
 
@@ -114,7 +114,7 @@ class KutuphaneEksikExcel
         - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle: Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')} (bu ölçekte 100 YOK — en yüksek şiddet 40).
         - Son Olasılık / Son Frekans / Son Şiddet: öneri uygulandıktan sonraki puanlar; ilk değerlerden büyük olamaz (şiddet genelde aynı kalır, olasılık düşer).
         Yanıtı aynı sütun sırasıyla (No, Klasör, Tehlike, Risk, Öneri, Mevzuat, Sorumlu, Olasılık, Frekans, Şiddet, Son Olasılık, Son Frekans, Son Şiddet) başlık satırı dahil TABLO olarak ver; açıklama ekleme.
-        Tablo uzunsa 100'er satırlık bloklar hâlinde ver (her blokta başlık satırı olsun); ben "devam" yazınca sonraki bloğu ver. Satır atlama, No ve Tehlike metnini aynen koru.
+        Tablonun TAMAMINI tek seferde ver; yanıt sınırına takılırsan kaldığın satırda dur, ben "devam" yazınca oradan sürdür. Satır atlama, No ve Tehlike metnini aynen koru.
         METIN;
     }
 
