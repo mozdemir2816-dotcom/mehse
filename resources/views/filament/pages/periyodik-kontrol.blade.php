@@ -6,6 +6,21 @@
 @endphp
 
 <x-filament-panels::page>
+    <style>
+        .mehse-ekipman-belge { display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.3rem }
+        .mehse-belge { display:inline-flex; align-items:center; gap:.2rem; max-width:100%; white-space:nowrap; font-size:.68rem; font-weight:600;
+            line-height:1; padding:.25rem .45rem; border-radius:999px; border:1px solid transparent; background:none; font-family:inherit }
+        .mehse-belge > span { overflow:hidden; text-overflow:ellipsis; min-width:0 }
+        .mehse-belge__ikon { width:.8rem; height:.8rem; flex:none }
+        button.mehse-belge { cursor:pointer; transition:background-color .15s, border-color .15s }
+        button.mehse-belge:focus-visible { outline:2px solid currentColor; outline-offset:1px }
+        .mehse-belge--var { color:#15803d; background:rgb(21 128 61 / .08); border-color:rgb(21 128 61 / .25) }
+        .mehse-belge--var:hover { background:rgb(21 128 61 / .16) }
+        .mehse-belge--eksik { color:#a16207; background:rgb(161 98 7 / .08); border-color:rgb(161 98 7 / .3) }
+        .mehse-belge--eksik:hover { background:rgb(161 98 7 / .16) }
+        .mehse-belge--yok { color:rgb(107 114 128); border-color:rgb(107 114 128 / .3); border-style:dashed }
+        .dark .mehse-belge--var { color:#4ade80 } .dark .mehse-belge--eksik { color:#facc15 } .dark .mehse-belge--yok { color:rgb(156 163 175) }
+    </style>
     @include('filament.pages.partials.acil-slate-stil')
     <p class="mehse-bolum-aciklama">
         6331 sayılı Kanun & EKİPNET doğrulamalı muayene takip sistemi. Her iş ekipmanını kategori
@@ -114,6 +129,34 @@
                                         <div style="font-size:.68rem;color:rgb(107 114 128)">
                                             {{ $s['konum'] ?: '—' }}@if ($s['kapasite']) · {{ $s['kapasite'] }} @endif
                                             @if ($s['yasal_standart']) · {{ $s['yasal_standart'] }} @endif
+                                        </div>
+                                        {{-- 12.11.2026: makinenin talimatı ve günlük kontrol formu — var / yok, tıklayınca PDF --}}
+                                        <div class="mehse-ekipman-belge">
+                                            @php $eksikTalimat = collect($s['talimatlar'])->whereNull('id'); @endphp
+                                            @foreach (collect($s['talimatlar'])->whereNotNull('id') as $t)
+                                                <button type="button" wire:click="talimatPdf({{ $t['id'] }})" class="mehse-belge mehse-belge--var" title="{{ $t['baslik'] }} — PDF indir">
+                                                    <x-filament::icon icon="heroicon-m-document-check" class="mehse-belge__ikon" /> <span>Talimat: {{ \Illuminate\Support\Str::limit($t['baslik'], 38) }}</span>
+                                                </button>
+                                            @endforeach
+                                            @if ($eksikTalimat->isNotEmpty())
+                                                <button type="button" wire:click="talimatlariTamamla" class="mehse-belge mehse-belge--eksik" title="Kütüphanede hazır, firmaya eklenmemiş: {{ $eksikTalimat->pluck('baslik')->implode(' · ') }}">
+                                                    <x-filament::icon icon="heroicon-m-plus-circle" class="mehse-belge__ikon" /> <span>{{ $eksikTalimat->count() > 1 ? $eksikTalimat->count().' talimatı ekle' : 'Talimatı ekle' }}</span>
+                                                </button>
+                                            @endif
+                                            @if ($s['talimatlar'] === [])
+                                                <span class="mehse-belge mehse-belge--yok">
+                                                    <x-filament::icon icon="heroicon-m-minus-circle" class="mehse-belge__ikon" /> <span>Talimat kütüphanede yok</span>
+                                                </span>
+                                            @endif
+                                            @if ($s['gunluk_form'])
+                                                <button type="button" wire:click="gunlukFormPdf({{ $s['id'] }})" class="mehse-belge mehse-belge--var" title="Günlük kontrol formu: {{ $s['gunluk_form'] }}">
+                                                    <x-filament::icon icon="heroicon-m-clipboard-document-check" class="mehse-belge__ikon" /> <span>Günlük kontrol formu</span>
+                                                </button>
+                                            @else
+                                                <span class="mehse-belge mehse-belge--yok">
+                                                    <x-filament::icon icon="heroicon-m-minus-circle" class="mehse-belge__ikon" /> <span>Günlük form kütüphanede yok</span>
+                                                </span>
+                                            @endif
                                         </div>
                                     </td>
                                     <td style="padding:.35rem;font-size:.75rem">{{ $s['seri_no'] ?: '—' }}<br><span class="mehse-soluk-metin">{{ $s['marka_model'] ?: '' }}</span></td>

@@ -187,9 +187,18 @@ class PeriyodikKontrol extends Page
             ->orderBy('kategori')->orderBy('ekipman_adi')
             ->get();
 
+        // Firmadaki talimatlar başlığa göre — satırda "talimat var / yok" ve indirme bağlantısı (12.11.2026).
+        $firmaTalimatlari = $this->firma
+            ? $this->firma->talimatlar()->get(['id', 'baslik'])->keyBy(fn ($t) => EkipmanKatalogu::norm($t->baslik))
+            : collect();
+
         $satirlar = ($q ?? collect())
             ->filter(fn (IsEkipmani $e) => ! $this->durumFiltre || $e->vizeDurumu() === $this->durumFiltre)
             ->map(fn (IsEkipmani $e) => [
+                'talimatlar' => collect(EkipmanKatalogu::talimatSablonlari($e->tip))
+                    ->map(fn (array $s) => ['baslik' => $s['baslik'], 'id' => $firmaTalimatlari->get(EkipmanKatalogu::norm($s['baslik']))?->id])
+                    ->all(),
+                'gunluk_form' => EkipmanKatalogu::kontrolFormu($e->tip)['ad'] ?? null,
                 'id' => $e->id,
                 'kategori' => $e->kategori,
                 'kategori_adi' => $e->kategoriAdi(),
@@ -260,6 +269,34 @@ class PeriyodikKontrol extends Page
         if (! $sessiz) {
             Notification::make()->title('Muayene bilgileri kaydedildi')->success()->send();
         }
+    }
+
+    /** Satırdaki talimat bağlantısı — firmanın kayıtlı talimatının PDF'i. */
+    public function talimatPdf(int $id)
+    {
+        $talimat = $this->firma?->talimatlar()->find($id);
+
+        return $talimat ? \App\Support\TalimatUretici::pdf($talimat) : null;
+    }
+
+    /** Satırdaki "Günlük form" — yalnız bu makinenin boş günlük kontrol formu. */
+    public function gunlukFormPdf(int $ekipmanId)
+    {
+        return $this->firma && $this->firma->isEkipmanlari()->whereKey($ekipmanId)->exists()
+            ? GunlukEkipmanKontrolUretici::pdf($this->firma, $ekipmanId)
+            : null;
+    }
+
+    /** Katalogda talimatı olup firmada eksik olanları ekler (satırdaki "Talimatı ekle"). */
+    public function talimatlariTamamla(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+        $eklenen = EkipmanKatalogu::talimatlariEkle($this->firma);
+        $this->satirlariYukle();
+        Notification::make()->title($eklenen ? count($eklenen).' talimat eklendi' : 'Eksik talimat yok')
+            ->body(implode(', ', $eklenen) ?: null)->success()->send();
     }
 
     public function ekipmanSil(int $id): void

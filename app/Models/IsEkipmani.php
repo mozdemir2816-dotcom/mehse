@@ -77,8 +77,10 @@ class IsEkipmani extends Model
 
         // Katalogda talimatı olan ekipman eklenince talimat firmaya otomatik eklenir
         // (yasal evrak kaçmasın — EkipmanKatalogu::talimatlariEkle; firmada varsa eklemez).
-        static::created(function (IsEkipmani $e): void {
-            if ($e->firma && EkipmanKatalogu::talimatSablonu($e->tip)) {
+        // 12.11.2026: tip sonradan değişirse ya da başka firmaya taşınırsa da.
+        static::saved(function (IsEkipmani $e): void {
+            if (($e->wasRecentlyCreated || $e->wasChanged(['tip', 'firma_id', 'aktif']))
+                && $e->aktif !== false && $e->firma && EkipmanKatalogu::talimatSablonu($e->tip)) {
                 EkipmanKatalogu::talimatlariEkle($e->firma);
             }
         });

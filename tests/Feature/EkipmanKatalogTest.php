@@ -494,4 +494,42 @@ class EkipmanKatalogTest extends TestCase
         $this->assertSame('muaf', $cnc->vizeDurumu());
         $this->assertSame('Üretim & Atölye Makineleri', $cnc->kategori_adi);
     }
+
+    /** 12.11.2026: birden çok talimat, tip değişince ekleme, listede var/yok + makine bazlı günlük form. */
+    public function test_cok_talimatli_ekipman_tip_degisimi_ve_listedeki_belge_durumu(): void
+    {
+        $pano = $this->ekipman('elektrik_topraklama', 'Elektrik Ana & Tali Dağıtım Panoları');
+        $this->assertEqualsCanonicalizing(['Elektrik Panosunda Çalışma Talimatı', 'Kilitleme-Etiketleme (LOTO) Talimatı'],
+            Talimat::where('firma_id', $this->firma->id)->pluck('baslik')->all());
+
+        // Önce talimatsız tiple kaydedilip sonradan torna yapılan makinenin talimatı da gelir.
+        $makine = $this->ekipman('uretim_atolye', 'Satıh Taşlama Tezgâhı');
+        $makine->update(['tip' => 'Torna Tezgâhı']);
+        $this->assertTrue(Talimat::where('firma_id', $this->firma->id)->where('baslik', 'ÜNİVERSAL TORNA TEZGAHI GÜVENLİ ÇALIŞMA TALİMATI')->exists());
+
+        $this->assertCount(1, GunlukEkipmanKontrolUretici::sayfalar($this->firma, $makine->id));
+
+        $sayfa = Livewire::test(PeriyodikKontrolSayfasi::class)->set('firmaId', $this->firma->id);
+        $satir = collect($sayfa->get('satirlar'))->keyBy('id');
+        $this->assertSame('Torna Tezgâhı', $satir[$makine->id]['gunluk_form']);
+        $this->assertNotNull($satir[$makine->id]['talimatlar'][0]['id']);
+        $this->assertNull($satir[$pano->id]['gunluk_form']);
+        $sayfa->assertSee('Günlük form kütüphanede yok')
+            ->call('gunlukFormPdf', $makine->id)->assertFileDownloaded()
+            ->call('talimatPdf', $satir[$makine->id]['talimatlar'][0]['id'])->assertFileDownloaded();
+
+        // Firmadan silinen talimat "ekle" olarak görünür ve tek tıkla geri gelir.
+        Talimat::where('baslik', 'Kilitleme-Etiketleme (LOTO) Talimatı')->delete();
+        $sayfa->call('talimatlariTamamla')->assertSee('Talimat: Kilitleme-Etiketleme (LOTO) Talimatı');
+    }
+
+    public function test_katalogdaki_her_talimat_ve_form_kutuphanede_bulunur(): void
+    {
+        foreach (config('ekipman_katalogu.tipler') as $tip => $d) {
+            $this->assertCount(count((array) ($d['talimat'] ?? [])), EkipmanKatalogu::talimatSablonlari($tip), $tip);
+            if ($d['kontrol_formu'] ?? null) {
+                $this->assertNotNull(EkipmanKatalogu::kontrolFormu($tip), $tip);
+            }
+        }
+    }
 }

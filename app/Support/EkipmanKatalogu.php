@@ -423,17 +423,44 @@ class EkipmanKatalogu
     }
 
     /**
-     * Ekipmanın katalogdaki talimat şablonu (TalimatKutuphanesi::hazirSablonlar içinden başlıkla).
+     * Ekipmanın katalogdaki ilk talimat şablonu (TalimatKutuphanesi::hazirSablonlar içinden başlıkla).
      *
      * @return array<string, mixed>|null
      */
     public static function talimatSablonu(?string $tip): ?array
     {
-        $baslik = static::tanim($tip)['talimat'] ?? null;
+        return static::talimatSablonlari($tip)[0] ?? null;
+    }
 
-        return $baslik
-            ? collect(TalimatKutuphanesi::hazirSablonlar())->first(fn (array $s) => static::norm($s['baslik']) === static::norm($baslik))
-            : null;
+    /**
+     * Ekipmanın katalogdaki tüm talimat şablonları — 'talimat' tek başlık ya da başlık listesi
+     * olabilir (12.11.2026: ör. iskele = cephe iskelesi + kurulum/söküm talimatı).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function talimatSablonlari(?string $tip): array
+    {
+        $basliklar = array_map([static::class, 'norm'], (array) (static::tanim($tip)['talimat'] ?? []));
+        if ($basliklar === []) {
+            return [];
+        }
+
+        return collect(TalimatKutuphanesi::hazirSablonlar())
+            ->filter(fn (array $s) => in_array(static::norm($s['baslik']), $basliklar, true))
+            ->unique(fn (array $s) => static::norm($s['baslik']))
+            ->values()->all();
+    }
+
+    /**
+     * Ekipmanın günlük / kullanım öncesi kontrol formu (isg.haftalik_ekipman_kontrol.tipler).
+     *
+     * @return array{ad: string, sorular: array<int, string>}|null
+     */
+    public static function kontrolFormu(?string $tip): ?array
+    {
+        $ad = static::tanim($tip)['kontrol_formu'] ?? null;
+
+        return $ad ? collect(static::kontrolFormlari())->firstWhere('ad', $ad) : null;
     }
 
     /**
@@ -447,8 +474,7 @@ class EkipmanKatalogu
         $mevcut = Talimat::query()->where('firma_id', $firma->id)->pluck('baslik')->map(fn ($b) => static::norm($b))->all();
 
         return static::ekipmanlar($firma)->pluck('tip')->filter()->unique()
-            ->map(fn ($tip) => static::talimatSablonu($tip))
-            ->filter()
+            ->flatMap(fn ($tip) => static::talimatSablonlari($tip))
             ->reject(fn (array $s) => in_array(static::norm($s['baslik']), $mevcut, true))
             ->keyBy('baslik')
             ->all();
