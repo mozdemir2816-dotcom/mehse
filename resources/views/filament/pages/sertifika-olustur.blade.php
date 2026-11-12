@@ -1,5 +1,5 @@
 @php
-    $altin = 'rgb(217 119 6)';
+    $altin = 'rgb(180 83 9)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $icerik = $this->icerik;
     $coklu = $this->cokluEgiticiMi;
@@ -45,7 +45,7 @@
             @php
                 $rozetler = [
                     'cok_tehlikeli' => ['16 Saat / Çok Tehlikeli', '#C02626'],
-                    'tehlikeli' => ['12 Saat / Tehlikeli', '#ea580c'],
+                    'tehlikeli' => ['12 Saat / Tehlikeli', '#c2410c'],
                     'az_tehlikeli' => ['8 Saat / Az Tehlikeli', '#2563eb'],
                 ];
             @endphp

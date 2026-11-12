@@ -9,7 +9,7 @@
             <tr>
                 <td style="padding:.35rem .5rem;white-space:nowrap">{{ $h->tarih?->format('d.m.Y') }}</td>
                 <td class="mehse-td">{{ $h->tipEtiketi() }}</td>
-                <td style="padding:.35rem .5rem;font-weight:600;color:{{ $h->miktar >= 0 ? '#16a34a' : '#dc2626' }}">{{ $h->miktar > 0 ? '+' : '' }}{{ $h->miktar }}</td>
+                <td style="padding:.35rem .5rem;font-weight:600;color:{{ $h->miktar >= 0 ? '#15803d' : '#dc2626' }}">{{ $h->miktar > 0 ? '+' : '' }}{{ $h->miktar }}</td>
                 <td class="mehse-td">{{ $h->aciklama }}{{ $h->zimmet ? ' ('.$h->zimmet->zimmet_no.')' : '' }}</td>
             </tr>
         @empty

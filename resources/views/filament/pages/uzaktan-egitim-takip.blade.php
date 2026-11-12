@@ -187,7 +187,7 @@
                     @foreach ($this->hatirlatilacaklar as $a)
                         <div wire:key="hat-{{ $a->id }}" style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.83rem;border-top:1px solid rgb(107 114 128 / .15);padding-top:.35rem">
                             <span>{{ $a->calisan->ad_soyad }} <span style="color:rgb(107 114 128);font-size:.75rem">· {{ $a->izlenenDersSayisi() }}/{{ $a->toplamDersSayisi() }} ders · {{ $a->durumEtiketi() }}@if ($a->gecikti()) · <span style="color:#b91c1c">gecikti</span>@endif @unless ($a->calisan->telefon) · telefon yok @endunless</span></span>
-                            <a href="{{ $this->hatirlatmaLinki($a) }}" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;padding:.2rem .6rem;border-radius:.4rem;font-size:.75rem;text-decoration:none;white-space:nowrap">📲 WhatsApp Hatırlat</a>
+                            <a href="{{ $this->hatirlatmaLinki($a) }}" target="_blank" rel="noopener" style="background:#15803d;color:#fff;padding:.2rem .6rem;border-radius:.4rem;font-size:.75rem;text-decoration:none;white-space:nowrap">📲 WhatsApp Hatırlat</a>
                         </div>
                     @endforeach
                 </div>

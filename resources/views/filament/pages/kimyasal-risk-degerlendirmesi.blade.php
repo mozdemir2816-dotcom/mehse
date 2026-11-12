@@ -1,7 +1,7 @@
 @php
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'width:100%;padding:.35rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.78rem';
-    $yaklasimRenk = [1 => '#16a34a', 2 => '#ca8a04', 3 => '#ea580c', 4 => '#dc2626'];
+    $yaklasimRenk = [1 => '#15803d', 2 => '#a16207', 3 => '#c2410c', 4 => '#dc2626'];
 @endphp
 
 <x-filament-panels::page>

@@ -5,7 +5,7 @@
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $durumRenk = ['taslak' => '#6b7280', 'incelemede' => '#b45309', 'onaylandi' => '#047857', 'arsiv' => '#9ca3af'];
-    $kapsamaRenk = ['yeterli' => 'rgb(21 128 61)', 'kismi' => 'rgb(217 119 6)', 'eksik' => 'rgb(107 114 128)'];
+    $kapsamaRenk = ['yeterli' => 'rgb(21 128 61)', 'kismi' => 'rgb(180 83 9)', 'eksik' => 'rgb(107 114 128)'];
     $kapsamaAd = ['yeterli' => 'Yeterli', 'kismi' => 'Kısmi', 'eksik' => 'Eksik'];
     $nk = $this->naceKapsama;
     $hedef = $nk['hedef'];
@@ -44,7 +44,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.5rem;margin-bottom:.8rem">
             <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ number_format($nk['toplam'], 0, ',', '.') }}</div><div class="mehse-soluk">Resmi NACE</div></div>
-            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:{{ $nk['ortak'] >= $hedef['temel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $nk['ortak'] }}</div><div class="mehse-soluk">Yayımlanmış ortak (temel) soru</div></div>
+            <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:{{ $nk['ortak'] >= $hedef['temel'] ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">{{ $nk['ortak'] }}</div><div class="mehse-soluk">Yayımlanmış ortak (temel) soru</div></div>
             <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800">{{ $nk['naceli_yayinli'] }}</div><div class="mehse-soluk">Yayımlanmış NACE kapsamlı soru</div></div>
             <div style="{{ $kart }}"><div style="font-size:1.2rem;font-weight:800;color:rgb(21 128 61)">{{ $nk['yeterli'] }}</div><div class="mehse-soluk">Havuzu yeterli NACE · {{ $nk['kismi'] }} kısmi</div></div>
         </div>

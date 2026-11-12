@@ -37,7 +37,7 @@
         <div style="max-height:320px;overflow:auto">
             <table style="width:100%;border-collapse:collapse;font-size:.8rem">
                 @foreach ($pf as $r)
-                    @php $k = $r['kontrol']; $renk = ['hazir' => 'rgb(21 128 61)', 'aksiyon' => 'rgb(217 119 6)', 'gozden_gecirme' => 'rgb(220 38 38)'][$k['durum'] ?? ''] ?? 'rgb(107 114 128)'; @endphp
+                    @php $k = $r['kontrol']; $renk = ['hazir' => 'rgb(21 128 61)', 'aksiyon' => 'rgb(180 83 9)', 'gozden_gecirme' => 'rgb(220 38 38)'][$k['durum'] ?? ''] ?? 'rgb(107 114 128)'; @endphp
                     <tr style="border-top:1px solid rgb(107 114 128 / .12)">
                         <td style="padding:.35rem .4rem">{{ $r['firma']->unvan }}</td>
                         <td style="padding:.35rem .4rem;white-space:nowrap;color:{{ $renk }};font-weight:700">{{ $k ? \App\Support\AcilDurumHazirlik::DURUM_ETIKET[$k['durum']].' · %'.$k['yuzde'] : 'Plan yok' }}</td>
@@ -261,7 +261,7 @@
                 @php $kartEksik = count(array_intersect($alanlar, array_keys($eksikSoru))); @endphp
                 <x-filament::section :icon="$ikon" icon-color="danger">
                     <x-slot name="heading">{{ $baslik }}</x-slot>
-                    <x-slot name="description"><span style="color:{{ $kartEksik ? 'rgb(217 119 6)' : 'rgb(22 163 74)' }}">{{ count($alanlar) - $kartEksik }} / {{ count($alanlar) }} tamam</span></x-slot>
+                    <x-slot name="description"><span style="color:{{ $kartEksik ? 'rgb(180 83 9)' : 'rgb(21 128 61)' }}">{{ count($alanlar) - $kartEksik }} / {{ count($alanlar) }} tamam</span></x-slot>
                     <div style="display:flex;flex-direction:column;gap:.6rem">
                         @foreach ($alanlar as $alanAd)
                             @php [$soru, $ornek] = $sorular[$alanAd]; $bos = array_key_exists($alanAd, $eksikSoru); $model = $alanAd === 'toplanma_yeri' ? 'toplanmaYeri' : 'uygulama.'.$alanAd; @endphp
@@ -492,7 +492,7 @@
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.4rem">
                     @foreach ($h['kontroller'] as $k)
                         <div style="display:flex;gap:.5rem;align-items:flex-start;padding:.45rem .6rem;border-radius:.45rem;border:1px solid {{ $k['tamam'] ? 'rgb(21 128 61 / .35)' : 'rgb(217 119 6 / .45)' }};background:{{ $k['tamam'] ? 'rgb(21 128 61 / .05)' : 'rgb(217 119 6 / .06)' }}">
-                            <span style="font-weight:800;color:{{ $k['tamam'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $k['tamam'] ? '✓' : '!' }}</span>
+                            <span style="font-weight:800;color:{{ $k['tamam'] ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">{{ $k['tamam'] ? '✓' : '!' }}</span>
                             <span><span style="font-size:.8rem;font-weight:600">{{ $k['baslik'] }}</span><br><span class="mehse-soluk">{{ $k['aciklama'] }}</span></span>
                         </div>
                     @endforeach

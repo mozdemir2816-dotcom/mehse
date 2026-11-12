@@ -40,7 +40,7 @@
             @endforelse
 
             @if ($tasarimId)
-                <button type="button" wire:click="whatsapp" style="{{ $btn }};margin-left:auto;background:#16a34a;color:#fff;border-color:#16a34a;font-weight:700"
+                <button type="button" wire:click="whatsapp" style="{{ $btn }};margin-left:auto;background:#15803d;color:#fff;border-color:#15803d;font-weight:700"
                     title="Açık tasarımın 30 gün geçerli baskı PDF bağlantısı — işverenin telefonu yoksa WhatsApp'ta alıcıyı (ör. tabelacı) siz seçersiniz">📲 WhatsApp ile Paylaş</button>
             @endif
         </div>
@@ -52,8 +52,8 @@
                 @if ($this->oneriler)
                     <div style="display:flex;gap:.35rem;align-items:center">
                         <span style="font-size:.75rem;font-weight:700">⚡ Önerilen Tüm Levhaları Otomatik Paketle (ZIP):</span>
-                        <button type="button" wire:click="oneriPaketi('a4')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A4</button>
-                        <button type="button" wire:click="oneriPaketi('a3')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#d97706;color:#fff;border-color:#d97706;font-weight:700">A3</button>
+                        <button type="button" wire:click="oneriPaketi('a4')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#b45309;color:#fff;border-color:#b45309;font-weight:700">A4</button>
+                        <button type="button" wire:click="oneriPaketi('a3')" wire:loading.attr="disabled" wire:target="oneriPaketi" style="{{ $btn }};background:#b45309;color:#fff;border-color:#b45309;font-weight:700">A3</button>
                         <span wire:loading wire:target="oneriPaketi" style="font-size:.75rem;color:#b45309">Hazırlanıyor…</span>
                     </div>
                 @endif
@@ -70,7 +70,7 @@
                     <div style="min-width:0;flex:1">
                         <div style="font-weight:700;font-size:.78rem">{{ $o['etiket'] }}</div>
                         <div style="display:flex;gap:.3rem;margin:.15rem 0;flex-wrap:wrap">
-                            <span style="font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:9999px;color:#fff;background:{{ $o['seviye'] === 'yuksek' ? '#dc2626' : ($o['seviye'] === 'orta' ? '#d97706' : '#64748b') }}">
+                            <span style="font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:9999px;color:#fff;background:{{ $o['seviye'] === 'yuksek' ? '#dc2626' : ($o['seviye'] === 'orta' ? '#b45309' : '#64748b') }}">
                                 {{ $o['tasarim']['signalTr'] }}
                             </span>
                             <span style="font-size:.68rem;color:rgb(107 114 128)">{{ $o['sayi'] }} kayıt</span>

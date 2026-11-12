@@ -115,9 +115,9 @@ class TehlikeRiskAnalitigiTest extends TestCase
     public function test_pano_risk_renkleri_fine_kinney_esikleri(): void
     {
         $this->assertSame('#e11d48', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 450)['renk']);
-        $this->assertSame('#d97706', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 300)['renk']);
-        $this->assertSame('#eab308', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 100)['renk']);
-        $this->assertSame('#059669', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 40)['renk']);
+        $this->assertSame('#c2410c', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 300)['renk']);
+        $this->assertSame('#a16207', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 100)['renk']);
+        $this->assertSame('#047857', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 40)['renk']);
         $this->assertSame('Çok Yüksek', \App\Support\RiskSkorlama::panoRengi('fine_kinney', 400)['duzey']);
     }
 

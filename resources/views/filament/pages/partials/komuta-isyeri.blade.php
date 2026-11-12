@@ -6,8 +6,8 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.55rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $renk = ['tamamlandi' => 'rgb(21 128 61)', 'eksik' => 'rgb(220 38 38)', 'gecikmis' => 'rgb(185 28 28)', 'yaklasan' => 'rgb(217 119 6)', 'bilgi' => 'rgb(37 99 235)'];
-    $tRenk = ['gecikmis' => 'rgb(220 38 38)', 'cok_yakin' => 'rgb(234 88 12)', 'yaklasiyor' => 'rgb(217 119 6)', 'ileri' => 'rgb(107 114 128)', 'tamamlandi' => 'rgb(21 128 61)'];
+    $renk = ['tamamlandi' => 'rgb(21 128 61)', 'eksik' => 'rgb(220 38 38)', 'gecikmis' => 'rgb(185 28 28)', 'yaklasan' => 'rgb(180 83 9)', 'bilgi' => 'rgb(37 99 235)'];
+    $tRenk = ['gecikmis' => 'rgb(220 38 38)', 'cok_yakin' => 'rgb(194 65 12)', 'yaklasiyor' => 'rgb(180 83 9)', 'ileri' => 'rgb(107 114 128)', 'tamamlandi' => 'rgb(21 128 61)'];
 @endphp
     @if (! $firma)
         <x-filament::section>Aktif işyeri bulunamadı.</x-filament::section>
@@ -45,7 +45,7 @@
         </div>
 
         {{-- Genel uyum --}}
-        <div style="{{ $kart }};border-left:4px solid {{ $o['gecikmis'] + $o['eksik'] > 0 ? 'rgb(220 38 38)' : ($o['yaklasan'] ? 'rgb(217 119 6)' : 'rgb(21 128 61)') }}">
+        <div style="{{ $kart }};border-left:4px solid {{ $o['gecikmis'] + $o['eksik'] > 0 ? 'rgb(220 38 38)' : ($o['yaklasan'] ? 'rgb(180 83 9)' : 'rgb(21 128 61)') }}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
                 <div>
                     <div style="font-weight:800">Genel uyum durumu</div>

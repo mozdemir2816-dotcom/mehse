@@ -38,12 +38,12 @@
                 <div style="{{ $kutu }};font-size:.78rem">
                     <div style="font-weight:600;margin-bottom:.35rem">
                         Yönetmelik kontrolü (Acil Durumlar Yön. Md.12/1-f) —
-                        @if ($eksik3) <span class="mehse-hata">{{ $eksik3 }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
+                        @if ($eksik3) <span class="mehse-hata">{{ $eksik3 }} zorunlu unsur eksik</span> @else <span style="color:#15803d">zorunlu unsurlar tamam</span> @endif
                         <span style="font-weight:400;color:rgb(107 114 128)">· kayıtlı 3B krokiye göre</span>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">
                         @foreach ($unsurlar3 as $u)
-                            <span style="color:{{ $u['var'] ? '#16a34a' : ($u['zorunlu'] ? '#dc2626' : 'rgb(107 114 128)') }}">{{ $u['var'] ? '✓' : ($u['zorunlu'] ? '✗' : '○') }} {{ $u['baslik'] }}</span>
+                            <span style="color:{{ $u['var'] ? '#15803d' : ($u['zorunlu'] ? '#dc2626' : 'rgb(107 114 128)') }}">{{ $u['var'] ? '✓' : ($u['zorunlu'] ? '✗' : '○') }} {{ $u['baslik'] }}</span>
                         @endforeach
                     </div>
                 </div>
@@ -87,12 +87,12 @@
         <div style="{{ $kutu }};font-size:.78rem">
             <div style="font-weight:600;margin-bottom:.35rem">
                 Yönetmelik kontrolü (Acil Durumlar Yön. Md.12/1-f) —
-                @if ($eksikSayi) <span class="mehse-hata">{{ $eksikSayi }} zorunlu unsur eksik</span> @else <span style="color:#16a34a">zorunlu unsurlar tamam</span> @endif
+                @if ($eksikSayi) <span class="mehse-hata">{{ $eksikSayi }} zorunlu unsur eksik</span> @else <span style="color:#15803d">zorunlu unsurlar tamam</span> @endif
                 <span style="font-weight:400;color:rgb(107 114 128)">· kayıtlı krokiye göre, "Kaydet" sonrası güncellenir</span>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">
                 @foreach ($unsurlar as $u)
-                    <span style="color:{{ $u['var'] ? '#16a34a' : ($u['zorunlu'] ? '#dc2626' : 'rgb(107 114 128)') }}">{{ $u['var'] ? '✓' : ($u['zorunlu'] ? '✗' : '○') }} {{ $u['baslik'] }}</span>
+                    <span style="color:{{ $u['var'] ? '#15803d' : ($u['zorunlu'] ? '#dc2626' : 'rgb(107 114 128)') }}">{{ $u['var'] ? '✓' : ($u['zorunlu'] ? '✗' : '○') }} {{ $u['baslik'] }}</span>
                 @endforeach
             </div>
             <div style="margin-top:.35rem;color:rgb(107 114 128)">

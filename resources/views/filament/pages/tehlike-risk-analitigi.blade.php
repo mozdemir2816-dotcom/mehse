@@ -47,7 +47,7 @@
             <div><div class="mehse-soluk">Risk kaydı</div><div style="font-weight:700">{{ $a['kapsam']['risk_kaydi'] }}</div></div>
         </div>
 
-        <div style="border:1px solid rgb(217 119 6);background:rgb(217 119 6 / .07);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
+        <div style="border:1px solid rgb(180 83 9);background:rgb(217 119 6 / .07);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
             <strong style="color:rgb(180 83 9)">Bilgi</strong> — NACE'ye göre listelenen tehlike kaynakları başlangıç kapsamıdır; otomatik risk üretmez. Her kaynak sahada doğrulanmalı ve risk değerlendirmesine işlenmelidir. Dominans skoru = <strong>risk puanı × maruz kalan kişi sayısı</strong>; kişi sayısı girilmeyen kayıtlar firmanın çalışan sayısı (<strong>{{ $a['maruz_varsayilan'] }}</strong> kişi) ile hesaplanır — yalnız istisnai maddeleri aşağıdan değiştirmeniz yeterli.
         </div>
 
@@ -66,7 +66,7 @@
             <div style="{{ $kart }}">
                 <div class="mehse-soluk">Toplam maruz kişi</div>
                 <div style="font-size:1.4rem;font-weight:800">{{ $sayi($a['maruz_toplam']) }}</div>
-                <div style="font-size:.75rem;color:{{ $a['maruz_eksik'] ? 'rgb(217 119 6)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta çalışan sayısı ('.$a['maruz_varsayilan'].') varsayıldı' : 'Tüm kayıtlarda elle girilmiş' }}</div>
+                <div style="font-size:.75rem;color:{{ $a['maruz_eksik'] ? 'rgb(180 83 9)' : 'rgb(107 114 128)' }}">{{ $a['maruz_eksik'] ? $a['maruz_eksik'].' kayıtta çalışan sayısı ('.$a['maruz_varsayilan'].') varsayıldı' : 'Tüm kayıtlarda elle girilmiş' }}</div>
             </div>
             <div style="{{ $kart }}">
                 <div class="mehse-soluk">Risk değerlendirmesi</div>
@@ -110,9 +110,9 @@
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem">
                     @foreach ($a['kaynaklar'] as $k)
                         @php $ok = $k['eslesen'] > 0; @endphp
-                        <div style="{{ $kart }};border-left:4px solid {{ $ok ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">
+                        <div style="{{ $kart }};border-left:4px solid {{ $ok ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">
                             <div style="font-weight:600;font-size:.85rem">{{ $k['baslik'] }}</div>
-                            <div style="font-size:.75rem;margin-top:.2rem;color:{{ $ok ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $ok ? 'Risk kaydında karşılığı var ('.$k['eslesen'].' kayıt)' : 'Saha doğrulaması bekliyor' }}</div>
+                            <div style="font-size:.75rem;margin-top:.2rem;color:{{ $ok ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">{{ $ok ? 'Risk kaydında karşılığı var ('.$k['eslesen'].' kayıt)' : 'Saha doğrulaması bekliyor' }}</div>
                         </div>
                     @endforeach
                 </div>

@@ -85,9 +85,9 @@ class RiskSkorlama
 
         return match (true) {
             $puan >= 400 => ['duzey' => 'Çok Yüksek', 'renk' => '#e11d48'],
-            $puan >= 200 => ['duzey' => 'Yüksek', 'renk' => '#d97706'],
-            $puan >= 70 => ['duzey' => 'Orta', 'renk' => '#eab308'],
-            default => ['duzey' => 'Düşük', 'renk' => '#059669'],
+            $puan >= 200 => ['duzey' => 'Yüksek', 'renk' => '#c2410c'],
+            $puan >= 70 => ['duzey' => 'Orta', 'renk' => '#a16207'],
+            default => ['duzey' => 'Düşük', 'renk' => '#047857'],
         };
     }
 

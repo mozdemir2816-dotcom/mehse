@@ -207,7 +207,7 @@
                                 @endif
                                 @if ($secili)
                                     <button type="button" wire:click="basUyeSec({{ $c->id }})" title="Baş üye"
-                                        style="background:none;border:none;cursor:pointer;font-size:.9rem;color:{{ $basUyeId === $c->id ? '#f59e0b' : 'rgb(107 114 128 / .4)' }}">★</button>
+                                        style="background:none;border:none;cursor:pointer;font-size:.9rem;color:{{ $basUyeId === $c->id ? '#b45309' : 'rgb(107 114 128 / .4)' }}">★</button>
                                 @endif
                             </div>
                         @endforeach

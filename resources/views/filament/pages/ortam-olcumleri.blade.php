@@ -34,8 +34,8 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem">
                 @foreach ([
                     ['Toplam ölçüm', count($satirlar), 'inherit'],
-                    ['Güncel', $terminler->filter(fn ($t) => $t === 'guncel')->count(), '#16a34a'],
-                    ['Yaklaşan', $terminler->filter(fn ($t) => $t === 'yaklasan')->count(), '#d97706'],
+                    ['Güncel', $terminler->filter(fn ($t) => $t === 'guncel')->count(), '#15803d'],
+                    ['Yaklaşan', $terminler->filter(fn ($t) => $t === 'yaklasan')->count(), '#b45309'],
                     ['Gecikmiş', $terminler->filter(fn ($t) => $t === 'gecikmis')->count(), '#dc2626'],
                     ['Ölçülmedi', $terminler->filter(fn ($t) => $t === 'olculmedi')->count(), 'rgb(107 114 128)'],
                     ['Sınır değer aşımı', $sonucSay['asim'] ?? 0, '#dc2626'],

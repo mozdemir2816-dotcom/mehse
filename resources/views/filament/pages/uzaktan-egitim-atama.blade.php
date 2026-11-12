@@ -100,7 +100,7 @@
                                 @unless (str_contains($g['eposta'], '@'))<span style="color:#b45309;font-size:.75rem"> (kod)</span>@endunless
                             </td>
                             <td style="padding:.3rem;font-family:monospace">{{ $g['sifre'] ?? '(mevcut şifre korunuyor)' }}</td>
-                            <td style="padding:.3rem"><a href="{{ $this->whatsappLinki($g) }}" target="_blank" rel="noopener" style="background:#16a34a;color:#fff;padding:.2rem .6rem;border-radius:.4rem;font-size:.75rem;text-decoration:none;white-space:nowrap">📲 WhatsApp ile İlet</a></td>
+                            <td style="padding:.3rem"><a href="{{ $this->whatsappLinki($g) }}" target="_blank" rel="noopener" style="background:#15803d;color:#fff;padding:.2rem .6rem;border-radius:.4rem;font-size:.75rem;text-decoration:none;white-space:nowrap">📲 WhatsApp ile İlet</a></td>
                         </tr>
                     @endforeach
                 </table>

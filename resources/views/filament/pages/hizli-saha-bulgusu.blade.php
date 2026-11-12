@@ -26,7 +26,7 @@
             <div class="mehse-soluk">Toplam bulgu</div>
         </div>
         <div style="{{ $kutu }};border-radius:1rem">
-            <div style="font-size:1.4rem;font-weight:800;color:{{ $o['acik'] > 0 ? '#d97706' : 'inherit' }}">{{ $o['acik'] }}</div>
+            <div style="font-size:1.4rem;font-weight:800;color:{{ $o['acik'] > 0 ? '#b45309' : 'inherit' }}">{{ $o['acik'] }}</div>
             <div class="mehse-soluk">Açık</div>
             @if ($o['kritik'] > 0 || $o['gecikmis'] > 0)
                 <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">
@@ -36,13 +36,13 @@
             @endif
         </div>
         <div style="{{ $kutu }};border-radius:1rem">
-            <div style="font-size:1.4rem;font-weight:800;color:{{ $o['kapandi'] > 0 ? '#16a34a' : 'inherit' }}">{{ $o['kapandi'] }}</div>
+            <div style="font-size:1.4rem;font-weight:800;color:{{ $o['kapandi'] > 0 ? '#15803d' : 'inherit' }}">{{ $o['kapandi'] }}</div>
             <div class="mehse-soluk">Kapatılan</div>
         </div>
         <div style="{{ $kutu }};border-radius:1rem">
-            <div style="font-size:1.4rem;font-weight:800;color:{{ $o['basari'] >= 75 ? '#16a34a' : ($o['basari'] >= 40 ? '#d97706' : '#b91c1c') }}">%{{ $o['basari'] }}</div>
+            <div style="font-size:1.4rem;font-weight:800;color:{{ $o['basari'] >= 75 ? '#15803d' : ($o['basari'] >= 40 ? '#b45309' : '#b91c1c') }}">%{{ $o['basari'] }}</div>
             <div class="mehse-soluk">Başarı oranı</div>
-            <div style="height:5px;border-radius:9999px;background:rgb(107 114 128 / .2);margin-top:.3rem;overflow:hidden"><div style="height:100%;width:{{ max($o['basari'], 1) }}%;background:#16a34a"></div></div>
+            <div style="height:5px;border-radius:9999px;background:rgb(107 114 128 / .2);margin-top:.3rem;overflow:hidden"><div style="height:100%;width:{{ max($o['basari'], 1) }}%;background:#15803d"></div></div>
         </div>
     </div>
 

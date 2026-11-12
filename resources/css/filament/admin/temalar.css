@@ -459,7 +459,7 @@ html[data-mehse-tema="windows11"] {
     --sidebar-to: transparent;
     --text-heading: #1A1A1A;
     --text-secondary: #5D5D5D;
-    --text-label: #8A8A8A;
+    --text-label: #6B6B6B;
     --border: rgb(0 0 0 / .0578);
     --border-light: rgb(0 0 0 / .0578);
     --info-bg: #E6F0FA;
@@ -834,7 +834,7 @@ html[data-mehse-tema="saha"] {
     --warning-border: #F5B400;
     --metric-blue: #0369A1;
     --metric-green: #15803D;
-    --metric-orange: #F5B400;
+    --metric-orange: #A16207;
     --metric-purple: #B91C1C;
     --saha-sari: #F5B400;
     --saha-komur: #1C1917;

@@ -18,7 +18,7 @@
 
     @php $o = $this->ozet; @endphp
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
-        @foreach ([['Bugünkü ziyaretçi', $o['bugun'], 'inherit'], ['Şu an içeride', $o['iceride'], 'rgb(124 58 237)'], ['Geçerli kart', $o['gecerli'], '#16a34a']] as [$ad, $sayi, $c])
+        @foreach ([['Bugünkü ziyaretçi', $o['bugun'], 'inherit'], ['Şu an içeride', $o['iceride'], 'rgb(124 58 237)'], ['Geçerli kart', $o['gecerli'], '#15803d']] as [$ad, $sayi, $c])
             <div style="{{ $kutu }}">
                 <div class="mehse-soluk">{{ $ad }}</div>
                 <div style="font-size:1.5rem;font-weight:700;color:{{ $sayi > 0 ? $c : 'inherit' }}">{{ $sayi }}</div>

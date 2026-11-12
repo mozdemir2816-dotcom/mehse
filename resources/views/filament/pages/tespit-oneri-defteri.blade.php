@@ -1,7 +1,7 @@
 @php
     $sari = 'rgb(245 158 11)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
-    $oncelikRenk = fn ($o) => match ($o) { 'yuksek' => '#ef4444', 'dusuk' => '#6b7280', default => '#f59e0b' };
+    $oncelikRenk = fn ($o) => match ($o) { 'yuksek' => '#ef4444', 'dusuk' => '#6b7280', default => '#b45309' };
     $oncelikEtiket = fn ($o) => match ($o) { 'yuksek' => 'Yüksek', 'dusuk' => 'Düşük', default => 'Orta' };
 @endphp
 

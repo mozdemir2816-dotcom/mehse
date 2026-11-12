@@ -31,7 +31,7 @@
                 ['Planlı', $ao['planli'], 'rgb(180 83 9)', null],
                 ['Tamamlanan', $ao['tamamlanan'], 'rgb(21 128 61)', null],
                 ['Gecikmiş', $ao['gecikmis'], 'rgb(220 38 38)', null],
-                ['Gidilen firma', $oz['toplam'] ? $oz['gidilen'].' / '.$oz['toplam'] : '—', 'rgb(13 148 136)', $oz['yuzde'] !== null ? '%'.$oz['yuzde'] : null],
+                ['Gidilen firma', $oz['toplam'] ? $oz['gidilen'].' / '.$oz['toplam'] : '—', 'rgb(15 118 110)', $oz['yuzde'] !== null ? '%'.$oz['yuzde'] : null],
                 ['Plansız firma', $plansiz->count(), 'rgb(220 38 38)', null],
             ] as [$ad, $sayi, $renk, $ek])
                 <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.5rem .8rem">
@@ -44,7 +44,7 @@
         </div>
 
         @if ($ao['gecikmis'] > 0)
-            <div style="border-left:3px solid rgb(217 119 6);background:rgb(245 158 11 / .07);border-radius:.4rem;padding:.45rem .8rem;margin-bottom:.8rem;font-size:.8rem">
+            <div style="border-left:3px solid rgb(180 83 9);background:rgb(245 158 11 / .07);border-radius:.4rem;padding:.45rem .8rem;margin-bottom:.8rem;font-size:.8rem">
                 • {{ $ao['gecikmis'] }} ziyaretin tarihi geçti ama "Tamamlandı" işaretlenmedi.
             </div>
         @endif

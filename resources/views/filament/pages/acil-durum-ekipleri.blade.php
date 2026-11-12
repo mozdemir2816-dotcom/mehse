@@ -6,9 +6,9 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $durumRenk = ['tam' => 'rgb(21 128 61)', 'eksik' => 'rgb(217 119 6)', 'kritik' => 'rgb(220 38 38)'];
+    $durumRenk = ['tam' => 'rgb(21 128 61)', 'eksik' => 'rgb(180 83 9)', 'kritik' => 'rgb(220 38 38)'];
     $durumAd = ['tam' => 'Tam', 'eksik' => 'Eksik', 'kritik' => 'Kritik'];
-    $belgeRenk = ['gecerli' => 'rgb(21 128 61)', 'yaklasan' => 'rgb(217 119 6)', 'dolmus' => 'rgb(220 38 38)', 'yok' => 'rgb(107 114 128)'];
+    $belgeRenk = ['gecerli' => 'rgb(21 128 61)', 'yaklasan' => 'rgb(180 83 9)', 'dolmus' => 'rgb(220 38 38)', 'yok' => 'rgb(107 114 128)'];
 @endphp
 
 <x-filament-panels::page>
@@ -47,7 +47,7 @@
         <x-filament::section><div style="text-align:center;padding:1rem;color:rgb(107 114 128)">Aktif işyeri yok.</div></x-filament::section>
     @else
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem">
-            @foreach ([['Ekip', $o['ekip'], null], ['Üye', $o['uye'], null], ['Lider', $o['lider'], $o['lider'] < $o['ekip'] ? 'rgb(217 119 6)' : 'rgb(21 128 61)'], ['Tam Ekip', $o['tam'].' / '.$o['ekip'], $o['tam'] === $o['ekip'] && $o['ekip'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)'], ['Kritik Ekip', $o['kritik'], $o['kritik'] ? 'rgb(220 38 38)' : null], ['Belge Süresi Dolan', $o['belge_dolan'], $o['belge_dolan'] ? 'rgb(220 38 38)' : null], ['30 Gün İçinde', $o['yaklasan'], $o['yaklasan'] ? 'rgb(217 119 6)' : null]] as [$ad, $deger, $renk])
+            @foreach ([['Ekip', $o['ekip'], null], ['Üye', $o['uye'], null], ['Lider', $o['lider'], $o['lider'] < $o['ekip'] ? 'rgb(180 83 9)' : 'rgb(21 128 61)'], ['Tam Ekip', $o['tam'].' / '.$o['ekip'], $o['tam'] === $o['ekip'] && $o['ekip'] ? 'rgb(21 128 61)' : 'rgb(180 83 9)'], ['Kritik Ekip', $o['kritik'], $o['kritik'] ? 'rgb(220 38 38)' : null], ['Belge Süresi Dolan', $o['belge_dolan'], $o['belge_dolan'] ? 'rgb(220 38 38)' : null], ['30 Gün İçinde', $o['yaklasan'], $o['yaklasan'] ? 'rgb(180 83 9)' : null]] as [$ad, $deger, $renk])
                 <div style="{{ $kart }}">
                     <div class="mehse-soluk">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:800;{{ $renk ? 'color:'.$renk : '' }}">{{ $deger }}</div>
@@ -77,7 +77,7 @@
         @endif
 
         @if ($o['oneriler'])
-            <div style="border:1px solid rgb(217 119 6 / .5);border-left:4px solid rgb(217 119 6);border-radius:.6rem;padding:.6rem .9rem">
+            <div style="border:1px solid rgb(217 119 6 / .5);border-left:4px solid rgb(180 83 9);border-radius:.6rem;padding:.6rem .9rem">
                 <div style="font-weight:700;font-size:.85rem;margin-bottom:.3rem">⚠ Kontrol Önerileri</div>
                 <ul style="margin:0;padding-left:1.1rem;font-size:.78rem;list-style:disc">
                     @foreach ($o['oneriler'] as $oneri)<li>{{ $oneri }}</li>@endforeach
@@ -96,7 +96,7 @@
                         <tr wire:key="atama-egitim-{{ $ekipId }}" style="border-top:1px solid rgb(107 114 128 / .15);vertical-align:top">
                             <td style="padding:.5rem .4rem;font-weight:700;white-space:nowrap">{{ $d['ekip']->ad }}</td>
                             <td style="padding:.5rem .4rem">
-                                <span style="font-weight:600;color:{{ $atama['guncel'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $atama['guncel'] ? '✓ Atama yazısı güncel' : '⚠ Atama yazısı güncel değil' }}</span>
+                                <span style="font-weight:600;color:{{ $atama['guncel'] ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">{{ $atama['guncel'] ? '✓ Atama yazısı güncel' : '⚠ Atama yazısı güncel değil' }}</span>
                                 @unless ($atama['guncel'])
                                     <div class="mehse-soluk">
                                         @if (! $atama['var']) Henüz hazırlanmadı.
@@ -109,7 +109,7 @@
                                 <div style="margin-top:.25rem"><x-filament::button size="xs" color="gray" icon="heroicon-o-document-text" wire:click="atamaPdf({{ $ekipId }})">Atama Yazısı (PDF)</x-filament::button></div>
                             </td>
                             <td style="padding:.5rem .4rem">
-                                <span style="font-weight:600;color:{{ $egitim['eksik']->isEmpty() ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $egitim['eksik']->isEmpty() ? '✓ Eğitimler tamam' : '⚠ '.$egitim['eksik']->count().' üyenin eğitimi yok' }}</span>
+                                <span style="font-weight:600;color:{{ $egitim['eksik']->isEmpty() ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">{{ $egitim['eksik']->isEmpty() ? '✓ Eğitimler tamam' : '⚠ '.$egitim['eksik']->count().' üyenin eğitimi yok' }}</span>
                                 @if ($egitim['eksik']->isNotEmpty())
                                     <div class="mehse-soluk">{{ $egitim['eksik']->pluck('ad_soyad')->implode(', ') }}</div>
                                     @php $pl = $d['planli']; @endphp

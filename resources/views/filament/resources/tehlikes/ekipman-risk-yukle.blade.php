@@ -83,7 +83,7 @@
                             <td style="{{ $td }};white-space:nowrap">{{ $s['madde'] }}</td>
                             <td style="{{ $td }};min-width:240px">
                                 <input type="text" wire:model.blur="onizleme.{{ $i }}.kategori_adi" style="{{ $girdi }};width:100%">
-                                <div style="font-size:.75rem;margin-top:.2rem;color:{{ $mevcut !== null ? 'rgb(217 119 6)' : 'rgb(21 128 61)' }}">
+                                <div style="font-size:.75rem;margin-top:.2rem;color:{{ $mevcut !== null ? 'rgb(180 83 9)' : 'rgb(21 128 61)' }}">
                                     {{ $mevcut !== null ? "Kütüphanede var ({$mevcut} madde) — güncellenecek" : 'Yeni kategori' }}
                                 </div>
                                 @error("onizleme.$i.kategori_adi") <div style="font-size:.75rem;color:rgb(185 28 28)">{{ $message }}</div> @enderror

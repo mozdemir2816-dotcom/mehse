@@ -31,9 +31,9 @@ class SahaBulgusu extends Model
 
     public const ONCELIK_RENK = [
         'kritik' => '#b91c1c',
-        'yuksek' => '#d97706',
-        'orta' => '#ca8a04',
-        'dusuk' => '#16a34a',
+        'yuksek' => '#c2410c',
+        'orta' => '#a16207',
+        'dusuk' => '#15803d',
     ];
 
     protected $table = 'saha_bulgulari';

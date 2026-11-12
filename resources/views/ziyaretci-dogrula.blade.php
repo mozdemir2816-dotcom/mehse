@@ -13,7 +13,7 @@
         background: var(--zemin); color: var(--yazi); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
     .kart { width: 100%; max-width: 420px; background: var(--kart); border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgb(0 0 0 / .12); }
     .durum { text-align: center; padding: 18px; border-radius: 12px; color: #fff; font-size: 1.4rem; font-weight: 800; margin-bottom: 18px; }
-    .ok { background: #16a34a; } .bekle { background: #d97706; } .red { background: #dc2626; }
+    .ok { background: #15803d; } .bekle { background: #b45309; } .red { background: #dc2626; }
     .satir { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--cizgi); font-size: .95rem; }
     .satir span:first-child { color: var(--soluk); }
     .satir span:last-child { text-align: right; font-weight: 600; }

@@ -3,8 +3,8 @@
     $s = $this->sonuc;
     $firma = $this->firma;
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
-    $renk = ['kritik' => 'rgb(220 38 38)', 'uyari' => 'rgb(217 119 6)', 'bilgi' => 'rgb(37 99 235)'];
-    $skorRenk = fn (int $skor) => $skor >= 90 ? 'rgb(21 128 61)' : ($skor >= 75 ? 'rgb(13 148 136)' : ($skor >= 50 ? 'rgb(217 119 6)' : 'rgb(220 38 38)'));
+    $renk = ['kritik' => 'rgb(220 38 38)', 'uyari' => 'rgb(180 83 9)', 'bilgi' => 'rgb(37 99 235)'];
+    $skorRenk = fn (int $skor) => $skor >= 90 ? 'rgb(21 128 61)' : ($skor >= 75 ? 'rgb(15 118 110)' : ($skor >= 50 ? 'rgb(180 83 9)' : 'rgb(220 38 38)'));
 @endphp
 
 <p style="font-size:.82rem;color:rgb(107 114 128);line-height:1.5;margin:0">

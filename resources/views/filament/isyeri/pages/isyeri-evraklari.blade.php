@@ -54,7 +54,7 @@
     {{-- İSG BİLGİLENDİRMELERİ (Ön Bilgilendirme / Tebliğ) --}}
     @if ($this->bilgilendirmeler->isNotEmpty())
         @php $bekleyen = $this->bilgilendirmeler->whereNull('isyeri_okundu_at')->count(); @endphp
-        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#f59e0b' : '#10b981' }}">
+        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#b45309' : '#10b981' }}">
             <div style="font-weight:700;margin-bottom:.2rem">İSG Bilgilendirmeleri</div>
             <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.6rem">
                 İSG uzmanınızın işe başlamadan önce bildirdiği tedbirler.

@@ -34,9 +34,9 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
             @foreach ([
                 ['Aktif zimmet', $o['aktif'], 'rgb(124 58 237)', 'aktif'],
-                ['Yenileme yaklaşan', $o['yaklasan'], '#d97706', 'yaklasan'],
+                ['Yenileme yaklaşan', $o['yaklasan'], '#b45309', 'yaklasan'],
                 ['Yenileme geciken', $o['gecikmis'], '#dc2626', 'gecikmis'],
-                ['Düşük stok', $o['dusuk_stok'], '#d97706', null],
+                ['Düşük stok', $o['dusuk_stok'], '#b45309', null],
             ] as [$ad, $sayi, $renk, $filtre])
                 <button type="button" @if ($filtre) wire:click="$set('durumFiltre', '{{ $filtre }}')" @endif
                     style="text-align:left;border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.75rem 1rem;background:transparent;cursor:{{ $filtre ? 'pointer' : 'default' }}">

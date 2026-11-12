@@ -35,7 +35,7 @@
     --sidebar-to: #172f4e;
     --text-heading: #1E293B;
     --text-secondary: #64748B;
-    --text-label: #94A3B8;
+    --text-label: #64748B;
     --border: #E2E8F0;
     --border-light: #F1F5F9;
     --success-bg: #F0FDF4;
@@ -48,8 +48,8 @@
     --warning-text: #B45309;
     --warning-border: #FED7AA;
     --metric-blue: #2563EB;
-    --metric-green: #16A34A;
-    --metric-orange: #D97706;
+    --metric-green: #15803D;
+    --metric-orange: #B45309;
     --metric-purple: #7C3AED;
 }
 

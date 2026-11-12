@@ -1,5 +1,5 @@
 @php
-    $renkler = ['bos' => '#374151', 'planlandi' => '#f59e0b', 'tamamlandi' => '#10b981'];
+    $renkler = ['bos' => '#374151', 'planlandi' => '#b45309', 'tamamlandi' => '#10b981'];
     $etiketler = ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'];
     $mor = 'rgb(139 92 246)';
     $p = $this->plan;
@@ -38,14 +38,14 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem">
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
                 <div style="font-size:.75rem;color:#64748b;font-weight:600">Yıllık Plan Gerçekleşme Oranı</div>
-                <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['oran'] === null ? '#64748b' : ($oz['oran'] >= 80 ? '#059669' : ($oz['oran'] >= 50 ? '#d97706' : '#dc2626')) }}">
+                <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['oran'] === null ? '#64748b' : ($oz['oran'] >= 80 ? '#047857' : ($oz['oran'] >= 50 ? '#b45309' : '#dc2626')) }}">
                     {{ $oz['oran'] === null ? '—' : '%'.$oz['oran'] }}
                 </div>
                 <div style="font-size:.75rem;color:#64748b">{{ $oz['gerceklesen'] }} G / {{ $oz['planlanan'] }} vadesi gelen faaliyet (çalışma + eğitim)</div>
             </div>
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:.8rem 1rem">
                 <div style="font-size:.75rem;color:#64748b;font-weight:600">Geciken Faaliyet</div>
-                <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['geciken'] > 0 ? '#dc2626' : '#059669' }}">{{ $oz['geciken'] }}</div>
+                <div style="font-size:1.6rem;font-weight:800;color:{{ $oz['geciken'] > 0 ? '#dc2626' : '#047857' }}">{{ $oz['geciken'] }}</div>
                 <div style="font-size:.75rem;color:#64748b">P'de kalan, ayı geçmiş hücre (kırmızı nokta ●)</div>
             </div>
         </div>

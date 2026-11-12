@@ -55,7 +55,7 @@
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
                 {!! $sayi($r['firma'], 'Firma') !!}
                 {!! $sayi($r['satir'], 'Kimyasal') !!}
-                {!! $sayi($r['yuksek'], 'Yaklaşım 3-4', '#d97706') !!}
+                {!! $sayi($r['yuksek'], 'Yaklaşım 3-4', '#b45309') !!}
                 {!! $sayi($r['cmr'], 'CMR', '#dc2626') !!}
             </div>
             <x-filament::button tag="a" :href="$this->adres(\App\Filament\Pages\KimyasalRiskDegerlendirmesi::class)" icon="heroicon-o-arrow-right" icon-position="after" color="gray">Risk Değerlendirmesini Aç</x-filament::button>
@@ -79,7 +79,7 @@
         {{-- PKD --}}
         <div style="{{ $kart }}">
             <div style="display:flex;gap:.6rem;align-items:center">
-                <x-filament::icon icon="heroicon-o-fire" style="width:1.6rem;height:1.6rem;color:rgb(234 88 12)" />
+                <x-filament::icon icon="heroicon-o-fire" style="width:1.6rem;height:1.6rem;color:rgb(194 65 12)" />
                 <div>
                     <div style="font-weight:700">PKD Sicili</div>
                     <div class="mehse-soluk">Patlamadan korunma dokümanları, zone ve önlem takibi</div>
@@ -88,7 +88,7 @@
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
                 {!! $sayi($p['toplam'], 'PKD') !!}
                 {!! $sayi($p['dosyasiz'], 'Dosya eksik', '#dc2626') !!}
-                {!! $sayi($p['takip'], 'Takip', '#d97706') !!}
+                {!! $sayi($p['takip'], 'Takip', '#b45309') !!}
             </div>
             <x-filament::button tag="a" :href="$this->adres(\App\Filament\Pages\PkdSicili::class)" icon="heroicon-o-arrow-right" icon-position="after" color="warning">PKD Sicilini Aç</x-filament::button>
         </div>

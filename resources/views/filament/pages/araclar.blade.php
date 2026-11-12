@@ -1,5 +1,5 @@
 @php
-    $turuncu = 'rgb(217 119 6)';
+    $turuncu = 'rgb(180 83 9)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
 @endphp

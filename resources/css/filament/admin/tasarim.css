@@ -1333,7 +1333,7 @@ html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-link {
     align-items: center;
     gap: .75rem;
     margin-bottom: .75rem;
-    color: #94A3B8;
+    color: #64748B;
     font-size: .75rem;
 }
 
@@ -1770,7 +1770,7 @@ html[data-mehse-tema="saha"] .mehse-kokpit .mehse-hosgeldin-baslik { font-size: 
 }
 
 .mehse-kokpit-kart {
-    --ton: #0284C7;
+    --ton: #0369A1;
     position: relative;
     display: flex;
     flex-direction: column;

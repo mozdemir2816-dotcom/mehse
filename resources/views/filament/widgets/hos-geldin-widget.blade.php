@@ -47,13 +47,13 @@
 
     {{-- Tek satır 4 kart (telefonda gizli: telefonda yalnız evrak uyumu + ziyaret takvimi) --}}
     <div class="mehse-kokpit-kartlar mehse-mobilde-gizle">
-        <a href="{{ $portfoy['url'] }}" class="mehse-kokpit-kart" style="--ton:#0284C7">
+        <a href="{{ $portfoy['url'] }}" class="mehse-kokpit-kart" style="--ton:#0369A1">
             <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-building-office-2" />Aktif Portföy</span>
             <span class="mehse-kokpit-kart-deger">{{ $portfoy['firma'] }} <small>firma</small> <span class="mehse-kokpit-ayrac">/</span> {{ $portfoy['calisan'] }} <small>çalışan</small></span>
             <span class="mehse-kokpit-kart-alt">Firma listesine git →</span>
         </a>
 
-        <div class="mehse-kokpit-kart" style="--ton:{{ $asim ? '#E11D48' : '#0284C7' }}" title="{{ $katipIpucu }}">
+        <div class="mehse-kokpit-kart" style="--ton:{{ $asim ? '#E11D48' : '#0369A1' }}" title="{{ $katipIpucu }}">
             <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-clock" />İSG-KATİP Kapasitesi
                 <span class="mehse-kokpit-bilgi" aria-label="{{ $katipIpucu }}">ⓘ</span></span>
             <span class="mehse-kokpit-kart-deger">{{ $saatDk($sure['kullanilan_dk']) }} <small>/ {{ $kapasiteSaat }} sa</small>
@@ -67,7 +67,7 @@
             </span>
         </div>
 
-        <a href="{{ $sozlesme['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $sozlesme['geciken'] ? '#E11D48' : '#059669' }}">
+        <a href="{{ $sozlesme['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $sozlesme['geciken'] ? '#E11D48' : '#047857' }}">
             <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-document-text" />Sözleşme Durumu</span>
             <span class="mehse-kokpit-kart-deger">{{ $sozlesme['geciken'] }} <small>geciken sözleşme</small></span>
             <span class="mehse-kokpit-kart-alt">
@@ -77,7 +77,7 @@
         </a>
 
         {{-- Görev panosuyla aynı liste: sayılar panodaki "Günü geçen" / "Yaklaşan" ile birebir aynıdır --}}
-        <a href="{{ $kritik['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $kritik['geciken'] ? '#E11D48' : ($kritik['yaklasan'] ? '#D97706' : '#059669') }}"
+        <a href="{{ $kritik['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $kritik['geciken'] ? '#E11D48' : ($kritik['yaklasan'] ? '#b45309' : '#047857') }}"
            title="Görev panosundaki Günü geçen / Yaklaşan sütunlarıyla aynı sayım (firma başına görev)">
             <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-exclamation-triangle" />Kritik Görevler (DÖF / Saha)</span>
             <span class="mehse-kokpit-kart-deger">{{ $kritik['geciken'] }} <small>günü geçen</small> <span class="mehse-kokpit-ayrac">/</span> {{ $kritik['yaklasan'] }} <small>yaklaşan</small></span>

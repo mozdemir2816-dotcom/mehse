@@ -1,6 +1,6 @@
 {{-- Arşiv kategori kartı: $anahtar, $k (config), $o (DokumanYonetimi::kartlar), $kart (stil), $firmaSayisi --}}
 @php
-    $serit = $o['gecikmis'] ? '#dc2626' : ($o['yaklasan'] ? '#d97706' : null);
+    $serit = $o['gecikmis'] ? '#dc2626' : ($o['yaklasan'] ? '#b45309' : null);
 @endphp
 <button type="button" wire:key="kart-{{ $anahtar }}" wire:click="kategoriAc('{{ $anahtar }}')" class="arsiv-kart"
     style="{{ $kart }};text-align:left;padding:.9rem 1rem;cursor:pointer;display:flex;flex-direction:column;gap:.45rem;min-height:7.5rem;color:inherit;{{ $serit ? 'border-left:4px solid '.$serit : '' }}">

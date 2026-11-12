@@ -24,7 +24,7 @@ html[data-mehse-tema="mehse"] {
     --sidebar-to: #061D33;
     --text-heading: #0A2540;
     --text-secondary: #5B6B7D;
-    --text-label: #8494A5;
+    --text-label: #64748B;
     --border: #DFE6EC;
     --border-light: #EDF1F5;
     --info-bg: #E9F3FC;
@@ -38,7 +38,7 @@ html[data-mehse-tema="mehse"] {
     --warning-border: #FADDAE;
     --metric-blue: #099291;
     --metric-green: #0A345A;
-    --metric-orange: #E08A00;
+    --metric-orange: #B45309;
     --metric-purple: #D9483B;
 
     --primary-50: #EEFAF9;

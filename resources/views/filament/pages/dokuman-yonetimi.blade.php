@@ -5,7 +5,7 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.8rem;background:var(--sgr-kart, transparent);box-shadow:0 1px 2px rgb(0 0 0 / .05)';
     $baslikStil = 'font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgb(107 114 128)';
     $soluk = 'color:rgb(107 114 128)';
-    $renk = ['gecikmis' => '#dc2626', 'yaklasan' => '#d97706', 'eksik' => '#6b7280', 'tamam' => '#15803d', 'muaf' => '#6b7280', 'takipsiz' => '#6b7280'];
+    $renk = ['gecikmis' => '#dc2626', 'yaklasan' => '#b45309', 'eksik' => '#6b7280', 'tamam' => '#15803d', 'muaf' => '#6b7280', 'takipsiz' => '#6b7280'];
     $kategoriler = config('arsiv.kategoriler');
     $gecikmisler = $this->sorunlar->where('durum', 'gecikmis');
     $th = 'text-align:left;padding:.5rem .55rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
@@ -233,7 +233,7 @@
                                 <td style="{{ $td }}">{{ $d->kategoriEtiketi() }}</td>
                                 <td style="{{ $td }};white-space:nowrap">{{ $d->baslangic_tarihi?->format('d.m.Y') ?? '—' }}@if ($d->yil)<div style="font-size:.75rem;{{ $soluk }}">Yıl {{ $d->yil }}</div>@endif</td>
                                 <td style="{{ $td }};white-space:nowrap">{{ $d->gecerlilik_sonu?->format('d.m.Y') ?? 'Süresiz' }}</td>
-                                <td style="{{ $td }};white-space:nowrap;font-weight:700;color:{{ ['Aktif' => '#15803d', 'Pasif' => '#6b7280', 'Süresi yaklaşıyor' => '#d97706', 'Süresi doldu' => '#dc2626', 'İmza bekliyor' => '#b45309'][$d->durumEtiketi()] ?? 'inherit' }}">{{ $d->durumEtiketi() }}</td>
+                                <td style="{{ $td }};white-space:nowrap;font-weight:700;color:{{ ['Aktif' => '#15803d', 'Pasif' => '#6b7280', 'Süresi yaklaşıyor' => '#b45309', 'Süresi doldu' => '#dc2626', 'İmza bekliyor' => '#b45309'][$d->durumEtiketi()] ?? 'inherit' }}">{{ $d->durumEtiketi() }}</td>
                                 <td style="{{ $td }};width:1%"><div style="display:grid;grid-template-columns:1fr 1fr;gap:.25rem;min-width:170px">
                                     <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="indir({{ $d->id }})">İndir</x-filament::button>
                                     <x-filament::button size="xs" color="gray" wire:click="mountAction('duzenle', { id: {{ $d->id }} })">Düzelt</x-filament::button>
@@ -305,7 +305,7 @@
                                     @if ($d->gecerlilik_sonu) · {{ $d->gecerlilik_sonu->format('d.m.Y') }}'e kadar @endif
                                 </span>
                             </span>
-                            <span style="font-size:.75rem;font-weight:600;color:{{ ['Süresi doldu' => '#dc2626', 'Süresi yaklaşıyor' => '#d97706', 'Pasif' => '#6b7280'][$d->durumEtiketi()] ?? '#15803d' }}">{{ $d->durumEtiketi() }}</span>
+                            <span style="font-size:.75rem;font-weight:600;color:{{ ['Süresi doldu' => '#dc2626', 'Süresi yaklaşıyor' => '#b45309', 'Pasif' => '#6b7280'][$d->durumEtiketi()] ?? '#15803d' }}">{{ $d->durumEtiketi() }}</span>
                         </button>
                     @endforeach
                 </div>

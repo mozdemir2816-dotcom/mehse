@@ -7,7 +7,7 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.5rem .6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $grupRenk = ['cok_yuksek' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#b45309', 'dusuk' => '#16a34a'];
+    $grupRenk = ['cok_yuksek' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#b45309', 'dusuk' => '#15803d'];
     $yontemAd = $rd ? config('isg.risk_yontemleri.'.$rd->yontem) : null;
 @endphp
 
@@ -38,11 +38,11 @@
 
         <div style="display:flex;gap:.25rem;border-bottom:1px solid rgb(107 114 128 / .2)">
             @foreach (['merkez' => 'Merkez', 'aksiyon' => 'Aksiyon', 'nace' => 'NACE Yol Haritası', 'raporlar' => 'Raporlar'] as $k => $ad)
-                <button type="button" wire:click="$set('sekme', '{{ $k }}')" style="padding:.5rem .9rem;font-size:.85rem;font-weight:600;border-bottom:2px solid {{ $sekme === $k ? 'rgb(13 148 136)' : 'transparent' }};color:{{ $sekme === $k ? 'rgb(13 148 136)' : 'inherit' }}">{{ $ad }}</button>
+                <button type="button" wire:click="$set('sekme', '{{ $k }}')" style="padding:.5rem .9rem;font-size:.85rem;font-weight:600;border-bottom:2px solid {{ $sekme === $k ? 'rgb(15 118 110)' : 'transparent' }};color:{{ $sekme === $k ? 'rgb(15 118 110)' : 'inherit' }}">{{ $ad }}</button>
             @endforeach
         </div>
 
-        @php $yen = RMV::yenileme($firma, $rd); $yRenk = ['yok' => 'rgb(220 38 38)', 'eksik' => 'rgb(37 99 235)', 'gecti' => 'rgb(220 38 38)', 'yakin' => 'rgb(217 119 6)', 'gecerli' => 'rgb(21 128 61)'][$yen['durum']]; @endphp
+        @php $yen = RMV::yenileme($firma, $rd); $yRenk = ['yok' => 'rgb(220 38 38)', 'eksik' => 'rgb(37 99 235)', 'gecti' => 'rgb(220 38 38)', 'yakin' => 'rgb(180 83 9)', 'gecerli' => 'rgb(21 128 61)'][$yen['durum']]; @endphp
         <div style="border:1px solid {{ $yRenk }};background:color-mix(in srgb, {{ $yRenk }} 7%, transparent);border-radius:.6rem;padding:.55rem .8rem;font-size:.8rem">
             <strong style="color:{{ $yRenk }}">Risk değerlendirmesi yenileme takibi</strong> — {{ $yen['metin'] }}
         </div>
@@ -59,7 +59,7 @@
                 </x-filament::section>
             @else
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem">
-                    @foreach ([['Toplam risk', $o['toplam'], $o['acik'].' açık', 'inherit'], ['Çok yüksek', $o['cok_yuksek_acik'], 'Açık, acil öncelik', '#7f1d1d'], ['Yüksek', $o['yuksek_acik'], 'Açık', '#dc2626'], ['Açık önlem', $o['aksiyon_acik'], 'Önerisi olan açık madde', '#d97706'], ['Geciken önlem', $o['geciken'], 'Termini geçmiş', '#dc2626']] as [$ad, $sayi, $alt, $renk])
+                    @foreach ([['Toplam risk', $o['toplam'], $o['acik'].' açık', 'inherit'], ['Çok yüksek', $o['cok_yuksek_acik'], 'Açık, acil öncelik', '#7f1d1d'], ['Yüksek', $o['yuksek_acik'], 'Açık', '#dc2626'], ['Açık önlem', $o['aksiyon_acik'], 'Önerisi olan açık madde', '#b45309'], ['Geciken önlem', $o['geciken'], 'Termini geçmiş', '#dc2626']] as [$ad, $sayi, $alt, $renk])
                         <div style="{{ $kart }};border-left:4px solid {{ $renk === 'inherit' ? 'rgb(107 114 128)' : $renk }}">
                             <div style="font-size:1.4rem;font-weight:800;color:{{ $renk }}">{{ $sayi }}</div>
                             <div style="font-size:.78rem;font-weight:600">{{ $ad }}</div>
@@ -210,7 +210,7 @@
                 <x-slot name="description">Mevzuat başlıkları rapor kapsamını kontrol etmek içindir; resmî değerlendirme ekip ve işveren onayı ile tamamlanır.</x-slot>
                 @foreach ($kontroller as $i => $k)
                     <div style="display:flex;gap:.6rem;align-items:flex-start;padding:.5rem .6rem;border:1px solid rgb(107 114 128 / .18);border-radius:.55rem;margin-bottom:.35rem">
-                        <span style="font-weight:800;min-width:1.4rem;color:{{ $k['tamam'] === true ? 'rgb(21 128 61)' : ($k['tamam'] === null ? 'rgb(107 114 128)' : 'rgb(217 119 6)') }}">{{ $k['tamam'] === true ? '✓' : ($k['tamam'] === null ? '–' : '!') }}</span>
+                        <span style="font-weight:800;min-width:1.4rem;color:{{ $k['tamam'] === true ? 'rgb(21 128 61)' : ($k['tamam'] === null ? 'rgb(107 114 128)' : 'rgb(180 83 9)') }}">{{ $k['tamam'] === true ? '✓' : ($k['tamam'] === null ? '–' : '!') }}</span>
                         <div style="flex:1;font-size:.8rem">
                             <strong>{{ $i + 1 }}. {{ $k['baslik'] }}</strong>
                             <div class="mehse-soluk">{{ $k['aciklama'] }} <em>({{ $k['dayanak'] }})</em></div>
@@ -225,7 +225,7 @@
                 <x-slot name="description">Kapsamdan izlemeye kadar sıralı iş akışı.</x-slot>
                 @foreach (RMV::yolHaritasi($kontroller, $o ?? ['toplam' => 0, 'geciken' => 0]) as $i => [$b, $a, $tamam])
                     <div style="display:flex;gap:.6rem;align-items:flex-start;margin-bottom:.5rem">
-                        <span style="width:1.6rem;height:1.6rem;flex:none;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;background:{{ $tamam ? 'rgb(21 128 61)' : 'rgb(13 148 136)' }}">{{ $tamam ? '✓' : $i + 1 }}</span>
+                        <span style="width:1.6rem;height:1.6rem;flex:none;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;background:{{ $tamam ? 'rgb(21 128 61)' : 'rgb(15 118 110)' }}">{{ $tamam ? '✓' : $i + 1 }}</span>
                         <div style="font-size:.8rem"><strong>{{ $b }}</strong><div class="mehse-soluk">{{ $a }}</div></div>
                     </div>
                 @endforeach

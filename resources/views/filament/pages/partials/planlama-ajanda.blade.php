@@ -28,7 +28,7 @@
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $yesil }}">{{ $ozet['firma'] }}</div>
                 <div style="font-size:.75rem;color:rgb(95 87 112)">Firma</div>
             </div>
-            @php $kd = $this->katipDoluluk; $kdRenk = $kd['yuzde'] > 100 ? '#dc2626' : ($kd['yuzde'] >= 90 ? '#d97706' : '#16a34a'); @endphp
+            @php $kd = $this->katipDoluluk; $kdRenk = $kd['yuzde'] > 100 ? '#dc2626' : ($kd['yuzde'] >= 90 ? '#b45309' : '#15803d'); @endphp
             <div style="{{ $kutu }};padding:.5rem .9rem;text-align:center" title="Aylık İSG-KATİP doluluk: aktif firmaların yasal süreleri toplamı / aylık kapasite">
                 <div style="font-size:1.2rem;font-weight:800;color:{{ $kdRenk }}">%{{ $kd['yuzde'] }}</div>
                 <div style="font-size:.75rem;color:rgb(95 87 112)">İSG-KATİP doluluk</div>
@@ -90,7 +90,7 @@
                     $zFirma = $z['firma'];
                     $durum = $z['durum'];
                     $sureDk = \App\Support\YasalZiyaretSuresi::dakikayaCevir($z['sure_saat']);
-                    $durumRenk = $durum === 'tamamlandi' ? '#059669' : ($durum === 'planlandi' ? '#f59e0b' : '#94a3b8');
+                    $durumRenk = $durum === 'tamamlandi' ? '#047857' : ($durum === 'planlandi' ? '#b45309' : '#94a3b8');
                 @endphp
                 <div style="border:1px solid rgb(128 116 148 / .22);border-radius:1rem;padding:.8rem 1rem;margin-bottom:.6rem">
                     <div style="display:flex;justify-content:space-between;align-items:start;gap:.5rem">

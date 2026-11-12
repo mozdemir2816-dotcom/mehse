@@ -229,7 +229,7 @@
                                             @if (filled($m['sorumlu']))<span style="display:block;font-size:.75rem;color:#6b7280;text-decoration:none">{{ $m['sorumlu'] }}</span>@endif
                                         </span>
                                         <button type="button" wire:click="kritikGorevToggle('{{ $m['alan'] }}', {{ $m['index'] }})" title="{{ $yildizli ? 'Öne çıkandan kaldır' : 'Ayın öne çıkan görevi yap' }}" aria-label="Öne çıkan görev"
-                                            style="flex-shrink:0;min-width:2.5rem;min-height:2.5rem;border-radius:.5rem;border:1px solid {{ $yildizli ? '#d97706' : '#e5e7eb' }};background:{{ $yildizli ? 'rgb(217 119 6 / .12)' : 'transparent' }};color:{{ $yildizli ? '#b45309' : '#9ca3af' }};font-size:1.05rem;cursor:pointer">{{ $yildizli ? '★' : '☆' }}</button>
+                                            style="flex-shrink:0;min-width:2.5rem;min-height:2.5rem;border-radius:.5rem;border:1px solid {{ $yildizli ? '#b45309' : '#e5e7eb' }};background:{{ $yildizli ? 'rgb(217 119 6 / .12)' : 'transparent' }};color:{{ $yildizli ? '#b45309' : '#9ca3af' }};font-size:1.05rem;cursor:pointer">{{ $yildizli ? '★' : '☆' }}</button>
                                         <span style="flex-shrink:0;width:5.2rem;font-size:.75rem;font-weight:700;color:{{ $m['gerceklesti'] ? '#15803d' : '#b45309' }}">{{ $m['gerceklesti'] ? 'G · Yapıldı' : 'P · Planlı' }}</span>
                                     </div>
                                 @endforeach

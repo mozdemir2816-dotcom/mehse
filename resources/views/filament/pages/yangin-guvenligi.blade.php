@@ -1,7 +1,7 @@
 @php
     $lbl = 'font-weight:600;font-size:.82rem;display:block;margin-bottom:.25rem';
     $inp = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem';
-    $sinifRenk = ['dusuk' => '#16a34a', 'orta' => '#d97706', 'yuksek' => '#dc2626'];
+    $sinifRenk = ['dusuk' => '#15803d', 'orta' => '#b45309', 'yuksek' => '#dc2626'];
     $ozelSorular = ['kapali_otopark' => 'Kapalı otopark var mı?', 'bodrum' => 'Bodrum kat var mı?', 'konaklama' => 'Konaklama / yataklı bölüm var mı?', 'toplanti' => 'Toplantı / eğlence alanı var mı?', 'kazan_dairesi' => 'Kazan dairesi var mı?'];
 @endphp
 
@@ -158,7 +158,7 @@
                 <div style="display:flex;gap:.5rem;align-items:start;margin-bottom:.3rem;font-size:.82rem">
                     <span style="font-weight:700;color:rgb(107 114 128)">{{ $i + 1 }}.</span>
                     <span style="flex:1">{{ $t['madde'] }}</span>
-                    <button type="button" wire:click="oncelikDegistir({{ $i }})" title="Önceliği değiştirmek için tıklayın" style="font-size:.75rem;color:{{ $t['oncelik'] === 'yuksek' ? '#dc2626' : '#d97706' }};font-weight:700;border:1px solid currentColor;border-radius:.3rem;padding:0 .35rem;background:none;cursor:pointer">{{ $t['oncelik'] === 'yuksek' ? 'Yüksek' : 'Orta' }} ⇄</button>
+                    <button type="button" wire:click="oncelikDegistir({{ $i }})" title="Önceliği değiştirmek için tıklayın" style="font-size:.75rem;color:{{ $t['oncelik'] === 'yuksek' ? '#dc2626' : '#b45309' }};font-weight:700;border:1px solid currentColor;border-radius:.3rem;padding:0 .35rem;background:none;cursor:pointer">{{ $t['oncelik'] === 'yuksek' ? 'Yüksek' : 'Orta' }} ⇄</button>
                     <button type="button" wire:click="tespitSil({{ $i }})" style="color:#b91c1c;border:none;background:none;cursor:pointer">✕</button>
                 </div>
             @empty

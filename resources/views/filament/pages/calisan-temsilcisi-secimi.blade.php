@@ -93,7 +93,7 @@
                         <input type="text" wire:model="adaylar.{{ $i }}.unvan" placeholder="Unvan / Görev"
                             style="flex:1;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         <button type="button" wire:click="kazananSec({{ $i }})" title="Seçim kazananı"
-                            style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:{{ $secilenAdayIndex === $i ? '#16a34a' : 'rgb(107 114 128 / .4)' }}">
+                            style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:{{ $secilenAdayIndex === $i ? '#15803d' : 'rgb(107 114 128 / .4)' }}">
                             {{ $secilenAdayIndex === $i ? '✓' : '○' }}
                         </button>
                         <button type="button" wire:click="adaySil({{ $i }})" title="Sil"
@@ -117,8 +117,8 @@
                     @foreach ($this->atamaEgitim as $t)
                         <tr style="border-top:1px solid rgb(107 114 128 / .15)">
                             <td style="padding:.45rem .4rem;font-weight:700">{{ $t['ad_soyad'] }}@if ($t['unvan']) <span style="font-weight:400;color:rgb(107 114 128)">— {{ $t['unvan'] }}</span>@endif</td>
-                            <td style="padding:.45rem .4rem;color:{{ $t['atama'] ? 'rgb(21 128 61)' : 'rgb(217 119 6)' }}">{{ $t['atama'] ? '✓ Atama yazısı var' : '⚠ Atama yazısı yok' }}</td>
-                            <td style="padding:.45rem .4rem;color:{{ $t['egitim_yok'] ? 'rgb(217 119 6)' : 'rgb(21 128 61)' }}">{{ $t['egitim_yok'] ? '⚠ Eğitimi yok' : '✓ Eğitim kaydı var' }}</td>
+                            <td style="padding:.45rem .4rem;color:{{ $t['atama'] ? 'rgb(21 128 61)' : 'rgb(180 83 9)' }}">{{ $t['atama'] ? '✓ Atama yazısı var' : '⚠ Atama yazısı yok' }}</td>
+                            <td style="padding:.45rem .4rem;color:{{ $t['egitim_yok'] ? 'rgb(180 83 9)' : 'rgb(21 128 61)' }}">{{ $t['egitim_yok'] ? '⚠ Eğitimi yok' : '✓ Eğitim kaydı var' }}</td>
                         </tr>
                     @endforeach
                 </table>

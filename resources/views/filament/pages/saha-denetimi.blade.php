@@ -1,10 +1,10 @@
 @php
-    $turuncu = 'rgb(234 88 12)';
+    $turuncu = 'rgb(194 65 12)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     // Kontrol listesi maddeleri kompakt (02.11.2026: dikey kaydırma ~yarıya)
     $madde_kutu = 'border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.45rem .7rem';
     $sonucRengi = fn ($s) => match ($s) {
-        'uygun' => ['#16a34a', 'rgb(22 163 74 / .1)'],
+        'uygun' => ['#15803d', 'rgb(22 163 74 / .1)'],
         'uygun_degil' => ['#dc2626', 'rgb(220 38 38 / .1)'],
         'uygulanamaz' => ['rgb(107 114 128)', 'rgb(107 114 128 / .1)'],
         default => ['rgb(107 114 128)', 'transparent'],
@@ -268,9 +268,9 @@
                             <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun')"
                                     style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
-                                        border:1px solid {{ $cevap['sonuc'] === 'uygun' ? '#16a34a' : 'rgb(107 114 128 / .3)' }};
+                                        border:1px solid {{ $cevap['sonuc'] === 'uygun' ? '#15803d' : 'rgb(107 114 128 / .3)' }};
                                         background:{{ $cevap['sonuc'] === 'uygun' ? 'rgb(22 163 74 / .1)' : 'transparent' }};
-                                        color:{{ $cevap['sonuc'] === 'uygun' ? '#16a34a' : 'inherit' }}">✓ Uygun</button>
+                                        color:{{ $cevap['sonuc'] === 'uygun' ? '#15803d' : 'inherit' }}">✓ Uygun</button>
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun_degil')"
                                     style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
                                         border:1px solid {{ $cevap['sonuc'] === 'uygun_degil' ? '#dc2626' : 'rgb(107 114 128 / .3)' }};

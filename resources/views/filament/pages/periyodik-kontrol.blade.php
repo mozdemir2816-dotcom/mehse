@@ -1,7 +1,7 @@
 @php
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'width:100%;padding:.4rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem';
-    $durumRenk = ['gecerli' => '#16a34a', 'yaklasan' => '#d97706', 'dolmus' => '#dc2626', 'bekliyor' => '#6b7280', 'muaf' => '#0369a1'];
+    $durumRenk = ['gecerli' => '#15803d', 'yaklasan' => '#b45309', 'dolmus' => '#dc2626', 'bekliyor' => '#6b7280', 'muaf' => '#0369a1'];
     $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan / Yasak', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
 @endphp
 
@@ -28,8 +28,8 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem">
             @foreach ([
                 ['TOPLAM EKİPMAN', $this->kpi['toplam'], 'Aktif takibe alınan iş ekipmanları', '#111827'],
-                ['VİZESİ GEÇERLİ', $this->kpi['gecerli'], 'Yasal muayenesi uygun ve onaylı', '#16a34a'],
-                ['VİZE YAKLAŞAN', $this->kpi['yaklasan'], '<30 gün kalanlar / randevu bekleyen', '#d97706'],
+                ['VİZESİ GEÇERLİ', $this->kpi['gecerli'], 'Yasal muayenesi uygun ve onaylı', '#15803d'],
+                ['VİZE YAKLAŞAN', $this->kpi['yaklasan'], '<30 gün kalanlar / randevu bekleyen', '#b45309'],
                 ['SÜRESİ DOLAN / YASAK', $this->kpi['dolmus'], 'Kullanımı kanunen durdurulmalıdır', '#dc2626'],
             ] as [$baslik, $deger, $aciklama, $renk])
                 <div style="{{ $kutu }}">

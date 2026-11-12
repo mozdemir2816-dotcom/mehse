@@ -4,7 +4,7 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.9rem;background:var(--zm-kart);padding:.9rem 1rem';
     $baslik = 'font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgb(107 114 128)';
     $soluk = 'color:rgb(107 114 128)';
-    $renk = ['gecikmis' => '#dc2626', 'yaklasan' => '#d97706', 'eksik' => '#6b7280', 'tamam' => '#15803d', 'muaf' => '#6b7280', 'takipsiz' => '#6b7280', 'yapilmayan' => '#d97706'];
+    $renk = ['gecikmis' => '#dc2626', 'yaklasan' => '#b45309', 'eksik' => '#6b7280', 'tamam' => '#15803d', 'muaf' => '#6b7280', 'takipsiz' => '#6b7280', 'yapilmayan' => '#b45309'];
     $buyukDugme = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;min-height:4.6rem;border-radius:.9rem;font-weight:700;font-size:.85rem;text-decoration:none;text-align:center;padding:.5rem';
     $f = $this->firma;
 @endphp

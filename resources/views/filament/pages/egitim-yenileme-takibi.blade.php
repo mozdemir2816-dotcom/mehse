@@ -142,12 +142,12 @@
                                     @if ($k->katilimciSayisi() === 0)
                                         —
                                     @elseif ($k->sonuclandiMi())
-                                        <span style="color:rgb(22 163 74);font-weight:600">Sonuçlandı</span> <span class="mehse-soluk-metin">({{ count($k->belgeAlacakKatilimcilar()) }}/{{ $k->katilimciSayisi() }} başarılı)</span>
+                                        <span style="color:rgb(21 128 61);font-weight:600">Sonuçlandı</span> <span class="mehse-soluk-metin">({{ count($k->belgeAlacakKatilimcilar()) }}/{{ $k->katilimciSayisi() }} başarılı)</span>
                                     @else
                                         <span style="color:rgb(180 83 9);font-weight:600">Sonuç bekliyor</span>
                                     @endif
                                 </td>
-                                <td style="{{ $td }};text-align:right;white-space:nowrap">@if ($k->katilimciSayisi() > 0)<button type="button" wire:click="mountAction('sonucGir', { id: {{ $k->id }} })" style="color:rgb(22 163 74);font-size:.78rem;margin-right:.6rem">Katılım / Sonuç</button>@endif<a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $k->firma_id]) }}" style="color:rgb(124 58 237);font-size:.78rem">Belgeler →</a></td>
+                                <td style="{{ $td }};text-align:right;white-space:nowrap">@if ($k->katilimciSayisi() > 0)<button type="button" wire:click="mountAction('sonucGir', { id: {{ $k->id }} })" style="color:rgb(21 128 61);font-size:.78rem;margin-right:.6rem">Katılım / Sonuç</button>@endif<a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $k->firma_id]) }}" style="color:rgb(124 58 237);font-size:.78rem">Belgeler →</a></td>
                             </tr>
                         @endforeach
                     </table>

@@ -5,7 +5,7 @@
     $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
     $th = 'text-align:left;padding:.5rem .6rem;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:rgb(107 114 128);border-bottom:1px solid rgb(107 114 128 / .2)';
     $td = 'padding:.6rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
-    $renk = ['gecikmis' => 'rgb(220 38 38)', 'cok_yakin' => 'rgb(234 88 12)', 'yaklasiyor' => 'rgb(217 119 6)', 'eksik' => 'rgb(71 85 105)'];
+    $renk = ['gecikmis' => 'rgb(220 38 38)', 'cok_yakin' => 'rgb(194 65 12)', 'yaklasiyor' => 'rgb(180 83 9)', 'eksik' => 'rgb(71 85 105)'];
     $durumAd = ['gecikmis' => 'Gecikmiş', 'cok_yakin' => 'Çok yakın', 'yaklasiyor' => 'Yaklaşıyor', 'eksik' => 'Eksik'];
 @endphp
 
@@ -23,8 +23,8 @@
     @php $g = $r['gostergeler']; $u = $r['uygunluk']; @endphp
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
         @foreach ([
-            ['İşyeri', $g['isyeri'], 'rgb(13 148 136)'], ['Aktif çalışan', $g['aktif_calisan'], 'rgb(13 148 136)'], ['Açık risk', $g['acik_risk'], 'rgb(220 38 38)'],
-            ['Açık olay', $g['acik_olay'], 'rgb(217 119 6)'], ['KKD zimmet', $g['kkd_zimmet'], 'rgb(124 58 237)'], ['Yaklaşan / geciken', $g['yaklasan_geciken'], 'rgb(220 38 38)'],
+            ['İşyeri', $g['isyeri'], 'rgb(15 118 110)'], ['Aktif çalışan', $g['aktif_calisan'], 'rgb(15 118 110)'], ['Açık risk', $g['acik_risk'], 'rgb(220 38 38)'],
+            ['Açık olay', $g['acik_olay'], 'rgb(180 83 9)'], ['KKD zimmet', $g['kkd_zimmet'], 'rgb(124 58 237)'], ['Yaklaşan / geciken', $g['yaklasan_geciken'], 'rgb(220 38 38)'],
         ] as [$ad, $deger, $c])
             <div style="{{ $kart }};border-top:3px solid {{ $c }}">
                 <div class="mehse-soluk">{{ $ad }}</div>

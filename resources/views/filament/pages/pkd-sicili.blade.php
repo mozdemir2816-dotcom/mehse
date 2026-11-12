@@ -32,9 +32,9 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem">
         @foreach ([
             ['Toplam PKD', $o['toplam'], 'inherit', null],
-            ['Aktif doküman', $o['aktif'], '#16a34a', null],
+            ['Aktif doküman', $o['aktif'], '#15803d', null],
             ['Dosyası mevcut', $o['dosyali'], 'inherit', $o['dosyasiz'].' eksik'],
-            ['Takip gerekiyor', $o['takip'], '#d97706', null],
+            ['Takip gerekiyor', $o['takip'], '#b45309', null],
             ['Gecikmiş inceleme', $o['gecikmis'], '#dc2626', null],
         ] as [$ad, $sayi, $renk, $alt])
             <div style="{{ $kutu }}">

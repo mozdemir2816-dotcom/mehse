@@ -1,7 +1,7 @@
 @php
     $mor = 'rgb(124 58 237)';
     $riskRozet = fn ($seviye) => match (\App\Models\JsaSablonu::riskRengi($seviye)) {
-        'kritik' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#b45309', 'dusuk' => '#16a34a', default => '#9ca3af',
+        'kritik' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#b45309', 'dusuk' => '#15803d', default => '#9ca3af',
     };
 @endphp
 

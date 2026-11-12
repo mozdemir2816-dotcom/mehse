@@ -303,7 +303,7 @@
             </div>
 
             @if ($ozet['eksik'])
-                <div style="border:1px solid #f59e0b;background:rgb(245 158 11 / .1);border-radius:.5rem;padding:.6rem .85rem;font-size:.8rem">
+                <div style="border:1px solid #b45309;background:rgb(245 158 11 / .1);border-radius:.5rem;padding:.6rem .85rem;font-size:.8rem">
                     <strong style="color:#b45309">Eksik Alanlar:</strong> {{ implode(', ', $ozet['eksik']) }}
                 </div>
             @endif

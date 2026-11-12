@@ -1,7 +1,7 @@
 @php
     $kirmizi = 'rgb(239 68 68)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
-    $cevapRenk = ['evet' => '#10b981', 'hayir' => '#ef4444', 'kismen' => '#f59e0b'];
+    $cevapRenk = ['evet' => '#10b981', 'hayir' => '#ef4444', 'kismen' => '#b45309'];
 @endphp
 
 <x-filament-panels::page>
@@ -134,7 +134,7 @@
                     <input type="number" min="0" wire:model.live.debounce.500ms="hedefTahliyeDk" placeholder="Senaryo seçince önerilen gelir"
                         class="mehse-girdi-kompakt mehse-tam">
                     @if ($tahliyeDk && $hedefTahliyeDk)
-                        <div style="font-size:.75rem;margin-top:.2rem;color:{{ $tahliyeDk <= $hedefTahliyeDk ? '#16a34a' : '#dc2626' }}">
+                        <div style="font-size:.75rem;margin-top:.2rem;color:{{ $tahliyeDk <= $hedefTahliyeDk ? '#15803d' : '#dc2626' }}">
                             {{ $tahliyeDk <= $hedefTahliyeDk ? '✓ Tahliye hedef süre içinde' : '✗ Hedef süre '.($tahliyeDk - $hedefTahliyeDk).' dk aşıldı — DÖF önerisi ekleyin' }}
                         </div>
                     @endif
@@ -376,8 +376,8 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;margin-bottom:.9rem">
             @foreach ([
                 ['Toplam kayıt', $o['toplam'], 'inherit', null],
-                ['Planlandı', $o['planlandi'], '#d97706', 'planlandi'],
-                ['Yapıldı', $o['yapildi'], '#16a34a', 'yapildi'],
+                ['Planlandı', $o['planlandi'], '#b45309', 'planlandi'],
+                ['Yapıldı', $o['yapildi'], '#15803d', 'yapildi'],
                 ['Takip gereken', $o['takip'], '#dc2626', 'takip'],
                 ['Tarihi geçen plan', $o['gecikmis'], '#dc2626', 'gecikmis'],
             ] as [$ad, $sayi, $renk, $filtre])
