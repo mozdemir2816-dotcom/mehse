@@ -45,6 +45,7 @@ class KutuphaneEksikExcelTest extends TestCase
 
         // Mevcut önlem eksik sayılmaz, HAZOP kapsam dışı.
         $this->assertSame([$bos->id], KutuphaneEksikExcel::eksikSorgu()->pluck('id')->all());
+        $kayan = $this->madde(['tehlike' => 'Kayan satırın gerçek tehlikesi']);
         $this->assertStringContainsString('0,5 / 1 / 2 / 3 / 6 / 10', KutuphaneEksikExcel::istem(1));
 
         Livewire::test(ListTehlikes::class)
@@ -57,6 +58,7 @@ class KutuphaneEksikExcelTest extends TestCase
             KutuphaneEksikExcel::BASLIKLAR,
             [$bos->id, 'Atölye', 'Taşlama taşının kırılması', 'Kesik, göz yaralanması', 'Gemini önerisi', 'İş Ekipmanları Yönetmeliği', 'Bakım Sorumlusu', '2,8', 6, 16, '0,5', 6, 15],
             [999999, 'Yok', 'Silinmiş', 'x', 'x', 'x', 'x', 1, 1, 1, 1, 1, 1],
+            [$kayan->id, 'Atölye', 'Başka bir tehlike (kaymış satır)', 'Yanlış risk', 'Yanlış öneri', 'x', 'x', 1, 1, 1, 1, 1, 1],
         ]);
         $yol = tempnam(sys_get_temp_dir(), 'kx').'.xlsx';
         (new Xlsx($kitap))->save($yol);
@@ -78,7 +80,8 @@ class KutuphaneEksikExcelTest extends TestCase
         $this->assertNull($bos->mevcut_onlem);                           // mevcut önleme dokunulmaz
         $this->assertNull($yalnizOnlem->fresh()->mevcut_onlem);
         $this->assertNull($hazop->fresh()->oneri);
-        $this->assertSame(0, KutuphaneEksikExcel::eksikSorgu()->count());
+        $this->assertNull($kayan->fresh()->oneri);                         // tehlikesi tutmayan satır yazılmadı
+        $this->assertSame([$kayan->id], KutuphaneEksikExcel::eksikSorgu()->pluck('id')->all());
         Http::assertNothingSent();
     }
 }

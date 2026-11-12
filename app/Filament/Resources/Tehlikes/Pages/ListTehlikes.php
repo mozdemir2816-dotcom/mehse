@@ -153,7 +153,7 @@ class ListTehlikes extends ListRecords
                     ->modalSubmitActionLabel('İndir')
                     ->schema([
                         \Filament\Forms\Components\Select::make('boyut')->label('Parça büyüklüğü (satır)')
-                            ->options([50 => '50', 100 => '100', 200 => '200'])->default(100)->required()->live(),
+                            ->options([50 => '50', 100 => '100', 200 => '200', 300 => '300', 500 => '500'])->default(100)->required()->live(),
                         \Filament\Forms\Components\TextInput::make('parca')->label('Parça no')->numeric()->minValue(1)->default(1)->required()
                             ->helperText(fn (\Filament\Schemas\Components\Utilities\Get $get) => 'Toplam '.\App\Support\KutuphaneEksikExcel::parcaSayisi((int) ($get('boyut') ?: 100)).' parça. Doldurup yükledikçe eksikler azalır — her seferinde 1. parçayı indirmeniz yeterli.'),
                     ])
@@ -181,7 +181,8 @@ class ListTehlikes extends ListRecords
                         }
                         Notification::make()
                             ->title($s['dolan'].' kütüphane maddesi güncellendi ('.$s['alan'].' alan)')
-                            ->body($s['satir'].' satır okundu'.($s['bulunamayan'] ? ', '.$s['bulunamayan'].' madde bulunamadı (silinmiş olabilir)' : '').'. Kalan eksik: '.\App\Support\KutuphaneEksikExcel::eksikSorgu()->count().'.')
+                            ->body($s['satir'].' satır okundu'.($s['bulunamayan'] ? ', '.$s['bulunamayan'].' madde bulunamadı (silinmiş olabilir)' : '')
+                                .($s['uyusmayan'] ? ', '.$s['uyusmayan'].' satır ATLANDI — Tehlike metni madde numarasıyla uyuşmuyor (Gemini satırları kaydırmış olabilir)' : '').'. Kalan eksik: '.\App\Support\KutuphaneEksikExcel::eksikSorgu()->count().'.')
                             ->success()->persistent()->send();
                     }),
 

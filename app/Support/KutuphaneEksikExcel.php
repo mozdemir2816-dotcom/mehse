@@ -47,7 +47,7 @@ class KutuphaneEksikExcel
 
     public static function indir(int $parca = 1, int $boyut = 100): StreamedResponse
     {
-        $boyut = max(10, min(500, $boyut));
+        $boyut = max(10, min(500, $boyut));   // 300 / 500: Gemini yanıtı kesebilir, kaydırmaya karşı yüklemede Tehlike kontrolü var
         $maddeler = static::eksikSorgu()->with('kategori')->skip(($parca - 1) * $boyut)->take($boyut)->get();
 
         $kitap = new Spreadsheet;
@@ -100,6 +100,7 @@ class KutuphaneEksikExcel
         1) "Maddeler" sayfasındaki tabloyu (başlık satırı dahil) seçip kopyalayın.
         2) Gemini'ye önce aşağıdaki metni, ardından tabloyu yapıştırın.
         3) Gemini'nin verdiği tabloyu kopyalayıp bu dosyanın "Maddeler" sayfasına A1 hücresinden yapıştırın, kaydedin.
+           Gemini tabloyu bloklar hâlinde verirse ("devam" yazarak) her bloğu bir öncekinin altına yapıştırın; araya gelen başlık satırları sorun değil.
         4) mehse → Risk Kütüphanesi → İçe / Dışa Aktar → "Eksikleri doldurulmuş Excel'i yükle".
         Not: Dolu hücreler değiştirilmez; yalnız boş olanlar kütüphaneye yazılır. Satır silmek / sıra değiştirmek sorun olmaz, No sütunu kalsın.
 
@@ -113,13 +114,14 @@ class KutuphaneEksikExcel
         - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle: Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')}.
         - Son Olasılık / Son Frekans / Son Şiddet: öneri uygulandıktan sonraki puanlar; ilk değerlerden büyük olamaz (şiddet genelde aynı kalır, olasılık düşer).
         Yanıtı aynı sütun sırasıyla (No, Klasör, Tehlike, Risk, Öneri, Mevzuat, Sorumlu, Olasılık, Frekans, Şiddet, Son Olasılık, Son Frekans, Son Şiddet) başlık satırı dahil TABLO olarak ver; açıklama ekleme.
+        Tablo uzunsa 100'er satırlık bloklar hâlinde ver (her blokta başlık satırı olsun); ben "devam" yazınca sonraki bloğu ver. Satır atlama, No ve Tehlike metnini aynen koru.
         METIN;
     }
 
     /**
      * Doldurulmuş Excel'i okur, boş alanları kütüphaneye yazar.
      *
-     * @return array{satir: int, dolan: int, alan: int, bulunamayan: int}
+     * @return array{satir: int, dolan: int, alan: int, bulunamayan: int, uyusmayan: int}
      */
     public static function yukle(string $yol): array
     {
@@ -130,7 +132,7 @@ class KutuphaneEksikExcel
             throw new \RuntimeException('"No" sütunu bulunamadı — indirilen dosyanın başlık satırını koruyun.');
         }
 
-        $sonuc = ['satir' => 0, 'dolan' => 0, 'alan' => 0, 'bulunamayan' => 0];
+        $sonuc = ['satir' => 0, 'dolan' => 0, 'alan' => 0, 'bulunamayan' => 0, 'uyusmayan' => 0];
         foreach ($tablo as $r) {
             $id = (int) ($r[$sutun['No']] ?? 0);
             if ($id <= 0) {
@@ -140,6 +142,12 @@ class KutuphaneEksikExcel
             $t = Tehlike::find($id);
             if (! $t) {
                 $sonuc['bulunamayan']++;
+
+                continue;
+            }
+            // Uzun tablolarda Gemini satırları kaydırabilir: No'nun tehlikesi tutmuyorsa satır yazılmaz (12.11.2026).
+            if (isset($sutun['Tehlike']) && EkipmanKatalogu::norm((string) ($r[$sutun['Tehlike']] ?? '')) !== EkipmanKatalogu::norm($t->tehlike)) {
+                $sonuc['uyusmayan']++;
 
                 continue;
             }
