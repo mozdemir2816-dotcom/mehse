@@ -29,7 +29,8 @@ class RiskPuanTamamla extends Command
     protected $signature = 'risk:puan-tamamla
         {--limit=25 : Tek istekte gönderilecek madde sayısı}
         {--rapor=* : Belge numarası (ör. RD-2026-127) — kuyruğa alınır ve ilk parti hemen işlenir}
-        {--sadece-kuyruk : --rapor ile: hemen işlemeden yalnız kuyruğa al (zamanlayıcı dakikada bir parti işler)}';
+        {--sadece-kuyruk : --rapor ile: hemen işlemeden yalnız kuyruğa al (zamanlayıcı dakikada bir parti işler)}
+        {--mevzuat : --rapor ile: yalnız mevzuatı boş maddeleri hemen tamamla (kuyruk yok; diğer boş alanlar da dolar)}';
 
     protected $description = 'Eksik alanlı risk maddelerini (öneri, mevzuat, puan, sorumlu…) yapay zekâ ile toplu tamamlar';
 
@@ -63,7 +64,7 @@ class RiskPuanTamamla extends Command
         return RiskAlanTamamlama::eksikKosulu(
             RiskMaddesi::query()->where('risk_degerlendirmesi_id', $rd->id),
             RiskSkorlama::ucEksenliMi($rd->yontem),
-            mevzuat: false,   // analiz maddesinde mevzuat sütunu yok — kütüphaneye yazılır
+            mevzuat: false,   // mevzuat eksik sayılmaz (kota); mevzuatı boşlar için --mevzuat (mevzuatsizSorgu)
         );
     }
 
@@ -73,14 +74,27 @@ class RiskPuanTamamla extends Command
         return self::eksikSorgu($rd)->whereNotIn('id', Cache::get(self::denenenAnahtari($rd->id), []));
     }
 
+    /**
+     * Mevzuatı boş maddeler (12.11.2026). "Eksik" sayımına mevzuat katılmadığı için ayrı yoldan, elle tetiklenir:
+     *   php artisan risk:puan-tamamla --rapor=RD-2026-127 --mevzuat
+     */
+    public static function mevzuatsizSorgu(RiskDegerlendirmesi $rd): Builder
+    {
+        return RiskMaddesi::query()->where('risk_degerlendirmesi_id', $rd->id)
+            ->where(fn ($w) => $w->whereNull('mevzuat')->orWhereRaw('TRIM(mevzuat) = ?', ['']));
+    }
+
     /** Raporun bir partisini işler; en az bir alanı dolan madde sayısı. */
-    public static function isle(RiskDegerlendirmesi $rd, int $limit = self::PARTI): int
+    public static function isle(RiskDegerlendirmesi $rd, int $limit = self::PARTI, bool $mevzuat = false): int
     {
         if (! in_array($rd->yontem, ['fine_kinney', 'matris_5x5'], true) || $rd->hastaneMi()) {
             return 0;
         }
 
-        $maddeler = self::islenecekSorgu($rd)->orderBy('sira')->orderBy('id')->limit($limit)->get()->keyBy('id');
+        $sorgu = $mevzuat
+            ? self::mevzuatsizSorgu($rd)->whereNotIn('id', Cache::get(self::denenenAnahtari($rd->id), []))
+            : self::islenecekSorgu($rd);
+        $maddeler = $sorgu->orderBy('sira')->orderBy('id')->limit($limit)->get()->keyBy('id');
         if ($maddeler->isEmpty()) {
             return 0;
         }
@@ -136,6 +150,23 @@ class RiskPuanTamamla extends Command
                     continue;
                 }
                 self::denemeleriSifirla($rd->id);
+
+                if ($this->option('mevzuat')) {
+                    $bos = self::mevzuatsizSorgu($rd)->count();
+                    // Parti parti, ilerleme durana kadar (yanıt yoksa ya da hepsi denendiyse biter).
+                    for ($i = 0; $i < 20 && self::mevzuatsizSorgu($rd)->exists(); $i++) {
+                        if (self::isle($rd, (int) $this->option('limit'), mevzuat: true) === 0) {
+                            break;
+                        }
+                    }
+                    $kalan = self::mevzuatsizSorgu($rd)->count();
+                    $rd->pdfOnbellegiTemizle();
+                    $rd->saveQuietly();
+                    $this->info("{$belgeNo} ({$rd->firma_unvan}): mevzuatı boş {$bos} maddeden ".($bos - $kalan)." doldu, kalan {$kalan}.");
+
+                    continue;
+                }
+
                 $eksik = self::eksikSorgu($rd)->count();
                 // Önce kuyruğa: web üzerinden çağrıda bağlantı zaman aşımına uğrasa da zamanlayıcı devam eder.
                 self::oncelikliyeAl($rd->id);

@@ -143,6 +143,26 @@ class RiskAlanTamamlamaTest extends TestCase
         $this->assertSame(30, $rd->maddeler()->whereNotNull('oneri')->count());
     }
 
+    public function test_mevzuat_secenegi_yalniz_mevzuati_bos_maddeleri_doldurur(): void
+    {
+        // 12.11.2026: Excel'den gelen (kütüphanesiz) maddelerin mevzuatı AI ile, kullanıcının yazdığına dokunmadan.
+        $this->aiFake($this->tamAi());
+        $firma = Firma::factory()->for($this->sahip)->create();
+        $rd = RiskDegerlendirmesi::create(['firma_id' => $firma->id, 'yontem' => 'fine_kinney', 'rapor_tarihi' => now(), 'belge_no' => 'RD-MVZ-1']);
+        $tam = ['risk' => 'Yaralanma', 'mevcut_onlem' => 'Var', 'oneri' => 'Kullanıcının önerisi', 'sorumlu' => 'Ustabaşı',
+            'olasilik' => 3, 'frekans' => 6, 'siddet' => 15, 'son_olasilik' => 1, 'son_frekans' => 6, 'son_siddet' => 15, 'durum' => 'acik'];
+        $bos = $rd->maddeler()->create(['sira' => 1, 'tehlike' => 'Excel maddesi'] + $tam);
+        $dolu = $rd->maddeler()->create(['sira' => 2, 'tehlike' => 'Mevzuatlı madde', 'mevzuat' => 'Kullanıcının mevzuatı'] + $tam);
+
+        $this->artisan('risk:puan-tamamla', ['--rapor' => ['RD-MVZ-1'], '--mevzuat' => true])
+            ->expectsOutputToContain('mevzuatı boş 1 maddeden 1 doldu, kalan 0')
+            ->assertSuccessful();
+
+        $this->assertSame('Yapı İşlerinde İSG Yönetmeliği Ek-4', $bos->fresh()->mevzuat);
+        $this->assertSame('Kullanıcının önerisi', $bos->fresh()->oneri);
+        $this->assertSame('Kullanıcının mevzuatı', $dolu->fresh()->mevzuat);
+    }
+
     public function test_kutuphane_onarimi_once_analizlerden_kotasiz_kopyalar(): void
     {
         Http::fake();
