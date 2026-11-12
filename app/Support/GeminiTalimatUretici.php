@@ -80,6 +80,50 @@ class GeminiTalimatUretici
         Her bölümde 3-8 kısa, somut madde; "...malıdır/meli" kipinde. TAAHHÜT bölümü EKLEME.
         PROMPT;
 
+        return static::bolumluIstek($istem);
+    }
+
+    /**
+     * İş ekipmanı / makine için bölümlü güvenli çalışma talimatı taslağı (12.11.2026): çalışma öncesi,
+     * sırası, sonrası düzeninde; ekipmanın günlük kontrol formu soruları varsa "çalışma öncesi"
+     * bölümüne dayanak olarak verilir. Uzman gözden geçirene kadar "YZ taslağı" sayılır.
+     *
+     * @param  array<int, string>  $kontrolSorulari
+     * @return array<int, array{baslik: string, aciklama: string, maddeler: array<int, string>}>
+     */
+    public static function uretEkipman(string $ekipman, string $kategoriAdi, ?string $mevzuat = null, array $kontrolSorulari = []): array
+    {
+        if (! static::aktifMi()) {
+            return [];
+        }
+
+        $dayanak = $mevzuat ? "Yasal dayanak / standart: {$mevzuat}." : '';
+        $sorular = $kontrolSorulari ? "Operatörün günlük kontrol formundaki maddeler (çalışma öncesi bölümüne yansıt):
+- ".implode("
+- ", array_slice($kontrolSorulari, 0, 25)) : '';
+        $istem = <<<PROMPT
+        Sen Türkiye'de 6331 sayılı İş Sağlığı ve Güvenliği Kanunu ve İş Ekipmanlarının Kullanımında
+        Sağlık ve Güvenlik Şartları Yönetmeliği'ne göre çalışan deneyimli bir A sınıfı İş Güvenliği
+        Uzmanısın. "{$ekipman}" ({$kategoriAdi}) için makinenin başına asılacak bölümlü bir GÜVENLİ
+        ÇALIŞMA TALİMATI hazırla. {$dayanak}
+        {$sorular}
+
+        Bölümler şu sırayla olsun (başlıklar BÜYÜK HARF, numarasız):
+        AMAÇ VE KAPSAM: yalnız "aciklama" (tek cümle), maddeler boş.
+        KİŞİSEL KORUYUCU DONANIMLAR (KKD): bu ekipmanda gerçekten gereken KKD'ler (standart numarasıyla, ör. EN 166).
+        ÇALIŞMA ÖNCESİ ALINACAK GÜVENLİK ÖNLEMLERİ; ÇALIŞMA SIRASINDA UYULACAK KURALLAR;
+        ÇALIŞMA SONRASI VE BAKIM (bakım/temizlikte enerji kesme, kilitleme-etiketleme);
+        YASAKLAR; ACİL DURUM VE ARIZA BİLDİRİMİ.
+        Her bölümde 4-8 kısa, somut, bu ekipmana özgü madde; "...malıdır/meli" kipinde; genel geçer
+        cümleler ve marka adı kullanma, uydurma yönetmelik maddesi numarası yazma. TAAHHÜT bölümü EKLEME.
+        PROMPT;
+
+        return static::bolumluIstek($istem);
+    }
+
+    /** @return array<int, array{baslik: string, aciklama: string, maddeler: array<int, string>}> */
+    private static function bolumluIstek(string $istem): array
+    {
         try {
             $yanit = GeminiIstemci::post([
                 'contents' => [['role' => 'user', 'parts' => [['text' => $istem]]]],

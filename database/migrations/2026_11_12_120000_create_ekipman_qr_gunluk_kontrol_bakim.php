@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Schema;
  *  - is_ekipmani_bakimlari: bakım / arıza kaydı; günlük kontrolde "Uygun Değil" çıkınca kendiliğinden açılır.
  *  - Tebliğ takibi (is_ekipmanlari): tebliğ paketi (talimat + aylık çizelge + tutanak) çıktısı alındı mı,
  *    işverene ıslak imzalı tebliğ edildi mi, imzalı nüshanın fotoğrafı / PDF'i.
+ *  - talimat_sablonlari: ekipman tipine bağlı kütüphane talimatı (yapay zekâ taslağı dahil) — katalogda
+ *    talimatı olmayan makineler için.
  */
 return new class extends Migration
 {
@@ -71,10 +73,19 @@ return new class extends Migration
 
             $table->index(['is_ekipmani_id', 'durum'], 'ekipman_bakim_durum_index');
         });
+
+        Schema::table('talimat_sablonlari', function (Blueprint $table) {
+            $table->string('ekipman_tipi')->nullable()->index()->after('kategori');
+            $table->boolean('yz_taslak')->default(false)->after('ekipman_tipi');   // uzman gözden geçirince false
+        });
     }
 
     public function down(): void
     {
+        Schema::table('talimat_sablonlari', function (Blueprint $table) {
+            $table->dropIndex(['ekipman_tipi']);
+            $table->dropColumn(['ekipman_tipi', 'yz_taslak']);
+        });
         Schema::dropIfExists('is_ekipmani_bakimlari');
         Schema::dropIfExists('is_ekipmani_gunluk_kontrolleri');
         Schema::table('is_ekipmanlari', function (Blueprint $table) {

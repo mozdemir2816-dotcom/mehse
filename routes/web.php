@@ -24,6 +24,14 @@ Route::get('/belge-dogrula/{kod}', function (string $kod) {
     return response()->view('belge-dogrula', ['a' => $atama], $atama ? 200 : 404);
 })->where('kod', '[A-Za-z0-9]{16,32}')->middleware('throttle:30,1')->name('belge.dogrula');
 
+// QR operatör ekranı (12.11.2026) — makinedeki QR: talimat + günlük kontrol, giriş gerektirmez (PIN isteğe bağlı).
+Route::prefix('ekipman/{anahtar}')->where(['anahtar' => '[A-Za-z0-9]{32}'])->controller(\App\Http\Controllers\EkipmanOperatorController::class)->group(function () {
+    Route::get('/', 'goster')->middleware('throttle:60,1')->name('ekipman.operator');
+    Route::post('/pin', 'pin')->middleware('throttle:20,1')->name('ekipman.operator.pin');
+    Route::post('/kontrol', 'kontrol')->middleware('throttle:10,1')->name('ekipman.operator.kontrol');
+    Route::get('/talimat.pdf', 'talimatPdf')->middleware('throttle:20,1')->name('ekipman.operator.talimat');
+});
+
 // Kök adres = herkese açık tanıtım sayfası (29.10.2026); üye olmayanlar teklif isteyebilir,
 // panel /admin'de. Teklif formu kayıt açar (TeklifTalebi), sahip hesap panelde görür.
 Route::view('/', 'tanitim')->name('tanitim');

@@ -23,6 +23,7 @@ class TalimatSablonu extends Model
         'kkdler' => 'array',
         'maddeler' => 'array',
         'bolumler' => 'array',
+        'yz_taslak' => 'boolean',
     ];
 
     public function user(): BelongsTo

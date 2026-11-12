@@ -4,11 +4,13 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\IsEkipmani;
+use App\Models\IsEkipmaniBakimi;
 use App\Models\IsEkipmaniKontrolu;
 use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
 use App\Filament\Support\ImzaSecenegi;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Support\EkipmanKatalogu;
+use App\Support\EkipmanTebligPaketi;
 use App\Support\GunlukEkipmanKontrolUretici;
 use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\PeriyodikKontrolUretici;
@@ -199,6 +201,10 @@ class PeriyodikKontrol extends Page
                     ->map(fn (array $s) => ['baslik' => $s['baslik'], 'id' => $firmaTalimatlari->get(EkipmanKatalogu::norm($s['baslik']))?->id])
                     ->all(),
                 'gunluk_form' => EkipmanKatalogu::kontrolFormu($e->tip)['ad'] ?? null,
+                'uyari' => $e->uyariSeviyesi(),
+                'teblig' => $e->tebligDurumu(),
+                'teblig_tarihi' => $e->teblig_tarihi?->format('d.m.Y'),
+                'acik_ariza' => $e->bakimlar()->acik()->count(),
                 'id' => $e->id,
                 'kategori' => $e->kategori,
                 'kategori_adi' => $e->kategoriAdi(),
@@ -299,6 +305,29 @@ class PeriyodikKontrol extends Page
             ->body(implode(', ', $eklenen) ?: null)->success()->send();
     }
 
+    /** Kütüphanede talimatı olmayan makine için yapay zekâ taslağı (kütüphaneye + firmaya eklenir). */
+    public function talimatTaslagiHazirla(int $id): void
+    {
+        $e = $this->ekipman($id);
+        if (! \App\Support\GeminiTalimatUretici::aktifMi()) {
+            Notification::make()->title('Yapay zekâ anahtarı tanımlı değil')->danger()->send();
+
+            return;
+        }
+        if (blank(trim((string) $e->tip))) {
+            Notification::make()->title('Önce ekipman tipini girin')->warning()->send();
+
+            return;
+        }
+
+        $sablon = \App\Support\EkipmanTalimatTaslagi::olustur($e->tip);
+        $this->listeyiYenile();
+
+        $sablon
+            ? Notification::make()->title('Talimat taslağı hazırlandı')->body($sablon->baslik.' — firmaya eklendi. Talimat Oluştur\'dan gözden geçirip düzenleyin.')->success()->send()
+            : Notification::make()->title('Taslak hazırlanamadı')->body('Yapay zekâ yanıt vermedi; biraz sonra tekrar deneyin.')->warning()->send();
+    }
+
     public function ekipmanSil(int $id): void
     {
         $this->firma?->isEkipmanlari()->find($id)?->delete();
@@ -366,6 +395,7 @@ class PeriyodikKontrol extends Page
                     TextInput::make('marka_model')->label('Marka / Model / Yıl')->placeholder('Örn: Linde H30D (2021)'),
                     TextInput::make('konum')->label('Bulunduğu Konum / Bölüm')->placeholder('Örn: Ana Depo / Pres Bölümü'),
                     TextInput::make('kapasite')->label('Kapasite / İşletme Değeri')->placeholder('Örn: 5 Ton / 500 Litre 11 Bar'),
+                    ...$this->operatorAlanlari(),
                     DatePicker::make('son_muayene_tarihi')
                         ->label('Son Yapılan Muayene Tarihi (Varsa)')
                         ->visible(fn (Get $get) => EkipmanKatalogu::periyodikMi($get('kategori')))
@@ -531,6 +561,174 @@ class PeriyodikKontrol extends Page
             });
     }
 
+    /**
+     * Operatör / bakım alanları (12.11.2026) — yeni ekipman ve "Ayarlar" formunda ortak.
+     *
+     * @return array<int, \Filament\Forms\Components\Field>
+     */
+    private function operatorAlanlari(bool $duzenleme = false): array
+    {
+        return [
+            TextInput::make('uretim_yili')->label('Üretim yılı')->numeric()->minValue(1950)->maxValue((int) date('Y') + 1),
+            TextInput::make('bakim_sorumlusu')->label('Bakım sorumlusu')->placeholder('Arıza bildirimi bu kişiye gider'),
+            TextInput::make('bakim_sorumlusu_eposta')->label('Bakım sorumlusu e-postası')->email(),
+            TextInput::make('qr_pin')
+                ->label('Operatör PIN (isteğe bağlı)')
+                ->password()->revealable()->minLength(4)->maxLength(12)->regex('/^\d+$/')
+                ->helperText($duzenleme
+                    ? 'Boş bırakılırsa mevcut PIN değişmez. QR okutan operatör, PIN tanımlıysa önce PIN girer.'
+                    : 'Boş bırakılırsa QR okutan herkes talimatı görür ve günlük kontrolü doldurabilir.'),
+        ];
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function pinHazirla(array $data): array
+    {
+        if (filled($data['qr_pin'] ?? null)) {
+            $data['qr_pin'] = \Illuminate\Support\Facades\Hash::make($data['qr_pin']);
+        } else {
+            unset($data['qr_pin']);
+        }
+        if (array_key_exists('uretim_yili', $data) && blank($data['uretim_yili'])) {
+            $data['uretim_yili'] = null;
+        }
+
+        return $data;
+    }
+
+    private function listeyiYenile(): void
+    {
+        unset($this->tumEkipmanlar, $this->kpi, $this->kategoriSayaclari, $this->portfoyEkipmanlari);
+        $this->satirlariYukle();
+    }
+
+    /** Ekipman detayı: QR, belgeler / tebliğ, günlük kontroller, bakım-arıza kayıtları. */
+    public function ekipmanDetayAction(): Action
+    {
+        return Action::make('ekipmanDetay')
+            ->label('Detay')
+            ->modalHeading(fn (array $arguments) => $this->ekipman($arguments['id'])->ekipman_adi)
+            ->modalDescription(fn (array $arguments) => collect([$this->ekipman($arguments['id'])->tip, $this->ekipman($arguments['id'])->seri_no])->filter()->implode(' · ') ?: null)
+            ->modalWidth('5xl')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Kapat')
+            // İçerikteki düğmeler (Ayarlar, İmzalı nüsha, Kapat) bu pencerenin alt penceresi olarak açılır.
+            ->registerModalActions([$this->ekipmanAyarAction(), $this->tebligYukleAction(), $this->bakimKapatAction()])
+            ->modalContent(function (array $arguments) {
+                $e = $this->ekipman($arguments['id']);
+
+                return view('filament.pages.partials.ekipman-detay', [
+                    'e' => $e,
+                    'talimat' => EkipmanKatalogu::firmaTalimati($e),
+                    'form' => EkipmanKatalogu::kontrolFormu($e->tip),
+                    'gunlukler' => $e->gunlukKontroller()->limit(30)->get(),
+                    'bakimlar' => $e->bakimlar()->get(),
+                ]);
+            });
+    }
+
+    public function ekipmanAyarAction(): Action
+    {
+        return Action::make('ekipmanAyar')
+            ->label('Ayarlar')
+            ->modalHeading(fn (array $arguments) => 'Ekipman ayarları — '.$this->ekipman($arguments['id'])->ekipman_adi)
+            ->fillForm(fn (array $arguments) => $this->ekipman($arguments['id'])->only(['ekipman_adi', 'seri_no', 'marka_model', 'uretim_yili', 'konum', 'kapasite', 'bakim_sorumlusu', 'bakim_sorumlusu_eposta']))
+            ->schema(fn () => [
+                TextInput::make('ekipman_adi')->label('Ekipman tanımı / ismi')->required(),
+                TextInput::make('seri_no')->label('Seri no / şasi / plaka'),
+                TextInput::make('marka_model')->label('Marka / model'),
+                TextInput::make('konum')->label('Konum / bölüm'),
+                TextInput::make('kapasite')->label('Kapasite'),
+                ...$this->operatorAlanlari(true),
+                \Filament\Forms\Components\Toggle::make('pin_kaldir')->label('PIN\'i kaldır'),
+                \Filament\Forms\Components\Toggle::make('qr_yenile')->label('QR kodunu yenile')
+                    ->helperText('Eski QR etiketleri çalışmaz olur; yeni etiketi yazdırıp makineye asın.'),
+            ])
+            ->action(function (array $data, array $arguments): void {
+                $e = $this->ekipman($arguments['id']);
+                $pinKaldir = (bool) ($data['pin_kaldir'] ?? false);
+                $qrYenile = (bool) ($data['qr_yenile'] ?? false);
+                unset($data['pin_kaldir'], $data['qr_yenile']);
+
+                $e->fill($this->pinHazirla($data));
+                if ($pinKaldir) {
+                    $e->qr_pin = null;
+                }
+                if ($qrYenile) {
+                    $e->qr_anahtar = IsEkipmani::yeniQrAnahtari();
+                }
+                $e->save();
+                $this->listeyiYenile();
+                Notification::make()->title('Ekipman güncellendi')->success()->send();
+            });
+    }
+
+    public function tebligYukleAction(): Action
+    {
+        return Action::make('tebligYukle')
+            ->label('İmzalı nüshayı yükle')
+            ->modalHeading(fn (array $arguments) => 'İmzalı tebliğ nüshası — '.$this->ekipman($arguments['id'])->ekipman_adi)
+            ->modalDescription('İşverene imzalatılan tebliğ tutanağının (ve varsa talimatın) fotoğrafını ya da PDF\'ini yükleyin; ekipman "Tebliğ edildi" olur.')
+            ->modalSubmitActionLabel('Yükle ve tebliğ edildi say')
+            ->fillForm(['teblig_tarihi' => now()->toDateString()])
+            ->schema([
+                FileUpload::make('dosya')
+                    ->label('İmzalı nüsha (fotoğraf / PDF)')
+                    ->disk('local')
+                    ->directory(fn () => EkipmanTebligPaketi::IMZALI_KLASOR.'/'.now()->format('Y'))
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic'])
+                    ->maxSize(20480)
+                    ->required(),
+                DatePicker::make('teblig_tarihi')->label('Tebliğ tarihi')->required()->maxDate(now()),
+            ])
+            ->action(function (array $data, array $arguments): void {
+                $e = $this->ekipman($arguments['id']);
+                EkipmanTebligPaketi::imzaliKaydet($e, $data['dosya'], $data['teblig_tarihi']);
+                $this->listeyiYenile();
+                Notification::make()->title('Tebliğ edildi olarak işaretlendi')->body($e->ekipman_adi)->success()->send();
+            });
+    }
+
+    public function tebligPaketiIndir(int $id)
+    {
+        $yanit = EkipmanTebligPaketi::indir($this->ekipman($id));
+        $this->listeyiYenile();
+
+        return $yanit;
+    }
+
+    public function imzaliNushaIndir(int $id)
+    {
+        $e = $this->ekipman($id);
+        if (! $e->imzali_belge_yolu || ! Storage::disk('local')->exists($e->imzali_belge_yolu)) {
+            Notification::make()->title('Dosya bulunamadı')->danger()->send();
+
+            return null;
+        }
+
+        return Storage::disk('local')->download($e->imzali_belge_yolu, 'imzali-teblig-'.\Illuminate\Support\Str::slug($e->ekipman_adi).'.'.pathinfo($e->imzali_belge_yolu, PATHINFO_EXTENSION));
+    }
+
+    public function bakimKapatAction(): Action
+    {
+        return Action::make('bakimKapat')
+            ->label('Kapat')
+            ->modalHeading('Arıza / bakım kaydını kapat')
+            ->modalDescription('Onarım yapıldı ve makine kullanıma uygun mu? Kapatılan kayıt geçmişte kalır.')
+            ->schema([Textarea::make('kapanis_notu')->label('Yapılan işlem')->rows(3)->required()])
+            ->action(function (array $data, array $arguments): void {
+                $b = IsEkipmaniBakimi::query()
+                    ->whereIn('is_ekipmani_id', IsEkipmani::query()->whereIn('firma_id', array_keys($this->firmalar))->select('id'))
+                    ->findOrFail($arguments['id']);
+                $b->update(['durum' => 'kapali', 'kapanis_zamani' => now(), 'kapanis_notu' => $data['kapanis_notu']]);
+                if ($this->firma && auth()->user()) {
+                    \App\Support\BildirimTarayici::tara(auth()->user(), $this->firma->id);
+                }
+                $this->listeyiYenile();
+                Notification::make()->title('Kayıt kapatıldı')->success()->send();
+            });
+    }
+
     public function kontrolGecmisiAction(): Action
     {
         return Action::make('kontrolGecmisi')
@@ -578,6 +776,7 @@ class PeriyodikKontrol extends Page
             $data['deney_test'] = $tanim['deney'];
         }
 
+        $data = $this->pinHazirla($data);
         $ekipman = IsEkipmani::create($data);
 
         unset($this->tumEkipmanlar, $this->kpi, $this->kategoriSayaclari);

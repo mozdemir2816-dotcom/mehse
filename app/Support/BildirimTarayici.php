@@ -292,6 +292,26 @@ class BildirimTarayici
             $ekle('dokuman:yakin', 'uyari', 'Doküman geçerliliği yaklaşıyor', $yakin->count().' doküman: '.Str::limit($yakin->map(fn ($d) => $d->etiket())->implode(', '), 120).'.', $yakin->first()->gecerlilik_sonu, $dokUrl);
         }
 
+        // 12.11.2026 — ekipman: açık arıza kaydı (kapanana kadar) ve periyodik kontrole 30 / 15 / 7 gün kala renkli uyarı.
+        $ekipmanUrl = static::url(fn () => PeriyodikKontrolSayfasi::getUrl(['firma' => $firma->id]));
+        $ekipmanlar = EkipmanKatalogu::ekipmanlar($firma);
+        foreach (\App\Models\IsEkipmaniBakimi::query()->acik()->whereIn('is_ekipmani_id', $ekipmanlar->pluck('id'))->with('ekipman')->get() as $b) {
+            $ekle('ekipman_ariza:'.$b->id, $b->tur === 'ariza' ? 'kritik' : 'uyari',
+                ($b->tur === 'ariza' ? 'Arızalı ekipman — kullanılmamalı: ' : 'Bakımdaki ekipman: ').$b->ekipman->ekipman_adi,
+                Str::limit($b->baslik.'. '.collect($b->uygunsuz_maddeler ?? [])->pluck('soru')->implode(', '), 200).($b->bildiren ? ' Bildiren: '.$b->bildiren.'.' : ''),
+                $b->acilis_zamani, $ekipmanUrl);
+        }
+        $seviyeler = ['kirmizi' => 'kritik', 'sari' => 'uyari', 'yesil' => 'bilgi'];
+        foreach ($ekipmanlar as $e) {
+            if ($renk = $e->uyariSeviyesi()) {
+                $kalan = $e->kalanGun();
+                $ekle('ekipman_vize:'.$e->id.':'.$renk, $seviyeler[$renk],
+                    'Periyodik kontrol '.($kalan < 0 ? (-$kalan).' gün gecikti' : ($kalan === 0 ? 'bugün' : $kalan.' gün kaldı')).': '.$e->ekipman_adi,
+                    $e->kategoriAdi().' — sonraki kontrol '.$e->sonraki_vize_tarihi->format('d.m.Y').'. Yetkili kişiye / A tipi muayene kuruluşuna kontrolü yaptırıp sonucu girin.',
+                    $e->sonraki_vize_tarihi, $ekipmanUrl);
+            }
+        }
+
         // Ana Sayfa'daki tarihli takipler (periyodik kontrol, KKD, ortam, DÖF, eğitim)
         foreach (GorevDurumu::tarihliGorevler($firma) as $g) {
             $ekle(

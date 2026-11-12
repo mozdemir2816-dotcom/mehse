@@ -3,6 +3,7 @@
 --  is_ekipmanlari  : üretim yılı, operatör QR anahtarı / PIN, bakım sorumlusu, tebliğ durumu + imzalı nüsha
 --  is_ekipmani_gunluk_kontrolleri : QR / panelden doldurulan günlük kontrol
 --  is_ekipmani_bakimlari          : bakım / arıza kaydı ("Uygun Değil" çıkınca otomatik açılır)
+--  talimat_sablonlari             : ekipman tipine bağlı kütüphane talimatı (yapay zekâ taslağı)
 
 USE `u2858154_mehse`;
 
@@ -24,10 +25,15 @@ alter table `is_ekipmani_bakimlari` add constraint `is_ekipmani_bakimlari_is_eki
 alter table `is_ekipmani_bakimlari` add constraint `is_ekipmani_bakimlari_gunluk_kontrol_id_foreign` foreign key (`gunluk_kontrol_id`) references `is_ekipmani_gunluk_kontrolleri` (`id`) on delete set null;
 alter table `is_ekipmani_bakimlari` add index `ekipman_bakim_durum_index`(`is_ekipmani_id`, `durum`);
 
+alter table `talimat_sablonlari` add `ekipman_tipi` varchar(191) null after `kategori`;
+alter table `talimat_sablonlari` add `yz_taslak` tinyint(1) not null default '0' after `ekipman_tipi`;
+alter table `talimat_sablonlari` add index `talimat_sablonlari_ekipman_tipi_index`(`ekipman_tipi`);
+
 INSERT INTO `migrations` (`migration`, `batch`)
 SELECT '2026_11_12_120000_create_ekipman_qr_gunluk_kontrol_bakim', COALESCE(MAX(`batch`), 0) + 1 FROM `migrations`;
 
--- Doğrulama: beklenen  yeni_sutun = 9 | tablo = 2
+-- Doğrulama: beklenen  yeni_sutun = 9 | tablo = 2 | talimat_sutun = 2
 SELECT (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'u2858154_mehse' AND TABLE_NAME = 'is_ekipmanlari'
           AND COLUMN_NAME IN ('uretim_yili','qr_anahtar','qr_pin','bakim_sorumlusu','bakim_sorumlusu_eposta','teblig_cikti_at','isverene_teblig_edildi','teblig_tarihi','imzali_belge_yolu')) AS yeni_sutun,
-       (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'u2858154_mehse' AND TABLE_NAME IN ('is_ekipmani_gunluk_kontrolleri','is_ekipmani_bakimlari')) AS tablo;
+       (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'u2858154_mehse' AND TABLE_NAME IN ('is_ekipmani_gunluk_kontrolleri','is_ekipmani_bakimlari')) AS tablo,
+       (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'u2858154_mehse' AND TABLE_NAME = 'talimat_sablonlari' AND COLUMN_NAME IN ('ekipman_tipi','yz_taslak')) AS talimat_sutun;

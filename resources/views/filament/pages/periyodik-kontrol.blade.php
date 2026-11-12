@@ -19,6 +19,12 @@
         .mehse-belge--eksik { color:#a16207; background:rgb(161 98 7 / .08); border-color:rgb(161 98 7 / .3) }
         .mehse-belge--eksik:hover { background:rgb(161 98 7 / .16) }
         .mehse-belge--yok { color:rgb(107 114 128); border-color:rgb(107 114 128 / .3); border-style:dashed }
+        .mehse-belge--yz { color:#6d28d9; background:rgb(109 40 217 / .07); border-color:rgb(109 40 217 / .3) }
+        .mehse-belge--yz:hover { background:rgb(109 40 217 / .14) } .dark .mehse-belge--yz { color:#c4b5fd }
+        .mehse-belge--ariza { color:#fff; background:#b91c1c; border-color:#b91c1c }
+        .mehse-kalan { font-size:.7rem; font-weight:600; margin-top:.2rem; color:rgb(107 114 128) }
+        .mehse-kalan--yesil { color:#15803d } .mehse-kalan--sari { color:#a16207 } .mehse-kalan--kirmizi { color:#b91c1c }
+        .dark .mehse-kalan--yesil { color:#4ade80 } .dark .mehse-kalan--sari { color:#facc15 } .dark .mehse-kalan--kirmizi { color:#f87171 }
         .dark .mehse-belge--var { color:#4ade80 } .dark .mehse-belge--eksik { color:#facc15 } .dark .mehse-belge--yok { color:rgb(156 163 175) }
     </style>
     @include('filament.pages.partials.acil-slate-stil')
@@ -144,9 +150,12 @@
                                                 </button>
                                             @endif
                                             @if ($s['talimatlar'] === [])
-                                                <span class="mehse-belge mehse-belge--yok">
-                                                    <x-filament::icon icon="heroicon-m-minus-circle" class="mehse-belge__ikon" /> <span>Talimat kütüphanede yok</span>
-                                                </span>
+                                                <button type="button" wire:click="talimatTaslagiHazirla({{ $s['id'] }})" wire:loading.attr="disabled"
+                                                    wire:target="talimatTaslagiHazirla({{ $s['id'] }})" class="mehse-belge mehse-belge--yz" title="Kütüphanede talimat yok — yapay zekâ taslak hazırlasın (yarım dakika sürebilir)">
+                                                    <x-filament::icon icon="heroicon-m-sparkles" class="mehse-belge__ikon" />
+                                                    <span wire:loading.remove wire:target="talimatTaslagiHazirla({{ $s['id'] }})">Talimat yok — YZ taslağı hazırla</span>
+                                                    <span wire:loading wire:target="talimatTaslagiHazirla({{ $s['id'] }})">Hazırlanıyor…</span>
+                                                </button>
                                             @endif
                                             @if ($s['gunluk_form'])
                                                 <button type="button" wire:click="gunlukFormPdf({{ $s['id'] }})" class="mehse-belge mehse-belge--var" title="Günlük kontrol formu: {{ $s['gunluk_form'] }}">
@@ -156,6 +165,18 @@
                                                 <span class="mehse-belge mehse-belge--yok">
                                                     <x-filament::icon icon="heroicon-m-minus-circle" class="mehse-belge__ikon" /> <span>Günlük form kütüphanede yok</span>
                                                 </span>
+                                            @endif
+                                            @if ($s['acik_ariza'])
+                                                <button type="button" wire:click="mountAction('ekipmanDetay', { id: {{ $s['id'] }} })" class="mehse-belge mehse-belge--ariza">
+                                                    <x-filament::icon icon="heroicon-m-exclamation-triangle" class="mehse-belge__ikon" /> <span>Arızalı — kullanılmamalı</span>
+                                                </button>
+                                            @endif
+                                            @if ($s['teblig'] === 'edildi')
+                                                <span class="mehse-belge mehse-belge--var"><x-filament::icon icon="heroicon-m-check-badge" class="mehse-belge__ikon" /> <span>İşverene tebliğ edildi ({{ $s['teblig_tarihi'] }})</span></span>
+                                            @elseif ($s['teblig'] === 'bekliyor')
+                                                <button type="button" wire:click="mountAction('tebligYukle', { id: {{ $s['id'] }} })" class="mehse-belge mehse-belge--eksik" title="İmzalı nüshanın fotoğrafını yükleyin">
+                                                    <x-filament::icon icon="heroicon-m-clock" class="mehse-belge__ikon" /> <span>Çıktı alındı — imza bekliyor</span>
+                                                </button>
                                             @endif
                                         </div>
                                     </td>
@@ -179,11 +200,12 @@
                                             {{ $durumEtiket[$s['vize_durumu']] }}
                                         </span>
                                         @if ($s['kalan_gun'] !== null && ! in_array($s['vize_durumu'], ['bekliyor', 'muaf'], true))
-                                            <div style="font-size:.68rem;color:rgb(107 114 128);margin-top:.15rem">{{ $s['kalan_gun'] }} gün</div>
+                                            <div class="mehse-kalan mehse-kalan--{{ $s['uyari'] ?? 'yok' }}">{{ $s['kalan_gun'] < 0 ? (-$s['kalan_gun']).' gün gecikti' : $s['kalan_gun'].' gün kaldı' }}</div>
                                         @endif
                                     </td>
                                     <td style="padding:.35rem;text-align:center;white-space:nowrap">
                                         <x-filament::button size="xs" color="primary" wire:click="mountAction('kontrolGir', { id: {{ $s['id'] }} })">Kontrol Gir</x-filament::button>
+                                        <x-filament::button size="xs" color="gray" wire:click="mountAction('ekipmanDetay', { id: {{ $s['id'] }} })">Detay</x-filament::button>
                                         <x-filament::button size="xs" color="gray" wire:click="mountAction('kontrolGecmisi', { id: {{ $s['id'] }} })">Geçmiş</x-filament::button>
                                         <button type="button" wire:click="ekipmanSil({{ $s['id'] }})"
                                             wire:confirm="Bu ekipman silinsin mi?"

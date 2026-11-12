@@ -7,6 +7,7 @@ use App\Models\IsEkipmani;
 use App\Models\RiskDegerlendirmesi;
 use App\Models\RiskMaddesi;
 use App\Models\Talimat;
+use App\Models\TalimatSablonu;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
 use Illuminate\Support\Collection;
@@ -442,7 +443,15 @@ class EkipmanKatalogu
     {
         $basliklar = array_map([static::class, 'norm'], (array) (static::tanim($tip)['talimat'] ?? []));
         if ($basliklar === []) {
-            return [];
+            // 12.11.2026: katalogda talimatı yoksa kütüphanede bu tipe kaydedilmiş talimat (yapay zekâ taslağı dahil).
+            $kutuphaneTipi = static::tipBul($tip) ?? trim((string) $tip);
+
+            return $kutuphaneTipi === '' ? [] : TalimatSablonu::query()->where('ekipman_tipi', $kutuphaneTipi)->get()
+                ->map(fn (TalimatSablonu $s) => [
+                    ...$s->only(['baslik', 'kategori', 'dokuman_no', 'aciklama', 'kkdler', 'maddeler', 'bolumler', 'taahhut']),
+                    'sablon_id' => $s->id,
+                    'yz_taslak' => (bool) $s->yz_taslak,
+                ])->all();
         }
 
         return collect(TalimatKutuphanesi::hazirSablonlar())
@@ -478,6 +487,16 @@ class EkipmanKatalogu
             ->reject(fn (array $s) => in_array(static::norm($s['baslik']), $mevcut, true))
             ->keyBy('baslik')
             ->all();
+    }
+
+    /** Ekipmanın firmadaki talimatı (kütüphane talimat başlığıyla eşleşen ilk kayıt); yoksa null. */
+    public static function firmaTalimati(IsEkipmani $ekipman): ?Talimat
+    {
+        $basliklar = collect(static::talimatSablonlari($ekipman->tip))->map(fn ($s) => static::norm($s['baslik']));
+
+        return $basliklar->isEmpty() ? null : Talimat::query()->where('firma_id', $ekipman->firma_id)->get()
+            ->sortBy(fn (Talimat $t) => $basliklar->search(static::norm($t->baslik)))
+            ->first(fn (Talimat $t) => $basliklar->contains(static::norm($t->baslik)));
     }
 
     /**

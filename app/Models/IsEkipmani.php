@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * İş Ekipmanı — periyodik kontrol/muayene takip künyesi (isgpratik "Ekipman &
@@ -29,10 +33,23 @@ class IsEkipmani extends Model
         'son_muayene_tarihi' => 'date',
         'sonraki_vize_tarihi' => 'date',
         'aktif' => 'boolean',
+        'uretim_yili' => 'integer',
+        'teblig_cikti_at' => 'datetime',
+        'isverene_teblig_edildi' => 'boolean',
+        'teblig_tarihi' => 'date',
     ];
+
+    protected $hidden = ['qr_pin'];
+
+    /** Periyodik kontrole kalan gün eşikleri (12.11.2026): 30 yeşil, 15 sarı, 7 kırmızı. */
+    public const UYARI_ESIKLERI = ['yesil' => 30, 'sari' => 15, 'kirmizi' => 7];
 
     protected static function booted(): void
     {
+        static::creating(function (IsEkipmani $e): void {
+            $e->qr_anahtar ??= static::yeniQrAnahtari();
+        });
+
         static::saving(function (IsEkipmani $e): void {
             $e->muayene_periyodu_ay = max(1, (int) ($e->muayene_periyodu_ay ?: 12));
 
@@ -100,6 +117,88 @@ class IsEkipmani extends Model
     public function kontroller(): HasMany
     {
         return $this->hasMany(IsEkipmaniKontrolu::class)->orderByDesc('kontrol_tarihi');
+    }
+
+    /** Operatör günlük kontrolleri — en yeni önce. */
+    public function gunlukKontroller(): HasMany
+    {
+        return $this->hasMany(IsEkipmaniGunlukKontrolu::class)->orderByDesc('kontrol_zamani');
+    }
+
+    /** Bakım / arıza kayıtları — en yeni önce. */
+    public function bakimlar(): HasMany
+    {
+        return $this->hasMany(IsEkipmaniBakimi::class)->orderByDesc('acilis_zamani');
+    }
+
+    public static function yeniQrAnahtari(): string
+    {
+        do {
+            $a = Str::random(32);
+        } while (static::query()->where('qr_anahtar', $a)->exists());
+
+        return $a;
+    }
+
+    /** QR anahtarı; eski kayıtta yoksa üretip sessizce kaydeder. */
+    public function qrAnahtari(): string
+    {
+        if (blank($this->qr_anahtar)) {
+            $this->qr_anahtar = static::yeniQrAnahtari();
+            $this->saveQuietly();
+        }
+
+        return $this->qr_anahtar;
+    }
+
+    /** Operatör ekranı (giriş gerektirmez; PIN tanımlıysa PIN sorar). */
+    public function operatorAdresi(): string
+    {
+        return route('ekipman.operator', $this->qrAnahtari());
+    }
+
+    /** QR görseli (SVG data URI — dompdf'te de çalışır). */
+    public function qrDataUri(): string
+    {
+        return (new QRCode(new QROptions(['outputBase64' => true, 'addQuietzone' => true])))
+            ->render($this->operatorAdresi());
+    }
+
+    public function pinGerekliMi(): bool
+    {
+        return filled($this->qr_pin);
+    }
+
+    public function pinDogruMu(?string $pin): bool
+    {
+        return ! $this->pinGerekliMi() || (filled($pin) && Hash::check($pin, $this->qr_pin));
+    }
+
+    /**
+     * Periyodik kontrol uyarı rengi: süresi dolmuş ya da ≤7 gün kırmızı, ≤15 sarı, ≤30 yeşil;
+     * daha uzak / takipsiz null.
+     *
+     * @return 'kirmizi'|'sari'|'yesil'|null
+     */
+    public function uyariSeviyesi(): ?string
+    {
+        $kalan = EkipmanKatalogu::periyodikMi($this->kategori) ? $this->kalanGun() : null;
+        if ($kalan === null) {
+            return null;
+        }
+
+        return match (true) {
+            $kalan <= self::UYARI_ESIKLERI['kirmizi'] => 'kirmizi',
+            $kalan <= self::UYARI_ESIKLERI['sari'] => 'sari',
+            $kalan <= self::UYARI_ESIKLERI['yesil'] => 'yesil',
+            default => null,
+        };
+    }
+
+    /** @return 'edildi'|'bekliyor'|'yok' — tebliğ paketi basıldı mı, işverene imzalatıldı mı */
+    public function tebligDurumu(): string
+    {
+        return $this->isverene_teblig_edildi ? 'edildi' : ($this->teblig_cikti_at ? 'bekliyor' : 'yok');
     }
 
     public function kategoriAdi(): string
