@@ -314,6 +314,41 @@
             @endif
         </div>
 
+        @if ($kategoriAnahtari === 'saha_gozlem' && $firmaId)
+            {{-- Sistemde hazırlanan tüm saha gözlem raporları (13.11.2026) --}}
+            @php $sahaRaporlari = $this->sahaRaporlari; @endphp
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.45rem">
+                    <span style="{{ $baslikStil }}">Sistemde Hazırlanan Raporlar{{ $sahaRaporlari->isNotEmpty() ? ' ('.$sahaRaporlari->count().')' : '' }}</span>
+                    @if ($sahaRaporlari->isNotEmpty())
+                        <x-filament::button size="sm" icon="heroicon-o-archive-box-arrow-down" wire:click="sahaRaporlariZip" wire:loading.attr="disabled" wire:target="sahaRaporlariZip">
+                            <span wire:loading.remove wire:target="sahaRaporlariZip">Tümünü İndir (ZIP)</span>
+                            <span wire:loading wire:target="sahaRaporlariZip">Hazırlanıyor…</span>
+                        </x-filament::button>
+                    @endif
+                </div>
+                @if ($sahaRaporlari->isNotEmpty())
+                    <div style="display:flex;flex-direction:column;gap:.45rem">
+                        @foreach ($sahaRaporlari as $s)
+                            @php $tamam = $s->tamamlandiMi(); $adet = count($s->bulgular ?? []); @endphp
+                            <div wire:key="saha-{{ $s->id }}" style="{{ $kart }};padding:.65rem .9rem;display:flex;gap:.6rem;align-items:center">
+                                <x-filament::icon icon="heroicon-o-camera" style="width:1.2rem;height:1.2rem;color:rgb(37 99 235);flex-shrink:0" />
+                                <span style="flex:1;min-width:0">
+                                    <span style="display:block;font-weight:600">{{ ($s->rapor_tarihi ?? $s->created_at)?->format('d.m.Y') }} · {{ $s->belge_no }}</span>
+                                    <span style="display:block;font-size:.8rem;{{ $soluk }}">{{ $adet }} bulgu</span>
+                                </span>
+                                <span style="font-size:.78rem;font-weight:600;color:{{ $tamam ? '#15803d' : '#b45309' }}">{{ $tamam ? 'Tamamlandı' : 'Taslak' }}</span>
+                                <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-down" wire:click="sahaRaporPdf({{ $s->id }})" wire:loading.attr="disabled" wire:target="sahaRaporPdf({{ $s->id }})">PDF</x-filament::button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <p style="font-size:.8rem;{{ $soluk }};margin-top:.4rem">Saha → Gözlem Raporu sayfasında hazırlanan raporlar. Taslaklar PDF'te "TASLAK" ibaresiyle çıkar; imzalı nüshayı "Yeni Kayıt" ile arşive ekleyebilirsiniz.</p>
+                @else
+                    <div style="{{ $kart }};padding:1.3rem;text-align:center;{{ $soluk }}">Bu firma için sistemde hazırlanmış saha gözlem raporu yok.</div>
+                @endif
+            </div>
+        @endif
+
         <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
                 <span style="{{ $baslikStil }}">Üretilmiş Belgeler{{ $detay['uretilmis']->isNotEmpty() ? ' ('.$detay['uretilmis']->count().')' : '' }}</span>

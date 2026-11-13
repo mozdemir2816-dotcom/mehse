@@ -7,6 +7,7 @@ use App\Filament\Concerns\SinirliErisim;
 use App\Models\ArsivDosya;
 use App\Models\BelgeSablonu;
 use App\Models\Firma;
+use App\Models\SahaAnalizi;
 use App\Support\ArsivKurali;
 use App\Support\ArsivUretici;
 use App\Support\ArsivYukleyici;
@@ -14,6 +15,7 @@ use App\Support\BelgeSablonMotoru;
 use App\Support\EtiketliSablon;
 use App\Support\ExcelBellek;
 use App\Support\KullaniciAyarlari;
+use App\Support\SahaAnaliziUretici;
 use BackedEnum;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
@@ -227,6 +229,70 @@ class DokumanYonetimi extends Page
         ];
     }
 
+    /**
+     * Saha Gözlem Raporları kategorisinde, seçili firmanın sistemde hazırlanmış
+     * TÜM raporları (Saha → Gözlem Raporu) — arşivde yalnız en sonuncusu
+     * üretilebiliyordu (13.11.2026, kullanıcı isteği).
+     *
+     * @return Collection<int, SahaAnalizi>
+     */
+    #[Computed]
+    public function sahaRaporlari(): Collection
+    {
+        if ($this->kategoriAnahtari !== 'saha_gozlem' || ! ($firma = $this->yetkiliFirma())) {
+            return collect();
+        }
+
+        return $firma->sahaAnalizleri()->orderByDesc('rapor_tarihi')->orderByDesc('id')->get();
+    }
+
+    private function yetkiliFirma(): ?Firma
+    {
+        return $this->firmaId ? Firma::query()->where('user_id', Filament::auth()->id())->find($this->firmaId) : null;
+    }
+
+    public function sahaRaporPdf(int $id)
+    {
+        $s = $this->yetkiliFirma()?->sahaAnalizleri()->find($id);
+
+        return $s ? SahaAnaliziUretici::pdf($s) : null;
+    }
+
+    /** Firmanın tüm saha gözlem raporları tek ZIP içinde (her rapor ayrı PDF). */
+    public function sahaRaporlariZip()
+    {
+        $firma = $this->yetkiliFirma();
+        $raporlar = $firma ? $firma->sahaAnalizleri()->orderBy('rapor_tarihi')->orderBy('id')->get() : collect();
+
+        if ($raporlar->isEmpty()) {
+            Notification::make()->title('İndirilecek saha gözlem raporu yok')->warning()->send();
+
+            return null;
+        }
+
+        @set_time_limit(300);
+        $tmp = tempnam(sys_get_temp_dir(), 'saha');
+        $zip = new \ZipArchive;
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+
+        foreach ($raporlar as $s) {
+            ob_start();
+            SahaAnaliziUretici::pdf($s)->sendContent();
+            $ad = ($s->rapor_tarihi?->format('Y-m-d') ?? $s->created_at?->format('Y-m-d') ?? 'tarihsiz')
+                .'_'.Str::slug($s->belge_no ?: 'rapor-'.$s->id)
+                .($s->tamamlandiMi() ? '' : '_taslak').'.pdf';
+            $zip->addFromString($ad, (string) ob_get_clean());
+        }
+        $zip->close();
+
+        $dosyaAdi = 'saha-gozlem-raporlari-'.Str::slug($firma->kisa_ad ?: $firma->unvan).'.zip';
+
+        return response()->streamDownload(function () use ($tmp) {
+            readfile($tmp);
+            @unlink($tmp);
+        }, $dosyaAdi, ['Content-Type' => 'application/zip']);
+    }
+
     /** @return Collection<int, BelgeSablonu> */
     #[Computed]
     public function sablonlar(): Collection
@@ -277,14 +343,14 @@ class DokumanYonetimi extends Page
     private function yenile(): void
     {
         unset($this->kapsamFirmalari, $this->tumu, $this->matris, $this->kartlar, $this->sorunlar,
-            $this->calisanListesiEksik, $this->kategoriDetay, $this->dokumanlar, $this->sablonlar, $this->goruntulenen, $this->haric);
+            $this->calisanListesiEksik, $this->kategoriDetay, $this->sahaRaporlari, $this->dokumanlar, $this->sablonlar, $this->goruntulenen, $this->haric);
     }
 
     public function kategoriAc(?string $anahtar): void
     {
         $this->kategoriAnahtari = $anahtar && isset(config('arsiv.kategoriler')[$anahtar]) ? $anahtar : null;
         $this->goruntulenenId = null;
-        unset($this->kategoriDetay);
+        unset($this->kategoriDetay, $this->sahaRaporlari);
     }
 
     /** Takip listesi / uyum tablosundan: firmayı seç ve kategoriyi aç. */
