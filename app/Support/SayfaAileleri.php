@@ -108,6 +108,7 @@ class SayfaAileleri
                 [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
                 [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
                 [Pages\Mevzuat::class, 'Mevzuat'],
+                [Pages\HazirIstemler::class, 'Hazır İstemler'],
             ],
             // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
             'belge' => [
@@ -166,7 +167,7 @@ class SayfaAileleri
         'ayarlar' => [
             ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class, Pages\SahaEkrani::class]],
             ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class]],
-            ['etiket' => 'İSG-KATİP Robotu & Mevzuat Kütüphanesi', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class]],
+            ['etiket' => 'İSG-KATİP Robotu, Mevzuat & Hazır İstemler', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class, Pages\HazirIstemler::class]],
         ],
         // Resmi Belge & Kurul Yönetim Merkezi (30.10.2026)
         'belge' => [

@@ -34,11 +34,11 @@ class SistemAyarlariMerkeziTest extends TestCase
         $g = SayfaAileleri::sekmeGruplari([Mevzuat::class]);
         $this->assertSame('ayarlar', $g['aile']);
         $this->assertSame(
-            ['Genel Ayarlar & Görünüm', 'Güvenlik, Oturumlar & Ekip Yetkileri', 'İSG-KATİP Robotu & Mevzuat Kütüphanesi'],
+            ['Genel Ayarlar & Görünüm', 'Güvenlik, Oturumlar & Ekip Yetkileri', 'İSG-KATİP Robotu, Mevzuat & Hazır İstemler'],
             array_column($g['ust'], 'etiket'),
         );
-        $this->assertSame('İSG-KATİP Robotu & Mevzuat Kütüphanesi', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertCount(3, $g['alt']);
+        $this->assertSame('İSG-KATİP Robotu, Mevzuat & Hazır İstemler', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
+        $this->assertCount(4, $g['alt']);   // + Hazır İstemler (13.11.2026)
         $this->assertCount(2, SayfaAileleri::sekmeGruplari([Guvenlik::class])['alt']);
 
         foreach ([Ayarlar::class, Guvenlik::class, KullaniciYonetimi::class, IsgKatipRobot::class, Mevzuat::class] as $sayfa) {
