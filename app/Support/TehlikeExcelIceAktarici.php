@@ -91,6 +91,11 @@ class TehlikeExcelIceAktarici
 
             $veri = static::satiriEslestir($satir, $sutunlar);
 
+            // Parça parça yapıştırılan Gemini tablolarında araya giren başlık satırı (Hazır İstemler, 13.11.2026).
+            if (static::normalize((string) ($veri['tehlike'] ?? '')) === 'tehlike') {
+                continue;
+            }
+
             if (blank($veri['kategori'] ?? null) || blank($veri['tehlike'] ?? null)) {
                 $hatalar[] = "Satır {$satirNo}: Kategori veya Tehlike boş, atlandı.";
 

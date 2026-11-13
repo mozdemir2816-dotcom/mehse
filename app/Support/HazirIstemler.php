@@ -23,7 +23,7 @@ class HazirIstemler
             'cikti' => 'Excel tablosu',
             'yukle' => 'Risk Değerlendirmesi → Kayıtlı Değerlendirmeler → "Excel Yükle"',
             'firma' => true,
-            'adet' => 60,
+            'adet' => 100,
         ],
         'tehlike_kutuphanesi' => [
             'ad' => 'Tehlike kütüphanesine yeni maddeler',
@@ -93,7 +93,9 @@ class HazirIstemler
 
         return [
             'İstemi kopyalayıp Gemini sohbetine yapıştırın.',
-            'Gemini\'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin. Yanıt yarıda kalırsa "devam" yazın; gelen satırları altına ekleyin.',
+            $tur === 'talimat'
+                ? 'Gemini\'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.'
+                : 'Gemini tabloyu parça parça verir: ilk parçayı boş bir Excel sayfasına A1 hücresinden yapıştırın; "devam" yazıp gelen her parçayı bir öncekinin hemen altına yapıştırın. Araya giren başlık satırlarını silmenize gerek yok. "BİTTİ" yazınca .xlsx olarak kaydedin.',
             "Yükleyin: {$yukle}.",
         ];
     }
@@ -129,8 +131,8 @@ class HazirIstemler
     {
         $fk = $yontem !== 'matris_5x5';
         $sutunlar = implode(' | ', $fk
-            ? ['Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Mevcut Önlem', 'Olasılık', 'Frekans', 'Şiddet', 'Önerilen Önlem', 'Sorumlu', 'Termin', 'Mevzuat', 'Son Olasılık', 'Son Frekans', 'Son Şiddet']
-            : ['Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Mevcut Önlem', 'Olasılık', 'Şiddet', 'Önerilen Önlem', 'Sorumlu', 'Termin', 'Mevzuat', 'Son Olasılık', 'Son Şiddet']);
+            ? ['Sıra', 'Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Mevcut Önlem', 'Olasılık', 'Frekans', 'Şiddet', 'Önerilen Önlem', 'Sorumlu', 'Termin', 'Mevzuat', 'Son Olasılık', 'Son Frekans', 'Son Şiddet']
+            : ['Sıra', 'Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Mevcut Önlem', 'Olasılık', 'Şiddet', 'Önerilen Önlem', 'Sorumlu', 'Termin', 'Mevzuat', 'Son Olasılık', 'Son Şiddet']);
         $puan = $fk
             ? 'Fine-Kinney yöntemi. Puanları YALNIZ şu değerlerden seç — Olasılık: '.static::olcekMetni('fine_kinney', 'olasilik')
                 .' · Frekans: '.static::olcekMetni('fine_kinney', 'frekans').' · Şiddet: '.static::olcekMetni('fine_kinney', 'siddet').' (bu ölçekte 100 YOK; en yüksek şiddet 40).'
@@ -139,8 +141,8 @@ class HazirIstemler
         $termin = implode(', ', array_unique([...array_values(config('isg.risk_termin_duzey', [])), 'Sürekli / Rutin']));
 
         return <<<METIN
-        GÖREV: {$kim} yaklaşık {$adet} maddelik bir risk değerlendirme tablosu hazırla.
-        - İşyerinde gerçekten bulunan bölüm ve faaliyetleri düşün (üretim, depo, bakım, ofis, yemekhane, temizlik, yükleme-boşaltma, elektrik, acil durum vb.). Her bölüm için tipik ve önemli tehlikeleri yaz; aynı tehlikeyi tekrarlama.
+        GÖREV: {$kim} TAM OLARAK {$adet} maddelik bir risk değerlendirme tablosu hazırla (Sıra 1'den {$adet}'e kadar; daha az madde yazma, kısaltma).
+        - Önce işyerinde gerçekten bulunan bölümleri kendin belirle (üretim alanları, depo, bakım, ofis, yemekhane, temizlik, yükleme-boşaltma, elektrik, acil durum, genel alanlar vb.) ve maddeleri bölümlere dengeli dağıt; her bölüme en az 4–5 madde. Aynı tehlikeyi tekrarlama.
         - Tehlike: somut durum ya da kaynak ("korumasız kayış-kasnak", "ıslak zemin"). Risk: doğurabileceği sonuç (uzuv kaybı, düşme sonucu kırık…).
         - Mevcut Önlem sütununu BOŞ bırak (işyerinde yerinde görülüp doldurulacak).
         - {$puan} Puanları mevcut önlem yokmuş gibi, gerçekçi ver.
@@ -151,7 +153,8 @@ class HazirIstemler
         - Son puanlar: önerilen önlem uygulandıktan sonraki değerler; ilk puanlardan büyük olamaz (şiddet genelde aynı kalır).
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         {$sutunlar}
-        Hücrelerde satır sonu kullanma. Puan hücrelerine yalnız sayı yaz (ondalıkta virgül). Yanıt sınırına takılırsan kaldığın satırda dur; "devam" yazınca başlığı tekrarlamadan sürdür.
+        Hücrelerde satır sonu kullanma. Puan hücrelerine yalnız sayı yaz (ondalıkta virgül).
+        PARÇA KURALI: Her yanıtta EN FAZLA 25 satır ver. 25 satırdan sonra dur ve tablonun altına yalnız şunu yaz: "Devam için devam yazın (x/{$adet})". Ben "devam" yazınca Sıra numarasından kaldığın yerden, aynı sütunlarla sürdür. {$adet}. satırı yazınca tablonun altına "BİTTİ" yaz.
         METIN;
     }
 
@@ -160,7 +163,7 @@ class HazirIstemler
         $kategori = $kategori !== '' ? $kategori : ($f?->nace_aciklama ?: 'Genel');
 
         return <<<METIN
-        GÖREV: Risk değerlendirmesinde kullanılacak bir tehlike kütüphanesi için "{$kategori}" konusunda yaklaşık {$adet} madde hazırla.
+        GÖREV: Risk değerlendirmesinde kullanılacak bir tehlike kütüphanesi için "{$kategori}" konusunda TAM OLARAK {$adet} madde hazırla (Sıra 1'den {$adet}'e kadar; daha az yazma).
         - Her satır tek bir tehlike olsun; birbirinin tekrarı olan maddeler yazma.
         - Kategori sütununa her satırda aynen şunu yaz: {$kategori}
         - Kod: boş bırak.
@@ -169,8 +172,9 @@ class HazirIstemler
         - Mevcut Önlem sütununu BOŞ bırak.
         - Mevzuat: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
-        Kategori | Kod | Bölüm | Faaliyet | Tehlike | Risk | Mevcut Önlem | Mevzuat
-        Hücrelerde satır sonu kullanma. Yanıt sınırına takılırsan kaldığın satırda dur; "devam" yazınca başlığı tekrarlamadan sürdür.
+        Sıra | Kategori | Kod | Bölüm | Faaliyet | Tehlike | Risk | Mevcut Önlem | Mevzuat
+        Hücrelerde satır sonu kullanma.
+        PARÇA KURALI: Her yanıtta EN FAZLA 40 satır ver. 40 satırdan sonra dur ve tablonun altına yalnız şunu yaz: "Devam için devam yazın (x/{$adet})". Ben "devam" yazınca Sıra numarasından kaldığın yerden sürdür. {$adet}. satırı yazınca "BİTTİ" yaz.
         METIN;
     }
 

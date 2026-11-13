@@ -348,7 +348,8 @@ class RiskDegerlendirmesiExcelOkuyucu
 
             $bosSayaci = 0;
 
-            if (blank($veri['tehlike'] ?? null)) {
+            // Parça parça yapıştırılan Gemini tablolarında araya giren başlık satırı veri değildir (Hazır İstemler, 13.11.2026).
+            if (blank($veri['tehlike'] ?? null) || static::normalize((string) $veri['tehlike']) === 'tehlike') {
                 continue;
             }
 
@@ -742,7 +743,8 @@ class RiskDegerlendirmesiExcelOkuyucu
         for ($r = $veriBaslangic; $r <= $veriBaslangic + 25 && $kontrolEdilen < 5; $r++) {
             $deger = $sheet->getCell([$col, $r])->getValue();
 
-            if ($deger === null || $deger === '') {
+            // Parça parça yapıştırılan tablolarda araya giren başlık hücresi ("Olasılık", "Son Şiddet") sayılmaz (13.11.2026).
+            if ($deger === null || $deger === '' || (is_string($deger) && static::puanEkseni(static::normalize($deger)) !== null)) {
                 continue;
             }
 

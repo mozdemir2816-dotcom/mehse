@@ -56,12 +56,14 @@ class HazirIstemlerTest extends TestCase
         $this->assertStringContainsString('14.13 — Dış giyim imalatı', $istem);
         $this->assertStringContainsString('Çalışan sayısı: 85', $istem);
         $this->assertStringContainsString('kesimhane, dikimhane', $istem);
-        $this->assertStringContainsString('yaklaşık 30 maddelik', $istem);
+        $this->assertStringContainsString('TAM OLARAK 30 maddelik', $istem);
+        $this->assertStringContainsString('EN FAZLA 25 satır', $istem);
         $this->assertStringContainsString('Mevcut Önlem sütununu BOŞ', $istem);
 
-        $b = $this->basliklar($istem, 'Bölüm');
-        $satir = ['Kesimhane', 'Kumaş kesimi', 'Korumasız şerit bıçak', 'El kesilmesi, uzuv kaybı', '', '3', '6', '15', 'Bıçak koruyucusu takılmalı, çelik örgü eldiven verilmeli.', 'Bölüm Şefi', '1 Ay', 'İş Ekipmanları Yönetmeliği', '1', '6', '15'];
-        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($this->excel($b, [$satir]));
+        $b = $this->basliklar($istem, 'Sıra');
+        $satir = ['1', 'Kesimhane', 'Kumaş kesimi', 'Korumasız şerit bıçak', 'El kesilmesi, uzuv kaybı', '', '3', '6', '15', 'Bıçak koruyucusu takılmalı, çelik örgü eldiven verilmeli.', 'Bölüm Şefi', '1 Ay', 'İş Ekipmanları Yönetmeliği', '1', '6', '15'];
+        // İkinci parça başlığıyla birlikte altına yapıştırılmış (Gemini her parçada başlığı tekrarlar).
+        $sonuc = RiskDegerlendirmesiExcelOkuyucu::oku($this->excel($b, [$satir, $b]));
 
         $this->assertSame(1, $sonuc['basarili'], implode(' ', $sonuc['hatalar']));
         $a = $sonuc['adaylar'][0];
@@ -81,7 +83,7 @@ class HazirIstemlerTest extends TestCase
     public function test_5x5_istemi_frekans_sutunu_istemez(): void
     {
         $istem = HazirIstemler::istem('risk_analizi', null, ['yontem' => 'matris_5x5', 'ek' => 'Küçük bir büro']);
-        $b = $this->basliklar($istem, 'Bölüm');
+        $b = $this->basliklar($istem, 'Sıra');
         $this->assertNotContains('Frekans', $b);
         $this->assertContains('Son Şiddet', $b);
         $this->assertStringContainsString('1–5 arası', $istem);
@@ -92,12 +94,14 @@ class HazirIstemlerTest extends TestCase
         $istem = HazirIstemler::istem('tehlike_kutuphanesi', null, ['kategori' => 'Matbaa – Ofset baskı', 'adet' => 10]);
         $this->assertStringContainsString('aynen şunu yaz: Matbaa – Ofset baskı', $istem);
 
-        $b = $this->basliklar($istem, 'Kategori');
+        $b = $this->basliklar($istem, 'Sıra');
         $sonuc = TehlikeExcelIceAktarici::iceAktar($this->excel($b, [
-            ['Matbaa – Ofset baskı', '', 'Baskı salonu', 'Silindir temizliği', 'Dönen silindirler arasına el kaptırma', 'Ezilme, parmak kopması', '', 'İş Ekipmanları Yönetmeliği'],
+            ['1', 'Matbaa – Ofset baskı', '', 'Baskı salonu', 'Silindir temizliği', 'Dönen silindirler arasına el kaptırma', 'Ezilme, parmak kopması', '', 'İş Ekipmanları Yönetmeliği'],
+            $b,
         ]));
 
         $this->assertSame(1, $sonuc['basarili'], implode(' ', $sonuc['hatalar']));
+        $this->assertSame([], $sonuc['hatalar']);
         $t = Tehlike::query()->where('tehlike', 'Dönen silindirler arasına el kaptırma')->firstOrFail();
         $this->assertSame('Ezilme, parmak kopması', $t->risk);
         $this->assertNull($t->mevcut_onlem);
