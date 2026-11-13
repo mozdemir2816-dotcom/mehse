@@ -775,7 +775,7 @@ abstract class YillikPlanlar extends Page
                         ->label('Değerlendirme raporu biçimi')
                         ->options([
                             'form' => 'İSG Plan ve Değerlendirme Formu (tek sayfa)',
-                            'ydr' => 'İSG-YDR-01 (7 sayfa)',
+                            'ydr' => 'İSG-YDR-01 (4 sayfa, yatay)',
                         ])
                         ->default('form')
                         ->inline()
@@ -893,7 +893,7 @@ abstract class YillikPlanlar extends Page
                 ->label('Çıktı Al (Excel)')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->tooltip('İSG Plan ve Değerlendirme Formu (tek sayfa) ya da İSG-YDR-01 (7 sayfa) Excel olarak iner')
+                ->tooltip('İSG Plan ve Değerlendirme Formu (tek sayfa) ya da İSG-YDR-01 (4 sayfa, yatay) Excel olarak iner')
                 ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
                 ->modalHeading('Yıllık Değerlendirme Raporu — Çıktı Al')
                 ->modalSubmitActionLabel('İndir')
@@ -902,7 +902,7 @@ abstract class YillikPlanlar extends Page
                         ->label('Biçim')
                         ->options([
                             'form' => 'İSG Plan ve Değerlendirme Formu (tek sayfa, 19 çalışma satırı)',
-                            'ydr' => 'İSG-YDR-01 (7 sayfa, 36 satır — bu sayfadaki satırlarla)',
+                            'ydr' => 'İSG-YDR-01 (4 sayfa yatay, 36 satır — bu sayfadaki satırlarla)',
                         ])
                         ->default('form')
                         ->required(),

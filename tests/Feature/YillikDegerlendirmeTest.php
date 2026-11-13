@@ -104,14 +104,22 @@ class YillikDegerlendirmeTest extends TestCase
 
         $this->assertSame('İşyeri unvanı: Deneme A.Ş.', $s->getCell('A2')->getValue());
         $this->assertSame('Rapor yılı: 2026 | Dönem: 01.03.2026–31.12.2026', $s->getCell('D2')->getValue());
-        $this->assertStringStartsWith('Rapor tarihi: 05.01.2027', $s->getCell('D6')->getValue());
-        $this->assertSame('03.05.2026', $s->getCell('B8')->getValue());
-        $this->assertStringStartsWith('Rapor tarihi: 03.05.2026', $s->getCell('F8')->getValue());
-        $this->assertSame('Tarih / Kaşe / İmza:', $s->getCell('A16')->getValue());
+        // 13.11.2026: A4 yatay, künye bir kez (2–5), tablo başlığı 6, ilk çalışma satırı 7
+        $this->assertStringStartsWith('Rapor tarihi: 05.01.2027', $s->getCell('D5')->getValue());
+        $this->assertSame('No', $s->getCell('A6')->getValue());
+        $this->assertSame('03.05.2026', $s->getCell('B7')->getValue());
+        $this->assertStringStartsWith('Rapor tarihi: 03.05.2026', $s->getCell('F7')->getValue());
+        $this->assertSame(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE, $s->getPageSetup()->getOrientation());
 
         $hepsi = collect($s->toArray())->flatten()->implode(' ');
         $this->assertStringNotContainsString('Mehmet Uzman', $hepsi);
         $this->assertStringNotContainsString('Patron Bey', $hepsi);
-        $this->assertCount(6, $s->getBreaks());
+        $this->assertCount(3, $s->getBreaks());   // 4 sayfa
+        $this->assertSame(1, substr_count($hepsi, 'İŞ SAĞLIĞI VE GÜVENLİĞİ YILLIK DEĞERLENDİRME RAPORU'));   // künye tekrarı yok
+        $this->assertSame(3, substr_count($hepsi, 'Tarih / Kaşe / İmza:'));   // yalnız sondaki imza alanı
+        $this->assertStringContainsString('GENEL SONUÇ', $hepsi);
+        $this->assertStringContainsString('Gelecek yıl önerileri', $hepsi);
+        $this->assertStringNotContainsString('Ad soyad: …', $hepsi);
+        $this->assertStringContainsString('Sayfa &P / &N', $s->getHeaderFooter()->getOddFooter());
     }
 }
