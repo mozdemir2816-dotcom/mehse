@@ -457,56 +457,11 @@ class UzaktanEgitimAtama extends Page
             return;
         }
 
-        $giris = [];
-        $atananSayi = 0;
-        $koduUretilenler = [];
-        $silinenEski = 0;
-
-        foreach ($this->calisanlar->whereIn('id', $this->secilenCalisanlar) as $calisan) {
-            // E-postası olmayan çalışana portala girebilmesi için geçici bir kullanıcı kodu ata.
-            if (blank($calisan->eposta)) {
-                $calisan->forceFill(['eposta' => $this->geciciKullaniciKodu($calisan)])->save();
-                $koduUretilenler[] = $calisan->ad_soyad;
-            }
-
-            // Yeni paket atanırken çalışanın önceki paketlerine ait atamalar tamamen silinir
-            // (ilerleme, sınav, giriş günlüğü dahil). Eğitim Kayıtları'ndaki tarih korunur.
-            EgitimAtamasi::query()
-                ->where('calisan_id', $calisan->id)
-                ->where('egitim_paketi_id', '!=', $paket->id)
-                ->get()
-                ->each(function (EgitimAtamasi $eski) use (&$silinenEski): void {
-                    $eski->delete();
-                    $silinenEski++;
-                });
-
-            // Zaten aynı paket atanmışsa atlanır (unique kısıtı).
-            $atama = EgitimAtamasi::firstOrNew([
-                'egitim_paketi_id' => $paket->id,
-                'calisan_id' => $calisan->id,
-            ]);
-
-            if (! $atama->exists) {
-                $atama->fill([
-                    'atayan_user_id' => Filament::auth()->id(),
-                    'atandi_at' => now(),
-                    'son_tarih' => $this->sonTarih ?: null,
-                    'egitim_turu' => $this->egitimTuru,
-                    'durum' => 'atandi',
-                ])->save();
-                $atananSayi++;
-            }
-
-            // Portal şifresi yoksa geçici bir tane üret.
-            $gecici = null;
-
-            if (blank($calisan->sifre)) {
-                $gecici = Str::upper(Str::random(3)).random_int(100, 999);
-                $calisan->forceFill(['sifre' => $gecici, 'sifre_belirlendi_at' => null])->save();
-            }
-
-            $giris[] = ['ad_soyad' => $calisan->ad_soyad, 'eposta' => $calisan->eposta, 'sifre' => $gecici, 'telefon' => $calisan->telefon];
-        }
+        $sonuc = \App\Support\UzaktanEgitimAtayici::ata($paket, $this->calisanlar->whereIn('id', $this->secilenCalisanlar), $this->egitimTuru, $this->sonTarih, Filament::auth()->id());
+        $giris = $sonuc['giris'];
+        $atananSayi = $sonuc['atanan'];
+        $silinenEski = $sonuc['silinen_eski'];
+        $koduUretilenler = $sonuc['kod_uretilen'];
 
         $this->sonUretilenGiris = $giris;
         $this->secilenCalisanlar = [];
@@ -562,17 +517,7 @@ class UzaktanEgitimAtama extends Page
      */
     private function geciciKullaniciKodu(Calisan $calisan): string
     {
-        $taban = (string) Str::of($calisan->ad_soyad)
-            ->ascii()
-            ->lower()
-            ->replace(' ', '.')
-            ->replaceMatches('/[^a-z0-9.]/', '');
-
-        do {
-            $kod = $taban.random_int(100, 999);
-        } while (Calisan::where('eposta', $kod)->exists());
-
-        return $kod;
+        return \App\Support\UzaktanEgitimAtayici::kullaniciKodu($calisan);
     }
 
     public function sifreYenile(int $calisanId): void

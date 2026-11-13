@@ -46,11 +46,13 @@ DELETE c FROM `calisanlar` c
 JOIN `_yedek_test_verisi_13_11` y ON y.`tablo` = 'calisanlar' AND y.`kayit_id` = c.`id`
 WHERE c.`tc` = '50923629512';
 
--- 4) KARAR SİZDE (varsayılan: çalıştırılmaz) — ABDULLETİF YALÇINKAYA çalışan temsilcisi seçimi (ÇT-2026-01):
---    adaylar "MEHMET ÖZDEMİR" (sizin adınız) ve "AYŞE YILMAZ"; seçilen MEHMET ÖZDEMİR. Deneme kaydıysa
---    aşağıdaki iki satırın başındaki "-- " işaretlerini silip çalıştırın; Kontrol Merkezi bu firmada temsilciyi eksik gösterir.
--- INSERT INTO `_yedek_test_verisi_13_11` (`tablo`,`kayit_id`,`veri`) SELECT 'calisan_temsilcisi_secimleri', `id`, CONCAT_WS(' | ', `firma_id`, `dokuman_no`, `adaylar`) FROM `calisan_temsilcisi_secimleri` WHERE `firma_id` = 1 AND `dokuman_no` = 'ÇT-2026-01';
--- DELETE FROM `calisan_temsilcisi_secimleri` WHERE `firma_id` = 1 AND `dokuman_no` = 'ÇT-2026-01';
+-- 4) ABDULLETİF YALÇINKAYA çalışan temsilcisi seçimi (ÇT-2026-01) — kullanıcı onayı 13.11.2026: test kaydı.
+--    Adaylar "MEHMET ÖZDEMİR" ve "AYŞE YILMAZ". Silinince Kontrol Merkezi bu firmada temsilciyi eksik gösterir.
+INSERT INTO `_yedek_test_verisi_13_11` (`tablo`,`kayit_id`,`veri`) SELECT 'calisan_temsilcisi_secimleri', `id`, CONCAT_WS(' | ', `firma_id`, `dokuman_no`, `adaylar`) FROM `calisan_temsilcisi_secimleri` WHERE `firma_id` = 1 AND `dokuman_no` = 'ÇT-2026-01'
+  AND `adaylar` LIKE '%AY%E YILMAZ%' AND `adaylar` LIKE '%MEHMET%'
+  AND NOT EXISTS (SELECT 1 FROM `_yedek_test_verisi_13_11` y WHERE y.`tablo` = 'calisan_temsilcisi_secimleri' AND y.`kayit_id` = `calisan_temsilcisi_secimleri`.`id`);
+DELETE FROM `calisan_temsilcisi_secimleri` WHERE `firma_id` = 1 AND `dokuman_no` = 'ÇT-2026-01'
+  AND `adaylar` LIKE '%AY%E YILMAZ%' AND `adaylar` LIKE '%MEHMET%';
 
 -- Silinen kayıtlar
 SELECT `tablo`, `kayit_id`, `veri` FROM `_yedek_test_verisi_13_11` ORDER BY `tablo`, `kayit_id`;

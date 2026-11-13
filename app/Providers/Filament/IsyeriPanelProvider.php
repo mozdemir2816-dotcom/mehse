@@ -24,7 +24,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 /**
  * İşyeri (işveren) paneli — firmaya tanımlanan kalıcı e-posta + şifre ile
  * (IsyeriHesabi, `isyeri` guard) girilir; yalnız o firmanın evrakları
- * salt-okunur görüntülenir/indirilir. Tema dosyası portal ile ortak (ayrı
+ * görüntülenir/indirilir, personel eklenir / çıkışı işlenir ve çalışanlar online
+ * eğitime eklenir (13.11.2026). Tema dosyası portal ile ortak (ayrı
  * Vite girdisi gerekmesin diye); sayfa stilleri satır içi.
  */
 class IsyeriPanelProvider extends PanelProvider
@@ -59,8 +60,8 @@ class IsyeriPanelProvider extends PanelProvider
                     'metin' => 'İş güvenliği uzmanınızın hazırladığı evrakları istediğiniz an görüntüleyin ve indirin.',
                     'maddeler' => [
                         'Risk değerlendirmesi, acil durum planı ve kurul belgeleri bir arada',
-                        'Çalışan eğitimleri ve sağlık muayenesi geçerlilik durumu',
-                        'Yaklaşan ve süresi dolan belgeleri kaçırmayın',
+                        'Personelinizi ekleyin, işten çıkışları işleyin',
+                        'Çalışanlarınızı online İSG eğitimine ekleyin, ilerlemeyi izleyin',
                         'Her evrak tek tıkla PDF olarak indirilir',
                     ],
                 ]),
