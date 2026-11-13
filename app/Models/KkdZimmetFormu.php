@@ -27,7 +27,7 @@ class KkdZimmetFormu extends Model
     protected static function booted(): void
     {
         static::saving(function (KkdZimmetFormu $f): void {
-            $f->form_no ??= 'KKD-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $f->form_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'form_no', 'KKD-'.now()->format('Y').'-', 3);
         });
     }
 

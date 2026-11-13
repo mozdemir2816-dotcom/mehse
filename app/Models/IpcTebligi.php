@@ -28,7 +28,7 @@ class IpcTebligi extends Model
     protected static function booted(): void
     {
         static::saving(function (IpcTebligi $t): void {
-            $t->belge_no ??= 'IPC-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $t->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'IPC-'.now()->format('Y').'-', 3);
 
             if ($t->ceza_tutari !== null) {
                 $t->pesin_odeme_tutari = round((float) $t->ceza_tutari * 0.75, 2);

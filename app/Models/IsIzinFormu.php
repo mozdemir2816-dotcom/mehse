@@ -39,7 +39,7 @@ class IsIzinFormu extends Model
     protected static function booted(): void
     {
         static::saving(function (IsIzinFormu $f): void {
-            $f->izin_no ??= 'PTW-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 4, '0', STR_PAD_LEFT);
+            $f->izin_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'izin_no', 'PTW-'.now()->format('Y').'-', 4);
             $f->durum ??= 'taslak';
 
             // Geçerlilik saati verilmiş ve bitiş boşsa başlangıçtan türet.

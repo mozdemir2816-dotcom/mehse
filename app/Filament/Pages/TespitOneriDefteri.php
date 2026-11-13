@@ -380,18 +380,16 @@ class TespitOneriDefteri extends Page
             return;
         }
 
-        $bugun = \App\Support\BulguHavuzu::eklenebilirler($this->firma->id, $d->maddeler ?? [])
-            ->filter(fn (SahaBulgusu $b) => $b->created_at?->isToday())
-            ->sortBy('id')->values();
+        $eklenen = TespitOneriDefteriModel::bugununBulgulariniEkle($this->firma);
+        unset($this->defter);
 
-        if ($bugun->isEmpty()) {
+        if ($eklenen === 0) {
             Notification::make()->title('Bugün deftere eklenecek yeni saha bulgusu yok')
                 ->body('Bugün açılan bulgular zaten defterde ya da henüz kayıt yok (Saha Denetimi\'ni "Tamamla" ile kaydedin).')->warning()->send();
 
             return;
         }
 
-        $d->update(['maddeler' => [...($d->maddeler ?? []), ...$bugun->map(fn (SahaBulgusu $b) => BulguDonusturucu::tespitOneriResmiMaddesi($b))->all()]]);
-        Notification::make()->title($bugun->count().' bugünkü bulgu deftere eklendi')->success()->send();
+        Notification::make()->title($eklenen.' bugünkü bulgu deftere eklendi')->success()->send();
     }
 }

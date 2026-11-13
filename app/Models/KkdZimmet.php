@@ -29,7 +29,7 @@ class KkdZimmet extends Model
     protected static function booted(): void
     {
         static::saving(function (KkdZimmet $z): void {
-            $z->zimmet_no ??= 'KKD-Z-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 4, '0', STR_PAD_LEFT);
+            $z->zimmet_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'zimmet_no', 'KKD-Z-'.now()->format('Y').'-', 4);
         });
     }
 

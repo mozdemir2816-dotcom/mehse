@@ -84,10 +84,7 @@ class RiskDegerlendirmesi extends Model
 
     public static function belgeNoUret(): string
     {
-        $yil = now()->year;
-        $sira = static::whereYear('created_at', $yil)->count() + 1;
-
-        return sprintf('RD-%d-%03d', $yil, $sira);
+        return \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'RD-'.now()->year.'-');
     }
 
     public function firma(): BelongsTo
@@ -125,6 +122,73 @@ class RiskDegerlendirmesi extends Model
     public function gecerlilikGecti(): bool
     {
         return $this->gecerlilik_tarihi && $this->gecerlilik_tarihi->isPast();
+    }
+
+    /** Durumlar (13.11.2026): firma/birim başına tek "Yürürlükte"; eskiler "Arşiv". */
+    public const DURUMLAR = ['taslak' => 'Taslak', 'yayinlandi' => 'Yürürlükte', 'arsiv' => 'Arşiv'];
+
+    public const DURUM_RENKLERI = ['taslak' => 'gray', 'yayinlandi' => 'success', 'arsiv' => 'warning'];
+
+    /**
+     * Bu değerlendirmeyi yürürlüğe alır; aynı firma + aynı birim/proje için yürürlükteki
+     * diğer değerlendirmeler arşive alınır (hastane gibi birim birim değerlendirmeler birbirini etkilemez).
+     */
+    public function yururlugeAl(): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function (): void {
+            static::query()->where('firma_id', $this->firma_id)->whereKeyNot($this->getKey())
+                ->where('durum', 'yayinlandi')
+                ->where(fn ($q) => filled($this->proje_adi) ? $q->where('proje_adi', $this->proje_adi) : $q->whereNull('proje_adi')->orWhere('proje_adi', ''))
+                ->update(['durum' => 'arsiv']);
+            $this->update(['durum' => 'yayinlandi']);
+        });
+    }
+
+    /**
+     * Firmanın geçerli (esas alınan) değerlendirmesi: yürürlükte işaretli olan; yoksa arşiv
+     * dışındaki en son rapor tarihli olan.
+     */
+    public static function gecerliOlan(int $firmaId): ?self
+    {
+        return static::query()->where('firma_id', $firmaId)->where('durum', 'yayinlandi')->latest('rapor_tarihi')->latest('id')->first()
+            ?? static::query()->where('firma_id', $firmaId)->where('durum', '!=', 'arsiv')->latest('rapor_tarihi')->latest('id')->first();
+    }
+
+    /**
+     * Risk Değerlendirmesi Yönetmeliği md.12 — rapor tarihinden sonra yenilemeyi gerektiren olaylar:
+     * iş kazası / ramak kala / meslek hastalığı, işyerine yeni iş ekipmanı girmesi.
+     *
+     * @return array<int, string>
+     */
+    public function revizyonGerekceleri(): array
+    {
+        $tarih = $this->rapor_tarihi;
+        $firma = $this->firma;
+        if (! $tarih || ! $firma) {
+            return [];
+        }
+
+        $gerekce = [];
+        $kaza = $firma->isKazasiRaporlari()->whereDate('kaza_tarihi', '>', $tarih)->count()
+            + $firma->olayKayitlari()->where('olay_tipi', 'is_kazasi')->whereDate('olay_tarihi', '>', $tarih)->count();
+        $ramak = $firma->olayKayitlari()->where('olay_tipi', 'ramak_kala')->whereDate('olay_tarihi', '>', $tarih)->count();
+        $mh = $firma->meslekHastaligiBildirimleri()->whereDate(\Illuminate\Support\Facades\DB::raw('COALESCE(tani_tarihi, ogrenme_tarihi, created_at)'), '>', $tarih)->count();
+        $ekipman = $firma->isEkipmanlari()->where('aktif', true)->whereDate('created_at', '>', $tarih)->count();
+
+        if ($kaza) {
+            $gerekce[] = $kaza.' iş kazası';
+        }
+        if ($ramak) {
+            $gerekce[] = $ramak.' ramak kala olay';
+        }
+        if ($mh) {
+            $gerekce[] = $mh.' meslek hastalığı bildirimi';
+        }
+        if ($ekipman) {
+            $gerekce[] = $ekipman.' yeni iş ekipmanı';
+        }
+
+        return $gerekce;
     }
 
     /**

@@ -32,7 +32,7 @@ class IseDonusBelgesi extends Model
     protected static function booted(): void
     {
         static::saving(function (IseDonusBelgesi $b): void {
-            $b->belge_no ??= 'IDB-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $b->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'IDB-'.now()->format('Y').'-', 3);
             $b->belge_tarihi ??= now()->toDateString();
         });
     }

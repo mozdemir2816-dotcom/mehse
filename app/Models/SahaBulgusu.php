@@ -59,7 +59,7 @@ class SahaBulgusu extends Model
     protected static function booted(): void
     {
         static::creating(function (SahaBulgusu $b): void {
-            $b->bulgu_no ??= 'SB-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 4, '0', STR_PAD_LEFT);
+            $b->bulgu_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'bulgu_no', 'SB-'.now()->format('Y').'-', 4);
         });
 
         // Kapatma / yeniden açma bağlı DÖF maddelerine yansır.

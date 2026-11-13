@@ -30,7 +30,7 @@ class MeslekHastaligiBildirimi extends Model
     protected static function booted(): void
     {
         static::saving(function (MeslekHastaligiBildirimi $m): void {
-            $m->belge_no ??= 'MH-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $m->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'MH-'.now()->format('Y').'-', 3);
 
             if ($m->ogrenme_tarihi) {
                 $m->bildirim_son_tarihi = Carbon::parse($m->ogrenme_tarihi)->addWeekdays(3);

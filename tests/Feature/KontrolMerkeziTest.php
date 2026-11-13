@@ -42,7 +42,12 @@ class KontrolMerkeziTest extends TestCase
 
         $this->assertSame(3, $ozet['firma']);
         $this->assertSame(1, $ozet['risk_olan']);
-        $this->assertSame(2, $ozet['evrak_eksigi']);
+        // Eksik evrakı olan = tam uyumlu olmayan firma (yalnız risk değerlendirmesi değil).
+        $this->assertSame(3, $ozet['evrak_eksigi']);
+        // Bildirilen 35 çalışan, hiç kayıt yok → 3 firma da çalışan kaydı eksik.
+        $this->assertSame(0, $ozet['calisan']);
+        $this->assertSame(35, $ozet['calisan_bildirilen']);
+        $this->assertSame(3, $ozet['calisan_uyarili']);
         // Çok sayıda hazır kriter var; firma A yalnız risk değerlendirmesini
         // karşılıyor, "tam uyumlu" sayılmaz.
         $this->assertSame(0, $ozet['tam_uyumlu']);
@@ -192,10 +197,11 @@ class KontrolMerkeziTest extends TestCase
             'rapor_tarihi' => now()->subYears(5), 'gecerlilik_tarihi' => now()->subMonth(),
         ]);
 
-        $isler = Livewire::test(KontrolMerkezi::class)->instance()->yaklasanIsler();
+        $isler = collect(Livewire::test(KontrolMerkezi::class)->instance()->yaklasanIsler())->where('tur', 'risk')->values();
 
         $this->assertCount(1, $isler);
         $this->assertSame('gecikti', $isler[0]['durum']);
+        $this->assertSame('Risk değerlendirmesi yenileme', $isler[0]['baslik']);
     }
 
     public function test_calisan_karne_genc_calisani_isaretler(): void

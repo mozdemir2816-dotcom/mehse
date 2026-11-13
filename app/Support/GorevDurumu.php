@@ -25,11 +25,13 @@ use App\Filament\Pages\TespitOneriDefteri;
 use App\Filament\Pages\YillikPlan\YillikCalismaPlani;
 use App\Filament\Pages\YillikPlan\YillikDegerlendirmeRaporu;
 use App\Filament\Pages\YillikPlan\YillikEgitimPlani;
+use App\Filament\Resources\Calisans\CalisanResource;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
 use App\Models\Firma;
 use App\Models\IsEkipmani;
 use App\Models\KkdZimmet;
+use App\Models\RiskDegerlendirmesi;
 use App\Models\OrtamOlcumu;
 use App\Models\SaglikGozetimi as SaglikGozetimiModel;
 use App\Models\User;
@@ -256,6 +258,43 @@ class GorevDurumu
                 $gorevler[] = static::gorev($firma, $baslik, $yakin->count().' '.$birim.' '.static::yaklasanGun().' gün içinde doluyor.', $dayanak, $yakin->min(), 'yaklasan', $modul, $url);
             }
         };
+
+        // Çalışan listesi (13.11.2026): eğitim, sağlık gözetimi ve temsilci takibi çalışan kaydıyla
+        // hesaplanır; liste yoksa diğer görevler eksik/yanıltıcı kalır — kök sebep ayrı görev olarak gösterilir.
+        $bildirilen = (int) $firma->calisan_sayisi;
+        $kayitli = $firma->calisanlar()->where('aktif', true)->whereNull('isten_cikis')->count();
+        if ($bildirilen > 0 && $kayitli < $bildirilen) {
+            $gorevler[] = static::gorev(
+                $firma,
+                $kayitli === 0 ? 'Çalışan listesi girilmemiş' : 'Çalışan listesi eksik',
+                ($kayitli === 0
+                    ? "Firma {$bildirilen} çalışan bildiriyor, hiç çalışan kaydı yok"
+                    : "Firma {$bildirilen} çalışan bildiriyor, {$kayitli} çalışan kayıtlı")
+                    .' — eğitim, sağlık gözetimi ve temsilci takibi bu listeyle yapılır (Excel\'den toplu eklenebilir).',
+                '6331 sayılı Kanun md.15, md.17 — sağlık gözetimi ve eğitim takibi',
+                null,
+                'yapilmayan',
+                'Firmalar & Çalışanlar',
+                static::sayfaUrl(CalisanResource::class, $firma),
+            );
+        }
+
+        // Risk değerlendirmesi revizyonu (Risk Değ. Yönetmeliği md.12): rapordan sonra kaza / ramak kala /
+        // meslek hastalığı / yeni ekipman varsa yenileme gerekir (13.11.2026).
+        if ($rd = RiskDegerlendirmesi::gecerliOlan($firma->id)) {
+            if ($gerekce = $rd->revizyonGerekceleri()) {
+                $gorevler[] = static::gorev(
+                    $firma,
+                    'Risk değerlendirmesi revizyonu',
+                    $rd->belge_no.' ('.$rd->rapor_tarihi?->format('d.m.Y').') sonrasında '.implode(', ', $gerekce).' kaydedildi — değerlendirme gözden geçirilmeli.',
+                    'Risk Değerlendirmesi Yönetmeliği md.12',
+                    null,
+                    'yapilmayan',
+                    'Risk ve DÖF',
+                    static::sayfaUrl(RiskDegerlendirmesiResource::class, $firma),
+                );
+            }
+        }
 
         $ekle('Periyodik kontrol', IsEkipmani::query()->where('firma_id', $firma->id)->where('aktif', true)->whereNotNull('sonraki_vize_tarihi')
             ->pluck('sonraki_vize_tarihi')->map(fn ($t) => Carbon::parse($t)),

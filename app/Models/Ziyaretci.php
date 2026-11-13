@@ -33,7 +33,7 @@ class Ziyaretci extends Model
     {
         static::creating(function (Ziyaretci $z): void {
             $z->token ??= Str::random(40);
-            $z->kart_no ??= 'ZYR-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 4, '0', STR_PAD_LEFT);
+            $z->kart_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'kart_no', 'ZYR-'.now()->format('Y').'-', 4);
         });
     }
 

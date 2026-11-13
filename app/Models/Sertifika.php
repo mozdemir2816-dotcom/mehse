@@ -28,7 +28,7 @@ class Sertifika extends Model
     protected static function booted(): void
     {
         static::saving(function (Sertifika $s): void {
-            $s->belge_no ??= 'SRT-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $s->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'SRT-'.now()->format('Y').'-', 3);
         });
     }
 

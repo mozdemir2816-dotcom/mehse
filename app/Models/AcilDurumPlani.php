@@ -32,7 +32,7 @@ class AcilDurumPlani extends Model
     protected static function booted(): void
     {
         static::saving(function (AcilDurumPlani $p): void {
-            $p->dokuman_no ??= 'AD-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 2, '0', STR_PAD_LEFT);
+            $p->dokuman_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'dokuman_no', 'AD-'.now()->format('Y').'-', 2);
             $p->kapak_cercevesi ??= 'klasik';
 
             // Yangın, iş kazası ve elektrik çarpması her planda (01.11.2026).

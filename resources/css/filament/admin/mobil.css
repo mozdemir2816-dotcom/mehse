@@ -16,6 +16,19 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         display: none !important;
     }
 
+    /* Arama kutusundaki "CTRL+K" kısayol ipucu telefonda anlamsız (13.11.2026). */
+    html .fi-global-search-field .fi-input-wrp-suffix {
+        display: none !important;
+    }
+
+    /* Sayfa üstü uzun açıklamalar telefonda 2 satıra iner; asıl iş (bulgu girişi vb.) yukarı çıkar (13.11.2026). */
+    html .mehse-bolum-aciklama {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
     /* Tema seçici telefonda gereksiz — Ayarlar > Görünüm'de duruyor. */
     html .fi-mehse-tema-secici {
         display: none !important;

@@ -30,7 +30,7 @@ class CalisanTemsilcisiSecimi extends Model
     protected static function booted(): void
     {
         static::saving(function (CalisanTemsilcisiSecimi $s): void {
-            $s->dokuman_no ??= 'ÇT-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 2, '0', STR_PAD_LEFT);
+            $s->dokuman_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'dokuman_no', 'ÇT-'.now()->format('Y').'-', 2);
             $s->ilan_tarihi ??= now();
 
             if ($s->isyeri_calisan_sayisi === null) {

@@ -22,7 +22,7 @@ class DofRaporu extends Model
     protected static function booted(): void
     {
         static::saving(function (DofRaporu $d): void {
-            $d->belge_no ??= 'DOF-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $d->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'DOF-'.now()->format('Y').'-', 3);
         });
 
         // Maddeler ortak saha bulgularına bağlanır, madde durumu bulguya geçer.

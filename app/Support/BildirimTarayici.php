@@ -162,7 +162,9 @@ class BildirimTarayici
         }
 
         // Doküman geçerliliği
-        $rd = RiskDegerlendirmesi::query()->where('firma_id', $firma->id)->whereNotNull('gecerlilik_tarihi')->latest('gecerlilik_tarihi')->first();
+        // Yürürlükte işaretli değerlendirme esas alınır (13.11.2026); yoksa en uzun geçerlilikli olan.
+        $rd = RiskDegerlendirmesi::query()->where('firma_id', $firma->id)->where('durum', 'yayinlandi')->whereNotNull('gecerlilik_tarihi')->latest('gecerlilik_tarihi')->first()
+            ?? RiskDegerlendirmesi::query()->where('firma_id', $firma->id)->where('durum', '!=', 'arsiv')->whereNotNull('gecerlilik_tarihi')->latest('gecerlilik_tarihi')->first();
         $rdUrl = static::url(fn () => RiskDegerlendirmesiResource::getUrl('index'));
         if ($rd && $rd->gecerlilik_tarihi->lt($bugun)) {
             $ekle('risk:gecti', 'kritik', 'Risk değerlendirmesinin geçerliliği doldu', 'Son risk değerlendirmesi '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihinde geçerliliğini yitirdi; yenileyin (6331 Md.10).', $rd->gecerlilik_tarihi, $rdUrl);

@@ -147,7 +147,7 @@ class MuayeneFormu extends Model
     protected static function booted(): void
     {
         static::saving(function (MuayeneFormu $m): void {
-            $m->belge_no ??= 'MF-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $m->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'MF-'.now()->format('Y').'-', 3);
         });
     }
 

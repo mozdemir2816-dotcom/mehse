@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Support\PortfoyKarne;
+use App\Support\YasalTakvim;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
@@ -99,6 +100,7 @@ class KontrolMerkezi extends Page
     {
         return Firma::query()
             ->where('user_id', Filament::auth()->id())
+            ->where('aktif', true)
             ->orderBy('unvan')
             ->secenekler()
             ->all();
@@ -108,6 +110,16 @@ class KontrolMerkezi extends Page
     public function ozet(): array
     {
         return PortfoyKarne::ozet(Filament::auth()->id());
+    }
+
+    /** Çalışan kaydı eksik firmalar (kayıtlı < bildirilen, TC / işe giriş boş) — çalışan listesine bağlantıyla. */
+    #[Computed]
+    public function calisanEksikleri(): array
+    {
+        $firmalar = Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->get();
+
+        return array_map(fn (array $s) => [...$s, 'url' => \App\Filament\Resources\Calisans\CalisanResource::getUrl('index', ['tableFilters' => ['firma_id' => ['value' => $s['id']]]])],
+            PortfoyKarne::calisanKaydiEksikFirmalar($firmalar));
     }
 
     #[Computed]
@@ -139,45 +151,18 @@ class KontrolMerkezi extends Page
             : null;
     }
 
-    /** Günlük Akış: geçerliliği geçmiş / 60 gün içinde dolan risk değerlendirmeleri. */
+    /** Günlük Akış penceresi (gün). */
+    public const TAKVIM_GUN = 90;
+
+    /**
+     * Günlük Akış (13.11.2026): yalnız risk değerlendirmesi değil, tüm süreli yasal yükümlülükler —
+     * süresi geçenler ve önümüzdeki 90 gün içinde dolanlar (App\Support\YasalTakvim).
+     */
     #[Computed]
     public function yaklasanIsler(): array
     {
-        return Firma::query()
-            ->where('user_id', Filament::auth()->id())
-            ->with(['riskDegerlendirmeleri' => fn ($q) => $q->latest('gecerlilik_tarihi')])
-            ->get()
-            ->flatMap(function (Firma $f) {
-                $rd = $f->riskDegerlendirmeleri->first();
-
-                if (! $rd) {
-                    return [[
-                        'firma' => $f->unvan,
-                        'baslik' => 'Risk değerlendirmesi yok',
-                        'durum' => 'gecikti',
-                        'tarih' => null,
-                    ]];
-                }
-
-                if (! $rd->gecerlilik_tarihi) {
-                    return [];
-                }
-
-                $gun = (int) now()->startOfDay()->diffInDays($rd->gecerlilik_tarihi, false);
-
-                if ($gun > 60) {
-                    return [];
-                }
-
-                return [[
-                    'firma' => $f->unvan,
-                    'baslik' => $gun < 0 ? 'Risk değerlendirmesi geçerliliği doldu' : 'Risk değerlendirmesi yenilemesi yaklaşıyor',
-                    'durum' => $gun < 0 ? 'gecikti' : 'yaklasiyor',
-                    'tarih' => $rd->gecerlilik_tarihi->format('d.m.Y'),
-                ]];
-            })
-            ->sortBy('tarih')
-            ->values()
+        return YasalTakvim::kalemler(Filament::auth()->id(), self::TAKVIM_GUN)
+            ->map(fn (array $k) => [...$k, 'tarih' => $k['tarih']?->format('d.m.Y')])
             ->all();
     }
 }

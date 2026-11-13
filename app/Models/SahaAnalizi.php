@@ -31,7 +31,7 @@ class SahaAnalizi extends Model
     protected static function booted(): void
     {
         static::saving(function (SahaAnalizi $s): void {
-            $s->belge_no ??= 'SAHA-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $s->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'SAHA-'.now()->format('Y').'-', 3);
         });
 
         // Taslak maddeler sık değişir; rapor tamamlanınca ortak bulgulara bağlanır.

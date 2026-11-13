@@ -89,7 +89,10 @@ class KurulToplantisi extends Model
     {
         $yil = ($tarih ? Carbon::parse($tarih) : now())->year;
 
-        $sayi = $firma->kurulToplantilari()->whereYear('tarih', $yil)->count() + 1;
+        // Sayım değil en büyük numara + 1: silinen toplantıdan sonra numara tekrar etmesin (13.11.2026).
+        $enBuyuk = $firma->kurulToplantilari()->where('toplanti_no', 'like', $yil.'/%')->pluck('toplanti_no')
+            ->map(fn ($no) => (int) substr((string) $no, strlen($yil.'/')))->max() ?? 0;
+        $sayi = max($enBuyuk, $firma->kurulToplantilari()->whereYear('tarih', $yil)->count()) + 1;
 
         return $yil.'/'.$sayi;
     }

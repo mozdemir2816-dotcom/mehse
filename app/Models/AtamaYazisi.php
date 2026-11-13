@@ -28,7 +28,7 @@ class AtamaYazisi extends Model
     protected static function booted(): void
     {
         static::saving(function (AtamaYazisi $a): void {
-            $a->dokuman_no ??= 'ATM-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $a->dokuman_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'dokuman_no', 'ATM-'.now()->format('Y').'-', 3);
         });
 
         // Risk değerlendirmesi PDF'inin imza sahipleri bu atamalardan gelir

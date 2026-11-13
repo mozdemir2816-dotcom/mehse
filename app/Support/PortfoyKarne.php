@@ -36,16 +36,51 @@ class PortfoyKarne
             ? round(array_sum(array_column($hazirKriterler, 'yuzde')) / count($hazirKriterler))
             : 0;
 
+        // 13.11.2026: Ana Sayfa kayıtlı çalışanı (250), burası bildirilen sayıyı (364) gösteriyordu;
+        // ikisi de gösterilir. "Evrak eksiği olan" yalnız risk değerlendirmesi olmayanı sayıyordu
+        // (0 eksik + 0 tam uyumlu çelişkisi) — artık en az bir yasal kriteri eksik olan firma.
+        $calisanEksikleri = static::calisanKaydiEksikFirmalar($firmalar);
+
         return [
             'firma' => $toplam,
-            // Firmaya kayıtlı Çalışan (isim) sayısı değil, firmanın bildirdiği
-            // toplam çalışan sayısı esas alınır (çalışan kaydı eksik olsa da doğru sayı görünsün).
-            'calisan' => (int) $firmalar->sum('calisan_sayisi'),
+            'calisan' => (int) Calisan::query()->whereIn('firma_id', $firmalar->modelKeys())
+                ->where('aktif', true)->whereNull('isten_cikis')->count(),
+            'calisan_bildirilen' => (int) $firmalar->sum('calisan_sayisi'),
             'risk_olan' => $riskOlan,
-            'evrak_eksigi' => $toplam - $riskOlan,
+            'evrak_eksigi' => $toplam - $tamUyumlu,
+            'calisan_uyarili' => count($calisanEksikleri),
             'tam_uyumlu' => $tamUyumlu,
             'uyum_yuzde' => $uyumYuzde,
         ];
+    }
+
+    /**
+     * Çalışan kaydı eksik firmalar: kayıtlı aktif çalışan bildirilen sayıdan az, ya da
+     * aktif çalışanlardan TC'si boş olan var (eğitim ve muayene takibi bu bilgilerle hesaplanır).
+     *
+     * @return array<int, array{id: int, unvan: string, kayitli: int, bildirilen: int, tc_bos: int, giris_bos: int}>
+     */
+    public static function calisanKaydiEksikFirmalar(\Illuminate\Database\Eloquent\Collection $firmalar): array
+    {
+        $sayim = Calisan::query()->whereIn('firma_id', $firmalar->modelKeys())
+            ->where('aktif', true)->whereNull('isten_cikis')
+            ->selectRaw("firma_id, COUNT(*) as kayitli, SUM(tc IS NULL OR tc = '') as tc_bos, SUM(ise_giris IS NULL) as giris_bos")
+            ->groupBy('firma_id')->get()->keyBy('firma_id');
+
+        return $firmalar->map(function (Firma $f) use ($sayim): ?array {
+            $s = $sayim[$f->id] ?? null;
+            $satir = [
+                'id' => $f->id,
+                'unvan' => (string) $f->unvan,
+                'kayitli' => (int) ($s->kayitli ?? 0),
+                'bildirilen' => (int) $f->calisan_sayisi,
+                'tc_bos' => (int) ($s->tc_bos ?? 0),
+                'giris_bos' => (int) ($s->giris_bos ?? 0),
+            ];
+
+            // İşe giriş tarihi boşluğu çok yaygın; tek başına uyarı sebebi sayılmaz, tabloda bilgi olarak görünür.
+            return $satir['kayitli'] < $satir['bildirilen'] || $satir['tc_bos'] ? $satir : null;
+        })->filter()->values()->all();
     }
 
     /**

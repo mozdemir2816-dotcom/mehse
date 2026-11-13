@@ -225,6 +225,19 @@ class ZiyaretModuTest extends TestCase
         $this->assertSame('tamamlandi', $ay[0]['durum']);
     }
 
+    public function test_ziyareti_bitir_bugunun_bulgularini_deftere_isler(): void
+    {
+        SahaBulgusu::create(['firma_id' => $this->firma->id, 'bolum' => 'Depo', 'uygunsuzluk' => 'Raf sabit değil']);
+
+        Livewire::test(ZiyaretModu::class, ['firmaId' => $this->firma->id])->call('ziyaretiBitir');
+        // Tekrar bitirince aynı bulgu ikinci kez eklenmez.
+        Livewire::test(ZiyaretModu::class, ['firmaId' => $this->firma->id])->call('ziyaretiBitir');
+
+        $maddeler = \App\Models\TespitOneriDefteri::where('firma_id', $this->firma->id)->sole()->maddeler;
+        $this->assertCount(1, $maddeler);
+        $this->assertStringContainsString('Raf', $maddeler[0]['tespit']);
+    }
+
     public function test_baskasinin_firmasi_ve_kayitlari_kullanilamaz(): void
     {
         $yabanci = Firma::factory()->for(User::factory())->create(['aktif' => true]);

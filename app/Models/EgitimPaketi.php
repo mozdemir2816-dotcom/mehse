@@ -32,7 +32,7 @@ class EgitimPaketi extends Model
     protected static function booted(): void
     {
         static::creating(function (EgitimPaketi $p): void {
-            $p->kod ??= 'UE-'.now()->format('Y').'-'.str_pad((string) (static::whereYear('created_at', now()->year)->count() + 1), 3, '0', STR_PAD_LEFT);
+            $p->kod ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'kod', 'UE-'.now()->format('Y').'-', 3);
         });
     }
 

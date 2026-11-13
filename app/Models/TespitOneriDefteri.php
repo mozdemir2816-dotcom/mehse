@@ -57,6 +57,26 @@ class TespitOneriDefteri extends Model
         ]]]);
     }
 
+    /**
+     * Bugün açılan ve deftere henüz bağlanmamış saha bulgularını resmî dille deftere ekler.
+     * Hem Tespit ve Öneri Defteri sayfası hem Ziyaret Modu "Ziyareti bitir" kullanır (13.11.2026).
+     *
+     * @return int eklenen madde sayısı
+     */
+    public static function bugununBulgulariniEkle(Firma $firma): int
+    {
+        $defter = static::firmaIcin($firma);
+        $bugun = BulguHavuzu::eklenebilirler($firma->id, $defter->maddeler ?? [])
+            ->filter(fn (SahaBulgusu $b) => $b->created_at?->isToday())
+            ->sortBy('id')->values();
+
+        if ($bugun->isNotEmpty()) {
+            $defter->update(['maddeler' => [...($defter->maddeler ?? []), ...$bugun->map(fn (SahaBulgusu $b) => \App\Support\BulguDonusturucu::tespitOneriResmiMaddesi($b))->all()]]);
+        }
+
+        return $bugun->count();
+    }
+
     public static function firmaIcin(Firma $firma): self
     {
         $defter = static::firstOrNew(['firma_id' => $firma->id]);

@@ -457,9 +457,13 @@ class ZiyaretModu extends Page
         $aylar[$ayIndex] = array_values($girdiler);
         $p->update(['ziyaretler' => $aylar]);
 
-        unset($this->bugunkuZiyaret, $this->bugunPlanli);
+        // Bugünün saha bulguları Tespit ve Öneri Defteri'ne kendiliğinden işlenir (13.11.2026).
+        $defter = \App\Models\TespitOneriDefteri::bugununBulgulariniEkle($this->firma);
+
+        unset($this->bugunkuZiyaret, $this->bugunPlanli, $this->arsivDurumu, $this->gorevler);
         $this->ozetAcik = true;
-        Notification::make()->title('Ziyaret tamamlandı olarak işlendi')->body('Ziyaret Programı\'na yazıldı.')->success()->send();
+        Notification::make()->title('Ziyaret tamamlandı olarak işlendi')
+            ->body('Ziyaret Programı\'na yazıldı.'.($defter ? " {$defter} bugünkü bulgu Tespit ve Öneri Defteri'ne eklendi." : ''))->success()->send();
     }
 
     /** Ziyaret özeti (WhatsApp / paylaşım metni). Görevli adı yazılmaz (04.10.2026); işverene gönderimde imza ayrıca eklenir. */

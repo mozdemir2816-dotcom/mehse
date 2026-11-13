@@ -30,7 +30,7 @@ class CezaTebligTutanagi extends Model
     protected static function booted(): void
     {
         static::saving(function (CezaTebligTutanagi $t): void {
-            $t->tutanak_no ??= 'CT-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $t->tutanak_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'tutanak_no', 'CT-'.now()->format('Y').'-', 3);
         });
     }
 

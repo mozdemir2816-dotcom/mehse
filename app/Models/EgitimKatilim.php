@@ -33,7 +33,7 @@ class EgitimKatilim extends Model
     protected static function booted(): void
     {
         static::saving(function (EgitimKatilim $e): void {
-            $e->belge_no ??= 'EGT-'.now()->format('Y').'-'.str_pad((string) (static::count() + 1), 3, '0', STR_PAD_LEFT);
+            $e->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'EGT-'.now()->format('Y').'-', 3);
         });
     }
 

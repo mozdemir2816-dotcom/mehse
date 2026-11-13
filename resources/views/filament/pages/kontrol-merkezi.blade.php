@@ -12,9 +12,9 @@
     // İSG Portföy Özeti kartları — Gemini referans görselindeki dolu-renk fayans stili.
     $ozetKartlari = [
         ['ad' => 'Toplam Firma', 'deger' => $o['firma'], 'ikon' => 'heroicon-o-building-office-2', 'renk' => $gri],
-        ['ad' => 'Evrak Eksiği Olan', 'deger' => $o['evrak_eksigi'], 'ikon' => 'heroicon-o-document-text', 'renk' => $kirmizi],
-        ['ad' => 'Çalışan Uyarılı', 'deger' => 0, 'ikon' => 'heroicon-o-exclamation-triangle', 'renk' => $sari],
-        ['ad' => 'Tam Uyumlu', 'deger' => $o['tam_uyumlu'], 'ikon' => 'heroicon-o-check-circle', 'renk' => $yesil],
+        ['ad' => 'Eksik Evrakı Olan Firma', 'deger' => $o['evrak_eksigi'], 'ikon' => 'heroicon-o-document-text', 'renk' => $kirmizi],
+        ['ad' => 'Çalışan Kaydı Eksik Firma', 'deger' => $o['calisan_uyarili'], 'ikon' => 'heroicon-o-exclamation-triangle', 'renk' => $sari],
+        ['ad' => 'Tam Uyumlu Firma', 'deger' => $o['tam_uyumlu'], 'ikon' => 'heroicon-o-check-circle', 'renk' => $yesil],
     ];
     $uyumRengi = $o['uyum_yuzde'] < 40 ? $kirmizi : ($o['uyum_yuzde'] < 75 ? $sari : $yesil);
 @endphp
@@ -48,32 +48,64 @@
     @endif
 
     {{-- ==================== GÜNLÜK AKIŞ ==================== --}}
+    {{-- 13.11.2026: tüm süreli yasal yükümlülükler (App\Support\YasalTakvim) — süresi geçenler + 90 gün içinde dolanlar. --}}
     @if ($sekme === 'gunluk')
-        @php $isler = $this->yaklasanIsler; @endphp
-        @if (empty($isler))
+        @php
+            $isler = collect($this->yaklasanIsler);
+            $turAdlari = ['risk' => 'Risk', 'acil' => 'Acil durum', 'kurul' => 'Kurul', 'egitim' => 'Eğitim', 'ekipman' => 'Periyodik kontrol', 'saglik' => 'Sağlık', 'olcum' => 'Ölçüm', 'kkd' => 'KKD', 'sozlesme' => 'Sözleşme'];
+            $gruplar = [
+                ['ad' => 'Süresi geçenler', 'renk' => $kirmizi, 'liste' => $isler->where('durum', 'gecikti')],
+                ['ad' => 'Önümüzdeki '.\App\Filament\Pages\KontrolMerkezi::TAKVIM_GUN.' gün', 'renk' => $sari, 'liste' => $isler->where('durum', 'yaklasiyor')],
+            ];
+        @endphp
+        @if ($isler->isEmpty())
             <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
-                <div style="font-size:2rem">🎉</div>
-                <div style="font-weight:700;margin-top:.4rem">Harika! Tüm Görevler Güncel</div>
-                <p style="font-size:.85rem;color:rgb(95 87 112)">
-                    Yaklaşan risk değerlendirmesi yenilemesi veya eksik kayıt bulunmuyor.
+                <div style="font-weight:700">Tüm yasal süreler güncel</div>
+                <p style="font-size:.85rem;color:{{ $gri }}">
+                    Süresi geçen ya da {{ \App\Filament\Pages\KontrolMerkezi::TAKVIM_GUN }} gün içinde dolan yükümlülük yok.
                 </p>
             </div>
         @else
-            <div style="display:flex;flex-direction:column;gap:.5rem">
-                @foreach ($isler as $is)
-                    <div style="{{ $kutu }};display:flex;align-items:center;justify-content:space-between;gap:1rem;
-                        border-left:4px solid {{ $is['durum'] === 'gecikti' ? $kirmizi : $sari }}">
-                        <div>
-                            <div style="font-weight:600;font-size:.88rem">{{ $is['baslik'] }}</div>
-                            <div style="font-size:.8rem;color:rgb(95 87 112)">{{ $is['firma'] }}</div>
-                        </div>
-                        <div style="font-size:.8rem;color:{{ $is['durum'] === 'gecikti' ? $kirmizi : $sari }};font-weight:600;white-space:nowrap">
-                            {{ $is['durum'] === 'gecikti' ? 'Gecikti' : 'Yaklaşıyor' }}
-                            @if ($is['tarih']) · {{ $is['tarih'] }} @endif
-                        </div>
+            <p style="font-size:.8rem;color:{{ $gri }};margin:0">
+                Risk değerlendirmesi, acil durum planı, tatbikat, kurul, eğitim, periyodik kontrol, sağlık gözetimi, ortam ölçümü, KKD ve İSG-KATİP sözleşme süreleri — tüm aktif firmalar.
+            </p>
+            @foreach ($gruplar as $grup)
+                @continue($grup['liste']->isEmpty())
+                <div style="{{ $kutu }};padding:.75rem .9rem">
+                    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+                        <span style="width:.6rem;height:.6rem;border-radius:9999px;background:{{ $grup['renk'] }}"></span>
+                        <span style="font-weight:700;font-size:.9rem">{{ $grup['ad'] }}</span>
+                        <span style="font-size:.75rem;font-weight:700;color:{{ $grup['renk'] }};background:color-mix(in srgb, {{ $grup['renk'] }} 14%, transparent);padding:.05rem .45rem;border-radius:9999px">{{ $grup['liste']->count() }}</span>
                     </div>
-                @endforeach
-            </div>
+                    <div style="display:flex;flex-direction:column">
+                        @foreach ($grup['liste'] as $is)
+                            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.25rem 1rem;align-items:center;padding:.5rem 0;border-top:1px solid rgb(128 116 148 / .14)">
+                                <div style="min-width:0">
+                                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.4rem">
+                                        <span style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:{{ $gri }};border:1px solid rgb(128 116 148 / .3);border-radius:.3rem;padding:0 .3rem">{{ $turAdlari[$is['tur']] ?? $is['tur'] }}</span>
+                                        <span style="font-weight:600;font-size:.86rem">{{ $is['baslik'] }}</span>
+                                        <span style="font-size:.8rem;color:{{ $gri }}">· {{ $is['firma'] }}</span>
+                                    </div>
+                                    <div style="font-size:.78rem;color:{{ $gri }};margin-top:.15rem">{{ $is['aciklama'] }}</div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:.8rem;white-space:nowrap">
+                                    <span style="font-size:.8rem;font-weight:600;color:{{ $grup['renk'] }};font-variant-numeric:tabular-nums;text-align:right">
+                                        @if ($is['tarih'])
+                                            {{ $is['tarih'] }}
+                                            <span style="font-weight:400;color:{{ $gri }}">· {{ $is['kalan_gun'] < 0 ? abs($is['kalan_gun']).' gün geçti' : ($is['kalan_gun'] === 0 ? 'bugün' : $is['kalan_gun'].' gün kaldı') }}</span>
+                                        @else
+                                            Kayıt yok
+                                        @endif
+                                    </span>
+                                    @if ($is['url'])
+                                        <a href="{{ $is['url'] }}" style="font-size:.8rem;font-weight:600;color:{{ $mor }}">Aç →</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
         @endif
     @endif
 
@@ -84,7 +116,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
                 <div>
                     <div style="font-weight:700">İSG Portföy Özeti</div>
-                    <div style="font-size:.8rem;color:{{ $gri }}">{{ $o['firma'] }} Firma · {{ $o['calisan'] }} Çalışan — anlık yasal uyum tablosu</div>
+                    <div style="font-size:.8rem;color:{{ $gri }}">{{ $o['firma'] }} Firma · {{ $o['calisan'] }} kayıtlı çalışan{{ $o['calisan_bildirilen'] !== $o['calisan'] ? ' (bildirilen '.$o['calisan_bildirilen'].')' : '' }} — anlık yasal uyum tablosu</div>
                 </div>
                 {{-- Uyum yüzdesi — dolgu halkası (conic-gradient + mask, tema-bağımsız) --}}
                 <div style="display:flex;align-items:center;gap:.7rem">
@@ -118,6 +150,40 @@
                     </div>
                 @endforeach
             </div>
+
+            {{-- Çalışan kaydı eksikleri (13.11.2026): eğitim / muayene / temsilci takibi çalışan listesiyle hesaplanır. --}}
+            @if ($this->calisanEksikleri)
+                <details style="margin-top:.9rem;border:1px solid rgb(128 116 148 / .25);border-radius:.6rem;padding:.6rem .8rem">
+                    <summary style="cursor:pointer;font-size:.85rem;font-weight:700">
+                        Çalışan kaydı eksik firmalar ({{ count($this->calisanEksikleri) }})
+                        <span style="font-weight:400;color:{{ $gri }}"> — eğitim, sağlık gözetimi ve temsilci takibi bu listeyle yapılır; Çalışanlar sayfasından Excel ile toplu eklenebilir.</span>
+                    </summary>
+                    <div style="overflow-x:auto;margin-top:.6rem">
+                        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                            <thead>
+                                <tr style="text-align:left;color:{{ $gri }};border-bottom:1px solid rgb(128 116 148 / .25)">
+                                    <th style="padding:.35rem .5rem">Firma</th>
+                                    <th style="padding:.35rem .5rem;text-align:right">Kayıtlı / Bildirilen</th>
+                                    <th style="padding:.35rem .5rem;text-align:right">TC boş</th>
+                                    <th style="padding:.35rem .5rem;text-align:right">İşe giriş boş</th>
+                                    <th style="padding:.35rem .5rem"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($this->calisanEksikleri as $s)
+                                    <tr style="border-bottom:1px solid rgb(128 116 148 / .12)">
+                                        <td style="padding:.35rem .5rem">{{ $s['unvan'] }}</td>
+                                        <td style="padding:.35rem .5rem;text-align:right;font-variant-numeric:tabular-nums;{{ $s['kayitli'] < $s['bildirilen'] ? 'color:'.$kirmizi.';font-weight:700' : '' }}">{{ $s['kayitli'] }} / {{ $s['bildirilen'] }}</td>
+                                        <td style="padding:.35rem .5rem;text-align:right;font-variant-numeric:tabular-nums">{{ $s['tc_bos'] ?: '—' }}</td>
+                                        <td style="padding:.35rem .5rem;text-align:right;font-variant-numeric:tabular-nums">{{ $s['giris_bos'] ?: '—' }}</td>
+                                        <td style="padding:.35rem .5rem;text-align:right"><a href="{{ $s['url'] }}" style="font-weight:600;color:{{ $mor }}">Çalışanlar →</a></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            @endif
         </div>
 
         {{-- Yasal Kriterlerin Portföy Tamamlanma Oranları --}}

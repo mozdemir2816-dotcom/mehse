@@ -61,7 +61,8 @@ class RiskDegerlendirmesiForm
                         ->native(false)->displayFormat('d.m.Y')
                         ->helperText('Boş bırakılırsa tehlike sınıfına göre otomatik (6 / 4 / 2 yıl).'),
                     Select::make('durum')->label('Durum')
-                        ->options(['taslak' => 'Taslak', 'yayinlandi' => 'Yayınlandı'])->default('taslak')->required(),
+                        ->options(\App\Models\RiskDegerlendirmesi::DURUMLAR)->default('taslak')->required()
+                        ->helperText('Yürürlükte: firmanın geçerli değerlendirmesi. Listede "Yürürlüğe al" ile seçilirse önceki otomatik arşive alınır.'),
                     TextInput::make('proje_adi')->label('İşyeri / proje adı')->maxLength(191)
                         ->placeholder('Örn. X Şantiyesi ve Kampı')
                         ->helperText('Kapakta yazılır; firmanın ayrı şantiye / işyerleri için.'),
