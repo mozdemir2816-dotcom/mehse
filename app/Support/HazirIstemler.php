@@ -146,7 +146,9 @@ class HazirIstemler
                 .' · Frekans: '.static::olcekMetni('fine_kinney', 'frekans').' · Şiddet: '.static::olcekMetni('fine_kinney', 'siddet').' (bu ölçekte 100 YOK; en yüksek şiddet 40).'
             : '5×5 L tipi matris. Olasılık ve Şiddet 1–5 arası tam sayı.';
         $kim = $f ? 'Yukarıdaki işyeri için' : 'Ek bilgide anlatılan işyeri için';
-        $termin = implode(', ', array_unique([...array_values(config('isg.risk_termin_duzey', [])), 'Sürekli / Rutin']));
+        $dagilim = $fk
+            ? 'Olasılık çoğu maddede 1 ya da 3 olsun; 6 ve 10 yalnız sık yaşanan, kontrolsüz durumlarda. Risk puanı (O×F×Ş) 400 üstü (tolere edilemez) yalnız gerçekten hemen durdurulması gereken maddelerde verilsin ve tüm maddelerin EN FAZLA beşte biri olsun; maddelerin çoğu 20–200 arasında kalsın.'
+            : 'Olasılık çoğu maddede 2 ya da 3 olsun; 4 ve 5 yalnız sık yaşanan, kontrolsüz durumlarda. Risk puanı (O×Ş) 15 ve üstü yalnız gerçekten hemen önlem gerektiren maddelerde verilsin ve tüm maddelerin EN FAZLA beşte biri olsun.';
         $parcaKurali = static::parcaKurali($parca, 25, $adet);
 
         return <<<METIN
@@ -154,12 +156,13 @@ class HazirIstemler
         - Önce işyerinde gerçekten bulunan bölümleri kendin belirle (üretim alanları, depo, bakım, ofis, yemekhane, temizlik, yükleme-boşaltma, elektrik, acil durum, genel alanlar vb.) ve maddeleri bölümlere dengeli dağıt; her bölüme en az 4–5 madde. Aynı tehlikeyi tekrarlama.
         - Tehlike: somut durum ya da kaynak ("korumasız kayış-kasnak", "ıslak zemin"). Risk: doğurabileceği sonuç (uzuv kaybı, düşme sonucu kırık…).
         - Mevcut Önlem sütununu BOŞ bırak (işyerinde yerinde görülüp doldurulacak).
-        - {$puan} Puanları mevcut önlem yokmuş gibi, gerçekçi ver.
+        - {$puan}
+        - Puanları işyerinin bugünkü olağan çalışma koşullarına göre gerçekçi ver; her maddeyi en kötü senaryoyla puanlama. {$dagilim}
         - Önerilen Önlem: kontrol hiyerarşisine göre (önce ortadan kaldırma ve mühendislik, sonra idari önlem, en son KKD), somut ve uygulanabilir; 1–2 cümle.
         - Sorumlu: rol yaz (İşveren / İşveren Vekili, Bakım Sorumlusu, Bölüm Şefi, Ustabaşı, İSG Uzmanı, İşyeri Hekimi…); kişi adı yazma.
-        - Termin: şunlardan biri: {$termin}. Yüksek riske kısa termin ver.
+        - Termin sütununu BOŞ bırak (sistem risk düzeyine göre kendisi verir).
         - Mevzuat: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
-        - Son puanlar: önerilen önlem uygulandıktan sonraki değerler; ilk puanlardan büyük olamaz (şiddet genelde aynı kalır).
+        - Son puanlar: önerilen önlem uygulandıktan sonraki değerler; ilk puanlardan büyük olamaz (şiddet genelde aynı kalır, olasılık ve gerekirse frekans düşer).
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         {$sutunlar}
         Hücrelerde satır sonu kullanma. Puan hücrelerine yalnız sayı yaz (ondalıkta virgül).

@@ -64,6 +64,9 @@ class HazirIstemlerTest extends TestCase
         $this->assertStringContainsString('"BİTTİ"', implode(' ', HazirIstemler::adimlar('risk_analizi', true)));
         $this->assertStringNotContainsString('BİTTİ', implode(' ', HazirIstemler::adimlar('risk_analizi')));
         $this->assertStringContainsString('Mevcut Önlem sütununu BOŞ', $istem);
+        $this->assertStringContainsString('Termin sütununu BOŞ', $istem);          // termin sistemce düzeyden verilir
+        $this->assertStringContainsString('EN FAZLA beşte biri', $istem);          // en kötü senaryo şişmesine karşı (13.11.2026)
+        $this->assertStringNotContainsString('mevcut önlem yokmuş gibi', $istem);
 
         $b = $this->basliklar($istem, 'Sıra');
         $satir = ['1', 'Kesimhane', 'Kumaş kesimi', 'Korumasız şerit bıçak', 'El kesilmesi, uzuv kaybı', '', '3', '6', '15', 'Bıçak koruyucusu takılmalı, çelik örgü eldiven verilmeli.', 'Bölüm Şefi', '1 Ay', 'İş Ekipmanları Yönetmeliği', '1', '6', '15'];
