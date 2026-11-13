@@ -61,6 +61,47 @@ class GorevDurumuWidget extends Widget
             ))->values();
     }
 
+    /**
+     * Portföy şeridi (Pano teması, 13.11.2026): her aktif firma bir çubuk, en kötü görev durumuna göre:
+     * gecikti (günü geçen var) · yaklasiyor (yaklaşan var) · tamam.
+     *
+     * @return array<int, array{id: int, ad: string, durum: string}>
+     */
+    #[Computed]
+    public function portfoySeridi(): array
+    {
+        $durumlar = $this->tumGorevler->groupBy('firma_id')->map(fn (Collection $g) => match (true) {
+            $g->contains('durum', 'gecikmis') => 'gecikti',
+            $g->contains('durum', 'yaklasan') => 'yaklasiyor',
+            default => 'tamam',
+        });
+
+        return \App\Models\Firma::query()->where('user_id', $this->kullanici()->id)->where('aktif', true)
+            ->orderBy('unvan')->get(['id', 'unvan', 'kisa_ad'])
+            ->map(fn (\App\Models\Firma $f) => [
+                'id' => $f->id,
+                'unvan' => (string) $f->unvan,
+                'ad' => (string) ($f->kisa_ad ?: $f->unvan),
+                'durum' => $durumlar[$f->id] ?? 'tamam',
+            ])->all();
+    }
+
+    /** Şeritte bir firmaya tıklanınca görevler o firmaya süzülür; aynı firmaya tekrar tıklamak süzgeci kaldırır. */
+    public function firmaSec(int $id): void
+    {
+        $f = collect($this->portfoySeridi)->firstWhere('id', $id);
+        if (! $f) {
+            return;
+        }
+
+        $this->arama = $this->arama === $f['unvan'] ? '' : $f['unvan'];
+        unset($this->gorevler, $this->ozet);
+
+        if ($this->arama !== '' && $f['durum'] === 'tamam') {
+            $this->pano = 'yapilmayan';
+        }
+    }
+
     #[Computed]
     public function ozet(): array
     {

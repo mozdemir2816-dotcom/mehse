@@ -1,15 +1,11 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
-/* Görsel temalar (material / windows11 / saha) — html[data-mehse-tema] önekli,
-   aşağıdaki klasik kurallardan daha özgül olduğu için sıralama önemli değil. */
-@import './temalar.css';
 /* Ortak bileşenler (marka, sidebar kartı, karşılama bandı), Ayarlar > Görünüm
    (yoğunluk/yazı boyutu) ve klasik tema zenginleştirmesi — hepsi html[...] önekli
    ya da kendine özgü sınıflı, dolayısıyla aşağıdaki kuralları sıradan bağımsız ezer. */
 @import './tasarim.css';
-/* MEHSE teması (varsayılan, logo renkleri) — tasarim.css'teki ortak bileşen
-   değişkenlerini ezdiği için ondan sonra gelir. */
-@import './tema-mehse.css';
-@import './tema-modern.css';
+/* Pano teması (13.11.2026: tek tema; MEHSE, Modern, Klasik, Material, Windows 11, Saha, Açık alan,
+   Kağıt kaldırıldı) — tasarim.css'teki ortak bileşen değişkenlerini ezdiği için ondan sonra gelir. */
+@import './tema-pano.css';
 /* Ortak sınıflar (mehse-soluk, mehse-girdi, mehse-tablo …) — sayfalardaki tekrarlı elle stiller (08.11.2026). */
 @import './ortak.css';
 /* Telefon düzeni — her temada; en sonda ki tema kurallarını dar ekranda ezsin. */

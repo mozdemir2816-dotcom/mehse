@@ -1,0 +1,364 @@
+/* ==========================================================================
+   PANO TEMASI (13.11.2026) — <html data-mehse-tema="pano">. Tek tema; diğerleri kaldırıldı.
+
+   Tasarım dili: İş güvenliği işaretlerinin (ISO 7010) renk + şekil dili durum göstergesidir:
+   kırmızı = süresi geçti (yasak dairesi), sarı = yaklaşıyor (uyarı üçgeni), yeşil = güncel
+   (güvenli durum karesi), mavi = yapılması gereken / birincil eylem (zorunluluk dairesi).
+   Grafit çerçeve, serin gri zemin, beyaz yüzeyler, ince çizgi; gölge ve gradyan yok.
+   Yazı: IBM Plex Sans (arayüz) + IBM Plex Sans Condensed (uzun firma adları: .mehse-firma-adi).
+   Bileşen temeli theme.css'teki token'lar; burada token'lar ve belirgin yüzeyler ezilir.
+   ========================================================================== */
+
+html[data-mehse-tema="pano"] {
+    --pano-grafit: #22272B;
+    --pano-grafit-2: #2E353A;
+    --pano-zemin: #EEF1F3;
+    --pano-yuzey: #FFFFFF;
+    --pano-cizgi: #D5DBE0;
+    --pano-cizgi-acik: #E6EAED;
+    --pano-soluk: #56606A;
+    --pano-kirmizi: #B3122E;
+    --pano-sari: #F2B705;
+    --pano-sari-metin: #7A5600;
+    --pano-yesil: #00704A;
+    --pano-mavi: #0057A8;
+
+    --font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --primary: #0057A8;
+    --bg: #EEF1F3;
+    --panel-bg: #FFFFFF;
+    --sidebar-from: #22272B;
+    --sidebar-to: #22272B;
+    --text-heading: #22272B;
+    --text-secondary: #56606A;
+    --text-label: #56606A;
+    --border: #D5DBE0;
+    --border-light: #E6EAED;
+    --success-bg: #E6F3EE;
+    --success-text: #00704A;
+    --success-border: #B3D9CA;
+    --info-bg: #E8F1FA;
+    --info-text: #0057A8;
+    --info-border: #B9D3EC;
+    --warning-bg: #FEF6DA;
+    --warning-text: #7A5600;
+    --warning-border: #F5DC8A;
+    --metric-blue: #0057A8;
+    --metric-green: #00704A;
+    --metric-orange: #7A5600;
+    --metric-purple: #5B4B8A;
+
+    --primary-50: #E8F1FA;
+    --primary-100: #CDE0F3;
+    --primary-200: #9EC2E8;
+    --primary-300: #5F9BD6;
+    --primary-400: #2A78C2;
+    --primary-500: #0A64B5;
+    --primary-600: #0057A8;
+    --primary-700: #00468A;
+    --primary-800: #00386E;
+    --primary-900: #002B55;
+    --primary-950: #001B36;
+
+    /* Ortak bileşen değişkenleri (tasarim.css): sidebar kartı ve karşılama bandı. */
+    --mehse-sb-kart-bg: rgb(255 255 255 / .05);
+    --mehse-sb-kart-kenar: #3A4147;
+    --mehse-sb-metin: #FFFFFF;
+    --mehse-sb-soluk: #AEB8C0;
+    --mehse-sb-avatar-bg: #F2B705;
+    --mehse-sb-avatar-metin: #22272B;
+    --mehse-sb-ayar-hover: rgb(255 255 255 / .08);
+
+    --mehse-hero-bg: #FFFFFF;
+    --mehse-hero-metin: #22272B;
+    --mehse-hero-soluk: #56606A;
+    --mehse-hero-eylem-bg: #FFFFFF;
+    --mehse-hero-eylem-kenar: #C3CBD2;
+    --mehse-hero-eylem-metin: #22272B;
+    --mehse-hero-birincil-bg: #0057A8;
+    --mehse-hero-birincil-metin: #FFFFFF;
+    --mehse-hero-halka: #00704A;
+    --mehse-hero-halka-zemin: #E6EAED;
+    --mehse-hero-radius: 8px;
+
+    .fi-body {
+        font-size: 14px;
+        background: var(--pano-zemin) !important;
+        color: var(--pano-grafit);
+        font-family: var(--font-family);
+    }
+
+    /* ---- Sidebar: düz grafit, aktif öğede solda sarı çizgi ---------------- */
+    .fi-sidebar {
+        background: var(--pano-grafit) !important;
+        border-inline-end: 0;
+    }
+
+    .fi-sidebar-header {
+        border-bottom: 1px solid #3A4147;
+    }
+
+    .fi-sidebar-nav {
+        row-gap: .6rem;
+        padding: .85rem .7rem;
+        scrollbar-width: thin;
+        scrollbar-color: #4A535A transparent;
+    }
+
+    .fi-sidebar-group-label {
+        color: #8E99A3 !important;
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .fi-sidebar-item-label {
+        color: #C9D1D7 !important;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .fi-sidebar-group-btn .fi-icon,
+    .fi-sidebar-group-dropdown-trigger-btn .fi-icon,
+    .fi-sidebar-item-btn > .fi-icon,
+    .fi-sidebar-database-notifications-btn > .fi-icon {
+        color: #8E99A3 !important;
+    }
+
+    .fi-sidebar-item-btn,
+    .fi-sidebar-group-btn {
+        min-height: 38px;
+        border-radius: 6px !important;
+    }
+
+    .fi-sidebar-group-btn:hover,
+    .fi-sidebar-item-btn:hover,
+    .fi-sidebar-database-notifications-btn:hover {
+        background: rgb(255 255 255 / .07) !important;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background: rgb(255 255 255 / .1) !important;
+        box-shadow: inset 3px 0 0 var(--pano-sari);
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+        color: #FFFFFF !important;
+        font-weight: 600;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+        color: var(--pano-sari) !important;
+    }
+
+    /* ---- Üst çubuk -------------------------------------------------------- */
+    .fi-topbar {
+        background: var(--pano-grafit) !important;
+        border-bottom: 0;
+    }
+
+    .fi-topbar .fi-icon-btn .fi-icon,
+    .mehse-zil {
+        color: #C9D1D7 !important;
+    }
+
+    .fi-global-search-field .fi-input-wrp {
+        background: var(--pano-grafit-2) !important;
+        border: 1px solid #4A535A !important;
+        box-shadow: none !important;
+    }
+
+    .fi-global-search-field .fi-input {
+        color: #FFFFFF !important;
+    }
+
+    .fi-global-search-field .fi-input::placeholder {
+        color: #AEB8C0 !important;
+    }
+
+    .fi-global-search-field .fi-icon {
+        color: #AEB8C0 !important;
+    }
+
+    /* ---- Sayfa başlığı ------------------------------------------------------ */
+    .fi-header-heading {
+        color: var(--pano-grafit) !important;
+        font-weight: 600;
+        letter-spacing: -.005em;
+    }
+
+    .fi-header-subheading {
+        color: var(--pano-soluk) !important;
+    }
+
+    /* ---- Yüzeyler: beyaz, ince çizgi, gölgesiz -------------------------------- */
+    .fi-section,
+    .fi-ta-ctn,
+    .fi-wi-stats-overview-stat,
+    .fi-fo-repeater-item,
+    .fi-in-repeatable-item {
+        background: var(--pano-yuzey) !important;
+        border: 1px solid var(--pano-cizgi) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+    }
+
+    .fi-section-header-heading {
+        font-weight: 600;
+        color: var(--pano-grafit);
+    }
+
+    .fi-section-header-description {
+        color: var(--pano-soluk);
+    }
+
+    /* ---- Düğmeler ve girdiler ------------------------------------------------- */
+    .fi-btn {
+        border-radius: 6px !important;
+        font-weight: 500;
+        box-shadow: none !important;
+    }
+
+    /* Renkler Filament'in --primary-N değişkenlerinden gelir (yukarıda mavi ölçek);
+       düğme zemini burada zorlanmaz — seçim düğmeleri (ToggleButtons) seçili / seçisiz ayrımını korur. */
+
+    .fi-input-wrp,
+    .fi-select-input,
+    .fi-fo-field .fi-input-wrp {
+        border-radius: 6px !important;
+    }
+
+    .fi-input-wrp {
+        box-shadow: 0 0 0 1px #C3CBD2 !important;
+        background: #FFFFFF;
+    }
+
+    .fi-input-wrp:focus-within {
+        box-shadow: 0 0 0 2px var(--pano-mavi) !important;
+    }
+
+    :focus-visible {
+        outline-color: var(--pano-sari);
+    }
+
+    /* ---- Tablolar: gri başlık, ince satır çizgisi, tabular rakamlar ---------- */
+    .fi-ta-header-cell {
+        background: #F6F8F9 !important;
+        color: var(--pano-soluk) !important;
+        font-weight: 500;
+    }
+
+    .fi-ta-row {
+        border-color: var(--pano-cizgi-acik) !important;
+    }
+
+    .fi-ta-row:hover {
+        background: #F6F8F9 !important;
+    }
+
+    .fi-ta-cell {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- Sekmeler: altı çizili mavi ------------------------------------------- */
+    .fi-tabs {
+        box-shadow: none !important;
+        border: 1px solid var(--pano-cizgi);
+        border-radius: 8px !important;
+        background: #FFFFFF !important;
+    }
+
+    .fi-tabs-item.fi-active {
+        background: transparent !important;
+        box-shadow: inset 0 -2px 0 var(--pano-mavi);
+        border-radius: 0 !important;
+    }
+
+    .fi-tabs-item.fi-active .fi-tabs-item-label,
+    .fi-tabs-item.fi-active .fi-icon {
+        color: var(--pano-mavi) !important;
+    }
+
+    /* ---- Modal ve bildirim -------------------------------------------------- */
+    .fi-modal-window {
+        border-radius: 10px !important;
+    }
+
+    .fi-no-notification {
+        border-radius: 8px !important;
+    }
+
+    /* ---- Karşılama bandı (HosGeldinWidget): sade beyaz yüzey ----------------- */
+    .mehse-hosgeldin {
+        border: 1px solid var(--pano-cizgi);
+        box-shadow: none;
+    }
+
+    .mehse-hosgeldin::after,
+    .mehse-hosgeldin::before {
+        display: none !important;
+    }
+
+    /* ---- Uzun firma adları ---------------------------------------------------- */
+    .mehse-firma-adi {
+        font-family: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+        font-weight: 600;
+    }
+}
+
+/* ==========================================================================
+   Durum işaretleri (ISO 7010 şekil + renk) — her yerde kullanılabilir:
+   <x-mehse-durum-isareti durum="gecikti|yaklasiyor|tamam|zorunlu" />
+   ========================================================================== */
+.mehse-isaret {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 1.05rem;
+    height: 1.05rem;
+    vertical-align: -.15em;
+}
+
+/* ==========================================================================
+   Portföy şeridi (Ana Sayfa) — firma başına bir çubuk, en kötü duruma göre renk.
+   ========================================================================== */
+.mehse-serit {
+    display: flex;
+    gap: 3px;
+    height: 2.4rem;
+}
+
+.mehse-serit-cubuk {
+    flex: 1 1 0;
+    min-width: 4px;
+    border: 0;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+    transition: transform .12s ease-out;
+}
+
+.mehse-serit-cubuk:hover,
+.mehse-serit-cubuk:focus-visible {
+    transform: scaleY(1.12);
+}
+
+.mehse-serit-cubuk:focus-visible {
+    outline: 3px solid #F2B705;
+    outline-offset: 2px;
+}
+
+.mehse-serit-cubuk.fi-active {
+    outline: 2px solid #22272B;
+    outline-offset: 2px;
+}
+
+.mehse-serit-gecikti { background: #B3122E; }
+.mehse-serit-yaklasiyor { background: #F2B705; box-shadow: inset 0 0 0 1px #8A6100; }
+.mehse-serit-tamam { background: #00704A; }
+
+@media (prefers-reduced-motion: reduce) {
+    .mehse-serit-cubuk { transition: none; }
+}

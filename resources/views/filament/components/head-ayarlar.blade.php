@@ -16,7 +16,7 @@
         'varsayilan' => \App\Support\KullaniciAyarlari::VARSAYILAN_TEMA,
         'yogunluk' => $ayar['yogunluk'] ?? 'rahat',
         'yazi' => $ayar['yazi_boyutu'] ?? 'normal',
-        'kaydetUrl' => $kullanici ? route('mehse.ayar.tema') : null,
+        'kaydetUrl' => null, // 13.11.2026: tek tema (Pano) — seçici ve kaydetme rotası kaldırıldı
         'csrf' => csrf_token(),
         'temalar' => array_keys(\App\Support\KullaniciAyarlari::TEMALAR),
     ];
@@ -140,4 +140,4 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Source+Serif+4:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">

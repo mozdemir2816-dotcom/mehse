@@ -5,11 +5,6 @@
    1024px = Filament'in sidebar'ı çekmeceye çevirdiği eşik (alt menü de orada açılır).
    ========================================================================== */
 
-/* Koyu üst çubuklu temalarda bildirim zili görünür olsun (önceden siyahtı). */
-html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
-    color: rgb(255 255 255 / .72) !important;
-}
-
 @media (max-width: 1023px) {
     /* Masaüstü işleri: Excel şablonu / Excel–KATİP yükleme (App\Support\MobilGorunum). */
     html .mehse-masaustu {

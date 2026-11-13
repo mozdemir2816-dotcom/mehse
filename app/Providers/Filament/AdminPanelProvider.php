@@ -128,7 +128,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             // Tasarım sistemi (2026-09-14): gövde — DM Sans, veri/belge no — JetBrains Mono.
-            ->font('DM Sans', provider: GoogleFontProvider::class)
+            ->font('IBM Plex Sans', provider: GoogleFontProvider::class)
             ->monoFont('JetBrains Mono', provider: GoogleFontProvider::class)
             // <head> başı: koyu mod geçişi + görsel tema/yoğunluk/yazı boyutu (hesaba
             // kayıtlı ayarlar ilk boyamadan önce <html data-mehse-*> olarak basılır) +
@@ -155,11 +155,6 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
                 fn () => view('filament.components.bildirim-zili'),
-            )
-            // Görsel tema seçici — topbar'da kullanıcı avatarının solunda.
-            ->renderHook(
-                PanelsRenderHook::USER_MENU_BEFORE,
-                fn () => view('filament.components.tema-secici'),
             )
             // Mobil alt navigasyon çubuğu (tasarım sistemi 2026-09-14) — yalnız
             // küçük ekranda görünür (bkz. theme.css .fi-mobil-alt-nav); 5 sekme

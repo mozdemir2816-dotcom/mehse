@@ -85,20 +85,6 @@ Route::get('/mehse/ayar/uzman-gorsel/{tur}', function (Request $request, string 
     return response()->file($disk->path($yol), ['Cache-Control' => 'private, max-age=300']);
 })->middleware('auth')->where('tur', 'kase|imza')->name('mehse.uzman-gorsel');
 
-// Topbar tema seçicisi (filament.components.tema-secici) seçimi hesaba kaydeder;
-// böylece tema her cihazda aynı gelir. Ayarlar sayfası aynı alanı yazar.
-Route::post('/mehse/ayar/tema', function (Request $request) {
-    $veri = $request->validate([
-        'tema' => ['required', Rule::in(array_keys(KullaniciAyarlari::TEMALAR))],
-    ]);
-
-    /** @var User $user */
-    $user = $request->user();
-    KullaniciAyarlari::kaydet($user, ['tema' => $veri['tema']]);
-
-    return response()->noContent();
-})->middleware('auth')->name('mehse.ayar.tema');
-
 // Saha Gözlem Raporu PDF'i — telefonda "PDF'i Paylaş" (Web Share API ile dosya olarak
 // WhatsApp'a gönderilir). Yalnız raporun sahibi uzman indirebilir.
 Route::get('/mehse/saha-gozlem/{rapor}/pdf', function (int $rapor, Request $request) {

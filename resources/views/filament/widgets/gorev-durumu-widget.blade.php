@@ -6,10 +6,11 @@
         $kullanici = \Filament\Facades\Filament::auth()->user();
         $yaklasanGun = \App\Support\GorevDurumu::yaklasanGun();
         $sutunlar = [
-            'gecikmis' => ['Günü geçenler', 'heroicon-o-exclamation-triangle', 'rgb(185 28 28)', 'rgb(220 38 38 / .06)'],
-            'yaklasan' => ['Yaklaşanlar', 'heroicon-o-calendar-days', 'rgb(180 83 9)', 'rgb(217 119 6 / .07)'],
-            'yapilmayan' => ['Yapılmayanlar', 'heroicon-o-clock', 'rgb(71 85 105)', 'rgb(100 116 139 / .06)'],
-            'yapilan' => ['Yapılanlar', 'heroicon-o-check-circle', 'rgb(21 128 61)', 'rgb(21 128 61 / .06)'],
+            // Pano renkleri (ISO 7010): kırmızı #B3122E · sarı zemin + koyu sarı metin · mavi · yeşil #00704A
+            'gecikmis' => ['Günü geçenler', 'heroicon-o-exclamation-triangle', '#B3122E', 'rgb(179 18 46 / .05)'],
+            'yaklasan' => ['Yaklaşanlar', 'heroicon-o-calendar-days', '#7A5600', 'rgb(242 183 5 / .09)'],
+            'yapilmayan' => ['Yapılmayanlar', 'heroicon-o-clock', '#0057A8', 'rgb(0 87 168 / .04)'],
+            'yapilan' => ['Yapılanlar', 'heroicon-o-check-circle', '#00704A', 'rgb(0 112 74 / .05)'],
         ];
         $kart = 'border:1px solid rgb(107 114 128 / .2);border-radius:.75rem;padding:.75rem 1rem';
         $saatDk = fn (int $dk) => \App\Support\GorevDurumu::saatDk($dk);
@@ -18,6 +19,32 @@
     {{-- 02.11.2026: "Görev durumu" başlık bandı kaldırıldı; kullanıcı / unvan satırı ve İSG-KATİP kapasite kartı
          ana sayfa kokpitine (HosGeldinWidget) taşındı. Pano sekmeli: varsayılan yalnız günü geçen + yaklaşan. --}}
     <x-filament::section>
+
+        {{-- Portföy şeridi (Pano, 13.11.2026): firma başına çubuk; tıklayınca görevler o firmaya süzülür. --}}
+        @php $serit = $this->portfoySeridi; $sayac = collect($serit)->countBy('durum'); @endphp
+        @if ($serit)
+            <div style="{{ $kart }};margin-bottom:1rem">
+                <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.4rem 1rem;margin-bottom:.6rem">
+                    <div style="font-weight:700;font-size:.9rem">Portföy şeridi</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem 1rem;font-size:.8rem;color:var(--text-secondary)">
+                        <span style="display:inline-flex;align-items:center;gap:.35rem"><x-mehse-durum-isareti durum="gecikti" />{{ $sayac['gecikti'] ?? 0 }} firmada geciken iş</span>
+                        <span style="display:inline-flex;align-items:center;gap:.35rem"><x-mehse-durum-isareti durum="yaklasiyor" />{{ $sayac['yaklasiyor'] ?? 0 }} firmada yaklaşan iş</span>
+                        <span style="display:inline-flex;align-items:center;gap:.35rem"><x-mehse-durum-isareti durum="tamam" />{{ $sayac['tamam'] ?? 0 }} firmada süreler güncel</span>
+                    </div>
+                </div>
+                <div class="mehse-serit" role="group" aria-label="Firmalar, duruma göre">
+                    @foreach ($serit as $f)
+                        <button type="button" wire:click="firmaSec({{ $f['id'] }})"
+                            @class(['mehse-serit-cubuk', 'mehse-serit-'.$f['durum'], 'fi-active' => $arama === $f['unvan']])
+                            title="{{ $f['ad'] }}" aria-label="{{ $f['ad'] }}: {{ ['gecikti' => 'geciken iş var', 'yaklasiyor' => 'yaklaşan iş var', 'tamam' => 'süreler güncel'][$f['durum']] }}"
+                            aria-pressed="{{ $arama === $f['unvan'] ? 'true' : 'false' }}"></button>
+                    @endforeach
+                </div>
+                <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.45rem">
+                    Her çubuk bir firma. Tıklayınca aşağıdaki görevler o firmaya süzülür; tekrar tıklayınca tüm firmalar döner.
+                </div>
+            </div>
+        @endif
 
         {{-- Hızlı çalışma akışları --}}
         <div style="{{ $kart }};margin-bottom:1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem">
@@ -83,7 +110,7 @@
                 @php $liste = $gorevler->where('durum', $durum); @endphp
                 <div style="border:1px solid color-mix(in srgb, {{ $renk }} 28%, transparent);border-radius:.75rem;background:{{ $zemin }};padding:.6rem;display:flex;flex-direction:column;max-height:{{ $tekSutun ? '560px' : '420px' }}">
                     <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;color:{{ $renk }};font-size:.88rem;padding:.1rem .2rem .5rem">
-                        <span style="display:flex;align-items:center;gap:.3rem"><x-filament::icon :icon="$ikon" style="width:1rem;height:1rem" /> {{ $baslik }}</span>
+                        <span style="display:flex;align-items:center;gap:.4rem"><x-mehse-durum-isareti :durum="['gecikmis' => 'gecikti', 'yaklasan' => 'yaklasiyor', 'yapilmayan' => 'zorunlu', 'yapilan' => 'tamam'][$durum]" /> {{ $baslik }}</span>
                         <span style="font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;background:color-mix(in srgb, {{ $renk }} 14%, transparent)">{{ $liste->count() }}</span>
                     </div>
                     <div style="overflow-y:auto;min-height:0;gap:.5rem;{{ $tekSutun ? 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));align-items:start' : 'display:flex;flex-direction:column' }}">

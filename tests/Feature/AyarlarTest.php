@@ -28,7 +28,7 @@ class AyarlarTest extends TestCase
 
     public function test_ayar_kaydetmemis_kullanici_icin_varsayilanlar_eski_sabit_degerlerle_ayni(): void
     {
-        $this->assertSame('mehse', KullaniciAyarlari::tema());
+        $this->assertSame('pano', KullaniciAyarlari::tema());
         $this->assertSame(60, KullaniciAyarlari::esik('egitim'));
         $this->assertSame((int) config('isg.periyodik_kontrol.vize_yaklasan_gun'), KullaniciAyarlari::esik('ekipman'));
         $this->assertSame((int) config('isg.onayli_defter.yaklasan_gun'), KullaniciAyarlari::esik('onayli_defter'));
@@ -48,7 +48,6 @@ class AyarlarTest extends TestCase
         Livewire::test(Ayarlar::class)
             ->assertOk()
             ->fillForm([
-                'tema' => 'windows11',
                 'yogunluk' => 'kompakt',
                 'yazi_boyutu' => 'buyuk',
                 'esikler.egitim' => 45,
@@ -59,7 +58,7 @@ class AyarlarTest extends TestCase
             ->assertHasNoFormErrors();
 
         $ayar = $this->uzman->fresh()->ayarlar;
-        $this->assertSame('windows11', $ayar['tema']);
+        $this->assertSame('pano', $ayar['tema']);
         $this->assertSame('kompakt', $ayar['yogunluk']);
         $this->assertSame('buyuk', $ayar['yazi_boyutu']);
         $this->assertSame(45, $ayar['esikler']['egitim']);
@@ -100,28 +99,20 @@ class AyarlarTest extends TestCase
         $this->assertCount(count($once) - 1, $sonra);
     }
 
-    public function test_topbar_tema_secimi_hesaba_kaydedilir(): void
+    public function test_tek_tema_pano_eski_secim_panoya_duser(): void
     {
-        $this->postJson(route('mehse.ayar.tema'), ['tema' => 'saha'])->assertNoContent();
-        $this->assertSame('saha', $this->uzman->fresh()->ayarlar['tema']);
-
-        $this->postJson(route('mehse.ayar.tema'), ['tema' => 'yok-boyle'])->assertUnprocessable();
-    }
-
-    public function test_misafir_tema_kaydedemez(): void
-    {
-        auth()->logout();
-
-        $this->postJson(route('mehse.ayar.tema'), ['tema' => 'saha'])->assertUnauthorized();
+        $this->assertSame(['pano' => 'Pano'], KullaniciAyarlari::TEMALAR);
+        KullaniciAyarlari::kaydet($this->uzman, ['tema' => 'windows11']);
+        $this->assertSame('pano', KullaniciAyarlari::tema($this->uzman->fresh()));
     }
 
     public function test_kayitli_gorunum_ayarlari_sayfa_basinda_basilir(): void
     {
-        KullaniciAyarlari::kaydet($this->uzman, ['tema' => 'material', 'yogunluk' => 'kompakt', 'yazi_boyutu' => 'kucuk']);
+        KullaniciAyarlari::kaydet($this->uzman, ['tema' => 'material', 'yogunluk' => 'kompakt', 'yazi_boyutu' => 'kucuk']);   // eski tema → pano
 
         $html = $this->get(Ayarlar::getUrl())->assertOk()->getContent();
 
-        $this->assertStringContainsString('"tema":"material"', $html);
+        $this->assertStringContainsString('"tema":"pano"', $html);
         $this->assertStringContainsString('"yogunluk":"kompakt"', $html);
         $this->assertStringContainsString('"yazi":"kucuk"', $html);
         // Sidebar alt kartı: Ayarlar kısayolu.

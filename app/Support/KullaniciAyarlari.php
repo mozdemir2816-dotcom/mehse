@@ -19,18 +19,14 @@ use WeakMap;
  */
 class KullaniciAyarlari
 {
-    /** Ayar kaydetmemiş kullanıcının teması (13.10.2026: klasik → mehse marka teması). */
-    public const VARSAYILAN_TEMA = 'mehse';
+    /**
+     * Tek tema (13.11.2026, kullanıcı kararı): Pano. Önceki 8 tema (MEHSE, Modern, Klasik, Material,
+     * Windows 11, Saha, Açık alan, Kağıt) kaldırıldı; kayıtlı eski seçimler tema() ile Pano'ya düşer.
+     */
+    public const VARSAYILAN_TEMA = 'pano';
 
     public const TEMALAR = [
-        'mehse' => 'MEHSE',
-        'modern' => 'MEHSE Modern',
-        'klasik' => 'Klasik',
-        'material' => 'Google Material',
-        'windows11' => 'Windows 11',
-        'saha' => 'Saha',
-        'acik_alan' => 'Açık alan',
-        'kagit' => 'Kağıt',
+        'pano' => 'Pano',
     ];
 
     public const YOGUNLUKLAR = [
