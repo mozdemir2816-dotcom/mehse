@@ -122,11 +122,15 @@ class HazirIstemlerTest extends TestCase
         $user = User::factory()->create();
 
         $sonuc = TalimatSablonuExcelIceAktarici::iceAktar($this->excel($b, [
-            ['Hidrolik Pres Kullanma Talimatı', 'İş Makineleri', 'Presin güvenli kullanımı.', 'İş eldiveni, Koruyucu gözlük', 'Çalışmadan önce ışık perdesini dene | Çift el kumandasını bantlama | Kalıp değişiminde enerjiyi kilitle'],
+            ['Hidrolik Pres Kullanma Talimatı', 'İş Makineleri', 'Presin güvenli kullanımı.', 'İş eldiveni, Koruyucu gözlük', 'Çalışmadan önce ışık perdesini dene • Çift el kumandasını bantlama • Kalıp değişiminde enerjiyi kilitle'],
+            ['Şerit Testere Talimatı', 'İş Makineleri', 'Eski biçim', '', 'Siperi indir | Eldiven takma'],
         ]), $user->id);
 
-        $this->assertSame(1, $sonuc['basarili'], implode(' ', $sonuc['hatalar']));
-        $t = TalimatSablonu::query()->latest('id')->firstOrFail();
+        $this->assertSame(2, $sonuc['basarili'], implode(' ', $sonuc['hatalar']));
+        $this->assertStringNotContainsString(' | " (boşluk', $istem);   // Gemini tablosunda dik çizgi sütun böler
+        $this->assertStringContainsString('" • "', $istem);
+        $this->assertSame(['Siperi indir', 'Eldiven takma'], TalimatSablonu::query()->where('baslik', 'Şerit Testere Talimatı')->firstOrFail()->maddeler);
+        $t = TalimatSablonu::query()->where('baslik', 'Hidrolik Pres Kullanma Talimatı')->firstOrFail();
         $this->assertCount(3, $t->maddeler);
         $this->assertSame('Çift el kumandasını bantlama', $t->maddeler[1]);
         $this->assertSame(['İş eldiveni', 'Koruyucu gözlük'], $t->kkdler);

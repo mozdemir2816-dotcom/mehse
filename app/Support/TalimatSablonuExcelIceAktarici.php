@@ -150,8 +150,8 @@ class TalimatSablonuExcelIceAktarici
 
             $veri[$alan] = match ($alan) {
                 'kkdler' => array_values(array_filter(array_map('trim', explode(',', (string) $deger)))),
-                // Satır sonu ya da " | " ayırıcı — Gemini tablosunda hücre içi satır sonu kopyalanamaz (Hazır İstemler, 13.11.2026).
-                'maddeler' => array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|\s+\|\s+/', (string) $deger)))),
+                // Satır sonu, " • " ya da " | " ayırıcı — Gemini tablosunda hücre içi satır sonu kopyalanamaz (Hazır İstemler, 13.11.2026).
+                'maddeler' => array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|\s+\|\s+|\s*•\s*/u', (string) $deger)))),
                 default => (string) $deger,
             };
         }

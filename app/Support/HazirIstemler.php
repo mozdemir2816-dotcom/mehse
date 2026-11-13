@@ -202,11 +202,11 @@ class HazirIstemler
         - Kategori: şunlardan biri, aynen: {$kategoriler}
         - Açıklama: talimatın amacı, tek cümle.
         - KKD'ler: gereken kişisel koruyucu donanımlar, virgülle ayrılmış (ör. Baret, Koruyucu gözlük, Çelik burunlu iş ayakkabısı).
-        - Maddeler: 10–20 kısa, uygulanabilir madde; çalışma öncesi kontrol, çalışma sırası, bakım-temizlik (enerji kesme / kilitleme), acil durum ve yasaklar sırasıyla. Maddeleri birbirinden " | " (boşluk, dik çizgi, boşluk) ile ayır; madde numarası yazma.
+        - Maddeler: 10–20 kısa, uygulanabilir madde; çalışma öncesi kontrol, çalışma sırası, bakım-temizlik (enerji kesme / kilitleme), acil durum ve yasaklar sırasıyla. Maddeleri birbirinden " • " (madde işareti) ile ayır; dik çizgi (|) KULLANMA, madde numarası yazma.
         - Mevzuata ve üretici kılavuzuna aykırı bir şey yazma; emin olmadığın sayısal değeri (basınç, mesafe) yazma.
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. Her talimat bir satır. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         Başlık | Kategori | Açıklama | KKD'ler (virgülle ayırın) | Maddeler (her satırda bir madde)
-        Hücrelerde satır sonu kullanma (maddeleri " | " ile ayır).
+        Hücrelerde satır sonu kullanma (maddeleri " • " ile ayır).
         METIN;
     }
 
