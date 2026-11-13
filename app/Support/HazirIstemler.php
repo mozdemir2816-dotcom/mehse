@@ -49,6 +49,22 @@ class HazirIstemler
             'firma' => false,
             'adet' => 20,
         ],
+        'saha_gozlem' => [
+            'ad' => 'Saha gözlem raporu',
+            'aciklama' => 'Sahada çektiğiniz fotoğraflardaki uygunsuzluklar; Fine-Kinney puanlı bulgu tablosu.',
+            'cikti' => 'Excel tablosu',
+            'yukle' => "Saha → Gözlem Raporu (AI) → firma seç → 'Excel'den Bulgu Ekle'",
+            'firma' => true,
+            'adet' => 15,
+        ],
+        'dof' => [
+            'ad' => 'DÖF (düzeltici-önleyici faaliyet)',
+            'aciklama' => 'Tespit ettiğiniz uygunsuzluklar için öneri, öncelik, sorumlu ve terminli DÖF tablosu.',
+            'cikti' => 'Excel tablosu',
+            'yukle' => "Saha → DÖF → firma seç → 'Word/Excel'den Aktar'",
+            'firma' => true,
+            'adet' => 20,
+        ],
     ];
 
     /**
@@ -68,6 +84,8 @@ class HazirIstemler
             'tehlike_kutuphanesi' => static::tehlikeKutuphanesi($firma, trim((string) ($s['kategori'] ?? '')), $adet, ! empty($s['parca'])),
             'talimat' => static::talimat($firma, $adet),
             'soru_bankasi' => static::soruBankasi($firma, (string) ($s['konu'] ?? ''), $adet),
+            'saha_gozlem' => static::sahaGozlem($adet),
+            'dof' => static::dof(),
         };
 
         return implode("\n\n", array_filter([
@@ -88,6 +106,22 @@ class HazirIstemler
                 "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin ve istemi yapıştırın.",
                 'Gemini\'nin verdiği JSON kod bloğunu kopyalayın; Not Defteri\'ne yapıştırıp "sorular.json" adıyla, Kodlama: UTF-8 seçerek kaydedin.',
                 "Yükleyin: {$yukle}. Sorular TASLAK olarak girer; kaynaklarını kontrol edip yayımlayın.",
+            ];
+        }
+
+        if ($tur === 'saha_gozlem') {
+            return [
+                "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin. Önce saha fotoğraflarını sohbete ekleyin (en fazla 10), sonra istemi yapıştırıp gönderin.",
+                "Gemini'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.",
+                "Yükleyin: {$yukle}. Maddeler onay bekler; her birini kontrol edin, fotoğrafı ilgili maddeye ekleyin (tablodaki Fotoğraf No yol gösterir).",
+            ];
+        }
+
+        if ($tur === 'dof') {
+            return [
+                "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin. Tespitlerinizi ek bilgiye yazın; isterseniz fotoğrafları da sohbete ekleyin, sonra istemi yapıştırın.",
+                "Gemini'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.",
+                "Yükleyin: {$yukle}. Maddeler listeye eklenir; fotoğrafları ekleyip DÖF raporunu alın.",
             ];
         }
 
@@ -174,6 +208,7 @@ class HazirIstemler
     {
         $kategori = $kategori !== '' ? $kategori : ($f?->nace_aciklama ?: 'Genel');
         $parcaKurali = static::parcaKurali($parca, 40, $adet);
+        $mevcutlar = static::mevcutMaddeler($kategori);
 
         return <<<METIN
         GÖREV: Risk değerlendirmesinde kullanılacak bir tehlike kütüphanesi için "{$kategori}" konusunda TAM OLARAK {$adet} madde hazırla (Sıra 1'den {$adet}'e kadar; daha az yazma).
@@ -188,7 +223,25 @@ class HazirIstemler
         Sıra | Kategori | Kod | Bölüm | Faaliyet | Tehlike | Risk | Mevcut Önlem | Mevzuat
         Hücrelerde satır sonu kullanma.
         {$parcaKurali}
-        METIN;
+        METIN.$mevcutlar;
+    }
+
+    /**
+     * Klasör kütüphanede zaten varsa içindeki maddeler isteme eklenir; Gemini yalnız eksikleri yazar
+     * (13.11.2026 — aynı ekipman / iş için mükerrer madde üretilmesin).
+     */
+    private static function mevcutMaddeler(string $kategori): string
+    {
+        $k = \App\Models\TehlikeKategorisi::query()->whereRaw('LOWER(ad) = ?', [mb_strtolower($kategori)])->first();
+        if (! $k) {
+            return '';
+        }
+
+        $maddeler = $k->tehlikeler()->orderBy('id')->limit(200)->pluck('tehlike')
+            ->map(fn ($t) => '- '.\Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', $t)), 140))
+            ->implode(PHP_EOL);
+
+        return $maddeler === '' ? '' : PHP_EOL.PHP_EOL.'BU KLASÖRDE ZATEN OLAN MADDELER — bunları ve anlamca aynı olanları TEKRAR YAZMA, yalnız eksik kalan tehlikeleri yaz:'.PHP_EOL.$maddeler;
     }
 
     private static function talimat(?Firma $f, int $adet): string
@@ -207,6 +260,46 @@ class HazirIstemler
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. Her talimat bir satır. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         Başlık | Kategori | Açıklama | KKD'ler (virgülle ayırın) | Maddeler (her satırda bir madde)
         Hücrelerde satır sonu kullanma (maddeleri " • " ile ayır).
+        METIN;
+    }
+
+    private static function sahaGozlem(int $adet): string
+    {
+        $olcek = fn (string $e) => static::olcekMetni('fine_kinney', $e);
+
+        return <<<METIN
+        GÖREV: Bu sohbete eklediğim saha fotoğraflarını bir iş güvenliği uzmanı gözüyle incele ve İSG uygunsuzluklarını (en fazla {$adet} madde) tablo olarak çıkar. Ek bilgide not yazdıysam onları da madde yap.
+        - Yalnız fotoğrafta gerçekten görülen uygunsuzlukları yaz; tahmin ya da fotoğrafta olmayan bir şeyi uydurma. Aynı uygunsuzluğu tekrarlama.
+        - Fotoğraf No: uygunsuzluğun görüldüğü fotoğrafın sırası (1, 2, 3…). Ek bilgiden gelen maddede boş bırak.
+        - Bina / Bölge: görülebiliyorsa alan adı (Depo, Üretim Hattı, Çatı…), görülmüyorsa boş.
+        - Fotoğraftaki Konum: uygunsuzluğun fotoğraftaki yeri, kısa ("sol alt, zemindeki kablo").
+        - Kategori: kısa etiket (Yüksekte Çalışma, Elektrik Güvenliği, KKD Eksikliği, Düzen/Temizlik, Makine Koruyucusu, Yangın Güvenliği, Kimyasal…).
+        - Tespit: uygunsuzluğu açık ve somut anlat (1–2 cümle).
+        - Öneriler: 1–3 somut düzeltici faaliyet; aralarına " • " koy, dik çizgi (|) KULLANMA.
+        - Yasal Gerekçe: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
+        - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle — Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')}. Gerçekçi puanla; her maddeyi en kötü senaryoyla puanlama.
+        ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
+        Fotoğraf No | Bina / Bölge | Fotoğraftaki Konum | Kategori | Tespit | Öneriler | Yasal Gerekçe | Olasılık | Frekans | Şiddet
+        Hücrelerde satır sonu kullanma. Puan hücrelerine yalnız sayı yaz (ondalıkta virgül).
+        METIN;
+    }
+
+    private static function dof(): string
+    {
+        $bugun = now()->format('d.m.Y');
+        $tarih = fn (int $gun) => now()->addDays($gun)->format('d.m.Y');
+
+        return <<<METIN
+        GÖREV: Ek bilgide yazdığım (ve varsa bu sohbete eklediğim fotoğraflarda görülen) her uygunsuzluk için bir DÖF (düzeltici-önleyici faaliyet) satırı hazırla. Uygunsuzluk ekleme ya da çıkarma; her tespit bir satır.
+        - Tespit: uygunsuzluğu açık, somut ve tarafsız bir dille yaz (1–2 cümle).
+        - Öneri: kontrol hiyerarşisine göre (önce ortadan kaldırma ve mühendislik, sonra idari önlem, en son KKD) somut, uygulanabilir düzeltici faaliyet; 1–2 cümle.
+        - Öncelik: Kritik, Yüksek, Orta ya da Düşük. Hayati tehlike, yüksekten düşme, enerji altında açık iletken, korumasız hareketli parça → Kritik.
+        - Sorumlu: rol yaz (İşveren / İşveren Vekili, Bakım Sorumlusu, Bölüm Şefi, Ustabaşı, İSG Uzmanı, İşyeri Hekimi…); kişi adı yazma.
+        - Termin: GG.AA.YYYY biçiminde tarih. Bugün {$bugun}; Kritik → {$tarih(7)}, Yüksek → {$tarih(30)}, Orta → {$tarih(90)}, Düşük → {$tarih(180)}.
+        - Dayanak: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
+        ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
+        Tespit | Öneri | Öncelik | Sorumlu | Termin | Dayanak
+        Hücrelerde satır sonu kullanma.
         METIN;
     }
 

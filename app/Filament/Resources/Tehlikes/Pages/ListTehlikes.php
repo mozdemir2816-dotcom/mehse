@@ -45,12 +45,16 @@ class ListTehlikes extends ListRecords
                         ])
                         ->required()
                         ->helperText('Beklenen sütunlar (şablonu indirin): '.implode(', ', TehlikeExcelIceAktarici::SABLON_BASLIKLARI)),
+                    \Filament\Forms\Components\Toggle::make('yeni_klasor')
+                        ->label('Benzer klasör olsa da yeni klasör aç')
+                        ->helperText('Kapalıyken: dosyadaki klasör adı kütüphanede yoksa ama aynı ekipman / iş için benzer bir klasör varsa (ör. "manito" ↔ "Manitou / teleskopik yükleyici") o satırlar yüklenmez, benzer klasörler gösterilir.')
+                        ->default(false),
                 ])
                 ->action(function (array $data): void {
                     $yol = Storage::disk('local')->path($data['dosya']);
 
                     try {
-                        $sonuc = TehlikeExcelIceAktarici::iceAktar($yol);
+                        $sonuc = TehlikeExcelIceAktarici::iceAktar($yol, (bool) ($data['yeni_klasor'] ?? false));
                     } catch (Throwable $e) {
                         Storage::disk('local')->delete($data['dosya']);
                         Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
@@ -60,7 +64,7 @@ class ListTehlikes extends ListRecords
 
                     // Şablon sütunları (Kategori + Tehlike) yoksa dosya büyük olasılıkla hazır bir
                     // Fine-Kinney risk analizidir (İ/F/Ş sütunlu): onu Fine-Kinney aktarıcısıyla dene.
-                    if ($sonuc['basarili'] === 0 && $sonuc['cakisma'] === 0) {
+                    if ($sonuc['basarili'] === 0 && $sonuc['cakisma'] === 0 && empty($sonuc['benzerKlasorler'])) {
                         try {
                             $fk = FineKinneyKutuphaneIceAktarici::iceAktar($yol);
                         } catch (Throwable $e) {
@@ -89,9 +93,26 @@ class ListTehlikes extends ListRecords
                     }
 
                     $bildirim = Notification::make()->title($baslik);
+                    $govde = [];
+
+                    // Aynı ekipman / iş için klasör zaten var: o satırlar yüklenmedi (13.11.2026).
+                    foreach ($sonuc['benzerKlasorler'] ?? [] as $dosyadaki => $benzerler) {
+                        $govde[] = '"'.$dosyadaki.'" klasörü kütüphanede yok ama benzerleri var: '.implode(' · ', $benzerler)
+                            .'. Bu satırlar YÜKLENMEDİ — Kategori sütununu mevcut klasörün adıyla değiştirip tekrar yükleyin ya da "Benzer klasör olsa da yeni klasör aç"ı işaretleyin.';
+                    }
 
                     if ($sonuc['hatalar']) {
-                        $bildirim->body(implode("\n", array_slice($sonuc['hatalar'], 0, 10)));
+                        $govde[] = implode("\n", array_slice($sonuc['hatalar'], 0, 10));
+                    }
+
+                    if ($govde) {
+                        $bildirim->body(implode("\n\n", $govde));
+                    }
+
+                    if (! empty($sonuc['benzerKlasorler'])) {
+                        $bildirim->warning()->persistent()->send();
+
+                        return;
                     }
 
                     $sonuc['basarili'] > 0 || $sonuc['cakisma'] > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();

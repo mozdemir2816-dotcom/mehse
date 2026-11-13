@@ -33,6 +33,14 @@ class TehlikeExcelIceAktarici
     /** Bu yüzdenin üzerindeki benzerlik (aynı kategoride) "zaten bu" sayılır, doğrudan günceller. */
     private const AYNI_MADDE_ESIGI = 97.0;
 
+    /**
+     * Dosyadaki klasör adı kütüphanede yoksa ama bir klasöre bu puanla benziyorsa (aynı ekipman / iş:
+     * "manito" ↔ "Ekipman – Manitou / teleskopik yükleyici") satırlar yüklenmez; kullanıcı ya Kategori'yi
+     * mevcut klasörün adıyla düzeltir ya da "yine de yeni klasör aç" der (13.11.2026). Otomatik eşleme
+     * yapılmaz: "Kaynak" gibi genel adlar farklı klasörlere de yüksek benzer.
+     */
+    private const KATEGORI_BENZERLIK_ESIGI = 85;
+
     private const ALAN_ESLESME = [
         'kategori' => 'kategori',
         'kod' => 'kod',
@@ -52,7 +60,7 @@ class TehlikeExcelIceAktarici
     /**
      * @return array{basarili: int, yeniKategori: int, cakisma: int, hatalar: array<int, string>}
      */
-    public static function iceAktar(string $dosyaYolu): array
+    public static function iceAktar(string $dosyaYolu, bool $benzerKlasordeYeniAc = false): array
     {
         ExcelBellek::artir();
 
@@ -76,6 +84,7 @@ class TehlikeExcelIceAktarici
         // Kütüphanenin tamamıyla (kategori sınırı olmadan) karşılaştırılır --
         // aynı tehlike farklı bir sektör dosyasında farklı kategoriyle de gelmiş olabilir.
         $mevcutTehlikeler = Tehlike::query()->get(['id', 'tehlike_kategorisi_id', 'tehlike']);
+        $benzerKlasorler = [];   // dosyadaki ad => [benzer klasör adları]
 
         $basarili = 0;
         $cakisma = 0;
@@ -103,6 +112,18 @@ class TehlikeExcelIceAktarici
             }
 
             try {
+                $adAnahtar = static::anahtarUret($veri['kategori']);
+
+                if (! $benzerKlasordeYeniAc && ! isset($yeniKategoriAnahtarlari[$adAnahtar])
+                    && ! TehlikeKategorisi::where('anahtar', $adAnahtar)->exists()) {
+                    $benzerKlasorler[$veri['kategori']] ??= TehlikeKategorisi::benzerleri($veri['kategori'], 3, self::KATEGORI_BENZERLIK_ESIGI)
+                        ->map(fn ($s) => $s['kategori']->ad.' ('.$s['madde'].' madde)')->all();
+
+                    if ($benzerKlasorler[$veri['kategori']]) {
+                        continue;
+                    }
+                }
+
                 $kategori = static::kategoriBul($veri['kategori']);
 
                 if ($kategori->wasRecentlyCreated) {
@@ -168,7 +189,8 @@ class TehlikeExcelIceAktarici
             }
         }
 
-        return ['basarili' => $basarili, 'yeniKategori' => count($yeniKategoriAnahtarlari), 'cakisma' => $cakisma, 'hatalar' => $hatalar];
+        return ['basarili' => $basarili, 'yeniKategori' => count($yeniKategoriAnahtarlari), 'cakisma' => $cakisma, 'hatalar' => $hatalar,
+            'benzerKlasorler' => array_filter($benzerKlasorler)];
     }
 
     private static function benzerlikYuzdesi(string $a, string $b): float

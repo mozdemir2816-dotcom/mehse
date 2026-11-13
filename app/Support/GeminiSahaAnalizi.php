@@ -125,7 +125,7 @@ class GeminiSahaAnalizi
     }
 
     /** @return array<string, mixed> */
-    private static function normalize(array $b): array
+    public static function normalize(array $b): array
     {
         $o = SahaAnalizi::olcegeYuvarla('olasilik', $b['olasilik'] ?? null);
         $f = SahaAnalizi::olcegeYuvarla('frekans', $b['frekans'] ?? null);

@@ -940,6 +940,48 @@ class AiSahaAnalizi extends Page
                     $this->bulgular = [...$this->bulgular, ...$eklenen->map(fn (SahaBulgusu $b) => static::bosBulgu(BulguDonusturucu::gozlemMaddesi($b)))->all()];
                     Notification::make()->title($eklenen->count().' bulgu eklendi')->success()->send();
                 }),
+            // Hazır İstemler → "Saha gözlem" istemiyle Gemini'de hazırlanan tablo (13.11.2026).
+            Action::make('exceldenBulgu')
+                ->label('Excel\'den Bulgu Ekle')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null && ! $this->kilitliMi())
+                ->modalHeading('Excel\'den bulgu ekle')
+                ->modalDescription('Hazır İstemler sayfasındaki "Saha gözlem raporu" istemiyle Gemini\'de hazırladığınız tabloyu yükleyin. Maddeler rapora eklenir; her birini kontrol edip onaylayın.')
+                ->schema([
+                    \App\Filament\Support\DosyaKabul::uygula(\Filament\Forms\Components\FileUpload::make('dosya')
+                        ->label('Excel dosyası (.xlsx)')
+                        ->disk('local')->directory('gecici'), ['xlsx', 'xls'])
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $yol = \Illuminate\Support\Facades\Storage::disk('local')->path($data['dosya']);
+
+                    try {
+                        $sonuc = \App\Support\SahaBulguExcelOkuyucu::oku($yol);
+                    } catch (\Throwable $e) {
+                        Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                        return;
+                    } finally {
+                        \Illuminate\Support\Facades\Storage::disk('local')->delete($data['dosya']);
+                    }
+
+                    if (! $sonuc['bulgular']) {
+                        Notification::make()->title('Tabloda bulgu bulunamadı')->body('İlk satırda "Tespit" başlıklı bir sütun olmalı.')->warning()->send();
+
+                        return;
+                    }
+
+                    foreach ($sonuc['bulgular'] as $b) {
+                        $this->bulgular[] = static::aiBulgusu($b, 'excel');
+                    }
+                    $this->taslagiKaydet(sessiz: true);
+
+                    Notification::make()->title(count($sonuc['bulgular']).' bulgu eklendi')
+                        ->body(($sonuc['atlanan'] ? $sonuc['atlanan'].' satır (tespit çok kısa) atlandı. ' : '').'Her maddeyi kontrol edip onaylayın; fotoğrafları maddelere ayrıca ekleyebilirsiniz.')
+                        ->success()->send();
+                }),
             $this->hazirRaporYukleAction(),
             Action::make('pdf')
                 ->label(fn () => $this->kilitliMi() ? 'PDF İndir' : 'Önizle / PDF (Taslak)')

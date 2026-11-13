@@ -12,6 +12,30 @@
 
     {{ $this->form }}
 
+    @if ($benzerKlasorler = $this->benzerKlasorler)
+        <div role="status" style="padding:.75rem 1rem;border-radius:.6rem;border:1px solid rgb(245 158 11 / .45);background:rgb(254 243 199 / .55)">
+            <p style="font-size:.9rem;font-weight:600;margin-bottom:.4rem">
+                @if ($benzerKlasorler[0]['ayni'])
+                    Bu klasör kütüphanede var — istem, içindeki maddeleri Gemini'ye "tekrar yazma" diye bildirir.
+                @else
+                    Kütüphanede benzer klasör var. Aynı ekipman / iş ise mevcut klasörü kullanın; yeni klasör açılırsa maddeler mükerrer olur.
+                @endif
+            </p>
+            <ul style="display:flex;flex-direction:column;gap:.35rem;font-size:.88rem">
+                @foreach ($benzerKlasorler as $k)
+                    <li style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+                        <span><strong>{{ $k['ad'] }}</strong> · {{ $k['madde'] }} madde</span>
+                        @if ($k['ayni'])
+                            <span style="font-size:.78rem;padding:.1rem .45rem;border-radius:.3rem;background:rgb(22 163 74 / .12);color:#15803d">seçili</span>
+                        @else
+                            <x-filament::button size="xs" color="gray" wire:click="klasorSec({{ $k['id'] }})">Bunu kullan</x-filament::button>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if ($bilgi)
         <x-filament::section>
             <x-slot name="heading">Nasıl kullanılır</x-slot>
@@ -27,10 +51,9 @@
             <x-slot name="heading">Gemini'ye yapıştırılacak istem</x-slot>
             <x-slot name="description">{{ number_format(mb_strlen($istem), 0, ',', '.') }} karakter</x-slot>
 
-            @if ($this->firmaEksik)
+            @if ($uyari = $this->uyari)
                 <p role="alert" style="font-size:.9rem;margin-bottom:.75rem;padding:.6rem .8rem;border-radius:.5rem;background:rgb(254 243 199);color:rgb(120 53 15)">
-                    Firma seçmediniz ve ek bilgi yazmadınız: Gemini hangi işyeri için hazırlayacağını bilemez.
-                    Bir firma seçin ya da ek bilgiye işyerini anlatın.
+                    {{ $uyari }}
                 </p>
             @endif
 

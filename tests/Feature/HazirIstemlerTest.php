@@ -156,6 +156,84 @@ class HazirIstemlerTest extends TestCase
         $this->assertCount(1, $sonuc['kayitlar']);
     }
 
+    public function test_saha_gozlem_tablosu_bulgulara_cevrilir(): void
+    {
+        $istem = HazirIstemler::istem('saha_gozlem', null, ['adet' => 10]);
+        $this->assertStringContainsString('eklediğim saha fotoğraflarını', $istem);
+        $b = $this->basliklar($istem, 'Fotoğraf No');
+
+        $satir = ['1', 'Depo', 'sol alt, zemindeki kablo', 'Elektrik Güvenliği', 'Yürüme yolunda yalıtımı hasarlı uzatma kablosu', 'Kablo değiştirilmeli • Kablo kanalı kullanılmalı', 'Elektrik İç Tesisleri Yönetmeliği', '3', '6', '15'];
+        $sonuc = \App\Support\SahaBulguExcelOkuyucu::oku($this->excel($b, [$satir, $b, ['', '', '', '', 'kısa']]));
+
+        $this->assertCount(1, $sonuc['bulgular']);   // tekrar eden başlık atlanır
+        $this->assertSame(1, $sonuc['atlanan']);       // 5 karakterden kısa tespit
+        $x = $sonuc['bulgular'][0];
+        $this->assertSame('Depo', $x['bina_bolge']);
+        $this->assertSame('sol alt, zemindeki kablo', $x['fotograftaki_konum']);
+        $this->assertSame(['Kablo değiştirilmeli', 'Kablo kanalı kullanılmalı'], $x['oneriler']);
+        $this->assertSame('3', (string) $x['olasilik']);
+        $this->assertSame('15', (string) $x['siddet']);
+        $this->assertContains($x['risk_derecesi'], [1, 2, 3, 4]);   // 3×6×15 = 270 → skordan
+    }
+
+    public function test_dof_tablosu_dof_aktarimindan_gecer(): void
+    {
+        $istem = HazirIstemler::istem('dof', Firma::factory()->create(), ['ek' => '1) Raf sabitlenmemiş']);
+        $this->assertStringContainsString('Kritik → '.now()->addDays(7)->format('d.m.Y'), $istem);
+        $b = $this->basliklar($istem, 'Tespit');
+
+        $sonuc = \App\Support\DofTabloOkuyucu::oku($this->excel($b, [
+            ['Depo rafları duvara sabitlenmemiş', 'Raflar duvara ankrajla sabitlenmeli.', 'Kritik', 'Bakım Sorumlusu', now()->addDays(7)->format('d.m.Y'), 'İşyeri Bina ve Eklentileri Yönetmeliği'],
+        ]));
+
+        $this->assertCount(1, $sonuc['maddeler']);
+        $m = $sonuc['maddeler'][0];
+        $this->assertSame('kritik', $m['oncelik']);
+        $this->assertSame(now()->addDays(7)->toDateString(), $m['termin']);
+        $this->assertSame('Bakım Sorumlusu', $m['sorumlu']);
+        $this->assertStringContainsString('ankraj', $m['oneri']);
+    }
+
+    public function test_ayni_ekipman_icin_benzer_klasor_bulunur_yukleme_durur_istem_mevcutlari_bildirir(): void
+    {
+        $k = \App\Models\TehlikeKategorisi::create(['ad' => 'Ekipman – Manitou / teleskopik yükleyici', 'anahtar' => 'ekipman_manitou', 'sira' => 1]);
+        Tehlike::create(['tehlike_kategorisi_id' => $k->id, 'tehlike' => 'Bom uzatılınca boyuna devrilme']);
+        \App\Models\TehlikeKategorisi::create(['ad' => 'Kaynak ve Kesme', 'anahtar' => 'kaynak', 'sira' => 2]);
+
+        // "manito" → Manitou klasörü; ilgisiz ad eşleşmez.
+        $this->assertSame($k->id, \App\Models\TehlikeKategorisi::benzerleri('manito')->first()['kategori']->id);
+        $this->assertTrue(\App\Models\TehlikeKategorisi::benzerleri('Matbaa ofset baskı')->isEmpty());
+
+        // Yükleme: benzer klasör varken yeni klasör açılmaz, satırlar yüklenmez.
+        $b = ['Sıra', 'Kategori', 'Kod', 'Bölüm', 'Faaliyet', 'Tehlike', 'Risk', 'Mevcut Önlem', 'Mevzuat'];
+        $dosya = $this->excel($b, [['1', 'manito', '', 'Saha', 'Kaldırma', 'Stabilizatörün yumuşak zemine basması', 'Devrilme', '', '']]);
+        $sonuc = TehlikeExcelIceAktarici::iceAktar($dosya);
+        $this->assertSame(0, $sonuc['basarili']);
+        $this->assertArrayHasKey('manito', $sonuc['benzerKlasorler']);
+        $this->assertStringContainsString('Manitou', $sonuc['benzerKlasorler']['manito'][0]);
+        $this->assertSame(0, \App\Models\TehlikeKategorisi::where('anahtar', 'manito')->count());
+
+        // Kullanıcı "yine de yeni klasör aç" derse açılır.
+        $this->assertSame(1, TehlikeExcelIceAktarici::iceAktar($dosya, true)['basarili']);
+        $this->assertSame(1, \App\Models\TehlikeKategorisi::where('anahtar', 'manito')->count());
+
+        // Mevcut klasör adıyla istem: içindeki maddeler "tekrar yazma" diye eklenir.
+        $istem = HazirIstemler::istem('tehlike_kutuphanesi', null, ['kategori' => 'Ekipman – Manitou / teleskopik yükleyici', 'adet' => 10]);
+        $this->assertStringContainsString('ZATEN OLAN MADDELER', $istem);
+        $this->assertStringContainsString('- Bom uzatılınca boyuna devrilme', $istem);
+        $this->assertStringNotContainsString('ZATEN OLAN', HazirIstemler::istem('tehlike_kutuphanesi', null, ['kategori' => 'Matbaa']));
+
+        // Sayfa: benzer klasör listelenir, "Bunu kullan" adı mevcut klasörün adıyla değiştirir.
+        $this->actingAs(User::factory()->create(['rol' => 'sahip']));
+        Livewire::test(Sayfa::class)
+            ->set('data.tur', 'tehlike_kutuphanesi')
+            ->set('data.kategori', 'Manitu')
+            ->assertSee('Kütüphanede benzer klasör var')
+            ->call('klasorSec', $k->id)
+            ->assertSet('data.kategori', 'Ekipman – Manitou / teleskopik yükleyici')
+            ->assertSee('Bu klasör kütüphanede var');
+    }
+
     public function test_sayfa_yalniz_sahibe_acik_ve_istem_secime_gore_degisir(): void
     {
         $this->actingAs(User::factory()->create(['rol' => 'uzman']));

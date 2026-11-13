@@ -63,8 +63,8 @@ class HazirIstemler extends Page
                     ->afterStateUpdated(fn ($state, $set) => $set('adet', Istemler::TURLER[$state]['adet'] ?? 20)),
                 Grid::make(['default' => 1, 'md' => 2, 'xl' => 4])->schema([
                     Select::make('firma_id')
-                        ->label(fn (Get $get) => ($get('tur') === 'risk_analizi') ? 'Firma' : 'Firma (isteğe bağlı)')
-                        ->helperText(fn (Get $get) => $get('tur') === 'risk_analizi'
+                        ->label(fn (Get $get) => Istemler::TURLER[$get('tur')]['firma'] ?? false ? 'Firma' : 'Firma (isteğe bağlı)')
+                        ->helperText(fn (Get $get) => in_array($get('tur'), ['risk_analizi', 'saha_gozlem', 'dof'], true)
                             ? 'Unvan, NACE, tehlike sınıfı, çalışan sayısı ve iş kalemleri isteme eklenir.'
                             : 'Seçilirse firmanın sektör bilgisi isteme eklenir.')
                         ->options(fn () => Firma::query()->orderBy('unvan')->pluck('unvan', 'id')->all())
@@ -100,9 +100,11 @@ class HazirIstemler extends Page
                         ->label(fn (Get $get) => match ($get('tur')) {
                             'talimat' => 'Talimat sayısı',
                             'soru_bankasi' => 'Soru sayısı',
+                            'saha_gozlem' => 'En fazla madde',
                             default => 'Madde sayısı',
                         })
                         ->numeric()->minValue(1)->maxValue(200)
+                        ->visible(fn (Get $get) => $get('tur') !== 'dof')
                         ->live(onBlur: true),
                 ]),
                 Textarea::make('ek')
@@ -110,6 +112,8 @@ class HazirIstemler extends Page
                     ->placeholder(fn (Get $get) => match ($get('tur')) {
                         'talimat' => 'ör. Hazırlanacak talimatlar: hidrolik pres, şerit testere, akülü istif makinesi',
                         'soru_bankasi' => 'ör. Sorular gıda üretiminde çalışan işçiler için; okuma düzeyi düşük, kısa cümleler',
+                        'saha_gozlem' => 'ör. Fotoğraflar depo ve yükleme rampasından. Ayrıca not: acil çıkış kapısı kilitliydi.',
+                        'dof' => "ör. 1) Depo rafları duvara sabitlenmemiş. 2) Kompresör emniyet ventili mühürsüz. 3) Ecza dolabında son kullanma tarihi geçmiş ürün.",
                         default => 'ör. Bölümler: kesimhane, dikimhane, ütü-paket, depo. Makineler: overlok, buhar kazanı, kompresör.',
                     })
                     ->rows(3)
@@ -133,8 +137,44 @@ class HazirIstemler extends Page
         return Istemler::istem($tur, $firma, $d);
     }
 
-    public function getFirmaEksikProperty(): bool
+    /**
+     * Tehlike kütüphanesi isteminde yazılan klasör adına benzeyen mevcut klasörler (aynı ekipman / iş
+     * için mükerrer klasör açılmasın, 13.11.2026). Tam aynı adlı klasör varsa o da listede ilk sıradadır.
+     *
+     * @return array<int, array{id: int, ad: string, madde: int, ayni: bool}>
+     */
+    public function getBenzerKlasorlerProperty(): array
     {
-        return ($this->data['tur'] ?? null) === 'risk_analizi' && blank($this->data['firma_id'] ?? null) && blank($this->data['ek'] ?? null);
+        $ad = trim((string) ($this->data['kategori'] ?? ''));
+
+        if (($this->data['tur'] ?? null) !== 'tehlike_kutuphanesi' || mb_strlen($ad) < 3) {
+            return [];
+        }
+
+        return \App\Models\TehlikeKategorisi::benzerleri($ad, 5)
+            ->map(fn ($s) => ['id' => $s['kategori']->id, 'ad' => $s['kategori']->ad, 'madde' => $s['madde'], 'ayni' => mb_strtolower($s['kategori']->ad) === mb_strtolower($ad)])
+            ->sortByDesc('ayni')->values()->all();
+    }
+
+    public function klasorSec(int $id): void
+    {
+        $k = \App\Models\TehlikeKategorisi::query()->find($id);
+
+        if ($k) {
+            $this->data['kategori'] = $k->ad;
+        }
+    }
+
+    /** İstem eksik bilgiyle hazırlanıyorsa gösterilecek uyarı (yoksa null). */
+    public function getUyariProperty(): ?string
+    {
+        $tur = $this->data['tur'] ?? null;
+        $ekYok = blank($this->data['ek'] ?? null);
+
+        return match (true) {
+            $tur === 'risk_analizi' && blank($this->data['firma_id'] ?? null) && $ekYok => 'Firma seçmediniz ve ek bilgi yazmadınız: Gemini hangi işyeri için hazırlayacağını bilemez. Bir firma seçin ya da ek bilgiye işyerini anlatın.',
+            $tur === 'dof' && $ekYok => 'Ek bilgiye tespitlerinizi yazın (ya da fotoğrafları Gemini sohbetine ekleyin); DÖF satırları bu tespitlerden hazırlanır.',
+            default => null,
+        };
     }
 }

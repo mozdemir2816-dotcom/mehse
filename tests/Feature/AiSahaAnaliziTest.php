@@ -429,4 +429,30 @@ class AiSahaAnaliziTest extends TestCase
 
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
     }
+
+    /** 13.11.2026: Hazır İstemler "Saha gözlem" tablosu → "Excel'den Bulgu Ekle" ile rapora eklenir (onay bekler). */
+    public function test_excelden_bulgu_ekle_tabloyu_onay_bekleyen_maddelere_cevirir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $k = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Bina / Bölge', 'Fotoğraftaki Konum', 'Kategori', 'Tespit', 'Öneriler', 'Yasal Gerekçe', 'Olasılık', 'Frekans', 'Şiddet'],
+            ['1', 'Atölye', 'sağda taşlama', 'Makine Koruyucusu', 'Avuç taşlamanın koruyucu siperi sökülmüş', 'Siper takılmalı • Operatöre eğitim verilmeli', 'İş Ekipmanları Yönetmeliği', '3', '6', '15'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'sg').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($k))->save($yol);
+
+        $sayfa = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('exceldenBulgu', data: ['dosya' => UploadedFile::fake()->createWithContent('saha.xlsx', file_get_contents($yol))])
+            ->assertHasNoActionErrors();
+
+        $b = $sayfa->get('bulgular');
+        $this->assertCount(1, $b);
+        $this->assertSame('Avuç taşlamanın koruyucu siperi sökülmüş', $b[0]['tespit']);
+        $this->assertSame('bekliyor', $b[0]['durum']);
+        $this->assertSame("Siper takılmalı\nOperatöre eğitim verilmeli", $b[0]['oneriler_metni']);
+        $this->assertSame('Atölye', $b[0]['bina_bolge']);
+        $this->assertSame(1, SahaAnalizi::where('firma_id', $firma->id)->count());   // taslak kaydedildi
+    }
 }
