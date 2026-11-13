@@ -16,7 +16,7 @@
                 <div style="{{ $etiket }}">Firma</div>
                 <div style="font-size:1.15rem;font-weight:700">{{ $firma->unvan }}</div>
             </div>
-            <span style="font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:rgb(16 185 129 / .12);color:#047857;font-weight:600">Aktif</span>
+            <span style="font-size:.75rem;padding:.2rem .6rem;border-radius:999px;background:rgb(0 112 74 / .1);color:#00704A;font-weight:600">Aktif</span>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem;margin-top:.9rem">
@@ -43,7 +43,7 @@
 
     {{-- ÖZET --}}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
-        @foreach ([['Aktif çalışan', $oz['calisan'], '#0f766e'], ['Evrak', $oz['evrak'], '#2563eb'], ['Aktif iş izni', $oz['aktif_izin'], '#047857']] as [$ad, $sayi, $renk])
+        @foreach ([['Aktif çalışan', $oz['calisan'], '#0057A8'], ['Evrak', $oz['evrak'], '#22272B'], ['Aktif iş izni', $oz['aktif_izin'], '#00704A']] as [$ad, $sayi, $renk])
             <div style="{{ $kart }};border-left:4px solid {{ $renk }}">
                 <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
                 <div style="font-size:1.6rem;font-weight:700;color:{{ $renk }}">{{ $sayi }}</div>
@@ -54,7 +54,7 @@
     {{-- İSG BİLGİLENDİRMELERİ (Ön Bilgilendirme / Tebliğ) --}}
     @if ($this->bilgilendirmeler->isNotEmpty())
         @php $bekleyen = $this->bilgilendirmeler->whereNull('isyeri_okundu_at')->count(); @endphp
-        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#b45309' : '#10b981' }}">
+        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#F2B705' : '#00704A' }}">
             <div style="font-weight:700;margin-bottom:.2rem">İSG Bilgilendirmeleri</div>
             <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.6rem">
                 İSG uzmanınızın işe başlamadan önce bildirdiği tedbirler.
@@ -69,7 +69,7 @@
                         <div style="font-size:.76rem;color:rgb(107 114 128)">
                             {{ $b->bildirim_tarihi?->format('d.m.Y') }}
                             @if ($b->isyeri_okundu_at)
-                                · <span style="color:#047857">Onaylandı {{ $b->isyeri_okundu_at->format('d.m.Y H:i') }}</span>
+                                · <span style="color:#00704A">Onaylandı {{ $b->isyeri_okundu_at->format('d.m.Y H:i') }}</span>
                             @endif
                         </div>
                         @if ($b->aciklama)

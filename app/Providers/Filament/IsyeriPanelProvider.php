@@ -38,15 +38,20 @@ class IsyeriPanelProvider extends PanelProvider
             ->authGuard('isyeri')
             ->login(IsyeriLogin::class)
             ->brandName('mehse')
-            ->viteTheme('resources/css/filament/portal/theme.css')
+            ->viteTheme('resources/css/filament/isyeri/theme.css')
             ->defaultThemeMode(ThemeMode::Light)
             // Karanlık mod kapalı (08.11.2026): sayfalardaki elle yazılmış renkler karanlık temaya uymuyordu.
             ->darkMode(false)
             ->topNavigation()
+            // Pano teması (13.11.2026): admin paneliyle aynı dil; mavi ölçek tema-pano.css'te ezilir.
             ->colors([
-                'primary' => Color::Teal,
+                'primary' => Color::Blue,
             ])
-            ->font('DM Sans', provider: GoogleFontProvider::class)
+            ->font('IBM Plex Sans', provider: GoogleFontProvider::class)
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn (): HtmlString => new HtmlString('<script>document.documentElement.dataset.mehseTema="pano"</script>'),
+            )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 fn (): HtmlString => new HtmlString('<span class="portal-brand-tag">İşyeri Girişi</span>'),
@@ -54,7 +59,7 @@ class IsyeriPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::SIMPLE_LAYOUT_START,
                 fn () => view('filament.components.portal-giris-tanitim', [
-                    'vurgu' => 'teal',
+                    'vurgu' => 'pano',
                     'etiket' => 'İşyeri Girişi',
                     'baslik' => 'Çalışanlarınızın eğitim, muayene ve belge durumunu tek ekrandan izleyin.',
                     'metin' => 'İş güvenliği uzmanınızın hazırladığı evrakları istediğiniz an görüntüleyin ve indirin.',

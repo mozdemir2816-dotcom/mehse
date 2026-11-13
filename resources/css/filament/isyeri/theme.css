@@ -1,0 +1,53 @@
+/* ==========================================================================
+   İşyeri (işveren) paneli teması (13.11.2026) — Pano dili.
+   Çalışan eğitim portalıyla ortak temel (portal/theme.css: büyük dokunma alanları, giriş ekranı),
+   üstüne admin paneliyle aynı Pano teması (admin/tema-pano.css). Pano kuralları
+   html[data-mehse-tema="pano"] önekli; IsyeriPanelProvider HEAD_START bu özniteliği basar.
+   Eğitim portalı (çalışan tarafı) bu dosyayı kullanmaz, görünümü değişmez.
+   ========================================================================== */
+@import '../portal/theme.css';
+@import '../admin/tema-pano.css';
+
+@source '../../../../app/Filament/Isyeri';
+@source '../../../../resources/views/filament/isyeri';
+@source '../../../../resources/views/components';
+
+html[data-mehse-tema="pano"] {
+    .fi-body {
+        font-size: 15px;
+    }
+
+    /* Üst çubuktaki menü öğeleri: grafit zeminde açık metin, aktif öğede sarı alt çizgi. */
+    .fi-topbar-item-btn,
+    .fi-topbar-item > a {
+        border-radius: 6px !important;
+    }
+
+    .fi-topbar-item.fi-active .fi-topbar-item-btn,
+    .fi-topbar-item.fi-active > a {
+        background: rgb(255 255 255 / .1) !important;
+        box-shadow: inset 0 -3px 0 #F2B705;
+    }
+
+    .fi-topbar-item.fi-active .fi-topbar-item-label,
+    .fi-topbar-item.fi-active .fi-icon {
+        color: #FFFFFF !important;
+    }
+
+    .portal-brand-tag {
+        background: #F2B705;
+        color: #22272B;
+    }
+
+    .fi-user-menu-trigger .fi-avatar {
+        background: #F2B705 !important;
+        color: #22272B !important;
+    }
+}
+
+/* Giriş ekranı tanıtım paneli — Pano: düz grafit, sarı vurgu. */
+.portal-giris--pano {
+    --pg-from: #22272B;
+    --pg-to: #22272B;
+    --pg-vurgu: #F2B705;
+}
