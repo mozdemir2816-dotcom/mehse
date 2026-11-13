@@ -64,8 +64,8 @@ class HazirIstemler
         $ek = trim((string) ($s['ek'] ?? ''));
 
         $govde = match ($tur) {
-            'risk_analizi' => static::riskAnalizi($firma, (string) ($s['yontem'] ?? 'fine_kinney'), $adet),
-            'tehlike_kutuphanesi' => static::tehlikeKutuphanesi($firma, trim((string) ($s['kategori'] ?? '')), $adet),
+            'risk_analizi' => static::riskAnalizi($firma, (string) ($s['yontem'] ?? 'fine_kinney'), $adet, ! empty($s['parca'])),
+            'tehlike_kutuphanesi' => static::tehlikeKutuphanesi($firma, trim((string) ($s['kategori'] ?? '')), $adet, ! empty($s['parca'])),
             'talimat' => static::talimat($firma, $adet),
             'soru_bankasi' => static::soruBankasi($firma, (string) ($s['konu'] ?? ''), $adet),
         };
@@ -79,21 +79,21 @@ class HazirIstemler
     }
 
     /** @return array<int, string> İstemin üstünde gösterilecek kullanım adımları. */
-    public static function adimlar(string $tur): array
+    public static function adimlar(string $tur, bool $parca = false): array
     {
         $yukle = self::TURLER[$tur]['yukle'];
 
         if ($tur === 'soru_bankasi') {
             return [
-                'İstemi kopyalayıp Gemini sohbetine yapıştırın.',
+                "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin ve istemi yapıştırın.",
                 'Gemini\'nin verdiği JSON kod bloğunu kopyalayın; Not Defteri\'ne yapıştırıp "sorular.json" adıyla, Kodlama: UTF-8 seçerek kaydedin.',
                 "Yükleyin: {$yukle}. Sorular TASLAK olarak girer; kaynaklarını kontrol edip yayımlayın.",
             ];
         }
 
         return [
-            'İstemi kopyalayıp Gemini sohbetine yapıştırın.',
-            $tur === 'talimat'
+            "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin ve istemi yapıştırın.",
+            $tur === 'talimat' || ! $parca
                 ? 'Gemini\'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.'
                 : 'Gemini tabloyu parça parça verir: ilk parçayı boş bir Excel sayfasına A1 hücresinden yapıştırın; "devam" yazıp gelen her parçayı bir öncekinin hemen altına yapıştırın. Araya giren başlık satırlarını silmenize gerek yok. "BİTTİ" yazınca .xlsx olarak kaydedin.',
             "Yükleyin: {$yukle}.",
@@ -127,7 +127,15 @@ class HazirIstemler
         return implode(' / ', array_map(fn ($v) => str_replace('.', ',', (string) $v), array_keys(RiskSkorlama::olcek($yontem, $eksen))));
     }
 
-    private static function riskAnalizi(?Firma $f, string $yontem, int $adet): string
+    /** Varsayılan: tamamı tek yanıtta (Pro modeli 120 maddeyi tek seferde verdi, 13.11.2026); parça: kesilen modeller için. */
+    private static function parcaKurali(bool $parca, int $boyut, int $adet): string
+    {
+        return $parca
+            ? "PARÇA KURALI: Her yanıtta EN FAZLA {$boyut} satır ver. {$boyut} satırdan sonra dur ve tablonun altına yalnız şunu yaz: \"Devam için devam yazın (x/{$adet})\". Ben \"devam\" yazınca Sıra numarasından kaldığın yerden, aynı sütunlarla sürdür. {$adet}. satırı yazınca tablonun altına \"BİTTİ\" yaz."
+            : "{$adet} satırın TAMAMINI tek yanıtta, tek tablo olarak ver; satır atlama, kısaltma. Yine de yanıt sınırına takılırsan kaldığın satırda dur; \"devam\" yazınca Sıra numarasından sürdür.";
+    }
+
+    private static function riskAnalizi(?Firma $f, string $yontem, int $adet, bool $parca = false): string
     {
         $fk = $yontem !== 'matris_5x5';
         $sutunlar = implode(' | ', $fk
@@ -139,6 +147,7 @@ class HazirIstemler
             : '5×5 L tipi matris. Olasılık ve Şiddet 1–5 arası tam sayı.';
         $kim = $f ? 'Yukarıdaki işyeri için' : 'Ek bilgide anlatılan işyeri için';
         $termin = implode(', ', array_unique([...array_values(config('isg.risk_termin_duzey', [])), 'Sürekli / Rutin']));
+        $parcaKurali = static::parcaKurali($parca, 25, $adet);
 
         return <<<METIN
         GÖREV: {$kim} TAM OLARAK {$adet} maddelik bir risk değerlendirme tablosu hazırla (Sıra 1'den {$adet}'e kadar; daha az madde yazma, kısaltma).
@@ -154,13 +163,14 @@ class HazirIstemler
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         {$sutunlar}
         Hücrelerde satır sonu kullanma. Puan hücrelerine yalnız sayı yaz (ondalıkta virgül).
-        PARÇA KURALI: Her yanıtta EN FAZLA 25 satır ver. 25 satırdan sonra dur ve tablonun altına yalnız şunu yaz: "Devam için devam yazın (x/{$adet})". Ben "devam" yazınca Sıra numarasından kaldığın yerden, aynı sütunlarla sürdür. {$adet}. satırı yazınca tablonun altına "BİTTİ" yaz.
+        {$parcaKurali}
         METIN;
     }
 
-    private static function tehlikeKutuphanesi(?Firma $f, string $kategori, int $adet): string
+    private static function tehlikeKutuphanesi(?Firma $f, string $kategori, int $adet, bool $parca = false): string
     {
         $kategori = $kategori !== '' ? $kategori : ($f?->nace_aciklama ?: 'Genel');
+        $parcaKurali = static::parcaKurali($parca, 40, $adet);
 
         return <<<METIN
         GÖREV: Risk değerlendirmesinde kullanılacak bir tehlike kütüphanesi için "{$kategori}" konusunda TAM OLARAK {$adet} madde hazırla (Sıra 1'den {$adet}'e kadar; daha az yazma).
@@ -174,7 +184,7 @@ class HazirIstemler
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         Sıra | Kategori | Kod | Bölüm | Faaliyet | Tehlike | Risk | Mevcut Önlem | Mevzuat
         Hücrelerde satır sonu kullanma.
-        PARÇA KURALI: Her yanıtta EN FAZLA 40 satır ver. 40 satırdan sonra dur ve tablonun altına yalnız şunu yaz: "Devam için devam yazın (x/{$adet})". Ben "devam" yazınca Sıra numarasından kaldığın yerden sürdür. {$adet}. satırı yazınca "BİTTİ" yaz.
+        {$parcaKurali}
         METIN;
     }
 

@@ -17,7 +17,7 @@
             <x-slot name="heading">Nasıl kullanılır</x-slot>
             <x-slot name="description">Çıktı: {{ $bilgi['cikti'] }}</x-slot>
             <ol style="font-size:.9rem;list-style:decimal;padding-left:1.25rem;display:flex;flex-direction:column;gap:.35rem">
-                @foreach (\App\Support\HazirIstemler::adimlar($tur) as $adim)
+                @foreach (\App\Support\HazirIstemler::adimlar($tur, ! empty($this->data['parca'])) as $adim)
                     <li>{{ $adim }}</li>
                 @endforeach
             </ol>

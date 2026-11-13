@@ -57,7 +57,12 @@ class HazirIstemlerTest extends TestCase
         $this->assertStringContainsString('Çalışan sayısı: 85', $istem);
         $this->assertStringContainsString('kesimhane, dikimhane', $istem);
         $this->assertStringContainsString('TAM OLARAK 30 maddelik', $istem);
-        $this->assertStringContainsString('EN FAZLA 25 satır', $istem);
+        $this->assertStringContainsString('30 satırın TAMAMINI tek yanıtta', $istem);   // varsayılan: tek seferde
+        $this->assertStringNotContainsString('PARÇA KURALI', $istem);
+        $parcali = HazirIstemler::istem('risk_analizi', $firma, ['adet' => 30, 'parca' => 1]);
+        $this->assertStringContainsString('EN FAZLA 25 satır', $parcali);
+        $this->assertStringContainsString('"BİTTİ"', implode(' ', HazirIstemler::adimlar('risk_analizi', true)));
+        $this->assertStringNotContainsString('BİTTİ', implode(' ', HazirIstemler::adimlar('risk_analizi')));
         $this->assertStringContainsString('Mevcut Önlem sütununu BOŞ', $istem);
 
         $b = $this->basliklar($istem, 'Sıra');

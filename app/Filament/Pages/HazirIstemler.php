@@ -46,7 +46,7 @@ class HazirIstemler extends Page
 
     public function mount(): void
     {
-        $this->form->fill(['tur' => 'risk_analizi', 'yontem' => 'fine_kinney', 'adet' => Istemler::TURLER['risk_analizi']['adet']]);
+        $this->form->fill(['tur' => 'risk_analizi', 'yontem' => 'fine_kinney', 'parca' => 0, 'adet' => Istemler::TURLER['risk_analizi']['adet']]);
     }
 
     public function form(Schema $schema): Schema
@@ -61,7 +61,7 @@ class HazirIstemler extends Page
                     ->required()
                     ->live()
                     ->afterStateUpdated(fn ($state, $set) => $set('adet', Istemler::TURLER[$state]['adet'] ?? 20)),
-                Grid::make(['default' => 1, 'md' => 3])->schema([
+                Grid::make(['default' => 1, 'md' => 2, 'xl' => 4])->schema([
                     Select::make('firma_id')
                         ->label(fn (Get $get) => ($get('tur') === 'risk_analizi') ? 'Firma' : 'Firma (isteğe bağlı)')
                         ->helperText(fn (Get $get) => $get('tur') === 'risk_analizi'
@@ -89,11 +89,18 @@ class HazirIstemler extends Page
                         ->options(config('isg.soru_bankasi.konular', []))
                         ->visible(fn (Get $get) => $get('tur') === 'soru_bankasi')
                         ->live(),
+                    ToggleButtons::make('parca')
+                        ->label('Gemini cevabı')
+                        ->options([0 => 'Tek seferde', 1 => 'Parça parça'])
+                        ->helperText('Tablo yarıda kesilirse "Parça parça" seçin.')
+                        ->inline()
+                        ->visible(fn (Get $get) => in_array($get('tur'), ['risk_analizi', 'tehlike_kutuphanesi'], true))
+                        ->live(),
                     TextInput::make('adet')
                         ->label(fn (Get $get) => match ($get('tur')) {
                             'talimat' => 'Talimat sayısı',
                             'soru_bankasi' => 'Soru sayısı',
-                            default => 'Yaklaşık madde sayısı',
+                            default => 'Madde sayısı',
                         })
                         ->numeric()->minValue(1)->maxValue(200)
                         ->live(onBlur: true),
