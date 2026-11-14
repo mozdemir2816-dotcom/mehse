@@ -469,4 +469,32 @@ class HizliSahaBulgusuTest extends TestCase
         $this->assertSame([], $bulgular[1]->fotograflar ?? []);
         $this->assertCount(1, Storage::disk('public')->files('saha-bulgu-foto'));   // işaretsiz orijinal silindi
     }
+
+    /** Fotoğraf No dolu ama fotoğraf seçilmediyse uyarı verilir; eşleşen her şey bağlıysa verilmez (14.11.2026). */
+    public function test_fotograf_secilmediyse_uyari_verilir(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        $k = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneriler'],
+            ['1', 'Merdiven kenarında korkuluk yok', 'Korkuluk yapılmalı'],
+            ['2', 'Zeminde dağınık kablo', 'Kablolar toplanmalı'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'blg').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($k))->save($yol);
+
+        Livewire::test(HizliSahaBulgusu::class)
+            ->set('firmaId', $this->firma->id)
+            ->callAction('dosyadanAktar', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('gemini.xlsx', file_get_contents($yol)),
+            ])
+            ->assertHasNoActionErrors()
+            ->assertNotified('Bazı bulgular fotoğrafsız eklendi');
+
+        $this->assertSame(2, SahaBulgusu::count());
+        $this->assertNull(\App\Support\SahaBulguExcelOkuyucu::fotoUyarisi(0, 2));
+        $this->assertStringContainsString('fotoğraf seçilmedi', \App\Support\SahaBulguExcelOkuyucu::fotoUyarisi(2, 0));
+        $this->assertStringContainsString('1 fotoğraf seçildi', \App\Support\SahaBulguExcelOkuyucu::fotoUyarisi(1, 1));
+    }
 }

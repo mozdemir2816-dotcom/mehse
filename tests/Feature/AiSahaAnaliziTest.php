@@ -445,7 +445,8 @@ class AiSahaAnaliziTest extends TestCase
         $sayfa = Livewire::test(SahaSayfasi::class)
             ->set('firmaId', $firma->id)
             ->callAction('exceldenBulgu', data: ['dosya' => UploadedFile::fake()->createWithContent('saha.xlsx', file_get_contents($yol))])
-            ->assertHasNoActionErrors();
+            ->assertHasNoActionErrors()
+            ->assertNotified('Bazı maddeler fotoğrafsız eklendi');   // Fotoğraf No 1 var, fotoğraf seçilmedi
 
         $b = $sayfa->get('bulgular');
         $this->assertCount(1, $b);

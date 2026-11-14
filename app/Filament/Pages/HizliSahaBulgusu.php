@@ -66,6 +66,11 @@ class HizliSahaBulgusu extends Page
     /** Son Word/Excel aktarımında fotoğrafa çember çizilen madde sayısı (bildirim için). */
     protected int $isaretlenen = 0;
 
+    /** Son aktarımda Fotoğraf No dolu ama fotoğraf bağlanamayan madde sayısı ve seçilen fotoğraf sayısı. */
+    protected int $fotosuz = 0;
+
+    protected int $yuklenenFoto = 0;
+
     public ?string $bolum = null;
 
     public ?string $gozlemKonumu = null;
@@ -644,10 +649,13 @@ class HizliSahaBulgusu extends Page
         $fotolar = array_values(array_filter($fotolar));
         $esles = \App\Support\SahaBulguExcelOkuyucu::fotoEsle($fotolar, $fotoAdlari);
         $this->isaretlenen = 0;
+        $this->fotosuz = 0;
+        $this->yuklenenFoto = count($fotolar);
 
         foreach ($sonuc['maddeler'] as $i => $m) {
             if (empty($m['foto_yolu']) && ($m['foto_no'] ?? null)) {
                 $m['foto_yolu'] = $esles[$m['foto_no']] ?? null;
+                $this->fotosuz += $m['foto_yolu'] ? 0 : 1;
             }
 
             if (! empty($m['foto_yolu']) && ! empty($m['isaret'])) {
@@ -733,6 +741,10 @@ class HizliSahaBulgusu extends Page
                     $sayi > 0
                         ? Notification::make()->title($sayi.' bulgu eklendi')->body(($this->isaretlenen ? $this->isaretlenen.' maddede uygunsuzluğun yeri fotoğrafta numaralı çemberle işaretlendi. ' : '').'DÖF raporu için listeden seçip "Seçilenleri DÖF\'e Aktar"ı kullanın.')->success()->send()
                         : Notification::make()->title('Dosyada bulgu tablosu bulunamadı')->body('Tabloda "Tespit" ve "Öneri / Düzeltici Faaliyet" başlıklı sütunlar olmalı.')->danger()->send();
+
+                    if ($sayi > 0 && $uyari = \App\Support\SahaBulguExcelOkuyucu::fotoUyarisi($this->fotosuz, $this->yuklenenFoto)) {
+                        Notification::make()->title('Bazı bulgular fotoğrafsız eklendi')->body($uyari)->warning()->persistent()->send();
+                    }
                 }),
 
             Action::make('excel')

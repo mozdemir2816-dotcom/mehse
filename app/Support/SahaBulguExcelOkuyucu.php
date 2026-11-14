@@ -140,6 +140,24 @@ class SahaBulguExcelOkuyucu
         return $yollar ? array_combine(range(1, count($yollar)), $yollar) : [];
     }
 
+    /**
+     * Tabloda Fotoğraf No dolu olduğu hâlde fotoğraf bağlanamayan madde varsa
+     * kullanıcıya gösterilecek uyarı; yoksa null (14.11.2026 — fotoğraf pencerede
+     * seçilmeden gönderilince maddeler sessizce fotoğrafsız ekleniyordu).
+     */
+    public static function fotoUyarisi(int $eksik, int $yuklenen): ?string
+    {
+        if ($eksik < 1) {
+            return null;
+        }
+
+        return $yuklenen === 0
+            ? "Tabloda {$eksik} maddede Fotoğraf No var ama pencerede fotoğraf seçilmedi; bu maddeler fotoğrafsız eklendi. "
+                .'Fotoğrafı maddeye elle ekleyin ya da eklenen maddeleri silip Excel ile fotoğrafları aynı pencerede seçerek yeniden aktarın.'
+            : "{$eksik} maddenin Fotoğraf No'suna karşılık gelen fotoğraf bulunamadı ({$yuklenen} fotoğraf seçildi); bu maddeler fotoğrafsız eklendi. "
+                .'Fotoğraf sayısını ve sırasını (ya da 1.jpg, 2.jpg… adlarını) kontrol edin.';
+    }
+
     /** "3", "Fotoğraf 3", "3, 5" → 3 (ilk sayı); yoksa null. */
     public static function fotoNo(string $metin): ?int
     {

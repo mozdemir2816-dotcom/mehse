@@ -244,6 +244,29 @@ class DofTabloAktarimTest extends TestCase
         $this->assertCount(2, Storage::disk('public')->files('dof-foto'));   // orijinal kullanılmadığı için silindi
     }
 
+    /** Fotoğraf No dolu ama fotoğraf seçilmediyse uyarı verilir (14.11.2026). */
+    public function test_fotograf_no_var_fotograf_secilmediyse_uyarir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $k = new Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneri'],
+            ['1', 'Merdiven kenarında korkuluk yok', 'Korkuluk yapılmalı'],
+            ['', 'Acil durum planı güncel değil', 'Plan güncellenmeli'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'dof').'.xlsx';
+        (new Xlsx($k))->save($yol);
+
+        Livewire::test(DofOlustur::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('tablodanAktar', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('dof.xlsx', file_get_contents($yol)),
+            ])
+            ->assertHasNoActionErrors()
+            ->assertCount('maddeler', 2)
+            ->assertNotified('Bazı maddeler fotoğrafsız eklendi');
+    }
+
     /** Künyenin kişi bilgileri firma kaydından gelir, dosyadaki değerlerle ezilmez (08.10.2026). */
     public function test_aktarimda_kunye_kisileri_firma_kaydindan_gelir(): void
     {

@@ -992,11 +992,13 @@ class AiSahaAnalizi extends Page
 
                     $bagli = 0;
                     $isaretlenen = 0;
+                    $fotosuz = 0;
                     $havuza = $fotolar;
                     foreach ($sonuc['bulgular'] as $b) {
                         // Önce Excel satırına yapıştırılan fotoğraf, yoksa Fotoğraf No eşleşmesi.
                         $foto = ($b['foto_yolu'] ?? null) ?: ($b['foto_no'] ? ($esles[$b['foto_no']] ?? null) : null);
                         $bagli += $foto ? 1 : 0;
+                        $fotosuz += ($b['foto_no'] && ! $foto) ? 1 : 0;
                         $havuza[] = $b['foto_yolu'] ?? null;
 
                         // Gemini işaret verdiyse uygunsuzluğun yeri fotoğrafın kopyasında çemberlenir;
@@ -1029,6 +1031,10 @@ class AiSahaAnalizi extends Page
                         ->body(($sonuc['atlanan'] ? $sonuc['atlanan'].' satır (tespit çok kısa) atlandı. ' : '').$fotoNotu
                             .($isaretlenen ? ' '.$isaretlenen.' maddede uygunsuzluğun yeri fotoğrafta çemberle işaretlendi.' : '').' Her maddeyi kontrol edip onaylayın.')
                         ->success()->send();
+
+                    if ($uyari = \App\Support\SahaBulguExcelOkuyucu::fotoUyarisi($fotosuz, count($fotolar))) {
+                        Notification::make()->title('Bazı maddeler fotoğrafsız eklendi')->body($uyari)->warning()->persistent()->send();
+                    }
                 }),
             $this->hazirRaporYukleAction(),
             Action::make('pdf')

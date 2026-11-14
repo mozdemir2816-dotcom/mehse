@@ -362,11 +362,16 @@ class DofOlustur extends Page
         // 14.11.2026: Fotoğraf No'ya göre — dosya adındaki numara (1.jpg) ya da yükleme sırası.
         // Excel/Word satırına yapıştırılmış fotoğraf varsa o korunur.
         $sira = count($this->maddeler);
+        $fotosuz = 0;
         foreach ($sonuc['maddeler'] as $i => $m) {
             $foto = ($m['foto_no'] ?? null) ? ($esles[$m['foto_no']] ?? null) : null;
 
             if ($foto && empty($m['foto_yolu'])) {
                 $sonuc['maddeler'][$i]['foto_yolu'] = $foto;
+            }
+
+            if (($m['foto_no'] ?? null) && empty($sonuc['maddeler'][$i]['foto_yolu'])) {
+                $fotosuz++;
             }
 
             // Gemini işaret verdiyse uygunsuzluğun yeri fotoğrafın kopyasında madde
@@ -386,6 +391,10 @@ class DofOlustur extends Page
         )));
 
         $this->aktarimUygula($sonuc);
+
+        if ($uyari = \App\Support\SahaBulguExcelOkuyucu::fotoUyarisi($fotosuz, count($fotolar))) {
+            Notification::make()->title('Bazı maddeler fotoğrafsız eklendi')->body($uyari)->warning()->persistent()->send();
+        }
     }
 
     /** "Hazır Rapor Yükle"ye DÖF tablosu verildiyse bu sayfada yönlendirmeden aktarılır. */
