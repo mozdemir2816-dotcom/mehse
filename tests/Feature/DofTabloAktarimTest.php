@@ -183,6 +183,36 @@ class DofTabloAktarimTest extends TestCase
         $this->assertSame($foto, $rapor->maddeler[1]['foto_yolu']);
     }
 
+    /** 14.11.2026: aktarımla seçilen fotoğraflar tablodaki Fotoğraf No'ya göre maddelere bağlanır. */
+    public function test_aktarimda_fotograflar_fotograf_noya_gore_baglanir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $k = new Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneri', 'Öncelik'],
+            ['2', 'Raf sabitlenmemiş', 'Ankrajla sabitlenmeli', 'Kritik'],
+            ['', 'Talimat asılı değil', 'Talimat asılmalı', 'Düşük'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'dof').'.xlsx';
+        (new Xlsx($k))->save($yol);
+
+        $sayfa = Livewire::test(DofOlustur::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('tablodanAktar', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('dof.xlsx', file_get_contents($yol)),
+                'fotograflar' => [UploadedFile::fake()->image('IMG_1.jpg'), UploadedFile::fake()->image('IMG_2.jpg')],
+            ])
+            ->assertHasNoActionErrors();
+
+        $m = $sayfa->get('maddeler');
+        $this->assertCount(2, $m);
+        $this->assertNotNull($m[0]['foto_yolu']);
+        $this->assertNull($m[1]['foto_yolu']);
+        $this->assertArrayNotHasKey('foto_no', $m[0]);
+        Storage::disk('public')->assertExists($m[0]['foto_yolu']);
+        $this->assertCount(1, Storage::disk('public')->files('dof-foto'));   // kullanılmayan silindi
+    }
+
     /** Künyenin kişi bilgileri firma kaydından gelir, dosyadaki değerlerle ezilmez (08.10.2026). */
     public function test_aktarimda_kunye_kisileri_firma_kaydindan_gelir(): void
     {

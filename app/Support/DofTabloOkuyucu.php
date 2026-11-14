@@ -12,6 +12,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelTarih;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use ZipArchive;
 
 /**
@@ -35,6 +36,7 @@ class DofTabloOkuyucu
         'sorumlu' => ['sorumlu'],
         'termin' => ['termin', 'tarih'],
         'durum' => ['durum'],
+        'foto_no' => ['fotoğraf no', 'foto no', 'fotoğraf sıra', 'fotoğraf numara'],
         'foto' => ['foto', 'görsel', 'resim'],
         'dayanak' => ['dayanak', 'mevzuat'],   // Tespit Öneri Defteri
     ];
@@ -182,6 +184,8 @@ class DofTabloOkuyucu
             'durum' => static::durum($al('durum')),
             'foto_yolu' => $resim,
             'dayanak' => $al('dayanak') ?: null,
+            // Gemini'ye eklenen fotoğrafın sırası — aktarımda yüklenen fotoğraflardan o maddeye bağlanır.
+            'foto_no' => SahaBulguExcelOkuyucu::fotoNo($al('foto_no')),
         ];
     }
 
@@ -357,19 +361,7 @@ class DofTabloOkuyucu
 
         foreach ($kitap->getAllSheets() as $sayfa) {
             // Satıra gömülü fotoğraflar (satır numarası => resim yolu)
-            $resimler = [];
-
-            foreach ($sayfa->getDrawingCollection() as $cizim) {
-                if ($cizim instanceof Drawing && is_file($cizim->getPath())) {
-                    $satirNo = (int) preg_replace('/\D/', '', $cizim->getCoordinates());
-                    $resimler[$satirNo] ??= static::resimKaydet((string) file_get_contents($cizim->getPath()), $cizim->getPath());
-                } elseif ($cizim instanceof MemoryDrawing) {
-                    $satirNo = (int) preg_replace('/\D/', '', $cizim->getCoordinates());
-                    ob_start();
-                    imagepng($cizim->getImageResource());
-                    $resimler[$satirNo] ??= static::resimKaydet((string) ob_get_clean(), 'resim.png');
-                }
-            }
+            $resimler = static::satirResimleri($sayfa);
 
             $satirlar = [];
 
@@ -405,7 +397,45 @@ class DofTabloOkuyucu
         return $tablolar;
     }
 
-    private static function resimKaydet(string|false $icerik, string $adi): ?string
+    /**
+     * Excel sayfasına yapıştırılmış fotoğraflar: satır numarası => kaydedilen yol
+     * (public diski). Fotoğrafın sol üst köşesinin düştüğü satır esas alınır;
+     * Saha Gözlem "Excel'den Bulgu Ekle" de kullanır (14.11.2026).
+     *
+     * @return array<int, string>
+     */
+    public static function satirResimleri(Worksheet $sayfa, string $klasor = 'dof-foto'): array
+    {
+        $resimler = [];
+
+        foreach ($sayfa->getDrawingCollection() as $cizim) {
+            $satirNo = (int) preg_replace('/\D/', '', $cizim->getCoordinates());
+
+            if (isset($resimler[$satirNo])) {
+                continue;
+            }
+
+            // .xlsx'ten okunan resmin yolu "zip://…xlsx#xl/media/image1.png" — is_file()
+            // bunu tanımaz (14.11.2026'ya kadar Excel'e yapıştırılan fotoğraflar gelmiyordu).
+            if ($cizim instanceof Drawing && ($icerik = @file_get_contents($cizim->getPath())) !== false) {
+                $yol = static::resimKaydet($icerik, $cizim->getPath(), $klasor);
+            } elseif ($cizim instanceof MemoryDrawing) {
+                ob_start();
+                imagepng($cizim->getImageResource());
+                $yol = static::resimKaydet((string) ob_get_clean(), 'resim.png', $klasor);
+            } else {
+                $yol = null;
+            }
+
+            if ($yol) {
+                $resimler[$satirNo] = $yol;
+            }
+        }
+
+        return $resimler;
+    }
+
+    private static function resimKaydet(string|false $icerik, string $adi, string $klasor = 'dof-foto'): ?string
     {
         $uzanti = strtolower(pathinfo($adi, PATHINFO_EXTENSION));
 
@@ -413,7 +443,7 @@ class DofTabloOkuyucu
             return null;
         }
 
-        $yol = 'dof-foto/'.Str::random(32).'.'.$uzanti;
+        $yol = $klasor.'/'.Str::random(32).'.'.$uzanti;
         Storage::disk('public')->put($yol, $icerik);
 
         return $yol;

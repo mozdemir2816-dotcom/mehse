@@ -14,7 +14,7 @@ class PortalGirisEkranlariTest extends TestCase
     {
         $this->get('/isyeri/login')
             ->assertOk()
-            ->assertSee('portal-giris--teal', false)
+            ->assertSee('portal-giris--pano', false)   // 13.11.2026: işyeri paneli Pano teması
             ->assertSee('Çalışanlarınızın eğitim, muayene ve belge durumunu tek ekrandan izleyin.')
             ->assertDontSee('sertifikanızı indirin');
     }

@@ -227,6 +227,11 @@ class Firma extends Model
         return $this->hasMany(IseDonusBelgesi::class);
     }
 
+    public function kontrolKartlari(): HasMany
+    {
+        return $this->hasMany(KontrolKarti::class);
+    }
+
     public function yanginGuvenligi(): HasOne
     {
         return $this->hasOne(YanginGuvenligiDegerlendirmesi::class);

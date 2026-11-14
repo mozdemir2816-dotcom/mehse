@@ -346,7 +346,11 @@ class DofOlustur extends Page
             Storage::disk('local')->delete($yol);
         }
 
+        $fotolar = array_values(array_filter((array) ($data['fotograflar'] ?? [])));
+        $esles = \App\Support\SahaBulguExcelOkuyucu::fotoEsle($fotolar, (array) ($data['fotograf_adlari'] ?? []));
+
         if (! $sonuc['maddeler']) {
+            Storage::disk('public')->delete($fotolar);
             Notification::make()
                 ->title('Dosyada DÖF tablosu bulunamadı')
                 ->body('Tabloda "Tespit / Uygunsuzluk" ve "Öneri / Düzeltici Faaliyet" başlıklı sütunlar olmalı.')
@@ -354,6 +358,19 @@ class DofOlustur extends Page
 
             return;
         }
+
+        // 14.11.2026: Fotoğraf No'ya göre — dosya adındaki numara (1.jpg) ya da yükleme sırası.
+        // Excel/Word satırına yapıştırılmış fotoğraf varsa o korunur.
+        $kullanilan = [];
+        foreach ($sonuc['maddeler'] as $i => $m) {
+            $foto = ($m['foto_no'] ?? null) ? ($esles[$m['foto_no']] ?? null) : null;
+
+            if ($foto && empty($m['foto_yolu'])) {
+                $sonuc['maddeler'][$i]['foto_yolu'] = $foto;
+                $kullanilan[] = $foto;
+            }
+        }
+        Storage::disk('public')->delete(array_diff($fotolar, $kullanilan));
 
         $this->aktarimUygula($sonuc);
     }
@@ -393,11 +410,19 @@ class DofOlustur extends Page
             $this->{$alan} = $deger;
         }
 
-        $this->maddeler = [...$this->maddeler, ...$sonuc['maddeler']];
+        $maddeler = array_map(function (array $m) {
+            unset($m['foto_no']);
+
+            return $m;
+        }, $sonuc['maddeler']);
+        $this->maddeler = [...$this->maddeler, ...$maddeler];
+
+        $fotolu = count(array_filter($maddeler, fn (array $m) => filled($m['foto_yolu'] ?? null)));
+        $fotoNotu = $fotolu ? $fotolu.' maddeye fotoğraf bağlandı. ' : '';
 
         Notification::make()
             ->title(count($sonuc['maddeler']).' madde aktarıldı')
-            ->body($this->firma ? 'Fotoğrafları ekleyip "DÖF Raporu (Kaydet ve İndir)" ile çıktı alın.' : 'Kaydetmek için firmayı seçin.')
+            ->body($fotoNotu.($this->firma ? 'Eksik fotoğrafları ekleyip "DÖF Raporu (Kaydet ve İndir)" ile çıktı alın.' : 'Kaydetmek için firmayı seçin.'))
             ->success()->send();
     }
 
@@ -542,6 +567,17 @@ class DofOlustur extends Page
                         ->disk('local')->directory('dof-aktarim'), ['docx', 'xlsx', 'xls'])
                         ->maxSize(20480)
                         ->required(),
+                    FileUpload::make('fotograflar')
+                        ->label('Fotoğraflar (isteğe bağlı)')
+                        ->helperText('Tablodaki "Fotoğraf No"ya göre maddelere yerleşir. Dosya adları numaralıysa (1.jpg, 2.jpg…) numaraya, değilse sıraya bakılır (sürükleyerek düzeltebilirsiniz). Fotoğrafı Excel/Word\'de maddenin satırına yapıştırdıysanız burayı boş bırakın.')
+                        ->storeFileNamesIn('fotograf_adlari')
+                        ->image()
+                        ->multiple()
+                        ->reorderable()
+                        ->appendFiles()
+                        ->maxFiles(20)
+                        ->maxSize(10240)
+                        ->disk('public')->directory('dof-foto'),
                 ])
                 ->action(fn (array $data) => $this->tablodanAktar($data)),
             $this->hazirRaporYukleAction(),

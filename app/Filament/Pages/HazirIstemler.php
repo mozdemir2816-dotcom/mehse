@@ -89,6 +89,13 @@ class HazirIstemler extends Page
                         ->options(config('isg.soru_bankasi.konular', []))
                         ->visible(fn (Get $get) => $get('tur') === 'soru_bankasi')
                         ->live(),
+                    Select::make('sablon')
+                        ->label('Kontrol listesi')
+                        ->placeholder('Yeni alan / ekipman — Gemini listeyi hazırlasın')
+                        ->helperText('Listede yoksa boş bırakın: Gemini fotoğraftan alanı tanır, listeyi hazırlar; yüklerken yeni şablon olarak kaydedilir.')
+                        ->options(fn () => \App\Models\KontrolKarti::sablonSecenekleri())
+                        ->visible(fn (Get $get) => $get('tur') === 'kontrol_karti')
+                        ->live(),
                     ToggleButtons::make('parca')
                         ->label('Gemini cevabı')
                         ->options([0 => 'Tek seferde', 1 => 'Parça parça'])
@@ -101,10 +108,11 @@ class HazirIstemler extends Page
                             'talimat' => 'Talimat sayısı',
                             'soru_bankasi' => 'Soru sayısı',
                             'saha_gozlem' => 'En fazla madde',
+                            'kontrol_karti' => 'Madde sayısı (yeni alan)',
                             default => 'Madde sayısı',
                         })
                         ->numeric()->minValue(1)->maxValue(200)
-                        ->visible(fn (Get $get) => $get('tur') !== 'dof')
+                        ->visible(fn (Get $get) => $get('tur') !== 'dof' && ! ($get('tur') === 'kontrol_karti' && filled($get('sablon'))))
                         ->live(onBlur: true),
                 ]),
                 Textarea::make('ek')
@@ -113,6 +121,7 @@ class HazirIstemler extends Page
                         'talimat' => 'ör. Hazırlanacak talimatlar: hidrolik pres, şerit testere, akülü istif makinesi',
                         'soru_bankasi' => 'ör. Sorular gıda üretiminde çalışan işçiler için; okuma düzeyi düşük, kısa cümleler',
                         'saha_gozlem' => 'ör. Fotoğraflar depo ve yükleme rampasından. Ayrıca not: acil çıkış kapısı kilitliydi.',
+                        'kontrol_karti' => 'ör. Fotoğraf atölyenin kaynak bölümündeki tüp deposundan. Tüplerin bir kısmı boş.',
                         'dof' => "ör. 1) Depo rafları duvara sabitlenmemiş. 2) Kompresör emniyet ventili mühürsüz. 3) Ecza dolabında son kullanma tarihi geçmiş ürün.",
                         default => 'ör. Bölümler: kesimhane, dikimhane, ütü-paket, depo. Makineler: overlok, buhar kazanı, kompresör.',
                     })

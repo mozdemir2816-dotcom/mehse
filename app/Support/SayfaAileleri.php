@@ -39,6 +39,7 @@ class SayfaAileleri
                 [Pages\HizliSahaBulgusu::class, 'Bulgular'],
                 [Pages\ZiyaretModu::class, 'Bugün (Ziyaret Modu)'],
                 [Pages\SahaDenetimi::class, 'Saha Denetimi'],
+                [Pages\KontrolKarti::class, 'Kontrol Kartı'],
                 [Pages\AiSahaAnalizi::class, 'Gözlem Raporu (AI)'],
                 [Pages\DofOlustur::class, 'DÖF'],
                 [Pages\TespitOneriDefteri::class, 'Tespit Öneri Defteri'],
@@ -267,7 +268,7 @@ class SayfaAileleri
             [
                 'etiket' => 'Aktif Saha Denetimi & Ziyaret Modu',
                 'ikon' => 'heroicon-o-bolt',
-                'siniflar' => [Pages\ZiyaretModu::class, Pages\HizliSahaBulgusu::class, Pages\SahaDenetimi::class],
+                'siniflar' => [Pages\ZiyaretModu::class, Pages\HizliSahaBulgusu::class, Pages\SahaDenetimi::class, Pages\KontrolKarti::class],
             ],
             [
                 'etiket' => 'Bulgu & DÖF Takip Havuzu',

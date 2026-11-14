@@ -47,7 +47,8 @@
     </div>
 
     <p style="margin-top:.9rem;font-size:.8rem;color:rgb(107 114 128)">
-        İşveren girince yalnız bu firmanın evraklarını, personel listesini ve personel dosyasını görür ve indirir; hiçbir şeyi değiştiremez.
+        İşveren yalnız bu firmayı görür: evrakları görüntüleyip indirir ve tebellüğ eder; personel ekler, düzenler, işten çıkışını girer
+        (silemez); çalışanları online eğitime ekler, başlamamış olanı çıkarır ve yeni eğitim şifresi alır. Evrakları ve uzmanın kayıtlarını değiştiremez.
         Son giriş: {{ $hesap->son_giris_at?->format('d.m.Y H:i') ?? 'henüz giriş yapılmadı' }}
     </p>
 </div>

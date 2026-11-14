@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 /**
  * İşyeri (işveren) girişi — firma başına tek kalıcı hesap. /isyeri panelinde
- * yalnız kendi firmasının evraklarını salt-okunur görür. Şifreyi İSG uzmanı
+ * yalnız kendi firmasını görür (evrak görüntüleme/tebellüğ, personel, online eğitim atama). Şifreyi İSG uzmanı
  * üretir ve işverene iletir; uzman "Şifreyi Sıfırla" demedikçe değişmez.
  */
 class IsyeriHesabi extends Model implements AuthenticatableContract, FilamentUser, HasName

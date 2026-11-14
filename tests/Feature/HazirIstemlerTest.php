@@ -13,6 +13,7 @@ use App\Support\SoruBankasiIceAktarici;
 use App\Support\TalimatSablonuExcelIceAktarici;
 use App\Support\TehlikeExcelIceAktarici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -180,10 +181,10 @@ class HazirIstemlerTest extends TestCase
     {
         $istem = HazirIstemler::istem('dof', Firma::factory()->create(), ['ek' => '1) Raf sabitlenmemiş']);
         $this->assertStringContainsString('Kritik → '.now()->addDays(7)->format('d.m.Y'), $istem);
-        $b = $this->basliklar($istem, 'Tespit');
+        $b = $this->basliklar($istem, 'Fotoğraf No');
 
         $sonuc = \App\Support\DofTabloOkuyucu::oku($this->excel($b, [
-            ['Depo rafları duvara sabitlenmemiş', 'Raflar duvara ankrajla sabitlenmeli.', 'Kritik', 'Bakım Sorumlusu', now()->addDays(7)->format('d.m.Y'), 'İşyeri Bina ve Eklentileri Yönetmeliği'],
+            ['2', 'Depo rafları duvara sabitlenmemiş', 'Raflar duvara ankrajla sabitlenmeli.', 'Kritik', 'Bakım Sorumlusu', now()->addDays(7)->format('d.m.Y'), 'İşyeri Bina ve Eklentileri Yönetmeliği'],
         ]));
 
         $this->assertCount(1, $sonuc['maddeler']);
@@ -192,6 +193,49 @@ class HazirIstemlerTest extends TestCase
         $this->assertSame(now()->addDays(7)->toDateString(), $m['termin']);
         $this->assertSame('Bakım Sorumlusu', $m['sorumlu']);
         $this->assertStringContainsString('ankraj', $m['oneri']);
+        $this->assertSame(2, $m['foto_no']);
+    }
+
+    /** 14.11.2026: fotoğraflar dosya adındaki numaraya, numara yoksa sıraya göre eşlenir. */
+    public function test_fotograflar_dosya_adi_numarasina_ya_da_siraya_gore_eslenir(): void
+    {
+        $oku = \App\Support\SahaBulguExcelOkuyucu::class;
+
+        $this->assertSame([2 => 'a', 1 => 'b'], $oku::fotoEsle(['a', 'b'], ['a' => '2.jpg', 'b' => 'foto 1.png']));
+        // Telefon adları numara sayılmaz → sıra
+        $this->assertSame([1 => 'a', 2 => 'b'], $oku::fotoEsle(['a', 'b'], ['a' => 'IMG_20261114_1234.jpg', 'b' => 'IMG_20261114_1240.jpg']));
+        // Aynı numara iki kez → sıra
+        $this->assertSame([1 => 'a', 2 => 'b'], $oku::fotoEsle(['a', 'b'], ['a' => '1.jpg', 'b' => '1 (2).jpg']));
+        $this->assertSame([], $oku::fotoEsle([]));
+        $this->assertSame(3, $oku::fotoNo('Fotoğraf 3, 5'));
+        $this->assertNull($oku::fotoNo(''));
+    }
+
+    /** 14.11.2026: Excel'de maddenin satırına yapıştırılan fotoğraf o maddeye bağlanır. */
+    public function test_saha_excel_satirina_yapistirilan_fotograf_maddeye_baglanir(): void
+    {
+        Storage::fake('public');
+        $k = new Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneriler'],
+            ['', 'Yürüme yolunda hasarlı uzatma kablosu', 'Kablo değiştirilmeli'],
+            ['', 'Yangın tüpünün önü kapatılmış', 'Önü boşaltılmalı'],
+        ], null, 'A1');
+        $resim = tempnam(sys_get_temp_dir(), 'r').'.png';
+        imagepng(imagecreatetruecolor(20, 20), $resim);
+        $cizim = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+        $cizim->setPath($resim);
+        $cizim->setCoordinates('D3');
+        $cizim->setWorksheet($k->getActiveSheet());
+        $yol = tempnam(sys_get_temp_dir(), 'sg').'.xlsx';
+        (new Xlsx($k))->save($yol);
+
+        $b = \App\Support\SahaBulguExcelOkuyucu::oku($yol)['bulgular'];
+
+        $this->assertNull($b[0]['foto_yolu']);
+        $this->assertNotNull($b[1]['foto_yolu']);
+        $this->assertStringStartsWith('saha-analiz-foto/', $b[1]['foto_yolu']);
+        Storage::disk('public')->assertExists($b[1]['foto_yolu']);
     }
 
     public function test_ayni_ekipman_icin_benzer_klasor_bulunur_yukleme_durur_istem_mevcutlari_bildirir(): void

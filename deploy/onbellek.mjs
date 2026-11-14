@@ -4,7 +4,7 @@
 //   node deploy/onbellek.mjs            -> php artisan optimize        (önbellekleri kur / yenile)
 //   node deploy/onbellek.mjs --temizle  -> php artisan optimize:clear  (geri al: önbelleksiz çalış)
 //   node deploy/onbellek.mjs --komut "risk:puan-tamamla --rapor=RD-2026-127"
-//                                       -> canlıda tek bir artisan komutu (yalnız risk:* komutları, 02.11.2026)
+//                                       -> canlıda tek bir artisan komutu (yalnız risk:* ve kurulum:* komutları)
 //
 // deploy.mjs her yüklemenin sonunda bunu kendiliğinden çağırır (--onbelleksiz ile atlanır).
 // Önbellek kuruluyken config/*.php değişiklikleri ancak bu yenilemeyle canlıya yansır.
@@ -57,8 +57,9 @@ if (function_exists('opcache_reset')) { echo 'OPCACHE='.(@opcache_reset() ? 'sif
 export async function onbellekYenile({ temizle = false, sessiz = false, ozelKomut = null } = {}) {
     const env = envDeploy();
     const site = (env.SITE_URL || 'https://mehse.com').replace(/\/$/, '');
-    if (ozelKomut && !/^risk:[a-z:-]+( --?[a-zA-Z-]+(=[A-Za-z0-9._-]+)?)*$/.test(ozelKomut)) {
-        throw new Error(`İzin verilmeyen komut: ${ozelKomut} (yalnız "risk:..." ve basit seçenekler)`);
+    // kurulum:* — tek tabloyu kuran, tekrar çalıştırılabilir komutlar (14.11.2026, ör. kurulum:kontrol-karti).
+    if (ozelKomut && !/^(risk|kurulum):[a-z:-]+( --?[a-zA-Z-]+(=[A-Za-z0-9._-]+)?)*$/.test(ozelKomut)) {
+        throw new Error(`İzin verilmeyen komut: ${ozelKomut} (yalnız "risk:..." / "kurulum:..." ve basit seçenekler)`);
     }
     const komut = ozelKomut ?? (temizle ? 'optimize:clear' : 'optimize');
     const anahtar = crypto.randomBytes(24).toString('hex');

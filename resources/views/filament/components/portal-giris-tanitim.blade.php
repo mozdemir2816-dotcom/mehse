@@ -1,6 +1,6 @@
 {{--
     /isyeri ve /egitim giriş ekranlarının sol tanıtım paneli (SIMPLE_LAYOUT_START).
-    Parametreler: $etiket (rozet), $baslik, $metin, $maddeler (3-4 kısa satır), $vurgu$vurgu ('teal'|'blue'|'pano').
+    Parametreler: $etiket (rozet), $baslik, $metin, $maddeler (3-4 kısa satır), $vurgu ('teal'|'blue'|'pano').
     Bu panellerde Blade ikon bileşenleri kapalı (DisableBladeIconComponents) — ikon kullanılmaz.
     Stiller: css/filament/portal/theme.css "Bölünmüş giriş ekranı".
 --}}

@@ -947,19 +947,35 @@ class AiSahaAnalizi extends Page
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null && ! $this->kilitliMi())
                 ->modalHeading('Excel\'den bulgu ekle')
-                ->modalDescription('Hazır İstemler sayfasındaki "Saha gözlem raporu" istemiyle Gemini\'de hazırladığınız tabloyu yükleyin. Maddeler rapora eklenir; her birini kontrol edip onaylayın.')
+                ->modalDescription('Hazır İstemler sayfasındaki "Saha gözlem raporu" istemiyle Gemini\'de hazırladığınız tabloyu yükleyin. Gemini\'ye eklediğiniz fotoğrafları da aynı sırayla seçerseniz her fotoğraf, tablodaki Fotoğraf No\'ya göre kendi maddesine yerleşir.')
                 ->schema([
                     \App\Filament\Support\DosyaKabul::uygula(\Filament\Forms\Components\FileUpload::make('dosya')
                         ->label('Excel dosyası (.xlsx)')
                         ->disk('local')->directory('gecici'), ['xlsx', 'xls'])
                         ->required(),
+                    // 14.11.2026: Excel'le fotoğraf gelmiyordu. Eşleşme: Excel satırına yapıştırılan
+                    // fotoğraf > dosya adındaki numara (1.jpg) > yükleme sırası (SahaBulguExcelOkuyucu::fotoEsle).
+                    \Filament\Forms\Components\FileUpload::make('fotograflar')
+                        ->label('Fotoğraflar')
+                        ->helperText('Fotoğraf No\'ya göre maddelere yerleşir. Dosya adları numaralıysa (1.jpg, 2.jpg…) numaraya, değilse sıraya bakılır (1. fotoğraf = Fotoğraf No 1; sürükleyerek düzeltebilirsiniz). Fotoğrafı Excel\'de maddenin satırına yapıştırdıysanız burayı boş bırakın.')
+                        ->storeFileNamesIn('fotograf_adlari')
+                        ->image()
+                        ->multiple()
+                        ->reorderable()
+                        ->appendFiles()
+                        ->maxFiles(static::MAX_FOTOGRAF)
+                        ->maxSize(10240)
+                        ->disk('public')->directory('saha-analiz-foto'),
                 ])
                 ->action(function (array $data): void {
                     $yol = \Illuminate\Support\Facades\Storage::disk('local')->path($data['dosya']);
+                    $fotolar = array_values(array_filter((array) ($data['fotograflar'] ?? [])));
+                    $esles = \App\Support\SahaBulguExcelOkuyucu::fotoEsle($fotolar, (array) ($data['fotograf_adlari'] ?? []));
 
                     try {
                         $sonuc = \App\Support\SahaBulguExcelOkuyucu::oku($yol);
                     } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($fotolar);
                         Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
 
                         return;
@@ -968,18 +984,49 @@ class AiSahaAnalizi extends Page
                     }
 
                     if (! $sonuc['bulgular']) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($fotolar);
                         Notification::make()->title('Tabloda bulgu bulunamadı')->body('İlk satırda "Tespit" başlıklı bir sütun olmalı.')->warning()->send();
 
                         return;
                     }
 
+                    $bagli = 0;
+                    $isaretlenen = 0;
+                    $havuza = $fotolar;
                     foreach ($sonuc['bulgular'] as $b) {
-                        $this->bulgular[] = static::aiBulgusu($b, 'excel');
+                        // Önce Excel satırına yapıştırılan fotoğraf, yoksa Fotoğraf No eşleşmesi.
+                        $foto = ($b['foto_yolu'] ?? null) ?: ($b['foto_no'] ? ($esles[$b['foto_no']] ?? null) : null);
+                        $bagli += $foto ? 1 : 0;
+                        $havuza[] = $b['foto_yolu'] ?? null;
+
+                        // Gemini işaret verdiyse uygunsuzluğun yeri fotoğrafın kopyasında çemberlenir;
+                        // rapor işaretli kopyayı kullanır, havuzda orijinal kalır (14.11.2026).
+                        if ($foto && ! empty($b['isaret'])) {
+                            $isaretli = \App\Support\FotoIsaretleyici::cember($foto, (float) $b['isaret']['x'], (float) $b['isaret']['y'], $b['isaret']['cap'] ? (float) $b['isaret']['cap'] : null);
+                            $isaretlenen += $isaretli ? 1 : 0;
+                            $foto = $isaretli ?: $foto;
+                        }
+
+                        $this->bulgular[] = static::aiBulgusu($b, 'excel', $foto);
+                    }
+
+                    // Fotoğraflar rapor havuzuna girer (Gemini'de incelendiği için analiz edilmiş sayılır).
+                    $havuza = array_values(array_unique(array_filter($havuza)));
+                    foreach (array_slice($havuza, 0, max(0, static::MAX_HAVUZ - count($this->fotograflar))) as $yolu) {
+                        $this->fotograflar[] = ['yol' => $yolu, 'analiz_edildi' => true];
                     }
                     $this->taslagiKaydet(sessiz: true);
 
-                    Notification::make()->title(count($sonuc['bulgular']).' bulgu eklendi')
-                        ->body(($sonuc['atlanan'] ? $sonuc['atlanan'].' satır (tespit çok kısa) atlandı. ' : '').'Her maddeyi kontrol edip onaylayın; fotoğrafları maddelere ayrıca ekleyebilirsiniz.')
+                    $adet = count($sonuc['bulgular']);
+                    $fotoNotu = match (true) {
+                        $bagli === 0 => 'Fotoğraf bağlanmadı; fotoğrafları maddelere ayrıca ekleyebilirsiniz.',
+                        $bagli === $adet => 'Tüm maddelere fotoğrafı bağlandı.',
+                        default => $bagli.' maddeye fotoğraf bağlandı; '.($adet - $bagli).' maddede Fotoğraf No boş ya da o sırada fotoğraf yok.',
+                    };
+
+                    Notification::make()->title($adet.' bulgu eklendi')
+                        ->body(($sonuc['atlanan'] ? $sonuc['atlanan'].' satır (tespit çok kısa) atlandı. ' : '').$fotoNotu
+                            .($isaretlenen ? ' '.$isaretlenen.' maddede uygunsuzluğun yeri fotoğrafta çemberle işaretlendi.' : '').' Her maddeyi kontrol edip onaylayın.')
                         ->success()->send();
                 }),
             $this->hazirRaporYukleAction(),

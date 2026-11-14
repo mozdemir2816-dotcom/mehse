@@ -455,4 +455,83 @@ class AiSahaAnaliziTest extends TestCase
         $this->assertSame('Atölye', $b[0]['bina_bolge']);
         $this->assertSame(1, SahaAnalizi::where('firma_id', $firma->id)->count());   // taslak kaydedildi
     }
+
+    /** 14.11.2026: Excel'le birlikte seçilen fotoğraflar Fotoğraf No'ya (dosya adındaki numaraya) göre maddeye bağlanır. */
+    public function test_excelden_bulgu_ekle_fotograflari_fotograf_noya_gore_baglar(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $k = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneriler'],
+            ['2', 'Avuç taşlamanın koruyucu siperi sökülmüş', 'Siper takılmalı'],
+            ['1', 'Yangın tüpünün önü kapatılmış', 'Önü boşaltılmalı'],
+            ['', 'Ek bilgiden gelen madde: eğitim eksik', 'Eğitim verilmeli'],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'sg').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($k))->save($yol);
+
+        // Seçim sırası ters; adlar numaralı → ada göre eşlenir.
+        $sayfa = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('exceldenBulgu', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('saha.xlsx', file_get_contents($yol)),
+                'fotograflar' => [UploadedFile::fake()->image('1.jpg'), UploadedFile::fake()->image('2.jpg')],
+            ])
+            ->assertHasNoActionErrors();
+
+        $b = $sayfa->get('bulgular');
+        $this->assertCount(3, $b);
+        $this->assertNotNull($b[0]['foto_yolu']);
+        $this->assertNotNull($b[1]['foto_yolu']);
+        $this->assertNotSame($b[0]['foto_yolu'], $b[1]['foto_yolu']);
+        $this->assertNull($b[2]['foto_yolu']);
+        Storage::disk('public')->assertExists($b[0]['foto_yolu']);
+        $this->assertCount(2, $sayfa->get('fotograflar'));   // rapor havuzunda
+    }
+
+    /** 14.11.2026: Gemini'nin "İşaret X/Y/Çap" değerleriyle uygunsuzluğun yeri fotoğrafa çemberle çizilir; rapor işaretli kopyayı kullanır. */
+    public function test_excelden_bulgu_ekle_uygunsuzlugun_yerini_fotografta_isaretler(): void
+    {
+        Storage::fake('public');
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $k = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneriler', 'İşaret X', 'İşaret Y', 'İşaret Çap'],
+            ['1', 'Merdiven kenarında korkuluk yok', 'Korkuluk yapılmalı', '25', '50', '30'],
+            ['1', 'Zeminde dağınık kablo var', 'Kablo toplanmalı', '', '', ''],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'sg').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($k))->save($yol);
+
+        // Beyaz fotoğraf: çember kırmızı piksel bırakmalı
+        $resim = imagecreatetruecolor(400, 300);
+        imagefill($resim, 0, 0, imagecolorallocate($resim, 255, 255, 255));
+        ob_start();
+        imagejpeg($resim, null, 95);
+        $foto = UploadedFile::fake()->createWithContent('1.jpg', ob_get_clean());
+
+        $sayfa = Livewire::test(SahaSayfasi::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('exceldenBulgu', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('saha.xlsx', file_get_contents($yol)),
+                'fotograflar' => [$foto],
+            ])
+            ->assertHasNoActionErrors();
+
+        $b = $sayfa->get('bulgular');
+        $havuz = collect($sayfa->get('fotograflar'))->pluck('yol')->all();
+        $this->assertStringContainsString('isaretli-', $b[0]['foto_yolu']);
+        $this->assertNotContains($b[0]['foto_yolu'], $havuz);        // havuzda orijinal
+        $this->assertSame($havuz[0], $b[1]['foto_yolu']);              // işaretsiz madde orijinali kullanır
+        Storage::disk('public')->assertExists($b[0]['foto_yolu']);
+
+        // Çember: merkez (100,150), yarıçap 60 px → (40,150) civarı kırmızı, merkez beyaz kalır
+        $isaretli = imagecreatefromjpeg(Storage::disk('public')->path($b[0]['foto_yolu']));
+        $renk = fn ($x, $y) => imagecolorsforindex($isaretli, imagecolorat($isaretli, $x, $y));
+        $kenar = $renk(38, 150);
+        $this->assertGreaterThan(180, $kenar['red']);
+        $this->assertLessThan(110, $kenar['green']);
+        $this->assertGreaterThan(230, $renk(100, 150)['green']);
+    }
 }

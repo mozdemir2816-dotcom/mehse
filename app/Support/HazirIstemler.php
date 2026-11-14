@@ -65,6 +65,14 @@ class HazirIstemler
             'firma' => true,
             'adet' => 20,
         ],
+        'kontrol_karti' => [
+            'ad' => 'Kontrol kartı (fotoğraftan)',
+            'aciklama' => 'Bir alanın ya da ekipmanın fotoğrafı üzerinden numaralı işaretli kontrol listesi; uygunsuzlukta Fine-Kinney önce/sonra.',
+            'cikti' => 'JSON (sayfaya yapıştırılır)',
+            'yukle' => "Saha → Kontrol Kartı → firma seç → 'Gemini'den Yükle'",
+            'firma' => false,
+            'adet' => 12,
+        ],
     ];
 
     /**
@@ -86,6 +94,7 @@ class HazirIstemler
             'soru_bankasi' => static::soruBankasi($firma, (string) ($s['konu'] ?? ''), $adet),
             'saha_gozlem' => static::sahaGozlem($adet),
             'dof' => static::dof(),
+            'kontrol_karti' => static::kontrolKarti((string) ($s['sablon'] ?? ''), $adet),
         };
 
         return implode("\n\n", array_filter([
@@ -113,7 +122,15 @@ class HazirIstemler
             return [
                 "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin. Önce saha fotoğraflarını sohbete ekleyin (en fazla 10), sonra istemi yapıştırıp gönderin.",
                 "Gemini'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.",
-                "Yükleyin: {$yukle}. Maddeler onay bekler; her birini kontrol edin, fotoğrafı ilgili maddeye ekleyin (tablodaki Fotoğraf No yol gösterir).",
+                "Yükleyin: {$yukle}. Fotoğraflar için iki yol var: (a) dosyalara 1.jpg, 2.jpg… diye Gemini'deki sırayla ad verip aynı pencerede seçin — Fotoğraf No'ya göre maddelere yerleşir; (b) fotoğrafı Excel'de maddenin satırına yapıştırın. Her uygunsuzluğun yeri fotoğrafta kırmızı çemberle kendiliğinden işaretlenir ve raporda işaretli fotoğraf kullanılır. Maddeler onay bekler; her birini kontrol edin.",
+            ];
+        }
+
+        if ($tur === 'kontrol_karti') {
+            return [
+                "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin. Alanın ya da ekipmanın fotoğrafını (tek, genel görünüm) sohbete ekleyin, sonra istemi yapıştırıp gönderin.",
+                "Gemini'nin verdiği JSON kod bloğunun tamamını kopyalayın (kod bloğunun sağ üstündeki kopyala düğmesi).",
+                "Yükleyin: {$yukle} — cevabı yapıştırın, aynı fotoğrafı seçin. Alan sistemde yoksa kontrol listesi yeni şablon olarak kaydedilir; maddeleri kontrol edip kaydedin.",
             ];
         }
 
@@ -121,7 +138,7 @@ class HazirIstemler
             return [
                 "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin. Tespitlerinizi ek bilgiye yazın; isterseniz fotoğrafları da sohbete ekleyin, sonra istemi yapıştırın.",
                 "Gemini'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.",
-                "Yükleyin: {$yukle}. Maddeler listeye eklenir; fotoğrafları ekleyip DÖF raporunu alın.",
+                "Yükleyin: {$yukle}. Fotoğraf kullandıysanız: dosyalara 1.jpg, 2.jpg… diye ad verip aynı pencerede seçin (Fotoğraf No'ya göre yerleşir) ya da fotoğrafı Excel'de maddenin satırına yapıştırın. Sonra DÖF raporunu alın.",
             ];
         }
 
@@ -278,8 +295,10 @@ class HazirIstemler
         - Öneriler: 1–3 somut düzeltici faaliyet; aralarına " • " koy, dik çizgi (|) KULLANMA.
         - Yasal Gerekçe: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
         - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle — Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')}. Gerçekçi puanla; her maddeyi en kötü senaryoyla puanlama.
+        - İşaret X / İşaret Y: uygunsuzluğun fotoğrafta işaretlenecek alanının MERKEZİ, fotoğrafın sol üst köşesine göre yüzde (0–100; X soldan sağa, Y yukarıdan aşağı). Eksik olanı değil, eksikliğin görüldüğü yeri göster (ör. "merdiven kenarında korkuluk yok" → korkuluğun olması gereken merdiven kenarı). Sistem bu noktaya kırmızı çember çizip raporda o fotoğrafı kullanır; dikkatli ve doğru ver.
+        - İşaret Çap: çemberin içine alacağı alanın genişliği, fotoğraf genişliğinin yüzdesi (5–60; küçük nesne 8–15, merdiven/raf gibi büyük alan 25–45). Ek bilgiden gelen, fotoğrafı olmayan maddede üçünü de boş bırak.
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
-        Fotoğraf No | Bina / Bölge | Fotoğraftaki Konum | Kategori | Tespit | Öneriler | Yasal Gerekçe | Olasılık | Frekans | Şiddet
+        Fotoğraf No | Bina / Bölge | Fotoğraftaki Konum | Kategori | Tespit | Öneriler | Yasal Gerekçe | Olasılık | Frekans | Şiddet | İşaret X | İşaret Y | İşaret Çap
         Hücrelerde satır sonu kullanma. Puan hücrelerine yalnız sayı yaz (ondalıkta virgül).
         METIN;
     }
@@ -297,9 +316,53 @@ class HazirIstemler
         - Sorumlu: rol yaz (İşveren / İşveren Vekili, Bakım Sorumlusu, Bölüm Şefi, Ustabaşı, İSG Uzmanı, İşyeri Hekimi…); kişi adı yazma.
         - Termin: GG.AA.YYYY biçiminde tarih. Bugün {$bugun}; Kritik → {$tarih(7)}, Yüksek → {$tarih(30)}, Orta → {$tarih(90)}, Düşük → {$tarih(180)}.
         - Dayanak: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
+        - Fotoğraf No: uygunsuzluğun görüldüğü fotoğrafın bu sohbete eklenme sırası (1, 2, 3…); fotoğrafı olmayan maddede boş bırak.
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
-        Tespit | Öneri | Öncelik | Sorumlu | Termin | Dayanak
+        Fotoğraf No | Tespit | Öneri | Öncelik | Sorumlu | Termin | Dayanak
         Hücrelerde satır sonu kullanma.
+        METIN;
+    }
+
+    /** Kontrol kartı: seçilen şablonun maddeleri ya da (boşsa) Gemini'nin hazırlayacağı yeni liste (14.11.2026). */
+    private static function kontrolKarti(string $sablonAnahtari, int $adet): string
+    {
+        $sablon = \App\Models\KontrolKarti::sablon($sablonAnahtari);
+        $olcek = fn (string $o) => implode(', ', array_map(
+            fn ($k, $v) => "{$k} ({$v})",
+            array_keys(config("isg.risk_fine_kinney.{$o}", [])),
+            config("isg.risk_fine_kinney.{$o}", []),
+        ));
+
+        if ($sablon) {
+            $liste = collect($sablon['maddeler'])->map(fn ($m, $i) => ($i + 1).". kod={$m['kod']} | {$m['baslik']} | {$m['kontrol']}")->implode("
+");
+            $gorev = <<<METIN
+            GÖREV: Bu sohbete eklediğim fotoğraf "{$sablon['ad']}" alanına ait. Aşağıdaki kontrol listesinin HER maddesini fotoğrafa bakarak değerlendir. Maddeleri aynı sırayla ve aynı "kod" ile ver; madde ekleme ya da çıkarma.
+            KONTROL LİSTESİ:
+            {$liste}
+            METIN;
+            $alan = "\"alan_adi\": \"{$sablon['ad']}\", \"sablon\": \"{$sablonAnahtari}\"";
+        } else {
+            $gorev = <<<METIN
+            GÖREV: Bu sohbete eklediğim fotoğraftaki alanı ya da ekipmanı tanı ve onun için bir İSG kontrol kartı hazırla. Önce "alan_adi"nı kısa ve genel yaz (ör. "Kompresör Odası", "Akülü Forklift Şarj Alanı", "Elektrik Ana Panosu"). Bu alan için {$adet} maddelik bir kontrol listesi oluştur: fotoğrafta görülen uygunsuzluklar ve bu tür bir alanda her zaman kontrol edilmesi gereken temel maddeler. Her madde kısa bir başlık ("baslik", 2–4 kelime) ve evet/hayır ile cevaplanabilen bir kontrol sorusu ("kontrol") içersin. Bu liste ileride aynı alanın diğer kontrollerinde şablon olarak kullanılacak; firmaya özgü değil, genel yaz.
+            METIN;
+            $alan = '"alan_adi": "…", "sablon": ""';
+        }
+
+        return <<<METIN
+        {$gorev}
+        KURALLAR:
+        - "durum": "uygun", "uygunsuz", "kapsam_disi" (alanda bu konu yok) ya da fotoğrafta değerlendirilemiyorsa "" (boş). Fotoğrafta görülmeyen bir şeyi uygunsuz sayma, uydurma.
+        - "isaret": maddenin fotoğrafta görüldüğü noktanın konumu, fotoğrafın sol üst köşesine göre yüzde: {"x": 0–100 (soldan sağa), "y": 0–100 (yukarıdan aşağı)}. Fotoğrafta görülmüyorsa null.
+        - "uygunsuz" maddelerde doldur: "tespit" (fotoğrafta görülen uygunsuzluk, 1 cümle), "olasi_sonuc" (olası kaza/zarar), "etkilenenler", "mevcut_onlem" (görülen bir önlem yoksa "Yok"), "oneri" (kontrol hiyerarşisine göre somut ek önlem, 1–2 cümle), "sorumlu" (rol: İşveren / İşveren Vekili, Bakım Sorumlusu, Bölüm Şefi…; kişi adı yazma), "hedef_gun" (sayı: hayati risk 7, yüksek 15–30, diğer 30–90).
+        - Fine-Kinney (mevcut durum): "olasilik", "frekans", "siddet"; ek önlem uygulandıktan sonra beklenen: "yeni_olasilik", "yeni_frekans", "yeni_siddet". YALNIZ şu değerleri kullan —
+          Olasılık: {$olcek('olasilik')}
+          Frekans: {$olcek('frekans')}
+          Şiddet: {$olcek('siddet')}
+        - "uygun" ve "kapsam_disi" maddelerde tespit/öneri/risk alanlarını boş bırak ("").
+        - "yonetmelik": ilgili Türk yönetmeliğinin tam adı; "standart": ilgili TS / TS EN / TS EN ISO standardı ve kısa konusu. Emin olmadığın madde ya da standart numarasını yazma; yoksa boş bırak.
+        ÇIKTI: Yalnız tek bir JSON nesnesi ver (```json kod bloğu içinde), açıklama ekleme. Yapı:
+        {{$alan}, "maddeler": [{"kod": "…", "baslik": "…", "kontrol": "…", "durum": "uygunsuz", "isaret": {"x": 42, "y": 61}, "tespit": "…", "olasi_sonuc": "…", "etkilenenler": "…", "mevcut_onlem": "Yok", "olasilik": 3, "frekans": 6, "siddet": 30, "oneri": "…", "sorumlu": "…", "hedef_gun": 15, "yeni_olasilik": 0.5, "yeni_frekans": 6, "yeni_siddet": 30, "yonetmelik": "…", "standart": "…"}]}
         METIN;
     }
 
