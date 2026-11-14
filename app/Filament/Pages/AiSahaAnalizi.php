@@ -1002,7 +1002,8 @@ class AiSahaAnalizi extends Page
                         // Gemini işaret verdiyse uygunsuzluğun yeri fotoğrafın kopyasında çemberlenir;
                         // rapor işaretli kopyayı kullanır, havuzda orijinal kalır (14.11.2026).
                         if ($foto && ! empty($b['isaret'])) {
-                            $isaretli = \App\Support\FotoIsaretleyici::cember($foto, (float) $b['isaret']['x'], (float) $b['isaret']['y'], $b['isaret']['cap'] ? (float) $b['isaret']['cap'] : null);
+                            // Çemberin yanında maddenin rapordaki numarası: aynı fotoğrafta birden çok uygunsuzluk ayırt edilir.
+                            $isaretli = \App\Support\FotoIsaretleyici::cember($foto, (float) $b['isaret']['x'], (float) $b['isaret']['y'], $b['isaret']['cap'] ? (float) $b['isaret']['cap'] : null, 'public', count($this->bulgular) + 1);
                             $isaretlenen += $isaretli ? 1 : 0;
                             $foto = $isaretli ?: $foto;
                         }

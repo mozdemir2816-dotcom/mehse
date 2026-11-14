@@ -438,4 +438,35 @@ class HizliSahaBulgusuTest extends TestCase
         $this->assertSame('ai', $bulgular[0]->kaynak);
         $this->assertSame(['saha-bulgu-foto/x.jpg'], $bulgular[0]->fotograflar);
     }
+
+    /** 14.11.2026: Bulgular "Word/Excel'den Aktar" — fotoğraf Fotoğraf No'ya bağlanır, İşaret varsa çemberlenir. */
+    public function test_dosyadan_aktarim_fotografi_baglar_ve_isaretler(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        $k = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneriler', 'İşaret X', 'İşaret Y', 'İşaret Çap'],
+            ['1', 'Merdiven kenarında korkuluk yok', 'Korkuluk yapılmalı', '75', '50', '45'],
+            ['', 'Acil durum planı güncel değil', 'Plan güncellenmeli', '', '', ''],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'blg').'.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($k))->save($yol);
+
+        Livewire::test(HizliSahaBulgusu::class)
+            ->set('firmaId', $this->firma->id)
+            ->callAction('dosyadanAktar', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('gemini.xlsx', file_get_contents($yol)),
+                'fotograflar' => [UploadedFile::fake()->image('merdiven.jpg', 400, 300)],
+            ])
+            ->assertHasNoActionErrors();
+
+        $bulgular = SahaBulgusu::orderBy('id')->get();
+        $this->assertCount(2, $bulgular);
+        $this->assertCount(1, $bulgular[0]->fotograflar);
+        $this->assertStringContainsString('isaretli-', $bulgular[0]->fotograflar[0]);
+        Storage::disk('public')->assertExists($bulgular[0]->fotograflar[0]);
+        $this->assertSame([], $bulgular[1]->fotograflar ?? []);
+        $this->assertCount(1, Storage::disk('public')->files('saha-bulgu-foto'));   // işaretsiz orijinal silindi
+    }
 }

@@ -213,6 +213,37 @@ class DofTabloAktarimTest extends TestCase
         $this->assertCount(1, Storage::disk('public')->files('dof-foto'));   // kullanılmayan silindi
     }
 
+    /** 14.11.2026: Gemini'nin "İşaret X/Y/Çap" değerleriyle DÖF fotoğrafına madde numaralı çember çizilir. */
+    public function test_aktarimda_isaret_varsa_fotograf_cemberlenir(): void
+    {
+        $firma = Firma::factory()->for($this->uzman)->create();
+        $k = new Spreadsheet;
+        $k->getActiveSheet()->fromArray([
+            ['Fotoğraf No', 'Tespit', 'Öneri', 'Öncelik', 'İşaret X', 'İşaret Y', 'İşaret Çap'],
+            ['1', 'Merdiven kenarında korkuluk yok', 'Korkuluk yapılmalı', 'Kritik', '25', '50', '30'],
+            ['1', 'Zeminde dağınık kablo', 'Kablolar toplanmalı', 'Orta', '70,5', '80', ''],
+        ], null, 'A1');
+        $yol = tempnam(sys_get_temp_dir(), 'dof').'.xlsx';
+        (new Xlsx($k))->save($yol);
+
+        $sayfa = Livewire::test(DofOlustur::class)
+            ->set('firmaId', $firma->id)
+            ->callAction('tablodanAktar', data: [
+                'dosya' => UploadedFile::fake()->createWithContent('dof.xlsx', file_get_contents($yol)),
+                'fotograflar' => [UploadedFile::fake()->image('1.jpg', 400, 300)],
+            ])
+            ->assertHasNoActionErrors();
+
+        $m = $sayfa->get('maddeler');
+        $this->assertCount(2, $m);
+        $this->assertStringContainsString('isaretli-', $m[0]['foto_yolu']);
+        $this->assertStringContainsString('isaretli-', $m[1]['foto_yolu']);
+        $this->assertNotSame($m[0]['foto_yolu'], $m[1]['foto_yolu']);   // her madde kendi çemberiyle
+        $this->assertArrayNotHasKey('isaret', $m[0]);
+        Storage::disk('public')->assertExists($m[0]['foto_yolu']);
+        $this->assertCount(2, Storage::disk('public')->files('dof-foto'));   // orijinal kullanılmadığı için silindi
+    }
+
     /** Künyenin kişi bilgileri firma kaydından gelir, dosyadaki değerlerle ezilmez (08.10.2026). */
     public function test_aktarimda_kunye_kisileri_firma_kaydindan_gelir(): void
     {

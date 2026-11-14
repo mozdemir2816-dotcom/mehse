@@ -19,9 +19,11 @@ class FotoIsaretleyici
      * @param  float  $x  merkez, fotoğraf genişliğinin yüzdesi (0–100, soldan)
      * @param  float  $y  merkez, fotoğraf yüksekliğinin yüzdesi (0–100, yukarıdan)
      * @param  float|null  $cap  çemberin çapı, fotoğraf genişliğinin yüzdesi (boşsa 18)
+     * @param  int|string|null  $no  çemberin yanına basılan madde numarası — aynı fotoğrafta
+     *                               birden çok uygunsuzluk olunca hangisinin hangisi olduğu anlaşılır
      * @return string|null işaretli kopyanın yolu (aynı disk), çizilemezse null
      */
-    public static function cember(string $yol, float $x, float $y, ?float $cap = null, string $disk = 'public'): ?string
+    public static function cember(string $yol, float $x, float $y, ?float $cap = null, string $disk = 'public', int|string|null $no = null): ?string
     {
         if (! function_exists('imagecreatetruecolor') || ! Storage::disk($disk)->exists($yol)) {
             return null;
@@ -61,6 +63,10 @@ class FotoIsaretleyici
                 imageellipse($resim, $cx, $cy, 2 * ($r + $i), 2 * ($r + $i), $kirmizi);
             }
 
+            if ($no !== null && $no !== '') {
+                static::numara($resim, (string) $no, $cx, $cy, $r, $kalinlik, $kirmizi);
+            }
+
             $hedef = pathinfo($yol, PATHINFO_DIRNAME).'/isaretli-'.Str::random(24).'.jpg';
             ob_start();
             imagejpeg($resim, null, 88);
@@ -72,5 +78,54 @@ class FotoIsaretleyici
 
             return null;
         }
+    }
+
+    /**
+     * Excel'deki "İşaret X / Y / Çap" hücrelerini okur (virgüllü ondalık ve "%" kabul).
+     *
+     * @return array{x: float, y: float, cap: float|null}|null
+     */
+    public static function degerler(mixed $x, mixed $y, mixed $cap = null): ?array
+    {
+        $sayi = function (mixed $v): ?float {
+            $v = str_replace([',', '%', ' '], ['.', '', ''], trim((string) $v));
+
+            return $v !== '' && is_numeric($v) ? (float) $v : null;
+        };
+
+        return $sayi($x) !== null && $sayi($y) !== null
+            ? ['x' => $sayi($x), 'y' => $sayi($y), 'cap' => $sayi($cap)]
+            : null;
+    }
+
+    /** Çemberin sol üst çaprazına beyaz kenarlı kırmızı yuvarlak içinde numara; fotoğraftan taşmaz. */
+    private static function numara(\GdImage $resim, string $no, int $cx, int $cy, int $r, int $kalinlik, int $kirmizi): void
+    {
+        $g = imagesx($resim);
+        $h = imagesy($resim);
+        $yr = max(18, (int) round($g * 0.028));                  // rozet yarıçapı
+        $aci = 0.7071;                                          // 45°
+        $bx = (int) round($cx - ($r + $kalinlik) * $aci);
+        $by = (int) round($cy - ($r + $kalinlik) * $aci);
+        $bx = max($yr + 4, min($g - $yr - 4, $bx));
+        $by = max($yr + 4, min($h - $yr - 4, $by));
+
+        $beyaz = imagecolorallocate($resim, 255, 255, 255);
+        imagefilledellipse($resim, $bx, $by, 2 * $yr + 8, 2 * $yr + 8, $beyaz);
+        imagefilledellipse($resim, $bx, $by, 2 * $yr, 2 * $yr, $kirmizi);
+
+        $font = base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ttf');
+
+        if (function_exists('imagettftext') && is_file($font)) {
+            $boyut = $yr * (strlen($no) > 1 ? 0.8 : 1.0);
+            $kutu = imagettfbbox($boyut, 0, $font, $no);
+            $tw = $kutu[2] - $kutu[0];
+            $th = $kutu[1] - $kutu[7];
+            imagettftext($resim, $boyut, 0, (int) round($bx - $tw / 2 - $kutu[0]), (int) round($by + $th / 2), $beyaz, $font, $no);
+
+            return;
+        }
+
+        imagestring($resim, 5, $bx - (int) (imagefontwidth(5) * strlen($no) / 2), $by - (int) (imagefontheight(5) / 2), $no, $beyaz);
     }
 }

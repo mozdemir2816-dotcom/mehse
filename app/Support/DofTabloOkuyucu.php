@@ -30,6 +30,10 @@ class DofTabloOkuyucu
 {
     /** Sütun anahtarı => başlıkta aranan kelimeler (sıra önemli: ilk eşleşen kazanır). */
     private const SUTUNLAR = [
+        // Gemini'nin verdiği uygunsuzluk yeri (yüzde) — aktarımda fotoğrafa çember çizilir (14.11.2026).
+        'isaret_x' => ['işaret x'],
+        'isaret_y' => ['işaret y'],
+        'isaret_cap' => ['işaret çap'],
         'tespit' => ['tespit', 'uygunsuzluk', 'bulgu'],
         'oneri' => ['öneri', 'düzeltici', 'faaliyet', 'önlem'],
         'oncelik' => ['öncelik', 'risk'],
@@ -186,6 +190,7 @@ class DofTabloOkuyucu
             'dayanak' => $al('dayanak') ?: null,
             // Gemini'ye eklenen fotoğrafın sırası — aktarımda yüklenen fotoğraflardan o maddeye bağlanır.
             'foto_no' => SahaBulguExcelOkuyucu::fotoNo($al('foto_no')),
+            'isaret' => FotoIsaretleyici::degerler($al('isaret_x'), $al('isaret_y'), $al('isaret_cap')),
         ];
     }
 

@@ -63,6 +63,9 @@ class HizliSahaBulgusu extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    /** Son Word/Excel aktarımında fotoğrafa çember çizilen madde sayısı (bildirim için). */
+    protected int $isaretlenen = 0;
+
     public ?string $bolum = null;
 
     public ?string $gozlemKonumu = null;
@@ -623,7 +626,7 @@ class HizliSahaBulgusu extends Page
      *
      * @return int eklenen bulgu sayısı
      */
-    public function dosyadanAktar(string $yol, string $adi): int
+    public function dosyadanAktar(string $yol, string $adi, array $fotolar = [], array $fotoAdlari = []): int
     {
         abort_unless($this->firmaId && array_key_exists($this->firmaId, $this->firmalar), 403);
 
@@ -635,6 +638,29 @@ class HizliSahaBulgusu extends Page
         } finally {
             Storage::disk('local')->delete($yol);
         }
+
+        // 14.11.2026: Fotoğraf No'ya göre yüklenen fotoğraf bağlanır; Gemini işaret
+        // verdiyse uygunsuzluğun yeri kopyada madde numarasıyla çemberlenir.
+        $fotolar = array_values(array_filter($fotolar));
+        $esles = \App\Support\SahaBulguExcelOkuyucu::fotoEsle($fotolar, $fotoAdlari);
+        $this->isaretlenen = 0;
+
+        foreach ($sonuc['maddeler'] as $i => $m) {
+            if (empty($m['foto_yolu']) && ($m['foto_no'] ?? null)) {
+                $m['foto_yolu'] = $esles[$m['foto_no']] ?? null;
+            }
+
+            if (! empty($m['foto_yolu']) && ! empty($m['isaret'])) {
+                $isaretli = \App\Support\FotoIsaretleyici::cember($m['foto_yolu'], $m['isaret']['x'], $m['isaret']['y'], $m['isaret']['cap'], 'public', $i + 1);
+                $this->isaretlenen += $isaretli ? 1 : 0;
+                $m['foto_yolu'] = $isaretli ?: $m['foto_yolu'];
+            }
+
+            $sonuc['maddeler'][$i] = $m;
+        }
+
+        // Bulguya bağlanmayan yüklemeler (işaretli kopyası alınmış orijinal dahil) silinir.
+        Storage::disk('public')->delete(array_diff($fotolar, array_column($sonuc['maddeler'], 'foto_yolu')));
 
         foreach ($sonuc['maddeler'] as $m) {
             SahaBulgusu::create([
@@ -684,12 +710,28 @@ class HizliSahaBulgusu extends Page
                         ->disk('local')->directory('bulgu-aktarim'), ['docx', 'xlsx', 'xls'])
                         ->maxSize(20480)
                         ->required(),
+                    FileUpload::make('fotograflar')
+                        ->label('Fotoğraflar (isteğe bağlı)')
+                        ->helperText('Tablodaki "Fotoğraf No"ya göre maddelere yerleşir. Dosya adları numaralıysa (1.jpg, 2.jpg…) numaraya, değilse sıraya bakılır. Tabloda "İşaret X / Y / Çap" varsa uygunsuzluğun yeri fotoğrafta numaralı çemberle işaretlenir.')
+                        ->storeFileNamesIn('fotograf_adlari')
+                        ->image()
+                        ->multiple()
+                        ->reorderable()
+                        ->appendFiles()
+                        ->maxFiles(20)
+                        ->maxSize(10240)
+                        ->disk('public')->directory('saha-bulgu-foto'),
                 ])
                 ->action(function (array $data): void {
-                    $sayi = $this->dosyadanAktar((string) $data['dosya'], (string) ($data['dosya_adi'] ?? $data['dosya']));
+                    $sayi = $this->dosyadanAktar(
+                        (string) $data['dosya'],
+                        (string) ($data['dosya_adi'] ?? $data['dosya']),
+                        (array) ($data['fotograflar'] ?? []),
+                        (array) ($data['fotograf_adlari'] ?? []),
+                    );
 
                     $sayi > 0
-                        ? Notification::make()->title($sayi.' bulgu eklendi')->body('DÖF raporu için listeden seçip "Seçilenleri DÖF\'e Aktar"ı kullanın.')->success()->send()
+                        ? Notification::make()->title($sayi.' bulgu eklendi')->body(($this->isaretlenen ? $this->isaretlenen.' maddede uygunsuzluğun yeri fotoğrafta numaralı çemberle işaretlendi. ' : '').'DÖF raporu için listeden seçip "Seçilenleri DÖF\'e Aktar"ı kullanın.')->success()->send()
                         : Notification::make()->title('Dosyada bulgu tablosu bulunamadı')->body('Tabloda "Tespit" ve "Öneri / Düzeltici Faaliyet" başlıklı sütunlar olmalı.')->danger()->send();
                 }),
 

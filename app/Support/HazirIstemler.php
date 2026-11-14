@@ -138,7 +138,7 @@ class HazirIstemler
             return [
                 "Gemini'de yeni bir sohbet açın, Pro (Düşünme) modelini seçin. Tespitlerinizi ek bilgiye yazın; isterseniz fotoğrafları da sohbete ekleyin, sonra istemi yapıştırın.",
                 "Gemini'nin verdiği tabloyu kopyalayıp boş bir Excel sayfasına A1 hücresinden yapıştırın, .xlsx olarak kaydedin.",
-                "Yükleyin: {$yukle}. Fotoğraf kullandıysanız: dosyalara 1.jpg, 2.jpg… diye ad verip aynı pencerede seçin (Fotoğraf No'ya göre yerleşir) ya da fotoğrafı Excel'de maddenin satırına yapıştırın. Sonra DÖF raporunu alın.",
+                "Yükleyin: {$yukle}. Fotoğraf kullandıysanız: dosyalara 1.jpg, 2.jpg… diye ad verip aynı pencerede seçin (Fotoğraf No'ya göre yerleşir) ya da fotoğrafı Excel'de maddenin satırına yapıştırın. Her uygunsuzluğun yeri fotoğrafta madde numaralı kırmızı çemberle kendiliğinden işaretlenir. Sonra DÖF raporunu alın.",
             ];
         }
 
@@ -295,7 +295,7 @@ class HazirIstemler
         - Öneriler: 1–3 somut düzeltici faaliyet; aralarına " • " koy, dik çizgi (|) KULLANMA.
         - Yasal Gerekçe: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
         - Puanlar Fine-Kinney ölçeğinde, YALNIZ şu değerlerle — Olasılık: {$olcek('olasilik')} · Frekans: {$olcek('frekans')} · Şiddet: {$olcek('siddet')}. Gerçekçi puanla; her maddeyi en kötü senaryoyla puanlama.
-        - İşaret X / İşaret Y: uygunsuzluğun fotoğrafta işaretlenecek alanının MERKEZİ, fotoğrafın sol üst köşesine göre yüzde (0–100; X soldan sağa, Y yukarıdan aşağı). Eksik olanı değil, eksikliğin görüldüğü yeri göster (ör. "merdiven kenarında korkuluk yok" → korkuluğun olması gereken merdiven kenarı). Sistem bu noktaya kırmızı çember çizip raporda o fotoğrafı kullanır; dikkatli ve doğru ver.
+        - İşaret X / İşaret Y: uygunsuzluğun fotoğrafta işaretlenecek alanının MERKEZİ, fotoğrafın sol üst köşesine göre yüzde (0–100; X soldan sağa, Y yukarıdan aşağı). Eksik olanı değil, eksikliğin görüldüğü yeri göster (ör. "merdiven kenarında korkuluk yok" → korkuluğun olması gereken merdiven kenarı). Sistem bu noktaya madde numaralı kırmızı çember çizip raporda o fotoğrafı kullanır; dikkatli ve doğru ver. Aynı fotoğrafta birden fazla uygunsuzluk varsa her biri kendi yerini göstersin; çemberler aynı noktaya konmasın.
         - İşaret Çap: çemberin içine alacağı alanın genişliği, fotoğraf genişliğinin yüzdesi (5–60; küçük nesne 8–15, merdiven/raf gibi büyük alan 25–45). Ek bilgiden gelen, fotoğrafı olmayan maddede üçünü de boş bırak.
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
         Fotoğraf No | Bina / Bölge | Fotoğraftaki Konum | Kategori | Tespit | Öneriler | Yasal Gerekçe | Olasılık | Frekans | Şiddet | İşaret X | İşaret Y | İşaret Çap
@@ -317,9 +317,11 @@ class HazirIstemler
         - Termin: GG.AA.YYYY biçiminde tarih. Bugün {$bugun}; Kritik → {$tarih(7)}, Yüksek → {$tarih(30)}, Orta → {$tarih(90)}, Düşük → {$tarih(180)}.
         - Dayanak: ilgili yönetmelik ya da standart adı; emin olmadığın madde numarasını yazma.
         - Fotoğraf No: uygunsuzluğun görüldüğü fotoğrafın bu sohbete eklenme sırası (1, 2, 3…); fotoğrafı olmayan maddede boş bırak.
+        - İşaret X / İşaret Y: uygunsuzluğun fotoğrafta işaretlenecek alanının MERKEZİ, fotoğrafın sol üst köşesine göre yüzde (0–100; X soldan sağa, Y yukarıdan aşağı). Eksik olanı değil, eksikliğin görüldüğü yeri göster (ör. "merdiven kenarında korkuluk yok" → korkuluğun olması gereken merdiven kenarı). Sistem bu noktaya madde numaralı kırmızı çember çizer. Aynı fotoğrafta birden fazla uygunsuzluk varsa her biri kendi yerini göstersin; çemberler aynı noktaya konmasın.
+        - İşaret Çap: çemberin içine alacağı alanın genişliği, fotoğraf genişliğinin yüzdesi (5–60; küçük nesne 8–15, merdiven/raf gibi büyük alan 25–45). Fotoğrafı olmayan maddede üçünü de boş bırak.
         ÇIKTI: Yalnız bir TABLO ver, açıklama ekleme. İlk satır başlık; sütunlar tam olarak şu sırada ve şu adlarla:
-        Fotoğraf No | Tespit | Öneri | Öncelik | Sorumlu | Termin | Dayanak
-        Hücrelerde satır sonu kullanma.
+        Fotoğraf No | Tespit | Öneri | Öncelik | Sorumlu | Termin | Dayanak | İşaret X | İşaret Y | İşaret Çap
+        Hücrelerde satır sonu kullanma. İşaret hücrelerine yalnız sayı yaz.
         METIN;
     }
 

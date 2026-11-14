@@ -361,16 +361,29 @@ class DofOlustur extends Page
 
         // 14.11.2026: Fotoğraf No'ya göre — dosya adındaki numara (1.jpg) ya da yükleme sırası.
         // Excel/Word satırına yapıştırılmış fotoğraf varsa o korunur.
-        $kullanilan = [];
+        $sira = count($this->maddeler);
         foreach ($sonuc['maddeler'] as $i => $m) {
             $foto = ($m['foto_no'] ?? null) ? ($esles[$m['foto_no']] ?? null) : null;
 
             if ($foto && empty($m['foto_yolu'])) {
                 $sonuc['maddeler'][$i]['foto_yolu'] = $foto;
-                $kullanilan[] = $foto;
+            }
+
+            // Gemini işaret verdiyse uygunsuzluğun yeri fotoğrafın kopyasında madde
+            // numarasıyla çemberlenir (14.11.2026) — işverenin dikkatini çeker.
+            $yol = $sonuc['maddeler'][$i]['foto_yolu'] ?? null;
+            if ($yol && ! empty($m['isaret'])) {
+                $isaretli = \App\Support\FotoIsaretleyici::cember($yol, $m['isaret']['x'], $m['isaret']['y'], $m['isaret']['cap'], 'public', $sira + $i + 1);
+                if ($isaretli) {
+                    $sonuc['maddeler'][$i]['foto_yolu'] = $isaretli;
+                    $sonuc['isaretlenen'] = ($sonuc['isaretlenen'] ?? 0) + 1;
+                }
             }
         }
-        Storage::disk('public')->delete(array_diff($fotolar, $kullanilan));
+        // Raporda kullanılmayan yüklemeler silinir (işaretli kopyası alınmış orijinal dahil).
+        Storage::disk('public')->delete(array_diff($fotolar, array_map(
+            fn (array $m) => $m['foto_yolu'] ?? null, $sonuc['maddeler'],
+        )));
 
         $this->aktarimUygula($sonuc);
     }
@@ -411,14 +424,15 @@ class DofOlustur extends Page
         }
 
         $maddeler = array_map(function (array $m) {
-            unset($m['foto_no']);
+            unset($m['foto_no'], $m['isaret']);
 
             return $m;
         }, $sonuc['maddeler']);
         $this->maddeler = [...$this->maddeler, ...$maddeler];
 
         $fotolu = count(array_filter($maddeler, fn (array $m) => filled($m['foto_yolu'] ?? null)));
-        $fotoNotu = $fotolu ? $fotolu.' maddeye fotoğraf bağlandı. ' : '';
+        $fotoNotu = ($fotolu ? $fotolu.' maddeye fotoğraf bağlandı. ' : '')
+            .(! empty($sonuc['isaretlenen']) ? $sonuc['isaretlenen'].' maddede uygunsuzluğun yeri fotoğrafta numaralı çemberle işaretlendi. ' : '');
 
         Notification::make()
             ->title(count($sonuc['maddeler']).' madde aktarıldı')
