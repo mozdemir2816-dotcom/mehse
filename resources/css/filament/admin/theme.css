@@ -3,6 +3,8 @@
    (yoğunluk/yazı boyutu) ve klasik tema zenginleştirmesi — hepsi html[...] önekli
    ya da kendine özgü sınıflı, dolayısıyla aşağıdaki kuralları sıradan bağımsız ezer. */
 @import './tasarim.css';
+/* Görsel temalar (material / windows11 / saha / açık alan / kağıt) — html[data-mehse-tema] önekli. */
+@import './temalar.css';
 /* Pano teması (13.11.2026: tek tema; MEHSE, Modern, Klasik, Material, Windows 11, Saha, Açık alan,
    Kağıt kaldırıldı) — tasarim.css'teki ortak bileşen değişkenlerini ezdiği için ondan sonra gelir. */
 @import './tema-pano.css';

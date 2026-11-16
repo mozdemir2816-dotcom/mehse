@@ -11,7 +11,7 @@ class GorselTemaSeciciTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_panel_sayfasi_erken_tema_scriptini_icerir_tema_secici_yok(): void
+    public function test_panel_sayfasi_tema_seciciyi_ve_erken_tema_scriptini_icerir(): void
     {
         $this->actingAs(User::factory()->create());
 
@@ -20,8 +20,10 @@ class GorselTemaSeciciTest extends TestCase
         $yanit->assertOk();
         // İlk boyamadan önce <html data-mehse-tema> basan script.
         $yanit->assertSee('window.mehseTemaUygula', escape: false);
-        // 13.11.2026: tek tema (Pano) — topbar seçicisi kaldırıldı.
+        // Topbar'daki seçici: Pano varsayılan; MEHSE adlı temalar yok.
         $yanit->assertSee('"tema":"pano"', escape: false);
-        $yanit->assertDontSee('fi-mehse-tema-secenek', escape: false);
+        $yanit->assertSee('fi-mehse-tema-secenek', escape: false);
+        $yanit->assertSeeInOrder(['Pano', 'Klasik', 'Google Material', 'Windows 11', 'Saha']);
+        $yanit->assertDontSee('MEHSE Modern', escape: false);
     }
 }

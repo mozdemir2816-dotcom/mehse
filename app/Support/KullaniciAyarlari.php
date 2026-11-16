@@ -20,13 +20,20 @@ use WeakMap;
 class KullaniciAyarlari
 {
     /**
-     * Tek tema (13.11.2026, kullanıcı kararı): Pano. Önceki 8 tema (MEHSE, Modern, Klasik, Material,
-     * Windows 11, Saha, Açık alan, Kağıt) kaldırıldı; kayıtlı eski seçimler tema() ile Pano'ya düşer.
+     * Temalar (16.11.2026, kullanıcı kararı): "mehse" adlı iki tema (MEHSE, MEHSE Modern) kaldırıldı;
+     * Klasik, Google Material, Windows 11, Saha, Açık alan, Kağıt kaldı, Pano varsayılan.
+     * Kayıtlı eski "mehse"/"modern" seçimi tema() ile Pano'ya düşer.
      */
     public const VARSAYILAN_TEMA = 'pano';
 
     public const TEMALAR = [
         'pano' => 'Pano',
+        'klasik' => 'Klasik',
+        'material' => 'Google Material',
+        'windows11' => 'Windows 11',
+        'saha' => 'Saha',
+        'acik_alan' => 'Açık alan',
+        'kagit' => 'Kağıt',
     ];
 
     public const YOGUNLUKLAR = [

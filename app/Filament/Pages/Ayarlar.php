@@ -56,6 +56,7 @@ class Ayarlar extends Page
         $tumKriterler = array_column(config('isg.kontrol_merkezi.kriterler', []), 'anahtar');
 
         $this->form->fill([
+            'tema' => $ayar['tema'],
             'yogunluk' => $ayar['yogunluk'],
             'yazi_boyutu' => $ayar['yazi_boyutu'],
             'ana_ekran' => $ayar['ana_ekran'],
@@ -76,6 +77,21 @@ class Ayarlar extends Page
                     ->icon('heroicon-o-swatch')
                     ->columns(3)
                     ->schema([
+                        ToggleButtons::make('tema')
+                            ->label('Tema')
+                            ->options(KullaniciAyarlari::TEMALAR)
+                            ->icons([
+                                'pano' => 'heroicon-o-squares-plus',
+                                'klasik' => 'heroicon-o-building-office-2',
+                                'material' => 'heroicon-o-squares-2x2',
+                                'windows11' => 'heroicon-o-window',
+                                'saha' => 'heroicon-o-wrench-screwdriver',
+                                'acik_alan' => 'heroicon-o-sun',
+                                'kagit' => 'heroicon-o-book-open',
+                            ])
+                            ->inline()
+                            ->required()
+                            ->columnSpanFull(),
                         ToggleButtons::make('yogunluk')
                             ->label('Yoğunluk')
                             ->helperText('Kompakt: tablolarda ve menüde daha çok satır sığar.')
@@ -221,7 +237,7 @@ class Ayarlar extends Page
         $tumKriterler = array_column(config('isg.kontrol_merkezi.kriterler', []), 'anahtar');
 
         KullaniciAyarlari::kaydet($this->kullanici(), [
-            'tema' => KullaniciAyarlari::VARSAYILAN_TEMA,
+            'tema' => $veri['tema'],
             'yogunluk' => $veri['yogunluk'],
             'yazi_boyutu' => $veri['yazi_boyutu'],
             'ana_ekran' => $veri['ana_ekran'],

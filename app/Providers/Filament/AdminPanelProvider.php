@@ -156,6 +156,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::USER_MENU_BEFORE,
                 fn () => view('filament.components.bildirim-zili'),
             )
+            // Görsel tema seçici — topbar'da kullanıcı avatarının solunda.
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => view('filament.components.tema-secici'),
+            )
             // Mobil alt navigasyon çubuğu (tasarım sistemi 2026-09-14) — yalnız
             // küçük ekranda görünür (bkz. theme.css .fi-mobil-alt-nav); 5 sekme
             // kullanıcıyla birlikte seçildi: Kontrol Merkezi, Firmalar, Risk
