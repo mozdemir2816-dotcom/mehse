@@ -6217,6 +6217,24 @@ return [
             'cok_ciddi' => 'Çok Ciddi (ölüm / sürekli iş göremezlik)',
         ],
 
+        // Yaralanan vücut bölgesi — Olay Komuta 360° vücut haritası (16.11.2026).
+        // 'on' => vücut önden görünüşte işaret noktası [x, y] (0-100 ölçeği, 100x220 çizim alanı).
+        'vucut_bolgeleri' => [
+            'bas' => ['ad' => 'Baş / Yüz', 'x' => 50, 'y' => 7],
+            'goz' => ['ad' => 'Göz', 'x' => 50, 'y' => 16],
+            'boyun' => ['ad' => 'Boyun', 'x' => 50, 'y' => 30],
+            'omuz' => ['ad' => 'Omuz', 'x' => 31, 'y' => 40],
+            'gogus' => ['ad' => 'Göğüs / Sırt Üstü', 'x' => 50, 'y' => 58],
+            'bel' => ['ad' => 'Bel / Lomber', 'x' => 50, 'y' => 84],
+            'kol' => ['ad' => 'Kol / Dirsek', 'x' => 21, 'y' => 70],
+            'el_bilek' => ['ad' => 'El / Bilek', 'x' => 16, 'y' => 98],
+            'parmak' => ['ad' => 'Parmak', 'x' => 12, 'y' => 108],
+            'kalca' => ['ad' => 'Kalça / Kasık', 'x' => 50, 'y' => 106],
+            'diz' => ['ad' => 'Diz / Bacak', 'x' => 40, 'y' => 150],
+            'ayak' => ['ad' => 'Ayak / Ayak Bileği', 'x' => 40, 'y' => 205],
+            'genel' => ['ad' => 'Birden Çok Bölge / Sistemik', 'x' => 0, 'y' => 0],
+        ],
+
         // Kaydın inceleme durumu (defter + Excel "Durum" sütunu).
         'durumlar' => [
             'acik' => 'Açık',

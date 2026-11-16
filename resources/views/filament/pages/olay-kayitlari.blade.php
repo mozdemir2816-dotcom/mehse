@@ -418,6 +418,15 @@
                         <input type="text" wire:model="yaralanmaTuru" placeholder="Örn: Sol el işaret parmağında kesik" style="{{ $inp }}">
                     </div>
                     <div>
+                        <label style="{{ $lbl }}">Yaralanan Vücut Bölgesi</label>
+                        <select wire:model="yaralananBolge" style="{{ $inp }}">
+                            <option value="">— Seçin (Olay Komuta 360° vücut haritası) —</option>
+                            @foreach (config('isg.olay.vucut_bolgeleri') as $k => $b)
+                                <option value="{{ $k }}">{{ $b['ad'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label style="{{ $lbl }}">Rapor Süresi / Kayıp Gün</label>
                         <input type="number" min="0" wire:model="kayipGunSayisi" style="{{ $inp }}">
                     </div>

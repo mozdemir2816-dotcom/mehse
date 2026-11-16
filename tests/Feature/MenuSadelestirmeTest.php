@@ -74,7 +74,7 @@ class MenuSadelestirmeTest extends TestCase
 
         $sekmeler = SayfaAileleri::sekmeler([Pages\MuayeneFormu::class]);
 
-        $this->assertSame(['Sağlık Gözetimi', 'Muayene Formu (EK-2)', 'İşe Dönüş Belgesi', 'Meslek Hastalığı Bildirimi', 'Olay Kayıtları', 'Kaza İnceleme Raporu', 'İstatistikler'], array_column($sekmeler, 'etiket'));
+        $this->assertSame(['Sağlık Gözetimi', 'Muayene Formu (EK-2)', 'İşe Dönüş Belgesi', 'Meslek Hastalığı Bildirimi', 'Olay Kayıtları', 'Kaza İnceleme Raporu', 'İstatistikler', 'Olay Komuta 360°'], array_column($sekmeler, 'etiket'));
         $this->assertTrue($sekmeler[1]['aktif']);
         $this->assertFalse($sekmeler[0]['aktif']);
         $this->assertSame([], SayfaAileleri::sekmeler([Pages\ZiyaretProgrami::class]));

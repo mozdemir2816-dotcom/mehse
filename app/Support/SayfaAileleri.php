@@ -75,6 +75,7 @@ class SayfaAileleri
                 [Pages\EgitimYenilemeTakibi::class, 'Eğitim Takibi (Yenileme)'],
                 [Pages\SertifikaOlustur::class, 'Sertifika'],
                 [EgitimPaketiResource::class, 'Paketler'],
+                [Pages\UzaktanEgitimFirmaAyarlari::class, 'Firma Ayarları'],
                 [Pages\UzaktanEgitimAtama::class, 'Atama'],
                 [Pages\UzaktanEgitimTakip::class, 'Takip'],
                 [Pages\UzaktanEgitimSorulari::class, 'Sınav Soruları'],
@@ -99,6 +100,7 @@ class SayfaAileleri
                 [Pages\OlayKayitlari::class, 'Olay Kayıtları'],
                 [Pages\IsKazasiRaporu::class, 'Kaza İnceleme Raporu'],
                 [Pages\KazaIstatistikleri::class, 'İstatistikler'],
+                [Pages\OlayKomuta360::class, 'Olay Komuta 360°'],
             ],
             // Sistem Yönetim & Entegrasyon Merkezi: 8 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['ayarlar'] bkz.
             'ayarlar' => [
@@ -199,6 +201,11 @@ class SayfaAileleri
                 'ikon' => 'heroicon-o-chart-bar',
                 'siniflar' => [Pages\KazaIstatistikleri::class],
             ],
+            [
+                'etiket' => 'Olay Komuta 360° — Yönetici Panosu & Vücut Haritası',
+                'ikon' => 'heroicon-o-presentation-chart-line',
+                'siniflar' => [Pages\OlayKomuta360::class],
+            ],
         ],
         'egitim' => [
             [
@@ -210,7 +217,7 @@ class SayfaAileleri
                 // Online Eğitim Yönet (08.11.2026): Paketler · Atama · Takip · Sınav Soruları.
                 'etiket' => 'Online Eğitim Yönet',
                 'ikon' => 'heroicon-o-computer-desktop',
-                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimAtama::class, Pages\UzaktanEgitimTakip::class, Pages\UzaktanEgitimSorulari::class],
+                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimFirmaAyarlari::class, Pages\UzaktanEgitimAtama::class, Pages\UzaktanEgitimTakip::class, Pages\UzaktanEgitimSorulari::class],
             ],
             [
                 'etiket' => 'Soru & İçerik Bankası',

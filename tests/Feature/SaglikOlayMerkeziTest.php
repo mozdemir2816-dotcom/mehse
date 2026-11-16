@@ -28,7 +28,7 @@ class SaglikOlayMerkeziTest extends TestCase
         $g = SayfaAileleri::sekmeGruplari([KazaIstatistikleri::class]);
         $this->assertSame('saglik_olay', $g['aile']);
         $this->assertSame(
-            ['Sağlık Gözetimi & EK-2 Muayene Formu', 'Olay / Kaza / Ramak Kala & Kök Neden Analizi', 'Kaza İstatistikleri & Sıklık/Ağırlık Oranları'],
+            ['Sağlık Gözetimi & EK-2 Muayene Formu', 'Olay / Kaza / Ramak Kala & Kök Neden Analizi', 'Kaza İstatistikleri & Sıklık/Ağırlık Oranları', 'Olay Komuta 360° — Yönetici Panosu & Vücut Haritası'],
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame('Kaza İstatistikleri & Sıklık/Ağırlık Oranları', collect($g['ust'])->firstWhere('aktif', true)['etiket']);

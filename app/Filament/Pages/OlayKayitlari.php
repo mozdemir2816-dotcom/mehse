@@ -95,6 +95,8 @@ class OlayKayitlari extends Page
 
     public ?string $yaralanmaTuru = null;
 
+    public ?string $yaralananBolge = null;
+
     public ?string $mudahaleDetayi = null;
 
     public ?string $sistemselEksiklik = null;
@@ -402,6 +404,7 @@ class OlayKayitlari extends Page
         $this->kayipGunSayisi = $o->kayip_gun_sayisi;
         $this->kazaTuru = $o->kaza_turu;
         $this->yaralanmaTuru = $o->yaralanma_turu;
+        $this->yaralananBolge = $o->yaralanan_bolge;
         $this->mudahaleDetayi = $o->mudahale_detayi;
         $this->sgkBildirimiYapildi = (bool) $o->sgk_bildirimi_yapildi;
         $this->sgkBildirimTarihi = $o->sgk_bildirim_tarihi?->toDateString();
@@ -718,6 +721,7 @@ class OlayKayitlari extends Page
             'kayip_gun_sayisi' => $this->kayipGunSayisi,
             'kaza_turu' => $this->kazaTuru,
             'yaralanma_turu' => $this->yaralanmaTuru,
+            'yaralanan_bolge' => filled($this->yaralananBolge) ? $this->yaralananBolge : null,
             'mudahale_detayi' => $this->mudahaleDetayi,
             'sgk_bildirimi_yapildi' => $this->sgkBildirimiYapildi,
             'sgk_bildirim_tarihi' => $this->sgkBildirimiYapildi ? $this->sgkBildirimTarihi : null,
