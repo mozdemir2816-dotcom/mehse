@@ -51,6 +51,7 @@ class UzaktanEgitimAtayici
                     'durum' => 'atandi',
                 ])->save();
                 $sonuc['atanan']++;
+                \App\Models\EgitimOlayi::yaz($atama->id, 'atama', 'Eğitim atandı', $paket->ad.' · '.($egitimTuru === 'ilk_defa' ? 'ilk eğitim' : 'tekrar eğitimi'), $calisan->id);
             }
 
             $gecici = null;

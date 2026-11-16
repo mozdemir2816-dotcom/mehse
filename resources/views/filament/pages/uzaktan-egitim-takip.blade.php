@@ -21,13 +21,100 @@
         </div>
     </div>
 
-    @if (! $this->firma && $this->tumAtamalar->isEmpty())
+
+    {{-- ===================== GÖNDERİLENLER (kart listesi) ===================== --}}
+    @if ($this->gorunum === 'kart')
+        @php
+            $tum = $this->tumAtamalar;
+            $filtreler = ['hepsi' => 'Tümü', 'devam' => 'Devam eden / başlamadı', 'basarisiz' => 'Sınavda kaldı', 'onay_bekliyor' => 'İGU / pratik onayı bekliyor', 'ih_onay_bekliyor' => 'İH onayı bekliyor', 'tamamlandi' => 'Tamamlandı', 'gecikti' => 'Süresi geçen'];
+            $liste = $this->gonderilenler;
+        @endphp
+        <x-filament::section icon="heroicon-o-paper-airplane" icon-color="primary">
+            <x-slot name="heading">Gönderilenler</x-slot>
+            <x-slot name="description">Her kart bir çalışanın eğitimidir: ilerleme, son giriş ve son geçerlilik tarihi. "Ayrıntılı kayıt" giriş-çıkış, sınav cevapları ve zaman çizelgesini açar.</x-slot>
+            <x-slot name="afterHeader">
+                <button type="button" wire:click="$set('gorunum', 'tablo')" style="font-size:.8rem;cursor:pointer;background:none;border:1px solid rgb(107 114 128 / .35);border-radius:.5rem;padding:.35rem .8rem;color:inherit">Tablo görünümü</button>
+            </x-slot>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem;margin-bottom:.8rem">
+                <div>
+                    <label class="mehse-etiket" for="gon-ara">Ara</label>
+                    <input id="gon-ara" type="search" wire:model.live.debounce.300ms="gonderilenAra" placeholder="Çalışan ya da firma" style="{{ $girdi }}">
+                </div>
+                <div style="display:flex;align-items:end">
+                    <button type="button" wire:click="$refresh" style="{{ $girdi }};cursor:pointer;font-weight:600;margin-top:0">Yenile</button>
+                </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem" role="group" aria-label="Durum süzgeci">
+                @foreach ($filtreler as $k => $v)
+                    <button type="button" wire:click="$set('genelFiltre', '{{ $k }}')" aria-pressed="{{ $genelFiltre === $k ? 'true' : 'false' }}" style="font-size:.78rem;padding:.3rem .7rem;border-radius:999px;cursor:pointer;min-height:2rem;border:1px solid {{ $genelFiltre === $k ? 'rgb(79 70 229)' : 'rgb(107 114 128 / .35)' }};background:{{ $genelFiltre === $k ? 'rgb(79 70 229)' : 'transparent' }};color:{{ $genelFiltre === $k ? '#fff' : 'inherit' }}">
+                        {{ $v }} ({{ $tum->when($this->firmaId, fn ($c) => $c->where('calisan.firma_id', $this->firmaId))->filter(fn ($a) => \App\Filament\Pages\UzaktanEgitimAtama::genelFiltreUyar($a, $k))->count() }})
+                    </button>
+                @endforeach
+            </div>
+            @if ($this->firma)
+                <div style="margin-bottom:.8rem"><div style="display:flex;flex-wrap:wrap;gap:.4rem">
+                    <x-filament::button size="sm" color="primary" icon="heroicon-o-document-text" wire:click="denetimTutanagi">Denetim Tutanağı (PDF)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="takipExcel">Takip Listesi (Excel)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-key" wire:click="girisBilgileriIndir('excel')" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Giriş Bilgileri (Excel)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-printer" wire:click="girisBilgileriIndir('pdf')" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Giriş Kartları (PDF)</x-filament::button>
+                </div></div>
+            @endif
+
+            @if ($liste->isEmpty())
+                <p style="font-size:.85rem;color:rgb(107 114 128)">{{ $tum->isEmpty() ? 'Henüz gönderilmiş uzaktan eğitim yok. Atama sekmesinden eğitim gönderin.' : 'Bu süzgece uyan eğitim yok.' }}</p>
+            @else
+                <div style="display:grid;gap:.7rem">
+                    @foreach ($liste as $a)
+                        @php
+                            $toplam = $a->paket->dersler->count();
+                            $biten = $a->ilerlemeler->where('izlendi', true)->count();
+                            $sonSinav = $a->sinavSonuclari->first();
+                            $sonGiris = $a->girisler->last()?->giris_at;
+                            $renk = match ($a->durum) { 'tamamlandi' => '#15803d', 'basarisiz' => '#b91c1c', 'onay_bekliyor' => '#b45309', 'ih_onay_bekliyor' => '#7c3aed', default => '#475569' };
+                        @endphp
+                        <div wire:key="gon-{{ $a->id }}" style="border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.9rem 1rem">
+                            <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;align-items:flex-start">
+                                <div>
+                                    <div style="font-weight:800;font-size:1rem">{{ $a->calisan->ad_soyad }}</div>
+                                    <div class="mehse-soluk" style="font-size:.8rem">{{ $a->calisan->firma->unvan }} · {{ config('isg.tehlike_siniflari.'.$a->calisan->firma->tehlike_sinifi, $a->calisan->firma->tehlike_sinifi) }} · {{ $a->turEtiketi() }} · {{ \App\Filament\Pages\UzaktanEgitimAtama::telefonMaskele($a->calisan->telefon) }}</div>
+                                </div>
+                                <span style="border:1px solid {{ $renk }};color:{{ $renk }};border-radius:999px;padding:.1rem .7rem;font-size:.75rem;font-weight:700">{{ $a->durumEtiketi() }}</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem 1.2rem;margin-top:.7rem;font-size:.82rem">
+                                <div><div class="mehse-soluk">İlerleme</div><strong>Ön test {{ $a->on_test_puani ?? '—' }} · Ders {{ $biten }}/{{ $toplam }} · Son sınav {{ $sonSinav ? $sonSinav->puan : '—' }}</strong></div>
+                                <div><div class="mehse-soluk">Gönderim</div><strong>{{ $a->atandi_at?->format('d.m.Y') ?? '—' }}</strong></div>
+                                <div><div class="mehse-soluk">Son giriş</div><strong>{{ $sonGiris?->format('d.m.Y H:i') ?? '—' }}</strong></div>
+                                <div><div class="mehse-soluk">Son geçerlilik</div><strong>{{ $a->son_tarih?->format('d.m.Y') ?? '—' }}</strong>@if (\App\Filament\Pages\UzaktanEgitimAtama::genelFiltreUyar($a, 'gecikti')) <span style="color:#b91c1c;font-size:.75rem">· geçti</span>@endif</div>
+                            </div>
+                            <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem;align-items:center">
+                                @include('filament.pages.partials.uzaktan-egitim-onay-dugmeleri')
+                                @if (in_array($a->durum, ['atandi', 'devam', 'basarisiz'], true))
+                                    <a href="{{ $this->hatirlatmaLinki($a) }}" target="_blank" rel="noopener" style="font-size:.8rem;padding:.3rem .7rem;border:1px solid rgb(107 114 128 / .4);border-radius:.45rem;text-decoration:none;color:inherit;min-height:2rem;display:inline-flex;align-items:center">Bilgileri yeniden gönder (WhatsApp)</a>
+                                @endif
+                                <button type="button" wire:click="detayaGit({{ $a->id }})" style="font-size:.8rem;padding:.3rem .7rem;border:1px solid rgb(79 70 229 / .5);border-radius:.45rem;background:none;color:rgb(79 70 229);font-weight:600;cursor:pointer;min-height:2rem">Ayrıntılı kayıt</button>
+                                @if (\App\Support\UzaktanEgitimAtayici::baslamadiMi($a))
+                                    <button type="button" wire:click="atamaIptal({{ $a->id }})" wire:confirm="Eğitim iptal edilsin mi? Çalışan henüz başlamadığı için kayıt silinir." style="font-size:.8rem;padding:.3rem .7rem;border:1px solid rgb(185 28 28 / .5);border-radius:.45rem;background:none;color:#b91c1c;cursor:pointer;min-height:2rem">İptal et</button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </x-filament::section>
+    @else
+        <div style="display:flex;justify-content:flex-end">
+            <button type="button" wire:click="$set('gorunum', 'kart')" style="font-size:.8rem;cursor:pointer;background:none;border:1px solid rgb(107 114 128 / .35);border-radius:.5rem;padding:.35rem .8rem;color:inherit">Kart görünümü (Gönderilenler)</button>
+        </div>
+    @endif
+
+    @if ($this->gorunum === 'tablo' && ! $this->firma && $this->tumAtamalar->isEmpty())
         <p style="font-size:.85rem;color:rgb(107 114 128)">Henüz atanmış uzaktan eğitim yok. Atama sekmesinden eğitim atayın.</p>
-    @elseif ($this->firma && $this->atamalar->isEmpty())
+    @elseif ($this->gorunum === 'tablo' && $this->firma && $this->atamalar->isEmpty())
         <p style="font-size:.85rem;color:rgb(107 114 128)">Bu firmada atanmış uzaktan eğitim yok.</p>
     @endif
 
-    @if (! $this->firma && $this->tumAtamalar->isNotEmpty())
+    @if ($this->gorunum === 'tablo' && ! $this->firma && $this->tumAtamalar->isNotEmpty())
         @php
             $tum = $this->tumAtamalar;
             $filtreler = ['hepsi' => 'Tümü', 'devam' => 'Devam eden / başlamadı', 'basarisiz' => 'Sınavda kaldı', 'onay_bekliyor' => 'İGU / pratik onayı bekliyor', 'ih_onay_bekliyor' => 'İH onayı bekliyor', 'tamamlandi' => 'Tamamlandı', 'sertifika' => 'Sertifika hazır', 'gecikti' => 'Son tarihi geçti'];
@@ -92,6 +179,7 @@
     @endif
 
     @if ($this->firma && $this->atamalar->isNotEmpty())
+        @if ($this->gorunum === 'tablo')
         <x-filament::section icon="heroicon-o-chart-bar" icon-color="gray">
             <x-slot name="heading">Atanan Eğitimler — {{ $this->firma->unvan }}</x-slot>
             <x-slot name="description">Her oturumun giriş–çıkış saati ve fiili izleme süresi kaydedilir. Temel İSG eğitimi bitince çalışanın Eğitim Kayıtları'na işlenir (tehlikeli / çok tehlikeli işyerinde 4. konu yüz yüze verilince).</x-slot>
@@ -174,6 +262,8 @@
                 </table>
             </div>
         </x-filament::section>
+
+        @endif
 
         @if ($this->detay)
             @include('filament.pages.partials.uzaktan-egitim-takip-detay')

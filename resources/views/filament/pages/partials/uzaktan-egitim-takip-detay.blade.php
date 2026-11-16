@@ -27,6 +27,8 @@
             ['KVKK + taahhüt onayı', $cl->kvkk_onay_at ? $cl->kvkk_onay_at->format('d.m.Y H:i').' · IP '.$cl->kvkk_onay_ip : 'Onaylamadı'],
             ['Atandı / son tarih', $d->atandi_at?->format('d.m.Y').' / '.($d->son_tarih?->format('d.m.Y') ?? '—')],
             ['Tamamlanma', $d->tamamlandi_at?->format('d.m.Y H:i') ?? '—'],
+            ['Ekrandan ayrılma', $d->olaylar->where('baslik', 'Eğitim ekranından ayrıldı')->count().' kez'],
+            ['Hatalı giriş denemesi', $d->olaylar->where('tur', 'hatali_giris')->count().' kez'],
         ] as [$etiket, $deger])
             <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.5rem;padding:.55rem .7rem">
                 <div style="font-size:.75rem;{{ $soluk }}">{{ $etiket }}</div>
@@ -139,6 +141,39 @@
             </details>
         @endforeach
     @endif
+
+    {{-- Zaman çizelgesi (olay günlüğü, Md.12/4) --}}
+    @php
+        $suzgecler = \App\Models\EgitimOlayi::SUZGECLER;
+        $secili = array_key_exists($this->zamanFiltre, $suzgecler) ? $this->zamanFiltre : 'tumu';
+        $turler = $suzgecler[$secili][1];
+        $olaylar = $d->olaylar->when($turler, fn ($c) => $c->whereIn('tur', $turler))->values();
+    @endphp
+    <div style="font-weight:700;margin:1.1rem 0 .4rem;font-size:.9rem">Zaman çizelgesi</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.7rem" role="group" aria-label="Zaman çizelgesi süzgeci">
+        @foreach ($suzgecler as $anahtar => [$etiket])
+            <button type="button" wire:click="$set('zamanFiltre', '{{ $anahtar }}')" aria-pressed="{{ $secili === $anahtar ? 'true' : 'false' }}"
+                style="padding:.3rem .8rem;border-radius:999px;font-size:.78rem;font-weight:600;cursor:pointer;min-height:2rem;border:1px solid rgb(107 114 128 / .35);{{ $secili === $anahtar ? 'background:rgb(79 70 229);color:#fff;border-color:rgb(79 70 229)' : 'background:transparent;color:inherit' }}">{{ $etiket }}</button>
+        @endforeach
+    </div>
+    @if ($olaylar->isEmpty())
+        <div style="font-size:.8rem;{{ $soluk }}">Bu türde kayıt yok.</div>
+    @else
+        <div style="border-left:2px solid rgb(107 114 128 / .25);margin-left:.45rem;padding-left:1rem">
+            @foreach ($olaylar->groupBy(fn ($o) => $o->olay_at->locale('tr')->translatedFormat('d F Y l')) as $gun => $liste)
+                <div style="font-weight:700;font-size:.8rem;margin:.6rem 0 .3rem">{{ $gun }}</div>
+                @foreach ($liste as $o)
+                    <div style="position:relative;margin-bottom:.55rem;font-size:.82rem">
+                        <span aria-hidden="true" style="position:absolute;left:-1.4rem;top:.3rem;width:.7rem;height:.7rem;border-radius:50%;background:{{ \App\Models\EgitimOlayi::RENKLER[$o->tur] ?? '#64748b' }}"></span>
+                        <span style="{{ $soluk }};font-variant-numeric:tabular-nums">{{ $o->olay_at->format('H:i:s') }}</span>
+                        <strong style="margin-left:.35rem">{{ $o->baslik }}</strong>
+                        @if ($o->aciklama)<div style="{{ $soluk }};margin-top:.1rem">{{ $o->aciklama }}</div>@endif
+                    </div>
+                @endforeach
+            @endforeach
+        </div>
+    @endif
+    <p style="font-size:.74rem;{{ $soluk }};margin:.5rem 0 0">Saatler Türkiye saatidir. Kayıtlar, uzaktan eğitimde giriş, çıkış ve ölçme kaydı tutulması şartı (Eğitim Yönetmeliği md. 12/4) için saklanır.</p>
 
     {{-- Onay ve belge --}}
     <div style="font-weight:700;margin:1.1rem 0 .4rem;font-size:.9rem">Onay ve belge</div>

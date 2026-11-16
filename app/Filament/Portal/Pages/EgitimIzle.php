@@ -5,6 +5,7 @@ namespace App\Filament\Portal\Pages;
 use App\Models\EgitimAtamasi;
 use App\Models\EgitimDersIlerlemesi;
 use App\Models\EgitimGirisi;
+use App\Models\EgitimOlayi;
 use App\Models\EgitimPaketiSorusu;
 use App\Models\EgitimSinavSonucu;
 use App\Support\UzaktanEgitimBelgesiUretici;
@@ -76,6 +77,10 @@ class EgitimIzle extends Page
         } elseif ($a->onTestBekliyorMu()) {
             $this->soruHazirla($a, 'on_test');
             $this->mod = 'on_test';
+
+            if (! $a->olaylar()->where('tur', 'on_test')->exists()) {
+                EgitimOlayi::yaz($a->id, 'on_test', 'Ön test başladı', count($this->sinavSorulari).' soru.', $a->calisan_id);
+            }
         }
     }
 
@@ -137,6 +142,9 @@ class EgitimIzle extends Page
         }
 
         $ilerleme = EgitimDersIlerlemesi::firstOrNew(['egitim_atamasi_id' => $a->id, 'egitim_dersi_id' => $dersId]);
+        if (! $ilerleme->exists) {
+            EgitimOlayi::yaz($a->id, 'oturum', $ders->siraEtiketi().'. ders başladı: '.$ders->baslik, null, $a->calisan_id);
+        }
         $ilerleme->izlenen_sn = (int) $ilerleme->izlenen_sn + $artis;
         // Videoda en fazla fiilen oynatılan toplam süre kadar ileri gidilebilir.
         $ilerleme->son_konum_sn = max((int) $ilerleme->son_konum_sn, min(max(0, $konumSn), $ilerleme->izlenen_sn + 10));
@@ -172,12 +180,50 @@ class EgitimIzle extends Page
         if (! $ilerleme->izlendi && $ilerleme->izleme_yuzdesi >= $a->paket->video_zorunlu_yuzde) {
             $ilerleme->izlendi = true;
             $ilerleme->izlendi_at = now();
+            $dersAdi = $a->paket->dersler->firstWhere('id', $ilerleme->egitim_dersi_id);
+            EgitimOlayi::yaz($a->id, 'oturum', ($dersAdi ? $dersAdi->siraEtiketi().'. ders tamamlandı: '.$dersAdi->baslik : 'Ders tamamlandı'),
+                'İzlenen süre: '.floor(((int) $ilerleme->izlenen_sn) / 60).' dk '.((int) $ilerleme->izlenen_sn % 60).' sn', $a->calisan_id);
         }
 
         $ilerleme->save();
 
         unset($this->atamaKaydi, $this->izlenenDersIdler);
         $a->durumuTazele();
+    }
+
+    /**
+     * Tarayıcıdan: çalışan eğitim ekranından ayrıldı (başka sekme / pencere). Video
+     * zaten durur; burada yalnız uyarı olarak kayda geçer (Md.12/4). Aynı ayrılışta
+     * iki olay (sekme + pencere) birlikte gelirse tek kayıt tutulur.
+     */
+    public function ekrandanAyrildi(string $neden = 'sekme', ?int $dersId = null): void
+    {
+        $a = $this->atamaKaydi();
+        if (! $a) {
+            return;
+        }
+
+        $anahtar = $this->oturumAnahtari('ayrilma');
+        $simdi = now()->getTimestamp();
+        if ($simdi - (int) session()->get($anahtar, 0) < 4) {
+            return;
+        }
+        session()->put($anahtar, $simdi);
+
+        $ders = $dersId ? $a->paket->dersler->firstWhere('id', $dersId) : null;
+        $yer = $ders ? $ders->siraEtiketi().'. ders — '.$ders->baslik : 'eğitim ekranı';
+        $sayi = $a->olaylar()->where('baslik', 'Eğitim ekranından ayrıldı')->count() + 1;
+
+        EgitimOlayi::yaz($a->id, 'uyari', 'Eğitim ekranından ayrıldı',
+            $yer.': '.($neden === 'pencere' ? 'başka pencereye ya da uygulamaya geçti' : 'başka sekmeye geçti').' ('.$sayi.' kez). Bu sırada video durdu ve süre sayılmadı.', $a->calisan_id);
+    }
+
+    /** Ön test sonuç ekranından derslere geçiş. */
+    public function derslereGec(): void
+    {
+        if ($this->mod === 'on_test_sonuc') {
+            $this->mod = 'izle';
+        }
     }
 
     /** Sayfa açıkken dakikada bir — oturumun son etkinliği (çıkış saati). */
@@ -203,9 +249,13 @@ class EgitimIzle extends Page
         ['puan' => $puan, 'detay' => $detay] = $this->puanla();
         $a->forceFill(['on_test_puani' => $puan, 'on_test_cevaplar' => $detay, 'on_test_at' => now()])->save();
 
+        $dogru = collect($detay)->filter(fn ($c) => (int) $c['verilen_index'] === (int) $c['dogru_index'])->count();
+        EgitimOlayi::yaz($a->id, 'on_test', 'Ön test bitti',
+            $puan.' puan ('.count($detay).' sorudan '.$dogru.' doğru) · Seviye: '.EgitimAtamasi::seviyeEtiketi($puan).'.', $a->calisan_id);
+
         $this->sinavSorulari = [];
         $this->cevaplar = [];
-        $this->mod = 'izle';
+        $this->mod = 'on_test_sonuc';
         unset($this->atamaKaydi);
 
         Notification::make()->title('Seviye tespit testi kaydedildi')->body('Şimdi derslere başlayabilirsiniz.')->success()->send();
@@ -227,6 +277,7 @@ class EgitimIzle extends Page
 
         $this->soruHazirla($a, 'final');
         $this->mod = 'sinav';
+        EgitimOlayi::yaz($a->id, 'sinav', 'Final sınavı başladı', ($a->sonrakiDeneme()).'. deneme · '.count($this->sinavSorulari).' soru.', $a->calisan_id);
     }
 
     public function sinaviGonder(): void
@@ -256,6 +307,12 @@ class EgitimIzle extends Page
 
         $a->durumuTazele();
         $this->oturum()?->nabiz();
+
+        EgitimOlayi::yaz($a->id, 'sinav', 'Final sınavı bitti',
+            $sonuc->deneme_no.'. deneme · '.$puan.' puan · '.($gecti ? 'GEÇTİ' : 'KALDI').' (geçme: '.$a->gecmePuani().').', $a->calisan_id);
+        if ($gecti) {
+            EgitimOlayi::yaz($a->id, 'tamamlama', 'Eğitim tamamlandı', 'Final sınavı başarıyla geçildi; onay ve belge adımları başlar.', $a->calisan_id);
+        }
 
         $this->sonSonuc = $sonuc;
         $this->mod = 'sonuc';

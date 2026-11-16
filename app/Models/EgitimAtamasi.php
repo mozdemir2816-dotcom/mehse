@@ -51,13 +51,22 @@ class EgitimAtamasi extends Model
 
     protected static function booted(): void
     {
-        static::deleting(fn (EgitimAtamasi $a) => $a->girisler()->delete());
+        static::deleting(function (EgitimAtamasi $a): void {
+            $a->girisler()->delete();
+            $a->olaylar()->delete();
+        });
     }
 
     /** Bu eğitimin açıldığı tarihler (giriş günlüğü). */
     public function girisler(): HasMany
     {
         return $this->hasMany(EgitimGirisi::class)->orderBy('giris_at');
+    }
+
+    /** Zaman çizelgesi olayları (en eski üstte). */
+    public function olaylar(): HasMany
+    {
+        return $this->hasMany(EgitimOlayi::class, 'egitim_atamasi_id')->orderBy('olay_at')->orderBy('id');
     }
 
     public function ilerlemeler(): HasMany
@@ -251,6 +260,34 @@ class EgitimAtamasi extends Model
     public function onTestBekliyorMu(): bool
     {
         return $this->on_test_at === null && ! $this->basariliMi() && $this->paket?->sorular()->exists();
+    }
+
+    /** Ön test seviyesi: <50 Başlangıç, 50-79 Orta, ≥80 İyi. */
+    public static function seviyeEtiketi(int $puan): string
+    {
+        return $puan >= 80 ? 'İyi' : ($puan >= 50 ? 'Orta' : 'Başlangıç');
+    }
+
+    /**
+     * Ön testte yanlış/boş cevaplanan sorulardan "dikkat edilecek konular" (modül
+     * adı, soru sayısıyla). Soru id'leri havuzdan modülle eşlenir.
+     *
+     * @return array<int, array{konu: string, adet: int}>
+     */
+    public function onTestZayifKonulari(): array
+    {
+        $yanlislar = collect($this->on_test_cevaplar ?? [])
+            ->filter(fn ($c) => (int) ($c['verilen_index'] ?? -1) !== (int) ($c['dogru_index'] ?? -2))
+            ->pluck('id');
+
+        if ($yanlislar->isEmpty()) {
+            return [];
+        }
+
+        return EgitimPaketiSorusu::query()->whereIn('id', $yanlislar)->get()
+            ->groupBy(fn ($s) => $s->modul ?: 0)
+            ->map(fn ($g, $modul) => ['konu' => $modul ? (EgitimDersi::MODULLER[$modul] ?? 'Diğer') : 'Genel', 'adet' => $g->count()])
+            ->sortByDesc('adet')->values()->all();
     }
 
     /** Fiilen izlenen toplam süre (saniye). */

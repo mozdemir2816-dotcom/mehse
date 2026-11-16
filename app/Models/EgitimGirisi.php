@@ -44,13 +44,25 @@ class EgitimGirisi extends Model
             ->latest('giris_at')
             ->first();
 
-        return $suren ?? static::create([
+        if ($suren) {
+            return $suren;
+        }
+
+        $yeni = static::create([
             'calisan_id' => $calisanId,
             'egitim_atamasi_id' => $atamaId,
             'ip' => request()->ip(),
             'cihaz' => mb_substr((string) request()->userAgent(), 0, 255) ?: null,
             'giris_at' => now(),
         ]);
+
+        if ($atamaId) {
+            $ilk = ! static::query()->where('egitim_atamasi_id', $atamaId)->where('id', '!=', $yeni->id)->exists();
+            EgitimOlayi::yaz($atamaId, 'giris', $ilk ? 'İlk kez giriş yaptı' : 'Eğitime giriş yaptı',
+                $ilk ? 'Çalışan eğitim ekranını ilk kez açtı.' : 'Çalışan eğitim ekranını yeniden açtı.', $calisanId);
+        }
+
+        return $yeni;
     }
 
     /** Oturumun son etkinliği = çıkış; izlenen süre eklenir (Md.12/4). */

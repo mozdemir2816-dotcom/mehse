@@ -78,6 +78,22 @@ class AppServiceProvider extends ServiceProvider
         // (düzenleme sayfaları için bkz. KaydetUstte::afterSave).
         \Filament\Actions\EditAction::configureUsing(fn ($a) => $a->after(fn () => \App\Support\BagliKayitGuncelleyici::bildir()));
 
+        // Portalda yanlış şifre denemesi: çalışanın açık eğitimlerinin zaman çizelgesine "Hatalı giriş denemesi" düşer.
+        Event::listen(\Illuminate\Auth\Events\Failed::class, function (\Illuminate\Auth\Events\Failed $e): void {
+            if ($e->guard !== 'calisan' || blank($e->credentials['eposta'] ?? null)) {
+                return;
+            }
+            $calisan = \App\Models\Calisan::query()->where('eposta', $e->credentials['eposta'])->first();
+            if (! $calisan) {
+                return;
+            }
+            \App\Models\EgitimAtamasi::query()->where('calisan_id', $calisan->id)->where('durum', '!=', 'tamamlandi')->get()
+                ->each(function (\App\Models\EgitimAtamasi $a): void {
+                    $sayi = $a->olaylar()->where('tur', 'hatali_giris')->count() + 1;
+                    \App\Models\EgitimOlayi::yaz($a->id, 'hatali_giris', 'Hatalı giriş denemesi', 'Şifre yanlış girildi (toplam '.$sayi.'. hatalı deneme).', $a->calisan_id);
+                });
+        });
+
         // Uzaktan eğitim portalına (kullanıcı kodu / e-posta) her giriş günlüğe düşer.
         Event::listen(Login::class, function (Login $e): void {
             if ($e->guard === 'calisan') {

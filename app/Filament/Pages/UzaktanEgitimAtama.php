@@ -58,6 +58,15 @@ class UzaktanEgitimAtama extends Page
     /** Takip detayı açık olan atama (Yönetmelik Md.12/4 kayıtları). */
     public ?int $detayId = null;
 
+    /** Takip detayı zaman çizelgesi süzgeci (bkz. EgitimOlayi::SUZGECLER). */
+    public string $zamanFiltre = 'tumu';
+
+    /** Takip görünümü: 'kart' (Gönderilenler) ya da 'tablo' (eski tablo). */
+    public string $gorunum = 'kart';
+
+    /** Gönderilenler listesi arama kutusu (çalışan / firma). */
+    public string $gonderilenAra = '';
+
     public string $egitimTuru = 'yenileme';
 
     public ?string $sonTarih = null;
@@ -178,6 +187,56 @@ class UzaktanEgitimAtama extends Page
     public function genelListe(): Collection
     {
         return $this->tumAtamalar->filter(fn (EgitimAtamasi $a) => static::genelFiltreUyar($a, $this->genelFiltre))->values();
+    }
+
+    /**
+     * Gönderilenler: firma + durum süzgeci + arama uygulanmış atamalar (kart listesi).
+     *
+     * @return Collection<int, EgitimAtamasi>
+     */
+    #[Computed]
+    public function gonderilenler(): Collection
+    {
+        $ara = mb_strtolower(trim($this->gonderilenAra));
+
+        return $this->tumAtamalar
+            ->when($this->firmaId, fn ($c) => $c->where('calisan.firma_id', $this->firmaId))
+            ->filter(fn (EgitimAtamasi $a) => static::genelFiltreUyar($a, $this->genelFiltre))
+            ->when($ara !== '', fn ($c) => $c->filter(fn (EgitimAtamasi $a) => str_contains(
+                mb_strtolower($a->calisan->ad_soyad.' '.$a->calisan->firma->unvan), $ara)))
+            ->values();
+    }
+
+    /** Telefonu maskeler: 0506 *** ** 55. */
+    public static function telefonMaskele(?string $tel): string
+    {
+        $no = preg_replace('/\D/', '', (string) $tel);
+        if (strlen($no) < 10) {
+            return 'telefon yok';
+        }
+
+        return substr($no, 0, strlen($no) - 10 > 0 ? 5 : 4).' *** ** '.substr($no, -2);
+    }
+
+    /** Gönderilenler: eğitimi iptal et — yalnız çalışan henüz başlamadıysa (başlamışsa kayıtlar korunur). */
+    public function atamaIptal(int $id): void
+    {
+        $a = $this->tumAtamalar->firstWhere('id', $id);
+
+        if (! $a) {
+            return;
+        }
+
+        if (! \App\Support\UzaktanEgitimAtayici::baslamadiMi($a)) {
+            Notification::make()->title('Başlamış eğitim iptal edilemez')
+                ->body('Çalışan eğitime başladığı için Md.12/4 kayıtları korunur.')->warning()->send();
+
+            return;
+        }
+
+        $a->delete();
+        unset($this->tumAtamalar, $this->gonderilenler, $this->atamalar, $this->genelListe);
+        Notification::make()->title('Eğitim iptal edildi')->success()->send();
     }
 
     /** Genel listeden: firmayı seçip o çalışanın takip detayını açar. */
@@ -359,7 +418,7 @@ class UzaktanEgitimAtama extends Page
     public function hatirlatmaLinki(EgitimAtamasi $a): string
     {
         $kalan = $a->toplamDersSayisi() - $a->izlenenDersSayisi();
-        $metin = "Sayın {$a->calisan->ad_soyad}, {$this->firma?->unvan} bünyesindeki yasal İSG uzaktan eğitiminiz henüz tamamlanmadı"
+        $metin = "Sayın {$a->calisan->ad_soyad}, {$a->calisan->firma?->unvan} bünyesindeki yasal İSG uzaktan eğitiminiz henüz tamamlanmadı"
             .($kalan > 0 ? " ({$kalan} ders kaldı)" : ' (final sınavı bekleniyor)').'.'
             .($a->son_tarih ? ' Son tarih: '.$a->son_tarih->format('d.m.Y').'.' : '')
             ."\nEğitim Portalı: ".url('/egitim')."\nKullanıcı Kodu: {$a->calisan->eposta}\nŞifrenizi unuttuysanız iş güvenliği uzmanınıza bildirin.";
@@ -453,6 +512,14 @@ class UzaktanEgitimAtama extends Page
 
         if (! $paket->sinavaHazirMi()) {
             Notification::make()->title('Paket eksik')->body('Pakette en az bir ders ve 5 sınav sorusu olmalı.')->danger()->send();
+
+            return;
+        }
+
+        if (! \App\Models\UzaktanEgitimFirmaAyari::gonderimeHazirMi($this->firma, $paket)) {
+            Notification::make()->title('Önce firma ayarı ve içerik onayı gerekli')
+                ->body('Firma Ayarları sekmesinde bu firma için eğitim içeriğini onaylayın; içerik değiştiyse onay yenilenir.')
+                ->warning()->send();
 
             return;
         }

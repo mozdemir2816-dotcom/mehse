@@ -42,6 +42,15 @@
     $iguNo = $igu?->sertifika_no;
     $ihAd = $atama->ih_ad_soyad ?? $firma?->isyeriHekimi?->ad_soyad;
     $ihNo = $atama->ih_belge_no ?? $firma?->isyeriHekimi?->sertifika_no;
+    // Firma ayarları (16.11.2026): eğitici adı/unvanı, kaşe, logo ve çalışan imza alanı.
+    $ayar = $firma ? \App\Models\UzaktanEgitimFirmaAyari::firmaIcin($firma->id) : null;
+    $iguAd = $ayar?->egitici_igu_ad ?: $iguAd;
+    $ihAd = $atama->ih_ad_soyad ?: ($ayar?->egitici_hekim_ad ?: $ihAd);
+    $iguUnvan = $ayar?->egitici_igu_unvan ?: 'İş Güvenliği Uzmanı';
+    $ihUnvan = $ayar?->egitici_hekim_unvan ?: 'İşyeri Hekimi';
+    $iguKase = ($ayar?->kase_bas ?? false) ? \App\Models\UzaktanEgitimFirmaAyari::gorselVeri($firma?->igu?->kase_gorseli ?: $firma?->user?->kase_gorseli) : null;
+    $ihKase = ($ayar?->kase_bas ?? false) ? \App\Models\UzaktanEgitimFirmaAyari::gorselVeri($firma?->isyeriHekimi?->kase_gorseli) : null;
+    $logo = in_array($ayar?->logo_konumu, ['sol', 'sag'], true) ? \App\Models\UzaktanEgitimFirmaAyari::gorselVeri($firma?->logo) : null;
     // Konu başlığı bazında fiilen izlenen net süre (dk) — Ek-1 1/2/3.
     $atama->loadMissing('ilerlemeler.ders');
     $konuDk = $atama->ilerlemeler->groupBy(fn ($il) => (int) ($il->ders?->modul ?? 0))->map(fn ($g) => (int) round($g->sum('izlenen_sn') / 60));
@@ -50,6 +59,9 @@
     $konuNo = 0;
 @endphp
 
+@if ($logo)
+    <div style="text-align:{{ $ayar->logo_konumu === 'sag' ? 'right' : 'left' }};margin-bottom:4px"><img src="{{ $logo }}" style="max-height:38px;max-width:140px"></div>
+@endif
 <div class="ek">Ek-2</div>
 <div class="baslik">TEMEL EĞİTİM BELGESİ</div>
 
@@ -81,17 +93,26 @@
                     <div style="padding-left:62px">Yüz yüze {!! $kutu(false) !!} (Başlık {{ $dorduncuYuzYuze ? '4 — ayrıca yüz yüze verilir' : '……' }})</div>
                 </div>
                 <div class="alan">Eğiticilerin adı soyadı ve ünvanı:</div>
-                <div class="alan" style="padding-left:10px">— <strong>{{ $iguAd }}</strong>, İş Güvenliği Uzmanı@if ($egitimciUnvan && ! $igu) ({{ $egitimciUnvan }})@endif @if ($iguNo) · Belge no: {{ $iguNo }}@endif @if ($atama->igu_onay_at) · onay {{ $atama->igu_onay_at->format('d.m.Y') }}@endif</div>
+                <div class="alan" style="padding-left:10px">— <strong>{{ $iguAd }}</strong>, {{ $iguUnvan }}@if ($egitimciUnvan && ! $igu) ({{ $egitimciUnvan }})@endif @if ($iguNo) · Belge no: {{ $iguNo }}@endif @if ($atama->igu_onay_at) · onay {{ $atama->igu_onay_at->format('d.m.Y') }}@endif</div>
                 @if ($ihAd)
-                    <div class="alan" style="padding-left:10px">— <strong>{{ $ihAd }}</strong>, İşyeri Hekimi @if ($ihNo) · Diploma / belge no: {{ $ihNo }}@endif @if ($atama->ih_onay_at) · onay {{ $atama->ih_onay_at->format('d.m.Y') }}@endif</div>
+                    <div class="alan" style="padding-left:10px">— <strong>{{ $ihAd }}</strong>, {{ $ihUnvan }} @if ($ihNo) · Diploma / belge no: {{ $ihNo }}@endif @if ($atama->ih_onay_at) · onay {{ $atama->ih_onay_at->format('d.m.Y') }}@endif</div>
                 @endif
                 <div class="alan">Eğiticilerin imzası:</div>
+                @if ($iguKase || $ihKase)
+                    <div class="alan">
+                        @if ($iguKase)<img src="{{ $iguKase }}" style="max-height:46px;max-width:120px;margin-right:10px">@endif
+                        @if ($ihKase)<img src="{{ $ihKase }}" style="max-height:46px;max-width:120px">@endif
+                    </div>
+                @endif
             </div>
 
             <div style="margin-top:22px">
                 <div class="alan">Çalışanın işyerinin ünvanı: <strong>{{ $firma?->unvan }}</strong></div>
                 <div class="alan">İşverenin/işveren vekilinin adı soyadı: <strong></strong></div>
                 <div class="alan">İşveren/işveren vekilinin imzası:</div>
+                @if ($ayar?->calisan_imza_alani)
+                    <div class="alan" style="margin-top:14px">Çalışanın imzası: ..................................................</div>
+                @endif
             </div>
 
             <div style="margin-top:22px;font-size:7.5px;color:#444">

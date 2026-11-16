@@ -66,6 +66,39 @@
                 <x-filament::button wire:click="onTestiGonder" style="width:100%;justify-content:center">Testi Gönder ve Eğitime Başla</x-filament::button>
             </div>
 
+        {{-- ================= ÖN TEST SONUCU ================= --}}
+        @elseif ($mod === 'on_test_sonuc')
+            @php
+                $otPuan = (int) $a->on_test_puani;
+                $otCevap = collect($a->on_test_cevaplar ?? []);
+                $otDogru = $otCevap->filter(fn ($c) => (int) ($c['verilen_index'] ?? -1) === (int) ($c['dogru_index'] ?? -2))->count();
+                $zayif = $a->onTestZayifKonulari();
+            @endphp
+            <div class="portal-card portal-card-pad" style="max-width:760px">
+                <div style="display:inline-block;padding:.2rem .7rem;border-radius:999px;background:var(--p-success-bg, #dcfce7);color:var(--p-success-text, #166534);font-weight:700;font-size:.78rem">Ön test tamamlandı</div>
+                <div class="portal-heading" style="font-weight:800;font-size:2.4rem;line-height:1.1;margin:.6rem 0 .2rem">{{ $otPuan }} puan</div>
+                <div class="portal-muted" style="font-size:.9rem">{{ $otDogru }} / {{ $otCevap->count() }} doğru · seviye: {{ \App\Models\EgitimAtamasi::seviyeEtiketi($otPuan) }}</div>
+
+                <p style="margin:1rem 0 .4rem;font-size:.92rem;line-height:1.55">
+                    {{ $otPuan >= 80 ? 'Bu konulara büyük ölçüde hakimsiniz. Yine de eğitimi baştan sona izlemeniz gerekir.' : 'Bu konuların çoğu sizin için yeni olabilir. Eğitim her konuyu baştan ve adım adım anlatır; videoları acele etmeden izleyin.' }}
+                </p>
+
+                @if ($zayif)
+                    <div style="font-weight:700;font-size:.9rem;margin-top:.8rem">Eğitimde özellikle dikkat etmeniz önerilen konular:</div>
+                    <ul style="margin:.4rem 0 0;padding-left:1.2rem;font-size:.9rem;line-height:1.6">
+                        @foreach ($zayif as $z)
+                            <li>{{ $z['konu'] }} <span class="portal-muted">({{ $z['adet'] }} soru)</span></li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                <p class="portal-muted" style="font-size:.8rem;margin:1rem 0">
+                    Ön test sınav değildir; sonucunuz eğitime katılmanızı etkilemez. Eğitimin sonunda final sınavı puanınızla karşılaştırılır.
+                    Kayıt; teste giriş ve bitiş zamanlarını, soruları, cevapları, puanı ve ekrandan ayrılmaları içerir (Eğitim Yönetmeliği md. 12/4).
+                </p>
+                <x-filament::button wire:click="derslereGec" style="width:100%;justify-content:center">Eğitime başla</x-filament::button>
+            </div>
+
         {{-- ================= İZLE ================= --}}
         @elseif ($mod === 'izle')
             @if ($a->yeniden_baslatma > 0 && $izlenen === [])
@@ -340,6 +373,7 @@
                         document.addEventListener('visibilitychange', () => {
                             if (document.visibilityState !== 'visible' && player && player.pauseVideo) {
                                 player.pauseVideo(); rapor();
+                                @this.call('ekrandanAyrildi', 'sekme', {{ (int) ($aktif->id ?? 0) }});
                             } else if (player) {
                                 uyari('Başka sekmeye / pencereye geçtiğiniz için video durduruldu. Devam etmek için oynatın.');
                             }
@@ -349,6 +383,7 @@
                         window.addEventListener('blur', () => {
                             if (player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) {
                                 player.pauseVideo(); rapor();
+                                @this.call('ekrandanAyrildi', 'pencere', {{ (int) ($aktif->id ?? 0) }});
                                 uyari('Pencereden ayrıldığınız için video durduruldu. Devam etmek için oynatın.');
                             }
                         });
