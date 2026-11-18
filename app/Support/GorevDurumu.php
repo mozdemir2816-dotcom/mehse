@@ -316,7 +316,7 @@ class GorevDurumu
         $ekle('DÖF', BulguHavuzu::aksiyonlar($firma->id)
             ->filter(fn (array $a) => $a['acik'] && $a['termin'])
             ->map(fn (array $a) => $a['termin']->copy()->startOfDay())->values(),
-            'açık bulgu / DÖF maddesinin terminin', 'Düzeltici / önleyici faaliyet takibi', 'Risk ve DÖF', static::sayfaUrl(HizliSahaBulgusu::class, $firma));
+            'açık bulgu / DÖF maddesinin termin', 'Düzeltici / önleyici faaliyet takibi', 'Risk ve DÖF', static::sayfaUrl(HizliSahaBulgusu::class, $firma));
 
         // Temel eğitim — Yenileme Takibi ile aynı hesap
         $egitim = collect(EgitimTakibi::satirlar($firma));

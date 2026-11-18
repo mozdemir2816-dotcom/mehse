@@ -50,6 +50,8 @@ class BildirimMerkezi extends Page
 
     public bool $okunanlariGoster = true;
 
+    public bool $otomatikTaramaBekliyor = false;
+
     public static function getNavigationBadge(): ?string
     {
         $sayi = Filament::auth()->id() ? Bildirim::okunmamisSayisi(Filament::auth()->id()) : 0;
@@ -68,7 +70,23 @@ class BildirimMerkezi extends Page
             $this->firmaId = $firmaId;
         }
 
+        // İlk tarama hiç yapılmamışsa hemen tara; daha önce taranmışsa sayfayı anında açıp arka planda yenile.
+        if (! Bildirim::query()->where('user_id', $this->kullanici()->id)->exists()) {
+            BildirimTarayici::gerekirseTara($this->kullanici());
+        } else {
+            $this->otomatikTaramaBekliyor = true;
+        }
+    }
+
+    public function otomatikTara(): void
+    {
+        if (! $this->otomatikTaramaBekliyor) {
+            return;
+        }
+
+        $this->otomatikTaramaBekliyor = false;
         BildirimTarayici::gerekirseTara($this->kullanici());
+        $this->tazele();
     }
 
     private function kullanici(): User

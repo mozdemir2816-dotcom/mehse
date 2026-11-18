@@ -78,7 +78,7 @@ class KkdTakip extends Page
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()->orderBy('unvan')->secenekler()->all();
+        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
     }
 
     #[Computed]

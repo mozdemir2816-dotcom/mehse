@@ -100,7 +100,7 @@ class ZiyaretciYonetimi extends Page
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()->orderBy('unvan')->secenekler()->all();
+        return Firma::query()->where('user_id', \Filament\Facades\Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
     }
 
     /** @return Collection<int, Ziyaretci> filtrelenmiş liste */

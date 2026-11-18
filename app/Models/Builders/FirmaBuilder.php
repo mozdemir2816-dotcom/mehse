@@ -16,7 +16,8 @@ class FirmaBuilder extends Builder
      */
     public function secenekler(): Collection
     {
-        return $this->get(['firmalar.id', 'firmalar.unvan', 'firmalar.kisa_ad'])
+        return $this->where('firmalar.aktif', true)
+            ->get(['firmalar.id', 'firmalar.unvan', 'firmalar.kisa_ad'])
             ->mapWithKeys(fn (Firma $f) => [$f->id => $f->secimEtiketi()]);
     }
 }

@@ -8,6 +8,9 @@
 @endphp
 
 <x-filament-panels::page>
+    @if ($otomatikTaramaBekliyor)
+        <div wire:init="otomatikTara" style="display:none"></div>
+    @endif
     <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;justify-content:space-between">
         <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end">
             <div>
