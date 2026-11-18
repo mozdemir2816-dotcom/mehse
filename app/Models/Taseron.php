@@ -109,12 +109,16 @@ class Taseron extends Model
 
         $e = [];
 
+        $ziyaretci = $this->tur === 'ziyaretci_firma';
+        $sure = $ziyaretci ? 'Ziyaret süresi' : 'Sözleşme';
+
         $sozlesme = $this->sozlesmeDurumu();
         if ($sozlesme === 'bitti') {
-            $e[] = 'Sözleşme süresi '.$this->sozlesme_bitis->format('d.m.Y').' tarihinde bitmiş';
+            $e[] = $sure.' '.$this->sozlesme_bitis->format('d.m.Y').' tarihinde bitmiş';
         } elseif ($sozlesme === 'yaklasan') {
-            $e[] = 'Sözleşme '.$this->sozlesme_bitis->format('d.m.Y').' tarihinde bitiyor';
-        } elseif ($sozlesme === 'belirsiz') {
+            $e[] = $sure.' '.$this->sozlesme_bitis->format('d.m.Y').' tarihinde bitiyor';
+        } elseif ($sozlesme === 'belirsiz' && ! $ziyaretci) {
+            // Ziyaretçi firmada bitiş tarihi zorunlu değil (tek seferlik ziyaret olabilir).
             $e[] = 'Sözleşme bitiş tarihi girilmemiş';
         }
 
@@ -131,7 +135,9 @@ class Taseron extends Model
 
         $aktifler = $this->calisanlar->where('aktif', true);
         if ($aktifler->isEmpty()) {
-            $e[] = 'Aktif taşeron çalışanı bulunmuyor';
+            if (! $ziyaretci) {
+                $e[] = 'Aktif taşeron çalışanı bulunmuyor';
+            }
         } else {
             $egitimsiz = $aktifler->reject->egitimGecerliMi();
             if ($egitimsiz->isNotEmpty()) {

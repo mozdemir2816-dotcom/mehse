@@ -99,6 +99,10 @@
 
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem">
                 <x-filament::button size="sm" color="primary" icon="heroicon-o-document-arrow-down" wire:click="uygunlukRaporu">Uygunluk Raporu (PDF)</x-filament::button>
+                <x-filament::button size="sm" color="gray" icon="heroicon-o-document-text" wire:click="ornekForm('taahhut')">İSG Taahhütnamesi (PDF)</x-filament::button>
+                @if ($t->tur === 'ziyaretci_firma')
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-identification" wire:click="ornekForm('ziyaretci')">Ziyaretçi Bilgilendirme Formu (PDF)</x-filament::button>
+                @endif
                 <x-filament::button size="sm" color="gray" icon="heroicon-o-pencil-square" wire:click="mountAction('taseronDuzenle')">Bilgileri Düzenle</x-filament::button>
                 <x-filament::button size="sm" color="{{ $t->aktif ? 'warning' : 'success' }}" wire:click="aktiflikDegistir">{{ $t->aktif ? 'Pasife Al' : 'Aktifleştir' }}</x-filament::button>
                 <x-filament::button size="sm" color="danger" wire:click="taseronSil" wire:confirm="Bu kayıt; çalışanları, belgeleri ve iş izni bağlarıyla birlikte silinsin mi?">Sil</x-filament::button>

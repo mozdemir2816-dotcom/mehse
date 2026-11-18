@@ -228,4 +228,47 @@ class TaseronYonetimiTest extends TestCase
         $this->assertSame('Yıldız Elektrik', $sayfa->getCell('C2')->getValue());
         $this->assertSame('Eksik var', $sayfa->getCell('N2')->getValue());
     }
+
+    public function test_ziyaretci_firma_icin_taahhut_ve_kvkk_zorunlu_belgedir_sozlesme_uyarisi_yoktur(): void
+    {
+        $z = $this->taseron(['tur' => 'ziyaretci_firma', 'unvan' => 'Bakım Ziyaretçisi', 'sozlesme_bitis' => null]);
+
+        $eksikler = $z->eksikler();
+
+        $this->assertSame(['Belge kaydı bulunmuyor'], $eksikler);
+        $this->assertSame('Ziyaretçi Firma (ziyaret / geçici iş)', $z->turEtiketi());
+
+        $z->belgeler()->create(['tur' => 'isg_taahhut']);
+        $this->assertSame(['Eksik zorunlu belge: KVKK aydınlatma metni onayı'], $z->fresh()->eksikler());
+
+        $z->belgeler()->create(['tur' => 'kvkk_onay']);
+        $this->assertSame([], $z->fresh()->eksikler());
+    }
+
+    public function test_ornek_formlar_pdf_olarak_uretilir_ve_ziyaretci_formu_yalniz_ziyaretci_firmaya_aittir(): void
+    {
+        $alt = $this->taseron();
+        $z = $this->taseron(['tur' => 'ziyaretci_firma', 'unvan' => 'Ziyaret Firma']);
+
+        ob_start();
+        TaseronUretici::ornekFormPdf($alt, 'taahhut')->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        ob_start();
+        TaseronUretici::ornekFormPdf($z, 'ziyaretci')->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        TaseronUretici::ornekFormPdf($alt, 'ziyaretci');
+    }
+
+    public function test_sayfadan_ornek_form_indirilir(): void
+    {
+        $t = $this->taseron();
+
+        Livewire::test(TaseronYonetimi::class)
+            ->call('yonet', $t->id)
+            ->call('ornekForm', 'taahhut')
+            ->assertOk();
+    }
 }

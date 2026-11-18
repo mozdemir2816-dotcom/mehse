@@ -18,6 +18,31 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class TaseronUretici
 {
+    /**
+     * Yazdırılabilir örnek formlar: "taahhut" (İSG taahhütnamesi) ve
+     * "ziyaretci" (ziyaretçi kayıt ve İSG bilgilendirme formu).
+     */
+    public static function ornekFormPdf(Taseron $t, string $form): StreamedResponse
+    {
+        abort_unless(in_array($form, ['taahhut', 'ziyaretci'], true), 404);
+
+        $t->loadMissing('firma');
+
+        if ($form === 'ziyaretci' && $t->tur !== 'ziyaretci_firma') {
+            abort(404);
+        }
+
+        $gorunum = $form === 'taahhut' ? 'pdf.taseron-taahhut' : 'pdf.taseron-ziyaretci-form';
+        $pdf = Pdf::loadView($gorunum, ['t' => $t, 'firma' => $t->firma])->setPaper('a4');
+
+        $ad = $form === 'taahhut' ? 'isg-taahhutname-' : 'ziyaretci-bilgilendirme-';
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            $ad.Str::slug($t->unvan).'.pdf',
+        );
+    }
+
     public static function uygunlukPdf(Taseron $t): StreamedResponse
     {
         $t->loadMissing(['firma.igu', 'calisanlar', 'belgeler', 'isIzinleri']);

@@ -5364,8 +5364,12 @@ return [
         'turler' => [
             'alt_isveren' => 'Alt İşveren',
             'taseron' => 'Taşeron / Yüklenici (hizmet alımı)',
+            'ziyaretci_firma' => 'Ziyaretçi Firma (ziyaret / geçici iş)',
         ],
         'belge_turleri' => [
+            'isg_taahhut' => ['ad' => 'İSG taahhütnamesi', 'zorunlu' => ['ziyaretci_firma']],
+            'kvkk_onay' => ['ad' => 'KVKK aydınlatma metni onayı', 'zorunlu' => ['ziyaretci_firma']],
+            'arac_belgesi' => ['ad' => 'Araç ruhsatı ve sigorta (girişi yapılacak araç)', 'zorunlu' => []],
             'sozlesme' => ['ad' => 'Sözleşme (alt işverenlik / hizmet)', 'zorunlu' => ['alt_isveren', 'taseron']],
             'sgk_tescil' => ['ad' => 'SGK işyeri tescil / alt işveren bildirgesi', 'zorunlu' => ['alt_isveren']],
             'isg_hizmet' => ['ad' => 'İSG hizmet sözleşmesi / İGU–hekim görevlendirmesi', 'zorunlu' => ['alt_isveren', 'taseron']],

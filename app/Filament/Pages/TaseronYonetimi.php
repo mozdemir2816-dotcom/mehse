@@ -304,6 +304,12 @@ class TaseronYonetimi extends Page
         return TaseronUretici::uygunlukPdf($this->taseron($this->seciliId));
     }
 
+    /** Örnek form PDF'i: 'taahhut' (İSG taahhütnamesi) veya 'ziyaretci' (ziyaretçi bilgilendirme). */
+    public function ornekForm(string $form)
+    {
+        return TaseronUretici::ornekFormPdf($this->taseron($this->seciliId), $form);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Çalışanlar
