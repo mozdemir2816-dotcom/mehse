@@ -166,6 +166,20 @@ class UzmanRaporu
         return implode("\r\n", $satirlar)."\r\n";
     }
 
+    /** İşverene gönderilebilir tek sayfalık İSG Yönetici Özeti ve Uygunluk Karnesi PDF'i. */
+    public static function pdf(Firma $firma): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $rapor = static::rapor($firma);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.uzman-raporu', [
+            'firma' => $firma,
+            'rapor' => $rapor,
+        ])->setPaper('a4');
+
+        $ad = 'isg-yonetici-ozeti-'.\Illuminate\Support\Str::slug($firma->kisa_ad ?: $firma->unvan).'.pdf';
+
+        return response()->streamDownload(fn () => print ($pdf->output()), $ad, ['Content-Type' => 'application/pdf']);
+    }
+
     private static function surecKategorisi(string $surec): string
     {
         return match (true) {

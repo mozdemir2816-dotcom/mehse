@@ -34,6 +34,8 @@
         otomatik gelir). Son muayene tarihi girilince <strong>sonraki vize</strong> hesaplanır.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'periyodik_kontrol_raporu'])
+
     <x-filament::section icon="heroicon-o-wrench-screwdriver" icon-color="primary">
         <x-slot name="heading">Firma</x-slot>
         <select wire:model.live="firmaId" style="{{ $girdi }};max-width:460px">

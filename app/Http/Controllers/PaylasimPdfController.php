@@ -37,6 +37,7 @@ class PaylasimPdfController extends Controller
             'risk' => $this->risk(RiskDegerlendirmesi::findOrFail($id)),
             'adep' => AcilDurumPlaniUretici::pdf(AcilDurumPlani::findOrFail($id)),
             'tabela' => \App\Support\TabelaPdfUretici::pdf(TabelaTasarimi::findOrFail($id)),
+            'uzman-raporu' => \App\Support\UzmanRaporu::pdf(\App\Models\Firma::findOrFail($id)),
         };
     }
 

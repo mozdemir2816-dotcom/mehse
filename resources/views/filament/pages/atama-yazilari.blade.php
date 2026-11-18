@@ -14,6 +14,12 @@
 
     <p style="font-size:.78rem;color:rgb(107 114 128)">Söndürme, kurtarma, koruma ve ilk yardım ekiplerinin atama yazıları artık <a href="{{ \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $this->firmaId]) }}" style="color:rgb(15 118 110);font-weight:600">Acil Durum Ekipleri</a> sayfasındaki ekip kartından alınır (ekibe eklenen personelle aynı kayıt).</p>
 
+    @if ($rolAnahtari === 'calisan_temsilcisi')
+        @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'calisan_temsilcisi'])
+    @elseif ($rolAnahtari === 'isg_kurulu')
+        @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'isg_kurulu'])
+    @endif
+
     {{-- SEKME PİLLERİ --}}
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(107 114 128 / .06);padding:.5rem;border-radius:9999px">
         @foreach ($this->gorunenRoller as $anahtar => $r)

@@ -17,6 +17,8 @@
         <span style="font-size:1.05rem;font-weight:800">Çalışan Temsilcisi Seçimi</span>
     </div>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'calisan_temsilcisi'])
+
     <x-filament::section icon="heroicon-o-building-office" icon-color="primary">
         <x-slot name="heading">1. Firma Seçin</x-slot>
 

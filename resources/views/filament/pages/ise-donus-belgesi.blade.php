@@ -12,6 +12,8 @@
         işyeri hekiminin uygunluk değerlendirmesi ve geçici iş kısıtlamaları (6331 s.K. Md.15).
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'ise_donus_muayenesi'])
+
     <x-filament::section icon="heroicon-o-arrow-uturn-left" icon-color="primary">
         <x-slot name="heading">Firma</x-slot>
         <select wire:model.live="firmaId" style="{{ $inp }};max-width:420px">

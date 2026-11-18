@@ -33,6 +33,7 @@ class IsverenWhatsApp
         'risk' => RiskDegerlendirmesi::class,
         'adep' => AcilDurumPlani::class,
         'tabela' => TabelaTasarimi::class,
+        'uzman-raporu' => Firma::class,
     ];
 
     public static function telefon(?Firma $firma): ?string
@@ -212,5 +213,25 @@ class IsverenWhatsApp
             'Tamamlandığında fotoğrafla bilgi vermenizi rica ederiz.',
             self::imza($b->firma),
         ]));
+    }
+
+    /** İşverene Aylık İSG Yönetici Özeti ve Uygunluk Karnesi PDF paylaşım mesajı. */
+    public static function uzmanRaporuMesaji(Firma $firma): string
+    {
+        $r = UzmanRaporu::rapor($firma);
+        $g = $r['gostergeler'];
+        $u = $r['uygunluk'];
+
+        return implode("\n", [
+            'Sayın '.self::isverenAdi($firma).' ('.$firma->unvan.'),',
+            now()->format('d.m.Y').' tarihli İşyeri İSG Yönetici Özeti ve Yasal Uygunluk Karneniz hazırlanmıştır.',
+            '- Genel Durum: '.$u['durum'],
+            '- Aktif Çalışan: '.$g['aktif_calisan'].' · Açık Yüksek Risk: '.$g['acik_risk'],
+            '- Öncelikli Aksiyon / Yaklaşan veya Geciken Kayıt: '.$r['aksiyonlar']->count().' adet',
+            'Tek sayfalık özet karnenizi ve öncelikli aksiyonları incelemek için: '.self::pdfBaglantisi('uzman-raporu', $firma->id),
+            '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
+            'Bilgilerinize sunar, iyi çalışmalar dileriz.',
+            self::imza($firma),
+        ]);
     }
 }

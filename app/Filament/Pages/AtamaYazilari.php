@@ -55,6 +55,7 @@ class AtamaYazilari extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    #[Url(as: 'rol')]
     public string $rolAnahtari = 'calisan_temsilcisi';
 
     public ?string $tarih = null;

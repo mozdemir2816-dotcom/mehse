@@ -10,6 +10,8 @@
         İSG-KATİP'e yüklenen resmi nüshaların kaydı burada tutulur.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'onayli_defter_nushalari'])
+
     <x-filament::section icon="heroicon-o-document-check" icon-color="primary">
         <x-slot name="heading">Firma & Defter Türü</x-slot>
 

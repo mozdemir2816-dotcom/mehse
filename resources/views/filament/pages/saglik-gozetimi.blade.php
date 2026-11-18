@@ -84,6 +84,8 @@
                                 @php
                                     $sonraki = !empty($s['sonraki_tarih']) ? \Illuminate\Support\Carbon::parse($s['sonraki_tarih']) : null;
                                     $gecmis = $sonraki && $sonraki->lt($bugun);
+                                    $kalanGun = $sonraki ? (int) $bugun->diffInDays($sonraki->copy()->startOfDay(), false) : null;
+                                    $yaklasan = $kalanGun !== null && $kalanGun >= 0 && $kalanGun <= 30;
                                 @endphp
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.35rem">
@@ -92,8 +94,13 @@
                                     </td>
                                     <td style="padding:.35rem">{{ $this->turler[$s['tetkik_turu']]['ad'] ?? $s['tetkik_turu'] }}</td>
                                     <td style="padding:.35rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.tarih" style="{{ $girdi }}"></td>
-                                    <td style="padding:.35rem;{{ $gecmis ? 'color:#b91c1c;font-weight:600' : 'color:rgb(107 114 128)' }}">
+                                    <td style="padding:.35rem;{{ $gecmis ? 'color:#b91c1c;font-weight:600' : ($yaklasan ? 'color:#b45309;font-weight:600' : 'color:rgb(107 114 128)') }}">
                                         {{ $sonraki ? $sonraki->format('d.m.Y') : '—' }}
+                                        @if ($kalanGun !== null)
+                                            <div style="font-size:.7rem;font-weight:600;color:{{ $kalanGun < 0 ? '#b91c1c' : ($yaklasan ? '#b45309' : 'rgb(107 114 128)') }}">
+                                                {{ $kalanGun < 0 ? abs($kalanGun).' gün geçti' : ($kalanGun === 0 ? 'Bugün' : $kalanGun.' gün kaldı') }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td style="padding:.35rem">
                                         <select wire:model.blur="satirlar.{{ $i }}.sonuc" style="{{ $girdi }}">
@@ -110,7 +117,12 @@
                                             <span class="mehse-soluk-metin">—</span>
                                         @endif
                                     </td>
-                                    <td style="padding:.35rem;text-align:center">
+                                    <td style="padding:.35rem;text-align:center;white-space:nowrap">
+                                        @if (!empty($s['calisan_id']))
+                                            <a href="{{ \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $this->firmaId, 'calisan' => $s['calisan_id']]) }}"
+                                                title="Bu çalışan için EK-2 Muayene Formu oluştur"
+                                                style="font-size:.72rem;font-weight:700;color:rgb(124 58 237);text-decoration:none;margin-right:.4rem">EK-2 →</a>
+                                        @endif
                                         <button type="button" wire:click="satirSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>
                                 </tr>

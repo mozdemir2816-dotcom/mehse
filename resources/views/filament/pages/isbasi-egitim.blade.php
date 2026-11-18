@@ -10,6 +10,8 @@
         ile boş imza satırlı formu indirip işyerinde elle doldurabilirsiniz.
     </p>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'kaza_sonrasi_isbasi_egitimi'])
+
     {{-- 1. FİRMA & EĞİTİM BİLGİSİ --}}
     <x-filament::section icon="heroicon-o-identification" icon-color="success">
         <x-slot name="heading">1. Firma & Eğitim Bilgisi</x-slot>

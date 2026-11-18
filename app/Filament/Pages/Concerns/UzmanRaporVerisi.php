@@ -32,4 +32,9 @@ trait UzmanRaporVerisi
 
         return response()->streamDownload(fn () => print ("\xEF\xBB\xBF".$metin), 'uzman-raporu-'.Str::slug($this->firma->kisa_ad ?: $this->firma->unvan).'.txt', ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
+
+    public function pdfIndir()
+    {
+        return $this->firma ? UzmanRaporu::pdf($this->firma) : null;
+    }
 }

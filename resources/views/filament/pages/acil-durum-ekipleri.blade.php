@@ -15,6 +15,8 @@
     @include('filament.pages.partials.acil-slate-stil')
     <div style="font-size:.85rem;color:rgb(107 114 128);margin-top:-.75rem">Söndürme, kurtarma, koruma, ilk yardım, tahliye ve haberleşme ekipleri ile destek elemanı görevlendirmeleri.</div>
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'acil_durum_destek'])
+
     <div style="display:flex;flex-wrap:wrap;gap:.4rem">
         @if ($firma)
             <x-filament::button size="sm" color="warning" icon="heroicon-o-bolt" wire:click="otomatikDagit" wire:loading.attr="disabled" wire:target="otomatikDagit" :disabled="$this->ekipler->isEmpty()"

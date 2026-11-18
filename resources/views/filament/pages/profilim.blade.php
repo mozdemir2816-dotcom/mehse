@@ -465,9 +465,14 @@
                                     <div style="font-weight:400;font-size:.75rem;color:rgb(95 87 112)">{{ $satir['calisan']->firma?->unvan }}</div>
                                 </td>
                                 @foreach ($this->egitimTurleriGorunen as $t)
-                                    @php $h = $satir['hucreler'][$t->anahtar]; @endphp
+                                    @php $h = $satir['hucreler'][$t->anahtar]; $kalan = $h['kalan_gun'] ?? null; @endphp
                                     <td style="padding:.35rem;text-align:center;color:{{ $h['durum'] ? $durumRenk[$h['durum']] : $kirmizi }}">
                                         {{ $h['tarih'] ? $h['tarih']->format('d.m.Y') : 'Eksik' }}
+                                        @if ($kalan !== null)
+                                            <div style="font-size:.66rem;opacity:.85">
+                                                {{ $kalan < 0 ? abs($kalan).'g geçti' : $kalan.'g kaldı' }}
+                                            </div>
+                                        @endif
                                     </td>
                                 @endforeach
                             </tr>

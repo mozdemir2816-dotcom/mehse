@@ -13,9 +13,18 @@
     <p style="font-size:.82rem;color:rgb(107 114 128);margin:0">
         Yalnız aktif görevlendirmeli işyerinizin sağlık dışı İSG görünümüdür. Klinik sağlık kayıtları bu rapora ve uzman rolüne dahil edilmez.
     </p>
-    <div style="display:flex;gap:.4rem">
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
         <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-path" wire:click="yenile">Yenile</x-filament::button>
-        <x-filament::button size="sm" icon="heroicon-o-arrow-down-tray" wire:click="txtIndir" :disabled="! $firma">TXT indir</x-filament::button>
+        <x-filament::button size="sm" color="danger" icon="heroicon-o-document-arrow-down" wire:click="pdfIndir" :disabled="! $firma">PDF İndir (İşveren Özeti)</x-filament::button>
+        @if ($firma)
+            @php $waUrl = \App\Support\IsverenWhatsApp::url($firma, \App\Support\IsverenWhatsApp::uzmanRaporuMesaji($firma), true); @endphp
+            @if ($waUrl)
+                <x-filament::button size="sm" color="success" icon="heroicon-o-chat-bubble-left-ellipsis" tag="a" :href="$waUrl" target="_blank" rel="noopener">
+                    WhatsApp ile İşverene Gönder
+                </x-filament::button>
+            @endif
+        @endif
+        <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="txtIndir" :disabled="! $firma">TXT indir</x-filament::button>
     </div>
 </div>
 

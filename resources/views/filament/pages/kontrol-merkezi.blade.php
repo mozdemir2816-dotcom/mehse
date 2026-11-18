@@ -243,15 +243,24 @@
                                     @if ($acik)
                                         @php $eksikFirmalar = $this->acikKriterEksikFirmalar; @endphp
                                         <div style="margin-top:.5rem;padding-top:.45rem;border-top:1px dashed rgb(128 116 148 / .3)" onclick="event.stopPropagation()">
-                                            <div style="font-size:.75rem;font-weight:700;color:{{ $kirmizi }};margin-bottom:.35rem">
-                                                Bu kriterin eksik olduğu {{ count($eksikFirmalar) }} firma:
+                                            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.35rem">
+                                                <div style="font-size:.75rem;font-weight:700;color:{{ $kirmizi }}">
+                                                    Bu kriterin eksik olduğu {{ count($eksikFirmalar) }} firma (tıklayınca ilgili modülde açılır):
+                                                </div>
+                                                @if ($eksikFirmalar)
+                                                    @php $ilkFirmaId = array_key_first($eksikFirmalar); @endphp
+                                                    <a href="{{ \App\Support\PortfoyKarne::kriterSayfaUrl($k['anahtar'], $ilkFirmaId) }}"
+                                                        style="font-size:.73rem;font-weight:700;color:{{ $mor }};text-decoration:none">
+                                                        İlk Eksik Firmadan Başla →
+                                                    </a>
+                                                @endif
                                             </div>
                                             <div style="display:flex;flex-wrap:wrap;gap:.3rem">
                                                 @forelse ($eksikFirmalar as $fId => $fUnvan)
-                                                    <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $fId]) }}"
+                                                    <a href="{{ \App\Support\PortfoyKarne::kriterSayfaUrl($k['anahtar'], $fId) }}"
                                                         style="display:inline-block;padding:.12rem .5rem;border-radius:9999px;font-size:.75rem;
                                                             border:1px solid {{ $kirmizi }};color:{{ $kirmizi }};text-decoration:none">
-                                                        {{ $fUnvan }} ↗
+                                                        {{ $fUnvan }} →
                                                     </a>
                                                 @empty
                                                     <span style="font-size:.75rem;color:{{ $gri }}">Eksik firma yok.</span>

@@ -537,6 +537,37 @@ class PortfoyKarne
         return $firmalar->reject(fn (Firma $f) => static::firmaKriterKarsilarMi($f, $kriterAnahtari))->values();
     }
 
+    /**
+     * Bir yasal kriterin eksik olduğu firma için doğrudan ilgili modül/evrak hazırlama sayfasının adresini döner.
+     */
+    public static function kriterSayfaUrl(string $kriterAnahtari, int $firmaId): string
+    {
+        return match ($kriterAnahtari) {
+            'risk_degerlendirmesi' => \App\Filament\Pages\RiskSihirbazi::getUrl(['firma' => $firmaId]),
+            'yillik_calisma_plani' => \App\Filament\Pages\YillikPlan\YillikCalismaPlani::getUrl(['firma' => $firmaId]),
+            'yillik_egitim_plani' => \App\Filament\Pages\YillikPlan\YillikEgitimPlani::getUrl(['firma' => $firmaId]),
+            'yillik_degerlendirme' => \App\Filament\Pages\YillikPlan\YillikDegerlendirmeRaporu::getUrl(['firma' => $firmaId]),
+            'acil_durum_plani' => \App\Filament\Pages\AcilDurumPlani::getUrl(['firma' => $firmaId]),
+            'acil_durum_destek' => \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $firmaId]),
+            'acil_durum_tatbikat' => \App\Filament\Pages\TatbikatTutanagi::getUrl(['firma' => $firmaId]),
+            'isg_kurulu' => \App\Filament\Pages\KurulToplantisi::getUrl(['firma' => $firmaId]),
+            'calisan_temsilcisi' => \App\Filament\Pages\AtamaYazilari::getUrl(['firma' => $firmaId, 'rol' => 'calisan_temsilcisi']),
+            'tespit_oneri' => \App\Filament\Pages\TespitOneriDefteri::getUrl(['firma' => $firmaId]),
+            'egitim_katilim_formu' => \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firmaId]),
+            'ise_donus_muayenesi' => \App\Filament\Pages\IseDonusBelgesi::getUrl(['firma' => $firmaId]),
+            'kaza_sonrasi_isbasi_egitimi' => \App\Filament\Pages\IsbasiEgitim::getUrl(['firma' => $firmaId]),
+            'periyodik_kontrol_raporu' => \App\Filament\Pages\PeriyodikKontrol::getUrl(['firma' => $firmaId]),
+            'calisma_izin_formu' => \App\Filament\Pages\IsIzinFormu::getUrl(['firma' => $firmaId]),
+            'saha_denetim_formu' => \App\Filament\Pages\SahaDenetimi::getUrl(['firma' => $firmaId]),
+            'is_kazasi_bildirimi' => \App\Filament\Pages\IsKazasiRaporu::getUrl(['firma' => $firmaId]),
+            'olay_ramak_kala_kaydi' => \App\Filament\Pages\OlayKayitlari::getUrl(['firma' => $firmaId]),
+            'meslek_hastaligi_bildirimi' => \App\Filament\Pages\MeslekHastaligiBildirimi::getUrl(['firma' => $firmaId]),
+            'saglik_raporu' => \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $firmaId]),
+            'onayli_defter_nushalari' => \App\Filament\Pages\OnayliDefterNushalari::getUrl(['firma' => $firmaId]),
+            default => \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $firmaId]),
+        };
+    }
+
     public static function calisanDagilimi(int $userId): array
     {
         return Firma::query()

@@ -381,9 +381,12 @@ class Profilim extends Page
 
                 foreach ($turler as $tur) {
                     $kayit = $kayitlar->get($tur->anahtar);
+                    $gecerlilik = $kayit?->gecerlilikTarihi($tur);
+                    $kalanGun = $gecerlilik ? (int) now()->startOfDay()->diffInDays($gecerlilik->copy()->startOfDay(), false) : null;
                     $hucreler[$tur->anahtar] = [
                         'tarih' => $kayit?->tarih,
                         'durum' => $kayit?->durum($tur),
+                        'kalan_gun' => $kalanGun,
                     ];
                 }
 

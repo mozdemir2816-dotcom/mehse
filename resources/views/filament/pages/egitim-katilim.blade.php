@@ -48,6 +48,8 @@
 
     @php $eksikIdler = \App\Support\PortfoyKarne::eksikFirmalar(\Filament\Facades\Filament::auth()->id(), 'egitim_katilim_formu')->pluck('id')->all(); @endphp
 
+    @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'egitim_katilim_formu'])
+
     {{-- 0. BOŞ İMZA FORMU — firma/katılımcı seçmeden, tek tıkla --}}
     <x-filament::section icon="heroicon-o-pencil-square" icon-color="gray" collapsible collapsed>
         <x-slot name="heading">Boş İmza Formu İndir</x-slot>
