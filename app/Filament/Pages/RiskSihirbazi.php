@@ -23,6 +23,7 @@ use App\Support\RiskKutuphanesi;
 use App\Support\RiskMaddeMukerrer;
 use App\Support\RiskSkorlama;
 use App\Support\RiskUretici;
+use App\Support\SaglikGuvenlikPlaniUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -91,9 +92,12 @@ class RiskSihirbazi extends Page
         'sablon' => ['ad' => 'Şablonlar & Paylaşılanlar', 'onerilen' => false, 'hazir' => true,
             'aciklama' => 'Sektöre göre kaydettiğiniz risk setleri; aynı sektörden yeni firmada tek tıkla uygulanır.',
             'maddeler' => ['Sektör bazlı gruplama', 'Kendi hazır risk setleriniz', 'Tek tıkla toplu ekleme']],
-        'kayitli' => ['ad' => 'Kayıtlı Risklerim', 'onerilen' => false, 'hazir' => false,
-            'aciklama' => 'Daha önce eklediğiniz risk maddelerinizi klasörlenmiş olarak seçin.',
-            'maddeler' => ['Klasör bazlı görüntüleme', 'Arama ve filtreleme', 'Toplu veya tekli ekleme']],
+        'kayitli' => ['ad' => 'Kayıtlı Risklerim', 'onerilen' => false, 'hazir' => true,
+            'aciklama' => 'Daha önce başka firmalarda hazırladığınız risk değerlendirmelerinden madde seçip aktarın.',
+            'maddeler' => ['Firma / değerlendirme bazlı görüntüleme', 'Arama ve filtreleme', 'Toplu veya tekli ekleme']],
+        'saha' => ['ad' => 'Saha Denetimi & Bulgulardan Aktar', 'onerilen' => false, 'hazir' => true,
+            'aciklama' => 'Sahada tespit ettiğiniz açık uygunsuzlukları ve denetim bulgularını doğrudan risk maddesine dönüştürün.',
+            'maddeler' => ['Saha bulgularından otomatik tehlike/önlem', 'Saha denetimi uygunsuzlukları', 'Tek tıkla risk analizine dahil etme']],
         'excel' => ['ad' => 'Risk Değerlendirmenizden Yükleyin', 'onerilen' => false, 'hazir' => true,
             'aciklama' => 'Kendi Excel risk değerlendirmenizi yükleyin; sistem risk maddelerini otomatik ekler.',
             'maddeler' => ['Her formatı akıllı algılama', 'Eksik puan/önlem tamamlama', 'Tüm maddeler otomatik eklenir']],
@@ -148,6 +152,164 @@ class RiskSihirbazi extends Page
 
     /** @var array<int, int> seçili aday indeksleri */
     public array $aiEkipmanSecim = [];
+
+    /** Kayıtlı Risklerim: seçilen kaynak değerlendirme id'si ve arama filtresi */
+    public ?int $kayitliKaynakRdId = null;
+
+    public string $kayitliArama = '';
+
+    /** @return Collection<int, RiskDegerlendirmesi> kullanıcının geçmiş risk değerlendirmeleri */
+    #[Computed]
+    public function kayitliDegerlendirmeler(): Collection
+    {
+        return RiskDegerlendirmesi::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->with('firma:id,unvan,kisa_ad')
+            ->withCount('maddeler')
+            ->latest('id')
+            ->limit(40)
+            ->get();
+    }
+
+    /** @return Collection<int, RiskMaddesi> seçili kaynak değerlendirmedeki maddeler */
+    #[Computed]
+    public function kayitliKaynakMaddeler(): Collection
+    {
+        if (! $this->kayitliKaynakRdId) {
+            return collect();
+        }
+
+        $rd = RiskDegerlendirmesi::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->find($this->kayitliKaynakRdId);
+
+        if (! $rd) {
+            return collect();
+        }
+
+        $ara = mb_strtolower(trim($this->kayitliArama));
+
+        return $rd->maddeler()
+            ->orderBy('sira')
+            ->get()
+            ->when($ara !== '', fn (Collection $c) => $c->filter(fn (RiskMaddesi $m) => str_contains(
+                mb_strtolower(implode(' ', [$m->bolum, $m->faaliyet, $m->tehlike, $m->risk, $m->oneri])),
+                $ara,
+            )))
+            ->values();
+    }
+
+    public function kayitliMaddeEkle(int $maddeId): void
+    {
+        $m = RiskMaddesi::query()
+            ->whereHas('riskDegerlendirmesi.firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->find($maddeId);
+
+        if (! $m) {
+            return;
+        }
+
+        $this->secilenler[] = [
+            'anahtar' => 'kayitli-'.$m->id.'-'.substr(md5(uniqid('', true)), 0, 5),
+            'kaynak' => 'kayitli',
+            'tehlike_id' => $m->tehlike_id,
+            'bolum' => $m->bolum,
+            'faaliyet' => $m->faaliyet,
+            'tehlike' => $m->tehlike,
+            'risk' => $m->risk,
+            'mevcut_onlem' => $m->mevcut_onlem,
+            'oneri' => $m->oneri,
+            'mevzuat' => $m->mevzuat,
+            'sorumlu' => $m->sorumlu,
+            'termin' => $m->termin,
+            'aciklama' => $m->aciklama,
+            'olasilik' => $m->olasilik,
+            'frekans' => $this->fineKinney ? ($m->frekans ?? 1) : null,
+            'siddet' => $m->siddet,
+            'son_olasilik' => $m->son_olasilik,
+            'son_frekans' => $this->fineKinney ? $m->son_frekans : null,
+            'son_siddet' => $m->son_siddet,
+        ];
+    }
+
+    public function kayitliTumunuEkle(): void
+    {
+        $maddeler = $this->kayitliKaynakMaddeler;
+        foreach ($maddeler as $m) {
+            $this->kayitliMaddeEkle($m->id);
+        }
+
+        Notification::make()->title($maddeler->count().' kayıtlı risk maddesi eklendi')->success()->send();
+    }
+
+    /** @return Collection<int, array<string, mixed>> Seçili firmanın saha bulguları ve uygunsuz denetim maddeleri */
+    #[Computed]
+    public function sahaRiskAdaylari(): Collection
+    {
+        if (! $this->firma) {
+            return collect();
+        }
+
+        $bulgular = \App\Models\SahaBulgusu::query()
+            ->where('firma_id', $this->firma->id)
+            ->latest('id')
+            ->limit(50)
+            ->get()
+            ->map(fn ($b) => [
+                'id' => 'bulgu_'.$b->id,
+                'kaynak_etiket' => 'Saha Bulgusu ('.($b->bulgu_no ?: '#'.$b->id).')',
+                'bolum' => $b->konum ?: 'Saha Geneli',
+                'faaliyet' => 'Saha Gözetimi',
+                'tehlike' => (string) $b->uygunsuzluk,
+                'risk' => 'İş kazası / yaralanma ve yasal uygunsuzluk riski',
+                'oneri' => $b->aksiyon ?: 'Uygunsuzluk giderilmeli ve gerekli güvenlik tedbirleri alınmalıdır.',
+                'sorumlu' => $b->sorumlu ?: 'İşveren / İşveren Vekili',
+                'termin' => $b->termin?->format('d.m.Y') ?: 'İvedi',
+            ]);
+
+        return $bulgular->values();
+    }
+
+    public function sahaAdayEkle(string $adayId): void
+    {
+        $aday = $this->sahaRiskAdaylari->firstWhere('id', $adayId);
+        if (! $aday) {
+            return;
+        }
+
+        $fk = $this->fineKinney;
+        $this->secilenler[] = [
+            'anahtar' => 'saha-'.$aday['id'].'-'.substr(md5(uniqid('', true)), 0, 5),
+            'kaynak' => 'saha',
+            'tehlike_id' => null,
+            'bolum' => $aday['bolum'],
+            'faaliyet' => $aday['faaliyet'],
+            'tehlike' => $aday['tehlike'],
+            'risk' => $aday['risk'],
+            'mevcut_onlem' => null,
+            'oneri' => $aday['oneri'],
+            'mevzuat' => '6331 Sayılı İSG Kanunu Md. 4 ve Md. 10',
+            'sorumlu' => $aday['sorumlu'],
+            'termin' => $aday['termin'],
+            'aciklama' => $aday['kaynak_etiket'],
+            'olasilik' => $fk ? 3 : 3,
+            'frekans' => $fk ? 3 : null,
+            'siddet' => $fk ? 15 : 4,
+            'son_olasilik' => 1,
+            'son_frekans' => $fk ? 1 : null,
+            'son_siddet' => $fk ? 15 : 4,
+        ];
+    }
+
+    public function sahaTumunuEkle(): void
+    {
+        $adaylar = $this->sahaRiskAdaylari;
+        foreach ($adaylar as $a) {
+            $this->sahaAdayEkle($a['id']);
+        }
+
+        Notification::make()->title($adaylar->count().' saha bulgusu risk maddesi olarak eklendi')->success()->send();
+    }
 
     public bool $aiKutuphaneyeKaydet = true;
 
@@ -1863,5 +2025,12 @@ class RiskSihirbazi extends Page
             ->success()->send();
 
         return redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $rd]));
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            SaglikGuvenlikPlaniUretici::filamentAction(fn () => $this->seciliFirma),
+        ];
     }
 }

@@ -10,13 +10,16 @@ use App\Models\KkdMatrisi;
 use App\Models\KkdZimmetFormu as KkdZimmetFormuModel;
 use App\Support\KkdZimmetFormuSenkron;
 use App\Support\KkdZimmetFormuUretici;
+use App\Support\SgkIseGirisOkuyucu;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
@@ -55,6 +58,8 @@ class KkdFormu extends Page
     public ?string $periyodikKontrolTarihi = null;
 
     public ?string $teslimEden = null;
+
+    public ?string $canliImza = null;
 
     /** @var array<int, int> */
     public array $secilenCalisanIdler = [];
@@ -308,7 +313,13 @@ class KkdFormu extends Page
             ->map(fn (array $c) => [...$c, 'calisan_id' => null])
             ->all();
 
-        return [...$firmaCalisanlari, ...$manuel];
+        $liste = [...$firmaCalisanlari, ...$manuel];
+
+        if ($this->canliImza && count($liste) === 1) {
+            $liste[0]['imza'] = $this->canliImza;
+        }
+
+        return $liste;
     }
 
     /** @return array<int, array{ad: string, standart: string, kategori: string}> */
@@ -403,6 +414,54 @@ class KkdFormu extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            Action::make('sgkPdfYukle')
+                ->label('SGK İşe Giriş PDF\'inden Çalışan Ekle')
+                ->icon('heroicon-o-identification')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('SGK İşe Giriş Bildirgesi PDF\'inden Çalışan Ekle ve Seç')
+                ->modalDescription('e-SGK Sigortalı İşe Giriş Bildirgesi PDF dosyasını (tekli veya çoklu) yükleyin; çalışan(lar) otomatik olarak firmaya kaydedilir ve bu KKD zimmet formunda seçili hale gelir.')
+                ->modalSubmitActionLabel('PDF\'ten Aktar')
+                ->schema([
+                    FileUpload::make('dosyalar')
+                        ->label('SGK İşe Giriş Bildirgesi PDF Dosyaları')
+                        ->disk('local')
+                        ->directory('sgk-ice-aktarim')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->multiple()
+                        ->maxFiles(30)
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $dosyalar = is_array($data['dosyalar'] ?? null) ? $data['dosyalar'] : array_filter([$data['dosyalar'] ?? null]);
+                    $yollar = array_map(fn (string $d) => Storage::disk('local')->path($d), $dosyalar);
+
+                    try {
+                        $kayitlar = SgkIseGirisOkuyucu::dosyalardanCikar($yollar);
+                    } finally {
+                        foreach ($dosyalar as $d) {
+                            Storage::disk('local')->delete($d);
+                        }
+                    }
+
+                    if (! $kayitlar) {
+                        Notification::make()->title('PDF dosyasından çalışan bilgisi okunamadı')->danger()->send();
+
+                        return;
+                    }
+
+                    $sonuc = SgkIseGirisOkuyucu::firmayaKaydet($this->firma, $kayitlar);
+                    unset($this->calisanlar);
+
+                    $yeniIdler = $sonuc['calisanlar']->pluck('id')->all();
+                    $this->secilenCalisanIdler = array_values(array_unique([...$this->secilenCalisanIdler, ...$yeniIdler]));
+
+                    Notification::make()
+                        ->title($sonuc['calisanlar']->count().' çalışan SGK PDF\'inden eklendi ve seçildi')
+                        ->body($sonuc['calisanlar']->pluck('ad_soyad')->implode(', '))
+                        ->success()->send();
+                }),
+
             Action::make('bosForm')
                 ->label('Boş Form (Elle Doldurulacak)')
                 ->icon('heroicon-o-pencil-square')
@@ -447,7 +506,7 @@ class KkdFormu extends Page
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $form ? KkdZimmetFormuUretici::pdf($form) : null;
+                    return $form ? KkdZimmetFormuUretici::pdf($form, $this->canliImza) : null;
                 }),
         ];
     }

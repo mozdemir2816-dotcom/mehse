@@ -172,6 +172,8 @@
                     @endforeach
                 </div>
             @endif
+
+            @include('filament.pages.partials.canli-imza', ['canliImza' => $canliImza])
         </x-filament::section>
 
         {{-- 4. GEÇMİŞ TUTANAKLAR --}}

@@ -57,7 +57,12 @@
 
     <table class="imza">
         <tr>
-            <td>{{ $tutanak->calisan_ad_soyad }}<br>(Çalışan İmzası)</td>
+            <td>
+                @if (! empty($canliImza))
+                    <img src="{{ $canliImza }}" style="max-height:44px;display:block;margin:-36px auto 2px">
+                @endif
+                {{ $tutanak->calisan_ad_soyad }}<br>(Çalışan İmzası)
+            </td>
             <td>{{ $tutanak->egitimi_veren ?: 'Eğitici' }}<br>(İmza)</td>
             <td>
                 @if ($tutanak->igu_imzasi) İş Güvenliği Uzmanı @endif

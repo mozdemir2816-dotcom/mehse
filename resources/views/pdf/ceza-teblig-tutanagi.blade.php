@@ -91,7 +91,12 @@
     <table class="imza">
         <tr>
             <td>Düzenleyen (İSG Uzmanı)<br>(İmza – Kaşe)</td>
-            <td>Çalışan<br>(İmza)</td>
+            <td>
+                @if (! empty($canliImza) && $tutanak->imza_durumu !== 'imtina_etti')
+                    <img src="{{ $canliImza }}" style="max-height:44px;display:block;margin:-36px auto 2px">
+                @endif
+                Çalışan<br>(İmza)
+            </td>
         </tr>
     </table>
 

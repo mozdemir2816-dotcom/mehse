@@ -241,11 +241,33 @@
                     </div>
                 </div>
             </div>
+
+            @if ($imzaDurumu !== 'imtina_etti')
+                @include('filament.pages.partials.canli-imza', ['canliImza' => $canliImza])
+            @endif
         </x-filament::section>
 
         {{-- 6. FOTOĞRAFLAR --}}
         <x-filament::section icon="heroicon-o-camera" icon-color="danger">
-            <x-slot name="heading">6. Fotoğraflar ({{ count($yeniFotograflar) }})</x-slot>
+            <x-slot name="heading">6. Fotoğraflar ({{ count($yeniFotograflar) + count($sahaFotograflari) }})</x-slot>
+
+            @if ($this->mevcutSahaFotograflari)
+                <div style="margin-bottom:.85rem">
+                    <div style="font-size:.78rem;font-weight:700;margin-bottom:.35rem">📸 Saha Bulgusu / Denetim Fotoğraflarından Seç ({{ count($sahaFotograflari) }} seçili)</div>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                        @foreach ($this->mevcutSahaFotograflari as $sf)
+                            @php $seciliFoto = in_array($sf['yol'], $sahaFotograflari, true); @endphp
+                            <button type="button" wire:click="sahaFotoToggle('{{ addslashes($sf['yol']) }}')"
+                                style="display:flex;align-items:center;gap:.4rem;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer;font-size:.75rem;text-align:left;
+                                    border:2px solid {{ $seciliFoto ? $kirmizi : 'rgb(107 114 128 / .3)' }};
+                                    background:{{ $seciliFoto ? 'rgb(239 68 68 / .08)' : 'transparent' }}">
+                                <span>{{ $seciliFoto ? '☑' : '☐' }}</span>
+                                <span>{{ $sf['etiket'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             @if ($yeniFotograflar)
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">

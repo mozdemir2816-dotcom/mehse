@@ -31,10 +31,18 @@
             q: '',
             ekler,
             ekSonuclar: [],
+            favoriler: [],
             init() {
                 // Görsel temaya göre değişen menü yazı rengini kopyala (4 tema, ayrı CSS).
                 const etiket = document.querySelector('.fi-sidebar-item-label');
                 if (etiket) this.$root.style.color = getComputedStyle(etiket).color;
+
+                try {
+                    this.favoriler = JSON.parse(localStorage.getItem('mehse_menu_favoriler') || '[]');
+                } catch (e) {
+                    this.favoriler = [];
+                }
+                this.yildizlariBagla();
 
                 // Menü sadeleştirmesinden (11.10.2026) önce kapatılan gruplar tarayıcıda
                 // (collapsedGroups) kalırsa, artık kapatma düğmesi olmayan grubun maddeleri
@@ -110,6 +118,47 @@
                 this.q = '';
                 this.filtrele();
             },
+            favoriMi(url) {
+                return this.favoriler.some((f) => f.url === url);
+            },
+            favoriToggle(url, etiket) {
+                if (this.favoriMi(url)) {
+                    this.favoriler = this.favoriler.filter((f) => f.url !== url);
+                } else {
+                    this.favoriler.push({ url, etiket });
+                }
+                try {
+                    localStorage.setItem('mehse_menu_favoriler', JSON.stringify(this.favoriler));
+                } catch (e) {}
+                this.yildizlariGuncelle();
+            },
+            yildizlariBagla() {
+                const nav = this.$root.closest('.fi-sidebar-nav') || document;
+                nav.querySelectorAll('.fi-sidebar-item-btn').forEach((btn) => {
+                    if (btn.querySelector('.mehse-fav-btn')) return;
+                    const url = btn.getAttribute('href');
+                    const etiket = btn.querySelector('.fi-sidebar-item-label')?.textContent?.trim();
+                    if (!url || !etiket) return;
+                    const star = document.createElement('span');
+                    star.className = 'mehse-fav-btn';
+                    star.dataset.favUrl = url;
+                    star.title = 'Sık kullanılanlara ekle / çıkar';
+                    star.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        this.favoriToggle(url, etiket);
+                    });
+                    btn.appendChild(star);
+                });
+                this.yildizlariGuncelle();
+            },
+            yildizlariGuncelle() {
+                document.querySelectorAll('.mehse-fav-btn').forEach((star) => {
+                    const secili = this.favoriMi(star.dataset.favUrl);
+                    star.textContent = secili ? '★' : '☆';
+                    star.classList.toggle('aktif', secili);
+                });
+            },
         };
     };
 </script>
@@ -135,9 +184,30 @@
             </li>
         </template>
     </ul>
+    <div x-show="favoriler.length && !q" x-cloak class="mehse-menu-favoriler">
+        <div class="mehse-menu-favoriler-baslik">★ Sık Kullanılanlar</div>
+        <ul>
+            <template x-for="f in favoriler" :key="f.url">
+                <li>
+                    <a :href="f.url" x-text="f.etiket"></a>
+                    <button type="button" x-on:click.prevent="favoriToggle(f.url, f.etiket)" title="Kaldır">×</button>
+                </li>
+            </template>
+        </ul>
+    </div>
 </div>
 
 <style>
+    .mehse-menu-favoriler { margin-top: .45rem; padding-top: .35rem; border-top: 1px solid color-mix(in srgb, var(--mehse-sb-metin, currentColor) 15%, transparent); }
+    .mehse-menu-favoriler-baslik { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .75; margin-bottom: .25rem; color: #f59e0b; }
+    .mehse-menu-favoriler ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .15rem; }
+    .mehse-menu-favoriler li { display: flex; align-items: center; justify-content: space-between; border-radius: .4rem; background: color-mix(in srgb, var(--mehse-sb-metin, currentColor) 7%, transparent); }
+    .mehse-menu-favoriler a { flex: 1; padding: .3rem .55rem; font-size: .78rem; font-weight: 600; color: inherit; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mehse-menu-favoriler button { background: none; border: none; color: inherit; opacity: .55; cursor: pointer; padding: .2rem .45rem; font-size: .85rem; }
+    .mehse-menu-favoriler button:hover { opacity: 1; color: #ef4444; }
+    .mehse-fav-btn { margin-left: auto; font-size: .85rem; opacity: 0; transition: opacity .15s, color .15s; cursor: pointer; padding: 0 .2rem; color: inherit; }
+    .fi-sidebar-item-btn:hover .mehse-fav-btn, .mehse-fav-btn.aktif { opacity: .85; }
+    .mehse-fav-btn.aktif { color: #f59e0b; opacity: 1; }
     .mehse-menu-arama { padding: 0 .5rem .5rem; color: var(--mehse-sb-metin, #fff); }
     .mehse-menu-arama input {
         width: 100%; font-size: .8rem; padding: .42rem .65rem; border-radius: .5rem;

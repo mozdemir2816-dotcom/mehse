@@ -122,8 +122,12 @@
                 <td class="alan">
                     Adı Soyadı: {{ $c['ad_soyad'] ?? '' }}<br>
                     Görev: {{ $c['departman'] ?? '' }}<br>
-                    İmza:<br>
-                    Tarih:
+                    İmza:
+                    @if (! empty($c['imza'] ?? $canliImza ?? null))
+                        <img src="{{ $c['imza'] ?? $canliImza }}" style="max-height:38px;vertical-align:middle">
+                    @endif
+                    <br>
+                    Tarih: {{ $form->teslim_tarihi?->format('d.m.Y') ?? '' }}
                 </td>
                 <td class="alan">
                     Adı Soyadı: {{ $form->teslim_eden ?: '' }}<br>

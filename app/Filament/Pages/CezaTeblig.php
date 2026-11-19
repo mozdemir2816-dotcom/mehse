@@ -97,9 +97,44 @@ class CezaTeblig extends Page
 
     public ?string $imzaDurumu = 'imzaladi';
 
+    public ?string $canliImza = null;
+
     // Fotoğraflar (olay/ihlal kanıtı)
     /** @var array<int, TemporaryUploadedFile> */
     public array $yeniFotograflar = [];
+
+    /** @var array<int, string> Saha bulgularından seçilen mevcut fotoğraf yolları */
+    public array $sahaFotograflari = [];
+
+    #[Computed]
+    public function mevcutSahaFotograflari(): array
+    {
+        if (! $this->firma) {
+            return [];
+        }
+
+        return \App\Models\SahaBulgusu::query()
+            ->where('firma_id', $this->firma->id)
+            ->whereNotNull('fotograflar')
+            ->latest('id')
+            ->limit(25)
+            ->get()
+            ->flatMap(fn ($b) => collect($b->fotograflar ?? [])->map(fn ($yol) => [
+                'yol' => $yol,
+                'etiket' => ($b->bulgu_no ?: '#'.$b->id).' — '.\Illuminate\Support\Str::limit($b->uygunsuzluk, 45),
+            ]))
+            ->filter(fn ($f) => filled($f['yol']))
+            ->unique('yol')
+            ->values()
+            ->all();
+    }
+
+    public function sahaFotoToggle(string $yol): void
+    {
+        $this->sahaFotograflari = in_array($yol, $this->sahaFotograflari, true)
+            ? array_values(array_diff($this->sahaFotograflari, [$yol]))
+            : [...$this->sahaFotograflari, $yol];
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -359,7 +394,10 @@ class CezaTeblig extends Page
             'yaptirim' => $this->yaptirim,
             'teblig_tarihi' => $this->tebligTarihi,
             'imza_durumu' => $this->imzaDurumu,
-            'fotograflar' => collect($this->yeniFotograflar)->map(fn ($f) => $f->store('ceza-teblig-foto', 'public'))->all(),
+            'fotograflar' => [
+                ...$this->sahaFotograflari,
+                ...collect($this->yeniFotograflar)->map(fn ($f) => $f->store('ceza-teblig-foto', 'public'))->all(),
+            ],
         ]);
         $t->save();
 
@@ -414,7 +452,7 @@ class CezaTeblig extends Page
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $t ? CezaTebligTutanagiUretici::pdf($t) : null;
+                    return $t ? CezaTebligTutanagiUretici::pdf($t, $this->canliImza) : null;
                 }),
 
             Action::make('pdfIpc')

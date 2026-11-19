@@ -9,6 +9,7 @@ use App\Models\EgitimSunumu;
 use App\Models\Firma;
 use App\Models\IsbasiEgitimTutanagi as IsbasiEgitimTutanagiModel;
 use App\Support\IsbasiEgitimTutanagiUretici;
+use App\Support\SgkIseGirisOkuyucu;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -76,6 +77,8 @@ class IsbasiEgitim extends Page
     public bool $iguImzasi = true;
 
     public bool $isyeriHekimiImzasi = false;
+
+    public ?string $canliImza = null;
 
     /** @var array<int, string> */
     public array $secilenKonular = [];
@@ -278,6 +281,58 @@ class IsbasiEgitim extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            Action::make('sgkPdfYukle')
+                ->label('SGK İşe Giriş PDF\'inden Doldur')
+                ->icon('heroicon-o-identification')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('SGK İşe Giriş Bildirgesi PDF\'inden Çalışan Doldur')
+                ->modalDescription('e-SGK İşe Giriş Bildirgesi PDF dosyasını yükleyin; çalışan otomatik olarak firmaya kaydedilir ve bu tutanaktaki Ad Soyad, T.C., Görev ve Eğitim Tarihi alanları doldurulur.')
+                ->modalSubmitActionLabel('PDF\'ten Aktar')
+                ->schema([
+                    FileUpload::make('dosya')
+                        ->label('SGK İşe Giriş Bildirgesi PDF')
+                        ->disk('local')
+                        ->directory('sgk-ice-aktarim')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $yol = Storage::disk('local')->path($data['dosya']);
+                    try {
+                        $kayitlar = SgkIseGirisOkuyucu::dosyadanCikar($yol);
+                    } finally {
+                        Storage::disk('local')->delete($data['dosya']);
+                    }
+
+                    if (! $kayitlar) {
+                        Notification::make()->title('PDF dosyasından çalışan bilgisi okunamadı')->danger()->send();
+
+                        return;
+                    }
+
+                    $sonuc = SgkIseGirisOkuyucu::firmayaKaydet($this->firma, $kayitlar);
+                    unset($this->calisanlar);
+
+                    $ilk = $sonuc['calisanlar']->first();
+                    if ($ilk) {
+                        $this->calisanHizliSecId = $ilk->id;
+                        $this->calisanAdSoyad = $ilk->ad_soyad;
+                        $this->calisanTc = $ilk->tc;
+                        $this->calisanGorev = $ilk->gorev;
+                        if ($ilk->ise_giris) {
+                            $this->egitimTarihi = $ilk->ise_giris->toDateString();
+                            $this->belgeTarihi = $ilk->ise_giris->toDateString();
+                        }
+                        unset($this->eslesenSunumlar);
+                    }
+
+                    Notification::make()
+                        ->title('SGK İşe Giriş Bildirgesinden çalışan aktarıldı')
+                        ->body($ilk?->ad_soyad)
+                        ->success()->send();
+                }),
+
             Action::make('sunumYukle')
                 ->label('Eğitim Sunumu Yükle')
                 ->icon('heroicon-o-presentation-chart-bar')
@@ -324,7 +379,7 @@ class IsbasiEgitim extends Page
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $t ? IsbasiEgitimTutanagiUretici::pdf($t) : null;
+                    return $t ? IsbasiEgitimTutanagiUretici::pdf($t, $this->canliImza) : null;
                 }),
 
             Action::make('katilimFormu')

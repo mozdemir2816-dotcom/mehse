@@ -350,6 +350,56 @@ class TespitOneriDefteri extends Page
                     Notification::make()->title($eklenen->count().' bulgu eklendi')->success()->send();
                 }),
 
+            Action::make('risktenEkle')
+                ->label('Risk Değerlendirmesinden Çek')
+                ->icon('heroicon-o-sparkles')
+                ->color('primary')
+                ->visible(fn () => $this->defter() !== null && $this->firma?->riskDegerlendirmeleri()->exists())
+                ->modalHeading('Risk Değerlendirmesinden Onaylı Deftere Madde Aktar')
+                ->modalDescription('Firmanın son risk değerlendirmesindeki risk maddelerini seçip doğrudan Tespit ve Öneri Defterine aktarabilirsiniz.')
+                ->modalSubmitActionLabel('Seçilenleri Deftere Ekle')
+                ->schema([
+                    CheckboxList::make('madde_idleri')
+                        ->label('Risk Maddeleri (Yüksek puanlılar üstte)')
+                        ->options(function (): array {
+                            $rd = $this->firma?->riskDegerlendirmeleri()->latest('id')->first();
+                            if (! $rd) {
+                                return [];
+                            }
+
+                            return $rd->maddeler()
+                                ->orderByDesc('puan')
+                                ->limit(80)
+                                ->get()
+                                ->mapWithKeys(fn ($m) => [
+                                    $m->id => trim(($m->duzey ? '['.$m->duzey.'] ' : '').$m->tehlike.($m->risk ? ' → '.$m->risk : '')),
+                                ])
+                                ->all();
+                        })
+                        ->required()
+                        ->bulkToggleable(),
+                ])
+                ->action(function (array $data): void {
+                    $d = $this->defter();
+                    $rd = $this->firma?->riskDegerlendirmeleri()->latest('id')->first();
+                    if (! $d || ! $rd) {
+                        return;
+                    }
+
+                    $maddeler = $rd->maddeler()->whereIn('id', $data['madde_idleri'] ?? [])->get();
+                    $yeni = $maddeler->map(fn ($m) => [
+                        'tespit' => trim($m->tehlike.($m->risk ? ' (Risk: '.$m->risk.')' : '')),
+                        'oneri' => $m->oneri ?: ($m->mevcut_onlem ?: \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI),
+                        'dayanak' => $m->mevzuat ?: '6331 Sayılı İSG Kanunu Md. 10',
+                        'oncelik' => in_array($m->duzey, ['Çok Yüksek', 'Yüksek', 'Tolerans Gösterilemez', 'Önemli'], true) ? 'yuksek' : 'orta',
+                        'foto_yolu' => null,
+                    ])->all();
+
+                    $d->update(['maddeler' => [...($d->maddeler ?? []), ...$yeni]]);
+                    unset($this->defter);
+                    Notification::make()->title(count($yeni).' risk maddesi onaylı deftere eklendi')->success()->send();
+                }),
+
             Action::make('pdf')
                 ->label('PDF Çıktı Al')
                 ->icon('heroicon-o-document-arrow-down')

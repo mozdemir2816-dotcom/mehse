@@ -66,8 +66,12 @@ class RiskSihirbaziTest extends TestCase
             ->set('yontem', 'matris_5x5')
             ->call('ileri')
             ->assertSet('adim', 2)
-            ->call('yontemSec', 'kayitli')           // hazır değil
+            ->call('yontemSec', 'gecersiz_yontem')   // tanımsız yöntem seçilemez
             ->assertSet('yontemSecim', null)
+            ->call('yontemSec', 'kayitli')           // kayıtlı risklerim artık hazır
+            ->assertSet('yontemSecim', 'kayitli')
+            ->call('yontemSec', 'saha')              // saha bulgularından aktarım hazır
+            ->assertSet('yontemSecim', 'saha')
             ->call('yontemSec', 'manuel')
             ->assertSet('yontemSecim', 'manuel')
             ->call('ileri')

@@ -14,13 +14,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class IsbasiEgitimTutanagiUretici
 {
-    public static function pdf(IsbasiEgitimTutanagi $t): StreamedResponse
+    public static function pdf(IsbasiEgitimTutanagi $t, ?string $canliImza = null): StreamedResponse
     {
         $t->loadMissing('firma');
 
         $pdf = Pdf::loadView('pdf.isbasi-egitim-tutanagi', [
             'tutanak' => $t,
             'firma' => $t->firma,
+            'canliImza' => $canliImza,
         ])->setPaper('a4');
 
         $ad = 'isbasi-egitim-tutanagi-'.Str::slug($t->calisan_ad_soyad).'.pdf';

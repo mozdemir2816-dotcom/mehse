@@ -7,6 +7,7 @@ use App\Support\CalisanDosyasiUretici;
 use App\Support\CalisanExcelIceAktarici;
 use App\Support\CalisanMukerrerBirlestirici;
 use App\Support\CalisanListesiUretici;
+use App\Support\SgkIseGirisOkuyucu;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -54,6 +55,56 @@ class CalisanAksiyonlari
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->action(fn () => CalisanExcelIceAktarici::sablonIndir()),
+
+            Action::make('sgkPdfYukle')
+                ->label('SGK İşe Giriş PDF\'inden Ekle')
+                ->icon('heroicon-o-identification')
+                ->color('success')
+                ->modalHeading('SGK İşe Giriş Bildirgesi PDF\'inden Çalışan Ekle')
+                ->modalDescription('e-SGK Sigortalı İşe Giriş Bildirgesi PDF dosyasını (tekli veya birden fazla PDF) yükleyin. '
+                    .'T.C. Kimlik No, Ad Soyad, İşe Giriş Tarihi ve Meslek/Görev otomatik okunarak firmaya kaydedilir.')
+                ->modalSubmitActionLabel('PDF\'ten Aktar')
+                ->schema([
+                    ...static::firmaAlani($sabitFirma, $varsayilanFirmaId),
+                    FileUpload::make('dosyalar')
+                        ->label('SGK İşe Giriş Bildirgesi PDF Dosyaları')
+                        ->disk('local')
+                        ->directory('sgk-ice-aktarim')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->multiple()
+                        ->maxFiles(30)
+                        ->required(),
+                ])
+                ->action(function (array $data) use ($sabitFirma): void {
+                    $firma = static::firmaBul($sabitFirma, $data);
+                    $dosyalar = is_array($data['dosyalar'] ?? null) ? $data['dosyalar'] : array_filter([$data['dosyalar'] ?? null]);
+                    $yollar = array_map(fn (string $d) => Storage::disk('local')->path($d), $dosyalar);
+
+                    try {
+                        $kayitlar = SgkIseGirisOkuyucu::dosyalardanCikar($yollar);
+                    } finally {
+                        foreach ($dosyalar as $d) {
+                            Storage::disk('local')->delete($d);
+                        }
+                    }
+
+                    if (! $kayitlar) {
+                        Notification::make()
+                            ->title('PDF dosyasından çalışan bilgisi okunamadı')
+                            ->body('Lütfen metin katmanı içeren orijinal e-SGK İşe Giriş Bildirgesi PDF dosyası yükleyin.')
+                            ->danger()->send();
+
+                        return;
+                    }
+
+                    $sonuc = SgkIseGirisOkuyucu::firmayaKaydet($firma, $kayitlar);
+                    $isimler = $sonuc['calisanlar']->pluck('ad_soyad')->implode(', ');
+
+                    Notification::make()
+                        ->title($sonuc['eklenen'].' yeni çalışan eklendi, '.$sonuc['guncellenen'].' çalışan güncellendi')
+                        ->body($isimler)
+                        ->success()->send();
+                }),
 
             Action::make('excelYukle')
                 ->label('Doldurulan Excel\'i Yükle')

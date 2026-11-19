@@ -640,6 +640,91 @@
     @endif
 
     {{-- ==================== ADIM 3 — ŞABLONLAR ========================= --}}
+    @if ($adim === 3 && $yontemSecim === 'kayitli')
+        <x-filament::section icon="heroicon-o-folder-open" icon-color="primary">
+            <x-slot name="heading">Kayıtlı Risklerimden Seç</x-slot>
+            <x-slot name="description">Daha önce hazırladığınız risk değerlendirmelerinden madde seçip bu analize ekleyin — eklenen: {{ count($secilenler) }}</x-slot>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem;margin-bottom:1rem">
+                <div>
+                    <label style="font-size:.8rem;font-weight:600">Kaynak Risk Değerlendirmesi Seçin</label>
+                    <select wire:model.live="kayitliKaynakRdId"
+                        style="margin-top:.3rem;width:100%;padding:.5rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
+                        <option value="">— Geçmiş değerlendirme seçin —</option>
+                        @foreach ($this->kayitliDegerlendirmeler as $krd)
+                            <option value="{{ $krd->id }}">{{ $krd->firma?->secimEtiketi() ?? $krd->firma_unvan }} — {{ $krd->belge_no }} ({{ $krd->maddeler_count }} madde)</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:.8rem;font-weight:600">Maddelerde Ara</label>
+                    <input type="search" wire:model.live.debounce.300ms="kayitliArama" placeholder="Bölüm, tehlike veya önlem ara…"
+                        style="margin-top:.3rem;width:100%;padding:.5rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
+                </div>
+            </div>
+
+            @if ($this->kayitliKaynakRdId)
+                @php $kMaddeler = $this->kayitliKaynakMaddeler; @endphp
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
+                    <span style="font-size:.82rem;font-weight:600">{{ $kMaddeler->count() }} madde listeleniyor</span>
+                    @if ($kMaddeler->isNotEmpty())
+                        <x-filament::button size="xs" icon="heroicon-o-plus-circle" wire:click="kayitliTumunuEkle">
+                            Listelenen Tüm Maddeleri Ekle ({{ $kMaddeler->count() }})
+                        </x-filament::button>
+                    @endif
+                </div>
+                <div style="display:flex;flex-direction:column;gap:.4rem;max-height:26rem;overflow-y:auto;padding-right:.25rem">
+                    @forelse ($kMaddeler as $km)
+                        <div style="{{ $kutu }};padding:.6rem .85rem;display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem">
+                            <div style="font-size:.82rem">
+                                <div style="font-weight:600">{{ $km->tehlike }}</div>
+                                <div class="mehse-soluk">{{ collect([$km->bolum, $km->faaliyet, $km->risk])->filter()->implode(' · ') }}</div>
+                            </div>
+                            <x-filament::button size="xs" wire:click="kayitliMaddeEkle({{ $km->id }})">+ Ekle</x-filament::button>
+                        </div>
+                    @empty
+                        <p class="mehse-soluk">Eşleşen madde bulunamadı.</p>
+                    @endforelse
+                </div>
+            @else
+                <p class="mehse-soluk">Yukarıdan daha önce hazırladığınız bir risk değerlendirmesini seçin.</p>
+            @endif
+        </x-filament::section>
+    @endif
+
+    @if ($adim === 3 && $yontemSecim === 'saha')
+        <x-filament::section icon="heroicon-o-clipboard-document-check" icon-color="primary">
+            <x-slot name="heading">Saha Denetimi & Bulgulardan Risk Aktar</x-slot>
+            <x-slot name="description">{{ $this->firma?->unvan }} işyerindeki saha bulgularını doğrudan risk değerlendirmesine madde olarak aktarın — eklenen: {{ count($secilenler) }}</x-slot>
+
+            @php $sahaAdaylar = $this->sahaRiskAdaylari; @endphp
+            @if ($sahaAdaylar->isEmpty())
+                <div style="{{ $kutu }};padding:1rem;font-size:.85rem;color:rgb(107 114 128)">
+                    Bu işyerinde henüz kayıtlı saha bulgusu bulunamadı. Saha ziyaretlerinizde tespit ettiğiniz bulgular burada otomatik listelenir.
+                </div>
+            @else
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
+                    <span style="font-size:.82rem;font-weight:600">{{ $sahaAdaylar->count() }} saha bulgusu bulundu</span>
+                    <x-filament::button size="xs" icon="heroicon-o-plus-circle" wire:click="sahaTumunuEkle">
+                        Tüm Saha Bulgularını Risklere Ekle ({{ $sahaAdaylar->count() }})
+                    </x-filament::button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:.45rem;max-height:26rem;overflow-y:auto;padding-right:.25rem">
+                    @foreach ($sahaAdaylar as $sa)
+                        <div style="{{ $kutu }};padding:.65rem .9rem;display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem">
+                            <div style="font-size:.82rem">
+                                <span style="font-size:.7rem;font-weight:700;color:{{ $mor }}">{{ $sa['kaynak_etiket'] }} · {{ $sa['bolum'] }}</span>
+                                <div style="font-weight:600;margin-top:.15rem">{{ $sa['tehlike'] }}</div>
+                                <div class="mehse-soluk">Öneri: {{ $sa['oneri'] }}</div>
+                            </div>
+                            <x-filament::button size="xs" wire:click="sahaAdayEkle('{{ $sa['id'] }}')">+ Ekle</x-filament::button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </x-filament::section>
+    @endif
+
     @if ($adim === 3 && $yontemSecim === 'sablon')
         <x-filament::section icon="heroicon-o-rectangle-stack" icon-color="primary">
             <x-slot name="heading">Şablonlar & Paylaşılanlar</x-slot>

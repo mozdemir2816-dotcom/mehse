@@ -9,6 +9,7 @@ use App\Models\IsIzinSablonu;
 use App\Models\SahaDenetimi;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\IsIzinFormuUretici;
+use App\Support\SaglikGuvenlikPlaniUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -416,6 +417,7 @@ class IsIzinFormu extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            SaglikGuvenlikPlaniUretici::filamentAction(fn () => $this->firma),
             Action::make('kutuphayeEkle')
                 ->label('Şablon Olarak Kaydet')->tooltip('Formu Kütüphaneye Şablon Olarak Ekle')
                 ->icon('heroicon-o-bookmark')
