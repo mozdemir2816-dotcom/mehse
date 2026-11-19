@@ -8,7 +8,9 @@ use App\Models\Firma;
 use App\Models\IsKazasiRaporu as IsKazasiRaporuModel;
 use App\Models\RiskDegerlendirmesi;
 use App\Filament\Support\ImzaSecenegi;
+use App\Models\KurulToplantisi as KurulToplantisiModel;
 use App\Support\EkipmanKatalogu;
+use App\Support\IsKazasiIstatistikUretici;
 use App\Support\IsKazasiRaporuUretici;
 use App\Support\RiskSkorlama;
 use BackedEnum;
@@ -524,6 +526,12 @@ class IsKazasiRaporu extends Page
                     return IsKazasiRaporuUretici::pdf($kayit, ImzaSecenegi::secili($data));
                 }),
 
+            Action::make('kazaIstatistikleriPdf')
+                ->label('📊 Kaza İstatistikleri (12 Kırılım PDF)')
+                ->icon('heroicon-o-chart-bar')
+                ->color('gray')
+                ->action(fn () => IsKazasiIstatistikUretici::pdf($this->firma, (int) Filament::auth()->id())),
+
             Action::make('riskAnalizineEkle')
                 ->label(fn () => $this->sonRiskDegerlendirmesi ? 'Risk Analizine Ekle' : 'Önce Risk Değerlendirmesi Oluşturun')
                 ->icon('heroicon-o-shield-exclamation')
@@ -613,6 +621,54 @@ class IsKazasiRaporu extends Page
         $r = $this->firma?->isKazasiRaporlari()->find($id);
 
         return $r ? IsKazasiRaporuUretici::pdf($r) : null;
+    }
+
+    /** Kayıtlı iş kazası raporunu firmanın aktif/taslak İSG Kurulu toplantı gündemine ekler. */
+    public function kurulGundemineEkle(int $id): void
+    {
+        $r = $this->firma?->isKazasiRaporlari()->find($id);
+
+        if (! $r || ! $this->firma) {
+            return;
+        }
+
+        $toplanti = $this->firma->kurulToplantilari()
+            ->whereIn('durum', ['taslak', 'planlandi'])
+            ->latest('tarih')
+            ->first();
+
+        if (! $toplanti) {
+            $toplanti = KurulToplantisiModel::create([
+                'firma_id' => $this->firma->id,
+                'toplanti_no' => KurulToplantisiModel::sonrakiNo($this->firma),
+                'tarih' => now()->toDateString(),
+                'tur' => 'olaganustu',
+                'durum' => 'taslak',
+                'baskan' => $this->firma->isveren_vekili ?: $this->firma->isveren_ad,
+                'gundem' => [],
+                'kararlar' => [],
+            ]);
+        }
+
+        $madde = "İş Kazası / Olay İncelemesi ({$r->belge_no} — {$r->kazazede_ad_soyad}, ".$r->kaza_tarihi?->format('d.m.Y')."): Kök neden analizi ve DÖF tedbirlerinin değerlendirilmesi";
+        $gundem = $toplanti->gundem ?? [];
+
+        if (! in_array($madde, $gundem, true)) {
+            $gundem[] = $madde;
+            $toplanti->update(['gundem' => $gundem]);
+        }
+
+        Notification::make()
+            ->title('İSG Kurulu gündemine eklendi')
+            ->body('Toplantı No: '.$toplanti->toplanti_no)
+            ->actions([
+                Action::make('kurulaGit')
+                    ->label('Kurul Toplantısını Aç →')
+                    ->button()
+                    ->url(KurulToplantisi::getUrl(['firma' => $this->firma->id, 'toplanti' => $toplanti->id])),
+            ])
+            ->success()
+            ->send();
     }
 
     public function gecmisSil(int $id): void

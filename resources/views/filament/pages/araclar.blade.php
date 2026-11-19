@@ -29,6 +29,22 @@
             </div>
         </div>
 
+        <div style="margin-top:.75rem;padding:.65rem .85rem;border-radius:.55rem;border:1px dashed rgb(107 114 128 / .35);display:flex;align-items:end;gap:.65rem;flex-wrap:wrap">
+            <div>
+                <label class="mehse-etiket">Çalışan Sayısından Saat Hesapla (Kişi × 225 Saat × Ay)</label>
+                <div style="display:flex;gap:.45rem;align-items:center;margin-top:.25rem">
+                    <input type="number" min="1" placeholder="Çalışan sayısı" wire:model="kazaCalisanSayisi"
+                        style="width:140px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
+                    <span style="font-size:.8rem;color:rgb(107 114 128)">×</span>
+                    <input type="number" min="1" max="12" placeholder="Ay (12)" wire:model="kazaDonemAy"
+                        style="width:80px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
+                    <span style="font-size:.78rem;color:rgb(107 114 128)">ay</span>
+                </div>
+            </div>
+            <x-filament::button size="xs" color="warning" wire:click="calisanSayisindanSaatHesapla">Çalışma Saatini Hesapla</x-filament::button>
+            <x-filament::button size="xs" color="gray" wire:click="kazaOrnekVeriDoldur">Örnek Veriyle Dene</x-filament::button>
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem">
             <div style="{{ $kutu }};text-align:center">
                 <div style="font-size:.78rem;color:rgb(107 114 128)">Kaza Sıklık Hızı</div>
@@ -95,21 +111,100 @@
         </div>
     </x-filament::section>
 
-    {{-- NACE KOD → TEHLİKE SINIFI SORGULA --}}
+    {{-- NACE KOD / SGK SİCİL NO / FAALİYET ADI → TEHLİKE SINIFI SORGULA --}}
     <x-filament::section icon="heroicon-o-magnifying-glass" icon-color="warning">
-        <x-slot name="heading">NACE Kod → Tehlike Sınıfı Sorgula</x-slot>
-        <x-slot name="description">6 haneli NACE Rev.2 faaliyet kodunu girin (ör. 01.11.14), İşyeri Tehlike Sınıfları Tebliği EK-1'deki tehlike sınıfını görün.</x-slot>
+        <x-slot name="heading">Tehlike Sınıfını Bul — NACE Kodu · 26 Haneli SGK Sicil No · Faaliyet Adı</x-slot>
+        <x-slot name="description">6 haneli NACE Rev.2 koduyla, 26 haneli SGK işyeri sicil numarasıyla veya faaliyet adıyla işyerinin tehlike sınıfını ve 13 temel yasal İSG yükümlülüğünü sorgulayın.</x-slot>
 
-        <div style="display:flex;gap:.75rem;align-items:end;flex-wrap:wrap">
-            <div style="flex:1;min-width:200px">
-                <label class="mehse-etiket">NACE Kodu</label>
-                <input type="text" placeholder="Örn: 01.11.14 veya 011114" wire:model="naceKoduGirdi" wire:keydown.enter="naceSorgula" style="{{ $girdi }}">
+        {{-- 1. 26 HANELİ SGK SİCİL NO ÇÖZÜMLEYİCİ --}}
+        <div style="{{ $kutu }};margin-bottom:1rem;background:rgb(180 83 9 / .03)">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+                <div style="font-weight:700;font-size:.88rem">🔢 26 Haneli SGK İşyeri Sicil Numarası Çözümleyici</div>
+                <x-filament::button size="xs" color="gray" wire:click="ornekSgkSicilDene">Örnek Numarayla Dene</x-filament::button>
             </div>
-            <x-filament::button color="warning" wire:click="naceSorgula">Sorgula</x-filament::button>
-            @if ($naceKoduGirdi || $naceSonuc)
-                <x-filament::button size="sm" color="gray" wire:click="naceSifirla">Temizle</x-filament::button>
+            <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.15rem">
+                SGK Vergi/İşe Giriş bildirgesindeki 26 haneli işyeri sicil numarasını yapıştırın (boşluk veya tire içerebilir); 2-5. hanedeki 4 haneli NACE işkolu otomatik ayrıştırılır.
+            </div>
+            <div style="display:flex;gap:.6rem;align-items:end;flex-wrap:wrap;margin-top:.5rem">
+                <div style="flex:1;min-width:240px">
+                    <input type="text" placeholder="Örn: 2 4120 01 01 1234567 034 01 85 000" wire:model="sgkSicilGirdi" wire:keydown.enter="sgkSicilCozumle" style="{{ $girdi }};margin-top:0;font-family:monospace">
+                </div>
+                <x-filament::button size="sm" color="warning" wire:click="sgkSicilCozumle">Sicil No Çözümle</x-filament::button>
+            </div>
+
+            @if ($sgkCozumSonucu)
+                @if (! $sgkCozumSonucu['gecerli'] && $sgkCozumSonucu['hata'])
+                    <div style="margin-top:.65rem;color:rgb(185 28 28);font-size:.82rem">{{ $sgkCozumSonucu['hata'] }}</div>
+                @elseif ($sgkCozumSonucu['gecerli'])
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.45rem;margin-top:.75rem">
+                        @foreach ($sgkCozumSonucu['parcalar'] as $p)
+                            <div style="padding:.45rem .6rem;border-radius:.45rem;border:1px solid {{ ($p['vurgu'] ?? false) ? $turuncu : 'rgb(107 114 128 / .25)' }};background:{{ ($p['vurgu'] ?? false) ? 'rgb(180 83 9 / .1)' : 'transparent' }}">
+                                <div style="font-size:.68rem;color:rgb(107 114 128);font-weight:600">{{ $p['etiket'] }}</div>
+                                <div style="font-size:.95rem;font-weight:800;font-family:monospace;color:{{ ($p['vurgu'] ?? false) ? $turuncu : 'inherit' }}">{{ $p['deger'] }}</div>
+                                <div style="font-size:.68rem;color:rgb(107 114 128)">{{ $p['aciklama'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($sgkNaceAdaylari->isNotEmpty())
+                        <div style="margin-top:.75rem">
+                            <div style="font-size:.78rem;font-weight:700;margin-bottom:.35rem">
+                                Bu İşkoluna ({{ substr($sgkCozumSonucu['nace4'], 0, 2).'.'.substr($sgkCozumSonucu['nace4'], 2, 2) }}) Ait 6 Haneli NACE Faaliyet Kırılımları (Seçmek için tıklayın):
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:.3rem">
+                                @foreach ($sgkNaceAdaylari as $aday)
+                                    <button type="button" wire:click="naceKodSec('{{ $aday->kod }}')"
+                                        style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .65rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .3);background:transparent;cursor:pointer;text-align:left;font-size:.8rem">
+                                        <span><strong style="font-family:monospace">{{ $aday->kod }}</strong> — {{ $aday->tanim }}</span>
+                                        <span style="font-weight:700;color:{{ $turuncu }};white-space:nowrap">{{ config('isg.tehlike_siniflari')[$aday->tehlike_sinifi] ?? $aday->tehlike_sinifi }} →</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endif
             @endif
         </div>
+
+        {{-- 2. 6 HANELİ NACE KODU VEYA FAALİYET ADIYLA SORGULA --}}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.85rem;align-items:end">
+            <div style="display:flex;gap:.5rem;align-items:end">
+                <div style="flex:1">
+                    <label class="mehse-etiket">6 Haneli NACE Kodu</label>
+                    <input type="text" placeholder="Örn: 01.11.14 veya 011114" wire:model="naceKoduGirdi" wire:keydown.enter="naceSorgula" style="{{ $girdi }}">
+                </div>
+                <x-filament::button color="warning" wire:click="naceSorgula">Sorgula</x-filament::button>
+            </div>
+
+            <div style="display:flex;gap:.5rem;align-items:end">
+                <div style="flex:1">
+                    <label class="mehse-etiket">Veya Faaliyet / Sektör Adıyla Ara</label>
+                    <input type="text" placeholder="Örn: inşaat, metal, fırın, tekstil..." wire:model="faaliyetAramaGirdi" wire:keydown.enter="faaliyetIleNaceAra" style="{{ $girdi }}">
+                </div>
+                <x-filament::button color="gray" wire:click="faaliyetIleNaceAra">Faaliyet Ara</x-filament::button>
+            </div>
+        </div>
+
+        @if ($naceKoduGirdi || $naceSonuc || $sgkSicilGirdi || $faaliyetAramaGirdi)
+            <div style="margin-top:.6rem">
+                <x-filament::button size="xs" color="gray" wire:click="naceSifirla">Tümünü Temizle</x-filament::button>
+            </div>
+        @endif
+
+        @if ($faaliyetSonuclari->isNotEmpty())
+            <div style="margin-top:.75rem;max-height:240px;overflow-y:auto;border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.5rem">
+                <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.35rem">{{ $faaliyetSonuclari->count() }} faaliyet eşleşti (seçmek için tıklayın):</div>
+                <div style="display:flex;flex-direction:column;gap:.25rem">
+                    @foreach ($faaliyetSonuclari as $f)
+                        <button type="button" wire:click="naceKodSec('{{ $f->kod }}')"
+                            style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.35rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .2);background:transparent;cursor:pointer;text-align:left;font-size:.79rem">
+                            <span><strong style="font-family:monospace">{{ $f->kod }}</strong> — {{ $f->tanim }}</span>
+                            <span style="font-weight:700;color:{{ $turuncu }};white-space:nowrap">{{ config('isg.tehlike_siniflari')[$f->tehlike_sinifi] ?? $f->tehlike_sinifi }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         @if ($naceHata)
             <div style="margin-top:1rem;color:rgb(185 28 28);font-size:.85rem">{{ $naceHata }}</div>
@@ -131,6 +226,42 @@
                 </div>
             </div>
         @endif
+
+        {{-- 3. 13 SATIRLIK TEHLİKE SINIFINA GÖRE YASAL İSG YÜKÜMLÜLÜKLERİ MATRİSİ --}}
+        @php $seciliSinif = $naceSonuc?->tehlike_sinifi; @endphp
+        <details @if($seciliSinif) open @endif style="margin-top:1rem;border:1px solid rgb(107 114 128 / .3);border-radius:.65rem;padding:.75rem">
+            <summary style="cursor:pointer;font-weight:700;font-size:.86rem">
+                📋 Tehlike Sınıfına Göre 13 Temel Yasal İSG Yükümlülüğü Karşılaştırma Tablosu
+                @if ($seciliSinif)
+                    <span style="color:{{ $turuncu }}">({{ config('isg.tehlike_siniflari')[$seciliSinif] }} sınıf sütunu vurgulandı)</span>
+                @endif
+            </summary>
+            <div style="overflow-x:auto;margin-top:.65rem">
+                <table style="width:100%;border-collapse:collapse;font-size:.79rem">
+                    <thead>
+                        <tr style="text-align:left;border-bottom:2px solid rgb(107 114 128 / .3)">
+                            <th style="padding:.4rem .5rem">Yükümlülük &amp; Dayanak</th>
+                            <th style="padding:.4rem .5rem;{{ $seciliSinif === 'az_tehlikeli' ? 'background:rgb(34 197 94 / .14);font-weight:800' : '' }}">Az Tehlikeli</th>
+                            <th style="padding:.4rem .5rem;{{ $seciliSinif === 'tehlikeli' ? 'background:rgb(245 158 11 / .15);font-weight:800' : '' }}">Tehlikeli</th>
+                            <th style="padding:.4rem .5rem;{{ $seciliSinif === 'cok_tehlikeli' ? 'background:rgb(239 68 68 / .14);font-weight:800' : '' }}">Çok Tehlikeli</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (\App\Support\SgkSicilCozumleyici::yukumlulukMatrisi() as $satir)
+                            <tr style="border-bottom:1px solid rgb(107 114 128 / .14)">
+                                <td style="padding:.4rem .5rem">
+                                    <div style="font-weight:600">{{ $satir['baslik'] }}</div>
+                                    <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $satir['dayanak'] }}</div>
+                                </td>
+                                <td style="padding:.4rem .5rem;{{ $seciliSinif === 'az_tehlikeli' ? 'background:rgb(34 197 94 / .09);font-weight:700' : '' }}">{{ $satir['az_tehlikeli'] }}</td>
+                                <td style="padding:.4rem .5rem;{{ $seciliSinif === 'tehlikeli' ? 'background:rgb(245 158 11 / .1);font-weight:700' : '' }}">{{ $satir['tehlikeli'] }}</td>
+                                <td style="padding:.4rem .5rem;{{ $seciliSinif === 'cok_tehlikeli' ? 'background:rgb(239 68 68 / .09);font-weight:700' : '' }}">{{ $satir['cok_tehlikeli'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </details>
 
         <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:1rem">
             Kaynak: 26/12/2012 tarihli ve 28509 sayılı Resmî Gazete, İş Sağlığı ve Güvenliğine İlişkin İşyeri

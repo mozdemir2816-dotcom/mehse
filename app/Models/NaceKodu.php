@@ -28,4 +28,33 @@ class NaceKodu extends Model
 
         return $kod ? self::where('kod', $kod)->first() : null;
     }
+
+    /** 4 haneli SGK işkolu koduna (ör. "4120" veya "41.20") bağlı 6 haneli alt kırılımları döner. */
+    public static function nace4IleBul(string $nace4): \Illuminate\Database\Eloquent\Collection
+    {
+        $rakamlar = preg_replace('/\D/', '', $nace4) ?? '';
+        if (strlen($rakamlar) < 4) {
+            return new \Illuminate\Database\Eloquent\Collection;
+        }
+
+        $onEk = substr($rakamlar, 0, 2).'.'.substr($rakamlar, 2, 2).'.';
+
+        return self::where('kod', 'like', $onEk.'%')->orderBy('kod')->get();
+    }
+
+    /** Faaliyet adına veya sektör tanımına göre NACE arama. */
+    public static function faaliyetAra(string $terim): \Illuminate\Database\Eloquent\Collection
+    {
+        $temiz = trim($terim);
+        if (mb_strlen($temiz) < 2) {
+            return new \Illuminate\Database\Eloquent\Collection;
+        }
+
+        return self::where('tanim', 'like', '%'.$temiz.'%')
+            ->orWhere('sektor_adi', 'like', '%'.$temiz.'%')
+            ->orWhere('kod', 'like', '%'.$temiz.'%')
+            ->orderBy('kod')
+            ->limit(25)
+            ->get();
+    }
 }

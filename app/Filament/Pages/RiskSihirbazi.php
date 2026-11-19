@@ -12,6 +12,7 @@ use App\Models\RiskMaddesi;
 use App\Models\RiskSablonu;
 use App\Models\Tehlike;
 use App\Models\TehlikeKategorisi;
+use App\Support\FirmaRiskBildirimQrUretici;
 use App\Support\GeminiRiskPdfOkuyucu;
 use App\Support\GeminiRiskPuanTamamlayici;
 use App\Support\EkipmanRiskKutuphanesi;
@@ -2030,7 +2031,13 @@ class RiskSihirbazi extends Page
     protected function getHeaderActions(): array
     {
         return [
-            SaglikGuvenlikPlaniUretici::filamentAction(fn () => $this->seciliFirma),
+            Action::make('riskBildirimQrPdf')
+                ->label('📱 Risk Bildirim QR Posteri (PDF)')
+                ->icon('heroicon-o-qr-code')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => $this->firma ? FirmaRiskBildirimQrUretici::pdf($this->firma) : null),
+            SaglikGuvenlikPlaniUretici::filamentAction(fn () => $this->firma),
         ];
     }
 }

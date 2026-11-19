@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\MykMeslek;
 use App\Models\NaceKodu;
 use App\Support\GeminiMevzuatDanismani;
+use App\Support\SgkSicilCozumleyici;
 use BackedEnum;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,6 +43,29 @@ class Araclar extends Page
     public ?int $kayipGunSayisi = null;
 
     public ?float $toplamCalismaSaati = null;
+
+    public ?int $kazaCalisanSayisi = null;
+
+    public int $kazaDonemAy = 12;
+
+    public function calisanSayisindanSaatHesapla(): void
+    {
+        if (! $this->kazaCalisanSayisi || $this->kazaCalisanSayisi <= 0) {
+            return;
+        }
+
+        // Standart İSG hesabı: 1 çalışan = ayda 225 çalışma saati (günde 7.5 saat × 30 gün)
+        $this->toplamCalismaSaati = (float) ($this->kazaCalisanSayisi * 225 * max(1, $this->kazaDonemAy));
+    }
+
+    public function kazaOrnekVeriDoldur(): void
+    {
+        $this->kazaSayisi = 3;
+        $this->kayipGunSayisi = 45;
+        $this->kazaCalisanSayisi = 100;
+        $this->kazaDonemAy = 12;
+        $this->toplamCalismaSaati = 270000;
+    }
 
     // --- Gürültü Maruziyet Düzeyi (Lex,8h) ---
     /** @var array<int, array{db: ?float, saat: ?float}> */
@@ -112,7 +136,8 @@ class Araclar extends Page
 
     public function kazaHesaplayiciSifirla(): void
     {
-        $this->reset(['kazaSayisi', 'kayipGunSayisi', 'toplamCalismaSaati']);
+        $this->reset(['kazaSayisi', 'kayipGunSayisi', 'toplamCalismaSaati', 'kazaCalisanSayisi']);
+        $this->kazaDonemAy = 12;
     }
 
     public function gurultuHesaplayiciSifirla(): void
@@ -120,12 +145,25 @@ class Araclar extends Page
         $this->gurultuOlcumleri = [['db' => null, 'saat' => null]];
     }
 
-    // --- NACE Kod → Tehlike Sınıfı Sorgula ---
+    // --- NACE Kod / SGK Sicil No / Faaliyet Adı → Tehlike Sınıfı Sorgula ---
     public ?string $naceKoduGirdi = null;
 
     public ?string $naceHata = null;
 
     public ?NaceKodu $naceSonuc = null;
+
+    public ?string $sgkSicilGirdi = null;
+
+    /** @var array<string, mixed>|null */
+    public ?array $sgkCozumSonucu = null;
+
+    /** @var Collection<int, NaceKodu> */
+    public Collection $sgkNaceAdaylari;
+
+    public ?string $faaliyetAramaGirdi = null;
+
+    /** @var Collection<int, NaceKodu> */
+    public Collection $faaliyetSonuclari;
 
     public function naceSorgula(): void
     {
@@ -155,9 +193,42 @@ class Araclar extends Page
         $this->naceSonuc = $sonuc;
     }
 
+    public function sgkSicilCozumle(): void
+    {
+        $this->sgkCozumSonucu = SgkSicilCozumleyici::cozumle((string) $this->sgkSicilGirdi);
+        $this->sgkNaceAdaylari = new Collection;
+
+        if ($this->sgkCozumSonucu['gecerli'] && $this->sgkCozumSonucu['nace4']) {
+            $this->sgkNaceAdaylari = NaceKodu::nace4IleBul($this->sgkCozumSonucu['nace4']);
+            if ($this->sgkNaceAdaylari->count() === 1) {
+                $this->naceSonuc = $this->sgkNaceAdaylari->first();
+                $this->naceKoduGirdi = $this->naceSonuc->kod;
+            }
+        }
+    }
+
+    public function ornekSgkSicilDene(): void
+    {
+        $this->sgkSicilGirdi = SgkSicilCozumleyici::ORNEK_SICIL_NO;
+        $this->sgkSicilCozumle();
+    }
+
+    public function faaliyetIleNaceAra(): void
+    {
+        $this->faaliyetSonuclari = NaceKodu::faaliyetAra((string) $this->faaliyetAramaGirdi);
+    }
+
+    public function naceKodSec(string $kod): void
+    {
+        $this->naceKoduGirdi = $kod;
+        $this->naceSorgula();
+    }
+
     public function naceSifirla(): void
     {
-        $this->reset(['naceKoduGirdi', 'naceHata', 'naceSonuc']);
+        $this->reset(['naceKoduGirdi', 'naceHata', 'naceSonuc', 'sgkSicilGirdi', 'sgkCozumSonucu', 'faaliyetAramaGirdi']);
+        $this->sgkNaceAdaylari = new Collection;
+        $this->faaliyetSonuclari = new Collection;
     }
 
     // --- MYK Zorunluluk Sorgula ---
@@ -171,6 +242,8 @@ class Araclar extends Page
     public function mount(): void
     {
         $this->mykSonuclar = new Collection;
+        $this->sgkNaceAdaylari = new Collection;
+        $this->faaliyetSonuclari = new Collection;
     }
 
     public function mykAra(): void

@@ -164,9 +164,22 @@
             <div x-show="acik" x-cloak style="margin-top:.7rem">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
                 <div style="grid-column:1/-1">
-                    <label class="mehse-etiket">Tespit <span class="mehse-hata">*</span></label>
-                    <textarea wire:model="yeniTespit" rows="2" placeholder="Sahada tespit edilen uygunsuzluğu yazın"
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+                        <label class="mehse-etiket">Tespit / Uygunsuzluk Tanımı <span class="mehse-hata">*</span></label>
+                        <x-filament::button size="xs" color="warning" icon="heroicon-o-sparkles" wire:click="aiOtoDoldur">
+                            ✨ Ham Nottan Düzeltici Faaliyet Oto-Doldur
+                        </x-filament::button>
+                    </div>
+                    <textarea wire:model="yeniTespit" rows="2" placeholder="Sahada tespit edilen uygunsuzluğu yazın (Örn: Pano kapağı açık, yangın tüpü önü kapalı...)"
                         style="margin-top:.2rem;width:100%;padding:.5rem .65rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem"></textarea>
+                </div>
+                <div>
+                    <label class="mehse-etiket">Risk Değerlendirme Metodu</label>
+                    <select wire:model.live="yeniRiskMetodu" class="mehse-girdi-kompakt mehse-tam">
+                        <option value="standart">Standart (Öncelik Seçimi)</option>
+                        <option value="matris_5x5">5×5 L Tipi Matris (O × Ş)</option>
+                        <option value="fine_kinney">Fine-Kinney (O × F × Ş)</option>
+                    </select>
                 </div>
                 <div>
                     <label class="mehse-etiket">Öncelik</label>
@@ -186,7 +199,55 @@
                     <label class="mehse-etiket">Termin Tarihi</label>
                     <input type="date" wire:model="yeniTermin"
                         class="mehse-girdi-kompakt mehse-tam">
+                    <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.3rem">
+                        @foreach ([7 => '1 Hafta', 14 => '2 Hafta', 30 => '1 Ay', 60 => '2 Ay', 90 => '3 Ay', 180 => '6 Ay'] as $gun => $etiket)
+                            <button type="button" wire:click="terminKisayolu({{ $gun }})"
+                                style="font-size:.68rem;padding:.1rem .4rem;border-radius:.35rem;border:1px solid rgb(107 114 128 / .35);background:transparent;cursor:pointer;color:inherit">
+                                {{ $etiket }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
+
+                @if ($yeniRiskMetodu !== 'standart')
+                    @php
+                        $olcekO = \App\Support\RiskSkorlama::olcek($yeniRiskMetodu, 'olasilik');
+                        $olcekF = $yeniRiskMetodu === 'fine_kinney' ? \App\Support\RiskSkorlama::olcek('fine_kinney', 'frekans') : [];
+                        $olcekS = \App\Support\RiskSkorlama::olcek($yeniRiskMetodu, 'siddet');
+                        $rSonuc = $this->yeniRiskSonuc;
+                    @endphp
+                    <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;padding:.55rem .7rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .25)">
+                        <div>
+                            <label class="mehse-etiket">Olasılık</label>
+                            <select wire:model.live="yeniOlasilik" class="mehse-girdi-kompakt mehse-tam">
+                                <option value="">— Seçin —</option>
+                                @foreach ($olcekO as $k => $v) <option value="{{ $k }}">{{ $k }} — {{ $v }}</option> @endforeach
+                            </select>
+                        </div>
+                        @if ($yeniRiskMetodu === 'fine_kinney')
+                            <div>
+                                <label class="mehse-etiket">Frekans</label>
+                                <select wire:model.live="yeniFrekans" class="mehse-girdi-kompakt mehse-tam">
+                                    <option value="">— Seçin —</option>
+                                    @foreach ($olcekF as $k => $v) <option value="{{ $k }}">{{ $k }} — {{ $v }}</option> @endforeach
+                                </select>
+                            </div>
+                        @endif
+                        <div>
+                            <label class="mehse-etiket">Şiddet</label>
+                            <select wire:model.live="yeniSiddet" class="mehse-girdi-kompakt mehse-tam">
+                                <option value="">— Seçin —</option>
+                                @foreach ($olcekS as $k => $v) <option value="{{ $k }}">{{ $k }} — {{ $v }}</option> @endforeach
+                            </select>
+                        </div>
+                        @if ($rSonuc)
+                            <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:.35rem;border-radius:.4rem;background:{{ $rSonuc['renk'] }}22">
+                                <div style="font-size:1.1rem;font-weight:800;color:{{ $rSonuc['renk'] }}">Skor: {{ $rSonuc['puan'] ?: '—' }}</div>
+                                <div style="font-size:.72rem;font-weight:600;color:{{ $rSonuc['renk'] }}">{{ $rSonuc['duzey'] }}</div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
                 <div style="grid-column:1/-1">
                     <label class="mehse-etiket">Öneri / Düzeltici Faaliyet</label>
                     <textarea wire:model="yeniOneri" rows="2" placeholder="Alınacak düzeltici/önleyici faaliyet"
@@ -239,7 +300,12 @@
                                 </div>
                                 @error('maddeFotolari.'.$i) <div style="font-size:.75rem;color:#b91c1c">{{ $message }}</div> @enderror
                             </td>
-                            <td style="padding:.3rem .5rem">{{ $this->oncelikler[$m['oncelik']] ?? $m['oncelik'] }}</td>
+                            <td style="padding:.3rem .5rem">
+                                {{ $this->oncelikler[$m['oncelik']] ?? $m['oncelik'] }}
+                                @if (! empty($m['risk_puani']))
+                                    <div style="font-size:.7rem;color:rgb(107 114 128)">Skor: {{ $m['risk_puani'] }} ({{ $m['risk_duzeyi'] ?? '' }})</div>
+                                @endif
+                            </td>
                             <td style="padding:.3rem .5rem;max-width:16rem;white-space:pre-line">{{ $m['oneri'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $m['sorumlu'] ?: '—' }}</td>
                             <td style="padding:.3rem .5rem">{{ $m['termin'] ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : '—' }}</td>

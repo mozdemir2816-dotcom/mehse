@@ -331,6 +331,7 @@
                             <td class="mehse-td">{{ $k->kazazede_ad_soyad }} — {{ $k->kaza_tarihi?->format('d.m.Y') }}</td>
                             <td class="mehse-td">{{ $k->durumEtiketi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
+                                <x-filament::button size="xs" color="warning" wire:click="kurulGundemineEkle({{ $k->id }})" title="İSG Kurulu toplantı gündemine ekle">📋 Kurul Gündemine Ekle</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="duzenle({{ $k->id }})">Düzenle</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>
                                 <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $k->id }})">Sil</x-filament::button>

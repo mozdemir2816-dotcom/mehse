@@ -70,6 +70,56 @@
         @endif
     </div>
 
+    {{-- 6331 SAYILI KANUN SADE ANLATIM & PRATİK UYGULAMA REHBERİ --}}
+    @php $rehber6331 = \App\Support\GeminiMevzuatDanismani::kanun6331Rehberi(); @endphp
+    <details style="{{ $kutu }};margin-top:.85rem">
+        <summary style="cursor:pointer;font-weight:700;font-size:.92rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+            <span>📘 6331 Sayılı İş Sağlığı ve Güvenliği Kanunu — Sade Anlatım &amp; Pratik Uygulama Rehberi (39 Madde Özeti)</span>
+            <span style="font-size:.75rem;font-weight:600;color:rgb(180 83 9)">Aç / Kapat ▾</span>
+        </summary>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem;margin-top:.85rem">
+            <div style="{{ $kutu }};background:rgb(59 130 246 / .05);border-color:rgb(59 130 246 / .3)">
+                <div style="font-weight:700;font-size:.85rem;color:rgb(37 99 235)">🎯 Neyi Kapsar?</div>
+                <div style="font-size:.8rem;margin-top:.3rem;line-height:1.45">{{ $rehber6331['kartlar']['neyi_kapsar'] }}</div>
+            </div>
+            <div style="{{ $kutu }};background:rgb(139 92 246 / .05);border-color:rgb(139 92 246 / .3)">
+                <div style="font-weight:700;font-size:.85rem;color:rgb(124 58 237)">👥 Kimi Bağlar?</div>
+                <div style="font-size:.8rem;margin-top:.3rem;line-height:1.45">{{ $rehber6331['kartlar']['kimi_baglar'] }}</div>
+            </div>
+            <div style="{{ $kutu }};background:rgb(34 197 94 / .05);border-color:rgb(34 197 94 / .3)">
+                <div style="font-weight:700;font-size:.85rem;color:rgb(22 163 74)">✅ Pratikte Ne Yapmalı? (7 Adım)</div>
+                <ul style="margin:.35rem 0 0;padding-left:1rem;font-size:.77rem;line-height:1.45;display:flex;flex-direction:column;gap:.2rem">
+                    @foreach ($rehber6331['kartlar']['pratik_adimlar'] as $adim)
+                        <li>{{ $adim }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top:.85rem">
+            <div style="font-weight:700;font-size:.86rem;margin-bottom:.45rem">Sade Anlatımla 6331 Sayılı Kanun (8 Temel Başlık):</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.65rem">
+                @foreach ($rehber6331['bolumler'] as $b)
+                    <div style="padding:.65rem .8rem;border-radius:.55rem;border:1px solid rgb(107 114 128 / .25)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem">
+                            <span style="font-weight:700;font-size:.82rem">{{ $b['baslik'] }}</span>
+                            <span style="font-size:.7rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;background:rgb(180 83 9 / .14);color:rgb(180 83 9);white-space:nowrap">{{ $b['maddeler'] }}</span>
+                        </div>
+                        <div style="font-size:.79rem;color:rgb(107 114 128);margin-top:.3rem;line-height:1.45">{{ $b['ozet'] }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div style="margin-top:.75rem;display:flex;justify-content:flex-end">
+            <a href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5" target="_blank" rel="noopener"
+                style="font-size:.8rem;font-weight:700;color:rgb(180 83 9);text-decoration:none">
+                Resmî Tam Metni Oku (mevzuat.gov.tr — 6331 s.K.) ↗
+            </a>
+        </div>
+    </details>
+
     <div style="margin-top:1rem">
         <input type="text" placeholder="Mevzuat ara (ör. risk değerlendirmesi, KKD, gürültü...)" wire:model.live.debounce.300ms="arama" style="{{ $girdi }}">
     </div>

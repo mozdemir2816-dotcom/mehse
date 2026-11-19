@@ -9,6 +9,7 @@ use App\Filament\Support\ImzaSecenegi;
 use App\Support\DofRaporuUretici;
 use App\Support\DofTabloOkuyucu;
 use App\Support\GeminiOneriDanismani;
+use App\Support\RiskSkorlama;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -86,6 +87,15 @@ class DofOlustur extends Page
     public ?string $yeniSorumlu = null;
 
     public ?string $yeniTermin = null;
+
+    /** DÖF maddesi risk değerlendirme metodu: 'standart', 'matris_5x5' veya 'fine_kinney'. */
+    public string $yeniRiskMetodu = 'standart';
+
+    public ?float $yeniOlasilik = null;
+
+    public ?float $yeniFrekans = null;
+
+    public ?float $yeniSiddet = null;
 
     /** Sahada tespit edilen uygunsuzluğun fotoğraf kanıtı (yeni madde eklerken). */
     public $yeniFoto = null;
@@ -318,6 +328,8 @@ class DofOlustur extends Page
             return;
         }
 
+        $riskSonuc = $this->yeniRiskSonuc();
+
         $this->maddeler[] = [
             'tespit' => $this->yeniTespit,
             'oncelik' => $this->yeniOncelik,
@@ -326,10 +338,115 @@ class DofOlustur extends Page
             'termin' => $this->yeniTermin,
             'durum' => 'acik',
             'foto_yolu' => $this->yeniFoto?->store('dof-foto', 'public'),
+            ...(($riskSonuc && ($riskSonuc['puan'] ?? 0) > 0) ? [
+                'risk_metodu' => $this->yeniRiskMetodu,
+                'risk_puani' => $riskSonuc['puan'],
+                'risk_duzeyi' => $riskSonuc['duzey'],
+            ] : []),
         ];
 
-        $this->reset('yeniTespit', 'yeniOneri', 'yeniSorumlu', 'yeniTermin', 'yeniFoto');
+        $this->reset('yeniTespit', 'yeniOneri', 'yeniSorumlu', 'yeniTermin', 'yeniFoto', 'yeniOlasilik', 'yeniFrekans', 'yeniSiddet');
         $this->yeniOncelik = 'orta';
+    }
+
+    /** Hazır termin kısayolu (1 Hafta, 2 Hafta, 1 Ay, 2 Ay, 3 Ay, 6 Ay). */
+    public function terminKisayolu(int $gun): void
+    {
+        $this->yeniTermin = now()->addDays($gun)->toDateString();
+    }
+
+    /** @return array{puan:int|float, duzey:string, renk:string, eylem:string}|null */
+    #[Computed]
+    public function yeniRiskSonuc(): ?array
+    {
+        if ($this->yeniRiskMetodu === 'standart') {
+            return null;
+        }
+
+        return RiskSkorlama::hesapla(
+            $this->yeniRiskMetodu,
+            $this->yeniOlasilik,
+            $this->yeniSiddet,
+            $this->yeniRiskMetodu === 'fine_kinney' ? $this->yeniFrekans : null,
+        );
+    }
+
+    public function updatedYeniOlasilik(): void
+    {
+        $this->riskOnceliginiSenkronla();
+    }
+
+    public function updatedYeniFrekans(): void
+    {
+        $this->riskOnceliginiSenkronla();
+    }
+
+    public function updatedYeniSiddet(): void
+    {
+        $this->riskOnceliginiSenkronla();
+    }
+
+    private function riskOnceliginiSenkronla(): void
+    {
+        $sonuc = $this->yeniRiskSonuc();
+        if (! $sonuc || ! ($sonuc['puan'] ?? 0)) {
+            return;
+        }
+
+        $puan = (float) $sonuc['puan'];
+        if ($this->yeniRiskMetodu === 'fine_kinney') {
+            $this->yeniOncelik = match (true) {
+                $puan >= 400 => 'kritik',
+                $puan >= 200 => 'yuksek',
+                $puan >= 70 => 'orta',
+                default => 'dusuk',
+            };
+        } else {
+            $this->yeniOncelik = match (true) {
+                $puan >= 20 => 'kritik',
+                $puan >= 12 => 'yuksek',
+                $puan >= 6 => 'orta',
+                default => 'dusuk',
+            };
+        }
+    }
+
+    /** Ham saha notundan Tespit + Düzeltici Faaliyet (Öneri) + Öncelik oto-doldurma. */
+    public function aiOtoDoldur(): void
+    {
+        $not = trim((string) $this->yeniTespit);
+        if ($not === '') {
+            Notification::make()->title('Önce kısa bir tespit / uygunsuzluk notu yazın')->warning()->send();
+
+            return;
+        }
+
+        if ($this->aiAktif && ($oneri = GeminiOneriDanismani::oner($not))) {
+            $this->yeniOneri = $oneri;
+            Notification::make()->title('Düzeltici faaliyet yapay zekâ ile dolduruldu')->success()->send();
+
+            return;
+        }
+
+        $kucuk = mb_strtolower($not, 'UTF-8');
+        $this->yeniOneri = match (true) {
+            str_contains($kucuk, 'elektrik') || str_contains($kucuk, 'pano') || str_contains($kucuk, 'kablo')
+                => 'Elektrik panosu ve açık kablolar yetkili elektrikçi tarafından izole edilmeli, kaçak akım rölesi (30 mA) kontrol edilmeli, pano önü yalıtkan paspas tamamlanmalı ve yetkisiz erişime karşı kilitlenmelidir.',
+            str_contains($kucuk, 'yangın') || str_contains($kucuk, 'tüp') || str_contains($kucuk, 'acil çıkış')
+                => 'Yangın söndürme tüplerinin basınç/dolum kontrolleri yapılmalı, yerden 90 cm yüksekliğe asılmalı, önleri ve acil çıkış güzergâhları malzeme istifinden arındırılarak sürekli açık tutulmalıdır.',
+            str_contains($kucuk, 'iskele') || str_contains($kucuk, 'yüksek') || str_contains($kucuk, 'korkuluk') || str_contains($kucuk, 'boşluk')
+                => 'Düşme tehlikesi bulunan kat/şaft boşluklarına standartlara uygun (110 cm üst, 55 cm ara kayıt ve 15 cm topuk levhalı) korkuluk yapılmalı, emniyet kemeri yaşam hattı kurulmalıdır.',
+            str_contains($kucuk, 'kkd') || str_contains($kucuk, 'baret') || str_contains($kucuk, 'gözlük') || str_contains($kucuk, 'ayakkabı')
+                => 'Çalışanlara yapılan işe uygun EN standartlı Kişisel Koruyucu Donanım (KKD) zimmet tutanağı ile teslim edilmeli, sahada kullanımı günlük olarak denetlenmelidir.',
+            str_contains($kucuk, 'makine') || str_contains($kucuk, 'koruyucu') || str_contains($kucuk, 'pres') || str_contains($kucuk, 'acil durdurma')
+                => 'Makinenin döner/hareketli aksam koruyucu muhafazaları ve acil durdurma (E-Stop) butonu aktif hale getirilmeli, güvenlik donanımı devre dışı bırakılarak kesinlikle çalıştırılmamalıdır.',
+            str_contains($kucuk, 'kimyasal') || str_contains($kucuk, 'msds') || str_contains($kucuk, 'depolama')
+                => 'Kimyasal maddelerin Türkçe Güvenlik Bilgi Formları (GBF/MSDS) çalışma alanına asılmalı, taşma havuzlu ve havalandırmalı alanda etiketli şekilde depolanmalıdır.',
+            default
+                => 'Tespit edilen uygunsuzluk 6331 sayılı İSG Kanunu m.4 kapsamında teknik ve idari tedbirlerle giderilmeli, ilgili çalışanlara bilgilendirme yapılarak tekrarını önleyici saha kontrolü sağlanmalıdır.',
+        };
+
+        Notification::make()->title('Düzeltici faaliyet önerisi otomatik dolduruldu')->success()->send();
     }
 
     public function tablodanAktar(array $data): void

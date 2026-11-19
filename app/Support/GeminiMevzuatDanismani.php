@@ -120,6 +120,77 @@ class GeminiMevzuatDanismani
     }
 
     /**
+     * 6331 Sayılı İSG Kanunu Sade Özet Rehberi (isgpratik 6331 detay sayfası karşılığı):
+     * 3 pratik özet kartı (Neyi Kapsar / Kimi Bağlar / Pratikte Ne Yapmalı - 7 adım)
+     * ve 8 sadeleştirilmiş temel başlık.
+     *
+     * @return array{
+     *     kartlar: array{neyi_kapsar: string, kimi_baglar: string, pratik_adimlar: array<int, string>},
+     *     bolumler: array<int, array{baslik: string, maddeler: string, ozet: string}>
+     * }
+     */
+    public static function kanun6331Rehberi(): array
+    {
+        return [
+            'kartlar' => [
+                'neyi_kapsar' => 'İşyerlerinde iş sağlığı ve güvenliğinin sağlanması, mevcut sağlık ve güvenlik şartlarının iyileştirilmesi için işveren ile çalışanların görev, yetki, sorumluluk, hak ve yükümlülüklerini düzenler.',
+                'kimi_baglar' => 'Kamu ve özel sektöre ait bütün işlere ve işyerlerine; bu işyerlerinin işverenleri, işveren vekilleri, çırak ve stajyerler de dâhil olmak üzere tüm çalışanlarına faaliyet konularına bakılmaksızın uygulanır.',
+                'pratik_adimlar' => [
+                    '1. İşyerinin 6 haneli NACE koduna göre Tehlike Sınıfını (Az Tehlikeli / Tehlikeli / Çok Tehlikeli) belirleyin.',
+                    '2. İSG-KATİP üzerinden İş Güvenliği Uzmanı (İGU), İşyeri Hekimi ve (Çok Tehlikeli 10+ çalışanda) DSP atamasını yapın.',
+                    '3. Risk Değerlendirmesi ekibini kurup analiz raporunu ve Acil Durum Planını hazırlayın.',
+                    '4. Çalışan Temsilcisini seçin; ilk yardımcı ile söndürme, kurtarma ve koruma destek elemanlarını atayın.',
+                    '5. Çalışanlara işe giriş / periyodik sağlık muayenesi (EK-2), Temel İSG Eğitimi ve İşbaşı Oryantasyon Eğitimi verin.',
+                    '6. İş ekipmanlarının periyodik kontrollerini, ortam ölçümlerini ve KKD zimmet tutanaklarını tamamlayın.',
+                    '7. 50 ve üzeri çalışan varsa İSG Kurulunu kurun; Onaylı Tespit ve Öneri Defterini notere/İŞKUR\'a onaylatıp düzenli işleyin.',
+                ],
+            ],
+            'bolumler' => [
+                [
+                    'baslik' => '1. 6331 Sayılı Kanun Nedir ve Neyi Değiştirdi?',
+                    'maddeler' => 'Madde 1 – 3',
+                    'ozet' => 'Kazadan sonra telafi ("reaktif") yaklaşımı yerine kaza olmadan önleme ("proaktif") yaklaşımını getirmiştir. İşçi/memur ayrımı olmaksızın 1 çalışanı olan işyerlerini bile kapsama almıştır.',
+                ],
+                [
+                    'baslik' => '2. Kimler Kapsamda, Kimler İstisna?',
+                    'maddeler' => 'Madde 2',
+                    'ozet' => 'TSK, genel kolluk kuvvetleri ve MİT faaliyetleri, afet/acil durum müdahale ekipleri, ev hizmetleri, çalışan istihdam etmeksizin kendi namına mal/hizmet üretenler ve hükümlü/tutuklulara yönelik ıslah işleri istisnadır.',
+                ],
+                [
+                    'baslik' => '3. İşverenin Genel Yükümlülüğü ve Risklerden Korunma İlkeleri',
+                    'maddeler' => 'Madde 4 – 5',
+                    'ozet' => 'İşveren; mesleki risklerin önlenmesi, eğitim ve bilgi verilmesi dâhil her türlü tedbiri almak, organizasyonu yapmak, KKD sağlamak ve alınan tedbirlere uyulup uyulmadığını izlemek/denetlemekle yükümlüdür. İSG tedbirlerinin maliyeti çalışanlara yansıtılamaz.',
+                ],
+                [
+                    'baslik' => '4. İGU, İşyeri Hekimi ve DSP Görevlendirme & Onaylı Defter',
+                    'maddeler' => 'Madde 6 – 8',
+                    'ozet' => 'İşveren, tehlike sınıfına uygun İGU ve İşyeri Hekimi görevlendirir. Uzman ve hekimin onaylı deftere yazdığı tespit ve öneriler işverene tebliğ edilmiş sayılır. Hayati tehlike tedbir alınmazsa Bakanlığa bildirilir.',
+                ],
+                [
+                    'baslik' => '5. Risk Değerlendirmesi, Acil Durumlar ve Tahliye',
+                    'maddeler' => 'Madde 10 – 13',
+                    'ozet' => 'Her işveren risk değerlendirmesi yapmak/yaptırmak, acil durum planı hazırlamak ve tatbikat yapmak zorundadır. Ciddi ve yakın tehlike halinde çalışanlar çalışmaktan kaçınma hakkına (m.13) sahiptir.',
+                ],
+                [
+                    'baslik' => '6. İş Kazası ve Meslek Hastalığı Kayıt ve Bildirimi',
+                    'maddeler' => 'Madde 14',
+                    'ozet' => 'İşveren bütün iş kazalarının ve meslek hastalıklarının kaydını tutar, inceleme raporu hazırlar, yaralanmasız (ramak kala) olayları inceler ve iş kazasını kazadan sonraki 3 İŞ GÜNÜ içinde SGK\'ya bildirir.',
+                ],
+                [
+                    'baslik' => '7. Sağlık Gözetimi (EK-2) ve Çalışanların İSG Eğitimi',
+                    'maddeler' => 'Madde 15 – 17',
+                    'ozet' => 'İşe girişte, iş değişikliğinde, iş kazası/meslek hastalığı sonrası işe dönüşte ve tehlike sınıfına göre periyodik (1/3/5 yıl) sağlık muayenesi zorunludur. Tehlikeli ve çok tehlikeli işlerde mesleki eğitim / MYK belgesi olmayan çalıştırılamaz.',
+                ],
+                [
+                    'baslik' => '8. Çalışan Temsilcisi, İSG Kurulu, İşin Durdurulması ve İdari Para Cezaları',
+                    'maddeler' => 'Madde 20 – 26',
+                    'ozet' => 'Çalışan sayısına göre 1–6 çalışan temsilcisi seçilir; 50+ çalışanda İSG Kurulu kurulur. Hayati tehlike veya çok tehlikeli sınıfta risk değerlendirmesi olmaması işin durdurulması (m.25) sebebidir. İhlallerde m.26 uyarınca çalışan sayısı ve tehlike sınıfı çarpanlı İPC uygulanır.',
+                ],
+            ],
+        ];
+    }
+
+    /**
      * @return array<int, array{baslik: string, kategori: string, aciklama: string}>
      */
     public static function ilgiliMevzuatBul(string $soru): array
