@@ -122,6 +122,7 @@ class UzmanRaporu
             'gostergeler' => [
                 'isyeri' => 1,
                 'aktif_calisan' => $firma->calisanlar()->where('aktif', true)->count(),
+                'bildirilen_calisan' => (int) $firma->calisan_sayisi,
                 'acik_risk' => static::acikRiskSayisi($firma),
                 'acik_olay' => OlayKaydi::query()->where('firma_id', $firma->id)->where(fn ($q) => $q->whereNull('durum')->orWhere('durum', 'acik'))->count(),
                 'kkd_zimmet' => KkdZimmet::query()->where('firma_id', $firma->id)->where('durum', 'teslim_edildi')->count(),

@@ -395,7 +395,7 @@ h1, h2, h3 {
     }
 
     .fi-main {
-        padding-bottom: 4.5rem;
+        padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
     }
 
     /* Yapışkan form düğmeleri (Kaydet) alt menünün ÜSTÜNDE dursun — yoksa

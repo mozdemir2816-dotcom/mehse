@@ -31,6 +31,14 @@
     max-width: 100%;
 }
 
+/* Filament seçim kutularında (@tailwindcss/forms + Filament SVG oku) çift aşağı ok görünmesini önle. */
+.fi-select-input {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+}
+
 @media (max-width: 1023px) {
     .fi-main select:not(table *, .fi-select-input) {
         width: 100% !important;

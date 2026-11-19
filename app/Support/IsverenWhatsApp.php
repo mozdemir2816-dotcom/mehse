@@ -226,7 +226,7 @@ class IsverenWhatsApp
             'Sayın '.self::isverenAdi($firma).' ('.$firma->unvan.'),',
             now()->format('d.m.Y').' tarihli İşyeri İSG Yönetici Özeti ve Yasal Uygunluk Karneniz hazırlanmıştır.',
             '- Genel Durum: '.$u['durum'],
-            '- Aktif Çalışan: '.$g['aktif_calisan'].' · Açık Yüksek Risk: '.$g['acik_risk'],
+            '- Çalışan Sayısı: '.($g['aktif_calisan'] > 0 ? $g['aktif_calisan'] : (($g['bildirilen_calisan'] ?? 0) ?: 0)).' · Açık Yüksek Risk: '.$g['acik_risk'],
             '- Öncelikli Aksiyon / Yaklaşan veya Geciken Kayıt: '.$r['aksiyonlar']->count().' adet',
             'Tek sayfalık özet karnenizi ve öncelikli aksiyonları incelemek için: '.self::pdfBaglantisi('uzman-raporu', $firma->id),
             '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',

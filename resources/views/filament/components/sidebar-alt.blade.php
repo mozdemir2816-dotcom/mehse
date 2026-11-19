@@ -24,6 +24,14 @@
                 <small>{{ $kullanici->unvanEtiketi() }}</small>
             </span>
             <a
+                href="{{ \App\Filament\Pages\SahaEkrani::getUrl() }}"
+                class="mehse-sidebar-alt-ayar @if (request()->routeIs(\App\Filament\Pages\SahaEkrani::getRouteName())) fi-active @endif"
+                title="Telefon Saha Uygulaması"
+                aria-label="Telefon Saha Uygulaması"
+            >
+                <x-filament::icon icon="heroicon-o-device-phone-mobile" class="mehse-sidebar-alt-ayar-ikon" />
+            </a>
+            <a
                 href="{{ \App\Filament\Pages\Ayarlar::getUrl() }}"
                 class="mehse-sidebar-alt-ayar @if ($ayarlarAktif) fi-active @endif"
                 title="Ayarlar"

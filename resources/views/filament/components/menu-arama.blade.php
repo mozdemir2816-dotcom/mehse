@@ -138,14 +138,16 @@
 </div>
 
 <style>
-    .mehse-menu-arama { padding: 0 .5rem .5rem; }
+    .mehse-menu-arama { padding: 0 .5rem .5rem; color: var(--mehse-sb-metin, #fff); }
     .mehse-menu-arama input {
-        width: 100%; font-size: .8rem; padding: .4rem .6rem; border-radius: .5rem;
-        color: inherit; background: color-mix(in srgb, currentColor 7%, transparent);
-        border: 1px solid color-mix(in srgb, currentColor 22%, transparent); outline: none;
+        width: 100%; font-size: .8rem; padding: .42rem .65rem; border-radius: .5rem;
+        color: var(--mehse-sb-metin, inherit);
+        background: color-mix(in srgb, var(--mehse-sb-metin, currentColor) 9%, transparent);
+        border: 1px solid color-mix(in srgb, var(--mehse-sb-metin, currentColor) 28%, transparent);
+        outline: none;
     }
-    .mehse-menu-arama input:focus { border-color: color-mix(in srgb, currentColor 55%, transparent); }
-    .mehse-menu-arama input::placeholder { color: inherit; opacity: .6; }
+    .mehse-menu-arama input:focus { border-color: color-mix(in srgb, var(--mehse-sb-metin, currentColor) 65%, transparent); }
+    .mehse-menu-arama input::placeholder { color: var(--mehse-sb-soluk, inherit); opacity: .9; }
     .mehse-menu-arama-ek { list-style: none; margin: .4rem 0 0; padding: 0; display: grid; gap: .15rem; }
     .mehse-menu-arama-ek a {
         display: flex; flex-direction: column; padding: .35rem .6rem; border-radius: .4rem;

@@ -29,9 +29,10 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         overflow: hidden;
     }
 
-    /* Tema seçici telefonda gereksiz — Ayarlar > Görünüm'de duruyor. */
-    html .fi-mehse-tema-secici {
-        display: none !important;
+    /* Tema seçici telefonda da erişilebilir kalsın (küçük boyutta). */
+    html .fi-mehse-tema-btn {
+        width: 2rem;
+        height: 2rem;
     }
 
     html .fi-topbar {

@@ -71,8 +71,8 @@
 <table class="kpi-tablo">
     <tr>
         <td>
-            <div class="kpi-deger">{{ $g['aktif_calisan'] }}</div>
-            <div class="kpi-etiket">Aktif Çalışan</div>
+            <div class="kpi-deger">{{ $g['aktif_calisan'] > 0 ? $g['aktif_calisan'] : (($g['bildirilen_calisan'] ?? 0) ?: 0) }}</div>
+            <div class="kpi-etiket">{{ $g['aktif_calisan'] > 0 ? 'Aktif Çalışan' : 'Çalışan Sayısı' }}</div>
         </td>
         <td>
             <div class="kpi-deger" style="color:{{ $uyumOrani >= 75 ? '#15803d' : '#b45309' }}">%{{ $uyumOrani }}</div>

@@ -221,9 +221,9 @@
                                     $tiklanir = $k['hazir'] && ! $k['takip'] && $eksikSayi > 0;
                                     $acik = $acikKriter === $k['anahtar'];
                                 @endphp
-                                <div style="border-top:1px solid rgb(128 116 148 / .15);padding:.4rem 0"
-                                    @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif>
-                                    <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;{{ $tiklanir ? 'cursor:pointer' : '' }}">
+                                <div style="border-top:1px solid rgb(128 116 148 / .15);padding:.4rem 0">
+                                    <div @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif
+                                        style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;{{ $tiklanir ? 'cursor:pointer' : '' }}">
                                         <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:600;min-width:0">
                                             <x-filament::icon :icon="$k['ikon']" style="width:.85rem;height:.85rem;flex-shrink:0;color:{{ $kRenk }}"/>
                                             <span style="overflow:hidden;text-overflow:ellipsis" title="{{ $k['ad'] }}">{{ $k['ad'] }}</span>

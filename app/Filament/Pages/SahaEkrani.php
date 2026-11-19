@@ -2,10 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Firma;
+use App\Support\KomutaFirma;
 use App\Support\KullaniciAyarlari;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use UnitEnum;
 
 /**
@@ -32,17 +36,51 @@ class SahaEkrani extends Page
 
     protected static ?string $navigationLabel = 'Saha Ekranı';
 
+    #[Url(as: 'firma')]
+    public ?int $firmaId = null;
+
+    public function mount(): void
+    {
+        $this->firmaId = KomutaFirma::baslangic($this->firmalar);
+    }
+
+    public function updatedFirmaId(): void
+    {
+        KomutaFirma::sec($this->firmaId);
+        if ($this->firmaId) {
+            session(['ziyaret_firma' => $this->firmaId]);
+        } else {
+            session()->forget('ziyaret_firma');
+        }
+    }
+
+    #[Computed]
+    public function firmalar(): array
+    {
+        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
+    }
+
+    #[Computed]
+    public function seciliFirma(): ?Firma
+    {
+        return $this->firmaId && array_key_exists($this->firmaId, $this->firmalar)
+            ? Firma::find($this->firmaId)
+            : null;
+    }
+
     /** @return array<string, mixed> */
     protected function getViewData(): array
     {
         $kartlar = [];
+        $firmaParam = $this->firmaId ? ['firma' => $this->firmaId] : [];
 
         foreach (KullaniciAyarlari::sahaKisayollari(Filament::auth()->user()) as $anahtar => [$etiket, $ikon, $rota, $parametreler]) {
+            $ekParam = $anahtar === 'firmalar' ? [] : $firmaParam;
             $kartlar[] = [
                 'anahtar' => $anahtar,
                 'etiket' => $etiket,
                 'ikon' => $ikon,
-                'url' => route($rota, $parametreler),
+                'url' => route($rota, [...$ekParam, ...$parametreler]),
             ];
         }
 

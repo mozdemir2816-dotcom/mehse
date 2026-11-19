@@ -90,7 +90,7 @@ class KontrolMerkezi extends Page
         }
 
         return PortfoyKarne::eksikFirmalar(Filament::auth()->id(), $this->acikKriter)
-            ->pluck('unvan', 'id')
+            ->mapWithKeys(fn (Firma $f) => [$f->id => $f->secimEtiketi()])
             ->all();
     }
 

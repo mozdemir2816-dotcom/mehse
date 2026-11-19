@@ -426,6 +426,7 @@ html[data-mehse-tema="saha"] .mehse-hosgeldin-eylem {
 }
 
 html[data-mehse-tema="klasik"] .mehse-hosgeldin-halka::before { background: #1E3A5F; }
+html[data-mehse-tema="pano"] .mehse-hosgeldin-halka::before { background: #FFFFFF; }
 html[data-mehse-tema="material"] .mehse-hosgeldin-halka::before { background: #E8F0FE; }
 html[data-mehse-tema="windows11"] .mehse-hosgeldin-halka::before { background: #FBFBFB; }
 html[data-mehse-tema="saha"] .mehse-hosgeldin-halka::before { background: #231F1D; }

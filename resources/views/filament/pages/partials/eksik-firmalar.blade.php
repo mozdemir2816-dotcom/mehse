@@ -15,7 +15,7 @@
             @if ($siradaki)
                 <button type="button" wire:click.stop="$set('firmaId', {{ $siradaki->id }})"
                     style="padding:.22rem .6rem;border-radius:9999px;border:1px solid rgb(180 83 9);background:rgb(217 119 6 / .14);color:rgb(180 83 9);cursor:pointer;font-size:.75rem;font-weight:700">
-                    Sıradaki Eksik Firma: {{ \Illuminate\Support\Str::limit($siradaki->unvan, 32) }} →
+                    Sıradaki Eksik Firma: {{ \Illuminate\Support\Str::limit($siradaki->secimEtiketi(), 36) }} →
                 </button>
             @endif
         </summary>
@@ -24,7 +24,7 @@
                 @php $seciliMi = $mevcutId === $f->id; @endphp
                 <button type="button" wire:click="$set('firmaId', {{ $f->id }})"
                     style="padding:.3rem .65rem;border-radius:.4rem;border:1px solid {{ $seciliMi ? 'rgb(180 83 9)' : 'rgb(107 114 128 / .3)' }};background:{{ $seciliMi ? 'rgb(217 119 6 / .18)' : 'transparent' }};font-weight:{{ $seciliMi ? '700' : '400' }};cursor:pointer;font-size:.78rem">
-                    {{ $seciliMi ? '● ' : '' }}{{ $f->unvan }}
+                    {{ $seciliMi ? '● ' : '' }}{{ $f->secimEtiketi() }}
                 </button>
             @endforeach
         </div>
