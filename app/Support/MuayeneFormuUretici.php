@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class MuayeneFormuUretici
 {
     /** @param  bool  $imzali  false = imzasız (matbu): kaşe/imza görselleri basılmaz */
-    public static function pdf(MuayeneFormu $m, bool $imzali = true): StreamedResponse
+    public static function pdf(MuayeneFormu $m, bool $imzali = true, ?string $canliImza = null): StreamedResponse
     {
         $m->loadMissing('firma');
 
@@ -21,6 +21,7 @@ class MuayeneFormuUretici
             'imzali' => $imzali,
             'form' => $m,
             'firma' => $m->firma,
+            'canliImza' => $canliImza,
         ])->setPaper('a4');
 
         $ad = 'muayene-formu-'.Str::slug($m->calisan_ad_soyad ?: 'calisan').'.pdf';

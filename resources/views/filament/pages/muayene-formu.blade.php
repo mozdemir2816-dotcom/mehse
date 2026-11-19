@@ -127,12 +127,24 @@
                 <strong>Çalışan beyanı:</strong> "İşe giriş / periyodik muayene olmayı kabul ettiğimi, muayene sırasında verdiğim bilgilerin doğru ve eksiksiz olduğunu ve tahlil sonuçlarım hakkında bilgilendirildiğimi beyan ederim."
                 <div style="max-width:200px;margin-top:.4rem"><label style="{{ $etk }}">Beyan Tarihi</label><input type="date" wire:model="ek2.beyan_tarih" style="{{ $kucukGirdi }}"></div>
             </div>
+
+            @include('filament.pages.partials.canli-imza', [
+                'canliImza' => $canliImza,
+                'baslik' => '📱 Çalışan Beyan İmzası (Telefon / Tablet / Fare ile Ekrandan İmzalat)',
+                'aciklama' => 'Çalışanın muayene ve bilgilendirme beyanı imzasını ekrandan alın; EK-2 PDF çıktısındaki "Çalışanın İmzası" kutusuna otomatik basılır.',
+            ])
         </x-filament::section>
 
         {{-- 3. TIBBİ ANAMNEZ --}}
         <x-filament::section icon="heroicon-o-document-text" icon-color="info">
             <x-slot name="heading">3. Tıbbi Anamnez</x-slot>
-            <x-slot name="afterHeader"><x-filament::button size="xs" color="gray" wire:click="anamnezHayir">Tümünü "Hayır" İşaretle</x-filament::button></x-slot>
+            <x-slot name="afterHeader">
+                <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+                    <x-filament::button size="xs" color="gray" wire:click="asiTamDoldur">Aşıları "Tam" İşaretle</x-filament::button>
+                    <x-filament::button size="xs" color="gray" wire:click="soygecmisNormalDoldur">Soygeçmiş: "Tümü Sağ"</x-filament::button>
+                    <x-filament::button size="xs" color="gray" wire:click="anamnezHayir">Özgeçmiş: Tümünü "Hayır"</x-filament::button>
+                </div>
+            </x-slot>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem">
                 <div>

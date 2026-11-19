@@ -145,7 +145,14 @@
                 <tr>
                     <td class="e" style="width:22%"><span class="etk">Tarih</span><span class="deger">{{ $tr($e['beyan_tarih']) }}</span></td>
                     <td class="e" style="width:44%"><span class="etk">Çalışanın Adı Soyadı</span><span class="deger">{{ $form->calisan_ad_soyad }}</span></td>
-                    <td class="e"><span class="etk">Çalışanın İmzası</span><span class="deger">&nbsp;<br>&nbsp;</span></td>
+                    <td class="e">
+                        <span class="etk">Çalışanın İmzası</span>
+                        @if ($imzali && ! empty($canliImza ?? ($e['calisan_imza'] ?? null)))
+                            <img src="{{ $canliImza ?? $e['calisan_imza'] }}" style="max-height:32px;display:block;margin:1px auto">
+                        @else
+                            <span class="deger">&nbsp;<br>&nbsp;</span>
+                        @endif
+                    </td>
                 </tr>
             </table>
         </div>

@@ -19,6 +19,7 @@
                 ['excel', 'heroicon-o-table-cells', 'Eğitim Katılım Formu — Excel', 'Düzenlenebilir tablo'],
                 ['word', 'heroicon-o-document-text', 'Eğitim Katılım Formu — Word', 'Düzenlenebilir belge'],
                 ['sertifika', 'heroicon-o-check-badge', 'Katılımcı Sertifikaları — PDF', 'Her katılımcı için sertifika'],
+                ['sinavKagidi', 'heroicon-o-clipboard-document-check', 'Eğitim Sınav Kâğıdı & Cevap Anahtarı — PDF', '10 soruluk çoktan seçmeli test + cevap anahtarı'],
             ];
             if ($baslikAnahtari === 'genel') {
                 $ciktilar[] = ['yildizGrupSertifika', 'heroicon-o-academic-cap', 'Yıldız Grup Eğitim Sertifikası — Excel / PDF', 'Her katılımcı için belge + eğitim konuları'];

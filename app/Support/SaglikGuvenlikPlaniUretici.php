@@ -110,7 +110,7 @@ class SaglikGuvenlikPlaniUretici
      */
     public static function pdf(Firma $firma, array $veri = []): StreamedResponse
     {
-        $firma->loadMissing(['igu', 'isyeriHekimi', 'dsp', 'taseronlar', 'acilDurumEkipUyeleri']);
+        $firma->loadMissing(['igu', 'isyeriHekimi', 'dsp', 'taseronlar', 'acilEkipler.uyeler']);
 
         $sureGun = max(1, (int) ($veri['tahmini_sure_gun'] ?? 90));
         $azamiCalisan = max(1, (int) ($veri['azami_calisan'] ?? ($firma->calisan_sayisi ?: 25)));

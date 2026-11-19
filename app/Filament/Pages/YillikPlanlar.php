@@ -843,6 +843,63 @@ abstract class YillikPlanlar extends Page
                         ->send();
                 }),
 
+            Action::make('oncekiYildanKopyala')
+                ->label('Önceki Yıldan Kopyala')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('gray')
+                ->tooltip(fn () => ($this->yil - 1).' yılındaki özel satırları ve planlanan ayları '.$this->yil.' yılına aktarır')
+                ->visible(fn () => $this->plan() !== null && in_array($this->sekme, ['calisma', 'egitim'], true))
+                ->requiresConfirmation()
+                ->modalHeading(fn () => ($this->yil - 1).' Yılı Planından '.$this->yil.' Yılına Kopyala')
+                ->modalDescription(fn () => 'Bu firmanın '.($this->yil - 1).' yılına ait '.($this->sekme === 'egitim' ? 'Yıllık Eğitim Planı' : 'Yıllık Çalışma Planı')
+                    .' satırları ve planlanan ayları '.$this->yil.' yılına kopyalanır (geçen yılın "Gerçekleşti" işaretleri yeni yılda "Planlandı" olarak aktarılır).')
+                ->modalSubmitActionLabel('Kopyala')
+                ->action(function (): void {
+                    $hedef = $this->plan();
+                    if (! $hedef || ! $this->firma) {
+                        return;
+                    }
+
+                    $onceki = YillikPlanModel::where('firma_id', $this->firma->id)
+                        ->where('yil', $this->yil - 1)
+                        ->first();
+
+                    if (! $onceki) {
+                        Notification::make()
+                            ->title(($this->yil - 1).' yılına ait kayıtlı bir plan bulunamadı')
+                            ->warning()->send();
+
+                        return;
+                    }
+
+                    $alan = $this->sekme === 'egitim' ? 'egitimler' : 'faaliyetler';
+                    $satirlar = collect($onceki->{$alan} ?? [])->map(function (array $satir) {
+                        if (isset($satir['aylar']) && is_array($satir['aylar'])) {
+                            $satir['aylar'] = array_map(
+                                fn ($durum) => in_array($durum, ['planlandi', 'tamamlandi', 'planlandi_gerceklesti', 'P', 'G', 'PG'], true) ? 'planlandi' : 'bos',
+                                $satir['aylar']
+                            );
+                        }
+
+                        return $satir;
+                    })->values()->all();
+
+                    if (! $satirlar) {
+                        Notification::make()->title('Önceki yıl planında kopyalanacak satır yok')->warning()->send();
+
+                        return;
+                    }
+
+                    $hedef->update([$alan => $satirlar]);
+                    unset($this->plan);
+                    $this->gerceklesmeleriIsle();
+
+                    Notification::make()
+                        ->title(($this->yil - 1).' yılı planı '.$this->yil.' yılına kopyalandı')
+                        ->body(count($satirlar).' satır aktarıldı.')
+                        ->success()->send();
+                }),
+
             Action::make('sablonuUygula')
                 ->label('Standart Şablonu Uygula')
                 ->icon('heroicon-o-arrow-path')

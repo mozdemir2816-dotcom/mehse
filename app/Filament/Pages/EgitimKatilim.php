@@ -16,21 +16,26 @@ use App\Support\EgitimFirmaIcerigi;
 use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
 use App\Support\EgitimKonulari;
+use App\Support\EgitimSinavKagidiUretici;
 use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\IseOzguSenkron;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
+use App\Support\SgkIseGirisOkuyucu;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
@@ -1163,6 +1168,86 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            Action::make('sgkPdfYukle')
+                ->label('SGK İşe Giriş PDF\'inden Katılımcı Ekle')
+                ->icon('heroicon-o-identification')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('SGK İşe Giriş Bildirgesi PDF\'inden Katılımcı Ekle')
+                ->modalDescription('e-SGK Sigortalı İşe Giriş Bildirgesi PDF dosyasını (tekli veya çoklu) yükleyin; çalışan(lar) otomatik olarak firmaya kaydedilir ve bu eğitim katılım formunda seçili hale gelir.')
+                ->modalSubmitActionLabel('PDF\'ten Aktar')
+                ->schema([
+                    FileUpload::make('dosyalar')
+                        ->label('SGK İşe Giriş Bildirgesi PDF Dosyaları')
+                        ->disk('local')
+                        ->directory('sgk-ice-aktarim')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->multiple()
+                        ->maxFiles(30)
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $dosyalar = is_array($data['dosyalar'] ?? null) ? $data['dosyalar'] : array_filter([$data['dosyalar'] ?? null]);
+                    $yollar = array_map(fn (string $d) => Storage::disk('local')->path($d), $dosyalar);
+
+                    try {
+                        $kayitlar = SgkIseGirisOkuyucu::dosyalardanCikar($yollar);
+                    } finally {
+                        foreach ($dosyalar as $d) {
+                            Storage::disk('local')->delete($d);
+                        }
+                    }
+
+                    if (! $kayitlar) {
+                        Notification::make()->title('PDF dosyasından çalışan bilgisi okunamadı')->danger()->send();
+
+                        return;
+                    }
+
+                    $sonuc = SgkIseGirisOkuyucu::firmayaKaydet($this->firma, $kayitlar);
+                    unset($this->calisanlar, $this->gorunenCalisanlar);
+
+                    $yeniIdler = $sonuc['calisanlar']->pluck('id')->all();
+                    $this->secilenCalisanIdler = array_values(array_unique([...$this->secilenCalisanIdler, ...$yeniIdler]));
+
+                    Notification::make()
+                        ->title($sonuc['calisanlar']->count().' çalışan SGK PDF\'inden eklendi ve katılımcı olarak seçildi')
+                        ->body($sonuc['calisanlar']->pluck('ad_soyad')->implode(', '))
+                        ->success()->send();
+                }),
+
+            Action::make('sinavKagidi')
+                ->extraAttributes(['style' => 'display:none'])
+                ->label('Eğitim Sınav Kâğıdı & Cevap Anahtarı — PDF')
+                ->icon('heroicon-o-clipboard-document-check')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('📝 İSG Eğitimi Değerlendirme Sınav Kâğıdı (10 Soru + Cevap Anahtarı)')
+                ->modalDescription('Seçili katılımcıların her biri için ad/T.C. basılı 10 soruluk sınav kâğıdı (katılımcı seçilmemişse boş sınav kâğıdı) ve en sonda eğitici için Cevap Anahtarı sayfası üretilir.')
+                ->modalSubmitActionLabel('Sınav PDF İndir')
+                ->schema([
+                    Select::make('sinav_turu')
+                        ->label('Sınav Türü')
+                        ->options([
+                            'Son Test (Değerlendirme Sınavı)' => 'Son Test (Eğitim Sonu Değerlendirme Sınavı)',
+                            'Ön Test (Seviye Tespit Sınavı)' => 'Ön Test (Eğitim Öncesi Seviye Tespit Sınavı)',
+                        ])
+                        ->default('Son Test (Değerlendirme Sınavı)')
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $baslik = $this->basliklar[$this->baslikAnahtari] ?? 'İş Sağlığı ve Güvenliği Eğitimi';
+                    $tarih = $this->belgeTarihi ? Carbon::parse($this->belgeTarihi)->format('d.m.Y') : now()->format('d.m.Y');
+
+                    return EgitimSinavKagidiUretici::pdf(
+                        $this->firma,
+                        $baslik,
+                        $tarih,
+                        $this->katilimcilarTopla(),
+                        (string) ($data['sinav_turu'] ?? 'Son Test (Değerlendirme Sınavı)'),
+                    );
+                }),
+
             // Seçili firma adlı BOŞ form (katılımcısız, elle doldurulacak): kayıt oluşturmaz, yıllık planı etkilemez.
             Action::make('bosFormFirma')
                 ->label('Boş Form (PDF)')

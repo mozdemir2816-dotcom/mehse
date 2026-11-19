@@ -372,6 +372,11 @@ class Firma extends Model
         return $this->hasOne(AcilDurumPlani::class);
     }
 
+    public function acilEkipler(): HasMany
+    {
+        return $this->hasMany(AcilEkip::class);
+    }
+
     public function acilDurumKrokisi(): HasOne
     {
         return $this->hasOne(AcilDurumKrokisi::class);

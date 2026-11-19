@@ -104,6 +104,8 @@ class TatbikatTutanagi extends Page
 
     public bool $isyeriHekimiImzasi = false;
 
+    public ?string $canliImza = null;
+
     public ?string $belgeTarihi = null;
 
     // Ekipler
@@ -612,6 +614,20 @@ class TatbikatTutanagi extends Page
         }
     }
 
+    public function tumCalisanlariKatilimciEkle(): void
+    {
+        $mevcutAdlar = collect($this->katilimcilar)
+            ->pluck('ad_soyad')
+            ->map(fn ($a) => mb_strtolower(trim((string) $a), 'UTF-8'))
+            ->all();
+
+        foreach ($this->calisanlar as $c) {
+            if (! in_array(mb_strtolower(trim($c->ad_soyad), 'UTF-8'), $mevcutAdlar, true)) {
+                $this->katilimcilar[] = ['ad_soyad' => $c->ad_soyad, 'tc' => $c->tc, 'gorev' => $c->gorev];
+            }
+        }
+    }
+
     public function katilimciEkle(): void
     {
         if (blank($this->yeniKatilimciAd)) {
@@ -801,7 +817,7 @@ class TatbikatTutanagi extends Page
                 ->action(function () {
                     $t = $this->kaydet();
 
-                    return $t ? TatbikatTutanagiUretici::pdf($t) : null;
+                    return $t ? TatbikatTutanagiUretici::pdf($t, $this->canliImza) : null;
                 }),
 
             Action::make('word')

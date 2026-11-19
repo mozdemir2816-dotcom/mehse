@@ -23,13 +23,14 @@ class TatbikatTutanagiUretici
 
     private const GRI = 'F3F4F6';
 
-    public static function pdf(TatbikatTutanagi $t): StreamedResponse
+    public static function pdf(TatbikatTutanagi $t, ?string $canliImza = null): StreamedResponse
     {
         $t->loadMissing('firma');
 
         $pdf = Pdf::loadView('pdf.tatbikat-tutanagi', [
             'tutanak' => $t,
             'firma' => $t->firma,
+            'canliImza' => $canliImza,
         ])->setPaper('a4');
 
         return response()->streamDownload(fn () => print ($pdf->output()), self::dosyaAdi($t, 'pdf'));

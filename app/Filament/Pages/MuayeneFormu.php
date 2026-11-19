@@ -9,13 +9,16 @@ use App\Models\Calisan;
 use App\Models\Firma;
 use App\Models\MuayeneFormu as MuayeneFormuModel;
 use App\Support\MuayeneFormuUretici;
+use App\Support\SgkIseGirisOkuyucu;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
@@ -87,6 +90,8 @@ class MuayeneFormu extends Page
     public ?string $onerilenKontrolTarihi = null;
 
     public ?string $hekimAdi = null;
+
+    public ?string $canliImza = null;
 
     /** EK-2 referans şablonunun yeni alanları — bkz. MuayeneFormuModel::ek2Sablon(). */
     public array $ek2 = [];
@@ -224,6 +229,24 @@ class MuayeneFormu extends Page
         }
     }
 
+    /** Soygeçmiş alanlarının tamamını "Sağ — Bilinen kronik hastalık yok" olarak doldurur. */
+    public function soygecmisNormalDoldur(): void
+    {
+        foreach (['anne', 'baba', 'kardes', 'cocuk'] as $k) {
+            if (blank($this->ek2['soygecmis'][$k] ?? null)) {
+                $this->ek2['soygecmis'][$k] = 'Sağ — Bilinen kronik hastalık yok';
+            }
+        }
+    }
+
+    /** Bağışıklama (Tetanoz ve Hepatit B) alanlarını "Tam / Güncel" olarak işaretler. */
+    public function asiTamDoldur(): void
+    {
+        $this->ek2['asi']['tetanoz']['durum'] = 'Tam';
+        $this->ek2['asi']['hepatit']['durum'] = 'Tam';
+        $this->ek2['asi']['diger']['durum'] = 'Yok';
+    }
+
     /** Boş fizik muayene sistemlerini "Normal" bulgu metniyle doldurur; dolu olana dokunmaz. */
     public function fizikNormalDoldur(): void
     {
@@ -285,7 +308,9 @@ class MuayeneFormu extends Page
             'onerilen_kontrol_tarihi' => $this->onerilenKontrolTarihi,
             'hekim_adi' => $this->hekimAdi,
             'hekim_kase' => $this->firma->isyeriHekimi?->kase_gorseli,
-            'ek2' => MuayeneFormuModel::ek2Birlestir($this->ek2),
+            'ek2' => array_merge(MuayeneFormuModel::ek2Birlestir($this->ek2), array_filter([
+                'calisan_imza' => $this->canliImza,
+            ])),
         ]);
         $m->save();
 
@@ -299,6 +324,52 @@ class MuayeneFormu extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            Action::make('sgkPdfYukle')
+                ->label('SGK İşe Giriş PDF\'inden Doldur')
+                ->icon('heroicon-o-identification')
+                ->color('success')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('SGK İşe Giriş Bildirgesi PDF\'inden EK-2 Doldur')
+                ->modalDescription('e-SGK Sigortalı İşe Giriş Bildirgesi PDF dosyasını yükleyin; çalışan otomatik olarak firmaya kaydedilir ve EK-2 muayene formundaki kimlik/görev bilgileri doldurulur.')
+                ->modalSubmitActionLabel('PDF\'ten Aktar')
+                ->schema([
+                    FileUpload::make('dosya')
+                        ->label('SGK İşe Giriş Bildirgesi PDF')
+                        ->disk('local')
+                        ->directory('sgk-ice-aktarim')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $yol = Storage::disk('local')->path($data['dosya']);
+                    try {
+                        $kayitlar = SgkIseGirisOkuyucu::dosyadanCikar($yol);
+                    } finally {
+                        Storage::disk('local')->delete($data['dosya']);
+                    }
+
+                    if (! $kayitlar) {
+                        Notification::make()->title('PDF dosyasından çalışan bilgisi okunamadı')->danger()->send();
+
+                        return;
+                    }
+
+                    $sonuc = SgkIseGirisOkuyucu::firmayaKaydet($this->firma, $kayitlar);
+                    unset($this->calisanlar);
+
+                    $ilk = $sonuc['calisanlar']->first();
+                    if ($ilk) {
+                        $this->calisanHizliSecId = $ilk->id;
+                        $this->muayeneTuru = 'ise_giris';
+                        $this->updatedCalisanHizliSecId();
+                    }
+
+                    Notification::make()
+                        ->title('SGK İşe Giriş Bildirgesinden çalışan EK-2 formuna aktarıldı')
+                        ->body($ilk?->ad_soyad)
+                        ->success()->send();
+                }),
+
             Action::make('pdf')
                 ->label('Formu Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -315,7 +386,7 @@ class MuayeneFormu extends Page
 
                     Notification::make()->title('Muayene formu kaydedildi')->body($m->belge_no)->success()->send();
 
-                    return MuayeneFormuUretici::pdf($m, ImzaSecenegi::secili($data));
+                    return MuayeneFormuUretici::pdf($m, ImzaSecenegi::secili($data), $this->canliImza);
                 }),
         ];
     }

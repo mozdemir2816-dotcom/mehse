@@ -184,6 +184,62 @@
                     </div>
                 </details>
             @endif
+
+            {{-- İlk Yardımcı & Acil Durum Destek Elemanı Yasal Kontenjan Hesaplayıcı --}}
+            @php
+                $kontenjanlar = $this->ekipKontenjanTablosu;
+                $eksikKontenjanFirmaSayisi = collect($kontenjanlar)->filter(fn ($r) => $r['ilkyardim_eksik'] > 0 || $r['destek_eksik'] > 0)->count();
+            @endphp
+            @if ($kontenjanlar)
+                <details style="margin-top:.75rem;border:1px solid rgb(128 116 148 / .25);border-radius:.6rem;padding:.6rem .8rem">
+                    <summary style="cursor:pointer;font-size:.85rem;font-weight:700">
+                        🚑 İlk Yardımcı & Acil Durum Destek Elemanı Yasal Kontenjan Hesaplayıcı ({{ $eksikKontenjanFirmaSayisi }} firmada kontenjan açığı)
+                        <span style="font-weight:400;color:{{ $gri }}"> — İlk Yardım Yönetmeliği m.19 (10/15/20 çalışana 1) ve Acil Durumlar Yönetmeliği m.11 (30/40/50 çalışana 1×3 ekip)</span>
+                    </summary>
+                    <div style="overflow-x:auto;margin-top:.6rem">
+                        <table style="width:100%;border-collapse:collapse;font-size:.81rem">
+                            <thead>
+                                <tr style="text-align:left;color:{{ $gri }};border-bottom:1px solid rgb(128 116 148 / .25)">
+                                    <th style="padding:.35rem .5rem">Firma</th>
+                                    <th style="padding:.35rem .5rem">Tehlike Sınıfı</th>
+                                    <th style="padding:.35rem .5rem;text-align:right">Çalışan</th>
+                                    <th style="padding:.35rem .5rem;text-align:center">İlk Yardımcı (Atanan / Yasal)</th>
+                                    <th style="padding:.35rem .5rem;text-align:center">Söndürme·Kurtarma·Koruma (Atanan / Yasal)</th>
+                                    <th style="padding:.35rem .5rem;text-align:right">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($kontenjanlar as $kr)
+                                    <tr style="border-bottom:1px solid rgb(128 116 148 / .12)">
+                                        <td style="padding:.35rem .5rem;font-weight:600">{{ $kr['unvan'] }}</td>
+                                        <td style="padding:.35rem .5rem">{{ $kr['tehlike_etiketi'] }}</td>
+                                        <td style="padding:.35rem .5rem;text-align:right;font-variant-numeric:tabular-nums">{{ $kr['calisan'] }}</td>
+                                        <td style="padding:.35rem .5rem;text-align:center;font-variant-numeric:tabular-nums;{{ $kr['ilkyardim_eksik'] > 0 ? 'color:'.$kirmizi.';font-weight:700' : 'color:'.$yesil }}">
+                                            {{ $kr['ilkyardim_atanan'] }} / {{ $kr['ilkyardim_gereken'] }}
+                                            @if ($kr['ilkyardim_eksik'] > 0)
+                                                <span>({{ $kr['ilkyardim_eksik'] }} eksik)</span>
+                                            @else
+                                                <span>✓</span>
+                                            @endif
+                                        </td>
+                                        <td style="padding:.35rem .5rem;text-align:center;font-variant-numeric:tabular-nums;{{ $kr['destek_eksik'] > 0 ? 'color:'.$sari.';font-weight:700' : 'color:'.$yesil }}">
+                                            {{ $kr['destek_atanan'] }} / {{ $kr['destek_toplam_gereken'] }}
+                                            @if ($kr['destek_eksik'] > 0)
+                                                <span>({{ $kr['destek_eksik'] }} eksik)</span>
+                                            @else
+                                                <span>✓</span>
+                                            @endif
+                                        </td>
+                                        <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
+                                            <a href="{{ $kr['url'] }}" style="font-weight:600;color:{{ $mor }}">Ekipler →</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            @endif
         </div>
 
         {{-- Yasal Kriterlerin Portföy Tamamlanma Oranları --}}
@@ -326,8 +382,53 @@
                         <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">Ağır & Tehlikeli İş</div>
                         <div style="font-size:1.3rem;font-weight:800">{{ $k['agir_tehlikeli'] }}</div>
                     </div>
+                    <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
+                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">İSG Eğitimi Eksik</div>
+                        <div style="font-size:1.3rem;font-weight:800;color:{{ ($k['egitim_eksik'] ?? collect())->count() ? $kirmizi : $yesil }}">{{ ($k['egitim_eksik'] ?? collect())->count() }}</div>
+                    </div>
+                    <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
+                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">Sağlık Muayenesi (EK-2) Eksik</div>
+                        <div style="font-size:1.3rem;font-weight:800;color:{{ ($k['muayene_eksik'] ?? collect())->count() ? $kirmizi : $yesil }}">{{ ($k['muayene_eksik'] ?? collect())->count() }}</div>
+                    </div>
+                    <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
+                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">T.C. Kimlik No Boş</div>
+                        <div style="font-size:1.3rem;font-weight:800;color:{{ ($k['tc_eksik'] ?? collect())->count() ? $sari : $yesil }}">{{ ($k['tc_eksik'] ?? collect())->count() }}</div>
+                    </div>
                 </div>
             </div>
+
+            @if (($k['egitim_eksik'] ?? collect())->isNotEmpty())
+                <div style="{{ $kutu }}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+                        <div style="font-weight:700;color:{{ $kirmizi }}">🎓 İSG Eğitimi Kaydı Bulunmayan Çalışanlar ({{ $k['egitim_eksik']->count() }})</div>
+                        <a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->secilenFirma->id]) }}" style="font-size:.82rem;font-weight:700;color:{{ $mor }}">Eğitim Katılım Formu Oluştur →</a>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
+                        @foreach ($k['egitim_eksik']->take(40) as $c)
+                            <span style="font-size:.78rem;padding:.15rem .55rem;border-radius:999px;border:1px solid rgb(239 68 68 / .35);background:rgb(239 68 68 / .06)">
+                                {{ $c->ad_soyad }}{{ $c->gorev ? ' ('.$c->gorev.')' : '' }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if (($k['muayene_eksik'] ?? collect())->isNotEmpty())
+                <div style="{{ $kutu }}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+                        <div style="font-weight:700;color:{{ $kirmizi }}">🩺 Sağlık Muayenesi (EK-2 / Gözetim) Kaydı Bulunmayan Çalışanlar ({{ $k['muayene_eksik']->count() }})</div>
+                        <a href="{{ \App\Filament\Pages\SaglikGozetimi::getUrl(['firma' => $this->secilenFirma->id]) }}" style="font-size:.82rem;font-weight:700;color:{{ $mor }}">Sağlık Gözetimine Git →</a>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
+                        @foreach ($k['muayene_eksik']->take(40) as $c)
+                            <a href="{{ \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $this->secilenFirma->id, 'calisan' => $c->id]) }}"
+                                style="font-size:.78rem;padding:.15rem .55rem;border-radius:999px;border:1px solid rgb(20 184 166 / .45);background:rgb(20 184 166 / .08);text-decoration:none;color:inherit">
+                                {{ $c->ad_soyad }} · EK-2 Hazırla →
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             @if ($k['genc']->isNotEmpty())
                 <div style="{{ $kutu }}">
@@ -339,11 +440,6 @@
                     </ul>
                 </div>
             @endif
-
-            <div style="{{ $kutu }};font-size:.82rem;color:rgb(95 87 112)">
-                📋 Şu takipler ilgili modüller kurulunca burada listelenecek:
-                <strong>{{ implode(', ', $k['moduller_bekliyor']) }}</strong>.
-            </div>
         @endif
     @endif
 </x-filament-panels::page>

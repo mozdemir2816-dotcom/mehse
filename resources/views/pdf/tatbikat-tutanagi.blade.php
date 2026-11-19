@@ -184,9 +184,13 @@
 
     <table class="imza">
         <tr>
-            @foreach ($imzalar as $im)
+            @foreach ($imzalar as $idx => $im)
                 <td style="width:{{ round(100 / count($imzalar), 2) }}%">
-                    <div class="alan"></div>
+                    <div class="alan">
+                        @if ($idx === 0 && ! empty($canliImza))
+                            <img src="{{ $canliImza }}" style="max-height:46px;display:block;margin:2px auto">
+                        @endif
+                    </div>
                     <div class="rol">{{ $im['rol'] }}</div>
                     <div>{{ $im['ad'] ?: '.............................' }}</div>
                     <div style="color:#666;font-size:8px">({{ $im['not'] }})</div>

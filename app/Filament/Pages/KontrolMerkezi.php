@@ -3,11 +3,19 @@
 namespace App\Filament\Pages;
 
 use App\Models\Firma;
+use App\Support\FirmaEvrakPaketi;
+use App\Support\FirmaEvrakZipUretici;
 use App\Support\PortfoyKarne;
 use App\Support\YasalTakvim;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
@@ -149,6 +157,74 @@ class KontrolMerkezi extends Page
         return $this->secilenFirma
             ? PortfoyKarne::calisanKarne($this->secilenFirma)
             : null;
+    }
+
+    #[Computed]
+    public function ekipKontenjanTablosu(): array
+    {
+        return PortfoyKarne::ekipKontenjanTablosu(Filament::auth()->id(), $this->firmaId);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        $bosFormlar = FirmaEvrakPaketi::bosFormlar();
+
+        return [
+            Action::make('hizliEvrakPaketi')
+                ->label('📦 Hızlı Evrak Paketi (ZIP İndir)')
+                ->icon('heroicon-o-archive-box-arrow-down')
+                ->color('primary')
+                ->modalWidth('2xl')
+                ->modalHeading('📦 Hızlı Evrak Paketi — Tek Tıkla Toplu ZIP İndir')
+                ->modalDescription('Firmayı seçin; kayıtlı İSG evraklarını ve firma ünvanı basılı boş formları işaretleyip tek bir ZIP dosyası olarak indirin.')
+                ->modalSubmitActionLabel('ZIP Olarak İndir')
+                ->schema([
+                    Select::make('firma_id')
+                        ->label('Firma')
+                        ->options(fn () => $this->firmalar)
+                        ->default(fn () => $this->firmaId ?: array_key_first($this->firmalar))
+                        ->live()
+                        ->searchable()
+                        ->required(),
+                    Section::make('Kayıtlı Evraklar')
+                        ->collapsible()
+                        ->schema([
+                            CheckboxList::make('kayitli')
+                                ->hiddenLabel()
+                                ->options(function (Get $get): array {
+                                    $fId = (int) ($get('firma_id') ?: $this->firmaId);
+                                    $f = $fId ? Firma::where('user_id', Filament::auth()->id())->find($fId) : null;
+
+                                    return $f ? FirmaEvrakZipUretici::secenekler($f) : [];
+                                })
+                                ->bulkToggleable()
+                                ->columns(1),
+                        ]),
+                    ...collect(FirmaEvrakPaketi::GRUPLAR)->map(fn (string $baslik, string $grup) => Section::make($baslik)
+                        ->collapsible()
+                        ->schema([
+                            CheckboxList::make($grup)
+                                ->hiddenLabel()
+                                ->options($bosFormlar[$grup])
+                                ->bulkToggleable()
+                                ->columns(2),
+                        ]))->values()->all(),
+                ])
+                ->action(function (array $data) {
+                    $firma = Firma::where('user_id', Filament::auth()->id())->findOrFail($data['firma_id']);
+                    unset($data['firma_id']);
+
+                    if (! collect($data)->flatten()->filter()->count()) {
+                        Notification::make()->title('En az bir evrak seçin')->warning()->send();
+
+                        return null;
+                    }
+
+                    @set_time_limit(app()->runningInConsole() ? 0 : 300);
+
+                    return FirmaEvrakPaketi::zip($firma, $data);
+                }),
+        ];
     }
 
     /** Günlük Akış penceresi (gün). */

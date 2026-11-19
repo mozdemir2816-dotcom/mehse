@@ -720,22 +720,122 @@ class PortfoyKarne
         return true;
     }
 
+    /**
+     * Portföy genelinde (veya tek firmada) İlk Yardımcı ve Acil Durum Destek Elemanı
+     * (Söndürme / Kurtarma / Koruma) yasal kontenjan ve açık tablosu.
+     *
+     * @return array<int, array{
+     *     id: int,
+     *     unvan: string,
+     *     tehlike_etiketi: string,
+     *     calisan: int,
+     *     ilkyardim_gereken: int,
+     *     ilkyardim_atanan: int,
+     *     ilkyardim_eksik: int,
+     *     destek_birim_gereken: int,
+     *     destek_toplam_gereken: int,
+     *     destek_atanan: int,
+     *     destek_eksik: int,
+     *     url: string,
+     * }>
+     */
+    public static function ekipKontenjanTablosu(int $userId, ?int $firmaId = null): array
+    {
+        $ilkyardimOran = ['cok_tehlikeli' => 10, 'tehlikeli' => 15, 'az_tehlikeli' => 20];
+        $destekOran = ['cok_tehlikeli' => 30, 'tehlikeli' => 40, 'az_tehlikeli' => 50];
+
+        return Firma::query()
+            ->where('user_id', $userId)
+            ->where('aktif', true)
+            ->when($firmaId, fn ($q) => $q->whereKey($firmaId))
+            ->withCount(['calisanlar as aktif_calisan' => fn ($q) => $q->where('aktif', true)])
+            ->with(['acilEkipler.uyeler'])
+            ->orderBy('unvan')
+            ->get()
+            ->map(function (Firma $f) use ($ilkyardimOran, $destekOran): array {
+                $calisan = max((int) $f->aktif_calisan, (int) $f->calisan_sayisi);
+                $iyOran = $ilkyardimOran[$f->tehlike_sinifi] ?? 20;
+                $dOran = $destekOran[$f->tehlike_sinifi] ?? 50;
+
+                $iyGereken = $calisan > 0 ? (int) ceil($calisan / $iyOran) : 0;
+                $birimGereken = $calisan > 0 ? (int) ceil($calisan / $dOran) : 0;
+
+                $ekipler = $f->acilEkipler->keyBy('tur');
+                $iyAtanan = $ekipler->get('ilk_yardim')?->uyeler?->where('uyelik', 'asil')->count() ?? 0;
+
+                $destekAtanan = 0;
+                $destekEksik = 0;
+                foreach (['sondurme', 'kurtarma', 'koruma'] as $tur) {
+                    $atanan = $ekipler->get($tur)?->uyeler?->where('uyelik', 'asil')->count() ?? 0;
+                    $destekAtanan += $atanan;
+                    $destekEksik += max(0, $birimGereken - $atanan);
+                }
+
+                return [
+                    'id' => $f->id,
+                    'unvan' => $f->secimEtiketi(),
+                    'tehlike_etiketi' => $f->tehlikeSinifiEtiketi(),
+                    'calisan' => $calisan,
+                    'ilkyardim_gereken' => $iyGereken,
+                    'ilkyardim_atanan' => $iyAtanan,
+                    'ilkyardim_eksik' => max(0, $iyGereken - $iyAtanan),
+                    'destek_birim_gereken' => $birimGereken,
+                    'destek_toplam_gereken' => $birimGereken * 3,
+                    'destek_atanan' => $destekAtanan,
+                    'destek_eksik' => $destekEksik,
+                    'url' => \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $f->id]),
+                ];
+            })
+            ->all();
+    }
+
     /** Tek firma için çalışan eksikleri (Çalışan Asistanı sekmesi). */
     public static function calisanKarne(Firma $firma): array
     {
-        $calisanlar = $firma->calisanlar()->where('aktif', true)->get();
+        $calisanlar = $firma->calisanlar()->where('aktif', true)->orderBy('ad_soyad')->get();
 
         $genc = $calisanlar->filter(function (Calisan $c): bool {
             return $c->dogum_tarihi
                 && Carbon::parse($c->dogum_tarihi)->age < 18;
         });
 
+        // Muayene kaydı olan çalışanlar (EK-2 Muayene Formu veya Sağlık Gözetimi satırı)
+        $muayeneliIdler = $firma->muayeneFormlari()->whereNotNull('calisan_id')->pluck('calisan_id')->all();
+        $muayeneliAdlar = $firma->muayeneFormlari()
+            ->pluck('calisan_ad_soyad')
+            ->map(fn ($a) => mb_strtolower(trim((string) $a), 'UTF-8'))
+            ->filter()
+            ->all();
+
+        $gozetimSatirlari = collect(\App\Models\SaglikGozetimi::where('firma_id', $firma->id)->value('satirlar') ?? []);
+        $gozetimliIdler = $gozetimSatirlari->whereNotNull('son_tarih')->pluck('calisan_id')->filter()->all();
+
+        $muayeneEksik = $calisanlar->reject(fn (Calisan $c) => in_array($c->id, $muayeneliIdler, true)
+            || in_array($c->id, $gozetimliIdler, true)
+            || in_array(mb_strtolower(trim($c->ad_soyad), 'UTF-8'), $muayeneliAdlar, true))->values();
+
+        // Eğitim kaydı olan çalışanlar (EgitimKaydi veya EgitimKatilim katılımcı listesi)
+        $egitimliIdler = \App\Models\EgitimKaydi::whereIn('calisan_id', $calisanlar->pluck('id'))->pluck('calisan_id')->all();
+        $katilimAdlari = $firma->egitimKatilimlari()
+            ->get(['katilimcilar'])
+            ->flatMap(fn ($k) => collect($k->katilimcilar ?? [])->pluck('ad_soyad'))
+            ->map(fn ($a) => mb_strtolower(trim((string) $a), 'UTF-8'))
+            ->filter()
+            ->all();
+
+        $egitimEksik = $calisanlar->reject(fn (Calisan $c) => in_array($c->id, $egitimliIdler, true)
+            || in_array(mb_strtolower(trim($c->ad_soyad), 'UTF-8'), $katilimAdlari, true))->values();
+
+        $tcEksik = $calisanlar->filter(fn (Calisan $c) => blank($c->tc))->values();
+
         return [
             'toplam' => $calisanlar->count(),
             'genc' => $genc->values(),
             'agir_tehlikeli' => $calisanlar->where('agir_tehlikeli_iste', true)->count(),
-            // Muayene / eğitim / MYK takibi ilgili modüller kurulunca eklenecek
-            'moduller_bekliyor' => ['Periyodik muayene', 'İSG eğitimi', 'MYK belgesi'],
+            'muayene_eksik' => $muayeneEksik,
+            'egitim_eksik' => $egitimEksik,
+            'tc_eksik' => $tcEksik,
+            'moduller_bekliyor' => [],
         ];
     }
 }

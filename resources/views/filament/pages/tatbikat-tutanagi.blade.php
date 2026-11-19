@@ -171,6 +171,12 @@
                     <input type="checkbox" wire:model="isyeriHekimiImzasi"> İşyeri Hekimi imzası ekle
                 </label>
             </div>
+
+            @include('filament.pages.partials.canli-imza', [
+                'canliImza' => $canliImza,
+                'baslik' => '📱 İşveren / Tatbikat Yetkilisi Canlı İmzası (Telefon / Tablet / Fare)',
+                'aciklama' => 'Tatbikat sonunda işveren veya işveren vekiline doğrudan ekrandan parmakla imzalatın; imza PDF tutanağına otomatik basılır.',
+            ])
         </x-filament::section>
 
         {{-- 3. SENARYO METNİ --}}
@@ -304,7 +310,8 @@
             <x-slot name="heading">9. Firma Çalışanları / Katılımcılar ({{ count($katilimcilar) }})</x-slot>
 
             @if ($this->calisanlar->isNotEmpty())
-                <div style="margin-bottom:.75rem;display:flex;gap:.4rem;flex-wrap:wrap">
+                <div style="margin-bottom:.75rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+                    <x-filament::button size="xs" color="danger" wire:click="tumCalisanlariKatilimciEkle">+ Tüm Çalışanları Ekle ({{ $this->calisanlar->count() }})</x-filament::button>
                     @foreach ($this->calisanlar as $c)
                         <x-filament::button size="xs" color="gray" wire:click="katilimciHizliEkle({{ $c->id }})">+ {{ $c->ad_soyad }}</x-filament::button>
                     @endforeach
