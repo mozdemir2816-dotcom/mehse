@@ -347,12 +347,22 @@
 
                 <div style="display:flex;flex-direction:column;gap:.3rem">
                     @foreach ($this->ipcMaddeKatalogu as $m)
-                        @php $secili = $this->ihlalIpcSeciliMi($m['baslik']); @endphp
+                        @php
+                            $secili = $this->ihlalIpcSeciliMi($m['baslik']);
+                            $maddeTutar = $this->ipcMaddeTutari($m['baslik']);
+                        @endphp
                         <button type="button" wire:click="ihlalIpcToggle('{{ addslashes($m['baslik']) }}', '{{ addslashes($m['aciklama']) }}')"
-                            style="text-align:left;padding:.4rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
+                            style="text-align:left;padding:.45rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
                                 border:1px solid {{ $secili ? '#b45309' : 'rgb(107 114 128 / .3)' }};
                                 background:{{ $secili ? 'rgb(180 83 9 / .08)' : 'transparent' }}">
-                            {{ $secili ? '☑' : '☐' }} {{ $m['baslik'] }}
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+                                <span>{{ $secili ? '☑' : '☐' }} <strong>{{ $m['baslik'] }}</strong></span>
+                                @if ($maddeTutar)
+                                    <span style="font-size:.74rem;font-weight:700;color:#b45309;background:rgb(180 83 9 / .12);padding:.1rem .45rem;border-radius:999px">
+                                        2026 Referans: {{ number_format($maddeTutar, 0, ',', '.') }} TL
+                                    </span>
+                                @endif
+                            </div>
                             <div class="mehse-soluk">{{ $m['aciklama'] }}</div>
                         </button>
                     @endforeach
@@ -368,6 +378,20 @@
             {{-- 3. CEZA TUTARI VE ÖDEME --}}
             <x-filament::section icon="heroicon-o-banknotes" icon-color="warning">
                 <x-slot name="heading">3. Ceza Tutarı ve Ödeme</x-slot>
+
+                @php $hesaplananIpc = $this->hesaplananToplamIpc(); @endphp
+                @if ($hesaplananIpc > 0)
+                    <div style="margin-bottom:.85rem;padding:.6rem .85rem;border-radius:.5rem;background:rgb(180 83 9 / .08);border:1px solid rgb(180 83 9 / .35);display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap">
+                        <div style="font-size:.8rem">
+                            🧮 <strong>6331 m.26 (2026 Yılı) Otomatik Hesaplanan Risk Tutarı:</strong>
+                            <span style="font-weight:800;color:#b45309">{{ number_format($hesaplananIpc, 2, ',', '.') }} TL</span>
+                            <span class="mehse-soluk">({{ $this->firma->tehlikeSinifiEtiketi() }} · Çarpan: {{ $this->ipcCarpani() }}x)</span>
+                        </div>
+                        <x-filament::button size="xs" color="warning" type="button" wire:click="yasalCezaTutariniUygula">
+                            Tutara Aktar
+                        </x-filament::button>
+                    </div>
+                @endif
 
                 <div class="mehse-izgara">
                     <div>

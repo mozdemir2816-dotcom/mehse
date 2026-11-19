@@ -42,8 +42,8 @@
         @endforeach
     </div>
 
-    {{-- FİRMA SEÇ (firma / calisan sekmeleri) --}}
-    @if (in_array($sekme, ['firma', 'calisan'], true))
+    {{-- FİRMA SEÇ (firma / calisan / hizli_evrak sekmeleri) --}}
+    @if (in_array($sekme, ['firma', 'calisan', 'hizli_evrak'], true))
         @include('filament.pages.partials.komuta-firma-cubugu', ['tumPortfoy' => true])
     @endif
 
@@ -440,6 +440,126 @@
                     </ul>
                 </div>
             @endif
+        @endif
+    @endif
+
+    {{-- ==================== HIZLI EVRAK MATRİSİ ==================== --}}
+    @if ($sekme === 'hizli_evrak')
+        @if (! $this->secilenFirma)
+            <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
+                <div style="font-size:2rem">⚡</div>
+                <div style="font-weight:700;margin-top:.4rem">Hızlı Evrak Matrisi (Firma & Çalışan Evrakları)</div>
+                <p style="font-size:.85rem;color:rgb(95 87 112)">
+                    Tek ekranda bir firmanın tüm zorunlu İSG firma evraklarını ve çalışan dosyası evraklarını görmek, eksikleri tek tıkla hazırlamak veya toplu ZIP indirmek için yukarıdan bir firma seçin.
+                </p>
+            </div>
+        @else
+            @php
+                $matris = $this->hizliEvrakMatrisi;
+                $mOzet = $matris['ozet'];
+                $mRenk = $mOzet['oran'] < 40 ? $kirmizi : ($mOzet['oran'] < 75 ? $sari : $yesil);
+            @endphp
+            <div style="{{ $kutu }}">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+                    <div>
+                        <div style="font-weight:700;font-size:1rem">{{ $this->secilenFirma->unvan }} — Hızlı Evrak Matrisi</div>
+                        <div style="font-size:.8rem;color:{{ $gri }}">
+                            {{ $this->secilenFirma->tehlikeSinifiEtiketi() }} · {{ $this->secilenFirma->calisan_sayisi }} Çalışan ·
+                            <strong style="color:{{ $yesil }}">{{ $mOzet['tamam'] }} Tamam</strong> ·
+                            <strong style="color:{{ $mOzet['eksik'] > 0 ? $kirmizi : $gri }}">{{ $mOzet['eksik'] }} Eksik</strong>
+                            @if ($mOzet['muaf'] > 0)
+                                · <span>{{ $mOzet['muaf'] }} Kapsam Dışı (Muaf)</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
+                        <span style="font-size:.88rem;font-weight:800;padding:.25rem .7rem;border-radius:999px;color:{{ $mRenk }};background:color-mix(in srgb, {{ $mRenk }} 15%, transparent)">
+                            Uyum: %{{ $mOzet['oran'] }}
+                        </span>
+                        <x-filament::button size="sm" color="primary" icon="heroicon-o-archive-box-arrow-down" wire:click="mountAction('hizliEvrakPaketi')">
+                            Seçili Firmanın Evraklarını ZIP İndir
+                        </x-filament::button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:1rem;align-items:start">
+                {{-- SOL: FİRMA YASAL EVRAKLARI --}}
+                <div style="{{ $kutu }}">
+                    <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">🏢 Firma Yasal İSG Evrakları</div>
+                    <div style="font-size:.78rem;color:{{ $gri }};margin-bottom:.75rem">
+                        Firmanın yasal zorunlu dosyaları — eksik evraklara tıklayarak doğrudan ilgili modülde oluşturabilirsiniz.
+                    </div>
+
+                    <div style="display:flex;flex-direction:column">
+                        @foreach ($matris['firma_evraklari'] as $evrak)
+                            @php
+                                $dRenk = match (true) {
+                                    $evrak['muaf'] => $gri,
+                                    $evrak['tamam'] => $yesil,
+                                    $evrak['takip'] => $gri,
+                                    $evrak['durum'] === 'yakin' => $sari,
+                                    default => $kirmizi,
+                                };
+                                $dEtiket = match (true) {
+                                    $evrak['muaf'] => 'Muaf',
+                                    $evrak['tamam'] => 'Hazır ✓',
+                                    $evrak['takip'] => 'Olay Bazlı',
+                                    $evrak['durum'] === 'yakin' => 'Vadesi Yakın',
+                                    default => 'Eksik',
+                                };
+                            @endphp
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.45rem 0;border-top:1px solid rgb(128 116 148 / .14)">
+                                <div style="min-width:0">
+                                    <div style="font-size:.83rem;font-weight:600;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+                                        <span>{{ $evrak['ad'] }}</span>
+                                        <span style="font-size:.68rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;color:{{ $dRenk }};background:color-mix(in srgb, {{ $dRenk }} 14%, transparent)">
+                                            {{ $dEtiket }}
+                                        </span>
+                                    </div>
+                                    @if ($evrak['vade_tarihi'])
+                                        <div style="font-size:.73rem;color:{{ $gri }}">Vade / Geçerlilik: {{ $evrak['vade_tarihi']->format('d.m.Y') }}</div>
+                                    @endif
+                                </div>
+                                <a href="{{ $evrak['url'] }}"
+                                    style="font-size:.78rem;font-weight:700;color:{{ $evrak['tamam'] ? $turkuaz : $mor }};text-decoration:none;white-space:nowrap">
+                                    {{ $evrak['tamam'] ? 'Görüntüle →' : 'Hazırla →' }}
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- SAĞ: ÇALIŞAN ÖZLÜK & SAHA EVRAKLARI --}}
+                <div style="{{ $kutu }}">
+                    <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">👷 Çalışan Özlük & İSG Dosyası Evrakları</div>
+                    <div style="font-size:.78rem;color:{{ $gri }};margin-bottom:.75rem">
+                        Personel özlük dosyasında bulunması gereken bireysel ve toplu İSG kayıtları (canlı imza ve PDF çıktılı).
+                    </div>
+
+                    <div style="display:flex;flex-direction:column">
+                        @foreach ($matris['calisan_evraklari'] as $cEvrak)
+                            @php $var = $cEvrak['adet'] > 0; @endphp
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.5rem 0;border-top:1px solid rgb(128 116 148 / .14)">
+                                <div style="min-width:0">
+                                    <div style="font-size:.84rem;font-weight:600;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+                                        <x-filament::icon :icon="$cEvrak['ikon']" style="width:.95rem;height:.95rem;color:{{ $var ? $yesil : $turkuaz }}"/>
+                                        <span>{{ $cEvrak['ad'] }}</span>
+                                        <span style="font-size:.68rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;color:{{ $var ? $yesil : $gri }};background:color-mix(in srgb, {{ $var ? $yesil : $gri }} 14%, transparent)">
+                                            {{ $cEvrak['adet'] }} kayıt
+                                        </span>
+                                    </div>
+                                    <div style="font-size:.75rem;color:{{ $gri }};margin-top:.1rem">{{ $cEvrak['aciklama'] }}</div>
+                                </div>
+                                <a href="{{ $cEvrak['url'] }}"
+                                    style="font-size:.78rem;font-weight:700;color:{{ $mor }};text-decoration:none;white-space:nowrap">
+                                    Oluştur / Aç →
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
         @endif
     @endif
 </x-filament-panels::page>

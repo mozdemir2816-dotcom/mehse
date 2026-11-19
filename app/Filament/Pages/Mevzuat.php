@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Support\GeminiMevzuatDanismani;
 use BackedEnum;
 use Filament\Pages\Page;
 use Illuminate\Support\Str;
@@ -40,6 +41,42 @@ class Mevzuat extends Page
     public string $arama = '';
 
     public string $kategori = 'tumu';
+
+    public string $mevzuatSoru = '';
+
+    public ?string $danismanYaniti = null;
+
+    /** @var array<int, array{baslik: string, kategori: string, aciklama: string}> */
+    public array $danismanKaynaklari = [];
+
+    public function mevzuataSor(): void
+    {
+        if (blank(trim($this->mevzuatSoru))) {
+            return;
+        }
+
+        $sonuc = GeminiMevzuatDanismani::sor($this->mevzuatSoru);
+        $this->danismanYaniti = $sonuc['yanit'];
+        $this->danismanKaynaklari = $sonuc['kaynaklar'];
+    }
+
+    public function hazirSoruSor(string $anahtar): void
+    {
+        $hazir = GeminiMevzuatDanismani::HAZIR_SORULAR[$anahtar] ?? null;
+        if (! $hazir) {
+            return;
+        }
+
+        $this->mevzuatSoru = $hazir['soru'];
+        $this->mevzuataSor();
+    }
+
+    public function danismanTemizle(): void
+    {
+        $this->mevzuatSoru = '';
+        $this->danismanYaniti = null;
+        $this->danismanKaynaklari = [];
+    }
 
     /** @return array<int, array{baslik: string, kategori: string, aciklama: string}> */
     public function sonuclar(): array

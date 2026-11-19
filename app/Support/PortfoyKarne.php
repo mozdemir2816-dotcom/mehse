@@ -838,4 +838,110 @@ class PortfoyKarne
             'moduller_bekliyor' => [],
         ];
     }
+
+    /**
+     * İSG Komuta Merkezi 4. Sekme: "⚡ Hızlı Evrak Matrisi" — seçili firmanın
+     * tüm Firma Evrakları (durum rozeti, vade ve doğrudan oluşturma/düzenleme
+     * bağlantısıyla) ve Çalışan Evrakları (kayıt adedi ve 1-tıkla hazırlama
+     * bağlantısıyla) tek ekranda.
+     *
+     * @return array{
+     *     ozet: array{tamam: int, eksik: int, muaf: int, oran: int},
+     *     firma_evraklari: array<int, array<string, mixed>>,
+     *     calisan_evraklari: array<int, array{ad: string, aciklama: string, adet: int, url: string, ikon: string}>,
+     * }
+     */
+    public static function hizliEvrakMatrisi(Firma $firma): array
+    {
+        $detay = collect(static::firmaChecklistDetay($firma))
+            ->map(fn (array $k): array => [
+                ...$k,
+                'url' => static::kriterSayfaUrl($k['anahtar'], $firma->id),
+            ])
+            ->values();
+
+        $olculen = $detay->filter(fn (array $k) => $k['hazir'] && ! $k['takip'] && ! $k['muaf']);
+        $tamamSayisi = $olculen->where('tamam', true)->count();
+        $eksikSayisi = $olculen->where('tamam', false)->count();
+        $muafSayisi = $detay->where('muaf', true)->count();
+        $oran = $olculen->isNotEmpty() ? (int) round(($tamamSayisi / $olculen->count()) * 100) : 100;
+
+        $egitimKayitAdet = $firma->egitimKatilimlari()->count();
+        $sertifikaAdet = \App\Models\EgitimKaydi::whereIn('calisan_id', $firma->calisanlar()->select('id'))->count();
+        $isbasiAdet = $firma->isbasiEgitimTutanaklari()->count();
+        $muayeneAdet = $firma->muayeneFormlari()->count();
+        $kkdAdet = $firma->kkdTutanaklari()->count();
+        $talimatAdet = $firma->talimatlar()->count();
+        $cezaAdet = $firma->cezaTebligleri()->count();
+
+        $calisanEvraklari = [
+            [
+                'ad' => 'Eğitim Katılım Formu',
+                'aciklama' => 'Temel İSG eğitimi yoklama ve imzalı katılımcı çizelgesi',
+                'adet' => $egitimKayitAdet,
+                'url' => \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-academic-cap',
+            ],
+            [
+                'ad' => 'Eğitim Değerlendirme Sınavı (10 Soru)',
+                'aciklama' => 'Çoktan seçmeli eğitim ölçme-değerlendirme sınav kâğıdı ve cevap anahtarı',
+                'adet' => $egitimKayitAdet,
+                'url' => \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-clipboard-document-check',
+            ],
+            [
+                'ad' => 'İSG Eğitim Belgesi / Sertifikası',
+                'aciklama' => '6331 m.17 ve Ek-1 uyumlu çalışan İSG eğitim katılım belgesi',
+                'adet' => $sertifikaAdet + $egitimKayitAdet,
+                'url' => \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-check-badge',
+            ],
+            [
+                'ad' => 'İşbaşı Oryantasyon Eğitimi Tutanağı',
+                'aciklama' => 'Yeni işe başlayan çalışana verilen en az 2 saatlik pratik işbaşı eğitimi',
+                'adet' => $isbasiAdet,
+                'url' => \App\Filament\Pages\IsbasiEgitim::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-user-plus',
+            ],
+            [
+                'ad' => 'İşe Giriş / Periyodik Muayene Formu (EK-2)',
+                'aciklama' => 'İşyeri hekimi sağlık gözetimi, anamnez, aşı ve fizik muayene formu',
+                'adet' => $muayeneAdet,
+                'url' => \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-heart',
+            ],
+            [
+                'ad' => 'KKD Zimmet ve Teslim Tutanağı',
+                'aciklama' => 'EN standartlı kişisel koruyucu donanım zimmet ve taahhüt formu',
+                'adet' => $kkdAdet,
+                'url' => \App\Filament\Pages\KkdFormu::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-shield-check',
+            ],
+            [
+                'ad' => 'Güvenli Çalışma Talimatı & Tebellüğ',
+                'aciklama' => 'Makine / görev bazlı çalışma talimatı ve çalışan tebellüğ imzası',
+                'adet' => $talimatAdet,
+                'url' => \App\Filament\Pages\TalimatOlustur::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-document-text',
+            ],
+            [
+                'ad' => 'Çalışana İhtar / Ceza & İşverene İPC Tebliği',
+                'aciklama' => '4857 m.25/II-ı uyarınca çalışana ihtar veya 6331 m.26 İPC işveren tebliği',
+                'adet' => $cezaAdet,
+                'url' => \App\Filament\Pages\CezaTeblig::getUrl(['firma' => $firma->id]),
+                'ikon' => 'heroicon-o-exclamation-triangle',
+            ],
+        ];
+
+        return [
+            'ozet' => [
+                'tamam' => $tamamSayisi,
+                'eksik' => $eksikSayisi,
+                'muaf' => $muafSayisi,
+                'oran' => $oran,
+            ],
+            'firma_evraklari' => $detay->all(),
+            'calisan_evraklari' => $calisanEvraklari,
+        ];
+    }
 }

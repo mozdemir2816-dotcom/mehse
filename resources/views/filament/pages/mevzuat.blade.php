@@ -5,9 +5,70 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     <p class="mehse-bolum-aciklama">
-        İSG pratiğinde en sık başvurulan mevzuatın kısa dizini — tam metin değil, yönlendirme amaçlıdır.
+        İSG pratiğinde en sık başvurulan mevzuatın kısa dizini ve yapay zekâ destekli mevzuat danışmanı.
         Madde numarası/tarih gibi ayrıntılar için resmi kaynağa (mevzuat.gov.tr, resmigazete.gov.tr) bakınız.
     </p>
+
+    {{-- MEVZUATA SOR (YAPAY ZEKA İSG MEVZUAT DANIŞMANI) --}}
+    <div style="{{ $kutu }};margin-top:.75rem;background:rgb(180 83 9 / .04);border-color:rgb(180 83 9 / .3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+            <div style="font-weight:700;font-size:.95rem">⚖️ Mevzuata Sor — İSG Mevzuat Danışmanı</div>
+            <span style="font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:rgb(180 83 9 / .14);color:rgb(180 83 9)">
+                6331 · 4857 · 5510 &amp; İSG Yönetmelikleri
+            </span>
+        </div>
+        <div style="font-size:.8rem;color:rgb(107 114 128);margin-top:.2rem">
+            İSG mevzuatı, yasal süreler, kurul/temsilci/destek elemanı zorunlulukları veya bildirim süreleri hakkında soru sorun ya da aşağıdaki hazır sorulardan birine tıklayın:
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem">
+            @foreach (\App\Support\GeminiMevzuatDanismani::HAZIR_SORULAR as $anahtar => $hazir)
+                <button type="button" wire:click="hazirSoruSor('{{ $anahtar }}')"
+                    style="font-size:.75rem;padding:.25rem .6rem;border-radius:999px;border:1px solid rgb(180 83 9 / .35);background:transparent;color:inherit;cursor:pointer;text-align:left">
+                    💬 {{ $hazir['soru'] }}
+                </button>
+            @endforeach
+        </div>
+
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.65rem">
+            <div style="flex:1;min-width:220px">
+                <input type="text"
+                    placeholder="Örn: Çok tehlikeli sınıfta 45 çalışan için kaç ilk yardımcı ve destek elemanı gerekir?"
+                    wire:model="mevzuatSoru"
+                    wire:keydown.enter="mevzuataSor"
+                    style="{{ $girdi }};margin-top:0">
+            </div>
+            <x-filament::button color="warning" wire:click="mevzuataSor">
+                Mevzuata Sor
+            </x-filament::button>
+            @if ($danismanYaniti || $mevzuatSoru !== '')
+                <x-filament::button color="gray" size="sm" wire:click="danismanTemizle">
+                    Temizle
+                </x-filament::button>
+            @endif
+        </div>
+
+        @if ($danismanYaniti)
+            <div style="margin-top:.85rem;padding:.85rem;border-radius:.6rem;border:1px solid rgb(180 83 9 / .35);background:rgb(107 114 128 / .06)">
+                <div style="font-weight:700;font-size:.84rem;color:rgb(180 83 9);margin-bottom:.35rem">📌 Mevzuat Danışmanı Yanıtı</div>
+                <div style="font-size:.85rem;line-height:1.55;white-space:pre-line">{{ $danismanYaniti }}</div>
+
+                @if ($danismanKaynaklari)
+                    <div style="margin-top:.65rem;padding-top:.55rem;border-top:1px dashed rgb(107 114 128 / .3)">
+                        <div style="font-size:.75rem;font-weight:700;color:rgb(107 114 128);margin-bottom:.3rem">İlgili Mevzuat Dayanakları:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+                            @foreach ($danismanKaynaklari as $k)
+                                <a href="{{ \App\Support\GeminiMevzuatDanismani::resmiMevzuatUrl($k['baslik']) }}" target="_blank" rel="noopener"
+                                    style="font-size:.74rem;padding:.15rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);text-decoration:none;color:inherit">
+                                    ⚖️ {{ $k['baslik'] }} ↗
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
+    </div>
 
     <div style="margin-top:1rem">
         <input type="text" placeholder="Mevzuat ara (ör. risk değerlendirmesi, KKD, gürültü...)" wire:model.live.debounce.300ms="arama" style="{{ $girdi }}">
@@ -26,10 +87,18 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:.5rem">
         @forelse ($sonuclar as $m)
-            <div style="{{ $kutu }}">
-                <x-filament::badge color="gray" size="sm">{{ config('isg.mevzuat.kategoriler')[$m['kategori']] }}</x-filament::badge>
-                <div style="font-weight:600;margin-top:.5rem">{{ $m['baslik'] }}</div>
-                <div style="font-size:.82rem;color:rgb(107 114 128);margin-top:.4rem">{{ $m['aciklama'] }}</div>
+            <div style="{{ $kutu }};display:flex;flex-direction:column;justify-content:space-between">
+                <div>
+                    <x-filament::badge color="gray" size="sm">{{ config('isg.mevzuat.kategoriler')[$m['kategori']] }}</x-filament::badge>
+                    <div style="font-weight:600;margin-top:.5rem">{{ $m['baslik'] }}</div>
+                    <div style="font-size:.82rem;color:rgb(107 114 128);margin-top:.4rem">{{ $m['aciklama'] }}</div>
+                </div>
+                <div style="margin-top:.75rem;padding-top:.45rem;border-top:1px solid rgb(107 114 128 / .15);display:flex;justify-content:flex-end">
+                    <a href="{{ \App\Support\GeminiMevzuatDanismani::resmiMevzuatUrl($m['baslik']) }}" target="_blank" rel="noopener"
+                        style="font-size:.76rem;font-weight:600;color:rgb(180 83 9);text-decoration:none">
+                        mevzuat.gov.tr'de Gör ↗
+                    </a>
+                </div>
             </div>
         @empty
             <p style="color:rgb(107 114 128);font-size:.85rem">Eşleşen mevzuat bulunamadı.</p>

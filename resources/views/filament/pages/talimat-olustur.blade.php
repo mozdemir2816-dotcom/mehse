@@ -182,6 +182,39 @@
                 <textarea wire:model="taahhut" rows="{{ $bolumlu ? 2 : 5 }}" style="{{ $girdi }}"></textarea>
                 <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">Altına TEBLİĞ EDEN / TEBELLÜĞ EDEN imza alanı basılır.</div>
             </div>
+
+            @if ($this->firma)
+                <div style="{{ $kutu }};margin-top:.85rem">
+                    <div style="font-weight:700;font-size:.83rem;margin-bottom:.4rem">📱 Tablette / Telefonda Çalışana Tebliğ Et (İsteğe Bağlı)</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem">
+                        @if ($this->calisanlar->isNotEmpty())
+                            <div>
+                                <label style="font-size:.75rem">Hızlı Çalışan Seç</label>
+                                <select wire:model.live="tebellugCalisanId" style="{{ $girdi }}">
+                                    <option value="">— Boş bırak / Elle gir —</option>
+                                    @foreach ($this->calisanlar as $c)
+                                        <option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+                        <div>
+                            <label style="font-size:.75rem">Tebellüğ Eden Ad Soyad</label>
+                            <input type="text" wire:model="tebellugAdSoyad" placeholder="Ad Soyad" style="{{ $girdi }}">
+                        </div>
+                        <div>
+                            <label style="font-size:.75rem">Görevi</label>
+                            <input type="text" wire:model="tebellugGorev" placeholder="Görevi" style="{{ $girdi }}">
+                        </div>
+                    </div>
+
+                    @include('filament.pages.partials.canli-imza', [
+                        'canliImza' => $canliImza,
+                        'baslik' => '📱 Tebellüğ Eden Çalışan Canlı İmzası (Telefon / Tablet / Fare)',
+                        'aciklama' => 'Talimatı okuyan çalışana doğrudan ekrandan imzalatın; PDF çıktısındaki "TEBELLÜĞ EDEN" imza alanına otomatik basılır.',
+                    ])
+                </div>
+            @endif
         </x-filament::section>
     @endif
 

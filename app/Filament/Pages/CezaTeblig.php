@@ -245,6 +245,85 @@ class CezaTeblig extends Page
         return $this->cezaTutari !== null ? round($this->cezaTutari * 0.75, 2) : null;
     }
 
+    /**
+     * 6331 sayılı Kanun m.26/2 kapsamında firmanın çalışan sayısı ve tehlike sınıfı çarpanı.
+     */
+    public function ipcCarpani(): float
+    {
+        if (! $this->firma) {
+            return 1.0;
+        }
+
+        $calisan = max((int) $this->firma->calisan_sayisi, $this->calisanlar->count());
+        $sinif = $this->firma->tehlike_sinifi ?: 'az_tehlikeli';
+
+        if ($calisan < 10) {
+            return match ($sinif) {
+                'cok_tehlikeli' => 1.5,
+                'tehlikeli' => 1.25,
+                default => 1.0,
+            };
+        }
+
+        if ($calisan < 50) {
+            return match ($sinif) {
+                'cok_tehlikeli' => 2.0,
+                'tehlikeli' => 1.5,
+                default => 1.0,
+            };
+        }
+
+        return match ($sinif) {
+            'cok_tehlikeli' => 3.0,
+            'tehlikeli' => 2.0,
+            default => 1.5,
+        };
+    }
+
+    /**
+     * 2026 yılı 6331 m.26 taban idari para cezası referans tutarları (TL) — firmanın
+     * çalışan sayısı ve tehlike sınıfı çarpanı uygulanmış olarak döner.
+     */
+    public function ipcMaddeTutari(string $baslik): ?float
+    {
+        $tabanlar = [
+            'Risk Değerlendirmesi Yaptırmama' => ['tutar' => 88663, 'carpanli' => true],
+            'İSG Hizmeti Sağlamama' => ['tutar' => 147742, 'carpanli' => true],
+            'Acil Durum Planı Eksikliği' => ['tutar' => 29524, 'carpanli' => true],
+            'İş Kazası/Meslek Hastalığı Bildirim İhlali' => ['tutar' => 59095, 'carpanli' => true],
+            'Sağlık Gözetimi Yaptırmama' => ['tutar' => 29524, 'carpanli' => false],
+            'Eğitim / Bilgilendirme Eksikliği' => ['tutar' => 11977, 'carpanli' => false],
+            'Çalışan Temsilcisi / Kurul Eksikliği' => ['tutar' => 59095, 'carpanli' => true],
+            'Koruyucu / Önleyici Tedbir Eksikliği' => ['tutar' => 59095, 'carpanli' => true],
+            'Durdurma Kararına Uymama' => ['tutar' => 295890, 'carpanli' => true],
+        ];
+
+        if (! isset($tabanlar[$baslik])) {
+            return null;
+        }
+
+        $kalem = $tabanlar[$baslik];
+
+        return round($kalem['tutar'] * ($kalem['carpanli'] ? $this->ipcCarpani() : 1.0), 2);
+    }
+
+    public function hesaplananToplamIpc(): float
+    {
+        return round(
+            collect($this->ihlallerIpc)
+                ->sum(fn (array $i) => $this->ipcMaddeTutari($i['baslik'] ?? '') ?? 0),
+            2
+        );
+    }
+
+    public function yasalCezaTutariniUygula(): void
+    {
+        $toplam = $this->hesaplananToplamIpc();
+        if ($toplam > 0) {
+            $this->cezaTutari = $toplam;
+        }
+    }
+
     public function updatedFirmaId(): void
     {
         $this->kayitUnut();

@@ -9,6 +9,7 @@ use App\Models\IsEkipmaniKontrolu;
 use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
 use App\Filament\Support\ImzaSecenegi;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Support\EkipmanExcelIceAktarici;
 use App\Support\EkipmanKatalogu;
 use App\Support\EkipmanTebligPaketi;
 use App\Support\GunlukEkipmanKontrolUretici;
@@ -404,6 +405,63 @@ class PeriyodikKontrol extends Page
                         ->placeholder('Operatör ehliyeti zorunludur, çift halatlı tambur vb.'),
                 ])
                 ->action(fn (array $data) => $this->ekipmanKaydet($data)),
+
+            Action::make('ekipmanSablonIndir')
+                ->label('Excel Şablonu İndir')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => EkipmanExcelIceAktarici::sablonIndir()),
+
+            Action::make('ekipmanExcelYukle')
+                ->label('Excel ile Toplu Ekipman Ekle')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('Excel ile Toplu İş Ekipmanı Yükle')
+                ->modalDescription('İlk satır başlık kabul edilir. "Ekipman Adı / Tanımı" zorunludur; kategori veya tip belirtilmişse yasal standart ve periyot otomatik doldurulur. Seri No doluysa mevcut ekipman güncellenir.')
+                ->modalSubmitActionLabel('Yükle')
+                ->schema([
+                    FileUpload::make('dosya')
+                        ->label('Excel / CSV dosyası')
+                        ->disk('local')
+                        ->directory('excel-ice-aktarim')
+                        ->acceptedFileTypes([
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'application/vnd.ms-excel',
+                            'text/csv',
+                        ])
+                        ->required()
+                        ->helperText('Beklenen sütunlar: '.implode(', ', EkipmanExcelIceAktarici::SABLON_BASLIKLARI)),
+                ])
+                ->action(function (array $data): void {
+                    if (! $this->firma) {
+                        return;
+                    }
+
+                    $yol = Storage::disk('local')->path($data['dosya']);
+
+                    try {
+                        $sonuc = EkipmanExcelIceAktarici::iceAktar($yol, $this->firma);
+                    } catch (\Throwable $e) {
+                        Storage::disk('local')->delete($data['dosya']);
+                        Notification::make()->title('Dosya okunamadı')->body($e->getMessage())->danger()->send();
+
+                        return;
+                    }
+
+                    Storage::disk('local')->delete($data['dosya']);
+                    $this->listeyiYenile();
+
+                    $baslik = $sonuc['basarili'].' ekipman eklendi'.($sonuc['guncellenen'] > 0 ? ', '.$sonuc['guncellenen'].' ekipman güncellendi' : '');
+                    $bildirim = Notification::make()->title($baslik);
+
+                    if ($sonuc['hatalar']) {
+                        $bildirim->body(implode("\n", array_slice($sonuc['hatalar'], 0, 10)));
+                    }
+
+                    ($sonuc['basarili'] + $sonuc['guncellenen']) > 0 ? $bildirim->success()->send() : $bildirim->danger()->send();
+                }),
 
             Action::make('portfoy_excel')
                 ->label('Tüm Firmalar Excel')

@@ -49,6 +49,7 @@ class KontrolMerkezi extends Page
         'gunluk' => 'Günlük Akış',
         'firma' => 'Firma Asistanı',
         'calisan' => 'Çalışan Asistanı',
+        'hizli_evrak' => '⚡ Hızlı Evrak Matrisi',
     ];
 
     #[Url(as: 'sekme')]
@@ -163,6 +164,14 @@ class KontrolMerkezi extends Page
     public function ekipKontenjanTablosu(): array
     {
         return PortfoyKarne::ekipKontenjanTablosu(Filament::auth()->id(), $this->firmaId);
+    }
+
+    #[Computed]
+    public function hizliEvrakMatrisi(): ?array
+    {
+        return $this->secilenFirma
+            ? PortfoyKarne::hizliEvrakMatrisi($this->secilenFirma)
+            : null;
     }
 
     protected function getHeaderActions(): array

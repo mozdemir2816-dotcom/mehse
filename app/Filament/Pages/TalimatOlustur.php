@@ -108,6 +108,14 @@ class TalimatOlustur extends Page
 
     public string $taahhut = '';
 
+    public ?int $tebellugCalisanId = null;
+
+    public ?string $tebellugAdSoyad = null;
+
+    public ?string $tebellugGorev = null;
+
+    public ?string $canliImza = null;
+
     public function mount(): void
     {
         if ($firmaId = request()->integer('firma')) {
@@ -187,11 +195,28 @@ class TalimatOlustur extends Page
         return $this->firma?->talimatlar()->latest()->get() ?? collect();
     }
 
+    /** @return Collection<int, \App\Models\Calisan> */
+    #[Computed]
+    public function calisanlar(): Collection
+    {
+        return $this->firma?->calisanlar()->where('aktif', true)->orderBy('ad_soyad')->get() ?? collect();
+    }
+
     public function updatedFirmaId(): void
     {
         $this->kayitUnut();
 
-        unset($this->firma, $this->kayitliTalimatlar);
+        unset($this->firma, $this->kayitliTalimatlar, $this->calisanlar);
+        $this->tebellugCalisanId = null;
+        $this->tebellugAdSoyad = null;
+        $this->tebellugGorev = null;
+    }
+
+    public function updatedTebellugCalisanId(): void
+    {
+        $c = $this->tebellugCalisanId ? $this->calisanlar->firstWhere('id', $this->tebellugCalisanId) : null;
+        $this->tebellugAdSoyad = $c?->ad_soyad;
+        $this->tebellugGorev = $c?->gorev;
     }
 
     /*
@@ -644,7 +669,14 @@ class TalimatOlustur extends Page
                         $this->ciktiAlindi();   // aynı formun diğer çıktıları aynı belgeyi kullanır
                     }
 
-                    return $talimat ? TalimatUretici::pdf($talimat, ImzaSecenegi::secili($data), (int) ($data['tebellug_satiri'] ?? 0)) : null;
+                    $tebellugAlan = array_filter([
+                        'ad_soyad' => $this->tebellugAdSoyad,
+                        'gorev' => $this->tebellugGorev,
+                        'tarih' => ($this->tebellugAdSoyad || $this->canliImza) ? now()->format('d.m.Y') : null,
+                        'imza' => $this->canliImza,
+                    ]);
+
+                    return $talimat ? TalimatUretici::pdf($talimat, ImzaSecenegi::secili($data), (int) ($data['tebellug_satiri'] ?? 0), $tebellugAlan) : null;
                 }),
 
             Action::make('word')

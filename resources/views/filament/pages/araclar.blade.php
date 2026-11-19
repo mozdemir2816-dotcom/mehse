@@ -186,4 +186,54 @@
             kontrol edin.
         </p>
     </x-filament::section>
+
+    {{-- MEVZUATA SOR & İSG MEVZUAT DANIŞMANI --}}
+    <x-filament::section icon="heroicon-o-scale" icon-color="warning">
+        <x-slot name="heading">⚖️ Mevzuata Sor — İSG Mevzuat Danışmanı &amp; Kütüphanesi</x-slot>
+        <x-slot name="description">6331, 4857, 5510 sayılı kanunlar ve İSG yönetmeliklerindeki yasal süreler, kontenjanlar ve bildirim yükümlülükleri hakkında hızlı soru sorun.</x-slot>
+
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.65rem">
+            @foreach (\App\Support\GeminiMevzuatDanismani::HAZIR_SORULAR as $anahtar => $hazir)
+                <button type="button" wire:click="hazirSoruSor('{{ $anahtar }}')"
+                    style="font-size:.75rem;padding:.25rem .6rem;border-radius:999px;border:1px solid rgb(180 83 9 / .35);background:transparent;color:inherit;cursor:pointer;text-align:left">
+                    💬 {{ $hazir['soru'] }}
+                </button>
+            @endforeach
+        </div>
+
+        <div style="display:flex;gap:.75rem;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+                <label class="mehse-etiket">İSG Mevzuat Sorunuz</label>
+                <input type="text" placeholder="Örn: Risk değerlendirmesi kaç yılda bir yenilenir?" wire:model="mevzuatSoru" wire:keydown.enter="mevzuataSor" style="{{ $girdi }}">
+            </div>
+            <x-filament::button color="warning" wire:click="mevzuataSor">Mevzuata Sor</x-filament::button>
+            @if ($danismanYaniti || $mevzuatSoru !== '')
+                <x-filament::button size="sm" color="gray" wire:click="danismanTemizle">Temizle</x-filament::button>
+            @endif
+            <x-filament::button size="sm" color="gray" tag="a" :href="\App\Filament\Pages\Mevzuat::getUrl()">
+                Tüm Mevzuat Kütüphanesi →
+            </x-filament::button>
+        </div>
+
+        @if ($danismanYaniti)
+            <div style="{{ $kutu }};margin-top:1rem;border-color:rgb(180 83 9 / .35)">
+                <div style="font-weight:700;font-size:.84rem;color:{{ $turuncu }};margin-bottom:.35rem">📌 Mevzuat Danışmanı Yanıtı</div>
+                <div style="font-size:.85rem;line-height:1.55;white-space:pre-line">{{ $danismanYaniti }}</div>
+
+                @if ($danismanKaynaklari)
+                    <div style="margin-top:.65rem;padding-top:.55rem;border-top:1px dashed rgb(107 114 128 / .3)">
+                        <div style="font-size:.75rem;font-weight:700;color:rgb(107 114 128);margin-bottom:.3rem">İlgili Mevzuat Dayanakları:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+                            @foreach ($danismanKaynaklari as $k)
+                                <a href="{{ \App\Support\GeminiMevzuatDanismani::resmiMevzuatUrl($k['baslik']) }}" target="_blank" rel="noopener"
+                                    style="font-size:.74rem;padding:.15rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);text-decoration:none;color:inherit">
+                                    ⚖️ {{ $k['baslik'] }} ↗
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
+    </x-filament::section>
 </x-filament-panels::page>

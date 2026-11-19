@@ -17,8 +17,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class TalimatUretici
 {
-    /** @param  int  $tebellugSatiri  >0 ise sona elle doldurulacak çok kişilik tebellüğ imza listesi eklenir */
-    public static function pdf(Talimat $talimat, bool $imzali = true, int $tebellugSatiri = 0): StreamedResponse
+    /**
+     * @param  int  $tebellugSatiri  >0 ise sona elle doldurulacak çok kişilik tebellüğ imza listesi eklenir
+     * @param  array{ad_soyad?: ?string, gorev?: ?string, tarih?: ?string, imza?: ?string}  $tebellugAlan
+     */
+    public static function pdf(Talimat $talimat, bool $imzali = true, int $tebellugSatiri = 0, array $tebellugAlan = []): StreamedResponse
     {
         $talimat->loadMissing('firma.igu', 'firma.user');
 
@@ -29,6 +32,7 @@ class TalimatUretici
             'tebligEden' => self::tebligEden($talimat->firma),
             'imzali' => $imzali,
             'tebellugSatiri' => max(0, min(60, $tebellugSatiri)),
+            'tebellugAlan' => $tebellugAlan,
         ])->setPaper('a4');
 
         return response()->streamDownload(fn () => print ($pdf->output()), self::dosyaAdi($talimat, 'pdf'));

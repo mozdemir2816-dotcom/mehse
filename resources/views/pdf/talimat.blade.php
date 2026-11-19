@@ -119,10 +119,13 @@
         </td>
         <td>
             <div class="rol">TEBELLÜĞ EDEN</div>
-            <div class="satir">Ad Soyad :</div>
-            <div class="satir">Görevi :</div>
-            <div class="satir">Tarih :</div>
+            <div class="satir">Ad Soyad : {{ $tebellugAlan['ad_soyad'] ?? '' }}</div>
+            <div class="satir">Görevi : {{ $tebellugAlan['gorev'] ?? '' }}</div>
+            <div class="satir">Tarih : {{ $tebellugAlan['tarih'] ?? '' }}</div>
             <div class="satir">İmza :</div>
+            @if (! empty($tebellugAlan['imza'] ?? null))
+                <div><img src="{{ $tebellugAlan['imza'] }}"></div>
+            @endif
         </td>
     </tr>
 </table>
