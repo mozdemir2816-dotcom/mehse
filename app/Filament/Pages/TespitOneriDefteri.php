@@ -442,4 +442,72 @@ class TespitOneriDefteri extends Page
 
         Notification::make()->title($eklenen.' bugünkü bulgu deftere eklendi')->success()->send();
     }
+
+    /** Katalogdaki yüksek öncelikli temel yasal maddelerden defterde olmayan ilk 5 tanesini tek tıkla ekler. */
+    public function temelTespitleriEkle(): void
+    {
+        $d = $this->defter();
+        if (! $d) {
+            return;
+        }
+
+        $mevcutTespitler = collect($d->maddeler ?? [])->pluck('tespit')->all();
+
+        $adaylar = collect(config('isg.tespit_oneri.katalog', []))
+            ->flatten(1)
+            ->reject(fn (array $m) => in_array($m['tespit'], $mevcutTespitler, true))
+            ->sortByDesc(fn (array $m) => ($m['oncelik'] ?? 'orta') === 'yuksek' ? 1 : 0)
+            ->take(5)
+            ->map(fn (array $m) => [
+                'tespit' => $m['tespit'],
+                'oneri' => $m['oneri'] ?? '',
+                'dayanak' => $m['dayanak'] ?? '6331 Sayılı İSG Kanunu',
+                'oncelik' => $m['oncelik'] ?? 'yuksek',
+                'foto_yolu' => null,
+            ])
+            ->values()
+            ->all();
+
+        if ($adaylar === []) {
+            Notification::make()->title('Temel katalog maddeleri zaten defterde mevcut')->warning()->send();
+
+            return;
+        }
+
+        $d->update(['maddeler' => [...($d->maddeler ?? []), ...$adaylar]]);
+        unset($this->defter);
+
+        Notification::make()->title(count($adaylar).' temel yasal tespit ve öneri maddesi eklendi')->success()->send();
+    }
+
+    /** Onaylı defterdeki maddeleri DÖF Oluştur modülüne aktarır. */
+    public function dofModuluneAktar()
+    {
+        $d = $this->defter();
+        if (! $d || ! $this->firma || empty($d->maddeler)) {
+            Notification::make()->title('Aktarılacak defter maddesi bulunamadı')->warning()->send();
+
+            return null;
+        }
+
+        $maddeler = collect($d->maddeler)->map(fn (array $m) => [
+            'tespit' => $m['tespit'],
+            'oncelik' => ($m['oncelik'] ?? 'orta') === 'yuksek' ? 'yuksek' : 'orta',
+            'oneri' => $m['oneri'] ?? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI,
+            'sorumlu' => $this->firma->isveren_vekili ?: $this->firma->isveren_ad,
+            'termin' => now()->addDays(15)->toDateString(),
+            'durum' => 'acik',
+            'foto_yolu' => $m['foto_yolu'] ?? null,
+        ])->values()->all();
+
+        session([
+            'dof_aktarim' => [
+                'firma_id' => $this->firma->id,
+                'kaynak' => 'Tespit ve Öneri Defteri',
+                'maddeler' => $maddeler,
+            ],
+        ]);
+
+        return redirect(DofOlustur::getUrl(['firma' => $this->firma->id]));
+    }
 }

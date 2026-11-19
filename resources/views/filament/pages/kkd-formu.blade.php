@@ -52,6 +52,18 @@
             </x-slot>
 
             @if ($this->calisanlar->isNotEmpty())
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem">
+                    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                        <x-filament::button size="xs" color="info" wire:click="tumCalisanlariSec">+ Tüm Çalışanları Seç</x-filament::button>
+                        @if ($secilenCalisanIdler)
+                            <x-filament::button size="xs" color="gray" wire:click="$set('secilenCalisanIdler', [])">Seçimi Temizle</x-filament::button>
+                        @endif
+                    </div>
+                    <label style="display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;cursor:pointer">
+                        <input type="checkbox" wire:model="tcGizli">
+                        🔒 T.C. Kimlik No Maskele (KVKK)
+                    </label>
+                </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.35rem;margin-bottom:.75rem">
                     @foreach ($this->calisanlar as $c)
                         @php $secili = in_array($c->id, $secilenCalisanIdler, true); @endphp
@@ -136,7 +148,14 @@
                 </div>
             @endif
 
-            <div style="margin-bottom:.75rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+                <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                    <span style="font-size:.76rem;font-weight:700;color:rgb(107 114 128)">Sektör Önerisiyle Hızlı Seç:</span>
+                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('insaat')">🏗️ Yapı / İnşaat</x-filament::button>
+                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('uretim')">⚙️ Metal / Üretim</x-filament::button>
+                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('kimya')">🧪 Kimyasal / Boyahane</x-filament::button>
+                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('depo')">📦 Depo / Lojistik</x-filament::button>
+                </div>
                 <x-filament::button size="xs" color="gray" wire:click="kkdSecimiTemizle">Temizle</x-filament::button>
             </div>
 

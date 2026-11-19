@@ -309,6 +309,13 @@ class IsKazasiRaporu extends Page
         return $this->firma?->isKazasiRaporlari()->latest('kaza_tarihi')->latest()->get() ?? collect();
     }
 
+    /** Sayfa içi canlı 12 kırılımlı kaza istatistikleri. */
+    #[Computed]
+    public function canliIstatistikler(): array
+    {
+        return IsKazasiIstatistikUretici::hesapla($this->firma, (int) Filament::auth()->id());
+    }
+
     public function updatedFirmaId(): void
     {
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
@@ -378,6 +385,152 @@ class IsKazasiRaporu extends Page
         }
 
         Notification::make()->title('Balık kılçığı 5N ve kök nedenlerden dolduruldu — düzenleyin')->success()->send();
+    }
+
+    /** Kaza özetinden ve kaza türünden 5 Neden (5 Whys) adımlarını ve kök neden kategorilerini otomatik doldurur. */
+    public function besNedenOtomatikDoldur(): void
+    {
+        $tanim = trim((string) $this->kazaTanimi);
+        $turEtiket = $this->kazaTuru ? ($this->kazaTurleri[$this->kazaTuru] ?? $this->kazaTuru) : 'İş kazası / olay';
+
+        if ($tanim === '' && ! $this->kazaTuru) {
+            Notification::make()->title('Önce 1. bölümde Kaza Türü veya Kaza Özeti girin')->warning()->send();
+
+            return;
+        }
+
+        $kucuk = mb_strtolower($tanim.' '.$turEtiket, 'UTF-8');
+
+        if (str_contains($kucuk, 'düşme') || str_contains($kucuk, 'kayma') || str_contains($kucuk, 'iskele') || str_contains($kucuk, 'merdiven')) {
+            $this->besNeden = [
+                'Çalışan çalışma alanında dengesini kaybederek / zeminde kayarak veya yüksekten düşmüştür.',
+                'Çalışma zemininde kayganlık / seviye farkı bulunması veya toplu koruma (korkuluk) önleminin eksik olması.',
+                'Çalışma öncesi zemin/platform kontrolünün yapılmaması ve emniyet kemeri / kaymaz tabanlı KKD kullanılmaması.',
+                'Bölümde periyodik saha kontrol listesinin (checklist) uygulanmaması ve gözetim eksikliği.',
+                'Yüksekte çalışma / zemin güvenliği prosedürünün ve işbaşı pratik denetim sisteminin yetersiz olması.',
+            ];
+        } elseif (str_contains($kucuk, 'makine') || str_contains($kucuk, 'sıkışma') || str_contains($kucuk, 'kesilme') || str_contains($kucuk, 'pres')) {
+            $this->besNeden = [
+                'Çalışanın eli / uzvu makinenin hareketli veya kesici aksamı ile temas etmiştir.',
+                'Makine koruyucu muhafazasının devre dışı/açık olması veya operasyon noktasına enerjili müdahale edilmesi.',
+                'Arıza/sıkışma giderme sırasında LOTO (Kilitleme-Etiketleme) ve enerji kesme kuralına uyulmaması.',
+                'Operatöre makineye özgü güvenli müdahale eğitiminin ve saha gözetiminin yeterince verilmemesi.',
+                'Makine emniyet svici/koruyucu periyodik kontrolü ile LOTO prosedürü denetim mekanizmasının eksikliği.',
+            ];
+        } elseif (str_contains($kucuk, 'elektrik') || str_contains($kucuk, 'çarpması') || str_contains($kucuk, 'kablo')) {
+            $this->besNeden = [
+                'Çalışan enerjili iletken veya kaçak akım bulunan ekipman yüzeyi ile temas etmiştir.',
+                'Kablo izolasyonunun hasarlı olması veya gövde topraklaması / kaçak akım rölesinin (30 mA) çalışmaması.',
+                'Hasarlı seyyar kablo veya ekipmanın kullanım öncesi görsel kontrol yapılmadan devreye alınması.',
+                'Elektrikli el aletleri ve panoların periyodik bakım/kontrol takibinin aksaması.',
+                'Elektrik güvenliği, LOTO ve kullanım öncesi ekipman kontrol sisteminin sahada etkin işletilmemesi.',
+            ];
+        } else {
+            $ozetKisa = $tanim !== '' ? \Illuminate\Support\Str::limit($tanim, 110) : $turEtiket;
+            $this->besNeden = [
+                "Olay gerçekleşmiştir: {$ozetKisa}",
+                'Çalışma alanında tehlikeli durumun / güvensiz hareketin zamanında fark edilmemesi ve koruyucu bariyer eksikliği.',
+                'İş öncesi tehlike kontrolünün yapılmaması ve güvenli çalışma talimatı / KKD kurallarına tam uyulmaması.',
+                'Saha gözetimi, işbaşı pratik bilgilendirme ve periyodik kontrol takibinin yetersiz kalması.',
+                'İşe özgü risk değerlendirmesi (JSA) ve proaktif saha denetim/kontrol kültürünün tam yerleşmemiş olması.',
+            ];
+        }
+
+        if ($this->kokNedenKategorileri === []) {
+            $tumAnahtarlar = array_keys($this->kokNedenSecenekleri);
+            $this->kokNedenKategorileri = array_slice($tumAnahtarlar, 0, min(3, count($tumAnahtarlar)));
+        }
+
+        Notification::make()->title('5 Neden analizi kaza özetine göre dolduruldu')->body('Maddeleri olaya göre gözden geçirip düzenleyebilirsiniz.')->success()->send();
+    }
+
+    /** 5 Neden ve Balık Kılçığı bulgularından otomatik DÖF aksiyonları oluşturur. */
+    public function kokNedenlerdenDofUret(): void
+    {
+        $kok5 = trim((string) ($this->besNeden[4] ?? ''));
+        $kok4 = trim((string) ($this->besNeden[3] ?? ''));
+        $hedef14 = now()->addDays(14)->toDateString();
+        $hedef30 = now()->addDays(30)->toDateString();
+        $sorumlu = $this->firma?->isveren_vekili ?: ($this->firma?->isveren_ad ?: 'Bölüm / Üretim Sorumlusu');
+
+        $yeni = [];
+
+        if ($kok5 !== '') {
+            $yeni[] = [
+                'tip' => 'teknik',
+                'sorumlu' => $sorumlu,
+                'aciklama' => "Kök nedenin ortadan kaldırılması ({$kok5}): İlgili ekipman/alan güvenlik tedbirlerinin tamamlanması ve doğrulama kontrolünün yapılması.",
+                'hedef_tarih' => $hedef14,
+                'durum' => 'acik',
+            ];
+        }
+
+        if ($kok4 !== '') {
+            $yeni[] = [
+                'tip' => 'idari',
+                'sorumlu' => $sorumlu,
+                'aciklama' => "Gözetim ve prosedür iyileştirmesi ({$kok4}): Bölüm çalışanlarına olay dersleri (toolbox) eğitimi verilmesi ve günlük kontrol listesinin uygulanması.",
+                'hedef_tarih' => $hedef30,
+                'durum' => 'acik',
+            ];
+        }
+
+        if ($yeni === []) {
+            $yeni[] = [
+                'tip' => 'teknik',
+                'sorumlu' => $sorumlu,
+                'aciklama' => 'Kaza mahallindeki teknik uygunsuzluğun giderilmesi, güvenli çalışma talimatının güncellenmesi ve bölüm çalışanlarına kaza kök neden bilgilendirmesi yapılması.',
+                'hedef_tarih' => $hedef14,
+                'durum' => 'acik',
+            ];
+        }
+
+        $this->dofMaddeleri = [...$this->dofMaddeleri, ...$yeni];
+
+        Notification::make()->title(count($yeni).' DÖF aksiyonu kök nedenlerden üretildi')->success()->send();
+    }
+
+    /** Kayıtlı iş kazası raporundaki DÖF maddelerini DÖF Oluştur modülüne aktarır. */
+    public function dofModuluneAktar(int $id)
+    {
+        $r = $this->firma?->isKazasiRaporlari()->find($id);
+        if (! $r || ! $this->firma) {
+            return null;
+        }
+
+        $maddeler = collect($r->dof_maddeleri ?? [])
+            ->filter(fn (array $d) => filled(trim((string) ($d['aciklama'] ?? ''))))
+            ->map(fn (array $d) => [
+                'tespit' => "İş Kazası ({$r->belge_no} — {$r->kazazede_ad_soyad}): ".($r->kaza_tanimi ?: 'Kaza sonrası düzeltici faaliyet'),
+                'oncelik' => 'yuksek',
+                'oneri' => $d['aciklama'],
+                'sorumlu' => $d['sorumlu'] ?? ($this->firma->isveren_vekili ?: $this->firma->isveren_ad),
+                'termin' => $d['hedef_tarih'] ?? now()->addDays(14)->toDateString(),
+                'durum' => ($d['durum'] ?? 'acik') === 'tamamlandi' ? 'tamamlandi' : 'acik',
+            ])
+            ->values()
+            ->all();
+
+        if ($maddeler === []) {
+            $maddeler[] = [
+                'tespit' => "İş Kazası ({$r->belge_no} — {$r->kazazede_ad_soyad}): ".($r->kaza_tanimi ?: 'Kaza incelemesi'),
+                'oncelik' => 'yuksek',
+                'oneri' => $r->kaza_nedeni ?: 'Kaza kök nedenine yönelik teknik ve idari önlemlerin alınması.',
+                'sorumlu' => $this->firma->isveren_vekili ?: $this->firma->isveren_ad,
+                'termin' => now()->addDays(14)->toDateString(),
+                'durum' => 'acik',
+            ];
+        }
+
+        session([
+            'dof_aktarim' => [
+                'firma_id' => $this->firma->id,
+                'kaynak' => 'İş Kazası Raporu ('.$r->belge_no.')',
+                'maddeler' => $maddeler,
+            ],
+        ]);
+
+        return redirect(DofOlustur::getUrl(['firma' => $this->firma->id]));
     }
 
     /*

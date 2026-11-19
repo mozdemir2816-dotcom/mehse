@@ -303,26 +303,61 @@
 
     {{-- ==================== FİRMALAR ==================== --}}
     @if ($sekme === 'firmalar')
+        @php
+            $toplamIguDk = 0;
+            $toplamHekimDk = 0;
+            $toplamDspDk = 0;
+            foreach ($this->firmalar as $f) {
+                $dk = $this->firmaYasalDakika($f);
+                $toplamIguDk += $dk['igu_dk'];
+                $toplamHekimDk += $dk['hekim_dk'];
+                $toplamDspDk += $dk['dsp_dk'];
+            }
+        @endphp
         <div style="{{ $kutu }};overflow-x:auto">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
-                <div style="font-weight:700">Firmalarım ({{ $this->firmalar->count() }})</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;margin-bottom:.75rem">
+                <div>
+                    <div style="font-weight:700">Firmalarım ({{ $this->firmalar->count() }}) — İSG-KATİP Aylık Yasal Hizmet Süreleri</div>
+                    <div style="font-size:.78rem;color:rgb(95 87 112)">
+                        Toplam İGU: <strong>{{ $say($toplamIguDk) }} dk ({{ round($toplamIguDk / 60, 1) }} saat/ay)</strong>
+                        &nbsp;·&nbsp; İşyeri Hekimi: <strong>{{ $say($toplamHekimDk) }} dk ({{ round($toplamHekimDk / 60, 1) }} saat/ay)</strong>
+                        @if ($toplamDspDk > 0)
+                            &nbsp;·&nbsp; DSP: <strong>{{ $say($toplamDspDk) }} dk ({{ round($toplamDspDk / 60, 1) }} saat/ay)</strong>
+                        @endif
+                    </div>
+                </div>
                 <x-filament::button size="xs" tag="a" :href="\App\Filament\Resources\Firmas\FirmaResource::getUrl()">Firmalar sayfası →</x-filament::button>
             </div>
-            <table style="width:100%;border-collapse:collapse;font-size:.83rem">
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
                 <thead><tr style="text-align:left;color:rgb(95 87 112)">
-                    <th style="padding:.4rem">Firma</th><th style="padding:.4rem">SGK Sicil</th>
-                    <th style="padding:.4rem">Çalışan</th><th style="padding:.4rem">Tehlike Sınıfı</th>
+                    <th style="padding:.4rem">Firma</th>
+                    <th style="padding:.4rem">SGK Sicil</th>
+                    <th style="padding:.4rem;text-align:right">Çalışan</th>
+                    <th style="padding:.4rem">Tehlike Sınıfı</th>
+                    <th style="padding:.4rem;text-align:right">İGU (Dk/Ay)</th>
+                    <th style="padding:.4rem;text-align:right">Hekim (Dk/Ay)</th>
+                    <th style="padding:.4rem;text-align:right">DSP (Dk/Ay)</th>
+                    <th style="padding:.4rem;text-align:right">Risk Bildirim QR</th>
                 </tr></thead>
                 <tbody>
                 @forelse ($this->firmalar as $f)
+                    @php $dk = $this->firmaYasalDakika($f); @endphp
                     <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                         <td style="padding:.4rem;font-weight:600">{{ $f->unvan }}</td>
                         <td style="padding:.4rem">{{ $f->sgk_sicil_no ?: '—' }}</td>
-                        <td style="padding:.4rem">{{ $f->calisanlar_count ?: $f->calisan_sayisi }}</td>
+                        <td style="padding:.4rem;text-align:right;font-variant-numeric:tabular-nums">{{ $dk['calisan'] }}</td>
                         <td style="padding:.4rem"><x-filament::badge>{{ $f->tehlikeSinifiEtiketi() }}</x-filament::badge></td>
+                        <td style="padding:.4rem;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">{{ $say($dk['igu_dk']) }} dk</td>
+                        <td style="padding:.4rem;text-align:right;font-variant-numeric:tabular-nums">{{ $say($dk['hekim_dk']) }} dk</td>
+                        <td style="padding:.4rem;text-align:right;font-variant-numeric:tabular-nums">{{ $dk['dsp_dk'] > 0 ? $say($dk['dsp_dk']).' dk' : '—' }}</td>
+                        <td style="padding:.4rem;text-align:right;white-space:nowrap">
+                            <x-filament::button size="xs" color="gray" wire:click="firmaRiskQrIndir({{ $f->id }})" title="Sahadan Risk & Tehlike Bildirim QR Posteri (PDF)">
+                                📱 Risk QR
+                            </x-filament::button>
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" style="padding:1rem;text-align:center;color:rgb(95 87 112)">Henüz firma eklenmemiş.</td></tr>
+                    <tr><td colspan="8" style="padding:1rem;text-align:center;color:rgb(95 87 112)">Henüz firma eklenmemiş.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -506,9 +541,13 @@
                     <tr style="border-top:1px solid rgb(128 116 148 / .15)">
                         <td style="padding:.35rem;font-weight:600;position:sticky;left:0;background:inherit">{{ $satir['firma']->unvan }}</td>
                         @foreach ($this->firmaTakipKriterleri as $k)
-                            @php $var = $satir['hucreler'][$k['anahtar']]; $renk = $var ? $yesil : ($k['takip'] ? 'rgb(95 87 112)' : ($k['hazir'] ? $kirmizi : 'rgb(239 68 68 / .55)')); @endphp
-                            <td style="padding:.35rem;text-align:center;color:{{ $renk }}" title="{{ $k['hazir'] ? 'Gerçek modül' : 'Henüz modül yok' }}">
-                                {{ $var ? '✓' : ($k['takip'] ? '–' : '✗') }}
+                            @php
+                                $var = $satir['hucreler'][$k['anahtar']];
+                                $kurulMuaf = $k['anahtar'] === 'isg_kurulu' && (int) $satir['firma']->calisan_sayisi < 50;
+                                $renk = $kurulMuaf ? 'rgb(95 87 112)' : ($var ? $yesil : ($k['takip'] ? 'rgb(95 87 112)' : ($k['hazir'] ? $kirmizi : 'rgb(239 68 68 / .55)')));
+                            @endphp
+                            <td style="padding:.35rem;text-align:center;color:{{ $renk }}" title="{{ $kurulMuaf ? '50 altı çalışan — İSG Kurulu zorunlu değil (Muaf)' : ($k['hazir'] ? 'Gerçek modül' : 'Henüz modül yok') }}">
+                                {{ $kurulMuaf ? 'Muaf' : ($var ? '✓' : ($k['takip'] ? '–' : '✗')) }}
                             </td>
                         @endforeach
                         <td style="padding:.35rem;text-align:center;font-weight:700">%{{ $satir['oran'] }}</td>

@@ -9,6 +9,7 @@ use App\Models\EgitimTuru;
 use App\Models\Firma;
 use App\Models\FirmaChecklistVadesi;
 use App\Support\EgitimKayitExcelIceAktarici;
+use App\Support\FirmaRiskBildirimQrUretici;
 use App\Support\PortfoyExcelPanosuUretici;
 use App\Support\PortfoyKarne;
 use App\Support\RaporKayitlari;
@@ -218,6 +219,46 @@ class Profilim extends Page
             ->withCount('calisanlar')
             ->orderBy('unvan')
             ->get();
+    }
+
+    /**
+     * Bir firmanın tehlike sınıfı ve çalışan sayısına göre aylık yasal asgari
+     * İGU, İşyeri Hekimi ve DSP hizmet sürelerini (dakika/ay) hesaplar.
+     *
+     * @return array{calisan: int, igu_dk: int, hekim_dk: int, dsp_dk: int}
+     */
+    public function firmaYasalDakika(Firma $f): array
+    {
+        $calisan = max((int) ($f->calisanlar_count ?? 0), (int) $f->calisan_sayisi);
+        $sinif = $f->tehlike_sinifi;
+
+        $iguBirim = match ($sinif) {
+            'cok_tehlikeli' => 40,
+            'tehlikeli' => 20,
+            default => 10,
+        };
+        $hekimBirim = match ($sinif) {
+            'cok_tehlikeli' => 15,
+            'tehlikeli' => 10,
+            default => 5,
+        };
+        $dspBirim = ($sinif === 'cok_tehlikeli' && $calisan >= 10)
+            ? ($calisan < 50 ? 10 : ($calisan < 250 ? 15 : 20))
+            : 0;
+
+        return [
+            'calisan' => $calisan,
+            'igu_dk' => $calisan * $iguBirim,
+            'hekim_dk' => $calisan * $hekimBirim,
+            'dsp_dk' => $calisan * $dspBirim,
+        ];
+    }
+
+    public function firmaRiskQrIndir(int $firmaId)
+    {
+        $firma = Firma::where('user_id', Filament::auth()->id())->find($firmaId);
+
+        return $firma ? FirmaRiskBildirimQrUretici::pdf($firma) : null;
     }
 
     #[Computed]

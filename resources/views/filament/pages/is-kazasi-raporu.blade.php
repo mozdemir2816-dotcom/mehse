@@ -23,6 +23,61 @@
         </select>
     </x-filament::section>
 
+    {{-- CANLI KAZA İSTATİSTİKLERİ (6 KPI + 12 OTOMATİK KIRILIM TABLOSU) --}}
+    @php
+        $ist = $this->canliIstatistikler;
+        $istKpi = $ist['kpi'];
+    @endphp
+    <details style="border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.85rem 1rem">
+        <summary style="cursor:pointer;font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+            <span>📊 Kaza İstatistikleri &amp; 12 Kırılım Analizi ({{ $this->firma ? $this->firma->unvan : 'Tüm Portföy' }} — {{ $istKpi['toplam'] }} Kayıt · {{ $istKpi['kayip_gun'] }} Kayıp Gün)</span>
+            <span style="font-size:.76rem;color:{{ $kirmizi }}">Tabloları Göster / Gizle ▾</span>
+        </summary>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.55rem;margin-top:.75rem">
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.55rem;text-align:center">
+                <div style="font-size:1.25rem;font-weight:800">{{ $istKpi['toplam'] }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">Toplam Kaza / Olay</div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.55rem;text-align:center">
+                <div style="font-size:1.25rem;font-weight:800;color:{{ $kirmizi }}">{{ $istKpi['kayip_gun'] }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">Toplam Kayıp Gün</div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.55rem;text-align:center">
+                <div style="font-size:1.25rem;font-weight:800;color:#d97706">{{ $istKpi['ramak_kala'] }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">Kayıp Günsüz / Hafif</div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.55rem;text-align:center">
+                <div style="font-size:1.25rem;font-weight:800;color:#991b1b">{{ $istKpi['agir_kaza'] }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">Ağır / 15+ Gün Kayıp</div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.55rem;text-align:center">
+                <div style="font-size:1.25rem;font-weight:800;color:#16a34a">{{ $istKpi['sgk_bildirilen'] }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">SGK Bildirimi Yapılan</div>
+            </div>
+            <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.55rem;text-align:center">
+                <div style="font-size:1.25rem;font-weight:800;color:#2563eb">{{ $istKpi['acik_dof'] }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">Açık DÖF Aksiyonu</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.65rem;margin-top:.75rem">
+            @foreach ($ist['kirilimlar'] as $kr)
+                <div style="border:1px solid rgb(107 114 128 / .22);border-radius:.5rem;padding:.55rem .7rem">
+                    <div style="font-weight:700;font-size:.78rem;margin-bottom:.3rem">{{ $kr['baslik'] }}</div>
+                    @forelse ($kr['satirlar'] as $etiket => $adet)
+                        <div style="display:flex;justify-content:space-between;font-size:.76rem;padding:.15rem 0;border-top:1px solid rgb(107 114 128 / .12)">
+                            <span>{{ $etiket }}</span>
+                            <strong>{{ $adet }}</strong>
+                        </div>
+                    @empty
+                        <div style="font-size:.74rem;color:rgb(107 114 128);font-style:italic">Veri yok</div>
+                    @endforelse
+                </div>
+            @endforeach
+        </div>
+    </details>
+
     @if ($this->firma)
         {{-- 1. GENEL BİLGİLER --}}
         <x-filament::section icon="heroicon-o-clipboard-document" icon-color="danger">
@@ -145,6 +200,12 @@
             <x-slot name="heading">2. Kök Neden Analizi (5 Neden)</x-slot>
             <x-slot name="description">Her soruyu yanıtlayarak kök nedene ulaşın. Görünür neden "tedbirsizlik" gibi durabilir; kök neden sistemdedir.</x-slot>
 
+            <div style="margin-bottom:.75rem">
+                <x-filament::button size="xs" color="warning" icon="heroicon-o-sparkles" wire:click="besNedenOtomatikDoldur">
+                    ✨ Kaza Özetinden 5 Neden &amp; Kök Nedenleri Otomatik Doldur
+                </x-filament::button>
+            </div>
+
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.9rem">
                 @foreach ($this->besNedenSorulari as $i => $soru)
                     <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.7rem">
@@ -215,6 +276,12 @@
         <x-filament::section icon="heroicon-o-wrench" icon-color="success">
             <x-slot name="heading">4. Düzeltici ve Önleyici Faaliyetler (DÖF)</x-slot>
             <x-slot name="description">Her kök neden için en az bir düzeltici faaliyet tanımlayın. Sorumlu kişi ve hedef tarih belirlemeyi unutmayın.</x-slot>
+
+            <div style="margin-bottom:.75rem">
+                <x-filament::button size="xs" color="success" icon="heroicon-o-sparkles" wire:click="kokNedenlerdenDofUret">
+                    ✨ Kök Nedenlerden Otomatik DÖF Aksiyonu Üret
+                </x-filament::button>
+            </div>
 
             @foreach ($dofMaddeleri as $i => $d)
                 <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.5rem;padding:.7rem;margin-bottom:.6rem">
@@ -331,6 +398,7 @@
                             <td class="mehse-td">{{ $k->kazazede_ad_soyad }} — {{ $k->kaza_tarihi?->format('d.m.Y') }}</td>
                             <td class="mehse-td">{{ $k->durumEtiketi() }}</td>
                             <td style="padding:.35rem .5rem;text-align:right;white-space:nowrap">
+                                <x-filament::button size="xs" color="success" wire:click="dofModuluneAktar({{ $k->id }})" title="Bu kazanın DÖF maddelerini DÖF Oluştur modülüne aktar">📤 DÖF'e Aktar</x-filament::button>
                                 <x-filament::button size="xs" color="warning" wire:click="kurulGundemineEkle({{ $k->id }})" title="İSG Kurulu toplantı gündemine ekle">📋 Kurul Gündemine Ekle</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="duzenle({{ $k->id }})">Düzenle</x-filament::button>
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $k->id }})">PDF</x-filament::button>

@@ -61,6 +61,8 @@ class KkdFormu extends Page
 
     public ?string $canliImza = null;
 
+    public bool $tcGizli = false;
+
     /** @var array<int, int> */
     public array $secilenCalisanIdler = [];
 
@@ -185,6 +187,11 @@ class KkdFormu extends Page
             : [...$this->secilenCalisanIdler, $id];
     }
 
+    public function tumCalisanlariSec(): void
+    {
+        $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
+    }
+
     public function manuelCalisanEkle(): void
     {
         if (blank($this->manuelAdSoyad)) {
@@ -232,6 +239,34 @@ class KkdFormu extends Page
     public function kkdSecimiTemizle(): void
     {
         $this->secilenKkdler = [];
+    }
+
+    /** Sektöre veya tehlike sınıfına göre hazır EN standartlı KKD setini tek tıkla seçer. */
+    public function sektorKkdPaketiUygula(string $paket): void
+    {
+        $kelimeler = match ($paket) {
+            'insaat' => ['baret', 'gözlük', 'yelek', 'kemer', 'eldiven', 'ayakkabı', 'bot', 'toz maskesi'],
+            'uretim' => ['gözlük', 'kulak', 'eldiven', 'ayakkabı', 'baret'],
+            'kimya' => ['gözlük', 'siper', 'maske', 'kimyasal', 'eldiven', 'önlük', 'çizme', 'ayakkabı'],
+            'depo' => ['baret', 'yelek', 'eldiven', 'ayakkabı'],
+            default => ['gözlük', 'eldiven', 'ayakkabı'],
+        };
+
+        $secilen = [];
+        foreach ($this->kategoriler() as $katAnahtar => $kategori) {
+            foreach ($kategori['maddeler'] ?? [] as $m) {
+                $adKucuk = mb_strtolower($m['ad'], 'UTF-8');
+                foreach ($kelimeler as $k) {
+                    if (str_contains($adKucuk, $k)) {
+                        $secilen[] = $katAnahtar.'|'.$m['ad'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        $this->secilenKkdler = array_values(array_unique([...$this->secilenKkdler, ...$secilen]));
+        Notification::make()->title(count($this->secilenKkdler).' KKD kalemi seçildi')->success()->send();
     }
 
     /**
@@ -314,6 +349,17 @@ class KkdFormu extends Page
             ->all();
 
         $liste = [...$firmaCalisanlari, ...$manuel];
+
+        if ($this->tcGizli) {
+            $liste = array_map(function (array $c): array {
+                $tc = trim((string) ($c['tc'] ?? ''));
+                if (strlen($tc) >= 7) {
+                    $c['tc'] = substr($tc, 0, 3).'*****'.substr($tc, -3);
+                }
+
+                return $c;
+            }, $liste);
+        }
 
         if ($this->canliImza && count($liste) === 1) {
             $liste[0]['imza'] = $this->canliImza;

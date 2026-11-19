@@ -367,4 +367,37 @@
             </div>
         @endif
     </x-filament::section>
+
+    {{-- İSG TERİMLER SÖZLÜĞÜ --}}
+    <x-filament::section icon="heroicon-o-book-open" icon-color="warning" collapsible>
+        <x-slot name="heading">📖 İSG Terimler Sözlüğü ({{ count(\App\Support\IsgSozlukKutuphanesi::tumu()) }} Temel Kavram)</x-slot>
+        <x-slot name="description">Risk analizlerinde, ortam ölçümlerinde, kimyasal yönetiminde ve İSG mevzuatında geçen teknik terimlerin pratik açıklamaları.</x-slot>
+
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.65rem">
+            <x-filament::button size="xs" :color="$sozlukKategori === '' ? 'warning' : 'gray'" wire:click="$set('sozlukKategori', '')">Tümü</x-filament::button>
+            @foreach (\App\Support\IsgSozlukKutuphanesi::KATEGORILER as $katAnahtar => $katEtiket)
+                <x-filament::button size="xs" :color="$sozlukKategori === $katAnahtar ? 'warning' : 'gray'" wire:click="$set('sozlukKategori', '{{ $katAnahtar }}')">{{ $katEtiket }}</x-filament::button>
+            @endforeach
+        </div>
+
+        <input type="text" placeholder="Terim veya açıklama ara (Örn: LOTO, Fine-Kinney, TWA, Ramak Kala, ATEX, EK-2...)"
+            wire:model.live.debounce.300ms="sozlukArama" style="{{ $girdi }};margin-bottom:.75rem">
+
+        @php $sozlukKayitlari = $this->sozlukSonuclari(); @endphp
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:.65rem;max-height:420px;overflow-y:auto;padding-right:.25rem">
+            @forelse ($sozlukKayitlari as $t)
+                <div style="{{ $kutu }}">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem">
+                        <span style="font-weight:700;font-size:.86rem;color:{{ $turuncu }}">{{ $t['terim'] }}</span>
+                        <span style="font-size:.68rem;padding:.1rem .45rem;border-radius:999px;background:rgb(107 114 128 / .14);color:rgb(107 114 128);white-space:nowrap">
+                            {{ \App\Support\IsgSozlukKutuphanesi::KATEGORILER[$t['kategori']] ?? $t['kategori'] }}
+                        </span>
+                    </div>
+                    <div style="font-size:.8rem;color:rgb(107 114 128);margin-top:.3rem;line-height:1.45">{{ $t['aciklama'] }}</div>
+                </div>
+            @empty
+                <div style="font-size:.82rem;color:rgb(107 114 128)">Eşleşen İSG terimi bulunamadı.</div>
+            @endforelse
+        </div>
+    </x-filament::section>
 </x-filament-panels::page>

@@ -120,6 +120,10 @@
 
                     <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:.8rem">
                         <x-filament::button size="sm" icon="heroicon-o-arrow-down-tray" wire:click="mountAction('pdf')" style="min-height:2.75rem">PDF Olarak İndir (İmzaya Hazır)</x-filament::button>
+                        <x-filament::button size="sm" color="warning" icon="heroicon-o-sparkles" wire:click="temelTespitleriEkle" style="min-height:2.75rem">✨ 5 Temel Yasal Madde Ekle</x-filament::button>
+                        @if ($maddeler)
+                            <x-filament::button size="sm" color="success" icon="heroicon-o-arrow-right-circle" wire:click="dofModuluneAktar" style="min-height:2.75rem">📤 DÖF'e Aktar</x-filament::button>
+                        @endif
                         <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-up" wire:click="mountAction('wordAktar')" style="min-height:2.75rem">Word/Excel Aktar</x-filament::button>
                         <x-filament::button size="sm" color="gray" icon="heroicon-o-envelope" tag="a" :href="\App\Filament\Pages\OnBilgilendirmeler::getUrl(['firma' => $f->id])" style="min-height:2.75rem">Tebliğ Tutanağı Oluştur</x-filament::button>
                     </div>

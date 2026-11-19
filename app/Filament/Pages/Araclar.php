@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\MykMeslek;
 use App\Models\NaceKodu;
 use App\Support\GeminiMevzuatDanismani;
+use App\Support\IsgSozlukKutuphanesi;
 use App\Support\SgkSicilCozumleyici;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -293,5 +294,16 @@ class Araclar extends Page
         $this->mevzuatSoru = '';
         $this->danismanYaniti = null;
         $this->danismanKaynaklari = [];
+    }
+
+    // --- İSG Terimler Sözlüğü ---
+    public string $sozlukArama = '';
+
+    public string $sozlukKategori = '';
+
+    /** @return array<int, array{terim: string, kategori: string, aciklama: string}> */
+    public function sozlukSonuclari(): array
+    {
+        return IsgSozlukKutuphanesi::filtrele($this->sozlukArama, $this->sozlukKategori);
     }
 }
