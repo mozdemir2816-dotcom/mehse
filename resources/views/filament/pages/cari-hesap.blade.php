@@ -1,7 +1,7 @@
 @php
     $p = $this->portfoy;
     $girdi = 'width:100%;padding:.42rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.83rem';
-    $kutu = 'border:1px solid rgb(128 116 148 / .28);border-radius:.75rem;padding:.9rem';
+    $kutu = 'background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:.95rem 1.05rem;box-shadow:0 1px 2px rgb(15 23 42 / .04)';
 @endphp
 
 <x-filament-panels::page>
@@ -11,22 +11,22 @@
     </p>
 
     {{-- PORTFÖY FİNANS ÖZET KARTLARI --}}
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.75rem">
-        <div style="{{ $kutu }}">
-            <div style="font-size:.73rem;text-transform:uppercase;color:rgb(107 114 128);font-weight:700">Aylık Sözleşme Cirosu (KDV Dahil)</div>
-            <div style="font-size:1.45rem;font-weight:800;color:#2563eb;margin-top:.2rem">{{ number_format($p['aylik_ciro'], 2, ',', '.') }} ₺</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem">
+        <div style="{{ $kutu }};border-left:3.5px solid #2563eb">
+            <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Aylık Sözleşme Cirosu (KDV Dahil)</div>
+            <div style="font-size:1.45rem;font-weight:800;color:#2563eb;margin-top:.25rem;font-variant-numeric:tabular-nums">{{ number_format($p['aylik_ciro'], 2, ',', '.') }} ₺</div>
         </div>
-        <div style="{{ $kutu }}">
-            <div style="font-size:.73rem;text-transform:uppercase;color:rgb(107 114 128);font-weight:700">Toplam Açık Alacak (Bakiye)</div>
-            <div style="font-size:1.45rem;font-weight:800;color:{{ $p['toplam_alacak'] > 0 ? '#dc2626' : '#15803d' }};margin-top:.2rem">{{ number_format($p['toplam_alacak'], 2, ',', '.') }} ₺</div>
+        <div style="{{ $kutu }};border-left:3.5px solid {{ $p['toplam_alacak'] > 0 ? '#dc2626' : '#059669' }}">
+            <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Toplam Açık Alacak (Bakiye)</div>
+            <div style="font-size:1.45rem;font-weight:800;color:{{ $p['toplam_alacak'] > 0 ? '#dc2626' : '#059669' }};margin-top:.25rem;font-variant-numeric:tabular-nums">{{ number_format($p['toplam_alacak'], 2, ',', '.') }} ₺</div>
         </div>
-        <div style="{{ $kutu }}">
-            <div style="font-size:.73rem;text-transform:uppercase;color:rgb(107 114 128);font-weight:700">Bu Ay Tahsilat</div>
-            <div style="font-size:1.45rem;font-weight:800;color:#15803d;margin-top:.2rem">{{ number_format($p['bu_ay_tahsilat'], 2, ',', '.') }} ₺</div>
+        <div style="{{ $kutu }};border-left:3.5px solid #059669">
+            <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Bu Ay Tahsilat</div>
+            <div style="font-size:1.45rem;font-weight:800;color:#059669;margin-top:.25rem;font-variant-numeric:tabular-nums">{{ number_format($p['bu_ay_tahsilat'], 2, ',', '.') }} ₺</div>
         </div>
-        <div style="{{ $kutu }}">
-            <div style="font-size:.73rem;text-transform:uppercase;color:rgb(107 114 128);font-weight:700">Açık Bakiyeli Firma</div>
-            <div style="font-size:1.45rem;font-weight:800;color:{{ $p['borclu_firma_sayisi'] > 0 ? '#b45309' : '#15803d' }};margin-top:.2rem">{{ $p['borclu_firma_sayisi'] }} firma</div>
+        <div style="{{ $kutu }};border-left:3.5px solid {{ $p['borclu_firma_sayisi'] > 0 ? '#d97706' : '#059669' }}">
+            <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Açık Bakiyeli Firma</div>
+            <div style="font-size:1.45rem;font-weight:800;color:{{ $p['borclu_firma_sayisi'] > 0 ? '#d97706' : '#059669' }};margin-top:.25rem;font-variant-numeric:tabular-nums">{{ $p['borclu_firma_sayisi'] }} firma</div>
         </div>
     </div>
 
@@ -36,7 +36,7 @@
             <x-slot name="heading">{{ $this->secilenFirma->unvan }} — Cari Hesap Detayı</x-slot>
             <x-slot name="headerEnd">
                 <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-down" wire:click="ekstrePdf({{ $this->secilenFirma->id }})">
-                    📄 PDF Hesap Ekstresi İndir
+                    PDF Hesap Ekstresi İndir
                 </x-filament::button>
             </x-slot>
 
@@ -148,16 +148,16 @@
                             </td>
                             <td style="padding:.45rem;text-align:right;font-variant-numeric:tabular-nums">{{ number_format($s['toplam_borc'], 2, ',', '.') }} ₺</td>
                             <td style="padding:.45rem;text-align:right;font-variant-numeric:tabular-nums;color:#15803d">{{ number_format($s['toplam_tahsilat'], 2, ',', '.') }} ₺</td>
-                            <td style="padding:.45rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:{{ $s['bakiye'] > 0.01 ? '#dc2626' : '#15803d' }}">
+                            <td style="padding:.5rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:{{ $s['bakiye'] > 0.01 ? '#dc2626' : '#059669' }}">
                                 {{ number_format($s['bakiye'], 2, ',', '.') }} ₺
                             </td>
-                            <td style="padding:.45rem;text-align:right;white-space:nowrap">
+                            <td style="padding:.5rem .5rem .5rem 1.25rem;text-align:right;white-space:nowrap">
                                 <button type="button" wire:click="firmaSec({{ $s['firma_id'] }})"
-                                    style="font-size:.76rem;font-weight:700;color:#2563eb;border:none;background:none;cursor:pointer;margin-right:.4rem">
+                                    style="font-size:.77rem;font-weight:700;color:#2563eb;border:none;background:none;cursor:pointer;margin-right:.65rem">
                                     Yönet
                                 </button>
                                 <button type="button" wire:click="ekstrePdf({{ $s['firma_id'] }})"
-                                    style="font-size:.76rem;font-weight:600;color:rgb(107 114 128);border:none;background:none;cursor:pointer">
+                                    style="font-size:.76rem;font-weight:600;color:#475569;border:none;background:none;cursor:pointer">
                                     PDF Ekstre
                                 </button>
                             </td>

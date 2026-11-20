@@ -196,7 +196,7 @@ class CariHesap extends Page
     {
         return [
             Action::make('topluTahakkuk')
-                ->label('⚡ Bu Ay Tüm Firmalara Tahakkuk Oluştur')
+                ->label('Bu Ay Tüm Firmalara Tahakkuk Oluştur')
                 ->icon('heroicon-o-bolt')
                 ->color('primary')
                 ->requiresConfirmation()

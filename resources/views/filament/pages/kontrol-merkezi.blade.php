@@ -1,12 +1,12 @@
 @php
     $sekmeler = \App\Filament\Pages\KontrolMerkezi::SEKMELER;
-    $mor = 'rgb(139 92 246)';
-    $turkuaz = 'rgb(20 184 166)';
-    $yesil = 'rgb(34 197 94)';
-    $kirmizi = 'rgb(239 68 68)';
-    $sari = 'rgb(245 158 11)';
-    $gri = 'rgb(95 87 112)';
-    $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
+    $mor = '#2563EB';
+    $turkuaz = '#2563EB';
+    $yesil = '#059669';
+    $kirmizi = '#DC2626';
+    $sari = '#D97706';
+    $gri = '#64748B';
+    $kutu = 'background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:1rem;box-shadow:0 1px 2px rgb(15 23 42 / .04)';
     $o = $this->ozet;
 
     // İSG Portföy Özeti kartları — Gemini referans görselindeki dolu-renk fayans stili.
@@ -517,7 +517,7 @@
                             Uyum: %{{ $mOzet['oran'] }}
                         </span>
                         <x-filament::button size="sm" color="gray" icon="heroicon-o-document-chart-bar" wire:click="isverenKarnesiPdf">
-                            📊 İşveren Karnesi PDF
+                            İşveren Karnesi PDF
                         </x-filament::button>
                         @if ($paylasim = $this->isverenKarnePaylasim)
                             <span x-data="{ kopyalandi: false }" style="display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap">

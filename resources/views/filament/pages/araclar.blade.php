@@ -1,7 +1,7 @@
 @php
-    $turuncu = 'rgb(180 83 9)';
-    $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
-    $girdi = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
+    $turuncu = '#2563EB';
+    $kutu = 'background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:1rem';
+    $girdi = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF';
 @endphp
 
 <x-filament-panels::page>
@@ -40,11 +40,11 @@
                         style="width:80px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
                     <span style="font-size:.78rem;color:rgb(107 114 128)">ay</span>
                     <input type="number" step="0.01" min="0" placeholder="Önceki dönem KSO" wire:model.live="oncekiDonemKso"
-                        style="width:145px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem"
+                        style="width:175px;padding:.4rem .6rem;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;font-size:.82rem"
                         title="Önceki dönem Kaza Sıklık Hızı (kıyaslama yüzdesi için)">
                 </div>
             </div>
-            <x-filament::button size="xs" color="warning" wire:click="calisanSayisindanSaatHesapla">Çalışma Saatini Hesapla</x-filament::button>
+            <x-filament::button size="xs" color="primary" wire:click="calisanSayisindanSaatHesapla">Çalışma Saatini Hesapla</x-filament::button>
             <x-filament::button size="xs" color="gray" wire:click="kazaOrnekVeriDoldur">Örnek Veriyle Dene</x-filament::button>
         </div>
 
@@ -200,7 +200,7 @@
                     <label class="mehse-etiket">6 Haneli NACE Kodu</label>
                     <input type="text" placeholder="Örn: 01.11.14 veya 011114" wire:model="naceKoduGirdi" wire:keydown.enter="naceSorgula" style="{{ $girdi }}">
                 </div>
-                <x-filament::button color="warning" wire:click="naceSorgula">Sorgula</x-filament::button>
+                <x-filament::button color="primary" wire:click="naceSorgula">Sorgula</x-filament::button>
             </div>
 
             <div style="display:flex;gap:.5rem;align-items:end">
@@ -346,15 +346,15 @@
     </x-filament::section>
 
     {{-- MEVZUATA SOR & İSG MEVZUAT DANIŞMANI --}}
-    <x-filament::section icon="heroicon-o-scale" icon-color="warning">
-        <x-slot name="heading">⚖️ Mevzuata Sor — İSG Mevzuat Danışmanı &amp; Kütüphanesi</x-slot>
+    <x-filament::section icon="heroicon-o-scale" icon-color="primary">
+        <x-slot name="heading">Mevzuata Sor — İSG Mevzuat Danışmanı &amp; Kütüphanesi</x-slot>
         <x-slot name="description">6331, 4857, 5510 sayılı kanunlar ve İSG yönetmeliklerindeki yasal süreler, kontenjanlar ve bildirim yükümlülükleri hakkında hızlı soru sorun.</x-slot>
 
         <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.65rem">
             @foreach (\App\Support\GeminiMevzuatDanismani::HAZIR_SORULAR as $anahtar => $hazir)
                 <button type="button" wire:click="hazirSoruSor('{{ $anahtar }}')"
-                    style="font-size:.75rem;padding:.25rem .6rem;border-radius:999px;border:1px solid rgb(180 83 9 / .35);background:transparent;color:inherit;cursor:pointer;text-align:left">
-                    💬 {{ $hazir['soru'] }}
+                    style="font-size:.75rem;padding:.25rem .65rem;border-radius:999px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;cursor:pointer;text-align:left">
+                    {{ $hazir['soru'] }}
                 </button>
             @endforeach
         </div>
@@ -364,7 +364,7 @@
                 <label class="mehse-etiket">İSG Mevzuat Sorunuz</label>
                 <input type="text" placeholder="Örn: Risk değerlendirmesi kaç yılda bir yenilenir?" wire:model="mevzuatSoru" wire:keydown.enter="mevzuataSor" style="{{ $girdi }}">
             </div>
-            <x-filament::button color="warning" wire:click="mevzuataSor">Mevzuata Sor</x-filament::button>
+            <x-filament::button color="primary" wire:click="mevzuataSor">Mevzuata Sor</x-filament::button>
             @if ($danismanYaniti || $mevzuatSoru !== '')
                 <x-filament::button size="sm" color="gray" wire:click="danismanTemizle">Temizle</x-filament::button>
             @endif
@@ -396,14 +396,14 @@
     </x-filament::section>
 
     {{-- İSG TERİMLER SÖZLÜĞÜ --}}
-    <x-filament::section icon="heroicon-o-book-open" icon-color="warning" collapsible>
-        <x-slot name="heading">📖 İSG Terimler Sözlüğü ({{ count(\App\Support\IsgSozlukKutuphanesi::tumu()) }} Temel Kavram)</x-slot>
+    <x-filament::section icon="heroicon-o-book-open" icon-color="primary" collapsible>
+        <x-slot name="heading">İSG Terimler Sözlüğü ({{ count(\App\Support\IsgSozlukKutuphanesi::tumu()) }} Temel Kavram)</x-slot>
         <x-slot name="description">Risk analizlerinde, ortam ölçümlerinde, kimyasal yönetiminde ve İSG mevzuatında geçen teknik terimlerin pratik açıklamaları.</x-slot>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.65rem">
-            <x-filament::button size="xs" :color="$sozlukKategori === '' ? 'warning' : 'gray'" wire:click="$set('sozlukKategori', '')">Tümü</x-filament::button>
+            <x-filament::button size="xs" :color="$sozlukKategori === '' ? 'primary' : 'gray'" wire:click="$set('sozlukKategori', '')">Tümü</x-filament::button>
             @foreach (\App\Support\IsgSozlukKutuphanesi::KATEGORILER as $katAnahtar => $katEtiket)
-                <x-filament::button size="xs" :color="$sozlukKategori === $katAnahtar ? 'warning' : 'gray'" wire:click="$set('sozlukKategori', '{{ $katAnahtar }}')">{{ $katEtiket }}</x-filament::button>
+                <x-filament::button size="xs" :color="$sozlukKategori === $katAnahtar ? 'primary' : 'gray'" wire:click="$set('sozlukKategori', '{{ $katAnahtar }}')">{{ $katEtiket }}</x-filament::button>
             @endforeach
         </div>
 
@@ -429,8 +429,8 @@
     </x-filament::section>
 
     {{-- İSG UZMANLIK DENEME SINAVI (ÖSYM MODU) & SAHA HAP NOTLARI --}}
-    <x-filament::section icon="heroicon-o-academic-cap" icon-color="warning" collapsible>
-        <x-slot name="heading">🎓 İSG Uzmanlık Deneme Sınavı (ÖSYM Modu) &amp; Saha Sayısal Hap Notlar (PDF)</x-slot>
+    <x-filament::section icon="heroicon-o-academic-cap" icon-color="primary" collapsible>
+        <x-slot name="heading">İSG Uzmanlık Deneme Sınavı (ÖSYM Modu) &amp; Saha Sayısal Hap Notlar (PDF)</x-slot>
         <x-slot name="description">A/B/C Sınıfı İSG Uzmanlığı ve İşyeri Hekimliği sınavlarında en sık çıkan mevzuat soruları, çözümlü açıklamaları ve tek sayfalık Saha Sayısal Hap Notlar PDF'i.</x-slot>
 
         @php

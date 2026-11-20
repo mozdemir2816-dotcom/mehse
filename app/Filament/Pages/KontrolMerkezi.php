@@ -52,7 +52,7 @@ class KontrolMerkezi extends Page
         'gunluk' => 'Günlük Akış',
         'firma' => 'Firma Asistanı',
         'calisan' => 'Çalışan Asistanı',
-        'hizli_evrak' => '⚡ Hızlı Evrak Matrisi',
+        'hizli_evrak' => 'Hızlı Evrak Matrisi',
     ];
 
     #[Url(as: 'sekme')]
@@ -210,10 +210,10 @@ class KontrolMerkezi extends Page
 
         return [
             Action::make('isverenUyumKarnesi')
-                ->label('📊 İşveren Uyum Karnesi (PDF)')
+                ->label('İşveren Uyum Karnesi (PDF)')
                 ->icon('heroicon-o-document-chart-bar')
                 ->color('gray')
-                ->modalHeading('📊 İşveren Salt-Okunur İSG Uyum Karnesi')
+                ->modalHeading('İşveren Salt-Okunur İSG Uyum Karnesi')
                 ->modalDescription('Seçili firmanın tüm yasal evrak durumunu, İSG-KATİP hizmet sürelerini ve ekip kontenjanlarını tek sayfalık yönetici karnesi (PDF) olarak indirin.')
                 ->modalSubmitActionLabel('Karneyi PDF İndir')
                 ->schema([
@@ -231,7 +231,7 @@ class KontrolMerkezi extends Page
                 }),
 
             Action::make('hizliEvrakPaketi')
-                ->label('📦 Hızlı Evrak Paketi (ZIP İndir)')
+                ->label('Hızlı Evrak Paketi (ZIP)')
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('primary')
                 ->modalWidth('2xl')
