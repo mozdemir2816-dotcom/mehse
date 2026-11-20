@@ -108,14 +108,28 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
     }
 
     /* Sayfa düğmeleri: alt alta yığılmak yerine iki sütunlu düzgün ızgara;
-       birincil eylem (Ekle) en üstte tam genişlik. */
+       "Nasıl Kullanılır?" yanına sıkışıp .fi-ac'yi 210px'e daraltmasın diye dikey dizilir. */
     html .fi-header-actions-ctn {
         width: 100%;
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: .5rem !important;
+    }
+
+    html .fi-header-actions-ctn > .mehse-nasil-kullanilir {
+        width: 100%;
+    }
+
+    html .fi-header-actions-ctn > .mehse-nasil-kullanilir > button {
+        width: 100%;
+        justify-content: center;
+        min-height: 2.5rem;
     }
 
     html .fi-header-actions-ctn > .fi-ac {
         display: grid !important;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: .5rem !important;
         width: 100%;
         align-items: stretch;
@@ -137,6 +151,9 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         min-height: 2.65rem;
         padding: .45rem .65rem !important;
         font-size: 12px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     html .fi-header-actions-ctn > .fi-ac .fi-btn .fi-icon {

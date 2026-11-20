@@ -3,7 +3,7 @@
 @endphp
 
 @if ($rehber)
-    <div x-data="{ acik: false }" style="display:inline-flex;align-items:center">
+    <div x-data="{ acik: false }" class="mehse-nasil-kullanilir" style="display:inline-flex;align-items:center">
         <button type="button"
             x-on:click="acik = true"
             style="display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .78rem;border-radius:.55rem;border:1px solid rgb(107 114 128 / .35);background:transparent;color:inherit;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap"
