@@ -139,11 +139,11 @@ html[data-mehse-tema="kagit"] {
     display: none !important;
 }
 
-:is(html[data-mehse-tema="klasik"], html[data-mehse-tema="saha"], html[data-mehse-tema="pano"]) :is(.fi-sidebar, .fi-topbar) .mehse-marka-renkli {
+:is(html[data-mehse-tema="klasik"], html[data-mehse-tema="saha"]) :is(.fi-sidebar, .fi-topbar) .mehse-marka-renkli {
     display: none !important;
 }
 
-:is(html[data-mehse-tema="klasik"], html[data-mehse-tema="saha"], html[data-mehse-tema="pano"]) :is(.fi-sidebar, .fi-topbar) .mehse-marka-acik {
+:is(html[data-mehse-tema="klasik"], html[data-mehse-tema="saha"]) :is(.fi-sidebar, .fi-topbar) .mehse-marka-acik {
     display: block !important;
 }
 

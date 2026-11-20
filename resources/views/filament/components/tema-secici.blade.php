@@ -7,7 +7,7 @@
 --}}
 @php
     $temalar = [
-        'pano' => ['ad' => 'Pano', 'aciklama' => 'Grafit çerçeve · serin gri zemin · mavi', 'renkler' => ['#1F2933', '#0057A8', '#EEF1F3']],
+        'pano' => ['ad' => 'Modern Kurumsal (Varsayılan)', 'aciklama' => 'Ferah beyaz · ince kenarlık · canlı mavi SaaS', 'renkler' => ['#FFFFFF', '#2563EB', '#F1F5F9']],
         'klasik' => ['ad' => 'Klasik', 'aciklama' => 'Lacivert mehse', 'renkler' => ['#1E3A5F', '#2563EB', '#F0F4F8']],
         'material' => ['ad' => 'Google Material', 'aciklama' => 'Material 3 · Material You', 'renkler' => ['#F8FAFD', '#0B57D0', '#D3E3FD']],
         'windows11' => ['ad' => 'Windows 11', 'aciklama' => 'Fluent · Mica', 'renkler' => ['#F3F3F3', '#005FB8', '#FFFFFF']],
