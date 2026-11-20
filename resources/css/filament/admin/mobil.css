@@ -162,6 +162,7 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
 
     html .fi-header-actions-ctn > .fi-ac .fi-btn .fi-btn-label,
     html .fi-header-actions-ctn > .fi-ac .fi-btn > span {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
