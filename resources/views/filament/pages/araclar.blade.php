@@ -5,12 +5,34 @@
 @endphp
 
 <x-filament-panels::page>
-    <p class="mehse-bolum-aciklama">
-        Firma seçimi gerektirmeyen, bağımsız İSG hesaplayıcıları. Girdiğiniz değerler kaydedilmez.
+<div x-data="{ aracGrup: 'tumu' }" style="display:flex;flex-direction:column;gap:1.15rem">
+    <p class="mehse-bolum-aciklama" style="margin:0">
+        Firma seçimi gerektirmeyen, bağımsız İSG hesaplayıcıları ve mevzuat araçları. Girdiğiniz değerler kaydedilmez.
     </p>
 
+    {{-- HIZLI KATEGORİ SEKME ŞERİDİ --}}
+    <div style="display:flex;flex-wrap:wrap;gap:.45rem;padding:.45rem;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px">
+        @foreach ([
+            ['tumu', 'Tümü (7)'],
+            ['hesap', 'Hesaplayıcılar (Kaza & Gürültü)'],
+            ['nace', 'SGK / NACE & MYK'],
+            ['mevzuat', 'Mevzuat & Sözlük'],
+            ['sinav', 'Sınav & Hap Notlar'],
+        ] as [$kod, $etiket])
+            <button type="button"
+                x-on:click="aracGrup = '{{ $kod }}'"
+                x-bind:style="aracGrup === '{{ $kod }}'
+                    ? 'background:#2563EB;color:#FFFFFF;border-color:#2563EB;font-weight:700'
+                    : 'background:#F8FAFC;color:#334155;border-color:#E2E8F0;font-weight:600'"
+                style="padding:.42rem .85rem;border-radius:8px;border:1px solid #E2E8F0;font-size:.8rem;cursor:pointer;transition:all .15s">
+                {{ $etiket }}
+            </button>
+        @endforeach
+    </div>
+
     {{-- KAZA SIKLIK / AĞIRLIK HIZI --}}
-    <x-filament::section icon="heroicon-o-calculator" icon-color="warning">
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'hesap'">
+    <x-filament::section icon="heroicon-o-calculator" icon-color="primary">
         <x-slot name="heading">Kaza Sıklık Hızı ve Ağırlık Hızı Hesaplayıcı</x-slot>
         <x-slot name="description">Sıklık Hızı = (Kaza Sayısı × 1.000.000) / Toplam Çalışma Saati &nbsp;·&nbsp; Ağırlık Hızı = (Kayıp Gün Sayısı × 1.000) / Toplam Çalışma Saati</x-slot>
 
@@ -87,9 +109,11 @@
             @endif
         </div>
     </x-filament::section>
+    </div>
 
     {{-- GÜRÜLTÜ MARUZİYET DÜZEYİ --}}
-    <x-filament::section icon="heroicon-o-speaker-wave" icon-color="warning">
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'hesap'">
+    <x-filament::section icon="heroicon-o-speaker-wave" icon-color="primary">
         <x-slot name="heading">Gürültü Maruziyet Düzeyi (Lex,8h) Hesaplayıcı</x-slot>
         <x-slot name="description">Farklı gürültü seviyelerinde geçirilen süreleri girin; günlük 8 saatlik normalize maruziyet düzeyi hesaplanır.</x-slot>
 
@@ -137,16 +161,18 @@
             <x-filament::button size="xs" color="gray" wire:click="gurultuHesaplayiciSifirla">Sıfırla</x-filament::button>
         </div>
     </x-filament::section>
+    </div>
 
     {{-- NACE KOD / SGK SİCİL NO / FAALİYET ADI → TEHLİKE SINIFI SORGULA --}}
-    <x-filament::section icon="heroicon-o-magnifying-glass" icon-color="warning">
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'nace'">
+    <x-filament::section icon="heroicon-o-magnifying-glass" icon-color="primary">
         <x-slot name="heading">Tehlike Sınıfını Bul — NACE Kodu · 26 Haneli SGK Sicil No · Faaliyet Adı</x-slot>
         <x-slot name="description">6 haneli NACE Rev.2 koduyla, 26 haneli SGK işyeri sicil numarasıyla veya faaliyet adıyla işyerinin tehlike sınıfını ve 13 temel yasal İSG yükümlülüğünü sorgulayın.</x-slot>
 
         {{-- 1. 26 HANELİ SGK SİCİL NO ÇÖZÜMLEYİCİ --}}
-        <div style="{{ $kutu }};margin-bottom:1rem;background:rgb(180 83 9 / .03)">
+        <div style="{{ $kutu }};margin-bottom:1rem;background:rgb(37 99 235 / .03)">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
-                <div style="font-weight:700;font-size:.88rem">🔢 26 Haneli SGK İşyeri Sicil Numarası Çözümleyici</div>
+                <div style="font-weight:700;font-size:.88rem">26 Haneli SGK İşyeri Sicil Numarası Çözümleyici</div>
                 <x-filament::button size="xs" color="gray" wire:click="ornekSgkSicilDene">Örnek Numarayla Dene</x-filament::button>
             </div>
             <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.15rem">
@@ -156,7 +182,7 @@
                 <div style="flex:1;min-width:240px">
                     <input type="text" placeholder="Örn: 2 4120 01 01 1234567 034 01 85 000" wire:model="sgkSicilGirdi" wire:keydown.enter="sgkSicilCozumle" style="{{ $girdi }};margin-top:0;font-family:monospace">
                 </div>
-                <x-filament::button size="sm" color="warning" wire:click="sgkSicilCozumle">Sicil No Çözümle</x-filament::button>
+                <x-filament::button size="sm" color="primary" wire:click="sgkSicilCozumle">Sicil No Çözümle</x-filament::button>
             </div>
 
             @if ($sgkCozumSonucu)
@@ -297,9 +323,11 @@
             güncel Resmî Gazete metniyle teyit edilmesi önerilir.
         </p>
     </x-filament::section>
+    </div>
 
     {{-- MYK ZORUNLULUK SORGULA --}}
-    <x-filament::section icon="heroicon-o-identification" icon-color="warning">
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'nace'">
+    <x-filament::section icon="heroicon-o-identification" icon-color="primary">
         <x-slot name="heading">MYK Zorunluluk Sorgula</x-slot>
         <x-slot name="description">Meslek adı veya yeterlilik kodu ile MYK (Mesleki Yeterlilik Belgesi) zorunluluğu kapsamındaki meslekleri arayın.</x-slot>
 
@@ -308,7 +336,7 @@
                 <label class="mehse-etiket">Meslek Adı veya Kodu</label>
                 <input type="text" placeholder="Örn: Betonarme Demircisi veya 11UY0011" wire:model="mykAramaTerimi" wire:keydown.enter="mykAra" style="{{ $girdi }}">
             </div>
-            <x-filament::button color="warning" wire:click="mykAra">Sorgula</x-filament::button>
+            <x-filament::button color="primary" wire:click="mykAra">Sorgula</x-filament::button>
             @if ($mykAramaTerimi || $mykArandi)
                 <x-filament::button size="sm" color="gray" wire:click="mykSifirla">Temizle</x-filament::button>
             @endif
@@ -344,8 +372,10 @@
             kontrol edin.
         </p>
     </x-filament::section>
+    </div>
 
     {{-- MEVZUATA SOR & İSG MEVZUAT DANIŞMANI --}}
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'mevzuat'">
     <x-filament::section icon="heroicon-o-scale" icon-color="primary">
         <x-slot name="heading">Mevzuata Sor — İSG Mevzuat Danışmanı &amp; Kütüphanesi</x-slot>
         <x-slot name="description">6331, 4857, 5510 sayılı kanunlar ve İSG yönetmeliklerindeki yasal süreler, kontenjanlar ve bildirim yükümlülükleri hakkında hızlı soru sorun.</x-slot>
@@ -394,8 +424,10 @@
             </div>
         @endif
     </x-filament::section>
+    </div>
 
     {{-- İSG TERİMLER SÖZLÜĞÜ --}}
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'mevzuat'">
     <x-filament::section icon="heroicon-o-book-open" icon-color="primary" collapsible>
         <x-slot name="heading">İSG Terimler Sözlüğü ({{ count(\App\Support\IsgSozlukKutuphanesi::tumu()) }} Temel Kavram)</x-slot>
         <x-slot name="description">Risk analizlerinde, ortam ölçümlerinde, kimyasal yönetiminde ve İSG mevzuatında geçen teknik terimlerin pratik açıklamaları.</x-slot>
@@ -427,8 +459,10 @@
             @endforelse
         </div>
     </x-filament::section>
+    </div>
 
     {{-- İSG UZMANLIK DENEME SINAVI (ÖSYM MODU) & SAHA HAP NOTLARI --}}
+    <div x-show="aracGrup === 'tumu' || aracGrup === 'sinav'">
     <x-filament::section icon="heroicon-o-academic-cap" icon-color="primary" collapsible>
         <x-slot name="heading">İSG Uzmanlık Deneme Sınavı (ÖSYM Modu) &amp; Saha Sayısal Hap Notlar (PDF)</x-slot>
         <x-slot name="description">A/B/C Sınıfı İSG Uzmanlığı ve İşyeri Hekimliği sınavlarında en sık çıkan mevzuat soruları, çözümlü açıklamaları ve tek sayfalık Saha Sayısal Hap Notlar PDF'i.</x-slot>
@@ -452,8 +486,8 @@
                 @endif
             </div>
             <div style="display:flex;gap:.45rem;flex-wrap:wrap">
-                <x-filament::button size="xs" color="warning" icon="heroicon-o-document-arrow-down" wire:click="hapNotlarPdfIndir">
-                    📄 Saha &amp; Sınav Hap Notları İndir (PDF)
+                <x-filament::button size="xs" color="primary" icon="heroicon-o-document-arrow-down" wire:click="hapNotlarPdfIndir">
+                    Saha &amp; Sınav Hap Notları İndir (PDF)
                 </x-filament::button>
                 <x-filament::button size="xs" color="success" wire:click="denemeKontrolEt">
                     ✓ Cevapları Kontrol Et &amp; Çözümleri Gör
@@ -490,7 +524,7 @@
                 <div style="{{ $kutu }}">
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-bottom:.3rem">
                         <span style="font-weight:700;font-size:.82rem">Soru {{ $sIndex + 1 }}</span>
-                        <span style="font-size:.7rem;padding:.1rem .45rem;border-radius:999px;background:rgb(180 83 9 / .14);color:{{ $turuncu }}">{{ $s['konu'] }}</span>
+                        <span style="font-size:.7rem;padding:.1rem .45rem;border-radius:999px;background:rgb(37 99 235 / .12);color:{{ $turuncu }}">{{ $s['konu'] }}</span>
                     </div>
                     <div style="font-size:.84rem;font-weight:600;margin-bottom:.5rem">{{ $s['soru'] }}</div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.35rem">
@@ -501,7 +535,7 @@
                                 $renkStil = match (true) {
                                     $denemeTamamlandi && $buDogru => 'border-color:rgb(22 163 74);background:rgb(22 163 74 / .14);font-weight:700',
                                     $denemeTamamlandi && $buSecili && ! $buDogru => 'border-color:rgb(220 38 38);background:rgb(220 38 38 / .12)',
-                                    $buSecili => 'border-color:'.$turuncu.';background:rgb(180 83 9 / .12);font-weight:600',
+                                    $buSecili => 'border-color:'.$turuncu.';background:rgb(37 99 235 / .10);font-weight:600',
                                     default => 'border-color:rgb(107 114 128 / .25);background:transparent',
                                 };
                             @endphp
@@ -521,4 +555,6 @@
             @endforeach
         </div>
     </x-filament::section>
+    </div>
+</div>
 </x-filament-panels::page>

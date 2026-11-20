@@ -92,6 +92,11 @@ class FirmasTable
                         ->icon('heroicon-o-document-chart-bar')
                         ->color('info')
                         ->action(fn (Firma $record) => \App\Support\IsverenFirmaKarnesiUretici::pdf($record)),
+                    Action::make('cariHesap')
+                        ->label('OSGB Cari & Tahsilat')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->url(fn (Firma $record) => \App\Filament\Pages\CariHesap::getUrl(['firma' => $record->id])),
                     Action::make('acilDurumPlani')
                         ->label('Acil Durum Planı')
                         ->icon('heroicon-o-exclamation-triangle')
