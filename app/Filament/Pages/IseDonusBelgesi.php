@@ -81,6 +81,11 @@ class IseDonusBelgesi extends Page
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
+
+            if ($calisanId = request()->integer('calisan')) {
+                $this->calisanHizliSecId = $calisanId;
+                $this->updatedCalisanHizliSecId();
+            }
         }
     }
 

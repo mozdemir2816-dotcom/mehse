@@ -38,14 +38,16 @@
                     <x-filament::badge :color="($firma->calisan_sayisi ?? 0) >= 50 ? 'warning' : 'gray'">
                         {{ (int) $firma->calisan_sayisi }} çalışan{{ ($firma->calisan_sayisi ?? 0) >= 50 ? ' · kurul zorunlu' : '' }}
                     </x-filament::badge>
-                    @if (($firma->calisan_sayisi ?? 0) < 50)
-                        <x-filament::badge color="info" icon="heroicon-o-information-circle">
-                            50'den az çalışan: İSG Kurulu yasal zorunluluk değildir (6331 s.K. m.22) — isteğe bağlı kurul yönetebilirsiniz
-                        </x-filament::badge>
-                    @endif
                 </div>
             @endif
         </div>
+
+        @if ($firma && ($firma->calisan_sayisi ?? 0) < 50)
+            <div style="margin-top:.85rem;display:flex;align-items:center;gap:.55rem;padding:.6rem .85rem;border-radius:10px;border:1px solid rgb(37 99 235 / .22);background:rgb(239 246 255);color:#1e40af;font-size:.8rem;line-height:1.45">
+                <x-filament::icon icon="heroicon-o-information-circle" class="h-4 w-4 shrink-0" style="color:#2563eb" />
+                <span><strong>50'den az çalışan:</strong> İSG Kurulu yasal zorunluluk değildir (6331 s.K. m.22) — isteğe bağlı kurul yönetebilirsiniz.</span>
+            </div>
+        @endif
     </x-filament::section>
 
     @if ($firma)
@@ -132,9 +134,6 @@
         <x-filament::section icon="heroicon-o-user-group" collapsible>
             <x-slot name="heading">Kurul üyeleri ({{ $this->uyeler->count() }})</x-slot>
             <x-slot name="description">İSG Kurulları Hakkında Yönetmelik Md.6 — kalıcı üye listesi. Toplantı oluşturulurken katılımcı olarak kopyalanır.</x-slot>
-            <x-slot name="afterHeader">
-                <x-filament::button size="sm" color="gray" icon="heroicon-o-user-plus" wire:click="mountAction('uyeYonet')">Üye Yönet</x-filament::button>
-            </x-slot>
 
             @if ($this->uyeler->isNotEmpty())
                 <div class="overflow-x-auto">
@@ -176,9 +175,6 @@
         {{-- TOPLANTILAR --}}
         <x-filament::section icon="heroicon-o-calendar-days">
             <x-slot name="heading">Toplantılar ({{ $this->toplantilar->count() }})</x-slot>
-            <x-slot name="afterHeader">
-                <x-filament::button size="sm" icon="heroicon-o-plus" wire:click="mountAction('toplantiPlanla')">Toplantı Planla</x-filament::button>
-            </x-slot>
 
             @if ($this->toplantilar->isNotEmpty())
                 <div class="overflow-x-auto">

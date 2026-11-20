@@ -25,6 +25,46 @@
     </x-filament::section>
 
     @if ($this->firma)
+        @php
+            $ozetGuncel = 0;
+            $ozetYaklasan = 0;
+            $ozetGecmis = 0;
+            $ozetKisitli = 0;
+            foreach ($satirlar as $sOzet) {
+                if (in_array($sOzet['sonuc'] ?? '', ['sartli', 'uygun_degil'], true)) {
+                    $ozetKisitli++;
+                }
+                if (! empty($sOzet['sonraki_tarih'])) {
+                    $sTarih = \Illuminate\Support\Carbon::parse($sOzet['sonraki_tarih'])->startOfDay();
+                    $fark = (int) $bugun->diffInDays($sTarih, false);
+                    if ($fark < 0) {
+                        $ozetGecmis++;
+                    } elseif ($fark <= 30) {
+                        $ozetYaklasan++;
+                    } else {
+                        $ozetGuncel++;
+                    }
+                }
+            }
+        @endphp
+
+        @if (count($satirlar))
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.75rem">
+                @foreach ([
+                    ['Toplam takip', count($satirlar), 'inherit'],
+                    ['Güncel', $ozetGuncel, '#15803d'],
+                    ['Yaklaşan (30 gün)', $ozetYaklasan, '#b45309'],
+                    ['Süresi geçmiş', $ozetGecmis, '#dc2626'],
+                    ['Kısıtlı / Uygun değil', $ozetKisitli, '#dc2626'],
+                ] as [$ad, $sayi, $renk])
+                    <div style="{{ $kutu }};padding:.7rem 1rem">
+                        <div class="mehse-soluk">{{ $ad }}</div>
+                        <div style="font-size:1.4rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         <x-filament::section icon="heroicon-o-plus-circle" icon-color="gray">
             <x-slot name="heading">Tetkik Satırı Ekle</x-slot>
 
@@ -121,7 +161,12 @@
                                         @if (!empty($s['calisan_id']))
                                             <a href="{{ \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $this->firmaId, 'calisan' => $s['calisan_id']]) }}"
                                                 title="Bu çalışan için EK-2 Muayene Formu oluştur"
-                                                style="font-size:.72rem;font-weight:700;color:rgb(124 58 237);text-decoration:none;margin-right:.4rem">EK-2 →</a>
+                                                style="font-size:.72rem;font-weight:700;color:#2563eb;text-decoration:none;margin-right:.45rem">EK-2 →</a>
+                                            @if (in_array($s['sonuc'] ?? '', ['sartli', 'uygun_degil'], true) || ($s['tetkik_turu'] ?? '') === 'ise_donus')
+                                                <a href="{{ \App\Filament\Pages\IseDonusBelgesi::getUrl(['firma' => $this->firmaId, 'calisan' => $s['calisan_id']]) }}"
+                                                    title="Bu çalışan için İşe Dönüş / Kısıtlama Belgesi hazırla"
+                                                    style="font-size:.72rem;font-weight:700;color:#b45309;text-decoration:none;margin-right:.45rem">İşe Dönüş →</a>
+                                            @endif
                                         @endif
                                         <button type="button" wire:click="satirSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
                                     </td>

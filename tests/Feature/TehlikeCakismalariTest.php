@@ -34,14 +34,15 @@ class TehlikeCakismalariTest extends TestCase
         ]);
     }
 
-    public function test_bos_iken_nav_gizli_doluyken_rozet_gosterir(): void
+    public function test_menude_gizli_ve_rozet_cakisma_sayisini_doner(): void
     {
         $this->assertFalse(TehlikeCakismalari::shouldRegisterNavigation());
         $this->assertNull(TehlikeCakismalari::getNavigationBadge());
 
         $this->cakismaOlustur();
 
-        $this->assertTrue(TehlikeCakismalari::shouldRegisterNavigation());
+        // Risk Yönetim Merkezi sekme şeridinden açılır; sol menüde ekstra satır açmaz.
+        $this->assertFalse(TehlikeCakismalari::shouldRegisterNavigation());
         $this->assertSame('1', TehlikeCakismalari::getNavigationBadge());
     }
 

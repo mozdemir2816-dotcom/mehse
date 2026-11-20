@@ -33,10 +33,10 @@ class TehlikeCakismalari extends Page
 
     protected static ?string $navigationLabel = 'Kütüphane Çakışmaları';
 
-    /** Yalnız bekleyen çakışma varken menüde (rozetle uyarı); her zaman Risk & Tehlike Yönetimi sekme şeridinden de açılır. */
+    /** Menüde gizli — Risk Yönetim Merkezi → Merkezi Kütüphane sekme şeridinden açılır (App\Support\SayfaAileleri). */
     public static function shouldRegisterNavigation(): bool
     {
-        return TehlikeCakismasi::query()->exists();
+        return false;
     }
 
     public static function getNavigationBadge(): ?string

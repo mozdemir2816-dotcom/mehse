@@ -4,9 +4,9 @@
     $ileriEtiket = \App\Filament\Pages\RiskSihirbazi::ILERI_ETIKET;
     $sorular = config('isg.risk_ai.sorular', []);
     $sektorler = config('isg.risk_ai.sektorler', []);
-    $mor = 'rgb(139 92 246)';
-    $yesil = 'rgb(34 197 94)';
-    $grad = 'linear-gradient(90deg, rgb(139 92 246), rgb(217 70 239))';
+    $mor = 'rgb(37 99 235)';
+    $yesil = 'rgb(22 163 74)';
+    $grad = 'linear-gradient(90deg, rgb(37 99 235), rgb(29 78 216))';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.6rem';
 @endphp
 
@@ -36,7 +36,7 @@
                 <button type="button" wire:click="adimaGit({{ $no }})"
                     style="display:flex;flex-direction:column;align-items:center;gap:.35rem;flex:1;background:none;border:none;cursor:pointer">
                     <span style="width:2.25rem;height:2.25rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;
-                        font-weight:700;color:#fff;background:{{ $renk }};box-shadow:{{ $aktif ? '0 0 0 4px rgb(139 92 246 / .25)' : 'none' }}">
+                        font-weight:700;color:#fff;background:{{ $renk }};box-shadow:{{ $aktif ? '0 0 0 4px rgb(37 99 235 / .25)' : 'none' }}">
                         {{ $tamam ? '✓' : $no }}
                     </span>
                     <span style="font-size:.75rem;text-align:center;color:{{ $aktif ? 'inherit' : 'rgb(107 114 128)' }};font-weight:{{ $aktif ? 600 : 400 }}">{{ $ad }}</span>
@@ -72,7 +72,7 @@
                 </div>
 
                 @if ($this->firma)
-                    <div style="border:1px solid rgb(139 92 246 / .35);border-radius:.75rem;padding:1rem;background:rgb(139 92 246 / .06)">
+                    <div style="border:1px solid rgb(37 99 235 / .35);border-radius:.75rem;padding:1rem;background:rgb(37 99 235 / .06)">
                         <div style="font-weight:700">{{ $this->firma->unvan }}</div>
                         <div style="font-size:.85rem;color:rgb(107 114 128)">{{ $this->firma->adres ?: 'Adres girilmemiş' }}</div>
                         <div style="margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap">
@@ -134,7 +134,7 @@
                         @style([
                             'text-align:left;padding:1rem;border-radius:.75rem;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:.5rem',
                             'border:2px solid '.($secili ? $mor : 'rgb(107 114 128 / .3)'),
-                            'background:'.($secili ? 'rgb(139 92 246 / .08)' : 'transparent'),
+                            'background:'.($secili ? 'rgb(37 99 235 / .08)' : 'transparent'),
                             'opacity:.55' => ! $y['hazir'],
                         ])>
                         @if ($y['onerilen'])
@@ -153,7 +153,7 @@
             </div>
 
             @if ($yontemSecim)
-                <div style="margin-top:1rem;border:1px solid {{ $mor }};border-radius:.5rem;padding:.75rem;font-size:.85rem;background:rgb(139 92 246 / .06)">
+                <div style="margin-top:1rem;border:1px solid {{ $mor }};border-radius:.5rem;padding:.75rem;font-size:.85rem;background:rgb(37 99 235 / .06)">
                     <strong>{{ $yontemler[$yontemSecim]['ad'] }}</strong> seçildi. Devam etmek için "{{ $ileriEtiket[2] }}" butonuna tıklayın.
                 </div>
             @endif
@@ -364,7 +364,7 @@
 
             {{-- Başlangıç --}}
             @if ($aiAsama === 'baslangic')
-                <div style="text-align:center;padding:1.75rem 1rem;border:1px dashed rgb(139 92 246 / .5);border-radius:.75rem;margin-top:1rem">
+                <div style="text-align:center;padding:1.75rem 1rem;border:1px dashed rgb(37 99 235 / .5);border-radius:.75rem;margin-top:1rem">
                     <div style="font-size:1.5rem">✨</div>
                     <div style="font-weight:700;margin-top:.35rem">AI ile Risk Değerlendirmesi Başlat</div>
                     <p style="font-size:.85rem;color:rgb(107 114 128);max-width:36rem;margin:.5rem auto">
@@ -386,7 +386,7 @@
                             <button type="button" wire:click="aiSektorSec('{{ $anahtar }}')"
                                 style="text-align:left;padding:.85rem;border-radius:.6rem;cursor:pointer;
                                     border:2px solid {{ $sec ? $mor : 'rgb(107 114 128 / .3)' }};
-                                    background:{{ $sec ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                    background:{{ $sec ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                                 <div style="display:flex;align-items:center;gap:.5rem;font-weight:600">
                                     <x-filament::icon :icon="$s['ikon']" style="width:1.1rem;height:1.1rem"/>
                                     {{ $s['ad'] }}
@@ -398,7 +398,7 @@
                     @if ($aiSektor)
                         @php $sektorSablonlari = $this->aiSektorSablonlari(); @endphp
                         @if ($sektorSablonlari->isNotEmpty())
-                            <div style="{{ $kutu }};border-color:{{ $mor }};padding:.75rem;margin-top:1rem;background:rgb(139 92 246 / .06)">
+                            <div style="{{ $kutu }};border-color:{{ $mor }};padding:.75rem;margin-top:1rem;background:rgb(37 99 235 / .06)">
                                 <div style="font-size:.85rem;font-weight:600">
                                     ⚡ Bu sektör için {{ $sektorSablonlari->count() }} kayıtlı şablonunuz var — sohbete girmeden direkt kullanabilirsiniz:
                                 </div>
@@ -434,7 +434,7 @@
                             <button type="button" wire:click="aiAltKategoriToggle({{ $ai }})"
                                 style="padding:.35rem .7rem;border-radius:9999px;cursor:pointer;font-size:.8rem;
                                     border:1px solid {{ $sec ? $mor : 'rgb(107 114 128 / .4)' }};
-                                    background:{{ $sec ? 'rgb(139 92 246 / .12)' : 'transparent' }}">
+                                    background:{{ $sec ? 'rgb(37 99 235 / .12)' : 'transparent' }}">
                                 {{ $sec ? '✓ ' : '' }}{{ $ak }}
                             </button>
                         @endforeach
@@ -577,7 +577,7 @@
                                     wire:click="aiCevapla('{{ $siradaki['anahtar'] }}', '{{ $sec['deger'] }}', {{ $coklu ? 'true' : 'false' }})"
                                     style="text-align:left;padding:.55rem .75rem;border-radius:.5rem;cursor:pointer;font-size:.85rem;
                                         border:1px solid {{ $isaretli ? $mor : 'rgb(107 114 128 / .35)' }};
-                                        background:{{ $isaretli ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
+                                        background:{{ $isaretli ? 'rgb(37 99 235 / .1)' : 'transparent' }}">
                                     {{ $coklu ? ($isaretli ? '☑ ' : '☐ ') : '○ ' }}{{ $sec['etiket'] }}
                                 </button>
                             @endforeach
@@ -617,7 +617,7 @@
                         <button type="button" wire:click="aiAdayToggle('{{ $aday['anahtar'] }}')"
                             style="text-align:left;padding:.6rem .75rem;border-radius:.5rem;cursor:pointer;
                                 border:1px solid {{ $sec ? $mor : 'rgb(107 114 128 / .3)' }};
-                                background:{{ $sec ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                background:{{ $sec ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                             <div style="font-weight:600;font-size:.85rem">{{ $sec ? '☑ ' : '☐ ' }}{{ $aday['tehlike'] }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128)">
                                 {{ $aday['risk'] }}
@@ -811,7 +811,7 @@
                         <button type="button" wire:click="excelAdayToggle('{{ $aday['anahtar'] }}')"
                             style="text-align:left;padding:.6rem .75rem;border-radius:.5rem;cursor:pointer;
                                 border:1px solid {{ $sec ? $mor : 'rgb(107 114 128 / .3)' }};
-                                background:{{ $sec ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                background:{{ $sec ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                             <div style="font-weight:600;font-size:.85rem">{{ $sec ? '☑ ' : '☐ ' }}{{ $aday['tehlike'] }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128)">
                                 @if ($aday['faaliyet'] ?? null) {{ $aday['faaliyet'] }} · @endif
@@ -897,7 +897,7 @@
                         <button type="button" wire:click="excelAdayToggle('{{ $aday['anahtar'] }}')"
                             style="text-align:left;padding:.6rem .75rem;border-radius:.5rem;cursor:pointer;
                                 border:1px solid {{ $sec ? $mor : 'rgb(107 114 128 / .3)' }};
-                                background:{{ $sec ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                background:{{ $sec ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                             <div style="font-weight:600;font-size:.85rem">{{ $sec ? '☑ ' : '☐ ' }}{{ $aday['tehlike'] }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128)">
                                 @if ($aday['faaliyet'] ?? null) {{ $aday['faaliyet'] }} · @endif
