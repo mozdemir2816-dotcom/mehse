@@ -28,12 +28,11 @@ class SayfaAileleri
     {
         return [
             'kontrol' => [
-                // Komuta Merkezi 5 sekmeden 3'e indi (29.10.2026): İşyeri Durumu + Tesis Uygunluğu + Uzman Raporları
-                // "Firma Denetim & Operasyon" altında birleşti; eski adresler geriye uyum için çalışmaya devam eder.
+                // Komuta Merkezi 3 sekme: Portföy Genel Bakış, Firma Denetim & Operasyon, Risk Panosu.
+                // Profilim artık Hesap & Arşiv altında kendi temiz girişinde yer alır (20.11.2026).
                 [Pages\KontrolMerkezi::class, 'Portföy Genel Bakış'],
                 [Pages\FirmaDenetimOperasyon::class, 'Firma Denetim & Operasyon'],
                 [Pages\RiskMerkezi::class, 'Risk Panosu'],
-                [Pages\Profilim::class, 'Profilim'],
             ],
             'saha' => [
                 [Pages\HizliSahaBulgusu::class, 'Bulgular'],
@@ -161,9 +160,9 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
-        // Kontrol Merkezi: Profilim "Portföy Genel Bakış" sekmesinin alt sayfası (30.10.2026)
+        // Kontrol Merkezi: 3 ana sekme (Profilim artık Hesap & Arşiv menüsünde — çift sekme şeridi kaldırıldı)
         'kontrol' => [
-            ['etiket' => 'Portföy Genel Bakış', 'ikon' => 'heroicon-o-squares-2x2', 'siniflar' => [Pages\KontrolMerkezi::class, Pages\Profilim::class]],
+            ['etiket' => 'Portföy Genel Bakış', 'ikon' => 'heroicon-o-squares-2x2', 'siniflar' => [Pages\KontrolMerkezi::class]],
             ['etiket' => 'Firma Denetim & Operasyon', 'ikon' => 'heroicon-o-clipboard-document-check', 'siniflar' => [Pages\FirmaDenetimOperasyon::class]],
             ['etiket' => 'Risk Panosu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\RiskMerkezi::class]],
         ],

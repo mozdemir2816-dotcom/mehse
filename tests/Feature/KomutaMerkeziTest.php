@@ -43,11 +43,7 @@ class KomutaMerkeziTest extends TestCase
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame([false, true, false], array_column($g['ust'], 'aktif'));
-
-        // Profilim, "Portföy Genel Bakış" sekmesinin alt sayfası (ayrı menü girişi değil).
-        $genel = SayfaAileleri::sekmeGruplari([\App\Filament\Pages\Profilim::class]);
-        $this->assertSame('Portföy Genel Bakış', collect($genel['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertSame(['Portföy Genel Bakış', 'Profilim'], array_column($genel['alt'], 'etiket'));
+        $this->assertSame([], $g['alt']);
     }
 
     public function test_birlesik_sayfa_acilir_ve_uc_bolum_gosterir(): void

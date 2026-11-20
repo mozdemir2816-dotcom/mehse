@@ -33,14 +33,14 @@ class MenuUstDuzeyTest extends TestCase
         $this->assertSame(['Risk Yönetim Merkezi', 'Eğitim Yönetim Merkezi', 'Yıllık Planlar & Değerlendirme',
             'Sağlık & Olay Merkezi', 'Acil Durum & Yangın Merkezi', 'İSG Kurulu'], $gorunen['Merkezler']);
         $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş'], $gorunen['Firmalar & Çalışanlar']);
-        $this->assertSame(['Arşiv', 'Araçlar', 'Pazarlama & Talepler', 'Fatura & Profil', 'Ayarlar'], $gorunen['Hesap & Arşiv']);
+        $this->assertSame(['Arşiv', 'Araçlar', 'Pazarlama & Talepler', 'Fatura & Profil', 'Profilim', 'Ayarlar', 'OSGB Cari & Tahsilat'], $gorunen['Hesap & Arşiv']);
 
         $this->assertTrue(HizliSahaBulgusu::shouldRegisterNavigation());
         $this->assertFalse(SahaEkrani::shouldRegisterNavigation());
-        $this->assertFalse(Profilim::shouldRegisterNavigation());
+        $this->assertTrue(Profilim::shouldRegisterNavigation());
     }
 
-    public function test_saha_ekrani_genel_ayarlar_sekmesinde_profilim_portfoy_genel_bakista(): void
+    public function test_saha_ekrani_genel_ayarlar_sekmesinde_profilim_ayri_menude(): void
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
@@ -49,10 +49,7 @@ class MenuUstDuzeyTest extends TestCase
         $this->assertSame('Genel Ayarlar & Görünüm', collect($ayarlar['ust'])->firstWhere('aktif', true)['etiket']);
         $this->assertSame(['Ayarlar', 'Saha Ekranı'], array_column($ayarlar['alt'], 'etiket'));
 
-        $kontrol = SayfaAileleri::sekmeGruplari([Profilim::class]);
-        $this->assertSame('kontrol', $kontrol['aile']);
-        $this->assertSame('Portföy Genel Bakış', collect($kontrol['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertSame(['Portföy Genel Bakış', 'Profilim'], array_column($kontrol['alt'], 'etiket'));
+        $this->assertNull(SayfaAileleri::sekmeGruplari([Profilim::class]));
 
         foreach ([SahaEkrani::class, Profilim::class, Ayarlar::class, KontrolMerkezi::class] as $sayfa) {
             $this->get($sayfa::getUrl())->assertSuccessful();

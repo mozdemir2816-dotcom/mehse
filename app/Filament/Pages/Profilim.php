@@ -51,13 +51,10 @@ class Profilim extends Page
 
     protected static ?int $navigationSort = 5;
 
-    /**
-     * Profilim, Kontrol Merkezi > "Portföy Genel Bakış" sekmesinin alt sayfasıdır (App\Support\SayfaAileleri, 'kontrol').
-     * Kontrol Merkezi'ne yetkisi olmayan kullanıcı sayfayı kaybetmesin diye menüde yalnız o durumda görünür.
-     */
+    /** Profilim, Hesap & Arşiv altında doğrudan görünür (20.11.2026 — Komuta Merkezi çift sekmesi sadeleştirildi). */
     public static function shouldRegisterNavigation(): bool
     {
-        return ! KontrolMerkezi::canAccess();
+        return static::canAccess();
     }
 
     protected static ?string $slug = 'profilim';

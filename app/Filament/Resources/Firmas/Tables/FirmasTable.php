@@ -82,6 +82,16 @@ class FirmasTable
                     ->modalDescription('Firma ve bağlı TÜM kayıtları (çalışanlar, eğitimler, risk değerlendirmeleri...) kalıcı silinir. Bu işlem geri alınamaz.'),
                 EditAction::make()->iconButton()->tooltip('Düzenle')->hidden(fn (Firma $record) => $record->trashed()),
                 ActionGroup::make([
+                    Action::make('hizliEvrakMatrisi')
+                        ->label('Hızlı Evrak Matrisi')
+                        ->icon('heroicon-o-squares-2x2')
+                        ->color('primary')
+                        ->url(fn (Firma $record) => \App\Filament\Pages\KontrolMerkezi::getUrl(['firma' => $record->id, 'sekme' => 'hizli_evrak'])),
+                    Action::make('isverenUyumKarnesi')
+                        ->label('İşveren Uyum Karnesi (PDF)')
+                        ->icon('heroicon-o-document-chart-bar')
+                        ->color('info')
+                        ->action(fn (Firma $record) => \App\Support\IsverenFirmaKarnesiUretici::pdf($record)),
                     Action::make('acilDurumPlani')
                         ->label('Acil Durum Planı')
                         ->icon('heroicon-o-exclamation-triangle')

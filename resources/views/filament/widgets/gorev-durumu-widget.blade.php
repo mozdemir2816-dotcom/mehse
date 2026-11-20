@@ -43,6 +43,28 @@
                 <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.45rem">
                     Her çubuk bir firma. Tıklayınca aşağıdaki görevler o firmaya süzülür; tekrar tıklayınca tüm firmalar döner.
                 </div>
+                @php $seciliSeritFirma = filled($arama) ? collect($serit)->firstWhere('unvan', $arama) : null; @endphp
+                @if ($seciliSeritFirma)
+                    <div style="margin-top:.65rem;padding:.55rem .8rem;border-radius:10px;background:#EFF6FF;border:1px solid #BFDBFE;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap">
+                        <div style="font-size:.82rem;font-weight:700;color:#1E3A8A">
+                            Seçili Firma: {{ $seciliSeritFirma['ad'] }}
+                        </div>
+                        <div style="display:flex;align-items:center;gap:.45rem;flex-wrap:wrap">
+                            <a href="{{ \App\Filament\Pages\KontrolMerkezi::getUrl(['firma' => $seciliSeritFirma['id'], 'sekme' => 'hizli_evrak']) }}"
+                                style="font-size:.76rem;font-weight:600;padding:.28rem .65rem;border-radius:8px;background:#2563EB;color:#FFFFFF;text-decoration:none">
+                                Hızlı Evrak Matrisi →
+                            </a>
+                            <a href="{{ \App\Filament\Pages\ZiyaretModu::getUrl(['firma' => $seciliSeritFirma['id']]) }}"
+                                style="font-size:.76rem;font-weight:600;padding:.28rem .65rem;border-radius:8px;background:#FFFFFF;border:1px solid #BFDBFE;color:#1D4ED8;text-decoration:none">
+                                Ziyaret Modu →
+                            </a>
+                            <button type="button" wire:click="firmaSec({{ $seciliSeritFirma['id'] }})"
+                                style="font-size:.74rem;font-weight:600;padding:.26rem .55rem;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#475569;cursor:pointer">
+                                Tüm Firmalar
+                            </button>
+                        </div>
+                    </div>
+                @endif
             </div>
         @endif
 
