@@ -69,4 +69,20 @@ class KirikFotografTemizlemeTest extends TestCase
         $this->assertNull($dof->fresh()->maddeler[1]['foto_yolu']);
         $this->assertSame(['dof-foto/gecerli.jpg'], $denetim->fresh()->cevaplar['M1']['fotolar']);
     }
+
+    public function test_storage_yedek_rotasi_oturumla_public_dosyayi_sunar_ve_izinsiz_engeller(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('dof-foto/ornek.jpeg', 'fake-jpeg-bytes');
+
+        // Misafir erişemez (girişe yönlenir)
+        $this->get('/storage/dof-foto/ornek.jpeg')->assertRedirect();
+
+        // Oturum açmış kullanıcı görebilir; path traversal ve izinli olmayan uzantılar 404
+        $this->actingAs(User::factory()->create());
+        $this->get('/storage/dof-foto/ornek.jpeg')->assertOk();
+        $this->get('/storage/dof-foto/olmayan.jpeg')->assertNotFound();
+        $this->get('/storage/../.env')->assertNotFound();
+        $this->get('/storage/dof-foto/test.php')->assertNotFound();
+    }
 }

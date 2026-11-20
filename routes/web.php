@@ -157,3 +157,24 @@ Route::post('/mehse/mevzuat-sor', function (Request $request) {
 
     return response()->json(\App\Support\GeminiMevzuatDanismani::sor($veri['soru']));
 })->middleware(['auth', 'throttle:30,1'])->name('mehse.mevzuat.sor');
+
+// Paylaşımlı sunucuda public_html/storage sembolik bağlantısı eksik olduğunda public diskindeki
+// saha/DÖF fotoğrafları ve görsellerin 404 vermemesi için oturum korumalı güvenli akış.
+Route::get('/storage/{yol}', function (string $yol) {
+    $temiz = ltrim($yol, '/');
+    abort_if(
+        $temiz === ''
+        || str_contains($temiz, '..')
+        || str_contains($temiz, "\0")
+        || preg_match('#(^|/)\.#', $temiz),
+        404,
+    );
+
+    $uzanti = strtolower(pathinfo($temiz, PATHINFO_EXTENSION));
+    abort_unless(in_array($uzanti, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'pdf'], true), 404);
+
+    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    abort_unless($disk->exists($temiz), 404);
+
+    return response()->file($disk->path($temiz), ['Cache-Control' => 'private, max-age=3600']);
+})->where('yol', '.*')->middleware('auth:web,isyeri,calisan')->name('mehse.storage.dosya');
