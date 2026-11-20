@@ -41,8 +41,18 @@
     table.imza .kucuk { color: #555; font-size: 8.5px; }
 
     .foto-sayfa { page-break-before: always; }
-    .foto-sayfa .baslik2 { font-size: 10.5px; font-weight: bold; margin: 0 0 6px; }
-    .foto-sayfa img { max-width: 100%; max-height: 640px; }
+    .foto-sayfa-alt { font-size: 9px; font-weight: bold; color: #333; margin: 0 0 6px; text-align: center; }
+    table.foto-izgara { width: 100%; border-collapse: separate; border-spacing: 6px; table-layout: fixed; }
+    table.foto-izgara td.foto-kart { width: 25%; border: 1px solid #bbb; border-radius: 4px; padding: 5px; vertical-align: top; background: #fafafa; }
+    table.foto-izgara td.foto-bos { width: 25%; border: none; background: transparent; }
+    .foto-kutu { text-align: center; background: #fff; border: 1px solid #e5e7eb; padding: 3px; margin-bottom: 4px; }
+    .foto-kutu img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
+    .foto-kutu.tek-satir { height: 270px; }
+    .foto-kutu.tek-satir img { max-height: 264px; }
+    .foto-kutu.cift-satir { height: 210px; }
+    .foto-kutu.cift-satir img { max-height: 204px; }
+    .foto-baslik { font-size: 8px; font-weight: bold; color: #111; margin-bottom: 2px; }
+    .foto-aciklama { font-size: 7.4px; color: #333; line-height: 1.25; }
 </style>
 </head>
 <body>
@@ -132,20 +142,61 @@
     </tr>
 </table>
 
-{{-- Fotoğraf kanıtı sayfaları: yalnız diskte gerçekten bulunan fotoğraflar --}}
-@php $fotoNo = 0; @endphp
-@foreach ($maddeler as $i => $m)
-    @if ($fotoVar($m))
-        @php $fotoNo++; @endphp
-        <div class="foto-sayfa">
-            <div class="baslik">
-                <h1>ÇOKLU DÜZELTİCİ ÖNLEYİCİ FAALİYET (DÖF) RAPORU</h1>
-                <div class="firma">{{ $firma?->unvan }}</div>
-            </div>
-            <div class="baslik2">FOTOĞRAF KANITI {{ $fotoNo }} · Madde {{ $i + 1 }} — {{ $m['tespit'] ?? '' }}</div>
-            <img src="{{ $fotoYolu($m) }}">
+{{-- Fotoğraf kanıtı sayfaları: sayfa başına en fazla 8 fotoğraf (4×2 ızgara) — gereksiz sayfa israfını önler --}}
+@php
+    $fotoListesi = [];
+    foreach ($maddeler as $i => $m) {
+        if ($fotoVar($m)) {
+            $fotoListesi[] = [
+                'no' => count($fotoListesi) + 1,
+                'madde_no' => $i + 1,
+                'tespit' => (string) ($m['tespit'] ?? ''),
+                'oncelik' => $m['oncelik'] ?? 'orta',
+                'yol' => $fotoYolu($m),
+            ];
+        }
+    }
+    $fotoSayfalari = array_chunk($fotoListesi, 8);
+    $toplamFotoSayfa = count($fotoSayfalari);
+    $toplamFoto = count($fotoListesi);
+@endphp
+@foreach ($fotoSayfalari as $sayfaIndex => $sayfaFotolari)
+    @php
+        $tekSatir = count($sayfaFotolari) <= 4;
+        $satirlar = array_chunk($sayfaFotolari, 4);
+    @endphp
+    <div class="foto-sayfa">
+        <div class="baslik">
+            <h1>ÇOKLU DÜZELTİCİ ÖNLEYİCİ FAALİYET (DÖF) RAPORU</h1>
+            <div class="firma">{{ $firma?->unvan }}</div>
         </div>
-    @endif
+        <div class="foto-sayfa-alt">
+            FOTOĞRAF KANITLARI ({{ $sayfaIndex + 1 }} / {{ $toplamFotoSayfa }}) · Toplam {{ $toplamFoto }} Fotoğraf
+        </div>
+        <table class="foto-izgara">
+            @foreach ($satirlar as $satir)
+                <tr>
+                    @foreach ($satir as $f)
+                        <td class="foto-kart">
+                            <div class="foto-kutu {{ $tekSatir ? 'tek-satir' : 'cift-satir' }}">
+                                <img src="{{ $f['yol'] }}">
+                            </div>
+                            <div class="foto-baslik">
+                                FOTOĞRAF KANITI {{ $f['no'] }} · Madde {{ $f['madde_no'] }}
+                                <span class="oncelik-{{ $f['oncelik'] }}">({{ \App\Models\DofRaporu::oncelikEtiketi($f['oncelik']) }})</span>
+                            </div>
+                            <div class="foto-aciklama">
+                                {{ \Illuminate\Support\Str::limit($f['tespit'], 115) }}
+                            </div>
+                        </td>
+                    @endforeach
+                    @for ($bos = count($satir); $bos < 4; $bos++)
+                        <td class="foto-bos"></td>
+                    @endfor
+                </tr>
+            @endforeach
+        </table>
+    </div>
 @endforeach
 
 </body>

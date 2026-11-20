@@ -112,6 +112,36 @@ class DofOlusturTest extends TestCase
         $this->assertStringContainsString($yol, $html);
     }
 
+    public function test_14_fotografli_dof_pdfinde_fotograflar_2_sayfaya_sigdirilir(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg', 600, 800)->store('dof-foto', 'public');
+
+        $maddeler = [];
+        for ($i = 1; $i <= 14; $i++) {
+            $maddeler[] = [
+                'tespit' => "Madde {$i} — Dış cephe iskelesinde korkuluk ve platform eksikliği tespit edilmiştir.",
+                'oncelik' => 'kritik',
+                'durum' => 'acik',
+                'foto_yolu' => $yol,
+            ];
+        }
+
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek Şantiye A.Ş.']);
+        $rapor = DofRaporu::create(['firma_id' => $firma->id, 'maddeler' => $maddeler]);
+
+        $html = view('pdf.dof-raporu', ['rapor' => $rapor, 'firma' => $firma])->render();
+
+        $this->assertSame(2, substr_count($html, 'class="foto-sayfa"'));
+        $this->assertStringContainsString('FOTOĞRAF KANITLARI (1 / 2) · Toplam 14 Fotoğraf', $html);
+        $this->assertStringContainsString('FOTOĞRAF KANITLARI (2 / 2) · Toplam 14 Fotoğraf', $html);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+        $pdf->render();
+        // 2 tablo sayfası + 2 fotoğraf kanıt sayfası = en fazla 4 sayfa (eskiden 16 sayfaydı)
+        $this->assertLessThanOrEqual(4, $pdf->getDomPDF()->getCanvas()->get_page_count());
+    }
+
     public function test_dof_pdf_madde_tablosunda_satir_ici_foto_gosterilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
