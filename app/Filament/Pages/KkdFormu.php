@@ -97,6 +97,11 @@ class KkdFormu extends Page
 
         if ($firmaId = request()->integer('firma')) {
             $this->firmaId = $firmaId;
+
+            if ($isKalemi = trim((string) request()->query('is_kalemi', ''))) {
+                $this->secilenIsKalemi = $isKalemi;
+                $this->isKalemindenDoldur();
+            }
         }
     }
 

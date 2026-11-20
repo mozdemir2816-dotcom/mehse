@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\OrtamOlcumu as OrtamOlcumuModel;
+use App\Models\TespitOneriDefteri as TespitOneriDefteriModel;
 use App\Filament\Support\ImzaSecenegi;
 use App\Support\OrtamOlcumuUretici;
 use BackedEnum;
@@ -242,6 +243,151 @@ class OrtamOlcumleri extends Page
         if (! $sessiz) {
             Notification::make()->title('Ortam ölçümleri listesi kaydedildi')->success()->send();
         }
+    }
+
+    /**
+     * Sınır değer aşımı bulunan ölçüm satırlarını tek tıkla DÖF Oluştur sayfasına aktarır.
+     * $index verilirse yalnızca ilgili satır, null ise tüm aşım satırları aktarılır.
+     */
+    public function asimlariDofaAktar(?int $index = null): void
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce bir firma seçin')->danger()->send();
+
+            return;
+        }
+
+        $this->kaydet(sessiz: true);
+
+        $hedef = $this->asimSatirlari($index);
+
+        if ($hedef === []) {
+            Notification::make()->title('Aktarılacak sınır değer aşımı bulunamadı')->warning()->send();
+
+            return;
+        }
+
+        $maddeler = array_map(function (array $s): array {
+            $hazir = $this->asimMaddesiHazirla($s);
+
+            return [
+                'tespit' => $hazir['tespit'],
+                'oncelik' => 'yuksek',
+                'oneri' => $hazir['oneri'],
+                'sorumlu' => null,
+                'termin' => now()->addDays(15)->toDateString(),
+                'durum' => 'acik',
+            ];
+        }, $hedef);
+
+        session([
+            'dof_aktarim' => [
+                'firma_id' => $this->firmaId,
+                'kaynak' => 'Ortam Ölçümleri',
+                'maddeler' => $maddeler,
+            ],
+        ]);
+
+        $this->redirect(DofOlustur::getUrl());
+    }
+
+    /**
+     * Sınır değer aşımı bulunan ölçüm satırlarını firmanın Onaylı Defterine
+     * (Tespit ve Öneri Defteri) mevzuat dayanağı ile birlikte işler.
+     */
+    public function asimlariDeftereAktar(?int $index = null): void
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce bir firma seçin')->danger()->send();
+
+            return;
+        }
+
+        $this->kaydet(sessiz: true);
+
+        $hedef = $this->asimSatirlari($index);
+
+        if ($hedef === []) {
+            Notification::make()->title('Deftere işlenecek sınır değer aşımı bulunamadı')->warning()->send();
+
+            return;
+        }
+
+        $defter = TespitOneriDefteriModel::firmaIcin($this->firma);
+        $mevcut = $defter->maddeler ?? [];
+
+        foreach ($hedef as $s) {
+            $hazir = $this->asimMaddesiHazirla($s);
+            $mevcut[] = [
+                'tespit' => $hazir['tespit'],
+                'oneri' => $hazir['oneri'],
+                'dayanak' => $hazir['dayanak'],
+                'oncelik' => 'yuksek',
+                'foto_yolu' => null,
+            ];
+        }
+
+        $defter->update(['maddeler' => $mevcut]);
+
+        Notification::make()
+            ->title(count($hedef).' sınır değer aşımı Onaylı Deftere işlendi')
+            ->success()
+            ->send();
+
+        $this->redirect(TespitOneriDefteri::getUrl(['firma' => $this->firmaId]));
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function asimSatirlari(?int $index): array
+    {
+        if ($index !== null) {
+            return isset($this->satirlar[$index]) ? [$this->satirlar[$index]] : [];
+        }
+
+        return array_values(array_filter(
+            $this->satirlar,
+            fn (array $s): bool => ($s['sonuc'] ?? '') === 'asim',
+        ));
+    }
+
+    /** @return array{tespit: string, oneri: string, dayanak: string} */
+    private function asimMaddesiHazirla(array $s): array
+    {
+        $parametre = trim((string) ($s['parametre'] ?? 'Ortam Ölçümü'));
+        $bolge = trim((string) ($s['bolge'] ?? ''));
+        $birim = trim((string) ($s['birim'] ?? ''));
+        $olculen = trim((string) ($s['olculen_deger'] ?? ''));
+        $sinir = trim((string) ($s['sinir_deger'] ?? ''));
+        $raporNo = trim((string) ($s['rapor_no'] ?? ''));
+        $tarih = filled($s['olcum_tarihi'] ?? null)
+            ? \Illuminate\Support\Carbon::parse($s['olcum_tarihi'])->format('d.m.Y')
+            : '';
+
+        $detay = [];
+        if ($olculen !== '') {
+            $detay[] = 'ölçülen: '.trim($olculen.' '.$birim);
+        }
+        if ($sinir !== '') {
+            $detay[] = 'sınır değer: '.trim($sinir.' '.$birim);
+        }
+        if ($tarih !== '') {
+            $detay[] = 'tarih: '.$tarih;
+        }
+        if ($raporNo !== '') {
+            $detay[] = 'rapor: '.$raporNo;
+        }
+
+        $tespit = 'Ortam ölçümü sınır değer aşımı — '.$parametre
+            .($bolge !== '' ? ' ('.$bolge.')' : '')
+            .($detay !== [] ? ': '.implode(', ', $detay).'.' : '.');
+
+        $oneri = 'Aşımın kaynağı incelenerek mühendislik ve toplu koruma önlemleri (havalandırma, yalıtım, bakım, kaynak kontrolü) uygulanmalı; önlem tamamlanıncaya kadar maruz kalan çalışanlara uygun KKD kullandırılmalı ve akredite laboratuvar ile kontrol ölçümü tekrarlanmalıdır.';
+
+        return [
+            'tespit' => $tespit,
+            'oneri' => $oneri,
+            'dayanak' => '6331 sayılı Kanun m.10 · İş Hijyeni Ölçüm, Test ve Analizleri Hakkında Yönetmelik',
+        ];
     }
 
     protected function getHeaderActions(): array

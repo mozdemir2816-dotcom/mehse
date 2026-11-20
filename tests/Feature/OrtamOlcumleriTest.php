@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\DofOlustur;
 use App\Filament\Pages\OrtamOlcumleri as OrtamOlcumleriSayfasi;
+use App\Filament\Pages\TespitOneriDefteri as TespitOneriDefteriSayfasi;
 use App\Models\Firma;
 use App\Models\OrtamOlcumu;
+use App\Models\TespitOneriDefteri;
 use App\Models\User;
 use App\Support\OrtamOlcumuUretici;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -214,5 +217,40 @@ class OrtamOlcumleriTest extends TestCase
         ob_start();
         OrtamOlcumuUretici::pdf(OrtamOlcumu::sole())->sendContent();
         $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
+
+    public function test_sinir_deger_asimlari_tek_tikla_dofa_ve_onayli_deftere_aktarilir(): void
+    {
+        $sayfa = Livewire::test(OrtamOlcumleriSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'Fiziksel Etkenler', 'Gürültü Maruziyeti (LEX,8h)')
+            ->set('satirlar.0.bolge', 'Pres Hattı')
+            ->set('satirlar.0.olcum_tarihi', '2026-04-15')
+            ->set('satirlar.0.olculen_deger', '92')
+            ->set('satirlar.0.rapor_no', 'LAB-2026-44')
+            ->call('katalogdanEkle', 'Toz Maruziyeti', 'Solunabilir Toz')
+            ->set('satirlar.1.olculen_deger', '1')
+            ->set('satirlar.1.sonuc', 'uygun');
+
+        // Sadece aşım olan 1 satır DÖF oturumuna aktarılır ve DofOlustur'a yönlenir.
+        $sayfa->call('asimlariDofaAktar')
+            ->assertRedirect(DofOlustur::getUrl());
+
+        $aktarim = session('dof_aktarim');
+        $this->assertSame($this->firma->id, $aktarim['firma_id']);
+        $this->assertSame('Ortam Ölçümleri', $aktarim['kaynak']);
+        $this->assertCount(1, $aktarim['maddeler']);
+        $this->assertSame('yuksek', $aktarim['maddeler'][0]['oncelik']);
+        $this->assertStringContainsString('Pres Hattı', $aktarim['maddeler'][0]['tespit']);
+        $this->assertStringContainsString('92', $aktarim['maddeler'][0]['tespit']);
+
+        // Aynı aşım Onaylı Deftere de mevzuat dayanağıyla işlenir.
+        $sayfa->call('asimlariDeftereAktar', 0)
+            ->assertRedirect(TespitOneriDefteriSayfasi::getUrl(['firma' => $this->firma->id]));
+
+        $defter = TespitOneriDefteri::where('firma_id', $this->firma->id)->sole();
+        $this->assertCount(1, $defter->maddeler);
+        $this->assertStringContainsString('6331', $defter->maddeler[0]['dayanak']);
+        $this->assertStringContainsString('LAB-2026-44', $defter->maddeler[0]['tespit']);
     }
 }

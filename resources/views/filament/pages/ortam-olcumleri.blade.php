@@ -46,6 +46,23 @@
                     </div>
                 @endforeach
             </div>
+
+            @if (($sonucSay['asim'] ?? 0) > 0)
+                <div style="border:1px solid rgb(220 38 38 / .35);background:rgb(254 242 242 / .85);border-radius:.75rem;padding:.75rem 1rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem">
+                    <div style="font-size:.84rem;color:#991b1b">
+                        <strong>{{ $sonucSay['asim'] }} ölçümde sınır değer aşımı tespit edildi.</strong>
+                        <span style="opacity:.85">6331 m.10 kapsamında düzeltici faaliyet başlatıp Onaylı Deftere işleyebilirsiniz.</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+                        <x-filament::button size="xs" color="danger" icon="heroicon-o-wrench-screwdriver" wire:click="asimlariDofaAktar">
+                            Aşımlardan DÖF Oluştur
+                        </x-filament::button>
+                        <x-filament::button size="xs" color="gray" icon="heroicon-o-book-open" wire:click="asimlariDeftereAktar">
+                            Onaylı Deftere İşle
+                        </x-filament::button>
+                    </div>
+                </div>
+            @endif
         @endif
 
         {{-- KATALOG + SERBEST EKLEME --}}
@@ -145,6 +162,10 @@
                                         <span style="font-size:.75rem;padding:.1rem .5rem;border-radius:999px;white-space:nowrap;border:1px solid {{ $terminRenk[$terminler[$i]] }}">{{ $terminEtiket[$terminler[$i]] }}</span>
                                     </td>
                                     <td style="padding:.4rem;text-align:center;white-space:nowrap">
+                                        @if (($s['sonuc'] ?? '') === 'asim')
+                                            <x-filament::button size="xs" color="danger" icon="heroicon-o-wrench-screwdriver" wire:click="asimlariDofaAktar({{ $i }})" title="Bu aşımı DÖF Oluştur'a aktar">DÖF</x-filament::button>
+                                            <x-filament::button size="xs" color="gray" icon="heroicon-o-book-open" wire:click="asimlariDeftereAktar({{ $i }})" title="Bu aşımı Onaylı Deftere işle">Defter</x-filament::button>
+                                        @endif
                                         @if (filled($s['olcum_tarihi'] ?? null))
                                             <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-path" wire:click="yeniOlcum({{ $i }})" title="Mevcut sonucu geçmişe al, yeni ölçüm gir">Yeni ölçüm</x-filament::button>
                                         @endif

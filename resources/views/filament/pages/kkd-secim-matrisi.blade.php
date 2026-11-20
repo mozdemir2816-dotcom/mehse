@@ -88,8 +88,11 @@
                                                 style="width:100%;margin-top:.2rem;padding:.1rem .25rem;border-radius:.3rem;border:1px solid rgb(107 114 128 / .25);background:transparent;font-size:.68rem;text-align:center">
                                         </td>
                                     @endforeach
-                                    <td style="padding:.3rem;text-align:center">
-                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem">✕</button>
+                                    <td style="padding:.3rem;text-align:center;white-space:nowrap">
+                                        @if (filled($s['is_kalemi'] ?? null))
+                                            <x-filament::button size="xs" color="gray" icon="heroicon-o-document-check" wire:click="kkdFormunaGec({{ $i }})" title="Bu iş kaleminin KKD listesiyle Zimmet Formu aç">Zimmet</x-filament::button>
+                                        @endif
+                                        <button type="button" wire:click="satirSil({{ $i }})" style="color:#b91c1c;background:none;border:none;cursor:pointer;font-size:1rem;margin-left:.25rem">✕</button>
                                     </td>
                                 </tr>
                             @endforeach

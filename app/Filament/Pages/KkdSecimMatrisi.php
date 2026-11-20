@@ -212,6 +212,25 @@ class KkdSecimMatrisi extends Page
         $this->kaydet(sessiz: true);
     }
 
+    /** Matristeki iş kalemini kaydedip ilgili KKD standardı dolu olarak KKD Zimmet Formu'nu açar. */
+    public function kkdFormunaGec(int $index): void
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce bir firma seçin')->danger()->send();
+
+            return;
+        }
+
+        $this->kaydet(sessiz: true);
+
+        $isKalemi = trim((string) ($this->satirlar[$index]['is_kalemi'] ?? ''));
+
+        $this->redirect(KkdFormu::getUrl(array_filter([
+            'firma' => $this->firmaId,
+            'is_kalemi' => $isKalemi !== '' ? $isKalemi : null,
+        ])));
+    }
+
     public function kaydet(bool $sessiz = false): void
     {
         $matris = $this->matris();

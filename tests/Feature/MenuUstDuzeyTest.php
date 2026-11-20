@@ -29,7 +29,7 @@ class MenuUstDuzeyTest extends TestCase
             ->mapWithKeys(fn ($g) => [(string) $g->getLabel() => $g->getItems()->map(fn ($i) => $i->getLabel())->values()->all()])->all();
         $this->assertSame(['', 'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Arşiv'], array_keys($gorunen));
         $this->assertSame(['Ana Sayfa', 'Kontrol Merkezi'], $gorunen['']);
-        $this->assertSame(['Saha', 'Ziyaret Planlama', 'İş İzin Formu', 'KKD', 'Ekipman & Ölçüm'], $gorunen['Günlük Saha İşi']);
+        $this->assertSame(['Saha', 'Ziyaret Planlama', 'Resmi Belgeler & PTW', 'KKD', 'Ekipman & Ölçüm'], $gorunen['Günlük Saha İşi']);
         $this->assertSame(['Risk Yönetim Merkezi', 'Eğitim Yönetim Merkezi', 'Yıllık Planlar & Değerlendirme',
             'Sağlık & Olay Merkezi', 'Acil Durum & Yangın Merkezi', 'İSG Kurulu'], $gorunen['Merkezler']);
         $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş'], $gorunen['Firmalar & Çalışanlar']);

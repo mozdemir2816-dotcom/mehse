@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\KkdFormu;
 use App\Filament\Pages\KkdSecimMatrisi as KkdSecimMatrisiSayfasi;
 use App\Models\Firma;
 use App\Models\KkdMatrisi;
@@ -142,5 +143,24 @@ class KkdSecimMatrisiTest extends TestCase
 
         $firmalar = Livewire::test(KkdSecimMatrisiSayfasi::class)->instance()->firmalar();
         $this->assertArrayNotHasKey($baskaFirma->id, $firmalar);
+    }
+
+    public function test_matris_satirindan_kkd_formuna_gecis_ve_otomatik_dolum(): void
+    {
+        $isKalemi = 'Yüksekte Çalışma (Çatı, Dış Cephe)';
+
+        Livewire::test(KkdSecimMatrisiSayfasi::class)
+            ->set('firmaId', $this->firma->id)
+            ->call('katalogdanEkle', 'İnşaat / Şantiye', $isKalemi)
+            ->call('kkdFormunaGec', 0)
+            ->assertRedirect(KkdFormu::getUrl(['firma' => $this->firma->id, 'is_kalemi' => $isKalemi]));
+
+        // Kaydetmeden geçilse bile matris kaydedilmiş olmalı ve KkdFormu iş kalemini otomatik doldurmalı.
+        $form = Livewire::withQueryParams(['firma' => $this->firma->id, 'is_kalemi' => $isKalemi])
+            ->test(KkdFormu::class);
+
+        $this->assertSame($this->firma->id, $form->get('firmaId'));
+        $this->assertSame($isKalemi, $form->get('secilenIsKalemi'));
+        $this->assertNotEmpty($form->get('matristenGelenKkdler'));
     }
 }
