@@ -1154,7 +1154,7 @@
     @endif
 
     {{-- NAVİGASYON ------------------------------------------------------- --}}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.5rem;padding-bottom:1.5rem;padding-right:4rem">
         <div>
             @if ($adim > 1)
                 <x-filament::button color="gray" icon="heroicon-o-chevron-left" wire:click="geri">Geri</x-filament::button>

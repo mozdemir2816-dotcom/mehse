@@ -92,11 +92,11 @@
         <button
             type="button"
             x-on:click="acik = !acik"
-            style="display:inline-flex;align-items:center;gap:.4rem;padding:.52rem .95rem;border-radius:999px;border:1px solid #1d4ed8;background:#2563eb;color:#ffffff;font-size:.8rem;font-weight:600;cursor:pointer;box-shadow:0 8px 20px -4px rgb(37 99 235 / .42)"
+            style="width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid #1d4ed8;background:#2563eb;color:#ffffff;cursor:pointer;box-shadow:0 8px 20px -4px rgb(37 99 235 / .45)"
+            aria-label="İSG Mevzuat Asistanı"
             title="İSG Mevzuat Asistanı (6331 & Yönetmelikler)"
         >
-            <x-filament::icon icon="heroicon-o-scale" style="width:1rem;height:1rem" />
-            <span x-text="acik ? 'Asistanı Kapat' : 'İSG Asistan'">İSG Asistan</span>
+            <x-filament::icon icon="heroicon-o-scale" style="width:1.25rem;height:1.25rem" />
         </button>
     </div>
 </div>

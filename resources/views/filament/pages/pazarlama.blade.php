@@ -80,6 +80,5 @@
                 </table>
             @endif
         </div>
-        {{ $this->adayFirmaKaydetAction }}
 </div>
 </x-filament-panels::page>

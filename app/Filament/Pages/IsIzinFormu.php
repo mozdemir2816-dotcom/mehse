@@ -48,7 +48,7 @@ class IsIzinFormu extends Page
 
     protected static ?string $title = 'İş İzin Formu (PTW)';
 
-    protected static ?string $navigationLabel = 'Resmi Belgeler & PTW';
+    protected static ?string $navigationLabel = 'Resmi Belgeler';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;

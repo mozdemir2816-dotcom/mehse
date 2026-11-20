@@ -24,8 +24,9 @@
             class="fi-topbar-item-btn fi-mehse-tema-btn"
             aria-label="Görünüm teması"
             x-tooltip="{ content: 'Görünüm teması', theme: $store.theme }"
+            style="width:2.25rem;height:2.25rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;padding:0"
         >
-            <x-filament::icon icon="heroicon-o-swatch" class="fi-icon fi-size-md" />
+            <x-filament::icon icon="heroicon-o-swatch" style="width:1.25rem;height:1.25rem;color:#475569" />
         </button>
     </x-slot>
 
