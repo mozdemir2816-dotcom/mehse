@@ -472,10 +472,29 @@
                             @endif
                         </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
+                    <div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap">
                         <span style="font-size:.88rem;font-weight:800;padding:.25rem .7rem;border-radius:999px;color:{{ $mRenk }};background:color-mix(in srgb, {{ $mRenk }} 15%, transparent)">
                             Uyum: %{{ $mOzet['oran'] }}
                         </span>
+                        <x-filament::button size="sm" color="gray" icon="heroicon-o-document-chart-bar" wire:click="isverenKarnesiPdf">
+                            📊 İşveren Karnesi PDF
+                        </x-filament::button>
+                        @if ($paylasim = $this->isverenKarnePaylasim)
+                            <span x-data="{ kopyalandi: false }" style="display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+                                <button type="button"
+                                    x-on:click="navigator.clipboard?.writeText(@js($paylasim['link'])).then(() => { kopyalandi = true; setTimeout(() => kopyalandi = false, 2500); })"
+                                    style="font-size:.78rem;font-weight:600;padding:.38rem .7rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;color:inherit;cursor:pointer"
+                                    title="İşveren için giriş gerektirmeyen 30 günlük salt-okunur PDF bağlantısını kopyala">
+                                    <span x-text="kopyalandi ? '✓ Bağlantı Kopyalandı (30 Gün)' : '🔗 İşveren Linki Kopyala (30 Gün)'">🔗 İşveren Linki Kopyala (30 Gün)</span>
+                                </button>
+                                @if ($paylasim['whatsapp'])
+                                    <a href="{{ $paylasim['whatsapp'] }}" target="_blank" rel="noopener"
+                                        style="font-size:.78rem;font-weight:600;padding:.38rem .7rem;border-radius:.5rem;border:1px solid rgb(22 163 74 / .45);background:rgb(22 163 74 / .1);color:#15803d;text-decoration:none">
+                                        💬 WhatsApp ile Gönder
+                                    </a>
+                                @endif
+                            </span>
+                        @endif
                         <x-filament::button size="sm" color="primary" icon="heroicon-o-archive-box-arrow-down" wire:click="mountAction('hizliEvrakPaketi')">
                             Seçili Firmanın Evraklarını ZIP İndir
                         </x-filament::button>

@@ -202,6 +202,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::PAGE_START,
                 fn (array $scopes) => view('filament.components.sayfa-sekmeleri', ['scopes' => $scopes]),
             )
+            // Ana modüllerin sağ üstünde "❓ Nasıl Kullanılır?" 3 adımlı görsel rehber — App\Support\SayfaRehberi.
+            ->renderHook(
+                PanelsRenderHook::PAGE_HEADER_ACTIONS_AFTER,
+                fn (array $scopes) => view('filament.components.nasil-kullanilir', ['scopes' => $scopes]),
+            )
             // İSG dosyası klasör yapısına göre (isgpratik "İSG Klasöründe Olması Gerekenler")
             ->navigationGroups($this->navGruplari())
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

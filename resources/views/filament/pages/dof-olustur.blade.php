@@ -166,9 +166,12 @@
                 <div style="grid-column:1/-1">
                     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
                         <label class="mehse-etiket">Tespit / Uygunsuzluk Tanımı <span class="mehse-hata">*</span></label>
-                        <x-filament::button size="xs" color="warning" icon="heroicon-o-sparkles" wire:click="aiOtoDoldur">
-                            ✨ Ham Nottan Düzeltici Faaliyet Oto-Doldur
-                        </x-filament::button>
+                        <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                            @include('filament.pages.partials.sesle-yaz', ['hedefModel' => 'yeniTespit'])
+                            <x-filament::button size="xs" color="warning" icon="heroicon-o-sparkles" wire:click="aiOtoDoldur">
+                                ✨ Ham Nottan Düzeltici Faaliyet Oto-Doldur
+                            </x-filament::button>
+                        </div>
                     </div>
                     <textarea wire:model="yeniTespit" rows="2" placeholder="Sahada tespit edilen uygunsuzluğu yazın (Örn: Pano kapağı açık, yangın tüpü önü kapalı...)"
                         style="margin-top:.2rem;width:100%;padding:.5rem .65rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem"></textarea>

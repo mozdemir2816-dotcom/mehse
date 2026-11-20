@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\MykMeslek;
 use App\Models\NaceKodu;
 use App\Support\GeminiMevzuatDanismani;
+use App\Support\IsgDenemeSinaviKutuphanesi;
 use App\Support\IsgSozlukKutuphanesi;
 use App\Support\SgkSicilCozumleyici;
 use BackedEnum;
@@ -305,5 +306,32 @@ class Araclar extends Page
     public function sozlukSonuclari(): array
     {
         return IsgSozlukKutuphanesi::filtrele($this->sozlukArama, $this->sozlukKategori);
+    }
+
+    // --- İSG Uzmanlık Deneme Sınavı (ÖSYM Modu) & Hap Notlar ---
+    /** @var array<int, int> soruIndex => secilenSikIndex */
+    public array $denemeCevaplari = [];
+
+    public bool $denemeTamamlandi = false;
+
+    public function denemeSikSec(int $soruIndex, int $sikIndex): void
+    {
+        $this->denemeCevaplari[$soruIndex] = $sikIndex;
+    }
+
+    public function denemeKontrolEt(): void
+    {
+        $this->denemeTamamlandi = true;
+    }
+
+    public function denemeSifirla(): void
+    {
+        $this->denemeCevaplari = [];
+        $this->denemeTamamlandi = false;
+    }
+
+    public function hapNotlarPdfIndir()
+    {
+        return IsgDenemeSinaviKutuphanesi::hapNotlarPdf();
     }
 }

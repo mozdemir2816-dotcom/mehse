@@ -5,6 +5,8 @@ namespace App\Filament\Pages;
 use App\Models\Firma;
 use App\Support\FirmaEvrakPaketi;
 use App\Support\FirmaEvrakZipUretici;
+use App\Support\IsverenFirmaKarnesiUretici;
+use App\Support\IsverenWhatsApp;
 use App\Support\PortfoyKarne;
 use App\Support\YasalTakvim;
 use BackedEnum;
@@ -174,11 +176,59 @@ class KontrolMerkezi extends Page
             : null;
     }
 
+    /** Seçili firma için 30 günlük salt-okunur İşveren İSG Uyum Karnesi imzalı bağlantısı ve WhatsApp linki. */
+    #[Computed]
+    public function isverenKarnePaylasim(): ?array
+    {
+        $firma = $this->secilenFirma;
+        if (! $firma) {
+            return null;
+        }
+
+        return [
+            'link' => IsverenWhatsApp::pdfBaglantisi('firma-karnesi', $firma->id),
+            'whatsapp' => IsverenWhatsApp::url($firma, IsverenWhatsApp::firmaKarnesiMesaji($firma), true),
+        ];
+    }
+
+    public function isverenKarnesiPdf()
+    {
+        $firma = $this->secilenFirma;
+        if (! $firma) {
+            Notification::make()->title('Önce bir firma seçin')->warning()->send();
+
+            return null;
+        }
+
+        return IsverenFirmaKarnesiUretici::pdf($firma);
+    }
+
     protected function getHeaderActions(): array
     {
         $bosFormlar = FirmaEvrakPaketi::bosFormlar();
 
         return [
+            Action::make('isverenUyumKarnesi')
+                ->label('📊 İşveren Uyum Karnesi (PDF)')
+                ->icon('heroicon-o-document-chart-bar')
+                ->color('gray')
+                ->modalHeading('📊 İşveren Salt-Okunur İSG Uyum Karnesi')
+                ->modalDescription('Seçili firmanın tüm yasal evrak durumunu, İSG-KATİP hizmet sürelerini ve ekip kontenjanlarını tek sayfalık yönetici karnesi (PDF) olarak indirin.')
+                ->modalSubmitActionLabel('Karneyi PDF İndir')
+                ->schema([
+                    Select::make('firma_id')
+                        ->label('Firma')
+                        ->options(fn () => $this->firmalar)
+                        ->default(fn () => $this->firmaId ?: array_key_first($this->firmalar))
+                        ->searchable()
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $firma = Firma::where('user_id', Filament::auth()->id())->findOrFail($data['firma_id']);
+
+                    return IsverenFirmaKarnesiUretici::pdf($firma);
+                }),
+
             Action::make('hizliEvrakPaketi')
                 ->label('📦 Hızlı Evrak Paketi (ZIP İndir)')
                 ->icon('heroicon-o-archive-box-arrow-down')

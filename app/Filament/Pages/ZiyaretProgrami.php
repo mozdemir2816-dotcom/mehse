@@ -497,19 +497,113 @@ class ZiyaretProgrami extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('ajandaZiyaretEkle')
+                ->label('+ Seçili Güne Firma Ziyareti Ekle')
+                ->icon('heroicon-o-plus-circle')
+                ->color('primary')
+                ->visible(fn () => $this->gorunum === 'ajanda')
+                ->modalHeading(fn () => 'Ajandaya Ziyaret Ekle — '.Carbon::parse($this->seciliTarih ?: now()->toDateString())->format('d.m.Y'))
+                ->modalSubmitActionLabel('Ziyareti Ekle')
+                ->schema([
+                    \Filament\Forms\Components\Select::make('firma_id')
+                        ->label('Firma Seçin')
+                        ->options(fn () => $this->firmalar)
+                        ->required(),
+                    \Filament\Forms\Components\DatePicker::make('tarih')
+                        ->label('Ziyaret Tarihi')
+                        ->default(fn () => $this->seciliTarih ?: now()->toDateString())
+                        ->required(),
+                    \Filament\Forms\Components\Select::make('amac')
+                        ->label('Ziyaret Amacı')
+                        ->options(fn () => collect($this->amacKategorileri)->mapWithKeys(fn ($v, $k) => is_int($k) ? [$v => $v] : [$k => $v])->all())
+                        ->default('Genel Saha Gözetimi'),
+                ])
+                ->action(function (array $data): void {
+                    $firma = Firma::where('user_id', Filament::auth()->id())->find($data['firma_id']);
+                    if (! $firma) {
+                        return;
+                    }
+
+                    $tarih = Carbon::parse($data['tarih']);
+                    $program = ZiyaretProgramiModel::firmaYilIcin($firma, $tarih->year);
+                    $aylar = $program->ziyaretler ?? array_fill(0, 12, [ZiyaretProgramiModel::bosGirdi()]);
+                    $ayIndex = $tarih->month - 1;
+                    $girdiler = ZiyaretProgramiModel::ayGirdileri($aylar[$ayIndex] ?? null);
+
+                    $yeniGirdi = [
+                        'tarih' => $tarih->toDateString(),
+                        'amac' => $data['amac'] ?? 'Genel Saha Gözetimi',
+                        'durum' => 'planlandi',
+                        'sure_saat' => YasalZiyaretSuresi::saat(YasalZiyaretSuresi::dakika($firma)) ?: 2.0,
+                        'notlar' => null,
+                    ];
+
+                    if (count($girdiler) === 1 && blank($girdiler[0]['tarih'] ?? null)) {
+                        $girdiler[0] = $yeniGirdi;
+                    } else {
+                        $girdiler[] = $yeniGirdi;
+                    }
+
+                    $aylar[$ayIndex] = $girdiler;
+                    $program->update(['ziyaretler' => $aylar]);
+
+                    $this->seciliTarih = $tarih->toDateString();
+                    $this->gosterilenAy = $tarih->format('Y-m');
+                    unset($this->gunlukGruplar, $this->ozet, $this->gunlukListe, $this->ayRozetleri, $this->program, $this->takvimGunler);
+
+                    Notification::make()->title($firma->unvan.' ziyaret takvimine eklendi')->body($tarih->format('d.m.Y'))->success()->send();
+                }),
+
             Action::make('otomatikDoldur')
                 ->label('Boş Ayları Otomatik Doldur')
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
-                ->visible(fn () => $this->gorunum === 'plan')
-                ->requiresConfirmation()
-                ->modalHeading('Boş ayları otomatik doldur')
-                ->modalDescription('Seçtiğiniz yıl için: elle veya daha önce doldurulmuş aylara DOKUNULMAZ. Hâlâ boş olan aylar; FOM MAKİNA / Orman Müdürlükleri gibi sabit kurallı firmalarda o kurala göre, diğer tüm aktif firmalarda ise İSG-KATİP süresine göre (günde en fazla 10 saat) otomatik doldurulur. Bugünden önceki günlere ziyaret konmaz.')
+                ->modalHeading('Boş ayları otomatik doldur (Kapasite & Meşgul Gün Filtreli)')
+                ->modalDescription('Seçtiğiniz yıl için elle veya daha önce doldurulmuş aylara dokunulmaz. Hâlâ boş olan aylar İSG-KATİP süresine, günlük kapasite sınırına, Cumartesi tercihine ve meşgul/tatil günlerine göre otomatik dağıtılır.')
                 ->modalSubmitActionLabel('Doldur')
-                ->action(function (): void {
-                    $sonuc = ZiyaretOtomatikPlanlayici::calistir($this->yil);
+                ->schema([
+                    \Filament\Forms\Components\Select::make('gunluk_max_saat')
+                        ->label('Günlük Maksimum Ziyaret Kapasitesi')
+                        ->options([
+                            '4' => '4 Saat / Gün (Yarım Gün)',
+                            '6' => '6 Saat / Gün',
+                            '8' => '8 Saat / Gün (1 Tam İş Günü)',
+                            '10' => '10 Saat / Gün (Varsayılan)',
+                            '12' => '12 Saat / Gün',
+                        ])
+                        ->default('10')
+                        ->required(),
+                    \Filament\Forms\Components\Toggle::make('cumartesi_dahil')
+                        ->label('Cumartesi Günlerini Ziyaret Takvimine Dahil Et')
+                        ->default(false),
+                    \Filament\Forms\Components\TextInput::make('mesgul_gunler')
+                        ->label('Meşgul / Kapalı / Tatil Günleri (İsteğe bağlı, virgülle ayırın)')
+                        ->placeholder('Örn: 29.10.2026, 01.01.2026'),
+                ])
+                ->action(function (array $data): void {
+                    $mesgul = collect(explode(',', (string) ($data['mesgul_gunler'] ?? '')))
+                        ->map(fn ($t) => trim($t))
+                        ->filter()
+                        ->map(function (string $t): ?string {
+                            try {
+                                return Carbon::parse($t)->toDateString();
+                            } catch (\Throwable) {
+                                return null;
+                            }
+                        })
+                        ->filter()
+                        ->values()
+                        ->all();
 
-                    unset($this->program);
+                    $sonuc = ZiyaretOtomatikPlanlayici::calistir(
+                        $this->yil,
+                        null,
+                        (bool) ($data['cumartesi_dahil'] ?? false),
+                        $mesgul,
+                        (float) ($data['gunluk_max_saat'] ?? 10.0),
+                    );
+
+                    unset($this->program, $this->gunlukGruplar, $this->ozet, $this->gunlukListe, $this->ayRozetleri, $this->takvimGunler);
 
                     Notification::make()
                         ->title($sonuc['firma'].' firmada '.$sonuc['doldurulan_ay'].' ay dolduruldu')

@@ -870,9 +870,9 @@ class PortfoyKarne
         $sertifikaAdet = \App\Models\EgitimKaydi::whereIn('calisan_id', $firma->calisanlar()->select('id'))->count();
         $isbasiAdet = $firma->isbasiEgitimTutanaklari()->count();
         $muayeneAdet = $firma->muayeneFormlari()->count();
-        $kkdAdet = $firma->kkdTutanaklari()->count();
+        $kkdAdet = $firma->kkdZimmetFormlari()->count() + $firma->kkdZimmetleri()->count();
         $talimatAdet = $firma->talimatlar()->count();
-        $cezaAdet = $firma->cezaTebligleri()->count();
+        $cezaAdet = $firma->cezaTebligTutanaklari()->count() + $firma->ipcTebligleri()->count();
 
         $calisanEvraklari = [
             [

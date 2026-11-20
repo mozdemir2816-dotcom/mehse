@@ -35,11 +35,18 @@ class ZiyaretOtomatikPlanlayici
     ];
 
     /**
+     * @param  array<int, string>  $mesgulTarihler  'Y-m-d' formatında hariç tutulacak meşgul/tatil günleri
      * @return array{firma: int, doldurulan_ay: int, atlanan_ay: int, detay: array<int, string>}
      */
-    public static function calistir(int $yil, ?Carbon $baslangic = null): array
-    {
+    public static function calistir(
+        int $yil,
+        ?Carbon $baslangic = null,
+        bool $cumartesiDahil = false,
+        array $mesgulTarihler = [],
+        float $gunlukMaxSaat = self::GUNLUK_MAX_SAAT,
+    ): array {
         $baslangic = ($baslangic ?? now())->copy()->startOfDay();
+        $gunlukMaxSaat = max(1.0, $gunlukMaxSaat);
         $rapor = ['firma' => 0, 'doldurulan_ay' => 0, 'atlanan_ay' => 0, 'detay' => []];
 
         foreach (Firma::query()->where('aktif', true)->get() as $firma) {
@@ -63,7 +70,7 @@ class ZiyaretOtomatikPlanlayici
 
                 $girdiler = $ozel
                     ? static::ozelKuraldanGirdiler($ozel, $yil, $ay, $baslangic)
-                    : static::otomatikGirdiler($firma, $yil, $ay, $baslangic);
+                    : static::otomatikGirdiler($firma, $yil, $ay, $baslangic, $cumartesiDahil, $mesgulTarihler, $gunlukMaxSaat);
 
                 if (! $girdiler) {
                     continue;
@@ -128,9 +135,19 @@ class ZiyaretOtomatikPlanlayici
         ])->all() ?: null;
     }
 
-    /** @return array<int, array<string, mixed>>|null */
-    private static function otomatikGirdiler(Firma $firma, int $yil, int $ayIndex, Carbon $baslangic): ?array
-    {
+    /**
+     * @param  array<int, string>  $mesgulTarihler
+     * @return array<int, array<string, mixed>>|null
+     */
+    private static function otomatikGirdiler(
+        Firma $firma,
+        int $yil,
+        int $ayIndex,
+        Carbon $baslangic,
+        bool $cumartesiDahil = false,
+        array $mesgulTarihler = [],
+        float $gunlukMaxSaat = self::GUNLUK_MAX_SAAT,
+    ): ?array {
         $dk = $firma->iguAylikDk();
 
         if ($dk <= 0) {
@@ -138,11 +155,14 @@ class ZiyaretOtomatikPlanlayici
         }
 
         $saat = $dk / 60;
-        $gunSayisi = max(1, (int) ceil($saat / self::GUNLUK_MAX_SAAT));
+        $gunSayisi = max(1, (int) ceil($saat / $gunlukMaxSaat));
 
         $ayBaslangic = Carbon::create($yil, $ayIndex + 1, 1);
         $altSinir = $baslangic->gt($ayBaslangic) ? $baslangic->copy() : $ayBaslangic->copy();
-        $isGunleri = static::ayinGunleri($ayBaslangic, $altSinir)->filter(fn (Carbon $g) => $g->isWeekday())->values();
+        $isGunleri = static::ayinGunleri($ayBaslangic, $altSinir)
+            ->filter(fn (Carbon $g) => $g->isWeekday() || ($cumartesiDahil && $g->isSaturday()))
+            ->reject(fn (Carbon $g) => in_array($g->toDateString(), $mesgulTarihler, true))
+            ->values();
 
         if ($isGunleri->isEmpty()) {
             return null;
@@ -153,7 +173,7 @@ class ZiyaretOtomatikPlanlayici
         $girdiler = [];
 
         foreach ($secili as $tarih) {
-            $buGun = min(self::GUNLUK_MAX_SAAT, $kalanSaat);
+            $buGun = min($gunlukMaxSaat, $kalanSaat);
             $girdiler[] = [
                 'tarih' => $tarih->toDateString(),
                 'amac' => 'Genel Saha Gözetimi',

@@ -84,6 +84,9 @@
                 <x-filament::section icon="heroicon-o-pencil-square" icon-color="warning">
                     <x-slot name="heading">3. Diğer (Kendiniz Yazın)</x-slot>
 
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:.35rem">
+                        @include('filament.pages.partials.sesle-yaz', ['hedefModel' => 'serbestTespit'])
+                    </div>
                     <textarea wire:model="serbestTespit" rows="2" placeholder="Tespitinizi yazın (örn: İşyerinde acil çıkış kapısının kilitli olduğu tespit edilmiştir.)"
                         style="width:100%;padding:.5rem .7rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.82rem;font-family:inherit;margin-bottom:.5rem"></textarea>
 

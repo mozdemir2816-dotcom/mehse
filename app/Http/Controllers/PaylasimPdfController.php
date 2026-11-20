@@ -38,6 +38,7 @@ class PaylasimPdfController extends Controller
             'adep' => AcilDurumPlaniUretici::pdf(AcilDurumPlani::findOrFail($id)),
             'tabela' => \App\Support\TabelaPdfUretici::pdf(TabelaTasarimi::findOrFail($id)),
             'uzman-raporu' => \App\Support\UzmanRaporu::pdf(\App\Models\Firma::findOrFail($id)),
+            'firma-karnesi' => \App\Support\IsverenFirmaKarnesiUretici::pdf(\App\Models\Firma::findOrFail($id)),
         };
     }
 

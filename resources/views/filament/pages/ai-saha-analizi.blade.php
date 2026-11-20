@@ -132,7 +132,10 @@
                         Aşağıdaki <strong>Rapor Fotoğrafları</strong> alanından fotoğraf çekin/yükleyin, analiz edilecekleri seçip
                         <strong>Seçilenleri analiz et</strong>'e basın.
                     </p>
-                    <input type="text" wire:model="baglamNotu" placeholder="Opsiyonel bağlam notu — örn: inşaat sahası, kalıp katı" style="{{ $girdi }}">
+                    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+                        <input type="text" wire:model="baglamNotu" placeholder="Opsiyonel bağlam notu — örn: inşaat sahası, kalıp katı" style="flex:1;min-width:220px;{{ $girdi }}">
+                        @include('filament.pages.partials.sesle-yaz', ['hedefModel' => 'baglamNotu'])
+                    </div>
                     <details style="margin-top:.6rem;border:1px solid rgb(107 114 128 / .3);border-radius:.6rem;padding:.6rem .8rem" x-data="{ ara: '' }">
                         <summary style="cursor:pointer;font-weight:600;font-size:.82rem">
                             İncelenecek tehlikeler ({{ count($odakKategoriler) }} / {{ count(config('isg.saha_tehlike_kategorileri')) }} kategori)

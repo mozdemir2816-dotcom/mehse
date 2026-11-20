@@ -34,6 +34,7 @@ class IsverenWhatsApp
         'adep' => AcilDurumPlani::class,
         'tabela' => TabelaTasarimi::class,
         'uzman-raporu' => Firma::class,
+        'firma-karnesi' => Firma::class,
     ];
 
     public static function telefon(?Firma $firma): ?string
@@ -229,6 +230,24 @@ class IsverenWhatsApp
             '- Çalışan Sayısı: '.($g['aktif_calisan'] > 0 ? $g['aktif_calisan'] : (($g['bildirilen_calisan'] ?? 0) ?: 0)).' · Açık Yüksek Risk: '.$g['acik_risk'],
             '- Öncelikli Aksiyon / Yaklaşan veya Geciken Kayıt: '.$r['aksiyonlar']->count().' adet',
             'Tek sayfalık özet karnenizi ve öncelikli aksiyonları incelemek için: '.self::pdfBaglantisi('uzman-raporu', $firma->id),
+            '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
+            'Bilgilerinize sunar, iyi çalışmalar dileriz.',
+            self::imza($firma),
+        ]);
+    }
+
+    /** İşverene Salt-Okunur İSG Uyum Karnesi PDF paylaşım mesajı (30 gün imzalı bağlantı). */
+    public static function firmaKarnesiMesaji(Firma $firma): string
+    {
+        $matris = PortfoyKarne::hizliEvrakMatrisi($firma);
+        $ozet = $matris['ozet'];
+
+        return implode("\n", [
+            'Sayın '.self::isverenAdi($firma).' ('.$firma->unvan.'),',
+            now()->format('d.m.Y').' tarihli İşveren İSG Uyum Karneniz (salt-okunur özet) hazırlanmıştır.',
+            '- Genel Yasal Uyum Oranı: %'.$ozet['oran'].' ('.$ozet['tamam'].' hazır, '.$ozet['eksik'].' eksik)',
+            '- Tehlike Sınıfı: '.$firma->tehlikeSinifiEtiketi().' · Çalışan: '.max((int) $firma->calisanlar()->where('aktif', true)->count(), (int) $firma->calisan_sayisi),
+            'Güncel uyum karnenizi incelemek ve indirmek için: '.self::pdfBaglantisi('firma-karnesi', $firma->id),
             '(Bağlantı '.self::BAGLANTI_GUN.' gün geçerlidir.)',
             'Bilgilerinize sunar, iyi çalışmalar dileriz.',
             self::imza($firma),

@@ -116,7 +116,10 @@
                 @if ($hata('firmaId'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('firmaId') }}</div>@endif
             </div>
             <div>
-                <label style="{{ $lbl }}">Uygunsuzluk / risk tanımı *</label>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem">
+                    <label style="{{ $lbl }}">Uygunsuzluk / risk tanımı *</label>
+                    @include('filament.pages.partials.sesle-yaz', ['hedefModel' => 'uygunsuzluk'])
+                </div>
                 <textarea wire:model="uygunsuzluk" rows="3" placeholder="Ne gördünüz, hangi çalışanı veya süreci etkiliyor?" style="{{ $inp }}"></textarea>
                 @if ($hata('uygunsuzluk'))<div style="color:#b91c1c;font-size:.75rem">{{ $hata('uygunsuzluk') }}</div>@endif
             </div>

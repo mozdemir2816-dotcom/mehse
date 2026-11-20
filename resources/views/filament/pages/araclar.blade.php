@@ -400,4 +400,98 @@
             @endforelse
         </div>
     </x-filament::section>
+
+    {{-- İSG UZMANLIK DENEME SINAVI (ÖSYM MODU) & SAHA HAP NOTLARI --}}
+    <x-filament::section icon="heroicon-o-academic-cap" icon-color="warning" collapsible>
+        <x-slot name="heading">🎓 İSG Uzmanlık Deneme Sınavı (ÖSYM Modu) &amp; Saha Sayısal Hap Notlar (PDF)</x-slot>
+        <x-slot name="description">A/B/C Sınıfı İSG Uzmanlığı ve İşyeri Hekimliği sınavlarında en sık çıkan mevzuat soruları, çözümlü açıklamaları ve tek sayfalık Saha Sayısal Hap Notlar PDF'i.</x-slot>
+
+        @php
+            $denemeSorular = \App\Support\IsgDenemeSinaviKutuphanesi::sorular();
+            $hapNotlar = \App\Support\IsgDenemeSinaviKutuphanesi::hapNotlar();
+            $dogruSayisi = 0;
+            foreach ($denemeSorular as $idx => $s) {
+                if (($denemeCevaplari[$idx] ?? -1) === $s['dogru']) {
+                    $dogruSayisi++;
+                }
+            }
+        @endphp
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+            <div style="font-size:.82rem;color:rgb(107 114 128)">
+                İşaretlenen: <strong>{{ count($denemeCevaplari) }} / {{ count($denemeSorular) }}</strong>
+                @if ($denemeTamamlandi)
+                    &nbsp;·&nbsp; <strong style="color:rgb(22 163 74)">Doğru: {{ $dogruSayisi }} / {{ count($denemeSorular) }} (%{{ round(($dogruSayisi / max(1, count($denemeSorular))) * 100) }})</strong>
+                @endif
+            </div>
+            <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+                <x-filament::button size="xs" color="warning" icon="heroicon-o-document-arrow-down" wire:click="hapNotlarPdfIndir">
+                    📄 Saha &amp; Sınav Hap Notları İndir (PDF)
+                </x-filament::button>
+                <x-filament::button size="xs" color="success" wire:click="denemeKontrolEt">
+                    ✓ Cevapları Kontrol Et &amp; Çözümleri Gör
+                </x-filament::button>
+                @if ($denemeCevaplari || $denemeTamamlandi)
+                    <x-filament::button size="xs" color="gray" wire:click="denemeSifirla">Sıfırla</x-filament::button>
+                @endif
+            </div>
+        </div>
+
+        <details style="margin-bottom:.85rem;border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.65rem .8rem">
+            <summary style="cursor:pointer;font-weight:700;font-size:.85rem;color:{{ $turuncu }}">
+                📌 Kritik Sayısal İSG Hap Notlar Tablosu ({{ count($hapNotlar) }} Başlık — Görüntülemek İçin Tıklayın)
+            </summary>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.65rem;margin-top:.65rem">
+                @foreach ($hapNotlar as $hn)
+                    <div style="{{ $kutu }}">
+                        <div style="font-weight:700;font-size:.82rem;color:{{ $turuncu }};margin-bottom:.3rem">{{ $hn['baslik'] }}</div>
+                        <ul style="margin:0;padding-left:1rem;font-size:.76rem;line-height:1.45;display:flex;flex-direction:column;gap:.2rem">
+                            @foreach ($hn['maddeler'] as $m)
+                                <li>{{ $m }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endforeach
+            </div>
+        </details>
+
+        <div style="display:flex;flex-direction:column;gap:.65rem;max-height:480px;overflow-y:auto;padding-right:.25rem">
+            @foreach ($denemeSorular as $sIndex => $s)
+                @php
+                    $secilen = $denemeCevaplari[$sIndex] ?? null;
+                @endphp
+                <div style="{{ $kutu }}">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-bottom:.3rem">
+                        <span style="font-weight:700;font-size:.82rem">Soru {{ $sIndex + 1 }}</span>
+                        <span style="font-size:.7rem;padding:.1rem .45rem;border-radius:999px;background:rgb(180 83 9 / .14);color:{{ $turuncu }}">{{ $s['konu'] }}</span>
+                    </div>
+                    <div style="font-size:.84rem;font-weight:600;margin-bottom:.5rem">{{ $s['soru'] }}</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.35rem">
+                        @foreach ($s['siklar'] as $sikIndex => $sikMetin)
+                            @php
+                                $buSecili = $secilen === $sikIndex;
+                                $buDogru = $s['dogru'] === $sikIndex;
+                                $renkStil = match (true) {
+                                    $denemeTamamlandi && $buDogru => 'border-color:rgb(22 163 74);background:rgb(22 163 74 / .14);font-weight:700',
+                                    $denemeTamamlandi && $buSecili && ! $buDogru => 'border-color:rgb(220 38 38);background:rgb(220 38 38 / .12)',
+                                    $buSecili => 'border-color:'.$turuncu.';background:rgb(180 83 9 / .12);font-weight:600',
+                                    default => 'border-color:rgb(107 114 128 / .25);background:transparent',
+                                };
+                            @endphp
+                            <button type="button" wire:click="denemeSikSec({{ $sIndex }}, {{ $sikIndex }})"
+                                style="text-align:left;padding:.4rem .6rem;border-radius:.45rem;border:1px solid;cursor:pointer;font-size:.79rem;color:inherit;{{ $renkStil }}">
+                                {{ $sikMetin }}
+                            </button>
+                        @endforeach
+                    </div>
+
+                    @if ($denemeTamamlandi)
+                        <div style="margin-top:.55rem;padding:.5rem .65rem;border-radius:.45rem;background:rgb(107 114 128 / .08);font-size:.78rem">
+                            <strong style="color:rgb(22 163 74)">✓ Çözüm &amp; Mevzuat Dayanağı:</strong> {{ $s['cozum'] }}
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </x-filament::section>
 </x-filament-panels::page>
