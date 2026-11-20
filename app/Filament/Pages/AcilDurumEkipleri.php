@@ -301,7 +301,7 @@ class AcilDurumEkipleri extends Page
                     ->options(fn () => $this->firma?->calisanlar()->where('aktif', true)->orderBy('ad_soyad')->pluck('ad_soyad', 'id')->all() ?? [])
                     ->live()
                     ->afterStateUpdated(function (?string $state, Set $set): void {
-                        if ($c = $state ? Calisan::find($state) : null) {
+                        if ($c = $state ? $this->firma?->calisanlar()->find($state) : null) {
                             $set('ad_soyad', $c->ad_soyad);
                             $set('gorev', $c->gorev);
                             $set('bolum', $c->sube ?: $c->departman);

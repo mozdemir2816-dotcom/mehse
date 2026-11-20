@@ -84,7 +84,9 @@ class KkdTakip extends Page
     #[Computed]
     public function firma(): ?Firma
     {
-        return $this->firmaId ? Firma::find($this->firmaId) : null;
+        return $this->firmaId && array_key_exists($this->firmaId, $this->firmalar)
+            ? Firma::find($this->firmaId)
+            : null;
     }
 
     /** @return Collection<int, KkdZimmet> */
@@ -245,7 +247,7 @@ class KkdTakip extends Page
                     ->searchable()
                     ->live()
                     ->afterStateUpdated(function (?string $state, Set $set): void {
-                        $c = $state ? Calisan::find($state) : null;
+                        $c = $state ? $this->firma?->calisanlar()->find($state) : null;
                         if ($c) {
                             $set('personel_ad_soyad', $c->ad_soyad);
                             $set('bolum', $c->sube ?: $c->gorev);
@@ -255,12 +257,12 @@ class KkdTakip extends Page
                     ->label('Görevine göre önerilen KKD (KKD Seçim Matrisi)')
                     ->placeholder('Önce personel seçin')
                     ->options(function (Get $get): array {
-                        $c = $get('calisan_id') ? Calisan::find($get('calisan_id')) : null;
+                        $c = $get('calisan_id') ? $this->firma?->calisanlar()->find($get('calisan_id')) : null;
 
                         return $c && $this->firma ? KkdGorevOnerisi::oner($this->firma, $c->gorev)['kalemler'] : [];
                     })
                     ->helperText(function (Get $get): ?string {
-                        $c = $get('calisan_id') ? Calisan::find($get('calisan_id')) : null;
+                        $c = $get('calisan_id') ? $this->firma?->calisanlar()->find($get('calisan_id')) : null;
                         $oner = $c && $this->firma ? KkdGorevOnerisi::oner($this->firma, $c->gorev) : null;
 
                         return $oner && $oner['is_kalemi'] !== '' ? 'Matris satırı: '.$oner['is_kalemi'].' — seçince KKD türü ve değişim tarihi dolar' : ($c ? 'Görev "'.($c->gorev ?: '—').'" için matriste eşleşen satır yok; türü elle seçin.' : null);
