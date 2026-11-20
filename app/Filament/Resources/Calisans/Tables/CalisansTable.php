@@ -55,6 +55,24 @@ class CalisansTable
                 SelectFilter::make('sube')->label('Şube')
                     ->options(fn () => Calisan::query()->whereHas('firma', fn (Builder $q) => $q->where('user_id', Filament::auth()->id()))->whereNotNull('sube')->distinct()->orderBy('sube')->pluck('sube', 'sube')->all()),
                 SelectFilter::make('cinsiyet')->label('Cinsiyet')->options(Calisan::CINSIYETLER),
+                TernaryFilter::make('egitim_durumu')->label('İSG Eğitimi')
+                    ->placeholder('Tümü')->trueLabel('Eğitimi Kayıtlı')->falseLabel('Eğitimi Eksik')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereHas('egitimKayitlari'),
+                        false: fn (Builder $query) => $query->whereDoesntHave('egitimKayitlari'),
+                    ),
+                TernaryFilter::make('ek2_durumu')->label('EK-2 Muayene')
+                    ->placeholder('Tümü')->trueLabel('EK-2 Kayıtlı')->falseLabel('EK-2 Eksik')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereHas('muayeneFormlari'),
+                        false: fn (Builder $query) => $query->whereDoesntHave('muayeneFormlari'),
+                    ),
+                TernaryFilter::make('tc_durumu')->label('T.C. Kimlik No')
+                    ->placeholder('Tümü')->trueLabel('T.C. Dolu')->falseLabel('T.C. Boş')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('tc')->where('tc', '!=', ''),
+                        false: fn (Builder $query) => $query->where(fn (Builder $q) => $q->whereNull('tc')->orWhere('tc', '')),
+                    ),
             ])
             ->recordActions([
                 EditAction::make()->iconButton()->tooltip('Düzenle')->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge),

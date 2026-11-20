@@ -151,6 +151,11 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn () => \Illuminate\Support\Facades\Blade::render('@livewire(\App\Livewire\GeminiEllePencere::class)'),
             )
+            // Hızlı Notlarım çekmecesi (topbar, bildirim zilinin solunda).
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => view('filament.components.notlarim-cekmece'),
+            )
             // Bildirim zili (Bildirim Merkezi okunmamış sayısı) — tema seçicinin solunda.
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
@@ -168,6 +173,11 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.mobil-alt-nav'),
+            )
+            // Sağ alt sabit yüzen İSG Mevzuat Asistanı (6331 & yönetmelikler).
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.components.yuzen-isg-asistan'),
             )
             // Giriş / kayıt / şifre ekranları: sol tanıtım paneli (yalnız misafir) +
             // giriş kartının altında kayıt seçeneği. Stiller: tasarim.css "Giriş ekranı".

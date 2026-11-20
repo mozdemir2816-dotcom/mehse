@@ -108,3 +108,52 @@ Route::get('/mehse/saha-gozlem/{rapor}/pdf', function (int $rapor, Request $requ
 
     return SahaAnaliziUretici::pdf($s);
 })->middleware('auth')->name('mehse.saha-gozlem.pdf');
+
+// Üst bar "Hızlı Notlarım" çekmecesi (users.ayarlar['notlarim']).
+Route::middleware('auth')->prefix('/mehse/notlar')->group(function () {
+    Route::get('/', function (Request $request) {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json([
+            'notlar' => \App\Support\UzmanNotlari::liste($user),
+            'firmalar' => \App\Models\Firma::where('user_id', $user->id)->where('aktif', true)->orderBy('unvan')->get(['id', 'unvan']),
+        ]);
+    })->name('mehse.notlar.liste');
+
+    Route::post('/', function (Request $request) {
+        $veri = $request->validate([
+            'metin' => ['required', 'string', 'max:500'],
+            'etiket' => ['nullable', 'string', Rule::in(array_keys(\App\Support\UzmanNotlari::ETIKETLER))],
+            'firma_id' => ['nullable', 'integer'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json([
+            'notlar' => \App\Support\UzmanNotlari::ekle($user, $veri['metin'], $veri['etiket'] ?? 'genel', $veri['firma_id'] ?? null),
+        ]);
+    })->name('mehse.notlar.ekle');
+
+    Route::post('/{id}/tamamla', function (string $id, Request $request) {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json(['notlar' => \App\Support\UzmanNotlari::tamamlaToggle($user, $id)]);
+    })->name('mehse.notlar.tamamla');
+
+    Route::delete('/{id}', function (string $id, Request $request) {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json(['notlar' => \App\Support\UzmanNotlari::sil($user, $id)]);
+    })->name('mehse.notlar.sil');
+});
+
+// Sağ alt yüzen İSG Mevzuat Asistanı — mevcut GeminiMevzuatDanismani servisini kullanır.
+Route::post('/mehse/mevzuat-sor', function (Request $request) {
+    $veri = $request->validate(['soru' => ['required', 'string', 'max:500']]);
+
+    return response()->json(\App\Support\GeminiMevzuatDanismani::sor($veri['soru']));
+})->middleware(['auth', 'throttle:30,1'])->name('mehse.mevzuat.sor');
