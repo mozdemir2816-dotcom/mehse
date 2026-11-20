@@ -39,10 +39,20 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         min-height: 54px !important;
     }
 
-    /* Menü çekmecesi açıkken alt çubuk gizli — menünün altındaki kullanıcı
-       kartını örtüyordu. */
-    html body:has(.fi-sidebar.fi-sidebar-open) .fi-mobil-alt-nav {
+    /* Menü çekmecesi açıkken alt çubuk ve yüzen asistan gizli — menünün altındaki
+       kullanıcı kartını örtüyordu. */
+    html body:has(.fi-sidebar.fi-sidebar-open) .fi-mobil-alt-nav,
+    html body:has(.fi-sidebar.fi-sidebar-open) .mehse-yuzen-asistan {
         display: none !important;
+    }
+
+    /* Risk Sihirbazı adım şeridi: mobilde gri yatay kaydırma çubuğu görünmesin. */
+    .mehse-adim-cubuk {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .mehse-adim-cubuk::-webkit-scrollbar {
+        display: none;
     }
 
     /* Aile sekmeleri (Kontrol Merkezi · İşyeri Durumu · ...): kesilmek yerine
@@ -108,18 +118,29 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
         grid-template-columns: 1fr 1fr;
         gap: .5rem !important;
         width: 100%;
+        align-items: stretch;
     }
 
-    html .fi-header-actions-ctn > .fi-ac > * {
+    html .fi-header-actions-ctn > .fi-ac > *,
+    html .fi-header-actions-ctn > .fi-ac .fi-dropdown,
+    html .fi-header-actions-ctn > .fi-ac .fi-dropdown-trigger {
         min-width: 0;
+        width: 100%;
+        display: flex;
     }
 
     html .fi-header-actions-ctn > .fi-ac .fi-btn {
         width: 100%;
+        height: 100%;
         justify-content: center;
-        min-height: 2.75rem;
-        padding: 6px 10px !important;
+        gap: .35rem;
+        min-height: 2.65rem;
+        padding: .45rem .65rem !important;
         font-size: 12px !important;
+    }
+
+    html .fi-header-actions-ctn > .fi-ac .fi-btn .fi-icon {
+        flex-shrink: 0;
     }
 
     html .fi-header-actions-ctn > .fi-ac .fi-btn .fi-btn-label,
@@ -244,9 +265,9 @@ html:is([data-mehse-tema="klasik"], [data-mehse-tema="saha"]) .mehse-zil {
 @media (max-width: 1023px) {
     html .fi-simple-layout:has(.mehse-giris-tanitim) {
         background:
-            radial-gradient(420px 220px at 100% 0%, rgb(44 197 194 / .35), transparent 70%),
-            linear-gradient(160deg, #0A345A 0%, #0B4566 100%) top / 100% 15rem no-repeat,
-            #F4F8FA !important;
+            radial-gradient(420px 220px at 100% 0%, rgb(96 165 250 / .35), transparent 70%),
+            linear-gradient(160deg, #1E3A8A 0%, #2563EB 100%) top / 100% 15rem no-repeat,
+            #F8FAFC !important;
     }
 
     html .fi-simple-layout:has(.mehse-giris-tanitim) .fi-simple-main-ctn {
@@ -337,7 +358,7 @@ html .mehse-pwa-bant-yukle {
     font-weight: 600;
     font-size: 13px;
     color: #fff;
-    background: linear-gradient(135deg, #099291, #077A79);
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
 }
 
 html .mehse-pwa-bant-yukle[hidden] {

@@ -26,7 +26,7 @@
     </div>
 
     {{-- ADIM ÇUBUĞU ------------------------------------------------------- --}}
-    <div style="display:flex;align-items:flex-start;gap:.25rem;overflow-x:auto;padding-bottom:.5rem">
+    <div class="mehse-adim-cubuk" style="display:flex;align-items:flex-start;gap:.25rem;overflow-x:auto;padding-bottom:.5rem">
         @foreach ($adimlar as $no => $ad)
             @php
                 $tamam = $no < $adim; $aktif = $no === $adim;

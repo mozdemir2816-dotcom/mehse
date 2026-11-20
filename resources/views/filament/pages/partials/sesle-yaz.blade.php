@@ -32,8 +32,12 @@
     }
 }" style="display:inline-flex;align-items:center">
     <button type="button" x-on:click="baslatDurdur()"
-        :style="dinliyor ? 'background:rgb(220 38 38 / .14);border-color:rgb(220 38 38);color:rgb(220 38 38)' : 'background:transparent;border-color:rgb(107 114 128 / .35);color:inherit'"
-        style="font-size:.73rem;font-weight:600;padding:.2rem .55rem;border-radius:999px;border:1px solid rgb(107 114 128 / .35);cursor:pointer;display:inline-flex;align-items:center;gap:.25rem"
+        x-bind:style="{
+            background: dinliyor ? 'rgb(220 38 38 / .14)' : '#F8FAFC',
+            borderColor: dinliyor ? 'rgb(220 38 38)' : 'rgb(107 114 128 / .35)',
+            color: dinliyor ? 'rgb(220 38 38)' : '#334155'
+        }"
+        style="font-size:.76rem;font-weight:600;padding:.38rem .75rem;min-height:2.2rem;border-radius:999px;border:1px solid rgb(107 114 128 / .35);cursor:pointer;display:inline-flex;align-items:center;gap:.3rem"
         title="Mikrofonla Türkçe dikte (Sesle Yaz)">
         <span x-text="dinliyor ? '🔴 Dinleniyor... (Durdur)' : '🎤 Sesle Yaz'">🎤 Sesle Yaz</span>
     </button>

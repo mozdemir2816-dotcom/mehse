@@ -88,6 +88,20 @@ class EgitimPaketi extends Model
         return (int) ceil($this->dersler->sum('sure_sn') / 60);
     }
 
+    /** Planlanan sınav süreleri (dk): ön test + final (config uzaktan_egitim.sinav_sure_dk). */
+    public static function sinavSureDk(?string $tur = null): int
+    {
+        $sureler = (array) config('isg.uzaktan_egitim.sinav_sure_dk', []);
+
+        return $tur ? (int) ($sureler[$tur] ?? 0) : (int) array_sum($sureler);
+    }
+
+    /** Online eğitimin toplam süresi: videolar + ön test + final (Md.13 karşılaştırmasında bu kullanılır). */
+    public function onlineSureDk(): int
+    {
+        return $this->toplamSureDk() + static::sinavSureDk();
+    }
+
     /**
      * Md.13 + 08.11.2026 kararı: online kısım her sınıfta `uzaktan_hedef_saat` (8 ders saati
      * = 360 dk, tek video paketi); kalan süre yüz yüze (`yuz_yuze_saat`, 4. konu dahil).

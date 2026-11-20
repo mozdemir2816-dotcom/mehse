@@ -43,7 +43,7 @@
         {{-- ================= ÖN TEST (seviye tespiti) ================= --}}
         @if ($mod === 'on_test')
             <div class="portal-card portal-card-pad" style="max-width:760px">
-                <div class="portal-heading" style="font-weight:700;margin-bottom:.3rem">Seviye Tespit Testi — {{ count($sinavSorulari) }} soru</div>
+                <div class="portal-heading" style="font-weight:700;margin-bottom:.3rem">Seviye Tespit Testi — {{ count($sinavSorulari) }} soru · {{ \App\Models\EgitimPaketi::sinavSureDk('on_test') }} dk</div>
                 <div class="portal-muted" style="font-size:.85rem;margin-bottom:1.1rem;line-height:1.5">
                     Eğitime başlamadan önce bilgi seviyenizi ölçmek için kısa bir test. Puanınız geçme / kalma için
                     kullanılmaz; yalnız kayıt altına alınır. Bilmediğiniz soruda tahmin edebilirsiniz.
@@ -397,7 +397,7 @@
         {{-- ================= SINAV ================= --}}
         @elseif ($mod === 'sinav')
             <div class="portal-card portal-card-pad" style="max-width:760px">
-                <div class="portal-heading" style="font-weight:700;margin-bottom:.3rem">Final Sınavı — {{ count($sinavSorulari) }} soru</div>
+                <div class="portal-heading" style="font-weight:700;margin-bottom:.3rem">Final Sınavı — {{ count($sinavSorulari) }} soru · {{ \App\Models\EgitimPaketi::sinavSureDk('final') }} dk</div>
                 <div class="portal-muted" style="font-size:.85rem;margin-bottom:1.1rem">
                     Geçmek için en az {{ $a->gecmePuani() }} puan gerekir. Bu sınavla birlikte kalan hakkınız: {{ $kalanHak }}.
                 </div>

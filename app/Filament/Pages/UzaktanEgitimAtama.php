@@ -138,7 +138,7 @@ class UzaktanEgitimAtama extends Page
 
         ['saat' => $saat, 'gereken_dk' => $gereken, 'dorduncu_yuz_yuze' => $dorduncuYuzYuze, 'yuz_yuze_saat' => $yuzYuzeSaat]
             = EgitimPaketi::gerekenUzaktanSure($sinif, $this->egitimTuru);
-        $paketDk = $paket->toplamSureDk();
+        $paketDk = $paket->onlineSureDk();   // videolar + ön test + final
 
         return [
             'gereken_dk' => $gereken,

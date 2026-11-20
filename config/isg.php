@@ -600,6 +600,9 @@ return [
         // Çift onay (08.11.2026): sınavı geçen çalışanın eğitimi İGU + işyeri hekimi onayıyla tamamlanır.
         'cift_onay' => true,
         'final_soru_sayisi' => 10,
+        // 20.11.2026 (kullanıcı kararı): sınavlar online sürenin parçası — ön test 10 dk + final 15 dk
+        // paket süresine eklenir (video 335 dk + 25 dk = 8 ders saati / 360 dk).
+        'sinav_sure_dk' => ['on_test' => 10, 'final' => 15],
         // Md.12/5-c: aktif katılım — videonun her N dakikasında açılır pencere + kısa soru.
         'yoklama_dk' => 5,
         // Md.12/3: dördüncü konu başlığı bu sınıflarda yüz yüze verilir; uzaktan

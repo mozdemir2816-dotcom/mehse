@@ -81,7 +81,7 @@ class OnlineEgitim extends Page implements HasTable
             return true;
         }
 
-        return $paket->toplamSureDk() >= EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['gereken_dk'];
+        return $paket->onlineSureDk() >=EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['gereken_dk'];
     }
 
     /** @return array<int, \Filament\Schemas\Components\Component> */

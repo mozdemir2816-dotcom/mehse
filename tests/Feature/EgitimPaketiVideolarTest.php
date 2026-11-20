@@ -107,4 +107,17 @@ class EgitimPaketiVideolarTest extends TestCase
         $this->assertSame(['Yangın', 'Ergonomi', 'Ergonomi — oturma düzeni', 'Ergonomi — elle taşıma'], $this->paket->dersler()->pluck('baslik')->all());
         $this->assertSame([2, 5, 5, 5], $this->paket->dersler()->pluck('sira')->all());
     }
+
+    public function test_online_sure_videolara_on_test_10_ve_final_15_dakikayi_ekler(): void
+    {
+        // 20.11.2026: 335 dk video + ön test 10 + final 15 = 360 dk (8 ders saati) hedefi tamamlar.
+        $this->paket->dersler()->create(['modul' => 3, 'sira' => 1, 'baslik' => 'Uzun', 'video_url' => 'https://youtu.be/aaaaaaaaaaa', 'sure_sn' => 335 * 60]);
+        $paket = $this->paket->fresh();
+
+        $this->assertSame(10, EgitimPaketi::sinavSureDk('on_test'));
+        $this->assertSame(15, EgitimPaketi::sinavSureDk('final'));
+        $this->assertSame(335, $paket->toplamSureDk());
+        $this->assertSame(360, $paket->onlineSureDk());
+        $this->assertGreaterThanOrEqual(EgitimPaketi::gerekenUzaktanSure('cok_tehlikeli')['gereken_dk'], $paket->onlineSureDk());
+    }
 }

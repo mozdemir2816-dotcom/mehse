@@ -38,8 +38,8 @@
     class="mehse-yuzen-asistan"
 >
     <style>
-        .mehse-yuzen-asistan { position: fixed; right: 1.25rem; bottom: 1.15rem; z-index: 55; }
-        @media (max-width: 1023px) { .mehse-yuzen-asistan { bottom: 4.65rem; right: .85rem; } }
+        .mehse-yuzen-asistan { position: fixed; right: .6rem; bottom: .65rem; z-index: 55; }
+        @media (max-width: 1023px) { .mehse-yuzen-asistan { bottom: 4.75rem; right: .75rem; } }
     </style>
     <div
         x-show="acik"
@@ -92,11 +92,11 @@
         <button
             type="button"
             x-on:click="acik = !acik"
-            style="width:2.75rem;height:2.75rem;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid #1d4ed8;background:#2563eb;color:#ffffff;cursor:pointer;box-shadow:0 8px 20px -4px rgb(37 99 235 / .45)"
+            style="width:2.5rem;height:2.5rem;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid #1d4ed8;background:#2563eb;color:#ffffff;cursor:pointer;box-shadow:0 8px 20px -4px rgb(37 99 235 / .45)"
             aria-label="İSG Mevzuat Asistanı"
             title="İSG Mevzuat Asistanı (6331 & Yönetmelikler)"
         >
-            <x-filament::icon icon="heroicon-o-scale" style="width:1.25rem;height:1.25rem" />
+            <x-filament::icon icon="heroicon-o-scale" style="width:1.2rem;height:1.2rem" />
         </button>
     </div>
 </div>

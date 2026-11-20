@@ -21,10 +21,13 @@
         ] as [$kod, $etiket])
             <button type="button"
                 x-on:click="aracGrup = '{{ $kod }}'"
-                x-bind:style="aracGrup === '{{ $kod }}'
-                    ? 'background:#2563EB;color:#FFFFFF;border-color:#2563EB;font-weight:700'
-                    : 'background:#F8FAFC;color:#334155;border-color:#E2E8F0;font-weight:600'"
-                style="padding:.42rem .85rem;border-radius:8px;border:1px solid #E2E8F0;font-size:.8rem;cursor:pointer;transition:all .15s">
+                x-bind:style="{
+                    background: aracGrup === '{{ $kod }}' ? '#2563EB' : '#F8FAFC',
+                    color: aracGrup === '{{ $kod }}' ? '#FFFFFF' : '#334155',
+                    borderColor: aracGrup === '{{ $kod }}' ? '#2563EB' : '#E2E8F0',
+                    fontWeight: aracGrup === '{{ $kod }}' ? '700' : '600'
+                }"
+                style="padding:.48rem .9rem;min-height:2.4rem;border-radius:8px;border:1px solid #E2E8F0;font-size:.8rem;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center">
                 {{ $etiket }}
             </button>
         @endforeach

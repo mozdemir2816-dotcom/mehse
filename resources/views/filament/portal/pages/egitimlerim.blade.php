@@ -27,7 +27,7 @@
                         <div>
                             <div class="portal-heading" style="font-weight:700;font-size:1.05rem">{{ $a->paket->ad }}</div>
                             <div class="portal-muted" style="font-size:.82rem;margin-top:.25rem">
-                                {{ $a->paket->dersler->count() }} ders · ~{{ $a->paket->toplamSureDk() }} dk
+                                {{ $a->paket->dersler->count() }} ders · ~{{ $a->paket->onlineSureDk() }} dk (sınavlar dahil)
                                 @if ($a->son_tarih) · Son tarih: {{ $a->son_tarih->format('d.m.Y') }} @endif
                             </div>
                         </div>

@@ -233,7 +233,7 @@
         {{-- 2. KONTROL LİSTESİ --}}
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.6rem .9rem;border-radius:.6rem;border:1px solid rgb(22 163 74 / .35);background:rgb(22 163 74 / .06)">
             <div style="font-size:.82rem">Sorunsuz alanları tek tıkla geçin; yalnız sorunlu maddeleri <strong>✕ Uygun Değil</strong> yapın (açıklama, foto, risk, sorumlu ve termin aynı kartta açılır; denetim tamamlanınca DÖF havuzuna düşer).</div>
-            <x-filament::button color="success" size="lg" icon="heroicon-o-check-badge" wire:click="tumunuUygunIsaretle">✓ Tümünü Uygun İşaretle</x-filament::button>
+            <x-filament::button color="success" size="lg" icon="heroicon-o-check-badge" wire:click="tumunuUygunIsaretle">Tümünü Uygun İşaretle</x-filament::button>
         </div>
         @foreach ($this->kategoriler as $kategoriAnahtari => $kategori)
             <x-filament::section icon="heroicon-o-list-bullet" icon-color="warning" compact>
@@ -265,20 +265,20 @@
                             @if (! empty($madde['dayanak']))
                                 <div style="font-size:.75rem;color:rgb(107 114 128);margin:-.15rem 0 .3rem">Dayanak: {{ $madde['dayanak'] }}</div>
                             @endif
-                            <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                            <div style="display:flex;gap:.45rem;flex-wrap:wrap">
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun')"
-                                    style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
+                                    style="padding:.48rem .85rem;min-height:2.4rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;font-weight:600;
                                         border:1px solid {{ $cevap['sonuc'] === 'uygun' ? '#15803d' : 'rgb(107 114 128 / .3)' }};
                                         background:{{ $cevap['sonuc'] === 'uygun' ? 'rgb(22 163 74 / .1)' : 'transparent' }};
                                         color:{{ $cevap['sonuc'] === 'uygun' ? '#15803d' : 'inherit' }}">✓ Uygun</button>
                                 <button type="button" wire:click="cevapVer('{{ $kod }}','uygun_degil')"
-                                    style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
+                                    style="padding:.48rem .85rem;min-height:2.4rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;font-weight:600;
                                         border:1px solid {{ $cevap['sonuc'] === 'uygun_degil' ? '#dc2626' : 'rgb(107 114 128 / .3)' }};
                                         background:{{ $cevap['sonuc'] === 'uygun_degil' ? 'rgb(220 38 38 / .1)' : 'transparent' }};
                                         color:{{ $cevap['sonuc'] === 'uygun_degil' ? '#dc2626' : 'inherit' }}">✕ Uygun Değil</button>
                                 @if ($madde['uygulanamaz_izni'])
                                     <button type="button" wire:click="cevapVer('{{ $kod }}','uygulanamaz')"
-                                        style="padding:.25rem .65rem;border-radius:.4rem;cursor:pointer;font-size:.76rem;
+                                        style="padding:.48rem .85rem;min-height:2.4rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;font-weight:600;
                                             border:1px solid {{ $cevap['sonuc'] === 'uygulanamaz' ? 'rgb(107 114 128)' : 'rgb(107 114 128 / .3)' }};
                                             background:{{ $cevap['sonuc'] === 'uygulanamaz' ? 'rgb(107 114 128 / .15)' : 'transparent' }}">Uygulanamaz</button>
                                 @endif

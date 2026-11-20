@@ -173,13 +173,15 @@ class DerslerRelationManager extends RelationManager
     {
         $paket = $this->getOwnerRecord();
         $paket->unsetRelation('dersler');
-        $toplam = $paket->toplamSureDk();
+        $video = $paket->toplamSureDk();
+        $toplam = $paket->onlineSureDk();
         $suresiz = $paket->dersler->whereNull('sure_sn')->count();
         $hedef = EgitimPaketi::gerekenUzaktanSure('az_tehlikeli')['gereken_dk'];
         $ys = fn (string $sinif, string $tur) => EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['yuz_yuze_saat'];
 
-        return 'Toplam video süresi: '.$toplam.' dk'
+        return 'Toplam video süresi: '.$video.' dk'
             .($suresiz ? ' — '.$suresiz.' videonun süresi bilinmiyor (YouTube ilk izlemede doldurur ya da Düzenle ile girin)' : '')
+            .' + sınavlar '.EgitimPaketi::sinavSureDk().' dk (ön test '.EgitimPaketi::sinavSureDk('on_test').', final '.EgitimPaketi::sinavSureDk('final').') = '.$toplam.' dk'
             .'. Online hedef '.intdiv($hedef, (int) config('isg.uzaktan_egitim.ders_saati_dk', 45)).' ders saati = '.$hedef.' dk: '
             .($toplam >= $hedef ? '✓ tamam' : '✗ '.($hedef - $toplam).' dk eksik')
             .'. Kalanı yüz yüze (4. konu dahil) — ilk defa: tehlikeli '.$ys('tehlikeli', 'ilk_defa').', çok tehlikeli '.$ys('cok_tehlikeli', 'ilk_defa')

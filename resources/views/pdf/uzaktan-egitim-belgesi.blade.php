@@ -31,7 +31,7 @@
     $dorduncuYuzYuze = $atama->dorduncuKonuYuzYuzeMi();
     $uzaktanBasliklar = $dorduncuYuzYuze ? '1, 2, 3' : '1, 2, 3, 4';
     $kutu = fn (bool $isaretli) => $isaretli ? '<span class="kutu dolu">☒</span>' : '<span class="kutu">☐</span>';
-    $dk = $paket?->toplamSureDk() ?? 0;
+    $dk = $paket?->onlineSureDk() ?? 0;   // videolar + ön test + final (20.11.2026)
     $dersSaati = (int) config('isg.uzaktan_egitim.ders_saati_dk', 45);
     $egitimci = $atama->atayan;
     $egitimciUnvan = $egitimci ? config('isg.uzman_unvanlari.'.$egitimci->unvan, '') : '';
@@ -139,6 +139,9 @@
                         <tr><td>{{ $m }}</td><td class="sure"></td></tr>
                     @endforeach
                 @endforeach
+                <tr class="ana"><td>ÖLÇME VE DEĞERLENDİRME (ön test + final sınavı)</td><td class="sure">{{ \App\Models\EgitimPaketi::sinavSureDk() }} dk</td></tr>
+                <tr><td>Seviye tespit (ön test)</td><td class="sure">{{ \App\Models\EgitimPaketi::sinavSureDk('on_test') }} dk</td></tr>
+                <tr><td>Final sınavı</td><td class="sure">{{ \App\Models\EgitimPaketi::sinavSureDk('final') }} dk</td></tr>
                 <tr class="ana"><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_baslik') }}</td><td class="sure">{{ $yuzYuzeSaat ? $yuzYuzeSaat.' ders saati (yüz yüze)' : (($konuDk[4] ?? 0) ? $konuDk[4].' dk' : '') }}</td></tr>
                 <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_a') }} {!! $kutu(false) !!}@if ($dorduncuYuzYuze) <em>(yüz yüze verilir)</em>@endif</td><td class="sure"></td></tr>
                 <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_b') }} {!! $kutu($tehlike === 'az_tehlikeli') !!}</td><td class="sure"></td></tr>
