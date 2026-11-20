@@ -15,39 +15,64 @@
 html[data-mehse-tema="pano"] {
     .fi-body {
         font-size: 15px;
+        background: #F8FAFC !important;
     }
 
-    /* Üst çubuktaki menü öğeleri: grafit zeminde açık metin, aktif öğede sarı alt çizgi. */
+    /* Üst çubuk: Modern Kurumsal SaaS — beyaz zemin, ince alt çizgi, kurumsal mavi aktif vurgu. */
+    .fi-topbar {
+        background: #FFFFFF !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+
+    .fi-logo {
+        color: #0F172A !important;
+    }
+
+    .fi-topbar-item-label,
+    .fi-topbar-item-btn .fi-icon,
+    .fi-topbar-open-sidebar-btn .fi-icon,
+    .fi-topbar-close-sidebar-btn .fi-icon,
+    .fi-user-menu .fi-icon {
+        color: #475569 !important;
+    }
+
     .fi-topbar-item-btn,
     .fi-topbar-item > a {
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+    }
+
+    .fi-topbar-item-btn:hover,
+    .fi-topbar-item > a:hover {
+        background: #F1F5F9 !important;
     }
 
     .fi-topbar-item.fi-active .fi-topbar-item-btn,
     .fi-topbar-item.fi-active > a {
-        background: rgb(255 255 255 / .1) !important;
-        box-shadow: inset 0 -3px 0 #F2B705;
+        background: #EFF6FF !important;
+        box-shadow: inset 0 -2px 0 #2563EB;
     }
 
     .fi-topbar-item.fi-active .fi-topbar-item-label,
     .fi-topbar-item.fi-active .fi-icon {
-        color: #FFFFFF !important;
+        color: #1D4ED8 !important;
+        font-weight: 600;
     }
 
     .portal-brand-tag {
-        background: #F2B705;
-        color: #22272B;
+        background: #EFF6FF;
+        color: #1D4ED8;
+        border: 1px solid #BFDBFE;
     }
 
     .fi-user-menu-trigger .fi-avatar {
-        background: #F2B705 !important;
-        color: #22272B !important;
+        background: #2563EB !important;
+        color: #FFFFFF !important;
     }
 }
 
-/* Giriş ekranı tanıtım paneli — Pano: düz grafit, sarı vurgu. */
+/* Giriş ekranı tanıtım paneli — Modern Kurumsal SaaS: derin lacivert + kraliyet mavisi vurgu. */
 .portal-giris--pano {
-    --pg-from: #22272B;
-    --pg-to: #22272B;
-    --pg-vurgu: #F2B705;
+    --pg-from: #0F172A;
+    --pg-to: #1E3A8A;
+    --pg-vurgu: #3B82F6;
 }

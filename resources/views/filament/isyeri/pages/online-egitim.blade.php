@@ -1,22 +1,22 @@
-@php $kart = 'border:1px solid rgb(107 114 128 / .22);border-radius:.75rem;padding:1rem 1.1rem;background:rgb(255 255 255 / .6)'; @endphp
+@php $kart = 'border:1px solid #E2E8F0;border-radius:12px;padding:1rem 1.15rem;background:#FFFFFF;box-shadow:0 1px 2px rgb(15 23 42 / .04)'; @endphp
 <x-filament-panels::page>
-    <p style="font-size:.85rem;color:rgb(75 85 99);margin:0">
+    <p style="font-size:.85rem;color:#475569;margin:0">
         Çalışanlarınızı İSG uzmanınızın hazırladığı online eğitime ekleyin. Birden fazla kişiyi işaretleyip
         "Seçilenleri eğitime ekle" ile toplu ekleyebilirsiniz. Eğitime başlamış çalışan çıkarılamaz.
-        Listede yalnız çalışan personel görünür; yeni çalışanı önce <a href="{{ \App\Filament\Isyeri\Pages\Personel::getUrl() }}" style="color:#0057A8;font-weight:600;text-decoration:underline">Personel</a> sayfasından ekleyin.
+        Listede yalnız çalışan personel görünür; yeni çalışanı önce <a href="{{ \App\Filament\Isyeri\Pages\Personel::getUrl() }}" style="color:#2563EB;font-weight:600;text-decoration:underline">Personel</a> sayfasından ekleyin.
     </p>
 
     @if ($this->paketler->isEmpty())
-        <div style="{{ $kart }};border-left:4px solid #b45309">
+        <div style="{{ $kart }};border-left:4px solid #D97706">
             <div style="font-weight:700">Henüz eklenebilecek eğitim yok</div>
-            <div style="font-size:.85rem;color:rgb(75 85 99)">İSG uzmanınız online eğitimi hazırladığında burada seçilebilir olacak.</div>
+            <div style="font-size:.85rem;color:#64748B">İSG uzmanınız online eğitimi hazırladığında burada seçilebilir olacak.</div>
         </div>
     @endif
 
     {{ $this->table }}
 
     @if ($girisBilgileri)
-        <div style="{{ $kart }};border-left:4px solid #0057A8">
+        <div style="{{ $kart }};border-left:4px solid #2563EB">
             <div style="font-weight:700;margin-bottom:.2rem">Giriş bilgileri</div>
             <div style="font-size:.8rem;color:rgb(75 85 99);margin-bottom:.6rem">
                 Portal: <strong>{{ url('/egitim') }}</strong> · Şifre yalnız şimdi gösterilir; çalışan ilk girişte kendi şifresini belirler.

@@ -1,8 +1,8 @@
 @php
     $firma = $this->firma;
     $oz = $this->ozet;
-    $kart = 'border:1px solid rgb(107 114 128 / .22);border-radius:.75rem;padding:1rem 1.1rem;background:rgb(255 255 255 / .6)';
-    $etiket = 'font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;color:rgb(107 114 128);font-weight:600';
+    $kart = 'border:1px solid #E2E8F0;border-radius:12px;padding:1rem 1.15rem;background:#FFFFFF;box-shadow:0 1px 2px rgb(15 23 42 / .04)';
+    $etiket = 'font-size:.73rem;letter-spacing:.04em;text-transform:uppercase;color:#64748B;font-weight:600';
 @endphp
 
 <x-filament-panels::page>
@@ -43,10 +43,10 @@
 
     {{-- ÖZET --}}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
-        @foreach ([['Aktif çalışan', $oz['calisan'], '#0057A8'], ['Evrak', $oz['evrak'], '#22272B'], ['Aktif iş izni', $oz['aktif_izin'], '#00704A']] as [$ad, $sayi, $renk])
+        @foreach ([['Aktif çalışan', $oz['calisan'], '#2563EB'], ['Evrak', $oz['evrak'], '#0F172A'], ['Aktif iş izni', $oz['aktif_izin'], '#16A34A']] as [$ad, $sayi, $renk])
             <div style="{{ $kart }};border-left:4px solid {{ $renk }}">
-                <div style="font-size:.75rem;color:rgb(107 114 128)">{{ $ad }}</div>
-                <div style="font-size:1.6rem;font-weight:700;color:{{ $renk }}">{{ $sayi }}</div>
+                <div style="font-size:.75rem;color:#64748B;font-weight:600">{{ $ad }}</div>
+                <div style="font-size:1.6rem;font-weight:800;color:{{ $renk }}">{{ $sayi }}</div>
             </div>
         @endforeach
     </div>
@@ -54,7 +54,7 @@
     {{-- İSG BİLGİLENDİRMELERİ (Ön Bilgilendirme / Tebliğ) --}}
     @if ($this->bilgilendirmeler->isNotEmpty())
         @php $bekleyen = $this->bilgilendirmeler->whereNull('isyeri_okundu_at')->count(); @endphp
-        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#F2B705' : '#00704A' }}">
+        <div style="{{ $kart }};border-left:4px solid {{ $bekleyen ? '#D97706' : '#16A34A' }}">
             <div style="font-weight:700;margin-bottom:.2rem">İSG Bilgilendirmeleri</div>
             <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.6rem">
                 İSG uzmanınızın işe başlamadan önce bildirdiği tedbirler.
