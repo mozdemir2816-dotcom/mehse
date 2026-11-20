@@ -39,7 +39,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem">
         @foreach ([
             ['İşyeri', $g['isyeri'], 'rgb(15 118 110)'], ['Aktif çalışan', $calisanGosterim, 'rgb(15 118 110)'], ['Açık risk', $g['acik_risk'], 'rgb(220 38 38)'],
-            ['Açık olay', $g['acik_olay'], 'rgb(180 83 9)'], ['KKD zimmet', $g['kkd_zimmet'], 'rgb(124 58 237)'], ['Yaklaşan / geciken', $g['yaklasan_geciken'], 'rgb(220 38 38)'],
+            ['Açık olay', $g['acik_olay'], 'rgb(180 83 9)'], ['KKD zimmet', $g['kkd_zimmet'], 'rgb(37 99 235)'], ['Yaklaşan / geciken', $g['yaklasan_geciken'], 'rgb(220 38 38)'],
         ] as [$ad, $deger, $c])
             <div style="{{ $kart }};border-top:3px solid {{ $c }}">
                 <div class="mehse-soluk">{{ $ad }}</div>

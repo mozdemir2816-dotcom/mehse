@@ -258,7 +258,7 @@
                                 @php $d = $e->vizeDurumu(); $kalan = $e->kalanGun(); @endphp
                                 <tr style="border-top:1px solid rgb(107 114 128 / .18)">
                                     <td style="padding:.35rem">
-                                        <button type="button" wire:click="firmaSec({{ $e->firma_id }})" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(124 58 237);text-align:left;text-decoration:underline">{{ $e->firma?->unvan }}</button>
+                                        <button type="button" wire:click="firmaSec({{ $e->firma_id }})" style="background:none;border:none;padding:0;cursor:pointer;color:rgb(37 99 235);text-align:left;text-decoration:underline">{{ $e->firma?->unvan }}</button>
                                     </td>
                                     <td style="padding:.35rem">{{ $e->kategoriAdi() }}</td>
                                     <td style="padding:.35rem;font-weight:600">{{ $e->ekipman_adi }}@if ($e->seri_no)<div style="font-weight:400;font-size:.75rem;color:rgb(107 114 128)">{{ $e->seri_no }}</div>@endif</td>

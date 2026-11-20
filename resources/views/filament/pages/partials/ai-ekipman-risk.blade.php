@@ -1,6 +1,6 @@
 {{-- Risk Sihirbazı: "Kütüphanede Olmayan Ekipman / Proses Ekle (AI)" — düğme + pencere.
      Mantık: RiskSihirbazi::aiEkipmanUret / aiEkipmanAdayToggle / aiEkipmanEkle, App\Support\GeminiEkipmanRiskUretici. --}}
-<x-filament::button color="primary" icon="heroicon-o-sparkles" style="background:linear-gradient(90deg, rgb(139 92 246), rgb(217 70 239));border:none"
+<x-filament::button color="primary" icon="heroicon-o-sparkles" style="background:linear-gradient(90deg, rgb(37 99 235), rgb(217 70 239));border:none"
     x-on:click="$dispatch('open-modal', { id: 'ai-ekipman-risk' })">
     Kütüphanede Olmayan Ekipman / Proses Ekle (AI)
 </x-filament::button>
@@ -54,8 +54,8 @@
                 @endphp
                 <label wire:key="ai-aday-{{ $i }}" @style([
                     'display:flex;gap:.7rem;align-items:flex-start;padding:.75rem;border-radius:.6rem;cursor:pointer',
-                    'border:2px solid '.($isaretli ? 'rgb(139 92 246)' : 'rgb(107 114 128 / .3)'),
-                    'background:rgb(139 92 246 / .06)' => $isaretli,
+                    'border:2px solid '.($isaretli ? 'rgb(37 99 235)' : 'rgb(107 114 128 / .3)'),
+                    'background:rgb(37 99 235 / .06)' => $isaretli,
                 ])>
                     <input type="checkbox" @checked($isaretli) wire:click="aiEkipmanAdayToggle({{ $i }})" style="margin-top:.2rem">
                     <span style="min-width:0;font-size:.82rem;display:flex;flex-direction:column;gap:.25rem">

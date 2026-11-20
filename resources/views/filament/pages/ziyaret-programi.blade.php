@@ -1,5 +1,5 @@
 @php
-    $mor = 'rgb(124 58 237)';
+    $mor = 'rgb(37 99 235)';
     $girdi = 'width:100%;padding:.4rem .5rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .3);background:transparent;font-size:.78rem';
     $durumRenk = ['bos' => 'rgb(156 163 175)', 'planlandi' => 'rgb(180 83 9)', 'tamamlandi' => 'rgb(21 128 61)'];
     $durumEtiket = ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'];
@@ -284,7 +284,7 @@
                             @endphp
                             <button type="button" wire:click="takvimGunSec('{{ $tarih }}')"
                                 style="aspect-ratio:1;border-radius:.35rem;border:none;cursor:pointer;font-size:.78rem;
-                                    background:{{ $seciliMi ? $mor : ($doluMu ? 'rgb(139 92 246 / .15)' : 'transparent') }};
+                                    background:{{ $seciliMi ? $mor : ($doluMu ? 'rgb(37 99 235 / .15)' : 'transparent') }};
                                     color:{{ $seciliMi ? '#fff' : 'inherit' }}">
                                 {{ $gun }}
                             </button>

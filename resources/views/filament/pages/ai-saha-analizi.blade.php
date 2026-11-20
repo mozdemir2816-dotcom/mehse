@@ -2,7 +2,7 @@
     use App\Models\SahaAnalizi;
     use Illuminate\Support\Facades\Storage;
 
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.85rem';
     $etiket = 'font-size:.75rem;font-weight:600;color:rgb(107 114 128);text-transform:uppercase;letter-spacing:.03em';

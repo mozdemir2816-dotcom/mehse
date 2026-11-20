@@ -62,7 +62,7 @@
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
                                 <div style="font-weight:600;font-size:.85rem">Sayfalar</div>
-                                <button type="button" wire:click="tumSayfalariSec" style="font-size:.75rem;color:rgb(139 92 246);background:none;border:none;cursor:pointer;text-decoration:underline">Tümünü Seç</button>
+                                <button type="button" wire:click="tumSayfalariSec" style="font-size:.75rem;color:rgb(37 99 235);background:none;border:none;cursor:pointer;text-decoration:underline">Tümünü Seç</button>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;max-height:320px;overflow:auto">
                                 @foreach ($this->sayfaKatalogu as $anahtar => $ad)
@@ -76,7 +76,7 @@
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
                                 <div style="font-weight:600;font-size:.85rem">Firmalar</div>
-                                <button type="button" wire:click="tumFirmalariSec" style="font-size:.75rem;color:rgb(139 92 246);background:none;border:none;cursor:pointer;text-decoration:underline">Tümünü Seç</button>
+                                <button type="button" wire:click="tumFirmalariSec" style="font-size:.75rem;color:rgb(37 99 235);background:none;border:none;cursor:pointer;text-decoration:underline">Tümünü Seç</button>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;max-height:320px;overflow:auto">
                                 @foreach ($this->firmalar as $firma)

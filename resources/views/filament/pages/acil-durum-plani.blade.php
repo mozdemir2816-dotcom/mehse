@@ -5,7 +5,7 @@
     $afisler = config('isg.acil_durum.afisler');
     $sablonlar = config('isg.acil_durum.word_sablonlari');
     $ornekMetinler = config('isg.acil_durum.ornek_metinler', []);
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $kirmizi = 'rgb(239 68 68)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $alan = 'width:100%;padding:.45rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem';
@@ -42,7 +42,7 @@
                         <td style="padding:.35rem .4rem">{{ $r['firma']->unvan }}</td>
                         <td style="padding:.35rem .4rem;white-space:nowrap;color:{{ $renk }};font-weight:700">{{ $k ? \App\Support\AcilDurumHazirlik::DURUM_ETIKET[$k['durum']].' · %'.$k['yuzde'] : 'Plan yok' }}</td>
                         <td style="padding:.35rem .4rem;white-space:nowrap;color:rgb(107 114 128)">{{ $r['plan']?->gecerlilik_tarihi ? 'Gözden geçirme '.$r['plan']->gecerlilik_tarihi->format('d.m.Y') : '' }}</td>
-                        <td style="padding:.35rem .4rem;text-align:right"><a href="{{ \App\Filament\Pages\AcilDurumPlani::getUrl(['firma' => $r['firma']->id]) }}" style="color:rgb(124 58 237);font-size:.75rem">{{ $k ? 'Aç →' : 'Plan oluştur →' }}</a></td>
+                        <td style="padding:.35rem .4rem;text-align:right"><a href="{{ \App\Filament\Pages\AcilDurumPlani::getUrl(['firma' => $r['firma']->id]) }}" style="color:rgb(37 99 235);font-size:.75rem">{{ $k ? 'Aç →' : 'Plan oluştur →' }}</a></td>
                     </tr>
                 @endforeach
             </table>
@@ -525,7 +525,7 @@
                 @foreach ($cerceveler as $anahtar => $ad)
                     @php $secili = $kapakCercevesi === $anahtar; @endphp
                     <button type="button" wire:click="$set('kapakCercevesi','{{ $anahtar }}')"
-                        style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;border:2px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                        style="padding:.6rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;border:2px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};background:{{ $secili ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                         <div style="font-weight:600">{{ Str::before($ad, ' — ') }}</div>
                         <div class="mehse-soluk">{{ Str::after($ad, ' — ') }}</div>
                     </button>

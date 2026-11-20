@@ -1,8 +1,8 @@
 @php
     $cfg = config('isg.isg_katip');
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $yesil = 'rgb(34 197 94)';
-    $grad = 'linear-gradient(135deg, rgb(139 92 246), rgb(99 102 241))';
+    $grad = 'linear-gradient(135deg, rgb(37 99 235), rgb(29 78 216))';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
 @endphp
 

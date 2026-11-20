@@ -4,7 +4,7 @@
     $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.45rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $sekmeStil = fn (string $s) => 'padding:.45rem .85rem;border-radius:999px;cursor:pointer;font-weight:600;font-size:.82rem;border:1px solid '
-        .($sekme === $s ? 'rgb(124 58 237);background:rgb(124 58 237);color:#fff' : 'rgb(107 114 128 / .35);background:transparent');
+        .($sekme === $s ? 'rgb(37 99 235);background:rgb(37 99 235);color:#fff' : 'rgb(107 114 128 / .35);background:transparent');
     $durumRenk = ['kayit_yok' => '#b91c1c', 'dolmus' => '#c2410c', 'yaklasan' => '#b45309', 'gecerli' => '#15803d'];
     $sinif = $this->firma?->tehlike_sinifi;
     $yil = $sinif ? config('isg.egitim_yenileme_yili.'.$sinif) : null;
@@ -40,7 +40,7 @@
             <p style="font-size:.85rem;color:#b45309">Çalışanların eğitim durumunu görmek için bir işyeri seçin.</p>
         @else
             @php $o = $this->ozet; @endphp
-            <div style="border:1px solid rgb(124 58 237 / .3);background:rgb(124 58 237 / .05);border-radius:.75rem;padding:.7rem 1rem;font-size:.82rem">
+            <div style="border:1px solid rgb(37 99 235 / .3);background:rgb(37 99 235 / .05);border-radius:.75rem;padding:.7rem 1rem;font-size:.82rem">
                 <strong>{{ $this->firma->tehlikeSinifiEtiketi() }}:</strong>
                 ilk temel eğitim {{ config('isg.egitim.sureler.ilk.'.$sinif.'.saat', '—') }} ders saati,
                 tekrar eğitimi {{ config('isg.egitim.sureler.tekrar.saat', '—') }} ders saati;
@@ -71,8 +71,8 @@
                                 <div style="font-weight:700">{{ $baslik }}</div>
                                 <div style="font-size:.76rem;color:rgb(107 114 128);margin:.2rem 0 .5rem">{{ $aciklama }}</div>
                                 <div style="display:flex;gap:.6rem;font-size:.78rem">
-                                    <button type="button" wire:click="$set('durumFiltre', '{{ $filtre }}')" style="background:none;border:0;padding:0;color:rgb(124 58 237);cursor:pointer;text-decoration:underline">Kişileri göster</button>
-                                    <a href="{{ $url }}" style="color:rgb(124 58 237)">→ Planla</a>
+                                    <button type="button" wire:click="$set('durumFiltre', '{{ $filtre }}')" style="background:none;border:0;padding:0;color:rgb(37 99 235);cursor:pointer;text-decoration:underline">Kişileri göster</button>
+                                    <a href="{{ $url }}" style="color:rgb(37 99 235)">→ Planla</a>
                                 </div>
                             </div>
                         @endforeach
@@ -82,7 +82,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem">
                 @foreach ([['Aktif çalışan', $o['toplam'], 'inherit', null], ['Kayıt yok', $o['kayit_yok'], '#b91c1c', 'kayit_yok'], ['Süresi dolmuş', $o['dolmus'], '#c2410c', 'dolmus'], ['Yaklaşan', $o['yaklasan'], '#b45309', 'yaklasan'], ['Geçerli', $o['gecerli'], '#15803d', 'gecerli']] as [$ad, $sayi, $renk, $f])
-                    <button type="button" wire:click="$set('durumFiltre', {{ $f ? "'".$f."'" : 'null' }})" style="text-align:left;border:1px solid {{ $durumFiltre === $f ? 'rgb(124 58 237)' : 'rgb(107 114 128 / .3)' }};border-radius:.75rem;padding:.6rem .9rem;background:transparent;cursor:pointer">
+                    <button type="button" wire:click="$set('durumFiltre', {{ $f ? "'".$f."'" : 'null' }})" style="text-align:left;border:1px solid {{ $durumFiltre === $f ? 'rgb(37 99 235)' : 'rgb(107 114 128 / .3)' }};border-radius:.75rem;padding:.6rem .9rem;background:transparent;cursor:pointer">
                         <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                         <div class="mehse-soluk">{{ $ad }}</div>
                     </button>
@@ -147,7 +147,7 @@
                                         <span style="color:rgb(180 83 9);font-weight:600">Sonuç bekliyor</span>
                                     @endif
                                 </td>
-                                <td style="{{ $td }};text-align:right;white-space:nowrap">@if ($k->katilimciSayisi() > 0)<button type="button" wire:click="mountAction('sonucGir', { id: {{ $k->id }} })" style="color:rgb(21 128 61);font-size:.78rem;margin-right:.6rem">Katılım / Sonuç</button>@endif<a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $k->firma_id]) }}" style="color:rgb(124 58 237);font-size:.78rem">Belgeler →</a></td>
+                                <td style="{{ $td }};text-align:right;white-space:nowrap">@if ($k->katilimciSayisi() > 0)<button type="button" wire:click="mountAction('sonucGir', { id: {{ $k->id }} })" style="color:rgb(21 128 61);font-size:.78rem;margin-right:.6rem">Katılım / Sonuç</button>@endif<a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $k->firma_id]) }}" style="color:rgb(37 99 235);font-size:.78rem">Belgeler →</a></td>
                             </tr>
                         @endforeach
                     </table>

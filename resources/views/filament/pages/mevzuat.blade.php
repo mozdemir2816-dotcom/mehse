@@ -83,8 +83,8 @@
                 <div style="font-weight:700;font-size:.85rem;color:rgb(37 99 235)">🎯 Neyi Kapsar?</div>
                 <div style="font-size:.8rem;margin-top:.3rem;line-height:1.45">{{ $rehber6331['kartlar']['neyi_kapsar'] }}</div>
             </div>
-            <div style="{{ $kutu }};background:rgb(139 92 246 / .05);border-color:rgb(139 92 246 / .3)">
-                <div style="font-weight:700;font-size:.85rem;color:rgb(124 58 237)">👥 Kimi Bağlar?</div>
+            <div style="{{ $kutu }};background:rgb(37 99 235 / .05);border-color:rgb(37 99 235 / .3)">
+                <div style="font-weight:700;font-size:.85rem;color:rgb(37 99 235)">👥 Kimi Bağlar?</div>
                 <div style="font-size:.8rem;margin-top:.3rem;line-height:1.45">{{ $rehber6331['kartlar']['kimi_baglar'] }}</div>
             </div>
             <div style="{{ $kutu }};background:rgb(34 197 94 / .05);border-color:rgb(34 197 94 / .3)">

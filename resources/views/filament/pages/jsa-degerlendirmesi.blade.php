@@ -1,5 +1,5 @@
 @php
-    $mor = 'rgb(124 58 237)';
+    $mor = 'rgb(37 99 235)';
     $riskRozet = fn ($seviye) => match (\App\Models\JsaSablonu::riskRengi($seviye)) {
         'kritik' => '#7f1d1d', 'yuksek' => '#dc2626', 'orta' => '#b45309', 'dusuk' => '#15803d', default => '#9ca3af',
     };
@@ -75,7 +75,7 @@
 
         {{-- TOPLU SEÇİM ÇUBUĞU --}}
         @if (count($secili) > 0)
-            <div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;padding:.6rem .85rem;margin-bottom:.9rem;border:1px solid {{ $mor }};border-radius:.5rem;background:rgb(124 58 237 / .07)">
+            <div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;padding:.6rem .85rem;margin-bottom:.9rem;border:1px solid {{ $mor }};border-radius:.5rem;background:rgb(37 99 235 / .07)">
                 <span style="font-weight:700;font-size:.82rem">{{ count($secili) }} JSA seçili</span>
                 <x-filament::button size="xs" color="danger" icon="heroicon-o-document-arrow-down" wire:click="topluPdf" wire:loading.attr="disabled">
                     Seçilenleri PDF (tek belge)

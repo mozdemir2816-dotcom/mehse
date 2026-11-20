@@ -9,7 +9,7 @@
     @style([
         'text-align:left;display:flex;gap:.6rem;align-items:flex-start;padding:.7rem;border-radius:.6rem;background:transparent',
         'border:2px solid '.($isaretli ? $mor : 'rgb(107 114 128 / .3)'),
-        'background:rgb(139 92 246 / .08)' => $isaretli,
+        'background:rgb(37 99 235 / .08)' => $isaretli,
         'cursor:pointer' => ! $yok && ! $tamam,
         'opacity:.5;cursor:not-allowed' => $yok,
         'border-color:rgb(34 197 94 / .6);background:rgb(34 197 94 / .06)' => $tamam,

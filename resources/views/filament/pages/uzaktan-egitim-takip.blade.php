@@ -71,7 +71,7 @@
                             $biten = $a->ilerlemeler->where('izlendi', true)->count();
                             $sonSinav = $a->sinavSonuclari->first();
                             $sonGiris = $a->girisler->last()?->giris_at;
-                            $renk = match ($a->durum) { 'tamamlandi' => '#15803d', 'basarisiz' => '#b91c1c', 'onay_bekliyor' => '#b45309', 'ih_onay_bekliyor' => '#7c3aed', default => '#475569' };
+                            $renk = match ($a->durum) { 'tamamlandi' => '#15803d', 'basarisiz' => '#b91c1c', 'onay_bekliyor' => '#b45309', 'ih_onay_bekliyor' => '#2563eb', default => '#475569' };
                         @endphp
                         <div wire:key="gon-{{ $a->id }}" style="border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.9rem 1rem">
                             <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;align-items:flex-start">
@@ -148,7 +148,7 @@
                                 $toplam = $a->paket->dersler->count();
                                 $biten = $a->ilerlemeler->where('izlendi', true)->count();
                                 $son = $a->sinavSonuclari->first();
-                                $renk = match ($a->durum) { 'tamamlandi' => 'rgb(21 128 61)', 'basarisiz' => 'rgb(185 28 28)', 'onay_bekliyor' => '#b45309', 'ih_onay_bekliyor' => '#7c3aed', default => 'rgb(107 114 128)' };
+                                $renk = match ($a->durum) { 'tamamlandi' => 'rgb(21 128 61)', 'basarisiz' => 'rgb(185 28 28)', 'onay_bekliyor' => '#b45309', 'ih_onay_bekliyor' => '#2563eb', default => 'rgb(107 114 128)' };
                             @endphp
                             <tr wire:key="genel-{{ $a->id }}" style="border-top:1px solid rgb(107 114 128 / .15)">
                                 <td style="{{ $h }}">{{ \Illuminate\Support\Str::limit($a->calisan->firma->unvan, 30) }}</td>
@@ -239,7 +239,7 @@
                                 @if ($a->durum === 'onay_bekliyor')
                                     <span style="color:#b45309;font-weight:700">⏳ Sınav geçti · {{ $a->durumEtiketi() }}</span>
                                 @elseif ($a->durum === 'ih_onay_bekliyor')
-                                    <span style="color:#7c3aed;font-weight:700">⏳ İGU onayladı · İH Onayı Bekliyor</span>
+                                    <span style="color:#2563eb;font-weight:700">⏳ İGU onayladı · İH Onayı Bekliyor</span>
                                     <div class="mehse-soluk">Hekim: {{ $a->calisan?->firma?->isyeriHekimi?->ad_soyad ?? 'firmada kayıtlı değil' }}</div>
                                 @elseif ($a->durum === 'tamamlandi')
                                     <span style="color:rgb(21 128 61);font-weight:700">☑ Tamamlandı</span>

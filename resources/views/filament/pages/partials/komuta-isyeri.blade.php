@@ -32,9 +32,9 @@
             </div>
         </div>
 
-        <div style="{{ $kart }};display:flex;justify-content:space-between;gap:1rem;background:rgb(124 58 237 / .05)">
+        <div style="{{ $kart }};display:flex;justify-content:space-between;gap:1rem;background:rgb(37 99 235 / .05)">
             <div>
-                <div style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(124 58 237);font-weight:700">Firma 360 · yönetici dosyası</div>
+                <div style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(37 99 235);font-weight:700">Firma 360 · yönetici dosyası</div>
                 <div style="font-weight:800;font-size:1.1rem">Tek ekranda firma resmi</div>
                 <div style="font-size:.78rem;color:rgb(107 114 128)">İSG operasyonu, sözleşme ve yetkiniz dahilindeki cari veriler aynı rapor bütününde. Sağlık bilgileri yalnız toplu sayı olarak gösterilir.</div>
             </div>
@@ -52,7 +52,7 @@
                     <div style="font-size:.82rem;color:rgb(107 114 128)">{{ $o['genel'] }}</div>
                 </div>
                 <div style="text-align:right">
-                    <div style="font-size:1.6rem;font-weight:800;color:rgb(124 58 237)">%{{ $o['yuzde'] }}</div>
+                    <div style="font-size:1.6rem;font-weight:800;color:rgb(37 99 235)">%{{ $o['yuzde'] }}</div>
                     <div class="mehse-soluk">ölçülebilir süreç tamamlanması</div>
                 </div>
             </div>
@@ -78,7 +78,7 @@
                             <td style="{{ $td }};white-space:nowrap;font-weight:700;color:{{ $renk[$s['durum']] }}">{{ IsyeriDurumu::DURUMLAR[$s['durum']] }}</td>
                             <td style="{{ $td }};line-height:1.45">{{ $s['sonuc'] }}</td>
                             <td style="{{ $td }};color:rgb(75 85 99)">{{ $s['sorumlu'] }}</td>
-                            <td style="{{ $td }};white-space:nowrap">@if ($s['url'])<a href="{{ $s['url'] }}" class="idm-yazdirma" style="font-size:.75rem;font-weight:700;color:rgb(124 58 237)">Modüle git →</a>@endif</td>
+                            <td style="{{ $td }};white-space:nowrap">@if ($s['url'])<a href="{{ $s['url'] }}" class="idm-yazdirma" style="font-size:.75rem;font-weight:700;color:rgb(37 99 235)">Modüle git →</a>@endif</td>
                         </tr>
                     @endforeach
                 </table>
@@ -129,7 +129,7 @@
                             <td style="{{ $td }};white-space:nowrap">{{ $t['tarih']->format('d.m.Y') }}</td>
                             <td style="{{ $td }};white-space:nowrap">{{ $t['durum'] === 'tamamlandi' ? 'Tamamlandı' : IsyeriDurumu::kalanMetni($t['tarih']) }}</td>
                             <td style="{{ $td }};color:rgb(75 85 99)">{{ $t['sorumlu'] }}</td>
-                            <td style="{{ $td }}">@if ($t['url'])<a href="{{ $t['url'] }}" class="idm-yazdirma" style="font-size:.75rem;font-weight:700;color:rgb(124 58 237)">Kaydı aç</a>@endif</td>
+                            <td style="{{ $td }}">@if ($t['url'])<a href="{{ $t['url'] }}" class="idm-yazdirma" style="font-size:.75rem;font-weight:700;color:rgb(37 99 235)">Kaydı aç</a>@endif</td>
                         </tr>
                     @empty
                         <tr><td colspan="7" style="{{ $td }};text-align:center;color:rgb(107 114 128)">Termini olan kayıt yok.</td></tr>

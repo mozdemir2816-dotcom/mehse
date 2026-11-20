@@ -8,7 +8,7 @@
     @php($hekim = $a->calisan?->firma?->isyeriHekimi)
     <button wire:click="ihOnayla({{ $a->id }})"
         wire:confirm="Sağlık konuları işyeri hekimi {{ $hekim?->ad_soyad ?? '(firmada kayıtlı hekim yok)' }} adına onaylansın mı?"
-        style="{{ $dugme }};background:#7c3aed">İH Onayı</button>
+        style="{{ $dugme }};background:#2563eb">İH Onayı</button>
 @endif
 @if ($a->belgeAcikMi())
     <button wire:click="belgeIndir({{ $a->id }})" style="{{ $dugme }};background:rgb(20 184 166)">Sertifika</button>

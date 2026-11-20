@@ -1,5 +1,5 @@
 @php
-    $mor = 'rgb(124 58 237)';
+    $mor = 'rgb(37 99 235)';
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
@@ -13,7 +13,7 @@
         potansiyel risk (olasılık × şiddet) ve <strong>5 Neden (5N)</strong> kök neden analizi yapılır.
     </p>
 
-    <div style="{{ $kutu }};background:rgb(124 58 237 / .06);border-color:rgb(124 58 237 / .3);font-size:.78rem;color:#5b21b6">
+    <div style="{{ $kutu }};background:rgb(37 99 235 / .06);border-color:rgb(37 99 235 / .3);font-size:.78rem;color:#1e40af">
         6331 sayılı Kanun m.14 — işveren, iş kazaları ve meslek hastalıklarının yanı sıra
         <strong>ramak kala olaylarını da kayıt altına alır</strong> ve gerekli incelemeleri yaparak raporlar.
     </div>
@@ -153,7 +153,7 @@
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem">
                 @foreach ($this->etkiSecenekleri as $anahtar => $etki)
-                    <label style="display:flex;gap:.55rem;align-items:flex-start;cursor:pointer;{{ $kutu }};padding:.6rem .75rem;{{ in_array($anahtar, $etkiler, true) ? 'background:rgb(124 58 237 / .08);border-color:rgb(124 58 237 / .45)' : '' }}">
+                    <label style="display:flex;gap:.55rem;align-items:flex-start;cursor:pointer;{{ $kutu }};padding:.6rem .75rem;{{ in_array($anahtar, $etkiler, true) ? 'background:rgb(37 99 235 / .08);border-color:rgb(37 99 235 / .45)' : '' }}">
                         <input type="checkbox" wire:model.live="etkiler" value="{{ $anahtar }}" style="margin-top:.2rem">
                         <span>
                             <span style="font-weight:600;font-size:.82rem;display:block">{{ $etki['ad'] }}</span>
@@ -198,7 +198,7 @@
             </div>
 
             @if ($this->potansiyelOnizleme)
-                <div style="margin-top:1rem;display:inline-block;{{ $kutu }};padding:.55rem .9rem;background:rgb(124 58 237 / .08);border-color:rgb(124 58 237 / .35);font-size:.85rem">
+                <div style="margin-top:1rem;display:inline-block;{{ $kutu }};padding:.55rem .9rem;background:rgb(37 99 235 / .08);border-color:rgb(37 99 235 / .35);font-size:.85rem">
                     Potansiyel Risk Skoru: <strong>{{ $this->potansiyelOnizleme['skor'] }}</strong> / 25 —
                     <strong>{{ $this->potansiyelOnizleme['seviye'] }}</strong>
                 </div>

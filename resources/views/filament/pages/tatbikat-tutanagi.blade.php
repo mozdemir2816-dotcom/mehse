@@ -389,7 +389,7 @@
                 ['Tarihi geçen plan', $o['gecikmis'], '#dc2626', 'gecikmis'],
             ] as [$ad, $sayi, $renk, $filtre])
                 <button type="button" wire:click="$set('listeDurum', {{ $filtre ? "'".$filtre."'" : 'null' }})"
-                    style="text-align:left;{{ $kutu }};padding:.6rem .85rem;background:transparent;cursor:pointer;{{ $listeDurum === $filtre ? 'border-color:rgb(124 58 237)' : '' }}">
+                    style="text-align:left;{{ $kutu }};padding:.6rem .85rem;background:transparent;cursor:pointer;{{ $listeDurum === $filtre ? 'border-color:rgb(37 99 235)' : '' }}">
                     <div class="mehse-soluk">{{ $ad }}</div>
                     <div style="font-size:1.35rem;font-weight:700;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
                 </button>

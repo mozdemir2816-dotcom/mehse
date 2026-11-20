@@ -1,6 +1,6 @@
 @php
     $mavi = 'rgb(59 130 246)';
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
 @endphp
 

@@ -206,7 +206,7 @@
                                 @if ($s->naceKapsami())<span style="border:1px solid rgb(13 148 136 / .4);border-radius:.3rem;padding:0 .3rem;color:rgb(15 118 110)">NACE: {{ implode(', ', $s->naceKapsami()) }}</span>
                                 @elseif ($s->sektor_anahtari)<span style="border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;padding:0 .3rem">Sektör: {{ $s->sektorEtiketi() }}</span>
                                 @else<span style="border:1px solid rgb(107 114 128 / .3);border-radius:.3rem;padding:0 .3rem">Ortak: *</span>@endif
-                                @if ($s->uretim_kaynagi === 'ai')<span style="color:#8b5cf6">✨ AI</span>@endif
+                                @if ($s->uretim_kaynagi === 'ai')<span style="color:#2563eb">✨ AI</span>@endif
                                 @if ($s->uretim_kaynagi === 'json')<span>JSON</span>@endif
                                 @if ($s->user_id === null)<span>sistem havuzu</span>@endif
                                 <span style="margin-left:auto">Güncelleme: {{ $s->updated_at?->format('d.m.Y') }}</span>

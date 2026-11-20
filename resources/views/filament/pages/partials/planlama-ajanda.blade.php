@@ -1,6 +1,6 @@
 {{-- Genel Ajanda: portföy takvimi (eski Saha Takvimi) — Concerns\PortfoyAjandasi --}}
 @php
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $yesil = 'rgb(34 197 94)';
     $mavi = 'rgb(29 78 216)';
     $kutu = 'border:1px solid rgb(128 116 148 / .3);border-radius:.75rem;padding:1rem';
@@ -65,7 +65,7 @@
                     <button type="button" wire:click="tarihSec('{{ $tarih }}')"
                         style="min-height:3.1rem;border-radius:.35rem;cursor:pointer;font-size:.78rem;position:relative;padding:.2rem;
                             border:{{ $bugunMu ? '1.5px solid '.$mor : '1px solid transparent' }};
-                            background:{{ $seciliMi ? $mor : ($r ? 'rgb(139 92 246 / .1)' : 'transparent') }};
+                            background:{{ $seciliMi ? $mor : ($r ? 'rgb(37 99 235 / .1)' : 'transparent') }};
                             color:{{ $seciliMi ? '#fff' : 'inherit' }}">
                         <div>{{ $gun }}</div>
                         @if ($r)

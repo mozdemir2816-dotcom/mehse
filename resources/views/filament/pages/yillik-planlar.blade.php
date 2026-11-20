@@ -1,7 +1,7 @@
 @php
     $renkler = ['bos' => '#374151', 'planlandi' => '#b45309', 'tamamlandi' => '#10b981'];
     $etiketler = ['bos' => 'Boş', 'planlandi' => 'Planlandı', 'tamamlandi' => 'Tamamlandı'];
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $p = $this->plan;
     $kilit = $this->kilitAyIndeksi;
     $egitimKategorileri = config('isg.yillik_plan.egitim_kategorileri');

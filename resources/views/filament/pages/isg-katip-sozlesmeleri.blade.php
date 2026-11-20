@@ -1,5 +1,5 @@
 @php
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $yesil = 'rgb(34 197 94)';
     $kirmizi = 'rgb(239 68 68)';
     $sari = 'rgb(234 179 8)';
@@ -33,7 +33,7 @@
                 @endphp
                 <button
                     wire:click="kisiSec('{{ $secili ? '' : $kisi['anahtar'] }}')"
-                    style="{{ $kutu }};text-align:left;cursor:pointer;background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }};border-color:{{ $secili ? $mor : 'rgb(107 114 128 / .3)' }}"
+                    style="{{ $kutu }};text-align:left;cursor:pointer;background:{{ $secili ? 'rgb(37 99 235 / .08)' : 'transparent' }};border-color:{{ $secili ? $mor : 'rgb(107 114 128 / .3)' }}"
                 >
                     <div style="display:flex;align-items:start;justify-content:space-between;gap:.5rem">
                         <div>

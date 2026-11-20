@@ -1,5 +1,5 @@
 @php
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $kirmizi = 'rgb(239 68 68)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $cakismalar = $this->cakismalar();
@@ -30,7 +30,7 @@
                             <div style="font-weight:600;font-size:.88rem;margin-top:.25rem">{{ $c->mevcutTehlike?->tehlike }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.2rem">{{ $c->mevcutTehlike?->risk }}</div>
                         </div>
-                        <div style="border:1px solid {{ $mor }};border-radius:.5rem;padding:.65rem .8rem;background:rgb(139 92 246 / .06)">
+                        <div style="border:1px solid {{ $mor }};border-radius:.5rem;padding:.65rem .8rem;background:rgb(37 99 235 / .06)">
                             <div style="font-size:.75rem;font-weight:700;color:{{ $mor }};text-transform:uppercase;letter-spacing:.03em">Yeni (Excel'den)</div>
                             <div style="font-weight:600;font-size:.88rem;margin-top:.25rem">{{ $c->yeni_veri['tehlike'] ?? '—' }}</div>
                             <div style="font-size:.78rem;color:rgb(107 114 128);margin-top:.2rem">{{ $c->yeni_veri['risk'] ?? '—' }}</div>

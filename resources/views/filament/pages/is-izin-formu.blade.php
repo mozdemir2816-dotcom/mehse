@@ -1,7 +1,7 @@
 @php
     $turuncu = 'rgb(245 158 11)';
     $yesil = 'rgb(4 120 87)';
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $inp = 'margin-top:.3rem;width:100%;padding:.5rem .75rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent';
     $lbl = 'font-weight:600;font-size:.82rem';
 
@@ -211,7 +211,7 @@
                     <button type="button" wire:click="kkdToggle('{{ $kkd }}')"
                         style="padding:.5rem;border-radius:.5rem;cursor:pointer;font-size:.8rem;text-align:center;
                             border:2px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
-                            background:{{ $secili ? 'rgb(139 92 246 / .1)' : 'transparent' }}">
+                            background:{{ $secili ? 'rgb(37 99 235 / .1)' : 'transparent' }}">
                         {{ $kkd }}
                     </button>
                 @endforeach

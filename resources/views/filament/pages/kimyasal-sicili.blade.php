@@ -65,7 +65,7 @@
                                     {{ $u->sonraki_gozden_gecirme?->format('d.m.Y') ?: '—' }}
                                 </td>
                                 <td style="padding:.5rem">
-                                    <button wire:click="mountAction('kimyasalDuzenle', { id: {{ $u->id }} })" style="background:none;border:0;color:rgb(124 58 237);cursor:pointer;margin-right:.5rem">Düzenle</button>
+                                    <button wire:click="mountAction('kimyasalDuzenle', { id: {{ $u->id }} })" style="background:none;border:0;color:rgb(37 99 235);cursor:pointer;margin-right:.5rem">Düzenle</button>
                                     <button wire:click="kutuphaneyeKaydet({{ $u->id }})" title="Bu ürünü kendi kütüphanene kaydet" style="background:none;border:0;color:rgb(20 184 166);cursor:pointer;margin-right:.5rem">Kütüphaneye</button>
                                     <button wire:click="kimyasalSil({{ $u->id }})" wire:confirm="'{{ $u->urun_adi }}' silinsin mi?" style="background:none;border:0;color:#b91c1c;cursor:pointer">Sil</button>
                                 </td>

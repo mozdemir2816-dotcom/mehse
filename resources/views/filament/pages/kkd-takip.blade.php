@@ -13,7 +13,7 @@
     <p class="mehse-bolum-aciklama">
         Personel bazlı KKD zimmet sicili: kategori → tür, yenileme / SKT takibi, iade ve yenileme, zimmet formu ve Excel.
         Stok kartlarıyla giriş, zimmet çıkışı, iade ve fire izlenir. Toplu teslim tutanağı için
-        <a href="{{ \App\Filament\Pages\KkdFormu::getUrl() }}" style="color:rgb(124 58 237);text-decoration:underline">KKD Zimmet Formu</a>
+        <a href="{{ \App\Filament\Pages\KkdFormu::getUrl() }}" style="color:rgb(37 99 235);text-decoration:underline">KKD Zimmet Formu</a>
         da kullanılabilir.
     </p>
 
@@ -33,7 +33,7 @@
         @php $o = $this->ozet; @endphp
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
             @foreach ([
-                ['Aktif zimmet', $o['aktif'], 'rgb(124 58 237)', 'aktif'],
+                ['Aktif zimmet', $o['aktif'], 'rgb(37 99 235)', 'aktif'],
                 ['Yenileme yaklaşan', $o['yaklasan'], '#b45309', 'yaklasan'],
                 ['Yenileme geciken', $o['gecikmis'], '#dc2626', 'gecikmis'],
                 ['Düşük stok', $o['dusuk_stok'], '#b45309', null],

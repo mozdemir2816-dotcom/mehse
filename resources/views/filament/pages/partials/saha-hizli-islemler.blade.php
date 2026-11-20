@@ -7,7 +7,7 @@
     $lbl = 'font-weight:600;font-size:.85rem';
     $hata = fn (string $alan) => $errors->first($alan);
     $dugme = fn (string $p) => 'flex:1;padding:.65rem .8rem;border-radius:.6rem;cursor:pointer;font-weight:600;font-size:.9rem;border:1px solid '
-        .($hizliIslem === $p ? 'rgb(124 58 237);background:rgb(124 58 237);color:#fff' : 'rgb(107 114 128 / .35);background:transparent;color:inherit');
+        .($hizliIslem === $p ? 'rgb(37 99 235);background:rgb(37 99 235);color:#fff' : 'rgb(107 114 128 / .35);background:transparent;color:inherit');
 @endphp
 
 <div style="{{ $kart }}">
@@ -94,7 +94,7 @@
                     @foreach ($this->sonRamakKalalar as $o)
                         <div style="padding:.2rem 0">{{ $o->belge_no }} · {{ $o->olay_tarihi?->format('d.m.Y') }} · {{ \Illuminate\Support\Str::limit($o->olay_ozeti, 60) }}</div>
                     @endforeach
-                    <a href="{{ \App\Filament\Pages\OlayKayitlari::getUrl(['firma' => $firmaId]) }}" style="color:rgb(124 58 237);text-decoration:underline">Olay Kayıtları'nda aç (kök neden, DÖF)</a>
+                    <a href="{{ \App\Filament\Pages\OlayKayitlari::getUrl(['firma' => $firmaId]) }}" style="color:rgb(37 99 235);text-decoration:underline">Olay Kayıtları'nda aç (kök neden, DÖF)</a>
                 </div>
             @endif
         </div>

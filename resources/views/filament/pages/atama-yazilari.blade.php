@@ -1,8 +1,8 @@
 @php
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $rol = $this->rol;
-    $grad = 'linear-gradient(135deg, rgb(139 92 246), rgb(99 102 241))';
+    $grad = 'linear-gradient(135deg, rgb(37 99 235), rgb(29 78 216))';
 @endphp
 
 <x-filament-panels::page>
@@ -163,7 +163,7 @@
                                     <button type="button" wire:click="profesyonelToggle({{ $p->id }})"
                                         style="text-align:left;padding:.45rem .6rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;color:inherit;
                                             border:1px solid {{ $psecili ? $mor : 'rgb(107 114 128 / .3)' }};
-                                            background:{{ $psecili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                            background:{{ $psecili ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                                         {{ $psecili ? '☑' : '☐' }} {{ $p->ad_soyad }}
                                         <span class="mehse-soluk-metin">— {{ $p->tipEtiketi() }}</span>
                                         @if ($p->kase_gorseli) <span title="Kaşe yüklü">🖋️</span> @endif
@@ -197,7 +197,7 @@
                             @php $secili = in_array($c->id, $secilenCalisanIdler, true); @endphp
                             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;min-width:0;padding:.45rem .3rem;border-radius:.4rem;
                                 border:1px solid {{ $secili ? $mor : 'rgb(107 114 128 / .3)' }};
-                                background:{{ $secili ? 'rgb(139 92 246 / .08)' : 'transparent' }}">
+                                background:{{ $secili ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                                 <button type="button" wire:click="calisanToggle({{ $c->id }})" style="flex:1 1 {{ $secili && $rolAnahtari === 'isg_kurulu' ? '100%' : '0' }};min-width:0;overflow-wrap:anywhere;text-align:left;background:none;border:none;cursor:pointer;font-size:.8rem;color:inherit">
                                     {{ $secili ? '☑' : '☐' }} {{ $c->ad_soyad }}
                                     @if ($c->gorev) <span class="mehse-soluk-metin">— {{ $c->gorev }}</span> @endif

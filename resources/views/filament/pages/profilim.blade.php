@@ -3,7 +3,7 @@
     $u = $this->kullanici;
     $o = $this->ozet;
     $gorsel = $this->gorselDurumu();
-    $mor = 'rgb(139 92 246)';
+    $mor = 'rgb(37 99 235)';
     $indigo = 'rgb(99 102 241)';
     $turkuaz = 'rgb(20 184 166)';
     $yesil = 'rgb(34 197 94)';
@@ -447,12 +447,12 @@
                     <button type="button" wire:click="$set('egitimKategoriFiltre','')"
                         style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                             border:1px solid {{ $egitimKategoriFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
-                            background:{{ $egitimKategoriFiltre === '' ? 'rgb(139 92 246 / .1)' : 'transparent' }}">Tümü</button>
+                            background:{{ $egitimKategoriFiltre === '' ? 'rgb(37 99 235 / .1)' : 'transparent' }}">Tümü</button>
                     @foreach ($kullanilanKategoriler as $kat)
                         <button type="button" wire:click="$set('egitimKategoriFiltre','{{ $kat }}')"
                             style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                                 border:1px solid {{ $egitimKategoriFiltre === $kat ? $mor : 'rgb(128 116 148 / .3)' }};
-                                background:{{ $egitimKategoriFiltre === $kat ? 'rgb(139 92 246 / .1)' : 'transparent' }}">{{ \App\Filament\Pages\Profilim::EGITIM_KATEGORI_ETIKETLERI[$kat] ?? $kat }}</button>
+                                background:{{ $egitimKategoriFiltre === $kat ? 'rgb(37 99 235 / .1)' : 'transparent' }}">{{ \App\Filament\Pages\Profilim::EGITIM_KATEGORI_ETIKETLERI[$kat] ?? $kat }}</button>
                     @endforeach
                 </div>
             @endif
@@ -463,13 +463,13 @@
                 <button type="button" wire:click="$set('egitimDurumFiltre','')"
                     style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                         border:1px solid {{ $egitimDurumFiltre === '' ? $mor : 'rgb(128 116 148 / .3)' }};
-                        background:{{ $egitimDurumFiltre === '' ? 'rgb(139 92 246 / .1)' : 'transparent' }}">Tümü</button>
+                        background:{{ $egitimDurumFiltre === '' ? 'rgb(37 99 235 / .1)' : 'transparent' }}">Tümü</button>
                 @foreach ($durumEtiket as $anahtar => $etiket)
                     <button type="button" wire:click="$set('egitimDurumFiltre','{{ $anahtar }}')"
                         style="padding:.15rem .6rem;border-radius:9999px;font-size:.75rem;cursor:pointer;
                             border:1px solid {{ $egitimDurumFiltre === $anahtar ? ($durumRenk[$anahtar] ?? $mor) : 'rgb(128 116 148 / .3)' }};
                             color:{{ $egitimDurumFiltre === $anahtar ? ($durumRenk[$anahtar] ?? $mor) : 'inherit' }};
-                            background:{{ $egitimDurumFiltre === $anahtar ? 'rgb(139 92 246 / .08)' : 'transparent' }}">{{ $etiket }}</button>
+                            background:{{ $egitimDurumFiltre === $anahtar ? 'rgb(37 99 235 / .08)' : 'transparent' }}">{{ $etiket }}</button>
                 @endforeach
             </div>
 

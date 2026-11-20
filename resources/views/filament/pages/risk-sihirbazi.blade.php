@@ -459,9 +459,9 @@
                 <div style="margin-top:1rem">
                     <div style="background:{{ $grad }};color:#fff;border-radius:.5rem;padding:.5rem .85rem;font-weight:600">İşyerinde Kullanılan Ekipman ve Prosesler</div>
                     @if ($aiSektorOtomatik)
-                        <div style="margin-top:.6rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(124 58 237 / .07);border:1px solid rgb(124 58 237 / .25)">
+                        <div style="margin-top:.6rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(37 99 235 / .07);border:1px solid rgb(37 99 235 / .25)">
                             <span>🏷 Sektör firmanın NACE kodundan ({{ $this->firma?->nace_kodu }}) belirlendi: <strong>{{ $this->aiSektorEtiketi() }}</strong></span>
-                            <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
+                            <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(37 99 235);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
                         </div>
                     @endif
                     <div style="font-size:.82rem;color:rgb(107 114 128);margin:.6rem 0">
@@ -535,11 +535,11 @@
             {{-- Sohbet — Sorular --}}
             @if ($aiAsama === 'sohbet')
                 @php $siradaki = $this->aiSiradakiSoru(); @endphp
-                <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(124 58 237 / .07);border:1px solid rgb(124 58 237 / .25)">
+                <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.8rem;padding:.45rem .7rem;border-radius:.5rem;background:rgb(37 99 235 / .07);border:1px solid rgb(37 99 235 / .25)">
                     <span>🏷 {{ $aiSektorOtomatik ? 'NACE kodundan ('.$this->firma?->nace_kodu.') belirlenen sektör' : 'Sektör' }}: <strong>{{ $this->aiSektorEtiketi() }}</strong> — yalnız bu işyerine özgü sorular soruluyor</span>
-                    <button type="button" wire:click="$set('aiAsama', 'ekipman')" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">← Ekipmanlara dön</button>
+                    <button type="button" wire:click="$set('aiAsama', 'ekipman')" style="background:none;border:none;color:rgb(37 99 235);text-decoration:underline;cursor:pointer;font-size:.78rem">← Ekipmanlara dön</button>
                     @if ($aiSektorOtomatik)
-                        <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(124 58 237);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
+                        <button type="button" wire:click="aiSektorDegistir" style="background:none;border:none;color:rgb(37 99 235);text-decoration:underline;cursor:pointer;font-size:.78rem">Sektörü değiştir</button>
                     @endif
                 </div>
                 <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.6rem;max-height:22rem;overflow-y:auto;padding-right:.25rem">

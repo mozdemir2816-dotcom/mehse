@@ -46,7 +46,7 @@
         {{-- RİSK --}}
         <div style="{{ $kart }}">
             <div style="display:flex;gap:.6rem;align-items:center">
-                <x-filament::icon icon="heroicon-o-shield-exclamation" style="width:1.6rem;height:1.6rem;color:rgb(124 58 237)" />
+                <x-filament::icon icon="heroicon-o-shield-exclamation" style="width:1.6rem;height:1.6rem;color:rgb(37 99 235)" />
                 <div>
                     <div style="font-weight:700">Kimyasal Risk Değerlendirmesi</div>
                     <div class="mehse-soluk">Kontrol bantlama (COSHH) — envanterden otomatik satır</div>

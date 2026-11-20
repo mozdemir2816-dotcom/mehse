@@ -15,7 +15,7 @@
         Sahada gördüğünüz her uygunsuzluk burada <strong>bir kez</strong> kaydedilir: elle, fotoğraftan ya da kısa açıklamadan AI ile,
         veya başka bir yapay zekaya hazırlattığınız Word/Excel dosyasından ("Word/Excel'den Aktar"). DÖF raporu için listeden bulguları
         seçip "Seçilenleri DÖF'e Aktar"ı kullanın. Kapsamlı kontrol listesi için
-        <a href="{{ \App\Filament\Pages\SahaDenetimi::getUrl() }}" style="color:rgb(124 58 237);text-decoration:underline">Saha Denetimi</a>.
+        <a href="{{ \App\Filament\Pages\SahaDenetimi::getUrl() }}" style="color:rgb(37 99 235);text-decoration:underline">Saha Denetimi</a>.
     </p>
 
     @php $o = $this->ozet; @endphp
@@ -93,7 +93,7 @@
                     <span wire:loading.remove wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">✨ Yapay Zekâ ile Değerlendir</span>
                     <span wire:loading wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">Değerlendiriliyor…</span>
                 </x-filament::button>
-                @if ($kaynak === 'ai')<div style="font-size:.78rem;color:rgb(124 58 237);margin-top:.4rem">AI taslağı yazıldı — aşağıdaki özet kartını kontrol edin; gerekirse "Ayrıntıları düzenle" ile açıp kaydedin.</div>@endif
+                @if ($kaynak === 'ai')<div style="font-size:.78rem;color:rgb(37 99 235);margin-top:.4rem">AI taslağı yazıldı — aşağıdaki özet kartını kontrol edin; gerekirse "Ayrıntıları düzenle" ile açıp kaydedin.</div>@endif
                 @if ($aiEkTespitler)
                     <x-filament::button color="warning" icon="heroicon-o-plus" wire:click="kalanTespitleriEkle" style="margin-top:.5rem">Kalan {{ count($aiEkTespitler) }} tespiti de ekle</x-filament::button>
                 @endif
@@ -290,7 +290,7 @@
                         <tr wire:key="bulgu-{{ $b->id }}">
                             <td style="{{ $td }}"><input type="checkbox" wire:model.live="secili" value="{{ $b->id }}" title="DÖF'e aktarmak için seç" style="width:1.1rem;height:1.1rem"></td>
                             <td style="{{ $td }};white-space:nowrap"><strong>{{ $b->bulgu_no }}</strong><div class="mehse-soluk">{{ $b->created_at?->format('d.m.Y') }}{{ match ($b->kaynak) { 'ai' => ' · AI', 'dosya' => ' · dosya', default => '' } }}@if (count($b->fotograflar ?? [])) · 📷 {{ count($b->fotograflar) }}@endif</div></td>
-                            <td style="{{ $td }}">{{ $b->firma?->unvan }}<div class="mehse-soluk">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(124 58 237)">harita</a>@endif</div></td>
+                            <td style="{{ $td }}">{{ $b->firma?->unvan }}<div class="mehse-soluk">{{ collect([$b->bolum, $b->gozlem_konumu])->filter()->implode(' · ') }}@if ($b->konumLinki()) · <a href="{{ $b->konumLinki() }}" target="_blank" style="color:rgb(37 99 235)">harita</a>@endif</div></td>
                             <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div class="mehse-soluk">{{ $b->kategori }}</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">
                                 <span style="display:inline-block;color:#fff;background:{{ $b->oncelikRengi() }};border-radius:9999px;padding:.15rem .65rem;font-weight:700;font-size:.75rem">{{ $b->skor() }} · {{ $b->oncelikEtiketi() }}</span>

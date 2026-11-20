@@ -4,7 +4,7 @@
     $th = 'text-align:left;padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .3);font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:rgb(107 114 128)';
     $td = 'padding:.4rem .5rem;border-bottom:1px solid rgb(107 114 128 / .12);vertical-align:top';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:.75rem 1rem';
-    $renk = ['gecerli' => 'rgb(22 163 74 / .55)', 'icerde' => 'rgb(124 58 237 / .6)', 'planli' => 'rgb(245 158 11 / .6)', 'cikti' => 'rgb(107 114 128 / .45)', 'suresi_doldu' => 'rgb(220 38 38 / .6)', 'iptal' => 'rgb(220 38 38 / .6)'];
+    $renk = ['gecerli' => 'rgb(22 163 74 / .55)', 'icerde' => 'rgb(37 99 235 / .6)', 'planli' => 'rgb(245 158 11 / .6)', 'cikti' => 'rgb(107 114 128 / .45)', 'suresi_doldu' => 'rgb(220 38 38 / .6)', 'iptal' => 'rgb(220 38 38 / .6)'];
     $hata = fn (string $alan) => $errors->first($alan);
 @endphp
 
@@ -18,7 +18,7 @@
 
     @php $o = $this->ozet; @endphp
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
-        @foreach ([['Bugünkü ziyaretçi', $o['bugun'], 'inherit'], ['Şu an içeride', $o['iceride'], 'rgb(124 58 237)'], ['Geçerli kart', $o['gecerli'], '#15803d']] as [$ad, $sayi, $c])
+        @foreach ([['Bugünkü ziyaretçi', $o['bugun'], 'inherit'], ['Şu an içeride', $o['iceride'], 'rgb(37 99 235)'], ['Geçerli kart', $o['gecerli'], '#15803d']] as [$ad, $sayi, $c])
             <div style="{{ $kutu }}">
                 <div class="mehse-soluk">{{ $ad }}</div>
                 <div style="font-size:1.5rem;font-weight:700;color:{{ $sayi > 0 ? $c : 'inherit' }}">{{ $sayi }}</div>
