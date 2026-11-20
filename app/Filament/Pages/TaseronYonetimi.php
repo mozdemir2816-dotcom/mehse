@@ -3,10 +3,11 @@
 namespace App\Filament\Pages;
 
 use App\Models\Firma;
-use App\Models\IsIzinFormu;
+use App\Models\IsIzinFormu as IsIzinFormuModel;
 use App\Models\Taseron;
 use App\Models\TaseronBelgesi;
 use App\Models\TaseronCalisani;
+use App\Models\TespitOneriDefteri as TespitOneriDefteriModel;
 use App\Support\TaseronUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -131,12 +132,12 @@ class TaseronYonetimi extends Page
 
         $bagli = $this->secili->isIzinleri->pluck('id')->all();
 
-        return IsIzinFormu::query()
+        return IsIzinFormuModel::query()
             ->where('firma_id', $this->secili->firma_id)
             ->whereNotIn('id', $bagli)
             ->latest('baslangic')->latest('id')
             ->get()
-            ->mapWithKeys(fn (IsIzinFormu $f) => [$f->id => trim(($f->izin_no ?: '#'.$f->id).' — '.($f->calisma_alani ?: 'Alan belirtilmemiş')
+            ->mapWithKeys(fn (IsIzinFormuModel $f) => [$f->id => trim(($f->izin_no ?: '#'.$f->id).' — '.($f->calisma_alani ?: 'Alan belirtilmemiş')
                 .($f->baslangic ? ' ('.$f->baslangic->format('d.m.Y').')' : ''))])
             ->all();
     }
@@ -308,6 +309,73 @@ class TaseronYonetimi extends Page
     public function ornekForm(string $form)
     {
         return TaseronUretici::ornekFormPdf($this->taseron($this->seciliId), $form);
+    }
+
+    /** Taşeron/alt işveren uygunsuzluklarını 6331 m.23 koordinasyon görevi gereği DÖF'e aktarır. */
+    public function eksikleriDofaAktar(): void
+    {
+        $t = $this->taseron($this->seciliId);
+        $eksikler = $t->eksikler();
+
+        if ($eksikler === []) {
+            Notification::make()->title('Aktarılacak taşeron eksiği yok')->warning()->send();
+
+            return;
+        }
+
+        $maddeler = array_map(fn (string $e): array => [
+            'tespit' => 'Taşeron / Alt İşveren uygunsuzluğu ('.$t->unvan.'): '.$e,
+            'oncelik' => 'yuksek',
+            'oneri' => '6331 sayılı Kanun m.23 ve Alt İşverenlik Yönetmeliği gereği ilgili belge/eğitim/sağlık eksiği giderilmeden saha çalışmasına izin verilmemeli, taşeron yetkilisine yazılı tebliğ yapılmalıdır.',
+            'sorumlu' => $t->yetkili ?: $t->unvan,
+            'termin' => now()->addDays(7)->toDateString(),
+            'durum' => 'acik',
+        ], $eksikler);
+
+        session([
+            'dof_aktarim' => [
+                'firma_id' => $t->firma_id,
+                'kaynak' => 'Taşeron / Alt İşveren Yönetimi',
+                'maddeler' => $maddeler,
+            ],
+        ]);
+
+        $this->redirect(DofOlustur::getUrl());
+    }
+
+    /** Taşeron/alt işveren eksiklerini firmanın Onaylı Defterine (6331 m.23 dayanağıyla) işler. */
+    public function eksikleriDeftereAktar(): void
+    {
+        $t = $this->taseron($this->seciliId);
+        $eksikler = $t->eksikler();
+
+        if ($eksikler === []) {
+            Notification::make()->title('Deftere işlenecek taşeron eksiği yok')->warning()->send();
+
+            return;
+        }
+
+        $defter = TespitOneriDefteriModel::firmaIcin($t->firma);
+        $mevcut = $defter->maddeler ?? [];
+
+        foreach ($eksikler as $e) {
+            $mevcut[] = [
+                'tespit' => 'Taşeron / Alt İşveren uygunsuzluğu ('.$t->unvan.'): '.$e,
+                'oneri' => 'İlgili taşeron / alt işveren yetkilisine yazılı bildirim yapılarak eksik belge/eğitim/sağlık kayıtları tamamlanmalı; eksikler giderilmeden saha çalışması başlatılmamalıdır.',
+                'dayanak' => '6331 sayılı Kanun m.23 (Koordinasyon) · Alt İşverenlik Yönetmeliği',
+                'oncelik' => 'yuksek',
+                'foto_yolu' => null,
+            ];
+        }
+
+        $defter->update(['maddeler' => $mevcut]);
+
+        Notification::make()
+            ->title(count($eksikler).' taşeron eksiği Onaylı Deftere işlendi')
+            ->success()
+            ->send();
+
+        $this->redirect(TespitOneriDefteri::getUrl(['firma' => $t->firma_id]));
     }
 
     /*

@@ -271,4 +271,26 @@ class TaseronYonetimiTest extends TestCase
             ->call('ornekForm', 'taahhut')
             ->assertOk();
     }
+
+    public function test_taseron_eksikleri_dofa_ve_onayli_deftere_aktarilir(): void
+    {
+        $t = $this->taseron();
+
+        $sayfa = Livewire::test(TaseronYonetimi::class)->call('yonet', $t->id);
+
+        $sayfa->call('eksikleriDofaAktar')
+            ->assertRedirect(\App\Filament\Pages\DofOlustur::getUrl());
+
+        $aktarim = session('dof_aktarim');
+        $this->assertSame($this->firma->id, $aktarim['firma_id']);
+        $this->assertNotEmpty($aktarim['maddeler']);
+        $this->assertStringContainsString('Yıldız Elektrik', $aktarim['maddeler'][0]['tespit']);
+
+        $sayfa->call('eksikleriDeftereAktar')
+            ->assertRedirect(\App\Filament\Pages\TespitOneriDefteri::getUrl(['firma' => $this->firma->id]));
+
+        $defter = \App\Models\TespitOneriDefteri::where('firma_id', $this->firma->id)->sole();
+        $this->assertNotEmpty($defter->maddeler);
+        $this->assertStringContainsString('6331', $defter->maddeler[0]['dayanak']);
+    }
 }

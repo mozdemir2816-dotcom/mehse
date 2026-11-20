@@ -50,7 +50,7 @@
                     </tr>
                     @foreach ($this->taseronlar as $t)
                         @php $eksik = $t->eksikler(); @endphp
-                        <tr @if ($seciliId === $t->id) style="background:rgb(124 58 237 / .07)" @endif>
+                        <tr @if ($seciliId === $t->id) style="background:rgb(37 99 235 / .08)" @endif>
                             <td style="{{ $td }}">
                                 <strong>{{ $t->unvan }}</strong>
                                 @if ($t->faaliyet)<div class="mehse-soluk">{{ $t->faaliyet }}</div>@endif
@@ -111,9 +111,17 @@
             @if (! $t->aktif)
                 <div style="border:1px solid {{ $gri }};border-radius:.6rem;padding:.6rem .9rem;font-size:.82rem">Bu kayıt pasif — uygunluk kontrolü yapılmaz.</div>
             @elseif ($eksik)
-                <div style="border:1px solid {{ $kirmizi }};background:rgb(220 38 38 / .06);border-radius:.6rem;padding:.6rem .9rem;font-size:.82rem;color:#b91c1c">
-                    <strong>Eksik var:</strong>
-                    @foreach ($eksik as $e)<br>• {{ $e }}@endforeach
+                <div style="border:1px solid {{ $kirmizi }};background:rgb(220 38 38 / .06);border-radius:.6rem;padding:.7rem .95rem;font-size:.82rem;color:#b91c1c">
+                    <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:.75rem">
+                        <div>
+                            <strong>Eksik var (6331 m.23 koordinasyon):</strong>
+                            @foreach ($eksik as $e)<br>• {{ $e }}@endforeach
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:.45rem;shrink:0">
+                            <x-filament::button size="xs" color="danger" icon="heroicon-o-wrench-screwdriver" wire:click="eksikleriDofaAktar">Eksiklerden DÖF Oluştur</x-filament::button>
+                            <x-filament::button size="xs" color="gray" icon="heroicon-o-book-open" wire:click="eksikleriDeftereAktar">Onaylı Deftere İşle</x-filament::button>
+                        </div>
+                    </div>
                 </div>
             @else
                 <div style="border:1px solid {{ $yesil }};background:rgb(22 163 74 / .06);border-radius:.6rem;padding:.6rem .9rem;font-size:.82rem;color:#15803d">
@@ -237,7 +245,10 @@
                 <x-filament::button size="sm" icon="heroicon-o-link" wire:click="izinBagla">Taşerona Bağla</x-filament::button>
             </div>
             @if (! $this->baglanabilirIzinler && $t->isIzinleri->isEmpty())
-                <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:.4rem">Bu işyerinde iş izni kaydı yok — İş İzin Formu'ndan oluşturabilirsiniz.</p>
+                <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:.4rem">
+                    Bu işyerinde iş izni kaydı yok —
+                    <a href="{{ \App\Filament\Pages\IsIzinFormu::getUrl(['firma' => $t->firma_id]) }}" style="color:#2563eb;font-weight:600;text-decoration:underline">Resmi Belgeler &amp; PTW (İş İzin Formu)</a>'ndan oluşturabilirsiniz.
+                </p>
             @endif
 
             @if ($t->isIzinleri->isNotEmpty())

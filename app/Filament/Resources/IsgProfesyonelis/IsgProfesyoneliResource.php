@@ -96,8 +96,20 @@ class IsgProfesyoneliResource extends Resource
                         default => 'gray',
                     }),
                 TextColumn::make('sertifika_no')->label('Sertifika No')->toggleable(),
+                TextColumn::make('atanan_firma_sayisi')->label('Atanan Firma')->badge()->alignCenter()
+                    ->state(function (IsgProfesyoneli $r): int {
+                        $alan = $r->firmaAlani();
+
+                        return $alan
+                            ? Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->where($alan, $r->id)->count()
+                            : 0;
+                    })
+                    ->formatStateUsing(fn (int $state) => $state.' firma')
+                    ->color(fn (int $state) => $state > 0 ? 'primary' : 'gray'),
                 IconColumn::make('kase_var')->label('Kaşe')->boolean()
                     ->state(fn (IsgProfesyoneli $r) => filled($r->kase_gorseli)),
+                IconColumn::make('imza_var')->label('İmza')->boolean()
+                    ->state(fn (IsgProfesyoneli $r) => filled($r->imza_gorseli)),
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
             ])
             ->recordActions([

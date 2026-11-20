@@ -77,14 +77,32 @@ class CalisansTable
             ->recordActions([
                 EditAction::make()->iconButton()->tooltip('Düzenle')->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge),
                 \Filament\Actions\ActionGroup::make([
-                Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')->color('gray')
-                    ->visible(fn (Calisan $record) => $record->aktif)
-                    ->requiresConfirmation()
-                    ->modalDescription('Personel listeden düşer ama kaydı ve geçmiş evrakları (eğitim, KKD, muayene) korunur. Çıkış tarihi boşsa bugün yazılır.')
-                    ->action(fn (Calisan $record) => static::pasifeAl(collect([$record]))),
-                Action::make('aktifEt')->label('Aktifleştir')->icon('heroicon-o-play-circle')->color('success')
-                    ->visible(fn (Calisan $record) => ! $record->aktif)
-                    ->action(fn (Calisan $record) => $record->update(['aktif' => true, 'isten_cikis' => null])),
+                    Action::make('muayeneFormu')
+                        ->label('EK-2 Muayene Formu')
+                        ->icon('heroicon-o-heart')
+                        ->color('primary')
+                        ->url(fn (Calisan $record) => \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $record->firma_id, 'calisan' => $record->id])),
+                    Action::make('iseDonusBelgesi')
+                        ->label('İşe Dönüş Belgesi')
+                        ->icon('heroicon-o-arrow-uturn-left')
+                        ->color('info')
+                        ->url(fn (Calisan $record) => \App\Filament\Pages\IseDonusBelgesi::getUrl(['firma' => $record->firma_id, 'calisan' => $record->id])),
+                    Action::make('egitimKatilim')
+                        ->label('Eğitim Katılım')
+                        ->icon('heroicon-o-academic-cap')
+                        ->url(fn (Calisan $record) => \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $record->firma_id])),
+                    Action::make('kkdFormu')
+                        ->label('KKD Zimmet Formu')
+                        ->icon('heroicon-o-shield-check')
+                        ->url(fn (Calisan $record) => \App\Filament\Pages\KkdFormu::getUrl(['firma' => $record->firma_id])),
+                    Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')->color('gray')
+                        ->visible(fn (Calisan $record) => $record->aktif)
+                        ->requiresConfirmation()
+                        ->modalDescription('Personel listeden düşer ama kaydı ve geçmiş evrakları (eğitim, KKD, muayene) korunur. Çıkış tarihi boşsa bugün yazılır.')
+                        ->action(fn (Calisan $record) => static::pasifeAl(collect([$record]))),
+                    Action::make('aktifEt')->label('Aktifleştir')->icon('heroicon-o-play-circle')->color('success')
+                        ->visible(fn (Calisan $record) => ! $record->aktif)
+                        ->action(fn (Calisan $record) => $record->update(['aktif' => true, 'isten_cikis' => null])),
                 ]),
                 DeleteAction::make()->iconButton()->tooltip('Kalıcı Sil')->label('Kalıcı Sil'),
             ])
