@@ -142,6 +142,34 @@ class DofOlusturTest extends TestCase
         $this->assertLessThanOrEqual(4, $pdf->getDomPDF()->getCanvas()->get_page_count());
     }
 
+    public function test_17_maddeli_dof_pdfinde_imza_tek_basina_bos_sayfaya_dusmez(): void
+    {
+        Storage::fake('public');
+        $yol = UploadedFile::fake()->image('kanit.jpg', 450, 600)->store('dof-foto', 'public');
+
+        $maddeler = [];
+        for ($i = 1; $i <= 17; $i++) {
+            $maddeler[] = [
+                'tespit' => "Madde {$i} — Dış cephe iskelesinin çalışma platformlarında yürüyüş kalasları tek sıra döşenmiş olup dış kenarlarda korkuluk ve topukluk eksiktir.",
+                'oncelik' => 'kritik',
+                'oneri' => 'Platform genişliği standartlara uygun şekilde tamamlanmalı ve tüm katlara korkuluk/topukluk monte edilmelidir.',
+                'durum' => 'acik',
+                'foto_yolu' => $yol,
+            ];
+        }
+
+        $firma = Firma::factory()->for($this->uzman)->create(['unvan' => 'Örnek Şantiye']);
+        $rapor = DofRaporu::create(['firma_id' => $firma->id, 'maddeler' => $maddeler]);
+
+        $html = view('pdf.dof-raporu', ['rapor' => $rapor, 'firma' => $firma])->render();
+        $this->assertStringContainsString('class="son-blok"', $html);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+        $pdf->render();
+        // 2 tablo+imza sayfası + 3 fotoğraf sayfası (17 fotoğraf) = en fazla 5 sayfa (imza ayrı sayfaya taşmaz)
+        $this->assertLessThanOrEqual(5, $pdf->getDomPDF()->getCanvas()->get_page_count());
+    }
+
     public function test_dof_pdf_madde_tablosunda_satir_ici_foto_gosterilir(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();

@@ -6,39 +6,42 @@
     /* Çoklu DÖF Raporu (A4 yatay) — 02.11.2026 yerleşim düzeltmesi: başlık en üstte, sabit sütun
        genişlikleri (table-layout: fixed), tüm hücreler üste hizalı, tablo başlığı her sayfada tekrar,
        tek temiz imza bloğu (kaşe görseli basılmaz — görseldeki küçük yazı okunmuyor ve metinle mükerrerdi). */
-    @page { margin: 22px 30px 26px 30px; }
+    @page { margin: 16px 26px 18px 26px; }
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 10px; }
 
-    .baslik { width: 100%; text-align: center; border-bottom: 3px double #111; padding-bottom: 8px; margin: 0 0 10px; }
-    .baslik h1 { font-size: 15px; margin: 0 0 3px; letter-spacing: .2px; }
+    .baslik { width: 100%; text-align: center; border-bottom: 3px double #111; padding-bottom: 6px; margin: 0 0 7px; }
+    .baslik h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: .2px; }
     .baslik .firma { font-size: 11px; }
 
-    table.kunye { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9.5px; margin: 0 0 10px; }
-    table.kunye td { border: 1px solid #999; padding: 4px 7px; vertical-align: top; }
+    table.kunye { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9.2px; margin: 0 0 7px; }
+    table.kunye td { border: 1px solid #999; padding: 3px 6px; vertical-align: top; }
     table.kunye td.e { background: #f0f0f0; font-weight: bold; width: 15%; }
 
-    table.maddeler { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8.8px; margin: 0 0 10px; }
+    table.maddeler { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8.6px; margin: 0; }
     table.maddeler thead { display: table-header-group; }
     table.maddeler tr { page-break-inside: avoid; }
-    table.maddeler th, table.maddeler td { border: 1px solid #999; padding: 4px 5px; text-align: left; vertical-align: top; word-wrap: break-word; }
+    table.maddeler th, table.maddeler td { border: 1px solid #999; padding: 3px 5px; text-align: left; vertical-align: top; word-wrap: break-word; }
+    table.maddeler.son-satir td { border-top: none; }
     /* Başlıklar tek satır, ortalı (02.11.2026: Durum / Foto başlığı kırılıyordu) */
-    table.maddeler thead th { background: #f0f0f0; font-size: 9.5px; white-space: nowrap; vertical-align: middle; text-align: center; padding: 5px 4px; }
+    table.maddeler thead th { background: #f0f0f0; font-size: 9.2px; white-space: nowrap; vertical-align: middle; text-align: center; padding: 4px; }
     table.maddeler td.sira { text-align: center; font-weight: bold; }
     table.maddeler td.orta { text-align: center; }
     table.maddeler td.varsayilan { color: #555; font-style: italic; }
     table.maddeler td.foto { text-align: center; color: #888; font-size: 7.5px; }
-    table.maddeler img.satir-foto { width: 100%; max-height: 60px; }
+    table.maddeler img.satir-foto { width: 100%; max-height: 48px; }
     .oncelik-kritik { color: #b91c1c; font-weight: bold; }
     .oncelik-yuksek { color: #dc2626; }
     .oncelik-orta { color: #d97706; }
     .oncelik-dusuk { color: #16a34a; }
 
-    table.imza { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 26px; page-break-inside: avoid; }
-    table.imza td { width: 50%; padding: 0 30px; text-align: center; vertical-align: top; font-size: 9.5px; line-height: 1.5; }
-    table.imza .cizgi { height: 40px; border-bottom: 1px solid #111; margin-bottom: 5px; }
-    table.imza .ad { font-weight: bold; font-size: 10.5px; }
-    table.imza .kucuk { color: #555; font-size: 8.5px; }
+    /* Son madde + imza bloğu birlikte tutulur — imza hiçbir zaman tek başına yeni sayfaya düşmez */
+    .son-blok { page-break-inside: avoid; }
+    table.imza { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; page-break-inside: avoid; }
+    table.imza td { width: 50%; padding: 0 30px; text-align: center; vertical-align: top; font-size: 9.2px; line-height: 1.35; }
+    table.imza .cizgi { height: 28px; border-bottom: 1px solid #111; margin-bottom: 4px; }
+    table.imza .ad { font-weight: bold; font-size: 10px; }
+    table.imza .kucuk { color: #555; font-size: 8.2px; }
 
     .foto-sayfa { page-break-before: always; }
     .foto-sayfa-alt { font-size: 9px; font-weight: bold; color: #333; margin: 0 0 6px; text-align: center; }
@@ -87,6 +90,14 @@
     </tr>
 </table>
 
+@php
+    $maddeSayisi = count($maddeler);
+    $ustMaddeler = $maddeSayisi > 1 ? array_slice($maddeler, 0, $maddeSayisi - 1, true) : [];
+    $sonMaddeIndex = $maddeSayisi > 0 ? $maddeSayisi - 1 : null;
+    $sonMadde = $sonMaddeIndex !== null ? $maddeler[$sonMaddeIndex] : null;
+@endphp
+
+@if ($maddeSayisi > 1)
 <table class="maddeler">
     <thead>
         <tr>
@@ -101,7 +112,7 @@
         </tr>
     </thead>
     <tbody>
-        @forelse ($maddeler as $i => $m)
+        @foreach ($ustMaddeler as $i => $m)
             <tr>
                 <td class="sira">{{ $i + 1 }}</td>
                 <td>{{ $m['tespit'] ?? '' }}</td>
@@ -118,29 +129,69 @@
                     @endif
                 </td>
             </tr>
-        @empty
-            <tr><td colspan="8" style="color:#888">Madde eklenmedi.</td></tr>
-        @endforelse
+        @endforeach
     </tbody>
 </table>
+@endif
 
-<table class="imza">
-    <tr>
-        <td>
-            <div class="cizgi"></div>
-            <div class="ad">{{ $gy['ad'] ?: '.............................' }}</div>
-            <div>{{ $gy['unvan'] }}</div>
-            @if ($gy['belge_no'])<div>Belge No: {{ $gy['belge_no'] }}</div>@endif
-            <div class="kucuk">(İmza – Kaşe)</div>
-        </td>
-        <td>
-            <div class="cizgi"></div>
-            <div class="ad">{{ $isveren ?: '.............................' }}</div>
-            <div>İşveren / İşveren Vekili</div>
-            <div class="kucuk">(İmza – Kaşe)</div>
-        </td>
-    </tr>
-</table>
+<div class="son-blok">
+    <table class="maddeler {{ $maddeSayisi > 1 ? 'son-satir' : '' }}">
+        @if ($maddeSayisi <= 1)
+            <thead>
+                <tr>
+                    <th style="width:4%">#</th>
+                    <th style="width:26%">Tespit</th>
+                    <th style="width:10%">Öncelik</th>
+                    <th style="width:22%">Öneri / Düzeltici Faaliyet</th>
+                    <th style="width:12%">Sorumlu</th>
+                    <th style="width:10%">Termin</th>
+                    <th style="width:8%">Durum</th>
+                    <th style="width:8%">Foto</th>
+                </tr>
+            </thead>
+        @endif
+        <tbody>
+            @if ($sonMadde !== null)
+                <tr>
+                    <td class="sira" style="width:4%">{{ $sonMaddeIndex + 1 }}</td>
+                    <td style="width:26%">{{ $sonMadde['tespit'] ?? '' }}</td>
+                    <td class="oncelik-{{ $sonMadde['oncelik'] ?? 'orta' }}" style="width:10%">{{ \App\Models\DofRaporu::oncelikEtiketi($sonMadde['oncelik'] ?? null) }}</td>
+                    <td style="width:22%">{!! nl2br(e($sonMadde['oneri'] ?? '—')) !!}</td>
+                    <td class="{{ blank($sonMadde['sorumlu'] ?? null) ? 'varsayilan' : '' }}" style="width:12%">{{ \App\Models\DofRaporu::maddeSorumlusu($sonMadde) }}</td>
+                    <td class="orta {{ blank($sonMadde['termin'] ?? null) ? 'varsayilan' : '' }}" style="width:10%">{{ $rapor->maddeTermini($sonMadde) }}</td>
+                    <td style="width:8%">{{ \App\Models\DofRaporu::durumEtiketi($sonMadde['durum'] ?? null) }}</td>
+                    <td class="foto" style="width:8%">
+                        @if ($fotoVar($sonMadde))
+                            <img class="satir-foto" src="{{ $fotoYolu($sonMadde) }}">
+                        @else
+                            Görsel yok
+                        @endif
+                    </td>
+                </tr>
+            @else
+                <tr><td colspan="8" style="color:#888">Madde eklenmedi.</td></tr>
+            @endif
+        </tbody>
+    </table>
+
+    <table class="imza">
+        <tr>
+            <td>
+                <div class="cizgi"></div>
+                <div class="ad">{{ $gy['ad'] ?: '.............................' }}</div>
+                <div>{{ $gy['unvan'] }}</div>
+                @if ($gy['belge_no'])<div>Belge No: {{ $gy['belge_no'] }}</div>@endif
+                <div class="kucuk">(İmza – Kaşe)</div>
+            </td>
+            <td>
+                <div class="cizgi"></div>
+                <div class="ad">{{ $isveren ?: '.............................' }}</div>
+                <div>İşveren / İşveren Vekili</div>
+                <div class="kucuk">(İmza – Kaşe)</div>
+            </td>
+        </tr>
+    </table>
+</div>
 
 {{-- Fotoğraf kanıtı sayfaları: sayfa başına en fazla 8 fotoğraf (4×2 ızgara) — gereksiz sayfa israfını önler --}}
 @php
