@@ -1,5 +1,5 @@
 @php
-    $altin = 'rgb(180 83 9)';
+    $altin = '#2563EB';
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $icerik = $this->icerik;
     $coklu = $this->cokluEgiticiMi;
@@ -13,7 +13,7 @@
     </p>
 
     {{-- 1. FİRMA & SERTİFİKA TİPİ --}}
-    <x-filament::section icon="heroicon-o-check-badge" icon-color="warning">
+    <x-filament::section icon="heroicon-o-check-badge" icon-color="primary">
         <x-slot name="heading">1. Firma & Sertifika Tipi</x-slot>
 
         <div class="mehse-izgara">
@@ -35,7 +35,8 @@
                 <button type="button" wire:click="$set('tip','{{ $anahtar }}')"
                     style="padding:.4rem .7rem;border-radius:.4rem;cursor:pointer;font-size:.8rem;
                         border:1px solid {{ $secili ? $altin : 'rgb(107 114 128 / .3)' }};
-                        background:{{ $secili ? 'rgb(217 119 6 / .1)' : 'transparent' }}">
+                        background:{{ $secili ? 'rgb(37 99 235 / .1)' : 'transparent' }};
+                        color:{{ $secili ? '#1D4ED8' : 'inherit' }};font-weight:{{ $secili ? '600' : '400' }}">
                     {{ $t['ad'] }}
                 </button>
             @endforeach
@@ -76,7 +77,7 @@
 
     @if ($this->firma)
         {{-- 2. EĞİTİM BİLGİLERİ --}}
-        <x-filament::section icon="heroicon-o-calendar" icon-color="warning">
+        <x-filament::section icon="heroicon-o-calendar" icon-color="primary">
             <x-slot name="heading">2. Eğitim Bilgileri</x-slot>
 
             <div class="mehse-izgara">

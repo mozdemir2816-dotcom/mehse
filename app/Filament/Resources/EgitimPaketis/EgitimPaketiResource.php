@@ -203,7 +203,7 @@ class EgitimPaketiResource extends Resource
                 TextColumn::make('dersler_count')->counts('dersler')->label('Ders')->alignCenter(),
                 TextColumn::make('sorular_count')->counts('sorular')->label('Soru')->alignCenter(),
                 TextColumn::make('atamalar_count')->counts('atamalar')->label('Atama')->alignCenter(),
-                IconColumn::make('paylasildi')->label('Paylaşık')->boolean(),
+                IconColumn::make('paylasildi')->label('Paylaşımlı')->boolean(),
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
             ])
             ->recordActions([

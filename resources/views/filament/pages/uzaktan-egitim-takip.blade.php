@@ -36,18 +36,16 @@
                 <button type="button" wire:click="$set('gorunum', 'tablo')" style="font-size:.8rem;cursor:pointer;background:none;border:1px solid rgb(107 114 128 / .35);border-radius:.5rem;padding:.35rem .8rem;color:inherit">Tablo görünümü</button>
             </x-slot>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem;margin-bottom:.8rem">
-                <div>
+            <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;margin-bottom:.8rem">
+                <div style="flex:1;min-width:220px">
                     <label class="mehse-etiket" for="gon-ara">Ara</label>
                     <input id="gon-ara" type="search" wire:model.live.debounce.300ms="gonderilenAra" placeholder="Çalışan ya da firma" style="{{ $girdi }}">
                 </div>
-                <div style="display:flex;align-items:end">
-                    <button type="button" wire:click="$refresh" style="{{ $girdi }};cursor:pointer;font-weight:600;margin-top:0">Yenile</button>
-                </div>
+                <x-filament::button color="gray" icon="heroicon-o-arrow-path" wire:click="$refresh">Yenile</x-filament::button>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem" role="group" aria-label="Durum süzgeci">
                 @foreach ($filtreler as $k => $v)
-                    <button type="button" wire:click="$set('genelFiltre', '{{ $k }}')" aria-pressed="{{ $genelFiltre === $k ? 'true' : 'false' }}" style="font-size:.78rem;padding:.3rem .7rem;border-radius:999px;cursor:pointer;min-height:2rem;border:1px solid {{ $genelFiltre === $k ? 'rgb(79 70 229)' : 'rgb(107 114 128 / .35)' }};background:{{ $genelFiltre === $k ? 'rgb(79 70 229)' : 'transparent' }};color:{{ $genelFiltre === $k ? '#fff' : 'inherit' }}">
+                    <button type="button" wire:click="$set('genelFiltre', '{{ $k }}')" aria-pressed="{{ $genelFiltre === $k ? 'true' : 'false' }}" style="font-size:.78rem;padding:.3rem .7rem;border-radius:999px;cursor:pointer;min-height:2rem;border:1px solid {{ $genelFiltre === $k ? '#2563EB' : 'rgb(107 114 128 / .35)' }};background:{{ $genelFiltre === $k ? '#2563EB' : 'transparent' }};color:{{ $genelFiltre === $k ? '#fff' : 'inherit' }}">
                         {{ $v }} ({{ $tum->when($this->firmaId, fn ($c) => $c->where('calisan.firma_id', $this->firmaId))->filter(fn ($a) => \App\Filament\Pages\UzaktanEgitimAtama::genelFiltreUyar($a, $k))->count() }})
                     </button>
                 @endforeach

@@ -7605,7 +7605,7 @@ return [
                 'aciklama' => 'MYK belgesi zorunlu meslekleri ve yeterlilik kodlarını kademeli olarak (Sıra No ile) genişleten tebliğ dizisi (bkz. Araçlar → MYK Zorunluluk Sorgula).'],
 
             ['baslik' => 'Çalışma ve Sosyal Güvenlik Bakanlığı — Risk Değerlendirmesi Rehberleri', 'kategori' => 'rehber',
-                'aciklama' => 'İSG Genel Müdürlüğü\'nün sektörel risk değerlendirmesi ve KKD seçimine yönelik uygulama rehberleri (ailevi.gov.tr / çalışma bakanlığı yayınları).'],
+                'aciklama' => 'İSG Genel Müdürlüğü\'nün sektörel risk değerlendirmesi ve KKD seçimine yönelik uygulama rehberleri (csgb.gov.tr / Çalışma ve Sosyal Güvenlik Bakanlığı yayınları).'],
             ['baslik' => 'SGK İş Kazası ve Meslek Hastalığı Bildirim Rehberi', 'kategori' => 'rehber',
                 'aciklama' => 'İş kazası/meslek hastalığının SGK\'ya bildirim süresi ve usulüne ilişkin uygulama rehberi.'],
         ],

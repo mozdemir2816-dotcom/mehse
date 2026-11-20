@@ -121,24 +121,24 @@
                 </x-slot>
 
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1500px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:980px">
                         <tr>
-                            <th rowspan="2" style="{{ $th }};width:2rem">No</th>
-                            <th rowspan="2" style="{{ $th }};width:8rem">Ana Konu</th>
-                            <th rowspan="2" style="{{ $th }};min-width:14rem">Planlanan Faaliyet</th>
-                            <th rowspan="2" style="{{ $th }};width:7rem">Periyot</th>
-                            <th rowspan="2" style="{{ $th }};width:8rem">Sorumlu</th>
-                            @foreach (['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'] as $ay)
-                                <th colspan="2" style="{{ $th }}">{{ $ay }}</th>
+                            <th rowspan="2" style="{{ $th }};width:1.75rem">No</th>
+                            <th rowspan="2" style="{{ $th }};width:5.5rem">Ana Konu</th>
+                            <th rowspan="2" style="{{ $th }};min-width:10rem">Planlanan Faaliyet</th>
+                            <th rowspan="2" style="{{ $th }};width:4.75rem">Periyot</th>
+                            <th rowspan="2" style="{{ $th }};width:5.5rem">Sorumlu</th>
+                            @foreach (['OCA', 'ŞUB', 'MAR', 'NİS', 'MAY', 'HAZ', 'TEM', 'AĞU', 'EYL', 'EKİ', 'KAS', 'ARA'] as $ay)
+                                <th colspan="2" style="{{ $th }};padding:.25rem .15rem">{{ $ay }}</th>
                             @endforeach
-                            <th rowspan="2" style="{{ $th }};min-width:14rem">Mevzuat Dayanağı / Kayıt-Kanıt / Açıklama</th>
-                            <th rowspan="2" style="{{ $th }};width:5.5rem">Durum</th>
+                            <th rowspan="2" style="{{ $th }};min-width:9rem">Mevzuat Dayanağı / Kayıt-Kanıt / Açıklama</th>
+                            <th rowspan="2" style="{{ $th }};width:4.5rem">Durum</th>
                             <th rowspan="2" style="{{ $th }};width:1.5rem"></th>
                         </tr>
                         <tr>
                             @foreach (range(0, 11) as $_)
-                                <th style="{{ $th }};width:1.4rem;color:{{ $pRenk }}">P</th>
-                                <th style="{{ $th }};width:1.4rem;color:{{ $gRenk }}">G</th>
+                                <th style="{{ $th }};width:1.15rem;padding:.2rem .1rem;color:{{ $pRenk }}">P</th>
+                                <th style="{{ $th }};width:1.15rem;padding:.2rem .1rem;color:{{ $gRenk }}">G</th>
                             @endforeach
                         </tr>
                         @foreach (($p->faaliyetler ?? []) as $fi => $f)

@@ -31,12 +31,21 @@
     max-width: 100%;
 }
 
-/* Filament seçim kutularında (@tailwindcss/forms + Filament SVG oku) çift aşağı ok görünmesini önle. */
-.fi-select-input {
+/* Native <select.fi-select-input> her temada tek satır (38px), sağda Filament'in tek temiz SVG oku
+   ile hizalansın; Chromium'da okun alt satıra düşüp 55px'e şişmesini engelle. */
+select.fi-select-input {
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
     appearance: none !important;
-    background-image: none !important;
+    height: 2.375rem;
+    min-height: 2.375rem;
+    line-height: 1.35 !important;
+    padding-block: .4rem !important;
+    white-space: nowrap;
+}
+
+select.fi-select-input::picker-icon {
+    display: none !important;
 }
 
 @media (max-width: 1023px) {

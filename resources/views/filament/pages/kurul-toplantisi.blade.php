@@ -52,12 +52,18 @@
 
     @if ($firma)
         {{-- METRİKLER --}}
+        @php
+            $zorunluDegilBos = ($firma->calisan_sayisi ?? 0) < 50 && ($m['aktif_uye'] ?? 0) === 0;
+            $zorunluKart = $zorunluDegilBos
+                ? ['Zorunlu üyeler', 'İsteğe bağlı', "50'den az çalışan (üye eklenebilir)", 'var(--metric-blue)']
+                : ['Zorunlu üyeler', $m['eksik'] ? $m['eksik'].' eksik' : 'Tam', $m['eksik'] ? 'Yalnız taslak kaydedilebilir' : 'Resmî kayıt yapılabilir', $m['eksik'] ? 'var(--metric-orange)' : 'var(--metric-green)'];
+        @endphp
         <div class="grid gap-3 grid-cols-2 lg:grid-cols-4">
             @foreach ([
                 ['Aktif üyeler', $m['aktif_uye'], 'Yeni toplantıya katılımcı olarak aktarılır', 'var(--metric-blue)'],
                 ['Planlı toplantılar', $m['planli'], 'Bugün ve sonrası', 'var(--metric-green)'],
-                ['Toplam toplantı', $m['toplam'], 'Tarihsel kayıtlar dahil', 'var(--metric-purple)'],
-                ['Zorunlu üyeler', $m['eksik'] ? $m['eksik'].' eksik' : 'Tam', $m['eksik'] ? 'Yalnız taslak kaydedilebilir' : 'Resmî kayıt yapılabilir', $m['eksik'] ? 'var(--metric-orange)' : 'var(--metric-green)'],
+                ['Toplam toplantı', $m['toplam'], 'Tarihsel kayıtlar dahil', 'var(--metric-blue)'],
+                $zorunluKart,
             ] as [$baslik, $deger, $alt, $renk])
                 <div style="background:var(--panel-bg,#fff);border-radius:12px;padding:.9rem 1rem;border-left:4px solid {{ $renk }};box-shadow:0 0 0 1px rgb(15 23 42 / .05)">
                     <div style="font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-label)">{{ $baslik }}</div>
@@ -84,8 +90,7 @@
                                 Son yazı: {{ $ae['atama']['son']->tarih?->format('d.m.Y') }} · {{ $ae['atama']['son']->dokuman_no }}
                             @else
                                 Son yazıdan sonra
-                                @if ($ae['atama']['eklenen']) <strong>{{ implode(', ', $ae['atama']['eklenen']) }}</strong> eklendi @endif
-                                @if ($ae['atama']['cikan']) · <strong>{{ implode(', ', $ae['atama']['cikan']) }}</strong> çıktı @endif.
+                                @if ($ae['atama']['eklenen']) <strong>{{ implode(', ', $ae['atama']['eklenen']) }}</strong> eklendi@endif@if ($ae['atama']['cikan']) · <strong>{{ implode(', ', $ae['atama']['cikan']) }}</strong> çıktı@endif.
                             @endif
                         </div>
                         <div class="mt-2 flex flex-wrap gap-2">

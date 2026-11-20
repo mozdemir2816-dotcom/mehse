@@ -11,7 +11,7 @@
     </p>
 
     {{-- 1. FİRMA & SEKTÖR/ZORLUK --}}
-    <x-filament::section icon="heroicon-o-question-mark-circle" icon-color="warning">
+    <x-filament::section icon="heroicon-o-question-mark-circle" icon-color="primary">
         <x-slot name="heading">1. Firma & Sınav Ayarları</x-slot>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
@@ -61,7 +61,7 @@
 
         <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
             @if ($this->aiAktif)
-                <x-filament::button color="warning" icon="heroicon-o-sparkles" wire:click="aiIleUret">AI ile 10 Soru Üret</x-filament::button>
+                <x-filament::button color="primary" icon="heroicon-o-sparkles" wire:click="aiIleUret">AI ile 10 Soru Üret</x-filament::button>
             @else
                 <span style="font-size:.78rem;color:rgb(107 114 128)">AI devre dışı (GEMINI_API_KEY tanımlı değil) — aşağıdan elle soru ekleyin.</span>
             @endif
@@ -73,7 +73,7 @@
 
     @if ($this->firma)
         {{-- 2. SORULAR --}}
-        <x-filament::section icon="heroicon-o-list-bullet" icon-color="warning">
+        <x-filament::section icon="heroicon-o-list-bullet" icon-color="primary">
             <x-slot name="heading">2. Sorular ({{ count($sorular) }})</x-slot>
 
             @foreach ($sorular as $i => $s)

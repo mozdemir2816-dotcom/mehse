@@ -118,7 +118,7 @@ class ListRiskSablonus extends ListRecords
                 ->button(),
 
             Action::make('sihirbaz')
-                ->label('+ Sihirbazdan Yeni Şablon')
+                ->label('Sihirbazdan Yeni Şablon')
                 ->icon('heroicon-o-sparkles')
                 ->url(RiskSihirbazi::getUrl()),
         ];

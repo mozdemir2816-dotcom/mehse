@@ -151,10 +151,10 @@
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
                 <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
                     <span style="font-size:.76rem;font-weight:700;color:rgb(107 114 128)">Sektör Önerisiyle Hızlı Seç:</span>
-                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('insaat')">🏗️ Yapı / İnşaat</x-filament::button>
-                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('uretim')">⚙️ Metal / Üretim</x-filament::button>
-                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('kimya')">🧪 Kimyasal / Boyahane</x-filament::button>
-                    <x-filament::button size="xs" color="info" wire:click="sektorKkdPaketiUygula('depo')">📦 Depo / Lojistik</x-filament::button>
+                    <x-filament::button size="xs" color="info" icon="heroicon-o-building-office-2" wire:click="sektorKkdPaketiUygula('insaat')">Yapı / İnşaat</x-filament::button>
+                    <x-filament::button size="xs" color="info" icon="heroicon-o-wrench-screwdriver" wire:click="sektorKkdPaketiUygula('uretim')">Metal / Üretim</x-filament::button>
+                    <x-filament::button size="xs" color="info" icon="heroicon-o-beaker" wire:click="sektorKkdPaketiUygula('kimya')">Kimyasal / Boyahane</x-filament::button>
+                    <x-filament::button size="xs" color="info" icon="heroicon-o-archive-box" wire:click="sektorKkdPaketiUygula('depo')">Depo / Lojistik</x-filament::button>
                 </div>
                 <x-filament::button size="xs" color="gray" wire:click="kkdSecimiTemizle">Temizle</x-filament::button>
             </div>

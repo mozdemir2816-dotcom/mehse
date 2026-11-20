@@ -741,7 +741,7 @@ class DofOlustur extends Page
                 }),
 
             Action::make('whatsapp')
-                ->label('📲 WhatsApp ile İşverene Gönder')
+                ->label('WhatsApp ile İşverene Gönder')
                 ->color('success')
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->visible(fn () => $this->firma !== null)

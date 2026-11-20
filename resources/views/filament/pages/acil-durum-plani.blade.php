@@ -30,7 +30,7 @@
             'aksiyon' => $pf->filter(fn ($r) => ($r['kontrol']['durum'] ?? null) === 'aksiyon')->count(), 'gozden' => $pf->filter(fn ($r) => ($r['kontrol']['durum'] ?? null) === 'gozden_gecirme')->count()];
     @endphp
     <x-filament::section icon="heroicon-o-folder-open" icon-color="danger" collapsible collapsed>
-        <x-slot name="heading">📂 Kayıtlı Planlar ve Hazırlık Durumu ({{ $pf->count() }})</x-slot>
+        <x-slot name="heading">Kayıtlı Planlar ve Hazırlık Durumu ({{ $pf->count() }})</x-slot>
         <x-slot name="description">{{ $pfSay['toplam'] }} plan · {{ $pfSay['hazir'] }} hazır · {{ $pfSay['aksiyon'] }} aksiyon gerekli · {{ $pfSay['gozden'] }} gözden geçirme — açmak için tıklayın</x-slot>
         <x-slot name="afterHeader"><x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="portfoyExcel">Excel dışa aktar</x-filament::button></x-slot>
         <div style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.6rem">Hazırlık düzeyi hukuki uygunluk beyanı değildir; saha doğrulaması, işveren onayı, ekip eğitimleri ve tatbikat kayıtları ayrıca tamamlanmalıdır.</div>
@@ -161,7 +161,7 @@
                                 border:1px solid {{ $secili ? '#e11d48' : '#e2e8f0' }};background:{{ $secili ? '#fff1f2' : '#fff' }};color:{{ $secili ? '#9f1239' : '#334155' }}">
                             {{ $kilit ? '🔒' : ($secili ? '☑' : '☐') }}
                             <span style="display:inline-block;width:1.4rem;text-align:center;color:rgb(107 114 128)">{{ $secili ? ++$sira : '' }}</span>
-                            ACİL DURUM: {{ mb_strtoupper($k['ad'], 'UTF-8') }}
+                            ACİL DURUM: {{ mb_strtoupper(str_replace(['i', 'ı'], ['İ', 'I'], $k['ad']), 'UTF-8') }}
                         </button>
                     @endforeach
                 </div>
@@ -479,7 +479,7 @@
             <x-slot name="heading">Çıktı ve Gönderim</x-slot>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap">
                 <x-filament::button color="danger" icon="heroicon-o-document-arrow-down" wire:click="mountAction('pdf')">Plan Çıktısı (PDF / Word)</x-filament::button>
-                <x-filament::button color="success" icon="heroicon-o-chat-bubble-left-right" wire:click="mountAction('whatsapp')">📲 WhatsApp ile İşverene Gönder</x-filament::button>
+                <x-filament::button color="success" icon="heroicon-o-chat-bubble-left-right" wire:click="mountAction('whatsapp')">WhatsApp ile İşverene Gönder</x-filament::button>
                 <x-filament::button color="gray" icon="heroicon-o-document" wire:click="mountAction('word')">Word (seçili şablon)</x-filament::button>
                 <x-filament::button color="gray" icon="heroicon-o-map" tag="a" :href="\App\Filament\Pages\AcilDurumKrokisi::getUrl(['firma' => $this->firmaId])">Kroki Planı</x-filament::button>
             </div>

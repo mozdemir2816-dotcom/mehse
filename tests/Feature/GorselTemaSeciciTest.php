@@ -23,7 +23,7 @@ class GorselTemaSeciciTest extends TestCase
         // Topbar'daki seçici: Pano varsayılan; MEHSE adlı temalar yok.
         $yanit->assertSee('"tema":"pano"', escape: false);
         $yanit->assertSee('fi-mehse-tema-secenek', escape: false);
-        $yanit->assertSeeInOrder(['Pano', 'Klasik', 'Google Material', 'Windows 11', 'Saha']);
+        $yanit->assertSeeInOrder(['Modern Kurumsal (Varsayılan)', 'Klasik', 'Google Material', 'Windows 11', 'Saha']);
         $yanit->assertDontSee('MEHSE Modern', escape: false);
     }
 }

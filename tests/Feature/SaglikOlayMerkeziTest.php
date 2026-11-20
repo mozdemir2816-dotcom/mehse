@@ -28,15 +28,15 @@ class SaglikOlayMerkeziTest extends TestCase
         $g = SayfaAileleri::sekmeGruplari([KazaIstatistikleri::class]);
         $this->assertSame('saglik_olay', $g['aile']);
         $this->assertSame(
-            ['Sağlık Gözetimi & EK-2 Muayene Formu', 'Olay / Kaza / Ramak Kala & Kök Neden Analizi', 'Kaza İstatistikleri & Sıklık/Ağırlık Oranları', 'Olay Komuta 360° — Yönetici Panosu & Vücut Haritası'],
+            ['Sağlık Gözetimi & EK-2', 'Olay / Kaza & Kök Neden', 'Kaza İstatistikleri', 'Olay Komuta 360°'],
             array_column($g['ust'], 'etiket'),
         );
-        $this->assertSame('Kaza İstatistikleri & Sıklık/Ağırlık Oranları', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
+        $this->assertSame('Kaza İstatistikleri', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
 
         $olay = SayfaAileleri::sekmeGruplari([OlayKayitlari::class]);
         $this->assertCount(2, $olay['alt']);
 
-        $this->get(SaglikGozetimi::getUrl())->assertSuccessful()->assertSee('Sağlık Gözetimi &amp; EK-2 Muayene Formu', false);
+        $this->get(SaglikGozetimi::getUrl())->assertSuccessful()->assertSee('Sağlık Gözetimi &amp; EK-2', false);
     }
 
     public function test_sgk_sayaci_uc_is_gununu_hafta_sonu_atlayarak_hesaplar(): void

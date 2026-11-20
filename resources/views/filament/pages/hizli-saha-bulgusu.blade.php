@@ -90,7 +90,7 @@
 
                 <x-filament::button icon="heroicon-o-sparkles" wire:click="aiDegerlendir" wire:loading.attr="disabled" wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur"
                     style="width:100%;min-height:3rem;margin-top:.6rem">
-                    <span wire:loading.remove wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">✨ Yapay Zekâ ile Değerlendir</span>
+                    <span wire:loading.remove wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">Yapay Zekâ ile Değerlendir</span>
                     <span wire:loading wire:target="aiDegerlendir,aiIleDoldur,aciklamadanDoldur">Değerlendiriliyor…</span>
                 </x-filament::button>
                 @if ($kaynak === 'ai')<div style="font-size:.78rem;color:rgb(37 99 235);margin-top:.4rem">AI taslağı yazıldı — aşağıdaki özet kartını kontrol edin; gerekirse "Ayrıntıları düzenle" ile açıp kaydedin.</div>@endif

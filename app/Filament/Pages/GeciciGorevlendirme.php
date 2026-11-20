@@ -196,7 +196,7 @@ class GeciciGorevlendirme extends Page
     {
         return [
             Action::make('pdfIndir')
-                ->label('📄 Görevlendirme PDF İndir')
+                ->label('Görevlendirme PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('primary')
                 ->action(fn () => $this->pdfIndir()),

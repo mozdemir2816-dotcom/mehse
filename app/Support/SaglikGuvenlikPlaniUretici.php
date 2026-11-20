@@ -50,7 +50,7 @@ class SaglikGuvenlikPlaniUretici
                 'baslik' => '4. Yüksekte Çalışma, Cephe İskelesi, Çatı ve Kenar Koruma (Ek-2 Özel Risk)',
                 'tehlikeler' => 'Döşeme boşluklarından, iskeleden veya çatıdan düşme, yukarıdan malzeme düşmesi',
                 'onlemler' => 'Asansör, aydınlık ve şaft boşlukları sağlam korkuluk (110 cm üst, 55 cm ara, 15 cm topuk levhası) ve güvenlik ağı ile kapatılır. Cephe iskeleleri TS EN 12810/12811 standardına uygun kurulur ve yeşil/kırmızı etiketle kontrol edilir.',
-                'kkd' => 'Paraşüt Tipi Tam Vücut Emniyet Kemeri (EN 361), Çift Kollu Şok Emicili Lanyard, Çeneantlı Baret',
+                'kkd' => 'Paraşüt Tipi Tam Vücut Emniyet Kemeri (EN 361), Çift Kollu Şok Emicili Lanyard, Çene Bantlı Baret',
             ],
             'vinc_kaldirma' => [
                 'baslik' => '5. Kule Vinç, Mobil Vinç ve Ağır Yük Kaldırma Operasyonları',
@@ -171,11 +171,11 @@ class SaglikGuvenlikPlaniUretici
     public static function filamentAction(?Closure $seciliFirma = null): Action
     {
         return Action::make('saglikGuvenlikPlani')
-            ->label('Sağlık ve Güvenlik Planı (SGP)')
+            ->label('Sağlık & Güvenlik Planı (SGP)')
             ->icon('heroicon-o-building-office-2')
-            ->color('warning')
+            ->color('primary')
             ->modalWidth('2xl')
-            ->modalHeading('🏗️ Yapı İşleri Sağlık ve Güvenlik Planı (SGP) Oluştur')
+            ->modalHeading('Yapı İşleri Sağlık ve Güvenlik Planı (SGP) Oluştur')
             ->modalDescription('Yapı İşlerinde İSG Yönetmeliği (m.5, m.7, m.8, Ek-2 ve Ek-3) kapsamında firmanın İGU/İH atamalarını, alt işverenlerini, öncelikli risk maddelerini ve seçilen yapı iş fazlarını içeren resmi SGP PDF çıktısını üretir.')
             ->modalSubmitActionLabel('SGP PDF İndir')
             ->schema([

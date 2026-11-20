@@ -2032,7 +2032,7 @@ class RiskSihirbazi extends Page
     {
         return [
             Action::make('riskBildirimQrPdf')
-                ->label('📱 Risk Bildirim QR Posteri (PDF)')
+                ->label('Risk Bildirim QR (PDF)')
                 ->icon('heroicon-o-qr-code')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)

@@ -30,10 +30,10 @@ class TehlikesTable
             ->modifyQueryUsing(fn ($query) => $query->with('kategori'))
             ->columns([
                 TextColumn::make('kod')->label('Kod')->width(64),
-                TextColumn::make('bolum')->label('Bölüm')->placeholder('—')->searchable()->toggleable(),
-                TextColumn::make('tehlike')->label('Tehlike')->searchable()->wrap()->limit(90),
-                TextColumn::make('risk')->label('Risk')->limit(60)->placeholder('—')->searchable()->toggleable(),
-                TextColumn::make('mevzuat')->label('Mevzuat')->placeholder('—')->limit(80)->toggleable(),
+                TextColumn::make('bolum')->label('Bölüm')->placeholder('—')->searchable()->wrap()->limit(40)->toggleable(),
+                TextColumn::make('tehlike')->label('Tehlike')->searchable()->wrap()->limit(80),
+                TextColumn::make('risk')->label('Risk')->wrap()->limit(55)->placeholder('—')->searchable()->toggleable(),
+                TextColumn::make('mevzuat')->label('Mevzuat')->placeholder('—')->wrap()->limit(60)->toggleable(),
             ])
             ->groups([
                 Group::make('kategori_bolum')->label('Kategori › Bölüm')->collapsible()

@@ -707,7 +707,7 @@ class AcilDurumPlani extends Page
                 }),
 
             Action::make('whatsapp')
-                ->label('📲 WhatsApp ile İşverene Gönder')
+                ->label('WhatsApp ile İşverene Gönder')
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->color('success')
                 ->visible(fn () => $this->firma !== null)

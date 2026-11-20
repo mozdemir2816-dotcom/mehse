@@ -130,19 +130,19 @@
 
   <!-- Üst Başlık (Header) -->
   <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
-    <div class="max-w-[1780px] mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+    <div class="max-w-[1780px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
 
-      <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="flex items-center gap-3 min-w-0">
         <div class="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-md shadow-red-600/30 shrink-0">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10h2v4h-2zm0 6h2v2h-2z"/>
           </svg>
         </div>
-        <div>
-          <h1 class="text-base sm:text-lg font-black tracking-tight text-white leading-none">
+        <div class="min-w-0">
+          <h1 class="text-sm sm:text-base font-black tracking-tight text-white leading-tight break-words">
             İSG TABELA & GÜVENLİK LEVHASI MASTER TASARIM PLATFORMU
           </h1>
-          <p class="text-[11px] text-slate-400 font-medium tracking-wide mt-1 flex items-center gap-2">
+          <p class="text-[11px] text-slate-400 font-medium tracking-wide mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span>T.C. Sağlık ve Güvenlik İşaretleri Yönetmeliği (Ek-2)</span>
             <span class="text-slate-600">•</span>
             <span class="text-amber-400 font-bold">ANSI Z535 & ISO 7010 Tam Uyum</span>
@@ -151,7 +151,7 @@
       </div>
 
       <!-- Araç Çubuğu / Aksiyon Butonları -->
-      <div class="flex items-center flex-wrap gap-2 justify-end w-full md:w-auto">
+      <div class="flex items-center flex-wrap gap-2 justify-start 2xl:justify-end">
         <input type="text" id="tasarimBaslikInput" placeholder="Tasarım adı (örn. Trafo Odası Levhası)"
           oninput="state.baslik = this.value"
           class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-white border border-slate-700 placeholder-slate-500 w-48">

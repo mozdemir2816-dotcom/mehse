@@ -72,7 +72,9 @@ class FirmaIsgDosyasi extends Page
     {
         return [
             Action::make('teftis')
-                ->label('📦 Teftiş Paketi (ZIP)')->tooltip('📦 Tüm İSG Evraklarını ZIP İndir (Teftiş Paketi)')
+                ->label('Teftiş Paketi (ZIP)')
+                ->icon('heroicon-o-archive-box-arrow-down')
+                ->tooltip('Tüm İSG Evraklarını ZIP İndir (Teftiş Paketi)')
                 ->color('success')
                 ->visible(fn () => $this->firma !== null)
                 ->action(fn () => $this->teftisPaketi()),

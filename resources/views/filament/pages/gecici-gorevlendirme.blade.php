@@ -123,7 +123,7 @@
 
         <div style="margin-top:1rem">
             <x-filament::button color="primary" icon="heroicon-o-document-arrow-down" wire:click="pdfIndir">
-                📄 Geçici Görevlendirme & İSG Taahhütnamesi PDF İndir
+                Geçici Görevlendirme & İSG Taahhütnamesi PDF İndir
             </x-filament::button>
         </div>
     </x-filament::section>

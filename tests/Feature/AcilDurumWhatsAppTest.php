@@ -93,7 +93,7 @@ class AcilDurumWhatsAppTest extends TestCase
         $firma = Firma::factory()->for($this->uzman)->create(['adres' => null]);
 
         $sayfa = Livewire::test(AcilDurumSayfasi::class)
-            ->assertSee('📂 Kayıtlı Planlar ve Hazırlık Durumu', false)
+            ->assertSee('Kayıtlı Planlar ve Hazırlık Durumu', false)
             ->assertSet('adim', 1)
             ->call('adimaGit', 3)->assertSet('adim', 1)            // firma seçilmeden ileri adıma geçilmez
             ->set('firmaId', $firma->id)
@@ -109,7 +109,7 @@ class AcilDurumWhatsAppTest extends TestCase
 
         $sayfa->call('kaydetVeIlerle')->assertSet('adim', 4)
             ->assertSee('Hazırlık kontrolü')
-            ->assertSee('📲 WhatsApp ile İşverene Gönder')
+            ->assertSee('WhatsApp ile İşverene Gönder')
             ->assertSee('Acil Durum Afişleri');
 
         $sayfa->call('adimaGit', 2)->assertSet('adim', 2);

@@ -216,11 +216,11 @@ class EgitimYenilemeTakibiTest extends TestCase
             ->assertFileDownloaded();
     }
 
-    public function test_katilim_formunda_eksik_firma_dropdownda_rozetli_ve_sari_bant_yok(): void
+    public function test_katilim_formunda_eksik_firma_dropdownda_rozetli_ve_hizli_tamamlama_var(): void
     {
         Livewire::test(\App\Filament\Pages\EgitimKatilim::class)
             ->assertSee('(Eksik)')
-            ->assertDontSee('Eksik Olan Firmalar');
+            ->assertSee('Eksik Olan Firmalar');
     }
 
     public function test_egitimi_eksik_personel_excel_indirilir(): void

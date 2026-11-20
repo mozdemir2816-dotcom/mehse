@@ -187,22 +187,22 @@ class SayfaAileleri
         ],
         'saglik_olay' => [
             [
-                'etiket' => 'Sağlık Gözetimi & EK-2 Muayene Formu',
+                'etiket' => 'Sağlık Gözetimi & EK-2',
                 'ikon' => 'heroicon-o-heart',
                 'siniflar' => [Pages\SaglikGozetimi::class, Pages\MuayeneFormu::class, Pages\IseDonusBelgesi::class, Pages\MeslekHastaligiBildirimi::class],
             ],
             [
-                'etiket' => 'Olay / Kaza / Ramak Kala & Kök Neden Analizi',
+                'etiket' => 'Olay / Kaza & Kök Neden',
                 'ikon' => 'heroicon-o-exclamation-triangle',
                 'siniflar' => [Pages\OlayKayitlari::class, Pages\IsKazasiRaporu::class],
             ],
             [
-                'etiket' => 'Kaza İstatistikleri & Sıklık/Ağırlık Oranları',
+                'etiket' => 'Kaza İstatistikleri',
                 'ikon' => 'heroicon-o-chart-bar',
                 'siniflar' => [Pages\KazaIstatistikleri::class],
             ],
             [
-                'etiket' => 'Olay Komuta 360° — Yönetici Panosu & Vücut Haritası',
+                'etiket' => 'Olay Komuta 360°',
                 'ikon' => 'heroicon-o-presentation-chart-line',
                 'siniflar' => [Pages\OlayKomuta360::class],
             ],

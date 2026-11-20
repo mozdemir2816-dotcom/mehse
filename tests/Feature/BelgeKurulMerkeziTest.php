@@ -34,7 +34,7 @@ class BelgeKurulMerkeziTest extends TestCase
         $menu = collect(Filament::getNavigation());
         $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Belgeler & Yazışmalar'));
         $etiketler = $menu->flatMap(fn ($g) => $g->getItems())->map(fn ($i) => $i->getLabel());
-        $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'İş İzin Formu'));
+        $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'Resmi Belgeler'));
         $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'İSG Kurulu'));
         $this->assertTrue(KurulToplantisi::shouldRegisterNavigation());
 
@@ -49,7 +49,7 @@ class BelgeKurulMerkeziTest extends TestCase
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame('Yasal Atamalar, Temsilci & Tebliğler', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertCount(3, $g['alt']);
+        $this->assertCount(4, $g['alt']);
         $this->assertCount(2, SayfaAileleri::sekmeGruplari([TalimatOlustur::class])['alt']);
 
         foreach ([IsIzinFormu::class, TalimatOlustur::class, AtamaYazilari::class, CezaTeblig::class] as $sayfa) {

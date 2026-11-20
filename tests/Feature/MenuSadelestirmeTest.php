@@ -41,7 +41,7 @@ class MenuSadelestirmeTest extends TestCase
 
         $this->get(Pages\KazaIstatistikleri::getUrl())
             ->assertSuccessful()
-            ->assertSee('Kaza İstatistikleri &amp; Sıklık/Ağırlık Oranları', false);
+            ->assertSee('Kaza İstatistikleri', false);
 
         $this->get(Pages\OlayKayitlari::getUrl())
             ->assertSuccessful()

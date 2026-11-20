@@ -70,12 +70,14 @@ class EditFirma extends EditRecord
                 ->url(fn (Firma $record) => FirmaDenetimOperasyon::getUrl(['firma' => $record->id, 'bolum' => 'firma360'])),
 
             Action::make('isgDosyasi')
-                ->label('📁 İSG Dosyası & Evrak Takip')
+                ->label('İSG Dosyası & Evrak Takip')
+                ->icon('heroicon-o-folder')
                 ->color('gray')
                 ->url(fn (Firma $record) => \App\Filament\Pages\FirmaIsgDosyasi::getUrl(['firma' => $record->id])),
 
             Action::make('teftisPaketi')
-                ->label('📦 Teftiş Paketi (ZIP)')
+                ->label('Teftiş Paketi (ZIP)')
+                ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('success')
                 ->action(function (Firma $record) {
                     $yanit = \App\Support\FirmaIsgDosyasi::teftisPaketi($record);

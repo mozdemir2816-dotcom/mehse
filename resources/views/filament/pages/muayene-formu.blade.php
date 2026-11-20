@@ -34,7 +34,7 @@
                 <div>
                     <label class="mehse-etiket">Hızlı Çalışan Seç</label>
                     <select wire:model.live="calisanHizliSecId" style="{{ $girdi }}">
-                        <option value="">Firmaya kayıtlı çalışan yok / manuel gir</option>
+                        <option value="">— Çalışan yok (elle girin) —</option>
                         @foreach ($this->calisanlar as $c)
                             <option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>
                         @endforeach

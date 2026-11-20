@@ -14,16 +14,22 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     {{-- BAŞLIK --}}
-    <div style="border-radius:.9rem;padding:1.1rem 1.3rem;background:linear-gradient(120deg,#0f2b46,#115e59);color:#fff">
-        <div style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:700">Denetlenebilir içerik · editoryal onay</div>
+    <div style="border-radius:.9rem;padding:1.1rem 1.3rem;background:linear-gradient(120deg,#1e3a8a,#2563eb);color:#fff">
+        <div style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;opacity:.9;font-weight:700">Denetlenebilir içerik · editoryal onay</div>
         <div style="font-size:1.25rem;font-weight:800;margin:.25rem 0">İSG soru bankası ve sınav havuzu</div>
-        <div style="font-size:.82rem;opacity:.9;max-width:720px">
+        <div style="font-size:.82rem;opacity:.95;max-width:720px">
             Sorular kod + sürüm, doğru cevabın gerekçesi ve doğrulanabilir kaynaklarla tutulur; taslak → incelemede → yayımlandı akışından geçer.
             Eğitim Soruları ve Uzaktan Eğitim sınavları yalnızca <strong>yayımlanmış</strong> ve işyerinin sektörüne / NACE koduna uyan soruları kullanır.
         </div>
-        <div style="display:flex;gap:.4rem;margin-top:.75rem;flex-wrap:wrap">
-            <x-filament::button size="xs" color="gray" icon="heroicon-o-document-arrow-down" wire:click="jsonSablonu">JSON şablonu</x-filament::button>
-            <x-filament::button size="xs" color="gray" icon="heroicon-o-arrow-up-tray" wire:click="mountAction('topluYukle')">Toplu taslak yükle</x-filament::button>
+        <div style="display:flex;gap:.5rem;margin-top:.85rem;flex-wrap:wrap">
+            <button type="button" wire:click="jsonSablonu" style="display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;border-radius:.5rem;border:1px solid rgba(255,255,255,.35);background:#fff;color:#0f172a;font-size:.78rem;font-weight:600;cursor:pointer">
+                <x-filament::icon icon="heroicon-o-document-arrow-down" style="width:1rem;height:1rem;color:#2563eb" />
+                JSON şablonu
+            </button>
+            <button type="button" wire:click="mountAction('topluYukle')" style="display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;border-radius:.5rem;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.16);color:#fff;font-size:.78rem;font-weight:600;cursor:pointer">
+                <x-filament::icon icon="heroicon-o-arrow-up-tray" style="width:1rem;height:1rem;color:#fff" />
+                Toplu taslak yükle
+            </button>
         </div>
     </div>
 

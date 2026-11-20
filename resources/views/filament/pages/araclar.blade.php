@@ -489,8 +489,8 @@
                 <x-filament::button size="xs" color="primary" icon="heroicon-o-document-arrow-down" wire:click="hapNotlarPdfIndir">
                     Saha &amp; Sınav Hap Notları İndir (PDF)
                 </x-filament::button>
-                <x-filament::button size="xs" color="success" wire:click="denemeKontrolEt">
-                    ✓ Cevapları Kontrol Et &amp; Çözümleri Gör
+                <x-filament::button size="xs" color="success" icon="heroicon-o-check-circle" wire:click="denemeKontrolEt">
+                    Cevapları Kontrol Et &amp; Çözümleri Gör
                 </x-filament::button>
                 @if ($denemeCevaplari || $denemeTamamlandi)
                     <x-filament::button size="xs" color="gray" wire:click="denemeSifirla">Sıfırla</x-filament::button>
