@@ -51,6 +51,7 @@
     {{-- 13.11.2026: tüm süreli yasal yükümlülükler (App\Support\YasalTakvim) — süresi geçenler + 90 gün içinde dolanlar. --}}
     @if ($sekme === 'gunluk')
         @php
+            $acikBulgular = $this->acikSahaBulgulari;
             $isler = collect($this->yaklasanIsler);
             $turAdlari = ['risk' => 'Risk', 'acil' => 'Acil durum', 'kurul' => 'Kurul', 'egitim' => 'Eğitim', 'ekipman' => 'Periyodik kontrol', 'saglik' => 'Sağlık', 'olcum' => 'Ölçüm', 'kkd' => 'KKD', 'sozlesme' => 'Sözleşme'];
             $gruplar = [
@@ -58,6 +59,45 @@
                 ['ad' => 'Önümüzdeki '.\App\Filament\Pages\KontrolMerkezi::TAKVIM_GUN.' gün', 'renk' => $sari, 'liste' => $isler->where('durum', 'yaklasiyor')],
             ];
         @endphp
+
+        @if ($acikBulgular)
+            <div style="{{ $kutu }};padding:.75rem .9rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap">
+                    <div style="display:flex;align-items:center;gap:.45rem">
+                        <span style="font-weight:700;font-size:.9rem">⚡ Benim Günüm — Açık Saha Bulguları (Hızlı Aksiyon)</span>
+                        <span style="font-size:.73rem;font-weight:700;color:{{ $sari }};background:color-mix(in srgb, {{ $sari }} 15%, transparent);padding:.05rem .45rem;border-radius:9999px">{{ count($acikBulgular) }}</span>
+                    </div>
+                    <span style="font-size:.74rem;color:{{ $gri }}">Ekrandan ayrılmadan +7 gün erteleyin veya tek tıkla kapatın</span>
+                </div>
+                <div style="display:flex;flex-direction:column">
+                    @foreach ($acikBulgular as $b)
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:.45rem 0;border-top:1px solid rgb(128 116 148 / .14)">
+                            <div style="min-width:220px;flex:1">
+                                <div style="font-size:.84rem;font-weight:600">
+                                    <span style="font-size:.7rem;color:{{ $b['gecikti'] ? $kirmizi : $gri }};font-weight:700">{{ $b['bulgu_no'] }}</span>
+                                    · {{ \Illuminate\Support\Str::limit($b['uygunsuzluk'], 110) }}
+                                </div>
+                                <div style="font-size:.75rem;color:{{ $gri }}">
+                                    {{ $b['firma'] }} · Termin: <strong style="color:{{ $b['gecikti'] ? $kirmizi : 'inherit' }}">{{ $b['termin'] ?: 'Belirtilmedi' }}</strong>
+                                    @if ($b['gecikti']) <span style="color:{{ $kirmizi }};font-weight:700">(Gecikti)</span> @endif
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+                                <button type="button" wire:click="bulguErtele({{ $b['id'] }}, 7)"
+                                    style="font-size:.74rem;font-weight:600;padding:.26rem .55rem;border-radius:.4rem;border:1px solid rgb(245 158 11 / .45);background:rgb(245 158 11 / .1);color:#b45309;cursor:pointer">
+                                    ⏱ +7 Gün Ertele
+                                </button>
+                                <button type="button" wire:click="bulguTamamla({{ $b['id'] }})"
+                                    style="font-size:.74rem;font-weight:600;padding:.26rem .55rem;border-radius:.4rem;border:1px solid rgb(22 163 74 / .45);background:rgb(22 163 74 / .1);color:#15803d;cursor:pointer">
+                                    ✓ Tamamlandı
+                                </button>
+                                <a href="{{ $b['url'] }}" style="font-size:.76rem;font-weight:600;color:{{ $mor }};text-decoration:none;padding-left:.2rem">Aç →</a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
         @if ($isler->isEmpty())
             <div style="{{ $kutu }};text-align:center;padding:2.5rem 1rem">
                 <div style="font-weight:700">Tüm yasal süreler güncel</div>

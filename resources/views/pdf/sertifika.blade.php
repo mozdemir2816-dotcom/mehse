@@ -67,7 +67,7 @@
         <table class="bilgi">
             <tr>
                 <td class="etiket">Katılımcının Adı Soyadı</td><td>: <strong>{{ $k['ad_soyad'] ?? '—' }}</strong></td>
-                <td class="etiket">Katılımcının T.C. No</td><td>: {{ $k['tc'] ?? '' }}</td>
+                <td class="etiket">Katılımcının T.C. No</td><td>: {{ ! empty($tcMaskele) ? \App\Support\GeciciGorevlendirmeUretici::tcMaskele($k['tc'] ?? null, true) : ($k['tc'] ?? '') }}</td>
             </tr>
             <tr>
                 <td class="etiket">Katılımcının Görev Ünvanı</td><td>: {{ $k['gorev'] ?? '—' }}</td>

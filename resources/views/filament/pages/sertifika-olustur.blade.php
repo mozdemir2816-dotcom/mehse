@@ -219,6 +219,13 @@
                     @endforeach
                 </select>
             </div>
+
+            <div style="margin-top:.85rem">
+                <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" wire:model="tcMaskele">
+                    <span>KVKK: Sertifikada T.C. Kimlik Numarasını Maskele (123*****89)</span>
+                </label>
+            </div>
         </x-filament::section>
 
         {{-- 3. KONU İÇERİĞİ --}}

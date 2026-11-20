@@ -50,6 +50,8 @@ class Araclar extends Page
 
     public int $kazaDonemAy = 12;
 
+    public ?float $oncekiDonemKso = null;
+
     public function calisanSayisindanSaatHesapla(): void
     {
         if (! $this->kazaCalisanSayisi || $this->kazaCalisanSayisi <= 0) {
@@ -91,6 +93,46 @@ class Araclar extends Page
         }
 
         return round(($this->kayipGunSayisi * 1_000) / $this->toplamCalismaSaati, 2);
+    }
+
+    /** Kaza İnsidans Oranı = (Kaza Sayısı × 1.000) / Ortalama Çalışan Sayısı */
+    public function insidansOrani(): ?float
+    {
+        if (! $this->kazaSayisi || ! $this->kazaCalisanSayisi || $this->kazaCalisanSayisi <= 0) {
+            return null;
+        }
+
+        return round(($this->kazaSayisi * 1_000) / $this->kazaCalisanSayisi, 2);
+    }
+
+    /** Önceki dönem KSO'ya göre yüzde değişim (+ artış, - iyileşme). */
+    public function ksoDegisimYuzde(): ?float
+    {
+        $kso = $this->sikikHizi();
+        if ($kso === null || ! $this->oncekiDonemKso || $this->oncekiDonemKso <= 0) {
+            return null;
+        }
+
+        return round((($kso - $this->oncekiDonemKso) / $this->oncekiDonemKso) * 100, 1);
+    }
+
+    public function kazaOzetiMetni(): string
+    {
+        $satirlar = ['İSG Kaza Oranları Özeti ('.now()->format('d.m.Y').')'];
+        if ($kso = $this->sikikHizi()) {
+            $satirlar[] = '- Kaza Sıklık Hızı (KSO / 1.000.000 saat): '.$kso;
+        }
+        if ($kao = $this->agirlikHizi()) {
+            $satirlar[] = '- Kaza Ağırlık Hızı (KAO / 1.000 saat): '.$kao;
+        }
+        if ($ins = $this->insidansOrani()) {
+            $satirlar[] = '- Kaza İnsidans Oranı (1.000 çalışan başına): '.$ins;
+        }
+        if (($deg = $this->ksoDegisimYuzde()) !== null) {
+            $satirlar[] = '- Önceki Dönem KSO Kıyaslaması: '.($deg > 0 ? '+'.$deg.'% artış' : abs($deg).'% azalış');
+        }
+
+        return implode("\n", $satirlar);
     }
 
     public function gurultuOlcumEkle(): void

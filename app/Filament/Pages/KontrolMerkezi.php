@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Firma;
+use App\Models\SahaBulgusu;
 use App\Support\FirmaEvrakPaketi;
 use App\Support\FirmaEvrakZipUretici;
 use App\Support\IsverenFirmaKarnesiUretici;
@@ -299,5 +300,83 @@ class KontrolMerkezi extends Page
         return YasalTakvim::kalemler(Filament::auth()->id(), self::TAKVIM_GUN)
             ->map(fn (array $k) => [...$k, 'tarih' => $k['tarih']?->format('d.m.Y')])
             ->all();
+    }
+
+    /** Benim Günüm: tüm aktif firmalardaki açık/gecikmiş saha bulguları (tek tıkla +7 gün ertele / kapat). */
+    #[Computed]
+    public function acikSahaBulgulari(): array
+    {
+        return SahaBulgusu::query()
+            ->whereIn('durum', ['acik', 'devam_ediyor', 'ertelendi'])
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id())->where('aktif', true))
+            ->with('firma:id,unvan')
+            ->orderByRaw('termin IS NULL, termin ASC')
+            ->limit(15)
+            ->get()
+            ->map(function (SahaBulgusu $b): array {
+                $gecikti = $b->termin && $b->termin->isPast() && ! $b->termin->isToday();
+
+                return [
+                    'id' => $b->id,
+                    'bulgu_no' => $b->bulgu_no,
+                    'firma' => $b->firma?->unvan ?? '—',
+                    'firma_id' => $b->firma_id,
+                    'uygunsuzluk' => (string) $b->uygunsuzluk,
+                    'durum' => $b->durum,
+                    'termin' => $b->termin?->format('d.m.Y'),
+                    'gecikti' => $gecikti,
+                    'url' => HizliSahaBulgusu::getUrl(['firma' => $b->firma_id]),
+                ];
+            })
+            ->all();
+    }
+
+    public function bulguErtele(int $id, int $gun = 7): void
+    {
+        $bulgu = SahaBulgusu::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->find($id);
+
+        if (! $bulgu) {
+            return;
+        }
+
+        $baz = $bulgu->termin && $bulgu->termin->isFuture() ? $bulgu->termin : today();
+        $yeniTermin = $baz->copy()->addDays(max(1, $gun));
+
+        $bulgu->update([
+            'termin' => $yeniTermin,
+            'durum' => 'ertelendi',
+        ]);
+
+        unset($this->acikSahaBulgulari);
+        Notification::make()
+            ->title('Bulgu '.$gun.' gün ertelendi')
+            ->body(($bulgu->bulgu_no ?: 'Bulgu').' — Yeni termin: '.$yeniTermin->format('d.m.Y'))
+            ->success()
+            ->send();
+    }
+
+    public function bulguTamamla(int $id): void
+    {
+        $bulgu = SahaBulgusu::query()
+            ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id()))
+            ->find($id);
+
+        if (! $bulgu) {
+            return;
+        }
+
+        $bulgu->update([
+            'durum' => 'kapandi',
+            'kapanis_tarihi' => today(),
+        ]);
+
+        unset($this->acikSahaBulgulari);
+        Notification::make()
+            ->title('Saha bulgusu kapatıldı')
+            ->body(($bulgu->bulgu_no ?: 'Bulgu').' tamamlandı olarak işaretlendi (bağlı DÖF kaydı güncellendi).')
+            ->success()
+            ->send();
     }
 }

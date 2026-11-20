@@ -120,6 +120,7 @@ class SayfaAileleri
                 [Pages\AtamaYazilari::class, 'Atama Yazıları'],
                 [Pages\CalisanTemsilcisiSecimi::class, 'Çalışan Temsilcisi Seçimi'],
                 [Pages\CezaTeblig::class, 'Ceza ve Tebliğ Tutanağı'],
+                [Pages\GeciciGorevlendirme::class, 'Geçici Görevlendirme'],
             ],
             // Tesis Güvenliği, Ekipman & Dış Paydaş Merkezi: 8 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['kkd'] bkz.
             'kkd' => [
@@ -182,7 +183,7 @@ class SayfaAileleri
             [
                 'etiket' => 'Yasal Atamalar, Temsilci & Tebliğler',
                 'ikon' => 'heroicon-o-scale',
-                'siniflar' => [Pages\AtamaYazilari::class, Pages\CalisanTemsilcisiSecimi::class, Pages\CezaTeblig::class],
+                'siniflar' => [Pages\AtamaYazilari::class, Pages\CalisanTemsilcisiSecimi::class, Pages\CezaTeblig::class, Pages\GeciciGorevlendirme::class],
             ],
         ],
         'saglik_olay' => [

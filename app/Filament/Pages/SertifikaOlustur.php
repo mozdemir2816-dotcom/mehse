@@ -88,6 +88,8 @@ class SertifikaOlustur extends Page
 
     public string $cerceve = 'sade';
 
+    public bool $tcMaskele = false;
+
     /** @var array<int, int> */
     public array $secilenCalisanIdler = [];
 
@@ -471,7 +473,27 @@ class SertifikaOlustur extends Page
 
                     Notification::make()->title('Sertifika kaydedildi')->body($s->belge_no)->success()->send();
 
-                    return SertifikaUretici::pdf($s, ImzaSecenegi::secili($data));
+                    return SertifikaUretici::pdf($s, ImzaSecenegi::secili($data), $this->tcMaskele);
+                }),
+
+            Action::make('zipIndir')
+                ->label('📦 Katılımcı Başına Ayrı PDF (ZIP)')
+                ->icon('heroicon-o-archive-box-arrow-down')
+                ->color('gray')
+                ->visible(fn () => $this->firma !== null)
+                ->schema([ImzaSecenegi::alan()])
+                ->action(function (array $data) {
+                    $s = $this->kaydet();
+
+                    if (! $s) {
+                        return null;
+                    }
+
+                    $this->ciktiAlindi();
+
+                    Notification::make()->title('Sertifika ZIP arşivi hazırlanıyor')->body(count($s->katilimcilar ?? []).' katılımcı için ayrı PDF')->success()->send();
+
+                    return SertifikaUretici::zip($s, ImzaSecenegi::secili($data), $this->tcMaskele);
                 }),
 
             Action::make('onizle')

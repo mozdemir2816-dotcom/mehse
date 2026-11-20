@@ -4683,6 +4683,14 @@ return [
                 'Acil durum, kurtarma ve tahliye planı: kurtarma hiyerarşisi, ekipmanlar (tripod/vinç/halat) ve tatbikat',
                 'Yanlış kurtarmanın ölümcül tehlikesi (çok kurbanlı ikinci ölüm), ilk yardım ve temel yaşam desteği',
             ]],
+            'kimyasal_guvenlik' => ['ad' => 'Kimyasal Maddelerle Güvenli Çalışma Eğitimi', 'maddeler' => [
+                '6331 sayılı İSG Kanunu ve Kimyasal Maddelerle Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik',
+                'Kimyasal maddelerin sınıflandırılması, GHS/CLP tehlike piktogramları, H (zararlılık) ve P (önlem) ifadeleri',
+                'Güvenlik Bilgi Formları (GBF / SDS — 16 bölüm) okuma ve sahada kullanma esasları',
+                'Kimyasalların güvenli depolanması, uyumsuz kimyasal matrisi ve dökülme/sızıntı kapları',
+                'Maruziyet sınır değerleri (TWA/STEL), havalandırma ve solunum/göz/el KKD seçimi (EN 374, EN 143/14387)',
+                'Kimyasal dökülme, sıçrama, göz/vücut duşu kullanımı ve acil ilk yardım müdahalesi',
+            ]],
             'is_kazasi_sonrasi' => ['ad' => 'İş Kazası Sonrası İşe Dönüş Eğitimi', 'maddeler' => [
                 'Yasal mevzuat: 6331 sayılı İSG kanunu md.17/3 (ilave eğitim) ve çalışanların iş eğitimlerinin usul ve esasları hakkında yönetmelik md.8 (RG 15.05.2013/28648)',
                 'Yaşanan iş kazasının değerlendirilmesi: kazanın oluş şekli, sebepleri ve katkıda bulunan faktörler',
@@ -6329,6 +6337,10 @@ return [
             'yangin' => [
                 'ad' => 'Yangın Eğitimi Sertifikası', 'baslik' => 'Yangın Eğitimi ve Söndürme Sertifikası',
                 'coklu_egitici' => false, 'icerik_anahtari' => 'sondurme_ekibi',
+            ],
+            'kimyasal' => [
+                'ad' => 'Kimyasal Güvenlik Sertifikası', 'baslik' => 'Kimyasal Maddelerle Güvenli Çalışma Eğitimi Sertifikası',
+                'coklu_egitici' => false, 'icerik_anahtari' => 'kimyasal_guvenlik',
             ],
         ],
         // Çalışanların İSG Eğitimlerinin Usul ve Esasları Hak. Yön. — periyodik

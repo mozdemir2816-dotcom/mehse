@@ -31,33 +31,60 @@
 
         <div style="margin-top:.75rem;padding:.65rem .85rem;border-radius:.55rem;border:1px dashed rgb(107 114 128 / .35);display:flex;align-items:end;gap:.65rem;flex-wrap:wrap">
             <div>
-                <label class="mehse-etiket">Çalışan Sayısından Saat Hesapla (Kişi × 225 Saat × Ay)</label>
-                <div style="display:flex;gap:.45rem;align-items:center;margin-top:.25rem">
-                    <input type="number" min="1" placeholder="Çalışan sayısı" wire:model="kazaCalisanSayisi"
+                <label class="mehse-etiket">Çalışan Sayısından Saat &amp; İnsidans Hesapla (Kişi × 225 Saat × Ay)</label>
+                <div style="display:flex;gap:.45rem;align-items:center;margin-top:.25rem;flex-wrap:wrap">
+                    <input type="number" min="1" placeholder="Çalışan sayısı" wire:model.live="kazaCalisanSayisi"
                         style="width:140px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
                     <span style="font-size:.8rem;color:rgb(107 114 128)">×</span>
                     <input type="number" min="1" max="12" placeholder="Ay (12)" wire:model="kazaDonemAy"
                         style="width:80px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem">
                     <span style="font-size:.78rem;color:rgb(107 114 128)">ay</span>
+                    <input type="number" step="0.01" min="0" placeholder="Önceki dönem KSO" wire:model.live="oncekiDonemKso"
+                        style="width:145px;padding:.4rem .6rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.82rem"
+                        title="Önceki dönem Kaza Sıklık Hızı (kıyaslama yüzdesi için)">
                 </div>
             </div>
             <x-filament::button size="xs" color="warning" wire:click="calisanSayisindanSaatHesapla">Çalışma Saatini Hesapla</x-filament::button>
             <x-filament::button size="xs" color="gray" wire:click="kazaOrnekVeriDoldur">Örnek Veriyle Dene</x-filament::button>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem">
+        @php $ksoDeg = $this->ksoDegisimYuzde(); @endphp
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:.85rem;margin-top:1rem">
             <div style="{{ $kutu }};text-align:center">
-                <div style="font-size:.78rem;color:rgb(107 114 128)">Kaza Sıklık Hızı</div>
+                <div style="font-size:.78rem;color:rgb(107 114 128)">Kaza Sıklık Hızı (KSO)</div>
                 <div style="font-size:1.5rem;font-weight:800;color:{{ $turuncu }}">{{ $this->sikikHizi() ?? '—' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">1.000.000 çalışma saatinde</div>
             </div>
             <div style="{{ $kutu }};text-align:center">
-                <div style="font-size:.78rem;color:rgb(107 114 128)">Kaza Ağırlık Hızı</div>
+                <div style="font-size:.78rem;color:rgb(107 114 128)">Kaza Ağırlık Hızı (KAO)</div>
                 <div style="font-size:1.5rem;font-weight:800;color:{{ $turuncu }}">{{ $this->agirlikHizi() ?? '—' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">1.000 çalışma saatinde</div>
             </div>
+            <div style="{{ $kutu }};text-align:center">
+                <div style="font-size:.78rem;color:rgb(107 114 128)">Kaza İnsidans Oranı</div>
+                <div style="font-size:1.5rem;font-weight:800;color:#2563eb">{{ $this->insidansOrani() ?? '—' }}</div>
+                <div style="font-size:.7rem;color:rgb(107 114 128)">1.000 çalışan başına</div>
+            </div>
+            @if ($ksoDeg !== null)
+                <div style="{{ $kutu }};text-align:center">
+                    <div style="font-size:.78rem;color:rgb(107 114 128)">Önceki Dönem Kıyas</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:{{ $ksoDeg > 0 ? '#dc2626' : '#15803d' }}">
+                        {{ $ksoDeg > 0 ? '+' : '' }}{{ $ksoDeg }}%
+                    </div>
+                    <div style="font-size:.7rem;color:rgb(107 114 128)">{{ $ksoDeg > 0 ? 'KSO artışı' : 'KSO iyileşmesi ✓' }}</div>
+                </div>
+            @endif
         </div>
 
-        <div style="margin-top:.75rem">
+        <div x-data="{ kopyalandi: false }" style="margin-top:.75rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <x-filament::button size="xs" color="gray" wire:click="kazaHesaplayiciSifirla">Sıfırla</x-filament::button>
+            @if ($this->sikikHizi() !== null)
+                <button type="button"
+                    x-on:click="navigator.clipboard?.writeText(@js($this->kazaOzetiMetni())).then(() => { kopyalandi = true; setTimeout(() => kopyalandi = false, 2500); })"
+                    style="padding:.32rem .68rem;border-radius:.45rem;border:1px solid rgb(107 114 128 / .35);background:transparent;color:inherit;font-size:.76rem;font-weight:600;cursor:pointer">
+                    <span x-text="kopyalandi ? '✓ Özet Kopyalandı' : '📋 Kurul / Rapor Özeti Kopyala'">📋 Kurul / Rapor Özeti Kopyala</span>
+                </button>
+            @endif
         </div>
     </x-filament::section>
 

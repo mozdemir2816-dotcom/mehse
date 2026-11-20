@@ -206,6 +206,26 @@ class SayfaRehberi
                 ],
                 'ipucu' => '2026 İPC tutarları çalışan sayısı (1–9, 10–49, 50+) ve tehlike sınıfı katsayısına göre otomatik hesaplanır.',
             ],
+            Pages\GeciciGorevlendirme::class => [
+                'baslik' => 'Geçici Görevlendirme & Dış Saha Görev Emri',
+                'ozet' => 'Şantiye, şubeler arası, 4857 m.7 geçici iş ilişkisi veya teknik servis için İSG taahhütnameli resmi görev emri PDF\'i üretin.',
+                'adimlar' => [
+                    'Üstten 4 yasal şablondan uygun olanı seçin ve firma, görev yeri, tarih aralığı ile görev konusunu girin.',
+                    'Aktif çalışan listesinden bir veya birden fazla kişi işaretleyin (isterseniz KVKK T.C. maskelemeyi açın).',
+                    'Tek çalışanda canlı imza alıp "📄 Geçici Görevlendirme PDF İndir" ile her kişi için ayrı A4 belge üretin.',
+                ],
+                'ipucu' => '4857 sayılı İş Kanunu m.7 kapsamındaki geçici iş ilişkisi görevlendirmesinde çalışanın yazılı rızası belgeye otomatik eklenir.',
+            ],
+            Pages\CariHesap::class => [
+                'baslik' => 'OSGB Cari Hesap & Tahsilat Takibi',
+                'ozet' => 'Müşteri firmalarınızın aylık İSG hizmet bedellerini, borç/tahsilat hareketlerini ve güncel bakiyelerini takip edin.',
+                'adimlar' => [
+                    'Alt tablodan bir firmanın "Yönet" düğmesine tıklayıp aylık sözleşme bedelini ve KDV oranını kaydedin.',
+                    'Her ay başında sağ üstteki "⚡ Bu Ay Tüm Firmalara Tahakkuk Oluştur" ile tüm aylık hizmet bedellerini tek tıkla borç işleyin.',
+                    'Ödeme geldiğinde tahsilat girin ve "📄 PDF Hesap Ekstresi İndir" ile müşteriye resmi ekstre gönderin.',
+                ],
+                'ipucu' => 'Toplu tahakkuk aynı dönem için ikinci kez borç oluşturmaz; mükerrer kayıt riski olmadan her ay güvenle kullanabilirsiniz.',
+            ],
             Pages\TalimatOlustur::class => [
                 'baslik' => 'Güvenli Çalışma Talimatları & Tebellüğ',
                 'ozet' => 'Makine, ekipman ve görev bazlı güvenli çalışma talimatları oluşturup tabletten canlı tebellüğ imzası alın.',
