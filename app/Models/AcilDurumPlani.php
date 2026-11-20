@@ -116,8 +116,12 @@ class AcilDurumPlani extends Model
     /** Planın tahliye planı görseli: yüklenen görsel, yoksa kaydedilmiş kroki görüntüsü (tam yol). */
     public function tahliyeGorselYolu(): ?string
     {
-        if ($this->tahliye_plani_gorseli && is_file($yol = public_path('storage/'.$this->tahliye_plani_gorseli))) {
-            return $yol;
+        if ($this->tahliye_plani_gorseli) {
+            foreach ([storage_path('app/public/'.$this->tahliye_plani_gorseli), public_path('storage/'.$this->tahliye_plani_gorseli)] as $yol) {
+                if (is_file($yol)) {
+                    return $yol;
+                }
+            }
         }
 
         $kroki = AcilDurumKrokisi::query()->where('firma_id', $this->firma_id)->first();

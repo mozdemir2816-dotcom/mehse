@@ -29,7 +29,7 @@
     .fb .problem { border: 2px solid #b91c1c; color: #b91c1c; border-radius: 3px; text-align: center; font-weight: bold; padding: 6px 3px; margin: 2px; font-size: 8px; }
     .durum-acik { color: #b45309; font-weight: bold; }
     .durum-tamamlandi { color: #15803d; font-weight: bold; }
-    .imza { margin-top: 22px; width: 100%; border-collapse: collapse; }
+    .imza { margin-top: 22px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
     .imza td { width: 33%; text-align: center; font-size: 9px; padding: 0 6px; }
     .imza .rol { font-weight: bold; }
     .imza .unvan { color: #555; font-size: 8px; }

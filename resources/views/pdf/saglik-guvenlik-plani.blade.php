@@ -17,7 +17,7 @@
     .rozet-zorunlu { display: inline-block; padding: 2px 7px; border-radius: 3px; background: #dc2626; color: #fff; font-weight: bold; font-size: 8.5px; }
     .rozet-bilgi { display: inline-block; padding: 2px 7px; border-radius: 3px; background: #0284c7; color: #fff; font-weight: bold; font-size: 8.5px; }
     .kutu { border: 1px solid #cbd5e1; background: #f8fafc; padding: 7px 9px; border-radius: 4px; margin-bottom: 10px; font-size: 9px; }
-    table.imza { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 9px; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 9px; page-break-inside: avoid; }
     table.imza td { border: 1px solid #94a3b8; width: 33.33%; text-align: center; padding: 6px 6px 36px; vertical-align: top; }
     table.imza .rol { font-weight: bold; background: #f1f5f9; display: block; padding: 3px; margin: -6px -6px 6px; border-bottom: 1px solid #94a3b8; }
 </style>

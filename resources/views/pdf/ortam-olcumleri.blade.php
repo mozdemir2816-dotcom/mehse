@@ -21,7 +21,7 @@
     .s-sinir { color: #b45309; font-weight: bold; }
     .s-bekliyor { color: #6b7280; }
     .yasal { margin-top: 10px; font-size: 7.5px; color: #555; }
-    .imza { margin-top: 26px; width: 100%; border-collapse: collapse; font-size: 8px; }
+    .imza { margin-top: 26px; width: 100%; border-collapse: collapse; font-size: 8px; page-break-inside: avoid; }
     .imza td { border-top: 1px solid #111; padding-top: 4px; text-align: center; width: 33%; }
 </style>
 </head>

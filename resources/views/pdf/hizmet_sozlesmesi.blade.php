@@ -21,7 +21,7 @@
     .marka span { color: #0284c7; }
     .marka-alt { font-size: 8.5px; color: #475569; }
     .ust-sag { text-align: right; font-size: 8.5px; color: #475569; }
-    h1 { font-size: 14px; text-align: center; margin: 4px 0 12px; text-transform: uppercase; letter-spacing: .5px; }
+    h1 { font-size: 14px; text-align: center; margin: 4px 0 12px; letter-spacing: .5px; }
     .taraflar { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
     .taraflar th { background: #0f172a; color: #fff; font-size: 9.5px; padding: 5px 8px; text-align: left; width: 50%; }
     .taraflar td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top; font-size: 9px; }
@@ -29,7 +29,7 @@
     .metin h3 { font-size: 10.5px; margin: 10px 0 3px; color: #0f172a; }
     .metin p { margin: 0 0 5px; text-align: justify; }
     .metin mark { background: #fef08a; }
-    .kase { margin-top: 18px; border: 2px solid #047857; border-radius: 6px; padding: 8px 12px; width: 62%; }
+    .kase { margin-top: 18px; border: 2px solid #047857; border-radius: 6px; padding: 8px 12px; width: 62%; page-break-inside: avoid; }
     .kase-baslik { color: #047857; font-weight: bold; font-size: 11px; letter-spacing: .5px; }
     .kase table { border-collapse: collapse; margin-top: 4px; }
     .kase td { padding: 1px 8px 1px 0; font-size: 8.5px; }
@@ -57,7 +57,7 @@
     </table>
 </div>
 
-<h1>Hizmet ve Kullanım Sözleşmesi</h1>
+<h1>HİZMET VE KULLANIM SÖZLEŞMESİ</h1>
 
 <table class="taraflar">
     <tr><th>SAĞLAYICI</th><th>MÜŞTERİ</th></tr>

@@ -602,7 +602,7 @@ class RiskDegerlendirmesiOfisUretici
             foreach ($sira as $k => [$rol, $ad, $gorseller]) {
                 $bas = Coordinate::stringFromColumnIndex($k * $genislik + 1);
                 $bit = Coordinate::stringFromColumnIndex($k === 2 ? $toplam : ($k + 1) * $genislik);
-                $sayfa->setCellValue("{$bas}{$satir}", mb_strtoupper($rol, 'UTF-8')."\n\n\n\n".($ad !== '' ? $ad : '........................................'));
+                $sayfa->setCellValue("{$bas}{$satir}", TurkceMetin::buyuk($rol)."\n\n\n\n".($ad !== '' ? $ad : '........................................'));
                 $sayfa->mergeCells("{$bas}{$satir}:{$bit}{$satir}");
                 $sayfa->getStyle("{$bas}{$satir}")->getAlignment()->setWrapText(true)
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_TOP);

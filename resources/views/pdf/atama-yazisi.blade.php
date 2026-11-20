@@ -8,12 +8,12 @@
     .sayfa { padding: 30px 36px; }
     .sayfa + .sayfa { page-break-before: always; }
     .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 16px; }
-    .baslik h1 { font-size: 16px; margin: 0 0 4px; text-transform: uppercase; }
+    .baslik h1 { font-size: 16px; margin: 0 0 4px; }
     .kunye { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 14px; }
     .kunye td { border: 1px solid #999; padding: 5px 8px; }
     .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 24%; }
     .govde { font-size: 11.5px; line-height: 1.7; text-align: justify; margin-bottom: 18px; }
-    .imza { margin-top: 60px; width: 100%; }
+    .imza { margin-top: 60px; width: 100%; page-break-inside: avoid; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     .imza img { max-height: 40px; display: block; margin: 0 auto -32px auto; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
@@ -24,7 +24,7 @@
     <div class="sayfa">
 
         <div class="baslik">
-            <h1>{{ $rol['ad'] ?? $kayit->rolEtiketi() }} Görevlendirme Yazısı</h1>
+            <h1>{{ \App\Support\TurkceMetin::buyuk(($rol['ad'] ?? $kayit->rolEtiketi()).' Görevlendirme Yazısı') }}</h1>
             <div style="font-size:11px">{{ $firma?->unvan }}</div>
         </div>
 

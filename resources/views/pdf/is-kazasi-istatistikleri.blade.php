@@ -12,7 +12,7 @@
         table { width: 100%; border-collapse: collapse; }
         .kpi-tablo td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: center; background: #f9fafb; width: 16.6%; }
         .kpi-sayi { font-size: 14px; font-weight: bold; color: #111827; }
-        .kpi-etiket { font-size: 8px; color: #6b7280; text-transform: uppercase; margin-top: 2px; }
+        .kpi-etiket { font-size: 8px; color: #6b7280; margin-top: 2px; }
         .izgara-tablo { width: 100%; margin-top: 8px; }
         .izgara-hucre { width: 49%; vertical-align: top; padding: 4px; }
         .kart { border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 6px; }

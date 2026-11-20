@@ -12,7 +12,7 @@
     .kunye td { border: 1px solid #999; padding: 6px 8px; vertical-align: top; }
     .kunye td.e { background: #f0f0f0; font-weight: bold; width: 26%; }
     .metin { font-size: 10.5px; line-height: 1.55; margin: 14px 0; text-align: justify; }
-    .imza { margin-top: 40px; width: 100%; border-collapse: collapse; }
+    .imza { margin-top: 40px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
     .imza td { width: 50%; text-align: center; vertical-align: top; font-size: 10px; padding: 0 12px; }
     .imza .kutu { border-top: 1px solid #111; padding-top: 6px; margin-top: 60px; }
 </style>

@@ -22,7 +22,7 @@
     table.bulgular td.orta { text-align: center; }
     table.bulgular img { width: 100%; max-height: 70px; object-fit: cover; }
     table.bulgular ol { margin: 0; padding-left: 12px; }
-    .imza { margin-top: 20px; width: 40%; }
+    .imza { margin-top: 20px; width: 40%; page-break-inside: avoid; }
     .imza img { max-height: 55px; display: block; margin-bottom: 4px; }
     .imza .baslik { font-weight: bold; font-size: 9px; margin-bottom: 4px; }
 </style>

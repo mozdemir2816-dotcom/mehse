@@ -20,7 +20,7 @@
     table.m td { text-align: center; }
     .grp { background: #f4f4f4; font-weight: bold; text-align: left; font-size: 8px; }
     .yasal { margin-top: 8px; font-size: 7px; color: #555; }
-    .imza { margin-top: 22px; width: 100%; border-collapse: collapse; font-size: 8px; }
+    .imza { margin-top: 22px; width: 100%; border-collapse: collapse; font-size: 8px; page-break-inside: avoid; }
     .imza td { border-top: 1px solid #111; padding-top: 4px; text-align: center; width: 33%; }
 </style>
 </head>

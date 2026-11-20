@@ -27,7 +27,7 @@
     .d-bekliyor { color: #6b7280; }
     .d-muaf { color: #0369a1; }
     .yasal { margin-top: 8px; font-size: 7px; color: #555; }
-    .imza { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 8px; }
+    .imza { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 8px; page-break-inside: avoid; }
     .imza td { border-top: 1px solid #111; padding-top: 4px; text-align: center; width: 33%; }
 </style>
 </head>

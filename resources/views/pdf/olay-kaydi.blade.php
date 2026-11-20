@@ -22,7 +22,7 @@
     .eksik { background: #fff7d6; border: 1px solid #e8c95a; padding: 6px 9px; font-size: 9.5px; margin-bottom: 10px; }
     .uyari { background: #fde8e8; border: 1px solid #e59a9a; color: #8b1c1c; padding: 5px 9px; font-size: 9.5px; margin-bottom: 4px; }
     .etki td { width: 33.3%; }
-    table.imza { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-top: 8px; }
+    table.imza { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-top: 8px; page-break-inside: avoid; }
     table.imza th { background: #222; color: #fff; text-align: left; padding: 5px 7px; }
     table.imza td { border: 1px solid #999; padding: 6px 7px; height: 46px; vertical-align: middle; }
     table.imza img { max-height: 40px; max-width: 90px; margin-right: 4px; }

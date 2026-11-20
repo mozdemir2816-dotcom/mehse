@@ -20,7 +20,7 @@
     .y3 { background: #fed7aa; } .y4 { background: #fecaca; }
     .yb { text-align: center; font-weight: bold; }
     .yasal { margin-top: 8px; font-size: 7px; color: #555; }
-    .imza { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 8px; }
+    .imza { margin-top: 18px; width: 100%; border-collapse: collapse; font-size: 8px; page-break-inside: avoid; }
     .imza td { border-top: 1px solid #111; padding-top: 4px; text-align: center; width: 33%; }
 </style>
 </head>

@@ -18,7 +18,7 @@
     .kpi-tablo { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
     .kpi-tablo td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; background: #f8fafc; width: 20%; }
     .kpi-deger { font-size: 14px; font-weight: bold; color: #0f172a; }
-    .kpi-etiket { font-size: 8px; color: #64748b; text-transform: uppercase; margin-top: 2px; }
+    .kpi-etiket { font-size: 8px; color: #64748b; font-weight: bold; margin-top: 2px; }
     h2 { font-size: 10px; margin: 10px 0 4px; color: #fff; background: #0f766e; padding: 4px 8px; }
     table.liste { width: 100%; border-collapse: collapse; font-size: 8.8px; margin-bottom: 8px; }
     table.liste th, table.liste td { border: 1px solid #cbd5e1; padding: 4px 6px; vertical-align: top; }
@@ -26,7 +26,7 @@
     .d-tamam { color: #15803d; font-weight: bold; }
     .d-eksik { color: #b91c1c; font-weight: bold; }
     .d-yakin { color: #b45309; font-weight: bold; }
-    .imza-kutusu { margin-top: 16px; width: 100%; border-collapse: collapse; }
+    .imza-kutusu { margin-top: 16px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
     .imza-kutusu td { width: 50%; vertical-align: top; padding: 6px 10px; border: 1px solid #cbd5e1; height: 65px; font-size: 8.5px; }
     .altbilgi { margin-top: 10px; font-size: 7.8px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px; }
 </style>

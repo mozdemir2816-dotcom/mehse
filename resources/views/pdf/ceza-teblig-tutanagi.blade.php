@@ -16,7 +16,7 @@
     table.liste th, table.liste td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     table.liste th { background: #f0f0f0; }
     .yaptirim { display: inline-block; background: #ef4444; color: #fff; padding: 3px 10px; border-radius: 4px; font-size: 10.5px; font-weight: bold; }
-    .imza { margin-top: 30px; width: 100%; }
+    .imza { margin-top: 30px; width: 100%; page-break-inside: avoid; }
     .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 10px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
     .foto-sayfa { page-break-before: always; }

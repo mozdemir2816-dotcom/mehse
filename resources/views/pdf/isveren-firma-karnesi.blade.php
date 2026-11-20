@@ -15,7 +15,7 @@
         .puan-alt { font-size: 7.5px; font-weight: normal; }
         .ozet-tablo { width: 100%; border-collapse: separate; border-spacing: 5px 0; margin: 0 -5px 8px -5px; }
         .ozet-hucre { border: 1px solid #d1d5db; border-radius: 5px; padding: 5px 7px; background: #f9fafb; vertical-align: top; }
-        .ozet-etiket { font-size: 7px; color: #6b7280; text-transform: uppercase; }
+        .ozet-etiket { font-size: 7px; color: #6b7280; font-weight: bold; }
         .ozet-deger { font-size: 10px; font-weight: bold; color: #111827; margin-top: 1px; }
         .ozet-not { font-size: 7.2px; color: #4b5563; margin-top: 1px; }
         .bolum-baslik { font-size: 9.2px; font-weight: bold; color: #1e3a8a; background: #f3f4f6; border-left: 3px solid #1d4ed8; padding: 4px 8px; margin: 7px 0 4px 0; }

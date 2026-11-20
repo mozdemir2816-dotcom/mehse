@@ -45,7 +45,7 @@
     </table>
 
     @foreach (config('isg.isbasi_egitim.konu_kategorileri') as $kategori => $maddeler)
-        <h2>{{ mb_strtoupper($kategori, 'UTF-8') }}</h2>
+        <h2>{{ \App\Support\TurkceMetin::buyuk($kategori) }}</h2>
         <ul class="konular">
             @foreach ($maddeler as $madde)
                 @php $isaretli = in_array($madde, $veri['konular'] ?? [], true); @endphp

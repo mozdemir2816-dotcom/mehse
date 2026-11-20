@@ -677,7 +677,7 @@ class AtamaYazilariTest extends TestCase
         $this->assertCount(3, $kayit->uyeler);
 
         $html = view('pdf.atama-yazisi', ['kayit' => $kayit, 'firma' => $firma, 'rol' => $kayit->rol(), 'imzali' => false])->render();
-        $this->assertSame(3, substr_count($html, 'Görevlendirme Yazısı</h1>'));
+        $this->assertSame(3, substr_count($html, 'GÖREVLENDİRME YAZISI</h1>'));
         $this->assertStringContainsString(AtamaYazisiUretici::BOS_ALAN, $html);
         $this->assertStringContainsString('..... / ..... / ..........', $html);
         $this->assertStringContainsString('BOŞ FORM', $html);

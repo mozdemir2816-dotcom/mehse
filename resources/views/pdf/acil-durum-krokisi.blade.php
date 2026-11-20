@@ -36,8 +36,8 @@
     </div>
 
     <svg viewBox="0 0 {{ $w }} {{ $h }}" width="760" height="{{ round(760 * $h / $w) }}">
-        @if ($kroki->arka_plan_gorseli)
-            <image xlink:href="{{ public_path('storage/'.$kroki->arka_plan_gorseli) }}" x="0" y="0" width="{{ $w }}" height="{{ $h }}" opacity="0.5" />
+        @if ($kroki->arka_plan_gorseli && ($arkaYol = is_file(storage_path('app/public/'.$kroki->arka_plan_gorseli)) ? storage_path('app/public/'.$kroki->arka_plan_gorseli) : (is_file(public_path('storage/'.$kroki->arka_plan_gorseli)) ? public_path('storage/'.$kroki->arka_plan_gorseli) : null)))
+            <image xlink:href="{{ $arkaYol }}" x="0" y="0" width="{{ $w }}" height="{{ $h }}" opacity="0.5" />
         @endif
 
         <rect x="0" y="0" width="{{ $w }}" height="{{ $h }}" fill="none" stroke="#ccc" stroke-width="1" />

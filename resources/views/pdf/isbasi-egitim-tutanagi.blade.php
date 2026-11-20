@@ -14,7 +14,7 @@
     h2 { font-size: 11.5px; margin: 12px 0 4px; color: #0ea5e9; }
     ul.konular { margin: 0 0 8px; padding-left: 1.2rem; font-size: 10px; }
     ul.konular li { margin-bottom: 2px; }
-    .imza { margin-top: 40px; width: 100%; }
+    .imza { margin-top: 40px; width: 100%; page-break-inside: avoid; }
     .imza td { width: 33.33%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 9.5px; }
 </style>
 </head>
@@ -46,7 +46,7 @@
     </table>
 
     @foreach (config('isg.isbasi_egitim.konu_kategorileri') as $kategori => $maddeler)
-        <h2>{{ mb_strtoupper($kategori, 'UTF-8') }}</h2>
+        <h2>{{ \App\Support\TurkceMetin::buyuk($kategori) }}</h2>
         <ul class="konular">
             @foreach ($maddeler as $madde)
                 @php $isaretli = in_array($madde, $tutanak->konular ?? [], true); @endphp

@@ -17,7 +17,7 @@
     .sure-kutu { width: 100%; border-collapse: collapse; font-size: 10.5px; margin: 8px 0; }
     .sure-kutu td { border: 2px solid #{{ $form->suresiGectiMi() ? 'b91c1c' : '0e7490' }}; padding: 8px; text-align: center; font-weight: bold; }
     .sure-kutu.gecti td { color: #b91c1c; }
-    .imza { margin-top: 26px; width: 100%; }
+    .imza { margin-top: 26px; width: 100%; page-break-inside: avoid; }
     .imza td { width: 50%; text-align: center; padding-top: 38px; border-top: 1px solid #111; font-size: 9px; }
     .imza img { max-height: 40px; display: block; margin: 0 auto -32px auto; }
 </style>

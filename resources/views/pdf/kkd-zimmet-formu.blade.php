@@ -35,7 +35,7 @@
     .taahhut { margin: 0 0 9px; text-align: justify; }
     .teslim-aldim { font-weight: bold; margin: 14px 0 0; text-align: center; letter-spacing: .3px; }
 
-    table.imza { width: 100%; border-collapse: collapse; margin-top: 22px; font-size: 9.5px; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 22px; font-size: 9.5px; page-break-inside: avoid; }
     table.imza td { border: 1px solid #666; padding: 6px 9px; width: 50%; vertical-align: top; }
     table.imza .rol { text-align: center; font-weight: bold; background: #eee; letter-spacing: .3px; }
     table.imza .alan { line-height: 2.1; }

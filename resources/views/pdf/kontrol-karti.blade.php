@@ -93,7 +93,7 @@
 </div>
 
 <div class="ust">
-    <div class="ad">{{ mb_strtoupper($kart->alan_adi ?: $kart->sablonAdi(), 'UTF-8') }} — KONTROL KARTI</div>
+    <div class="ad">{{ \App\Support\TurkceMetin::buyuk($kart->alan_adi ?: $kart->sablonAdi()) }} — KONTROL KARTI</div>
     <div class="alt">{{ $firma?->unvan }}</div>
 </div>
 

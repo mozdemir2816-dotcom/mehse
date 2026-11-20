@@ -12,7 +12,7 @@
     .alt { font-size: 8.2px; color: #374151; margin-top: 2px; }
     table.ozet { width: 100%; border-collapse: separate; border-spacing: 6px 0; margin: 0 -6px 10px -6px; }
     table.ozet td { border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; background: #f8fafc; width: 33.33%; }
-    .o-lbl { font-size: 7.2px; color: #64748b; text-transform: uppercase; }
+    .o-lbl { font-size: 7.2px; color: #64748b; letter-spacing: .2px; }
     .o-val { font-size: 11px; font-weight: bold; margin-top: 2px; }
     table.liste { width: 100%; border-collapse: collapse; font-size: 8.5px; }
     table.liste th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 6px; text-align: left; }

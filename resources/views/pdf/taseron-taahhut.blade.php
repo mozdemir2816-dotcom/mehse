@@ -9,7 +9,7 @@
     .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 14px; }
     .baslik h1 { font-size: 15px; margin: 0 0 4px; }
     .alan { border-bottom: 1px solid #111; display: inline-block; min-width: 220px; }
-    .imza { margin-top: 30px; }
+    .imza { margin-top: 30px; page-break-inside: avoid; }
     .imza td { border: none; width: 50%; text-align: center; padding-top: 40px; vertical-align: top; }
     .imza span { display: block; border-top: 1px solid #111; margin: 0 30px; padding-top: 4px; }
     p { margin: 6px 0; text-align: justify; }

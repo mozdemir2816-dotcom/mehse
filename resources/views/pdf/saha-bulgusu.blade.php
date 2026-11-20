@@ -15,6 +15,7 @@
     .rozet { display: inline-block; padding: 2px 8px; border-radius: 8px; color: #fff; font-weight: bold; }
     .foto { width: 48%; display: inline-block; margin: 0 1% 8px 0; vertical-align: top; }
     .foto img { width: 100%; max-height: 300px; }
+    .imza { page-break-inside: avoid; }
     .imza td { height: 52px; border: none; width: 50%; text-align: center; vertical-align: bottom; }
     .imza span { display: block; border-top: 1px solid #111; margin: 0 24px; padding-top: 3px; }
 </style>

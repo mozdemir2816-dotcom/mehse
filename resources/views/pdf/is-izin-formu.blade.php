@@ -19,7 +19,7 @@
     .onay { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-top: 8px; }
     .onay td, .onay th { border: 1px solid #999; padding: 5px 8px; text-align: left; }
     .onay th { background: #f0f0f0; }
-    .imza { margin-top: 26px; width: 100%; }
+    .imza { margin-top: 26px; width: 100%; page-break-inside: avoid; }
     .imza td { width: 50%; text-align: center; padding-top: 30px; border-top: 1px solid #111; font-size: 10px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
     .damga { display: inline-block; padding: 3px 10px; border: 2px solid #111; border-radius: 4px; font-weight: bold; font-size: 11px; }

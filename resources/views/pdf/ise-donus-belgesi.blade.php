@@ -21,7 +21,7 @@
     .uygun-uygun_degil { color: #b91c1c; font-weight: bold; }
     .uygun-gecici_gorev { color: #b45309; font-weight: bold; }
     .taahhut { font-size: 8.5px; color: #444; margin-top: 4px; }
-    .imza { margin-top: 36px; width: 100%; border-collapse: collapse; }
+    .imza { margin-top: 36px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
     .imza td { width: 50%; text-align: center; font-size: 9px; padding: 0 10px; }
     .imza .rol { font-weight: bold; }
     .imza .kutu2 { border: 1px solid #999; height: 70px; margin-top: 4px; position: relative; }

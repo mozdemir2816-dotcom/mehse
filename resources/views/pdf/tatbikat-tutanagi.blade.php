@@ -20,7 +20,7 @@
     table.liste th { background: #f3f4f6; }
     table.krono { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-bottom: 6px; }
     table.krono td { border: 1px solid #999; padding: 5px 4px; text-align: center; width: 16.66%; }
-    table.krono .k { font-size: 7.5px; color: #555; text-transform: uppercase; }
+    table.krono .k { font-size: 7.5px; color: #555; font-weight: bold; }
     table.krono .d { font-size: 12px; font-weight: bold; margin-top: 2px; }
     .iyi { color: #15803d; } .kotu { color: #b91c1c; }
     .bos { color: #888; }
