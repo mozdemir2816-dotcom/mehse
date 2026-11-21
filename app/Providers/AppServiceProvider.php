@@ -2,14 +2,27 @@
 
 namespace App\Providers;
 
+use App\Models\Calisan;
+use App\Models\EgitimAtamasi;
 use App\Models\EgitimGirisi;
+use App\Models\EgitimOlayi;
+use App\Models\Firma;
+use App\Models\IsgProfesyoneli;
+use App\Support\BagliKayitGuncelleyici;
+use App\Support\MobilGorunum;
+use App\Support\OfficeMimeTahmincisi;
+use App\Support\OzelEkipmanTipleri;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Pages\BasePage;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use PhpOffice\PhpWord\Settings;
+use Symfony\Component\Mime\MimeTypes;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +49,10 @@ class AppServiceProvider extends ServiceProvider
         // şifreler etkilenmez, yalnız değiştirilirken uygulanır.
         Password::defaults(fn () => Password::min(10));
 
+        // 21.11.2026: Toplu Makine Paketi ile kurulan makine tipleri config'teki listelere eklenir
+        // (seçim listesi, günlük form, katalog, afiş). Tablo yoksa sessizce atlanır.
+        OzelEkipmanTipleri::configeEkle();
+
         // Paylaşımlı hosting'de public/ kökü bootstrap/app.php'de usePublicPath() ile
         // taşındı (bkz. o dosyadaki yorum); dompdf paketi bunu kullanmıyor, kendi
         // config'inde ayrıca base_path('public') deniyor — orada public/ olmadığı için
@@ -45,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
         // PhpWord varsayılanda metni XML-kaçışsız yazar: firma adında / metinde
         // "&" ya da "<" olunca .docx bozuk çıkar, Word açamaz. Hiçbir üretici ham
         // XML basmadığı için kaçış genel olarak açık (Kurul/JSA/Talimat Word).
-        \PhpOffice\PhpWord\Settings::setOutputEscapingEnabled(true);
+        Settings::setOutputEscapingEnabled(true);
 
         // Bazı .docx/.xlsx dosyalarını fileinfo "application/octet-stream" sanıyor;
         // acceptedFileTypes (mimetypes:) gerçek Word dosyasını reddediyordu
@@ -55,7 +72,7 @@ class AppServiceProvider extends ServiceProvider
         // eklenirse (testler, kuyruk işçisi) tahminci listesi sürekli büyür.
         static $officeTahmincisiKayitli = false;
         if (! $officeTahmincisiKayitli) {
-            \Symfony\Component\Mime\MimeTypes::getDefault()->registerGuesser(new \App\Support\OfficeMimeTahmincisi);
+            MimeTypes::getDefault()->registerGuesser(new OfficeMimeTahmincisi);
             $officeTahmincisiKayitli = true;
         }
 
@@ -67,30 +84,30 @@ class AppServiceProvider extends ServiceProvider
         BasePage::stickyFormActions();
 
         // Excel şablon / Excel–KATİP yükleme düğmeleri telefonda gizli (mobil.css).
-        \App\Support\MobilGorunum::kaydet();
+        MobilGorunum::kaydet();
 
         // Personel / firma / İGU-hekim bilgisi düzeltilince, bilginin kopyalandığı
         // evraklar (tutanak, atama yazısı, iş izni...) da güncellenir (06.10.2026).
-        \App\Models\Calisan::updated(fn ($c) => \App\Support\BagliKayitGuncelleyici::calisanGuncellendi($c));
-        \App\Models\Firma::updated(fn ($f) => \App\Support\BagliKayitGuncelleyici::firmaGuncellendi($f));
-        \App\Models\IsgProfesyoneli::updated(fn ($p) => \App\Support\BagliKayitGuncelleyici::profesyonelGuncellendi($p));
+        Calisan::updated(fn ($c) => BagliKayitGuncelleyici::calisanGuncellendi($c));
+        Firma::updated(fn ($f) => BagliKayitGuncelleyici::firmaGuncellendi($f));
+        IsgProfesyoneli::updated(fn ($p) => BagliKayitGuncelleyici::profesyonelGuncellendi($p));
         // Tablo içi "Düzenle" pencerelerinde kaydetme sonrası "X evrak güncellendi"
         // (düzenleme sayfaları için bkz. KaydetUstte::afterSave).
-        \Filament\Actions\EditAction::configureUsing(fn ($a) => $a->after(fn () => \App\Support\BagliKayitGuncelleyici::bildir()));
+        EditAction::configureUsing(fn ($a) => $a->after(fn () => BagliKayitGuncelleyici::bildir()));
 
         // Portalda yanlış şifre denemesi: çalışanın açık eğitimlerinin zaman çizelgesine "Hatalı giriş denemesi" düşer.
-        Event::listen(\Illuminate\Auth\Events\Failed::class, function (\Illuminate\Auth\Events\Failed $e): void {
+        Event::listen(Failed::class, function (Failed $e): void {
             if ($e->guard !== 'calisan' || blank($e->credentials['eposta'] ?? null)) {
                 return;
             }
-            $calisan = \App\Models\Calisan::query()->where('eposta', $e->credentials['eposta'])->first();
+            $calisan = Calisan::query()->where('eposta', $e->credentials['eposta'])->first();
             if (! $calisan) {
                 return;
             }
-            \App\Models\EgitimAtamasi::query()->where('calisan_id', $calisan->id)->where('durum', '!=', 'tamamlandi')->get()
-                ->each(function (\App\Models\EgitimAtamasi $a): void {
+            EgitimAtamasi::query()->where('calisan_id', $calisan->id)->where('durum', '!=', 'tamamlandi')->get()
+                ->each(function (EgitimAtamasi $a): void {
                     $sayi = $a->olaylar()->where('tur', 'hatali_giris')->count() + 1;
-                    \App\Models\EgitimOlayi::yaz($a->id, 'hatali_giris', 'Hatalı giriş denemesi', 'Şifre yanlış girildi (toplam '.$sayi.'. hatalı deneme).', $a->calisan_id);
+                    EgitimOlayi::yaz($a->id, 'hatali_giris', 'Hatalı giriş denemesi', 'Şifre yanlış girildi (toplam '.$sayi.'. hatalı deneme).', $a->calisan_id);
                 });
         });
 

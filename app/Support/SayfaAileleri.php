@@ -132,6 +132,7 @@ class SayfaAileleri
                 [Pages\PeriyodikKontrol::class, 'Periyodik Kontrol'],
                 [Pages\OrtamOlcumleri::class, 'Ortam Ölçümleri'],
                 [Pages\EkipmanAfisleri::class, 'Ekipman Afişleri'],
+                [Pages\TopluMakinePaketi::class, 'Toplu Makine Paketi'],
             ],
             'dis_paydas' => [
                 [Pages\TaseronYonetimi::class, 'Taşeron / Alt İşveren'],

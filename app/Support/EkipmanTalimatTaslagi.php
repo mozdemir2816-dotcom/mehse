@@ -74,6 +74,22 @@ class EkipmanTalimatTaslagi
             return null;
         }
 
+        return static::kaydet($tip, $bolumler);
+    }
+
+    /**
+     * Bölümlü talimatı kütüphaneye YZ taslağı olarak yazar ve firmalara ekler (21.11.2026: Toplu Makine
+     * Paketi'nde Gemini sohbetinden gelen bölümler de buradan girer). Tipte talimat varsa onu döndürür.
+     *
+     * @param  array<int, array{baslik: string, aciklama?: string, maddeler: array<int, string>}>  $bolumler
+     */
+    public static function kaydet(string $tip, array $bolumler): TalimatSablonu
+    {
+        $tip = static::kutuphaneTipi($tip);
+        if ($mevcut = TalimatSablonu::query()->where('ekipman_tipi', $tip)->first()) {
+            return $mevcut;
+        }
+
         $sablon = TalimatSablonu::create([
             'user_id' => static::kutuphaneSahibi(),
             'baslik' => static::baslik($tip),
