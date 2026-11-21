@@ -2,41 +2,52 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\AileAnaSayfasi;
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\IsEkipmani;
 use App\Models\IsEkipmaniBakimi;
 use App\Models\IsEkipmaniKontrolu;
 use App\Models\PeriyodikKontrol as PeriyodikKontrolKapsayici;
-use App\Filament\Support\ImzaSecenegi;
-use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use App\Support\BildirimTarayici;
+use App\Support\EkipmanAfisKutuphanesi;
 use App\Support\EkipmanExcelIceAktarici;
 use App\Support\EkipmanKatalogu;
+use App\Support\EkipmanTalimatTaslagi;
 use App\Support\EkipmanTebligPaketi;
+use App\Support\GeminiTalimatUretici;
 use App\Support\GunlukEkipmanKontrolUretici;
 use App\Support\HaftalikEkipmanKontrolUretici;
 use App\Support\PeriyodikKontrolUretici;
+use App\Support\TalimatUretici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use UnitEnum;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Ekipman & Periyodik Kontrol Motoru — isgpratik. Her iş ekipmanı kategori +
  * tip ile tanımlanır (tip seçilince yasal standart / deney / periyot otomatik
@@ -45,8 +56,8 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class PeriyodikKontrol extends Page
 {
-    use \App\Filament\Concerns\AileAnaSayfasi;
-    use \App\Filament\Concerns\SinirliErisim;
+    use AileAnaSayfasi;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.periyodik-kontrol';
 
@@ -127,7 +138,7 @@ class PeriyodikKontrol extends Page
         return config('isg.periyodik_kontrol.periyot_secenekleri', []);
     }
 
-    /** @return \Illuminate\Support\Collection<int, IsEkipmani> Ham (filtresiz) ekipman listesi — KPI için. */
+    /** @return Collection<int, IsEkipmani> Ham (filtresiz) ekipman listesi — KPI için. */
     #[Computed]
     public function tumEkipmanlar()
     {
@@ -195,9 +206,12 @@ class PeriyodikKontrol extends Page
             ? $this->firma->talimatlar()->get(['id', 'baslik'])->keyBy(fn ($t) => EkipmanKatalogu::norm($t->baslik))
             : collect();
 
+        $hazirAfisler = EkipmanAfisKutuphanesi::hazirAfisler();
+
         $satirlar = ($q ?? collect())
             ->filter(fn (IsEkipmani $e) => ! $this->durumFiltre || $e->vizeDurumu() === $this->durumFiltre)
             ->map(fn (IsEkipmani $e) => [
+                'afis' => EkipmanAfisKutuphanesi::ekipmanAfisi($e, $hazirAfisler)?->id,
                 'talimatlar' => collect(EkipmanKatalogu::talimatSablonlari($e->tip))
                     ->map(fn (array $s) => ['baslik' => $s['baslik'], 'id' => $firmaTalimatlari->get(EkipmanKatalogu::norm($s['baslik']))?->id])
                     ->all(),
@@ -283,7 +297,7 @@ class PeriyodikKontrol extends Page
     {
         $talimat = $this->firma?->talimatlar()->find($id);
 
-        return $talimat ? \App\Support\TalimatUretici::pdf($talimat) : null;
+        return $talimat ? TalimatUretici::pdf($talimat) : null;
     }
 
     /** Satırdaki "Günlük form" — yalnız bu makinenin boş günlük kontrol formu. */
@@ -292,6 +306,19 @@ class PeriyodikKontrol extends Page
         return $this->firma && $this->firma->isEkipmanlari()->whereKey($ekipmanId)->exists()
             ? GunlukEkipmanKontrolUretici::pdf($this->firma, $ekipmanId)
             : null;
+    }
+
+    /** Satırdaki "Güvenlik afişi" — firma logosu ve ekipman QR'ı ile A4 afiş (App\Support\EkipmanAfisKutuphanesi). */
+    public function afisPdf(int $ekipmanId)
+    {
+        $e = $this->firma?->isEkipmanlari()->whereKey($ekipmanId)->first();
+        $afis = $e ? EkipmanAfisKutuphanesi::ekipmanAfisi($e) : null;
+        if (! $afis) {
+            return null;
+        }
+        $icerik = EkipmanAfisKutuphanesi::pdfIcerik($afis, $e);
+
+        return response()->streamDownload(fn () => print ($icerik), EkipmanAfisKutuphanesi::dosyaAdi($afis, $e), ['Content-Type' => 'application/pdf']);
     }
 
     /** Katalogda talimatı olup firmada eksik olanları ekler (satırdaki "Talimatı ekle"). */
@@ -310,7 +337,7 @@ class PeriyodikKontrol extends Page
     public function talimatTaslagiHazirla(int $id): void
     {
         $e = $this->ekipman($id);
-        if (! \App\Support\GeminiTalimatUretici::aktifMi()) {
+        if (! GeminiTalimatUretici::aktifMi()) {
             Notification::make()->title('Yapay zekâ anahtarı tanımlı değil')->danger()->send();
 
             return;
@@ -321,7 +348,7 @@ class PeriyodikKontrol extends Page
             return;
         }
 
-        $sablon = \App\Support\EkipmanTalimatTaslagi::olustur($e->tip);
+        $sablon = EkipmanTalimatTaslagi::olustur($e->tip);
         $this->listeyiYenile();
 
         $sablon
@@ -380,7 +407,7 @@ class PeriyodikKontrol extends Page
                             $t = collect(config('isg.periyodik_kontrol.tipler.'.$get('kategori'), []))->firstWhere('ad', $get('tip'));
 
                             return $t
-                                ? new \Illuminate\Support\HtmlString('<strong>'.e($t['standart']).'</strong><br><span style="color:#666">'.e($t['deney']).'</span>')
+                                ? new HtmlString('<strong>'.e($t['standart']).'</strong><br><span style="color:#666">'.e($t['deney']).'</span>')
                                 : 'Tip seçilince otomatik gelir.';
                         }),
 
@@ -622,7 +649,7 @@ class PeriyodikKontrol extends Page
     /**
      * Operatör / bakım alanları (12.11.2026) — yeni ekipman ve "Ayarlar" formunda ortak.
      *
-     * @return array<int, \Filament\Forms\Components\Field>
+     * @return array<int, Field>
      */
     private function operatorAlanlari(bool $duzenleme = false): array
     {
@@ -643,7 +670,7 @@ class PeriyodikKontrol extends Page
     private function pinHazirla(array $data): array
     {
         if (filled($data['qr_pin'] ?? null)) {
-            $data['qr_pin'] = \Illuminate\Support\Facades\Hash::make($data['qr_pin']);
+            $data['qr_pin'] = Hash::make($data['qr_pin']);
         } else {
             unset($data['qr_pin']);
         }
@@ -698,8 +725,8 @@ class PeriyodikKontrol extends Page
                 TextInput::make('konum')->label('Konum / bölüm'),
                 TextInput::make('kapasite')->label('Kapasite'),
                 ...$this->operatorAlanlari(true),
-                \Filament\Forms\Components\Toggle::make('pin_kaldir')->label('PIN\'i kaldır'),
-                \Filament\Forms\Components\Toggle::make('qr_yenile')->label('QR kodunu yenile')
+                Toggle::make('pin_kaldir')->label('PIN\'i kaldır'),
+                Toggle::make('qr_yenile')->label('QR kodunu yenile')
                     ->helperText('Eski QR etiketleri çalışmaz olur; yeni etiketi yazdırıp makineye asın.'),
             ])
             ->action(function (array $data, array $arguments): void {
@@ -764,7 +791,7 @@ class PeriyodikKontrol extends Page
             return null;
         }
 
-        return Storage::disk('local')->download($e->imzali_belge_yolu, 'imzali-teblig-'.\Illuminate\Support\Str::slug($e->ekipman_adi).'.'.pathinfo($e->imzali_belge_yolu, PATHINFO_EXTENSION));
+        return Storage::disk('local')->download($e->imzali_belge_yolu, 'imzali-teblig-'.Str::slug($e->ekipman_adi).'.'.pathinfo($e->imzali_belge_yolu, PATHINFO_EXTENSION));
     }
 
     public function bakimKapatAction(): Action
@@ -780,7 +807,7 @@ class PeriyodikKontrol extends Page
                     ->findOrFail($arguments['id']);
                 $b->update(['durum' => 'kapali', 'kapanis_zamani' => now(), 'kapanis_notu' => $data['kapanis_notu']]);
                 if ($this->firma && auth()->user()) {
-                    \App\Support\BildirimTarayici::tara(auth()->user(), $this->firma->id);
+                    BildirimTarayici::tara(auth()->user(), $this->firma->id);
                 }
                 $this->listeyiYenile();
                 Notification::make()->title('Kayıt kapatıldı')->success()->send();
@@ -885,7 +912,7 @@ class PeriyodikKontrol extends Page
 
         Notification::make()
             ->title($ekipman->tip.' — bağlantılı işler')
-            ->body(new \Illuminate\Support\HtmlString(collect($satirlar)->map(fn ($s) => e($s))->implode('<br>')))
+            ->body(new HtmlString(collect($satirlar)->map(fn ($s) => e($s))->implode('<br>')))
             ->warning()
             ->persistent()
             ->actions($aksiyonlar)

@@ -131,6 +131,7 @@ class SayfaAileleri
             'ekipman' => [
                 [Pages\PeriyodikKontrol::class, 'Periyodik Kontrol'],
                 [Pages\OrtamOlcumleri::class, 'Ortam Ölçümleri'],
+                [Pages\EkipmanAfisleri::class, 'Ekipman Afişleri'],
             ],
             'dis_paydas' => [
                 [Pages\TaseronYonetimi::class, 'Taşeron / Alt İşveren'],

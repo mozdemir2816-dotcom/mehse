@@ -168,6 +168,11 @@
                                                     <x-filament::icon icon="heroicon-m-minus-circle" class="mehse-belge__ikon" /> <span>Günlük form kütüphanede yok</span>
                                                 </span>
                                             @endif
+                                            @if ($s['afis'] ?? null)
+                                                <button type="button" wire:click="afisPdf({{ $s['id'] }})" class="mehse-belge mehse-belge--var" title="Makinenin yanına asılacak A4 güvenlik afişi (firma logosu + QR)">
+                                                    <x-filament::icon icon="heroicon-m-photo" class="mehse-belge__ikon" /> <span>Güvenlik afişi</span>
+                                                </button>
+                                            @endif
                                             @if ($s['acik_ariza'])
                                                 <button type="button" wire:click="mountAction('ekipmanDetay', { id: {{ $s['id'] }} })" class="mehse-belge mehse-belge--ariza">
                                                     <x-filament::icon icon="heroicon-m-exclamation-triangle" class="mehse-belge__ikon" /> <span>Arızalı — kullanılmamalı</span>

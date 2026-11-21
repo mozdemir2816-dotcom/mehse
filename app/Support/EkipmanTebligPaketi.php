@@ -56,10 +56,15 @@ class EkipmanTebligPaketi
             'dokumanKodu' => static::kod($e, 'TBT'),
         ])->setPaper('a4')->output();
 
+        // 21.11.2026: kütüphanede hazır afişi varsa makinenin yanına asılacak güvenlik afişi de pakete girer.
+        if ($afis = EkipmanAfisKutuphanesi::ekipmanAfisi($e)) {
+            $belgeler["4-guvenlik-afisi-{$ad}.pdf"] = EkipmanAfisKutuphanesi::pdfIcerik($afis, $e);
+        }
+
         return $belgeler;
     }
 
-    /** Üç belge tek ZIP; ekipman "imza bekliyor" olur (tebliğ edilmişse durumu bozulmaz). */
+    /** Belgeler tek ZIP; ekipman "imza bekliyor" olur (tebliğ edilmişse durumu bozulmaz). */
     public static function indir(IsEkipmani $e, ?Carbon $ay = null): StreamedResponse
     {
         $belgeler = static::belgeler($e, $ay);
