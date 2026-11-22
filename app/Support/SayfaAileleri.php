@@ -140,6 +140,7 @@ class SayfaAileleri
             'dis_paydas' => [
                 [Pages\TaseronYonetimi::class, 'Taşeron / Alt İşveren'],
                 [Pages\ZiyaretciYonetimi::class, 'Tesis Giriş / Ziyaretçi Kartı'],
+                [Pages\YoklamaPuantaj::class, 'Günlük Yoklama & Puantaj'],
             ],
             // Satış/üyelik girişleri tek yerde: aday firmalar + web teklif formu + OSGB üyelik başvuruları.
             'pazarlama' => [

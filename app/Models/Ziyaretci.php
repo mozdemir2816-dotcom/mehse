@@ -18,16 +18,56 @@ class Ziyaretci extends Model
 
     protected $guarded = ['id'];
 
-    protected $attributes = ['iptal' => false, 'isg_bilgilendirme' => false];
+    protected $attributes = ['iptal' => false, 'isg_bilgilendirme' => false, 'egitim_zorunlu' => true];
 
     protected $casts = [
         'gecerlilik_baslangic' => 'datetime',
         'gecerlilik_bitis' => 'datetime',
         'giris_zamani' => 'datetime',
         'cikis_zamani' => 'datetime',
+        'egitim_tamamlandi_at' => 'datetime',
         'isg_bilgilendirme' => 'boolean',
+        'egitim_zorunlu' => 'boolean',
+        'test_puani' => 'integer',
+        'test_cevaplari' => 'array',
         'iptal' => 'boolean',
     ];
+
+    /** Ziyaretçi giriş öncesi standart 3 soruluk İSG bilgi testi (N1). */
+    public const BRIFING_SORULARI = [
+        [
+            'soru' => 'Tesis içinde acil durum / yangın alarmı duyduğunuzda ne yapmalısınız?',
+            'secenekler' => [
+                'a' => 'Eşyalarımı toplayıp beklerim',
+                'b' => 'Refakatçimle birlikte işaretli acil çıkıştan toplanma alanına geçerim',
+                'c' => 'Asansörü kullanarak en alt kata inerim',
+            ],
+            'dogru' => 'b',
+        ],
+        [
+            'soru' => 'Üretim / şantiye sahasında kişisel koruyucu donanım (KKD) kullanımı hakkında hangisi doğrudur?',
+            'secenekler' => [
+                'a' => 'Yalnızca çalışanlar için geçerlidir, ziyaretçiler muaf tutulur',
+                'b' => 'Girişte belirtilen KKD\'leri (baret, yelek, gözlük vb.) saha boyunca eksiksiz takmalıyım',
+                'c' => 'Kısa ziyaretlerde takılmasına gerek yoktur',
+            ],
+            'dogru' => 'b',
+        ],
+        [
+            'soru' => 'Tesis içinde sigara içme ve fotoğraf/video çekimi kuralı nedir?',
+            'secenekler' => [
+                'a' => 'Sadece belirlenmiş sigara alanları kullanılabilir; izinsiz çekim ve makinelere temas yasaktır',
+                'b' => 'Her açık alanda serbesttir',
+                'c' => 'Sadece güvenlik görevlisi görürse yasaktır',
+            ],
+            'dogru' => 'a',
+        ],
+    ];
+
+    public function egitimTamamlandiMi(): bool
+    {
+        return ! $this->egitim_zorunlu || $this->egitim_tamamlandi_at !== null || $this->isg_bilgilendirme;
+    }
 
     protected static function booted(): void
     {

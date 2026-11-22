@@ -500,7 +500,7 @@
             <a href="{{ $waLink }}" target="_blank" rel="noopener" class="dugme dugme-yesil dugme-kucuk">{!! $wa !!} WhatsApp Destek</a>
         </div>
     </div>
-    <div class="telif"><div class="kap"><p>© {{ date('Y') }} Mehse İSG. Tüm hakları saklıdır. · <a href="{{ route('kvkk') }}">KVKK Aydınlatma Metni</a> · <a href="{{ route('cerez') }}">Çerez Politikası</a></p></div></div>
+    <div class="telif"><div class="kap"><p>© {{ date('Y') }} Mehse İSG. Tüm hakları saklıdır. · <a href="{{ route('kvkk') }}">KVKK Aydınlatma Metni</a> · <a href="{{ route('cerez') }}">Çerez Politikası</a> · <a href="{{ route('bilgi-guvenligi') }}">Bilgi Güvenliği</a></p></div></div>
 </footer>
 
 <a href="{{ $waLink }}" target="_blank" rel="noopener" class="wa-sabit" aria-label="WhatsApp ile yazın">{!! $wa !!}</a>

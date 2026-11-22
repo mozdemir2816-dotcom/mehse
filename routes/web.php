@@ -10,12 +10,39 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
 
-// Ziyaretçi kartı QR doğrulaması — güvenlik görevlisi giriş yapmadan okutur.
+// Ziyaretçi kartı QR doğrulaması + giriş öncesi İSG brifing & bilgi testi kilidi (N1).
 Route::get('/ziyaretci/{token}', function (string $token) {
     $z = Ziyaretci::query()->with('firma')->where('token', $token)->first();
 
     return response()->view('ziyaretci-dogrula', ['z' => $z], $z ? 200 : 404);
 })->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('ziyaretci.dogrula');
+
+Route::post('/ziyaretci/{token}/test', function (Request $request, string $token) {
+    $z = Ziyaretci::query()->where('token', $token)->firstOrFail();
+    $cevaplar = (array) $request->input('cevaplar', []);
+    $sorular = Ziyaretci::BRIFING_SORULARI;
+    $dogru = 0;
+
+    foreach ($sorular as $i => $s) {
+        if (($cevaplar[$i] ?? null) === $s['dogru']) {
+            $dogru++;
+        }
+    }
+
+    $puan = (int) round(($dogru / max(1, count($sorular))) * 100);
+    if ($puan < 67 || ! $request->boolean('kvkk_onay')) {
+        return back()->with('test_hata', "Test puanınız: %{$puan}. Giriş onayı için tüm kuralları onaylayıp en az 2/3 soruyu doğru yanıtlamalısınız.");
+    }
+
+    $z->update([
+        'isg_bilgilendirme' => true,
+        'egitim_tamamlandi_at' => now(),
+        'test_puani' => $puan,
+        'test_cevaplari' => $cevaplar,
+    ]);
+
+    return back()->with('test_ok', "Tebrikler! İSG giriş brifingi ve bilgi testi (%{$puan}) başarıyla tamamlandı. Kartınız kapıda girişe açıldı.");
+})->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:20,1')->name('ziyaretci.test');
 
 // Uzaktan eğitim belgesi QR doğrulaması — denetçi giriş yapmadan okutur; kişisel veri maskelenir.
 Route::get('/belge-dogrula/{kod}', function (string $kod) {
@@ -95,6 +122,7 @@ Route::view('/', 'tanitim')->name('tanitim');
 Route::get('/tanitim', fn () => redirect(url('/'), 301));
 Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
 Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
+Route::view('/bilgi-guvenligi', 'pages.bilgi-guvenligi')->name('bilgi-guvenligi');
 Route::view('/fiyatlandirma', 'pages.fiyatlandirma')->name('fiyatlandirma');
 Route::get('/demo', [\App\Http\Controllers\UcretsizAraclarController::class, 'canliDemo'])->name('demo');
 Route::get('/araclar/tehlike-sinifi-sorgulama', [\App\Http\Controllers\UcretsizAraclarController::class, 'tehlikeSinifi'])->name('araclar.tehlike');
@@ -121,6 +149,7 @@ Route::get('/sitemap.xml', function () {
             ['adres' => 'https://mehse.com/araclar/fine-kinney-risk-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
+            ['adres' => 'https://mehse.com/bilgi-guvenligi', 'lastmod' => $tarih('pages/bilgi-guvenligi'), 'changefreq' => 'monthly', 'priority' => '0.6'],
             // Sektör sayfaları (config/sektorler.php); içerik config'te olduğundan lastmod = config dosyası tarihi.
             ...collect(array_keys(config('sektorler', [])))->map(fn (string $slug) => [
                 'adres' => 'https://mehse.com/sektor/'.$slug,

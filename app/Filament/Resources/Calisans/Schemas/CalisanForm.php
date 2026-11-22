@@ -59,6 +59,17 @@ class CalisanForm
                     TextInput::make('eposta')->label('E-posta')->email()->maxLength(255),
                     Toggle::make('agir_tehlikeli_iste')->label('Ağır ve tehlikeli işte çalışıyor'),
                     Toggle::make('aktif')->label('Aktif')->default(true),
+                    Select::make('rol_etiketleri')
+                        ->label('İSG Rol & Yetkinlik Rozetleri')
+                        ->options(Calisan::ROL_ETIKETLERI)
+                        ->multiple()
+                        ->searchable()
+                        ->columnSpanFull(),
+                    TextInput::make('myk_belge_no')->label('MYK Belge No')->maxLength(80),
+                    DatePicker::make('myk_gecerlilik')->label('MYK Geçerlilik')->native(false)->displayFormat('d.m.Y'),
+                    DatePicker::make('src_gecerlilik')->label('SRC Geçerlilik')->native(false)->displayFormat('d.m.Y'),
+                    DatePicker::make('psikoteknik_gecerlilik')->label('Psikoteknik Geçerlilik')->native(false)->displayFormat('d.m.Y'),
+                    DatePicker::make('operatorluk_gecerlilik')->label('Operatörlük / G Sınıfı Geçerlilik')->native(false)->displayFormat('d.m.Y'),
                     Textarea::make('notlar')->label('Notlar')->rows(1)->columnSpanFull(),
                 ]),
         ]);

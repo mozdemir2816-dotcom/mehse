@@ -94,4 +94,105 @@ return [
         ],
     ],
 
+    'insaat-ve-santiye' => [
+        'baslik' => 'İnşaat ve Şantiye',
+        'seo_baslik' => 'İnşaat & Şantiye İSG Yazılımı ve Risk Yönetimi | Mehse İSG',
+        'aciklama' => 'İnşaat ve şantiye projelerinde yüksekte çalışma, iskele/kalıp, taşeron evrak takibi, günlük yoklama, iş izni (PTW) ve QR ziyaretçi giriş yönetimi.',
+        'giris' => 'Değişken iş kalemleri ve çoklu taşeron yapısına sahip şantiyelerde yüksekte çalışma, kazı, kaldırma ve alt işveren İSG süreçlerini tek ekrandan sahada yönetiyoruz.',
+        'bolgeler' => ['Türkiye Geneli', 'Bursa', 'İstanbul', 'Ankara', 'İzmir', 'Kocaeli'],
+        'tehlike' => 'Çok Tehlikeli',
+        'nace' => [
+            ['41.20.02', 'İkamet amaçlı binaların inşaatı', 'Çok Tehlikeli'],
+            ['42.11.01', 'Kara yolları, otoyollar ve köprülerin inşaatı', 'Çok Tehlikeli'],
+            ['43.99.15', 'Yapı iskelesi ve çalışma platformu kurma ve sökme', 'Çok Tehlikeli'],
+        ],
+        'riskler' => [
+            ['Yüksekte çalışma ve düşme', 'Yaşam hatları, korkuluk sistemleri, güvenlik ağları, tam vücut emniyet kemeri ve yüksekte çalışma iş izinleri (PTW).'],
+            ['İskele ve kalıp güvenliği', 'TS EN 12810/12811 uyumlu iskele kontrolleri, etiketleme, zemin taşıma gücü ve rüzgar kısıtlamaları.'],
+            ['Kazı ve iksa çalışmaları', 'Şev açısı, iksa projesi, yeraltı elektrik/doğalgaz hatları tespiti ve göçük riskine karşı günlük kontrol.'],
+            ['Kule vinç ve mobil vinçler', 'EKİPNET periyodik kontrolleri, sapan-halat muayenesi, işaretçi-sapancı yetkinlikleri ve yük yolu izolasyonu.'],
+            ['Alt işveren / taşeron yönetimi', 'Şantiyeye girmeden önce SGK bildirgesi, MYK belgeleri, sağlık raporu ve eğitim evraklarının self-servis QR portalıyla doğrulanması.'],
+            ['Günlük şantiye yoklaması', 'Acil tahliye ve göçük/yangın anında sahada fiilen bulunan çalışan ve ziyaretçi sayısının anlık bilinmesi.'],
+        ],
+        'sss' => [
+            ['Şantiyede Sağlık ve Güvenlik Planı (SGP) ne zaman zorunludur?', 'Yapı İşlerinde İş Sağlığı ve Güvenliği Yönetmeliği uyarınca yapı işine başlamadan önce proje hazırlık aşamasında Sağlık ve Güvenlik Planı hazırlanmalı ve şantiye ilerledikçe güncellenmelidir.'],
+            ['Alt işveren çalışanlarının evrakları sahaya girmeden nasıl kontrol edilir?', 'Mehse İSG Taşeron Self-Servis QR Portalı ile alt işveren tüm zorunlu belgelerini (SGK, MYK, EK-2, eğitim) linkten yükler; İSG uzmanı onaylamadan saha girişi açılmaz.'],
+            ['Yüksekte çalışma ve sıcak işler için dijital İş İzni (PTW) kullanabilir miyiz?', 'Evet, İş İzin Formu modülüyle yüksekte çalışma, sıcak iş, kazı ve kapalı alan izinleri kontrol listesi ve onay kilidiyle yönetilir.'],
+        ],
+    ],
+
+    'madencilik-ve-tas-ocagi' => [
+        'baslik' => 'Madencilik ve Taş Ocakları',
+        'seo_baslik' => 'Madencilik & Taş Ocağı İSG Yönetimi | Sağlık ve Güvenlik Dokümanı',
+        'aciklama' => 'Açık ve yeraltı maden işletmeleri ile taş ocaklarında Sağlık ve Güvenlik Dokümanı, patlatma, iş makineleri, toz/gürültü ölçümü ve sağlık gözetimi takibi.',
+        'giris' => 'Ağır iş makineleri, patlatma, şev stabilitesi ve yüksek toz maruziyeti barındıran madencilik sahalarında 6331 ve Maden İşyerleri Yönetmeliğine tam uyumlu dijital takip sunuyoruz.',
+        'bolgeler' => ['Türkiye Geneli', 'Marmara', 'Ege', 'İç Anadolu', 'Karadeniz'],
+        'tehlike' => 'Çok Tehlikeli',
+        'nace' => [
+            ['08.11.01', 'Taş ocakçılığı (mermer, granit, kum taşı vb.)', 'Çok Tehlikeli'],
+            ['08.12.01', 'Çakıl ve kum ocaklarının faaliyetleri', 'Çok Tehlikeli'],
+            ['05.10.01', 'Taş kömürü ve linyit madenciliği', 'Çok Tehlikeli'],
+        ],
+        'riskler' => [
+            ['Şev stabilitesi ve göçük', 'Basamak yüksekliği, şev eğimi, yağış sonrası çatlak denetimleri ve düşen kaya bariyerleri.'],
+            ['Ağır iş makineleri', 'Ekskavatör, yükleyici ve kaya kamyonları için G sınıfı/operatörlük belge vadesi, periyodik kontroller ve kör nokta kuralları.'],
+            ['Toz (silika) ve gürültü', 'Kişisel maruziyet ölçümleri, sulu bastırma sistemleri, FFP3 solunum koruyucular ve periyodik SFT/odyometri/akciğer grafisi takibi.'],
+            ['Patlatma ve ateşleme', 'Ateşleyici yeterlilik belgeleri, patlayıcı madde depolama güvenliği ve patlatma öncesi alan tahliye protokolleri.'],
+            ['Acil durum ve kurtarma', 'Sertifikalı ilkyardımcı, tahlisiye/kurtarma ekibi kontenjanları, revir/ecza dolabı stoğu ve yıllık tatbikatlar.'],
+        ],
+        'sss' => [
+            ['Maden işyerlerinde Sağlık ve Güvenlik Dokümanı (SGD) nasıl takip edilir?', 'Maden İşyerlerinde İş Sağlığı ve Güvenliği Yönetmeliği gereği çalışma başlamadan önce hazırlanması zorunlu olan risk değerlendirmesi, acil durum ve ekipman kayıtları Mehse İSG üzerinde sürüm kilidiyle saklanır.'],
+            ['İş makinesi operatörlerinin belge geçerlilikleri otomatik hatırlatılır mı?', 'Evet, çalışan kartındaki MYK, SRC, Psikoteknik ve Operatörlük belge geçerlilik tarihleri Yasal Takvim üzerinden otomatik uyarı üretir.'],
+        ],
+    ],
+
+    'enerji-ve-tersane' => [
+        'baslik' => 'Enerji ve Tersane',
+        'seo_baslik' => 'Enerji Santralleri & Tersane İSG Yönetimi | LOTO, PTW ve ATEX',
+        'aciklama' => 'GES, RES, termik santraller ve tersane sahalarında yüksek gerilim, kapalı alan, sıcak iş izni (PTW), ATEX/PKD ve çoklu yüklenici İSG kontrolü.',
+        'giris' => 'Yüksek enerjili elektrik tesisleri, rüzgar/güneş santralleri ve tersane bakım havuzlarında kapalı alan, sıcak iş ve yüksek gerilim risklerini izin ve kanıt disipliniyle yönetiyoruz.',
+        'bolgeler' => ['Türkiye Geneli', 'Yalova', 'Tuzla', 'Kocaeli', 'İzmir', 'Bursa'],
+        'tehlike' => 'Çok Tehlikeli',
+        'nace' => [
+            ['35.11.19', 'Elektrik enerjisi üretimi (GES, RES, HES, termik)', 'Çok Tehlikeli'],
+            ['30.11.01', 'Gemi ve yüzer yapıların inşası ve onarımı (tersane)', 'Çok Tehlikeli'],
+            ['35.12.01', 'Elektrik enerjisinin iletimi ve dağıtımı', 'Çok Tehlikeli'],
+        ],
+        'riskler' => [
+            ['Yüksek gerilim ve LOTO', 'Enerji kesme, kilitleme-etiketleme, gerilim yokluğu kontrolü, topraklama ve ark flaş KKD matrisi.'],
+            ['Kapalı alan ve gaz ölçümü', 'Gemi tankları ve menhollerde O₂/LEL/CO/H₂S ölçümü, gözcü ataması ve kurtarma ekipmanı.'],
+            ['Sıcak işler ve yangın', 'Kesme/kaynak iş izinleri (PTW), gaz-free kontrolü, yangın gözcüsü ve kıvılcım örtüleri.'],
+            ['Patlayıcı ortam (ATEX/PKD)', 'Boya, yakıt ve akü odalarında bölge sınıflandırması ve Patlamadan Korunma Dokümanı sicili.'],
+            ['Çoklu alt yüklenici koordinasyonu', 'Sahaya giren onlarca alt yüklenicinin eş zamanlı belge, eğitim ve günlük yoklama kontrolü.'],
+        ],
+        'sss' => [
+            ['Tersane ve enerji tesislerinde kapalı alan / sıcak iş izinleri nasıl yönetilir?', 'İş İzin Formu (PTW) modülünde ön kontrol maddeleri tamamlanmadan ve "uygun değil" kalemler giderilmeden izin onaylanmaz.'],
+            ['Yabancı veya dış ziyaretçiler sahaya girmeden İSG brifingi alabilir mi?', 'Evet, Ziyaretçi QR Brifing & Bilgi Testi kilidi ile ziyaretçi testi geçmeden kapı geçiş onayı açılmaz.'],
+        ],
+    ],
+
+    'gida-ve-uretim' => [
+        'baslik' => 'Gıda ve Fabrika Üretimi',
+        'seo_baslik' => 'Gıda & Üretim Fabrikaları İSG Yönetimi | Hijyen, Makine ve Revir',
+        'aciklama' => 'Gıda üretim ve imalat fabrikalarında makine emniyeti, hijyen eğitimleri, portör/sağlık gözetimi, revir/ecza dolabı ve kimyasal SDS takibi.',
+        'giris' => 'Kesintisiz vardiya düzeninde çalışan gıda ve imalat tesislerinde makine emniyeti, hijyen/sağlık gözetimi ve BRC/IFS/ISO 45001 denetimlerine hazır dijital kayıt sistemi kuruyoruz.',
+        'bolgeler' => ['Türkiye Geneli', 'Bursa', 'İstanbul', 'İzmir', 'Konya', 'Gaziantep'],
+        'tehlike' => 'Tehlikeli',
+        'nace' => [
+            ['10.89.90', 'Gıda maddelerinin imalatı ve paketlenmesi', 'Tehlikeli'],
+            ['10.51.01', 'Süt ve süt ürünleri imalatı', 'Tehlikeli'],
+            ['22.22.01', 'Plastik ambalaj malzemeleri imalatı', 'Tehlikeli'],
+        ],
+        'riskler' => [
+            ['Makine ve konveyör güvenliği', 'Sıkışma noktaları, acil durdurma halatları, temizlik/bakım sırasında enerji kesimi.'],
+            ['Kaygan zemin ve soğuk depolar', 'Su/yağ kaynaklı kayma riski, soğuk hava deposu termal KKD\'leri ve içeride kilitli kalma alarmları.'],
+            ['Temizlik ve dezenfeksiyon kimyasalları', 'Asit/alkali karışım riski, güncel GBF/SDS envanteri, göz ve vücut duşları.'],
+            ['Hijyen ve sağlık gözetimi', 'Gıda hijyeni eğitimleri, periyodik sağlık/portör kontrolleri, revir protokol defteri ve aşı takibi.'],
+        ],
+        'sss' => [
+            ['Gıda işletmelerinde hijyen ve İSG eğitimleri tek panelden yönetilebilir mi?', 'Evet, Canlı QR Sınav ve Uzaktan Eğitim modüllerinde Temel İSG yanında 4 saatlik İşyeri ve Gıda Hijyeni sertifikaları üretilir.'],
+            ['Revir, ecza dolabı SKT ve aşı takibi mevcut mu?', 'Evet, Sağlık Gözetimi ekranındaki Revir/Protokol Defteri, Ecza Dolabı SKT ve Aşı Takibi sekmelerinden tüm hekim/DSP süreçleri izlenir.'],
+        ],
+    ],
+
 ];

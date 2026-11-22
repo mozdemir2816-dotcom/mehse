@@ -137,6 +137,13 @@ class YasalTakvim
         $toplu('kkd', 'KKD yenileme', 'KKD zimmeti', $firma->kkdZimmetleri()->where('durum', 'teslim_edildi')->get()->map(fn (KkdZimmet $z) => $z->vade()),
             static::url(fn () => KkdTakip::getUrl(['firma' => $firma->id])));
 
+        // N3: Çalışan kişisel mesleki belgeleri (MYK, SRC, Psikoteknik, Operatörlük)
+        $meslekiTarihler = $firma->calisanlar()->where('aktif', true)
+            ->get(['myk_gecerlilik', 'src_gecerlilik', 'psikoteknik_gecerlilik', 'operatorluk_gecerlilik'])
+            ->flatMap(fn ($c) => [$c->myk_gecerlilik, $c->src_gecerlilik, $c->psikoteknik_gecerlilik, $c->operatorluk_gecerlilik]);
+        $toplu('egitim', 'Mesleki belge (MYK/SRC/Psikoteknik)', 'mesleki belge', $meslekiTarihler,
+            static::url(fn () => \App\Filament\Resources\Calisans\CalisanResource::getUrl('index')));
+
         // İSG-KATİP sözleşmesi
         $sozlesme = IsgKatipSozlesmesi::query()->where('firma_id', $firma->id)->aktif()->whereNotNull('bitis_tarihi')->orderBy('bitis_tarihi')->first();
         if ($sozlesme) {

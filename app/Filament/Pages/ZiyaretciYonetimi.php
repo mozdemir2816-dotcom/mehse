@@ -70,6 +70,10 @@ class ZiyaretciYonetimi extends Page
 
     public bool $isgBilgilendirme = false;
 
+    public bool $egitimZorunlu = true;
+
+    public ?string $brifingVideoUrl = null;
+
     public ?string $verilenKkd = null;
 
     public ?string $notlar = null;
@@ -220,6 +224,9 @@ class ZiyaretciYonetimi extends Page
             'gecerlilik_baslangic' => Carbon::parse($this->baslangic),
             'gecerlilik_bitis' => Carbon::parse($this->bitis),
             'isg_bilgilendirme' => $this->isgBilgilendirme,
+            'egitim_zorunlu' => $this->egitimZorunlu,
+            'brifing_video_url' => trim((string) $this->brifingVideoUrl) ?: null,
+            'egitim_tamamlandi_at' => $this->isgBilgilendirme ? now() : null,
             'verilen_kkd' => $this->verilenKkd,
             'notlar' => $this->notlar,
         ]);
@@ -240,6 +247,17 @@ class ZiyaretciYonetimi extends Page
     public function giris(int $id): void
     {
         $z = $this->ziyaretci($id);
+
+        if ($z->egitim_zorunlu && ! $z->egitimTamamlandiMi()) {
+            Notification::make()
+                ->title('İSG Brifing Testi Tamamlanmamış')
+                ->body('Ziyaretçi giriş öncesi QR linkinden güvenlik brifingini ve bilgi testini tamamlamadan giriş onayı verilemez: '.$z->dogrulamaAdresi())
+                ->danger()
+                ->persistent()
+                ->send();
+
+            return;
+        }
 
         if (! in_array($z->durum(), ['gecerli', 'planli'], true)) {
             Notification::make()->title('Bu kartla giriş yapılamaz')->body($z->durumEtiketi())->danger()->send();

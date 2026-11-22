@@ -34,6 +34,11 @@ class Calisan extends Model implements AuthenticatableContract, FilamentUser, Ha
         'ise_giris' => 'date',
         'isten_cikis' => 'date',
         'dogum_tarihi' => 'date',
+        'myk_gecerlilik' => 'date',
+        'src_gecerlilik' => 'date',
+        'psikoteknik_gecerlilik' => 'date',
+        'operatorluk_gecerlilik' => 'date',
+        'rol_etiketleri' => 'array',
         'agir_tehlikeli_iste' => 'boolean',
         'aktif' => 'boolean',
         'sifre_belirlendi_at' => 'datetime',
@@ -42,6 +47,48 @@ class Calisan extends Model implements AuthenticatableContract, FilamentUser, Ha
     ];
 
     public const CINSIYETLER = ['erkek' => 'Erkek', 'kadin' => 'Kadın'];
+
+    /** Çalışan rol rozetleri (N3). */
+    public const ROL_ETIKETLERI = [
+        'ilkyardimci' => 'İlk Yardımcı',
+        'kurtarma' => 'Kurtarma Ekibi',
+        'sondurme' => 'Söndürme Ekibi',
+        'koruma' => 'Koruma Ekibi',
+        'temsilci' => 'Çalışan Temsilcisi',
+        'forklift' => 'Forklift Operatörü',
+        'vinc' => 'Vinç Operatörü',
+        'yuksekte' => 'Yüksekte Çalışan',
+        'elektrik' => 'Yetkili Elektrikçi',
+        'kaynak' => 'Kaynak Operatörü',
+    ];
+
+    /** Kişisel mesleki belge geçerlilikleri ve kalan gün bilgisi (N3). */
+    public function meslekiBelgeler(): array
+    {
+        $bugun = \Illuminate\Support\Carbon::today();
+        $alanlar = [
+            'MYK' => $this->myk_gecerlilik,
+            'SRC' => $this->src_gecerlilik,
+            'Psikoteknik' => $this->psikoteknik_gecerlilik,
+            'Operatörlük' => $this->operatorluk_gecerlilik,
+        ];
+
+        $sonuc = [];
+        foreach ($alanlar as $ad => $tarih) {
+            if (! $tarih) {
+                continue;
+            }
+            $kalan = (int) $bugun->diffInDays($tarih->copy()->startOfDay(), false);
+            $sonuc[] = [
+                'ad' => $ad,
+                'tarih' => $tarih->format('d.m.Y'),
+                'kalan_gun' => $kalan,
+                'durum' => $kalan < 0 ? 'dolmus' : ($kalan <= 30 ? 'yaklasan' : 'gecerli'),
+            ];
+        }
+
+        return $sonuc;
+    }
 
     /** Özel durum alanı serbest metin; bunlar yalnız öneri listesi. */
     public const OZEL_DURUM_ONERILERI = ['Engelli', 'Hükümlü', 'Eski hükümlü', 'Gebe / emziren', 'Genç çalışan (18 yaş altı)', 'Kronik hastalık'];

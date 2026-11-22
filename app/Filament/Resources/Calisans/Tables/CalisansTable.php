@@ -33,6 +33,17 @@ class CalisansTable
                 TextColumn::make('firma.unvan')->label('Firma')->searchable()->sortable()->limit(26)->tooltip(fn (Calisan $r) => $r->firma?->unvan),
                 TextColumn::make('gorev')->visibleFrom('md')->label('Görev / Departman')->searchable(['gorev', 'departman'])->placeholder('—')
                     ->description(fn (Calisan $r) => $r->departman ?: null)->limit(24)->wrap(),
+                TextColumn::make('rol_etiketleri')->visibleFrom('md')->label('Roller & Mesleki Belge')
+                    ->getStateUsing(function (Calisan $r): string {
+                        $parcalar = collect($r->rol_etiketleri ?? [])->map(fn ($k) => Calisan::ROL_ETIKETLERI[$k] ?? $k)->all();
+                        foreach ($r->meslekiBelgeler() as $b) {
+                            $parcalar[] = $b['ad'].': '.($b['kalan_gun'] < 0 ? abs($b['kalan_gun']).'g geçti' : $b['kalan_gun'].'g');
+                        }
+
+                        return $parcalar ? implode(' · ', $parcalar) : '—';
+                    })
+                    ->wrap()
+                    ->toggleable(),
                 \Filament\Tables\Columns\ViewColumn::make('isg_durumu')->label('İSG Durumu')->view('filament.tables.columns.calisan-isg-durumu')
                     ->extraCellAttributes(['style' => 'min-width:15rem']),
                 TextColumn::make('sube')->visibleFrom('md')->label('Şube')->searchable()->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
@@ -95,6 +106,11 @@ class CalisansTable
                         ->label('KKD Zimmet Formu')
                         ->icon('heroicon-o-shield-check')
                         ->url(fn (Calisan $record) => \App\Filament\Pages\KkdFormu::getUrl(['firma' => $record->firma_id])),
+                    Action::make('ozlukZip')
+                        ->label('Özlük Dosyası (.zip)')
+                        ->icon('heroicon-o-archive-box-arrow-down')
+                        ->color('success')
+                        ->action(fn (Calisan $record) => \App\Support\CalisanOzlukZipUretici::indir($record)),
                     Action::make('pasifeAl')->label('Pasife Al')->icon('heroicon-o-pause-circle')->color('gray')
                         ->visible(fn (Calisan $record) => $record->aktif)
                         ->requiresConfirmation()

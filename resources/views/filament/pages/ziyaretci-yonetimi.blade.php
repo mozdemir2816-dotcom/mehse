@@ -76,16 +76,26 @@
                 <input type="text" wire:model="verilenKkd" placeholder="Örn. Baret, yelek, gözlük" style="{{ $inp }}">
             </div>
             <div>
+                <label style="{{ $lbl }}">İSG Brifing Video Linki (opsiyonel)</label>
+                <input type="url" wire:model="brifingVideoUrl" placeholder="https://..." style="{{ $inp }}">
+            </div>
+            <div>
                 <label style="{{ $lbl }}">Not</label>
                 <input type="text" wire:model="notlar" style="{{ $inp }}">
             </div>
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1rem">
-            <label style="display:flex;align-items:center;gap:.45rem;font-size:.85rem;cursor:pointer">
-                <input type="checkbox" wire:model="isgBilgilendirme">
-                Ziyaretçiye İSG kuralları ve acil durumda yapılacaklar anlatıldı
-            </label>
+            <div style="display:flex;gap:1rem;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:.45rem;font-size:.84rem;cursor:pointer;font-weight:600;color:#1d4ed8">
+                    <input type="checkbox" wire:model="egitimZorunlu">
+                    Giriş öncesi QR İSG Brifing &amp; Bilgi Testi zorunlu (kilit)
+                </label>
+                <label style="display:flex;align-items:center;gap:.45rem;font-size:.84rem;cursor:pointer">
+                    <input type="checkbox" wire:model="isgBilgilendirme">
+                    Kapıda yüz yüze bilgilendirme yapıldı
+                </label>
+            </div>
             <x-filament::button icon="heroicon-o-qr-code" wire:click="gecisOlustur">Geçiş Oluştur (Kartı İndir)</x-filament::button>
         </div>
     </x-filament::section>
