@@ -46,7 +46,7 @@ class TesisGuvenligiMerkeziTest extends TestCase
         $kkd = SayfaAileleri::sekmeler([KkdTakip::class]);
         $this->assertSame(['Zimmet & Stok', 'KKD Formu', 'Seçim Matrisi'], array_column($kkd, 'etiket'));
 
-        $this->assertSame(['Periyodik Kontrol', 'Ortam Ölçümleri', 'Ekipman Afişleri', 'Toplu Makine Paketi'], array_column(SayfaAileleri::sekmeler([OrtamOlcumleri::class]), 'etiket'));
+        $this->assertSame(['Periyodik Kontrol', 'Ortam Ölçümleri', 'Ekipman Afişleri', 'Toplu Makine Paketi', 'Matbu Evrak Paketi'], array_column(SayfaAileleri::sekmeler([OrtamOlcumleri::class]), 'etiket'));
         $this->assertSame(['Taşeron / Alt İşveren', 'Tesis Giriş / Ziyaretçi Kartı'], array_column(SayfaAileleri::sekmeler([ZiyaretciYonetimi::class]), 'etiket'));
 
         // Tabela güvenlik levhasıdır: Acil Durum & Yangın merkezinin sekmesi.

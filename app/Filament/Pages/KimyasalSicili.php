@@ -2,11 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SinirliErisim;
+use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\IsgAfis;
 use App\Models\KimyasalKutuphane;
 use App\Models\KimyasalUrun;
-use App\Filament\Support\ImzaSecenegi;
 use App\Support\KimyasalEnvanterUretici;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -26,7 +27,6 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 
-use App\Filament\Concerns\SinirliErisim;
 /**
  * Kimyasal Sicili — işyeri kimyasal envanteri (SDS / GHS) + İSG afiş / pano
  * kütüphanesi. Firma seçilir, kimyasallar SDS dosyasıyla eklenir, envanter PDF'i
@@ -34,7 +34,7 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class KimyasalSicili extends Page
 {
-    use \App\Filament\Concerns\SinirliErisim;
+    use SinirliErisim;
 
     protected string $view = 'filament.pages.kimyasal-sicili';
 
@@ -197,6 +197,14 @@ class KimyasalSicili extends Page
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
                 ->url(fn () => KimyasalYonetimi::getUrl(array_filter(['firma' => $this->firmaId]))),
+
+            Action::make('matbuEvrak')
+                ->label('Matbu Evrak Paketi')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->tooltip('Ekipman ve kimyasalların tüm evrakını tek PDF olarak indir')
+                ->visible(fn () => $this->firma !== null)
+                ->url(fn () => MatbuEvrakPaketi::getUrl(['firma' => $this->firmaId])),
 
             Action::make('kimyasalEkle')
                 ->label('Kimyasal Ekle')

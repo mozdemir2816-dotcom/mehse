@@ -367,6 +367,14 @@ class PeriyodikKontrol extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('matbuEvrak')
+                ->label('Matbu Evrak Paketi')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->tooltip('Ekipman ve kimyasalların tüm evrakını tek PDF olarak indir')
+                ->visible(fn () => $this->firma !== null)
+                ->url(fn () => MatbuEvrakPaketi::getUrl(['firma' => $this->firmaId])),
+
             Action::make('kaydet')
                 ->label('Kaydet')
                 ->icon('heroicon-o-check')

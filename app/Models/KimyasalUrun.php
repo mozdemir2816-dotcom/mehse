@@ -25,6 +25,10 @@ class KimyasalUrun extends Model
         'sds_tarihi' => 'date',
         'sonraki_gozden_gecirme' => 'date',
         'aktif' => 'boolean',
+        'ozet' => 'array',
+        'ozet_yz_taslak' => 'boolean',
+        'ozet_onaylandi_at' => 'datetime',
+        'evrak_cikti_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -68,5 +72,25 @@ class KimyasalUrun extends Model
             $gun <= KullaniciAyarlari::esik('kimyasal') => 'yaklasan',
             default => 'guncel',
         };
+    }
+
+    /** MSDS özeti (afiş + özet sayfası için yeterli içerik) var mı? */
+    public function ozetVarMi(): bool
+    {
+        return filled($this->ozet['ilk_yardim'] ?? null) || filled($this->ozet['tehlikeler'] ?? null);
+    }
+
+    public function ozetOnayBekliyorMu(): bool
+    {
+        return $this->ozetVarMi() && $this->ozet_yz_taslak && ! $this->ozet_onaylandi_at;
+    }
+
+    /** Afişte basılacak GHS kodları: özetteki, yoksa üründe işaretli olanlar (ghs01–ghs09). */
+    public function ghsKodlari(): array
+    {
+        $kodlar = filled($this->ozet['ghs'] ?? null) ? $this->ozet['ghs'] : ($this->ghs ?? []);
+
+        return collect($kodlar)->map(fn ($k) => strtolower(trim((string) $k)))
+            ->filter(fn ($k) => preg_match('/^ghs0[1-9]$/', $k))->unique()->values()->all();
     }
 }

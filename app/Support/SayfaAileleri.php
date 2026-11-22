@@ -133,6 +133,7 @@ class SayfaAileleri
                 [Pages\OrtamOlcumleri::class, 'Ortam Ölçümleri'],
                 [Pages\EkipmanAfisleri::class, 'Ekipman Afişleri'],
                 [Pages\TopluMakinePaketi::class, 'Toplu Makine Paketi'],
+                [Pages\MatbuEvrakPaketi::class, 'Matbu Evrak Paketi'],
             ],
             'dis_paydas' => [
                 [Pages\TaseronYonetimi::class, 'Taşeron / Alt İşveren'],

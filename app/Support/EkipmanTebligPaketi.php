@@ -23,8 +23,11 @@ class EkipmanTebligPaketi
 {
     public const IMZALI_KLASOR = 'ekipman-teblig';
 
-    /** @return array<string, string> dosya adı => PDF içeriği (talimat / form yoksa o belge atlanır) */
-    public static function belgeler(IsEkipmani $e, ?Carbon $ay = null): array
+    /**
+     * @param  bool  $tutanakli  false: ekipman tebliğ tutanağı atlanır (firma Matbu Evrak Paketi tek ortak tutanak basar)
+     * @return array<string, string> dosya adı => PDF içeriği (talimat / form yoksa o belge atlanır)
+     */
+    public static function belgeler(IsEkipmani $e, ?Carbon $ay = null, bool $tutanakli = true): array
     {
         $e->loadMissing('firma.igu', 'firma.user');
         $ay ??= Carbon::today()->startOfMonth();
@@ -50,11 +53,13 @@ class EkipmanTebligPaketi
             ])->setPaper('a4', 'landscape')->output();
         }
 
-        $belgeler["3-teblig-tutanagi-{$ad}.pdf"] = Pdf::loadView('pdf.ekipman.teblig-tutanagi', $ortak + [
-            'talimat' => $talimat,
-            'form' => $form,
-            'dokumanKodu' => static::kod($e, 'TBT'),
-        ])->setPaper('a4')->output();
+        if ($tutanakli) {
+            $belgeler["3-teblig-tutanagi-{$ad}.pdf"] = Pdf::loadView('pdf.ekipman.teblig-tutanagi', $ortak + [
+                'talimat' => $talimat,
+                'form' => $form,
+                'dokumanKodu' => static::kod($e, 'TBT'),
+            ])->setPaper('a4')->output();
+        }
 
         // 21.11.2026: kütüphanede hazır afişi varsa makinenin yanına asılacak güvenlik afişi de pakete girer.
         if ($afis = EkipmanAfisKutuphanesi::ekipmanAfisi($e)) {

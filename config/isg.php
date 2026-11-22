@@ -508,6 +508,16 @@ return [
             'ghs08' => 'GHS08 — Sağlığa uzun vadeli tehdit (KMR)',
             'ghs09' => 'GHS09 — Çevreye zararlı (sucul)',
         ],
+        // Kimyasal afişi / MSDS özeti KKD listesi (22.11.2026) — Gemini yalnız bu adlardan seçer.
+        'kkd' => [
+            'Koruyucu gözlük',
+            'Yüz siperi',
+            'Kimyasal koruyucu eldiven',
+            'Solunum maskesi (filtreli)',
+            'Toz maskesi',
+            'Kimyasal koruyucu önlük / tulum',
+            'İş ayakkabısı / çizme',
+        ],
     ],
 
     /*
