@@ -77,14 +77,14 @@ class MatbuEvrakPaketi extends Page
         return $this->firma ? Paket::kimyasallar($this->firma) : collect();
     }
 
-    /** @return Collection<int, KimyasalUrun> */
+    /** @return Collection<int, KimyasalUrun> özeti olmayanlar + MSDS'si yüklendiği/değiştiği için özeti yenilenmesi gerekenler */
     #[Computed]
     public function ozetsizler(): Collection
     {
-        return $this->kimyasallar->reject->ozetVarMi()->values();
+        return $this->kimyasallar->filter(fn (KimyasalUrun $k) => ! $k->ozetVarMi() || $k->ozetEskiMi())->values();
     }
 
-    /** @return array<int, string> */
+    /** @return array<int, array{baslik: string, istem: string}> */
     #[Computed]
     public function istemler(): array
     {

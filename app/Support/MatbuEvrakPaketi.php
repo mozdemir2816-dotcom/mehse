@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *
  *   Kapak + içindekiler + ortak teslim/tebliğ tutanağı (işveren imzası)
  *   Her ekipman: çalışma talimatı, aylık günlük kontrol çizelgesi (yatay), güvenlik afişi
- *   Her kimyasal: kimyasal afişi, MSDS (GBF) özeti
+ *   Her kimyasal: kullanım alanına asılan tek sayfalık MSDS özeti afişi
  *
  * Basılan kayıt "gönderildi" olur (ekipman teblig_cikti_at, kimyasal evrak_cikti_at); boş olanlar
  * "yeni eklenen, evrakı gönderilmemiş" sayılır ve "Yalnız yenileri" ile ayrıca basılabilir.
@@ -83,8 +83,8 @@ class MatbuEvrakPaketi
             if (! $k->ozetVarMi()) {
                 continue; // özeti olmayan kimyasalın basılacak içeriği yok; sayfada "MSDS özeti eksik" uyarısı çıkar
             }
-            $bolumler[] = ['grup' => 'Kimyasal', 'konu' => $k->urun_adi, 'belge' => 'Kimyasal güvenlik afişi', 'pdf' => KimyasalOzetleri::afisPdf($k)];
-            $bolumler[] = ['grup' => 'Kimyasal', 'konu' => $k->urun_adi, 'belge' => 'MSDS (GBF) özeti', 'pdf' => KimyasalOzetleri::ozetPdf($k)];
+            // 22.11.2026 kullanıcı kararı: kimyasal başına tek belge — kullanım alanına asılan tek sayfalık MSDS özeti afişi.
+            $bolumler[] = ['grup' => 'Kimyasal', 'konu' => $k->urun_adi, 'belge' => 'MSDS özeti afişi (kullanım alanına asılır)', 'pdf' => KimyasalOzetleri::afisPdf($k)];
         }
 
         if ($bolumler === []) {

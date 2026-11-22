@@ -9,6 +9,7 @@ use App\Models\KimyasalUrun;
 use App\Models\User;
 use App\Support\KimyasalOzetleri;
 use App\Support\MatbuEvrakPaketi;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -65,9 +66,36 @@ class MatbuEvrakPaketiTest extends TestCase
         $istemler = KimyasalOzetleri::istemler($urunler);
 
         $this->assertCount(2, $istemler);
-        $this->assertStringContainsString('id '.$urunler[0]->id.': Ürün 1', $istemler[0]);
-        $this->assertStringContainsString('(parça 2/2)', $istemler[1]);
-        $this->assertStringContainsString('Kimyasal koruyucu eldiven', $istemler[0]);
+        $this->assertStringContainsString('id '.$urunler[0]->id.': Ürün 1', $istemler[0]['istem']);
+        $this->assertStringContainsString('(2/2)', $istemler[1]['baslik']);
+        $this->assertStringContainsString('Kimyasal koruyucu eldiven', $istemler[0]['istem']);
+        $this->assertStringContainsString('KULLANILDIĞI ALANA asılacak', $istemler[0]['istem']);
+    }
+
+    public function test_yuklu_msds_metni_ayri_isteme_girer_ve_msds_degisince_ozet_yenilenmeli_olur(): void
+    {
+        $metin = 'GÜVENLİK BİLGİ FORMU Bölüm 2 H225 Kolay alevlenir sıvı ve buhar. '.str_repeat('Bölüm 4 İlk yardım önlemleri: göze temasında bol suyla yıkayın. ', 8);
+        Storage::disk('public')->put('sds/1/aseton.pdf', Pdf::loadHTML('<p>'.$metin.'</p>')->output());
+        $msdsli = $this->kimyasal('Aseton');
+        $msdsli->update(['sds_dosya_yolu' => 'sds/1/aseton.pdf', 'sds_dosya_adi' => 'aseton.pdf', 'kullanim_alani' => 'Boyahane']);
+        $msdssiz = $this->kimyasal('Tiner');
+
+        $istemler = KimyasalOzetleri::istemler(collect([$msdsli->fresh(), $msdssiz]));
+
+        $this->assertCount(2, $istemler);
+        $this->assertStringContainsString('Aseton', $istemler[0]['baslik']);
+        $this->assertStringContainsString('H225 Kolay alevlenir', $istemler[0]['istem']);
+        $this->assertStringContainsString('YALNIZ aşağıdaki Güvenlik Bilgi Formu', $istemler[0]['istem']);
+        $this->assertStringContainsString('Kullanıldığı alan / iş: Boyahane', $istemler[0]['istem']);
+        $this->assertStringNotContainsString('id '.$msdssiz->id, $istemler[0]['istem']);
+        $this->assertStringContainsString('id '.$msdssiz->id.': Tiner', $istemler[1]['istem']);
+
+        KimyasalOzetleri::iceAktar($this->firma, $this->cevap($msdsli));
+        $msdsli->refresh();
+        $this->assertFalse($msdsli->ozetEskiMi());
+
+        $msdsli->update(['sds_dosya_yolu' => 'sds/1/aseton-rev2.pdf']);
+        $this->assertTrue($msdsli->fresh()->ozetEskiMi());
     }
 
     public function test_cevap_temizlenip_yalniz_bu_firmanin_urunune_yazilir(): void
@@ -130,8 +158,8 @@ class MatbuEvrakPaketiTest extends TestCase
         $this->assertSame(1, $sonuc['ekipman']);
         $this->assertSame(1, $sonuc['kimyasal']);
         $this->assertSame($sonuc['sayfa'], $this->sayfaSayisi($sonuc['pdf']));
-        // kapak + talimat + aylık çizelge + kimyasal afişi + MSDS özeti
-        $this->assertGreaterThanOrEqual(5, $sonuc['sayfa']);
+        // kapak + talimat + aylık çizelge + kimyasal başına tek MSDS özeti afişi
+        $this->assertGreaterThanOrEqual(4, $sonuc['sayfa']);
 
         $this->assertNotNull($e->fresh()->teblig_cikti_at);
         $this->assertNull($pasif->fresh()->teblig_cikti_at);

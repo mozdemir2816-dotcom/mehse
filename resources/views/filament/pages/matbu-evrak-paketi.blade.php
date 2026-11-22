@@ -31,7 +31,7 @@
 
     <p class="mehse-bolum-aciklama" style="max-width:76ch">
         Firmaya eklenen ekipman ve kimyasalların takip edilmesi gereken tüm evrakı tek PDF'te alın, yazdırıp işverene teslim edin:
-        ekipman için çalışma talimatı, aylık günlük kontrol çizelgesi ve güvenlik afişi; kimyasal için güvenlik afişi ve MSDS özeti.
+        ekipman için çalışma talimatı, aylık günlük kontrol çizelgesi ve güvenlik afişi; kimyasal için yüklediğiniz MSDS'den hazırlanan, kullanım alanına asılacak tek sayfalık MSDS özeti afişi.
         Paketin ilk sayfası içindekiler ve işverenin imzalayacağı teslim tutanağıdır.
     </p>
 
@@ -68,7 +68,7 @@
                 </div>
             </div>
             @if ($ozetsizler->isNotEmpty())
-                <p class="mep-soluk" style="margin-top:.6rem">MSDS özeti olmayan {{ $ozetsizler->count() }} kimyasal pakete girmez; aşağıdan özetini hazırlayın.</p>
+                <p class="mep-soluk" style="margin-top:.6rem">MSDS özeti hazırlanacak ya da yenilenecek {{ $ozetsizler->count() }} kimyasal var; özeti olmayanlar pakete girmez. Aşağıdan hazırlayın.</p>
             @endif
         </x-filament::section>
 
@@ -131,7 +131,7 @@
             @else
                 <div style="overflow-x:auto">
                     <table class="mep-tablo">
-                        <thead><tr><th scope="col"><span class="sr-only">Seç</span></th><th scope="col">Kimyasal</th><th scope="col">MSDS özeti</th><th scope="col">Durum</th><th scope="col">Belgeler</th></tr></thead>
+                        <thead><tr><th scope="col"><span class="sr-only">Seç</span></th><th scope="col">Kimyasal</th><th scope="col">MSDS</th><th scope="col">MSDS özeti</th><th scope="col">Durum</th><th scope="col">Belgeler</th></tr></thead>
                         <tbody>
                             @foreach ($kimyasallar as $k)
                                 <tr wire:key="k-{{ $k->id }}">
@@ -143,8 +143,18 @@
                                         <div class="mep-soluk">{{ collect([$k->cas_no ? 'CAS '.$k->cas_no : null, $k->kullanim_alani])->filter()->implode(' — ') }}</div>
                                     </td>
                                     <td>
+                                        @if ($k->sdsVarMi())
+                                            <span class="mep-etiket var">Yüklü{{ $k->sds_tarihi ? ' '.$k->sds_tarihi->format('d.m.Y') : '' }}</span>
+                                        @else
+                                            <span class="mep-etiket yok">Yüklenmedi</span>
+                                            <div class="mep-soluk" style="margin-top:.3rem"><a class="text-primary-600 underline" href="{{ \App\Filament\Pages\KimyasalSicili::getUrl(['firma' => $firma->id]) }}">Kimyasal Sicili</a>'nden yükleyin</div>
+                                        @endif
+                                    </td>
+                                    <td>
                                         @if (! $k->ozetVarMi())
                                             <span class="mep-etiket yok">Yok</span>
+                                        @elseif ($k->ozetEskiMi())
+                                            <span class="mep-etiket bekle">MSDS güncellendi — özeti yenileyin</span>
                                         @elseif ($k->ozetOnayBekliyorMu())
                                             <div class="mep-adim" style="gap:.35rem;align-items:flex-start">
                                                 <span class="mep-etiket bekle">YZ taslağı — onay bekliyor</span>
@@ -166,8 +176,8 @@
                                     <td>
                                         @if ($k->ozetVarMi())
                                             <div class="mep-satir">
-                                                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="kimyasalAfisi({{ $k->id }})">Afiş</x-filament::button>
-                                                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="msdsOzeti({{ $k->id }})">MSDS özeti</x-filament::button>
+                                                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="kimyasalAfisi({{ $k->id }})">MSDS özeti afişi</x-filament::button>
+                                                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrow-down-tray" wire:click="msdsOzeti({{ $k->id }})" tooltip="İmzalı, belge biçiminde özet; İSG dosyasına konur">Dosya nüshası</x-filament::button>
                                             </div>
                                         @endif
                                     </td>
@@ -182,7 +192,7 @@
         @if ($ozetsizler->isNotEmpty())
             <x-filament::section icon="heroicon-o-sparkles" icon-color="primary">
                 <x-slot name="heading">Eksik MSDS özetlerini hazırlayın ({{ $ozetsizler->count() }})</x-slot>
-                <x-slot name="description">Önce başka firmalarınızda hazır özet var mı bakın; kalanlar için istemi Gemini'ye yapıştırıp cevabı aşağıya kaydedin. Yapay zekâ kotası harcanmaz.</x-slot>
+                <x-slot name="description">MSDS'si yüklü kimyasalın istemi MSDS metnini içerir, özet o formdan çıkar. MSDS'si yüklü olmayanlar için Gemini genel bilgiyle yazar; önce MSDS'yi yüklemeniz önerilir. İstemi Gemini'ye yapıştırıp cevabı aşağıya kaydedin; yapay zekâ kotası harcanmaz.</x-slot>
                 <div class="mep-adim">
                     <div class="mep-satir">
                         <x-filament::button color="gray" icon="heroicon-o-arrow-path" wire:click="hazirOzetleriKullan">Başka firmalardaki özetleri kullan</x-filament::button>
@@ -190,15 +200,15 @@
                     </div>
 
                     @foreach ($this->istemler as $i => $istem)
-                        <div x-data="{ k: false, kopyala() { navigator.clipboard.writeText(this.$refs.m.value).then(() => { this.k = true; setTimeout(() => this.k = false, 2000) }) } }" wire:key="istem-{{ $i }}-{{ md5($istem) }}">
+                        <div x-data="{ k: false, kopyala() { navigator.clipboard.writeText(this.$refs.m.value).then(() => { this.k = true; setTimeout(() => this.k = false, 2000) }) } }" wire:key="istem-{{ $i }}-{{ md5($istem['istem']) }}">
                             <div class="mep-satir" style="margin-bottom:.4rem">
-                                <strong style="font-size:.9rem">İstem {{ $i + 1 }}{{ count($this->istemler) > 1 ? ' / '.count($this->istemler) : '' }}</strong>
+                                <strong style="font-size:.9rem">İstem {{ $i + 1 }}: {{ $istem['baslik'] }}</strong>
                                 <x-filament::button size="sm" icon="heroicon-o-clipboard-document" x-on:click="kopyala()">
                                     <span x-show="! k">Kopyala</span><span x-show="k" x-cloak>Kopyalandı</span>
                                 </x-filament::button>
                                 <x-filament::button size="sm" color="gray" tag="a" href="https://gemini.google.com/app" target="_blank" rel="noopener" icon="heroicon-o-arrow-top-right-on-square">Gemini'yi aç</x-filament::button>
                             </div>
-                            <textarea x-ref="m" readonly rows="5" class="mep-metin" aria-label="İstem {{ $i + 1 }}">{{ $istem }}</textarea>
+                            <textarea x-ref="m" readonly rows="5" class="mep-metin" aria-label="İstem {{ $i + 1 }}">{{ $istem['istem'] }}</textarea>
                         </div>
                     @endforeach
 

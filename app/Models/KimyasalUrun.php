@@ -80,6 +80,12 @@ class KimyasalUrun extends Model
         return filled($this->ozet['ilk_yardim'] ?? null) || filled($this->ozet['tehlikeler'] ?? null);
     }
 
+    /** MSDS yüklendi ya da değişti ama özet eski MSDS'den (ya da MSDS'siz) üretilmiş: yenilenmeli. */
+    public function ozetEskiMi(): bool
+    {
+        return $this->ozetVarMi() && $this->sdsVarMi() && ($this->ozet['kaynak_sds'] ?? null) !== $this->sds_dosya_yolu;
+    }
+
     public function ozetOnayBekliyorMu(): bool
     {
         return $this->ozetVarMi() && $this->ozet_yz_taslak && ! $this->ozet_onaylandi_at;

@@ -6,9 +6,11 @@ use App\Models\Firma;
 use App\Models\KimyasalUrun;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use setasign\Fpdi\Fpdi;
 use setasign\Fpdi\PdfParser\StreamReader;
+use Smalot\PdfParser\Parser as PdfParser;
 
 /**
  * Kimyasal MSDS (GBF) özeti ve kimyasal afişi (22.11.2026).
@@ -32,32 +34,84 @@ class KimyasalOzetleri
 
     public const ILK_YARDIM = ['soluma' => 'Solunursa', 'cilt' => 'Cilde temasında', 'goz' => 'Göze temasında', 'yutma' => 'Yutulursa'];
 
-    /** @param  Collection<int, KimyasalUrun>  $urunler  @return array<int, string> */
+    /**
+     * MSDS'si (GBF PDF'i) yüklü ve metni okunabilen her ürün için ayrı istem (GBF metni istemin içinde);
+     * MSDS'si olmayan ya da okunamayanlar 8'erli toplu istemde, ürün adına göre.
+     *
+     * @param  Collection<int, KimyasalUrun>  $urunler
+     * @return array<int, array{baslik: string, istem: string}>
+     */
     public static function istemler(Collection $urunler): array
     {
-        $parcalar = $urunler->values()->chunk(static::ISTEM_BASINA);
+        $istemler = [];
+        $msdssiz = collect();
 
-        return $parcalar->values()->map(fn (Collection $p, int $i) => static::istem($p, $i + 1, $parcalar->count()))->all();
+        foreach ($urunler->values() as $u) {
+            $metin = static::sdsMetni($u);
+            if ($metin === null) {
+                $msdssiz->push($u);
+
+                continue;
+            }
+            $istemler[] = ['baslik' => $u->urun_adi.' — yüklü MSDS\'den', 'istem' => static::istem(collect([$u]), $metin)];
+        }
+
+        $parcalar = $msdssiz->chunk(static::ISTEM_BASINA)->values();
+        foreach ($parcalar as $i => $p) {
+            $istemler[] = [
+                'baslik' => 'MSDS\'si yüklü olmayan '.$p->count().' kimyasal'.($parcalar->count() > 1 ? ' ('.($i + 1).'/'.$parcalar->count().')' : ''),
+                'istem' => static::istem($p->values()),
+            ];
+        }
+
+        return $istemler;
+    }
+
+    /**
+     * Yüklü MSDS PDF'inin metni (Gemini'ye istemle birlikte verilir). Taranmış (resim) PDF, Word/Excel
+     * ya da okunamayan dosyada null: o ürün toplu isteme düşer, sayfa dosyayı Gemini'ye ayrıca eklemeyi söyler.
+     */
+    public static function sdsMetni(KimyasalUrun $u): ?string
+    {
+        if (! $u->sdsVarMi() || strtolower(pathinfo($u->sds_dosya_yolu, PATHINFO_EXTENSION)) !== 'pdf'
+            || ! Storage::disk('public')->exists($u->sds_dosya_yolu)) {
+            return null;
+        }
+
+        try {
+            $metin = (new PdfParser)->parseFile(Storage::disk('public')->path($u->sds_dosya_yolu))->getText();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $metin = trim(preg_replace(["/[ \t]+/u", "/\n{3,}/u"], [' ', "\n\n"], (string) $metin));
+
+        // 300 harften azı taranmış PDF demektir (metin katmanı yok).
+        return mb_strlen($metin) < 300 ? null : Str::limit($metin, 60000, "\n[…]");
     }
 
     /** @param  Collection<int, KimyasalUrun>  $urunler */
-    public static function istem(Collection $urunler, int $no = 1, int $toplam = 1): string
+    public static function istem(Collection $urunler, ?string $sdsMetni = null): string
     {
         $liste = $urunler->map(fn (KimyasalUrun $u) => '- id '.$u->id.': '.collect([
             $u->urun_adi,
             $u->cas_no ? 'CAS '.$u->cas_no : null,
             $u->tedarikci ? 'Üretici/tedarikçi: '.$u->tedarikci : null,
-            $u->kullanim_alani ? 'Kullanım: '.$u->kullanim_alani : null,
+            'Kullanıldığı alan / iş: '.($u->kullanim_alani ?: 'belirtilmemiş'),
         ])->filter()->implode(' | '))->implode("\n");
 
         $kkd = implode(', ', config('isg.kimyasal.kkd', []));
-        $parca = $toplam > 1 ? " (parça {$no}/{$toplam})" : '';
+        $kaynak = $sdsMetni
+            ? "Özeti YALNIZ aşağıdaki Güvenlik Bilgi Formu (MSDS/GBF) metnine dayandır; formda olmayan bilgiyi ekleme, formdaki H/P ifadelerini, ilk yardımı, söndürücüyü ve KKD'yi aynen esas al."
+            : "Bu ürünlerin MSDS'si sisteme yüklenmemiş: bilinen Güvenlik Bilgi Formu (KKDİK, CLP/GHS) bilgilerine göre yaz; ticari üründe tipik bileşimi esas al, emin olmadığın bilgiyi uydurma, o alanı kısa ve genel güvenli ifadeyle doldur.";
+        $metinBolumu = $sdsMetni ? "\n\nMSDS METNİ (başı):\n<<<\n{$sdsMetni}\n>>>" : '';
 
         return <<<TXT
-Sen Türkiye'de çalışan bir iş güvenliği uzmanısın{$parca}. Aşağıdaki kimyasal ürünlerin her biri için Güvenlik Bilgi Formu (SDS/GBF, KKDİK ve CLP/GHS) bilgilerine dayanarak çalışanlara yönelik KISA bir özet hazırla. Ticari ürünse bilinen tipik bileşimine göre yaz; emin olmadığın bilgiyi uydurma, o alanı kısa ve genel güvenli ifadeyle doldur.
+Sen Türkiye'de çalışan bir iş güvenliği uzmanısın. Aşağıdaki kimyasal için tek sayfalık MSDS özeti afişi hazırlayacaksın. Afiş, kimyasalın KULLANILDIĞI ALANA asılacak ve oradaki çalışan tarafından ayakta, birkaç saniyede okunacak. Bu yüzden bilgiyi o alandaki işe göre yorumla: çalışanın kimyasalı kullanırken, dökülünce, sıçrayınca, yangında ne yapacağını kısa ve somut yaz; laboratuvar dili ve gereksiz ayrıntı kullanma.
+{$kaynak}
 
 Ürünler:
-{$liste}
+{$liste}{$metinBolumu}
 
 Cevabı YALNIZ geçerli bir JSON dizi olarak ver (açıklama yazma). Her ürün için bir nesne:
 {
@@ -71,7 +125,7 @@ Cevabı YALNIZ geçerli bir JSON dizi olarak ver (açıklama yazma). Her ürün 
   "ilk_yardim": {"soluma": "≤160 karakter", "cilt": "≤160", "goz": "≤160", "yutma": "≤160"},
   "yangin": "uygun ve uygun olmayan söndürücü, ≤160 karakter",
   "dokulme": "döküntü/sızıntıda yapılacaklar, ≤200 karakter",
-  "depolama": "güvenli elleçleme ve depolama, ≤200 karakter",
+  "depolama": "bu alanda kullanırken ve depolarken uyulacak kurallar, ≤200 karakter",
   "maruziyet": "maruziyet sınırı (varsa) ve havalandırma vb. önlem, ≤200 karakter",
   "bertaraf": "atık bertarafı, ≤140 karakter",
   "fiziksel": "görünüm, koku, parlama noktası gibi kısa bilgi, ≤120 karakter"
@@ -170,7 +224,8 @@ TXT;
     public static function yaz(KimyasalUrun $u, array $ozet, bool $yz): void
     {
         $u->forceFill([
-            'ozet' => $ozet,
+            // Hangi MSDS dosyasından üretildiği: MSDS sonradan değişirse özet "yenilenmeli" görünür.
+            'ozet' => ['kaynak_sds' => $u->sds_dosya_yolu] + $ozet,
             'ozet_yz_taslak' => $yz,
             'ozet_onaylandi_at' => $yz ? null : now(),
             // Üründe GHS işaretlenmemişse özetteki piktogramlar envantere de geçer.
@@ -231,6 +286,7 @@ TXT;
         $iy = $o['ilk_yardim'];
         $mm += array_filter($iy) ? 13 + (max($satir($iy['soluma'] ?? '', 50), $satir($iy['cilt'] ?? '', 50)) + max($satir($iy['goz'] ?? '', 50), $satir($iy['yutma'] ?? '', 50))) * 4.4 + 12 : 0;
         $mm += filled($o['yangin'] ?? null) || filled($o['dokulme'] ?? null) ? 12 + max($satir($o['yangin'] ?? '', 50), $satir($o['dokulme'] ?? '', 50)) * 4.4 : 0;
+        $mm += filled($o['depolama'] ?? null) ? 11 + $satir($o['depolama'], 100) * 4.4 : 0;
 
         return round(max(0.7, min(1, 244 / $mm)), 2);
     }
@@ -317,6 +373,9 @@ TXT;
             'piktogramMm' => $ghs ? (int) min(38, floor((186 - (filled($ozet['sinyal_kelime'] ?? null) ? 46 : 0)) / count($ghs)) - 4) : 0,
             'ilkYardimBasliklari' => static::ILK_YARDIM,
             'taslak' => $u->ozetOnayBekliyorMu(),
+            'kaynak' => $u->sdsVarMi()
+                ? 'Kaynak: '.($u->tedarikci ? $u->tedarikci.' ' : '').'MSDS'.($u->sds_tarihi ? ', '.$u->sds_tarihi->format('d.m.Y') : '').'. Ayrıntı için MSDS klasörüne bakın.'
+                : 'Ayrıntılı bilgi için ürünün güvenlik bilgi formuna (MSDS) bakın.',
             'dokumanKodu' => 'KMY-'.str_pad((string) $u->id, 4, '0', STR_PAD_LEFT),
             'tarih' => ($u->ozet_onaylandi_at ?? $u->updated_at ?? now())->format('d.m.Y'),
         ];

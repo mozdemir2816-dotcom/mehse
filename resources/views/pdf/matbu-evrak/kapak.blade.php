@@ -60,11 +60,10 @@
 <div class="tutanak">
     <h2>Teslim ve tebliğ tutanağı</h2>
     <p class="metin">Yukarıda listelenen iş ekipmanlarına ait çalışma ve güvenlik talimatları, günlük kontrol
-        çizelgeleri ve güvenlik afişleri ile kimyasallara ait güvenlik afişleri ve güvenlik bilgi formu (MSDS)
-        özetleri hazırlanarak işverene / işveren vekiline teslim edilmiştir. 6331 sayılı İş Sağlığı ve Güvenliği
+        çizelgeleri ve güvenlik afişleri ile kimyasallara ait MSDS özeti afişleri hazırlanarak işverene / işveren vekiline teslim edilmiştir. 6331 sayılı İş Sağlığı ve Güvenliği
         Kanunu, İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği ve Kimyasal Maddelerle
         Çalışmalarda Sağlık ve Güvenlik Önlemleri Hakkında Yönetmelik kapsamında; talimatların ilgili çalışanlara
-        imza karşılığı duyurulması, afişlerin makine ve kimyasal kullanım / depolama yerlerine asılması, günlük
+        imza karşılığı duyurulması, afişlerin makinelerin yanına ve kimyasalların kullanıldığı alanlara asılması, kimyasalların asıl güvenlik bilgi formlarının (MSDS) çalışanların erişebileceği yerde tutulması, günlük
         kontrollerin her kullanım öncesi yapılıp kayıt altına alınması ve uygunsuzluk görülen ekipmanın giderilene
         kadar kullanılmaması işverenin sorumluluğundadır.</p>
 

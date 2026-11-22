@@ -70,7 +70,7 @@
         <tr>
             <td>
                 <div class="ad">{{ $baslik }}</div>
-                <div class="alt">Kimyasal güvenlik bilgileri{{ $u->cas_no ? ' — CAS '.$u->cas_no : '' }}{{ $u->kullanim_alani ? ' — '.$u->kullanim_alani : '' }}</div>
+                <div class="alt">MSDS özeti{{ $u->kullanim_alani ? ' — Kullanım alanı: '.$u->kullanim_alani : '' }}{{ $u->cas_no ? ' — CAS '.$u->cas_no : '' }}</div>
             </td>
             @if ($logo)<td class="logo"><img src="{{ $logo }}"></td>@endif
         </tr>
@@ -107,7 +107,7 @@
     @if (filled($ozet['kkd']))
         <div class="kkd">
             <div class="etiket">Bu kimyasalla çalışırken kullanılması zorunlu koruyucu donanım</div>
-            @foreach ($ozet['kkd'] as $k)<span class="rozet">{{ $k }}</span>@endforeach
+            @foreach ($ozet['kkd'] as $kkdAdi)<span class="rozet">{{ $kkdAdi }}</span>@endforeach
         </div>
     @endif
 
@@ -136,11 +136,17 @@
         </table>
     @endif
 
+    @if (filled($ozet['depolama'] ?? null))
+        <table class="ek">
+            <tr><td class="k" style="width:auto"><b>Kullanırken ve depolarken</b>{{ $ozet['depolama'] }}</td></tr>
+        </table>
+    @endif
+
     <table class="dip">
         <tr>
             <td>
                 <div class="acil">Acil: <span>112</span> &nbsp; Zehir Danışma: <span>114</span></div>
-                <div>Ayrıntılı bilgi için ürünün güvenlik bilgi formuna (SDS) bakın.</div>
+                <div>{{ $kaynak }}</div>
             </td>
             <td class="sag">
                 @if ($firma){{ $firma->unvan }}<br>@endif
