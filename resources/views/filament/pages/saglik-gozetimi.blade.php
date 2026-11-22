@@ -25,6 +25,19 @@
     </x-filament::section>
 
     @if ($this->firma)
+        {{-- K1 SEKMELER: Tetkik & Muayene | Revir & Protokol Defteri | Ecza Dolabı & SKT | Aşı Takibi --}}
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(128 116 148 / .1);padding:.3rem;border-radius:.6rem">
+            @foreach (\App\Filament\Pages\SaglikGozetimi::SEKMELER as $anahtar => $etiket)
+                @php $aktif = $sekme === $anahtar; @endphp
+                <button type="button" wire:click="sekmeSec('{{ $anahtar }}')"
+                    style="flex:1;min-width:130px;padding:.48rem .75rem;border:none;border-radius:.45rem;cursor:pointer;font-weight:600;font-size:.83rem;
+                        background:{{ $aktif ? '#2563EB' : 'transparent' }};color:{{ $aktif ? '#fff' : 'inherit' }}">
+                    {{ $etiket }}
+                </button>
+            @endforeach
+        </div>
+
+        @if ($sekme === 'tetkik')
         @php
             $ozetGuncel = 0;
             $ozetYaklasan = 0;
@@ -182,5 +195,147 @@
                 <input type="text" wire:model.blur="genelNot" style="{{ $girdi }}" placeholder="örn. Muayeneleri yapan işyeri hekimi; OSGB sözleşme no">
             </div>
         </x-filament::section>
+        @elseif ($sekme === 'revir')
+            <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="primary">
+                <x-slot name="heading">Revir &amp; Poliklinik Protokol Defteri ({{ $this->revirKayitlari->count() }})</x-slot>
+                <x-slot name="afterHeader">
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-down" wire:click="protokolDefteriPdf">Protokol Defteri (PDF)</x-filament::button>
+                </x-slot>
+                <div style="{{ $kutu }};display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.55rem;margin-bottom:1rem;align-items:end">
+                    <div>
+                        <label style="font-size:.75rem;font-weight:600">Çalışan (Kayıtlı)</label>
+                        <select wire:model="revirCalisanId" style="{{ $girdi }}">
+                            <option value="">— Liste dışıysa sağa yaz —</option>
+                            @foreach ($this->calisanlar as $c)<option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div><label style="font-size:.75rem;font-weight:600">Ad Soyad (Alternatif)</label><input type="text" wire:model="revirAdSoyad" style="{{ $girdi }}" placeholder="Çalışan adı"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Başvuru Nedeni *</label><input type="text" wire:model="revirNeden" style="{{ $girdi }}" placeholder="Örn: Baş ağrısı / kesik"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Bulgu / Tanı</label><input type="text" wire:model="revirTani" style="{{ $girdi }}" placeholder="Tansiyon, pansuman vb."></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Yapılan İşlem</label><input type="text" wire:model="revirIslem" style="{{ $girdi }}" placeholder="Pansuman / reçete / sevk"></div>
+                    <div>
+                        <label style="font-size:.75rem;font-weight:600">Sonuç</label>
+                        <select wire:model="revirSonuc" style="{{ $girdi }}">
+                            @foreach (\App\Models\RevirKaydi::SONUCLAR as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div><x-filament::button size="sm" wire:click="revirEkle">Protokole Ekle</x-filament::button></div>
+                </div>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                        <thead><tr style="text-align:left;background:rgb(107 114 128 / .08)"><th style="padding:.4rem">Protokol</th><th style="padding:.4rem">Tarih</th><th style="padding:.4rem">Çalışan</th><th style="padding:.4rem">Neden &amp; İşlem</th><th style="padding:.4rem">Sonuç</th><th style="padding:.4rem"></th></tr></thead>
+                        <tbody>
+                            @forelse ($this->revirKayitlari as $r)
+                                <tr style="border-top:1px solid rgb(107 114 128 / .15)">
+                                    <td style="padding:.4rem;font-weight:700;white-space:nowrap">{{ $r->protokol_no }}</td>
+                                    <td style="padding:.4rem;white-space:nowrap">{{ $r->tarih?->format('d.m.Y H:i') }}</td>
+                                    <td style="padding:.4rem;font-weight:600">{{ $r->calisan_ad_soyad }}</td>
+                                    <td style="padding:.4rem">{{ $r->basvuru_nedeni }}@if ($r->yapilan_islem)<div style="font-size:.73rem;color:rgb(107 114 128)">{{ $r->yapilan_islem }}</div>@endif</td>
+                                    <td style="padding:.4rem">{{ $r->sonucEtiketi() }}</td>
+                                    <td style="padding:.4rem;text-align:right"><button type="button" wire:click="revirSil({{ $r->id }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" style="padding:1rem;text-align:center;color:rgb(107 114 128)">Henüz revir başvurusu yok.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        @elseif ($sekme === 'ecza')
+            <x-filament::section icon="heroicon-o-beaker" icon-color="primary">
+                <x-slot name="heading">Ecza Dolabı &amp; İlk Yardım Çantası Stoğu ({{ $this->eczaKalemleri->count() }})</x-slot>
+                <div style="{{ $kutu }};display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.55rem;margin-bottom:1rem;align-items:end">
+                    <div><label style="font-size:.75rem;font-weight:600">Malzeme / İlaç Adı *</label><input type="text" wire:model="eczaAd" style="{{ $girdi }}" placeholder="Örn: Steril gazlı bez"></div>
+                    <div>
+                        <label style="font-size:.75rem;font-weight:600">Kategori</label>
+                        <select wire:model="eczaKategori" style="{{ $girdi }}">
+                            @foreach (\App\Models\EczaDolabiKalemi::KATEGORILER as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div><label style="font-size:.75rem;font-weight:600">Miktar</label><input type="number" min="0" wire:model="eczaMiktar" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Kritik Eşik</label><input type="number" min="0" wire:model="eczaKritik" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">SKT</label><input type="date" wire:model="eczaSkt" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Konum</label><input type="text" wire:model="eczaKonum" style="{{ $girdi }}"></div>
+                    <div><x-filament::button size="sm" wire:click="eczaEkle">Stoğa Ekle</x-filament::button></div>
+                </div>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                        <thead><tr style="text-align:left;background:rgb(107 114 128 / .08)"><th style="padding:.4rem">Malzeme</th><th style="padding:.4rem">Konum</th><th style="padding:.4rem">Stok</th><th style="padding:.4rem">SKT</th><th style="padding:.4rem">Durum</th><th style="padding:.4rem"></th></tr></thead>
+                        <tbody>
+                            @forelse ($this->eczaKalemleri as $ek)
+                                @php
+                                    $dr = $ek->durum();
+                                    $drRenk = match ($dr) { 'suresi_gecmis' => '#dc2626', 'skt_yaklasan', 'kritik_stok' => '#d97706', default => '#15803d' };
+                                @endphp
+                                <tr style="border-top:1px solid rgb(107 114 128 / .15)">
+                                    <td style="padding:.4rem;font-weight:600">{{ $ek->malzeme_adi }}<div style="font-size:.72rem;color:rgb(107 114 128)">{{ \App\Models\EczaDolabiKalemi::KATEGORILER[$ek->kategori] ?? $ek->kategori }}</div></td>
+                                    <td style="padding:.4rem">{{ $ek->konum ?: '—' }}</td>
+                                    <td style="padding:.4rem;white-space:nowrap">
+                                        <button type="button" wire:click="eczaMiktarDegistir({{ $ek->id }}, -1)" style="padding:.1rem .4rem;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer">−</button>
+                                        <strong style="margin:0 .4rem">{{ $ek->miktar }} {{ $ek->birim }}</strong>
+                                        <button type="button" wire:click="eczaMiktarDegistir({{ $ek->id }}, 1)" style="padding:.1rem .4rem;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer">+</button>
+                                    </td>
+                                    <td style="padding:.4rem;white-space:nowrap">{{ $ek->skt?->format('d.m.Y') ?: '—' }}</td>
+                                    <td style="padding:.4rem"><span style="font-size:.73rem;font-weight:700;color:{{ $drRenk }}">{{ $ek->durumEtiketi() }}</span></td>
+                                    <td style="padding:.4rem;text-align:right"><button type="button" wire:click="eczaSil({{ $ek->id }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" style="padding:1rem;text-align:center;color:rgb(107 114 128)">Ecza dolabı kalemi tanımlanmamış.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        @else
+            <x-filament::section icon="heroicon-o-shield-check" icon-color="primary">
+                <x-slot name="heading">Çalışan Aşı Takibi ({{ $this->asiKayitlari->count() }})</x-slot>
+                <div style="{{ $kutu }};display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.55rem;margin-bottom:1rem;align-items:end">
+                    <div>
+                        <label style="font-size:.75rem;font-weight:600">Çalışan</label>
+                        <select wire:model="asiCalisanId" style="{{ $girdi }}">
+                            <option value="">— Liste dışıysa sağa yaz —</option>
+                            @foreach ($this->calisanlar as $c)<option value="{{ $c->id }}">{{ $c->ad_soyad }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div><label style="font-size:.75rem;font-weight:600">Ad Soyad (Alternatif)</label><input type="text" wire:model="asiAdSoyad" style="{{ $girdi }}"></div>
+                    <div>
+                        <label style="font-size:.75rem;font-weight:600">Aşı Türü</label>
+                        <select wire:model="asiTur" style="{{ $girdi }}">
+                            @foreach (\App\Models\AsiKaydi::TURLER as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:.75rem;font-weight:600">Doz</label>
+                        <select wire:model="asiDoz" style="{{ $girdi }}">
+                            @foreach (\App\Models\AsiKaydi::DOZLAR as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div><label style="font-size:.75rem;font-weight:600">Yapılma Tarihi</label><input type="date" wire:model="asiTarih" style="{{ $girdi }}"></div>
+                    <div><label style="font-size:.75rem;font-weight:600">Sonraki Doz / Rapel</label><input type="date" wire:model="asiSonrakiTarih" style="{{ $girdi }}"></div>
+                    <div><x-filament::button size="sm" wire:click="asiEkle">Aşı Ekle</x-filament::button></div>
+                </div>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                        <thead><tr style="text-align:left;background:rgb(107 114 128 / .08)"><th style="padding:.4rem">Çalışan</th><th style="padding:.4rem">Aşı / Doz</th><th style="padding:.4rem">Yapılma</th><th style="padding:.4rem">Sonraki Doz</th><th style="padding:.4rem"></th></tr></thead>
+                        <tbody>
+                            @forelse ($this->asiKayitlari as $a)
+                                @php $sd = $a->sonrakiDurum(); @endphp
+                                <tr style="border-top:1px solid rgb(107 114 128 / .15)">
+                                    <td style="padding:.4rem;font-weight:600">{{ $a->calisan_ad_soyad }}</td>
+                                    <td style="padding:.4rem">{{ $a->asi_turu }} · <strong>{{ $a->doz }}</strong></td>
+                                    <td style="padding:.4rem;white-space:nowrap">{{ $a->yapilma_tarihi?->format('d.m.Y') }}</td>
+                                    <td style="padding:.4rem;white-space:nowrap;color:{{ $sd === 'gecikti' ? '#dc2626' : ($sd === 'yaklasan' ? '#d97706' : 'inherit') }};font-weight:{{ in_array($sd, ['gecikti', 'yaklasan'], true) ? '700' : '400' }}">
+                                        {{ $a->sonraki_doz_tarihi?->format('d.m.Y') ?: 'Tamamlandı' }}
+                                    </td>
+                                    <td style="padding:.4rem;text-align:right"><button type="button" wire:click="asiSil({{ $a->id }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" style="padding:1rem;text-align:center;color:rgb(107 114 128)">Aşı kaydı bulunmuyor.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        @endif
     @endif
 </x-filament-panels::page>

@@ -36,6 +36,41 @@
         </div>
     </div>
 
+    {{-- SELF-SERVİS TAŞERON BAŞVURULARI & QR LİNKLERİ (K2) --}}
+    @if ($this->basvurular->isNotEmpty())
+        <x-filament::section icon="heroicon-o-qr-code" icon-color="warning" collapsible>
+            <x-slot name="heading">Self-Servis Taşeron Başvuru Linkleri &amp; Gelen Evraklar ({{ $this->basvurular->count() }})</x-slot>
+            <div style="display:flex;flex-direction:column;gap:.6rem">
+                @foreach ($this->basvurular as $bv)
+                    <div style="display:flex;gap:.85rem;align-items:center;flex-wrap:wrap;padding:.6rem .75rem;border:1px solid rgb(107 114 128 / .22);border-radius:.6rem">
+                        <img src="{{ $bv->qrDataUri() }}" alt="QR" style="width:54px;height:54px;border-radius:6px;border:1px solid #e2e8f0">
+                        <div style="flex:1;min-width:220px;font-size:.82rem">
+                            <div>
+                                <strong>{{ $bv->unvan ?: 'Başvuru bekleniyor' }}</strong>
+                                <span style="font-size:.73rem;color:rgb(107 114 128)">· {{ $bv->firma?->unvan }}</span>
+                                <span style="{{ $rozet($bv->durum === 'onaylandi' ? $yesil : ($bv->durum === 'reddedildi' ? $kirmizi : $sari)) }}">{{ \App\Models\TaseronBasvurusu::DURUMLAR[$bv->durum] ?? $bv->durum }}</span>
+                            </div>
+                            <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">
+                                Link: <a href="{{ $bv->basvuruLinki() }}" target="_blank" style="color:#2563eb;text-decoration:underline">{{ $bv->basvuruLinki() }}</a>
+                                @if ($bv->yetkili_ad) · {{ $bv->yetkili_ad }} ({{ $bv->telefon }})@endif
+                                @if (! empty($bv->yuklenen_belgeler)) · <strong>{{ count($bv->yuklenen_belgeler) }} evrak yüklü</strong>@endif
+                            </div>
+                            @if ($bv->ret_nedeni)
+                                <div style="font-size:.74rem;color:#dc2626;margin-top:.15rem">Eksik notu: {{ $bv->ret_nedeni }}</div>
+                            @endif
+                        </div>
+                        <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+                            @if ($bv->durum === 'bekliyor')
+                                <x-filament::button size="xs" color="success" wire:click="basvuruOnayla({{ $bv->id }})">✓ Onayla &amp; Sicile Aktar</x-filament::button>
+                                <x-filament::button size="xs" color="danger" outlined wire:click="mountAction('basvuruReddet', { id: {{ $bv->id }} })">Eksik İste</x-filament::button>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </x-filament::section>
+    @endif
+
     {{-- LİSTE --}}
     <x-filament::section icon="heroicon-o-building-office" icon-color="primary">
         <x-slot name="heading">Taşeronlar / Alt İşverenler ({{ $this->taseronlar->count() }})</x-slot>

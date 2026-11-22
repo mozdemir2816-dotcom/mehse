@@ -49,14 +49,25 @@
     >
         <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem .95rem;background:#2563eb;color:#ffffff">
             <div>
-                <div style="font-weight:700;font-size:.88rem">İSG Mevzuat Asistanı</div>
-                <div style="font-size:.7rem;opacity:.9">6331 s.K. &amp; yönetmelikler hakkında anında sorun</div>
+                <div style="font-weight:700;font-size:.88rem">İSG Asistanı (Canlı Veri + Mevzuat)</div>
+                <div style="font-size:.7rem;opacity:.9">Portföy durumunuzu veya 6331 mevzuatını anında sorun</div>
             </div>
             <button type="button" x-on:click="acik = false" aria-label="Kapat"
                 style="border:none;background:transparent;color:#fff;font-size:1.05rem;cursor:pointer;padding:.2rem .4rem">✕</button>
         </div>
 
         <div style="padding:.8rem .9rem;display:flex;flex-direction:column;gap:.55rem;max-height:24rem;overflow-y:auto">
+            <div style="font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.03em">Canlı Portföy Sorguları</div>
+            <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+                @foreach (\App\Support\CanliPortfoyAsistani::HIZLI_SORGULAR as $hs)
+                    <button type="button"
+                        x-on:click="sorGonder(@js($hs['soru']))"
+                        style="font-size:.7rem;padding:.22rem .55rem;border-radius:999px;border:1px solid #86efac;background:#f0fdf4;color:#166534;cursor:pointer;text-align:left;font-weight:600">
+                        {{ $hs['etiket'] }}
+                    </button>
+                @endforeach
+            </div>
+            <div style="font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.03em;margin-top:.15rem">Mevzuat Soruları</div>
             <div style="display:flex;flex-wrap:wrap;gap:.3rem">
                 @foreach (array_slice(\App\Support\GeminiMevzuatDanismani::HAZIR_SORULAR, 0, 3) as $h)
                     <button type="button"

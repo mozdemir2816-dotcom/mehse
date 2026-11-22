@@ -109,6 +109,11 @@
                             <div style="font-size:.75rem;color:#b45309;font-weight:600;margin-top:.2rem">
                                 ⏳ {{ $b->isveren_kapanis_talebi_at->format('d.m.Y H:i') }} tarihinde kanıt gönderildi — İSG uzmanı onayı bekleniyor.
                             </div>
+                        @elseif (! empty($b->isveren_ret_gecmisi))
+                            @php $sonRet = end($b->isveren_ret_gecmisi); @endphp
+                            <div style="font-size:.75rem;color:#dc2626;font-weight:600;margin-top:.2rem">
+                                ↩ Uzman Revizyon Talebi ({{ $sonRet['tarih'] ?? '' }}): {{ $sonRet['neden'] ?? '' }}
+                            </div>
                         @endif
                     </div>
                     <x-filament::button size="sm" :color="$b->isveren_kapanis_talebi_at ? 'gray' : 'primary'" icon="heroicon-o-arrow-up-tray" wire:click="mountAction('dofKanitGonder', { id: {{ $b->id }} })">

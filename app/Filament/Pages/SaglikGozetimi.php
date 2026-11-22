@@ -45,6 +45,42 @@ class SaglikGozetimi extends Page
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
 
+    #[Url(as: 'sekme')]
+    public string $sekme = 'tetkik';
+
+    public const SEKMELER = [
+        'tetkik' => 'Tetkik & Muayene',
+        'revir' => 'Revir & Protokol Defteri',
+        'ecza' => 'Ecza Dolabı & SKT',
+        'asi' => 'Aşı Takibi',
+    ];
+
+    // --- K1 Revir formu ---
+    public ?int $revirCalisanId = null;
+    public string $revirAdSoyad = '';
+    public string $revirNeden = '';
+    public string $revirTani = '';
+    public string $revirIslem = '';
+    public string $revirSonuc = 'ayakta';
+    public ?int $revirIstirahatGun = null;
+
+    // --- K1 Ecza Dolabı formu ---
+    public string $eczaAd = '';
+    public string $eczaKategori = 'pansuman';
+    public int $eczaMiktar = 10;
+    public int $eczaKritik = 3;
+    public string $eczaBirim = 'Adet';
+    public ?string $eczaSkt = null;
+    public string $eczaKonum = 'Revir / Ana Dolap';
+
+    // --- K1 Aşı Takibi formu ---
+    public ?int $asiCalisanId = null;
+    public string $asiAdSoyad = '';
+    public string $asiTur = 'Tetanoz';
+    public string $asiDoz = '1. Doz';
+    public ?string $asiTarih = null;
+    public ?string $asiSonrakiTarih = null;
+
     /** @var array<int, array<string, mixed>> */
     public array $satirlar = [];
 
@@ -107,11 +143,201 @@ class SaglikGozetimi extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->gozetim, $this->calisanlar);
+        unset($this->firma, $this->gozetim, $this->calisanlar, $this->revirKayitlari, $this->eczaKalemleri, $this->asiKayitlari);
 
         $gozetim = $this->gozetim();
         $this->satirlar = $gozetim?->satirlar ?? [];
         $this->genelNot = $gozetim?->genel_not;
+    }
+
+    public function sekmeSec(string $sekme): void
+    {
+        if (array_key_exists($sekme, self::SEKMELER)) {
+            $this->sekme = $sekme;
+        }
+    }
+
+    #[Computed]
+    public function revirKayitlari()
+    {
+        if (! $this->firma || ! \Illuminate\Support\Facades\Schema::hasTable('revir_kayitlari')) {
+            return collect();
+        }
+
+        return \App\Models\RevirKaydi::query()
+            ->where('firma_id', $this->firma->id)
+            ->latest('tarih')
+            ->latest('id')
+            ->limit(50)
+            ->get();
+    }
+
+    public function revirEkle(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $calisan = $this->revirCalisanId ? $this->calisanlar->firstWhere('id', $this->revirCalisanId) : null;
+        $ad = trim($calisan?->ad_soyad ?: $this->revirAdSoyad);
+        if ($ad === '' || trim($this->revirNeden) === '') {
+            Notification::make()->title('Çalışan adı ve başvuru nedeni zorunludur')->warning()->send();
+
+            return;
+        }
+
+        \App\Models\RevirKaydi::create([
+            'firma_id' => $this->firma->id,
+            'calisan_id' => $calisan?->id,
+            'calisan_ad_soyad' => $ad,
+            'tarih' => now(),
+            'basvuru_nedeni' => trim($this->revirNeden),
+            'bulgu_tani' => trim($this->revirTani) ?: null,
+            'yapilan_islem' => trim($this->revirIslem) ?: null,
+            'sonuc' => array_key_exists($this->revirSonuc, \App\Models\RevirKaydi::SONUCLAR) ? $this->revirSonuc : 'ayakta',
+            'istirahat_gun' => $this->revirSonuc === 'istirahat' ? ($this->revirIstirahatGun ?: 1) : null,
+            'hekim_dsp' => $this->firma->isyeriHekimi?->ad_soyad ?: $this->firma->dsp?->ad_soyad ?: Filament::auth()->user()?->name,
+        ]);
+
+        $this->reset('revirCalisanId', 'revirAdSoyad', 'revirNeden', 'revirTani', 'revirIslem', 'revirIstirahatGun');
+        $this->revirSonuc = 'ayakta';
+        unset($this->revirKayitlari);
+        Notification::make()->title('Revir protokol kaydı eklendi')->success()->send();
+    }
+
+    public function revirSil(int $id): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+        \App\Models\RevirKaydi::where('firma_id', $this->firma->id)->whereKey($id)->delete();
+        unset($this->revirKayitlari);
+    }
+
+    public function protokolDefteriPdf()
+    {
+        if (! $this->firma) {
+            return null;
+        }
+        $kayitlar = \App\Models\RevirKaydi::where('firma_id', $this->firma->id)->orderBy('tarih')->get();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.revir-protokol-defteri', [
+            'firma' => $this->firma,
+            'kayitlar' => $kayitlar,
+        ])->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(fn () => print($pdf->output()), 'protokol-defteri-'.\Illuminate\Support\Str::slug($this->firma->unvan ?: 'firma').'.pdf');
+    }
+
+    #[Computed]
+    public function eczaKalemleri()
+    {
+        if (! $this->firma || ! \Illuminate\Support\Facades\Schema::hasTable('ecza_dolabi_kalemleri')) {
+            return collect();
+        }
+
+        return \App\Models\EczaDolabiKalemi::query()
+            ->where('firma_id', $this->firma->id)
+            ->orderByRaw('skt IS NULL, skt ASC')
+            ->orderBy('malzeme_adi')
+            ->get();
+    }
+
+    public function eczaEkle(): void
+    {
+        if (! $this->firma || trim($this->eczaAd) === '') {
+            Notification::make()->title('Malzeme / ilaç adı zorunludur')->warning()->send();
+
+            return;
+        }
+
+        \App\Models\EczaDolabiKalemi::create([
+            'firma_id' => $this->firma->id,
+            'malzeme_adi' => trim($this->eczaAd),
+            'kategori' => array_key_exists($this->eczaKategori, \App\Models\EczaDolabiKalemi::KATEGORILER) ? $this->eczaKategori : 'pansuman',
+            'miktar' => max(0, $this->eczaMiktar),
+            'kritik_miktar' => max(0, $this->eczaKritik),
+            'birim' => trim($this->eczaBirim) ?: 'Adet',
+            'skt' => $this->eczaSkt ?: null,
+            'konum' => trim($this->eczaKonum) ?: null,
+        ]);
+
+        $this->reset('eczaAd', 'eczaSkt');
+        $this->eczaMiktar = 10;
+        unset($this->eczaKalemleri);
+        Notification::make()->title('Ecza dolabı kalemi eklendi')->success()->send();
+    }
+
+    public function eczaMiktarDegistir(int $id, int $fark): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+        $k = \App\Models\EczaDolabiKalemi::where('firma_id', $this->firma->id)->find($id);
+        if ($k) {
+            $k->update(['miktar' => max(0, (int) $k->miktar + $fark)]);
+            unset($this->eczaKalemleri);
+        }
+    }
+
+    public function eczaSil(int $id): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+        \App\Models\EczaDolabiKalemi::where('firma_id', $this->firma->id)->whereKey($id)->delete();
+        unset($this->eczaKalemleri);
+    }
+
+    #[Computed]
+    public function asiKayitlari()
+    {
+        if (! $this->firma || ! \Illuminate\Support\Facades\Schema::hasTable('asi_kayitlari')) {
+            return collect();
+        }
+
+        return \App\Models\AsiKaydi::query()
+            ->where('firma_id', $this->firma->id)
+            ->latest('yapilma_tarihi')
+            ->latest('id')
+            ->get();
+    }
+
+    public function asiEkle(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+        $calisan = $this->asiCalisanId ? $this->calisanlar->firstWhere('id', $this->asiCalisanId) : null;
+        $ad = trim($calisan?->ad_soyad ?: $this->asiAdSoyad);
+        if ($ad === '') {
+            Notification::make()->title('Çalışan adı zorunludur')->warning()->send();
+
+            return;
+        }
+
+        \App\Models\AsiKaydi::create([
+            'firma_id' => $this->firma->id,
+            'calisan_id' => $calisan?->id,
+            'calisan_ad_soyad' => $ad,
+            'asi_turu' => $this->asiTur ?: 'Tetanoz',
+            'doz' => $this->asiDoz ?: '1. Doz',
+            'yapilma_tarihi' => $this->asiTarih ?: now()->toDateString(),
+            'sonraki_doz_tarihi' => $this->asiSonrakiTarih ?: null,
+            'uygulayan' => $this->firma->isyeriHekimi?->ad_soyad ?: $this->firma->dsp?->ad_soyad ?: Filament::auth()->user()?->name,
+        ]);
+
+        $this->reset('asiCalisanId', 'asiAdSoyad', 'asiSonrakiTarih');
+        unset($this->asiKayitlari);
+        Notification::make()->title('Aşı kaydı eklendi')->success()->send();
+    }
+
+    public function asiSil(int $id): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+        \App\Models\AsiKaydi::where('firma_id', $this->firma->id)->whereKey($id)->delete();
+        unset($this->asiKayitlari);
     }
 
     private function satirYap(Calisan $c, string $tur): array

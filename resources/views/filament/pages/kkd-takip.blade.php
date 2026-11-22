@@ -46,6 +46,33 @@
             @endforeach
         </div>
 
+        {{-- ÇALIŞAN PORTALINDAN GELEN KKD TALEPLERİ (K5) --}}
+        @if ($this->kkdTalepleri->isNotEmpty())
+            <x-filament::section icon="heroicon-o-inbox-arrow-down" icon-color="warning" collapsible>
+                <x-slot name="heading">Çalışan Portalı KKD Talepleri ({{ $this->kkdTalepleri->where('durum', 'bekliyor')->count() }} bekliyor)</x-slot>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                        <tr>@foreach (['Tarih', 'Çalışan', 'KKD / Beden', 'Neden', 'Durum', ''] as $b)<th style="{{ $th }}">{{ $b }}</th>@endforeach</tr>
+                        @foreach ($this->kkdTalepleri as $kt)
+                            <tr>
+                                <td style="{{ $td }};white-space:nowrap">{{ $kt->created_at?->format('d.m.Y') }}</td>
+                                <td style="{{ $td }};font-weight:600">{{ $kt->calisan_ad_soyad }}</td>
+                                <td style="{{ $td }}">{{ $kt->kkd_turu }}@if ($kt->beden) ({{ $kt->beden }})@endif</td>
+                                <td style="{{ $td }}">{{ \App\Models\KkdTalebi::NEDENLER[$kt->neden] ?? $kt->neden }}@if ($kt->aciklama)<div class="mehse-soluk">{{ $kt->aciklama }}</div>@endif</td>
+                                <td style="{{ $td }}"><strong>{{ \App\Models\KkdTalebi::DURUMLAR[$kt->durum] ?? $kt->durum }}</strong></td>
+                                <td style="{{ $td }};text-align:right;white-space:nowrap">
+                                    @if (in_array($kt->durum, ['bekliyor', 'onaylandi'], true))
+                                        <x-filament::button size="xs" color="success" wire:click="kkdTalepDurum({{ $kt->id }}, 'teslim_edildi')">Teslim Edildi</x-filament::button>
+                                        <x-filament::button size="xs" color="danger" outlined wire:click="kkdTalepDurum({{ $kt->id }}, 'reddedildi')">Reddet</x-filament::button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </table>
+                </div>
+            </x-filament::section>
+        @endif
+
         {{-- ZİMMET SİCİLİ --}}
         <x-filament::section icon="heroicon-o-user-group" icon-color="primary">
             <x-slot name="heading">KKD Zimmet Kayıtları</x-slot>

@@ -80,6 +80,7 @@ class SahaBulgusu extends Model
         'termin' => 'date',
         'kapanis_tarihi' => 'date',
         'isveren_kapanis_talebi_at' => 'datetime',
+        'isveren_ret_gecmisi' => 'array',
         'fotograflar' => 'array',
     ];
 

@@ -574,6 +574,37 @@ class TaseronYonetimi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('basvuruLinkiUret')
+                ->label('Taşeron Başvuru Linki / QR Üret')
+                ->icon('heroicon-o-qr-code')
+                ->color('primary')
+                ->modalHeading('Self-Servis Taşeron Başvuru Linki Oluştur')
+                ->modalDescription('Seçilen işyeri için benzersiz bir başvuru linki ve QR kod üretilir. Taşeron şifre açmadan kendi firma bilgisini ve İSG evraklarını yükler; onayınızla taşeron siciline aktarılır.')
+                ->schema([
+                    Select::make('firma_id')
+                        ->label('Ana İşyeri')
+                        ->options(fn () => $this->firmalar)
+                        ->default(fn () => $this->firmaId)
+                        ->required(),
+                    TextInput::make('unvan')->label('Beklenen Taşeron Adı (opsiyonel)')->maxLength(200),
+                ])
+                ->modalSubmitActionLabel('Link & QR Oluştur')
+                ->action(function (array $data): void {
+                    abort_unless(array_key_exists((int) $data['firma_id'], $this->firmalar), 403);
+                    $b = \App\Models\TaseronBasvurusu::create([
+                        'firma_id' => (int) $data['firma_id'],
+                        'unvan' => trim((string) ($data['unvan'] ?? '')) ?: null,
+                        'durum' => 'link_acik',
+                    ]);
+                    unset($this->basvurular);
+                    Notification::make()
+                        ->title('Taşeron başvuru linki hazır')
+                        ->body($b->basvuruLinki())
+                        ->success()
+                        ->persistent()
+                        ->send();
+                }),
+
             Action::make('liste_excel')
                 ->label('Excel')
                 ->icon('heroicon-o-table-cells')
@@ -581,5 +612,91 @@ class TaseronYonetimi extends Page
                 ->visible(fn () => $this->taseronlar->isNotEmpty())
                 ->action(fn () => TaseronUretici::listeExcel($this->taseronlar)),
         ];
+    }
+
+    /** Self-servis taşeron başvuru linkleri ve gelen evrak başvuruları (K2). */
+    #[Computed]
+    public function basvurular(): Collection
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('taseron_basvurulari')) {
+            return collect();
+        }
+
+        return \App\Models\TaseronBasvurusu::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->when($this->firmaId, fn ($q) => $q->where('firma_id', $this->firmaId))
+            ->with('firma:id,unvan')
+            ->latest('id')
+            ->limit(20)
+            ->get();
+    }
+
+    /** Gelen taşeron başvurusunu onaylayıp doğrudan Taseron + TaseronBelgesi kaydına aktarır (K2). */
+    public function basvuruOnayla(int $id): void
+    {
+        $b = \App\Models\TaseronBasvurusu::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->findOrFail($id);
+
+        if (! $b->unvan) {
+            Notification::make()->title('Taşeron henüz formu doldurmamış')->warning()->send();
+
+            return;
+        }
+
+        $taseron = Taseron::create([
+            'firma_id' => $b->firma_id,
+            'tur' => 'taseron',
+            'unvan' => $b->unvan,
+            'vergi_no' => $b->vergi_no,
+            'faaliyet' => $b->faaliyet,
+            'yetkili' => $b->yetkili_ad,
+            'telefon' => $b->telefon,
+            'eposta' => $b->eposta,
+            'aktif' => true,
+        ]);
+
+        foreach ((array) ($b->yuklenen_belgeler ?? []) as $blg) {
+            TaseronBelgesi::create([
+                'taseron_id' => $taseron->id,
+                'tur' => $blg['tur'] ?? 'diger',
+                'belge_tarihi' => $blg['tarih'] ?? now()->toDateString(),
+                'dosya_yolu' => $blg['dosya'] ?? null,
+                'dosya_adi' => $blg['ad'] ?? 'Belge',
+            ]);
+        }
+
+        $b->update([
+            'taseron_id' => $taseron->id,
+            'durum' => 'onaylandi',
+            'incelenme_at' => now(),
+        ]);
+
+        unset($this->basvurular, $this->taseronlar);
+        $this->seciliId = $taseron->id;
+        Notification::make()->title('Taşeron onaylandı ve sicile aktarıldı')->body($taseron->unvan.' + '.count((array) $b->yuklenen_belgeler).' evrak kaydedildi.')->success()->send();
+    }
+
+    public function basvuruReddetAction(): Action
+    {
+        return Action::make('basvuruReddet')
+            ->modalHeading('Taşeron Başvurusundan Eksik / Revizyon İste')
+            ->schema([
+                Textarea::make('ret_nedeni')->label('Eksik / Reddetme Nedeni')->rows(3)->required(),
+            ])
+            ->modalSubmitActionLabel('Eksik Bildir')
+            ->action(function (array $data, array $arguments): void {
+                $b = \App\Models\TaseronBasvurusu::query()
+                    ->whereIn('firma_id', array_keys($this->firmalar))
+                    ->findOrFail((int) ($arguments['id'] ?? 0));
+
+                $b->update([
+                    'durum' => 'reddedildi',
+                    'ret_nedeni' => trim($data['ret_nedeni']),
+                    'incelenme_at' => now(),
+                ]);
+                unset($this->basvurular);
+                Notification::make()->title('Eksik talebi taşeron portalına yansıtıldı')->warning()->send();
+            });
     }
 }

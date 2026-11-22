@@ -40,6 +40,39 @@ class IsgKatipRobot extends Page
     /** Eklenti gerçekte kurulu değil — daima false (stub). */
     public bool $eklentiBagli = false;
 
+    /** İBYS uyumlu aktarım paketi için seçili firma (K6). */
+    public ?int $ibysFirmaId = null;
+
+    #[\Livewire\Attributes\Computed]
+    public function firmalar(): array
+    {
+        return \App\Models\Firma::query()
+            ->where('user_id', \Filament\Facades\Filament::auth()->id())
+            ->where('aktif', true)
+            ->orderBy('unvan')
+            ->secenekler()
+            ->all();
+    }
+
+    public function ibysIndir(string $bicim = 'xml')
+    {
+        $firma = $this->ibysFirmaId
+            ? \App\Models\Firma::where('user_id', \Filament\Facades\Filament::auth()->id())->find($this->ibysFirmaId)
+            : null;
+
+        if (! $firma) {
+            Notification::make()->title('Önce bir firma seçin')->warning()->send();
+
+            return null;
+        }
+
+        \App\Support\DenetimKaydedici::kaydet('İBYS Aktarım', 'indirdi', $firma->unvan.' İBYS '.strtoupper($bicim).' paketi indirildi', $firma->id);
+
+        return $bicim === 'json'
+            ? \App\Support\IbysAktarimUretici::jsonIndir($firma)
+            : \App\Support\IbysAktarimUretici::xmlIndir($firma);
+    }
+
     protected function getHeaderActions(): array
     {
         return [

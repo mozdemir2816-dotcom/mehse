@@ -645,16 +645,104 @@ class HizliSahaBulgusu extends Page
             });
     }
 
-    /** İşyeri portalından gelen kapanış kanıtı talebini reddeder (ek kanıt ister). */
-    public function isverenKanitReddet(int $id): void
+    /** İşyeri portalından gelen kapanış kanıtı talebini gerekçeli reddeder ve tarihçeye yazar (K4). */
+    public function isverenKanitReddetAction(): Action
+    {
+        return Action::make('isverenKanitReddet')
+            ->modalHeading('Kapanış Kanıtını Reddet (Revizyon İste)')
+            ->modalDescription('Ret nedeni işveren portalında görünecek ve revizyon tarihçesine eklenecektir.')
+            ->schema([
+                Textarea::make('ret_nedeni')->label('Ret / Eksik Nedeni')->rows(3)->required(),
+            ])
+            ->modalSubmitActionLabel('Reddet ve Bildir')
+            ->action(function (array $data, array $arguments): void {
+                $b = $this->bulgu((int) ($arguments['id'] ?? 0));
+                $gecmis = (array) ($b->isveren_ret_gecmisi ?? []);
+                $gecmis[] = [
+                    'tarih' => now()->format('d.m.Y H:i'),
+                    'neden' => trim($data['ret_nedeni']),
+                    'reddeden' => Filament::auth()->user()?->name ?: 'İSG Uzmanı',
+                ];
+                $b->update([
+                    'isveren_kapanis_talebi_at' => null,
+                    'isveren_ret_gecmisi' => $gecmis,
+                ]);
+                $this->yenile();
+                Notification::make()->title('Kapanış kanıtı gerekçeli reddedildi')->body('Ret nedeni revizyon tarihçesine kaydedildi ve işveren portalına yansıtıldı.')->warning()->send();
+            });
+    }
+
+    /** Eski çağrılar için geriye uyumlu yardımcı. */
+    public function isverenKanitReddet(int $id, string $neden = 'Kanıt yetersiz, ek fotoğraf/belge gerekli.'): void
     {
         $b = $this->bulgu($id);
+        $gecmis = (array) ($b->isveren_ret_gecmisi ?? []);
+        $gecmis[] = [
+            'tarih' => now()->format('d.m.Y H:i'),
+            'neden' => $neden,
+            'reddeden' => Filament::auth()->user()?->name ?: 'İSG Uzmanı',
+        ];
         $b->update([
             'isveren_kapanis_talebi_at' => null,
-            'isveren_kapanis_notu' => null,
+            'isveren_ret_gecmisi' => $gecmis,
         ]);
         $this->yenile();
         Notification::make()->title('İşveren kapanış talebi reddedildi')->body('Bulgu açık kaldı; işyeri yeni kanıt yükleyebilir.')->warning()->send();
+    }
+
+    /**
+     * DÖF Yaşlandırma (0-7 / 8-15 / 16-30 / 30+ gün) + Sorumlu / Bölüm Performans Analizi (K4).
+     *
+     * @return array{yaslandirma: array<string, int>, sorumlular: array<int, array{ad: string, acik: int, kapali: int, oran: int}>, toplam_acik: int, toplam_kapali: int}
+     */
+    #[Computed]
+    public function dofYaslandirma(): array
+    {
+        $tum = SahaBulgusu::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->when($this->firmaId, fn ($q) => $q->where('firma_id', $this->firmaId))
+            ->get(['durum', 'created_at', 'sorumlu', 'bolum']);
+
+        $yas = ['0_7' => 0, '8_15' => 0, '16_30' => 0, '30_ustu' => 0];
+        $bugun = now()->startOfDay();
+
+        foreach ($tum->where('durum', '!=', 'kapandi') as $b) {
+            $gun = $b->created_at ? (int) $b->created_at->startOfDay()->diffInDays($bugun) : 0;
+            if ($gun <= 7) {
+                $yas['0_7']++;
+            } elseif ($gun <= 15) {
+                $yas['8_15']++;
+            } elseif ($gun <= 30) {
+                $yas['16_30']++;
+            } else {
+                $yas['30_ustu']++;
+            }
+        }
+
+        $sorumlular = $tum->groupBy(fn (SahaBulgusu $b) => trim((string) $b->sorumlu) ?: 'Atanmamış')
+            ->map(function (Collection $g, string $ad): array {
+                $acik = $g->where('durum', '!=', 'kapandi')->count();
+                $kapali = $g->where('durum', 'kapandi')->count();
+                $t = $acik + $kapali;
+
+                return [
+                    'ad' => $ad,
+                    'acik' => $acik,
+                    'kapali' => $kapali,
+                    'oran' => $t > 0 ? (int) round(($kapali / $t) * 100) : 0,
+                ];
+            })
+            ->sortByDesc('acik')
+            ->take(6)
+            ->values()
+            ->all();
+
+        return [
+            'yaslandirma' => $yas,
+            'sorumlular' => $sorumlular,
+            'toplam_acik' => $tum->where('durum', '!=', 'kapandi')->count(),
+            'toplam_kapali' => $tum->where('durum', 'kapandi')->count(),
+        ];
     }
 
     /** Açık / devam ediyor / ertelendi arası geçiş (kapatma ayrı aksiyonla, not ister). */

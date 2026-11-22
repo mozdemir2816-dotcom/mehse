@@ -272,6 +272,44 @@
         </div>
     </x-filament::section>
 
+    {{-- DÖF YAŞLANDIRMA & SORUMLU PERFORMANS PANELİ (K4) --}}
+    @php $ya = $this->dofYaslandirma; @endphp
+    @if (($ya['toplam_acik'] + $ya['toplam_kapali']) > 0)
+        <x-filament::section icon="heroicon-o-chart-bar" icon-color="primary" collapsible collapsed>
+            <x-slot name="heading">DÖF Yaşlandırma &amp; Sorumlu Performansı ({{ $ya['toplam_acik'] }} açık · {{ $ya['toplam_kapali'] }} kapalı)</x-slot>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.65rem;margin-bottom:.9rem">
+                @foreach ([
+                    ['0–7 Gün Açık', $ya['yaslandirma']['0_7'], '#059669'],
+                    ['8–15 Gün Açık', $ya['yaslandirma']['8_15'], '#2563eb'],
+                    ['16–30 Gün Açık', $ya['yaslandirma']['16_30'], '#d97706'],
+                    ['30+ Gün (Kritik Yaş)', $ya['yaslandirma']['30_ustu'], '#dc2626'],
+                ] as [$etiket, $sayi, $renk])
+                    <div style="border:1px solid rgb(107 114 128 / .22);border-left:4px solid {{ $renk }};border-radius:.6rem;padding:.55rem .75rem">
+                        <div style="font-size:.72rem;color:rgb(107 114 128);font-weight:600">{{ $etiket }}</div>
+                        <div style="font-size:1.35rem;font-weight:800;color:{{ $sayi > 0 ? $renk : 'inherit' }}">{{ $sayi }}</div>
+                    </div>
+                @endforeach
+            </div>
+            @if (count($ya['sorumlular']))
+                <div style="font-size:.78rem;font-weight:700;margin-bottom:.35rem">Sorumlu Bazlı Kapanış Performansı</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.55rem">
+                    @foreach ($ya['sorumlular'] as $sr)
+                        <div style="border:1px solid rgb(107 114 128 / .18);border-radius:.55rem;padding:.45rem .65rem;font-size:.78rem">
+                            <div style="display:flex;justify-content:space-between;font-weight:600">
+                                <span>{{ $sr['ad'] }}</span>
+                                <span style="color:#059669">%{{ $sr['oran'] }}</span>
+                            </div>
+                            <div style="height:5px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:.25rem 0">
+                                <div style="height:100%;width:{{ $sr['oran'] }}%;background:#059669"></div>
+                            </div>
+                            <div style="font-size:.71rem;color:rgb(107 114 128)">Açık: {{ $sr['acik'] }} · Kapalı: {{ $sr['kapali'] }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </x-filament::section>
+    @endif
+
     {{-- LİSTE --}}
     <x-filament::section icon="heroicon-o-queue-list" icon-color="gray">
         <x-slot name="heading">Saha Bulguları {{ $firmaId ? '' : '— tüm işyerleri' }} ({{ $this->bulguToplamSayisi }})</x-slot>
@@ -322,8 +360,13 @@
                                                     <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($b->isveren_kapanis_dosya) }}" target="_blank" style="color:#1d4ed8;font-weight:600;text-decoration:underline">Kanıtı Gör</a>
                                                 @endif
                                                 <button type="button" wire:click="mountAction('kapat', { id: {{ $b->id }} })" style="color:#15803d;font-weight:700;background:none;border:none;cursor:pointer;padding:0">✓ Doğrula &amp; Kapat</button>
-                                                <button type="button" wire:click="isverenKanitReddet({{ $b->id }})" style="color:#dc2626;font-weight:600;background:none;border:none;cursor:pointer;padding:0">✕ Reddet</button>
+                                                <button type="button" wire:click="mountAction('isverenKanitReddet', { id: {{ $b->id }} })" style="color:#dc2626;font-weight:600;background:none;border:none;cursor:pointer;padding:0">✕ Gerekçeli Reddet</button>
                                             </div>
+                                        </div>
+                                    @elseif (! empty($b->isveren_ret_gecmisi))
+                                        @php $sonRet = end($b->isveren_ret_gecmisi); @endphp
+                                        <div style="font-size:.71rem;color:#b91c1c;margin-bottom:.25rem">
+                                            ↩ Son ret ({{ $sonRet['tarih'] ?? '' }}): {{ \Illuminate\Support\Str::limit((string) ($sonRet['neden'] ?? ''), 70) }}
                                         </div>
                                     @endif
                                     <div style="display:flex;gap:.35rem;align-items:center">

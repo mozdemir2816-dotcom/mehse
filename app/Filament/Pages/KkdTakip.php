@@ -623,6 +623,36 @@ class KkdTakip extends Page
         $this->yenile();
     }
 
+    /** Çalışan portalından gelen KKD talepleri (K5). */
+    #[Computed]
+    public function kkdTalepleri(): Collection
+    {
+        if (! $this->firma || ! \Illuminate\Support\Facades\Schema::hasTable('kkd_talepleri')) {
+            return collect();
+        }
+
+        return \App\Models\KkdTalebi::query()
+            ->where('firma_id', $this->firma->id)
+            ->orderByRaw("CASE WHEN durum = 'bekliyor' THEN 0 ELSE 1 END")
+            ->latest('id')
+            ->limit(25)
+            ->get();
+    }
+
+    public function kkdTalepDurum(int $id, string $durum): void
+    {
+        if (! $this->firma || ! in_array($durum, ['onaylandi', 'teslim_edildi', 'reddedildi'], true)) {
+            return;
+        }
+        $t = \App\Models\KkdTalebi::where('firma_id', $this->firma->id)->find($id);
+        if (! $t) {
+            return;
+        }
+        $t->update(['durum' => $durum]);
+        unset($this->kkdTalepleri);
+        Notification::make()->title('KKD talebi güncellendi: '.\App\Models\KkdTalebi::DURUMLAR[$durum])->success()->send();
+    }
+
     protected function getHeaderActions(): array
     {
         return [

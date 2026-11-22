@@ -48,6 +48,12 @@ Route::get('/risk-bildir/{firma}/{imza}', [\App\Http\Controllers\QrRiskBildirimC
 Route::post('/risk-bildir/{firma}/{imza}', [\App\Http\Controllers\QrRiskBildirimController::class, 'kaydet'])
     ->whereNumber('firma')->where('imza', '[a-f0-9]{20}')->middleware('throttle:10,1')->name('risk.bildir.kaydet');
 
+// Taşeron Self-Servis Evrak & Başvuru Portalı — giriş gerektirmeden taşeron evrak yükler (K2).
+Route::get('/taseron-basvuru/{token}', [\App\Http\Controllers\TaseronBasvuruController::class, 'goster'])
+    ->where('token', '[A-Za-z0-9]{20,48}')->middleware('throttle:60,1')->name('taseron.basvuru');
+Route::post('/taseron-basvuru/{token}', [\App\Http\Controllers\TaseronBasvuruController::class, 'kaydet'])
+    ->where('token', '[A-Za-z0-9]{20,48}')->middleware('throttle:20,1')->name('taseron.basvuru.kaydet');
+
 // Müfettiş / Denetçi için süreli, salt-okunur ve erişim loglu teftiş ekranı (C21).
 Route::get('/teftis/{token}', [\App\Http\Controllers\MufettisTeftisController::class, 'goster'])
     ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('mufettis.teftis');
@@ -217,9 +223,17 @@ Route::middleware('auth')->prefix('/mehse/notlar')->group(function () {
     })->name('mehse.notlar.sil');
 });
 
-// Sağ alt yüzen İSG Mevzuat Asistanı — mevcut GeminiMevzuatDanismani servisini kullanır.
+// Sağ alt yüzen İSG Asistanı — önce canlı portföy verisini (K3), değilse 6331 mevzuat danışmanını yanıtlar.
 Route::post('/mehse/mevzuat-sor', function (Request $request) {
     $veri = $request->validate(['soru' => ['required', 'string', 'max:500']]);
+    $user = $request->user();
+
+    if ($user instanceof User) {
+        $canli = \App\Support\CanliPortfoyAsistani::sor($user, $veri['soru']);
+        if ($canli !== null) {
+            return response()->json($canli);
+        }
+    }
 
     return response()->json(\App\Support\GeminiMevzuatDanismani::sor($veri['soru']));
 })->middleware(['auth', 'throttle:30,1'])->name('mehse.mevzuat.sor');
