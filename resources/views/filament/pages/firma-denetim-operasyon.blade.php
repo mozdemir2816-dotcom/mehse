@@ -20,6 +20,23 @@
         </div>
 
         @if ($bolum === 'skor')
+            @php $trend = $this->denetimSkorTrendi; @endphp
+            @if (count($trend))
+                <x-filament::section heading="Ziyaret & Saha Denetimi Skor Trendi (0–100)" description="Her geçmiş saha denetiminin uygunluk skoru — firmanın aydan aya gelişimi.">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;align-items:end">
+                        @foreach ($trend as $t)
+                            <div style="border:1px solid rgb(107 114 128 / .2);border-radius:.6rem;padding:.55rem .65rem;text-align:center">
+                                <div style="font-size:.72rem;color:rgb(107 114 128)">{{ $t['tarih'] }}</div>
+                                <div style="font-size:1.35rem;font-weight:800;color:{{ $t['renk'] }};margin:.15rem 0">{{ $t['skor'] }}</div>
+                                <div style="height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-bottom:.3rem">
+                                    <div style="height:100%;width:{{ $t['skor'] }}%;background:{{ $t['renk'] }}"></div>
+                                </div>
+                                <div style="font-size:.68rem;color:rgb(107 114 128)">✓ {{ $t['uygun'] }} · ✕ {{ $t['uygun_degil'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-filament::section>
+            @endif
             @include('filament.pages.partials.komuta-tesis')
         @elseif ($bolum === 'firma360')
             @include('filament.pages.partials.komuta-isyeri')

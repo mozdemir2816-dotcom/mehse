@@ -92,11 +92,25 @@ class IsyeriDurumu
             default => $yoksa,
         };
 
-        // 1. Profesyonel görevlendirmeleri
+        // 1. Profesyonel görevlendirmeleri (F4: "Bu hizmeti biz vermiyoruz" muafiyeti + sınıf uyuşmazlığı)
         $gorevli = collect([$firma->igu_id, $firma->isyeri_hekimi_id, $firma->dsp_id])->filter()->count();
-        $eksikRol = array_filter(['iş güvenliği uzmanı' => ! $firma->igu_id, 'işyeri hekimi' => ! $firma->isyeri_hekimi_id]);
-        $ekle('İSG profesyoneli görevlendirmeleri', $eksikRol ? 'eksik' : 'tamamlandi',
-            $gorevli.' aktif görevlendirme bulunuyor.'.($eksikRol ? ' Atanmamış: '.implode(', ', array_keys($eksikRol)).'.' : ''),
+        $eksikRol = array_filter([
+            'iş güvenliği uzmanı' => ! $firma->igu_hizmeti_yok && ! $firma->igu_id,
+            'işyeri hekimi' => ! $firma->hekim_hizmeti_yok && ! $firma->isyeri_hekimi_id,
+        ]);
+        $sinif = $firma->igu ? OsgbKadroAnalizi::uzmanSinifi($firma->igu) : null;
+        $sinifUyumsuz = ! $firma->igu_hizmeti_yok && $sinif && ! OsgbKadroAnalizi::sinifUygunMu($sinif, $firma->tehlike_sinifi);
+        $muafNot = array_filter([
+            $firma->igu_hizmeti_yok ? 'İGU kapsam dışı' : null,
+            $firma->hekim_hizmeti_yok ? 'Hekim kapsam dışı' : null,
+            $firma->dsp_hizmeti_yok ? 'DSP kapsam dışı' : null,
+        ]);
+        $ekle('İSG profesyoneli görevlendirmeleri',
+            $sinifUyumsuz ? 'gecikmis' : ($eksikRol ? 'eksik' : 'tamamlandi'),
+            $gorevli.' aktif görevlendirme.'
+                .($eksikRol ? ' Atanmamış: '.implode(', ', array_keys($eksikRol)).'.' : '')
+                .($sinifUyumsuz ? ' UYARI: '.$sinif.' sınıfı uzman bu tehlike sınıfı için uygun değil!' : '')
+                .($muafNot ? ' ('.implode(', ', $muafNot).')' : ''),
             'İşveren / OSGB yöneticisi', fn () => FirmaResource::getUrl('edit', ['record' => $firma]));
 
         // 2. Çalışan kayıtları
@@ -180,11 +194,15 @@ class IsyeriDurumu
             $tatbikatSayi.' tatbikat kaydı'.($sonraki ? '; sonraki tatbikat '.$sonraki->format('d.m.Y').' ('.static::kalanMetni($sonraki).')' : '').'.',
             'İş güvenliği uzmanı / İşveren', fn () => TatbikatSayfasi::getUrl(['firma' => $firma->id]));
 
-        // 12. Periyodik kontroller
-        $ekipman = IsEkipmani::query()->where('firma_id', $firma->id)->where('aktif', true)->get(['sonraki_vize_tarihi']);
-        [$g, $y] = $sayac($ekipman->pluck('sonraki_vize_tarihi')->filter()->map(fn ($t) => Carbon::parse($t)));
-        $ekle('Periyodik kontroller', $durumBul($ekipman->isNotEmpty(), $g, $y),
-            $ekipman->count().' aktif ekipman kaydı; '.$g.' gecikmiş, '.$y.' yaklaşan.',
+        // 12. Periyodik kontroller (F2: sonucu 'uygun_degil' olan rapor tamamlanmış sayılmaz!)
+        $ekipman = IsEkipmani::query()->where('firma_id', $firma->id)->where('aktif', true)->get(['sonraki_vize_tarihi', 'sonuc', 'kategori']);
+        $periyodikEkipman = $ekipman->filter(fn (IsEkipmani $e) => EkipmanKatalogu::periyodikMi($e->kategori));
+        $uygunsuzEkipman = $periyodikEkipman->where('sonuc', 'uygun_degil')->count();
+        [$g, $y] = $sayac($periyodikEkipman->pluck('sonraki_vize_tarihi')->filter()->map(fn ($t) => Carbon::parse($t)));
+        $ekle('Periyodik kontroller',
+            $uygunsuzEkipman > 0 ? 'gecikmis' : $durumBul($periyodikEkipman->isNotEmpty(), $g, $y),
+            $ekipman->count().' aktif ekipman; '.$g.' gecikmiş, '.$y.' yaklaşan'
+                .($uygunsuzEkipman > 0 ? ", {$uygunsuzEkipman} UYGUN DEĞİL (uygunsuzluk giderilmeden tamam sayılmaz)" : '').'.',
             'İşveren / İş güvenliği uzmanı', fn () => PeriyodikKontrol::getUrl(['firma' => $firma->id]));
 
         // 13. Ortam ölçümleri
@@ -409,6 +427,43 @@ class IsyeriDurumu
     public static function sonOlaylar(Firma $firma, int $adet = 5): Collection
     {
         return OlayKaydi::query()->where('firma_id', $firma->id)->latest('olay_tarihi')->latest('id')->take($adet)->get();
+    }
+
+    /**
+     * Ziyaret / Saha Denetimi başı 0–100 denetim skoru trendi (F8).
+     * Her geçmiş SahaDenetimi kaydının uygun / (uygun + uygun_degil) yüzdesini ve tarihini döner.
+     *
+     * @return array<int, array{id: int, tarih: string, skor: int, uygun: int, uygun_degil: int, denetleyen: string, renk: string}>
+     */
+    public static function denetimSkorTrendi(Firma $firma, int $adet = 10): array
+    {
+        return \App\Models\SahaDenetimi::query()
+            ->where('firma_id', $firma->id)
+            ->orderByDesc('denetim_tarihi')
+            ->orderByDesc('id')
+            ->take($adet)
+            ->get(['id', 'denetim_tarihi', 'denetleyen', 'cevaplar'])
+            ->map(function (\App\Models\SahaDenetimi $d): array {
+                $cevaplar = collect($d->cevaplar ?? []);
+                $uygun = $cevaplar->where('sonuc', 'uygun')->count();
+                $uygunDegil = $cevaplar->where('sonuc', 'uygun_degil')->count();
+                $toplam = $uygun + $uygunDegil;
+                $skor = $toplam > 0 ? (int) round(($uygun / $toplam) * 100) : 100;
+                $renk = $skor >= 85 ? '#059669' : ($skor >= 60 ? '#d97706' : '#dc2626');
+
+                return [
+                    'id' => $d->id,
+                    'tarih' => $d->denetim_tarihi?->format('d.m.Y') ?: '—',
+                    'skor' => $skor,
+                    'uygun' => $uygun,
+                    'uygun_degil' => $uygunDegil,
+                    'denetleyen' => (string) ($d->denetleyen ?: 'İSG Uzmanı'),
+                    'renk' => $renk,
+                ];
+            })
+            ->reverse()
+            ->values()
+            ->all();
     }
 
     public static function kalanMetni(Carbon $tarih): string

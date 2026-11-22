@@ -13,6 +13,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -62,6 +63,7 @@ class Ayarlar extends Page
             'ana_ekran' => $ayar['ana_ekran'],
             'saha_kisayollar' => array_keys(array_filter((array) $ayar['saha_kisayollar'])),
             'esikler' => $ayar['esikler'],
+            'politika' => $ayar['politika'] ?? ['islak_imza_zorunlu' => false, 'merkezi_ziyaret_programi' => false],
             'kontrol_takip' => array_values(array_diff($tumKriterler, (array) $ayar['kontrol_haric'])),
             'kontrol_yalniz_takip' => KullaniciAyarlari::kontrolYalnizTakip($this->kullanici()->id),
         ]);
@@ -157,6 +159,19 @@ class Ayarlar extends Page
                             )),
                     ]),
 
+                Section::make('OSGB Yönetim Politikaları')
+                    ->description('Ekip ve belge disiplini için kurumsal kilitler.')
+                    ->icon('heroicon-o-shield-check')
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('politika.islak_imza_zorunlu')
+                            ->label('Islak / Canlı imza taraması zorunlu')
+                            ->helperText('Açıkken Risk Değerlendirmesi ve resmi belgelerde ıslak/canlı imza hatırlatma kilidi gösterilir.'),
+                        Toggle::make('politika.merkezi_ziyaret_programi')
+                            ->label('Ziyaret programını merkezi olarak yönet')
+                            ->helperText('Açıkken yönetici dışındaki uzmanlar ziyaret planından satır ekleyip silemez; plan merkezden yönetilir.'),
+                    ]),
+
                 Section::make('Kontrol Merkezi kriterleri')
                     ->headerActions(static::kriterHizliSecimleri())
                     ->description('İşaretli kriterler Kontrol Merkezi, Firma Takip ve Excel panosunda sayılır. Takip etmediğiniz kriterlerin işaretini kaldırın; tamamlanma yüzdeleri buna göre hesaplanır.')
@@ -246,6 +261,10 @@ class Ayarlar extends Page
                 array_combine(array_keys(KullaniciAyarlari::SAHA_KISAYOLLARI), array_keys(KullaniciAyarlari::SAHA_KISAYOLLARI)),
             ),
             'esikler' => array_map('intval', $veri['esikler']),
+            'politika' => [
+                'islak_imza_zorunlu' => (bool) ($veri['politika']['islak_imza_zorunlu'] ?? false),
+                'merkezi_ziyaret_programi' => (bool) ($veri['politika']['merkezi_ziyaret_programi'] ?? false),
+            ],
             'kontrol_haric' => array_values(array_diff($tumKriterler, $veri['kontrol_takip'] ?? [])),
             'kontrol_yalniz_takip' => array_values($veri['kontrol_yalniz_takip'] ?? []),
         ]);

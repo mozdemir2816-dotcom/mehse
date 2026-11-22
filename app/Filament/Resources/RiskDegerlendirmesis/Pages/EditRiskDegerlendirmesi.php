@@ -92,7 +92,63 @@ class EditRiskDegerlendirmesi extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            $this->ustKaydet(),
+            $this->ustKaydet()->visible(fn () => ! $this->record->kilitliMi()),
+            Action::make('imzalaKilitle')
+                ->label('İmzala & Kilitle')
+                ->icon('heroicon-o-lock-closed')
+                ->color('success')
+                ->visible(fn () => ! $this->record->kilitliMi())
+                ->requiresConfirmation()
+                ->modalHeading('Risk Değerlendirmesini İmzala ve Kilitle')
+                ->modalDescription(function (): string {
+                    $eksikler = $this->record->md6EkipEksikleri();
+                    $metin = 'Bu işlem risk değerlendirmesini yürürlüğe alır ve değiştirilemez (kilitli) sürüm olarak mühürler. Sonradan değişiklik gerektiğinde "Yeni Versiyon Aç" ile v'.((int) ($this->record->revizyon_no ?? 0) + 1).' oluşturulur.';
+
+                    if ($eksikler) {
+                        $metin .= "\n\n⚠️ Yönetmelik Md. 6 Eksik Zorunlu Roller:\n• ".implode("\n• ", $eksikler);
+                    }
+
+                    if (\App\Support\KullaniciAyarlari::islakImzaZorunluMu()) {
+                        $metin .= "\n\n✍️ OSGB Politikası: Islak / canlı imza taraması zorunludur — imzalattıktan sonra taranmış belgeyi Arşiv'e yüklemeyi unutmayın.";
+                    }
+
+                    return $metin;
+                })
+                ->modalSubmitActionLabel('Onayla ve Kilitle')
+                ->action(function (): void {
+                    $this->record->kilitle(auth()->id());
+                    Notification::make()
+                        ->title('Risk değerlendirmesi kilitlendi (v'.($this->record->revizyon_no ?? 0).')')
+                        ->body('Artık geriye dönük değiştirilemez. Değişiklik için "Yeni Versiyon Aç" kullanabilirsiniz.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $this->record]));
+                }),
+            Action::make('yeniVersiyonAc')
+                ->label(fn () => 'Yeni Versiyon Aç (v'.((int) ($this->record->revizyon_no ?? 0) + 1).')')
+                ->icon('heroicon-o-document-duplicate')
+                ->color('warning')
+                ->visible(fn () => $this->record->kilitliMi())
+                ->modalHeading('Kilitli Sürümden Yeni Versiyon Aç')
+                ->modalDescription('Mevcut kilitli sürüm arşivde aynen korunur; tüm maddeleriyle yeni bir taslak revizyon oluşturulur.')
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('neden')
+                        ->label('Revizyon Nedeni')
+                        ->placeholder('Örn: Yeni ekipman alımı / periyodik gözden geçirme / saha bulgusu')
+                        ->maxLength(200),
+                ])
+                ->modalSubmitActionLabel('Yeni Versiyonu Oluştur')
+                ->action(function (array $data): void {
+                    $yeni = $this->record->yeniVersiyonAc($data['neden'] ?? null);
+                    Notification::make()
+                        ->title('Yeni revizyon açıldı (v'.$yeni->revizyon_no.')')
+                        ->body('Önceki sürüm değişmeden arşivde saklandı.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
+                }),
             $this->ekipmanEksikleriAksiyonu(),
             Action::make('hastanePdf')
                 ->label('PDF İndir')
@@ -211,7 +267,34 @@ class EditRiskDegerlendirmesi extends EditRecord
 
                     $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
                 }),
-            DeleteAction::make(),
+            DeleteAction::make()->visible(fn () => ! $this->record->kilitliMi()),
         ];
+    }
+
+    public function getSubheading(): ?string
+    {
+        if ($this->record->kilitliMi()) {
+            return '🔒 Bu sürüm '.$this->record->kilitli_at->format('d.m.Y H:i').' tarihinde imzalanıp kilitlenmiştir — doğrudan düzenlenemez. Değişiklik için yukarıdan "Yeni Versiyon Aç" kullanın.';
+        }
+
+        $eksikler = $this->record->md6EkipEksikleri();
+        if ($eksikler) {
+            return '⚠️ Yönetmelik Md. 6 eksik ekip rolleri: '.implode(', ', $eksikler);
+        }
+
+        return null;
+    }
+
+    protected function beforeSave(): void
+    {
+        if ($this->record->kilitliMi()) {
+            Notification::make()
+                ->title('Kilitli sürüm değiştirilemez')
+                ->body('İmzalanmış risk değerlendirmesinde değişiklik yapmak için yukarıdan "Yeni Versiyon Aç" butonunu kullanın.')
+                ->danger()
+                ->send();
+
+            $this->halt();
+        }
     }
 }

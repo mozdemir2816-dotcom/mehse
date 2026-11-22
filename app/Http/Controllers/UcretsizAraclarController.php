@@ -71,4 +71,43 @@ class UcretsizAraclarController extends Controller
             'sonuclar' => [],
         ]);
     }
+
+    public function ipcCezaHesaplama()
+    {
+        return view('pages.ucretsiz-araclar', [
+            'aktifArac' => 'ipc',
+            'baslik' => '2026 İSG İdari Para Cezası (6331 m.26) Hesaplayıcı (Ücretsiz)',
+            'aciklama' => 'Tehlike sınıfı ve çalışan sayısına göre 6331 sayılı Kanun m.26 kademeli İPC çarpanı ile tahmini ceza riskinizi anında hesaplayın.',
+            'q' => '',
+            'sonuclar' => [],
+        ]);
+    }
+
+    public function ilkyardimciDestekHesaplama()
+    {
+        return view('pages.ucretsiz-araclar', [
+            'aktifArac' => 'ekip',
+            'baslik' => 'İlkyardımcı & Acil Durum Destek Elemanı Hesaplayıcı (Ücretsiz)',
+            'aciklama' => 'Acil Durumlar Hakkında Yönetmelik ve İlkyardım Yönetmeliğine göre zorunlu söndürme, kurtarma, koruma ve sertifikalı ilkyardımcı sayısını hesaplayın.',
+            'q' => '',
+            'sonuclar' => [],
+        ]);
+    }
+
+    public function fineKinneyRiskHesaplama()
+    {
+        return view('pages.ucretsiz-araclar', [
+            'aktifArac' => 'risk',
+            'baslik' => 'Fine-Kinney & 5×5 Matris Risk Skoru Hesaplayıcı (Ücretsiz)',
+            'aciklama' => 'Fine-Kinney (Olasılık × Frekans × Şiddet) ve 5×5 L-Tipi Matris risk puanınızı, risk sınıfınızı ve yasal aksiyon önceliğinizi anında görün.',
+            'q' => '',
+            'sonuclar' => [],
+        ]);
+    }
+
+    /** Kayıtsız, salt-okunur canlı OSGB Demo Turu (F9). */
+    public function canliDemo()
+    {
+        return view('pages.demo');
+    }
 }

@@ -36,6 +36,31 @@ class SahaBulgusu extends Model
         'dusuk' => '#15803d',
     ];
 
+    /** ISO 45001 Kontrol Hiyerarşisi (F1 — kapalı devre DÖF). */
+    public const KONTROL_HIYERARSISI = [
+        'eliminasyon' => 'Eliminasyon (Ortadan Kaldırma)',
+        'ikame' => 'İkame (Daha Güvenli ile Değiştirme)',
+        'muhendislik' => 'Mühendislik Kontrolü',
+        'idari' => 'İdari Kontrol / Talimat / Eğitim',
+        'kkd' => 'Kişisel Koruyucu Donanım (KKD)',
+    ];
+
+    public const KONTROL_HIYERARSISI_KISA = [
+        'eliminasyon' => 'Eliminasyon',
+        'ikame' => 'İkame',
+        'muhendislik' => 'Mühendislik',
+        'idari' => 'İdari',
+        'kkd' => 'KKD',
+    ];
+
+    public const KONTROL_HIYERARSISI_RENK = [
+        'eliminasyon' => '#047857',
+        'ikame' => '#0d9488',
+        'muhendislik' => '#2563eb',
+        'idari' => '#b45309',
+        'kkd' => '#7c3aed',
+    ];
+
     protected $table = 'saha_bulgulari';
 
     protected $guarded = ['id'];
@@ -47,12 +72,14 @@ class SahaBulgusu extends Model
         'siddet' => 'integer',
         'hedef_olasilik' => 'integer',
         'hedef_siddet' => 'integer',
+        'etkinlik_puani' => 'integer',
         'kaynak_kayit_id' => 'integer',
         'kaynak_sira' => 'integer',
         'enlem' => 'float',
         'boylam' => 'float',
         'termin' => 'date',
         'kapanis_tarihi' => 'date',
+        'isveren_kapanis_talebi_at' => 'datetime',
         'fotograflar' => 'array',
     ];
 
@@ -62,20 +89,52 @@ class SahaBulgusu extends Model
             $b->bulgu_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'bulgu_no', 'SB-'.now()->format('Y').'-', 4);
         });
 
+        static::created(function (SahaBulgusu $b): void {
+            \App\Support\DenetimKaydedici::kaydet('Saha Bulguları / DÖF', 'olusturdu', ($b->bulgu_no ?: 'Bulgu').': '.\Illuminate\Support\Str::limit((string) $b->uygunsuzluk, 120), $b->firma_id, static::class, $b->id);
+        });
+
         // Kapatma / yeniden açma bağlı DÖF maddelerine yansır.
         static::updated(function (SahaBulgusu $b): void {
             if ($b->wasChanged('durum')) {
                 \App\Support\BulguHavuzu::dofaYansit($b);
+                $islem = $b->durum === 'kapandi' ? 'onayladi' : 'guncelledi';
+                \App\Support\DenetimKaydedici::kaydet('Saha Bulguları / DÖF', $islem, ($b->bulgu_no ?: 'Bulgu').' durumu → '.(self::DURUMLAR[$b->durum] ?? $b->durum), $b->firma_id, static::class, $b->id);
             }
         });
 
         static::deleting(function (SahaBulgusu $b): void {
+            \App\Support\DenetimKaydedici::kaydet('Saha Bulguları / DÖF', 'sildi', ($b->bulgu_no ?: 'Bulgu').' silindi', $b->firma_id, static::class, $b->id);
             foreach ($b->fotograflar ?? [] as $yol) {
                 if (Storage::disk('public')->exists($yol)) {
                     Storage::disk('public')->delete($yol);
                 }
             }
         });
+    }
+
+    public function kontrolHiyerarsisiEtiketi(bool $kisa = true): ?string
+    {
+        if (! $this->kontrol_hiyerarsisi) {
+            return null;
+        }
+
+        return $kisa
+            ? (self::KONTROL_HIYERARSISI_KISA[$this->kontrol_hiyerarsisi] ?? $this->kontrol_hiyerarsisi)
+            : (self::KONTROL_HIYERARSISI[$this->kontrol_hiyerarsisi] ?? $this->kontrol_hiyerarsisi);
+    }
+
+    public function artikRiskSkoru(): ?int
+    {
+        if (! $this->hedef_olasilik || ! $this->hedef_siddet) {
+            return null;
+        }
+
+        return (int) $this->hedef_olasilik * (int) $this->hedef_siddet;
+    }
+
+    public function isverenOnayiBekliyorMu(): bool
+    {
+        return $this->isveren_kapanis_talebi_at !== null && $this->durum !== 'kapandi';
     }
 
     public function firma(): BelongsTo

@@ -83,23 +83,43 @@ class FirmaForm
 
             Section::make('İSG Profesyonelleri')
                 ->columns(3)
-                ->description('Atanan kişilerin kaşesi bu firmanın belgelerinde (Atama Yazıları vb.) otomatik basılır.')
+                ->description('Atanan kişilerin kaşesi bu firmanın belgelerinde (Atama Yazıları vb.) otomatik basılır. OSGB kapsamı dışında olan hizmetleri işaretleyerek yanlış eksik uyarılarını engelleyebilirsiniz.')
                 ->schema([
                     Select::make('igu_id')->label('İş Güvenliği Uzmanı')
                         ->options(fn () => IsgProfesyoneli::query()
                             ->where('user_id', Filament::auth()->id())->where('tip', 'igu')
                             ->pluck('ad_soyad', 'id'))
-                        ->native(false)->searchable()->preload(),
+                        ->native(false)->searchable()->preload()
+                        ->rule(fn (?Model $record) => function (string $attribute, $value, \Closure $fail) use ($record): void {
+                            if ($cakisan = \App\Support\OsgbKadroAnalizi::tamSureliCakisanFirma($value ? (int) $value : null, 'igu', $record?->getKey())) {
+                                $fail("Bu İGU '{$cakisan->unvan}' firmasında Tam Süreli (%100 kapasite) kilitlidir; başka firmaya atanamaz.");
+                            }
+                        }),
                     Select::make('isyeri_hekimi_id')->label('İşyeri Hekimi')
                         ->options(fn () => IsgProfesyoneli::query()
                             ->where('user_id', Filament::auth()->id())->where('tip', 'isyeri_hekimi')
                             ->pluck('ad_soyad', 'id'))
-                        ->native(false)->searchable()->preload(),
+                        ->native(false)->searchable()->preload()
+                        ->rule(fn (?Model $record) => function (string $attribute, $value, \Closure $fail) use ($record): void {
+                            if ($cakisan = \App\Support\OsgbKadroAnalizi::tamSureliCakisanFirma($value ? (int) $value : null, 'isyeri_hekimi', $record?->getKey())) {
+                                $fail("Bu İşyeri Hekimi '{$cakisan->unvan}' firmasında Tam Süreli (%100 kapasite) kilitlidir; başka firmaya atanamaz.");
+                            }
+                        }),
                     Select::make('dsp_id')->label('Diğer Sağlık Personeli (DSP)')
                         ->options(fn () => IsgProfesyoneli::query()
                             ->where('user_id', Filament::auth()->id())->where('tip', 'dsp')
                             ->pluck('ad_soyad', 'id'))
                         ->native(false)->searchable()->preload(),
+                    Toggle::make('igu_hizmeti_yok')->label('İGU hizmetini biz vermiyoruz')
+                        ->helperText('Uyum skoru ve İPC uyarısından muaf tutulur.'),
+                    Toggle::make('hekim_hizmeti_yok')->label('Hekim hizmetini biz vermiyoruz')
+                        ->helperText('Uyum skoru ve İPC uyarısından muaf tutulur.'),
+                    Toggle::make('dsp_hizmeti_yok')->label('DSP hizmetini biz vermiyoruz')
+                        ->helperText('Kadro hesabında hariç tutulur.'),
+                    Toggle::make('tam_sureli_igu')->label('Tam süreli İGU (%100 kapasite kilidi)')
+                        ->helperText('Atanan İGU bu firmaya %100 ayrılır; başka firmaya atama engellenir.'),
+                    Toggle::make('tam_sureli_hekim')->label('Tam süreli Hekim (%100 kapasite kilidi)')
+                        ->helperText('Atanan Hekim bu firmaya %100 ayrılır; başka firmaya atama engellenir.'),
                 ]),
 
             Section::make('Sözleşme & Diğer')

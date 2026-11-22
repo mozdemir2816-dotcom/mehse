@@ -112,6 +112,11 @@ class KullaniciAyarlari
             'kontrol_yalniz_takip' => null,
             // Arşiv hatırlatma ayarları (Arşiv > Hatırlatma Ayarları).
             'arsiv' => ['yaklasan_gun' => (int) config('arsiv.yaklasan_gun', 30)],
+            // OSGB yönetim politikaları (F5): ıslak/canlı imza zorunluluğu + merkezi ziyaret takvimi kilidi.
+            'politika' => [
+                'islak_imza_zorunlu' => false,
+                'merkezi_ziyaret_programi' => false,
+            ],
             'ana_ekran' => 'standart',
             // Anahtar => açık mı. Map olduğu için kaydedilen değer varsayılanı ezer, liste gibi kaymaz.
             'saha_kisayollar' => array_map(
@@ -125,6 +130,18 @@ class KullaniciAyarlari
     public static function sahaAnaEkrani(?User $user = null): bool
     {
         return self::hepsi($user)['ana_ekran'] === 'saha';
+    }
+
+    /** OSGB politikası: ıslak / canlı imza taraması zorunlu mu? (F5) */
+    public static function islakImzaZorunluMu(?User $user = null): bool
+    {
+        return (bool) (self::hepsi($user)['politika']['islak_imza_zorunlu'] ?? false);
+    }
+
+    /** OSGB politikası: ziyaret programı merkezi olarak mı yönetiliyor? (F5) */
+    public static function merkeziZiyaretProgramiMi(?User $user = null): bool
+    {
+        return (bool) (self::hepsi($user)['politika']['merkezi_ziyaret_programi'] ?? false);
     }
 
     /**

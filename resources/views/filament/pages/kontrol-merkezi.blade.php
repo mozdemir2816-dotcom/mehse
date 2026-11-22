@@ -75,6 +75,9 @@
                             <div style="min-width:220px;flex:1">
                                 <div style="font-size:.84rem;font-weight:600">
                                     <span style="font-size:.7rem;color:{{ $b['gecikti'] ? $kirmizi : $gri }};font-weight:700">{{ $b['bulgu_no'] }}</span>
+                                    @if (! empty($b['hiyerarsi']))
+                                        <span style="font-size:.66rem;font-weight:700;padding:.05rem .4rem;border-radius:999px;color:#fff;background:{{ $b['hiyerarsi_renk'] ?: '#2563eb' }}">{{ $b['hiyerarsi'] }}</span>
+                                    @endif
                                     · {{ \Illuminate\Support\Str::limit($b['uygunsuzluk'], 110) }}
                                 </div>
                                 <div style="font-size:.75rem;color:{{ $gri }}">
@@ -620,5 +623,199 @@
                 </div>
             </div>
         @endif
+    @endif
+
+    {{-- ==================== OSGB KADRO, KARNE & İHMAL EDİLEN FİRMALAR (F4 & F6) ==================== --}}
+    @if ($sekme === 'kadro')
+        @php
+            $kp = $this->kadroPanosu;
+            $uyusmaz = $this->sinifUyusmazliklari;
+            $ihmal = $this->ihmalEdilenFirmalar;
+            $karneler = $this->uzmanKarneleri;
+            $duyurular = $this->ekipDuyurulari;
+            $aktifKullaniciId = (int) auth()->id();
+        @endphp
+
+        {{-- FTE KAPASİTE ÖZETİ --}}
+        <div class="mehse-kpi-4">
+            <div style="{{ $kutu }};border-left:4px solid #2563eb">
+                <div style="font-size:.74rem;color:{{ $gri }};font-weight:600">Gereken İGU Kapasitesi (FTE)</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#1d4ed8">{{ number_format($kp['gereken_igu_fte'], 2, ',', '.') }} kişi</div>
+                <div style="font-size:.72rem;color:{{ $gri }}">{{ number_format($kp['toplam_igu_dk'], 0, ',', '.') }} dk/ay</div>
+            </div>
+            <div style="{{ $kutu }};border-left:4px solid #059669">
+                <div style="font-size:.74rem;color:{{ $gri }};font-weight:600">Gereken Hekim Kapasitesi (FTE)</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#059669">{{ number_format($kp['gereken_hekim_fte'], 2, ',', '.') }} kişi</div>
+                <div style="font-size:.72rem;color:{{ $gri }}">{{ number_format($kp['toplam_hekim_dk'], 0, ',', '.') }} dk/ay</div>
+            </div>
+            <div style="{{ $kutu }};border-left:4px solid {{ $kp['bantlar']['asan'] > 0 ? $kirmizi : $yesil }}">
+                <div style="font-size:.74rem;color:{{ $gri }};font-weight:600">Kapasite Bant Dağılımı</div>
+                <div style="font-size:.82rem;font-weight:700;margin-top:.25rem;display:flex;gap:.45rem;flex-wrap:wrap">
+                    <span style="color:#dc2626">Aşan: {{ $kp['bantlar']['asan'] }}</span>
+                    <span style="color:#d97706">Sınırda: {{ $kp['bantlar']['sinirda'] }}</span>
+                    <span style="color:#059669">Normal: {{ $kp['bantlar']['normal'] }}</span>
+                    <span style="color:#2563eb">Boşta: {{ $kp['bantlar']['bosta'] }}</span>
+                </div>
+            </div>
+            <div style="{{ $kutu }};border-left:4px solid {{ count($uyusmaz) > 0 ? $kirmizi : $yesil }}">
+                <div style="font-size:.74rem;color:{{ $gri }};font-weight:600">Belge Sınıfı Uyuşmazlığı</div>
+                <div style="font-size:1.45rem;font-weight:800;color:{{ count($uyusmaz) > 0 ? $kirmizi : $yesil }}">{{ count($uyusmaz) }} firma</div>
+                <div style="font-size:.72rem;color:{{ $gri }}">{{ count($uyusmaz) > 0 ? 'Acil atama düzeltmesi gerekli' : 'Tüm atamalar sınıfa uygun' }}</div>
+            </div>
+        </div>
+
+        {{-- BELGE SINIFI UYUŞMAZLIKLARI --}}
+        @if (count($uyusmaz))
+            <div style="{{ $kutu }};border-left:4px solid {{ $kirmizi }}">
+                <div style="font-weight:700;font-size:.92rem;color:{{ $kirmizi }};margin-bottom:.4rem">🚨 Uzman Belge Sınıfı Uyuşmazlık Uyarıları</div>
+                @foreach ($uyusmaz as $u)
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.4rem 0;border-top:1px solid rgb(128 116 148 / .14);font-size:.83rem">
+                        <div>
+                            <strong>{{ $u['unvan'] }}</strong> ({{ $u['tehlike_sinifi'] }}) — Atanan: <strong>{{ $u['igu_ad'] }}</strong>
+                            <span style="color:{{ $kirmizi }};font-weight:700">({{ $u['belge_sinifi'] }} Sınıfı uygun değil — {{ $u['gereken'] }} gerekir)</span>
+                        </div>
+                        <a href="{{ \App\Filament\Resources\Firmas\FirmaResource::getUrl('edit', ['record' => $u['firma_id']]) }}" style="color:{{ $mor }};font-weight:700;text-decoration:none">Düzelt →</a>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:.9rem;align-items:start">
+            {{-- KADRO DOLULUK PANOSU --}}
+            <div style="{{ $kutu }}">
+                <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">👥 OSGB Kadro Doluluk Panosu</div>
+                <div style="font-size:.77rem;color:{{ $gri }};margin-bottom:.65rem">180 saat/ay (10.800 dk) tam zamanlı kapasite baz alınarak hesaplanır.</div>
+                @forelse ($kp['personeller'] as $p)
+                    <div style="padding:.5rem 0;border-top:1px solid rgb(128 116 148 / .14)">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-size:.83rem">
+                            <div>
+                                <strong>{{ $p['ad_soyad'] }}</strong>
+                                <span style="font-size:.73rem;color:{{ $gri }}">· {{ $p['tip'] }}@if ($p['sinif']) ({{ $p['sinif'] }})@endif · {{ $p['firma_sayisi'] }} firma</span>
+                                @if ($p['tam_sureli_firma'])
+                                    <span style="font-size:.68rem;font-weight:700;padding:.05rem .4rem;border-radius:999px;background:#fef3c7;color:#92400e">🔒 Tam Süreli</span>
+                                @endif
+                            </div>
+                            <span style="font-size:.74rem;font-weight:700;color:{{ $p['bant_renk'] }}">%{{ $p['doluluk_yuzde'] }} ({{ $p['toplam_saat'] }} sa)</span>
+                        </div>
+                        <div style="height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:.3rem">
+                            <div style="height:100%;width:{{ min(100, $p['doluluk_yuzde']) }}%;background:{{ $p['bant_renk'] }}"></div>
+                        </div>
+                    </div>
+                @empty
+                    <p style="font-size:.82rem;color:{{ $gri }}">Aktif İSG profesyoneli tanımlı değil.</p>
+                @endforelse
+            </div>
+
+            {{-- İHMAL EDİLEN FİRMALAR --}}
+            <div style="{{ $kutu }}">
+                <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">⏳ İhmal Edilen Firmalar (Son Ziyaret Takibi)</div>
+                <div style="font-size:.77rem;color:{{ $gri }};margin-bottom:.65rem">En uzun süredir saha denetimi / ziyaret kanıtı / bulgu kaydı girilmeyen aktif firmalar.</div>
+                @forelse ($ihmal as $ih)
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.45rem 0;border-top:1px solid rgb(128 116 148 / .14);font-size:.82rem">
+                        <div style="min-width:0">
+                            <div style="font-weight:600">{{ $ih['unvan'] }}</div>
+                            <div style="font-size:.73rem;color:{{ $gri }}">{{ $ih['tehlike_sinifi'] }} · {{ $ih['igu_ad'] }}</div>
+                        </div>
+                        <div style="text-align:right;white-space:nowrap">
+                            <span style="font-size:.74rem;font-weight:700;padding:.1rem .5rem;border-radius:999px;color:{{ $ih['kritik'] ? $kirmizi : $yesil }};background:color-mix(in srgb, {{ $ih['kritik'] ? $kirmizi : $yesil }} 12%, transparent)">
+                                {{ $ih['gecen_gun'] === null ? 'Hiç gidilmedi' : $ih['gecen_gun'].' gündür yok' }}
+                            </span>
+                            <div style="font-size:.7rem;color:{{ $gri }}">{{ $ih['son_ziyaret'] ? 'Son: '.$ih['son_ziyaret'] : 'Kayıt yok' }}</div>
+                        </div>
+                    </div>
+                @empty
+                    <p style="font-size:.82rem;color:{{ $gri }}">Aktif firma bulunamadı.</p>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- AYLIK UZMAN DEĞERLENDİRME KARNESİ (0-100 — F6) --}}
+        <div style="{{ $kutu }}">
+            <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">🏆 Aylık Uzman Değerlendirme Karnesi (0–100)</div>
+            <div style="font-size:.77rem;color:{{ $gri }};margin-bottom:.7rem">Ağırlıklar: Aylık Ziyaret Uyumu (%40) · DÖF Kapanış Oranı (%35) · Portföy &amp; Sınıf Uyumu (%25).</div>
+            @if (count($karneler))
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+                        <thead>
+                            <tr style="text-align:left;border-bottom:1px solid #e2e8f0;color:{{ $gri }}">
+                                <th style="padding:.45rem">Sıra / Uzman</th>
+                                <th style="padding:.45rem">Firma</th>
+                                <th style="padding:.45rem">Ziyaret (%40)</th>
+                                <th style="padding:.45rem">DÖF (%35)</th>
+                                <th style="padding:.45rem">Uyum (%25)</th>
+                                <th style="padding:.45rem">Toplam Puan</th>
+                                <th style="padding:.45rem">Erken Uyarılar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($karneler as $idx => $kn)
+                                <tr style="border-bottom:1px solid rgb(128 116 148 / .12)">
+                                    <td style="padding:.45rem"><strong>#{{ $idx + 1 }} {{ $kn['ad_soyad'] }}</strong><div style="font-size:.72rem;color:{{ $gri }}">{{ $kn['tip'] }}</div></td>
+                                    <td style="padding:.45rem">{{ $kn['firma_sayisi'] }}</td>
+                                    <td style="padding:.45rem">%{{ $kn['ziyaret_puan'] }}</td>
+                                    <td style="padding:.45rem">%{{ $kn['dof_puan'] }}</td>
+                                    <td style="padding:.45rem">%{{ $kn['uyum_puan'] }}</td>
+                                    <td style="padding:.45rem"><span style="font-weight:800;font-size:.95rem;color:{{ $kn['renk'] }}">{{ $kn['toplam_puan'] }} / 100</span></td>
+                                    <td style="padding:.45rem">
+                                        @forelse ($kn['uyarilar'] as $uy)
+                                            <span style="display:inline-block;font-size:.7rem;font-weight:600;padding:.05rem .45rem;border-radius:999px;background:#fef2f2;color:#b91c1c;margin:.1rem .15rem .1rem 0">⚠ {{ $uy }}</span>
+                                        @empty
+                                            <span style="font-size:.74rem;color:{{ $yesil }};font-weight:600">✓ Sorun yok</span>
+                                        @endforelse
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <p style="font-size:.82rem;color:{{ $gri }}">Aktif firma ataması bulunan İSG profesyoneli yok.</p>
+            @endif
+        </div>
+
+        {{-- EKİP İÇİ DUYURU & OKUNDU TAKİBİ (F6) --}}
+        <div style="{{ $kutu }}">
+            <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">📣 Ekip İçi Duyuru &amp; Okundu Takibi</div>
+            <div style="font-size:.77rem;color:{{ $gri }};margin-bottom:.75rem">OSGB içi talimat, mevzuat değişikliği veya saha uyarılarını ekibinize yayınlayın; kimin ne zaman okuyup onayladığını görün.</div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:.55rem;margin-bottom:.55rem">
+                <input type="text" wire:model="duyuruBaslik" placeholder="Duyuru / Talimat başlığı..." style="padding:.45rem .65rem;border:1px solid #cbd5e1;border-radius:.5rem;font-size:.83rem">
+                <select wire:model="duyuruOncelik" style="padding:.45rem .65rem;border:1px solid #cbd5e1;border-radius:.5rem;font-size:.83rem">
+                    @foreach (\App\Models\EkipDuyurusu::ONCELIKLER as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                </select>
+            </div>
+            <div style="display:flex;gap:.55rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:.85rem">
+                <textarea wire:model="duyuruIcerik" rows="2" placeholder="Ekibe iletilecek talimat / mesaj..." style="flex:1;min-width:240px;padding:.45rem .65rem;border:1px solid #cbd5e1;border-radius:.5rem;font-size:.83rem"></textarea>
+                <x-filament::button wire:click="ekipDuyurusuGonder" icon="heroicon-o-paper-airplane">Duyuruyu Yayınla</x-filament::button>
+            </div>
+
+            @forelse ($duyurular as $d)
+                @php $okudu = $d->okuduMu($aktifKullaniciId); @endphp
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap;padding:.6rem 0;border-top:1px solid rgb(128 116 148 / .14)">
+                    <div style="flex:1;min-width:240px">
+                        <div style="font-weight:700;font-size:.85rem">
+                            @if ($d->oncelik === 'acil') <span style="color:#dc2626">[ACİL]</span> @elseif ($d->oncelik === 'onemli') <span style="color:#d97706">[ÖNEMLİ]</span> @endif
+                            {{ $d->baslik }}
+                        </div>
+                        <div style="font-size:.8rem;color:#334155;margin-top:.15rem">{{ $d->icerik }}</div>
+                        <div style="font-size:.72rem;color:{{ $gri }};margin-top:.25rem">
+                            {{ $d->gonderen?->name ?: 'Yönetici' }} · {{ $d->created_at?->format('d.m.Y H:i') }} ·
+                            <strong>{{ $d->okuyanSayisi() }} kişi okuyup onayladı</strong>
+                            @if ($d->okuyanlar)
+                                ({{ collect($d->okuyanlar)->pluck('ad')->implode(', ') }})
+                            @endif
+                        </div>
+                    </div>
+                    <div>
+                        @if ($okudu)
+                            <span style="font-size:.75rem;font-weight:700;color:{{ $yesil }}">✓ Okundu Onaylı</span>
+                        @else
+                            <x-filament::button size="xs" color="success" wire:click="ekipDuyurusuOkundu({{ $d->id }})">Okudum &amp; Onayladım</x-filament::button>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <p style="font-size:.82rem;color:{{ $gri }}">Henüz ekip duyurusu yok.</p>
+            @endforelse
+        </div>
     @endif
 </x-filament-panels::page>

@@ -528,8 +528,23 @@ class ZiyaretProgrami extends Page
         unset($this->program, $this->takvimGunler);
     }
 
+    private function merkeziPlanKilitliMi(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user instanceof \App\Models\User
+            && ! $user->sahipMi()
+            && \App\Support\KullaniciAyarlari::merkeziZiyaretProgramiMi($user);
+    }
+
     public function ziyaretEkle(int $ayIndex): void
     {
+        if ($this->merkeziPlanKilitliMi()) {
+            Notification::make()->title('Ziyaret programı merkezi olarak yönetiliyor')->body('Yeni ziyaret eklemek için OSGB yöneticinizle iletişime geçin.')->warning()->send();
+
+            return;
+        }
+
         $p = $this->program();
         $aylar = $p?->ziyaretler ?? [];
 
@@ -547,6 +562,12 @@ class ZiyaretProgrami extends Page
 
     public function ziyaretSil(int $ayIndex, int $satirIndex): void
     {
+        if ($this->merkeziPlanKilitliMi()) {
+            Notification::make()->title('Ziyaret programı merkezi olarak yönetiliyor')->body('Planlanmış ziyaretleri yalnızca OSGB yöneticisi silebilir.')->warning()->send();
+
+            return;
+        }
+
         $p = $this->program();
         $aylar = $p?->ziyaretler ?? [];
 

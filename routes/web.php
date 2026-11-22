@@ -90,9 +90,13 @@ Route::get('/tanitim', fn () => redirect(url('/'), 301));
 Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
 Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
 Route::view('/fiyatlandirma', 'pages.fiyatlandirma')->name('fiyatlandirma');
+Route::get('/demo', [\App\Http\Controllers\UcretsizAraclarController::class, 'canliDemo'])->name('demo');
 Route::get('/araclar/tehlike-sinifi-sorgulama', [\App\Http\Controllers\UcretsizAraclarController::class, 'tehlikeSinifi'])->name('araclar.tehlike');
 Route::get('/araclar/kaza-siklik-orani', [\App\Http\Controllers\UcretsizAraclarController::class, 'kazaSiklikOrani'])->name('araclar.kso');
 Route::get('/araclar/isg-sure-hesaplama', [\App\Http\Controllers\UcretsizAraclarController::class, 'isgSureHesaplama'])->name('araclar.sure');
+Route::get('/araclar/ipc-ceza-hesaplama', [\App\Http\Controllers\UcretsizAraclarController::class, 'ipcCezaHesaplama'])->name('araclar.ipc');
+Route::get('/araclar/ilkyardimci-destek-elemani-hesaplama', [\App\Http\Controllers\UcretsizAraclarController::class, 'ilkyardimciDestekHesaplama'])->name('araclar.ekip');
+Route::get('/araclar/fine-kinney-risk-hesaplama', [\App\Http\Controllers\UcretsizAraclarController::class, 'fineKinneyRiskHesaplama'])->name('araclar.risk');
 Route::get('/sektor/{slug}', [\App\Http\Controllers\SektorController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('sektor.show');
 // Arama motorları için site haritası (public/robots.txt bunu gösterir). lastmod = sayfa şablonunun son değişikliği.
 Route::get('/sitemap.xml', function () {
@@ -102,9 +106,13 @@ Route::get('/sitemap.xml', function () {
         'sayfalar' => [
             ['adres' => 'https://mehse.com/', 'lastmod' => $tarih('tanitim'), 'changefreq' => 'weekly', 'priority' => '1.0'],
             ['adres' => 'https://mehse.com/fiyatlandirma', 'lastmod' => $tarih('pages/fiyatlandirma'), 'changefreq' => 'weekly', 'priority' => '0.9'],
+            ['adres' => 'https://mehse.com/demo', 'lastmod' => $tarih('pages/demo'), 'changefreq' => 'weekly', 'priority' => '0.9'],
             ['adres' => 'https://mehse.com/araclar/tehlike-sinifi-sorgulama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/araclar/isg-sure-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/araclar/kaza-siklik-orani', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['adres' => 'https://mehse.com/araclar/ipc-ceza-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['adres' => 'https://mehse.com/araclar/ilkyardimci-destek-elemani-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['adres' => 'https://mehse.com/araclar/fine-kinney-risk-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             // Sektör sayfaları (config/sektorler.php); içerik config'te olduğundan lastmod = config dosyası tarihi.

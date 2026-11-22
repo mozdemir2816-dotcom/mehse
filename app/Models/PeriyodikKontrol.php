@@ -55,7 +55,7 @@ class PeriyodikKontrol extends Model
     public function yaklasanlar(): array
     {
         return $this->ekipmanlar()
-            ->filter(fn (IsEkipmani $e) => in_array($e->vizeDurumu(), ['yaklasan', 'dolmus'], true))
+            ->filter(fn (IsEkipmani $e) => in_array($e->vizeDurumu(), ['yaklasan', 'dolmus', 'uygun_degil'], true))
             ->values()
             ->all();
     }

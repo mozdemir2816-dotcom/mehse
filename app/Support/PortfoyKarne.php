@@ -94,7 +94,7 @@ class PortfoyKarne
         $toplam = $firmalar->count();
 
         return array_map(function (array $kriter) use ($firmalar, $toplam): array {
-            $kapsam = $firmalar->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null));
+            $kapsam = $firmalar->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null, $kriter['anahtar'] ?? null));
 
             $kapsamSayi = $kapsam->count();
 
@@ -127,8 +127,16 @@ class PortfoyKarne
      * `firmaTamUyumluMu()` ve `eksikFirmalar()` aynı tanımı kullanır.
      * Şart yoksa (null) her firma kapsamdadır.
      */
-    private static function kosulKarsilarMi(Firma $firma, ?string $kosul): bool
+    private static function kosulKarsilarMi(Firma $firma, ?string $kosul, ?string $anahtar = null): bool
     {
+        // F4: "Bu hizmeti biz vermiyoruz" muafiyeti — sözleşme dışı hizmetler uyum puanını düşürmez.
+        if ($anahtar === 'igu_atamasi' && $firma->igu_hizmeti_yok) {
+            return false;
+        }
+        if ($anahtar === 'hekim_atamasi' && $firma->hekim_hizmeti_yok) {
+            return false;
+        }
+
         return match ($kosul) {
             'elli_calisan' => (int) $firma->calisan_sayisi >= 50,
             // Yalnız periyodik muayeneye tabi ekipman (atölye makineleri rapor gerektirmez).
@@ -181,7 +189,19 @@ class PortfoyKarne
             // periyot (varsayılan 3 ay) geçmemiş mi de aranır — süresi dolan
             // firma "eksik" sayılır ki kullanıcı yeni nüsha yüklemeye teşvik olsun.
             'onayli_defter_nushalari' => in_array(OnayliDefterNushasi::durum($firma->id), ['gecerli', 'yaklasan'], true),
-            'periyodik_kontrol_raporu' => $firma->isEkipmanlari()->whereNotNull('son_muayene_tarihi')->exists(),
+            // F2 güvenlik kuralı: Sonucu 'uygun_degil' olan periyodik kontrol raporu belgeyi
+            // tamamlamış sayılmaz — uygunsuzluk giderilene kadar kategori eksik görünür.
+            'periyodik_kontrol_raporu' => $firma->isEkipmanlari()
+                ->where('aktif', true)
+                ->whereNotIn('kategori', EkipmanKatalogu::periyodikOlmayanKategoriler())
+                ->whereNotNull('son_muayene_tarihi')
+                ->where('sonuc', '!=', 'uygun_degil')
+                ->exists()
+                && ! $firma->isEkipmanlari()
+                    ->where('aktif', true)
+                    ->whereNotIn('kategori', EkipmanKatalogu::periyodikOlmayanKategoriler())
+                    ->where('sonuc', 'uygun_degil')
+                    ->exists(),
             'yillik_calisma_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'faaliyetler'),
             'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
             'yillik_degerlendirme' => static::yillikPlanDegerlendirmeDoluMu($firma),
@@ -384,7 +404,7 @@ class PortfoyKarne
                     // → ekipman kaydı olması) kapsam dışı firmalarda muaf — kriterler()/ozet()
                     // bu firmaları zaten kapsam dışı bırakıyordu (bkz. 'kapsam' filtresi),
                     // burada da aynı muafiyet uygulanmazsa firmalar haksız yere düşük "Oran" alır.
-                    $muaf = ! static::kosulKarsilarMi($firma, $k['kosul'] ?? null);
+                    $muaf = ! static::kosulKarsilarMi($firma, $k['kosul'] ?? null, $k['anahtar'] ?? null);
 
                     $var = $muaf || static::gercekModulVarMi($firma, $k['anahtar']) === true;
 
@@ -427,7 +447,7 @@ class PortfoyKarne
         $vadeler = $firma->checklistVadeleri()->get()->keyBy('kriter_anahtari');
 
         return collect($kriterler)->map(function (array $k) use ($firma, $vadeler): array {
-            $muaf = ! static::kosulKarsilarMi($firma, $k['kosul'] ?? null);
+            $muaf = ! static::kosulKarsilarMi($firma, $k['kosul'] ?? null, $k['anahtar'] ?? null);
             $tamam = $muaf || (bool) $k['hazir'] && static::gercekModulVarMi($firma, $k['anahtar']) === true;
             $vadeTarihi = $vadeler->get($k['anahtar'])?->vade_tarihi;
 
@@ -532,7 +552,7 @@ class PortfoyKarne
         }
 
         $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan')->get()
-            ->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null))->values();
+            ->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null, $kriterAnahtari))->values();
 
         return $firmalar->reject(fn (Firma $f) => static::firmaKriterKarsilarMi($f, $kriterAnahtari))->values();
     }
@@ -699,7 +719,7 @@ class PortfoyKarne
             ->all();
     }
 
-    private static function firmaTamUyumluMu(Firma $firma): bool
+    public static function firmaTamUyumluMu(Firma $firma): bool
     {
         foreach (static::firmaTakipKriterleri($firma->user_id) as $kriter) {
             if (! $kriter['hazir'] || $kriter['takip']) {
@@ -708,7 +728,7 @@ class PortfoyKarne
 
             // 'kosul'lu kriterler kapsam dışı firmalarda muaf — aksi halde bu
             // firmalar şartı hiç karşılayamayacağı için asla "tam uyumlu" sayılmaz.
-            $muaf = ! static::kosulKarsilarMi($firma, $kriter['kosul'] ?? null);
+            $muaf = ! static::kosulKarsilarMi($firma, $kriter['kosul'] ?? null, $kriter['anahtar'] ?? null);
             if ($muaf) {
                 continue;
             }

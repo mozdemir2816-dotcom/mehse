@@ -34,9 +34,9 @@
 <body>
 
 @php
-    $sayac = ['gecerli' => 0, 'yaklasan' => 0, 'dolmus' => 0, 'bekliyor' => 0, 'muaf' => 0];
-    foreach ($ekipmanlar as $e) { $sayac[$e->vizeDurumu()]++; }
-    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
+    $sayac = ['gecerli' => 0, 'yaklasan' => 0, 'dolmus' => 0, 'uygun_degil' => 0, 'bekliyor' => 0, 'muaf' => 0];
+    foreach ($ekipmanlar as $e) { $sayac[$e->vizeDurumu()] = ($sayac[$e->vizeDurumu()] ?? 0) + 1; }
+    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan', 'uygun_degil' => 'Uygun Değil — Giderilmeli', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
 @endphp
 
 <h1>EKİPMAN & PERİYODİK KONTROL — MÜFETTİŞ TEFTİŞ PAKETİ</h1>
@@ -58,7 +58,7 @@
         <td><span class="v">{{ count($ekipmanlar) }}</span><span class="l">TOPLAM EKİPMAN</span></td>
         <td><span class="v" style="color:#15803d">{{ $sayac['gecerli'] }}</span><span class="l">VİZESİ GEÇERLİ</span></td>
         <td><span class="v" style="color:#b45309">{{ $sayac['yaklasan'] }}</span><span class="l">VİZE YAKLAŞAN (&lt;30 GÜN)</span></td>
-        <td><span class="v" style="color:#b91c1c">{{ $sayac['dolmus'] + $sayac['bekliyor'] }}</span><span class="l">SÜRESİ DOLAN / MUAYENE BEKLEYEN</span></td>
+        <td><span class="v" style="color:#b91c1c">{{ $sayac['dolmus'] + $sayac['bekliyor'] + $sayac['uygun_degil'] }}</span><span class="l">SÜRESİ DOLAN / UYGUNSUZ / BEKLEYEN</span></td>
     </tr>
 </table>
 

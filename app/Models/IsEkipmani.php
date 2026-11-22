@@ -106,6 +106,16 @@ class IsEkipmani extends Model
         static::deleting(function (IsEkipmani $e): void {
             $e->kontroller()->get()->each->delete();
         });
+
+        static::created(function (IsEkipmani $e): void {
+            \App\Support\DenetimKaydedici::kaydet('Periyodik Kontrol', 'olusturdu', 'Ekipman eklendi: '.$e->ekipman_adi, $e->firma_id, static::class, $e->id);
+        });
+
+        static::updated(function (IsEkipmani $e): void {
+            if ($e->wasChanged(['sonuc', 'son_muayene_tarihi', 'sonraki_vize_tarihi'])) {
+                \App\Support\DenetimKaydedici::kaydet('Periyodik Kontrol', 'guncelledi', $e->ekipman_adi.' → '.$e->sonucEtiketi(), $e->firma_id, static::class, $e->id);
+            }
+        });
     }
 
     public function firma(): BelongsTo
@@ -219,14 +229,20 @@ class IsEkipmani extends Model
 
     /**
      * Vize (periyodik muayene geçerlilik) durumu.
+     * F2 güvenlik kuralı: Sonucu "uygun_degil" olan ekipman, sonraki vize tarihi
+     * ileri olsa dahi ASLA geçerli/yeşil sayılmaz — uygunsuzluk giderilene kadar "uygun_degil" kalır.
      *
-     * @return 'muaf'|'bekliyor'|'gecerli'|'yaklasan'|'dolmus'
+     * @return 'muaf'|'uygun_degil'|'bekliyor'|'gecerli'|'yaklasan'|'dolmus'
      */
     public function vizeDurumu(): string
     {
         // Periyodik muayeneye tabi olmayan kategori (ör. Üretim & Atölye Makineleri).
         if (! EkipmanKatalogu::periyodikMi($this->kategori)) {
             return 'muaf';
+        }
+
+        if ($this->sonuc === 'uygun_degil') {
+            return 'uygun_degil';
         }
 
         if (! $this->sonraki_vize_tarihi) {
@@ -248,6 +264,7 @@ class IsEkipmani extends Model
     {
         return [
             'muaf' => 'Periyodik Muayene Yok',
+            'uygun_degil' => 'Uygun Değil — Giderilmeli',
             'bekliyor' => 'Muayene Bekliyor',
             'gecerli' => 'Vizesi Geçerli',
             'yaklasan' => 'Vize Yaklaşan',

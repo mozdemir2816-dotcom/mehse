@@ -29,6 +29,7 @@ class RiskDegerlendirmesi extends Model
         'ekip' => 'array',
         'sablon_verisi' => 'array',
         'haric_tehlikeler' => 'array',
+        'kilitli_at' => 'datetime',
         'pdf_talep_edildi_at' => 'datetime',
         'pdf_hazir_at' => 'datetime',
     ];
@@ -74,6 +75,116 @@ class RiskDegerlendirmesi extends Model
                 $rd->pdfOnbellegiTemizle();
             }
         });
+
+        static::created(function (RiskDegerlendirmesi $rd): void {
+            \App\Support\DenetimKaydedici::kaydet('Risk Değerlendirmesi', 'olusturdu', ($rd->belge_no ?: 'RD').' (v'.($rd->revizyon_no ?? 0).') oluşturuldu', $rd->firma_id, static::class, $rd->id);
+        });
+
+        static::updated(function (RiskDegerlendirmesi $rd): void {
+            if ($rd->wasChanged('kilitli_at') && $rd->kilitli_at !== null) {
+                \App\Support\DenetimKaydedici::kaydet('Risk Değerlendirmesi', 'kilitledi', ($rd->belge_no ?: 'RD').' imzalandı ve kilitlendi', $rd->firma_id, static::class, $rd->id);
+            } elseif ($rd->wasChanged(['durum', 'revizyon_no', 'rapor_tarihi'])) {
+                \App\Support\DenetimKaydedici::kaydet('Risk Değerlendirmesi', 'guncelledi', ($rd->belge_no ?: 'RD').' güncellendi', $rd->firma_id, static::class, $rd->id);
+            }
+        });
+    }
+
+    public function oncekiVersiyon(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'onceki_versiyon_id');
+    }
+
+    /** İmzalanıp kilitlenmiş değişmez sürüm mü? (F3) */
+    public function kilitliMi(): bool
+    {
+        return $this->kilitli_at !== null;
+    }
+
+    /**
+     * Risk değerlendirmesini imzalanmış olarak kilitler ve yürürlüğe alır (F3).
+     * Kilitlenen sürümde değişiklik yapılamaz; değişiklik için yeniVersiyonAc() kullanılır.
+     */
+    public function kilitle(?int $userId = null): void
+    {
+        $this->yururlugeAl();
+        $this->forceFill([
+            'kilitli_at' => now(),
+            'kilitli_by' => $userId ?? auth()->id(),
+        ])->save();
+    }
+
+    /**
+     * Kilitli (veya mevcut) sürümden tüm maddeleriyle yeni bir taslak revizyon açar (F3).
+     * Önceki sürüm salt-okunur arşiv olarak değişmeden kalır.
+     */
+    public function yeniVersiyonAc(?string $neden = null): self
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($neden): self {
+            $yeni = $this->replicate([
+                'belge_no', 'kilitli_at', 'kilitli_by', 'pdf_yolu', 'pdf_talep_edildi_at', 'pdf_hazir_at',
+            ]);
+            $yeni->belge_no = static::belgeNoUret();
+            $yeni->durum = 'taslak';
+            $yeni->revizyon_no = (int) ($this->revizyon_no ?? 0) + 1;
+            $yeni->revizyon_nedeni = $neden ?: ('v'.($this->revizyon_no ?? 0).' sürümünden yeni revizyon açıldı');
+            $yeni->rapor_tarihi = now()->toDateString();
+            $yeni->onceki_versiyon_id = $this->id;
+            $yeni->kilitli_at = null;
+            $yeni->kilitli_by = null;
+            $yeni->save();
+
+            foreach ($this->maddeler()->get() as $madde) {
+                $kopya = $madde->replicate();
+                $kopya->risk_degerlendirmesi_id = $yeni->id;
+                $kopya->save();
+            }
+
+            return $yeni;
+        });
+    }
+
+    /**
+     * İSG Risk Değerlendirmesi Yönetmeliği md.6 zorunlu ekip rollerini denetler (F3).
+     *
+     * @return array<int, string> Eksik zorunlu rol adları
+     */
+    public function md6EkipEksikleri(): array
+    {
+        $firma = $this->firma;
+        $ekip = collect($this->ekip ?? []);
+        $eksikler = [];
+
+        $ekipteVar = function (string $anahtar) use ($ekip): bool {
+            return $ekip->contains(function ($u) use ($anahtar): bool {
+                $metin = mb_strtolower(trim((string) (($u['gorev'] ?? '').' '.($u['unvan'] ?? '').' '.($u['ekip_gorevi'] ?? ''))), 'UTF-8');
+
+                return filled($u['ad_soyad'] ?? $u['ad'] ?? null) && str_contains($metin, $anahtar);
+            });
+        };
+
+        $oto = $firma ? \App\Support\RiskEkibiOtomatik::uyeler($firma) : [];
+        $imza = $firma ? collect(\App\Support\RiskEkibiOtomatik::imzaSahipleri($firma)) : collect();
+
+        if (! ($firma?->isveren_ad || $firma?->isveren_vekili || $ekipteVar('işveren'))) {
+            $eksikler[] = 'İşveren veya İşveren Vekili (Zorunlu)';
+        }
+        if (! ($firma?->igu_hizmeti_yok) && ! ($this->igu_id || $firma?->igu_id || $ekipteVar('uzman'))) {
+            $eksikler[] = 'İş Güvenliği Uzmanı (Zorunlu)';
+        }
+        if (! ($firma?->hekim_hizmeti_yok) && ! ($firma?->isyeri_hekimi_id || $ekipteVar('hekim'))) {
+            $eksikler[] = 'İşyeri Hekimi (Zorunlu)';
+        }
+        if (empty($oto['Çalışan Temsilcisi']) && ! $ekipteVar('temsilci')) {
+            $eksikler[] = 'Çalışan Temsilcisi (Zorunlu)';
+        }
+        $destekVar = $imza->contains(fn ($u) => str_contains(mb_strtolower((string) ($u['unvan'] ?? ''), 'UTF-8'), 'destek'))
+            || $ekipteVar('destek')
+            || ($firma && $firma->atamaYazilari()->whereIn('rol_anahtari', ['sondurme_ekibi', 'kurtarma_ekibi', 'koruma_ekibi', 'ilkyardim_ekibi'])->exists());
+        if (! $destekVar) {
+            $eksikler[] = 'Destek Elemanı (Yön. md.6 — Zorunlu)';
+        }
+
+        return $eksikler;
     }
 
     /** Bursa Şehir Hastanesi formu: çıktı (Excel/PDF) hastanenin kendi şablonunda üretilir. */

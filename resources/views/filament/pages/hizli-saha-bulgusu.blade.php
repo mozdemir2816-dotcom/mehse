@@ -231,7 +231,14 @@
                 <div>
         <label style="{{ $lbl }}">Aksiyon açıklaması</label>
         <textarea wire:model="aksiyon" rows="2" placeholder="Kapatmak için yapılması gereken iş" style="{{ $inp }}"></textarea>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem">
+            <div>
+                <label style="{{ $lbl }}">Kontrol Hiyerarşisi (ISO 45001)</label>
+                <select wire:model="kontrolHiyerarsisi" style="{{ $inp }}">
+                    <option value="">Seçiniz (Eliminasyon → KKD)</option>
+                    @foreach (\App\Models\SahaBulgusu::KONTROL_HIYERARSISI as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
+                </select>
+            </div>
             <div><label style="{{ $lbl }}">Sorumlu kişi</label><input type="text" wire:model="sorumlu" style="{{ $inp }}"></div>
             <div><label style="{{ $lbl }}">Termin</label><input type="date" wire:model="termin" style="{{ $inp }}"></div>
         </div>
@@ -294,6 +301,12 @@
                             <td style="{{ $td }};max-width:22rem">{{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 110) }}@if ($b->kategori)<div class="mehse-soluk">{{ $b->kategori }}</div>@endif</td>
                             <td style="{{ $td }};white-space:nowrap">
                                 <span style="display:inline-block;color:#fff;background:{{ $b->oncelikRengi() }};border-radius:9999px;padding:.15rem .65rem;font-weight:700;font-size:.75rem">{{ $b->skor() }} · {{ $b->oncelikEtiketi() }}</span>
+                                @if ($b->kontrol_hiyerarsisi)
+                                    <div style="margin-top:.22rem"><span style="display:inline-block;font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;color:#fff;background:{{ \App\Models\SahaBulgusu::KONTROL_HIYERARSISI_RENK[$b->kontrol_hiyerarsisi] ?? '#475569' }}">{{ $b->kontrolHiyerarsisiEtiketi() }}</span></div>
+                                @endif
+                                @if ($b->isverenOnayiBekliyorMu())
+                                    <div style="margin-top:.22rem"><span style="display:inline-block;font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:9999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b">📩 İşveren Kanıtı Onay Bekliyor</span></div>
+                                @endif
                                 @if ($b->durum !== 'acik')
                                     <div style="margin-top:.25rem"><span style="display:inline-block;font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:9999px;{{ $b->durum === 'kapandi' ? 'background:rgb(22 163 74 / .12);color:#15803d' : 'background:rgb(217 119 6 / .14);color:#b45309' }}">{{ \App\Models\SahaBulgusu::DURUMLAR[$b->durum] ?? $b->durum }}</span></div>
                                 @endif
@@ -301,13 +314,31 @@
                             <td style="{{ $td }};white-space:nowrap">{{ $b->sorumlu ?: '—' }}<div style="font-size:.75rem;color:{{ $b->terminGectiMi() ? '#dc2626' : 'rgb(107 114 128)' }}">{{ $b->termin?->format('d.m.Y') }}{{ $b->terminGectiMi() ? ' · geçti' : '' }}</div></td>
                             <td style="{{ $td }};min-width:16rem">
                                 @if ($b->durum !== 'kapandi')
+                                    @if ($b->isverenOnayiBekliyorMu())
+                                        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:.45rem;padding:.4rem .55rem;margin-bottom:.35rem;font-size:.75rem">
+                                            <strong>{{ $b->isveren_kapanis_gonderen ?: 'İşveren' }}</strong> ({{ $b->isveren_kapanis_talebi_at?->format('d.m H:i') }}): {{ \Illuminate\Support\Str::limit((string) $b->isveren_kapanis_notu, 90) }}
+                                            <div style="display:flex;gap:.35rem;margin-top:.3rem;flex-wrap:wrap">
+                                                @if ($b->isveren_kapanis_dosya)
+                                                    <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($b->isveren_kapanis_dosya) }}" target="_blank" style="color:#1d4ed8;font-weight:600;text-decoration:underline">Kanıtı Gör</a>
+                                                @endif
+                                                <button type="button" wire:click="mountAction('kapat', { id: {{ $b->id }} })" style="color:#15803d;font-weight:700;background:none;border:none;cursor:pointer;padding:0">✓ Doğrula &amp; Kapat</button>
+                                                <button type="button" wire:click="isverenKanitReddet({{ $b->id }})" style="color:#dc2626;font-weight:600;background:none;border:none;cursor:pointer;padding:0">✕ Reddet</button>
+                                            </div>
+                                        </div>
+                                    @endif
                                     <div style="display:flex;gap:.35rem;align-items:center">
                                         <input type="text" wire:model="kapatNotlari.{{ $b->id }}" wire:keydown.enter="hizliKapat({{ $b->id }})" placeholder="Kapatma notu…" aria-label="Kapatma notu"
                                             style="flex:1;min-width:0;min-height:2.5rem;padding:.35rem .6rem;border-radius:.5rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
                                         <x-filament::button size="sm" color="success" wire:click="hizliKapat({{ $b->id }})" style="min-height:2.5rem">Kapat</x-filament::button>
                                     </div>
                                 @else
-                                    <span class="mehse-soluk">{{ $b->kapanis_tarihi?->format('d.m.Y') }}@if ($b->kapanis_notu) · {{ \Illuminate\Support\Str::limit($b->kapanis_notu, 60) }}@endif</span>
+                                    <span class="mehse-soluk">
+                                        {{ $b->kapanis_tarihi?->format('d.m.Y') }}
+                                        @if ($b->artikRiskSkoru()) · <strong>Artık: {{ $b->artikRiskSkoru() }}</strong>@endif
+                                        @if ($b->etkinlik_puani) · ★ {{ $b->etkinlik_puani }}/5 @endif
+                                        @if ($b->kapanis_kaniti_dosya) · <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($b->kapanis_kaniti_dosya) }}" target="_blank" style="color:#2563eb;text-decoration:underline">Kanıt</a>@endif
+                                        @if ($b->kapanis_notu) · {{ \Illuminate\Support\Str::limit($b->kapanis_notu, 55) }}@endif
+                                    </span>
                                 @endif
                             </td>
                             <td style="{{ $td }};text-align:right;white-space:nowrap">

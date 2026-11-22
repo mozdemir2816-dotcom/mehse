@@ -85,6 +85,40 @@
         </div>
     @endif
 
+    {{-- AÇIK DÖF / SAHA BULGULARI — KAPANIŞ KANITI GÖNDER (F1) --}}
+    @if ($this->acikBulgular->isNotEmpty())
+        <div style="{{ $kart }};border-left:4px solid #DC2626">
+            <div style="font-weight:700;margin-bottom:.2rem">Açık DÖF &amp; Saha Bulguları ({{ $this->acikBulgular->count() }})</div>
+            <div style="font-size:.8rem;color:rgb(107 114 128);margin-bottom:.6rem">
+                Giderilen uygunsuzluklar için fotoğraf veya belge yükleyip İSG uzmanınızın onayına gönderebilirsiniz.
+            </div>
+            @foreach ($this->acikBulgular as $b)
+                <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;border-top:1px solid rgb(107 114 128 / .15);padding:.6rem 0">
+                    <div style="flex:1;min-width:15rem">
+                        <div style="font-weight:600;font-size:.87rem">
+                            <span style="color:#dc2626">{{ $b->bulgu_no }}</span> · {{ \Illuminate\Support\Str::limit($b->uygunsuzluk, 120) }}
+                        </div>
+                        <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">
+                            @if ($b->kontrol_hiyerarsisi)
+                                <span style="padding:.05rem .4rem;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-weight:600">{{ $b->kontrolHiyerarsisiEtiketi() }}</span> ·
+                            @endif
+                            Termin: <strong style="color:{{ $b->terminGectiMi() ? '#dc2626' : 'inherit' }}">{{ $b->termin?->format('d.m.Y') ?: 'Belirtilmedi' }}</strong>
+                            @if ($b->sorumlu) · Sorumlu: {{ $b->sorumlu }}@endif
+                        </div>
+                        @if ($b->isveren_kapanis_talebi_at)
+                            <div style="font-size:.75rem;color:#b45309;font-weight:600;margin-top:.2rem">
+                                ⏳ {{ $b->isveren_kapanis_talebi_at->format('d.m.Y H:i') }} tarihinde kanıt gönderildi — İSG uzmanı onayı bekleniyor.
+                            </div>
+                        @endif
+                    </div>
+                    <x-filament::button size="sm" :color="$b->isveren_kapanis_talebi_at ? 'gray' : 'primary'" icon="heroicon-o-arrow-up-tray" wire:click="mountAction('dofKanitGonder', { id: {{ $b->id }} })">
+                        {{ $b->isveren_kapanis_talebi_at ? 'Kanıtı Güncelle' : 'Kapanış Kanıtı Gönder' }}
+                    </x-filament::button>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- PERSONEL --}}
     <div style="{{ $kart }}">
         <div style="font-weight:700;margin-bottom:.6rem">Personel</div>

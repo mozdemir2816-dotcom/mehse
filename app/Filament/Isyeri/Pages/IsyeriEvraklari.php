@@ -6,6 +6,7 @@ use App\Models\Firma;
 use App\Models\IsIzinFormu;
 use App\Models\IsyeriHesabi;
 use App\Models\OnBilgilendirme;
+use App\Models\SahaBulgusu;
 use App\Support\CalisanDosyasiUretici;
 use App\Support\CalisanListesiUretici;
 use App\Support\FirmaEvrakZipUretici;
@@ -13,6 +14,8 @@ use BackedEnum;
 use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -122,6 +125,65 @@ class IsyeriEvraklari extends Page
 
                 unset($this->bilgilendirmeler);
                 Notification::make()->title('Onayınız kaydedildi')->success()->send();
+            });
+    }
+
+    /** Firmanın açık saha bulguları / DÖF maddeleri — işveren kapanış kanıtı yükleyip İGU onayına sunar (F1). */
+    #[Computed]
+    public function acikBulgular(): Collection
+    {
+        return SahaBulgusu::query()
+            ->where('firma_id', $this->firma->id)
+            ->where('durum', '!=', 'kapandi')
+            ->orderByRaw('termin IS NULL, termin ASC')
+            ->latest('id')
+            ->take(25)
+            ->get();
+    }
+
+    /** İşveren DÖF kapanış kanıtı gönderir — doğrudan kapatmaz, İGU onayına düşer (F1). */
+    public function dofKanitGonderAction(): Action
+    {
+        return Action::make('dofKanitGonder')
+            ->modalHeading('DÖF Kapanış Kanıtı Gönder')
+            ->modalDescription('Uygunsuzluğu giderdiğinize dair fotoğraf veya belge yükleyin. İSG uzmanınız doğrulayıp onayladıktan sonra DÖF kapatılacaktır.')
+            ->modalSubmitActionLabel('Uzman Onayına Gönder')
+            ->schema([
+                TextInput::make('gonderen')->label('Adınız Soyadınız / Göreviniz')->required()->maxLength(150),
+                Textarea::make('not')->label('Yapılan Düzeltici İşlem')->rows(3)->required(),
+                FileUpload::make('dosya')
+                    ->label('Kapanış Kanıtı (Fotoğraf / PDF)')
+                    ->disk('public')
+                    ->directory('dof-kanit')
+                    ->acceptedFileTypes(['image/*', 'application/pdf'])
+                    ->maxSize(10240),
+            ])
+            ->action(function (array $data, array $arguments): void {
+                $bulgu = SahaBulgusu::query()
+                    ->where('firma_id', $this->firma->id)
+                    ->where('durum', '!=', 'kapandi')
+                    ->find((int) ($arguments['id'] ?? 0));
+
+                if (! $bulgu) {
+                    Notification::make()->title('Açık bulgu bulunamadı')->danger()->send();
+
+                    return;
+                }
+
+                $bulgu->update([
+                    'isveren_kapanis_talebi_at' => now(),
+                    'isveren_kapanis_gonderen' => trim($data['gonderen']),
+                    'isveren_kapanis_notu' => trim($data['not']),
+                    'isveren_kapanis_dosya' => $data['dosya'] ?? $bulgu->isveren_kapanis_dosya,
+                    'durum' => $bulgu->durum === 'acik' ? 'devam_ediyor' : $bulgu->durum,
+                ]);
+
+                unset($this->acikBulgular);
+                Notification::make()
+                    ->title('Kanıt İSG uzmanınıza iletildi')
+                    ->body($bulgu->bulgu_no.' için kapanış talebiniz uzman onayına alındı.')
+                    ->success()
+                    ->send();
             });
     }
 

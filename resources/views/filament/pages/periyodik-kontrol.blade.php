@@ -1,8 +1,8 @@
 @php
     $kutu = 'border:1px solid rgb(107 114 128 / .3);border-radius:.75rem;padding:1rem';
     $girdi = 'width:100%;padding:.4rem .55rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem';
-    $durumRenk = ['gecerli' => '#15803d', 'yaklasan' => '#b45309', 'dolmus' => '#dc2626', 'bekliyor' => '#6b7280', 'muaf' => '#0369a1'];
-    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan / Yasak', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
+    $durumRenk = ['gecerli' => '#15803d', 'yaklasan' => '#b45309', 'dolmus' => '#dc2626', 'uygun_degil' => '#991b1b', 'bekliyor' => '#6b7280', 'muaf' => '#0369a1'];
+    $durumEtiket = ['gecerli' => 'Vizesi Geçerli', 'yaklasan' => 'Vize Yaklaşan', 'dolmus' => 'Süresi Dolan / Yasak', 'uygun_degil' => 'Uygun Değil — Giderilmeli', 'bekliyor' => 'Muayene Bekliyor', 'muaf' => 'Periyodik Muayene Yok'];
 @endphp
 
 <x-filament-panels::page>

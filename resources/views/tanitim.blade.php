@@ -105,6 +105,7 @@
             <a href="#sektorler">Sektörler</a>
             <a href="#yazilim">İSG Yazılımı</a>
             <a href="{{ route('fiyatlandirma') }}">Fiyatlandırma</a>
+            <a href="{{ route('demo') }}">Canlı Demo</a>
             <a href="{{ route('araclar.tehlike') }}">Ücretsiz Araçlar</a>
             <a href="#sss">S.S.S.</a>
         </nav>
@@ -122,6 +123,7 @@
         <a href="#sektorler">Sektörler</a>
         <a href="#yazilim">İSG Yazılımı</a>
         <a href="{{ route('fiyatlandirma') }}">Fiyatlandırma</a>
+        <a href="{{ route('demo') }}">Canlı Demo</a>
         <a href="{{ route('araclar.tehlike') }}">Ücretsiz Araçlar</a>
         <a href="#sss">S.S.S.</a>
         <a href="{{ $girisUrl }}" class="uye-giris-mobil">Üye Girişi</a>

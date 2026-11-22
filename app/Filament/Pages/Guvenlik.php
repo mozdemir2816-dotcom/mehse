@@ -44,6 +44,11 @@ class Guvenlik extends Page
     /** @var array<string, mixed>|null */
     public ?array $sifre = [];
 
+    /** Denetim kayıtları filtreleri (F7). */
+    public ?string $denetimModul = null;
+
+    public ?string $denetimIslem = null;
+
     public function mount(): void
     {
         $this->form->fill();
@@ -158,6 +163,46 @@ class Guvenlik extends Page
                 'guncel' => YasalMetinler::guncelOnayliMi($kullanici, $anahtar),
             ])
             ->all();
+    }
+
+    /** Son 7 günlük işlem hacmi grafiği verisi (F7). */
+    #[Computed]
+    public function denetim7Gun(): array
+    {
+        $kullanici = $this->kullanici();
+
+        return \App\Support\DenetimKaydedici::son7GunHacim($kullanici->sahipMi() ? null : $kullanici->id);
+    }
+
+    /** Filtrelenebilir son 40 denetim kaydı (F7). */
+    #[Computed]
+    public function denetimKayitlari()
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('denetim_kayitlari')) {
+            return collect();
+        }
+
+        $kullanici = $this->kullanici();
+
+        return \App\Models\DenetimKaydi::query()
+            ->with('firma:id,unvan')
+            ->when(! $kullanici->sahipMi(), fn ($q) => $q->where('user_id', $kullanici->id))
+            ->when($this->denetimModul, fn ($q, $m) => $q->where('modul', $m))
+            ->when($this->denetimIslem, fn ($q, $i) => $q->where('islem', $i))
+            ->latest('id')
+            ->limit(40)
+            ->get();
+    }
+
+    /** Mevcut modül listesi (F7 filtre). */
+    #[Computed]
+    public function denetimModulleri(): array
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('denetim_kayitlari')) {
+            return [];
+        }
+
+        return \App\Models\DenetimKaydi::query()->distinct()->orderBy('modul')->pluck('modul')->all();
     }
 
     /** User-Agent'tan kaba "Tarayıcı · İşletim sistemi" etiketi. */

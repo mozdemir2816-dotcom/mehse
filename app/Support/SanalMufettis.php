@@ -119,6 +119,14 @@ class SanalMufettis
                 $minCeza += $mn;
                 $maxCeza += $mx;
 
+                $aksiyon = $k['aksiyon'];
+                if ($k['anahtar'] === 'periyodik_kontrol_raporu') {
+                    $uygunsuzAdet = $firma->isEkipmanlari()->where('aktif', true)->where('sonuc', 'uygun_degil')->count();
+                    if ($uygunsuzAdet > 0) {
+                        $aksiyon = "{$uygunsuzAdet} ekipmanın periyodik kontrol sonucu UYGUN DEĞİL — uygunsuzluk giderilip tekrar uygun raporu alınmadan belge tamamlanmış sayılmaz.";
+                    }
+                }
+
                 $bulgular[] = [
                     'kod' => $k['kod'],
                     'baslik' => $k['baslik'],
@@ -127,7 +135,7 @@ class SanalMufettis
                     'durum' => 'eksik',
                     'min_tl' => $mn,
                     'max_tl' => $mx,
-                    'aksiyon' => $k['aksiyon'],
+                    'aksiyon' => $aksiyon,
                 ];
             }
         }

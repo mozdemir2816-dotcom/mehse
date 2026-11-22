@@ -155,7 +155,7 @@ class PeriyodikKontrol extends Page
             'toplam' => $hepsi->count(),
             'gecerli' => $hepsi->filter(fn (IsEkipmani $e) => $e->vizeDurumu() === 'gecerli')->count(),
             'yaklasan' => $hepsi->filter(fn (IsEkipmani $e) => $e->vizeDurumu() === 'yaklasan')->count(),
-            'dolmus' => $hepsi->filter(fn (IsEkipmani $e) => in_array($e->vizeDurumu(), ['dolmus', 'bekliyor'], true))->count(),
+            'dolmus' => $hepsi->filter(fn (IsEkipmani $e) => in_array($e->vizeDurumu(), ['dolmus', 'bekliyor', 'uygun_degil'], true))->count(),
         ];
     }
 

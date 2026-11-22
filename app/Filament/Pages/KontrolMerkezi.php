@@ -53,7 +53,14 @@ class KontrolMerkezi extends Page
         'firma' => 'Firma Asistanı',
         'calisan' => 'Çalışan Asistanı',
         'hizli_evrak' => 'Hızlı Evrak Matrisi',
+        'kadro' => 'OSGB Kadro & Karne',
     ];
+
+    public string $duyuruBaslik = '';
+
+    public string $duyuruIcerik = '';
+
+    public string $duyuruOncelik = 'normal';
 
     #[Url(as: 'sekme')]
     public string $sekme = 'firma';
@@ -330,6 +337,8 @@ class KontrolMerkezi extends Page
                     'firma' => $b->firma?->unvan ?? '—',
                     'firma_id' => $b->firma_id,
                     'uygunsuzluk' => (string) $b->uygunsuzluk,
+                    'hiyerarsi' => $b->kontrolHiyerarsisiEtiketi(),
+                    'hiyerarsi_renk' => \App\Models\SahaBulgusu::KONTROL_HIYERARSISI_RENK[$b->kontrol_hiyerarsisi ?? ''] ?? null,
                     'durum' => $b->durum,
                     'termin' => $b->termin?->format('d.m.Y'),
                     'gecikti' => $gecikti,
@@ -386,5 +395,90 @@ class KontrolMerkezi extends Page
             ->body(($bulgu->bulgu_no ?: 'Bulgu').' tamamlandı olarak işaretlendi (bağlı DÖF kaydı güncellendi).')
             ->success()
             ->send();
+    }
+
+    /** OSGB Kadro Panosu: FTE kapasite + doluluk bantları (F4). */
+    #[Computed]
+    public function kadroPanosu(): array
+    {
+        return \App\Support\OsgbKadroAnalizi::kadroPanosu((int) Filament::auth()->id());
+    }
+
+    /** Belge sınıfı uyuşmazlığı tespit edilen firmalar (F4). */
+    #[Computed]
+    public function sinifUyusmazliklari(): array
+    {
+        return \App\Support\OsgbKadroAnalizi::sinifUyusmazliklari((int) Filament::auth()->id());
+    }
+
+    /** En uzun süredir saha ziyareti yapılmamış aktif firmalar (F4). */
+    #[Computed]
+    public function ihmalEdilenFirmalar(): array
+    {
+        return \App\Support\OsgbKadroAnalizi::ihmalEdilenFirmalar((int) Filament::auth()->id());
+    }
+
+    /** Aylık Uzman Değerlendirme Karnesi (0–100 + erken uyarı — F6). */
+    #[Computed]
+    public function uzmanKarneleri(): array
+    {
+        return \App\Support\OsgbKadroAnalizi::uzmanKarneleri((int) Filament::auth()->id());
+    }
+
+    /** Ekip içi duyuru ve talimatlar (okundu/onaylandı takipli — F6). */
+    #[Computed]
+    public function ekipDuyurulari()
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('ekip_duyurulari')) {
+            return collect();
+        }
+
+        return \App\Models\EkipDuyurusu::query()
+            ->with('gonderen:id,name')
+            ->latest('id')
+            ->limit(20)
+            ->get();
+    }
+
+    public function ekipDuyurusuGonder(): void
+    {
+        $baslik = trim($this->duyuruBaslik);
+        $icerik = trim($this->duyuruIcerik);
+        if ($baslik === '' || $icerik === '') {
+            Notification::make()->title('Başlık ve duyuru metni zorunludur')->warning()->send();
+
+            return;
+        }
+
+        $user = Filament::auth()->user();
+        \App\Models\EkipDuyurusu::create([
+            'user_id' => $user->id,
+            'baslik' => $baslik,
+            'icerik' => $icerik,
+            'oncelik' => in_array($this->duyuruOncelik, ['normal', 'onemli', 'acil'], true) ? $this->duyuruOncelik : 'normal',
+            'okuyanlar' => [
+                (string) $user->id => ['ad' => (string) $user->name, 'okundu_at' => now()->toIso8601String()],
+            ],
+        ]);
+
+        \App\Support\DenetimKaydedici::kaydet('OSGB Ekip', 'olusturdu', 'Ekip duyurusu gönderildi: '.$baslik);
+
+        $this->duyuruBaslik = '';
+        $this->duyuruIcerik = '';
+        $this->duyuruOncelik = 'normal';
+        unset($this->ekipDuyurulari);
+
+        Notification::make()->title('Ekip duyurusu yayınlandı')->body('Ekip üyelerinin okundu onayları aşağıda canlı izlenir.')->success()->send();
+    }
+
+    public function ekipDuyurusuOkundu(int $id): void
+    {
+        $duyuru = \App\Models\EkipDuyurusu::find($id);
+        $user = Filament::auth()->user();
+        if ($duyuru && $user instanceof \App\Models\User) {
+            $duyuru->okunduIsaretle($user);
+            unset($this->ekipDuyurulari);
+            Notification::make()->title('Okundu & onaylandı olarak işlendi')->success()->send();
+        }
     }
 }

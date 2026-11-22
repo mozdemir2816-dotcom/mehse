@@ -17,6 +17,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -95,6 +96,9 @@ class HizliSahaBulgusu extends Page
 
     /** Boş = 5×5 skordan otomatik. */
     public ?string $oncelik = null;
+
+    /** ISO 45001 Kontrol Hiyerarşisi (F1). */
+    public ?string $kontrolHiyerarsisi = null;
 
     public ?string $aksiyon = null;
 
@@ -515,6 +519,7 @@ class HizliSahaBulgusu extends Page
             'olasilik' => $this->olasilik,
             'siddet' => $this->siddet,
             'oncelik' => $this->oncelik ?: null,
+            'kontrol_hiyerarsisi' => $this->kontrolHiyerarsisi ?: null,
             'aksiyon' => $this->aksiyon,
             'sorumlu' => $this->sorumlu,
             'termin' => $this->termin ?: null,
@@ -523,7 +528,7 @@ class HizliSahaBulgusu extends Page
         ]);
 
         // Firma ve bölüm sonraki bulgu için kalsın (sahada aynı alanda devam).
-        $this->reset('gozlemKonumu', 'enlem', 'boylam', 'kategori', 'tehlike', 'uygunsuzluk', 'mevcutOnlemler', 'yasalGerekce', 'aksiyon', 'sorumlu', 'termin', 'yeniFotograflar', 'kaydedilenFotolar', 'kaynak', 'olasilik', 'siddet', 'oncelik');
+        $this->reset('gozlemKonumu', 'enlem', 'boylam', 'kategori', 'tehlike', 'uygunsuzluk', 'mevcutOnlemler', 'yasalGerekce', 'aksiyon', 'sorumlu', 'termin', 'yeniFotograflar', 'kaydedilenFotolar', 'kaynak', 'olasilik', 'siddet', 'oncelik', 'kontrolHiyerarsisi');
         $this->yenile();
 
         $mesaj = $b->bulgu_no.' — risk '.$b->skor().' ('.$b->oncelikEtiketi().')';
@@ -577,18 +582,79 @@ class HizliSahaBulgusu extends Page
     {
         return Action::make('kapat')
             ->label('Kapat')
-            ->modalHeading(fn (array $arguments) => 'Bulguyu kapat — '.$this->bulgu($arguments['id'])->bulgu_no)
-            ->fillForm(fn (): array => ['kapanis_tarihi' => now()->toDateString()])
+            ->modalHeading(fn (array $arguments) => 'Kapalı Devre DÖF Kapanışı — '.$this->bulgu($arguments['id'])->bulgu_no)
+            ->fillForm(function (array $arguments): array {
+                $b = $this->bulgu($arguments['id']);
+
+                return [
+                    'kapanis_tarihi' => now()->toDateString(),
+                    'kontrol_hiyerarsisi' => $b->kontrol_hiyerarsisi ?: 'muhendislik',
+                    'hedef_olasilik' => $b->hedef_olasilik ?: 1,
+                    'hedef_siddet' => $b->hedef_siddet ?: max(1, (int) $b->siddet - 1),
+                    'etkinlik_puani' => $b->etkinlik_puani ?: 4,
+                    'kapanis_notu' => $b->isveren_kapanis_notu ?: $b->kapanis_notu,
+                ];
+            })
             ->schema([
                 DatePicker::make('kapanis_tarihi')->label('Kapanış tarihi')->required(),
-                Textarea::make('kapanis_notu')->label('Yapılan düzeltme')->rows(3)->required(),
+                Select::make('kontrol_hiyerarsisi')
+                    ->label('Kontrol Hiyerarşisi (ISO 45001)')
+                    ->options(SahaBulgusu::KONTROL_HIYERARSISI)
+                    ->required(),
+                Select::make('hedef_olasilik')
+                    ->label('Kapanış Sonrası Artık Olasılık (1–5)')
+                    ->options(config('isg.saha_bulgu.olasilik'))
+                    ->required(),
+                Select::make('hedef_siddet')
+                    ->label('Kapanış Sonrası Artık Şiddet (1–5)')
+                    ->options(config('isg.saha_bulgu.siddet'))
+                    ->required(),
+                Select::make('etkinlik_puani')
+                    ->label('Önlem Etkinlik Puanı (1–5)')
+                    ->options([
+                        5 => '5 · Çok Etkin (Kök neden giderildi)',
+                        4 => '4 · Etkin (Risk kabul edilebilir)',
+                        3 => '3 · Orta (İzleme gerektirir)',
+                        2 => '2 · Zayıf (Ek önlem gerekebilir)',
+                        1 => '1 · Yetersiz',
+                    ])
+                    ->required(),
+                FileUpload::make('kapanis_kaniti_dosya')
+                    ->label('Kapanış Kanıtı (Fotoğraf / Belge)')
+                    ->disk('public')
+                    ->directory('dof-kanit')
+                    ->acceptedFileTypes(['image/*', 'application/pdf'])
+                    ->maxSize(10240),
+                Textarea::make('kapanis_notu')->label('Yapılan düzeltme ve doğrulama notu')->rows(3)->required(),
             ])
             ->action(function (array $data, array $arguments): void {
-                $this->bulgu($arguments['id'])->update([...$data, 'durum' => 'kapandi']);
+                $b = $this->bulgu($arguments['id']);
+                $kanit = $data['kapanis_kaniti_dosya'] ?? $b->isveren_kapanis_dosya;
+                $b->update([
+                    ...$data,
+                    'kapanis_kaniti_dosya' => $kanit,
+                    'durum' => 'kapandi',
+                ]);
                 $this->yenile();
 
-                Notification::make()->title('Bulgu kapatıldı')->success()->send();
+                Notification::make()
+                    ->title('DÖF doğrulandı ve kapatıldı')
+                    ->body('Artık risk: '.$b->fresh()->artikRiskSkoru().' · Etkinlik: '.$data['etkinlik_puani'].'/5')
+                    ->success()
+                    ->send();
             });
+    }
+
+    /** İşyeri portalından gelen kapanış kanıtı talebini reddeder (ek kanıt ister). */
+    public function isverenKanitReddet(int $id): void
+    {
+        $b = $this->bulgu($id);
+        $b->update([
+            'isveren_kapanis_talebi_at' => null,
+            'isveren_kapanis_notu' => null,
+        ]);
+        $this->yenile();
+        Notification::make()->title('İşveren kapanış talebi reddedildi')->body('Bulgu açık kaldı; işyeri yeni kanıt yükleyebilir.')->warning()->send();
     }
 
     /** Açık / devam ediyor / ertelendi arası geçiş (kapatma ayrı aksiyonla, not ister). */

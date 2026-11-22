@@ -63,6 +63,11 @@ class Firma extends Model
         'calisan_sayisi' => 'integer',
         'katip_aylik_dk' => 'integer',
         'is_kalemleri' => 'array',
+        'igu_hizmeti_yok' => 'boolean',
+        'hekim_hizmeti_yok' => 'boolean',
+        'dsp_hizmeti_yok' => 'boolean',
+        'tam_sureli_igu' => 'boolean',
+        'tam_sureli_hekim' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -74,6 +79,16 @@ class Firma extends Model
         static::saving(function (Firma $f): void {
             if (blank($f->user_id) && auth()->check()) {
                 $f->user_id = auth()->id();
+            }
+        });
+
+        static::created(function (Firma $f): void {
+            \App\Support\DenetimKaydedici::kaydet('Firmalar', 'olusturdu', 'Firma eklendi: '.$f->unvan, $f->id, static::class, $f->id);
+        });
+
+        static::updated(function (Firma $f): void {
+            if ($f->wasChanged(['unvan', 'tehlike_sinifi', 'igu_id', 'isyeri_hekimi_id', 'dsp_id', 'aktif', 'igu_hizmeti_yok', 'hekim_hizmeti_yok', 'tam_sureli_igu', 'tam_sureli_hekim'])) {
+                \App\Support\DenetimKaydedici::kaydet('Firmalar', 'guncelledi', 'Firma güncellendi: '.$f->unvan, $f->id, static::class, $f->id);
             }
         });
 

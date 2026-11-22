@@ -103,7 +103,14 @@ class FirmaDenetimOperasyon extends Page
 
     public function yenile(): void
     {
-        unset($this->firma, $this->sonuc, $this->rapor);
+        unset($this->firma, $this->sonuc, $this->rapor, $this->denetimSkorTrendi);
         $this->isyeriVerisiniSifirla();
+    }
+
+    /** Ziyaret / Saha Denetimi başı 0–100 skor trendi (F8). */
+    #[\Livewire\Attributes\Computed]
+    public function denetimSkorTrendi(): array
+    {
+        return $this->firma ? \App\Support\IsyeriDurumu::denetimSkorTrendi($this->firma) : [];
     }
 }

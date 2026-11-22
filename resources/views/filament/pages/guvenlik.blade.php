@@ -82,6 +82,82 @@
         </div>
     </div>
 
+    {{-- DENETİM KAYITLARI (AUDIT LOG) + 7 GÜNLÜK AKTİVİTE GRAFİĞİ (F7) --}}
+    @php
+        $hacim = $this->denetim7Gun;
+        $maksHacim = max(1, (int) collect($hacim)->max('sayi'));
+        $kayitlar = $this->denetimKayitlari;
+    @endphp
+    <div style="{{ $kart }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem">
+            <div>
+                <div style="{{ $baslik }};margin-bottom:.15rem">Denetim Kayıtları (Audit Log)</div>
+                <div style="{{ $soluk }}">Kim, ne zaman, hangi firma ve modülde işlem yaptı — son 7 gün aktivite hacmi ve işlem geçmişi.</div>
+            </div>
+            <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+                <select wire:model.live="denetimModul" style="font-size:.78rem;padding:.32rem .55rem;border:1px solid rgb(107 114 128 / .35);border-radius:.45rem;background:transparent">
+                    <option value="">Tüm Modüller</option>
+                    @foreach ($this->denetimModulleri as $mod)
+                        <option value="{{ $mod }}">{{ $mod }}</option>
+                    @endforeach
+                </select>
+                <select wire:model.live="denetimIslem" style="font-size:.78rem;padding:.32rem .55rem;border:1px solid rgb(107 114 128 / .35);border-radius:.45rem;background:transparent">
+                    <option value="">Tüm İşlemler</option>
+                    @foreach (\App\Models\DenetimKaydi::ISLEMLER as $k => $ad)
+                        <option value="{{ $k }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- 7 GÜNLÜK ÇUBUK GRAFİK --}}
+        @if (count($hacim))
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;align-items:end;height:86px;padding:.5rem .6rem;border:1px solid rgb(107 114 128 / .15);border-radius:.6rem;margin-bottom:.9rem">
+                @foreach ($hacim as $gun)
+                    @php $yukseklik = max(6, (int) round(($gun['sayi'] / $maksHacim) * 52)); @endphp
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:.2rem">
+                        <span style="font-size:.68rem;font-weight:700;color:#2563eb">{{ $gun['sayi'] }}</span>
+                        <div style="width:100%;max-width:34px;height:{{ $yukseklik }}px;background:#2563eb;border-radius:4px 4px 0 0;opacity:.85"></div>
+                        <span style="font-size:.68rem;color:rgb(107 114 128)">{{ $gun['etiket'] }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- SON İŞLEMLER TABLOSU --}}
+        @if ($kayitlar->isNotEmpty())
+            <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                    <thead>
+                        <tr style="text-align:left;border-bottom:1px solid rgb(107 114 128 / .25);color:rgb(107 114 128)">
+                            <th style="padding:.4rem">Tarih</th>
+                            <th style="padding:.4rem">Kullanıcı</th>
+                            <th style="padding:.4rem">Modül / İşlem</th>
+                            <th style="padding:.4rem">Firma</th>
+                            <th style="padding:.4rem">Özet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($kayitlar as $k)
+                            <tr style="border-bottom:1px solid rgb(107 114 128 / .12)">
+                                <td style="padding:.4rem;white-space:nowrap;color:rgb(107 114 128)">{{ $k->created_at?->format('d.m.Y H:i') }}</td>
+                                <td style="padding:.4rem;white-space:nowrap;font-weight:600">{{ $k->kullanici_adi ?: 'Sistem' }}</td>
+                                <td style="padding:.4rem;white-space:nowrap">
+                                    <span style="font-weight:600">{{ $k->modul }}</span> ·
+                                    <span style="font-size:.72rem;padding:.05rem .4rem;border-radius:999px;background:rgb(37 99 235 / .1);color:#1d4ed8;font-weight:600">{{ \App\Models\DenetimKaydi::ISLEMLER[$k->islem] ?? $k->islem }}</span>
+                                </td>
+                                <td style="padding:.4rem">{{ $k->firma?->unvan ?: '—' }}</td>
+                                <td style="padding:.4rem">{{ $k->ozet }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p style="{{ $soluk }}">Henüz denetim kaydı yok. Firma, Risk Değerlendirmesi, DÖF veya Periyodik Kontrol işlemlerinde kayıtlar otomatik oluşur.</p>
+        @endif
+    </div>
+
     {{-- HUKUKİ ONAYLAR --}}
     <div style="{{ $kart }}">
         <div style="{{ $baslik }};margin-bottom:.2rem">Hukuki Onaylar</div>
