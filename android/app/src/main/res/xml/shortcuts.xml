@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="hizli_bulgu"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_bulgu">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://mehse.com/admin/hizli-saha-bulgusu"
+            android:targetPackage="com.mehse.isg"
+            android:targetClass="com.mehse.isg.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="bugun_ziyaret"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_ziyaret">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://mehse.com/admin/ziyaret"
+            android:targetPackage="com.mehse.isg"
+            android:targetClass="com.mehse.isg.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="firmalar"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_firmalar">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://mehse.com/admin/firmalar"
+            android:targetPackage="com.mehse.isg"
+            android:targetClass="com.mehse.isg.MainActivity" />
+    </shortcut>
+</shortcuts>

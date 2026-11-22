@@ -123,6 +123,7 @@ Route::get('/tanitim', fn () => redirect(url('/'), 301));
 Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
 Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
 Route::view('/bilgi-guvenligi', 'pages.bilgi-guvenligi')->name('bilgi-guvenligi');
+Route::view('/android', 'pages.android')->name('android');
 Route::view('/fiyatlandirma', 'pages.fiyatlandirma')->name('fiyatlandirma');
 Route::get('/demo', [\App\Http\Controllers\UcretsizAraclarController::class, 'canliDemo'])->name('demo');
 Route::get('/araclar/tehlike-sinifi-sorgulama', [\App\Http\Controllers\UcretsizAraclarController::class, 'tehlikeSinifi'])->name('araclar.tehlike');
@@ -150,6 +151,7 @@ Route::get('/sitemap.xml', function () {
             ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/bilgi-guvenligi', 'lastmod' => $tarih('pages/bilgi-guvenligi'), 'changefreq' => 'monthly', 'priority' => '0.6'],
+            ['adres' => 'https://mehse.com/android', 'lastmod' => $tarih('pages/android'), 'changefreq' => 'monthly', 'priority' => '0.7'],
             // Sektör sayfaları (config/sektorler.php); içerik config'te olduğundan lastmod = config dosyası tarihi.
             ...collect(array_keys(config('sektorler', [])))->map(fn (string $slug) => [
                 'adres' => 'https://mehse.com/sektor/'.$slug,

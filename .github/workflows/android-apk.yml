@@ -1,0 +1,80 @@
+name: Build Mehse İSG Android APK
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Prepare Release Keystore
+        working-directory: android/app
+        env:
+          KEYSTORE_BASE64: ${{ secrets.MEHSE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS: ${{ secrets.MEHSE_KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.MEHSE_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.MEHSE_KEY_PASS }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > mehse-release.jks
+          else
+            keytool -genkeypair -v \
+              -keystore mehse-release.jks \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -alias "${KEY_ALIAS:-mehse}" \
+              -storepass "${KEYSTORE_PASS:-MehseISG2026!}" \
+              -keypass "${KEY_PASS:-MehseISG2026!}" \
+              -dname "CN=Mehse ISG, OU=Mobile, O=Mehse ISG, L=Bursa, C=TR"
+          fi
+
+      - name: Build Signed Release APK
+        working-directory: android
+        env:
+          MEHSE_KEYSTORE_PATH: mehse-release.jks
+          MEHSE_KEYSTORE_PASS: ${{ secrets.MEHSE_KEYSTORE_PASS || 'MehseISG2026!' }}
+          MEHSE_KEY_ALIAS: ${{ secrets.MEHSE_KEY_ALIAS || 'mehse' }}
+          MEHSE_KEY_PASS: ${{ secrets.MEHSE_KEY_PASS || 'MehseISG2026!' }}
+        run: |
+          gradle assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/mehse-isg.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mehse-isg-apk
+          path: android/app/build/outputs/apk/release/mehse-isg.apk
+          retention-days: 90
+
+      - name: Publish GitHub Release (android-latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Mehse İSG Android APK (v1.0.0)
+          body: |
+            **Mehse İSG Android Uygulaması (`com.mehse.isg`)**
+            - Doğrudan kurulum için `mehse-isg.apk` dosyasını Android telefonunuza indirip açın.
+            - Özellikler: Saha fotoğrafı/kamera yükleme, 4'lü ziyaret kanıtı GPS, sesli komut, PDF/Excel/ZIP indirme, WhatsApp & Google Maps entegrasyonu, uygulama kısayolları.
+          files: android/app/build/outputs/apk/release/mehse-isg.apk
+          make_latest: true

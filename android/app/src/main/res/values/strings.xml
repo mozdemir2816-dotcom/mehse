@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mehse İSG</string>
+    <string name="offline_title">İnternet Bağlantısı Yok</string>
+    <string name="offline_desc">Mehse İSG sunucusuna bağlanılamıyor. Lütfen mobil veri veya Wi-Fi bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="retry">Tekrar Dene</string>
+    <string name="shortcut_bulgu">Hızlı Bulgu</string>
+    <string name="shortcut_ziyaret">Bugün (Ziyaret)</string>
+    <string name="shortcut_firmalar">Firmalar</string>
+</resources>
