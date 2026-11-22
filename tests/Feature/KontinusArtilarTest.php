@@ -103,6 +103,12 @@ class KontinusArtilarTest extends TestCase
         $basvuru->refresh();
         $this->assertSame('bekliyor', $basvuru->durum);
         $this->assertSame('Kaya Elektrik Taahhüt Ltd. Şti.', $basvuru->unvan);
+
+        // Admin Taşeron Yönetimi sayfası hatasız açılmalı ve QR/link butonunu göstermeli
+        $this->actingAs($u)
+            ->get('/admin/taseron-yonetimi')
+            ->assertOk()
+            ->assertSee('Taşeron Başvuru Linki / QR Üret');
     }
 
     public function test_k3_canli_portfoy_asistani_gercek_veriyi_yanitlar(): void
