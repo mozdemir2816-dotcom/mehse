@@ -1,0 +1,48 @@
+-- 22.11.2026 — Canlı İmza (C15) ve Müfettiş Salt-Okunur Teftiş Paylaşımı (C21) tabloları
+CREATE TABLE IF NOT EXISTS `canli_imzalar` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `firma_id` BIGINT UNSIGNED NOT NULL,
+  `belge_turu` VARCHAR(40) NOT NULL,
+  `belge_id` BIGINT UNSIGNED NULL,
+  `belge_baslik` VARCHAR(255) NOT NULL,
+  `imza_token` VARCHAR(64) NOT NULL,
+  `calisan_adi` VARCHAR(160) NULL,
+  `calisan_tc` VARCHAR(11) NULL,
+  `imza_gorseli` VARCHAR(255) NULL,
+  `imzalandi_at` TIMESTAMP NULL,
+  `dogrulama_kodu` VARCHAR(32) NULL,
+  `ip_adresi` VARCHAR(45) NULL,
+  `cihaz_bilgisi` VARCHAR(255) NULL,
+  `created_at` TIMESTAMP NULL,
+  `updated_at` TIMESTAMP NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `canli_imzalar_imza_token_unique` (`imza_token`),
+  UNIQUE KEY `canli_imzalar_dogrulama_kodu_unique` (`dogrulama_kodu`),
+  KEY `canli_imzalar_belge_turu_index` (`belge_turu`),
+  KEY `canli_imzalar_firma_id_belge_turu_index` (`firma_id`, `belge_turu`),
+  CONSTRAINT `canli_imzalar_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `canli_imzalar_firma_id_foreign` FOREIGN KEY (`firma_id`) REFERENCES `firmalar` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `teftis_paylasimlari` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `firma_id` BIGINT UNSIGNED NOT NULL,
+  `token` VARCHAR(64) NOT NULL,
+  `baslik` VARCHAR(200) NOT NULL,
+  `mufettis_adi` VARCHAR(160) NULL,
+  `bitis_tarihi` TIMESTAMP NOT NULL,
+  `aktif` TINYINT(1) NOT NULL DEFAULT 1,
+  `erisim_sayisi` INT UNSIGNED NOT NULL DEFAULT 0,
+  `son_erisim_at` TIMESTAMP NULL,
+  `erisim_kayitlari` JSON NULL,
+  `notlar` TEXT NULL,
+  `created_at` TIMESTAMP NULL,
+  `updated_at` TIMESTAMP NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `teftis_paylasimlari_token_unique` (`token`),
+  KEY `teftis_paylasimlari_firma_id_aktif_index` (`firma_id`, `aktif`),
+  CONSTRAINT `teftis_paylasimlari_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `teftis_paylasimlari_firma_id_foreign` FOREIGN KEY (`firma_id`) REFERENCES `firmalar` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

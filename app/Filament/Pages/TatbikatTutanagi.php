@@ -809,6 +809,8 @@ class TatbikatTutanagi extends Page
                 ->visible(fn () => $this->duzenlenenId !== null)
                 ->action(fn () => $this->yeniKayit()),
 
+            \App\Filament\Support\CanliImzaAksiyonu::make('tatbikat', fn () => $this->firma),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')

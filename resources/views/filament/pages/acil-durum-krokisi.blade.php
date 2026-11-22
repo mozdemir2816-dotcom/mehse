@@ -533,9 +533,35 @@
                     </div>
 
                     <div style="{{ $kutu }};font-size:.75rem;color:rgb(107 114 128);line-height:1.45">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+                            <strong style="color:inherit">ISO 7010 Otomatik Lejant Sihirbazı</strong>
+                            <span style="font-weight:700" x-text="`${d.semboller.length} işaret`"></span>
+                        </div>
+                        <template x-if="d.semboller.length === 0">
+                            <div>Krokiye ISO 7010 sembol ekledikçe otomatik adet sayımı burada oluşur.</div>
+                        </template>
+                        <template x-if="d.semboller.length > 0">
+                            <div style="display:flex;flex-direction:column;gap:.2rem;margin-bottom:.45rem">
+                                <template x-for="[tip, adet] in Object.entries(d.semboller.reduce((acc, s) => { acc[s.tip] = (acc[s.tip] || 0) + 1; return acc; }, {}))" :key="tip">
+                                    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgb(107 114 128/.2);padding:.12rem 0">
+                                        <span x-text="ayar.semboller[tip]?.ad || tip"></span>
+                                        <strong x-text="`${adet} adet`"></strong>
+                                    </div>
+                                </template>
+                                <button type="button" style="{{ $btn }};margin-top:.35rem;width:100%;font-weight:700"
+                                    x-on:click="
+                                        const ozet = Object.entries(d.semboller.reduce((acc, s) => { acc[s.tip] = (acc[s.tip] || 0) + 1; return acc; }, {}))
+                                            .map(([tip, adet]) => (ayar.semboller[tip]?.ad || tip) + ': ' + adet).join(' · ');
+                                        d.ogeler.metinler.push({ x: 60, y: H - 40, metin: 'LEJANT: ' + ozet, boyut: 12, renk: '#0f172a', aci: 0 });
+                                        ciz();
+                                    ">
+                                    📋 Lejantı Krokiye Ekle
+                                </button>
+                            </div>
+                        </template>
                         <strong>Sayım:</strong>
                         <span x-text="`${d.duvarlar.length} duvar · ${d.ogeler.odalar.length} oda · ${d.ogeler.yollar.length} kaçış yolu · ${d.semboller.length} işaret · ${d.ogeler.metinler.length} metin`"></span>
-                        <div style="margin-top:.3rem">İşaretler ISO 7010 renk ve biçim kurallarına göre şematiktir; resmî piktogram baskıları için Acil Durum Planı → afişleri kullanın.</div>
+                        <div style="margin-top:.3rem">İşaretler ISO 7010 renk ve biçim kurallarına göre şematiktir; mimari altlık (PNG/JPG) yükleyip opaklık ayarıyla üzerinden çizebilirsiniz.</div>
                     </div>
                 </div>
             </div>

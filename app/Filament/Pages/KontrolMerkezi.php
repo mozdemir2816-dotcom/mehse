@@ -44,7 +44,7 @@ class KontrolMerkezi extends Page
 
     protected static ?string $slug = 'kontrol-merkezi';
 
-    protected static ?string $title = 'İSG Komuta Merkezi';
+    protected static ?string $title = 'Kontrol Merkezi';
 
     protected static ?string $navigationLabel = 'Kontrol Merkezi';
 
@@ -209,6 +209,10 @@ class KontrolMerkezi extends Page
         $bosFormlar = FirmaEvrakPaketi::bosFormlar();
 
         return [
+            \App\Filament\Support\MufettisYetkilendirAksiyonu::make(
+                fn () => $this->firmaId ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId) : null
+            ),
+
             Action::make('isverenUyumKarnesi')
                 ->label('İşveren Uyum Karnesi (PDF)')
                 ->icon('heroicon-o-document-chart-bar')

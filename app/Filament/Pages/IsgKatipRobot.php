@@ -18,18 +18,18 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class IsgKatipRobot extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.isg-katip-robot';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
+    protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
-    /** Menüde gizli — Sistem & Ayarlar Merkezi sekme şeridinden açılır (App\Support\SayfaAileleri). */
-    protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = true;
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'isg-katip-robot';
 

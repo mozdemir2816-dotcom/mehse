@@ -19,9 +19,22 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class FirmaRiskBildirimQrUretici
 {
+    public static function imzaKodu(Firma $firma): string
+    {
+        return substr(hash_hmac('sha256', 'mehse-risk-qr-'.$firma->id, (string) config('app.key')), 0, 20);
+    }
+
+    public static function imzaGecerliMi(Firma $firma, string $imza): bool
+    {
+        return hash_equals(static::imzaKodu($firma), $imza);
+    }
+
     public static function bildirimAdresi(Firma $firma): string
     {
-        return SahaEkrani::getUrl(['firma' => $firma->id]);
+        return route('risk.bildir', [
+            'firma' => $firma->id,
+            'imza' => static::imzaKodu($firma),
+        ]);
     }
 
     public static function qrDataUri(Firma $firma): string

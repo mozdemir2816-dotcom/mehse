@@ -367,6 +367,41 @@ class PeriyodikKontrol extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('ekipnetPasaport')
+                ->label('🪪 EKİPNET & QR Emniyet Pasaportu')
+                ->icon('heroicon-o-qr-code')
+                ->color('info')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('EKİPNET Doğrulama & Makine QR Emniyet Pasaportu')
+                ->modalDescription('Ekipmanı seçip makine üzerine asılabilir A5 QR Emniyet Pasaportu (PDF) indirin. İsteğe bağlı EKİPNET kayıt numarası format kontrolü yapar.')
+                ->modalSubmitActionLabel('QR Emniyet Pasaportu İndir (PDF)')
+                ->schema([
+                    Select::make('ekipman_id')
+                        ->label('İş Ekipmanı')
+                        ->options(fn () => $this->firma?->isEkipmanlari()->orderBy('ekipman_adi')->pluck('ekipman_adi', 'id')->all() ?? [])
+                        ->searchable()
+                        ->required(),
+                    TextInput::make('ekipnet_no')
+                        ->label('Kontrol Eden EKİPNET Kayıt No (Opsiyonel)')
+                        ->placeholder('Örn: K12345678 veya EKP-2026001')
+                        ->helperText(new HtmlString('Resmî doğrulama: <a href="https://ekipnet.csgb.gov.tr/" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline">ekipnet.csgb.gov.tr ↗</a>')),
+                ])
+                ->action(function (array $data) {
+                    $ekipman = IsEkipmani::where('firma_id', $this->firmaId)->findOrFail($data['ekipman_id']);
+                    $ekipnet = trim((string) ($data['ekipnet_no'] ?? ''));
+
+                    if ($ekipnet !== '' && ! \App\Support\EkipmanPasaportUretici::ekipnetNoGecerliMi($ekipnet)) {
+                        Notification::make()
+                            ->title('EKİPNET numarası format uyarısı')
+                            ->body("'{$ekipnet}' standart EKİPNET biçimine (K + rakamlar) uymuyor; yine de pasaporta yazıldı, ekipnet.csgb.gov.tr'den teyit edin.")
+                            ->warning()
+                            ->send();
+                    }
+
+                    return \App\Support\EkipmanPasaportUretici::pdf($ekipman, $ekipnet ?: null);
+                }),
+
             Action::make('matbuEvrak')
                 ->label('Matbu Evrak Paketi')
                 ->icon('heroicon-o-printer')

@@ -66,7 +66,7 @@ class EgitimKatilim extends Page
 
     protected static ?string $title = 'Eğitim Katılım Formu';
 
-    protected static ?string $navigationLabel = 'Eğitim Yönetim Merkezi';
+    protected static ?string $navigationLabel = 'Eğitim & Sınav';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;
@@ -1168,6 +1168,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            \App\Filament\Support\CanliImzaAksiyonu::make('egitim_katilim', fn () => $this->firma),
             Action::make('sgkPdfYukle')
                 ->label('SGK İşe Giriş PDF\'inden Katılımcı Ekle')
                 ->icon('heroicon-o-identification')

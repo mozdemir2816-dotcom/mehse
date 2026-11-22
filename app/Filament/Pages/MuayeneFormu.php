@@ -324,6 +324,63 @@ class MuayeneFormu extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            \App\Filament\Support\CanliImzaAksiyonu::make('muayene_ek2', fn () => $this->firma),
+
+            Action::make('tumuNormalDoldur')
+                ->label('✓ Tümü Normal / Hayır')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->action(function (): void {
+                    foreach ($this->sistemikMuayene as $i => $s) {
+                        $this->sistemikMuayene[$i]['sonuc'] = 'normal';
+                        $this->sistemikMuayene[$i]['not'] = null;
+                    }
+                    foreach ($this->ek2 as $k => $v) {
+                        if (is_array($v) && array_key_exists('cevap', $v)) {
+                            $this->ek2[$k]['cevap'] = 'hayir';
+                        } elseif (in_array($v, ['evet', 'var', ''], true) && str_starts_with((string) $k, 'anamnez')) {
+                            $this->ek2[$k] = 'hayir';
+                        }
+                    }
+                    $this->sonucKanaati = 'elverislidir';
+                    Notification::make()->title('Tüm muayene alanları "Normal / Hayır" olarak dolduruldu')->success()->send();
+                }),
+
+            Action::make('ek1Radyasyon')
+                ->label('☢ EK-1 Radyasyon Formu (PDF)')
+                ->icon('heroicon-o-document-text')
+                ->color('warning')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('EK-1 Radyasyon Çalışanı Sağlık Muayene Formu')
+                ->modalSubmitActionLabel('EK-1 PDF İndir')
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('dozimetre_no')->label('Dozimetre / Takip No'),
+                    \Filament\Forms\Components\TextInput::make('hemogram')->label('Hemogram')->default('Normal sınırlar içinde'),
+                    \Filament\Forms\Components\TextInput::make('periferik')->label('Periferik Yayma')->default('Normal'),
+                    \Filament\Forms\Components\TextInput::make('goz')->label('Göz / Katarakt Muayenesi')->default('Katarakt / lens opasitesi saptanmadı'),
+                    \Filament\Forms\Components\TextInput::make('cilt')->label('Dermatolojik Muayene')->default('Radyasyon dermatiti bulgusu yok'),
+                    \Filament\Forms\Components\TextInput::make('tiroid')->label('Tiroid & Sistemik')->default('Normal'),
+                    \Filament\Forms\Components\TextInput::make('kanaat')->label('Hekim Kanaati')->default('İyonlaştırıcı radyasyon kaynakları ile çalışmaya elverişlidir.'),
+                ])
+                ->action(function (array $data) {
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.ek1-radyasyon', [
+                        'firma' => $this->firma,
+                        'calisan_ad' => $this->calisanAdSoyad,
+                        'calisan_tc' => $this->calisanTc,
+                        'calisan_gorev' => $this->calisanGorevi,
+                        'hekim_adi' => $this->hekimAdi,
+                        'tarih' => $this->muayeneTarihi ? Carbon::parse($this->muayeneTarihi)->format('d.m.Y') : now()->format('d.m.Y'),
+                        ...$data,
+                    ])->setPaper('a4');
+
+                    return response()->streamDownload(
+                        fn () => print ($pdf->output()),
+                        'ek1-radyasyon-'.\Illuminate\Support\Str::slug($this->calisanAdSoyad ?: 'calisan').'.pdf',
+                    );
+                }),
             Action::make('sgkPdfYukle')
                 ->label('SGK İşe Giriş PDF\'inden Doldur')
                 ->icon('heroicon-o-identification')

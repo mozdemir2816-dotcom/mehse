@@ -31,7 +31,7 @@ class Araclar extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'araclar';
 

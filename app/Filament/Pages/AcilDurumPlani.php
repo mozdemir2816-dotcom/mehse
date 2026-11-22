@@ -56,7 +56,7 @@ class AcilDurumPlani extends Page
 
     protected static ?string $title = 'Acil Durum Eylem Planı';
 
-    protected static ?string $navigationLabel = 'Acil Durum & Yangın Merkezi';
+    protected static ?string $navigationLabel = 'Acil Durum & Yangın';
 
     #[Url(as: 'firma')]
     public ?int $firmaId = null;

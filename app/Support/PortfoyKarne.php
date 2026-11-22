@@ -650,11 +650,12 @@ class PortfoyKarne
 
         return [
             'firma' => $firmalar->count(),
-            // Firmaya kayıtlı Çalışan (isim) sayısı değil, firmanın bildirdiği
-            // toplam çalışan sayısı esas alınır.
+            // Firmaya kayıtlı Çalışan (isim) sayısı + firmanın bildirdiği toplam sayı birlikte döner.
             'calisan' => (int) $firmalar->sum('calisan_sayisi'),
+            'calisan_kayitli' => $ozet['calisan'],
             'risk_degerlendirmesi' => RiskDegerlendirmesi::query()
                 ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))->count(),
+            'risk_eksik_firma' => max(0, $firmalar->count() - $ozet['risk_olan']),
             'risk_sablonu' => RiskSablonu::query()->where('user_id', $userId)->count(),
             'onemli_risk' => $onemliRisk,
             'calisansiz_firma' => $calisansizFirma,

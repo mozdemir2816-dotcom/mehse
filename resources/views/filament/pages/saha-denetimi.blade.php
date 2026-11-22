@@ -20,6 +20,54 @@
 
     @include('filament.pages.partials.eksik-firmalar', ['kriterAnahtari' => 'saha_denetim_formu'])
 
+    {{-- Çevrimdışı (Offline) Otomatik Tarayıcı Taslağı (C20) --}}
+    @if ($this->firma)
+        <div
+            x-data="{
+                anahtar: 'mehse_saha_denetim_offline_' + {{ (int) $this->firma->id }},
+                varMi: false,
+                cevrimdisi: !navigator.onLine,
+                init() {
+                    window.addEventListener('online', () => { this.cevrimdisi = false; });
+                    window.addEventListener('offline', () => { this.cevrimdisi = true; });
+                    try { this.varMi = !!localStorage.getItem(this.anahtar); } catch (_) {}
+                    $watch('$wire.cevaplar', (v) => {
+                        try {
+                            if (v && Object.keys(v).length > 0) {
+                                localStorage.setItem(this.anahtar, JSON.stringify({ cevaplar: v, notlar: $wire.genelNotlar || '', zaman: new Date().toLocaleTimeString('tr-TR') }));
+                                this.varMi = true;
+                            }
+                        } catch (_) {}
+                    });
+                },
+                geriYukle() {
+                    try {
+                        const raw = localStorage.getItem(this.anahtar);
+                        if (!raw) return;
+                        const d = JSON.parse(raw);
+                        if (d.cevaplar) $wire.set('cevaplar', d.cevaplar);
+                        if (d.notlar) $wire.set('genelNotlar', d.notlar);
+                    } catch (_) {}
+                },
+                sil() {
+                    try { localStorage.removeItem(this.anahtar); } catch (_) {}
+                    this.varMi = false;
+                }
+            }"
+            x-show="cevrimdisi || varMi"
+            x-cloak
+            style="border:1px solid rgb(2 132 199/.35);background:rgb(2 132 199/.06);border-radius:.75rem;padding:.65rem .95rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;font-size:.8rem"
+        >
+            <div>
+                <strong x-text="cevrimdisi ? '📡 Çevrimdışı Mod — yanıtlar cihazda güvenle saklanıyor' : '💾 Bu cihazda yerel çevrimdışı taslak kayıtlı'"></strong>
+            </div>
+            <div style="display:flex;gap:.45rem">
+                <button type="button" x-show="varMi" x-on:click="geriYukle()" style="padding:.28rem .65rem;border-radius:8px;border:1px solid #0284c7;background:#0284c7;color:#fff;font-weight:700;cursor:pointer;font-size:.76rem">Taslağı Geri Yükle</button>
+                <button type="button" x-show="varMi" x-on:click="sil()" style="padding:.28rem .65rem;border-radius:8px;border:1px solid #94a3b8;background:transparent;cursor:pointer;font-size:.76rem">Temizle</button>
+            </div>
+        </div>
+    @endif
+
     @if ($this->firma && $taslakYuklendi)
         <div style="border:1px solid {{ $turuncu }};background:rgb(234 88 12 / .08);border-radius:.75rem;padding:.85rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
             <div style="font-size:.83rem">

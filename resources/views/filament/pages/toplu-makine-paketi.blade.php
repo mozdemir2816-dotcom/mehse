@@ -19,7 +19,7 @@
 
     <p class="mehse-metin-soluk" style="max-width:74ch;font-size:.9rem">
         Sistemde olmayan makineler için günlük kontrol formu, çalışma talimatı, risk maddeleri ve afiş yazısı
-        Gemini sohbetinde hazırlanır, tek yapıştırmayla kurulur. Yapay zekâ kotası harcanmaz. Kurulan her şey
+        akıllı JSON şablonuyla tek adımda kurulur. Kurulan her paket
         "uzman onayı bekliyor" etiketiyle gelir; kontrol edip <strong>Paketi onayla</strong> deyin.
     </p>
 
@@ -45,8 +45,8 @@
 
     @if ($istemler)
         <x-filament::section>
-            <x-slot name="heading">2. İstemleri Gemini'ye yapıştırın</x-slot>
-            <x-slot name="description">{{ count($yeni) }} makine, {{ count($istemler) }} istem. Her istemin cevabını sırayla 3. adıma yapıştırıp kurun. Gemini'de Pro modeli önerilir.</x-slot>
+            <x-slot name="heading">2. Hazır İstemleri Yapay Zekâya Aktarın</x-slot>
+            <x-slot name="description">{{ count($yeni) }} makine, {{ count($istemler) }} istem. Üretilen JSON çıktısını sırayla 3. adıma yapıştırıp kurun.</x-slot>
             <div class="tmp-adim">
                 @foreach ($istemler as $i => $istem)
                     <div x-data="{ k: false, kopyala() { navigator.clipboard.writeText(this.$refs.m.value).then(() => { this.k = true; setTimeout(() => this.k = false, 2000) }) } }" wire:key="istem-{{ $i }}-{{ md5($istem) }}">
@@ -55,7 +55,7 @@
                             <x-filament::button size="sm" icon="heroicon-o-clipboard-document" x-on:click="kopyala()">
                                 <span x-show="! k">Kopyala</span><span x-show="k" x-cloak>Kopyalandı</span>
                             </x-filament::button>
-                            <x-filament::button size="sm" color="gray" tag="a" href="https://gemini.google.com/app" target="_blank" rel="noopener" icon="heroicon-o-arrow-top-right-on-square">Gemini'yi aç</x-filament::button>
+                            <x-filament::button size="sm" color="gray" tag="a" href="https://gemini.google.com/app" target="_blank" rel="noopener" icon="heroicon-o-arrow-top-right-on-square">Harici AI Asistanı Aç</x-filament::button>
                         </div>
                         <textarea x-ref="m" readonly rows="5" class="tmp-metin kod" aria-label="İstem {{ $i + 1 }}">{{ $istem }}</textarea>
                     </div>
@@ -65,10 +65,10 @@
     @endif
 
     <x-filament::section>
-        <x-slot name="heading">3. Gemini'nin cevabını yapıştırıp kurun</x-slot>
+        <x-slot name="heading">3. JSON Çıktısını Yapıştırıp Sisteme Kurun</x-slot>
         <x-slot name="description">Köşeli parantezle başlayan JSON'un tamamını yapıştırın. Kontrol formu, talimat, risk maddeleri ve afiş yazısı kurulur; o makinesi olan firmalara talimat eklenir.</x-slot>
         <div class="tmp-adim">
-            <textarea class="tmp-metin kod" rows="8" wire:model="cevap" aria-label="Gemini cevabı (JSON)" placeholder='[{"makine": "...", ...}]'></textarea>
+            <textarea class="tmp-metin kod" rows="8" wire:model="cevap" aria-label="AI JSON çıktısı" placeholder='[{"makine": "...", ...}]'></textarea>
             <div class="tmp-satir">
                 <x-filament::button icon="heroicon-o-arrow-down-tray" wire:click="kur" wire:loading.attr="disabled" wire:target="kur">
                     <span wire:loading.remove wire:target="kur">Sisteme kur</span><span wire:loading wire:target="kur">Kuruluyor…</span>
@@ -79,7 +79,7 @@
 
     <x-filament::section>
         <x-slot name="heading">Kurulan makineler</x-slot>
-        <x-slot name="description">Afiş resmi için "Resim istemi"ni Gemini'ye verin, resmi gösterilen adla kaydedip Ekipman Afişleri'nden yükleyin.</x-slot>
+        <x-slot name="description">Afiş görseli için "Resim istemi" ile ürettiğiniz görseli gösterilen adla kaydedip Ekipman Afişleri'nden yükleyin.</x-slot>
         @if ($durumlar === [])
             <p style="font-size:.9rem">Henüz paketle kurulan makine yok. Yukarıdaki adımlarla ilk makineyi kurun.</p>
         @else

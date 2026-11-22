@@ -49,11 +49,11 @@ class SahaModuluTest extends TestCase
         $g = SayfaAileleri::sekmeGruplari([ZiyaretModu::class]);
 
         $this->assertSame(
-            ['Aktif Saha Denetimi & Ziyaret Modu', 'Bulgu & DÖF Takip Havuzu', 'Yasal Rapor & Defter Çıktıları'],
+            ['Saha Bulguları & Denetim', 'Bulgu & DÖF Takip Havuzu', 'Yasal Rapor & Defter'],
             array_column($g['ust'], 'etiket'),
         );
         $this->assertSame([true, false, false], array_column($g['ust'], 'aktif'));
-        $this->assertSame(['Bugün (Ziyaret Modu)', 'Bulgular', 'Saha Denetimi', 'Kontrol Kartı'], array_column($g['alt'], 'etiket'));
+        $this->assertSame(['Bulgular', 'Bugün (Ziyaret Modu)', 'Saha Denetimi', 'Kontrol Kartı'], array_column($g['alt'], 'etiket'));
 
         // Tek sayfalı grup alt şerit göstermez; defter grubunda üç sayfa.
         $this->assertSame([], SayfaAileleri::sekmeGruplari([DofOlustur::class])['alt']);

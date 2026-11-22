@@ -15,9 +15,14 @@
             Periyodik muayene sırasında tespit edilen basit rahatsızlıklar için, çalışanınız
             aile hekimine gitmeden e-Reçete ile eczaneden ilacını temin edebilir.
         </p>
-        <x-filament::button size="sm" color="white" icon="heroicon-o-information-circle" wire:click="isyeriHekimiHatirlat">
-            İşyeri Hekimi Atamamı Kontrol Et
-        </x-filament::button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:.25rem">
+            <x-filament::button size="sm" color="white" icon="heroicon-o-check-badge" wire:click="isyeriHekimiHatirlat">
+                İşyeri Hekimi Atamalarımı Kontrol Et
+            </x-filament::button>
+            <x-filament::button size="sm" color="gray" tag="a" href="https://recetem.enabiz.gov.tr/" target="_blank" rel="noopener noreferrer" icon="heroicon-o-arrow-top-right-on-square">
+                e-Reçetem Portalını Aç
+            </x-filament::button>
+        </div>
     </div>
 
     {{-- NEDİR --}}

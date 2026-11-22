@@ -465,6 +465,7 @@ class KkdFormu extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            \App\Filament\Support\CanliImzaAksiyonu::make('kkd', fn () => $this->firma),
             Action::make('sgkPdfYukle')
                 ->label('SGK İşe Giriş PDF\'inden Çalışan Ekle')
                 ->icon('heroicon-o-identification')

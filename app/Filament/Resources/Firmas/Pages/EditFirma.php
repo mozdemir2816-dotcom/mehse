@@ -97,6 +97,8 @@ class EditFirma extends EditRecord
 
             IsyeriGirisAksiyonu::make(),
 
+            \App\Filament\Support\MufettisYetkilendirAksiyonu::make(fn () => $this->record instanceof Firma ? $this->record : null),
+
             Action::make('dosyaFihristi')
                 ->label('Dosya Fihristi (İçindekiler)')
                 ->icon('heroicon-o-list-bullet')

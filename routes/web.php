@@ -32,6 +32,26 @@ Route::prefix('ekipman/{anahtar}')->where(['anahtar' => '[A-Za-z0-9]{32}'])->con
     Route::get('/talimat.pdf', 'talimatPdf')->middleware('throttle:20,1')->name('ekipman.operator.talimat');
 });
 
+// Canlı Çalışan İmzası (Tablette / QR İmzalat — C15): giriş gerektirmeyen imza pad + QR doğrulama + mühürlü PDF.
+Route::get('/imza/{token}', [\App\Http\Controllers\CanliImzaController::class, 'goster'])
+    ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('canli-imza.form');
+Route::post('/imza/{token}', [\App\Http\Controllers\CanliImzaController::class, 'kaydet'])
+    ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:20,1')->name('canli-imza.kaydet');
+Route::get('/imza-dogrula/{kod}', [\App\Http\Controllers\CanliImzaController::class, 'dogrula'])
+    ->where('kod', '[A-Za-z0-9]{12,32}')->middleware('throttle:60,1')->name('canli-imza.dogrula');
+Route::get('/mehse/canli-imza/{id}/pdf', [\App\Http\Controllers\CanliImzaController::class, 'pdf'])
+    ->whereNumber('id')->middleware('auth')->name('canli-imza.pdf');
+
+// Çalışanlar için giriş gerektirmeyen QR kod ile Saha Risk / Ramak Kala Bildirimi (C16).
+Route::get('/risk-bildir/{firma}/{imza}', [\App\Http\Controllers\QrRiskBildirimController::class, 'goster'])
+    ->whereNumber('firma')->where('imza', '[a-f0-9]{20}')->middleware('throttle:60,1')->name('risk.bildir');
+Route::post('/risk-bildir/{firma}/{imza}', [\App\Http\Controllers\QrRiskBildirimController::class, 'kaydet'])
+    ->whereNumber('firma')->where('imza', '[a-f0-9]{20}')->middleware('throttle:10,1')->name('risk.bildir.kaydet');
+
+// Müfettiş / Denetçi için süreli, salt-okunur ve erişim loglu teftiş ekranı (C21).
+Route::get('/teftis/{token}', [\App\Http\Controllers\MufettisTeftisController::class, 'goster'])
+    ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('mufettis.teftis');
+
 // Kök adres = herkese açık tanıtım sayfası (29.10.2026); üye olmayanlar teklif isteyebilir,
 // panel /admin'de. Teklif formu kayıt açar (TeklifTalebi), sahip hesap panelde görür.
 Route::view('/', 'tanitim')->name('tanitim');
@@ -39,6 +59,10 @@ Route::view('/', 'tanitim')->name('tanitim');
 Route::get('/tanitim', fn () => redirect(url('/'), 301));
 Route::view('/kvkk', 'pages.kvkk')->name('kvkk');
 Route::view('/cerez-politikasi', 'pages.cerez-politikasi')->name('cerez');
+Route::view('/fiyatlandirma', 'pages.fiyatlandirma')->name('fiyatlandirma');
+Route::get('/araclar/tehlike-sinifi-sorgulama', [\App\Http\Controllers\UcretsizAraclarController::class, 'tehlikeSinifi'])->name('araclar.tehlike');
+Route::get('/araclar/kaza-siklik-orani', [\App\Http\Controllers\UcretsizAraclarController::class, 'kazaSiklikOrani'])->name('araclar.kso');
+Route::get('/araclar/isg-sure-hesaplama', [\App\Http\Controllers\UcretsizAraclarController::class, 'isgSureHesaplama'])->name('araclar.sure');
 Route::get('/sektor/{slug}', [\App\Http\Controllers\SektorController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('sektor.show');
 // Arama motorları için site haritası (public/robots.txt bunu gösterir). lastmod = sayfa şablonunun son değişikliği.
 Route::get('/sitemap.xml', function () {
@@ -47,6 +71,10 @@ Route::get('/sitemap.xml', function () {
     return response()->view('sitemap', [
         'sayfalar' => [
             ['adres' => 'https://mehse.com/', 'lastmod' => $tarih('tanitim'), 'changefreq' => 'weekly', 'priority' => '1.0'],
+            ['adres' => 'https://mehse.com/fiyatlandirma', 'lastmod' => $tarih('pages/fiyatlandirma'), 'changefreq' => 'weekly', 'priority' => '0.9'],
+            ['adres' => 'https://mehse.com/araclar/tehlike-sinifi-sorgulama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['adres' => 'https://mehse.com/araclar/isg-sure-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['adres' => 'https://mehse.com/araclar/kaza-siklik-orani', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             // Sektör sayfaları (config/sektorler.php); içerik config'te olduğundan lastmod = config dosyası tarihi.

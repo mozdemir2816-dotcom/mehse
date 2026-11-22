@@ -1031,6 +1031,8 @@ class KurulToplantisi extends Page
 
             $this->cagriFormuAction(),
 
+            \App\Filament\Support\CanliImzaAksiyonu::make('kurul', fn () => $this->firma),
+
             Action::make('pdf')
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')

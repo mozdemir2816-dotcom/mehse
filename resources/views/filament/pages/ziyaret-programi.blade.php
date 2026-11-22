@@ -6,9 +6,9 @@
 @endphp
 
 <x-filament-panels::page>
-    {{-- Görünüm seçici: Genel Ajanda (portföy takvimi) / Firma Bazlı Yıllık Plan (12 ay) --}}
+    {{-- Görünüm seçici: Genel Ajanda / Firma Bazlı Yıllık Plan / Harita & Rota --}}
     <div style="display:flex;gap:.5rem;flex-wrap:wrap" role="tablist" aria-label="Planlama görünümü">
-        @foreach (['ajanda' => 'Genel Ajanda (Portföy Takvimi)', 'plan' => 'Firma Bazlı Yıllık Plan (12 Ay)'] as $kod => $ad)
+        @foreach (['ajanda' => 'Genel Ajanda (Portföy Takvimi)', 'plan' => 'Firma Bazlı Yıllık Plan (12 Ay)', 'harita' => '🗺 Harita & Rota Planlama'] as $kod => $ad)
             <button type="button" role="tab" aria-selected="{{ $gorunum === $kod ? 'true' : 'false' }}" wire:click="gorunumSec('{{ $kod }}')"
                 style="min-height:2.75rem;padding:0 1.1rem;border-radius:9999px;cursor:pointer;font-size:.88rem;font-weight:700;
                     border:1px solid {{ $gorunum === $kod ? '#0284C7' : 'rgb(107 114 128 / .35)' }};
@@ -19,6 +19,8 @@
 
     @if ($gorunum === 'ajanda')
         @include('filament.pages.partials.planlama-ajanda')
+    @elseif ($gorunum === 'harita')
+        @include('filament.pages.partials.planlama-harita')
     @else
     <p class="mehse-bolum-aciklama">
         Firma başına yıllık, 12 aylık saha ziyaret programı. Durum hücresine tıklayarak

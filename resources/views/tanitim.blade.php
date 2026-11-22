@@ -1,5 +1,5 @@
 @php
-    $eposta = 'mozdemir2816@gmail.com';
+    $eposta = 'info@mehse.com';
     $telefon = '0506 475 48 55';
     $telUri = '+905064754855';
     $waNo = '905064754855';
@@ -104,7 +104,8 @@
             <a href="#hizmetler">Hizmetler</a>
             <a href="#sektorler">Sektörler</a>
             <a href="#yazilim">İSG Yazılımı</a>
-            <a href="#surec">Süreç</a>
+            <a href="{{ route('fiyatlandirma') }}">Fiyatlandırma</a>
+            <a href="{{ route('araclar.tehlike') }}">Ücretsiz Araçlar</a>
             <a href="#sss">S.S.S.</a>
         </nav>
         <div class="ust-sag">
@@ -120,7 +121,8 @@
         <a href="#hizmetler">Hizmetler</a>
         <a href="#sektorler">Sektörler</a>
         <a href="#yazilim">İSG Yazılımı</a>
-        <a href="#surec">Süreç</a>
+        <a href="{{ route('fiyatlandirma') }}">Fiyatlandırma</a>
+        <a href="{{ route('araclar.tehlike') }}">Ücretsiz Araçlar</a>
         <a href="#sss">S.S.S.</a>
         <a href="{{ $girisUrl }}" class="uye-giris-mobil">Üye Girişi</a>
         <a href="{{ $kayitUrl }}" class="dugme dugme-cerceve">Uzman Kaydı</a>
@@ -132,7 +134,7 @@
 
     {{-- ============ HERO ============ --}}
     <section class="hero">
-        <img class="hero-gorsel" src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1800&q=70" alt="" width="1800" height="1200" fetchpriority="high">
+        <img class="hero-gorsel" src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1800&q=70" alt="Endüstriyel üretim tesisinde iş sağlığı ve güvenliği saha mühendisliği incelemesi" width="1800" height="1200" fetchpriority="high">
         <div class="hero-katman"></div>
         <div class="hero-izgara"></div>
         <div class="kap">
@@ -433,8 +435,8 @@
             <h2>Aklınızdaki soruların kısa cevapları</h2>
             <div class="sss-liste">
                 @foreach ($sss as $i => [$soru, $cevap])
-                    <details class="sss-madde" @if ($i === 0) open @endif>
-                        <summary>{{ $soru }}<span class="sss-isaret" aria-hidden="true"></span></summary>
+                    <details class="sss-madde" @if ($i === 0) open @endif ontoggle="this.querySelector('summary')?.setAttribute('aria-expanded', this.open ? 'true' : 'false')">
+                        <summary aria-expanded="{{ $i === 0 ? 'true' : 'false' }}">{{ $soru }}<span class="sss-isaret" aria-hidden="true"></span></summary>
                         <p>{{ $cevap }}</p>
                     </details>
                 @endforeach

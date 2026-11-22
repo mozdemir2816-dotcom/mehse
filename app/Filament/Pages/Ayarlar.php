@@ -318,12 +318,70 @@ class Ayarlar extends Page
                 ->map(fn (PushAbonelik $a): array => [
                     'id' => $a->id,
                     'cihaz' => $a->cihaz ?: 'Cihaz',
-                    'eklenme' => $a->created_at?->format('d.m.Y') ?? '',
-                    'son' => $a->son_basari_at?->format('d.m.Y H:i'),
+                    'eklenme' => $a->created_at?->timezone('Europe/Istanbul')->format('d.m.Y') ?? '',
+                    'son' => $a->son_basari_at?->timezone('Europe/Istanbul')->format('d.m.Y H:i'),
                 ])->all();
         } catch (QueryException) {
             return []; // canlıya tablo SQL'i henüz çalıştırılmadıysa Ayarlar açılmaya devam etsin
         }
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('smsAyarlari')
+                ->label('📱 SMS Bildirim Ayarları')
+                ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                ->color('info')
+                ->outlined()
+                ->modalHeading('Opsiyonel SMS Bildirim Entegrasyonu (Netgsm / İleti Merkezi)')
+                ->modalDescription('WhatsApp kısayollarının yanında çalışanlara uzaktan eğitim veya randevu SMS\'i göndermek için SMS sağlayıcınızı yapılandırabilirsiniz.')
+                ->modalSubmitActionLabel('Ayarları Kaydet')
+                ->fillForm(fn (): array => \App\Support\SmsGonderici::ayarlar($this->kullanici()))
+                ->schema([
+                    \Filament\Forms\Components\Select::make('surucu')
+                        ->label('SMS Sağlayıcı')
+                        ->options(\App\Support\SmsGonderici::SURUCULER)
+                        ->required(),
+                    \Filament\Forms\Components\TextInput::make('kullanici')
+                        ->label('API Kullanıcı Kodu / Anahtar'),
+                    \Filament\Forms\Components\TextInput::make('sifre')
+                        ->label('API Şifre / Hash')
+                        ->password()
+                        ->revealable(),
+                    \Filament\Forms\Components\TextInput::make('baslik')
+                        ->label('Gönderici Başlığı (Originator)')
+                        ->default('MEHSE ISG')
+                        ->maxLength(20),
+                    \Filament\Forms\Components\TextInput::make('test_telefon')
+                        ->label('Deneme SMS Telefonu (Opsiyonel — doldurursanız kaydederken deneme SMS\'i gönderir)')
+                        ->placeholder('05XX XXX XX XX'),
+                ])
+                ->action(function (array $data): void {
+                    $user = $this->kullanici();
+                    KullaniciAyarlari::kaydet($user, [
+                        'sms_ayar' => [
+                            'surucu' => $data['surucu'] ?? 'log',
+                            'kullanici' => trim((string) ($data['kullanici'] ?? '')),
+                            'sifre' => trim((string) ($data['sifre'] ?? '')),
+                            'baslik' => trim((string) ($data['baslik'] ?? 'MEHSE ISG')),
+                        ],
+                    ]);
+
+                    if (filled($data['test_telefon'] ?? null)) {
+                        $sonuc = \App\Support\SmsGonderici::gonder($user->fresh(), (string) $data['test_telefon'], 'Mehse İSG SMS entegrasyonu deneme mesajıdır.');
+                        Notification::make()
+                            ->title($sonuc['basarili'] ? 'SMS Ayarları Kaydedildi & Deneme Gönderildi' : 'SMS Deneme Hatası')
+                            ->body($sonuc['mesaj'])
+                            ->{$sonuc['basarili'] ? 'success' : 'warning'}()
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()->title('SMS bildirim ayarları kaydedildi')->success()->send();
+                }),
+        ];
     }
 
     private function kullanici(): User

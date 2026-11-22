@@ -281,6 +281,7 @@ class IsbasiEgitim extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            \App\Filament\Support\CanliImzaAksiyonu::make('isbasi_egitim', fn () => $this->firma),
             Action::make('sgkPdfYukle')
                 ->label('SGK İşe Giriş PDF\'inden Doldur')
                 ->icon('heroicon-o-identification')

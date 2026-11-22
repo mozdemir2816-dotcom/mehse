@@ -33,7 +33,7 @@ class Pazarlama extends Page
     /** Sidebar ekrana sığsın diye Genel grubunda (31.10.2026 kullanıcı isteği). */
     protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
     /** Menüde "Pazarlama & Talepler" tek girişi; Teklif Talepleri ve OSGB Başvuruları sekme şeridinden açılır ('pazarlama' ailesi). */
     protected static ?string $navigationLabel = 'Pazarlama & Talepler';

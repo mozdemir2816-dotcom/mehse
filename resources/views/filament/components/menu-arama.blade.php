@@ -55,24 +55,15 @@
                     const temiz = sidebar.collapsedGroups.filter((g) => daraltilabilir.includes(g));
                     if (temiz.length !== sidebar.collapsedGroups.length) sidebar.collapsedGroups = temiz;
 
-                    // Akordeon (29.10.2026): menü çok uzamasın — her seferinde tek grup açık. Açılışta yalnız
-                    // geçerli sayfanın grubu (yoksa ilk grup) açık, diğerleri kapalıdır; bir grubu açınca
-                    // ötekiler kapanır. Arama sürerken (filtrele) kapalı gruplar zaten açılıp süzülür.
-                    if (daraltilabilir.length > 1 && !sidebar.__akordeon) {
-                        sidebar.__akordeon = true;
+                    // Çoklu grup açık kalabilir: başlangıçta geçerli sayfanın grubu ile ilk grup ("Günlük Saha İşi")
+                    // açık gelir; kullanıcı istediği grupları aynı anda açık tutabilir.
+                    if (daraltilabilir.length > 1 && !sidebar.__mehseBaslatildi) {
+                        sidebar.__mehseBaslatildi = true;
                         const aktif = [...document.querySelectorAll('.fi-sidebar-group')]
                             .find((g) => g.classList.contains('fi-active'))?.dataset.groupLabel;
-                        const acik = aktif && daraltilabilir.includes(aktif) ? aktif : daraltilabilir[0];
-                        sidebar.collapsedGroups = daraltilabilir.filter((g) => g !== acik);
-
-                        const asil = sidebar.toggleCollapsedGroup.bind(sidebar);
-                        sidebar.toggleCollapsedGroup = (etiket) => {
-                            if (sidebar.groupIsCollapsed(etiket)) {
-                                sidebar.collapsedGroups = daraltilabilir.filter((g) => g !== etiket);
-                            } else {
-                                asil(etiket);
-                            }
-                        };
+                        if (aktif && sidebar.groupIsCollapsed(aktif)) {
+                            sidebar.collapsedGroups = sidebar.collapsedGroups.filter((g) => g !== aktif);
+                        }
                     }
                 }
             },

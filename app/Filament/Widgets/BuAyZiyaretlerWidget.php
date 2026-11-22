@@ -171,13 +171,16 @@ class BuAyZiyaretlerWidget extends Widget
             ->values();
 
         $aktifFirmalar = Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->get(['id', 'unvan']);
-        $plansiz = $aktifFirmalar->whereNotIn('id', $firmalar->pluck('firma_id'))
+        $aktifIdler = $aktifFirmalar->pluck('id')->all();
+        $aktifPlanli = $firmalar->filter(fn (array $f) => in_array($f['firma_id'], $aktifIdler, true))->values();
+
+        $plansiz = $aktifFirmalar->whereNotIn('id', $aktifPlanli->pluck('firma_id'))
             ->map(fn (Firma $f) => ['firma' => (string) $f->unvan, 'firma_id' => $f->id])
             ->values();
 
-        // Pasif ama o ay ziyaret planlanmış firma da gidilecekler arasında kalır
-        $toplam = $aktifFirmalar->pluck('id')->merge($firmalar->pluck('firma_id'))->unique()->count();
-        $gidilen = $firmalar->where('gidildi', true)->count();
+        // Gidilen firma oranı yalnızca aktif portföy üzerinden hesaplanır (Ana Sayfa 31 firma sayacıyla uyumlu).
+        $toplam = $aktifFirmalar->count();
+        $gidilen = $aktifPlanli->where('gidildi', true)->count();
 
         $bugun = now();
         $takvim = match (true) {

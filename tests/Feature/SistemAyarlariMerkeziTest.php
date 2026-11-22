@@ -34,16 +34,17 @@ class SistemAyarlariMerkeziTest extends TestCase
         $g = SayfaAileleri::sekmeGruplari([Mevzuat::class]);
         $this->assertSame('ayarlar', $g['aile']);
         $this->assertSame(
-            ['Genel Ayarlar & Görünüm', 'Güvenlik, Oturumlar & Ekip Yetkileri', 'İSG-KATİP Robotu, Mevzuat & Hazır İstemler'],
+            ['Genel Ayarlar & Görünüm', 'Güvenlik, Oturumlar & Ekip Yetkileri', 'Mevzuat & Hazır İstemler'],
             array_column($g['ust'], 'etiket'),
         );
-        $this->assertSame('İSG-KATİP Robotu, Mevzuat & Hazır İstemler', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertCount(4, $g['alt']);   // + Hazır İstemler (13.11.2026)
+        $this->assertSame('Mevzuat & Hazır İstemler', collect($g['ust'])->firstWhere('aktif', true)['etiket']);
+        $this->assertCount(2, $g['alt']);
         $this->assertCount(2, SayfaAileleri::sekmeGruplari([Guvenlik::class])['alt']);
 
-        foreach ([Ayarlar::class, Guvenlik::class, KullaniciYonetimi::class, IsgKatipRobot::class, Mevzuat::class] as $sayfa) {
+        foreach ([Ayarlar::class, Guvenlik::class, KullaniciYonetimi::class, Mevzuat::class] as $sayfa) {
             $this->get($sayfa::getUrl())->assertSuccessful()->assertSee('Genel Ayarlar &amp; Görünüm', false);
         }
+        $this->get(IsgKatipRobot::getUrl())->assertSuccessful()->assertSee('İSG-KATİP Sözleşmeleri');
     }
 
     public function test_kontrol_kriterleri_dort_kategoride_ve_hizli_secimler(): void

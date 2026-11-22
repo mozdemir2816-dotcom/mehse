@@ -101,16 +101,18 @@ class SayfaAileleri
                 [Pages\KazaIstatistikleri::class, 'İstatistikler'],
                 [Pages\OlayKomuta360::class, 'Olay Komuta 360°'],
             ],
-            // Sistem Yönetim & Entegrasyon Merkezi: 8 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['ayarlar'] bkz.
+            // Sistem Yönetim & Entegrasyon Merkezi: 6 sayfa → 3 ana sekme (İSG-KATİP Robot kendi menü girişinde)
             'ayarlar' => [
                 [Pages\Ayarlar::class, 'Ayarlar'],
                 [Pages\SahaEkrani::class, 'Saha Ekranı'],
                 [Pages\Guvenlik::class, 'Güvenlik'],
                 [Pages\KullaniciYonetimi::class, 'Kullanıcı Yetkileri'],
-                [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
-                [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
                 [Pages\Mevzuat::class, 'Mevzuat'],
                 [Pages\HazirIstemler::class, 'Hazır İstemler'],
+            ],
+            'isg_katip' => [
+                [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
+                [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
             ],
             // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
             'belge' => [
@@ -173,7 +175,7 @@ class SayfaAileleri
         'ayarlar' => [
             ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class, Pages\SahaEkrani::class]],
             ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class]],
-            ['etiket' => 'İSG-KATİP Robotu, Mevzuat & Hazır İstemler', 'ikon' => 'heroicon-o-cpu-chip', 'siniflar' => [Pages\IsgKatipRobot::class, Pages\IsgKatipSozlesmeleri::class, Pages\Mevzuat::class, Pages\HazirIstemler::class]],
+            ['etiket' => 'Mevzuat & Hazır İstemler', 'ikon' => 'heroicon-o-book-open', 'siniflar' => [Pages\Mevzuat::class, Pages\HazirIstemler::class]],
         ],
         // Resmi Belge & Kurul Yönetim Merkezi (30.10.2026)
         'belge' => [
@@ -276,9 +278,9 @@ class SayfaAileleri
         ],
         'saha' => [
             [
-                'etiket' => 'Aktif Saha Denetimi & Ziyaret Modu',
+                'etiket' => 'Saha Bulguları & Denetim',
                 'ikon' => 'heroicon-o-bolt',
-                'siniflar' => [Pages\ZiyaretModu::class, Pages\HizliSahaBulgusu::class, Pages\SahaDenetimi::class, Pages\KontrolKarti::class],
+                'siniflar' => [Pages\HizliSahaBulgusu::class, Pages\ZiyaretModu::class, Pages\SahaDenetimi::class, Pages\KontrolKarti::class],
             ],
             [
                 'etiket' => 'Bulgu & DÖF Takip Havuzu',
@@ -286,7 +288,7 @@ class SayfaAileleri
                 'siniflar' => [Pages\DofOlustur::class],
             ],
             [
-                'etiket' => 'Yasal Rapor & Defter Çıktıları',
+                'etiket' => 'Yasal Rapor & Defter',
                 'ikon' => 'heroicon-o-document-text',
                 'siniflar' => [Pages\TespitOneriDefteri::class, Pages\AiSahaAnalizi::class, Pages\OnBilgilendirmeler::class],
             ],

@@ -125,6 +125,10 @@
 /* -------------------------------------------------------------------------
    Topbar — düz lacivert, 50px, başlık beyaz / breadcrumb saydam beyaz.
    ------------------------------------------------------------------------- */
+.fi-topbar-ctn {
+    z-index: 30 !important;
+}
+
 .fi-topbar {
     background: var(--sidebar-from) !important;
     min-height: 50px !important;
@@ -389,7 +393,7 @@ h1, h2, h3 {
     padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
     .fi-mobil-alt-nav {
         display: flex;
     }
@@ -406,6 +410,12 @@ h1, h2, h3 {
 
     .fi-main:has(.fi-sticky) {
         padding-bottom: 10rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .fi-mobil-alt-nav {
+        display: none !important;
     }
 }
 
@@ -503,9 +513,34 @@ body:has(.fi-modal.fi-modal-open) .fi-mobil-alt-nav {
     z-index: 20;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
     .mehse-sabit-alt {
         bottom: calc(3.9rem + env(safe-area-inset-bottom, 0px));
     }
+}
+
+/* 4'lü KPI kart şeridi: masaüstünde daima 4 eşit sütun, dar ekranda 2x2 (3+1 kırılmaz). */
+.mehse-kpi-4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+}
+
+@media (min-width: 900px) {
+    .mehse-kpi-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Sayfa sekme şeridi: her ekran genişliğinde sağdan kesilmeden kaydırılabilir / sarılabilir. */
+.mehse-sayfa-sekmeleri {
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: wrap !important;
+    gap: .25rem;
+}
+
+.mehse-sayfa-sekmeleri .fi-tabs-item {
+    flex-shrink: 0;
 }
 

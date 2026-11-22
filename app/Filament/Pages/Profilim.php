@@ -49,9 +49,9 @@ class Profilim extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 4;
 
-    /** Profilim, Hesap & Arşiv altında doğrudan görünür (20.11.2026 — Komuta Merkezi çift sekmesi sadeleştirildi). */
+    /** Profilim, Hesap & Arşiv altında doğrudan görünür. */
     public static function shouldRegisterNavigation(): bool
     {
         return static::canAccess();
@@ -59,7 +59,9 @@ class Profilim extends Page
 
     protected static ?string $slug = 'profilim';
 
-    protected static ?string $title = 'Profilim';
+    protected static ?string $title = 'Profil & Kaşe/İmza';
+
+    protected static ?string $navigationLabel = 'Profil & Kaşe/İmza';
 
     public const EGITIM_KATEGORI_ETIKETLERI = [
         'genel' => 'Genel',
@@ -190,9 +192,34 @@ class Profilim extends Page
                         ->disk('public')->directory('uzman-imza')->maxSize(2048),
                 ])
                 ->action(function (array $data): void {
-                    Filament::auth()->user()->forceFill($data)->save();
+                    $disk = Storage::disk('public');
+                    foreach (['kase_gorseli', 'imza_gorseli'] as $alan) {
+                        if (! empty($data[$alan]) && $disk->exists($data[$alan])) {
+                            \App\Support\GorselKirpici::kenarlariKirp($disk->path($data[$alan]));
+                        }
+                    }
+
+                    $user = Filament::auth()->user();
+                    $user->forceFill($data)->save();
+
+                    // Kaşe kütüphanesine (users.ayarlar['kase_kutuphanesi']) otomatik ekle
+                    if (! empty($data['kase_gorseli'])) {
+                        $ayar = (array) ($user->ayarlar ?? []);
+                        $kutuphane = array_values((array) ($ayar['kase_kutuphanesi'] ?? []));
+                        $varMi = collect($kutuphane)->contains(fn ($k) => ($k['yol'] ?? null) === $data['kase_gorseli']);
+                        if (! $varMi) {
+                            $kutuphane[] = [
+                                'id' => (string) Str::uuid(),
+                                'ad' => ($user->unvanEtiketi() ?: 'Uzman').' Kaşesi — '.now()->format('d.m.Y'),
+                                'yol' => $data['kase_gorseli'],
+                                'eklenme' => now()->toDateString(),
+                            ];
+                            \App\Support\KullaniciAyarlari::kaydet($user, ['kase_kutuphanesi' => array_slice($kutuphane, -100)]);
+                        }
+                    }
+
                     unset($this->kullanici);
-                    Notification::make()->title('Kaşe bilgisi kaydedildi')->success()->send();
+                    Notification::make()->title('Kaşe / imza otomatik kenar kırpmasıyla kaydedildi')->success()->send();
                 });
     }
 

@@ -116,8 +116,8 @@
 
         @if (! $this->firma)
             <div class="kk-kutu" style="margin-top:1rem;padding:1.25rem;font-size:.88rem">
-                Kartı doldurmak için önce firmayı seçin. Fotoğrafı Gemini'de değerlendirdiyseniz firmayı seçtikten sonra
-                <strong>"Gemini'den Yükle"</strong> ile cevabı yapıştırabilirsiniz.
+                Kartı doldurmak için önce firmayı seçin. Hazır yapay zekâ değerlendirme çıktınız varsa firmayı seçtikten sonra
+                <strong>"AI Çıktısı İçe Aktar"</strong> ile cevabı yapıştırabilirsiniz.
             </div>
         @else
             <div class="kk-duzen" style="margin-top:1rem">

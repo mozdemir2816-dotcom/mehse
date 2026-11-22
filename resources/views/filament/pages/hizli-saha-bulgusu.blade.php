@@ -267,7 +267,7 @@
 
     {{-- LİSTE --}}
     <x-filament::section icon="heroicon-o-queue-list" icon-color="gray">
-        <x-slot name="heading">Saha Bulguları {{ $firmaId ? '' : '— tüm işyerleri' }} ({{ $this->bulgular->count() }})</x-slot>
+        <x-slot name="heading">Saha Bulguları {{ $firmaId ? '' : '— tüm işyerleri' }} ({{ $this->bulguToplamSayisi }})</x-slot>
         <x-slot name="afterHeader">
             <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
                 @if (count($secili))
@@ -341,6 +341,19 @@
                     @endforeach
                 </table>
             </div>
+            @if ($this->bulgular->count() < $this->bulguToplamSayisi)
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-top:.85rem;padding-top:.75rem;border-top:1px solid rgb(107 114 128 / .2);font-size:.8rem">
+                    <span class="mehse-soluk">{{ $this->bulgular->count() }} / {{ $this->bulguToplamSayisi }} bulgu gösteriliyor</span>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                        <x-filament::button size="sm" color="gray" outlined wire:click="dahaFazlaGoster">
+                            +25 Daha Göster
+                        </x-filament::button>
+                        <x-filament::button size="sm" color="gray" outlined wire:click="tumunuGoster">
+                            Tümünü Göster ({{ $this->bulguToplamSayisi }})
+                        </x-filament::button>
+                    </div>
+                </div>
+            @endif
         @else
             <p style="font-size:.83rem;color:rgb(107 114 128)">Bu filtrede saha bulgusu yok.</p>
         @endif

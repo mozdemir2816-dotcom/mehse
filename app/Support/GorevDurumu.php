@@ -348,7 +348,7 @@ class GorevDurumu
 
         // İSG Kurulu: üye atama yazısı ve kurul eğitimi (üye atanınca / değişince Kurul sayfasında otomatik hazırlanır)
         if (KurulAtamaEgitim::uyeler($firma)->isNotEmpty()) {
-            $kurulUrl = static::sayfaUrl(KurulToplantisiSayfasi::class, $firma);
+            $kurulUrl = static::sayfaUrl(KurulToplantisi::class, $firma);
             $atama = KurulAtamaEgitim::atamaDurumu($firma);
             $kurulEgitim = KurulAtamaEgitim::egitimDurumu($firma);
 

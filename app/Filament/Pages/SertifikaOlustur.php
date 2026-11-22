@@ -515,6 +515,55 @@ class SertifikaOlustur extends Page
                     'sekil' => $this->sekil,
                 ])),
 
+            Action::make('sgkPdfYukle')
+                ->label('SGK İşe Giriş PDF\'inden Katılımcı Ekle')
+                ->icon('heroicon-o-identification')
+                ->color('success')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('SGK İşe Giriş Bildirgesi PDF\'inden Katılımcı Ekle')
+                ->modalDescription('e-SGK Sigortalı İşe Giriş Bildirgesi PDF dosyalarını yükleyin; çalışanlar otomatik olarak firmaya kaydedilir ve sertifika listesinde seçili hale gelir.')
+                ->modalSubmitActionLabel('PDF\'ten Aktar')
+                ->schema([
+                    \Filament\Forms\Components\FileUpload::make('dosyalar')
+                        ->label('SGK İşe Giriş Bildirgesi PDF Dosyaları')
+                        ->disk('local')
+                        ->directory('sgk-ice-aktarim')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->multiple()
+                        ->maxFiles(30)
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $dosyalar = is_array($data['dosyalar'] ?? null) ? $data['dosyalar'] : array_filter([$data['dosyalar'] ?? null]);
+                    $yollar = array_map(fn (string $d) => \Illuminate\Support\Facades\Storage::disk('local')->path($d), $dosyalar);
+
+                    try {
+                        $kayitlar = \App\Support\SgkIseGirisOkuyucu::dosyalardanCikar($yollar);
+                    } finally {
+                        foreach ($dosyalar as $d) {
+                            \Illuminate\Support\Facades\Storage::disk('local')->delete($d);
+                        }
+                    }
+
+                    if (! $kayitlar) {
+                        Notification::make()->title('PDF dosyasından çalışan bilgisi okunamadı')->danger()->send();
+
+                        return;
+                    }
+
+                    $sonuc = \App\Support\SgkIseGirisOkuyucu::firmayaKaydet($this->firma, $kayitlar);
+                    $yeniIdler = $sonuc['calisanlar']->pluck('id')->map(fn ($id) => (int) $id)->all();
+                    $this->secilenCalisanIdler = array_values(array_unique([...$this->secilenCalisanIdler, ...$yeniIdler]));
+                    unset($this->calisanlar);
+
+                    Notification::make()
+                        ->title(count($yeniIdler).' çalışan sertifika listesine eklendi')
+                        ->body("Yeni kayıt: {$sonuc['eklenen']} · Güncellenen: {$sonuc['guncellenen']}")
+                        ->success()
+                        ->send();
+                }),
+
             Action::make('topluPdf')
                 ->label('Toplu Sertifika İndir (PDF)')
                 ->icon('heroicon-o-document-arrow-down')

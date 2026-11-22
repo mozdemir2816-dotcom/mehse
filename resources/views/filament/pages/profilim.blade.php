@@ -69,13 +69,13 @@
     {{-- ==================== KPI ŞERİDİ (mükerrer sayaçlar tek satırda) ==================== --}}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem">
         @foreach ([
-            ['Aktif Firma', $o['firma'], 'heroicon-o-building-office-2', $indigo, null],
-            ['Çalışan', $o['calisan'], 'heroicon-o-user-group', $yesil, null],
-            ['Risk Analizi', $o['risk_degerlendirmesi'], 'heroicon-o-sparkles', $sari, null],
-            ['Sektör Şablonu', $o['risk_sablonu'], 'heroicon-o-rectangle-stack', $mor, null],
-            ['Kritik Risk Maddesi', $o['onemli_risk'], 'heroicon-o-exclamation-triangle', $kirmizi, 'Skor > '.$onemliEsik],
-        ] as [$etiket, $deger, $ikon, $renk, $alt])
-            <div style="{{ $golge }};padding:.8rem 1rem;{{ $alt ? 'background:rgb(244 63 94 / .06);border-color:rgb(244 63 94 / .35)' : '' }}">
+            ['Aktif Firma', $o['firma'], 'heroicon-o-building-office-2', $indigo, null, false],
+            ['Çalışan (Bildirilen)', $o['calisan'], 'heroicon-o-user-group', $yesil, 'Kayıtlı aktif: '.$say($o['calisan_kayitli'] ?? 0), false],
+            ['Risk Analizi', $o['risk_degerlendirmesi'], 'heroicon-o-sparkles', $sari, null, false],
+            ['Sektör Şablonu', $o['risk_sablonu'], 'heroicon-o-rectangle-stack', $mor, null, false],
+            ['Kritik Risk Maddesi', $o['onemli_risk'], 'heroicon-o-exclamation-triangle', $kirmizi, 'Skor > '.$onemliEsik, true],
+        ] as [$etiket, $deger, $ikon, $renk, $alt, $vurgulu])
+            <div style="{{ $golge }};padding:.8rem 1rem;{{ $vurgulu ? 'background:rgb(244 63 94 / .06);border-color:rgb(244 63 94 / .35)' : '' }}">
                 <div style="display:flex;align-items:center;gap:.5rem">
                     <div style="width:1.8rem;height:1.8rem;border-radius:9999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, {{ $renk }} 15%, transparent)">
                         <x-filament::icon :icon="$ikon" style="width:1rem;height:1rem;color:{{ $renk }}"/>
@@ -88,13 +88,16 @@
         @endforeach
     </div>
 
-    @if ($o['calisansiz_firma'] > 0 || $o['evrak_eksigi'] > 0)
+    @if ($o['calisansiz_firma'] > 0 || $o['evrak_eksigi'] > 0 || ($o['risk_eksik_firma'] ?? 0) > 0)
         <div style="display:flex;flex-wrap:wrap;gap:.5rem;font-size:.76rem">
             @if ($o['calisansiz_firma'] > 0)
                 <span style="padding:.2rem .7rem;border-radius:9999px;background:rgb(245 158 11 / .12);color:rgb(180 83 9)">⚠ {{ $o['calisansiz_firma'] }} firmada aktif çalışan eklenmemiş</span>
             @endif
+            @if (($o['risk_eksik_firma'] ?? 0) > 0)
+                <span style="padding:.2rem .7rem;border-radius:9999px;background:rgb(239 68 68 / .12);color:rgb(185 28 28)">⚠ {{ $o['risk_eksik_firma'] }} firmada risk değerlendirmesi yok</span>
+            @endif
             @if ($o['evrak_eksigi'] > 0)
-                <span style="padding:.2rem .7rem;border-radius:9999px;background:rgb(245 158 11 / .12);color:rgb(180 83 9)">⚠ {{ $o['evrak_eksigi'] }} firmada risk değerlendirmesi yok</span>
+                <span style="padding:.2rem .7rem;border-radius:9999px;background:rgb(245 158 11 / .12);color:rgb(180 83 9)">⚠ {{ $o['evrak_eksigi'] }} firmada eksik yasal evrak var</span>
             @endif
         </div>
     @endif

@@ -28,7 +28,7 @@ class CariHesap extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 18;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'cari-hesap';
 
@@ -195,6 +195,77 @@ class CariHesap extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('personelHakedis')
+                ->label('💼 Personel Hakediş & Prim')
+                ->icon('heroicon-o-calculator')
+                ->color('info')
+                ->outlined()
+                ->modalHeading('OSGB Personel Aylık Hakediş & Prim Özeti')
+                ->modalDescription('Portföyünüzdeki firmalara atanmış İGU / İşyeri Hekimi bazında aylık yasal dakika ve prim payı hesabı.')
+                ->modalSubmitActionLabel('Hesapla')
+                ->fillForm(['prim_yuzde' => 25, 'saatlik_birim' => 350])
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('prim_yuzde')
+                        ->label('Cirodan Prim Oranı (%)')
+                        ->numeric()->minValue(0)->maxValue(100)->default(25)->required(),
+                    \Filament\Forms\Components\TextInput::make('saatlik_birim')
+                        ->label('Saatlik Uzman / Hekim Birim Ücreti (₺)')
+                        ->numeric()->minValue(0)->default(350)->required(),
+                ])
+                ->action(function (array $data): void {
+                    $p = $this->portfoy;
+                    $primOran = (float) ($data['prim_yuzde'] ?? 25);
+                    $birim = (float) ($data['saatlik_birim'] ?? 350);
+                    $toplamDk = Firma::where('user_id', $this->kullanici()->id)->where('aktif', true)->sum('katip_aylik_dk');
+                    $saat = round($toplamDk / 60, 1);
+                    $primTutar = round($p['aylik_ciro'] * ($primOran / 100), 2);
+                    $saatTutar = round($saat * $birim, 2);
+
+                    Notification::make()
+                        ->title('Aylık Hakediş Özeti')
+                        ->body("Toplam İSG-KATİP Süresi: {$saat} saat · Saatlik Hakediş: ".number_format($saatTutar, 2, ',', '.').' ₺ · Ciro Primi (%'.$primOran.'): '.number_format($primTutar, 2, ',', '.').' ₺')
+                        ->success()
+                        ->persistent()
+                        ->send();
+                }),
+
+            Action::make('osgbSubeler')
+                ->label('🏢 OSGB Şubeleri')
+                ->icon('heroicon-o-building-office-2')
+                ->color('gray')
+                ->outlined()
+                ->modalHeading('OSGB Çoklu Şube Profilleri')
+                ->modalDescription('Birden fazla il veya şubede hizmet veren OSGB\'ler için şube tanımlayıp aktif şubeyi seçebilirsiniz.')
+                ->modalSubmitActionLabel('Şube Ekle / Aktif Yap')
+                ->fillForm(fn (): array => [
+                    'aktif_sube' => (string) (($this->kullanici()->ayarlar ?? [])['aktif_sube'] ?? 'Merkez Şube'),
+                ])
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('aktif_sube')
+                        ->label('Aktif Şube Adı')
+                        ->placeholder('Örn: Bursa Nilüfer Merkez / İstanbul Anadolu Şube')
+                        ->required()
+                        ->maxLength(120),
+                    \Filament\Forms\Components\TextInput::make('yeni_sube_il')
+                        ->label('Şube İli / Yetki Bölgesi (Opsiyonel)')
+                        ->placeholder('Örn: Bursa / Kocaeli')
+                        ->maxLength(80),
+                ])
+                ->action(function (array $data): void {
+                    $user = $this->kullanici();
+                    $ayar = (array) ($user->ayarlar ?? []);
+                    $subeler = array_values((array) ($ayar['osgb_subeleri'] ?? []));
+                    $ad = trim((string) $data['aktif_sube']);
+                    if (! collect($subeler)->contains(fn ($s) => ($s['ad'] ?? null) === $ad)) {
+                        $subeler[] = ['ad' => $ad, 'il' => trim((string) ($data['yeni_sube_il'] ?? ''))];
+                    }
+                    \App\Support\KullaniciAyarlari::kaydet($user, [
+                        'aktif_sube' => $ad,
+                        'osgb_subeleri' => $subeler,
+                    ]);
+                    Notification::make()->title("Aktif OSGB şubesi: {$ad} (Toplam ".count($subeler).' şube)')->success()->send();
+                }),
+
             Action::make('topluTahakkuk')
                 ->label('Bu Ay Tüm Firmalara Tahakkuk Oluştur')
                 ->icon('heroicon-o-bolt')

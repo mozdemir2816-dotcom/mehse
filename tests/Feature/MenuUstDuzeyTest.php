@@ -29,11 +29,11 @@ class MenuUstDuzeyTest extends TestCase
             ->mapWithKeys(fn ($g) => [(string) $g->getLabel() => $g->getItems()->map(fn ($i) => $i->getLabel())->values()->all()])->all();
         $this->assertSame(['', 'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Arşiv'], array_keys($gorunen));
         $this->assertSame(['Ana Sayfa', 'Kontrol Merkezi'], $gorunen['']);
-        $this->assertSame(['Saha', 'Ziyaret Planlama', 'Resmi Belgeler', 'KKD', 'Ekipman & Ölçüm'], $gorunen['Günlük Saha İşi']);
-        $this->assertSame(['Risk Yönetim Merkezi', 'Eğitim Yönetim Merkezi', 'Yıllık Planlar & Değerlendirme',
-            'Sağlık & Olay Merkezi', 'Acil Durum & Yangın Merkezi', 'İSG Kurulu'], $gorunen['Merkezler']);
-        $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş'], $gorunen['Firmalar & Çalışanlar']);
-        $this->assertSame(['Arşiv', 'Araçlar', 'Pazarlama & Talepler', 'Fatura & Profil', 'Profilim', 'Ayarlar', 'OSGB Cari & Tahsilat'], $gorunen['Hesap & Arşiv']);
+        $this->assertSame(['Saha', 'Ziyaret Planlama', 'Resmi Belgeler', 'KKD', 'Ekipman & Ölçüm', 'Arşiv'], $gorunen['Günlük Saha İşi']);
+        $this->assertSame(['Risk Yönetimi', 'Eğitim & Sınav', 'Yıllık Planlar',
+            'Sağlık & Kaza', 'Acil Durum & Yangın', 'İSG Kurulu'], $gorunen['Merkezler']);
+        $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş', 'İSG-KATİP Robot'], $gorunen['Firmalar & Çalışanlar']);
+        $this->assertSame(['Pazarlama & Talepler', 'OSGB Cari & Tahsilat', 'Abonelik & Fatura', 'Profil & Kaşe/İmza', 'Araçlar', 'Ayarlar'], $gorunen['Hesap & Arşiv']);
 
         $this->assertTrue(HizliSahaBulgusu::shouldRegisterNavigation());
         $this->assertFalse(SahaEkrani::shouldRegisterNavigation());

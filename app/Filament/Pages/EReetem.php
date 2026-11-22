@@ -37,10 +37,42 @@ class EReetem extends Page
 
     public function isyeriHekimiHatirlat(): void
     {
+        $firmalar = \App\Models\Firma::query()
+            ->where('user_id', \Filament\Facades\Filament::auth()->id())
+            ->where('aktif', true)
+            ->get(['id', 'unvan', 'isyeri_hekimi_id']);
+
+        $toplam = $firmalar->count();
+        $atanmis = $firmalar->whereNotNull('isyeri_hekimi_id')->count();
+        $eksikler = $firmalar->whereNull('isyeri_hekimi_id');
+
+        if ($toplam === 0) {
+            Notification::make()
+                ->title('Aktif Firma Kaydı Bulunamadı')
+                ->body('Önce Firmalar modülünden işyeri kaydı ekleyip işyeri hekimi ataması yapabilirsiniz.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        if ($eksikler->isEmpty()) {
+            Notification::make()
+                ->title("Tüm Aktif Firmalarda Hekim Atanmış ({$atanmis}/{$toplam})")
+                ->body('e-Reçete düzenleme yetkisi doğrudan atanmış işyeri hekimlerinize aittir; hekiminiz Sağlık Bakanlığı e-Reçetem portalından reçete düzenleyebilir.')
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        $ornek = $eksikler->take(4)->pluck('unvan')->implode(', ');
+        $fazla = $eksikler->count() > 4 ? ' ve '.($eksikler->count() - 4).' firma daha' : '';
+
         Notification::make()
-            ->title('İşyeri Hekimi Ataması')
-            ->body('Firma kaydınızda işyeri hekimi atanmışsa, e-reçete düzenleme yetkisi doğrudan hekiminize aittir. Atama yoksa "İSG Profesyonelleri" modülünden ekleyebilirsiniz.')
-            ->info()
+            ->title("İşyeri Hekimi Atama Durumu: {$atanmis}/{$toplam} Firma")
+            ->body("{$eksikler->count()} aktif firmada işyeri hekimi eksik ({$ornek}{$fazla}). İSG Profesyonelleri / Firma düzenleme ekranından hekim ataması yapabilirsiniz.")
+            ->warning()
             ->send();
     }
 }

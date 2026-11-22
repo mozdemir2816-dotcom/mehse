@@ -122,6 +122,9 @@ class HizliSahaBulgusu extends Page
     // --- Liste ---
     public ?string $listeDurum = 'acik';
 
+    /** Tek seferde çizilen bulgu üst sınırı (100+ kayıtta DOM yavaşlamasın). */
+    public int $listeLimit = 25;
+
     /** @var array<int, int|string> DÖF'e toplu aktarım için seçili bulgu id'leri */
     public array $secili = [];
 
@@ -171,18 +174,42 @@ class HizliSahaBulgusu extends Page
             : [];
     }
 
-    /** @return Collection<int, SahaBulgusu> */
-    #[Computed]
-    public function bulgular(): Collection
+    private function bulguSorgusu()
     {
         return SahaBulgusu::query()
             ->whereIn('firma_id', array_keys($this->firmalar))
             ->when($this->firmaId, fn ($q) => $q->where('firma_id', $this->firmaId))
             ->when($this->listeDurum === 'acik', fn ($q) => $q->whereIn('durum', ['acik', 'devam_ediyor']))
-            ->when($this->listeDurum && $this->listeDurum !== 'acik', fn ($q) => $q->where('durum', $this->listeDurum))
+            ->when($this->listeDurum && $this->listeDurum !== 'acik', fn ($q) => $q->where('durum', $this->listeDurum));
+    }
+
+    #[Computed]
+    public function bulguToplamSayisi(): int
+    {
+        return $this->bulguSorgusu()->count();
+    }
+
+    /** @return Collection<int, SahaBulgusu> */
+    #[Computed]
+    public function bulgular(): Collection
+    {
+        return $this->bulguSorgusu()
             ->with('firma')
             ->latest('id')
+            ->limit($this->listeLimit)
             ->get();
+    }
+
+    public function dahaFazlaGoster(): void
+    {
+        $this->listeLimit += 25;
+        unset($this->bulgular);
+    }
+
+    public function tumunuGoster(): void
+    {
+        $this->listeLimit = max(500, $this->bulguToplamSayisi);
+        unset($this->bulgular);
     }
 
     /** @return array{toplam: int, acik: int, kritik: int, gecikmis: int, kapandi: int, basari: int} */
@@ -235,14 +262,15 @@ class HizliSahaBulgusu extends Page
         }
 
         if (in_array($alan, ['firmaId', 'listeDurum'], true)) {
-            unset($this->bulgular, $this->ozet, $this->bolumOnerileri);
+            $this->listeLimit = 25;
+            unset($this->bulgular, $this->bulguToplamSayisi, $this->ozet, $this->bolumOnerileri);
             $this->secili = [];
         }
     }
 
     private function yenile(): void
     {
-        unset($this->bulgular, $this->ozet, $this->bolumOnerileri);
+        unset($this->bulgular, $this->bulguToplamSayisi, $this->ozet, $this->bolumOnerileri);
     }
 
     /** Tarayıcıdan gelen GPS koordinatı (Konum al düğmesi). */
@@ -688,6 +716,18 @@ class HizliSahaBulgusu extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('qrRiskPosteri')
+                ->label('QR Risk Bildirim Posteri (PDF)')
+                ->icon('heroicon-o-qr-code')
+                ->color('warning')
+                ->outlined()
+                ->visible(fn () => $this->firmaId !== null)
+                ->action(function () {
+                    $firma = Firma::where('user_id', Filament::auth()->id())->find($this->firmaId);
+
+                    return $firma ? \App\Support\FirmaRiskBildirimQrUretici::pdf($firma) : null;
+                }),
+
             // 4. aşama — 3. aşamadan önceki DÖF / Tespit-Öneri maddeleri (canlıda shell yok)
             Action::make('eskileriBagla')
                 ->label(fn () => 'Eski kayıtları bulgulara bağla ('.$this->baglanmamisSayisi.')')

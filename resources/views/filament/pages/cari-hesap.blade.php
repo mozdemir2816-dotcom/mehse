@@ -11,7 +11,7 @@
     </p>
 
     {{-- PORTFÖY FİNANS ÖZET KARTLARI --}}
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem">
+    <div class="mehse-kpi-4">
         <div style="{{ $kutu }};border-left:3.5px solid #2563eb">
             <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Aylık Sözleşme Cirosu (KDV Dahil)</div>
             <div style="font-size:1.45rem;font-weight:800;color:#2563eb;margin-top:.25rem;font-variant-numeric:tabular-nums">{{ number_format($p['aylik_ciro'], 2, ',', '.') }} ₺</div>

@@ -58,7 +58,7 @@ class RiskYonetimiSekmeleriTest extends TestCase
     {
         $menu = collect(Filament::getNavigation());
         $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Risk & Tehlike Yönetimi'));
-        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'Risk Yönetim Merkezi'));
+        $this->assertCount(1, $menu->flatMap(fn ($g) => $g->getItems())->filter(fn ($i) => $i->getLabel() === 'Risk Yönetimi'));
 
         foreach ([JsaDegerlendirmesi::class, KimyasalYonetimi::class, TehlikeRiskAnalitigi::class, KimyasalSicili::class,
             TehlikeResource::class, RiskSablonuResource::class, RiskProsedurResource::class, RiskDegerlendirmesiResource::class] as $sinif) {

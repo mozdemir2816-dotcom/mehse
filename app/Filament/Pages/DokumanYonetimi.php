@@ -67,9 +67,9 @@ class DokumanYonetimi extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-folder-open';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Günlük Saha İşi';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $slug = 'dokuman-yonetimi';
 
@@ -122,16 +122,16 @@ class DokumanYonetimi extends Page
     #[Computed]
     public function firmalar(): array
     {
-        return Firma::query()->where('user_id', Filament::auth()->id())->orderBy('unvan')->secenekler()->all();
+        return Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->secenekler()->all();
     }
 
-    /** @return Collection<int, Firma> kapsamdaki firmalar (seçiliyse yalnız o) */
+    /** @return Collection<int, Firma> kapsamdaki aktif firmalar (seçiliyse yalnız o) */
     #[Computed]
     public function kapsamFirmalari(): Collection
     {
         return Firma::query()
             ->where('user_id', Filament::auth()->id())
-            ->when($this->firmaId, fn ($q) => $q->whereKey($this->firmaId))
+            ->when($this->firmaId, fn ($q) => $q->whereKey($this->firmaId), fn ($q) => $q->where('aktif', true))
             ->withCount(['calisanlar as aktif_calisan' => fn ($q) => $q->where('aktif', true)])
             ->orderBy('unvan')
             ->get();
@@ -954,6 +954,26 @@ class DokumanYonetimi extends Page
     | Excel rapor (Tüm Belgeler)
     |--------------------------------------------------------------------------
     */
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('bulutYedegi')
+                ->label('☁ Bulut Arşiv Yedeği (ZIP)')
+                ->icon('heroicon-o-cloud-arrow-down')
+                ->color('gray')
+                ->outlined()
+                ->tooltip('Google Drive / OneDrive\'a yüklemeye hazır, firma ve kategori klasörlü tam arşiv yedeği indirir.')
+                ->action(function () {
+                    $yanit = \App\Support\ArsivBulutYedegi::indir(Filament::auth()->user(), $this->firmaId);
+                    if (! $yanit) {
+                        Notification::make()->title('Yedeklenecek aktif firma bulunamadı')->warning()->send();
+                    }
+
+                    return $yanit;
+                }),
+        ];
+    }
 
     public function excelRapor()
     {

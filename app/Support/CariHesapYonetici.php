@@ -201,7 +201,7 @@ class CariHesapYonetici
 
             $satirlar[] = [
                 'firma_id' => $f->id,
-                'unvan' => $f->unvan,
+                'unvan' => $f->secimEtiketi(),
                 'tehlike' => $f->tehlikeSinifiEtiketi(),
                 'calisan' => (int) $f->calisan_sayisi,
                 'aylik_ucret' => $o['aylik_ucret'],

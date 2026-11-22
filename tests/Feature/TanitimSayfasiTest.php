@@ -41,7 +41,7 @@ class TanitimSayfasiTest extends TestCase
             ->assertSee('/admin/osgb-basvuru', false)
             ->assertSee('/admin/login', false)
             ->assertSee('Üye Girişi')
-            ->assertSee('mozdemir2816@gmail.com')
+            ->assertSee('info@mehse.com')
             ->assertSee('0506 475 48 55')
             ->assertSee('tel:+905064754855', false)
             ->assertSee('wa.me/905064754855', false)

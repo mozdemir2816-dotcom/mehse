@@ -31,13 +31,13 @@ class FaturaProfil extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationLabel = 'Fatura & Profil';
+    protected static ?string $navigationLabel = 'Abonelik & Fatura';
 
     protected static ?string $slug = 'fatura-profil';
 
-    protected static ?string $title = 'Fatura & Profil';
+    protected static ?string $title = 'Abonelik & Fatura';
 
     public const ALANLAR = ['fatura_tipi', 'fatura_unvan', 'vergi_dairesi', 'vergi_no', 'fatura_adresi', 'fatura_il', 'fatura_ilce'];
 

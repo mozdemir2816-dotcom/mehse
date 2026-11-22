@@ -147,9 +147,26 @@
                                                 {{ $durumEtiket[$z['durum']] ?? $z['durum'] }}{{ $gecikmis ? ' (Gecikmiş)' : '' }}
                                             </button>
                                         </div>
+                                        @php
+                                            $sureEtiket = null;
+                                            if (! empty($z['sure_saat'])) {
+                                                $s = (float) $z['sure_saat'];
+                                                if ($s > 24) {
+                                                    // 24'ten büyük değerler dakika olarak girilmiş (ör. 600 dk = 10 sa)
+                                                    $dk = (int) round($s);
+                                                    $sa = intdiv($dk, 60);
+                                                    $kalanDk = $dk % 60;
+                                                    $sureEtiket = $sa > 0
+                                                        ? ($kalanDk > 0 ? "{$sa} sa {$kalanDk} dk" : "{$sa} sa")
+                                                        : "{$dk} dk";
+                                                } else {
+                                                    $sureEtiket = rtrim(rtrim(number_format($s, 1, ',', ''), '0'), ',').' saat';
+                                                }
+                                            }
+                                        @endphp
                                         <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">
                                             {{ \Illuminate\Support\Carbon::parse($z['tarih'])->format('d.m.Y') }}
-                                            · {{ $z['amac'] ?: '—' }}@if ($z['sure_saat']) · {{ $z['sure_saat'] }} saat @endif
+                                            · {{ $z['amac'] ?: '—' }}@if ($sureEtiket) · {{ $sureEtiket }} @endif
                                             @if ($say && $say['toplam'] > 0)
                                                 ·
                                                 <a href="{{ \App\Filament\Pages\ZiyaretProgrami::getUrl(['firma' => $z['firma']->id, 'yil' => $yil, 'ay' => $z['ay_index'] + 1]) }}"

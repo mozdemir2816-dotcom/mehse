@@ -678,6 +678,49 @@ abstract class YillikPlanlar extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('gecenYildanKopyala')
+                ->label('📋 Önceki Yıldan Kopyala')
+                ->icon('heroicon-o-document-duplicate')
+                ->color('info')
+                ->outlined()
+                ->visible(fn () => $this->plan() !== null && in_array($this->sekme, ['calisma', 'egitim'], true))
+                ->requiresConfirmation()
+                ->modalHeading('Önceki Yılın Planı Kopyalansın mı?')
+                ->modalDescription(fn () => ($this->yil - 1).' yılındaki planlı (P) aylar bu yılın planına kopyalanır.')
+                ->action(function (): void {
+                    $onceki = \App\Models\YillikPlan::query()
+                        ->where('firma_id', $this->firmaId)
+                        ->where('yil', $this->yil - 1)
+                        ->first();
+
+                    if (! $onceki) {
+                        Notification::make()->title(($this->yil - 1).' yılına ait kayıtlı plan bulunamadı')->warning()->send();
+
+                        return;
+                    }
+
+                    $mevcut = $this->plan();
+                    $alan = $this->sekme === 'egitim' ? 'egitimler' : 'faaliyetler';
+                    $kopya = collect($onceki->{$alan} ?? [])->map(function (array $satir): array {
+                        $satir['aylar'] = array_map(
+                            fn ($d) => in_array($d, ['planlandi', 'tamamlandi', 'gerceklesti'], true) ? 'planlandi' : 'bos',
+                            (array) ($satir['aylar'] ?? array_fill(0, 12, 'bos')),
+                        );
+
+                        return $satir;
+                    })->all();
+
+                    if ($kopya === []) {
+                        Notification::make()->title('Önceki yıl planında kopyalanacak madde yok')->warning()->send();
+
+                        return;
+                    }
+
+                    $mevcut->forceFill([$alan => $kopya])->save();
+                    unset($this->plan);
+                    Notification::make()->title(($this->yil - 1).' planı '.$this->yil.' yılına kopyalandı')->success()->send();
+                }),
+
             Action::make('planiKaydet')
                 ->label('Planı Kaydet')
                 ->icon('heroicon-o-check')

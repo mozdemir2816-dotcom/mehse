@@ -23,7 +23,7 @@
 
     {{-- ÖZET KARTLARI — seçili firma, yoksa tüm firmalar --}}
     @php $oz = $this->ozet; @endphp
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
+    <div class="mehse-kpi-4">
         @foreach ([
             ['Toplam izin', $oz['toplam'], '#0f766e'],
             ['Aktif izin', $oz['aktif'], '#047857'],

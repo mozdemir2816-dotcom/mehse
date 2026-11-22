@@ -82,7 +82,7 @@ class ZiyaretProgrami extends Page
 
         $this->ajandaBaslat();
 
-        if (! in_array($this->gorunum, ['ajanda', 'plan'], true)) {
+        if (! in_array($this->gorunum, ['ajanda', 'plan', 'harita'], true)) {
             $this->gorunum = 'plan';
         }
 
@@ -363,9 +363,45 @@ class ZiyaretProgrami extends Page
 
     public function gorunumSec(string $gorunum): void
     {
-        if (in_array($gorunum, ['ajanda', 'plan'], true)) {
+        if (in_array($gorunum, ['ajanda', 'plan', 'harita'], true)) {
             $this->gorunum = $gorunum;
         }
+    }
+
+    /** Harita & Rota görünümü için seçili günün (boşsa tüm aktif portföyün) optimize edilmiş durakları. */
+    #[Computed]
+    public function haritaRotasi(): array
+    {
+        $tarih = $this->takvimSeciliTarih ?: now()->toDateString();
+        $gruplar = ZiyaretTakvimi::gunlukGruplar(Filament::auth()->id());
+        $gununFirmalari = collect($gruplar[$tarih] ?? [])->pluck('firma')->filter()->unique('id');
+
+        $kaynak = $gununFirmalari->isNotEmpty()
+            ? $gununFirmalari
+            : Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->get();
+
+        $duraklar = $kaynak->map(function (Firma $f): array {
+            $k = \App\Support\HaritaRotaPlanlayici::firmaKoordinati($f);
+
+            return [
+                'firma_id' => $f->id,
+                'unvan' => $f->secimEtiketi(),
+                'adres' => trim(implode(', ', array_filter([$f->adres, $f->ilce, $f->il]))),
+                'lat' => $k['lat'],
+                'lng' => $k['lng'],
+                'bolge' => $k['bolge'],
+            ];
+        })->all();
+
+        $sirali = \App\Support\HaritaRotaPlanlayici::rotayiSirala($duraklar);
+
+        return [
+            'tarih_etiket' => $gununFirmalari->isNotEmpty()
+                ? Carbon::parse($tarih)->format('d.m.Y').' planlı ziyaretler'
+                : 'Bu günde plan yok — tüm aktif portföy',
+            'duraklar' => $sirali,
+            'gmaps_url' => \App\Support\HaritaRotaPlanlayici::googleMapsRotaUrl($sirali),
+        ];
     }
 
     /** Seçili firmanın aylık yasal asgari süresi (dakika): KATİP süresi varsa o, yoksa çalışan × tehlike sınıfı dakikası. */

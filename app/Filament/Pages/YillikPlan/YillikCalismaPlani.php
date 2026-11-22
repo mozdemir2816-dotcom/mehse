@@ -23,5 +23,5 @@ class YillikCalismaPlani extends YillikPlanlar
 
     protected static ?string $title = 'Yıllık Çalışma Planı';
 
-    protected static ?string $navigationLabel = 'Yıllık Planlar & Değerlendirme';
+    protected static ?string $navigationLabel = 'Yıllık Planlar';
 }

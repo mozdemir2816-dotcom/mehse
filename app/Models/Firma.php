@@ -36,12 +36,22 @@ class Firma extends Model
      */
     public function secimEtiketi(): string
     {
+        $unvan = self::temizUnvan((string) $this->unvan);
         $kisa = trim((string) $this->kisa_ad);
         $sade = fn (string $s) => preg_replace('/[^a-z0-9]/', '', Str::lower(Str::ascii($s)));
 
-        return $kisa === '' || str_starts_with($sade($this->unvan), $sade($kisa))
-            ? (string) $this->unvan
-            : $kisa.' · '.$this->unvan;
+        return $kisa === '' || str_starts_with($sade($unvan), $sade($kisa))
+            ? $unvan
+            : $kisa.' · '.$unvan;
+    }
+
+    /** Çift alt çizgi (__), mükerrer A.Ş. ve fazla boşlukları temizler. */
+    public static function temizUnvan(string $unvan): string
+    {
+        $temiz = preg_replace('/\s*_{2,}\s*/u', ' — ', trim($unvan)) ?? trim($unvan);
+        $temiz = preg_replace('/(\bA\.Ş\.)(\s+A\.Ş\.)+/iu', '$1', $temiz) ?? $temiz;
+
+        return preg_replace('/\s{2,}/u', ' ', $temiz) ?? $temiz;
     }
 
     protected $guarded = ['id'];

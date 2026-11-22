@@ -800,9 +800,137 @@ class SahaDenetimi extends Page
         Notification::make()->title('Taslak kaydedildi')->body('Kaldığınız yerden devam edebilirsiniz.')->success()->send();
     }
 
+    /** Uygunsuz maddeleri tek tıkla Çoklu DÖF raporuna aktarır (C20). */
+    public function uygunsuzluklariDofeAktar(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $maddeler = $this->uygunsuzMaddeListesi();
+        if ($maddeler === []) {
+            Notification::make()->title('Aktarılacak uygunsuz madde yok')->body('Önce en az bir maddeyi "Uygun Değil" işaretleyin.')->warning()->send();
+
+            return;
+        }
+
+        $dof = \App\Models\DofRaporu::create([
+            'firma_id' => $this->firma->id,
+            'rapor_tarihi' => $this->denetimTarihi ?: now()->toDateString(),
+            'hazirlayan' => $this->denetciAdi ?: Filament::auth()->user()?->name,
+            'maddeler' => array_map(fn (array $m): array => [
+                'alan' => $this->santiyeAdi ?: \App\Models\DofRaporu::VARSAYILAN_ALAN,
+                'uygunsuzluk' => $m['ifade'].($m['aciklama'] ? ' — '.$m['aciklama'] : ''),
+                'oneri' => 'Düzeltici ve önleyici faaliyet uygulanarak uygunsuzluk giderilmelidir.',
+                'oncelik' => $m['kritik'] ? 'kritik' : 'yuksek',
+                'durum' => 'acik',
+                'sorumlu' => $m['sorumlu'] ?: \App\Models\DofRaporu::VARSAYILAN_SORUMLU,
+                'termin' => $m['termin'] ?: now()->addDays($m['kritik'] ? 1 : 7)->toDateString(),
+            ], $maddeler),
+        ]);
+
+        Notification::make()
+            ->title(count($maddeler).' uygunsuzluk Çoklu DÖF\'e aktarıldı')
+            ->body('Belge No: '.$dof->belge_no)
+            ->actions([
+                Action::make('dofAc')->label('DÖF Havuzuna Git')->url(DofOlustur::getUrl(['firma' => $this->firma->id]))->button(),
+            ])
+            ->success()
+            ->send();
+    }
+
+    /** Uygunsuz maddeleri tek tıkla firmanın en güncel Risk Değerlendirmesine ekler (C20). */
+    public function uygunsuzluklariRiskeAktar(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $maddeler = $this->uygunsuzMaddeListesi();
+        if ($maddeler === []) {
+            Notification::make()->title('Aktarılacak uygunsuz madde yok')->body('Önce en az bir maddeyi "Uygun Değil" işaretleyin.')->warning()->send();
+
+            return;
+        }
+
+        $rd = $this->firma->riskDegerlendirmeleri()->latest('id')->first();
+        if (! $rd) {
+            $rd = \App\Models\RiskDegerlendirmesi::create([
+                'firma_id' => $this->firma->id,
+                'baslik' => $this->firma->unvan.' — Saha Denetimi Risk Değerlendirmesi',
+                'yontem' => '5x5',
+                'hazirlanma_tarihi' => now()->toDateString(),
+                'gecerlilik_tarihi' => now()->addYears(2)->toDateString(),
+            ]);
+        }
+
+        $sira = (int) ($rd->maddeler()->max('sira') ?? 0);
+        foreach ($maddeler as $m) {
+            $sira++;
+            $rd->maddeler()->create([
+                'sira' => $sira,
+                'bolum' => $this->santiyeAdi ?: 'Saha Denetimi',
+                'faaliyet' => $m['kategori'] ?: 'Saha Kontrolü',
+                'tehlike' => $m['ifade'],
+                'risk' => $m['aciklama'] ?: 'Saha denetiminde tespit edilen uygunsuzluk kaynaklı iş kazası riski',
+                'oneri' => 'Tespit edilen uygunsuzluğun ivedilikle giderilmesi ve kontrolünün sağlanması.',
+                'mevzuat' => '6331 sayılı İş Sağlığı ve Güvenliği Kanunu',
+                'olasilik' => $m['kritik'] ? 4 : 3,
+                'siddet' => $m['kritik'] ? 5 : 4,
+                'sorumlu' => $m['sorumlu'] ?: 'İşveren / Saha Sorumlusu',
+                'termin' => $m['termin'] ?: now()->addDays(15)->toDateString(),
+                'durum' => 'acik',
+            ]);
+        }
+
+        Notification::make()
+            ->title(count($maddeler).' uygunsuzluk Risk Değerlendirmesine aktarıldı')
+            ->body('Kayıt: '.($rd->belge_no ?: '#'.$rd->id))
+            ->success()
+            ->send();
+    }
+
+    /** @return array<int, array{kod: string, kategori: string, ifade: string, kritik: bool, aciklama: ?string, sorumlu: ?string, termin: ?string}> */
+    private function uygunsuzMaddeListesi(): array
+    {
+        $sonuc = [];
+        foreach ($this->cevaplar as $kod => $cevap) {
+            if (($cevap['sonuc'] ?? null) !== 'uygun_degil') {
+                continue;
+            }
+            $sonuc[] = [
+                'kod' => (string) $kod,
+                'kategori' => (string) ($cevap['kategori'] ?? 'Saha Denetimi'),
+                'ifade' => (string) ($cevap['ifade'] ?? $kod),
+                'kritik' => (bool) ($cevap['kritik'] ?? false),
+                'aciklama' => $cevap['aciklama'] ?? null,
+                'sorumlu' => $cevap['sorumlu'] ?? null,
+                'termin' => $cevap['termin'] ?? null,
+            ];
+        }
+
+        return $sonuc;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('cokluDofAktar')
+                ->label('⚡ Çoklu DÖF\'e Aktar')
+                ->icon('heroicon-o-bolt')
+                ->color('warning')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => $this->uygunsuzluklariDofeAktar()),
+
+            Action::make('riskeAktar')
+                ->label('🛡 Risk Değerlendirmesine Aktar')
+                ->icon('heroicon-o-shield-exclamation')
+                ->color('danger')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->action(fn () => $this->uygunsuzluklariRiskeAktar()),
+
             Action::make('taslak')
                 ->label('Taslak Olarak Kaydet')
                 ->icon('heroicon-o-bookmark')

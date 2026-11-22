@@ -511,6 +511,7 @@ class TalimatOlustur extends Page
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
+            \App\Filament\Support\CanliImzaAksiyonu::make('talimat', fn () => $this->firma),
 
             // Firmaya verilen talimatların listesi = kullanıcının "Talimat Teslim Tutanağı" (Talimat İçerikleri.xlsx).
             Action::make('talimatListesi')

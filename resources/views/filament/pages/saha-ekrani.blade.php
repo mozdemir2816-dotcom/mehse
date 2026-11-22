@@ -14,9 +14,9 @@
         </div>
         <select id="saha-firma-sec" wire:model.live="firmaId"
             style="width:100%;padding:.55rem .75rem;border-radius:10px;border:1px solid var(--border,#cbd5e1);background:transparent;font-size:.9rem;font-weight:600;color:var(--text-heading,#0f172a)">
-            <option value="">— İşyeri seçin (tüm kısayollar o firmayla açılır) —</option>
+            <option value="" @selected(blank($firmaId))>— İşyeri seçin (tüm kısayollar o firmayla açılır) —</option>
             @foreach ($this->firmalar as $id => $ad)
-                <option value="{{ $id }}">{{ $ad }}</option>
+                <option value="{{ $id }}" @selected((int) $firmaId === (int) $id)>{{ $ad }}</option>
             @endforeach
         </select>
         @if ($this->seciliFirma)

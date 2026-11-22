@@ -28,7 +28,7 @@
     </style>
 
     <p class="mehse-metin-soluk" style="max-width:72ch;font-size:.9rem">
-        Makinenin yanına asılacak A4 güvenlik afişleri. Resim ve yazılar Gemini'de hazırlanıp buraya toplu yüklenir.
+        Makinenin yanına asılacak A4 güvenlik afişleri. Görsel ve güvenlik kuralları şablon/AI çıktılarıyla toplu yüklenebilir.
         Firmanın logosu ve ekipmanın QR kodu basılı afiş için <strong>Periyodik Kontrol</strong>'de ekipman satırındaki "Afiş" düğmesini kullanın.
     </p>
 
@@ -41,7 +41,7 @@
 
     @if ($yonetir && $s['resim'] === 0 && $s['yazi'] === 0)
         <div role="note" style="max-width:72ch;padding:.75rem 1rem;border-radius:.6rem;border:1px solid rgb(59 130 246 / .35);background:rgb(59 130 246 / .07);font-size:.9rem">
-            Henüz afiş yok. Gemini'de ürettiğiniz resimleri <strong>Resimleri yükle</strong> ile (tek tek ya da ZIP),
+            Henüz afiş yok. Hazırladığınız makine görsellerini <strong>Resimleri yükle</strong> ile (tek tek ya da ZIP),
             YAPIN / YAPMAYIN tablosunu <strong>Yazıları yükle</strong> ile ekleyin. Resim ve yazısı olan makinenin afişi hemen basılabilir.
         </div>
     @endif

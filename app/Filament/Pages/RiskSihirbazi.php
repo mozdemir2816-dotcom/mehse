@@ -69,7 +69,7 @@ class RiskSihirbazi extends Page
 
     protected static ?string $title = 'Risk Değerlendirme';
 
-    protected static ?string $navigationLabel = 'Risk Yönetim Merkezi';
+    protected static ?string $navigationLabel = 'Risk Yönetimi';
 
     public const ADIMLAR = [
         1 => 'Firma Bilgileri',
@@ -432,10 +432,11 @@ class RiskSihirbazi extends Page
     {
         return Firma::query()
             ->where('user_id', Filament::auth()->id())
+            ->where('aktif', true)
             ->orderBy('unvan')
-            ->get(['id', 'unvan', 'tehlike_sinifi'])
+            ->get(['id', 'unvan', 'kisa_ad', 'tehlike_sinifi'])
             ->mapWithKeys(fn (Firma $f) => [
-                $f->id => $f->unvan.' ('.$f->tehlikeSinifiEtiketi().')',
+                $f->id => $f->secimEtiketi().' ('.$f->tehlikeSinifiEtiketi().')',
             ])
             ->all();
     }
@@ -2031,6 +2032,143 @@ class RiskSihirbazi extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('aiKonuFotoRisk')
+                ->label('✨ AI ile Konu / Fotoğraftan Risk Ekle')
+                ->icon('heroicon-o-sparkles')
+                ->color('primary')
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('Yapay Zekâ ile Anında Risk Maddesi Üret (Konu veya Fotoğraf)')
+                ->modalDescription('Bir makine, süreç veya bölüm adı yazın (örn. "forklift, kompresör, kaynak atölyesi") ya da saha fotoğrafı yükleyin — sistem Fine-Kinney / 5x5 risk maddelerini üretip doğrudan seçili riskler listenize ekler.')
+                ->modalSubmitActionLabel('Riskleri Üret ve Listeye Ekle')
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('konu')
+                        ->label('Konu / Ekipman / Bölüm (Opsiyonel — fotoğraf yüklenmiyorsa zorunlu)')
+                        ->placeholder('Örn: Pres hattı, forklift, yüksekte çalışma, kompresör')
+                        ->maxLength(250),
+                    \Filament\Forms\Components\FileUpload::make('foto')
+                        ->label('Saha Fotoğrafı (Opsiyonel)')
+                        ->image()
+                        ->disk('local')
+                        ->directory('risk-ai-foto')
+                        ->maxSize(8192),
+                ])
+                ->action(function (array $data): void {
+                    $konu = trim((string) ($data['konu'] ?? ''));
+                    $foto = $data['foto'] ?? null;
+
+                    if ($konu === '' && blank($foto)) {
+                        Notification::make()->title('Konu yazın veya saha fotoğrafı yükleyin')->warning()->send();
+
+                        return;
+                    }
+
+                    $eklenen = 0;
+                    $mevcut = array_column($this->secilenler, 'tehlike');
+
+                    if (filled($foto)) {
+                        $yol = \Illuminate\Support\Facades\Storage::disk('local')->path($foto);
+                        try {
+                            $sonuc = \App\Support\GeminiSahaAnalizi::analizEt([$yol], $konu ?: ($this->firma?->unvan ?? 'Saha'));
+                            foreach ((array) ($sonuc['bulgular'] ?? []) as $b) {
+                                $this->secilenler[] = [
+                                    'bolum' => $b['bolum'] ?? ($konu ?: 'Saha'),
+                                    'faaliyet' => $b['kategori'] ?? 'Saha Gözlemi',
+                                    'tehlike' => $b['tehlike'] ?? ($b['uygunsuzluk'] ?? 'Tespit edilen tehlike'),
+                                    'risk' => $b['uygunsuzluk'] ?? 'Yaralanma / iş kazası riski',
+                                    'mevcut_onlem' => $b['mevcut_onlemler'] ?? null,
+                                    'oneri' => $b['aksiyon'] ?? 'Düzeltici ve önleyici faaliyet uygulanmalıdır.',
+                                    'mevzuat' => $b['yasal_gerekce'] ?? '6331 sayılı İSG Kanunu',
+                                    'olasilik' => $this->fineKinney ? 3 : max(1, min(5, (int) ($b['olasilik'] ?? 3))),
+                                    'frekans' => $this->fineKinney ? 6 : null,
+                                    'siddet' => $this->fineKinney ? 7 : max(1, min(5, (int) ($b['siddet'] ?? 3))),
+                                    'sorumlu' => 'İşveren / Saha Sorumlusu',
+                                    'termin' => $this->varsayilanTermin,
+                                ];
+                                $eklenen++;
+                            }
+                        } catch (\Throwable) {
+                            // Fotoğraf AI çağrısı erişilemezse aşağıdaki kütüphane yedeğine düşer.
+                        } finally {
+                            \Illuminate\Support\Facades\Storage::disk('local')->delete($foto);
+                        }
+                    }
+
+                    if ($konu !== '' && $eklenen === 0) {
+                        if (\App\Support\GeminiRiskDanismani::aktifMi()) {
+                            try {
+                                $ai = \App\Support\GeminiRiskDanismani::oner($konu, [$konu], ['Odak konu' => $konu], $mevcut);
+                                foreach ($ai as $r) {
+                                    $this->secilenler[] = [
+                                        'bolum' => $r['bolum'] ?? $konu,
+                                        'faaliyet' => $r['faaliyet'] ?? $konu,
+                                        'tehlike' => $r['tehlike'] ?? $konu.' kaynaklı tehlike',
+                                        'risk' => $r['risk'] ?? 'İş kazası / meslek hastalığı riski',
+                                        'oneri' => $r['oneri'] ?? '6331 sayılı Kanun kapsamında teknik ve idari önlem alınmalıdır.',
+                                        'mevzuat' => $r['mevzuat'] ?? '6331 sayılı İSG Kanunu',
+                                        'olasilik' => $this->fineKinney ? 3 : 3,
+                                        'frekans' => $this->fineKinney ? 6 : null,
+                                        'siddet' => $this->fineKinney ? 7 : 4,
+                                        'sorumlu' => 'İşveren / İSG Sorumlusu',
+                                        'termin' => $this->varsayilanTermin,
+                                    ];
+                                    $eklenen++;
+                                }
+                            } catch (\Throwable) {
+                                // Kütüphane aramasına düşer.
+                            }
+                        }
+
+                        if ($eklenen === 0) {
+                            $kelimeler = array_values(array_filter(preg_split('/[\s,;]+/u', $konu) ?: [], fn ($k) => mb_strlen($k) >= 3));
+                            $eslesenler = \App\Models\Tehlike::query()
+                                ->where(function ($q) use ($kelimeler, $konu): void {
+                                    $q->where('tehlike', 'like', '%'.$konu.'%')
+                                        ->orWhere('risk', 'like', '%'.$konu.'%')
+                                        ->orWhere('kategori', 'like', '%'.$konu.'%');
+                                    foreach (array_slice($kelimeler, 0, 5) as $k) {
+                                        $q->orWhere('tehlike', 'like', '%'.$k.'%')
+                                            ->orWhere('faaliyet', 'like', '%'.$k.'%')
+                                            ->orWhere('kategori', 'like', '%'.$k.'%');
+                                    }
+                                })
+                                ->limit(8)
+                                ->get();
+
+                            foreach ($eslesenler as $t) {
+                                $this->secilenler[] = [
+                                    'bolum' => $konu,
+                                    'faaliyet' => $t->faaliyet ?: $konu,
+                                    'tehlike' => $t->tehlike,
+                                    'risk' => $t->risk,
+                                    'oneri' => $t->oneri,
+                                    'mevzuat' => $t->mevzuat ?: '6331 sayılı İSG Kanunu',
+                                    'olasilik' => $this->fineKinney ? 3 : 3,
+                                    'frekans' => $this->fineKinney ? 6 : null,
+                                    'siddet' => $this->fineKinney ? 7 : 4,
+                                    'sorumlu' => 'İşveren / Saha Sorumlusu',
+                                    'termin' => $this->varsayilanTermin,
+                                ];
+                                $eklenen++;
+                            }
+                        }
+                    }
+
+                    if ($eklenen > 0) {
+                        $this->adim = 5;
+                        Notification::make()
+                            ->title("{$eklenen} risk maddesi eklendi")
+                            ->body('Risklerim (Adım 5) listesinde düzenleyip kaydedebilirsiniz.')
+                            ->success()
+                            ->send();
+                    } else {
+                        Notification::make()
+                            ->title('Eşleşen risk maddesi üretilemedi')
+                            ->body('Farklı bir ekipman/faaliyet adı deneyebilir veya kütüphaneden manuel seçim yapabilirsiniz.')
+                            ->warning()
+                            ->send();
+                    }
+                }),
+
             Action::make('riskBildirimQrPdf')
                 ->label('Risk Bildirim QR (PDF)')
                 ->icon('heroicon-o-qr-code')

@@ -137,6 +137,12 @@
             }
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['style'], subtree: true });
     })();
+    // Zararsız ResizeObserver döngü uyarısını (Chrome/Filament form alanları) bastırır.
+    window.addEventListener('error', function (e) {
+        if (e && typeof e.message === 'string' && e.message.indexOf('ResizeObserver loop') !== -1) {
+            e.stopImmediatePropagation();
+        }
+    });
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
