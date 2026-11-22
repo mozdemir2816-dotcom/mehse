@@ -52,6 +52,36 @@ Route::post('/risk-bildir/{firma}/{imza}', [\App\Http\Controllers\QrRiskBildirim
 Route::get('/teftis/{token}', [\App\Http\Controllers\MufettisTeftisController::class, 'goster'])
     ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('mufettis.teftis');
 
+// Canlı (Senkron) Eğitim Oturumu sınav ve >=70 puan QR sertifika (E5).
+Route::get('/canli-egitim/{token}', [\App\Http\Controllers\CanliEgitimController::class, 'goster'])
+    ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('canli-egitim.form');
+Route::post('/canli-egitim/{token}', [\App\Http\Controllers\CanliEgitimController::class, 'sinavGonder'])
+    ->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:20,1')->name('canli-egitim.gonder');
+Route::get('/canli-egitim/{token}/sertifika/{kod}', [\App\Http\Controllers\CanliEgitimController::class, 'sertifika'])
+    ->where('token', '[A-Za-z0-9]{20,64}')->where('kod', '[A-Za-z0-9]{8,32}')->middleware('throttle:60,1')->name('canli-egitim.sertifika');
+
+// OSGB opsiyonel canlı saha konumu paylaşımı (opt-in heartbeat — E9).
+Route::post('/mehse/konum-bildir', function (Request $request) {
+    $veri = $request->validate([
+        'aktif' => ['required', 'boolean'],
+        'enlem' => ['nullable', 'numeric', 'between:-90,90'],
+        'boylam' => ['nullable', 'numeric', 'between:-180,180'],
+    ]);
+
+    /** @var User $user */
+    $user = $request->user();
+    KullaniciAyarlari::kaydet($user, [
+        'canli_konum' => [
+            'aktif' => (bool) $veri['aktif'],
+            'enlem' => $veri['aktif'] ? ($veri['enlem'] ?? null) : null,
+            'boylam' => $veri['aktif'] ? ($veri['boylam'] ?? null) : null,
+            'guncelleme' => now()->timezone('Europe/Istanbul')->format('d.m.Y H:i'),
+        ],
+    ]);
+
+    return response()->json(['ok' => true]);
+})->middleware(['auth', 'throttle:30,1'])->name('mehse.konum.bildir');
+
 // Kök adres = herkese açık tanıtım sayfası (29.10.2026); üye olmayanlar teklif isteyebilir,
 // panel /admin'de. Teklif formu kayıt açar (TeklifTalebi), sahip hesap panelde görür.
 Route::view('/', 'tanitim')->name('tanitim');

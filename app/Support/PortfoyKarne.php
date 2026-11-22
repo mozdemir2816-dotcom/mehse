@@ -762,13 +762,18 @@ class PortfoyKarne
                 $birimGereken = $calisan > 0 ? (int) ceil($calisan / $dOran) : 0;
 
                 $ekipler = $f->acilEkipler->keyBy('tur');
-                $iyAtanan = $ekipler->get('ilk_yardim')?->uyeler?->where('uyelik', 'asil')->count() ?? 0;
+                $iyAsilUyeler = $ekipler->get('ilk_yardim')?->uyeler?->where('uyelik', 'asil') ?? collect();
+                $iyAtanan = $iyAsilUyeler->count();
+                $iyGecerliBelge = $iyAsilUyeler->filter(fn ($u) => in_array($u->belgeDurumu(), ['gecerli', 'yaklasan'], true))->count();
 
                 $destekAtanan = 0;
+                $destekGecerliBelge = 0;
                 $destekEksik = 0;
                 foreach (['sondurme', 'kurtarma', 'koruma'] as $tur) {
-                    $atanan = $ekipler->get($tur)?->uyeler?->where('uyelik', 'asil')->count() ?? 0;
+                    $uyeler = $ekipler->get($tur)?->uyeler?->where('uyelik', 'asil') ?? collect();
+                    $atanan = $uyeler->count();
                     $destekAtanan += $atanan;
+                    $destekGecerliBelge += $uyeler->filter(fn ($u) => in_array($u->belgeDurumu(), ['gecerli', 'yaklasan'], true))->count();
                     $destekEksik += max(0, $birimGereken - $atanan);
                 }
 
@@ -779,10 +784,13 @@ class PortfoyKarne
                     'calisan' => $calisan,
                     'ilkyardim_gereken' => $iyGereken,
                     'ilkyardim_atanan' => $iyAtanan,
+                    'ilkyardim_gecerli_belge' => $iyGecerliBelge,
+                    'ilkyardim_belge_eksik' => max(0, $iyGereken - $iyGecerliBelge),
                     'ilkyardim_eksik' => max(0, $iyGereken - $iyAtanan),
                     'destek_birim_gereken' => $birimGereken,
                     'destek_toplam_gereken' => $birimGereken * 3,
                     'destek_atanan' => $destekAtanan,
+                    'destek_gecerli_belge' => $destekGecerliBelge,
                     'destek_eksik' => $destekEksik,
                     'url' => \App\Filament\Pages\AcilDurumEkipleri::getUrl(['firma' => $f->id]),
                 ];

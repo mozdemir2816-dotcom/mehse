@@ -1163,12 +1163,65 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         return $kayit;
     }
 
+    #[Computed]
+    public function iseBaslamaEksik()
+    {
+        return $this->firma ? \App\Support\CanliEgitimYonetici::iseBaslamaEksikKuyrugu($this->firma) : collect();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             $this->kaydetAction(),
             $this->yeniKayitAction(),
             \App\Filament\Support\CanliImzaAksiyonu::make('egitim_katilim', fn () => $this->firma),
+
+            Action::make('canliEgitimOturumu')
+                ->label('🎥 Canlı Eğitim & Özel Eğitim (QR Sertifika)')
+                ->icon('heroicon-o-video-camera')
+                ->color('primary')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('Canlı Eğitim / Özel Eğitim Oturumu (≥70 Puan QR Sertifika)')
+                ->modalDescription('Temel İSG, Yüksekte Çalışma (8 sa), İşyeri Hijyeni (4 sa) veya Gıda/Su Hijyeni (4 sa) oturumu açın. Katılımcılar sınav linkini tamamlayıp ≥70 puan aldığında QR doğrulamalı sertifikasını anında indirir.')
+                ->modalSubmitActionLabel('Canlı Eğitim & Sınav Linki Oluştur')
+                ->schema([
+                    \Filament\Forms\Components\Select::make('kategori')
+                        ->label('Eğitim Programı')
+                        ->options(collect(\App\Models\CanliEgitimOturumu::KATEGORILER)->map(fn ($k) => $k['ad'])->all())
+                        ->default('temel_isg')
+                        ->required(),
+                    \Filament\Forms\Components\TextInput::make('baslik')
+                        ->label('Oturum Başlığı')
+                        ->default('Canlı İSG Eğitim Oturumu — '.now()->format('d.m.Y'))
+                        ->required()
+                        ->maxLength(255),
+                    \Filament\Forms\Components\TextInput::make('toplanti_url')
+                        ->label('Zoom / Meet / Teams Linki (Opsiyonel)')
+                        ->url()
+                        ->placeholder('https://meet.google.com/...'),
+                ])
+                ->action(function (array $data): void {
+                    $oturum = \App\Support\CanliEgitimYonetici::oturumOlustur(
+                        Filament::auth()->user(),
+                        $this->firma,
+                        (string) $data['kategori'],
+                        (string) $data['baslik'],
+                        now()->toDateTimeString(),
+                        $data['toplanti_url'] ?? null,
+                    );
+                    $url = route('canli-egitim.form', ['token' => $oturum->katilim_token]);
+
+                    Notification::make()
+                        ->title('Canlı Eğitim & Sınav Oturumu Açıldı')
+                        ->body('Katılımcı sınav & QR sertifika bağlantısı: '.$url)
+                        ->actions([
+                            Action::make('oturumAc')->label('Sınav Ekranını Aç')->url($url, shouldOpenInNewTab: true)->button(),
+                        ])
+                        ->success()
+                        ->persistent()
+                        ->send();
+                }),
             Action::make('sgkPdfYukle')
                 ->label('SGK İşe Giriş PDF\'inden Katılımcı Ekle')
                 ->icon('heroicon-o-identification')

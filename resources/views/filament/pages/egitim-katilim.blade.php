@@ -10,6 +10,26 @@
         Madde 17 kapsamındaki eğitim katılım formunu oluşturun.
     </p>
 
+    {{-- "Bugün Ne Yapmalıyım?" — İşe Başlama Eğitimi Eksik Çalışanlar Öncelik Kuyruğu (E5) --}}
+    @if ($this->firma && $this->iseBaslamaEksik->isNotEmpty())
+        <div style="border-left:4px solid #dc2626;background:rgb(220 38 38/.06);border-radius:.75rem;padding:.75rem 1rem;margin-bottom:.75rem;font-size:.82rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+                <strong style="color:#b91c1c">🚨 Bugün Ne Yapmalıyım? — {{ $this->iseBaslamaEksik->count() }} aktif çalışanın İşe Başlama / Temel İSG Eğitimi eksik</strong>
+                <span style="font-size:.74rem;color:#7f1d1d">6331 m.17 · Öncelik: Kırmızı</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem">
+                @foreach ($this->iseBaslamaEksik->take(10) as $c)
+                    <span style="padding:.15rem .55rem;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:.74rem;font-weight:600">
+                        {{ $c->ad_soyad }}@if ($c->ise_giris) ({{ $c->ise_giris->format('d.m.Y') }})@endif
+                    </span>
+                @endforeach
+                @if ($this->iseBaslamaEksik->count() > 10)
+                    <span style="font-size:.74rem;color:#991b1b;font-weight:700">+{{ $this->iseBaslamaEksik->count() - 10 }} kişi daha</span>
+                @endif
+            </div>
+        </div>
+    @endif
+
     {{-- ÇIKTI AL: butonun hemen altında açılan sabit konumlu menü (Filament açılır menüsü bazı ekranlarda sol üst köşede açılıyordu).
          Eylemler başlıkta gizli durur; buradan mountAction ile açılır (önce kaydeder, Kaydet ile aynı belgeyi kullanır). --}}
     @if ($this->firma)

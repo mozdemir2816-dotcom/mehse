@@ -112,10 +112,18 @@
             </div>
         </div>
 
-        <div style="margin-top:.75rem;display:flex;justify-content:flex-end">
+        <div style="margin-top:.75rem;display:flex;justify-content:flex-end;gap:1rem;flex-wrap:wrap">
             <a href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=6331&MevzuatTur=1&MevzuatTertip=5" target="_blank" rel="noopener"
                 style="font-size:.8rem;font-weight:700;color:rgb(180 83 9);text-decoration:none">
-                Resmî Tam Metni Oku (mevzuat.gov.tr — 6331 s.K.) ↗
+                Resmî Kaynağı Aç: 6331 s.K. (mevzuat.gov.tr) ↗
+            </a>
+            <a href="https://ekipnet.csgb.gov.tr/" target="_blank" rel="noopener"
+                style="font-size:.8rem;font-weight:700;color:#2563eb;text-decoration:none">
+                Resmî Kaynağı Aç: EKİPNET (csgb.gov.tr) ↗
+            </a>
+            <a href="https://isgkatip.csgb.gov.tr/" target="_blank" rel="noopener"
+                style="font-size:.8rem;font-weight:700;color:#047857;text-decoration:none">
+                Resmî Kaynağı Aç: İSG-KATİP ↗
             </a>
         </div>
     </details>

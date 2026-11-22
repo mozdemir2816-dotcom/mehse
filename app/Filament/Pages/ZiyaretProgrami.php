@@ -71,6 +71,16 @@ class ZiyaretProgrami extends Page
     /** Yapılacaklar penceresi (modal) açık mı. */
     public bool $yapilacakModalAcik = false;
 
+    public ?int $kanitFirmaId = null;
+
+    public ?string $kanitKonu = null;
+
+    public ?string $kanitQrKod = null;
+
+    public ?float $kanitEnlem = null;
+
+    public ?float $kanitBoylam = null;
+
     /** Bir ay için öne çıkarılabilecek kritik görev sayısı. */
     public const KRITIK_GOREV_SINIRI = 2;
 
@@ -82,7 +92,7 @@ class ZiyaretProgrami extends Page
 
         $this->ajandaBaslat();
 
-        if (! in_array($this->gorunum, ['ajanda', 'plan', 'harita'], true)) {
+        if (! in_array($this->gorunum, ['ajanda', 'plan', 'harita', 'kanit'], true)) {
             $this->gorunum = 'plan';
         }
 
@@ -363,9 +373,76 @@ class ZiyaretProgrami extends Page
 
     public function gorunumSec(string $gorunum): void
     {
-        if (in_array($gorunum, ['ajanda', 'plan', 'harita'], true)) {
+        if (in_array($gorunum, ['ajanda', 'plan', 'harita', 'kanit'], true)) {
             $this->gorunum = $gorunum;
+            if ($gorunum === 'kanit' && ! $this->kanitFirmaId && $this->firmaId) {
+                $this->kanitFirmaId = $this->firmaId;
+            }
         }
+    }
+
+    #[Computed]
+    public function eksikSureTablosu(): array
+    {
+        return \App\Support\SahaZiyaretKanitYonetici::eksikSureTablosu(Filament::auth()->user());
+    }
+
+    #[Computed]
+    public function ziyaretKanitlari()
+    {
+        return \App\Models\SahaZiyaretKaniti::query()
+            ->where('user_id', Filament::auth()->id())
+            ->with('firma')
+            ->latest('id')
+            ->limit(40)
+            ->get();
+    }
+
+    public function kanitGirisYap(): void
+    {
+        $fId = $this->kanitFirmaId ?: $this->firmaId;
+        $firma = $fId ? Firma::where('user_id', Filament::auth()->id())->find($fId) : null;
+        if (! $firma) {
+            Notification::make()->title('Önce işyeri seçin')->warning()->send();
+
+            return;
+        }
+
+        $kanit = \App\Support\SahaZiyaretKanitYonetici::girisYap(
+            Filament::auth()->user(),
+            $firma,
+            $this->kanitKonu,
+            $this->kanitEnlem,
+            $this->kanitBoylam,
+            $this->kanitQrKod,
+        );
+
+        $this->kanitKonu = null;
+        $this->kanitQrKod = null;
+        unset($this->ziyaretKanitlari, $this->eksikSureTablosu);
+
+        Notification::make()
+            ->title('Saha ziyareti girişi kaydedildi')
+            ->body($firma->secimEtiketi().($kanit->qr_dogrulandi ? ' · QR ✓' : '').($kanit->gpsVarMi() ? ' · GPS ✓' : ''))
+            ->success()
+            ->send();
+    }
+
+    public function kanitCikisYap(int $kanitId): void
+    {
+        $kanit = \App\Models\SahaZiyaretKaniti::where('user_id', Filament::auth()->id())->find($kanitId);
+        if (! $kanit) {
+            return;
+        }
+
+        $kanit = \App\Support\SahaZiyaretKanitYonetici::cikisYap($kanit, $this->kanitEnlem, $this->kanitBoylam);
+        unset($this->ziyaretKanitlari, $this->eksikSureTablosu);
+
+        Notification::make()
+            ->title('Ziyaret tamamlandı ('.$kanit->sure_dk.' dk)')
+            ->body('4\'lü kanıt puanı: '.$kanit->kanitPuani().'/4')
+            ->success()
+            ->send();
     }
 
     /** Harita & Rota görünümü için seçili günün (boşsa tüm aktif portföyün) optimize edilmiş durakları. */

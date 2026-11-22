@@ -678,6 +678,91 @@ abstract class YillikPlanlar extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('otomatikPlanUret')
+                ->label('⚡ Otomatik Plan Üret')
+                ->icon('heroicon-o-sparkles')
+                ->color('primary')
+                ->outlined()
+                ->visible(fn () => $this->plan() !== null && in_array($this->sekme, ['calisma', 'egitim'], true))
+                ->requiresConfirmation()
+                ->modalHeading('Tehlike Sınıfına Göre 12 Aylık Plan Otomatik Doldurulsun mu?')
+                ->modalDescription('Boş kalan plan satırları işyerinin tehlike sınıfına (Çok Tehlikeli / Tehlikeli / Az Tehlikeli) göre 12 aya dengeli şekilde Planlandı (P) olarak dağıtılır.')
+                ->action(function (): void {
+                    $plan = $this->plan();
+                    if (! $plan) {
+                        return;
+                    }
+                    $alan = $this->sekme === 'egitim' ? 'egitimler' : 'faaliyetler';
+                    $sinif = $this->firma?->tehlike_sinifi ?? 'tehlikeli';
+                    $adim = match ($sinif) {
+                        'cok_tehlikeli' => 1,
+                        'tehlikeli' => 2,
+                        default => 3,
+                    };
+
+                    $satirlar = (array) ($plan->{$alan} ?? []);
+                    $guncellenen = 0;
+                    foreach ($satirlar as $idx => $s) {
+                        $aylar = array_pad((array) ($s['aylar'] ?? []), 12, 'bos');
+                        if (! collect($aylar)->contains(fn ($d) => $d !== 'bos')) {
+                            $baslangic = $idx % max(1, $adim);
+                            for ($ay = $baslangic; $ay < 12; $ay += max(3, $adim * 2)) {
+                                $aylar[$ay] = 'planlandi';
+                            }
+                            $satirlar[$idx]['aylar'] = $aylar;
+                            $guncellenen++;
+                        }
+                    }
+
+                    $plan->forceFill([$alan => $satirlar])->save();
+                    unset($this->plan);
+                    Notification::make()->title("{$guncellenen} boş satır için 12 aylık otomatik plan üretildi")->success()->send();
+                }),
+
+            Action::make('plandanDegerlendirmeSenkron')
+                ->label('🔄 Plandan Değerlendirmeyi Senkronize Et')
+                ->icon('heroicon-o-arrow-path')
+                ->color('success')
+                ->outlined()
+                ->visible(fn () => $this->plan() !== null && $this->sekme === 'degerlendirme')
+                ->action(function (): void {
+                    $plan = $this->plan();
+                    if (! $plan) {
+                        return;
+                    }
+                    $planli = 0;
+                    $gerceklesen = 0;
+                    foreach (['faaliyetler', 'egitimler'] as $alan) {
+                        foreach ((array) ($plan->{$alan} ?? []) as $s) {
+                            foreach ((array) ($s['aylar'] ?? []) as $d) {
+                                if (in_array($d, ['planlandi', 'tamamlandi', 'gerceklesti'], true)) {
+                                    $planli++;
+                                }
+                                if (in_array($d, ['tamamlandi', 'gerceklesti'], true)) {
+                                    $gerceklesen++;
+                                }
+                            }
+                        }
+                    }
+                    $oran = $planli > 0 ? (int) round(($gerceklesen / $planli) * 100) : 0;
+                    $deg = (array) ($plan->degerlendirmeler ?? []);
+                    $deg[] = [
+                        'tarih' => now()->format('d.m.Y'),
+                        'calisma' => $this->yil.' Yılı Plan Gerçekleşme Senkronizasyonu',
+                        'yapan_kisi' => Filament::auth()->user()?->name ?: 'İSG Uzmanı',
+                        'sonuc' => "Planlanan: {$planli} · Gerçekleşen: {$gerceklesen} · Gerçekleşme Oranı: %{$oran}",
+                        'otomatik' => true,
+                    ];
+                    $plan->forceFill(['degerlendirmeler' => $deg])->save();
+                    unset($this->plan);
+
+                    Notification::make()
+                        ->title("Yıllık Plan → Değerlendirme Senkronize Edildi (%{$oran})")
+                        ->body("Planlanan: {$planli} · Gerçekleşen: {$gerceklesen}")
+                        ->success()
+                        ->send();
+                }),
+
             Action::make('gecenYildanKopyala')
                 ->label('📋 Önceki Yıldan Kopyala')
                 ->icon('heroicon-o-document-duplicate')

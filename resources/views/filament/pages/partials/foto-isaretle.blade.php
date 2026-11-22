@@ -7,11 +7,12 @@
 <div
     x-data="{
         acik: false, src: '', tur: '', index: 0, yukleniyor: false, hata: '',
-        daireler: [], secili: -1, boyut: 75, kalinlik: 5, renk: '#ef4444', etiket: '',
+        arac: 'cember',
+        daireler: [], bulaniklar: [], secili: -1, boyut: 75, kalinlik: 5, renk: '#ef4444', etiket: '',
         surukle: false, fark: { x: 0, y: 0 },
         ac(d) {
             this.src = d.src; this.tur = d.tur; this.index = d.index;
-            this.daireler = []; this.secili = -1; this.hata = ''; this.etiket = ''; this.acik = true;
+            this.arac = 'cember'; this.daireler = []; this.bulaniklar = []; this.secili = -1; this.hata = ''; this.etiket = ''; this.acik = true;
             const im = new Image();
             im.onload = () => {
                 const olcek = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
@@ -45,13 +46,19 @@
             this.ciz();
         },
         sil() { if (this.secili >= 0) { this.daireler.splice(this.secili, 1); this.secili = -1; this.ciz(); } },
-        temizle() { this.daireler = []; this.secili = -1; this.ciz(); },
+        temizle() { this.daireler = []; this.bulaniklar = []; this.secili = -1; this.ciz(); },
         nokta(e) {
             const c = this.$refs.tuval, r = c.getBoundingClientRect();
             return { x: (e.clientX - r.left) * c.width / r.width, y: (e.clientY - r.top) * c.height / r.height };
         },
         basla(e) {
             const p = this.nokta(e);
+            if (this.arac === 'bulanik') {
+                const cap = Math.max(40, this.boyut * this.k());
+                this.bulaniklar.push({ x: p.x - cap / 2, y: p.y - cap / 2, w: cap, h: cap });
+                this.ciz();
+                return;
+            }
             let bulunan = -1;
             for (let i = this.daireler.length - 1; i >= 0; i--) {
                 const d = this.daireler[i];
@@ -79,6 +86,22 @@
             if (!c.resim) { return; }
             g.clearRect(0, 0, c.width, c.height);
             g.drawImage(c.resim, 0, 0, c.width, c.height);
+            // KVKK Gizlilik Bulanıklığı (yüz/plaka pikselleştirme — E3)
+            this.bulaniklar.forEach((b) => {
+                const x = Math.max(0, Math.round(b.x)), y = Math.max(0, Math.round(b.y));
+                const w = Math.min(c.width - x, Math.round(b.w)), h = Math.min(c.height - y, Math.round(b.h));
+                if (w < 4 || h < 4) return;
+                const blok = Math.max(10, Math.round(Math.min(w, h) / 6));
+                const tmp = document.createElement('canvas');
+                tmp.width = Math.max(2, Math.round(w / blok));
+                tmp.height = Math.max(2, Math.round(h / blok));
+                const tg = tmp.getContext('2d');
+                tg.drawImage(c, x, y, w, h, 0, 0, tmp.width, tmp.height);
+                g.save();
+                g.imageSmoothingEnabled = false;
+                g.drawImage(tmp, 0, 0, tmp.width, tmp.height, x, y, w, h);
+                g.restore();
+            });
             this.daireler.forEach((d, i) => {
                 g.lineWidth = d.w; g.strokeStyle = d.c;
                 g.beginPath(); g.arc(d.x, d.y, d.r, 0, Math.PI * 2); g.stroke();
@@ -96,7 +119,7 @@
             });
         },
         uygula() {
-            if (!this.daireler.length) { this.acik = false; return; }
+            if (!this.daireler.length && !this.bulaniklar.length) { this.acik = false; return; }
             this.secili = -1; this.ciz(); this.hata = '';
             try {
                 this.$refs.tuval.toBlob((b) => {
@@ -148,6 +171,8 @@
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem;justify-content:space-between">
             <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <x-filament::button size="sm" x-bind:color="arac === 'cember' ? 'primary' : 'gray'" x-on:click="arac = 'cember'">⭕ Tehlike Çemberi</x-filament::button>
+                <x-filament::button size="sm" x-bind:color="arac === 'bulanik' ? 'warning' : 'gray'" x-on:click="arac = 'bulanik'">🔒 KVKK Yüz/Plaka Bulanıklaştır</x-filament::button>
                 <x-filament::button size="sm" color="gray" x-on:click="yeniCember()">Yeni çember</x-filament::button>
                 <x-filament::button size="sm" color="gray" x-on:click="sil()">Seçiliyi sil</x-filament::button>
                 <x-filament::button size="sm" color="gray" x-on:click="temizle()">Tümünü temizle</x-filament::button>

@@ -209,6 +209,10 @@ class KontrolMerkezi extends Page
         $bosFormlar = FirmaEvrakPaketi::bosFormlar();
 
         return [
+            \App\Filament\Support\SanalMufettisAksiyonu::make(
+                fn () => $this->firmaId ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId) : null
+            ),
+
             \App\Filament\Support\MufettisYetkilendirAksiyonu::make(
                 fn () => $this->firmaId ? Firma::where('user_id', Filament::auth()->id())->find($this->firmaId) : null
             ),
