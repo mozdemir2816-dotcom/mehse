@@ -64,7 +64,7 @@
                                 <tr>
                                     <td><strong>{{ $s['kod'] }}</strong></td>
                                     <td>{{ $s['ad'] }}</td>
-                                    <td><strong>{{ strtoupper(str_replace('_', ' ', $s['sinif'])) }}</strong></td>
+                                    <td><strong>{{ ['az_tehlikeli' => 'Az Tehlikeli', 'tehlikeli' => 'Tehlikeli', 'cok_tehlikeli' => 'Çok Tehlikeli'][$s['sinif']] ?? strtoupper(str_replace('_', ' ', $s['sinif'])) }}</strong></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -100,10 +100,11 @@
                     const n = Math.max(0, parseInt(document.getElementById('s-calisan').value || '0', 10));
                     const igu = n * (sinif === 'cok' ? 40 : (sinif === 'tehlikeli' ? 20 : 10));
                     const ih = n * (sinif === 'cok' ? 15 : (sinif === 'tehlikeli' ? 10 : 5));
-                    const dsp = (sinif === 'cok' && n >= 10) ? n * (n < 50 ? 10 : (n < 250 ? 15 : 20)) : 0;
+                    const dspMuaf = sinif === 'cok' && n >= 750;
+                    const dsp = (sinif === 'cok' && n >= 10 && !dspMuaf) ? n * (n < 50 ? 10 : (n < 250 ? 15 : 20)) : 0;
                     document.getElementById('out-igu').textContent = fmtDk(igu);
                     document.getElementById('out-ih').textContent = fmtDk(ih);
-                    document.getElementById('out-dsp').textContent = dsp > 0 ? fmtDk(dsp) : 'Zorunlu değil';
+                    document.getElementById('out-dsp').textContent = dspMuaf ? 'Zorunlu değil (750+ tam süreli İH · m.19/3)' : (dsp > 0 ? fmtDk(dsp) : 'Zorunlu değil');
                 }
                 hesaplaSure();
             </script>
@@ -147,17 +148,18 @@
                 </div>
             </div>
             <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.5rem;font-size:.86rem">
-                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-min="88663" data-max="177326" checked onchange="hesaplaIpc()" style="width:auto"> İGU Görevlendirmemek (md.26/1-b)</label>
-                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-min="88663" data-max="177326" checked onchange="hesaplaIpc()" style="width:auto"> İşyeri Hekimi Görevlendirmemek</label>
-                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-min="53197" data-max="159591" checked onchange="hesaplaIpc()" style="width:auto"> Risk Değerlendirmesi Yapmamak</label>
-                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-min="17731" data-max="53193" onchange="hesaplaIpc()" style="width:auto"> Acil Durum Planı / Tatbikat Eksik</label>
-                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-min="35462" data-max="106386" onchange="hesaplaIpc()" style="width:auto"> Periyodik Kontrol Eksik / Uygunsuz</label>
-                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-min="17731" data-max="35462" onchange="hesaplaIpc()" style="width:auto"> Çalışan Temsilcisi Atamamak</label>
+                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-taban="88663" data-aylik="1" checked onchange="hesaplaIpc()" style="width:auto"> İGU Görevlendirmemek (md.26/1-b · her ay)</label>
+                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-taban="88663" data-aylik="1" checked onchange="hesaplaIpc()" style="width:auto"> İşyeri Hekimi Görevlendirmemek (md.26/1-b · her ay)</label>
+                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-taban="53197" data-aylik="1" checked onchange="hesaplaIpc()" style="width:auto"> Risk Değerlendirmesi Yapmamak (md.26/1-ç · devam eden her ay)</label>
+                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-taban="17731" data-aylik="1" onchange="hesaplaIpc()" style="width:auto"> Acil Durum Planı / Tatbikat Eksik (md.26/1-d · her ay)</label>
+                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-taban="35462" data-aylik="0" onchange="hesaplaIpc()" style="width:auto"> Periyodik Kontrol Eksik / Uygunsuz</label>
+                <label style="display:flex;gap:.45rem;align-items:center;margin:0"><input type="checkbox" class="ipc-kalem" data-taban="17731" data-aylik="0" onchange="hesaplaIpc()" style="width:auto"> Çalışan Temsilcisi Atamamak (md.26/1-i)</label>
             </div>
             <div class="izgara" style="margin-top:1.1rem">
-                <div class="sonuc"><span>6331 m.26 Çarpanı</span><b id="out-ipc-carpan">—</b></div>
-                <div class="sonuc" style="border-color:#fca5a5;background:#fef2f2"><span>Tahmini Ceza Aralığı (2026)</span><b id="out-ipc-tutar" style="color:#b91c1c">—</b></div>
+                <div class="sonuc"><span>6331 m.26/2 Çarpanı</span><b id="out-ipc-carpan">—</b></div>
+                <div class="sonuc" style="border-color:#fca5a5;background:#fef2f2"><span>Tahmini Ceza Tutarı (m.26/2 Çarpanlı · Tek Ay / Tespit)</span><b id="out-ipc-tutar" style="color:#b91c1c">—</b></div>
             </div>
+            <p style="font-size:.78rem;color:#64748b;margin:.6rem 0 0">Not: 6331 SK md.26/2 çarpanı (1× – 3×) taban tutara yalnızca bir kez uygulanır. Devam eden aykırılıklarda ilgili kalemler her ay tekrarlanır; güncel ÇSGB yeniden değerleme tablosunu esas alınız.</p>
             <script>
                 function hesaplaIpc() {
                     const s = document.getElementById('ipc-sinif').value;
@@ -166,13 +168,12 @@
                     if (n < 10) c = s === 'cok' ? 1.5 : (s === 'tehlikeli' ? 1.25 : 1.0);
                     else if (n < 50) c = s === 'cok' ? 2.0 : (s === 'tehlikeli' ? 1.5 : 1.0);
                     else c = s === 'cok' ? 3.0 : (s === 'tehlikeli' ? 2.0 : 1.5);
-                    let mn = 0, mx = 0;
+                    let toplam = 0;
                     document.querySelectorAll('.ipc-kalem:checked').forEach(el => {
-                        mn += Math.round(parseFloat(el.dataset.min) * c);
-                        mx += Math.round(parseFloat(el.dataset.max) * c);
+                        toplam += Math.round(parseFloat(el.dataset.taban) * c);
                     });
                     document.getElementById('out-ipc-carpan').textContent = c.toFixed(2) + '×';
-                    document.getElementById('out-ipc-tutar').textContent = mn.toLocaleString('tr-TR') + ' ₺ – ' + mx.toLocaleString('tr-TR') + ' ₺';
+                    document.getElementById('out-ipc-tutar').textContent = toplam.toLocaleString('tr-TR') + ' ₺';
                 }
                 hesaplaIpc();
             </script>
@@ -195,21 +196,26 @@
                 <div class="sonuc"><span>Söndürme Ekibi (Min.)</span><b id="out-ek-son">—</b></div>
                 <div class="sonuc"><span>Kurtarma &amp; Koruma (Her biri)</span><b id="out-ek-kur">—</b></div>
                 <div class="sonuc"><span>Sertifikalı İlkyardımcı</span><b id="out-ek-ilk">—</b></div>
-                <div class="sonuc"><span>Çalışan Temsilcisi</span><b id="out-ek-tem">—</b></div>
+                <div class="sonuc"><span>Çalışan Temsilcisi (6331 m.20)</span><b id="out-ek-tem">—</b></div>
             </div>
+            <p id="out-ek-not" style="font-size:.78rem;color:#64748b;margin:.6rem 0 0"></p>
             <script>
                 function hesaplaEkip() {
                     const s = document.getElementById('ek-sinif').value;
                     const n = Math.max(1, parseInt(document.getElementById('ek-calisan').value || '1', 10));
                     const destekOran = s === 'cok' ? 30 : (s === 'tehlikeli' ? 40 : 50);
                     const ilkOran = s === 'cok' ? 10 : (s === 'tehlikeli' ? 15 : 20);
+                    const ondanAz = n < 10;
                     const destek = Math.max(1, Math.ceil(n / destekOran));
                     const ilk = Math.max(1, Math.ceil(n / ilkOran));
-                    const tem = n <= 50 ? 1 : (n <= 100 ? 2 : (n <= 500 ? 3 : (n <= 1000 ? 4 : (n <= 2000 ? 5 : 6))));
-                    document.getElementById('out-ek-son').textContent = destek + ' kişi';
-                    document.getElementById('out-ek-kur').textContent = destek + ' kişi';
+                    const tem = n < 2 ? 0 : (n <= 50 ? 1 : (n <= 100 ? 2 : (n <= 500 ? 3 : (n <= 1000 ? 4 : (n <= 2000 ? 5 : 6)))));
+                    document.getElementById('out-ek-son').textContent = ondanAz ? 'Toplam 1 destek elemanı' : (destek + ' kişi');
+                    document.getElementById('out-ek-kur').textContent = ondanAz ? '(Söndürme+Kurtarma+Koruma ortak)' : (destek + ' kişi');
                     document.getElementById('out-ek-ilk').textContent = ilk + ' kişi';
-                    document.getElementById('out-ek-tem').textContent = tem + ' kişi';
+                    document.getElementById('out-ek-tem').textContent = tem === 0 ? 'Zorunlu değil (<2 çalışan)' : (tem + ' kişi');
+                    document.getElementById('out-ek-not').textContent = ondanAz
+                        ? 'İşyerlerinde Acil Durumlar Hk. Yönetmelik m.11/4: 10\'dan az çalışanı olan işyerlerinde söndürme, kurtarma ve koruma ekiplerinin tamamı için en az 1 destek elemanı yeterlidir.'
+                        : '';
                 }
                 hesaplaEkip();
             </script>
@@ -217,21 +223,14 @@
             <div class="izgara">
                 <div>
                     <label for="rk-yontem">Değerlendirme Yöntemi</label>
-                    <select id="rk-yontem" onchange="hesaplaRisk()">
+                    <select id="rk-yontem" onchange="yontemDegisti()">
                         <option value="fk" selected>Fine-Kinney (O × F × Ş)</option>
                         <option value="m5">5×5 L-Tipi Matris (O × Ş)</option>
                     </select>
                 </div>
                 <div>
                     <label for="rk-o">Olasılık</label>
-                    <select id="rk-o" onchange="hesaplaRisk()">
-                        <option value="0.2">0.2 (Pratikte İmkânsız)</option>
-                        <option value="0.5">0.5 (Zayıf İhtimal)</option>
-                        <option value="1">1 (Düşük)</option>
-                        <option value="3" selected>3 (Mümkün)</option>
-                        <option value="6">6 (Yüksek)</option>
-                        <option value="10">10 (Çok Yüksek)</option>
-                    </select>
+                    <select id="rk-o" onchange="hesaplaRisk()"></select>
                 </div>
                 <div id="rk-f-kutu">
                     <label for="rk-f">Frekans (Maruziyet)</label>
@@ -246,14 +245,7 @@
                 </div>
                 <div>
                     <label for="rk-s">Şiddet</label>
-                    <select id="rk-s" onchange="hesaplaRisk()">
-                        <option value="1">1 (Hafif / İlkyardım)</option>
-                        <option value="3">3 (Tıbbi Müdahale)</option>
-                        <option value="7">7 (Ciddi Yaralanma)</option>
-                        <option value="15" selected>15 (Ölüm / Ağır Maluliyet)</option>
-                        <option value="40">40 (Birden Fazla Ölüm)</option>
-                        <option value="100">100 (Felaket)</option>
-                    </select>
+                    <select id="rk-s" onchange="hesaplaRisk()"></select>
                 </div>
             </div>
             <div class="izgara" style="margin-top:1.1rem">
@@ -261,15 +253,32 @@
                 <div class="sonuc"><span>Risk Sınıfı &amp; Aksiyon</span><b id="out-rk-seviye" style="font-size:1.05rem">—</b></div>
             </div>
             <script>
+                const FK_O = [['0.2','0.2 (Pratikte İmkânsız)'],['0.5','0.5 (Zayıf İhtimal)'],['1','1 (Düşük)'],['3','3 (Mümkün)'],['6','6 (Yüksek)'],['10','10 (Çok Yüksek)']];
+                const FK_S = [['1','1 (Hafif / İlkyardım)'],['3','3 (Tıbbi Müdahale)'],['7','7 (Ciddi Yaralanma)'],['15','15 (Ölüm / Ağır Maluliyet)'],['40','40 (Birden Fazla Ölüm)'],['100','100 (Felaket)']];
+                const M5_O = [['1','1 (Çok Küçük)'],['2','2 (Küçük)'],['3','3 (Orta)'],['4','4 (Yüksek)'],['5','5 (Çok Yüksek)']];
+                const M5_S = [['1','1 (Çok Hafif)'],['2','2 (Hafif)'],['3','3 (Orta)'],['4','4 (Ciddi)'],['5','5 (Çok Ciddi / Ölüm)']];
+                function doldurSecenek(id, liste, secili) {
+                    const el = document.getElementById(id);
+                    el.innerHTML = liste.map(([v, ad]) => `<option value="${v}" ${v === secili ? 'selected' : ''}>${ad}</option>`).join('');
+                }
+                function yontemDegisti() {
+                    const y = document.getElementById('rk-yontem').value;
+                    if (y === 'm5') {
+                        doldurSecenek('rk-o', M5_O, '3');
+                        doldurSecenek('rk-s', M5_S, '4');
+                    } else {
+                        doldurSecenek('rk-o', FK_O, '3');
+                        doldurSecenek('rk-s', FK_S, '15');
+                    }
+                    hesaplaRisk();
+                }
                 function hesaplaRisk() {
                     const y = document.getElementById('rk-yontem').value;
                     document.getElementById('rk-f-kutu').style.display = y === 'fk' ? 'block' : 'none';
-                    let o = parseFloat(document.getElementById('rk-o').value);
-                    let f = parseFloat(document.getElementById('rk-f').value);
-                    let s = parseFloat(document.getElementById('rk-s').value);
+                    const o = parseFloat(document.getElementById('rk-o').value);
+                    const f = parseFloat(document.getElementById('rk-f').value);
+                    const s = parseFloat(document.getElementById('rk-s').value);
                     if (y === 'm5') {
-                        o = Math.min(5, Math.max(1, Math.round(o)));
-                        s = Math.min(5, Math.max(1, Math.round(s > 5 ? 5 : s)));
                         const skor = o * s;
                         const sev = skor >= 16 ? 'Çok Yüksek (İşi Durdur)' : (skor >= 10 ? 'Yüksek (Acil Önlem)' : (skor >= 5 ? 'Orta (Planlı Önlem)' : 'Düşük (Kabul Edilebilir)'));
                         document.getElementById('out-rk-skor').textContent = skor + ' / 25';
@@ -281,7 +290,7 @@
                         document.getElementById('out-rk-seviye').textContent = sev;
                     }
                 }
-                hesaplaRisk();
+                yontemDegisti();
             </script>
         @endif
     </div>

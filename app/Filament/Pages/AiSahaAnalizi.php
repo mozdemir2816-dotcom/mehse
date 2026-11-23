@@ -269,7 +269,11 @@ class AiSahaAnalizi extends Page
         $dosyalar = array_slice($this->yeniFotograflar, 0, max(0, $bos));
 
         foreach ($dosyalar as $dosya) {
-            $yol = $dosya->store('saha-analiz-foto', 'public');
+            $yol = \App\Support\GuvenliFoto::yukle($dosya, 'saha-analiz-foto');
+            if (! $yol) {
+                Notification::make()->title('Geçersiz fotoğraf dosyası')->body('Yalnız JPG, PNG veya WEBP (en fazla 10 MB) yüklenebilir.')->warning()->send();
+                continue;
+            }
             $this->fotograflar[] = ['yol' => $yol, 'analiz_edildi' => false];
 
             if (count($this->seciliFotograflar) < static::MAX_FOTOGRAF) {

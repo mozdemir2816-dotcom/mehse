@@ -223,8 +223,8 @@ class PkdSicili extends Page
                 FileUpload::make('dosya')
                     ->label('PKD dosyası (PDF / Word)')
                     ->disk('public')
-                    ->directory('pkd')
-                    ->preserveFilenames()
+                    ->directory(fn () => 'pkd/'.($this->firmaId ?: Filament::auth()->id() ?: 0))
+                    ->storeFileNamesIn('dosya_adi_ozgun')
                     ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
                     ->maxSize(30720)
                     ->required(),
@@ -236,7 +236,7 @@ class PkdSicili extends Page
                     Storage::disk('public')->delete($p->dosya_yolu);
                 }
 
-                $p->update(['dosya_yolu' => $data['dosya'], 'dosya_adi' => basename($data['dosya'])]);
+                $p->update(['dosya_yolu' => $data['dosya'], 'dosya_adi' => basename((string) ($data['dosya_adi_ozgun'] ?? basename($data['dosya'])))]);
                 $this->yenile();
 
                 Notification::make()->title('PKD dosyası yüklendi')->success()->send();

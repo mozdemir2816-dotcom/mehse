@@ -118,6 +118,17 @@ class YoklamaPuantaj extends Page
         ];
     }
 
+    private function guvenliTarih(): Carbon
+    {
+        try {
+            return Carbon::parse($this->tarih ?: now()->toDateString());
+        } catch (\Throwable) {
+            $this->tarih = now()->toDateString();
+
+            return now();
+        }
+    }
+
     /** Seçili ay için personel bazlı puantaj toplamları. */
     #[Computed]
     public function aylikPuantaj(): array
@@ -126,7 +137,7 @@ class YoklamaPuantaj extends Page
             return [];
         }
 
-        $ayBas = Carbon::parse($this->tarih)->startOfMonth();
+        $ayBas = $this->guvenliTarih()->startOfMonth();
         $ayBit = $ayBas->copy()->endOfMonth();
 
         $kayitlar = YoklamaKaydi::query()
@@ -156,8 +167,11 @@ class YoklamaPuantaj extends Page
             return;
         }
 
+        abort_unless($this->firma->calisanlar()->whereKey($calisanId)->exists(), 403);
+
+        $tarih = $this->guvenliTarih()->toDateString();
         YoklamaKaydi::updateOrCreate(
-            ['firma_id' => $this->firma->id, 'calisan_id' => $calisanId, 'tarih' => $this->tarih],
+            ['firma_id' => $this->firma->id, 'calisan_id' => $calisanId, 'tarih' => $tarih],
             ['durum' => $durum, 'kaydeden' => Filament::auth()->user()?->name]
         );
 
@@ -170,10 +184,11 @@ class YoklamaPuantaj extends Page
             return;
         }
 
+        $tarih = $this->guvenliTarih()->toDateString();
         $kaydeden = Filament::auth()->user()?->name;
         foreach ($this->calisanlar as $c) {
             YoklamaKaydi::updateOrCreate(
-                ['firma_id' => $this->firma->id, 'calisan_id' => $c->id, 'tarih' => $this->tarih],
+                ['firma_id' => $this->firma->id, 'calisan_id' => $c->id, 'tarih' => $tarih],
                 ['durum' => 'mevcut', 'kaydeden' => $kaydeden]
             );
         }
@@ -188,15 +203,16 @@ class YoklamaPuantaj extends Page
             return null;
         }
 
-        $ay = Carbon::parse($this->tarih)->format('Y-m');
+        $ay = $this->guvenliTarih()->format('Y-m');
         $satirlar = $this->aylikPuantaj;
+        $guvenliHucre = fn (string $v): string => preg_match('/^[=+\-@\t\r]/', $v) ? "'".$v : $v;
 
-        return response()->streamDownload(function () use ($satirlar): void {
+        return response()->streamDownload(function () use ($satirlar, $guvenliHucre): void {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['Ad Soyad', 'Görev', 'Mevcut', 'İzinli', 'Raporlu', 'Görevli', 'Gelmedi'], ';');
             foreach ($satirlar as $s) {
-                fputcsv($out, [$s['ad_soyad'], $s['gorev'], $s['mevcut'], $s['izinli'], $s['raporlu'], $s['gorevli'], $s['gelmedi']], ';');
+                fputcsv($out, [$guvenliHucre((string) $s['ad_soyad']), $guvenliHucre((string) $s['gorev']), $s['mevcut'], $s['izinli'], $s['raporlu'], $s['gorevli'], $s['gelmedi']], ';');
             }
             fclose($out);
         }, 'puantaj-'.Str::slug($this->firma->unvan ?: 'firma').'-'.$ay.'.csv', ['Content-Type' => 'text/csv; charset=utf-8']);

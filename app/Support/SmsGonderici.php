@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -19,15 +20,41 @@ class SmsGonderici
         'iletimerkezi' => 'İleti Merkezi API',
     ];
 
-    /** @return array{surucu: string, kullanici: string, sifre: string, baslik: string} */
+    public static function sifreSifrele(string $duz): string
+    {
+        $duz = trim($duz);
+
+        return $duz === '' ? '' : 'enc:'.Crypt::encryptString($duz);
+    }
+
+    public static function sifreCoz(string $sakli): string
+    {
+        if ($sakli === '') {
+            return '';
+        }
+
+        if (str_starts_with($sakli, 'enc:')) {
+            try {
+                return Crypt::decryptString(substr($sakli, 4));
+            } catch (\Throwable) {
+                return '';
+            }
+        }
+
+        return $sakli;
+    }
+
+    /** @return array{surucu: string, kullanici: string, sifre: string, sifre_kayitli: bool, baslik: string} */
     public static function ayarlar(User $user): array
     {
         $ham = (array) (($user->ayarlar ?? [])['sms_ayar'] ?? []);
+        $cozulmus = self::sifreCoz((string) ($ham['sifre'] ?? ''));
 
         return [
             'surucu' => (string) ($ham['surucu'] ?? 'log'),
             'kullanici' => (string) ($ham['kullanici'] ?? ''),
-            'sifre' => (string) ($ham['sifre'] ?? ''),
+            'sifre' => $cozulmus,
+            'sifre_kayitli' => $cozulmus !== '',
             'baslik' => (string) ($ham['baslik'] ?? 'MEHSE ISG'),
         ];
     }
@@ -50,7 +77,7 @@ class SmsGonderici
 
         try {
             if ($ayar['surucu'] === 'netgsm') {
-                $yanit = Http::timeout(8)->get('https://api.netgsm.com.tr/sms/send/get', [
+                $yanit = Http::timeout(8)->asForm()->post('https://api.netgsm.com.tr/sms/send/get', [
                     'usercode' => $ayar['kullanici'],
                     'password' => $ayar['sifre'],
                     'gsmno' => $tel,
@@ -65,7 +92,7 @@ class SmsGonderici
             }
 
             if ($ayar['surucu'] === 'iletimerkezi') {
-                $yanit = Http::timeout(8)->get('https://api.iletimerkezi.com/v1/send-sms/get/', [
+                $yanit = Http::timeout(8)->asForm()->post('https://api.iletimerkezi.com/v1/send-sms/get/', [
                     'key' => $ayar['kullanici'],
                     'hash' => $ayar['sifre'],
                     'text' => $metin,

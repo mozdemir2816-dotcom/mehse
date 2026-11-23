@@ -1982,10 +1982,11 @@ class RiskSihirbazi extends Page
         }
 
         $firma = Firma::where('user_id', Filament::auth()->id())->findOrFail($this->firmaId);
+        $guvenliIguId = ($this->iguId && array_key_exists($this->iguId, $this->iguSecenekleri)) ? $this->iguId : null;
 
         $rd = new RiskDegerlendirmesi([
             'firma_id' => $firma->id,
-            'igu_id' => $this->iguId,
+            'igu_id' => $guvenliIguId,
             'yontem' => $this->yontem,
             'rapor_tarihi' => $this->raporTarihi,
             'gecerlilik_tarihi' => $this->gecerlilikTarihi,
@@ -2070,7 +2071,8 @@ class RiskSihirbazi extends Page
                         try {
                             $sonuc = \App\Support\GeminiSahaAnalizi::analizEt([$yol], $konu ?: ($this->firma?->unvan ?? 'Saha'));
                             foreach ((array) ($sonuc['bulgular'] ?? []) as $b) {
-                                $this->secilenler[] = [
+                                $this->secilenler[] = \App\Support\RiskKutuphanesi::bosMadde([
+                                    'anahtar' => 'ai_'.\Illuminate\Support\Str::random(10),
                                     'bolum' => $b['bolum'] ?? ($konu ?: 'Saha'),
                                     'faaliyet' => $b['kategori'] ?? 'Saha Gözlemi',
                                     'tehlike' => $b['tehlike'] ?? ($b['uygunsuzluk'] ?? 'Tespit edilen tehlike'),
@@ -2083,7 +2085,7 @@ class RiskSihirbazi extends Page
                                     'siddet' => $this->fineKinney ? 7 : max(1, min(5, (int) ($b['siddet'] ?? 3))),
                                     'sorumlu' => 'İşveren / Saha Sorumlusu',
                                     'termin' => $this->varsayilanTermin,
-                                ];
+                                ]);
                                 $eklenen++;
                             }
                         } catch (\Throwable) {
@@ -2098,7 +2100,8 @@ class RiskSihirbazi extends Page
                             try {
                                 $ai = \App\Support\GeminiRiskDanismani::oner($konu, [$konu], ['Odak konu' => $konu], $mevcut);
                                 foreach ($ai as $r) {
-                                    $this->secilenler[] = [
+                                    $this->secilenler[] = \App\Support\RiskKutuphanesi::bosMadde([
+                                        'anahtar' => 'ai_'.\Illuminate\Support\Str::random(10),
                                         'bolum' => $r['bolum'] ?? $konu,
                                         'faaliyet' => $r['faaliyet'] ?? $konu,
                                         'tehlike' => $r['tehlike'] ?? $konu.' kaynaklı tehlike',
@@ -2110,7 +2113,7 @@ class RiskSihirbazi extends Page
                                         'siddet' => $this->fineKinney ? 7 : 4,
                                         'sorumlu' => 'İşveren / İSG Sorumlusu',
                                         'termin' => $this->varsayilanTermin,
-                                    ];
+                                    ]);
                                     $eklenen++;
                                 }
                             } catch (\Throwable) {
@@ -2124,18 +2127,20 @@ class RiskSihirbazi extends Page
                                 ->where(function ($q) use ($kelimeler, $konu): void {
                                     $q->where('tehlike', 'like', '%'.$konu.'%')
                                         ->orWhere('risk', 'like', '%'.$konu.'%')
-                                        ->orWhere('kategori', 'like', '%'.$konu.'%');
+                                        ->orWhereHas('kategori', fn ($k) => $k->where('ad', 'like', '%'.$konu.'%'));
                                     foreach (array_slice($kelimeler, 0, 5) as $k) {
                                         $q->orWhere('tehlike', 'like', '%'.$k.'%')
                                             ->orWhere('faaliyet', 'like', '%'.$k.'%')
-                                            ->orWhere('kategori', 'like', '%'.$k.'%');
+                                            ->orWhereHas('kategori', fn ($kq) => $kq->where('ad', 'like', '%'.$k.'%'));
                                     }
                                 })
                                 ->limit(8)
                                 ->get();
 
                             foreach ($eslesenler as $t) {
-                                $this->secilenler[] = [
+                                $this->secilenler[] = \App\Support\RiskKutuphanesi::bosMadde([
+                                    'anahtar' => 't_'.$t->id.'_'.\Illuminate\Support\Str::random(6),
+                                    'tehlike_id' => $t->id,
                                     'bolum' => $konu,
                                     'faaliyet' => $t->faaliyet ?: $konu,
                                     'tehlike' => $t->tehlike,
@@ -2147,7 +2152,7 @@ class RiskSihirbazi extends Page
                                     'siddet' => $this->fineKinney ? 7 : 4,
                                     'sorumlu' => 'İşveren / Saha Sorumlusu',
                                     'termin' => $this->varsayilanTermin,
-                                ];
+                                ]);
                                 $eklenen++;
                             }
                         }

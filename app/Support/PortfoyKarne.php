@@ -945,6 +945,12 @@ class PortfoyKarne
         }
 
         foreach (\App\Models\SaglikGozetimi::where('firma_id', $firma->id)->value('satirlar') ?? [] as $s) {
+            // 6331 m.15: Yalnız hekimce "Uygun" veya "Şartlı" onaylanmış periyodik/işe giriş muayeneleri geçerlidir;
+            // "uygun_degil" veya "bekliyor" sonuçlu kayıtlar asla geçerli muayene sayılmaz.
+            $sonucDegeri = (string) ($s['sonuc'] ?? '');
+            if ($sonucDegeri !== '' && ! in_array($sonucDegeri, ['uygun', 'sartli'], true)) {
+                continue;
+            }
             $id = $eslestir($s['calisan_id'] ?? null, null, $s['calisan_adi'] ?? null);
             $son = filled($s['sonraki_tarih'] ?? null) ? Carbon::parse($s['sonraki_tarih'])
                 : (filled($s['tarih'] ?? null) ? Carbon::parse($s['tarih'])->addYears($saglikYil) : null);

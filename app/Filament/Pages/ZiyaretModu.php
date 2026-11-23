@@ -372,7 +372,7 @@ class ZiyaretModu extends Page
     {
         $foto = $this->kapanisFoto[$anahtar] ?? null;
 
-        return $foto instanceof TemporaryUploadedFile ? $foto->store($klasor, 'public') : null;
+        return \App\Support\GuvenliFoto::yukle($foto, $klasor);
     }
 
     /** Saha bulgusunu sahada "giderildi" olarak kapatır (isteğe bağlı fotoğraf + not). */

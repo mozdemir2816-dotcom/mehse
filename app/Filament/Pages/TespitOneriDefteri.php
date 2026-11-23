@@ -227,7 +227,7 @@ class TespitOneriDefteri extends Page
             'oneri' => $this->serbestOneri,
             'dayanak' => null,
             'oncelik' => 'orta',
-            'foto_yolu' => $this->yeniFoto?->store('tespit-oneri-foto', 'public'),
+            'foto_yolu' => \App\Support\GuvenliFoto::yukle($this->yeniFoto, 'tespit-oneri-foto'),
         ];
         $d->update(['maddeler' => $maddeler]);
 

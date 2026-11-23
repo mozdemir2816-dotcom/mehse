@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\WithFileUploads;
 use UnitEnum;
@@ -63,6 +64,7 @@ class KontrolKarti extends Page
     /** Yeni yüklenen fotoğraf (Livewire geçici dosya). */
     public $foto = null;
 
+    #[Locked]
     public ?string $fotoYolu = null;
 
     /** @var array<int, array<string, mixed>> */

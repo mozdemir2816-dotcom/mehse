@@ -127,13 +127,24 @@ class UzaktanEgitimSorulari extends Page implements HasTable
         ];
     }
 
+    private function paketDuzenlenebilirMi(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $this->paket !== null
+            && $user !== null
+            && ($this->paket->user_id === $user->id || ($user instanceof \App\Models\User && $user->sahipMi()));
+    }
+
     public function table(Table $table): Table
     {
+        $duzenlenebilir = fn (): bool => $this->paketDuzenlenebilirMi();
+
         return $table
             ->query(fn (): Builder => EgitimPaketiSorusu::query()
                 ->where('egitim_paketi_id', $this->paket?->id ?? 0)
                 ->orderBy('id'))
-            ->heading(fn () => $this->paket ? 'Soru havuzu — '.$this->paket->ad : 'Önce bir paket seçin')
+            ->heading(fn () => $this->paket ? 'Soru havuzu — '.$this->paket->ad.($this->paketDuzenlenebilirMi() ? '' : ' (Salt okunur / paylaşımlı)') : 'Önce bir paket seçin')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(50)
             ->emptyStateHeading('Bu pakette henüz soru yok')
@@ -144,12 +155,15 @@ class UzaktanEgitimSorulari extends Page implements HasTable
                     ->description(fn (EgitimPaketiSorusu $s) => 'Doğru: '.chr(65 + (int) $s->dogru_index).') '.$s->dogruSecenek()),
                 SelectColumn::make('kullanim')->label('Hangi sınavda')
                     ->options(EgitimPaketiSorusu::KULLANIMLAR)->selectablePlaceholder(false)
+                    ->disabled(fn () => ! $this->paketDuzenlenebilirMi())
                     ->afterStateUpdated(fn () => $this->ozetiTazele()),
                 SelectColumn::make('modul')->label('Konu')
                     ->options(EgitimPaketiSorusu::KONULAR)->placeholder('—')
+                    ->disabled(fn () => ! $this->paketDuzenlenebilirMi())
                     ->afterStateUpdated(fn () => $this->ozetiTazele()),
                 SelectColumn::make('zorluk')->label('Zorluk')
-                    ->options(EgitimPaketiSorusu::ZORLUKLAR)->placeholder('—'),
+                    ->options(EgitimPaketiSorusu::ZORLUKLAR)->placeholder('—')
+                    ->disabled(fn () => ! $this->paketDuzenlenebilirMi()),
             ])
             ->filters([
                 SelectFilter::make('kullanim')->label('Sınav')->options(EgitimPaketiSorusu::KULLANIMLAR),
@@ -158,18 +172,22 @@ class UzaktanEgitimSorulari extends Page implements HasTable
             ])
             ->headerActions([
                 CreateAction::make()->label('Soru Ekle')->icon('heroicon-o-plus')
-                    ->visible(fn () => $this->paket !== null)
+                    ->visible($duzenlenebilir)
                     ->schema($this->soruFormu())
-                    ->using(fn (array $data) => $this->paket->sorular()->create($data))
+                    ->using(function (array $data) {
+                        abort_unless($this->paketDuzenlenebilirMi(), 403);
+
+                        return $this->paket->sorular()->create($data);
+                    })
                     ->after(fn () => $this->ozetiTazele())
                     ->createAnother(true),
             ])
             ->recordActions([
-                EditAction::make()->label('Düzenle')->schema($this->soruFormu()),
-                DeleteAction::make()->label('Sil')->after(fn () => $this->ozetiTazele()),
+                EditAction::make()->label('Düzenle')->visible($duzenlenebilir)->schema($this->soruFormu()),
+                DeleteAction::make()->label('Sil')->visible($duzenlenebilir)->after(fn () => $this->ozetiTazele()),
             ])
             ->toolbarActions([
-                DeleteBulkAction::make()->after(fn () => $this->ozetiTazele()),
+                DeleteBulkAction::make()->visible($duzenlenebilir)->after(fn () => $this->ozetiTazele()),
             ]);
     }
 }

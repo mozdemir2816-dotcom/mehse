@@ -114,9 +114,9 @@ class KazaIstatistigiUretici
         }
         $r++;
 
-        $s->setCellValue("A{$r}", 'Sıklık Oranı = (Kaza Sayısı × '.number_format($kayit->carpan(), 0, ',', '.').') / Toplam Çalışma Saati');
+        $s->setCellValue("A{$r}", 'Sıklık Oranı (KSO) = (Kaza Sayısı × '.number_format($kayit->carpan(), 0, ',', '.').') / Toplam Çalışma Saati');
         $r++;
-        $s->setCellValue("A{$r}", 'Ağırlık Oranı = (Toplam Kayıp Gün × '.number_format($kayit->carpan(), 0, ',', '.').') / Toplam Çalışma Saati');
+        $s->setCellValue("A{$r}", 'Ağırlık Oranı (KAO) = (Toplam Kayıp Gün × '.number_format($kayit->agirlikCarpan(), 0, ',', '.').') / Toplam Çalışma Saati');
         $s->getStyle('A'.($r - 1).":A{$r}")->getFont()->setItalic(true)->setSize(8);
 
         $tmp = tempnam(sys_get_temp_dir(), 'kzi').'.xlsx';

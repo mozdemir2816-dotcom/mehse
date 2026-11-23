@@ -529,7 +529,7 @@ class CezaTeblig extends Page
                 ->outlined()
                 ->visible(fn () => $this->firma !== null && $this->aktifSekme === 'tutanak')
                 ->action(function (): void {
-                    $this->imzaDurumu = 'imtina';
+                    $this->imzaDurumu = 'imtina_etti';
                     Notification::make()
                         ->title('Tutanak "Çalışan İmzadan İmtina Etti" olarak işaretlendi')
                         ->body('Hukuki geçerlilik için Tanıklar bölümüne en az 2 şahit eklemeniz önerilir.')

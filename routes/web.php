@@ -270,7 +270,7 @@ Route::post('/mehse/mevzuat-sor', function (Request $request) {
 })->middleware(['auth', 'throttle:30,1'])->name('mehse.mevzuat.sor');
 
 // Paylaşımlı sunucuda public_html/storage sembolik bağlantısı eksik olduğunda public diskindeki
-// saha/DÖF fotoğrafları ve görsellerin 404 vermemesi için oturum korumalı güvenli akış.
+// saha/DÖF fotoğrafları ve görsellerin 404 vermemesi için oturum + kiracı korumalı güvenli akış.
 Route::get('/storage/{yol}', function (string $yol) {
     $temiz = ltrim($yol, '/');
     abort_if(
@@ -284,8 +284,66 @@ Route::get('/storage/{yol}', function (string $yol) {
     $uzanti = strtolower(pathinfo($temiz, PATHINFO_EXTENSION));
     abort_unless(in_array($uzanti, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'pdf'], true), 404);
 
+    // Kiracı (multi-tenant) sahiplik doğrulaması: hassas firma/kullanıcı klasörleri yalnız yetkili hesaba açılır.
+    $webUser = auth('web')->user();
+    $isyeriFirma = auth('isyeri')->user();
+    $calisan = auth('calisan')->user();
+    $sahip = $webUser instanceof User && $webUser->sahipMi();
+
+    $firmaErisimliMi = function (int $firmaId) use ($webUser, $isyeriFirma, $calisan, $sahip): bool {
+        if ($sahip) {
+            return true;
+        }
+        if ($webUser instanceof User) {
+            return $webUser->erisilebilirFirmaIdleri()->map(fn ($id) => (int) $id)->contains($firmaId);
+        }
+        if ($isyeriFirma instanceof \App\Models\Firma) {
+            return (int) $isyeriFirma->id === $firmaId;
+        }
+        if ($calisan instanceof \App\Models\Calisan) {
+            return (int) $calisan->firma_id === $firmaId;
+        }
+
+        return false;
+    };
+
+    if (! $sahip) {
+        // Firma ID bazlı klasörler: arsiv/{firmaId}/..., sds/{firmaId}/..., taseron/{firmaId}/..., pkd/{firmaId}/..., periyodik-kontrol/{firmaId}/...
+        if (preg_match('#^(arsiv|sds|taseron|pkd|periyodik-kontrol)/(\d+)/#', $temiz, $m)) {
+            abort_unless($firmaErisimliMi((int) $m[2]), 403);
+        }
+
+        // Kullanıcı ID bazlı klasörler: arsiv/gecici/{userId}/..., toolbox-konusmalari/{userId}/..., afis/{userId}/...
+        if (preg_match('#^(arsiv/gecici|toolbox-konusmalari|afis)/(\d+)/#', $temiz, $m)) {
+            abort_unless($webUser instanceof User && (int) $webUser->id === (int) $m[2], 403);
+        }
+
+        // Yalnız yetkili panel kullanıcılarına (çalışan/işyeri portalına kapalı) özel hassas klasörler
+        if (preg_match('#^(uzman-imza|isveren-imza|taseron-basvuru|canli-imzalar|isg-katip)/#', $temiz)) {
+            abort_unless($webUser instanceof User, 403);
+
+            if (str_starts_with($temiz, 'uzman-imza/') && $webUser->imza_yolu !== $temiz && $webUser->kase_yolu !== $temiz) {
+                $profSahip = \App\Models\IsgProfesyoneli::where('user_id', $webUser->id)
+                    ->where(fn ($q) => $q->where('imza_yolu', $temiz)->orWhere('kase_yolu', $temiz))
+                    ->exists();
+                abort_unless($profSahip, 403);
+            }
+        }
+    }
+
     $disk = \Illuminate\Support\Facades\Storage::disk('public');
     abort_unless($disk->exists($temiz), 404);
 
-    return response()->file($disk->path($temiz), ['Cache-Control' => 'private, max-age=3600']);
+    $basliklar = [
+        'Cache-Control' => 'private, max-age=3600',
+        'X-Content-Type-Options' => 'nosniff',
+    ];
+
+    // SVG inline script/XSS vektörünü tamamen etkisizleştir.
+    if ($uzanti === 'svg') {
+        $basliklar['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+        $basliklar['Content-Disposition'] = 'attachment; filename="'.basename($temiz).'"';
+    }
+
+    return response()->file($disk->path($temiz), $basliklar);
 })->where('yol', '.*')->middleware('auth:web,isyeri,calisan')->name('mehse.storage.dosya');

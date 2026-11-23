@@ -178,12 +178,12 @@ class AcilDurumHazirlik
         $ekipler = $plan->ekipListesi();
         $bosEkip = collect($ekipler)->filter(fn ($l) => $l === [])->keys()->map(fn ($k) => config('isg.acil_durum.ekipler.'.$k))->all();
 
-        // Tatbikat: Tatbikat modülündeki "yapıldı" kaydı öncelikli, yoksa elle girilen tarih
-        $sonTatbikat = TatbikatTutanagi::query()->where('firma_id', $plan->firma_id)
-            ->where(fn ($q) => $q->whereNull('durum')->orWhere('durum', 'tamamlandi'))
+        // Tatbikat: Tatbikat modülündeki "yapıldı / takip" (ve geriye dönük "tamamlandi") kaydı öncelikli, yoksa elle girilen tarih
+        $modulSonTatbikat = TatbikatTutanagi::query()->where('firma_id', $plan->firma_id)
+            ->where(fn ($q) => $q->whereNull('durum')->orWhereIn('durum', [...TatbikatTutanagi::YAPILMIS, 'tamamlandi']))
             ->whereNotNull('tatbikat_tarihi')->max('tatbikat_tarihi');
-        $sonTatbikat = $sonTatbikat ? Carbon::parse($sonTatbikat) : (filled($u['son_tatbikat']) ? Carbon::parse($u['son_tatbikat']) : null);
-        $tatbikatKaynak = $sonTatbikat && TatbikatTutanagi::query()->where('firma_id', $plan->firma_id)->exists() ? 'Tatbikat modülü' : 'elle girilen tarih';
+        $sonTatbikat = $modulSonTatbikat ? Carbon::parse($modulSonTatbikat) : (filled($u['son_tatbikat']) ? Carbon::parse($u['son_tatbikat']) : null);
+        $tatbikatKaynak = $modulSonTatbikat ? 'Tatbikat modülü' : 'elle girilen tarih';
 
         // Tahliye planı: yüklenen görsel (içeriği denetlenemez) ya da editör
         // krokisi — editör krokisinde Md.12(1)(f) zorunlu unsurları aranır.

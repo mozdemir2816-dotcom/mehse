@@ -631,7 +631,7 @@ class IsKazasiRaporu extends Page
             'isyeri_hekimi_kase' => $this->isyeriHekimiDahil ? $this->firma->isyeriHekimi?->kase_gorseli : null,
         ];
 
-        $yeniFoto = collect($this->yeniFotograflar)->map(fn ($f) => $f->store('is-kazasi-foto', 'public'))->all();
+        $yeniFoto = collect($this->yeniFotograflar)->map(fn ($f) => \App\Support\GuvenliFoto::yukle($f, 'is-kazasi-foto'))->filter()->values()->all();
 
         if ($this->duzenlenenId && $kayit = $this->firma->isKazasiRaporlari()->find($this->duzenlenenId)) {
             $veri['fotograflar'] = [...($kayit->fotograflar ?? []), ...$yeniFoto];

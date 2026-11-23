@@ -205,11 +205,13 @@ class ZiyaretciYonetimi extends Page
             'adSoyad' => ['required', 'string', 'max:255'],
             'baslangic' => ['required', 'date'],
             'bitis' => ['required', 'date', 'after:baslangic'],
+            'brifingVideoUrl' => ['nullable', 'url:http,https', 'max:500'],
         ], [], [
             'formFirmaId' => 'işyeri',
             'adSoyad' => 'ad soyad',
             'baslangic' => 'geçerlilik başlangıcı',
             'bitis' => 'geçerlilik bitişi',
+            'brifingVideoUrl' => 'brifing video bağlantısı',
         ]);
 
         abort_unless(array_key_exists($this->formFirmaId, $this->firmalar), 403);

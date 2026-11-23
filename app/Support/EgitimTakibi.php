@@ -84,8 +84,15 @@ class EgitimTakibi
             $tc = static::tcAnahtari($c->tc);
             $ad = static::adAnahtari($c->ad_soyad);
 
+            $sonTemelKayitTarihi = $c->egitimKayitlari
+                ->where('tur', static::TEMEL_TUR)
+                ->pluck('tarih')
+                ->filter()
+                ->sortByDesc(fn ($t) => $t->timestamp)
+                ->first();
+
             $adaylar = collect([
-                ['tarih' => $c->egitimKayitlari->firstWhere('tur', static::TEMEL_TUR)?->tarih, 'kaynak' => 'Eğitim kaydı'],
+                ['tarih' => $sonTemelKayitTarihi, 'kaynak' => 'Eğitim kaydı'],
                 ['tarih' => ($tc !== '' ? ($katilimTc[$tc] ?? null) : null) ?? ($katilimAd[$ad] ?? null), 'kaynak' => 'Yüz yüze katılım'],
             ])->filter(fn ($a) => $a['tarih'] !== null)->sortByDesc(fn ($a) => $a['tarih']->timestamp);
 

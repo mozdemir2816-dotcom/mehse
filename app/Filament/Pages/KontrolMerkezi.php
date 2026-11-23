@@ -425,7 +425,7 @@ class KontrolMerkezi extends Page
         return \App\Support\OsgbKadroAnalizi::uzmanKarneleri((int) Filament::auth()->id());
     }
 
-    /** Ekip içi duyuru ve talimatlar (okundu/onaylandı takipli — F6). */
+    /** Ekip içi duyuru ve talimatlar (okundu/onaylandı takipli — F6, kiracı izole). */
     #[Computed]
     public function ekipDuyurulari()
     {
@@ -433,7 +433,13 @@ class KontrolMerkezi extends Page
             return collect();
         }
 
+        $user = Filament::auth()->user();
+        if (! $user instanceof \App\Models\User) {
+            return collect();
+        }
+
         return \App\Models\EkipDuyurusu::query()
+            ->whereIn('user_id', \App\Models\EkipDuyurusu::ekipKullaniciIdleri($user))
             ->with('gonderen:id,name')
             ->latest('id')
             ->limit(20)
@@ -473,9 +479,16 @@ class KontrolMerkezi extends Page
 
     public function ekipDuyurusuOkundu(int $id): void
     {
-        $duyuru = \App\Models\EkipDuyurusu::find($id);
         $user = Filament::auth()->user();
-        if ($duyuru && $user instanceof \App\Models\User) {
+        if (! $user instanceof \App\Models\User) {
+            return;
+        }
+
+        $duyuru = \App\Models\EkipDuyurusu::query()
+            ->whereIn('user_id', \App\Models\EkipDuyurusu::ekipKullaniciIdleri($user))
+            ->find($id);
+
+        if ($duyuru) {
             $duyuru->okunduIsaretle($user);
             unset($this->ekipDuyurulari);
             Notification::make()->title('Okundu & onaylandı olarak işlendi')->success()->send();

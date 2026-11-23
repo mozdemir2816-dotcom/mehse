@@ -397,7 +397,13 @@ class SoruBankasi extends Page
 
     private function sahipMi(SoruBankasiSorusu $s): bool
     {
-        return $s->user_id === null || $s->user_id === Filament::auth()->id();
+        $user = Filament::auth()->user();
+
+        if ($s->user_id === null) {
+            return $user instanceof \App\Models\User && $user->sahipMi();
+        }
+
+        return $s->user_id === $user?->id;
     }
 
     private function kendiSorusu(int $id): ?SoruBankasiSorusu
@@ -485,7 +491,7 @@ class SoruBankasi extends Page
             ->when($this->konuFiltre, fn ($q) => $q->where('konu', $this->konuFiltre))
             ->get();
 
-        $uygun = $adaylar->filter(fn ($s) => static::yayimlanabilirMi($s));
+        $uygun = $adaylar->filter(fn ($s) => $this->sahipMi($s) && static::yayimlanabilirMi($s));
         $uygun->each(fn ($s) => $this->yayimla($s));
 
         $this->yenile();

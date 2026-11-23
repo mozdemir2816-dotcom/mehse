@@ -67,8 +67,8 @@ class KazaIstatistikleriTest extends TestCase
         $this->assertSame(96000, $kayit->toplamCalismaSaati());
         // Sıklık = 2 × 1.000.000 / 96.000 = 20.83
         $this->assertSame(20.83, $kayit->siklikOrani());
-        // Ağırlık = 20 × 1.000.000 / 96.000 = 208.33
-        $this->assertSame(208.33, $kayit->agirlikOrani());
+        // Ağırlık (ILO/SGK × 1.000) = 20 × 1.000 / 96.000 = 0.21
+        $this->assertSame(0.21, $kayit->agirlikOrani());
     }
 
     public function test_calisma_saati_yoksa_oranlar_null(): void

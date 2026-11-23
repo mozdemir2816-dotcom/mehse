@@ -22,6 +22,8 @@ final class ArsivYukleyici
 {
     public const GORSEL_UZANTILARI = ['jpg', 'jpeg', 'png', 'webp'];
 
+    public const IZINLI_UZANTILAR = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip'];
+
     /**
      * @param  array<int, string>  $yollar  public diskteki geçici yollar
      * @param  array<string, ?string>  $adlar  yol → özgün dosya adı
@@ -30,7 +32,15 @@ final class ArsivYukleyici
     public static function birlestir(array $yollar, Firma $firma, string $baslik, array $adlar = []): ?array
     {
         $disk = Storage::disk('public');
-        $yollar = array_values(array_filter($yollar, fn ($y) => is_string($y) && $disk->exists($y)));
+        $yollar = array_values(array_filter($yollar, function ($y) use ($disk): bool {
+            if (! is_string($y) || str_contains($y, '..') || str_contains($y, "\0") || ! $disk->exists($y)) {
+                return false;
+            }
+
+            $uzanti = strtolower(pathinfo($y, PATHINFO_EXTENSION));
+
+            return in_array($uzanti, self::IZINLI_UZANTILAR, true);
+        }));
 
         if (! $yollar) {
             return null;
@@ -47,19 +57,22 @@ final class ArsivYukleyici
             ])->setPaper('a4')->output();
             $ad .= '.pdf';
         } elseif (count($yollar) > 1) {
-            $zipYolu = tempnam(sys_get_temp_dir(), 'arz').'.zip';
+            $baz = tempnam(sys_get_temp_dir(), 'arz');
+            $zipYolu = $baz.'.zip';
+            @unlink($baz);
             $zip = new ZipArchive;
             $zip->open($zipYolu, ZipArchive::CREATE);
             foreach ($yollar as $i => $y) {
-                $zip->addFile($disk->path($y), ($i + 1).'-'.($adlar[$y] ?? basename($y)));
+                $zip->addFile($disk->path($y), ($i + 1).'-'.basename((string) ($adlar[$y] ?? basename($y))));
             }
             $zip->close();
             $icerik = (string) file_get_contents($zipYolu);
             @unlink($zipYolu);
             $ad .= '.zip';
         } else {
-            $ozgun = (string) (($adlar[$yollar[0]] ?? null) ?: basename($yollar[0]));
-            $yol = $klasor.'/'.Str::random(8).'-'.(Str::slug(pathinfo($ozgun, PATHINFO_FILENAME)) ?: 'belge').'.'.strtolower(pathinfo($yollar[0], PATHINFO_EXTENSION));
+            $ozgun = basename((string) (($adlar[$yollar[0]] ?? null) ?: basename($yollar[0])));
+            $uzanti = strtolower(pathinfo($yollar[0], PATHINFO_EXTENSION));
+            $yol = $klasor.'/'.Str::random(8).'-'.(Str::slug(pathinfo($ozgun, PATHINFO_FILENAME)) ?: 'belge').'.'.$uzanti;
             $disk->move($yollar[0], $yol);
 
             return ['dosya_adi' => $ozgun, 'dosya_yolu' => $yol, 'boyut' => $disk->size($yol)];

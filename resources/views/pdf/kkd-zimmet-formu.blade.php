@@ -123,8 +123,9 @@
                     Adı Soyadı: {{ $c['ad_soyad'] ?? '' }}<br>
                     Görev: {{ $c['departman'] ?? '' }}<br>
                     İmza:
-                    @if (! empty($c['imza'] ?? $canliImza ?? null))
-                        <img src="{{ $c['imza'] ?? $canliImza }}" style="max-height:38px;vertical-align:middle">
+                    @php $kisiImza = $c['imza'] ?? (count($form->calisanlar ?? []) === 1 ? ($canliImza ?? null) : null); @endphp
+                    @if (! empty($kisiImza))
+                        <img src="{{ $kisiImza }}" style="max-height:38px;vertical-align:middle">
                     @endif
                     <br>
                     Tarih: {{ $form->teslim_tarihi?->format('d.m.Y') ?? '' }}

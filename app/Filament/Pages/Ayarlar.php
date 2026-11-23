@@ -356,7 +356,12 @@ class Ayarlar extends Page
                 ->modalHeading('Opsiyonel SMS Bildirim Entegrasyonu (Netgsm / İleti Merkezi)')
                 ->modalDescription('WhatsApp kısayollarının yanında çalışanlara uzaktan eğitim veya randevu SMS\'i göndermek için SMS sağlayıcınızı yapılandırabilirsiniz.')
                 ->modalSubmitActionLabel('Ayarları Kaydet')
-                ->fillForm(fn (): array => \App\Support\SmsGonderici::ayarlar($this->kullanici()))
+                ->fillForm(function (): array {
+                    $ayar = \App\Support\SmsGonderici::ayarlar($this->kullanici());
+                    $ayar['sifre'] = '';
+
+                    return $ayar;
+                })
                 ->schema([
                     \Filament\Forms\Components\Select::make('surucu')
                         ->label('SMS Sağlayıcı')
@@ -366,6 +371,7 @@ class Ayarlar extends Page
                         ->label('API Kullanıcı Kodu / Anahtar'),
                     \Filament\Forms\Components\TextInput::make('sifre')
                         ->label('API Şifre / Hash')
+                        ->placeholder('Kayıtlı şifreyi korumak için boş bırakın')
                         ->password()
                         ->revealable(),
                     \Filament\Forms\Components\TextInput::make('baslik')
@@ -378,11 +384,19 @@ class Ayarlar extends Page
                 ])
                 ->action(function (array $data): void {
                     $user = $this->kullanici();
+                    $mevcutHam = (string) ((($user->ayarlar ?? [])['sms_ayar'] ?? [])['sifre'] ?? '');
+                    $yeniSifre = trim((string) ($data['sifre'] ?? ''));
+                    $saklanacakSifre = $yeniSifre !== ''
+                        ? \App\Support\SmsGonderici::sifreSifrele($yeniSifre)
+                        : ($mevcutHam !== '' && ! str_starts_with($mevcutHam, 'enc:')
+                            ? \App\Support\SmsGonderici::sifreSifrele($mevcutHam)
+                            : $mevcutHam);
+
                     KullaniciAyarlari::kaydet($user, [
                         'sms_ayar' => [
                             'surucu' => $data['surucu'] ?? 'log',
                             'kullanici' => trim((string) ($data['kullanici'] ?? '')),
-                            'sifre' => trim((string) ($data['sifre'] ?? '')),
+                            'sifre' => $saklanacakSifre,
                             'baslik' => trim((string) ($data['baslik'] ?? 'MEHSE ISG')),
                         ],
                     ]);

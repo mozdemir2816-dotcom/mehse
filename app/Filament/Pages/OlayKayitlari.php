@@ -665,7 +665,7 @@ class OlayKayitlari extends Page
         $o->fill($this->formVerisi());
         $o->fotograflar = [
             ...($mevcut?->fotograflar ?? []),
-            ...collect($this->yeniFotograflar)->map(fn ($f) => $f->store('olay-kaydi-foto', 'public'))->all(),
+            ...collect($this->yeniFotograflar)->map(fn ($f) => \App\Support\GuvenliFoto::yukle($f, 'olay-kaydi-foto'))->filter()->values()->all(),
         ];
         $o->save();
 

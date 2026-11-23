@@ -99,7 +99,7 @@ class CalisanKarneEslesmeTest extends TestCase
         MuayeneFormu::create(['firma_id' => $this->firma->id, 'calisan_tc' => '99999999990', 'calisan_ad_soyad' => 'Süresi Dolan',
             'muayene_tarihi' => now()->subMonths(14)]);   // çok tehlikeli: yılda bir
         SaglikGozetimi::create(['firma_id' => $this->firma->id, 'satirlar' => [
-            ['calisan_id' => $b->id, 'calisan_adi' => 'Gözetimli', 'tetkik_turu' => 'periyodik', 'tarih' => now()->subMonths(3)->toDateString()],
+            ['calisan_id' => $b->id, 'calisan_adi' => 'Gözetimli', 'tetkik_turu' => 'periyodik', 'tarih' => now()->subMonths(3)->toDateString(), 'sonuc' => 'uygun'],
         ]]);
 
         $karne = PortfoyKarne::calisanKarne($this->firma);

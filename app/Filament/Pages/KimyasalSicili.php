@@ -171,7 +171,7 @@ class KimyasalSicili extends Page
             DatePicker::make('sonraki_gozden_gecirme')->label('Sonraki gözden geçirme')
                 ->helperText('Boş bırakılırsa SDS tarihinden +1 yıl.'),
             FileUpload::make('sds')->label('Malzeme Güvenlik Bilgi Formu (SDS / GBF)')
-                ->disk('public')->directory(fn () => 'sds/'.$this->firmaId)->preserveFilenames()
+                ->disk('public')->directory(fn () => 'sds/'.($this->firmaId ?? 0))
                 ->acceptedFileTypes([
                     'application/pdf',
                     'application/msword',
@@ -251,7 +251,7 @@ class KimyasalSicili extends Page
                         ->options(fn () => ['' => 'Genel (tüm işyerleri)'] + $this->firmalar())
                         ->default(fn () => $this->firmaId)->native(false),
                     FileUpload::make('dosya')->label('Afiş dosyası (PDF veya görsel)')
-                        ->disk('public')->directory('afis')->preserveFilenames()
+                        ->disk('public')->directory(fn () => 'afis/'.(Filament::auth()->id() ?? 0))
                         ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
                         ->maxSize(15360)->required(),
                     Textarea::make('aciklama')->label('Açıklama')->rows(2),

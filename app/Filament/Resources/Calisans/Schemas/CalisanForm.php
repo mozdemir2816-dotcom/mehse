@@ -75,14 +75,14 @@ class CalisanForm
         ]);
     }
 
-    /** Firmada daha önce girilmiş şube adları — yazım birliği için öneri. */
+    /** Firmada daha önce girilmiş şube adları — yazım birliği için öneri (kiracı izole). */
     public static function firmaSubeleri(mixed $firmaId): array
     {
-        if (blank($firmaId)) {
+        if (blank($firmaId) || ! Firma::query()->whereKey((int) $firmaId)->exists()) {
             return [];
         }
 
-        return Calisan::query()->where('firma_id', $firmaId)->whereNotNull('sube')
+        return Calisan::query()->where('firma_id', (int) $firmaId)->whereNotNull('sube')
             ->distinct()->orderBy('sube')->pluck('sube')->all();
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CanliEgitimOturumu;
 use App\Support\CanliEgitimYonetici;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -57,9 +58,13 @@ class CanliEgitimController extends Controller
             'tarih' => now()->timezone('Europe/Istanbul')->format('d.m.Y H:i'),
         ];
 
-        $sonuclar = array_values((array) ($oturum->sonuclar ?? []));
-        $sonuclar[] = $kayit;
-        $oturum->forceFill(['sonuclar' => $sonuclar])->save();
+        // Eşzamanlı gönderimlerde JSON sonuclar yarış koşulunu (race condition) engelle.
+        DB::transaction(function () use ($oturum, $kayit): void {
+            $kilitli = CanliEgitimOturumu::query()->lockForUpdate()->findOrFail($oturum->id);
+            $sonuclar = array_values((array) ($kilitli->sonuclar ?? []));
+            $sonuclar[] = $kayit;
+            $kilitli->forceFill(['sonuclar' => $sonuclar])->save();
+        });
 
         return redirect()
             ->route('canli-egitim.form', ['token' => $token])

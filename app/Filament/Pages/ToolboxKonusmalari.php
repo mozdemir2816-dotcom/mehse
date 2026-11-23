@@ -82,8 +82,8 @@ class ToolboxKonusmalari extends Page
                     TextInput::make('baslik')->label('Başlık')->required(),
                     FileUpload::make('dosya')
                         ->label('Dosya (Word, PDF veya Excel)')
-                        ->disk('public')->directory('toolbox-konusmalari')
-                        ->preserveFilenames()
+                        ->disk('public')->directory(fn () => 'toolbox-konusmalari/'.(Filament::auth()->id() ?? 0))
+                        ->storeFileNamesIn('dosya_adi_ozgun')
                         ->acceptedFileTypes([
                             'application/pdf',
                             'application/msword',
@@ -101,7 +101,7 @@ class ToolboxKonusmalari extends Page
                     ToolboxKonusmasi::create([
                         'user_id' => Filament::auth()->id(),
                         'baslik' => $data['baslik'],
-                        'dosya_adi' => basename($yol),
+                        'dosya_adi' => basename((string) ($data['dosya_adi_ozgun'] ?? basename($yol))),
                         'dosya_yolu' => $yol,
                         'boyut' => Storage::disk('public')->exists($yol) ? Storage::disk('public')->size($yol) : 0,
                         'aciklama' => $data['aciklama'] ?: null,

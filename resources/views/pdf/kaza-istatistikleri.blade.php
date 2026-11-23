@@ -32,6 +32,7 @@
     $siklik = $kayit->siklikOrani();
     $agirlik = $kayit->agirlikOrani();
     $carpanMetni = number_format($kayit->carpan(), 0, ',', '.');
+    $agirlikCarpanMetni = number_format($kayit->agirlikCarpan(), 0, ',', '.');
 @endphp
 
 <h1>KAZA İSTATİSTİKLERİ</h1>
@@ -105,8 +106,8 @@
 </table>
 
 <p class="formul">
-    <strong>Kaza Sıklık Oranı</strong> = (Hesaba Dahil Kaza Sayısı × {{ $carpanMetni }}) / Toplam Çalışma Saati &nbsp;—&nbsp;
-    <strong>Kaza Ağırlık Oranı</strong> = (Toplam Kayıp Gün × {{ $carpanMetni }}) / Toplam Çalışma Saati.
+    <strong>Kaza Sıklık Oranı (KSO)</strong> = (Hesaba Dahil Kaza Sayısı × {{ $carpanMetni }}) / Toplam Çalışma Saati &nbsp;—&nbsp;
+    <strong>Kaza Ağırlık Oranı (KAO)</strong> = (Toplam Kayıp Gün × {{ $agirlikCarpanMetni }}) / Toplam Çalışma Saati.
     Kazalar; İş Kazası Raporları, Olay Kayıtları (iş kazası tipi) ve elle eklenen harici kayıtlardan birleştirilir.
     @if ($kayit->not) <br><strong>Not:</strong> {{ $kayit->not }} @endif
 </p>

@@ -738,7 +738,19 @@ class DokumanYonetimi extends Page
                 ...$this->kategoriAlanlari(),
                 Textarea::make('aciklama')->label('Not')->rows(2),
                 FileUpload::make('dosya')->storeFileNamesIn('dosya_adi_ozgun')->label('Yeni dosya (boş bırakılırsa mevcut dosya korunur)')
-                    ->disk('public')->directory('arsiv/gecici')->maxSize(40960),
+                    ->disk('public')->directory(fn () => 'arsiv/gecici/'.(Filament::auth()->id() ?? 0))
+                    ->acceptedFileTypes([
+                        'application/pdf',
+                        'image/jpeg',
+                        'image/png',
+                        'image/webp',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/zip',
+                    ])
+                    ->maxSize(40960),
             ])
             ->action(function (array $data, array $arguments): void {
                 $d = $this->bul($arguments['id'] ?? null);

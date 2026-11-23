@@ -12,7 +12,9 @@ use App\Support\UzaktanEgitimBelgesiUretici;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 
 /**
@@ -44,6 +46,7 @@ class EgitimIzle extends Page
     #[Url]
     public ?int $ders = null;
 
+    #[Locked]
     public string $mod = 'izle';
 
     public ?int $aktifDersId = null;
@@ -52,6 +55,7 @@ class EgitimIzle extends Page
     public array $cevaplar = [];
 
     /** @var array<int, array<string, mixed>> doğru cevap İÇERMEZ (istemciye gider) */
+    #[Locked]
     public array $sinavSorulari = [];
 
     public ?EgitimSinavSonucu $sonSonuc = null;
@@ -130,17 +134,15 @@ class EgitimIzle extends Page
         }
 
         $simdi = now()->getTimestamp();
-        $anahtar = $this->oturumAnahtari('son').'_'.$dersId;
+        // Paralel sekme atlatmasını önlemek için zaman kilidi çalışan bazında tekildir (Md.12/5).
+        $anahtar = 'uzaktan_egitim_calisan_son_'.$a->calisan_id;
         $son = session()->get($anahtar);
-        $izinli = $son === null ? 20 : $simdi - $son + 3;
+        $izinli = $son === null ? 20 : max(0, $simdi - $son + 3);
         session()->put($anahtar, $simdi);
 
         $artis = max(0, min($artisSn, $izinli, 120));
 
-        if (! $ders->sure_sn && $sureSn > 0) {
-            $ders->forceFill(['sure_sn' => $sureSn])->save();
-        }
-
+        // İstemciden gelen $sureSn asla ortak `egitim_dersleri.sure_sn` kaydını ezmez (süre zehirleme engeli).
         $ilerleme = EgitimDersIlerlemesi::firstOrNew(['egitim_atamasi_id' => $a->id, 'egitim_dersi_id' => $dersId]);
         if (! $ilerleme->exists) {
             EgitimOlayi::yaz($a->id, 'oturum', $ders->siraEtiketi().'. ders başladı: '.$ders->baslik, null, $a->calisan_id);
@@ -149,7 +151,7 @@ class EgitimIzle extends Page
         // Videoda en fazla fiilen oynatılan toplam süre kadar ileri gidilebilir.
         $ilerleme->son_konum_sn = max((int) $ilerleme->son_konum_sn, min(max(0, $konumSn), $ilerleme->izlenen_sn + 10));
 
-        $sure = $ders->sure_sn ?: $sureSn;
+        $sure = (int) ($ders->sure_sn ?: max(60, $sureSn));
         $yuzde = $sure > 0 ? min(100, (int) floor($ilerleme->izlenen_sn / $sure * 100)) : 0;
         $ilerleme->izleme_yuzdesi = max((int) $ilerleme->izleme_yuzdesi, $yuzde);
 
@@ -241,12 +243,14 @@ class EgitimIzle extends Page
     public function onTestiGonder(): void
     {
         $a = $this->atamaKaydi();
+        $sunucuSorular = session()->get($this->oturumAnahtari('sorular_on_test'), []);
 
-        if (! $a || $this->mod !== 'on_test' || ! $this->sinavSorulari) {
+        if (! $a || $this->mod !== 'on_test' || ! $sunucuSorular) {
             return;
         }
 
-        ['puan' => $puan, 'detay' => $detay] = $this->puanla();
+        ['puan' => $puan, 'detay' => $detay] = $this->puanla('on_test');
+        session()->forget([$this->oturumAnahtari('cevap_on_test'), $this->oturumAnahtari('sorular_on_test')]);
         $a->forceFill(['on_test_puani' => $puan, 'on_test_cevaplar' => $detay, 'on_test_at' => now()])->save();
 
         $dogru = collect($detay)->filter(fn ($c) => (int) $c['verilen_index'] === (int) $c['dogru_index'])->count();
@@ -283,59 +287,81 @@ class EgitimIzle extends Page
     public function sinaviGonder(): void
     {
         $a = $this->atamaKaydi();
+        $sunucuSorular = session()->get($this->oturumAnahtari('sorular_final'), []);
 
-        if (! $a || $this->mod !== 'sinav' || ! $this->sinavSorulari) {
+        if (! $a || $this->mod !== 'sinav' || ! $sunucuSorular) {
             return;
         }
 
-        if (count(array_filter($this->cevaplar, fn ($c) => $c !== null && $c !== '')) < count($this->sinavSorulari)) {
+        // Video izleme ve sınav hakkı şartlarını gönderim anında da doğrula (Md.12/5 & Md.16/3).
+        if (! $a->tumDerslerIzlendiMi() || $a->kalanSinavHakki() < 1) {
+            Notification::make()->title('Sınav koşulları sağlanmıyor')->danger()->send();
+
+            return;
+        }
+
+        $cevaplanan = collect($sunucuSorular)
+            ->filter(fn (array $s) => isset($this->cevaplar[$s['id']]) && $this->cevaplar[$s['id']] !== null && $this->cevaplar[$s['id']] !== '')
+            ->count();
+
+        if ($cevaplanan < count($sunucuSorular)) {
             Notification::make()->title('Tüm soruları cevaplayın')->warning()->send();
 
             return;
         }
 
-        ['puan' => $puan, 'detay' => $cevapDetay] = $this->puanla();
-        $gecti = $puan >= $a->gecmePuani();
-
-        $sonuc = $a->sinavSonuclari()->create([
-            'deneme_no' => $a->sonrakiDeneme(),
-            'puan' => $puan,
-            'gecti' => $gecti,
-            'cevaplar' => $cevapDetay,
-            'tamamlandi_at' => now(),
-        ]);
-
-        $a->durumuTazele();
-        $this->oturum()?->nabiz();
-
-        EgitimOlayi::yaz($a->id, 'sinav', 'Final sınavı bitti',
-            $sonuc->deneme_no.'. deneme · '.$puan.' puan · '.($gecti ? 'GEÇTİ' : 'KALDI').' (geçme: '.$a->gecmePuani().').', $a->calisan_id);
-        if ($gecti) {
-            EgitimOlayi::yaz($a->id, 'tamamlama', 'Eğitim tamamlandı', 'Final sınavı başarıyla geçildi; onay ve belge adımları başlar.', $a->calisan_id);
-        }
-
-        $this->sonSonuc = $sonuc;
-        $this->mod = 'sonuc';
-        $this->sinavSorulari = [];
-        unset($this->atamaKaydi);
-
-        if (! $gecti && $a->kalanSinavHakki() < 1) {
-            // Md.16/3: üç sınavda da başarısız → temel eğitime yeniden katılır.
-            $a->yenidenBaslat();
-            unset($this->atamaKaydi, $this->izlenenDersIdler);
-
-            Notification::make()
-                ->title("Sınav puanınız: %{$puan}. Sınav hakkınız doldu.")
-                ->body('Yönetmelik gereği eğitime baştan başlamanız gerekiyor; dersler sıfırlandı.')
-                ->danger()->persistent()->send();
-
+        $kilit = Cache::lock('uzaktan_egitim_sinav_'.$a->id, 10);
+        if (! $kilit->get()) {
             return;
         }
 
-        Notification::make()
-            ->title($gecti ? "Tebrikler! Sınavı %{$puan} ile geçtiniz." : "Sınav puanınız: %{$puan} (geçme: %{$a->gecmePuani()})")
-            ->{$gecti ? 'success' : 'danger'}()
-            ->send();
+        try {
+            ['puan' => $puan, 'detay' => $cevapDetay] = $this->puanla('final');
+            session()->forget([$this->oturumAnahtari('cevap_final'), $this->oturumAnahtari('sorular_final')]);
+            $gecti = $puan >= $a->gecmePuani();
+
+            $sonuc = $a->sinavSonuclari()->create([
+                'deneme_no' => $a->sonrakiDeneme(),
+                'puan' => $puan,
+                'gecti' => $gecti,
+                'cevaplar' => $cevapDetay,
+                'tamamlandi_at' => now(),
+            ]);
+
+            $a->durumuTazele();
+            $this->oturum()?->nabiz();
+
+            EgitimOlayi::yaz($a->id, 'sinav', 'Final sınavı bitti',
+                $sonuc->deneme_no.'. deneme · '.$puan.' puan · '.($gecti ? 'GEÇTİ' : 'KALDI').' (geçme: '.$a->gecmePuani().').', $a->calisan_id);
+            if ($gecti) {
+                EgitimOlayi::yaz($a->id, 'tamamlama', 'Eğitim tamamlandı', 'Final sınavı başarıyla geçildi; onay ve belge adımları başlar.', $a->calisan_id);
+            }
+
+            $this->sonSonuc = $sonuc;
+            $this->mod = 'sonuc';
+            $this->sinavSorulari = [];
+            unset($this->atamaKaydi);
+
+            if (! $gecti && $a->kalanSinavHakki() < 1) {
+                // Md.16/3: üç sınavda da başarısız → temel eğitime yeniden katılır.
+                $a->yenidenBaslat();
+                unset($this->atamaKaydi, $this->izlenenDersIdler);
+
+                Notification::make()
+                    ->title("Sınav puanınız: %{$puan}. Sınav hakkınız doldu.")
+                    ->body('Yönetmelik gereği eğitime baştan başlamanız gerekiyor; dersler sıfırlandı.')
+                    ->danger()->persistent()->send();
+
+                return;
+            }
+
+            Notification::make()
+                ->title($gecti ? "Tebrikler! Sınavı %{$puan} ile geçtiniz." : "Sınav puanınız: %{$puan} (geçme: %{$a->gecmePuani()})")
+                ->{$gecti ? 'success' : 'danger'}()
+                ->send();
+        } finally {
+            $kilit->release();
+        }
     }
 
     public function tekrarDene(): void
@@ -355,7 +381,7 @@ class EgitimIzle extends Page
         return UzaktanEgitimBelgesiUretici::pdf($a);
     }
 
-    /** Soruları hazırlar; doğru cevaplar yalnız sunucu oturumunda tutulur. */
+    /** Soruları hazırlar; tam soru seti ve doğru cevaplar tür bazında yalnız sunucu oturumunda tutulur. */
     private function soruHazirla(EgitimAtamasi $a, string $tur): void
     {
         // Final denemelerinde önceki denemelerde sorulan sorular (havuz yetiyorsa) tekrar gelmez.
@@ -363,21 +389,24 @@ class EgitimIzle extends Page
             ? $a->donemSinavlari()->get()->flatMap(fn ($s) => collect($s->cevaplar ?? [])->pluck('id'))->filter()->all()
             : [];
         $sorular = $a->paket->sinavSorulari($tur, $haric);
+        $gorunumSorulari = collect($sorular)->map(fn (array $s) => collect($s)->except('dogru_index')->all())->values()->all();
 
-        session()->put($this->oturumAnahtari('cevap'), collect($sorular)->pluck('dogru_index', 'id')->all());
+        session()->put($this->oturumAnahtari('cevap_'.$tur), collect($sorular)->pluck('dogru_index', 'id')->all());
+        session()->put($this->oturumAnahtari('sorular_'.$tur), $gorunumSorulari);
 
-        $this->sinavSorulari = collect($sorular)->map(fn (array $s) => collect($s)->except('dogru_index')->all())->all();
+        $this->sinavSorulari = $gorunumSorulari;
         $this->cevaplar = [];
     }
 
     /** @return array{puan: int, detay: array<int, array<string, mixed>>} */
-    private function puanla(): array
+    private function puanla(string $tur): array
     {
-        $dogrular = session()->get($this->oturumAnahtari('cevap'), []);
+        $dogrular = session()->get($this->oturumAnahtari('cevap_'.$tur), []);
+        $sorular = session()->get($this->oturumAnahtari('sorular_'.$tur), []);
         $dogru = 0;
         $detay = [];
 
-        foreach ($this->sinavSorulari as $s) {
+        foreach ($sorular as $s) {
             $verilen = (int) ($this->cevaplar[$s['id']] ?? -1);
             $dogruIndex = (int) ($dogrular[$s['id']] ?? -2);
             $dogru += $verilen === $dogruIndex ? 1 : 0;
@@ -391,7 +420,7 @@ class EgitimIzle extends Page
             ];
         }
 
-        return ['puan' => (int) round($dogru / max(1, count($this->sinavSorulari)) * 100), 'detay' => $detay];
+        return ['puan' => (int) round($dogru / max(1, count($sorular)) * 100), 'detay' => $detay];
     }
 
     private function oturumAnahtari(string $tur): string

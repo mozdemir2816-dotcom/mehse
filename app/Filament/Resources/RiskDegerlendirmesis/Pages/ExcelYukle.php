@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Locked;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -64,13 +65,47 @@ class ExcelYukle extends Page
 
     /**
      * Çözümlenmiş dosyalar (RiskExcelYukleyici::analiz çıktısı + ekrandaki düzeltmeler).
+     * Gerçek sunucu dosya yolları istemciye açılmaz ($dosyaYollari içinde kilitli tutulur).
      *
      * @var array<int, array<string, mixed>>
      */
     public array $girdiler = [];
 
+    /** @var array<string, string> kimlik => local diskteki yalnızca risk-yukleme/<dosya> göreli yolu */
+    #[Locked]
+    public array $dosyaYollari = [];
+
     /** @var array<int, string> */
     public array $hatalar = [];
+
+    private function guvenliTamYol(?string $kimlik): ?string
+    {
+        if (! $kimlik || ! isset($this->dosyaYollari[$kimlik])) {
+            return null;
+        }
+
+        $ad = basename($this->dosyaYollari[$kimlik]);
+        $goreli = 'risk-yukleme/'.$ad;
+        $kok = realpath(Storage::disk('local')->path('risk-yukleme'));
+        $tam = realpath(Storage::disk('local')->path($goreli));
+
+        if (! $kok || ! $tam || ! str_starts_with($tam, $kok.DIRECTORY_SEPARATOR)) {
+            return null;
+        }
+
+        return $tam;
+    }
+
+    private function guvenliSil(?string $kimlik): void
+    {
+        if (! $kimlik || ! isset($this->dosyaYollari[$kimlik])) {
+            return;
+        }
+
+        $ad = basename($this->dosyaYollari[$kimlik]);
+        Storage::disk('local')->delete('risk-yukleme/'.$ad);
+        unset($this->dosyaYollari[$kimlik]);
+    }
 
     public function updatedDosyalar(): void
     {
@@ -79,10 +114,16 @@ class ExcelYukle extends Page
         foreach ($this->dosyalar as $dosya) {
             $ad = $dosya->getClientOriginalName();
             $uzanti = strtolower($dosya->getClientOriginalExtension()) ?: 'xlsx';
-            $yol = Storage::disk('local')->putFileAs('risk-yukleme', $dosya, Str::uuid().'.'.$uzanti);
+            $dosyaAdi = Str::uuid().'.'.$uzanti;
+            $yol = Storage::disk('local')->putFileAs('risk-yukleme', $dosya, $dosyaAdi);
 
             try {
-                $this->girdiler[] = RiskExcelYukleyici::analiz(Storage::disk('local')->path($yol), $ad);
+                $analiz = RiskExcelYukleyici::analiz(Storage::disk('local')->path($yol), $ad);
+                $kimlik = (string) Str::uuid();
+                $this->dosyaYollari[$kimlik] = 'risk-yukleme/'.basename($yol);
+                unset($analiz['yol']);
+                $analiz['kimlik'] = $kimlik;
+                $this->girdiler[] = $analiz;
             } catch (Throwable $e) {
                 Storage::disk('local')->delete($yol);
                 $this->hatalar[] = "{$ad}: okunamadı ({$e->getMessage()})";
@@ -94,9 +135,7 @@ class ExcelYukle extends Page
 
     public function girdiKaldir(int $i): void
     {
-        if (isset($this->girdiler[$i]['yol'])) {
-            @unlink($this->girdiler[$i]['yol']);
-        }
+        $this->guvenliSil($this->girdiler[$i]['kimlik'] ?? null);
 
         unset($this->girdiler[$i]);
         $this->girdiler = array_values($this->girdiler);
@@ -104,11 +143,12 @@ class ExcelYukle extends Page
 
     public function temizle(): void
     {
-        foreach ($this->girdiler as $g) {
-            @unlink($g['yol'] ?? '');
+        foreach (array_keys($this->dosyaYollari) as $kimlik) {
+            $this->guvenliSil($kimlik);
         }
 
         $this->reset('girdiler', 'hatalar', 'dosyalar');
+        $this->dosyaYollari = [];
     }
 
     public function kaydet(): void
@@ -116,6 +156,13 @@ class ExcelYukle extends Page
         $this->validate(['firma_id' => 'required|integer', 'girdiler' => 'required|array|min:1'], [], ['firma_id' => 'firma', 'girdiler' => 'yüklenecek dosya']);
 
         $mevcut = $this->mevcutRd();
+
+        if ($mevcut?->kilitliMi()) {
+            Notification::make()->title('Kilitli değerlendirmeye madde eklenemez')->danger()->send();
+
+            return;
+        }
+
         $firma = $mevcut ? $mevcut->firma : Firma::where('user_id', Filament::auth()->id())->findOrFail($this->firma_id);
 
         // Yüklemeden önce eşleme hatalarını topla: kayıt yarım kalmasın.
@@ -152,19 +199,29 @@ class ExcelYukle extends Page
         $notlar = [];
 
         foreach ($this->girdiler as $g) {
+            $kimlik = $g['kimlik'] ?? null;
+            $tamYol = $this->guvenliTamYol($kimlik);
+
+            if (! $tamYol) {
+                $notlar[] = ($g['dosya'] ?? 'Dosya').': geçici dosya bulunamadı veya geçersiz.';
+                continue;
+            }
+
             try {
-                $sonuc = $mevcut ? RiskExcelYukleyici::mevcutaEkle($mevcut, $g) : RiskExcelYukleyici::yukle($firma, $g);
+                $girdi = $g + ['yol' => $tamYol];
+                $sonuc = $mevcut ? RiskExcelYukleyici::mevcutaEkle($mevcut, $girdi) : RiskExcelYukleyici::yukle($firma, $girdi);
                 $eklenen += $sonuc['eklenen'];
                 $madde += $sonuc['madde'];
                 $notlar = array_merge($notlar, $sonuc['notlar']);
             } catch (Throwable $e) {
                 $notlar[] = "{$g['dosya']}: okunamadı ({$e->getMessage()})";
             } finally {
-                @unlink($g['yol'] ?? '');
+                $this->guvenliSil($kimlik);
             }
         }
 
         $this->reset('girdiler', 'dosyalar');
+        $this->dosyaYollari = [];
 
         Notification::make()
             ->title($mevcut

@@ -147,8 +147,18 @@ class KontrolKartiUretici
      */
     public static function foto(?string $yol): ?array
     {
-        $tam = $yol ? storage_path('app/public/'.$yol) : null;
-        $boyut = $tam && is_file($tam) ? @getimagesize($tam) : null;
+        if (! $yol || str_contains($yol, '..') || str_contains($yol, "\0")) {
+            return null;
+        }
+
+        $kok = realpath(storage_path('app/public/kontrol-karti-foto'));
+        $tam = realpath(storage_path('app/public/'.$yol));
+
+        if (! $kok || ! $tam || ! str_starts_with($tam, $kok.DIRECTORY_SEPARATOR)) {
+            return null;
+        }
+
+        $boyut = is_file($tam) ? @getimagesize($tam) : null;
 
         if (! $boyut || ! $boyut[0]) {
             return null;

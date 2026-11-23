@@ -51,4 +51,41 @@ class EkipDuyurusu extends Model
     {
         return count((array) ($this->okuyanlar ?? []));
     }
+
+    /**
+     * Multi-tenant kiracı izolasyonu: kullanıcı yalnız kendi duyurularını ve
+     * ortak firma paylaştığı ekip arkadaşlarının duyurularını görür.
+     *
+     * @return list<int>
+     */
+    public static function ekipKullaniciIdleri(User $user): array
+    {
+        $idler = [(int) $user->id];
+
+        $kendiFirmaIdleri = \Illuminate\Support\Facades\DB::table('firmalar')
+            ->where('user_id', $user->id)
+            ->pluck('id');
+        $paylasilanFirmaIdleri = \Illuminate\Support\Facades\DB::table('kullanici_firmalar')
+            ->where('user_id', $user->id)
+            ->pluck('firma_id');
+
+        $ortakFirmaIdleri = $kendiFirmaIdleri->merge($paylasilanFirmaIdleri)->unique()->values();
+
+        if ($ortakFirmaIdleri->isNotEmpty()) {
+            $sahipler = \Illuminate\Support\Facades\DB::table('firmalar')
+                ->whereIn('id', $ortakFirmaIdleri)
+                ->pluck('user_id');
+            $paylasanlar = \Illuminate\Support\Facades\DB::table('kullanici_firmalar')
+                ->whereIn('firma_id', $ortakFirmaIdleri)
+                ->pluck('user_id');
+
+            $idler = collect($idler)->merge($sahipler)->merge($paylasanlar)
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $idler;
+    }
 }

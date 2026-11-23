@@ -197,11 +197,11 @@ class MehseIyilestirmelerTest extends TestCase
 
         Livewire::test(MuayeneFormu::class, ['firmaId' => $this->firma->id])
             ->callAction('tumuNormalDoldur')
-            ->assertSet('sonucKanaati', 'elverislidir');
+            ->assertSet('sonucKanaati', 'uygun');
 
         Livewire::test(CezaTeblig::class, ['firmaId' => $this->firma->id])
             ->callAction('imzadanImtina')
-            ->assertSet('imzaDurumu', 'imtina');
+            ->assertSet('imzaDurumu', 'imtina_etti');
 
         $ekipman = IsEkipmani::create([
             'firma_id' => $this->firma->id,

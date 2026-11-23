@@ -337,7 +337,7 @@ class DofOlustur extends Page
             'sorumlu' => $this->yeniSorumlu,
             'termin' => $this->yeniTermin,
             'durum' => 'acik',
-            'foto_yolu' => $this->yeniFoto?->store('dof-foto', 'public'),
+            'foto_yolu' => \App\Support\GuvenliFoto::yukle($this->yeniFoto, 'dof-foto'),
             ...(($riskSonuc && ($riskSonuc['puan'] ?? 0) > 0) ? [
                 'risk_metodu' => $this->yeniRiskMetodu,
                 'risk_puani' => $riskSonuc['puan'],

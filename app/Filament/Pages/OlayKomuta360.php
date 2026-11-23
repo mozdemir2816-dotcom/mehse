@@ -257,11 +257,16 @@ class OlayKomuta360 extends Page
     #[Computed]
     public function calisma(): array
     {
-        $firmaIdleri = $this->firmaId ? [$this->firmaId] : array_keys($this->firmalar);
-        $kayitlar = KazaIstatistigi::query()
-            ->whereIn('firma_id', $firmaIdleri)
-            ->when($this->yil, fn ($q) => $q->where('yil', $this->yil))
-            ->get();
+        $izinliIdler = array_keys($this->firmalar);
+        $firmaIdleri = $this->firmaId
+            ? (in_array($this->firmaId, $izinliIdler, true) ? [$this->firmaId] : [])
+            : $izinliIdler;
+        $kayitlar = $firmaIdleri
+            ? KazaIstatistigi::query()
+                ->whereIn('firma_id', $firmaIdleri)
+                ->when($this->yil, fn ($q) => $q->where('yil', $this->yil))
+                ->get()
+            : collect();
 
         return [
             'saat' => (int) $kayitlar->sum(fn (KazaIstatistigi $k) => $k->toplamCalismaSaati()),

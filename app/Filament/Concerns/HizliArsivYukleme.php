@@ -6,8 +6,10 @@ use App\Models\ArsivDosya;
 use App\Models\Firma;
 use App\Support\ArsivKurali;
 use App\Support\ArsivYukleyici;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Locked;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
@@ -27,12 +29,26 @@ trait HizliArsivYukleme
     public array $hizliYeni = [];
 
     /** @var array<string, array<int, array{yol: string, ad: string}>> kategori → tepsideki sayfalar */
+    #[Locked]
     public array $hizliSayfalar = [];
 
     abstract protected function hizliArsivFirmasi(): ?Firma;
 
     /** Kayıt sonrası sayfanın kendi önbelleklerini yenilemesi için. */
     protected function hizliArsivKaydedildi(ArsivDosya $d): void {}
+
+    private function hizliGeciciKlasor(): string
+    {
+        return 'arsiv/gecici/'.(Filament::auth()->id() ?? 0);
+    }
+
+    private function hizliGeciciYolGecerliMi(mixed $yol): bool
+    {
+        return is_string($yol)
+            && ! str_contains($yol, '..')
+            && ! str_contains($yol, "\0")
+            && str_starts_with($yol, $this->hizliGeciciKlasor().'/');
+    }
 
     public function updatedHizliYeni(mixed $deger, ?string $kategori = null): void
     {
@@ -44,16 +60,18 @@ trait HizliArsivYukleme
 
         foreach ($dosyalar as $dosya) {
             $uzanti = strtolower($dosya->getClientOriginalExtension());
+            $mime = (string) $dosya->getMimeType();
+            $gecerliMime = str_starts_with($mime, 'image/') || $mime === 'application/pdf';
 
-            if (! in_array($uzanti, [...ArsivYukleyici::GORSEL_UZANTILARI, 'pdf', 'heic'], true) || $dosya->getSize() > 20 * 1024 * 1024) {
-                Notification::make()->title('Yalnız fotoğraf ya da PDF (en fazla 20 MB)')->danger()->send();
+            if (! in_array($uzanti, [...ArsivYukleyici::GORSEL_UZANTILARI, 'pdf'], true) || ! $gecerliMime || $dosya->getSize() > 20 * 1024 * 1024) {
+                Notification::make()->title('Yalnız fotoğraf (JPG/PNG/WEBP) ya da PDF (en fazla 20 MB)')->danger()->send();
 
                 continue;
             }
 
             $this->hizliSayfalar[$kategori][] = [
-                'yol' => $dosya->store('arsiv/gecici', 'public'),
-                'ad' => $dosya->getClientOriginalName(),
+                'yol' => $dosya->store($this->hizliGeciciKlasor(), 'public'),
+                'ad' => basename($dosya->getClientOriginalName()),
             ];
         }
 
@@ -65,7 +83,9 @@ trait HizliArsivYukleme
         $sayfa = $this->hizliSayfalar[$kategori][$sira] ?? null;
 
         if ($sayfa) {
-            Storage::disk('public')->delete($sayfa['yol']);
+            if ($this->hizliGeciciYolGecerliMi($sayfa['yol'] ?? null)) {
+                Storage::disk('public')->delete($sayfa['yol']);
+            }
             unset($this->hizliSayfalar[$kategori][$sira]);
             $this->hizliSayfalar[$kategori] = array_values($this->hizliSayfalar[$kategori]);
         }
@@ -73,14 +93,25 @@ trait HizliArsivYukleme
 
     public function hizliIptal(string $kategori): void
     {
-        Storage::disk('public')->delete(array_column($this->hizliSayfalar[$kategori] ?? [], 'yol'));
+        $yollar = array_values(array_filter(
+            array_column($this->hizliSayfalar[$kategori] ?? [], 'yol'),
+            fn ($y) => $this->hizliGeciciYolGecerliMi($y),
+        ));
+
+        if ($yollar) {
+            Storage::disk('public')->delete($yollar);
+        }
+
         unset($this->hizliSayfalar[$kategori]);
     }
 
     public function hizliKaydet(string $kategori): void
     {
         $firma = $this->hizliArsivFirmasi();
-        $sayfalar = $this->hizliSayfalar[$kategori] ?? [];
+        $sayfalar = array_values(array_filter(
+            $this->hizliSayfalar[$kategori] ?? [],
+            fn ($s) => $this->hizliGeciciYolGecerliMi($s['yol'] ?? null),
+        ));
 
         if (! $firma || ! $sayfalar) {
             Notification::make()->title($firma ? 'Önce fotoğraf çekin' : 'Önce firma seçin')->danger()->send();

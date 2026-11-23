@@ -656,8 +656,7 @@ class PeriyodikKontrol extends Page
                 FileUpload::make('dosya')
                     ->label('Kontrol raporu (PDF / görsel)')
                     ->disk('public')
-                    ->directory(fn () => 'periyodik-kontrol/'.now()->format('Y'))
-                    ->preserveFilenames()
+                    ->directory(fn () => 'periyodik-kontrol/'.($this->firmaId ?: Filament::auth()->id() ?: 0).'/'.now()->format('Y'))
                     ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                     ->maxSize(20480),
                 Textarea::make('notu')->label('Not')->rows(2),

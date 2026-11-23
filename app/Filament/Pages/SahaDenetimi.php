@@ -328,8 +328,8 @@ class SahaDenetimi extends Page
         $yollar = SahaDenetimiModel::maddeFotolari($cevap);
 
         foreach (Arr::wrap($this->fotoYuklemeleri[$anahtar] ?? []) as $dosya) {
-            if ($dosya instanceof UploadedFile) {
-                $yollar[] = $dosya->store('saha-denetimi-foto', 'public');
+            if ($yuklenen = \App\Support\GuvenliFoto::yukle($dosya, 'saha-denetimi-foto')) {
+                $yollar[] = $yuklenen;
             }
         }
 
@@ -817,10 +817,10 @@ class SahaDenetimi extends Page
         $dof = \App\Models\DofRaporu::create([
             'firma_id' => $this->firma->id,
             'rapor_tarihi' => $this->denetimTarihi ?: now()->toDateString(),
-            'hazirlayan' => $this->denetciAdi ?: Filament::auth()->user()?->name,
+            'gozetim_yapan' => $this->denetciAdi ?: Filament::auth()->user()?->name,
             'maddeler' => array_map(fn (array $m): array => [
                 'alan' => $this->santiyeAdi ?: \App\Models\DofRaporu::VARSAYILAN_ALAN,
-                'uygunsuzluk' => $m['ifade'].($m['aciklama'] ? ' — '.$m['aciklama'] : ''),
+                'tespit' => $m['ifade'].($m['aciklama'] ? ' — '.$m['aciklama'] : ''),
                 'oneri' => 'Düzeltici ve önleyici faaliyet uygulanarak uygunsuzluk giderilmelidir.',
                 'oncelik' => $m['kritik'] ? 'kritik' : 'yuksek',
                 'durum' => 'acik',
@@ -853,14 +853,15 @@ class SahaDenetimi extends Page
             return;
         }
 
-        $rd = $this->firma->riskDegerlendirmeleri()->latest('id')->first();
+        $rd = $this->firma->riskDegerlendirmeleri()->whereNull('kilitli_at')->latest('id')->first();
         if (! $rd) {
+            $yil = (int) config('isg.risk_yenileme_yili.'.($this->firma->tehlike_sinifi ?: 'cok_tehlikeli'), 2);
             $rd = \App\Models\RiskDegerlendirmesi::create([
                 'firma_id' => $this->firma->id,
-                'baslik' => $this->firma->unvan.' — Saha Denetimi Risk Değerlendirmesi',
-                'yontem' => '5x5',
-                'hazirlanma_tarihi' => now()->toDateString(),
-                'gecerlilik_tarihi' => now()->addYears(2)->toDateString(),
+                'yontem' => 'matris_5x5',
+                'rapor_tarihi' => now()->toDateString(),
+                'gecerlilik_tarihi' => now()->addYears($yil)->toDateString(),
+                'durum' => 'taslak',
             ]);
         }
 
@@ -893,16 +894,31 @@ class SahaDenetimi extends Page
     /** @return array<int, array{kod: string, kategori: string, ifade: string, kritik: bool, aciklama: ?string, sorumlu: ?string, termin: ?string}> */
     private function uygunsuzMaddeListesi(): array
     {
+        $harita = [];
+        foreach ($this->kategoriler as $kat) {
+            $katAdi = (string) ($kat['ad'] ?? 'Saha Denetimi');
+            foreach ((array) ($kat['maddeler'] ?? []) as $m) {
+                if (isset($m['kod'])) {
+                    $harita[(string) $m['kod']] = [
+                        'kategori' => $katAdi,
+                        'ifade' => (string) ($m['ifade'] ?? $m['kod']),
+                        'kritik' => (bool) ($m['kritik'] ?? false),
+                    ];
+                }
+            }
+        }
+
         $sonuc = [];
         foreach ($this->cevaplar as $kod => $cevap) {
             if (($cevap['sonuc'] ?? null) !== 'uygun_degil') {
                 continue;
             }
+            $tanim = $harita[(string) $kod] ?? null;
             $sonuc[] = [
                 'kod' => (string) $kod,
-                'kategori' => (string) ($cevap['kategori'] ?? 'Saha Denetimi'),
-                'ifade' => (string) ($cevap['ifade'] ?? $kod),
-                'kritik' => (bool) ($cevap['kritik'] ?? false),
+                'kategori' => (string) ($tanim['kategori'] ?? $cevap['kategori'] ?? 'Saha Denetimi'),
+                'ifade' => (string) ($tanim['ifade'] ?? $cevap['ifade'] ?? $kod),
+                'kritik' => (bool) ($tanim['kritik'] ?? $cevap['kritik'] ?? false),
                 'aciklama' => $cevap['aciklama'] ?? null,
                 'sorumlu' => $cevap['sorumlu'] ?? null,
                 'termin' => $cevap['termin'] ?? null,

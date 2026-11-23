@@ -73,9 +73,9 @@
                     <li>Acil alarmda asansör kullanmadan en yakın çıkıştan toplanma alanına geçin.</li>
                     <li>İzinsiz fotoğraf/video çekimi ve makinelere temas yasaktır.</li>
                 </ul>
-                @if ($z->brifing_video_url)
+                @if ($z->brifing_video_url && preg_match('#^https?://#i', $z->brifing_video_url))
                     <div style="margin:.6rem 0">
-                        <a href="{{ $z->brifing_video_url }}" target="_blank" style="color:#1d4ed8;font-weight:700;text-decoration:underline">▶ Tesis Güvenlik Brifing Videosunu İzle</a>
+                        <a href="{{ $z->brifing_video_url }}" target="_blank" rel="noopener noreferrer" style="color:#1d4ed8;font-weight:700;text-decoration:underline">▶ Tesis Güvenlik Brifing Videosunu İzle</a>
                     </div>
                 @endif
 

@@ -942,8 +942,8 @@ return [
     */
     'kaza_istatistik' => [
         'standartlar' => [
-            'turkiye_1m' => ['ad' => 'Türkiye (× 1.000.000)', 'carpan' => 1000000],
-            'osha_200k' => ['ad' => 'OSHA (× 200.000)', 'carpan' => 200000],
+            'turkiye_1m' => ['ad' => 'Türkiye / ILO (KSO × 1.000.000 · KAO × 1.000)', 'carpan' => 1000000, 'agirlik_carpan' => 1000],
+            'osha_200k' => ['ad' => 'OSHA (× 200.000)', 'carpan' => 200000, 'agirlik_carpan' => 200000],
         ],
         // Bir çalışanın bir ayda ortalama fiili çalışma saati (varsayılan öneri;
         // aylık tabloda elle değiştirilebilir).

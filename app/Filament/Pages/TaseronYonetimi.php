@@ -639,39 +639,50 @@ class TaseronYonetimi extends Page
             ->whereIn('firma_id', array_keys($this->firmalar))
             ->findOrFail($id);
 
+        if ($b->durum === 'onaylandi') {
+            Notification::make()->title('Bu başvuru zaten onaylanmış')->warning()->send();
+
+            return;
+        }
+
         if (! $b->unvan) {
             Notification::make()->title('Taşeron henüz formu doldurmamış')->warning()->send();
 
             return;
         }
 
-        $taseron = Taseron::create([
-            'firma_id' => $b->firma_id,
-            'tur' => 'taseron',
-            'unvan' => $b->unvan,
-            'vergi_no' => $b->vergi_no,
-            'faaliyet' => $b->faaliyet,
-            'yetkili' => $b->yetkili_ad,
-            'telefon' => $b->telefon,
-            'eposta' => $b->eposta,
-            'aktif' => true,
-        ]);
-
-        foreach ((array) ($b->yuklenen_belgeler ?? []) as $blg) {
-            TaseronBelgesi::create([
-                'taseron_id' => $taseron->id,
-                'tur' => $blg['tur'] ?? 'diger',
-                'belge_tarihi' => $blg['tarih'] ?? now()->toDateString(),
-                'dosya_yolu' => $blg['dosya'] ?? null,
-                'dosya_adi' => $blg['ad'] ?? 'Belge',
+        $taseron = \Illuminate\Support\Facades\DB::transaction(function () use ($b): Taseron {
+            $taseron = Taseron::create([
+                'firma_id' => $b->firma_id,
+                'tur' => 'taseron',
+                'unvan' => $b->unvan,
+                'vergi_no' => $b->vergi_no,
+                'faaliyet' => $b->faaliyet,
+                'yetkili' => $b->yetkili_ad,
+                'telefon' => $b->telefon,
+                'eposta' => $b->eposta,
+                'aktif' => true,
             ]);
-        }
 
-        $b->update([
-            'taseron_id' => $taseron->id,
-            'durum' => 'onaylandi',
-            'incelenme_at' => now(),
-        ]);
+            foreach ((array) ($b->yuklenen_belgeler ?? []) as $blg) {
+                TaseronBelgesi::create([
+                    'taseron_id' => $taseron->id,
+                    'tur' => $blg['tur'] ?? 'diger',
+                    'gecerlilik_sonu' => filled($blg['gecerlilik_sonu'] ?? null) ? $blg['gecerlilik_sonu'] : null,
+                    'notu' => filled($blg['tarih'] ?? null) ? 'Başvuru yükleme tarihi: '.$blg['tarih'] : null,
+                    'dosya_yolu' => $blg['dosya'] ?? null,
+                    'dosya_adi' => $blg['ad'] ?? 'Belge',
+                ]);
+            }
+
+            $b->update([
+                'taseron_id' => $taseron->id,
+                'durum' => 'onaylandi',
+                'incelenme_at' => now(),
+            ]);
+
+            return $taseron;
+        });
 
         unset($this->basvurular, $this->taseronlar);
         $this->seciliId = $taseron->id;

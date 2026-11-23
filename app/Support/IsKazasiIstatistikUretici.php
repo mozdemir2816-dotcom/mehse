@@ -56,8 +56,9 @@ class IsKazasiIstatistikUretici
         $toplam = $raporlar->count();
         $kayipGun = (int) $raporlar->sum('kayip_gun_sayisi');
         $sgkBildirilen = $raporlar->where('sgk_bildirimi_yapildi', true)->count();
-        $ramakKala = $raporlar->filter(fn (IsKazasiRaporu $r) => in_array($r->agirlik_derecesi, ['ramak_kala', 'yaralanmasiz', 'ilk_yardim'], true) || (int) $r->kayip_gun_sayisi === 0)->count();
-        $agirKaza = $raporlar->filter(fn (IsKazasiRaporu $r) => in_array($r->agirlik_derecesi, ['agir', 'uzuv_kaybi', 'olum'], true) || (int) $r->kayip_gun_sayisi >= 15)->count();
+        $agirKaza = $raporlar->filter(fn (IsKazasiRaporu $r) => in_array($r->agirlik_derecesi, ['agir', 'olumlu', 'uzuv_kaybi', 'olum'], true) || (int) $r->kayip_gun_sayisi >= 15)->count();
+        $ramakKala = $raporlar->filter(fn (IsKazasiRaporu $r) => ! in_array($r->agirlik_derecesi, ['agir', 'olumlu', 'uzuv_kaybi', 'olum'], true)
+            && (in_array($r->agirlik_derecesi, ['hafif', 'ramak_kala', 'yaralanmasiz', 'ilk_yardim'], true) || (int) $r->kayip_gun_sayisi === 0))->count();
         $acikDof = $raporlar->sum(fn (IsKazasiRaporu $r) => collect($r->dof_maddeleri ?? [])->where('durum', '!=', 'tamamlandi')->count());
 
         $kazaTurleri = config('isg.is_kazasi.kaza_turleri', []);

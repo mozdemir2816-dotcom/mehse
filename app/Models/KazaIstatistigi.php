@@ -87,6 +87,12 @@ class KazaIstatistigi extends Model
         return (int) config('isg.kaza_istatistik.standartlar.'.$this->standart.'.carpan', 1000000);
     }
 
+    /** Kaza Ağırlık Oranı (KAO) çarpanı — ILO/SGK standardı: 1.000; OSHA: 200.000. */
+    public function agirlikCarpan(): int
+    {
+        return (int) config('isg.kaza_istatistik.standartlar.'.$this->standart.'.agirlik_carpan', 1000);
+    }
+
     public function toplamCalismaSaati(): int
     {
         return collect($this->aylik_veriler ?? [])->sum('calisma_saati');
@@ -173,12 +179,12 @@ class KazaIstatistigi extends Model
         return $saat > 0 ? round($this->kazaSayisi() * $this->carpan() / $saat, 2) : null;
     }
 
-    /** Kaza Ağırlık Oranı — çalışma saati yoksa null. */
+    /** Kaza Ağırlık Oranı (KAO) — çalışma saati yoksa null. */
     public function agirlikOrani(): ?float
     {
         $saat = $this->toplamCalismaSaati();
 
-        return $saat > 0 ? round($this->toplamKayipGun() * $this->carpan() / $saat, 2) : null;
+        return $saat > 0 ? round($this->toplamKayipGun() * $this->agirlikCarpan() / $saat, 2) : null;
     }
 
     public function standartEtiketi(): string

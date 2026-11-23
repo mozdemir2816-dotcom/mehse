@@ -94,6 +94,24 @@ class CanliEgitimYonetici
     ): CanliEgitimOturumu {
         $varsayilanSaat = CanliEgitimOturumu::KATEGORILER[$kategori]['saat'] ?? 4;
 
+        $karisikSorular = array_map(function (array $s): array {
+            $secenekler = array_values((array) ($s['secenekler'] ?? []));
+            $dogruMetin = $secenekler[(int) ($s['dogru'] ?? 0)] ?? null;
+            shuffle($secenekler);
+            $yeniDogru = $dogruMetin !== null ? (int) array_search($dogruMetin, $secenekler, true) : 0;
+
+            return [
+                'soru' => $s['soru'],
+                'secenekler' => $secenekler,
+                'dogru' => $yeniDogru,
+            ];
+        }, static::varsayilanSorular($kategori));
+
+        $temizUrl = $toplantiUrl ? trim($toplantiUrl) : null;
+        if ($temizUrl !== null && ! preg_match('#^https?://#i', $temizUrl)) {
+            $temizUrl = null;
+        }
+
         return CanliEgitimOturumu::create([
             'user_id' => $user->id,
             'firma_id' => $firma->id,
@@ -101,10 +119,10 @@ class CanliEgitimYonetici
             'kategori' => array_key_exists($kategori, CanliEgitimOturumu::KATEGORILER) ? $kategori : 'temel_isg',
             'sure_saat' => $sureSaat && $sureSaat > 0 ? $sureSaat : $varsayilanSaat,
             'oturum_tarihi' => $oturumTarihi,
-            'toplanti_url' => $toplantiUrl ? trim($toplantiUrl) : null,
+            'toplanti_url' => $temizUrl,
             'katilim_token' => Str::random(36),
-            'gecme_notu' => 70,
-            'sorular' => static::varsayilanSorular($kategori),
+            'gecme_notu' => (int) config('isg.egitim.gecme_puani', 60),
+            'sorular' => $karisikSorular,
             'sonuclar' => [],
             'aktif' => true,
         ]);

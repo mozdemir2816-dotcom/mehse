@@ -21,8 +21,8 @@
     <h1 style="margin:.45rem 0 .2rem;font-size:1.35rem">{{ $oturum->baslik }}</h1>
     <div style="font-size:.86rem;color:#475569;margin-bottom:1rem">
         {{ $oturum->firma?->unvan }} · {{ $oturum->oturum_tarihi?->timezone('Europe/Istanbul')->format('d.m.Y H:i') }}
-        @if ($oturum->toplanti_url)
-            · <a href="{{ $oturum->toplanti_url }}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Canlı Oturuma Katıl ↗</a>
+        @if ($oturum->toplanti_url && preg_match('#^https?://#i', $oturum->toplanti_url))
+            · <a href="{{ $oturum->toplanti_url }}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-weight:700">Canlı Oturuma Katıl ↗</a>
         @endif
     </div>
 

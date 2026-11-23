@@ -99,7 +99,7 @@ class TabelaTasarimi extends Model
 
         $ozelResimler = collect($veri['slotCustomImages'] ?? [])->take(4)
             ->map(function ($img) {
-                if (! is_string($img) || ! preg_match('/^data:image\/(png|jpe?g|svg\+xml);base64,/', $img)) {
+                if (! is_string($img) || ! preg_match('/^data:image\/(png|jpe?g|webp);base64,/', $img)) {
                     return null;
                 }
 

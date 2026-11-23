@@ -142,14 +142,17 @@ class IsgKatipSozlesmeleri extends Page
                     FileUpload::make('dosya')
                         ->label('Excel dosyası (.xlsx)')
                         ->required()
-                        ->disk('public')->directory('isg-katip/gecici')
+                        ->disk('local')->directory('isg-katip/gecici')
                         ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])
                         ->maxSize(20480),
                 ])
                 ->action(function (array $data): void {
-                    $disk = Storage::disk('public');
-                    $sonuc = IsgKatipSozlesmeIceAktarici::iceAktar($disk->path($data['dosya']), Filament::auth()->id());
-                    $disk->delete($data['dosya']);
+                    $disk = Storage::disk('local');
+                    try {
+                        $sonuc = IsgKatipSozlesmeIceAktarici::iceAktar($disk->path($data['dosya']), Filament::auth()->id());
+                    } finally {
+                        $disk->delete($data['dosya']);
+                    }
 
                     unset($this->tumu, $this->kisiler, $this->sonIceAktarim, $this->secilenKisiOzet, $this->seciliKisiSozlesmeleri);
 

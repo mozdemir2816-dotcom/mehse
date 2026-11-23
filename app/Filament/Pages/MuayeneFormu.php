@@ -337,14 +337,10 @@ class MuayeneFormu extends Page
                         $this->sistemikMuayene[$i]['sonuc'] = 'normal';
                         $this->sistemikMuayene[$i]['not'] = null;
                     }
-                    foreach ($this->ek2 as $k => $v) {
-                        if (is_array($v) && array_key_exists('cevap', $v)) {
-                            $this->ek2[$k]['cevap'] = 'hayir';
-                        } elseif (in_array($v, ['evet', 'var', ''], true) && str_starts_with((string) $k, 'anamnez')) {
-                            $this->ek2[$k] = 'hayir';
-                        }
-                    }
-                    $this->sonucKanaati = 'elverislidir';
+                    $this->anamnezHayir();
+                    $this->soygecmisNormalDoldur();
+                    $this->fizikNormalDoldur();
+                    $this->sonucKanaati = 'uygun';
                     Notification::make()->title('Tüm muayene alanları "Normal / Hayır" olarak dolduruldu')->success()->send();
                 }),
 

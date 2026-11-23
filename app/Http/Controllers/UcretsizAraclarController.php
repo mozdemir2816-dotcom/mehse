@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\NaceGrubu;
+use App\Models\NaceKodu;
 use Illuminate\Http\Request;
 
 /**
@@ -19,24 +19,23 @@ class UcretsizAraclarController extends Controller
         $sonuclar = [];
 
         if ($q !== '') {
-            $naceListesi = (array) config('nace', []);
-            $qKucuk = mb_strtolower($q, 'UTF-8');
+            if ($tam = NaceKodu::bul($q)) {
+                $sonuclar[] = [
+                    'kod' => (string) $tam->kod,
+                    'ad' => (string) ($tam->tanim ?: $tam->sektor_adi),
+                    'sinif' => (string) $tam->tehlike_sinifi,
+                ];
+            } else {
+                $bulunanlar = preg_match('/^\d{2}\.?\d{2}$/', $q)
+                    ? NaceKodu::nace4IleBul($q)
+                    : NaceKodu::faaliyetAra($q);
 
-            foreach ($naceListesi as $kod => $kayit) {
-                $ad = is_array($kayit) ? (string) ($kayit['ad'] ?? $kayit['tanim'] ?? '') : (string) $kayit;
-                $sinif = is_array($kayit) ? (string) ($kayit['sinif'] ?? $kayit['tehlike_sinifi'] ?? 'tehlikeli') : 'tehlikeli';
-                if (str_contains(mb_strtolower((string) $kod, 'UTF-8'), $qKucuk) || str_contains(mb_strtolower($ad, 'UTF-8'), $qKucuk)) {
-                    $sonuclar[] = ['kod' => (string) $kod, 'ad' => $ad, 'sinif' => $sinif];
-                    if (count($sonuclar) >= 25) {
-                        break;
-                    }
-                }
-            }
-
-            if ($sonuclar === [] && class_exists(NaceGrubu::class)) {
-                $grup = NaceGrubu::bul($q);
-                if ($grup) {
-                    $sonuclar[] = ['kod' => $q, 'ad' => $grup, 'sinif' => 'tehlikeli'];
+                foreach ($bulunanlar->take(25) as $k) {
+                    $sonuclar[] = [
+                        'kod' => (string) $k->kod,
+                        'ad' => (string) ($k->tanim ?: $k->sektor_adi),
+                        'sinif' => (string) $k->tehlike_sinifi,
+                    ];
                 }
             }
         }

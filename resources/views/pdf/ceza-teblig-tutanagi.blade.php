@@ -68,40 +68,47 @@
 
     <h2>TANIKLAR</h2>
     <table class="liste">
-        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th>Görevi</th></tr>
+        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th>Görevi</th><th style="width:22%">İmza</th></tr>
         @forelse (($tutanak->taniklar ?? []) as $i => $tk)
-            <tr><td>{{ $i + 1 }}</td><td>{{ $tk['ad_soyad'] ?? '' }}</td><td>{{ $tk['gorev'] ?? '—' }}</td></tr>
+            <tr><td>{{ $i + 1 }}</td><td>{{ $tk['ad_soyad'] ?? '' }}</td><td>{{ $tk['gorev'] ?? '—' }}</td><td>&nbsp;</td></tr>
         @empty
-            <tr><td colspan="3" style="color:#888">Tanık eklenmedi.</td></tr>
+            <tr><td colspan="4" style="color:#888">Tanık eklenmedi.</td></tr>
         @endforelse
     </table>
 
     <h2>UYGULANAN YAPTIRIM</h2>
     <span class="yaptirim">{{ $tutanak->yaptirimEtiketi() }}</span>
 
-    <h2>TEBLİĞ / TEBELLÜĞ</h2>
+    <h2>TEBLİĞ / TEBELLÜĞ VE SAVUNMA HAKKI (4857 s.K. md.19)</h2>
     <table class="kunye">
         <tr>
             <td>Tebliğ Tarihi</td><td>{{ $tutanak->teblig_tarihi?->format('d.m.Y') ?: '—' }}</td>
             <td>Çalışanın İmza Durumu</td>
             <td>{{ $tutanak->imza_durumu === 'imtina_etti' ? 'İmzadan İmtina Etti' : 'İmzaladı / Teslim Aldı' }}</td>
         </tr>
+        <tr>
+            <td colspan="4" style="font-size:8px;color:#333">
+                İşbu tutanağın bir nüshasını elden teslim aldım. 4857 sayılı İş Kanunu md.19 uyarınca konu hakkındaki
+                yazılı savunmamı tebliğ tarihinden itibaren makul süre içinde işverene sunma hakkım tarafıma bildirilmiştir.
+            </td>
+        </tr>
     </table>
 
     <table class="imza">
         <tr>
-            <td>Düzenleyen (İSG Uzmanı)<br>(İmza – Kaşe)</td>
+            <td>Tespit Eden (İSG Uzmanı)<br>(İmza – Kaşe)</td>
+            <td>Tebliğ Eden (İşveren / Vekili)<br>(İmza – Kaşe)</td>
             <td>
                 @if (! empty($canliImza) && $tutanak->imza_durumu !== 'imtina_etti')
                     <img src="{{ $canliImza }}" style="max-height:44px;display:block;margin:-36px auto 2px">
                 @endif
-                Çalışan<br>(İmza)
+                Tebellüğ Eden (Çalışan)<br>(İmza)
             </td>
         </tr>
     </table>
 
     <p class="yasal">
-        6331 sayılı İş Sağlığı ve Güvenliği Kanunu md.19, 4857 sayılı İş Kanunu md.25-II ve
+        6331 sayılı İş Sağlığı ve Güvenliği Kanunu md.19, 4857 sayılı İş Kanunu md.19, md.25-II ve
         md.38 uyarınca düzenlenmiştir.
     </p>
 

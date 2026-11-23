@@ -135,7 +135,9 @@ class HizliSahaBulgusu extends Page
     public function mount(): void
     {
         if ($firmaId = request()->integer('firma')) {
-            $this->firmaId = $firmaId;
+            if (array_key_exists($firmaId, $this->firmalar)) {
+                $this->firmaId = $firmaId;
+            }
         }
 
         // Ziyaret Modu "uygunsuz" işareti: plan maddesi taslak olarak gelir (yalnız kendi firması).
@@ -173,7 +175,7 @@ class HizliSahaBulgusu extends Page
     #[Computed]
     public function bolumOnerileri(): array
     {
-        return $this->firmaId
+        return $this->firmaId && array_key_exists($this->firmaId, $this->firmalar)
             ? SahaBulgusu::query()->where('firma_id', $this->firmaId)->whereNotNull('bolum')->distinct()->orderBy('bolum')->pluck('bolum')->all()
             : [];
     }

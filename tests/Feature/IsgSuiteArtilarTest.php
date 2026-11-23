@@ -107,10 +107,11 @@ class IsgSuiteArtilarTest extends TestCase
         auth()->logout();
         $this->get(route('canli-egitim.form', ['token' => $oturum->katilim_token]))->assertOk()->assertSee('Yüksekte Çalışma');
 
+        $dogruCevaplar = collect($oturum->sorular)->pluck('dogru')->all();
         $this->post(route('canli-egitim.gonder', ['token' => $oturum->katilim_token]), [
             'ad_soyad' => 'Ahmet Demir',
             'tc' => '11122233344',
-            'cevaplar' => [0 => 0, 1 => 0, 2 => 0, 3 => 0, 4 => 0],
+            'cevaplar' => $dogruCevaplar,
         ])->assertRedirect();
 
         $oturum->refresh();
