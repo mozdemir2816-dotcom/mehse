@@ -28,7 +28,7 @@ class GeminiMevzuatDanismani
         ],
         'egitim_sureleri' => [
             'soru' => 'Temel İSG eğitim süreleri ve periyotları tehlike sınıfına göre nedir?',
-            'yanit' => "Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik m.6 uyarınca asgari eğitim süreleri ve tekrar periyotları:\n• Az Tehlikeli işyerleri: En az 8 saat (3 yılda bir tekrar)\n• Tehlikeli işyerleri: En az 12 saat (2 yılda bir tekrar)\n• Çok Tehlikeli işyerleri: En az 16 saat (Yılda bir tekrar)\nİşe girişte ayrıca her çalışana işe başlamadan önce en az 2 saatlik pratik İşbaşı Oryantasyon Eğitimi verilmesi zorunludur.",
+            'yanit' => "Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik (RG 02.04.2026/33212) m.11 uyarınca asgari eğitim süreleri ve tekrar periyotları:\n• Az Tehlikeli işyerleri: En az 8 saat (3 yılda bir tekrar)\n• Tehlikeli işyerleri: En az 12 saat (2 yılda bir tekrar)\n• Çok Tehlikeli işyerleri: En az 16 saat (Yılda bir tekrar)\nİşe girişte ayrıca her çalışana işe başlamadan önce en az 2 saatlik yüz yüze İşbaşı Oryantasyon Eğitimi verilmesi zorunludur.",
             'anahtar_kelimeler' => ['eğitim', 'kaç saat', 'temel isg', 'oryantasyon', 'işbaşı'],
         ],
         'destek_ilkyardim' => [

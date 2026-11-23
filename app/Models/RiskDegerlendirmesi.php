@@ -183,6 +183,10 @@ class RiskDegerlendirmesi extends Model
         if (! $destekVar) {
             $eksikler[] = 'Destek Elemanı (Yön. md.6 — Zorunlu)';
         }
+        $bilgiSahibiVar = $ekipteVar('birim') || $ekipteVar('sorumlu') || $ekipteVar('bilgi') || $ekipteVar('müdür') || $ekipteVar('mudur') || $ekipteVar('şef') || $ekipteVar('sef') || $ekipteVar('usta');
+        if (! $bilgiSahibiVar && $imza->count() < 5) {
+            $eksikler[] = 'İşyerindeki Bütün Birimleri Temsil Eden Bilgi Sahibi Çalışan (Yön. md.6/1-ç)';
+        }
 
         return $eksikler;
     }

@@ -45,10 +45,12 @@
                         <strong>Tehlike Sınıfı:</strong> {{ $firma->tehlikeSinifiEtiketi() }}
                         &nbsp;|&nbsp; <strong>Çalışan:</strong> {{ $calisan }} kişi
                         @if ($firma->sgk_sicil_no) &nbsp;|&nbsp; <strong>SGK:</strong> {{ $firma->sgk_sicil_no }} @endif
+                        @if ($firma->nace_kodu) &nbsp;|&nbsp; <strong>NACE:</strong> {{ $firma->nace_kodu }} @endif
+                        @if ($firma->isg_katip_sozlesme_no) &nbsp;|&nbsp; <strong>İSG-KATİP:</strong> {{ $firma->isg_katip_sozlesme_no }} @endif
                     </div>
                     <div class="alt">
-                        <strong>İSG Uzmanı:</strong> {{ $firma->igu?->ad_soyad ?: 'Atanmadı' }}
-                        &nbsp;|&nbsp; <strong>İşyeri Hekimi:</strong> {{ $firma->isyeriHekimi?->ad_soyad ?: 'Atanmadı' }}
+                        <strong>İSG Uzmanı:</strong> {{ $firma->igu_hizmeti_yok ? 'Kapsam Dışı / Muaf' : ($firma->igu?->ad_soyad ? $firma->igu->ad_soyad.($firma->igu->sertifika_no ? ' (Belge: '.$firma->igu->sertifika_no.')' : '') : 'Atanmadı') }}
+                        &nbsp;|&nbsp; <strong>İşyeri Hekimi:</strong> {{ $firma->hekim_hizmeti_yok ? 'Kapsam Dışı / Muaf' : ($firma->isyeriHekimi?->ad_soyad ? $firma->isyeriHekimi->ad_soyad.($firma->isyeriHekimi->sertifika_no ? ' (Belge: '.$firma->isyeriHekimi->sertifika_no.')' : '') : 'Atanmadı') }}
                         &nbsp;|&nbsp; <strong>Tarih:</strong> {{ $tarih }}
                     </div>
                 </td>
@@ -73,13 +75,16 @@
                 <div class="ozet-etiket">Acil Durum &amp; İlk Yardım Kontenjanı</div>
                 @if ($kontenjan)
                     <div class="ozet-deger">
-                        İlk Yardım: {{ $kontenjan['ilkyardim_atanan'] }}/{{ $kontenjan['ilkyardim_gereken'] }}
+                        İlk Yardım: {{ $kontenjan['ilkyardim_gecerli_belge'] ?? $kontenjan['ilkyardim_atanan'] }}/{{ $kontenjan['ilkyardim_gereken'] }}
                         · Destek: {{ $kontenjan['destek_atanan'] }}/{{ $kontenjan['destek_toplam_gereken'] }}
                     </div>
                     <div class="ozet-not">
                         {{ ($kontenjan['ilkyardim_eksik'] + $kontenjan['destek_eksik']) > 0
-                            ? 'Açık: '.$kontenjan['ilkyardim_eksik'].' ilk yardımcı, '.$kontenjan['destek_eksik'].' destek elemanı'
+                            ? 'Açık: '.$kontenjan['ilkyardim_eksik'].' geçerli ilk yardımcı, '.$kontenjan['destek_eksik'].' destek elemanı'
                             : 'Yasal ekip kontenjanları tam' }}
+                        @if (($kontenjan['ilkyardim_suresi_dolmus'] ?? 0) > 0)
+                            · ({{ $kontenjan['ilkyardim_suresi_dolmus'] }} belgesi dolmuş)
+                        @endif
                     </div>
                 @else
                     <div class="ozet-deger">—</div>
@@ -148,6 +153,23 @@
                 </tr>
             @endforeach
         </tbody>
+    </table>
+
+    <table style="width:100%;border-collapse:collapse;margin-top:12px;page-break-inside:avoid;font-size:8px">
+        <tr>
+            <td style="width:50%;border:1px solid #d1d5db;padding:6px 8px;vertical-align:top">
+                <strong>Hazırlayan (İSG Uzmanı)</strong><br>
+                {{ $firma->igu?->ad_soyad ?: '—' }}@if ($firma->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif
+                <div style="height:26px"></div>
+                <span style="color:#6b7280">İmza / Kaşe · {{ $tarih }}</span>
+            </td>
+            <td style="width:50%;border:1px solid #d1d5db;padding:6px 8px;vertical-align:top">
+                <strong>Tebellüğ Eden (İşveren / İşveren Vekili)</strong><br>
+                {{ $firma->isveren_vekili ?: ($firma->isveren_ad ?: '—') }}
+                <div style="height:26px"></div>
+                <span style="color:#6b7280">İmza / Kaşe · Tarih: .... / .... / ........</span>
+            </td>
+        </tr>
     </table>
 
     <div class="alt-bilgi">

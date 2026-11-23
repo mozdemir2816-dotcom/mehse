@@ -397,7 +397,7 @@
         @endforeach
     </table>
     <p style="font-size:9.5px;color:#666;margin-top:6px">
-        6331 SK m.6 ve Risk Değerlendirmesi Yönetmeliği uyarınca risk değerlendirmesi
+        6331 SK m.10 ve İş Sağlığı ve Güvenliği Risk Değerlendirmesi Yönetmeliği m.6 uyarınca risk değerlendirmesi
         işveren, iş güvenliği uzmanı, işyeri hekimi, çalışan temsilcisi ve destek
         elemanlarından oluşan bir ekip tarafından gerçekleştirilir.
     </p>

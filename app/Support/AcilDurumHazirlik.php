@@ -176,7 +176,24 @@ class AcilDurumHazirlik
         $bugun = Carbon::today();
 
         $ekipler = $plan->ekipListesi();
-        $bosEkip = collect($ekipler)->filter(fn ($l) => $l === [])->keys()->map(fn ($k) => config('isg.acil_durum.ekipler.'.$k))->all();
+        $calisanSayisi = $firma ? AcilEkipDurumu::calisanSayisi($firma) : 0;
+        $kucukIsyeriDestekVar = $calisanSayisi > 0 && $calisanSayisi < 10
+            && collect(['sondurme', 'kurtarma', 'koruma'])->contains(fn (string $t) => ! empty($ekipler[$t]));
+        $bosEkip = collect($ekipler)
+            ->filter(function ($l, $k) use ($kucukIsyeriDestekVar) {
+                if ($l !== []) {
+                    return false;
+                }
+                // Acil Durumlar Yön. m.11/4: <10 çalışanlı işyerinde söndürme/kurtarma/koruma için toplam 1 destek elemanı yeterlidir.
+                if ($kucukIsyeriDestekVar && in_array($k, ['sondurme', 'kurtarma', 'koruma'], true)) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->keys()
+            ->map(fn ($k) => config('isg.acil_durum.ekipler.'.$k))
+            ->all();
 
         // Tatbikat: Tatbikat modülündeki "yapıldı / takip" (ve geriye dönük "tamamlandi") kaydı öncelikli, yoksa elle girilen tarih
         $modulSonTatbikat = TatbikatTutanagi::query()->where('firma_id', $plan->firma_id)

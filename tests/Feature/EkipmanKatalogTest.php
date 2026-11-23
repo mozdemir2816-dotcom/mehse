@@ -159,7 +159,8 @@ class EkipmanKatalogTest extends TestCase
             ->callAction('yeniEkipman', ['kategori' => 'kaldirma_iletme', 'tip' => 'Gondol (Asılı Çalışma Platformu)', 'ekipman_adi' => 'Gondol-1'])->assertHasNoActionErrors()
             ->callAction('yeniEkipman', ['kategori' => 'diger_ekipman', 'tip' => 'Traktör', 'ekipman_adi' => 'Traktör-1'])->assertHasNoActionErrors();
 
-        $this->assertSame('muaf', IsEkipmani::where('ekipman_adi', 'Pres-1')->sole()->vizeDurumu());
+        // 18.02.2022/31754 RG Ek-III m.2.4: Hidrolik Pres (Tezgâhlar) periyodik kontrole tabi; Traktör muaf.
+        $this->assertSame('bekliyor', IsEkipmani::where('ekipman_adi', 'Pres-1')->sole()->vizeDurumu());
         $this->assertSame('muaf', IsEkipmani::where('ekipman_adi', 'Traktör-1')->sole()->vizeDurumu());
         $this->assertSame('Kaldırma & İletme Araçları', IsEkipmani::where('ekipman_adi', 'Gondol-1')->sole()->kategori_adi);
 
@@ -195,8 +196,11 @@ class EkipmanKatalogTest extends TestCase
 
         $this->assertEqualsCanonicalizing(['Dikey Freze Tezgâhı', 'Trafo & Yüksek Gerilim İşletmesi', EkipmanKatalogu::HER_FIRMA_ETIKET], array_keys($eksik['gruplar']));
         $this->assertSame(52 + 52 + self::HER_FIRMA_TOPLAM, $eksik['toplam']);
-        // Trafo periyodik muayeneye tabi: tarih girilmeyince uyarı listesinde.
-        $this->assertSame(['Trafo & Yüksek Gerilim İşletmesi'], EkipmanKatalogu::muayeneTarihiEksik($this->firma)->pluck('tip')->all());
+        // Trafo ve Dikey Freze Tezgâhı (Ek-III m.2.4) periyodik muayeneye tabi: tarih girilmeyince uyarı listesinde.
+        $this->assertEqualsCanonicalizing(
+            ['Trafo & Yüksek Gerilim İşletmesi', 'Dikey Freze Tezgâhı'],
+            EkipmanKatalogu::muayeneTarihiEksik($this->firma)->pluck('tip')->all()
+        );
     }
 
     public function test_ortak_atolye_maddeleri_yalniz_kendi_dosyasi_olmayan_makinede_gelir(): void
@@ -298,11 +302,16 @@ class EkipmanKatalogTest extends TestCase
 
     public function test_atolye_makinesi_periyodik_muayeneden_muaf(): void
     {
+        // 18.02.2022 / 31754 RG Ek-III m.2.4: CNC Tezgâhı artık periyodik kontrole tabidir;
+        // Ek-III kapsamı dışındaki ekipmanlar (ör. Seyyar Merdiven) muaftır.
+        $merdiven = $this->ekipman('diger_ekipman', 'Seyyar / Çok Amaçlı Merdiven', ['son_muayene_tarihi' => now()->subYears(2)]);
         $cnc = $this->ekipman('uretim_atolye', 'CNC Tezgâhı', ['son_muayene_tarihi' => now()->subYears(2)]);
         $this->ekipman('kaldirma_iletme', 'Forklift / Akülü & Dizel İstifleyici');
 
-        $this->assertSame('muaf', $cnc->vizeDurumu());
-        $this->assertNull($cnc->fresh()->sonraki_vize_tarihi);
+        $this->assertSame('muaf', $merdiven->vizeDurumu());
+        $this->assertNull($merdiven->fresh()->sonraki_vize_tarihi);
+        $this->assertSame('dolmus', $cnc->vizeDurumu());
+        $this->assertNotNull($cnc->fresh()->sonraki_vize_tarihi);
         $this->assertSame(['Forklift / Akülü & Dizel İstifleyici'], EkipmanKatalogu::muayeneTarihiEksik($this->firma)->pluck('tip')->all());
     }
 
@@ -491,8 +500,8 @@ class EkipmanKatalogTest extends TestCase
             ->assertHasNoActionErrors();
 
         $cnc = IsEkipmani::where('firma_id', $this->firma->id)->sole();
-        $this->assertSame('muaf', $cnc->vizeDurumu());
-        $this->assertSame('Üretim & Atölye Makineleri', $cnc->kategori_adi);
+        $this->assertSame('bekliyor', $cnc->vizeDurumu());
+        $this->assertSame('Üretim & Atölye Makineleri (Tezgâhlar)', $cnc->kategori_adi);
     }
 
     /** 12.11.2026: birden çok talimat, tip değişince ekleme, listede var/yok + makine bazlı günlük form. */

@@ -73,7 +73,8 @@
                 <td style="text-align:center">{{ !empty($s['cmr']) ? '✔' : '' }}</td>
                 <td class="yb y{{ $y }}">{{ $y }}</td>
                 <td>{{ $s['alinan_onlemler'] ?? '' }}</td>
-                <td style="text-align:center">{{ ucfirst($s['artik_risk'] ?? '') }}</td>
+                @php $artikEtiket = ['dusuk' => 'Düşük', 'orta' => 'Orta', 'yuksek' => 'Yüksek'][$s['artik_risk'] ?? ''] ?? ucfirst((string) ($s['artik_risk'] ?? '')); @endphp
+                <td style="text-align:center">{{ $artikEtiket }}</td>
             </tr>
         @empty
             <tr><td colspan="11" style="text-align:center;color:#888">Kimyasal girilmemiş.</td></tr>

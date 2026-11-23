@@ -41,14 +41,14 @@ class OrtamOlcumu extends Model
                 $m['gecmis'] = array_values((array) ($m['gecmis'] ?? []));
 
                 // Değer + sınır sayısal ve sonuç henüz seçilmemişse otomatik belirle.
-                if ($m['sonuc'] === 'bekliyor' && ($oto = static::otomatikSonuc($m['olculen_deger'], $m['sinir_deger']))) {
+                if ($m['sonuc'] === 'bekliyor' && ($oto = static::otomatikSonuc($m['olculen_deger'], $m['sinir_deger'], $m['birim'] ?? null, $m['parametre'] ?? null))) {
                     $m['sonuc'] = $oto;
                 }
 
                 // Ölçüm tarihi girilmiş ve sonraki elle verilmemişse periyottan türet.
                 if (! empty($m['olcum_tarihi']) && empty($m['sonraki_olcum_tarihi'])) {
                     $m['sonraki_olcum_tarihi'] = Carbon::parse($m['olcum_tarihi'])
-                        ->addMonths($m['periyot_ay'])->toDateString();
+                        ->addMonthsNoOverflow($m['periyot_ay'])->toDateString();
                 }
 
                 return $m;
@@ -57,11 +57,13 @@ class OrtamOlcumu extends Model
     }
 
     /**
-     * Ölçülen değer sınır değerle karşılaştırılır (ikisi de sayıysa): sınırı
-     * aşan → asim, sınırın %80'i ve üstü → sinir, altı → uygun. Sınırı "—"
-     * olan (ör. aydınlatma — alt sınır) ölçümlerde null döner, elle seçilir.
+     * Ölçülen değer sınır değerle karşılaştırılır (ikisi de sayıysa):
+     * - Gürültü / dB(A) ölçümleri logaritmik ölçektedir (Gürültü Yön. m.5):
+     *   sınır üstü → asim, ≥ 80 dB(A) (en düşük maruziyet eylem değeri) → sinir, < 80 → uygun.
+     * - Diğer lineer ölçümlerde: sınırı aşan → asim, sınırın %80'i ve üstü → sinir, altı → uygun.
+     * Sınırı "—" olan (ör. aydınlatma — alt sınır) ölçümlerde null döner, elle seçilir.
      */
-    public static function otomatikSonuc(mixed $olculen, mixed $sinir): ?string
+    public static function otomatikSonuc(mixed $olculen, mixed $sinir, ?string $birim = null, ?string $parametre = null): ?string
     {
         $sayi = fn ($v) => is_numeric($v = str_replace(',', '.', trim((string) $v))) ? (float) $v : null;
         $o = $sayi($olculen);
@@ -69,6 +71,18 @@ class OrtamOlcumu extends Model
 
         if ($o === null || $s === null || $s <= 0) {
             return null;
+        }
+
+        $gurultuMu = str_contains(mb_strtolower((string) $birim, 'UTF-8'), 'db')
+            || str_contains(mb_strtolower((string) $parametre, 'UTF-8'), 'gürültü')
+            || str_contains(mb_strtolower((string) $parametre, 'UTF-8'), 'gurultu');
+
+        if ($gurultuMu) {
+            return match (true) {
+                $o > $s => 'asim',
+                $o >= 80.0 => 'sinir',
+                default => 'uygun',
+            };
         }
 
         return match (true) {

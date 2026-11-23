@@ -170,7 +170,12 @@ class OrtamOlcumleri extends Page
             return;
         }
 
-        $oto = OrtamOlcumuModel::otomatikSonuc($this->satirlar[$i]['olculen_deger'] ?? null, $this->satirlar[$i]['sinir_deger'] ?? null);
+        $oto = OrtamOlcumuModel::otomatikSonuc(
+            $this->satirlar[$i]['olculen_deger'] ?? null,
+            $this->satirlar[$i]['sinir_deger'] ?? null,
+            $this->satirlar[$i]['birim'] ?? null,
+            $this->satirlar[$i]['parametre'] ?? null,
+        );
 
         if ($oto) {
             $this->satirlar[$i]['sonuc'] = $oto;

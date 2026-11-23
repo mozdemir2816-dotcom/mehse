@@ -380,6 +380,12 @@ class IsIzinFormu extends Page
             return null;
         }
 
+        if ($this->baslangic && $this->bitis && strtotime($this->bitis) < strtotime($this->baslangic)) {
+            Notification::make()->title('Geçersiz tarih aralığı')->body('Bitiş zamanı başlangıç zamanından önce olamaz.')->danger()->send();
+
+            return null;
+        }
+
         $form = $this->kayitIcin(IsIzinFormuModel::class, [
             'firma_id' => $this->firma->id,
             'sablon_kaynak' => $this->sablonKaynak,
@@ -455,7 +461,6 @@ class IsIzinFormu extends Page
                 ->label('Formu Kaydet ve PDF Oluştur')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $form = $this->kaydet();
                     if ($form) {
@@ -517,7 +522,15 @@ class IsIzinFormu extends Page
     {
         $f = $this->kayit($id);
 
-        if (! $f || $f->durum !== 'onay_bekliyor') {
+        if (! $f || $f->durum !== 'onay_bekliyor' || ! in_array($hangi, [1, 2], true)) {
+            return;
+        }
+
+        if ($f->suresiGectiMi()) {
+            Notification::make()->title('Süresi dolmuş iş izni onaylanamaz')
+                ->body('İzin geçerlilik süresi geçmiş. Yeni tarih/saat ile güncel izin oluşturun.')
+                ->danger()->send();
+
             return;
         }
 
@@ -612,6 +625,11 @@ class IsIzinFormu extends Page
         }
 
         if ($this->islemTuru === 'reddet') {
+            if (! in_array($f->durum, ['taslak', 'onay_bekliyor'], true)) {
+                $this->islemIptal();
+
+                return;
+            }
             if (blank($this->islemNotu)) {
                 Notification::make()->title('Ret gerekçesi zorunlu')->danger()->send();
 
@@ -639,6 +657,11 @@ class IsIzinFormu extends Page
         }
 
         if ($this->islemTuru === 'kapat') {
+            if (! in_array($f->durum, ['onaylandi', 'is_tamamlandi'], true)) {
+                $this->islemIptal();
+
+                return;
+            }
             $f->update([
                 'durum' => 'kapatildi',
                 'is_bitis_tarihi' => $f->is_bitis_tarihi ?? now(),

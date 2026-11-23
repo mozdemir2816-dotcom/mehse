@@ -732,13 +732,11 @@ return [
             'kaldirma_iletme' => ['ad' => 'Kaldırma & İletme Araçları', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.2'],
             'basincli_kap' => ['ad' => 'Basınçlı Kap ve Tesisatlar', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.1'],
             'elektrik_topraklama' => ['ad' => 'Elektrik & Topraklama', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.3'],
-            'tesisat_yangin' => ['ad' => 'Tesisat & Yangın', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.4'],
-            'is_hijyeni' => ['ad' => 'İş Hijyeni & Ortam Ölçümleri', 'mevzuat' => 'İş Hijyeni Ölçüm, Test ve Analizi Yapan Laboratuvarlar Hakkında Yönetmelik'],
-            // Periyodik muayene (vize) takibi YOK — 'periyodik' => false. Firmaya eklenince
-            // risk değerlendirmesi ve kontrol formu bağlantısı çalışır (config/ekipman_katalogu.php);
-            // vize durumu "Muayene gerekmiyor" görünür, Kontrol Merkezi periyodik rapor beklemez.
-            'uretim_atolye' => ['ad' => 'Üretim & Atölye Makineleri', 'mevzuat' => 'İş Ekipmanları Yön. — kullanım öncesi / düzenli kullanıcı kontrolü', 'periyodik' => false],
-            'diger_ekipman' => ['ad' => 'Diğer İş Ekipmanları & Araçlar', 'mevzuat' => 'İş Ekipmanları Yön. — kullanım öncesi kontrol (Ek-III periyodik muayene kapsamı dışı)', 'periyodik' => false],
+            'tesisat_yangin' => ['ad' => 'Tesisat & Yangın', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.3'],
+            'is_hijyeni' => ['ad' => 'İş Hijyeni & Ortam Ölçümleri', 'mevzuat' => 'İş Hijyeni Ölçüm, Test ve Analizleri Hakkında Yönetmelik (27.01.2023/32086 RG)'],
+            // 18.02.2022 / 31754 RG Ek-III Madde 2.4: Tezgâhlar standartta süre belirtilmemişse azami 1 yıl periyodik kontrole tabidir.
+            'uretim_atolye' => ['ad' => 'Üretim & Atölye Makineleri (Tezgâhlar)', 'mevzuat' => 'Yönetmelik Ek-III Madde 2.4 (Tezgâhlar — azami 1 yıl)'],
+            'diger_ekipman' => ['ad' => 'Diğer İş Ekipmanları & Araçlar', 'mevzuat' => 'İş Ekipmanları Yön. — kullanım öncesi kontrol (Ek-III Madde 2.5 kapsamındaki endüstriyel raflar hariç)', 'periyodik' => false],
         ],
 
         'tipler' => [
@@ -837,7 +835,7 @@ return [
                 ['ad' => 'Endüstriyel Zemin Temizleme Otomatı', 'periyot_ay' => 12, 'standart' => 'TS EN 60335-2-72', 'deney' => 'Periyodik muayene yok — kullanım öncesi kontrol'],
                 ['ad' => 'Seyyar / Çok Amaçlı Merdiven', 'periyot_ay' => 12, 'standart' => 'TS EN 131', 'deney' => 'Periyodik muayene yok — kullanım öncesi gözle kontrol'],
                 ['ad' => 'Şirket Aracı', 'periyot_ay' => 12, 'standart' => 'Karayolları Trafik Yön. (araç muayenesi ayrıca)', 'deney' => 'İSG periyodik muayenesi yok — araç muayene ve bakım takibi'],
-                ['ad' => 'Endüstriyel Raf', 'periyot_ay' => 12, 'standart' => 'TS EN 15635', 'deney' => 'Ek-III kapsamı dışı — raf sorumlusu kontrolü ve uzman muayenesi önerilir'],
+                ['ad' => 'Endüstriyel Raf', 'periyot_ay' => 12, 'periyodik' => true, 'standart' => 'TS EN 15635', 'deney' => 'Yönetmelik Ek-III Madde 2.5 (18.02.2022/31754 RG) — yılda en az 1 kez periyodik kontrol'],
                 // Şantiye iş makineleri (14.10.2026, SK-RA-01) — üretici talimatına göre bakım + kullanım öncesi kontrol formu.
                 ['ad' => 'Kazıcı Yükleyici (Beko Loder)', 'periyot_ay' => 12, 'standart' => 'TS EN 474-1 / TS EN 474-4', 'deney' => 'Üretici talimatına göre bakım; kullanım öncesi günlük kontrol formu'],
                 ['ad' => 'Damperli Kamyon', 'periyot_ay' => 12, 'standart' => 'Karayolları Trafik Yön. (araç muayenesi ayrıca)', 'deney' => 'Araç muayene ve bakım takibi; kullanım öncesi günlük kontrol formu'],
@@ -3193,7 +3191,7 @@ return [
             ['baslik' => 'Yıllık Tatbikat', 'metin' => 'Yılda en az 1 kez acil durum tahliye / yangın tatbikatı yapılıp tutanak sisteme işlenmelidir.'],
             ['baslik' => 'İSG Kurulu', 'metin' => '50 ve üzeri çalışanlı işyerlerinde kurul kararları ve toplantı tutanakları yıl boyu güncel tutulmalıdır.'],
             ['baslik' => 'Çalışan Temsilcisi', 'metin' => 'Seçim veya atama tutanaklarının süresi dolmadan yenilenmesi yasal zorunludur.'],
-            ['baslik' => 'Periyodik Muayene', 'metin' => 'Ağır ve tehlikeli işlerde çalışanların periyodik sağlık muayeneleri aksatılmamalıdır.'],
+            ['baslik' => 'Periyodik Muayene', 'metin' => 'Tehlikeli ve çok tehlikeli işlerde çalışanların periyodik sağlık muayeneleri (6331 m.15) aksatılmamalıdır.'],
         ],
     ],
 
@@ -4713,7 +4711,7 @@ return [
                 'Kimyasal dökülme, sıçrama, göz/vücut duşu kullanımı ve acil ilk yardım müdahalesi',
             ]],
             'is_kazasi_sonrasi' => ['ad' => 'İş Kazası Sonrası İşe Dönüş Eğitimi', 'maddeler' => [
-                'Yasal mevzuat: 6331 sayılı İSG kanunu md.17/3 (ilave eğitim) ve çalışanların iş eğitimlerinin usul ve esasları hakkında yönetmelik md.8 (RG 15.05.2013/28648)',
+                'Yasal mevzuat: 6331 sayılı İSG Kanunu md.17/3 (ilave eğitim) ve Çalışanların İSG Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik (RG 02.04.2026/33212)',
                 'Yaşanan iş kazasının değerlendirilmesi: kazanın oluş şekli, sebepleri ve katkıda bulunan faktörler',
                 'Kaza kök neden analizi: tehlikeli durum ve tehlikeli hareket (davranış) ayrımı',
                 'Benzer kazaların önlenmesi: alınan düzeltici faaliyetler (DÖF) ve kazadan çıkarılan dersler',
@@ -5784,7 +5782,7 @@ return [
             ['baslik' => 'İş Kazası/Meslek Hastalığı Bildirim İhlali', 'aciklama' => '6331 s.K. m.14 uyarınca iş kazası/meslek hastalığının süresinde bildirilmemesi.'],
             ['baslik' => 'Sağlık Gözetimi Yaptırmama', 'aciklama' => '6331 s.K. m.15 uyarınca işe giriş/periyodik sağlık muayenelerinin yaptırılmaması.'],
             ['baslik' => 'Eğitim / Bilgilendirme Eksikliği', 'aciklama' => '6331 s.K. m.16, m.17 uyarınca çalışanlara İSG eğitimi verilmemesi/bilgilendirme yapılmaması.'],
-            ['baslik' => 'Çalışan Temsilcisi / Kurul Eksikliği', 'aciklama' => '6331 s.K. m.18, m.22 uyarınca çalışan temsilcisi görevlendirilmemesi veya İSG kurulu oluşturulmaması.'],
+            ['baslik' => 'Çalışan Temsilcisi / Kurul Eksikliği', 'aciklama' => '6331 s.K. m.20, m.22 uyarınca çalışan temsilcisi görevlendirilmemesi veya İSG kurulu oluşturulmaması.'],
             ['baslik' => 'Koruyucu / Önleyici Tedbir Eksikliği', 'aciklama' => '6331 s.K. m.4, m.5 uyarınca tespit edilen risklere karşı gerekli önlemlerin alınmaması.'],
             ['baslik' => 'Durdurma Kararına Uymama', 'aciklama' => '6331 s.K. m.25 uyarınca işin durdurulması kararına rağmen faaliyetin sürdürülmesi.'],
             ['baslik' => 'Diğer', 'aciklama' => 'Yukarıdaki kategorilere girmeyen, tebligatta belirtilen diğer ihlal.'],
@@ -7033,7 +7031,7 @@ return [
             'dogalgaz_lpg' => ['ad' => 'Doğalgaz/LPG Kaçağı Tatbikatı', 'sure_dk' => '30-45', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde, {yer} bölümünde yoğun gaz kokusu alındığı ve doğalgaz / LPG kaçağından şüphelenildiği senaryosu kurgulanmıştır. Kaçağı fark eden çalışan elektrik anahtarlarına, prizlere ve kıvılcım çıkarabilecek cihazlara dokunmadan durumu bildirmiş; gaz ana kesme vanası kapatılmış, kapı ve pencereler açılarak doğal havalandırma sağlanmıştır. Ortamda telefon kullanılmamış, ihbar (187 Doğalgaz Acil / 112) güvenli alandan yapılmıştır. Çalışanlar alarm butonu yerine sesli uyarı ile {toplanma} toplanma alanına tahliye edilmiş, yetkili ekip gelip ortamın güvenli olduğunu teyit edene kadar binaya girilmemiştir.'],
             'sel_su_baskini' => ['ad' => 'Sel/Su Baskını Tatbikatı', 'sure_dk' => '45-60', 'hedef_tahliye_dk' => 10, 'metin' => '{firma} ({adres}) işyerinde aşırı yağış sonucu bodrum ve alçak kotlu alanlarda ({yer}) su baskını yaşandığı senaryosu kurgulanmıştır. Durumu fark eden çalışanın bildirmesiyle etkilenen alanların elektrik beslemesi ana panodan kesilmiş, su ile temas edebilecek elektrikli cihazlar devre dışı bırakılmıştır. Alçak kotlardaki çalışanlar üst katlara / güvenli bölgeye ve gerektiğinde {toplanma} toplanma alanına tahliye edilmiş, kritik evrak, kimyasal ve malzemeler yüksek alanlara taşınmıştır. Akıntılı sudan geçilmemesi konusunda uyarı yapılmış, 112 ve belediye ekipleriyle iletişim simüle edilmiş ve su çekildikten sonra elektrik tesisatı kontrol edilmeden enerji verilmemesi talimatı uygulanmıştır.'],
             'elektrik_yangini' => ['ad' => 'Elektrik Yangını Tatbikatı', 'sure_dk' => '30-45', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde, {yer} bölümündeki elektrik panosunda aşırı ısınma sonucu yangın başladığı senaryosu kurgulanmıştır. Dumanı fark eden çalışan alarmı vermiş, yetkili elektrikçi / görevli personel ilgili bölümün ve gerekirse ana şalterin enerjisini kesmiştir. Söndürme ekibi enerjili ekipmana su ile müdahale edilmemesi kuralına uyarak karbondioksitli (CO₂) söndürücü ile ilk müdahaleyi yapmış, söndürücü kullanımında rüzgâr yönü ve güvenli mesafe gözetilmiştir. Bölüm çalışanları {toplanma} toplanma alanına tahliye edilmiş, 112 aranarak itfaiyeye ihbar simüle edilmiş ve panonun yetkili kişilerce kontrolü yapılmadan yeniden enerji verilmemiştir.'],
-            'sabotaj_guvenlik' => ['ad' => 'Sabotaj/Güvenlik Tehdidi Tatbikatı', 'sure_dk' => '30-45', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde, {yer} bölümünde sahipsiz şüpheli bir paket bulunduğu ve telefonla sabotaj / bomba ihbarı alındığı senaryosu kurgulanmıştır. İhbarı alan personel arayanın söylediklerini, ses özelliklerini ve saatini ihbar formuna not etmiş; şüpheli pakete dokunulmamış, yerinden oynatılmamış ve yakınında telsiz / cep telefonu kullanılmamıştır. Koordinatörün talimatıyla alan geniş bir güvenlik çemberiyle boşaltılmış, çalışanlar şüpheli paketin bulunduğu güzergâhtan uzak çıkışlar kullanılarak {toplanma} toplanma alanına tahliye edilmiştir. 155 Polis İmdat aranarak ihbar simüle edilmiş, koruma ekibi bina girişlerini kontrol altına almış ve yetkililer alanı güvenli ilan edene kadar binaya dönülmemiştir.'],
+            'sabotaj_guvenlik' => ['ad' => 'Sabotaj/Güvenlik Tehdidi Tatbikatı', 'sure_dk' => '30-45', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde, {yer} bölümünde sahipsiz şüpheli bir paket bulunduğu ve telefonla sabotaj / bomba ihbarı alındığı senaryosu kurgulanmıştır. İhbarı alan personel arayanın söylediklerini, ses özelliklerini ve saatini ihbar formuna not etmiş; şüpheli pakete dokunulmamış, yerinden oynatılmamış ve yakınında telsiz / cep telefonu kullanılmamıştır. Koordinatörün talimatıyla alan geniş bir güvenlik çemberiyle boşaltılmış, çalışanlar şüpheli paketin bulunduğu güzergâhtan uzak çıkışlar kullanılarak {toplanma} toplanma alanına tahliye edilmiştir. 112 Acil Çağrı Merkezi (Emniyet / Polis) aranarak ihbar simüle edilmiş, koruma ekibi bina girişlerini kontrol altına almış ve yetkililer alanı güvenli ilan edene kadar binaya dönülmemiştir.'],
             'gida_zehirlenmesi' => ['ad' => 'Gıda Zehirlenmesi Tatbikatı', 'sure_dk' => '45-60', 'hedef_tahliye_dk' => 5, 'metin' => '{firma} ({adres}) işyerinde öğle yemeğinin ardından {yer} bölümünde birden fazla çalışanda bulantı, kusma ve karın ağrısı şikâyetleri başladığı, toplu gıda zehirlenmesinden şüphelenildiği senaryosu kurgulanmıştır. Durumu bildiren bölüm sorumlusunun ardından ilk yardım ekibi etkilenen çalışanları tespit ederek sakin ve havadar bir alana almış, yaşamsal bulgularını takip etmiş ve sıvı kaybına karşı önlem almıştır. 112 aranarak etkilenen kişi sayısı ve belirtiler bildirilmiş, işyeri hekimi bilgilendirilmiş, yemekhane servisi durdurularak şüpheli yemeklerden numune (şahit numune) muhafaza altına alınmıştır. Etkilenen çalışanların listesi çıkarılarak sağlık kuruluşuna sevkleri ve yemek firması ile iletişim süreci uygulanmıştır.'],
         ],
         // Çoklu / bileşik tatbikat (02.11.2026). Sıra = olayların birbirini tetikleme sırası; seçilen
@@ -7063,7 +7061,7 @@ return [
                 'sorular' => [
                     'Şüpheli pakete dokunulmadan alan güvenlik çemberiyle boşaltıldı mı?',
                 ],
-                'asama' => '{tetik}{yer} bölümünde sahipsiz şüpheli bir paket bulunduğu ve sabotaj ihbarı alındığı varsayılmıştır. Pakete dokunulmamış, yakınında telsiz / cep telefonu kullanılmamış, alan geniş bir güvenlik çemberiyle boşaltılmış ve 155 Polis İmdat aranarak ihbar simüle edilmiştir.',
+                'asama' => '{tetik}{yer} bölümünde sahipsiz şüpheli bir paket bulunduğu ve sabotaj ihbarı alındığı varsayılmıştır. Pakete dokunulmamış, yakınında telsiz / cep telefonu kullanılmamış, alan geniş bir güvenlik çemberiyle boşaltılmış ve 112 Acil Çağrı Merkezi (Emniyet / Polis) aranarak ihbar simüle edilmiştir.',
             ],
             'dogalgaz_lpg' => [
                 'kisa' => 'Gaz kaçağı', 'baslik' => 'Doğalgaz / LPG kaçağı',
@@ -7615,8 +7613,8 @@ return [
                 'aciklama' => 'Vardiyalı (postalı) çalışmada dinlenme süresi ve postalar arası geçiş kurallarını düzenler.'],
             ['baslik' => 'Binaların Yangından Korunması Hakkında Yönetmelik', 'kategori' => 'yonetmelik',
                 'aciklama' => 'Yangın söndürme sistemleri, kaçış yolları ve periyodik bakım yükümlülüklerini düzenler.'],
-            ['baslik' => 'Asansör İşletme, Bakım ve Periyodik Kontrol Yönetmeliği', 'kategori' => 'yonetmelik',
-                'aciklama' => 'Asansörlerin yıllık periyodik kontrol ve bakım yükümlülüklerini düzenler.'],
+            ['baslik' => 'Asansör Periyodik Kontrol Yönetmeliği & Asansör İşletme ve Bakım Yönetmeliği', 'kategori' => 'yonetmelik',
+                'aciklama' => 'Asansörlerin A tipi muayene kuruluşunca yıllık periyodik kontrolü ile aylık bakım ve işletme yükümlülüklerini düzenler.'],
             ['baslik' => 'İşyerlerinde İşin Durdurulmasına Dair Yönetmelik', 'kategori' => 'yonetmelik',
                 'aciklama' => 'Hayati tehlike halinde işin durdurulması usul ve esaslarını düzenler.'],
 

@@ -77,7 +77,7 @@
 
             <label class="onay">
                 <input type="checkbox" name="onay" value="1" required>
-                <span>Yukarıda belirtilen İSG belgesini/tutanak içeriğini okuduğumu, anladığımı ve kendi rızamla elektronik imza attığımı beyan ederim.</span>
+                <span>Yukarıda belirtilen İSG belgesini/tutanak içeriğini okuduğumu, anladığımı, 6698 sayılı KVKK kapsamında iş sağlığı ve güvenliği kayıtlarının tutulması amacıyla işlenmesine bilgilendirildiğimi ve basit elektronik onay/imza verdiğimi (5070 sayılı Kanun kapsamında nitelikli e-imza olmadığını bilerek) beyan ederim.</span>
             </label>
 
             <button type="submit" class="btn btn-birincil" id="gonder-btn">✍ İmzamı Onayla ve Kaydet</button>
@@ -137,9 +137,9 @@
                     if (!navigator.onLine) {
                         e.preventDefault();
                         try {
+                            // KVKK veri minimizasyonu: T.C. Kimlik No tarayıcı localStorage'ında saklanmaz.
                             localStorage.setItem('mehse_offline_imza_{{ $imza->imza_token }}', JSON.stringify({
                                 ad: document.getElementById('calisan_adi').value,
-                                tc: document.getElementById('calisan_tc').value,
                                 img: dataUrl,
                             }));
                             const u = document.getElementById('cevrimdisi-uyari');

@@ -135,10 +135,17 @@ class SertifikaOlusturTest extends TestCase
             'konu_icerigi' => ['tip' => 'genel', 'genel_konular' => [], 'saglik_konulari' => [], 'teknik_konular' => []],
         ]);
 
-        $html = fn (bool $imzali) => view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma, 'imzali' => $imzali])->render();
+        $yol = storage_path('app/public/isg-profesyonel-kase/x.png');
+        @mkdir(dirname($yol), 0775, true);
+        file_put_contents($yol, 'png');
+        try {
+            $html = fn (bool $imzali) => view('pdf.sertifika', ['sertifika' => $s, 'firma' => $firma, 'imzali' => $imzali])->render();
 
-        $this->assertStringContainsString('isg-profesyonel-kase/x.png', $html(true));
-        $this->assertStringNotContainsString('isg-profesyonel-kase/x.png', $html(false));
+            $this->assertStringContainsString('isg-profesyonel-kase/x.png', $html(true));
+            $this->assertStringNotContainsString('isg-profesyonel-kase/x.png', $html(false));
+        } finally {
+            @unlink($yol);
+        }
     }
 
     public function test_pdf_uretilir(): void

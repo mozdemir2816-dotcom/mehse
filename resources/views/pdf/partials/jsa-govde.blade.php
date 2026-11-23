@@ -8,7 +8,7 @@
 
     <table class="ust">
         <tr>
-            @if ($firma?->logo)
+            @if ($firma?->logo && is_file(storage_path('app/public/'.$firma->logo)))
                 <td class="logo"><img src="{{ storage_path('app/public/'.$firma->logo) }}"></td>
             @endif
             <td>
@@ -89,11 +89,11 @@
             <tr>
                 <td>{{ $rol['rol'] ?? '' }}</td>
                 <td>
-                    {{ $hazirlayan ? '' : ($rol['ad'] ?? '') }}
+                    {{ $hazirlayan ? ($uzman->ad_soyad ?: ($rol['ad'] ?? '')) : ($rol['ad'] ?? '') }}
                     @if ($hazirlayan && $uzman->unvan)<br><span style="color:#555;font-size:7px">{{ $uzman->unvan }}</span>@endif
                 </td>
                 <td class="kase">
-                    @if (($imzali ?? true) && $hazirlayan && $uzman->kase_gorseli)
+                    @if (($imzali ?? true) && $hazirlayan && $uzman->kase_gorseli && is_file(storage_path('app/public/'.$uzman->kase_gorseli)))
                         <img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}" style="max-height:38px;max-width:95%">
                     @endif
                 </td>

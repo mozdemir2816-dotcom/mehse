@@ -33,7 +33,7 @@ class MeslekHastaligiBildirimi extends Model
             $m->belge_no ??= \App\Support\BelgeNumarasi::sonraki(static::class, 'belge_no', 'MH-'.now()->format('Y').'-', 3);
 
             if ($m->ogrenme_tarihi) {
-                $m->bildirim_son_tarihi = Carbon::parse($m->ogrenme_tarihi)->addWeekdays(3);
+                $m->bildirim_son_tarihi = \App\Support\SgkBildirimSayaci::isGunuEkle(Carbon::parse($m->ogrenme_tarihi), 3);
             }
         });
     }
@@ -58,10 +58,10 @@ class MeslekHastaligiBildirimi extends Model
         return config('isg.meslek_hastaligi.kurul_onay_durumlari.'.$this->sgk_kurul_onay_durumu, $this->sgk_kurul_onay_durumu ?? '—');
     }
 
-    /** Süresi geçmiş mi — SGK'ya hâlâ bildirilmemiş ve son tarih geride kaldıysa. */
+    /** Süresi geçmiş mi — SGK'ya hâlâ bildirilmemiş ve son günün bitimi (23:59:59) geride kaldıysa. */
     public function suresiGectiMi(): bool
     {
-        return ! $this->sgk_bildirimi_yapildi && $this->bildirim_son_tarihi && now()->gt($this->bildirim_son_tarihi);
+        return ! $this->sgk_bildirimi_yapildi && $this->bildirim_son_tarihi && now()->gt($this->bildirim_son_tarihi->copy()->endOfDay());
     }
 
     /** Bildirime kaç gün kaldığı (negatifse süre geçmiş demektir). */

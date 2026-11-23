@@ -145,9 +145,18 @@ class EkipmanKatalogu
             ])->all();
     }
 
-    /** Kategori periyodik muayene (vize) takibine tabi mi? Bilinmeyen kategori: evet. */
-    public static function periyodikMi(?string $kategori): bool
+    /** Kategori (veya tip istisnası — ör. Endüstriyel Raf Ek-III m.2.5) periyodik muayene takibine tabi mi? */
+    public static function periyodikMi(?string $kategori, ?string $tip = null): bool
     {
+        if (filled($tip) && filled($kategori)) {
+            $tipler = config('isg.periyodik_kontrol.tipler.'.$kategori, []);
+            foreach ($tipler as $t) {
+                if (($t['ad'] ?? null) === $tip && array_key_exists('periyodik', $t)) {
+                    return (bool) $t['periyodik'];
+                }
+            }
+        }
+
         return config('isg.periyodik_kontrol.kategoriler.'.$kategori.'.periyodik', true) !== false;
     }
 

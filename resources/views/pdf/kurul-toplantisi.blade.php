@@ -78,7 +78,7 @@
         <td class="e">Toplantı türü</td><td>{{ $toplanti->turEtiketi() }}</td>
     </tr>
     <tr>
-        <td class="e">Toplantı başkanı</td><td>İşveren / İşveren Vekili</td>
+        <td class="e">Toplantı başkanı</td><td>{{ $toplanti->baskan ?: ($firma?->isveren_vekili ?: ($firma?->isveren_ad ?: 'İşveren / İşveren Vekili')) }}</td>
         <td class="e">Sonraki toplantı</td><td>{{ $toplanti->sonraki_toplanti?->format('d.m.Y') ?: '—' }}</td>
     </tr>
     <tr>

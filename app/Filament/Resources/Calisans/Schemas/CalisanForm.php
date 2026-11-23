@@ -57,7 +57,7 @@ class CalisanForm
                             ->mapWithKeys(fn ($v) => [$v => $v])),
                     TextInput::make('telefon')->label('Telefon')->tel()->maxLength(30),
                     TextInput::make('eposta')->label('E-posta')->email()->maxLength(255),
-                    Toggle::make('agir_tehlikeli_iste')->label('Ağır ve tehlikeli işte çalışıyor'),
+                    Toggle::make('agir_tehlikeli_iste')->label('Mesleki eğitim gerektiren işte çalışıyor (6331 m.17/3)'),
                     Toggle::make('aktif')->label('Aktif')->default(true),
                     Select::make('rol_etiketleri')
                         ->label('İSG Rol & Yetkinlik Rozetleri')

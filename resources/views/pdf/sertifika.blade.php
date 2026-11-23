@@ -58,7 +58,7 @@
         <div class="ic">
 
         <div class="baslik">
-            @if ($firma?->logo)
+            @if ($firma?->logo && is_file(storage_path('app/public/'.$firma->logo)))
                 <img src="{{ storage_path('app/public/'.$firma->logo) }}">
             @endif
             <h1>{{ \App\Support\TurkceMetin::buyuk($sertifika->tipBasligi()) }}</h1>
@@ -150,8 +150,9 @@
                     </td>
                     <td>
                         <div class="blok">
-                            @foreach ($ozelMaddeler->slice((int) ceil($ozelMaddeler->count() / 2)) as $i => $m)
-                                <p>{{ $harf($i + (int) ceil($ozelMaddeler->count() / 2)) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                            @php $yari = (int) ceil($ozelMaddeler->count() / 2); @endphp
+                            @foreach ($ozelMaddeler->slice($yari)->values() as $i => $m)
+                                <p>{{ $harf($i + $yari) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
                             @endforeach
                         </div>
                     </td>
@@ -164,8 +165,8 @@
                 @if ($sertifika->egitici_igu_dahil)
                     <td>
                         İş Güvenliği Uzmanı<br>
-                        Eğitici Adı Soyadı : <br>
-                        @if (($imzali ?? true) && $sertifika->egitici_igu_kase)
+                        Eğitici Adı Soyadı : {{ $sertifika->egitici_igu_ad ?: ($firma?->igu?->ad_soyad ?: '') }}@if ($firma?->igu?->sertifika_no)<br>Belge No : {{ $firma->igu->sertifika_no }}@endif<br>
+                        @if (($imzali ?? true) && $sertifika->egitici_igu_kase && is_file(storage_path('app/public/'.$sertifika->egitici_igu_kase)))
                             <img src="{{ storage_path('app/public/'.$sertifika->egitici_igu_kase) }}">
                         @endif
                         İmza :
@@ -174,8 +175,8 @@
                 @if ($sertifika->cokluEgiticiMi() && $sertifika->egitici_hekim_dahil)
                     <td>
                         İşyeri Hekimi<br>
-                        Eğitici Adı Soyadı : <br>
-                        @if (($imzali ?? true) && $sertifika->egitici_hekim_kase)
+                        Eğitici Adı Soyadı : {{ $sertifika->egitici_hekim_ad ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}@if ($firma?->isyeriHekimi?->sertifika_no)<br>Belge No : {{ $firma->isyeriHekimi->sertifika_no }}@endif<br>
+                        @if (($imzali ?? true) && $sertifika->egitici_hekim_kase && is_file(storage_path('app/public/'.$sertifika->egitici_hekim_kase)))
                             <img src="{{ storage_path('app/public/'.$sertifika->egitici_hekim_kase) }}">
                         @endif
                         İmza :
@@ -183,14 +184,21 @@
                 @endif
                 <td>
                     İşveren / İşveren Vekilinin<br>
-                    Adı Soyadı :<br><br>
+                    Adı Soyadı : {{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}<br><br>
                     İmza :
                 </td>
             </tr>
         </table>
 
+        @php
+            $sonEgitimTarihi = collect($sertifika->egitim_tarihleri ?? [])->filter()->last();
+            $duzenlemeTarihi = $sertifika->belge_tarihi?->format('d.m.Y')
+                ?? ($sonEgitimTarihi ? \Illuminate\Support\Carbon::parse($sonEgitimTarihi)->format('d.m.Y') : null)
+                ?? $sertifika->created_at?->format('d.m.Y')
+                ?? now()->format('d.m.Y');
+        @endphp
         <p class="not">(1 ders saati: 45 dk ders + 15 dk Dinlenme)</p>
-        <p class="tarih-sag">Düzenleme Tarihi : {{ now()->format('d.m.Y') }}</p>
+        <p class="tarih-sag">Düzenleme Tarihi : {{ $duzenlemeTarihi }}</p>
 
         </div>
     </div>

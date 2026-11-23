@@ -102,7 +102,7 @@
                     @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$belge->hekim_kase) }}">@endif
                 @endif
             </div>
-            
+            <div style="font-size:8.5px;margin-top:2px">{{ $belge->hekim_adi ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}</div>
         </td>
         <td>
             <div class="rol">Çalışan (Bilgilendirildi)</div>

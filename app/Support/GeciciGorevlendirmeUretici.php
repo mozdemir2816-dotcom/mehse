@@ -40,7 +40,7 @@ class GeciciGorevlendirmeUretici
         ],
         'gecici_is_iliskisi' => [
             'ad' => 'Geçici İş İlişkisi Görevlendirmesi (4857 m.7 — İşçi Rızalı)',
-            'dayanak' => '4857 Sayılı İş Kanunu m.7 & 6331 Sayılı İSG Kanunu m.22-23',
+            'dayanak' => '4857 Sayılı İş Kanunu m.7 & 6331 Sayılı İSG Kanunu m.16/3, m.17/5',
             'aciklama' => 'Holding bünyesi veya aynı şirketler topluluğu içinde işçinin yazılı rızasıyla geçici devir.',
             'metin' => '4857 sayılı İş Kanunu\'nun 7. maddesi uyarınca, çalışanın yazılı rızası alınmak suretiyle aşağıda belirtilen işyerinde ve tarih aralığında geçici iş ilişkisi kapsamında görevlendirme yapılmıştır. Görevlendirme süresince iş sözleşmesi mevcut işveren nezdinde devam etmekte olup, iş sağlığı ve güvenliği eğitimleri ile gözetimi her iki işverenin koordinasyonunda yürütülür.',
             'taahhut' => [

@@ -63,11 +63,11 @@
         <table class="imza">
             <tr>
                 @if ($kayit->isg_uzmani_var)
-                    <td @if (! $kayit->isyeri_hekimi_var) style="width:100%" @endif>
+                    <td style="width:{{ $kayit->isyeri_hekimi_var ? '33.33%' : '50%' }}">
                         <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
-                        <div class="ad">&nbsp;</div>
+                        <div class="ad">{{ $kayit->isg_uzmani_ad ?: ($firma?->igu?->ad_soyad ?: '') }}@if ($firma?->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
-                            @if (($imzali ?? true) && $kayit->isg_uzmani_kase)
+                            @if (($imzali ?? true) && $kayit->isg_uzmani_kase && is_file(storage_path('app/public/'.$kayit->isg_uzmani_kase)))
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
                             @endif
                         </div>
@@ -75,17 +75,23 @@
                     </td>
                 @endif
                 @if ($kayit->isyeri_hekimi_var)
-                    <td @if (! $kayit->isg_uzmani_var) style="width:100%" @endif>
+                    <td style="width:{{ $kayit->isg_uzmani_var ? '33.33%' : '50%' }}">
                         <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
-                        <div class="ad">&nbsp;</div>
+                        <div class="ad">{{ $kayit->isyeri_hekimi_ad ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}@if ($firma?->isyeriHekimi?->sertifika_no) ({{ $firma->isyeriHekimi->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
-                            @if (($imzali ?? true) && $kayit->isyeri_hekimi_kase)
+                            @if (($imzali ?? true) && $kayit->isyeri_hekimi_kase && is_file(storage_path('app/public/'.$kayit->isyeri_hekimi_kase)))
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
                             @endif
                         </div>
                         <div class="imza-satir">Kaşe / İmza</div>
                     </td>
                 @endif
+                <td style="width:{{ ($kayit->isg_uzmani_var && $kayit->isyeri_hekimi_var) ? '33.33%' : '50%' }}">
+                    <div class="rol">İşveren / İşveren Vekili</div>
+                    <div class="ad">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}&nbsp;</div>
+                    <div class="kase"></div>
+                    <div class="imza-satir">Kaşe / İmza</div>
+                </td>
             </tr>
         </table>
         <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>

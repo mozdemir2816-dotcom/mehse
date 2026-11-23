@@ -319,7 +319,7 @@
                                 <td><span class="etk">İşyeri Hekimliği Belge No</span><span class="deger">{{ $e['hekim']['belge_no'] }}</span></td>
                             </tr>
                         </table>
-                        @if ($imzali && $form->hekim_kase)
+                        @if ($imzali && $form->hekim_kase && is_file(storage_path('app/public/'.$form->hekim_kase)))
                             <div style="text-align:center;margin-top:3px"><img src="{{ storage_path('app/public/'.$form->hekim_kase) }}"></div>
                         @endif
                         <div class="imza-cizgi" @if ($imzali && $form->hekim_kase) style="margin-top:2px" @endif>İmza / Kaşe</div>

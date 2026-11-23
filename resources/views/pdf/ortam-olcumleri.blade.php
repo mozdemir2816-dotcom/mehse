@@ -1,5 +1,5 @@
-{{-- Ortam Ölçümleri Takip Listesi — İş Hijyeni Ölçüm, Test ve Analizi Yapan
-     Laboratuvarlar Hakkında Yönetmelik. A4 yatay. --}}
+{{-- Ortam Ölçümleri Takip Listesi — İş Hijyeni Ölçüm, Test ve Analizleri
+     Hakkında Yönetmelik (RG 27.01.2023/32086). A4 yatay. --}}
 <!doctype html>
 <html lang="tr">
 <head>
@@ -85,7 +85,7 @@
 </table>
 
 <p class="yasal">
-    Ortam ölçümleri, İş Hijyeni Ölçüm, Test ve Analizi Yapan Laboratuvarlar Hakkında Yönetmelik
+    Ortam ölçümleri, İş Hijyeni Ölçüm, Test ve Analizleri Hakkında Yönetmelik (RG 27.01.2023/32086)
     kapsamında yetkilendirilmiş laboratuvarlarca; ölçüm periyodu ise risk değerlendirmesi
     sonuçlarına göre belirlenir (* tablodaki periyotlar önerilen sıklıktır; mevzuatta genel ve sabit
     bir ölçüm periyodu yoktur). "Sınır Değer Aşımı" bulunan parametrelerde kaynağında önlem

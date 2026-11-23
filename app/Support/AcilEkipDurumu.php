@@ -39,7 +39,7 @@ class AcilEkipDurumu
     }
 
     /** @return array{asil: int, yedek: int, min: int, lider: ?string, durum: string, uyarilar: array<int, string>, dolmus: int, yaklasan: int} */
-    public static function ekipDurumu(AcilEkip $ekip, int $calisan): array
+    public static function ekipDurumu(AcilEkip $ekip, int $calisan, int $destekToplam = 0): array
     {
         $uyeler = $ekip->uyeler;
         $asil = $uyeler->where('uyelik', '!=', 'yedek')->count();
@@ -49,11 +49,20 @@ class AcilEkipDurumu
         $yaklasan = $uyeler->filter(fn (AcilEkipUyesi $u) => $u->belgeDurumu() === 'yaklasan')->count();
         $belgesiz = $uyeler->filter(fn (AcilEkipUyesi $u) => $u->belgeDurumu() === 'yok')->count();
 
+        // İşyerlerinde Acil Durumlar Hk. Yönetmelik (01.10.2021/31615 RG) m.11/4:
+        // 10'dan az çalışanı olan işyerlerinde söndürme, kurtarma ve koruma ekiplerinin tamamı
+        // için toplam en az 1 destek elemanı görevlendirilmesi yeterlidir.
+        $kucukIsyeriKapsaminda = $calisan > 0 && $calisan < 10
+            && in_array($ekip->tur, ['sondurme', 'kurtarma', 'koruma'], true)
+            && $destekToplam >= 1;
+
         $uyarilar = [];
         if ($uyeler->isEmpty()) {
-            $uyarilar[] = 'Bu ekibe henüz üye atanmamış — kontrol edilmesi önerilir.';
+            if (! $kucukIsyeriKapsaminda) {
+                $uyarilar[] = 'Bu ekibe henüz üye atanmamış — kontrol edilmesi önerilir.';
+            }
         } else {
-            if ($asil < $min) {
+            if ($asil < $min && ! $kucukIsyeriKapsaminda) {
                 $uyarilar[] = "Asıl üye {$asil}, asgari {$min}".($ekip->yasalOranMetni() ? ' ('.$ekip->yasalOranMetni().')' : '').' — '.($min - $asil).' kişi daha görevlendirilmeli.';
             }
             if (! $lider) {
@@ -74,12 +83,13 @@ class AcilEkipDurumu
         }
 
         $durum = match (true) {
+            $kucukIsyeriKapsaminda && $asil === 0 => 'tam',
             $asil === 0 => 'kritik',
-            $asil < $min || ! $lider || $dolmus > 0 => 'eksik',
+            (! $kucukIsyeriKapsaminda && $asil < $min) || ! $lider || $dolmus > 0 => 'eksik',
             default => 'tam',
         };
 
-        return ['asil' => $asil, 'yedek' => $uyeler->count() - $asil, 'min' => $min, 'lider' => $lider?->ad_soyad, 'durum' => $durum, 'uyarilar' => $uyarilar, 'dolmus' => $dolmus, 'yaklasan' => $yaklasan];
+        return ['asil' => $asil, 'yedek' => $uyeler->count() - $asil, 'min' => $kucukIsyeriKapsaminda ? 0 : $min, 'lider' => $lider?->ad_soyad, 'durum' => $durum, 'uyarilar' => $uyarilar, 'dolmus' => $dolmus, 'yaklasan' => $yaklasan];
     }
 
     /** @return array<string, mixed> */
@@ -87,7 +97,10 @@ class AcilEkipDurumu
     {
         $ekipler ??= static::ekipler($firma);
         $calisan = static::calisanSayisi($firma);
-        $durumlar = $ekipler->mapWithKeys(fn (AcilEkip $e) => [$e->id => static::ekipDurumu($e, $calisan)]);
+        $destekToplam = $ekipler
+            ->whereIn('tur', ['sondurme', 'kurtarma', 'koruma'])
+            ->sum(fn (AcilEkip $e) => $e->uyeler->where('uyelik', '!=', 'yedek')->count());
+        $durumlar = $ekipler->mapWithKeys(fn (AcilEkip $e) => [$e->id => static::ekipDurumu($e, $calisan, $destekToplam)]);
         $uyeler = $ekipler->flatMap->uyeler;
 
         $oneriler = [];

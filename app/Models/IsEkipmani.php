@@ -63,7 +63,7 @@ class IsEkipmani extends Model
             }
 
             // Periyodik muayenesi olmayan ekipmanda vize tarihi tutulmaz (takvim/uyarılara girmez).
-            if (! $e->son_muayene_tarihi || ! EkipmanKatalogu::periyodikMi($e->kategori)) {
+            if (! $e->son_muayene_tarihi || ! EkipmanKatalogu::periyodikMi($e->kategori, $e->tip)) {
                 $e->sonraki_vize_tarihi = null;
             }
         });
@@ -192,7 +192,7 @@ class IsEkipmani extends Model
      */
     public function uyariSeviyesi(): ?string
     {
-        $kalan = EkipmanKatalogu::periyodikMi($this->kategori) ? $this->kalanGun() : null;
+        $kalan = EkipmanKatalogu::periyodikMi($this->kategori, $this->tip) ? $this->kalanGun() : null;
         if ($kalan === null) {
             return null;
         }
@@ -236,8 +236,8 @@ class IsEkipmani extends Model
      */
     public function vizeDurumu(): string
     {
-        // Periyodik muayeneye tabi olmayan kategori (ör. Üretim & Atölye Makineleri).
-        if (! EkipmanKatalogu::periyodikMi($this->kategori)) {
+        // Periyodik muayeneye tabi olmayan kategori/tip (ör. el merdiveni, şirket aracı).
+        if (! EkipmanKatalogu::periyodikMi($this->kategori, $this->tip)) {
             return 'muaf';
         }
 

@@ -77,7 +77,7 @@
         <td class="etiket">Sorumlu</td><td>{{ $denetim->santiye_sorumlusu ?: '-' }}</td>
     </tr>
     <tr>
-        <td class="etiket">Denetçi</td><td>İş Güvenliği Uzmanı</td>
+        <td class="etiket">Denetçi</td><td>{{ $denetim->denetci_adi ?: ($firma?->igu?->ad_soyad ?: 'İş Güvenliği Uzmanı') }}</td>
         <td class="etiket">Sonuç</td><td>{{ $denetim->sonucEtiketi() }}</td>
     </tr>
 </table>
@@ -109,7 +109,9 @@
             <td class="orta sonuc-{{ $c['sonuc'] ?? '' }}">{{ config('isg.saha_denetimi.sonuc_secenekleri.'.($c['sonuc'] ?? ''), '-') }}</td>
             <td class="foto">
                 @forelse ($fotolar as $yol)
-                    <img class="satir-foto" src="{{ storage_path('app/public/'.$yol) }}">
+                    @if (is_file(storage_path('app/public/'.$yol)))
+                        <img class="satir-foto" src="{{ storage_path('app/public/'.$yol) }}">
+                    @endif
                 @empty
                     -
                 @endforelse
@@ -162,12 +164,12 @@
         <td style="width:58%">Genel Notlar: &nbsp; {{ $denetim->genel_notlar ?: '-' }}</td>
         <td>
             <div class="imza">
-                @if ($denetim->denetci_kase && ($imzali ?? true))
+                @if ($denetim->denetci_kase && ($imzali ?? true) && is_file(storage_path('app/public/'.$denetim->denetci_kase)))
                     <img src="{{ storage_path('app/public/'.$denetim->denetci_kase) }}">
                 @else
                     <div style="height:50px"></div>
                 @endif
-                <div class="cizgi">Denetçi Kaşe / İmza</div>
+                <div class="cizgi">{{ $denetim->denetci_adi ?: ($firma?->igu?->ad_soyad ?: 'Denetçi') }} · Kaşe / İmza</div>
             </div>
         </td>
     </tr>

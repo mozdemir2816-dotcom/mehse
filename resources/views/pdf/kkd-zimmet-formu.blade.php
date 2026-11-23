@@ -93,22 +93,25 @@
         </table>
 
         <p class="taahhut">
-            Yukarıda belirtilen kişisel koruyucu malzemelerin nerede ve ne zaman kullanacağımı ve
-            kullanmadığım takdirde karşılaşabileceğim tehlikeler konusunda bilgilendirildiğimi,
+            6331 sayılı İş Sağlığı ve Güvenliği Kanunu m.4 ve Kişisel Koruyucu Donanımların İşyerlerinde
+            Kullanılması Hakkında Yönetmelik m.6–8 uyarınca; yukarıda belirtilen CE/EN standartlarına uygun
+            kişisel koruyucu donanımların tarafıma ücretsiz olarak teslim edildiğini, kullanım yeri, süresi ve
+            uygulamalı kullanım esasları hakkında bilgilendirildiğimi beyan ederim.
         </p>
         <p class="taahhut">
-            Belirtilen malzemeleri kullanmadığım takdirde, İSG birimi tarafından yapılacak olan sözlü /
-            yazılı uyarıdan sonraki ihlalde 4857 sayılı Kanun 25. maddesi uyarınca görevime son
-            verileceğini bildiğimi beyan ve taahhüt ederim.
+            6331 sayılı Kanun m.19 uyarınca; teslim aldığım kişisel koruyucu donanımları belirlenen iş ve
+            alanlarda doğru şekilde kullanacağımı, koruyacağımı, bakım ve temizliğine özen göstereceğimi,
+            hasar veya eksiklik durumunda işverene / amirime derhal bildireceğimi taahhüt ederim.
         </p>
         <p class="taahhut">
-            Belirtilen malzemelerin kullanılmamasından dolayı meydana gelecek ceza ve kazalar ile ilgili
-            her türlü sorumluluğu kabul ederim.
+            İş sağlığı ve güvenliği kurallarına ve KKD kullanım talimatlarına aykırı davranılması halinde
+            4857 sayılı Kanun 25. maddesi ve ilgili disiplin hükümleri çerçevesinde işlem yapılabileceğini
+            bildiğimi beyan ederim.
         </p>
         <p class="taahhut">
-            Süresiz olarak verilmiş iş güvenliği malzemeleri iş durumuna göre belirli aralıkta ve
-            yıpranmalarına bakılarak yenisi verilecektir. Bunun için personel mevcut olan kişisel
-            koruyucu donanımın durumunu beyan etmekle sorumludur.
+            Teslim edilen kişisel koruyucu donanımlar iş durumuna, kullanım ömrüne ve yıpranmasına bağlı olarak
+            işveren tarafından ücretsiz olarak yenilenecektir; çalışan mevcut donanımın durumunu zamanında
+            bildirmekle yükümlüdür.
         </p>
 
         <p class="teslim-aldim">TÜM AÇIKLAMALARI OKUDUM, ANLADIM VE İŞ GÜVENLİĞİ MALZEMELERİMİ TESLİM ALDIM.</p>

@@ -19,7 +19,11 @@
 @php $tl = fn (int $n) => number_format($n, 0, ',', '.').' TL'; @endphp
 <div class="ust">
     <h1>SANAL MÜFETTİŞ — 6331 SAYILI KANUN İPC RİSK RAPORU</h1>
-    <div>{{ $firma->secimEtiketi() }} · {{ $firma->tehlikeSinifiEtiketi() }} · {{ $firma->calisan_sayisi ?: 1 }} Çalışan · {{ $tarih }}</div>
+    <div>
+        {{ $firma->secimEtiketi() }} · {{ $firma->tehlikeSinifiEtiketi() }} · {{ $firma->calisan_sayisi ?: 1 }} Çalışan · {{ $tarih }}
+        @if ($firma->sgk_sicil_no) · SGK: {{ $firma->sgk_sicil_no }} @endif
+        @if ($firma->nace_kodu) · NACE: {{ $firma->nace_kodu }} @endif
+    </div>
 </div>
 
 <table class="ozet">
@@ -55,7 +59,24 @@
     </tbody>
 </table>
 
-<p style="margin-top:12px;font-size:8.5px;color:#475569">
+<table style="width:100%;border-collapse:collapse;margin-top:14px;page-break-inside:avoid;font-size:9px">
+    <tr>
+        <td style="width:50%;border:1px solid #cbd5e1;padding:7px 9px;vertical-align:top">
+            <strong>Raporu Hazırlayan (İSG Uzmanı)</strong><br>
+            {{ $firma->igu?->ad_soyad ?: '—' }}@if ($firma->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif
+            <div style="height:28px"></div>
+            <span style="color:#64748b">İmza / Kaşe · {{ $tarih }}</span>
+        </td>
+        <td style="width:50%;border:1px solid #cbd5e1;padding:7px 9px;vertical-align:top">
+            <strong>Bilgilendirilen (İşveren / İşveren Vekili)</strong><br>
+            {{ $firma->isveren_vekili ?: ($firma->isveren_ad ?: '—') }}
+            <div style="height:28px"></div>
+            <span style="color:#64748b">İmza / Kaşe · Tarih: .... / .... / ........</span>
+        </td>
+    </tr>
+</table>
+
+<p style="margin-top:10px;font-size:8.5px;color:#475569">
     Not: Bu rapor 6331 sayılı İş Sağlığı ve Güvenliği Kanunu m.26 esas alınarak işvereni olası teftiş riskleri konusunda bilgilendirmek üzere Mehse İSG tarafından üretilmiştir.
 </p>
 </body>

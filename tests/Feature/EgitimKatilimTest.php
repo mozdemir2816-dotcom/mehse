@@ -171,13 +171,20 @@ class EgitimKatilimTest extends TestCase
             'katilimcilar' => [],
         ]);
 
-        $html = fn (bool $imzali) => view('pdf.egitim-katilim', [
-            'kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri, 'imzali' => $imzali,
-        ])->render();
+        $yol = storage_path('app/public/isg-profesyonel-kase/x.png');
+        @mkdir(dirname($yol), 0775, true);
+        file_put_contents($yol, 'png');
+        try {
+            $html = fn (bool $imzali) => view('pdf.egitim-katilim', [
+                'kayit' => $kayit, 'firma' => $firma, 'icerik' => $kayit->konu_secimleri, 'imzali' => $imzali,
+            ])->render();
 
-        $this->assertStringContainsString('isg-profesyonel-kase/x.png', $html(true));
-        $this->assertStringNotContainsString('isg-profesyonel-kase/x.png', $html(false));
-        $this->assertStringContainsString('Kaşe / İmza', $html(false));   // elle imza yeri kalır
+            $this->assertStringContainsString('isg-profesyonel-kase/x.png', $html(true));
+            $this->assertStringNotContainsString('isg-profesyonel-kase/x.png', $html(false));
+            $this->assertStringContainsString('Kaşe / İmza', $html(false));   // elle imza yeri kalır
+        } finally {
+            @unlink($yol);
+        }
     }
 
     public function test_iki_gunluk_egitim_pdfinde_gun_bazli_imza_sutunlari_olusur(): void

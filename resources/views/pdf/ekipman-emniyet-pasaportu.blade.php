@@ -23,11 +23,11 @@
     <div class="govde">
         <table>
             <tr><th>Ekipman Adı / Tanımı</th><td><strong>{{ $ekipman->ekipman_adi }}</strong></td></tr>
-            <tr><th>Kategori / Seri No</th><td>{{ $ekipman->kategori ?: '—' }} / {{ $ekipman->seri_no ?: '—' }}</td></tr>
+            <tr><th>Kategori / Seri No</th><td>{{ $ekipman->kategoriAdi() }} / {{ $ekipman->seri_no ?: '—' }}</td></tr>
             <tr><th>Konum / Bölüm</th><td>{{ $ekipman->konum ?: '—' }}</td></tr>
             <tr><th>Son Periyodik Kontrol</th><td>{{ $ekipman->son_muayene_tarihi?->format('d.m.Y') ?: '—' }}</td></tr>
             <tr><th>Sonraki Kontrol Tarihi</th><td><strong>{{ $ekipman->sonraki_vize_tarihi?->format('d.m.Y') ?: '—' }}</strong></td></tr>
-            <tr><th>Kontrol Eden / EKİPNET No</th><td>{{ $ekipnetNo ?: ($ekipman->kontrol_kurulusu ?: '—') }}</td></tr>
+            <tr><th>Kontrol Eden / EKİPNET No</th><td>{{ $ekipnetNo ?: ($ekipman->muayene_yapan ?: '—') }}</td></tr>
             <tr><th>Pasaport Düzenleme Tarihi</th><td>{{ $tarih }}</td></tr>
         </table>
 

@@ -190,7 +190,7 @@
                         @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$rapor->rapor_hazirlayan_kase) }}">@endif
                     @endif
                 </div>
-                
+                <div style="font-size:8px;margin-top:2px">{{ $rapor->rapor_hazirlayan ?: ($firma?->igu?->ad_soyad ?: '') }}</div>
             </td>
             <td>
                 <div class="rol">ONAYLAYAN</div><div class="unvan">İşyeri Hekimi</div>
@@ -199,11 +199,12 @@
                         @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$rapor->isyeri_hekimi_kase) }}">@endif
                     @endif
                 </div>
-                
+                <div style="font-size:8px;margin-top:2px">{{ $rapor->isyeri_hekimi ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}</div>
             </td>
             <td>
                 <div class="rol">İŞVEREN / VEKİLİ</div><div class="unvan">&nbsp;</div>
                 <div class="kutu"></div>
+                <div style="font-size:8px;margin-top:2px">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}</div>
             </td>
         </tr>
     </table>
@@ -213,11 +214,13 @@
 </div>
 
 @foreach (($rapor->fotograflar ?? []) as $i => $foto)
-    <div class="sayfa foto-sayfa">
-        <div class="baslik"><h1>İŞ KAZASI İNCELEME RAPORU</h1><div class="firma">{{ $firma?->unvan }}</div></div>
-        <div style="font-weight:bold;font-size:10px;margin-bottom:6px">KAZA YERİ FOTOĞRAFI {{ $i + 1 }}</div>
-        <img src="{{ storage_path('app/public/'.$foto) }}">
-    </div>
+    @if (is_file(storage_path('app/public/'.$foto)) || \Illuminate\Support\Facades\Storage::disk('public')->exists($foto))
+        <div class="sayfa foto-sayfa">
+            <div class="baslik"><h1>İŞ KAZASI İNCELEME RAPORU</h1><div class="firma">{{ $firma?->unvan }}</div></div>
+            <div style="font-weight:bold;font-size:10px;margin-bottom:6px">KAZA YERİ FOTOĞRAFI {{ $i + 1 }}</div>
+            <img src="{{ storage_path('app/public/'.$foto) }}">
+        </div>
+    @endif
 @endforeach
 
 </body>

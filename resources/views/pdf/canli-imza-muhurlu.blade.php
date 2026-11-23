@@ -15,7 +15,7 @@
 </head>
 <body>
     <div class="baslik">
-        <h1>QR DOĞRULAMALI ELEKTRONİK İMZA MÜHÜR BELGESİ</h1>
+        <h1>QR DOĞRULAMALI BASİT ELEKTRONİK ONAY VE İMZA KAYIT BELGESİ</h1>
         <div>{{ $imza->firma?->unvan }}</div>
     </div>
 
@@ -51,7 +51,9 @@
     </table>
 
     <div class="alt">
-        Bu belge Mehse İSG Elektronik İmza Mührü ile üretilmiştir. Doğrulama adresi: {{ $dogrulamaUrl ?: '—' }}
+        Bu belge Mehse İSG sisteminde dokunmatik ekran / fare üzerinden alınan basit elektronik onay ve imza görseli kaydıdır;
+        5070 sayılı Elektronik İmza Kanunu anlamında nitelikli (güvenli) elektronik imza niteliği taşımaz.
+        Doğrulama adresi: {{ $dogrulamaUrl ?: '—' }}
     </div>
 </body>
 </html>

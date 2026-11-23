@@ -85,7 +85,7 @@ class YasalTakvim
         // Acil durum planı
         $adp = $firma->acilDurumPlani;
         if ($adp && filled($adp->konular) && $adp->gecerlilik_tarihi) {
-            $ekle('acil', 'Acil durum planı yenileme', 'Acil Durumlar Yönetmeliği md.12 — plan geçerlilik sonu.', Carbon::parse($adp->gecerlilik_tarihi), static::url(fn () => AcilDurumPlaniSayfasi::getUrl(['firma' => $firma->id])));
+            $ekle('acil', 'Acil durum planı yenileme', 'Acil Durumlar Yönetmeliği md.14 — plan geçerlilik sonu.', Carbon::parse($adp->gecerlilik_tarihi), static::url(fn () => AcilDurumPlaniSayfasi::getUrl(['firma' => $firma->id])));
         }
 
         // Yıllık tatbikat: son yapılan tatbikat + 1 yıl; hiç yoksa sözleşme başlangıcı + 1 yıl

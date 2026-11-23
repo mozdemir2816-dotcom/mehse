@@ -53,7 +53,7 @@ class CalisansTable
                 TextColumn::make('cinsiyet')->visibleFrom('md')->label('Cinsiyet')->placeholder('—')
                     ->formatStateUsing(fn ($state) => Calisan::CINSIYETLER[$state] ?? $state)->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('ozel_durum')->visibleFrom('md')->label('Özel durum')->placeholder('—')->badge()->color('warning')->toggleable(isToggledHiddenByDefault: true),
-                IconColumn::make('agir_tehlikeli_iste')->visibleFrom('md')->label('Ağır-tehlikeli')->boolean()->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('agir_tehlikeli_iste')->visibleFrom('md')->label('Mesleki Eğitim (m.17/3)')->boolean()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('aktif')->label('Durum')->badge()->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(fn ($state) => $state ? 'Aktif' : 'Pasif')
                     ->color(fn ($state) => $state ? 'success' : 'gray'),
