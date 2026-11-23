@@ -141,7 +141,7 @@ class RiskMerkezi extends Page
         }
 
         $m = RiskMaddesi::query()
-            ->whereHas('riskDegerlendirmesi', fn ($q) => $q->whereIn('firma_id', array_keys($this->firmalar)))
+            ->whereHas('riskDegerlendirmesi', fn ($q) => $q->whereIn('firma_id', array_keys($this->firmalar))->whereNull('kilitli_at'))
             ->find($maddeId);
 
         if ($m) {

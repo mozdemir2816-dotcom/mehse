@@ -40,7 +40,7 @@ class FirmaForm
                         ->live()
                         ->helperText(fn (Get $get) => static::tehlikeSinifiIpucu($get('nace_kodu'), $get('tehlike_sinifi'))),
                     Select::make('risk_cikti_sablonu')->label('Risk çıktı şablonu')
-                        ->options(['hastane' => 'Hastane formu (Bursa Şehir Hastanesi)'])
+                        ->options(['hastane' => 'Hastane / Sağlık Tesisi Formatı'])
                         ->placeholder('Standart (sistem çıktısı)')
                         ->helperText('Hastane formu seçilirse bu firmanın Fine-Kinney risk değerlendirmeleri Excel/PDF çıktısında hastanenin kendi formatında üretilir.'),
                     TextInput::make('sgk_sicil_no')->label('SGK sicil no')->maxLength(50)

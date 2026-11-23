@@ -36,6 +36,7 @@ class ZiyaretOtomatikPlanlayici
 
     /**
      * @param  array<int, string>  $mesgulTarihler  'Y-m-d' formatında hariç tutulacak meşgul/tatil günleri
+     * @param  array<int, int>|null  $firmaIdleri  Yalnız belirtilen kiracı firmaları planlanır (null: mevcut scope)
      * @return array{firma: int, doldurulan_ay: int, atlanan_ay: int, detay: array<int, string>}
      */
     public static function calistir(
@@ -44,12 +45,18 @@ class ZiyaretOtomatikPlanlayici
         bool $cumartesiDahil = false,
         array $mesgulTarihler = [],
         float $gunlukMaxSaat = self::GUNLUK_MAX_SAAT,
+        ?array $firmaIdleri = null,
     ): array {
         $baslangic = ($baslangic ?? now())->copy()->startOfDay();
         $gunlukMaxSaat = max(1.0, $gunlukMaxSaat);
         $rapor = ['firma' => 0, 'doldurulan_ay' => 0, 'atlanan_ay' => 0, 'detay' => []];
 
-        foreach (Firma::query()->where('aktif', true)->get() as $firma) {
+        $sorgu = Firma::query()->where('aktif', true);
+        if ($firmaIdleri !== null) {
+            $sorgu->whereIn('id', $firmaIdleri);
+        }
+
+        foreach ($sorgu->get() as $firma) {
             $ozel = static::ozelKural($firma->unvan);
             $program = ZiyaretProgrami::firmaYilIcin($firma, $yil);
             $aylar = $program->ziyaretler ?? array_fill(0, 12, [ZiyaretProgrami::bosGirdi()]);

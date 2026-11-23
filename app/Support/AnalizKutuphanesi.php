@@ -126,6 +126,7 @@ class AnalizKutuphanesi
         $kardesler = RiskMaddesi::query()->with('riskDegerlendirmesi')
             ->where('tehlike_id', $m->tehlike_id)->whereKeyNot($m->id)
             ->whereHas('riskDegerlendirmesi', fn ($q) => $q->whereIn('yontem', self::YONTEMLER)
+                ->whereNull('kilitli_at')
                 ->whereHas('firma', fn ($f) => $f->where('user_id', static::firmasi($rd)->user_id)))
             ->get();
 

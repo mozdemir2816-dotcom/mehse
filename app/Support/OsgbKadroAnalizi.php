@@ -29,7 +29,7 @@ class OsgbKadroAnalizi
             return null;
         }
 
-        $metin = mb_strtoupper(trim(($p->unvan ?? '').' '.($p->belge_no ?? '')), 'UTF-8');
+        $metin = mb_strtoupper(trim(($p->unvan ?? '').' '.($p->sertifika_no ?? '')), 'UTF-8');
 
         if (preg_match('/\bA\s*SINIFI\b|\(A\)|\bA\s+IGU\b|\bA\s+İGU\b/u', $metin)) {
             return 'A';

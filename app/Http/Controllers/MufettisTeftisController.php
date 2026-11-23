@@ -14,7 +14,10 @@ class MufettisTeftisController extends Controller
     public function goster(string $token, Request $request)
     {
         $paylasim = TeftisPaylasimi::query()
-            ->with(['firma.igu', 'firma.isyeriHekimi', 'firma.dsp', 'user'])
+            ->with([
+                'firma' => fn ($q) => $q->withoutGlobalScopes()->with(['igu', 'isyeriHekimi', 'dsp']),
+                'user',
+            ])
             ->where('token', $token)
             ->first();
 

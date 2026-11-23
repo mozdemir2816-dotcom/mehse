@@ -90,7 +90,10 @@ class EkipmanRiskYukle extends Page
 
     public function satirKaldir(int $i): void
     {
-        Cache::forget($this->onizleme[$i]['anahtar'] ?? '');
+        $anahtar = (string) ($this->onizleme[$i]['anahtar'] ?? '');
+        if (str_starts_with($anahtar, 'ekipman-risk-yukle:')) {
+            Cache::forget($anahtar);
+        }
         unset($this->onizleme[$i]);
         $this->onizleme = array_values($this->onizleme);
     }
@@ -98,7 +101,10 @@ class EkipmanRiskYukle extends Page
     public function temizle(): void
     {
         foreach ($this->onizleme as $s) {
-            Cache::forget($s['anahtar']);
+            $anahtar = (string) ($s['anahtar'] ?? '');
+            if (str_starts_with($anahtar, 'ekipman-risk-yukle:')) {
+                Cache::forget($anahtar);
+            }
         }
         $this->reset('onizleme', 'hatalar', 'dosyalar');
     }

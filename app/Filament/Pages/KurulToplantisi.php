@@ -459,7 +459,8 @@ class KurulToplantisi extends Page
 
         $tutanak = 0;
 
-        foreach ($this->firma->kurulToplantilari()->get() as $t) {
+        // Yalnız henüz onaylanmamış/tamamlanmamış taslak tutanaklar güncellenir; geçmiş imzalı karar defteri tutanakları korunur.
+        foreach ($this->firma->kurulToplantilari()->where('durum', 'taslak')->get() as $t) {
             $degisti = false;
             $katilimcilar = collect($t->katilimcilar ?? [])->map(function (array $k) use ($eskiAd, $ad, $rol, &$degisti) {
                 if (! BagliKayitGuncelleyici::ayni($k['ad_soyad'] ?? '', $eskiAd)) {

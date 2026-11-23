@@ -79,14 +79,22 @@ class EgitimAtamasi extends Model
         return $this->hasMany(EgitimSinavSonucu::class)->orderByDesc('deneme_no');
     }
 
-    /** İzlenmiş ders sayısı / toplam ders. */
+    /** İzlenmiş ders sayısı / toplam ders (eager-loaded ilişki varsa N+1 sorgu atmaz). */
     public function izlenenDersSayisi(): int
     {
+        if ($this->relationLoaded('ilerlemeler')) {
+            return $this->ilerlemeler->where('izlendi', true)->count();
+        }
+
         return $this->ilerlemeler()->where('izlendi', true)->count();
     }
 
     public function toplamDersSayisi(): int
     {
+        if ($this->relationLoaded('paket') && $this->paket?->relationLoaded('dersler')) {
+            return $this->paket->dersler->count();
+        }
+
         return $this->paket->dersler()->count();
     }
 
@@ -119,11 +127,19 @@ class EgitimAtamasi extends Model
 
     public function sonSinav(): ?EgitimSinavSonucu
     {
+        if ($this->relationLoaded('sinavSonuclari')) {
+            return $this->sinavSonuclari->sortByDesc('deneme_no')->first();
+        }
+
         return $this->sinavSonuclari()->first();
     }
 
     public function basariliMi(): bool
     {
+        if ($this->relationLoaded('sinavSonuclari')) {
+            return $this->sinavSonuclari->contains(fn (EgitimSinavSonucu $s) => (bool) $s->gecti);
+        }
+
         return $this->sinavSonuclari()->where('gecti', true)->exists();
     }
 

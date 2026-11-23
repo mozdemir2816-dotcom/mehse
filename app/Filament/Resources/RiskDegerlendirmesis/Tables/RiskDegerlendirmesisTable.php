@@ -65,12 +65,16 @@ class RiskDegerlendirmesisTable
                             $record->yururlugeAl();
                             Notification::make()->title($record->belge_no.' yürürlüğe alındı')->success()->send();
                         }),
-                    DeleteAction::make(),
+                    DeleteAction::make()
+                        ->visible(fn (RiskDegerlendirmesi $record) => ! $record->kilitliMi()),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                            $records->reject(fn (RiskDegerlendirmesi $r) => $r->kilitliMi())->each->delete();
+                        }),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

@@ -193,6 +193,7 @@ class PeriyodikKontrol extends Page
     private function satirlariYukle(): void
     {
         $q = $this->firma?->isEkipmanlari()->where('aktif', true)
+            ->withCount(['bakimlar as acik_ariza_sayisi' => fn ($b) => $b->acik()])
             ->when($this->kategoriFiltre, fn ($q) => $q->where('kategori', $this->kategoriFiltre))
             ->when(filled($this->arama), fn ($q) => $q->where(fn ($q2) => $q2
                 ->where('ekipman_adi', 'like', "%{$this->arama}%")
@@ -219,7 +220,7 @@ class PeriyodikKontrol extends Page
                 'uyari' => $e->uyariSeviyesi(),
                 'teblig' => $e->tebligDurumu(),
                 'teblig_tarihi' => $e->teblig_tarihi?->format('d.m.Y'),
-                'acik_ariza' => $e->bakimlar()->acik()->count(),
+                'acik_ariza' => (int) ($e->acik_ariza_sayisi ?? 0),
                 'id' => $e->id,
                 'kategori' => $e->kategori,
                 'kategori_adi' => $e->kategoriAdi(),
@@ -276,7 +277,7 @@ class PeriyodikKontrol extends Page
             } else {
                 // Periyot ya da tarih değiştiyse sonraki vizeyi yeniden türet.
                 $ekipman->sonraki_vize_tarihi = Carbon::parse($s['son_muayene_tarihi'])
-                    ->addMonths($ekipman->muayene_periyodu_ay);
+                    ->addMonthsNoOverflow($ekipman->muayene_periyodu_ay);
             }
 
             $ekipman->save();

@@ -25,6 +25,8 @@ use UnitEnum;
  */
 class EkipmanAfisleri extends Page
 {
+    use \App\Filament\Concerns\SinirliErisim;
+
     protected string $view = 'filament.pages.ekipman-afisleri';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';

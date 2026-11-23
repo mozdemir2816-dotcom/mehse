@@ -112,6 +112,11 @@ class CariHesap extends Page
             return;
         }
 
+        $this->validate([
+            'aylikUcret' => ['required', 'numeric', 'min:0', 'max:99999999'],
+            'kdvOrani' => ['required', 'integer', 'min:0', 'max:100'],
+        ], [], ['aylikUcret' => 'aylık ücret', 'kdvOrani' => 'KDV oranı']);
+
         CariHesapYonetici::ucretKaydet($this->kullanici(), $this->secilenFirma->id, (float) $this->aylikUcret, (int) $this->kdvOrani);
         unset($this->portfoy, $this->firmaCari);
 
@@ -124,11 +129,17 @@ class CariHesap extends Page
             return;
         }
 
-        if ($this->hareketTutar <= 0) {
-            Notification::make()->title('Geçerli bir tutar girin')->warning()->send();
-
-            return;
-        }
+        $this->validate([
+            'hareketTur' => ['required', 'in:borc,tahsilat'],
+            'hareketTutar' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+            'hareketTarih' => ['required', 'date'],
+            'hareketAciklama' => ['nullable', 'string', 'max:200'],
+        ], [], [
+            'hareketTur' => 'hareket türü',
+            'hareketTutar' => 'tutar',
+            'hareketTarih' => 'tarih',
+            'hareketAciklama' => 'açıklama',
+        ]);
 
         CariHesapYonetici::hareketEkle(
             $this->kullanici(),
@@ -153,6 +164,7 @@ class CariHesap extends Page
         }
 
         CariHesapYonetici::hareketSil($this->kullanici(), $this->secilenFirma->id, $hareketId);
+        \App\Support\DenetimKaydedici::kaydet('Cari Hesap', 'sildi', $this->secilenFirma->unvan.' — hareket #'.$hareketId);
         unset($this->portfoy, $this->firmaCari);
 
         Notification::make()->title('Hareket silindi')->success()->send();

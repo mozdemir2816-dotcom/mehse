@@ -651,13 +651,18 @@ abstract class YillikPlanlar extends Page
      */
     protected function uyarlanabilirFirmalar(): array
     {
-        $planliIdler = YillikPlanModel::where('yil', $this->yil)->pluck('firma_id')->all();
-
-        return Firma::query()
+        $firmalar = Firma::query()
             ->where('user_id', Filament::auth()->id())
             ->whereKeyNot($this->firmaId)
             ->orderBy('unvan')
-            ->get()
+            ->get();
+
+        $planliIdler = YillikPlanModel::where('yil', $this->yil)
+            ->whereIn('firma_id', $firmalar->pluck('id'))
+            ->pluck('firma_id')
+            ->all();
+
+        return $firmalar
             ->mapWithKeys(fn (Firma $f) => [$f->id => $f->secimEtiketi()
                 .(YillikPlanSablonu::santiyeMi($f) ? ' · inşaat' : '')
                 .(in_array($f->id, $planliIdler, true) ? ' · '.$this->yil.' planı var, seçilen bölümler değişir' : '')])

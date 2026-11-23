@@ -77,6 +77,11 @@ class RiskSablonuResource extends Resource
         return $record->user_id === Filament::auth()->id();
     }
 
+    public static function canDelete(Model $record): bool
+    {
+        return $record->user_id === Filament::auth()->id();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([

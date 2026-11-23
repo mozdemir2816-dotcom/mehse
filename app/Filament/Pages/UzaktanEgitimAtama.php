@@ -609,11 +609,26 @@ class UzaktanEgitimAtama extends Page
 
     public function atamaSil(int $id): void
     {
-        EgitimAtamasi::query()
+        $atama = EgitimAtamasi::query()
             ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma?->id))
-            ->find($id)?->delete();
+            ->find($id);
 
-        unset($this->atamalar);
+        if (! $atama) {
+            return;
+        }
+
+        if (! \App\Support\UzaktanEgitimAtayici::baslamadiMi($atama)) {
+            Notification::make()
+                ->title('Başlamış veya tamamlanmış eğitim silinemez')
+                ->body('Yönetmelik gereği izleme/sınav kaydı oluşan atamalar denetim izi olarak saklanmalıdır.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $atama->delete();
+        unset($this->atamalar, $this->tumAtamalar);
     }
 
     /** İGU: 4. modül yüz yüze tamamlandı — belgeyi aç. */

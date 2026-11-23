@@ -7,16 +7,6 @@
     $sari = '#D97706';
     $gri = '#64748B';
     $kutu = 'background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:1rem;box-shadow:0 1px 2px rgb(15 23 42 / .04)';
-    $o = $this->ozet;
-
-    // İSG Portföy Özeti kartları — Gemini referans görselindeki dolu-renk fayans stili.
-    $ozetKartlari = [
-        ['ad' => 'Toplam Firma', 'deger' => $o['firma'], 'ikon' => 'heroicon-o-building-office-2', 'renk' => $gri],
-        ['ad' => 'Eksik Evrakı Olan Firma', 'deger' => $o['evrak_eksigi'], 'ikon' => 'heroicon-o-document-text', 'renk' => $kirmizi],
-        ['ad' => 'Çalışan Kaydı Eksik Firma', 'deger' => $o['calisan_uyarili'], 'ikon' => 'heroicon-o-exclamation-triangle', 'renk' => $sari],
-        ['ad' => 'Tam Uyumlu Firma', 'deger' => $o['tam_uyumlu'], 'ikon' => 'heroicon-o-check-circle', 'renk' => $yesil],
-    ];
-    $uyumRengi = $o['uyum_yuzde'] < 40 ? $kirmizi : ($o['uyum_yuzde'] < 75 ? $sari : $yesil);
 @endphp
 
 <x-filament-panels::page>
@@ -154,6 +144,16 @@
 
     {{-- ==================== FİRMA ASİSTANI ==================== --}}
     @if ($sekme === 'firma')
+        @php
+            $o = $this->ozet;
+            $ozetKartlari = [
+                ['ad' => 'Toplam Firma', 'deger' => $o['firma'], 'ikon' => 'heroicon-o-building-office-2', 'renk' => $gri],
+                ['ad' => 'Eksik Evrakı Olan Firma', 'deger' => $o['evrak_eksigi'], 'ikon' => 'heroicon-o-document-text', 'renk' => $kirmizi],
+                ['ad' => 'Çalışan Kaydı Eksik Firma', 'deger' => $o['calisan_uyarili'], 'ikon' => 'heroicon-o-exclamation-triangle', 'renk' => $sari],
+                ['ad' => 'Tam Uyumlu Firma', 'deger' => $o['tam_uyumlu'], 'ikon' => 'heroicon-o-check-circle', 'renk' => $yesil],
+            ];
+            $uyumRengi = $o['uyum_yuzde'] < 40 ? $kirmizi : ($o['uyum_yuzde'] < 75 ? $sari : $yesil);
+        @endphp
         {{-- İSG Portföy Özeti --}}
         <div style="{{ $kutu }}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">

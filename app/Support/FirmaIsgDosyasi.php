@@ -105,8 +105,8 @@ class FirmaIsgDosyasi
                 )
                 : $satir('Son Temel Eğitim Katılım Tutanağı', 'Kayıt yok', 'yok', 'Eksik', null, EgitimKatilim::getUrl($fid)),
             $sertifika
-                ? $satir('Eğitim Sertifikaları (Yıldız Grup dahil)', $firma->sertifikalar()->count().' sertifika · son: '.$sertifika->created_at->format('d.m.Y'), 'ok', 'Mevcut', 'sertifika:'.$sertifika->id, SertifikaOlustur::getUrl($fid))
-                : $satir('Eğitim Sertifikaları (Yıldız Grup dahil)', 'Kayıt yok', 'yok', 'Eksik', null, SertifikaOlustur::getUrl($fid)),
+                ? $satir('Eğitim Sertifikaları', $firma->sertifikalar()->count().' sertifika · son: '.$sertifika->created_at->format('d.m.Y'), 'ok', 'Mevcut', 'sertifika:'.$sertifika->id, SertifikaOlustur::getUrl($fid))
+                : $satir('Eğitim Sertifikaları', 'Kayıt yok', 'yok', 'Eksik', null, SertifikaOlustur::getUrl($fid)),
             $isbasi
                 ? $satir('İşbaşı Eğitim Tutanakları', $firma->isbasiEgitimTutanaklari()->count().' tutanak · son: '.$isbasi->created_at->format('d.m.Y'), 'ok', 'Mevcut', 'isbasi:'.$isbasi->id, EgitimYenilemeTakibi::getUrl($fid))
                 : $satir('İşbaşı Eğitim Tutanakları', 'Kayıt yok', 'uyari', 'Yok', null, EgitimYenilemeTakibi::getUrl($fid)),

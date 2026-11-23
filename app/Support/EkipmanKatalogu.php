@@ -112,6 +112,11 @@ class EkipmanKatalogu
      */
     public static function kutuphaneBaglari(): array
     {
+        $cacheKey = 'mehse.ekipman.kutuphane_baglari';
+        if (app()->bound($cacheKey)) {
+            return app()->make($cacheKey);
+        }
+
         $baglar = [];
 
         foreach (TehlikeKategorisi::query()->whereNotNull('ekipman_tipleri')->get(['anahtar', 'ekipman_tipleri']) as $k) {
@@ -119,6 +124,8 @@ class EkipmanKatalogu
                 $baglar[$tip][] = $k->anahtar;
             }
         }
+
+        app()->instance($cacheKey, $baglar);
 
         return $baglar;
     }

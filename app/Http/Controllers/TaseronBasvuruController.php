@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TaseronBasvurusu;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Giriş gerektirmeyen Taşeron Self-Servis Evrak & Başvuru Portalı (K2).
@@ -14,7 +15,7 @@ class TaseronBasvuruController extends Controller
 {
     public function goster(string $token)
     {
-        $basvuru = TaseronBasvurusu::with('firma')->where('token', $token)->firstOrFail();
+        $basvuru = TaseronBasvurusu::with(['firma' => fn ($q) => $q->withoutGlobalScopes()])->where('token', $token)->firstOrFail();
 
         return view('pages.taseron-basvuru', [
             'basvuru' => $basvuru,
@@ -24,11 +25,13 @@ class TaseronBasvuruController extends Controller
 
     public function kaydet(Request $request, string $token)
     {
-        $basvuru = TaseronBasvurusu::with('firma')->where('token', $token)->firstOrFail();
+        $basvuru = TaseronBasvurusu::with(['firma' => fn ($q) => $q->withoutGlobalScopes()])->where('token', $token)->firstOrFail();
 
         if ($basvuru->durum === 'onaylandi') {
             return back()->with('bilgi', 'Bu başvuru zaten onaylanmıştır.');
         }
+
+        $gecerliTurler = array_keys((array) config('isg.taseron.belge_turleri', []));
 
         $veri = $request->validate([
             'unvan' => ['required', 'string', 'max:200'],
@@ -37,23 +40,24 @@ class TaseronBasvuruController extends Controller
             'yetkili_ad' => ['required', 'string', 'max:140'],
             'telefon' => ['required', 'string', 'max:40'],
             'eposta' => ['nullable', 'email', 'max:160'],
-            'belge_turu' => ['nullable', 'string', 'max:60'],
+            'belge_turu' => array_filter(['nullable', 'string', 'max:60', $gecerliTurler ? Rule::in($gecerliTurler) : null]),
+            'belgeler' => ['nullable', 'array', 'max:10'],
             'belgeler.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240'],
         ]);
 
         $mevcutBelgeler = (array) ($basvuru->yuklenen_belgeler ?? []);
-        $seciliTur = ($veri['belge_turu'] ?? null) ?: 'sgk_bildirgesi';
+        $seciliTur = ($veri['belge_turu'] ?? null) ?: 'sgk_tescil';
 
         if ($request->hasFile('belgeler')) {
             foreach ($request->file('belgeler') as $dosya) {
-                if (! $dosya || ! $dosya->isValid()) {
+                if (! $dosya || ! $dosya->isValid() || count($mevcutBelgeler) >= 20) {
                     continue;
                 }
-                $yol = $dosya->store('taseron-basvuru', 'public');
+                $yol = $dosya->store('taseron-basvuru/'.$basvuru->firma_id, 'public');
                 $mevcutBelgeler[] = [
                     'tur' => $seciliTur,
                     'dosya' => $yol,
-                    'ad' => $dosya->getClientOriginalName(),
+                    'ad' => basename($dosya->getClientOriginalName()),
                     'tarih' => now()->toDateString(),
                 ];
             }

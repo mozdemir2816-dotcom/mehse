@@ -208,6 +208,7 @@ class AcilDurumPlani extends Page
      *
      * @return array<string, array{gereken: int, atanan: int, eksik: int}>
      */
+    #[Computed]
     public function ekipSayaclari(): array
     {
         $firma = $this->firma;
@@ -217,6 +218,7 @@ class AcilDurumPlani extends Page
         }
 
         $calisan = $firma->calisanlar()->where('aktif', true)->count() ?: (int) $firma->calisan_sayisi;
+        $ekipler = AcilEkip::where('firma_id', $firma->id)->withCount('uyeler')->get()->keyBy('tur');
         $sonuc = [];
 
         foreach (config('isg.acil_durum.ekip_turleri') as $tur => $bilgi) {
@@ -224,10 +226,10 @@ class AcilDurumPlani extends Page
                 continue;
             }
 
-            $ekip = AcilEkip::where('firma_id', $firma->id)->where('tur', $tur)->first();
+            $ekip = $ekipler->get($tur);
             $gereken = AcilEkip::yasalMinimum($tur, $firma->tehlike_sinifi, $calisan);
             $atanan = $ekip
-                ? $ekip->uyeler()->count()
+                ? (int) $ekip->uyeler_count
                 : count(array_filter(array_map('trim', explode(',', (string) ($this->ekipMetni[$bilgi['plan']] ?? '')))));
 
             $sonuc[$bilgi['plan']] = ['gereken' => $gereken, 'atanan' => $atanan, 'eksik' => max($gereken - $atanan, 0)];

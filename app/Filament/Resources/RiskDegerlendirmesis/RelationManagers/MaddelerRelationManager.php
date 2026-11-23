@@ -43,6 +43,11 @@ class MaddelerRelationManager extends RelationManager
 
     protected static ?string $title = 'Risk Maddeleri';
 
+    public function isReadOnly(): bool
+    {
+        return (bool) ($this->getOwnerRecord()?->kilitliMi());
+    }
+
     protected function yontem(): string
     {
         return $this->getOwnerRecord()->yontem;

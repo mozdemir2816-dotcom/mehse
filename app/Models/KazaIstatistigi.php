@@ -105,6 +105,10 @@ class KazaIstatistigi extends Model
         return $aylar->isEmpty() ? 0 : (int) round($aylar->avg());
     }
 
+    private ?Collection $tumKazalarCache = null;
+
+    private ?string $tumKazalarCacheAnahtar = null;
+
     /**
      * Bu yıla ait İş Kazası Raporları + iş kazası tipli Olay Kayıtları + harici
      * kazalar — ortak satır şeklinde ({kaynak, tarih, kayip_gunu, olumlu}).
@@ -113,6 +117,11 @@ class KazaIstatistigi extends Model
      */
     public function tumKazalar(): Collection
     {
+        $anahtar = md5(json_encode([$this->firma_id, $this->yil, $this->harici_kazalar]));
+        if ($this->tumKazalarCache !== null && $this->tumKazalarCacheAnahtar === $anahtar) {
+            return $this->tumKazalarCache;
+        }
+
         $raporlar = IsKazasiRaporu::query()
             ->where('firma_id', $this->firma_id)
             ->whereYear('kaza_tarihi', $this->yil)
@@ -146,7 +155,9 @@ class KazaIstatistigi extends Model
             'aciklama' => $h['aciklama'] ?? null,
         ]);
 
-        return $raporlar->concat($olaylar)->concat($harici)
+        $this->tumKazalarCacheAnahtar = $anahtar;
+
+        return $this->tumKazalarCache = $raporlar->concat($olaylar)->concat($harici)
             ->sortBy('tarih')
             ->values();
     }

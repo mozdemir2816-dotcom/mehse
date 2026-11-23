@@ -12,13 +12,17 @@ use Illuminate\Validation\Rule;
 
 // Ziyaretçi kartı QR doğrulaması + giriş öncesi İSG brifing & bilgi testi kilidi (N1).
 Route::get('/ziyaretci/{token}', function (string $token) {
-    $z = Ziyaretci::query()->with('firma')->where('token', $token)->first();
+    $z = Ziyaretci::query()->with(['firma' => fn ($q) => $q->withoutGlobalScopes()])->where('token', $token)->first();
 
     return response()->view('ziyaretci-dogrula', ['z' => $z], $z ? 200 : 404);
 })->where('token', '[A-Za-z0-9]{20,64}')->middleware('throttle:60,1')->name('ziyaretci.dogrula');
 
 Route::post('/ziyaretci/{token}/test', function (Request $request, string $token) {
     $z = Ziyaretci::query()->where('token', $token)->firstOrFail();
+
+    if ($z->iptal || $z->cikis_zamani !== null || ($z->gecerlilik_bitis && $z->gecerlilik_bitis->isPast())) {
+        return back()->with('test_hata', 'Bu ziyaretçi kartı iptal edilmiş, çıkış yapmış veya geçerlilik süresi dolmuştur.');
+    }
     $cevaplar = (array) $request->input('cevaplar', []);
     $sorular = Ziyaretci::BRIFING_SORULARI;
     $dogru = 0;

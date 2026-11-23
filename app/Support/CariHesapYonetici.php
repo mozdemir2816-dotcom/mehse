@@ -26,7 +26,16 @@ class CariHesapYonetici
     /** @param  array<string, mixed>  $veri */
     private static function kaydet(User $user, array $veri): void
     {
-        KullaniciAyarlari::kaydet($user, ['cari_hesap' => $veri]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $veri): void {
+            $kilitli = User::query()->lockForUpdate()->find($user->id);
+            if (! $kilitli) {
+                return;
+            }
+            $mevcutAyarlar = (array) ($kilitli->ayarlar ?? []);
+            $mevcutAyarlar['cari_hesap'] = $veri;
+            $kilitli->forceFill(['ayarlar' => $mevcutAyarlar])->save();
+            $user->ayarlar = $mevcutAyarlar;
+        });
     }
 
     public static function ucretKaydet(User $user, int $firmaId, float $aylikUcret, int $kdv = 20): void

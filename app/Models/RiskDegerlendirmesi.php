@@ -121,7 +121,7 @@ class RiskDegerlendirmesi extends Model
     {
         return \Illuminate\Support\Facades\DB::transaction(function () use ($neden): self {
             $yeni = $this->replicate([
-                'belge_no', 'kilitli_at', 'kilitli_by', 'pdf_yolu', 'pdf_talep_edildi_at', 'pdf_hazir_at',
+                'belge_no', 'gecerlilik_tarihi', 'kilitli_at', 'kilitli_by', 'pdf_yolu', 'pdf_talep_edildi_at', 'pdf_hazir_at',
             ]);
             $yeni->belge_no = static::belgeNoUret();
             $yeni->durum = 'taslak';

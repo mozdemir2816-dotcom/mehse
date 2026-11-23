@@ -186,6 +186,11 @@ class SaglikGozetimi extends Page
             return;
         }
 
+        $kullanici = Filament::auth()->user();
+        $klinikKullaniciAdi = ($kullanici instanceof \App\Models\User && in_array($kullanici->unvan, ['isyeri_hekimi', 'dsp'], true))
+            ? $kullanici->name
+            : null;
+
         \App\Models\RevirKaydi::create([
             'firma_id' => $this->firma->id,
             'calisan_id' => $calisan?->id,
@@ -196,7 +201,7 @@ class SaglikGozetimi extends Page
             'yapilan_islem' => trim($this->revirIslem) ?: null,
             'sonuc' => array_key_exists($this->revirSonuc, \App\Models\RevirKaydi::SONUCLAR) ? $this->revirSonuc : 'ayakta',
             'istirahat_gun' => $this->revirSonuc === 'istirahat' ? ($this->revirIstirahatGun ?: 1) : null,
-            'hekim_dsp' => $this->firma->isyeriHekimi?->ad_soyad ?: $this->firma->dsp?->ad_soyad ?: Filament::auth()->user()?->name,
+            'hekim_dsp' => $this->firma->isyeriHekimi?->ad_soyad ?: $this->firma->dsp?->ad_soyad ?: $klinikKullaniciAdi,
         ]);
 
         $this->reset('revirCalisanId', 'revirAdSoyad', 'revirNeden', 'revirTani', 'revirIslem', 'revirIstirahatGun');
@@ -315,6 +320,11 @@ class SaglikGozetimi extends Page
             return;
         }
 
+        $kullanici = Filament::auth()->user();
+        $klinikKullaniciAdi = ($kullanici instanceof \App\Models\User && in_array($kullanici->unvan, ['isyeri_hekimi', 'dsp'], true))
+            ? $kullanici->name
+            : null;
+
         \App\Models\AsiKaydi::create([
             'firma_id' => $this->firma->id,
             'calisan_id' => $calisan?->id,
@@ -323,7 +333,7 @@ class SaglikGozetimi extends Page
             'doz' => $this->asiDoz ?: '1. Doz',
             'yapilma_tarihi' => $this->asiTarih ?: now()->toDateString(),
             'sonraki_doz_tarihi' => $this->asiSonrakiTarih ?: null,
-            'uygulayan' => $this->firma->isyeriHekimi?->ad_soyad ?: $this->firma->dsp?->ad_soyad ?: Filament::auth()->user()?->name,
+            'uygulayan' => $this->firma->isyeriHekimi?->ad_soyad ?: $this->firma->dsp?->ad_soyad ?: $klinikKullaniciAdi,
         ]);
 
         $this->reset('asiCalisanId', 'asiAdSoyad', 'asiSonrakiTarih');

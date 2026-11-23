@@ -106,7 +106,7 @@ class TehlikeRiskAnalitigi extends Page
         }
 
         $m = RiskMaddesi::query()
-            ->whereHas('riskDegerlendirmesi', fn ($q) => $q->whereIn('firma_id', array_keys($this->firmalar)))
+            ->whereHas('riskDegerlendirmesi', fn ($q) => $q->whereIn('firma_id', array_keys($this->firmalar))->whereNull('kilitli_at'))
             ->find($maddeId);
 
         if (! $m) {
@@ -127,7 +127,7 @@ class TehlikeRiskAnalitigi extends Page
     /** Tahmin edilen türleri maddelere kalıcı olarak yazar (uzman sonra düzeltebilir). */
     public function tahminleriKaydet(): void
     {
-        if (! $this->analiz) {
+        if (! $this->analiz || $this->rd?->kilitliMi()) {
             return;
         }
 

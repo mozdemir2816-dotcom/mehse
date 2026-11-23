@@ -116,6 +116,7 @@ class KullaniciYonetimi extends Page
         }
 
         $user = User::findOrFail($this->acikKullaniciId);
+        abort_if($user->sahipMi(), 403);
 
         $this->validate([
             'abonelikPlani' => ['required', 'in:'.implode(',', array_keys(User::ABONELIK_PLANLARI))],
@@ -169,6 +170,7 @@ class KullaniciYonetimi extends Page
     public function aktifDegistir(int $userId): void
     {
         $user = User::findOrFail($userId);
+        abort_if($user->sahipMi(), 403);
         $user->update(['aktif' => ! $user->aktif]);
         unset($this->kullanicilar);
     }

@@ -735,6 +735,7 @@ class ZiyaretProgrami extends Page
                         (bool) ($data['cumartesi_dahil'] ?? false),
                         $mesgul,
                         (float) ($data['gunluk_max_saat'] ?? 10.0),
+                        array_keys($this->firmalar),
                     );
 
                     unset($this->program, $this->gunlukGruplar, $this->ozet, $this->gunlukListe, $this->ayRozetleri, $this->takvimGunler);

@@ -106,7 +106,7 @@
                                 <td style="padding:.4rem">{{ $h['aciklama'] }}</td>
                                 <td style="padding:.4rem;text-align:right;font-weight:700">{{ number_format((float) $h['tutar'], 2, ',', '.') }} ₺</td>
                                 <td style="padding:.4rem;text-align:right">
-                                    <button type="button" wire:click="hareketSil('{{ $h['id'] }}')" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:.8rem" title="Sil">✕</button>
+                                    <button type="button" wire:click="hareketSil('{{ $h['id'] }}')" wire:confirm="Bu cari hareket kalıcı olarak silinecek. Emin misiniz?" wire:loading.attr="disabled" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:.8rem" title="Sil">✕</button>
                                 </td>
                             </tr>
                         @empty

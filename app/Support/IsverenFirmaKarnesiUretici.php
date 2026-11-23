@@ -21,11 +21,11 @@ class IsverenFirmaKarnesiUretici
 
         $calisan = max((int) $firma->calisanlar()->where('aktif', true)->count(), (int) $firma->calisan_sayisi);
         $sinif = $firma->tehlike_sinifi;
-        $iguDk = $calisan * match ($sinif) { 'cok_tehlikeli' => 40, 'tehlikeli' => 20, default => 10 };
-        $hekimDk = $calisan * match ($sinif) { 'cok_tehlikeli' => 15, 'tehlikeli' => 10, default => 5 };
-        $dspDk = ($sinif === 'cok_tehlikeli' && $calisan >= 10)
-            ? $calisan * ($calisan < 50 ? 10 : ($calisan < 250 ? 15 : 20))
-            : 0;
+        $iguDk = $firma->igu_hizmeti_yok ? 0 : ($firma->katip_aylik_dk ?: OsgbKadroAnalizi::yasalDakika($sinif, $calisan, 'igu'));
+        $hekimDk = $firma->hekim_hizmeti_yok ? 0 : OsgbKadroAnalizi::yasalDakika($sinif, $calisan, 'hekim');
+        $dspDk = ($firma->dsp_hizmeti_yok || ($sinif === 'cok_tehlikeli' && $calisan >= 750))
+            ? 0
+            : OsgbKadroAnalizi::yasalDakika($sinif, $calisan, 'dsp');
 
         $pdf = Pdf::loadView('pdf.isveren-firma-karnesi', [
             'firma' => $firma,

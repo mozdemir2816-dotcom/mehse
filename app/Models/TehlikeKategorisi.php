@@ -20,6 +20,13 @@ class TehlikeKategorisi extends Model
         'nace_gruplari' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        $temizle = fn () => app()->forgetInstance('mehse.ekipman.kutuphane_baglari');
+        static::saved($temizle);
+        static::deleted($temizle);
+    }
+
     public function tehlikeler(): HasMany
     {
         return $this->hasMany(Tehlike::class);
