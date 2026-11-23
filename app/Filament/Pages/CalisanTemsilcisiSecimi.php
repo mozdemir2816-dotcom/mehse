@@ -131,6 +131,8 @@ class CalisanTemsilcisiSecimi extends Page
 
         if ($this->secilenAdayIndex === $index) {
             $this->secilenAdayIndex = null;
+        } elseif ($this->secilenAdayIndex !== null && $this->secilenAdayIndex > $index) {
+            $this->secilenAdayIndex--;
         }
     }
 

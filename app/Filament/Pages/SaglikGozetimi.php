@@ -446,15 +446,14 @@ class SaglikGozetimi extends Page
             Action::make('kaydet')
                 ->label('Kaydet')
                 ->icon('heroicon-o-check')
-                ->visible(fn () => $this->firma !== null)
+                ->visible(fn () => $this->firma !== null && $this->sekme === 'tetkik')
                 ->action(fn () => $this->kaydet()),
 
             Action::make('pdf')
                 ->label('PDF (Takip Çizelgesi)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->visible(fn () => filled($this->gozetim()?->satirlar))
-                ->schema([ImzaSecenegi::alan()])
+                ->visible(fn () => $this->sekme === 'tetkik' && filled($this->gozetim()?->satirlar))
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

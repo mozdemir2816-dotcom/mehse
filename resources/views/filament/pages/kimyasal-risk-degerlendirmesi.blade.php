@@ -91,7 +91,7 @@
                             </div>
                             <div>
                                 <label class="mehse-etiket-kucuk">Uçuculuk / Tozlaşma</label>
-                                <select wire:model.blur="satirlar.{{ $i }}.ucuculuk" style="{{ $girdi }}">
+                                <select wire:model.live="satirlar.{{ $i }}.ucuculuk" style="{{ $girdi }}">
                                     @foreach ($this->ucuculukSecenekleri as $u => $ad)
                                         <option value="{{ $u }}">{{ $ad }}</option>
                                     @endforeach
@@ -103,8 +103,8 @@
                             </div>
                         </div>
                         <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin:.5rem 0">
-                            <label style="font-size:.75rem;display:flex;align-items:center;gap:.3rem"><input type="checkbox" wire:model.blur="satirlar.{{ $i }}.cmr"> CMR (kanserojen/mutajen/üreme toksik)</label>
-                            <label style="font-size:.75rem;display:flex;align-items:center;gap:.3rem"><input type="checkbox" wire:model.blur="satirlar.{{ $i }}.deri_goz_yolu"> Deri/göz teması yolu</label>
+                            <label style="font-size:.75rem;display:flex;align-items:center;gap:.3rem"><input type="checkbox" wire:model.live="satirlar.{{ $i }}.cmr"> CMR (kanserojen/mutajen/üreme toksik)</label>
+                            <label style="font-size:.75rem;display:flex;align-items:center;gap:.3rem"><input type="checkbox" wire:model.live="satirlar.{{ $i }}.deri_goz_yolu"> Deri/göz teması yolu</label>
                         </div>
                         <div style="display:grid;grid-template-columns:2fr 1fr;gap:.5rem">
                             <div>

@@ -166,7 +166,7 @@
                                         @php $oneriBos = blank(trim((string) ($m['oneri'] ?? ''))); @endphp
                                         <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb;{{ $oneriBos ? 'color:#6b7280;font-style:italic' : '' }}" @if ($oneriBos) title="Öneri boş — PDF'e bu varsayılan metin basılır" @endif>{{ $oneriBos ? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI : $m['oneri'] }}</td>
                                         <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb">
-                                            <button type="button" wire:click="maddeSil({{ $i }})" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#b91c1c;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
+                                            <button type="button" wire:click="maddeSil({{ $i }})" wire:confirm="Bu tespit maddesi defterden silinsin mi?" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#b91c1c;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
                                         </td>
                                     </tr>
                                 @endforeach

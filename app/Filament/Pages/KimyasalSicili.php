@@ -263,7 +263,6 @@ class KimyasalSicili extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => $this->urunler->isNotEmpty())
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KimyasalEnvanterUretici::pdf($this->firma)),
 
             Action::make('envanterExcel')

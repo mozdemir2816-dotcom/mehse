@@ -215,11 +215,14 @@
                     <div><label style="font-size:.75rem;font-weight:600">Yapılan İşlem</label><input type="text" wire:model="revirIslem" style="{{ $girdi }}" placeholder="Pansuman / reçete / sevk"></div>
                     <div>
                         <label style="font-size:.75rem;font-weight:600">Sonuç</label>
-                        <select wire:model="revirSonuc" style="{{ $girdi }}">
+                        <select wire:model.live="revirSonuc" style="{{ $girdi }}">
                             @foreach (\App\Models\RevirKaydi::SONUCLAR as $k => $ad)<option value="{{ $k }}">{{ $ad }}</option>@endforeach
                         </select>
                     </div>
-                    <div><x-filament::button size="sm" wire:click="revirEkle">Protokole Ekle</x-filament::button></div>
+                    @if ($revirSonuc === 'istirahat')
+                        <div><label style="font-size:.75rem;font-weight:600">İstirahat (Gün)</label><input type="number" min="1" max="180" wire:model="revirIstirahatGun" style="{{ $girdi }}" placeholder="1"></div>
+                    @endif
+                    <div><x-filament::button size="sm" wire:click="revirEkle" wire:loading.attr="disabled">Protokole Ekle</x-filament::button></div>
                 </div>
                 <div style="overflow-x:auto">
                     <table style="width:100%;border-collapse:collapse;font-size:.8rem">

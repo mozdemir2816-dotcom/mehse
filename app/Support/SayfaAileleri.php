@@ -52,6 +52,7 @@ class SayfaAileleri
                 [Pages\KimyasalYonetimi::class, 'Kimyasal Yönetimi'],
                 [Pages\KimyasalRiskDegerlendirmesi::class, 'Kimyasal Risk Değ.'],
                 [Pages\KimyasalSicili::class, 'Kimyasal Sicili / Afiş'],
+                [Pages\PkdSicili::class, 'PKD Sicili (Patlama)'],
                 [Pages\TehlikeRiskAnalitigi::class, 'Tehlike ve Risk Analitiği'],
                 [TehlikeResource::class, 'Tehlike Kütüphanesi'],
                 [RiskSablonuResource::class, 'Sektör Şablonları'],
@@ -269,9 +270,9 @@ class SayfaAileleri
                 'siniflar' => [Pages\RiskSihirbazi::class, RiskDegerlendirmesiResource::class, Pages\JsaDegerlendirmesi::class],
             ],
             [
-                'etiket' => 'Kimyasal & Tehlike Analitiği',
+                'etiket' => 'Kimyasal, PKD & Tehlike Analitiği',
                 'ikon' => 'heroicon-o-beaker',
-                'siniflar' => [Pages\KimyasalYonetimi::class, Pages\KimyasalRiskDegerlendirmesi::class, Pages\KimyasalSicili::class, Pages\TehlikeRiskAnalitigi::class],
+                'siniflar' => [Pages\KimyasalYonetimi::class, Pages\KimyasalRiskDegerlendirmesi::class, Pages\KimyasalSicili::class, Pages\PkdSicili::class, Pages\TehlikeRiskAnalitigi::class],
             ],
             [
                 'etiket' => 'Merkezi Kütüphane & Şablonlar',

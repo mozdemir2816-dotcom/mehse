@@ -227,10 +227,14 @@ class OrtamOlcumleri extends Page
             return;
         }
 
-        // Ölçüm tarihi temizlendiyse "sonraki" yeniden hesaplansın diye sıfırla.
+        // Ölçüm tarihi temizlendiyse sıfırla; tarih/periyot doluysa sonraki ölçüm tarihini güncelle.
         $satirlar = array_map(function (array $s): array {
             if (empty($s['olcum_tarihi'])) {
                 $s['sonraki_olcum_tarihi'] = null;
+            } elseif (! empty($s['periyot_ay']) && (int) $s['periyot_ay'] > 0) {
+                $s['sonraki_olcum_tarihi'] = \Illuminate\Support\Carbon::parse($s['olcum_tarihi'])
+                    ->addMonthsNoOverflow((int) $s['periyot_ay'])
+                    ->toDateString();
             }
 
             return $s;

@@ -6,7 +6,7 @@
     $kirmizi = '#DC2626';
     $sari = '#D97706';
     $gri = '#64748B';
-    $kutu = 'background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:1rem;box-shadow:0 1px 2px rgb(15 23 42 / .04)';
+    $kutu = 'background:rgb(128 116 148 / .03);border:1px solid rgb(128 116 148 / .24);border-radius:12px;padding:1rem;box-shadow:0 1px 2px rgb(15 23 42 / .04)';
 @endphp
 
 <x-filament-panels::page>
@@ -76,11 +76,11 @@
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-                                <button type="button" wire:click="bulguErtele({{ $b['id'] }}, 7)"
+                                <button type="button" wire:click="bulguErtele({{ $b['id'] }}, 7)" wire:loading.attr="disabled"
                                     style="font-size:.74rem;font-weight:600;padding:.26rem .55rem;border-radius:.4rem;border:1px solid rgb(245 158 11 / .45);background:rgb(245 158 11 / .1);color:#b45309;cursor:pointer">
                                     ⏱ +7 Gün Ertele
                                 </button>
-                                <button type="button" wire:click="bulguTamamla({{ $b['id'] }})"
+                                <button type="button" wire:click="bulguTamamla({{ $b['id'] }})" wire:confirm="Bu saha bulgusunu hızlıca 'Giderildi' olarak kapatmak istiyor musunuz? Kanıt/artık risk eklemek için 'Aç →' bağlantısını kullanın." wire:loading.attr="disabled"
                                     style="font-size:.74rem;font-weight:600;padding:.26rem .55rem;border-radius:.4rem;border:1px solid rgb(22 163 74 / .45);background:rgb(22 163 74 / .1);color:#15803d;cursor:pointer">
                                     ✓ Tamamlandı
                                 </button>
@@ -89,6 +89,11 @@
                         </div>
                     @endforeach
                 </div>
+                @if (count($acikBulgular) >= 15)
+                    <div style="margin-top:.5rem;padding-top:.45rem;border-top:1px solid rgb(128 116 148 / .14);text-align:right">
+                        <a href="{{ \App\Filament\Pages\HizliSahaBulgusu::getUrl() }}" style="font-size:.78rem;font-weight:700;color:{{ $mor }};text-decoration:none">Tüm Açık Saha Bulgularını Gör →</a>
+                    </div>
+                @endif
             </div>
         @endif
         @if ($isler->isEmpty())
@@ -154,6 +159,19 @@
             ];
             $uyumRengi = $o['uyum_yuzde'] < 40 ? $kirmizi : ($o['uyum_yuzde'] < 75 ? $sari : $yesil);
         @endphp
+        {{-- Seçili Firma Kapsam Bilgisi --}}
+        @if ($this->secilenFirma)
+            <div style="{{ $kutu }};border-color:rgb(37 99 235 / .35);background:rgb(37 99 235 / .05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+                <div style="font-size:.83rem">
+                    <strong>Seçili Firma: {{ $this->secilenFirma->unvan }}</strong>
+                    <span style="color:{{ $gri }}"> · Aşağıdaki portföy özeti tüm firmalarınızı gösterir; bu firmanın tekil evrak durumu için Hızlı Evrak Matrisi'ni açabilirsiniz.</span>
+                </div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <button type="button" wire:click="sekmeSec('hizli_evrak')" style="font-size:.78rem;font-weight:700;padding:.32rem .65rem;border-radius:.45rem;border:1px solid rgb(37 99 235 / .4);background:#2563EB;color:#fff;cursor:pointer">⚡ Firma Evrak Matrisini Aç</button>
+                    <button type="button" wire:click="sekmeSec('calisan')" style="font-size:.78rem;font-weight:700;padding:.32rem .65rem;border-radius:.45rem;border:1px solid rgb(128 116 148 / .35);background:transparent;color:inherit;cursor:pointer">👷 Çalışan Asistanı</button>
+                </div>
+            </div>
+        @endif
         {{-- İSG Portföy Özeti --}}
         <div style="{{ $kutu }}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
@@ -257,10 +275,13 @@
                                         <td style="padding:.35rem .5rem;font-weight:600">{{ $kr['unvan'] }}</td>
                                         <td style="padding:.35rem .5rem">{{ $kr['tehlike_etiketi'] }}</td>
                                         <td style="padding:.35rem .5rem;text-align:right;font-variant-numeric:tabular-nums">{{ $kr['calisan'] }}</td>
-                                        <td style="padding:.35rem .5rem;text-align:center;font-variant-numeric:tabular-nums;{{ $kr['ilkyardim_eksik'] > 0 ? 'color:'.$kirmizi.';font-weight:700' : 'color:'.$yesil }}">
-                                            {{ $kr['ilkyardim_atanan'] }} / {{ $kr['ilkyardim_gereken'] }}
-                                            @if ($kr['ilkyardim_eksik'] > 0)
-                                                <span>({{ $kr['ilkyardim_eksik'] }} eksik)</span>
+                                        <td style="padding:.35rem .5rem;text-align:center;font-variant-numeric:tabular-nums;{{ ($kr['ilkyardim_belge_eksik'] ?? $kr['ilkyardim_eksik']) > 0 ? 'color:'.$kirmizi.';font-weight:700' : 'color:'.$yesil }}">
+                                            {{ $kr['ilkyardim_gecerli_belge'] ?? $kr['ilkyardim_atanan'] }} / {{ $kr['ilkyardim_gereken'] }}
+                                            @if (($kr['ilkyardim_atanan'] ?? 0) > ($kr['ilkyardim_gecerli_belge'] ?? $kr['ilkyardim_atanan']))
+                                                <span style="font-size:.7rem;color:{{ $sari }}" title="Atanan ilk yardımcıların bir kısmının sertifika süresi dolmuş">(atanan: {{ $kr['ilkyardim_atanan'] }})</span>
+                                            @endif
+                                            @if (($kr['ilkyardim_belge_eksik'] ?? $kr['ilkyardim_eksik']) > 0)
+                                                <span>({{ $kr['ilkyardim_belge_eksik'] ?? $kr['ilkyardim_eksik'] }} eksik)</span>
                                             @else
                                                 <span>✓</span>
                                             @endif
@@ -321,7 +342,7 @@
                                     $acik = $acikKriter === $k['anahtar'];
                                 @endphp
                                 <div style="border-top:1px solid rgb(128 116 148 / .15);padding:.4rem 0">
-                                    <div @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif
+                                    <div @if ($tiklanir) wire:click="kriterDetayAc('{{ $k['anahtar'] }}')" wire:keydown.enter="kriterDetayAc('{{ $k['anahtar'] }}')" wire:keydown.space.prevent="kriterDetayAc('{{ $k['anahtar'] }}')" role="button" tabindex="0" @endif
                                         style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;{{ $tiklanir ? 'cursor:pointer' : '' }}">
                                         <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:600;min-width:0">
                                             <x-filament::icon :icon="$k['ikon']" style="width:.85rem;height:.85rem;flex-shrink:0;color:{{ $kRenk }}"/>
@@ -422,7 +443,7 @@
                         <div style="font-size:1.3rem;font-weight:800;color:{{ $k['genc']->count() ? $sari : 'inherit' }}">{{ $k['genc']->count() }}</div>
                     </div>
                     <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
-                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">Ağır & Tehlikeli İş</div>
+                        <div style="font-size:.75rem;color:rgb(95 87 112);text-transform:uppercase">Mesleki Eğitim Gerektiren (m.17/3)</div>
                         <div style="font-size:1.3rem;font-weight:800">{{ $k['agir_tehlikeli'] }}</div>
                     </div>
                     <div style="border:1px solid rgb(128 116 148 / .25);border-radius:.5rem;padding:.6rem">
@@ -452,6 +473,11 @@
                                 {{ $c->ad_soyad }}{{ $c->gorev ? ' ('.$c->gorev.')' : '' }}@if (in_array($c->id, $k['egitim_suresi_dolan'] ?? [], true)) · <strong>süresi doldu</strong>@endif
                             </span>
                         @endforeach
+                        @if ($k['egitim_eksik']->count() > 40)
+                            <a href="{{ \App\Filament\Pages\EgitimYenilemeTakibi::getUrl(['firma' => $this->secilenFirma->id]) }}" style="font-size:.78rem;font-weight:700;padding:.15rem .55rem;color:{{ $mor }}">
+                                +{{ $k['egitim_eksik']->count() - 40 }} kişi daha (Tümünü Gör →)
+                            </a>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -469,8 +495,27 @@
                                 {{ $c->ad_soyad }}@if (in_array($c->id, $k['muayene_suresi_dolan'] ?? [], true)) · süresi doldu @endif · EK-2 Hazırla →
                             </a>
                         @endforeach
+                        @if ($k['muayene_eksik']->count() > 40)
+                            <a href="{{ \App\Filament\Pages\SaglikGozetimi::getUrl(['firma' => $this->secilenFirma->id]) }}" style="font-size:.78rem;font-weight:700;padding:.15rem .55rem;color:{{ $mor }}">
+                                +{{ $k['muayene_eksik']->count() - 40 }} kişi daha (Tümünü Gör →)
+                            </a>
+                        @endif
                     </div>
                 </div>
+            @endif
+
+            @if (($k['tc_eksik'] ?? collect())->isNotEmpty())
+                <details style="{{ $kutu }}">
+                    <summary style="cursor:pointer;font-weight:700;color:{{ $sari }}">🪪 T.C. Kimlik No Eksik Çalışanlar ({{ $k['tc_eksik']->count() }})</summary>
+                    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
+                        @foreach ($k['tc_eksik']->take(40) as $c)
+                            <span style="font-size:.78rem;padding:.15rem .55rem;border-radius:999px;border:1px solid rgb(245 158 11 / .4);background:rgb(245 158 11 / .08)">{{ $c->ad_soyad }}</span>
+                        @endforeach
+                        @if ($k['tc_eksik']->count() > 40)
+                            <span style="font-size:.78rem;color:{{ $gri }}">+{{ $k['tc_eksik']->count() - 40 }} kişi daha</span>
+                        @endif
+                    </div>
+                </details>
             @endif
 
             @if ($k['genc']->isNotEmpty())

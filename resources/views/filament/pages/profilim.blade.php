@@ -31,7 +31,10 @@
                     @if ($u->telefon)<span style="display:inline-flex;align-items:center;gap:.3rem"><x-filament::icon icon="heroicon-o-phone" style="width:.9rem;height:.9rem"/>{{ $u->telefon }}</span>@endif
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem">
-                    <x-filament::badge color="success">● İSG-KATİP: Aktif</x-filament::badge>
+                    @php $katipSayisi = \App\Models\IsgKatipSozlesmesi::where('user_id', $u->id)->count(); @endphp
+                    <x-filament::badge :color="$katipSayisi > 0 ? 'success' : 'gray'">
+                        {{ $katipSayisi > 0 ? '● İSG-KATİP: '.$katipSayisi.' Sözleşme' : '○ İSG-KATİP: Yüklenmedi' }}
+                    </x-filament::badge>
                     <x-filament::badge :color="match ($gorsel['kase']) { 'yuklu' => 'success', default => 'warning' }">
                         {{ match ($gorsel['kase']) { 'yuklu' => 'Kaşe Yüklü', 'dosya_yok' => 'Kaşe dosyası bulunamadı', default => 'Kaşe eksik' } }}
                     </x-filament::badge>

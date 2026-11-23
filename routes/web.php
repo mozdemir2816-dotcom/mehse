@@ -152,7 +152,7 @@ Route::get('/sitemap.xml', function () {
             ['adres' => 'https://mehse.com/araclar/ipc-ceza-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/araclar/ilkyardimci-destek-elemani-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['adres' => 'https://mehse.com/araclar/fine-kinney-risk-hesaplama', 'lastmod' => $tarih('pages/ucretsiz-araclar'), 'changefreq' => 'monthly', 'priority' => '0.8'],
-            ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('yasal/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
+            ['adres' => 'https://mehse.com/kvkk', 'lastmod' => $tarih('pages/kvkk'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/cerez-politikasi', 'lastmod' => $tarih('pages/cerez-politikasi'), 'changefreq' => 'monthly', 'priority' => '0.5'],
             ['adres' => 'https://mehse.com/bilgi-guvenligi', 'lastmod' => $tarih('pages/bilgi-guvenligi'), 'changefreq' => 'monthly', 'priority' => '0.6'],
             ['adres' => 'https://mehse.com/android', 'lastmod' => $tarih('pages/android'), 'changefreq' => 'monthly', 'priority' => '0.7'],

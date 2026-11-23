@@ -736,6 +736,7 @@ class IsKazasiRaporu extends Page
         }
 
         $this->duzenlenenId = $r->id;
+        $this->kazazedeHizliSecId = $r->calisan_id;
         $this->kazazedeAdSoyad = $r->kazazede_ad_soyad;
         $this->kazazedeTc = $r->kazazede_tc;
         $this->kazazedeGorev = $r->kazazede_gorev;

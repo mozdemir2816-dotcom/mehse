@@ -72,6 +72,12 @@ class UzaktanEgitimFirmaAyarlari extends Page
         $this->yukle();
     }
 
+    public function updatedPaketId(): void
+    {
+        unset($this->paket, $this->onayli, $this->icerik);
+        $this->icerikOnayi = (bool) $this->onayli;
+    }
+
     #[Computed]
     public function firmalar(): array
     {

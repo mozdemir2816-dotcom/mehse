@@ -364,9 +364,9 @@
                                     @endif
                                     <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $f->id }})">PDF</x-filament::button>
                                     @if (! in_array($f->durum, ['kapatildi', 'iptal']))
-                                        <x-filament::button size="xs" color="danger" wire:click="iptalEt({{ $f->id }})">İptal</x-filament::button>
+                                        <x-filament::button size="xs" color="danger" wire:click="iptalEt({{ $f->id }})" wire:confirm="Bu iş izni iptal edilsin mi?">İptal</x-filament::button>
                                     @endif
-                                    <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $f->id }})">Sil</x-filament::button>
+                                    <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $f->id }})" wire:confirm="Bu iş izni kaydı kalıcı olarak silinsin mi?">Sil</x-filament::button>
                                 </td>
                             </tr>
 

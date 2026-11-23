@@ -56,7 +56,7 @@ class IseOzguEgitimKonulari extends Page
 
     public function mount(): void
     {
-        $id = request()->integer('firmaId');
+        $id = request()->integer('firma') ?: request()->integer('firmaId');
         $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
     }
 

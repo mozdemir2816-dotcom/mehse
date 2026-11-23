@@ -193,7 +193,7 @@
                             <td style="padding:.3rem .5rem">{{ $f->form_no }} — {{ $f->teslim_tarihi?->format('d.m.Y') }} ({{ count($f->calisanlar ?? []) }} çalışan, {{ count($f->kkdler ?? []) }} KKD)</td>
                             <td style="padding:.3rem .5rem;text-align:right;white-space:nowrap">
                                 <x-filament::button size="xs" color="gray" wire:click="gecmisPdf({{ $f->id }})">PDF</x-filament::button>
-                                <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $f->id }})">Sil</x-filament::button>
+                                <x-filament::button size="xs" color="danger" wire:click="gecmisSil({{ $f->id }})" wire:confirm="Bu KKD zimmet formunu silmek istediğinize emin misiniz?">Sil</x-filament::button>
                             </td>
                         </tr>
                     @endforeach

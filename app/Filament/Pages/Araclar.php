@@ -180,7 +180,7 @@ class Araclar extends Page
 
     public function kazaHesaplayiciSifirla(): void
     {
-        $this->reset(['kazaSayisi', 'kayipGunSayisi', 'toplamCalismaSaati', 'kazaCalisanSayisi']);
+        $this->reset(['kazaSayisi', 'kayipGunSayisi', 'toplamCalismaSaati', 'kazaCalisanSayisi', 'oncekiDonemKso']);
         $this->kazaDonemAy = 12;
     }
 

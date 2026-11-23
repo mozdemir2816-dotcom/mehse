@@ -164,7 +164,7 @@
                                     @endif
                                     @if (count($girdiler) > 1)
                                         <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm"
-                                            wire:click="ziyaretSil({{ $i }}, {{ $s }})" tooltip="Bu satırı sil"/>
+                                            wire:click="ziyaretSil({{ $i }}, {{ $s }})" wire:confirm="Bu ziyaret satırı silinsin mi?" tooltip="Bu satırı sil"/>
                                     @endif
                                 </td>
                             </tr>

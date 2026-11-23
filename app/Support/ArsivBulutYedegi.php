@@ -61,9 +61,9 @@ class ArsivBulutYedegi
             $manifest['kayitlar'][] = [
                 'firma' => $firma->secimEtiketi(),
                 'kategori' => $d->kategori,
-                'ad' => $d->ad,
+                'ad' => $d->etiket(),
                 'baslangic' => $d->baslangic_tarihi?->toDateString(),
-                'bitis' => $d->bitis_tarihi?->toDateString(),
+                'bitis' => $d->gecerlilik_sonu?->toDateString(),
                 'dosya_yolu' => $d->dosya_yolu,
             ];
 
