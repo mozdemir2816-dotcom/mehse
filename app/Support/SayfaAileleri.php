@@ -77,6 +77,7 @@ class SayfaAileleri
                 [Pages\UzaktanEgitimFirmaAyarlari::class, 'Firma Ayarları'],
                 [Pages\UzaktanEgitimAtama::class, 'Atama'],
                 [Pages\UzaktanEgitimTakip::class, 'Takip'],
+                [Pages\UzaktanEgitimYilBasi::class, 'Yıl Başı Toplu Eğitim'],
                 [Pages\UzaktanEgitimSorulari::class, 'Sınav Soruları'],
                 [Pages\SoruBankasi::class, 'Soru Bankası'],
                 [Pages\EgitimSorulari::class, 'AI ile Soru / Sınav'],
@@ -224,7 +225,7 @@ class SayfaAileleri
                 // Online Eğitim Yönet (08.11.2026): Paketler · Atama · Takip · Sınav Soruları.
                 'etiket' => 'Online Eğitim Yönet',
                 'ikon' => 'heroicon-o-computer-desktop',
-                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimFirmaAyarlari::class, Pages\UzaktanEgitimAtama::class, Pages\UzaktanEgitimTakip::class, Pages\UzaktanEgitimSorulari::class],
+                'siniflar' => [EgitimPaketiResource::class, Pages\UzaktanEgitimFirmaAyarlari::class, Pages\UzaktanEgitimAtama::class, Pages\UzaktanEgitimTakip::class, Pages\UzaktanEgitimYilBasi::class, Pages\UzaktanEgitimSorulari::class],
             ],
             [
                 'etiket' => 'Soru & İçerik Bankası',

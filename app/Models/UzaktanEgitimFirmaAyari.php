@@ -19,6 +19,7 @@ class UzaktanEgitimFirmaAyari extends Model
         'kase_bas' => 'boolean',
         'calisan_imza_alani' => 'boolean',
         'icerik_onay_at' => 'datetime',
+        'icerik_onaylari' => 'array',
     ];
 
     public const LOGO_KONUMLARI = [
@@ -46,12 +47,60 @@ class UzaktanEgitimFirmaAyari extends Model
         return substr(sha1(json_encode($satirlar, JSON_UNESCAPED_UNICODE)), 0, 12);
     }
 
-    /** Verilen paket için içerik onayı geçerli mi (aynı paket + aynı içerik sürümü). */
+    /**
+     * Verilen paket için içerik onayı geçerli mi (aynı paket + aynı içerik sürümü). 23.11.2026'dan
+     * beri onay paket başına `icerik_onaylari` içinde tutulur; eski tek paketli alanlar da okunur.
+     */
     public function icerikOnayliMi(EgitimPaketi $paket): bool
     {
+        $surum = static::icerikSurumu($paket);
+        $kayit = $this->icerik_onaylari[(string) $paket->id] ?? null;
+
+        if ($kayit) {
+            return ($kayit['surum'] ?? null) === $surum;
+        }
+
         return $this->icerik_onay_at !== null
             && (int) $this->icerik_paket_id === (int) $paket->id
-            && $this->icerik_surumu === static::icerikSurumu($paket);
+            && $this->icerik_surumu === $surum;
+    }
+
+    /** Paketin onay bilgisi (onaylayan, tarih) — yoksa null. @return array{onaylayan: ?string, at: ?\Illuminate\Support\Carbon}|null */
+    public function onayBilgisi(EgitimPaketi $paket): ?array
+    {
+        if ($kayit = $this->icerik_onaylari[(string) $paket->id] ?? null) {
+            return ['onaylayan' => $kayit['onaylayan'] ?? null, 'at' => isset($kayit['at']) ? \Illuminate\Support\Carbon::parse($kayit['at']) : null];
+        }
+
+        return $this->icerik_onay_at && (int) $this->icerik_paket_id === (int) $paket->id
+            ? ['onaylayan' => $this->icerik_onaylayan, 'at' => $this->icerik_onay_at]
+            : null;
+    }
+
+    /** Paket için içerik onayını ver ya da kaldır. */
+    public function onayYaz(EgitimPaketi $paket, ?string $onaylayan): void
+    {
+        $onaylar = $this->icerik_onaylari ?? [];
+        $onaylar[(string) $paket->id] = ['surum' => static::icerikSurumu($paket), 'at' => now()->toDateTimeString(), 'onaylayan' => $onaylayan];
+        $this->icerik_onaylari = $onaylar;
+        // Eski alanlar son onaylanan paketi gösterir (geriye dönük okuma).
+        $this->icerik_paket_id = $paket->id;
+        $this->icerik_surumu = $onaylar[(string) $paket->id]['surum'];
+        $this->icerik_onay_at = now();
+        $this->icerik_onaylayan = $onaylayan;
+    }
+
+    public function onayKaldir(EgitimPaketi $paket): void
+    {
+        $onaylar = $this->icerik_onaylari ?? [];
+        unset($onaylar[(string) $paket->id]);
+        $this->icerik_onaylari = $onaylar ?: null;
+
+        if ((int) $this->icerik_paket_id === (int) $paket->id) {
+            $this->icerik_onay_at = null;
+            $this->icerik_surumu = null;
+            $this->icerik_onaylayan = null;
+        }
     }
 
     /** Gönderime hazır mı: ayar kaydedilmiş ve içerik onaylı. */

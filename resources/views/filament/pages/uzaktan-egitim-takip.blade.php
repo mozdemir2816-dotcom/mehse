@@ -241,7 +241,7 @@
                                     <div class="mehse-soluk">Hekim: {{ $a->calisan?->firma?->isyeriHekimi?->ad_soyad ?? 'firmada kayıtlı değil' }}</div>
                                 @elseif ($a->durum === 'tamamlandi')
                                     <span style="color:rgb(21 128 61);font-weight:700">☑ Tamamlandı</span>
-                                    <div class="mehse-soluk">{{ $a->tamamlandi_at?->format('d.m.Y') }}@if ($a->egitimKaydinaIslenirMi()) · kayda işlendi @elseif ($a->dorduncuKonuYuzYuzeMi()) · <span style="color:#b45309">1–3. konular tamam, 4. konu yüz yüze bekleniyor</span> @endif</div>
+                                    <div class="mehse-soluk">{{ $a->tamamlandi_at?->format('d.m.Y') }}@if ($a->egitimKaydinaIslenirMi()) · kayda işlendi @elseif ($a->dorduncuKonuYuzYuzeMi()) · <span style="color:#b45309">1–3. konular tamam, 4. konu yüz yüze bekleniyor</span> @elseif ($a->yuzYuzeTamamlamaGerekirMi()) · <span style="color:#b45309">online 4 saat tamam, yüz yüze 4 saat bekleniyor</span> @endif</div>
                                 @else
                                     <span style="font-size:.75rem;color:{{ $a->durum === 'basarisiz' ? 'rgb(185 28 28)' : 'rgb(107 114 128)' }}">
                                         ☐ {{ $a->durumEtiketi() }}@if ($a->gecikti()) · gecikti @endif

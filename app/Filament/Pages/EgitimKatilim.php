@@ -405,27 +405,44 @@ class EgitimKatilim extends Page
         }
 
         $tur = $this->egitimTuru === 'tekrar' ? 'yenileme' : 'ilk_defa';
-        $sure = \App\Models\EgitimPaketi::gerekenUzaktanSure((string) $this->firma->tehlike_sinifi, $tur);
+        $sonAtama = $this->sonOnlineAtama($tur);
 
-        if (! $sure['yuz_yuze_saat']) {
+        if (! $sonAtama) {
             return null;
         }
 
-        $onlineVar = \App\Models\EgitimAtamasi::query()
+        $saat = $this->yuzYuzeSaati($tur, $sonAtama->paket);
+
+        return $saat ?: null;
+    }
+
+    /** Firmadaki son online temel eğitim ataması — önce aynı türden, yoksa herhangi biri. */
+    private function sonOnlineAtama(string $tur): ?\App\Models\EgitimAtamasi
+    {
+        $sorgu = fn () => \App\Models\EgitimAtamasi::query()
             ->whereIn('egitim_turu', ['ilk_defa', 'yenileme'])
             ->whereHas('calisan', fn ($q) => $q->where('firma_id', $this->firma->id))
-            ->exists();
+            ->with('paket')->latest('atandi_at')->latest('id');
 
-        return $onlineVar ? $sure['yuz_yuze_saat'] : null;
+        return $sorgu()->where('egitim_turu', $tur)->first() ?? $sorgu()->first();
+    }
+
+    /** Online paketin türüne göre (8 saat ilk / 4 saat yenileme) yüz yüze tamamlanacak ders saati. */
+    private function yuzYuzeSaati(string $tur, ?\App\Models\EgitimPaketi $paket): int
+    {
+        $sinif = (string) $this->firma->tehlike_sinifi;
+
+        return (int) ($paket
+            ? $paket->gerekenSure($sinif, $tur)['yuz_yuze_saat']
+            : \App\Models\EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['yuz_yuze_saat']);
     }
 
     /** Şekil elle değişince ders saati de uyar: Karma → yüz yüze kısım, diğerleri → tam süre. */
     public function updatedEgitimSekli(): void
     {
         $tur = $this->egitimTuru === 'tekrar' ? 'yenileme' : 'ilk_defa';
-        $yuzYuze = $this->firma
-            ? \App\Models\EgitimPaketi::gerekenUzaktanSure((string) $this->firma->tehlike_sinifi, $tur)['yuz_yuze_saat']
-            : 0;
+        $sonPaket = $this->firma ? $this->sonOnlineAtama($tur)?->paket : null;
+        $yuzYuze = $this->firma ? $this->yuzYuzeSaati($tur, $sonPaket) : 0;
 
         $this->dersSaati = ($this->egitimSekli === 'karma' && $yuzYuze) ? $yuzYuze : ($this->icerik['saat'] ?? null);
         $this->sureGunYenile();

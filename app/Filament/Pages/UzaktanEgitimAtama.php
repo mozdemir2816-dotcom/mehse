@@ -137,7 +137,7 @@ class UzaktanEgitimAtama extends Page
         }
 
         ['saat' => $saat, 'gereken_dk' => $gereken, 'dorduncu_yuz_yuze' => $dorduncuYuzYuze, 'yuz_yuze_saat' => $yuzYuzeSaat]
-            = EgitimPaketi::gerekenUzaktanSure($sinif, $this->egitimTuru);
+            = $paket->gerekenSure($sinif, $this->egitimTuru);
         $paketDk = $paket->onlineSureDk();   // videolar + ön test + final
 
         return [
@@ -330,7 +330,7 @@ class UzaktanEgitimAtama extends Page
                 $a->yeniden_baslatma ?: null,
                 $tamam ? '✓' : '—',
                 $a->tamamlandi_at?->format('d.m.Y'),
-                ! $tamam ? '—' : ($a->egitimKaydinaIslenirMi() ? 'İşlendi' : ($a->dorduncuKonuYuzYuzeMi() ? '4. konu yüz yüze bekleniyor' : '—')),
+                ! $tamam ? '—' : ($a->egitimKaydinaIslenirMi() ? 'İşlendi' : ($a->dorduncuKonuYuzYuzeMi() ? '4. konu yüz yüze bekleniyor' : ($a->yuzYuzeTamamlamaGerekirMi() ? 'Yüz yüze 4 saat bekleniyor' : '—'))),
             ], null, 'A'.($i + 2));
         }
 
@@ -460,6 +460,10 @@ class UzaktanEgitimAtama extends Page
 
     public function updated(string $alan): void
     {
+        // Paket seçilince eğitim türü paketin türüne göre ayarlanır (8 saat ilk / 4 saat yenileme karışmasın).
+        if ($alan === 'paketId' && ($paket = EgitimPaketi::query()->gorunur(Filament::auth()->id())->find($this->paketId))) {
+            $this->egitimTuru = $paket->turAnahtari();
+        }
         if (in_array($alan, ['paketId', 'egitimTuru'], true)) {
             unset($this->sureKontrolu);
         }

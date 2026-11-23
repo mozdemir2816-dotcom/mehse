@@ -29,6 +29,7 @@
                 <td class="kart">
                     <div class="ad">{{ $r['ad_soyad'] }}</div>
                     @if ($r['gorev'])<div class="gorev">{{ $r['gorev'] }}</div>@endif
+                    @if (! empty($r['egitim']))<div class="satir">Eğitim: <strong>{{ $r['egitim'] }}</strong></div>@endif
                     <div class="satir">Portal: <span class="deger">{{ preg_replace('~^https?://~', '', $portal) }}</span></div>
                     <div class="satir">Kullanıcı kodu: <span class="deger">{{ $r['kod'] }}</span></div>
                     <div class="satir">Geçici şifre: <span class="deger">{{ $r['sifre'] }}</span></div>

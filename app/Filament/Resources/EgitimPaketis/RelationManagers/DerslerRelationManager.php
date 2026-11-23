@@ -176,8 +176,18 @@ class DerslerRelationManager extends RelationManager
         $video = $paket->toplamSureDk();
         $toplam = $paket->onlineSureDk();
         $suresiz = $paket->dersler->whereNull('sure_sn')->count();
-        $hedef = EgitimPaketi::gerekenUzaktanSure('az_tehlikeli')['gereken_dk'];
-        $ys = fn (string $sinif, string $tur) => EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['yuz_yuze_saat'];
+        $hedef = $paket->gerekenSure('az_tehlikeli')['gereken_dk'];
+        $ys = fn (string $sinif, string $tur) => $paket->gerekenSure($sinif, $tur)['yuz_yuze_saat'];
+
+        if ($paket->turAnahtari() === 'yenileme') {
+            return 'Toplam video süresi: '.$video.' dk'
+                .($suresiz ? ' — '.$suresiz.' videonun süresi bilinmiyor (YouTube ilk izlemede doldurur ya da Düzenle ile girin)' : '')
+                .' + sınavlar '.EgitimPaketi::sinavSureDk().' dk = '.$toplam.' dk'
+                .'. Temel İSG Yenileme Eğitimi online hedefi '.intdiv($hedef, (int) config('isg.uzaktan_egitim.ders_saati_dk', 45)).' ders saati = '.$hedef.' dk: '
+                .($toplam >= $hedef ? '✓ tamam' : '✗ '.($hedef - $toplam).' dk eksik')
+                .'. Yenileme toplam '.(int) config('isg.egitim.sureler.tekrar.saat', 8).' ders saati; kalan '.$ys('az_tehlikeli', 'yenileme')
+                .' ders saati her tehlike sınıfında yüz yüze verilir.';
+        }
 
         return 'Toplam video süresi: '.$video.' dk'
             .($suresiz ? ' — '.$suresiz.' videonun süresi bilinmiyor (YouTube ilk izlemede doldurur ya da Düzenle ile girin)' : '')

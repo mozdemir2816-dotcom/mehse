@@ -174,18 +174,14 @@ class UzaktanEgitimFirmaAyarlari extends Page
         ]);
 
         // İçerik onayı: işaretliyse mevcut paket + içerik sürümü onaylanır; kaldırılırsa geri alınır.
+        // 23.11.2026: onay paket başına — başka paketin onayı bozulmaz.
         if ($this->icerikOnayi && $paket) {
             $zatenOnayli = $ayar->exists && $ayar->icerikOnayliMi($paket);
             if (! $zatenOnayli) {
-                $ayar->icerik_paket_id = $paket->id;
-                $ayar->icerik_surumu = UzaktanEgitimFirmaAyari::icerikSurumu($paket);
-                $ayar->icerik_onay_at = now();
-                $ayar->icerik_onaylayan = Filament::auth()->user()?->name;
+                $ayar->onayYaz($paket, Filament::auth()->user()?->name);
             }
-        } else {
-            $ayar->icerik_onay_at = null;
-            $ayar->icerik_surumu = null;
-            $ayar->icerik_onaylayan = null;
+        } elseif ($paket) {
+            $ayar->onayKaldir($paket);
         }
 
         $ayar->save();

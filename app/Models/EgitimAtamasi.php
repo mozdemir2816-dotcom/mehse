@@ -144,7 +144,7 @@ class EgitimAtamasi extends Model
     public function iguOnayiBekliyorMu(): bool
     {
         return $this->basariliMi()
-            && (static::ciftOnayAcikMi() || $this->dorduncuKonuYuzYuzeMi())
+            && (static::ciftOnayAcikMi() || $this->yuzYuzeTamamlamaGerekirMi())
             && $this->igu_onay_at === null
             && $this->durum !== 'tamamlandi';
     }
@@ -368,13 +368,23 @@ class EgitimAtamasi extends Model
     public function egitimKaydinaIslenirMi(): bool
     {
         return in_array($this->egitim_turu, ['ilk_defa', 'yenileme'], true)
-            && (! $this->dorduncuKonuYuzYuzeMi() || $this->igu_onay_at !== null);
+            && (! $this->yuzYuzeTamamlamaGerekirMi() || $this->igu_onay_at !== null);
+    }
+
+    /**
+     * Online kısımdan sonra yüz yüze tamamlama gerekiyor mu: tehlikeli / çok tehlikelide 4. konu
+     * (Md.12/3) ya da 4 saatlik Temel İSG Yenileme paketi (toplam 8 saatin kalan 4 saati, her sınıfta —
+     * 23.11.2026 kararı). Gerekiyorsa eğitim kaydına İGU onayından sonra işlenir.
+     */
+    public function yuzYuzeTamamlamaGerekirMi(): bool
+    {
+        return $this->dorduncuKonuYuzYuzeMi() || $this->paket?->egitim_turu === 'yenileme';
     }
 
     public function durumEtiketi(): string
     {
-        // Tehlikeli / çok tehlikelide İGU onayı = 4. konunun yüz yüze pratiği.
-        if ($this->durum === 'onay_bekliyor' && $this->dorduncuKonuYuzYuzeMi()) {
+        // Tehlikeli / çok tehlikelide ve 4 saatlik yenilemede İGU onayı = yüz yüze kısmın pratiği.
+        if ($this->durum === 'onay_bekliyor' && $this->yuzYuzeTamamlamaGerekirMi()) {
             return config('isg.uzaktan_egitim.durumlar.pratik_bekliyor');
         }
 

@@ -103,13 +103,15 @@ class EgitimPaketi extends Model
     }
 
     /**
-     * Md.13 + 08.11.2026 kararı: online kısım her sınıfta `uzaktan_hedef_saat` (8 ders saati
-     * = 360 dk, tek video paketi); kalan süre yüz yüze (`yuz_yuze_saat`, 4. konu dahil).
-     * `saat` = yönetmelikteki asgari toplam ders saati.
+     * Md.13 + 08.11.2026 / 23.11.2026 kararları: online kısım paket türüne göre `uzaktan_hedef_saat`
+     * (Temel İSG Eğitimi 8 ders saati = 360 dk; Temel İSG Yenileme Eğitimi 4 ders saati = 180 dk).
+     * Yüz yüze kısım: tehlikeli / çok tehlikelide 4. konu (`yuz_yuze_saat`) ve her durumda yasal
+     * toplamın (`saat`) online ile karşılanmayan kalanı — 4 saatlik yenilemede her sınıfta 4 saat.
+     * `$paketTuru` verilmezse eski davranış (tek 8 saatlik paket) korunur.
      *
-     * @return array{saat: int, gereken_dk: int, dorduncu_yuz_yuze: bool, yuz_yuze_saat: int}
+     * @return array{saat: int, gereken_dk: int, dorduncu_yuz_yuze: bool, yuz_yuze_saat: int, online_saat: int}
      */
-    public static function gerekenUzaktanSure(string $sinif, string $tur = 'ilk_defa'): array
+    public static function gerekenUzaktanSure(string $sinif, string $tur = 'ilk_defa', ?string $paketTuru = null): array
     {
         $saat = (int) ($tur === 'ilk_defa'
             ? config("isg.egitim.sureler.ilk.{$sinif}.saat", 8)
@@ -119,14 +121,44 @@ class EgitimPaketi extends Model
         $yuzYuze = $dorduncuYuzYuze
             ? max($dorduncu, (int) config('isg.uzaktan_egitim.yuz_yuze_saat.'.($tur === 'ilk_defa' ? 'ilk_defa' : 'yenileme').".{$sinif}", $dorduncu))
             : 0;
-        $online = (int) config('isg.uzaktan_egitim.uzaktan_hedef_saat', 8);   // tek paket: yenilemede de aynı 8 saat izlenir
+        $online = static::onlineHedefSaat($paketTuru ?? 'ilk_defa');
+        // Online ile karşılanmayan yasal süre yüz yüze tamamlanır (4 saatlik yenilemede 8 − 4 = 4).
+        if ($paketTuru !== null) {
+            $yuzYuze = max($yuzYuze, $saat - $online);
+        }
 
         return [
             'saat' => $saat,
             'gereken_dk' => $online * (int) config('isg.uzaktan_egitim.ders_saati_dk', 45),
             'dorduncu_yuz_yuze' => $dorduncuYuzYuze,
             'yuz_yuze_saat' => $yuzYuze,
+            'online_saat' => $online,
         ];
+    }
+
+    /** Paket türünün online hedefi (ders saati). Eski tek değerli ayar da okunur. */
+    public static function onlineHedefSaat(string $paketTuru = 'ilk_defa'): int
+    {
+        $ayar = config('isg.uzaktan_egitim.uzaktan_hedef_saat', 8);
+
+        return (int) (is_array($ayar) ? ($ayar[$paketTuru] ?? $ayar['ilk_defa'] ?? 8) : $ayar);
+    }
+
+    /** Bu paketin Md.13 süre hesabı (paket türüyle). */
+    public function gerekenSure(string $sinif, ?string $tur = null): array
+    {
+        return static::gerekenUzaktanSure($sinif, $tur ?? $this->turAnahtari(), $this->turAnahtari());
+    }
+
+    /** ilk_defa | yenileme */
+    public function turAnahtari(): string
+    {
+        return $this->egitim_turu === 'yenileme' ? 'yenileme' : 'ilk_defa';
+    }
+
+    public function turEtiketi(): string
+    {
+        return (string) config('isg.uzaktan_egitim.paket_turleri.'.$this->turAnahtari());
     }
 
     /** Sınav için havuzdan rastgele soru seç (yetmezse hepsi). */

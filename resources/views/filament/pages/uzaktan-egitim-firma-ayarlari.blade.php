@@ -29,9 +29,9 @@
     @if ($this->firma)
         @if ($this->onayli)
             <div style="border-left:4px solid rgb(21 128 61);background:rgb(21 128 61 / .08);padding:.6rem .8rem;border-radius:.4rem;font-size:.85rem">
-                <strong>{{ $this->firma->unvan }}</strong> gönderime hazır. İçerik onayı: {{ $ayar->icerik_onaylayan }} · {{ $ayar->icerik_onay_at->format('d.m.Y H:i') }}
+                <strong>{{ $this->firma->unvan }}</strong> gönderime hazır. @php $ob = $this->paket ? $ayar->onayBilgisi($this->paket) : null; @endphp İçerik onayı: {{ $ob['onaylayan'] ?? '' }} · {{ $ob['at']?->format('d.m.Y H:i') }}
             </div>
-        @elseif ($ayar?->icerik_onay_at)
+        @elseif ($this->paket && $ayar?->onayBilgisi($this->paket))
             <div style="border-left:4px solid #d97706;background:rgb(217 119 6 / .08);padding:.6rem .8rem;border-radius:.4rem;font-size:.85rem">
                 Eğitim içeriği ya da paket değişti; <strong>onay yeniden gerekiyor</strong>. İçeriği inceleyip aşağıdan onaylayın.
             </div>

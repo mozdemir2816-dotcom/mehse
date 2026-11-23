@@ -624,7 +624,15 @@ return [
         'ders_saati_dk' => 45,
         // 08.11.2026 (kullanıcı kararı): online kısım her sınıfta 8 ders saati (360 dk) — tek video paketi;
         // kalan süre yüz yüze verilir (4. konu dahil). Yüz yüze ders saati: tür → sınıf.
-        'uzaktan_hedef_saat' => 8,
+        // 23.11.2026 (kullanıcı kararı): paket türüne göre — Temel İSG Eğitimi (ilk defa / hiç kaydı
+        // olmayan) 8 ders saati; Temel İSG Yenileme Eğitimi 4 ders saati. Yenilemede toplam 8 saatin
+        // (egitim.sureler.tekrar) kalan 4 saati her sınıfta yüz yüze verilir (gerekenUzaktanSure).
+        'uzaktan_hedef_saat' => ['ilk_defa' => 8, 'yenileme' => 4],
+        // Paket türleri (egitim_paketleri.egitim_turu).
+        'paket_turleri' => [
+            'ilk_defa' => 'Temel İSG Eğitimi (8 saat online)',
+            'yenileme' => 'Temel İSG Yenileme Eğitimi (4 saat online)',
+        ],
         'yuz_yuze_saat' => [
             'ilk_defa' => ['az_tehlikeli' => 0, 'tehlikeli' => 4, 'cok_tehlikeli' => 8],
             'yenileme' => ['az_tehlikeli' => 0, 'tehlikeli' => 4, 'cok_tehlikeli' => 4],
