@@ -88,7 +88,7 @@ class EgitimPaketiResource extends Resource
                     ->placeholder('İnşaat Sektörü Uzaktan İSG Eğitimi'),
                 Select::make('egitim_turu')->label('Paket türü')->required()->native(false)->default('ilk_defa')
                     ->options(config('isg.uzaktan_egitim.paket_turleri'))
-                    ->helperText('Hiç eğitim kaydı olmayanlara 8 saatlik Temel İSG Eğitimi, yenilemesi gelenlere 4 saatlik Yenileme Eğitimi atanır; Yıl Başı Toplu Eğitim bu türe göre seçer.'),
+                    ->helperText('Hiç eğitim kaydı olmayanlara 8 ders saatlik (8×45 = 360 dk) Temel İSG Eğitimi, yenilemesi gelenlere 4 ders saatlik (4×45 = 180 dk) Yenileme Eğitimi atanır; Yıl Başı Toplu Eğitim bu türe göre seçer.'),
                 Select::make('sektor')->label('Sektör')
                     ->options(collect(config('isg.risk_ai.sektorler'))->map(fn ($s) => $s['ad']))
                     ->native(false)->searchable(),
@@ -202,7 +202,7 @@ class EgitimPaketiResource extends Resource
                 TextColumn::make('kod')->label('Kod')->badge()->color('gray'),
                 TextColumn::make('ad')->label('Eğitim')->searchable()->weight('bold')->wrap(),
                 TextColumn::make('egitim_turu')->label('Tür')->badge()
-                    ->formatStateUsing(fn (?string $state) => $state === 'yenileme' ? 'Yenileme · 4 saat' : 'Temel · 8 saat')
+                    ->formatStateUsing(fn (?string $state) => $state === 'yenileme' ? 'Yenileme · 4 ders saati' : 'Temel · 8 ders saati')
                     ->color(fn (?string $state) => $state === 'yenileme' ? 'info' : 'primary'),
                 TextColumn::make('sektor')->label('Sektör')
                     ->formatStateUsing(fn (EgitimPaketi $r) => $r->sektorEtiketi() ?: '—'),

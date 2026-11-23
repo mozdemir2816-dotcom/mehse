@@ -330,7 +330,7 @@ class UzaktanEgitimAtama extends Page
                 $a->yeniden_baslatma ?: null,
                 $tamam ? '✓' : '—',
                 $a->tamamlandi_at?->format('d.m.Y'),
-                ! $tamam ? '—' : ($a->egitimKaydinaIslenirMi() ? 'İşlendi' : ($a->dorduncuKonuYuzYuzeMi() ? '4. konu yüz yüze bekleniyor' : ($a->yuzYuzeTamamlamaGerekirMi() ? 'Yüz yüze 4 saat bekleniyor' : '—'))),
+                ! $tamam ? '—' : ($a->egitimKaydinaIslenirMi() ? 'İşlendi' : ($a->dorduncuKonuYuzYuzeMi() ? '4. konu yüz yüze bekleniyor' : ($a->yuzYuzeTamamlamaGerekirMi() ? 'Yüz yüze 4 ders saati bekleniyor' : '—'))),
             ], null, 'A'.($i + 2));
         }
 

@@ -5,9 +5,9 @@
 
 <x-filament-panels::page>
     <p class="mehse-bolum-aciklama" style="margin-top:-.5rem;max-width:72ch;line-height:1.55">
-        Temel İSG eğitimi kaydı olan ve <strong>yenilemesi {{ $yil }} içinde dolan</strong> (ya da zaten dolmuş) çalışanlara
-        <strong>4 saatlik Yenileme</strong>, <strong>hiç eğitim kaydı olmayanlara 8 saatlik Temel</strong> eğitim atanır.
-        Yenilemesi sonraki yıllarda olanlar ve devam eden eğitimi bulunanlar atlanır. Gönderimde kullanıcı kodu ve
+        Önceden temel İSG eğitimi kaydı olan çalışanlara <strong>4 ders saatlik (4×45 = 180 dk) Yenileme</strong>,
+        <strong>hiç eğitim kaydı olmayanlara 8 ders saatlik (8×45 = 360 dk) Temel</strong> eğitim atanır.
+        {{ $yil }} içinde zaten eğitim almış olanlar ve devam eden eğitimi bulunanlar atlanır. Gönderimde kullanıcı kodu ve
         geçici şifre üretilir, firma e-postasına giriş kartları PDF'i gider ve WhatsApp mesajı hazırlanır.
     </p>
 
@@ -18,19 +18,32 @@
                 <input id="yb-yil" type="number" min="2024" max="2100" wire:model.live.debounce.500ms="yil" class="mehse-girdi">
             </div>
             <div>
-                <label class="mehse-etiket" for="yb-yenileme">Yenileme paketi (4 saat)</label>
+                <label class="mehse-etiket" for="yb-yenileme">Yenileme paketi (4 ders saati)</label>
                 <select id="yb-yenileme" wire:model.live="yenilemePaketId" class="mehse-girdi">
                     <option value="">— Seçin —</option>
                     @foreach ($this->paketler('yenileme') as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
                 </select>
             </div>
             <div>
-                <label class="mehse-etiket" for="yb-temel">Temel paket (8 saat, kaydı olmayanlar)</label>
+                <label class="mehse-etiket" for="yb-temel">Temel paket (8 ders saati, kaydı olmayanlar)</label>
                 <select id="yb-temel" wire:model.live="temelPaketId" class="mehse-girdi">
                     <option value="">— Seçin —</option>
                     @foreach ($this->paketler('ilk_defa') as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
                 </select>
             </div>
+            <div>
+                <label class="mehse-etiket" for="yb-kapsam">Yenileme kimlere</label>
+                <select id="yb-kapsam" wire:model.live="kapsam" class="mehse-girdi">
+                    @foreach (\App\Support\YilBasiTopluEgitim::KAPSAMLAR as $k => $etiket)<option value="{{ $k }}">{{ $etiket }}</option>@endforeach
+                </select>
+            </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin-top:.9rem">
+            <x-filament::button size="sm" color="warning" icon="heroicon-o-shield-check" wire:click="topluOnayVer"
+                wire:confirm="Seçili iki paketin eğitim içeriğini inceledim; TÜM firmalarım için içerik onayı verilsin mi? (Firma Ayarları'ndaki onayla aynı)">
+                Tüm firmalara içerik onayı ver
+            </x-filament::button>
+            <span class="mehse-soluk-metin" style="font-size:.8rem">Onay her firma için Firma Ayarları sekmesinde ayrı ayrı da verilebilir; paket içeriği değişirse onay yenilenmelidir.</span>
         </div>
         @if (! $this->paketler('yenileme'))
             <p class="mehse-uyari-not" style="margin-top:.75rem">
@@ -41,7 +54,7 @@
     </x-filament::section>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem">
-        @foreach ([['Firma', $toplam['firma']], ['4 saat yenileme', $toplam['yenileme']], ['8 saat temel', $toplam['ilk_defa']], ['Gönderime hazır firma', $toplam['hazir']]] as [$etiket, $deger])
+        @foreach ([['Firma', $toplam['firma']], ['4 ders saati yenileme', $toplam['yenileme']], ['8 ders saati temel', $toplam['ilk_defa']], ['Gönderime hazır firma', $toplam['hazir']]] as [$etiket, $deger])
             <div style="border:1px solid rgb(107 114 128 / .25);border-radius:.6rem;padding:.7rem .9rem">
                 <div class="mehse-soluk-metin" style="font-size:.8rem">{{ $etiket }}</div>
                 <div style="font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums">{{ $deger }}</div>
@@ -77,8 +90,8 @@
                         <tr>
                             <th class="mehse-th" style="width:44px"><span class="sr-only">Seç</span></th>
                             <th class="mehse-th">Firma</th>
-                            <th class="mehse-th" style="text-align:center">4 saat yenileme</th>
-                            <th class="mehse-th" style="text-align:center">8 saat temel</th>
+                            <th class="mehse-th" style="text-align:center">4 ders saati yenileme</th>
+                            <th class="mehse-th" style="text-align:center">8 ders saati temel</th>
                             <th class="mehse-th" style="text-align:center">Atlanan</th>
                             <th class="mehse-th">Durum</th>
                         </tr>
@@ -96,13 +109,13 @@
                                         <summary style="cursor:pointer;font-weight:600">{{ $o['firma']->unvan }}</summary>
                                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem;margin-top:.5rem;font-size:.82rem">
                                             <div>
-                                                <div style="font-weight:600;margin-bottom:.25rem">Yenileme (4 saat)</div>
+                                                <div style="font-weight:600;margin-bottom:.25rem">Yenileme (4 ders saati)</div>
                                                 @forelse ($o['yenileme'] as $s)
                                                     <div>{{ $s['calisan']->ad_soyad }} <span class="mehse-soluk-metin">· son {{ $s['son_egitim']->format('d.m.Y') }} · yenileme {{ $s['yenileme']->format('d.m.Y') }}</span></div>
                                                 @empty <div class="mehse-soluk-metin">—</div> @endforelse
                                             </div>
                                             <div>
-                                                <div style="font-weight:600;margin-bottom:.25rem">Temel (8 saat) — kaydı yok</div>
+                                                <div style="font-weight:600;margin-bottom:.25rem">Temel (8 ders saati) — kaydı yok</div>
                                                 @forelse ($o['ilk_defa'] as $s)
                                                     <div>{{ $s['calisan']->ad_soyad }}@if ($s['calisan']->gorev) <span class="mehse-soluk-metin">· {{ $s['calisan']->gorev }}</span>@endif</div>
                                                 @empty <div class="mehse-soluk-metin">—</div> @endforelse
@@ -147,7 +160,7 @@
                     <thead>
                         <tr>
                             <th class="mehse-th">Firma</th>
-                            <th class="mehse-th" style="text-align:center">Atanan (4 / 8 saat)</th>
+                            <th class="mehse-th" style="text-align:center">Atanan (4 / 8 ders saati)</th>
                             <th class="mehse-th">E-posta</th>
                             <th class="mehse-th">Firma yetkilisine</th>
                         </tr>

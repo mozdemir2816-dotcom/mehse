@@ -72,12 +72,47 @@ class UzaktanEgitimYilBasiTest extends TestCase
         $this->calisan('Veli Gecerli', '2026-06-01');   // → 2028: atlanır
         $this->calisan('Ayşe Kayitsiz');                // kaydı yok → 8 saat
 
-        $o = YilBasiTopluEgitim::firmaOnizleme($this->firma, 2027, $temel, $yenileme);
+        $o = YilBasiTopluEgitim::firmaOnizleme($this->firma, 2027, $temel, $yenileme, 'yenilemesi_dolan');
 
         $this->assertSame(['Ali Dolan'], $o['yenileme']->map(fn ($s) => $s['calisan']->ad_soyad)->all());
         $this->assertSame(['Ayşe Kayitsiz'], $o['ilk_defa']->map(fn ($s) => $s['calisan']->ad_soyad)->all());
         $this->assertSame(1, $o['gecerli']);
         $this->assertNotEmpty($o['eksik']);   // içerik onayı yok
+    }
+
+    public function test_kaydi_olan_herkes_kapsaminda_onceki_egitimi_olan_herkes_yenileme_alir(): void
+    {
+        $temel = $this->paket('ilk_defa');
+        $yenileme = $this->paket('yenileme');
+        $this->calisan('Ali Dolan', '2025-03-10');
+        $this->calisan('Veli Gecerli', '2026-06-01');
+        $this->calisan('Can BuYil', '2027-01-15');      // seçilen yıl içinde eğitim almış → atlanır
+        $this->calisan('Ayşe Kayitsiz');
+
+        $o = YilBasiTopluEgitim::firmaOnizleme($this->firma, 2027, $temel, $yenileme);   // varsayılan: kaydi_olan
+
+        $this->assertSame(['Ali Dolan', 'Veli Gecerli'], $o['yenileme']->map(fn ($s) => $s['calisan']->ad_soyad)->sort()->values()->all());
+        $this->assertSame(['Ayşe Kayitsiz'], $o['ilk_defa']->map(fn ($s) => $s['calisan']->ad_soyad)->all());
+        $this->assertSame(1, $o['gecerli']);
+    }
+
+    public function test_tum_firmalara_toplu_icerik_onayi(): void
+    {
+        $temel = $this->paket('ilk_defa');
+        $yenileme = $this->paket('yenileme');
+        $ikinci = Firma::factory()->for($this->uzman)->create(['tehlike_sinifi' => 'az_tehlikeli']);
+        $baskasi = Firma::factory()->create();
+
+        Livewire::test(UzaktanEgitimYilBasi::class)
+            ->set('temelPaketId', $temel->id)
+            ->set('yenilemePaketId', $yenileme->id)
+            ->call('topluOnayVer');
+
+        foreach ([$this->firma, $ikinci] as $f) {
+            $this->assertTrue(UzaktanEgitimFirmaAyari::gonderimeHazirMi($f, $temel));
+            $this->assertTrue(UzaktanEgitimFirmaAyari::gonderimeHazirMi($f, $yenileme));
+        }
+        $this->assertFalse(UzaktanEgitimFirmaAyari::gonderimeHazirMi($baskasi, $yenileme));
     }
 
     public function test_iki_paket_ayni_firmada_birlikte_onayli_kalir(): void

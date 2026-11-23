@@ -630,8 +630,8 @@ return [
         'uzaktan_hedef_saat' => ['ilk_defa' => 8, 'yenileme' => 4],
         // Paket türleri (egitim_paketleri.egitim_turu).
         'paket_turleri' => [
-            'ilk_defa' => 'Temel İSG Eğitimi (8 saat online)',
-            'yenileme' => 'Temel İSG Yenileme Eğitimi (4 saat online)',
+            'ilk_defa' => 'Temel İSG Eğitimi (8 ders saati online = 360 dk)',
+            'yenileme' => 'Temel İSG Yenileme Eğitimi (4 ders saati online = 180 dk)',
         ],
         'yuz_yuze_saat' => [
             'ilk_defa' => ['az_tehlikeli' => 0, 'tehlikeli' => 4, 'cok_tehlikeli' => 8],

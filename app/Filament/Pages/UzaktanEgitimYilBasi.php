@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\EgitimPaketi;
 use App\Models\Firma;
+use App\Models\UzaktanEgitimFirmaAyari;
 use App\Support\YilBasiTopluEgitim;
 use BackedEnum;
 use Filament\Facades\Filament;
@@ -52,6 +53,9 @@ class UzaktanEgitimYilBasi extends Page
 
     public bool $epostaGonder = true;
 
+    /** kaydi_olan | yenilemesi_dolan — bkz. YilBasiTopluEgitim::KAPSAMLAR */
+    public string $kapsam = 'kaydi_olan';
+
     /** Son gönderimin sonuçları (firma başına). @var array<int, array<string, mixed>> */
     public array $sonuclar = [];
 
@@ -97,7 +101,7 @@ class UzaktanEgitimYilBasi extends Page
     public function onizleme(): array
     {
         return Firma::query()->where('user_id', Filament::auth()->id())->orderBy('unvan')->get()
-            ->mapWithKeys(fn (Firma $f) => [$f->id => YilBasiTopluEgitim::firmaOnizleme($f, $this->yil, $this->temelPaket, $this->yenilemePaketi)])
+            ->mapWithKeys(fn (Firma $f) => [$f->id => YilBasiTopluEgitim::firmaOnizleme($f, $this->yil, $this->temelPaket, $this->yenilemePaketi, $this->kapsamAnahtari())])
             ->filter(fn (array $o) => $o['yenileme']->isNotEmpty() || $o['ilk_defa']->isNotEmpty() || $o['bildirim'])
             ->all();
     }
@@ -123,12 +127,52 @@ class UzaktanEgitimYilBasi extends Page
 
     public function updated(string $alan): void
     {
-        if (in_array($alan, ['yil', 'temelPaketId', 'yenilemePaketId'], true)) {
+        if (in_array($alan, ['yil', 'temelPaketId', 'yenilemePaketId', 'kapsam'], true)) {
             $this->yil = max(2024, min(2100, (int) $this->yil));
             unset($this->temelPaket, $this->yenilemePaketi, $this->onizleme, $this->toplam);
             $this->seciliFirmalar = [];
             $this->sonuclar = [];
         }
+    }
+
+    public function kapsamAnahtari(): string
+    {
+        return array_key_exists($this->kapsam, YilBasiTopluEgitim::KAPSAMLAR) ? $this->kapsam : 'kaydi_olan';
+    }
+
+    /**
+     * Seçili iki paketin içeriğini uzmanın TÜM firmaları için tek seferde onaylar (Firma Ayarları'ndaki
+     * onayla aynı kayıt; eğitimi verenler boşsa belge firmanın İGU / hekim bilgisini kullanır).
+     */
+    public function topluOnayVer(): void
+    {
+        $paketler = array_filter([$this->temelPaket, $this->yenilemePaketi]);
+        if (! $paketler) {
+            Notification::make()->title('Önce paketleri seçin')->warning()->send();
+
+            return;
+        }
+
+        $ad = Filament::auth()->user()?->name;
+        $sayi = 0;
+        foreach (Firma::query()->where('user_id', Filament::auth()->id())->get() as $firma) {
+            $ayar = UzaktanEgitimFirmaAyari::firmaIcin($firma->id) ?? new UzaktanEgitimFirmaAyari(['firma_id' => $firma->id]);
+            $degisti = false;
+            foreach ($paketler as $p) {
+                if (! $ayar->exists || ! $ayar->icerikOnayliMi($p)) {
+                    $ayar->onayYaz($p, $ad);
+                    $degisti = true;
+                }
+            }
+            if ($degisti) {
+                $ayar->save();
+                $sayi++;
+            }
+        }
+
+        unset($this->onizleme, $this->toplam);
+        Notification::make()->title($sayi ? "{$sayi} firmada içerik onayı verildi" : 'Tüm firmalar zaten onaylı')
+            ->body(collect($paketler)->map(fn (EgitimPaketi $p) => $p->ad)->implode(' · '))->success()->send();
     }
 
     public function hazirlariSec(): void
@@ -157,7 +201,7 @@ class UzaktanEgitimYilBasi extends Page
 
         foreach ($firmalar as $firma) {
             try {
-                $s = YilBasiTopluEgitim::gonder($firma, $this->yil, $this->temelPaket, $this->yenilemePaketi, (int) Filament::auth()->id(), $this->epostaGonder);
+                $s = YilBasiTopluEgitim::gonder($firma, $this->yil, $this->temelPaket, $this->yenilemePaketi, (int) Filament::auth()->id(), $this->epostaGonder, $this->kapsamAnahtari());
                 $this->sonuclar[$firma->id] = [
                     'unvan' => $firma->unvan,
                     'yenileme' => $s['yenileme'],

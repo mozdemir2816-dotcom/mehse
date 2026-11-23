@@ -2,7 +2,7 @@
 @php($dugme = 'border:0;border-radius:.4rem;padding:.15rem .5rem;cursor:pointer;font-size:.78rem;color:#fff')
 @if ($a->iguOnayiBekliyorMu())
     <button wire:click="iguOnayla({{ $a->id }})"
-        wire:confirm="{{ $a->dorduncuKonuYuzYuzeMi() ? '4. konu (işe ve işyerine özgü riskler) yüz yüze pratik olarak verildi ve sınav sonucu uygundur; onaylansın mı?' : ($a->yuzYuzeTamamlamaGerekirMi() ? 'Yenileme eğitiminin yüz yüze 4 saati verildi ve sınav sonucu uygundur; onaylansın mı?' : 'Teknik konular ve sınav sonucu uygundur; İGU olarak onaylansın mı?') }}"
+        wire:confirm="{{ $a->dorduncuKonuYuzYuzeMi() ? '4. konu (işe ve işyerine özgü riskler) yüz yüze pratik olarak verildi ve sınav sonucu uygundur; onaylansın mı?' : ($a->yuzYuzeTamamlamaGerekirMi() ? 'Yenileme eğitiminin yüz yüze 4 ders saati verildi ve sınav sonucu uygundur; onaylansın mı?' : 'Teknik konular ve sınav sonucu uygundur; İGU olarak onaylansın mı?') }}"
         style="{{ $dugme }};background:#b45309">{{ $a->yuzYuzeTamamlamaGerekirMi() ? 'Pratik + İGU Onayı' : 'İGU Onayı' }}</button>
 @elseif ($a->ihOnayiBekliyorMu())
     @php($hekim = $a->calisan?->firma?->isyeriHekimi)

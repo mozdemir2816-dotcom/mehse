@@ -30,7 +30,13 @@ class YilBasiTopluEgitim
      *
      * @return array{firma: Firma, yenileme: Collection<int, array{calisan: Calisan, son_egitim: ?Carbon, yenileme: ?Carbon}>, ilk_defa: Collection<int, array{calisan: Calisan}>, gecerli: int, zaten_atanmis: int, eksik: array<int, string>, bildirim: ?EgitimTopluBildirimi}
      */
-    public static function firmaOnizleme(Firma $firma, int $yil, ?EgitimPaketi $temel, ?EgitimPaketi $yenilemePaketi): array
+    /** Kapsam: kaydı olan herkes yenileme alır (23.11.2026 kullanıcı kararı) ya da yalnız yenilemesi o yıl dolanlar. */
+    public const KAPSAMLAR = [
+        'kaydi_olan' => 'Eğitim kaydı olan herkes',
+        'yenilemesi_dolan' => 'Yalnız yenilemesi o yıl dolanlar',
+    ];
+
+    public static function firmaOnizleme(Firma $firma, int $yil, ?EgitimPaketi $temel, ?EgitimPaketi $yenilemePaketi, string $kapsam = 'kaydi_olan'): array
     {
         $yilSonu = Carbon::create($yil, 12, 31)->endOfDay();
         $yilBasi = Carbon::create($yil, 1, 1)->startOfDay();
@@ -77,8 +83,12 @@ class YilBasiTopluEgitim
             }
 
             $yenilemeTarihi = $yenilemeYili ? $son->copy()->addYears($yenilemeYili) : null;
+            // "Kaydı olan herkes": seçilen yıl içinde zaten eğitim almış olan atlanır, diğer herkes yenileme alır.
+            $yenilemeAlir = $kapsam === 'kaydi_olan'
+                ? $son->lt($yilBasi)
+                : ($yenilemeTarihi && $yenilemeTarihi->lte($yilSonu));
 
-            if ($yenilemeTarihi && $yenilemeTarihi->lte($yilSonu)) {
+            if ($yenilemeAlir) {
                 $yenileme->push(['calisan' => $c, 'son_egitim' => $son, 'yenileme' => $yenilemeTarihi]);
             } else {
                 $gecerli++;
@@ -92,9 +102,9 @@ class YilBasiTopluEgitim
             $eksik[] = 'Yenileme paketi için içerik onayı yok (Firma Ayarları)';
         }
         if ($ilk->isNotEmpty() && ! $temel) {
-            $eksik[] = 'Temel (8 saat) paket seçilmedi';
+            $eksik[] = 'Temel (8 ders saati) paket seçilmedi';
         } elseif ($ilk->isNotEmpty() && ! UzaktanEgitimFirmaAyari::gonderimeHazirMi($firma, $temel)) {
-            $eksik[] = 'Temel (8 saat) paket için içerik onayı yok (Firma Ayarları)';
+            $eksik[] = 'Temel (8 ders saati) paket için içerik onayı yok (Firma Ayarları)';
         }
 
         return [
@@ -113,9 +123,9 @@ class YilBasiTopluEgitim
      *
      * @return array{yenileme: int, ilk_defa: int, giris: array<int, array{ad_soyad: string, gorev: ?string, kod: ?string, sifre: string, telefon: ?string, egitim: string}>, eposta: ?string, eposta_hatasi: ?string, bildirim: EgitimTopluBildirimi}
      */
-    public static function gonder(Firma $firma, int $yil, ?EgitimPaketi $temel, ?EgitimPaketi $yenilemePaketi, int $userId, bool $epostaGonder = true): array
+    public static function gonder(Firma $firma, int $yil, ?EgitimPaketi $temel, ?EgitimPaketi $yenilemePaketi, int $userId, bool $epostaGonder = true, string $kapsam = 'kaydi_olan'): array
     {
-        $o = static::firmaOnizleme($firma, $yil, $temel, $yenilemePaketi);
+        $o = static::firmaOnizleme($firma, $yil, $temel, $yenilemePaketi, $kapsam);
 
         if ($o['eksik']) {
             throw new \RuntimeException(implode(' · ', $o['eksik']));
@@ -181,7 +191,7 @@ class YilBasiTopluEgitim
                 'kod' => $c->eposta,
                 'sifre' => $sifre,
                 'telefon' => $c->telefon,
-                'egitim' => $a->paket?->egitim_turu === 'yenileme' ? 'Temel İSG Yenileme Eğitimi (4 saat)' : 'Temel İSG Eğitimi (8 saat)',
+                'egitim' => $a->paket?->egitim_turu === 'yenileme' ? 'Temel İSG Yenileme Eğitimi (4 ders saati)' : 'Temel İSG Eğitimi (8 ders saati)',
             ];
         }
 
@@ -205,8 +215,8 @@ class YilBasiTopluEgitim
 
         return 'Sayın '.($muhatap ?: 'Yetkili').",\n\n"
             ."{$firma->unvan} çalışanlarının {$yil} yılı online İş Sağlığı ve Güvenliği eğitimleri tanımlanmıştır.\n\n"
-            .($yenileme ? "• {$yenileme} çalışan: Temel İSG Yenileme Eğitimi (4 saat online + 4 saat yüz yüze)\n" : '')
-            .($ilk ? "• {$ilk} çalışan: Temel İSG Eğitimi (8 saat online)\n" : '')
+            .($yenileme ? "• {$yenileme} çalışan: Temel İSG Yenileme Eğitimi (4 ders saati online = 180 dk + 4 ders saati yüz yüze)\n" : '')
+            .($ilk ? "• {$ilk} çalışan: Temel İSG Eğitimi (8 ders saati online = 360 dk)\n" : '')
             ."\nEğitim portalı: ".url('/egitim')."\n"
             ."Çalışanların kullanıcı kodu ve geçici şifreleri ekteki giriş kartlarındadır; lütfen kartları ilgili çalışanlara iletiniz.\n"
             ."Eğitimlerin en geç {$sonTarih} tarihine kadar tamamlanması rica olunur. Videolar ileri sarılamaz; sınavdan en az "
