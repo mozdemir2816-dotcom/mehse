@@ -214,7 +214,7 @@ class YilBasiTopluEgitim
         $muhatap = $firma->isveren_vekili ?: $firma->isveren_ad;
 
         return 'Sayın '.($muhatap ?: 'Yetkili').",\n\n"
-            ."{$firma->unvan} çalışanlarının {$yil} yılı online İş Sağlığı ve Güvenliği eğitimleri tanımlanmıştır.\n\n"
+            ."".$firma->secimEtiketi()." çalışanlarının {$yil} yılı online İş Sağlığı ve Güvenliği eğitimleri tanımlanmıştır.\n\n"
             .($yenileme ? "• {$yenileme} çalışan: Temel İSG Yenileme Eğitimi (4 ders saati online = 180 dk + 4 ders saati yüz yüze)\n" : '')
             .($ilk ? "• {$ilk} çalışan: Temel İSG Eğitimi (8 ders saati online = 360 dk)\n" : '')
             ."\nEğitim portalı: ".url('/egitim')."\n"
@@ -250,7 +250,7 @@ class YilBasiTopluEgitim
         try {
             $pdf = static::girisKartlariPdf($firma, $giris);
             Mail::raw(static::bildirimMetni($firma, $yil, $giris), fn ($m) => $m->to($alici)
-                ->subject("{$yil} Yılı Online İSG Eğitimi — Çalışan Giriş Bilgileri ({$firma->unvan})")
+                ->subject("{$yil} Yılı Online İSG Eğitimi — Çalışan Giriş Bilgileri (".$firma->secimEtiketi().")")
                 ->attachData($pdf, 'online-isg-egitimi-giris-kartlari-'.$yil.'.pdf', ['mime' => 'application/pdf']));
         } catch (Throwable $e) {
             Log::error('Yıl başı toplu eğitim e-postası gönderilemedi', ['firma' => $firma->id, 'hata' => $e->getMessage()]);

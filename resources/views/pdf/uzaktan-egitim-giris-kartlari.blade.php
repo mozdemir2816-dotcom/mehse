@@ -20,7 +20,7 @@
 </head>
 <body>
 <h1>Uzaktan İSG Eğitimi — Portal Giriş Bilgileri</h1>
-<div class="alt">{{ $firma->unvan }} · {{ now()->format('d.m.Y H:i') }} · {{ count($satirlar) }} çalışan · Kartları kesip ilgili çalışana elden verin.</div>
+<div class="alt">{{ $firma->secimEtiketi() }} · {{ now()->format('d.m.Y H:i') }} · {{ count($satirlar) }} çalışan · Kartları kesip ilgili çalışana elden verin.</div>
 
 <table class="kartlar">
     @foreach (array_chunk($satirlar, 2) as $cift)

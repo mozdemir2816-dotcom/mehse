@@ -102,11 +102,11 @@
                             <tr wire:key="yb-{{ $firmaId }}-{{ $yil }}">
                                 <td class="mehse-td" style="text-align:center">
                                     <input type="checkbox" value="{{ $firmaId }}" wire:model.live="seciliFirmalar" @disabled(! $hazir)
-                                        aria-label="{{ $o['firma']->unvan }} seç" style="width:20px;height:20px">
+                                        aria-label="{{ $o['firma']->secimEtiketi() }} seç" style="width:20px;height:20px">
                                 </td>
                                 <td class="mehse-td">
                                     <details>
-                                        <summary style="cursor:pointer;font-weight:600">{{ $o['firma']->unvan }}</summary>
+                                        <summary style="cursor:pointer;font-weight:600">{{ $o['firma']->secimEtiketi() }}</summary>
                                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem;margin-top:.5rem;font-size:.82rem">
                                             <div>
                                                 <div style="font-weight:600;margin-bottom:.25rem">Yenileme (4 ders saati)</div>

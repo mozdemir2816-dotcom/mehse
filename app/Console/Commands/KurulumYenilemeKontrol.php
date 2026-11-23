@@ -74,7 +74,7 @@ class KurulumYenilemeKontrol extends Command
                 $top['y'] += $o['yenileme']->count();
                 $top['t'] += $o['ilk_defa']->count();
                 $top['hazir'] += $o['eksik'] ? 0 : 1;
-                $this->line(sprintf('  %s: %d / %d / %d · onay %s%s · e-posta %s%s', $f->unvan, $o['yenileme']->count(), $o['ilk_defa']->count(),
+                $this->line(sprintf('  %s: %d / %d / %d · onay %s%s · e-posta %s%s', $f->secimEtiketi(), $o['yenileme']->count(), $o['ilk_defa']->count(),
                     $o['gecerli'] + $o['zaten_atanmis'], $oy, $ot, $f->eposta ?: 'YOK', $o['eksik'] ? ' · '.implode('; ', $o['eksik']) : ''));
             }
             $this->line("TOPLAM yenileme {$top['y']} · temel {$top['t']} · gönderime hazır firma {$top['hazir']}");

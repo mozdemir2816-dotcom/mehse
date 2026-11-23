@@ -203,7 +203,7 @@ class UzaktanEgitimYilBasi extends Page
             try {
                 $s = YilBasiTopluEgitim::gonder($firma, $this->yil, $this->temelPaket, $this->yenilemePaketi, (int) Filament::auth()->id(), $this->epostaGonder, $this->kapsamAnahtari());
                 $this->sonuclar[$firma->id] = [
-                    'unvan' => $firma->unvan,
+                    'unvan' => $firma->secimEtiketi(),
                     'yenileme' => $s['yenileme'],
                     'ilk_defa' => $s['ilk_defa'],
                     'kisi' => count($s['giris']),
@@ -215,7 +215,7 @@ class UzaktanEgitimYilBasi extends Page
                 ];
                 $basarili++;
             } catch (Throwable $e) {
-                $this->sonuclar[$firma->id] = ['unvan' => $firma->unvan, 'hata' => $e->getMessage()];
+                $this->sonuclar[$firma->id] = ['unvan' => $firma->secimEtiketi(), 'hata' => $e->getMessage()];
             }
         }
 
