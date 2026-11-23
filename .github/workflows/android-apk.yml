@@ -71,7 +71,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-latest
-          name: Mehse İSG Android APK (v1.0.0)
+          name: Mehse İSG Android APK (v1.0.1)
           body: |
             **Mehse İSG Android Uygulaması (`com.mehse.isg`)**
             - Doğrudan kurulum için `mehse-isg.apk` dosyasını Android telefonunuza indirip açın.

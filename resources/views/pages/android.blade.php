@@ -38,11 +38,11 @@
     @endphp
     <div class="hero">
         <div style="flex:1;min-width:260px">
-            <span style="display:inline-block;padding:.2rem .65rem;border-radius:999px;background:rgb(255 255 255 / .18);font-size:.76rem;font-weight:700;margin-bottom:.6rem">Android 7.0+ · v1.0.0 · com.mehse.isg</span>
+            <span style="display:inline-block;padding:.2rem .65rem;border-radius:999px;background:rgb(255 255 255 / .18);font-size:.76rem;font-weight:700;margin-bottom:.6rem">Android 7.0+ · v1.0.1 · com.mehse.isg</span>
             <h1 style="margin:0 0 .5rem;font-size:1.7rem">Mehse İSG Android Uygulaması</h1>
             <p style="margin:0 0 1.2rem;opacity:.92;font-size:.93rem">Sahada kamerayla bulgu &amp; DÖF fotoğrafı çekin, GPS ile 4'lü ziyaret kanıtı alın, sesle sayfa açın ve PDF/Excel raporları doğrudan telefonunuza indirin.</p>
             <div style="display:flex;gap:.65rem;flex-wrap:wrap">
-                <a href="{{ $indirmeLinki }}" class="btn">📥 Mehse İSG APK İndir (v1.0.0)</a>
+                <a href="{{ $indirmeLinki }}" class="btn">📥 Mehse İSG APK İndir (v1.0.1)</a>
                 <a href="{{ url('/admin') }}" class="btn btn-acik">Web Panelden Aç</a>
             </div>
         </div>
