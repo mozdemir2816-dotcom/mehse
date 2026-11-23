@@ -67,7 +67,7 @@
                                 {{ config('isg.dof.oncelikler.'.$m['oncelik']) }}
                             </x-filament::badge>
                             @if ($m['termin'] ?? null)
-                                <span style="font-size:.75rem;color:rgb(107 114 128);margin-left:.4rem">Termin: {{ $m['termin'] }}</span>
+                                <span style="font-size:.75rem;color:rgb(107 114 128);margin-left:.4rem">Termin: {{ preg_match('/^\d{4}-\d{2}-\d{2}/', (string) $m['termin']) ? \Illuminate\Support\Carbon::parse($m['termin'])->format('d.m.Y') : $m['termin'] }}</span>
                             @endif
                         </div>
                     </div>

@@ -29,16 +29,19 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class IsgKatipSozlesmeleri extends Page
 {
+    use \App\Filament\Concerns\AileAnaSayfasi;
     use SinirliErisim;
 
     protected string $view = 'filament.pages.isg-katip-sozlesmeleri';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-chart-bar';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Ayarlar ve Kütüphaneler';
+    protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
-    /** Menüde gizli — İSG-KATİP Robot sayfasındaki bot kartından açılır. */
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?int $navigationSort = 5;
+
+    /** O7 (23.11.2026): menüde görünen İSG-KATİP girişi bu (çalışan özellik); Robot sekme olarak açılır. */
+    protected static bool $shouldRegisterNavigation = true;
 
     protected static ?string $slug = 'isg-katip-sozlesmeleri';
 

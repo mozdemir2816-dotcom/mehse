@@ -3864,7 +3864,7 @@ return [
             [
                 'anahtar' => 'calisan_sayisi',
                 'soru' => 'İşyerinizde toplam kaç çalışan görev yapıyor?',
-                'ipucu' => 'Çalışan sayısı; 6331 m.6 uyarınca İSG uzmanı, işyeri hekimi ve sağlık personeli bulundurma yükümlülüğünü, çalışan temsilcisi ve İSG kurulu zorunluluğunu belirler.',
+                'ipucu' => 'Çalışan sayısı; İSG uzmanı, işyeri hekimi ve sağlık personeli bulundurma yükümlülüğünü (6331 m.6), çalışan temsilcisi sayısını (6331 m.20) ve İSG kurulu zorunluluğunu (6331 m.22) belirler.',
                 'tip' => 'radyo',
                 'secenekler' => [
                     ['deger' => 'mikro', 'etiket' => '1-9 (mikro)'],
@@ -3880,7 +3880,7 @@ return [
                         'bolum' => 'Organizasyon', 'faaliyet' => 'İSG yönetimi',
                         'tehlike' => '50+ çalışanda İSG kurulunun kurulmamış olması',
                         'risk' => 'Kurul kararlarının alınmaması, denetimde idari yaptırım',
-                        'oneri' => 'İSG kurulu kurulur, ayda en az 1 (tehlikeli) toplanır, kararlar kayıt altına alınır.',
+                        'oneri' => 'İSG kurulu kurulur; çok tehlikeli işyerinde ayda bir, tehlikeli işyerinde iki ayda bir, az tehlikeli işyerinde üç ayda bir toplanır, kararlar kayıt altına alınır.',
                         'mevzuat' => 'İSG Kurulları Hakkında Yönetmelik', 'olasilik' => 3, 'siddet' => 2,
                     ]]],
                     ['deger' => 'cok_buyuk', 'etiket' => '500+ (çok büyük)', 'riskler' => [[

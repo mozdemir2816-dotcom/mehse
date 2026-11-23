@@ -122,6 +122,49 @@ class PortfoyKarne
     }
 
     /**
+     * K2 (23.11.2026): süresi geçmemiş kayıt var mı? Açık "geçerlilik" sütunu doluysa o esas
+     * alınır; yoksa tarih + $ay ay bugünden sonra olmalı. Tarihi boş kayıt geçerli sayılmaz
+     * (ne zaman yapıldığı bilinmeyen belge güncel kabul edilemez). $ay null → süresiz, varlık yeter.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\Relation  $sorgu
+     */
+    public static function gecerliKayitVarMi($sorgu, string $tarihAlani, ?int $ay, ?string $gecerlilikAlani = null): bool
+    {
+        if ($ay === null) {
+            return (clone $sorgu)->exists();
+        }
+
+        $bugun = now()->startOfDay();
+        $esik = $bugun->copy()->subMonthsNoOverflow($ay);
+
+        return (clone $sorgu)
+            ->where(function ($q) use ($tarihAlani, $gecerlilikAlani, $bugun, $esik): void {
+                if ($gecerlilikAlani) {
+                    $q->whereDate($gecerlilikAlani, '>=', $bugun)
+                        ->orWhere(fn ($q2) => $q2->whereNull($gecerlilikAlani)->whereDate($tarihAlani, '>', $esik));
+                } else {
+                    $q->whereDate($tarihAlani, '>', $esik);
+                }
+            })
+            ->exists();
+    }
+
+    /** Tek kayıt için aynı kural: geçerlilik tarihi doluysa o, değilse tarih + $ay ay. */
+    public static function tarihGecerliMi($tarih, ?int $ay, $gecerlilik = null): bool
+    {
+        $bugun = now()->startOfDay();
+
+        if ($gecerlilik) {
+            return Carbon::parse($gecerlilik)->startOfDay()->gte($bugun);
+        }
+        if (! $tarih) {
+            return false;
+        }
+
+        return $ay === null || Carbon::parse($tarih)->startOfDay()->gt($bugun->copy()->subMonthsNoOverflow($ay));
+    }
+
+    /**
      * Bir kriterin 'kosul' alanına göre firma kapsam/muafiyet kontrolü —
      * `kriterler()`, `firmaKriterMatrisi()`, `firmaChecklistDetay()`,
      * `firmaTamUyumluMu()` ve `eksikFirmalar()` aynı tanımı kullanır.
@@ -159,11 +202,15 @@ class PortfoyKarne
     private static function gercekModulVarMi(Firma $firma, string $anahtar): ?bool
     {
         return match ($anahtar) {
-            'risk_degerlendirmesi' => $firma->riskDegerlendirmeleri()->exists(),
+            // K2 (23.11.2026): salt "kayıt var" değil, süresi geçmemiş kayıt aranır. Süreler
+            // config/arsiv.php kurallarından (ArsivKurali::ay) — Arşiv ile aynı kaynak.
+            // RA: gecerlilik_tarihi (rapor_tarihi + 2/4/6 yıl, model otomatik doldurur) bugünden sonra.
+            'risk_degerlendirmesi' => static::gecerliKayitVarMi($firma->riskDegerlendirmeleri(), 'rapor_tarihi', ArsivKurali::ay('risk_degerlendirmesi', $firma), 'gecerlilik_tarihi'),
             // AcilDurumPlani::firmaIcin() ilk ziyarette otomatik bir taslak kaydı açar
             // (rapor_tarihi atanır) — bu yüzden salt "kayıt var" yeterli kanıt değil,
-            // konular (acil durum sayfaları) gerçekten seçilmiş olmalı.
-            'acil_durum_plani' => filled($firma->acilDurumPlani?->konular),
+            // konular (acil durum sayfaları) gerçekten seçilmiş olmalı; ayrıca süresi (2/4/6 yıl) geçmemiş olmalı.
+            'acil_durum_plani' => filled($firma->acilDurumPlani?->konular)
+                && static::tarihGecerliMi($firma->acilDurumPlani->rapor_tarihi, ArsivKurali::ay('acil_durum_plani', $firma), $firma->acilDurumPlani->gecerlilik_tarihi),
             // Destek elemanları (söndürme/kurtarma/koruma/ilk yardım) ya doğrudan
             // Acil Durum Planı'nın kendi "Ekip Üyeleri" alanına ya da Atama
             // Yazıları'ndaki ilgili "ekip" rollerine girilmiş olabilir.
@@ -171,8 +218,13 @@ class PortfoyKarne
                 || $firma->atamaYazilari()
                     ->whereIn('rol_anahtari', ['sondurme_ekibi', 'kurtarma_ekibi', 'koruma_ekibi', 'ilkyardim_ekibi'])
                     ->exists(),
-            'acil_durum_tatbikat' => $firma->tatbikatTutanaklari()->whereIn('durum', \App\Models\TatbikatTutanagi::YAPILMIS)->exists(),
-            'isg_kurulu' => $firma->kurulToplantilari()->exists(),
+            // Tatbikat yılda en az bir kez (Acil Durumlar Yönetmeliği) — son 12 ayda yapılmış olmalı.
+            'acil_durum_tatbikat' => static::gecerliKayitVarMi(
+                $firma->tatbikatTutanaklari()->whereIn('durum', \App\Models\TatbikatTutanagi::YAPILMIS),
+                'tatbikat_tarihi', ArsivKurali::ay('tatbikat', $firma) ?? 12,
+            ),
+            // Kurul: çok tehlikeli 1, tehlikeli 2, az tehlikeli 3 ayda bir (İSG Kurulları Yönetmeliği).
+            'isg_kurulu' => static::gecerliKayitVarMi($firma->kurulToplantilari(), 'tarih', ArsivKurali::ay('kurul_tutanagi', $firma)),
             'calisma_izin_formu' => $firma->isIzinFormlari()->exists(),
             'saha_denetim_formu' => $firma->sahaDenetimleri()->exists(),
             'is_kazasi_bildirimi' => $firma->isKazasiRaporlari()->exists(),
@@ -206,10 +258,15 @@ class PortfoyKarne
             'yillik_egitim_plani' => static::yillikPlanAyMatrisiDoluMu($firma, 'egitimler'),
             'yillik_degerlendirme' => static::yillikPlanDegerlendirmeDoluMu($firma),
             // Temel İSG eğitimi: eğitim katılım formu veya çalışan eğitim kaydı.
-            'egitim_katilim_formu' => $firma->egitimKatilimlari()->exists()
-                || \App\Models\EgitimKaydi::query()
-                    ->whereIn('calisan_id', $firma->calisanlar()->select('id'))
-                    ->where('tur', 'is_sagligi_guvenligi_egitimi')->exists(),
+            // Firma düzeyinde: tekrar süresi (1/2/3 yıl) içinde yapılmış en az bir eğitim.
+            // Çalışan bazında süre kontrolü ayrı madde (K3).
+            'egitim_katilim_formu' => static::gecerliKayitVarMi($firma->egitimKatilimlari(), 'belge_tarihi', ArsivKurali::ay('egitim_katilim', $firma))
+                || static::gecerliKayitVarMi(
+                    \App\Models\EgitimKaydi::query()
+                        ->whereIn('calisan_id', $firma->calisanlar()->select('id'))
+                        ->where('tur', 'is_sagligi_guvenligi_egitimi'),
+                    'tarih', ArsivKurali::ay('egitim_katilim', $firma),
+                ),
             'ise_donus_muayenesi' => static::kazaSonrasiKayitVarMi($firma, $firma->iseDonusBelgeleri(), ['ise_donus_tarihi', 'kontrol_muayene_tarihi', 'belge_tarihi']),
             'kaza_sonrasi_isbasi_egitimi' => static::kazaSonrasiKayitVarMi($firma, $firma->isbasiEgitimTutanaklari(), ['egitim_tarihi', 'belge_tarihi']),
             default => null,
@@ -818,6 +875,41 @@ class PortfoyKarne
             ->all();
     }
 
+    /**
+     * K3: belge kaydını firmanın çalışanına bağlar. Sıra: calisan_id → TC → ad.
+     * Ad yalnız kayıtta TC yoksa ve o ad firmada tek kişiye aitse kullanılır
+     * (aynı adlı iki çalışan yanlış eşleşmesin). Türkçe büyük/küçük harf ve boşluk farkı yok sayılır.
+     *
+     * @param  \Illuminate\Support\Collection<int, Calisan>  $calisanlar
+     * @return \Closure(mixed, mixed, mixed): ?int
+     */
+    public static function calisanEslestirici(Collection $calisanlar): \Closure
+    {
+        $normalAd = fn (?string $a): string => preg_replace('/\s+/u', ' ', trim(mb_strtolower(
+            strtr((string) $a, ['I' => 'ı', 'İ' => 'i']), 'UTF-8'
+        )));
+        $normalTc = fn ($tc): string => preg_replace('/\D/', '', (string) $tc);
+
+        $idler = $calisanlar->pluck('id')->flip();
+        $tcIle = $calisanlar->filter(fn (Calisan $c) => strlen($normalTc($c->tc)) === 11)
+            ->mapWithKeys(fn (Calisan $c) => [$normalTc($c->tc) => $c->id]);
+        $adIle = $calisanlar->groupBy(fn (Calisan $c) => $normalAd($c->ad_soyad))
+            ->filter(fn ($grup, $ad) => $ad !== '' && $grup->count() === 1)
+            ->map(fn ($grup) => $grup->first()->id);
+
+        return function ($id, $tc, $ad) use ($idler, $tcIle, $adIle, $normalAd, $normalTc): ?int {
+            if ($id && $idler->has((int) $id)) {
+                return (int) $id;
+            }
+            $tc = $normalTc($tc);
+            if (strlen($tc) === 11) {
+                return $tcIle[$tc] ?? null;   // TC var ama firmada yoksa adla tahmin edilmez
+            }
+
+            return $adIle[$normalAd($ad)] ?? null;
+        };
+    }
+
     /** Tek firma için çalışan eksikleri (Çalışan Asistanı sekmesi). */
     public static function calisanKarne(Firma $firma): array
     {
@@ -828,32 +920,67 @@ class PortfoyKarne
                 && Carbon::parse($c->dogum_tarihi)->age < 18;
         });
 
-        // Muayene kaydı olan çalışanlar (EK-2 Muayene Formu veya Sağlık Gözetimi satırı)
-        $muayeneliIdler = $firma->muayeneFormlari()->whereNotNull('calisan_id')->pluck('calisan_id')->all();
-        $muayeneliAdlar = $firma->muayeneFormlari()
-            ->pluck('calisan_ad_soyad')
-            ->map(fn ($a) => mb_strtolower(trim((string) $a), 'UTF-8'))
-            ->filter()
-            ->all();
+        // K3 (23.11.2026): eşleşme çalışan kimliği → TC → (yalnız TC'siz kayıtta, firmada tekil) ad;
+        // ve "kayıt var" yerine geçerlilik süresi. Eskiden ada göre eşleşip tarihe bakmıyordu.
+        $bugun = now()->startOfDay();
+        $eslestir = static::calisanEslestirici($calisanlar);
 
-        $gozetimSatirlari = collect(\App\Models\SaglikGozetimi::where('firma_id', $firma->id)->value('satirlar') ?? []);
-        $gozetimliIdler = $gozetimSatirlari->whereNotNull('son_tarih')->pluck('calisan_id')->filter()->all();
+        // Sağlık: EK-2 muayene formu (önerilen kontrol tarihi ya da muayene + 1/3/5 yıl) ve
+        // Sağlık Gözetimi satırları (sonraki_tarih; model kaydederken hesaplar).
+        $saglikYil = (int) config('isg.saglik_periyodik_yili.'.($firma->tehlike_sinifi ?: 'cok_tehlikeli'), 1);
+        $muayeneSonu = [];   // calisan_id => geçerlilik sonu (en geç olan)
+        $isle = function (array &$hedef, ?int $id, ?Carbon $son): void {
+            if ($id && $son && (! isset($hedef[$id]) || $son->gt($hedef[$id]))) {
+                $hedef[$id] = $son;
+            }
+        };
 
-        $muayeneEksik = $calisanlar->reject(fn (Calisan $c) => in_array($c->id, $muayeneliIdler, true)
-            || in_array($c->id, $gozetimliIdler, true)
-            || in_array(mb_strtolower(trim($c->ad_soyad), 'UTF-8'), $muayeneliAdlar, true))->values();
+        foreach ($firma->muayeneFormlari()->get(['calisan_id', 'calisan_tc', 'calisan_ad_soyad', 'muayene_tarihi', 'onerilen_kontrol_tarihi']) as $m) {
+            $id = $eslestir($m->calisan_id, $m->calisan_tc, $m->calisan_ad_soyad);
+            $tarih = $m->muayene_tarihi;
+            $son = $m->onerilen_kontrol_tarihi
+                ? Carbon::parse($m->onerilen_kontrol_tarihi)
+                : ($tarih ? Carbon::parse($tarih)->addYears($saglikYil) : null);
+            $isle($muayeneSonu, $id, $son);
+        }
 
-        // Eğitim kaydı olan çalışanlar (EgitimKaydi veya EgitimKatilim katılımcı listesi)
-        $egitimliIdler = \App\Models\EgitimKaydi::whereIn('calisan_id', $calisanlar->pluck('id'))->pluck('calisan_id')->all();
-        $katilimAdlari = $firma->egitimKatilimlari()
-            ->get(['katilimcilar'])
-            ->flatMap(fn ($k) => collect($k->katilimcilar ?? [])->pluck('ad_soyad'))
-            ->map(fn ($a) => mb_strtolower(trim((string) $a), 'UTF-8'))
-            ->filter()
-            ->all();
+        foreach (\App\Models\SaglikGozetimi::where('firma_id', $firma->id)->value('satirlar') ?? [] as $s) {
+            $id = $eslestir($s['calisan_id'] ?? null, null, $s['calisan_adi'] ?? null);
+            $son = filled($s['sonraki_tarih'] ?? null) ? Carbon::parse($s['sonraki_tarih'])
+                : (filled($s['tarih'] ?? null) ? Carbon::parse($s['tarih'])->addYears($saglikYil) : null);
+            $isle($muayeneSonu, $id, $son);
+        }
 
-        $egitimEksik = $calisanlar->reject(fn (Calisan $c) => in_array($c->id, $egitimliIdler, true)
-            || in_array(mb_strtolower(trim($c->ad_soyad), 'UTF-8'), $katilimAdlari, true))->values();
+        // Eğitim: temel İSG eğitim kaydı + eğitim katılım formunda başarılı katılımcılar; tekrar süresi 1/2/3 yıl.
+        $egitimYil = (int) config('isg.egitim_yenileme_yili.'.($firma->tehlike_sinifi ?: 'cok_tehlikeli'), 1);
+        $egitimSonu = [];
+
+        $kayitlar = \App\Models\EgitimKaydi::whereIn('calisan_id', $calisanlar->pluck('id'))
+            ->where('tur', 'is_sagligi_guvenligi_egitimi')
+            ->whereNotNull('tarih')
+            ->get(['calisan_id', 'tarih']);
+        foreach ($kayitlar as $k) {   // fn() diziyi kopyalar; referansla güncellemek için döngü
+            $isle($egitimSonu, (int) $k->calisan_id, Carbon::parse($k->tarih)->addYears($egitimYil));
+        }
+
+        foreach ($firma->egitimKatilimlari()->get(['belge_tarihi', 'gun_tarihleri', 'katilimcilar']) as $k) {
+            $tarih = $k->belge_tarihi ?? collect($k->gun_tarihleri ?? [])->filter()->max();
+            if (! $tarih) {
+                continue;
+            }
+            $son = Carbon::parse($tarih)->addYears($egitimYil);
+            foreach ($k->belgeAlacakKatilimcilar() as $kisi) {
+                $isle($egitimSonu, $eslestir($kisi['calisan_id'] ?? null, $kisi['tc'] ?? null, $kisi['ad_soyad'] ?? null), $son);
+            }
+        }
+
+        $gecerli = fn (array $sonlar, Calisan $c): bool => isset($sonlar[$c->id]) && $sonlar[$c->id]->gte($bugun);
+
+        $muayeneEksik = $calisanlar->reject(fn (Calisan $c) => $gecerli($muayeneSonu, $c))->values();
+        $egitimEksik = $calisanlar->reject(fn (Calisan $c) => $gecerli($egitimSonu, $c))->values();
+        // Kayıt var ama süresi dolmuş olanlar (listede "süresi doldu" diye ayrılır).
+        $muayeneSuresiDolan = $muayeneEksik->filter(fn (Calisan $c) => isset($muayeneSonu[$c->id]))->pluck('id')->all();
+        $egitimSuresiDolan = $egitimEksik->filter(fn (Calisan $c) => isset($egitimSonu[$c->id]))->pluck('id')->all();
 
         $tcEksik = $calisanlar->filter(fn (Calisan $c) => blank($c->tc))->values();
 
@@ -863,6 +990,8 @@ class PortfoyKarne
             'agir_tehlikeli' => $calisanlar->where('agir_tehlikeli_iste', true)->count(),
             'muayene_eksik' => $muayeneEksik,
             'egitim_eksik' => $egitimEksik,
+            'muayene_suresi_dolan' => $muayeneSuresiDolan,
+            'egitim_suresi_dolan' => $egitimSuresiDolan,
             'tc_eksik' => $tcEksik,
             'moduller_bekliyor' => [],
         ];

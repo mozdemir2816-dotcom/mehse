@@ -67,13 +67,23 @@
             </span>
         </div>
 
-        <a href="{{ $sozlesme['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $sozlesme['geciken'] ? '#E11D48' : '#047857' }}">
+        {{-- O12: hiçbir firmada bitiş tarihi yoksa "0 / Güncel" yanıltıcıydı → "Bilinmiyor" --}}
+        @php $sozHicTarihYok = $portfoy['firma'] > 0 && $sozlesme['tarihsiz'] >= $portfoy['firma']; @endphp
+        <a href="{{ $sozlesme['url'] }}" class="mehse-kokpit-kart" style="--ton:{{ $sozlesme['geciken'] ? '#E11D48' : ($sozHicTarihYok ? '#64748B' : '#047857') }}">
             <span class="mehse-kokpit-kart-etiket"><x-filament::icon icon="heroicon-o-document-text" />Sözleşme Durumu</span>
-            <span class="mehse-kokpit-kart-deger">{{ $sozlesme['geciken'] }} <small>geciken sözleşme</small></span>
-            <span class="mehse-kokpit-kart-alt">
-                <span class="mehse-kokpit-hap {{ $sozlesme['geciken'] ? 'kotu' : 'iyi' }}">{{ $sozlesme['geciken'] ? 'Yenileme gerekli' : 'Güncel' }}</span>
-                @if ($sozlesme['yaklasan'])<span class="mehse-kokpit-hap uyari">{{ $sozlesme['yaklasan'] }} tanesi 30 gün içinde bitiyor</span>@endif
-            </span>
+            @if ($sozHicTarihYok)
+                <span class="mehse-kokpit-kart-deger">Bilinmiyor</span>
+                <span class="mehse-kokpit-kart-alt">
+                    <span class="mehse-kokpit-hap uyari" title="Hiçbir firmada sözleşme bitiş tarihi girilmemiş">Bitiş tarihi girilmemiş</span>
+                </span>
+            @else
+                <span class="mehse-kokpit-kart-deger">{{ $sozlesme['geciken'] }} <small>geciken sözleşme</small></span>
+                <span class="mehse-kokpit-kart-alt">
+                    <span class="mehse-kokpit-hap {{ $sozlesme['geciken'] ? 'kotu' : 'iyi' }}">{{ $sozlesme['geciken'] ? 'Yenileme gerekli' : 'Güncel' }}</span>
+                    @if ($sozlesme['yaklasan'])<span class="mehse-kokpit-hap uyari">{{ $sozlesme['yaklasan'] }} tanesi 30 gün içinde bitiyor</span>@endif
+                    @if ($sozlesme['tarihsiz'])<span class="mehse-kokpit-hap uyari">{{ $sozlesme['tarihsiz'] }} firmada bitiş tarihi yok</span>@endif
+                </span>
+            @endif
         </a>
 
         {{-- Görev panosuyla aynı liste: sayılar panodaki "Günü geçen" / "Yaklaşan" ile birebir aynıdır --}}

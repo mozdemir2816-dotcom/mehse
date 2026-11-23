@@ -77,13 +77,17 @@
                             @foreach ($maddeler as $m)
                                 <x-filament::button size="xs" color="gray" icon="heroicon-o-plus"
                                     wire:click="katalogdanEkle('{{ addslashes($grup) }}', '{{ addslashes($m['ad']) }}')">
-                                    {{ $m['ad'] }} <span style="opacity:.6">· {{ $m['periyot_ay'] }} ay</span>
+                                    {{ $m['ad'] }} <span style="opacity:.6">· önerilen {{ $m['periyot_ay'] }} ay</span>
                                 </x-filament::button>
                             @endforeach
                         </div>
                     </div>
                 @endforeach
             </div>
+            <p class="mehse-metin-soluk" style="font-size:.78rem;margin-top:.5rem">
+                Katalogdaki süreler <b>önerilen sıklıktır</b>. Mevzuatta ortam ölçümü için genel ve sabit bir periyot yoktur;
+                sıklık risk değerlendirmesine ve önceki ölçüm sonucuna göre belirlenir. Periyodu satırda değiştirebilirsiniz.
+            </p>
 
             <div style="{{ $kutu }};margin-top:.75rem;display:grid;grid-template-columns:2fr 1.5fr .8fr auto;gap:.5rem;align-items:end">
                 <div>
@@ -95,7 +99,7 @@
                     <input type="text" wire:model="yeniGrup" style="{{ $girdi }}" placeholder="Diğer">
                 </div>
                 <div>
-                    <label style="font-size:.78rem;font-weight:600">Periyot (ay)</label>
+                    <label style="font-size:.78rem;font-weight:600">Periyot (ay, öneri)</label>
                     <input type="number" min="1" wire:model="yeniPeriyot" style="{{ $girdi }}">
                 </div>
                 <x-filament::button size="sm" wire:click="serbestOlcumEkle">Ekle</x-filament::button>
@@ -116,7 +120,7 @@
                             <tr style="text-align:left;background:rgb(107 114 128 / .08)">
                                 <th style="padding:.5rem">Parametre</th>
                                 <th style="padding:.5rem;width:130px">Bölge / Ölçüm Noktası</th>
-                                <th style="padding:.5rem;width:64px">Periyot (ay)</th>
+                                <th style="padding:.5rem;width:64px" title="Önerilen sıklık; risk değerlendirmesine göre değiştirilebilir">Periyot (ay)*</th>
                                 <th style="padding:.5rem;width:130px">Ölçüm Tarihi</th>
                                 <th style="padding:.5rem;width:150px">Laboratuvar / Rapor No</th>
                                 <th style="padding:.5rem;width:150px">Ölçülen / Sınır / Birim</th>

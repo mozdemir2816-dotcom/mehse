@@ -48,7 +48,7 @@
             <th>Ölçüm Parametresi</th>
             <th style="width:78px">Grup</th>
             <th style="width:80px">Bölge / Nokta</th>
-            <th style="width:30px">Periyot (ay)</th>
+            <th style="width:30px">Periyot (ay)*</th>
             <th style="width:52px">Ölçüm Tarihi</th>
             <th style="width:100px">Laboratuvar / Rapor No</th>
             <th style="width:80px">Ölçülen / Sınır Değer</th>
@@ -87,7 +87,8 @@
 <p class="yasal">
     Ortam ölçümleri, İş Hijyeni Ölçüm, Test ve Analizi Yapan Laboratuvarlar Hakkında Yönetmelik
     kapsamında yetkilendirilmiş laboratuvarlarca; ölçüm periyodu ise risk değerlendirmesi
-    sonuçlarına göre belirlenir. "Sınır Değer Aşımı" bulunan parametrelerde kaynağında önlem
+    sonuçlarına göre belirlenir (* tablodaki periyotlar önerilen sıklıktır; mevzuatta genel ve sabit
+    bir ölçüm periyodu yoktur). "Sınır Değer Aşımı" bulunan parametrelerde kaynağında önlem
     alınır ve ölçüm tekrarlanır.
 </p>
 

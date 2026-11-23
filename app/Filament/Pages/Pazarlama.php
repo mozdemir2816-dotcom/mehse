@@ -31,7 +31,7 @@ class Pazarlama extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';
 
     /** Sidebar ekrana sığsın diye Genel grubunda (31.10.2026 kullanıcı isteği). */
-    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Yönetim';
 
     protected static ?int $navigationSort = 1;
 

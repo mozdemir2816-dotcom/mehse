@@ -99,7 +99,7 @@
                 <td class="ortala">{{ $i + 1 }}</td>
                 <td>{{ $k['karar_metni'] }}</td>
                 <td>{{ $k['sorumlu'] }}</td>
-                <td style="white-space:nowrap">{{ $k['termin'] }}</td>
+                <td style="white-space:nowrap">{{ preg_match('/^\d{4}-\d{2}-\d{2}/', (string) $k['termin']) ? \Illuminate\Support\Carbon::parse($k['termin'])->format('d.m.Y') : $k['termin'] }}</td>
                 <td>{{ $k['durum'] }}</td>
             </tr>
         @endforeach

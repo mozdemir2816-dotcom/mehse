@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Firmas\Schemas;
 
 use App\Models\IsgProfesyoneli;
+use App\Models\NaceKodu;
 use App\Support\KatipSozlesmeIceAktarici;
+use App\Support\SgkSicilCozumleyici;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -29,8 +31,14 @@ class FirmaForm
                 ->schema([
                     TextInput::make('unvan')->label('Ticari unvan')->required()->maxLength(255)->columnSpanFull(),
                     TextInput::make('kisa_ad')->label('Kısa ad')->maxLength(255),
+                    // K1 (23.11.2026): tehlike sınıfı NACE kodundan gelir (İşyeri Tehlike Sınıfları Tebliği).
+                    // Varsayılan "Az Tehlikeli" kaldırıldı — en uzun yasal süreleri sessizce seçiyordu.
                     Select::make('tehlike_sinifi')->label('Tehlike sınıfı')
-                        ->options(config('isg.tehlike_siniflari'))->default('az_tehlikeli')->required(),
+                        ->options(config('isg.tehlike_siniflari'))
+                        ->placeholder('NACE kodundan otomatik gelir')
+                        ->required()
+                        ->live()
+                        ->helperText(fn (Get $get) => static::tehlikeSinifiIpucu($get('nace_kodu'), $get('tehlike_sinifi'))),
                     Select::make('risk_cikti_sablonu')->label('Risk çıktı şablonu')
                         ->options(['hastane' => 'Hastane formu (Bursa Şehir Hastanesi)'])
                         ->placeholder('Standart (sistem çıktısı)')
@@ -48,7 +56,11 @@ class FirmaForm
                     TextInput::make('calisan_sayisi')->label('Çalışan sayısı')->numeric()->minValue(0)->default(0),
                     TextInput::make('katip_aylik_dk')->label('İSG-KATİP aylık süre (dk)')->numeric()->minValue(0)
                         ->helperText('İGU sözleşme süresi; KATİP Excel\'i yüklenince en son dosyadaki değerle güncellenir. Boşsa çalışan sayısı × tehlike sınıfından hesaplanır.'),
-                    TextInput::make('nace_kodu')->label('NACE kodu')->maxLength(20),
+                    TextInput::make('nace_kodu')->label('NACE kodu')->maxLength(20)
+                        ->placeholder('ör. 41.20.02')
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(fn (?string $state, Get $get, Set $set) => static::nacedenDoldur($state, $get, $set))
+                        ->helperText(fn (Get $get) => static::naceIpucu($get('nace_kodu'), $get('sgk_sicil_no'))),
                     TextInput::make('nace_aciklama')->label('NACE açıklaması')->maxLength(255)->columnSpanFull(),
                 ]),
 
@@ -164,5 +176,71 @@ class FirmaForm
         if ($dolan > 0) {
             Notification::make()->title('İSG-KATİP listesinden dolduruldu')->body($kayit['unvan'])->success()->send();
         }
+    }
+
+    /**
+     * NACE kodu girilince tebliğ listesindeki tehlike sınıfını ve açıklamayı yazar.
+     * Listede olmayan kodda hiçbir şeyi değiştirmez (ipucu uyarı verir).
+     */
+    public static function nacedenDoldur(?string $kod, Get $get, Set $set): void
+    {
+        $nace = filled($kod) ? NaceKodu::bul($kod) : null;
+        if (! $nace) {
+            return;
+        }
+
+        $set('nace_kodu', $nace->kod);
+        if (blank($get('nace_aciklama'))) {
+            $set('nace_aciklama', $nace->tanim);
+        }
+
+        $onceki = $get('tehlike_sinifi');
+        $set('tehlike_sinifi', $nace->tehlike_sinifi);
+
+        $ad = config('isg.tehlike_siniflari.'.$nace->tehlike_sinifi);
+        Notification::make()
+            ->title("Tehlike sınıfı: {$ad}")
+            ->body($onceki && $onceki !== $nace->tehlike_sinifi
+                ? 'Önceki seçim ('.config('isg.tehlike_siniflari.'.$onceki).') NACE koduna göre değiştirildi.'
+                : 'NACE koduna göre İşyeri Tehlike Sınıfları Tebliği listesinden alındı.')
+            ->success()->send();
+    }
+
+    /** NACE alanının altındaki açıklama: listede yoksa uyarı, boşsa SGK sicilinden işkolu ipucu. */
+    public static function naceIpucu(?string $kod, ?string $sgkSicil): ?string
+    {
+        if (filled($kod)) {
+            if (NaceKodu::bul($kod)) {
+                return null;
+            }
+
+            return NaceKodu::normalizeKod($kod)
+                ? 'Bu kod tebliğ listesinde (2012 EK-1) bulunamadı; tehlike sınıfını İSG-KATİP\'teki değere göre elle seçin.'
+                : 'NACE kodu 6 haneli olmalı (ör. 41.20.02).';
+        }
+
+        $cozum = filled($sgkSicil) ? SgkSicilCozumleyici::cozumle($sgkSicil) : null;
+        if (! ($cozum['gecerli'] ?? false) || blank($cozum['nace4'])) {
+            return 'Kodu girince tehlike sınıfı otomatik dolar.';
+        }
+
+        $siniflar = NaceKodu::nace4IleBul($cozum['nace4'])->pluck('tehlike_sinifi')->unique();
+        $sinifMetni = $siniflar->count() === 1
+            ? ' — bu işkolundaki tüm kodlar '.config('isg.tehlike_siniflari.'.$siniflar->first())
+            : '';
+
+        return "SGK sicilindeki işkolu: {$cozum['nace4']}{$sinifMetni}. 6 haneli kodu girin.";
+    }
+
+    /** Seçilen tehlike sınıfı NACE kodunun sınıfından farklıysa uyarır. */
+    public static function tehlikeSinifiIpucu(?string $kod, ?string $secili): ?string
+    {
+        $nace = filled($kod) ? NaceKodu::bul($kod) : null;
+        if (! $nace || blank($secili) || $nace->tehlike_sinifi === $secili) {
+            return null;
+        }
+
+        return '⚠ NACE '.$nace->kod.' tebliğe göre '.config('isg.tehlike_siniflari.'.$nace->tehlike_sinifi)
+            .'. Seçiminiz farklı — yasal süreler (RA, eğitim, sağlık, İGU dakikası) bu alana göre hesaplanır.';
     }
 }

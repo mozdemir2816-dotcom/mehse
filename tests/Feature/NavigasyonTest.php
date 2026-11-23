@@ -99,7 +99,7 @@ class NavigasyonTest extends TestCase
 
         $this->assertSame(
             [
-                'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Arşiv',
+                'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Yönetim',
                 'Genel', 'Risk & Tehlike Yönetimi', 'Acil Durum & Yangın',
                 'Eğitimler', 'Sağlık & Olaylar', 'Belgeler & Yazışmalar', 'Saha Dışı Kayıtlar',
                 'Planlama & Arşiv', 'Ayarlar ve Kütüphaneler',

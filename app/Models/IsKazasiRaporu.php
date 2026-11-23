@@ -169,6 +169,29 @@ class IsKazasiRaporu extends Model
         return config('isg.is_kazasi.dof_durumlari.'.$durum, $durum ?? '—');
     }
 
+    /**
+     * SGK bildirimi için son gün — kazadan sonraki 3 iş günü (6331 m.14, 5510 m.13).
+     * Hafta sonu atlanır; resmi tatiller hesaba katılmaz (OlayKaydi::sgkSonTarih ile aynı).
+     */
+    public function sgkSonTarih(): ?\Illuminate\Support\Carbon
+    {
+        return $this->kaza_tarihi?->copy()->addWeekdays(3);
+    }
+
+    /** Bildirim yasal süreden sonra mı yapıldı (ya da süre geçti ve hâlâ yapılmadı mı)? */
+    public function sgkBildirimiGecikti(): bool
+    {
+        $son = $this->sgkSonTarih();
+        if (! $son) {
+            return false;
+        }
+        if ($this->sgk_bildirimi_yapildi) {
+            return $this->sgk_bildirim_tarihi !== null && $this->sgk_bildirim_tarihi->gt($son);
+        }
+
+        return now()->startOfDay()->gt($son);
+    }
+
     /** Zorunlu alan eksikleri (Önizleme adımı). @return array<int, string> */
     public function eksikAlanlar(): array
     {

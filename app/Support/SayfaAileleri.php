@@ -29,7 +29,7 @@ class SayfaAileleri
         return [
             'kontrol' => [
                 // Komuta Merkezi 3 sekme: Portföy Genel Bakış, Firma Denetim & Operasyon, Risk Panosu.
-                // Profilim artık Hesap & Arşiv altında kendi temiz girişinde yer alır (20.11.2026).
+                // Profilim artık Hesap & Yönetim altında kendi temiz girişinde yer alır (20.11.2026).
                 [Pages\KontrolMerkezi::class, 'Portföy Genel Bakış'],
                 [Pages\FirmaDenetimOperasyon::class, 'Firma Denetim & Operasyon'],
                 [Pages\RiskMerkezi::class, 'Risk Panosu'],
@@ -111,8 +111,9 @@ class SayfaAileleri
                 [Pages\HazirIstemler::class, 'Hazır İstemler'],
             ],
             'isg_katip' => [
-                [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
+                // O7 (23.11.2026): menüdeki giriş Sözleşmeler (çalışan özellik); Robot ikinci sekme.
                 [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
+                [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
             ],
             // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
             'belge' => [
@@ -166,7 +167,7 @@ class SayfaAileleri
      * @var array<string, array<int, array{etiket: string, ikon: string, siniflar: array<int, class-string>}>>
      */
     public const GRUPLAR = [
-        // Kontrol Merkezi: 3 ana sekme (Profilim artık Hesap & Arşiv menüsünde — çift sekme şeridi kaldırıldı)
+        // Kontrol Merkezi: 3 ana sekme (Profilim artık Hesap & Yönetim menüsünde — çift sekme şeridi kaldırıldı)
         'kontrol' => [
             ['etiket' => 'Portföy Genel Bakış', 'ikon' => 'heroicon-o-squares-2x2', 'siniflar' => [Pages\KontrolMerkezi::class]],
             ['etiket' => 'Firma Denetim & Operasyon', 'ikon' => 'heroicon-o-clipboard-document-check', 'siniflar' => [Pages\FirmaDenetimOperasyon::class]],

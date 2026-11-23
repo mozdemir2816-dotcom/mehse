@@ -877,7 +877,7 @@ class AcilDurumPlaniTest extends TestCase
     {
         $eksik = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planı Olmayan A.Ş.']);
         $tamam = Firma::factory()->for($this->uzman)->create(['unvan' => 'Planı Tamam A.Ş.']);
-        AcilDurumPlani::create(['firma_id' => $tamam->id, 'konular' => ['yangin']]);
+        AcilDurumPlani::create(['firma_id' => $tamam->id, 'konular' => ['yangin'], 'rapor_tarihi' => now()]);
 
         Livewire::test(AcilDurumSayfasi::class)
             ->assertSee('Eksik Olan Firmalar (1)')

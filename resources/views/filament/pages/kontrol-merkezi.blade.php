@@ -443,13 +443,13 @@
             @if (($k['egitim_eksik'] ?? collect())->isNotEmpty())
                 <div style="{{ $kutu }}">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
-                        <div style="font-weight:700;color:{{ $kirmizi }}">🎓 İSG Eğitimi Kaydı Bulunmayan Çalışanlar ({{ $k['egitim_eksik']->count() }})</div>
+                        <div style="font-weight:700;color:{{ $kirmizi }}">🎓 Geçerli İSG Eğitimi Olmayan Çalışanlar ({{ $k['egitim_eksik']->count() }})@if (count($k['egitim_suresi_dolan'] ?? [])) <span style="font-weight:500;font-size:.8rem">· {{ count($k['egitim_suresi_dolan']) }} kişinin süresi dolmuş</span>@endif</div>
                         <a href="{{ \App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->secilenFirma->id]) }}" style="font-size:.82rem;font-weight:700;color:{{ $mor }}">Eğitim Katılım Formu Oluştur →</a>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
                         @foreach ($k['egitim_eksik']->take(40) as $c)
                             <span style="font-size:.78rem;padding:.15rem .55rem;border-radius:999px;border:1px solid rgb(239 68 68 / .35);background:rgb(239 68 68 / .06)">
-                                {{ $c->ad_soyad }}{{ $c->gorev ? ' ('.$c->gorev.')' : '' }}
+                                {{ $c->ad_soyad }}{{ $c->gorev ? ' ('.$c->gorev.')' : '' }}@if (in_array($c->id, $k['egitim_suresi_dolan'] ?? [], true)) · <strong>süresi doldu</strong>@endif
                             </span>
                         @endforeach
                     </div>
@@ -459,14 +459,14 @@
             @if (($k['muayene_eksik'] ?? collect())->isNotEmpty())
                 <div style="{{ $kutu }}">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
-                        <div style="font-weight:700;color:{{ $kirmizi }}">🩺 Sağlık Muayenesi (EK-2 / Gözetim) Kaydı Bulunmayan Çalışanlar ({{ $k['muayene_eksik']->count() }})</div>
+                        <div style="font-weight:700;color:{{ $kirmizi }}">🩺 Geçerli Sağlık Muayenesi (EK-2 / Gözetim) Olmayan Çalışanlar ({{ $k['muayene_eksik']->count() }})@if (count($k['muayene_suresi_dolan'] ?? [])) <span style="font-weight:500;font-size:.8rem">· {{ count($k['muayene_suresi_dolan']) }} kişinin süresi dolmuş</span>@endif</div>
                         <a href="{{ \App\Filament\Pages\SaglikGozetimi::getUrl(['firma' => $this->secilenFirma->id]) }}" style="font-size:.82rem;font-weight:700;color:{{ $mor }}">Sağlık Gözetimine Git →</a>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">
                         @foreach ($k['muayene_eksik']->take(40) as $c)
                             <a href="{{ \App\Filament\Pages\MuayeneFormu::getUrl(['firma' => $this->secilenFirma->id, 'calisan' => $c->id]) }}"
                                 style="font-size:.78rem;padding:.15rem .55rem;border-radius:999px;border:1px solid rgb(20 184 166 / .45);background:rgb(20 184 166 / .08);text-decoration:none;color:inherit">
-                                {{ $c->ad_soyad }} · EK-2 Hazırla →
+                                {{ $c->ad_soyad }}@if (in_array($c->id, $k['muayene_suresi_dolan'] ?? [], true)) · süresi doldu @endif · EK-2 Hazırla →
                             </a>
                         @endforeach
                     </div>

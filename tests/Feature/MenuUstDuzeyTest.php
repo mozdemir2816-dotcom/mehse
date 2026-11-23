@@ -27,13 +27,13 @@ class MenuUstDuzeyTest extends TestCase
         // 08.11.2026 sade menü: Ana Sayfa + Kontrol Merkezi üstte, altında 4 grup.
         $gorunen = $menu->filter(fn ($g) => $g->getItems()->isNotEmpty())
             ->mapWithKeys(fn ($g) => [(string) $g->getLabel() => $g->getItems()->map(fn ($i) => $i->getLabel())->values()->all()])->all();
-        $this->assertSame(['', 'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Arşiv'], array_keys($gorunen));
+        $this->assertSame(['', 'Günlük Saha İşi', 'Merkezler', 'Firmalar & Çalışanlar', 'Hesap & Yönetim'], array_keys($gorunen));
         $this->assertSame(['Ana Sayfa', 'Kontrol Merkezi'], $gorunen['']);
-        $this->assertSame(['Saha', 'Ziyaret Planlama', 'Resmi Belgeler', 'KKD', 'Ekipman & Ölçüm', 'Arşiv'], $gorunen['Günlük Saha İşi']);
+        $this->assertSame(['Saha', 'Ziyaret Planlama', 'İş İzni & Yazışmalar', 'KKD', 'Ekipman & Ölçüm', 'Arşiv'], $gorunen['Günlük Saha İşi']);
         $this->assertSame(['Risk Yönetimi', 'Eğitim & Sınav', 'Yıllık Planlar',
             'Sağlık & Kaza', 'Acil Durum & Yangın', 'İSG Kurulu'], $gorunen['Merkezler']);
-        $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş', 'İSG-KATİP Robot'], $gorunen['Firmalar & Çalışanlar']);
-        $this->assertSame(['Pazarlama & Talepler', 'OSGB Cari & Tahsilat', 'Abonelik & Fatura', 'Profil & Kaşe/İmza', 'Araçlar', 'Ayarlar'], $gorunen['Hesap & Arşiv']);
+        $this->assertSame(['Firmalar', 'Çalışanlar', 'İSG Profesyonelleri', 'Dış Paydaş', 'İSG-KATİP Sözleşmeleri'], $gorunen['Firmalar & Çalışanlar']);
+        $this->assertSame(['Pazarlama & Talepler', 'OSGB Cari & Tahsilat', 'Abonelik & Fatura', 'Profil & Kaşe/İmza', 'Araçlar', 'Ayarlar'], $gorunen['Hesap & Yönetim']);
 
         $this->assertTrue(HizliSahaBulgusu::shouldRegisterNavigation());
         $this->assertFalse(SahaEkrani::shouldRegisterNavigation());

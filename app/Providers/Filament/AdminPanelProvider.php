@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
         'Günlük Saha İşi',
         'Merkezler',
         'Firmalar & Çalışanlar',
-        'Hesap & Arşiv',
+        'Hesap & Yönetim',
         'Genel',
         'Risk & Tehlike Yönetimi',
         'Acil Durum & Yangın',

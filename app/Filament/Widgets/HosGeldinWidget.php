@@ -70,6 +70,8 @@ class HosGeldinWidget extends Widget
                 'geciken' => (clone $aktifFirmalar)->whereNotNull('sozlesme_bitis')->whereDate('sozlesme_bitis', '<', today())->count(),
                 'yaklasan' => (clone $aktifFirmalar)->whereNotNull('sozlesme_bitis')->whereDate('sozlesme_bitis', '>=', today())
                     ->whereDate('sozlesme_bitis', '<=', today()->addDays(30))->count(),
+                // O12 (23.11.2026): bitiş tarihi girilmemiş firma "Güncel" sayılmaz — bilinmiyor.
+                'tarihsiz' => (clone $aktifFirmalar)->whereNull('sozlesme_bitis')->count(),
                 'url' => FirmaResource::getUrl('index'),
             ],
             'kritik' => $this->kritikGorevler($kullanici),

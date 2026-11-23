@@ -26,7 +26,7 @@ class CariHesap extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Yönetim';
 
     protected static ?int $navigationSort = 2;
 

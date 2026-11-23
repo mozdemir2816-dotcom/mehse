@@ -47,11 +47,11 @@ class Profilim extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Arşiv';
+    protected static string|UnitEnum|null $navigationGroup = 'Hesap & Yönetim';
 
     protected static ?int $navigationSort = 4;
 
-    /** Profilim, Hesap & Arşiv altında doğrudan görünür. */
+    /** Profilim, Hesap & Yönetim altında doğrudan görünür. */
     public static function shouldRegisterNavigation(): bool
     {
         return static::canAccess();

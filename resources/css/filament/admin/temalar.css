@@ -1391,6 +1391,7 @@ html[data-mehse-tema="kagit"] {
     .fi-ta-table,
     .fi-ta-table td,
     .mehse-kokpit-kart,
+    .mehse-baslangic,
     .fi-tabs {
         background-color: var(--panel-bg) !important;
     }

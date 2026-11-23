@@ -112,7 +112,8 @@ class PazarlamaTest extends TestCase
                 'unvan' => 'Aktarılan Firma',
                 'telefon' => '5559876543',
                 'il' => 'Ankara',
-                'tehlike_sinifi' => 'az_tehlikeli',
+                // K1 (23.11.2026): varsayılan "Az Tehlikeli" kaldırıldı — sınıf NACE'den ya da elle seçilir.
+                'tehlike_sinifi' => null,
             ]);
     }
 

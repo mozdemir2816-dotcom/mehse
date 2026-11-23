@@ -71,7 +71,11 @@
         <tr>
             <td class="e">Belge No</td><td>{{ $rapor->belge_no }}</td>
             <td class="e">SGK Bildirimi</td>
-            <td>{{ $rapor->sgk_bildirimi_yapildi ? 'Yapıldı' : 'Yapılmadı' }}@if ($rapor->sgk_bildirimi_yapildi && $rapor->sgk_bildirim_tarihi) ({{ $rapor->sgk_bildirim_tarihi->format('d.m.Y') }}) @endif</td>
+            <td>{{ $rapor->sgk_bildirimi_yapildi ? 'Yapıldı' : 'Yapılmadı' }}@if ($rapor->sgk_bildirimi_yapildi && $rapor->sgk_bildirim_tarihi) ({{ $rapor->sgk_bildirim_tarihi->format('d.m.Y') }}) @endif
+                @if ($rapor->sgkSonTarih())
+                    <br><span style="font-size:7.5px;color:{{ $rapor->sgkBildirimiGecikti() ? '#c8102e' : '#555' }}">Yasal son gün: {{ $rapor->sgkSonTarih()->format('d.m.Y') }} (3 iş günü){{ $rapor->sgkBildirimiGecikti() ? ' · SÜRE AŞILDI' : '' }}</span>
+                @endif
+            </td>
         </tr>
     </table>
     <div style="font-weight:bold;font-size:8.5px;color:#555;margin:6px 0 2px">KAZA ÖZETİ</div>

@@ -18,7 +18,6 @@ use App\Filament\Concerns\SinirliErisim;
  */
 class IsgKatipRobot extends Page
 {
-    use \App\Filament\Concerns\AileAnaSayfasi;
     use \App\Filament\Concerns\SinirliErisim;
 
     protected string $view = 'filament.pages.isg-katip-robot';
@@ -27,7 +26,7 @@ class IsgKatipRobot extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Firmalar & Çalışanlar';
 
-    protected static bool $shouldRegisterNavigation = true;
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 5;
 

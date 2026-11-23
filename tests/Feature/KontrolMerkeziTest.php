@@ -70,7 +70,7 @@ class KontrolMerkeziTest extends TestCase
     public function test_acil_durum_plani_kriteri_artik_gercek_modulu_bagli(): void
     {
         $firma = Firma::factory()->for($this->uzman)->create();
-        AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin']]);
+        AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin'], 'rapor_tarihi' => now()]);
 
         $kriterler = collect(PortfoyKarne::kriterler($this->uzman->id))->keyBy('anahtar');
 

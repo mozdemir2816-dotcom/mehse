@@ -34,7 +34,7 @@ class BelgeKurulMerkeziTest extends TestCase
         $menu = collect(Filament::getNavigation());
         $this->assertNull($menu->first(fn ($g) => $g->getLabel() === 'Belgeler & Yazışmalar'));
         $etiketler = $menu->flatMap(fn ($g) => $g->getItems())->map(fn ($i) => $i->getLabel());
-        $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'Resmi Belgeler'));
+        $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'İş İzni & Yazışmalar'));
         $this->assertCount(1, $etiketler->filter(fn ($e) => $e === 'İSG Kurulu'));
         $this->assertTrue(KurulToplantisi::shouldRegisterNavigation());
 

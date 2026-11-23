@@ -157,7 +157,7 @@ class ProfilimTest extends TestCase
 
         $this->assertFalse(PortfoyKarne::firmaKriterKarsilarMi($firma, 'acil_durum_plani'));
 
-        \App\Models\AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin', 'deprem']]);
+        \App\Models\AcilDurumPlani::create(['firma_id' => $firma->id, 'konular' => ['yangin', 'deprem'], 'rapor_tarihi' => now()]);
         $firma->refresh();
 
         $this->assertTrue(PortfoyKarne::firmaKriterKarsilarMi($firma, 'acil_durum_plani'));
@@ -167,7 +167,7 @@ class ProfilimTest extends TestCase
     {
         $tamam = Firma::factory()->for($this->uzman)->create(['unvan' => 'Tamamlayan Firma']);
         $eksik = Firma::factory()->for($this->uzman)->create(['unvan' => 'Eksik Firma']);
-        \App\Models\AcilDurumPlani::create(['firma_id' => $tamam->id, 'konular' => ['yangin']]);
+        \App\Models\AcilDurumPlani::create(['firma_id' => $tamam->id, 'konular' => ['yangin'], 'rapor_tarihi' => now()]);
 
         $eksikFirmalar = PortfoyKarne::eksikFirmalar($this->uzman->id, 'acil_durum_plani');
 
