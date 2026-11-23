@@ -561,7 +561,6 @@ class PeriyodikKontrol extends Page
                     ->label('Müfettiş Teftiş Paketi (PDF)')
                     ->icon('heroicon-o-document-arrow-down')
                     ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
-                    ->schema([ImzaSecenegi::alan()])
                     ->action(function () {
                         $this->kaydet(sessiz: true);
 
@@ -572,7 +571,6 @@ class PeriyodikKontrol extends Page
                     ->label('Müfettiş Teftiş Paketi (Excel)')
                     ->icon('heroicon-o-table-cells')
                     ->visible(fn () => $this->firma !== null && $this->tumEkipmanlar->isNotEmpty())
-                    ->schema([ImzaSecenegi::alan()])
                     ->action(function () {
                         $this->kaydet(sessiz: true);
 

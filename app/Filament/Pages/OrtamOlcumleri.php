@@ -413,7 +413,6 @@ class OrtamOlcumleri extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => filled($this->olcum()?->olcumler))
-                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $this->kaydet(sessiz: true);
 

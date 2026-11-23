@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\TehlikeCakismasi;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use UnitEnum;
@@ -53,6 +54,7 @@ class TehlikeCakismalari extends Page
 
     public function mevcuduKoru(int $id): void
     {
+        abort_unless((bool) Filament::auth()->user()?->sahipMi(), 403);
         $cakisma = TehlikeCakismasi::findOrFail($id);
         $cakisma->mevcuduKoru();
 
@@ -61,6 +63,7 @@ class TehlikeCakismalari extends Page
 
     public function yenisiniKullan(int $id): void
     {
+        abort_unless((bool) Filament::auth()->user()?->sahipMi(), 403);
         $cakisma = TehlikeCakismasi::findOrFail($id);
         $cakisma->yenisiniKullan();
 
@@ -69,6 +72,7 @@ class TehlikeCakismalari extends Page
 
     public function ikisiniDeTut(int $id): void
     {
+        abort_unless((bool) Filament::auth()->user()?->sahipMi(), 403);
         $cakisma = TehlikeCakismasi::findOrFail($id);
         $cakisma->ikisiniDeTut();
 

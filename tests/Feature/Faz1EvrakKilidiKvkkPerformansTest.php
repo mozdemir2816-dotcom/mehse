@@ -134,9 +134,7 @@ class Faz1EvrakKilidiKvkkPerformansTest extends TestCase
             'yontem' => 'matris_5x5',
             'rapor_tarihi' => '2022-01-01',
             'gecerlilik_tarihi' => '2024-01-01',
-            'durum' => 'yayinlandi',
-            'kilitli_at' => now(),
-            'kilitli_by' => $u->id,
+            'durum' => 'taslak',
         ]);
 
         $madde = RiskMaddesi::create([
@@ -146,15 +144,23 @@ class Faz1EvrakKilidiKvkkPerformansTest extends TestCase
             'durum' => 'acik',
         ]);
 
+        // Şimdi kilitle: artık ne Livewire'dan ne de doğrudan model üzerinden değiştirilemez / silinemez
+        $rd->kilitle($u->id);
+
         Livewire::test(RiskMerkezi::class)->call('maddeDurumu', $madde->id, 'kapali');
         $this->assertSame('acik', $madde->fresh()->durum);
 
         Livewire::test(TehlikeRiskAnalitigi::class)->call('maddeGuncelle', $madde->id, 'maruz_kisi', 25);
         $this->assertNull($madde->fresh()->maruz_kisi);
 
+        // Doğrudan model silme ve yeni madde ekleme de kilit engeline takılmalı
+        $this->assertFalse((bool) $madde->fresh()->delete());
+        $this->assertNotNull($madde->fresh());
+
         // Yeni versiyon eski 2024 geçerlilik tarihini kopyalamamalı
-        $v2 = $rd->yeniVersiyonAc('Yıllık güncelleme');
+        $v2 = $rd->fresh()->yeniVersiyonAc('Yıllık güncelleme');
         $this->assertTrue($v2->gecerlilik_tarihi->year >= now()->addYears(2)->year);
+        $this->assertSame(1, $v2->maddeler()->count());
     }
 
     public function test_kurul_uye_guncelleme_gecmis_tamamlanmis_tutanagi_ezmez(): void

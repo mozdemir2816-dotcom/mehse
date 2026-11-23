@@ -815,7 +815,6 @@ class TatbikatTutanagi extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $t = $this->kaydet();
 

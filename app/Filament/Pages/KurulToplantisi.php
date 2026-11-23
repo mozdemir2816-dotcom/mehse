@@ -1038,7 +1038,6 @@ class KurulToplantisi extends Page
                 ->label('PDF İndir')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->toplanti() !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KurulToplantisiUretici::pdf($this->toplanti())),
 
             // Kararları Word'de düzeltip çıktı almak için (PDF ile aynı düzen).
@@ -1054,7 +1053,6 @@ class KurulToplantisi extends Page
                 ->icon('heroicon-o-table-cells')
                 ->color('gray')
                 ->visible(fn () => $this->toplanti() !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => KurulToplantisiUretici::excel($this->toplanti())),
         ];
     }

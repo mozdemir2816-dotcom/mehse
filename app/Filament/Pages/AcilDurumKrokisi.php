@@ -319,7 +319,6 @@ class AcilDurumKrokisi extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
                 ->modalDescription('PDF, en son "Kaydet" ile kaydedilen kroki görüntüsünden üretilir.')
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => AcilDurumKrokisiUretici::pdf($this->kroki())),
         ];
     }

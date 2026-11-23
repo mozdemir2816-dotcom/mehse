@@ -404,7 +404,6 @@ class TespitOneriDefteri extends Page
                 ->label('PDF Çıktı Al')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->defter() !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => TespitOneriDefteriUretici::pdf($this->defter())),
 
             Action::make('whatsapp')

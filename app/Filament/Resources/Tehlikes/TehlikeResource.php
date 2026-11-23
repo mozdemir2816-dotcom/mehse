@@ -11,6 +11,7 @@ use App\Filament\Resources\Tehlikes\Schemas\TehlikeForm;
 use App\Filament\Resources\Tehlikes\Tables\TehlikesTable;
 use App\Models\Tehlike;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -48,6 +49,26 @@ class TehlikeResource extends Resource
     public static function table(Table $table): Table
     {
         return TehlikesTable::configure($table);
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) Filament::auth()->user()?->sahipMi();
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return (bool) Filament::auth()->user()?->sahipMi();
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return (bool) Filament::auth()->user()?->sahipMi();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return (bool) Filament::auth()->user()?->sahipMi();
     }
 
     public static function getPages(): array

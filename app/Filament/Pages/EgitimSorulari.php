@@ -349,7 +349,6 @@ class EgitimSorulari extends Page
                 ->label('PDF İndir (Kaydet)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(function () {
                     $sinav = $this->kaydet();
                     if ($sinav) {

@@ -51,7 +51,10 @@ class EkipmanOperatorController extends Controller
         }
 
         RateLimiter::clear($kilit);
-        $request->session()->put('ekipman_pin.'.$ekipman->id, now()->addHours(12)->timestamp);
+        $request->session()->put('ekipman_pin.'.$ekipman->id, [
+            'exp' => now()->addHours(12)->timestamp,
+            'hash' => hash('sha256', (string) $ekipman->qr_pin),
+        ]);
 
         return redirect()->route('ekipman.operator', $anahtar);
     }
@@ -99,12 +102,24 @@ class EkipmanOperatorController extends Controller
 
     private function ekipman(string $anahtar): IsEkipmani
     {
-        return IsEkipmani::query()->with('firma')->where('qr_anahtar', $anahtar)->where('aktif', true)->firstOrFail();
+        return IsEkipmani::query()
+            ->with(['firma' => fn ($q) => $q->withoutGlobalScopes()])
+            ->where('qr_anahtar', $anahtar)
+            ->where('aktif', true)
+            ->firstOrFail();
     }
 
     private function pinGecti(Request $request, IsEkipmani $ekipman): bool
     {
-        return ! $ekipman->pinGerekliMi() || (int) $request->session()->get('ekipman_pin.'.$ekipman->id) > now()->timestamp;
+        if (! $ekipman->pinGerekliMi()) {
+            return true;
+        }
+
+        $oturum = $request->session()->get('ekipman_pin.'.$ekipman->id);
+
+        return is_array($oturum)
+            && (int) ($oturum['exp'] ?? 0) > now()->timestamp
+            && hash_equals(hash('sha256', (string) $ekipman->qr_pin), (string) ($oturum['hash'] ?? ''));
     }
 
     private function talimat(IsEkipmani $ekipman): ?Talimat

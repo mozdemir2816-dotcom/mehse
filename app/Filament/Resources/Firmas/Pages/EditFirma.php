@@ -105,7 +105,6 @@ class EditFirma extends EditRecord
                 ->label('Dosya Fihristi (İçindekiler)')
                 ->icon('heroicon-o-list-bullet')
                 ->color('gray')
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn (Firma $record) => FirmaDosyaFihristiUretici::pdf($record)),
 
             EvrakPaketiAksiyonu::make('tumEvrakIndir')->label('Tüm Evrakları İndir (ZIP)'),

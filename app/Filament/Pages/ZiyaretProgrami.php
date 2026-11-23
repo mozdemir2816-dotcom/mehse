@@ -756,7 +756,6 @@ class ZiyaretProgrami extends Page
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible(fn () => $this->gorunum === 'plan' && $this->program() !== null)
-                ->schema([ImzaSecenegi::alan()])
                 ->action(fn () => ZiyaretProgramiUretici::pdf($this->program())),
         ];
     }

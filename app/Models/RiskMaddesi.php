@@ -36,12 +36,17 @@ class RiskMaddesi extends Model
 
     protected static function booted(): void
     {
-        static::saving(function (RiskMaddesi $m): void {
+        static::saving(function (RiskMaddesi $m): ?bool {
+            // İmzalanıp kilitlenmiş risk değerlendirmesinin maddeleri hiçbir yoldan değiştirilemez.
+            if ($m->riskDegerlendirmesi?->kilitliMi()) {
+                return false;
+            }
+
             // Hastane şablonu: puanlar dosyadaki gibi korunur, boş alanlar varsayılanla doldurulmaz.
             if ($m->riskDegerlendirmesi?->hastaneMi()) {
                 HastaneRisk::maddeyiHesapla($m);
 
-                return;
+                return null;
             }
 
             $yontem = $m->riskDegerlendirmesi?->yontem ?? 'matris_5x5';
@@ -85,6 +90,8 @@ class RiskMaddesi extends Model
             if (blank($m->termin) || ($m->exists && self::otomatikTerminMi($m->termin) && $m->isDirty(['olasilik', 'frekans', 'siddet', 'duzey']))) {
                 $m->termin = self::varsayilanTermin($yontem, $m->duzey, $m->tehlike.' '.$m->oneri);
             }
+
+            return null;
         });
 
         // Madde eklenip/değişip/silinince üst rapordaki önbelleklenmiş PDF
@@ -97,6 +104,14 @@ class RiskMaddesi extends Model
                 $rd->saveQuietly();
             }
         };
+        static::deleting(function (RiskMaddesi $m): ?bool {
+            if ($m->riskDegerlendirmesi?->kilitliMi()) {
+                return false;
+            }
+
+            return null;
+        });
+
         static::saved($temizle);
         static::deleted($temizle);
 
