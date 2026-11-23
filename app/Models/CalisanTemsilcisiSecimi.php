@@ -34,7 +34,8 @@ class CalisanTemsilcisiSecimi extends Model
             $s->ilan_tarihi ??= now();
 
             if ($s->isyeri_calisan_sayisi === null) {
-                $s->isyeri_calisan_sayisi = $s->firma?->calisanlar()->count() ?? 0;
+                $s->isyeri_calisan_sayisi = $s->firma?->calisanlar()->where('aktif', true)->count()
+                    ?: (int) ($s->firma?->calisan_sayisi ?? 0);
             }
 
             if ($s->zorunlu_temsilci_sayisi === null) {

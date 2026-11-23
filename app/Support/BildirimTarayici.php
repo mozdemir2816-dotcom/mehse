@@ -55,7 +55,7 @@ class BildirimTarayici
             ->when($firmaId, fn ($q) => $q->whereKey($firmaId))
             ->get();
 
-        $bulunan = $firmalar->flatMap(fn (Firma $f) => static::firmaBildirimleri($f))
+        $bulunan = $firmalar->flatMap(fn (Firma $f) => static::firmaBildirimleri($f, $kullanici))
             ->merge(static::genelBildirimler())
             ->keyBy('anahtar');
 
@@ -120,11 +120,13 @@ class BildirimTarayici
     }
 
     /** @return Collection<int, array<string, mixed>> */
-    public static function firmaBildirimleri(Firma $firma): Collection
+    public static function firmaBildirimleri(Firma $firma, ?User $kullanici = null): Collection
     {
         $liste = collect();
         $bugun = Carbon::today();
-        $esik = 30;
+        $esik = KullaniciAyarlari::esik('ekipman', $kullanici);
+        $esikRisk = KullaniciAyarlari::esik('risk', $kullanici);
+        $esikSaglik = KullaniciAyarlari::esik('saglik', $kullanici);
         $ekle = function (string $anahtar, string $seviye, string $baslik, string $aciklama, ?Carbon $tarih = null, ?string $url = null) use ($liste, $firma): void {
             $liste->push([
                 'anahtar' => 'f'.$firma->id.':'.$anahtar,
@@ -154,10 +156,10 @@ class BildirimTarayici
         if (blank($firma->katip_no)) {
             $ekle('katip', 'uyari', 'İSG-KATİP işyeri no eksik', 'Firma kaydında İSG-KATİP işyeri numarası yok.', null, $firmaUrl);
         }
-        if (! $firma->igu_id) {
+        if (! $firma->igu_hizmeti_yok && ! $firma->igu_id) {
             $ekle('igu', 'kritik', 'İş güvenliği uzmanı atanmamış', '6331 sayılı Kanun Md.6 — işyerine iş güvenliği uzmanı görevlendirilmelidir.', null, $firmaUrl);
         }
-        if (! $firma->isyeri_hekimi_id) {
+        if (! $firma->hekim_hizmeti_yok && ! $firma->isyeri_hekimi_id) {
             $ekle('hekim', 'kritik', 'İşyeri hekimi atanmamış', '6331 sayılı Kanun Md.6 — işyerine işyeri hekimi görevlendirilmelidir.', null, $firmaUrl);
         }
 
@@ -168,7 +170,7 @@ class BildirimTarayici
         $rdUrl = static::url(fn () => RiskDegerlendirmesiResource::getUrl('index'));
         if ($rd && $rd->gecerlilik_tarihi->lt($bugun)) {
             $ekle('risk:gecti', 'kritik', 'Risk değerlendirmesinin geçerliliği doldu', 'Son risk değerlendirmesi '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihinde geçerliliğini yitirdi; yenileyin (6331 Md.10).', $rd->gecerlilik_tarihi, $rdUrl);
-        } elseif ($rd && $rd->gecerlilik_tarihi->lte($bugun->copy()->addDays($esik))) {
+        } elseif ($rd && $rd->gecerlilik_tarihi->lte($bugun->copy()->addDays($esikRisk))) {
             $ekle('risk:yakin', 'uyari', 'Risk değerlendirmesi yenileme tarihi yaklaşıyor', 'Geçerlilik '.$rd->gecerlilik_tarihi->format('d.m.Y').' tarihinde bitiyor.', $rd->gecerlilik_tarihi, $rdUrl);
         }
 
@@ -236,12 +238,12 @@ class BildirimTarayici
             ->pluck('sonraki_tarih')->filter()->map(fn ($t) => static::tarih($t))->filter();
         $sgUrl = static::url(fn () => SaglikGozetimiSayfasi::getUrl(['firma' => $firma->id]));
         $sgGecmis = $sg->filter(fn (Carbon $t) => $t->lt($bugun));
-        $sgYakin = $sg->filter(fn (Carbon $t) => $t->gte($bugun) && $t->lte($bugun->copy()->addDays($esik)));
+        $sgYakin = $sg->filter(fn (Carbon $t) => $t->gte($bugun) && $t->lte($bugun->copy()->addDays($esikSaglik)));
         if ($sgGecmis->isNotEmpty()) {
             $ekle('saglik:gecti', 'kritik', 'Periyodik sağlık muayenesi gecikmiş', $sgGecmis->count().' tetkikin tarihi geçti (ayrıntı işyeri hekimi kaydında).', $sgGecmis->min(), $sgUrl);
         }
         if ($sgYakin->isNotEmpty()) {
-            $ekle('saglik:yakin', 'uyari', 'Periyodik sağlık muayenesi yaklaşıyor', $sgYakin->count().' tetkikin tarihi '.$esik.' gün içinde.', $sgYakin->min(), $sgUrl);
+            $ekle('saglik:yakin', 'uyari', 'Periyodik sağlık muayenesi yaklaşıyor', $sgYakin->count().' tetkikin tarihi '.$esikSaglik.' gün içinde.', $sgYakin->min(), $sgUrl);
         }
 
         // Geciken yıllık plan: bu yılın geçmiş aylarında planlanıp gerçekleşmeyen maddeler
