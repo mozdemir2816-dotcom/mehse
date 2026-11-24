@@ -113,9 +113,8 @@ class SayfaAileleri
                 [Pages\HazirIstemler::class, 'Hazır İstemler'],
             ],
             'isg_katip' => [
-                // O7 (23.11.2026): menüdeki giriş Sözleşmeler (çalışan özellik); Robot ikinci sekme.
                 [Pages\IsgKatipSozlesmeleri::class, 'İSG-KATİP Sözleşmeleri'],
-                [Pages\IsgKatipRobot::class, 'İSG-KATİP Robot'],
+                [Pages\IsgKatipRobot::class, 'İBYS Veri Aktarımı (XML/JSON)'],
             ],
             // Resmi Belge & Kurul Yönetim Merkezi: 6 sayfa → 3 ana sekme, tek menü girişi (30.10.2026); GRUPLAR['belge'] bkz.
             'belge' => [

@@ -138,7 +138,8 @@ class FirmaForm
                 ->columns(2)
                 ->schema([
                     DatePicker::make('sozlesme_baslangic')->label('Sözleşme başlangıcı')->native(false)->displayFormat('d.m.Y'),
-                    DatePicker::make('sozlesme_bitis')->label('Sözleşme bitişi')->native(false)->displayFormat('d.m.Y'),
+                    DatePicker::make('sozlesme_bitis')->label('Sözleşme bitişi')->native(false)->displayFormat('d.m.Y')
+                        ->afterOrEqual('sozlesme_baslangic'),
                     FileUpload::make('logo')->label('Firma logosu')->image()
                         ->disk('public')->directory('firma-logo')->imageEditor(),
                     Toggle::make('aktif')->label('Aktif')->default(true),

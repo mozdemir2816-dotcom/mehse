@@ -31,6 +31,10 @@ class TaseronBasvuruController extends Controller
             return back()->with('bilgi', 'Bu başvuru zaten onaylanmıştır.');
         }
 
+        if ($basvuru->linkSuresiDolduMu()) {
+            return back()->withErrors(['link' => 'Bu taşeron başvuru linkinin 6 aylık geçerlilik süresi dolmuştur. İSG uzmanınızdan yeni başvuru linki talep ediniz.']);
+        }
+
         $gecerliTurler = array_keys((array) config('isg.taseron.belge_turleri', []));
 
         $veri = $request->validate([

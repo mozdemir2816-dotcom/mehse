@@ -148,8 +148,21 @@ class IsgKatipSozlesmeleri extends Page
                 ])
                 ->action(function (array $data): void {
                     $disk = Storage::disk('local');
+                    $userId = (int) Filament::auth()->id();
+                    $firmaBellekAdet = 0;
                     try {
-                        $sonuc = IsgKatipSozlesmeIceAktarici::iceAktar($disk->path($data['dosya']), Filament::auth()->id());
+                        $tamYol = $disk->path($data['dosya']);
+                        $sonuc = IsgKatipSozlesmeIceAktarici::iceAktar($tamYol, $userId);
+                        // Birleşik akış: aynı İSG-KATİP Excel'i Firma ekleme/otomatik doldurma belleğine de aktarılır.
+                        try {
+                            $katipListe = \App\Support\KatipSozlesmeIceAktarici::dosyaOku($tamYol);
+                            if ($katipListe !== []) {
+                                \App\Support\KatipSozlesmeIceAktarici::listeKaydet($userId, $katipListe);
+                                $firmaBellekAdet = count($katipListe);
+                            }
+                        } catch (\Throwable) {
+                            // Farklı sütun düzeninde yalnız sözleşme aktarımı devam eder.
+                        }
                     } finally {
                         $disk->delete($data['dosya']);
                     }
@@ -162,9 +175,17 @@ class IsgKatipSozlesmeleri extends Page
                         return;
                     }
 
+                    $ekBilgi = [];
+                    if ($firmaBellekAdet > 0) {
+                        $ekBilgi[] = $firmaBellekAdet.' işyeri Firma otomatik doldurma listesine senkronize edildi.';
+                    }
+                    if ($sonuc['hatalar']) {
+                        $ekBilgi[] = count($sonuc['hatalar']).' satırda sorun oluştu: '.implode(' ', array_slice($sonuc['hatalar'], 0, 3));
+                    }
+
                     Notification::make()
                         ->title($sonuc['basarili'].' sözleşme içe aktarıldı')
-                        ->body($sonuc['hatalar'] ? (count($sonuc['hatalar']).' satırda sorun oluştu: '.implode(' ', array_slice($sonuc['hatalar'], 0, 3))) : null)
+                        ->body($ekBilgi ? implode(' ', $ekBilgi) : null)
                         ->success()
                         ->send();
                 }),

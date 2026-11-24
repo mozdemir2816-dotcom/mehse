@@ -32,9 +32,9 @@ class IsgKatipRobot extends Page
 
     protected static ?string $slug = 'isg-katip-robot';
 
-    protected static ?string $title = 'İSG-KATİP Robot';
+    protected static ?string $title = 'İBYS Veri Aktarımı (XML / JSON)';
 
-    protected static ?string $navigationLabel = 'İSG-KATİP Robot';
+    protected static ?string $navigationLabel = 'İBYS Veri Aktarımı';
 
     /** Eklenti gerçekte kurulu değil — daima false (stub). */
     public bool $eklentiBagli = false;

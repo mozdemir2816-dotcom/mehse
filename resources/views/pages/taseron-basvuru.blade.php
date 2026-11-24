@@ -38,7 +38,15 @@
     @if ($basvuru->durum === 'onaylandi')
         <div class="kart" style="text-align:center;border-color:#86efac;background:#f0fdf4">
             <h2 style="margin:0 0 .4rem;color:#166534">✓ Başvurunuz Onaylandı</h2>
-            <p style="margin:0;color:#15803d;font-size:.9rem"><strong>{{ $basvuru->unvan }}</strong> kaydınız <strong>{{ $basvuru->firma?->unvan }}</strong> taşeron siciline aktarılmıştır.</p>
+            <p style="margin:0;color:#15803d;font-size:.9rem"><strong>{{ $basvuru->unvan }}</strong> kaydınız <strong>{{ $basvuru->firma?->unvan }}</strong> taşeron siciline 6 aylık onay süresiyle aktarılmıştır.</p>
+        </div>
+    @elseif ($basvuru->linkSuresiDolduMu())
+        <div class="kart" style="text-align:center;border-color:#fca5a5;background:#fef2f2">
+            <h2 style="margin:0 0 .4rem;color:#991b1b">⏱ Başvuru Linkinin Süresi Doldu</h2>
+            <p style="margin:0;color:#b91c1c;font-size:.9rem">
+                Bu başvuru linki {{ $basvuru->gecerlilikBitis()->format('d.m.Y') }} tarihinde (6 ay) sona ermiştir.
+                Yeni dönem onayı için İSG uzmanınızdan güncel başvuru linki talep ediniz.
+            </p>
         </div>
     @else
         <div class="kart">

@@ -52,6 +52,7 @@
                             </div>
                             <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.15rem">
                                 Link: <a href="{{ $bv->basvuruLinki() }}" target="_blank" style="color:#2563eb;text-decoration:underline">{{ $bv->basvuruLinki() }}</a>
+                                · Geçerlilik: <strong>{{ $bv->gecerlilikBitis()->format('d.m.Y') }}</strong>@if ($bv->linkSuresiDolduMu()) <span style="color:#dc2626">(Süresi doldu)</span>@endif
                                 @if ($bv->yetkili_ad) · {{ $bv->yetkili_ad }} ({{ $bv->telefon }})@endif
                                 @if (! empty($bv->yuklenen_belgeler)) · <strong>{{ count($bv->yuklenen_belgeler) }} evrak yüklü</strong>@endif
                             </div>
@@ -61,8 +62,11 @@
                         </div>
                         <div style="display:flex;gap:.35rem;flex-wrap:wrap">
                             @if ($bv->durum === 'bekliyor')
-                                <x-filament::button size="xs" color="success" wire:click="basvuruOnayla({{ $bv->id }})">✓ Onayla &amp; Sicile Aktar</x-filament::button>
+                                <x-filament::button size="xs" color="success" wire:click="basvuruOnayla({{ $bv->id }})">✓ 6 Ay Onayla &amp; Sicile Aktar</x-filament::button>
                                 <x-filament::button size="xs" color="danger" outlined wire:click="mountAction('basvuruReddet', { id: {{ $bv->id }} })">Eksik İste</x-filament::button>
+                            @endif
+                            @if ($bv->durum !== 'onaylandi')
+                                <x-filament::button size="xs" color="gray" outlined wire:click="basvuruLinkYenile({{ $bv->id }})" wire:confirm="Eski link iptal edilip yeni 6 aylık link üretilsin mi?">Linki Yenile (6 Ay)</x-filament::button>
                             @endif
                         </div>
                     </div>
@@ -107,7 +111,10 @@
                                     <span style="{{ $rozet($yesil) }}">Uygun</span>
                                 @endif
                             </td>
-                            <td style="{{ $td }};text-align:right">
+                            <td style="{{ $td }};text-align:right;white-space:nowrap">
+                                @if (in_array($t->sozlesmeDurumu(), ['bitti', 'yaklasan', 'belirsiz'], true) && $t->tur !== 'ziyaretci_firma')
+                                    <x-filament::button size="xs" color="success" wire:click="altiAyOnayla({{ $t->id }})" wire:confirm="{{ $t->unvan }} için 6 aylık yeni onay verilsin mi?">✓ 6 Ay Onayla</x-filament::button>
+                                @endif
                                 <x-filament::button size="xs" wire:click="yonet({{ $t->id }})">Yönet</x-filament::button>
                             </td>
                         </tr>
@@ -133,6 +140,7 @@
             </x-slot>
 
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem">
+                <x-filament::button size="sm" color="success" icon="heroicon-o-check-badge" wire:click="altiAyOnayla" wire:confirm="{{ $t->unvan }} için bugünden itibaren 6 aylık yeni onay verilsin mi?">✓ 6 Ay Onayla / Yenile</x-filament::button>
                 <x-filament::button size="sm" color="primary" icon="heroicon-o-document-arrow-down" wire:click="uygunlukRaporu">Uygunluk Raporu (PDF)</x-filament::button>
                 <x-filament::button size="sm" color="gray" icon="heroicon-o-document-text" wire:click="ornekForm('taahhut')">İSG Taahhütnamesi (PDF)</x-filament::button>
                 @if ($t->tur === 'ziyaretci_firma')

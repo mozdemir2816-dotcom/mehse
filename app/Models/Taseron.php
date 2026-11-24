@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Taseron extends Model
 {
+    /** Taşeron onay / geçerlilik dönemi (ay): her 6 ayda bir yeniden onaylanır. */
+    public const ONAY_SURESI_AY = 6;
+
     protected $table = 'taseronlar';
 
     protected $guarded = ['id'];
@@ -82,6 +85,23 @@ class Taseron extends Model
             $kalan <= config('isg.taseron.yaklasan_gun', 30) => 'yaklasan',
             default => 'gecerli',
         };
+    }
+
+    /** 6 aylık taşeron onayı süresi doldu mu? */
+    public function onaySuresiDolduMu(): bool
+    {
+        return $this->sozlesmeDurumu() === 'bitti';
+    }
+
+    /** Taşeronu bugünden itibaren 6 ay süreyle onaylar / yeniler. */
+    public function altiAyOnayla(): void
+    {
+        $baslangic = now()->startOfDay();
+        $this->update([
+            'sozlesme_baslangic' => $baslangic->toDateString(),
+            'sozlesme_bitis' => $baslangic->copy()->addMonthsNoOverflow(self::ONAY_SURESI_AY)->toDateString(),
+            'aktif' => true,
+        ]);
     }
 
     /** @return array<int, string> türüne göre zorunlu olup hiç kaydı olmayan belgelerin adları */

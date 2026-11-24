@@ -83,8 +83,11 @@ class Profilim extends Page
         'raporlar' => 'Raporlar',
     ];
 
-    /** Sekme şeridinde gösterilmeyenler: Arşiv sol menüdeki "Arşiv" sayfasında (29.10.2026); eski ?sekme=arsiv adresi çalışır. */
-    public const GIZLI_SEKMELER = ['arsiv'];
+    /**
+     * Sekme şeridinde gösterilmeyenler: Profilim sayfası yalnızca Profil & Kaşe/İmza + özet görünümüne
+     * odaklanır; diğer sekmeler sol menüdeki kendi modüllerindedir (eski ?sekme=... adresleri çalışmaya devam eder).
+     */
+    public const GIZLI_SEKMELER = ['arsiv', 'firmalar', 'calisanlar', 'egitimler', 'firma_takip', 'risklerim', 'raporlar'];
 
     #[Url(as: 'sekme')]
     public string $sekme = 'genel';

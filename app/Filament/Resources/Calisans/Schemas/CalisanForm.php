@@ -37,7 +37,29 @@ class CalisanForm
                             ->searchable()->preload()->required()->live(),
                     ] : []),
                     TextInput::make('ad_soyad')->label('Ad soyad')->required()->maxLength(255),
-                    TextInput::make('tc')->label('T.C. Kimlik No')->maxLength(11)->rule('digits:11')->nullable(),
+                    TextInput::make('tc')->label('T.C. Kimlik No')->maxLength(11)->rule('digits:11')->nullable()
+                        ->rule(fn (Get $get, ?\Illuminate\Database\Eloquent\Model $record) => function (string $attribute, $value, \Closure $fail) use ($get, $firmaId, $record): void {
+                            $tc = trim((string) $value);
+                            if ($tc === '') {
+                                return;
+                            }
+                            if (! static::tcGecerliMi($tc)) {
+                                $fail('Geçersiz T.C. Kimlik No (11 haneli doğrulama algoritmasına uymuyor).');
+
+                                return;
+                            }
+                            $hedefFirmaId = $firmaId ?? ($get('firma_id') ? (int) $get('firma_id') : ($record?->firma_id ?? null));
+                            if ($hedefFirmaId) {
+                                $mukerrer = Calisan::query()
+                                    ->where('firma_id', $hedefFirmaId)
+                                    ->where('tc', $tc)
+                                    ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
+                                    ->exists();
+                                if ($mukerrer) {
+                                    $fail('Bu T.C. Kimlik No aynı işyerinde başka bir çalışanda zaten kayıtlı.');
+                                }
+                            }
+                        }),
                     TextInput::make('gorev')->label('Görevi')->maxLength(255),
                     TextInput::make('departman')->label('Departman')->maxLength(255),
                     TextInput::make('sube')->label('Şube')->maxLength(255)
@@ -46,6 +68,7 @@ class CalisanForm
                     Select::make('cinsiyet')->label('Cinsiyet')->options(Calisan::CINSIYETLER)->placeholder('Belirtilmedi'),
                     DatePicker::make('ise_giris')->label('İşe giriş')->native(false)->displayFormat('d.m.Y'),
                     DatePicker::make('isten_cikis')->label('İşten çıkış')->native(false)->displayFormat('d.m.Y')
+                        ->afterOrEqual('ise_giris')
                         ->live()
                         ->afterStateUpdated(fn ($state, Set $set) => filled($state) ? $set('aktif', false) : null)
                         ->hintIcon('heroicon-o-information-circle', 'Çıkış tarihi girilince personel pasife alınır'),
@@ -84,5 +107,23 @@ class CalisanForm
 
         return Calisan::query()->where('firma_id', (int) $firmaId)->whereNotNull('sube')
             ->distinct()->orderBy('sube')->pluck('sube')->all();
+    }
+
+    /** 11 haneli Türkiye Cumhuriyeti Kimlik Numarası resmi doğrulama algoritması. */
+    public static function tcGecerliMi(string $tc): bool
+    {
+        if (! preg_match('/^[1-9][0-9]{10}$/', $tc)) {
+            return false;
+        }
+        $d = array_map('intval', str_split($tc));
+        $tek = $d[0] + $d[2] + $d[4] + $d[6] + $d[8];
+        $cift = $d[1] + $d[3] + $d[5] + $d[7];
+        $h10 = (($tek * 7) - $cift) % 10;
+        if ($h10 < 0) {
+            $h10 += 10;
+        }
+        $h11 = array_sum(array_slice($d, 0, 10)) % 10;
+
+        return $d[9] === $h10 && $d[10] === $h11;
     }
 }

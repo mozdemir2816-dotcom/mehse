@@ -49,7 +49,7 @@ class TaseronYonetimiTest extends TestCase
                 'faaliyet' => 'Elektrik tesisatı',
                 'sozlesme_no' => 'SZ-1',
                 'sozlesme_baslangic' => '2026-01-01',
-                'sozlesme_bitis' => '2027-01-01',
+                'sozlesme_bitis' => '2026-06-30',
                 'ilk_calisanlar' => "Ali Veli - Elektrikçi\nAyşe Kaya",
             ])
             ->assertHasNoActionErrors()

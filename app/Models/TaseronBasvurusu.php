@@ -23,12 +23,24 @@ class TaseronBasvurusu extends Model
         'incelenme_at' => 'datetime',
     ];
 
+    public const GECERLILIK_AY = 6;
+
     public const DURUMLAR = [
         'link_acik' => 'Link Gönderildi (Bekleniyor)',
         'bekliyor' => 'İnceleme Bekliyor',
         'onaylandi' => 'Onaylandı',
         'reddedildi' => 'Reddedildi',
     ];
+
+    public function gecerlilikBitis(): \Illuminate\Support\Carbon
+    {
+        return ($this->created_at ?? now())->copy()->addMonthsNoOverflow(self::GECERLILIK_AY);
+    }
+
+    public function linkSuresiDolduMu(): bool
+    {
+        return $this->durum !== 'onaylandi' && $this->gecerlilikBitis()->isPast();
+    }
 
     protected static function booted(): void
     {

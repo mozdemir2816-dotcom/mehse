@@ -14,6 +14,7 @@ use App\Models\Firma;
 use App\Support\FirmaDosyaFihristiUretici;
 use App\Support\IsKalemiEvrakHazirlayici;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -63,79 +64,82 @@ class EditFirma extends EditRecord
     {
         return [
             $this->ustKaydet(),
+
             Action::make('durumMerkezi')
                 ->label('Durum Merkezi')
                 ->icon('heroicon-o-building-office-2')
                 ->color('gray')
                 ->url(fn (Firma $record) => FirmaDenetimOperasyon::getUrl(['firma' => $record->id, 'bolum' => 'firma360'])),
 
-            Action::make('isgDosyasi')
-                ->label('İSG Dosyası & Evrak Takip')
-                ->icon('heroicon-o-folder')
-                ->color('gray')
-                ->url(fn (Firma $record) => \App\Filament\Pages\FirmaIsgDosyasi::getUrl(['firma' => $record->id])),
+            ActionGroup::make([
+                Action::make('isgDosyasi')
+                    ->label('İSG Dosyası & Evrak Takip')
+                    ->icon('heroicon-o-folder')
+                    ->url(fn (Firma $record) => \App\Filament\Pages\FirmaIsgDosyasi::getUrl(['firma' => $record->id])),
 
-            Action::make('teftisPaketi')
-                ->label('Teftiş Paketi (ZIP)')
-                ->icon('heroicon-o-archive-box-arrow-down')
-                ->color('success')
-                ->action(function (Firma $record) {
-                    $yanit = \App\Support\FirmaIsgDosyasi::teftisPaketi($record);
+                Action::make('teftisPaketi')
+                    ->label('Teftiş Paketi (ZIP)')
+                    ->icon('heroicon-o-archive-box-arrow-down')
+                    ->color('success')
+                    ->action(function (Firma $record) {
+                        $yanit = \App\Support\FirmaIsgDosyasi::teftisPaketi($record);
 
-                    if (! $yanit) {
-                        Notification::make()->title('Pakete eklenecek evrak yok')->warning()->send();
-                    }
+                        if (! $yanit) {
+                            Notification::make()->title('Pakete eklenecek evrak yok')->warning()->send();
+                        }
 
-                    return $yanit;
-                }),
+                        return $yanit;
+                    }),
 
-            Action::make('arsivDosyasi')
-                ->label('Arşiv Dosyası')
-                ->icon('heroicon-o-folder-open')
-                ->color('gray')
-                ->url(fn (Firma $record) => DokumanYonetimi::getUrl(['firma' => $record->id])),
+                EvrakPaketiAksiyonu::make('tumEvrakIndir')->label('Tüm Evrakları İndir (ZIP)'),
 
-            IsyeriGirisAksiyonu::make(),
+                Action::make('dosyaFihristi')
+                    ->label('Dosya Fihristi (İçindekiler)')
+                    ->icon('heroicon-o-list-bullet')
+                    ->action(fn (Firma $record) => FirmaDosyaFihristiUretici::pdf($record)),
 
-            \App\Filament\Support\SanalMufettisAksiyonu::make(fn () => $this->record instanceof Firma ? $this->record : null),
+                Action::make('arsivDosyasi')
+                    ->label('Arşiv Dosyası')
+                    ->icon('heroicon-o-folder-open')
+                    ->url(fn (Firma $record) => DokumanYonetimi::getUrl(['firma' => $record->id])),
 
-            \App\Filament\Support\MufettisYetkilendirAksiyonu::make(fn () => $this->record instanceof Firma ? $this->record : null),
+                IsyeriGirisAksiyonu::make(),
 
-            Action::make('dosyaFihristi')
-                ->label('Dosya Fihristi (İçindekiler)')
-                ->icon('heroicon-o-list-bullet')
-                ->color('gray')
-                ->action(fn (Firma $record) => FirmaDosyaFihristiUretici::pdf($record)),
+                \App\Filament\Support\SanalMufettisAksiyonu::make(fn () => $this->record instanceof Firma ? $this->record : null),
 
-            EvrakPaketiAksiyonu::make('tumEvrakIndir')->label('Tüm Evrakları İndir (ZIP)'),
+                \App\Filament\Support\MufettisYetkilendirAksiyonu::make(fn () => $this->record instanceof Firma ? $this->record : null),
 
-            Action::make('isKalemiEvraklariniHazirla')
-                ->label('Evrakları Hazırla')->tooltip('İş Kalemlerine Göre Evrakları Hazırla')
-                ->icon('heroicon-o-sparkles')
-                ->color('gray')
-                ->requiresConfirmation()
-                ->modalDescription('Seçili iş kalemlerine göre eksik KKD satırları, çalışma talimatları ve (varsa) bir risk değerlendirmesi taslağı eklenir. Var olan kayıtların üstüne yazılmaz.')
-                ->visible(fn (Firma $record): bool => filled($record->is_kalemleri))
-                ->action(function (Firma $record) {
-                    $ozet = IsKalemiEvrakHazirlayici::hazirla($record);
+                Action::make('isKalemiEvraklariniHazirla')
+                    ->label('İş Kalemlerine Göre Evrakları Hazırla')
+                    ->icon('heroicon-o-sparkles')
+                    ->requiresConfirmation()
+                    ->modalDescription('Seçili iş kalemlerine göre eksik KKD satırları, çalışma talimatları ve (varsa) bir risk değerlendirmesi taslağı eklenir. Var olan kayıtların üstüne yazılmaz.')
+                    ->visible(fn (Firma $record): bool => filled($record->is_kalemleri))
+                    ->action(function (Firma $record) {
+                        $ozet = IsKalemiEvrakHazirlayici::hazirla($record);
 
-                    $satirlar = [
-                        $ozet['kkd_eklenen'].' KKD satırı eklendi',
-                        $ozet['talimat_eklenen'].' talimat eklendi',
-                        $ozet['risk_olusturuldu']
-                            ? 'yeni risk değerlendirmesi taslağı oluşturuldu'
-                            : ($ozet['risk_atlandi_neden'] ?? 'risk değerlendirmesi için eşleşen tehlike bulunamadı'),
-                    ];
+                        $satirlar = [
+                            $ozet['kkd_eklenen'].' KKD satırı eklendi',
+                            $ozet['talimat_eklenen'].' talimat eklendi',
+                            $ozet['risk_olusturuldu']
+                                ? 'yeni risk değerlendirmesi taslağı oluşturuldu'
+                                : ($ozet['risk_atlandi_neden'] ?? 'risk değerlendirmesi için eşleşen tehlike bulunamadı'),
+                        ];
 
-                    if ($ozet['egitim_konu_sayisi'] > 0) {
-                        $satirlar[] = $ozet['egitim_konu_sayisi'].' eğitim konusu, eğitim kayıtlarında önerilecek';
-                    }
+                        if ($ozet['egitim_konu_sayisi'] > 0) {
+                            $satirlar[] = $ozet['egitim_konu_sayisi'].' eğitim konusu, eğitim kayıtlarında önerilecek';
+                        }
 
-                    Notification::make()
-                        ->title('Evraklar hazırlandı')
-                        ->body(implode(' · ', $satirlar))
-                        ->success()->send();
-                }),
+                        Notification::make()
+                            ->title('Evraklar hazırlandı')
+                            ->body(implode(' · ', $satirlar))
+                            ->success()->send();
+                    }),
+            ])
+                ->label('Evrak & Teftiş Çıktıları')
+                ->icon('heroicon-o-folder-arrow-down')
+                ->color('primary')
+                ->button(),
 
             FirmasTable::silAksiyonu(DeleteAction::make()),
         ];

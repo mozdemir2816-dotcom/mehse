@@ -19,16 +19,20 @@ use Illuminate\Support\Collection;
  */
 class PortfoyKarne
 {
-    /** @return array<string, int|float> portföy özeti */
-    public static function ozet(int $userId): array
+    /** @return array<string, int|float> portföy (veya seçili firma) özeti */
+    public static function ozet(int $userId, ?int $firmaId = null): array
     {
-        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->get();
+        $firmalar = Firma::query()
+            ->where('user_id', $userId)
+            ->where('aktif', true)
+            ->when($firmaId, fn ($q) => $q->whereKey($firmaId))
+            ->get();
         $toplam = $firmalar->count();
 
         $riskOlan = $firmalar->filter(fn (Firma $f) => $f->riskDegerlendirmeleri()->exists())->count();
         $tamUyumlu = $firmalar->filter(fn (Firma $f) => static::firmaTamUyumluMu($f))->count();
 
-        $kriterler = static::kriterler($userId);
+        $kriterler = static::kriterler($userId, $firmaId);
         // Yalnız takip edilen kriterler (iş kazası vb.) ve hiçbir firmayı kapsamayan
         // kriterler (ör. 50+ çalışanı olmayan portföyde İSG Kurulu) uyum yüzdesine girmez.
         $hazirKriterler = array_filter($kriterler, fn ($k) => $k['hazir'] && ! $k['takip'] && $k['kapsam'] > 0);
@@ -88,9 +92,13 @@ class PortfoyKarne
      *
      * @return array<int, array{anahtar:string, ad:string, ikon:string, tamam:int, toplam:int, yuzde:int, hazir:bool}>
      */
-    public static function kriterler(int $userId): array
+    public static function kriterler(int $userId, ?int $firmaId = null): array
     {
-        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->get();
+        $firmalar = Firma::query()
+            ->where('user_id', $userId)
+            ->where('aktif', true)
+            ->when($firmaId, fn ($q) => $q->whereKey($firmaId))
+            ->get();
         $toplam = $firmalar->count();
 
         return array_map(function (array $kriter) use ($firmalar, $toplam): array {
@@ -599,7 +607,7 @@ class PortfoyKarne
      *
      * @return Collection<int, Firma>
      */
-    public static function eksikFirmalar(int $userId, string $kriterAnahtari): Collection
+    public static function eksikFirmalar(int $userId, string $kriterAnahtari, ?int $firmaId = null): Collection
     {
         $kriter = collect(config('isg.kontrol_merkezi.kriterler'))->firstWhere('anahtar', $kriterAnahtari);
 
@@ -608,7 +616,12 @@ class PortfoyKarne
             return collect();
         }
 
-        $firmalar = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan')->get()
+        $firmalar = Firma::query()
+            ->where('user_id', $userId)
+            ->where('aktif', true)
+            ->when($firmaId, fn ($q) => $q->whereKey($firmaId))
+            ->orderBy('unvan')
+            ->get()
             ->filter(fn (Firma $f) => static::kosulKarsilarMi($f, $kriter['kosul'] ?? null, $kriterAnahtari))->values();
 
         return $firmalar->reject(fn (Firma $f) => static::firmaKriterKarsilarMi($f, $kriterAnahtari))->values();

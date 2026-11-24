@@ -214,8 +214,24 @@ class TaseronYonetimi extends Page
             Section::make('Sözleşme ve iletişim')->schema([
                 Grid::make(2)->schema([
                     TextInput::make('sozlesme_no')->label('Sözleşme no')->maxLength(255),
-                    DatePicker::make('sozlesme_baslangic')->label('Sözleşme başlangıç'),
-                    DatePicker::make('sozlesme_bitis')->label('Sözleşme bitiş')->afterOrEqual('sozlesme_baslangic'),
+                    DatePicker::make('sozlesme_baslangic')->label('Onay / sözleşme başlangıç')
+                        ->default(fn () => now()->toDateString()),
+                    DatePicker::make('sozlesme_bitis')->label('6 aylık onay / sözleşme bitiş')
+                        ->default(fn () => now()->addMonthsNoOverflow(Taseron::ONAY_SURESI_AY)->toDateString())
+                        ->afterOrEqual('sozlesme_baslangic')
+                        ->helperText('Taşeron süresi en fazla 6 ay ile sınırlıdır; 6 ayda bir yeniden onaylanır.')
+                        ->rule(fn (\Filament\Schemas\Components\Utilities\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get): void {
+                            if (blank($value)) {
+                                return;
+                            }
+                            $baslangic = filled($get('sozlesme_baslangic'))
+                                ? \Illuminate\Support\Carbon::parse($get('sozlesme_baslangic'))
+                                : now()->startOfDay();
+                            $azami = $baslangic->copy()->addMonthsNoOverflow(Taseron::ONAY_SURESI_AY)->endOfDay();
+                            if (\Illuminate\Support\Carbon::parse($value)->gt($azami)) {
+                                $fail('Taşeron onay süresi en fazla '.Taseron::ONAY_SURESI_AY.' ay olabilir (en geç '.$azami->format('d.m.Y').').');
+                            }
+                        }),
                     TextInput::make('yetkili')->label('Yetkili')->maxLength(255),
                     TextInput::make('telefon')->label('Telefon')->tel()->maxLength(255),
                     TextInput::make('eposta')->label('E-posta')->email()->maxLength(255),
@@ -240,10 +256,24 @@ class TaseronYonetimi extends Page
             ->modalHeading('Taşeron / Alt İşveren Kaydı')
             ->modalWidth(Width::FourExtraLarge)
             ->modalSubmitActionLabel('Kaydet')
-            ->fillForm(fn (): array => ['firma_id' => $this->firmaId, 'tur' => 'alt_isveren'])
+            ->fillForm(fn (): array => [
+                'firma_id' => $this->firmaId,
+                'tur' => 'alt_isveren',
+                'sozlesme_baslangic' => now()->toDateString(),
+                'sozlesme_bitis' => now()->addMonthsNoOverflow(Taseron::ONAY_SURESI_AY)->toDateString(),
+            ])
             ->schema(fn () => $this->taseronSemasi(true))
             ->action(function (array $data): void {
                 abort_unless(array_key_exists((int) $data['firma_id'], $this->firmalar), 403);
+
+                if (blank($data['sozlesme_baslangic'] ?? null)) {
+                    $data['sozlesme_baslangic'] = now()->toDateString();
+                }
+                if (blank($data['sozlesme_bitis'] ?? null) && ($data['tur'] ?? null) !== 'ziyaretci_firma') {
+                    $data['sozlesme_bitis'] = \Illuminate\Support\Carbon::parse($data['sozlesme_baslangic'])
+                        ->addMonthsNoOverflow(Taseron::ONAY_SURESI_AY)
+                        ->toDateString();
+                }
 
                 $ilk = $data['ilk_calisanlar'] ?? null;
                 unset($data['ilk_calisanlar']);
@@ -294,6 +324,43 @@ class TaseronYonetimi extends Page
         $this->yenile();
 
         Notification::make()->title($t->unvan.($t->aktif ? ' aktifleştirildi' : ' pasife alındı'))->success()->send();
+    }
+
+    /** Taşeronun 6 aylık çalışma onayını bugünden itibaren yeniden başlatır / yeniler. */
+    public function altiAyOnayla(?int $id = null): void
+    {
+        $t = $this->taseron($id ?? $this->seciliId);
+        $t->altiAyOnayla();
+        \App\Support\DenetimKaydedici::kaydet('Taşeron Yönetimi', 'onayladi', $t->unvan.' — 6 aylık onay yenilendi (bitiş: '.$t->sozlesme_bitis?->format('d.m.Y').')', $t->firma_id, Taseron::class, $t->id);
+        $this->yenile();
+
+        Notification::make()
+            ->title($t->unvan.' — 6 aylık onay verildi')
+            ->body('Yeni geçerlilik bitiş tarihi: '.$t->sozlesme_bitis?->format('d.m.Y'))
+            ->success()
+            ->send();
+    }
+
+    /** Süresi dolan veya eski taşeron self-servis başvuru linkini yeni token + 6 ay ile yeniler. */
+    public function basvuruLinkYenile(int $id): void
+    {
+        $b = \App\Models\TaseronBasvurusu::query()
+            ->whereIn('firma_id', array_keys($this->firmalar))
+            ->findOrFail($id);
+
+        $b->forceFill([
+            'token' => \Illuminate\Support\Str::random(36),
+            'durum' => 'link_acik',
+            'ret_nedeni' => null,
+            'created_at' => now(),
+        ])->save();
+
+        unset($this->basvurular);
+        Notification::make()
+            ->title('Başvuru linki 6 ay için yenilendi')
+            ->body($b->basvuruLinki())
+            ->success()
+            ->send();
     }
 
     public function taseronSil(): void
@@ -652,6 +719,7 @@ class TaseronYonetimi extends Page
         }
 
         $taseron = \Illuminate\Support\Facades\DB::transaction(function () use ($b): Taseron {
+            $baslangic = now()->startOfDay();
             $taseron = Taseron::create([
                 'firma_id' => $b->firma_id,
                 'tur' => 'taseron',
@@ -661,6 +729,8 @@ class TaseronYonetimi extends Page
                 'yetkili' => $b->yetkili_ad,
                 'telefon' => $b->telefon,
                 'eposta' => $b->eposta,
+                'sozlesme_baslangic' => $baslangic->toDateString(),
+                'sozlesme_bitis' => $baslangic->copy()->addMonthsNoOverflow(Taseron::ONAY_SURESI_AY)->toDateString(),
                 'aktif' => true,
             ]);
 

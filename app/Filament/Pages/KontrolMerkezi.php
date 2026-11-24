@@ -77,6 +77,18 @@ class KontrolMerkezi extends Page
     public function updatedFirmaId(): void
     {
         \App\Support\KomutaFirma::sec($this->firmaId);
+        $this->acikKriter = null;
+        unset(
+            $this->ozet,
+            $this->kriterler,
+            $this->kriterGruplari,
+            $this->calisanEksikleri,
+            $this->secilenFirma,
+            $this->calisanKarne,
+            $this->ekipKontenjanTablosu,
+            $this->hizliEvrakMatrisi,
+            $this->acikKriterEksikFirmalar,
+        );
     }
 
     /** Portföy kriter listesinde "eksik firmaları göster" için açık olan kriter anahtarı. */
@@ -108,7 +120,7 @@ class KontrolMerkezi extends Page
             return [];
         }
 
-        return PortfoyKarne::eksikFirmalar(Filament::auth()->id(), $this->acikKriter)
+        return PortfoyKarne::eksikFirmalar(Filament::auth()->id(), $this->acikKriter, $this->firmaId)
             ->mapWithKeys(fn (Firma $f) => [$f->id => $f->secimEtiketi()])
             ->all();
     }
@@ -128,14 +140,19 @@ class KontrolMerkezi extends Page
     #[Computed]
     public function ozet(): array
     {
-        return PortfoyKarne::ozet(Filament::auth()->id());
+        return PortfoyKarne::ozet(Filament::auth()->id(), $this->firmaId);
     }
 
     /** Çalışan kaydı eksik firmalar (kayıtlı < bildirilen, TC / işe giriş boş) — çalışan listesine bağlantıyla. */
     #[Computed]
     public function calisanEksikleri(): array
     {
-        $firmalar = Firma::query()->where('user_id', Filament::auth()->id())->where('aktif', true)->orderBy('unvan')->get();
+        $firmalar = Firma::query()
+            ->where('user_id', Filament::auth()->id())
+            ->where('aktif', true)
+            ->when($this->firmaId, fn ($q) => $q->whereKey($this->firmaId))
+            ->orderBy('unvan')
+            ->get();
 
         return array_map(fn (array $s) => [...$s, 'url' => \App\Filament\Resources\Calisans\CalisanResource::getUrl('index', ['tableFilters' => ['firma_id' => ['value' => $s['id']]]])],
             PortfoyKarne::calisanKaydiEksikFirmalar($firmalar));
@@ -144,7 +161,7 @@ class KontrolMerkezi extends Page
     #[Computed]
     public function kriterler(): array
     {
-        return PortfoyKarne::kriterler(Filament::auth()->id());
+        return PortfoyKarne::kriterler(Filament::auth()->id(), $this->firmaId);
     }
 
     /** Kriterler 3 mantıksal grupta (Temel Yasal Belgeler / Saha & Kurul / Sağlık & Takip). */
