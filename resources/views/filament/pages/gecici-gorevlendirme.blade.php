@@ -60,10 +60,14 @@
                 <label class="mehse-etiket">Araç / Plaka Bilgisi (Opsiyonel)</label>
                 <input type="text" wire:model="aracPlaka" placeholder="Örn: 16 ABC 123" style="{{ $girdi }};margin-top:.25rem">
             </div>
-            <div style="display:flex;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:.35rem">
                 <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;cursor:pointer">
                     <input type="checkbox" wire:model="tcMaskele">
                     <span>KVKK: T.C. Kimlik No Maskele (`123*****89`)</span>
+                </label>
+                <label style="display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;cursor:pointer">
+                    <input type="checkbox" wire:model="arsiveKaydet">
+                    <span>Üretilen PDF'i Firma Arşivine Otomatik Kaydet</span>
                 </label>
             </div>
         </div>

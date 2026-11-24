@@ -149,7 +149,11 @@ class KurulToplantisi extends Page
 
     public function mount(): void
     {
-        $this->firmaId = request()->integer('firma') ?: $this->firmaId ?: (int) array_key_first($this->firmalar()) ?: null;
+        $this->firmaId = request()->integer('firma')
+            ?: \App\Support\KomutaFirma::baslangic($this->firmalar())
+            ?: $this->firmaId
+            ?: (int) array_key_first($this->firmalar())
+            ?: null;
 
         // Sayfa yenilenince URL'deki toplantı açık kalsın; firmaya ait değilse kapat
         if ($this->toplantiId) {
@@ -350,6 +354,7 @@ class KurulToplantisi extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->onbellekTemizle();
         $this->toplantiId = null;
     }
@@ -567,9 +572,50 @@ class KurulToplantisi extends Page
         Notification::make()->title('Toplantı bilgileri kaydedildi')->success()->send();
     }
 
+    /** Tamamlanmış (imzalanmış) kurul toplantısı değişiklik/silmeye karşı kilitlidir. */
+    private function kilitEngeli(?KurulToplantisiModel $t = null): bool
+    {
+        $hedef = $t ?? $this->toplanti();
+
+        if ($hedef?->durum !== 'tamamlandi') {
+            return false;
+        }
+
+        Notification::make()
+            ->title('Tamamlanmış kurul toplantısı kilitlidir')
+            ->body('İmzalı tutanak bütünlüğünü korumak için gündem, katılımcı ve karar metinleri değiştirilemez veya silinemez. Değişiklik için "Revizyona Aç" düğmesini kullanın.')
+            ->warning()
+            ->send();
+
+        return true;
+    }
+
+    /** Kilitli (tamamlanmış) toplantıyı açık onayla revizyona (taslak) açar. */
+    public function revizyonaAc(int $id): void
+    {
+        $t = $this->firma?->kurulToplantilari()->find($id);
+
+        if (! $t || $t->durum !== 'tamamlandi') {
+            return;
+        }
+
+        $t->update(['durum' => 'taslak']);
+        if ($this->toplantiId === $t->id) {
+            $this->durum = 'taslak';
+        }
+        unset($this->toplantilar, $this->metrikler, $this->toplanti);
+        Notification::make()->title(($t->toplanti_no ?: 'Toplantı').' revizyona açıldı (Taslak)')->warning()->send();
+    }
+
     public function toplantiSil(int $id): void
     {
-        $this->firma?->kurulToplantilari()->find($id)?->delete();
+        $t = $this->firma?->kurulToplantilari()->find($id);
+
+        if (! $t || $this->kilitEngeli($t)) {
+            return;
+        }
+
+        $t->delete();
 
         if ($this->toplantiId === $id) {
             $this->toplantiId = null;
@@ -645,7 +691,7 @@ class KurulToplantisi extends Page
     {
         $t = $this->toplanti();
 
-        if (! $t || blank($this->yeniKatilimciAd)) {
+        if (! $t || $this->kilitEngeli($t) || blank($this->yeniKatilimciAd)) {
             return;
         }
 
@@ -667,7 +713,7 @@ class KurulToplantisi extends Page
         $t = $this->toplanti();
         $c = $this->calisanlar->firstWhere('id', $calisanId);
 
-        if (! $t || ! $c) {
+        if (! $t || $this->kilitEngeli($t) || ! $c) {
             return;
         }
 
@@ -693,7 +739,7 @@ class KurulToplantisi extends Page
     {
         $t = $this->toplanti();
 
-        if (! $t) {
+        if (! $t || $this->kilitEngeli($t)) {
             return;
         }
 
@@ -755,7 +801,7 @@ class KurulToplantisi extends Page
     {
         $t = $this->toplanti();
 
-        if (! $t || blank($this->yeniGundemMaddesi)) {
+        if (! $t || $this->kilitEngeli($t) || blank($this->yeniGundemMaddesi)) {
             return;
         }
 
@@ -827,7 +873,7 @@ class KurulToplantisi extends Page
     {
         $t = $this->toplanti();
 
-        if (! $t) {
+        if (! $t || $this->kilitEngeli($t)) {
             return;
         }
 
@@ -924,7 +970,7 @@ class KurulToplantisi extends Page
         $t = $this->toplanti();
         $gundem = $t?->gundem ?? [];
 
-        if (! $t || $this->kararGundemIndex === null || ! isset($gundem[$this->kararGundemIndex]) || blank($this->yeniKararMetni)) {
+        if (! $t || $this->kilitEngeli($t) || $this->kararGundemIndex === null || ! isset($gundem[$this->kararGundemIndex]) || blank($this->yeniKararMetni)) {
             return;
         }
 
@@ -996,7 +1042,7 @@ class KurulToplantisi extends Page
     {
         $t = $this->toplanti();
 
-        if (! $t) {
+        if (! $t || $this->kilitEngeli($t)) {
             return;
         }
 

@@ -73,7 +73,7 @@ class AcilDurumEkipleri extends Page
 
     public function mount(): void
     {
-        $id = request()->integer('firma');
+        $id = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar);
         $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : array_key_first($this->firmalar);
     }
 

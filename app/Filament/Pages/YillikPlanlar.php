@@ -106,7 +106,7 @@ abstract class YillikPlanlar extends Page
         $this->sekme = static::$planTuru;
         $this->yil = (int) now()->format('Y');
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
 
@@ -177,6 +177,7 @@ abstract class YillikPlanlar extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->plan);
         $this->degerlendirmeyiOtomatikGuncelle();
         $this->gerceklesmeleriIsle();

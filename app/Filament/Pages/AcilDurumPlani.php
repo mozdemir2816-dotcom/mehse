@@ -125,7 +125,7 @@ class AcilDurumPlani extends Page
     /** Firmalar listesinden "Acil Durum Planı" satır aksiyonuyla ?firma= ile gelinir. */
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -245,6 +245,7 @@ class AcilDurumPlani extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->calisanSecenekleri);
         $this->ozelOnizleme = null;
         $this->ozelPanel = false;

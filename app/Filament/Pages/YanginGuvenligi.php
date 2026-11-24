@@ -86,7 +86,7 @@ class YanginGuvenligi extends Page
     {
         $this->degerlendirmeTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -189,6 +189,7 @@ class YanginGuvenligi extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->kayit);
 
         $k = $this->kayit();
@@ -289,6 +290,40 @@ class YanginGuvenligi extends Page
         }
     }
 
+    /** Yangın güvenliği tespitlerini DÖF Oluştur modülüne aktarır. */
+    public function dofeAktar()
+    {
+        if (! $this->firma || ! $this->tespitler) {
+            Notification::make()->title('Aktarılacak yangın güvenliği tespiti yok')->warning()->send();
+
+            return null;
+        }
+
+        $this->kaydet(sessiz: true);
+
+        $sorumlu = $this->firma->isveren_vekili ?: $this->firma->isveren_ad;
+        $maddeler = collect($this->tespitler)
+            ->filter(fn (array $t) => filled(trim((string) ($t['madde'] ?? ''))))
+            ->map(fn (array $t) => [
+                'tespit' => '[Yangın Güvenliği] '.trim((string) $t['madde']),
+                'oncelik' => ($t['oncelik'] ?? 'orta') === 'yuksek' ? 'yuksek' : 'orta',
+                'oneri' => 'Binaların Yangından Korunması Hakkında Yönetmelik hükümlerine uygun olarak eksiklik giderilmelidir.',
+                'sorumlu' => $sorumlu,
+                'termin' => now()->addDays(15)->toDateString(),
+                'durum' => 'acik',
+            ])
+            ->values()
+            ->all();
+
+        session(['dof_aktarim' => [
+            'firma_id' => $this->firma->id,
+            'kaynak' => 'Yangın Güvenliği Değerlendirmesi',
+            'maddeler' => $maddeler,
+        ]]);
+
+        return $this->redirect(DofOlustur::getUrl(['firma' => $this->firma->id]));
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -297,6 +332,13 @@ class YanginGuvenligi extends Page
                 ->icon('heroicon-o-check')
                 ->visible(fn () => $this->firma !== null)
                 ->action(fn () => $this->kaydet()),
+
+            Action::make('dofeAktar')
+                ->label("Tespitleri DÖF'e Aktar")
+                ->icon('heroicon-o-arrow-right-circle')
+                ->color('warning')
+                ->visible(fn () => $this->firma !== null && filled($this->tespitler))
+                ->action(fn () => $this->dofeAktar()),
 
             Action::make('pdf')
                 ->label('Değerlendirme Raporu (PDF)')

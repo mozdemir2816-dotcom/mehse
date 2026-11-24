@@ -49,17 +49,56 @@ class CalisanTemsilcisiSecimi extends Model
         return $this->belongsTo(Firma::class);
     }
 
-    /** @return array<int, array{ad_soyad: string, unvan: ?string}> */
+    /** @return array<int, array{ad_soyad: string, unvan: ?string, secildi: bool, bas_temsilci: bool}> */
     public function adaylarListesi(): array
     {
-        return collect($this->adaylar ?? [])
-            ->map(fn ($a) => ['ad_soyad' => $a['ad_soyad'] ?? '', 'unvan' => $a['unvan'] ?? null])
+        $ham = $this->adaylar ?? [];
+        $herhangiSecili = collect($ham)->contains(fn ($a) => ! empty($a['secildi']));
+
+        return collect($ham)
+            ->values()
+            ->map(function ($a, int $i) use ($herhangiSecili) {
+                $secildi = $herhangiSecili
+                    ? ! empty($a['secildi'])
+                    : ($this->secilen_aday_index !== null && $this->secilen_aday_index === $i);
+                $bas = ! empty($a['bas_temsilci'])
+                    || (! $herhangiSecili && $secildi);
+
+                return [
+                    'ad_soyad' => $a['ad_soyad'] ?? '',
+                    'unvan' => $a['unvan'] ?? null,
+                    'secildi' => $secildi,
+                    'bas_temsilci' => $secildi && $bas,
+                ];
+            })
             ->all();
     }
 
-    /** @return array{ad_soyad: string, unvan: ?string}|null */
+    /** 6331 m.20/1–2: seçilen tüm çalışan temsilcileri (Baş Temsilci en üstte). @return array<int, array{ad_soyad: string, unvan: ?string, secildi: bool, bas_temsilci: bool}> */
+    public function secilenAdaylar(): array
+    {
+        return collect($this->adaylarListesi())
+            ->filter(fn (array $a) => $a['secildi'] && filled($a['ad_soyad']))
+            ->sortByDesc(fn (array $a) => $a['bas_temsilci'] ? 1 : 0)
+            ->values()
+            ->all();
+    }
+
+    /** @return array{ad_soyad: string, unvan: ?string, secildi: bool, bas_temsilci: bool}|null */
+    public function basTemsilci(): ?array
+    {
+        $secilenler = $this->secilenAdaylar();
+
+        return collect($secilenler)->firstWhere('bas_temsilci', true) ?? ($secilenler[0] ?? null);
+    }
+
+    /** @return array{ad_soyad: string, unvan: ?string, secildi: bool, bas_temsilci: bool}|null */
     public function secilenAday(): ?array
     {
+        if ($bas = $this->basTemsilci()) {
+            return $bas;
+        }
+
         if ($this->secilen_aday_index === null) {
             return null;
         }

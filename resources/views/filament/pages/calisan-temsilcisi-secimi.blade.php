@@ -82,22 +82,36 @@
         </x-filament::section>
 
         <x-filament::section icon="heroicon-o-list-bullet" icon-color="primary">
-            <x-slot name="heading">3. Adaylar</x-slot>
-            <x-slot name="description">Kesin Aday Listesi ve Oy Pusulası bu listeden üretilir. Seçim sonucunda kazananı işaretleyip "Atama Tutanağı"nı indirin.</x-slot>
+            @php
+                $seciliSayisi = collect($adaylar)->filter(fn ($a, $idx) => ! empty($a['secildi']) || ($secilenAdayIndex === $idx && ! collect($adaylar)->contains(fn ($x) => ! empty($x['secildi']))))->count();
+                $kota = max(1, (int) ($zorunluTemsilciSayisi ?? 1));
+            @endphp
+            <x-slot name="heading">3. Adaylar (Seçilen: {{ $seciliSayisi }} / {{ $kota }} zorunlu)</x-slot>
+            <x-slot name="description">Kesin Aday Listesi ve Oy Pusulası bu listeden üretilir. 6331 m.20/2 gereği birden fazla temsilci seçildiğinde aralarından ★ Baş Temsilci belirleyin.</x-slot>
 
             <div style="display:flex;flex-direction:column;gap:.5rem">
                 @forelse ($adaylar as $i => $aday)
+                    @php
+                        $secili = ! empty($aday['secildi']) || ($secilenAdayIndex === $i && ! collect($adaylar)->contains(fn ($x) => ! empty($x['secildi'])));
+                        $bas = $secili && (! empty($aday['bas_temsilci']) || $secilenAdayIndex === $i);
+                    @endphp
                     <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem;border-radius:.5rem;
-                        border:1px solid {{ $secilenAdayIndex === $i ? $mavi : 'rgb(107 114 128 / .3)' }};
-                        background:{{ $secilenAdayIndex === $i ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
+                        border:1px solid {{ $secili ? $mavi : 'rgb(107 114 128 / .3)' }};
+                        background:{{ $secili ? 'rgb(37 99 235 / .08)' : 'transparent' }}">
                         <input type="text" wire:model="adaylar.{{ $i }}.ad_soyad" placeholder="Ad Soyad"
                             style="flex:2;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
                         <input type="text" wire:model="adaylar.{{ $i }}.unvan" placeholder="Unvan / Görev"
                             style="flex:1;padding:.4rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent">
-                        <button type="button" wire:click="kazananSec({{ $i }})" title="Seçim kazananı"
-                            style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:{{ $secilenAdayIndex === $i ? '#15803d' : 'rgb(107 114 128 / .4)' }}">
-                            {{ $secilenAdayIndex === $i ? '✓' : '○' }}
+                        <button type="button" wire:click="kazananSec({{ $i }})" title="Seçim kazananı olarak işaretle / kaldır"
+                            style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:{{ $secili ? '#15803d' : 'rgb(107 114 128 / .4)' }}">
+                            {{ $secili ? '✓' : '○' }}
                         </button>
+                        @if ($kota >= 2 || $seciliSayisi >= 2)
+                            <button type="button" wire:click="basTemsilciSec({{ $i }})" title="Baş Temsilci (6331 m.20/2)"
+                                style="background:none;border:none;cursor:pointer;font-size:.82rem;font-weight:700;color:{{ $bas ? '#d97706' : 'rgb(107 114 128 / .45)' }}">
+                                {{ $bas ? '★ Baş Temsilci' : '☆' }}
+                            </button>
+                        @endif
                         <button type="button" wire:click="adaySil({{ $i }})" title="Sil"
                             style="background:none;border:none;cursor:pointer;color:#b91c1c">✕</button>
                     </div>

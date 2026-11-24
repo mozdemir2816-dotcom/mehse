@@ -172,7 +172,7 @@ class CezaTeblig extends Page
         $this->tebligTarihi = now()->toDateString();
         $this->tebligTarihiIpc = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -326,6 +326,7 @@ class CezaTeblig extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->gecmisIpcTebligleri);

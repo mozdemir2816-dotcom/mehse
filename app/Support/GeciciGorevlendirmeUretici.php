@@ -90,11 +90,13 @@ class GeciciGorevlendirmeUretici
      *   calisanlar: array<int, array{ad_soyad: string, tc?: ?string, gorev?: ?string}>,
      * }  $veri
      */
-    public static function pdf(Firma $firma, array $veri): StreamedResponse
+    /** @return array{icerik: string, dosya_adi: string, belge_no: string} */
+    public static function pdfIcerik(Firma $firma, array $veri): array
     {
         $firma->loadMissing(['igu', 'isyeriHekimi']);
         $sablonAnahtar = array_key_exists($veri['sablon'] ?? '', self::SABLONLAR) ? $veri['sablon'] : 'santiye';
         $sablon = self::SABLONLAR[$sablonAnahtar];
+        $belgeNo = ($veri['belge_no'] ?? null) ?: ('GG-'.now()->format('Y-md-Hi'));
 
         $baslangic = filled($veri['baslangic_tarihi'] ?? null)
             ? Carbon::parse($veri['baslangic_tarihi'])->format('d.m.Y')
@@ -107,7 +109,7 @@ class GeciciGorevlendirmeUretici
             'firma' => $firma,
             'sablon' => $sablon,
             'sablonAnahtar' => $sablonAnahtar,
-            'belgeNo' => ($veri['belge_no'] ?? null) ?: ('GG-'.now()->format('Y-md-Hi')),
+            'belgeNo' => $belgeNo,
             'tarih' => now()->format('d.m.Y'),
             'gorevYeri' => $veri['gorev_yeri'],
             'gorevKonusu' => $veri['gorev_konusu'],
@@ -120,8 +122,17 @@ class GeciciGorevlendirmeUretici
             'calisanlar' => array_values($veri['calisanlar'] ?? []),
         ])->setPaper('a4');
 
-        $ad = 'gecici-gorevlendirme-'.Str::slug($firma->unvan).'.pdf';
+        return [
+            'icerik' => $pdf->output(),
+            'dosya_adi' => 'gecici-gorevlendirme-'.Str::slug($firma->unvan).'.pdf',
+            'belge_no' => $belgeNo,
+        ];
+    }
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+    public static function pdf(Firma $firma, array $veri): StreamedResponse
+    {
+        $uretilen = static::pdfIcerik($firma, $veri);
+
+        return response()->streamDownload(fn () => print ($uretilen['icerik']), $uretilen['dosya_adi']);
     }
 }

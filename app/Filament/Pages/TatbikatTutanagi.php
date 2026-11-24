@@ -162,7 +162,7 @@ class TatbikatTutanagi extends Page
             ->map(fn ($s) => ['soru' => $s, 'cevap' => null])
             ->all();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->yetkilileriDoldur();
         }
@@ -280,6 +280,7 @@ class TatbikatTutanagi extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar, $this->kayitlar, $this->ozet);
         $this->duzenlenenId = null;
         $this->isverenVekili = $this->isGuvenligiUzmani = null;

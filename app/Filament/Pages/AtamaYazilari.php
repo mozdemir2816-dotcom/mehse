@@ -97,7 +97,7 @@ class AtamaYazilari extends Page
         $this->tarih = now()->toDateString();
         $this->gorevBaslangic = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -215,6 +215,7 @@ class AtamaYazilari extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->firmaProfesyonelleri, $this->otomatikEkip);
         $this->isverenVekiliAdi = $this->firma?->isveren_vekili ?: $this->firma?->isveren_ad;
         $this->secilenCalisanIdler = [];

@@ -59,7 +59,7 @@ class AcilDurumKrokisi extends Page
 
     public function mount(): void
     {
-        $id = request()->integer('firma');
+        $id = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar);
         $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
         $this->editor = in_array(request()->query('editor'), ['klasik', '3b'], true) ? request()->query('editor') : $this->varsayilanEditor();
     }

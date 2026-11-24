@@ -25,7 +25,9 @@
 <body>
 @php
     $bosMi = $bos ?? false;
-    $aday = $secim->secilenAday() ?? [];
+    $secilenler = $secim->secilenAdaylar();
+    $aday = $secilenler[0] ?? ($secim->secilenAday() ?? []);
+    $coklu = count($secilenler) > 1;
     $tire = fn ($deger) => filled($deger) ? $deger : ($bosMi ? '' : '—');
 @endphp
 <div class="sayfa">
@@ -50,8 +52,19 @@
     </div>
 
     <table class="kunye">
-        <tr><td>Atanan Çalışanın Adı Soyadı</td><td>{{ $tire($aday['ad_soyad'] ?? null) }}</td></tr>
-        <tr><td>Unvanı / Görevi</td><td>{{ $tire($aday['unvan'] ?? null) }}</td></tr>
+        @if ($coklu)
+            <tr>
+                <td>Atanan Çalışan Temsilcileri ({{ count($secilenler) }})</td>
+                <td>
+                    @foreach ($secilenler as $idx => $s)
+                        <div>{{ $idx + 1 }}. <strong>{{ $s['ad_soyad'] }}</strong>@if (! empty($s['unvan'])) — {{ $s['unvan'] }}@endif @if (! empty($s['bas_temsilci'])) <strong>(Baş Temsilci — 6331 m.20/2)</strong>@endif</div>
+                    @endforeach
+                </td>
+            </tr>
+        @else
+            <tr><td>Atanan Çalışanın Adı Soyadı</td><td>{{ $tire($aday['ad_soyad'] ?? null) }}</td></tr>
+            <tr><td>Unvanı / Görevi</td><td>{{ $tire($aday['unvan'] ?? null) }}</td></tr>
+        @endif
         <tr><td>Görevlendirme Tarihi</td><td>{{ $tire(($secim->gorevlendirme_tarihi ?: $secim->secim_tarihi)?->format('d.m.Y')) }}</td></tr>
         <tr><td>İşyeri Çalışan Sayısı</td><td>{{ $tire($secim->isyeri_calisan_sayisi) }}</td></tr>
         <tr><td>Zorunlu Temsilci Sayısı</td><td>{{ $tire($secim->zorunlu_temsilci_sayisi) }}</td></tr>

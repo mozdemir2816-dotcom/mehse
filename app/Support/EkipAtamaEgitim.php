@@ -161,7 +161,7 @@ class EkipAtamaEgitim
     {
         $liste = collect();
 
-        if ($aday = $firma->calisanTemsilcisiSecimi?->secilenAday()) {
+        foreach ($firma->calisanTemsilcisiSecimi?->secilenAdaylar() ?? [] as $aday) {
             $liste->push(['ad_soyad' => $aday['ad_soyad'], 'unvan' => $aday['unvan'] ?? null]);
         }
 
@@ -199,13 +199,28 @@ class EkipAtamaEgitim
      */
     public static function temsilciAtamaHazirla(Firma $firma): ?AtamaYazisi
     {
-        $aday = $firma->calisanTemsilcisiSecimi?->secilenAday();
+        $secilenler = $firma->calisanTemsilcisiSecimi?->secilenAdaylar() ?? [];
 
-        if (! $aday || self::temsilciAtamaVar($firma, $aday['ad_soyad'])) {
+        if (! $secilenler) {
             return null;
         }
 
-        $tc = $firma->calisanlar()->get(['ad_soyad', 'tc'])->first(fn ($c) => EgitimTakibi::adAnahtari($c->ad_soyad) === EgitimTakibi::adAnahtari($aday['ad_soyad']))?->tc;
+        $eksikler = collect($secilenler)->reject(fn (array $a) => self::temsilciAtamaVar($firma, $a['ad_soyad']))->values();
+        if ($eksikler->isEmpty()) {
+            return null;
+        }
+
+        $calisanlar = $firma->calisanlar()->get(['ad_soyad', 'tc']);
+        $uyeler = collect($secilenler)->map(function (array $a, int $i) use ($calisanlar) {
+            $tc = $calisanlar->first(fn ($c) => EgitimTakibi::adAnahtari($c->ad_soyad) === EgitimTakibi::adAnahtari($a['ad_soyad']))?->tc;
+
+            return [
+                'ad_soyad' => $a['ad_soyad'],
+                'tc' => $tc,
+                'gorev' => $a['unvan'] ?? null,
+                'bas_uye' => ! empty($a['bas_temsilci']) || $i === 0,
+            ];
+        })->all();
 
         return AtamaYazisi::create([
             'firma_id' => $firma->id,
@@ -213,7 +228,7 @@ class EkipAtamaEgitim
             'tarih' => today(),
             'isveren_vekili_adi' => $firma->isveren_vekili ?: $firma->isveren_ad,
             'gorev_baslangic' => $firma->calisanTemsilcisiSecimi->gorevlendirme_tarihi ?? today(),
-            'uyeler' => [['ad_soyad' => $aday['ad_soyad'], 'tc' => $tc, 'gorev' => $aday['unvan'] ?? null, 'bas_uye' => true]],
+            'uyeler' => $uyeler,
         ]);
     }
 

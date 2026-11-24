@@ -69,7 +69,7 @@ class CalisanTemsilcisiSecimi extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -100,6 +100,7 @@ class CalisanTemsilcisiSecimi extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma);
 
         $secim = $this->secim();
@@ -121,7 +122,7 @@ class CalisanTemsilcisiSecimi extends Page
 
     public function adayEkle(): void
     {
-        $this->adaylar[] = ['ad_soyad' => '', 'unvan' => ''];
+        $this->adaylar[] = ['ad_soyad' => '', 'unvan' => '', 'secildi' => false, 'bas_temsilci' => false];
     }
 
     public function adaySil(int $index): void
@@ -129,16 +130,74 @@ class CalisanTemsilcisiSecimi extends Page
         unset($this->adaylar[$index]);
         $this->adaylar = array_values($this->adaylar);
 
-        if ($this->secilenAdayIndex === $index) {
-            $this->secilenAdayIndex = null;
-        } elseif ($this->secilenAdayIndex !== null && $this->secilenAdayIndex > $index) {
-            $this->secilenAdayIndex--;
-        }
+        $this->secilenIndexiHizala();
     }
 
     public function kazananSec(int $index): void
     {
-        $this->secilenAdayIndex = $this->secilenAdayIndex === $index ? null : $index;
+        if (! isset($this->adaylar[$index])) {
+            return;
+        }
+
+        $kota = max(1, (int) ($this->zorunluTemsilciSayisi ?? 1));
+
+        if ($kota <= 1) {
+            $zaten = ! empty($this->adaylar[$index]['secildi']) || $this->secilenAdayIndex === $index;
+            foreach ($this->adaylar as $i => $a) {
+                $this->adaylar[$i]['secildi'] = false;
+                $this->adaylar[$i]['bas_temsilci'] = false;
+            }
+            if (! $zaten) {
+                $this->adaylar[$index]['secildi'] = true;
+                $this->adaylar[$index]['bas_temsilci'] = true;
+            }
+        } else {
+            $aktif = ! empty($this->adaylar[$index]['secildi']);
+            $this->adaylar[$index]['secildi'] = ! $aktif;
+            if ($aktif) {
+                $this->adaylar[$index]['bas_temsilci'] = false;
+            } elseif (! collect($this->adaylar)->contains(fn ($a) => ! empty($a['bas_temsilci']))) {
+                $this->adaylar[$index]['bas_temsilci'] = true;
+            }
+        }
+
+        $this->secilenIndexiHizala();
+    }
+
+    /** 6331 m.20/2: 2+ çalışan temsilcisi seçildiğinde Baş Temsilci'yi belirler. */
+    public function basTemsilciSec(int $index): void
+    {
+        if (! isset($this->adaylar[$index])) {
+            return;
+        }
+
+        foreach ($this->adaylar as $i => $a) {
+            $this->adaylar[$i]['bas_temsilci'] = false;
+        }
+
+        $this->adaylar[$index]['secildi'] = true;
+        $this->adaylar[$index]['bas_temsilci'] = true;
+        $this->secilenIndexiHizala();
+    }
+
+    private function secilenIndexiHizala(): void
+    {
+        $bas = collect($this->adaylar)->search(fn ($a) => ! empty($a['secildi']) && ! empty($a['bas_temsilci']));
+        if ($bas !== false) {
+            $this->secilenAdayIndex = (int) $bas;
+
+            return;
+        }
+
+        $ilk = collect($this->adaylar)->search(fn ($a) => ! empty($a['secildi']));
+        if ($ilk !== false) {
+            $this->adaylar[$ilk]['bas_temsilci'] = true;
+            $this->secilenAdayIndex = (int) $ilk;
+
+            return;
+        }
+
+        $this->secilenAdayIndex = null;
     }
 
     private function kaydet(): ?SecimModel
@@ -152,10 +211,24 @@ class CalisanTemsilcisiSecimi extends Page
         }
 
         $temizAdaylar = collect($this->adaylar)
-            ->map(fn ($a) => ['ad_soyad' => trim($a['ad_soyad'] ?? ''), 'unvan' => trim($a['unvan'] ?? '') ?: null])
+            ->values()
+            ->map(fn ($a, int $i) => [
+                'ad_soyad' => trim($a['ad_soyad'] ?? ''),
+                'unvan' => trim($a['unvan'] ?? '') ?: null,
+                'secildi' => ! empty($a['secildi']) || ($this->secilenAdayIndex !== null && $this->secilenAdayIndex === $i && ! collect($this->adaylar)->contains(fn ($x) => ! empty($x['secildi']))),
+                'bas_temsilci' => ! empty($a['bas_temsilci']),
+            ])
             ->filter(fn ($a) => filled($a['ad_soyad']))
             ->values()
             ->all();
+
+        $basIndex = collect($temizAdaylar)->search(fn ($a) => $a['secildi'] && $a['bas_temsilci']);
+        $ilkIndex = collect($temizAdaylar)->search(fn ($a) => $a['secildi']);
+        $secilenIndex = $basIndex !== false ? (int) $basIndex : ($ilkIndex !== false ? (int) $ilkIndex : null);
+
+        if ($secilenIndex !== null && $basIndex === false) {
+            $temizAdaylar[$secilenIndex]['bas_temsilci'] = true;
+        }
 
         $secim->forceFill([
             'aday_basvuru_son_tarihi' => $this->adayBasvuruSonTarihi,
@@ -166,12 +239,11 @@ class CalisanTemsilcisiSecimi extends Page
             'zorunlu_temsilci_sayisi' => $this->zorunluTemsilciSayisi,
             'gorevlendirme_tarihi' => $this->gorevlendirmeTarihi,
             'adaylar' => $temizAdaylar,
-            'secilen_aday_index' => $this->secilenAdayIndex !== null && isset($temizAdaylar[$this->secilenAdayIndex])
-                ? $this->secilenAdayIndex
-                : null,
+            'secilen_aday_index' => $secilenIndex,
         ])->save();
 
         $this->adaylar = $temizAdaylar;
+        $this->secilenAdayIndex = $secilenIndex;
 
         $this->temsilciAtamasiniHazirla();
 

@@ -247,8 +247,21 @@
             <x-slot name="heading">Toplantı {{ $t->toplanti_no ?: '' }} — {{ $t->tarih?->format('d.m.Y') }}</x-slot>
             <x-slot name="description">Tutanak künyesi. PDF / Excel sayfanın üstündeki düğmelerden indirilir.</x-slot>
             <x-slot name="afterHeader">
+                @if ($t->durum === 'tamamlandi')
+                    <x-filament::button size="xs" color="warning" icon="heroicon-o-lock-open"
+                        wire:click="revizyonaAc({{ $t->id }})"
+                        wire:confirm="Tamamlanmış tutanağın kilidi açılıp Taslak durumuna alınsın mı?">
+                        Revizyona Aç
+                    </x-filament::button>
+                @endif
                 <x-filament::icon-button icon="heroicon-o-x-mark" color="gray" label="Kapat" wire:click="toplantiKapat" />
             </x-slot>
+
+            @if ($t->durum === 'tamamlandi')
+                <div style="margin-bottom:.85rem;padding:.55rem .8rem;border-radius:.5rem;border:1px solid rgb(217 119 6 / .5);background:rgb(217 119 6 / .08);color:#92400e;font-size:.8rem">
+                    🔒 <strong>Tamamlanmış Toplantı Kilitlidir:</strong> İmzalı tutanak bütünlüğü için gündem, katılımcı ve karar metinleri korunur. Kararların takip durumunu güncelleyebilir veya değişiklik için <strong>Revizyona Aç</strong> düğmesini kullanabilirsiniz.
+                </div>
+            @endif
 
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div><label style="{{ $etiket }}">Toplantı no</label><input type="text" wire:model="toplantiNo" style="{{ $girdi }}"></div>

@@ -60,6 +60,8 @@ class GeciciGorevlendirme extends Page
 
     public bool $tcMaskele = false;
 
+    public bool $arsiveKaydet = true;
+
     public ?string $canliImza = null;
 
     /** @var array<int, int> */
@@ -78,7 +80,7 @@ class GeciciGorevlendirme extends Page
     {
         $this->baslangicTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -114,6 +116,7 @@ class GeciciGorevlendirme extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->secilenCalisanIdler = [];
     }
 
@@ -178,7 +181,7 @@ class GeciciGorevlendirme extends Page
             return null;
         }
 
-        return GeciciGorevlendirmeUretici::pdf($this->firma, [
+        $veri = [
             'sablon' => $this->sablon,
             'gorev_yeri' => trim($this->gorevYeri),
             'gorev_konusu' => trim($this->gorevKonusu),
@@ -189,7 +192,31 @@ class GeciciGorevlendirme extends Page
             'tc_maskele' => $this->tcMaskele,
             'canli_imza' => $this->canliImza,
             'calisanlar' => $liste,
-        ]);
+        ];
+
+        $uretilen = GeciciGorevlendirmeUretici::pdfIcerik($this->firma, $veri);
+
+        if ($this->arsiveKaydet) {
+            $yol = 'arsiv/'.$this->firma->id.'/'.\Illuminate\Support\Str::slug($uretilen['belge_no']).'-'.uniqid().'.pdf';
+            \Illuminate\Support\Facades\Storage::disk('public')->put($yol, $uretilen['icerik']);
+
+            \App\Models\ArsivDosya::create([
+                'firma_id' => $this->firma->id,
+                'user_id' => Filament::auth()->id(),
+                'kategori' => 'diger',
+                'baslik' => 'Geçici Görevlendirme — '.trim($this->gorevYeri),
+                'dosya_adi' => $uretilen['dosya_adi'],
+                'dosya_yolu' => $yol,
+                'boyut' => strlen($uretilen['icerik']),
+                'yil' => (int) \Illuminate\Support\Carbon::parse($veri['baslangic_tarihi'])->year,
+                'baslangic_tarihi' => $veri['baslangic_tarihi'],
+                'bitis_tarihi' => $veri['bitis_tarihi'] ?: null,
+                'notlar' => 'Görev konusu: '.$veri['gorev_konusu'].' · Personel: '.collect($liste)->pluck('ad_soyad')->implode(', '),
+                'kaynak' => 'otomatik',
+            ]);
+        }
+
+        return response()->streamDownload(fn () => print ($uretilen['icerik']), $uretilen['dosya_adi']);
     }
 
     protected function getHeaderActions(): array
