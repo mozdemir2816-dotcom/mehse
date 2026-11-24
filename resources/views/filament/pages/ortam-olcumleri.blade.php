@@ -142,6 +142,7 @@
                                     <td style="padding:.4rem"><input type="date" wire:model.blur="satirlar.{{ $i }}.olcum_tarihi" style="{{ $girdi }}"></td>
                                     <td style="padding:.4rem">
                                         <input type="text" wire:model.blur="satirlar.{{ $i }}.laboratuvar" placeholder="Yetkili laboratuvar" style="{{ $girdi }};margin-bottom:.2rem">
+                                        <input type="text" wire:model.blur="satirlar.{{ $i }}.yetki_no" placeholder="TÜRKAK / İSGÜM Yetki No" style="{{ $girdi }};margin-bottom:.2rem">
                                         <input type="text" wire:model.blur="satirlar.{{ $i }}.rapor_no" placeholder="Rapor no" style="{{ $girdi }}">
                                     </td>
                                     <td style="padding:.4rem">

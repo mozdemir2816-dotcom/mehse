@@ -99,6 +99,10 @@ class DokumanYonetimi extends Page
 
     public function mount(): void
     {
+        if (! $this->firmaId && ($oturumFirma = \App\Support\KomutaFirma::baslangic($this->firmalar))) {
+            $this->firmaId = $oturumFirma;
+        }
+
         if ($this->firmaId && ! array_key_exists($this->firmaId, $this->firmalar)) {
             $this->firmaId = null;
         }

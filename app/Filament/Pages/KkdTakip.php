@@ -64,7 +64,7 @@ class KkdTakip extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -142,6 +142,7 @@ class KkdTakip extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->tumZimmetler, $this->zimmetler, $this->stokKartlari, $this->ozet);
     }
 

@@ -60,7 +60,7 @@ class TabelaTasarimi extends Page
 
     public function mount(): void
     {
-        $id = request()->integer('firma');
+        $id = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar);
         $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
 
         $tasarimId = request()->integer('id');
@@ -190,6 +190,7 @@ class TabelaTasarimi extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->tasarimId = null;
         $this->redirect(static::getUrl($this->firmaId ? ['firma' => $this->firmaId] : []));
     }

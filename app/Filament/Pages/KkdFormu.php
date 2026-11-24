@@ -95,7 +95,7 @@ class KkdFormu extends Page
     {
         $this->teslimTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
 
             if ($isKalemi = trim((string) request()->query('is_kalemi', ''))) {
@@ -171,6 +171,7 @@ class KkdFormu extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->calisanlar, $this->gecmisFormlar, $this->isKalemleri);

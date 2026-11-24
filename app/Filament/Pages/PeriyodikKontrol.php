@@ -90,7 +90,7 @@ class PeriyodikKontrol extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -168,6 +168,7 @@ class PeriyodikKontrol extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->kapsayici, $this->tumEkipmanlar, $this->kpi, $this->kategoriSayaclari);
         $this->satirlariYukle();
         $this->genelNot = $this->kapsayici()?->genel_not;
@@ -426,7 +427,8 @@ class PeriyodikKontrol extends Page
                 ->schema([
                     Select::make('kategori')
                         ->label('Ekipman Kategorisi')
-                        ->options(collect(config('isg.periyodik_kontrol.kategoriler'))->map(fn ($k) => $k['ad'])->all())
+                        ->options(collect(config('isg.periyodik_kontrol.kategoriler'))->except('is_hijyeni')->map(fn ($k) => $k['ad'])->all())
+                        ->helperText(new HtmlString('İş hijyeni / ortam ölçümleri (gürültü, toz, aydınlatma vb.) için <a href="'.e(OrtamOlcumleri::getUrl($this->firmaId ? ['firma' => $this->firmaId] : [])).'" style="color:#2563eb;text-decoration:underline">Ortam Ölçümleri →</a> sekmesini kullanın.'))
                         ->live()
                         ->required(),
 
@@ -649,6 +651,10 @@ class PeriyodikKontrol extends Page
             ->schema([
                 DatePicker::make('kontrol_tarihi')->label('Kontrol tarihi')->required()->maxDate(now()),
                 TextInput::make('kontrol_eden')->label('Kontrol firması / yetkili kişi'),
+                TextInput::make('ekipnet_no')
+                    ->label('EKİPNET Kayıt No (Opsiyonel)')
+                    ->placeholder('Örn: K12345678')
+                    ->helperText('İş Ekipmanları Yön. gereği yetkili muayene personeli EKİPNET kayıt numarası.'),
                 TextInput::make('rapor_no')->label('Rapor no'),
                 Select::make('sonuc')->label('Sonuç')->options(fn () => $this->sonuclar)->required(),
                 DatePicker::make('sonraki_tarih')->label('Sonraki termin (isteğe bağlı)')->afterOrEqual('kontrol_tarihi'),
@@ -662,13 +668,18 @@ class PeriyodikKontrol extends Page
             ])
             ->action(function (array $data, array $arguments): void {
                 $e = $this->ekipman($arguments['id']);
+                $ekipnet = trim((string) ($data['ekipnet_no'] ?? ''));
+                $kontrolEden = trim((string) ($data['kontrol_eden'] ?? ''));
+                if ($ekipnet !== '' && ! str_contains($kontrolEden, $ekipnet)) {
+                    $kontrolEden = trim($kontrolEden.' [EKİPNET: '.$ekipnet.']');
+                }
 
                 $e->fill([
                     'son_muayene_tarihi' => $data['kontrol_tarihi'],
                     'sonraki_vize_tarihi' => filled($data['sonraki_tarih'] ?? null)
                         ? $data['sonraki_tarih']
                         : Carbon::parse($data['kontrol_tarihi'])->addMonths($e->muayene_periyodu_ay)->toDateString(),
-                    'muayene_yapan' => $data['kontrol_eden'] ?: null,
+                    'muayene_yapan' => $kontrolEden ?: null,
                     'rapor_no' => $data['rapor_no'] ?: null,
                     'sonuc' => $data['sonuc'],
                 ]);

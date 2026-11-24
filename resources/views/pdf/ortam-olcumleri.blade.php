@@ -68,6 +68,7 @@
                 <td>{{ !empty($m['olcum_tarihi']) ? \Illuminate\Support\Carbon::parse($m['olcum_tarihi'])->format('d.m.Y') : '—' }}</td>
                 <td>
                     {{ $m['laboratuvar'] ?? '—' }}
+                    @if (!empty($m['yetki_no'])) <br><span style="color:#1e40af">Yetki: {{ $m['yetki_no'] }}</span> @endif
                     @if (!empty($m['rapor_no'])) <br><span style="color:#555">{{ $m['rapor_no'] }}</span> @endif
                 </td>
                 <td>

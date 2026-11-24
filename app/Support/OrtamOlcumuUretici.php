@@ -49,7 +49,7 @@ class OrtamOlcumuUretici
         $defter->setTitle('Ölçüm Defteri');
         self::tablo($defter, [
             'Grup', 'Parametre', 'Yer / Ölçüm Noktası', 'Ölçüm Tarihi', 'Değer', 'Birim', 'Limit',
-            'Sonuç', 'Laboratuvar', 'Rapor No', 'Periyot (ay)', 'Sonraki Ölçüm', 'Durum', 'Not',
+            'Sonuç', 'Laboratuvar', 'Rapor No', 'Periyot (ay)', 'Sonraki Ölçüm', 'Durum', 'Not', 'TÜRKAK / İSGÜM Yetki No',
         ], collect($olcum->olcumler ?? [])->map(fn (array $m) => [
             $m['grup'] ?? null,
             $m['parametre'] ?? null,
@@ -65,6 +65,7 @@ class OrtamOlcumuUretici
             $tarih($m['sonraki_olcum_tarihi'] ?? null),
             $terminler[OrtamOlcumu::terminDurumu($m)],
             $m['not'] ?? null,
+            $m['yetki_no'] ?? null,
         ])->all());
 
         $gecmis = $kitap->createSheet();

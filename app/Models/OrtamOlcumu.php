@@ -27,11 +27,14 @@ class OrtamOlcumu extends Model
     protected static function booted(): void
     {
         static::saving(function (OrtamOlcumu $o): void {
-            $o->olcumler = collect($o->olcumler ?? [])->map(function (array $m): array {
+            $hamEski = $o->getRawOriginal('olcumler');
+            $eskiListe = is_string($hamEski) ? (json_decode($hamEski, true) ?: []) : (is_array($hamEski) ? $hamEski : []);
+
+            $o->olcumler = collect($o->olcumler ?? [])->values()->map(function (array $m, int $i) use ($eskiListe): array {
                 $m = array_merge([
                     'parametre' => '', 'grup' => null, 'bolge' => null,
                     'periyot_ay' => 24, 'olcum_tarihi' => null, 'sonraki_olcum_tarihi' => null,
-                    'laboratuvar' => null, 'rapor_no' => null,
+                    'laboratuvar' => null, 'yetki_no' => null, 'rapor_no' => null,
                     'olculen_deger' => null, 'sinir_deger' => null, 'birim' => null,
                     'sonuc' => 'bekliyor', 'not' => null, 'gecmis' => [],
                 ], $m);
@@ -45,8 +48,13 @@ class OrtamOlcumu extends Model
                     $m['sonuc'] = $oto;
                 }
 
-                // Ölçüm tarihi girilmiş ve sonraki elle verilmemişse periyottan türet.
-                if (! empty($m['olcum_tarihi']) && empty($m['sonraki_olcum_tarihi'])) {
+                // Ölçüm tarihi / periyot değiştiğinde (sonraki tarih elle değiştirilmediyse) yeniden hesapla.
+                $eski = is_array($eskiListe[$i] ?? null) ? $eskiListe[$i] : null;
+                $tarihVeyaPeriyotDegisti = $eski !== null
+                    && (($eski['olcum_tarihi'] ?? null) !== $m['olcum_tarihi'] || (int) ($eski['periyot_ay'] ?? 24) !== $m['periyot_ay'])
+                    && ($eski['sonraki_olcum_tarihi'] ?? null) === $m['sonraki_olcum_tarihi'];
+
+                if (! empty($m['olcum_tarihi']) && (empty($m['sonraki_olcum_tarihi']) || $tarihVeyaPeriyotDegisti)) {
                     $m['sonraki_olcum_tarihi'] = Carbon::parse($m['olcum_tarihi'])
                         ->addMonthsNoOverflow($m['periyot_ay'])->toDateString();
                 }

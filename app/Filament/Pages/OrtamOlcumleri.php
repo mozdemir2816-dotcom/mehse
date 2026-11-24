@@ -61,7 +61,7 @@ class OrtamOlcumleri extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -105,6 +105,7 @@ class OrtamOlcumleri extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->olcum);
 
         $olcum = $this->olcum();
@@ -407,6 +408,13 @@ class OrtamOlcumleri extends Page
                 ->icon('heroicon-o-check')
                 ->visible(fn () => $this->firma !== null)
                 ->action(fn () => $this->kaydet()),
+
+            Action::make('asimDof')
+                ->label("Aşımları DÖF'e Aktar")
+                ->icon('heroicon-o-arrow-right-circle')
+                ->color('danger')
+                ->visible(fn () => $this->firma !== null && collect($this->satirlar)->contains(fn (array $s) => ($s['sonuc'] ?? '') === 'asim'))
+                ->action(fn () => $this->asimlariDofaAktar()),
 
             Action::make('pdf')
                 ->label('PDF (Takip Listesi)')

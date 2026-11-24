@@ -57,8 +57,9 @@ class IsEkipmani extends Model
                 $e->sonuc = 'bekliyor';
             }
 
-            // Son muayene tarihi girilmiş; sonraki vize elle verilmemişse periyottan türet.
-            if ($e->son_muayene_tarihi && ! $e->getOriginal('sonraki_vize_tarihi') && ! $e->isDirty('sonraki_vize_tarihi')) {
+            // Son muayene tarihi veya periyot değiştiğinde (sonraki vize elle değiştirilmediyse) otomatik yeniden hesapla.
+            if ($e->son_muayene_tarihi && ! $e->isDirty('sonraki_vize_tarihi')
+                && (! $e->getOriginal('sonraki_vize_tarihi') || $e->isDirty('son_muayene_tarihi') || $e->isDirty('muayene_periyodu_ay'))) {
                 $e->sonraki_vize_tarihi = Carbon::parse($e->son_muayene_tarihi)->addMonths($e->muayene_periyodu_ay);
             }
 
