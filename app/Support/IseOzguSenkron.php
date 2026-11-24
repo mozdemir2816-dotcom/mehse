@@ -4,16 +4,18 @@ namespace App\Support;
 
 use App\Models\EgitimKatilim;
 use App\Models\Firma;
+use App\Models\User;
 use App\Models\YillikPlan;
 use Illuminate\Support\Collection;
 
 /**
  * Yıllık Eğitim Planı'nın 4. bölümü ("İşe ve İşyerine Özgü Riskler") ile Eğitim Katılım formunun işyerine özgü
- * bölümünü tek kaynak gibi tutar (30.10.2026):
+ * bölümünü tek doğruluk kaynağı olarak tutar:
  *  - formdanPlana: formda kaydedilen işe özgü konular, o firmanın o yılki planının 4. bölümüne yazılır
- *    (zaten plandaki konuların ay işaretleri korunur, formda olmayanlar çıkar, yenileri 2. hafta / tüm aylar P eklenir).
- *  - naceOrtakSatirlar: kütüphaneden eşleşme çıkmayan yeni planlarda, NACE'si aynı diğer firmaların son planındaki
- *    4. bölüm konuları (önce tam kod, sonra sınıf xx.yy, sonra bölüm xx) başlangıç olarak gelir.
+ *    (plan henüz yoksa otomatik açılır; iş kolu/ekip formları hedef_kitle etiketiyle eklenir).
+ *  - firmaGrubuOku / firmaGrubuKaydet: NACE'si gerçek işiyle tutmayan firmalar için elle "Gerçek İş Grubu" seçimi.
+ *  - dorduncuBolumuGrubaEsitle: aynı NACE / aynı Gerçek İş Grubundaki tüm firmaların 4. bölümünü tek tıkla eşitler.
+ *  - naceOrtakSatirlar: kütüphaneden eşleşme çıkmayan yeni planlarda aynı NACE'deki diğer firmaların 4. bölümünü getirir.
  */
 class IseOzguSenkron
 {
@@ -23,6 +25,11 @@ class IseOzguSenkron
         $firma = $kayit->firma;
 
         if ($kayit->baslik_anahtari !== 'genel' || ($icerik['tip'] ?? 'genel') !== 'genel' || ! $firma || ! $kayit->belge_tarihi) {
+            return false;
+        }
+
+        // Yalnız online (uzaktan) oturumda Tehlikeli/Çok Tehlikeli 4. bölüm hariçtir — planın 4. bölümünü ezme.
+        if ($kayit->egitim_sekli === 'uzaktan' && YillikEgitimPlanlayici::zorunluYuzYuzeMi(['kategori' => 'ise_ozgu'], $firma)) {
             return false;
         }
 
@@ -38,15 +45,14 @@ class IseOzguSenkron
         }
 
         $yil = (int) $kayit->belge_tarihi->year;
-        $plan = YillikPlan::query()->where('firma_id', $firma->id)->where('yil', $yil)->first();
+        $plan = YillikPlan::firmaYilIcin($firma, $yil);
 
-        if (! $plan) {
-            return false;
-        }
+        $isKolu = filled($kayit->is_kolu) ? trim((string) $kayit->is_kolu) : null;
+        $yeniGelenAnahtarlar = $konular->map(fn (string $k) => mb_strtolower($k))->flip();
 
-        // Çalışan grubu / iş kolu formu: plan firma geneli olduğundan bu grubun konuları plana EKLENİR, planda
-        // zaten olan diğer grupların konuları çıkarılmaz (aksi hâlde ikinci grup formu birincinin konusunu siler).
-        if (filled($kayit->is_kolu)) {
+        // Çalışan grubu / iş kolu formu (ör. Kalıp Ekibi / Sıva Ekibi): plan firma geneli olduğundan bu grubun
+        // konuları plana EKLENİR, diğer grupların konuları korunur.
+        if ($isKolu !== null) {
             $konular = collect($plan->egitimler ?? [])->where('kategori', 'ise_ozgu')->pluck('konu')
                 ->map(fn ($k) => trim((string) $k))->filter()->merge($konular)
                 ->unique(fn (string $k) => mb_strtolower($k))->values();
@@ -55,32 +61,45 @@ class IseOzguSenkron
         $kilit = $firma->planKilitAyIndeksi($yil);
         $mevcutlar = collect($plan->egitimler ?? [])->where('kategori', 'ise_ozgu')
             ->keyBy(fn ($e) => mb_strtolower(trim((string) ($e['konu'] ?? ''))));
-        $kutuphane = IseOzguEgitimKutuphanesi::tumu($firma->user_id)
-            ->mapWithKeys(fn ($k, $a) => [mb_strtolower(trim($k['ad'])) => $a]);
         $tumu = IseOzguEgitimKutuphanesi::tumu($firma->user_id);
+        $kutuphane = $tumu->mapWithKeys(fn ($k, $a) => [mb_strtolower(trim($k['ad'])) => $a]);
 
-        $satirlar = $konular->map(function (string $konu) use ($mevcutlar, $kutuphane, $tumu, $kilit): array {
+        $satirlar = $konular->map(function (string $konu) use ($mevcutlar, $kutuphane, $tumu, $kilit, $isKolu, $yeniGelenAnahtarlar): array {
             $anahtar = mb_strtolower($konu);
+            $buGruptanMi = $isKolu !== null && $yeniGelenAnahtarlar->has($anahtar);
 
             if ($mevcutlar->has($anahtar)) {
-                return $mevcutlar[$anahtar];
+                $satir = $mevcutlar[$anahtar];
+                if ($buGruptanMi && blank($satir['hedef_kitle'] ?? null)) {
+                    $satir['hedef_kitle'] = $isKolu;
+                }
+
+                return $satir;
             }
 
             if ($kutuphane->has($anahtar)) {
-                return IseOzguEgitimKutuphanesi::planSatiri($tumu[$kutuphane[$anahtar]], $kilit);
+                $satir = IseOzguEgitimKutuphanesi::planSatiri($tumu[$kutuphane[$anahtar]], $kilit);
+                if ($buGruptanMi) {
+                    $satir['hedef_kitle'] = $isKolu;
+                }
+
+                return $satir;
             }
 
             return YillikPlan::maddeAylarIle([[
                 'konu' => $konu,
                 'kategori' => 'ise_ozgu',
-                'hedef' => '',
+                'hedef' => $buGruptanMi ? $isKolu.' çalışanlarına özgü saha riskleri ve korunma önlemleri.' : '',
+                'hedef_kitle' => $buGruptanMi ? $isKolu : null,
                 'egitici' => IseOzguEgitimKutuphanesi::VARSAYILAN_EGITICI,
                 'hafta' => 2,
                 'varsayilan_aylar' => range(0, 11),
             ]], $kilit)[0];
         })->all();
 
+        $aktifMod = YillikEgitimPlanlayici::moduTespitEt($plan->egitimler ?? [], $firma);
         $yeni = YillikPlanSablonu::iseOzguYerlestir($plan->egitimler ?? [], $satirlar);
+        $yeni = YillikEgitimPlanlayici::satirlaraUygula($yeni, $firma, $aktifMod);
 
         if ($yeni === ($plan->egitimler ?? [])) {
             return false;
@@ -89,6 +108,139 @@ class IseOzguSenkron
         $plan->update(['egitimler' => $yeni]);
 
         return true;
+    }
+
+    /** NACE'si gerçek işiyle tutmayan firma için elle kaydedilmiş eğitim sektörü (yoksa null). */
+    public static function firmaGrubuOku(?Firma $firma): ?string
+    {
+        if (! $firma || ! $firma->user_id) {
+            return null;
+        }
+
+        $user = User::find($firma->user_id);
+        $gruplar = (array) (($user?->ayarlar ?? [])['firma_egitim_gruplari'] ?? []);
+        $deger = $gruplar[(string) $firma->id] ?? $gruplar[$firma->id] ?? null;
+
+        return filled($deger) ? (string) $deger : null;
+    }
+
+    /** Firma için elle gerçek iş grubu (sektör anahtarı) kaydeder; null verilirse NACE otomatiğine döner. */
+    public static function firmaGrubuKaydet(Firma $firma, ?string $sektorAnahtari): void
+    {
+        $user = User::find($firma->user_id);
+        if (! $user) {
+            return;
+        }
+
+        $gruplar = (array) (($user->ayarlar ?? [])['firma_egitim_gruplari'] ?? []);
+        if (filled($sektorAnahtari)) {
+            $gruplar[(string) $firma->id] = (string) $sektorAnahtari;
+        } else {
+            unset($gruplar[(string) $firma->id], $gruplar[$firma->id]);
+        }
+
+        KullaniciAyarlari::kaydet($user, ['firma_egitim_gruplari' => $gruplar]);
+    }
+
+    /** Firmanın etkin eğitim grubu: önce elle seçilen gerçek iş grubu, yoksa NACE'den türetilen sektör. */
+    public static function etkinGrup(Firma $firma): ?string
+    {
+        return self::firmaGrubuOku($firma) ?: EgitimIcerikOlusturucu::naceSektoru($firma->nace_kodu);
+    }
+
+    /**
+     * Aynı etkin eğitim grubunda (elle seçili aynı gerçek iş grubu veya aynı NACE sınıfı/sektörü)
+     * bulunan diğer aktif firmaları döndürür.
+     *
+     * @return Collection<int, Firma>
+     */
+    public static function ayniGrubunFirmalari(Firma $kaynak): Collection
+    {
+        $grup = self::etkinGrup($kaynak);
+        $kaynakNace4 = substr(preg_replace('/\D/', '', (string) $kaynak->nace_kodu), 0, 4);
+
+        return Firma::query()
+            ->where('user_id', $kaynak->user_id)
+            ->where('aktif', true)
+            ->where('id', '!=', $kaynak->id)
+            ->orderBy('unvan')
+            ->get()
+            ->filter(function (Firma $f) use ($grup, $kaynakNace4): bool {
+                $hedefGrup = self::etkinGrup($f);
+                if ($grup !== null && $hedefGrup === $grup) {
+                    return true;
+                }
+                if ($grup === null && strlen($kaynakNace4) >= 4) {
+                    return str_starts_with(preg_replace('/\D/', '', (string) $f->nace_kodu), $kaynakNace4);
+                }
+
+                return false;
+            })
+            ->values();
+    }
+
+    /**
+     * Kaynak firmanın 4. bölüm ("İşe ve İşyerine Özgü Riskler") satırlarını, aynı iş grubundaki
+     * (veya belirtilen) diğer firmaların ilgili yıl Yıllık Eğitim Planı'na eşitler.
+     * Hedef firmalardaki tamamlanmış (G) aylar ve hedef firmanın tehlike sınıfına göre saatleri korunur.
+     *
+     * @param  array<int, int>|null  $hedefFirmaIdler
+     */
+    public static function dorduncuBolumuGrubaEsitle(Firma $kaynak, int $yil, ?array $hedefFirmaIdler = null): int
+    {
+        $kaynakPlan = YillikPlan::firmaYilIcin($kaynak, $yil);
+        $kaynakSatirlar = collect($kaynakPlan->egitimler ?? [])->where('kategori', 'ise_ozgu')->values()->all();
+
+        if ($kaynakSatirlar === []) {
+            return 0;
+        }
+
+        $hedefler = $hedefFirmaIdler !== null
+            ? Firma::query()->where('user_id', $kaynak->user_id)->whereIn('id', $hedefFirmaIdler)->where('id', '!=', $kaynak->id)->get()
+            : self::ayniGrubunFirmalari($kaynak);
+
+        $guncellenen = 0;
+        foreach ($hedefler as $hedef) {
+            $plan = YillikPlan::firmaYilIcin($hedef, $yil);
+            $kilit = $hedef->planKilitAyIndeksi($yil);
+
+            // Hedef firmanın mevcut 4. bölüm tamamlandı (G) işaretlerini konu adına göre koru
+            $mevcutG = [];
+            foreach (collect($plan->egitimler ?? [])->where('kategori', 'ise_ozgu') as $m) {
+                $anahtar = EgitimKonulari::normalize((string) ($m['konu'] ?? ''));
+                foreach (($m['aylar'] ?? []) as $ay => $durum) {
+                    if ($durum === 'tamamlandi') {
+                        $mevcutG[$anahtar][$ay] = true;
+                    }
+                }
+            }
+
+            $yeniOzgu = array_map(function (array $satir) use ($mevcutG, $kilit): array {
+                $anahtar = EgitimKonulari::normalize((string) ($satir['konu'] ?? ''));
+                $aylar = [];
+                for ($ay = 0; $ay < 12; $ay++) {
+                    $d = $satir['aylar'][$ay] ?? 'planlandi';
+                    $aylar[$ay] = isset($mevcutG[$anahtar][$ay])
+                        ? 'tamamlandi'
+                        : ($ay < $kilit ? 'bos' : ($d === 'tamamlandi' ? 'planlandi' : $d));
+                }
+
+                return [
+                    ...collect($satir)->only(['konu', 'kategori', 'hedef', 'hedef_kitle', 'egitici', 'hafta', 'kutuphane_anahtari'])->all(),
+                    'kategori' => 'ise_ozgu',
+                    'aylar' => $aylar,
+                ];
+            }, $kaynakSatirlar);
+
+            $aktifMod = YillikEgitimPlanlayici::moduTespitEt($plan->egitimler ?? [], $hedef);
+            $tum = YillikPlanSablonu::iseOzguYerlestir($plan->egitimler ?? [], $yeniOzgu);
+            $tum = YillikEgitimPlanlayici::satirlaraUygula($tum, $hedef, $aktifMod);
+
+            $plan->update(['egitimler' => $tum]);
+            $guncellenen++;
+        }
+
+        return $guncellenen;
     }
 
     /**
@@ -125,7 +277,7 @@ class IseOzguSenkron
 
             if ($satirlar) {
                 return YillikPlan::maddeAylarIle(
-                    $satirlar->map(fn (array $e) => collect($e)->only(['konu', 'kategori', 'hedef', 'egitici', 'hafta', 'varsayilan_aylar', 'kutuphane_anahtari'])
+                    $satirlar->map(fn (array $e) => collect($e)->only(['konu', 'kategori', 'hedef', 'hedef_kitle', 'egitici', 'hafta', 'varsayilan_aylar', 'kutuphane_anahtari'])
                         ->put('varsayilan_aylar', $e['varsayilan_aylar'] ?? range(0, 11))->all())->all(),
                     $kilitAy,
                 );

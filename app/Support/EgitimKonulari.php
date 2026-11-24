@@ -272,6 +272,42 @@ class EgitimKonulari
             $toplam += $sayi;
         }
 
+        // Tamamlanmış uzaktan eğitim (LMS) atamaları, ilgili ayın online temel konularını G (tamamlandı) işler.
+        $lmsAylar = \App\Models\EgitimAtamasi::query()
+            ->where('durum', 'tamamlandi')
+            ->whereNotNull('tamamlandi_at')
+            ->whereYear('tamamlandi_at', $plan->yil)
+            ->whereHas('calisan', fn ($q) => $q->where('firma_id', $plan->firma_id))
+            ->pluck('tamamlandi_at')
+            ->map(fn ($t) => (int) \Illuminate\Support\Carbon::parse($t)->month - 1)
+            ->unique()
+            ->values();
+
+        if ($lmsAylar->isNotEmpty()) {
+            $azTehlikeli = $plan->firma?->tehlike_sinifi === 'az_tehlikeli';
+            foreach ($lmsAylar as $ay) {
+                foreach ($satirlar as $i => $s) {
+                    $kat = $s['kategori'] ?? null;
+                    $yontem = $s['yontem'] ?? null;
+                    $onlineUygun = in_array($kat, ['genel', 'saglik', 'teknik'], true)
+                        || ($kat === 'ise_ozgu' && $azTehlikeli);
+
+                    if (! $onlineUygun) {
+                        continue;
+                    }
+                    // Satır açıkça 'yuz_yuze' işaretliyse yalnız LMS ile tamamlandı sayılmaz.
+                    if ($yontem === 'yuz_yuze') {
+                        continue;
+                    }
+
+                    if (($s['aylar'][$ay] ?? 'bos') !== 'tamamlandi') {
+                        $satirlar[$i]['aylar'][$ay] = 'tamamlandi';
+                        $toplam++;
+                    }
+                }
+            }
+        }
+
         if ($toplam) {
             $plan->update(['egitimler' => $satirlar]);
         }

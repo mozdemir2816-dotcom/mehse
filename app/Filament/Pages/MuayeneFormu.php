@@ -433,11 +433,78 @@ class MuayeneFormu extends Page
                         ->success()->send();
                 }),
 
+            Action::make('hekimKanaatPdf')
+                ->label('🩺 Hekim Kanaat PDF (İşveren)')
+                ->icon('heroicon-o-shield-check')
+                ->color('info')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('İşyeri Hekimi Kanaat Belgesi (KVKK — İşveren Nüshası)')
+                ->modalDescription('Tıbbi anamnez ve tetkik bilgileri gizlenir; yalnızca işe uygunluk kanaati ve hekim kaşesi basılır (6331 m.15/5).')
+                ->schema([
+                    ImzaSecenegi::alan(),
+                    \Filament\Forms\Components\Radio::make('dil')
+                        ->label('Belge Dili')
+                        ->options(['tr' => 'Türkçe (TR)', 'tr_en' => 'Çift Dilli (TR / EN)'])
+                        ->default('tr')
+                        ->inline(),
+                ])
+                ->action(function (array $data) {
+                    $m = $this->kaydet();
+
+                    return $m ? MuayeneFormuUretici::kanaatPdf($m, ImzaSecenegi::secili($data), (string) ($data['dil'] ?? 'tr')) : null;
+                }),
+
+            Action::make('cokluEk2Pdf')
+                ->label('📑 Çoklu EK-2 (Toplu PDF)')
+                ->icon('heroicon-o-document-duplicate')
+                ->color('gray')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null && $this->gecmisKayitlar->isNotEmpty())
+                ->modalHeading('Çoklu EK-2 Muayene Formu (Tek PDF)')
+                ->modalDescription('Bu firmaya kayıtlı birden fazla EK-2 muayene formunu seçerek tek PDF dosyasında indirin.')
+                ->schema(fn () => [
+                    \Filament\Forms\Components\CheckboxList::make('kayit_idler')
+                        ->label('Birleştirilecek EK-2 Kayıtları')
+                        ->options(
+                            $this->firma->muayeneFormlari()->latest('muayene_tarihi')->limit(50)->get()
+                                ->mapWithKeys(fn ($k) => [$k->id => ($k->calisan_ad_soyad ?: 'Çalışan').' — '.($k->muayene_tarihi?->format('d.m.Y') ?? '—')])
+                                ->all()
+                        )
+                        ->bulkToggleable()
+                        ->required(),
+                    ImzaSecenegi::alan(),
+                    \Filament\Forms\Components\Radio::make('dil')
+                        ->label('Belge Dili')
+                        ->options(['tr' => 'Türkçe (TR)', 'tr_en' => 'Çift Dilli (TR / EN)'])
+                        ->default('tr')
+                        ->inline(),
+                ])
+                ->action(function (array $data) {
+                    $idler = array_values((array) ($data['kayit_idler'] ?? []));
+                    $formlar = $this->firma->muayeneFormlari()->whereIn('id', $idler)->orderBy('calisan_ad_soyad')->get();
+
+                    if ($formlar->isEmpty()) {
+                        Notification::make()->title('Seçili kayıt bulunamadı')->warning()->send();
+
+                        return null;
+                    }
+
+                    return MuayeneFormuUretici::topluPdf($formlar, ImzaSecenegi::secili($data), (string) ($data['dil'] ?? 'tr'));
+                }),
+
             Action::make('pdf')
                 ->label('Formu Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([
+                    ImzaSecenegi::alan(),
+                    \Filament\Forms\Components\Radio::make('dil')
+                        ->label('Belge Dili')
+                        ->options(['tr' => 'Türkçe (TR)', 'tr_en' => 'Çift Dilli (TR / EN)'])
+                        ->default('tr')
+                        ->inline(),
+                ])
                 ->action(function (array $data) {
                     $m = $this->kaydet();
 
@@ -449,7 +516,7 @@ class MuayeneFormu extends Page
 
                     Notification::make()->title('Muayene formu kaydedildi')->body($m->belge_no)->success()->send();
 
-                    return MuayeneFormuUretici::pdf($m, ImzaSecenegi::secili($data), $this->canliImza);
+                    return MuayeneFormuUretici::pdf($m, ImzaSecenegi::secili($data), $this->canliImza, (string) ($data['dil'] ?? 'tr'));
                 }),
         ];
     }

@@ -55,6 +55,9 @@ class YillikPlanUyarlayici
                 }
             }
 
+            $kaynakMod = YillikEgitimPlanlayici::moduTespitEt($kaynak->egitimler ?? [], $kaynak->firma);
+            $egitimler = YillikEgitimPlanlayici::satirlaraUygula($egitimler, $hedef, $kaynakMod);
+
             $plan->egitimler = $egitimler;
         }
 

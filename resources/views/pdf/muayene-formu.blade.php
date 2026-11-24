@@ -35,6 +35,7 @@
 </head>
 <body>
 @php
+    $en = ($dil ?? 'tr') === 'tr_en';
     $e = \App\Models\MuayeneFormu::ek2Birlestir($form->ek2);
     $eskiKayit = $form->ek2 === null;
     $tr = fn ($t) => filled($t) ? \Illuminate\Support\Carbon::parse($t)->format('d.m.Y') : '';
@@ -54,7 +55,7 @@
     <tr>
         <td style="width:57%">
             <span class="ek-rozet">EK-2</span>
-            <h1>İŞE GİRİŞ / PERİYODİK MUAYENE FORMU</h1>
+            <h1>İŞE GİRİŞ / PERİYODİK MUAYENE FORMU{{ $en ? ' — PRE-EMPLOYMENT & PERIODIC MEDICAL EXAM' : '' }}</h1>
             <p class="alt-baslik">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu &amp; İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik</p>
             <p class="alt-baslik" style="margin-top:2px">Belge No: {{ $form->belge_no }}</p>
         </td>
@@ -71,7 +72,7 @@
 
 {{-- 1. İŞYERİNİN BİLGİLERİ --}}
 <div class="bolum">
-    <div class="bolum-baslik">1. İŞYERİNİN BİLGİLERİ</div>
+    <div class="bolum-baslik">1. İŞYERİNİN BİLGİLERİ{{ $en ? ' / WORKPLACE INFORMATION' : '' }}</div>
     <div class="bolum-govde">
         <table>
             <tr>
@@ -90,7 +91,7 @@
 
 {{-- 2. ÇALIŞANIN BİLGİLERİ --}}
 <div class="bolum">
-    <div class="bolum-baslik">2. ÇALIŞANIN BİLGİLERİ</div>
+    <div class="bolum-baslik">2. ÇALIŞANIN BİLGİLERİ{{ $en ? ' / EMPLOYEE INFORMATION' : '' }}</div>
     <div class="bolum-govde">
         <table>
             <tr>
@@ -161,7 +162,7 @@
 
 {{-- 3. TIBBİ ANAMNEZ --}}
 <div class="bolum" style="page-break-inside:auto">
-    <div class="bolum-baslik">3. TIBBİ ANAMNEZ</div>
+    <div class="bolum-baslik">3. TIBBİ ANAMNEZ{{ $en ? ' / MEDICAL HISTORY' : '' }}</div>
     <div class="bolum-govde">
         <table>
             <tr>
@@ -223,7 +224,7 @@
     <div style="font-size:7.5px;color:#475569;border-bottom:1px solid #cbd5e1;padding-bottom:2px;margin-bottom:4px">
         <strong>EK-2 Devamı</strong> · İşyeri: {{ $firma?->unvan }} · Çalışan: <strong>{{ $form->calisan_ad_soyad }}</strong> · T.C.: {{ $form->calisan_tc ?: '—' }} · Muayene: {{ $tr($form->muayene_tarihi) }}
     </div>
-    <div class="bolum-baslik">4. FİZİK MUAYENE SONUÇLARI</div>
+    <div class="bolum-baslik">4. FİZİK MUAYENE SONUÇLARI{{ $en ? ' / PHYSICAL EXAMINATION' : '' }}</div>
     <div class="bolum-govde">
         <table style="background:#e8f1f8;border:1px solid #bae6fd">
             <tr>
@@ -257,7 +258,7 @@
 
 {{-- 5. LABORATUVAR BULGULARI VE DİĞER TETKİKLER --}}
 <div class="bolum">
-    <div class="bolum-baslik">5. LABORATUVAR BULGULARI VE DİĞER TETKİKLER</div>
+    <div class="bolum-baslik">5. LABORATUVAR BULGULARI VE DİĞER TETKİKLER{{ $en ? ' / LABORATORY & TESTS' : '' }}</div>
     <div class="bolum-govde">
         <table>
             <tr><th class="e" style="width:30%">Tetkik Grubu</th><th class="e" style="width:15%">Tarih</th><th class="e">Sonuç / Değerlendirme</th></tr>
@@ -284,7 +285,7 @@
 
 {{-- 6. KANAAT VE SONUÇ --}}
 <div class="bolum">
-    <div class="bolum-baslik">6. KANAAT VE SONUÇ (*)</div>
+    <div class="bolum-baslik">6. KANAAT VE SONUÇ (*){{ $en ? ' / PHYSICIAN OPINION & CONCLUSION' : '' }}</div>
     <div class="bolum-govde">
         <table>
             <tr>

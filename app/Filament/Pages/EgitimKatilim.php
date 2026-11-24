@@ -17,12 +17,14 @@ use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKatilimUretici;
 use App\Support\EgitimKonulari;
 use App\Support\EgitimSinavKagidiUretici;
+use App\Support\GeminiIseOzguEgitimUretici;
 use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\IseOzguSenkron;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
 use App\Support\SgkIseGirisOkuyucu;
+use App\Support\YillikEgitimPlanlayici;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -83,6 +85,9 @@ class EgitimKatilim extends Page
 
     /** Katılımcı süzgeci: şube ya da departman adı (boş = tümü). */
     public string $calisanFiltre = '';
+
+    /** Katılımcı görev süzgeci (ör. Kalıpçı, Sıvacı — boş = tümü). */
+    public string $gorevFiltre = '';
 
     /** Sektör → iş kalemi grubu (config isg.kkd_matris.is_kalemleri anahtarı). Yeni sektör eklenince buraya yazılır. */
     private const SEKTOR_IS_KALEMLERI = ['insaat' => 'İnşaat / Şantiye'];
@@ -228,13 +233,26 @@ class EgitimKatilim extends Page
             ->map(fn ($d) => trim((string) $d))->filter()->unique()->sort()->values()->all();
     }
 
+    /** Katılımcı görev süzgeci seçenekleri (ör. Kalıpçı, Sıvacı, Demirci). @return array<int, string> */
+    #[Computed]
+    public function gorevFiltreSecenekleri(): array
+    {
+        return $this->calisanlar->pluck('gorev')
+            ->map(fn ($g) => trim((string) $g))->filter()->unique()->sort()->values()->all();
+    }
+
     /** @return Collection<int, Calisan> */
     #[Computed]
     public function gorunenCalisanlar(): Collection
     {
-        return $this->calisanFiltre === ''
-            ? $this->calisanlar
-            : $this->calisanlar->filter(fn (Calisan $c) => trim((string) $c->sube) === $this->calisanFiltre || trim((string) $c->departman) === $this->calisanFiltre)->values();
+        return $this->calisanlar
+            ->when($this->calisanFiltre !== '', fn (Collection $col) => $col->filter(
+                fn (Calisan $c) => trim((string) $c->sube) === $this->calisanFiltre || trim((string) $c->departman) === $this->calisanFiltre,
+            ))
+            ->when($this->gorevFiltre !== '', fn (Collection $col) => $col->filter(
+                fn (Calisan $c) => trim((string) $c->gorev) === $this->gorevFiltre,
+            ))
+            ->values();
     }
 
     /** İş kalemi seç/kaldır: grup adı boşsa (ya da önceki otomatik addaysa) seçime göre yazılır; konu şablonu yenilenir. */
@@ -334,6 +352,10 @@ class EgitimKatilim extends Page
     /** "NACE'ye göre seç" — elle seçimi bırakıp firmanın NACE sektörüne döner. */
     public function naceSektorunuKullan(): void
     {
+        if ($this->firma) {
+            IseOzguSenkron::firmaGrubuKaydet($this->firma, null);
+        }
+
         $this->sektorAnahtari = $this->naceSektoru;
         $this->sektorElle = false;
         $this->oncekiIcerikYoksay = false;
@@ -349,15 +371,15 @@ class EgitimKatilim extends Page
     /** Önceki içerik nereden geldi (bu firma / NACE'si aynı başka firma) — arayüz notu. */
     public ?string $oncekiKaynak = null;
 
-    private function icerikYenile(): void
+    private function icerikYenile(bool $sekliOtomatikBelirle = true): void
     {
         // Sektör firmanın NACE kodundan gelir; kullanıcı bu firmada daha önce elle
-        // farklı sektör seçtiyse (NACE ile yapılan iş uyuşmuyor) o seçim gelir —
-        // kullanıcı kararı 25.10.2026. Başka firmadaki seçim artık taşınmaz.
+        // farklı sektör/gerçek iş grubu seçtiyse (NACE ile yapılan iş uyuşmuyor) o seçim gelir —
+        // kullanıcı kararı 25.10.2026 & 24.11.2026. Başka firmadaki seçim taşınmaz.
         if ($this->baslikAnahtari === 'genel' && blank($this->sektorAnahtari) && ! $this->oncekiIcerikYoksay) {
-            $elle = $this->elleSecilenSektor();
+            $elle = IseOzguSenkron::firmaGrubuOku($this->firma) ?? $this->elleSecilenSektor();
             $this->sektorAnahtari = $elle ?? $this->naceSektoru;
-            $this->sektorElle = $elle !== null;
+            $this->sektorElle = $elle !== null && $elle !== $this->naceSektoru;
         }
 
         $taze = EgitimIcerikOlusturucu::olustur(
@@ -374,6 +396,11 @@ class EgitimKatilim extends Page
         if ($onceki && ($onceki['tip'] ?? null) === ($taze['tip'] ?? null)) {
             $this->icerik = $this->konuIcerigiBirlestir($taze, $onceki);
             $this->oncekidenYuklendi = true;
+            // Firma geneli (ekip seçilmemiş) temel eğitimde, firmanın bu yılki Yıllık Eğitim Planı varsa
+            // 4. bölüm Yıllık Eğitim Planı ile birebir senkron tutulur.
+            if ($this->baslikAnahtari === 'genel' && $this->isKolu === '' && $this->firma) {
+                $this->planOzguBolumunuKur();
+            }
         } else {
             $this->icerik = $taze;
             $this->oncekidenYuklendi = false;
@@ -381,13 +408,28 @@ class EgitimKatilim extends Page
             $this->isKoluKutuphanedenEkle();
         }
 
-        // Tehlike sınıfına göre nominal ders saati (8/12/16) — kullanıcı elle değiştirebilir.
-        $this->dersSaati = $this->icerik['saat'] ?? null;
-
-        // 08.11.2026: firma online eğitim kullanıyorsa (tehlikeli / çok tehlikeli) bu form
-        // online 8 saatin yüz yüze tamamlayıcısıdır — şekil "Karma", ders saati kalan yüz yüze süre.
-        if (($yuzYuze = $this->onlineTamamlayiciSaat()) !== null) {
+        // 08.11.2026: firma online eğitim kullanıyorsa (tehlikeli / çok tehlikeli) varsayılan açılışta
+        // şekil "Karma" (online sonrası yüz yüze tamamlama) seçilir.
+        $yuzYuze = $sekliOtomatikBelirle ? $this->onlineTamamlayiciSaat() : null;
+        if ($yuzYuze !== null) {
             $this->egitimSekli = 'karma';
+        }
+
+        // 24.11.2026: 3 ayrı Eğitim Katılım Formu modu (Tamamı Yüz Yüze | Online/Uzaktan | Yüz Yüze Tamamlama Karma).
+        // Kullanıcı şekli değiştirdiyse, ya da aktif şekil uzaktan/karma ise, ya da önceki kayıt farklı moddaysa konuları moda göre uygula.
+        $oncekiFarkliMod = in_array($this->icerik['form_modu'] ?? null, ['uzaktan', 'karma'], true) && $this->egitimSekli === 'yuz_yuze';
+        if ($this->baslikAnahtari === 'genel' && (! $sekliOtomatikBelirle || $this->egitimSekli !== 'yuz_yuze' || $oncekiFarkliMod)) {
+            $this->icerik = YillikEgitimPlanlayici::katilimFormuModuUygula(
+                $this->icerik,
+                $this->firma,
+                $this->egitimSekli,
+                $this->egitimTuru,
+            );
+        }
+
+        // Tehlike sınıfına ve seçili oturum moduna göre ders saati (8/12/16 tam; 8/4 online; 4/8 karma) — kullanıcı elle değiştirebilir.
+        $this->dersSaati = $this->icerik['saat'] ?? null;
+        if ($this->egitimSekli === 'karma' && $yuzYuze !== null) {
             $this->dersSaati = $yuzYuze;
         }
 
@@ -437,15 +479,11 @@ class EgitimKatilim extends Page
             : \App\Models\EgitimPaketi::gerekenUzaktanSure($sinif, $tur)['yuz_yuze_saat']);
     }
 
-    /** Şekil elle değişince ders saati de uyar: Karma → yüz yüze kısım, diğerleri → tam süre. */
+    /** Şekil elle değişince konu blokları ve ders saati seçili forma göre kurulur (Tamamı Yüz Yüze | Uzaktan | Karma). */
     public function updatedEgitimSekli(): void
     {
-        $tur = $this->egitimTuru === 'tekrar' ? 'yenileme' : 'ilk_defa';
-        $sonPaket = $this->firma ? $this->sonOnlineAtama($tur)?->paket : null;
-        $yuzYuze = $this->firma ? $this->yuzYuzeSaati($tur, $sonPaket) : 0;
-
-        $this->dersSaati = ($this->egitimSekli === 'karma' && $yuzYuze) ? $yuzYuze : ($this->icerik['saat'] ?? null);
-        $this->sureGunYenile();
+        unset($this->sureYasalUyarisi);
+        $this->icerikYenile(false);
     }
 
     /**
@@ -455,17 +493,26 @@ class EgitimKatilim extends Page
      */
     private function isKalemiKonulariniOner(): void
     {
-        // Grup (iş kolu) formu: işe özgü konular YALNIZ seçilen iş kalemlerinden gelir (firma geneli yıllık plan /
-        // tüm iş kalemleri bu gruba karışmaz).
+        // Grup (iş kolu) formu (ör. Kalıp Ekibi vs Sıva Ekibi): 4. bölüm YALNIZ seçilen iş kalemlerinin
+        // konularıyla kurulur — ilgisiz kazı/iş makinesi/genel şablon konuları ekibe karışmaz.
         if ($this->isKoluKalemleri) {
-            if (isset($this->icerik['isyerine_ozgu']['maddeler'])) {
-                $mevcut = collect($this->icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+            $konular = collect(config('isg.kkd_matris.is_kalemleri', []))
+                ->flatten(1)
+                ->whereIn('anahtar', $this->isKoluKalemleri)
+                ->pluck('egitim_konusu')
+                ->filter()
+                ->unique()
+                ->values();
 
-                foreach (collect(config('isg.kkd_matris.is_kalemleri', []))->flatten(1)->whereIn('anahtar', $this->isKoluKalemleri)->pluck('egitim_konusu')->filter() as $konu) {
-                    if (! in_array($konu, $mevcut, true)) {
-                        $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $konu, 'dakika' => 10, 'dahil' => true];
-                    }
-                }
+            if ($konular->isNotEmpty()) {
+                $sinif = $this->firma?->tehlike_sinifi ?: 'az_tehlikeli';
+                $hedefDk = in_array($sinif, ['tehlikeli', 'cok_tehlikeli'], true) ? 180 : 90;
+                $dk = max(1, (int) round($hedefDk / $konular->count()));
+
+                $this->icerik['isyerine_ozgu'] = [
+                    'sektor' => $this->isKolu !== '' ? $this->isKolu : ($this->icerik['isyerine_ozgu']['sektor'] ?? 'İş Kolu / Ekip'),
+                    'maddeler' => $konular->map(fn (string $konu) => ['madde' => $konu, 'dakika' => $dk, 'dahil' => true])->all(),
+                ];
             }
 
             return;
@@ -485,19 +532,31 @@ class EgitimKatilim extends Page
 
         $konular = $this->firma?->isKalemiEgitimKonulari() ?? [];
 
+        // Kullanıcının AI/elle kütüphaneye bu firmanın NACE'si / iş kalemi için kaydettiği kendi konuları da otomatik gelir.
+        if ($this->firma) {
+            $kutuphaneKendi = IseOzguEgitimKutuphanesi::firmaIcin($this->firma)
+                ->filter(fn (array $k) => ! ($k['sistem'] ?? true))
+                ->pluck('ad')
+                ->all();
+            $konular = array_values(array_unique([...$konular, ...$kutuphaneKendi]));
+        }
+
         if (blank($konular)) {
             return;
         }
 
-        $mevcut = collect($this->icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+        $mevcut = collect($this->icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->map(fn ($m) => mb_strtolower(trim((string) $m)))->all();
 
         foreach ($konular as $konu) {
-            if (in_array($konu, $mevcut, true)) {
+            if (in_array(mb_strtolower(trim((string) $konu)), $mevcut, true)) {
                 continue;
             }
 
             $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $konu, 'dakika' => 10, 'dahil' => true];
+            $mevcut[] = mb_strtolower(trim((string) $konu));
         }
+
+        $this->blokSuresiniDagit('isyerine_ozgu');
     }
 
     /**
@@ -632,6 +691,9 @@ class EgitimKatilim extends Page
 
     public function updatedDersSaati(): void
     {
+        if ($this->dersSaati && $this->dersSaati > 0) {
+            $this->tumBlokSureleriniDagit();
+        }
         $this->sureGunYenile();
     }
 
@@ -683,10 +745,140 @@ class EgitimKatilim extends Page
             ->all();
     }
 
-    /** Konu dakikası / dahil durumu her değiştiğinde gün sayısını yeniden hesapla. */
-    public function updatedIcerik(): void
+    /** Konu dakikası / dahil durumu her değiştiğinde süreleri ve gün sayısını yeniden hesapla. */
+    public function updatedIcerik(mixed $value = null, ?string $key = null): void
     {
+        // Kullanıcı bir konunun "dahil" kutusunu işaretleyip/kaldırdığında o bloğun toplam süresi
+        // kalan dahil konulara otomatik dağıtılır; elle dakika yazılırsa manuel değer korunur.
+        if (is_string($key) && str_ends_with($key, '.dahil')) {
+            if (str_starts_with($key, 'isyerine_ozgu.')) {
+                $this->blokSuresiniDagit('isyerine_ozgu');
+            } elseif (str_starts_with($key, 'genel_konular.')) {
+                $this->blokSuresiniDagit('genel_konular');
+            } elseif (str_starts_with($key, 'saglik_konulari.')) {
+                $this->blokSuresiniDagit('saglik_konulari');
+            } elseif (str_starts_with($key, 'teknik_konular.')) {
+                $this->blokSuresiniDagit('teknik_konular');
+            } elseif (str_starts_with($key, 'maddeler.')) {
+                $this->ozelSureyiDagit();
+            }
+        }
+
         $this->sureGunYenile();
+    }
+
+    /**
+     * Seçili eğitim şekli, tehlike sınıfı ve Ders Saati'ne göre ilgili konu bloğunun
+     * hedef fiili ders dakikasını (1 ders saati = 45 dk fiili) hesaplar.
+     */
+    private function blokHedefFiiliDk(string $blokAnahtari): int
+    {
+        $katEslesme = [
+            'genel_konular' => 'genel',
+            'saglik_konulari' => 'saglik',
+            'teknik_konular' => 'teknik',
+            'isyerine_ozgu' => 'ise_ozgu',
+        ];
+        $kat = $katEslesme[$blokAnahtari] ?? null;
+
+        if (! $kat || ($this->icerik['tip'] ?? null) !== 'genel') {
+            return 0;
+        }
+
+        $k = $this->egitimTuru === 'tekrar' ? 'tekrar' : 'ilk';
+        $dagilim = YillikEgitimPlanlayici::bolumDagilimi($this->firma, 'karma_lms');
+
+        if ($this->egitimSekli === 'uzaktan' || $this->egitimSekli === 'karma') {
+            $alan = $this->egitimSekli === 'uzaktan' ? "{$k}_online" : "{$k}_yuz_yuze";
+            $bazToplam = (float) $dagilim[$alan];
+            $bazBlok = (float) ($dagilim['bolumler'][$kat][$alan] ?? 0);
+
+            if ($bazToplam <= 0 || $bazBlok <= 0) {
+                return 0;
+            }
+
+            $etkinToplam = ($this->dersSaati && $this->dersSaati > 0) ? (float) $this->dersSaati : $bazToplam;
+
+            return (int) round(($bazBlok / $bazToplam) * $etkinToplam * 45);
+        }
+
+        // Tamamı Yüz Yüze: toplam ders saati aktif (dahil konusu bulunan) 4 blok arasında eşit bölünür.
+        $etkinToplam = ($this->dersSaati && $this->dersSaati > 0)
+            ? (float) $this->dersSaati
+            : (float) ($this->icerik['saat'] ?? $dagilim["{$k}_toplam"]);
+
+        $aktifBloklar = collect(array_keys($katEslesme))->filter(function (string $b): bool {
+            $maddeler = $b === 'isyerine_ozgu'
+                ? ($this->icerik['isyerine_ozgu']['maddeler'] ?? [])
+                : ($this->icerik[$b] ?? []);
+
+            return collect($maddeler)->contains(fn ($m) => (bool) ($m['dahil'] ?? true));
+        })->count();
+
+        if ($aktifBloklar <= 0) {
+            return 0;
+        }
+
+        return (int) round(($etkinToplam / $aktifBloklar) * 45);
+    }
+
+    /** Tek bir bloğun dahil konularına hedef fiili dakikayı kayıpsız dağıtır. */
+    private function blokSuresiniDagit(string $blokAnahtari): void
+    {
+        if (($this->icerik['tip'] ?? null) !== 'genel') {
+            return;
+        }
+
+        $hedefDk = $this->blokHedefFiiliDk($blokAnahtari);
+        if ($hedefDk <= 0) {
+            return;
+        }
+
+        if ($blokAnahtari === 'isyerine_ozgu') {
+            if (! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+                return;
+            }
+            $this->icerik['isyerine_ozgu']['maddeler'] = EgitimIcerikOlusturucu::bolumDakikalariniDagit(
+                $this->icerik['isyerine_ozgu']['maddeler'],
+                $hedefDk,
+            );
+
+            return;
+        }
+
+        if (isset($this->icerik[$blokAnahtari]) && is_array($this->icerik[$blokAnahtari])) {
+            $this->icerik[$blokAnahtari] = EgitimIcerikOlusturucu::bolumDakikalariniDagit(
+                $this->icerik[$blokAnahtari],
+                $hedefDk,
+            );
+        }
+    }
+
+    /** Ders Saati değişince tüm aktif blokların konu dakikalarını yeni toplam süreye göre günceller. */
+    private function tumBlokSureleriniDagit(): void
+    {
+        if (($this->icerik['tip'] ?? null) === 'ozel') {
+            $this->ozelSureyiDagit();
+
+            return;
+        }
+
+        foreach (['genel_konular', 'saglik_konulari', 'teknik_konular', 'isyerine_ozgu'] as $blok) {
+            $this->blokSuresiniDagit($blok);
+        }
+    }
+
+    /** Özel (tek bloklu) eğitimde ders saati giriliyse toplam fiili dakikayı aktif konulara dağıtır. */
+    private function ozelSureyiDagit(): void
+    {
+        if (($this->icerik['tip'] ?? null) !== 'ozel' || ! isset($this->icerik['maddeler']) || ! $this->dersSaati || $this->dersSaati <= 0) {
+            return;
+        }
+
+        $this->icerik['maddeler'] = EgitimIcerikOlusturucu::bolumDakikalariniDagit(
+            $this->icerik['maddeler'],
+            (int) round($this->dersSaati * 45),
+        );
     }
 
     public function updatedEgitimTuru(): void
@@ -710,6 +902,8 @@ class EgitimKatilim extends Page
         }
 
         $this->icerik['isyerine_ozgu']['maddeler'][] = ['madde' => '', 'dakika' => 10, 'dahil' => true];
+        $this->blokSuresiniDagit('isyerine_ozgu');
+        $this->sureGunYenile();
     }
 
     public function isyerineOzguMaddeCikar(int $index): void
@@ -720,7 +914,124 @@ class EgitimKatilim extends Page
 
         unset($this->icerik['isyerine_ozgu']['maddeler'][$index]);
         $this->icerik['isyerine_ozgu']['maddeler'] = array_values($this->icerik['isyerine_ozgu']['maddeler']);
+        $this->blokSuresiniDagit('isyerine_ozgu');
         $this->sureGunYenile();
+    }
+
+    /**
+     * Gemini API ile seçilen sektör / ekip / saha bağlamına özel 4. bölüm konularını üretir,
+     * forma ekler ve toplam eğitim süresine göre dakikaları otomatik dağıtır.
+     */
+    public function aiIseOzguKonuUretAction(): Action
+    {
+        return Action::make('aiIseOzguKonuUret')
+            ->modalHeading('✨ Yapay Zekâ (API) ile İşe Özgü Eğitim Konuları Üret')
+            ->modalDescription('Seçili sektör ve ekip/iş kolu için 4. Bölüm ("İşe ve İşyerine Özgü Riskler") konularını üretir; eklenen konular toplam eğitim süresine göre otomatik dakikalandırılır.')
+            ->modalSubmitActionLabel('Konuları Üret ve Uygula')
+            ->fillForm(fn () => [
+                'sektor' => ($this->sektorAnahtari && $this->sektorAnahtari !== 'ozel') ? $this->sektorAnahtari : ($this->naceSektoru ?: 'insaat'),
+                'is_kolu' => $this->isKolu ?: null,
+                'adet' => 5,
+                'ekleme_sekli' => 'ekle',
+                'kutuphaneye_kaydet' => true,
+            ])
+            ->schema([
+                Select::make('sektor')
+                    ->label('Sektör / İş Grubu')
+                    ->options(GeminiIseOzguEgitimUretici::sektorSecenekleri())
+                    ->searchable()
+                    ->required(),
+                \Filament\Forms\Components\TextInput::make('is_kolu')
+                    ->label('Çalışan Grubu / Ekip (Opsiyonel)')
+                    ->placeholder('Örn: Kalıp Ekibi, Sıva Ekibi, CNC Operatörleri, Depo'),
+                \Filament\Forms\Components\Textarea::make('ek_baglam')
+                    ->label('Ek Saha / Ekipman Bilgisi (Opsiyonel)')
+                    ->rows(2)
+                    ->placeholder('Örn: Kule vinç, dış cephe iskelesi, epoksi boya, forklift'),
+                \Filament\Schemas\Components\Grid::make(2)->schema([
+                    Select::make('adet')
+                        ->label('Üretilecek Konu Sayısı')
+                        ->options([3 => '3 konu', 4 => '4 konu', 5 => '5 konu', 6 => '6 konu', 8 => '8 konu'])
+                        ->default(5)
+                        ->required(),
+                    \Filament\Forms\Components\Radio::make('ekleme_sekli')
+                        ->label('Uygulama Şekli')
+                        ->options([
+                            'ekle' => 'Mevcut konuların üzerine ekle',
+                            'degistir' => '4. bölümü yenileriyle değiştir',
+                        ])
+                        ->default('ekle')
+                        ->required(),
+                ]),
+                \Filament\Forms\Components\Toggle::make('kutuphaneye_kaydet')
+                    ->label('Üretilen konuları İşe Özgü Eğitim Kütüphanesi\'ne de kaydet (aynı sektördeki diğer firmalar için)')
+                    ->default(true),
+            ])
+            ->action(function (array $data): void {
+                $sektorAnahtar = (string) ($data['sektor'] ?? '');
+                $sektorler = GeminiIseOzguEgitimUretici::sektorSecenekleri();
+                $sektorAd = $sektorler[$sektorAnahtar] ?? $sektorAnahtar;
+                $isKolu = filled($data['is_kolu'] ?? null) ? trim((string) $data['is_kolu']) : null;
+                $ekBaglam = filled($data['ek_baglam'] ?? null) ? trim((string) $data['ek_baglam']) : null;
+                $adet = (int) ($data['adet'] ?? 5);
+
+                $sonuc = GeminiIseOzguEgitimUretici::uret(
+                    $sektorAd,
+                    $this->firma?->nace_kodu ?: GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar),
+                    $this->firma?->tehlike_sinifi,
+                    $isKolu,
+                    $ekBaglam,
+                    $adet,
+                );
+
+                if ($sonuc['hata'] !== null) {
+                    Notification::make()->title('Konu üretilemedi')->body($sonuc['hata'])->danger()->send();
+
+                    return;
+                }
+
+                if (($this->icerik['tip'] ?? null) === 'genel') {
+                    if (! isset($this->icerik['isyerine_ozgu']['maddeler'])) {
+                        $this->icerik['isyerine_ozgu'] = [
+                            'sektor' => $isKolu ?: $sektorAd,
+                            'maddeler' => [],
+                        ];
+                    }
+
+                    $mevcutlar = ($data['ekleme_sekli'] ?? 'ekle') === 'degistir'
+                        ? []
+                        : array_values(array_filter(
+                            $this->icerik['isyerine_ozgu']['maddeler'],
+                            fn ($m) => filled(trim((string) ($m['madde'] ?? ''))),
+                        ));
+
+                    $mevcutAdlar = collect($mevcutlar)->pluck('madde')->map(fn ($m) => mb_strtolower(trim((string) $m)))->flip();
+
+                    foreach ($sonuc['konular'] as $k) {
+                        $anahtar = mb_strtolower($k['ad']);
+                        if (! $mevcutAdlar->has($anahtar)) {
+                            $mevcutlar[] = ['madde' => $k['ad'], 'dakika' => 15, 'dahil' => true];
+                            $mevcutAdlar->put($anahtar, true);
+                        }
+                    }
+
+                    $this->icerik['isyerine_ozgu']['maddeler'] = $mevcutlar;
+                    $this->blokSuresiniDagit('isyerine_ozgu');
+                    $this->sureGunYenile();
+                }
+
+                $kaydedilen = 0;
+                if (! empty($data['kutuphaneye_kaydet']) && ($userId = Filament::auth()->id())) {
+                    $nace = GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar, $this->firma?->nace_kodu);
+                    $kaydedilen = GeminiIseOzguEgitimUretici::kutuphaneyeKaydet($userId, $sonuc['konular'], $nace, $isKolu, $this->isKoluKalemleri);
+                }
+
+                Notification::make()
+                    ->title(count($sonuc['konular']).' işe özgü konu eklendi ve süreler güncellendi')
+                    ->body($kaydedilen > 0 ? "{$kaydedilen} yeni konu kütüphaneye de kaydedildi." : 'Dakikalar toplam eğitim süresine göre otomatik dağıtıldı.')
+                    ->success()
+                    ->send();
+            });
     }
 
     /**
@@ -734,6 +1045,8 @@ class EgitimKatilim extends Page
         }
 
         $this->icerik['maddeler'][] = ['madde' => '', 'dakika' => 15, 'dahil' => true, 'ek' => true];
+        $this->ozelSureyiDagit();
+        $this->sureGunYenile();
     }
 
     public function ozelMaddeCikar(int $index): void
@@ -744,6 +1057,7 @@ class EgitimKatilim extends Page
 
         unset($this->icerik['maddeler'][$index]);
         $this->icerik['maddeler'] = array_values($this->icerik['maddeler']);
+        $this->ozelSureyiDagit();
         $this->sureGunYenile();
     }
 
@@ -765,13 +1079,14 @@ class EgitimKatilim extends Page
         \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
-        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru, $this->isKalemiSecenekleri, $this->calisanFiltreSecenekleri, $this->gorunenCalisanlar, $this->asgariDersSaati, $this->sureYasalUyarisi);
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru, $this->isKalemiSecenekleri, $this->calisanFiltreSecenekleri, $this->gorevFiltreSecenekleri, $this->gorunenCalisanlar, $this->asgariDersSaati, $this->sureYasalUyarisi);
         // Önceki firmanın sektörü yeni firmaya taşınmasın — icerikYenile NACE'den/elle seçimden kurar.
         $this->sektorAnahtari = null;
         $this->sektorElle = false;
         $this->isKolu = '';
         $this->isKoluKalemleri = [];
         $this->calisanFiltre = '';
+        $this->gorevFiltre = '';
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egitmenBilgileriYenile();
         $this->egitimSekli = 'yuz_yuze';
@@ -1163,6 +1478,11 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         ]);
         $kayit->save();
 
+        // Kullanıcı NACE dışı bir "Gerçek İş Grubu" seçtiyse Yıllık Eğitim Planı ile ortak kullanılması için firmada hatırla.
+        if ($this->baslikAnahtari === 'genel' && $this->sektorElle && filled($this->sektorAnahtari)) {
+            IseOzguSenkron::firmaGrubuKaydet($this->firma, $this->sektorAnahtari);
+        }
+
         // Formdaki işe özgü konular yıllık eğitim planının 4. bölümüne yazılır (önce), sonra işlenenler "tamamlandı" işaretlenir.
         IseOzguSenkron::formdanPlana($kayit);
 
@@ -1207,7 +1527,27 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
     {
         $asgari = $this->asgariDersSaati;
 
-        if (! $asgari || $this->dersSaati === null || $this->dersSaati >= $asgari) {
+        if (! $asgari || $this->dersSaati === null) {
+            return null;
+        }
+
+        if ($this->egitimSekli === 'uzaktan' || $this->egitimSekli === 'karma') {
+            $dagilim = YillikEgitimPlanlayici::bolumDagilimi($this->firma, 'karma_lms');
+            $k = $this->egitimTuru === 'tekrar' ? 'tekrar' : 'ilk';
+            $oturumAsgari = (int) round($this->egitimSekli === 'uzaktan' ? $dagilim["{$k}_online"] : $dagilim["{$k}_yuz_yuze"]);
+
+            if ($oturumAsgari <= 0 || $this->dersSaati >= $oturumAsgari) {
+                return null;
+            }
+
+            $oturumAd = $this->egitimSekli === 'uzaktan' ? 'uzaktan (online)' : 'yüz yüze tamamlama (karma)';
+
+            return 'Çalışanların İSG Eğitimleri Yön. m.11 / RG 02.04.2026 uyarısı: '
+                .$this->firma->tehlikeSinifiEtiketi()
+                ." işyerinde {$oturumAd} oturumu en az {$oturumAsgari} saat olmalıdır (girilen: {$this->dersSaati} saat).";
+        }
+
+        if ($this->dersSaati >= $asgari) {
             return null;
         }
 
@@ -1381,7 +1721,14 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 ->label('Eğitim Katılım Formu — PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([
+                    ImzaSecenegi::alan(),
+                    \Filament\Forms\Components\Radio::make('dil')
+                        ->label('Belge Dili')
+                        ->options(['tr' => 'Türkçe (TR)', 'tr_en' => 'Çift Dilli (TR / EN)'])
+                        ->default('tr')
+                        ->inline(),
+                ])
                 ->action(function (array $data) {
                     $kayit = $this->kaydet();
 
@@ -1393,7 +1740,7 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
 
                     Notification::make()->title('Eğitim katılım formu kaydedildi')->body($kayit->belge_no)->success()->send();
 
-                    return EgitimKatilimUretici::pdf($kayit, ImzaSecenegi::secili($data));
+                    return EgitimKatilimUretici::pdf($kayit, ImzaSecenegi::secili($data), (string) ($data['dil'] ?? 'tr'));
                 }),
 
             Action::make('excel')

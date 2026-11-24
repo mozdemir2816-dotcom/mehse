@@ -4,10 +4,12 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\IseOzguEgitimKonusu;
+use App\Support\GeminiIseOzguEgitimUretici;
 use App\Support\IseOzguEgitimKutuphanesi;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -150,6 +152,92 @@ class IseOzguEgitimKonulari extends Page
                 IseOzguEgitimKonusu::create([...$this->veri($data), 'user_id' => Filament::auth()->id()]);
                 $this->updated();
                 Notification::make()->success()->title('Konu kaydedildi')->send();
+            });
+    }
+
+    /** Gemini API ile tek sektör, seçili sektörler veya tüm sektörler için toplu işe özgü eğitim içeriği üretir. */
+    public function aiSektorKonulariUretAction(): Action
+    {
+        return Action::make('aiSektorKonulariUret')
+            ->label('✨ API / AI ile Sektör Konuları Üret')
+            ->icon('heroicon-o-sparkles')
+            ->modalHeading('✨ API / Yapay Zekâ ile Sektörlere Özgü Eğitim Konuları Üret')
+            ->modalDescription('Seçtiğiniz sektörler (veya sistemdeki tüm 21 sektör) için 4. Bölüm işe özgü eğitim başlıkları ve hedefleri üretilir; NACE ön ekleriyle otomatik eşlenerek Yıllık Eğitim Planı ve Eğitim Katılım formlarına entegre olur.')
+            ->modalSubmitActionLabel('API ile Üret ve Kütüphaneye Ekle')
+            ->schema([
+                Radio::make('kapsam')
+                    ->label('Üretim Kapsamı')
+                    ->options([
+                        'secili' => 'Seçili sektör(ler) için üret',
+                        'tumu' => 'Tüm sektörler için toplu üret ('.count(GeminiIseOzguEgitimUretici::sektorSecenekleri()).' sektör)',
+                    ])
+                    ->default('secili')
+                    ->live()
+                    ->required(),
+                Select::make('sektorler')
+                    ->label('Sektörler')
+                    ->multiple()
+                    ->searchable()
+                    ->options(GeminiIseOzguEgitimUretici::sektorSecenekleri())
+                    ->visible(fn ($get) => ($get('kapsam') ?? 'secili') === 'secili')
+                    ->required(fn ($get) => ($get('kapsam') ?? 'secili') === 'secili'),
+                Grid::make(2)->schema([
+                    Select::make('adet')
+                        ->label('Sektör Başına Konu Adedi')
+                        ->options([3 => '3 konu', 4 => '4 konu', 5 => '5 konu', 6 => '6 konu', 8 => '8 konu'])
+                        ->default(5)
+                        ->required(),
+                    TextInput::make('is_kolu')
+                        ->label('Ekip / İş Kolu Etiketi (Opsiyonel)')
+                        ->placeholder('Örn: Kalıp Ekibi, Sıva Ekibi (boş = sektör geneli)'),
+                ]),
+                Textarea::make('ek_baglam')
+                    ->label('Ek Odak / Ekipman Notu (Opsiyonel)')
+                    ->rows(2)
+                    ->placeholder('Örn: Saha uygulamaları, makine koruyucuları ve LOTO ağırlıklı'),
+            ])
+            ->action(function (array $data): void {
+                $userId = (int) Filament::auth()->id();
+                $sektorAnahtarlari = ($data['kapsam'] ?? 'secili') === 'tumu'
+                    ? array_keys(GeminiIseOzguEgitimUretici::sektorSecenekleri())
+                    : array_values((array) ($data['sektorler'] ?? []));
+
+                if ($sektorAnahtarlari === []) {
+                    Notification::make()->title('En az bir sektör seçin')->warning()->send();
+
+                    return;
+                }
+
+                $sonuc = GeminiIseOzguEgitimUretici::sektorlerIcinTopluUret(
+                    $userId,
+                    $sektorAnahtarlari,
+                    (int) ($data['adet'] ?? 5),
+                    filled($data['is_kolu'] ?? null) ? trim((string) $data['is_kolu']) : null,
+                    filled($data['ek_baglam'] ?? null) ? trim((string) $data['ek_baglam']) : null,
+                );
+
+                $this->updated();
+
+                if ($sonuc['basarili_sektor'] === 0) {
+                    Notification::make()
+                        ->title('API üzerinden konu üretilemedi')
+                        ->body(implode(' | ', array_slice($sonuc['hatalar'], 0, 3)))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $mesaj = "{$sonuc['basarili_sektor']} sektör için {$sonuc['toplam_eklenen']} yeni konu kütüphaneye eklendi.";
+                if ($sonuc['hatalar'] !== []) {
+                    $mesaj .= ' ('.count($sonuc['hatalar']).' sektör atlandı)';
+                }
+
+                Notification::make()
+                    ->title('Sektör konuları API ile eklendi')
+                    ->body($mesaj)
+                    ->success()
+                    ->send();
             });
     }
 

@@ -45,6 +45,7 @@ class YillikPlanSablonu
         }
 
         $icerik['egitimler'] = self::iseOzguYerlestir($icerik['egitimler'], $iseOzgu);
+        $icerik['egitimler'] = YillikEgitimPlanlayici::satirlaraUygula($icerik['egitimler'], $firma, YillikEgitimPlanlayici::VARSAYILAN_MOD);
         $icerik['faaliyetler'] = self::kurulPeriyodunuYerlestir($icerik['faaliyetler'], $firma, $kilitAy);
 
         return $icerik;

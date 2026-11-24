@@ -462,7 +462,17 @@ class SertifikaOlustur extends Page
                 ->label('Sertifika Oluştur')->tooltip('Sertifikayı Oluştur (Kaydet ve İndir)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([
+                    ImzaSecenegi::alan(),
+                    \Filament\Forms\Components\Radio::make('sayfa_duzeni')
+                        ->label('Sayfa Düzeni')
+                        ->options([
+                            'tek' => 'Tek Sayfa (Ön yüzde özet konular)',
+                            'arkali_onlu' => 'Arkalı Önlü (Ön: Sertifika · Arka: Detaylı Konu Müfredatı)',
+                        ])
+                        ->default('tek')
+                        ->inline(),
+                ])
                 ->action(function (array $data) {
                     $s = $this->kaydet();
 
@@ -474,7 +484,7 @@ class SertifikaOlustur extends Page
 
                     Notification::make()->title('Sertifika kaydedildi')->body($s->belge_no)->success()->send();
 
-                    return SertifikaUretici::pdf($s, ImzaSecenegi::secili($data), $this->tcMaskele);
+                    return SertifikaUretici::pdf($s, ImzaSecenegi::secili($data), $this->tcMaskele, ($data['sayfa_duzeni'] ?? 'tek') === 'arkali_onlu');
                 }),
 
             Action::make('zipIndir')
@@ -482,7 +492,17 @@ class SertifikaOlustur extends Page
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
-                ->schema([ImzaSecenegi::alan()])
+                ->schema([
+                    ImzaSecenegi::alan(),
+                    \Filament\Forms\Components\Radio::make('sayfa_duzeni')
+                        ->label('Sayfa Düzeni')
+                        ->options([
+                            'tek' => 'Tek Sayfa',
+                            'arkali_onlu' => 'Arkalı Önlü (2 Sayfa)',
+                        ])
+                        ->default('tek')
+                        ->inline(),
+                ])
                 ->action(function (array $data) {
                     $s = $this->kaydet();
 
@@ -494,7 +514,7 @@ class SertifikaOlustur extends Page
 
                     Notification::make()->title('Sertifika ZIP arşivi hazırlanıyor')->body(count($s->katilimcilar ?? []).' katılımcı için ayrı PDF')->success()->send();
 
-                    return SertifikaUretici::zip($s, ImzaSecenegi::secili($data), $this->tcMaskele);
+                    return SertifikaUretici::zip($s, ImzaSecenegi::secili($data), $this->tcMaskele, ($data['sayfa_duzeni'] ?? 'tek') === 'arkali_onlu');
                 }),
 
             Action::make('onizle')

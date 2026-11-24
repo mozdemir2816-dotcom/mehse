@@ -216,14 +216,14 @@
                 </select>
             </div>
             <div>
-                <label class="mehse-etiket">Eğitim Şekli</label>
-                <select wire:model="egitimSekli"
+                <label class="mehse-etiket">Eğitim Şekli (Katılım Formu Tipi)</label>
+                <select wire:model.live="egitimSekli"
                     class="mehse-girdi">
-                    <option value="yuz_yuze">Yüz Yüze</option>
-                    <option value="uzaktan">Uzaktan</option>
-                    <option value="karma">Karma</option>
+                    <option value="yuz_yuze">Tamamı Yüz Yüze (Tüm Konular — Tam Süre)</option>
+                    <option value="uzaktan">Uzaktan / Online Verilen Eğitim Formu (LMS — 8s / 4s)</option>
+                    <option value="karma">Yüz Yüze Tamamlama Formu — Online Sonrası Kalan (4s / 8s)</option>
                 </select>
-                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">Formda tür ve şekil, elde işaretlenebilir kutu olarak da görünür.</p>
+                <p style="font-size:.75rem;color:rgb(107 114 128);margin-top:.25rem">Her eğitim şekli için ayrı başlık, konu kapsamı ve süre ile ayrı katılım formu üretilir.</p>
             </div>
             @if ($baslikAnahtari === 'genel')
                 <div>
@@ -251,10 +251,15 @@
 
         @if ($baslikAnahtari === 'genel' && ($icerik['saat'] ?? null))
             <div style="{{ $kutu }};margin-top:1rem;background:rgb(16 185 129 / .06);border-color:rgb(16 185 129 / .3);font-size:.82rem">
+                @if (filled($icerik['oturum_notu'] ?? null))
+                    <div style="margin-bottom:.4rem;padding:.4rem .6rem;border-radius:.45rem;background:rgb(37 99 235 / .09);border:1px solid rgb(37 99 235 / .28);color:#1e3a8a;font-weight:600">
+                        {{ $icerik['oturum_notu'] }}
+                    </div>
+                @endif
                 @if ($egitimTuru === 'tekrar')
-                    <strong>Tekrar eğitimi</strong> — tehlike sınıfından bağımsız <strong>8 Ders Saati</strong>.
+                    <strong>Tekrar eğitimi</strong> — tehlike sınıfından bağımsız <strong>8 Ders Saati</strong> (bu form: <strong>{{ $dersSaati ?? $icerik['saat'] }} Ders Saati</strong>).
                 @else
-                    <strong>{{ $this->firma?->tehlikeSinifiEtiketi() ?? 'Az Tehlikeli' }}</strong> sınıfı için ilk eğitim:
+                    <strong>{{ $this->firma?->tehlikeSinifiEtiketi() ?? 'Az Tehlikeli' }}</strong> sınıfı için bu oturum formu:
                     <strong>{{ $dersSaati ?? $icerik['saat'] }} Ders Saati</strong>. "Ders Saati" alanından değiştirebilirsiniz.
                 @endif
                 Konuları ve dakikaları aşağıdaki "Eğitim Konuları" bölümünden düzenleyebilirsiniz.
@@ -324,14 +329,23 @@
 
             @if ($this->calisanlar->isNotEmpty())
                 <div style="font-weight:600;font-size:.82rem;margin-bottom:.4rem">Firma Çalışanları</div>
-                @if ($this->calisanFiltreSecenekleri)
+                @if ($this->calisanFiltreSecenekleri || $this->gorevFiltreSecenekleri)
                     <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
-                        <label style="font-size:.78rem">Şube / departman:</label>
-                        <select wire:model.live="calisanFiltre" style="padding:.35rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
-                            <option value="">Tümü</option>
-                            @foreach ($this->calisanFiltreSecenekleri as $f)<option value="{{ $f }}">{{ $f }}</option>@endforeach
-                        </select>
-                        @if ($calisanFiltre !== '')
+                        @if ($this->calisanFiltreSecenekleri)
+                            <label style="font-size:.78rem">Şube / departman:</label>
+                            <select wire:model.live="calisanFiltre" style="padding:.35rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                                <option value="">Tümü</option>
+                                @foreach ($this->calisanFiltreSecenekleri as $f)<option value="{{ $f }}">{{ $f }}</option>@endforeach
+                            </select>
+                        @endif
+                        @if ($this->gorevFiltreSecenekleri)
+                            <label style="font-size:.78rem">Görev:</label>
+                            <select wire:model.live="gorevFiltre" style="padding:.35rem .6rem;border-radius:.4rem;border:1px solid rgb(107 114 128 / .35);background:transparent;font-size:.8rem">
+                                <option value="">Tüm Görevler</option>
+                                @foreach ($this->gorevFiltreSecenekleri as $g)<option value="{{ $g }}">{{ $g }}</option>@endforeach
+                            </select>
+                        @endif
+                        @if ($calisanFiltre !== '' || $gorevFiltre !== '')
                             <x-filament::button size="xs" color="success" wire:click="filtredekileriSec">Yalnız bu listedekileri seç ({{ $this->gorunenCalisanlar->count() }})</x-filament::button>
                         @endif
                     </div>

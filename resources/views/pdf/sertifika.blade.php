@@ -17,6 +17,18 @@
     .cerceve-mavi_kose .kose-sag-alt { bottom: 6px; right: 6px; }
     .cerceve-altin_susleme { border: 3px double #b8860b; border-radius: 14px; margin: 10px; }
     .cerceve-gri_cizgi { border: 3px double #444; margin: 10px; }
+    .cerceve-lacivert_kurumsal { border: 4px solid #0f294a; outline: 1px solid #cbd5e1; margin: 10px; }
+    .cerceve-zumrut_klasik { border: 3px double #047857; border-radius: 10px; margin: 10px; }
+    .cerceve-bordo_resmi { border: 4px double #7f1d1d; margin: 10px; }
+    .on-yuz-ferah .ic { padding: 28px 36px; }
+    .on-yuz-ferah .baslik h1 { font-size: 16px; }
+    .on-yuz-ferah .bilgi { font-size: 9.5px; margin: 14px 0; }
+    .on-yuz-ferah .bilgi td { padding: 4px 6px; }
+    .on-yuz-ferah .metin { font-size: 10px; line-height: 1.55; margin: 14px 0 22px; }
+    .on-yuz-ferah table.imza { margin-top: 28px; }
+    .arka-yuz-baslik { border-bottom: 2px solid #0f294a; padding-bottom: 5px; margin-bottom: 8px; }
+    .arka-yuz-baslik h2 { font-size: 11px; margin: 0; color: #0f294a; }
+    .arka-yuz-alt { font-size: 7.5px; color: #475569; margin-top: 2px; }
     .baslik { text-align: center; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px; }
     .baslik img { max-height: 32px; float: left; }
     .baslik h1 { font-size: 12px; margin: 0; }
@@ -47,8 +59,9 @@
     $goster = fn (array $maddeler) => collect($maddeler)->where('dahil', true)->values();
 @endphp
 
+@php $arkali = (bool) ($arkaliOnlu ?? false); @endphp
 @forelse (($sertifika->katilimcilar ?? []) as $k)
-    <div class="sayfa cerceve-{{ $sertifika->cerceve }}">
+    <div class="sayfa cerceve-{{ $sertifika->cerceve }}{{ $arkali ? ' on-yuz-ferah' : '' }}">
         @if ($sertifika->cerceve === 'mavi_kose')
             <div class="kose kose-sol-ust"></div>
             <div class="kose kose-sag-ust"></div>
@@ -89,6 +102,7 @@
             tamamlayarak bu eğitim belgesini almaya hak kazanmıştır.
         </p>
 
+        @if (! $arkali)
         <h3>Eğitimin Konuları :</h3>
 
         @if ($sertifika->cokluEgiticiMi() && ($sertifika->konu_icerigi['tip'] ?? null) === 'genel')
@@ -159,6 +173,9 @@
                 </tr>
             </table>
         @endif
+        @else
+            <p class="not" style="margin:6px 0;font-size:8px;color:#334155"><em>* Eğitim müfredatı, konu başlıkları ve süre kırılımı belgenin arka yüzünde (2. sayfada) yer almaktadır.</em></p>
+        @endif
 
         <table class="imza">
             <tr>
@@ -202,6 +219,93 @@
 
         </div>
     </div>
+
+    @if ($arkali)
+        {{-- Arkalı Önlü: 2. Sayfa (Arka Yüz — Detaylı Eğitim Müfredatı ve Konu Süreleri) --}}
+        <div class="sayfa cerceve-{{ $sertifika->cerceve }}">
+            <div class="ic">
+                <div class="arka-yuz-baslik">
+                    <h2>EĞİTİM MÜFREDATI VE KONU / SÜRE LİSTESİ (ARKA YÜZ)</h2>
+                    <div class="arka-yuz-alt">
+                        Katılımcı: <strong>{{ $k['ad_soyad'] ?? '—' }}</strong> &nbsp;·&nbsp;
+                        Firma: <strong>{{ $firma?->unvan }}</strong> &nbsp;·&nbsp;
+                        Süre: <strong>{{ $sertifika->sure_metni ?: '—' }}</strong>
+                        @if ($sertifika->belge_no) &nbsp;·&nbsp; Belge No: <strong>{{ $sertifika->belge_no }}</strong>@endif
+                    </div>
+                </div>
+
+                @if ($sertifika->cokluEgiticiMi() && ($sertifika->konu_icerigi['tip'] ?? null) === 'genel')
+                    @php
+                        $genel = $goster($sertifika->konu_icerigi['genel_konular'] ?? []);
+                        $saglik = $goster($sertifika->konu_icerigi['saglik_konulari'] ?? []);
+                        $teknik = $goster($sertifika->konu_icerigi['teknik_konular'] ?? []);
+                        $ozgu = $sertifika->konu_icerigi['isyerine_ozgu'] ?? null;
+                        $ozguMaddeler = $ozgu ? $goster($ozgu['maddeler']) : collect();
+                    @endphp
+                    <table class="konular">
+                        <tr>
+                            <td>
+                                <div class="blok">
+                                    @php $s = $sure($sertifika->konu_icerigi['genel_konular'] ?? []); @endphp
+                                    <div class="blok-baslik">1. Genel Konular (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                                    @foreach ($genel as $i => $m)
+                                        <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                                    @endforeach
+                                </div>
+                                <div class="blok">
+                                    @php $s = $sure($sertifika->konu_icerigi['saglik_konulari'] ?? []); @endphp
+                                    <div class="blok-baslik">2. Sağlık Konuları (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                                    @foreach ($saglik as $i => $m)
+                                        <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                                    @endforeach
+                                </div>
+                            </td>
+                            <td>
+                                <div class="blok">
+                                    @php $s = $sure($sertifika->konu_icerigi['teknik_konular'] ?? []); @endphp
+                                    <div class="blok-baslik">3. Teknik Konular (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                                    @foreach ($teknik as $i => $m)
+                                        <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                                    @endforeach
+                                </div>
+                                @if ($ozgu)
+                                    <div class="blok">
+                                        @php $s = $sure($ozgu['maddeler']); @endphp
+                                        <div class="blok-baslik">4. İşyerine Özgü Riskler (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                                        @foreach ($ozguMaddeler as $i => $m)
+                                            <p>{{ $harf($i) }}) {{ \App\Support\TurkceMetin::buyuk($m['madde']) }} ({{ $m['dakika'] }} dk)</p>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                @else
+                    @php $ozelMaddeler = $goster($sertifika->konu_icerigi['maddeler'] ?? []); @endphp
+                    <table class="konular">
+                        <tr>
+                            <td>
+                                <div class="blok">
+                                    @foreach ($ozelMaddeler->slice(0, (int) ceil($ozelMaddeler->count() / 2)) as $i => $m)
+                                        <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                                    @endforeach
+                                </div>
+                            </td>
+                            <td>
+                                <div class="blok">
+                                    @php $yari = (int) ceil($ozelMaddeler->count() / 2); @endphp
+                                    @foreach ($ozelMaddeler->slice($yari)->values() as $i => $m)
+                                        <p>{{ $harf($i + $yari) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
+                                    @endforeach
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                @endif
+                <p class="not" style="margin-top:10px">6331 Sayılı İSG Kanunu m.17 &amp; RG 02.04.2026 (33212) kapsamında düzenlenmiştir · Düzenleme Tarihi: {{ $duzenlemeTarihi }}</p>
+            </div>
+        </div>
+    @endif
 @empty
     <div class="sayfa">
         <div class="ic">

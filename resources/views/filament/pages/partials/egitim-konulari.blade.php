@@ -84,13 +84,28 @@
                     @endforeach
                 </div>
                 @if ($konularDuzenlenebilir)
-                    <button type="button" wire:click="isyerineOzguMaddeEkle"
-                        style="margin-top:.5rem;font-size:.75rem;color:rgb(4 120 87);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
-                        + Konu Ekle
-                    </button>
+                    <div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem">
+                        <button type="button" wire:click="isyerineOzguMaddeEkle"
+                            style="font-size:.75rem;color:rgb(4 120 87);background:none;border:1px dashed rgb(16 185 129 / .5);border-radius:.4rem;padding:.25rem .6rem;cursor:pointer">
+                            + Konu Ekle
+                        </button>
+                        @if (method_exists($this, 'aiIseOzguKonuUretAction'))
+                            <button type="button" wire:click="mountAction('aiIseOzguKonuUret')"
+                                style="font-size:.75rem;font-weight:600;color:#4338ca;background:rgb(79 70 229 / .08);border:1px solid rgb(79 70 229 / .35);border-radius:.4rem;padding:.25rem .65rem;cursor:pointer">
+                                ✨ AI ile İşe Özgü Konu Üret
+                            </button>
+                        @endif
+                    </div>
+                    <p style="font-size:.7rem;color:rgb(107 114 128);margin:.3rem 0 0">Konu ekledikçe/çıkardıkça dakikalar toplam eğitim süresine göre otomatik güncellenir.</p>
                 @endif
             @else
                 <p style="font-size:.78rem;color:#b45309;margin:0">Sektör seçilmedi.</p>
+                @if ($konularDuzenlenebilir && method_exists($this, 'aiIseOzguKonuUretAction'))
+                    <button type="button" wire:click="mountAction('aiIseOzguKonuUret')"
+                        style="margin-top:.5rem;font-size:.75rem;font-weight:600;color:#4338ca;background:rgb(79 70 229 / .08);border:1px solid rgb(79 70 229 / .35);border-radius:.4rem;padding:.25rem .65rem;cursor:pointer">
+                        ✨ AI ile İşe Özgü Konu Üret
+                    </button>
+                @endif
             @endif
         </div>
     </div>

@@ -94,12 +94,14 @@ class YillikPlanExcelUretici
 
         $gruplar = collect($plan->egitimler ?? [])->groupBy(fn (array $e) => self::egitimBolumu($e['kategori'] ?? null));
         $bilgi = YillikPlanSablonu::egitimBilgileri();
+        $dinamikBilgi = YillikEgitimPlanlayici::excelBolumBilgileri($plan->egitimler ?? [], $firma);
 
         // Alttan üste: alt bölümün satır ekleme/silmesi üst bölümlerin satırlarını kaydırmaz.
         $sonuclar = [];
         foreach (array_reverse(self::EGITIM_BOLUMLERI, true) as $kat => [$ilk, $son]) {
             $maddeler = $gruplar->get($kat, collect())->values()->all();
-            $fark = self::egitimBolumuYaz($s, $kat, $ilk, $son, $maddeler, $bilgi['bolum_aciklamalari'][$kat] ?? null);
+            $aciklama = $dinamikBilgi['bolum_aciklamalari'][$kat] ?? ($bilgi['bolum_aciklamalari'][$kat] ?? null);
+            $fark = self::egitimBolumuYaz($s, $kat, $ilk, $son, $maddeler, $aciklama);
             $sonuclar[$kat] = [$ilk, $son + $fark];
         }
 
@@ -115,12 +117,14 @@ class YillikPlanExcelUretici
         $sureSatir = $katilanSatir + 1;
         $s->setCellValue("C{$katilanSatir}", $bilgi['katilanlar'] ?? 'TÜM PERSONEL');
 
-        [$toplam, $sureler] = self::egitimSureleri($firma, $bilgi);
-        $s->setCellValue("C{$sureSatir}", $toplam);
-        $s->setCellValue("D{$sureSatir}", $sureler['genel']);
-        $s->setCellValue("R{$sureSatir}", $sureler['saglik']);
-        $s->setCellValue("AF{$sureSatir}", $sureler['teknik']);
-        $s->setCellValue("AV{$sureSatir}", $sureler['ise_ozgu']);
+        $s->setCellValue("C{$sureSatir}", $dinamikBilgi['toplam_sure']);
+        $s->setCellValue("D{$sureSatir}", $dinamikBilgi['bolum_sureleri']['genel']);
+        $s->setCellValue("R{$sureSatir}", $dinamikBilgi['bolum_sureleri']['saglik']);
+        $s->setCellValue("AF{$sureSatir}", $dinamikBilgi['bolum_sureleri']['teknik']);
+        $s->setCellValue("AV{$sureSatir}", $dinamikBilgi['bolum_sureleri']['ise_ozgu']);
+        foreach (['C', 'D', 'R', 'AF', 'AV'] as $col) {
+            $s->getStyle("{$col}{$sureSatir}")->getAlignment()->setWrapText(true);
+        }
 
         // Yazdırma: 5. Diğer Eğitimler ikinci sayfada başlar (şablondaki gibi).
         foreach (array_keys($s->getBreaks()) as $hucre) {
@@ -181,8 +185,19 @@ class YillikPlanExcelUretici
         foreach ($maddeler as $i => $m) {
             $r = $ilk + $i;
             $s->setCellValue("B{$r}", $m['konu'] ?? '');
-            $s->setCellValue("C{$r}", $m['hedef'] ?? '');
-            $s->setCellValue("D{$r}", self::buyuk((string) ($m['egitici'] ?? '')));
+            $hedefMetin = (string) ($m['hedef'] ?? '');
+            if (filled($m['hedef_kitle'] ?? null)) {
+                $ekipEtiket = '[EKİP: '.trim((string) $m['hedef_kitle']).']';
+                $hedefMetin = filled($hedefMetin) ? $ekipEtiket.' '.$hedefMetin : $ekipEtiket;
+            }
+            $s->setCellValue("C{$r}", $hedefMetin);
+            $egiticiMetin = self::buyuk((string) ($m['egitici'] ?? ''));
+            $yontemEtiket = YillikEgitimPlanlayici::excelYontemEtiketi($m['yontem'] ?? null);
+            if ($yontemEtiket !== '') {
+                $egiticiMetin = trim($egiticiMetin."\n[".$yontemEtiket.']');
+            }
+            $s->setCellValue("D{$r}", $egiticiMetin);
+            $s->getStyle("D{$r}")->getAlignment()->setWrapText(true);
             $hafta = max(1, min(4, (int) ($m['hafta'] ?? 2)));
 
             foreach (($m['aylar'] ?? []) as $ay => $durum) {

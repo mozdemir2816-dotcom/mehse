@@ -59,6 +59,7 @@
 {{-- Eğitmen kaşe/imzası — position:fixed olduğu için formun HER sayfasında görünür.
      Katılımcı listesi ikinci sayfaya taşarsa da eğitmen imzası orada da olur. --}}
     @php
+        $en = ($dil ?? 'tr') === 'tr_en';
         $sutunSayisi = 1 + ($kayit->isg_uzmani_var ? 1 : 0) + ($kayit->isyeri_hekimi_var ? 1 : 0);
         $sutunGenislik = round(100 / $sutunSayisi, 2).'%';
     @endphp
@@ -67,46 +68,61 @@
             <tr>
                 @if ($kayit->isg_uzmani_var)
                     <td style="width:{{ $sutunGenislik }}">
-                        <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
+                        <div class="rol">{{ $en ? 'Eğitimi Veren — İGU / OHS Specialist' : 'Eğitimi Veren — İş Güvenliği Uzmanı' }}</div>
                         <div class="ad">{{ $kayit->isg_uzmani_ad ?: ($firma?->igu?->ad_soyad ?: '') }}@if ($firma?->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
                             @if (($imzali ?? true) && $kayit->isg_uzmani_kase && is_file(storage_path('app/public/'.$kayit->isg_uzmani_kase)))
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
                             @endif
                         </div>
-                        <div class="imza-satir">Kaşe / İmza</div>
+                        <div class="imza-satir">{{ $en ? 'Kaşe / İmza · Stamp / Signature' : 'Kaşe / İmza' }}</div>
                     </td>
                 @endif
                 @if ($kayit->isyeri_hekimi_var)
                     <td style="width:{{ $sutunGenislik }}">
-                        <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
+                        <div class="rol">{{ $en ? 'Eğitimi Veren — İşyeri Hekimi / Physician' : 'Eğitimi Veren — İşyeri Hekimi' }}</div>
                         <div class="ad">{{ $kayit->isyeri_hekimi_ad ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}@if ($firma?->isyeriHekimi?->sertifika_no) ({{ $firma->isyeriHekimi->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
                             @if (($imzali ?? true) && $kayit->isyeri_hekimi_kase && is_file(storage_path('app/public/'.$kayit->isyeri_hekimi_kase)))
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
                             @endif
                         </div>
-                        <div class="imza-satir">Kaşe / İmza</div>
+                        <div class="imza-satir">{{ $en ? 'Kaşe / İmza · Stamp / Signature' : 'Kaşe / İmza' }}</div>
                     </td>
                 @endif
                 <td style="width:{{ $sutunGenislik }}">
-                    <div class="rol">İşveren / İşveren Vekili</div>
+                    <div class="rol">{{ $en ? 'İşveren / Vekili · Employer' : 'İşveren / İşveren Vekili' }}</div>
                     <div class="ad">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}&nbsp;</div>
                     <div class="kase"></div>
-                    <div class="imza-satir">Kaşe / İmza</div>
+                    <div class="imza-satir">{{ $en ? 'Kaşe / İmza · Stamp / Signature' : 'Kaşe / İmza' }}</div>
                 </td>
             </tr>
         </table>
-        <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>
+        <p class="yasal">{{ $en ? '6331 Sayılı İSG Kanunu m.17 uyarınca düzenlenmiştir. / Issued pursuant to OHS Law No. 6331 Art. 17.' : '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.' }}</p>
     </div>
 
 <div class="sayfa">
+
+    @php
+        $sekil = $kayit->egitim_sekli ?? 'yuz_yuze';
+        $formBaslik = match ($sekil) {
+            'uzaktan' => $en
+                ? 'UZAKTAN (ONLİNE) EĞİTİM KATILIM FORMU / ONLINE TRAINING ATTENDANCE FORM'
+                : 'UZAKTAN (ONLİNE) EĞİTİM KATILIM FORMU',
+            'karma' => $en
+                ? 'YÜZ YÜZE TAMAMLAMA EĞİTİM KATILIM FORMU (KARMA) / FACE-TO-FACE COMPLETION FORM'
+                : 'YÜZ YÜZE TAMAMLAMA EĞİTİM KATILIM FORMU (KARMA)',
+            default => $en
+                ? 'EĞİTİM KATILIM FORMU / TRAINING ATTENDANCE FORM'
+                : 'EĞİTİM KATILIM FORMU',
+        };
+    @endphp
 
     <div class="baslik">
         @if ($firma?->logo && is_file(storage_path('app/public/'.$firma->logo)))
             <img src="{{ storage_path('app/public/'.$firma->logo) }}">
         @endif
-        <h1>EĞİTİM KATILIM FORMU</h1>
+        <h1>{{ $formBaslik }}</h1>
         <div>{{ $firma?->unvan }}</div>
     </div>
 
@@ -122,7 +138,6 @@
             ? $gunTarihleri->map(fn ($t, $i) => ($i + 1).'. Gün: '.$t)->implode(' · ')
             : ($gunTarihleri->first() ?? $kayit->belge_tarihi?->format('d.m.Y') ?? '..... / ..... / ..........');
         $tekrarMi = ($kayit->egitim_turu ?? 'ilk') === 'tekrar';
-        $sekil = $kayit->egitim_sekli ?? 'yuz_yuze';
         $tik = fn (bool $v) => '<span class="kutu">'.($v ? 'X' : '').'</span>';
     @endphp
 
@@ -157,13 +172,28 @@
         </tr>
     </table>
 
+    @if (filled($icerik['oturum_notu'] ?? null))
+        <div style="border:1px solid #334155;background:#f8fafc;padding:3px 6px;margin-bottom:5px;font-size:7.2px;color:#0f172a">
+            <strong>Oturum Kapsamı:</strong> {{ $icerik['oturum_notu'] }}
+        </div>
+    @endif
+
     @php
         $goster = fn (array $maddeler) => collect($maddeler)->where('dahil', true)->values();
         $sure = fn (array $maddeler) => \App\Support\EgitimIcerikOlusturucu::bolumSuresi($maddeler);
-        $blok = function (string $baslik, array $maddeler, string $kenar) use ($goster, $sure) {
+        $blok = function (string $baslik, array $maddeler, string $kenar) use ($goster, $sure, $sekil) {
+            $secili = $goster($maddeler);
+            if ($secili->isEmpty()) {
+                $not = match ($sekil) {
+                    'karma' => 'Bu bölüm uzaktan (Online / LMS) eğitim oturumunda tamamlanmıştır.',
+                    'uzaktan' => 'Bu bölüm yüz yüze tamamlama oturumunda ayrı tutanak ile verilir.',
+                    default => 'Bu oturumda seçili konu yok.',
+                };
+                return '<div class="blok '.$kenar.'"><h3>'.e($baslik).' <span class="dk">(Bu oturumda yok)</span></h3><p style="font-size:6.8px;color:#555;margin:3px 6px;font-style:italic">'.e($not).'</p></div>';
+            }
             $s = $sure($maddeler);
             $html = '<div class="blok '.$kenar.'"><h3>'.e($baslik).' <span class="dk">('.$s['fiili'].'+'.$s['dinlenme'].' dk)</span></h3><ol>';
-            foreach ($goster($maddeler) as $m) {
+            foreach ($secili as $m) {
                 $html .= '<li>'.e($m['madde']).' <span class="dk">('.$m['dakika'].')</span></li>';
             }
             return $html.'</ol></div>';
@@ -205,18 +235,23 @@
         // hepsi listelenir (fazlası 2. sayfaya taşar, eğitmen imzası orada da var).
         $satirSayisi = max(count($katilimcilar), 24);
     @endphp
-    <div class="lt">Katılımcı Listesi ve İmzaları</div>
+    <div class="lt">{{ $en ? 'Katılımcı Listesi ve İmzaları / Participant Attendance & Signatures' : 'Katılımcı Listesi ve İmzaları' }}</div>
     <table class="katilim">
         <thead>
             <tr>
-                <th style="width:4%">#</th><th>Ad Soyad</th><th style="width:13%">T.C. No</th><th style="width:14%">Görevi</th>
+                <th style="width:4%">#</th>
+                <th>{{ $en ? 'Ad Soyad / Full Name' : 'Ad Soyad' }}</th>
+                <th style="width:13%">{{ $en ? 'T.C. / ID No' : 'T.C. No' }}</th>
+                <th style="width:14%">{{ $en ? 'Görevi / Title' : 'Görevi' }}</th>
                 @if ($ikiGun)
-                    <th style="width:13%">İmza (1. Gün)</th><th style="width:13%">İmza (2. Gün)</th>
+                    <th style="width:13%">{{ $en ? 'İmza (1. Gün / Day 1)' : 'İmza (1. Gün)' }}</th>
+                    <th style="width:13%">{{ $en ? 'İmza (2. Gün / Day 2)' : 'İmza (2. Gün)' }}</th>
                 @else
-                    <th style="width:18%">İmza</th>
+                    <th style="width:18%">{{ $en ? 'İmza / Signature' : 'İmza' }}</th>
                 @endif
                 {{-- Sınav puanları elle yazılır; imza yerleriyle karışmasın diye imzalardan sonra yan yana. --}}
-                <th style="width:7%">Ön Test</th><th style="width:7%">Son Test</th>
+                <th style="width:7%">{{ $en ? 'Ön / Pre' : 'Ön Test' }}</th>
+                <th style="width:7%">{{ $en ? 'Son / Final' : 'Son Test' }}</th>
             </tr>
         </thead>
         <tbody>

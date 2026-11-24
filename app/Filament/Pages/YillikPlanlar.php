@@ -6,11 +6,15 @@ use App\Filament\Support\ImzaSecenegi;
 use App\Models\Firma;
 use App\Models\IseOzguEgitimKonusu;
 use App\Models\YillikPlan as YillikPlanModel;
+use App\Support\EgitimIcerikOlusturucu;
 use App\Support\EgitimKonulari;
+use App\Support\GeminiIseOzguEgitimUretici;
 use App\Support\IseOzguEgitimKutuphanesi;
+use App\Support\IseOzguSenkron;
 use App\Support\YillikDegerlendirmeExcelUretici;
 use App\Support\YillikDegerlendirmeFormUretici;
 use App\Support\YillikDegerlendirmeVerisi;
+use App\Support\YillikEgitimPlanlayici;
 use App\Support\YillikPlanExcelIceAktarici;
 use App\Support\YillikPlanExcelUretici;
 use App\Support\YillikPlanGerceklesme;
@@ -99,6 +103,14 @@ abstract class YillikPlanlar extends Page
 
     public ?string $yeniEgitimHedefKitle = null;
 
+    public string $yeniEgitimYontem = 'yuz_yuze';
+
+    /** Online / Yüz Yüze dağıtım modu (YillikEgitimPlanlayici::MODLAR). */
+    public string $egitimPlanModu = YillikEgitimPlanlayici::VARSAYILAN_MOD;
+
+    /** Firmanın elle seçilmiş "Gerçek İş Grubu" (NACE'si yapılan işle tutmayan firmalar için; null = NACE otomatik). */
+    public ?string $firmaEgitimGrubu = null;
+
     public ?string $yeniDegerlendirmeCalisma = null;
 
     public function mount(): void
@@ -117,15 +129,44 @@ abstract class YillikPlanlar extends Page
 
         $this->degerlendirmeyiOtomatikGuncelle();
         $this->gerceklesmeleriIsle();
+        $this->egitimPlanModunuSenkronla();
     }
 
-    /** Çalışma planı sekmesi açılınca sistem kayıtlarından (tatbikat, denetim, DÖF, kurul vb.) G'ler işlenir. */
+    /** Çalışma planında sistem kayıtları, eğitim planında katılım + LMS tamamlanmaları G olarak işlenir. */
     protected function gerceklesmeleriIsle(): void
     {
-        if ($this->sekme === 'calisma' && ($p = $this->plan())) {
+        if (! ($p = $this->plan())) {
+            return;
+        }
+
+        if ($this->sekme === 'calisma') {
             YillikPlanGerceklesme::isle($p);
             unset($this->plan);
+        } elseif ($this->sekme === 'egitim') {
+            if (EgitimKonulari::kayitlariPlanaIsle($p) > 0) {
+                unset($this->plan);
+            }
         }
+    }
+
+    protected function egitimPlanModunuSenkronla(): void
+    {
+        if ($this->sekme === 'egitim' && ($p = $this->plan())) {
+            $this->egitimPlanModu = YillikEgitimPlanlayici::moduTespitEt($p->egitimler ?? [], $this->firma);
+            $this->firmaEgitimGrubu = IseOzguSenkron::firmaGrubuOku($this->firma) ?? '';
+        }
+    }
+
+    #[Computed]
+    public function egitimSektorSecenekleri(): array
+    {
+        return EgitimIcerikOlusturucu::sektorler();
+    }
+
+    #[Computed]
+    public function ayniIsGrubuFirmaSayisi(): int
+    {
+        return $this->firma ? IseOzguSenkron::ayniGrubunFirmalari($this->firma)->count() : 0;
     }
 
     /**
@@ -181,6 +222,7 @@ abstract class YillikPlanlar extends Page
         unset($this->firma, $this->plan);
         $this->degerlendirmeyiOtomatikGuncelle();
         $this->gerceklesmeleriIsle();
+        $this->egitimPlanModunuSenkronla();
     }
 
     public function updatedYil(): void
@@ -188,6 +230,7 @@ abstract class YillikPlanlar extends Page
         unset($this->plan);
         $this->degerlendirmeyiOtomatikGuncelle();
         $this->gerceklesmeleriIsle();
+        $this->egitimPlanModunuSenkronla();
     }
 
     /** Atanmış uzman (sözleşme başlangıcı) öncesi ay indeksi — bu aylar kilitli. */
@@ -310,21 +353,127 @@ abstract class YillikPlanlar extends Page
             return;
         }
 
+        $kategori = array_key_exists($this->yeniEgitimKategori, config('isg.yillik_plan.egitim_kategorileri'))
+            ? $this->yeniEgitimKategori : 'genel';
+        $yontem = array_key_exists($this->yeniEgitimYontem, YillikEgitimPlanlayici::YONTEMLER)
+            ? $this->yeniEgitimYontem : 'yuz_yuze';
+
+        if (YillikEgitimPlanlayici::zorunluYuzYuzeMi(['kategori' => $kategori], $this->firma)) {
+            $yontem = 'yuz_yuze';
+        }
+
+        $sure = is_numeric($this->yeniEgitimSure) && (float) $this->yeniEgitimSure > 0
+            ? round((float) $this->yeniEgitimSure, 2)
+            : null;
+        $onSaat = $sure !== null ? ($yontem === 'uzaktan' ? $sure : ($yontem === 'karma' ? round($sure / 2, 2) : 0.0)) : 0.0;
+        $yySaat = $sure !== null ? round($sure - $onSaat, 2) : 0.0;
+
         $egitimler = $p->egitimler ?? [];
         $egitimler[] = [
             'konu' => $this->yeniEgitimKonu,
-            'kategori' => array_key_exists($this->yeniEgitimKategori, config('isg.yillik_plan.egitim_kategorileri'))
-                ? $this->yeniEgitimKategori : 'genel',
+            'kategori' => $kategori,
+            'yontem' => $yontem,
+            'plan_modu' => $this->egitimPlanModu,
             'hafta' => 2,
-            'sure_saat' => $this->yeniEgitimSure ?: null,
+            'sure_saat' => $sure,
+            'online_saat' => $onSaat,
+            'yuz_yuze_saat' => $yySaat,
             'egitici' => $this->yeniEgitimEgitici,
             'hedef' => null,
             'hedef_kitle' => $this->yeniEgitimHedefKitle,
             'aylar' => array_fill(0, 12, 'bos'),
         ];
+
+        // 4 temel bölümden birine konu eklendiğinde tüm bölüm saatleri toplam eğitim süresine göre otomatik güncellenir.
+        if ($kategori !== 'diger') {
+            $egitimler = YillikEgitimPlanlayici::satirlaraUygula($egitimler, $this->firma, $this->egitimPlanModu);
+        }
+
         $p->update(['egitimler' => $egitimler]);
+        unset($this->plan);
 
         $this->reset('yeniEgitimKonu', 'yeniEgitimSure', 'yeniEgitimEgitici', 'yeniEgitimHedefKitle');
+    }
+
+    /** Seçili moda göre tüm satırların Online / Yüz Yüze yöntemini ve yasal saatlerini otomatik dağıtır. */
+    public function egitimModuUygula(?string $mod = null): void
+    {
+        $p = $this->plan();
+        if (! $p) {
+            return;
+        }
+
+        $hedefMod = $mod && array_key_exists($mod, YillikEgitimPlanlayici::MODLAR)
+            ? $mod
+            : $this->egitimPlanModu;
+        $this->egitimPlanModu = $hedefMod;
+
+        $yeni = YillikEgitimPlanlayici::satirlaraUygula($p->egitimler ?? [], $this->firma, $hedefMod);
+        $p->update(['egitimler' => $yeni]);
+        unset($this->plan);
+
+        $ozet = YillikEgitimPlanlayici::ozet($yeni, $this->firma);
+
+        Notification::make()
+            ->title('Yıllık eğitim planı güncellendi')
+            ->body(sprintf(
+                '%s (%s): %s Online + %s Yüz Yüze = %s',
+                $ozet['tehlike_etiketi'],
+                YillikEgitimPlanlayici::MODLAR[$hedefMod],
+                YillikEgitimPlanlayici::saatMetni($ozet['ilk_online']),
+                YillikEgitimPlanlayici::saatMetni($ozet['ilk_yuz_yuze']),
+                YillikEgitimPlanlayici::saatMetni($ozet['ilk_toplam']),
+            ))
+            ->success()
+            ->send();
+    }
+
+    /** Tek bir eğitim satırının yöntemini Online ↔ Yüz Yüze ↔ Karma olarak değiştirir (mevzuat kilidiyle). */
+    public function egitimYontemDegistir(int $index): void
+    {
+        $p = $this->plan();
+        $egitimler = $p?->egitimler ?? [];
+
+        if (! $p || ! isset($egitimler[$index])) {
+            return;
+        }
+
+        $satir = $egitimler[$index];
+        if (YillikEgitimPlanlayici::zorunluYuzYuzeMi($satir, $this->firma)) {
+            Notification::make()
+                ->title('Bu konu yüz yüze zorunludur')
+                ->body('RG 02.04.2026 (33212) Md.12/3 ve Md.7 gereği bu bölümdeki eğitimler online (uzaktan) verilemez.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $sira = ['uzaktan', 'yuz_yuze', 'karma'];
+        $mevcut = $satir['yontem'] ?? 'yuz_yuze';
+        $yeniYontem = $sira[((int) array_search($mevcut, $sira, true) + 1) % count($sira)];
+
+        $toplam = (float) ($satir['sure_saat'] ?? ((float) ($satir['online_saat'] ?? 0) + (float) ($satir['yuz_yuze_saat'] ?? 0)));
+        if ($toplam <= 0) {
+            $toplam = 0.5;
+        }
+
+        $egitimler[$index]['yontem'] = $yontem = $yeniYontem;
+        $egitimler[$index]['sure_saat'] = round($toplam, 2);
+        if ($yontem === 'uzaktan') {
+            $egitimler[$index]['online_saat'] = round($toplam, 2);
+            $egitimler[$index]['yuz_yuze_saat'] = 0.0;
+        } elseif ($yontem === 'yuz_yuze') {
+            $egitimler[$index]['online_saat'] = 0.0;
+            $egitimler[$index]['yuz_yuze_saat'] = round($toplam, 2);
+        } else {
+            $on = round($toplam / 2, 2);
+            $egitimler[$index]['online_saat'] = $on;
+            $egitimler[$index]['yuz_yuze_saat'] = round($toplam - $on, 2);
+        }
+
+        $p->update(['egitimler' => $egitimler]);
+        unset($this->plan);
     }
 
     public function egitimSil(int $index): void
@@ -336,8 +485,16 @@ abstract class YillikPlanlar extends Page
             return;
         }
 
+        $silinenKat = $egitimler[$index]['kategori'] ?? 'diger';
         unset($egitimler[$index]);
-        $p->update(['egitimler' => array_values($egitimler)]);
+        $egitimler = array_values($egitimler);
+
+        if ($silinenKat !== 'diger') {
+            $egitimler = YillikEgitimPlanlayici::satirlaraUygula($egitimler, $this->firma, $this->egitimPlanModu);
+        }
+
+        $p->update(['egitimler' => $egitimler]);
+        unset($this->plan);
     }
 
     /*
@@ -537,9 +694,214 @@ abstract class YillikPlanlar extends Page
             return $e;
         })->values()->all();
 
-        $p->update(['egitimler' => YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $satirlar)]);
+        $yeniPlan = YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $satirlar);
+        $yeniPlan = YillikEgitimPlanlayici::satirlaraUygula($yeniPlan, $this->firma, $this->egitimPlanModu);
+        $p->update(['egitimler' => $yeniPlan]);
+        unset($this->plan);
 
         Notification::make()->title('İşe özgü konular güncellendi')->body(count($satirlar).' konu planın 4. bölümünde.')->success()->send();
+    }
+
+    /**
+     * NACE'si gerçek işiyle tutmayan firma için elle "Gerçek İş Grubu" kaydeder;
+     * $konulariYukle = true ise o grubun standart 4. bölüm konularını bu firmanın planına uygular (tamamlanan aylar korunur).
+     */
+    public function firmaEgitimGrubunuUygula(bool $konulariYukle = false): void
+    {
+        $p = $this->plan();
+        if (! $p || ! $this->firma) {
+            return;
+        }
+
+        $secili = filled($this->firmaEgitimGrubu) ? (string) $this->firmaEgitimGrubu : null;
+        IseOzguSenkron::firmaGrubuKaydet($this->firma, $secili);
+        unset($this->ayniIsGrubuFirmaSayisi);
+
+        $etkin = IseOzguSenkron::etkinGrup($this->firma);
+
+        if ($konulariYukle && $etkin) {
+            $sablon = EgitimIcerikOlusturucu::olustur('genel', $etkin, $this->firma->tehlike_sinifi ?: 'tehlikeli', 'ilk');
+            $maddeler = collect($sablon['isyerine_ozgu']['maddeler'] ?? [])
+                ->pluck('madde')->map(fn ($m) => trim((string) $m))->filter()->unique()->values();
+
+            if ($maddeler->isNotEmpty()) {
+                $kilit = $this->kilitAyIndeksi();
+                $mevcutlar = collect($p->egitimler ?? [])->where('kategori', 'ise_ozgu')
+                    ->keyBy(fn ($e) => EgitimKonulari::normalize((string) ($e['konu'] ?? '')));
+
+                $satirlar = $maddeler->map(function (string $konu) use ($mevcutlar, $kilit): array {
+                    $norm = EgitimKonulari::normalize($konu);
+                    if ($mevcutlar->has($norm)) {
+                        return $mevcutlar[$norm];
+                    }
+
+                    return YillikPlanModel::maddeAylarIle([[
+                        'konu' => $konu,
+                        'kategori' => 'ise_ozgu',
+                        'hedef' => '',
+                        'egitici' => IseOzguEgitimKutuphanesi::VARSAYILAN_EGITICI,
+                        'hafta' => 2,
+                        'varsayilan_aylar' => range(0, 11),
+                    ]], $kilit)[0];
+                })->all();
+
+                $yeniPlan = YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $satirlar);
+                $yeniPlan = YillikEgitimPlanlayici::satirlaraUygula($yeniPlan, $this->firma, $this->egitimPlanModu);
+                $p->update(['egitimler' => $yeniPlan]);
+                unset($this->plan);
+            }
+        }
+
+        $sektorAd = $etkin ? (EgitimIcerikOlusturucu::sektorler()[$etkin] ?? $etkin) : 'NACE Otomatik';
+        Notification::make()
+            ->title($konulariYukle ? '4. bölüm gerçek iş grubuna göre güncellendi' : 'Gerçek iş grubu kaydedildi')
+            ->body('Etkin grup: '.$sektorAd.'. Eğitim Katılım Formu da aynı grubu kullanır.')
+            ->success()
+            ->send();
+    }
+
+    /** Bu firmanın 4. bölüm ("İşe ve İşyerine Özgü Riskler") konularını aynı iş grubundaki tüm firmalara tek tıkla eşitler. */
+    public function dorduncuBolumuGrubaEsitle(): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        $adet = IseOzguSenkron::dorduncuBolumuGrubaEsitle($this->firma, $this->yil);
+
+        if ($adet === 0) {
+            Notification::make()
+                ->title('Eşitlenecek başka firma bulunamadı')
+                ->body('Aynı NACE veya aynı "Gerçek İş Grubu"na sahip başka aktif firmanız yok.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title($adet.' firmanın 4. bölümü eşitlendi')
+            ->body('Aynı iş grubundaki firmaların '.$this->yil.' Yıllık Eğitim Planı 4. bölümleri güncellendi (tamamlanmış G ayları ve tehlike sınıfı saatleri korundu).')
+            ->success()
+            ->send();
+    }
+
+    /** Gemini API ile firmanın sektörü/NACE/ekibine uygun 4. bölüm konularını üretip plana ekler ve saatleri günceller. */
+    public function aiIseOzguUretAction(): Action
+    {
+        return Action::make('aiIseOzguUret')
+            ->label('✨ AI ile 4. Bölüm Üret')
+            ->modalHeading('✨ Yapay Zekâ (API) ile 4. Bölüm Konuları Üret')
+            ->modalDescription('Firmanın sektörüne/NACE koduna ve ekibine özel 4. Bölüm konularını üretir; toplam eğitim süresine göre satır saatlerini otomatik yeniden dağıtır.')
+            ->modalSubmitActionLabel('Üret ve Plana Uygula')
+            ->fillForm(fn () => [
+                'sektor' => ($this->firma ? IseOzguSenkron::etkinGrup($this->firma) : null) ?: 'insaat',
+                'adet' => 5,
+                'ekleme_sekli' => 'ekle',
+                'kutuphaneye_kaydet' => true,
+            ])
+            ->schema([
+                \Filament\Forms\Components\Select::make('sektor')
+                    ->label('Sektör / İş Grubu')
+                    ->options(GeminiIseOzguEgitimUretici::sektorSecenekleri())
+                    ->searchable()
+                    ->required(),
+                \Filament\Forms\Components\TextInput::make('hedef_kitle')
+                    ->label('Ekip / Çalışan Grubu Etiketi (Opsiyonel)')
+                    ->placeholder('Örn: Kalıp Ekibi, Sıva Ekibi, Kaynak Atölyesi'),
+                \Filament\Forms\Components\Textarea::make('ek_baglam')
+                    ->label('Ek Saha / Ekipman Bilgisi (Opsiyonel)')
+                    ->rows(2)
+                    ->placeholder('Örn: CNC tezgâhları, tavan vinci, solvent bazlı boya'),
+                Grid::make(2)->schema([
+                    \Filament\Forms\Components\Select::make('adet')
+                        ->label('Konu Sayısı')
+                        ->options([3 => '3 konu', 4 => '4 konu', 5 => '5 konu', 6 => '6 konu', 8 => '8 konu'])
+                        ->default(5)
+                        ->required(),
+                    Radio::make('ekleme_sekli')
+                        ->label('Uygulama Şekli')
+                        ->options([
+                            'ekle' => 'Mevcut 4. bölümün üzerine ekle',
+                            'degistir' => '4. bölümü yenileriyle değiştir',
+                        ])
+                        ->default('ekle')
+                        ->required(),
+                ]),
+                Toggle::make('kutuphaneye_kaydet')
+                    ->label('İşe Özgü Eğitim Kütüphanesi\'ne de kaydet (aynı sektördeki diğer firmalar için)')
+                    ->default(true),
+            ])
+            ->action(function (array $data): void {
+                $p = $this->plan();
+                if (! $p || ! $this->firma) {
+                    return;
+                }
+
+                $sektorAnahtar = (string) ($data['sektor'] ?? '');
+                $sektorler = GeminiIseOzguEgitimUretici::sektorSecenekleri();
+                $sektorAd = $sektorler[$sektorAnahtar] ?? $sektorAnahtar;
+                $hedefKitle = filled($data['hedef_kitle'] ?? null) ? trim((string) $data['hedef_kitle']) : null;
+                $ekBaglam = filled($data['ek_baglam'] ?? null) ? trim((string) $data['ek_baglam']) : null;
+                $adet = (int) ($data['adet'] ?? 5);
+
+                $sonuc = GeminiIseOzguEgitimUretici::uret(
+                    $sektorAd,
+                    $this->firma->nace_kodu ?: GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar),
+                    $this->firma->tehlike_sinifi,
+                    $hedefKitle,
+                    $ekBaglam,
+                    $adet,
+                );
+
+                if ($sonuc['hata'] !== null) {
+                    Notification::make()->title('Konu üretilemedi')->body($sonuc['hata'])->danger()->send();
+
+                    return;
+                }
+
+                $kilit = $this->kilitAyIndeksi();
+                $mevcutlar = ($data['ekleme_sekli'] ?? 'ekle') === 'degistir'
+                    ? collect()
+                    : collect($p->egitimler ?? [])->where('kategori', 'ise_ozgu')->values();
+
+                $mevcutAdlar = $mevcutlar->map(fn ($e) => EgitimKonulari::normalize((string) ($e['konu'] ?? '')))->flip();
+
+                foreach ($sonuc['konular'] as $k) {
+                    $norm = EgitimKonulari::normalize($k['ad']);
+                    if ($mevcutAdlar->has($norm)) {
+                        continue;
+                    }
+
+                    $mevcutlar->push(YillikPlanModel::maddeAylarIle([[
+                        'konu' => $k['ad'],
+                        'kategori' => 'ise_ozgu',
+                        'hedef' => $k['hedef'],
+                        'hedef_kitle' => $hedefKitle,
+                        'egitici' => $k['egitici'],
+                        'hafta' => 2,
+                        'varsayilan_aylar' => range(0, 11),
+                    ]], $kilit)[0]);
+                    $mevcutAdlar->put($norm, true);
+                }
+
+                $yeniPlan = YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $mevcutlar->all());
+                $yeniPlan = YillikEgitimPlanlayici::satirlaraUygula($yeniPlan, $this->firma, $this->egitimPlanModu);
+                $p->update(['egitimler' => $yeniPlan]);
+                unset($this->plan);
+
+                $kaydedilen = 0;
+                if (! empty($data['kutuphaneye_kaydet']) && ($userId = Filament::auth()->id())) {
+                    $nace = GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar, $this->firma->nace_kodu);
+                    $kaydedilen = GeminiIseOzguEgitimUretici::kutuphaneyeKaydet($userId, $sonuc['konular'], $nace, $hedefKitle);
+                }
+
+                Notification::make()
+                    ->title(count($sonuc['konular']).' konu 4. bölüme eklendi ve süreler güncellendi')
+                    ->body($kaydedilen > 0 ? "{$kaydedilen} konu kütüphaneye de kaydedildi." : '4. bölüm saatleri toplam eğitim süresine göre otomatik yeniden dağıtıldı.')
+                    ->success()
+                    ->send();
+            });
     }
 
     /** Plandaki bir 4. bölüm satırını kendi kütüphaneme kaydeder (başka firmalarda da seçilebilsin). */

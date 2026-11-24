@@ -103,6 +103,42 @@ class EgitimIcerikOlusturucu
             ->all();
     }
 
+    /**
+     * Bir bölümdeki dahil (`dahil = true`) maddelerin dakikalarını hedef toplam fiili
+     * dakikaya tam bölerek (yuvarlama kayıpsız) dağıtır. Konu eklendikçe, çıkarıldıkça
+     * veya dahil işareti değiştikçe toplam bölüm süresi sabit/doğru kalır.
+     *
+     * @param  array<int, array<string, mixed>>  $maddeler
+     * @return array<int, array<string, mixed>>
+     */
+    public static function bolumDakikalariniDagit(array $maddeler, int $hedefFiiliDk): array
+    {
+        if ($hedefFiiliDk <= 0) {
+            return $maddeler;
+        }
+
+        $aktifIndeksler = [];
+        foreach ($maddeler as $i => $m) {
+            if ($m['dahil'] ?? true) {
+                $aktifIndeksler[] = $i;
+            }
+        }
+
+        $adet = count($aktifIndeksler);
+        if ($adet === 0) {
+            return $maddeler;
+        }
+
+        $taban = intdiv($hedefFiiliDk, $adet);
+        $kalan = $hedefFiiliDk - ($taban * $adet);
+
+        foreach ($aktifIndeksler as $sira => $idx) {
+            $maddeler[$idx]['dakika'] = max(1, $taban + ($sira < $kalan ? 1 : 0));
+        }
+
+        return $maddeler;
+    }
+
     /** Eğitim, bu duvar-saati dakikasını aşarsa 2 güne planlanır (11 saat). */
     public const IKI_GUN_ESIGI_DK = 11 * 60;
 

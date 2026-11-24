@@ -29,13 +29,14 @@ class EgitimKatilimUretici
     private const BASLIK_ARKA = 'F0F0F0';
 
     /** @param  bool  $imzali  false = imzasız (matbu): eğitmen kaşe/imza görselleri basılmaz */
-    public static function pdf(EgitimKatilim $kayit, bool $imzali = true): StreamedResponse
+    public static function pdf(EgitimKatilim $kayit, bool $imzali = true, string $dil = 'tr'): StreamedResponse
     {
         $kayit->loadMissing('firma');
 
-        $ad = 'egitim-katilim-'.Str::slug($kayit->firma?->unvan ?? 'firma').'-'.$kayit->belge_no.'.pdf';
+        $ek = $dil === 'tr_en' ? '-tr-en' : '';
+        $ad = 'egitim-katilim-'.Str::slug($kayit->firma?->unvan ?? 'firma').'-'.$kayit->belge_no.$ek.'.pdf';
 
-        return static::pdfCikti($kayit, $kayit->firma, $kayit->konu_secimleri ?? [], $ad, $imzali);
+        return static::pdfCikti($kayit, $kayit->firma, $kayit->konu_secimleri ?? [], $ad, $imzali, $dil);
     }
 
     /**
@@ -43,9 +44,10 @@ class EgitimKatilimUretici
      * her sayfaya "Belge No · Sayfa X/Y" damgalar (eğitmen imzası zaten
      * position:fixed ile her sayfada). Tek sayfada damga yok.
      */
-    private static function pdfCikti(EgitimKatilim $kayit, $firma, array $icerik, string $ad, bool $imzali = true): StreamedResponse
+    private static function pdfCikti(EgitimKatilim $kayit, $firma, array $icerik, string $ad, bool $imzali = true, string $dil = 'tr'): StreamedResponse
     {
-        $pdf = Pdf::loadView('pdf.egitim-katilim', compact('kayit', 'firma', 'icerik', 'imzali'))->setPaper('a4');
+        $dil = $dil === 'tr_en' ? 'tr_en' : 'tr';
+        $pdf = Pdf::loadView('pdf.egitim-katilim', compact('kayit', 'firma', 'icerik', 'imzali', 'dil'))->setPaper('a4');
         $pdf->render();
 
         $dompdf = $pdf->getDomPDF();

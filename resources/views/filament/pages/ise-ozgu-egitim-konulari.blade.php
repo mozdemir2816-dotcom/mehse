@@ -30,7 +30,10 @@
                     @foreach ($this->firmalar as $id => $ad)<option value="{{ $id }}">{{ $ad }}</option>@endforeach
                 </select></div>
         </div>
-        <x-filament::button icon="heroicon-o-plus" wire:click="mountAction('yeniKonu')">Yeni Konu</x-filament::button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <x-filament::button color="info" icon="heroicon-o-sparkles" wire:click="mountAction('aiSektorKonulariUret')">✨ API / AI ile Sektör Konuları Üret</x-filament::button>
+            <x-filament::button icon="heroicon-o-plus" wire:click="mountAction('yeniKonu')">Yeni Konu</x-filament::button>
+        </div>
     </div>
 
     @if ($this->firma)

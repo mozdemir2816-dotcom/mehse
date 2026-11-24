@@ -17,7 +17,7 @@ use ZipArchive;
 class SertifikaUretici
 {
     /** @param  bool  $imzali  false = imzasız (matbu): eğitici kaşe/imza görselleri basılmaz */
-    public static function pdf(Sertifika $s, bool $imzali = true, bool $tcMaskele = false): StreamedResponse
+    public static function pdf(Sertifika $s, bool $imzali = true, bool $tcMaskele = false, bool $arkaliOnlu = false): StreamedResponse
     {
         $s->loadMissing('firma');
 
@@ -26,15 +26,17 @@ class SertifikaUretici
             'firma' => $s->firma,
             'imzali' => $imzali,
             'tcMaskele' => $tcMaskele,
+            'arkaliOnlu' => $arkaliOnlu,
         ])->setPaper('a4', 'landscape');
 
-        $ad = 'sertifika-'.Str::slug($s->tipEtiketi()).'-'.Str::slug($s->firma?->unvan ?? 'firma').'.pdf';
+        $ek = $arkaliOnlu ? '-arkali-onlu' : '';
+        $ad = 'sertifika-'.Str::slug($s->tipEtiketi()).'-'.Str::slug($s->firma?->unvan ?? 'firma').$ek.'.pdf';
 
         return response()->streamDownload(fn () => print ($pdf->output()), $ad);
     }
 
     /** Katılımcı başına ayrı PDF dosyası üreterek tek ZIP arşivi olarak indirir. */
-    public static function zip(Sertifika $s, bool $imzali = true, bool $tcMaskele = false): BinaryFileResponse
+    public static function zip(Sertifika $s, bool $imzali = true, bool $tcMaskele = false, bool $arkaliOnlu = false): BinaryFileResponse
     {
         $s->loadMissing('firma');
         $katilimcilar = array_values($s->katilimcilar ?? []);
@@ -53,6 +55,7 @@ class SertifikaUretici
                 'firma' => $s->firma,
                 'imzali' => $imzali,
                 'tcMaskele' => $tcMaskele,
+                'arkaliOnlu' => $arkaliOnlu,
             ])->setPaper('a4', 'landscape');
 
             $kisiAd = Str::slug((string) ($k['ad_soyad'] ?? 'katilimci-'.($i + 1))) ?: 'katilimci-'.($i + 1);

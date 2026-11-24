@@ -314,6 +314,23 @@ class AcilDurumKrokisi extends Page
                     $this->redirect(static::getUrl(['firma' => $this->firmaId]));
                 }),
 
+            Action::make('svg')
+                ->label('📐 Vektör SVG (A4/A3/A0)')
+                ->icon('heroicon-o-arrows-pointing-out')
+                ->color('info')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->modalHeading('Vektör SVG Kroki İndir (Otomatik Lejant Sayacı)')
+                ->modalDescription('Büyük boy baskı (A4 / A3 / A0) için kayıpsız vektör SVG ve otomatik ISO 7010 sembol sayacı lejantı üretir.')
+                ->schema([
+                    \Filament\Forms\Components\Radio::make('boyut')
+                        ->label('Kağıt / Pano Boyutu')
+                        ->options(collect(AcilDurumKrokisiUretici::SVG_BOYUTLAR)->mapWithKeys(fn ($v, $k) => [$k => $v['etiket']])->all())
+                        ->default('A3')
+                        ->required(),
+                ])
+                ->action(fn (array $data) => AcilDurumKrokisiUretici::svg($this->kroki(), (string) ($data['boyut'] ?? 'A3'))),
+
             Action::make('pdf')
                 ->label('Kroki PDF')
                 ->icon('heroicon-o-document-arrow-down')

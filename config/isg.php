@@ -6370,12 +6370,15 @@ return [
             'cok_tehlikeli' => 1,
         ],
         'sureler' => ['4 saat', '8 saat', '8 Ders saati', '12 saat', '12 Ders saati', '16 saat', '16 Ders saati'],
-        // isgpratik'in gerçek sertifika çıktılarında görülen 4 çerçeve seçeneği.
+        // 7 kurumsal sertifika çerçeve seçeneği.
         'cerceveler' => [
             'sade' => 'Sade — çerçevesiz',
             'mavi_kose' => 'Mavi Köşeli Çerçeve',
             'altin_susleme' => 'Altın Süsleme Çerçeve',
             'gri_cizgi' => 'Gri Çift Çizgi Çerçeve',
+            'lacivert_kurumsal' => 'Lacivert Kurumsal Çerçeve',
+            'zumrut_klasik' => 'Zümrüt Yeşil Klasik Çerçeve',
+            'bordo_resmi' => 'Bordo Resmi Çerçeve',
         ],
         'turler' => [
             'ilk_defa' => 'İlk Defa Eğitim',

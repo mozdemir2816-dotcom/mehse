@@ -650,7 +650,16 @@ class RiskDegerlendirmesiOfisUretici
         $phpWord->setDefaultParagraphStyle(['spaceAfter' => 0, 'spaceBefore' => 0, 'spacing' => 0]);
 
         // PDF ile aynı düzen: künye + yöntem dikey, risk tablosu + ekip / onay yatay (yeni bölüm).
-        $altBilgi = fn (Section $b) => $b->addFooter()->addPreserveText($rd->belge_no.'     Sayfa {PAGE} / {NUMPAGES}', ['size' => 7, 'color' => '666666'], ['alignment' => Jc::END]);
+        // Risk Değ. Yön. m.11/2: her sayfa alt bilgisinde ekip paraflama şeridi + belge no + sayfa no.
+        $altBilgi = function (Section $b) use ($rd): void {
+            $footer = $b->addFooter();
+            $footer->addText(
+                'Paraf (Yön. m.11/2) — İşveren/Vekili: ............  |  İGU: ............  |  İşyeri Hekimi: ............  |  Çalışan Tem.: ............  |  Destek El.: ............',
+                ['size' => 6.5, 'color' => '475569'],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 20],
+            );
+            $footer->addPreserveText($rd->belge_no.'     Sayfa {PAGE} / {NUMPAGES}', ['size' => 7, 'color' => '666666'], ['alignment' => Jc::END]);
+        };
         $bolum = $phpWord->addSection(['marginTop' => 700, 'marginBottom' => 700, 'marginLeft' => 500, 'marginRight' => 500]);
         $altBilgi($bolum);
 

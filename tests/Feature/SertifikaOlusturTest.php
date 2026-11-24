@@ -268,7 +268,7 @@ class SertifikaOlusturTest extends TestCase
     public function test_dort_gercek_cerceve_secenegi_mevcut(): void
     {
         $this->assertSame(
-            ['sade', 'mavi_kose', 'altin_susleme', 'gri_cizgi'],
+            ['sade', 'mavi_kose', 'altin_susleme', 'gri_cizgi', 'lacivert_kurumsal', 'zumrut_klasik', 'bordo_resmi'],
             array_keys(config('isg.sertifika.cerceveler')),
         );
     }

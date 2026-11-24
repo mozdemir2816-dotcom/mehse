@@ -218,17 +218,90 @@
         @endif
 
         @if ($sekme === 'egitim')
+            @php
+                $egitimOzet = \App\Support\YillikEgitimPlanlayici::ozet($p->egitimler ?? [], $this->firma);
+                $yontemStil = [
+                    'uzaktan' => ['etiket' => '💻 Online', 'bg' => 'rgb(37 99 235 / .12)', 'renk' => '#1d4ed8', 'kenar' => 'rgb(37 99 235 / .35)'],
+                    'yuz_yuze' => ['etiket' => '🏫 Yüz Yüze', 'bg' => 'rgb(217 119 6 / .12)', 'renk' => '#b45309', 'kenar' => 'rgb(217 119 6 / .35)'],
+                    'karma' => ['etiket' => '🔀 Karma', 'bg' => 'rgb(124 58 237 / .12)', 'renk' => '#6d28d9', 'kenar' => 'rgb(124 58 237 / .35)'],
+                ];
+            @endphp
             <x-filament::section icon="heroicon-o-academic-cap" icon-color="primary">
                 <x-slot name="heading">
                     Yıllık Eğitim Planı — {{ $yil }}
-                    <span style="font-weight:400;font-size:.78rem;color:rgb(107 114 128)">(tıklayarak durumu değiştirin)</span>
+                    <span style="font-weight:400;font-size:.78rem;color:rgb(107 114 128)">(ay hücresine tıklayarak durumu, yöntem rozetine tıklayarak Online/Yüz Yüze seçimini değiştirin)</span>
                 </x-slot>
 
+                {{-- Online / Yüz Yüze Planlama Kontrol Şeridi & RG 02.04.2026 Uyum Özeti --}}
+                <div style="border:1px solid {{ $egitimOzet['uyumlu'] ? 'rgb(34 197 94 / .35)' : 'rgb(239 68 68 / .45)' }};background:{{ $egitimOzet['uyumlu'] ? 'rgb(34 197 94 / .05)' : 'rgb(239 68 68 / .06)' }};border-radius:.85rem;padding:.85rem 1rem;margin-bottom:1rem">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.65rem;margin-bottom:.65rem">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.45rem;font-size:.8rem">
+                            <span style="font-weight:700;padding:.2rem .6rem;border-radius:9999px;background:rgb(15 23 42 / .08)">{{ $egitimOzet['tehlike_etiketi'] }}</span>
+                            <span style="font-weight:700;padding:.2rem .6rem;border-radius:9999px;background:rgb(37 99 235 / .12);color:#1d4ed8">💻 Online: {{ \App\Support\YillikEgitimPlanlayici::saatMetni($egitimOzet['ilk_online']) }}</span>
+                            <span style="font-weight:700;padding:.2rem .6rem;border-radius:9999px;background:rgb(217 119 6 / .12);color:#b45309">🏫 Yüz Yüze: {{ \App\Support\YillikEgitimPlanlayici::saatMetni($egitimOzet['ilk_yuz_yuze']) }}</span>
+                            <span style="font-weight:700;padding:.2rem .6rem;border-radius:9999px;background:rgb(15 23 42 / .08)">Toplam İlk Defa: {{ \App\Support\YillikEgitimPlanlayici::saatMetni($egitimOzet['ilk_toplam']) }}</span>
+                            <span style="font-size:.75rem;color:rgb(71 85 105)">Tekrar: {{ \App\Support\YillikEgitimPlanlayici::saatMetni($egitimOzet['tekrar_online']) }} Online + {{ \App\Support\YillikEgitimPlanlayici::saatMetni($egitimOzet['tekrar_yuz_yuze']) }} Yüz Yüze</span>
+                            @if ($egitimOzet['uyumlu'])
+                                <span style="font-weight:700;color:#15803d">✓ RG 02.04.2026 Uyumlu</span>
+                            @else
+                                <span style="font-weight:700;color:#b91c1c">⚠ Mevzuat Uyarısı</span>
+                            @endif
+                        </div>
+                        @if (\App\Filament\Pages\UzaktanEgitimAtama::canAccess())
+                            <x-filament::button size="xs" color="info" icon="heroicon-o-computer-desktop" tag="a" :href="\App\Filament\Pages\UzaktanEgitimAtama::getUrl(['firma' => $this->firmaId])">
+                                Online Eğitim Ata →
+                            </x-filament::button>
+                        @endif
+                    </div>
+
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem">
+                        <select wire:model="egitimPlanModu" class="mehse-girdi-kompakt" style="max-width:440px;font-size:.78rem">
+                            @foreach (\App\Support\YillikEgitimPlanlayici::MODLAR as $modKod => $modAd)
+                                <option value="{{ $modKod }}">{{ $modAd }}</option>
+                            @endforeach
+                        </select>
+                        <x-filament::button size="xs" color="primary" icon="heroicon-o-sparkles" wire:click="egitimModuUygula">
+                            Online / Yüz Yüze Otomatik Planla
+                        </x-filament::button>
+                        <span style="font-size:.73rem;color:rgb(100 116 139)">
+                            {{ $egitimOzet['online_konu'] }} online · {{ $egitimOzet['yuz_yuze_konu'] }} yüz yüze{{ $egitimOzet['karma_konu'] > 0 ? ' · '.$egitimOzet['karma_konu'].' karma' : '' }} temel konu{{ $egitimOzet['diger_saat'] > 0 ? ' · Ek uygulamalı: '.\App\Support\YillikEgitimPlanlayici::saatMetni($egitimOzet['diger_saat']) : '' }}
+                        </span>
+                    </div>
+
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.55rem;padding-top:.55rem;border-top:1px dashed rgb(100 116 139 / .25)">
+                        @php
+                            $naceGrup = \App\Support\EgitimIcerikOlusturucu::naceSektoru($this->firma?->nace_kodu);
+                            $naceGrupAd = $naceGrup ? ($this->egitimSektorSecenekleri[$naceGrup] ?? $naceGrup) : 'Tespit edilemedi';
+                        @endphp
+                        <span style="font-size:.75rem;font-weight:700;color:rgb(51 65 85)">4. Bölüm Gerçek İş Grubu:</span>
+                        <select wire:model="firmaEgitimGrubu" class="mehse-girdi-kompakt" style="max-width:260px;font-size:.76rem">
+                            <option value="">— NACE Otomatik ({{ $naceGrupAd }}) —</option>
+                            @foreach ($this->egitimSektorSecenekleri as $sKod => $sAd)
+                                <option value="{{ $sKod }}">{{ $sAd }}</option>
+                            @endforeach
+                        </select>
+                        <x-filament::button size="xs" color="gray" wire:click="firmaEgitimGrubunuUygula(false)">Grubu Kaydet</x-filament::button>
+                        <x-filament::button size="xs" color="info" wire:click="firmaEgitimGrubunuUygula(true)">4. Bölümü Gruba Göre Doldur</x-filament::button>
+                        <x-filament::button size="xs" color="success" icon="heroicon-o-arrow-path" wire:click="dorduncuBolumuGrubaEsitle" wire:confirm="Bu firmanın 4. bölüm konuları aynı iş grubundaki tüm firmaların {{ $yil }} planına eşitlensin mi? (Diğer firmalardaki tamamlanmış G ayları korunur.)">
+                            Aynı İş Grubundaki Firmalara Eşitle ({{ $this->ayniIsGrubuFirmaSayisi }} firma)
+                        </x-filament::button>
+                    </div>
+
+                    @if (! empty($egitimOzet['uyarilar']))
+                        <ul style="margin:.55rem 0 0;padding-left:1.1rem;font-size:.75rem;color:#b91c1c">
+                            @foreach ($egitimOzet['uyarilar'] as $uyari)
+                                <li>{{ $uyari }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1000px">
+                    <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:1100px">
                         <tr>
                             <th class="mehse-th">Kategori</th>
                             <th class="mehse-th">Eğitim Konusu</th>
+                            <th class="mehse-th">Yöntem</th>
                             <th class="mehse-th">Süre</th>
                             <th class="mehse-th">Eğitici</th>
                             @foreach (\App\Filament\Pages\YillikPlanlar::AYLAR as $ay)
@@ -237,10 +310,33 @@
                             <th style="border-bottom:1px solid rgb(107 114 128 / .3)"></th>
                         </tr>
                         @foreach (($p->egitimler ?? []) as $ei => $e)
+                            @php
+                                $yontem = $e['yontem'] ?? 'yuz_yuze';
+                                $ys = $yontemStil[$yontem] ?? $yontemStil['yuz_yuze'];
+                                $zorunluYy = \App\Support\YillikEgitimPlanlayici::zorunluYuzYuzeMi($e, $this->firma);
+                                $onSaat = (float) ($e['online_saat'] ?? 0);
+                                $yySaat = (float) ($e['yuz_yuze_saat'] ?? 0);
+                                $sureMetin = $yontem === 'karma' && $onSaat > 0 && $yySaat > 0
+                                    ? \App\Support\YillikEgitimPlanlayici::saatSayi($onSaat).'s 💻 + '.\App\Support\YillikEgitimPlanlayici::saatSayi($yySaat).'s 🏫'
+                                    : \App\Support\YillikEgitimPlanlayici::saatMetni($e['sure_saat'] ?? null);
+                            @endphp
                             <tr>
                                 <td style="padding:.3rem .5rem;color:rgb(107 114 128);font-size:.75rem">{{ $egitimKategorileri[$e['kategori'] ?? ''] ?? '—' }}</td>
-                                <td style="padding:.3rem .5rem;font-weight:600">{{ $e['konu'] }}</td>
-                                <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['sure_saat'] ?? '—' }} saat</td>
+                                <td style="padding:.3rem .5rem;font-weight:600">
+                                    {{ $e['konu'] }}
+                                    @if (filled($e['hedef_kitle'] ?? null))
+                                        <span style="display:inline-block;margin-left:.35rem;padding:.05rem .45rem;border-radius:9999px;font-size:.66rem;font-weight:700;background:rgb(15 118 110 / .12);color:#0f766e">👷 {{ $e['hedef_kitle'] }}</span>
+                                    @endif
+                                </td>
+                                <td style="padding:.3rem .4rem;white-space:nowrap">
+                                    <button type="button"
+                                        wire:click="egitimYontemDegistir({{ $ei }})"
+                                        title="{{ $zorunluYy ? 'RG 02.04.2026 Md.12/3 & Md.7 gereği yüz yüze zorunlu' : 'Değiştirmek için tıklayın (Online / Yüz Yüze / Karma)' }}"
+                                        style="padding:.18rem .5rem;border-radius:9999px;font-size:.7rem;font-weight:700;border:1px solid {{ $ys['kenar'] }};background:{{ $ys['bg'] }};color:{{ $ys['renk'] }};cursor:{{ $zorunluYy ? 'not-allowed' : 'pointer' }}">
+                                        {{ $ys['etiket'] }}{{ $zorunluYy ? ' 🔒' : '' }}
+                                    </button>
+                                </td>
+                                <td style="padding:.3rem .5rem;color:rgb(71 85 105);white-space:nowrap;font-variant-numeric:tabular-nums">{{ $sureMetin }}</td>
                                 <td style="padding:.3rem .5rem;color:rgb(107 114 128)">{{ $e['egitici'] ?? '—' }}</td>
                                 @foreach (($e['aylar'] ?? array_fill(0, 12, 'bos')) as $ai => $durum)
                                     @php $kilitli = $ai < $kilit; @endphp
@@ -260,7 +356,7 @@
                     </table>
                 </div>
 
-                <div style="margin-top:1rem;display:grid;grid-template-columns:1.2fr 2fr 1fr 1fr 1fr auto;gap:.5rem">
+                <div style="margin-top:1rem;display:grid;grid-template-columns:1.1fr 1.8fr 1fr .8fr 1fr 1fr auto;gap:.5rem">
                     <select wire:model="yeniEgitimKategori" title="Eğitim planındaki bölüm"
                         class="mehse-girdi-kompakt">
                         @foreach ($egitimKategorileri as $anahtar => $ad)
@@ -269,7 +365,13 @@
                     </select>
                     <input type="text" wire:model="yeniEgitimKonu" placeholder="Eğitim konusu"
                         class="mehse-girdi-kompakt">
-                    <input type="number" wire:model="yeniEgitimSure" placeholder="Süre (saat)"
+                    <select wire:model="yeniEgitimYontem" title="Eğitim şekli"
+                        class="mehse-girdi-kompakt">
+                        @foreach (\App\Support\YillikEgitimPlanlayici::YONTEMLER as $yKod => $yAd)
+                            <option value="{{ $yKod }}">{{ $yAd }}</option>
+                        @endforeach
+                    </select>
+                    <input type="number" step="0.5" wire:model="yeniEgitimSure" placeholder="Süre (saat)"
                         class="mehse-girdi-kompakt">
                     <input type="text" wire:model="yeniEgitimEgitici" placeholder="Eğitici"
                         class="mehse-girdi-kompakt">
@@ -280,9 +382,10 @@
 
                 <div style="margin-top:.75rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
                     <x-filament::button size="xs" color="primary" icon="heroicon-o-queue-list" wire:click="mountAction('iseOzguSec')">İşe Özgü Konuları Seç</x-filament::button>
+                    <x-filament::button size="xs" color="info" icon="heroicon-o-sparkles" wire:click="mountAction('aiIseOzguUret')">✨ AI ile 4. Bölüm Üret</x-filament::button>
                     <x-filament::button size="xs" color="gray" tag="a" :href="\App\Filament\Pages\IseOzguEgitimKonulari::getUrl(['firmaId' => $this->firmaId])">Konu kütüphanesi</x-filament::button>
                     <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
-                    <span class="mehse-soluk">4. bölüm firmanın iş kalemine / NACE koduna göre otomatik gelir; ★ ile plandaki konuyu kütüphaneye kaydedebilirsiniz.</span>
+                    <span class="mehse-soluk">Konu eklendikçe/silindikçe satır saatleri toplam eğitim süresine göre otomatik güncellenir; ★ ile kütüphaneye kaydedebilirsiniz.</span>
                 </div>
             </x-filament::section>
         @endif

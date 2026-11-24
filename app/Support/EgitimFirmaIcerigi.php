@@ -24,10 +24,10 @@ class EgitimFirmaIcerigi
             return null;
         }
 
-        $sure = $egitimTuru === 'tekrar'
-            ? config('isg.egitim.sureler.tekrar')
-            : (config('isg.egitim.sureler.ilk.'.$firma->tehlike_sinifi) ?? config('isg.egitim.sureler.ilk.az_tehlikeli'));
-        $dakika = (int) round(($sure['blok_fiili_dk'] ?? 40) / $konular->count());
+        $sinif = $firma->tehlike_sinifi ?: 'az_tehlikeli';
+        // 4. bölüm fiili dk: Az Tehlikeli 2s (90 dk), Tehlikeli 4s (180 dk), Çok Tehlikeli 4s (180 dk).
+        $blokDk = in_array($sinif, ['tehlikeli', 'cok_tehlikeli'], true) ? 180 : 90;
+        $dakika = max(1, (int) round($blokDk / $konular->count()));
 
         return [
             'sektor' => 'Firmaya özgü ('.$yil.' Yıllık Eğitim Planı)',
@@ -36,18 +36,16 @@ class EgitimFirmaIcerigi
     }
 
     /**
-     * Boş form için içerik: sektör şablonunun konularına firmanın kendi konuları EKLENİR (yerine geçmez; aynı metin tekrar
-     * eklenmez). Firmanın konuları: bu yılki yıllık planın 4. bölümü, aynı başlık/sektör/türdeki son kayıtlı formunun işe
-     * özgü konuları, seçili iş kalemlerinin eğitim konuları ve kütüphanede firmaya eşleşen konular.
+     * Boş form için içerik: sektör şablonunun üzerine firmanın kendi güncel konularını (yıllık plan 4. bölümü,
+     * önceki kayıt, iş kalemleri, kütüphane) ekler — şablon konuları korunur, plan konuları eksiksiz dahil olur.
      *
      * @return array<string, mixed>
      */
     public static function bosForm(Firma $firma, string $baslikAnahtari, ?string $sektorAnahtari, string $egitimTuru): array
     {
-        return self::firmaKonulariniEkle(
-            EgitimIcerikOlusturucu::olustur($baslikAnahtari, $sektorAnahtari, $firma->tehlike_sinifi ?: 'az_tehlikeli', $egitimTuru),
-            $firma, $baslikAnahtari, $sektorAnahtari, $egitimTuru,
-        );
+        $icerik = EgitimIcerikOlusturucu::olustur($baslikAnahtari, $sektorAnahtari, $firma->tehlike_sinifi ?: 'az_tehlikeli', $egitimTuru);
+
+        return self::firmaKonulariniEkle($icerik, $firma, $baslikAnahtari, $sektorAnahtari, $egitimTuru);
     }
 
     /**

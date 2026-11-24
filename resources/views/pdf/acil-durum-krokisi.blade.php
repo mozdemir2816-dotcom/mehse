@@ -23,7 +23,16 @@
 @if ($gorsel)
     {{-- Editörün kaydettiği görüntü: antet + lejant görüntünün içindedir --}}
     {{-- A4 yatay kullanılabilir alan ≈ 1078×757 px: görsel sığmazsa dompdf onu sonraki sayfaya atar, ilk sayfa boş kalır --}}
-    <div style="text-align:center"><img src="{{ $gorsel }}" style="width:1000px;height:707px"></div>
+    <div style="text-align:center"><img src="{{ $gorsel }}" style="width:980px;height:680px"></div>
+    @php $otoLejant = $kroki->lejant(); @endphp
+    @if (count($otoLejant) > 0)
+        <div class="lejant" style="margin-top:4px;border-top:1px solid #cbd5e1;padding-top:3px">
+            <strong style="font-size:9px;margin-right:8px">ISO 7010 Sembol Sayacı:</strong>
+            @foreach ($otoLejant as $l)
+                <span><span class="renk" style="background:{{ $l['renk'] }}"></span>{{ $l['ad'] }} ({{ $l['adet'] }})</span>
+            @endforeach
+        </div>
+    @endif
     <div class="kunye" style="margin-top:4px">
         {{ $firma?->unvan }} · Hazırlanma: {{ $kroki->hazirlanma_tarihi?->format('d.m.Y') ?? '—' }}
         @if ($kroki->antet['revizyon'] ?? null) · Rev. {{ $kroki->antet['revizyon'] }} @endif

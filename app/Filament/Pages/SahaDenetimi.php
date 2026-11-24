@@ -986,6 +986,19 @@ class SahaDenetimi extends Page
                     );
                 }),
 
+            Action::make('excel')
+                ->label('📊 Excel Raporu')
+                ->tooltip('Saha Denetimini Excel (.xlsx) olarak indir')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->outlined()
+                ->visible(fn () => $this->firma !== null)
+                ->action(function () {
+                    $d = $this->kaydet();
+
+                    return $d ? SahaDenetimiUretici::excel($d) : null;
+                }),
+
             Action::make('pdf')
                 ->label('Tamamla ve PDF')->tooltip('Denetimi Tamamla (Kaydet ve İndir PDF)')
                 ->icon('heroicon-o-document-arrow-down')
@@ -1034,6 +1047,13 @@ class SahaDenetimi extends Page
         $d = $this->firma?->sahaDenetimleri()->find($id);
 
         return $d ? SahaDenetimiUretici::pdf($d) : null;
+    }
+
+    public function gecmisExcel(int $id)
+    {
+        $d = $this->firma?->sahaDenetimleri()->find($id);
+
+        return $d ? SahaDenetimiUretici::excel($d) : null;
     }
 
     public function gecmisSil(int $id): void
