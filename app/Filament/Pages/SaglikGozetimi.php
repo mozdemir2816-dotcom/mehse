@@ -92,7 +92,7 @@ class SaglikGozetimi extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -143,11 +143,30 @@ class SaglikGozetimi extends Page
 
     public function updatedFirmaId(): void
     {
-        unset($this->firma, $this->gozetim, $this->calisanlar, $this->revirKayitlari, $this->eczaKalemleri, $this->asiKayitlari);
+        \App\Support\KomutaFirma::sec($this->firmaId);
+        unset($this->firma, $this->gozetim, $this->calisanlar, $this->revirKayitlari, $this->revirToplamSayisi, $this->eczaKalemleri, $this->asiKayitlari);
 
         $gozetim = $this->gozetim();
         $this->satirlar = $gozetim?->satirlar ?? [];
         $this->genelNot = $gozetim?->genel_not;
+    }
+
+    #[Computed]
+    public function tibbiVeriGorebilirMi(): bool
+    {
+        $u = Filament::auth()->user();
+
+        return ! $u instanceof \App\Models\User || $u->tibbiVeriGorebilirMi();
+    }
+
+    #[Computed]
+    public function revirToplamSayisi(): int
+    {
+        if (! $this->firma || ! \Illuminate\Support\Facades\Schema::hasTable('revir_kayitlari')) {
+            return 0;
+        }
+
+        return \App\Models\RevirKaydi::where('firma_id', $this->firma->id)->count();
     }
 
     public function sekmeSec(string $sekme): void

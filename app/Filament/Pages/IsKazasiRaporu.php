@@ -137,7 +137,40 @@ class IsKazasiRaporu extends Page
     {
         $this->kazaTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($aktarim = session()->pull('is_kazasi_aktarim')) {
+            $this->firmaId = (int) ($aktarim['firma_id'] ?? 0) ?: null;
+            $this->updatedFirmaId();
+            $this->kazazedeHizliSecId = $aktarim['calisan_id'] ?? null;
+            if ($this->kazazedeHizliSecId) {
+                $this->updatedKazazedeHizliSecId();
+            }
+            $this->kazazedeAdSoyad = ($aktarim['kazazede_ad_soyad'] ?? null) ?: $this->kazazedeAdSoyad;
+            $this->kazazedeGorev = ($aktarim['kazazede_gorev'] ?? null) ?: $this->kazazedeGorev;
+            $this->kazaTarihi = ($aktarim['kaza_tarihi'] ?? null) ?: $this->kazaTarihi;
+            $this->kazaSaati = $aktarim['kaza_saati'] ?? null;
+            $this->kazaYeri = ($aktarim['kaza_yeri'] ?? null) ?: null;
+            $this->kazaTuru = $aktarim['kaza_turu'] ?? null;
+            $this->kayipGunSayisi = $aktarim['kayip_gun_sayisi'] ?? null;
+            $this->kazaTanimi = ($aktarim['kaza_tanimi'] ?? null) ?: null;
+            $this->besNeden = array_pad((array) ($aktarim['bes_neden'] ?? []), 5, '');
+            $this->kokNedenKategorileri = (array) ($aktarim['kok_neden_kategorileri'] ?? []);
+            $this->balikKilcigi = array_merge(
+                ['insan' => [], 'makine' => [], 'metot' => [], 'malzeme' => [], 'olcum' => [], 'cevre' => []],
+                (array) ($aktarim['balik_kilcigi'] ?? []),
+            );
+            $this->taniklar = (array) ($aktarim['taniklar'] ?? []);
+            $this->sgkBildirimiYapildi = (bool) ($aktarim['sgk_bildirimi_yapildi'] ?? false);
+            $this->sgkBildirimTarihi = $aktarim['sgk_bildirim_tarihi'] ?? null;
+
+            Notification::make()
+                ->title('Olay kaydı ('.($aktarim['kaynak_belge_no'] ?? 'Olay').') İş Kazası Raporuna aktarıldı')
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -318,6 +351,7 @@ class IsKazasiRaporu extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->raporHazirlayan = $this->firma?->igu?->ad_soyad;
         $this->isyeriHekimiAdi = $this->firma?->isyeriHekimi?->ad_soyad;

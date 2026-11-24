@@ -83,11 +83,20 @@ class OlayKomuta360 extends Page
         if (! array_key_exists($this->sekme, self::SEKMELER)) {
             $this->sekme = 'pano';
         }
+        if (! $this->firmaId && ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar))) {
+            $this->firmaId = $firmaId;
+        }
         // Varsayılan: içinde bulunulan yıl (veri yoksa tüm yıllar).
         if (! request()->has('yil')) {
             $buYil = (int) now()->year;
             $this->yil = $this->tumOlaylar()->contains(fn ($o) => $o->olay_tarihi?->year === $buYil) ? $buYil : 0;
         }
+    }
+
+    public function updatedFirmaId(): void
+    {
+        \App\Support\KomutaFirma::sec($this->firmaId);
+        unset($this->firmaOlaylari, $this->olaylar);
     }
 
     public function sekmeAc(string $sekme): void

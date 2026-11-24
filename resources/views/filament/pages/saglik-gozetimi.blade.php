@@ -197,10 +197,15 @@
         </x-filament::section>
         @elseif ($sekme === 'revir')
             <x-filament::section icon="heroicon-o-clipboard-document-list" icon-color="primary">
-                <x-slot name="heading">Revir &amp; Poliklinik Protokol Defteri ({{ $this->revirKayitlari->count() }})</x-slot>
+                <x-slot name="heading">Revir &amp; Poliklinik Protokol Defteri ({{ $this->revirToplamSayisi }})</x-slot>
                 <x-slot name="afterHeader">
                     <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-down" wire:click="protokolDefteriPdf">Protokol Defteri (PDF)</x-filament::button>
                 </x-slot>
+                @unless ($this->tibbiVeriGorebilirMi)
+                    <div style="margin-bottom:.75rem;padding:.55rem .8rem;border-radius:.5rem;border:1px solid rgb(217 119 6 / .5);background:rgb(217 119 6 / .08);color:#92400e;font-size:.78rem">
+                        🔒 <strong>6331 m.15/5 &amp; KVKK m.6 Gizlilik Koruması:</strong> Çalışanların tıbbi tanı ve klinik işlem detayları yalnızca İşyeri Hekimi / DSP yetkisinde görünür; bu ekranda maskelenmiştir.
+                    </div>
+                @endunless
                 <div style="{{ $kutu }};display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.55rem;margin-bottom:1rem;align-items:end">
                     <div>
                         <label style="font-size:.75rem;font-weight:600">Çalışan (Kayıtlı)</label>
@@ -233,9 +238,16 @@
                                     <td style="padding:.4rem;font-weight:700;white-space:nowrap">{{ $r->protokol_no }}</td>
                                     <td style="padding:.4rem;white-space:nowrap">{{ $r->tarih?->format('d.m.Y H:i') }}</td>
                                     <td style="padding:.4rem;font-weight:600">{{ $r->calisan_ad_soyad }}</td>
-                                    <td style="padding:.4rem">{{ $r->basvuru_nedeni }}@if ($r->yapilan_islem)<div style="font-size:.73rem;color:rgb(107 114 128)">{{ $r->yapilan_islem }}</div>@endif</td>
+                                    <td style="padding:.4rem">
+                                        @if ($this->tibbiVeriGorebilirMi)
+                                            {{ $r->basvuru_nedeni }}@if ($r->bulgu_tani) <span style="font-size:.73rem;color:#6b7280">({{ $r->bulgu_tani }})</span>@endif
+                                            @if ($r->yapilan_islem)<div style="font-size:.73rem;color:rgb(107 114 128)">{{ $r->yapilan_islem }}</div>@endif
+                                        @else
+                                            <span style="font-size:.75rem;color:#6b7280;font-style:italic">[Gizli — 6331 m.15/5]</span>
+                                        @endif
+                                    </td>
                                     <td style="padding:.4rem">{{ $r->sonucEtiketi() }}</td>
-                                    <td style="padding:.4rem;text-align:right"><button type="button" wire:click="revirSil({{ $r->id }})" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button></td>
+                                    <td style="padding:.4rem;text-align:right"><button type="button" wire:click="revirSil({{ $r->id }})" wire:confirm="Bu revir kaydı silinsin mi?" style="color:#b91c1c;background:none;border:none;cursor:pointer">✕</button></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="6" style="padding:1rem;text-align:center;color:rgb(107 114 128)">Henüz revir başvurusu yok.</td></tr>
@@ -243,6 +255,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($this->revirToplamSayisi > $this->revirKayitlari->count())
+                    <p style="font-size:.78rem;color:rgb(107 114 128);margin-top:.6rem">
+                        Son {{ $this->revirKayitlari->count() }} kayıt gösteriliyor (+{{ $this->revirToplamSayisi - $this->revirKayitlari->count() }} eski kayıt daha — tümü <strong>Protokol Defteri (PDF)</strong> çıktısında yer alır).
+                    </p>
+                @endif
             </x-filament::section>
         @elseif ($sekme === 'ecza')
             <x-filament::section icon="heroicon-o-beaker" icon-color="primary">

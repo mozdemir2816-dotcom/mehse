@@ -10,6 +10,11 @@
 <x-filament-panels::page>
     @include('filament.pages.partials.acil-slate-stil')
     @include('filament.pages.partials.kvkk-rozeti')
+    @unless ($this->tibbiVeriGorebilirMi)
+        <div style="margin-bottom:.75rem;padding:.55rem .8rem;border-radius:.5rem;border:1px solid rgb(217 119 6 / .55);background:rgb(217 119 6 / .08);color:#92400e;font-size:.8rem">
+            🔒 <strong>6331 m.15/5 &amp; KVKK m.6 Gizlilik Uyarısı:</strong> EK-2 tıbbi özgeçmiş, soygeçmiş ve sistemik muayene bulguları özel nitelikli sağlık verisidir; yalnızca İşyeri Hekimi / DSP tarafından işlenmeli ve saklanmalıdır.
+        </div>
+    @endunless
     <p class="mehse-bolum-aciklama">
         EK-2 İşe Giriş / Periyodik Muayene Formu'nu doldurun; sonuç ve kanaat ile PDF çıktısı üretilir.
     </p>

@@ -190,7 +190,7 @@ class OlayKayitlari extends Page
         $this->olayTarihi = now()->toDateString();
         $this->bildirimTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -346,6 +346,7 @@ class OlayKayitlari extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
         $this->duzenlenenId = null;
         $this->raporHazirlayan = $this->firma?->igu?->ad_soyad;
@@ -871,5 +872,37 @@ class OlayKayitlari extends Page
         ]]);
 
         return $this->redirect(DofOlustur::getUrl());
+    }
+
+    /** Olay kaydını tek tıkla İş Kazası İnceleme ve Kök Neden Raporu'na aktarır. */
+    public function isKazasiRaporunaAktar(int $id)
+    {
+        $o = $this->firma?->olayKayitlari()->find($id);
+
+        if (! $o) {
+            return null;
+        }
+
+        session(['is_kazasi_aktarim' => [
+            'firma_id' => $o->firma_id,
+            'kaynak_belge_no' => $o->belge_no,
+            'calisan_id' => $o->calisan_id,
+            'kazazede_ad_soyad' => $o->etkilenen_ad_soyad,
+            'kazazede_gorev' => $o->etkilenen_gorev,
+            'kaza_tarihi' => $o->olay_tarihi?->toDateString(),
+            'kaza_saati' => $o->olay_saati,
+            'kaza_yeri' => trim(implode(' — ', array_filter([$o->bolum, $o->olay_yeri ?: $o->alan]))),
+            'kaza_turu' => $o->kaza_turu,
+            'kayip_gun_sayisi' => $o->kayip_gun_sayisi,
+            'kaza_tanimi' => trim(implode("\n\n", array_filter([$o->olay_ozeti, $o->olay_detayi]))),
+            'bes_neden' => $o->bes_neden ?? [],
+            'kok_neden_kategorileri' => $o->kok_neden_kategorileri ?? [],
+            'balik_kilcigi' => $o->balik_kilcigi ?? [],
+            'taniklar' => $o->taniklar ?? [],
+            'sgk_bildirimi_yapildi' => (bool) $o->sgk_bildirimi_yapildi,
+            'sgk_bildirim_tarihi' => $o->sgk_bildirim_tarihi?->toDateString(),
+        ]]);
+
+        return $this->redirect(IsKazasiRaporu::getUrl(['firma' => $o->firma_id]));
     }
 }

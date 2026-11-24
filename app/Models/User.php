@@ -90,6 +90,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return $this->sayfaYetkileri()->where('sayfa_anahtari', $anahtar)->exists();
     }
 
+    /** 6331 m.15/5 & KVKK m.6: tıbbi tanı / özgeçmiş alanlarına erişim (sahip, İşyeri Hekimi veya DSP). */
+    public function tibbiVeriGorebilirMi(): bool
+    {
+        return $this->sahipMi() || in_array($this->unvan, ['isyeri_hekimi', 'dsp'], true);
+    }
+
     public function unvanEtiketi(): string
     {
         return config('isg.uzman_unvanlari.'.$this->unvan, $this->unvan ?: '—');

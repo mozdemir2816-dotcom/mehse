@@ -570,6 +570,7 @@
                                         <x-filament::button size="xs" color="gray" wire:click="gecmisBalikKilcigi({{ $k->id }})">Balık Kılçığı</x-filament::button>
                                     @endif
                                     <x-filament::button size="xs" color="warning" wire:click="dofeAktar({{ $k->id }})">DÖF'e Aktar</x-filament::button>
+                                    <x-filament::button size="xs" color="info" wire:click="isKazasiRaporunaAktar({{ $k->id }})" title="Bu olayı İş Kazası İnceleme Raporu'na aktar">Kaza Raporu →</x-filament::button>
                                     @if ($k->durum !== 'kapandi')
                                         <x-filament::button size="xs" color="success" wire:click="kaydiKapat({{ $k->id }})" wire:confirm="Kayıt kapatılsın mı?">Kapat</x-filament::button>
                                     @endif

@@ -111,7 +111,7 @@ class MuayeneFormu extends Page
             ->values()
             ->all();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -180,6 +180,7 @@ class MuayeneFormu extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
@@ -187,6 +188,14 @@ class MuayeneFormu extends Page
         $this->ek2['isyeri_tel'] = $this->firma?->telefon;
         $this->ek2['isyeri_eposta'] = $this->firma?->eposta;
         $this->ek2['hekim']['belge_no'] = $this->firma?->isyeriHekimi?->sertifika_no;
+    }
+
+    #[Computed]
+    public function tibbiVeriGorebilirMi(): bool
+    {
+        $u = Filament::auth()->user();
+
+        return ! $u instanceof \App\Models\User || $u->tibbiVeriGorebilirMi();
     }
 
     public function updatedCalisanHizliSecId(): void
@@ -313,6 +322,7 @@ class MuayeneFormu extends Page
             ])),
         ]);
         $m->save();
+        \App\Models\SaglikGozetimi::muayenedenSenkronla($m);
 
         unset($this->gecmisKayitlar);
 

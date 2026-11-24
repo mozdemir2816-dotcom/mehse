@@ -97,4 +97,65 @@ class SaglikGozetimi extends Model
             'yaklasan' => count($this->yaklasanlar()),
         ];
     }
+
+    /**
+     * EK-2 Muayene Formu kaydedildiğinde çalışanın Sağlık Gözetimi satırını otomatik oluşturur/günceller.
+     */
+    public static function muayenedenSenkronla(MuayeneFormu $m): void
+    {
+        if (! $m->firma || blank($m->calisan_ad_soyad)) {
+            return;
+        }
+
+        $gozetim = static::firmaIcin($m->firma);
+        $satirlar = $gozetim->satirlar ?? [];
+
+        $tetkikTuru = match ($m->muayene_turu) {
+            'ise_giris' => 'ise_giris',
+            'ise_donus' => 'ise_donus',
+            default => 'periyodik',
+        };
+        $sonuc = match ($m->sonuc_kanaati) {
+            'uygun' => 'uygun',
+            'sartli_uygun' => 'sartli',
+            'uygun_degil' => 'uygun_degil',
+            default => 'bekliyor',
+        };
+
+        $adNorm = mb_strtolower(trim((string) $m->calisan_ad_soyad), 'UTF-8');
+        $indeks = null;
+
+        foreach ($satirlar as $i => $s) {
+            if (($s['tetkik_turu'] ?? null) !== $tetkikTuru) {
+                continue;
+            }
+            if ($m->calisan_id && (int) ($s['calisan_id'] ?? 0) === (int) $m->calisan_id) {
+                $indeks = $i;
+                break;
+            }
+            if (! $m->calisan_id && mb_strtolower(trim((string) ($s['calisan_adi'] ?? '')), 'UTF-8') === $adNorm) {
+                $indeks = $i;
+                break;
+            }
+        }
+
+        $guncel = [
+            'calisan_id' => $m->calisan_id,
+            'calisan_adi' => $m->calisan_ad_soyad,
+            'gorev' => $m->calisan_gorevi,
+            'tetkik_turu' => $tetkikTuru,
+            'tarih' => $m->muayene_tarihi?->toDateString(),
+            'sonraki_tarih' => $m->onerilen_kontrol_tarihi?->toDateString(),
+            'sonuc' => $sonuc,
+            'rapor_no' => $m->belge_no,
+        ];
+
+        if ($indeks !== null) {
+            $satirlar[$indeks] = array_merge($satirlar[$indeks], array_filter($guncel, fn ($v) => $v !== null));
+        } else {
+            $satirlar[] = $guncel;
+        }
+
+        $gozetim->update(['satirlar' => array_values($satirlar)]);
+    }
 }

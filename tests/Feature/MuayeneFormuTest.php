@@ -210,7 +210,15 @@ class MuayeneFormuTest extends TestCase
         $this->assertSame('Apandisit', $m->ek2['oz'][3]['aciklama']);
         $this->assertSame('IH-4567', $m->ek2['hekim']['belge_no']);
 
-        $html = view('pdf.muayene-formu', ['form' => $m, 'firma' => $firma, 'imzali' => true])->render();
+        $kaseYolu = storage_path('app/public/isg-profesyonel-kase/k.png');
+        @mkdir(dirname($kaseYolu), 0777, true);
+        file_put_contents($kaseYolu, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='));
+
+        try {
+            $html = view('pdf.muayene-formu', ['form' => $m, 'firma' => $firma, 'imzali' => true])->render();
+        } finally {
+            @unlink($kaseYolu);
+        }
 
         // Referans şablonun bölüm başlıkları ve yasal metinleri
         foreach (['EK-2', 'İŞE GİRİŞ / PERİYODİK MUAYENE FORMU', '1. İŞYERİNİN BİLGİLERİ', '2. ÇALIŞANIN BİLGİLERİ', '3. TIBBİ ANAMNEZ', '4. FİZİK MUAYENE SONUÇLARI',

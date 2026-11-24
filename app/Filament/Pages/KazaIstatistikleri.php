@@ -62,7 +62,7 @@ class KazaIstatistikleri extends Page
     {
         $this->yil = (int) now()->year;
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
 
@@ -139,6 +139,7 @@ class KazaIstatistikleri extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->kayit);
         $this->yukle();
     }

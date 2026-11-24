@@ -83,7 +83,7 @@ class MeslekHastaligiBildirimi extends Page
     {
         $this->ogrenmeTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -150,6 +150,7 @@ class MeslekHastaligiBildirimi extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->calisanlar, $this->gecmisKayitlar);
