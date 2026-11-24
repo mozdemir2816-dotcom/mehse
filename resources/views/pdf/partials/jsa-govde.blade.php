@@ -85,15 +85,18 @@
             <th style="width:20%">Tarih</th>
         </tr>
         @foreach (($sablon->imza_rolleri ?: \App\Models\JsaSablonu::VARSAYILAN_IMZA_ROLLERI) as $rol)
-            @php $hazirlayan = $uzman && \App\Models\JsaSablonu::hazirlayanRoluMu($rol['rol'] ?? null); @endphp
+            @php
+                $hazirlayan = $uzman && \App\Models\JsaSablonu::hazirlayanRoluMu($rol['rol'] ?? null);
+                $kaseBasiliyor = ($imzali ?? true) && $hazirlayan && $uzman->kase_gorseli && is_file(storage_path('app/public/'.$uzman->kase_gorseli));
+            @endphp
             <tr>
                 <td>{{ $rol['rol'] ?? '' }}</td>
                 <td>
-                    {{ $hazirlayan ? '' : ($rol['ad'] ?? '') }}
+                    {{ $kaseBasiliyor ? '' : ($hazirlayan ? ($uzman->name ?? '') : ($rol['ad'] ?? '')) }}
                     @if ($hazirlayan && $uzman->unvan)<br><span style="color:#555;font-size:7px">{{ $uzman->unvan }}</span>@endif
                 </td>
                 <td class="kase">
-                    @if (($imzali ?? true) && $hazirlayan && $uzman->kase_gorseli && is_file(storage_path('app/public/'.$uzman->kase_gorseli)))
+                    @if ($kaseBasiliyor)
                         <img src="{{ storage_path('app/public/'.$uzman->kase_gorseli) }}" style="max-height:38px;max-width:95%">
                     @endif
                 </td>

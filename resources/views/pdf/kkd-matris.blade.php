@@ -40,14 +40,33 @@
     @endif
 </table>
 
-@php $sutunKisa = ['baret' => 'Baret', 'gozluk' => 'Gözlük / Siperlik', 'kulaklik' => 'Kulak Kor.', 'maske' => 'Solunum Kor.', 'eldiven' => 'Eldiven', 'ayakkabi' => 'İş Ayakkabısı', 'yuksek_ayakkabi' => 'Yüksek Tip Ayakkabı / Çizme', 'yelek' => 'Reflektif Yelek', 'kemer' => 'Düşme Durd.', 'diger' => 'Diğer KKD']; @endphp
+@php
+    $sutunKisa = [
+        'baret' => 'Baret (EN 397)',
+        'gozluk' => 'Gözlük / Siperlik (EN 166)',
+        'kulaklik' => 'Kulak Kor. (EN 352)',
+        'maske' => 'Solunum (EN 149)',
+        'eldiven' => 'Eldiven (EN 388)',
+        'ayakkabi' => 'İş Ayakkabısı (EN 20345)',
+        'yuksek_ayakkabi' => 'Çizme / Yüksek (EN 20345)',
+        'yelek' => 'Reflektif (EN 20471)',
+        'kemer' => 'Düşme Durd. (EN 361)',
+        'diger' => 'Diğer KKD',
+    ];
+    $pastelRenk = [
+        'zorunlu' => '#fee2e2',
+        'kosullu' => '#fef3c7',
+        'onerilen' => '#dcfce7',
+        'gerekmez' => '#f8fafc',
+    ];
+@endphp
 
 <table class="m">
     <thead>
         <tr>
             <th style="width:130px">İş Kalemi / Görev</th>
             @foreach ($sutunlar as $anahtar => $tam)
-                <th>{{ $sutunKisa[$anahtar] ?? $anahtar }}</th>
+                <th>{{ $sutunKisa[$anahtar] ?? $tam }}</th>
             @endforeach
         </tr>
     </thead>
@@ -65,8 +84,9 @@
                         $durum = $s[$anahtar] ?? 'gerekmez';
                         $meta = $durumlar[$durum] ?? $durumlar['gerekmez'];
                         $not = $s[$anahtar.'_not'] ?? null;
+                        $bg = $pastelRenk[$durum] ?? '#f8fafc';
                     @endphp
-                    <td style="background:{{ $meta['renk'] }}22">
+                    <td style="background:{{ $bg }}">
                         {{ $meta['sembol'] }}
                         @if ($not)
                             <br><span style="font-size:6px">{{ $not }}</span>
@@ -90,9 +110,9 @@
 
 <table class="imza">
     <tr>
-        <td>Hazırlayan (İş Güvenliği Uzmanı)</td>
-        <td>İşyeri Hekimi</td>
-        <td>İşveren / İşveren Vekili</td>
+        <td>Hazırlayan (İş Güvenliği Uzmanı)<br>{{ $firma?->igu?->ad_soyad ?: '' }}<br>İmza / Tarih</td>
+        <td>İşyeri Hekimi<br>{{ $firma?->isyeriHekimi?->ad_soyad ?: '' }}<br>İmza / Tarih</td>
+        <td>İşveren / İşveren Vekili<br>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}<br>Kaşe / İmza / Tarih</td>
     </tr>
 </table>
 

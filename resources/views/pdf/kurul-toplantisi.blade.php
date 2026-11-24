@@ -163,7 +163,7 @@
 <div style="page-break-inside:avoid">
 <h2>Katılımcı İmzaları</h2>
 <div style="font-size:8.5px;color:#475569;margin-bottom:4px">
-    Yukarıdaki kararlar toplantıya katılan kurul üyelerince alınmış ve imza altına alınmıştır.
+    İSG Kurulları Hakkında Yönetmelik m.9 uyarınca toplantı yeter sayısı (üye tam sayısının salt çoğunluğu: <strong>{{ count($katilanlar) }} / {{ count($katilanlar) + count($katilmayanlar) }}</strong> üye katılımı) sağlanmış, önceki toplantı kararları gözden geçirilmiş ve yukarıdaki kararlar katılan üyelerin oy birliği / oy çokluğu ile alınarak imza altına alınmıştır.
 </div>
 <table class="liste imza-tablo">
     <tr>

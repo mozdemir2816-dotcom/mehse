@@ -14,4 +14,10 @@ class TurkceMetin
     {
         return mb_strtoupper(str_replace('i', 'İ', $metin), 'UTF-8');
     }
+
+    /** Türkçe "I" → "ı", "İ" → "i" dönüşümünü doğru yapan küçük harf yardımcı metodu. */
+    public static function kucuk(string $metin): string
+    {
+        return mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], $metin), 'UTF-8');
+    }
 }

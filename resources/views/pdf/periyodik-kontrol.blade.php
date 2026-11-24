@@ -18,12 +18,15 @@
     .kpi .v { font-size: 14px; font-weight: bold; display: block; }
     .kpi .l { font-size: 7px; color: #555; }
     table.liste { width: 100%; border-collapse: collapse; }
+    table.liste thead { display: table-header-group; }
+    table.liste tr { page-break-inside: avoid; }
     table.liste th, table.liste td { border: 1px solid #888; padding: 2px 3px; vertical-align: top; }
     table.liste th { background: #eee; font-size: 6.8px; text-align: left; }
     .grp { background: #f2f2f2; font-weight: bold; }
     .d-gecerli { color: #15803d; font-weight: bold; }
     .d-yaklasan { color: #b45309; font-weight: bold; }
     .d-dolmus { color: #b91c1c; font-weight: bold; }
+    .d-uygun_degil { color: #b91c1c; font-weight: bold; background: #fee2e2; }
     .d-bekliyor { color: #6b7280; }
     .d-muaf { color: #0369a1; }
     .yasal { margin-top: 8px; font-size: 7px; color: #555; }
@@ -76,8 +79,8 @@
             <th style="width:50px">Son Muayene</th>
             <th style="width:50px">Sonraki Vize</th>
             <th style="width:60px">Vize Durumu</th>
-            <th style="width:80px">Muayene Yapan / Rapor No</th>
-            <th style="width:60px">Sonuç</th>
+            <th style="width:86px">Yetkili / Rapor &amp; EKİPNET No</th>
+            <th style="width:66px">Sonuç / Kusur</th>
         </tr>
     </thead>
     <tbody>
@@ -101,7 +104,7 @@
                 <td>{{ $e->sonraki_vize_tarihi?->format('d.m.Y') ?? '—' }}</td>
                 <td class="d-{{ $d }}">{{ $durumEtiket[$d] }}@if ($e->kalanGun() !== null && ! in_array($d, ['bekliyor', 'muaf'], true))<br><span style="font-weight:normal;color:#666">{{ $e->kalanGun() }} gün</span>@endif</td>
                 <td>{{ $e->muayene_yapan ?: '—' }}@if ($e->rapor_no)<br><span style="color:#666">{{ $e->rapor_no }}</span>@endif</td>
-                <td>{{ $sonuclar[$e->sonuc] ?? $e->sonuc }}</td>
+                <td>{{ $sonuclar[$e->sonuc] ?? $e->sonuc }}@if ($e->sonuc === 'uygun_degil')<br><span style="color:#b91c1c;font-weight:bold">Ağır Kusur — Kullanım Dışı</span>@elseif ($e->sonuc === 'sartli')<br><span style="color:#b45309">Hafif Kusur — Takipte</span>@endif</td>
             </tr>
         @empty
             <tr><td colspan="13" style="text-align:center;color:#888">Tanımlı iş ekipmanı yok.</td></tr>

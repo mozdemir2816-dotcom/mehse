@@ -123,14 +123,14 @@
 
     <h2>5. GÖREV ALAN ACİL DURUM EKİPLERİ</h2>
     <table class="liste">
-        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th style="width:35%">Ekip</th></tr>
+        <tr><th style="width:5%">#</th><th>Ad Soyad</th><th style="width:32%">Ekip</th><th style="width:22%">İmza</th></tr>
         @forelse ($ekipler as $i => $e)
-            <tr><td>{{ $i + 1 }}</td><td>{{ $e['ad_soyad'] ?? '' }}</td><td>{{ $e['ekip'] ?? '—' }}</td></tr>
+            <tr><td>{{ $i + 1 }}</td><td>{{ $e['ad_soyad'] ?? '' }}</td><td>{{ $e['ekip'] ?? '—' }}</td><td></td></tr>
         @empty
-            <tr><td colspan="3" class="bos">Ekip üyesi eklenmedi.</td></tr>
+            <tr><td colspan="4" class="bos">Ekip üyesi eklenmedi.</td></tr>
         @endforelse
         @if ($eksikEkip = $t->eksikEkipler())
-            <tr><td colspan="3" class="kotu">Uyarı: Bu senaryoda {{ implode(', ', $eksikEkip) }} görev almalıdır — firmada tanımlı değil (Acil Durum Ekipleri).</td></tr>
+            <tr><td colspan="4" class="kotu">Uyarı: Bu senaryoda {{ implode(', ', $eksikEkip) }} görev almalıdır — firmada tanımlı değil (Acil Durum Ekipleri).</td></tr>
         @endif
     </table>
 

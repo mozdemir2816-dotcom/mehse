@@ -52,7 +52,7 @@
                 <td class="dk">
                     <div><b>Form No</b> {{ $form->form_no }}</div>
                     <div><b>Tarih</b> {{ $form->teslim_tarihi?->format('d.m.Y') }}</div>
-                    <div><b>Sayfa</b> 1 / 1</div>
+                    <div><b>Sayfa</b> {{ $loop->iteration }} / {{ $loop->count }}</div>
                 </td>
             </tr>
         </table>
@@ -64,7 +64,7 @@
             </tr>
             <tr>
                 <td class="e">Adı Soyadı</td><td>{{ $c['ad_soyad'] ?? '' }}</td>
-                <td class="e">Görevi</td><td>{{ $c['departman'] ?? '' }}</td>
+                <td class="e">Görevi / Bölümü</td><td>{{ collect([$c['gorev'] ?? null, $c['departman'] ?? null])->filter()->unique()->implode(' / ') }}</td>
             </tr>
             <tr>
                 <td class="e">Periyodik Kontrol</td><td>{{ $form->periyodik_kontrol_tarihi?->format('d.m.Y') ?: '—' }}</td>
@@ -74,17 +74,19 @@
 
         <table class="mlz">
             <tr>
-                <th style="width:26px">#</th>
+                <th style="width:24px">#</th>
                 <th>MALZEMENİN TÜRÜ</th>
-                <th style="width:130px">STANDARDI</th>
-                <th style="width:112px">KULLANMA DÖNEMİ</th>
-                <th style="width:58px">MİKTAR</th>
+                <th style="width:95px">MARKA / MODEL</th>
+                <th style="width:105px">CE / EN STANDARDI</th>
+                <th style="width:95px">KULLANMA DÖNEMİ</th>
+                <th style="width:48px">MİKTAR</th>
             </tr>
             @php $satirlar = array_values($form->kkdler ?? []); $satirSayisi = max(count($satirlar), 12); @endphp
             @for ($i = 0; $i < $satirSayisi; $i++)
                 <tr>
                     <td class="no">{{ $i + 1 }}</td>
                     <td>{{ $satirlar[$i]['ad'] ?? '' }}</td>
+                    <td>{{ $satirlar[$i]['marka_model'] ?? $satirlar[$i]['marka'] ?? '' }}</td>
                     <td>{{ $satirlar[$i]['standart'] ?? '' }}</td>
                     <td>{{ $satirlar[$i]['donem'] ?? '' }}</td>
                     <td class="mik">{{ $satirlar[$i]['miktar'] ?? '' }}</td>
@@ -95,8 +97,8 @@
         <p class="taahhut">
             6331 sayılı İş Sağlığı ve Güvenliği Kanunu m.4 ve Kişisel Koruyucu Donanımların İşyerlerinde
             Kullanılması Hakkında Yönetmelik m.6–8 uyarınca; yukarıda belirtilen CE/EN standartlarına uygun
-            kişisel koruyucu donanımların tarafıma ücretsiz olarak teslim edildiğini, kullanım yeri, süresi ve
-            uygulamalı kullanım esasları hakkında bilgilendirildiğimi beyan ederim.
+            kişisel koruyucu donanımların tarafıma ücretsiz olarak teslim edildiğini, kullanım yeri, süresi,
+            bakım/saklama koşulları ve uygulamalı kullanım eğitimi hakkında bilgilendirildiğimi beyan ederim.
         </p>
         <p class="taahhut">
             6331 sayılı Kanun m.19 uyarınca; teslim aldığım kişisel koruyucu donanımları belirlenen iş ve
@@ -124,20 +126,20 @@
             <tr>
                 <td class="alan">
                     Adı Soyadı: {{ $c['ad_soyad'] ?? '' }}<br>
-                    Görev: {{ $c['departman'] ?? '' }}<br>
+                    Görev: {{ $c['gorev'] ?? $c['departman'] ?? '' }}<br>
                     İmza:
                     @php $kisiImza = $c['imza'] ?? (count($form->calisanlar ?? []) === 1 ? ($canliImza ?? null) : null); @endphp
-                    @if (! empty($kisiImza))
+                    @if (! empty($kisiImza) && (str_starts_with((string) $kisiImza, 'data:image/') || is_file((string) $kisiImza)))
                         <img src="{{ $kisiImza }}" style="max-height:38px;vertical-align:middle">
                     @endif
                     <br>
                     Tarih: {{ $form->teslim_tarihi?->format('d.m.Y') ?? '' }}
                 </td>
                 <td class="alan">
-                    Adı Soyadı: {{ $form->teslim_eden ?: '' }}<br>
-                    Görev:<br>
+                    Adı Soyadı: {{ $form->teslim_eden ?: ($firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '')) }}<br>
+                    Görev: İşveren / Yetkili<br>
                     İmza:<br>
-                    Tarih:
+                    Tarih: {{ $form->teslim_tarihi?->format('d.m.Y') ?? '' }}
                 </td>
             </tr>
         </table>

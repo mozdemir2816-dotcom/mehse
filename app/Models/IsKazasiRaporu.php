@@ -171,11 +171,13 @@ class IsKazasiRaporu extends Model
 
     /**
      * SGK bildirimi için son gün — kazadan sonraki 3 iş günü (6331 m.14, 5510 m.13).
-     * Hafta sonu atlanır; resmi tatiller hesaba katılmaz (OlayKaydi::sgkSonTarih ile aynı).
+     * Hafta sonları ve Türkiye resmi tatilleri SgkBildirimSayaci ile atlanır.
      */
     public function sgkSonTarih(): ?\Illuminate\Support\Carbon
     {
-        return $this->kaza_tarihi?->copy()->addWeekdays(3);
+        return $this->kaza_tarihi
+            ? \App\Support\SgkBildirimSayaci::isGunuEkle($this->kaza_tarihi, 3)
+            : null;
     }
 
     /** Bildirim yasal süreden sonra mı yapıldı (ya da süre geçti ve hâlâ yapılmadı mı)? */

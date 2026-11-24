@@ -30,7 +30,7 @@
     @endforeach
 
     <div class="alt">
-        Acil Servis: 112 &nbsp;|&nbsp; İtfaiye: 110 &nbsp;|&nbsp; UZEM: 114<br>
+        112 Tek Acil Çağrı Merkezi (İtfaiye · Ambulans · Polis · AFAD) &nbsp;|&nbsp; UZEM: 114<br>
         Bu talimat işyerine görünür şekilde asılmalıdır. — 6331 Sayılı İSG Kanunu
     </div>
 </div>

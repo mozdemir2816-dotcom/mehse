@@ -50,8 +50,8 @@
             <th style="width:80px">Bölge / Nokta</th>
             <th style="width:30px">Periyot (ay)*</th>
             <th style="width:52px">Ölçüm Tarihi</th>
-            <th style="width:100px">Laboratuvar / Rapor No</th>
-            <th style="width:80px">Ölçülen / Sınır Değer</th>
+            <th style="width:104px">Laboratuvar / Yetki &amp; Rapor No</th>
+            <th style="width:82px">Ölçülen / Sınır-Eylem Değeri</th>
             <th style="width:64px">Sonuç</th>
             <th style="width:52px">Sonraki Ölçüm</th>
             <th style="width:50px">Durum</th>
@@ -73,7 +73,10 @@
                 </td>
                 <td>
                     {{ $m['olculen_deger'] ?? '—' }}{{ !empty($m['birim']) ? ' '.$m['birim'] : '' }}
-                    @if (!empty($m['sinir_deger'])) <br><span style="color:#555">Sınır: {{ $m['sinir_deger'] }}</span> @endif
+                    @if (!empty($m['sinir_deger']))
+                        @php $gurultuEylem = str_contains(\App\Support\TurkceMetin::kucuk((string) ($m['parametre'] ?? '')), 'gürültü') && (float) $m['sinir_deger'] <= 85; @endphp
+                        <br><span style="color:#555">{{ $gurultuEylem ? 'Eylem: '.$m['sinir_deger'].' (Sınır: 87)' : 'Sınır: '.$m['sinir_deger'] }}{{ !empty($m['birim']) ? ' '.$m['birim'] : '' }}</span>
+                    @endif
                 </td>
                 <td class="s-{{ $m['sonuc'] ?? 'bekliyor' }}">{{ $sonuclar[$m['sonuc'] ?? 'bekliyor'] ?? ($m['sonuc'] ?? '') }}</td>
                 <td>{{ !empty($m['sonraki_olcum_tarihi']) ? \Illuminate\Support\Carbon::parse($m['sonraki_olcum_tarihi'])->format('d.m.Y') : '—' }}</td>
@@ -87,17 +90,17 @@
 
 <p class="yasal">
     Ortam ölçümleri, İş Hijyeni Ölçüm, Test ve Analizleri Hakkında Yönetmelik (RG 27.01.2023/32086)
-    kapsamında yetkilendirilmiş laboratuvarlarca; ölçüm periyodu ise risk değerlendirmesi
-    sonuçlarına göre belirlenir (* tablodaki periyotlar önerilen sıklıktır; mevzuatta genel ve sabit
-    bir ölçüm periyodu yoktur). "Sınır Değer Aşımı" bulunan parametrelerde kaynağında önlem
-    alınır ve ölçüm tekrarlanır.
+    kapsamında TÜRKAK/İSGÜM yetkilendirilmiş laboratuvarlarca; ölçüm periyodu ise risk değerlendirmesi
+    sonuçlarına göre belirlenir (* tablodaki periyotlar önerilen sıklıktır). Gürültüde 85 dB(A) en yüksek
+    maruziyet eylem değeri, 87 dB(A) maruziyet sınır değeridir (Gürültü Yön. m.5). Aşım bulunan parametrelerde
+    kaynağında önlem alınır ve ölçüm tekrarlanır.
 </p>
 
 <table class="imza">
     <tr>
-        <td>Ölçümü Yapan<br>(Yetkili Laboratuvar)</td>
-        <td>İş Güvenliği Uzmanı</td>
-        <td>İşveren / İşveren Vekili</td>
+        <td>İş Güvenliği Uzmanı<br>{{ $firma?->igu?->ad_soyad ?: '' }}</td>
+        <td>İşyeri Hekimi<br>{{ $firma?->isyeriHekimi?->ad_soyad ?: '' }}</td>
+        <td>İşveren / İşveren Vekili<br>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}</td>
     </tr>
 </table>
 

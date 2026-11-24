@@ -53,11 +53,15 @@
     <h2>1. GENEL BİLGİLER</h2>
     <table class="kunye">
         <tr>
+            <td class="e">İşyeri SGK Sicil No</td><td>{{ $firma?->sgk_sicil_no ?: '—' }}</td>
+            <td class="e">Tehlike Sınıfı</td><td>{{ $firma?->tehlikeSinifiEtiketi() ?? '—' }}</td>
+        </tr>
+        <tr>
             <td class="e">Kaza Tarihi</td><td>{{ $rapor->kaza_tarihi?->format('d.m.Y') ?: '—' }} {{ $rapor->kaza_saati ?: '' }}</td>
             <td class="e">Kaza Yeri</td><td>{{ $rapor->kaza_yeri ?: '—' }}</td>
         </tr>
         <tr>
-            <td class="e">Kazazede</td><td>{{ $rapor->kazazede_ad_soyad ?: '—' }}</td>
+            <td class="e">Kazazede</td><td>{{ $rapor->kazazede_ad_soyad ?: '—' }}@if ($rapor->kazazede_tc) (T.C.: {{ $rapor->kazazede_tc }})@endif</td>
             <td class="e">Görev</td><td>{{ $rapor->kazazede_gorev ?: '—' }}</td>
         </tr>
         <tr>

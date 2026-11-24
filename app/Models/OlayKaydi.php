@@ -152,11 +152,13 @@ class OlayKaydi extends Model
 
     /**
      * SGK bildirimi için son gün — olaydan sonraki 3 iş günü (5510 s.K. m.13).
-     * Hafta sonu atlanır; resmi tatiller hesaba katılmaz.
+     * Hafta sonları ve Türkiye resmi tatilleri SgkBildirimSayaci ile atlanır.
      */
     public function sgkSonTarih(): ?Carbon
     {
-        return $this->olay_tarihi?->copy()->addWeekdays(3);
+        return $this->olay_tarihi
+            ? \App\Support\SgkBildirimSayaci::isGunuEkle($this->olay_tarihi, 3)
+            : null;
     }
 
     /**

@@ -96,5 +96,22 @@
     <div class="alt-not">
         Bu istatistik raporu 6331 sayılı İş Sağlığı ve Güvenliği Kanunu m.14 ve İSG Kurulları Hakkında Yönetmelik m.8 kapsamında kurul değerlendirmesi ve yönetim gözden geçirmesi için üretilmiştir.
     </div>
+
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;page-break-inside:avoid;font-size:8.5px">
+        <tr>
+            <td style="width:33.33%;text-align:center;padding:6px">
+                <div style="height:34px;border-bottom:1px solid #334155;margin:0 12px 4px"></div>
+                <strong>İş Güvenliği Uzmanı</strong><br>{{ $firma?->igu?->ad_soyad ?: '' }}
+            </td>
+            <td style="width:33.33%;text-align:center;padding:6px">
+                <div style="height:34px;border-bottom:1px solid #334155;margin:0 12px 4px"></div>
+                <strong>İşyeri Hekimi</strong><br>{{ $firma?->isyeriHekimi?->ad_soyad ?: '' }}
+            </td>
+            <td style="width:33.33%;text-align:center;padding:6px">
+                <div style="height:34px;border-bottom:1px solid #334155;margin:0 12px 4px"></div>
+                <strong>İşveren / İşveren Vekili</strong><br>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

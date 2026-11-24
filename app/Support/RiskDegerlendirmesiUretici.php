@@ -43,6 +43,7 @@ class RiskDegerlendirmesiUretici
         return (object) [
             'name' => $igu?->ad_soyad ?: $hesapSahibi?->name,
             'unvan' => $igu ? $igu->unvan : ($hesapSahibi?->unvan ? $hesapSahibi->unvanEtiketi() : null),
+            'sertifika_no' => $igu?->sertifika_no,
             'kase_gorseli' => $igu?->kase_gorseli ?: $hesapSahibi?->kase_gorseli,
             'imza_gorseli' => $igu?->imza_gorseli ?: $hesapSahibi?->imza_gorseli,
         ];
@@ -116,9 +117,10 @@ class RiskDegerlendirmesiUretici
         // kendi ekip listesinden, o rol boşsa firmanın atama yazılarından (RiskEkibiOtomatik) gelir.
         $elleEkip = collect($rd->ekip ?? [])->filter(fn (array $u) => filled($u['ad'] ?? null));
         $otoEkip = collect($rd->firma ? RiskEkibiOtomatik::imzaSahipleri($rd->firma) : []);
-        $rolVarMi = fn (string $anahtar) => $elleEkip->contains(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), $anahtar));
-        $ekip = $elleEkip->concat($otoEkip->filter(function (array $u) use ($rolVarMi) {
-            $unvan = mb_strtolower($u['unvan'] ?? '');
+        $kucuk = fn (?string $s) => TurkceMetin::kucuk((string) $s);
+        $rolVarMi = fn (string $anahtar) => $elleEkip->contains(fn (array $u) => str_contains($kucuk($u['unvan'] ?? ''), $anahtar));
+        $ekip = $elleEkip->concat($otoEkip->filter(function (array $u) use ($rolVarMi, $kucuk) {
+            $unvan = $kucuk($u['unvan'] ?? '');
 
             foreach (['temsilci', 'destek', 'bilgi sahibi'] as $anahtar) {
                 if (str_contains($unvan, $anahtar)) {
@@ -133,27 +135,25 @@ class RiskDegerlendirmesiUretici
         $hekim = $rd->firma?->isyeriHekimi;
         // Kapak ve imza şeridinde kaşeli görevlilerin adı da yazılır (kullanıcı 19.10.2026, yalnız risk raporu).
         $isverenAdi = $rd->firma?->isveren_vekili ?: $rd->firma?->isveren_ad;
-        $iguAdi = $uzman->name;
-        $hekimAdi = $hekim?->ad_soyad;
-        $temsilci = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'temsilci'));
-        $destekElemani = $ekip->first(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'destek'));
-        $bilgiSahibiCalisanlar = $ekip->filter(fn (array $u) => str_contains(mb_strtolower($u['unvan'] ?? ''), 'bilgi sahibi'))->values();
+        $iguAdi = $uzman->name ? trim($uzman->name.($uzman->sertifika_no ? ' (Belge No: '.$uzman->sertifika_no.')' : '')) : null;
+        $hekimAdi = $hekim?->ad_soyad ? trim($hekim->ad_soyad.($hekim->sertifika_no ? ' (Belge No: '.$hekim->sertifika_no.')' : '')) : null;
+        $temsilciler = $ekip->filter(fn (array $u) => str_contains($kucuk($u['unvan'] ?? ''), 'temsilci'))->values();
+        $destekElemanlari = $ekip->filter(fn (array $u) => str_contains($kucuk($u['unvan'] ?? ''), 'destek'))->values();
+        $temsilci = $temsilciler->first();
+        $destekElemani = $destekElemanlari->first();
+        $bilgiSahibiCalisanlar = $ekip->filter(fn (array $u) => str_contains($kucuk($u['unvan'] ?? ''), 'bilgi sahibi'))->values();
         $bilgiSahibiCalisan = $bilgiSahibiCalisanlar->first();
 
-        // "4. RİSK DEĞERLENDİRME EKİBİ" tablosu — ekip Repeater'ı hiç
-        // doldurulmamış olsa bile 6331 SK m.6'daki 6 sabit rolü daima listeler
-        // (son rol "bilgi sahibi çalışan" birden fazla kişi olabileceğinden
-        // ekip'te kaç tane varsa o kadar satır açılır, hiç yoksa tek boş satır);
-        // ad soyad bilgisi bilinen kaynaktan (firma/uzman/hekim/ekip) gelirse
-        // doldurulur, gelmezse satır boş bırakılır (kağıt çıktıda elle yazılabilsin
-        // diye "—" DEĞİL boş). Sonda ayrıca tamamen boş bir satır bırakılır —
-        // sonradan elle bir isim eklenmesi gerekirse şablonu bozmadan yazılabilsin.
         $ekipGosterim = [
             ['unvan' => 'İşveren', 'ad' => $isverenAdi ?? ''],
             ['unvan' => 'İş Güvenliği Uzmanı', 'ad' => $iguAdi ?? ''],
             ['unvan' => 'İşyeri Hekimi', 'ad' => $hekimAdi ?? ''],
-            ['unvan' => 'Çalışan Temsilcisi', 'ad' => $temsilci['ad'] ?? ''],
-            ['unvan' => 'Destek Elemanı', 'ad' => $destekElemani['ad'] ?? ''],
+            ...($temsilciler->isNotEmpty()
+                ? $temsilciler->map(fn (array $u) => ['unvan' => 'Çalışan Temsilcisi', 'ad' => $u['ad'] ?? ''])->all()
+                : [['unvan' => 'Çalışan Temsilcisi', 'ad' => '']]),
+            ...($destekElemanlari->isNotEmpty()
+                ? $destekElemanlari->map(fn (array $u) => ['unvan' => 'Destek Elemanı', 'ad' => $u['ad'] ?? ''])->all()
+                : [['unvan' => 'Destek Elemanı', 'ad' => '']]),
             ...($bilgiSahibiCalisanlar->isNotEmpty()
                 ? $bilgiSahibiCalisanlar->map(fn (array $u) => ['unvan' => 'Bilgi Sahibi Çalışan', 'ad' => $u['ad'] ?? ''])->all()
                 : [['unvan' => 'Bilgi Sahibi Çalışan', 'ad' => '']]),

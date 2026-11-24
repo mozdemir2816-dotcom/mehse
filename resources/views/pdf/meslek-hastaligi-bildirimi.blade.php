@@ -88,15 +88,24 @@
 
     <table class="imza">
         <tr>
-            <td>
+            <td style="width:33.33%">
                 @if (($imzali ?? true) && $firma?->isyeriHekimi?->kase_gorseli && is_file(storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli)))
                     <img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">
                 @endif
-                İşyeri Hekimi<br>(Kaşe / İmza)
+                İşyeri Hekimi<br>{{ $firma?->isyeriHekimi?->ad_soyad ?: '' }}<br>(Kaşe / İmza)
             </td>
-            <td>İşveren / İşveren Vekili<br>(Kaşe/İmza)</td>
+            <td style="width:33.33%">
+                İş Güvenliği Uzmanı<br>{{ $firma?->igu?->ad_soyad ?: '' }}<br>(Kaşe / İmza)
+            </td>
+            <td style="width:33.33%">
+                İşveren / İşveren Vekili<br>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}<br>(Kaşe / İmza)
+            </td>
         </tr>
     </table>
+
+    <p style="margin-top:10px;padding:5px 7px;border:1px solid #cbd5e1;background:#f8fafc;font-size:8px;color:#334155">
+        <strong>TIBBİ GİZLİLİK (6331 SK m.15/5 &amp; 6698 KVKK m.6):</strong> Bu bildirimdeki tıbbi tanı ve sağlık bilgileri gizlidir; yalnızca yetkili sağlık birimi ve SGK/resmi mercilerce muhafaza edilir. 6331 SK m.14 gereği meslek hastalığı vakası için maruziyet ve kök neden incelemesi yapılarak düzeltici faaliyet planlanır.
+    </p>
 
 </div>
 </body>

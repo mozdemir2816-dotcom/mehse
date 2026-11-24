@@ -246,7 +246,7 @@ class KurulToplantisiUretici
             ['İşyeri', $firma?->unvan ?? '—', 'Adres', collect([$firma?->adres, $firma?->ilce, $firma?->il])->filter()->implode(', ') ?: '—'],
             ['Toplantı tarihi', $toplanti->tarih?->format('d.m.Y') ?: '—', 'Saat', $toplanti->saatAraligi() ?: '—'],
             ['Toplantı yeri', $toplanti->yer ?: '—', 'Toplantı türü', $toplanti->turEtiketi()],
-            ['Toplantı başkanı', 'İşveren / İşveren Vekili', 'Sonraki toplantı', $toplanti->sonraki_toplanti?->format('d.m.Y') ?: '—'],
+            ['Toplantı başkanı', $toplanti->baskan ?: ($firma?->isveren_vekili ?: ($firma?->isveren_ad ?: 'İşveren / İşveren Vekili')), 'Sonraki toplantı', $toplanti->sonraki_toplanti?->format('d.m.Y') ?: '—'],
             ['Katılım', 'Katılan: '.$katilanSayisi.' / '.count($kisiler).' kişi'.(count($katilmayanlar) ? ' · Katılmayan: '.count($katilmayanlar) : ''), null, null],
         ] as $s) {
             $kunye->addRow();

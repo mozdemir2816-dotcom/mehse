@@ -35,7 +35,7 @@
         &nbsp;·&nbsp; Adres: {{ $firma?->adres ?: '—' }}
     </div>
 
-    <svg viewBox="0 0 {{ $w }} {{ $h }}" width="760" height="{{ round(760 * $h / $w) }}">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {{ $w }} {{ $h }}" width="760" height="{{ round(760 * $h / $w) }}">
         @if ($kroki->arka_plan_gorseli && ($arkaYol = is_file(storage_path('app/public/'.$kroki->arka_plan_gorseli)) ? storage_path('app/public/'.$kroki->arka_plan_gorseli) : (is_file(public_path('storage/'.$kroki->arka_plan_gorseli)) ? public_path('storage/'.$kroki->arka_plan_gorseli) : null)))
             <image xlink:href="{{ $arkaYol }}" x="0" y="0" width="{{ $w }}" height="{{ $h }}" opacity="0.5" />
         @endif
@@ -55,6 +55,11 @@
         @foreach ($kroki->lejant() as $l)
             <span><span class="renk" style="background:{{ $l['renk'] }}"></span>{{ $l['ad'] }} ({{ $l['adet'] }})</span>
         @endforeach
+    </div>
+    <div class="kunye" style="margin-top:8px;border-top:1px solid #cbd5e1;padding-top:4px">
+        <strong>112 Tek Acil Çağrı Merkezi</strong> &nbsp;·&nbsp;
+        Hazırlayan (İGU): {{ $firma?->igu?->ad_soyad ?: '........................' }} &nbsp;·&nbsp;
+        Onaylayan (İşveren / Vekili): {{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '........................') }}
     </div>
 @endif
 </body>

@@ -411,7 +411,7 @@
 {{-- EK-4 DESTEK ELEMANI ATAMA --}}
 <div class="yeni-sayfa"></div>
 <h2>EK-4 DESTEK ELEMANI ATAMA YAZISI</h2>
-<p>Aşağıdaki çalışanlar işveren tarafından belirtilen acil durum görevlerine atanır. İşyerinde {{ $d['calisan'] ?: $nokta }} çalışan ve {{ $d['tehlike'] ? mb_strtolower($d['tehlike'], 'UTF-8') : $nokta }} sınıf esas alınmıştır. Söndürme, kurtarma ve koruma ekipleri için ayrı ayrı en az birer eğitimli çalışan; ilkyardım için en az bir geçerli belgeli ilkyardımcı görevlendirilir. Haberleşme ve teknik müdahale ekipleri ayrıca düzenlenir.@if ($d['calisan'] > 0 && $d['calisan'] < 10) 10’dan az çalışanı olan bu işyerinde söndürme, kurtarma ve koruma görevleri için en az bir eğitimli kişi yeterlidir (Md.11).@endif Vardiya / devamsızlıkta görev devamlılığı sağlanır.</p>
+<p>Aşağıdaki çalışanlar işveren tarafından belirtilen acil durum görevlerine atanır. İşyerinde {{ $d['calisan'] ?: $nokta }} çalışan ve {{ $d['tehlike'] ? mb_strtolower($d['tehlike'], 'UTF-8') : $nokta }} sınıf esas alınmıştır. Söndürme, kurtarma ve koruma ekipleri için ayrı ayrı en az birer eğitimli çalışan; ilkyardım için en az bir geçerli belgeli ilkyardımcı görevlendirilir. Haberleşme ve teknik müdahale ekipleri ayrıca düzenlenir.@if ($d['calisan'] > 0 && $d['calisan'] < 10 && ($firma?->tehlike_sinifi === 'az_tehlikeli')) 10’dan az çalışanı olan ve az tehlikeli sınıfta yer alan bu işyerinde söndürme, kurtarma ve koruma görevleri için en az bir eğitimli kişi yeterlidir (Md.11/4).@endif Vardiya / devamsızlıkta görev devamlılığı sağlanır.</p>
 <table class="tablo">
     <tr><th style="width:46%">Ad / Soyad (Rol)</th><th style="width:30%">Görevi (Acil Durum Ekibi)</th><th>İMZA</th></tr>
     @foreach ($ekipAd as $anahtar => $ekip)
@@ -444,7 +444,7 @@
 <table class="tablo">
     <tr><th style="width:18%">İŞYERİNİN</th><td colspan="2"><b>{{ $unvan }}</b></td></tr>
     <tr><th></th><td>İşveren / vekili: {{ $n(implode(' / ', array_filter([$d['isveren'], $d['isveren_vekili']]))) }}</td><td style="width:30%">ÇALIŞAN SAYISI: {{ $d['calisan'] ?: $nokta }}</td></tr>
-    <tr><th>İGU / İH</th><td>İGU: {{ $hz['ad'] }}{{ $hz['unvan'] ? ' — '.$hz['unvan'] : '' }}</td><td>İşyeri hekimi: ........................</td></tr>
+    <tr><th>İGU / İH</th><td>İGU: {{ $hz['ad'] }}{{ $hz['unvan'] ? ' — '.$hz['unvan'] : '' }}{{ $firma?->igu?->sertifika_no ? ' (Belge No: '.$firma->igu->sertifika_no.')' : '' }}</td><td>İşyeri hekimi: {{ $hekim?->sertifika_no ? 'Belge No: '.$hekim->sertifika_no : '........................' }}</td></tr>
     <tr><th>FAALİYETİN TÜRÜ</th><td colspan="2">
         Faaliyet: {{ $n($d['faaliyet']) }}<br>
         NACE: {{ $n($firma?->nace_kodu) }} &nbsp;·&nbsp; Tehlike sınıfı: {{ $n($d['tehlike']) }}<br>
@@ -510,15 +510,30 @@
 <p style="text-align:center;font-size:8.5pt">BU ACİL DURUM PLANININ SAYFALARI NUMARALANDIRILMIŞTIR; TOPLAM SAYFA SAYISI ALT BİLGİDE GÖSTERİLMİŞTİR. İŞYERİNE ÖZGÜ BİLGİLER, GÖREVLENDİRMELER VE KROKİ TAMAMLANARAK İŞVEREN ONAYINA SUNULUR. HAZIRLAYANLAR HER SAYFAYI PARAFLAR VE SON SAYFAYI İMZALAR (Md.12/2).</p>
 <table class="tablo" style="margin-top:10pt">
     <tr>
+        @php
+            $gorselYol = function (?string $yol): ?string {
+                if (! $yol) {
+                    return null;
+                }
+                $tam = storage_path('app/public/'.$yol);
+                if (is_file($tam)) {
+                    return $tam;
+                }
+
+                return \Illuminate\Support\Facades\Storage::disk('public')->exists($yol)
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->path($yol)
+                    : null;
+            };
+        @endphp
         <td class="orta" style="width:33%;height:80pt">
-            @if ($imzali && ! empty($hz['kase']) && is_file(storage_path('app/public/'.$hz['kase'])))<img src="{{ storage_path('app/public/'.$hz['kase']) }}" style="max-height:38pt"><br>@endif
-            @if ($imzali && ! empty($hz['imza']) && is_file(storage_path('app/public/'.$hz['imza'])))<img src="{{ storage_path('app/public/'.$hz['imza']) }}" style="max-height:30pt"><br>@endif
+            @if ($imzali && ($yol = $gorselYol($hz['kase'] ?? null)))<img src="{{ $yol }}" style="max-height:38pt"><br>@endif
+            @if ($imzali && ($yol = $gorselYol($hz['imza'] ?? null)))<img src="{{ $yol }}" style="max-height:30pt"><br>@endif
             <b>Hazırlayan</b><br>{{ $hz['ad'] }}@if ($hz['unvan'])<br>{{ $hz['unvan'] }}@endif
         </td>
         <td class="orta" style="width:33%">
-            @if ($imzali && $hekim?->kase_gorseli && is_file(storage_path('app/public/'.$hekim->kase_gorseli)))<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}" style="max-height:38pt"><br>@endif
-            @if ($imzali && $hekim?->imza_gorseli && is_file(storage_path('app/public/'.$hekim->imza_gorseli)))<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}" style="max-height:30pt"><br>@endif
-            <b>İşyeri Hekimi</b><br>{{ $hekim?->ad_soyad ?: '(İmza – Kaşe)' }}@if ($hekim?->sertifika_no)<br>Belge No: {{ $hekim->sertifika_no }}@endif
+            @if ($imzali && ($yol = $gorselYol($hekim?->kase_gorseli)))<img src="{{ $yol }}" style="max-height:38pt"><br>@endif
+            @if ($imzali && ($yol = $gorselYol($hekim?->imza_gorseli)))<img src="{{ $yol }}" style="max-height:30pt"><br>@endif
+            <b>İşyeri Hekimi</b><br>(İmza – Kaşe)@if ($hekim?->sertifika_no)<br>Belge No: {{ $hekim->sertifika_no }}@endif
         </td>
         <td class="orta">
             <b>Onaylayan — İşveren / İşveren Vekili</b><br>{{ $d['isveren'] ?? $d['isveren_vekili'] }}<br>(İmza – Kaşe – Onay Tarihi)

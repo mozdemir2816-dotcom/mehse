@@ -126,7 +126,7 @@ class AcilDurumPlaniTest extends TestCase
 
     public function test_plan_belgesi_bilgileri_kaydedilir_ve_pdfe_basilir(): void
     {
-        $firma = Firma::factory()->for($this->uzman)->create(['isveren_ad' => 'Hasan Kaya', 'calisan_sayisi' => 8]);
+        $firma = Firma::factory()->for($this->uzman)->create(['isveren_ad' => 'Hasan Kaya', 'calisan_sayisi' => 8, 'tehlike_sinifi' => 'az_tehlikeli']);
 
         Livewire::test(AcilDurumSayfasi::class)
             ->set('firmaId', $firma->id)
@@ -154,7 +154,7 @@ class AcilDurumPlaniTest extends TestCase
         $this->assertStringContainsString('Şehir Hastanesi', $html);
         $this->assertStringContainsString('<b>9</b>', $html);           // deprem toplamı 4+5
         $this->assertStringContainsString('Karşıda LPG istasyonu', $html);
-        $this->assertStringContainsString('10’dan az çalışanı olan bu işyerinde', $html);
+        $this->assertStringContainsString('10’dan az çalışanı olan ve az tehlikeli sınıfta yer alan bu işyerinde', $html);
         $this->assertStringContainsString('TEKNİK MÜDAHALE EKİBİ', $html);
     }
 
@@ -651,6 +651,11 @@ class AcilDurumPlaniTest extends TestCase
 
     public function test_plan_pdf_onay_bolumunde_uzman_ve_hekimin_kase_imzasi_gorunur(): void
     {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        \Illuminate\Support\Facades\Storage::disk('public')->put('uzman-kase/test-kase.png', 'fake-png');
+        \Illuminate\Support\Facades\Storage::disk('public')->put('uzman-kase/test-imza.png', 'fake-png');
+        \Illuminate\Support\Facades\Storage::disk('public')->put('hekim-kase/test-kase.png', 'fake-png');
+
         $this->uzman->forceFill(['kase_gorseli' => 'uzman-kase/test-kase.png', 'imza_gorseli' => 'uzman-kase/test-imza.png'])->save();
         $hekim = IsgProfesyoneli::factory()->create(['tip' => 'isyeri_hekimi', 'kase_gorseli' => 'hekim-kase/test-kase.png']);
 

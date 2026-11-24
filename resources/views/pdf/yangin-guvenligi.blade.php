@@ -25,8 +25,9 @@
     .o-yuksek { color: #b91c1c; font-weight: bold; }
     .o-orta { color: #b45309; font-weight: bold; }
     .yasal { margin-top: 12px; font-size: 8px; color: #666; }
-    .imza { margin-top: 30px; width: 100%; border-collapse: collapse; }
-    .imza td { width: 33%; text-align: center; font-size: 9px; padding-top: 40px; border-top: 1px solid #111; }
+    .imza { margin-top: 22px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
+    .imza td { width: 33.33%; text-align: center; font-size: 9px; padding: 6px; vertical-align: bottom; }
+    .imza .alan { height: 40px; border-bottom: 1px solid #111; margin: 0 10px 4px; }
 </style>
 </head>
 <body>
@@ -34,6 +35,9 @@
 <div class="baslik">
     <h1>YANGIN GÜVENLİĞİ GENEL DURUM DEĞERLENDİRME RAPORU</h1>
     <div class="firma">{{ $firma?->unvan }}</div>
+    <div style="font-size:8px;color:#555;margin-top:2px">
+        SGK Sicil: {{ $firma?->sgk_sicil_no ?: '—' }} · Tehlike Sınıfı: {{ $firma?->tehlikeSinifiEtiketi() ?? '—' }} · Çalışan: {{ $firma?->calisan_sayisi ?: '—' }} · Tarih: {{ $kayit->degerlendirme_tarihi?->format('d.m.Y') ?? now()->format('d.m.Y') }}
+    </div>
 </div>
 
 @php
@@ -124,9 +128,9 @@
 
 <table class="imza">
     <tr>
-        <td>İş Güvenliği Uzmanı</td>
-        <td>İşyeri Hekimi</td>
-        <td>İşveren / İşveren Vekili</td>
+        <td><div class="alan"></div><strong>İş Güvenliği Uzmanı</strong><br>{{ $firma?->igu?->ad_soyad ?: '' }}{{ $firma?->igu?->sertifika_no ? ' ('.$firma->igu->sertifika_no.')' : '' }}</td>
+        <td><div class="alan"></div><strong>İşyeri Hekimi</strong><br>{{ $firma?->isyeriHekimi?->ad_soyad ?: '' }}</td>
+        <td><div class="alan"></div><strong>İşveren / İşveren Vekili</strong><br>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}</td>
     </tr>
 </table>
 
