@@ -135,13 +135,38 @@ class KullaniciAyarlari
     /** OSGB politikası: ıslak / canlı imza taraması zorunlu mu? (F5) */
     public static function islakImzaZorunluMu(?User $user = null): bool
     {
-        return (bool) (self::hepsi($user)['politika']['islak_imza_zorunlu'] ?? false);
+        return self::osgbPolitikaAktifMi('islak_imza_zorunlu', $user);
     }
 
     /** OSGB politikası: ziyaret programı merkezi olarak mı yönetiliyor? (F5) */
     public static function merkeziZiyaretProgramiMi(?User $user = null): bool
     {
-        return (bool) (self::hepsi($user)['politika']['merkezi_ziyaret_programi'] ?? false);
+        return self::osgbPolitikaAktifMi('merkezi_ziyaret_programi', $user);
+    }
+
+    /**
+     * Kurumsal OSGB politikası: kullanıcının kendi ayarında açıksa veya sahip hesabın
+     * politikasında açıksa uzman hesapları için de etkin sayılır.
+     */
+    private static function osgbPolitikaAktifMi(string $anahtar, ?User $user = null): bool
+    {
+        $user ??= self::aktifKullanici();
+
+        if ((bool) (self::hepsi($user)['politika'][$anahtar] ?? false)) {
+            return true;
+        }
+
+        if (! $user || $user->sahipMi()) {
+            return false;
+        }
+
+        foreach (User::query()->where('rol', 'sahip')->get() as $sahip) {
+            if ((bool) (self::hepsi($sahip)['politika'][$anahtar] ?? false)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

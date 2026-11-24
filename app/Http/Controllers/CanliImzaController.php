@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Resources\Calisans\Schemas\CalisanForm;
 use App\Models\CanliImza;
 use App\Support\CanliImzaYonetici;
 use Illuminate\Http\Request;
@@ -29,7 +30,12 @@ class CanliImzaController extends Controller
 
         $veri = $request->validate([
             'calisan_adi' => ['required', 'string', 'min:3', 'max:160'],
-            'calisan_tc' => ['nullable', 'string', 'max:14'],
+            'calisan_tc' => ['nullable', 'string', 'max:14', function (string $attribute, $value, \Closure $fail): void {
+                $temiz = preg_replace('/\D/', '', (string) $value);
+                if ($temiz !== '' && ! CalisanForm::tcGecerliMi($temiz)) {
+                    $fail('Geçersiz T.C. Kimlik No (11 haneli doğrulama algoritmasına uymuyor).');
+                }
+            }],
             'imza_veri' => ['required', 'string'],
             'onay' => ['accepted'],
         ], [

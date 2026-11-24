@@ -83,6 +83,12 @@
         <x-filament::section icon="heroicon-o-calendar" icon-color="primary">
             <x-slot name="heading">{{ $yil }} Yılı Ziyaret Programı</x-slot>
 
+            @if ($this->merkeziPlanKilitli)
+                <div style="margin-bottom:.75rem;padding:.65rem .9rem;border-radius:.65rem;border:1px solid #f59e0b;background:rgb(245 158 11 / .1);color:#92400e;font-size:.82rem;font-weight:600">
+                    🔒 OSGB Politikası: Ziyaret programı merkezden yönetiliyor — plan satırı ekleme ve silme yetkisi OSGB yöneticisine aittir.
+                </div>
+            @endif
+
             <div style="overflow-x:auto">
                 <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:900px">
                     <tr>
@@ -158,13 +164,15 @@
                                     @endif
                                 </td>
                                 <td style="padding:.4rem;white-space:nowrap">
-                                    @if ($s === count($girdiler) - 1)
-                                        <x-filament::icon-button icon="heroicon-o-plus" color="gray" size="sm"
-                                            wire:click="ziyaretEkle({{ $i }})" tooltip="Bu aya ek ziyaret ekle"/>
-                                    @endif
-                                    @if (count($girdiler) > 1)
-                                        <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm"
-                                            wire:click="ziyaretSil({{ $i }}, {{ $s }})" wire:confirm="Bu ziyaret satırı silinsin mi?" tooltip="Bu satırı sil"/>
+                                    @if (! $this->merkeziPlanKilitli)
+                                        @if ($s === count($girdiler) - 1)
+                                            <x-filament::icon-button icon="heroicon-o-plus" color="gray" size="sm"
+                                                wire:click="ziyaretEkle({{ $i }})" tooltip="Bu aya ek ziyaret ekle"/>
+                                        @endif
+                                        @if (count($girdiler) > 1)
+                                            <x-filament::icon-button icon="heroicon-o-x-mark" color="danger" size="sm"
+                                                wire:click="ziyaretSil({{ $i }}, {{ $s }})" wire:confirm="Bu ziyaret satırı silinsin mi?" tooltip="Bu satırı sil"/>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>

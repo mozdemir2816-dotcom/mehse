@@ -528,6 +528,12 @@ class ZiyaretProgrami extends Page
         unset($this->program, $this->takvimGunler);
     }
 
+    #[Computed]
+    public function merkeziPlanKilitli(): bool
+    {
+        return $this->merkeziPlanKilitliMi();
+    }
+
     private function merkeziPlanKilitliMi(): bool
     {
         $user = Filament::auth()->user();

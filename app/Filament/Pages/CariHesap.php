@@ -6,6 +6,7 @@ use App\Filament\Concerns\SinirliErisim;
 use App\Models\Firma;
 use App\Models\User;
 use App\Support\CariHesapYonetici;
+use App\Support\KomutaFirma;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -55,8 +56,17 @@ class CariHesap extends Page
     {
         $this->hareketTarih = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
-            $this->firmaId = $firmaId;
+        $firmaSecenekleri = Firma::query()
+            ->where('user_id', $this->kullanici()->id)
+            ->where('aktif', true)
+            ->orderBy('unvan')
+            ->secenekler()
+            ->all();
+
+        $hedefId = request()->integer('firma') ?: KomutaFirma::baslangic($firmaSecenekleri);
+        if ($hedefId) {
+            $this->firmaId = $hedefId;
+            KomutaFirma::sec($hedefId);
             $this->firmaYukle();
         }
     }
@@ -94,6 +104,7 @@ class CariHesap extends Page
     public function firmaSec(int $id): void
     {
         $this->firmaId = $id;
+        KomutaFirma::sec($id);
         $this->firmaYukle();
     }
 
@@ -218,7 +229,7 @@ class CariHesap extends Page
                 ->fillForm(['prim_yuzde' => 25, 'saatlik_birim' => 350])
                 ->schema([
                     \Filament\Forms\Components\TextInput::make('prim_yuzde')
-                        ->label('Cirodan Prim Oranı (%)')
+                        ->label('Net Cirodan (KDV Hariç) Prim Oranı (%)')
                         ->numeric()->minValue(0)->maxValue(100)->default(25)->required(),
                     \Filament\Forms\Components\TextInput::make('saatlik_birim')
                         ->label('Saatlik Uzman / Hekim Birim Ücreti (₺)')
@@ -230,12 +241,13 @@ class CariHesap extends Page
                     $birim = (float) ($data['saatlik_birim'] ?? 350);
                     $toplamDk = Firma::where('user_id', $this->kullanici()->id)->where('aktif', true)->sum('katip_aylik_dk');
                     $saat = round($toplamDk / 60, 1);
-                    $primTutar = round($p['aylik_ciro'] * ($primOran / 100), 2);
+                    $netCiro = (float) ($p['aylik_ciro_net'] ?? 0);
+                    $primTutar = round($netCiro * ($primOran / 100), 2);
                     $saatTutar = round($saat * $birim, 2);
 
                     Notification::make()
                         ->title('Aylık Hakediş Özeti')
-                        ->body("Toplam İSG-KATİP Süresi: {$saat} saat · Saatlik Hakediş: ".number_format($saatTutar, 2, ',', '.').' ₺ · Ciro Primi (%'.$primOran.'): '.number_format($primTutar, 2, ',', '.').' ₺')
+                        ->body('Net Ciro (KDV Hariç): '.number_format($netCiro, 2, ',', '.').' ₺ (KDV Dahil: '.number_format($p['aylik_ciro'], 2, ',', '.')." ₺) · Toplam İSG-KATİP Süresi: {$saat} saat · Saatlik Hakediş: ".number_format($saatTutar, 2, ',', '.').' ₺ · Net Ciro Primi (%'.$primOran.'): '.number_format($primTutar, 2, ',', '.').' ₺')
                         ->success()
                         ->persistent()
                         ->send();

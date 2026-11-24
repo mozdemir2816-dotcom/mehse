@@ -23,32 +23,48 @@ class CariHesapYonetici
         return is_array($ayar['cari_hesap'] ?? null) ? $ayar['cari_hesap'] : ['firmalar' => []];
     }
 
-    /** @param  array<string, mixed>  $veri */
-    private static function kaydet(User $user, array $veri): void
+    /**
+     * Atomik okuma-güncelleme-yazma: tüm cari değişiklikleri tek transaction ve satır kilidi altında yürür.
+     *
+     * @param  \Closure(array<string, mixed>): array{0: array<string, mixed>, 1: mixed}  $islem
+     */
+    private static function guncelle(User $user, \Closure $islem): mixed
     {
-        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $veri): void {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($user, $islem) {
             $kilitli = User::query()->lockForUpdate()->find($user->id);
             if (! $kilitli) {
-                return;
+                return null;
             }
+
             $mevcutAyarlar = (array) ($kilitli->ayarlar ?? []);
-            $mevcutAyarlar['cari_hesap'] = $veri;
-            $kilitli->forceFill(['ayarlar' => $mevcutAyarlar])->save();
-            $user->ayarlar = $mevcutAyarlar;
+            $veri = is_array($mevcutAyarlar['cari_hesap'] ?? null)
+                ? $mevcutAyarlar['cari_hesap']
+                : ['firmalar' => []];
+
+            [$yeniVeri, $sonuc] = $islem($veri);
+
+            if ($yeniVeri !== $veri) {
+                $mevcutAyarlar['cari_hesap'] = $yeniVeri;
+                $kilitli->forceFill(['ayarlar' => $mevcutAyarlar])->save();
+                $user->ayarlar = $mevcutAyarlar;
+            }
+
+            return $sonuc;
         });
     }
 
     public static function ucretKaydet(User $user, int $firmaId, float $aylikUcret, int $kdv = 20): void
     {
-        $veri = self::hamVeri($user);
-        $anahtar = (string) $firmaId;
-        $mevcut = $veri['firmalar'][$anahtar] ?? ['aylik_ucret' => 0.0, 'kdv' => 20, 'hareketler' => []];
+        self::guncelle($user, function (array $veri) use ($firmaId, $aylikUcret, $kdv): array {
+            $anahtar = (string) $firmaId;
+            $mevcut = $veri['firmalar'][$anahtar] ?? ['aylik_ucret' => 0.0, 'kdv' => 20, 'hareketler' => []];
 
-        $mevcut['aylik_ucret'] = max(0.0, round($aylikUcret, 2));
-        $mevcut['kdv'] = max(0, min(100, $kdv));
-        $veri['firmalar'][$anahtar] = $mevcut;
+            $mevcut['aylik_ucret'] = max(0.0, round($aylikUcret, 2));
+            $mevcut['kdv'] = max(0, min(100, $kdv));
+            $veri['firmalar'][$anahtar] = $mevcut;
 
-        self::kaydet($user, $veri);
+            return [$veri, null];
+        });
     }
 
     public static function hareketEkle(
@@ -64,39 +80,41 @@ class CariHesapYonetici
             return;
         }
 
-        $veri = self::hamVeri($user);
-        $anahtar = (string) $firmaId;
-        $mevcut = $veri['firmalar'][$anahtar] ?? ['aylik_ucret' => 0.0, 'kdv' => 20, 'hareketler' => []];
+        self::guncelle($user, function (array $veri) use ($firmaId, $tur, $tutar, $tarih, $aciklama, $donem): array {
+            $anahtar = (string) $firmaId;
+            $mevcut = $veri['firmalar'][$anahtar] ?? ['aylik_ucret' => 0.0, 'kdv' => 20, 'hareketler' => []];
 
-        $mevcut['hareketler'][] = [
-            'id' => (string) Str::uuid(),
-            'tarih' => Carbon::parse($tarih)->toDateString(),
-            'tur' => $tur,
-            'tutar' => round($tutar, 2),
-            'aciklama' => trim($aciklama) ?: ($tur === 'tahsilat' ? 'Tahsilat' : 'İSG Hizmet Bedeli'),
-            'donem' => $donem,
-        ];
+            $mevcut['hareketler'][] = [
+                'id' => (string) Str::uuid(),
+                'tarih' => Carbon::parse($tarih)->toDateString(),
+                'tur' => $tur,
+                'tutar' => round($tutar, 2),
+                'aciklama' => trim($aciklama) ?: ($tur === 'tahsilat' ? 'Tahsilat' : 'İSG Hizmet Bedeli'),
+                'donem' => $donem,
+            ];
 
-        usort($mevcut['hareketler'], fn (array $a, array $b) => strcmp($b['tarih'], $a['tarih']));
-        $veri['firmalar'][$anahtar] = $mevcut;
+            usort($mevcut['hareketler'], fn (array $a, array $b) => strcmp($b['tarih'], $a['tarih']));
+            $veri['firmalar'][$anahtar] = $mevcut;
 
-        self::kaydet($user, $veri);
+            return [$veri, null];
+        });
     }
 
     public static function hareketSil(User $user, int $firmaId, string $hareketId): void
     {
-        $veri = self::hamVeri($user);
-        $anahtar = (string) $firmaId;
-        if (! isset($veri['firmalar'][$anahtar]['hareketler'])) {
-            return;
-        }
+        self::guncelle($user, function (array $veri) use ($firmaId, $hareketId): array {
+            $anahtar = (string) $firmaId;
+            if (! isset($veri['firmalar'][$anahtar]['hareketler'])) {
+                return [$veri, null];
+            }
 
-        $veri['firmalar'][$anahtar]['hareketler'] = array_values(array_filter(
-            $veri['firmalar'][$anahtar]['hareketler'],
-            fn (array $h) => ($h['id'] ?? '') !== $hareketId,
-        ));
+            $veri['firmalar'][$anahtar]['hareketler'] = array_values(array_filter(
+                $veri['firmalar'][$anahtar]['hareketler'],
+                fn (array $h) => ($h['id'] ?? '') !== $hareketId,
+            ));
 
-        self::kaydet($user, $veri);
+            return [$veri, null];
+        });
     }
 
     /** Aylık ücreti tanımlı tüm aktif firmalara bu ayın KDV dahil hizmet bedelini (mükerrersiz) borç işler. */
@@ -104,49 +122,46 @@ class CariHesapYonetici
     {
         $donem ??= now()->format('Y-m');
         $donemEtiket = Carbon::parse($donem.'-01')->translatedFormat('F Y');
-        $veri = self::hamVeri($user);
-        $eklenen = 0;
-
         $aktifFirmalar = Firma::query()
             ->where('user_id', $user->id)
             ->where('aktif', true)
             ->pluck('id');
 
-        foreach ($aktifFirmalar as $fId) {
-            $anahtar = (string) $fId;
-            $kayit = $veri['firmalar'][$anahtar] ?? null;
-            $ucret = (float) ($kayit['aylik_ucret'] ?? 0);
-            if ($ucret <= 0) {
-                continue;
+        return (int) self::guncelle($user, function (array $veri) use ($aktifFirmalar, $donem, $donemEtiket): array {
+            $eklenen = 0;
+
+            foreach ($aktifFirmalar as $fId) {
+                $anahtar = (string) $fId;
+                $kayit = $veri['firmalar'][$anahtar] ?? null;
+                $ucret = (float) ($kayit['aylik_ucret'] ?? 0);
+                if ($ucret <= 0) {
+                    continue;
+                }
+
+                $zatenVar = collect($kayit['hareketler'] ?? [])
+                    ->contains(fn (array $h) => ($h['tur'] ?? '') === 'borc' && ($h['donem'] ?? null) === $donem);
+
+                if ($zatenVar) {
+                    continue;
+                }
+
+                $kdv = (int) ($kayit['kdv'] ?? 20);
+                $kdvDahil = round($ucret * (1 + $kdv / 100), 2);
+
+                $veri['firmalar'][$anahtar]['hareketler'][] = [
+                    'id' => (string) Str::uuid(),
+                    'tarih' => now()->toDateString(),
+                    'tur' => 'borc',
+                    'tutar' => $kdvDahil,
+                    'aciklama' => $donemEtiket.' İSG Hizmet Bedeli (%'.$kdv.' KDV dahil)',
+                    'donem' => $donem,
+                ];
+                usort($veri['firmalar'][$anahtar]['hareketler'], fn (array $a, array $b) => strcmp($b['tarih'], $a['tarih']));
+                $eklenen++;
             }
 
-            $zatenVar = collect($kayit['hareketler'] ?? [])
-                ->contains(fn (array $h) => ($h['tur'] ?? '') === 'borc' && ($h['donem'] ?? null) === $donem);
-
-            if ($zatenVar) {
-                continue;
-            }
-
-            $kdv = (int) ($kayit['kdv'] ?? 20);
-            $kdvDahil = round($ucret * (1 + $kdv / 100), 2);
-
-            $veri['firmalar'][$anahtar]['hareketler'][] = [
-                'id' => (string) Str::uuid(),
-                'tarih' => now()->toDateString(),
-                'tur' => 'borc',
-                'tutar' => $kdvDahil,
-                'aciklama' => $donemEtiket.' İSG Hizmet Bedeli (%'.$kdv.' KDV dahil)',
-                'donem' => $donem,
-            ];
-            usort($veri['firmalar'][$anahtar]['hareketler'], fn (array $a, array $b) => strcmp($b['tarih'], $a['tarih']));
-            $eklenen++;
-        }
-
-        if ($eklenen > 0) {
-            self::kaydet($user, $veri);
-        }
-
-        return $eklenen;
+            return [$veri, $eklenen];
+        });
     }
 
     /** @return array{aylik_ucret: float, kdv: int, toplam_borc: float, toplam_tahsilat: float, bakiye: float, hareketler: array<int, array<string, mixed>>} */
@@ -176,7 +191,7 @@ class CariHesapYonetici
         ];
     }
 
-    /** @return array{aylik_ciro: float, toplam_alacak: float, bu_ay_tahsilat: float, borclu_firma_sayisi: int, satirlar: array<int, array<string, mixed>>} */
+    /** @return array{aylik_ciro: float, aylik_ciro_net: float, toplam_alacak: float, bu_ay_tahsilat: float, borclu_firma_sayisi: int, satirlar: array<int, array<string, mixed>>} */
     public static function portfoyOzeti(User $user): array
     {
         $firmalar = Firma::query()
@@ -187,6 +202,7 @@ class CariHesapYonetici
 
         $buAy = now()->format('Y-m');
         $aylikCiro = 0.0;
+        $aylikCiroNet = 0.0;
         $toplamAlacak = 0.0;
         $buAyTahsilat = 0.0;
         $borcluSayisi = 0;
@@ -195,6 +211,7 @@ class CariHesapYonetici
         foreach ($firmalar as $f) {
             $o = self::firmaOzeti($user, $f);
             $kdvDahilAylik = round($o['aylik_ucret'] * (1 + $o['kdv'] / 100), 2);
+            $aylikCiroNet += $o['aylik_ucret'];
             $aylikCiro += $kdvDahilAylik;
 
             if ($o['bakiye'] > 0.01) {
@@ -225,6 +242,7 @@ class CariHesapYonetici
 
         return [
             'aylik_ciro' => round($aylikCiro, 2),
+            'aylik_ciro_net' => round($aylikCiroNet, 2),
             'toplam_alacak' => round($toplamAlacak, 2),
             'bu_ay_tahsilat' => round($buAyTahsilat, 2),
             'borclu_firma_sayisi' => $borcluSayisi,

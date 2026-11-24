@@ -15,6 +15,7 @@
         <div style="{{ $kutu }};border-left:3.5px solid #2563eb">
             <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Aylık Sözleşme Cirosu (KDV Dahil)</div>
             <div style="font-size:1.45rem;font-weight:800;color:#2563eb;margin-top:.25rem;font-variant-numeric:tabular-nums">{{ number_format($p['aylik_ciro'], 2, ',', '.') }} ₺</div>
+            <div style="font-size:.72rem;color:#64748b;margin-top:.15rem;font-variant-numeric:tabular-nums">KDV Hariç Net: <strong>{{ number_format($p['aylik_ciro_net'] ?? 0, 2, ',', '.') }} ₺</strong></div>
         </div>
         <div style="{{ $kutu }};border-left:3.5px solid {{ $p['toplam_alacak'] > 0 ? '#dc2626' : '#059669' }}">
             <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b;font-weight:700">Toplam Açık Alacak (Bakiye)</div>

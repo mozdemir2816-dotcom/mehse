@@ -194,7 +194,7 @@ class Guvenlik extends Page
             ->get();
     }
 
-    /** Mevcut modül listesi (F7 filtre). */
+    /** Mevcut modül listesi (F7 filtre — sahip değilse yalnız kendi kayıtlarının modülleri). */
     #[Computed]
     public function denetimModulleri(): array
     {
@@ -202,7 +202,14 @@ class Guvenlik extends Page
             return [];
         }
 
-        return \App\Models\DenetimKaydi::query()->distinct()->orderBy('modul')->pluck('modul')->all();
+        $kullanici = $this->kullanici();
+
+        return \App\Models\DenetimKaydi::query()
+            ->when(! $kullanici->sahipMi(), fn ($q) => $q->where('user_id', $kullanici->id))
+            ->distinct()
+            ->orderBy('modul')
+            ->pluck('modul')
+            ->all();
     }
 
     /** User-Agent'tan kaba "Tarayıcı · İşletim sistemi" etiketi. */

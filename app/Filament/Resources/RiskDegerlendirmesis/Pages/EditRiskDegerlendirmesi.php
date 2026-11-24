@@ -275,16 +275,31 @@ class EditRiskDegerlendirmesi extends EditRecord
 
     public function getSubheading(): ?string
     {
+        $parcalar = [];
+
         if ($this->record->kilitliMi()) {
-            return '🔒 Bu sürüm '.$this->record->kilitli_at->format('d.m.Y H:i').' tarihinde imzalanıp kilitlenmiştir — doğrudan düzenlenemez. Değişiklik için yukarıdan "Yeni Versiyon Aç" kullanın.';
+            $parcalar[] = '🔒 Bu sürüm '.$this->record->kilitli_at->format('d.m.Y H:i').' tarihinde imzalanıp kilitlenmiştir — doğrudan düzenlenemez. Değişiklik için yukarıdan "Yeni Versiyon Aç" kullanın.';
+        } else {
+            $eksikler = $this->record->md6EkipEksikleri();
+            if ($eksikler) {
+                $parcalar[] = '⚠️ Yönetmelik Md. 6 eksik ekip rolleri: '.implode(', ', $eksikler);
+            }
         }
 
-        $eksikler = $this->record->md6EkipEksikleri();
-        if ($eksikler) {
-            return '⚠️ Yönetmelik Md. 6 eksik ekip rolleri: '.implode(', ', $eksikler);
+        if (\App\Support\KullaniciAyarlari::islakImzaZorunluMu()) {
+            $canliImzaVar = \App\Models\CanliImza::query()
+                ->where('firma_id', $this->record->firma_id)
+                ->where('belge_turu', 'risk_degerlendirmesi')
+                ->whereNotNull('imzalandi_at')
+                ->where(fn ($q) => $q->where('belge_id', $this->record->id)->orWhereNull('belge_id'))
+                ->exists();
+
+            if (! $canliImzaVar) {
+                $parcalar[] = '✍️ OSGB Politikası: Islak / canlı imza taraması zorunludur — imzalanmış nüshayı Arşiv\'e yükleyin veya Canlı İmza alın.';
+            }
         }
 
-        return null;
+        return $parcalar !== [] ? implode(' · ', $parcalar) : null;
     }
 
     protected function beforeSave(): void

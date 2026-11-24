@@ -152,6 +152,12 @@ class KullaniciYonetimi extends Page
 
         unset($this->kullanicilar);
 
+        \App\Support\DenetimKaydedici::kaydet(
+            'Kullanıcı Yetkileri',
+            'guncelledi',
+            $user->name.' — plan: '.$this->abonelikPlani.($this->abonelikBitis ? ' ('.$this->abonelikBitis.')' : ' (süresiz)').', '.count($secilenSayfalar).' sayfa, '.count($paylasimIdleri).' paylaşılan firma',
+        );
+
         Notification::make()
             ->title($user->name.' için yetkiler kaydedildi')
             ->success()
@@ -171,7 +177,14 @@ class KullaniciYonetimi extends Page
     {
         $user = User::findOrFail($userId);
         abort_if($user->sahipMi(), 403);
-        $user->update(['aktif' => ! $user->aktif]);
+        $yeniDurum = ! $user->aktif;
+        $user->update(['aktif' => $yeniDurum]);
         unset($this->kullanicilar);
+
+        \App\Support\DenetimKaydedici::kaydet(
+            'Kullanıcı Yetkileri',
+            'guncelledi',
+            $user->name.' — hesap '.($yeniDurum ? 'aktif edildi' : 'pasife alındı'),
+        );
     }
 }

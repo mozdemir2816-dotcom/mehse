@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="robots" content="noindex, nofollow">
     <title>Canlı İmza — {{ $imza->belge_baslik }} | Mehse İSG</title>
     <style>
         :root { --primary:#1d4ed8; --bg:#f1f5f9; --card:#fff; --text:#0f172a; --muted:#475569; --border:#cbd5e1; }
