@@ -19,6 +19,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
@@ -67,6 +68,8 @@ class TespitOneriDefteri extends Page
     public ?string $serbestTespit = null;
 
     public ?string $serbestOneri = null;
+
+    public bool $serbestHayatiTehlike = false;
 
     /** Serbest tespitin fotoğraf kanıtı (opsiyonel). */
     public $yeniFoto = null;
@@ -225,14 +228,40 @@ class TespitOneriDefteri extends Page
         $maddeler[] = [
             'tespit' => $this->serbestTespit,
             'oneri' => $this->serbestOneri,
-            'dayanak' => null,
-            'oncelik' => 'orta',
+            'dayanak' => $this->serbestHayatiTehlike ? '6331 Sayılı İSG Kanunu m.8/2 (Hayati Tehlike)' : null,
+            'oncelik' => $this->serbestHayatiTehlike ? 'kritik' : 'orta',
+            'hayati_tehlike' => $this->serbestHayatiTehlike,
             'foto_yolu' => \App\Support\GuvenliFoto::yukle($this->yeniFoto, 'tespit-oneri-foto'),
         ];
         $d->update(['maddeler' => $maddeler]);
 
-        $this->reset('serbestTespit', 'serbestOneri', 'yeniFoto');
+        $this->reset('serbestTespit', 'serbestOneri', 'yeniFoto', 'serbestHayatiTehlike');
         Notification::make()->title('Madde eklendi')->success()->send();
+    }
+
+    public function hayatiTehlikeToggle(int $index): void
+    {
+        $d = $this->defter();
+        $maddeler = $d?->maddeler ?? [];
+
+        if (! $d || ! isset($maddeler[$index])) {
+            return;
+        }
+
+        if (! empty($maddeler[$index]['kilitli'])) {
+            Notification::make()->title('Onaylı nüshaya işlenmiş madde değiştirilemez')->warning()->send();
+
+            return;
+        }
+
+        $aktif = ! empty($maddeler[$index]['hayati_tehlike']);
+        $maddeler[$index]['hayati_tehlike'] = ! $aktif;
+        if (! $aktif) {
+            $maddeler[$index]['oncelik'] = 'kritik';
+            $maddeler[$index]['dayanak'] = $maddeler[$index]['dayanak'] ?: '6331 Sayılı İSG Kanunu m.8/2 (Hayati Tehlike)';
+        }
+        $d->update(['maddeler' => $maddeler]);
+        unset($this->defter);
     }
 
     public function maddeSil(int $index): void
@@ -244,8 +273,56 @@ class TespitOneriDefteri extends Page
         }
 
         $maddeler = $d->maddeler ?? [];
+
+        if (! empty($maddeler[$index]['kilitli'])) {
+            Notification::make()
+                ->title('Kilitli madde silinemez')
+                ->body('Onaylı defter nüshasına işlenen maddeler resmi kayıt bütünlüğü gereği silinemez.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         unset($maddeler[$index]);
         $d->update(['maddeler' => array_values($maddeler)]);
+        unset($this->defter);
+    }
+
+    /** Henüz kilitlenmemiş defter maddelerini Seri/Sayfa ve Onay Makamı bilgisiyle kilitler. */
+    public function nushayaKilitle(?string $seriSayfaNo = null, ?string $onayMakami = null): int
+    {
+        $d = $this->defter();
+
+        if (! $d || empty($d->maddeler)) {
+            return 0;
+        }
+
+        $maddeler = $d->maddeler;
+        $kilitlenen = 0;
+        $bilgi = collect([
+            filled($seriSayfaNo) ? 'Seri/Sayfa: '.trim((string) $seriSayfaNo) : null,
+            filled($onayMakami) ? 'Onay: '.trim((string) $onayMakami) : null,
+        ])->filter()->implode(' · ');
+
+        foreach ($maddeler as $i => $m) {
+            if (! empty($m['kilitli'])) {
+                continue;
+            }
+            $maddeler[$i]['kilitli'] = true;
+            $maddeler[$i]['kilit_tarihi'] = now()->format('d.m.Y');
+            if ($bilgi !== '') {
+                $maddeler[$i]['nusha_bilgisi'] = $bilgi;
+            }
+            $kilitlenen++;
+        }
+
+        if ($kilitlenen > 0) {
+            $d->update(['maddeler' => $maddeler]);
+            unset($this->defter);
+        }
+
+        return $kilitlenen;
     }
 
     public function genelNotuKaydet(): void
@@ -398,6 +475,32 @@ class TespitOneriDefteri extends Page
                     $d->update(['maddeler' => [...($d->maddeler ?? []), ...$yeni]]);
                     unset($this->defter);
                     Notification::make()->title(count($yeni).' risk maddesi onaylı deftere eklendi')->success()->send();
+                }),
+
+            Action::make('nushaKilitle')
+                ->label('Onaylı Nüshaya İşle / Kilitle')
+                ->icon('heroicon-o-lock-closed')
+                ->color('danger')
+                ->visible(fn () => filled($this->defter()?->maddeler))
+                ->modalHeading('Maddeleri Onaylı Defter Nüshasına İşle ve Kilitle')
+                ->modalDescription('Onaylı deftere aktarılan maddeler kilitlenir; kilitli maddeler sonradan kazara silinemez ve künye bilgisi PDF çıktısına yansır.')
+                ->modalSubmitActionLabel('Kilitle')
+                ->schema([
+                    TextInput::make('seri_sayfa_no')
+                        ->label('Defter Seri / Sayfa No (opsiyonel)')
+                        ->placeholder('Örn: Seri A · Sayfa 12–14'),
+                    TextInput::make('onay_makami')
+                        ->label('Onay Makamı / Tasdik No (opsiyonel)')
+                        ->placeholder('Örn: 14. Noter / Çalışma ve İş Kurumu İl Müd.'),
+                ])
+                ->action(function (array $data): void {
+                    $adet = $this->nushayaKilitle($data['seri_sayfa_no'] ?? null, $data['onay_makami'] ?? null);
+                    if ($adet === 0) {
+                        Notification::make()->title('Kilitlenecek yeni madde yok')->warning()->send();
+
+                        return;
+                    }
+                    Notification::make()->title($adet.' madde onaylı nüshaya kilitlendi')->success()->send();
                 }),
 
             Action::make('pdf')

@@ -35,4 +35,20 @@ class FirmaImza
     {
         return trim((string) ($firma?->isveren_vekili ?: $firma?->isveren_ad)) ?: null;
     }
+
+    /** @return array{ad: string, unvan: string, belge_no: ?string}|null */
+    public static function hekim(?Firma $firma): ?array
+    {
+        $hekim = $firma?->isyeriHekimi;
+
+        if (! $hekim || blank($hekim->ad_soyad)) {
+            return null;
+        }
+
+        return [
+            'ad' => $hekim->ad_soyad,
+            'unvan' => $hekim->unvan ?: 'İşyeri Hekimi',
+            'belge_no' => $hekim->sertifika_no ?: null,
+        ];
+    }
 }

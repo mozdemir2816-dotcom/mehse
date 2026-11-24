@@ -60,7 +60,7 @@ class OnayliDefterNushalari extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -125,6 +125,7 @@ class OnayliDefterNushalari extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->nushalar, $this->durum, $this->vadeTarihi);
     }
 
@@ -181,6 +182,8 @@ class OnayliDefterNushalari extends Page
                             ).'. Nüsha'),
                         DatePicker::make('onay_tarihi')->label('Onay tarihi')->default(now()),
                         TextInput::make('donem')->label('Dönem')->placeholder('örn. 2026/1. çeyrek'),
+                        TextInput::make('seri_sayfa_no')->label('Seri / Sayfa No')->placeholder('örn. Seri A · Sayfa 1-5'),
+                        TextInput::make('onay_makami')->label('Onay Makamı')->placeholder('Noter / Çalışma ve İş Kurumu İl Müd.'),
                     ]),
                     Textarea::make('aciklama')->label('Açıklama (opsiyonel)')->rows(1),
                 ])
@@ -195,6 +198,11 @@ class OnayliDefterNushalari extends Page
 
                     $yol = $data['dosya'];
                     $turu = $data['defter_turu'] ?: 'tespit_oneri';
+                    $aciklamaParcalari = array_filter([
+                        filled($data['seri_sayfa_no'] ?? null) ? 'Seri/Sayfa: '.trim((string) $data['seri_sayfa_no']) : null,
+                        filled($data['onay_makami'] ?? null) ? 'Onay Makamı: '.trim((string) $data['onay_makami']) : null,
+                        filled($data['aciklama'] ?? null) ? trim((string) $data['aciklama']) : null,
+                    ]);
 
                     $nusha = OnayliDefterNushasi::create([
                         'firma_id' => $firma->id,
@@ -205,7 +213,7 @@ class OnayliDefterNushalari extends Page
                         'dosya_adi' => basename($yol),
                         'dosya_yolu' => $yol,
                         'boyut' => Storage::disk('public')->exists($yol) ? Storage::disk('public')->size($yol) : 0,
-                        'aciklama' => $data['aciklama'] ?: null,
+                        'aciklama' => $aciklamaParcalari !== [] ? implode(' · ', $aciklamaParcalari) : null,
                     ]);
 
                     unset($this->nushalar, $this->durum, $this->vadeTarihi);

@@ -375,7 +375,7 @@ class ZiyaretModu extends Page
         return \App\Support\GuvenliFoto::yukle($foto, $klasor);
     }
 
-    /** Saha bulgusunu sahada "giderildi" olarak kapatır (isteğe bağlı fotoğraf + not). */
+    /** Saha bulgusunu sahada "giderildi" olarak kapatır (Yüksek/Kritik için fotoğraf veya not zorunlu). */
     public function bulguKapat(int $id): void
     {
         $b = $this->firma ? SahaBulgusu::query()->where('firma_id', $this->firma->id)->find($id) : null;
@@ -385,12 +385,23 @@ class ZiyaretModu extends Page
         }
 
         $anahtar = 'b'.$id;
+        $not = trim((string) ($this->kapanisNot[$anahtar] ?? ''));
         $foto = $this->kapanisFotografi($anahtar, 'saha-bulgu');
+
+        if (in_array($b->oncelikAnahtari(), ['yuksek', 'kritik'], true) && ! $foto && $not === '') {
+            Notification::make()
+                ->title('Yüksek / Kritik bulgu kanıtsız kapatılamaz')
+                ->body('Kapanış fotoğrafı ekleyin veya yapılan düzeltmeyi kapanış notuna yazın.')
+                ->danger()
+                ->send();
+
+            return;
+        }
 
         $b->update([
             'durum' => 'kapandi',
             'kapanis_tarihi' => Carbon::today()->toDateString(),
-            'kapanis_notu' => trim((string) ($this->kapanisNot[$anahtar] ?? '')) ?: 'Ziyarette yerinde kontrol edildi, giderildi.',
+            'kapanis_notu' => $not ?: 'Ziyarette yerinde kontrol edildi, giderildi.',
             'fotograflar' => $foto ? [...($b->fotograflar ?? []), $foto] : $b->fotograflar,
         ]);
 
@@ -400,7 +411,7 @@ class ZiyaretModu extends Page
         Notification::make()->title('Bulgu kapatıldı')->success()->send();
     }
 
-    /** DÖF maddesini sahada tamamlandı yapar (isteğe bağlı fotoğraf + not). */
+    /** DÖF maddesini sahada tamamlandı yapar (Yüksek/Kritik için fotoğraf veya not zorunlu). */
     public function dofKapat(int $raporId, int $index): void
     {
         $r = $this->firma ? DofRaporu::query()->where('firma_id', $this->firma->id)->find($raporId) : null;
@@ -411,11 +422,24 @@ class ZiyaretModu extends Page
 
         $anahtar = 'd'.$raporId.'_'.$index;
         $maddeler = $r->maddeler;
+        $not = trim((string) ($this->kapanisNot[$anahtar] ?? ''));
+        $foto = $this->kapanisFotografi($anahtar, 'dof-foto');
+
+        if (in_array($maddeler[$index]['oncelik'] ?? 'orta', ['yuksek', 'kritik'], true) && ! $foto && $not === '') {
+            Notification::make()
+                ->title('Yüksek / Kritik DÖF maddesi kanıtsız kapatılamaz')
+                ->body('Kapanış fotoğrafı ekleyin veya yapılan düzeltmeyi kapanış notuna yazın.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $maddeler[$index]['durum'] = 'tamamlandi';
         $maddeler[$index]['kapatma_tarihi'] = Carbon::today()->toDateString();
-        $maddeler[$index]['kapatma_notu'] = trim((string) ($this->kapanisNot[$anahtar] ?? '')) ?: 'Ziyarette yerinde kontrol edildi, tamamlandı.';
+        $maddeler[$index]['kapatma_notu'] = $not ?: 'Ziyarette yerinde kontrol edildi, tamamlandı.';
 
-        if ($foto = $this->kapanisFotografi($anahtar, 'dof-foto')) {
+        if ($foto) {
             $maddeler[$index]['kapatma_foto'] = $foto;
         }
 

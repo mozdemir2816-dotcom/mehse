@@ -40,14 +40,14 @@ class MenuUstDuzeyTest extends TestCase
         $this->assertTrue(Profilim::shouldRegisterNavigation());
     }
 
-    public function test_saha_ekrani_genel_ayarlar_sekmesinde_profilim_ayri_menude(): void
+    public function test_saha_ekrani_saha_sekmesinde_profilim_ayri_menude(): void
     {
         $this->actingAs(User::factory()->create(['rol' => 'sahip']));
 
-        $ayarlar = SayfaAileleri::sekmeGruplari([SahaEkrani::class]);
-        $this->assertSame('ayarlar', $ayarlar['aile']);
-        $this->assertSame('Genel Ayarlar & Görünüm', collect($ayarlar['ust'])->firstWhere('aktif', true)['etiket']);
-        $this->assertSame(['Ayarlar', 'Saha Ekranı'], array_column($ayarlar['alt'], 'etiket'));
+        $saha = SayfaAileleri::sekmeGruplari([SahaEkrani::class]);
+        $this->assertSame('saha', $saha['aile']);
+        $this->assertSame('Saha Bulguları & Denetim', collect($saha['ust'])->firstWhere('aktif', true)['etiket']);
+        $this->assertContains('Saha Ekranı', array_column($saha['alt'], 'etiket'));
 
         $this->assertNull(SayfaAileleri::sekmeGruplari([Profilim::class]));
 

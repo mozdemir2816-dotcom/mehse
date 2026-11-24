@@ -30,11 +30,13 @@
     .on-bilgi { background: #2563eb; }
 
     table.imza { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 30px; page-break-inside: avoid; }
-    table.imza td.kutu { width: 45%; text-align: center; vertical-align: top; font-size: 10px; line-height: 1.5; }
-    table.imza td.ara { width: 10%; }
+    table.imza td.kutu { text-align: center; vertical-align: top; font-size: 9.5px; line-height: 1.45; }
+    table.imza td.ara { width: 4%; }
     table.imza .cizgi { height: 42px; border-bottom: 1px solid #111; margin-bottom: 5px; }
-    table.imza .ad { font-weight: bold; font-size: 11px; }
+    table.imza .ad { font-weight: bold; font-size: 10.5px; }
     table.imza .kucuk { color: #555; font-size: 8.5px; }
+    .hayati { border: 1.5px solid #991b1b; background: #fef2f2; }
+    .hayati-uyari { margin-top: 4px; padding: 3px 6px; background: #991b1b; color: #fff; font-size: 8px; border-radius: 2px; }
 
     .foto-sayfa { page-break-before: always; }
     .foto-sayfa .baslik2 { font-size: 10.5px; font-weight: bold; margin: 0 0 6px; }
@@ -44,8 +46,10 @@
 <body>
 @php
     $uzman = \App\Support\FirmaImza::uzman($firma);
+    $hekim = \App\Support\FirmaImza::hekim($firma);
     $isveren = \App\Support\FirmaImza::isveren($firma);
     $maddeler = array_values($defter->maddeler ?? []);
+    $nushaBilgisi = collect($maddeler)->pluck('nusha_bilgisi')->filter()->last();
     $oncelikler = [
         'kritik' => ['Kritik Öncelik', '#991b1b'],
         'yuksek' => ['Yüksek Öncelik', '#ef4444'],
@@ -74,6 +78,9 @@
         <td class="e">NACE Kodu / Tehlike Sınıfı</td>
         <td colspan="3">{{ $nace ?: '—' }} / <strong>{{ $firma?->tehlike_sinifi ? $firma->tehlikeSinifiEtiketi() : '—' }}</strong></td>
     </tr>
+    @if ($nushaBilgisi)
+        <tr><td class="e">Defter Seri / Onay Bilgisi</td><td colspan="3">{{ $nushaBilgisi }}</td></tr>
+    @endif
     @if ($defter->genel_not)
         <tr><td class="e">Genel Not</td><td colspan="3">{{ $defter->genel_not }}</td></tr>
     @endif
@@ -83,17 +90,26 @@
     @php
         [$etiket, $renk] = $oncelikler[$m['oncelik'] ?? 'orta'] ?? $oncelikler['orta'];
         $oneri = trim((string) ($m['oneri'] ?? ''));
+        $hayati = ! empty($m['hayati_tehlike']);
     @endphp
-    <div class="madde">
+    <div class="madde {{ $hayati ? 'hayati' : '' }}">
+        @if ($hayati)
+            <span class="oncelik" style="background:#991b1b">HAYATİ TEHLİKE — 6331 m.8/2</span>
+        @endif
         @if (($m['tur'] ?? null) === 'bilgilendirme')
             <span class="oncelik on-bilgi">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span>
             <div class="tespit satirli">{{ $i + 1 }}. {{ $m['tespit'] ?? '' }}</div>
             <div class="oneri satirli"><span class="e">Firmanın alması gereken önlemler:</span>
 {{ $oneri !== '' ? $oneri : $varsayilanOneri }}</div>
         @else
-            <span class="oncelik" style="background:{{ $renk }}">{{ $etiket }}</span>
+            @if (! $hayati)
+                <span class="oncelik" style="background:{{ $renk }}">{{ $etiket }}</span>
+            @endif
             <div class="tespit satirli">{{ $i + 1 }}. {{ $m['tespit'] ?? '' }}</div>
             <div class="oneri satirli {{ $oneri === '' ? 'varsayilan' : '' }}"><span class="e">Öneri:</span> {{ $oneri !== '' ? $oneri : $varsayilanOneri }}</div>
+        @endif
+        @if ($hayati)
+            <div class="hayati-uyari">6331 sayılı İSG Kanunu m.8/2 uyarınca hayati tehlike arz eden bu husus işverene yazılı olarak bildirilmiş olup, işverence makul sürede tedbir alınmaması hâlinde Bakanlığın yetkili birimine bildirilecektir.</div>
         @endif
         @if (filled($m['dayanak'] ?? null))
             <div class="dayanak">Dayanak: {{ $m['dayanak'] }}</div>
@@ -105,15 +121,25 @@
 
 <table class="imza">
     <tr>
-        <td class="kutu">
+        <td class="kutu" style="width:{{ $hekim ? '31%' : '45%' }}">
             <div class="cizgi"></div>
             <div class="ad">{{ $uzman['ad'] ?: '.............................' }}</div>
             <div>{{ $uzman['unvan'] }}</div>
             @if ($uzman['belge_no'])<div>Belge No: {{ $uzman['belge_no'] }}</div>@endif
             <div class="kucuk">(İmza – Kaşe)</div>
         </td>
+        @if ($hekim)
+            <td class="ara"></td>
+            <td class="kutu" style="width:30%">
+                <div class="cizgi"></div>
+                <div class="ad">{{ $hekim['ad'] }}</div>
+                <div>{{ $hekim['unvan'] }}</div>
+                @if ($hekim['belge_no'])<div>Belge No: {{ $hekim['belge_no'] }}</div>@endif
+                <div class="kucuk">(İmza – Kaşe)</div>
+            </td>
+        @endif
         <td class="ara"></td>
-        <td class="kutu">
+        <td class="kutu" style="width:{{ $hekim ? '31%' : '45%' }}">
             <div class="cizgi"></div>
             <div class="ad">{{ $isveren ?: '.............................' }}</div>
             <div>İşveren / İşveren Vekili</div>

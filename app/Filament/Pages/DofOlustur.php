@@ -594,11 +594,34 @@ class DofOlustur extends Page
         $this->maddeFotolari = [];
     }
 
-    public function durumGuncelle(int $index, string $durum): void
+    public function durumGuncelle(int $index, string $durum, ?string $kapatmaNotu = null): void
     {
-        if (isset($this->maddeler[$index])) {
-            $this->maddeler[$index]['durum'] = $durum;
+        if (! isset($this->maddeler[$index])) {
+            return;
         }
+
+        if ($durum === 'tamamlandi') {
+            $madde = $this->maddeler[$index];
+            $not = trim((string) ($kapatmaNotu ?? ($madde['kapatma_notu'] ?? '')));
+            $fotoVar = filled($madde['kapatma_foto'] ?? null) || filled($madde['foto_yolu'] ?? null);
+
+            if (in_array($madde['oncelik'] ?? 'orta', ['yuksek', 'kritik'], true) && ! $fotoVar && $not === '') {
+                Notification::make()
+                    ->title('Yüksek / Kritik DÖF maddesi kanıtsız kapatılamaz')
+                    ->body('Maddeye fotoğraf kanıtı ekleyin veya kapatma açıklaması girin.')
+                    ->danger()
+                    ->send();
+
+                return;
+            }
+
+            if ($not !== '') {
+                $this->maddeler[$index]['kapatma_notu'] = $not;
+            }
+            $this->maddeler[$index]['kapatma_tarihi'] ??= now()->toDateString();
+        }
+
+        $this->maddeler[$index]['durum'] = $durum;
     }
 
     public function aiOnerisiAl(): void

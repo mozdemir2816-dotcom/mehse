@@ -37,11 +37,13 @@ class SayfaAileleri
             'saha' => [
                 [Pages\HizliSahaBulgusu::class, 'Bulgular'],
                 [Pages\ZiyaretModu::class, 'Bugün (Ziyaret Modu)'],
+                [Pages\SahaEkrani::class, 'Saha Ekranı'],
                 [Pages\SahaDenetimi::class, 'Saha Denetimi'],
                 [Pages\KontrolKarti::class, 'Kontrol Kartı'],
                 [Pages\AiSahaAnalizi::class, 'Gözlem Raporu (AI)'],
                 [Pages\DofOlustur::class, 'DÖF'],
                 [Pages\TespitOneriDefteri::class, 'Tespit Öneri Defteri'],
+                [Pages\OnayliDefterNushalari::class, 'Onaylı Defter Nüshaları'],
                 [Pages\OnBilgilendirmeler::class, 'Ön Bilgilendirme / Tebliğ'],
             ],
             // Risk & Tehlike Yönetimi: 12 sayfa → 3 ana sekme (30.10.2026); GRUPLAR['risk'] bkz.
@@ -103,10 +105,9 @@ class SayfaAileleri
                 [Pages\KazaIstatistikleri::class, 'İstatistikler'],
                 [Pages\OlayKomuta360::class, 'Olay Komuta 360°'],
             ],
-            // Sistem Yönetim & Entegrasyon Merkezi: 6 sayfa → 3 ana sekme (İSG-KATİP Robot kendi menü girişinde)
+            // Sistem Yönetim & Entegrasyon Merkezi
             'ayarlar' => [
                 [Pages\Ayarlar::class, 'Ayarlar'],
-                [Pages\SahaEkrani::class, 'Saha Ekranı'],
                 [Pages\Guvenlik::class, 'Güvenlik'],
                 [Pages\KullaniciYonetimi::class, 'Kullanıcı Yetkileri'],
                 [Pages\Mevzuat::class, 'Mevzuat'],
@@ -152,7 +153,6 @@ class SayfaAileleri
             ],
             'arsiv' => [
                 [Pages\DokumanYonetimi::class, 'Arşiv'],
-                [Pages\OnayliDefterNushalari::class, 'Onaylı Defter Nüshaları'],
             ],
             'araclar' => [
                 [Pages\Araclar::class, 'Araçlar'],
@@ -174,9 +174,9 @@ class SayfaAileleri
             ['etiket' => 'Firma Denetim & Operasyon', 'ikon' => 'heroicon-o-clipboard-document-check', 'siniflar' => [Pages\FirmaDenetimOperasyon::class]],
             ['etiket' => 'Risk Panosu', 'ikon' => 'heroicon-o-chart-bar', 'siniflar' => [Pages\RiskMerkezi::class]],
         ],
-        // Sistem Yönetim & Entegrasyon Merkezi (30.10.2026); Saha Ekranı "Genel Ayarlar & Görünüm" sekmesinin alt sayfası
+        // Sistem Yönetim & Entegrasyon Merkezi
         'ayarlar' => [
-            ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class, Pages\SahaEkrani::class]],
+            ['etiket' => 'Genel Ayarlar & Görünüm', 'ikon' => 'heroicon-o-cog-6-tooth', 'siniflar' => [Pages\Ayarlar::class]],
             ['etiket' => 'Güvenlik, Oturumlar & Ekip Yetkileri', 'ikon' => 'heroicon-o-lock-closed', 'siniflar' => [Pages\Guvenlik::class, Pages\KullaniciYonetimi::class]],
             ['etiket' => 'Mevzuat & Hazır İstemler', 'ikon' => 'heroicon-o-book-open', 'siniflar' => [Pages\Mevzuat::class, Pages\HazirIstemler::class]],
         ],
@@ -283,7 +283,7 @@ class SayfaAileleri
             [
                 'etiket' => 'Saha Bulguları & Denetim',
                 'ikon' => 'heroicon-o-bolt',
-                'siniflar' => [Pages\HizliSahaBulgusu::class, Pages\ZiyaretModu::class, Pages\SahaDenetimi::class, Pages\KontrolKarti::class],
+                'siniflar' => [Pages\HizliSahaBulgusu::class, Pages\ZiyaretModu::class, Pages\SahaEkrani::class, Pages\SahaDenetimi::class, Pages\KontrolKarti::class],
             ],
             [
                 'etiket' => 'Bulgu & DÖF Takip Havuzu',
@@ -293,7 +293,7 @@ class SayfaAileleri
             [
                 'etiket' => 'Yasal Rapor & Defter',
                 'ikon' => 'heroicon-o-document-text',
-                'siniflar' => [Pages\TespitOneriDefteri::class, Pages\AiSahaAnalizi::class, Pages\OnBilgilendirmeler::class],
+                'siniflar' => [Pages\TespitOneriDefteri::class, Pages\OnayliDefterNushalari::class, Pages\AiSahaAnalizi::class, Pages\OnBilgilendirmeler::class],
             ],
         ],
     ];

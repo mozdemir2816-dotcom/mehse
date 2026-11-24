@@ -104,6 +104,10 @@
                             <button type="button" wire:click="$set('yeniFoto', null)" style="color:#b91c1c;cursor:pointer;background:none;border:none;font-size:.8rem">Kaldır</button>
                         @endif
                     </div>
+                    <label style="display:flex;align-items:center;gap:.45rem;font-size:.8rem;color:#b91c1c;font-weight:600;margin-bottom:.5rem;cursor:pointer">
+                        <input type="checkbox" wire:model="serbestHayatiTehlike">
+                        <span>⚠ Hayati Tehlike (6331 m.8/2 — acil yazılı bildirim işareti)</span>
+                    </label>
                     <p style="font-size:.75rem;color:rgb(107 114 128);margin-bottom:.5rem">
                         İsteğe bağlı fotoğraf kanıtı — PDF'te ilgili maddenin ardından ayrı bir sayfa olarak eklenir.
                     </p>
@@ -125,6 +129,7 @@
                         <x-filament::button size="sm" icon="heroicon-o-arrow-down-tray" wire:click="mountAction('pdf')" style="min-height:2.75rem">PDF Olarak İndir (İmzaya Hazır)</x-filament::button>
                         <x-filament::button size="sm" color="primary" icon="heroicon-o-sparkles" wire:click="temelTespitleriEkle" style="min-height:2.75rem">5 Temel Yasal Madde Ekle</x-filament::button>
                         @if ($maddeler)
+                            <x-filament::button size="sm" color="danger" icon="heroicon-o-lock-closed" wire:click="mountAction('nushaKilitle')" style="min-height:2.75rem">Nüshaya İşle / Kilitle</x-filament::button>
                             <x-filament::button size="sm" color="success" icon="heroicon-o-arrow-right-circle" wire:click="dofModuluneAktar" style="min-height:2.75rem">DÖF'e Aktar</x-filament::button>
                         @endif
                         <x-filament::button size="sm" color="gray" icon="heroicon-o-document-arrow-up" wire:click="mountAction('wordAktar')" style="min-height:2.75rem">Word/Excel Aktar</x-filament::button>
@@ -160,13 +165,19 @@
                                     <th style="width:1.5rem;border-bottom:1px solid #111827"></th>
                                 </tr>
                                 @foreach ($maddeler as $i => $m)
-                                    <tr wire:key="defter-madde-{{ $i }}">
+                                    @php $kilitli = ! empty($m['kilitli']); $hayati = ! empty($m['hayati_tehlike']); @endphp
+                                    <tr wire:key="defter-madde-{{ $i }}" style="{{ $hayati ? 'background:#fef2f2' : '' }}">
                                         <td style="padding:.35rem .3rem;vertical-align:top;border-bottom:1px solid #e5e7eb">{{ $i + 1 }}</td>
-                                        <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb">@if (($m['tur'] ?? null) === 'bilgilendirme')<span style="display:inline-block;background:#2563eb;color:#fff;border-radius:4px;padding:0 .35rem;font-size:.68rem;font-family:sans-serif">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span> @endif @if (! empty($m['foto_yolu']))<span title="Fotoğraf kanıtı ekli">📷</span> @endif{{ $m['tespit'] }}</td>
+                                        <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb">@if ($hayati)<span style="display:inline-block;background:#991b1b;color:#fff;border-radius:4px;padding:0 .35rem;font-size:.66rem;font-family:sans-serif;font-weight:700">⚠ HAYATİ TEHLİKE (6331 m.8/2)</span> @endif @if (($m['tur'] ?? null) === 'bilgilendirme')<span style="display:inline-block;background:#2563eb;color:#fff;border-radius:4px;padding:0 .35rem;font-size:.68rem;font-family:sans-serif">Ön Bilgilendirme{{ ! empty($m['tarih']) ? ' — '.$m['tarih'] : '' }}</span> @endif @if (! empty($m['foto_yolu']))<span title="Fotoğraf kanıtı ekli">📷</span> @endif{{ $m['tespit'] }}@if ($kilitli)<div style="font-size:.66rem;color:#6b7280;font-family:sans-serif;margin-top:.15rem">🔒 Kilitli ({{ $m['kilit_tarihi'] ?? 'Nüshaya işlendi' }}{{ ! empty($m['nusha_bilgisi']) ? ' · '.$m['nusha_bilgisi'] : '' }})</div>@endif</td>
                                         @php $oneriBos = blank(trim((string) ($m['oneri'] ?? ''))); @endphp
                                         <td style="padding:.35rem .4rem;white-space:pre-line;vertical-align:top;border-bottom:1px solid #e5e7eb;{{ $oneriBos ? 'color:#6b7280;font-style:italic' : '' }}" @if ($oneriBos) title="Öneri boş — PDF'e bu varsayılan metin basılır" @endif>{{ $oneriBos ? \App\Models\TespitOneriDefteri::VARSAYILAN_ONERI : $m['oneri'] }}</td>
-                                        <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb">
-                                            <button type="button" wire:click="maddeSil({{ $i }})" wire:confirm="Bu tespit maddesi defterden silinsin mi?" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#b91c1c;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
+                                        <td style="padding:.35rem 0;text-align:right;vertical-align:top;border-bottom:1px solid #e5e7eb;white-space:nowrap">
+                                            @if ($kilitli)
+                                                <span title="Onaylı nüshaya işlendi — silinemez" style="font-size:.75rem;color:#6b7280">🔒</span>
+                                            @else
+                                                <button type="button" wire:click="hayatiTehlikeToggle({{ $i }})" title="Hayati tehlike (6331 m.8/2) işaretle / kaldır" style="color:{{ $hayati ? '#991b1b' : '#9ca3af' }};cursor:pointer;background:none;border:none;font-size:.75rem">⚠</button>
+                                                <button type="button" wire:click="maddeSil({{ $i }})" wire:confirm="Bu tespit maddesi defterden silinsin mi?" title="Maddeyi sil" aria-label="Maddeyi sil" style="color:#b91c1c;cursor:pointer;background:none;border:none;min-width:1.5rem;min-height:1.5rem">✕</button>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -174,6 +185,9 @@
 
                             <div style="display:flex;justify-content:space-between;gap:1rem;margin-top:1.8rem;font-size:.75rem;font-family:sans-serif">
                                 <div style="flex:1;border-top:1px solid #111827;padding-top:.25rem;text-align:center">İş Güvenliği Uzmanı<br>{{ $f->igu?->ad_soyad ?: $f->user?->name }}</div>
+                                @if ($f->isyeriHekimi?->ad_soyad)
+                                    <div style="flex:1;border-top:1px solid #111827;padding-top:.25rem;text-align:center">İşyeri Hekimi<br>{{ $f->isyeriHekimi->ad_soyad }}</div>
+                                @endif
                                 <div style="flex:1;border-top:1px solid #111827;padding-top:.25rem;text-align:center">İşveren / Vekili<br>{{ $f->isveren_vekili ?: $f->isveren_ad }}</div>
                             </div>
                         @else

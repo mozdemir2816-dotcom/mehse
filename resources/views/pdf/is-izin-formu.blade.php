@@ -107,6 +107,37 @@
                 </tr>
             @endforeach
         </table>
+
+        @php $olcum = $form->olcumVerileri(); @endphp
+        @if ($olcum !== [])
+            <table class="liste">
+                @if (isset($olcum['gaz_o2']) || isset($olcum['gaz_lel']) || isset($olcum['gaz_co']) || isset($olcum['gaz_h2s']) || isset($olcum['gaz_saat']))
+                    <tr>
+                        <td style="width:24%;background:#fef3c7;font-weight:bold">Gaz Ölçümü</td>
+                        <td>
+                            {{ collect([
+                                isset($olcum['gaz_o2']) ? 'O₂: '.$olcum['gaz_o2'].'%' : null,
+                                isset($olcum['gaz_lel']) ? 'LEL: '.$olcum['gaz_lel'].'%' : null,
+                                isset($olcum['gaz_co']) ? 'CO: '.$olcum['gaz_co'].' ppm' : null,
+                                isset($olcum['gaz_h2s']) ? 'H₂S: '.$olcum['gaz_h2s'].' ppm' : null,
+                                isset($olcum['gaz_saat']) ? 'Saat: '.$olcum['gaz_saat'] : null,
+                            ])->filter()->implode(' · ') }}
+                        </td>
+                    </tr>
+                @endif
+                @if (isset($olcum['loto_kilit_no']) || isset($olcum['loto_cihaz']))
+                    <tr>
+                        <td style="width:24%;background:#e0f2fe;font-weight:bold">LOTO Kaydı</td>
+                        <td>
+                            {{ collect([
+                                isset($olcum['loto_kilit_no']) ? 'Kilit/Etiket No: '.$olcum['loto_kilit_no'] : null,
+                                isset($olcum['loto_cihaz']) ? 'İzole Ekipman: '.$olcum['loto_cihaz'] : null,
+                            ])->filter()->implode(' · ') }}
+                        </td>
+                    </tr>
+                @endif
+            </table>
+        @endif
     @endif
 
     @if ($form->uyarilar || $form->ozel_kosullar)

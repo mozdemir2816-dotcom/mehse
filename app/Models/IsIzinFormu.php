@@ -98,6 +98,27 @@ class IsIzinFormu extends Model
             ->pluck('ad')->all();
     }
 
+    /** Sayısal gaz ölçümü (O2, LEL, CO, H2S, saat) ve LOTO kilit no kayıtları. @return array<string, string> */
+    public function olcumVerileri(): array
+    {
+        $ham = is_array($this->kontroller['_olcum'] ?? null) ? $this->kontroller['_olcum'] : [];
+
+        return array_filter(
+            array_map(fn ($v) => trim((string) $v), $ham),
+            fn (string $v) => $v !== '',
+        );
+    }
+
+    public function gazOlcumuGerekliMi(): bool
+    {
+        return array_intersect($this->izin_turleri ?? [], ['sicak_is', 'kapali_alan']) !== [];
+    }
+
+    public function lotoGerekliMi(): bool
+    {
+        return array_intersect($this->izin_turleri ?? [], ['elektrik', 'bakim', 'kapali_alan']) !== [];
+    }
+
     /** @return array<int, string> izinde çalışacakların "Ad Soyad (Görev)" listesi */
     public function calisanEtiketleri(): array
     {

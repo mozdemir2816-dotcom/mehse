@@ -235,6 +235,50 @@
                     </div>
                 @endforeach
             </div>
+
+            @if (array_intersect($izinTurleri, ['sicak_is', 'kapali_alan']) !== [])
+                <div style="margin-top:1rem;padding:.75rem;border-radius:.5rem;border:1px solid rgb(245 158 11 / .45);background:rgb(245 158 11 / .06)">
+                    <div style="font-size:.82rem;font-weight:700;margin-bottom:.5rem">Sayısal Gaz Ölçümü (Sıcak İş / Kapalı Alan)</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem">
+                        <div>
+                            <label style="{{ $lbl }}">O₂ (%) — [19.5–23.5]</label>
+                            <input type="text" wire:model="gazO2" placeholder="Örn: 20.9" style="{{ $inp }}">
+                        </div>
+                        <div>
+                            <label style="{{ $lbl }}">LEL (%) — [&lt;10]</label>
+                            <input type="text" wire:model="gazLel" placeholder="Örn: 0" style="{{ $inp }}">
+                        </div>
+                        <div>
+                            <label style="{{ $lbl }}">CO (ppm)</label>
+                            <input type="text" wire:model="gazCo" placeholder="Örn: 0" style="{{ $inp }}">
+                        </div>
+                        <div>
+                            <label style="{{ $lbl }}">H₂S (ppm)</label>
+                            <input type="text" wire:model="gazH2s" placeholder="Örn: 0" style="{{ $inp }}">
+                        </div>
+                        <div>
+                            <label style="{{ $lbl }}">Ölçüm Saati</label>
+                            <input type="time" wire:model="gazSaat" style="{{ $inp }}">
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if (array_intersect($izinTurleri, ['elektrik', 'bakim', 'kapali_alan']) !== [])
+                <div style="margin-top:.8rem;padding:.75rem;border-radius:.5rem;border:1px solid rgb(14 165 233 / .45);background:rgb(14 165 233 / .06)">
+                    <div style="font-size:.82rem;font-weight:700;margin-bottom:.5rem">LOTO (Kilitleme / Etiketleme) Kaydı</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem">
+                        <div>
+                            <label style="{{ $lbl }}">LOTO Kilit / Etiket No</label>
+                            <input type="text" wire:model="lotoKilitNo" placeholder="Örn: LOTO-2026-14" style="{{ $inp }}">
+                        </div>
+                        <div>
+                            <label style="{{ $lbl }}">İzole Edilen Enerji / Ekipman</label>
+                            <input type="text" wire:model="lotoCihaz" placeholder="Örn: Ana Dağıtım Panosu Şalter #3" style="{{ $inp }}">
+                        </div>
+                    </div>
+                </div>
+            @endif
         </x-filament::section>
 
         {{-- 4b. UYARILAR & ÖZEL KOŞULLAR --}}

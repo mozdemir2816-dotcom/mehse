@@ -623,6 +623,7 @@ class HizliSahaBulgusu extends Page
                     ->required(),
                 FileUpload::make('kapanis_kaniti_dosya')
                     ->label('Kapanış Kanıtı (Fotoğraf / Belge)')
+                    ->helperText('Yüksek ve Kritik öncelikli bulgularda kapanış fotoğrafı/belgesi veya en az 15 karakter detaylı doğrulama açıklaması zorunludur.')
                     ->disk('public')
                     ->directory('dof-kanit')
                     ->acceptedFileTypes(['image/*', 'application/pdf'])
@@ -632,6 +633,18 @@ class HizliSahaBulgusu extends Page
             ->action(function (array $data, array $arguments): void {
                 $b = $this->bulgu($arguments['id']);
                 $kanit = $data['kapanis_kaniti_dosya'] ?? $b->isveren_kapanis_dosya;
+                $not = trim((string) ($data['kapanis_notu'] ?? ''));
+
+                if (in_array($b->oncelikAnahtari(), ['yuksek', 'kritik'], true) && blank($kanit) && mb_strlen($not) < 15) {
+                    Notification::make()
+                        ->title('Yüksek / Kritik bulgu kanıtsız kapatılamaz')
+                        ->body('Kapanış fotoğrafı/belgesi yükleyin veya yapılan düzeltmeyi en az 15 karakterle açıklayın.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
                 $b->update([
                     ...$data,
                     'kapanis_kaniti_dosya' => $kanit,

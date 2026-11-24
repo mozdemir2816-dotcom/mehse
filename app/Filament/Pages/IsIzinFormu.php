@@ -97,6 +97,21 @@ class IsIzinFormu extends Page
     /** @var array<string, string> PTW operasyon kontrolleri: anahtar => durum */
     public array $kontroller = [];
 
+    /** Sayısal gaz ölçümü ve LOTO kilit/etiket kayıtları (kontroller['_olcum'] altında saklanır). */
+    public ?string $gazO2 = null;
+
+    public ?string $gazLel = null;
+
+    public ?string $gazCo = null;
+
+    public ?string $gazH2s = null;
+
+    public ?string $gazSaat = null;
+
+    public ?string $lotoKilitNo = null;
+
+    public ?string $lotoCihaz = null;
+
     /** @var array<string, string> geçmiş kayıtta düzenlenen kontroller */
     public array $islemKontroller = [];
 
@@ -114,7 +129,7 @@ class IsIzinFormu extends Page
 
     public function mount(): void
     {
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
 
@@ -124,7 +139,7 @@ class IsIzinFormu extends Page
             $this->izinTurleri = [$tur];
         }
 
-        $this->kontroller = IsIzinFormuModel::varsayilanKontroller([]);
+        $this->kontroller = IsIzinFormuModel::varsayilanKontroller($this->izinTurleri);
     }
 
     /*
@@ -254,6 +269,7 @@ class IsIzinFormu extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->gecmisFormlar, $this->firmaCalisanlari, $this->sahaDenetimleri, $this->ozet);
@@ -386,6 +402,31 @@ class IsIzinFormu extends Page
             return null;
         }
 
+        if ($this->ayniOnayciMi($this->onay1Ad, $this->onay2Ad)) {
+            Notification::make()
+                ->title('Görevler ayrılığı (SoD) ihlali')
+                ->body('1. onaycı ve 2. onaycı aynı kişi olamaz. Farklı iki yetkili adı girin.')
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
+        $kontroller = $this->gecerliKontroller($this->kontroller);
+        $olcum = array_filter([
+            'gaz_o2' => trim((string) $this->gazO2),
+            'gaz_lel' => trim((string) $this->gazLel),
+            'gaz_co' => trim((string) $this->gazCo),
+            'gaz_h2s' => trim((string) $this->gazH2s),
+            'gaz_saat' => trim((string) $this->gazSaat),
+            'loto_kilit_no' => trim((string) $this->lotoKilitNo),
+            'loto_cihaz' => trim((string) $this->lotoCihaz),
+        ], fn (string $v) => $v !== '');
+
+        if ($olcum !== []) {
+            $kontroller['_olcum'] = $olcum;
+        }
+
         $form = $this->kayitIcin(IsIzinFormuModel::class, [
             'firma_id' => $this->firma->id,
             'sablon_kaynak' => $this->sablonKaynak,
@@ -409,7 +450,7 @@ class IsIzinFormu extends Page
                 ->values()->all(),
             'taseron' => $this->taseron,
             'saha_denetimi_id' => array_key_exists((int) $this->sahaDenetimiId, $this->sahaDenetimleri()) ? $this->sahaDenetimiId : null,
-            'kontroller' => $this->gecerliKontroller($this->kontroller),
+            'kontroller' => $kontroller,
         ]);
         $form->save();
 
@@ -534,6 +575,14 @@ class IsIzinFormu extends Page
             return;
         }
 
+        if ($this->ayniOnayciMi($f->onay1_ad, $f->onay2_ad)) {
+            Notification::make()->title('Görevler ayrılığı (SoD) ihlali')
+                ->body('1. onaycı ve 2. onaycı aynı kişi olamaz; izni farklı iki yetkili onaylamalıdır.')
+                ->danger()->send();
+
+            return;
+        }
+
         $alan = $hangi === 1 ? 'onay1' : 'onay2';
         $digerOnayli = ($hangi === 1 ? $f->onay2_durum : $f->onay1_durum) === 'onayladi';
 
@@ -604,14 +653,28 @@ class IsIzinFormu extends Page
         $this->reset('islemId', 'islemTuru', 'islemNotu', 'islemSahaTeslim', 'islemKontroller');
     }
 
-    /** @return array<string, string> yalnız tanımlı anahtar + geçerli durum */
-    private function gecerliKontroller(array $kontroller): array
+    private function ayniOnayciMi(?string $ad1, ?string $ad2): bool
+    {
+        $a = mb_strtolower(preg_replace('/\s+/u', ' ', trim((string) $ad1)), 'UTF-8');
+        $b = mb_strtolower(preg_replace('/\s+/u', ' ', trim((string) $ad2)), 'UTF-8');
+
+        return $a !== '' && $b !== '' && $a === $b;
+    }
+
+    /** @return array<string, mixed> yalnız tanımlı anahtar + geçerli durum (mevcut _olcum korunur) */
+    private function gecerliKontroller(array $kontroller, ?array $mevcutOlcum = null): array
     {
         $durumlar = config('isg.is_izin.kontrol_durumlari');
 
-        return collect(config('isg.is_izin.operasyon_kontrolleri'))
+        $temiz = collect(config('isg.is_izin.operasyon_kontrolleri'))
             ->mapWithKeys(fn ($k, $anahtar) => [$anahtar => isset($durumlar[$kontroller[$anahtar] ?? '']) ? $kontroller[$anahtar] : 'bekliyor'])
             ->all();
+
+        if (is_array($mevcutOlcum) && $mevcutOlcum !== []) {
+            $temiz['_olcum'] = $mevcutOlcum;
+        }
+
+        return $temiz;
     }
 
     public function islemiUygula(): void
@@ -652,7 +715,7 @@ class IsIzinFormu extends Page
                 return;
             }
 
-            $f->update(['kontroller' => $this->gecerliKontroller($this->islemKontroller)]);
+            $f->update(['kontroller' => $this->gecerliKontroller($this->islemKontroller, $f->kontroller['_olcum'] ?? null)]);
             Notification::make()->title($f->izin_no.' kontrolleri kaydedildi')->success()->send();
         }
 
