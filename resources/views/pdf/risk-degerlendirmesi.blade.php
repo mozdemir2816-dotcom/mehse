@@ -321,7 +321,7 @@
         @include('pdf.partials.hazop-tablo')
     @else
     @php $fBaslik = $rd->yontem === 'fmea' ? 'D' : 'F'; @endphp
-    <p class="kisaltma-acik">Düzey kısaltmaları:
+    <p class="kisaltma-acik"><em>“Son” sütunları önerilen önlemler tamamlandığında hedeflenen (önlem sonrası) artık riski gösterir; aksiyon kapanana kadar açık takiptedir.</em> &nbsp;|&nbsp; Düzey kısaltmaları:
         @foreach ($bantlar as $bant)
             <span style="background:{{ $bant['renk'] }}">{{ $bant['kisa'] }}</span> {{ $bant['ad'] }}@if(! $loop->last) &nbsp; @endif
         @endforeach

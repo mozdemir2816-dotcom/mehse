@@ -173,10 +173,53 @@ class KimyasalRiskDegerlendirmesi extends Page
         $this->satirlar[] = $this->satirYap([
             'kimyasal_urun_id' => $urun->id,
             'kimyasal_adi' => $urun->urun_adi,
+            'kullanim_alani' => $urun->kullanim_alani ?? null,
             'tehlike_grubu' => $this->ghsdenGrup($ghs),
             'cmr' => in_array('ghs08', $ghs, true),
             'ucuculuk' => in_array($urun->fiziksel_hal, ['gaz', 'aerosol', 'toz'], true) ? 'yuksek' : 'orta',
         ]);
+    }
+
+    /** Seçili firmanın Kimyasal Sicili envanterindeki henüz eklenmemiş tüm aktif kimyasalları tek tıkla aktarır. */
+    public function tumEnvanteriAktar(): void
+    {
+        if (! $this->firma) {
+            Notification::make()->title('Önce bir firma seçin')->warning()->send();
+
+            return;
+        }
+
+        $mevcutIdler = collect($this->satirlar)->pluck('kimyasal_urun_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $mevcutAdlar = collect($this->satirlar)->pluck('kimyasal_adi')->map(fn ($ad) => mb_strtolower(trim((string) $ad), 'UTF-8'))->all();
+        $eklenen = 0;
+
+        foreach ($this->envanter as $urun) {
+            if (in_array((int) $urun->id, $mevcutIdler, true) || in_array(mb_strtolower(trim((string) $urun->urun_adi), 'UTF-8'), $mevcutAdlar, true)) {
+                continue;
+            }
+            $ghs = (array) ($urun->ghs ?? []);
+            $this->satirlar[] = $this->satirYap([
+                'kimyasal_urun_id' => $urun->id,
+                'kimyasal_adi' => $urun->urun_adi,
+                'kullanim_alani' => $urun->kullanim_alani ?? null,
+                'tehlike_grubu' => $this->ghsdenGrup($ghs),
+                'cmr' => in_array('ghs08', $ghs, true),
+                'ucuculuk' => in_array($urun->fiziksel_hal, ['gaz', 'aerosol', 'toz'], true) ? 'yuksek' : 'orta',
+            ]);
+            $eklenen++;
+        }
+
+        if ($eklenen === 0) {
+            Notification::make()->title('Kimyasal Sicilindeki tüm ürünler zaten listede')->info()->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title($eklenen.' kimyasal Kimyasal Sicilinden aktarıldı')
+            ->body('Tehlike grubu ve uçuculuk değerlerini gözden geçirip sağ üstten "Kaydet"e basın.')
+            ->success()
+            ->send();
     }
 
     public function serbestEkle(): void

@@ -98,7 +98,12 @@
                         <input type="checkbox" wire:model.live="secili" value="{{ $s->id }}" title="Toplu çıktı için işaretle"
                             style="width:1.05rem;height:1.05rem;margin-top:.15rem;flex-shrink:0;cursor:pointer">
                         <div style="flex:1">
-                            <div style="font-weight:700;font-size:.9rem">{{ $s->baslik }}</div>
+                            <div style="font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.45rem;flex-wrap:wrap">
+                                <span>{{ $s->baslik }}</span>
+                                @if (in_array((int) $s->id, $this->onerilenSablonIdleri, true))
+                                    <span style="font-size:.68rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b">★ Bu Firma İçin Önerilen JSA</span>
+                                @endif
+                            </div>
                             <div style="font-size:.75rem;color:rgb(107 114 128);margin-top:.2rem">
                                 {{ count($s->adimlar ?? []) }} iş adımı
                                 @if ($s->dokuman_ref) &nbsp;•&nbsp; Ref: {{ $s->dokuman_ref }} @endif

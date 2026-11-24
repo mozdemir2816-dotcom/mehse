@@ -33,7 +33,7 @@
         <x-filament::section icon="heroicon-o-plus-circle" icon-color="gray">
             <x-slot name="heading">Kimyasal Ekle</x-slot>
 
-            <div style="{{ $kutu }};display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:end;margin-bottom:.5rem">
+            <div style="{{ $kutu }};display:grid;grid-template-columns:1fr auto auto;gap:.5rem;align-items:end;margin-bottom:.5rem">
                 <div>
                     <label style="font-size:.78rem;font-weight:600">Envanterden (Kimyasal Sicili)</label>
                     <select wire:model="yeniUrunId" style="{{ $girdi }}">
@@ -44,6 +44,11 @@
                     </select>
                 </div>
                 <x-filament::button size="sm" wire:click="envanterdenEkle">Ekle</x-filament::button>
+                @if ($this->envanter->isNotEmpty())
+                    <x-filament::button size="sm" color="success" outlined icon="heroicon-o-bolt" wire:click="tumEnvanteriAktar" wire:loading.attr="disabled">
+                        Sicilden Tümünü Aktar
+                    </x-filament::button>
+                @endif
             </div>
             <div style="{{ $kutu }};display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:end">
                 <div>

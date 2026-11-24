@@ -247,11 +247,19 @@ class JsaDegerlendirmesiTest extends TestCase
             'imza_rolleri' => JsaSablonu::VARSAYILAN_IMZA_ROLLERI,
         ]);
 
-        $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma, 'uzman' => $firma->igu])->render();
+        $kaseYolu = storage_path('app/public/isg-profesyonel-kase/ayse.png');
+        @mkdir(dirname($kaseYolu), 0777, true);
+        file_put_contents($kaseYolu, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='));
 
-        $this->assertStringNotContainsString('Uzman Ayşe Yılmaz', $html);
-        $this->assertStringContainsString('A Sınıfı İş Güvenliği Uzmanı', $html);
-        $this->assertStringContainsString('isg-profesyonel-kase/ayse.png', $html);
+        try {
+            $html = view('pdf.jsa', ['sablon' => $sablon, 'firma' => $firma, 'uzman' => $firma->igu])->render();
+
+            $this->assertStringNotContainsString('Uzman Ayşe Yılmaz', $html);
+            $this->assertStringContainsString('A Sınıfı İş Güvenliği Uzmanı', $html);
+            $this->assertStringContainsString('isg-profesyonel-kase/ayse.png', $html);
+        } finally {
+            @unlink($kaseYolu);
+        }
 
         // Word çıktısı da kaşe olmadan (dosya yok) hatasız üretilmeli.
         ob_start();

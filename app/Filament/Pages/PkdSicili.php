@@ -125,13 +125,48 @@ class PkdSicili extends Page
         return PkdKaydi::query()->whereIn('firma_id', array_keys($this->firmalar))->findOrFail($id);
     }
 
+    /** Seçili (veya belirtilen) firmanın Kimyasal Sicili'ndeki parlayıcı/patlayıcı (GHS01-03 / H200-H261) ürünleri. */
+    public function parlayiciKimyasalMetni(?int $firmaId = null): ?string
+    {
+        $fid = $firmaId ?: $this->firmaId;
+        if (! $fid || ! array_key_exists($fid, $this->firmalar)) {
+            return null;
+        }
+
+        $urunler = \App\Models\KimyasalUrun::query()
+            ->where('firma_id', $fid)
+            ->where('aktif', true)
+            ->orderBy('urun_adi')
+            ->get()
+            ->filter(function (\App\Models\KimyasalUrun $u): bool {
+                $ghs = (array) ($u->ghs ?? []);
+                if (array_intersect($ghs, ['ghs01', 'ghs02', 'ghs03']) !== []) {
+                    return true;
+                }
+                $hMetin = strtoupper(is_array($u->h_kodlari) ? implode(' ', $u->h_kodlari) : (string) ($u->h_kodlari ?? ''));
+
+                return (bool) preg_match('/\bH2(?:0[0-5]|2[0-8]|4[0-2]|5[0-2]|6[01])\b/', $hMetin);
+            })
+            ->map(fn (\App\Models\KimyasalUrun $u) => trim($u->urun_adi.($u->fiziksel_hal ? ' ('.$u->fiziksel_hal.')' : '')))
+            ->values()
+            ->all();
+
+        return $urunler ? implode(', ', $urunler) : null;
+    }
+
     /** @return array<int, mixed> */
     private function sema(bool $yeni): array
     {
         return [
             Section::make('Doküman künyesi')->description('PKD\'nin hangi işyeri, alan ve revizyona ait olduğu.')->schema([
                 Grid::make(2)->schema([
-                    Select::make('firma_id')->label('Firma')->options(fn () => $this->firmalar)->searchable()->required()->visible($yeni),
+                    Select::make('firma_id')->label('Firma')->options(fn () => $this->firmalar)->searchable()->required()->visible($yeni)
+                        ->live()
+                        ->afterStateUpdated(function ($state, \Filament\Schemas\Components\Utilities\Get $get, \Filament\Schemas\Components\Utilities\Set $set): void {
+                            if (blank($get('tehlikeli_maddeler')) && ($oneri = $this->parlayiciKimyasalMetni((int) $state))) {
+                                $set('tehlikeli_maddeler', $oneri);
+                            }
+                        }),
                     TextInput::make('dokuman_no')->label('PKD doküman no')->placeholder('Örn. PKD-2026-001')->required()->maxLength(255),
                     TextInput::make('bolum')->label('Bölüm / tehlikeli alan')->placeholder('Örn. Solvent deposu')->required()->maxLength(255),
                     TextInput::make('proses')->label('Proses / faaliyet')->placeholder('Örn. Dolum ve transfer hattı')->maxLength(255),
@@ -174,6 +209,7 @@ class PkdSicili extends Page
                 'durum' => 'taslak',
                 'dokuman_tarihi' => now()->toDateString(),
                 'hazirlayan' => Filament::auth()->user()?->name,
+                'tehlikeli_maddeler' => $this->parlayiciKimyasalMetni($this->firmaId),
             ])
             ->schema(fn () => $this->sema(true))
             ->action(function (array $data): void {

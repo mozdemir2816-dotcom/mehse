@@ -98,16 +98,67 @@ class JsaDegerlendirmesi extends Page
         return $this->firma ? \App\Support\YuksekRiskliIsler::firma($this->firma) : [];
     }
 
+    /**
+     * Seçili firmanın risk değerlendirmesindeki yüksek riskli işlerle (yüksekte çalışma, sıcak iş,
+     * elektrik, kapalı alan, kaldırma, kazı vb.) eşleşen JSA şablon kimlikleri — listede öne çıkar.
+     *
+     * @return array<int, int>
+     */
+    #[Computed]
+    public function onerilenSablonIdleri(): array
+    {
+        if (! $this->firma || $this->yuksekRiskliIsler === []) {
+            return [];
+        }
+
+        $anahtarKelimeler = [
+            'yukseklik' => ['yüksek', 'yuksek', 'iskele', 'çatı', 'cati', 'platform', 'sepet'],
+            'sicak_is' => ['kaynak', 'sıcak', 'sicak', 'kesme', 'taşlama', 'taslama', 'oksijen'],
+            'elektrik' => ['elektrik', 'pano', 'enerji', 'loto', 'trafo', 'kablo'],
+            'kapali_alan' => ['kapalı', 'kapali', 'kuyu', 'tank', 'silo', 'menhol'],
+            'kaldirma' => ['vinç', 'vinc', 'kaldırma', 'kaldirma', 'forklift', 'sapan'],
+            'kazi' => ['kazı', 'kazi', 'hafriyat', 'hendek', 'iksa'],
+            'kimyasal' => ['kimyasal', 'boya', 'solvent', 'asit', 'gaz'],
+        ];
+
+        $kelimeler = collect($this->yuksekRiskliIsler)
+            ->flatMap(fn (array $is) => $anahtarKelimeler[$is['tur']] ?? [mb_strtolower((string) $is['ad'], 'UTF-8')])
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($kelimeler === []) {
+            return [];
+        }
+
+        return JsaSablonu::query()
+            ->sahip((int) Filament::auth()->id())
+            ->get(['id', 'baslik', 'kapsam'])
+            ->filter(function (JsaSablonu $s) use ($kelimeler): bool {
+                $metin = mb_strtolower($s->baslik.' '.($s->kapsam ?? ''), 'UTF-8');
+
+                return collect($kelimeler)->contains(fn (string $k) => str_contains($metin, $k));
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
     /** @return Collection<int, JsaSablonu> */
     #[Computed]
     public function sablonlar(): Collection
     {
+        $onerilen = $this->onerilenSablonIdleri;
+
         return JsaSablonu::query()
             ->sahip((int) Filament::auth()->id())
             ->with('firmalar:id,unvan')
             ->when($this->arama !== '', fn ($q) => $q->where('baslik', 'like', '%'.$this->arama.'%'))
             ->latest()
-            ->get();
+            ->get()
+            ->sortByDesc(fn (JsaSablonu $s) => in_array((int) $s->id, $onerilen, true) ? 1 : 0)
+            ->values();
     }
 
     /*

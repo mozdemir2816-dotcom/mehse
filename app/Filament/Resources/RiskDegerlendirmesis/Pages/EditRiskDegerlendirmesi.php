@@ -14,6 +14,7 @@ use App\Support\RiskDegerlendirmesiOfisUretici;
 use App\Support\RiskDegerlendirmesiUretici;
 use App\Support\RiskYontemDonusturucu;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
@@ -150,123 +151,124 @@ class EditRiskDegerlendirmesi extends EditRecord
                     $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
                 }),
             $this->ekipmanEksikleriAksiyonu(),
-            Action::make('hastanePdf')
-                ->label('PDF İndir')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->visible(fn () => $this->record->hastaneMi())
-                ->action(fn () => HastaneRiskPdfUretici::pdf($this->record)),
-            Action::make('hastaneExcel')
-                ->label('Excel İndir')
-                ->icon('heroicon-o-table-cells')
-                ->color('success')
-                ->visible(fn () => $this->record->hastaneMi())
-                ->action(fn () => HastaneRiskExcelUretici::excel($this->record)),
-            Action::make('pdf')
-                ->visible(fn () => ! $this->record->hastaneMi())
-                ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->schema([ImzaSecenegi::alan()])
-                ->action(function (array $data) {
-                    // Küçük/orta raporlar: tıklama anında üretilip doğrudan indirilir (eskisi gibi).
-                    if (! $this->pdfBuyukMu()) {
-                        return RiskDegerlendirmesiUretici::pdf($this->record, ImzaSecenegi::secili($data));
-                    }
+            ActionGroup::make([
+                Action::make('hastanePdf')
+                    ->label('PDF İndir')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->visible(fn () => $this->record->hastaneMi())
+                    ->action(fn () => HastaneRiskPdfUretici::pdf($this->record)),
+                Action::make('hastaneExcel')
+                    ->label('Excel İndir')
+                    ->icon('heroicon-o-table-cells')
+                    ->color('success')
+                    ->visible(fn () => $this->record->hastaneMi())
+                    ->action(fn () => HastaneRiskExcelUretici::excel($this->record)),
+                Action::make('pdf')
+                    ->visible(fn () => ! $this->record->hastaneMi())
+                    ->label(fn () => $this->pdfBuyukMu() && ! $this->record->pdfHazirMi() ? 'PDF Hazırla' : 'PDF İndir')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->schema([ImzaSecenegi::alan()])
+                    ->action(function (array $data) {
+                        // Küçük/orta raporlar: tıklama anında üretilip doğrudan indirilir (eskisi gibi).
+                        if (! $this->pdfBuyukMu()) {
+                            return RiskDegerlendirmesiUretici::pdf($this->record, ImzaSecenegi::secili($data));
+                        }
 
-                    // Büyük rapor + önbellekte güncel bir PDF hazır: seçilen nüshayı (imzalı/imzasız) diskten indir.
-                    $imzali = ImzaSecenegi::secili($data);
+                        // Büyük rapor + önbellekte güncel bir PDF hazır: seçilen nüshayı (imzalı/imzasız) diskten indir.
+                        $imzali = ImzaSecenegi::secili($data);
 
-                    if ($this->record->pdfHazirMi($imzali)) {
-                        $ad = 'risk-degerlendirmesi-'.Str::slug($this->record->firma_unvan ?: 'firma').($imzali ? '' : '-imzasiz').'.pdf';
+                        if ($this->record->pdfHazirMi($imzali)) {
+                            $ad = 'risk-degerlendirmesi-'.Str::slug($this->record->firma_unvan ?: 'firma').($imzali ? '' : '-imzasiz').'.pdf';
 
-                        return response()->download(Storage::disk('local')->path($this->record->pdfDosyasi($imzali)), $ad);
-                    }
+                            return response()->download(Storage::disk('local')->path($this->record->pdfDosyasi($imzali)), $ad);
+                        }
 
-                    // Önceki talep 5 dk'dır bekliyorsa arka plan görevi (cron) çalışmıyor olabilir —
-                    // kullanıcı sonsuza kadar "hazırlanıyor" görmesin (14.10.2026: canlıda cron yanlış PHP ile çalışıyordu).
-                    // Yalnız henüz işlenmemiş talep sayılır — işlenmiş ama istenen nüsha (ör. imzasız)
-                    // yoksa yeni talep açılır (15.10.2026: eski talep yüzünden yanlış "cron çalışmıyor" uyarısı).
-                    $bekleyen = $this->record->pdf_talep_edildi_at;
-                    $hazir = $this->record->pdf_hazir_at;
-                    $islenmedi = $bekleyen && (! $hazir || $hazir->lt($bekleyen));
-                    if ($islenmedi && $bekleyen->between(now()->subMinutes(15), now()->subMinutes(5))) {
+                        $bekleyen = $this->record->pdf_talep_edildi_at;
+                        $hazir = $this->record->pdf_hazir_at;
+                        $islenmedi = $bekleyen && (! $hazir || $hazir->lt($bekleyen));
+                        if ($islenmedi && $bekleyen->between(now()->subMinutes(15), now()->subMinutes(5))) {
+                            Notification::make()
+                                ->title('PDF hâlâ hazırlanmadı')
+                                ->body('Talep '.$bekleyen->diffForHumans().' verildi ama arka plan görevi henüz işlemedi; sunucudaki zamanlanmış görev (cron) çalışmıyor olabilir. Bu arada Excel veya Word olarak indirebilirsiniz.')
+                                ->warning()
+                                ->persistent()
+                                ->send();
+
+                            return null;
+                        }
+
+                        $this->record->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
+
                         Notification::make()
-                            ->title('PDF hâlâ hazırlanmadı')
-                            ->body('Talep '.$bekleyen->diffForHumans().' verildi ama arka plan görevi henüz işlemedi; sunucudaki zamanlanmış görev (cron) çalışmıyor olabilir. Bu arada Excel veya Word olarak indirebilirsiniz.')
-                            ->warning()
-                            ->persistent()
+                            ->title('PDF hazırlanıyor')
+                            ->body('Bu rapor '.RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI.' maddeden büyük olduğu için hazırlanması yaklaşık 1 dakika sürüyor. Birazdan tekrar "PDF Hazırla"ya tıklayın.')
+                            ->info()
                             ->send();
 
                         return null;
-                    }
+                    }),
+                Action::make('excel')
+                    ->visible(fn () => ! $this->record->hastaneMi())
+                    ->label('Excel İndir')
+                    ->icon('heroicon-o-table-cells')
+                    ->color('success')
+                    ->schema([ImzaSecenegi::alan()])
+                    ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::excel($this->record, ImzaSecenegi::secili($data))),
+                Action::make('word')
+                    ->visible(fn () => ! $this->record->hastaneMi())
+                    ->label('Word İndir')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->schema([ImzaSecenegi::alan()])
+                    ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::word($this->record, ImzaSecenegi::secili($data))),
+                Action::make('whatsapp')
+                    ->label('📲 WhatsApp ile İşverene Gönder')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    ->action(fn () => $this->whatsappAc(\App\Support\IsverenWhatsApp::url($this->record->firma, \App\Support\IsverenWhatsApp::riskMesaji($this->record)), 'Risk değerlendirmesi')),
+                Action::make('fineKinneyeDonustur')
+                    ->label('Fine-Kinney\'e Dönüştür')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('gray')
+                    ->visible(fn () => $this->record->yontem === 'matris_5x5' && ! $this->record->hastaneMi())
+                    ->requiresConfirmation()
+                    ->modalDescription('Bu değerlendirmenin Fine-Kinney yöntemiyle YENİ bir kopyası oluşturulur (bu kayıt değişmez). Frekans, mevcut Olasılık değerinden tahmini olarak türetilir — yeni kayıtta puanları gözden geçirin.')
+                    ->action(function () {
+                        $yeni = RiskYontemDonusturucu::matristenFineKinneye($this->record);
 
-                    // Büyük rapor + henüz üretilmemiş: arka plana talep bırak, tıklama anında indirme yok.
-                    $this->record->forceFill(['pdf_talep_edildi_at' => now()])->saveQuietly();
+                        Notification::make()
+                            ->title('Fine-Kinney kopyası oluşturuldu')
+                            ->body('Puanlar tahminidir, gözden geçirip düzeltin.')
+                            ->success()
+                            ->send();
 
-                    Notification::make()
-                        ->title('PDF hazırlanıyor')
-                        ->body('Bu rapor '.RiskDegerlendirmesi::PDF_ARKA_PLAN_ESIGI.' maddeden büyük olduğu için hazırlanması yaklaşık 1 dakika sürüyor. Birazdan tekrar "PDF Hazırla"ya tıklayın.')
-                        ->info()
-                        ->send();
+                        $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
+                    }),
+                Action::make('matriseDonustur')
+                    ->label('Matris (5x5)\'e Dönüştür')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('gray')
+                    ->visible(fn () => $this->record->yontem === 'fine_kinney' && ! $this->record->hastaneMi())
+                    ->requiresConfirmation()
+                    ->modalDescription('Bu değerlendirmenin Matris (5x5) yöntemiyle YENİ bir kopyası oluşturulur (bu kayıt değişmez). Frekans ekseni Matris\'te olmadığından yok sayılır — yeni kayıtta puanları gözden geçirin.')
+                    ->action(function () {
+                        $yeni = RiskYontemDonusturucu::fineKinneydenMatrise($this->record);
 
-                    return null;
-                }),
-            Action::make('excel')
-                ->visible(fn () => ! $this->record->hastaneMi())
-                ->label('Excel İndir')
-                ->icon('heroicon-o-table-cells')
-                ->color('success')
-                ->schema([ImzaSecenegi::alan()])
-                ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::excel($this->record, ImzaSecenegi::secili($data))),
-            Action::make('word')
-                ->visible(fn () => ! $this->record->hastaneMi())
-                ->label('Word İndir')
-                ->icon('heroicon-o-document-text')
-                ->color('info')
-                ->schema([ImzaSecenegi::alan()])
-                ->action(fn (array $data) => RiskDegerlendirmesiOfisUretici::word($this->record, ImzaSecenegi::secili($data))),
-            Action::make('whatsapp')
-                ->label('📲 WhatsApp ile İşverene Gönder')
-                ->icon('heroicon-o-chat-bubble-left-right')
-                ->color('success')
-                ->action(fn () => $this->whatsappAc(\App\Support\IsverenWhatsApp::url($this->record->firma, \App\Support\IsverenWhatsApp::riskMesaji($this->record)), 'Risk değerlendirmesi')),
-            Action::make('fineKinneyeDonustur')
-                ->label('Fine-Kinney\'e Dönüştür')
-                ->icon('heroicon-o-arrow-path')
-                ->color('gray')
-                ->visible(fn () => $this->record->yontem === 'matris_5x5' && ! $this->record->hastaneMi())
-                ->requiresConfirmation()
-                ->modalDescription('Bu değerlendirmenin Fine-Kinney yöntemiyle YENİ bir kopyası oluşturulur (bu kayıt değişmez). Frekans, mevcut Olasılık değerinden tahmini olarak türetilir — yeni kayıtta puanları gözden geçirin.')
-                ->action(function () {
-                    $yeni = RiskYontemDonusturucu::matristenFineKinneye($this->record);
+                        Notification::make()
+                            ->title('Matris (5x5) kopyası oluşturuldu')
+                            ->body('Puanlar tahminidir, gözden geçirip düzeltin.')
+                            ->success()
+                            ->send();
 
-                    Notification::make()
-                        ->title('Fine-Kinney kopyası oluşturuldu')
-                        ->body('Puanlar tahminidir, gözden geçirip düzeltin.')
-                        ->success()
-                        ->send();
-
-                    $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
-                }),
-            Action::make('matriseDonustur')
-                ->label('Matris (5x5)\'e Dönüştür')
-                ->icon('heroicon-o-arrow-path')
-                ->color('gray')
-                ->visible(fn () => $this->record->yontem === 'fine_kinney' && ! $this->record->hastaneMi())
-                ->requiresConfirmation()
-                ->modalDescription('Bu değerlendirmenin Matris (5x5) yöntemiyle YENİ bir kopyası oluşturulur (bu kayıt değişmez). Frekans ekseni Matris\'te olmadığından yok sayılır — yeni kayıtta puanları gözden geçirin.')
-                ->action(function () {
-                    $yeni = RiskYontemDonusturucu::fineKinneydenMatrise($this->record);
-
-                    Notification::make()
-                        ->title('Matris (5x5) kopyası oluşturuldu')
-                        ->body('Puanlar tahminidir, gözden geçirip düzeltin.')
-                        ->success()
-                        ->send();
-
-                    $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
-                }),
+                        $this->redirect(RiskDegerlendirmesiResource::getUrl('edit', ['record' => $yeni]));
+                    }),
+            ])
+                ->label('Çıktı & Dönüştürme')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->button(),
             DeleteAction::make()->visible(fn () => ! $this->record->kilitliMi()),
         ];
     }
