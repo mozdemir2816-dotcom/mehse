@@ -869,7 +869,9 @@ class UzaktanEgitimTest extends TestCase
 
         $eskiHash = $ali->fresh()->sifre;
         $this->assertInstanceOf(StreamedResponse::class, $sayfa->instance()->girisBilgileriIndir('excel'));
-        $this->assertNotSame($eskiHash, $ali->fresh()->sifre);                 // kendi şifresini belirlemeyene yeni geçici şifre
+        $this->assertSame($eskiHash, $ali->fresh()->sifre);                     // varsayılan indirme mevcut geçici şifreyi bozmaz
+        $this->assertInstanceOf(StreamedResponse::class, $sayfa->instance()->girisBilgileriIndir('excel', true));
+        $this->assertNotSame($eskiHash, $ali->fresh()->sifre);                  // açık sıfırlamada yeni geçici şifre üretilir
         $this->assertSame($zeynep->sifre, $zeynep->fresh()->sifre);             // kendi şifresini belirleyene dokunulmaz
 
         $pdf = $sayfa->instance()->girisBilgileriIndir('pdf');

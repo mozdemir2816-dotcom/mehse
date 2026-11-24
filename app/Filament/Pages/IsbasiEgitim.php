@@ -88,7 +88,7 @@ class IsbasiEgitim extends Page
         $this->egitimTarihi = now()->toDateString();
         $this->belgeTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -150,6 +150,7 @@ class IsbasiEgitim extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->calisanlar, $this->gecmisTutanaklar);
@@ -250,6 +251,16 @@ class IsbasiEgitim extends Page
     {
         if (! $this->firma || blank($this->calisanAdSoyad)) {
             Notification::make()->title('Firma ve çalışan adı zorunlu')->danger()->send();
+
+            return null;
+        }
+
+        if ($this->sureSaat !== null && $this->sureSaat < 2) {
+            Notification::make()
+                ->title('İşbaşı eğitimi en az 2 saat olmalıdır')
+                ->body('Çalışanların İSG Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik m.7 gereği işe başlama eğitimi en az 2 saat ve uygulamalı/yüz yüze verilmelidir.')
+                ->danger()
+                ->send();
 
             return null;
         }

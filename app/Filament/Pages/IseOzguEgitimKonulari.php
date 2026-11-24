@@ -56,7 +56,7 @@ class IseOzguEgitimKonulari extends Page
 
     public function mount(): void
     {
-        $id = request()->integer('firma') ?: request()->integer('firmaId');
+        $id = request()->integer('firma') ?: request()->integer('firmaId') ?: \App\Support\KomutaFirma::baslangic($this->firmalar);
         $this->firmaId = $id && array_key_exists($id, $this->firmalar) ? $id : null;
     }
 
@@ -96,8 +96,11 @@ class IseOzguEgitimKonulari extends Page
         return IseOzguEgitimKutuphanesi::gizlenenler(Filament::auth()->id());
     }
 
-    public function updated(): void
+    public function updated(string $alan = ''): void
     {
+        if ($alan === 'firmaId') {
+            \App\Support\KomutaFirma::sec($this->firmaId);
+        }
         unset($this->firma, $this->konular, $this->gizlenenler);
     }
 

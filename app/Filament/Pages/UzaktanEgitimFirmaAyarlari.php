@@ -64,11 +64,15 @@ class UzaktanEgitimFirmaAyarlari extends Page
     public function mount(): void
     {
         $this->paketId = array_key_first($this->paketler) ?: null;
+        if (! $this->firmaId && ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar))) {
+            $this->firmaId = $firmaId;
+        }
         $this->yukle();
     }
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->yukle();
     }
 

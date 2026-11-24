@@ -4,7 +4,9 @@ namespace App\Filament\Pages;
 
 use App\Models\EgitimPaketi;
 use App\Models\EgitimPaketiSorusu;
+use App\Models\SoruBankasiSorusu;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -15,6 +17,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -171,6 +174,80 @@ class UzaktanEgitimSorulari extends Page implements HasTable
                 SelectFilter::make('zorluk')->label('Zorluk')->options(EgitimPaketiSorusu::ZORLUKLAR),
             ])
             ->headerActions([
+                Action::make('bankadanCek')
+                    ->label('Soru Bankasından Pakete Çek')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->visible($duzenlenebilir)
+                    ->modalHeading('Merkezi Soru Bankasından Pakete Soru Aktar')
+                    ->modalDescription('Yayımlanmış (onaylı) Soru Bankası soruları seçili pakete kopyalanır; pakette zaten bulunan sorular tekrar eklenmez.')
+                    ->schema([
+                        Select::make('konu')
+                            ->label('Konu filtresi (opsiyonel)')
+                            ->options(config('isg.soru_bankasi.konular', []))
+                            ->placeholder('Tüm konular')
+                            ->native(false),
+                        Select::make('kullanim')
+                            ->label('Hangi sınavda kullanılsın')
+                            ->options(EgitimPaketiSorusu::KULLANIMLAR)
+                            ->default('ortak')
+                            ->required()
+                            ->native(false),
+                        TextInput::make('adet')
+                            ->label('En fazla kaç soru çekilsin')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(50)
+                            ->default(10)
+                            ->required(),
+                    ])
+                    ->action(function (array $data): void {
+                        abort_unless($this->paketDuzenlenebilirMi(), 403);
+
+                        $mevcut = $this->paket->sorular()
+                            ->pluck('soru')
+                            ->map(fn ($s) => mb_strtolower(trim((string) $s), 'UTF-8'))
+                            ->flip();
+
+                        $adaylar = SoruBankasiSorusu::query()
+                            ->erisilebilir(Filament::auth()->id())
+                            ->onayli()
+                            ->when(filled($data['konu'] ?? null), fn ($q) => $q->where('konu', $data['konu']))
+                            ->inRandomOrder()
+                            ->limit(max(1, min(50, (int) ($data['adet'] ?? 10))) * 2)
+                            ->get();
+
+                        $hedef = max(1, min(50, (int) ($data['adet'] ?? 10)));
+                        $eklenen = 0;
+
+                        foreach ($adaylar as $s) {
+                            if ($eklenen >= $hedef) {
+                                break;
+                            }
+                            $anahtar = mb_strtolower(trim((string) $s->soru), 'UTF-8');
+                            if (isset($mevcut[$anahtar])) {
+                                continue;
+                            }
+                            $this->paket->sorular()->create([
+                                'kullanim' => $data['kullanim'] ?? 'ortak',
+                                'zorluk' => in_array($s->zorluk, array_keys(EgitimPaketiSorusu::ZORLUKLAR), true) ? $s->zorluk : null,
+                                'soru' => $s->soru,
+                                'secenekler' => $s->secenekler,
+                                'dogru_index' => (int) $s->dogru_index,
+                                'aciklama' => $s->aciklama,
+                            ]);
+                            $mevcut[$anahtar] = true;
+                            $eklenen++;
+                        }
+
+                        $this->ozetiTazele();
+                        if ($eklenen === 0) {
+                            Notification::make()->title('Aktarılacak yeni onaylı soru bulunamadı')->warning()->send();
+
+                            return;
+                        }
+                        Notification::make()->title($eklenen.' soru Soru Bankasından pakete eklendi')->success()->send();
+                    }),
                 CreateAction::make()->label('Soru Ekle')->icon('heroicon-o-plus')
                     ->visible($duzenlenebilir)
                     ->schema($this->soruFormu())

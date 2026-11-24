@@ -54,8 +54,9 @@
                 <div style="margin-bottom:.8rem"><div style="display:flex;flex-wrap:wrap;gap:.4rem">
                     <x-filament::button size="sm" color="primary" icon="heroicon-o-document-text" wire:click="denetimTutanagi">Denetim Tutanağı (PDF)</x-filament::button>
                     <x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="takipExcel">Takip Listesi (Excel)</x-filament::button>
-                    <x-filament::button size="sm" color="gray" icon="heroicon-o-key" wire:click="girisBilgileriIndir('excel')" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Giriş Bilgileri (Excel)</x-filament::button>
-                    <x-filament::button size="sm" color="gray" icon="heroicon-o-printer" wire:click="girisBilgileriIndir('pdf')" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Giriş Kartları (PDF)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-key" wire:click="girisBilgileriIndir('excel', false)" title="Mevcut geçici şifreleri bozmadan kullanıcı kodlarını indirir">Giriş Bilgileri (Excel)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-printer" wire:click="girisBilgileriIndir('pdf', false)" title="Mevcut geçici şifreleri bozmadan giriş kartlarını indirir">Giriş Kartları (PDF)</x-filament::button>
+                    <x-filament::button size="sm" color="warning" icon="heroicon-o-arrow-path" wire:click="girisBilgileriIndir('excel', true)" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Geçici Şifreleri Yenile & İndir</x-filament::button>
                 </div></div>
             @endif
 
@@ -185,8 +186,9 @@
                 <div style="display:flex;flex-wrap:wrap;gap:.4rem">
                     <x-filament::button size="sm" color="primary" icon="heroicon-o-document-text" wire:click="denetimTutanagi">Denetim Tutanağı (PDF)</x-filament::button>
                     <x-filament::button size="sm" color="gray" icon="heroicon-o-table-cells" wire:click="takipExcel">Takip Listesi (Excel)</x-filament::button>
-                    <x-filament::button size="sm" color="gray" icon="heroicon-o-key" wire:click="girisBilgileriIndir('excel')" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Giriş Bilgileri (Excel)</x-filament::button>
-                    <x-filament::button size="sm" color="gray" icon="heroicon-o-printer" wire:click="girisBilgileriIndir('pdf')" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Giriş Kartları (PDF)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-key" wire:click="girisBilgileriIndir('excel', false)" title="Mevcut geçici şifreleri bozmadan kullanıcı kodlarını indirir">Giriş Bilgileri (Excel)</x-filament::button>
+                    <x-filament::button size="sm" color="gray" icon="heroicon-o-printer" wire:click="girisBilgileriIndir('pdf', false)" title="Mevcut geçici şifreleri bozmadan giriş kartlarını indirir">Giriş Kartları (PDF)</x-filament::button>
+                    <x-filament::button size="sm" color="warning" icon="heroicon-o-arrow-path" wire:click="girisBilgileriIndir('excel', true)" wire:confirm="Kendi şifresini belirlememiş ve eğitimi bitmemiş çalışanlara YENİ geçici şifre üretilir (önceki geçici şifreler geçersiz olur). Devam edilsin mi?">Geçici Şifreleri Yenile & İndir</x-filament::button>
                 </div>
             </x-slot>
             <div style="overflow-x:auto">

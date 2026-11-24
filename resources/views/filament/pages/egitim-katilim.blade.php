@@ -174,6 +174,11 @@
                         gerekirse 16 yapabilirsiniz — belgede "{{ $dersSaati ?? '…' }} Ders Saati" yazar.
                         Tarihi veya ders saatini boş bırakırsanız belgede kalemle doldurulacak boşluk çıkar.
                     </p>
+                    @if ($this->sureYasalUyarisi)
+                        <div style="margin-top:.4rem;padding:.45rem .65rem;border-radius:.45rem;border:1px solid rgb(217 119 6 / .6);background:rgb(217 119 6 / .08);color:#b45309;font-size:.78rem">
+                            ⚠ {{ $this->sureYasalUyarisi }}
+                        </div>
+                    @endif
                 </div>
             <div>
                 <label class="mehse-etiket">Eğitim Süresi (Gün)</label>

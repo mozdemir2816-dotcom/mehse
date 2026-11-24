@@ -163,7 +163,7 @@ class EgitimKatilim extends Page
             return;
         }
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
             $this->updatedFirmaId();
         }
@@ -762,9 +762,10 @@ class EgitimKatilim extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
-        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru, $this->isKalemiSecenekleri, $this->calisanFiltreSecenekleri, $this->gorunenCalisanlar);
+        unset($this->firma, $this->calisanlar, $this->gecmisKayitlar, $this->naceSektoru, $this->isKalemiSecenekleri, $this->calisanFiltreSecenekleri, $this->gorunenCalisanlar, $this->asgariDersSaati, $this->sureYasalUyarisi);
         // Önceki firmanın sektörü yeni firmaya taşınmasın — icerikYenile NACE'den/elle seçimden kurar.
         $this->sektorAnahtari = null;
         $this->sektorElle = false;
@@ -773,6 +774,7 @@ class EgitimKatilim extends Page
         $this->calisanFiltre = '';
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
         $this->egitmenBilgileriYenile();
+        $this->egitimSekli = 'yuz_yuze';
         $this->oncekiIcerikYoksay = false;
         $this->icerikYenile();
         $this->uyelerOtomatik = false;
@@ -1175,9 +1177,44 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         // İşlenen temel/işe özgü konular yıllık eğitim planında o aya "tamamlandı" işlenir.
         EgitimKonulari::planiIsle($kayit);
 
+        if ($uyari = $this->sureYasalUyarisi) {
+            Notification::make()->title('Yasal asgari süre uyarısı (kayıt oluşturuldu)')->body($uyari)->warning()->send();
+        }
+
         unset($this->gecmisKayitlar);
 
         return $kayit;
+    }
+
+    /** Çalışanların İSG Eğitimleri Yön. m.11: tehlike sınıfına göre temel eğitim asgari ders saati. */
+    #[Computed]
+    public function asgariDersSaati(): ?int
+    {
+        if ($this->baslikAnahtari !== 'genel' || ! $this->firma) {
+            return null;
+        }
+
+        return match ($this->firma->tehlike_sinifi) {
+            'cok_tehlikeli' => 16,
+            'tehlikeli' => 12,
+            default => 8,
+        };
+    }
+
+    /** Temel eğitimde girilen saat yasal asgari sürenin altındaysa uyarı metni (kısmi oturum kaydı yine serbest). */
+    #[Computed]
+    public function sureYasalUyarisi(): ?string
+    {
+        $asgari = $this->asgariDersSaati;
+
+        if (! $asgari || $this->dersSaati === null || $this->dersSaati >= $asgari) {
+            return null;
+        }
+
+        return 'Çalışanların İSG Eğitimleri Yön. m.11 uyarısı: '
+            .$this->firma->tehlikeSinifiEtiketi()
+            ." işyerinde temel eğitim toplam en az {$asgari} saat olmalıdır (girilen: {$this->dersSaati} saat). "
+            .'Kısmi / oturum bazlı eğitim tutanağı olarak kaydedebilirsiniz.';
     }
 
     #[Computed]

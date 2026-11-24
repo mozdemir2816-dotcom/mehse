@@ -66,6 +66,7 @@
                 <span style="font-size:.78rem;color:rgb(107 114 128)">AI devre dışı (GEMINI_API_KEY tanımlı değil) — aşağıdan elle soru ekleyin.</span>
             @endif
             @if ($sorular)
+                <x-filament::button size="sm" color="success" icon="heroicon-o-archive-box-arrow-down" wire:click="bankayaKaydet">Soru Bankasına Kaydet</x-filament::button>
                 <x-filament::button size="sm" color="gray" wire:click="sifirla">Soruları Sıfırla</x-filament::button>
             @endif
         </div>

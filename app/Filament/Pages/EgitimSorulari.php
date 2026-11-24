@@ -84,7 +84,7 @@ class EgitimSorulari extends Page
     {
         $this->yeniSinavTarihi = now()->toDateString();
 
-        if ($firmaId = request()->integer('firma')) {
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
             $this->firmaId = $firmaId;
         }
     }
@@ -153,6 +153,7 @@ class EgitimSorulari extends Page
 
     public function updatedFirmaId(): void
     {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         $this->kayitUnut();
 
         unset($this->firma, $this->calisanlar, $this->gecmisSinavlar);
@@ -250,6 +251,63 @@ class EgitimSorulari extends Page
     public function sifirla(): void
     {
         $this->sorular = [];
+    }
+
+    /** Ekrandaki soruları merkezi Soru Bankasına taslak olarak kaydeder (aynı metinleri atlar). */
+    public function bankayaKaydet(): void
+    {
+        if (! $this->sorular) {
+            Notification::make()->title('Kaydedilecek soru yok')->warning()->send();
+
+            return;
+        }
+
+        $userId = Filament::auth()->id();
+        $mevcut = SoruBankasiSorusu::query()
+            ->where('user_id', $userId)
+            ->pluck('soru')
+            ->map(fn ($s) => mb_strtolower(trim((string) $s), 'UTF-8'))
+            ->flip();
+
+        $zorluk = in_array($this->zorluk, ['kolay', 'orta', 'zor'], true) ? $this->zorluk : 'orta';
+        $eklenen = 0;
+
+        foreach ($this->sorular as $s) {
+            $metin = trim((string) ($s['soru'] ?? ''));
+            $anahtar = mb_strtolower($metin, 'UTF-8');
+
+            if ($metin === '' || isset($mevcut[$anahtar])) {
+                continue;
+            }
+
+            SoruBankasiSorusu::create([
+                'user_id' => $userId,
+                'soru' => $metin,
+                'secenekler' => array_values($s['secenekler'] ?? []),
+                'dogru_index' => (int) ($s['dogru_index'] ?? 0),
+                'sektor_anahtari' => $this->sektorAnahtari ?: null,
+                'nace_onekleri' => $this->firma?->nace_kodu ? ','.$this->firma->nace_kodu.',' : null,
+                'konu' => 'genel_isg',
+                'zorluk' => $zorluk,
+                'durum' => 'taslak',
+            ]);
+            $mevcut[$anahtar] = true;
+            $eklenen++;
+        }
+
+        unset($this->bankaSayisi);
+
+        if ($eklenen === 0) {
+            Notification::make()->title('Tüm sorular zaten Soru Bankasında mevcut')->info()->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title($eklenen.' soru Soru Bankasına taslak olarak kaydedildi')
+            ->body('Soru Bankası sekmesinden inceleyip yayımlayabilirsiniz.')
+            ->success()
+            ->send();
     }
 
     /*

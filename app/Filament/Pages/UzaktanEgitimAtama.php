@@ -339,34 +339,36 @@ class UzaktanEgitimAtama extends Page
         }
         $sayfa->freezePane('A2');
 
-        $tmp = tempnam(sys_get_temp_dir(), 'uze').'.xlsx';
-        (new Xlsx($kitap))->save($tmp);
-
-        return response()->streamDownload(function () use ($tmp) {
-            echo file_get_contents($tmp);
-            @unlink($tmp);
-        }, 'uzaktan-egitim-takibi-'.Str::slug($this->firma->unvan).'.xlsx');
+        return response()->streamDownload(function () use ($kitap) {
+            (new Xlsx($kitap))->save('php://output');
+        }, 'uzaktan-egitim-takibi-'.Str::slug($this->firma->unvan).'.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     /**
-     * Toplu giriş bilgileri (08.11.2026): firmadaki tamamlanmamış atamaların çalışanları için
-     * kullanıcı kodu + geçici şifre listesi (Excel ya da yazdırılabilir PDF kartlar). Şifreler
-     * şifreli saklandığından, kendi şifresini belirlememiş çalışanlara YENİ geçici şifre üretilir;
-     * kendi şifresini belirleyenlerin şifresine dokunulmaz.
+     * Toplu giriş bilgileri: firmadaki tamamlanmamış atamaların çalışanları için kullanıcı kodu +
+     * geçici şifre listesi (Excel ya da yazdırılabilir PDF kartlar).
+     * Varsayılan olarak ($sifreSifirla = false) mevcut geçici şifreler BOZULMAZ; yalnız şifresi hiç
+     * oluşturulmamış çalışanlara geçici şifre üretilir. $sifreSifirla = true verildiğinde kendi
+     * şifresini belirlememiş olanlara yeni geçici şifre üretilir.
      */
-    public function girisBilgileriIndir(string $bicim = 'excel')
+    public function girisBilgileriIndir(string $bicim = 'excel', bool $sifreSifirla = false)
     {
         $satirlar = [];
 
         foreach ($this->atamalar->where('durum', '!=', 'tamamlandi')->pluck('calisan')->unique('id') as $c) {
             $sifre = null;
 
-            if ($c->sifre_belirlendi_at === null) {
+            if (blank($c->sifre) || ($sifreSifirla && $c->sifre_belirlendi_at === null)) {
                 $sifre = Str::upper(Str::random(3)).random_int(100, 999);
                 $c->forceFill(['sifre' => $sifre])->save();
             }
 
-            $satirlar[] = ['ad_soyad' => $c->ad_soyad, 'gorev' => $c->gorev, 'kod' => $c->eposta, 'sifre' => $sifre ?? '(kendi belirlediği şifre)', 'telefon' => $c->telefon];
+            $sifreMetni = $sifre
+                ?? ($c->sifre_belirlendi_at !== null ? '(kendi belirlediği şifre)' : '(mevcut geçici şifre korunuyor)');
+
+            $satirlar[] = ['ad_soyad' => $c->ad_soyad, 'gorev' => $c->gorev, 'kod' => $c->eposta, 'sifre' => $sifreMetni, 'telefon' => $c->telefon];
         }
 
         if (! $satirlar) {
@@ -398,13 +400,11 @@ class UzaktanEgitimAtama extends Page
             $sayfa->getColumnDimension($k)->setAutoSize(true);
         }
 
-        $tmp = tempnam(sys_get_temp_dir(), 'ueg').'.xlsx';
-        (new Xlsx($kitap))->save($tmp);
-
-        return response()->streamDownload(function () use ($tmp) {
-            echo file_get_contents($tmp);
-            @unlink($tmp);
-        }, $ad.'.xlsx');
+        return response()->streamDownload(function () use ($kitap) {
+            (new Xlsx($kitap))->save('php://output');
+        }, $ad.'.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     /** Eğitimi henüz bitirmeyenler (WhatsApp hatırlatma listesi). */
@@ -476,10 +476,19 @@ class UzaktanEgitimAtama extends Page
             $this->firmaId = (int) $aktarim['firma_id'];
             $this->updatedFirmaId();
             $this->secilenCalisanlar = array_values(array_intersect($aktarim['calisan_idleri'], $this->calisanlar->pluck('id')->all()));
+
+            return;
+        }
+
+        if ($firmaId = request()->integer('firma') ?: \App\Support\KomutaFirma::baslangic($this->firmalar)) {
+            $this->firmaId = $firmaId;
+            $this->updatedFirmaId();
         }
     }
 
-    public function updatedFirmaId(): void    {
+    public function updatedFirmaId(): void
+    {
+        \App\Support\KomutaFirma::sec($this->firmaId);
         unset($this->firma, $this->calisanlar, $this->atamalar, $this->portalGirisleri, $this->sureKontrolu, $this->detay, $this->hatirlatilacaklar);
         $this->detayId = null;
         $this->secilenCalisanlar = [];
