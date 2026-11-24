@@ -38,6 +38,25 @@
                     <x-filament::badge :color="match ($gorsel['kase']) { 'yuklu' => 'success', default => 'warning' }">
                         {{ match ($gorsel['kase']) { 'yuklu' => 'Kaşe Yüklü', 'dosya_yok' => 'Kaşe dosyası bulunamadı', default => 'Kaşe eksik' } }}
                     </x-filament::badge>
+                    @if (filled($u->sertifika_no))
+                        <x-filament::badge color="info">Belge No: {{ $u->sertifika_no }}</x-filament::badge>
+                    @endif
+                    @if ($u->sertifika_gecerlilik)
+                        @php
+                            $sertifikaTarih = \Illuminate\Support\Carbon::parse($u->sertifika_gecerlilik);
+                            $sertifikaKalan = (int) now()->startOfDay()->diffInDays($sertifikaTarih->copy()->startOfDay(), false);
+                            $sertifikaRenk = $sertifikaKalan < 0 ? 'danger' : ($sertifikaKalan <= 90 ? 'warning' : 'success');
+                        @endphp
+                        <x-filament::badge :color="$sertifikaRenk">
+                            @if ($sertifikaKalan < 0)
+                                Sertifika süresi doldu ({{ $sertifikaTarih->format('d.m.Y') }})
+                            @elseif ($sertifikaKalan <= 90)
+                                Sertifika: {{ $sertifikaTarih->format('d.m.Y') }} ({{ $sertifikaKalan }} gün)
+                            @else
+                                Sertifika geçerlilik: {{ $sertifikaTarih->format('d.m.Y') }}
+                            @endif
+                        </x-filament::badge>
+                    @endif
                 </div>
             </div>
         </div>
@@ -105,17 +124,46 @@
         </div>
     @endif
 
-    {{-- SEKME PILL'LERİ --}}
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(128 116 148 / .1);padding:.3rem;border-radius:.6rem">
-        @foreach ($sekmeler as $anahtar => $ad)
-            @php $aktif = $sekme === $anahtar; @endphp
-            <button type="button" wire:click="sekmeSec('{{ $anahtar }}')"
-                style="padding:.5rem .85rem;border:none;border-radius:.45rem;cursor:pointer;font-weight:600;font-size:.83rem;
-                    background:{{ $aktif ? $turkuaz : 'transparent' }};color:{{ $aktif ? '#fff' : 'inherit' }}">
-                {{ $ad }}
-            </button>
-        @endforeach
-    </div>
+    {{-- ==================== KAYITLI KAŞE KÜTÜPHANESİ ==================== --}}
+    @if (count($this->kaseKutuphanesi) > 0)
+        <div style="{{ $golge }};padding:.75rem 1rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+                <div style="font-size:.82rem;font-weight:700">Kayıtlı Kaşe Kütüphanesi <span style="font-weight:400;color:{{ $gri }}">· tek tıkla aktif kaşeyi değiştirin</span></div>
+                <span style="font-size:.72rem;color:{{ $gri }}">{{ count($this->kaseKutuphanesi) }} kaşe kayıtlı</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+                @foreach ($this->kaseKutuphanesi as $kase)
+                    <div style="display:inline-flex;align-items:center;gap:.45rem;padding:.35rem .65rem;border-radius:.65rem;font-size:.78rem;
+                        border:1px solid {{ $kase['aktif'] ? 'rgb(34 197 94 / .65)' : 'rgb(128 116 148 / .3)' }};
+                        background:{{ $kase['aktif'] ? 'rgb(34 197 94 / .09)' : 'transparent' }}">
+                        <button type="button" wire:click="kaseKutuphanedenSec('{{ $kase['id'] }}')"
+                            style="background:none;border:none;padding:0;cursor:pointer;color:inherit;font-weight:{{ $kase['aktif'] ? '700' : '600' }};font-size:inherit">
+                            {{ $kase['aktif'] ? '✓ ' : '' }}{{ $kase['ad'] }}
+                        </button>
+                        @if (! $kase['aktif'])
+                            <button type="button" wire:click="kaseKutuphanedenSil('{{ $kase['id'] }}')"
+                                title="Kütüphaneden kaldır"
+                                style="background:none;border:none;padding:0 .15rem;cursor:pointer;color:{{ $gri }};font-size:.88rem;line-height:1">×</button>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- SEKME PILL'LERİ (yalnız birden fazla görünür sekme varsa) --}}
+    @if (count($sekmeler) > 1)
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;background:rgb(128 116 148 / .1);padding:.3rem;border-radius:.6rem">
+            @foreach ($sekmeler as $anahtar => $ad)
+                @php $aktif = $sekme === $anahtar; @endphp
+                <button type="button" wire:click="sekmeSec('{{ $anahtar }}')"
+                    style="padding:.5rem .85rem;border:none;border-radius:.45rem;cursor:pointer;font-weight:600;font-size:.83rem;
+                        background:{{ $aktif ? $turkuaz : 'transparent' }};color:{{ $aktif ? '#fff' : 'inherit' }}">
+                    {{ $ad }}
+                </button>
+            @endforeach
+        </div>
+    @endif
 
     {{-- ==================== GENEL BAKIŞ ==================== --}}
     @if ($sekme === 'genel')
@@ -304,6 +352,63 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        {{-- ==================== İSG-KATİP AYLIK YASAL HİZMET SÜRELERİ ==================== --}}
+        @php
+            $katipOzet = $this->isgKatipSureOzeti;
+            $kapasiteRenk = $katipOzet['kapasite_yuzde'] > 100 ? $kirmizi : ($katipOzet['kapasite_yuzde'] >= 80 ? $sari : $yesil);
+        @endphp
+        <div style="{{ $golge }}">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem">
+                <div>
+                    <div style="font-weight:800">⏱️ İSG-KATİP Aylık Yasal Hizmet Süreleri &amp; Kapasite</div>
+                    <div style="font-size:.76rem;color:{{ $gri }};margin-top:.15rem">
+                        İGU: <strong>{{ $say($katipOzet['toplam_igu_dk']) }} dk ({{ round($katipOzet['toplam_igu_dk'] / 60, 1) }} saat/ay)</strong>
+                        &nbsp;·&nbsp; İşyeri Hekimi: <strong>{{ $say($katipOzet['toplam_hekim_dk']) }} dk ({{ round($katipOzet['toplam_hekim_dk'] / 60, 1) }} saat/ay)</strong>
+                        @if ($katipOzet['toplam_dsp_dk'] > 0)
+                            &nbsp;·&nbsp; DSP: <strong>{{ $say($katipOzet['toplam_dsp_dk']) }} dk ({{ round($katipOzet['toplam_dsp_dk'] / 60, 1) }} saat/ay)</strong>
+                        @endif
+                    </div>
+                </div>
+                <div style="min-width:190px">
+                    <div style="display:flex;justify-content:space-between;font-size:.73rem;margin-bottom:.2rem">
+                        <span style="color:{{ $gri }}">Aylık 180 saat İGU kapasitesi</span>
+                        <strong style="color:{{ $kapasiteRenk }}">%{{ $katipOzet['kapasite_yuzde'] }}</strong>
+                    </div>
+                    <div style="height:7px;border-radius:9999px;background:rgb(128 116 148 / .18);overflow:hidden">
+                        <div style="height:100%;width:{{ min(100, $katipOzet['kapasite_yuzde']) }}%;background:{{ $kapasiteRenk }};border-radius:9999px"></div>
+                    </div>
+                </div>
+            </div>
+            @if (count($katipOzet['satirlar']) > 0)
+                <div style="overflow-x:auto;max-height:280px;overflow-y:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.8rem;min-width:540px">
+                        <thead>
+                            <tr style="text-align:left;color:{{ $gri }};font-size:.73rem;text-transform:uppercase;letter-spacing:.04em">
+                                <th style="padding:.4rem">Firma</th>
+                                <th style="padding:.4rem">Tehlike Sınıfı</th>
+                                <th style="padding:.4rem;text-align:right">Çalışan</th>
+                                <th style="padding:.4rem;text-align:right">İGU (Dk/Ay)</th>
+                                <th style="padding:.4rem;text-align:right">Hekim (Dk/Ay)</th>
+                                <th style="padding:.4rem;text-align:right">DSP (Dk/Ay)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($katipOzet['satirlar'] as $s)
+                                <tr style="border-top:1px solid rgb(128 116 148 / .15)">
+                                    <td style="padding:.45rem .4rem;font-weight:600">{{ \Illuminate\Support\Str::limit($s['unvan'], 48) }}</td>
+                                    <td style="padding:.45rem .4rem">{{ $s['tehlike'] }}</td>
+                                    <td style="padding:.45rem .4rem;text-align:right;font-variant-numeric:tabular-nums">{{ $say($s['calisan']) }}</td>
+                                    <td style="padding:.45rem .4rem;text-align:right;font-weight:700;font-variant-numeric:tabular-nums">{{ $say($s['igu_dk']) }} dk</td>
+                                    <td style="padding:.45rem .4rem;text-align:right;font-variant-numeric:tabular-nums">{{ $say($s['hekim_dk']) }} dk</td>
+                                    <td style="padding:.45rem .4rem;text-align:right;font-variant-numeric:tabular-nums">{{ $s['dsp_dk'] > 0 ? $say($s['dsp_dk']).' dk' : '—' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     @endif
 

@@ -4,11 +4,12 @@ namespace App\Filament\Pages;
 
 use App\Models\Firma;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use App\Support\CanliKonumTakibi;
 use App\Support\SayfaKatalogu;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use UnitEnum;
@@ -49,6 +50,66 @@ class KullaniciYonetimi extends Page
 
     public ?string $abonelikBitis = null;
 
+    public string $sayfaArama = '';
+
+    public string $firmaArama = '';
+
+    /** Hazır rol paketleri — tek tıkla yetki seçimi (SayfaKatalogu anahtarları). */
+    public const ROL_SABLONLARI = [
+        'igu' => [
+            'ad' => 'İGU Paketi',
+            'sayfalar' => [
+                'ana-sayfa', 'kontrol-merkezi', 'firma-denetim-operasyon', 'risk-merkezi', 'profilim',
+                'hizli-saha-bulgusu', 'ziyaret-modu', 'saha-ekrani', 'saha-denetimi', 'kontrol-karti', 'ai-saha-analizi',
+                'dof-olustur', 'tespit-oneri-defteri', 'onayli-defter-nushalari', 'on-bilgilendirmeler',
+                'ziyaret-programi', 'is-izin-formu', 'talimat-olustur', 'atama-yazilari', 'calisan-temsilcisi-secimi',
+                'ceza-teblig', 'gecici-gorevlendirme', 'kkd-takip', 'kkd-formu', 'kkd-secim-matrisi',
+                'periyodik-kontrol', 'ortam-olcumleri', 'ekipman-afisleri', 'toplu-makine-paketi', 'matbu-evrak-paketi',
+                'dokuman-yonetimi', 'risk-sihirbazi', 'risk-degerlendirmesi-resource', 'jsa-degerlendirmesi',
+                'kimyasal-yonetimi', 'kimyasal-risk-degerlendirmesi', 'kimyasal-sicili', 'pkd-sicili',
+                'tehlike-risk-analitigi', 'tehlike-resource', 'risk-sablonu-resource', 'risk-prosedur-resource',
+                'egitim-katilim', 'isbasi-egitim', 'egitim-yenileme-takibi', 'sertifika-olustur',
+                'egitim-paketi-resource', 'uzaktan-egitim-firma-ayarlari', 'uzaktan-egitim-atama', 'uzaktan-egitim-takip',
+                'uzaktan-egitim-yil-basi', 'uzaktan-egitim-sorulari', 'soru-bankasi', 'egitim-sorulari',
+                'toolbox-konusmalari', 'ise-ozgu-egitim-konulari', 'yillik-planlar',
+                'olay-kayitlari', 'is-kazasi-raporu', 'kaza-istatistikleri', 'olay-komuta360',
+                'acil-durum-plani', 'acil-durum-krokisi', 'acil-durum-ekipleri', 'yangin-guvenligi', 'tatbikat-tutanagi', 'tabela-tasarimi',
+                'kurul-toplantisi', 'firma-resource', 'calisan-resource', 'isg-profesyoneli-resource',
+                'taseron-yonetimi', 'ziyaretci-yonetimi', 'yoklama-puantaj', 'isg-katip-sozlesmeleri', 'isg-katip-robot',
+                'araclar', 'mevzuat', 'hazir-istemler', 'bildirim-merkezi',
+            ],
+        ],
+        'hekim' => [
+            'ad' => 'İşyeri Hekimi Paketi',
+            'sayfalar' => [
+                'ana-sayfa', 'kontrol-merkezi', 'profilim', 'saglik-gozetimi', 'muayene-formu', 'ise-donus-belgesi',
+                'meslek-hastaligi-bildirimi', 'e-reetem', 'olay-kayitlari', 'is-kazasi-raporu', 'kaza-istatistikleri',
+                'olay-komuta360', 'egitim-katilim', 'isbasi-egitim', 'egitim-yenileme-takibi', 'sertifika-olustur',
+                'kurul-toplantisi', 'tespit-oneri-defteri', 'onayli-defter-nushalari', 'ziyaret-programi',
+                'ziyaret-modu', 'saha-ekrani', 'dokuman-yonetimi', 'firma-resource', 'calisan-resource',
+                'isg-katip-sozlesmeleri', 'araclar', 'mevzuat', 'bildirim-merkezi',
+            ],
+        ],
+        'dsp' => [
+            'ad' => 'DSP Paketi',
+            'sayfalar' => [
+                'ana-sayfa', 'profilim', 'saglik-gozetimi', 'muayene-formu', 'ise-donus-belgesi', 'olay-kayitlari',
+                'ziyaret-programi', 'ziyaret-modu', 'saha-ekrani', 'dokuman-yonetimi',
+                'firma-resource', 'calisan-resource', 'bildirim-merkezi',
+            ],
+        ],
+        'saha_destek' => [
+            'ad' => 'Saha Destek Paketi',
+            'sayfalar' => [
+                'ana-sayfa', 'profilim', 'saha-ekrani', 'ziyaret-modu', 'ziyaret-programi',
+                'hizli-saha-bulgusu', 'saha-denetimi', 'kontrol-karti', 'dof-olustur',
+                'kkd-takip', 'kkd-formu', 'ekipman-afisleri', 'periyodik-kontrol',
+                'dokuman-yonetimi', 'firma-resource', 'calisan-resource',
+                'yoklama-puantaj', 'ziyaretci-yonetimi', 'bildirim-merkezi',
+            ],
+        ],
+    ];
+
     public static function canAccess(): bool
     {
         return (bool) auth()->user()?->sahipMi();
@@ -60,16 +121,53 @@ class KullaniciYonetimi extends Page
         return User::where('rol', '!=', 'sahip')->orderBy('name')->get();
     }
 
+    /** @return array<int, array{id: int, name: string, unvan: string, enlem: ?float, boylam: ?float, guncelleme: ?string, harita_url: ?string}> */
+    #[Computed]
+    public function aktifKonumlar(): array
+    {
+        return CanliKonumTakibi::aktifKonumlar();
+    }
+
     #[Computed]
     public function sayfaKatalogu(): array
     {
         return SayfaKatalogu::tumSayfalar();
     }
 
+    /** @return array<string, string> */
+    #[Computed]
+    public function filtrelenmisSayfalar(): array
+    {
+        $tum = $this->sayfaKatalogu();
+        $q = trim(\App\Support\TurkceMetin::kucuk($this->sayfaArama));
+        if ($q === '') {
+            return $tum;
+        }
+
+        return array_filter(
+            $tum,
+            fn (string $ad, string $anahtar) => str_contains(\App\Support\TurkceMetin::kucuk($ad.' '.$anahtar), $q),
+            ARRAY_FILTER_USE_BOTH,
+        );
+    }
+
     #[Computed]
     public function firmalar()
     {
         return Firma::withoutGlobalScopes()->orderBy('unvan')->get();
+    }
+
+    #[Computed]
+    public function filtrelenmisFirmalar()
+    {
+        $q = trim(\App\Support\TurkceMetin::kucuk($this->firmaArama));
+        if ($q === '') {
+            return $this->firmalar;
+        }
+
+        return $this->firmalar
+            ->filter(fn (Firma $f) => str_contains(\App\Support\TurkceMetin::kucuk($f->unvan.' '.$f->kisa_ad), $q))
+            ->values();
     }
 
     public function ac(int $userId): void
@@ -83,6 +181,8 @@ class KullaniciYonetimi extends Page
         $user = User::findOrFail($userId);
 
         $this->acikKullaniciId = $userId;
+        $this->sayfaArama = '';
+        $this->firmaArama = '';
         $this->sayfaSecim = array_fill_keys(array_keys($this->sayfaKatalogu()), false);
         foreach ($user->sayfaYetkileri()->pluck('sayfa_anahtari') as $anahtar) {
             $this->sayfaSecim[$anahtar] = true;
@@ -104,9 +204,35 @@ class KullaniciYonetimi extends Page
         $this->sayfaSecim = array_fill_keys(array_keys($this->sayfaKatalogu()), true);
     }
 
+    public function tumSayfalariKaldir(): void
+    {
+        $this->sayfaSecim = array_fill_keys(array_keys($this->sayfaKatalogu()), false);
+    }
+
+    public function rolSablonuUygula(string $rol): void
+    {
+        $sablon = self::ROL_SABLONLARI[$rol] ?? null;
+        if (! $sablon) {
+            return;
+        }
+
+        $katalog = array_keys($this->sayfaKatalogu());
+        $this->sayfaSecim = array_fill_keys($katalog, false);
+        foreach ($sablon['sayfalar'] as $anahtar) {
+            if (array_key_exists($anahtar, $this->sayfaSecim)) {
+                $this->sayfaSecim[$anahtar] = true;
+            }
+        }
+    }
+
     public function tumFirmalariSec(): void
     {
         $this->firmaSecim = array_fill_keys($this->firmalar()->pluck('id')->all(), true);
+    }
+
+    public function tumFirmalariKaldir(): void
+    {
+        $this->firmaSecim = [];
     }
 
     public function kaydet(): void

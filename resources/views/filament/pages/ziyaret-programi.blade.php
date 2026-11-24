@@ -6,6 +6,25 @@
 @endphp
 
 <x-filament-panels::page>
+    {{-- OSGB Canlı Saha Ekibi Konumları (yalnız sahip hesabı görür) --}}
+    @if (auth()->user()?->sahipMi())
+        @php $aktifSahaKonumlar = \App\Support\CanliKonumTakibi::aktifKonumlar(); @endphp
+        @if (count($aktifSahaKonumlar) > 0)
+            <div style="border:1px solid rgb(34 197 94 / .4);background:rgb(34 197 94 / .07);border-radius:.85rem;padding:.65rem .9rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .85rem;font-size:.8rem">
+                <strong style="color:#15803d">📍 Sahada Konumu Açık Ekip ({{ count($aktifSahaKonumlar) }}):</strong>
+                @foreach ($aktifSahaKonumlar as $sk)
+                    <span style="display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .55rem;border-radius:9999px;border:1px solid rgb(34 197 94 / .35);background:rgb(255 255 255 / .7)">
+                        <strong>{{ $sk['name'] }}</strong>
+                        @if ($sk['guncelleme'])<span style="color:rgb(95 87 112)">{{ $sk['guncelleme'] }}</span>@endif
+                        @if ($sk['harita_url'])
+                            <a href="{{ $sk['harita_url'] }}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;font-weight:700;text-decoration:underline">Harita ↗</a>
+                        @endif
+                    </span>
+                @endforeach
+            </div>
+        @endif
+    @endif
+
     {{-- Görünüm seçici: Genel Ajanda / Firma Bazlı Yıllık Plan / Harita & Rota / 4'lü Kanıt & Eksik Süre --}}
     <div style="display:flex;gap:.5rem;flex-wrap:wrap" role="tablist" aria-label="Planlama görünümü">
         @foreach (['ajanda' => 'Genel Ajanda (Portföy Takvimi)', 'plan' => 'Firma Bazlı Yıllık Plan (12 Ay)', 'harita' => '🗺 Harita & Rota Planlama', 'kanit' => '🛡 Ziyaret Kanıt & Eksik Süre (QR/GPS)'] as $kod => $ad)

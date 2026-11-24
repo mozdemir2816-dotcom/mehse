@@ -107,17 +107,32 @@ Route::post('/mehse/konum-bildir', function (Request $request) {
 
     /** @var User $user */
     $user = $request->user();
+    $aktif = (bool) $veri['aktif'];
+    $guncelleme = now()->timezone('Europe/Istanbul')->format('d.m.Y H:i');
+
     KullaniciAyarlari::kaydet($user, [
         'canli_konum' => [
-            'aktif' => (bool) $veri['aktif'],
-            'enlem' => $veri['aktif'] ? ($veri['enlem'] ?? null) : null,
-            'boylam' => $veri['aktif'] ? ($veri['boylam'] ?? null) : null,
-            'guncelleme' => now()->timezone('Europe/Istanbul')->format('d.m.Y H:i'),
+            'aktif' => $aktif,
+            'enlem' => $aktif ? ($veri['enlem'] ?? null) : null,
+            'boylam' => $aktif ? ($veri['boylam'] ?? null) : null,
+            'guncelleme' => $guncelleme,
+            'guncelleme_ts' => now()->timestamp,
         ],
     ]);
 
-    return response()->json(['ok' => true]);
+    return response()->json([
+        'ok' => true,
+        'aktif' => $aktif,
+        'guncelleme' => $guncelleme,
+    ]);
 })->middleware(['auth', 'throttle:30,1'])->name('mehse.konum.bildir');
+
+// Sol bar "Aktif İşyeri Bağlamı" temizleme — tüm portföy görünümüne döner.
+Route::post('/mehse/aktif-firma/temizle', function () {
+    \App\Support\KomutaFirma::sec(null);
+
+    return response()->json(['ok' => true]);
+})->middleware(['auth', 'throttle:60,1'])->name('mehse.aktif-firma.temizle');
 
 // Kök adres = herkese açık tanıtım sayfası (29.10.2026); üye olmayanlar teklif isteyebilir,
 // panel /admin'de. Teklif formu kayıt açar (TeklifTalebi), sahip hesap panelde görür.

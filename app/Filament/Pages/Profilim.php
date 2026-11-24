@@ -221,9 +221,105 @@ class Profilim extends Page
                         }
                     }
 
-                    unset($this->kullanici);
+                    unset($this->kullanici, $this->kaseKutuphanesi);
                     Notification::make()->title('Kaşe / imza otomatik kenar kırpmasıyla kaydedildi')->success()->send();
                 });
+    }
+
+    /**
+     * Kullanıcının yüklediği kayıtlı kaşeler (users.ayarlar['kase_kutuphanesi']).
+     * Yalnızca public diskte dosyası mevcut olan kaşeler listelenir.
+     *
+     * @return array<int, array{id: string, ad: string, yol: string, eklenme: string, aktif: bool}>
+     */
+    #[Computed]
+    public function kaseKutuphanesi(): array
+    {
+        $user = $this->kullanici;
+        $ham = array_values((array) (($user->ayarlar ?? [])['kase_kutuphanesi'] ?? []));
+        $disk = Storage::disk('public');
+
+        return collect($ham)
+            ->filter(fn ($k) => is_array($k) && filled($k['id'] ?? null) && filled($k['yol'] ?? null) && $disk->exists((string) $k['yol']))
+            ->map(fn (array $k): array => [
+                'id' => (string) $k['id'],
+                'ad' => (string) ($k['ad'] ?? 'Kayıtlı Kaşe'),
+                'yol' => (string) $k['yol'],
+                'eklenme' => (string) ($k['eklenme'] ?? ''),
+                'aktif' => $user->kase_gorseli === (string) $k['yol'],
+            ])
+            ->reverse()
+            ->values()
+            ->all();
+    }
+
+    public function kaseKutuphanedenSec(string $id): void
+    {
+        $secilen = collect($this->kaseKutuphanesi)->firstWhere('id', $id);
+        if (! $secilen) {
+            Notification::make()->title('Kaşe bulunamadı')->danger()->send();
+
+            return;
+        }
+
+        $user = Filament::auth()->user();
+        $user->forceFill(['kase_gorseli' => $secilen['yol']])->save();
+        unset($this->kullanici, $this->kaseKutuphanesi);
+
+        Notification::make()->title('Aktif kaşe değiştirildi: '.$secilen['ad'])->success()->send();
+    }
+
+    public function kaseKutuphanedenSil(string $id): void
+    {
+        $user = Filament::auth()->user();
+        $mevcut = array_values((array) (($user->ayarlar ?? [])['kase_kutuphanesi'] ?? []));
+        $kalan = array_values(array_filter($mevcut, fn ($k) => ($k['id'] ?? null) !== $id));
+
+        \App\Support\KullaniciAyarlari::kaydet($user, ['kase_kutuphanesi' => $kalan]);
+        unset($this->kullanici, $this->kaseKutuphanesi);
+
+        Notification::make()->title('Kaşe kütüphaneden kaldırıldı')->success()->send();
+    }
+
+    /**
+     * Portföy genelindeki aktif firmaların aylık yasal İGU/Hekim/DSP hizmet süreleri.
+     *
+     * @return array{toplam_igu_dk: int, toplam_hekim_dk: int, toplam_dsp_dk: int, kapasite_yuzde: int, satirlar: array<int, array{id: int, unvan: string, tehlike: string, calisan: int, igu_dk: int, hekim_dk: int, dsp_dk: int}>}
+     */
+    #[Computed]
+    public function isgKatipSureOzeti(): array
+    {
+        $toplamIgu = 0;
+        $toplamHekim = 0;
+        $toplamDsp = 0;
+        $satirlar = [];
+
+        foreach ($this->firmalar->where('aktif', true) as $f) {
+            $dk = $this->firmaYasalDakika($f);
+            $toplamIgu += $dk['igu_dk'];
+            $toplamHekim += $dk['hekim_dk'];
+            $toplamDsp += $dk['dsp_dk'];
+            $satirlar[] = [
+                'id' => $f->id,
+                'unvan' => $f->secimEtiketi(),
+                'tehlike' => $f->tehlikeSinifiEtiketi(),
+                'calisan' => $dk['calisan'],
+                'igu_dk' => $dk['igu_dk'],
+                'hekim_dk' => $dk['hekim_dk'],
+                'dsp_dk' => $dk['dsp_dk'],
+            ];
+        }
+
+        // Tam süreli uzman aylık yasal tavan: 180 saat = 10.800 dk (+ fazla mesai hariç).
+        $kapasiteYuzde = (int) min(999, round(($toplamIgu / 10800) * 100));
+
+        return [
+            'toplam_igu_dk' => $toplamIgu,
+            'toplam_hekim_dk' => $toplamHekim,
+            'toplam_dsp_dk' => $toplamDsp,
+            'kapasite_yuzde' => $kapasiteYuzde,
+            'satirlar' => $satirlar,
+        ];
     }
 
     #[Computed]
